@@ -1,0 +1,18 @@
+pre.haskell-pre a {
+    border-bottom: 1px dotted #000;
+    text-decoration: none;
+}
+
+td div.highlight {
+    margin: 0;
+}
+
+h3 code {
+}
+
+.wy-plain-list-decimal ol,
+.rst-content .section ol ol,
+.rst-content ol.arabic ol,
+article ol ol {
+    margin-bottom: 0;
+}

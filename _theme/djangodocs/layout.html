@@ -1,0 +1,155 @@
+{% extends "basic/layout.html" %}
+
+{%- macro secondnav() %}
+  {%- if prev %}
+    &laquo; <a href="{{ prev.link|e }}" title="{{ prev.title|e }}">previous</a>
+    {{ reldelim2 }}
+  {%- endif %}
+  {%- if parents %}
+    <a href="{{ parents.0.link|e }}" title="{{ parents.0.title|e }}" accesskey="U">up</a>
+  {%- else %}
+    <a title="{{ docstitle }}" href="{{ pathto('index') }}" accesskey="U">up</a>
+  {%- endif %}
+  {%- if next %}
+  {{ reldelim2 }}
+    <a href="{{ next.link|e }}" title="{{ next.title|e }}">next</a> &raquo;
+  {%- endif %}
+{%- endmacro %}
+
+{% block extrahead %}
+{# When building htmlhelp (CHM format) disable jQuery inclusion, #}
+{# as it causes problems in compiled CHM files.                  #}
+{% if builder != "htmlhelp" %}
+{{ super() }}
+{# <script type="text/javascript" src="{{ pathto('templatebuiltins.js', 1) }}"></script> #}
+<script type="text/javascript">
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "{{ pathto('ref/templates/builtins') }}";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);
+</script>
+{% endif %}
+{% endblock %}
+
+{% block document %}
+  <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if pagename != 'index' else '' }}{% endblock %}">
+    <div id="hd">
+      <h1><a href="{{ pathto('index') }}">{{ docstitle }}</a></h1>
+      {# <div id="global-nav">
+        <a title="Home page" href="{{ pathto('index') }}">Home</a> {{ reldelim2 }}
+        <a title="Table of contents" href="{{ pathto('contents') }}">Table of contents</a> {{ reldelim2 }}
+        <a title="Global index" href="{{ pathto('genindex') }}">Index</a> {{ reldelim2 }}
+        <a title="Module index" href="{{ pathto('py-modindex') }}">Modules</a>
+      </div>
+      <div class="nav">{{ secondnav() }}</div> #}
+    </div>
+
+    <div id="">
+      <div role="main">
+        <div id="docs-content">
+          <div id="{{ pagename|replace('/', '-') }}">
+            {% block body %}{% endblock %}
+          </div>
+        </div>
+        <div class="nav">{{ secondnav() }}</div>
+      </div>
+
+      {% block sidebarwrapper %}
+        {% if pagename != 'index' %}
+          <div class="yui-b" id="sidebar">
+            {{ sidebar() }}
+            {%- if last_updated %}
+              <h3>Last update:</h3>
+              <p class="topless">{{ last_updated }}</p>
+            {%- endif %}
+          </div>
+        {% endif %}
+      {% endblock %}
+
+      <div style="clear: both;"></div>
+    </div>
+
+  </div>
+{% endblock %}
+
+{% block sidebarrel %}
+  <h3>Browse</h3>
+  <ul>
+    {% if prev %}
+      <li>Prev: <a href="{{ prev.link }}">{{ prev.title }}</a></li>
+    {% endif %}
+    {% if next %}
+      <li>Next: <a href="{{ next.link }}">{{ next.title }}</a></li>
+    {% endif %}
+  </ul>
+  <h3>You are here:</h3>
+  <ul>
+      <li>
+        <a href="{{ pathto('index') }}">{{ docstitle }}</a>
+        {% for p in parents %}
+          <ul><li><a href="{{ p.link }}">{{ p.title }}</a>
+        {% endfor %}
+        <ul><li>{{ title }}</li></ul>
+        {% for p in parents %}</li></ul>{% endfor %}
+      </li>
+  </ul>
+{% endblock %}
+
+{# Empty some default blocks out #}
+{% block relbar1 %}{% endblock %}
+{% block relbar2 %}{% endblock %}
+{% block sidebar1 %}{% endblock %}
+{% block sidebar2 %}{% endblock %}
+{% block footer %}
+  <div class="footer-hasura-custom">
+    Powered by <a target="_blank" href="http://www.sphinx-doc.org">Sphinx</a>.
+    Inspired from the djangosite.com theme (<a target="_blank" href="https://github.com/django/djangoproject.com/blob/master/LICENSE">LICENSE</a>).
+    Copyright &copy; 2016 <a target="_blank" href="https://hasura.io">Hasura</a>.
+  </div>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-59768903-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+
+  <script>
+    window.intercomSettings = {
+      app_id: "rucirpb3"
+    };
+  </script>
+  <script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/rucirpb3';var
+    x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})()</script>
+
+{% endblock %}

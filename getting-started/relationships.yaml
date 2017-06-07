@@ -1,0 +1,99 @@
+type: bulk
+args:
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+- type: create_array_relationship
+  args:
+    table: author
+    name: comments
+    using:
+      foreign_key_constraint_on:
+        table: comment
+        column: author_id
+- type: create_array_relationship
+  args:
+    table: author
+    name: liked_articles
+    using:
+      foreign_key_constraint_on:
+        table: article_like
+        column: author_id
+
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+- type: create_array_relationship
+  args:
+    table: article
+    name: comments
+    using:
+      foreign_key_constraint_on:
+        table: comment
+        column: article_id
+- type: create_array_relationship
+  args:
+    table: article
+    name: categories
+    using:
+      foreign_key_constraint_on:
+        table: article_category
+        column: article_id
+
+- type: create_object_relationship
+  args:
+    table: article_like
+    name: liked_by
+    using:
+      foreign_key_constraint_on: author_id
+- type: create_object_relationship
+  args:
+    table: article_like
+    name: article
+    using:
+      foreign_key_constraint_on: article_id
+
+- type: create_object_relationship
+  args:
+    table: comment
+    name: commented_by
+    using:
+      foreign_key_constraint_on: author_id
+- type: create_object_relationship
+  args:
+    table: comment
+    name: article
+    using:
+      foreign_key_constraint_on: article_id
+
+- type: create_array_relationship
+  args:
+    table: category
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article_category
+        column: category_id
+
+- type: create_object_relationship
+  args:
+    table: article_category
+    name: article
+    using:
+      foreign_key_constraint_on: article_id
+
+- type: create_object_relationship
+  args:
+    table: article_category
+    name: category
+    using:
+      foreign_key_constraint_on: category_id
