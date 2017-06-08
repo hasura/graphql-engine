@@ -12,13 +12,15 @@ Reference
 This is the reference documentation of the entire Hasura platform
 
 .. toctree::
-  :maxdepth: 2
+  :maxdepth: 3
 
-  data/index
-  auth/index
-  custom-services/index
-  api-gateway/index
-  android/index
-  iOS/index
-  tooling/index
-  production-guidelines/index
+  Creating a Project/index
+  Architecture/index
+  Hasura Microservices/index
+  Custom Microservices/index
+  Docker Microservices/index
+  CLI/index
+  SDKs/index
+  Project Status/index
+  Domains and API Gateway/index
+  Project Export and Import/index
