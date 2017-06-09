@@ -1,0 +1,26 @@
+<div>
+  <h3>Guides</h3>
+  <div id="guide-listing"></div>
+  <script>
+    $('#guide-listing').html('Hi. this is a list of items populated by Javascript');
+    $.ajax({
+      url: 'http://hn.algolia.com/api/v1/search?query=paas',
+      success: function (result) {
+        var snippets = result.hits.map(function (result) {
+          return `
+            <div>
+              <h3>${result.title}</h3>
+              <p>
+                Votes - <b>${result.points}</b>
+                Comments - ${result.num_comments}<br/>
+                URL - <a href="${result.url}">${result.url}</a>
+              </p>
+            </div>
+            <hr/>
+          `;
+        });
+        $('#guide-listing').html(snippets.join(''));
+      }
+    });
+  </script>
+</div>

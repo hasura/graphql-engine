@@ -39,8 +39,12 @@
     </div>
 
     <div id="">
+      <h3><i>{{ pagename }}</i></h3>
+      <hr/>
       {%- if pagename == 'index' %}
         {% include 'pages/landing.html' %}
+      {%- elif pagename == 'guides/index' %}
+        {% include 'pages/guides.html' %}
       {%- else %}
         <div role="main">
           <div id="docs-content">
@@ -54,11 +58,10 @@
         {% block sidebarwrapper %}
           {% if pagename != 'index' %}
             <div class="yui-b" id="sidebar">
-              {{ sidebar() }}
               {%- if last_updated %}
-                <h3>Last update:</h3>
-                <p class="topless">{{ last_updated }}</p>
+                <span><b>Last updated:</b> {{ last_updated }}</span>
               {%- endif %}
+              {{ sidebar() }}
             </div>
           {% endif %}
         {% endblock %}

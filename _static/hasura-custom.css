@@ -16,3 +16,12 @@ h3 code {
 article ol ol {
     margin-bottom: 0;
 }
+
+/* **** BEGIN landing.html ******************************* */
+.hcl_half {
+    width: 45%;
+    float: left;
+    border: 1px solid #ccc;
+}
+
+/* **** END landing.html ******************************* */
