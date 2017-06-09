@@ -1,4 +1,0 @@
-Configuration
-=============
-
-Nothing here
