@@ -1,5 +1,7 @@
 {% extends "basic/layout.html" %}
 
+{% set css_files = css_files + ['_static/hasura-custom.css', '_static/djangosite.css'] %}
+
 {%- macro secondnav() %}
   {%- if prev %}
     &laquo; <a href="{{ prev.link|e }}" title="{{ prev.title|e }}">previous</a>
@@ -17,82 +19,52 @@
 {%- endmacro %}
 
 {% block extrahead %}
-{# When building htmlhelp (CHM format) disable jQuery inclusion, #}
-{# as it causes problems in compiled CHM files.                  #}
-{% if builder != "htmlhelp" %}
-{{ super() }}
-{# <script type="text/javascript" src="{{ pathto('templatebuiltins.js', 1) }}"></script> #}
-<script type="text/javascript">
-(function($) {
-    if (!django_template_builtins) {
-       // templatebuiltins.js missing, do nothing.
-       return;
-    }
-    $(document).ready(function() {
-        // Hyperlink Django template tags and filters
-        var base = "{{ pathto('ref/templates/builtins') }}";
-        if (base == "#") {
-            // Special case for builtins.html itself
-            base = "";
-        }
-        // Tags are keywords, class '.k'
-        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
-             var tagname = $(elem).text();
-             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
-                 var fragment = tagname.replace(/_/, '-');
-                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
-             }
-        });
-        // Filters are functions, class '.nf'
-        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
-             var filtername = $(elem).text();
-             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
-                 var fragment = filtername.replace(/_/, '-');
-                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
-             }
-        });
-    });
-})(jQuery);
-</script>
-{% endif %}
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 {% endblock %}
 
 {% block document %}
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if pagename != 'index' else '' }}{% endblock %}">
     <div id="hd">
-      <h1><a href="{{ pathto('index') }}">{{ docstitle }}</a></h1>
-      {# <div id="global-nav">
-        <a title="Home page" href="{{ pathto('index') }}">Home</a> {{ reldelim2 }}
-        <a title="Table of contents" href="{{ pathto('contents') }}">Table of contents</a> {{ reldelim2 }}
-        <a title="Global index" href="{{ pathto('genindex') }}">Index</a> {{ reldelim2 }}
-        <a title="Module index" href="{{ pathto('py-modindex') }}">Modules</a>
+      <div id="global-nav">
+        <a title="Home page" href="https://hasura.io">Hasura</a>
+        <div class="ui-widget">
+          <label for="tags">Search: </label>
+          <input id="tags">
+        </div>
+        <a title="Table of contents" href="{{ pathto('contents') }}">Data</a> {{ reldelim2 }}
+        <a title="Global index" href="{{ pathto('genindex') }}">Auth</a> {{ reldelim2 }}
+        <a title="Module index" href="{{ pathto('py-modindex') }}">gateway</a>
       </div>
-      <div class="nav">{{ secondnav() }}</div> #}
+      <h1><a href="{{ pathto('index') }}">{{ docstitle }}</a></h1>
     </div>
 
     <div id="">
-      <div role="main">
-        <div id="docs-content">
-          <div id="{{ pagename|replace('/', '-') }}">
-            {% block body %}{% endblock %}
+      {%- if pagename == 'index' %}
+        {% include 'pages/landing.html' %}
+      {%- else %}
+        <div role="main">
+          <div id="docs-content">
+            <div id="{{ pagename|replace('/', '-') }}">
+              {% block body %}{% endblock %}
+            </div>
           </div>
+          <div class="nav">{{ secondnav() }}</div>
         </div>
-        <div class="nav">{{ secondnav() }}</div>
-      </div>
 
-      {% block sidebarwrapper %}
-        {% if pagename != 'index' %}
-          <div class="yui-b" id="sidebar">
-            {{ sidebar() }}
-            {%- if last_updated %}
-              <h3>Last update:</h3>
-              <p class="topless">{{ last_updated }}</p>
-            {%- endif %}
-          </div>
-        {% endif %}
-      {% endblock %}
+        {% block sidebarwrapper %}
+          {% if pagename != 'index' %}
+            <div class="yui-b" id="sidebar">
+              {{ sidebar() }}
+              {%- if last_updated %}
+                <h3>Last update:</h3>
+                <p class="topless">{{ last_updated }}</p>
+              {%- endif %}
+            </div>
+          {% endif %}
+        {% endblock %}
 
-      <div style="clear: both;"></div>
+        <div style="clear: both;"></div>
+      {%- endif %}
     </div>
 
   </div>
@@ -151,5 +123,38 @@
   </script>
   <script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/rucirpb3';var
     x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})()</script>
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script>
+    $( function() {
+      var availableTags = [
+      "ActionScript",
+      "AppleScript",
+      "Asp",
+      "BASIC",
+      "C",
+      "C++",
+      "Clojure",
+      "COBOL",
+      "ColdFusion",
+      "Erlang",
+      "Fortran",
+      "Groovy",
+      "Haskell",
+      "Java",
+      "JavaScript",
+      "Lisp",
+      "Perl",
+      "PHP",
+      "Python",
+      "Ruby",
+      "Scala",
+      "Scheme"
+      ];
+      $( "#tags" ).autocomplete({
+        source: availableTags
+      });
+    });
+  </script>
 
 {% endblock %}

@@ -38,9 +38,7 @@ sys.path.append(abspath(join(dirname(__file__), "_ext")))
 extensions = [
     "djangodocs",
     "sphinx.ext.intersphinx",
-    "sphinx.ext.viewcode",
-    "ticket_role",
-    "cve_role"
+    "sphinx.ext.viewcode"
 ]
 
 # Add any paths that contain templates here, relative to this directory.

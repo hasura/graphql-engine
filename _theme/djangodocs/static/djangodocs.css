@@ -55,12 +55,8 @@ a.reference em { font-style: normal; }
     font-weight: 300;
     color: #fff;
 }
-#global-nav { position:absolute; top:5px; margin-left: -5px; padding:7px 0; color:#263E2B; }
-#global-nav a:link, #global-nav a:visited {color:#487858;}
-#global-nav a {padding:0 4px;}
-#global-nav a.about {padding-left:0;}
-#global-nav:hover {color:#fff;}
-#global-nav:hover a:link, #global-nav:hover a:visited  { color:#ffc757; }
+#global-nav { padding: 20px; color:#263E2B; }
+#global-nav .ui-widget { display: inline-block; }
 
 /*** content ***/
 #yui-main div.yui-b { position: relative; }

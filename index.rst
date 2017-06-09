@@ -3,6 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. sectionauthor:: Tanmai Gopal <tanmaig@hasura.io>
+
+.. meta::
+   :description: Testing meta description
+   :keywords: hasura, docs, reference
+
 Hasura Documentation
 ====================
 
