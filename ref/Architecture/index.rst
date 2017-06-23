@@ -19,6 +19,6 @@ Basic Architecture
 WIP
 
 Application architecture
------------------------
+------------------------
 
 WIP
