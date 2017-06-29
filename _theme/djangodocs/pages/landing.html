@@ -1,17 +1,80 @@
-<div>
-  <div class="hcl_half">
-    <h3>First steps</h3>
+<div class="landing_page_wrapper">
+  <div class="wd_80">
+    <div class="hcl_half">
+      <div class="box_wrapper">
+        <div class="box_head">
+          <img src="_images/small-first-steps-icon.svg" alt="First steps"/>
+          <h3 class="head_wrapper">First steps</h3>
+        </div>
+        <div class="box_head">
+          <p>Sign-in</p>
+          <p><img src="_images/right-arrow.svg" alt="First steps"/></p>
+          <p>Quickstart</p>
+        </div>
+        <div class="common_btn">
+          <button class="body_content">Sign-in</button>
+        </div>
+        <div class="box_head padd_remove">
+          <p>Or read</p>
+          <p><a href="#">How to get started with Hasura</a></p>
+        </div>
+      </div>
+    </div>
+    <div class="hcl_half">
+      <div class="box_wrapper">
+        <div class="box_head">
+          <img src="_images/small-guides-icon.svg" alt="Guides"/>
+          <h3 class="head_wrapper">Guides</h3>
+        </div>
+        <div class="box_head">
+          <p><img src="_images/img_lights.jpg" alt="First steps"/></p>
+          <p><a href="#">How to build an Uber on Hasura</a></p>
+        </div>
+        <div class="box_head">
+          <p><img src="_images/img_lights.jpg" alt="First steps"/></p>
+          <p><a href="#">Inter-service communication</a></p>
+        </div>
+        <div class="box_head padd_remove">
+          <p><a href="#">More</a></p>
+        </div>
+      </div>
+    </div>
+    <div class="hcl_half">
+      <div class="box_wrapper">
+        <div class="box_head">
+          <img src="_images/small-docs-icon.svg" alt="Reference"/>
+          <h3 class="head_wrapper"><a href="{{pathto('ref/index')}}">Reference</a></h3>
+        </div>
+        <div class="box_head">
+            <div class="hcl_half referance_wrapper">
+                <p><img src="_images/img_lights.jpg" alt="First steps"/></p>
+                <p><a href="#">Architecture</a></p>
+            </div>
+            <div class="hcl_half referance_wrapper">
+                <p><img src="_images/img_lights.jpg" alt="First steps"/></p>
+                <p><a href="{{ pathto('ref/Hasura Microservices/data/index') }}">Data</a></p>
+            </div>
+        </div>
+        <div class="box_head">
+            <div class="hcl_half referance_wrapper">
+                <p><img src="_images/img_lights.jpg" alt="First steps"/></p>
+                <p><a href="{{ pathto('ref/Hasura Microservices/auth/index') }}">Auth</a></p>
+            </div>
+            <div class="hcl_half referance_wrapper">
+                <p><img src="_images/img_lights.jpg" alt="First steps"/></p>
+                <p><a href="#">File Store</a></p>
+            </div>
+        </div>
+        <div class="box_head padd_remove">
+          <p><a href="#">More</a></p>
+        </div>
+      </div>
+    </div>
+    <div class="hcl_half">
+      <div class="box_wrapper">
+        <h3>Tutorials</h3>
+      </div>
+    </div>
+    <div style="clear: both;"></div>
   </div>
-  <div class="hcl_half">
-    <h3>Guides</h3>
-  </div>
-  <div class="hcl_half">
-    <h3><a href="{{pathto('ref/index')}}">Reference</a></h3>
-      <a href="{{ pathto('ref/Hasura Microservices/data/index') }}">data</a>
-      <a href="{{ pathto('ref/Hasura Microservices/auth/index') }}">auth</a>
-  </div>
-  <div class="hcl_half">
-    <h3>Tutorials</h3>
-  </div>
-  <div style="clear: both;"></div>
 </div>

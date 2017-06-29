@@ -1,3 +1,25 @@
+@import url('https://fonts.googleapis.com/css?family=Gudea');
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+body
+{
+  font-family: 'Gudea';
+  font-size: 16px;
+}
+p
+{
+  font-family: 'Gudea';
+  font-size: 16px;
+}
+.head_wrapper
+{
+  font-family: 'Quicksand';
+  font-size: 30px;
+}
+.body_content
+{
+  font-family: 'Gudea';
+  font-size: 16px;
+}
 pre.haskell-pre a {
     border-bottom: 1px dotted #000;
     text-decoration: none;
@@ -18,10 +40,101 @@ article ol ol {
 }
 
 /* **** BEGIN landing.html ******************************* */
+p
+{
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.wd_80
+{
+  margin: 0 auto;
+  width: 80%;
+}
 .hcl_half {
-    width: 45%;
+    width: 50%;
     float: left;
-    border: 1px solid #ccc;
+}
+.box_wrapper
+{
+  border: 1px solid #ccc;
+  border-radius: 15px;
+  width: 90%;
+  margin: 0 auto;
+  margin-bottom: 20px;
+  text-align: center;
+  min-height: 192px;
+  padding: 20px 0;
+}
+.padd_remove
+{
+  padding-bottom: 0px !important;
+}
+.box_head
+{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 20px;
+}
+.box_head img
+{
+  width: 40px;
+  display: inline-block;
+  padding-right: 20px;
+}
+.box_head h3
+{
+  display: inline-block;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.box_head p
+{
+  padding: 0 10px;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.box_head p img
+{
+  width: 20px !important;
+  padding-right: 0 !important;
+}
+.referance_wrapper
+{
+  text-align: left;
+  padding-left: 25px;
+}
+.box_head .referance_wrapper img
+{
+  width: 40px;
+  display: inline-block;
+  padding-right: 20px;
+}
+.referance_wrapper p
+{
+  display: inline-block;
+}
+.box_head .referance_wrapper p img
+{
+  width: 20px !important;
+  padding-right: 0 !important;
+}
+.common_btn
+{
+  text-align: center;
+  padding-bottom: 20px;
+}
+.common_btn button
+{
+  padding: 10px 15px;
+  background-color: #cc401b;
+  color: #fff;
+  border: 1px solid #cc401b;
+  transition: background-color 0.5s linear;
 }
 
+.common_btn button:hover
+{
+  background-color: #b22509;
+}
 /* **** END landing.html ******************************* */
