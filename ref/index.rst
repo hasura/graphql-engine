@@ -14,13 +14,13 @@ This is the reference documentation of the entire Hasura platform
 .. toctree::
   :maxdepth: 3
 
-  Creating a Project/index
-  Architecture/index
-  Hasura Microservices/index
-  Custom Microservices/index
-  Docker Microservices/index
-  CLI/index
-  SDKs/index
-  Project Status/index
-  Domains and API Gateway/index
-  Project Export and Import/index
+  creating-a-project/index
+  architecture/index
+  hasura-microservices/index
+  custom-microservices/index
+  docker-microservices/index
+  cli/index
+  sdks/index
+  project-status/index
+  domains-and-api-gateway/index
+  project-export-and-import/index
