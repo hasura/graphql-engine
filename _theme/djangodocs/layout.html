@@ -20,22 +20,46 @@
 
 {% block extrahead %}
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 {% endblock %}
 
 {% block document %}
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if pagename != 'index' else '' }}{% endblock %}">
-    <div id="hd">
-      <div id="global-nav">
-        <a title="Home page" href="https://hasura.io">Hasura</a>
-        <div class="ui-widget">
-          <label for="tags">Search: </label>
-          <input id="tags">
+    <div class="header_wrapper">
+      <div class="header_main">
+        <div class="inline-block header_main_logo">
+          <div class="img_wrapper inline-block">
+            <img class="responsive logo_img" src="/_images/logo.svg" />
+          </div>
+          <div class="inline-block"> Docs </div>
         </div>
-        <a title="Table of contents" href="{{ pathto('contents') }}">Data</a> {{ reldelim2 }}
-        <a title="Global index" href="{{ pathto('genindex') }}">Auth</a> {{ reldelim2 }}
-        <a title="Module index" href="{{ pathto('py-modindex') }}">gateway</a>
+        <div class="inline-block input_search_box">
+          <span class="fa fa-search"></span>
+          <input type="text" placeholder="Search reference docs, tutorials, guides" />
+        </div>
+        <div class="header_links inline-block">
+          <div class="inline-block link_element">
+            <a href="#">
+              Reference
+            </a>
+          </div>
+          <div class="inline-block link_element">
+            <a href="#">
+              Tutorials
+            </a>
+          </div>
+          <div class="inline-block link_element">
+            <a href="#">
+              Troubleshooting
+            </a>
+          </div>
+          <div class="inline-block link_element">
+            <a href="#">
+              Guides
+            </a>
+          </div>
+        </div>
       </div>
-      <h1><a href="{{ pathto('index') }}">{{ docstitle }}</a></h1>
     </div>
 
     <div id="">
@@ -46,7 +70,7 @@
       {%- elif pagename == 'guides/index' %}
         {% include 'pages/guides.html' %}
       {%- elif pagename == 'tutorials/index' %}
-	{% include 'pages/tutorials.html' %}
+        {% include 'pages/tutorials.html' %}
       {%- else %}
         <div role="main">
           <div id="docs-content">
