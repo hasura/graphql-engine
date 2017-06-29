@@ -1,3 +1,4 @@
+*.sw*
 *.pyc
 # sphinx build folder
 _build
