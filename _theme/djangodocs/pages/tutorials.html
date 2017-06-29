@@ -1,10 +1,10 @@
 <div>
-  <h3>Guides</h3>
-  <div id="guide-listing"></div>
+  <h3>Tutorials</h3>
+  <div id="tutorials-listing"></div>
   <script>
-    $('#guide-listing').html('Hi. this is a list of items populated by Javascript');
+    $('#tutorials-listing').html('Hi. this is a list of tutorials populated by Javascript from algolia');
     $.ajax({
-      url: 'http://hn.algolia.com/api/v1/search?query=baas',
+      url: 'http://hn.algolia.com/api/v1/search?query=mbaas',
       success: function (result) {
         var snippets = result.hits.map(function (result) {
           return `
@@ -19,7 +19,7 @@
             <hr/>
           `;
         });
-        $('#guide-listing').html(snippets.join(''));
+        $('#tutorials-listing').html(snippets.join(''));
       }
     });
   </script>
