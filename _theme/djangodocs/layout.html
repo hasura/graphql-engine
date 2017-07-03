@@ -69,10 +69,7 @@
         </div>
       </div>
     </div>
-
-    <div id="">
-      <h3><i>{{ pagename }}</i></h3>
-      <hr/>
+    <div id="" class="content_wrapper">
       {%- if pagename == 'index' %}
         {% include 'pages/landing.html' %}
       {%- elif pagename == 'guides/index' %}
@@ -80,15 +77,6 @@
       {%- elif pagename == 'tutorials/index' %}
         {% include 'pages/tutorials.html' %}
       {%- else %}
-        <div role="main">
-          <div id="docs-content">
-            <div id="{{ pagename|replace('/', '-') }}">
-              {% block body %}{% endblock %}
-            </div>
-          </div>
-          <div class="nav">{{ secondnav() }}</div>
-        </div>
-
         {% block sidebarwrapper %}
           {% if pagename != 'index' %}
             <div class="yui-b" id="sidebar">
@@ -99,16 +87,24 @@
             </div>
           {% endif %}
         {% endblock %}
-
+        <div role="main">
+          <div id="docs-content">
+            <div id="{{ pagename|replace('/', '-') }}">
+              {% block body %}{% endblock %}
+            </div>
+          </div>
+          <div class="nav">{{ secondnav() }}</div>
+        </div>
         <div style="clear: both;"></div>
       {%- endif %}
     </div>
-
   </div>
 {% endblock %}
 
 {% block sidebarrel %}
   <h3>Browse</h3>
+  {% set local_toc = local_toctree(pagename, maxdepth=2|int, collapse=theme_collapse_navigation, includehidden=True) %}
+  {{ local_toc }}
   <ul>
     {% if prev %}
       <li>Prev: <a href="{{ prev.link }}">{{ prev.title }}</a></li>
@@ -120,6 +116,7 @@
   <h3>You are here:</h3>
   <ul>
       <li>
+
         <a href="{{ pathto('index') }}">{{ docstitle }}</a>
         {% for p in parents %}
           <ul><li><a href="{{ p.link }}">{{ p.title }}</a>
@@ -150,7 +147,6 @@
 
     ga('create', 'UA-59768903-1', 'auto');
     ga('send', 'pageview');
-
   </script>
 
   <script>
