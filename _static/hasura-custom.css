@@ -93,6 +93,9 @@ article ol ol {
 }
 
 /* **** BEGIN landing.html ******************************* */
+.content_wrapper {
+  margin-top: 40px;
+}
 p
 {
   margin-top: 0;
