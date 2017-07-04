@@ -508,6 +508,9 @@ p
   background-color: #414859;
   width: 20% !important;
 }
+[parent] {
+  background-color: green;
+}
 [role="main"]
 {
   width: 67% !important;

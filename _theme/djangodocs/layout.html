@@ -78,8 +78,7 @@
         {% include 'pages/tutorials.html' %}
       {%- else %}
         {% block sidebarwrapper %}
-        {% set rootpage = pagename.split('/') %}
-          {% if rootpage[0] == 'ref' %}
+          {% if pagename.split('/')[0] == 'ref' %}
             <div class="yui-b" id="sidebar">
               {%- if last_updated %}
                 <span><b>Last updated:</b> {{ last_updated }}</span>
@@ -88,7 +87,12 @@
             </div>
           {% endif %}
         {% endblock %}
-        <div role="main" parent={{ rootpage[0] }}>
+        {%- if pagename.split('/')[0] == 'ref' %}
+          {% set rootpage='ref' %}
+        {%- else %}
+          {% set rootpage='common' %}
+        {%- endif %}
+        <div role="main" parent={{ rootpage }}>
           <div id="docs-content">
             <div id="{{ pagename|replace('/', '-') }}">
               {% block body %}{% endblock %}
