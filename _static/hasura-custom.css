@@ -497,3 +497,39 @@ p
   width: 60%;
 }
 /* Guides page ends here */
+/* Reference Page starts here */
+.content_wrapper
+{
+  display: flex;
+  font-family: 'Gudea';
+}
+#sidebar
+{
+  background-color: #414859;
+  width: 20% !important;
+}
+[role="main"]
+{
+  width: 67% !important;
+  margin: 0 auto !important;
+}
+.version_txt
+{
+  color: #32A061;
+}
+#sidebar .sphinxsidebar .sphinxsidebarwrapper h3
+{
+  color: #fff;
+  font-family: 'Khula';
+}
+#sidebar .sphinxsidebar .sphinxsidebarwrapper ul li
+{
+  list-style-type: none;
+  color: #fff;
+}
+#sidebar .sphinxsidebar .sphinxsidebarwrapper ul li a
+{
+  color: #fff;
+  text-decoration: none;
+}
+/* Reference Page ends here */

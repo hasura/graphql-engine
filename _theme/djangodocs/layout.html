@@ -102,15 +102,15 @@
 {% endblock %}
 
 {% block sidebarrel %}
-  <h3>Browse</h3>
+  <h3>DOCS VERSION: <span class="version_txt">v0.1</span></h3>
   {% set local_toc = local_toctree(pagename, maxdepth=2|int, collapse=theme_collapse_navigation, includehidden=True) %}
   {{ local_toc }}
   <ul>
     {% if prev %}
-      <li>Prev: <a href="{{ prev.link }}">{{ prev.title }}</a></li>
+      <li><span class="version_txt">Prev: </span> <a href="{{ prev.link }}">{{ prev.title }}</a></li>
     {% endif %}
     {% if next %}
-      <li>Next: <a href="{{ next.link }}">{{ next.title }}</a></li>
+      <li><span class="version_txt">Next: </span> <a href="{{ next.link }}">{{ next.title }}</a></li>
     {% endif %}
   </ul>
   <h3>You are here:</h3>
