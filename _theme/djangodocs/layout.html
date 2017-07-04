@@ -27,12 +27,14 @@
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if pagename != 'index' else '' }}{% endblock %}">
     <div class="header_wrapper">
       <div class="header_main">
-        <div class="inline-block header_main_logo">
-          <div class="img_wrapper inline-block">
-            <img class="responsive logo_img" src="/_images/logo.svg" />
+        <a href="/">
+          <div class="inline-block header_main_logo">
+            <div class="img_wrapper inline-block">
+              <img class="responsive logo_img" src="/_images/logo.svg" />
+            </div>
+            <div class="inline-block"> DOCS</div>
           </div>
-          <div class="inline-block"> DOCS </div>
-        </div>
+        </a>
         <div class="inline-block input_search_box">
           <span class="fa fa-search"></span>
           <input type="text" placeholder="Search reference docs, tutorials, guides" />
