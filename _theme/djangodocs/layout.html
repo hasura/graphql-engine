@@ -78,7 +78,8 @@
         {% include 'pages/tutorials.html' %}
       {%- else %}
         {% block sidebarwrapper %}
-          {% if pagename != 'index' %}
+        {% set rootpage = pagename.split('/') %}
+          {% if rootpage[0] == 'ref' %}
             <div class="yui-b" id="sidebar">
               {%- if last_updated %}
                 <span><b>Last updated:</b> {{ last_updated }}</span>
@@ -87,7 +88,7 @@
             </div>
           {% endif %}
         {% endblock %}
-        <div role="main">
+        <div role="main" parent={{ rootpage[0] }}>
           <div id="docs-content">
             <div id="{{ pagename|replace('/', '-') }}">
               {% block body %}{% endblock %}
@@ -105,6 +106,7 @@
   <h3>DOCS VERSION: <span class="version_txt">v0.1</span></h3>
   {% set local_toc = local_toctree(pagename, maxdepth=2|int, collapse=theme_collapse_navigation, includehidden=True) %}
   {{ local_toc }}
+  <!--
   <ul>
     {% if prev %}
       <li><span class="version_txt">Prev: </span> <a href="{{ prev.link }}">{{ prev.title }}</a></li>
@@ -125,6 +127,7 @@
         {% for p in parents %}</li></ul>{% endfor %}
       </li>
   </ul>
+  -->
 {% endblock %}
 
 {# Empty some default blocks out #}
