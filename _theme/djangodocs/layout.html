@@ -87,7 +87,8 @@
             </div>
           {% endif %}
         {% endblock %}
-        <div role="main">
+        {% set rootpage = pagename.split('/') %}
+        <div role="main" parent={{ rootpage[0] }}>
           <div id="docs-content">
             <div id="{{ pagename|replace('/', '-') }}">
               {% block body %}{% endblock %}
@@ -103,8 +104,9 @@
 
 {% block sidebarrel %}
   <h3>Browse</h3>
-  {% set local_toc = local_toctree(pagename, maxdepth=2|int, collapse=theme_collapse_navigation, includehidden=True) %}
-  {{ local_toc }}
+  {% set global_toc = local_toctree(pagename, maxdepth=2|int, collapse=theme_collapse_navigation, includehidden=True) %}
+  {{ global_toc }}
+  <!--
   <ul>
     {% if prev %}
       <li>Prev: <a href="{{ prev.link }}">{{ prev.title }}</a></li>
@@ -125,6 +127,7 @@
         {% for p in parents %}</li></ul>{% endfor %}
       </li>
   </ul>
+  -->
 {% endblock %}
 
 {# Empty some default blocks out #}
