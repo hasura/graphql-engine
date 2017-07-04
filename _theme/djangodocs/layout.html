@@ -89,11 +89,19 @@
             </div>
           {% endif %}
         {% endblock %}
-        {%- if pagename.split('/')[0] == 'ref' %}
+        {% set splittedPage = pagename.split('/') %}
+        {%- if splittedPage[0] == 'ref' %}
           {% set rootpage='ref' %}
         {%- else %}
           {% set rootpage='common' %}
-        {%- endif %}
+        {% endif %}
+        {%- if rootpage == 'common' %}
+          {%- if splittedPage[1] != 'index' %}
+            <div class="back_link">
+              <a href={{ '/' + splittedPage[0] }}> Back to {{ splittedPage[0] }} </a>
+            </div>
+          {% endif %}
+        {% endif %}
         <div role="main" parent={{ rootpage }}>
           <div id="docs-content">
             <div id="{{ pagename|replace('/', '-') }}">
