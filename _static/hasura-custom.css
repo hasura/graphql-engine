@@ -21,6 +21,14 @@ h3
   margin: 0 0 0;
   margin: 0;
 }
+#docs-content h1, #docs-content h2, #docs-content h3, #docs-content h4, #docs-content h5, #docs-content h6
+{
+  font-family: 'Khula';
+}
+.wd_100
+{
+  width: 100% !important;
+}
 .wd_50
 {
   width: 50%;
@@ -30,6 +38,10 @@ h3
 {
   display: flex;
   align-items: center;
+}
+.pad_bottom
+{
+  padding-bottom: 10px;
 }
 .wd_26
 {
@@ -215,6 +227,10 @@ p
     display: flex;
     align-items: center;
 }
+.tutorial_in_wrapper
+{
+  display: block;
+}
 .sign_in_wrapper .get_start
 {
   display: inline-block;
@@ -284,7 +300,6 @@ p
 
 .header_wrapper {
   font-family: 'Gudea';
-  width: 100%;
   background-color: white;
   padding: 20px;
 }
@@ -293,7 +308,20 @@ p
   width: 90%;
   margin: 0 auto;
 }
-
+.header_wrapper .header_main a
+{
+  text-decoration: none;
+  color: #595959;
+  font-weight: 600;
+}
+.header_wrapper .header_main a:hover
+{
+  color: #414859;
+}
+.header_wrapper .header_main a:visited
+{
+  color: #414859;
+}
 .input_search_box {
   position: relative;
   margin-left: 30px;
@@ -331,12 +359,14 @@ p
 }
 
 .link_element {
-  padding-left: 10px;
-  padding-right: 10px;
+  padding: 5px 10px;
   font-size: 14px;
   color: #6F7279;
 }
-
+.link_element_active
+{
+  border-bottom: 4px solid #32A061;
+}
 .link_element a {
   text-decoration: none;
 }
@@ -450,12 +480,18 @@ p
   font-weight: 600;
   font-family: 'Gudea';
 }
+.share_wrapper .green_btn
+{
+  background-color: #fff;
+  color: #32A061 !important;
+  border: 1px solid #32A061 !important;
+}
 .share_btn
 {
   display: flex;
   align-items: center;
 }
-.share_btn .share_icon
+.share_wrapper button i
 {
   padding-left: 10px;
   width: 13px;
@@ -466,6 +502,11 @@ p
   padding-bottom: 25px;
   display: flex;
   align-items: center;
+}
+.details_media
+{
+  padding-top: 25px;
+  padding-bottom: 0;
 }
 .media_img_circle
 {
@@ -511,10 +552,29 @@ p
 [parent] {
   background-color: green;
 }
-[role="main"]
+.content_inner_wrapper
 {
   width: 67% !important;
   margin: 0 auto !important;
+}
+.back_link
+{
+  display: flex;
+  align-items: center;
+  padding-bottom: 30px;
+}
+.back_link a
+{
+  text-decoration: none;
+  color: #595959;
+}
+.back_link a i
+{
+  padding-right: 5px;
+}
+[role="main"]
+{
+  width: 100% !important;
 }
 .version_txt
 {
@@ -533,6 +593,11 @@ p
 #sidebar .sphinxsidebar .sphinxsidebarwrapper ul li a
 {
   color: #fff;
+  text-decoration: none;
+}
+#sidebar .sphinxsidebar .sphinxsidebarwrapper ul li a code
+{
+  color: #32A061;
   text-decoration: none;
 }
 /* Reference Page ends here */
