@@ -228,6 +228,7 @@
 {% block sidebarrel %}
   <h3>DOCS VERSION: <span class="version_txt">v0.1</span></h3>
   {% set local_toc = local_toctree(pagename, maxdepth=2|int, collapse=theme_collapse_navigation, includehidden=True) %}
+  {% set generate_index = generate_index(pagename, maxdepth=2|int, collapse=theme_collapse_navigation, includehidden=True) %}
   {{ local_toc }}
   <!--
   <ul>
