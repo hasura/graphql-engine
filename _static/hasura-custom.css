@@ -58,8 +58,9 @@
 }
 body
 {
-  font-family: 'Gudea';
-  font-size: 16px;
+  font-family: 'Gudea' !important;
+  font-size: 16px !important;
+  color: #788094 !important;
 }
 .main_wrapper
 {
@@ -70,6 +71,15 @@ p
 {
   font-family: 'Gudea';
   font-size: 16px;
+  color: #788094;
+}
+.docutils
+{
+  color: #788094;
+}
+#docs-content a.reference
+{
+  color: #FEC53D !important;
 }
 h3
 {
@@ -80,6 +90,8 @@ h3
 #docs-content h1, #docs-content h2, #docs-content h3, #docs-content h4, #docs-content h5, #docs-content h6
 {
   font-family: 'Khula';
+  font-weight: 600;
+  color: #788094;
 }
 .wd_100
 {
@@ -127,19 +139,19 @@ h3
 {
   font-family: 'Gudea';
   font-size: 15px;
-  color: #9EA5AF;
+  color: #788094;
 }
 .small_content
 {
   font-family: 'Gudea';
   font-size: 14px;
-  color: #9EA5AF;
+  color: #788094;
 }
 .extra_small_content
 {
   font-family: 'Gudea';
   font-size: 12px;
-  color: #9EA5AF;
+  color: #788094;
 }
 pre.haskell-pre a {
     border-bottom: 1px dotted #000;
@@ -380,8 +392,8 @@ p
 }
 .input_search_box {
   position: relative;
-  margin-left: 30px;
-  width: 30%;
+  margin-left: 25px;
+  width: 28%;
 }
 
 .input_search_box .fa-search {
@@ -421,7 +433,7 @@ p
 }
 .link_element_active
 {
-  border-bottom: 4px solid #32A061;
+  border-bottom: 4px solid #0B0B0B;
 }
 .link_element a {
   text-decoration: none;
@@ -624,13 +636,18 @@ p
   text-decoration: none;
   color: #595959;
 }
+.back_link a:hover
+{
+  text-decoration: none;
+  color: #FEC53D !important;
+}
 .back_link a i
 {
   padding-right: 5px;
 }
 [role="main"]
 {
-  width: 100% !important;
+  width: 94% !important;
 }
 .version_txt
 {
