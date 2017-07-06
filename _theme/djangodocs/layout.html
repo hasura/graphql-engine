@@ -32,7 +32,7 @@
             <div class="img_wrapper inline-block">
               <img class="responsive logo_img" src="/_images/logo.svg" />
             </div>
-            <div class="inline-block"> DOCS</div>
+            <div class="inline-block"> DOCS </div>
           </div>
         </a>
         <div class="inline-block input_search_box">
@@ -40,7 +40,7 @@
           <input type="text" placeholder="Search reference docs, tutorials, guides" />
         </div>
         <div class="header_links inline-block">
-          <div class="inline-block link_element">
+          <div class="inline-block link_element link_element_active">
             <a href="#">
               Reference
             </a>
@@ -97,18 +97,31 @@
         {% endif %}
         {%- if rootpage == 'common' %}
           {%- if splittedPage[1] != 'index' %}
-            <div class="back_link">
-              <a href={{ '/' + splittedPage[0] }}> Back to {{ splittedPage[0] }} </a>
-            </div>
+
           {% endif %}
         {% endif %}
-        <div role="main" parent={{ rootpage }}>
-          <div id="docs-content">
-            <div id="{{ pagename|replace('/', '-') }}">
-              {% block body %}{% endblock %}
-            </div>
+        <div class="content_inner_wrapper">
+          <div class="back_link">
+            <a href={{ '/' + splittedPage[0] }}> <i class="fa fa-long-arrow-left" aria-hidden="true"></i>Back to {{ splittedPage[0] }} </a>
           </div>
-          <div class="nav">{{ secondnav() }}</div>
+          <div role="main" parent={{ rootpage }}>
+            <div id="docs-content">
+              <div class="media_wrapper details_media">
+                <div class="float_right wd_100">
+                  <div class="share_wrapper">
+                    <button class="share_btn green_btn">
+                      <span>Share</span>
+                      <i class="fa fa-share" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div id="{{ pagename|replace('/', '-') }}">
+                {% block body %}{% endblock %}
+              </div>
+            </div>
+            <div class="nav">{{ secondnav() }}</div>
+          </div>
         </div>
         <div style="clear: both;"></div>
       {%- endif %}
