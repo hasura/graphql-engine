@@ -53,6 +53,7 @@ it to your clipboard:
 
 Then, head to ``console.<project-name>.hasura-app.io/advanced#sshkeys``, copy it to authorized_keys and save it!
 
+.. rst-class:: featured-image
 .. image:: sshkeys.png
    :scale: 50%
 
