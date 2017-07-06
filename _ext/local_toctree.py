@@ -50,16 +50,18 @@ def init_local_toctree(app):
         # if the imgs has something  return else return default image
 
 
-        title = soup.findAll('title')[0].text
+        # title = soup.findAll('title')[0].text
         content = soup.findAll('body')[0].text
         url = '/' + docpath.split('.rst')[0] + '.html'
         category = docpath.split('/')[0]
         image = ''
-        descriptions = ''
+        # descriptions = ''
+        title = 'Hasura Authentication'
+        description = 'Hasura authentication helps you implement sign/signup'
 
         if ( len(imgs) > 0 ):
             image = imgs[0]['src'].split('/')[-1]
-            indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": "" }
+            indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": description }
 
             indexObjs.append(indexObj)
 
@@ -73,7 +75,7 @@ def init_local_toctree(app):
             # print (descriptions)
             # print ('\n')
         else:
-            indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": "" }
+            indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": description }
 
             indexObjs.append(indexObj)
 
