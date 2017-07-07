@@ -25,8 +25,25 @@ def callme(app, exception):
 def generateIndexFile(app, pagename, templatename, context, doctree):
 
     title = ''
+
+    keyword = ''
+    description = ''
+
     if ( 'title' in context ):
         title = context['title']
+
+    if ( 'metatags' in context ):
+        metatags = context['metatags']
+        if ( len(metatags) > 0 ):
+            soup = BeautifulSoup(metatags, 'html.parser')
+            descriptions = soup.findAll("meta", { "name" : "description" })
+            keywords = soup.findAll("meta", { "name" : "keywords" })
+            if ( len(descriptions) > 0 ):
+                description = descriptions[0]['content']
+
+            if ( len(keywords) > 0 ):
+                keyword = keywords[0]['content']
+
     content = ''
     image = ''
 
@@ -44,9 +61,8 @@ def generateIndexFile(app, pagename, templatename, context, doctree):
 
         url = pagename + '.html'
         category = pagename.split('/')[0]
-        description = 'Sample description'
 
-        indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": description }
+        indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": description, "keywords": keyword }
 
         indexObjs.append(indexObj)
 
