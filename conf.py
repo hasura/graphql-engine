@@ -22,6 +22,13 @@ import sys
 from os.path import abspath, dirname, join
 sys.setrecursionlimit(2000)
 
+# Monkey patching StandaloneHTMLBuilder to not include unnecessary scripts
+
+from sphinx.builders.html import StandaloneHTMLBuilder
+StandaloneHTMLBuilder.script_files = []
+
+# End of it
+
 # sys.path.insert(0, os.path.abspath('.'))
 
 sys.path.append(abspath(join(dirname(__file__), "_ext")))
