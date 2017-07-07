@@ -3,6 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. meta::
+   :description: An overview of how the Hasura Auth microservice works & links to related content like Identity, Roles, Sessions, Basic actions, Social logins, etc. 
+   :keywords: hasura, docs, auth, introduction
+
 How it works
 ============
 

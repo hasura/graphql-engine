@@ -1,3 +1,7 @@
+.. meta::
+   :description: API reference for all Hasura Auth service. Links to Swagger based documentation.
+   :keywords: hasura, docs, auth, API reference, swagger docs
+
 API Reference
 =============
 

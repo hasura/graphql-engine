@@ -1,3 +1,8 @@
+.. meta::
+   :description: Overview of the general setup required for integrating Hasura's Auth service with third-party providers via social login for identity management.
+   :keywords: hasura, docs, auth, identity, social login, 3rd party provider integraton, integration
+
+
 Social Login
 ============
 

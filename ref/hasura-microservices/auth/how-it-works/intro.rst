@@ -1,3 +1,7 @@
+.. meta::
+   :description: Overview of core Hasura Auth concepts- Identity (verified identity & social login based identity), Roles and Session management (cookies & auth tokens) 
+   :keywords: hasura, docs, auth, introduction, identity, roles, sessions
+
 Introduction and Core Concepts
 ===============================
 

@@ -1,3 +1,8 @@
+.. meta::
+   :description: Hasura's Data service's insert query - JSON body's syntax, description, response params and examples.
+   :keywords: hasura, docs, data, query reference, insert query
+
+
 .. _data_insert:
 
 insert

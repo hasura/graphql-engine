@@ -1,3 +1,7 @@
+.. meta::
+   :description: Frequently asked questions about Hasura's Auth service.
+   :keywords: hasura, docs, auth, FAQs, FAQ, common questions
+
 FAQ
 ===
 

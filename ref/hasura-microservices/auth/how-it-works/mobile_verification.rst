@@ -1,3 +1,7 @@
+.. meta::
+   :description: Find out how to establish the identity of a user when they sign up by configuring Hasura's Auth service to verify their mobile number using an OTP.
+   :keywords: hasura, docs, auth, identity, mobile, mobile verification, MSG91
+
 Mobile Verification
 ===================
 

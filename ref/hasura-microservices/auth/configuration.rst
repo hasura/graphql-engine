@@ -1,3 +1,7 @@
+.. meta::
+   :description: Reference docs for Hasura Auth service's config params in the console- settings for user account, Email/Mobile, Facebook, Google,  LinkedIn, Recaptca. 
+   :keywords: hasura, docs, auth, configuration, console, zccount settings, email configuration, mobile configuration, Sparkpost configuration, MSG91 configuration, facebook configuration, google configuration, linkedin configuration, Recaptcha configuration
+
 Configuration
 =============
 

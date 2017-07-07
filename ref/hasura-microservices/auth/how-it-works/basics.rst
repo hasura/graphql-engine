@@ -1,3 +1,7 @@
+.. meta::
+   :description: Learn how to perform basic actions like registering and logging in users with Hasura Auth APIs (/signup and /login) and enabling identity verification. 
+   :keywords: hasura, docs, auth, signup, login, basics
+
 Basic actions & Sessions
 ========================
 

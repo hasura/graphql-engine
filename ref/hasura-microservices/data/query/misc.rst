@@ -1,3 +1,7 @@
+.. meta::
+   :description: Learn about miscellaneous Data service functions like using run_sql to run arbitrary SQL statements along with examples.
+   :keywords: hasura, docs, data, miscellaneous, run sql, raw sql
+
 Miscellaneous
 =============
 

@@ -1,3 +1,7 @@
+.. meta::
+   :description: Reference documentation for more Hasura Auth service features like password reset, login via OTP, forgot password etc. 
+   :keywords: hasura, docs, auth, password reset, login via OTP, forgot password
+
 More actions
 ============
 

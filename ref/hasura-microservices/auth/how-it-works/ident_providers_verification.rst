@@ -1,3 +1,7 @@
+.. meta::
+   :description: Overview of identity providers in Hasura Auth like self (username and password), third-party providers (Email, Mobile, Recaptcha) and Social Login.
+   :keywords: hasura, docs, auth, identity, email, mobile, username, password, recaptcha, social login
+
 Verification & Identity Providers
 =================================
 

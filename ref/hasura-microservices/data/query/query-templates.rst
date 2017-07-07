@@ -1,3 +1,7 @@
+.. meta::
+   :description: Query templates: Learn how to template Data service queries and to define and manage your own REST interfaces with detailed examples.
+   :keywords: hasura, docs, data, query templates, REST interface, REST endpoint, RESTful API
+
 Query Templates
 ===============
 
