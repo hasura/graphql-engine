@@ -430,6 +430,7 @@ p
   padding: 5px 10px;
   font-size: 14px;
   color: #6F7279;
+  border-bottom: 4px solid transparent;
 }
 .link_element_active
 {
