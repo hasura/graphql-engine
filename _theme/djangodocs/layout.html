@@ -84,10 +84,10 @@
         </div>
         <div class="header_buttons inline-block">
           <div class="inline-block">
-            <a href="https://dashboard.hasura-stg.hasura-app.io/login"><button class="indiv_btns black"> Log in </button></a>
+            <button class="indiv_btns black"> Log in </button>
           </div>
           <div class="inline-block">
-            <a href="https://dashboard.hasura-stg.hasura-app.io/login#register"><button class="indiv_btns"> Sign up </button></a>
+            <button class="indiv_btns"> Sign up </button>
           </div>
         </div>
       </div>
@@ -149,8 +149,8 @@
     </div>
     <div class="search_wrapper_template hide">
       <div class="wd_80">
-        <div class="search_box_head">
-          <i class="fa fa-search" aria-hidden="true"></i>
+        <div class="guide_box_head">
+          <img src="/_images/Guides.svg" alt="Guides"/>
           <h3 class="head_wrapper">
             Searching for ... <%= searchString %>
           </h3>
@@ -212,6 +212,7 @@
         <%
           }
         %>
+        <div class = "pagination_container wd_100" id = "pagination_container"></div>
         <div style="clear: both;"></div>
       </div>
     </div>
@@ -349,7 +350,7 @@
         if ( values[1].length > 0 ) {
           var searchElement = $('.search_element');
           if ( searchElement.length > 0 ) {
-            searchElement[0].value = values[1];
+            searchElement[0].value = decodeURIComponent(values[1]);
             searchElement.keyup();
           }
         }
