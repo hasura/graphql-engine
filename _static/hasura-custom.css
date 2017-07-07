@@ -493,6 +493,11 @@ p
 /* End of Header block */
 
 /* Guides page starts here */
+.guides_page_wrapper
+{
+  width: 100%;
+  float: left;
+}
 .guide_box_wrapper
 {
   width: 90%;
