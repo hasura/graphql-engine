@@ -84,8 +84,8 @@ p
 h3
 {
   font-weight: 500;
-  margin: 0 0 0;
-  margin: 0;
+  margin: 0 0 0 !important;
+  margin: 0 !important;
 }
 #docs-content h1, #docs-content h2, #docs-content h3, #docs-content h4, #docs-content h5, #docs-content h6
 {
@@ -505,6 +505,17 @@ p
   display: flex;
   align-items: center;
   padding-bottom: 20px;
+}
+.search_box_head
+{
+  display: flex;
+  padding-bottom: 20px;
+}
+.search_box_head i
+{
+  color: #36B37E;
+  padding-right: 20px;
+  font-size: 20px;
 }
 .guide_box_head h3
 {
