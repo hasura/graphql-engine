@@ -473,7 +473,10 @@ p
   padding-bottom: 7px;
   margin-left: 10px;
 }
-
+.indiv_btns:focus
+{
+  outline: none;
+}
 .indiv_btns.black {
   background-color: white;
   border: 1px solid #8F8F8F;
