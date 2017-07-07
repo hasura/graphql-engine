@@ -515,6 +515,10 @@ p
   display: flex;
   padding-bottom: 20px;
 }
+.search_box_head h3
+{
+  margin: 0 0 0 !important;
+}
 .search_box_head i
 {
   color: #36B37E;
@@ -670,6 +674,7 @@ p
 }
 #sidebar .sphinxsidebar .sphinxsidebarwrapper h3
 {
+  padding-top: 30px;
   color: #fff;
   font-family: 'Khula';
 }
