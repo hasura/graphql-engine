@@ -8,7 +8,7 @@
         if ( objs.length > 0 ) {
           _.each(objs, function(obj, index ) {
     %>
-          <a href="<%= obj.url %>">
+          <a href="/<%= obj.url %>">
             <div class="wd_33">
               <div class="guide_box_wrapper">
                 <div class="thumnail_image">
@@ -78,7 +78,7 @@
         var templated_html = template({"objs": content.results[0].hits, "searchString": content.results[0].query});
         $(".guides_page_wrapper").html(templated_html);
       }
-      objs = searchFunc('micro', callback);
+      objs = searchFunc('guides', callback);
     }
   };
   initialize();

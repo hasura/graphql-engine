@@ -30,23 +30,25 @@ def generateIndexFile(app, pagename, templatename, context, doctree):
     content = ''
     image = ''
 
-    if ( 'body' in context ):
-        content = context['body']
+    # If the page name is not the part of the below list
+    if ( pagename not in ['ref/index', 'tutorials/index', 'guides/index'] ):
+        if ( 'body' in context ):
+            content = context['body']
 
-        soup = BeautifulSoup(content, 'html.parser')
+            soup = BeautifulSoup(content, 'html.parser')
 
-        imgs = soup.findAll("img", { "class" : "featured-image" })
+            imgs = soup.findAll("img", { "class" : "featured-image" })
 
-        if ( len(imgs) > 0 ):
-            image = imgs[0]['src'].split('/')[-1]
+            if ( len(imgs) > 0 ):
+                image = imgs[0]['src'].split('/')[-1]
 
-    url = pagename + '.html'
-    category = pagename.split('/')[0]
-    description = 'Sample description'
+        url = pagename + '.html'
+        category = pagename.split('/')[0]
+        description = 'Sample description'
 
-    indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": description }
+        indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": description }
 
-    indexObjs.append(indexObj)
+        indexObjs.append(indexObj)
 
 def setup(app):
     app.connect('build-finished', callme)
