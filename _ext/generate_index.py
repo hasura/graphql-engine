@@ -74,11 +74,11 @@ def callme(app, exception):
     print('I am called')
 
 def callmeAgain(app, pagename, templatename, context, doctree):
-    print ('\n Values')
-    print ('\n')
-    print (pagename)
-    print (templatename)
-    print (context)
+    # print ('\n Values')
+    # print ('\n')
+    # print (pagename)
+    # print (templatename)
+    # print (context)
     # print (doctree)
 
     title = ''
