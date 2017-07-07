@@ -18,12 +18,13 @@ var promise_ajax = function(url, data, type) {
   });
 };
 
-var searchFunc = function( query, callback ) {
+var searchFunc = function( query, callback, page=1 ) {
   var APPLICATION_ID = '2R09CYX6BF';                                                                                                                              
   var SEARCH_ONLY_KEY = '1361d3d9973e36ed78e29c3018f74aa6';
   var hitsPerPage = 10;
-  var pageNo = 1;
-  var offset = 0;
+  var page_no = parseInt(page) - 1;
+  var offset = (hitsPerPage * (page - 1))
+  // var offset = 0;
 
   var queries = [];
 
@@ -36,7 +37,7 @@ var searchFunc = function( query, callback ) {
       query: query,
       params: {
         hitsPerPage: hitsPerPage,
-        page: pageNo,
+        page: page_no,
         offset: offset
       }
     }
