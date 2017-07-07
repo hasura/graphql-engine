@@ -25,7 +25,6 @@ def callme(app, exception):
 def generateIndexFile(app, pagename, templatename, context, doctree):
 
     title = ''
-
     keyword = ''
     description = ''
 
