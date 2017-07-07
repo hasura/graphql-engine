@@ -20,17 +20,12 @@ indexObjs = []
 def init_generate_index(app):
 
     def _get_generate_index(docname, **kwds):
+        print ('\n')
+        print (docname)
         doctree = app.env.get_doctree(docname)
         if 'maxdepth' not in kwds:
             kwds['maxdepth'] = 0
         toctrees = []
-        """
-        print ('length of doctree\n\n')
-        print ((doctree))
-        print (doctree.__dict__)
-        print (doctree.traverse())
-        print('*** \n\n')
-        """
 
         for toctreenode in doctree.traverse(addnodes.toctree):
             toctreenode.parent.remove(toctreenode)
@@ -38,7 +33,7 @@ def init_generate_index(app):
         for pending_xhrefnode in doctree.traverse(addnodes.pending_xref ):
             pending_xhrefnode.parent.remove(pending_xhrefnode)
 
-        # doctree = app.env.get_and_resolve_doctree(docname, app.builder, doctree)
+        doctree = app.env.get_and_resolve_doctree(docname, app.builder, doctree)
 
         htmlString = docutils.core.publish_from_doctree(doctree, writer_name='html')
         soup = BeautifulSoup(htmlString, 'html.parser')
@@ -55,7 +50,6 @@ def init_generate_index(app):
         url = '/' + docpath.split('.rst')[0] + '.html'
         category = docpath.split('/')[0]
         image = ''
-        # descriptions = ''
         title = 'Hasura Authentication'
         description = 'Hasura authentication helps you implement sign/signup'
 
@@ -64,42 +58,10 @@ def init_generate_index(app):
             indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": description }
 
             indexObjs.append(indexObj)
-
-            print ('\n')
-
-            # print (title)
-            # print (content)
-            # print (url)
-            # print (category)
-            # print (image)
-            # print (descriptions)
-            # print ('\n')
         else:
             indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": description }
 
             indexObjs.append(indexObj)
-
-        """
-        for toctreenode in doctree.traverse(addnodes.toctree):
-            toctree = app.env.resolve_toctree(
-                            docname, app.builder, toctreenode, **kwds)
-            toctrees.append(toctree)
-        if not toctrees:
-            return None
-        result = toctrees[0]
-        for toctree in toctrees[1:]:
-            result.extend(toctree.children)
-
-        print ('doctree \n\n')
-        print (doctree)
-        print ('\n')
-        print ('\n\nresult is\n\n')
-        print (result)
-        print ('\n\n')
-        print ('builder fragment is')
-        print (app.builder.render_partial(result)['fragment'])
-        return app.builder.render_partial(result)['fragment']
-        """
 
     ctx = app.env.config['html_context']
     if 'generate_index' not in ctx:
@@ -111,6 +73,42 @@ def callme(app, exception):
     f.write(json.dumps(indexObjs))
     print('I am called')
 
+def callmeAgain(app, pagename, templatename, context, doctree):
+    print ('\n Values')
+    print ('\n')
+    print (pagename)
+    print (templatename)
+    print (context)
+    # print (doctree)
+
+    title = ''
+
+    if ( 'title' in context ):
+        title = context['title']
+
+    content = ''
+
+    image = ''
+
+    if ( 'body' in context ):
+        content = context['body']
+
+        soup = BeautifulSoup(content, 'html.parser')
+
+        imgs = soup.findAll("img", { "class" : "featured-image" })
+
+        if ( len(imgs) > 0 ):
+            image = imgs[0]['src'].split('/')[-1]
+
+    url = pagename + '.html'
+    category = pagename.split('/')[0]
+    description = 'Sample description'
+
+    indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": description }
+
+    indexObjs.append(indexObj)
+
 def setup(app):
     app.connect('builder-inited', init_generate_index)
     app.connect('build-finished', callme)
+    app.connect('html-page-context', callmeAgain)

@@ -163,7 +163,7 @@
                 <div class="wd_33">
                   <div class="guide_box_wrapper">
                     <div class="thumnail_image">
-                      <img src="<%= ( obj.image ? obj.image : '/_images/img_lights.jpg' ) %>" src="Thumbnails Images" />
+                      <img src="<%= ( obj.image ? '/_images/' + obj.image : '/_images/img_lights.jpg' ) %>" src="Thumbnails Images" />
                     </div>
                     <div class="guides_list_wrapper">
                       <div class="subhead_wrapper text_left">
@@ -228,7 +228,6 @@
 {% block sidebarrel %}
   <h3>DOCS VERSION: <span class="version_txt">v0.1</span></h3>
   {% set local_toc = local_toctree(pagename, maxdepth=2|int, collapse=theme_collapse_navigation, includehidden=True) %}
-  {% set generate_index = generate_index(pagename, maxdepth=2|int, collapse=theme_collapse_navigation, includehidden=True) %}
   {{ local_toc }}
   <!--
   <ul>
