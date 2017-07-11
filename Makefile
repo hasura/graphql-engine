@@ -61,6 +61,27 @@ html:
 .PHONY: html-images
 html-images: clean html release-images
 
+# Function to check whether a particular variable is set or not
+
+check_defined = \
+								$(strip $(foreach 1,$1, \
+								$(call __check_defined,$1,$(strip $(value 2)))))
+
+__check_defined = \
+									$(if $(value $1),, \
+									$(error Undefined $1$(if $2, ($2))))
+
+.PHONY: algolia_index
+algolia_index:
+	# Checking if all the variables are available
+	$(call check_defined, ALGOLIA_APPLICATION_ID)
+	$(call check_defined, ALGOLIA_SEARCH_KEY)
+	$(call check_defined, ALGOLIA_ADMIN_KEY)
+
+	export ALGOLIA_APPLICATION_ID=${ALGOLIA_APPLICATION_ID} ALGOLIA_SEARCH_KEY=${ALGOLIA_SEARCH_KEY} ALGOLIA_ADMIN_KEY=${ALGOLIA_ADMIN_KEY}
+	python ./algolia_index/algolia_index.py _build/algolia_index/index.json
+
+
 .PHONY: dirhtml
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
