@@ -48,10 +48,18 @@ help:
 clean:
 	rm -rf $(BUILDDIR)/*
 
+.PHONY: release-images
+release-images:
+	cp -r img/* _build/html/_images/
+	@echo "Image copy finished. The images are in $(BUILDDIR)/html/_images"
+
 .PHONY: html
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
+.PHONY: html-images
+html-images: clean html release-images
 
 .PHONY: dirhtml
 dirhtml:

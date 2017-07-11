@@ -12,13 +12,21 @@ optional keyword arguments are available:
 """
 
 import docutils
+import os
 import json
 from bs4 import BeautifulSoup
 
 indexObjs = []
 
 def callme(app, exception):
-    f = open('./sample.json', 'w+')
+    file_path = "./_build/algolia_index/index.json"
+    directory = os.path.dirname(file_path)
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except OSError as e:
+        raise
+    f = open(file_path, 'w+')
     f.write(json.dumps(indexObjs))
     print('I am called')
 
