@@ -261,7 +261,7 @@
   <script type="text/javascript">
     const urlParams = {};
     $(document).ready( function() {
-      var re = /query=(.*)&limit=(.*)&offset=(.*)/
+      var re = /query=(.*)$/
 
       var delayTimer = 0;
 
@@ -301,7 +301,7 @@
               function callback(err, content ) {
                 var templated_html = template({"objs": content.results[0].hits, "searchString": content.results[0].query, "totalResults": content.results[0].nbHits });
                 $(".search_wrapper").html(templated_html);
-                window.history.pushState({"url": e.target.value }, 'Search Page', '?query=' + e.target.value + '&limit=10&offset=0' );
+                window.history.pushState({"url": e.target.value }, 'Search Page', '/?query=' + e.target.value + '' );
                 enableSearch();
                 hideLoading();
               }
