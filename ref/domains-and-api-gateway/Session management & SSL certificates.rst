@@ -1,3 +1,7 @@
+.. meta::
+   :description: Reference documentation for managing user sessions in a Hasura project and role-based authorization and SSL certicates for individual microservices.
+   :keywords: hasura, docs, API Gateway, sessions, roles, access control, SSL certs, SSL certificates
+
 Session Management & SSL certificates
 =====================================
 

@@ -1,3 +1,7 @@
+.. meta::
+   :description: A tutorial for deploying a custom microservice that talks to a Hasura microservice using the internal DNS label.
+   :keywords: hasura, docs, tutorials, inter-service communication, internal DNS
+
 ===============================================
 Inter-service communication in a Hasura backend
 ===============================================
