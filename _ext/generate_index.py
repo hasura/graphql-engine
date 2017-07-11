@@ -20,7 +20,6 @@ indexObjs = []
 def callme(app, exception):
     f = open('./sample.json', 'w+')
     f.write(json.dumps(indexObjs))
-    print('I am called')
 
 def generateIndexFile(app, pagename, templatename, context, doctree):
 

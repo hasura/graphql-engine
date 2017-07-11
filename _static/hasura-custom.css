@@ -53,6 +53,42 @@
 
 /* End of Loading */
 
+/* Search links */
+
+.no_of_results {
+  display: inline;
+  color: #CF9C0E;
+  font-weight: 600;
+}
+.search_query {
+  color: #CF9C0E;
+  font-weight: 600
+}
+.search_results_anchor {
+  text-decoration-color: #CF9C0E;
+}
+
+.search_results_description {
+  width: 60%;
+}
+
+.search_wrapper {
+  min-height: 76vh;
+}
+
+.search_bullets::before {
+  color: #788095;
+}
+.search_bullets {
+  list-style-type: disc;
+}
+
+.search_heading {
+  color: #788095;
+}
+
+/* End of it */
+
 .hide {
   display: none !important;
 }
