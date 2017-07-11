@@ -21,6 +21,9 @@
 {% block extrahead %}
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+  <script src="/_static/vendor.js"></script>
+  <script src="/_static/search.js"></script>
 {% endblock %}
 
 {% block document %}
@@ -37,36 +40,58 @@
         </a>
         <div class="inline-block input_search_box">
           <span class="fa fa-search"></span>
-          <input type="text" placeholder="Search reference docs, tutorials, guides" />
+          <input type="text" class="search_element" placeholder="Search reference docs, tutorials, guides" />
         </div>
         <div class="header_links inline-block">
-          <div class="inline-block link_element link_element_active">
-            <a href="#">
+          {% set currPage = pagename.split('/')[0] %}
+          {%- if ( currPage == "ref" ) %}
+            <div class="inline-block link_element link_element_active">
+          {%- else %}
+            <div class="inline-block link_element">
+          {%- endif %}
+            <a href="/ref">
               Reference
             </a>
           </div>
-          <div class="inline-block link_element">
-            <a href="#">
+
+          {%- if ( currPage == "tutorials" ) %}
+            <div class="inline-block link_element link_element_active">
+          {%- else %}
+            <div class="inline-block link_element">
+          {%- endif %}
+            <a href="/tutorials">
               Tutorials
             </a>
           </div>
-          <div class="inline-block link_element">
+          {%- if ( currPage == "troubleshooting" ) %}
+            <div class="inline-block link_element link_element_active">
+          {%- else %}
+            <div class="inline-block link_element">
+          {%- endif %}
             <a href="#">
               Troubleshooting
             </a>
           </div>
-          <div class="inline-block link_element">
-            <a href="#">
+          {%- if ( currPage == "guides" ) %}
+            <div class="inline-block link_element link_element_active">
+          {%- else %}
+            <div class="inline-block link_element">
+          {%- endif %}
+            <a href="/guides">
               Guides
             </a>
           </div>
         </div>
         <div class="header_buttons inline-block">
           <div class="inline-block">
-            <button class="indiv_btns black"> Log in </button>
+            <a href="https://dashboard.hasura-stg.hasura-app.io/login">
+              <button class="indiv_btns black"> Log in </button>
+            </a>
           </div>
           <div class="inline-block">
-            <button class="indiv_btns"> Sign up </button>
+            <a href="https://dashboard.hasura-stg.hasura-app.io/login#register">
+              <button class="indiv_btns"> Sign up </button>
+            </a>
           </div>
         </div>
       </div>
@@ -126,6 +151,53 @@
         <div style="clear: both;"></div>
       {%- endif %}
     </div>
+    <div class="search_wrapper_template hide">
+      <div class="wd_80">
+        <div class="search_box_head">
+          <h3 class="head_wrapper search_heading">
+            <%= totalResults %> results for <span class="search_query">'<%= searchString %>'</span>
+          </h3>
+        </div>
+        <%
+            if ( objs.length > 0 ) {
+        %>
+        <ul>
+        <%
+              _.each(objs, function(obj, index ) {
+        %>
+                <li class="search_bullets">
+                  <a class="search_results_anchor" href="/<%= obj.url %>">
+                    <div class="no_of_results">
+                      <%= obj.title %>
+                    </div>
+                  </a>
+                  <div class="search_results_description">
+                    <%= obj.description.length > 200 ? obj.description.slice(0, 200 ) + ' ...' : obj.description %>
+                  </div>
+                </li>
+              </a>
+        <%
+            });
+        %>
+        </ul>
+        <%
+          } else {
+        %>
+          <div> Sorry! we cannot find what you are searching for! </div>
+        <%
+          }
+        %>
+        <div class = "pagination_container wd_100" id = "pagination_container"></div>
+        <div style="clear: both;"></div>
+      </div>
+    </div>
+    <div class="noprojects_overley hide">
+      <div class="loader"></div>
+      <div class="subhead_wrapper_loader body_content_position"></div>
+      <div class="overley_wrapper"></div>
+    </div>
+    <div class="search_wrapper main_wrapper hide">
+    </div>
   </div>
 {% endblock %}
 
@@ -169,7 +241,7 @@
     Copyright &copy; 2016 <a target="_blank" href="https://hasura.io">Hasura</a>.
   </div>
 
-  <script>
+  <!--script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
         (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
@@ -177,7 +249,7 @@
 
     ga('create', 'UA-59768903-1', 'auto');
     ga('send', 'pageview');
-  </script>
+  </script-->
 
   <script>
     window.intercomSettings = {
@@ -186,37 +258,91 @@
   </script>
   <script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/rucirpb3';var
     x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})()</script>
-  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-  <script>
-    $( function() {
-      var availableTags = [
-      "ActionScript",
-      "AppleScript",
-      "Asp",
-      "BASIC",
-      "C",
-      "C++",
-      "Clojure",
-      "COBOL",
-      "ColdFusion",
-      "Erlang",
-      "Fortran",
-      "Groovy",
-      "Haskell",
-      "Java",
-      "JavaScript",
-      "Lisp",
-      "Perl",
-      "PHP",
-      "Python",
-      "Ruby",
-      "Scala",
-      "Scheme"
-      ];
-      $( "#tags" ).autocomplete({
-        source: availableTags
+  <script type="text/javascript">
+    const urlParams = {};
+    $(document).ready( function() {
+      var re = /query=(.*)$/
+
+      var delayTimer = 0;
+
+      var lastSearched = "";
+
+      const enableContent = function() {
+        $('.content_wrapper').removeClass('hide');
+        $('.search_wrapper').addClass('hide');
+      };
+
+      const enableSearch = function() {
+        $('.content_wrapper').addClass('hide');
+        $('.search_wrapper').removeClass('hide');
+      };
+
+      const showLoading = function() {
+        $('.noprojects_overley').removeClass('hide');
+      };
+
+      const hideLoading = function() {
+        $('.noprojects_overley').addClass('hide');
+      };
+
+      $('.search_element').on('keyup', function( e ) {
+        var searchHtmlTemplate = $('.search_wrapper_template').html();
+        clearInterval(delayTimer);
+
+        if ( e.target.value.length === 0 ) {
+          enableContent();
+          hideLoading();
+          window.history.replaceState({"url": e.target.value }, 'Search Page', '/' );
+        } else {
+          var template = _.template(_.unescape(searchHtmlTemplate));
+          if ( searchFunc ) {
+            /* Wait for 1 seconds */
+            if ( e.target.value.length > 0 ) {
+              function callback(err, content ) {
+                var templated_html = template({"objs": content.results[0].hits, "searchString": content.results[0].query, "totalResults": content.results[0].nbHits });
+                $(".search_wrapper").html(templated_html);
+                window.history.pushState({"url": e.target.value }, 'Search Page', '/?query=' + e.target.value + '' );
+                enableSearch();
+                hideLoading();
+              }
+
+              delayTimer = setTimeout( function() {
+                if ( e.target.value.length > 0 ) {
+                  showLoading();
+                  if ( lastSearched !== e.target.value ) {
+                    lastSearched = e.target.value;
+                    objs = searchFunc(e.target.value, callback);
+                  } else {
+                    hideLoading();
+                  }
+                } else {
+                  window.history.replaceState({"url": e.target.value }, 'Search Page', '/' );
+                  hideLoading();
+                  enableContent();
+                }
+              }, 500 );
+            }
+          }
+        }
       });
+
+      const handleQueryParams = function() {
+        const values = re.exec(window.location.search)
+        if ( values[1].length > 0 ) {
+          var searchElement = $('.search_element');
+          if ( searchElement.length > 0 ) {
+            searchElement[0].value = decodeURIComponent(values[1]);
+            searchElement.keyup();
+          }
+        }
+      }
+
+      const handleStatePop = function( e) {
+      };
+
+      window.onpopstate = handleStatePop();
+
+      window.location.search.length > 0 ? handleQueryParams() : '';
     });
   </script>
 

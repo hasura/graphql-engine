@@ -1,9 +1,102 @@
 @import url('https://fonts.googleapis.com/css?family=Gudea');
 @import url('https://fonts.googleapis.com/css?family=Khula:400,700');
+
+/* Loader */
+.loader {
+  border: 1px solid #cc401b;
+  border-radius: 50%;
+  border-top: 2px solid #cc401b;
+  width: 40px;
+  height: 40px;
+  -webkit-animation: spin 1.5s linear infinite;
+  animation: spin 1.5s linear infinite;
+  margin: auto;
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 101;
+}
+
+.overley_wrapper
+{
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: #fff;
+  opacity: 0.9;
+  z-index: 100;
+}
+
+.body_content_position
+{
+  margin: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 101;
+  margin-top: -45px;
+  font-weight: 500 !important;
+}
+
+.subhead_wrapper_loader
+{
+	color: #4d4d4d;
+	font-size: 20px;
+	font-family: 'Khula';
+	font-weight: 300;
+}
+
+/* End of Loading */
+
+/* Search links */
+
+.no_of_results {
+  display: inline;
+  color: #CF9C0E;
+  font-weight: 600;
+}
+.search_query {
+  color: #CF9C0E;
+  font-weight: 600
+}
+.search_results_anchor {
+  text-decoration-color: #CF9C0E;
+}
+
+.search_results_description {
+  width: 60%;
+}
+
+.search_wrapper {
+  min-height: 76vh;
+}
+
+.search_bullets::before {
+  color: #788095;
+}
+.search_bullets {
+  list-style-type: disc;
+}
+
+.search_heading {
+  color: #788095;
+}
+
+/* End of it */
+
+.hide {
+  display: none !important;
+}
 body
 {
-  font-family: 'Gudea';
-  font-size: 16px;
+  font-family: 'Gudea' !important;
+  font-size: 16px !important;
+  color: #788094 !important;
 }
 .main_wrapper
 {
@@ -14,16 +107,27 @@ p
 {
   font-family: 'Gudea';
   font-size: 16px;
+  color: #788094;
+}
+.docutils
+{
+  color: #788094;
+}
+#docs-content a.reference
+{
+  color: #FEC53D !important;
 }
 h3
 {
   font-weight: 500;
-  margin: 0 0 0;
-  margin: 0;
+  margin: 0 0 0 !important;
+  margin: 0 !important;
 }
 #docs-content h1, #docs-content h2, #docs-content h3, #docs-content h4, #docs-content h5, #docs-content h6
 {
   font-family: 'Khula';
+  font-weight: 600;
+  color: #788094;
 }
 .wd_100
 {
@@ -71,19 +175,19 @@ h3
 {
   font-family: 'Gudea';
   font-size: 15px;
-  color: #9EA5AF;
+  color: #788094;
 }
 .small_content
 {
   font-family: 'Gudea';
   font-size: 14px;
-  color: #9EA5AF;
+  color: #788094;
 }
 .extra_small_content
 {
   font-family: 'Gudea';
   font-size: 12px;
-  color: #9EA5AF;
+  color: #788094;
 }
 pre.haskell-pre a {
     border-bottom: 1px dotted #000;
@@ -324,8 +428,8 @@ p
 }
 .input_search_box {
   position: relative;
-  margin-left: 30px;
-  width: 30%;
+  margin-left: 25px;
+  width: 28%;
 }
 
 .input_search_box .fa-search {
@@ -362,10 +466,11 @@ p
   padding: 5px 10px;
   font-size: 14px;
   color: #6F7279;
+  border-bottom: 4px solid transparent;
 }
 .link_element_active
 {
-  border-bottom: 4px solid #32A061;
+  border-bottom: 4px solid #0B0B0B;
 }
 .link_element a {
   text-decoration: none;
@@ -405,7 +510,10 @@ p
   padding-bottom: 7px;
   margin-left: 10px;
 }
-
+.indiv_btns:focus
+{
+  outline: none;
+}
 .indiv_btns.black {
   background-color: white;
   border: 1px solid #8F8F8F;
@@ -421,6 +529,11 @@ p
 /* End of Header block */
 
 /* Guides page starts here */
+.guides_page_wrapper
+{
+  width: 100%;
+  float: left;
+}
 .guide_box_wrapper
 {
   width: 90%;
@@ -437,6 +550,21 @@ p
   display: flex;
   align-items: center;
   padding-bottom: 20px;
+}
+.search_box_head
+{
+  display: flex;
+  padding-bottom: 20px;
+}
+.search_box_head h3
+{
+  margin: 0 0 0 !important;
+}
+.search_box_head i
+{
+  color: #36B37E;
+  padding-right: 20px;
+  font-size: 20px;
 }
 .guide_box_head h3
 {
@@ -568,13 +696,18 @@ p
   text-decoration: none;
   color: #595959;
 }
+.back_link a:hover
+{
+  text-decoration: none;
+  color: #FEC53D !important;
+}
 .back_link a i
 {
   padding-right: 5px;
 }
 [role="main"]
 {
-  width: 100% !important;
+  width: 94% !important;
 }
 .version_txt
 {
@@ -582,6 +715,7 @@ p
 }
 #sidebar .sphinxsidebar .sphinxsidebarwrapper h3
 {
+  padding-top: 30px;
   color: #fff;
   font-family: 'Khula';
 }

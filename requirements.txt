@@ -1,0 +1,3 @@
+sphinx
+beautifulsoup4
+algoliasearch

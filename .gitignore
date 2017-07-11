@@ -1,3 +1,4 @@
+sample.json
 *.sw*
 *.pyc
 # sphinx build folder

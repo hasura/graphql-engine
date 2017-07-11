@@ -34,9 +34,7 @@ automatically to build your code in the right environment.
 
 Adding your SSH key
 -------------------
-
 Please see :ref:`add-SSH-keys` for instructions on how to create and add your SSH key to a Hasura project.
-
 
 Adding a git-push enabled service
 ---------------------------------
