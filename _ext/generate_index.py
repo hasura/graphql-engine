@@ -28,7 +28,6 @@ def callme(app, exception):
         raise
     f = open(file_path, 'w+')
     f.write(json.dumps(indexObjs))
-    print('I am called')
 
 def generateIndexFile(app, pagename, templatename, context, doctree):
 

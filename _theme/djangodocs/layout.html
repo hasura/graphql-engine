@@ -154,62 +154,33 @@
     <div class="search_wrapper_template hide">
       <div class="wd_80">
         <div class="search_box_head">
-          <i class="fa fa-search" aria-hidden="true"></i>
-          <h3 class="head_wrapper">
-            Search results for `<%= searchString %>`
+          <h3 class="head_wrapper search_heading">
+            <%= totalResults %> results for <span class="search_query">'<%= searchString %>'</span>
           </h3>
         </div>
         <%
             if ( objs.length > 0 ) {
+        %>
+        <ul>
+        <%
               _.each(objs, function(obj, index ) {
         %>
-              <a href="/<%= obj.url %>">
-                <div class="wd_33">
-                  <div class="guide_box_wrapper">
-                    <div class="thumnail_image">
-                      <img src="<%= ( obj.image ? '/_images/' + obj.image : '/_images/img_lights.jpg' ) %>" src="Thumbnails Images" />
+                <li class="search_bullets">
+                  <a class="search_results_anchor" href="/<%= obj.url %>">
+                    <div class="no_of_results">
+                      <%= obj.title %>
                     </div>
-                    <div class="guides_list_wrapper">
-                      <div class="subhead_wrapper text_left">
-                        <%= obj.title %>
-                      </div>
-                      <div class="small_content space_top_bot text_left">
-                        <%= obj.description.length > 80 ? obj.description.slice(0, 80 ) + ' ...' : obj.description %>
-                      </div>
-                      <div class="tags_wrapper">
-                        <div class="tags_btn">
-                          <button>webiste</button>
-                        </div>
-                      </div>
-                      <div class="media_wrapper">
-                        <!-- <div class="float_left display_flex">
-                          <div class="media_img_circle">
-                            <img src="/_images/profile.png" alt="Profile Image"/>
-                          </div>
-                          <div class="media_name_wrapper">
-                            <div class="small_content">
-                              Rajeev Chilak
-                            </div>
-                            <div class="extra_small_content">
-                              June 20, 2017
-                            </div>
-                          </div>
-                        </div> -->
-                        <div class="float_right wd_100">
-                          <div class="share_wrapper">
-                            <button class="share_btn">
-                              <span>Share</span>
-                              <i class="fa fa-share" aria-hidden="true"></i>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  </a>
+                  <div class="search_results_description">
+                    <%= obj.description.length > 200 ? obj.description.slice(0, 200 ) + ' ...' : obj.description %>
                   </div>
-                </div>
+                </li>
               </a>
         <%
             });
+        %>
+        </ul>
+        <%
           } else {
         %>
           <div> Sorry! we cannot find what you are searching for! </div>
@@ -222,7 +193,7 @@
     </div>
     <div class="noprojects_overley hide">
       <div class="loader"></div>
-      <div class="subhead_wrapper_loader body_content_position"> Hold on...</div>
+      <div class="subhead_wrapper_loader body_content_position"></div>
       <div class="overley_wrapper"></div>
     </div>
     <div class="search_wrapper main_wrapper hide">
@@ -294,6 +265,8 @@
 
       var delayTimer = 0;
 
+      var lastSearched = "";
+
       const enableContent = function() {
         $('.content_wrapper').removeClass('hide');
         $('.search_wrapper').addClass('hide');
@@ -326,7 +299,7 @@
             /* Wait for 1 seconds */
             if ( e.target.value.length > 0 ) {
               function callback(err, content ) {
-                var templated_html = template({"objs": content.results[0].hits, "searchString": content.results[0].query});
+                var templated_html = template({"objs": content.results[0].hits, "searchString": content.results[0].query, "totalResults": content.results[0].nbHits });
                 $(".search_wrapper").html(templated_html);
                 window.history.pushState({"url": e.target.value }, 'Search Page', '?query=' + e.target.value + '&limit=10&offset=0' );
                 enableSearch();
@@ -336,7 +309,12 @@
               delayTimer = setTimeout( function() {
                 if ( e.target.value.length > 0 ) {
                   showLoading();
-                  objs = searchFunc(e.target.value, callback);
+                  if ( lastSearched !== e.target.value ) {
+                    lastSearched = e.target.value;
+                    objs = searchFunc(e.target.value, callback);
+                  } else {
+                    hideLoading();
+                  }
                 } else {
                   window.history.replaceState({"url": e.target.value }, 'Search Page', '/' );
                   hideLoading();
