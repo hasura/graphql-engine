@@ -4,20 +4,20 @@
    contain the root `toctree` directive.
 
 .. meta::
-   :description: Reference documentation for Hasura's FileStore microservice. The service is used to upload & download files and has built-in with access control.
-   :keywords: hasura, docs, FileStore, file upload, file download
+   :description: Reference documentation for Hasura's ``File`` microservice. The service is used to upload & download files and has built-in with access control.
+   :keywords: hasura, docs, fileStore, file, file upload, file download
 
-=========
-Filestore
-=========
+====
+File
+====
 
-The Filestore service on Hasura let's you upload and download files. This can
+The ``File`` service on Hasura let's you upload and download files. This can
 be used to store user data files.
 
-The Filestore service, just like the data service, allows configuring access
+The File service, just like the data service, allows configuring access
 control on files based on roles.
 
-The filestore API provides the following features:
+The ``File`` API provides the following features:
 
 1. CRUD APIs to download, upload and delete files.
 2. Role based access control per file.
@@ -26,14 +26,14 @@ The filestore API provides the following features:
 Authorization webhooks
 ----------------------
 
-Filestore needs to authorize if the current user is allowed to call a Filestore
+File needs to authorize if the current user is allowed to call a ``File``
 API (say to upload or download a file). This authorization is done via a
 webhook.
 
-By default, only the ``admin`` role has access to the Filestore APIs, for other
+By default, only the ``admin`` role has access to the ``File`` APIs, for other
 roles the webhook has to be configured.
 
-The Filestore contacts the webhook with the following parameters:
+The File service contacts the webhook with the following parameters:
 
 1. The File ID: the unique id of the file.
 2. The operation on the file: one of ``create``, ``read``, ``delete``.
@@ -78,18 +78,18 @@ and if it returns ``403`` response, then the file operation is denied.
 Setting up the webhook
 ----------------------
 
-As a user, you are supposed to provide the Filestore with a webhook, which is a
+As a user, you are supposed to provide the ``File`` service with a webhook, which is a
 HTTP endpoint running inside the Hasura project.
 
 Which means, you need to write a custom endpoint which receives the above
-parameters from the Filestore, perform required authorization checks and return
+parameters from the ``File`` service, perform required authorization checks and return
 a response. You can deploy this custom endpoint as a custom service from the
 Hasura project console.
 
 Let's say the webhook that you have deployed is available at
 ``http://filecheck.<your-hasura-project>.hasura-app.io/check``. Internally,
 this endpoint will be available at ``filecheck.default/check``. Then the
-filestore will call your API to authorize before doing the actual file
+``File`` service will call your API to authorize before doing the actual file
 operation, like so:
 
 .. code-block:: http
