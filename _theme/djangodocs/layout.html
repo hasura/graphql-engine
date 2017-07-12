@@ -22,18 +22,18 @@
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 
-  <script src="/_static/vendor.js"></script>
-  <script src="/_static/search.js"></script>
+  <script src="/v{{version}}/_static/vendor.js"></script>
+  <script src="/v{{version}}/_static/search.js"></script>
 {% endblock %}
 
 {% block document %}
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if pagename != 'index' else '' }}{% endblock %}">
     <div class="header_wrapper">
       <div class="header_main">
-        <a href="/">
+        <a href="/v{{version}}/">
           <div class="inline-block header_main_logo">
             <div class="img_wrapper inline-block">
-              <img class="responsive logo_img" src="/_images/logo.svg" />
+                <img class="responsive logo_img" src="/v{{version}}/_images/logo.svg" />
             </div>
             <div class="inline-block"> DOCS </div>
           </div>
@@ -49,7 +49,7 @@
           {%- else %}
             <div class="inline-block link_element">
           {%- endif %}
-            <a href="/ref">
+            <a href="/v{{version}}/ref">
               Reference
             </a>
           </div>
@@ -59,7 +59,7 @@
           {%- else %}
             <div class="inline-block link_element">
           {%- endif %}
-            <a href="/tutorials">
+            <a href="/v{{version}}/tutorials">
               Tutorials
             </a>
           </div>
@@ -68,7 +68,7 @@
           {%- else %}
             <div class="inline-block link_element">
           {%- endif %}
-            <a href="#">
+            <a href="/v{{version}}#">
               Troubleshooting
             </a>
           </div>
@@ -77,7 +77,7 @@
           {%- else %}
             <div class="inline-block link_element">
           {%- endif %}
-            <a href="/guides">
+            <a href="/v{{version}}/guides">
               Guides
             </a>
           </div>
@@ -127,7 +127,7 @@
         {% endif %}
         <div class="content_inner_wrapper">
           <div class="back_link">
-            <a href={{ '/' + splittedPage[0] }}> <i class="fa fa-long-arrow-left" aria-hidden="true"></i>Back to {{ splittedPage[0] }} </a>
+            <a href={{ '/v' + version + '/' + splittedPage[0] }}> <i class="fa fa-long-arrow-left" aria-hidden="true"></i>Back to {{ splittedPage[0] }} </a>
           </div>
           <div role="main" parent={{ rootpage }}>
             <div id="docs-content">
@@ -166,7 +166,7 @@
               _.each(objs, function(obj, index ) {
         %>
                 <li class="search_bullets">
-                  <a class="search_results_anchor" href="/<%= obj.url %>">
+                  <a class="search_results_anchor" href="/v{{version}}/<%= obj.url %>">
                     <div class="no_of_results">
                       <%= obj.title %>
                     </div>
@@ -202,7 +202,7 @@
 {% endblock %}
 
 {% block sidebarrel %}
-  <h3>DOCS VERSION: <span class="version_txt">v0.1</span></h3>
+  <h3>DOCS VERSION: <span class="version_txt">v{{version}}</span></h3>
   {% set local_toc = local_toctree(pagename, maxdepth=2|int, collapse=theme_collapse_navigation, includehidden=True) %}
   {{ local_toc }}
   <!--
