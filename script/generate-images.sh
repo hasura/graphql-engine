@@ -8,10 +8,10 @@ CURRENT_BRANCH=$(git name-rev --name-only HEAD)
 
 checkout () {
     echo "$1 Release"
-    if git checkout -b origin/release-$1; then
+    if git checkout -b release-$1; then
         echo "New Branch pulled"
     else
-        git checkout origin/release-$1
+        git checkout release-$1
         echo "Pulled existing branch"
     fi
     git pull origin release-$1
@@ -20,7 +20,7 @@ checkout () {
     NGINX_LOCATIONS="$NGINX_LOCATIONS $1"
 }
 
-for branch in $(git branch -r); do
+for branch in $(git branch); do
     REGEX_MATCH=$(echo "$branch" | cut -d'-' -f 2)
     echo "$REGEX_MATCH"  | grep -Eq '^[-+]?[0-9]+\.?[0-9]*$' && checkout $REGEX_MATCH
 done

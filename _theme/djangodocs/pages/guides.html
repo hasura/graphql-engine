@@ -1,18 +1,18 @@
 <div class="guide_template hide">
   <div class="wd_80">
     <div class="guide_box_head">
-      <img src="{{ STATIC_URL }}/_images/Guides.svg" alt="Guides"/>
+      <img src="{{ pathto('_images/Guides.svg', 1) }}" alt="Guides"/>
       <h3 class="head_wrapper">Guides</h3>
     </div>
     <%
         if ( objs.length > 0 ) {
           _.each(objs, function(obj, index ) {
     %>
-          <a href="{{ STATIC_URL }}/<%= obj.url %>">
+          <a href="{{ pathto('', 1) }}<%= obj.url %>">
             <div class="wd_33">
               <div class="guide_box_wrapper">
                 <div class="thumnail_image">
-                  <img src="<%= ( obj.image ? '{{ STATIC_URL }}/_images/' + obj.image : '{{ STATIC_URL }}/_images/img_lights.jpg' ) %>" src="Thumbnails Images" />
+                  <img src="<%= ( obj.image ? '{{ pathto('_images/', 1) }}' + obj.image : '{{ pathto('_images/img_lights.jpg', 1) }}' ) %>" src="Thumbnails Images" />
                 </div>
                 <div class="guides_list_wrapper">
                   <div class="subhead_wrapper text_left">

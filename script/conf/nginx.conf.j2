@@ -15,21 +15,21 @@ http {
 	
 	server {
 		listen 80;
-        root /home/arvi/docs/_build;
+        root /usr/share/nginx/html;
 
         {% for location in locations %}
         
         location /{{location}} {
-            alias /home/arvi/docs/_build/{{location}}/html;
+            alias /usr/share/nginx/html/{{location}}/html;
         }
 
         location /{{location}}/_images {
-            alias /home/arvi/docs/_build/{{location}}/html/_images;
+            alias /usr/share/nginx/html/{{location}}/html/_images;
             gzip_static on;
         }
 
         location /{{location}}/_static {
-            alias /home/arvi/docs/_build/{{location}}/html/_static;
+            alias /usr/share/nginx/html/{{location}}/html/_static;
             gzip_static on;
         }
         {% endfor %}
