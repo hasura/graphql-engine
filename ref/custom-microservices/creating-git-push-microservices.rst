@@ -43,5 +43,6 @@ In the Add custom service section of the Hasura console, ensure that git-push is
 
 For reference, here's a configuraiton screenshot:
 
+.. rst-class:: featured-image
 .. image:: ../../getting-started/gitpush.png
    :scale: 50%

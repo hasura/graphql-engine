@@ -7,13 +7,7 @@
     &laquo; <a href="{{ prev.link|e }}" title="{{ prev.title|e }}">previous</a>
     {{ reldelim2 }}
   {%- endif %}
-  {%- if parents %}
-    <a href="{{ parents.0.link|e }}" title="{{ parents.0.title|e }}" accesskey="U">up</a>
-  {%- else %}
-    <a title="{{ docstitle }}" href="{{ pathto('index') }}" accesskey="U">up</a>
-  {%- endif %}
   {%- if next %}
-  {{ reldelim2 }}
     <a href="{{ next.link|e }}" title="{{ next.title|e }}">next</a> &raquo;
   {%- endif %}
 {%- endmacro %}
@@ -84,12 +78,12 @@
         </div>
         <div class="header_buttons inline-block">
           <div class="inline-block">
-            <a href="https://dashboard.hasura-stg.hasura-app.io/login">
+            <a target="_blank" href="https://dashboard.hasura-stg.hasura-app.io/login">
               <button class="indiv_btns black"> Log in </button>
             </a>
           </div>
           <div class="inline-block">
-            <a href="https://dashboard.hasura-stg.hasura-app.io/login#register">
+            <a target="_blank" href="https://dashboard.hasura-stg.hasura-app.io/login#register">
               <button class="indiv_btns"> Sign up </button>
             </a>
           </div>
@@ -131,7 +125,7 @@
           </div>
           <div role="main" parent={{ rootpage }}>
             <div id="docs-content">
-              <div class="media_wrapper details_media">
+              <!-- div class="media_wrapper details_media">
                 <div class="float_right wd_100">
                   <div class="share_wrapper">
                     <button class="share_btn green_btn">
@@ -140,7 +134,7 @@
                     </button>
                   </div>
                 </div>
-              </div>
+              </div -->
               <div id="{{ pagename|replace('/', '-') }}">
                 {% block body %}{% endblock %}
               </div>
@@ -292,7 +286,7 @@
         if ( e.target.value.length === 0 ) {
           enableContent();
           hideLoading();
-          window.history.replaceState({"url": e.target.value }, 'Search Page', '/' );
+          window.history.replaceState({ "url": "" }, 'Search Page', window.history.state.url );
         } else {
           var template = _.template(_.unescape(searchHtmlTemplate));
           if ( searchFunc ) {
@@ -301,7 +295,7 @@
               function callback(err, content ) {
                 var templated_html = template({"objs": content.hits, "searchString": content.query, "totalResults": content.nbHits });
                 $(".search_wrapper").html(templated_html);
-                window.history.pushState({"url": e.target.value }, 'Search Page', '/?query=' + e.target.value + '' );
+                window.history.pushState({"url": window.location.pathname }, 'Search Page', '?query=' + e.target.value + '' );
                 enableSearch();
                 hideLoading();
               }
@@ -316,7 +310,7 @@
                     hideLoading();
                   }
                 } else {
-                  window.history.replaceState({"url": e.target.value }, 'Search Page', '/' );
+                  window.history.replaceState({ "url": "" }, 'Search Page', window.history.state.url );
                   hideLoading();
                   enableContent();
                 }

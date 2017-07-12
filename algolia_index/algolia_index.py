@@ -27,6 +27,9 @@ def manage_indexes(index_name, data, settings):
 
     index = client.init_index(index_name)
 
+    index.set_settings({"searchableAttributes": ["category", "content", "title", "tags",
+        "description", "keywords", "url", "image"]})
+
     index.add_objects(data)
 
     for setting in settings:

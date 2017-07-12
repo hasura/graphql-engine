@@ -541,6 +541,7 @@ p
 .guides_page_wrapper
 {
   width: 100%;
+  min-height: 76vh;
   float: left;
 }
 .guide_box_wrapper
@@ -549,6 +550,7 @@ p
   margin-bottom: 30px;
   text-align: center;
   min-height: 450px;
+  max-height: 450px;
   background-color: #fff;
   -webkit-box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.2);
   -moz-box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.2);
