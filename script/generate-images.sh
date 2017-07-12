@@ -27,4 +27,6 @@ done
 
 python ./script/template.py "$NGINX_LOCATIONS"
 cp ./script/conf/mime.types ./_build/conf/mime.types
+cp ./script/conf/robots.txt ./_build/robots.txt
+
 git checkout $CURRENT_BRANCH
