@@ -19,7 +19,7 @@
                     <%= obj.title %>
                   </div>
                   <div class="small_content space_top_bot text_left">
-                    <%= obj.description.length > 80 ? obj.description.slice(0, 80 ) + ' ...' : obj.description %>
+                    <%= obj.description.length > 160 ? obj.description.slice(0, 160 ) + ' ...' : obj.description %>
                   </div>
                   <% 
                     var splitTags = obj.tags.replace(" ", "");
@@ -91,7 +91,9 @@
       function callback(err, content ) {
         var templated_html = template({"objs": content.hits, "searchString": content.query});
         $(".guides_page_wrapper").html(templated_html);
+        hideLoading();
       }
+      showLoading();
       objs = searchFunc('tutorials', callback, 1, [ 'category' ]);
     }
   };
