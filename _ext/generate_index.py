@@ -34,6 +34,7 @@ def generateIndexFile(app, pagename, templatename, context, doctree):
     title = ''
     keyword = ''
     description = ''
+    tagsVal = ''
 
     if ( 'title' in context ):
         title = context['title']
@@ -44,11 +45,16 @@ def generateIndexFile(app, pagename, templatename, context, doctree):
             soup = BeautifulSoup(metatags, 'html.parser')
             descriptions = soup.findAll("meta", { "name" : "description" })
             keywords = soup.findAll("meta", { "name" : "keywords" })
+            tags = soup.findAll("meta", { "name": "content-tags" })
+
             if ( len(descriptions) > 0 ):
                 description = descriptions[0]['content']
 
             if ( len(keywords) > 0 ):
                 keyword = keywords[0]['content']
+
+            if ( len(tags) > 0 ):
+                tagsVal = tags[0]['content']
 
     content = ''
     image = ''
@@ -68,7 +74,7 @@ def generateIndexFile(app, pagename, templatename, context, doctree):
         url = pagename + '.html'
         category = pagename.split('/')[0]
 
-        indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": description, "keywords": keyword }
+        indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": description, "keywords": keyword, "tags": tagsVal}
 
         indexObjs.append(indexObj)
 

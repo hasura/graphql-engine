@@ -1,6 +1,7 @@
 .. meta::
    :description: A guide to the understanding the architecture of applications built on the Hasura platform by comparing a reference app built with and without Hasura.
    :keywords: hasura, guide, architecture, app architecture
+   :content-tags: php, python
 
 Application Architecture on Hasura
 ==================================

@@ -21,13 +21,27 @@
                   <div class="small_content space_top_bot text_left">
                     <%= obj.description.length > 80 ? obj.description.slice(0, 80 ) + ' ...' : obj.description %>
                   </div>
-                  <div class="tags_wrapper">
-                    <div class="tags_btn">
-                      <button>webiste</button>
-                    </div>
-                  </div>
-                  <div class="media_wrapper">
-                    <!-- <div class="float_left display_flex">
+                  <% 
+                    var splitTags = obj.tags.replace(" ", "");
+                    if ( splitTags.length > 0 ) {
+                      splitTags = splitTags.split(",");
+                  %>
+                      <div class="tags_wrapper">
+                  <%
+                        _.each( splitTags, function( t ) {
+                  %>
+                        <div class="tags_btn">
+                          <button><%= t %></button>
+                        </div>
+                  <%
+                        });
+                  %>
+                      </div>
+                  <%
+                    }
+                  %>
+                  <!-- div class="media_wrapper">
+                    <div class="float_left display_flex">
                       <div class="media_img_circle">
                         <img src="/_images/profile.png" alt="Profile Image"/>
                       </div>
@@ -39,7 +53,7 @@
                           June 20, 2017
                         </div>
                       </div>
-                    </div> -->
+                    </div>
                     <div class="float_right wd_100">
                       <div class="share_wrapper">
                         <button class="share_btn">
@@ -48,7 +62,7 @@
                         </button>
                       </div>
                     </div>
-                  </div>
+                  </div -->
                 </div>
               </div>
             </div>
