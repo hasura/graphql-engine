@@ -1,6 +1,11 @@
 @import url('https://fonts.googleapis.com/css?family=Gudea');
 @import url('https://fonts.googleapis.com/css?family=Khula:400,700');
 
+.document {
+  max-width: 1366px;
+  margin: 0 auto;
+}
+
 /* Loader */
 .loader {
   border: 1px solid #cc401b;
