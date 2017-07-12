@@ -183,7 +183,7 @@
         <%
           } else {
         %>
-          <div> Sorry! we cannot find what you are searching for! </div>
+          <div class="no_results"> Sorry! we cannot find what you are searching for! </div>
         <%
           }
         %>
@@ -299,7 +299,7 @@
             /* Wait for 1 seconds */
             if ( e.target.value.length > 0 ) {
               function callback(err, content ) {
-                var templated_html = template({"objs": content.results[0].hits, "searchString": content.results[0].query, "totalResults": content.results[0].nbHits });
+                var templated_html = template({"objs": content.hits, "searchString": content.query, "totalResults": content.nbHits });
                 $(".search_wrapper").html(templated_html);
                 window.history.pushState({"url": e.target.value }, 'Search Page', '/?query=' + e.target.value + '' );
                 enableSearch();

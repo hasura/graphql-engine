@@ -75,10 +75,10 @@
     var template = _.template(_.unescape(searchHtmlTemplate));
     if ( searchFunc ) {
       function callback(err, content ) {
-        var templated_html = template({"objs": content.results[0].hits, "searchString": content.results[0].query});
+        var templated_html = template({"objs": content.hits, "searchString": content.query});
         $(".guides_page_wrapper").html(templated_html);
       }
-      objs = searchFunc('tutorials', callback);
+      objs = searchFunc('tutorials', callback, 1, [ 'category' ]);
     }
   };
   initialize();

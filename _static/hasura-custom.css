@@ -65,6 +65,9 @@
   color: #CF9C0E;
   font-weight: 600;
 }
+.no_results {
+  text-align: left;
+}
 .search_query {
   color: #CF9C0E;
   font-weight: 600
