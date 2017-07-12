@@ -3,6 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. meta::
+   :description: Reference documentation for Hasura's API Gateway, the single point of contact to Hasura services for the external world, and managing custom domains.
+   :keywords: hasura, docs, API Gateway, domains, custom domains, gateway, reverse proxy
+
 Domains and API Gateway
 =======================
 

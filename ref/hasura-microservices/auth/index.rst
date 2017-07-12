@@ -10,6 +10,20 @@
 Auth
 ====
 
+Introduction
+------------
+
+Auth is one of the Hasura's microservices that is packaged with the platform. It handles authentication and user management use-cases for applications without developers having to write a single line of code. It offers the following features:
+
++ Register using username, email or mobile number.
++ Login using username, email or mobile number.
++ Email verification.
++ Verification of mobile number via OTP.
++ Forgot password/reset password functionality.
++ Updation of account information.
++ Third-party logins - Google, Facebook, LinkedIn.
++ Role based APIs.
+
 .. toctree::
   :maxdepth: 2
 

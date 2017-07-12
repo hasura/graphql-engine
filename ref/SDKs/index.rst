@@ -3,6 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. meta::
+   :description: Homepage of the reference documentation for SDKs for integrating frontend code with backend APIs (both Hasura micro-services and custom services).
+   :keywords: hasura, docs, SDKs, Android SDK, Javascript SDK, IOS SDK
 
 SDKs
 ====

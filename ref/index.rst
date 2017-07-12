@@ -3,6 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. meta::
+   :description: Homepage for Hasura's reference documentation. List of topics, components and resources.
+   :keywords: hasura, docs, reference home, reference, ref home, ref
 
 .. _reference:
 
@@ -12,15 +15,14 @@ Reference
 This is the reference documentation of the entire Hasura platform
 
 .. toctree::
-  :maxdepth: 3
+  :maxdepth: 2
 
   creating-a-project/index
   architecture/index
   hasura-microservices/index
   custom-microservices/index
-  docker-microservices/index
   cli/index
-  sdks/index
-  project-status/index
+  SDKs/index
+  project-configuration-and-status/index
   domains-and-api-gateway/index
   project-export-and-import/index

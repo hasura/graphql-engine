@@ -3,15 +3,18 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. meta::
+   :description: Reference documentation for Hasura related command line interface(CLI) actions like creating/adding SSH keys, accessing TCP services, kubectl commands etc.
+   :keywords: hasura, docs, CLI, command line interface, SSH, kubectl
 
-CLI / Hasuractl
-===============
-Not sure about the name of this section - Shouldn't it be **Hasuractl - Command line tooling** ?
+CLI
+===
+Hasura platform related actions to be performed using a Command line interface(CLI).
 
 .. toctree::
   :maxdepth: 3
 
-  Quickstart
-  Adding SSH Keys to a Project
-  Tunneling - Accessing TCP services
-  Executing Kubectl commands
+  hasuractl
+  adding-SSH-keys-to-a-project
+  tunneling-accessing-TCP-services
+  executing-kubectl-commands

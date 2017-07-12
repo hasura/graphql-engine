@@ -3,6 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. meta::
+   :description: Homepage of the reference documentation for Hasura microservices or backend components (BaaS) that are packaged with the platform.
+   :keywords: hasura, docs, Hasura services, hasura microservices, BaaS
 
 .. _Hasura_microservices:
 
@@ -16,4 +19,4 @@ Hasura microservices are Backend-as-a-Service components that are packaged with 
 
   data/index
   auth/index
-  File Store/index
+  filestore/index
