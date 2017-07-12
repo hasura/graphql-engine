@@ -1,0 +1,37 @@
+worker_processes auto;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include mime.types;
+	server_names_hash_bucket_size 64;
+	log_format upstream_time '$remote_addr - [$time_local] "$host" '
+							 '"$request" $status $body_bytes_sent '
+							 '"$http_referer" '
+							 'rt="$request_time" uct="$upstream_connect_time" uht="$upstream_header_time" urt="$upstream_response_time"';
+	access_log /dev/stdout upstream_time;
+	
+	server {
+		listen 80;
+        root /home/arvi/docs/_build;
+
+        {% for location in locations %}
+        
+        location /{{location}} {
+            alias /home/arvi/docs/_build/{{location}}/html;
+        }
+
+        location /{{location}}/_images {
+            alias /home/arvi/docs/_build/{{location}}/html/_images;
+            gzip_static on;
+        }
+
+        location /{{location}}/_static {
+            alias /home/arvi/docs/_build/{{location}}/html/_static;
+            gzip_static on;
+        }
+        {% endfor %}
+	}
+}

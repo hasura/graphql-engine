@@ -1,18 +1,18 @@
 <div class="guide_template hide">
   <div class="wd_80">
     <div class="guide_box_head">
-      <img src="/_images/Guides.svg" alt="Guides"/>
+      <img src="{{ STATIC_URL }}/_images/Guides.svg" alt="Guides"/>
       <h3 class="head_wrapper">Guides</h3>
     </div>
     <%
         if ( objs.length > 0 ) {
           _.each(objs, function(obj, index ) {
     %>
-          <a href="/<%= obj.url %>">
+          <a href="{{ STATIC_URL }}/<%= obj.url %>">
             <div class="wd_33">
               <div class="guide_box_wrapper">
                 <div class="thumnail_image">
-                  <img src="<%= ( obj.image ? '/_images/' + obj.image : '/_images/img_lights.jpg' ) %>" src="Thumbnails Images" />
+                  <img src="<%= ( obj.image ? '{{ STATIC_URL }}/_images/' + obj.image : '{{ STATIC_URL }}/_images/img_lights.jpg' ) %>" src="Thumbnails Images" />
                 </div>
                 <div class="guides_list_wrapper">
                   <div class="subhead_wrapper text_left">
@@ -43,7 +43,7 @@
                   <!-- div class="media_wrapper">
                     <div class="float_left display_flex">
                       <div class="media_img_circle">
-                        <img src="/_images/profile.png" alt="Profile Image"/>
+                        <img src="{{ STATIC_URL }}/_images/profile.png" alt="Profile Image"/>
                       </div>
                       <div class="media_name_wrapper">
                         <div class="small_content">
