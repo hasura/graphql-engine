@@ -86,6 +86,7 @@
 }
 .search_bullets {
   list-style-type: disc;
+  text-align: left;
 }
 
 .search_heading {
