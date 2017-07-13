@@ -7,11 +7,11 @@
    :description: Reference documentation for managing Custom Microservices. Learn how to configure and manage custom microservices and their logs
    :keywords: hasura, docs, manage custom microservices, logs, configuration
 
-Managing Existing Custom Microservices
+Managing existing custom microservices
 ======================================
 
 
-Configuring existing Custom Microservices
+Configuring existing custom microservices
 -----------------------------------------
 
 Logs

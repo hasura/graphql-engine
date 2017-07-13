@@ -54,8 +54,9 @@ Scenario-2: App architecture when built using Hasura
 Every app built on Hasura largely adheres to the standard architecture show here:
 
 .. rst-class:: featured-image
-.. image:: ../img/arch-app-hasura.svg
+.. image:: ../img/app-arch-hasura-32mod.svg
 
+.. arch-app-hasura.svg / app-arch-hasura-32mod.svg
 
 Notes
 ^^^^^
