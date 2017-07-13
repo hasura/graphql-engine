@@ -91,6 +91,7 @@
       </div>
     </div>
     <div id="" class="content_wrapper">
+      {% include 'pages/loading.html' %}
       {%- if pagename == 'index' %}
         {% include 'pages/landing.html' %}
       {%- elif pagename == 'guides/index' %}
@@ -185,11 +186,6 @@
         <div style="clear: both;"></div>
       </div>
     </div>
-    <div class="noprojects_overley hide">
-      <div class="loader"></div>
-      <div class="subhead_wrapper_loader body_content_position"></div>
-      <div class="overley_wrapper"></div>
-    </div>
     <div class="search_wrapper main_wrapper hide">
     </div>
   </div>
@@ -269,14 +265,6 @@
       const enableSearch = function() {
         $('.content_wrapper').addClass('hide');
         $('.search_wrapper').removeClass('hide');
-      };
-
-      const showLoading = function() {
-        $('.noprojects_overley').removeClass('hide');
-      };
-
-      const hideLoading = function() {
-        $('.noprojects_overley').addClass('hide');
       };
 
       $('.search_element').on('keyup', function( e ) {
