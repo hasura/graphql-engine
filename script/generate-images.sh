@@ -20,7 +20,7 @@ checkout () {
     NGINX_LOCATIONS="$NGINX_LOCATIONS $1"
 }
 
-for branch in $(git branch); do
+for branch in $(git branch -r); do
     REGEX_MATCH=$(echo "$branch" | cut -d'-' -f 2)
     echo "$REGEX_MATCH"  | grep -Eq '^[-+]?[0-9]+\.?[0-9]*$' && checkout $REGEX_MATCH
 done
