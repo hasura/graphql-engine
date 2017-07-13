@@ -10,7 +10,7 @@ Inter-service communication in a Hasura backend
 ===============================================
 
 .. rst-class:: featured-image
-.. image:: ../img/inter-service-communication-block-diagram.png
+.. image:: ../img/inter-service-comms-3-2.png
 
 This tutorial shows you how an API service can internally contact another API service. The first service, titled ``api`` is accessible to clients. Clients make a request to the endpoint ``/hello``. ``api`` then makes a request to a service titled ``api2`` on the ``/respond`` endpoint. Once ``api`` receives a response from ``api2`` it responds to the client.
 Let’s see how we’d create these services on Hasura. For a tl;dr, head to the :ref:`post-summary` directly.
