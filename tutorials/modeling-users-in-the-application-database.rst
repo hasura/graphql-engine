@@ -10,6 +10,7 @@ Modeling Users in the application database
 
 The auth service handles user management related use-cases for your application and store its data in a different, isolated database in the Postgres instance. However, most applications may need to either store custom fields that are not supported by the service or hold a copy of a subset of the user data in the application database i.e. ``hasuradb`` (*or perhaps both*). In this tutorial, we will take a look at how to do this.
 
+
 Let's get Started!!
 
 Using the Hasura Data Service
@@ -22,7 +23,9 @@ Creating a new Table
 
 Go to your project console and head to **Data and Schema Management** present in the left side panel.
 
+
 Here, create a new table ``user_details``.
+
 
 Insert the following columns to the ``user_details`` table and click on ``Create``
 
@@ -35,7 +38,9 @@ Adding Permissions
 
 By default, the Hasura Data Service allows only admin to access the table information. To open up access of information to role: user, we add permissions.
 
+
 Head to **Modify Table, Relationships and Permissions** in the console and scroll to the bottom to find the permissions field
+
 
 Under Permissions, click on **Add Permissions for new Role** to add a new permission as follows.
 
@@ -45,12 +50,15 @@ Under Permissions, click on **Add Permissions for new Role** to add a new permis
 
 The above statement says that allow access only if value of ``user_id`` equals ``REQ_USER_ID`` where "REQ_USER_ID" is a special varialbe used by the Hasura Data Service that holds the Hasura-User-Id of the currently logged in user.
 
+
 **To show how to use the Hasura Data Service, we will be building a simple android app that gets the profile information of the user**
+
 
 Configuring the Hasura Android SDK
 ==================================
 
 Once you have created your android project, you will have to add Hasura-Android SDK and a few other dependencies. To do so, I am using Gradle.
+
 
 Add the following code to the App level build.gradle file
 
@@ -84,6 +92,7 @@ Initialiazing your Hasura Project
 
 To access your Hasura Project through android, you will have to first initialize it.
 
+
 This initialization should be before you start using the SDK(like beginning of your launcher activity), else you will get an error.
 
 .. code-block:: Java
@@ -99,6 +108,7 @@ Signup and Login
 
 Regarding the signUp/Login part, please refer to `Hasura Android Module 1-Login <https://github.com/hasura/Modules-Android/tree/master/Module_1-Login>`_.
 
+
 You can implement any one of the methods in the above module for performing SignUp/Login.
 
 Storing the User Details
@@ -109,7 +119,63 @@ Check if the User already filled profile details
 
 We will now make a query to the table we created earlier to check if the user already has filled his profile information, if yes, load that information.
 
+
 To do this, we have to fire a select query.
+
+**Modelling UserDetails class**
+
+.. code-block:: java
+
+	public class UserDetails {
+    		@SerializedName("name")
+    		String name;
+
+    		@SerializedName("status")
+    		String status;
+
+    		@SerializedName("user_id")
+    		int user_id;
+
+    		@SerializedName("file_id")
+    		String fileId;
+
+    		public void setName(String name){
+    		    this.name = name;
+    		}
+
+    		public void setStatus(String status){
+    		    this.status = status;
+    		}
+
+    		public void setId(int id){
+    		    this.user_id = id;
+    		}
+
+    		public void setFileId(String fileId){
+    		    this.fileId = fileId;
+    		}
+
+    		public String getName(){
+    		    return name;
+    		}
+
+    		public String getStatus(){
+    		    return status;
+    		}
+
+    		public int getId(){
+    		    return user_id;
+    		}
+
+    		public String getFileId(){
+    		    return fileId;
+    		}
+
+    		public UserDetails(){
+
+    		}
+		}
+
 
 **Modelling the SelectQuery**
 
@@ -147,6 +213,7 @@ To do this, we have to fire a select query.
 
 For more about modelling, refer the `Hasura Data Docs <https://hasura.io/_docs/platform/0.6/ref/data/reference.html>`_
 
+
 To make calls to Hasura, we use the HasuraClient instance provided by the SDK
 
 .. code-block:: Java
@@ -155,7 +222,9 @@ To make calls to Hasura, we use the HasuraClient instance provided by the SDK
 
 **Making the call**
 
+
 If we get a successful response, the user has already filled his information earlier.First will use the Hasura FileStore to download the profile picture.
+
 
 We extract File-Id from the response we get, and then download that particular file.
 
@@ -206,7 +275,9 @@ We extract File-Id from the response we get, and then download that particular f
 
 **Uploading Data**
 
+
 Depending on whether the user already has profile information stored or not, we will update/ insert into the table respectively.
+
 
 **UpdateQuery:**
 
@@ -280,6 +351,7 @@ Depending on whether the user already has profile information stored or not, we 
 	}
 
 **Making the call:**
+
 
 When the submit button is clicked, we should add name,status and other details to the userDetails object and upload to the database.
 
