@@ -6,7 +6,10 @@
 Building a ChatApp using Hasura
 ===============================
 
-.. image:: ../img/inter-service-communication-block-diagram.png
+.. rst-class:: featured-image
+.. image:: ../img/chat_tutorial_background.png
+   :height: 0px
+   :width: 0px
 
 This tutorial shows you how to build a simple chatting application using Hasura. For building this app, we will be using Hasura Auth, Hasura Data and a Socket Server for sending messages which will be hosted as a CustomService on Hasura.
 
