@@ -5,7 +5,8 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-BUILDDIR      = _build
+BUILDDIR      ?= _build
+BUILDVERSION  ?= "x.y"
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -50,16 +51,20 @@ clean:
 
 .PHONY: release-images
 release-images:
-	cp -r img/* _build/html/_images/
+	cp -r img/* $(BUILDDIR)/html/_images/
 	@echo "Image copy finished. The images are in $(BUILDDIR)/html/_images"
 
 .PHONY: html
 html:
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) -D version=$(BUILDVERSION) -D release=$(BUILDVERSION) $(BUILDDIR)/html
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 .PHONY: html-images
-html-images: clean html release-images
+html-images: html release-images
+
+.PHONY: build-release
+build-release: clean
+	script/generate-images.sh
 
 # Function to check whether a particular variable is set or not
 
