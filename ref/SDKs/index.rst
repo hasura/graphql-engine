@@ -14,6 +14,6 @@ SDKS for integrating frontend code with backend APIs.
 .. toctree::
   :maxdepth: 3
 
-  Android SDK
-  IOS SDK
-  Web SDKs
+  android-sdk
+  ios-sdk
+  web-sdks

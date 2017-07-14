@@ -12,7 +12,7 @@ Web SDKs
 ========
 The following is a list of web SDKs that can be used to integrate frontend code with backend APIs. They can be used to integrate both Hasura micro-services (Data, Auth/User-management and FileStore) and custom services.
 
-Javascript SDK
+JavaScript SDK
 --------------
 The documentation for the Javascript SDK can be found here: https://github.com/hasura/js-sdk
 

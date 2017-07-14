@@ -9,6 +9,6 @@
    :keywords: hasura, docs, IOS SDK, integration
 
 IOS SDK
-===========
+=======
 
 The IOS SDK will be released shortly. For an early preview, please write to us at support@hasura.io.

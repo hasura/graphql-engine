@@ -6,8 +6,8 @@
 .. sectionauthor:: Tanmai Gopal <tanmaig@hasura.io>
 
 .. meta::
-   :description: Testing meta description
-   :keywords: hasura, docs, reference
+   :description: Homepage for all of Hasura's documentation. Links to Reference docs, Guides and Tutorials.
+   :keywords: hasura, docs, home
 
 Hasura Documentation
 ====================

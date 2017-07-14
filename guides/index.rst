@@ -1,11 +1,8 @@
-.. _guides:
+:orphan:
 
-Guides
-======
+.. meta::
+   :description: A list of tags 
+   :keywords: hasura, docs, guides
+   :content-tags: guides
 
-This is a list of all the guides that are available to the lord.
 
-.. toctree::
-  :maxdepth: 2
-
-  guide-1

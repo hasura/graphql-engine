@@ -1,3 +1,7 @@
+.. meta::
+   :description: Part 5 of a set of learning exercises meant for exploring Hasura in detail. This part covers using the data API along with SQL views & relationships.
+   :keywords: hasura, getting started, step 5, SQL views and relationships
+
 ====================================================
 Part V: Aggregations, views and custom relationships
 ====================================================

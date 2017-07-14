@@ -431,8 +431,8 @@ ServicesDetailStatus
 
 .. _components-status:
 
-ComponentsStatus
-^^^^^^^^^^^^^^^^
+components-status
+^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -443,7 +443,7 @@ ComponentsStatus
      - Description
    * - state
      - true
-     - ``[`` :ref:`ResourceDetail <resources-detail>` ``]``
+     - ``[`` :ref:`ResourceDetail <resource-detail>` ``]``
      - Array of ``ResourceDetail`` objects that represent the application state (postgres)
    * - gateway
      - true
