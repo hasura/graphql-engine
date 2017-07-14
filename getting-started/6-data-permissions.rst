@@ -1,3 +1,7 @@
+.. meta::
+   :description: Part 6 of a set of learning exercises meant for exploring Hasura in detail. This part introduces access control for data when using the data API.
+   :keywords: hasura, getting started, step 6, access control, role based access control
+
 =====================================
 Part VI: Access control for data APIs
 =====================================

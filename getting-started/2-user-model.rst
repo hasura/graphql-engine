@@ -1,3 +1,7 @@
+.. meta::
+   :description: Part 2 of a set of learning exercises meant for exploring Hasura in detail. This part introduces the Auth service's User & Session management model.
+   :keywords: hasura, getting started, step 2
+
 ==================================
 Part II: Users, roles and sessions
 ==================================

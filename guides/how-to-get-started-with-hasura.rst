@@ -10,6 +10,8 @@ How to get started with Hasura
 
 .. rst-class:: featured-image
 .. image:: ../img/getting-started-3-2.png
+   :height: 0px
+   :width: 0px
 
 Hasura is a platform for building and deploying application backends. Hasura does the following for you  instant APIs for data (querying and inserting data in your database), auth & file handling (powered by Postgres). Hasura helps you deploy your custom code written in any language/framework. Runs anywhere: your laptop, your VM, your cluster on the cloud.
 

@@ -1,3 +1,7 @@
+.. meta::
+   :description: Part 4 of a set of learning exercises meant for exploring Hasura in detail. This part shows you how to consume the data service's instant JSON API.
+   :keywords: hasura, getting started, step 4, data API
+
 ========================================
 Part IV: Using the instant JSON data API
 ========================================
