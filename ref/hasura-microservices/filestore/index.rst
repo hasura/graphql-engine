@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 .. meta::
-   :description: Reference documentation for Hasura's ``File`` microservice. The service is used to upload & download files and has built-in with access control.
+   :description: Reference documentation for Hasura's ``File`` microservice. The service is used to upload & download files and has built-in access control.
    :keywords: hasura, docs, fileStore, file, file upload, file download
 
 ====

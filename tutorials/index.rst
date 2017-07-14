@@ -1,10 +1,8 @@
-.. _tutorials:
+:orphan:
 
-Tutorials
-=========
+.. meta::
+   :description: A list of tutorials 
+   :keywords: hasura, docs, tutorials
+   :content-tags: tutorials
 
-.. toctree::
-  :glob:
-
-  *
 

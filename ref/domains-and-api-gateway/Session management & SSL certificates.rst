@@ -38,9 +38,9 @@ Example
 To make an authenticated API request, the client has to send either a
 previously set cookie, or an Authorization header like:
 
-.. code-block:: http
-
-  Authorization: Bearer <token>
+.. code-block:: guess
+   
+   Authorization: Bearer <token>
 
 where the ``<token>`` is received in an earlier API call (like login).
 

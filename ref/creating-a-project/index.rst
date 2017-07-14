@@ -1,7 +1,6 @@
-.. Hasura Platform documentation master file, created by
-   sphinx-quickstart on Thu Jun 30 19:38:30 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. meta::
+   :description: Learn how to install Hasura - create a project by claiming a free trial project or by installing Hasura on public cloud infra or on a laptop/desktop.
+   :keywords: hasura, installation, cloud, public cloud
 
 
 .. _project_creation:
@@ -14,6 +13,6 @@ A Hasura project can be created in three ways:
 .. toctree::
   :maxdepth: 2
 
-  Free trial
-  Managed Cloud Installation
-  Local Development
+  free-trial
+  managed-cloud-installation
+  local-development
