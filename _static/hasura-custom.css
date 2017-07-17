@@ -233,7 +233,8 @@ article ol ol {
 
 /* **** BEGIN landing.html ******************************* */
 .content_wrapper {
-  margin-top: 40px;
+  margin: auto;
+  width: 90%;
 }
 p
 {
@@ -721,7 +722,7 @@ p
 }
 .content_inner_wrapper
 {
-  width: 67% !important;
+  width: 77% !important;
   margin: 0 auto !important;
 }
 .back_link
@@ -747,6 +748,7 @@ p
 [role="main"]
 {
   width: 94% !important;
+  border: none !important;
 }
 .version_txt
 {
