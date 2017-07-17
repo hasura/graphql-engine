@@ -39,47 +39,51 @@
           <input type="text" class="search_element" placeholder="Search reference docs, tutorials, guides" />
         </div>
         <div class="header_links inline-block">
-          {% set currPage = pagename.split('/')[0] %}
-          {%- if ( currPage == "ref" ) %}
-            <div class="inline-block link_element link_element_active">
-          {%- else %}
-            <div class="inline-block link_element">
-          {%- endif %}
-            <a href="{{ pathto('', 1) }}ref">
-              Reference
-            </a>
-          </div>
+          <div class="header_links_content">
+            {% set currPage = pagename.split('/')[0] %}
+            {%- if ( currPage == "ref" ) %}
+              <div class="inline-block link_element link_element_active">
+            {%- else %}
+              <div class="inline-block link_element">
+            {%- endif %}
+              <a href="{{ pathto('', 1) }}ref">
+                Reference
+              </a>
+            </div>
 
-          {%- if ( currPage == "tutorials" ) %}
-            <div class="inline-block link_element link_element_active">
-          {%- else %}
-            <div class="inline-block link_element">
-          {%- endif %}
-            <a href="{{ pathto('', 1) }}tutorials">
-              Tutorials
-            </a>
+            {%- if ( currPage == "tutorials" ) %}
+              <div class="inline-block link_element link_element_active">
+            {%- else %}
+              <div class="inline-block link_element">
+            {%- endif %}
+              <a href="{{ pathto('', 1) }}tutorials">
+                Tutorials
+              </a>
+            </div>
+            {%- if ( currPage == "guides" ) %}
+              <div class="inline-block link_element link_element_active">
+            {%- else %}
+              <div class="inline-block link_element">
+            {%- endif %}
+              <a href="{{ pathto('', 1) }}guides">
+                Guides
+              </a>
+            </div>
           </div>
-          {%- if ( currPage == "guides" ) %}
-            <div class="inline-block link_element link_element_active">
-          {%- else %}
-            <div class="inline-block link_element">
-          {%- endif %}
-            <a href="{{ pathto('', 1) }}guides">
-              Guides
-            </a>
+          <div class="buttons">
+            <div class="inline-block">
+              <a target="_blank" href="https://dashboard.hasura.io/login">
+                <button class="indiv_btns black"> Log in </button>
+              </a>
+            </div>
+            <div class="inline-block">
+              <a target="_blank" href="https://dashboard.hasura.io/login#register">
+                <button class="indiv_btns"> Sign up </button>
+              </a>
+            </div>
           </div>
         </div>
         <div class="header_buttons inline-block">
-          <div class="inline-block">
-            <a target="_blank" href="https://dashboard.hasura-stg.hasura-app.io/login">
-              <button class="indiv_btns black"> Log in </button>
-            </a>
-          </div>
-          <div class="inline-block">
-            <a target="_blank" href="https://dashboard.hasura-stg.hasura-app.io/login#register">
-              <button class="indiv_btns"> Sign up </button>
-            </a>
-          </div>
         </div>
       </div>
     </div>

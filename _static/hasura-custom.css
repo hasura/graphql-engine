@@ -134,7 +134,8 @@ p
 }
 #docs-content a.reference
 {
-  color: #FEC53D !important;
+  /* color: #FEC53D !important; */
+  color: rgba(207,156,14,1) !important;
 }
 h3
 {
@@ -479,11 +480,24 @@ p
 }
 
 .header_links {
-  margin-left: 10px;
+  width: 50%;
+  margin-left: 20px;
 }
+
+.header_links.inline-block .header_links_content {
+  float: left;
+}
+
+.header_links.inline-block .buttons {
+  float: right;
+}
+
+
 
 .link_element {
   padding: 5px 10px;
+  margin-left: 5px;
+  margin-right: 5px;
   font-size: 14px;
   color: #6F7279;
   border-bottom: 4px solid transparent;
