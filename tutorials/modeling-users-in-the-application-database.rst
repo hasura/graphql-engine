@@ -9,7 +9,6 @@
 Modeling Users in the application database
 ==========================================
 
-.. image:: ../img/inter-service-comms-3-2.png
 
 The auth service handles user management related use-cases for your application and store its data in a different, isolated database in the Postgres instance. However, most applications may need to either store custom fields that are not supported by the service or hold a copy of a subset of the user data in the application database i.e. ``hasuradb`` (*or perhaps both*). In this tutorial, we will take a look at how to do this.
 
@@ -65,7 +64,7 @@ Once you have created your android project, you will have to add Hasura-Android 
 
 Add the following code to the App level build.gradle file
 
-.. code-block:: Java
+.. code-block:: groovy
 
 	compile 'com.android.support:appcompat-v7:25.3.1'
     	compile 'com.squareup.retrofit2:retrofit:2.1.0'
@@ -78,7 +77,7 @@ Add the following code to the App level build.gradle file
 
 Make the following changes to Project level build.gradle file 
 
-.. code-block:: Java
+.. code-block::groovy
 
 	allprojects {
         	repositories {
