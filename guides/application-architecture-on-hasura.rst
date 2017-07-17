@@ -11,8 +11,9 @@ Application Architecture on Hasura
 Introduction
 ------------
 Hasura aims to provide the fastest way to build, deploy and manage a production application backend. To achieve this, Hasura provides a standardized architecture that is inherently secure, scalable and includes as much automation as possible. This brings predictability to the process of development, deployment and troubleshooting. To better understand the architecture, let's take a sample application as reference, and compare its architecture across the following 2 scenarios:
-	1. App built using a web framework like Django/Flask, Laravel, Spring, Ruby-on-Rails, etc.
-	2. App built using Hasura (with custom APIs in any language/framework)
+
+1. App built using a web framework like Django/Flask, Laravel, Spring, Ruby-on-Rails, etc.
+2. App built using Hasura (with custom APIs in any language/framework)
 
 Reference Application
 ---------------------
