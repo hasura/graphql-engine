@@ -436,7 +436,7 @@ p
 {
   text-decoration: none;
   color: #595959;
-  font-weight: 600;
+  font-size: 16px;
 }
 .header_wrapper .header_main a:hover
 {
@@ -454,19 +454,20 @@ p
 
 .input_search_box .fa-search {
   position: absolute;
-  top: 10px;
+  top: 13px;
   left: 10px;
-  font-size: 15px;
+  font-size: 18px;
   color: #A6A6A5;
 }
 
 .input_search_box input {
+  height: 44px;
   box-sizing: border-box;
   text-indent: 30px;
   display: block;
   width: 100%;
   padding: 6px 12px;
-  font-size: 14px;
+  font-size: 18px;
   line-height: 1.42857143;
   color: #A6A6A5;
   background-color: #fff;
@@ -488,6 +489,13 @@ p
   color: #6F7279;
   border-bottom: 4px solid transparent;
 }
+
+.link_element .header_links {
+  padding: 5px 10px;
+  font-size: 16px;
+  color: #262A35;
+}
+
 .link_element_active
 {
   border-bottom: 4px solid #0B0B0B;
@@ -511,6 +519,13 @@ p
 .inline-block {
   display: inline-block;
   vertical-align: middle;
+}
+
+.inline-block .hero {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .header_buttons {
