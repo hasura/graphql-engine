@@ -1,3 +1,4 @@
+sample.py
 sample.json
 *.sw*
 *.pyc
@@ -42,3 +43,6 @@ Thumbs.db
 # Editor backup files #
 #######################
 *~
+
+# Virtual Environment
+venv
