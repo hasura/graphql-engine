@@ -137,6 +137,9 @@ p
   /* color: #FEC53D !important; */
   color: rgba(207,156,14,1) !important;
 }
+a.current.reference.internal {
+  color: rgba(207,156,14,1) !important;
+}
 h3
 {
   font-weight: 500;
@@ -747,27 +750,38 @@ p
 }
 .version_txt
 {
-  color: #32A061;
+  color: rgba(255,198,39,1);
+}
+.toc_header a {
+  color: rgba(255,198,39,1);
 }
 #sidebar .sphinxsidebar .sphinxsidebarwrapper h3
 {
   padding-top: 30px;
+  /*
   color: #fff;
+  */
+  color: rgba(214,214,214,1);
   font-family: 'Khula';
 }
 #sidebar .sphinxsidebar .sphinxsidebarwrapper h4
 {
+  /*
   color: #fff;
+  */
+  color: rgba(214,214,214,1);
   font-family: 'Khula';
 }
 #sidebar .sphinxsidebar .sphinxsidebarwrapper ul li, .quick_links ul li
 {
   list-style-type: none;
-  color: #fff;
+  /* color: #fff; */
+  color: rgba(214,214,214,1);
 }
 #sidebar .sphinxsidebar .sphinxsidebarwrapper ul li a, .quick_links ul li a
 {
-  color: #fff;
+  /* color: #fff; */
+  color: rgba(214,214,214,1);
   text-decoration: none;
 }
 #sidebar .sphinxsidebar .sphinxsidebarwrapper ul li a code, .quick_links ul li a code
