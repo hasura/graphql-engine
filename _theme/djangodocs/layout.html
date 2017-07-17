@@ -15,7 +15,6 @@
 {% block extrahead %}
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
-
   <script src="{{ pathto('_static/vendor.js', 1) }}"></script>
   <script src="{{ pathto('_static/search.js', 1) }}"></script>
 {% endblock %}
@@ -141,7 +140,17 @@
       <div class="wd_80">
         <div class="search_box_head">
           <h3 class="head_wrapper search_heading">
-            <%= totalResults %> results for <span class="search_query">'<%= searchString %>'</span>
+            <div class="inline-block">
+              <%= totalResults %> result<%= totalResults > 1 ? 's' : '' %> for <span class="search_query">'<%= searchString %>'</span>
+            </div>
+            <div class="algolia_search_attribution">
+              <span>
+                powered by
+              </span>
+              <span>
+                <img class="algolia_image" src="{{ pathto('_images/algolia-logo.svg', 1) }}" alt="Algolia Hasura Search" />
+              </span>
+            </div>
           </h3>
         </div>
         <%
@@ -184,6 +193,49 @@
 
 {% block sidebarrel %}
   <h3>DOCS VERSION: <span class="version_txt">v{{version}}</span></h3>
+  <h4> Quick Links </h4>
+
+  {% set quick_links =
+    [
+      {
+        'name': 'Creating a Project',
+        'path': 'ref/creating-a-project/index.html'
+      },
+      {
+        'name': 'Hasura Microservices',
+        'path': 'ref/hasura-microservices/index.html'
+      },
+      {
+        'name': 'Custom Microservices',
+        'path': 'ref/custom-microservices/index.html'
+      },
+      {
+        'name': 'SDKs',
+        'path': 'ref/SDKs/index.html'
+      },
+      {
+        'name': 'Project Configuration and Status',
+        'path': 'ref/project-configuration-and-status/index.html'
+      },
+      {
+        'name': 'Domains and API Gateway',
+        'path': 'ref/domains-and-api-gateway/index.html'
+      }
+    ]
+  %}
+  <ul class="quick_links">
+  {% for link in quick_links %}
+    <li>
+      <a href="{{ pathto(link['path'], 1) }}">
+        {{ link['name'] }}
+      </a>
+    </li>
+  {% endfor %}
+  </ul>
+
+  <h4>
+    Table of contents
+  </h4>
   {% set local_toc = local_toctree(pagename, maxdepth=2|int, collapse=theme_collapse_navigation, includehidden=True) %}
   {{ local_toc }}
   <!--
