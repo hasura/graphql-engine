@@ -1,0 +1,5 @@
+{%- if display_toc %}
+  <h3>DOCS VERSION: <span class="version_txt">v{{version}}</span></h3>
+  <h4><a href="{{ pathto('ref/index') }}">{{ _('Table Of Contents') }}</a></h3>
+  {{ toc }}
+{%- endif %}

@@ -15,6 +15,9 @@
 {% block extrahead %}
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+  {%- if version != latest_docs_version %}
+    <link ref="canonical" href="https://docs.hasura.io/{{latest_docs_version}}/{{pagename}}.html" />
+  {% endif %}
   <script src="{{ pathto('_static/vendor.js', 1) }}"></script>
   <script src="{{ pathto('_static/search.js', 1) }}"></script>
 {% endblock %}
@@ -111,9 +114,11 @@
           {% endif %}
         {% endif %}
         <div class="content_inner_wrapper">
-          <div class="back_link">
-            <a href="{{ pathto('', 1) }}{{splittedPage[0] }}"> <i class="fa fa-long-arrow-left" aria-hidden="true"></i>Back to {{ splittedPage[0] }} </a>
-          </div>
+          {%- if pagename.split('/')[1] != 'index' %}
+            <div class="back_link">
+                <a href="{{ pathto('', 1) }}{{splittedPage[0] }}"> <i class="fa fa-long-arrow-left" aria-hidden="true"></i>Back to {{ splittedPage[0] }} </a>
+            </div>
+          {% endif %}
           <div role="main" parent={{ rootpage }}>
             <div id="docs-content">
               <!-- div class="media_wrapper details_media">
@@ -192,74 +197,6 @@
 {% endblock %}
 
 {% block sidebarrel %}
-  <h3>DOCS VERSION: <span class="version_txt">v{{version}}</span></h3>
-  <h4> Quick Links </h4>
-
-  {% set quick_links =
-    [
-      {
-        'name': 'Creating a Project',
-        'path': 'ref/creating-a-project/index.html'
-      },
-      {
-        'name': 'Hasura Microservices',
-        'path': 'ref/hasura-microservices/index.html'
-      },
-      {
-        'name': 'Custom Microservices',
-        'path': 'ref/custom-microservices/index.html'
-      },
-      {
-        'name': 'SDKs',
-        'path': 'ref/SDKs/index.html'
-      },
-      {
-        'name': 'Project Configuration and Status',
-        'path': 'ref/project-configuration-and-status/index.html'
-      },
-      {
-        'name': 'Domains and API Gateway',
-        'path': 'ref/domains-and-api-gateway/index.html'
-      }
-    ]
-  %}
-  <ul class="quick_links">
-  {% for link in quick_links %}
-    <li>
-      <a href="{{ pathto(link['path'], 1) }}">
-        {{ link['name'] }}
-      </a>
-    </li>
-  {% endfor %}
-  </ul>
-
-  <h4>
-    Table of contents
-  </h4>
-  {% set local_toc = local_toctree(pagename, maxdepth=2|int, collapse=theme_collapse_navigation, includehidden=True) %}
-  {{ local_toc }}
-  <!--
-  <ul>
-    {% if prev %}
-      <li><span class="version_txt">Prev: </span> <a href="{{ prev.link }}">{{ prev.title }}</a></li>
-    {% endif %}
-    {% if next %}
-      <li><span class="version_txt">Next: </span> <a href="{{ next.link }}">{{ next.title }}</a></li>
-    {% endif %}
-  </ul>
-  <h3>You are here:</h3>
-  <ul>
-      <li>
-
-        <a href="{{ pathto('index') }}">{{ docstitle }}</a>
-        {% for p in parents %}
-          <ul><li><a href="{{ p.link }}">{{ p.title }}</a>
-        {% endfor %}
-        <ul><li>{{ title }}</li></ul>
-        {% for p in parents %}</li></ul>{% endfor %}
-      </li>
-  </ul>
-  -->
 {% endblock %}
 
 {# Empty some default blocks out #}

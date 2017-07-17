@@ -46,8 +46,8 @@ sys.path.append(abspath(join(dirname(__file__), "_ext")))
 # ones.
 extensions = [
     "djangodocs",
-    "local_toctree",
     "generate_index",
+    "sphinxcontrib.fulltoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode"
 ]

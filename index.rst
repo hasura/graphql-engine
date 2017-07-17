@@ -23,7 +23,4 @@ Table of Contents
 .. toctree::
   :maxdepth: 2
 
-  getting-started/index
   ref/index
-  cookbooks/index
-  known-issues/index
