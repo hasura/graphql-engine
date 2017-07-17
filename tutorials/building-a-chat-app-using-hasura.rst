@@ -1,3 +1,5 @@
+:orphan:
+
 .. meta::
    :description: A tutorial on building a simple chatting application using Hasura.
    :keywords: hasura, docs, tutorials, user-modeling, user data
@@ -85,13 +87,13 @@ Once you have created your android project, you will have to add ``Hasura-Androi
 
 Add the following code to the App level build.gradle file
 
-.. code-block:: java
+.. code-block::groovy
 
        compile 'com.github.hasura.android-sdk:sdk:v0.0.5'
 
 These are the other dependencies that will be used in this project:
 
-.. code-block:: java
+.. code-block::groovy
 
         compile 'com.android.support:appcompat-v7:25.3.1'
         compile 'com.squareup.retrofit2:retrofit:2.1.0'
@@ -113,7 +115,7 @@ These are the other dependencies that will be used in this project:
 
 Make the following changes to Project level build.gradle file
 
-.. code-block:: java
+.. code-block::groovy
 
     allprojects {
             repositories {

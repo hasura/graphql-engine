@@ -22,8 +22,8 @@
             Get Started
           </div>
           <div class="common_btn">
-            <a target="_blank" href="https://dashboard.hasura-stg.hasura-app.io/login">
-              <button>Sign In</button>
+            <a target="_blank" href="https://dashboard.hasura-app.io">
+              <button>Sign Up</button>
             </a>
           </div>
         </div>
@@ -31,10 +31,12 @@
           <div class="get_start body_content">
             Or read:
           </div>
-          <div class="docs_link body_content">
-            How to get started with Hasura
-            <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
-          </div>
+          <a target="_blank" href="{{pathto('guides/how-to-get-started-with-hasura.html', 1) }}">
+            <div class="docs_link body_content">
+              How to get started with Hasura
+              <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
+            </div>
+          </a>
         </div>
       </div>
     </div>
@@ -58,11 +60,11 @@
             <img src="{{ pathto('_images/ReferenceDocs.svg', 1) }}" alt="First steps"/>
           </div>
           <a href="{{ pathto('guides/how-to-get-started-with-hasura.html', 1) }}">
-          <div class="docs_link body_content">
-            How to get started with Hasura
-            <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
-          </div>
-        </a>
+            <div class="docs_link body_content">
+              How to get started with Hasura
+              <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
+            </div>
+          </a>
         </div>
         <div class="sign_in_wrapper space_wrapper">
           <div class="get_start">
@@ -156,55 +158,27 @@
           Step-by-step instructions on implementing various use-cases and building reference applications along with code snippets, videos, etc. 
         </div>
         <div class="sign_in_wrapper space_wrapper">
-          <div class="wd_50 tutorial_in_wrapper">
-            <div class="wd_100 pad_bottom">
-              <a href="{{ pathto('tutorials/inter-service-communication-in-a-hasura-backend.html', 1) }}">
-                <div class="docs_link body_content">
-                  Inter-service Communication
-                  <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
-                </div>
-              </a>
-            </div>
-            <div class="tags_wrapper">
-              <div class="wd_26">
-                <div class="tags_btn">
-                  <button>php</button>
-                </div>
-              </div>
-              <div class="wd_33">
-                <div class="tags_btn">
-                  <button>nodejs</button>
-                </div>
-              </div>
-              <div class="wd_33">
-                <div class="tags_btn">
-                  <button>auth</button>
-                </div>
-              </div>
-            </div>
+          <div class="get_start">
+            <img src="{{ pathto('_images/ReferenceDocs.svg', 1) }}" alt="tutorial"/>
           </div>
-          <div class="wd_50 tutorial_in_wrapper">
-            <div class="wd_100 pad_bottom">
-              <a href="{{ pathto('tutorials/modeling-users-in-the-application-database.html', 1) }}"
-                <div class="docs_link body_content">
-                  Modeling users in the app db
-                  <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
-                </div>
-              </a>
-              <div class="tags_wrapper">
-              <div class="wd_50">
-                <div class="tags_btn">
-                  <button>integration</button>
-                </div>
-              </div>
-              <div class="wd_50">
-                <div class="tags_btn">
-                  <button>analytics</button>
-                </div>
-              </div>
+          <a href="{{ pathto('tutorials/inter-service-communication-in-a-hasura-backend.html', 1) }}">
+            <div class="docs_link body_content">
+              Inter-service Communication
+              <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
             </div>
-            </div>
+          </a>
+        </div>
+        <div class="sign_in_wrapper space_wrapper">
+          <div class="get_start">
+            <img src="{{ pathto('_images/ReferenceDocs.svg', 1) }}" alt="tutorial"/>
           </div>
+          <a href="{{ pathto('tutorials/modeling-users-in-the-application-database.html', 1) }}">
+            <div class="docs_link body_content">
+              Modeling users in the app db
+              <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
+            </div>
+          </a>
+        </div>
         </div>
       </div>
     </div>
