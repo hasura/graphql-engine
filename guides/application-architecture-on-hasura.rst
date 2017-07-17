@@ -1,7 +1,9 @@
+:orphan:
+
 .. meta::
    :description: A guide to the understanding the architecture of applications built on the Hasura platform by comparing a reference app built with and without Hasura.
    :keywords: hasura, guide, architecture, app architecture
-   :content-tags: php, python
+   :content-tags: app architecture, build apps
 
 Application Architecture on Hasura
 ==================================
@@ -31,7 +33,7 @@ Scenario-1: App architecture when built using a web framework
 
 The following is how the architecture for our referrence application could look like when built using a web framework:
 
-.. image:: ../img/arch-web-framework.svg
+.. image:: ../img/arch-web-framework-3-2.png
 
 
 Notes
@@ -51,8 +53,8 @@ Scenario-2: App architecture when built using Hasura
 
 Every app built on Hasura largely adheres to the standard architecture show here:
 
-.. image:: ../img/arch-app-hasura.svg
-
+.. rst-class:: featured-image
+.. image:: ../img/arch-app-hasura-3-2.png
 
 Notes
 ^^^^^
@@ -109,6 +111,6 @@ Additional information about the Hasura platform and underlying components:
 
 Based on the above, the following is a more detailed visualization of Hasura's architecture:
 
-.. image:: ../img/arch-app-hasura-advanced.svg
+.. image:: ../img/arch-app-hasura-advanced-3-2.png
 
 .. Add a section for additional reading

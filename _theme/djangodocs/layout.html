@@ -16,18 +16,18 @@
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 
-  <script src="/_static/vendor.js"></script>
-  <script src="/_static/search.js"></script>
+  <script src="{{ pathto('_static/vendor.js', 1) }}"></script>
+  <script src="{{ pathto('_static/search.js', 1) }}"></script>
 {% endblock %}
 
 {% block document %}
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if pagename != 'index' else '' }}{% endblock %}">
     <div class="header_wrapper">
       <div class="header_main">
-        <a href="/">
+        <a href="{{ pathto('', 1) }}">
           <div class="inline-block header_main_logo">
             <div class="img_wrapper inline-block">
-              <img class="responsive logo_img" src="/_images/logo.svg" />
+              <img class="responsive logo_img" src="{{ pathto('_images/logo.svg', 1) }}" />
             </div>
             <div class="inline-block"> DOCS </div>
           </div>
@@ -43,7 +43,7 @@
           {%- else %}
             <div class="inline-block link_element">
           {%- endif %}
-            <a href="/ref">
+            <a href="{{ pathto('', 1) }}ref">
               Reference
             </a>
           </div>
@@ -53,17 +53,8 @@
           {%- else %}
             <div class="inline-block link_element">
           {%- endif %}
-            <a href="/tutorials">
+            <a href="{{ pathto('', 1) }}tutorials">
               Tutorials
-            </a>
-          </div>
-          {%- if ( currPage == "troubleshooting" ) %}
-            <div class="inline-block link_element link_element_active">
-          {%- else %}
-            <div class="inline-block link_element">
-          {%- endif %}
-            <a href="#">
-              Troubleshooting
             </a>
           </div>
           {%- if ( currPage == "guides" ) %}
@@ -71,7 +62,7 @@
           {%- else %}
             <div class="inline-block link_element">
           {%- endif %}
-            <a href="/guides">
+            <a href="{{ pathto('', 1) }}guides">
               Guides
             </a>
           </div>
@@ -122,7 +113,7 @@
         {% endif %}
         <div class="content_inner_wrapper">
           <div class="back_link">
-            <a href={{ '/' + splittedPage[0] }}> <i class="fa fa-long-arrow-left" aria-hidden="true"></i>Back to {{ splittedPage[0] }} </a>
+            <a href="{{ pathto('', 1) }}{{splittedPage[0] }}"> <i class="fa fa-long-arrow-left" aria-hidden="true"></i>Back to {{ splittedPage[0] }} </a>
           </div>
           <div role="main" parent={{ rootpage }}>
             <div id="docs-content">
@@ -161,7 +152,7 @@
               _.each(objs, function(obj, index ) {
         %>
                 <li class="search_bullets">
-                  <a class="search_results_anchor" href="/<%= obj.url %>">
+                  <a class="search_results_anchor" href="{{ pathto('', 1) }}<%= obj.url %>">
                     <div class="no_of_results">
                       <%= obj.title %>
                     </div>
@@ -192,7 +183,7 @@
 {% endblock %}
 
 {% block sidebarrel %}
-  <h3>DOCS VERSION: <span class="version_txt">v0.1</span></h3>
+  <h3>DOCS VERSION: <span class="version_txt">v{{version}}</span></h3>
   {% set local_toc = local_toctree(pagename, maxdepth=2|int, collapse=theme_collapse_navigation, includehidden=True) %}
   {{ local_toc }}
   <!--

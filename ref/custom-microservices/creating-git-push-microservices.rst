@@ -7,8 +7,8 @@
    :description: Reference documentation for securely and automatically creating a custom microservices using git push.
    :keywords: hasura, docs, custom microservices, git push, deplyment
 
-Creating git push microservices
-===============================
+Creating ``git push`` microservices
+===================================
 
 To deploy your code as a service using git-push you need to do the following:
 
