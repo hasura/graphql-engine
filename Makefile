@@ -259,4 +259,7 @@ dummy:
 
 watch:
 	inotifywait -q -m --recursive -e modify -e move -e create -e delete \
-    --exclude $(BUILDDIR) . | while read; do $(MAKE) html; done
+    --exclude $(BUILDDIR)/* . | while read; do $(MAKE) html; done
+
+livehtml:
+	sphinx-autobuild -b html -i "$(BUILDDIR)/*" $(ALLSPHINXOPTS) $(BUILDDIR)/html

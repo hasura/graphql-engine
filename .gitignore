@@ -43,3 +43,6 @@ Thumbs.db
 # Editor backup files #
 #######################
 *~
+
+# Virtual Environment
+venv

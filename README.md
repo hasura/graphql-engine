@@ -8,6 +8,12 @@ To build, contribute and view docs:
 pip3 install -r requirements.txt
 ```
 
+* Live reload and auto build
+
+```bash
+make livehtml
+```
+
 * Now build the docs to produce HTML files. Inside the docs folder:
 ```
 make html-images
