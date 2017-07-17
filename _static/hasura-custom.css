@@ -60,6 +60,16 @@
 
 /* Search links */
 
+.algolia_search_attribution {
+  font-size: 18px;
+  margin-top: 10px;
+  text-align: left;
+}
+.algolia_search_attribution .algolia_image {
+  vertical-align: middle;
+  width: 70px;
+}
+
 .no_of_results {
   display: inline;
   color: #CF9C0E;
@@ -731,17 +741,22 @@ p
   color: #fff;
   font-family: 'Khula';
 }
-#sidebar .sphinxsidebar .sphinxsidebarwrapper ul li
+#sidebar .sphinxsidebar .sphinxsidebarwrapper h4
+{
+  color: #fff;
+  font-family: 'Khula';
+}
+#sidebar .sphinxsidebar .sphinxsidebarwrapper ul li, .quick_links ul li
 {
   list-style-type: none;
   color: #fff;
 }
-#sidebar .sphinxsidebar .sphinxsidebarwrapper ul li a
+#sidebar .sphinxsidebar .sphinxsidebarwrapper ul li a, .quick_links ul li a
 {
   color: #fff;
   text-decoration: none;
 }
-#sidebar .sphinxsidebar .sphinxsidebarwrapper ul li a code
+#sidebar .sphinxsidebar .sphinxsidebarwrapper ul li a code, .quick_links ul li a code
 {
   color: #32A061;
   text-decoration: none;
