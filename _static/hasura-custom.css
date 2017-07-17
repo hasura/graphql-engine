@@ -725,6 +725,9 @@ p
   width: 77% !important;
   margin: 0 auto !important;
 }
+.content_inner_wrapper.padding_top {
+  margin: 40px auto !important;
+}
 .back_link
 {
   display: flex;

@@ -117,7 +117,12 @@
 
           {% endif %}
         {% endif %}
-        <div class="content_inner_wrapper">
+        {% set p = pagename.split('/') %}                                                                                                                               
+        {% set c = '' %}
+        {% if p[0] != 'ref' %}
+        {% set c = 'padding_top' %}
+        {% endif %}
+        <div class="content_inner_wrapper {{ c }}">
           {%- if ( pagename.split('/')[1] != 'index' and pagename.split('/')[0] != 'ref' ) %}
             <div class="back_link">
                 <a href="{{ pathto('', 1) }}{{splittedPage[0] }}"> <i class="fa fa-long-arrow-left" aria-hidden="true"></i>Back to {{ splittedPage[0] }} </a>
