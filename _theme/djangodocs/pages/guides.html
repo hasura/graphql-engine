@@ -12,7 +12,7 @@
             <div class="wd_33">
               <div class="guide_box_wrapper">
                 <div class="thumnail_image">
-                  <img src="<%= ( obj.image ? '{{ pathto('_images/', 1) }}' + obj.image : '{{ pathto('_images/img_lights.jpg', 1) }}' ) %>" src="Thumbnails Images" />
+                  <img src="<%= ( obj.image ? '{{ pathto('_images/', 1) }}' + obj.image : '{{ pathto('_images/default_image.png', 1) }}' ) %>" src="Thumbnails Images" />
                 </div>
                 <div class="guides_list_wrapper">
                   <div class="subhead_wrapper text_left">
@@ -28,12 +28,14 @@
                   %>
                       <div class="tags_wrapper">
                   <%
-                        _.each( splitTags, function( t ) {
+                        _.each( splitTags, function( t, i ) {
+                          if ( i <= 1 ) {
                   %>
-                        <div class="tags_btn">
-                          <button><%= t %></button>
-                        </div>
+                            <div class="tags_btn">
+                              <button><%= t %></button>
+                            </div>
                   <%
+                          }
                         });
                   %>
                       </div>

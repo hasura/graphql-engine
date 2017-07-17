@@ -56,7 +56,7 @@ release-images:
 
 .PHONY: html
 html:
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) -D version=$(BUILDVERSION) -D release=$(BUILDVERSION) $(BUILDDIR)/html
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) -D version=$(BUILDVERSION) -D release=$(BUILDVERSION) -A latest_docs_version="0.13" $(BUILDDIR)/html
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 .PHONY: html-images
