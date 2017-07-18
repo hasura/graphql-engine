@@ -14,7 +14,6 @@ html {
 
 
 .document {
-  max-width: 1366px;
   margin: 0 auto;
 }
 
@@ -251,6 +250,7 @@ article ol ol {
 
 /* **** BEGIN landing.html ******************************* */
 .content_wrapper {
+  padding-top: 27px;
   margin: auto;
   width: 90%;
 }
