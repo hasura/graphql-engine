@@ -1,9 +1,22 @@
 @import url('https://fonts.googleapis.com/css?family=Gudea');
 @import url('https://fonts.googleapis.com/css?family=Khula:400,700');
 
+html {
+    background-color: #f8f8f8 !important;
+}
+::-moz-selection { /* Code for Firefox */
+    background: #b2d7fe !important;
+}
+
+::selection {
+    background: #b2d7fe !important;
+}
+
+
 .document {
-  max-width: 1366px;
   margin: 0 auto;
+  min-width: 1220px;
+  overflow-y: auto;
 }
 
 /* Loader */
@@ -120,7 +133,7 @@ body
 .main_wrapper
 {
   background-color: #F8FAFB;
-  padding-top: 20px;
+  padding-top: 28px;
 }
 p
 {
@@ -136,6 +149,12 @@ p
 {
   /* color: #FEC53D !important; */
   color: rgba(207,156,14,1) !important;
+  background-color: transparent !important;
+}
+.current
+{
+  font-family: 'Gudea';
+  font-size: 16px;
 }
 a.current.reference.internal {
   color: rgba(207,156,14,1) !important;
@@ -233,6 +252,7 @@ article ol ol {
 
 /* **** BEGIN landing.html ******************************* */
 .content_wrapper {
+  padding-top: 27px;
   margin: auto;
   width: 90%;
 }
@@ -252,9 +272,9 @@ p
 }
 .box_wrapper
 {
-  width: 90%;
+  width: 89%;
   margin: 0 auto;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
   text-align: center;
   min-height: 240px;
   padding: 10px;
@@ -272,7 +292,7 @@ p
 }
 .box_head
 {
-  width: 50%;
+  width: 60%;
   display: flex;
   align-items: center;
 }
@@ -292,7 +312,7 @@ p
 {
   display: flex;
   align-items: center;
-  width: 50%;
+  width: 40%;
   justify-content: flex-end;
   color: #FEC53D;
   font-weight: 600;
@@ -627,7 +647,7 @@ p
 }
 .guide_box_head img
 {
-  width: 30px;
+  width: 45px;
   display: inline-block;
   padding-right: 15px;
 }
@@ -731,6 +751,8 @@ p
 {
   background-color: #414859;
   width: 20% !important;
+  font-family: 'Gudea';
+  font-size: 16px;
 }
 [parent] {
   background-color: green;
@@ -808,5 +830,18 @@ p
 {
   color: #32A061;
   text-decoration: none;
+}
+.toctree-wrapper
+{
+  font-family: 'Gudea';
+}
+ol, ul
+{
+  font-family: 'Gudea';
+}
+.arabic
+{
+  font-family: 'Gudea';
+  font-size: 16px;
 }
 /* Reference Page ends here */

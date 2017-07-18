@@ -21,7 +21,7 @@
                   <div class="small_content space_top_bot text_left">
                     <%= obj.description.length > 160 ? obj.description.slice(0, 160 ) + ' ...' : obj.description %>
                   </div>
-                  <% 
+                  <%
                     var splitTags = obj.tags.replace(" ", "");
                     if ( splitTags.length > 0 ) {
                       splitTags = splitTags.split(",");
