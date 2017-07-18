@@ -41,7 +41,7 @@ Adding a git-push enabled service
 
 In the Add custom service section of the Hasura console, ensure that git-push is enabled and you're good to go.
 
-For reference, here's a configuraiton screenshot:
+For reference, here's a configuration screenshot:
 
 .. rst-class:: featured-image
 .. image:: ../../getting-started/gitpush.png

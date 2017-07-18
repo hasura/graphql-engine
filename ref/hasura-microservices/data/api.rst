@@ -94,7 +94,7 @@ The various values that ``type`` and ``args`` can take are listed in the followi
 
    * - ``"drop_insert_permission"``
      - :ref:`drop_insert_permission <drop_insert_permission>`
-     - Remove existing insert permisison
+     - Remove existing insert permission
 
    * - ``"create_select_permission"``
      - :ref:`create_select_permission <create_select_permission>`
