@@ -5,7 +5,6 @@
 API Reference
 =============
 
-List of all the APIs and their documentation is available at:
-https://hasura.io/_docs/auth/4.0/swagger-ui
+.. List of all the APIs and their documentation is available at: https://hasura.io/_docs/auth/4.0/swagger-ui
 
-.. swaggerv2doc:: http://petstore.swagger.io/v2/swagger.json
+.. swaggerv2doc:: https://00e9e64bacf290bf08bf59975d3a0e6246ee59c5899e275369-apidata.googleusercontent.com/download/storage/v1/b/hasura-storage/o/swagger.json?qk=AD5uMEsALqe7fwIGG9X1zdMffg5ESWDJyqbmujPiBI5y7tGhJmghcOPU8VfqDaZjv5KsGeFQc3Jsx7uqLAJZOhEesfZDfgz9iRbsFP78yl0Ns9Gud4HscqS6uPObHoBYuzE5z6FPmsy6K9EyC-W2xJ6HQMKFyMMFjHBf6VGIfq_WLjc9oQIlPKjC40nYggZyiVPo5dLeDPHCrYolVmf1ZLmgclgpuQnm7la28ywC8m-FDXVBKMuFNmI3WXjU1qVBTxOovDLSRD0hJj_l5QVc3daBWsd17wkov6rXQ7TnyohBmIijlrxj_jzv7pkWQ3NCrlvslkqmLSonwWnQq6EDC_iGrCWl3OiQQr3jr_tx1Oyg56GZ5c0yqJBa8cYNfLVF2CkEgsZ6VQ_T2Iz7Efhhepx3qNC7We3XuAUvxx6HXdVaBGiZyNbb7YNkhy-My6qlf0THE5ihIo6VrLCA1Ry-hVV9o-NZNp8-5339GK6nWmSy8NSGREtWrhfehshO2NfTiqbIoISnk1BZ2NRGD2vQfO-R-4In-od01wnlmGKKneFaThiKXfYWmmaVs1MQpb9VNb2U2PaK91qo8KQpxok6QYVenOytgYiiiPkKx64L2gBPAOq4UCmq1czXyVb_aR34Bts866Ly89-DblfwLcQga8GCXx3h2YjPcY4VWf_wntemb_L0h20to6dmb1LK-LtDEYxTLvRUkaXfJWX4zUNI3VVfzODIsqgWuE1m7xUiebcIMzql7hK0KMBjeWxx9HbIKUMsyXfXSroUpbHsEV6YW_sspKkFCrso9Q
