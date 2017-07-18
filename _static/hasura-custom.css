@@ -120,7 +120,7 @@ body
 .main_wrapper
 {
   background-color: #F8FAFB;
-  padding-top: 20px;
+  padding-top: 28px;
 }
 p
 {
@@ -252,9 +252,9 @@ p
 }
 .box_wrapper
 {
-  width: 90%;
+  width: 89%;
   margin: 0 auto;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
   text-align: center;
   min-height: 240px;
   padding: 10px;
@@ -272,7 +272,7 @@ p
 }
 .box_head
 {
-  width: 50%;
+  width: 60%;
   display: flex;
   align-items: center;
 }
@@ -292,7 +292,7 @@ p
 {
   display: flex;
   align-items: center;
-  width: 50%;
+  width: 40%;
   justify-content: flex-end;
   color: #FEC53D;
   font-weight: 600;
