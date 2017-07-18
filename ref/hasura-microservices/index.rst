@@ -20,3 +20,4 @@ Hasura microservices are Backend-as-a-Service components that are packaged with 
   data/index
   auth/index
   filestore/index
+  notify/index
