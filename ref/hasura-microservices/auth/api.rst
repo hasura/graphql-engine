@@ -7,3 +7,5 @@ API Reference
 
 List of all the APIs and their documentation is available at:
 https://hasura.io/_docs/auth/4.0/swagger-ui
+
+.. swaggerv2doc:: http://petstore.swagger.io/v2/swagger.json

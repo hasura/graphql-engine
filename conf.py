@@ -54,7 +54,8 @@ extensions = [
     "generate_index",
     "sphinxcontrib.fulltoc",
     "sphinx.ext.intersphinx",
-    "sphinx.ext.viewcode"
+    "sphinx.ext.viewcode",
+    "sphinxcontrib.swaggerdoc"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
