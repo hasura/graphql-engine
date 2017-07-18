@@ -21,7 +21,7 @@ If you are new to Hasura, the following is the best way to explore more about Ha
 
 #. **Interactive tutorial:** Every hasura project comes built-in with an interactive tutorial. It's the perfect way to get a high level understanding of the different components in Hasura and get your hands dirty with a few simple exercises.
 
-#. **Introductory exercises:**: A relatively more detailed set of exercises to get your Hasura mojo going:
+#. **Introductory exercises:** A relatively more detailed set of exercises to get your Hasura mojo going:
 
    .. toctree::
       :maxdepth: 2
