@@ -434,7 +434,7 @@ set_query_template_comment
        "type": "set_query_template_comment",
        "args": {
            "name": "article_homepage",
-           "commment" : "used for homepage data"
+           "comment" : "used for homepage data"
        }
    }
 

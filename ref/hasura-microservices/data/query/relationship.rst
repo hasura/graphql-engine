@@ -165,7 +165,7 @@ Syntax
      - Manual mapping of table and columns
 
 .. note::
-   There has to be atleast one and only one of ``foreign_key_constraint_on`` and ``manual_mapping``.
+   There has to be at least one and only one of ``foreign_key_constraint_on`` and ``manual_mapping``.
 
 
 ``ObjRelUsingManualMapping``
@@ -361,7 +361,7 @@ An example:
        "args": {
            "table": "article",
            "name": "article_detail",
-           "commment" : "has extra information about an article like count etc."
+           "comment" : "has extra information about an article like count etc."
        }
    }
 
