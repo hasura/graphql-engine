@@ -220,7 +220,7 @@
     Copyright &copy; 2016 <a target="_blank" href="https://hasura.io">Hasura</a>.
   </div>
 
-  <!--script>
+  <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
         (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
@@ -228,7 +228,7 @@
 
     ga('create', 'UA-59768903-1', 'auto');
     ga('send', 'pageview');
-  </script-->
+  </script>
 
   <script>
     window.intercomSettings = {
@@ -272,9 +272,10 @@
               function callback(err, content ) {
                 var templated_html = template({"objs": content.hits, "searchString": content.query, "totalResults": content.nbHits });
                 $(".search_wrapper").html(templated_html);
-                window.history.pushState({"url": window.location.pathname }, 'Search Page', '?query=' + e.target.value + '' );
+                window.history.pushState({"url": ( window.location.pathname +'?query=' + e.target.value + '' ) }, 'Search Page', '?query=' + e.target.value + '' );
                 enableSearch();
                 hideLoading();
+                trackga('docs', 'search', content.query, content.nbHits);
               }
 
               delayTimer = setTimeout( function() {
@@ -299,19 +300,25 @@
 
       const handleQueryParams = function() {
         const values = re.exec(window.location.search)
-        if ( values[1].length > 0 ) {
+        if ( values && values[1].length > 0 ) {
           var searchElement = $('.search_element');
           if ( searchElement.length > 0 ) {
             searchElement[0].value = decodeURIComponent(values[1]);
             searchElement.keyup();
           }
+        } else {
+          hideLoading();
+          enableContent();
+          $('.search_element').val('');
+          lastSearched = '';
         }
       }
 
       const handleStatePop = function( e) {
+        handleQueryParams();
       };
 
-      window.onpopstate = handleStatePop();
+      window.onpopstate = handleStatePop;
 
       window.location.search.length > 0 ? handleQueryParams() : '';
     });
