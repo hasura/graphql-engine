@@ -4,3 +4,4 @@ algoliasearch
 jinja2
 sphinx-autobuild
 sphinxcontrib-fulltoc
+sphinxcontrib.swaggerdoc
