@@ -16,11 +16,12 @@
                 </div>
                 <div class="guides_list_wrapper">
                   <div class="subhead_wrapper text_left">
-                    <%= obj.title %>
+                    <%= obj.title.length > 60 ? obj.title.slice(0, 60) + ' ...' : obj.title %>
                   </div>
                   <div class="small_content space_top_bot text_left">
                     <%= obj.description.length > 160 ? obj.description.slice(0, 160 ) + ' ...' : obj.description %>
                   </div>
+                  <!--
                   <%
                     var splitTags = obj.tags.replace(" ", "");
                     if ( splitTags.length > 0 ) {
@@ -42,6 +43,7 @@
                   <%
                     }
                   %>
+                  -->
                   <!-- div class="media_wrapper">
                     <div class="float_left display_flex">
                       <div class="media_img_circle">
