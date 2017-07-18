@@ -608,6 +608,14 @@ p
   min-height: 76vh;
   float: left;
 }
+.guides_page_wrapper a
+{
+  color: #788095 !important;
+}
+.guides_page_wrapper a:visited
+{
+  color: #788095 !important;
+}
 .guide_box_wrapper
 {
   width: 90%;
