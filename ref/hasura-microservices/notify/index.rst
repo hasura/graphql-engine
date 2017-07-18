@@ -19,17 +19,10 @@ The ``Notify`` service on Hasura lets you contact / notify your project users th
 
 ``Notify`` can be configured with the following providers:
 
-* Email:
-
-  * SMTP
-  * SparkPost
-* SMS:
-
-  * Twilio
-  * MSG91
-
 Email
 -----
+
+Any one of the following providers can be configured and enabled for sending emails.
 
 SMTP
 ^^^^
@@ -68,6 +61,8 @@ You need to configure the following option on the Hasura Project Console:
 
 SMS
 ---
+
+Either Twilio or MSG91 can be configured and enabled to send SMS.
 
 Twilio
 ^^^^^^
