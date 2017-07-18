@@ -1,7 +1,9 @@
 @import url('https://fonts.googleapis.com/css?family=Gudea');
 @import url('https://fonts.googleapis.com/css?family=Khula:400,700');
 
-
+html {
+    background-color: #f8f8f8 !important;
+}
 ::-moz-selection { /* Code for Firefox */
     background: #b2d7fe !important;
 }
@@ -147,6 +149,11 @@ p
   /* color: #FEC53D !important; */
   color: rgba(207,156,14,1) !important;
   background-color: transparent !important;
+}
+.current
+{
+  font-family: 'Gudea';
+  font-size: 16px;
 }
 a.current.reference.internal {
   color: rgba(207,156,14,1) !important;
@@ -742,6 +749,8 @@ p
 {
   background-color: #414859;
   width: 20% !important;
+  font-family: 'Gudea';
+  font-size: 16px;
 }
 [parent] {
   background-color: green;
@@ -819,5 +828,18 @@ p
 {
   color: #32A061;
   text-decoration: none;
+}
+.toctree-wrapper
+{
+  font-family: 'Gudea';
+}
+ol, ul
+{
+  font-family: 'Gudea';
+}
+.arabic
+{
+  font-family: 'Gudea';
+  font-size: 16px;
 }
 /* Reference Page ends here */
