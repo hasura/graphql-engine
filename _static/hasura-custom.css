@@ -1,6 +1,16 @@
 @import url('https://fonts.googleapis.com/css?family=Gudea');
 @import url('https://fonts.googleapis.com/css?family=Khula:400,700');
 
+
+::-moz-selection { /* Code for Firefox */
+    background: #b2d7fe !important;
+}
+
+::selection {
+    background: #b2d7fe !important;
+}
+
+
 .document {
   max-width: 1366px;
   margin: 0 auto;
@@ -136,6 +146,7 @@ p
 {
   /* color: #FEC53D !important; */
   color: rgba(207,156,14,1) !important;
+  background-color: transparent !important;
 }
 a.current.reference.internal {
   color: rgba(207,156,14,1) !important;
