@@ -42,3 +42,17 @@ var searchFunc = function( query, callback, page=1, restrictAttributes, isRestri
 
   index.search(queries, callback );
 };
+
+/* Track event function */
+const trackga = function ( category, action, label, value ) {
+  // If ga is available
+  if ( ga ) {
+    ga('send', {
+        hitType: 'event',
+        eventCategory: category,
+        eventAction: action,
+        eventLabel: label,
+        eventValue: value
+    });
+  }
+};
