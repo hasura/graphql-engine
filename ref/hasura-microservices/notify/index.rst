@@ -43,7 +43,7 @@ You need to configure the following options on the Hasura Project Console:
 SparkPost
 ^^^^^^^^^
 
-To start sending emails using Sparkpost, `signup <https://www.sparkpost.com/>`_ for an account and create a sending domain. You have to obtain an API key after verifying the sending domain. Sparkpost provides helpful interface to guide through the process. SparkPost's free plan should be enough to cover your intial email volume.
+To start sending emails using SparkPost, `signup <https://www.sparkpost.com/>`_ for an account and create a sending domain. You have to obtain an API key after verifying the sending domain. SparkPost provides helpful interface to guide through the process. SparkPost's free plan should be enough to cover your intial email volume.
 
 .. note::
 
@@ -53,11 +53,11 @@ Please remember that you have to setup SPF and DKIM records for your domain
 to start sending emails from your domain. Otherwise, SparkPost will
 reject sending emails.
 
-Here are some Sparkpost resources for `verifying sending domain <https://support.sparkpost.com/customer/portal/articles/1933360-verify-sending-domains>`_ and setting up `SPF/DKIM: <https://www.sparkpost.com/blog/understanding-spf-and-dkim-in-sixth-grade-english/>`_
+Here are some SparkPost resources for `verifying sending domain <https://support.sparkpost.com/customer/portal/articles/1933360-verify-sending-domains>`_ and setting up `SPF/DKIM: <https://www.sparkpost.com/blog/understanding-spf-and-dkim-in-sixth-grade-english/>`_
 
 You need to configure the following option on the Hasura Project Console:
 
-* **Sparkpost API Key**: The API key obtained from your Sparkpost account, for the sending domain. Make sure that you have checked *Transmissions: Read/Write* in API Permission section on SparkPost while creating the API key.
+* **SparkPost API Key**: The API key obtained from your SparkPost account, for the sending domain. Make sure that you have checked *Transmissions: Read/Write* in API Permission section on SparkPost while creating the API key.
 
 SMS
 ---
