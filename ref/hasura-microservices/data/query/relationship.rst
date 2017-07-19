@@ -53,7 +53,7 @@ Create an *object relationship* ``author`` on ``article`` *table*,  *using* the 
    Authorization: Bearer <admin-token>
 
    {
-       "type": "create_article_relationship",
+       "type": "create_array_relationship",
        "args": {
            "table": "author",
            "name": "articles",
