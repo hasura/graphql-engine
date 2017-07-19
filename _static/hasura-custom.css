@@ -11,7 +11,11 @@ html {
 ::selection {
     background: #b2d7fe !important;
 }
-
+body
+{
+  min-width: 1220px;
+  overflow-y: auto;
+}
 
 .document {
   margin: 0 auto;
@@ -853,3 +857,19 @@ ol, ul
   font-size: 16px;
 }
 /* Reference Page ends here */
+
+/* Media Query */
+@media (min-width: 0) and (max-width: 1220px)
+{
+  body
+  {
+    min-width: 1220px !important;
+    overflow-y: auto;
+  }
+  html
+  {
+    min-width: 1220px;
+    overflow-y: auto;
+    font-size: 100% !important;
+  }
+}
