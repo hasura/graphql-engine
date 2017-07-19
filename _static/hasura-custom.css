@@ -19,8 +19,6 @@ body
 
 .document {
   margin: 0 auto;
-  min-width: 1220px;
-  overflow-y: auto;
 }
 
 /* Loader */
@@ -451,7 +449,11 @@ p
 /* **** END landing.html ******************************* */
 
 /* Common Header CSS */
-
+.main_container_wrapper
+{
+  min-width: 1220px;
+  overflow-y: auto;
+}
 .header_wrapper {
   font-family: 'Gudea';
   background-color: white;
@@ -871,8 +873,6 @@ ol, ul
   }
   html
   {
-    min-width: 1220px;
-    overflow-y: auto;
     font-size: 100% !important;
   }
 }
