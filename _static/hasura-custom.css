@@ -11,12 +11,14 @@ html {
 ::selection {
     background: #b2d7fe !important;
 }
-
+body
+{
+  min-width: 1220px;
+  overflow-y: auto;
+}
 
 .document {
   margin: 0 auto;
-  min-width: 1220px;
-  overflow-y: auto;
 }
 
 /* Loader */
@@ -443,14 +445,20 @@ p
   font-weight: 600;
   font-family: 'Gudea';
 }
+
 /* **** END landing.html ******************************* */
 
 /* Common Header CSS */
-
+.main_container_wrapper
+{
+  min-width: 1220px;
+  overflow-y: auto;
+}
 .header_wrapper {
   font-family: 'Gudea';
   background-color: white;
   padding: 20px;
+  min-width: 1220px;
 }
 
 .header_wrapper .header_main {
@@ -607,6 +615,14 @@ p
   width: 100%;
   min-height: 76vh;
   float: left;
+}
+.guides_page_wrapper a
+{
+  color: #788095 !important;
+}
+.guides_page_wrapper a:visited
+{
+  color: #788095 !important;
 }
 .guide_box_wrapper
 {
@@ -817,7 +833,7 @@ p
 }
 #sidebar .sphinxsidebar .sphinxsidebarwrapper ul li, .quick_links ul li
 {
-  list-style-type: none;
+  /* list-style-type: none; */
   /* color: #fff; */
   color: rgba(214,214,214,1);
 }
@@ -846,3 +862,17 @@ ol, ul
   font-size: 16px;
 }
 /* Reference Page ends here */
+
+/* Media Query */
+@media (min-width: 0) and (max-width: 1220px)
+{
+  body
+  {
+    min-width: 1220px !important;
+    overflow-y: auto;
+  }
+  html
+  {
+    font-size: 100% !important;
+  }
+}
