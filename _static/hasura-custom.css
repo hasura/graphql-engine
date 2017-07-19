@@ -753,6 +753,7 @@ p
   width: 20% !important;
   font-family: 'Gudea';
   font-size: 16px;
+  overflow-y: auto;
 }
 [parent] {
   background-color: green;
