@@ -32,7 +32,7 @@ If you already have an email address and want to send emails from that account i
 You need to configure the following options on the Hasura Project Console:
 
 * **Hostname**: SMTP hostname for email provider (e.g. smtp.gmail.com)
-* **Port**: SMTP port number (e.g. 587)
+* **Port (SSL)**: SMTP port number (e.g. 465) [``Notify`` only supports SSL authentication as of now. TLS is on the roadmap.]
 * **Username**: SMTP username (e.g. yourusername@gmail.com) 
 * **Password**: SMTP password (e.g. yourgmailpassword)
 
@@ -42,12 +42,12 @@ You need to configure the following options on the Hasura Project Console:
 
 .. note ::
   
-  For Hasura projects on Google Compute Engine / Google Container Engine, SMTP settings with standard ports like 25, 465, 587 will not work, since Google Compute Engine does not allow outbound connections on ports 25, 465, and 587. Hence, make sure that your SMTP provider have alternate ports like 2525 in case you want to deploy on Google Cloud. You can find more details and possible solutions `here <https://cloud.google.com/compute/docs/tutorials/sending-mail/>`_.
+  For Hasura projects on Google Compute Engine / Google Container Engine, SMTP settings with standard ports like 25, 465, 587 will not work, since Google Compute Engine does not allow outbound connections on these ports. Hence, make sure that your SMTP provider have alternate ports like 2525 in case you want to deploy on Google Cloud. You can find more details and possible solutions `here <https://cloud.google.com/compute/docs/tutorials/sending-mail/>`_.
 
 SparkPost
 ^^^^^^^^^
 
-To start sending emails using SparkPost, `signup <https://www.sparkpost.com/>`_ for an account and create a sending domain. You have to obtain an API key after verifying the sending domain. SparkPost provides helpful interface to guide through the process. SparkPost's free plan should be enough to cover your intial email volume.
+To start sending emails using SparkPost, `signup <https://www.sparkpost.com/>`_ for an account and create a sending domain. You have to obtain an API key after verifying the sending domain. SparkPost provides helpful interface to guide through the process. SparkPost's free plan should be enough to cover your initial email volume.
 
 .. note::
 
@@ -86,8 +86,8 @@ MSG91
 
 You need to configure the following option on the Hasura Project Console:
 
-* **API Key**: Unique identifier obtained from MS91 Dashboard.
-* **Sender ID**: 6 letter unique sender identification from which the SMS will be sent.
+* **API Key**: Unique identifier obtained from MSG91 Dashboard.
+* **Sender ID**: Sender identification (maximum 6 characters) from which the SMS will be sent.
 
 API Reference
 -------------

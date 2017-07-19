@@ -8,7 +8,7 @@ API
 ``POST /v1/send/email``
 ---------------------------
 
-This POST endpoint let's you send an email.
+This POST endpoint lets you send an email.
 
 A typical request is as follows:
 
@@ -22,13 +22,17 @@ Request
 
      {
        "to": "Example User <user@example.com>",
-       "from": "Project Admin <admin@hasura-project.com>",
+       "from": "Project Admin <admin@project.com>",
        "sub": "This is the email subject line",
        "text": "This is the email content in plain text",
-       "html": "This is the email content in html format"
+       "html": "<p>This is the <b>email content</b> in html format</p>"
      }
 
-Either **text** or **html** keys should be present. Both can also be provided.
+.. note :: 
+  
+  * Make sure that the *from* field you will be using to send emails is from the sending domain. For example, if your sending domain is ``project.com``, you can only send emails from ``<something>@project.com``, like ``admin@project.com``.
+
+  * Either **text** or **html** key should be present. Both can also be provided.
 
 Response
 ^^^^^^^^
@@ -43,8 +47,11 @@ An example response looks like:
       "id": "<provider-reference-id>"
     }
 
+.. note ::
+  
+  For SMTP email provider, the ``provider-reference-id`` will be ``NA``.
 
-``GET /v1/send/sms``
+``POST /v1/send/sms``
 --------------------------
 
 This endpoint can be used to send SMS.
@@ -52,7 +59,7 @@ This endpoint can be used to send SMS.
 Request
 ^^^^^^^
 
-An example request would look like:
+An example request to send an SMS to +91-9876543210 would look like:
 
 
 .. code-block:: http
@@ -61,9 +68,8 @@ An example request would look like:
      Content-Type: application/json 
 
      {
-       "to": 9876543210
+       "to": 9876543210,
        "countryCode": 91, 
-       "smsFrom": "MYPROJECT",
        "message": "This is the body of SMS" 
      }
 
