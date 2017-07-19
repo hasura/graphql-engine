@@ -455,6 +455,7 @@ p
   font-family: 'Gudea';
   background-color: white;
   padding: 20px;
+  min-width: 1220px;
 }
 
 .header_wrapper .header_main {
