@@ -29,6 +29,11 @@ from sphinx.util.osutil import relative_uri
 StandaloneHTMLBuilder.script_files = []
 #StandaloneHTMLBuilder.imgpath = relative_uri("v0.13", '_images')
 
+html_context = {
+    "APPLICATION_ID": os.getenv("APPLICATION_ID"),
+    "APPLICATION_SEARCH_KEY": os.getenv("SEARCH_ONLY_KEY")
+}
+
 # End of it
 
 # sys.path.insert(0, os.path.abspath('.'))
@@ -49,7 +54,8 @@ extensions = [
     "generate_index",
     "sphinxcontrib.fulltoc",
     "sphinx.ext.intersphinx",
-    "sphinx.ext.viewcode"
+    "sphinx.ext.viewcode",
+    "sphinxcontrib.swaggerdoc"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -106,7 +112,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'venv', 'Thumbs.db', '.DS_Store']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.

@@ -19,11 +19,8 @@ var promise_ajax = function(url, data, type) {
 };
 
 var searchFunc = function( query, callback, page=1, restrictAttributes, isRestrictAttributes ) {
-  // var APPLICATION_ID = '2R09CYX6BF';                                                                                                                              
-  // var SEARCH_ONLY_KEY = '1361d3d9973e36ed78e29c3018f74aa6';
-
-  var APPLICATION_ID = {{ APPLICATION_ID }};                                                                                                                              
-  var SEARCH_ONLY_KEY = {{ APPLICATION_SEARCH_KEY }};
+  var APPLICATION_ID = "WCBB1VVLRC";
+  var SEARCH_ONLY_KEY = "11b1fdcf3e6d3961ac30c8708d9bbdd9";
 
   var hitsPerPage = 100;
   var page_no = parseInt(page) - 1;
@@ -34,7 +31,7 @@ var searchFunc = function( query, callback, page=1, restrictAttributes, isRestri
 
   var client = algoliasearch(APPLICATION_ID, SEARCH_ONLY_KEY, {"protocol":"https:"}); // localhost
   //var client = algoliasearch(APPLICATION_ID, SEARCH_ONLY_KEY);
-  var index = client.initIndex('docs_search')
+  var index = client.initIndex("docs_search")
   
   queries = {
     query: query,

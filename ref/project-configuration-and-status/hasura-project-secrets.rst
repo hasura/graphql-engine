@@ -131,7 +131,7 @@ Here’s the same JSON object, now referring to the ``postgres.password`` entry 
 +--------------------+--------------------+--------------------+-------------------------------+
 | ssh.authorizedKeys | true               | string             | Base64 encoded SSH            |
 |                    |                    |                    | public keys                   |
-|                    |                    |                    | seperated by                  |
+|                    |                    |                    | separated by                  |
 |                    |                    |                    | ``\n``; Eg: a                 |
 |                    |                    |                    | base64 encoding of            |
 |                    |                    |                    | a typical                     |
