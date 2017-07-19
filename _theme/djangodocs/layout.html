@@ -13,13 +13,18 @@
 {%- endmacro %}
 
 {% block extrahead %}
+  <meta name="viewport" content="user-scalable=no">
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
   {%- if version != latest_docs_version %}
     <link ref="canonical" href="https://docs.hasura.io/{{latest_docs_version}}/{{pagename}}.html" />
   {% endif %}
   <script src="{{ pathto('_static/vendor.js', 1) }}"></script>
-  <script src="{{ pathto('_static/search.js', 1) }}"></script>
+  {% block javascript %}
+    <script type="text/javascript">
+      {% include 'static/search.js' %}
+    </script>
+  {% endblock %}
 {% endblock %}
 
 {% block document %}
@@ -87,68 +92,70 @@
         </div>
       </div>
     </div>
-    <div id="" class="content_wrapper">
-      {% include 'pages/loading.html' %}
-      {%- if pagename == 'index' %}
-        {% include 'pages/landing.html' %}
-      {%- elif pagename == 'guides/index' %}
-        {% include 'pages/guides.html' %}
-      {%- elif pagename == 'tutorials/index' %}
-        {% include 'pages/tutorials.html' %}
-      {%- else %}
-        {% block sidebarwrapper %}
-          {% if pagename.split('/')[0] == 'ref' %}
-            <div class="yui-b" id="sidebar">
-              {%- if last_updated %}
-                <span><b>Last updated:</b> {{ last_updated }}</span>
-              {%- endif %}
-              {{ sidebar() }}
-            </div>
-          {% endif %}
-        {% endblock %}
-        {% set splittedPage = pagename.split('/') %}
-        {%- if splittedPage[0] == 'ref' %}
-          {% set rootpage='ref' %}
+    <div class="main_container_wrapper">
+      <div id="" class="content_wrapper">
+        {% include 'pages/loading.html' %}
+        {%- if pagename == 'index' %}
+          {% include 'pages/landing.html' %}
+        {%- elif pagename == 'guides/index' %}
+          {% include 'pages/guides.html' %}
+        {%- elif pagename == 'tutorials/index' %}
+          {% include 'pages/tutorials.html' %}
         {%- else %}
-          {% set rootpage='common' %}
-        {% endif %}
-        {%- if rootpage == 'common' %}
-          {%- if splittedPage[1] != 'index' %}
-
-          {% endif %}
-        {% endif %}
-        {% set p = pagename.split('/') %}                                                                                                                               
-        {% set c = '' %}
-        {% if p[0] != 'ref' %}
-        {% set c = 'padding_top' %}
-        {% endif %}
-        <div class="content_inner_wrapper {{ c }}">
-          {%- if ( pagename.split('/')[1] != 'index' and pagename.split('/')[0] != 'ref' ) %}
-            <div class="back_link">
-                <a href="{{ pathto('', 1) }}{{splittedPage[0] }}"> <i class="fa fa-long-arrow-left" aria-hidden="true"></i>Back to {{ splittedPage[0] }} </a>
-            </div>
-          {% endif %}
-          <div role="main" parent={{ rootpage }}>
-            <div id="docs-content">
-              <!-- div class="media_wrapper details_media">
-                <div class="float_right wd_100">
-                  <div class="share_wrapper">
-                    <button class="share_btn green_btn">
-                      <span>Share</span>
-                      <i class="fa fa-share" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </div>
-              </div -->
-              <div id="{{ pagename|replace('/', '-') }}">
-                {% block body %}{% endblock %}
+          {% block sidebarwrapper %}
+            {% if pagename.split('/')[0] == 'ref' %}
+              <div class="yui-b" id="sidebar">
+                {%- if last_updated %}
+                  <span><b>Last updated:</b> {{ last_updated }}</span>
+                {%- endif %}
+                {{ sidebar() }}
               </div>
+            {% endif %}
+          {% endblock %}
+          {% set splittedPage = pagename.split('/') %}
+          {%- if splittedPage[0] == 'ref' %}
+            {% set rootpage='ref' %}
+          {%- else %}
+            {% set rootpage='common' %}
+          {% endif %}
+          {%- if rootpage == 'common' %}
+            {%- if splittedPage[1] != 'index' %}
+
+            {% endif %}
+          {% endif %}
+          {% set p = pagename.split('/') %}
+          {% set c = '' %}
+          {% if p[0] != 'ref' %}
+          {% set c = 'padding_top' %}
+          {% endif %}
+          <div class="content_inner_wrapper {{ c }}">
+            {%- if ( pagename.split('/')[1] != 'index' and pagename.split('/')[0] != 'ref' ) %}
+              <div class="back_link">
+                  <a href="{{ pathto('', 1) }}{{splittedPage[0] }}"> <i class="fa fa-long-arrow-left" aria-hidden="true"></i>Back to {{ splittedPage[0] }} </a>
+              </div>
+            {% endif %}
+            <div role="main" parent={{ rootpage }}>
+              <div id="docs-content">
+                <!-- div class="media_wrapper details_media">
+                  <div class="float_right wd_100">
+                    <div class="share_wrapper">
+                      <button class="share_btn green_btn">
+                        <span>Share</span>
+                        <i class="fa fa-share" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div -->
+                <div id="{{ pagename|replace('/', '-') }}">
+                  {% block body %}{% endblock %}
+                </div>
+              </div>
+              <div class="nav">{{ secondnav() }}</div>
             </div>
-            <div class="nav">{{ secondnav() }}</div>
           </div>
-        </div>
-        <div style="clear: both;"></div>
-      {%- endif %}
+          <div style="clear: both;"></div>
+        {%- endif %}
+      </div>
     </div>
     <div class="search_wrapper_template hide">
       <div class="wd_80">
@@ -217,10 +224,10 @@
   <div class="footer-hasura-custom">
     Want to contribute or report missing content? Check out the <a target="_blank" href="https://github.com/hasura/docs">github repo for docs</a>.<br>
     Powered by <a target="_blank" href="http://www.sphinx-doc.org">Sphinx</a>.
-    Copyright &copy; 2016 <a target="_blank" href="https://hasura.io">Hasura</a>.
+    Copyright &copy; 2017 <a target="_blank" href="https://hasura.io">Hasura</a>.
   </div>
 
-  <!--script>
+  <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
         (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
@@ -228,7 +235,7 @@
 
     ga('create', 'UA-59768903-1', 'auto');
     ga('send', 'pageview');
-  </script-->
+  </script>
 
   <script>
     window.intercomSettings = {
@@ -272,9 +279,10 @@
               function callback(err, content ) {
                 var templated_html = template({"objs": content.hits, "searchString": content.query, "totalResults": content.nbHits });
                 $(".search_wrapper").html(templated_html);
-                window.history.pushState({"url": window.location.pathname }, 'Search Page', '?query=' + e.target.value + '' );
+                window.history.pushState({"url": ( window.location.pathname +'?query=' + e.target.value + '' ) }, 'Search Page', '?query=' + e.target.value + '' );
                 enableSearch();
                 hideLoading();
+                trackga('docs', 'search', content.query, content.nbHits);
               }
 
               delayTimer = setTimeout( function() {
@@ -299,19 +307,25 @@
 
       const handleQueryParams = function() {
         const values = re.exec(window.location.search)
-        if ( values[1].length > 0 ) {
+        if ( values && values[1].length > 0 ) {
           var searchElement = $('.search_element');
           if ( searchElement.length > 0 ) {
             searchElement[0].value = decodeURIComponent(values[1]);
             searchElement.keyup();
           }
+        } else {
+          hideLoading();
+          enableContent();
+          $('.search_element').val('');
+          lastSearched = '';
         }
       }
 
       const handleStatePop = function( e) {
+        handleQueryParams();
       };
 
-      window.onpopstate = handleStatePop();
+      window.onpopstate = handleStatePop;
 
       window.location.search.length > 0 ? handleQueryParams() : '';
     });

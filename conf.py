@@ -29,6 +29,11 @@ from sphinx.util.osutil import relative_uri
 StandaloneHTMLBuilder.script_files = []
 #StandaloneHTMLBuilder.imgpath = relative_uri("v0.13", '_images')
 
+html_context = {
+    "APPLICATION_ID": os.getenv("APPLICATION_ID"),
+    "APPLICATION_SEARCH_KEY": os.getenv("SEARCH_ONLY_KEY")
+}
+
 # End of it
 
 # sys.path.insert(0, os.path.abspath('.'))
@@ -49,7 +54,8 @@ extensions = [
     "generate_index",
     "sphinxcontrib.fulltoc",
     "sphinx.ext.intersphinx",
-    "sphinx.ext.viewcode"
+    "sphinx.ext.viewcode",
+    "sphinxcontrib.swaggerdoc"
 ]
 
 # Add any paths that contain templates here, relative to this directory.

@@ -1,8 +1,23 @@
 @import url('https://fonts.googleapis.com/css?family=Gudea');
 @import url('https://fonts.googleapis.com/css?family=Khula:400,700');
 
+html {
+    background-color: #f8f8f8 !important;
+}
+::-moz-selection { /* Code for Firefox */
+    background: #b2d7fe !important;
+}
+
+::selection {
+    background: #b2d7fe !important;
+}
+body
+{
+  min-width: 1220px;
+  overflow-y: auto;
+}
+
 .document {
-  max-width: 1366px;
   margin: 0 auto;
 }
 
@@ -120,7 +135,7 @@ body
 .main_wrapper
 {
   background-color: #F8FAFB;
-  padding-top: 20px;
+  padding-top: 28px;
 }
 p
 {
@@ -136,6 +151,12 @@ p
 {
   /* color: #FEC53D !important; */
   color: rgba(207,156,14,1) !important;
+  background-color: transparent !important;
+}
+.current
+{
+  font-family: 'Gudea';
+  font-size: 16px;
 }
 a.current.reference.internal {
   color: rgba(207,156,14,1) !important;
@@ -233,6 +254,7 @@ article ol ol {
 
 /* **** BEGIN landing.html ******************************* */
 .content_wrapper {
+  padding-top: 27px;
   margin: auto;
   width: 90%;
 }
@@ -252,9 +274,9 @@ p
 }
 .box_wrapper
 {
-  width: 90%;
+  width: 89%;
   margin: 0 auto;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
   text-align: center;
   min-height: 240px;
   padding: 10px;
@@ -272,7 +294,7 @@ p
 }
 .box_head
 {
-  width: 50%;
+  width: 60%;
   display: flex;
   align-items: center;
 }
@@ -292,7 +314,7 @@ p
 {
   display: flex;
   align-items: center;
-  width: 50%;
+  width: 40%;
   justify-content: flex-end;
   color: #FEC53D;
   font-weight: 600;
@@ -423,14 +445,20 @@ p
   font-weight: 600;
   font-family: 'Gudea';
 }
+
 /* **** END landing.html ******************************* */
 
 /* Common Header CSS */
-
+.main_container_wrapper
+{
+  min-width: 1220px;
+  overflow-y: auto;
+}
 .header_wrapper {
   font-family: 'Gudea';
   background-color: white;
   padding: 20px;
+  min-width: 1220px;
 }
 
 .header_wrapper .header_main {
@@ -588,6 +616,14 @@ p
   min-height: 76vh;
   float: left;
 }
+.guides_page_wrapper a
+{
+  color: #788095 !important;
+}
+.guides_page_wrapper a:visited
+{
+  color: #788095 !important;
+}
 .guide_box_wrapper
 {
   width: 90%;
@@ -627,7 +663,7 @@ p
 }
 .guide_box_head img
 {
-  width: 30px;
+  width: 45px;
   display: inline-block;
   padding-right: 15px;
 }
@@ -731,6 +767,9 @@ p
 {
   background-color: #414859;
   width: 20% !important;
+  font-family: 'Gudea';
+  font-size: 16px;
+  overflow-y: auto;
 }
 [parent] {
   background-color: green;
@@ -794,7 +833,7 @@ p
 }
 #sidebar .sphinxsidebar .sphinxsidebarwrapper ul li, .quick_links ul li
 {
-  list-style-type: none;
+  /* list-style-type: none; */
   /* color: #fff; */
   color: rgba(214,214,214,1);
 }
@@ -809,4 +848,31 @@ p
   color: #32A061;
   text-decoration: none;
 }
+.toctree-wrapper
+{
+  font-family: 'Gudea';
+}
+ol, ul
+{
+  font-family: 'Gudea';
+}
+.arabic
+{
+  font-family: 'Gudea';
+  font-size: 16px;
+}
 /* Reference Page ends here */
+
+/* Media Query */
+@media (min-width: 0) and (max-width: 1220px)
+{
+  body
+  {
+    min-width: 1220px !important;
+    overflow-y: auto;
+  }
+  html
+  {
+    font-size: 100% !important;
+  }
+}
