@@ -32,13 +32,17 @@ If you already have an email address and want to send emails from that account i
 You need to configure the following options on the Hasura Project Console:
 
 * **Hostname**: SMTP hostname for email provider (e.g. smtp.gmail.com)
-* **Port (TLS)**: SMTP port number (e.g. 587)
+* **Port**: SMTP port number (e.g. 587)
 * **Username**: SMTP username (e.g. yourusername@gmail.com) 
 * **Password**: SMTP password (e.g. yourgmailpassword)
 
 .. note ::
 
   If you are using GMail as your SMTP provider, you have to enable access to "Less Secure Apps" on your Google account. You can get a full explanation and how to enable it `here <https://support.google.com/accounts/answer/6010255>`_.
+
+.. note ::
+  
+  For Hasura projects on Google Compute Engine / Google Container Engine, SMTP settings with standard ports like 25, 465, 587 will not work, since Google Compute Engine does not allow outbound connections on ports 25, 465, and 587. Hence, make sure that your SMTP provider have alternate ports like 2525 in case you want to deploy on Google Cloud. You can find more details and possible solutions `here <https://cloud.google.com/compute/docs/tutorials/sending-mail/>`_.
 
 SparkPost
 ^^^^^^^^^
@@ -73,6 +77,7 @@ You need to configure the following option on the Hasura Project Console:
 
 * **Account SID**: Unique identifier for your account, obtained from the API Credentials section of Twilio Console.
 * **Auth Token**: Password like secret key for the account.
+* **Sender ID**: Sender number obtained from Twilio Console. Shows up as *From* at receiver's end.
 
 MSG91
 ^^^^^
@@ -82,9 +87,10 @@ MSG91
 You need to configure the following option on the Hasura Project Console:
 
 * **API Key**: Unique identifier obtained from MS91 Dashboard.
+* **Sender ID**: 6 letter unique sender identification from which the SMS will be sent.
 
-API
----
+API Reference
+-------------
 
 To perform the email/sms operations, the following APIs are provided:
 
