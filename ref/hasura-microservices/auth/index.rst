@@ -10,8 +10,8 @@
 Auth
 ====
 
-Introduction
-------------
+Introduction TO AUTH
+--------------------
 
 Auth is one of the Hasura's microservices that is packaged with the platform. It handles authentication and user management use-cases for applications without developers having to write a single line of code. It offers the following features:
 
