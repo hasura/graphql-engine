@@ -8,9 +8,8 @@
 Video: Building a restaurant rating app on Hasura
 =================================================
 
-.. 
-   rst-class:: featured-image
-   .. image:: ../img/getting-started-3-2.png
+.. rst-class:: featured-image
+.. image:: ../img/zomato.png
    :height: 0px
    :width: 0px
 

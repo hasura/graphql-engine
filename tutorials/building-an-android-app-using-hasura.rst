@@ -8,9 +8,8 @@
 Building an Android app using a Java based backend
 ==================================================
 
-.. 
-   rst-class:: featured-image
-   .. image:: ../img/getting-started-3-2.png
+.. rst-class:: featured-image
+.. image:: ../img/android-java.png
    :height: 0px
    :width: 0px
 
