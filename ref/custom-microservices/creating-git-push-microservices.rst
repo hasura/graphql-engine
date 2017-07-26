@@ -20,7 +20,7 @@ Creating a git repo
 -------------------
 
 The best way to get a base setup ready, is to grab the relevant 
-base template directory from `git-push-templates <https://github.com/hasura/git-push-templates>`_
+base template directory from `quickstart-docker-git <https://github.com/hasura/quickstart-docker-git>`_
 
 This is what your directory structure should look like::
 
