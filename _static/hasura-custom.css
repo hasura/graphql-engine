@@ -636,6 +636,10 @@ p
   -moz-box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.2);
   box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.2);
 }
+
+.guide_box_wrapper a {
+  text-decoration: none;
+}
 .guide_box_head
 {
   display: flex;
