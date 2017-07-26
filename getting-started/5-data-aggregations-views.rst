@@ -35,7 +35,7 @@ Let us define a view in `SQL <https://www.postgresql.org/docs/current/static/sql
    Authorization: Bearer <admin-token>
 
    {
-     "type" : "raw_sql",
+     "type" : "run_sql",
      "args" : {
        "sql" : "CREATE VIEW article_like_count AS...",
      }

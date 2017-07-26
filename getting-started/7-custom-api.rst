@@ -46,11 +46,17 @@ Git push: Adding a simple web-server to serve a UI
 --------------------------------------------------
 
 Let's take a simple nodejs, express example. The best way to get a base setup ready, is to
-grab the relevant base template directory from `git-push-templates <https://github.com/hasura/git-push-templates>`_
+grab the relevant base template directory from `quickstart-docker-git <https://github.com/hasura/quickstart-docker-git>`_
 
-Let's use the ``git-push-templates/nodejs-express`` for our example, and create a directory called ``www``.
+Let's copy the ``quickstart-docker-git/nodejs-express`` for our example, and rename it to ``www``.
 
-After getting the relevant directory, and intializing our own git repo in it, this is what
+Initialize a git repo in it using
+
+.. code-block:: console
+
+   $ git init 
+
+After copying the relevant directory, and intializing our own git repo in it, this is what
 our directory structure should look like::
 
    www/
@@ -87,7 +93,7 @@ To enable this option to ``git push`` a service, check the ``Enable git push`` b
 .. image:: gitpush.png
    :scale: 50%
 
-Make sure that you've added your SSH public key to the ``authorized_keys`` file via the ``Console > Advanced`` page.
+Make sure that you've added your SSH public key to the ``authorized_keys`` file via the ``Console > Advanced`` page, and added the Hasura project as a remote as described on the manage page of the service you just created.
 
 Once that is done, you're ready to push!
 
