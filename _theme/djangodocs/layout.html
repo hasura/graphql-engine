@@ -290,7 +290,7 @@
                   showLoading();
                   if ( lastSearched !== e.target.value ) {
                     lastSearched = e.target.value;
-                    objs = searchFunc(e.target.value, callback);
+                    objs = searchFunc(e.target.value, callback, [], ['url', 'description', 'title', 'image', 'tags']);
                   } else {
                     hideLoading();
                   }
