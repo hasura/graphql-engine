@@ -16,7 +16,9 @@ make livehtml
 
 * Now build the docs to produce HTML files. Inside the docs folder:
 ```
-make html-images
+ENV=development make html-images
+
+ENV will be development/production depending on the environment docs is built for.
 ```
 
 * The generated docs are in `_build/html`. Navigate to the HTML files by using
