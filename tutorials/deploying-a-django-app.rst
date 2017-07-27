@@ -38,15 +38,32 @@ database.
 Step 2: Install `hasuractl` and initialise a Django project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Initialise a Django project using `hasuractl` as follows
+Install `hasuractl` following the instructions `here
+https://github.com/hasura/local-development`_ . 
+
+Once hasuractl is installed, you need to login to your Hasura account
+.. code:: 
+
+    $ hasuractl auth login
+
+After logging in, set the Hasura project name with 
 
 .. code::
-    $ hasuractl quickstart python-django <project-name> <hasura-project-name>
+
+    $ hasuractl set-context <hasura-project-name>
+
+This is the domain you got when you created a Hasura project on the dashboard. 
+
+
+Once you've finished the above setup, you can Initialise a Django project using `hasuractl` as follows
+
+.. code::
+    $ hasuractl quickstart python-django <project-name> --create
 
 
 This will automatically set up the following file structure:
 .. code::
-    .
+    <project-name>
     ├── app
     │   ├── conf
     │   │   ├── gunicorn_config.py
@@ -73,7 +90,7 @@ its place using
     $ django-admin startproject <project-name>
 
 
-Once you create a new project, make sure to edit the Docker file and replace
+If you decide to create a new project, make sure to edit the Docker file and replace
 the `helloworld` in the following line near the end of the file
 
 .. code::
@@ -109,14 +126,10 @@ Replace the Database section of your settings.py file with the following
 
 This ensures that your app uses the correct database credentials.
 
-Now you will need to create a Custom Microservice on the Hasura console, to
-which you can deploy your Django project. You can follow the instructions at
-the `Hasura documentation <https://docs.hasura.io/0.13/ref/custom-microservices/index.html>`_ in order to do this.
-
-You will also need to set these environment variables in the hasura console for your
-git-push service so that your app will have access to them when deployed. You
+You will also need to set these environment variables in the hasura console for the  
+custom service that hasuractl created for you, so that your app will have access to them when deployed. You
 can do this at
-``console.<hasura-project-name>.hasura-app.io/gitpush/<git-push-service-name>/update``
+``console.<hasura-project-name>.hasura-app.io/gitpush/<project-name>/update``
 .. code::
 
     POSTGRES_PASSWORD :  <postgres-password-from-email>
@@ -145,6 +158,8 @@ instructions `here <https://confluence.atlassian.com/bitbucketserver/creating-ss
 Step 4: `git push` and you're done!
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Now you just ``git add --all`` and ``git commit -m "Init"`` your code, and
+you're ready to deploy!
 To deploy your code, now just do 
 
 .. code::
