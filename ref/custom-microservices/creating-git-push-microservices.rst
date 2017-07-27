@@ -56,7 +56,7 @@ manage page of your git-push service.
 
 .. code-block:: console
 
-   $ git remote add hasura ssh://hasura@gat.c100.hasura.me:2022/~/git/gat/
+   $ git remote add hasura ssh://hasura@<git-push-service-name>.<project-domain>.hasura-app.io:2022/~/git/<git-push-service-name>/
 
 After adding the remote, you can commit your changes and push to the hasura
 remote to instantly build and deploy your app in one command!
