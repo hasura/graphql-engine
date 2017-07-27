@@ -25,7 +25,8 @@ Head over to the Advanced settings page from your console. Under "Authorized SSH
 
    $ ssh -p 22 -L 5432:postgres.hasura:5432 hasura@ssh.<project-name>.hasura-app.io
 
-Once, you run the above command you can access the postgres service at ``127.0.0.1:5432``. We can then import data as follows:
+This command sets up an ssh tunnel, which forwards the 5432 port of the postgres.hasura service to the 5432 port on your local computer. 
+Once, you run the above command you can access the postgres service at ``127.0.0.1:5432``. We can then import data by running the following command on your local computer (Not the ssh tunnel opened above):
 
 .. code-block:: console
 

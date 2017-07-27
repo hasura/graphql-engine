@@ -20,9 +20,17 @@ Creating a git repo
 -------------------
 
 The best way to get a base setup ready, is to grab the relevant 
-base template directory from `git-push-templates <https://github.com/hasura/git-push-templates>`_
+base template directory from `quickstart-docker-git <https://github.com/hasura/quickstart-docker-git>`_
 
-This is what your directory structure should look like::
+Clone the quickstart repository, and copy the contents of the relevant base
+template directory into another folder for your project say ``myrepo``, and
+initialize a git repository inside your new project folder.
+
+.. code-block:: console
+
+   $ git init
+
+This is what your directory structure should now look like::
 
    myrepo/
       Dockerfile
@@ -39,10 +47,39 @@ Please see :ref:`add-SSH-keys` for instructions on how to create and add your SS
 Adding a git-push enabled service
 ---------------------------------
 
-In the Add custom service section of the Hasura console, ensure that git-push is enabled and you're good to go.
+In the ``Custom Microservices`` section of the Hasura console, select ``Git Push`` and create a git-push enabled service, and you're good to go.
 
 For reference, here's a configuration screenshot:
 
 .. rst-class:: featured-image
 .. image:: ../../getting-started/gitpush.png
    :scale: 50%
+
+Deploying a git-push enabled service
+------------------------------------
+
+Once a git-push enabled custom service has been added on the hasura console,
+you must first set the hasura remote by following the instructions shown on the
+manage page of your git-push service.
+
+.. code-block:: console
+
+   $ git remote add hasura ssh://hasura@<git-push-service-name>.<project-domain>.hasura-app.io:2022/~/git/<git-push-service-name>/
+
+After adding the remote, you can commit your changes and push to the hasura
+remote to instantly build and deploy your app in one command!
+
+.. code-block:: console
+
+   $ git push hasura master
+
+Voila, your service is deployed and live! In case there are any errors in building or deploying your code,
+the ``git push`` command will show you errors and the push will fail. Fix the error, and push again!
+
+.. admonition:: Behind The Scenes
+
+   The Hasura platform basically builds a docker image from the latest git changes
+   pushed by you, and deploys the right kubernetes service, deployment underneath.
+
+   If you want finer control over your deployment, you are encouraged to use ``kubectl``
+   and peek under the hood of the service that is automatically deployed.

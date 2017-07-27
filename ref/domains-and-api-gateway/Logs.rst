@@ -5,4 +5,9 @@
 Logs
 ====
 
-WIP
+Logs for Hasura or Custom microservices can be found under the Logs section of
+the Manage page for the service.
+
+
+.. image:: ../../img/logs.png
+   :scale: 50%

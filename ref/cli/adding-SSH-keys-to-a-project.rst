@@ -9,8 +9,8 @@
 Adding SSH Keys to a Project
 ============================
 
-Once you've generated an SSH key, you need to copy your public key and paste it in the authorized_keys section
-in the Advanced page on the Hasura console.
+Once you've generated an SSH key, you need to copy your public key and paste it in the ``SSH Keys`` section
+in the CLI page on the Hasura console.
 
 .. admonition:: Generating SSH keys
 
@@ -29,7 +29,7 @@ it to your clipboard:
    $ sudo apt-get install xclip           # Linux
    $ xclip -sel clip < ~/.ssh/id_rsa.pub  # Linux
 
-Then, head to ``console.<project-name>.hasura-app.io/advanced#sshkeys``, copy it to authorized_keys and save it!
+Then, head to ``console.<project-name>.hasura-app.io/commandline/ssh-keys``, copy it into the textbox and add it!
 
 .. image:: ../../img/sshkeys.png
    :scale: 50%
