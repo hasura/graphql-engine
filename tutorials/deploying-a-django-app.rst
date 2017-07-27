@@ -44,7 +44,7 @@ https://github.com/hasura/local-development`_ .
 Once hasuractl is installed, you need to login to your Hasura account
 .. code:: 
 
-    $ hasuractl auth login
+    $ hasuractl login
 
 After logging in, set the Hasura project name with 
 
