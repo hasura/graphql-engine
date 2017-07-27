@@ -46,3 +46,32 @@ For reference, here's a configuration screenshot:
 .. rst-class:: featured-image
 .. image:: ../../getting-started/gitpush.png
    :scale: 50%
+
+Deploying a git-push enabled service
+------------------------------------
+
+Once a git-push enabled custom service has been added on the hasura console,
+you must first set the hasura remote by following the instructions shown on the
+manage page of your git-push service.
+
+.. code-block:: console
+
+   $ git remote add hasura ssh://hasura@gat.c100.hasura.me:2022/~/git/gat/
+
+After adding the remote, you can commit your changes and push to the hasura
+remote to instantly build and deploy your app in one command!
+
+.. code-block:: console
+
+   $ git push hasura master
+
+Voila, your service is deployed and live! In case there are any errors in building or deploying your code,
+the ``git push`` command will show you errors and the push will fail. Fix the error, and push again!
+
+.. admonition:: Behind The Scenes
+
+   The Hasura platform basically builds a docker image from the latest git changes
+   pushed by you, and deploys the right kubernetes service, deployment underneath.
+
+   If you want finer control over your deployment, you are encouraged to use ``kubectl``
+   and peek under the hood of the service that is automatically deployed.
