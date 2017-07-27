@@ -8,9 +8,9 @@
         if ( objs.length > 0 ) {
           _.each(objs, function(obj, index ) {
     %>
-          <a href="{{ pathto('', 1) }}<%= obj.url %>">
-            <div class="wd_33">
-              <div class="guide_box_wrapper">
+          <div class="wd_33">
+            <div class="guide_box_wrapper">
+              <a href="{{ pathto('', 1) }}<%= obj.url %>">
                 <div class="thumnail_image">
                   <img src="<%= ( obj.image ? '{{ pathto('_images/', 1) }}' + obj.image : '{{ pathto('_images/default_image.png', 1) }}' ) %>" src="Thumbnails Images" />
                 </div>
@@ -68,9 +68,9 @@
                     </div>
                   </div -->
                 </div>
-              </div>
+              </a>
             </div>
-          </a>
+          </div>
     <%
         });
       } else {
@@ -98,7 +98,7 @@
         hideLoading();
       }
       showLoading();
-      objs = searchFunc('tutorials', callback, 1, [ 'category' ]);
+      objs = searchFunc('tutorials', callback, 1, [ 'category' ], ['url', 'description', 'title', 'image', 'tags']);
     }
   };
   initialize();

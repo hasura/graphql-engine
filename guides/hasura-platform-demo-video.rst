@@ -8,9 +8,8 @@
 Video: Hasura Platform features demonstration
 =============================================
 
-.. 
-   rst-class:: featured-image
-   .. image:: ../img/getting-started-3-2.png
+.. rst-class:: featured-image
+.. image:: ../img/hasura-features-video.png
    :height: 0px
    :width: 0px
 
