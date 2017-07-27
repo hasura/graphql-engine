@@ -1,4 +1,0 @@
-image: "python-djano:0.1"
-port: 8080
-volume_mounts: null
-env_variables: []
