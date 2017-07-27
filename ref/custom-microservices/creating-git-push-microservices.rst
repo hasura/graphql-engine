@@ -22,7 +22,15 @@ Creating a git repo
 The best way to get a base setup ready, is to grab the relevant 
 base template directory from `quickstart-docker-git <https://github.com/hasura/quickstart-docker-git>`_
 
-This is what your directory structure should look like::
+Clone the quickstart repository, and copy the contents of the relevant base
+template directory into another folder for your project say ``myrepo``, and
+initialize a git repository inside your new project folder.
+
+.. code-block:: console
+
+   $ git init
+
+This is what your directory structure should now look like::
 
    myrepo/
       Dockerfile
@@ -39,7 +47,7 @@ Please see :ref:`add-SSH-keys` for instructions on how to create and add your SS
 Adding a git-push enabled service
 ---------------------------------
 
-In the Add custom service section of the Hasura console, ensure that git-push is enabled and you're good to go.
+In the ``Custom Microservices`` section of the Hasura console, select ``Git Push`` and create a git-push enabled service, and you're good to go.
 
 For reference, here's a configuration screenshot:
 
