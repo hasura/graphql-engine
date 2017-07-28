@@ -4,6 +4,7 @@
    :description: A tutorial on using hasura-js-sdk with angularjs, also a starter-kit is provided.
    :keywords: hasura, docs, tutorials, starter-kit, angularjs, js-sdk
    :content-tags: angularjs, web
+   :created-on: 2017-07-28T10:20:35.073Z 
 
 AngularJS starter-kit with Yeoman Generator and using Hasura JS SDK
 ===================================================================
@@ -18,6 +19,8 @@ AngularJS starter-kit with Yeoman Generator and using Hasura JS SDK
 This guide lays out the required information for you to kickstart developing your AngularJS application using Hasura backend APIs.
 
 We have also made a `AngularJS-Hasura starter-kit <https://github.com/hasura/quickstart-docker-git/tree/master/js-angularjs>`_ using `Yeoman Generator for AngularJS <https://github.com/yeoman/generator-angular>`_ which you can use to scaffold your application. This kit has complete working pages that demonstrates capabilities of Hasura APIs. You can refer to these to get started or even use this kit directly for your applications. 
+
+:ref:`Click here to jump to How to use the starter-kit section <using-quickstart>`
 
 Including Hasura JS SDK
 -----------------------
@@ -290,3 +293,81 @@ Delete
   }, function(error){
     alert('file delete failed');
   });
+
+.. _using-quickstart:
+
+Using the Quick-start Template
+------------------------------
+
+Step 1a: Get a Hasura Project
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sign up on `Hasura Dashboard <https://dashboard.hasura.io>`_ and get yourself a Hasura project.
+Creating a hasura project will give you a domain. Something like: `project42.hasura-app.io`
+You will also get an email with your `admin` credentials for your project console and your
+database (search for "hasura credentials" in your inbox if you're having trouble finding the email).
+
+Specifically, note your project name.
+
+.. code::
+
+   #Project name: project42
+   Console link: https://project42.hasura-app.io
+
+Step 1b: Install ``hasuractl``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Install the hasura command line tool: :ref:`hasuractl`.
+
+Once you're done with that, login and setup ``hasuractl``:
+
+.. code-block:: Bash
+
+   # This will pop a browser open, where you should login with your hasura.io account
+   $ hasuractl login
+
+Make ``hasuractl`` talk to the specific project you created in Step 1a.
+(this was ``project42`` in the example above)
+
+.. code-block:: Bash
+
+   $ hasuractl set-context <project-name>
+
+Step 2: Initialise an AngularJS project with an app name
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Run the following command to initialise a Laravel app that can be instantly deployed:
+
+.. code-block:: Bash
+
+   $ hasuractl quickstart js-angularjs my-app --create
+
+
+Step 3: Add project name to the Hasura JS SDK
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Edit the file ``app/src/scripts/app.js``, and change the following line to use your project name
+
+.. code-block:: JavaScript 
+
+  hasura.setProject('project42'); // if your domain is project42.hasura-app.io
+
+Step 4: Use hasuractl to add your SSH key to the Hasura project
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can't just start pushing code to a new hasura project without making sure
+that you are really you! ``hasuractl`` can push your SSH key to your hasura project cluster
+so that you can start pushing your code.
+
+.. code-block:: Bash
+
+   $ hasuractl add-ssh-key
+
+
+Step 5: ``git push`` and you're done!
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: Bash
+
+   # make changes to code, git commit and then push
+   $ git push hasura master
