@@ -17,6 +17,7 @@ import json
 from bs4 import BeautifulSoup
 
 import datetime
+import calendar
 
 indexObjs = []
 
@@ -63,7 +64,7 @@ def generateIndexFile(app, pagename, templatename, context, doctree):
             if ( len ( created_at ) > 0 ):
                 createdVal = created_at[0]['content']
                 createdVal = datetime.datetime.strptime(createdVal, "%Y-%m-%dT%H:%M:%S.%fZ")
-                createdVal = createdVal.timestamp()
+                createdVal = calendar.timegm(createdVal.utctimetuple())
             else:
                 createdVal = 0
 
