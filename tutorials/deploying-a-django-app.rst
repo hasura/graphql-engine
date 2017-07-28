@@ -136,7 +136,7 @@ can do this at
     POSTGRES_HOST : postgres.hasura
 
 .. rst-class:: featured-image
-.. image:: ../../img/add-env-vars.png
+.. image:: ../img/add-env-vars.png
    :scale: 50%
 
 Also remember to edit your Available Hosts to look as follows
