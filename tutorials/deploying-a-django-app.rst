@@ -63,11 +63,14 @@ This is the domain you got when you created a Hasura project on the dashboard.
 Once you've finished the above setup, you can Initialise a Django project using `hasuractl` as follows
 
 .. code::
+
     $ hasuractl quickstart python-django <project-name> --create
 
 
 This will automatically set up the following file structure:
+
 .. code::
+
     <project-name>
     ├── app
     │   ├── conf
