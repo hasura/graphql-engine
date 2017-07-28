@@ -9,7 +9,7 @@ Deploying a Laravel PHP app
 ===========================
 
 .. rst-class:: featured-image
-.. image:: ../img/php-apache.png
+.. image:: ../img/laravel-hasura.png
    :height: 0px
    :width: 0px
 
