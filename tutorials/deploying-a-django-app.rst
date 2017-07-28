@@ -8,6 +8,11 @@
 Deploying a Django app
 ===========================
 
+.. rst-class:: featured-image
+.. image:: ../img/hasura-django.png
+   :height: 0px
+   :width: 0px
+
 
 This tutorial will take you over deploying a Django application on Hasura.
 
