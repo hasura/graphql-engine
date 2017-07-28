@@ -4,6 +4,7 @@
    :description: A tutorial on modeling users or adding user related data to your tables in the application database in addition to the auth service's database.
    :keywords: hasura, docs, tutorials, user-modeling, user data
    :content-tags: data-modeling, user-data
+   :created-on: 2017-07-25T10:20:35.073Z 
 
 ==========================================
 Modeling Users in the application database

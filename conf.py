@@ -29,9 +29,23 @@ from sphinx.util.osutil import relative_uri
 StandaloneHTMLBuilder.script_files = []
 #StandaloneHTMLBuilder.imgpath = relative_uri("v0.13", '_images')
 
+ALGOLIA_SECRETS = {
+    "development": {
+        "APPLICATION_ID": "2R09CYX6BF",
+        "APPLICATION_SEARCH_KEY": "1361d3d9973e36ed78e29c3018f74aa6"
+    },
+    "production": {
+        "APPLICATION_ID": "WCBB1VVLRC",
+        "APPLICATION_SEARCH_KEY": "11b1fdcf3e6d3961ac30c8708d9bbdd9"
+    }
+}
+
+# Defaults to development
+CURRENT_ENV = os.getenv("ENV") if os.getenv("ENV") else "development"
+
 html_context = {
-    "APPLICATION_ID": os.getenv("APPLICATION_ID"),
-    "APPLICATION_SEARCH_KEY": os.getenv("SEARCH_ONLY_KEY")
+    "APPLICATION_ID": ALGOLIA_SECRETS[CURRENT_ENV]["APPLICATION_ID"],
+    "APPLICATION_SEARCH_KEY": ALGOLIA_SECRETS[CURRENT_ENV]["APPLICATION_SEARCH_KEY"]
 }
 
 # End of it

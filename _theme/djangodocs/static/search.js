@@ -18,9 +18,10 @@ var promise_ajax = function(url, data, type) {
   });
 };
 
-var searchFunc = function( query, callback, page=1, restrictAttributes, isRestrictAttributes ) {
-  var APPLICATION_ID = "WCBB1VVLRC";
-  var SEARCH_ONLY_KEY = "11b1fdcf3e6d3961ac30c8708d9bbdd9";
+var searchFunc = function( query, callback, page=1, restrictAttributes, attributesToRetrieve ) {
+
+  var APPLICATION_ID = "{{ APPLICATION_ID }}";
+  var SEARCH_ONLY_KEY = "{{ APPLICATION_SEARCH_KEY }}";
 
   var hitsPerPage = 100;
   var page_no = parseInt(page) - 1;
@@ -40,6 +41,10 @@ var searchFunc = function( query, callback, page=1, restrictAttributes, isRestri
     offset: offset,
     restrictSearchableAttributes : restrictAttributes
   };
+
+  if ( attributesToRetrieve ) {
+    queries["attributesToRetrieve"] = attributesToRetrieve;
+  }
 
   index.search(queries, callback );
 };

@@ -16,8 +16,14 @@ make livehtml
 
 * Now build the docs to produce HTML files. Inside the docs folder:
 ```
-make html-images
+ENV=development make html-images
+
+ENV will be development/production depending on the environment docs is built for.
 ```
+
+* To index the documents to algolia, run the following command with the correct parameters
+
+`` make algolia_index ALGOLIA_APPLICATION_ID=<ALGOLIA_APP_ID > ALGOLIA_SEARCH_KEY=< ALGOLIA_SEARCH_KEY > ALGOLIA_ADMIN_KEY=<ALGOLIA_ADMIN_KEY >``
 
 * The generated docs are in `_build/html`. Navigate to the HTML files by using
 a webserver or opening them in the browser. Eg: 
