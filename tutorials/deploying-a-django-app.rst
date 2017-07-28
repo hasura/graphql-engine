@@ -135,6 +135,10 @@ can do this at
     POSTGRES_PASSWORD :  <postgres-password-from-email>
     POSTGRES_HOST : postgres.hasura
 
+.. rst-class:: featured-image
+.. image:: ../../img/add-env-vars.png
+   :scale: 50%
+
 Also remember to edit your Available Hosts to look as follows
 
 .. code::
@@ -186,6 +190,8 @@ postgres locally.
 
     $ hasuractl forward 5432:postgres.hasura:5432
  
+Leave this running in one terminal session, and continue development in another
+session. 
 
 Step 2: Run your app locally! 
 ------------------------------------------------
@@ -194,7 +200,6 @@ Now use manage.py runserver in your project directory to run your app locally!
 
 .. code::
 
-    $ POSTGRES_PASSWORD='<password>' POSTGRES_HOST='localhost' python3
-    manage.py runserver
+    $ POSTGRES_PASSWORD='<password>' POSTGRES_HOST='localhost' python3 manage.py runserver
 
 Go to ``127.0.0.1:8000`` to see your app live!
