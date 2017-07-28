@@ -80,6 +80,14 @@ The ssh key can be generated using
 
     $ ssh-keygen -t rsa
 
+After this run 
+
+.. code::
+
+    $ hasuractl add-ssh-key
+
+to add the ssh key to your Hasura project.
+
 quickstart
 ~~~~~~~~~~
 This command will initialize projects from templates from https://github.com/hasura/quickstart-docker-git into a local directory.
