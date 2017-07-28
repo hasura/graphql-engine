@@ -1,0 +1,332 @@
+- service: data
+  name: Select across relationships
+  method: POST
+  path: /v1/query
+  headers:
+  - name: Authorization
+    value: Bearer <auth_token>
+  request: {"type":"select","args":{"table":"author","columns":["user_id","first_name","last_name","bio",{"name":"articles","columns":["author_id","article_id","title","content","published_at",{"name":"tags","columns":[{"name":"tag","columns":["tag_name","tag_id"]}]}]}]}}
+  keywords:
+  - data
+  - query
+  - select
+  - relationship
+  - columns
+  - table
+
+- service: data
+  name: Select rows 
+  method: POST
+  path: /v1/query
+  headers:
+  - name: Authorization
+    value: Bearer <auth_token>
+  request: {"type":"select","args":{"table":"author","columns":["user_id","first_name","last_name","bio"]}}
+  keywords:
+  - data
+  - query
+  - select
+  - columns
+  - table
+
+- service: data
+  name: Select with conditions greater than
+  method: POST
+  path: /v1/query
+  headers:
+  - name: Authorization
+    value: Bearer <auth_token>
+  request: {"type":"select","args":{"table":"article","columns":["author_id","article_id","title","content","published_at",{"name":"tags","columns":[{"name":"tag","columns":["tag_name","tag_id"]}]}],"where":{"author_id":1,"published_at":{"$gt":"2017-04-19T03:21:35.617+00:00"}}}}
+  keywords:
+  - data
+  - query
+  - table
+  - select
+  - columns
+  - where
+  - or
+  - $gt
+  - greater
+
+- service: data
+  name: Select with conditions in a list 
+  method: POST
+  path: /v1/query
+  headers:
+  - name: Authorization
+    value: Bearer <auth_token>
+  request: {"type":"select","args":{"table":"article","columns":["author_id","article_id","title","content","published_at"],"where":{"tags":{"tag":{"tag_name":{"$in":["Sports","Tech","iOS"]}}}}}}
+  keywords:
+  - data
+  - query
+  - table
+  - select
+  - columns
+  - where
+  - $in
+  - in
+  - contains
+
+- service: data
+  name: Insert into a table
+  method: POST
+  path: /v1/query
+  headers:
+  - name: Authorization
+    value: Bearer <auth_token>
+  request: {"type":"insert","args":{"table":"article","objects":[{"author_id":1,"title":"New Article 1","content":"Content of New Article 1","published_at":"2017-05-19T04:21:35.617+00:00"},{"author_id":1,"title":"New Article 2","content":"Content for New Article 2","published_at":"2017-06-19T04:21:35.617+00:00"}],"returning":["article_id","author_id","title","content","published_at"]}}
+  keywords:
+  - data
+  - query
+  - table
+  - insert 
+  - columns
+  - returning
+  - object
+  - datetime
+  - timestamp
+  - date
+  - time
+
+- service: data
+  name: Insert into a table
+  method: POST
+  path: /v1/query
+  headers:
+  - name: Authorization
+    value: Bearer <auth_token>
+  request: {"type":"insert","args":{"table":"tag","objects":[{"tag_name":"Android"},{"tag_name":"Mobile"}],"returning":["tag_id","tag_name"]}}
+  keywords:
+  - data
+  - query
+  - table
+  - insert 
+  - columns
+  - returning
+  - object
+  - array
+  - objects
+
+- service: data
+  name: Update using $set
+  method: POST
+  path: /v1/query
+  headers:
+  - name: Authorization
+    value: Bearer <auth_token>
+  request: {"type":"update","args":{"table":"article","$set":{"title":"New Title For Article 2","content":"New Content For Article 2"},"where":{"article_id":2,"author_id":1}}}
+  keywords:
+  - data
+  - query
+  - table
+  - update
+  - set
+  - $set
+  - columns
+  - where 
+
+- service: data
+  name: Delete a row 
+  method: POST
+  path: /v1/query
+  headers:
+  - name: Authorization
+    value: Bearer <auth_token>
+  request: {"type":"delete","args":{"table":"article_tag","where":{"tag":{"tag_name":"Sports"},"article_id":1}}}
+  keywords:
+  - data
+  - query
+  - table
+  - delete 
+  - columns
+  - relationship
+  - where 
+
+
+- service: data
+  name: Count number of rows
+  method: POST
+  path: /v1/query
+  headers:
+  - name: Authorization
+    value: Bearer <auth_token>
+  request: {"type":"count","args":{"table":"article","where":{"author_id":1}}}
+  keywords:
+  - data
+  - query
+  - table
+  - count 
+  - where 
+
+- service: data
+  name: Bulk Query
+  method: POST
+  path: /v1/query
+  headers:
+  - name: Authorization
+    value: Bearer <auth_token>
+  request: {"type":"bulk","args":[{"type":"insert","args":{"table":"article","objects":[{"author_id":1,"title":"New Article 1","content":"Content of New Article 1","published_at":"2017-05-19T04:21:35.617+00:00"},{"author_id":1,"title":"New Article 2","content":"Content for New Article 2","published_at":"2017-06-19T04:21:35.617+00:00"}],"returning":["article_id","author_id","title","content","published_at"]}},{"type":"create_array_relationship","args":{"using":{"foreign_key_constraint_on":{"column":"author_id","table":"article"}},"table":"author","name":"articles"}}]}
+  keywords:
+  - data
+  - query
+  - bulk
+  - table
+  - multiple
+  - many
+  - where 
+  - columns
+  - returning
+
+- service: notify
+  name: Send email
+  method: POST
+  path: /v1/send/email
+  headers:
+  - name: Authorization
+    value: Bearer <auth_token>
+  request:
+    to: "user@example.com"
+    from: "sender@your-domain.com"
+    fromName: "Sender" 
+    sub: "Email subject" 
+    html: "<h1>Email body in HTML</h1>"
+    text: "Email body in text"
+  keywords:
+  - notify
+  - email
+  - send email
+  - subject
+  - html
+  - to
+  - from
+  
+- service: notify
+  name: Send SMS 
+  method: POST
+  path: /v1/send/sms
+  headers:
+  - name: Authorization
+    value: Bearer <auth_token>
+  request:
+    to: 9876543210
+    countryCode: 91
+    message: "Body of SMS"
+  keywords:
+  - notify
+  - sms 
+  - send sms 
+  - phone number
+  - mobile
+  - message
+  - text
+
+- service: auth
+  name: Signup using username password
+  method: POST
+  path: /signup
+  headers: []
+  request: {"username":"johnsmith", "password":"secretpassword"}
+  keywords:
+  - signup
+  - register
+  - username
+  - password
+
+- service: auth
+  name: Signup using email, username and password
+  method: POST
+  path: /signup
+  headers: []
+  request: {"email":"johnsmith@example.com", "username": "johnsmith", "password":"secretpassword"}
+  keywords:
+  - signup
+  - register
+  - username
+  - password
+  - email
+
+- service: auth
+  name: Signup using mobile, username and password
+  method: POST
+  path: /signup
+  headers: []
+  request: {"mobile":"9876543210", "username": "johnsmith", "password":"secretpassword"}
+  keywords:
+  - signup
+  - register
+  - username
+  - password
+  - mobile 
+
+- service: auth
+  name: Login using mobile password
+  method: POST
+  path: /login
+  headers: []
+  request: {"mobile":"9876543210", "password":"secretpassword"}
+  keywords:
+  - login
+  - signin
+  - mobile
+  - password
+
+- service: auth
+  name: Login using email password
+  method: POST
+  path: /login
+  headers: []
+  request: {"email":"johnsmith@example.com", "password":"secretpassword"}
+  keywords:
+  - login
+  - signin
+  - email 
+  - password
+
+- service: auth
+  name: Login using username password
+  method: POST
+  path: /login
+  headers: []
+  request: {"username":"johnsmith", "password":"secretpassword"}
+  keywords:
+  - login
+  - signin
+  - username 
+  - password
+
+- service: auth
+  name: Login using OTP sent to mobile
+  method: POST
+  path: /otp-login
+  headers: []
+  request: {"mobile":"7777777777"}
+  keywords:
+  - login
+  - signin
+  - mobile 
+  - otp 
+
+- service: auth
+  name: Validate OTP sent to mobile and login
+  method: POST
+  path: /otp-login
+  headers: []
+  request: {"mobile":"7777777777", "otp":"123456"}
+  keywords:
+  - login
+  - signin
+  - mobile 
+  - otp 
+  - verify
+
+- service: auth
+  name: Logout
+  method: POST 
+  path: /user/logout
+  request: {}
+  headers:
+  - name: Authorization
+    value: Bearer <auth_token>
+  keywords:
+  - logout 
+  - signout
