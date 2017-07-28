@@ -113,7 +113,7 @@ This is the file structure that will be setup:
 
 
 Step 3: Configure your laravel ``.env`` file and set the postgres password
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Use the postgres password from Step 1a, and set that in your ``.env`` file.
 
@@ -135,7 +135,7 @@ so that you can start pushing your code.
 
 
 Step 4: ``git push`` and you're done!
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: Bash
 
@@ -158,7 +158,7 @@ This will make postgres available on ``127.0.0.1:5432`` for any process on your 
    $ hasuractl forward 5432:postgres.hasura:5432
 
 Step 2: Change your ``.env`` environment variables
-------------------------------------------------
+--------------------------------------------------
 
 Change ``DB_HOST`` to ``localhost``. The original value would have been ``postgres.hasura``.
 
@@ -176,7 +176,7 @@ Make sure that the tunnel to your database is on (Step 1) and then run:
    $ php artisan migrate
 
 Step 3: Run ``php artisan serve``!
---------------------------------
+----------------------------------
 
 .. code::
 
