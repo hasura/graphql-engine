@@ -46,68 +46,77 @@ Specifically, note your project name postgres credentials:
    username: admin
    password: password
 
-Step 1b: Install `hasuractl`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 1b: Install ``hasuractl``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Install the command line tool: `hasuractl`.
-Read full instructions here:
+Install the command line tool: ``hasuractl``.
+
+Read full instructions `here <https://docs.hasura.io/0.13/ref/cli/hasuractl.html>`_.
 
 But on \*nix systems:
 
-.. code::
-   curl -Lo hasuractl https://storage.googleapis.com/hasuractl/v0.1.7/linux-amd64/hasuractl && chmod +x hasuractl && mv hasuractl /usr/local/bin/
+.. code-block:: Bash
 
-If you get a permission denied error for `/usr/local/bin`, sudo it:
+   $ curl -Lo hasuractl https://storage.googleapis.com/hasuractl/v0.1.7/linux-amd64/hasuractl && chmod +x hasuractl && mv hasuractl /usr/local/bin/
 
-.. code::
-   curl -Lo hasuractl https://storage.googleapis.com/hasuractl/v0.1.7/linux-amd64/hasuractl && chmod +x hasuractl && sudo mv hasuractl /usr/local/bin/
+If you get a permission denied error for ``/usr/local/bin``, sudo it:
+
+.. code-block:: Bash
+
+   $ curl -Lo hasuractl https://storage.googleapis.com/hasuractl/v0.1.7/linux-amd64/hasuractl && chmod +x hasuractl && sudo mv hasuractl /usr/local/bin/
 
 
-Once you're done with that, login and setup `hasuractl`:
+Once you're done with that, login and setup ``hasuractl``:
 
-.. code::
+.. code-block:: Bash
+
    # This will pop a browser open, where you should login with your hasura.io account
-   hasuractl login
+   $ hasuractl login
 
-Make `hasuractl` talk to the specific project you created in Step 1a.
-(this was `project42` in the example above)
+Make ``hasuractl`` talk to the specific project you created in Step 1a.
+(this was ``project42`` in the example above)
 
-.. code::
-   hasuractl set-context <project-name>
+.. code-block:: Bash
+
+   $ hasuractl set-context <project-name>
 
 Step 2: Initialise a Laravel project with an app name
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Run the following command to initialise a Laravel app that can be instantly deployed:
 
-.. code::
-   hasuractl quickstart php-laravel my-app --create
+.. code-block:: Bash
+
+   $ hasuractl quickstart php-laravel my-app --create
 
 This is the file structure that will be setup:
 
-.. code::
+.. code-block:: Bash
 
-   my-app/
-   - Dockerfile
-   - app/ # contains your Laravel project
-   ---- .env
-   ---- composer.json
-   ---- artisan
-   ---- app/
-   ---- database/
-   ---- config/
-   ---- routes/
-   ---- ... # and more
-   - .gitignore
-   - .git
+   ├── my-app
+   │   ├── app/ #contains your laravel project 
+   │   ├── artisan/
+   │   ├── bootstrap/
+   │   ├── composer.json
+   │   ├── composer.lock
+   │   ├── config/
+   │   ├── database/
+   │   ├── .env.example
+   │   ├── .gitattributes
+   │   ├── .gitignore
+   │   ├── .... 
+   ├── Dockerfile
+   ├── .dockerignore
+   ├── .git/
+   └── README
 
 
-Step 3: Configure your laravel `.env` file and set the postgres password
+Step 3: Configure your laravel ``.env`` file and set the postgres password
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Use the postgres password from Step 1a, and set that in your `.env` file.
+Use the postgres password from Step 1a, and set that in your ``.env`` file.
 
-.. code::
+.. code-block:: Bash
 
    DB_PASSWORD=password
 
@@ -116,18 +125,20 @@ Step 3: Use hasuractl to add your SSH key to the Hasura project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can't just start pushing code to a new hasura project without making sure
-that you are really you! `hasuractl` can push your SSH key to your hasura project cluster
+that you are really you! ``hasuractl`` can push your SSH key to your hasura project cluster
 so that you can start pushing your code.
 
-.. code::
+.. code-block:: Bash
 
-   hasuractl add-ssh-key
+   $ hasuractl add-ssh-key
 
 
-Step 4: `git push` and you're done!
+Step 4: ``git push`` and you're done!
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-xxxx
+.. code-block:: Bash
+
+   $ git push hasura master
 
 .. _local-development:
 Local development
@@ -139,34 +150,36 @@ developing on your own mahcine, on your application you might want to connect to
 Step 1: Setup a secure tunnel to your database
 ----------------------------------------------
 
-This will make postgres available on 127.0.0.1:5432 for any process on your machine :)
+This will make postgres available on ``127.0.0.1:5432`` for any process on your machine :)
 
-.. code::
-   hasuractl forward 5432:postgres.hasura:5432
+.. code-block:: Bash
 
-Step 2: Change your `.env` environment variables
+   $ hasuractl forward 5432:postgres.hasura:5432
+
+Step 2: Change your ``.env`` environment variables
 ------------------------------------------------
 
-Change `DB_HOST` to `localhost`. The original value would have been `postgres.hasura`.
+Change ``DB_HOST`` to ``localhost``. The original value would have been ``postgres.hasura``.
 
-.. code::
+.. code-block:: Bash
 
    DB_HOST=localhost
 
 Step 3: Run your database migrations
 ------------------------------------
+
 Make sure that the tunnel to your database is on (Step 1) and then run:
 
-.. code::
+.. code-block:: Bash
 
-   php artisan migrate
+   $ php artisan migrate
 
-Step 3: Run `php artisan serve`!
+Step 3: Run ``php artisan serve``!
 --------------------------------
 
 .. code::
 
-   php artisan serve
+   $ php artisan serve
 
 
 And everything works. :)
