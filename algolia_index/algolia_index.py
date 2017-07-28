@@ -30,6 +30,12 @@ def manage_indexes(index_name, data, settings):
     index.set_settings({"searchableAttributes": ["category", "content", "title", "tags",
         "description", "keywords", "url", "image"]})
 
+    index.set_settings({
+        "ranking": [
+            "desc(created_at)",
+        ]
+    });
+
     index.add_objects(data)
 
     for setting in settings:
