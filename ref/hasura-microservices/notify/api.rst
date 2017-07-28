@@ -22,7 +22,8 @@ Request
 
      {
        "to": "Example User <user@example.com>",
-       "from": "Project Admin <admin@project.com>",
+       "from": "admin@project.com",
+       "fromName": "Project Admin", // optional
        "sub": "This is the email subject line",
        "text": "This is the email content in plain text",
        "html": "<p>This is the <b>email content</b> in html format</p>"
@@ -30,7 +31,7 @@ Request
 
 .. note :: 
   
-  * Make sure that the *from* field you will be using to send emails is from the sending domain. For example, if your sending domain is ``project.com``, you can only send emails from ``<something>@project.com``, like ``admin@project.com``.
+  * Make sure that the *from* field you will be using to send emails is from the sending domain you have configured with the SparkPost or the exact email for which you are using SMTP with. For example, if your sending domain is ``project.com``, you can only send emails from ``<something>@project.com``, like ``admin@project.com``.
 
   * Either **text** or **html** key should be present. Both can also be provided.
 
@@ -40,11 +41,12 @@ An example response looks like:
 
 .. code-block:: http
 
-    HTTP/1.1 201 Created 
+    HTTP/1.1 200 OK 
     Content-Type: application/json
 
     {
-      "id": "<provider-reference-id>"
+      "id": "<provider-reference-id>",
+      "detail": "<details>"
     }
 
 .. note ::
@@ -80,11 +82,12 @@ A typical response will look like this:
 
 .. code-block:: http
 
-    HTTP/1.1 201 Created 
+    HTTP/1.1 200 OK 
     Content-Type: application/json
 
     {
-      "id": "<provider-reference-id>"
+      "id": "<provider-reference-id>",
+      "detail": "<details>"
     }
 
 
