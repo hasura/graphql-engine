@@ -46,7 +46,7 @@ NOTE:
 Starting hasura
 ===============
 
-1. Create an account on `beta.hasura.io <https://beta.hasura.io>`_ if you do not have one.
+1. Create an account at `dashboard.hasura.io <https://dashboard.hasura.io>`_ if you do not have one.
 
 2. Run:
 
