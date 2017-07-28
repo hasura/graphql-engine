@@ -14,6 +14,14 @@ pip3 install -r requirements.txt
 make livehtml
 ```
 
+* To prioritize articles
+
+```
+  Add a meta tag as follow
+
+  :created-on: 2017-07-28T10:20:35.073Z
+```
+
 * Now build the docs to produce HTML files. Inside the docs folder:
 ```
 ENV=development make html-images
