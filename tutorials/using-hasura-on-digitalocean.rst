@@ -4,6 +4,7 @@
    :description: A video tutorial on using Hasura on DigitalOcean 
    :keywords: hasura, docs, tutorial, DigitalOcean
    :content-tags: video,introduction, demo, DigitalOcean
+   :created-on: 2017-07-25T10:20:35.073Z 
 
 Video: Using Hasura on DigitalOcean
 ===================================

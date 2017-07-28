@@ -4,6 +4,7 @@
    :description: A tutorial on deploying a PHP/Apache web application using Hasura
    :keywords: hasura, docs, tutorials, php, apache, web-application
    :content-tags: php, apache, deployment, web-application
+   :created-on: 2017-07-25T10:20:35.073Z 
 
 Deploying a PHP/Apache web app using Hasura
 ===========================================

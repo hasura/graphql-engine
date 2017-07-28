@@ -52,7 +52,7 @@ In the ``Custom Microservices`` section of the Hasura console, select ``Git Push
 For reference, here's a configuration screenshot:
 
 .. rst-class:: featured-image
-.. image:: ../../getting-started/gitpush.png
+.. image:: ../../img/gitpush.png
    :scale: 50%
 
 Deploying a git-push enabled service
