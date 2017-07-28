@@ -4,6 +4,8 @@
    :description: Reference documentation for using Hasura's command line tooling, HasuraCTL
    :keywords: hasura, docs, CLI, HasuraCTL
 
+.. _hasuractl:
+
 HasuraCTL
 =========
 

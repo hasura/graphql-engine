@@ -38,8 +38,8 @@ database.
 Step 2: Install `hasuractl` and initialise a Django project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Install `hasuractl` following the instructions `here
-https://github.com/hasura/local-development`_ . 
+Install ``hasuractl`` following the instructions at :ref:`hasuractl`
+ 
 
 Once hasuractl is installed, you need to login to your Hasura account
 .. code:: 
