@@ -16,6 +16,8 @@ import os
 import json
 from bs4 import BeautifulSoup
 
+import datetime
+
 indexObjs = []
 
 def callme(app, exception):
@@ -35,6 +37,7 @@ def generateIndexFile(app, pagename, templatename, context, doctree):
     keyword = ''
     description = ''
     tagsVal = ''
+    createdVal = 0
 
     if ( 'title' in context ):
         title = context['title']
@@ -46,6 +49,7 @@ def generateIndexFile(app, pagename, templatename, context, doctree):
             descriptions = soup.findAll("meta", { "name" : "description" })
             keywords = soup.findAll("meta", { "name" : "keywords" })
             tags = soup.findAll("meta", { "name": "content-tags" })
+            created_at = soup.findAll("meta", { "name": "created-on" })
 
             if ( len(descriptions) > 0 ):
                 description = descriptions[0]['content']
@@ -55,6 +59,15 @@ def generateIndexFile(app, pagename, templatename, context, doctree):
 
             if ( len(tags) > 0 ):
                 tagsVal = tags[0]['content']
+
+            if ( len ( created_at ) > 0 ):
+                createdVal = created_at[0]['content']
+                createdVal = datetime.datetime.strptime(createdVal, "%Y-%m-%dT%H:%M:%S.%fZ")
+                createdVal = createdVal.timestamp()
+                # print ('CreatedVal')
+                # print (createdVal.timestamp())
+            else:
+                createdVal: 0
 
     content = ''
     image = ''
@@ -74,7 +87,7 @@ def generateIndexFile(app, pagename, templatename, context, doctree):
         url = pagename + '.html'
         category = pagename.split('/')[0]
 
-        indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": description, "keywords": keyword, "tags": tagsVal}
+        indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": description, "keywords": keyword, "tags": tagsVal, "created_at": createdVal }
 
         indexObjs.append(indexObj)
 

@@ -4,6 +4,7 @@
    :description: A tutorial on using hasura-js-sdk with angularjs, also a starter-kit is provided.
    :keywords: hasura, docs, tutorials, starter-kit, angularjs, js-sdk
    :content-tags: angularjs, web
+   :created-on: 2017-07-28T11:52:59.908Z
 
 AngularJS starter-kit with Yeoman Generator and using Hasura JS SDK
 ===================================================================
