@@ -65,7 +65,7 @@ def generateIndexFile(app, pagename, templatename, context, doctree):
                 createdVal = datetime.datetime.strptime(createdVal, "%Y-%m-%dT%H:%M:%S.%fZ")
                 createdVal = createdVal.timestamp()
             else:
-                createdVal: 0
+                createdVal = 0
 
     content = ''
     image = ''
