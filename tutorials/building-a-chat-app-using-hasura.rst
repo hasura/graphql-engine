@@ -3,6 +3,7 @@
 .. meta::
    :description: A tutorial on building a simple chatting application using Hasura.
    :keywords: hasura, docs, tutorials, user-modeling, user data
+   :created-on: 2017-07-25T10:20:35.073Z 
 
 ===============================
 Building a ChatApp using Hasura

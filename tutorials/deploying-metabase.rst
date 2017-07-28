@@ -4,6 +4,7 @@
    :description: A tutorial on installing Metabase for instant analytics on your Hasura project
    :keywords: hasura, docs, tutorials, analytics, metabase
    :content-tags: analytics, metabase
+   :created-on: 2017-07-25T10:20:35.073Z 
 
 Installing Metabase on Hasura for instant analytics
 ===================================================

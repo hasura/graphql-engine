@@ -4,6 +4,8 @@
    :description: A tutorial on deploying an HTML/JavaScript/CSS web application using Hasura
    :keywords: hasura, docs, tutorials, html, javascript, css, web-application
    :content-tags: html, javascript, css, deployment, web-application
+   :created-on: 2017-07-25T10:20:35.073Z 
+
 
 Deploying an HTML/JavaScript/CSS web app using Hasura
 =====================================================

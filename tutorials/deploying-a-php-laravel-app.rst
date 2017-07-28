@@ -4,7 +4,8 @@
    :description: A tutorial on deploying a Laravel PHP/Apache web application using Hasura complete with migrations and a postgres database
    :keywords: hasura, docs, tutorials, php, apache, web-application, laravel, migrations, postgres
    :content-tags: php, apache, deployment, web-application
-
+   :created-on: 2017-07-28T10:20:35.073Z 
+                
 Deploying a Laravel PHP app
 ===========================
 

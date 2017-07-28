@@ -4,6 +4,7 @@
    :description: A tutorial on building an Android app using Hasura 
    :keywords: hasura, docs, tutorials, android, java
    :content-tags: android, java
+   :created-on: 2017-07-25T10:20:35.073Z 
 
 Building an Android app using a Java based backend
 ==================================================
