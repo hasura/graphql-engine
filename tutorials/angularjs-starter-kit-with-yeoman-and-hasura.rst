@@ -365,7 +365,7 @@ so that you can start pushing your code.
 
 
 Step 5: ``git push`` and you're done!
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: Bash
 

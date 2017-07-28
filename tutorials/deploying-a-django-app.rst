@@ -28,7 +28,7 @@ Basic deployment
 ----------------
 
 Follow the 4 steps below so that you can start off and deploy a Django app
-within minutes. Refer to the next section on :ref:`local development`, to connect to
+within minutes. Refer to the next section on :ref:`local-development`, to connect to
 the Postgres database when you're developing and testing locally.
 
 Step 1: Get a hasura project and set up `hasuractl`
@@ -49,7 +49,7 @@ database (search for "hasura credentials" in your inbox if you're having trouble
    password: password
 
 Step 2: Install `hasuractl` and initialise a Hasura project
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Install ``hasuractl`` following the instructions at :ref:`hasuractl`
  
@@ -68,7 +68,7 @@ After logging in, set the Hasura project name with
 This is the domain you got when you created a Hasura project on the dashboard. (this was `project42` in the example above)
 
 Step 3: Configure your Django `settings.py` file and set the postgres password
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once you've finished setting up ``hasuractl``, you can initialise a Django project as follows
 
@@ -113,7 +113,7 @@ After setting up the variables as shown below, be sure to save!
 
 .. rst-class:: featured-image
 .. image:: ../img/add-env-vars.png
-:scale: 50%
+   :scale: 50%
 
 .. admonition::
     You can also remove the helloworld folder and create your own Django project in
@@ -196,6 +196,7 @@ Voila, your service is deployed and live! In case there are any errors in buildi
 the ``git push`` command will show you errors and the push will fail. Fix the error, and push again!
 
 .. _local-development:
+
 Local development
 -----------------
 
@@ -216,7 +217,7 @@ Leave this running in one terminal session, and continue development in another
 session. 
 
 Step 2: Run your app locally! 
-------------------------------------------------
+-----------------------------
 
 Now use manage.py runserver in your project directory to run your app locally!
 
