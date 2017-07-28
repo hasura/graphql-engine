@@ -4,6 +4,7 @@
    :description: A video tutorial on building the backend for a restaurant rating app like Zomato/Yelp using Hasura 
    :keywords: hasura, docs, tutorial, restaurant rating app, application, example
    :content-tags: video, sample app, 
+   :created-on: 2017-07-25T10:20:35.073Z 
 
 Video: Building a restaurant rating app on Hasura
 =================================================

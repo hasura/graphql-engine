@@ -167,7 +167,7 @@ create_query_template
 
 ``create_query_template`` is used to template a query and attach a name to it.
 
-Here is an example which uses the ``default`` values in the template parameters.
+Here is an example for a select query which uses the ``default`` values in the template parameters.
 
 .. code-block:: http
    :emphasize-lines: 14, 18, 23-24, 27-28
@@ -177,10 +177,12 @@ Here is an example which uses the ``default`` values in the template parameters.
    Authorization: Bearer <admin-token>
 
    {
-       "type" : "create_select_template",
+       "type" : "create_query_template",
        "args" : {
            "name" : "article_homepage",
-           "select" : {
+           "template": {
+             "type": "select",
+             "args": {
                "table" : "article",
                "columns": ["id", "title"],
                "where": {
@@ -200,8 +202,9 @@ Here is an example which uses the ``default`` values in the template parameters.
                "offset" : {
                    "param" : "offset",
                    "default" : 0
-               },
-           }
+               }
+             }
+          }
        }
    }
 
@@ -275,6 +278,69 @@ A :ref:`Query <query_def>` with TemplateParam_ for concrete values in a query. T
      - false
      - Value
      - A default value which is used when this parameter is not provided during execution
+
+Let's look at examples for other query types mentioned above.
+
+Here's an example for an ``insert`` query.
+
+.. code-block:: http
+   :emphasize-lines: 13-15
+
+   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   Content-Type: application/json
+   Authorization: Bearer <admin-token>
+
+   {
+       "type" : "create_query_template",
+       "args" : {
+           "name" : "insert_article",
+           "template" : {
+             "type" : "insert",
+             "args" : {
+                 "table" : "article",
+                 "objects" : {
+                    "param" : "article_objects"
+                 }
+             }
+          }
+       }
+   }
+
+As mentioned above, only the objects key in a insert query is templatable. This would insert ``n`` number of articles into the ``article`` table, where ``n`` is the length of the ``article_objects`` array. 
+
+Here's an example for an ``update`` query.
+
+.. code-block:: http
+   :emphasize-lines: 13-15
+
+   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   Content-Type: application/json
+   Authorization: Bearer <admin-token>
+
+   {
+       "type" : "create_query_template",
+       "args" : {
+           "name" : "update_article_author",
+           "template" : {
+             "type" : "update",
+             "args" : {
+                 "table" : "article",
+                 "$set" : {
+                    "author_id" : {
+                      "param" : "author_id"
+                    }
+                  },
+                  "where" : {
+                    "is_published" : {
+                      "$eq" : true
+                    }
+                  }
+             }
+          }
+       }
+   }
+
+In the above example, we are trying to update the author of all articles which are published. Note that ``$set`` has the templated param ``author_id``.
 
 .. _execute_query_template:
 
