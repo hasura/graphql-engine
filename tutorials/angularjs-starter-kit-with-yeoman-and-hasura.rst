@@ -17,7 +17,7 @@ AngularJS starter-kit with Yeoman Generator and using Hasura JS SDK
 
 This guide lays out the required information for you to kickstart developing your AngularJS application using Hasura backend APIs.
 
-We have also made a `AngularJS-Hasura starter-kit <https://github.com/hasura/quickstart-docker-git/angularjs-hasura>`_ using `Yeoman Generator for AngularJS <https://github.com/yeoman/generator-angular>`_ which you can use to scaffold your application. This kit has complete working pages that demonstrates capabilities of Hasura APIs. You can refer to these to get started or even use this kit directly for your applications. 
+We have also made a `AngularJS-Hasura starter-kit <https://github.com/hasura/quickstart-docker-git/tree/master/js-angularjs>`_ using `Yeoman Generator for AngularJS <https://github.com/yeoman/generator-angular>`_ which you can use to scaffold your application. This kit has complete working pages that demonstrates capabilities of Hasura APIs. You can refer to these to get started or even use this kit directly for your applications. 
 
 Including Hasura JS SDK
 -----------------------
@@ -78,7 +78,7 @@ Auth APIs
 Signup/Register
 ^^^^^^^^^^^^^^^
 
-Sample controller for using Signup API is given below. Complete working example can be seen at the `AngularJS-Hasura quickstart template <https://github.com/hasura/quickstart-docker-git/angularjs-hasura>`_
+Sample controller for using Signup API is given below. Complete working example can be seen at the `AngularJS-Hasura quickstart template <https://github.com/hasura/quickstart-docker-git/tree/master/js-angularjs>`_
 
 .. code-block:: JavaScript
 
@@ -101,7 +101,7 @@ Sample controller for using Signup API is given below. Complete working example 
 Login
 ^^^^^
 
-A sample controller for login using ``hasura`` would look like this. Complete working example can be seen at the `AngularJS-Hasura quickstart template <https://github.com/hasura/quickstart-docker-git/angularjs-hasura>`_ 
+A sample controller for login using ``hasura`` would look like this. Complete working example can be seen at the `AngularJS-Hasura quickstart template <https://github.com/hasura/quickstart-docker-git/tree/master/js-angularjs>`_ 
 
 .. code-block:: JavaScript
 
@@ -152,7 +152,7 @@ Now, you can use the following APIs.
 
 .. note:: 
 
-  Complete working example can be seen at the `AngularJS-Hasura quickstart template <https://github.com/hasura/quickstart-docker-git/angularjs-hasura>`_ 
+  Complete working example can be seen at the `AngularJS-Hasura quickstart template <https://github.com/hasura/quickstart-docker-git/tree/master/js-angularjs>`_ 
 
 Select
 ^^^^^^
