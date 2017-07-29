@@ -52,7 +52,7 @@ Step 1b: Install ``hasuractl``
 
 Install the command line tool: ``hasuractl``.
 
-Read full instructions `here <https://docs.hasura.io/0.13/ref/cli/hasuractl.html>`_.
+Read full instructions `here <https://docs.hasura.io/0.14/ref/cli/hasuractl.html>`_.
 
 But on \*nix systems:
 
