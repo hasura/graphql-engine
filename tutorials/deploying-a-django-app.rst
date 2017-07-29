@@ -56,6 +56,7 @@ Install ``hasuractl`` following the instructions at :doc:`../ref/cli/hasuractl`
  
 
 Once hasuractl is installed, you need to login to your Hasura account
+
 .. code:: 
 
     $ hasuractl login
