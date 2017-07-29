@@ -52,7 +52,7 @@ database (search for "hasura credentials" in your inbox if you're having trouble
 Step 2: Install `hasuractl` and initialise a Hasura project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Install ``hasuractl`` following the instructions at :ref:`hasuractl`
+Install ``hasuractl`` following the instructions at :doc:`../ref/cli/hasuractl`
  
 
 Once hasuractl is installed, you need to login to your Hasura account
