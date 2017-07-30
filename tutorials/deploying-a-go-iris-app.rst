@@ -10,13 +10,13 @@ Deploying a Iris Golang app
 ===========================
 
 .. rst-class:: featured-image
-.. image:: ../img/laravel-hasura.png
+.. image:: ../img/hasura-golang.png
    :height: 0px
    :width: 0px
 
 This tutorial will take you over deploying a Iris Golang application on Hasura.
 
-Benefits of using Hasura to deploy and host your Laravel app:
+Benefits of using Hasura to deploy and host your Go-Iris app:
 
 1. A Hasura project comes with a pre-configured Postgres that's ready to be used
 2. `git push hasura master` inside your go-iris app will deploy your application to your server
@@ -80,7 +80,7 @@ Make ``hasuractl`` talk to the specific project you created in Step 1a.
 Step 2: Initialise a Iris Golang project with an app name
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Run the following command to initialise a Laravel app that can be instantly deployed:
+Run the following command to initialise a Go-Iris app that can be instantly deployed:
 
 .. code-block:: Bash
 
