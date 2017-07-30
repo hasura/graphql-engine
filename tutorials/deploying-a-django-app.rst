@@ -32,8 +32,8 @@ Follow the 4 steps below so that you can start off and deploy a Django app
 within minutes. Refer to the next section on :ref:`local-development`, to connect to
 the Postgres database when you're developing and testing locally.
 
-Step 1: Get a hasura project and set up `hasuractl`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 1: Get a hasura project
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Sign up on http://dashboard.hasura.io and get yourself a Hasura project.
 Creating a hasura project will give you a domain. Something like: `project42.hasura-app.io`
@@ -52,10 +52,11 @@ database (search for "hasura credentials" in your inbox if you're having trouble
 Step 2: Install `hasuractl` and initialise a Hasura project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Install ``hasuractl`` following the instructions at :ref:`hasuractl`
+Install ``hasuractl`` following the instructions at :doc:`../ref/cli/hasuractl`
  
 
 Once hasuractl is installed, you need to login to your Hasura account
+
 .. code:: 
 
     $ hasuractl login
@@ -170,7 +171,7 @@ Step 3: Use hasuractl to add your SSH key to the Hasura project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can't just start pushing code to a new hasura project without making sure
-that you are really you! `hasuractl` can push your SSH key to your hasura project cluster
+that you are really you! :doc:`../ref/cli/hasuractl` can push your SSH key to your hasura project cluster
 so that you can start pushing your code.
 
 In case you do not have an ssh-key,  you can create one following the
