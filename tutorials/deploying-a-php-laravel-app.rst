@@ -118,7 +118,7 @@ Use the postgres password from Step 1a, and set that in your ``.env`` file.
 
 .. code-block:: Bash
 
-   DB_PASSWORD=password
+   DB_PASSWORD=a-very-secret-password
 
 
 Step 3: Use hasuractl to add your SSH key to the Hasura project
@@ -209,6 +209,22 @@ Step 1: Run all the steps above (skip if you already have)
 
 Make sure that you've already run all the steps above.
 **Step 5: Git push** is only important if you're deploying the app, so you can skip that.
+
+
+Step 2: Create a `.env` file with the remote postgres password
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: Bash
+
+   $ cd app
+   $ cp .env.example .env
+
+Now open the `.env` file in your favourite editor and edit the **DB_PASSWORD** value
+The same that you used in step 3 above.
+
+.. code-block:: bash
+
+   DB_PASSWORD=a-very-secret-password
 
 .. code-block:: Bash
 
