@@ -5,7 +5,7 @@
    :keywords: hasura, docs, tutorials, php, apache, web-application, laravel, migrations, postgres
    :content-tags: php, apache, deployment, web-application
    :created-on: 2017-07-28T10:20:35.073Z 
-                
+
 Deploying a Laravel PHP app
 ===========================
 
@@ -19,14 +19,13 @@ This tutorial will take you over deploying a Laravel PHP application on Hasura.
 Benefits of using Hasura to deploy and host your Laravel app:
 
 1. A Hasura project comes with a pre-configured Postgres that's ready to be used
-2. `git push hasura master` inside your laravel app will deploy your application to your server
-3. Migrations are automatically handled whenever you update and deploy your application to the server!
+2. `git push hasura master` inside your git repo will deploy your application to your server
 
 Basic deployment
 ----------------
 Follow the 4 steps below so that you can start off and deploy a Laravel app
-within minutes. Refer to the next section on :ref:`local development`, to connect to
-the Postgres database when you're developing and testing locally.
+within minutes. Refer to the next section on :ref:`laravel-local-development`
+ for when you're developing and testing locally.
 
 Step 1a: Get a hasura project and make a note of your credentials
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -133,54 +132,94 @@ so that you can start pushing your code.
 
    $ hasuractl add-ssh-key
 
+Step 4: Run the database migrations and generate a new application key
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Step 4: ``git push`` and you're done!
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Set up a tunnel to securely connect to the postgres database on the hasura project
+and run the migrations.
+
+.. code-block:: bash
+
+   $ hasuractl forward 5432:postgres.hasura:5432
+
+Now, in a different terminal:
+
+.. code-block:: bash
+
+   $ php artisan migrate
+   Migration table created successfully.
+   Migrating: 2014_10_12_000000_create_users_table
+   Migrated:  2014_10_12_000000_create_users_table
+   Migrating: 2014_10_12_100000_create_password_resets_table
+   Migrated:  2014_10_12_100000_create_password_resets_table
+   Migrating: 2017_07_27_102621_create_todos_table
+   Migrated:  2017_07_27_102621_create_todos_table
+   Migrating: 2017_07_27_215357_add_columns_to_todos
+   Migrated:  2017_07_27_215357_add_columns_to_todos
+
+   $ php artisan key:generate
+   Application key [base64:xVnT+XfhwcOZ76qaNcbFeb3YXWsoLLylqtKp6rdO5EQ=] set successfully.
+
+Note the exact value between the `[` and the `]`. This is the application key, and we'll be using it later:
+`base64:xVnT+XfhwcOZ76qaNcbFeb3YXWsoLLylqtKp6rdO5EQ=`
+
+Step 5: ``git push`` and you're done (almost)!
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: Bash
 
    $ git push hasura master
 
-.. _local-development:
+Step 6: Set the database password as an environment variable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Head to the `Data > Administration` section of the console and copy the database password.
+
+.. image:: ../img/copy-db-pass.png
+   :height: 400px
+
+Head do the `Git push > my-app > update` section of the console and create a new environment
+variable called `DB_PASSWORD` and paste the password as the value. Create another env variable
+called `APP_KEY` and paste the application key from above. Make sure you copy the exact string since
+it is base64 encoded and will error out if you miss any characters.
+
+.. image:: ../img/set-env-var.png
+   :height: 500px
+
+Step 7: You're done: view your app!
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Head to **my-app.project42.hasura-app.io** to view your app. This app is a simple app that uses
+a single table in a database to store values and fetch values.
+Remember to replace **project42** with your actual project's name!
+
+.. image:: ../img/laravel-app.png
+   :height: 500px
+
+.. _laravel-local-development:
+
 Local development
 -----------------
 
 Considering that the postgres database is already on the Hasura project cluster, when you are
 developing on your own mahcine, on your application you might want to connect to the database too.
 
-Step 1: Setup a secure tunnel to your database
-----------------------------------------------
+Step 1: Run all the steps above (skip if you already have)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This will make postgres available on ``127.0.0.1:5432`` for any process on your machine :)
+Make sure that you've already run all the steps above.
+**Step 5: Git push** is only important if you're deploying the app, so you can skip that.
 
 .. code-block:: Bash
 
    $ hasuractl forward 5432:postgres.hasura:5432
 
-Step 2: Change your ``.env`` environment variables
---------------------------------------------------
+Step 2: Run ``php artisan serve``!
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Change ``DB_HOST`` to ``localhost``. The original value would have been ``postgres.hasura``.
-
-.. code-block:: Bash
-
-   DB_HOST=localhost
-
-Step 3: Run your database migrations
-------------------------------------
-
-Make sure that the tunnel to your database is on (Step 1) and then run:
-
-.. code-block:: Bash
-
-   $ php artisan migrate
-
-Step 3: Run ``php artisan serve``!
-----------------------------------
-
-.. code::
+.. code-block:: bash
 
    $ php artisan serve
-
+   Laravel development server started: <http://127.0.0.1:8000>
 
 And everything works. :)
