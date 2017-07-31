@@ -19,17 +19,42 @@ from bs4 import BeautifulSoup
 import datetime
 import calendar
 
+import xml.etree.ElementTree as ET
+
 indexObjs = []
 
-def callme(app, exception):
-    file_path = "./_build/algolia_index/index.json"
-    directory = os.path.dirname(file_path)
+def checkDirectory( path ):
+    directory = os.path.dirname(path)
     try:
         if not os.path.exists(directory):
             os.makedirs(directory)
     except OSError as e:
         raise
+
+def onFinishBuilding(app, exception):
+    currentVersion = app.env.config["version"]
+    latestVersion = app.env.config["html_context"]["latest_docs_version"]
+    base_domain = app.env.config["html_context"]["BASE_DOMAIN"]
+
+    file_path = "./_build/algolia_index/index.json"
+    sitemap_path = "./_build/sitemap/sitemap_" + currentVersion + ".xml"
+
+    checkDirectory(file_path)
+    checkDirectory(sitemap_path)
+
     f = open(file_path, 'w+')
+
+    root = ET.Element("urlset")
+    root.set("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9")
+
+    for link in indexObjs:
+        url = ET.SubElement(root, "url")
+        ET.SubElement(url, "loc").text = base_domain + str(currentVersion) + "/" + link["url"]
+        ET.SubElement(url, "changefreq").text = "daily"
+        ET.SubElement(url, "priority").text = "1" if ( currentVersion == latestVersion ) else "0.5"
+
+    ET.ElementTree(root).write(sitemap_path)
+
     f.write(json.dumps(indexObjs))
 
 def generateIndexFile(app, pagename, templatename, context, doctree):
@@ -91,5 +116,5 @@ def generateIndexFile(app, pagename, templatename, context, doctree):
         indexObjs.append(indexObj)
 
 def setup(app):
-    app.connect('build-finished', callme)
+    app.connect('build-finished', onFinishBuilding)
     app.connect('html-page-context', generateIndexFile)
