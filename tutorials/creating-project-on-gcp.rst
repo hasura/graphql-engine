@@ -21,7 +21,7 @@ Introduction
 
 .. tip:: **Free $300 credits for new users!**
 
-   GCP offers $300 credits for free to first time users that are valid for an entire year. This makes GCP a great option for developers looking for an afordable cloud provider to deploy their applications.
+   GCP offers $300 credits for free to first time users that are valid for an entire year. This makes GCP a great option for developers looking for an affordable cloud provider to deploy their applications.
 
 In this tutorial, we will take a look at how to sign-up on Google Cloud Platform using its free tier, configure the account for Hasura and then create a Hasura project in your account.   
 
@@ -96,7 +96,7 @@ To verify that you have successfully completed all the prerequisite steps, pleas
 
 .. important::
 
-   If you have multiple GCP projects, please ensure that you are verifying the configuration of aformentioned APIs and billing for the right project.
+   If you have multiple GCP projects, please ensure that you are verifying the configuration of aforementioned APIs and billing for the right project.
 
 
 Step-3: Creating a project using the Hasura Dashboard 
