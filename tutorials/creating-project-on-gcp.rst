@@ -4,6 +4,7 @@
    :description: A video tutorial on creating a Hasura project on Google Cloud Platform
    :keywords: hasura, docs, tutorial, Google Cloud Platform, install, create
    :content-tags: Google Cloud,create project
+   :created-on: 2017-08-10T10:20:35.073Z 
 
 Creating a Hasura project on Google Cloud Platform
 ==================================================
