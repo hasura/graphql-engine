@@ -43,7 +43,7 @@ Navigate to https://cloud.google.com and click on the sign-in link.
 
  .. image:: ../img/GCP-signup-option.png
 
-Once you are logged in, you can check out GCP for free by registering for the free trial. Click on the `TRY IT FREE` button. If you already have a GCP account or have registered for the free trial, please follow the instructions to :ref:`configure your account <GCP_prereq_config>` for use with Hasura.
+Once you are logged in, you can check out GCP for free by registering for a free trial. Click on the `TRY IT FREE` button. If you already have a GCP account or have registered for the free trial, please follow the instructions to :ref:`configure your account <GCP_prereq_config>` for use with Hasura.
 
 .. image:: ../img/GCP-pre-free-trial.png
 
@@ -58,13 +58,13 @@ Step-2: Configuring your GCP account for Hasura
 
 According to Google, GCP projects form the basis for creating, enabling, and using all Cloud Platform services including managing APIs, enabling billing, adding and removing collaborators, and managing permissions for Cloud Platform resources.
 
-Hasura needs an active GCP project with billing and a couple of APIs enabled. In this section we will take a look at handling these mandatory prerequisite steps.
+Hasura needs an active GCP project with billing and a few APIs enabled. In this section we will take a look at handling these mandatory prerequisite steps.
 
 1. Creating a Google Cloud Project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-If you followed the instructions in **Step-1** above, then a GCP project named `My First Project` is automatically created for you with billing enabled. You can move on to the next prerequisite step #3.
+If you followed the instructions in **Step-1** above, then a GCP project named `My First Project` would have been created for you with billing enabled. You can move on to the next prerequisite step #3 (*unless you want to use a different GCP project*).
 
-To create a new project, navigate to https://console.cloud.google.com/projectcreate and 
+To create a new project, navigate to https://console.cloud.google.com/projectcreate and follow the simple instructions there.
 
 2. Enabling billing for your GCP Project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -93,17 +93,17 @@ Hasura uses the `Google Compute Engine API` to create and manage virtual machine
 Verification of prerequisite steps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To verify that you have successfully completed all the prerequisite steps, please head to the `APIs & services` dashboard of your GCP project and verify that the aforementioned APIs are part of the list of enabled APIs
+To verify that you have successfully completed all the prerequisite steps, please head to the `APIs & services` dashboard of your GCP project and check that the aforementioned APIs are part of the list of enabled APIs.
 
 .. important::
 
-   If you have multiple GCP projects, please ensure that you are verifying the configuration of aforementioned APIs and billing for the right project.
+   If you have multiple GCP projects, please ensure that you are verifying the configuration of aforementioned APIs and billing under the right project.
 
 
 Step-3: Creating a project using the Hasura Dashboard 
 -----------------------------------------------------
 
-Sign-up at `Hasura Project Dashboard`_ if you haven't already done so. Click on the `Create Project` button.
+Sign-up at the `Hasura Project Dashboard`_ if you haven't already done so. Click on the `Create Project` button.
 
 .. image:: ../img/GCP-dashboard-create-button.png
 
@@ -117,9 +117,9 @@ Once you have signed-in, the Hasura Dashboard fetches a list of GCP projects lin
 
    **Potential Errors**
 
-   If your Google Cloud account does not have a project linked to it or they are not configured for use with Hasura as specified in the above section on :ref:`prerequisite steps <GCP_prereq_config>`, you will be prompted to go to your Google Cloud console and setup the necessary configuration. You may follow the instructions provided in this section to do so.
+   If your Google Cloud account does not have a project linked to it or it is not configured for use with Hasura as specified in the above section on :ref:`prerequisite steps <GCP_prereq_config>`, you will be prompted to go to your Google Cloud console and setup the necessary configuration. You may follow the instructions provided in this section to do so.
 
-Once you have selected a properly configured project, you will be prompted to select a Google Cloud region and zone based mostly on the location of application users. You may refer to this `Google tutorial <https://cloud.google.com/compute/docs/regions-zones/regions-zones>`_ on how to pick the right region and zone for your application.
+Once you have selected a properly configured project, you will be prompted to select a Google Cloud region and zone based mostly on the location of application users. You may refer to this Google tutorial on `how to pick the right region and zone for your application <https://cloud.google.com/compute/docs/regions-zones/regions-zones>`_.
 
 You will then be prompted to pick from a list of VM instance types offered by Google in the region/zone selected by you. The instance type recommended for early stage applications by Hasura will be marked as such.
 
