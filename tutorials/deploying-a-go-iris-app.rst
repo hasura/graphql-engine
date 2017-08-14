@@ -54,13 +54,13 @@ But on \*nix systems:
 
 .. code-block:: Bash
 
-   $ curl -Lo hasuractl https://storage.googleapis.com/hasuractl/v0.1.7/linux-amd64/hasuractl && chmod +x hasuractl && mv hasuractl /usr/local/bin/
+   $ curl -Lo hasuractl https://storage.googleapis.com/hasuractl/v0.1.10/linux-amd64/hasuractl && chmod +x hasuractl && mv hasuractl /usr/local/bin/
 
 If you get a permission denied error for ``/usr/local/bin``, sudo it:
 
 .. code-block:: Bash
 
-   $ curl -Lo hasuractl https://storage.googleapis.com/hasuractl/v0.1.7/linux-amd64/hasuractl && chmod +x hasuractl && sudo mv hasuractl /usr/local/bin/
+   $ curl -Lo hasuractl https://storage.googleapis.com/hasuractl/v0.1.10/linux-amd64/hasuractl && chmod +x hasuractl && sudo mv hasuractl /usr/local/bin/
 
 
 Once you're done with that, login and setup ``hasuractl``:
