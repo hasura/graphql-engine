@@ -7,7 +7,7 @@
 .. _hasuractl:
 .. highlight:: bash
 
-HasuraCTL
+Hasuractl
 =========
 
 ``hasuractl`` is the commandline tool for the Hasura platform. 
@@ -15,52 +15,68 @@ HasuraCTL
 Installation
 ------------
 
-* Install latest ``kubectl`` (>= 1.6.0) (https://kubernetes.io/docs/tasks/kubectl/install/)
+Requirements
+~~~~~~~~~~~~~
+
+* 64 bit system (Linux/Mac/Windows) and if you're using local development, at least 4GB RAM.
+
+* Install the latest ``kubectl`` (>= 1.6.0) (https://kubernetes.io/docs/tasks/kubectl/install/)
+
+* ``virutalbox`` for local development
+
+* ``git-bash`` for Windows
+
+Linux Installation
+~~~~~~~~~~~~~~~~~~
+
+Run the following command
+
+.. code:: bash
+
+    $ curl -Lo hasuractl https://storage.googleapis.com/hasuractl/latest/linux-amd64/hasuractl && chmod +x hasuractl && sudo mv hasuractl /usr/local/bin/
 
 
-* Install ``hasuractl`` on Windows:
+If you would like to add hasuractl manually to your path drop the ``sudo mv hasuractl /usr/local/bin`` from the above command
 
-    Download `hasuractl.exe <https://storage.googleapis.com/hasuractl/v0.1.10/windows-amd64/hasuractl.exe>`_ and place it in your ``PATH``. Refer to this `video reference <https://drive.google.com/file/d/0B_G1GgYOqazYUDJFcVhmNHE1UnM/view>`_ if you need help with the installation on Windows.
 
-* Install ``hasuractl`` on Linux:
+Windows Installation
+~~~~~~~~~~~~~~~~~~~~
+
+Download `hasuractl.exe <https://storage.googleapis.com/hasuractl/latest/windows-amd64/hasuractl.exe>`_ 
+and place it in your ``PATH``. Refer to this `video <https://drive.google.com/file/d/0B_G1GgYOqazYUDJFcVhmNHE1UnM/view>`_ 
+if you need help with the installation on Windows.
+
+    In Windows, you should only use ``git-bash`` to execute commands that you see in this documentation.
+    
+Mac OS Installation
+~~~~~~~~~~~~~~~~~~~~
+
+Run the following command
 
 .. code::
 
-    $ curl -Lo hasuractl https://storage.googleapis.com/hasuractl/v0.1.10/linux-amd64/hasuractl && chmod +x hasuractl && sudo mv hasuractl /usr/local/bin/
+    $ curl -Lo hasuractl https://storage.googleapis.com/hasuractl/latest/darwin-amd64/hasuractl && chmod +x hasuractl && sudo mv hasuractl /usr/local/bin/
 
-Feel free to leave off the ``sudo mv hasuractl /usr/local/bin`` if you would like to add hasuractl to your path manually
+If you would like to add hasuractl manually to your path drop the ``sudo mv hasuractl /usr/local/bin`` from the above command
 
-* Install ``hasuractl`` on Mac:
 
-.. code::
-
-    $ curl -Lo hasuractl https://storage.googleapis.com/hasuractl/v0.1.10/darwin-amd64/hasuractl && chmod +x hasuractl && sudo mv hasuractl /usr/local/bin/
-
-Feel free to leave off the ``sudo mv hasuractl /usr/local/bin`` if you would like to add hasuractl to your path manually
-
-NOTE:
------
-
-- If you are on windows, you should only use git-bash to execute commands that you see in this documentation.
-- If you already have hasuractl installed, replace the old binary with the new one.
-
-Starting hasura
----------------
+Working with a Hasura project
+-----------------------------
 
 1. Create an account at `dashboard.hasura.io <https://dashboard.hasura.io>`_ if you do not have one.
 
-2. Run:
+2. Log into your Hasura account:
 
 .. code::
 
    $ hasuractl login
 
-3. Set context: 
+3. Set context to your Hasura project: 
 
-   You will need to create a Hasura project for the next step. You can do that
+   You will need to have created a Hasura project for this. You can do that
    at `dashboard.hasura.io <https://dashboard.hasura.io/projects>`_.
 
-   Set your project context using 
+   Set the hasuractl context to your project context using:
 
 .. code::
 
