@@ -33,3 +33,7 @@ Then, head to ``console.<project-name>.hasura-app.io/commandline/ssh-keys``, cop
 
 .. image:: ../../img/sshkeys.png
    :scale: 50%
+
+.. hint::
+
+    You can use **hasuractl** :ref:`add-ssh-key-cmd` to directly add your ssh key to the Hasura project.
