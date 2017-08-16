@@ -1,16 +1,17 @@
 :orphan:
 
 .. meta::
-   :description: Reference documentation for using Hasura's command line tooling, HasuraCTL
-   :keywords: hasura, docs, CLI, HasuraCTL
+   :description: Reference documentation for using Hasura's command line tooling, hasuractl
+   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl
 
 .. _hasuractl:
+
 .. highlight:: bash
 
 Hasuractl
 =========
 
-``hasuractl`` is the commandline tool for the Hasura platform. 
+``hasuractl`` is the command line tool for the Hasura platform. 
 
 Installation
 ------------
@@ -59,6 +60,7 @@ Run the following command
 
 If you would like to add hasuractl manually to your path drop the ``sudo mv hasuractl /usr/local/bin`` from the above command
 
+.. _working-with-hasura:
 
 Working with a Hasura project
 -----------------------------
@@ -85,8 +87,103 @@ Working with a Hasura project
 Here <project-name> is the name of the project you created on the Hasura
 Dashboard. This command also sets the kubectl context (which can be skipped using the -k flag).
 
+Local Development
+-----------------
+
+``hasuractl`` allows you to run the Hasura platform locally on a virtual machine using ``virtualbox``. The VM is called ``minihasura``.
+
+    Although you can develop locally on a VM, we encourage you to use a trial project which can be created on `<https://dashboard.hasura.io>`_.
+
+Starting minihasura
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning::
+
+    Running a local VM will take upto 2 GB of RAM and will download upto 1.5 GB of docker images when run for the first time.
+
+1. Create an account on `<https://dashboard.hasura.io>`_ and login to your account as shown in :ref:`working-with-hasura`.
+
+2. Start the local cluster using
+
+.. code:: bash
+
+    $ hasuractl local start
+
+It might take a long time for this to finish, depending on your internet connection. 
+The command exits by pointing you to a url to login to the console. 
+The hasuractl and kubectl contexts will be set to ``minihasura``.
+
+
+Stopping minihasura
+~~~~~~~~~~~~~~~~~~~
+
+To stop the VM, run:
+
+.. code:: bash
+
+    $ hasuractl local stop
+
+You can start it up again using ``hasuractl local start``.
+
+Cleaning minihasura
+~~~~~~~~~~~~~~~~~~~
+
+You can delete Hasura specific resources using the following command:
+
+.. code:: bash
+
+    $ hasuractl local clean
+
+This will only delete Hasura specific resources from the VM. All the data and configuration is deleted too. 
+The underlying VM is not deleted and the downloaded docker images will still exist inside the VM. 
+You can run ``hasuractl local start`` to set up Hasura again on the VM. For deleting the VM, see :ref:`local-delete`
+
+.. _local-delete:
+
+Deleting minihasura
+~~~~~~~~~~~~~~~~~~~~
+
+This will completely delete the minihasura VM and associated data and configurations from the system. 
+
+.. code:: bash
+
+    $ hasuractl local delete
+
+
+Exposing a local project over the internet
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Running ``hasuractl local start`` gives you a URL (e.g., c100.hasura.me) that points to your local project, 
+but this URL only works locally on your computer.
+
+
+If you need your iOS/Android app to access the project, or you want to share the project publicly, you need to expose the project over internet. 
+To do this, login to your Hasura dashboard, go to https://dashboard.hasura.io/local-development, and modify the Public URL. 
+This URL is where your project will be publicly accessible.
+Now, to expose your local project, run: 
+
+.. code:: bash
+
+    $ hasuractl local expose
+
+You can now access your local project at the public URL you configured earier.
+
+.. note::
+
+ On Windows, currently the command does not output anything when using git-bash. 
+ It works nonetheless. You can use CMD instead of git-bash, **only for this command**.
+
+Quickstart Projects
+-------------------
+
+Hasura provides readymade quickstart project templates in a variety of frameworks. 
+These can help you get started with developing using these frameworks on the Hasura platform. You check out further documentation at :ref:`quickstart-cmd`.
+
 Frequently Used Commands
 -------------------------
+
+.. _add-ssh-key-cmd:
+
 add-ssh-key
 ~~~~~~~~~~~
 This command picks the public key (id_rsa.pub) and adds it to the Hasura project. 
@@ -103,6 +200,8 @@ After this run
     $ hasuractl add-ssh-key
 
 to add the ssh key to your Hasura project.
+
+.. _quickstart-cmd:
 
 quickstart
 ~~~~~~~~~~
@@ -136,6 +235,7 @@ To list the available templates use
 
     $ hasuractl quickstart list
 
+.. _forward-cmd:
 
 forward
 ~~~~~~~
@@ -178,6 +278,8 @@ you can combine them into a single command like this
 
     $ hasuractl forward 8081:myapp.default:8080 5432:postgres.hasura:5432
 
+.. _set-context-cmd:
+
 set-context
 ~~~~~~~~~~~
 This command sets the hasuractl and kubectl context to the given project. Please note that you'll have to login to your Hasura account 
@@ -192,3 +294,11 @@ Passing the -k flag will skip setting the kubectl context and will only set the 
 get-context
 ~~~~~~~~~~~
 This command will display the current hasuractl and kubectl contexts.
+
+credentials
+~~~~~~~~~~~
+This command will display the credentials for your current Hasura project.
+
+status
+~~~~~~
+This command will display the status of the current Hasura project.

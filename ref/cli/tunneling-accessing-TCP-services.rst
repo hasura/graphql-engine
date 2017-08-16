@@ -26,6 +26,10 @@ hostname + port of the Postgres instance (as seen by the
 .. note::
    The above command is an example.  You can go to the CLI page of your project console (`Project Console` -> `CLI` -> `Tunnel`)  to get the exact command to setup the SSH tunnel.
 
+
+.. hint::
+  You can also create the ssh tunnel using **hasuractl** :ref:`forward-cmd`.
+
 Once the tunnel is created, then you can run ``psql`` as if you are connecting
 to your local machine's Postgres.
 

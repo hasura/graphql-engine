@@ -16,3 +16,6 @@ You can go to http://kubernetes.io/docs/user-guide/prereqs/ and download
 
 Once you have ``kubectl``, you can follow the instructions in the CLI page of your project console (`Project Console` -> `CLI` -> `Kubectl`) to setup ``kubectl`` to talk to the project's Kubernetes server.
 
+.. hint::
+
+    You can use **hasuractl** :ref:`set-context-cmd` to set kubectl to use a specific Hasura project.
