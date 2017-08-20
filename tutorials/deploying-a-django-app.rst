@@ -107,6 +107,18 @@ custom service that hasuractl created for you, so that your app will have access
 can do this at
 ``console.<hasura-project-name>.hasura-app.io/gitpush/<project-name>/update``
 
+
+.. code::
+
+    POSTGRES_PASSWORD :  <postgres-password-from-email>
+    POSTGRES_HOST : postgres.hasura
+
+After setting up the variables as shown below, be sure to save!
+
+.. rst-class:: featured-image
+.. image:: ../img/add-env-vars.png
+   :scale: 50%
+
 You can add any commands that you want django to run, like creating a superuser or collectstatic, to the app/scripts/migrate.sh file.  This file is run once your django app is deployed, so you can use this to run your special commands by adding them above the last ``gunicorn`` line in the file.
 
 .. code::
@@ -125,17 +137,6 @@ You can add any commands that you want django to run, like creating a superuser 
         # DO NOT ADD ANY COMMANDS BELOW THIS LINE
         # Now run the gunicorn server 
         gunicorn --config /conf/gunicorn_config.py helloworld.wsgi
-
-.. code::
-
-    POSTGRES_PASSWORD :  <postgres-password-from-email>
-    POSTGRES_HOST : postgres.hasura
-
-After setting up the variables as shown below, be sure to save!
-
-.. rst-class:: featured-image
-.. image:: ../img/add-env-vars.png
-   :scale: 50%
 
 .. admonition::
     You can also remove the helloworld folder and create your own Django project in
@@ -188,7 +189,8 @@ After setting up the variables as shown below, be sure to save!
 
     Finally, we'll edit our deployment script to serve the correct project by replacing the last line in our app/scripts/migrate.sh file with the following:
 
-    ..code::
+
+    .. code::
 
         gunicorn --config /conf/gunicorn_config.py <django-project-name>.wsgi
 
