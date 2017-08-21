@@ -106,6 +106,8 @@ You will need to set your database details as environment variables in the hasur
 custom service that hasuractl created for you, so that your app will have access to them when deployed. You
 can do this at
 ``console.<hasura-project-name>.hasura-app.io/gitpush/<project-name>/update``
+
+
 .. code::
 
     POSTGRES_PASSWORD :  <postgres-password-from-email>
@@ -116,6 +118,25 @@ After setting up the variables as shown below, be sure to save!
 .. rst-class:: featured-image
 .. image:: ../img/add-env-vars.png
    :scale: 50%
+
+You can add any commands that you want django to run, like creating a superuser or collectstatic, to the app/scripts/migrate.sh file.  This file is run once your django app is deployed, so you can use this to run your special commands by adding them above the last ``gunicorn`` line in the file.
+
+.. code::
+
+        #!/bin/sh
+
+        # ADD YOUR COMMANDS BELOW
+
+        # First, makemigrations and migrate
+        python3 manage.py makemigrations
+        python3 manage.py migrate
+        
+        # Your commands
+        # Eg: python3 manage.py collectstatic --noinput etc
+
+        # DO NOT ADD ANY COMMANDS BELOW THIS LINE
+        # Now run the gunicorn server 
+        gunicorn --config /conf/gunicorn_config.py helloworld.wsgi
 
 .. admonition::
     You can also remove the helloworld folder and create your own Django project in
@@ -164,6 +185,15 @@ After setting up the variables as shown below, be sure to save!
     .. code::
 
         ALLOWED_HOSTS = ['*']
+
+
+    Finally, we'll edit our deployment script to serve the correct project by replacing the last line in our app/scripts/migrate.sh file with the following:
+
+
+    .. code::
+
+        gunicorn --config /conf/gunicorn_config.py <django-project-name>.wsgi
+
 
     With this we've finished configuring our project to work with Hasura.
 
