@@ -1,0 +1,1337 @@
+{
+	"swagger": "2.0",
+	"info": {
+		"title": "Hasura Auth API",
+		"description": "Hausra Auth is an Identity and User management service. This is the API documentation for Hasura Auth.",
+		"version": "4.0.2"
+	},
+	"schemes": [
+		"http",
+		"https"
+	],
+	"externalDocs": {
+		"description": "High-level documentation for Hasura auth",
+		"url": "https://hasura.io/_docs/auth/4.0"
+	},
+	"consumes": [
+		"application/json"
+	],
+	"produces": [
+		"application/json"
+	],
+	"paths": {
+		"/signup": {
+			"post": {
+				"summary": "The sign up endpoint",
+				"description": "The endpoint is to sign up a user. It requires atleast one information among username, mobile, email along with the user's password(which is mandatory) is required. If recaptcha is enabled, then `g-recaptcha-response` is required.",
+				"parameters": [
+					{
+						"name": "password",
+						"in": "formData",
+						"description": "Password of the user",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "username",
+						"in": "formData",
+						"description": "Username of the user",
+						"type": "string"
+					},
+					{
+						"name": "email",
+						"in": "formData",
+						"description": "Email id of the user",
+						"type": "string"
+					},
+					{
+						"name": "mobile",
+						"in": "formData",
+						"description": "Mobile phone number of the user",
+						"type": "string"
+					},
+					{
+						"name": "g-recaptcha-response",
+						"in": "formData",
+						"description": "If recaptcha is enabled on the service, the recaptcha response key received from Google.",
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "An object with the hasura ID, role and session ID of the logged in user.",
+						"schema": {
+							"$ref": "#/definitions/UserInfo"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"anonymous"
+				]
+			}
+		},
+		"/login": {
+			"post": {
+				"summary": "The login endpoint",
+				"description": "The login endpoint is used to login an existing user. Password is a\nmandatory parameter. But among username, email and mobile atleast one\nof them has to be provided.\n",
+				"parameters": [
+					{
+						"name": "password",
+						"in": "formData",
+						"description": "Password of the user",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "username",
+						"in": "formData",
+						"description": "Username of the user",
+						"type": "string"
+					},
+					{
+						"name": "email",
+						"in": "formData",
+						"description": "Email id of the user",
+						"type": "string"
+					},
+					{
+						"name": "mobile",
+						"in": "formData",
+						"description": "Mobile phone number of the user",
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "An object with the hasura ID, role and session ID of the logged in\nuser.\n",
+						"schema": {
+							"$ref": "#/definitions/UserInfo"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"anonymous"
+				]
+			}
+		},
+		"/google/authenticate": {
+			"get": {
+				"summary": "Endpoint for Google sign-in authentication.",
+				"description": "After the OAuth2 flow in Google sign-in, obtain the id token. Once id token is obtained, use this endpoint to verify the access token and also create or login the user. Once the id token is verified, this endpoint will automatically create the user if she doesn't exist, or will login if existing user.",
+				"parameters": [
+					{
+						"name": "id_token",
+						"in": "query",
+						"required": true,
+						"description": "The ``id_token`` receieved from Google sign-in.",
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "An object with the hasura ID, role and auth token of the logged in\nuser.\n",
+						"schema": {
+							"$ref": "#/definitions/SocialLoginUserInfo"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"anonymous"
+				]
+			}
+		},
+		"/facebook/authenticate": {
+			"get": {
+				"summary": "Endpoint for Facebook sign-in authentication.",
+				"description": "After the OAuth2 flow in Facebook sign-in, obtain the access token. Once access token is obtained, use this endpoint to verify the access token and also create or login the user. Once the access token is verified, this endpoint will automatically create the user if she doesn't exist, or will login if existing user.",
+				"parameters": [
+					{
+						"name": "access_token",
+						"in": "query",
+						"required": true,
+						"description": "The ``access_token`` receieved from Facebook sign-in.",
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "An object with the hasura ID, role and auth token of the logged in\nuser.\n",
+						"schema": {
+							"$ref": "#/definitions/SocialLoginUserInfo"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"anonymous"
+				]
+			}
+		},
+		"/github/authenticate": {
+			"get": {
+				"summary": "Endpoint for Github sign-in authentication.",
+				"description": "After the OAuth2 flow in Github sign-in, obtain the access token. Once access token is obtained, use this endpoint to verify the access token and also create or login the user. Once the access token is verified, this endpoint will automatically create the user if she doesn't exist, or will login if existing user.",
+				"parameters": [
+					{
+						"name": "access_token",
+						"in": "query",
+						"required": true,
+						"description": "The ``access_token`` receieved from Github sign-in.",
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "An object with the hasura ID, role and auth token of the logged in\nuser.\n",
+						"schema": {
+							"$ref": "#/definitions/SocialLoginUserInfo"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"anonymous"
+				]
+			}
+		},
+		"/linkedin/authenticate": {
+			"get": {
+				"summary": "Endpoint for LinkedIn sign-in.",
+				"description": "After the OAuth2 flow in LinkedIn sign-in, obtain the access token. Once access token is obtained, use this endpoint to verify the access token and also create or login the user. Once the access token is verified, this endpoint will automatically create the user if they don't exist, or will log the user in if they are an existing one.",
+				"parameters": [
+					{
+						"name": "access_token",
+						"in": "query",
+						"required": true,
+						"description": "The ``access_token`` receieved from LinkedIn sign-in.",
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "An object with the hasura ID, role and auth token of the logged in\nuser.\n",
+						"schema": {
+							"$ref": "#/definitions/SocialLoginUserInfo"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"anonymous"
+				]
+			}
+		},
+		"/user/logout": {
+			"get": {
+				"summary": "The logout endpoint",
+				"description": "The logout endpoint to log out a currently logged in user.",
+				"responses": {
+					"200": {
+						"description": "A message describing success or failure",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					}
+				},
+				"tags": [
+					"user"
+				]
+			}
+		},
+		"/user/account/info": {
+			"get": {
+				"summary": "Get credentials of current logged in user",
+				"description": "This endpoint returns the user info object of the current logged in user.",
+				"responses": {
+					"200": {
+						"description": "An object with the hasura ID, role and session ID of the logged in user.",
+						"schema": {
+							"$ref": "#/definitions/ExtraUserInfo"
+						}
+					},
+					"401": {
+						"description": "This response is returned when there is no logged in user."
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"user"
+				]
+			}
+		},
+		"/user/login/verify": {
+			"post": {
+				"summary": "An endpoint to verify login credentials",
+				"description": "This endpoint works same as the login endpoint, except it doesn't log the user in. This endpoint is useful for verifying login credentials. Similar to the login endpoint, this required the password and one of the fields among username, email or mobile.",
+				"parameters": [
+					{
+						"name": "password",
+						"in": "formData",
+						"description": "Password of the user",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "username",
+						"in": "formData",
+						"description": "Username of the user",
+						"type": "string"
+					},
+					{
+						"name": "email",
+						"in": "formData",
+						"description": "Email id of the user",
+						"type": "string"
+					},
+					{
+						"name": "mobile",
+						"in": "formData",
+						"description": "Mobile phone number of the user",
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "An object with the hasura ID, role and session ID of the logged in user.",
+						"schema": {
+							"$ref": "#/definitions/UserInfo"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"user"
+				]
+			}
+		},
+		"/email/confirm": {
+			"get": {
+				"summary": "Endpoint to confirm the user's email with a token",
+				"description": "The endpoint to verify the email of the user. Once the user clicks on the verify email link (which is part of your app), your app should make a request to this endpoint, with the token, to verify the user's email.",
+				"parameters": [
+					{
+						"name": "token",
+						"in": "query",
+						"required": true,
+						"description": "The email verification token",
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "An object containing the hasura ID of the user, email of the user and a message indicating success.",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"hasura_id": {
+									"type": "integer",
+									"description": "The Hasura ID of the user."
+								},
+								"email": {
+									"type": "string",
+									"description": "The email of the user"
+								},
+								"message": {
+									"type": "string",
+									"description": "A string \"Email Verified\""
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"anonymous"
+				]
+			}
+		},
+		"/email/resend-verify": {
+			"post": {
+				"summary": "Resend the verify email",
+				"description": "Resend the verify email",
+				"parameters": [
+					{
+						"name": "email",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "The email address of the user to verify."
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"anonymous"
+				]
+			}
+		},
+		"/user/email/change": {
+			"post": {
+				"summary": "Change user's email",
+				"description": "Use this endpoint to change the user's email. The user has to be logged in. Also, as a good practice, force the user to enter her password in the app before making the request to this endpoint.",
+				"parameters": [
+					{
+						"name": "email",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "The email address of the user to change."
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A email verification link would be sent to the user's new email address.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"user"
+				]
+			}
+		},
+		"/mobile/confirm": {
+			"post": {
+				"summary": "Endpoint to confirm the user's mobile with OTP",
+				"description": "The endpoint to verify the mobile of the user. After the user has been sent an OTP, the user should enter the OTP in your app. Then your app should make a request to this endpoint with the OTP and the mobile number to verify the mobile phone number of the user.",
+				"parameters": [
+					{
+						"name": "mobile",
+						"in": "formData",
+						"required": true,
+						"description": "The mobile number",
+						"type": "string"
+					},
+					{
+						"name": "otp",
+						"in": "formData",
+						"required": true,
+						"description": "The OTP that is sent to the user.",
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message - \"Mobile verified\".",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"anonymous"
+				]
+			}
+		},
+		"/mobile/resend-otp": {
+			"post": {
+				"summary": "Resend the OTP to mobile",
+				"description": "Resend the OTP to mobile.",
+				"parameters": [
+					{
+						"name": "mobile",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "The mobile phone number of the user to send OTP to."
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"anonymous"
+				]
+			}
+		},
+		"/user/mobile/change": {
+			"post": {
+				"summary": "Change user's mobile",
+				"description": "Use this endpoint to change the user's mobile. The user has to be logged in. Also, as a good practice, force the user to enter her password in the app before making the request to this endpoint.",
+				"parameters": [
+					{
+						"name": "mobile",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "The new mobile number of the user to change."
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A verification OTP would be sent to the user's new mobile number.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"user"
+				]
+			}
+		},
+		"/user/password/change": {
+			"post": {
+				"summary": "Change logged in user's password",
+				"description": "Endpoint to change the password of the logged in user. Make sure the current user is logged in.",
+				"parameters": [
+					{
+						"name": "password",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "The current/old password of the user"
+					},
+					{
+						"name": "new_password",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "The new password of the user"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"user"
+				]
+			}
+		},
+		"/user/password/verify": {
+			"post": {
+				"summary": "Verify the logged in user's password",
+				"description": "Send password to verify if this is correct password for the user",
+				"parameters": [
+					{
+						"name": "password",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "The password to verify"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"user"
+				]
+			}
+		},
+		"/password/forgot": {
+			"post": {
+				"summary": "Endpoint to send forgot password email",
+				"description": "Endpoint will send a forgot password to the email address mentioned in the request body",
+				"parameters": [
+					{
+						"name": "email",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "Email address of the user"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A email for reset password would be sent.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"anonymous"
+				]
+			}
+		},
+		"/password/reset": {
+			"post": {
+				"summary": "Endpoint which reset password of a user",
+				"description": "Use this endpoint to reset password of an user. It requires a token and a new password. This token is sent with the forgot pasword email.",
+				"parameters": [
+					{
+						"name": "token",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "The token received in the forgot password email."
+					},
+					{
+						"name": "password",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "The new password that the user want to change to."
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"anonymous"
+				]
+			}
+		},
+		"/user/account/change-username": {
+			"post": {
+				"summary": "Change username of an user",
+				"description": "Change the username of currently logged in user.",
+				"parameters": [
+					{
+						"name": "username",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "The new username the current user wants to change to."
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"user"
+				]
+			}
+		},
+		"/user/account/delete": {
+			"post": {
+				"summary": "Endpoint to delete user account",
+				"description": "Delete an user account by submitting the password of the user.",
+				"parameters": [
+					{
+						"name": "password",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "Password of the user."
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"user"
+				]
+			}
+		},
+		"/admin/roles": {
+			"get": {
+				"summary": "Endpoint to get a list of all the roles available",
+				"description": "Lists all the roles",
+				"responses": {
+					"200": {
+						"description": "The list of roles",
+						"schema": {
+							"$ref": "#/definitions/RoleList"
+						}
+					}
+				},
+				"tags": [
+					"admin"
+				]
+			}
+		},
+		"/admin/users": {
+			"get": {
+				"summary": "Endpoint to fetch all the users",
+				"description": "Fetch all users' information",
+				"responses": {
+					"200": {
+						"description": "The list of users",
+						"schema": {
+							"$ref": "#/definitions/UserList"
+						}
+					}
+				},
+				"tags": [
+					"admin"
+				]
+			}
+		},
+		"/admin/users/{hasura_id}": {
+			"get": {
+				"summary": "Fetch user by id",
+				"description": "Fetch users' information by id",
+				"parameters": [
+					{
+						"name": "hasura_id",
+						"in": "path",
+						"description": "hasura_id of the user",
+						"type": "integer",
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "The user's information",
+						"schema": {
+							"$ref": "#/definitions/AdminUserInfo"
+						}
+					}
+				},
+				"tags": [
+					"admin"
+				]
+			}
+		},
+		"/admin/role/create": {
+			"post": {
+				"summary": "Create a new role",
+				"description": "Create a new role",
+				"parameters": [
+					{
+						"name": "role",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "The role name"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"admin"
+				]
+			}
+		},
+		"/admin/role/delete": {
+			"post": {
+				"summary": "Delete a role",
+				"description": "Delete an existing role",
+				"parameters": [
+					{
+						"name": "role",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "The role name to be deleted"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"admin"
+				]
+			}
+		},
+		"/admin/user/create": {
+			"post": {
+				"summary": "Create a new user",
+				"description": "Create a new user",
+				"parameters": [
+					{
+						"name": "username",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "Username of the user"
+					},
+					{
+						"name": "password",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "Password of the user"
+					},
+					{
+						"name": "email",
+						"in": "formData",
+						"type": "string",
+						"description": "Email of the user"
+					},
+					{
+						"name": "mobile",
+						"in": "formData",
+						"type": "string",
+						"description": "Mobile of the user"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"admin"
+				]
+			}
+		},
+		"/admin/user/delete": {
+			"post": {
+				"summary": "Delete a user",
+				"description": "Delete an existing user",
+				"parameters": [
+					{
+						"name": "hasura_id",
+						"in": "formData",
+						"type": "integer",
+						"required": true,
+						"description": "The ID of the user to be deleted"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"admin"
+				]
+			}
+		},
+		"/admin/user/activate": {
+			"post": {
+				"summary": "Activate a user",
+				"description": "Activate an existing user",
+				"parameters": [
+					{
+						"name": "hasura_id",
+						"in": "formData",
+						"type": "integer",
+						"required": true,
+						"description": "The ID of the user to be activated"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"admin"
+				]
+			}
+		},
+		"/admin/user/deactivate": {
+			"post": {
+				"summary": "Deactivate a user",
+				"description": "Deactivate an existing user",
+				"parameters": [
+					{
+						"name": "hasura_id",
+						"in": "formData",
+						"type": "integer",
+						"required": true,
+						"description": "The ID of the user to be deactivated"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"admin"
+				]
+			}
+		},
+		"/admin/user/assign-role": {
+			"post": {
+				"summary": "Assign role to user",
+				"description": "Assign a particular role to a user",
+				"parameters": [
+					{
+						"name": "hasura_id",
+						"in": "formData",
+						"type": "integer",
+						"required": true,
+						"description": "The ID of the user"
+					},
+					{
+						"name": "role",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "The role name to be assigned"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"admin"
+				]
+			}
+		},
+		"/admin/user/unassign-role": {
+			"post": {
+				"summary": "Remove role from user",
+				"description": "Remove a particular role from a user",
+				"parameters": [
+					{
+						"name": "hasura_id",
+						"in": "formData",
+						"type": "integer",
+						"required": true,
+						"description": "The ID of the user"
+					},
+					{
+						"name": "role",
+						"in": "formData",
+						"type": "string",
+						"required": true,
+						"description": "The role name to be unassigned"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"admin"
+				]
+			}
+		},
+		"/admin/user/force-logout": {
+			"post": {
+				"summary": "Force logout a user",
+				"description": "Expiring all sessions of a particular user. Effectively logging him out of all his sessions.",
+				"parameters": [
+					{
+						"name": "hasura_id",
+						"in": "formData",
+						"type": "integer",
+						"required": true,
+						"description": "The ID of the user"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A success message.",
+						"schema": {
+							"$ref": "#/definitions/SuccessMessage"
+						}
+					},
+					"default": {
+						"description": "Unexpected error",
+						"schema": {
+							"$ref": "#/definitions/ErrorMessage"
+						}
+					}
+				},
+				"tags": [
+					"admin"
+				]
+			}
+		}
+	},
+	"definitions": {
+		"ExtraUserInfo": {
+			"type": "object",
+			"properties": {
+				"hasura_id": {
+					"type": "integer",
+					"description": "The Hasura ID of the current logged in identity."
+				},
+				"hasura_role": {
+					"type": "string",
+					"description": "The role attached to the current logged in identity."
+				},
+				"auth_token": {
+					"type": "string",
+					"description": "Authorization token of the current logged in user. This token can be used in further requests."
+				},
+				"username": {
+					"type": "string",
+					"description": "Username of the user"
+				},
+				"email": {
+					"type": "string",
+					"description": "Email of the user; Maybe null."
+				},
+				"mobile": {
+					"type": "string",
+					"description": "Mobile of the user; Maybe null."
+				}
+			}
+		},
+		"UserInfo": {
+			"type": "object",
+			"properties": {
+				"hasura_id": {
+					"type": "integer",
+					"description": "Hasura ID of the current logged in identity."
+				},
+				"hasura_roles": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"description": "All the roles attached to the current logged in identity."
+				},
+				"auth_token": {
+					"type": "string",
+					"description": "Authorization token of the current logged in user. This token can be used in further requests."
+				}
+			}
+		},
+		"SocialLoginUserInfo": {
+			"type": "object",
+			"properties": {
+				"hasura_id": {
+					"type": "integer",
+					"description": "Hasura ID of the current logged in identity."
+				},
+				"hasura_roles": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"description": "All the roles attached to the current logged in identity."
+				},
+				"auth_token": {
+					"type": "string",
+					"description": "Authorization token of the current logged in user. This token can be used in further requests."
+				},
+				"access_token": {
+					"type": "string",
+					"description": "Access token of the user obtained from the provider."
+				},
+				"new_user": {
+					"type": "boolean",
+					"description": "Boolean value indicating if the user is new or returning."
+				}
+			}
+		},
+		"RoleList": {
+			"type": "object",
+			"properties": {
+				"roles": {
+					"type": "array",
+					"description": "a list of the role names",
+					"items": {
+						"type": "string"
+					}
+				}
+			}
+		},
+		"UserList": {
+			"type": "object",
+			"properties": {
+				"total": {
+					"type": "integer",
+					"description": "Total number of users"
+				},
+				"users": {
+					"type": "array",
+					"description": "list of all the users",
+					"items": {
+						"$ref": "#/definitions/AdminUserInfo"
+					}
+				}
+			}
+		},
+		"AdminUserInfo": {
+			"type": "object",
+			"properties": {
+				"id": {
+					"type": "integer"
+				},
+				"username": {
+					"type": "string"
+				},
+				"email": {
+					"type": "string"
+				},
+				"mobile": {
+					"type": "string"
+				},
+				"is_active": {
+					"type": "boolean"
+				},
+				"email_verfied": {
+					"type": "boolean"
+				},
+				"mobile_verfied": {
+					"type": "boolean"
+				},
+				"is_superuser": {
+					"type": "boolean"
+				},
+				"roles": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"date_joined": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"last_login": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"active_sessions": {
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/Session"
+					}
+				}
+			}
+		},
+		"Session": {
+			"type": "object",
+			"properties": {
+				"session_id": {
+					"type": "string"
+				},
+				"created": {
+					"type": "string",
+					"format": "date-time"
+				}
+			}
+		},
+		"SuccessMessage": {
+			"type": "object",
+			"properties": {
+				"message": {
+					"type": "string",
+					"description": "A message indicating the success"
+				}
+			}
+		},
+		"ErrorMessage": {
+			"type": "object",
+			"properties": {
+				"message": {
+					"type": "string",
+					"description": "Description of the error."
+				}
+			}
+		}
+	}
+}
