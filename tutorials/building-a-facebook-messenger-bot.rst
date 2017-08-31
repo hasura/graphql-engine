@@ -148,7 +148,7 @@ Step 2 - Setting up a Facebook Application
 ==========================================
 
 * Navigate to https://developers.facebook.com/apps/
-* Click on **'+ Add a new app’**.
+* Click on **'+ Create a new app’**.
 
 .. image:: ../img/tutorial_fb_app_screen.png
 
@@ -382,7 +382,7 @@ Now that the facebook servers and our server can talk to each other, let's start
   - 7: For each element inside messaging, we are checking whether it has a **message** key.
   - 8: When we send a message to our bot, the facebook server *echos* back that message with a field **is_echo** as true. In such cases, we are ignoring the messages.
   - 9: Extracting the message sent by the user to a variable called **textMessage**.
-  - 10: We send the **senderId** and the *textMessage** extracted from the request body to a function named **sendMessageToUser**. This function sends the textMessage sent to it, to the senderId provided.
+  - 10: We send the **senderId** and the *textMessage* extracted from the request body to a function named **sendMessageToUser**. This function sends the textMessage sent to it, to the senderId provided.
 
 * Let's have a look at our **sendMessageToUser** function.
 
@@ -723,3 +723,6 @@ Future Scope
 ------------
 
 Currently, our bot is quite simple and does no analysis(NLP) on the messages sent by the user. You can integrate with `wit.ai <https://wit.ai/>`_ to do this.
+
+
+.. tip:: The complete code for this app can be found on `Github <https://github.com/hasura/facebook-messenger-bot>`_
