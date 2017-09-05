@@ -49,34 +49,133 @@ Setup Hasura HTTP routes
 
 To expose Fission and the UI as a Hasura service, you need to add http routes to the hasura-project-conf. 
 
-The `add_routes.py <https://gist.github.com/sidmutha/530b1807204cadf41a9ca03b2cbab5a9>`_ script will do this for you.
+The `add_routes.py <https://github.com/hasura/serverless-tutorial/blob/master/add-route.py>`_ script will do this for you.
 Run the following command to do so:
 
 .. code ::
     
-    $ curl -s https://gist.githubusercontent.com/sidmutha/530b1807204cadf41a9ca03b2cbab5a9/raw/d28b6390fac374d96d0268bd35e65217e42b9623/add_routes.py | python -
+    $ curl -s https://raw.githubusercontent.com/hasura/serverless-tutorial/master/add-route.py|python -
 
 
 This will add the following http endpoints to the hasura-project-conf:
 
-- https://fission-ui.<project-name>.hasura-app.io : The Fission UI, accessible only to the admin
+- https://fission-ui.<project-name>.hasura-app.io : The Fission UI, accessible only to the admin.
+    Check out Fission-UI on `github <https://github.com/fission/fission-ui>`_ to understand how to use it.
+
 - https://fission-router.<project-name>.hasura-app.io : Fission router, to trigger functions, and is accessible to Hasura user
+    The functions can be triggered by `https://fission-router.<project-name>.hasura-app.io/<http-trigger>`.
 
 You are now ready to use Fission on Hasura!
 
-Using Fission
-=============
-We'll manage Fission functions using the Fission UI. Head to `https://fission-ui.<project-name>.hasura-app.io/` to access the UI.
+Deploying functions using git-push
+==================================
+You can deploy functions by pushing to a git remote. This can be done using the serverless-functions 
+`quickstart template <https://github.com/hasura/quickstart-docker-git>`_. 
+To set this up, you can either use hasuractl :ref:`quickstart-cmd` to init the quickstart template or follow the steps 
+below to manually set it up.
 
-Note that this UI is accessible only if you have logged in as an admin on your Hasura project. 
+Create a git-push service from the console
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To be able to create functions in Fission, you will first have to add an environment for a function to run in. 
-We'll use a python environment here. 
-Head to the 'Environment' page in the UI and click 'Add'. From the 'Choose Sample' dropdown, select 'Python' and click 'Save'.
+Navigate to your Hasura project's console and add a new git-push service. 
+Just enter a service name and click 'Create'. Don't worry about the rest of the options.
 
-You can manage functions from the 'Function' page. To add a function click on 'Add' which will take you to the create function 
-page. Enter the function name, select an environment and add the function body. Click 'Deploy' to deploy the function. 
-Finally, you need to add an http trigger for the function to be able to trigger it.
+We'll use this service to git-push and deploy functions.
 
-You can now invoke your function using `https://fission-router.<project-name>.hasura-app.io/<function>`.
-The function http endpoints are accessible to the Hasura 'user' role.
+.. image:: ../img/serverless_tut_add-service.png
+   :scale: 80%
+
+
+Get the serverless-functions quickstart template
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Clone the `quickstart-docker-git <https://github.com/hasura/quickstart-docker-git>`_ repo  using
+
+.. code::
+
+    $ git clone git@github.com:hasura/quickstart-docker-git.git
+
+.. image:: ../img/serverless_tut_git-clone.png
+   :scale: 80%
+
+Copy out the serverless-functions directory into a new directory
+
+.. image:: ../img/serverless_tut_cp-quickstart.png
+   :scale: 80%
+
+Initialize a git repo
+~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: ../img/serverless_tut_console-add-gp.png
+   :scale: 80%
+
+Add the hasura git remote as mentioned in the console
+
+.. image:: ../img/serverless_tut_git-init-remote.png
+   :scale: 80%
+
+Code your functions
+~~~~~~~~~~~~~~~~~~~
+
+You can write your functions in Python or NodeJS. You can also manually add environments using the Fission-UI.
+
+The 'config.json' specifies the function names, files and HTTP routes for the functions to be deployed. 
+All the functions must reside in the 'functions' directory. 
+
+The quickstart provides a sample "Hello World" function. There is one file, 'hello.py' in the functions directory.
+
+.. code:: python
+
+    def main():
+        return "Hello World!"
+
+The config.json has one entry which specifies the function name, file name, environment and the HTTP triggers for 
+this function. 
+
+.. code:: javascript
+
+    [
+        {
+            "name": "hello",
+            "env": "python",
+            "file": "hello.py",
+            "http_triggers": [
+                {
+                    "method": "GET",
+                    "urlpattern": "/hello"
+                }
+            ]
+        }
+    ]
+
+To add more functions, simply add the function file and another entry in the config.json.
+
+
+Commit your changes 
+~~~~~~~~~~~~~~~~~~~
+
+.. image:: ../img/serverless_tut_commit.png
+   :scale: 80%
+
+Push to deploy
+~~~~~~~~~~~~~~
+
+To deploy your functions, push to the hasura remote
+
+.. code::
+
+    $ git push hasura master
+
+.. image:: ../img/serverless_tut_git-push.png
+   :scale: 80%
+
+Great! Your functions have been deployed. 
+
+You can access the endpoints via the Fission router.
+
+
+.. image:: ../img/serverless_tut_hello.png
+   :scale: 80%
+
+
+For more, you can use the Fission-UI.
