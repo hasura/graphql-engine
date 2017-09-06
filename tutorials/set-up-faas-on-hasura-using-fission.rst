@@ -1,12 +1,17 @@
 :orphan:
 
 .. meta::
-   :description: A tutorial on installing Fission as a Hasura service which can provide Serverless Functions
+   :description: A tutorial on setting up serverless functions on Hasura and deploying them using git-push.
    :keywords: hasura, docs, tutorials, serverless, functions, faas, lambda, fission
    :content-tags: serverless, functions, faas
-
+   
 Setting up Serverless Functions (FaaS) on Hasura using Fission
 =================================================================
+
+.. rst-class:: featured-image
+.. image:: ../img/serverless.png
+   :height: 0px
+   :width: 0px
 
 This tutorial will guide you how to set up and use serverless functions on Hasura using the Fission framework.
 
@@ -177,5 +182,8 @@ You can access the endpoints via the Fission router.
 .. image:: ../img/serverless_tut_hello.png
    :scale: 80%
 
+You have completed the tutorial. The quickstart provides only a very simple example. In reality you'd want to write 
+somewhat more complex functions such as getting the request parameters, doing something with them and returning a result.
 
-For more, you can use the Fission-UI.
+You can check out the github repos of `Fission <https://github.com/fission/fission>`_ 
+and `Fission-UI <https://github.com/fission/fission-ui>`_ for more on using Fission.
