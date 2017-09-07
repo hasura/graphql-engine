@@ -9,7 +9,6 @@
 Setting up Serverless Functions (FaaS) on Hasura using Fission
 =================================================================
 
-.. rst-class:: featured-image
 .. image:: ../img/serverless-fission-tutorial.png
    :height: 0px
    :width: 0px
