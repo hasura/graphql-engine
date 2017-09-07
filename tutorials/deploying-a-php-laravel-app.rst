@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A tutorial on deploying a Laravel PHP/Apache web application using Hasura complete with migrations and a postgres database
+   :description: Bootstrap a PHP Laravel app with a PostgreSQL DB and deploy it to a cloud with a simple git push command or run it locally
    :keywords: hasura, docs, tutorials, php, apache, web-application, laravel, migrations, postgres
    :content-tags: php, apache, deployment, web-application
    :created-on: 2017-07-28T10:20:35.073Z 

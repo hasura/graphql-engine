@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A tutorial on deploying an HTML/JavaScript/CSS web application using Hasura
+   :description: Use an Nginx-based starter kit to bootstrap an HTML-CSS-JavaScript app and quickly deploy it to the cloud with a git push command
    :keywords: hasura, docs, tutorials, html, javascript, css, web-application
    :content-tags: html, javascript, css, deployment, web-application
    :created-on: 2017-07-25T10:20:35.073Z 

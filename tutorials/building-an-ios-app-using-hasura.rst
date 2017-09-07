@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A tutorial on building an IOS app using Swift for the backend on Hasura 
+   :description: Learn how IOS developers can use Swift for server-side development by building an app backend on Vapor and deploying to the cloud 
    :keywords: hasura, docs, tutorials, IOS, swift
    :content-tags: ios, swift
    :created-on: 2017-07-25T10:20:35.073Z 

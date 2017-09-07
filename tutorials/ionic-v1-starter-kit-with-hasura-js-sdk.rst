@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A tutorial on using hasura-js-sdk with Ionic v1, also a starter-kit is provided.
+   :description: Sample code to use a starter kit and our JS SDK to develop an Ionic app that integrates with the Hasura Auth, Data, and File APIs
    :keywords: hasura, docs, tutorials, starter-kit, angularjs, js-sdk, ionicframework, ionic
    :content-tags: ionic, mobile app, app 
    :created-on: 2017-08-04T10:20:35.073Z 

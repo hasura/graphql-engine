@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A video tutorial on creating a Hasura project on Google Cloud Platform
+   :description: A video tutorial on how to configure a Google Cloud Platform account, grant Hasura the prerequisite permissions and create a project
    :keywords: hasura, docs, tutorial, Google Cloud Platform, install, create
    :content-tags: Google Cloud,create project
    :created-on: 2017-08-10T10:20:35.073Z 
