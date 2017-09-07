@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A tutorial on building an Android app using Hasura 
+   :description: Learn how Android developers can use Java for server-side development by building an app backend on Play and deploying to the cloud 
    :keywords: hasura, docs, tutorials, android, java
    :content-tags: android, java
    :created-on: 2017-07-25T10:20:35.073Z 

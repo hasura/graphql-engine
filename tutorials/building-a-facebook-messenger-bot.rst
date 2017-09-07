@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A tutorial on building a simple FB Messenger bot on Hasura
+   :description: Build a bot that uses a node.js backend to automatically respond to movie names with details from The Movie Database (TMDb)
    :keywords: hasura, docs, tutorials, bot, chat bot, facebook, fb, messenger, fb messenger, facebook messenger
    :created-on: 2017-08-09T10:20:35.073Z
 

@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A video demonstration of the Hasura Platform features.
+   :description: A video of Hasura features like Data & Auth APIs, cloud deployment options like git push or Docker images, etc. in action
    :keywords: hasura, docs, guide, demo, platform features
    :content-tags: video, introduction, demo, features
 

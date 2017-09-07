@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A tutorial on deploying a Golang Iris web application using Hasura complete with migrations and a postgres database
+   :description: Use a starter kit to deploy your Iris Golang app, with migrations and a PostgreSQL DB, to the cloud using a simple git push command
    :keywords: hasura, docs, tutorials, go, golang, iris, web-application
    :content-tags: go, deployment, web-application
    :created-on: 2017-07-29T12:19:52.475Z

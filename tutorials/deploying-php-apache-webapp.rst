@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A tutorial on deploying a PHP/Apache web application using Hasura
+   :description: Use a starter kit to bootstrap a PHP Apache app with a PostgreSQL DB and quickly deploy it to the cloud with a git push command
    :keywords: hasura, docs, tutorials, php, apache, web-application
    :content-tags: php, apache, deployment, web-application
    :created-on: 2017-07-25T10:20:35.073Z 
