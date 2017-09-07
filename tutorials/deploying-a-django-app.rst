@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A tutorial on deploying a Django web application using Hasura complete with migrations and a postgres database
+   :description: Build and deploy a Django app with a PostgreSQL DB (automatically handled migrations) using a Python-Django starter kit
    :keywords: hasura, docs, tutorials, python, django, web-application,  migrations, postgres
    :content-tags: python, django, deployment, web-application
    :created-on: 2017-07-28T10:20:35.073Z 

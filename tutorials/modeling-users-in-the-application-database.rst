@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A tutorial on modeling users or adding user related data to your tables in the application database in addition to the auth service's database.
+   :description: Learn how to store user data from the Auth service or user attributes from providers like Google, FB, etc. in your application database
    :keywords: hasura, docs, tutorials, user-modeling, user data
    :content-tags: data-modeling, user-data
    :created-on: 2017-07-25T10:20:35.073Z 

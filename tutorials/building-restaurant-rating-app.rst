@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A video tutorial on building the backend for a restaurant rating app like Zomato/Yelp using Hasura 
+   :description: A video tutorial on building & deploying an MVP version of the backend of a Zomato/Yelp clone using the Hasura Data and Auth APIs
    :keywords: hasura, docs, tutorial, restaurant rating app, application, example
    :content-tags: video, sample app, 
    :created-on: 2017-07-25T10:20:35.073Z 

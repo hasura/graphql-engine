@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A video tutorial on using Hasura on DigitalOcean 
+   :description: Learn how to create a Hasura project on DO, use the Data & Auth APIs, and deploy sample web apps (a To-Do app and a blog engine)
    :keywords: hasura, docs, tutorial, DigitalOcean
    :content-tags: video,introduction, demo, DigitalOcean
    :created-on: 2017-07-25T10:20:35.073Z 
