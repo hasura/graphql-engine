@@ -5,38 +5,15 @@
         <div class="box_head_wrapper">
           <div class="box_head">
             <img src="{{ pathto('_images/FirstSteps.svg', 1) }}" alt="First steps"/>
-            <h3 class="head_wrapper">First steps</h3>
+            <h3 class="head_wrapper">1. What is Hasura?</h3>
           </div>
-          <!-- Do not display this at the moment
           <div class="view_all_wrapper small_content">
-            <a href="#">View all</a>
-            <img src="/v{{version}}/_images/right-arrow.svg" alt="Right Arrow" />
+            <img src="https://cdn0.iconfinder.com/data/icons/feather/96/clock-128.png" alt="time taken" />
+            1 min
           </div>
-          -->
         </div>
         <div class="small_content space_wrapper text_left">
-          If you are new to Hasura, then the best way to explore Hasura is by signing up and claiming a free trial project with a built-in interactive tutorial.
-        </div>
-        <div class="sign_in_wrapper1 space_wrapper">
-          <div class="get_start body_content">
-            Get Started
-          </div>
-          <div class="common_btn">
-            <a target="_blank" href="https://dashboard.hasura.io/login#register">
-              <button>Sign Up</button>
-            </a>
-          </div>
-        </div>
-        <div class="sign_in_wrapper space_wrapper">
-          <div class="get_start body_content">
-            Or read:
-          </div>
-          <a target="_blank" href="{{pathto('guides/how-to-get-started-with-hasura.html', 1) }}">
-            <div class="docs_link body_content">
-              How to get started with Hasura
-              <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
-            </div>
-          </a>
+          <iframe width="430" height="163" src="https://www.youtube.com/embed/t3lb5BACZTU?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>
         </div>
       </div>
     </div>
@@ -45,15 +22,19 @@
         <div class="box_head_wrapper">
           <div class="box_head">
             <img src="{{ pathto('_images/Guides.svg', 1) }}" alt="First steps"/>
-            <h3 class="head_wrapper">Guides</h3>
+            <h3 class="head_wrapper">2. Hasura hello-world</h3>
           </div>
           <div class="view_all_wrapper small_content">
-            <a href="{{ pathto('guides', 1) }}">View all</a>
-            <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
+            <img src="https://cdn0.iconfinder.com/data/icons/feather/96/clock-128.png" alt="time taken" />
+            10 mins
           </div>
         </div>
         <div class="small_content space_wrapper text_left">
-          Learn how to 'think in Hasura' - the concepts and philosophy of how to architect and build different kinds of apps and handling different use-cases using Hasura.
+          A fast introduction to Hasura for developers:
+          <br/>
+          Create a free cluster &middot; Create a database table &middot; Explore data APIs
+          &middot; Explore auth APIs &middot; Explore file APIs &middot; Deploy static files &middot; Deploy your web microservice
+          <br/>
         </div>
         <div class="sign_in_wrapper space_wrapper">
           <div class="get_start">
@@ -61,21 +42,10 @@
           </div>
           <a href="{{ pathto('guides/how-to-get-started-with-hasura.html', 1) }}">
             <div class="docs_link body_content">
-              How to get started with Hasura
+              Start Hasura 'hello world' tutorial
               <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
             </div>
           </a>
-        </div>
-        <div class="sign_in_wrapper space_wrapper">
-          <div class="get_start">
-            <img src="{{ pathto('_images/DocsGuideTuto.svg', 1) }}" alt="First steps"/>
-          </div>
-          <a href="{{ pathto('guides/application-architecture-on-hasura.html', 1) }}">
-          <div class="docs_link body_content">
-            Application Architecture on Hasura
-            <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
-          </div>
-        </a>
         </div>
       </div>
     </div>
@@ -84,61 +54,27 @@
         <div class="box_head_wrapper">
           <div class="box_head">
             <img src="{{ pathto('_images/ReferenceDocs.svg', 1) }}" alt="First steps"/>
-            <h3 class="head_wrapper">Reference Docs</h3>
+            <h3 class="head_wrapper">3. Getting started</h3>
           </div>
           <div class="view_all_wrapper small_content">
-            <a href="{{ pathto('ref', 1) }}">Home</a>
-            <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
+            <img src="https://cdn0.iconfinder.com/data/icons/feather/96/clock-128.png" alt="time taken" />
+            1 hr
           </div>
         </div>
         <div class="small_content space_wrapper text_left">
-          Detailed documentation for the platform, API reference for the Hasura BaaS microservices, deployment options for custom microservices and advanced topics.
+          An in-depth tutorial for setting up your APIs &amp; microservices. Includes tutorials for integration with Android, iOS, web front-ends.
+          <br/> <br/> <br/>
         </div>
         <div class="sign_in_wrapper space_wrapper">
-
-          <div class="wd_50 sign_in_wrapper">
-            <div class="get_start">
-              <img src="{{ pathto('_images/Architecture.svg', 1) }}" alt="First steps"/>
-            </div>
-            <a href="{{ pathto('ref/architecture/index.html', 1) }}">
-            <div class="ref_link body_content">
-              Architecture
-            </div>
-             </a>
+          <div class="get_start">
+            <img src="{{ pathto('_images/DocsGuideTuto.svg', 1) }}" alt="First steps"/>
           </div>
-
-          <div class="wd_50 sign_in_wrapper">
-            <div class="get_start">
-              <img src="{{ pathto('_images/Data.svg', 1) }}" alt="First steps"/>
-            </div>
-            <a href="{{ pathto('ref/hasura-microservices/data/index.html', 1) }}">
-            <div class="ref_link body_content">
-              Data
+          <a href="{{ pathto('guides/how-to-get-started-with-hasura.html', 1) }}">
+            <div class="docs_link body_content">
+              Start Hasura tutorial
+              <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
             </div>
           </a>
-          </div>
-        </div>
-        <div class="sign_in_wrapper space_wrapper">
-          <div class="wd_50 sign_in_wrapper">
-            <div class="get_start">
-              <img src="{{ pathto('_images/Artboard 5.svg', 1) }}" alt="First steps"/>
-            </div>
-            <a href="{{ pathto('ref/hasura-microservices/auth/index.html', 1) }}">
-            <div class="ref_link body_content">
-              Auth
-            </div>
-          </a>
-          </div>
-          <div class="wd_50 sign_in_wrapper">
-            <div class="get_start">
-              <img src="{{ pathto('_images/FileStore.svg', 1) }}" alt="First steps"/>
-            </div>
-            <a href="{{ pathto('ref/hasura-microservices/filestore/index.html', 1) }}">
-            <div class="ref_link body_content">
-              File Store
-            </div>
-          </a>
-          </div>
         </div>
       </div>
     </div>
@@ -147,15 +83,14 @@
         <div class="box_head_wrapper">
           <div class="box_head">
             <img src="{{ pathto('_images/Tutorials.svg', 1) }}" alt="First steps"/>
-            <h3 class="head_wrapper">Tutorials</h3>
+            <h3 class="head_wrapper">4. The Hasura manual</h3>
           </div>
           <div class="view_all_wrapper small_content">
-            <a href="{{ pathto('tutorials', 1) }}">View all</a>
-            <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
           </div>
         </div>
         <div class="small_content space_wrapper text_left">
-          Step-by-step instructions on implementing various use-cases and building reference applications along with code snippets, videos, etc.
+          This guide covers all Hasura concepts and features. Includes reference documentation for the CLI, the Hasura APIs &amp; project configuration (if you've started building with Hasura, keep this manual in a tab).
+         <br/> <br/>
         </div>
         <div class="sign_in_wrapper space_wrapper">
           <div class="get_start">
@@ -163,22 +98,10 @@
           </div>
           <a href="{{ pathto('tutorials/inter-service-communication-in-a-hasura-backend.html', 1) }}">
             <div class="docs_link body_content">
-              Inter-service Communication
+              Open manual
               <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
             </div>
           </a>
-        </div>
-        <div class="sign_in_wrapper space_wrapper">
-          <div class="get_start">
-            <img src="{{ pathto('_images/DocsGuideTuto.svg', 1) }}" alt="tutorial"/>
-          </div>
-          <a href="{{ pathto('tutorials/modeling-users-in-the-application-database.html', 1) }}">
-            <div class="docs_link body_content">
-              Modeling users in the app db
-              <img src="{{ pathto('_images/right-arrow.svg', 1) }}" alt="Right Arrow" />
-            </div>
-          </a>
-        </div>
         </div>
       </div>
     </div>
