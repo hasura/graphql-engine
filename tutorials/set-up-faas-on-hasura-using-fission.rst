@@ -4,7 +4,8 @@
    :description: A tutorial on setting up serverless functions on Hasura and deploying them using git-push.
    :keywords: hasura, docs, tutorials, serverless, functions, faas, lambda, fission
    :content-tags: serverless, functions, faas
-   
+   :created-on: 2017-09-07T08:36:08.00Z
+
 Setting up Serverless Functions (FaaS) on Hasura using Fission
 =================================================================
 
