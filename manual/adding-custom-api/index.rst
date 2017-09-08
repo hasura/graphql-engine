@@ -17,7 +17,7 @@ services on the Hasura platform.
 Serverless Functions on Hasura
 ------------------------------
 
-Serverless functions are short lived stateles functions that run on http or
+Serverless functions are short lived stateless functions that run on http or
 event triggers. Hasura provides a simple way to set up and use serverless
 functions through the Fission framework.
 
