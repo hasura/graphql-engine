@@ -18,6 +18,9 @@ This is the reference documentation of the entire Hasura platform
   files/index
   custom-domains
   cors-settings
+  adding-custom-api/index
+  deploying-webapp/index
+  SSH-cluster
   deploy-static
   deploy-docker
   postgres

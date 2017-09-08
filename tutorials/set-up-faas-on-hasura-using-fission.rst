@@ -5,6 +5,8 @@
    :keywords: hasura, docs, tutorials, serverless, functions, faas, lambda, fission
    :content-tags: serverless, functions, faas
 
+.. _faas-tutorial:
+
 Setting up Serverless Functions (FaaS) on Hasura using Fission
 =================================================================
 
