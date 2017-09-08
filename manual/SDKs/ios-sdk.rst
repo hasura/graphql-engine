@@ -105,6 +105,26 @@ like so :
 
     var user = client.currentUser;
 
+Hasura provides different ways to authenticate a user. Take a look at the  :doc:`docs <../users/index>` to get a better understanding of the various ways you can authenticate a user.
+
+Set the username and password.
+
+.. code-block:: swift
+
+   user.username = "username"
+   user.password = "password"
+
+.. tip:: Username is a mandatory field for the user, unless you are using social login(see below).
+
+Optional parameters are ``email`` and  ``mobile``. You can also setup
+*verification* of user's Email and Mobile. Once you enable email or mobile
+verification, those parameters also become mandatory.
+
+.. code-block:: swift
+
+   user.email = "xyz@abc.com"
+   user.mobile = "8888888888"
+
 SignUp
 ^^^^^^
 
@@ -141,6 +161,149 @@ Login
         }
     }
 
+Email-Verification Pending
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In case you have enabled email verification and want to resend the verification email.
+
+.. code-block:: swift
+
+   user.resendVerificationEmail { (successful, error) in
+         if successful {
+             //Email re-sent successfully
+         } else {
+             //Handle Error
+         }
+   }
+
+Mobile-Verification Pending
+---------------------------
+
+If you have enabled mobile verification, performing a signup on a user will send an otp to the provided mobile number.
+To verify the mobile number, use the following:
+
+.. code-block:: swift
+
+   user.confirmMobile(otp: "") { (confirmationSuccessful, error) in
+         if confirmationSuccessful {
+             //User's mobile has been verified/confirmed
+             //perform a user.login here
+         } else {
+             //Handle error
+         }
+   }
+
+``user.confirmMobile`` only confirms the user's mobile number but does not log him in. To confirm and login the user:
+
+.. code-block:: swift
+
+   user.confirmMobileAndLogin(otp: "") { (isLoginSuccessful, error) in
+        if isLoginSuccessful {
+            //Now Hasura.getClient().currentUser will have this user
+        } else {
+            //Handle Error
+        }
+   }
+
+To ``re-send OTP`` to mobile
+
+.. code-block:: swift
+
+   user.resendOTPForLogin { (successful, error) in
+      if (successful) {
+          //OTP re-sent to mobile
+      } else {
+          //Handle error
+      }
+   }
+
+Mobile - OTP
+------------
+
+Set the username and mobile number on the user object.
+
+.. code-block:: swift
+
+  user.username = "username"
+  user.mobile = "8888888888"
+
+SignUp
+^^^^^^
+
+.. code-block:: swift
+
+   user.otpSignUp { (isSuccessful: Bool, isPendingVerification: Bool, error: HasuraError?) in
+       if isSuccessful {
+         //Now Hasura.getClient().currentUser will have this user
+       } else {
+           //Handle Error
+       }
+   }
+
+.. tip:: Calling this method will send an ``otp`` to the provided mobile number. Once you receive the OTP, call the ``user.otpLogin`` method to login.
+
+Login
+^^^^^
+
+.. code-block:: swift
+
+   user.otpLogin(otp: otp) { (successful: Bool, error: HasuraError?) in
+      if successful {
+          //Now Hasura.getClient().currentUser will have this user
+      } else {
+          //handle error
+      }
+   }
+
+
+Social Login
+------------
+
+Hasura also providers authentication using various oauth login providers.
+
+Facebook
+^^^^^^^^
+
+* **Step1**: Integrate facebook login with your Hasura Project, check out the :doc:`docs <../users/facebook>`.
+
+* **Step2**: Intergate facebook login in your iOS app. Check out the facebook `docs <https://developers.facebook.com/docs/facebook-login/ios/>`_ to do this.
+
+* **Step3**: Perform facebook login in the app and receive the ``access token``.
+
+* **Step4**: Finally, pass this ``access token`` to the user object like so:
+
+.. code-block:: swift
+
+   user.socialLogin(loginType: .facebook, token: accessToken) { (isSuccessful, error) in
+      if isSuccessful {
+         //Login Successful
+      } else {
+         //Handle Error
+      }
+   }
+
+Google
+^^^^^^
+
+* **Step1**: Integrate google login with your Hasura Project, check out the :doc:`docs <../users/google>`.
+
+* **Step2**: Integrate google login in your iOS app. Check out the `docs <https://developers.google.com/identity/sign-in/ios/start-integrating>`_ to do this.
+
+* **Step3**: Perform google login in the app and receive the ``access token``.
+
+* **Step4**: Finally, pass this ``access token`` to the user object like so:
+
+.. code-block:: swift
+
+   user.socialLogin(loginType: .google, token: accessToken) { (isSuccessful, error) in
+      if isSuccessful {
+         //Login Successful
+      } else {
+         //Handle Error
+      }
+   }
+
+
 LoggedIn User
 ^^^^^^^^^^^^^
 
@@ -175,9 +338,7 @@ Data Service
 ~~~~~~~~~~~~
 
 Hasura provides out of the box data APIs on the tables and views you
-make in your project. To learn more about how they work, check out the
-docs
-`here <https://hasura.io/_docs/platform/0.6/getting-started/4-data-query.html>`__.
+make in your project. To learn more about how they work, check out the :doc:`docs <../users>`
 
 .. code:: swift
 

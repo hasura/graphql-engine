@@ -113,6 +113,7 @@ The ``HasuraClient`` object is the most functional feature of the SDK. It is bui
 
   HasuraClient client = Hasura.getClient();
 
+.. tip:: All network calls are called on a non ui thread and all the callbacks are pushed into the ui thread.
 
 Authentication
 ==============
@@ -123,14 +124,32 @@ Authentication
 
   HasuraUser user = client.getUser();
 
+Hasura provides different ways to authenticate a user. Take a look at the  :doc:`docs <../users/index>` to get a better understanding of the various ways you can authenticate a user.
+
+Set the username and password.
+
+.. code-block:: java
+
+  user.setUsername("username");
+  user.setPassword("password");
+
+.. tip:: Username is a mandatory field for the user, unless you are using social login(see below).
+
+Optional parameters are ``email`` and  ``mobile``. You can also setup
+*verification* of user's Email and Mobile. Once you enable email or mobile
+verification, those parameters also become mandatory.
+
+.. code-block:: java
+
+  user.setEmail("xyz@abc.com");
+  user.setMobile("88888888")
+
 
 SignUp
 ------
 
 .. code-block:: java
 
-  user.setUsername("username");
-  user.setPassword("password");
   user.signUp(new SignUpResponseListener() {
               @Override
               public void onSuccessAwaitingVerification(HasuraUser user) {
@@ -149,15 +168,11 @@ SignUp
               }
           });
 
-.. tip:: All network calls are called on a non ui thread and all the callbacks are pushed into the ui thread.
-
 Login
 -----
 
 .. code-block:: java
 
-  user.setUsername("username");
-  user.setPassword("password");
   user.login(new AuthResponseListener() {
 
               @Override
@@ -168,6 +183,184 @@ Login
               @Override
               public void onFailure(HasuraException e) {
                   //Handle Error
+              }
+          });
+
+Email-Verification Pending
+--------------------------
+
+In case you have enabled email verification and want to resend the verification email.
+
+.. code-block:: java
+
+  user.resendVerificationEmail(new EmailVerificationSenderListener() {
+              @Override
+              public void onSuccess(String message) {
+                  //email verification sent successfully
+              }
+
+              @Override
+              public void onFailure(HasuraException e) {
+                  //handle error
+              }
+          });
+
+Mobile-Verification Pending
+---------------------------
+
+If you have enabled mobile verification, performing a signup on a user will send an otp to the provided mobile number.
+To verify the mobile number, use the following:
+
+.. code-block:: java
+
+  user.confirmMobile(otp, new MobileConfirmationResponseListener() {
+              @Override
+              public void onSuccess(String message) {
+                  //The user's mobile number has been confirmed.
+                  //Perform a user.login() to login the user.
+              }
+
+              @Override
+              public void onFailure(HasuraException e) {
+                  //Handle error
+              }
+          });
+
+``user.confirmMobile`` only confirms the user's mobile number but does not log him in. To confirm and login the user:
+
+.. code-block:: java
+
+  user.confirmMobileAndLogin(otp, new AuthResponseListener() {
+              @Override
+              public void onSuccess(String message) {
+                //Now Hasura.getClient().getCurrentUser() will have this user
+              }
+
+              @Override
+              public void onFailure(HasuraException e) {
+                //Handle Error
+              }
+          });
+
+To ``re-send OTP`` to the mobile
+
+.. code-block:: java
+
+  user.resendOTP(new OtpStatusListener() {
+        @Override
+        public void onSuccess(String message) {
+            //OTP re-sent successfully
+        }
+
+        @Override
+        public void onFailure(HasuraException e) {
+            //Handle Error
+        }
+  });
+
+Mobile - OTP
+------------
+
+Set the username and mobile number on the user object.
+
+.. code-block:: java
+
+  user.setUsername("username");
+  user.setMobile("8888888888")
+
+SignUp
+^^^^^^
+
+.. code-block:: java
+
+  user.otpSignUp(new SignUpResponseListener() {
+              @Override
+              public void onSuccessAwaitingVerification(HasuraUser user) {}
+
+              @Override
+              public void onSuccess(HasuraUser user) {
+                //Now Hasura.getClient().getCurrentUser() will have this user
+              }
+
+              @Override
+              public void onFailure(HasuraException e) {
+                  //Handle Error
+              }
+          });
+
+.. tip:: Calling this method will send an ``otp`` to the provided mobile number. Once you receive the OTP, call the ``user.otpLogin()`` method to login.
+
+Login
+^^^^^
+
+.. code-block:: java
+
+  user.otpLogin(otp, new AuthResponseListener() {
+
+              @Override
+              public void onSuccess(HasuraUser user) {
+                //Now Hasura.getClient().getCurrentUser() will have this user
+              }
+
+              @Override
+              public void onFailure(HasuraException e) {
+                  //Handle Error
+              }
+          });
+
+
+Social Login
+------------
+
+Hasura also providers authentication using various oauth login providers.
+
+Facebook
+^^^^^^^^
+
+* **Step1**: Integrate facebook login with your Hasura Project, check out the :doc:`docs <../users/facebook>`.
+
+* **Step2**: Intergate facebook login in your Android app. Check out the facebook `docs <https://developers.facebook.com/docs/facebook-login/android/>`_ to do this.
+
+* **Step3**: Perform facebook login in the app and receive the ``access token``.
+
+* **Step4**: Finally, pass this ``access token`` to the user object like so:
+
+.. code-block:: java
+
+  user.socialLogin(HasuraSocialLoginType.FACEBOOK, accessToken, new AuthResponseListener() {
+              @Override
+              public void onSuccess(String message) {
+
+              }
+
+              @Override
+              public void onFailure(HasuraException e) {
+
+              }
+          });
+
+Google
+^^^^^^
+
+* **Step1**: Integrate google login with your Hasura Project, check out the :doc:`docs <../users/google>`.
+
+* **Step2**: Integrate google login in your Android app. Check out the `docs <https://developers.google.com/identity/sign-in/android/start-integrating>`_ to do this.
+
+* **Step3**: Perform google login in the app and receive the ``access token``.
+
+* **Step4**: Finally, pass this ``access token`` to the user object like so:
+
+.. code-block:: java
+
+  user.socialLogin(HasuraSocialLoginType.GOOGLE, accessToken, new AuthResponseListener() {
+              @Override
+              public void onSuccess(String message) {
+
+              }
+
+              @Override
+              public void onFailure(HasuraException e) {
+
               }
           });
 
@@ -208,7 +401,7 @@ Logout
 Data Service
 ============
 
-Hasura provides out of the box data apis on the tables and views you make in your project. To learn more about how they work, check out the `docs <https://hasura.io/_docs/platform/0.6/getting-started/4-data-query.html>`_
+Hasura provides out of the box data apis on the tables and views you make in your project. To learn more about how they work, check out the :doc:`docs <../users>`.
 
 .. code-block:: java
 
