@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A tutorial on using hasura-js-sdk with angularjs, also a starter-kit is provided.
+   :description: Use a starter kit & a JS SDK to build and deploy an AngularJS app that integrates with the Hasura Auth, Data, and File APIs
    :keywords: hasura, docs, tutorials, starter-kit, angularjs, js-sdk
    :content-tags: angularjs, web
    :created-on: 2017-07-28T10:20:35.073Z 

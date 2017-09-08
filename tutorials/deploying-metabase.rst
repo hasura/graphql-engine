@@ -1,7 +1,7 @@
 :orphan:
 
 .. meta::
-   :description: A tutorial on installing Metabase for instant analytics on your Hasura project
+   :description: Learn how to deploy an open-source analytics product that lets you explore data & share insights without writing a line of sql
    :keywords: hasura, docs, tutorials, analytics, metabase
    :content-tags: analytics, metabase
    :created-on: 2017-07-25T10:20:35.073Z 

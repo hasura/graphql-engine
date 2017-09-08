@@ -1,13 +1,13 @@
 :orphan:
 
 .. meta::
-   :description: A tutorial on building a simple chatting application using Hasura.
+   :description: Learn how to build a real-time chat app using the Hasura Android SDK to integrate with the Data, and Auth APIs and a socket.io server
    :keywords: hasura, docs, tutorials, user-modeling, user data
    :created-on: 2017-07-25T10:20:35.073Z 
 
-===============================
-Building a ChatApp using Hasura
-===============================
+================================
+Building a Chat App using Hasura
+================================
 
 .. rst-class:: featured-image
 .. image:: ../img/chat_tutorial_background.png
