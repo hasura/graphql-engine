@@ -9,26 +9,23 @@ Deploy custom services using Docker images
 Not all requirements for your app may be met by the Hasura data, auth APIs.
 Custom APIs and services will always need to be added specifically to the project.
 
-If the service needed to be run has a ``docker`` image Hasura provides an easy way to deploy the service by simply specifying the ``docker`` image.
-
-
-.. admonition:: Video reference
-
-   `Adding a custom service using a Docker image <https://youtu.be/LK1mgsl2uUs>`_
-
+If the service needed to be run has a ``docker`` image, Hasura provides an easy way to deploy the service by simply specifying the ``docker`` image.
 
 **Example: Adding a custom database browser (adminer) using its Docker image**
 
 The adminer docker image is available as `clue/adminer <https://hub.docker.com/r/clue/adminer/>`_.
 
-To add a new custom service, head to the console, and click on the ``+`` icon.
-Follow the instructions from this screenshot, and click on ``Create`` to add your service.
+| Docker based services are created using the project console.
+| Navigate to: ``Project Console -> Custom Microservice -> Docker -> Create New.``
 
-.. image:: adminer.png
+Here is a reference image for the page we land on:
+
+.. image:: deploy-docker.png
    :scale: 50%
 
-That's all you need to do. If you head to ``https://adminer.<project-name>.hasura-app.io`` you'll see
-the familiar ``adminer`` UI.
+
+Just add the name of the service (say adminer), the docker image (viz. clue/adminer) and hit ``Create``. That's all you need to do.
+If you head to ``https://adminer.<project-name>.hasura-app.io`` you'll see the familiar ``adminer`` UI.
 
 .. admonition:: Automatic SSL certificates
 
