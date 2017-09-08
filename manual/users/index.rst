@@ -241,8 +241,17 @@ user can make subsequent requests without having to authenticate, with
 credentials, on every request. Instead, on every request the user can present
 the ``auth_token`` to identify herself.
 
+Every service benefits from having the user's information (id and roles) with each request. In hasura platform, as mentioned earlier, every request goes through the gateway. So, the gateway integrates with the session store to act as a session middleware for all services.
+
+When the gateway receives a request, it looks for a session token in the ``Bearer`` token of ``Authorization`` header or in the cookie. It then retrieves the user's id and roles attached to this session token from the session store. This information is sent as ``X-Hasura-User-Id`` and ``X-Hasura-Role`` headers to the upstream service.
+
+When the session token is absent from both header and cookie, the gateway considers it an anonymous request and adds the header ``X-Hasura-Role: anonymous``. The ``X-Hasura-User-Id`` header is **not** set in this case.
+
+
 .. _session-expiry:
 
+Session Expiry
+^^^^^^^^^^^^^^
 A user session will expire:
 
 * when a logout action is requested
