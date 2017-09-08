@@ -46,3 +46,7 @@ Thumbs.db
 
 # Virtual Environment
 venv
+
+
+# Jetbrains folder
+.idea
