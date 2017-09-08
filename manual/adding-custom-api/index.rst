@@ -5,13 +5,34 @@
 
 .. _project_creation:
 
-Custom code
+Adding Custom APIs
 ==================
 
-Deploying custom code
+In cases where your app requirements are not met by the default Hasura APIs, you may
+want to deploy your own custom APIs on the Hasura platform.
 
-.. toctree::
-  :maxdepth: 2
+Hasura provides both serverless functions (lambdas) through Fission, and CI
+integration to quickly deploy apps built in your favourite frameworks as
+services on the Hasura platform.
 
-  docker-images
-  git-push
+Serverless Functions on Hasura
+------------------------------
+
+Serverless functions are short lived stateles functions that run on http or
+event triggers. Hasura provides a simple way to set up and use serverless
+functions through the Fission framework.
+
+Serverless functions are basically used when the developer does not need to
+build a full app, and just needs to run a few small functions on http calls or
+other event triggers. These functions are inexpensive and efficient, and are
+easy to scale under load.
+
+To learn more about serverless functions on Hasura, check out our tutorial at
+:ref:`faas-tutorial`!
+
+
+Deploying your code on Hasura
+-----------------------------
+
+If you want to deploy your custom api built using your favourite framework, you can check
+out :ref:`deploy-webapp`!
