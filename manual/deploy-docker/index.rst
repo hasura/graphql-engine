@@ -3,7 +3,7 @@
    :keywords: hasura, manual, docker, image, custom service
 
 ===========================================
-Deploy custom services using Docker images
+Deploying custom services using Docker images
 ===========================================
 
 Not all requirements for your app may be met by the Hasura data, auth APIs.
