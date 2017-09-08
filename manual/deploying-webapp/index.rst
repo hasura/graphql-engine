@@ -1,8 +1,3 @@
-.. meta::
-   :description: Learn how to install Hasura - create a project by claiming a free trial project or by installing Hasura on public cloud infra or on a laptop/desktop.
-   :keywords: hasura, installation, cloud, public cloud
-
-
 .. _deploy-webapp:
 
 Deploying your webapp on Hasura
@@ -72,7 +67,7 @@ favourite framework is missing from this list, drop us a message at
 support@hasura.io, and we'll get to work adding it.
 
 Choose a template, and use the following command to create your app folder
-called <app-name> 
+called <app-name>
 
 .. code-block:: console
 

@@ -3,10 +3,6 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. meta::
-   :description: Reference documentation for creating and managing Custom Microservices. These services are created using a git push commmand or a Docker image.
-   :keywords: hasura, docs, custom microservices, git push, docker
-
 Data
 ====================
 
