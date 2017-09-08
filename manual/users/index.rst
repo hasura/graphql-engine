@@ -232,7 +232,7 @@ A session is nothing but a unique, un-guessable identifier  attached to that
 Hasura identity (referred to as ``auth_token``) for that session. This way an
 user can make subsequent requests without having to authenticate, with
 credentials, on every request. Instead, on every request the user can present
-the ``auth_token`` to identify herself.
+the ``auth_token`` to identify themself.
 
 Every service benefits from having the user's information (id and roles) with each request. In hasura platform, as mentioned earlier, every request goes through the gateway. So, the gateway integrates with the session store to act as a session middleware for all services.
 
