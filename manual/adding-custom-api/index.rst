@@ -3,16 +3,15 @@
    :keywords: hasura, installation, cloud, public cloud
 
 
-.. _project_creation:
 
 Adding Custom APIs
 ==================
 
-In cases where your app requirements are not met by the default Hasura APIs, you may
-want to deploy your own custom APIs on the Hasura platform.
+Sometimes, the Hasura APIs might not be enough for your backend, and you might
+need to deploy your own custom APIs to handle your backend needs.
 
-Hasura provides both serverless functions (lambdas) through Fission, and CI
-integration to quickly deploy apps built in your favourite frameworks as
+For these situations, Hasura provides both serverless functions (lambdas) through Fission, and CI
+integration to quickly deploy any apps built in your favourite frameworks as
 services on the Hasura platform.
 
 Serverless Functions on Hasura
