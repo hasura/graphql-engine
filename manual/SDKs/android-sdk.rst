@@ -227,15 +227,54 @@ Hasura provides out of the box data apis on the tables and views you make in you
                       }
                   });
 
+.. tip:: In case you are expecting an array response, use ``.expectResponseTypeArrayOf(MyResponse.class)``. *All SELECT queries to the data service will return an array response.*
 
 In the above method, there are a few things to be noted :
 
-* ``.setRequestBody()``: This is an overloaded method which accepts either an object of type ``JsonObject`` or a POJO (ensure that the JSON representation of this object is correct).
+* ``.setRequestBody()``: This is an overloaded method which accepts either an object of type ``JsonObject`` or a POJO (ensure that the JSON representation of this object is correct). The sdk uses `gson <https://github.com/google/gson>`_ internally to map Java Objects to JSON.
+
+  * For eg, the POJO representation of the following JSON
+
+.. code-block:: JSON
+
+  {
+    "type": "select",
+    "args": {
+      "table": "tableName",
+      "columns": ["column1", "column2"]
+    }
+  }
+
+would look like so:
+
+.. code-block:: java
+
+  import com.google.gson.annotations.SerializedName;
+  public class SelectTodoRequest {
+
+    @SerializedName("type")
+    String type = "select";
+
+    @SerializedName("args")
+    Args args;
+
+    public SelectTodoRequest() { }
+
+    class Args {
+
+      @SerializedName("table")
+      String table = "tableName";
+
+      @SerializedName("columns")
+      String[] columns = {
+              "column1","column2"
+      };
+    }
+  }
+
 * ``.expectResponseType()``: Specify the POJO representation of the expected response.
 
-.. tip:: In case you are expecting an array response, use `.expectResponseTypeArrayOf()`. *All SELECT queries to the data service will return an array response.*
-
-.. tip:: If the HasuraUser in the HasuraClient is loggedin/signedup then every call made by the HasuraClient will be authenticated by default with "user" as the default role (This default role can be changed when building the project config).
+    If the HasuraUser in the HasuraClient is loggedin/signedup then every call made by the HasuraClient will be authenticated by default with "user" as the default role (This default role can be changed when building the project config).
 
 
 In case you want to make the above call for an ``anonymous`` role.
@@ -263,7 +302,7 @@ In case you want to make the above call for a ``custom`` role.
 
 .. code-block:: java
 
-  client.asRole("customRole") //throws an error if the current user does not have this role
+  client.asRole("customRole")
     .useDataService()
     .setRequestBody(JsonObject)
     .expectResponseType(MyResponse.class)
@@ -443,13 +482,13 @@ Bonus: Handle the Response
 ``RetrofitCallbackHandler`` is a helper class which you can use to handle the responses from your custom APIs and parse errors.
 
 ********
-EXAMPLES
+Examples
 ********
 
 To take a look at some sample apps built using the Hasura SDK, take a look at our `github repository <https://github.com/hasura/Modules-Android>`_.
 
 ******
-ISSUES
+Issues
 ******
 
 In case of bugs, please raise an issue `here <https://github.com/hasura/support>`_.

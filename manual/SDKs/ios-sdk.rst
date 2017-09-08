@@ -20,17 +20,16 @@ Installation
 Step 1 : Download the Hasura iOS SDK
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`CocoaPods <http://cocoapods.org>`__ is a dependency manager for Cocoa
-projects. You can install it with the following command:
+`CocoaPods <http://cocoapods.org>`__ is a dependency manager for iOS projects. You can install it with the following command:
 
 .. code:: bash
 
     $ gem install cocoapods
 
-    CocoaPods 1.1.0+ is required to build the Hasura sdk.
 
-To integrate the Hasura sdk into your Xcode project using CocoaPods,
-specify it in your ``Podfile``:
+.. tip:: CocoaPods 1.1.0+ is required to build the Hasura sdk.
+
+To integrate the Hasura sdk into your Xcode project using CocoaPods, specify it in your ``Podfile``:
 
 .. code :: ruby
 
@@ -56,24 +55,20 @@ Step 2 : Setup Hasura
 Project Config
 ^^^^^^^^^^^^^^
 
-You set the project name and other hasura-project related things in
-Project Config object.
+You set the project name and other hasura-project related things in Project Config object.
 
 .. code-block:: swift
 
     //Minimum Config
     let config = ProjectConfig(projectName: "projectName")
 
-Note: The above method can throw a ``HasuraInitError``.
-
 Other init params are :
 
--  customBaseDomain: String - If you have a base domain other than
+-  ``customBaseDomain: String`` - If you have a base domain other than
    .hasura-app.io
--  isEnabledOverHttp: Bool - Set this to true if you want to use Http
+-  ``isEnabledOverHttp: Bool`` - Set this to true if you want to use Http
    instead of Https
--  defaultRole: String - "user" role is used by default
--  apiVersion: Int - 1 is used by default
+-  ``defaultRole: String`` - "user" role is used by default
 
 Use the above project config to initialise Hasura.
 
@@ -81,15 +76,14 @@ Use the above project config to initialise Hasura.
 
     Hasura.initialise(config: config, enableLogs: true)
 
-**Note**: Initialisation **must** be done before you use the SDK.The
-best place to initialise Hasura would be in your ``AppDelegate`` class.
+**Note**: The above method can throw a ``HasuraInitError`` incase the project config provided is incorrect.
+
+.. tip:: Initialisation **must** be done before you use the SDK. The best place to initialise Hasura would be in your ``AppDelegate`` class.
 
 Hasura Client
 -------------
 
-The ``HasuraClient`` is the most functional feature of the SDK. It is
-built using the project config specified on initialisation. You can get
-an instance of the client only from Hasura, like so :
+The ``HasuraClient`` is the most functional feature of the SDK. It is built using the project config specified on initialisation. You can get an instance of the client from Hasura, like so :
 
 .. code:: swift
 
@@ -97,11 +91,11 @@ an instance of the client only from Hasura, like so :
 
 **Note**: The above method can throw a ``HasuraInitError``.
 
-Hasura User
-~~~~~~~~~~~
+Authentication
+~~~~~~~~~~~~~~
 
 ``HasuraClient`` provides a ``HasuraUser`` for all of your
-authentication needs (login, signup etc). This ensures that certain data
+authentication needs like login and signup. This ensures that certain data
 can only be accessed by authorized users.
 
 You can get an instance of the ``HasuraUser`` from the ``HasuraClient``
@@ -121,7 +115,8 @@ SignUp
     user.signUp { (isSuccessful: Bool, isPendingVerification: Bool, error: HasuraError?) in
         if isSuccessful {
             if isPendingVerification {
-              //The user is registered on Hasura, but either his mobile or email needs to be verified.
+              //The user is registered on Hasura
+              //But either his mobile or email needs to be verified.
             } else {
               //Now Hasura.getClient().currentUser will have this user
             }
@@ -179,7 +174,7 @@ To log the user out, simple call ``.logout`` method on the user object.
 Data Service
 ~~~~~~~~~~~~
 
-Hasura provides out of the box data APIs on the Tables and views you
+Hasura provides out of the box data APIs on the tables and views you
 make in your project. To learn more about how they work, check out the
 docs
 `here <https://hasura.io/_docs/platform/0.6/getting-started/4-data-query.html>`__.
@@ -195,23 +190,22 @@ docs
             }
     }
 
-In the above method, there are a few things to be noted : - MyResponse
-is just a swift class/struct - a representation of the response you are
-expecting. Hasura uses
-`ObjectMapper <https://github.com/Hearst-DD/ObjectMapper>`__ internally
+``MyResponse`` is just a swift class/struct which is a representation of the response you are
+expecting. Hasura uses `ObjectMapper <https://github.com/Hearst-DD/ObjectMapper>`__ internally
 to map the json response into your class/struct.
 
 **Note**: In case you are expecting an object response, use
-``.responseObject``. *All SELECT queries to the data service will return
+``.responseObject``.
+
+*All SELECT queries to the data service will return
 an array response.*
 
-
-    If the HasuraUser in the HasuraClient is logged-in/signed-up, then every call 
-    made by the HasuraClient will be authenticated by default with "user" as the 
-    default role (This default role can be changed when building the project 
+    If the HasuraUser in the HasuraClient is logged-in/signed-up, then every call
+    made by the HasuraClient will be authenticated by default with "user" as the
+    default role (This default role can be changed when building the project
     config)
 
-In case you want to make the above call for an anonymous user,
+In case you want to make the above call for an ``anonymous`` role,
 
 .. code:: swift
 
@@ -224,7 +218,7 @@ In case you want to make the above call for an anonymous user,
             }
     }
 
-In case you want to make the above call for a custom user,
+In case you want to make the above call for a ``custom`` role,
 
 .. code:: swift
 
@@ -271,8 +265,8 @@ Upload File
 
 The upload file method accepts the following:
 
--  ``file:Data``: data to be uploaded.
--  ``mimetype:String``: the ``mimetype`` of the file.
+-  ``file: Data`` which is the data to be uploaded.
+-  ``mimetype: String`` which is the ``mimetype`` of the file.
 
 .. code:: swift
 
@@ -288,10 +282,10 @@ The upload file method accepts the following:
 
 ``FileUploadResponse`` in the above response contains the following:
 
--  ``id:String?``: The uniqiue Id of the file that was uploaded.
--  ``userId:Int?``: The id of the user who uploaded the file.
--  ``createdAt:Date?``: The time string for when this file was uploaded/created.
-  
+-  ``id: String?`` is the unique Id generated for the file that was uploaded. To download the file you will be using this id.
+-  ``userId: Int?`` is the id of the user who uploaded the file.
+-  ``createdAt: Date?`` is the time string for when this file was uploaded/created.
+
 
 Download File
 ^^^^^^^^^^^^^
@@ -312,7 +306,7 @@ Download File
             }
     }
 
-ISSUES
+Issues
 ------
 
 In case of bugs, please raise an issue
