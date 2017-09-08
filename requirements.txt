@@ -5,3 +5,4 @@ jinja2
 sphinx-autobuild
 sphinxcontrib-fulltoc
 sphinxcontrib.swaggerdoc
+sphinxcontrib.httpdomain
