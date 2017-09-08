@@ -12,7 +12,7 @@
 iOS SDK
 =======
 
-The iOS SDK for Hasura.
+This SDK helps you integrate your iOS application with Hasura. It makes data queries and user management exceptionally easy.
 
 Installation
 ------------
