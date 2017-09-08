@@ -5,6 +5,8 @@
 API
 ===
 
+.. _filestore-api-upload:
+
 ``POST /v1/file/<file_id>``
 ---------------------------
 
@@ -45,6 +47,7 @@ An example response looks like:
       "created_at": "2017-04-25T08:26:22.834266+00:00"
     }
 
+.. _filestore-api-download:
 
 ``GET /v1/file/<file_id>``
 --------------------------
@@ -69,6 +72,8 @@ Response
 
 The file is streamed to the client with the ``Content-Type`` header set to the
 file's MIME type.
+
+.. _filestore-api-delete:
 
 ``DELETE /v1/file/<file_id>``
 -----------------------------

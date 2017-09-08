@@ -6,6 +6,8 @@
    :content-tags: serverless, functions, faas
    :created-on: 2017-09-07T08:36:08.00Z
 
+.. _faas-tutorial:
+
 Setting up Serverless Functions (FaaS) on Hasura using Fission
 =================================================================
 

@@ -44,6 +44,8 @@ You need to configure the following options on the Hasura Project Console:
   
   For Hasura projects on Google Compute Engine / Google Container Engine, SMTP settings with standard ports like 25, 465, 587 will not work, since Google Compute Engine does not allow outbound connections on these ports. Hence, make sure that your SMTP provider have alternate ports like 2525 in case you want to deploy on Google Cloud. You can find more details and possible solutions `here <https://cloud.google.com/compute/docs/tutorials/sending-mail/>`_.
 
+.. _notify-sparkpost-settings:
+
 SparkPost
 ^^^^^^^^^
 

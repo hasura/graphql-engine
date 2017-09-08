@@ -258,8 +258,7 @@ dummy:
 	@echo "Build finished. Dummy builder generates no files."
 
 watch:
-	inotifywait -q -m --recursive -e modify -e move -e create -e delete \
-    --exclude $(BUILDDIR)/* . | while read; do $(MAKE) html; done
+	inotifywait -q -m --recursive -e modify -e move -e create -e delete --exclude '($(BUILDDIR)|.git)' . | while read -r CHANGE; do $(MAKE) html; done
 
 livehtml:
 	sphinx-autobuild -b html -i "$(BUILDDIR)/*" $(ALLSPHINXOPTS) $(BUILDDIR)/html

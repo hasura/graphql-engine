@@ -70,7 +70,8 @@ extensions = [
     "sphinxcontrib.fulltoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
-    "sphinxcontrib.swaggerdoc"
+    "sphinxcontrib.swaggerdoc",
+    "sphinxcontrib.httpdomain"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
