@@ -16,6 +16,7 @@ This is the reference documentation of the entire Hasura platform
   roles/index
   data/index
   files/index
+  email-sms/index
   custom-domains
   cors-settings
   custom-code/index
