@@ -17,6 +17,9 @@ Signup
 Login
 ------
 
+Sessions
+----------
+
 Password reset
 ------------------
 

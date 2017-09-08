@@ -14,9 +14,11 @@ This is the reference documentation of the entire Hasura platform
 
   users/index
   roles/index
-  sessions/index
   data/index
   files/index
+  custom-domains
+  cors-settings
   custom-code/index
+  postgres
   logs/index
   SDKs/index
