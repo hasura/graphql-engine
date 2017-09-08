@@ -23,4 +23,4 @@ Table of Contents
 .. toctree::
   :maxdepth: 2
 
-  ref/index
+  manual/index

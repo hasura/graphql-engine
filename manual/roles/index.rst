@@ -94,10 +94,10 @@ To delete a role, make a request to the ``/admin/role/delete`` endpoint.
 
 
 FAQ
-===
+---
 
 Why is the user role given by default?
---------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Because, this role can be then leveraged by any service (running inside the
 project) to provide authorization and access control mechanisms very easily.
 
@@ -110,24 +110,24 @@ when the request reaches the upstream service. This service can then look at
 the headers and perform its own authorization and access control easily.
 
 What if the user role is removed from an user?
-----------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The user won't be able to access any profile management(account info, password
 change, password reset, email change etc. - basically any API behind
 ``/user/``) APIs, if the ``user`` role is removed from an user.
 
 What if the user role itself is removed?
-----------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 You cannot remove the ``user`` role, it is default to the system.
 
 What if a new role needs to be assigned to a user?
---------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 You can create custom roles, and use the admin APIs of Hasura Auth to assign
 roles to an user.
 
 You can also use the project console to assign roles to an user.
 
 How is a user verified during registration?
--------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 User verification is switched off by default.  There are few verification
 methods that are built-in to the system, like email verification, mobile
 verification and Recaptcha, which you can enable and configure from the project
