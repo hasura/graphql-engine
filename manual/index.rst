@@ -15,6 +15,8 @@ This is the reference documentation of the entire Hasura platform
   users/index
   roles/index
   data/index
+  data/permissions
+  data/query-templates
   files/index
   email-sms/index
   custom-domains-ssl
