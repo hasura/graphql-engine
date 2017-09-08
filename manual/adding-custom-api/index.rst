@@ -14,6 +14,13 @@ For these situations, Hasura provides both serverless functions (lambdas) throug
 integration to quickly deploy any apps built in your favourite frameworks as
 services on the Hasura platform.
 
+Deploying your code on Hasura
+-----------------------------
+
+If you've already written your custom API  using your favourite framework, and want
+to deploy it on Hasura, check out :ref:`deploy-webapp`!
+
+
 Serverless Functions on Hasura
 ------------------------------
 
@@ -30,8 +37,3 @@ To learn more about serverless functions on Hasura, check out our tutorial at
 :ref:`faas-tutorial`!
 
 
-Deploying your code on Hasura
------------------------------
-
-If you've already written your custom API  using your favourite framework, and want
-to deploy it on Hasura, check out :ref:`deploy-webapp`!

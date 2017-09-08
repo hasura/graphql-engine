@@ -18,6 +18,11 @@ To set up this simple git push deployment system, you need the following:
 * A Dockerfile that contains instructions on building a Docker image for your app
 * A git-push deployment enabled service on Hasura
 
+There are two ways of doing this:
+
+* Using the Hasura Quickstart Templates that have preconfigured Dockerfiles for various framesworks
+* Using your own Dockerfile
+
 
 Using the Quickstart Templates
 ------------------------------
@@ -28,9 +33,9 @@ frameworks, that already contain pre-configured Dockerfiles for you to quickly
 setup your app!
 
 The easiest way to use these templates is to install and set your project
-context on Hasuractl as show in :doc:`../../ref/cli/hasuractl` , and then do
+context on Hasuractl as shown in :doc:`../../ref/cli/hasuractl` , and then do
 
-.. code-block:: bash
+.. code-block:: console
 
     $ hasuractl quickstart list
     INFO Checking for network connection
@@ -69,28 +74,29 @@ support@hasura.io, and we'll get to work adding it.
 Choose a template, and use the following command to create your app folder
 called <app-name> 
 
-.. code::
+.. code-block:: console
 
     $ hasuractl quickstart <template-name> <app-name> --create
 
 This command will do the following:
+
 * Create a service hosted at <app-name>.<project-name>.hasura-app.io, to which you can deploy your app
 * Create a folder called <app-name>, that contains a Dockerfile with instructions  on building your app
 * Copy a hello world app written in the chosen framework into the <app-name> directory, which you can later replace with your own app.
 
 Now, cd into the folder, commit your code, and get ready to deploy!
 
-.. code::
+.. code-block:: console
 
     $ cd <app-name>
     $ git commit -am "Initialized"
 
-Make sure to add your ssh-key to your Hasura project - check out
+Make sure to add your ssh-key to your Hasura project before you deploy - check out
 :ref:`add-SSH-keys` for more info.
 
 Now, we deploy our app using
 
-.. code::
+.. code-block:: console
 
     $ git push hasura master
 
@@ -106,6 +112,9 @@ In case there are any errors in building or deploying your code, the git push co
    If you want finer control over your deployment, you are encouraged to use ``kubectl``
    and peek under the hood of the service that is automatically deployed.
 
+
+Using your own Dockerfile
+--------------------------------
 
 Create a git-push enabled service on the Hasura console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
