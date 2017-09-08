@@ -20,9 +20,9 @@ This is the reference documentation of the entire Hasura platform
   cors-settings
   adding-custom-api/index
   deploying-webapp/index
+  deploy-docker/index
+  serve-static/index
   SSH-cluster
-  deploy-static
-  deploy-docker
   postgres
   logs/index
   SDKs/index

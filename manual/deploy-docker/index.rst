@@ -20,7 +20,7 @@ The adminer docker image is available as `clue/adminer <https://hub.docker.com/r
 
 Here is a reference image for the page we land on:
 
-.. image:: deploy-docker.png
+.. image:: ../../img/deploy-docker.png
    :scale: 50%
 
 

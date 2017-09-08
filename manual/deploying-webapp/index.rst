@@ -105,14 +105,7 @@ In case there are any errors in building or deploying your code, the git push co
 
    If you want finer control over your deployment, you are encouraged to use ``kubectl``
    and peek under the hood of the service that is automatically deployed.
-   
 
-
-Using your own Dockerfile
--------------------------
-
-If you already know how to build a Dockerfile for your app, then you can easily
-deploy your app by following these steps:
 
 Create a git-push enabled service on the Hasura console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
