@@ -161,6 +161,16 @@ p
 a.current.reference.internal {
   color: rgba(207,156,14,1) !important;
 }
+
+.rubric#reference {
+  margin: 0.6em 0;
+  line-height: 1.1em;
+  font-family: 'Khula';
+  font-weight: 600;
+  color: #788094;
+  font-size: 3.2rem;
+}
+
 h3
 {
   font-weight: 500;
