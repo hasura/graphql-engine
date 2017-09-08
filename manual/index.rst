@@ -18,7 +18,8 @@ This is the reference documentation of the entire Hasura platform
   files/index
   custom-domains
   cors-settings
-  custom-code/index
+  deploy-static
+  deploy-docker
   postgres
   logs/index
   SDKs/index
