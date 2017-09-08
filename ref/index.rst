@@ -4,9 +4,6 @@
 
 .. _reference:
 
-Reference
-==========
-
 This is the reference documentation of the entire Hasura platform
 
 .. toctree::
