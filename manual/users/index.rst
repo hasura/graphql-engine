@@ -163,7 +163,7 @@ Google.
 
 
 To configure recaptcha for your project, you can to your project console.
-Inside Auth -> Signin Methods you should find the Recaptcha settings.
+Inside Auth -> Sign-In Methods you should find the Recaptcha settings.
 
 
 Login
@@ -221,19 +221,6 @@ If email/mobile verification is enabled and the user has not verified their
 email/mobile; then the response from ``/login`` endpoint would be an error
 saying email/mobile verification is pending.
 
-.. code-block:: http
-
-   HTTP/1.1 200 OK
-   Content-Type: application/json
-
-   {
-     "auth_token": null,
-     "hasura_roles": [
-       "user"
-     ],
-     "hasura_id": 79
-   }
-
 
 
 Sessions
@@ -286,6 +273,12 @@ To verify the email address, Hasura Auth will send an email with an unique
 token to the user's email address, and within a stipulated amount of time, the
 user has to submit the token to a Hasura Auth API endpoint to verify the email
 address.
+
+.. note::
+  Enable email verification in the project console.
+  Under Auth -> Sign-In Methods.
+  (You also have to enable email in Hasura Notify service)
+
 
 Once email verification is enabled, ``email`` becomes a mandatory parameter in
 the :ref:`signup <signup>` request.
@@ -354,6 +347,12 @@ To verify the mobile number, Hasura Auth will send a SMS with a one time
 password or OTP to the user's mobile number, and within a stipulated amount of
 time, the user has to submit the OTP to a Hasura Auth API endpoint to verify
 the mobile number.
+
+.. note::
+  Enable mobile verification in the project console.
+  Under Auth -> Sign-In Methods.
+  (You also have to enable mobile in Hasura Notify service)
+
 
 Once mobile verification is enabled, ``mobile`` becomes a mandatory parameter
 in the :ref:`signup <signup>` request.
@@ -496,11 +495,6 @@ integrating with third-party providers.
   secret associated with the application you created. It is usually called APP
   ID or CLIENT ID, and APP SECRET or CLIENT SECRET respectively.
 
-* In the application settings (after you create the application, you should be
-  able to see a settings page for your application), there should be a field
-  called "Redirect URI" or "OAuth Callback URI" or something similar. You
-  should fill up this field with your own application's endpoint/URL.
-
 * You should also set "scope" or "permissions" in the application settings to
   be "email" and "profile" info (which is to say - you want to access your
   users' email and profile information). This step is important, as otherwise
@@ -508,7 +502,6 @@ integrating with third-party providers.
 
 * Now, you should configure Hasura Auth to enable that particular provider and
   use the CLIENT ID and CLIENT SECRET you obtained in the second step.
-
 
 Now, once you have created and configured your application (with the provider)
 **and** configured Hasura Auth to use those credentials; you have to setup your
