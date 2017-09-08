@@ -5,7 +5,7 @@
 Files
 =====
 
-File APIs on Hasura lets users upload and store files on a Hasura project and also download when required. The API exposes upload, download and delete methods as well as provide permission options based on user's ID or Role to decide who can create, read or delete what files.
+File APIs on Hasura lets users upload and store files on a Hasura project and also download when required. The API exposes upload, download and delete methods as well as provide permission options based on user's ID or Role to decide who can create, read or delete files.
 
 Uploading a file
 ----------------
@@ -46,11 +46,11 @@ One of the basic usage of File API is to upload and store a file for later retri
 ``Authorization`` header is not required if the request is being made from a browser, since ``Cookie`` will be set.
 
 .. note::
-   By default, File APIs are only accessible to those users with ``admin`` role. Goto Permissions tab under File Service in the console and enable ``Private`` webhook to enable ``user`` role also to upload and download files. This default permissions are based only on role and not on user ID. Hence, anybody with a ``user`` role can download a file another user has uploaded. For a more fine grained access control, refer to Custom Webhooks. 
+   By default, File APIs are only accessible to those users with ``admin`` role. Goto Permissions tab under File Service in the console and enable ``Private`` webhook to enable ``user`` role also to upload and download files. This default permissions are based only on role and not on user ID. Hence, anybody with a ``user`` role can download a file another user has uploaded. For a more fine grained access control, refer to :ref:`Custom Webhooks <filestore-authz-webhooks>`. 
 
 Uploaded files will be visible on the console.
 
-For more details, see API reference.
+For more details, see  :ref:`API reference <filestore-api-upload>`.
 
 Downloading a file
 ------------------
@@ -85,7 +85,7 @@ API is as follows:
 
 ``Authorization`` header is not required from a web browser, since ``Cookie`` will be sent.
 
-For more details, see API reference.
+For more details, see  :ref:`API reference <filestore-api-download>`.
 
 Deleting a file
 ---------------
@@ -124,7 +124,7 @@ The unique file_id is used to delete an uploaded file.
 
 ``Authorization`` header is not required from a web browser, since ``Cookie`` will be sent.
 
-For more details, see API reference.
+For more details, see :ref:`API reference <filestore-api-delete>`.
 
 Permission Webhooks
 -------------------
@@ -133,5 +133,5 @@ The following options are available on the console for configuring webhooks:
 
 - Private: Only logged in users can read and upload
 - Public: Anybody can read, but only logged in users can upload
-- Custom Permission URL: For any other custom permissions, you need to define your own service. Refer to Authorization webhooks to see how this can be done.
+- Custom Permission URL: For any other custom permissions, you need to define your own service. Refer to :ref:`Authorization webhooks <filestore-authz-webhooks>` to see how this can be done.
 

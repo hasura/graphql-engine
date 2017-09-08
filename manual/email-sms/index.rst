@@ -28,7 +28,7 @@ SparkPost
 
 If you already own a domain, configuring ``SparkPost`` would be better. You will have to register for an account on SparkPost and add an API key to the console.
 
-For more details, please refer to a detailed guide here.
+For more details, please refer to a detailed guide :ref:`here <notify-sparkpost-settings>`.
 
 Sending an email
 ^^^^^^^^^^^^^^^^

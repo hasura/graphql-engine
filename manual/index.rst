@@ -17,7 +17,7 @@ This is the reference documentation of the entire Hasura platform
   data/index
   files/index
   email-sms/index
-  custom-domains
+  custom-domains-ssl
   cors-settings
   adding-custom-api/index
   deploying-webapp/index

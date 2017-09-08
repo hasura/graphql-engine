@@ -23,6 +23,8 @@ The ``File`` API provides the following features:
 2. Role based access control per file.
 
 
+.. _filestore-authz-webhooks:
+
 Authorization webhooks
 ----------------------
 
