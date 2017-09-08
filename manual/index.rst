@@ -2,10 +2,11 @@
    :description: Homepage for Hasura's reference documentation. List of topics, components and resources.
    :keywords: hasura, docs, reference home, reference, ref home, ref
 
+.. title:: Manual
+
 .. _reference:
 
-Manual
-==========
+.. rubric:: Manual
 
 This is the reference documentation of the entire Hasura platform
 

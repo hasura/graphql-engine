@@ -47,13 +47,13 @@
         <div class="header_links inline-block">
           <div class="header_links_content">
             {% set currPage = pagename.split('/')[0] %}
-            {%- if ( currPage == "ref" ) %}
+            {%- if ( currPage == "manual" ) %}
               <div class="inline-block link_element link_element_active">
             {%- else %}
               <div class="inline-block link_element">
             {%- endif %}
-              <a href="{{ pathto('', 1) }}ref">
-                Reference
+              <a href="{{ pathto('', 1) }}manual">
+                Manual
               </a>
             </div>
 
@@ -104,7 +104,7 @@
           {% include 'pages/tutorials.html' %}
         {%- else %}
           {% block sidebarwrapper %}
-            {% if pagename.split('/')[0] == 'ref' %}
+            {% if pagename.split('/')[0] == 'manual' %}
               <div class="yui-b" id="sidebar">
                 {%- if last_updated %}
                   <span><b>Last updated:</b> {{ last_updated }}</span>
@@ -114,8 +114,8 @@
             {% endif %}
           {% endblock %}
           {% set splittedPage = pagename.split('/') %}
-          {%- if splittedPage[0] == 'ref' %}
-            {% set rootpage='ref' %}
+          {%- if splittedPage[0] == 'manual' %}
+            {% set rootpage='manual' %}
           {%- else %}
             {% set rootpage='common' %}
           {% endif %}
@@ -126,11 +126,11 @@
           {% endif %}
           {% set p = pagename.split('/') %}
           {% set c = '' %}
-          {% if p[0] != 'ref' %}
+          {% if p[0] != 'manual' %}
           {% set c = 'padding_top' %}
           {% endif %}
           <div class="content_inner_wrapper {{ c }}">
-            {%- if ( pagename.split('/')[1] != 'index' and pagename.split('/')[0] != 'ref' ) %}
+            {%- if ( pagename.split('/')[1] != 'index' and pagename.split('/')[0] != 'manual' ) %}
               <div class="back_link">
                   <a href="{{ pathto('', 1) }}{{splittedPage[0] }}"> <i class="fa fa-long-arrow-left" aria-hidden="true"></i>Back to {{ splittedPage[0] }} </a>
               </div>
