@@ -271,8 +271,8 @@ Upload File
 
 The upload file method accepts the following:
 
--  ``file``: data to be uploaded.
--  ``mimetype``: the ``mimetype`` of the file with datatype ``String``.
+-  ``file:Data``: data to be uploaded.
+-  ``mimetype:String``: the ``mimetype`` of the file.
 
 .. code:: swift
 
@@ -288,9 +288,9 @@ The upload file method accepts the following:
 
 ``FileUploadResponse`` in the above response contains the following:
 
--  ``id:`` The uniqiue Id of the file that was uploaded with datatype ``String``.
--  ``userId``: The id of the user who uploaded the file with datatype ``Int``.
--  ``createdAt``: The time string for when this file was uploaded/created.
+-  ``id:String?``: The uniqiue Id of the file that was uploaded.
+-  ``userId:Int?``: The id of the user who uploaded the file.
+-  ``createdAt:Date?``: The time string for when this file was uploaded/created.
   
 
 Download File
