@@ -4,7 +4,7 @@
 
 
 Roles
-=========
+=====
 
 Every Hasura project has concept of roles attached to every user. This helps in
 grouping users together and authorizing them for various actions.
@@ -37,7 +37,7 @@ To create a role, make a request to the ``/admin/role/create`` endpoint.
    Content-Type: application/json
 
    {
-     "role" : "seller"
+     "role" : "merchant"
    }
 
 
@@ -57,7 +57,7 @@ endpoint.
    Content-Type: application/json
 
    {
-     "role" : "seller",
+     "role" : "merchant",
      "hasura_id": 42
    }
 
@@ -70,7 +70,7 @@ endpoint.
    Content-Type: application/json
 
    {
-     "role" : "seller",
+     "role" : "merchant",
      "hasura_id": 42
    }
 
@@ -88,7 +88,7 @@ To delete a role, make a request to the ``/admin/role/delete`` endpoint.
    Content-Type: application/json
 
    {
-     "role" : "seller"
+     "role" : "merchant"
    }
 
 
