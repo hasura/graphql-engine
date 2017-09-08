@@ -89,6 +89,12 @@ Enabling other fields in signup
 Email and Mobile fields during signup are optional or mandatory based on your
 configuration.
 
+.. note::
+  IMPORTANT: The mobile number has to be sent with country code prefixed (with
+  + and not 00). If any country code is **not** given, it is assumed to be an
+  Indian phone number.
+
+
 Email/Mobile not enabled
 ++++++++++++++++++++++++
 
@@ -104,7 +110,7 @@ those fields **optionally**:
      "username" : "johnsmith",
      "password" : "jsmith123456",
      "email"    : "johnsmith@example.com",
-     "mobile"   : "9876543210"
+     "mobile"   : "+919876543210"
    }
 
 
@@ -359,9 +365,14 @@ in the :ref:`signup <signup>` request.
 
    {
      "username" : "johnsmith",
-     "mobile"   : "9876543210",
+     "mobile"   : "+919876543210",
      "password" : "jsmith123456"
    }
+
+.. note::
+  IMPORTANT: The mobile number has to be sent with country code prefixed (with
+  + and not 00). If any country code is **not** given, it is assumed to be an
+  Indian phone number.
 
 
 Now, when a request is made to the :ref:`signup <signup>` endpoint, the
@@ -397,7 +408,7 @@ application receives the OTP, your application should make auth API call to the
    Content-Type: application/json
 
    {
-     "mobile": "9876543210",
+     "mobile": "+919876543210",
      "otp"   : "123456"
    }
 
