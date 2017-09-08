@@ -33,5 +33,5 @@ To learn more about serverless functions on Hasura, check out our tutorial at
 Deploying your code on Hasura
 -----------------------------
 
-If you want to deploy your custom api built using your favourite framework, you can check
-out :ref:`deploy-webapp`!
+If you've already written your custom API  using your favourite framework, and want
+to deploy it on Hasura, check out :ref:`deploy-webapp`!

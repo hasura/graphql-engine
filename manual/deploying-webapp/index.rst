@@ -19,8 +19,8 @@ To set up this simple git push deployment system, you need the following:
 * A git-push deployment enabled service on Hasura
 
 
-Quickstart Templates
---------------------
+Using the Quickstart Templates
+------------------------------
 
 Apps or Services deployed on Hasura run on Docker images, built according to a
 Dockerfile. We've prepared `starter kits <https://github.com/hasura/quickstart-docker-git>`_ for all your favourite
@@ -105,3 +105,51 @@ In case there are any errors in building or deploying your code, the git push co
 
    If you want finer control over your deployment, you are encouraged to use ``kubectl``
    and peek under the hood of the service that is automatically deployed.
+   
+
+
+Using your own Dockerfile
+-------------------------
+
+If you already know how to build a Dockerfile for your app, then you can easily
+deploy your app by following these steps:
+
+Create a git-push enabled service on the Hasura console
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Go to the ``Custom Microservices`` section of the Hasura console, select ``Git Push`` and create a git-push enabled service, and you're good to go.
+
+For reference, here's a configuration screenshot:
+
+.. rst-class:: featured-image
+.. image:: ../../img/gitpush.png
+   :scale: 50%
+
+
+Add your SSH key
+^^^^^^^^^^^^^^^^^^^
+
+Please see :ref:`add-SSH-keys` for instructions on how to create and add your SSH key to a Hasura project.
+
+
+Deploy to your git-push enabled service
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once a git-push enabled custom service has been added on the hasura console,
+you must first set the hasura remote by following the instructions shown on the
+manage page of your git-push service.
+
+.. code-block:: console
+
+   $ git remote add hasura ssh://hasura@<git-push-service-name>.<project-domain>.hasura-app.io:2022/~/git/<git-push-service-name>/
+
+After adding the remote, you can commit your changes and push to the hasura
+remote to instantly build and deploy your app in one command!
+
+.. code-block:: console
+
+   $ git push hasura master
+
+Voila, your service is deployed and live! Check out your service live at <app-name>.<project-name>.hasura-app.io!
+
+In case there are any errors in building or deploying your code, the git push command will show you errors and the push will fail. Fix the error, and push again!
