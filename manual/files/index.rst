@@ -6,10 +6,11 @@
 Files
 =====
 
-.. toctree::
-   :maxdepth: 3
+Storing files
+--------------
 
-   adding-SSH-keys-to-a-project
-   hasuractl
-   tunneling-accessing-TCP-services
-   executing-kubectl-commands
+Retrieving files
+------------------
+
+Permissions
+--------------

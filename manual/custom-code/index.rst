@@ -5,23 +5,13 @@
 
 .. _project_creation:
 
-Users
+Custom code
 ==================
 
-A Hasura project can be created in three ways:
+Deploying custom code
 
+.. toctree::
+  :maxdepth: 2
 
-Signup
--------------
-
-Login
-------
-
-Password reset
-------------------
-
-Verifying emails
--------------------
-
-Social login providers
---------------------------
+  docker-images
+  git-push

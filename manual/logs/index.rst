@@ -5,23 +5,7 @@
 
 .. _project_creation:
 
-Users
+Logs
 ==================
 
-A Hasura project can be created in three ways:
-
-
-Signup
--------------
-
-Login
-------
-
-Password reset
-------------------
-
-Verifying emails
--------------------
-
-Social login providers
---------------------------
+We can retrieve the logs of any running service.

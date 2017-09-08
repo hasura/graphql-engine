@@ -9,14 +9,30 @@
 
 Data
 ====================
-Custom microservices are services that are deployed by developers on Hasura using a git push command or by using one of the thousands of `Docker images <https://hub.docker.com/explore/>`_ or build and use their own images.
 
+The data APIs can be used to store and retrieve data. The actual data is stored in Postgres tables. To fetch associated data, one can define relationships on tables. Permissions can then be used to authorize the access to data based on roles.
 
-You can create and manage your own microservices in a Hasura project.
+Tables
+--------
+The console UI can be used to create tables or in SQL from the console.
 
-.. toctree::
-  :maxdepth: 3
+Relationships
+---------------
 
-  creating-git-push-microservices
-  creating-docker-microservices
-  managing-existing-custom-microservices
+Inserting data
+----------------
+
+Retrieving data
+------------------
+
+Update queries
+------------------
+
+Delete queries
+-------------------
+
+Permissions
+--------------
+
+Query templates
+--------------------

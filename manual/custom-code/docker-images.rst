@@ -4,7 +4,7 @@
 
 .. _local_development:
 
-Local Development
+Docker images
 ==========================
 
 Instructions on how to install Hasura on a desktop/laptop have been documented here: https://github.com/hasura/local-development.

@@ -17,4 +17,6 @@ This is the reference documentation of the entire Hasura platform
   sessions/index
   data/index
   files/index
+  custom-code/index
+  logs/index
   SDKs/index

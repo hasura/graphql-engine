@@ -4,7 +4,7 @@
 
 .. _cloud_installation:
 
-Managed Cloud Installation
+Git push
 ==========================
 
 Hasura can be installed on supported cloud providers by signing up at `Hasura Project Dashboard`_ . Support for DIY installation is available for the following providers:
@@ -19,4 +19,3 @@ Other providers supported on request (*and soon to be available as DIY options*)
 2. Microsoft Azure
 3. OVH
 4. Private Cloud infrastructure
-
