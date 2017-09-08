@@ -27,8 +27,6 @@ This is the reference documentation of the entire Hasura platform
   deploy-docker/index
   serve-static/index
   SSH-cluster
-  ..
-     postgres
   logs/index
   SDKs/index
   reference/index

@@ -5,6 +5,9 @@
 Query Templates
 ===============
 
+Create
+------
+
 Query templates are used to template queries and to define your own REST interface. Let's jump into some examples.
 
 Let's say we would like to query the article table to fetch ``id`` and ``title`` of all published articles written by an author. We can issue a ``select`` query as follows:
