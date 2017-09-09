@@ -252,6 +252,9 @@ h3
   font-size: 14px;
   color: #788094;
 }
+.small_content img {
+  max-width: 100%;
+}
 .extra_small_content
 {
   font-family: 'Gudea';
