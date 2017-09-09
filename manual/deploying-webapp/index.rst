@@ -15,20 +15,39 @@ To set up this simple git push deployment system, you need the following:
 
 There are two ways of doing this:
 
-* Using the Hasura Quickstart Templates that have preconfigured Dockerfiles for various framesworks
-* Using your own Dockerfile
+* Use the Hasura Quickstart Templates that have "hello world" for a various framesworks
+* Use your own Dockerfile
 
 
-Using the Quickstart Templates
-------------------------------
+Option 1: Using the Quickstart Templates
+----------------------------------------
 
 Apps or Services deployed on Hasura run on Docker images, built according to a
 Dockerfile. We've prepared `starter kits <https://github.com/hasura/quickstart-docker-git>`_ for all your favourite
 frameworks, that already contain pre-configured Dockerfiles for you to quickly
 setup your app!
 
+Step 0: Create a hasura project
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Make sure you've create a Hasura project via dashboard.hasura.io.
+Let's say your project is called `<project-name>`
+
+Step 1: Install `hasuractl`
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 The easiest way to use these templates is to install and set your project
-context on Hasuractl as shown in :doc:`../../ref/cli/hasuractl` , and then do
+context on Hasuractl as shown in :doc:`../../ref/cli/hasuractl`.
+
+Before you continue, remember to login and set-context so that `hasuractl` knows the name
+of your hasura project.
+
+.. code-block:: console
+
+   $ hasuractl login
+   $ hasuractl set-context <project-name>
+
+Step 2: Check if your framework is in the quickstart list
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: console
 
@@ -64,7 +83,10 @@ context on Hasuractl as shown in :doc:`../../ref/cli/hasuractl` , and then do
 
 This will show you a list of all supported quickstart templates. If your
 favourite framework is missing from this list, drop us a message at
-support@hasura.io, and we'll get to work adding it.
+support@hasura.io, and we'll add it within a few hours!
+
+Step 3: Initialise your app folder and git repo
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Choose a template, and use the following command to create your app folder
 called <app-name>
@@ -73,23 +95,38 @@ called <app-name>
 
     $ hasuractl quickstart <template-name> <app-name> --create
 
+For example, to create a folder and a subdomain app called `my-app` based on `python-flask`:
+
+.. code-block:: console
+
+    $ hasuractl quickstart python-flask my-app --create
+
 This command will do the following:
 
-* Create a service hosted at <app-name>.<project-name>.hasura-app.io, to which you can deploy your app
-* Create a folder called <app-name>, that contains a Dockerfile with instructions  on building your app
-* Copy a hello world app written in the chosen framework into the <app-name> directory, which you can later replace with your own app.
+* Create a service hosted at `my-app.<project-name>.hasura-app.io`, to which you can deploy your app
+* Create a folder called `my-app`, that contains a Dockerfile with instructions on building your app
+* Copy a hello world app written in the chosen framework (`python-flask`) into the <app-name> (`my-app`) directory
 
-Now, cd into the folder, commit your code, and get ready to deploy!
+Now, `cd` into the folder, commit your code, and get ready to deploy!
 
 .. code-block:: console
 
     $ cd <app-name>
     $ git commit -am "Initialized"
 
-Make sure to add your ssh-key to your Hasura project before you deploy - check out
-:ref:`add-SSH-keys` for more info.
+Step 4: Add your SSH key
+^^^^^^^^^^^^^^^^^^^^^^^^
+Make sure to add your ssh-key to your Hasura project before you deploy:
 
-Now, we deploy our app using
+.. code-block:: console
+
+    $ hasuractl add-ssh-key
+
+Read :ref:`add-SSH-keys` for more info.
+
+Step 5: Deploy your app
+^^^^^^^^^^^^^^^^^^^^^^^
+Now, we deploy our app using:
 
 .. code-block:: console
 
@@ -108,8 +145,8 @@ In case there are any errors in building or deploying your code, the git push co
    and peek under the hood of the service that is automatically deployed.
 
 
-Using your own Dockerfile
---------------------------------
+Option 2: Using your own Dockerfile (advanced users)
+------------------------------------
 
 Create a git-push enabled service on the Hasura console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
