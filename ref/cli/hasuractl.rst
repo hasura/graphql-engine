@@ -16,8 +16,8 @@ Hasuractl
 Installation
 ------------
 
-Linux Installation
-~~~~~~~~~~~~~~~~~~
+Linux
+~~~~~
 
 Ensure that a file called ``~/.kube/config`` exists. It can even be empty.
 
@@ -35,8 +35,8 @@ Once you've done that, install ``hasuractl``:
 If you would like to add hasuractl manually to your path drop the ``sudo mv hasuractl /usr/local/bin`` from the above command
 
 
-Windows Installation
-~~~~~~~~~~~~~~~~~~~~
+Windows
+~~~~~~~
 
 Ensure that a file called ``C:\Users\<username>\.kube\config`` exists. It can even be empty.
 To do this, you can run the following command in your command prompt, remember to replace ``<username>`` with the right value:
@@ -51,8 +51,8 @@ if you need help with the installation on Windows.
 
     In Windows, you should only use ``git-bash`` to execute commands that you see in this documentation.
 
-Mac OS Installation
-~~~~~~~~~~~~~~~~~~~~
+Mac OS
+~~~~~~
 
 Ensure that a file called ``~/.kube/config`` exists. It can even be empty.
 
