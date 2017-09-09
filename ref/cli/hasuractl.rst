@@ -15,12 +15,17 @@ Hasuractl
 
 Installation
 ------------
-Whether, you're on mac/windows/linux, first install: `kubectl <https://kubernetes.io/docs/tasks/tools/install-kubectl/>`_
 
 Linux Installation
 ~~~~~~~~~~~~~~~~~~
 
-Run the following command (after you've installed kubectl):
+Ensure that a file called `~/.kube/config` exists. It can even be empty.
+
+.. code:: bash
+
+    $ mkdir -p ~/.kube && touch ~/.kube/config
+
+Once you've done that, install `hasuractl`:
 
 .. code:: bash
 
@@ -33,8 +38,14 @@ If you would like to add hasuractl manually to your path drop the ``sudo mv hasu
 Windows Installation
 ~~~~~~~~~~~~~~~~~~~~
 
-After installing `kubectl <https://kubernetes.io/docs/tasks/tools/install-kubectl/>`_,
-download `hasuractl.exe <https://storage.googleapis.com/hasuractl/latest/windows-amd64/hasuractl.exe>`_.
+Ensure that a file called `C:\Users\<username>\.kube\config` exists. It can even be empty.
+To do this, you can run the following command in your command prompt, remember to replace `<username>` with the right value:
+
+.. code:: bash
+
+    $ mkdir C:\Users\username\.kube && echo. > C:\Users\username\.kube\config
+
+Next, download `hasuractl.exe <https://storage.googleapis.com/hasuractl/latest/windows-amd64/hasuractl.exe>`_.
 and place it in your ``PATH``. Refer to this `video <https://drive.google.com/file/d/0B_G1GgYOqazYUDJFcVhmNHE1UnM/view>`_
 if you need help with the installation on Windows.
 
@@ -43,7 +54,14 @@ if you need help with the installation on Windows.
 Mac OS Installation
 ~~~~~~~~~~~~~~~~~~~~
 
-After installing `kubectl <https://kubernetes.io/docs/tasks/tools/install-kubectl/>`_, run the following command to install `hasuractl`:
+Ensure that a file called `~/.kube/config` exists. It can even be empty.
+
+.. code:: bash
+
+    $ mkdir -p ~/.kube && touch ~/.kube/config
+
+
+Run the following command to install `hasuractl`:
 
 .. code::
 
