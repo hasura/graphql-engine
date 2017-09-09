@@ -25,16 +25,35 @@ def manage_indexes(index_name, data, settings):
     index_delete = client.delete_index(index_name)
     #index.clear_index()
 
+    docs_by_desc = client.init_index("docs_by_date_desc")
+
     index = client.init_index(index_name)
 
-    index.set_settings({"searchableAttributes": ["category", "content", "title", "tags",
-        "description", "keywords", "url", "image"]})
+    index.set_settings(
+        {
+            "searchableAttributes": ["category", "content", "title", "tags",
+            "description", "keywords", "url", "image"],
+            "replicas": [
+                "docs_by_date_desc",
+            ],
+        })
 
-    index.set_settings({
+    # index.set_settings({
+    #     "ranking": [
+    #         "desc(created_at)",
+    #     ]
+    # });
+
+    docs_by_desc.set_settings({
+        "searchableAttributes": ["category", "content", "title", "tags",
+            "description", "keywords", "url", "image"]
+    })
+
+    docs_by_desc.set_settings({
         "ranking": [
             "desc(created_at)",
         ]
-    });
+    })
 
     index.add_objects(data)
 

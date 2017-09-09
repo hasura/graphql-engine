@@ -30,9 +30,15 @@ var searchFunc = function( query, callback, page=1, restrictAttributes, attribut
 
   var queries = {};
 
+  var indexName = "docs_search";
+
+  if ( query === "tutorials" || query === "guides" ) {
+    indexName = "docs_by_date_desc";
+  }
+
   var client = algoliasearch(APPLICATION_ID, SEARCH_ONLY_KEY, {"protocol":"https:"}); // localhost
   //var client = algoliasearch(APPLICATION_ID, SEARCH_ONLY_KEY);
-  var index = client.initIndex("docs_search")
+  var index = client.initIndex(indexName);
   
   queries = {
     query: query,
