@@ -11,15 +11,16 @@
 Hasuractl
 =========
 
-``hasuractl`` is the command line tool for the Hasura platform. 
+``hasuractl`` is the command line tool for the Hasura platform.
 
 Installation
 ------------
+Whether, you're on mac/windows/linux, first install: `kubectl <https://kubernetes.io/docs/tasks/tools/install-kubectl/>`_
 
 Linux Installation
 ~~~~~~~~~~~~~~~~~~
 
-Run the following command
+Run the following command (after you've installed kubectl):
 
 .. code:: bash
 
@@ -32,16 +33,17 @@ If you would like to add hasuractl manually to your path drop the ``sudo mv hasu
 Windows Installation
 ~~~~~~~~~~~~~~~~~~~~
 
-Download `hasuractl.exe <https://storage.googleapis.com/hasuractl/latest/windows-amd64/hasuractl.exe>`_ 
-and place it in your ``PATH``. Refer to this `video <https://drive.google.com/file/d/0B_G1GgYOqazYUDJFcVhmNHE1UnM/view>`_ 
+After installing `kubectl <https://kubernetes.io/docs/tasks/tools/install-kubectl/>`_,
+download `hasuractl.exe <https://storage.googleapis.com/hasuractl/latest/windows-amd64/hasuractl.exe>`_.
+and place it in your ``PATH``. Refer to this `video <https://drive.google.com/file/d/0B_G1GgYOqazYUDJFcVhmNHE1UnM/view>`_
 if you need help with the installation on Windows.
 
     In Windows, you should only use ``git-bash`` to execute commands that you see in this documentation.
-    
+
 Mac OS Installation
 ~~~~~~~~~~~~~~~~~~~~
 
-Run the following command
+After installing `kubectl <https://kubernetes.io/docs/tasks/tools/install-kubectl/>`_, run the following command to install `hasuractl`:
 
 .. code::
 
@@ -96,7 +98,7 @@ The ssh key can be generated using
 
     $ ssh-keygen -t rsa
 
-After this run 
+After this run:
 
 .. code::
 
