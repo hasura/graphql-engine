@@ -37,6 +37,7 @@ Sending an email
    ``Notify`` is an admin-only microservive. Hence, only users with ``admin`` role will be able to access these APIs
 
 .. http:post:: /v1/send/email
+   :noindex:
 
    Send an email as per the options given is request body.
 
@@ -81,6 +82,7 @@ Sending SMS
 ^^^^^^^^^^^
 
 .. http:post:: /v1/send/sms
+   :noindex:
 
    **Example request**:
 

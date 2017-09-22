@@ -64,10 +64,12 @@ sys.path.append(abspath(join(dirname(__file__), "_ext")))
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+
+# "sphinxcontrib.fulltoc",
 extensions = [
     "djangodocs",
     "generate_index",
-    "sphinxcontrib.fulltoc",
+    "fulltoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "sphinxcontrib.swaggerdoc",
