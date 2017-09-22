@@ -134,7 +134,7 @@ Use the following command to quickly add a sample hello-world app (*let's call i
 
 .. code:: bash
 
-   $ hasuractl service quickstart app-name --template csharp-aspnet -c cluster-name
+   $ hasuractl service quickstart app-name --template csharp-aspnet
 
 This command will do the following:
 
