@@ -13,6 +13,7 @@ One of the basic usage of File API is to upload and store a file for later retri
 
 
 .. http:post:: /v1/file/(file_id)
+   :noindex:
 
    Upload a file with a given `file_id`. You are required to generate a `file_id` and post the content of file in request body with the correct MIME type set as `Content-Type` header. 
 
@@ -61,6 +62,7 @@ For example, if your application is storing user's profile pictures, this unique
 API is as follows:
 
 .. http:get:: /v1/file/(file_id)
+   :noindex:
 
    Download/retrieve a file with a given `file_id`. The file is streamed to the client with correct `Content-Type` header.
 
@@ -92,6 +94,7 @@ Deleting a file
 The unique file_id is used to delete an uploaded file.
 
 .. http:delete:: /v1/file/(file_id)
+   :noindex:
 
    Delete a file with a given `file_id`.
 
