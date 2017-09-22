@@ -5,8 +5,8 @@
    :keywords: hasura, guide, architecture, app architecture
    :content-tags: app architecture, build apps
 
-Application Architecture on Hasura
-==================================
+.. rst-class:: guide-title
+.. rubric:: Application Architecture on Hasura
 
 Introduction
 ------------
