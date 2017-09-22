@@ -34,7 +34,7 @@ Sending an email
 ^^^^^^^^^^^^^^^^
 
 .. note::
-   ``Notify`` is an admin-only microservive. Hence, only users with ``admin`` role will be able to access these APIs
+   ``Notify`` is an admin-only microservice. Hence, only users with ``admin`` role will be able to access these APIs
 
 .. http:post:: /v1/send/email
 
