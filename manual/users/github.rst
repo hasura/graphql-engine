@@ -44,14 +44,15 @@ Pre-requisites
 
 * Now you need to configure Hasura Auth to tell it to use these credentials.
 
-  To configure, head over to your project's dashboard (Usually,
-  https://console.your-project.hasura-app.io). On the left sidebar, click on
-  the "Auth" icon. You'll get more options in another sidebar. Click on
-  "Github" on the left under the "Configure" section.
+* To configure, go to auth.yaml in clusters/<cluster-name> directory.
 
-  * **CLIENT ID**: The client ID obtained when creating the application.
+* Under ``github``, set ``clientId`` and ``clientSecret``
 
-  * **CLIENT SECRET**: The client secret.
+.. code-block:: yaml
+
+      github:
+        clientId: "String"
+        clientSecret: "String"
 
 The flow
 ++++++++
@@ -89,42 +90,43 @@ The flow
 
 * Now your application has to parse the URL and retrieve the authorization code.
 
-* Once the code is retrieved, you have to exchange this code to get the access
-  token.  This is done by making the following ``x-www-form-urlencoded`` HTTP
-  ``POST`` request to https://github.com/login/oauth/access_token with the
-  following parameters (all of them are mandatory).
+* Once the ``code`` is obtained, send the ``code`` to Hasura Auth
+  service:
 
-  * ``code`` : The authorization code you received from the above step.
+.. code-block:: http
 
-  * ``redirect_uri`` : The URL in your application where users will be sent
-    after authorization.
+   POST auth.<project-name>.hasura-app.io/v2/signup HTTP/1.1
+   Content-Type: application/json
 
-  * ``client_id`` : Your application client ID.
-
-  * ``client_secret`` : Your application client secret.
-
-  * ``state`` : The unguessable random string you optionally provided earlier.
-
-  Example ::
-
-      POST https://github.com/login/oauth/access_token HTTP/1.1
-      Content-Type: application/x-www-form-urlencoded
-
-      code=987654321&redirect_uri=https%3A%2F%2Fwww.myapp.com%2Fexample&client_id=123456789&client_secret=shhdonottell
-
-* Once the access token is retrieved from the previous step, make a call to
-  Hasura Auth's ``/github/authenticate``  endpoint to validate the token and
-  then create/login the user. The response from Hasura will also indicate if
-  this user is a newly created user or an old user (via the ``new_user``
-  attribute in the response).
+   {
+     "provider" : "github",
+     "data" : {
+        "code": "String",
+        "redirect_uri": "String",
+        "state": "String" (Optional)
+     }
+   }
 
 
-API Endpoints
-+++++++++++++
+* If successful, this will return a response as follows:
 
-* To validate the access token and then log the user in (and create if not
-  exists), make a call to
-  ``/github/authenticate?access_token=<ACCESS-TOKEN>``
+  .. code:: http
+
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+
+    {
+      "auth_token": "tpdq0m9whrj7i4vcjn48zq43bqx2",
+      "hasura_roles": [
+        "user"
+      ],
+      "hasura_id": 79,
+      "new_user": true
+    }
+
+
+* If the user is a new user, ``new_user`` will be true, else false.
+
 
 * To check if the current user is logged in, make a call to:
   ``/user/account/info``.
@@ -132,9 +134,6 @@ API Endpoints
 * To logout, make a call to ``/user/logout``.
 
 * To get Hasura credentials of current logged in user, ``/user/account/info``.
-
-Read the API docs to know more about Hasura Auth endpoints
-https://hasura.io/_docs/auth/4.0/swagger-ui/.
 
 
 .. _implicit grant flow: http://tools.ietf.org/html/rfc6749#section-4.2
