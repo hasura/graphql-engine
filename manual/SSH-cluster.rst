@@ -4,7 +4,7 @@ SSH access to your cluster
 For those times where you just need to SSH into your cluster, Hasura allows you
 access through an ssh key you can download from your project Dashboard.
 
-Click on your project name on the `Hasura Dashboard <https://dashboard.hasura.io/project>`_
+Click on your project name on the `Hasura Dashboard <https://dashboard.hasura.io/projects>`_
 
 .. rst-class:: featured-image
 .. image:: ../img/dashboard-ssh.png
