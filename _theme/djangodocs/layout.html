@@ -32,14 +32,16 @@
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if pagename != 'index' else '' }}{% endblock %}">
     <div class="header_wrapper">
       <div class="header_main">
-        <a href="{{ pathto('', 1) }}">
-          <div class="inline-block header_main_logo">
+        <div class="inline-block header_main_logo">
+          <a href="http://hasura.io/" target="_blank">
             <div class="img_wrapper inline-block">
               <img class="responsive logo_img" src="{{ pathto('_images/logo.svg', 1) }}" />
             </div>
+          </a>
+          <a href="{{ pathto('', 1) }}">
             <div class="inline-block hero"> DOCS </div>
-          </div>
-        </a>
+          </a>
+        </div>
         <div class="inline-block input_search_box">
           <span class="fa fa-search"></span>
           <input type="text" class="search_element" placeholder="Search reference docs, tutorials, guides" />
