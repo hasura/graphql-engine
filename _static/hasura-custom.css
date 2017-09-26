@@ -508,6 +508,9 @@ p
   width: 90%;
   margin: 0 auto;
 }
+.header_wrapper .header_main .header_main_logo a{
+  display: inherit;
+}
 .header_wrapper .header_main a
 {
   text-decoration: none;
@@ -598,7 +601,6 @@ p
   padding-top: 4px;
   padding-bottom: 4px;
   border-right: 1px solid;
-  margin-right: 10px;
 }
 
 .logo_img {
@@ -615,6 +617,7 @@ p
   vertical-align: middle;
   font-size: 18px;
   font-weight: 600;
+  margin-left: 10px;
 }
 
 .header_buttons {
