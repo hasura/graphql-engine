@@ -134,9 +134,10 @@
           {% endif %}
           <div class="content_inner_wrapper {{ c }}">
             {%- if ( pagename.split('/')[1] != 'index' and pagename.split('/')[0] != 'manual' ) %}
+
               <div class="back_link" id={{ pagename.split('/')[0] }}>
                 <a href="{{ pathto('', 1) }}{{splittedPage[0] }}"> <i class="fa fa-long-arrow-left" aria-hidden="true"></i>Back to {{ splittedPage[0] }} </a>
-              </div>
+         </div>
             {% endif %}
             <div role="main" parent={{ rootpage }}>
               <div id="docs-content">
