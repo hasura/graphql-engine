@@ -13,15 +13,32 @@ Adding a custom domain
 ----------------------
 
 - Get IP for the project
-  
+
 .. code-block:: bash
 
    $ ping project-name.hasura-app.io
 
-- Point your domain's DNS to the project's IP from your registrar's dashboard
-- Goto `API Gateway` on console sidebar
-- Open `Domains` tab
-- Type you new domain and click Add button
-- Save
+- Point your domain's DNS to the project's IP from your registrar's dashboard by adding a A record for your domain pointing to the IP above
 
-You can check the project details to see the status.
++---+----------------+---------+
+| A | `*.domain.com` | 1.1.1.1 |
++---+----------------+---------+
+
+- Goto ``clusters/<cluster-name>/domains.yaml`` and add the following block to the file where ``domain.com`` is your domain:
+
+.. code-block:: yaml
+
+   domain.com:
+     ssl:
+       conf:
+         account: you@youremail.com
+       type: LetsEncrypt
+
+
+- Apply your changes to the cluster
+
+.. code-block:: bash
+
+   $ hasuractl cluster apply #add -c <cluster-name> in case you have multiple clusters
+
+Now, SSL certificates will automatically be generated and your services will be accessible on this domain!
