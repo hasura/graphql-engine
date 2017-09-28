@@ -144,3 +144,99 @@ Make changes to the source code in ``service/python-flask`` directory, commit th
 .. note::
 
    You can find all the available quickstart templates here: `https://github.com/hasura/quickstart-docker-git <https://github.com/hasura/quickstart-docker-git>`_
+
+
+Project
+-------
+
+A *"project"* is a *"gittable"* directory in the file system, which captures all the information regarding clusters, services and migrations. It can also be used to keep source code for custom services that you write.
+
+.. note::
+
+   You should initialize a git repo in the Hasura project directory (or add Hasura project directory to an existing git repo) so that the contents can be version controlled.
+
+The project (a.k.a. project directory) has a particular directory structure and it has to be maintained strictly, else hasuractl would not work as expected. A representative project is shown below:
+
+.. code:: bash
+
+   .
+   ├── hasura.yaml
+   ├── clusters
+   │   ├── production/
+   │   └── staging
+   │       ├── .kubecontext
+   │       ├── domains.yaml
+   │       ├── gateway.yaml
+   │       ├── nginx-directives.yaml
+   │       ├── remotes.yaml
+   │       ├── routes.yaml
+   │       ├── auth.yaml
+   │       ├── notify.yaml
+   │       ├── filestore.yaml
+   │       ├── authorized_keys 
+   │       └── services
+   │           ├── adminer
+   │           │   ├── deployment.yaml
+   │           │   └── service.yaml
+   │           └── flask
+   │               ├── deployment.yaml
+   │               └── service.yaml
+   ├── migrations
+   │   ├── 1504788327_create_table_user.down.yaml
+   │   ├── 1504788327_create_table_user.down.sql
+   │   ├── 1504788327_create_table_user.up.yaml
+   │   └── 1504788327_create_table_user.up.sql
+   └── services
+       ├── adminer/
+       └── flask
+           ├── app/
+           ├── docker-config.yaml
+           ├── Dockerfile
+           └── README.md
+
+Files and directories
+~~~~~~~~~~~~~~~~~~~~~
+
+* ``hasura.yaml``
+  
+  * Stores some metadata about the project, like name and default cluster
+    
+* ``clusters``
+  
+  * A *"cluster"* is a kubernetes cluster with Hasura platform installed on it
+  * clusters directory holds information about all the clusters
+  * Each sub-directory denotes a cluster added to the project
+  * ``staging``
+    
+    * Directory that holds configuration for a cluster called staging, named after the cluster alias
+    * ``.kubecontext``
+      
+      * Actual kubernetes context name is stored in this file
+        
+    * ``authorized_keys``
+      
+      * SSH keys allowed to access the cluster
+      * One public key per line
+        
+    * ``*.yaml``
+      
+      * Configuration for the cluster, split into various yaml files
+        
+    * ``services``
+      
+      * Directory that holds kubernetes configurations for microservices added to this cluster
+      * Each sub directory contains yaml spec files for a service
+      * ``adminer``
+
+        * Contains ``deployment.yaml`` and ``service.yaml`` for adminer service
+ 
+* ``migrations``
+
+  * Database migration files are kept in this directory
+    
+* ``services``
+
+  * Default directory to store source code for custom microservices
+  * Each sub-directory contains source code + Dockerfile 
+  
+*hasuractl doesn't care about any other files or directories apart from those mentioned above*
