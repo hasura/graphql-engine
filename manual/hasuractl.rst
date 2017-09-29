@@ -13,7 +13,7 @@ hasuractl
 
 ``hasuractl`` is the command line tool for the Hasura platform.
 
-Starting v0.15, ``hasuractl`` is the primary mode of managing Hasura projects and Hasura clusters.
+Starting v0.15, it is the primary mode of managing Hasura projects and Hasura clusters.
 
 .. _hasuractl-installation
 
@@ -22,7 +22,7 @@ Installation
 
 .. note::
 
-   ``git`` is a dependency for ``hasuractl``. Make sure that git is installed in your system. 
+   ``git`` is a dependency for ``hasuractl``. If you don't have it installed, follow the instructions `here <https://git-scm.com/book/id/v2/Getting-Started-Installing-Git>`_.
 
 Linux
 ~~~~~
@@ -146,14 +146,26 @@ Make changes to the source code in ``service/python-flask`` directory, commit th
    You can find all the available quickstart templates here: `https://github.com/hasura/quickstart-docker-git <https://github.com/hasura/quickstart-docker-git>`_
 
 
-Project
--------
+Understanding a Hasura project
+------------------------------
 
 A *"project"* is a *"gittable"* directory in the file system, which captures all the information regarding clusters, services and migrations. It can also be used to keep source code for custom services that you write.
 
+Creating a project
+~~~~~~~~~~~~~~~~~~
+
+.. code:: bash
+
+   $ hasuractl create my-project 
+
+   # creates a directory called `my-project` and initialize an empty Hasura project
+   
 .. note::
 
-   You should initialize a git repo in the Hasura project directory (or add Hasura project directory to an existing git repo) so that the contents can be version controlled.
+   You should initialize a git repo in the Hasura project directory (or add Hasura project directory to an existing git repo) so that the contents can be version controlled. You can then share this repo with others working on the same project.
+
+Files and directories
+~~~~~~~~~~~~~~~~~~~~~
 
 The project (a.k.a. project directory) has a particular directory structure and it has to be maintained strictly, else hasuractl would not work as expected. A representative project is shown below:
 
@@ -193,9 +205,6 @@ The project (a.k.a. project directory) has a particular directory structure and 
            ├── docker-config.yaml
            ├── Dockerfile
            └── README.md
-
-Files and directories
-~~~~~~~~~~~~~~~~~~~~~
 
 * ``hasura.yaml``
   
@@ -237,6 +246,36 @@ Files and directories
 * ``services``
 
   * Default directory to store source code for custom microservices
-  * Each sub-directory contains source code + Dockerfile 
+  * Each sub-directory contains source code and *Dockerfile*
   
-*hasuractl doesn't care about any other files or directories apart from those mentioned above*
+*hasuractl doesn't consider any other files or directories outside of those mentioned above*
+
+
+Clusters
+--------
+
+A *"cluster"* is a Kubernetes system with Hasura platform installed on it. If you want to know more about how Hasura use Kubernetes, refer to our :ref:`architecture docs <platform-architecture>`.
+
+Create a cluster
+~~~~~~~~~~~~~~~~
+
+You can create a free trial cluster using ``hasuractl`` for evaluation and development purposes. Hasura will create a virtual machine on it's cloud infrastructure, install kubernetes and Hasura on it and allot it to your Hasura account. Assuming you have already logged in and created a project called *my-project*,
+
+.. code:: bash
+
+   $ cd my-project
+   $ hasuractl cluster create --type=trial
+
+
+Add cluster to project
+~~~~~~~~~~~~~~~~~~~~~~
+
+All your clusters are visible on the `Hasura Dashboard <https://dashboard.hasura.io>`_. You can add a cluster listed on your dashboard to your project by executing the following command from inside the project directory:
+
+.. code:: bash
+
+   $ hasuractl cluster add [cluster-name] -c [cluster-alias]
+
+   # creates a sub-directory named `[cluster-alias]` inside the `clusters` directory, adds the cluster configuration files into it
+
+``[cluster-name]`` is the name shown on the Hasura Dashboard and ``[cluster-alias]`` is the name you want to attach to the cluster for easier access. For example, a cluster named ``caddy89`` can be added to the project with an alias ``dev`` and you will be referring to this cluster as ``-c dev`` in all the other ``hasuractl`` commands.
