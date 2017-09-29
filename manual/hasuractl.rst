@@ -276,8 +276,8 @@ You can create a free trial cluster using ``hasuractl`` for evaluation and devel
    $ hasuractl cluster create --type=trial
 
 
-Add cluster to project
-~~~~~~~~~~~~~~~~~~~~~~
+Add a cluster to project
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 All your clusters are visible on the `Hasura Dashboard <https://dashboard.hasura.io>`_. You can add a cluster listed on your dashboard to your project by executing the following command from inside the project directory:
 
@@ -288,3 +288,112 @@ All your clusters are visible on the `Hasura Dashboard <https://dashboard.hasura
    # creates a sub-directory named `[cluster-alias]` inside the `clusters` directory, adds the cluster configuration files into it
 
 ``[cluster-name]`` is the name shown on the Hasura Dashboard and ``[cluster-alias]`` is the name you want to attach to the cluster for easier access. For example, a cluster named ``caddy89`` can be added to the project with an alias ``dev`` and you will be referring to this cluster as ``-c dev`` in all the other ``hasuractl`` commands.
+
+.. _hasuractl-cluster-set-default:
+
+Setting a cluster as default
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Instead of providing ``-c cluster-alias`` flag every time, you can set a cluster as the default one to contact. For example, if you want to set the cluster aliased as ``dev`` to be the default one, execute:
+
+.. code:: bash
+
+   $ hasuractl cluster set-default -c dev
+
+   # adds new entry called `defaultCluster: dev` to `hasura.yaml`
+
+.. _hasuractl-cluster-status:
+
+Check status of a cluster
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can check the status of a cluster and see all the running services inside it using the status command. For ``dev`` cluster,
+
+.. code:: bash
+
+   $ hasuractl cluster status -c dev
+
+   INFO Reading cluster status...                    
+   INFO Status:                                      
+   Cluster Name:       caddy89 
+   Cluster Alias:      dev 
+   Platform Version:   v0.15.2
+   Cluster State:      Synced
+
+   INFO Cluster configuration:                       
+   no changes
+
+
+.. note::
+
+   If you have already set a cluster as default using :ref:`set-default <hasuractl-cluster-set-default>` command, you can omit the ``-c`` flag.
+
+This command will show you the actual cluster name, it's alias, Hasura platform version and the cluster state.
+
+**Cluster state** can be:
+
+**Synced**
+   All configurations have been successfully applied on the server. Current state is in sync with the server
+**Applying**
+   Configuration changes are being applied on the server
+**Partial**
+   Configurations are partially applied. Cluster is in working state, but there are some misconfigurations
+**ConfigError**
+   There is an error in the current configuration
+
+.. note::
+
+   If the state is not **Synced**, there will be an extra field called **Detail** which will tell you what went wrong so that you can fix it.
+
+In order to see a detailed status including running services, use ``--detail`` flag.
+
+.. code:: bash
+
+   $ hasuractl cluster status -c dev --detail
+
+   INFO Reading cluster status...                    
+   INFO Status:                                      
+   Cluster Name:       caddy89 
+   Cluster Alias:      dev 
+   Platform Version:   v0.15.2
+   Cluster State:      Synced
+
+   INFO Cluster configuration:                       
+   no changes
+
+   INFO Custom services:                             
+   SERVICE NAME   POD NAME                  STATUS
+   adminer        adminer-333681945-g4tpl   Running
+
+   INFO Hasura services:                             
+   SERVICE NAME    POD NAME                         STATUS
+   auth            auth-3241845006-g3qsf            Running
+   data            data-1221248522-9b3b8            Running
+   filestore       filestore-3551953429-1x5p5       Running
+   gateway         gateway-2942000076-48s72         Running
+   le-agent        le-agent-1320899665-gnhzw        Running
+   notify          notify-1035130465-c5h0c          Running
+   platform-sync   platform-sync-3459994486-0gf87   Running
+   postgres        postgres-3538737592-hn61h        Running
+   session-redis   session-redis-1843475950-ftdgs   Running
+   sshd            sshd-2417147444-wt4kv            Running
+   vahana          vahana-2975736420-3sh9v          Running
+
+.. _hasuractl-logs:
+
+Get logs for running services
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to get logs for a service, you need to know the name. You can use ``cluster status`` to get service names. For Hasura services, use ``--namespace=hasura``.
+
+.. code:: bash
+
+   # get logs for gateway service (hasura)
+   $ hasuractl logs -s gateway -n hasura
+   # get logs for custom service adminer
+   $ hasuractl logs -s adminer
+
+.. note::
+
+   You can also use ``--follow`` and ``--tail=<lines>`` flags to follow logs or to mention number of recent lines 
+
