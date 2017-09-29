@@ -15,7 +15,7 @@ hasuractl
 
 Starting v0.15, it is the primary mode of managing Hasura projects and Hasura clusters.
 
-.. _hasuractl-installation
+.. _hasuractl-installation:
 
 Installation
 ------------
@@ -23,6 +23,8 @@ Installation
 .. note::
 
    ``git`` is a dependency for ``hasuractl``. If you don't have it installed, follow the instructions `here <https://git-scm.com/book/id/v2/Getting-Started-Installing-Git>`_.
+
+.. _hasuractl-installation-linux:
 
 Linux
 ~~~~~
@@ -40,6 +42,8 @@ Install the latest ``hasuractl`` using the following command:
 
     # This command will download a bash script and execute it, which will in turn download the latest version of `hasuractl` and install it into `/usr/local/bin`. You will be prompted for the root password to complete installation.
 
+.. _hasuractl-installation-windows:
+
 Windows
 ~~~~~~~
 
@@ -50,6 +54,8 @@ if you need help with the installation on Windows.
 .. note::
 
     It is recommended to use `git-bash <https://git-scm.com/download/win>`_ on Windows to execute hasuractl commands.
+
+.. _hasuractl-installation-macos:
 
 Mac OS
 ~~~~~~
@@ -67,10 +73,12 @@ Run the following command to install ``hasuractl``:
 
     # This command will download a bash script and execute it, which will in turn download the latest version of `hasuractl` and install it into `/usr/local/bin`. You will be prompted for the root password to complete installation.
 
-.. _hasuractl-getting-started
+.. _hasuractl-getting-started:
 
 Getting started
 ---------------
+
+.. _hasuractl-getting-started-create-project:
 
 Create a project and cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -100,6 +108,8 @@ If you are new to ``hasuractl`` and have not created any projects or clusters be
    $ hasuractl api-console 
           
 Using the API console, you can try out Hasura APIs for Auth, Data, File and Notify. You can also create and manage tables for your database, see users in your cluster etc.
+
+.. _hasuractl-getting-started-deploy-code:
 
 Deploy custom code
 ~~~~~~~~~~~~~~~~~~
@@ -144,7 +154,6 @@ Make changes to the source code in ``service/python-flask`` directory, commit th
 .. note::
 
    You can find all the available quickstart templates here: `https://github.com/hasura/quickstart-docker-git <https://github.com/hasura/quickstart-docker-git>`_
-
 
 Understanding a Hasura project
 ------------------------------
