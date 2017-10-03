@@ -33,7 +33,10 @@ def checkDirectory( path ):
 
 def onFinishBuilding(app, exception):
     currentVersion = app.env.config["version"]
-    latestVersion = app.env.config["html_context"]["latest_docs_version"]
+    if "latest_docs_version" in app.env.config["html_context"].keys():
+        latestVersion = app.env.config["html_context"]["latest_docs_version"]
+    else:
+        latestVersion = "dev"
     base_domain = app.env.config["html_context"]["BASE_DOMAIN"]
 
     file_path = "./_build/algolia_index/index.json"
