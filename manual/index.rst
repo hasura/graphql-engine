@@ -13,7 +13,7 @@ This is the reference documentation of the entire Hasura platform
 .. toctree::
   :maxdepth: 2
 
-  hasuractl
+  hasuractl/index
   users/index
   roles/index
   data/index

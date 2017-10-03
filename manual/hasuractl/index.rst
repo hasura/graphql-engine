@@ -4,7 +4,7 @@
    :description: Reference documentation for using Hasura's command line tooling, hasuractl
    :keywords: hasura, docs, CLI, HasuraCTL, hasuractl
 
-.. _hasuractl:
+.. _hasuractl_manual:
 
 .. highlight:: bash
 
@@ -362,22 +362,23 @@ In order to see a detailed status including running services, use ``--detail`` f
    no changes
 
    INFO Custom services:                             
-   SERVICE NAME   POD NAME                  STATUS
-   adminer        adminer-333681945-g4tpl   Running
+   SERVICE NAME   POD NAME                 STATUS    ENDPOINT
+   flask          flask-2600324275-3zsdn   Running   https://flask.caddy89.hasura-app.io
+   node           node-216481375-07gxt     Running   https://node.caddy89.hasura-app.io
 
    INFO Hasura services:                             
-   SERVICE NAME    POD NAME                         STATUS
-   auth            auth-3241845006-g3qsf            Running
-   data            data-1221248522-9b3b8            Running
-   filestore       filestore-3551953429-1x5p5       Running
-   gateway         gateway-2942000076-48s72         Running
-   le-agent        le-agent-1320899665-gnhzw        Running
-   notify          notify-1035130465-c5h0c          Running
-   platform-sync   platform-sync-3459994486-0gf87   Running
-   postgres        postgres-3538737592-hn61h        Running
-   session-redis   session-redis-1843475950-ftdgs   Running
-   sshd            sshd-2417147444-wt4kv            Running
-   vahana          vahana-2975736420-3sh9v          Running
+   SERVICE NAME    POD NAME                         STATUS    ENDPOINT
+   auth            auth-156433954-6h1lh             Running   https://auth.caddy89.hasura-app.io
+   data            data-1570227353-k7smh            Running   https://data.caddy89.hasura-app.io
+   filestore       filestore-3722855872-d35mj       Running   https://filestore.caddy89.hasura-app.io
+   gateway         gateway-3863647987-5chjz         Running   
+   le-agent        le-agent-2751747641-050kn        Running   
+   notify          notify-1035130465-1lm9s          Running   https://notify.caddy89.hasura-app.io
+   platform-sync   platform-sync-3459994486-swfnl   Running   
+   postgres        postgres-3538737592-tnfqs        Running   
+   session-redis   session-redis-1843475950-4xj0d   Running   
+   sshd            sshd-289170215-5x5tb             Running   
+   vahana          vahana-3833531069-jscx3          Running   
 
 .. _hasuractl-logs:
 
@@ -397,3 +398,10 @@ In order to get logs for a service, you need to know the name. You can use ``clu
 
    You can also use ``--follow`` and ``--tail=<lines>`` flags to follow logs or to mention number of recent lines 
 
+Reference
+---------
+
+.. toctree::
+   :maxdepth: 1
+
+   ref/hasuractl
