@@ -15,11 +15,6 @@ hasuractl
 
 Starting v0.15, it is the primary mode of managing Hasura projects and Hasura clusters.
 
-.. toctree::
-   :maxdepth: 4
-
-   index
-
 .. _hasuractl-installation:
 
 Installation
@@ -460,8 +455,12 @@ If you wish to add continuous integration,
 6. Add a remote for the service so that you can push your code using git
 7. Apply the configuration again
 
-Add a service
-~~~~~~~~~~~~~
+.. note::
+
+   If you want to quickly create a service from a template, write code and deploy it, take a look at the :ref:`hasuractl service quickstart <hasuractl-getting-started-deploy-code>` command.
+
+Deploy a docker image
+~~~~~~~~~~~~~~~~~~~~~
 
 You can add docker based service to a cluster using the following commands:
 
@@ -484,6 +483,13 @@ You can add docker based service to a cluster using the following commands:
    $ hasuractl cluster status -c dev --detail
 
    # you will find the endpoint for `blog` service here
+
+
+Git push your code
+~~~~~~~~~~~~~~~~~~
+
+git push
+
 
 Reference
 ---------
