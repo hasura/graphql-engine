@@ -15,6 +15,11 @@ hasuractl
 
 Starting v0.15, it is the primary mode of managing Hasura projects and Hasura clusters.
 
+.. toctree::
+   :maxdepth: 4
+
+   index
+
 .. _hasuractl-installation:
 
 Installation
@@ -391,12 +396,94 @@ In order to get logs for a service, you need to know the name. You can use ``clu
 
    # get logs for gateway service (hasura)
    $ hasuractl logs -s gateway -n hasura
-   # get logs for custom service adminer
-   $ hasuractl logs -s adminer
+   # get logs for custom service flask
+   $ hasuractl logs -s flask 
 
 .. note::
 
    You can also use ``--follow`` and ``--tail=<lines>`` flags to follow logs or to mention number of recent lines 
+
+Compare cluster configurations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When you make changes to a cluster's configuration by editing the files, you can see what has changed, relative to the current configuration that is present on the cluster, using the ``diff`` command. You can also us it compare the configurations of two different clusters.
+
+.. code:: bash
+
+   # compare current configuration on disk to that on server for a cluster called `dev`
+   $ hasuractl cluster diff -c dev
+
+   # compare configurations on server for two clusters called `dev` and `prod`
+   $ hasuractl cluster diff -c dev -c prod
+
+Apply configuration on a cluster
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+After you add a service or edit some configuration files, these changes have to be applied on a cluster. ``apply`` command comes of help here. It takes the current configuration under the ``clusters/[cluster-name]`` directory and applies (over-writes) it on the server.
+
+.. code:: bash
+
+   # apply configuration changes to cluster called `dev`
+   $ hasuractl cluster apply -c dev
+
+   # This command will update the configuration and also creates/updates the services in the cluster
+
+Get credentials to access a cluster
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When you are added as a collaborator to a cluster, or when you just use a new environment, you need to have credentials so that you can access it. The usual pattern is to give the project git repository to a collaborator and also add them as collaborators to the clusters added to the project. You can read more about adding collaborators <here>.
+
+If you are a collaborator/owner on a cluster and you have the project directory, you can get the credentials for a cluster in the project using the ``get-credentials`` command.
+
+.. code:: bash
+
+   # Get the credentials to access a cluster called `dev`
+   $ hasuractl cluster get-credentials -c dev
+
+   # now you can access the cluster using hasuractl
+
+Services
+--------
+
+*Services* are containers running on Hasura platform as kubernetes objects. You can use them to run your own code, typically web-servers. You can deploy any docker container as a *Hasura Service*. You can configure HTTP routes for each service so that they can be access using the domains you configured. You can also configure continuous integration so that you can use ``git push`` to update the code for the service.
+
+The typical workflow in deploying a service is as follows:
+
+1. Add the service to a cluster
+2. Add a route so that the service can be accessed through HTTP
+3. Apply the new configuration on the cluster
+4. Check cluster status to see if everything is right
+5. Fix errors if there are any
+
+If you wish to add continuous integration,
+
+6. Add a remote for the service so that you can push your code using git
+7. Apply the configuration again
+
+Add a service
+~~~~~~~~~~~~~
+
+You can add docker based service to a cluster using the following commands:
+
+.. code:: bash
+
+   # add a service called `blog` which is using ghost docker image to a cluster called `dev`
+   $ hasuractl service add blog --image=ghost:1.10 --port=2368 -c dev
+
+   # creates kubernetes spec files required for the service inside `clusters/dev/services/blog`
+
+   # expose this service at `blog` subdomain
+   $ hasuractl route add blog --sub-domain=blog -c dev
+
+   # adds a route entry to `clusters/dev/routes.yaml`
+
+   # apply this configuration
+   $ hasuractl cluster apply -c dev
+
+   # check the status
+   $ hasuractl cluster status -c dev --detail
+
+   # you will find the endpoint for `blog` service here
 
 Reference
 ---------
