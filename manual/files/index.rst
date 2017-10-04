@@ -150,7 +150,5 @@ The following default urls are available on filestore service for configuring we
 - Read Only:
     Anybody can read, but no one can upload
       URL: http://localhost:8080/v2/hooks/public-read
-
-
 - Custom Permission URL:
     For any other custom permissions, you need to define your own service. Refer to :ref:`Authorization webhooks <filestore-authz-webhooks>` to see how this can be done.
