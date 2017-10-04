@@ -1,7 +1,5 @@
-:orphan:
-
 .. meta::
-   :description: Reference documentation for using Hasura's command line tooling, hasuractl
+   :description: User's manual for using Hasura's command line tooling, hasuractl
    :keywords: hasura, docs, CLI, HasuraCTL, hasuractl
 
 .. _hasuractl-manual:
@@ -33,12 +31,7 @@ Install the latest ``hasuractl`` using the following command:
 
 .. code:: bash
 
-    # curl 
     $ curl -L https://hasura.io/install.sh | bash 
-    # OR
-    # wget
-    $ wget -qO- https://hasura.io/install.sh | bash
-
 
     # This command will download a bash script and execute it, which will in turn download the latest version of `hasuractl` and install it into `/usr/local/bin`. You will be prompted for the root password to complete installation.
 
@@ -64,12 +57,7 @@ Run the following command to install ``hasuractl``:
 
 .. code:: bash
 
-    # curl 
     $ curl -L https://hasura.io/install.sh | bash 
-    # OR
-    # wget
-    $ wget -qO- https://hasura.io/install.sh | bash
-
 
     # This command will download a bash script and execute it, which will in turn download the latest version of `hasuractl` and install it into `/usr/local/bin`. You will be prompted for the root password to complete installation.
 
@@ -259,7 +247,6 @@ The project (a.k.a. project directory) has a particular directory structure and 
   
 *hasuractl doesn't consider any other files or directories outside of those mentioned above*
 
-
 Clusters
 --------
 
@@ -380,23 +367,6 @@ In order to see a detailed status including running services, use ``--detail`` f
    sshd            sshd-289170215-5x5tb             Running   
    vahana          vahana-3833531069-jscx3          Running   
 
-.. _hasuractl-logs:
-
-Get logs for running services
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In order to get logs for a service, you need to know the name. You can use ``cluster status`` to get service names. For Hasura services, use ``--namespace=hasura``.
-
-.. code:: bash
-
-   # get logs for gateway service (hasura)
-   $ hasuractl logs -s gateway -n hasura
-   # get logs for custom service flask
-   $ hasuractl logs -s flask 
-
-.. note::
-
-   You can also use ``--follow`` and ``--tail=<lines>`` flags to follow logs or to mention number of recent lines 
 
 Compare cluster configurations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -488,7 +458,209 @@ You can add docker based service to a cluster using the following commands:
 Git push your code
 ~~~~~~~~~~~~~~~~~~
 
-git push
+In order to be able to push your own code to a service, you need to add a *"remote"*. A remote is a configuration entity that defines how the docker image should be built for the corresponding service.
+
+.. note:: It is assumed that you already have a git repo with you code and a dockerfile ready to be deployed. If not, please use :ref:`hasuractl service quickstart <hasuractl-getting-started-deploy-code>` command to get started.
+
+.. code:: bash
+
+   # add a service called `api` to a cluster called `dev`
+   # default port is 8080 and image is hasura/hello-world
+   $ hasuractl service add api -c dev
+
+   # creates kubernetes spec files required for the service
+
+   # expose this service at `api` subdomain
+   # by default, service name is taken as the sub domain
+   $ hasuractl route add api
+
+   # adds a route entry to `clusters/dev/routes.yaml`
+
+   # add a remote for this service
+   # assuming your source code for this service is in a git repo at `/home/user/api` and has a `Dockerfile` (it can be anywhere else also)
+   # path and dockerfile are provided relative to the git repo
+   $ hasuractl remote add --service=api --cluster=dev --path=. --dockerfile=./Dockerfile
+
+   # adds a remote entry to `clusters/dev/remotes.yaml`, shows the `git remote` for you to push 
+   # copy the `git remote add ...` command and execute it in the repo containing service source code
+   $ cd /home/user/api
+   $ git remote add ...
+
+   $ cd /home/user/hasura-project
+   # apply this configuration
+   $ hasuractl cluster apply -c dev
+
+   # check the status
+   $ hasuractl cluster status -c dev --detail
+
+   # you will find the endpoint for `api` service here
+   
+   # now you can git push from your service source code repo to deploy to this cluster
+   $ cd /home/user/api
+   # make changes
+
+   $ git add <files>
+   $ git commit -m "<commit message"
+   $ git push <remote-name>
+   
+The service will be automatically re-deployed with latest code.
+
+Add environment variables
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can add environment variables to each service which will be available for the underlying docker image to use. Kubernetes spec files are directly modified for this purpose. Let's say you want to add couple of environment variables to a service called ``api`` on a cluster called ``dev``.
+
+Edit the file ``clusters/dev/services/api/deployment.yaml`` and add the ``env`` key with required environment variables' name and values:
+
+.. code-block:: yaml 
+   :emphasize-lines: 24-30 
+
+   apiVersion: extensions/v1beta1
+   kind: Deployment
+   metadata:
+     creationTimestamp: null
+     labels:
+       app: api
+       hasuraCI: "false"
+       hasuraService: custom
+     name: api
+     namespace: default
+   spec:
+     replicas: 1
+     strategy: {}
+     template:
+       metadata:
+         creationTimestamp: null
+         labels:
+           app: api
+       spec:
+         containers:
+         - image: hasura/hello-world:latest
+           imagePullPolicy: IfNotPresent
+           name: api
+           env:
+           - name: VERSION
+             value: v2.0
+           - name: ENV
+             value: production
+           - name: HELLO
+             value: world 
+           ports:
+           - containerPort: 8080
+             protocol: TCP
+           resources: {}
+   status: {}
+
+Once you add the required variables, you can apply the new configuration on the cluster by executing:
+
+.. code::
+
+   $ hasuractl cluster apply -c dev
+
+Add secret variables
+~~~~~~~~~~~~~~~~~~~~
+
+Secret variables like API token, passwords etc. are kept as kubernetes secret object. These secrets can also be made available to the docker image as environment variables. Secrets are saved directly on the cluster and are not stored locally in the cluster configuration. 
+
+For example, if you want to add a secret token to the service ``api`` on cluster ``dev``, and consume it inside the container as an environment variable, you need to create a secret with the value.
+
+.. code::
+
+   # creates a kubernetes secret key called `some.token` in `hasura-cluster-secrets`
+   $ hasuractl secret update some.token 9jmpkdptlm626ksw45wljokydlnf0qmu -c dev
+
+   # you can list all the secrets that are available already
+   $ hasuractl secret list -c dev
+
+Once you add the secret key and it's value, edit the file ``clusters/dev/services/api/deployment.yaml`` and add the ``env`` key as follows:
+
+.. code-block:: yaml
+   :emphasize-lines: 24-29
+
+   apiVersion: extensions/v1beta1
+   kind: Deployment
+   metadata:
+     creationTimestamp: null
+     labels:
+       app: api
+       hasuraCI: "false"
+       hasuraService: custom
+     name: api
+     namespace: default
+   spec:
+     replicas: 1
+     strategy: {}
+     template:
+       metadata:
+         creationTimestamp: null
+         labels:
+           app: api
+       spec:
+         containers:
+         - image: hasura/hello-world:latest
+           imagePullPolicy: IfNotPresent
+           name: api
+           env:
+           - name: TOKEN
+             valueFrom:
+              secretKeyRef:
+                key: some.token 
+                name: hasura-cluster-secrets
+           ports:
+           - containerPort: 8080
+             protocol: TCP
+           resources: {}
+   status: {}
+
+This token will now be available inside the container as an environment variable ``TOKEN``. Once you add the required variables, you can apply the new configuration on the cluster by executing:
+
+.. code::
+
+   $ hasuractl cluster apply -c dev
+
+.. _hasuractl-logs:
+
+Get logs for running services
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to get logs for a service, you need to know the name. You can use ``cluster status`` to get service names. For Hasura services, use ``--namespace=hasura``.
+
+.. code:: bash
+
+   # get logs for gateway service (hasura)
+   $ hasuractl logs -s gateway -n hasura
+   # get logs for custom service flask
+   $ hasuractl logs -s flask 
+
+.. note::
+
+   You can also use ``--follow`` and ``--tail=<lines>`` flags to follow logs or to mention number of recent lines 
+
+Delete a service
+~~~~~~~~~~~~~~~~
+
+A service once added to a cluster can be deleted using the following command. This will remove the service spec files, it's associated remotes and routes from the cluster configuration.
+
+.. code:: bash
+
+   # delete a service called `api` from cluster `dev`
+   $ hasuractl service delete api -c cluster 
+
+<incomplete>
+
+Migrations
+----------
+
+<incomplete>
+
+API console
+-----------
+
+<incomplete>
+
+Set up auto-complete
+--------------------
+
 
 
 Reference
