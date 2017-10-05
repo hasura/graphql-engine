@@ -102,6 +102,10 @@ Using the API console, you can try out Hasura APIs for Auth, Data, File and Noti
 Deploy custom code
 ~~~~~~~~~~~~~~~~~~
 
+.. note::
+
+   If you already have you code ready with Dockerfile, jump to :ref:`Git push your code <hasuractl-manual-git-push-code>`.
+
 For hosting your own code or static HTML websites, Hasura provides ready-made quickstart templates for a variety of frameworks. Find all the quickstart templates `here <https://github.com/hasura/quickstart-docker-git>`_
 
 You can add a template along with it's source code to your newly created Hasura project and deploy it to the cluster. These templates are deployed as micro-services on Hasura platform. Changes to the source code can be re-deployed using ``git push``.
@@ -455,6 +459,8 @@ You can add docker based service to a cluster using the following commands:
    # you will find the endpoint for `blog` service here
 
 
+.. _hasuractl-manual-git-push-code:
+
 Git push your code
 ~~~~~~~~~~~~~~~~~~
 
@@ -639,14 +645,19 @@ In order to get logs for a service, you need to know the name. You can use ``clu
 Delete a service
 ~~~~~~~~~~~~~~~~
 
-A service once added to a cluster can be deleted using the following command. This will remove the service spec files, it's associated remotes and routes from the cluster configuration.
+A service once added to a cluster can be removed using the following command. This will remove the service spec files, it's associated remotes and routes from the cluster configuration (if any).
 
 .. code:: bash
 
-   # delete a service called `api` from cluster `dev`
-   $ hasuractl service delete api -c cluster 
+   # remove a service called `api` from cluster `dev`
+   $ hasuractl service remove api -c dev 
 
-<incomplete>
+   # remove the service, but retain routes and remotes config
+   $ hasuractl service remove api -c dev --no-cascade 
+
+   # apply the changes on the cluster
+   $ hasuractl cluster apply -c dev
+
 
 Migrations
 ----------
@@ -656,10 +667,71 @@ Migrations
 API console
 -----------
 
-<incomplete>
+Open API console attached to a cluster called ``dev``:
+
+.. code::
+
+   $ hasuractl api-console -c dev
+
+<incomplete: introduce api-console features>
 
 Set up auto-complete
 --------------------
+
+Bash
+~~~~
+
+Linux
+^^^^^
+
+On linux systems (non-minimal), bash completion is already available. You just need to add the hasuractl specific functions to ``/etc/bash.completion.d``.
+
+.. code::
+
+   # add the file to bash completions 
+   $ sudo hasuractl completion bash --file=/etc/bash.completion.d/hasuractl
+
+   # reload the shell
+   $ exec $SHELL -l 
+
+Mac OS
+^^^^^^
+
+You can install bash completion using Homebrew and then add hasuractl specific functions.
+
+.. code:: 
+
+   $ brew install bash-completion
+
+   # then add this to your .bash_profile:
+
+    if [ -f `brew --prefix`/etc/bash_completion ]; then
+        . `brew --prefix`/etc/bash_completion
+    fi
+
+   # create the completion script
+   $ hasuractl completion bash --file=/usr/local/etc/bash_completion.d/hasuractl
+
+   # reload the shell
+   $ exec $SHELL -l
+
+
+Zsh
+~~~
+
+Instructions should work similarly for macOS and Linux systems. Place the completion script (filename should start with ``_``, e.g. ``_hasuractl``) in your ``/path/to/zsh/completions``, e.g. ``~/.zsh/completions/`` or ``/.oh-my-zsh/completions``:
+
+.. code::
+   
+   $ mkdir -p $HOME/.oh-my-zsh/completions
+   $ hasuractl completion zsh --file=$HOME/.oh-my-zsh/completions/_hasuractl
+   
+   # include the directory in your $fpath, e.g. by adding in ~/.zshrc:
+   # Make sure compinit is loaded or do it by adding in ~/.zshrc:
+   # autoload -Uz compinit && compinit -i
+
+   # Then reload your shell:
+   $ exec $SHELL -l
 
 
 
