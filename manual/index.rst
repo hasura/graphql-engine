@@ -30,3 +30,4 @@ This is the reference documentation of the entire Hasura platform
   logs/index
   SDKs/index
   reference/index
+  custom-authentication/index
