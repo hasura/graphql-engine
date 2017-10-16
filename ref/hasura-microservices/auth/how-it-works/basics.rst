@@ -9,7 +9,7 @@ Basic actions includes registering and logging in a user. We will see below how
 to perform these basic actions.
 
 You can always refer to the full API documentation, available at:
-https://hasura.io/_docs/auth/4.0/swagger-ui/ .
+https://docs.hasura.io/0.14/manual/reference/auth/api.html
 
 The base URL for the Auth service would be:
 `https://auth.<project-name>.hasura-app.io`. This is also mentioned in your
