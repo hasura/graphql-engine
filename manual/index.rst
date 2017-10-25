@@ -14,6 +14,7 @@ This is the reference documentation of the entire Hasura platform
   :maxdepth: 2
 
   getting-started/index
+  hasuractl/index
   users/index
   roles/index
   data/index
