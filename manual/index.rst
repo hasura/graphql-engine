@@ -29,5 +29,4 @@ This is the reference documentation of the entire Hasura platform
   serve-static/index
   SSH-cluster
   logs/index
-  SDKs/index
   reference/index

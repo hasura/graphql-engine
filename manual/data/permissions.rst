@@ -8,13 +8,7 @@ What are the typical roles other than ``admin``?
 #. ``user`` for logged in users
 #. ``anonymous`` for users who haven't logged in.
 
-We need to define permissions on all the tables that we have created so far (where applicable) for ``user`` and ``anonymous`` roles. As you've probably guessed, we can use both the console UI and the data API to create permissions.
-Watch this video to see how permissions are defined using the console or continue reading to use the ``data`` API
-
-.. admonition:: Video reference
-
-   For a highly simplified version of this page and a super fast introduction
-   check `this video <https://www.youtube.com/watch?v=lW7iz3cFqAg>`_ out!
+We need to define permissions on all the tables that we have created so far (where applicable) for ``user`` and ``anonymous`` roles. We can use the data API to create permissions. Continue reading to use the ``data`` API
 
 Select
 ------

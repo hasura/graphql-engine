@@ -6,12 +6,23 @@
 Data
 ====================
 
+This section assumes that you have already created a project and know how to launch your API console. If not, please head to
+`hasura.io <https://hasura.io>`_  and get started!
+
 The data APIs can be used to store and retrieve data. The actual data is stored in Postgres tables. To fetch associated data, one can define relationships on tables. Permissions can then be used to authorize the access to data based on roles.
 
 Tables
 --------
 
 1. Using the console UI. Head to ``Data > Schema``.
+
+   First launch the console:
+
+   .. code-block:: bash
+
+      $ hasuractl api-console
+
+   This will open the API console. Head to ``Data > Schema``.
 
    .. image:: ../../img/manual/data/create_table_console.png
 
