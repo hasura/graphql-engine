@@ -19,10 +19,8 @@
   </div>
   {% set splittedPage = pagename.split('/') %}
   {%- if splittedPage[0] == 'manual' %}
-    <h3 class="toc_header"><a href="{{ pathto('manual/index') }}">{{ _('Table Of Contents') }}</a></h3>
     {{ toc_full }}
   {%- elif splittedPage[0] == 'guides' %}
-    <h3 class="toc_header"><a href="{{ pathto('guides/index') }}">{{ _('Table Of Contents') }}</a></h3>
     {{ toc }}
   {% endif %}
 {%- endif %}
