@@ -31,3 +31,4 @@ This is the reference documentation of the entire Hasura platform
   SSH-cluster
   logs/index
   reference/index
+  custom-authentication/index
