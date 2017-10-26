@@ -8,6 +8,12 @@ Data
 
 The data APIs can be used to store and retrieve data. The actual data is stored in Postgres tables. To fetch associated data, one can define relationships on tables. Permissions can then be used to authorize the access to data based on roles.
 
+.. include:: sample-intro.rst
+
+Some temporary content goes here
+
+.. include:: sample-intro-2.rst
+
 Tables
 --------
 
