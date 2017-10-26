@@ -24,38 +24,51 @@ All APIs accept and respond only in JSON. Which means that you have to make
 sure that all requests you send, should contain the ``Content-Type:
 application/json`` header.
 
+.. _providers:
+
+Providers
+---------
+
+Providers denote the specific mode of authentication. Hasura Auth supports the following providers by default
+and allows allows to create href{custom providers}:
+
+* **username**
+* **email**
+* **mobile** ( OTP based login )
+* **mobile-password**
+* **google**
+* **facebook**
+* **linkedin**
+* **github**
 
 .. _signup:
 
 Signup
 ------
 
-To signup a user make a request to the signup endpoint.
-
-The signup endpoint is ``/signup``.
+To signup a user, make a request to the signup endpoint : ``/v2/signup``.
 
 Mandatory parameters in the request body are:
 
-* Username of the user: ``username``
-* Password of the user: ``password``
-
-Optional parameters are ``email`` and  ``mobile``. You can also setup
-*verification* of user's Email and Mobile. Once you enable email or mobile
-verification, those parameters also become mandatory.
+* Provider: ``provider``
+* Data required by the specific provider: ``data``
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/signup HTTP/1.1
+   POST auth.<project-name>.hasura-app.io/v2/signup HTTP/1.1
    Content-Type: application/json
 
    {
-     "username" : "johnsmith",
-     "password" : "jsmith123456"
+     "provider" : "username",
+     "data" : {
+        "username": "jsmith123456",
+        "password": "somepass123"
+     }
    }
 
-If the signup request is successful, the user is logged in.
+If the signup request is successful, the user is logged in automatically depending on the provider else the user needs to login separately.
 
-Typical response of the ``/signup`` request is :
+Typical response of the ``/v2/signup`` request is :
 
 .. code-block:: http
 
@@ -80,120 +93,34 @@ Typical response of the ``/signup`` request is :
 
 .. note::
   The ``auth_token``  is only returned if the user is logged in. If the user is
-  not logged in, due to email or mobile verification pending, or the admin user
+  not logged in, based on the provider type or the admin user
   disabling the user etc., then the value of the ``auth_token`` will be ``null``.
-
-
-Enabling other fields in signup
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Email and Mobile fields during signup are optional or mandatory based on your
-configuration.
-
-.. note::
-  IMPORTANT: The mobile number has to be sent with country code prefixed (with
-  + and not 00). If any country code is **not** given, it is assumed to be an
-  Indian phone number.
-
-
-Email/Mobile not enabled
-++++++++++++++++++++++++
-
-If you have not enabled email or mobile login/verification, you can pass
-those fields **optionally**:
-
-.. code-block:: http
-
-   POST auth.<project-name>.hasura-app.io/signup HTTP/1.1
-   Content-Type: application/json
-
-   {
-     "username" : "johnsmith",
-     "password" : "jsmith123456",
-     "email"    : "johnsmith@example.com",
-     "mobile"   : "+919876543210"
-   }
-
-
-Email/Mobile enabled
-++++++++++++++++++++
-
-If you have enabled email or mobile verification/login, then that field becomes
-**mandatory**. For e.g, if you have enabled email verification, then the the email
-field is mandatory.
-
-.. note::
-
-  If verification is enabled, then the response from ``/signup`` endpoint would
-  return ``auth_token`` as ``null``.
-
-  .. code-block:: http
-
-     HTTP/1.1 200 OK
-     Content-Type: application/json
-
-     {
-       "auth_token": null,
-       "hasura_roles": [
-         "user"
-       ],
-       "hasura_id": 79
-     }
-
-
-Recaptcha
-+++++++++
-
-You can also setup `recaptcha`_ in the sign up process.
-
-If you have enabled recaptcha, then you have to send another parameter in the
-signup request: ``g-recaptcha-response`` containing the recaptcha value from
-Google.
-
-.. code-block:: http
-
-   POST auth.<project-name>.hasura-app.io/signup HTTP/1.1
-   Content-Type: application/json
-
-   {
-     "username" : "johnsmith",
-     "password" : "jsmith123456",
-     "email"    : "johnsmith@example.com",
-     "g-recaptcha-response" : "<recaptcha-response-received-from-google>"
-   }
-
-
-To configure recaptcha for your project, you can to your project console.
-Inside Auth -> Sign-In Methods you should find the Recaptcha settings.
 
 
 Login
 ------
 
-To login a user make a request to the login endpoint.
+To login a user make a request to the login endpoint: ``/v2/login``.
 
-The login endpoint is ``/login``.
+Mandatory parameters in the request body are:
 
-There are two mandatory parameters in the request body for a login action.
-
-1. Password of the user.
-2. The second will be - based on your configuration - username, email or
-   mobile of the user. If you have enabled login via email in your project
-   console, this will be ``email``. Similarly for mobile. If you have not
-   enabled either of them, then this will be ``username``.
-
+* Provider: ``provider``
+* Data required by the specific provider: ``data``
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/login HTTP/1.1
+   POST auth.<project-name>.hasura-app.io/v2/login HTTP/1.1
    Content-Type: application/json
 
    {
-     "username" : "johnsmith",
-     "password" : "jsmith123456"
+     "provider" : "email",
+     "data" : {
+        "email": "johndoe@gmail.com",
+        "password": "somepass123"
+     }
    }
 
-
-Typical response of the ``/login`` request is :
+Typical response of the ``/v2/login`` request is :
 
 .. code-block:: http
 
@@ -215,23 +142,23 @@ Typical response of the ``/login`` request is :
 * ``hasura_id``  is the hasura identifier of the user.
 
 
-Verification is enabled
-^^^^^^^^^^^^^^^^^^^^^^^
-If email/mobile verification is enabled and the user has not verified their
-email/mobile; then the response from ``/login`` endpoint would be an error
-saying email/mobile verification is pending.
+Pending Verification
+^^^^^^^^^^^^^^^^^^^^
+If the provider is ``email``/``mobile-password`` and the user has not verified their
+email/mobile; then the response from ``/v2/login`` endpoint would be an error
+indicating email/mobile verification is pending.
 
 
 
 Sessions
-----------
+--------
 
 When a user is logged-in, along with its Hasura identity, a session is attached.
 
 A session is nothing but a unique, un-guessable identifier  attached to that
-Hasura identity (referred to as ``auth_token``) for that session. This way an
-user can make subsequent requests without having to authenticate, with
-credentials, on every request. Instead, on every request the user can present
+Hasura identity (referred to as ``auth_token``) for that session. This way a
+user can make subsequent requests without having to authenticate with
+credentials on every request. Instead, on every request the user can present
 the ``auth_token`` to identify themself.
 
 Every service benefits from having the user's information (id and roles) with each request. In hasura platform, as mentioned earlier, every request goes through the gateway. So, the gateway integrates with the session store to act as a session middleware for all services.
@@ -269,61 +196,19 @@ a new authentication token, and remove all existing authentication tokens
 Verifying Email
 ---------------
 
-To verify the email address, Hasura Auth will send an email with an unique
-token to the user's email address, and within a stipulated amount of time, the
-user has to submit the token to a Hasura Auth API endpoint to verify the email
+To verify the email address upon signup, Hasura Auth will send an email with a unique
+token to the user's email address. The email template can be configured in auth.yaml
+and must include the complete verification link alongwith the ``token`` parameter. Within a configurable amount of time, the
+user has to hit the verification endpoint to verify the email
 address.
 
 .. note::
-  Enable email verification in the project console.
-  Under Auth -> Sign-In Methods.
-  (You also have to enable email in Hasura Notify service)
-
-
-Once email verification is enabled, ``email`` becomes a mandatory parameter in
-the :ref:`signup <signup>` request.
+  For emails to be sent, you have to enable an email provider in Hasura Notify service.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/signup HTTP/1.1
-   Content-Type: application/json
+   GET auth.<project-name>.hasura-app.io/v2/providers/email/verify-email?token=<token> HTTP/1.1
 
-   {
-     "username" : "johnsmith",
-     "email"    : "johnsmith@example.com",
-     "password" : "jsmith123456"
-   }
-
-Now, when a request is made to the :ref:`signup <signup>` endpoint, the
-response will have ``auth_token`` as ``null``, the user won't be logged
-in and a verification email will be sent to the user.
-
-.. code-block:: http
-
-   HTTP/1.1 200 OK
-   Content-Type: application/json
-
-   {
-     "auth_token": null,
-     "hasura_roles": [
-       "user"
-     ],
-     "hasura_id": 79
-   }
-
-
-Also, the user will be set as not active. Once the email is verified the user
-will be set as active.
-
-To verify the email of the user, you have to configure the email settings to
-include a link to your application in the email content.  This link will
-include a ``token`` parameter, that your application has to retrieve. After
-obtaining the ``token``, your application should make auth API call to the
-``/email/confirm`` to verify the user's email.
-
-.. code-block:: http
-
-   GET auth.<project-name>.hasura-app.io/email/confirm?token=<token> HTTP/1.1
 
 The response of the email verification endpoint indicates success or failure.
 If it is successful, then your application should ask the user to login.
@@ -334,9 +219,7 @@ If it is successful, then your application should ask the user to login.
    Content-Type: application/json
 
    {
-     "hasura_id" : 79,
-     "user_email": "johnsmith@example.com",
-     "message"   : "Email Verified"
+     "message"   : "success"
    }
 
 
@@ -344,71 +227,24 @@ Verifying Mobile
 ----------------
 
 To verify the mobile number, Hasura Auth will send a SMS with a one time
-password or OTP to the user's mobile number, and within a stipulated amount of
+password or OTP to the user's mobile number, and within a configurable amount of
 time, the user has to submit the OTP to a Hasura Auth API endpoint to verify
 the mobile number.
 
 .. note::
-  Enable mobile verification in the project console.
-  Under Auth -> Sign-In Methods.
-  (You also have to enable mobile in Hasura Notify service)
+  For OTP to be sent, you have to enable SMS provider in Hasura Notify service.
 
-
-Once mobile verification is enabled, ``mobile`` becomes a mandatory parameter
-in the :ref:`signup <signup>` request.
+For ``mobile-password`` provider, the request is:
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/signup HTTP/1.1
+   POST auth.<project-name>.hasura-app.io/v2/providers/mobile-password/verify-otp HTTP/1.1
    Content-Type: application/json
 
    {
-     "username" : "johnsmith",
-     "mobile"   : "+919876543210",
-     "password" : "jsmith123456"
-   }
-
-.. note::
-  IMPORTANT: The mobile number has to be sent with country code prefixed (with
-  + and not 00). If any country code is **not** given, it is assumed to be an
-  Indian phone number.
-
-
-Now, when a request is made to the :ref:`signup <signup>` endpoint, the
-response will have ``auth_token`` as ``null``, the user won't be logged in and
-a verification SMS with an OTP will be sent to the user.
-
-.. code-block:: http
-
-   HTTP/1.1 200 OK
-   Content-Type: application/json
-
-   {
-     "auth_token": null,
-     "hasura_roles": [
-       "user"
-     ],
-     "hasura_id": 79
-   }
-
-
-Also, the user will be set as not active. Only, once the mobile is verified the
-user will be set as active.
-
-To verify the mobile of the user, you have to configure your mobile settings to
-include OTP and the message to send. User will receive the SMS with an OTP. You
-should instruct the user to visit your application and enter the OTP. Once your
-application receives the OTP, your application should make auth API call to the
-``/mobile/confirm`` to verify the user's mobile.
-
-.. code-block:: http
-
-   POST auth.<project-name>.hasura-app.io/mobile/confirm HTTP/1.1
-   Content-Type: application/json
-
-   {
-     "mobile": "+919876543210",
-     "otp"   : "123456"
+     "mobile": "9876543210",
+     "country_code": 91,
+     "otp"   : 123456
    }
 
 The response of the mobile verification endpoint indicates success or failure.
@@ -420,9 +256,39 @@ If it is successful, then your application should ask the user to login.
    Content-Type: application/json
 
    {
-     "message" : "Mobile verified"
+     "message" : "success"
    }
 
+For ``mobile`` provider, the verification is done during signup itself.
+
+.. code-block:: http
+
+   POST auth.<project-name>.hasura-app.io/v2/signup HTTP/1.1
+   Content-Type: application/json
+
+   {
+     "provider": "mobile"
+     "data": {
+        "mobile": "9876543210",
+        "country_code": 91,
+        "otp"   : 123456
+      }
+   }
+
+If it is successful, the signup response is sent to the user:
+
+.. code-block:: http
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+
+   {
+     "auth_token": "tpdq0m9whrj7i4vcjn48zq43bqx2",
+     "hasura_roles": [
+       "user"
+     ],
+     "hasura_id": 79
+   }
 
 
 Forgot password / Password reset
@@ -432,19 +298,21 @@ If a user has forgotten their password, it can be reset if they have an email
 address associated with the account.
 
 .. note::
-  This flow is meant for user's who have forgotten their password and can't
+  This flow is meant for users who have forgotten their password and can't
   login. For logged-in user to change their password use
-  ``/user/password/change`` endpoint.
+  ``/v2/user/change-password`` endpoint.
+
+For ``email`` provider:
 
 To reset a password first a reset token has to be obtained. This is done by
-send a reset password email to the user's email address.
+sending a forgot password email to the user's email address.
 
-To send a forgot password email make a request to ``/password/forgot`` endpoint
+To send a forgot password email make a request to ``/v2/providers/email/forgot-password`` endpoint
 with the user's email address.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/password/forgot HTTP/1.1
+   POST auth.<project-name>.hasura-app.io/v2/providers/email/forgot-password HTTP/1.1
    Content-Type: application/json
 
    {
@@ -454,24 +322,61 @@ with the user's email address.
 This will send a reset password email with a unique, random token to the user's
 email address.
 
-You have to configure the email templates (in the project console) to include a
+You have to configure the email templates in auth.yaml to include a
 link to your application in the email content.  This link will include a
 ``token`` parameter, that your application has to retrieve. After obtaining the
-``token``, your application should make auth API call to the
-``/password/reset`` endpoint to reset the user's password.
+``token``, your application should make auth API call to
+``/v2/providers/email/reset-password`` endpoint to reset the user's password.
 
 The reset password endpoint takes the ``token`` and the new password of the
 user.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/password/reset HTTP/1.1
+   POST auth.<project-name>.hasura-app.io/v2/providers/email/reset-password HTTP/1.1
    Content-Type: application/json
 
    {
-     "email" : "johnsmith@example.com",
-     "token" : "<token-sent-in-the-email>"
+     "token": "<token-sent-in-the-email>",
+     "password": "newpass123"
    }
+
+For ``mobile-password`` provider:
+
+To reset a password first a reset OTP has to be obtained. This is done by sending
+a forgot password SMS to the user's mobile.
+
+To send a forgot password SMS make a request to ``/v2/providers/mobile-password/forgot-password`` endpoint
+with the user's mobile number.
+
+.. code-block:: http
+
+   POST auth.<project-name>.hasura-app.io/v2/providers/mobile-password/forgot-password HTTP/1.1
+   Content-Type: application/json
+
+   {
+     "mobile" : "9876543210",
+     "country_code" : 91
+   }
+
+After obtaining the OTP, your application should make auth API call to
+``/v2/providers/mobile-password/reset-password`` endpoint to reset the user's password.
+
+The reset password endpoint takes the OTP and the new password of the user.
+
+.. code-block:: http
+
+   POST auth.<project-name>.hasura-app.io/v2/providers/mobile-password/reset-password HTTP/1.1
+   Content-Type: application/json
+
+   {
+     "country_code" : 91,
+     "mobile" : "9876543210",
+     "otp": 1231,
+     "password": "newpass123"
+   }
+
+
 
 
 

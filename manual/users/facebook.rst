@@ -16,15 +16,15 @@ Pre-requisites
 
 * Now you need to configure Hasura Auth service with these credentials.
 
-* To configure, go to your project console (https://console.your-project.hasura-app.io).
+* To configure, go to auth.yaml in clusters/<cluster-name> directory.
 
-* In the project console, go to Auth -> Sign-In Methods.
+* Under ``facebook``, set ``clientId`` and ``clientSecret``
 
-* Enable Facebook and enter
+.. code-block:: yaml
 
-  * **App ID**: The App ID obtained when creating the application.
-
-  * **App Secret**: The App secret.
+      facebook:
+        clientId: "String"
+        clientSecret: "String"
 
 * Choose your device and Facebook SDK from here:
   https://developers.google.com/identity/choose-auth
@@ -61,7 +61,15 @@ Login/Signup a user with Hasura Auth
 
   .. code:: http
 
-    GET /facebook/authenticate?access_token=<access-token> HTTP/1.1
+   POST auth.<project-name>.hasura-app.io/v2/signup HTTP/1.1
+   Content-Type: application/json
+
+   {
+     "provider" : "facebook",
+     "data" : {
+        "access_token": "String",
+     }
+   }
 
 
 * If successful, this will return a response as follows:
