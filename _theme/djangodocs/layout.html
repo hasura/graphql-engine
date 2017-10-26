@@ -30,71 +30,6 @@
 
 {% block document %}
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if pagename != 'index' else '' }}{% endblock %}">
-    <div class="header_wrapper">
-      <div class="header_main">
-        <div class="inline-block header_main_logo">
-          <a href="https://hasura.io/" target="_blank">
-            <div class="img_wrapper inline-block">
-              <img class="responsive logo_img" src="{{ pathto('_images/logo.svg', 1) }}" />
-            </div>
-          </a>
-          <a href="{{ pathto('', 1) }}">
-            <div class="inline-block hero"> DOCS </div>
-          </a>
-        </div>
-        <div class="inline-block input_search_box">
-          <span class="fa fa-search"></span>
-          <input type="text" class="search_element" placeholder="Search reference docs, tutorials, guides" />
-        </div>
-        <div class="header_links inline-block">
-          <div class="header_links_content">
-            {% set currPage = pagename.split('/')[0] %}
-            {%- if ( currPage == "manual" ) %}
-              <div class="inline-block link_element link_element_active">
-            {%- else %}
-              <div class="inline-block link_element">
-            {%- endif %}
-              <a href="{{ pathto('', 1) }}manual">
-                Manual
-              </a>
-            </div>
-
-            {%- if ( currPage == "tutorials" ) %}
-              <div class="inline-block link_element link_element_active">
-            {%- else %}
-              <div class="inline-block link_element">
-            {%- endif %}
-              <a href="{{ pathto('', 1) }}tutorials">
-                Tutorials
-              </a>
-            </div>
-            {%- if ( currPage == "guides" ) %}
-              <div class="inline-block link_element link_element_active">
-            {%- else %}
-              <div class="inline-block link_element">
-            {%- endif %}
-              <a href="{{ pathto('', 1) }}guides">
-                Guides
-              </a>
-            </div>
-          </div>
-          <div class="buttons">
-            <div class="inline-block">
-              <a target="_blank" href="https://dashboard.hasura.io/login">
-                <button class="indiv_btns black"> Log in </button>
-              </a>
-            </div>
-            <div class="inline-block">
-              <a target="_blank" href="https://dashboard.hasura.io/login#register">
-                <button class="indiv_btns"> Sign up </button>
-              </a>
-            </div>
-          </div>
-        </div>
-        <div class="header_buttons inline-block">
-        </div>
-      </div>
-    </div>
     <div class="main_container_wrapper">
       <div id="" class="content_wrapper">
         {% include 'pages/loading.html' %}
@@ -150,11 +85,37 @@
                     </div>
                   </div>
                 </div -->
+                <div class="search_head_wrapper">
+                  <div class="inline-block input_search_box">
+                    <span class="fa fa-search"></span>
+                    <input type="text" class="search_element" placeholder="Search reference docs, tutorials, guides" />
+                  </div>
+                  <div class="header_links inline-block">
+                    <div class="buttons">
+                      <div class="inline-block">
+                        <a target="_blank" href="https://dashboard.hasura.io/login">
+                          <button class="indiv_btns black"> Log in </button>
+                        </a>
+                      </div>
+                      <div class="inline-block">
+                        <a target="_blank" href="https://dashboard.hasura.io/login#register">
+                          <button class="indiv_btns"> Sign up </button>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div id="{{ pagename|replace('/', '-') }}">
                   {% block body %}{% endblock %}
                 </div>
+
               </div>
               <div class="nav">{{ secondnav() }}</div>
+              <div class="footer-hasura-custom">
+                Want to contribute or report missing content? Check out the <a target="_blank" href="https://github.com/hasura/docs">github repo for docs</a>.<br>
+                Powered by <a target="_blank" href="http://www.sphinx-doc.org">Sphinx</a>.
+                Copyright &copy; 2017 <a target="_blank" href="https://hasura.io">Hasura</a>.
+              </div>
             </div>
           </div>
           <div style="clear: both;"></div>
@@ -225,12 +186,6 @@
 {% block sidebar1 %}{% endblock %}
 {% block sidebar2 %}{% endblock %}
 {% block footer %}
-  <div class="footer-hasura-custom">
-    Want to contribute or report missing content? Check out the <a target="_blank" href="https://github.com/hasura/docs">github repo for docs</a>.<br>
-    Powered by <a target="_blank" href="http://www.sphinx-doc.org">Sphinx</a>.
-    Copyright &copy; 2017 <a target="_blank" href="https://hasura.io">Hasura</a>.
-  </div>
-
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
         (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

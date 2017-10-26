@@ -130,7 +130,7 @@ body
 {
   font-family: 'Gudea' !important;
   font-size: 16px !important;
-  color: #788094 !important;
+  color: #333 !important;
 }
 .main_wrapper
 {
@@ -141,11 +141,12 @@ p
 {
   font-family: 'Gudea';
   font-size: 16px;
-  color: #788094;
+  color: #333;
+  line-height: 1.7;
 }
 .docutils
 {
-  color: #788094;
+  color: #333;
 }
 #docs-content a.reference
 {
@@ -173,7 +174,7 @@ a.current.reference.internal {
   line-height: 1.1em;
   font-family: 'Khula';
   font-weight: 600;
-  color: #788094;
+  color: #333;
   font-size: 3.2rem;
 }
 
@@ -182,7 +183,7 @@ a.current.reference.internal {
   line-height: 1.1em;
   font-family: 'Khula';
   font-weight: 600;
-  color: #788094;
+  color: #333;
   font-size: 3.2rem;
 }
 
@@ -191,7 +192,7 @@ a.current.reference.internal {
   line-height: 1.1em;
   font-family: 'Khula';
   font-weight: 600;
-  color: #788094;
+  color: #333;
   font-size: 3.2rem;
 }
 
@@ -209,7 +210,7 @@ h3
 {
   font-family: 'Khula';
   font-weight: 600;
-  color: #788094;
+  color: #333;
 }
 .wd_100
 {
@@ -257,13 +258,13 @@ h3
 {
   font-family: 'Gudea';
   font-size: 15px;
-  color: #788094;
+  color: #333;
 }
 .small_content
 {
   font-family: 'Gudea';
   font-size: 14px;
-  color: #788094;
+  color: #333;
 }
 .small_content img {
   max-width: 100%;
@@ -272,7 +273,7 @@ h3
 {
   font-family: 'Gudea';
   font-size: 12px;
-  color: #788094;
+  color: #333;
 }
 pre.haskell-pre a {
     border-bottom: 1px dotted #000;
@@ -295,14 +296,14 @@ article ol ol {
 
 /* **** BEGIN landing.html ******************************* */
 .content_wrapper {
-  padding-top: 27px;
   margin: auto;
-  width: 90%;
+  width: 100%;
 }
 p
 {
   margin-top: 0;
   margin-bottom: 0;
+  line-height: 1.7;
 }
 .wd_80
 {
@@ -349,7 +350,7 @@ p
 {
   margin: 0 0 0;
   display: inline-block;
-  color: #788094;
+  color: #333;
 }
 .view_all_wrapper
 {
@@ -453,7 +454,7 @@ p
 .ref_link
 {
   display: inline;
-  color: #788094;
+  color: #333;
   font-weight: 600;
 }
 .ref_link img
@@ -490,7 +491,14 @@ p
 }
 
 /* **** END landing.html ******************************* */
-
+.section ol li
+{
+  line-height: 1.7;
+}
+.section p
+{
+  line-height: 1.7;
+}
 /* Common Header CSS */
 .main_container_wrapper
 {
@@ -502,6 +510,13 @@ p
   background-color: white;
   padding: 20px;
   min-width: 1220px;
+  position: sticky;
+  top: 0;
+  position: -webkit-sticky;
+  position: -moz-sticky;
+   position: -o-sticky;
+   position: -ms-sticky;
+  z-index: 100;
 }
 
 .header_wrapper .header_main {
@@ -527,8 +542,7 @@ p
 }
 .input_search_box {
   position: relative;
-  margin-left: 25px;
-  width: 28%;
+  width: 72%;
 }
 
 .input_search_box .fa-search {
@@ -548,19 +562,38 @@ p
   padding: 6px 12px;
   font-size: 18px;
   line-height: 1.42857143;
-  color: #A6A6A5;
+  color: #333;
   background-color: #fff;
   background-image: none;
-  border: 1px solid #F7F7F7;
+  border: 1px solid #999;
   -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
   -webkit-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
   transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
 }
-
+.input_search_box input:focus
+{
+  outline: none;
+}
+.input_search_box input::placeholder
+{
+  color:#ccc;
+}
+.input_search_box input::-webkit-input-placeholder
+{
+  color:#ccc;
+}
+.input_search_box input::-moz-placeholder { /* Firefox 19+ */
+  color:#ccc;
+}
+.input_search_box input:-ms-input-placeholder { /* IE 10+ */
+  color:#ccc;
+}
+.input_search_box input:-moz-placeholder { /* Firefox 18- */
+  color:#ccc;
+}
 .header_links {
-  width: 50%;
-  margin-left: 20px;
+  width: 25%;
 }
 
 .header_links.inline-block .header_links_content {
@@ -597,10 +630,9 @@ p
 }
 
 .img_wrapper {
-  padding: 10px;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  border-right: 1px solid;
+  padding: 0px;
+  padding-top: 0px;
+  padding-bottom: px;
 }
 
 .logo_img {
@@ -637,15 +669,26 @@ p
   padding-bottom: 7px;
   margin-left: 10px;
 }
+.indiv_btns:hover
+{
+  border: 1px solid #444444;
+  background-color: #fff;
+  color: #444444;
+}
 .indiv_btns:focus
 {
   outline: none;
 }
 .indiv_btns.black {
   background-color: white;
-  border: 1px solid #8F8F8F;
+  border: 1px solid #444444;
 }
-
+.indiv_btns.black:hover
+{
+  background-color: #444444;
+  border: 1px solid #444444;
+  color: #fff;
+}
 .indiv_btns.login {
 
 }
@@ -817,17 +860,25 @@ p
 {
   background-color: #414859;
   width: 20% !important;
-  font-family: 'Gudea';
+  font-family: 'Gudea' !important;
   font-size: 16px;
-  overflow-y: auto;
+  height: 100vh;
+  overflow-y: scroll;
+  padding-left: 15px !important;
 }
 [parent] {
   background-color: green;
 }
 .content_inner_wrapper
 {
-  width: 77% !important;
+  width: 79% !important;
   margin: 0 auto !important;
+  height: 100vh;
+  overflow-y: scroll;
+}
+.search_head_wrapper
+{
+  margin-top: 20px;
 }
 .content_inner_wrapper.padding_top {
   margin: 40px auto !important;
@@ -854,24 +905,62 @@ p
 }
 [role="main"]
 {
-  width: 94% !important;
+  width: 800px !important;
+  max-width: 800px !important;
   border: none !important;
 }
 .version_txt
 {
   color: rgba(255,198,39,1);
 }
+.version_txt select
+{
+  background-color: transparent;
+  border: 0;
+  color: rgba(255,198,39,1);
+  border-bottom: 1px solid;
+  border-color: rgba(255,198,39,1);
+  font-size: 16px;
+  border-style: dotted;
+}
+.version_txt select:focus
+{
+  outline: none;
+}
 .toc_header a {
   color: rgba(255,198,39,1);
 }
 #sidebar .sphinxsidebar .sphinxsidebarwrapper h3
 {
-  padding-top: 30px;
+  padding-top: 10px;
   /*
   color: #fff;
   */
   color: rgba(214,214,214,1);
   font-family: 'Khula';
+}
+#sidebar .sphinxsidebar .sphinxsidebarwrapper .header_main_logo
+{
+  display: flex;
+  align-items: center;
+  padding: 25px 0;
+  position: sticky;
+  top: 0;
+  position: -webkit-sticky;
+  position: -moz-sticky;
+  position: -o-sticky;
+  position: -ms-sticky;
+  background-color: #414859;
+  z-index: 10;
+}
+#sidebar .sphinxsidebar .sphinxsidebarwrapper .header_main_logo a
+{
+  color: #fff;
+  text-decoration: none;
+}
+#sidebar .sphinxsidebar .sphinxsidebarwrapper .header_main_logo .version_txt
+{
+  margin-left: 10px;
 }
 #sidebar .sphinxsidebar .sphinxsidebarwrapper h4
 {
@@ -892,6 +981,7 @@ p
   /* color: #fff; */
   color: rgba(214,214,214,1);
   text-decoration: none;
+  font-size: 16px;
 }
 #sidebar .sphinxsidebar .sphinxsidebarwrapper ul li a code, .quick_links ul li a code
 {
