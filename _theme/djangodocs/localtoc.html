@@ -1,5 +1,14 @@
 {%- if display_toc %}
-  <h3>DOCS VERSION: <span class="version_txt">v{{version}}</span></h3>
+  <h3>DOCS VERSION:
+    <span class="version_txt">
+      <select value="v1.2">
+        <option value="v1.1">v1.1</option>
+        <option value="v1.2">v1.2</option>
+        <option value="v1.3">v1.3</option>
+        <option value="v1.4">v1.4</option>
+      </select>
+    </span>
+  </h3>
   {% set splittedPage = pagename.split('/') %}
   {%- if splittedPage[0] == 'manual' %}
     <h3 class="toc_header"><a href="{{ pathto('manual/index') }}">{{ _('Table Of Contents') }}</a></h3>
