@@ -30,40 +30,6 @@
 
 {% block document %}
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if pagename != 'index' else '' }}{% endblock %}">
-    <div class="header_wrapper">
-      <div class="header_main">
-        <div class="inline-block header_main_logo">
-          <a href="https://hasura.io/" target="_blank">
-            <div class="img_wrapper inline-block">
-              <img class="responsive logo_img" src="{{ pathto('_images/logo.svg', 1) }}" />
-            </div>
-          </a>
-          <a href="{{ pathto('', 1) }}">
-            <div class="inline-block hero"> DOCS </div>
-          </a>
-        </div>
-        <div class="inline-block input_search_box">
-          <span class="fa fa-search"></span>
-          <input type="text" class="search_element" placeholder="Search reference docs, tutorials, guides" />
-        </div>
-        <div class="header_links inline-block">
-          <div class="buttons">
-            <div class="inline-block">
-              <a target="_blank" href="https://dashboard.hasura.io/login">
-                <button class="indiv_btns black"> Log in </button>
-              </a>
-            </div>
-            <div class="inline-block">
-              <a target="_blank" href="https://dashboard.hasura.io/login#register">
-                <button class="indiv_btns"> Sign up </button>
-              </a>
-            </div>
-          </div>
-        </div>
-        <div class="header_buttons inline-block">
-        </div>
-      </div>
-    </div>
     <div class="main_container_wrapper">
       <div id="" class="content_wrapper">
         {% include 'pages/loading.html' %}
@@ -119,6 +85,26 @@
                     </div>
                   </div>
                 </div -->
+                <div class="search_head_wrapper">
+                  <div class="inline-block input_search_box">
+                    <span class="fa fa-search"></span>
+                    <input type="text" class="search_element" placeholder="Search reference docs, tutorials, guides" />
+                  </div>
+                  <div class="header_links inline-block">
+                    <div class="buttons">
+                      <div class="inline-block">
+                        <a target="_blank" href="https://dashboard.hasura.io/login">
+                          <button class="indiv_btns black"> Log in </button>
+                        </a>
+                      </div>
+                      <div class="inline-block">
+                        <a target="_blank" href="https://dashboard.hasura.io/login#register">
+                          <button class="indiv_btns"> Sign up </button>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div id="{{ pagename|replace('/', '-') }}">
                   {% block body %}{% endblock %}
                 </div>
