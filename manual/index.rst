@@ -30,9 +30,9 @@ This is the reference documentation of the entire Hasura platform
   Permissions (access control) for filestore APIs<permission_detail_file>
   Data/schema migrations<data_migration/index>
   Sending Emails/SMS <email-sms/index>
+  Hosting docker containers <deploy-docker/index>
   deploying-webapp/index
   serve-static/index
-  Hosting docker containers <deploy-docker/index>
   persistent-services
   deploy-non-http
   deploy-k8s-objects

@@ -28,9 +28,10 @@ Create a new service
 This will create a new directory called ``adminer`` in the ``services``
 directory with Kubernetes specs.
 
-Edit the ``services/adminer/k8s.yaml`` file
-1. Under ``containers`` edit the ``image`` name, change
-   ``image: hasura/hello-world:latest`` to ``image: clue/adminer``
+Edit the ``services/adminer/k8s.yaml`` file:
+
+1. Under ``containers`` edit the ``image`` name to ``image: clue/adminer``
+
 2. Change the ``containerPort`` to ``80``
 
 Create a route for the service

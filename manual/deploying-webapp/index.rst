@@ -27,8 +27,8 @@ Dockerfile. We've prepared `starter kits https://hub.hasura.io`_ for all your
 favourite frameworks, that already contain pre-configured Dockerfiles for you
 to quickly setup your app!
 
-Step 0: Create a hasura project
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Create a hasura project
+^^^^^^^^^^^^^^^^^^^^^^^
 Create a hello-world project from Hasura hub.
 
 .. code-block:: shell
@@ -38,8 +38,8 @@ Create a hello-world project from Hasura hub.
 This will clone a Hasura project with an existing nodejs-express app, and
 create/add a Hasura cluster to the project.
 
-Step 1: Check out the project
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Customize the project
+^^^^^^^^^^^^^^^^^^^^^
 The ``services`` directory already has a ``node-express`` app with some sample
 hello world code, a Dockerfile to build docker image and Kubernetes specs for
 deployment in it.
@@ -47,8 +47,8 @@ deployment in it.
 Modify the code in the node-express app, or move your own code into this
 directory. You can run your code locally as you normally would.
 
-Step 2: Add files to git
-^^^^^^^^^^^^^^^^^^^^^^^^
+Add files to git
+^^^^^^^^^^^^^^^^
 ``hasura quickstart`` has already initialised a new git repo in the project
 directory. So if we add the files and commit, we can push to deploy.
 
@@ -57,8 +57,8 @@ directory. So if we add the files and commit, we can push to deploy.
   $ git add .
   $ git commit -m 'initial commit'
 
-Step 3: Deploy your app
-^^^^^^^^^^^^^^^^^^^^^^^
+Deploy your app
+^^^^^^^^^^^^^^^
 Now, we deploy our app using:
 
 .. code-block:: console
