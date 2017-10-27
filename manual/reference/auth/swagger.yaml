@@ -21,6 +21,8 @@ info:
     header. Refer to documentation for more details.
   version: '0.15'
 basePath: /v1
+basePrefix: /v1
+prefix: /v1
 schemes:
   - https
 externalDocs:
@@ -118,38 +120,6 @@ paths:
           description: This response is returned when there is no logged in user.
         default:
           description: Errors
-          schema:
-            $ref: '#/definitions/ErrorMessage'
-      tags:
-        - user
-  /user/email/change:
-    post:
-      summary: Change user's email
-      description: >-
-        Use this endpoint to change the user's email. The user has to be logged
-        in. Also, as a good practice, force the user to enter her password in
-        the app before making the request to this endpoint.
-      parameters:
-        - name: Authorization
-          in: header
-          type: string
-          required: true
-          description: Bearer <session token>
-        - name: email
-          in: body
-          required: true
-          description: The email address of the user to change.
-          schema:
-            $ref: '#/definitions/EmailData'
-      responses:
-        '200':
-          description: >-
-            A email verification link would be sent to the user's new email
-            address.
-          schema:
-            $ref: '#/definitions/SuccessMessage'
-        default:
-          description: Unexpected error
           schema:
             $ref: '#/definitions/ErrorMessage'
       tags:
@@ -304,40 +274,7 @@ paths:
       tags:
         - anonymous
 
-  /user/mobile/change:
-    post:
-      summary: Change user's mobile
-      description: >-
-        Use this endpoint to change the user's mobile. The user has to be logged
-        in. Also, as a good practice, force the user to enter her password in
-        the app before making the request to this endpoint.
-      parameters:
-        - name: Authorization
-          in: header
-          type: string
-          required: true
-          description: Bearer <session token>
-        - name: mobile
-          in: body
-          required: true
-          schema:
-            type: object
-            properties:
-              mobile:
-                type: string
-                description: The new mobile number of the user to change.
-      responses:
-        '200':
-          description: A verification OTP would be sent to the user's new mobile number.
-          schema:
-            $ref: '#/definitions/SuccessMessage'
-        default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/ErrorMessage'
-      tags:
-        - user
-  /user/password/change:
+  /user/change-password:
     post:
       summary: Change logged in user's password
       description: >-
@@ -355,7 +292,7 @@ paths:
           schema:
             type: object
             properties:
-              password:
+              old_password:
                 type: string
                 description: The current/old password of the user
               new_password:
@@ -372,73 +309,7 @@ paths:
             $ref: '#/definitions/ErrorMessage'
       tags:
         - user
-  /password/forgot:
-    post:
-      summary: Endpoint to send forgot password email
-      description: >-
-        Endpoint will send a forgot password to the email address mentioned in
-        the request body
-      parameters:
-        - name: Authorization
-          in: header
-          type: string
-          required: true
-          description: Bearer <session token>
-        - name: email
-          in: body
-          required: true
-          schema:
-            type: object
-            properties:
-              email:
-                type: string
-                description: Email address of the user
-      responses:
-        '200':
-          description: A email for reset password would be sent.
-          schema:
-            $ref: '#/definitions/SuccessMessage'
-        default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/ErrorMessage'
-      tags:
-        - anonymous
-  /password/reset:
-    post:
-      summary: Endpoint to reset password of an user
-      description: >-
-        Use this endpoint to reset password of an user. It requires a token and
-        a new password. This token is sent with the forgot pasword email.
-      parameters:
-        - name: Authorization
-          in: header
-          type: string
-          required: true
-          description: Bearer <session token>
-        - name: JSON payload
-          in: body
-          required: true
-          schema:
-            type: object
-            properties:
-              token:
-                type: string
-                description: The token received in the forgot password email.
-              password:
-                type: string
-                description: The new password that the user want to change to.
-      responses:
-        '200':
-          description: A success message.
-          schema:
-            $ref: '#/definitions/SuccessMessage'
-        default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/ErrorMessage'
-      tags:
-        - anonymous
+
   /admin/roles:
     get:
       summary: Endpoint to get a list of all the roles available
@@ -478,7 +349,7 @@ paths:
             $ref: '#/definitions/AdminUserInfo'
       tags:
         - admin
-  /admin/role/create:
+  /admin/create-role:
     post:
       summary: Create a new role
       description: Create a new role
@@ -508,7 +379,7 @@ paths:
             $ref: '#/definitions/ErrorMessage'
       tags:
         - admin
-  /admin/role/delete:
+  /admin/delete-role:
     post:
       summary: Delete a role
       description: Delete an existing role
@@ -599,7 +470,7 @@ paths:
             $ref: '#/definitions/ErrorMessage'
       tags:
         - admin
-  /admin/user/assign-role:
+  /admin/user/add-role:
     post:
       summary: Assign role to user
       description: Assign a particular role to a user
@@ -632,7 +503,7 @@ paths:
             $ref: '#/definitions/ErrorMessage'
       tags:
         - admin
-  /admin/user/unassign-role:
+  /admin/user/remove-role:
     post:
       summary: Remove role from user
       description: Remove a particular role from a user
@@ -665,7 +536,7 @@ paths:
             $ref: '#/definitions/ErrorMessage'
       tags:
         - admin
-  /admin/user/force-logout:
+  /admin/user/remove-all-sessions:
     post:
       summary: Force logout a user
       description: >-

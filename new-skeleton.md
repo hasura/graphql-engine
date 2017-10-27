@@ -69,6 +69,7 @@
 - Permissions (access control) for data APIs
 - Permissions (access control) for filestore APIs
 - Data/schema migrations
+- Sending Email/SMS
 - Hosting custom webapps or APIs
     - ...
     - <link to adding storage>
@@ -80,6 +81,7 @@
     - ...
     - <link to connecting to TCP services directly>
 - Directly accessing services on a hasura cluster
+- Logs
 - Monitoring resource consumption
 - Scaling
 - Copying files to/from your cluster

@@ -3,7 +3,7 @@
    :keywords: hasura, manual, static files, custom service, nginx
 
 ====================
-Serving static files
+Hosting static files
 ====================
 
 You might want to serve static files like ``html/css/js/images`` via a static file service on hasura.

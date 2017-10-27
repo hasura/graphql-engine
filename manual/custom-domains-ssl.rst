@@ -24,7 +24,7 @@ Adding a custom domain
 | A | `*.domain.com` | 1.1.1.1 |
 +---+----------------+---------+
 
-- Goto ``clusters/<cluster-name>/domains.yaml`` and add the following block to the file where ``domain.com`` is your domain:
+- Goto ``conf/domains.yaml`` and add the following block to the file where ``domain.com`` is your domain:
 
 .. code-block:: yaml
 

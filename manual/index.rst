@@ -20,23 +20,27 @@ This is the reference documentation of the entire Hasura platform
   roles/index
   Data Modeling<data_modeling/index>
   data/index
-  Aggregations and queries (data APIs)<aggregations>
+  Aggregations queries (data APIs)<aggregations>
   .. data/query-templates
-  Using SQL directly on your data<using_sql>
+  Using SQL directly on data<using_sql>
   Accessing postgres directly<access_postgres>
-  Managing files uploads/downloads (filestore APIs)<files/index>
+  Files uploads/downloads (filestore APIs)<files/index>
   Linking data to users<linking_users_auth>
   Permissions (access control) for data APIs<permission_detail_data>
   Permissions (access control) for filestore APIs<permission_detail_file>
   Data/schema migrations<data_migration/index>
-  .. email-sms/index
-  .. custom-domains-ssl
-  .. cors-settings
+  Sending Emails/SMS <email-sms/index>
+  deploying-webapp/index
+  serve-static/index
+  Hosting docker containers <deploy-docker/index>
+  persistent-services
+  deploy-non-http
+  deploy-k8s-objects
+  custom-domains-ssl
+  cors-settings
+  logs/index
+  monitoring
+  scaling
+  reference/index
   .. adding-custom-api/index
-  .. deploying-webapp/index
-  .. deploy-docker/index
-  .. serve-static/index
   .. SSH-cluster
-  .. logs/index
-  .. reference/index
-  .. custom-authentication/index

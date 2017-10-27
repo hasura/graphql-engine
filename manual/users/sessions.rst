@@ -41,15 +41,25 @@ A user session will expire:
 * role is assigned or unassigned
 * sessions are expired explicitly by any admin user
 
-Sessions are managed by Hasura Auth and the Gateway. Whenever a request is
-made Hasura Gateway resolves the session from Authorization header or Cookies.
+Handling/Storing session tokens
+--------------------------------
 
-If you are building browser-based apps, then Hasura Auth already sends
-appropriate cookie headers to. You don't have to do any additional work to
-manage sessions, except making the appropriate API calls.
+Sessions are managed by Hasura Auth and the API Gateway. Whenever a request is
+made API Gateway resolves the session from ``Authorization`` header or
+**cookies**.
 
-If you are building mobile/device apps, then you have to device your own
-mechanism of storing the authentication tokens (``auth_token``) and managing
-them. That means, storing and updating them whenever a Hasura Auth API returns
-a new authentication token, and remove all existing authentication tokens
-(``auth_token``) on the above conditions.
+Web-apps
+~~~~~~~~
+If you are building browser-based apps, then Hasura Auth APIs already sends
+appropriate cookie headers. You don't have to do any additional work to manage
+sessions tokens, except making appropriate API calls and browser handles the
+rest for you.
+
+Mobile / other device apps
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you are building mobile/device apps, then you have to make your own
+mechanism for storing session tokens (``auth_token``) and managing them. That
+is - storing, updating and deleting them whenever a Hasura Auth API returns a
+new session token, and remove all existing tokens (``auth_token``) on
+:ref:`these conditions <session-expiry>`.
+

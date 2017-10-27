@@ -1,0 +1,4 @@
+Hosting Kubernetes objects
+===========================
+
+stub

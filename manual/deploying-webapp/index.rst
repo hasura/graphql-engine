@@ -1,7 +1,7 @@
 .. _deploy-webapp:
 
-Deploying your webapp on Hasura
-===============================
+Hosting your web app or API
+============================
 
 Hasura provides a fast and simple way to deploy your app built on your favourite
 frameworks as a service on a secure https subdomain. To deploy your code on
