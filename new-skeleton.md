@@ -3,9 +3,9 @@
         - Create hasura project
                 - <Link to create hasura project detailed guide>
                 - <Link to create hasura cluster detailed guide>
-        - git push to deploy
-        - open API console
-        - Architecture diagram of how hasura works
+        - git push to deploy # Not sure
+        - open API console # Not sure
+        - Architecture diagram of how hasura works # Not sure
 - Installing the hasura CLI
 - Creating hasura project
         - What is a hasura project?
@@ -18,7 +18,7 @@
         - Free tier
         - Create a paid hasura cluster
         - Share your cluster with others
-            - Resetting your cluster 
+            - Resetting your cluster
 - Collaborating with your team
         - Sharing hasura project
         - Sharing hasura cluster
@@ -33,6 +33,13 @@
     - Linkedin
     - Github
     - Custom authentication
+- Data modelling
+  - Create table
+  - Alter table
+  - Add foreign key
+  - Relationship
+  - Managing permissions
+  - Delete table
 - Roles
 - Querying data (data APIs)
         - Select
@@ -42,9 +49,9 @@
         - Bulk
         - Basic permissions and access control 
             - <link to permissions>
-        - <link to data modelling>
-        - <link to aggregations>
-        - <link to permissions>
+            - <link to data modelling>
+            - <link to aggregations>
+            - <link to permissions>
 - Managing relationships in data models
         - Object, one to many
         - Array, many to one
@@ -58,7 +65,6 @@
         - Upload
         - Download
         - Basic permissions
-- Data modelling
 - Linking data to users
 - Permissions (access control) for data APIs
 - Permissions (access control) for filestore APIs
