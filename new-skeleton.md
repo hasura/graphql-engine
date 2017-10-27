@@ -1,0 +1,107 @@
+- Getting started
+        - Install hasura CLI
+        - Create hasura project
+                - <Link to create hasura project detailed guide>
+                - <Link to create hasura cluster detailed guide>
+        - git push to deploy
+        - open API console
+        - Architecture diagram of how hasura works
+- Installing the hasura CLI
+- Creating hasura project
+        - What is a hasura project?
+        - Start using a starter kit
+        - Start without a starter kit
+        - <link to collaboration>
+        - Adding a cluster to your project
+- Managing hasura clusters
+        - What is a hasura cluster?
+        - Free tier
+        - Create a paid hasura cluster
+        - Share your cluster with others
+            - Resetting your cluster 
+- Collaborating with your team
+        - Sharing hasura project
+        - Sharing hasura cluster
+- Managing users & sessions (auth APIs)
+    - Intro
+    - Basic (anonymous) authentication
+        - Signup/login/account/info/logout
+    - Adding extra fields to a user
+    - Email verification authentication
+    - Google
+    - Facebook
+    - Linkedin
+    - Github
+    - Custom authentication
+- Querying data (data APIs)
+        - Select
+        - Update
+        - Insert
+        - Delete
+        - Bulk
+        - Basic permissions and access control 
+            - <link to permissions>
+        - <link to data modelling>
+        - <link to aggregations>
+        - <link to permissions>
+- Managing relationships in data models
+        - Object, one to many
+        - Array, many to one
+        - Many to many
+        - Select query
+        - Permissions syntax
+- Aggregations and queries (data APIs)
+- Using SQL directly on your data
+- Accessing Postgres directly
+- Managing file uploads/downloads (filestore APIs)
+        - Upload
+        - Download
+        - Basic permissions
+- Data modelling
+- Linking data to users
+- Permissions (access control) for data APIs
+- Permissions (access control) for filestore APIs
+- Data/schema migrations
+- Hosting custom webapps or APIs
+    - ...
+    - <link to adding storage>
+- Hosting static files on Hasura
+- Adding persistent storage to services on Hasura
+- Hosting docker containers on Hasura
+- Hosting kubernetes objects on Hasura
+- Hosting non-HTTP services
+    - ...
+    - <link to connecting to TCP services directly>
+- Directly accessing services on a hasura cluster
+- Monitoring resource consumption
+- Scaling
+- Copying files to/from your cluster
+- Reference
+    - Hasura configuration
+    - Data migrations
+    - API gateway
+    - Hasura Data API
+    - Hasura Filestore API
+    - Hasura Auth API
+    - Hasura Notify API
+    - Hasura CLI
+    - Hasura Postgres
+    - Hasura Dashboard
+
+Website:
+- Karthikeya data app:
+    - Content changes
+    - Wrap it in a mobile screen type wireframe
+- Features we love content
+    - SEOness
+- hub.hasura.io
+    - docker hub type UI/UX
+    - docker hub type URL structures
+    - Per page details on the repo (repeat content from the github README?)
+
+Messaging:
+- Tighten messaging everywhere
+
+Content:
+- minikube
+- SO answer
