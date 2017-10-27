@@ -20,7 +20,7 @@ This is the reference documentation of the entire Hasura platform
   roles/index
   Data Modeling<data_modeling/index>
   data/index
-  Aggregations queries (data APIs)<aggregations>
+  Aggregation data queries <aggregations>
   .. data/query-templates
   Using SQL directly on data<using_sql>
   Accessing postgres directly<access_postgres>

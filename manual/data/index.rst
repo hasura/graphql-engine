@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Querying data (data APIs)
-====================
+Querying data
+==============
 
 This section assumes that you have already created a project and know how to launch your API console. If not, please head to
 `hasura.io <https://hasura.io>`_  and get started!
