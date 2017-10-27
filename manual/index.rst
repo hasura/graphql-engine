@@ -11,7 +11,8 @@
 This is the reference documentation of the entire Hasura platform
 
 .. toctree::
-  :maxdepth: 2
+  :maxdepth: 1
+  :titlesonly:
 
   getting-started/index
   hasuractl/index

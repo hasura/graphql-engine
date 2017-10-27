@@ -4,11 +4,9 @@ import template
 
 PAT_RST_SECTION = re.compile(r'(.*)\n((?:^----+$)|(?:^====+$)|(?:^~~~~+$)|(?:^````+$))', re.M)
 # List of tuples with language tab ( ID, Display Name)
-LANGUAGES_RAW = [('shell', 'Shell'), 
-             ('python', 'Python'),
-             ('nodejs', 'Node.js'),
-             ('go', 'Go'),
-             ('haskell', 'Haskell'),
+LANGUAGES_RAW = [ ('linux', 'Linux'),
+             ('mac', 'Mac'),
+             ('windows', 'Windows'),
              #('java-async', 'Java (Async)'),
              #('c', 'C'),
              #('cpp11', 'C++11'),

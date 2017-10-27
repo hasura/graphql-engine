@@ -6,70 +6,75 @@
 Getting started with Hasura
 ===========================
 
-Hasura helps you create clusters on which you can deploy your backend quickly.
-
-- Step 1: Install the hasura CLI tool
-- Step 2: Create a hasura project based off a starter kit of your choice
-- Step 3: ``git push hasura master`` to deploy your backend to your free cluster
-- Step 4: Browse your backend APIs: ``hasura api-console``
+..
+   Hasura helps you create clusters on which you can deploy your backend quickly.
+   - Step 1: Install the hasura CLI tool
+   - Step 2: Create a hasura project based off a starter kit of your choice
+   - Step 3: ``git push hasura master`` to deploy your backend to your free cluster
+   - Step 4: Browse your backend APIs: ``hasura api-console``
 
 Step 1: Install the hasura CLI tool
 -----------------------------------
 
-Mac
-^^^
+.. tabs::
+
+   tabs:
+     - id: linux
+       content: |
+         Open your linux shell and run the following command:
+
+         .. code-block:: bash
+
+            curl https://hasura.io/install.sh | bash
+
+         This will install the ``hasura`` CLI in ``/usr/local/bin``. You might have to provide your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
+
+         Next, run the command below to login or create a new Hasura account.
+
+         .. code-block:: bash
+
+            hasura login
+            #A browser window will open up for you to login/register
+
+     - id: mac
+       content: |
+         In your terminal enter the following command:
+
+         .. code-block:: bash
+
+            curl https://hasura.io/install.sh | bash
+
+         This will install the ``hasura`` CLI in ``/usr/local/bin``. You might have to provide your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
+
+         Next, run the command below to login or create a new Hasura account.
+
+         .. code-block:: bash
+
+            hasura login
+            #A browser window will open up for you to login/register
+
+
+     - id: windows
+       content: |
+
+         Download the ``hasura.exe`` binary from here: `hasura.exe Windows <https://dl.equinox.io/tanmai-gopal/hasuractl/stable>`_
+
+         Next, add it to your ``PATH`` so that you can use it from your *command-prompt* or your ``git-bash``.
+
+         Finally, run the command below to login or create a new Hasura account.
+
+         .. code-block:: bash
+
+            hasura.exe login
+            #A browser window will open up for you to login/register
+
+
+Step 2: Create a hasura project based on a starter kit
+------------------------------------------------------
 
 .. code-block:: bash
 
-   curl https://hasura.io/install.sh | bash
-
-This will install the ``hasura`` CLI in ``/usr/local/bin``. You might have to provide your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
-
-Next, run the command below to login or create a new Hasura account.
-
-.. code-block:: bash
-
-   hasura login
-   #A browser window will open up for you to login/register
-
-Linux
-^^^^^
-
-.. code-block:: bash
-
-   curl https://hasura.io/install.sh | bash
-
-This will install the ``hasura`` CLI in ``/usr/local/bin``. You might have to provide your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
-
-Next, run the command below to login or create a new Hasura account.
-
-.. code-block:: bash
-
-   hasura login
-   #A browser window will open up for you to login/register
-
-
-Windows
-^^^^^
-
-Download the ``hasura.exe`` binary from here: `hasura.exe Windows <https://dl.equinox.io/tanmai-gopal/hasuractl/stable>`_
-
-Next, add it to your ``PATH`` so that you can use it from your *command-prompt* or your ``git-bash``.
-
-Finally, run the command below to login or create a new Hasura account.
-
-.. code-block:: bash
-
-   hasura login
-   #A browser window will open up for you to login/register
-
-
-Step 2: Create a hasura project based from a starter kit
---------------------------------------------------------
-
-.. code-block:: bash
-
-   hasura clone hasura/hello-world
+   hasura quickstart hasura/hello-world
 
 You can browse a list of community contributed starter kits at: `hub.hasura.io <https://hub.hasura.io>`_
 
