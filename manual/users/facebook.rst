@@ -62,7 +62,7 @@ Login/Signup a user with Hasura Auth
 
   .. code:: http
 
-   POST auth.<project-name>.hasura-app.io/v2/signup HTTP/1.1
+   POST auth.<project-name>.hasura-app.io/v1/login HTTP/1.1
    Content-Type: application/json
 
    {
@@ -81,12 +81,12 @@ Login/Signup a user with Hasura Auth
     Content-Type: application/json
 
     {
-      "auth_token": "tpdq0m9whrj7i4vcjn48zq43bqx2",
-      "hasura_roles": [
-        "user"
-      ],
+      "auth_token": "b4b345f980ai4acua671ac7r1c37f285f8f62e29f5090306",
       "hasura_id": 79,
-      "new_user": true
+      "new_user": true,
+      "hasura_roles": [
+          "user"
+      ]
     }
 
 

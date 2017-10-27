@@ -124,11 +124,13 @@ would be an error indicating email/mobile verification is pending.
    email
    mobile
    mobile_password
+   extra_fields
+   sessions
    google
    facebook
    github
    linkedin
-   sessions
+   custom_provider
 
 
 .. _recaptcha: https://www.google.com/recaptcha/intro/index.html

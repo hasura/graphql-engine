@@ -61,13 +61,13 @@ Typical response of the ``/v1/signup`` request is :
    Content-Type: application/json
 
    {
-     "auth_token": "tpdq0m9whrj7i4vcjn48zq43bqx2",
+     "auth_token": "b4b345f980ai4acua671ac7r1c37f285f8f62e29f5090306",
+     "mobile": "9876543210",
+     "hasura_id": 79,
      "hasura_roles": [
-       "user"
-     ],
-     "hasura_id": 79
+         "user"
+     ]
    }
-
 
 * ``auth_token``  is the authentication token of the user for the current
   session.
@@ -127,11 +127,12 @@ Typical response of the ``/v1/login`` request is :
    Content-Type: application/json
 
    {
-     "auth_token": "tpdq0m9whrj7i4vcjn48zq43bqx2",
+     "auth_token": "b4b345f980ai4acua671ac7r1c37f285f8f62e29f5090306",
+     "mobile": "9876543210",
+     "hasura_id": 79,
      "hasura_roles": [
-       "user"
-     ],
-     "hasura_id": 79
+         "user"
+     ]
    }
 
 
@@ -157,7 +158,7 @@ Make a request to the endpoint: ``/v1/user/info``.
    Authorization: Bearer <auth_token>
 
 
-Typical response of the ``/v1/login`` request is :
+Typical response is :
 
 .. code-block:: http
 
@@ -165,11 +166,12 @@ Typical response of the ``/v1/login`` request is :
    Content-Type: application/json
 
    {
-     "auth_token": "tpdq0m9whrj7i4vcjn48zq43bqx2",
+     "auth_token": "b4b345f980ai4acua671ac7r1c37f285f8f62e29f5090306",
+     "mobile": "9876543210",
+     "hasura_id": 79,
      "hasura_roles": [
-       "user"
-     ],
-     "hasura_id": 79
+         "user"
+     ]
    }
 
 * ``auth_token``  is the authentication token of the user for the current

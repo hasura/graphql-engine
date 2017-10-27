@@ -24,7 +24,7 @@ To signup a user, make a request to the signup endpoint : ``/v1/signup``.
    {
      "provider" : "username",
      "data" : {
-        "username": "jsmith123456",
+        "username": "johnsmith",
         "password": "somepass123"
      }
    }
@@ -38,12 +38,14 @@ Typical response of the ``/v1/signup`` request is :
    HTTP/1.1 200 OK
    Content-Type: application/json
 
+
    {
-     "auth_token": "tpdq0m9whrj7i4vcjn48zq43bqx2",
+     "auth_token": "b4b345f980ai4acua671ac7r1c37f285f8f62e29f5090306",
+     "username": "johnsmith",
+     "hasura_id": 79,
      "hasura_roles": [
-       "user"
-     ],
-     "hasura_id": 79
+         "user"
+     ]
    }
 
 
@@ -67,7 +69,7 @@ To login a user make a request to the login endpoint: ``/v1/login``.
    {
      "provider" : "username",
      "data" : {
-        "username": "jsmith123456",
+        "username": "johnsmith",
         "password": "somepass123"
      }
    }
@@ -80,11 +82,12 @@ Typical response of the ``/v1/login`` request is :
    Content-Type: application/json
 
    {
-     "auth_token": "tpdq0m9whrj7i4vcjn48zq43bqx2",
+     "auth_token": "b4b345f980ai4acua671ac7r1c37f285f8f62e29f5090306",
+     "username": "johnsmith",
+     "hasura_id": 79,
      "hasura_roles": [
-       "user"
-     ],
-     "hasura_id": 79
+         "user"
+     ]
    }
 
 * ``auth_token``  is the authentication token of the user for the current
@@ -108,7 +111,7 @@ Make a request to the endpoint: ``/v1/user/info``.
    Authorization: Bearer <auth_token>
 
 
-Typical response of the ``/v1/login`` request is :
+Typical response is :
 
 .. code-block:: http
 
@@ -116,12 +119,14 @@ Typical response of the ``/v1/login`` request is :
    Content-Type: application/json
 
    {
-     "auth_token": "tpdq0m9whrj7i4vcjn48zq43bqx2",
+     "auth_token": "b4b345f980ai4acua671ac7r1c37f285f8f62e29f5090306",
+     "username": "johnsmith",
+     "hasura_id": 79,
      "hasura_roles": [
-       "user"
-     ],
-     "hasura_id": 79
+         "user"
+     ]
    }
+
 
 * ``auth_token``  is the authentication token of the user for the current
   session.
@@ -159,3 +164,13 @@ endpoint.
      "old_password": "oldpassword",
      "new_password": "newpassword"
    }
+
+
+Forgot Password
+----------------
+
+The Username provider does not have a forgot password feature. This is by
+design, as it does not have any channel (like email) to send a forgot password
+token to the user.
+
+If you want this feature, use either Email or Mobile/Password provider.
