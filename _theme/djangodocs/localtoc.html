@@ -1,11 +1,26 @@
 {%- if display_toc %}
-  <h3>DOCS VERSION: <span class="version_txt">v{{version}}</span></h3>
+  <div class="header_main_logo inline-block">
+    <a href="https://hasura.io/" target="_blank">
+      <div class="img_wrapper inline-block">
+        <img class="responsive logo_img" src="{{ pathto('_images/logo1.svg', 1) }}" />
+      </div>
+    </a>
+    <a class="docs_label" href="{{ pathto('', 1) }}">
+      <div class="inline-block hero"> docs </div>
+    </a>
+    <a class="version_txt">
+      <select value="v1.2">
+        <option value="v1.1">v1.1</option>
+        <option value="v1.2">v1.2</option>
+        <option value="v1.3">v1.3</option>
+        <option value="v1.4">v1.4</option>
+      </select>
+    </a>
+  </div>
   {% set splittedPage = pagename.split('/') %}
   {%- if splittedPage[0] == 'manual' %}
-    <h3 class="toc_header"><a href="{{ pathto('manual/index') }}">{{ _('Table Of Contents') }}</a></h3>
     {{ toc_full }}
   {%- elif splittedPage[0] == 'guides' %}
-    <h3 class="toc_header"><a href="{{ pathto('guides/index') }}">{{ _('Table Of Contents') }}</a></h3>
     {{ toc }}
   {% endif %}
 {%- endif %}

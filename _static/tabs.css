@@ -1,0 +1,115 @@
+/*
+ * Display and hide the appropriate tab content
+ */
+.tab {
+    display: none;
+}
+
+.tab-active {
+    display: block;
+}
+
+/*Clear the padding above the tabs*/
+.tab-strip__element {
+    padding-top: 0;
+}
+
+.tab-strip {
+    list-style: none;
+    padding-left: 0;
+    margin-left: 0 !important;
+}
+
+/*Styles for inactive & unhovered tabs*/
+.tab-strip__element {
+    background-color: #f4f6f6;
+    border-radius: 4px 4px 0 0;
+    border: 0.5px solid #babdbe;
+    color: #babdbe;
+    display: table-cell;
+    font-weight: bold;
+    height: 34px;
+    padding: 0 !important;
+    text-align: center;
+    vertical-align: middle;
+    width: 1%;
+}
+
+/*Styles for active tabs*/
+.tab-strip__element[aria-selected=true],
+.tab-strip__element[aria-selected=true]:focus,
+.tab-strip__element[aria-selected=true]:hover {
+    color: #6ba442;
+    font-weight: bold;
+    background-color: #fff;
+    border: 0.5px solid #babdbe;
+    border-bottom-color: transparent;
+}
+
+/*White background on hover*/
+.tab-strip__element:hover {
+    background: #fff;
+}
+
+/*
+ *Dropdown styles
+ */
+/*Caret styling*/
+.tab-strip__element[aria-selected=true] > .caret,
+.tab-strip__element[aria-selected=true]:focus > .caret,
+.tab-strip__element[aria-selected=true]:hover > .caret {
+    border-top-color: #6ba442;
+    border-bottom-color: #6ba442;
+}
+
+.tab-strip__element[aria-selected=true] > .caret,
+.tab-strip__element[aria-selected=true]:hover > .caret {
+    border-top-color: #babdbe;
+    border-bottom-color: #babdbe;
+}
+
+/*Make dropdown list width the same as dropdown tab*/
+.tab-strip__dropdown {
+     min-width: 0;
+     width: 100%;
+     background-color: #fff;
+}
+
+/*Dropdown hover highlight mongo green*/
+.tab-strip__dropdown > li:hover {
+     background-color: #6ba442;
+}
+
+/*White background for dropdown items*/
+.tab-strip__dropdown > li {
+    background-color: #fff;
+    color: #333;
+    font-weight: 400;
+    padding: 3px 20px;
+    text-align: left;
+}
+
+.tab-strip .dropdown-toggle {
+    color: inherit;
+    display: block;
+    padding: 5px 15px;
+    text-decoration: none;
+}
+
+.dropdown-menu > li:hover {
+    color: #fff;
+}
+
+.tab-strip .dropdown-toggle > .caret {
+    border-top-color: inherit;
+}
+
+/*Dropdown will always have the cursor*/
+.tab-strip .dropdown-toggle:hover {
+    color: inherit;
+    text-decoration: none;
+}
+
+.tab-strip [aria-selected]:hover {
+    cursor: pointer;
+}

@@ -17,15 +17,17 @@ Pre-requisites
 
 * Now you need to configure Hasura Auth service with these credentials.
 
-* To configure, go to your project console (https://console.your-project.hasura-app.io).
+* To configure, go to auth.yaml in clusters/<cluster-name> directory.
 
-* In the project console, go to Auth -> Sign-In Methods.
+* Under ``google``, set the array of ``clientIds``
 
-* Enable Google and enter
+.. code-block:: yaml
 
-  * **Client ID**: The client ID obtained when creating the application.
+      google:
+        clientIds: ["String"]
 
-  * **Client Secret**: The client secret.
+
+* **clientId**: The client IDs obtained when creating the application.
 
 * Choose your device and Google SDK from here:
   https://developers.google.com/identity/choose-auth
@@ -57,14 +59,22 @@ Login/Signup a user with Hasura Auth
 * Use Google SDK from above to obtain ``id_token`` (or ``idToken``) of the
   logged in Google user. (In some older platforms you might receive
   ``access_token`` (or ``accessToken``). In that case, you can replace
-  ``id_token`` with ``access_tokens`` in the rest of article.)
+  ``id_token`` with ``access_token`` in the rest of article.)
 
 * Once the ``id_token`` is obtained, send the ``id_token`` to Hasura Auth
   service:
 
-  .. code:: http
+.. code-block:: http
 
-    GET /google/authenticate?id_token=<id-token> HTTP/1.1
+   POST auth.<project-name>.hasura-app.io/v2/signup HTTP/1.1
+   Content-Type: application/json
+
+   {
+     "provider" : "google",
+     "data" : {
+        "id_token": "String",
+     }
+   }
 
 
 * If successful, this will return a response as follows:
