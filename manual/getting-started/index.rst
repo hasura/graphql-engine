@@ -3,6 +3,8 @@
    :keywords: hasura, quickstart, getting started, installation
 
 
+.. _getting-started:
+
 Getting started
 ===============
 

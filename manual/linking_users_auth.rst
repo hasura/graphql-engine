@@ -5,4 +5,4 @@
 Link users to auth
 ==================
 
-Sample content
+Refer to :ref:`user-extra-fields`.

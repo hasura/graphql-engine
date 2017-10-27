@@ -18,7 +18,7 @@ This is the reference documentation of the entire Hasura platform
   hasuractl/index
   users/index
   roles/index
-  Data Modeling<data_modeling/index>
+  .. data_modeling/index
   data/index
   Aggregation data queries <aggregations>
   .. data/query-templates
@@ -26,7 +26,7 @@ This is the reference documentation of the entire Hasura platform
   Accessing postgres directly<access_postgres>
   Files uploads/downloads (filestore APIs)<files/index>
   Linking data to users<linking_users_auth>
-  Permissions (access control) for data APIs<permission_detail_data>
+  data/permissions
   Permissions (access control) for filestore APIs<permission_detail_file>
   Data/schema migrations<data_migration/index>
   Sending Emails/SMS <email-sms/index>
