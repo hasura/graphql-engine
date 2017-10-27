@@ -2,8 +2,8 @@
    :description: Reference documentation for integrating Github OAuth2.0 based user signup & login with Hasura's Auth service for your web and mobile applications.
    :keywords: hasura, docs, auth, Github signup, Github login, social login, Github OAuth, Github OAuth2.0, integration
 
-LinkedIn
-========
+LinkedIn Provider
+=================
 
 Web apps
 --------
@@ -49,7 +49,8 @@ Pre-requisites
 
 * Now you need to configure Hasura Auth service with these credentials.
 
-* To configure, go to auth.yaml in clusters/<cluster-name> directory.
+* To configure, go to ``auth.yaml`` in ``conf`` directory inside your Hasura
+  project.
 
 * Under ``linkedin``, set ``clientId`` and ``clientSecret``
 
@@ -135,10 +136,8 @@ The flow
 
 * If the user is a new user, ``new_user`` will be true, else false.
 
+* To check if the current user is logged in, make a call to: ``/v1/user/info``.
 
-* To check if the current user is logged in, make a call to:
-  ``/user/account/info``.
+* To logout, make a call to ``/v1/user/logout``.
 
-* To logout, make a call to ``/user/logout``.
-
-* To get Hasura credentials of current logged in user, ``/user/account/info``.
+* To get Hasura credentials of current logged in user, ``/v1/user/info``.

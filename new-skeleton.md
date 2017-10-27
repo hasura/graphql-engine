@@ -22,7 +22,7 @@
 - Collaborating with your team
         - Sharing hasura project
         - Sharing hasura cluster
-- Managing users & sessions (auth APIs)
+- Users & sessions (auth APIs)
     - Intro
     - Basic (anonymous) authentication
         - Signup/login/account/info/logout
@@ -33,6 +33,7 @@
     - Linkedin
     - Github
     - Custom authentication
+- Roles
 - Querying data (data APIs)
         - Select
         - Update

@@ -2,8 +2,8 @@
    :description: Reference documentation for integrating Google OAuth2.0 based user signup & login with Hasura's Auth service for your web and mobile applications.
    :keywords: hasura, docs, auth, Google signup, Google login, social login, Google OAuth, Google OAuth2.0, integration
 
-Google Login
-============
+Google Provider
+===============
 
 
 Pre-requisites
@@ -17,7 +17,8 @@ Pre-requisites
 
 * Now you need to configure Hasura Auth service with these credentials.
 
-* To configure, go to auth.yaml in clusters/<cluster-name> directory.
+* To configure, go to ``auth.yaml`` in ``conf`` directory inside your Hasura
+  project.
 
 * Under ``google``, set the array of ``clientIds``
 
@@ -96,10 +97,8 @@ Login/Signup a user with Hasura Auth
 
 * If the user is a new user, ``new_user`` will be true, else false.
 
+* To check if the current user is logged in, make a call to: ``/v1/user/info``.
 
-* To check if the current user is logged in, make a call to:
-  ``/user/account/info``.
+* To logout, make a call to ``/v1/user/logout``.
 
-* To logout, make a call to ``/user/logout``.
-
-* To get Hasura credentials of current logged in user, ``/user/account/info``.
+* To get Hasura credentials of current logged in user, ``/v1/user/info``.
