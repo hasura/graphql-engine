@@ -83,17 +83,37 @@ authentication logic) and configure it with Hasura Auth.
 
 Signing Up
 ----------
-Stub - fill in details with basics of Signing up.
+
+The signup endpoint of Hasura Auth works in the following way. It takes two
+parameters.
+
+1. ``provider`` : A name of the provider to be used.
+2. ``data``: A JSON payload which is specific to each provider. See provider
+   examples.
+
+If the signup request is successful:
+
+1. If the provider doesn't have a verification step (e.g ``username``,
+   ``google``), it will login the user and return the session token in the
+   response.
+2. If the provider has any verification step (e.g. ``mobile``, ``email``), it
+   will not login the user, and will return ``null`` as the session token.
+
 
 Logging In
 ----------
-Stub - fill in details with basics of login.
+
+The request payload of the login endpoint is similar to the signup endpoint.
+
+1. ``provider`` : A name of the provider to be used.
+2. ``data``: A JSON payload which is specific to each provider. See provider
+   examples.
 
 Pending Verification
 ^^^^^^^^^^^^^^^^^^^^
-If the provider is ``email``/``mobile-password`` and the user has not verified
-their email/mobile; then the response from ``/v1/login`` endpoint would be an
-error indicating email/mobile verification is pending.
+If the provider is ``email`` or ``mobile-password`` and the user has not
+verified their email/mobile; then the response from ``/v1/login`` endpoint
+would be an error indicating email/mobile verification is pending.
 
 
 .. toctree::
@@ -116,5 +136,3 @@ error indicating email/mobile verification is pending.
 .. _Facebook: https://facebook.com
 .. _LinkedIn: https://linkedin.com
 .. _Github: https://github.com
-
-
