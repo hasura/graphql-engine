@@ -15,116 +15,49 @@ To set up this simple git push deployment system, you need the following:
 
 There are two ways of doing this:
 
-* Use the Hasura Quickstart Templates that have "hello world" for a various framesworks
+* Use Hasura quickstart apps that have "hello world" for various frameworks
 * Use your own Dockerfile
 
 
-Option 1: Using the Quickstart Templates
-----------------------------------------
+Option 1: Using the Quickstart Apps 
+------------------------------------
 
 Apps or Services deployed on Hasura run on Docker images, built according to a
-Dockerfile. We've prepared `starter kits <https://github.com/hasura/quickstart-docker-git>`_ for all your favourite
-frameworks, that already contain pre-configured Dockerfiles for you to quickly
-setup your app!
+Dockerfile. We've prepared `starter kits https://hub.hasura.io`_ for all your
+favourite frameworks, that already contain pre-configured Dockerfiles for you
+to quickly setup your app!
 
 Step 0: Create a hasura project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Create a hello-world project from Hasura hub.
 
-Make sure you've create a Hasura project via dashboard.hasura.io.
-Let's say your project is called `<project-name>`
+.. code-block:: shell
 
-Step 1: Install `hasuractl`
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-The easiest way to use these templates is to install and set your project
-context on Hasuractl as shown in :doc:`../../ref/cli/hasuractl`.
+  $ hasura quickstart hello-node-express
 
-Before you continue, remember to login and set-context so that `hasuractl` knows the name
-of your hasura project.
+This will clone a Hasura project with an existing nodejs-express app, and
+create/add a Hasura cluster to the project.
 
-.. code-block:: console
+Step 1: Check out the project
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The ``services`` directory already has a ``node-express`` app with some sample
+hello world code, a Dockerfile to build docker image and Kubernetes specs for
+deployment in it.
 
-   $ hasuractl login
-   $ hasuractl set-context <project-name>
+Modify the code in the node-express app, or move your own code into this
+directory. You can run your code locally as you normally would.
 
-Step 2: Check if your framework is in the quickstart list
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. code-block:: console
-
-    $ hasuractl quickstart list
-    INFO Checking for network connection
-    INFO Updating from https://github.com/hasura/quickstart-docker-git
-    Available quickstart templates:
-    csharp-aspnet
-    elasticsearch
-    go-iris
-    go-raw
-    haskell-spock
-    java-play
-    java-spark
-    java-spring-boot
-    joomla
-    js-angularjs
-    mysql
-    nginx
-    nodejs-express
-    nodejs-express-sass
-    php-apache
-    php-laravel
-    python-django
-    python-flask
-    r-shiny
-    ruby-rails
-    serverless-functions
-    swift-perfect
-    swift-vapor
-    wordpress
-
-
-This will show you a list of all supported quickstart templates. If your
-favourite framework is missing from this list, drop us a message at
-support@hasura.io, and we'll add it within a few hours!
-
-Step 3: Initialise your app folder and git repo
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Choose a template, and use the following command to create your app folder
-called <app-name>
-
-.. code-block:: console
-
-    $ hasuractl quickstart <template-name> <app-name> --create
-
-For example, to create a folder and a subdomain app called `my-app` based on `python-flask`:
-
-.. code-block:: console
-
-    $ hasuractl quickstart python-flask my-app --create
-
-This command will do the following:
-
-* Create a service hosted at `my-app.<project-name>.hasura-app.io`, to which you can deploy your app
-* Create a folder called `my-app`, that contains a Dockerfile with instructions on building your app
-* Copy a hello world app written in the chosen framework (`python-flask`) into the <app-name> (`my-app`) directory
-
-Now, `cd` into the folder, commit your code, and get ready to deploy!
-
-.. code-block:: console
-
-    $ cd <app-name>
-    $ git commit -am "Initialized"
-
-Step 4: Add your SSH key
+Step 2: Add files to git
 ^^^^^^^^^^^^^^^^^^^^^^^^
-Make sure to add your ssh-key to your Hasura project before you deploy:
+``hasura quickstart`` has already initialised a new git repo in the project
+directory. So if we add the files and commit, we can push to deploy.
 
 .. code-block:: console
 
-    $ hasuractl add-ssh-key
+  $ git add .
+  $ git commit -m 'initial commit'
 
-Read :ref:`add-SSH-keys` for more info.
-
-Step 5: Deploy your app
+Step 3: Deploy your app
 ^^^^^^^^^^^^^^^^^^^^^^^
 Now, we deploy our app using:
 
@@ -132,9 +65,12 @@ Now, we deploy our app using:
 
     $ git push hasura master
 
-Voila, your service is deployed and live! Check out your service live at <app-name>.<project-name>.hasura-app.io!
+Voila, your service is deployed and live! Check out your service live at
+<app-name>.<project-name>.hasura-app.io!
 
-In case there are any errors in building or deploying your code, the git push command will show you errors and the push will fail. Fix the error, and push again!
+In case there are any errors in building or deploying your code, the git push
+command will show you errors and the push will fail. Fix the error, and push
+again!
 
 .. admonition:: Behind The Scenes
 
@@ -148,42 +84,71 @@ In case there are any errors in building or deploying your code, the git push co
 Option 2: Using your own Dockerfile (advanced users)
 ------------------------------------
 
-Create a git-push enabled service on the Hasura console
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Go to the ``Custom Microservices`` section of the Hasura console, select ``Git Push`` and create a git-push enabled service, and you're good to go.
-
-For reference, here's a configuration screenshot:
-
-.. rst-class:: featured-image
-.. image:: ../../img/gitpush.png
-   :scale: 50%
+Make sure you are inside the directory of your Hasura project.
 
 
-Add your SSH key
-^^^^^^^^^^^^^^^^^^^
+Create a new service
+^^^^^^^^^^^^^^^^^^^^
 
-Please see :ref:`add-SSH-keys` for instructions on how to create and add your SSH key to a Hasura project.
+.. code-block:: shell
+
+  $ hasura service add myapp
+
+This will create a new directory in the ``services`` directory with Kubernetes
+specs.
+
+Move all your code and Dockerfile into the ``services/myapp`` directory. Change
+the ports in the Kubernetes specs according to your code.
+
+Create a route for the service
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now to expose the above created service, we have to create a route for it.
+
+.. code-block:: shell
+
+  $ hasura route generate myapp
+
+Create a remote for the service
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+As we are creating a git-push enabled service, we have to add a git remote for
+the service.
+
+.. code-block:: shell
+  $ hasura remote generate myapp
+
+**NOTE**: In the ``conf/remotes.yaml`` file make sure the path to your Dockerfile is
+correct.
+
+Make sure your SSH key is added
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: shell
+
+  $ hasura ssh-key list
+
+If your SSH key is not there, add it by:
+
+.. code-block:: shell
+
+  $ hasura ssh-key add
 
 
-Deploy to your git-push enabled service
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Once a git-push enabled custom service has been added on the hasura console,
-you must first set the hasura remote by following the instructions shown on the
-manage page of your git-push service.
-
-.. code-block:: console
-
-   $ git remote add hasura ssh://hasura@<git-push-service-name>.<project-domain>.hasura-app.io:2022/~/git/<git-push-service-name>/
-
-After adding the remote, you can commit your changes and push to the hasura
+Deploying the code
+^^^^^^^^^^^^^^^^^^
+Now you can commit your changes and push to the hasura
 remote to instantly build and deploy your app in one command!
 
 .. code-block:: console
 
-   $ git push hasura master
+  $ git add .
+  $ git commit -m 'sensible commit message'
+  $ git push hasura master
 
-Voila, your service is deployed and live! Check out your service live at <app-name>.<project-name>.hasura-app.io!
 
-In case there are any errors in building or deploying your code, the git push command will show you errors and the push will fail. Fix the error, and push again!
+Voila, your service is deployed and live! Check out your service live at
+<app-name>.<project-name>.hasura-app.io!
+
+In case there are any errors in building or deploying your code, the git push
+command will show you errors and the push will fail. Fix the error, and push
+again!

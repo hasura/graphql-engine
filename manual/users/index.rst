@@ -183,6 +183,8 @@ To logout a user, make the following request.
    github
    linkedin
    custom_provider
+   config
+   admin_endpoints
 
 
 .. _recaptcha: https://www.google.com/recaptcha/intro/index.html

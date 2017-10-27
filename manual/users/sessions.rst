@@ -60,6 +60,8 @@ Mobile / other device apps
 If you are building mobile/device apps, then you have to make your own
 mechanism for storing session tokens (``auth_token``) and managing them. That
 is - storing, updating and deleting them whenever a Hasura Auth API returns a
-new session token, and remove all existing tokens (``auth_token``) on
-:ref:`these conditions <session-expiry>`.
+new session token, and remove all existing tokens (``auth_token``) on the above
+conditions.
+
+.. :ref:`these conditions <session-expiry>`.
 
