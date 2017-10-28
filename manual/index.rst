@@ -2,13 +2,13 @@
    :description: Homepage for Hasura's reference documentation. List of topics, components and resources.
    :keywords: hasura, docs, reference home, reference, ref home, ref
 
-.. title:: Manual
+.. title:: Hasura Manual
 
 .. _reference:
 
-.. rubric:: Manual
+.. rubric:: Hasura Manual
 
-This is the reference documentation of the entire Hasura platform
+This is the reference documentation of the entire Hasura platform.
 
 .. toctree::
   :maxdepth: 1
@@ -18,7 +18,7 @@ This is the reference documentation of the entire Hasura platform
   hasuractl/index
   users/index
   roles/index
-  .. data_modeling/index
+  data_modeling/index
   data/index
   Aggregation data queries <aggregations>
   .. data/query-templates
