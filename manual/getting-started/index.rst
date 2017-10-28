@@ -27,7 +27,7 @@ Step 1: Install the hasura CLI tool
 
          .. code-block:: bash
 
-            curl https://hasura.io/install.sh | bash
+            curl -L https://storage.googleapis.com/hasuractl/install-stg.sh | bash
 
          This will install the ``hasura`` CLI tool in ``/usr/local/bin``. You might have to provide your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
 
@@ -37,7 +37,7 @@ Step 1: Install the hasura CLI tool
 
          .. code-block:: bash
 
-            curl https://hasura.io/install.sh | bash
+            curl -L https://storage.googleapis.com/hasuractl/install-stg.sh | bash
 
          This will install the ``hasura`` CLI in ``/usr/local/bin``. You might have to provide your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
 
