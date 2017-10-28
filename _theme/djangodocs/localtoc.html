@@ -9,11 +9,23 @@
       <div class="inline-block hero"> docs </div>
     </a>
     <a class="version_txt">
-      <select value="v1.2">
-        <option value="v1.1">v1.1</option>
-        <option value="v1.2">v1.2</option>
-        <option value="v1.3">v1.3</option>
-        <option value="v1.4">v1.4</option>
+      <select value="{{ version }}" onchange="location = this.value;">
+        {%- if version == '0.13' %}
+          <option value="0.13" selected="selected">v0.13</option>
+        {%- else -%}
+          <option value="https://docs.hasura.io/{{ version }}">v0.13</option>
+        {% endif %}
+
+        {%- if version == '0.14' %}
+          <option value="0.14" selected="selected">v0.14</option>
+        {%- else -%}
+          <option value="https://docs.hasura.io/{{ version }}">v0.14</option>
+        {% endif %}
+        {%- if version == '0.15' %}
+          <option value="0.15" selected="selected">v0.15</option>
+        {%- else -%}
+          <option value="https://docs.hasura.io/{{ version }}">v0.15</option>
+        {% endif %}
       </select>
     </a>
   </div>
