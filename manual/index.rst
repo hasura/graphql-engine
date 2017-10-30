@@ -15,6 +15,7 @@ This is the reference documentation of the entire Hasura platform.
   :titlesonly:
 
   getting-started/index
+  architecture/index
   hasuractl/index
   users/index
   roles/index
