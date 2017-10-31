@@ -15,33 +15,18 @@ This is the reference documentation of the entire Hasura platform.
   :titlesonly:
 
   getting-started/index
-  architecture/index
-  hasuractl/index
+  Tutorial<tutorial/index>
+  Hasura cluster<cluster/index>
+  Hasura project directory<project/index>
   users/index
   roles/index
-  data_modeling/index
   data/index
-  Aggregation data queries <aggregations>
-  .. data/query-templates
-  Using SQL directly on data<using_sql>
-  Accessing postgres directly<access_postgres>
-  Files uploads/downloads (filestore APIs)<files/index>
-  Linking data to users<linking_users_auth>
-  data/permissions
-  Permissions (access control) for filestore APIs<permission_detail_file>
-  Data/schema migrations<data_migration/index>
-  Sending Emails/SMS <email-sms/index>
-  Hosting docker containers <deploy-docker/index>
-  deploying-webapp/index
-  serve-static/index
-  persistent-services
-  deploy-non-http
-  deploy-k8s-objects
+  Files <files/index>
+  Emails/SMS <email-sms/index>
+  API gateway<gateway/index>
+  custom-microservices/index
   custom-domains-ssl
-  cors-settings
-  logs/index
-  monitoring
+  monitoring-logging/index
   scaling
+  backups
   reference/index
-  .. adding-custom-api/index
-  .. SSH-cluster

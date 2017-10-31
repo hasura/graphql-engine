@@ -1,0 +1,31 @@
+type: create_query_template
+args:
+  name: bulk_test
+  template:
+    type: bulk
+    args:
+    - type: insert
+      args:
+        table: author
+        objects:
+          param: authors
+        returning:
+        - hasura_id
+    - type: update
+      args:
+        table: article
+        "$set":
+          is_published:
+            param: is_published
+            default: true
+        where:
+          author_id:
+            "$eq" :
+              param: article_id
+    - type: count
+      args:
+        table: article
+        where:
+          author_id:
+            "$eq" :
+              param: author_id

@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Querying data
-==============
+Data
+====
 
 This section assumes that you have already created a project and know how to
 launch your API console. If not, please head to :ref:`getting-started`.
@@ -15,8 +15,8 @@ tables. Permissions can then be used to authorize the access to data based on
 roles.
 
 Tables
---------
- 
+------
+
 1. Using the console UI. Head to ``Data > Schema``.
 
    First launch the console:
@@ -54,9 +54,17 @@ Tables
 
 .. toctree::
   :maxdepth: 1
-  
+
   Select<select>
   Update<update>
   Insert<insert>
   Delete<delete>
+  Permissions and access control<permissions>
+  Linking data to users<linking_users_auth>
   Bulk<bulk>
+  data_modeling/index
+  Using SQL directly on data<using_sql>
+  Data/schema migrations<data_migration/index>
+  Aggregations <aggregations>
+  Accessing postgres directly<access_postgres>
+

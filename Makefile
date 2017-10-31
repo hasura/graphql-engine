@@ -260,5 +260,5 @@ dummy:
 watch:
 	inotifywait -q -m --recursive -e modify -e move -e create -e delete --exclude '($(BUILDDIR)|.git)' . | while read -r CHANGE; do $(MAKE) html; done
 
-livehtml:
+livehtml: html-images
 	sphinx-autobuild -b html -i "$(BUILDDIR)/*" $(ALLSPHINXOPTS) $(BUILDDIR)/html --ignore ".git/*"

@@ -1,0 +1,20 @@
+type: bulk
+args:
+- type: add_existing_table_or_view
+  args:
+    name: author
+- type: add_existing_table_or_view
+  args:
+    name: article
+- type: add_existing_table_or_view
+  args:
+    name: article_like
+- type: add_existing_table_or_view
+  args:
+    name: comment
+- type: add_existing_table_or_view
+  args:
+    name: category
+- type: add_existing_table_or_view
+  args:
+    name: article_category
