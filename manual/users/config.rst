@@ -1,4 +1,6 @@
 Auth API Configuration
 ======================
 
-stub: explanation of the entire auth config
+.. todo::
+
+   Auth configuration: this can link to hasura project/conf/auth

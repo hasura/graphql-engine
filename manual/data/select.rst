@@ -1,5 +1,5 @@
 Retrieving data
-------------------
+----------------
 
 The JSON based query language lets you make simple to complex queries.
 

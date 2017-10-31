@@ -15,12 +15,13 @@ This is the reference documentation of the entire Hasura platform.
   :titlesonly:
 
   getting-started/index
-  Tutorial<tutorial/index>
+  The complete tutorial<tutorial/index>
   Hasura cluster<cluster/index>
-  Hasura project directory<project/index>
+  Hasura project<project/index>
   users/index
   roles/index
   data/index
+  data-modelling/index
   Files <files/index>
   Emails/SMS <email-sms/index>
   API gateway<gateway/index>

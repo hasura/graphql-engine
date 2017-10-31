@@ -5,8 +5,8 @@
 
 .. _getting_started:
 
-Tutorial: Learn by example
-==========================
+The complete tutorial: Learn by example
+=======================================
 
 .. todo::
 

@@ -1,4 +1,0 @@
-Alter Table
-============
-
-some stub

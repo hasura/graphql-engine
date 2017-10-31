@@ -5,4 +5,9 @@
 Link users to auth
 ==================
 
+.. todo::
+
+   * hasura_id concept for 'ownership'
+   * REQ_USER_ID == hasura_id concept for permissions
+
 Refer to :ref:`user-extra-fields`.

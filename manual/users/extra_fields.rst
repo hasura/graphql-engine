@@ -8,6 +8,11 @@
 Extra user profile information
 ===============================
 
+.. todo::
+
+   * Make language more positive
+   * Show an example of a profile table with user_id and the permissions
+
 It is a common use-case to store extra information about your users other than
 authentication related data (like name, age, address etc.). But Hasura Auth
 APIs does not have provision to store any extra information. Hence you would

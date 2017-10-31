@@ -6,14 +6,18 @@
 Data Modelling
 ==============
 
-some stub
+.. todo::
+
+   + Introduction to modelling with postgres. Relational, NoSQL with JSON columns etc.
+   + many-to-one, many-to-many relationships
+   + Derived data via views
+   + Examples:
+
+     + User profile
+     + Comment thread
+     + Product inventory
+
 
 .. toctree::
    :hidden:
    :maxdepth: 1
-  
-   Create table<create>
-   Add relationship<relationship>
-   Add permission<permission>
-   Alter Table<alter>
-   Delete Table<delete>

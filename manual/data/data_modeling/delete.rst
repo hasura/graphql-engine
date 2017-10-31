@@ -1,4 +1,0 @@
-Delete Table
-============
-
-some stub

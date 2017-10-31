@@ -1,4 +1,6 @@
 Admin Endpoints
 ===============
 
-stub: list down imp admin endpoints
+.. todo::
+
+   List of all the admin endpoints, with examples

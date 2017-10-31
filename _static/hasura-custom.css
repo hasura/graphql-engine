@@ -153,8 +153,9 @@ p
 }
 #docs-content a.reference
 {
-  /* color: #FEC53D !important; */
-  color: #FF993A !important;
+  /* color: #FEC53D !important;
+  color: #FF993A !important; */
+  color: #d66700 !important;
   background-color: transparent !important;
 }
 

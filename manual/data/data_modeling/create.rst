@@ -1,4 +1,0 @@
-Create Table
-============
-
-some stub
