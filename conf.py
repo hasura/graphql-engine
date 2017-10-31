@@ -74,6 +74,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinxcontrib.swaggerdoc",
     "sphinxcontrib.httpdomain",
+    "sphinx.ext.todo",
     "tabs"
 ]
 

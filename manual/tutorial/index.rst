@@ -5,8 +5,40 @@
 
 .. _getting_started:
 
-Getting Started
-===============
+Tutorial: Learn by example
+==========================
+
+.. todo::
+
+   - Install hasura CLI
+   - Clone base
+   - Cluster create --type=free
+   - App architecture
+   - API console: Users, roles & sessions
+   - API console: Create tables (data modelling)
+   - API console: Explore APIs as admin user, import sample data
+   - API console: Permissions / access control & testing APIs
+   - API console: Relationships & testing APIs
+   - API console: Aggregations & views, manual relationships
+   - API console: File upload
+   - Add a custom login/signup API to register + add profile data
+   - Add a custom API to generate stats and send email with session middleware
+   - Building your UI:
+
+     - Webapp with server-side rendering: express + mustache
+        - Notes on how this can be extended to PHP or other frameworks
+     - SPA (react/angular): this is only a react example
+        - Use generate API code
+     - react-native
+        - Use generate API code
+     - Android/iOS: this is only an android example
+        - Use generate API code
+   - Add another docker-based microservice: ghost-blog
+      - Connect to postgres
+      - Environment variables
+   - Publish to hasura-hub
+
+
 
 Let's build a simple clone of the popular publishing platform `medium <https://medium.com/>`_ and use that to learn about the features provided by the Hasura platform. Our clone, called ``ether`` will have the following features:
 
