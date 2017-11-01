@@ -93,12 +93,12 @@
                   <div class="header_links inline-block">
                     <div class="buttons">
                       <div class="inline-block">
-                        <a target="_blank" href="https://dashboard.hasura.io/login">
-                          <button class="indiv_btns black"> Support </button>
-                        </a>
+                        <!-- a target="_blank" href="https://dashboard.hasura.io/login" -->
+                          <button class="indiv_btns black" id="supportBtn"> Support </button>
+                        </!-- a -->
                       </div>
                       <div class="inline-block">
-                        <a target="_blank" href="">
+                        <a target="_blank" href="https://docs.hasura-stg.hasura-app.io">
                           <button class="indiv_btns">Get started</button>
                         </a>
                       </div>
@@ -283,6 +283,16 @@
       const handleStatePop = function( e) {
         handleQueryParams();
       };
+
+      const handleSupportBtnClick = function(e) {
+        if ( window.Intercom ) {
+          window.Intercom('show');
+        }
+      }
+
+      const supportBtnObj = document.getElementById("supportBtn");
+
+      supportBtnObj.addEventListener("click", handleSupportBtnClick);
 
       window.onpopstate = handleStatePop;
 
