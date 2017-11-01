@@ -554,7 +554,7 @@ p
 }
 .input_search_box {
   position: relative;
-  width: 70%;
+  width: 64%;
 }
 
 .input_search_box .fa-search {
@@ -605,7 +605,7 @@ p
   color:#ccc;
 }
 .header_links {
-  width: 28%;
+  width: 33%;
 }
 
 .header_links.inline-block .header_links_content {
