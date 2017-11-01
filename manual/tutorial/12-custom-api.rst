@@ -3,7 +3,7 @@
    :keywords: hasura, getting started, step 7, custom service, Docker, git push
 
 ================================================
-Part VII: Custom code using Docker or `git push`
+Part XII: Custom code using Docker or `git push`
 ================================================
 
 Not all requirements will be met by the Hasura data, auth APIs.
@@ -15,32 +15,8 @@ or by pushing changes from your git repo, directly onto your project.
 
 Let us explore 2 use cases.
 
-.. admonition:: Video reference
-
+..
    `Adding a custom service using a Docker image, or by using git push <https://youtu.be/LK1mgsl2uUs>`_
-
-
-Docker: Adding a custom database browser (adminer)
---------------------------------------------------
-
-To add a custom service, head to the console, and click on the ``+`` icon.
-Follow the instructions from this screenshot, and click on ``Create`` to add your service.
-
-.. image:: adminer.png
-   :scale: 50%
-
-That's all you need to do. If you head to ``https://adminer.test42.hasura-app.io`` you'll see
-the familiar ``adminer`` UI.
-
-.. admonition:: Automatic SSL certificates
-
-   The Hasura platform automatically creates Grade A SSL certificates using LetsEncrypt.
-
-   SSL certificate creation can take a few minutes. During this time ``https://adminer.test42.hasura-app.io``
-   will not served, and you'll have to access your service on ``http`` instead. As soon as
-   the certificate is ready, ``http://adminer.test42.hasura-app.io`` will automatically
-   start redirecting to the ``https`` version.
-
 
 Git push: Adding a simple web-server to serve a UI
 --------------------------------------------------
@@ -54,7 +30,7 @@ Initialize a git repo in it using
 
 .. code-block:: console
 
-   $ git init 
+   $ git init
 
 After copying the relevant directory, and intializing our own git repo in it, this is what
 our directory structure should look like::
@@ -90,8 +66,12 @@ Let's modify ``www/app/server.js``, to just serve one sample request:
 Now that our code is ready to be consumed by the Hasura project, let's create a new service via the console.
 To enable this option to ``git push`` a service, check the ``Enable git push`` box on the ``Add a custom service`` page.
 
-.. image:: gitpush.png
-   :scale: 50%
+.. todo::
+
+   Update this:
+
+   .. image:: gitpush.png
+      :scale: 50%
 
 Make sure that you've added your SSH public key to the ``authorized_keys`` file via the ``Console > Advanced`` page, and added the Hasura project as a remote as described on the manage page of the service you just created.
 
@@ -111,3 +91,31 @@ the ``git push`` command will show you errors and the push will fail. Fix the er
 
    If you want finer control over your deployment, you are encouraged to use ``kubectl``
    and peek under the hood of the service that is automatically deployed.
+
+Docker: Adding a custom database browser (adminer)
+--------------------------------------------------
+
+To add a custom service, head to the console, and click on the ``+`` icon.
+Follow the instructions from this screenshot, and click on ``Create`` to add your service.
+
+.. todo::
+
+   Update this:
+
+   .. image:: adminer.png
+      :scale: 50%
+
+That's all you need to do. If you head to ``https://adminer.test42.hasura-app.io`` you'll see
+the familiar ``adminer`` UI.
+
+.. admonition:: Automatic SSL certificates
+
+   The Hasura platform automatically creates Grade A SSL certificates using LetsEncrypt.
+
+   SSL certificate creation can take a few minutes. During this time ``https://adminer.test42.hasura-app.io``
+   will not served, and you'll have to access your service on ``http`` instead. As soon as
+   the certificate is ready, ``http://adminer.test42.hasura-app.io`` will automatically
+   start redirecting to the ``https`` version.
+
+
+

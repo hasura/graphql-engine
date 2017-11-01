@@ -3,13 +3,11 @@
    :keywords: hasura, getting started, step 2
 
 ==================================
-Part II: Users, roles and sessions
+Part VI: Users, roles and sessions
 ==================================
 
-.. admonition:: Video reference
-
+..
    `User management on Hasura <https://www.youtube.com/watch?v=Qbon0cgbneo>`_
-
    The video is an introduction to user-management via the
    project console and basic user-management APIs. **After going through the 2 min video,
    you should read this page too!**
@@ -20,6 +18,23 @@ Let's list out the user management features required in our app:
 * There are two classes of visitors, logged in users and anonymous users. We need roles to model this.
 
 Before we implement the functionality needed for our ether app, let's understand what the hasura platform offers.
+
+Before you begin: Open the API console
+--------------------------------------
+
+Run:
+
+.. code-block:: bash
+
+   # Run this command inside your project directory
+   $ hasura api-console
+
+This will open up the ``api-console`` and show you the ``API explorer`` page which you can use to understand the APIs.
+
+.. admonition:: Note
+
+   You can try out all of the API examples below in the API explorer
+
 
 The ``auth`` service
 --------------------
@@ -175,3 +190,8 @@ When the session token is absent from both header and cookie, the gateway consid
 For example, say there are 2 different kinds incoming requests to ``data.test42.hasura-app.io`` from an HTTP client:
 
 .. image:: session-middleware.png
+
+Next: Create your data models
+-----------------------------
+
+Next, head to :doc:`Data modelling for the blog app <7-data-modelling>`.

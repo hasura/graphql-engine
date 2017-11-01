@@ -3,7 +3,7 @@
    :keywords: hasura, getting started, step 3, data modeling
 
 =========================================
-Part III: Data modelling for the blog app
+Part VII: Data modelling for the blog app
 =========================================
 
 Our basic data requirements are as follows:
@@ -13,32 +13,12 @@ Our basic data requirements are as follows:
 * Storing the likes given by users to articles
 * Storing the comments written by users on articles
 
-.. admonition:: Video reference
-
+..
    `Basic data modelling <https://youtu.be/EdBjQ3zRBWg>`_
-
    The video shows you how to create data models using the project console.
    The document below however, is an API driven approach to creating data models.
    Don't skip reading this guide if you need a solid developer intro to modelling,
    especially if you want to start versioning your schema!
-
-
-The ``data`` service
-====================
-
-Every Hasura project comes with a data service. The ``data`` service provides an HTTP API over PostgreSQL, an extremely versatile open source relational database. We create tables in Postgres and access the data using the APIs provided by the ``data`` service.
-
-Any user with the ``admin`` role has full-access to the data service. All requests to the ``data`` service are ``POST`` requests to ``/v1/query`` endpoint. The body should have two keys ``type`` and ``args``. For example,
-
-.. code-block:: json
-
-   {
-       "type": "run_sql",
-       "args": {
-           "sql" : "some sql"
-       }
-   }
-
 
 Creating tables
 ---------------
@@ -57,35 +37,19 @@ As you would normally do with any relational database, data is modelled as table
 |comment                                 |id, user_id, article_id, comment        |
 +----------------------------------------+----------------------------------------+
 
-Check out this video to see how we can create tables and model foreign key constraints via console. You can skip to the next section if you use the console.
+Create tables and model foreign key constraints via the API console.
 
-Let us define the structure of these tables in sql as follows:
+.. todo::
 
-.. literalinclude:: blog-schema.sql
-   :language: sql
+   Add console screenshots here.
 
-Let's execute this sql on the PostgreSQL database. The ``run_sql`` query type is only allowed for the ``admin`` role. Let's execute the above sql to create the tables.
+   In SQL, the structure of these tables is as follows:
 
-.. code-block:: http
+   .. literalinclude:: blog-schema.sql
+      :language: sql
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
-   Authorization: Bearer <admin-token>
-   Content-Type: application/json
 
-   {
-       "type" : "run_sql",
-       "args" : {
-           "sql" : "the above sql statements"
-       }
-   }
+Next: Explore the Data APIs
+----------------------------
 
-The response would be as follows:
-
-.. code-block:: http
-
-   HTTP/1.1 200 OK
-   Content-Type: application/json
-
-   {
-       "message" : "success"
-   }
+Next, head to :doc:`Explore Data APIs <8-explore-data-apis>`.

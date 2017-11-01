@@ -8,8 +8,7 @@
 The complete tutorial: Learn by example
 =======================================
 
-.. todo::
-
+..
    - Install hasura CLI
    - Clone base
    - Cluster create --type=free
@@ -24,7 +23,6 @@ The complete tutorial: Learn by example
    - Add a custom login/signup API to register + add profile data
    - Add a custom API to generate stats and send email with session middleware
    - Building your UI:
-
      - Webapp with server-side rendering: express + mustache
         - Notes on how this can be extended to PHP or other frameworks
      - SPA (react/angular): this is only a react example
@@ -38,18 +36,14 @@ The complete tutorial: Learn by example
       - Environment variables
    - Publish to hasura-hub
 
+This is a simple, in-depth tutorial to understand how Hasura works
+and how you can build a backend for your application, a blog engine, with Hasura.
 
+Once you're done with this tutorial, you'll understand:
 
-Let's build a simple clone of the popular publishing platform `medium <https://medium.com/>`_ and use that to learn about the features provided by the Hasura platform. Our clone, called ``ether`` will have the following features:
-
-#. Anyone can register on the site
-#. Users can publish posts, like and comment
-#. Anyone can view published posts, overall likes and comments
-
-.. admonition:: Video reference
-
-   You can also follow a roughly equivalent version of this getting started guide as a video series:
-   `Getting Started Playlist <https://www.youtube.com/playlist?list=PLTRTpHrUcSB-dJ02BRn1mMhJtgngX-mzI>`_
+- what Hasura projects and clusters are,
+- how to use the Hasura APIs to avoid writing backend code
+- how to deploy your own services on a Hasura cluster
 
 This tutorial is split across the following sections:
 
@@ -61,7 +55,10 @@ This tutorial is split across the following sections:
   3-hasura-cluster
   4-explore-hasura-cluster
   5-build-blog-app
-  6-data-permissions
-  7-custom-api
-
-
+  6-user-model
+  7-data-modelling
+  8-explore-data-apis
+  9-adding-permissions
+  10-adding-relationships
+  11-aggregations-views
+  12-custom-api

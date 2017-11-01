@@ -2,9 +2,9 @@
    :description: Part 5 of a set of learning exercises meant for exploring Hasura in detail. This part covers using the data API along with SQL views & relationships.
    :keywords: hasura, getting started, step 5, SQL views and relationships
 
-====================================================
-Part V: Aggregations, views and custom relationships
-====================================================
+=====================================================
+Part XI: Aggregations, views and custom relationships
+=====================================================
 
 The JSON based query language in ``select`` query is designed to be simple yet powerful. There will be queries that you cannot express with the ``select`` query. For example, getting the number of likes for each article. Aggregations (like counting the number of likes) are not supported in the ``select`` query syntax. This is conscious decision we've made to keep the query language small.
 
@@ -15,8 +15,7 @@ Let's see how we can get the likes of an article.
 Data APIs on Postgres views
 ===========================
 
-.. admonition:: Video reference
-
+..
    `Aggregations and Views <https://www.youtube.com/watch?v=d6VHJ7FiJTg>`_
 
 Let us define a view in `SQL <https://www.postgresql.org/docs/current/static/sql-createview.html>`_:
@@ -28,33 +27,43 @@ Let us define a view in `SQL <https://www.postgresql.org/docs/current/static/sql
       FROM article_like
       GROUP BY article_id;
 
-.. code-block:: http
+Let's apply this via the console:
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
-   Content-Type: application/json
-   Authorization: Bearer <admin-token>
+.. todo::
 
-   {
-     "type" : "run_sql",
-     "args" : {
-       "sql" : "CREATE VIEW article_like_count AS...",
-     }
-   }
+   Show in API console:
 
-Let us then add this view, using the ``add_existing_table_or_view`` query type:
+   .. code-block:: http
 
-.. code-block:: http
+      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+      Content-Type: application/json
+      Authorization: Bearer <admin-token>
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
-   Content-Type: application/json
-   Authorization: Bearer <admin-token>
+      {
+        "type" : "run_sql",
+        "args" : {
+          "sql" : "CREATE VIEW article_like_count AS...",
+        }
+      }
 
-   {
-     "type" : "add_existing_table_or_view",
-     "args" : {
-       "name" : "article_like_count"
-     }
-   }
+Let us then add this view, using the ``add_existing_table_or_view``:
+
+.. todo::
+
+   Show in API console:
+
+   .. code-block:: http
+
+      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+      Content-Type: application/json
+      Authorization: Bearer <admin-token>
+
+      {
+        "type" : "add_existing_table_or_view",
+        "args" : {
+          "name" : "article_like_count"
+        }
+      }
 
 As soon as the view is tracked by the Data API, you can use ``select`` as if ``article_like_count`` is a table.
 
