@@ -57,10 +57,10 @@ This tutorial is split across the following sections:
   :maxdepth: 1
 
   1-intro
-  2-user-model
-  3-data-modelling
-  4-data-query
-  5-data-aggregations-views
+  2-hasura-project
+  3-hasura-cluster
+  4-explore-hasura-cluster
+  5-build-blog-app
   6-data-permissions
   7-custom-api
 
