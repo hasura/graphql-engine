@@ -42,11 +42,13 @@ ALGOLIA_SECRETS = {
 
 # Defaults to development
 CURRENT_ENV = os.getenv("ENV") if os.getenv("ENV") else "development"
+BASE_DOMAIN = os.getenv("BASE_DOMAIN", "development")
 
 html_context = {
     "APPLICATION_ID": ALGOLIA_SECRETS[CURRENT_ENV]["APPLICATION_ID"],
     "APPLICATION_SEARCH_KEY": ALGOLIA_SECRETS[CURRENT_ENV]["APPLICATION_SEARCH_KEY"],
-    "BASE_DOMAIN": "https://docs.hasura.io/"
+    "SITEMAP_DOMAIN": "https://docs.hasura.io/",
+    "BASE_DOMAIN": "https://docs.hasura.io" if BASE_DOMAIN == "production" else "https://docs.hasura-stg.hasura-app.io"
 }
 
 # End of it

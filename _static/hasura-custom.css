@@ -948,8 +948,14 @@ p
   background-color: transparent;
   border: 0;
   color: #FFF;
+  // color: #000;
   font-size: 18px;
 }
+
+.version_txt .option_val {
+  color: #000;
+}
+
 .version_txt select:focus
 {
   outline: none;

@@ -37,7 +37,7 @@ def onFinishBuilding(app, exception):
         latestVersion = app.env.config["html_context"]["latest_docs_version"]
     else:
         latestVersion = "dev"
-    base_domain = app.env.config["html_context"]["BASE_DOMAIN"]
+    base_domain = app.env.config["html_context"]["SITEMAP_DOMAIN"]
 
     file_path = "./_build/algolia_index/index.json"
     sitemap_path = "./_build/sitemap/sitemap_" + currentVersion + ".xml"
