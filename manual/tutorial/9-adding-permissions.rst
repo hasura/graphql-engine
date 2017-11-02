@@ -24,10 +24,10 @@ Watch this video to see how permissions are defined using the console or continu
 Defining permissions
 ====================
 
-Let us consider the ``article`` table.
-
 Select
 ------
+
+Let us consider the ``article`` table. The following are the permissions we'd like to define for select queries on this table:
 
 .. list-table::
    :header-rows: 1
@@ -41,30 +41,59 @@ Select
    * - user
      - all columns
      - which are published and those written by the user (published or not)
+       
+There are 2 methods to define permissions for a table: via the console UI and via a REST query.
 
-.. todo::
+Using the UI
+^^^^^^^^^^^^
+In the api-console, navigate to *Data -> article -> Permissions*.
 
-   Show this via the console:
+This is the permissions section for the article table, which looks like this:
 
-   .. code-block:: http
+.. figure:: ../../img/tutorial-9-vanilla-screen.png
 
-      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
-      Content-Type: application/json
-      Authorization: <admin-token>
+To add permissions, click the *Add permissions for a new role* button:
 
-      {
-          "type" : "create_select_permission",
-          "args" : {
-              "table" : "article",
-              "role" : "anonymous",
-	      "permission" : {
-		   "columns" : "*",
-		   "filter" : {
-		       "is_published" : true
-		   }
-	      }
-          }
-      }
+.. figure:: ../../img/tutorial-9-add-permission.png
+	    
+	    You can add permissions for the query types Select, Insert, Update, Delete for different roles (default anonymous and user).
+Add *Select* permissions for the *anonymous* role:
+
+.. figure:: ../../img/tutorial-9-permissions-anon-select.png
+
+Similarly, add *Select* permissions for the *user* role.
+
+.. figure:: ../../img/tutorial-9-permissions-user-select.png
+
+Click *Save changes* to apply the permissions.
+
+You can use the same UI to add permissions for other query types. 
+
+Using a REST Query
+^^^^^^^^^^^^^^^^^^
+You can also make a REST query to the *data* service to accomplish the same task as the above mentioned UI and more.
+
+For **Select**, the HTTP query equivalent to the above UI-based flow looks like:
+
+.. code-block:: http
+
+   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   Content-Type: application/json
+   Authorization: <admin-token>
+
+   {
+       "type" : "create_select_permission",
+       "args" : {
+	   "table" : "article",
+	   "role" : "anonymous",
+	   "permission" : {
+		"columns" : "*",
+		"filter" : {
+		    "is_published" : true
+		}
+	   }
+       }
+   }
 
 We've specified ``*`` for ``columns`` as a short hand notation for all columns. ``filter`` is used to specify the rows that can be read. You may have noticed that the syntax is similar to that of ``where`` in ``select`` query. In fact, they are exactly the same. The only difference is that, in ``filter`` you can use a special placeholder variable ``REQ_USER_ID`` for the ``id`` of the user who makes the query. We'll see this in action when defining the select permission for ``user`` role on ``article`` table.
 
@@ -111,29 +140,27 @@ Update
      - title, content, is_published
      - those written by the user
 
-.. todo::
+To set the permissions, you can use the api-console UI based workflow described above or the following REST call:
 
-   Show this via the console:
+.. code-block:: http
 
-   .. code-block:: http
+   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   Content-Type: application/json
+   Authorization: <admin-token>
 
-      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
-      Content-Type: application/json
-      Authorization: <admin-token>
-
-      {
-          "type" : "create_update_permission",
-          "args" : {
-              "table" : "article",
-              "role" : "user",
-	      "permission" : {
-		   "columns" : ["title", "content", "is_published"],
-		   "filter" : {
-		      "author_id" : "REQ_USER_ID"
-		   }
-	      }
-          }
-      }
+   {
+       "type" : "create_update_permission",
+       "args" : {
+	   "table" : "article",
+	   "role" : "user",
+	   "permission" : {
+		"columns" : ["title", "content", "is_published"],
+		"filter" : {
+		   "author_id" : "REQ_USER_ID"
+		}
+	   }
+       }
+   }
 
 Update permission syntax is the same as select permission's. You specify the columns that can be updated with ``columns`` and the rows that can be updated using ``filter``.
 
@@ -152,28 +179,26 @@ Delete
    * - user
      - those written by the user
 
-.. todo::
+To set the permissions, you can use the api-console UI based workflow described above or the following REST call:
 
-   Show this via the console:
+.. code-block:: http
 
-   .. code-block:: http
+   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   Content-Type: application/json
+   Authorization: <admin-token>
 
-      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
-      Content-Type: application/json
-      Authorization: <admin-token>
-
-      {
-          "type" : "create_delete_permission",
-          "args" : {
-              "table" : "article",
-              "role" : "user",
-	      "permission" : {
-		   "filter" : {
-		      "author_id" : "REQ_USER_ID"
-		   }
-	      }
-          }
-      }
+   {
+       "type" : "create_delete_permission",
+       "args" : {
+	   "table" : "article",
+	   "role" : "user",
+	   "permission" : {
+		"filter" : {
+		   "author_id" : "REQ_USER_ID"
+		}
+	   }
+       }
+   }
 
 With delete, you only get to specify the rows that are allowed to be deleted with ``filter``.
 
@@ -182,28 +207,26 @@ Insert
 
 ``anonymous`` cannot insert into ``article`` table. If you are a user, you should only be able to create an article with you as the author, i.e, you should not be allowed to set arbitrary ``author_id`` when inserting into ``article`` table. This is an assertion that must be verified before the data is persisted.
 
-.. todo::
+To set the permissions, you can use the api-console UI based workflow described above or the following REST call:
 
-   Show this via the console:
+.. code-block:: http
 
-   .. code-block:: http
+   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   Content-Type: application/json
+   Authorization: <admin-token>
 
-      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
-      Content-Type: application/json
-      Authorization: <admin-token>
-
-      {
-          "type" : "create_insert_permission",
-          "args" : {
-              "table" : "article",
-              "role" : "user",
-	      "permission" : {
-		   "check" : {
-                       "author_id" : "REQ_USER_ID"
-		   }
-	      }
-          }
-      }
+   {
+       "type" : "create_insert_permission",
+       "args" : {
+	   "table" : "article",
+	   "role" : "user",
+	   "permission" : {
+		"check" : {
+		    "author_id" : "REQ_USER_ID"
+		}
+	   }
+       }
+   }
 
 With insert, you only get to specify the assertion that has to be validated with ``check``.
 
@@ -212,191 +235,189 @@ Permissions for all tables
 
 We've looked at the permissions on ``article`` table. Let's wrap this section by defining the permissions on all tables.
 
-.. todo::
+To define permissions on all tables you can follow the method above for each table. A better way to do it is to wrap all the queries into a **bulk** HTTP request:
 
-   Show this via the console:
+.. code-block:: http
 
-   .. code-block:: http
+  POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+  Content-Type: application/json
+  Authorization: <admin-token>
 
-      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
-      Content-Type: application/json
-      Authorization: <admin-token>
-
-	{
-	    "type": "bulk",
-	    "args": [
-		{
-		    "type": "create_insert_permission",
-		    "args": {
-			"table": "author",
-			"role": "user",
-			"permission": {
-			    "check": {
-				"hasura_id": "REQ_USER_ID"
-			    }
+    {
+	"type": "bulk",
+	"args": [
+	    {
+		"type": "create_insert_permission",
+		"args": {
+		    "table": "author",
+		    "role": "user",
+		    "permission": {
+			"check": {
+			    "hasura_id": "REQ_USER_ID"
 			}
 		    }
-		},
-		{
-		    "type": "create_select_permission",
-		    "args": {
-			"table": "author",
-			"role": "user",
-			"permission": {
-			    "columns": "*",
-			    "filter": {}
+		}
+	    },
+	    {
+		"type": "create_select_permission",
+		"args": {
+		    "table": "author",
+		    "role": "user",
+		    "permission": {
+			"columns": "*",
+			"filter": {}
+		    }
+		}
+	    },
+	    {
+		"type": "create_select_permission",
+		"args": {
+		    "table": "author",
+		    "role": "anonymous",
+		    "permission": {
+			"columns": "*",
+			"filter": {}
+		    }
+		}
+	    },
+	    {
+		"type": "create_insert_permission",
+		"args": {
+		    "table": "comment",
+		    "role": "user",
+		    "permission": {
+			"check": {
+			    "author_id": "REQ_USER_ID"
 			}
 		    }
-		},
-		{
-		    "type": "create_select_permission",
-		    "args": {
-			"table": "author",
-			"role": "anonymous",
-			"permission": {
-			    "columns": "*",
-			    "filter": {}
+		}
+	    },
+	    {
+		"type": "create_select_permission",
+		"args": {
+		    "table": "comment",
+		    "role": "user",
+		    "permission": {
+			"columns": "*",
+			"filter": {}
+		    }
+		}
+	    },
+	    {
+		"type": "create_update_permission",
+		"args": {
+		    "table": "comment",
+		    "role": "user",
+		    "permission": {
+			"columns": [
+			    "comment"
+			],
+			"filter": {
+			    "author_id": "REQ_USER_ID"
 			}
 		    }
-		},
-		{
-		    "type": "create_insert_permission",
-		    "args": {
-			"table": "comment",
-			"role": "user",
-			"permission": {
-			    "check": {
-				"author_id": "REQ_USER_ID"
-			    }
-			}
+		}
+	    },
+	    {
+		"type": "create_select_permission",
+		"args": {
+		    "table": "comment",
+		    "role": "anonymous",
+		    "permission": {
+			"columns": "*",
+			"filter": {}
 		    }
-		},
-		{
-		    "type": "create_select_permission",
-		    "args": {
-			"table": "comment",
-			"role": "user",
-			"permission": {
-			    "columns": "*",
-			    "filter": {}
-			}
+		}
+	    },
+	    {
+		"type": "create_select_permission",
+		"args": {
+		    "table": "category",
+		    "role": "user",
+		    "permission": {
+			"columns": "*",
+			"filter": {}
 		    }
-		},
-		{
-		    "type": "create_update_permission",
-		    "args": {
-			"table": "comment",
-			"role": "user",
-			"permission": {
-			    "columns": [
-				"comment"
-			    ],
-			    "filter": {
-				"author_id": "REQ_USER_ID"
-			    }
-			}
+		}
+	    },
+	    {
+		"type": "create_select_permission",
+		"args": {
+		    "table": "category",
+		    "role": "anonymous",
+		    "permission": {
+			"columns": "*",
+			"filter": {}
 		    }
-		},
-		{
-		    "type": "create_select_permission",
-		    "args": {
-			"table": "comment",
-			"role": "anonymous",
-			"permission": {
-			    "columns": "*",
-			    "filter": {}
-			}
-		    }
-		},
-		{
-		    "type": "create_select_permission",
-		    "args": {
-			"table": "category",
-			"role": "user",
-			"permission": {
-			    "columns": "*",
-			    "filter": {}
-			}
-		    }
-		},
-		{
-		    "type": "create_select_permission",
-		    "args": {
-			"table": "category",
-			"role": "anonymous",
-			"permission": {
-			    "columns": "*",
-			    "filter": {}
-			}
-		    }
-		},
-		{
-		    "type": "create_select_permission",
-		    "args": {
-			"table": "article_category",
-			"role": "anonymous",
-			"permission": {
-			    "columns": "*",
-			    "filter": {
-				"article": {
-				    "is_published": true
-				}
-			    }
-			}
-		    }
-		},
-		{
-		    "type": "create_select_permission",
-		    "args": {
-			"table": "article_category",
-			"role": "user",
-			"permission": {
-			    "columns": "*",
-			    "filter": {
-				"article": {
-				    "$or": [
-					{
-					    "is_published": true
-					},
-					{
-					    "author_id": "REQ_USER_ID"
-					}
-				    ]
-				}
-			    }
-			}
-		    }
-		},
-		{
-		    "type": "create_delete_permission",
-		    "args": {
-			"table": "article_category",
-			"role": "user",
-			"permission": {
-			    "filter": {
-				"article": {
-				    "author_id": "REQ_USER_ID"
-				}
-			    }
-			}
-		    }
-		},
-		{
-		    "type": "create_insert_permission",
-		    "args": {
-			"table": "article_category",
-			"role": "user",
-			"permission": {
-			    "check": {
-				"article": {
-				    "author_id": "REQ_USER_ID"
-				}
+		}
+	    },
+	    {
+		"type": "create_select_permission",
+		"args": {
+		    "table": "article_category",
+		    "role": "anonymous",
+		    "permission": {
+			"columns": "*",
+			"filter": {
+			    "article": {
+				"is_published": true
 			    }
 			}
 		    }
 		}
-	    ]
-	}
+	    },
+	    {
+		"type": "create_select_permission",
+		"args": {
+		    "table": "article_category",
+		    "role": "user",
+		    "permission": {
+			"columns": "*",
+			"filter": {
+			    "article": {
+				"$or": [
+				    {
+					"is_published": true
+				    },
+				    {
+					"author_id": "REQ_USER_ID"
+				    }
+				]
+			    }
+			}
+		    }
+		}
+	    },
+	    {
+		"type": "create_delete_permission",
+		"args": {
+		    "table": "article_category",
+		    "role": "user",
+		    "permission": {
+			"filter": {
+			    "article": {
+				"author_id": "REQ_USER_ID"
+			    }
+			}
+		    }
+		}
+	    },
+	    {
+		"type": "create_insert_permission",
+		"args": {
+		    "table": "article_category",
+		    "role": "user",
+		    "permission": {
+			"check": {
+			    "article": {
+				"author_id": "REQ_USER_ID"
+			    }
+			}
+		    }
+		}
+	    }
+	]
+    }
 Next: Add relationships
 ------------------------
 
