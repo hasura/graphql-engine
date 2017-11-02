@@ -57,10 +57,12 @@ Select
           "args" : {
               "table" : "article",
               "role" : "anonymous",
-              "columns" : "*",
-              "filter" : {
-                  "is_published" : true
-              }
+	      "permission" : {
+		   "columns" : "*",
+		   "filter" : {
+		       "is_published" : true
+		   }
+	      }
           }
       }
 
@@ -77,13 +79,15 @@ We've specified ``*`` for ``columns`` as a short hand notation for all columns. 
        "args" : {
            "table" : "article",
            "role" : "user",
-           "columns" : "*",
-           "filter" : {
-               "$or" : [
-                   { "is_published" : true },
-                   { "author_id" : "REQ_USER_ID" }
-               ]
-           }
+	   "permission" : {
+		"columns" : "*",
+		"filter" : {
+		   "$or" : [
+		      { "is_published" : true },
+                      { "author_id" : "REQ_USER_ID" }
+                    ]
+                }
+	   }
        }
    }
 
@@ -122,10 +126,12 @@ Update
           "args" : {
               "table" : "article",
               "role" : "user",
-              "columns" : ["title", "content", "is_published"],
-              "filter" : {
-                  "author_id" : "REQ_USER_ID"
-              }
+	      "permission" : {
+		   "columns" : ["title", "content", "is_published"],
+		   "filter" : {
+		      "author_id" : "REQ_USER_ID"
+		   }
+	      }
           }
       }
 
@@ -157,13 +163,15 @@ Delete
       Authorization: <admin-token>
 
       {
-          "type" : "create_update_permission",
+          "type" : "create_delete_permission",
           "args" : {
               "table" : "article",
               "role" : "user",
-              "filter" : {
-                  "author_id" : "REQ_USER_ID"
-              }
+	      "permission" : {
+		   "filter" : {
+		      "author_id" : "REQ_USER_ID"
+		   }
+	      }
           }
       }
 
@@ -189,9 +197,11 @@ Insert
           "args" : {
               "table" : "article",
               "role" : "user",
-              "check" : {
-                  "author_id" : "REQ_USER_ID"
-              }
+	      "permission" : {
+		   "check" : {
+                       "author_id" : "REQ_USER_ID"
+		   }
+	      }
           }
       }
 
@@ -212,151 +222,181 @@ We've looked at the permissions on ``article`` table. Let's wrap this section by
       Content-Type: application/json
       Authorization: <admin-token>
 
-      {
-          "type" : "bulk",
-          "args" : [
-              {
-                  "type" : "create_insert_permission",
-                  "args" : {
-                      "table" : "author",
-                      "role" : "user",
-                      "check" : {
-                          "hasura_id" : "REQ_USER_ID"
-                      }
-                  }
-              },
-              {
-                  "type" : "create_select_permission",
-                  "args" : {
-                      "table" : "author",
-                      "role" : "user",
-                      "columns" : "*",
-                      "filter" : {}
-                  }
-              },
-              {
-                  "type" : "create_select_permission",
-                  "args" : {
-                      "table" : "author",
-                      "role" : "anonymous",
-                      "columns" : "*",
-                      "filter" : {}
-                  }
-              },
-              {
-                  "type" : "create_insert_permission",
-                  "args" : {
-                      "table" : "comment",
-                      "role" : "user",
-                      "check" : {
-                          "author_id" : "REQ_USER_ID"
-                      }
-                  }
-              },
-              {
-                  "type" : "create_select_permission",
-                  "args" : {
-                      "table" : "comment",
-                      "role" : "user",
-                      "columns" : "*",
-                      "filter" : {}
-                  }
-              },
-              {
-                  "type" : "create_update_permission",
-                  "args" : {
-                      "table" : "comment",
-                      "role" : "user",
-                      "columns" : ["comment"],
-                      "filter" : {
-                          "author_id" : "REQ_USER_ID"
-                      }
-                  }
-              },
-              {
-                  "type" : "create_select_permission",
-                  "args" : {
-                      "table" : "comment",
-                      "role" : "anonymous",
-                      "columns" : "*",
-                      "filter" : {}
-                  }
-              },
-              {
-                  "type" : "create_select_permission",
-                  "args" : {
-                      "table" : "category",
-                      "role" : "user",
-                      "columns" : "*",
-                      "filter" : {}
-                  }
-              },
-              {
-                  "type" : "create_select_permission",
-                  "args" : {
-                      "table" : "category",
-                      "role" : "anonymous",
-                      "columns" : "*",
-                      "filter" : {}
-                  }
-              },
-              {
-                  "type" : "create_select_permission",
-                  "args" : {
-                      "table" : "article_category",
-                      "role" : "anonymous",
-                      "columns" : "*",
-                      "filter" : {
-                          "article" : {
-                              "is_published" : true
-                          }
-                      }
-                  }
-              },
-              {
-                  "type" : "create_select_permission",
-                  "args" : {
-                      "table" : "article_category",
-                      "role" : "user",
-                      "columns" : "*",
-                      "filter" : {
-                          "article" : {
-                              "$or" : [
-                                  { "is_published" : true },
-                                  { "author_id" : "REQ_USER_ID" }
-                              ]
-                          }
-                      }
-                  }
-              },
-              {
-                  "type" : "create_delete_permission",
-                  "args" : {
-                      "table" : "article_category",
-                      "role" : "user",
-                      "filter" : {
-                          "article" : {
-                              "author_id" : "REQ_USER_ID"
-                          }
-                      }
-                  }
-              },
-              {
-                  "type" : "create_insert_permission",
-                  "args" : {
-                      "table" : "article_category",
-                      "role" : "user",
-                      "check" : {
-                          "article" : {
-                              "author_id" : "REQ_USER_ID"
-                          }
-                      }
-                  }
-              },
-          ]
-
-      }
-
+	{
+	    "type": "bulk",
+	    "args": [
+		{
+		    "type": "create_insert_permission",
+		    "args": {
+			"table": "author",
+			"role": "user",
+			"permission": {
+			    "check": {
+				"hasura_id": "REQ_USER_ID"
+			    }
+			}
+		    }
+		},
+		{
+		    "type": "create_select_permission",
+		    "args": {
+			"table": "author",
+			"role": "user",
+			"permission": {
+			    "columns": "*",
+			    "filter": {}
+			}
+		    }
+		},
+		{
+		    "type": "create_select_permission",
+		    "args": {
+			"table": "author",
+			"role": "anonymous",
+			"permission": {
+			    "columns": "*",
+			    "filter": {}
+			}
+		    }
+		},
+		{
+		    "type": "create_insert_permission",
+		    "args": {
+			"table": "comment",
+			"role": "user",
+			"permission": {
+			    "check": {
+				"author_id": "REQ_USER_ID"
+			    }
+			}
+		    }
+		},
+		{
+		    "type": "create_select_permission",
+		    "args": {
+			"table": "comment",
+			"role": "user",
+			"permission": {
+			    "columns": "*",
+			    "filter": {}
+			}
+		    }
+		},
+		{
+		    "type": "create_update_permission",
+		    "args": {
+			"table": "comment",
+			"role": "user",
+			"permission": {
+			    "columns": [
+				"comment"
+			    ],
+			    "filter": {
+				"author_id": "REQ_USER_ID"
+			    }
+			}
+		    }
+		},
+		{
+		    "type": "create_select_permission",
+		    "args": {
+			"table": "comment",
+			"role": "anonymous",
+			"permission": {
+			    "columns": "*",
+			    "filter": {}
+			}
+		    }
+		},
+		{
+		    "type": "create_select_permission",
+		    "args": {
+			"table": "category",
+			"role": "user",
+			"permission": {
+			    "columns": "*",
+			    "filter": {}
+			}
+		    }
+		},
+		{
+		    "type": "create_select_permission",
+		    "args": {
+			"table": "category",
+			"role": "anonymous",
+			"permission": {
+			    "columns": "*",
+			    "filter": {}
+			}
+		    }
+		},
+		{
+		    "type": "create_select_permission",
+		    "args": {
+			"table": "article_category",
+			"role": "anonymous",
+			"permission": {
+			    "columns": "*",
+			    "filter": {
+				"article": {
+				    "is_published": true
+				}
+			    }
+			}
+		    }
+		},
+		{
+		    "type": "create_select_permission",
+		    "args": {
+			"table": "article_category",
+			"role": "user",
+			"permission": {
+			    "columns": "*",
+			    "filter": {
+				"article": {
+				    "$or": [
+					{
+					    "is_published": true
+					},
+					{
+					    "author_id": "REQ_USER_ID"
+					}
+				    ]
+				}
+			    }
+			}
+		    }
+		},
+		{
+		    "type": "create_delete_permission",
+		    "args": {
+			"table": "article_category",
+			"role": "user",
+			"permission": {
+			    "filter": {
+				"article": {
+				    "author_id": "REQ_USER_ID"
+				}
+			    }
+			}
+		    }
+		},
+		{
+		    "type": "create_insert_permission",
+		    "args": {
+			"table": "article_category",
+			"role": "user",
+			"permission": {
+			    "check": {
+				"article": {
+				    "author_id": "REQ_USER_ID"
+				}
+			    }
+			}
+		    }
+		}
+	    ]
+	}
 Next: Add relationships
 ------------------------
 
