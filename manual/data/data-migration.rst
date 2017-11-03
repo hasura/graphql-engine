@@ -2,6 +2,8 @@
    :description: Manual for accessing postgres directly
    :keywords: hasura, docs, postgres, tunnel
 
+.. _schema_migrations:
+
 Schema migrations
 =================
 
