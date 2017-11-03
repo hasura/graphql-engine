@@ -30,4 +30,6 @@ This is the reference documentation of the entire Hasura platform.
   monitoring-logging/index
   scaling
   backups
+  troubleshooting
   reference/index
+  
