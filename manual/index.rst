@@ -15,6 +15,7 @@ This is the reference documentation of the entire Hasura platform.
   :titlesonly:
 
   getting-started/index
+  Moving to v0.15 (existing Hasura users)<migration-v0_15/index>
   The complete tutorial<tutorial/index>
   Hasura cluster<cluster/index>
   Hasura project<project/index>
