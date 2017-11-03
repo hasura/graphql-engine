@@ -130,171 +130,185 @@ Let's see how these relationships are established.
 Creating relationships
 ----------------------
 
-You can create relationship metadata for tables via the console
+You can create relationship metadata for tables via the API console.
 
-.. todo::
+Let's say you wish to add an object relationsip for ``article(author_id) -> author(hasura_id)``. Navigate to the *Relationships* tab in the ``article`` table.
 
-   Show how relationships are created:
+You'll see an entry in *suggested object relationships*:
 
-  .. code-block:: http
+.. figure:: ../../img/tutorial-10-new-rel-article.png
 
-     POST /v1/query HTTP/1.1
-     Content-Type: application/json
-     Authorization: <admin-token>
+Click on *Add* to add a new object relationship and name the relationship:
 
-     {
-         "type": "bulk",
-         "args": [
-             {
-                 "type": "create_array_relationship",
-                 "args": {
-                     "using": {
-                         "foreign_key_constraint_on": {
-                             "column": "author_id",
-                             "table": "article"
-                         }
-                     },
-                     "table": "author",
-                     "name": "articles"
-                 }
-             },
-             {
-                 "type": "create_array_relationship",
-                 "args": {
-                     "using": {
-                         "foreign_key_constraint_on": {
-                             "column": "author_id",
-                             "table": "comment"
-                         }
-                     },
-                     "table": "author",
-                     "name": "comments"
-                 }
-             },
-             {
-                 "type": "create_array_relationship",
-                 "args": {
-                     "using": {
-                         "foreign_key_constraint_on": {
-                             "column": "author_id",
-                             "table": "article_like"
-                         }
-                     },
-                     "table": "author",
-                     "name": "liked_articles"
-                 }
-             },
-             {
-                 "type": "create_object_relationship",
-                 "args": {
-                     "using": {
-                         "foreign_key_constraint_on": "author_id"
-                     },
-                     "table": "article",
-                     "name": "author"
-                 }
-             },
-             {
-                 "type": "create_array_relationship",
-                 "args": {
-                     "using": {
-                         "foreign_key_constraint_on": {
-                             "column": "article_id",
-                             "table": "comment"
-                         }
-                     },
-                     "table": "article",
-                     "name": "comments"
-                 }
-             },
-             {
-                 "type": "create_array_relationship",
-                 "args": {
-                     "using": {
-                         "foreign_key_constraint_on": {
-                             "column": "article_id",
-                             "table": "article_category"
-                         }
-                     },
-                     "table": "article",
-                     "name": "categories"
-                 }
-             },
-             {
-                 "type": "create_object_relationship",
-                 "args": {
-                     "using": {
-                         "foreign_key_constraint_on": "author_id"
-                     },
-                     "table": "article_like",
-                     "name": "liked_by"
-                 }
-             },
-             {
-                 "type": "create_object_relationship",
-                 "args": {
-                     "using": {
-                         "foreign_key_constraint_on": "article_id"
-                     },
-                     "table": "article_like",
-                     "name": "article"
-                 }
-             },
-             {
-                 "type": "create_object_relationship",
-                 "args": {
-                     "using": {
-                         "foreign_key_constraint_on": "author_id"
-                     },
-                     "table": "comment",
-                     "name": "commented_by"
-                 }
-             },
-             {
-                 "type": "create_object_relationship",
-                 "args": {
-                     "using": {
-                         "foreign_key_constraint_on": "article_id"
-                     },
-                     "table": "comment",
-                     "name": "article"
-                 }
-             },
-             {
-                 "type": "create_array_relationship",
-                 "args": {
-                     "using": {
-                         "foreign_key_constraint_on": {
-                             "column": "category_id",
-                             "table": "article_category"
-                         }
-                     },
-                     "table": "category",
-                     "name": "articles"
-                 }
-             },
-             {
-                 "type": "create_object_relationship",
-                 "args": {
-                     "using": {
-                         "foreign_key_constraint_on": "article_id"
-                     },
-                     "table": "article_category",
-                     "name": "article"
-                 }
-             },
-             {
-                 "type": "create_object_relationship",
-                 "args": {
-                     "using": {
-                         "foreign_key_constraint_on": "category_id"
-                     },
-                     "table": "article_category",
-                     "name": "category"
-                 }
-             }
-         ]
-     }
+.. figure:: ../../img/tutorial-10-add-new-rel-article.png
+
+The relationship is created:
+
+.. figure:: ../../img/tutorial-10-new-rel-added-article.png
+
+You can create relationships for other constraints similarly.
+
+If you have a lot of relationships that you'd like to add but not use the UI, you can send a bulk request to the ``data`` service:
+	    
+.. code-block:: http
+
+  POST /v1/query HTTP/1.1
+  Content-Type: application/json
+  Authorization: <admin-token>
+
+  {
+      "type": "bulk",
+      "args": [
+	  {
+	      "type": "create_array_relationship",
+	      "args": {
+		  "using": {
+		      "foreign_key_constraint_on": {
+			  "column": "author_id",
+			  "table": "article"
+		      }
+		  },
+		  "table": "author",
+		  "name": "articles"
+	      }
+	  },
+	  {
+	      "type": "create_array_relationship",
+	      "args": {
+		  "using": {
+		      "foreign_key_constraint_on": {
+			  "column": "author_id",
+			  "table": "comment"
+		      }
+		  },
+		  "table": "author",
+		  "name": "comments"
+	      }
+	  },
+	  {
+	      "type": "create_array_relationship",
+	      "args": {
+		  "using": {
+		      "foreign_key_constraint_on": {
+			  "column": "author_id",
+			  "table": "article_like"
+		      }
+		  },
+		  "table": "author",
+		  "name": "liked_articles"
+	      }
+	  },
+	  {
+	      "type": "create_object_relationship",
+	      "args": {
+		  "using": {
+		      "foreign_key_constraint_on": "author_id"
+		  },
+		  "table": "article",
+		  "name": "author"
+	      }
+	  },
+	  {
+	      "type": "create_array_relationship",
+	      "args": {
+		  "using": {
+		      "foreign_key_constraint_on": {
+			  "column": "article_id",
+			  "table": "comment"
+		      }
+		  },
+		  "table": "article",
+		  "name": "comments"
+	      }
+	  },
+	  {
+	      "type": "create_array_relationship",
+	      "args": {
+		  "using": {
+		      "foreign_key_constraint_on": {
+			  "column": "article_id",
+			  "table": "article_category"
+		      }
+		  },
+		  "table": "article",
+		  "name": "categories"
+	      }
+	  },
+	  {
+	      "type": "create_object_relationship",
+	      "args": {
+		  "using": {
+		      "foreign_key_constraint_on": "author_id"
+		  },
+		  "table": "article_like",
+		  "name": "liked_by"
+	      }
+	  },
+	  {
+	      "type": "create_object_relationship",
+	      "args": {
+		  "using": {
+		      "foreign_key_constraint_on": "article_id"
+		  },
+		  "table": "article_like",
+		  "name": "article"
+	      }
+	  },
+	  {
+	      "type": "create_object_relationship",
+	      "args": {
+		  "using": {
+		      "foreign_key_constraint_on": "author_id"
+		  },
+		  "table": "comment",
+		  "name": "commented_by"
+	      }
+	  },
+	  {
+	      "type": "create_object_relationship",
+	      "args": {
+		  "using": {
+		      "foreign_key_constraint_on": "article_id"
+		  },
+		  "table": "comment",
+		  "name": "article"
+	      }
+	  },
+	  {
+	      "type": "create_array_relationship",
+	      "args": {
+		  "using": {
+		      "foreign_key_constraint_on": {
+			  "column": "category_id",
+			  "table": "article_category"
+		      }
+		  },
+		  "table": "category",
+		  "name": "articles"
+	      }
+	  },
+	  {
+	      "type": "create_object_relationship",
+	      "args": {
+		  "using": {
+		      "foreign_key_constraint_on": "article_id"
+		  },
+		  "table": "article_category",
+		  "name": "article"
+	      }
+	  },
+	  {
+	      "type": "create_object_relationship",
+	      "args": {
+		  "using": {
+		      "foreign_key_constraint_on": "category_id"
+		  },
+		  "table": "article_category",
+		  "name": "category"
+	      }
+	  }
+      ]
+  }
 
 
 
