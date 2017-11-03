@@ -48,7 +48,7 @@ Using the UI
 ^^^^^^^^^^^^
 In the api-console, navigate to *Data -> article -> Permissions*.
 
-This is the permissions section for the article table, which looks like this:
+This is the permissions section for the ``article`` table, which looks like this:
 
 .. figure:: ../../img/tutorial-9-vanilla-screen.png
 
@@ -57,7 +57,7 @@ To add permissions, click the *Add permissions for a new role* button:
 .. figure:: ../../img/tutorial-9-add-permission.png
 	    
 	    You can add permissions for the query types Select, Insert, Update, Delete for different roles (default anonymous and user).
-Add *Select* permissions for the *anonymous* role:
+Add permissions for the **Select** query for the **anonymous** role:
 
 .. figure:: ../../img/tutorial-9-permissions-anon-select.png
 

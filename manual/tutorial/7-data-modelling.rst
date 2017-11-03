@@ -37,16 +37,28 @@ As you would normally do with any relational database, data is modelled as table
 |comment                                 |id, user_id, article_id, comment        |
 +----------------------------------------+----------------------------------------+
 
-Create tables and model foreign key constraints via the API console.
+You can Create tables and model foreign key constraints via the API console like this:
 
-.. todo::
+.. figure:: ../../img/tutorial-7-create-author.png
 
-   Add console screenshots here.
+	    Creating the ``author`` table
 
-   In SQL, the structure of these tables is as follows:
+.. figure:: ../../img/tutorial-7-create-article.png
 
-   .. literalinclude:: blog-schema.sql
-      :language: sql
+	    Creating the ``article`` table
+
+To add foreign key constraints, after creating the tables go to *Modify* and edit the columns for which you wish to add foreign keys.
+	    
+.. figure:: ../../img/tutorial-7-article-add-fk.png
+
+	    Adding foreign key constraints to ``article``
+
+Now similarly create the other tables and add foreign key contraints.
+	    
+In SQL, the structure of these tables is as follows:
+
+.. literalinclude:: blog-schema.sql
+   :language: sql
 
 
 Next: Explore the Data APIs
