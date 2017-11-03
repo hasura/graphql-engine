@@ -54,9 +54,9 @@ Step 2: Login
 
 Next, run the command below to login or create a new Hasura account.
 
-.. code-block:: bash
+.. code-block:: console
 
-  hasura login
+  $ hasura login
 
 A browser window will open up for you to login or register.
 Once you've signed in, you'll see a 'Login success' message on the browser.

@@ -16,13 +16,13 @@ Get cluster information and the services running
 
 Inside your project directory, run:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ hasura cluster status
 
 the output of which looks like:
 
-.. code-block:: bash
+::
 
   INFO Reading cluster status...                    
   INFO Status:                                      

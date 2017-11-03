@@ -2,45 +2,38 @@
    :description: Part 5 of a set of learning exercises meant for exploring Hasura in detail. This part shows you how to create a custom microservice (Docker & git push)
    :keywords: hasura, getting started, step 7, custom service, Docker, git push
 
-================================================
-Part XII: Custom code using Docker or `git push`
-================================================
+=======================================
+Part XII: Custom code and microservices
+=======================================
 
-Not all requirements will be met by the Hasura data, auth APIs.
-Custom APIs and services like, API integrations or UI services will always
+Not all requirements will be met by the Hasura APIs.
+Custom APIs and microservices like API integrations or UI services will always
 need to be added specifically to the project.
 
 Hasura provides an easy way to run services by specifying ``docker`` images
-or by pushing changes from your git repo, directly onto your project.
+or by directly pushing code via ``git``.
 
 Let us explore 2 use cases.
 
-..
-   `Adding a custom service using a Docker image, or by using git push <https://youtu.be/LK1mgsl2uUs>`_
+Custom code: Adding a simple web-server to serve a UI
+-----------------------------------------------------
 
-Git push: Adding a simple web-server to serve a UI
---------------------------------------------------
-
-Let's take a simple nodejs, express example. The best way to get a base setup ready, is to
-grab the relevant base template directory from `quickstart-docker-git <https://github.com/hasura/quickstart-docker-git>`_
-
-Let's copy the ``quickstart-docker-git/nodejs-express`` for our example, and rename it to ``www``.
-
-Initialize a git repo in it using
+Initialize the microservice configuration (we'll call it ``www``) using:
 
 .. code-block:: console
+		
+	  $ hasura microservice add www
 
-   $ git init
+This will create a directory called ``www`` inside your ``microservices`` directory, which  will contain a ``k8s.yaml`` file. This file contains the Kubernetes configuration for the microservice. 
 
-After copying the relevant directory, and intializing our own git repo in it, this is what
-our directory structure should look like::
+.. todo::
 
-   www/
-      Dockerfile
-      .git
-      app/
-         package.json
-         server.js
+   Rewrite this section with better instructions 
+
+Now coming to the code, let's take a simple nodejs express example. The best way to get a base setup ready, is to
+grab the relevant base template directory from `quickstart-docker-git <https://github.com/hasura/quickstart-docker-git>`_
+
+Let's copy the ``quickstart-docker-git/nodejs-express`` inside the ``www`` directory.
 
 Note the ``Dockerfile`` at the top level. This Dockerfile is used by the Hasura platform
 automatically to build your code in the right environment.
@@ -63,18 +56,42 @@ Let's modify ``www/app/server.js``, to just serve one sample request:
    });
 
 
-Now that our code is ready to be consumed by the Hasura project, let's create a new service via the console.
-To enable this option to ``git push`` a service, check the ``Enable git push`` box on the ``Add a custom service`` page.
+Add a route so that the microservice can be reached externally:
 
-.. todo::
+.. code-block:: console
+		
+	  $ hasura routes generate www
+	  
+:: 
 
-   Update this:
+    INFO Generating route...                          
+    INFO Add the following block to conf/routes.yaml  
 
-   .. image:: gitpush.png
-      :scale: 50%
+    www:
+      /:
+	corsPolicy: null
+	enableAuth: true
+	enableCORS: true
+	enableWebsockets: true
+	locationDirectives: ""
+	restrictToRoles: []
+	upstreamService:
+	  name: www
+	  namespace: '{{ cluster.metadata.namespaces.user }}'
+	upstreamServicePath: /
+	upstreamServicePort: 80
 
-Make sure that you've added your SSH public key to the ``authorized_keys`` file via the ``Console > Advanced`` page, and added the Hasura project as a remote as described on the manage page of the service you just created.
 
+Add the output above to the ``conf/routes.yaml`` as instructed.
+
+If you want to have a separate git remote to push your code to, you can use the ``hasura remote generate`` command to do so.
+
+Make sure that you've added your SSH public key to the cluster using
+
+.. code-block:: console
+
+	  $ hasura ssh-key add
+	  
 Once that is done, you're ready to push!
 
 .. code-block:: console
@@ -95,17 +112,46 @@ the ``git push`` command will show you errors and the push will fail. Fix the er
 Docker: Adding a custom database browser (adminer)
 --------------------------------------------------
 
-To add a custom service, head to the console, and click on the ``+`` icon.
-Follow the instructions from this screenshot, and click on ``Create`` to add your service.
+To add a custom microservice, open your teminal and ``cd`` into your project directory. Execute:
 
-.. todo::
+.. code-block:: console
 
-   Update this:
+   $ hasura microservice add adminer -i clue/adminer -p 80
 
-   .. image:: adminer.png
-      :scale: 50%
+This will create a directory inside the *microservices* directory called *adminer* which will contain a ``k8s.yaml`` file.
+This file describes the Kubenernetes configuration for your microservice. 
 
-That's all you need to do. If you head to ``https://adminer.test42.hasura-app.io`` you'll see
+Next, generate the routes for this microservice:
+
+.. code-block:: console
+		
+	  $ hasura routes generate adminer
+	  
+::
+
+     INFO Generating route...                          
+     INFO Add the following block to conf/routes.yaml  
+
+     adminer:
+       /:
+	 corsPolicy: null
+	 enableAuth: true
+	 enableCORS: true
+	 enableWebsockets: true
+	 locationDirectives: ""
+	 restrictToRoles: []
+	 upstreamService:
+	   name: adminer
+	   namespace: '{{ cluster.metadata.namespaces.user }}'
+	 upstreamServicePath: /
+	 upstreamServicePort: 80
+
+
+Add this to the ``conf/routes.yaml`` file as instructed in the output of the above command.
+
+Finally run ``git push`` to deploy the configuration and microservices to the cluster.
+
+That's all you need to do. If you head to ``https://adminer.<cluster-name>.hasura-app.io`` you'll see
 the familiar ``adminer`` UI.
 
 .. admonition:: Automatic SSL certificates
