@@ -8,7 +8,7 @@
 Getting started
 ===============
 
-If you'd like to evaluate Hasura quickly, head to the `hello-world quickstart project <https://hasura-stg.hasura-app.io/hub-detail/hasura/hello-world>`_.
+If you'd like to evaluate Hasura quickly, head to the `hello-world quickstart project <https://hasura-stg.hasura-app.io/hub/project/hasura/hello-world>`_.
 
 Alternatively, if you'd like to get a deep understanding of how Hasura works, head to :doc:`The complete tutorial <../tutorial/index>`.
 
