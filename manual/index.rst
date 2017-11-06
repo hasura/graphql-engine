@@ -27,6 +27,7 @@ This is the reference documentation of the entire Hasura platform.
   Emails/SMS <email-sms/index>
   API gateway<gateway/index>
   custom-microservices/index
+  hasura CLI reference <hasuractl/index>
   custom-domains-ssl
   monitoring-logging/index
   scaling
