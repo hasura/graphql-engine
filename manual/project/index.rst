@@ -1,6 +1,6 @@
 .. meta::
    :description: Describing the hasura project directory structure
-   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl
+   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasuracli
 
 .. _hasuractl-manual:
 
@@ -9,8 +9,104 @@
 Hasura project
 ==============
 
-.. todo::
+A Hasura project is a folder (representing a code repo) that contains all the configuration files, the database migrations and the source code and cofiguration for your custom microservices. This project folder should be a git repo, so that you can `git push hasura master` to deploy everything in the repo to the cluster.
 
-   - What is a hasura project?: Source code and configuration for services, migrations, conf files in a mono-repo to make life easy
-   - Hasura project directory structure: Get this from hasuractl/
-   - Description of each folder, file. TOCTREE should mimic directory structure
+Creating a 'base' project
+-----------------------
+
+Run the following command:
+
+.. code-block:: console
+
+   $ hasura clone hasura/base
+   
+::
+   
+   INFO Getting app details...                        app=hasura/base
+   INFO Found on Hasura hub                          
+   INFO Downloading...                               
+   INFO Downloaded app to directory                   app=hasura/base directory=/home/sid/gen/base
+   INFO Cloned app successfully                      
+
+   
+This will 'clone' a base project from `hasura.io/hub <https://hasura.io/hub>`_.
+Note, you can clone any project from the hub and use that as a starting point for your new project.
+
+.. admonition:: Note
+
+   ``hasura/hello-world`` is another project that contains a few database
+   migrations, some sample data and even a sample mircoservice to get started quickly.
+
+Understanding the project structure
+--------------------------------
+The project (a.k.a. project directory) has a particular directory structure and it has to be maintained strictly, else hasura cli would not work as expected. A representative project is shown below:
+
+.. code-block:: bash
+
+   .
+   ├── hasura.yaml
+   ├── clusters.yaml
+   ├── conf
+   │   ├── authorized-keys.yaml
+   │   ├── auth.yaml
+   │   ├── ci.yaml
+   │   ├── domains.yaml
+   │   ├── filestore.yaml
+   │   ├── gateway.yaml
+   │   ├── http-directives.conf
+   │   ├── notify.yaml
+   │   ├── postgres.yaml
+   │   ├── routes.yaml
+   │   └── session-store.yaml
+   ├── migrations
+   │   ├── 1504788327_create_table_user.down.yaml
+   │   ├── 1504788327_create_table_user.down.sql
+   │   ├── 1504788327_create_table_user.up.yaml
+   │   └── 1504788327_create_table_user.up.sql
+   └── services
+       ├── adminer
+       │   └── k8s.yaml
+       └── flask
+           ├── src/
+           ├── k8s.yaml
+           └── Dockerfile
+
+hasura.yaml
+^^^^^^^^^^^
+
+This file contains some metadata about the project, namely a name, description and some keywords. Also contains platformVersion which says which Hasura platform version is compatible with this project.
+
+clusters.yaml
+^^^^^^^^^^^^^
+
+Info about the clusters added to this project can be found in this file. Each cluster is defined by it's name allotted by Hasura. While adding the cluster to the project you are prompted to give an alias, which is just hasura by default. The kubeContext mentions the name of kubernetes context used to access the cluster, which is also managed by hasura. The config key denotes the location of cluster's metadata on the cluster itself. This information is parsed and cluster's metadata is appended while conf is rendered. data key is for holding custom variables that you can define.
+
+.. code-block:: bash
+   
+   - name: h34-ambitious93-stg
+     alias: hasura
+     kubeContext: h34-ambitious93-stg
+     config:
+      configmap: controller-conf
+      namespace: hasura
+     data: null  
+
+conf/
+^^^^
+
+This directory contains the project configuration files such as HTTP routes, continuous integration remotes, etc. You can find more information about each conf file at the top of the file itself.
+
+
+migrations/
+^^^^^^^^^^^
+
+This directory contains database migrations.
+
+services/
+^^^^^^^^^
+
+This directory contains everything related to the services that you create; such as the Kuberenetes configuration, source code etc.
+
+For more information regarding each directory, you can look at the README.md present in it.
+
+
