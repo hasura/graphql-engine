@@ -50,7 +50,7 @@ This tutorial is split across the following sections:
 .. toctree::
   :maxdepth: 1
 
-  1-intro
+  1-setup-hasura-cli
   2-hasura-project
   3-hasura-cluster
   4-explore-hasura-cluster
