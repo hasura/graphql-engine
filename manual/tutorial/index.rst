@@ -36,10 +36,11 @@ The complete tutorial: Learn by example
       - Environment variables
    - Publish to hasura-hub
 
-This is a simple, in-depth tutorial to understand how Hasura works
-and how you can build a backend for your application, a blog engine, with Hasura.
+This is a simple, in-depth tutorial to understand how Hasura works and how you
+can build a backend for your application, a blog engine in this example, with
+Hasura.
 
-Once you're done with this tutorial, you'll understand:
+At the end of this tutorial, you'll understand:
 
 - what Hasura projects and clusters are,
 - how to use the Hasura APIs to avoid writing backend code
