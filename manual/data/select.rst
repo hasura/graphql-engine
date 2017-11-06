@@ -88,4 +88,22 @@ Example,
        }
    }
 
+Now let's look at a simple `count` query on the article table. The full definition of a `count` query can be found :ref:`here <data_count>`
+
+.. code-block:: http
+
+   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   Content-Type: application/json
+   Authorization: Bearer <admin-token>
+
+   {
+       "type" : "count",
+       "args" : {
+           "table" : "article",
+           "where": {"is_published": true}
+       }
+   }
+
+This query returns the count of rows from ``article`` table where ``is_published`` is ``true``.
+
 

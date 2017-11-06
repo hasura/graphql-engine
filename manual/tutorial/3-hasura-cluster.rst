@@ -15,10 +15,12 @@ For now, however, let's get started with a free Hasura cluster.
 Step 1: Create a free Hasura cluster
 ------------------------------------
 
-.. code-block:: bash
+.. code-block:: console
 
    $ hasura cluster create --type=free
 
+::
+   
    INFO Creating a Hasura cluster...
    INFO Hasura cluster created                        cluster=h34-depute95-stg
    INFO Initializing the cluster...
@@ -38,6 +40,8 @@ Take a note of your cluster name, in the example above ``h34-test42-stg``.
    # Add the cluster and alias it to an easier name
    $ hasura cluster add h34-test42-stg -c hasura
 
+::
+   
    INFO Adding cluster...                             cluster-alias=hasura cluster-name=h34-test42-stg
    INFO Cluster added to project
    INFO Setting up git remotes and pre-push hook...
@@ -62,6 +66,8 @@ to refer to this cluster in the future.
    # Set this cluster as the default
    $ hasura cluster set-default -c hasura
 
+::
+   
    INFO Setting default cluster...                    cluster-alias=hasura
    INFO Cluster set as default
 
@@ -76,6 +82,8 @@ your cluster's git remote can identify you securely.
 
    # Add an SSH key to the default cluster
    $ hasura ssh-key add
+
+::
 
    INFO Adding SSH key from /Users/suppandi/.ssh/id_rsa.pub ...
    INFO SSH key added to cluster

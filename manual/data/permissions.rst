@@ -33,15 +33,17 @@ Select
    Authorization: <admin-token>
 
    {
-       "type" : "create_select_permission",
-       "args" : {
+      "type" : "create_select_permission",
+      "args" : {
            "table" : "article",
            "role" : "anonymous",
-           "columns" : "*",
-           "filter" : {
-               "is_published" : true
-           }
-       }
+           "permission": {
+              "columns" : "*",
+              "filter" : {
+                "is_published" : true
+            }
+          }
+      }
    }
 
 The response would be as follows:
@@ -68,12 +70,14 @@ We've specified ``*`` for ``columns`` as a short hand notation for all columns. 
        "args" : {
            "table" : "article",
            "role" : "user",
-           "columns" : "*",
-           "filter" : {
-               "$or" : [
-                   { "is_published" : true },
-                   { "author_id" : "REQ_USER_ID" }
-               ]
+           "permission": {
+              "columns" : "*",
+              "filter" : {
+                "$or" : [
+                    { "is_published" : true },
+                    { "author_id" : "REQ_USER_ID" }
+                ]
+             }
            }
        }
    }
@@ -120,9 +124,11 @@ Update
        "args" : {
            "table" : "article",
            "role" : "user",
-           "columns" : ["title", "content", "is_published"],
-           "filter" : {
-               "author_id" : "REQ_USER_ID"
+           "permission": {
+             "columns" : ["title", "content", "is_published"],
+             "filter" : {
+                 "author_id" : "REQ_USER_ID"
+             }
            }
        }
    }
@@ -166,8 +172,11 @@ Delete
        "args" : {
            "table" : "article",
            "role" : "user",
-           "filter" : {
-               "author_id" : "REQ_USER_ID"
+           "permission": {
+              "columns": ["title", "content"],
+              "filter" : {
+                 "author_id" : "REQ_USER_ID"
+             }
            }
        }
    }
@@ -201,8 +210,10 @@ Insert
        "args" : {
            "table" : "article",
            "role" : "user",
-           "check" : {
-               "author_id" : "REQ_USER_ID"
+           "permission": {
+             "check" : {
+                 "author_id" : "REQ_USER_ID"
+             }
            }
        }
    }

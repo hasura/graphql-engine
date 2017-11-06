@@ -29,41 +29,44 @@ Let us define a view in `SQL <https://www.postgresql.org/docs/current/static/sql
 
 Let's apply this via the console:
 
-.. todo::
+Navigate to the *SQL* tab in the API console and enter the above SQL statement. Also, check the *This is a migration* box so that it can be added to the migrations.
 
-   Show in API console:
+.. figure:: ../../img/tutorial-11-add-view-sql.png
 
-   .. code-block:: http
+	    Adding a view via SQL. Don't forget to check *This is a migration*
+.. .. code-block:: http
+ 
+..      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+..      Content-Type: application/json
+..      Authorization: Bearer <admin-token>
+..      {
+..        "type" : "run_sql",
+..        "args" : {
+..          "sql" : "CREATE VIEW article_like_count AS...",
+..        }
+..      }
 
-      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
-      Content-Type: application/json
-      Authorization: Bearer <admin-token>
 
-      {
-        "type" : "run_sql",
-        "args" : {
-          "sql" : "CREATE VIEW article_like_count AS...",
-        }
-      }
+Let us then add this view to Hasura.
 
-Let us then add this view, using the ``add_existing_table_or_view``:
+Navigate to the *Schema* tab in the *Data* section of the API console. You'll see a list of untracked tables. Click on *Add* next to the view name to track it.
 
-.. todo::
+.. figure:: ../../img/tutorial-11-add-view-track.png
 
-   Show in API console:
+The equivalent REST request is:
 
-   .. code-block:: http
+.. code-block:: http
 
-      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
-      Content-Type: application/json
-      Authorization: Bearer <admin-token>
+   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   Content-Type: application/json
+   Authorization: Bearer <admin-token>
 
-      {
-        "type" : "add_existing_table_or_view",
-        "args" : {
-          "name" : "article_like_count"
-        }
-      }
+   {
+     "type" : "add_existing_table_or_view",
+     "args" : {
+       "name" : "article_like_count"
+     }
+   }
 
 As soon as the view is tracked by the Data API, you can use ``select`` as if ``article_like_count`` is a table.
 

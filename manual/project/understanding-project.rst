@@ -19,6 +19,23 @@ Creating a project
 
    # creates a directory called `my-project` and initialize an empty Hasura project
    
+::
+   
+   INFO Getting app details...                        app=hasura/base
+   INFO Found on Hasura hub                          
+   INFO Downloading...                               
+   INFO Downloaded app to directory                   app=hasura/base directory=/home/sid/gen/base
+   INFO Cloned app successfully                      
+
+   
+This will 'clone' a base project from `hasura.io/hub <https://hasura.io/hub>`_.
+Note, you can clone any project from the hub and use that as a starting point for your new project.
+
+.. admonition:: Note
+
+   ``hasura/hello-world`` is another project that contains a few database
+   migrations, some sample data and even a sample mircoservice to get started quickly.
+
 .. note::
 
   This command automatically intializes a git repository
@@ -113,5 +130,3 @@ holding custom variables that you can define.
 .. note::
 
   hasura cli doesn't consider any other files or directories outside of those mentioned above
-
-

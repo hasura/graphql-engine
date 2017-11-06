@@ -14,9 +14,11 @@ Create a 'base' project
 
 Run the following command:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ hasura clone hasura/base
+   
+::
    
    INFO Getting app details...                        app=hasura/base
    INFO Found on Hasura hub                          
