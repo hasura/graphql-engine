@@ -38,11 +38,11 @@ You can alter a column's type, default value and Nullable property via multiple 
       Content-Type: application/json
 
       {	
-  		"type" : "run_sql",
-  		"args" : {
-  			"sql" : "ALTER TABLE article 
-  				 ALTER COLUMN rating TYPE numeric;"
-  		}
+    		"type" : "run_sql",
+    		"args" : {
+    			"sql" : "ALTER TABLE article 
+    				 ALTER COLUMN rating TYPE numeric;"
+    		}
       }
 
 Alter Constraints
@@ -59,11 +59,11 @@ You can add ``Unique`` constraints or modify the existing primary key via SQL pa
       Content-Type: application/json
 
       {	
-  		"type" : "run_sql",
-  		"args" : {
-  			"sql" : "ALTER TABLE article 
-  				 ADD CONSTRAINT unique_author UNIQUE (author_id);"
-  		}
+    		"type" : "run_sql",
+    		"args" : {
+    			"sql" : "ALTER TABLE article 
+    				 ADD CONSTRAINT unique_author UNIQUE (author_id);"
+    		}
       }
 
 2. Using the API to alter ``primary key`` constraint:
@@ -75,13 +75,13 @@ You can add ``Unique`` constraints or modify the existing primary key via SQL pa
       Content-Type: application/json
 
       {	
-  		"type" : "run_sql",
-  		"args" : {
-  			"sql" : "ALTER TABLE category 
-  				   DROP CONSTRAINT category_pkey;
-  				   ALTER TABLE category 
-  				   ADD PRIMARY KEY (name);"
-  		}
+    		"type" : "run_sql",
+    		"args" : {
+    			"sql" : "ALTER TABLE category 
+    				   DROP CONSTRAINT category_pkey;
+    				   ALTER TABLE category 
+    				   ADD PRIMARY KEY (name);"
+    		}
       }
 
 First, you have to drop the existing primary key constraint before adding the new one. If you don't have a primary key already, then skip the DROP CONSTRAINT statement in the above API.
@@ -106,11 +106,11 @@ You can delete a ``Foreign key`` constraint(s) via
       Content-Type: application/json
 
       {	
-  		"type" : "run_sql",
-  		"args" : {
-  			"sql" : "ALTER TABLE article 
-  					DROP CONSTRAINT article_category_id_fkey;"
-  		}
+    		"type" : "run_sql",
+    		"args" : {
+    			"sql" : "ALTER TABLE article 
+    					DROP CONSTRAINT article_category_id_fkey;"
+    		}
       }
 
 3. SQL page of API console UI (just like the first example above) or via the API.
@@ -199,10 +199,10 @@ Note: When you delete a table, it is CASCADE disabled by default. It means that 
       Content-Type: application/json
 
       {	
-  		"type" : "run_sql",
-  		"args" : {
-  			"sql" : "DROP TABLE article"
-  		}
+    		"type" : "run_sql",
+    		"args" : {
+    			"sql" : "DROP TABLE article"
+    		}
       }
 
 In the above API, ``article`` table will be deleted if there are no dependent objects. In case, article table is being depended by other tables, like author, the delete won't go through. In that case, just modify the SQL statement to ``DROP TABLE article CASCADE``.
