@@ -1,24 +1,11 @@
 New workflow vs the old workflow
 ================================
 
-This document is described in terms of new terminologies. For example, even in
-the older workflow, new terms are being used. Refer :doc:`terminologies`.
-
-.. ..todo::
-  - Creating a Hasura project
-  - Opening the console
-  - Creating tables
-  - Configuring auth/notify/filestore
-  - Adding a git-push service
-  - Adding a docker service
-  - API gateway settings
-  - SSH key / cluster access settings
-  - Managing environment variables
-  - Viewing logs/events
-
+This document is described in terms of new terminologies. In the following,
+even in the older workflow, new terms are used. Refer :doc:`terminologies`.
 
 Creating a Hasura project
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 .. list-table::
   :header-rows: 1
 
@@ -33,7 +20,7 @@ Creating a Hasura project
 
 
 Creating a Hasura cluster
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 .. list-table::
   :header-rows: 1
 
@@ -48,7 +35,7 @@ Creating a Hasura cluster
 
 
 Opening the console
-~~~~~~~~~~~~~~~~~~~
+-------------------
 .. list-table::
   :header-rows: 1
 
@@ -61,7 +48,7 @@ Opening the console
 
 
 Creating tables
-~~~~~~~~~~~~~~~
+---------------
 .. list-table::
   :header-rows: 1
 
@@ -75,7 +62,7 @@ Creating tables
 
 
 Configuring auth/notify/filestore
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 .. list-table::
   :header-rows: 1
 
@@ -86,11 +73,12 @@ Configuring auth/notify/filestore
     - Edit the appropriate files in ``conf/{auth,notify,filestore}.yaml`` to
       change Auth, Notify and Filestore settings. To apply these changes to a
       cluster, git commit and push to that cluster. ``git commit && git push
-      hasura master``.
+      hasura master``. Refer :doc:`../users/config`, :doc:`../email-sms/index`,
+      :doc:`../files/index`.
 
 
 Adding a git-push microservice
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 .. list-table::
   :header-rows: 1
 
@@ -102,7 +90,7 @@ Adding a git-push microservice
 
 
 Adding a docker service
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 .. list-table::
   :header-rows: 1
 
@@ -114,7 +102,7 @@ Adding a docker service
 
 
 API gateway settings
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 .. list-table::
   :header-rows: 1
 
@@ -124,17 +112,31 @@ API gateway settings
       there and save.
     - Edit ``conf/{domains,http-directives,routes}.yaml`` to change any API
       Gateway settings, including routing to microservices. git commit and push
-      to apply these changes to the cluster.
+      to apply these changes to the cluster. For more details, refer
+      :doc:`../gateway/index`.
 
 
-SSH key / cluster access settings
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Managing SSH key
+----------------
+.. list-table::
+  :header-rows: 1
+
+  * - Old workflow (<= v0.14.x)
+    - New workflow (>= v0.15.x)
+  * - Login to the cluster console, head to CLI > SSH Keys page. Add, view and
+      remove keys from there and save.
+    - Using hasura cli. ``hasura ssh-key add/remove/list``. For more details,
+      refer :doc:`../hasuractl/hasura_ssh-key`.
+
+
+Cluster access settings
+-----------------------
 
 Managing environment variables
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 Viewing logs/events
-~~~~~~~~~~~~~~~~~~~
+-------------------
 .. list-table::
   :header-rows: 1
 
@@ -143,6 +145,7 @@ Viewing logs/events
   * - Login to the cluster console, head to particular microservice's page. Go
       to Logs page from there to view that micorservice's logs.
     - Using the hasura cli. ``hasura microservice logs <microservice-name>``.
+      For more details, refer :doc:`../hasuractl/hasura_microservice_logs`.
 
 
 
