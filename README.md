@@ -52,5 +52,7 @@ To deploy release versions and view docs:
 
 * Go to hasura.io/docs.
 
+* Update the timestamp value inside ``Dockerfile`` to update staging or ``Dockerfile_prod`` to update production.
+
 * git push to appropriate remote ( staging/production ) to deploy .
 `` git push hasura_stg master ``
