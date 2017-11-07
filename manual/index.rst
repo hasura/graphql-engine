@@ -29,6 +29,7 @@ This is the reference documentation of the entire Hasura platform.
   API gateway<gateway/index>
   custom-microservices/index
   hasura CLI reference <hasuractl/index>
+  hasura.io/hub guide <hub/index>
   custom-domains-ssl
   monitoring-logging/index
   scaling
