@@ -1,5 +1,5 @@
 .. meta::
-   :description: Part 2 of a set of learning exercises meant for exploring Hasura in detail. This part introduces the Auth service's User & Session management model.
+   :description: Part 2 of a set of learning exercises meant for exploring Hasura in detail. This part introduces the Auth microservice's User & Session management model.
    :keywords: hasura, getting started, step 2
 
 ==================================
@@ -36,10 +36,10 @@ This will open up the ``api-console`` and show you the ``API explorer`` page whi
    You can try out all of the API examples below in the API explorer
 
 
-The ``auth`` service
+The ``auth`` microservice
 --------------------
 
-The ``auth`` service is a part of every hasura project. It has extensive APIs to manage users, roles and integrates with various social login providers. These are the endpoints that we are interested in to build our ether app.
+The ``auth`` microservice is a part of every hasura project. It has extensive APIs to manage users, roles and integrates with various social login providers. These are the endpoints that we are interested in to build our ether app.
 
 #. Register a user
 
@@ -181,9 +181,9 @@ The ``auth`` service is a part of every hasura project. It has extensive APIs to
 A bit about sessions
 --------------------
 
-Every service benefits from having the user's information (id and roles) with each request. In hasura platform, as mentioned earlier, every request goes through the gateway. So, the gateway integrates with the session store to act as a session middleware for all services.
+Every microservice benefits from having the user's information (id and roles) with each request. In hasura platform, as mentioned earlier, every request goes through the gateway. So, the gateway integrates with the session store to act as a session middleware for all microservices.
 
-When the gateway receives a request, it looks for a session token in the ``Bearer`` token of ``Authorization`` header or in the cookie. It then retrieves the user's id and roles attached to this session token from the session store. This information is sent as ``X-Hasura-User-Id`` and ``X-Hasura-Role`` headers to the upstream service.
+When the gateway receives a request, it looks for a session token in the ``Bearer`` token of ``Authorization`` header or in the cookie. It then retrieves the user's id and roles attached to this session token from the session store. This information is sent as ``X-Hasura-User-Id`` and ``X-Hasura-Role`` headers to the upstream microservice.
 
 When the session token is absent from both header and cookie, the gateway considers it an anonymous request and adds the header ``X-Hasura-Role: anonymous``. The ``X-Hasura-User-Id`` header is **not** set in this case.
 

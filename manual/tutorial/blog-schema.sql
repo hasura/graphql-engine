@@ -1,5 +1,5 @@
 CREATE TABLE author (
-    -- hasura_id is used to link to the user generated on the auth service
+    -- hasura_id is used to link to the user generated on the auth microservice
     hasura_id INTEGER NOT NULL PRIMARY KEY,
     name TEXT NOT NULL
 );

@@ -1,6 +1,6 @@
 .. meta::
    :description: Part 5 of a set of learning exercises meant for exploring Hasura in detail. This part shows you how to create a custom microservice (Docker & git push)
-   :keywords: hasura, getting started, step 7, custom service, Docker, git push
+   :keywords: hasura, getting started, step 7, custom microservice, Docker, git push
 
 =======================================
 Part XII: Custom code and microservices
@@ -11,10 +11,10 @@ Part XII: Custom code and microservices
    Update entire section with the new hasura CLI commands
 
 Not all requirements will be met by the Hasura APIs.
-Custom APIs and microservices like API integrations or UI services will always
+Custom APIs and microservices like API integrations or UI microservices will always
 need to be added specifically to the project.
 
-Hasura provides an easy way to run services by specifying ``docker`` images
+Hasura provides an easy way to run microservices by specifying ``docker`` images
 or by directly pushing code via ``git``.
 
 Let us explore 2 use cases.
@@ -102,16 +102,16 @@ Once that is done, you're ready to push!
 
    $ git push hasura master
 
-Voila, your service is deployed and live! In case there are any errors in building or deploying your code,
+Voila, your microservice is deployed and live! In case there are any errors in building or deploying your code,
 the ``git push`` command will show you errors and the push will fail. Fix the error, and push again!
 
 .. admonition:: Behind The Scenes
 
    The Hasura platform basically builds a docker image from the latest git changes
-   pushed by you, and deploys the right kubernetes service, deployment underneath.
+   pushed by you, and deploys the right kubernetes microservice, deployment underneath.
 
    If you want finer control over your deployment, you are encouraged to use ``kubectl``
-   and peek under the hood of the service that is automatically deployed.
+   and peek under the hood of the microservice that is automatically deployed.
 
 Docker: Adding a custom database browser (adminer)
 --------------------------------------------------
@@ -163,7 +163,7 @@ the familiar ``adminer`` UI.
    The Hasura platform automatically creates Grade A SSL certificates using LetsEncrypt.
 
    SSL certificate creation can take a few minutes. During this time ``https://adminer.test42.hasura-app.io``
-   will not served, and you'll have to access your service on ``http`` instead. As soon as
+   will not served, and you'll have to access your microservice on ``http`` instead. As soon as
    the certificate is ready, ``http://adminer.test42.hasura-app.io`` will automatically
    start redirecting to the ``https`` version.
 

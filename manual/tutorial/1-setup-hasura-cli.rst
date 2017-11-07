@@ -6,7 +6,7 @@
 Part I: Setup the Hasura CLI
 ============================
 
-The ``hasura`` CLI is a command line utility to help you get your backend setup quickly. It helps you create projects, manage clusters and manage services and explore APIs running on the cluster.
+The ``hasura`` CLI is a command line utility to help you get your backend setup quickly. It helps you create projects, manage clusters and manage microservices and explore APIs running on the cluster.
 
 .. admonition:: Note
 

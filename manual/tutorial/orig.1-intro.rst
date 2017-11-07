@@ -6,7 +6,7 @@
 Part I: Setup the Hasura CLI
 ============================
 
-The ``hasura`` CLI is a command line utility to help you get your backend setup quickly. It helps you create projects, manage clusters and manage services and explore APIs running on the cluster.
+The ``hasura`` CLI is a command line utility to help you get your backend setup quickly. It helps you create projects, manage clusters and manage microservices and explore APIs running on the cluster.
 
 .. note::
 
@@ -85,19 +85,19 @@ The domain which will resolve to your hasura project. By default, it is ``<proje
 Services
 ^^^^^^^^
 
-A service is an abstract entity which captures a running web/tcp server. There are several services that come out of the box with hasura platform like ``data``, ``auth`` and ``console``.
+A microservice is an abstract entity which captures a running web/tcp server. There are several microservices that come out of the box with hasura platform like ``data``, ``auth`` and ``console``.
 
-An HTTP service, say ``svc`` is typically exposed using a subdomain at ``<svc>.<project-name>.hasura-app.io``. For example, the ``data`` service is exposed at ``data.<project-name>.hasura-app.io``.
+An HTTP microservice, say ``svc`` is typically exposed using a subdomain at ``<svc>.<project-name>.hasura-app.io``. For example, the ``data`` microservice is exposed at ``data.<project-name>.hasura-app.io``.
 
 Gateway
 ^^^^^^^
 
-The Gateway is the entrypoint for your project. Every request to the project goes through the gateway and is then routed to the appropriate service. For example, all requests on ``data.<project-name>.hasura-app.io`` are forwarded to the built-in hasura provided ``data`` service.
+The Gateway is the entrypoint for your project. Every request to the project goes through the gateway and is then routed to the appropriate microservice. For example, all requests on ``data.<project-name>.hasura-app.io`` are forwarded to the built-in hasura provided ``data`` microservice.
 
 Console
 ^^^^^^^
 
-The UI service that helps you manage data, users and other services in your project. It can be accessed at ``console.<project-name>.hasura-app.io``
+The UI microservice that helps you manage data, users and other microservices in your project. It can be accessed at ``console.<project-name>.hasura-app.io``
 
 Admin user
 ^^^^^^^^^^

@@ -1,5 +1,5 @@
 .. meta::
-   :description: Part 7 of a set of learning exercises meant for exploring Hasura in detail. This part takes you over data modeling & introduces the data service's API.
+   :description: Part 7 of a set of learning exercises meant for exploring Hasura in detail. This part takes you over data modeling & introduces the data microservice's API.
    :keywords: hasura, getting started, step 3, data modeling
 
 ================================
@@ -8,12 +8,12 @@ Part VIII: Explore the data APIs
 
 Now that you've created the data models, you can use HTTP JSON APIs to query your data directly.
 
-The ``data`` service
+The ``data`` microservice
 --------------------
 
-Every Hasura project comes with a data service. The ``data`` service provides an HTTP API over PostgreSQL, an extremely versatile open source relational database. We create tables in Postgres and access the data using the APIs provided by the ``data`` service.
+Every Hasura project comes with a data microservice. The ``data`` microservice provides an HTTP API over PostgreSQL, an extremely versatile open source relational database. We create tables in Postgres and access the data using the APIs provided by the ``data`` microservice.
 
-Any user with the ``admin`` role has full-access to the data service. All requests to the ``data`` service are ``POST`` requests to ``/v1/query`` endpoint. The body should have two keys ``type`` and ``args``. For example,
+Any user with the ``admin`` role has full-access to the data microservice. All requests to the ``data`` microservice are ``POST`` requests to ``/v1/query`` endpoint. The body should have two keys ``type`` and ``args``. For example,
 
 .. code-block:: json
 

@@ -6,7 +6,7 @@
 Part IX: Permissions & access control on data models
 ====================================================
 
-We've mentioned that by default, the ``data`` APIs can only be accessed by users with the ``admin`` role. However, we should never include the admin token in any client applications. So, we need to allow access to the ``data`` APIs for roles other than ``admin``. This is handled by the permission layer of the ``data`` service, which lets you define row level and column level access control policies for various roles.
+We've mentioned that by default, the ``data`` APIs can only be accessed by users with the ``admin`` role. However, we should never include the admin token in any client applications. So, we need to allow access to the ``data`` APIs for roles other than ``admin``. This is handled by the permission layer of the ``data`` microservice, which lets you define row level and column level access control policies for various roles.
 
 In our blog app, what roles do we have other than ``admin``?
 
@@ -71,7 +71,7 @@ You can use the same UI to add permissions for other query types.
 
 Using a REST Query
 ^^^^^^^^^^^^^^^^^^
-You can also make a REST query to the *data* service to accomplish the same task as the above mentioned UI and more.
+You can also make a REST query to the *data* microservice to accomplish the same task as the above mentioned UI and more.
 
 For **Select**, the HTTP query equivalent to the above UI-based flow looks like:
 

@@ -1,5 +1,5 @@
 .. meta::
-   :description: Part 2 of a set of learning exercises meant for exploring Hasura in detail. This part introduces the Auth service's User & Session management model.
+   :description: Part 2 of a set of learning exercises meant for exploring Hasura in detail. This part introduces the Auth microservice's User & Session management model.
    :keywords: hasura, getting started, step 2
 
 ===========================================
@@ -9,7 +9,7 @@ Part X: Adding relationships to data models
 Exploiting relationships in your data
 -------------------------------------
 
-If our data API service could understand the different relationships in data, then
+If our data API microservice could understand the different relationships in data, then
 we would be able to make more complex and interesting queries to fetch data.
 
 .. code-block:: javascript
@@ -148,7 +148,7 @@ The relationship is created:
 
 You can create relationships for other constraints similarly.
 
-If you have a lot of relationships that you'd like to add but not use the UI, you can send a bulk request to the ``data`` service:
+If you have a lot of relationships that you'd like to add but not use the UI, you can send a bulk request to the ``data`` microservice:
 	    
 .. code-block:: http
 

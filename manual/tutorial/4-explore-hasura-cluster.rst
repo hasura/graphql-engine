@@ -1,5 +1,5 @@
 .. meta::
-   :description: Part 4 of a set of learning exercises meant for exploring Hasura in detail. This part shows you how to consume the data service's instant JSON API.
+   :description: Part 4 of a set of learning exercises meant for exploring Hasura in detail. This part shows you how to consume the data microservice's instant JSON API.
    :keywords: hasura, getting started, step 4, data API
 
 ===================================
@@ -7,11 +7,11 @@ Part IV: Explore the Hasura cluster
 ===================================
 
 A Hasura cluster is essentially a kubernetes cluster that has 4 Hasura APIs,
-a controller to manage configuration changes across the cluster, and a SSH/git-push service
+a controller to manage configuration changes across the cluster, and a SSH/git-push microservice
 to help you `git push` to deploy easily.
 
 
-Get cluster information and the services running
+Get cluster information and the microservices running
 ------------------------------------------------
 
 Inside your project directory, run:
@@ -38,11 +38,11 @@ the output of which looks like:
   INFO Gateway warnings:                            
   none
 
-  INFO Custom services:                             
+  INFO Custom microservices:                             
   NAME      STATUS    ENDPOINT
   adminer   Running   https://adminer.h34-archness84-stg.hasura-app.io
 
-  INFO Hasura services:                             
+  INFO Hasura microservices:                             
   NAME            STATUS    ENDPOINT
   auth            Running   https://auth.h34-archness84-stg.hasura-app.io
   data            Running   https://data.h34-archness84-stg.hasura-app.io
@@ -60,26 +60,26 @@ The first section shows general information about the cluster.
 
 The cluster configuration section will tell if there is a difference between the local and remote cluster configurations.
 
-The services section shows the custom and Hasura services running in your cluster along with their http endpoint.
+The microservices section shows the custom and Hasura microservices running in your cluster along with their http endpoint.
 
 Hasura Services
 ---------------
 
 auth
 ^^^^
-The auth service handles user authentication for your Hasura cluster.
+The auth microservice handles user authentication for your Hasura cluster.
 
 data
 ^^^^
-The data service on Hasura exposes an HTTP/JSON API over a PostgreSQL database.
+The data microservice on Hasura exposes an HTTP/JSON API over a PostgreSQL database.
 
 filestore
 ^^^^^^^^^
-The filestore service lets users upload and store files on the Hasura project and also download when required.
+The filestore microservice lets users upload and store files on the Hasura project and also download when required.
 
 gateway
 ^^^^^^^
-This service exposes your project to the outside world. It authenticates and redirects external requests to the appropriate service inside the cluster.
+This microservice exposes your project to the outside world. It authenticates and redirects external requests to the appropriate microservice inside the cluster.
 
 le-agent
 ^^^^^^^^
@@ -87,23 +87,23 @@ This is the LetsEncrypt agent which is responsible for generating SSL certificat
 
 notify
 ^^^^^^
-This service handles the Email/SMS communication.
+This microservice handles the Email/SMS communication.
 
 platform-sync
 ^^^^^^^^^^^^^
-This service keeps the cluster in sync with the configuration.
+This microservice keeps the cluster in sync with the configuration.
 
 postgres
 ^^^^^^^^
-This service hosts the PostgrSQL database.
+This microservice hosts the PostgrSQL database.
 
 session-redis
 ^^^^^^^^^^^^^
-This is a Redis instance used by the auth service.
+This is a Redis instance used by the auth microservice.
 
 sshd
 ^^^^
-This service handles SSH access to the cluster.
+This microservice handles SSH access to the cluster.
 
 
 Next: Start building a blog-engine app!

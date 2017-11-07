@@ -1,5 +1,5 @@
 .. meta::
-   :description: Part 2 of a set of learning exercises meant for exploring Hasura in detail. This part introduces the Auth service's User & Session management model.
+   :description: Part 2 of a set of learning exercises meant for exploring Hasura in detail. This part introduces the Auth microservice's User & Session management model.
    :keywords: hasura, getting started, step 2
 
 ================================
@@ -61,7 +61,7 @@ The project (a.k.a. project directory) has a particular directory structure and 
    │   ├── 1504788327_create_table_user.down.sql
    │   ├── 1504788327_create_table_user.up.yaml
    │   └── 1504788327_create_table_user.up.sql
-   └── services
+   └── microservices
        ├── adminer
        │   └── k8s.yaml
        └── flask
@@ -103,7 +103,7 @@ This directory contains database migrations.
 services/
 ^^^^^^^^^
 
-This directory contains everything related to the services that you create; such as the Kuberenetes configuration, source code etc.
+This directory contains everything related to the microservices that you create; such as the Kuberenetes configuration, source code etc.
 
 For more information regarding each directory, you can look at the README.md present in it.
 

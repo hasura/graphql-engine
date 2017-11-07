@@ -44,7 +44,7 @@ At the end of this tutorial, you'll understand:
 
 - what Hasura projects and clusters are,
 - how to use the Hasura APIs to avoid writing backend code
-- how to deploy your own services on a Hasura cluster
+- how to deploy your own microservices on a Hasura cluster
 
 This tutorial is split across the following sections:
 
