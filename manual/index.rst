@@ -30,6 +30,7 @@ This is the reference documentation of the entire Hasura platform.
   custom-microservices/index
   hasura CLI reference <hasuractl/index>
   hasura.io/hub guide <hub/index>
+  git-push configuration <git-push/index>
   custom-domains-ssl
   monitoring-logging/index
   scaling
