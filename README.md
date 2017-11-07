@@ -52,4 +52,5 @@ To deploy release versions and view docs:
 
 * Go to hasura.io/docs.
 
-* Run docker build -t <imageName> .
+* git push to appropriate remote ( staging/production ) to deploy .
+`` git push hasura_stg master ``
