@@ -6,6 +6,10 @@
 Part XII: Custom code and microservices
 =======================================
 
+.. todo::
+
+   Update entire section with the new hasura CLI commands
+
 Not all requirements will be met by the Hasura APIs.
 Custom APIs and microservices like API integrations or UI services will always
 need to be added specifically to the project.
