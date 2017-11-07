@@ -60,6 +60,7 @@ Let's start with understanding how :doc:`microservices work on a Hasura cluster 
   :titlesonly:
 
   How microservices work on Hasura <microservices-hasura-cluster>
+  Communicating between microservices <communicating-between-microservices>
   Hosting webapps
   Hosting APIs
   Hosting static files
