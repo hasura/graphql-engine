@@ -14,16 +14,16 @@ way a user can make subsequent requests without having to authenticate with
 credentials on every request. Instead, on every request the user can present
 the ``auth_token`` to identify themself.
 
-Every service benefits from having the user's information (id and roles) with
+Every microservice benefits from having the user's information (id and roles) with
 each request. In the Hasura platform, every request goes through the API
 Gateway. So, the API Gateway integrates with the session store to act as a
-session middleware for all services.
+session middleware for all microservices.
 
 When the gateway receives a request, it looks for a session token in the
 ``Bearer`` token of ``Authorization`` header or in the cookie. It then
 retrieves the user's id and roles attached to this session token from the
 session store. This information is sent as ``X-Hasura-User-Id`` and
-``X-Hasura-Role`` headers to the upstream service.
+``X-Hasura-Role`` headers to the upstream microservice.
 
 When the session token is absent from both header and cookie, the gateway
 considers it an anonymous request and adds the header ``X-Hasura-Role:

@@ -5,12 +5,12 @@
 
 
 .. .. meta::
-   :description: Reference documentation for web SDKs used for integrating frontend code with backend APIs (both Hasura micro-services and custom services). 
+   :description: Reference documentation for web SDKs used for integrating frontend code with backend APIs (both Hasura micro-services and custom microservices). 
    :keywords: hasura, docs, Javascript SDK, integration
 
 Web SDKs
 ========
-The following is a list of web SDKs that can be used to integrate frontend code with backend APIs. They can be used to integrate both Hasura micro-services (Data, Auth/User-management and FileStore) and custom services.
+The following is a list of web SDKs that can be used to integrate frontend code with backend APIs. They can be used to integrate both Hasura micro-services (Data, Auth/User-management and FileStore) and custom microservices.
 
 JavaScript SDK
 --------------
@@ -178,7 +178,7 @@ The Hasura JS SDK provides a simple wrapper over fetch to make it easy for you t
 
     hasura.fetch(
     {
-      service: 'api',  // the name of your custom service
+      microservice: 'api',  // the name of your custom microservice
       path: '/submit', // the path
       method: 'POST',  // HTTP method (this is POST by default, so you can ignore this key if it's POST)
       json: {...},     // set this to an object or an array that will be serialised to make the request body
@@ -205,7 +205,7 @@ The Hasura JS SDK provides a simple wrapper over fetch to make it easy for you t
 
     hasura.fetch(
     {
-      service: 'api',  // the name of your custom service
+      microservice: 'api',  // the name of your custom microservice
       path: '/submit', // the path
       method: 'POST',  // HTTP method (this is POST by default, so you can ignore this key if it's POST)
       body: '...',     // set this to a string or a serialised value

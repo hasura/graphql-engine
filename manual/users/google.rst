@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: Reference documentation for integrating Google OAuth2.0 based user signup & login with Hasura's Auth service for your web and mobile applications.
+   :description: Reference documentation for integrating Google OAuth2.0 based user signup & login with Hasura's Auth microservice for your web and mobile applications.
    :keywords: hasura, docs, auth, Google signup, Google login, social login, Google OAuth, Google OAuth2.0, integration
 
 Google Provider
@@ -15,7 +15,7 @@ Pre-requisites
 
 * Register an application with Google, obtain the Client Id and Client secret.
 
-* Now you need to configure Hasura Auth service with these credentials.
+* Now you need to configure Hasura Auth microservice with these credentials.
 
 * To configure, go to ``auth.yaml`` in ``conf`` directory inside your Hasura
   project.
@@ -63,7 +63,7 @@ Login/Signup a user with Hasura Auth
   ``id_token`` with ``access_token`` in the rest of article.)
 
 * Once the ``id_token`` is obtained, send the ``id_token`` to Hasura Auth
-  service:
+  microservice:
 
 .. code-block:: http
 

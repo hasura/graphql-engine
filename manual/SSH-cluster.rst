@@ -48,4 +48,4 @@ You can now directly ssh into your server using
 (Replace polytheist21 here with your project-name)
 
 Since the Hasura platform runs on Kubernetes managed Docker containers, you
-cannot directly use this to change your services/data on the machine.
+cannot directly use this to change your microservices/data on the machine.

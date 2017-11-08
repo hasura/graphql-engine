@@ -32,7 +32,7 @@ Options
 
 ::
 
-      --api-port string       port for serving hasura API service (default "8081")
+      --api-port string       port for serving hasura API microservice (default "8081")
   -c, --cluster string        cluster to which console should connect
       --console-port string   port for serving console (default "8080")
   -h, --help                  help for api-console

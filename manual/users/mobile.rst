@@ -31,7 +31,7 @@ To get an OTP, use the ``/v1/providers/mobile/send-otp`` endpoint.
 .. note::
 
   For this provider to send SMS, you have to enable a SMS provider in
-  the Hasura Notify service.
+  the Hasura Notify microservice.
 
 
 Once the OTP is obtained, then the user should make a signup request.
@@ -98,7 +98,7 @@ To get an OTP, use the ``/v1/providers/mobile/send-otp`` endpoint.
 .. note::
 
   For this provider to send SMS, you have to enable a SMS provider in
-  the Hasura Notify service.
+  the Hasura Notify microservice.
 
 
 Once the OTP is obtained, then the user should make a login request.

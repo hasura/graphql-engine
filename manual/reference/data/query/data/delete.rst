@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: Hasura's Data service's delete query - JSON body's syntax, description, response params and examples.
+   :description: Hasura's Data microservice's delete query - JSON body's syntax, description, response params and examples.
    :keywords: hasura, docs, data, query reference, delete query
 
 .. _data_delete:

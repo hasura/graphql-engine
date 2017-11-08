@@ -5,7 +5,7 @@
 
 
 .. .. meta::
-   :description: Reference documentation for the IOS SDK used for integrating frontend code with backend APIs (both Hasura micro-services and custom services).
+   :description: Reference documentation for the IOS SDK used for integrating frontend code with backend APIs (both Hasura micro-services and custom microservices).
    :keywords: hasura, docs, IOS SDK, integration
 
 
@@ -358,7 +358,7 @@ to map the json response into your class/struct.
 **Note**: In case you are expecting an object response, use
 ``.responseObject``.
 
-*All SELECT queries to the data service will return
+*All SELECT queries to the data microservice will return
 an array response.*
 
     If the HasuraUser in the HasuraClient is logged-in/signed-up, then every call
@@ -398,7 +398,7 @@ not** become the default role.
 Query Template Service
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The syntax for the query template service remains the same as
+The syntax for the query template microservice remains the same as
 ``Data Service`` except for setting the name of the query template being
 used.
 
@@ -416,8 +416,8 @@ used.
 Filestore Service
 ~~~~~~~~~~~~~~~~~
 
-Hasura provides a filestore service, which can be used to upload and
-download files. To use the Filestore service properly, kindly take a
+Hasura provides a filestore microservice, which can be used to upload and
+download files. To use the Filestore microservice properly, kindly take a
 look at the docs
 `here <https://docs.hasura.io/0.13/ref/hasura-microservices/filestore/index.html>`__.
 

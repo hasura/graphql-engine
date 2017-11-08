@@ -1,9 +1,9 @@
 .. .. meta::
    :description: How to deploy docker images using hasura
-   :keywords: hasura, manual, docker, image, custom service
+   :keywords: hasura, manual, docker, image, custom microservice
 
 ====================================
-Developing & hosting custom services
+Developing & hosting custom microservices
 ====================================
 
 A Hasura project is composed of a set of microservices.
@@ -32,12 +32,12 @@ Let's start with understanding how :doc:`microservices work on a Hasura cluster 
 
    Recommended sections/pages in this section:
 
-   1. How custom services work on a Hasura cluster
+   1. How custom microservices work on a Hasura cluster
    2. Developing & hosting webapps:
 
       - Quickstart
       - Dockerfile, directory setup, git push
-      - Contacting internal services
+      - Contacting internal microservices
       - Using session middleware
       - local-development
       - Get logs
@@ -52,7 +52,7 @@ Let's start with understanding how :doc:`microservices work on a Hasura cluster 
    7. Configuring git-push
    8. Adding persistent storage
    9. Monitoring and logs
-   10. Deploying non-HTTP services
+   10. Deploying non-HTTP microservices
    11. Deploying kubernetes objects
 
 .. toctree::

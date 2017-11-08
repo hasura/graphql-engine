@@ -8,7 +8,7 @@ Permission Webhooks
 
         hookUrl: "String"
 
-The following default urls are available on filestore service for configuring webhooks:
+The following default urls are available on filestore microservice for configuring webhooks:
 
 - Private:
     Only logged in users can read and upload
@@ -20,4 +20,4 @@ The following default urls are available on filestore service for configuring we
     Anybody can read, but no one can upload
       URL: http://localhost:8080/v2/hooks/public-read
 - Custom Permission URL:
-    For any other custom permissions, you need to define your own service. Refer to :ref:`Authorization webhooks <filestore-authz-webhooks>` to see how this can be done.
+    For any other custom permissions, you need to define your own microservice. Refer to :ref:`Authorization webhooks <filestore-authz-webhooks>` to see how this can be done.

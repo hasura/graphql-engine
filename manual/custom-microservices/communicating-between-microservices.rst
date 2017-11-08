@@ -8,7 +8,7 @@ Communcating between microservices
 
 Every microservice has an internal hostname and URL at which other microservices
 can reach it. The URL is typically of the structure: `http://<microservice-name>.<namespace>`.
-This service discovery is powered by kubernetes's internal DNS.
+This microservice discovery is powered by kubernetes's internal DNS.
 
 Examples:
 

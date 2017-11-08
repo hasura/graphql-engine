@@ -35,7 +35,7 @@ given email address and will return a response with user details.
 
 .. note::
   For this provider to send emails, you have to enable an email provider in
-  the Hasura Notify service.
+  the Hasura Notify microservice.
 
 
 This will not login the user automatically (unlike the ``username`` provider),

@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 .. .. meta::
-   :description: Reference documentation for the Android SDK used for integrating frontend code with backend APIs (both Hasura micro-services and custom services).
+   :description: Reference documentation for the Android SDK used for integrating frontend code with backend APIs (both Hasura micro-services and custom microservices).
    :keywords: hasura, docs, Android SDK, integration, Android, SDK, Mobile SDK, Mobile app, Android app
 
 ###########
@@ -420,7 +420,7 @@ Hasura provides out of the box data apis on the tables and views you make in you
                       }
                   });
 
-.. tip:: In case you are expecting an array response, use ``.expectResponseTypeArrayOf(MyResponse.class)``. *All SELECT queries to the data service will return an array response.*
+.. tip:: In case you are expecting an array response, use ``.expectResponseTypeArrayOf(MyResponse.class)``. *All SELECT queries to the data microservice will return an array response.*
 
 In the above method, there are a few things to be noted :
 
@@ -517,7 +517,7 @@ In case you want to make the above call for a ``custom`` role.
 Query Template Service
 ======================
 
-The syntax for the query template service remains the same as ``Data Service`` except for setting the name of the query template being used.
+The syntax for the query template microservice remains the same as ``Data Service`` except for setting the name of the query template being used.
 
 .. code-block:: java
 
@@ -539,7 +539,7 @@ The syntax for the query template service remains the same as ``Data Service`` e
 Filestore Service
 =================
 
-Hasura provides a filestore service, which can be used to upload and download files. To use the Filestore service properly, kindly take a look at the `docs <https://docs.hasura.io/0.13/ref/hasura-microservices/filestore/index.html>`_ .
+Hasura provides a filestore microservice, which can be used to upload and download files. To use the Filestore microservice properly, kindly take a look at the `docs <https://docs.hasura.io/0.13/ref/hasura-microservices/filestore/index.html>`_ .
 
 Upload File
 -----------
@@ -600,15 +600,15 @@ Download File
 Custom Service
 ==============
 
-In addition to the ``data``, ``auth`` and ``fileStore`` services, you can also deploy your own custom service on Hasura. For such cases, you can still utilize the session management of the SDK to make your APIs. Currently, we have support for `Retrofit <http://square.github.io/retrofit/>`_.
+In addition to the ``data``, ``auth`` and ``fileStore`` microservices, you can also deploy your own custom microservice on Hasura. For such cases, you can still utilize the session management of the SDK to make your APIs. Currently, we have support for `Retrofit <http://square.github.io/retrofit/>`_.
 
-Using a custom service - Retrofit Support
+Using a custom microservice - Retrofit Support
 -----------------------------------------
 
-This is a wrapper over Retrofit for custom services, assuming that your interface with the api definitions is called ``MyCustomInterface.java``.
+This is a wrapper over Retrofit for custom microservices, assuming that your interface with the api definitions is called ``MyCustomInterface.java``.
 
-* Let's say you have a custom service set up on Hasura called ``api``.
-* Your external endpoint for this custom service would be -> ``api.<cluster-name>.hasura-app.io``.
+* Let's say you have a custom microservice set up on Hasura called ``api``.
+* Your external endpoint for this custom microservice would be -> ``api.<cluster-name>.hasura-app.io``.
 
 Step1: Including the retrofit support
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -638,7 +638,7 @@ Add the dependency
   </dependency>
 
 
-Step2: Build your custom service
+Step2: Build your custom microservice
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: java
@@ -650,7 +650,7 @@ Step2: Build your custom service
 
 .. tip:: This needs to be done before Hasura Init.
 
-Step3: Add this custom service during init
+Step3: Add this custom microservice during init
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: java

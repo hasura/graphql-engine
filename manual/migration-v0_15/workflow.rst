@@ -89,7 +89,7 @@ Adding a git-push microservice
     - Use the hasura cli. Refer :doc:`../custom-microservices/index`.
 
 
-Adding a docker service
+Adding a docker microservice
 ------------------------
 .. list-table::
   :header-rows: 1

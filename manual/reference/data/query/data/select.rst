@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: Hasura's Data service's select query - JSON body's syntax, description, response params and examples.
+   :description: Hasura's Data microservice's select query - JSON body's syntax, description, response params and examples.
    :keywords: hasura, docs, data, query reference, select query
 
 .. _data_select:

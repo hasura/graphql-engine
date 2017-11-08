@@ -71,7 +71,7 @@ Deployed custom code or a Docker image, including the installed Hasura backend
 APIs were collectively called **services**, prior to Hasura v0.15.
 
 From v0.15, they have been renamed to **microservices** to avoid confusion with
-Kubernetes services.
+Kubernetes microservices.
 
 
 .. |right-arrow| unicode:: U+2192

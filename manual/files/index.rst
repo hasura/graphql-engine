@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: Manual for using File Microservice on Hasura. The service lets users to upload and download files with access controls.
+   :description: Manual for using File Microservice on Hasura. The microservice lets users to upload and download files with access controls.
    :keywords: hasura, docs, fileStore, file, file upload, file download
 
 Files
