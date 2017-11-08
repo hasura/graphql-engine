@@ -2,6 +2,8 @@
    :description: Developing and Hosting webapps
    :keywords: hasura, manual, hosting, webapp, custom service
 
+.. _deploy-host-webapps:
+
 ==============================
 Developing and Hosting Webapps
 ==============================
@@ -45,14 +47,14 @@ Every hasura project is run on a Hasura cluster. To get details about the cluste
 
 This will give you cluster status, which looks like:
 
-```bash
-INFO Status:
-Cluster Name:       h34-excise98-stg
-Cluster Alias:      hasura
-Kube Context:       h34-excise98-stg
-Platform Version:   v0.15.3
-Cluster State:      Synced
-```
+.. code:: bash
+
+          INFO Status:
+          Cluster Name:       h34-excise98-stg
+          Cluster Alias:      hasura
+          Kube Context:       h34-excise98-stg
+          Platform Version:   v0.15.3
+          Cluster State:      Synced
 
 Keep a note of your cluster name. Alternatively, you can also go to your [ hasura dashboard ](http://dashboard.hasura.io) and see the clusters you have.
 

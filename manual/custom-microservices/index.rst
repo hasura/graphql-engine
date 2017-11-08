@@ -64,10 +64,9 @@ Let's start with understanding how :doc:`microservices work on a Hasura cluster 
   Hosting webapps
   Hosting APIs
   Hosting static files
+  develop-custom-services/index
   Hosting docker containers <deploy-docker/index>
-  deploying-webapp/index
   serve-static/index
   persistent-services
   deploy-non-http
   deploy-k8s-objects
-
