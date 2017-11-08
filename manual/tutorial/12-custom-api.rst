@@ -6,13 +6,9 @@
 Part XII: Custom code and microservices
 =======================================
 
-.. todo::
-
-   Update entire section with the new hasura CLI commands
-
 Not all requirements will be met by the Hasura APIs.
 Custom APIs and microservices like API integrations or UI microservices will always
-need to be added specifically to the project.
+be needed to be added specifically to the project.
 
 Hasura provides an easy way to run microservices by specifying ``docker`` images
 or by directly pushing code via ``git``.
@@ -22,25 +18,18 @@ Let us explore 2 use cases.
 Custom code: Adding a simple web-server to serve a UI
 -----------------------------------------------------
 
-Initialize the microservice configuration (we'll call it ``www``) using:
+We'll use a Nodejs Express microservice for the server. To do this, we'll use the ``nodejs-express`` microservice template for initialization.
+
+Initialize the microservice (we'll call it ``www``) using:
 
 .. code-block:: console
 		
-	  $ hasura microservice add www
+	  $ hasura microservice generate www --template nodejs-express
 
-This will create a directory called ``www`` inside your ``microservices`` directory, which  will contain a ``k8s.yaml`` file. This file contains the Kubernetes configuration for the microservice. 
+This will create a directory called ``www`` inside your ``microservices`` directory, which  will contain a ``k8s.yaml`` file, a ``Dockerfile`` and the source code for the Nodejs Express server. 
 
-.. todo::
-
-   Rewrite this section with better instructions 
-
-Now coming to the code, let's take a simple nodejs express example. The best way to get a base setup ready, is to
-grab the relevant base template directory from `quickstart-docker-git <https://github.com/hasura/quickstart-docker-git>`_
-
-Let's copy the ``quickstart-docker-git/nodejs-express`` inside the ``www`` directory.
-
-Note the ``Dockerfile`` at the top level. This Dockerfile is used by the Hasura platform
-automatically to build your code in the right environment.
+The ``k8s.yaml`` file contains the Kubernetes specs for the microservice. The ``Dockerfile`` is used by the Hasura platform
+to automatically build your code in the right environment.
 
 Let's modify ``www/app/server.js``, to just serve one sample request:
 
@@ -64,12 +53,9 @@ Add a route so that the microservice can be reached externally:
 
 .. code-block:: console
 		
-	  $ hasura routes generate www
+	  $ hasura conf generate-route www
 	  
 :: 
-
-    INFO Generating route...                          
-    INFO Add the following block to conf/routes.yaml  
 
     www:
       /:
@@ -86,7 +72,7 @@ Add a route so that the microservice can be reached externally:
 	upstreamServicePort: 80
 
 
-Add the output above to the ``conf/routes.yaml`` as instructed.
+Add the output above to the ``conf/routes.yaml``.
 
 If you want to have a separate git remote to push your code to, you can use the ``hasura remote generate`` command to do so.
 
@@ -98,12 +84,15 @@ Make sure that you've added your SSH public key to the cluster using
 	  
 Once that is done, you're ready to push!
 
-.. code-block:: console
+.. code-block:: bash
 
+   # in the root of your project directory
+   $ git add .
+   $ git commit -m "added www microservice"
    $ git push hasura master
 
 Voila, your microservice is deployed and live! In case there are any errors in building or deploying your code,
-the ``git push`` command will show you errors and the push will fail. Fix the error, and push again!
+the ``git push`` command will show you errors and the push will fail. Fix the error, commit and push again!
 
 .. admonition:: Behind The Scenes
 
@@ -116,25 +105,22 @@ the ``git push`` command will show you errors and the push will fail. Fix the er
 Docker: Adding a custom database browser (adminer)
 --------------------------------------------------
 
-To add a custom microservice, open your teminal and ``cd`` into your project directory. Execute:
+To add a custom microservice, in your project directory execute:
 
 .. code-block:: console
 
-   $ hasura microservice add adminer -i clue/adminer -p 80
+   $ hasura microservice generate adminer --image clue/adminer --port 80
 
-This will create a directory inside the *microservices* directory called *adminer* which will contain a ``k8s.yaml`` file.
+This will create a directory inside the ``microservices`` directory called ``adminer`` which will contain a ``k8s.yaml`` file.
 This file describes the Kubenernetes configuration for your microservice. 
 
 Next, generate the routes for this microservice:
 
 .. code-block:: console
 		
-	  $ hasura routes generate adminer
+	  $ hasura conf generate-route adminer
 	  
 ::
-
-     INFO Generating route...                          
-     INFO Add the following block to conf/routes.yaml  
 
      adminer:
        /:
@@ -151,9 +137,9 @@ Next, generate the routes for this microservice:
 	 upstreamServicePort: 80
 
 
-Add this to the ``conf/routes.yaml`` file as instructed in the output of the above command.
+Add this output to the ``conf/routes.yaml`` file.
 
-Finally run ``git push`` to deploy the configuration and microservices to the cluster.
+Finally use ``git commit`` and ``git push`` to deploy the configuration and microservices to the cluster.
 
 That's all you need to do. If you head to ``https://adminer.<cluster-name>.hasura-app.io`` you'll see
 the familiar ``adminer`` UI.
