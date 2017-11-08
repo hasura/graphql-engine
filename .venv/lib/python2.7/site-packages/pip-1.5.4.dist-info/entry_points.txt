@@ -1,5 +1,0 @@
-[console_scripts]
-pip = pip:main
-pip2.7 = pip:main
-pip2 = pip:main
-
