@@ -1,15 +1,15 @@
 .. .. meta::
    :description: How to serve static files using hasura
-   :keywords: hasura, manual, static files, custom service, nginx
+   :keywords: hasura, manual, static files, custom microservice, nginx
 
 ====================
 Hosting static files
 ====================
 
-You might want to serve static files like ``html/css/js/images`` via a static file service on hasura.
+You might want to serve static files like ``html/css/js/images`` via a static file microservice on hasura.
 
-This can be achieved by setting up an ``nginx`` service on Hasura which will serve these files.
-For this you can create a git-push based custom service using Hasura's ``quickstart templates``.
+This can be achieved by setting up an ``nginx`` microservice on Hasura which will serve these files.
+For this you can create a git-push based custom microservice using Hasura's ``quickstart templates``.
 
 Firstly, quickstart base from `hasura hub <https://hasura.io/hub>`_
 

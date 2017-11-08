@@ -24,7 +24,7 @@ on your user accounts.
 Accessing the API
 -----------------
 
-The base URL for the Auth service would be:
+The base URL for the Auth microservice would be:
 ``https://auth.<cluster-name>.hasura-app.io``.
 
 All APIs accept and respond only in JSON. Which means that you have to make

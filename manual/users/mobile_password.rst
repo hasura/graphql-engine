@@ -35,7 +35,7 @@ given mobile number and will return a response with user details.
 .. note::
 
   For this provider to send SMS, you have to enable a SMS provider in the
-  Hasura Notify service.
+  Hasura Notify microservice.
 
 
 This will not login the user automatically (unlike the ``username`` provider),
@@ -78,7 +78,7 @@ time, the user has to submit the OTP to a Hasura Auth API endpoint to verify
 the mobile number.
 
 .. note::
-  For OTP to be sent, you have to enable SMS provider in Hasura Notify service.
+  For OTP to be sent, you have to enable SMS provider in Hasura Notify microservice.
 
 To verify the mobile number, make the following request.
 

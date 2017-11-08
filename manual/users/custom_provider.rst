@@ -31,7 +31,7 @@ An example for signing up with custom provider:
 Prerequisites
 -------------
 
-Your custom provider should be a http(s) service which provides the following APIs:
+Your custom provider should be a http(s) microservice which provides the following APIs:
 
 * signup: For signing-up a new user
 * login: For logging-in user

@@ -112,14 +112,14 @@ You can add a template along with it's source code to your newly created Hasura 
 
    $ git init 
 
-2. Add the service and create it on the cluster:
+2. Add the microservice and create it on the cluster:
 
 .. code:: bash
 
    # for e.g., deploy a Python Flask based web server, name it api
-   $ hasuractl service quickstart api --template python-flask
+   $ hasuractl microservice quickstart api --template python-flask
 
-   # This command downloads the template, copies it into ``services`` directory in the project, creates this service on the cluster, adds a URL route for it, adds your SSH key to the cluster, creates a git remote for you to push and creates an initial commit for the code.
+   # This command downloads the template, copies it into ``services`` directory in the project, creates this microservice on the cluster, adds a URL route for it, adds your SSH key to the cluster, creates a git remote for you to push and creates an initial commit for the code.
 
 3. Deploy the code
 
@@ -127,7 +127,7 @@ You can add a template along with it's source code to your newly created Hasura 
 
    $ git push hasura master
 
-   # Your service will be live at https://api.<cluster-name>.hasura-app.io
+   # Your microservice will be live at https://api.<cluster-name>.hasura-app.io
 
 4. Deploy changes
 
@@ -146,7 +146,7 @@ Make changes to the source code in ``service/python-flask`` directory, commit th
 Understanding a Hasura project
 ------------------------------
 
-A *"project"* is a *"gittable"* directory in the file system, which captures all the information regarding clusters, services and migrations. It can also be used to keep source code for custom services that you write.
+A *"project"* is a *"gittable"* directory in the file system, which captures all the information regarding clusters, microservices and migrations. It can also be used to keep source code for custom microservices that you write.
 
 Creating a project
 ~~~~~~~~~~~~~~~~~~
@@ -183,19 +183,19 @@ The project (a.k.a. project directory) has a particular directory structure and 
    │       ├── notify.yaml
    │       ├── filestore.yaml
    │       ├── authorized_keys 
-   │       └── services
+   │       └── microservices
    │           ├── adminer
    │           │   ├── deployment.yaml
-   │           │   └── service.yaml
+   │           │   └── microservice.yaml
    │           └── flask
    │               ├── deployment.yaml
-   │               └── service.yaml
+   │               └── microservice.yaml
    ├── migrations
    │   ├── 1504788327_create_table_user.down.yaml
    │   ├── 1504788327_create_table_user.down.sql
    │   ├── 1504788327_create_table_user.up.yaml
    │   └── 1504788327_create_table_user.up.sql
-   └── services
+   └── microservices
        ├── adminer/
        └── flask
            ├── app/
@@ -231,10 +231,10 @@ The project (a.k.a. project directory) has a particular directory structure and 
     * ``services``
       
       * Directory that holds kubernetes configurations for microservices added to this cluster
-      * Each sub directory contains yaml spec files for a service
+      * Each sub directory contains yaml spec files for a microservice
       * ``adminer``
 
-        * Contains ``deployment.yaml`` and ``service.yaml`` for adminer service
+        * Contains ``deployment.yaml`` and ``service.yaml`` for adminer microservice
  
 * ``migrations``
 
@@ -294,7 +294,7 @@ Instead of providing ``-c cluster-alias`` flag every time, you can set a cluster
 Check status of a cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can check the status of a cluster and see all the running services inside it using the status command. For ``dev`` cluster,
+You can check the status of a cluster and see all the running microservices inside it using the status command. For ``dev`` cluster,
 
 .. code:: bash
 
@@ -332,7 +332,7 @@ This command will show you the actual cluster name, it's alias, Hasura platform 
 
    If the state is not **Synced**, there will be an extra field called **Detail** which will tell you what went wrong so that you can fix it.
 
-In order to see a detailed status including running services, use ``--detail`` flag.
+In order to see a detailed status including running microservices, use ``--detail`` flag.
 
 .. code:: bash
 
@@ -348,12 +348,12 @@ In order to see a detailed status including running services, use ``--detail`` f
    INFO Cluster configuration:                       
    no changes
 
-   INFO Custom services:                             
+   INFO Custom microservices:                             
    SERVICE NAME   POD NAME                 STATUS    ENDPOINT
    flask          flask-2600324275-3zsdn   Running   https://flask.caddy89.hasura-app.io
    node           node-216481375-07gxt     Running   https://node.caddy89.hasura-app.io
 
-   INFO Hasura services:                             
+   INFO Hasura microservices:                             
    SERVICE NAME    POD NAME                         STATUS    ENDPOINT
    auth            auth-156433954-6h1lh             Running   https://auth.caddy89.hasura-app.io
    data            data-1570227353-k7smh            Running   https://data.caddy89.hasura-app.io
@@ -384,14 +384,14 @@ When you make changes to a cluster's configuration by editing the files, you can
 Apply configuration on a cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After you add a service or edit some configuration files, these changes have to be applied on a cluster. ``apply`` command comes of help here. It takes the current configuration under the ``clusters/[cluster-name]`` directory and applies (over-writes) it on the server.
+After you add a microservice or edit some configuration files, these changes have to be applied on a cluster. ``apply`` command comes of help here. It takes the current configuration under the ``clusters/[cluster-name]`` directory and applies (over-writes) it on the server.
 
 .. code:: bash
 
    # apply configuration changes to cluster called `dev`
    $ hasuractl cluster apply -c dev
 
-   # This command will update the configuration and also creates/updates the services in the cluster
+   # This command will update the configuration and also creates/updates the microservices in the cluster
 
 Get credentials to access a cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -410,38 +410,38 @@ If you are a collaborator/owner on a cluster and you have the project directory,
 Services
 --------
 
-*Services* are containers running on Hasura platform as kubernetes objects. You can use them to run your own code, typically web-servers. You can deploy any docker container as a *Hasura Service*. You can configure HTTP routes for each service so that they can be access using the domains you configured. You can also configure continuous integration so that you can use ``git push`` to update the code for the service.
+*Services* are containers running on Hasura platform as kubernetes objects. You can use them to run your own code, typically web-servers. You can deploy any docker container as a *Hasura Service*. You can configure HTTP routes for each microservice so that they can be access using the domains you configured. You can also configure continuous integration so that you can use ``git push`` to update the code for the microservice.
 
-The typical workflow in deploying a service is as follows:
+The typical workflow in deploying a microservice is as follows:
 
-1. Add the service to a cluster
-2. Add a route so that the service can be accessed through HTTP
+1. Add the microservice to a cluster
+2. Add a route so that the microservice can be accessed through HTTP
 3. Apply the new configuration on the cluster
 4. Check cluster status to see if everything is right
 5. Fix errors if there are any
 
 If you wish to add continuous integration,
 
-6. Add a remote for the service so that you can push your code using git
+6. Add a remote for the microservice so that you can push your code using git
 7. Apply the configuration again
 
 .. note::
 
-   If you want to quickly create a service from a template, write code and deploy it, take a look at the :ref:`hasuractl service quickstart <hasuractl-getting-started-deploy-code>` command.
+   If you want to quickly create a microservice from a template, write code and deploy it, take a look at the :ref:`hasuractl microservice quickstart <hasuractl-getting-started-deploy-code>` command.
 
 Deploy a docker image
 ~~~~~~~~~~~~~~~~~~~~~
 
-You can add docker based service to a cluster using the following commands:
+You can add docker based microservice to a cluster using the following commands:
 
 .. code:: bash
 
-   # add a service called `blog` which is using ghost docker image to a cluster called `dev`
-   $ hasuractl service add blog --image=ghost:1.10 --port=2368 -c dev
+   # add a microservice called `blog` which is using ghost docker image to a cluster called `dev`
+   $ hasuractl microservice add blog --image=ghost:1.10 --port=2368 -c dev
 
-   # creates kubernetes spec files required for the service inside `clusters/dev/services/blog`
+   # creates kubernetes spec files required for the microservice inside `clusters/dev/services/blog`
 
-   # expose this service at `blog` subdomain
+   # expose this microservice at `blog` subdomain
    $ hasuractl route add blog --sub-domain=blog -c dev
 
    # adds a route entry to `clusters/dev/routes.yaml`
@@ -452,7 +452,7 @@ You can add docker based service to a cluster using the following commands:
    # check the status
    $ hasuractl cluster status -c dev --detail
 
-   # you will find the endpoint for `blog` service here
+   # you will find the endpoint for `blog` microservice here
 
 
 .. _hasuractl-manual-git-push-code:
@@ -460,31 +460,31 @@ You can add docker based service to a cluster using the following commands:
 Git push your code
 ~~~~~~~~~~~~~~~~~~
 
-In order to be able to push your own code to a service, you need to add a *"remote"*. A remote is a configuration entity that defines how the docker image should be built for the corresponding service.
+In order to be able to push your own code to a microservice, you need to add a *"remote"*. A remote is a configuration entity that defines how the docker image should be built for the corresponding microservice.
 
-.. note:: It is assumed that you already have a git repo with you code and a dockerfile ready to be deployed. If not, please use :ref:`hasuractl service quickstart <hasuractl-getting-started-deploy-code>` command to get started.
+.. note:: It is assumed that you already have a git repo with you code and a dockerfile ready to be deployed. If not, please use :ref:`hasuractl microservice quickstart <hasuractl-getting-started-deploy-code>` command to get started.
 
 .. code:: bash
 
-   # add a service called `api` to a cluster called `dev`
+   # add a microservice called `api` to a cluster called `dev`
    # default port is 8080 and image is hasura/hello-world
-   $ hasuractl service add api -c dev
+   $ hasuractl microservice add api -c dev
 
-   # creates kubernetes spec files required for the service
+   # creates kubernetes spec files required for the microservice
 
-   # expose this service at `api` subdomain
-   # by default, service name is taken as the sub domain
+   # expose this microservice at `api` subdomain
+   # by default, microservice name is taken as the sub domain
    $ hasuractl route add api
 
    # adds a route entry to `clusters/dev/routes.yaml`
 
-   # add a remote for this service
-   # assuming your source code for this service is in a git repo at `/home/user/api` and has a `Dockerfile` (it can be anywhere else also)
+   # add a remote for this microservice
+   # assuming your source code for this microservice is in a git repo at `/home/user/api` and has a `Dockerfile` (it can be anywhere else also)
    # path and dockerfile are provided relative to the git repo
    $ hasuractl remote add --service=api --cluster=dev --path=. --dockerfile=./Dockerfile
 
    # adds a remote entry to `clusters/dev/remotes.yaml`, shows the `git remote` for you to push 
-   # copy the `git remote add ...` command and execute it in the repo containing service source code
+   # copy the `git remote add ...` command and execute it in the repo containing microservice source code
    $ cd /home/user/api
    $ git remote add ...
 
@@ -495,9 +495,9 @@ In order to be able to push your own code to a service, you need to add a *"remo
    # check the status
    $ hasuractl cluster status -c dev --detail
 
-   # you will find the endpoint for `api` service here
+   # you will find the endpoint for `api` microservice here
    
-   # now you can git push from your service source code repo to deploy to this cluster
+   # now you can git push from your microservice source code repo to deploy to this cluster
    $ cd /home/user/api
    # make changes
 
@@ -505,12 +505,12 @@ In order to be able to push your own code to a service, you need to add a *"remo
    $ git commit -m "<commit message"
    $ git push <remote-name>
    
-The service will be automatically re-deployed with latest code.
+The microservice will be automatically re-deployed with latest code.
 
 Add environment variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can add environment variables to each service which will be available for the underlying docker image to use. Kubernetes spec files are directly modified for this purpose. Let's say you want to add couple of environment variables to a service called ``api`` on a cluster called ``dev``.
+You can add environment variables to each microservice which will be available for the underlying docker image to use. Kubernetes spec files are directly modified for this purpose. Let's say you want to add couple of environment variables to a microservice called ``api`` on a cluster called ``dev``.
 
 Edit the file ``clusters/dev/services/api/deployment.yaml`` and add the ``env`` key with required environment variables' name and values:
 
@@ -564,7 +564,7 @@ Add secret variables
 
 Secret variables like API token, passwords etc. are kept as kubernetes secret object. These secrets can also be made available to the docker image as environment variables. Secrets are saved directly on the cluster and are not stored locally in the cluster configuration. 
 
-For example, if you want to add a secret token to the service ``api`` on cluster ``dev``, and consume it inside the container as an environment variable, you need to create a secret with the value.
+For example, if you want to add a secret token to the microservice ``api`` on cluster ``dev``, and consume it inside the container as an environment variable, you need to create a secret with the value.
 
 .. code::
 
@@ -622,34 +622,34 @@ This token will now be available inside the container as an environment variable
 
 .. _hasuractl-logs:
 
-Get logs for running services
+Get logs for running microservices
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In order to get logs for a service, you need to know the name. You can use ``cluster status`` to get service names. For Hasura services, use ``--namespace=hasura``.
+In order to get logs for a microservice, you need to know the name. You can use ``cluster status`` to get microservice names. For Hasura microservices, use ``--namespace=hasura``.
 
 .. code:: bash
 
-   # get logs for gateway service (hasura)
+   # get logs for gateway microservice (hasura)
    $ hasuractl logs -s gateway -n hasura
-   # get logs for custom service flask
+   # get logs for custom microservice flask
    $ hasuractl logs -s flask 
 
 .. note::
 
    You can also use ``--follow`` and ``--tail=<lines>`` flags to follow logs or to mention number of recent lines 
 
-Delete a service
+Delete a microservice
 ~~~~~~~~~~~~~~~~
 
-A service once added to a cluster can be removed using the following command. This will remove the service spec files, it's associated remotes and routes from the cluster configuration (if any).
+A microservice once added to a cluster can be removed using the following command. This will remove the microservice spec files, it's associated remotes and routes from the cluster configuration (if any).
 
 .. code:: bash
 
-   # remove a service called `api` from cluster `dev`
-   $ hasuractl service remove api -c dev 
+   # remove a microservice called `api` from cluster `dev`
+   $ hasuractl microservice remove api -c dev 
 
-   # remove the service, but retain routes and remotes config
-   $ hasuractl service remove api -c dev --no-cascade 
+   # remove the microservice, but retain routes and remotes config
+   $ hasuractl microservice remove api -c dev --no-cascade 
 
    # apply the changes on the cluster
    $ hasuractl cluster apply -c dev

@@ -81,7 +81,7 @@ Understanding Auth conf
     verifyEmailSubject: MyAwesomeApp - Verify your account
     # Template for verification emails. HTML can be used in the template. The
     # template is a Jinja template. Leave the "{{token}}" as it is. It will be
-    # used by the auth service to inject the actual token when sending the email.
+    # used by the auth microservice to inject the actual token when sending the email.
     verifyTemplate: |
       Hi, Please click on <br/>
       https://auth.{{ cluster.name }}.hasura-app.io/v1/providers/email/verify-email?token={{ "{{token}}" }}
@@ -97,7 +97,7 @@ Understanding Auth conf
     forgotPassEmailSubject: MyAwesomeApp - Reset password request
     # Template for forgot password emails. HTML can be used in the template. The
     # template is a Jinja template. Leave the "{{token}}" as it is. It will be
-    # used by the auth service to inject the actual token when sending the email.
+    # used by the auth microservice to inject the actual token when sending the email.
     forgotPassTemplate: |
       Hi, <br/> Click on
       https://auth.{{ cluster.name }}.hasura-app.io/v1/providers/email/reset-password?token={{ "{{token}}" }}
@@ -108,7 +108,7 @@ Understanding Auth conf
   # Configuration for the mobile provider
   mobile:
     # Template for the SMS that is sent. This is a Jinja template. Leave the
-    # "{{otp}}" as it is. It will be used by the auth service to inject the
+    # "{{otp}}" as it is. It will be used by the auth microservice to inject the
     # actual token.
     smsTemplate: |
       Verify your acccount with MyAwesomeApp! Your OTP is {{ "{{otp}}" }}.
@@ -118,7 +118,7 @@ Understanding Auth conf
   # Configuration for the mobile-password provider
   mobilePassword:
     # Template for the SMS that is sent. This is a Jinja template. Leave the
-    # "{{otp}}" as it is. It will be used by the auth service to inject the
+    # "{{otp}}" as it is. It will be used by the auth microservice to inject the
     # actual token.
     smsTemplate: |
       Verify your acccount with MyAwesomeApp! Your OTP is {{ "{{otp}}" }}.

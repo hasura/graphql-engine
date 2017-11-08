@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: Hasura's Data service's count query - JSON body's syntax, description, response params and examples.
+   :description: Hasura's Data microservice's count query - JSON body's syntax, description, response params and examples.
    :keywords: hasura, docs, data, query reference, count query
 
 .. _data_count:

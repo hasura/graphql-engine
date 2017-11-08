@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: List of topics for detailed reference docs for all the queries supported by Hasura's Data service and Syntax definitions.
+   :description: List of topics for detailed reference docs for all the queries supported by Hasura's Data microservice and Syntax definitions.
    :keywords: hasura, docs, data, reference home, syntax definition, topics
 
 Queries

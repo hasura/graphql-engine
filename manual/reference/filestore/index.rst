@@ -4,17 +4,17 @@
    contain the root `toctree` directive.
 
 .. .. meta::
-   :description: Reference documentation for Hasura's ``File`` microservice. The service is used to upload & download files and has built-in access control.
+   :description: Reference documentation for Hasura's ``File``  microservice. The microservice is used to upload & download files and has built-in access control.
    :keywords: hasura, docs, fileStore, file, file upload, file download
 
 ====
 File
 ====
 
-The ``File`` service on Hasura let's you upload and download files. This can
+The ``File`` microservice on Hasura let's you upload and download files. This can
 be used to store user data files.
 
-The File service, just like the data service, allows configuring access
+The File microservice, just like the data microservice, allows configuring access
 control on files based on roles.
 
 The ``File`` API provides the following features:
@@ -35,7 +35,7 @@ webhook.
 By default, only the ``admin`` role has access to the ``File`` APIs, for other
 roles the webhook has to be configured.
 
-The File service contacts the webhook with the following parameters:
+The File microservice contacts the webhook with the following parameters:
 
 1. The File ID: the unique id of the file.
 2. The operation on the file: one of ``create``, ``read``, ``delete``.
@@ -80,17 +80,17 @@ and if it returns ``403`` response, then the file operation is denied.
 Setting up the webhook
 ----------------------
 
-As a user, you are supposed to provide the ``File`` service with a webhook, which is a
+As a user, you are supposed to provide the ``File`` microservice with a webhook, which is a
 HTTP URL running inside the Hasura cluster.
 
 Which means, you need to write a custom endpoint which receives the above
-parameters from the ``File`` service, perform required authorization checks and return
-a response. You can deploy this custom endpoint as a custom microservice.
+parameters from the ``File`` microservice, perform required authorization checks and return
+a response. You can deploy this custom endpoint as a custom  microservice.
 
 Let's say the webhook that you have deployed is available at
 ``http://filecheck.<cluster-name>.hasura-app.io/check``. Internally,
 this endpoint will be available at ``filecheck.default/check``. Then the
-``File`` service will call your API to authorize before doing the actual file
+``File`` microservice will call your API to authorize before doing the actual file
 operation, like so:
 
 .. code-block:: http

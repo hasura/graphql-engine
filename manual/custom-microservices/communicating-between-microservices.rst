@@ -3,26 +3,27 @@
    :keywords: hasura, getting started, step 2
 
 ==================================
-Communcating between microservices
+Communicating between microservices
 ==================================
 
-Every microservice has an internal hostname and URL at which other microservices
-can reach it. The URL is typically of the structure: `http://<microservice-name>.<namespace>`.
-This service discovery is powered by kubernetes's internal DNS.
+Every microservice has an ``internal URL`` at which other microservices
+can reach it. The URL is typically of the structure: ``http://<microservice-name>.<namespace>``.
+This microservice discovery is powered by kubernetes's internal DNS.
 
 Examples:
 
-1. Hasura Data API: `http://data.hasura`
-2. Custom webapp called app: `http://app.default`
+1. Hasura Data API: ``http://data.hasura``
+2. Custom webapp called app: ``http://app.default``
 
 This is because Hasura microservices run in the ``hasura`` namespace and custom microservices run in the ``default`` namespace.
 
-In fact, when a microservice is exposed 'externally' on a route, the API gateway proxies the request to the internal URL of the
-microservice.
+Also every microservice expects a ``X-Hasura-User-Id`` and ``X-Hasura-Role`` header to be passed with the request for authentication. The ``X-Hasura-Role`` can be set to ``anonymous`` or ``admin`` depending on the service's access permissions. The ``X-Hasura-User-Id`` can be set to ``0``.
 
-To get the internal and external URLs for the microservices running on the hasura cluster:
+In fact, when a microservice is ``exposed externally`` on a route, the API gateway proxies the request to the internal URL of the microservice while setting the ``X-Hasura-User-Id`` and ``X-Hasura-Role`` headers based on the user session token passed.
 
-.. code-block::
+To get the URLs of externally exposed microservices running on a hasura cluster run:
+
+.. code-block:: bash
 
    $ hasura microservices list
    INFO Custom microservices:
@@ -47,6 +48,18 @@ To get the internal and external URLs for the microservices running on the hasur
 Contacting other microservices during local development of a microservice
 -------------------------------------------------------------------------
 
-.. todo::
+To contact microservices on a cluster from your localhost while development you need to port forward the service from the cluster to your localhost
 
-   Add to this section
+
+Examples:
+
+.. code-block:: bash
+
+   # port forward the postgres microservice in namespace hasura to local port 6432
+   $ hasura microservice port-forward postgres -n hasura --local-port 6432
+
+   # port forward the custom microservice www to local port 8080
+   $ hasura microservice port-forward www --local-port=8080
+
+
+Run the command ``hasura microservice port-forward -h`` for more information on the command options.

@@ -4,14 +4,14 @@ Hosting your web app or API
 ============================
 
 Hasura provides a fast and simple way to deploy your app built on your favourite
-frameworks as a service on a secure https subdomain. To deploy your code on
+frameworks as a microservice on a secure https subdomain. To deploy your code on
 Hasura, all you need to do is a ``git push hasura master``!
 
 To set up this simple git push deployment system, you need the following:
 
 * Your app code in a git repository
 * A Dockerfile that contains instructions on building a Docker image for your app
-* A git-push deployment enabled service on Hasura
+* A git-push deployment enabled microservice on Hasura
 
 There are two ways of doing this:
 
@@ -65,7 +65,7 @@ Now, we deploy our app using:
 
     $ git push hasura master
 
-Voila, your service is deployed and live! Check out your service live at
+Voila, your microservice is deployed and live! Check out your microservice live at
 <app-name>.<cluster-name>.hasura-app.io!
 
 In case there are any errors in building or deploying your code, the git push
@@ -75,10 +75,10 @@ again!
 .. admonition:: Behind The Scenes
 
    The Hasura platform basically builds a docker image from the latest git changes
-   pushed by you, and deploys the right kubernetes service, deployment underneath.
+   pushed by you, and deploys the right kubernetes microservice, deployment underneath.
 
    If you want finer control over your deployment, you are encouraged to use ``kubectl``
-   and peek under the hood of the service that is automatically deployed.
+   and peek under the hood of the microservice that is automatically deployed.
 
 
 Option 2: Using your own Dockerfile (advanced users)
@@ -87,12 +87,12 @@ Option 2: Using your own Dockerfile (advanced users)
 Make sure you are inside the directory of your Hasura project.
 
 
-Create a new service
+Create a new microservice
 ^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: shell
 
-  $ hasura service add myapp
+  $ hasura microservice add myapp
 
 This will create a new directory in the ``services`` directory with Kubernetes
 specs.
@@ -100,19 +100,19 @@ specs.
 Move all your code and Dockerfile into the ``services/myapp`` directory. Change
 the ports in the Kubernetes specs according to your code.
 
-Create a route for the service
+Create a route for the microservice
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now to expose the above created service, we have to create a route for it.
+Now to expose the above created microservice, we have to create a route for it.
 
 .. code-block:: shell
 
   $ hasura route generate myapp
 
-Create a remote for the service
+Create a remote for the microservice
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-As we are creating a git-push enabled service, we have to add a git remote for
-the service.
+As we are creating a git-push enabled microservice, we have to add a git remote for
+the microservice.
 
 .. code-block:: shell
   $ hasura remote generate myapp
@@ -146,7 +146,7 @@ remote to instantly build and deploy your app in one command!
   $ git push hasura master
 
 
-Voila, your service is deployed and live! Check out your service live at
+Voila, your microservice is deployed and live! Check out your microservice live at
 <app-name>.<cluster-name>.hasura-app.io!
 
 In case there are any errors in building or deploying your code, the git push

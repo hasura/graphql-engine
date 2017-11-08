@@ -5,9 +5,9 @@
 Custom domains & SSL
 ====================
 
-Your Hasura cluster comes with a SSL enabled `hasura-app.io` domain. You can also point your own domain to the cluster so that your services/website is available on the domain.
+Your Hasura cluster comes with a SSL enabled `hasura-app.io` domain. You can also point your own domain to the cluster so that your microservices/website is available on the domain.
 
-Hasura provisions free SSL certificates for each domain you add using `LetsEncrypt <https://letsencrypt.org/>`_. All of your services will be available on each of these domains.
+Hasura provisions free SSL certificates for each domain you add using `LetsEncrypt <https://letsencrypt.org/>`_. All of your microservices will be available on each of these domains.
 
 Adding a custom domain
 ----------------------
@@ -41,4 +41,4 @@ Adding a custom domain
 
    $ hasuractl cluster apply #add -c <cluster-name> in case you have multiple clusters
 
-Now, SSL certificates will automatically be generated and your services will be accessible on this domain!
+Now, SSL certificates will automatically be generated and your microservices will be accessible on this domain!

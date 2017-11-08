@@ -7,5 +7,5 @@ Troubleshooting
 
 .. todo::
 
-   * service status: uptime, logs
+   * microservice status: uptime, logs
    * migration failures

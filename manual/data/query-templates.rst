@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: Query templates: Learn how to template Data service queries and to define and manage your own REST interfaces with detailed examples.
+   :description: Query templates: Learn how to template Data microservice queries and to define and manage your own REST interfaces with detailed examples.
    :keywords: hasura, docs, data, query templates, REST interface, REST endpoint, RESTful API
 
 Query Templates
@@ -320,7 +320,7 @@ In the above example, in case of ``POST`` and ``PUT``, the parameters in the bod
 
 .. note::
 
-   There is no enforcement from the data service on the method used to execute a query template (i.e, you can use the ``DELETE`` verb to execute a query template on ``select``). It is left to the developer to use the method appropriate for the template.
+   There is no enforcement from the data microservice on the method used to execute a query template (i.e, you can use the ``DELETE`` verb to execute a query template on ``select``). It is left to the developer to use the method appropriate for the template.
 
 ``drop_query_template`` is used to drop an existing query template.
 
@@ -348,7 +348,7 @@ List existing query templates
 
 To fetch a list of created query templates, run the following query using psql or adminer:
 
-You can also issue the following query to the data service.
+You can also issue the following query to the data microservice.
 
 .. code-block:: http
 

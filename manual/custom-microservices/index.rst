@@ -1,9 +1,9 @@
 .. .. meta::
    :description: How to deploy docker images using hasura
-   :keywords: hasura, manual, docker, image, custom service
+   :keywords: hasura, manual, docker, image, custom microservice
 
 ====================================
-Developing & hosting custom services
+Developing & hosting custom microservices
 ====================================
 
 A Hasura project is composed of a set of microservices.
@@ -19,10 +19,15 @@ Some typical examples of microservices you would add to your application:
 5. A 'stateful' microservice like a database
 
 Hasura makes it easy for you to build and deploy custom microservices.
+
+Here's what your Hasura cluster looks like before and after you add custom microservices:
+
+.. image:: adding-custom-microservices.png
+
 These are the 3 key steps you need to follow for deploying any microservice:
 
 1. Add your microservice source code to the ``microservices/`` directory.
-   - NOTE: You can also just add a kubernetes/docker specification too.
+   1. Use the ``hasura microservice generate app --template=nodejs-express`` to generate scaffolding for a nodejs-express microservice.
 2. Add a route (subdomain, or path) on which this microservice may be exposed to the external world
 3. Add it to the `hasura` remote, so that the microservice is deployed whenever you `git push`
 
@@ -32,12 +37,12 @@ Let's start with understanding how :doc:`microservices work on a Hasura cluster 
 
    Recommended sections/pages in this section:
 
-   1. How custom services work on a Hasura cluster
+   1. How custom microservices work on a Hasura cluster
    2. Developing & hosting webapps:
 
       - Quickstart
       - Dockerfile, directory setup, git push
-      - Contacting internal services
+      - Contacting internal microservices
       - Using session middleware
       - local-development
       - Get logs
@@ -52,14 +57,13 @@ Let's start with understanding how :doc:`microservices work on a Hasura cluster 
    7. Configuring git-push
    8. Adding persistent storage
    9. Monitoring and logs
-   10. Deploying non-HTTP services
+   10. Deploying non-HTTP microservices
    11. Deploying kubernetes objects
 
 .. toctree::
   :maxdepth: 1
   :titlesonly:
 
-  How microservices work on Hasura <microservices-hasura-cluster>
   Communicating between microservices <communicating-between-microservices>
   Hosting webapps
   Hosting APIs

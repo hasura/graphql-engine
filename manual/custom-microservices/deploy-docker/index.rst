@@ -1,22 +1,23 @@
 .. .. meta::
    :description: How to deploy docker images using hasura
-   :keywords: hasura, manual, docker, image, custom service
+   :keywords: hasura, manual, docker, image, custom microservice
 
 ===========================================
-Deploying custom services using Docker images
+Deploying custom microservices using Docker images
 ===========================================
 
 Not all requirements for your app may be met by the Hasura data, auth APIs.
-Custom APIs and services will always need to be added specifically to the project.
+Custom APIs and microservices will always need to be added specifically to the project.
 
-If the service needed to be run has a ``docker`` image, Hasura provides an easy
-way to deploy the service by simply specifying the ``docker`` image.
+If the microservice needed to be run has a ``docker`` image, Hasura provides an easy
+way to deploy the microservice by simply specifying the ``docker`` image.
 
 Example: Adding a custom database browser (adminer)
 ---------------------------------------------------
 
 The adminer docker image is available as
 `clue/adminer <https://hub.docker.com/r/clue/adminer/>`_.
+
 
 Quickstart
 ^^^^^^^^^^
@@ -38,7 +39,7 @@ directory with Kubernetes specs.
 Create a route for the microservice
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now to expose the above created service, we have to create a route for it.
+Now to expose the above created microservice, we have to create a route for it.
 
 .. code-block:: shell
 
@@ -49,7 +50,7 @@ This will create a route for the microservice and append it to ``conf/routes.yam
 Push this newly created microservice to the cluster
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Apply the service configuration by running:
+Apply the microservice configuration by running:
 
 .. code-block:: shell
 
@@ -67,6 +68,6 @@ familiar ``adminer`` UI.
    The Hasura platform automatically creates Grade A SSL certificates using LetsEncrypt.
 
    SSL certificate creation can take a few minutes. During this time ``https://adminer.<cluster-name>.hasura-app.io``
-   will not served, and you'll have to access your service on ``http`` instead. As soon as
+   will not served, and you'll have to access your microservice on ``http`` instead. As soon as
    the certificate is ready, ``http://adminer.<cluster-name>.hasura-app.io`` will automatically
    start redirecting to the ``https`` version.

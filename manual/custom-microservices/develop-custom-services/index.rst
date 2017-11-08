@@ -1,6 +1,6 @@
 .. meta::
    :description: Developing and Hosting webapps
-   :keywords: hasura, manual, hosting, webapp, custom service
+   :keywords: hasura, manual, hosting, webapp, custom microservice
 
 .. _deploy-host-webapps:
 
@@ -88,10 +88,10 @@ Using a Dockerfile
 
 Microservices on Hasura are deployed as Docker containers managed on a Kubernetes cluster. A normal microservice on Hasura consists of the following:
 1. A `Dockerfile` - this contains the instructions for building the Docker image
-2. A `k8s.yaml` file that contains all the kubernetes configuration required to manage the Docker image (By default, a service and a deployment)
+2. A `k8s.yaml` file that contains all the kubernetes configuration required to manage the Docker image (By default, a microservice and a deployment)
 3. A source folder(named after the microservice name) in the ``microservices`` directory that contains the `Dockerfile`, the `k8s.yaml` file and your source code.
 
-To add your own custom microservice to your Hasura project, start by adding a service:
+To add your own custom microservice to your Hasura project, start by adding a microservice:
 
 .. code:: bash
 
@@ -123,7 +123,7 @@ This should show a microservice called old running under the ``Custom microservi
 
 .. code:: bash
 
-    INFO Custom services:
+    INFO Custom microservices:
     NAME   STATUS    URL
     old    Running
 
@@ -155,7 +155,7 @@ So now the cluster status will show:
 
 .. code:: bash
 
-    INFO Custom services:
+    INFO Custom microservices:
     NAME          STATUS    URL
     my-service    Running   https://my-service.cluster-name.hasura-app.io
 
@@ -184,14 +184,14 @@ Once this is done, Hasura will begin to generate ssl certificates for your new m
 Under the gateway warnings section, you'll see a warning that the ssl certificate is still being generated. Once the certificate is generated, you can check out your app live at ``https://my-service.cluster-name.hasura-app.io``!
 
 
-Contacting internal URLs on services
+Contacting internal URLs on microservices
 ------------------------------------
 
 The Hasura BaaS APIs can be contacted through two URLs, or endpoints.
 1. The external URL (external endpoint) - this is of the form ``service.project-name.hasura-app.io``
 
 This is a https url, protected by ssl certificates that Hasura generates through LetsEncrypt. The authentication for this is handled by the gateway, which converts the Authorization token sent along with the query into two headers, the X-Hasura-User_id and the X-Hasura-Roles. These two Headers are used by Hasura to manage session. Check out the documentation on ``Session Middleware`` for more information!
-This URL can be used to contact the service from anywhere on the internet.
+This URL can be used to contact the microservice from anywhere on the internet.
 You can check this using ``hasura microservice status``
 
 .. code:: bash
@@ -221,4 +221,4 @@ To get logs for your microservice, you can use the ``hasura logs`` command:
 
    $  hasura microservice logs my-service -n default
 
-The -n flag is the namespace in which the service resides. All Hasura microservices are on the hasura namespace, while custom microservices are on the default namespace.
+The -n flag is the namespace in which the microservice resides. All Hasura microservices are on the hasura namespace, while custom microservices are on the default namespace.

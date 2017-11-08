@@ -5,7 +5,7 @@
 Email & SMS
 ===========
 
-The ``Notify`` service on Hasura lets you contact / notify your project users through Email and SMS.
+The ``Notify`` microservice on Hasura lets you contact / notify your project users through Email and SMS.
 
 .. note::
 
@@ -118,7 +118,7 @@ Sending an email
 
 ``Authorization`` header is not required if the request is being made from a browser, since ``Cookie`` will be set.
 
-.. note:: If you are writing backed code and want to send email from that code, you can directly contact the ``Notify`` service using the URL ``http://notify.hasura/v1/send/email``. You will also need to set headers ``X-Hasura-User-Id: 1`` and ``X-Hasura-User-Role: admin`` to make the request as ``admin``.
+.. note:: If you are writing backed code and want to send email from that code, you can directly contact the ``Notify`` microservice using the URL ``http://notify.hasura/v1/send/email``. You will also need to set headers ``X-Hasura-User-Id: 1`` and ``X-Hasura-User-Role: admin`` to make the request as ``admin``.
 
 SMS
 ---
@@ -201,4 +201,4 @@ Sending SMS
 
 ``Authorization`` header is not required if the request is being made from a browser, since ``Cookie`` will be set.
 
-.. note:: If you are writing backed code and want to send SMS, you can directly contact the ``Notify`` service using the URL ``http://notify.hasura/v1/send/sms``. You will also need to set headers ``X-Hasura-User-Id: 1`` and ``X-Hasura-User-Role: admin`` to make the request as ``admin``.
+.. note:: If you are writing backed code and want to send SMS, you can directly contact the ``Notify`` microservice using the URL ``http://notify.hasura/v1/send/sms``. You will also need to set headers ``X-Hasura-User-Id: 1`` and ``X-Hasura-User-Role: admin`` to make the request as ``admin``.

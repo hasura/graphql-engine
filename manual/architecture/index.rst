@@ -17,13 +17,13 @@ dependent resources as required.
 -----------------------------------
 
 The main intelligence and work of managing a Hasura project is done
-by a special kind of service, typically referred to in the Kubernetes community
+by a special kind of microservice, typically referred to in the Kubernetes community
 as a `controller <https://github.com/kubernetes/community/blob/master/contributors/devel/controllers.md>`_ or
 an `operator <https://coreos.com/blog/introducing-operators.html>`_.
 
-*Shukra* is a service that connects to the kubernetes API server
+*Shukra* is a microservice that connects to the kubernetes API server
 and manages state, and other kubernetes resources that together represent the
-Hasura platform. *Shukra* is not a web/API service; it is an
+Hasura platform. *Shukra* is not a web/API microservice; it is an
 *active reconciliation process. It watches some object [project-configuration] for
 the world's desired state, and it watches the world's actual state too.
 Then, it sends instructions to try and make the world's current state be more like the desired state.*
@@ -89,7 +89,7 @@ The ``init`` command by the Hasura controller (codenamed: *shukra*)
 does the following:
 
 #. Initialises the postgres database server
-#. Runs migrations for the hasura data, auth and filestore API services
+#. Runs migrations for the hasura data, auth and filestore API microservices
 #. Creates the superadmin user/password
 
 The Hasura controller reports its progress and logs warnings/errors in
@@ -121,5 +121,5 @@ This is what the kubernetes cluster would look like after a successful
 
 It is important to note, that the data, auth & filestore APIs depend on the
 postgres server to initialise and maintain their state.
-Additionally, the filestore API service also depends on a persistent-volume
+Additionally, the filestore API microservice also depends on a persistent-volume
 to store its data (files).

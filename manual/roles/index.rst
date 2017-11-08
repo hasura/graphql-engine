@@ -14,11 +14,11 @@ The default roles in the system are: ``anonymous``, ``user`` and ``admin``.
 The ``anonymous`` role is attached to every unauthenticated user.
 
 ``admin`` role has super-user privileges by default. For example, any user with
-``admin`` role has all permissions for the data, file services.
+``admin`` role has all permissions for the data, file microservices.
 
 Any logged-in user is attached the ``user`` role by default.
 
-Hasura Auth service has APIs to create and manage roles.
+Hasura Auth microservice has APIs to create and manage roles.
 
 Custom roles can be created by using Hasura Auth APIs. Users can be assigned
 custom roles as well.
@@ -98,7 +98,7 @@ FAQ
 
 Why is the user role given by default?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Because, this role can be then leveraged by any service (running inside the
+Because, this role can be then leveraged by any microservice (running inside the
 project) to provide authorization and access control mechanisms very easily.
 
 Like, Hasura Auth APIs use this role to allow access to profile management APIs
@@ -106,7 +106,7 @@ of an user. (Profile management APIs are any API starting with ``/user``. Like
 email change, password reset etc. APIs.)
 
 To illustrate, the role information is passed in the header by the API gateway
-when the request reaches the upstream service. This service can then look at
+when the request reaches the upstream microservice. This microservice can then look at
 the headers and perform its own authorization and access control easily.
 
 What if the user role is removed from an user?

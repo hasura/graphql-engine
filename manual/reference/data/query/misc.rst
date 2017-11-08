@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: Learn about miscellaneous Data service functions like using run_sql to run arbitrary SQL statements along with examples.
+   :description: Learn about miscellaneous Data microservice functions like using run_sql to run arbitrary SQL statements along with examples.
    :keywords: hasura, docs, data, miscellaneous, run sql, raw sql
 
 Miscellaneous
@@ -27,7 +27,7 @@ An example:
        }
    }
 
-While ``run_sql`` lets you run any SQL, it tries to ensure that the data service's state (relationships, permissions etc.) is consistent. i.e, you cannot drop a column on which any metadata is dependent on (say a permission or a relationship). The effects however can be cascaded.
+While ``run_sql`` lets you run any SQL, it tries to ensure that the data microservice's state (relationships, permissions etc.) is consistent. i.e, you cannot drop a column on which any metadata is dependent on (say a permission or a relationship). The effects however can be cascaded.
 
 For example, if we were to drop 'bio' column from the article table (let's say the column is used in some permission), you would see an error.
 
@@ -140,7 +140,7 @@ Use cases
 ^^^^^^^^^
 
 1. To execute DDL operations that are not supported by the console (like indexes).
-2. Run custom DML queries from backend services instead of installing libraries to speak to Postgres.
+2. Run custom DML queries from backend microservices instead of installing libraries to speak to Postgres.
 
 More examples
 ^^^^^^^^^^^^^

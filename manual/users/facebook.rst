@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: Reference documentation for integrating Facebook OAuth2.0 based user signup & login with Hasura's Auth service for your web and mobile applications.
+   :description: Reference documentation for integrating Facebook OAuth2.0 based user signup & login with Hasura's Auth microservice for your web and mobile applications.
    :keywords: hasura, docs, auth, facebook signup, facebook login, social login, facebook OAuth, facebook OAuth2.0, integration
 
 Facebook Provider
@@ -14,7 +14,7 @@ Pre-requisites
 * In the newly created app's page, and obtain the "App ID" and "App Secret"
   values.
 
-* Now you need to configure Hasura Auth service with these credentials.
+* Now you need to configure Hasura Auth microservice with these credentials.
 
 * To configure, go to ``auth.yaml`` in ``conf`` directory inside your Hasura
   project.
@@ -58,7 +58,7 @@ Login/Signup a user with Hasura Auth
   of the logged in Facebook user.
 
 * Once the ``access_token`` is obtained, send the ``access_token`` to Hasura Auth
-  service:
+  microservice:
 
   .. code:: http
 

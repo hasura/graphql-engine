@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: Reference documentation for integrating Github OAuth2.0 based user signup & login with Hasura's Auth service for your web and mobile applications.
+   :description: Reference documentation for integrating Github OAuth2.0 based user signup & login with Hasura's Auth microservice for your web and mobile applications.
    :keywords: hasura, docs, auth, Github signup, Github login, social login, Github OAuth, Github OAuth2.0, integration
 
 Github Provider
@@ -92,7 +92,7 @@ The flow
 * Now your application has to parse the URL and retrieve the authorization code.
 
 * Once the ``code`` is obtained, send the ``code`` to Hasura Auth
-  service:
+  microservice:
 
 .. code-block:: http
 

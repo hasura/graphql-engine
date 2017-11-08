@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: Overview of the single query endpoint, /v1/query, exposed by Hasura's Data service and its Request and Response structure.
+   :description: Overview of the single query endpoint, /v1/query, exposed by Hasura's Data microservice and its Request and Response structure.
    :keywords: hasura, docs, data, query endpoint
 
 API
@@ -8,7 +8,7 @@ API
 ``/v1/query``
 -------------
 
-The data service unifies all operations that can be performed on the database under
+The data microservice unifies all operations that can be performed on the database under
 a single 'query' interface. A query is ``POST`` ed to ``/v1/query``.
 
 A typical query operation is as follows:

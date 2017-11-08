@@ -1,6 +1,6 @@
 .. .. meta::
-   :description: Fetching logs of a service in hasura
-   :keywords: hasura, logs, service
+   :description: Fetching logs of a microservice in hasura
+   :keywords: hasura, logs, microservice
 
 
 .. _fetching_logs:

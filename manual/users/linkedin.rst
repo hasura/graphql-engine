@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: Reference documentation for integrating Github OAuth2.0 based user signup & login with Hasura's Auth service for your web and mobile applications.
+   :description: Reference documentation for integrating Github OAuth2.0 based user signup & login with Hasura's Auth microservice for your web and mobile applications.
    :keywords: hasura, docs, auth, Github signup, Github login, social login, Github OAuth, Github OAuth2.0, integration
 
 LinkedIn Provider
@@ -47,7 +47,7 @@ Pre-requisites
   important**. If you fail to do this, Hasura Auth won't be able to fetch your
   user's email address.
 
-* Now you need to configure Hasura Auth service with these credentials.
+* Now you need to configure Hasura Auth microservice with these credentials.
 
 * To configure, go to ``auth.yaml`` in ``conf`` directory inside your Hasura
   project.
@@ -101,7 +101,7 @@ The flow
 * Now your application has to parse the URL and retrieve the authorization code.
 
 * Once the ``code`` is obtained, send the ``code`` to Hasura Auth
-  service:
+  microservice:
 
 .. code-block:: http
 
