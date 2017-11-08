@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Getting started with Hasura
    :keywords: hasura, quickstart, getting started, installation
 

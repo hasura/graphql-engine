@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Learn how to manage the schema and metadata of Hasura's Postgres instance in a project and how to migrate it from one project to another.
    :keywords: hasura, docs, data, schema migration, data migration, metadata migration, manage schema
 

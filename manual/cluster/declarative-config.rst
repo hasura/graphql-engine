@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Declarative configuration of a Hasura cluster
    :keywords: hasura, CLI, cluster
 

@@ -1,5 +1,5 @@
 Data permissions
-=====================
+================
 
 The ``data`` APIs, by default can only be accessed by users with the ``admin`` role. However, we should never include the admin token in any client applications. So, we need to allow access to the ``data`` APIs for roles other than ``admin``. This is handled by the permission layer of the ``data`` APIs, which lets you define row level and column level access control policies for various roles.
 

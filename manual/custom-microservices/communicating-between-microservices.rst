@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: How microservices work on a Hasura cluster
    :keywords: hasura, getting started, step 2
 

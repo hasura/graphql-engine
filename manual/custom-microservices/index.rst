@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: How to deploy docker images using hasura
    :keywords: hasura, manual, docker, image, custom service
 

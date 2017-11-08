@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Hasura Auth username provider
    :keywords: hasura, users, signup, login, username
 

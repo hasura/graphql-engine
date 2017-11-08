@@ -1,6 +1,6 @@
-.. meta::
-   :description: Part 1 of a set of learning exercises meant for exploring Hasura in detail. This pre-requisite part deals with creating a Hasura project.
-   :keywords: hasura, getting started, step 1
+.. .. meta::
+   :description: Installing the hasura CLI on Linux, Mac OS, Windows.
+   :keywords: hasura, hasura CLI, install, linux, mac, windows
 
 =========================
 Installing the hasura CLI

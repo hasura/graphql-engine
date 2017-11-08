@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Hasura Auth email provider
    :keywords: hasura, users, signup, login, email, verify email
 

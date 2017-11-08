@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Manual for adding a custom authentication provider to Hasura Auth
    :keywords: hasura, docs, auth, authentication, custom, provider
 

@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
   :description: Learn how to use Hasura roles
   :keywords: hasura, auth, roles, create role, assign role, add role, delete role
 

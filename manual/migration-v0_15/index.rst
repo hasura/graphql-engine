@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Migration guide to Hasura v0.15
    :keywords: hasura, v0.15, migration guide, migration
 

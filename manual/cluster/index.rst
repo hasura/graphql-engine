@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: What is a Hasura cluster?
    :keywords: hasura, CLI, cluster
 
@@ -31,15 +31,16 @@ support@hasura.io.
 .. note::
 
   Please **do not host** production projects on these free clusters as they don't
-  have any SLA, and can go down anytime (highly unlikely, but there is no
-  guarantee also).
+  have production SLAs and can go down (although unlikely).
+
+
+To understand the architecture of a Hasura cluster in greater detail, read this guide on the :doc:`Hasura architecture <architecture>`
 
 .. toctree::
    :maxdepth: 1
    :hidden:
 
    architecture
- 
 
 ..
   uncomment this when we have danava

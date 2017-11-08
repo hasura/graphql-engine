@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: List of queries types supported by Hasura's Data service for selecting or modifying data (DML) i.e JSON for insert, select, update, delete, count.
    :keywords: hasura, docs, data, query reference, select data, modify data
 

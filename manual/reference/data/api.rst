@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Overview of the single query endpoint, /v1/query, exposed by Hasura's Data service and its Request and Response structure.
    :keywords: hasura, docs, data, query endpoint
 

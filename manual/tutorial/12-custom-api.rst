@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Part 5 of a set of learning exercises meant for exploring Hasura in detail. This part shows you how to create a custom microservice (Docker & git push)
    :keywords: hasura, getting started, step 7, custom microservice, Docker, git push
 
