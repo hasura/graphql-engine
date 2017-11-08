@@ -19,10 +19,15 @@ Some typical examples of microservices you would add to your application:
 5. A 'stateful' microservice like a database
 
 Hasura makes it easy for you to build and deploy custom microservices.
+
+Here's what your Hasura cluster looks like before and after you add custom microservices:
+
+.. image:: adding-custom-microservices.png
+
 These are the 3 key steps you need to follow for deploying any microservice:
 
 1. Add your microservice source code to the ``microservices/`` directory.
-   - NOTE: You can also just add a kubernetes/docker specification too.
+   1. Use the ``hasura microservice generate app --template=nodejs-express`` to generate scaffolding for a nodejs-express microservice.
 2. Add a route (subdomain, or path) on which this microservice may be exposed to the external world
 3. Add it to the `hasura` remote, so that the microservice is deployed whenever you `git push`
 
@@ -59,7 +64,6 @@ Let's start with understanding how :doc:`microservices work on a Hasura cluster 
   :maxdepth: 1
   :titlesonly:
 
-  How microservices work on Hasura <microservices-hasura-cluster>
   Communicating between microservices <communicating-between-microservices>
   Hosting webapps
   Hosting APIs
