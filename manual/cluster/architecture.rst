@@ -6,7 +6,7 @@
 
 .. _platform-architecture:
 
-Hasura Architecture
+Hasura architecture
 ===================
 
 The Hasura platform is a set of kubernetes resources. A controller
