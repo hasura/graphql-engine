@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: New terms and concepts in Hasura v0.15
    :keywords: hasura, v0.15, new terms and concepts
 

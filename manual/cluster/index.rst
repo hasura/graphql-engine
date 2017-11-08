@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: What is a Hasura cluster?
    :keywords: hasura, CLI, cluster
 

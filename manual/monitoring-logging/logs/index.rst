@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Fetching logs of a service in hasura
    :keywords: hasura, logs, service
 

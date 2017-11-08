@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Hasura auth users extra profile information
    :keywords: hasura, users, auth, profile, extra info
 

@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Describing the hasura project directory structure
    :keywords: hasura, docs, CLI
 

@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Learn how to protect your data by restricting access to users at a role level granularity using the console or using the Data service endpoint itself.
    :keywords: hasura, docs, data, permissions, data security, ACL, access control, safety
 

@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Overview, description, and detailed API reference for creating and managing SQL relationships amongst tables along with examples.
    :keywords: hasura, docs, data, relationships
 

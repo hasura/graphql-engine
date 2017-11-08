@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Hasura's Data service's delete query - JSON body's syntax, description, response params and examples.
    :keywords: hasura, docs, data, query reference, delete query
 

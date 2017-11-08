@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Reference documentation for Hasura's Kubernetes based
    architecture. The architecture is explained by following the life-cycle of a
    project. 

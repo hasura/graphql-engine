@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 
-.. meta::
+.. .. meta::
    :description: Reference documentation for the IOS SDK used for integrating frontend code with backend APIs (both Hasura micro-services and custom services).
    :keywords: hasura, docs, IOS SDK, integration
 

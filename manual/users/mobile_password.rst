@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Hasura Auth mobile provider
    :keywords: hasura, users, signup, login, mobile, verify mobile
 

@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Homepage of the reference documentation for Hasura's Data microservice and a Table of Contents
    :keywords: hasura, docs, data, home, toc, table of contents
 

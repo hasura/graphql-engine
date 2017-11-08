@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Manual for using Notify Microservice on Hasura. Notify is used to send email or sms from Hasura project to users through providers like SMTP, Spark Post, Twilio, MSG91. 
    :keywords: hasura, docs, notify, email, sms, smtp, sparkpost, twilio, msg91
 

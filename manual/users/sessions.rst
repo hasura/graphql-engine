@@ -1,4 +1,4 @@
-.. meta::
+.. .. meta::
    :description: Hasura Auth user sessions 
    :keywords: hasura, users, sessions
 
