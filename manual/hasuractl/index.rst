@@ -16,9 +16,8 @@ The ``hasura`` CLI is a command line tool which is the primary mode of managing 
 Installation
 ------------
 
-.. todo::
+Refer to :doc:`../install-hasura-cli`.
 
-   Link to the installation page
 
 Commands
 --------
