@@ -12,8 +12,4 @@ The ideal workflow is to start with a project that is closest to what you want t
 modify that hasura project as you like, to build your own.
 
 1. :doc:`Start with a project on hub <start-project>`
-2. Publish your project to hub
-
-.. todo::
-
-   Both of the sections above.
+2. :doc:`Publish your project to hub <publish>`
