@@ -18,7 +18,7 @@ Let us define a view in `SQL <https://www.postgresql.org/docs/current/static/sql
 
 .. code-block:: http
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -33,7 +33,7 @@ Let us then add this view, using the ``add_existing_table_or_view`` query type:
 
 .. code-block:: http
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 

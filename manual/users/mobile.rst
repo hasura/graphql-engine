@@ -19,7 +19,7 @@ To get an OTP, use the ``/v1/providers/mobile/send-otp`` endpoint.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/providers/mobile/send-otp HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/providers/mobile/send-otp HTTP/1.1
    Content-Type: application/json
 
    {
@@ -38,7 +38,7 @@ Once the OTP is obtained, then the user should make a signup request.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/signup HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/signup HTTP/1.1
    Content-Type: application/json
 
    {
@@ -86,7 +86,7 @@ To get an OTP, use the ``/v1/providers/mobile/send-otp`` endpoint.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/providers/mobile/send-otp HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/providers/mobile/send-otp HTTP/1.1
    Content-Type: application/json
 
    {
@@ -105,7 +105,7 @@ Once the OTP is obtained, then the user should make a login request.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/login HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/login HTTP/1.1
    Content-Type: application/json
 
    {
@@ -153,7 +153,7 @@ Make a request to the endpoint: ``/v1/user/info``.
 
 .. code-block:: http
 
-   GET auth.<project-name>.hasura-app.io/v1/user/info HTTP/1.1
+   GET auth.<cluster-name>.hasura-app.io/v1/user/info HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <auth_token>
 
@@ -188,7 +188,7 @@ To logout a user, make the following request.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/user/logout HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/user/logout HTTP/1.1
    Authorization: Bearer <auth_token>
 
 .. note::
@@ -203,7 +203,7 @@ endpoint.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/user/change-password HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/user/change-password HTTP/1.1
    Authorization: Bearer <auth_token>
 
    {

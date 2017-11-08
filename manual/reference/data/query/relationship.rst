@@ -24,7 +24,7 @@ Let's define these relationships:
 .. code-block:: http
    :emphasize-lines: 11
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -48,7 +48,7 @@ Create an *object relationship* ``author`` on ``article`` *table*,  *using* the 
 .. code-block:: http
    :emphasize-lines: 11-14
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -93,7 +93,7 @@ Let's say we have a view called ``article_detail`` which has three columns ``art
 
 .. code-block:: http
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -303,7 +303,7 @@ An example:
 
 .. code-block:: http
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -352,7 +352,7 @@ An example:
 
 .. code-block:: http
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 

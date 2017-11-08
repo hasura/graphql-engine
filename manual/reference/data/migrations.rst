@@ -6,6 +6,11 @@
 Managing schema and metadata
 ============================
 
+.. todo::
+
+   Needs to be severely updated
+
+
 Using the console to create tables, relationships, permissions etc. helps us to quickly iterate in the early stages of the project. The major downside of this approach is that once we have multiple environments (staging, dev etc), it'll be hard to replicate the changes across all these instances. This is even critical once the project is in production. Every change has to be carefully planned, tested and deployed.
 
 The best practice to manage schema of a relational database is to use migrations. You can choose any tool that you are comfortable with. We use alembic at Hasura for managing schema in our own projects.
@@ -263,7 +268,7 @@ This query clears the entire metadata of the data service. This can be used when
 .. code-block:: http
    :emphasize-lines: 11
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -287,7 +292,7 @@ This query exports the entire metadata of the data service.
 .. code-block:: http
    :emphasize-lines: 11
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -312,7 +317,7 @@ This query lets you set the metadata of the ``data`` service. Note that the old 
 
 .. code-block:: http
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 

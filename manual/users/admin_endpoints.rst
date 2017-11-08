@@ -17,7 +17,7 @@ To get a user info, make a get request to the admin get user endpoint : ``/v1/ad
 
 .. code-block:: http
 
-   GET auth.<project-name>.hasura-app.io/v1/admin/user/<user_id> HTTP/1.1
+   GET auth.<cluster-name>.hasura-app.io/v1/admin/user/<user_id> HTTP/1.1
 
 * ``user_id``  is the hasura_id of a user.
 
@@ -63,7 +63,7 @@ To create a new user, make a request to the admin create-user endpoint : ``/v1/a
 
 .. code-block:: http
 
-    POST auth.<project-name>.hasura-app.io/v1/admin/create-user HTTP/1.1
+    POST auth.<cluster-name>.hasura-app.io/v1/admin/create-user HTTP/1.1
     Content-Type: application/json
 
     {
@@ -120,7 +120,7 @@ To remove existing user, make a request to the delete-user endpoint : ``/v1/admi
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/admin/delete-user HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/admin/delete-user HTTP/1.1
    Content-Type: application/json
 
    {
@@ -150,7 +150,7 @@ To activate a user, make a request to the admin endpoint : ``/v1/admin/user/acti
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/admin/user/activate HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/admin/user/activate HTTP/1.1
    Content-Type: application/json
 
    {
@@ -199,7 +199,7 @@ To deactivate a user, make a request to the admin endpoint : ``/v1/admin/user/de
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/admin/user/deactivate HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/admin/user/deactivate HTTP/1.1
    Content-Type: application/json
 
    {
@@ -248,7 +248,7 @@ To add a role to a user, make a request to the admin endpoint : ``/v1/admin/user
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/admin/user/add-role HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/admin/user/add-role HTTP/1.1
    Content-Type: application/json
 
    {
@@ -299,7 +299,7 @@ To remove a role to a user, make a request to the admin endpoint : ``/v1/admin/u
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/admin/user/remove-role HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/admin/user/remove-role HTTP/1.1
    Content-Type: application/json
 
    {
@@ -349,7 +349,7 @@ To create a session to a user, make a request to the admin endpoint : ``/v1/admi
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/admin/user/create-session HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/admin/user/create-session HTTP/1.1
    Content-Type: application/json
 
    {
@@ -399,7 +399,7 @@ To remove a session of a user, make a request to the admin endpoint : ``/v1/admi
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/admin/user/remove-session HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/admin/user/remove-session HTTP/1.1
    Content-Type: application/json
 
    {
@@ -451,7 +451,7 @@ To remove all sessions of a user, make a request to the admin endpoint : ``/v1/a
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/admin/user/remove-all-sessions HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/admin/user/remove-all-sessions HTTP/1.1
    Content-Type: application/json
 
    {
@@ -499,7 +499,7 @@ To reset password of a user, make a request to the admin endpoint : ``/v1/admin/
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/admin/user/reset-password HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/admin/user/reset-password HTTP/1.1
    Content-Type: application/json
 
    {

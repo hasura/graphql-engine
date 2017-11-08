@@ -33,7 +33,7 @@ You can alter a column's type, default value and Nullable property via multiple 
 
    .. code-block:: http
 
-      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+      POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
       Authorization: Bearer <admin-token>
       Content-Type: application/json
 
@@ -54,7 +54,7 @@ You can add ``Unique`` constraints or modify the existing primary key via SQL pa
 
    .. code-block:: http
 
-      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+      POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
       Authorization: Bearer <admin-token>
       Content-Type: application/json
 
@@ -70,7 +70,7 @@ You can add ``Unique`` constraints or modify the existing primary key via SQL pa
 
    .. code-block:: http
 
-      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+      POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
       Authorization: Bearer <admin-token>
       Content-Type: application/json
 
@@ -101,7 +101,7 @@ You can delete a ``Foreign key`` constraint(s) via
 
    .. code-block:: http
 
-      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+      POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
       Authorization: Bearer <admin-token>
       Content-Type: application/json
 
@@ -134,7 +134,7 @@ Note: You can also see Suggested relationships in the UI. Thats the easiest way 
 
    .. code-block:: http
 
-      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+      POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
       Authorization: Bearer <admin-token>
       Content-Type: application/json
 
@@ -165,7 +165,7 @@ Note: You can also quick apply permissions in the UI. Thats the easiest way to q
 
    .. code-block:: http
 
-      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+      POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
       Authorization: Bearer <admin-token>
       Content-Type: application/json
 
@@ -194,7 +194,7 @@ Note: When you delete a table, it is CASCADE disabled by default. It means that 
 
    .. code-block:: http
 
-      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+      POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
       Authorization: Bearer <admin-token>
       Content-Type: application/json
 

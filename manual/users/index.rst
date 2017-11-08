@@ -25,7 +25,7 @@ Accessing the API
 -----------------
 
 The base URL for the Auth service would be:
-``https://auth.<project-name>.hasura-app.io``.
+``https://auth.<cluster-name>.hasura-app.io``.
 
 All APIs accept and respond only in JSON. Which means that you have to make
 sure that all requests you send, should contain the ``Content-Type:
@@ -125,7 +125,7 @@ Make a request to the endpoint: ``/v1/user/info``.
 
 .. code-block:: http
 
-   GET auth.<project-name>.hasura-app.io/v1/user/info HTTP/1.1
+   GET auth.<cluster-name>.hasura-app.io/v1/user/info HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <auth_token>
 
@@ -160,7 +160,7 @@ To logout a user, make the following request.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/user/logout HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/user/logout HTTP/1.1
    Authorization: Bearer <auth_token>
 
 .. note::

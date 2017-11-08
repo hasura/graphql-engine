@@ -29,7 +29,7 @@ Create tables
 
    .. code-block:: http
 
-      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+      POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
       Authorization: Bearer <admin-token>
       Content-Type: application/json
 

@@ -45,7 +45,7 @@ The ``auth`` microservice is a part of every hasura project. It has extensive AP
 
    .. code-block:: http
 
-     POST auth.<project-name>.hasura-app.io/signup HTTP/1.1
+     POST auth.<cluster-name>.hasura-app.io/signup HTTP/1.1
      Content-Type: application/json
 
      {
@@ -75,7 +75,7 @@ The ``auth`` microservice is a part of every hasura project. It has extensive AP
 
    .. code-block:: http
 
-      POST auth.<project-name>.hasura-app.io/login HTTP/1.1
+      POST auth.<cluster-name>.hasura-app.io/login HTTP/1.1
       Content-Type: application/json
 
       {
@@ -91,7 +91,7 @@ The ``auth`` microservice is a part of every hasura project. It has extensive AP
 
       HTTP/1.1 200 OK
       Content-Type: application/json
-      Set-Cookie: dinoisses=pand3yofqfqrz7kab8i7n4w9n2wgc6bg; Domain=.<project-name>.hasura-app.io:01:34 GMT; httponly; Max-Age=1814400; Path=/
+      Set-Cookie: dinoisses=pand3yofqfqrz7kab8i7n4w9n2wgc6bg; Domain=.<cluster-name>.hasura-app.io:01:34 GMT; httponly; Max-Age=1814400; Path=/
 
       {
           "auth_token": "pand3yofqfqrz7kab8i7n4w9n2wgc6bg",
@@ -108,7 +108,7 @@ The ``auth`` microservice is a part of every hasura project. It has extensive AP
    .. code-block:: http
       :emphasize-lines: 2
 
-      GET auth.<project-name>.hasura-app.io/user/account/info HTTP/1.1
+      GET auth.<cluster-name>.hasura-app.io/user/account/info HTTP/1.1
       Authorization: Bearer pand3yofqfqrz7kab8i7n4w9n2wgc6bg
 
    Note the session token in ``Authorization`` header. If the ``Authorization`` header is absent, session token is read from cookie. The response will be as follows:
@@ -134,7 +134,7 @@ The ``auth`` microservice is a part of every hasura project. It has extensive AP
    .. code-block:: http
       :emphasize-lines: 2
 
-      GET auth.<project-name>.hasura-app.io/user/account/info HTTP/1.1
+      GET auth.<cluster-name>.hasura-app.io/user/account/info HTTP/1.1
       Authorization: Bearer <admin-token>
 
    .. code-block:: http
@@ -162,7 +162,7 @@ The ``auth`` microservice is a part of every hasura project. It has extensive AP
    .. code-block:: http
       :emphasize-lines: 2
 
-      GET auth.<project-name>.hasura-app.io/user/logout HTTP/1.1
+      GET auth.<cluster-name>.hasura-app.io/user/logout HTTP/1.1
       Authorization: Bearer pand3yofqfqrz7kab8i7n4w9n2wgc6bg
 
    .. code-block:: http
@@ -170,7 +170,7 @@ The ``auth`` microservice is a part of every hasura project. It has extensive AP
 
       HTTP/1.1 200 OK
       Content-Type: application/json
-      Set-Cookie: dinoisses=; Domain=.<project-name>.hasura-app.io; expires=Thu, 01-Jan-1970 00:00:00 GMT; Max-Age=0; Path=/
+      Set-Cookie: dinoisses=; Domain=.<cluster-name>.hasura-app.io; expires=Thu, 01-Jan-1970 00:00:00 GMT; Max-Age=0; Path=/
 
       {
           "message": "Logged out"

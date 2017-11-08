@@ -13,7 +13,6 @@ Queries
    query/query-templates.rst
    query/permission.rst
    query/misc.rst
-   migrations.rst
 
 ------------------------------------------------------------------------------
 

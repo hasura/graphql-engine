@@ -36,7 +36,7 @@ Navigate to the *SQL* tab in the API console and enter the above SQL statement. 
 	    Adding a view via SQL. Don't forget to check *This is a migration*
 .. .. code-block:: http
  
-..      POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+..      POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
 ..      Content-Type: application/json
 ..      Authorization: Bearer <admin-token>
 ..      {
@@ -57,7 +57,7 @@ The equivalent REST request is:
 
 .. code-block:: http
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 

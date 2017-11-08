@@ -33,7 +33,7 @@ To create a role, make a request to the ``/admin/create-role`` endpoint.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/admin/create-role HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/admin/create-role HTTP/1.1
    Content-Type: application/json
 
    {
@@ -53,7 +53,7 @@ endpoint.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/admin/user/add-role HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/admin/user/add-role HTTP/1.1
    Content-Type: application/json
 
    {
@@ -66,7 +66,7 @@ endpoint.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/admin/user/remove-role HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/admin/user/remove-role HTTP/1.1
    Content-Type: application/json
 
    {
@@ -84,7 +84,7 @@ To delete a role, make a request to the ``/admin/delete-role`` endpoint.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/admin/delete-role HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/admin/delete-role HTTP/1.1
    Content-Type: application/json
 
    {

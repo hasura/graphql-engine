@@ -18,7 +18,7 @@ To signup a user, make a request to the signup endpoint : ``/v1/signup``.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/signup HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/signup HTTP/1.1
    Content-Type: application/json
 
    {
@@ -63,7 +63,7 @@ To login a user make a request to the login endpoint: ``/v1/login``.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/login HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/login HTTP/1.1
    Content-Type: application/json
 
    {
@@ -106,7 +106,7 @@ Make a request to the endpoint: ``/v1/user/info``.
 
 .. code-block:: http
 
-   GET auth.<project-name>.hasura-app.io/v1/user/info HTTP/1.1
+   GET auth.<cluster-name>.hasura-app.io/v1/user/info HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <auth_token>
 
@@ -142,7 +142,7 @@ To logout a user, make the following request.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/user/logout HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/user/logout HTTP/1.1
    Authorization: Bearer <auth_token>
 
 .. note::
@@ -157,7 +157,7 @@ endpoint.
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/user/change-password HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/user/change-password HTTP/1.1
    Authorization: Bearer <auth_token>
 
    {

@@ -81,15 +81,14 @@ Setting up the webhook
 ----------------------
 
 As a user, you are supposed to provide the ``File`` service with a webhook, which is a
-HTTP endpoint running inside the Hasura project.
+HTTP URL running inside the Hasura cluster.
 
 Which means, you need to write a custom endpoint which receives the above
 parameters from the ``File`` service, perform required authorization checks and return
-a response. You can deploy this custom endpoint as a custom service from the
-Hasura project console.
+a response. You can deploy this custom endpoint as a custom microservice.
 
 Let's say the webhook that you have deployed is available at
-``http://filecheck.<your-hasura-project>.hasura-app.io/check``. Internally,
+``http://filecheck.<cluster-name>.hasura-app.io/check``. Internally,
 this endpoint will be available at ``filecheck.default/check``. Then the
 ``File`` service will call your API to authorize before doing the actual file
 operation, like so:

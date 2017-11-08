@@ -608,7 +608,7 @@ Using a custom service - Retrofit Support
 This is a wrapper over Retrofit for custom services, assuming that your interface with the api definitions is called ``MyCustomInterface.java``.
 
 * Let's say you have a custom service set up on Hasura called ``api``.
-* Your external endpoint for this custom service would be -> ``api.<project-name>.hasura-app.io``.
+* Your external endpoint for this custom service would be -> ``api.<cluster-name>.hasura-app.io``.
 
 Step1: Including the retrofit support
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

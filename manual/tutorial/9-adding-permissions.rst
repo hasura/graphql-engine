@@ -77,7 +77,7 @@ For **Select**, the HTTP query equivalent to the above UI-based flow looks like:
 
 .. code-block:: http
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: <admin-token>
 
@@ -99,7 +99,7 @@ We've specified ``*`` for ``columns`` as a short hand notation for all columns. 
 
 .. code-block:: http
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: <admin-token>
 
@@ -144,7 +144,7 @@ To set the permissions, you can use the api-console UI based workflow described 
 
 .. code-block:: http
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: <admin-token>
 
@@ -183,7 +183,7 @@ To set the permissions, you can use the api-console UI based workflow described 
 
 .. code-block:: http
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: <admin-token>
 
@@ -211,7 +211,7 @@ To set the permissions, you can use the api-console UI based workflow described 
 
 .. code-block:: http
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: <admin-token>
 
@@ -239,7 +239,7 @@ To define permissions on all tables you can follow the method above for each tab
 
 .. code-block:: http
 
-  POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+  POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
   Content-Type: application/json
   Authorization: <admin-token>
 

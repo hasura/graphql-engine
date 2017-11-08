@@ -15,7 +15,7 @@ Let's say we would like to query the article table to fetch ``id`` and ``title``
 .. code-block:: http
    :emphasize-lines: 12
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -36,7 +36,7 @@ Now, if we find ourselves using this query quite often but with a different valu
 .. code-block:: http
    :emphasize-lines: 8-9, 16
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -65,7 +65,7 @@ In the above request, we've templated the ``author_id`` in the ``select`` query 
 .. code-block:: http
    :emphasize-lines: 9-11
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -88,7 +88,7 @@ Query templates also let you define a REST interface for your application. For e
 .. code-block:: http
    :emphasize-lines: 1
 
-   GET data.<project-name>.hasura-app.io/v1/template/article_minimal?author_id=1 HTTP/1.1
+   GET data.<cluster-name>.hasura-app.io/v1/template/article_minimal?author_id=1 HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -99,7 +99,7 @@ Here is another example where a delete query is templated:
 .. code-block:: http
    :emphasize-lines: 15,19
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -134,7 +134,7 @@ We would like to allow authors to delete a tag on articles if they are not yet p
 .. code-block:: http
    :emphasize-lines: 9-12
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -154,7 +154,7 @@ or
 .. code-block:: http
    :emphasize-lines: 1
 
-   DELETE data.<project-name>.hasura-app.io/v1/template/delete_article_tag?article_id=1&tag_name=opinion HTTP/1.1
+   DELETE data.<cluster-name>.hasura-app.io/v1/template/delete_article_tag?article_id=1&tag_name=opinion HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -163,7 +163,7 @@ Here is an example for a select query which uses the ``default`` values in the t
 .. code-block:: http
    :emphasize-lines: 14, 18, 23-24, 27-28
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -208,7 +208,7 @@ Here's an example for an ``insert`` query.
 .. code-block:: http
    :emphasize-lines: 13-15
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -235,7 +235,7 @@ Here's an example for an ``update`` query.
 .. code-block:: http
    :emphasize-lines: 13-15
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -284,24 +284,13 @@ For example, the ``article_homepage`` template can be executed by any of the fol
 
 .. code-block:: http
 
-   GET data.<project-name>.hasura-app.io/v1/template/article_homepage?is_published=true&like_count_min=20&limit=50 HTTP/1.1
+   GET data.<cluster-name>.hasura-app.io/v1/template/article_homepage?is_published=true&like_count_min=20&limit=50 HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
 .. code-block:: http
 
-   POST data.<project-name>.hasura-app.io/v1/template/article_homepage?is_published=true&limit=20 HTTP/1.1
-   Content-Type: application/json
-   Authorization: Bearer <admin-token>
-
-   {
-       "article_like_count" : 20,
-       "limit" : 50
-   }
-
-.. code-block:: http
-
-   PUT data.<project-name>.hasura-app.io/v1/template/article_homepage?is_published=true&limit=20 HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/template/article_homepage?is_published=true&limit=20 HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -312,7 +301,18 @@ For example, the ``article_homepage`` template can be executed by any of the fol
 
 .. code-block:: http
 
-   DELETE data.<project-name>.hasura-app.io/v1/template/article_homepage?is_published=true&like_count_min=20&limit=50 HTTP/1.1
+   PUT data.<cluster-name>.hasura-app.io/v1/template/article_homepage?is_published=true&limit=20 HTTP/1.1
+   Content-Type: application/json
+   Authorization: Bearer <admin-token>
+
+   {
+       "article_like_count" : 20,
+       "limit" : 50
+   }
+
+.. code-block:: http
+
+   DELETE data.<cluster-name>.hasura-app.io/v1/template/article_homepage?is_published=true&like_count_min=20&limit=50 HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 
@@ -327,7 +327,7 @@ In the above example, in case of ``POST`` and ``PUT``, the parameters in the bod
 .. code-block:: http
    :emphasize-lines: 14
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 

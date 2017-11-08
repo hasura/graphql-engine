@@ -10,7 +10,7 @@ Filestore API
 Create file
 --------------
 
-``POST filestore.<project-name>.hasura-app.io/v1/file/<file_id>``
+``POST filestore.<cluster-name>.hasura-app.io/v1/file/<file_id>``
 
 The POST endpoint let's you upload files.
 
@@ -25,7 +25,7 @@ Request
 
 .. code-block:: http
 
-     POST filestore.<project-name>.hasura-app.io/v1/file/05c40f1e-cdaf-4e29-8976-38c899 HTTP/1.1
+     POST filestore.<cluster-name>.hasura-app.io/v1/file/05c40f1e-cdaf-4e29-8976-38c899 HTTP/1.1
      Content-Type: image/png
 
      <contents of the file>
@@ -68,7 +68,7 @@ An example request would look like:
 
 .. code-block:: http
 
-    GET filestore.<project-name>.hasura-app.io/v1/file/05c40f1e-cdaf-4e29-8976-38c899 HTTP/1.1
+    GET filestore.<cluster-name>.hasura-app.io/v1/file/05c40f1e-cdaf-4e29-8976-38c899 HTTP/1.1
 
 
 Response
@@ -96,7 +96,7 @@ An example request would look like:
 
 .. code-block:: http
 
-    DELETE filestore.<project-name>.hasura-app.io/v1/file/05c40f1e-cdaf-4e29-8976-38c899 HTTP/1.1
+    DELETE filestore.<cluster-name>.hasura-app.io/v1/file/05c40f1e-cdaf-4e29-8976-38c899 HTTP/1.1
 
 
 Response

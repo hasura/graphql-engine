@@ -6,7 +6,7 @@ Consider Let's insert a couple of categories. The full definition of `insert` re
 .. code-block:: http
    :emphasize-lines: 13
 
-   POST data.<project-name>.hasura-app.io/v1/query HTTP/1.1
+   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <admin-token>
 

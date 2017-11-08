@@ -55,14 +55,14 @@ Apply the service configuration by running:
 
 And this should deploy the adminer service to your cluster.
 
-If you head to ``https://adminer.<project-name>.hasura-app.io`` you'll see the
+If you head to ``https://adminer.<cluster-name>.hasura-app.io`` you'll see the
 familiar ``adminer`` UI.
 
 .. admonition:: Automatic SSL certificates
 
    The Hasura platform automatically creates Grade A SSL certificates using LetsEncrypt.
 
-   SSL certificate creation can take a few minutes. During this time ``https://adminer.<project-name>.hasura-app.io``
+   SSL certificate creation can take a few minutes. During this time ``https://adminer.<cluster-name>.hasura-app.io``
    will not served, and you'll have to access your service on ``http`` instead. As soon as
-   the certificate is ready, ``http://adminer.<project-name>.hasura-app.io`` will automatically
+   the certificate is ready, ``http://adminer.<cluster-name>.hasura-app.io`` will automatically
    start redirecting to the ``https`` version.

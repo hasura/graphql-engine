@@ -75,29 +75,29 @@ Project name
 ^^^^^^^^^^^^
 
 Typically a word followed by an number; randomly generated when you create a project.
-Eg: ``test42``. It'll be referred to as ``<project-name>``.
+Eg: ``test42``. It'll be referred to as ``<cluster-name>``.
 
 Project domain
 ^^^^^^^^^^^^^^
 
-The domain which will resolve to your hasura project. By default, it is ``<project-name>.hasura-app.io`` or ``hasura.test`` (local).
+The domain which will resolve to your hasura project. By default, it is ``<cluster-name>.hasura-app.io`` or ``hasura.test`` (local).
 
 Services
 ^^^^^^^^
 
 A microservice is an abstract entity which captures a running web/tcp server. There are several microservices that come out of the box with hasura platform like ``data``, ``auth`` and ``console``.
 
-An HTTP microservice, say ``svc`` is typically exposed using a subdomain at ``<svc>.<project-name>.hasura-app.io``. For example, the ``data`` microservice is exposed at ``data.<project-name>.hasura-app.io``.
+An HTTP microservice, say ``svc`` is typically exposed using a subdomain at ``<svc>.<cluster-name>.hasura-app.io``. For example, the ``data`` microservice is exposed at ``data.<cluster-name>.hasura-app.io``.
 
 Gateway
 ^^^^^^^
 
-The Gateway is the entrypoint for your project. Every request to the project goes through the gateway and is then routed to the appropriate microservice. For example, all requests on ``data.<project-name>.hasura-app.io`` are forwarded to the built-in hasura provided ``data`` microservice.
+The Gateway is the entrypoint for your project. Every request to the project goes through the gateway and is then routed to the appropriate microservice. For example, all requests on ``data.<cluster-name>.hasura-app.io`` are forwarded to the built-in hasura provided ``data`` microservice.
 
 Console
 ^^^^^^^
 
-The UI microservice that helps you manage data, users and other microservices in your project. It can be accessed at ``console.<project-name>.hasura-app.io``
+The UI microservice that helps you manage data, users and other microservices in your project. It can be accessed at ``console.<cluster-name>.hasura-app.io``
 
 Admin user
 ^^^^^^^^^^

@@ -66,7 +66,7 @@ Now, we deploy our app using:
     $ git push hasura master
 
 Voila, your service is deployed and live! Check out your service live at
-<app-name>.<project-name>.hasura-app.io!
+<app-name>.<cluster-name>.hasura-app.io!
 
 In case there are any errors in building or deploying your code, the git push
 command will show you errors and the push will fail. Fix the error, and push
@@ -147,7 +147,7 @@ remote to instantly build and deploy your app in one command!
 
 
 Voila, your service is deployed and live! Check out your service live at
-<app-name>.<project-name>.hasura-app.io!
+<app-name>.<cluster-name>.hasura-app.io!
 
 In case there are any errors in building or deploying your code, the git push
 command will show you errors and the push will fail. Fix the error, and push

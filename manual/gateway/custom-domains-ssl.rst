@@ -5,20 +5,20 @@
 Custom domains & SSL
 ====================
 
-Your Hasura project comes with a SSL enabled `hasura-app.io` domain. You can also add your domain to the project so that your services/website is available on the domain.
+Your Hasura cluster comes with a SSL enabled `hasura-app.io` domain. You can also point your own domain to the cluster so that your services/website is available on the domain.
 
 Hasura provisions free SSL certificates for each domain you add using `LetsEncrypt <https://letsencrypt.org/>`_. All of your services will be available on each of these domains.
 
 Adding a custom domain
 ----------------------
 
-- Get IP for the project
+- Get IP for the cluster
 
 .. code-block:: bash
 
-   $ ping project-name.hasura-app.io
+   $ ping cluster-name.hasura-app.io
 
-- Point your domain's DNS to the project's IP from your registrar's dashboard by adding a A record for your domain pointing to the IP above
+- Point your domain's DNS to the cluster's IP from your registrar's dashboard by adding a A record for your domain pointing to the IP above
 
 +---+----------------+---------+
 | A | `*.domain.com` | 1.1.1.1 |

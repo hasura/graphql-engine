@@ -105,7 +105,7 @@ The flow
 
 .. code-block:: http
 
-   POST auth.<project-name>.hasura-app.io/v1/login HTTP/1.1
+   POST auth.<cluster-name>.hasura-app.io/v1/login HTTP/1.1
    Content-Type: application/json
 
    {
