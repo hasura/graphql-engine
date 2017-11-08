@@ -92,7 +92,7 @@ Every hasura cluster comes with an API Console that gives you a GUI to test out 
     $ hasura api-console
 
 You can use the API console to check and modify your Postgres schema and database. On making modifications to your schema (your database structure), the API Console will create migration files in your migration folder, and apply them on your cluster.
-To learn more about migrations, check out :ref:`our documentation <../data/data-migration>` on **Schema Migrations**.
+To learn more about migrations, check out :doc:`the schema migration docs <../../data/data-migration>`.
 
 Using a Dockerfile
 ------------------
@@ -211,6 +211,7 @@ To get logs for your microservice, you can use the ``hasura logs`` command:
 
 .. code:: bash
 
-   $  hasura microservice logs my-service -n default
+   $  hasura microservice logs my-service
 
-The ``-n`` flag is the namespace in which the service resides. All Hasura microservices are in the ``hasura`` namespace, while custom microservices are in the ``default`` namespace.
+The ``-n`` flag is the namespace in which the service resides. All Hasura
+microservices are in the ``hasura`` namespace.
