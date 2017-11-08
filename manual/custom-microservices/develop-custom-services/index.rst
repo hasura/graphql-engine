@@ -219,6 +219,6 @@ To get logs for your microservice, you can use the ``hasura logs`` command:
 
 .. code:: bash
 
-   $  hasura logs -s my-service -n default
+   $  hasura microservice logs my-service -n default
 
 The -n flag is the namespace in which the service resides. All Hasura microservices are on the hasura namespace, while custom microservices are on the default namespace.
