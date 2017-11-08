@@ -8,23 +8,23 @@
 Logs
 ======
 
-To check the logs of any service running on a cluster, run:
+To check the logs of any microservice running on a cluster, run:
 
 .. code-block:: bash
 
-   $ hasura logs -s <service-name> -n <namepace>
+   $ hasura microservice logs <microservice-name> -n <namepace>
 
-To fetch logs of a custom service, say blog, run:
+To fetch logs of a custom microservice, say blog, run:
 
 .. code-block:: bash
 
-   $ hasuractl logs -s blog
+   $ hasuractl microservice logs blog
 
 This would output all the logs of that pod.
 
-If you are interested in the logs of any hasura service, say auth, run:
+If you are interested in the logs of any hasura microservice, say auth, run:
 
 .. code-block:: bash
 
-   $ hasuractl logs -s auth -n hasura
+   $ hasuractl microservice logs auth -n hasura
 
