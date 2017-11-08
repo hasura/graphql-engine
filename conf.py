@@ -188,6 +188,7 @@ html_theme = "djangodocs"
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ["_theme"]
+html_title = '| Hasura ' + version + ' documentation'
 
 # The name for this set of Sphinx documents.
 # "<project> v<release> documentation" by default.
