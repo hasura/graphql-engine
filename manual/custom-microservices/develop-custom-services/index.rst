@@ -5,7 +5,7 @@
 .. _deploy-host-webapps:
 
 ==============================
-Developing and Hosting Webapps
+Developing and hosting webapps
 ==============================
 
 This section will attempt to discuss everything you need to know about developing and hosting webapps on Hasura.
@@ -13,7 +13,7 @@ This section will attempt to discuss everything you need to know about developin
 Quickstarts
 -----------
 
-Hasura provides a very simple and powerful system to develop, deploy and host your custom webapps easily. This is facilitated by the [ Hasura Hub ](https://hasura.io/hub), a user contributed repository of working projects that are just one command away from a running app.
+Hasura provides a very simple and powerful system to develop, deploy and host your custom webapps easily. This is facilitated by the `Hasura Hub <https://hasura.io/hub>`_, a user contributed repository of working projects that are just one command away from a running app.
 
 The Hasura Hub contains several quickstart projects that can be used to bootstrap your new app and quickly get a simple Hello World app up and running on Hasura using your favourite framework.
 
@@ -22,19 +22,30 @@ Setup
 
 Once the hasura cli is installed, you can get started with your favourite framework by using the quickstart command.
 
-Let's start with a [ python-flask quickstart ](https://hasura.io/hub-detail/hasura/hello-python-flask). This quickstart project comes with the following by default:
+Let's start with a `python-flask quickstart <https://hasura.io/hub/project/hasura/hello-python-flask>`_. This quickstart project comes with the following by default:
+
 1. A basic Hasura project
-2. Two tables `article` and `author` with some dummy data
-3. A basic flask app which runs at the `app` subdomain which fetches a list of articles available at the 'get_articles' endpoint.
+
+2. Two tables ``article`` and ``author`` with some dummy data
+
+3. A basic flask app which runs at the ``app`` subdomain which fetches a list of articles available at the */get_articles* endpoint.
 
 .. code:: bash
 
     $ hasura quickstart hello-python-flask
 
 This command will do the following:
-1.  Creates a new folder in the current working directory called ``hello-python-flask`` (So make sure there isn't a folder with that name already)
-2. Creates a new free hasura cluster for you and sets that cluster as the default cluster for this project.
-3. Initializes ``hello-python-flask`` as a git repository and adds the necessary git remotes for deploying to your Hasura cluster.
+
+1. Create a Hasura free-trial cluster
+
+2. Clone the ``hello-python-flask`` project from the Hasura Hub
+
+3. Add the above created cluster to the project and set it as the default cluster
+
+4. Initialize a git repo inside the project directory
+   
+5. Add you SSH key to the cluster
+   
 
 Getting cluster infromation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -56,7 +67,7 @@ This will give you cluster status, which looks like:
           Platform Version:   v0.15.3
           Cluster State:      Synced
 
-Keep a note of your cluster name. Alternatively, you can also go to your [ hasura dashboard ](http://dashboard.hasura.io) and see the clusters you have.
+Keep a note of your cluster name. Alternatively, you can also go to your `Hasura dashboard <http://dashboard.hasura.io>`_ and see the clusters you have.
 
 Deploying on a Hasura cluster
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -80,54 +91,57 @@ Every hasura cluster comes with an API Console that gives you a GUI to test out 
 
     $ hasura api-console
 
-You can use the API console to check and modify your Postgres schema and database. On making modifications to your schema(your database structure), the API Console will create migration files in your migration folder, and apply them on your cluster.
-To learn more about migrations, check out :ref:`our documentation <schema-migrations>`.
+You can use the API console to check and modify your Postgres schema and database. On making modifications to your schema (your database structure), the API Console will create migration files in your migration folder, and apply them on your cluster.
+To learn more about migrations, check out :ref:`our documentation <../data/data-migration>` on **Schema Migrations**.
 
 Using a Dockerfile
 ------------------
 
 Microservices on Hasura are deployed as Docker containers managed on a Kubernetes cluster. A normal microservice on Hasura consists of the following:
-1. A `Dockerfile` - this contains the instructions for building the Docker image
-2. A `k8s.yaml` file that contains all the kubernetes configuration required to manage the Docker image (By default, a microservice and a deployment)
-3. A source folder(named after the microservice name) in the ``microservices`` directory that contains the `Dockerfile`, the `k8s.yaml` file and your source code.
+
+1. A ``Dockerfile`` - this contains the instructions for building the Docker image
+2. A ``k8s.yaml`` file that contains all the kubernetes configuration required to manage the Docker image (By default, a service and a deployment)
+3. A source folder (named after the microservice name) in the ``microservices`` directory that contains the above ``Dockerfile`` and ``k8s.yaml`` files and your source code.
 
 To add your own custom microservice to your Hasura project, start by adding a microservice:
 
 .. code:: bash
 
-    $ hasura microservice add my-service
+    $ hasura microservice generate my-service
 
-(Make sure you add a ``-c cluster-name`` if you didn't set your default cluster using ``hasura cluster set-default -c cluster-alias``. By default, quickstart aliases the cluster it creates to `hasura` and sets it as the default, so you won't need to do this.)
+(Make sure you add a ``-c cluster-name`` if you didn't set your default cluster using ``hasura cluster set-default -c cluster-alias``. By default, quickstart aliases the cluster it creates to ``hasura`` and sets it as the default, so you won't need to do this.)
 
 This command will do the following:
+
 1. Create a ``my-service`` directory inside the ``microservices`` directory.
 2. Create a ``k8s.yaml`` file inside the ``my-service`` directory.
 
 Note that this command does not actually make any changes to your cluster, it just generates files on your local Hasura project directory.
 
-To apply this configuration, and create the microservice on your cluster, run:
+To apply this configuration, and create the microservice on your cluster ``git commit`` and ``git push`` the project directory:
 
 .. code:: bash
 
-    $ hasura microservice apply
+    $ git commit -m "added my-service"
+    $ git push hasura master
 
 This command will automatically pick up the microservice configuration from the ``microservices`` directory and apply them on the default cluster. ( This command will also update the configuration if you run it after making changes to the ``k8s.yaml`` file. )
 
-Now the cluster should have a microservice called ``old`` running on it. You can check this again using:
+Now the cluster should have a microservice called ``my-service`` running on it. You can check this again using:
 
 .. code:: bash
 
     $ hasura cluster status
 
-This should show a microservice called old running under the ``Custom microservices`` section. The ``URL`` column will be empty, since we haven't configured a route for your microservice yet.
+This should show a microservice called ``my-service`` running under the ``Custom microservices`` section. The ``URL`` column will be empty, since we haven't configured a route for your microservice yet.
 
 .. code:: bash
 
     INFO Custom microservices:
     NAME   STATUS    URL
-    old    Running
+    my-service    Running
 
-The routes for all the microservices on your Hasura project are configured in ``conf/routes.yaml``. The Hasura cli provides a handy command to generate the default routes configuration for your custom microservice:
+The routes for all the microservices on your Hasura project are configured in ``conf/routes.yaml``. The ``hasura`` CLI provides a handy command to generate the default routes configuration for your custom microservice:
 
 .. code:: bash
 
@@ -141,15 +155,14 @@ Once you've added a route, you should also add a remote, so that you can use git
 
     $ hasura conf generate-remotes my-service >> conf/ci.yaml
 
-Now copy the output and add it to the bottom of the ``conf/ci.yaml`` file. Make sure the file is properly indented, with two spaces per indentation.
-
-Once you add the route and remote configuration, apply the changes using:
+Once you add the route and remote configuration, apply the changes using ``git commit`` and ``git push``:
 
 .. code:: bash
 
-    $ hasura microservice apply
+    $ git commit -m "added route and remote for my-service"
+    $ git push hasura master
 
-This will add a route and a remote to your microservice, letting you access the app at a ``my-service.cluster-name.hasura-app.io`` (where cluster-name is the cluster-name from the ``hasura cluster status`` command), and also adds the remote configuration that builds and deploys your microservice when you do a git push to the cluster remote.
+This will add a route and a remote to your microservice, letting you access the app at a ``my-service.cluster-name.hasura-app.io`` (where ``cluster-name`` is the cluster-name from the ``hasura cluster status`` command), and also adds the remote configuration that builds and deploys your microservice when you do a ``git push`` to the cluster remote.
 
 So now the cluster status will show:
 
@@ -159,55 +172,34 @@ So now the cluster status will show:
     NAME          STATUS    URL
     my-service    Running   https://my-service.cluster-name.hasura-app.io
 
-This means that your custom microservice will be available at the url ``https://my-service.cluster-name.hasura-app.io``. Visiting this url now will just show you a "Hello World!" message.
-
-To deploy your microservice to your cluster, run:
-
-.. code:: bash
-
-   $ git add .
-   $ git commit -m "Added a microservice"
-   $ git push hasura master
-
-This command will do the following:
-
-  1. Run the git pre-push hooks that Hasura adds - These run the database migrations and do a cluster apply to sync your project configuration.
-  2. Do the actual git push to the hasura git remote.
-  3. Run the git post-push hooks, which will build your Dockerimage, and deploy your microservice at the URL configured by routes.
-
-Once this is done, Hasura will begin to generate ssl certificates for your new microservice, which will take a short while. To check the progress, you can do a
-
-.. code:: bash
-
-   $ hasura cluster apply
-
-Under the gateway warnings section, you'll see a warning that the ssl certificate is still being generated. Once the certificate is generated, you can check out your app live at ``https://my-service.cluster-name.hasura-app.io``!
+This means that your custom microservice will be available at the url ``https://my-service.cluster-name.hasura-app.io``. Visiting this url now will show you a "Hello World!" message.
 
 
 Contacting internal URLs on microservices
 ------------------------------------
 
 The Hasura BaaS APIs can be contacted through two URLs, or endpoints.
-1. The external URL (external endpoint) - this is of the form ``service.project-name.hasura-app.io``
 
-This is a https url, protected by ssl certificates that Hasura generates through LetsEncrypt. The authentication for this is handled by the gateway, which converts the Authorization token sent along with the query into two headers, the X-Hasura-User_id and the X-Hasura-Roles. These two Headers are used by Hasura to manage session. Check out the documentation on ``Session Middleware`` for more information!
-This URL can be used to contact the microservice from anywhere on the internet.
+1. The external URL (external endpoint) - this is of the form ``htpps://service-name.cluster-name.hasura-app.io``
+
+This is a https url, protected by ssl certificates that Hasura generates through LetsEncrypt. The authentication for this is handled by the gateway, which converts the Authorization token sent along with the query into two headers, the ``X-Hasura-User-Id`` and the ``X-Hasura-Roles``. These two Headers are used by Hasura to manage session. Check out the documentation on ``Session Middleware`` for more information!
+This URL can be used to contact the service from anywhere on the internet.
 You can check this using ``hasura microservice status``
 
 .. code:: bash
 
    $ hasura cluster status
 
-2. The internal URL (internal endpoint) - this is of the form ``service.namespace``
+2. The internal URL (internal endpoint) - this is of the form ``http://service-name.namespace``
 
-This internal URL is the url that microservices running on the same Hasura cluster can use to contact the microservice.
+This internal URL is the URL that microservices running on the same Hasura cluster can use to contact the microservice.
 The Hasura microservices are all in the ``hasura`` namespace, and all custom microservices are in the ``default`` namespace.
-Since the session management is handled by Hasura, authentication for queries to the internal URL can be done by adding two headers, the X-Hasura-User-Id , which is the user id of the user you want to run the query as, and X-Hasura-Roles, which is an array of the roles that you want to run the query as. Check out the documentation on the ``Session Middleware`` for more information!
+Since the session management is handled by Hasura, authentication for queries to the internal URL can be done by adding two headers, the ``X-Hasura-User-Id``, which is the user id of the user you want to run the query as, and ``X-Hasura-Roles``, which is an array of the roles that you want to run the query as. Check out the documentation on the **Session Middleware** for more information!
 
 Using Session Middleware
 ------------------------
 
-The Hasura session middleware resides in the Gateway microservice, and handles session management for the entire platform. Every query made to an external URL on the Hasura app goes through the Gateway microservice, which looks for an Authentication header in the query. Based on the token in the Authentication header, the Gateway microservice will lookup the session details for the user and replace the header with two other headers - X-Hasura-User-Id, which contains the user id of the user logging in(as per the auth user database), and X-Hasura-Roles, which contains a list of roles the user is assigned.
+The Hasura session middleware resides in the Gateway microservice, and handles session management for the entire platform. Every query made to an external URL on the Hasura app goes through the Gateway microservice, which looks for an Authentication header in the query. Based on the token in the Authentication header, the Gateway microservice will lookup the session details for the user and replace the header with two other headers - X-Hasura-User-Id, which contains the user id of the user logging in (as per the auth user database), and X-Hasura-Roles, which contains a list of roles the user is assigned.
 
 Microservices running on Hasura can directly look for these headers, and permit access or process the user based on the content of these headers.
 For more info, check out the documentation on the Hasura ``Session Middleware``!
@@ -221,4 +213,4 @@ To get logs for your microservice, you can use the ``hasura logs`` command:
 
    $  hasura microservice logs my-service -n default
 
-The -n flag is the namespace in which the microservice resides. All Hasura microservices are on the hasura namespace, while custom microservices are on the default namespace.
+The ``-n`` flag is the namespace in which the service resides. All Hasura microservices are in the ``hasura`` namespace, while custom microservices are in the ``default`` namespace.

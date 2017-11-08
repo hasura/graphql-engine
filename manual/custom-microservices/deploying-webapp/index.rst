@@ -4,7 +4,7 @@ Hosting your web app or API
 ============================
 
 Hasura provides a fast and simple way to deploy your app built on your favourite
-frameworks as a microservice on a secure https subdomain. To deploy your code on
+frameworks as a microservice on a secure ``https`` subdomain. To deploy your code on
 Hasura, all you need to do is a ``git push hasura master``!
 
 To set up this simple git push deployment system, you need the following:
