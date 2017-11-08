@@ -69,7 +69,7 @@ Let's start with understanding how :doc:`microservices work on a Hasura cluster 
   Hosting APIs
   Hosting static files
   develop-custom-services/index
-  Hosting docker containers <deploy-docker/index>
+  Hosting Docker containers <deploy-docker/index>
   Routing <routing>
   serve-static/index
   persistent-services
