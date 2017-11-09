@@ -31,6 +31,17 @@ All APIs accept and respond only in JSON. Which means that you have to make
 sure that all requests you send, should contain the ``Content-Type:
 application/json`` header.
 
+API Console
+~~~~~~~~~~~
+Use the API console to browse various Auth APIs. ``cd`` to the project
+directory and run:
+
+.. code-block:: bash
+
+  $ hasura api-console
+
+
+
 .. _providers:
 
 Providers
