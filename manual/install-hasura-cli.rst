@@ -35,13 +35,6 @@ Step 1: Install
          This will install the ``hasura`` CLI in ``/usr/local/bin``. You might have to provide
          your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
 
-     - id: windows
-       content: |
-
-         **Note:** You should be running 64-bit windows, and should have ``git`` installed to run the ``hasura`` CLI.
-
-         Download the ``hasura`` installer from here: `hasura (Windows installer) <https://hasura.io/install.msi>`_
-
 
 Step 2: Login
 -------------
@@ -72,16 +65,7 @@ Step 2: Login
          This command will open up the browser and
          allow you to register with a new account (or login to your existing account).
 
-     - id: windows
-       content: |
-         Next, open the command prompt, or ``git-bash`` and login/register:
 
-         .. code-block:: bash
-
-            hasura.exe login
-
-         This command will open up the browser and
-         allow you to register with a new account (or login to your existing account).
 
 
 Adding shell completion (optional)
@@ -131,3 +115,18 @@ Execute the following commands:
 
   $ mkdir -p $HOME/.oh-my-zsh/completions
   $ hasura completion zsh --file=$HOME/.oh-my-zsh/completions/_hasura
+
+
+..     
+  - id: windows
+       content: |
+         **Note:** You should be running 64-bit windows, and should have ``git`` installed to run the ``hasura`` CLI.
+         Download the ``hasura`` installer from here: `hasura (Windows installer) <https://hasura.io/install.msi>`_
+     - id: windows
+       content: |
+         Next, open the command prompt, or ``git-bash`` and login/register:
+         .. code-block:: bash
+            hasura.exe login
+         This command will open up the browser and
+         allow you to register with a new account (or login to your existing account).
+
