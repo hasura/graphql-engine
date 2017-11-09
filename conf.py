@@ -44,6 +44,9 @@ ALGOLIA_SECRETS = {
 CURRENT_ENV = os.getenv("ENV") if os.getenv("ENV") else "development"
 BASE_DOMAIN = os.getenv("BASE_DOMAIN", "development")
 
+print ('BASE_DOMAIN')
+print (BASE_DOMAIN)
+
 html_context = {
     "APPLICATION_ID": ALGOLIA_SECRETS[CURRENT_ENV]["APPLICATION_ID"],
     "APPLICATION_SEARCH_KEY": ALGOLIA_SECRETS[CURRENT_ENV]["APPLICATION_SEARCH_KEY"],
