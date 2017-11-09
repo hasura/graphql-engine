@@ -82,3 +82,52 @@ Step 2: Login
 
          This command will open up the browser and
          allow you to register with a new account (or login to your existing account).
+
+
+Adding shell completion (optional)
+----------------------------------
+You can also add ``bash`` or ``zsh`` completions for ``hasura`` CLI.
+
+Bash
+~~~~
+
+Linux
++++++
+Generate the Bash completion using:
+
+.. code-block:: bash
+
+  $ sudo hasura completion bash --file=/etc/bash.completion.d/hasura
+
+Mac
++++
+
+1. Install bash-completion using homebrew:
+
+.. code-block:: bash
+
+  $ brew install bash-completion
+
+2. Add the following code to your ``~/.bash_profile``:
+
+.. code-block:: bash
+
+  if [ -f $(brew --prefix)/etc/bash_completion ]; then
+      . $(brew --prefix)/etc/bash_completion
+  fi
+
+3. Add hasura completion:
+
+.. code-block:: bash
+
+  $ sudo hasura completion bash --file=/etc/bash_completion.d/hasura
+
+
+Zsh
+~~~
+Execute the following commands:
+
+.. code-block:: bash
+
+  $ mkdir -p $HOME/.oh-my-zsh/completions
+  $ hasura completion zsh --file=$HOME/.oh-my-zsh/completions/_hasura
