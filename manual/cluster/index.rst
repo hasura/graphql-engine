@@ -41,6 +41,7 @@ To understand the architecture of a Hasura cluster in greater detail, read this 
    :hidden:
 
    architecture
+   multiple-clusters
 
 ..
   uncomment this when we have danava
