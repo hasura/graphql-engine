@@ -42,7 +42,7 @@ ALGOLIA_SECRETS = {
 
 # Defaults to development
 CURRENT_ENV = os.getenv("ENV") if os.getenv("ENV") else "development"
-BASE_DOMAIN = os.getenv("BASE_DOMAIN", "development")
+BASE_DOMAIN = "production"
 
 print ('BASE_DOMAIN')
 print (BASE_DOMAIN)
