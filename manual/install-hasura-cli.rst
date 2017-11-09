@@ -40,7 +40,7 @@ Step 1: Install
 
          **Note:** You should be running 64-bit windows, and should have ``git`` installed to run the ``hasura`` CLI.
 
-         Download the ``hasura`` installer from here: `hasura (Windows installer) <https://storage.googleapis.com/hasuractl/stable/windows-amd64/hasura.msi>`_
+         Download the ``hasura`` installer from here: `hasura (Windows installer) <https://hasura.io/install.msi>`_
 
 
 Step 2: Login
