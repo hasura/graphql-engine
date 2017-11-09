@@ -43,6 +43,7 @@ Commands
    hasura_completion
    hasura_conf
    hasura_conf_apply
+   hasura_conf_diff
    hasura_conf_generate-domain
    hasura_conf_generate-remote
    hasura_conf_generate-route
@@ -55,7 +56,9 @@ Commands
    hasura_microservice_generate
    hasura_microservice_list
    hasura_microservice_logs
+   hasura_microservice_port-forward
    hasura_microservice_remove
+   hasura_microservice_template-list
    hasura_migration
    hasura_migration_apply
    hasura_migration_db-reset
