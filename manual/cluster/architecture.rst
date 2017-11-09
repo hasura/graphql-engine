@@ -10,9 +10,9 @@ Hasura architecture
 ===================
 
 .. note::
-  This is an advanced guide to the internals of how Hasura works. If you're an
-  advanced user or know Kubernetes details you can go ahead and read this.
-  Please note you **do not** need to know this to use Hasura.
+  This is an advanced guide to the internals of Hasura. If you're an advanced
+  user or know Kubernetes details you can go ahead and read this.  Please note
+  you **do not** need to know this to use Hasura.
 
 
 The Hasura platform is a set of kubernetes resources. A controller
