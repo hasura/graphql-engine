@@ -6,11 +6,15 @@
 Installing the hasura CLI
 =========================
 
+Step 1: Install
+---------------
+
 .. tabs::
 
    tabs:
      - id: linux
        content: |
+
          Open your linux shell and run the following command:
 
          .. code-block:: bash
@@ -34,7 +38,47 @@ Installing the hasura CLI
      - id: windows
        content: |
 
-         **Note:** You should be running 64-bit windows to run the ``hasura`` CLI.
+         **Note:** You should be running 64-bit windows, and should have ``git`` installed to run the ``hasura`` CLI.
 
          Download the ``hasura`` installer from here: `hasura (Windows installer) <https://storage.googleapis.com/hasuractl/stable/windows-amd64/hasura.msi>`_
 
+
+Step 2: Login
+-------------
+
+.. tabs::
+
+   tabs:
+     - id: linux
+       content: |
+
+         Next, login or register by running the following command:
+
+         .. code-block:: bash
+
+            hasura login
+
+         This command will open up the browser and
+         allow you to register with a new account (or login to your existing account).
+
+     - id: mac
+       content: |
+         Next, login or register by running the following command:
+
+         .. code-block:: bash
+
+            hasura login
+
+         This command will open up the browser and
+         allow you to register with a new account (or login to your existing account).
+
+     - id: windows
+       content: |
+         Next, open the command prompt, or ``git-bash`` and login/register:
+
+         .. code-block:: bash
+
+            hasura.exe login
+
+         This command will open up the browser and
+         allow you to register with a new account (or login to your existing account).
