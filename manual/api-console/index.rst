@@ -10,6 +10,12 @@ To open the API console, ``cd`` into the project directory and run:
 
   $ hasura api-console
 
+This will open up a browser window at `http://localhost:9695 <http://localhost:9695>`_.
+
+.. image:: console-screenshot.png
 
 .. note::
-  The API console has support generating code in various languages.
+
+  The API console also allows you to generate API client code. For eg: you can
+  easily export a sample ``curl`` command for an API request you make from the
+  API explorer.
