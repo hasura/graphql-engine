@@ -21,7 +21,7 @@
 {# XXX necessary? #}
 {%- if url_root == '#' %}{% set url_root = '' %}{% endif %}
 {%- if not embedded and docstitle %}
-  {%- set titlesuffix = " "|safe + docstitle|e %}
+  {%- set titlesuffix = " | "|safe + docstitle|e %}
 {%- else %}
   {%- set titlesuffix = "" %}
 {%- endif %}
