@@ -78,7 +78,7 @@ Step 2: Login
 
          .. code-block:: bash
 
-            hasura.exe login
+            hasura login
 
          This command will open up the browser and
          allow you to register with a new account (or login to your existing account).
@@ -90,58 +90,57 @@ You can also add ``bash`` or ``zsh`` completions for ``hasura`` CLI.
 Bash
 ~~~~
 
-Linux
-+++++
-Generate the Bash completion using:
+.. tabs::
 
-.. code-block:: bash
+   tabs:
+     - id: linux
+       content: |
+         Generate the Bash completion using:
 
-  $ sudo hasura completion bash --file=/etc/bash.completion.d/hasura
+         .. code-block:: bash
 
-Mac
-+++
+            $ sudo hasura completion bash --file=/etc/bash.completion.d/hasura
 
-1. Install bash-completion using homebrew:
 
-.. code-block:: bash
+     - id: mac
+       content: |
+         1. Install bash-completion using homebrew:
 
-  $ brew install bash-completion
+         .. code-block:: bash
 
-2. Add the following code to your ``~/.bash_profile``:
+            $ brew install bash-completion
 
-.. code-block:: bash
+         2. Add the following code to your ``~/.bash_profile``:
 
-  if [ -f $(brew --prefix)/etc/bash_completion ]; then
-      . $(brew --prefix)/etc/bash_completion
-  fi
+         .. code-block:: bash
 
-3. Add hasura completion:
+            if [ -f $(brew --prefix)/etc/bash_completion ]; then
+                . $(brew --prefix)/etc/bash_completion
+            fi
 
-.. code-block:: bash
+         3. Add hasura completion:
 
-  $ sudo hasura completion bash --file=/etc/bash_completion.d/hasura
+         .. code-block:: bash
+
+            $ sudo hasura completion bash --file=/etc/bash_completion.d/hasura
+
+
+     - id: windows
+       content: |
+
+         For windows, if you're using ``git-bash``, generate the Bash completion file using:
+
+         .. code-block:: bash
+
+            $ sudo hasura completion bash --file=/source/to/bash/completion/directory
 
 
 Zsh
 ~~~
+
 Execute the following commands:
 
 .. code-block:: bash
 
   $ mkdir -p $HOME/.oh-my-zsh/completions
   $ hasura completion zsh --file=$HOME/.oh-my-zsh/completions/_hasura
-
-
-..     
-  - id: windows
-       content: |
-         **Note:** You should be running 64-bit windows, and should have ``git`` installed to run the ``hasura`` CLI.
-         Download the ``hasura`` installer from here: `hasura (Windows installer) <https://hasura.io/install.msi>`_
-     - id: windows
-       content: |
-         Next, open the command prompt, or ``git-bash`` and login/register:
-         .. code-block:: bash
-            hasura.exe login
-         This command will open up the browser and
-         allow you to register with a new account (or login to your existing account).
-
