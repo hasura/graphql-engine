@@ -27,7 +27,7 @@ Creating a project
 
 .. code:: bash
 
-   $ hasuractl clone base my-project
+   $ hasura clone base my-project
 
    # creates a directory called `my-project` and initialize an empty Hasura project
 
@@ -36,12 +36,12 @@ Creating a project
    INFO Getting app details...                        app=hasura/base
    INFO Found on Hasura hub
    INFO Downloading...
-   INFO Downloaded app to directory                   app=hasura/base directory=/home/sid/gen/base
+   INFO Downloaded app to directory
    INFO Cloned app successfully
 
 
-This will 'clone' a base project from `hasura.io/hub <https://hasura.io/hub>`_.
-Note, you can clone any project from the hub and use that as a starting point for your new project.
+This will 'clone' a base project from |hub-link|.  Note, you can clone any
+project from the hub and use that as a starting point for your new project.
 
 .. admonition:: Note
 
@@ -81,7 +81,7 @@ representative project is shown below:
   │   ├── 1504788327_create_table_userprofile.down.sql
   │   ├── 1504788327_create_table_userprofile.up.yaml
   │   └── 1504788327_create_table_userprofile.up.sql
-  └── microservices 
+  └── microservices
       ├── adminer
       │   └── k8s.yaml
       └── flask
@@ -115,30 +115,35 @@ holding custom variables that you can define.
     config:
       configmap: controller-conf
       namespace: hasura
-    data: null  
+    data: null
 
 
 * ``conf``
-      
+
   * ``authorized-keys.yaml``
-    
+
     * SSH keys allowed to access the cluster
     * One public key per line
-      
+
   * ``*.yaml``
-    
+
     * Configuration for the cluster, split into various yaml files
-      
+
 * ``migrations``
 
   * Database migration files are kept in this directory
-    
+
 * ``microservices``
 
   * Default directory to store source code for custom microservices
   * Each sub-directory contains source code and *Dockerfile*
-  
+
 
 .. note::
 
   hasura cli doesn't consider any other files or directories outside of those mentioned above
+
+
+.. |hub-link| raw:: html
+
+   <a href="https://hasura.io/hub" target="_blank">Hasura Hub</a>
