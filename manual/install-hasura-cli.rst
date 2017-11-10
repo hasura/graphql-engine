@@ -38,7 +38,7 @@ Step 1: Install
      - id: windows
        content: |
 
-         **Note:** You should be running 64-bit windows, and should have ``git`` installed to run the ``hasura`` CLI.
+         **Note:** You should be running 64-bit windows, and should have ``git bash`` installed to run the ``hasura`` CLI. Download git bash using the following `(link) <https://git-scm.com/download/win>`_
 
          Download the ``hasura`` installer from here: `hasura (Windows installer) <https://hasura.io/install.msi>`_
 
@@ -74,7 +74,7 @@ Step 2: Login
 
      - id: windows
        content: |
-         Next, open the command prompt, or ``git-bash`` and login/register:
+         Next, open ``git-bash`` and login/register:
 
          .. code-block:: bash
 
