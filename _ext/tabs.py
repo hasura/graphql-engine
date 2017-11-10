@@ -6,7 +6,7 @@ PAT_RST_SECTION = re.compile(r'(.*)\n((?:^----+$)|(?:^====+$)|(?:^~~~~+$)|(?:^``
 # List of tuples with language tab ( ID, Display Name)
 LANGUAGES_RAW = [ ('linux', 'Linux'),
              ('mac', 'Mac'),
-             #('windows', 'Windows'),
+             ('windows', 'Windows'),
              #('java-async', 'Java (Async)'),
              #('c', 'C'),
              #('cpp11', 'C++11'),
