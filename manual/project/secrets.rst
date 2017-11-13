@@ -88,7 +88,6 @@ the container.
 
 Add/update secrets
 ------------------
-
 You can add new or modify old secrets by using this command:
 
 .. code-block:: bash
@@ -96,3 +95,11 @@ You can add new or modify old secrets by using this command:
    $ hasura secrets update my.new.key 1234-some-secret-value-6789
 
 Here ``my.new.key`` is the name of the secret and ``1234-some-secret-value-6789`` is the value of the secret.
+
+List secrets
+------------
+To see all the secrets that are saved in your cluster:
+
+.. code-block:: bash
+
+   $ hasura secrets list
