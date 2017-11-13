@@ -13,4 +13,3 @@ Existing users: Moving to Hasura platform v0.15
   terminologies
   workflow
   auth-api
-  
