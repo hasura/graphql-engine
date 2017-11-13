@@ -147,3 +147,9 @@ holding custom variables that you can define.
 .. |hub-link| raw:: html
 
    <a href="https://hasura.io/hub" target="_blank">Hasura Hub</a>
+
+.. toctree::
+  :maxdepth: 1
+  :titlesonly:
+
+  secrets
