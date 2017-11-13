@@ -1,0 +1,46 @@
+alias: hasura # insert the cluster alias which will be used for hasura cli commands
+data: null
+kubeContext: gke_hasura-test_asia-east1-a_myco-hasura # insert kubeContext
+config:
+  namespace: hasura
+  configmap: controller-conf
+metadata:
+  filestore:
+    volume:
+      gcePersistentDisk:
+        pdName: myco-hasura-filestore # insert filestore disk name
+      name: filestore-pv
+  gateway:
+    loadBalancerIP: 35.201.235.220 # insert IP
+    ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 443
+    - name: ssh
+      port: 22
+      protocol: TCP
+      targetPort: 22
+    selector:
+      app: gateway
+    type: LoadBalancer
+  namespaces:
+    hasura: hasura
+    user: default
+  postgres:
+    volume:
+      gcePersistentDisk:
+        pdName: myco-hasura-postgres # insert postgres disk name
+      name: postgres-pv
+  sessionStore:
+    volume:
+      gcePersistentDisk:
+        pdName: myco-hasura-redis # insert redis disk name
+      name: redis-pv
+  registry: null
+name: myco-hasura # insert cluster name which will be used to generate a <cluster-name>.hasura-app.io domain
+services: null

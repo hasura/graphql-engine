@@ -39,4 +39,5 @@ This is the reference documentation of the entire Hasura platform.
   hasura CLI reference <hasuractl/index>
   hasura.io/hub guide <hub/index>
   Platform reference <reference/index>
+  Advanced <advanced>
   
