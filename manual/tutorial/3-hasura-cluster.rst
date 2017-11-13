@@ -64,7 +64,7 @@ to refer to this cluster in the future.
 .. code-block:: bash
 
    # Set this cluster as the default
-   $ hasura cluster set-default -c hasura
+   $ hasura cluster set-default hasura
 
 ::
    
