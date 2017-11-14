@@ -7,6 +7,8 @@
 
 .. highlight:: bash
 
+.. _hasura_cluster_doc:
+
 Hasura cluster
 ==============
 

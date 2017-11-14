@@ -1,3 +1,5 @@
+.. _api_explorer:
+
 Hasura API explorer
 ===================
 
