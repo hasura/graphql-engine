@@ -3,13 +3,13 @@
 hasura api-console
 ------------------
 
-Opens a Console UI connected to a cluster. Read more :ref:`here <api_explorer>`
+Opens a Console UI connected to a cluster. Read more :ref:`here <api_explorer>.`
 
 Synopsis
 ~~~~~~~~
 
 
-Opens a Console UI connected to a cluster. Read more :ref:`here <api_explorer>`
+Opens a Console UI connected to a cluster. Read more :ref:`here <api_explorer>.`
 
 ::
 
