@@ -3,7 +3,7 @@
 hasura microservice generate
 ----------------------------
 
-Generate spec for a microservice
+Generate a microservice on Hasura. (Please note that it generates only the specifications for a microservice unless you are using some :ref:`microservice template <hasura_microservice_template-list>`. You also have to generate the :ref:`conf <hasura_conf>` for your service.)
 
 Synopsis
 ~~~~~~~~
