@@ -24,7 +24,7 @@ To get an OTP, use the ``/v1/providers/mobile/send-otp`` endpoint.
 
    {
       "mobile": "9876543210",
-      "country_code": 91
+      "country_code": "91"
    }
 
 
@@ -45,8 +45,8 @@ Once the OTP is obtained, then the user should make a signup request.
      "provider" : "mobile",
      "data" : {
         "mobile": "9876543210",
-        "country_code": 91,
-        "otp": 123456
+        "country_code": "91",
+        "otp": "123456"
      }
    }
 
@@ -91,7 +91,7 @@ To get an OTP, use the ``/v1/providers/mobile/send-otp`` endpoint.
 
    {
       "mobile": "9876543210",
-      "country_code": 91
+      "country_code": "91"
    }
 
 
@@ -112,8 +112,8 @@ Once the OTP is obtained, then the user should make a login request.
      "provider" : "mobile",
      "data" : {
         "mobile": "9876543210",
-        "country_code": 91,
-        "otp": 123456
+        "country_code": "91",
+        "otp": "123456"
      }
    }
 
