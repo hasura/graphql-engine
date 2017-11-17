@@ -17,17 +17,18 @@ roles.
 .. toctree::
   :maxdepth: 1
 
-  Create tables<create-tables>
-  Select & count query<select>
-  Update query<update>
-  Insert query<insert>
-  Delete query<delete>
+  Create tables <create-tables>
+  Select & count query <select>
+  Update query <update>
+  Insert query <insert>
+  Delete query <delete>
   Bulk query<bulk>
   Permissions and access control<permissions>
   Relationships <relationship>
   Altering schema <alter-schema/index>
   Linking auth users to data <linking_users_auth>
-  Using SQL directly on data<using-sql>
-  Data/schema migrations<data-migration>
+  Using SQL directly on data <using-sql>
+  Data/schema migrations <data-migration>
+  Reset Database <db-reset>
   Aggregations <aggregations>
-  Accessing postgres directly<access-postgres>
+  Accessing postgres directly <access-postgres>

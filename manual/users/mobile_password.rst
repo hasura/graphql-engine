@@ -89,8 +89,8 @@ To verify the mobile number, make the following request.
 
    {
      "mobile": "9876543210",
-     "country_code": 91,
-     "otp": 123456
+     "country_code": "91",
+     "otp": "123456"
    }
 
 The response of the mobile verification endpoint indicates success or failure.
@@ -242,7 +242,7 @@ mobile number.
 
    {
      "mobile" : "9876543210",
-     "country_code" : 91
+     "country_code" : "91"
    }
 
 After obtaining the OTP, your application should make auth API call to
@@ -256,8 +256,8 @@ The reset password endpoint takes the OTP and the new password of the user.
    Content-Type: application/json
 
    {
-     "country_code" : 91,
+     "country_code" : "91",
      "mobile" : "9876543210",
-     "otp": 1231,
+     "otp": "1231",
      "password": "newpass123"
    }

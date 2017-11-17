@@ -127,7 +127,7 @@
         <div class="search_box_head">
           <h3 class="head_wrapper search_heading">
             <div class="inline-block">
-              <%= totalResults %> result<%= totalResults > 1 ? 's' : '' %> for <span class="search_query">'<%= searchString %>'</span>
+              <%= totalResults %> result<%= totalResults > 1 ? 's' : '' %> for <span class="search_query">'<%= _.escape(searchString) %>'</span>
             </div>
             <div class="algolia_search_attribution">
               <span>

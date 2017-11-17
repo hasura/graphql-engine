@@ -2,6 +2,8 @@
    :description: How to deploy docker images using hasura
    :keywords: hasura, manual, docker, image, custom microservice
 
+.. _hasura_microservice_doc:
+
 ====================================
 Developing & hosting custom microservices
 ====================================

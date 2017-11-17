@@ -24,7 +24,7 @@ To get an OTP, use the ``/v1/providers/mobile/send-otp`` endpoint.
 
    {
       "mobile": "9876543210",
-      "country_code": 91
+      "country_code": "91"
    }
 
 
@@ -45,8 +45,8 @@ Once the OTP is obtained, then the user should make a signup request.
      "provider" : "mobile",
      "data" : {
         "mobile": "9876543210",
-        "country_code": 91,
-        "otp": 123456
+        "country_code": "91",
+        "otp": "123456"
      }
    }
 
@@ -91,7 +91,7 @@ To get an OTP, use the ``/v1/providers/mobile/send-otp`` endpoint.
 
    {
       "mobile": "9876543210",
-      "country_code": 91
+      "country_code": "91"
    }
 
 
@@ -112,8 +112,8 @@ Once the OTP is obtained, then the user should make a login request.
      "provider" : "mobile",
      "data" : {
         "mobile": "9876543210",
-        "country_code": 91,
-        "otp": 123456
+        "country_code": "91",
+        "otp": "123456"
      }
    }
 
@@ -193,20 +193,3 @@ To logout a user, make the following request.
 
 .. note::
     The logout request is a POST request with an empty body.
-
- 
-Changing Password
------------------
-
-If the user is logged in, they can change their password using the following
-endpoint.
-
-.. code-block:: http
-
-   POST auth.<cluster-name>.hasura-app.io/v1/user/change-password HTTP/1.1
-   Authorization: Bearer <auth_token>
-
-   {
-     "old_password": "oldpassword",
-     "new_password": "newpassword"
-   }
