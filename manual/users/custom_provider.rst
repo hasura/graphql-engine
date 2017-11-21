@@ -124,11 +124,8 @@ receive the following JSON data from Hasura Auth:
 .. code-block:: json
 
     {
-      "hasura_id": "Int",
       "data": "Object"
     }
-
-* **hasura_id**: A unique id used to identify user in Hasura Auth
 
 * **data**: A JSON object which is specific to your provider (same as the
   ``data`` object passed to Hasura Auth during signup)
