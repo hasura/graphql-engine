@@ -623,7 +623,7 @@ This token will now be available inside the container as an environment variable
 .. _hasuractl-logs:
 
 Get logs for running microservices
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to get logs for a microservice, you need to know the name. You can use ``cluster status`` to get microservice names. For Hasura microservices, use ``--namespace=hasura``.
 
@@ -639,7 +639,7 @@ In order to get logs for a microservice, you need to know the name. You can use 
    You can also use ``--follow`` and ``--tail=<lines>`` flags to follow logs or to mention number of recent lines 
 
 Delete a microservice
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 A microservice once added to a cluster can be removed using the following command. This will remove the microservice spec files, it's associated remotes and routes from the cluster configuration (if any).
 
@@ -718,10 +718,10 @@ Zsh
 Instructions should work similarly for macOS and Linux systems. Place the completion script (filename should start with ``_``, e.g. ``_hasuractl``) in your ``/path/to/zsh/completions``, e.g. ``~/.zsh/completions/`` or ``/.oh-my-zsh/completions``:
 
 .. code::
-   
+
    $ mkdir -p $HOME/.oh-my-zsh/completions
    $ hasuractl completion zsh --file=$HOME/.oh-my-zsh/completions/_hasuractl
-   
+
    # include the directory in your $fpath, e.g. by adding in ~/.zshrc:
    # Make sure compinit is loaded or do it by adding in ~/.zshrc:
    # autoload -Uz compinit && compinit -i
@@ -731,10 +731,3 @@ Instructions should work similarly for macOS and Linux systems. Place the comple
 
 
 
-Reference
----------
-
-.. toctree::
-   :maxdepth: 1
-
-   ref/hasura

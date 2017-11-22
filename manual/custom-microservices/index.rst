@@ -2,9 +2,11 @@
    :description: How to deploy docker images using hasura
    :keywords: hasura, manual, docker, image, custom microservice
 
-====================================
+.. _hasura_microservice_doc:
+
+=========================================
 Developing & hosting custom microservices
-====================================
+=========================================
 
 A Hasura project is composed of a set of microservices.
 These include certain Hasura microservices like, ``postgres``, ``nginx``, ``data API``, ``auth API`` and more but can also
@@ -61,14 +63,7 @@ These are the 3 key steps you need to follow for deploying any microservice:
    9. Monitoring and logs
    10. Deploying non-HTTP microservices
    11. Deploying kubernetes objects
-
-Read in details about the various ways to develop and deploy custom
-microservices.
-
-.. toctree::
-  :maxdepth: 1
-  :titlesonly:
-
+  TOCTREE:
   Communicating between microservices <communicating-between-microservices>
   Hosting webapps
   Hosting APIs
@@ -80,3 +75,15 @@ microservices.
   persistent-services
   deploy-non-http
   deploy-k8s-objects
+
+Read in details about the various ways to develop and deploy custom
+microservices.
+
+.. toctree::
+  :maxdepth: 1
+  :titlesonly:
+
+  Communicating between microservices <communicating-between-microservices>
+  develop-custom-services/index
+  Hosting Docker containers <deploy-docker/index>
+  serve-static/index

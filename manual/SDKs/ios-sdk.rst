@@ -338,7 +338,7 @@ Data Service
 ~~~~~~~~~~~~
 
 Hasura provides out of the box data APIs on the tables and views you
-make in your project. To learn more about how they work, check out the :doc:`docs <../users>`
+make in your project. To learn more about how they work, check out the :doc:`docs <../users/index>`
 
 .. code:: swift
 

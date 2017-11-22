@@ -96,34 +96,33 @@ The flow
 
 .. code-block:: http
 
-   POST auth.<cluster-name>.hasura-app.io/v1/login HTTP/1.1
-   Content-Type: application/json
+  POST auth.<cluster-name>.hasura-app.io/v1/login HTTP/1.1
+  Content-Type: application/json
 
-   {
-     "provider" : "github",
-     "data" : {
-        "code": "String",
-        "redirect_uri": "String",
-        "state": "String" (Optional)
-     }
-   }
-
+  {
+    "provider" : "github",
+    "data" : {
+       "code": "String",
+       "redirect_uri": "String (optional)",
+       "state": "String"
+    }
+  }
 
 * If successful, this will return a response as follows:
 
-  .. code:: http
+.. code-block:: http
 
-    HTTP/1.1 200 OK
-    Content-Type: application/json
+  HTTP/1.1 200 OK
+  Content-Type: application/json
 
-    {
-      "auth_token": "b4b345f980ai4acua671ac7r1c37f285f8f62e29f5090306",
-      "hasura_id": 79,
-      "new_user": true,
-      "hasura_roles": [
-          "user"
-      ]
-    }
+  {
+    "auth_token": "b4b345f980ai4acua671ac7r1c37f285f8f62e29f5090306",
+    "hasura_id": 79,
+    "new_user": true,
+    "hasura_roles": [
+        "user"
+    ]
+  }
 
 
 * If the user is a new user, ``new_user`` will be true, else false.

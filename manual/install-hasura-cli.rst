@@ -101,7 +101,6 @@ Bash
 
             $ sudo hasura completion bash --file=/etc/bash.completion.d/hasura
 
-
      - id: mac
        content: |
          1. Install bash-completion using homebrew:
@@ -124,15 +123,28 @@ Bash
 
             $ sudo hasura completion bash --file=/etc/bash_completion.d/hasura
 
-
      - id: windows
        content: |
-
-         For windows, if you're using ``git-bash``, generate the Bash completion file using:
+         1. Make a bash completion directory
 
          .. code-block:: bash
 
-            $ sudo hasura completion bash --file=/source/to/bash/completion/directory
+            $ mkdir -p ~/bash_completion.d
+
+         2. Add the following code to your ``~/.bash_profile`` (create this file if it doesn't exist):
+
+         .. code-block:: bash
+
+            if [ -f ~/bash_completion.d/hasura ]; then
+                . ~/bash_completion.d/hasura
+            fi
+
+         3. Add hasura completion:
+
+         .. code-block:: bash
+
+            $ hasura completion bash --file=~/bash_completion.d/hasura
+         4. Restart your ``git-bash`` shell.
 
 
 Zsh

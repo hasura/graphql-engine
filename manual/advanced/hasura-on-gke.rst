@@ -18,49 +18,40 @@ Your GKE cluster needs to have a few things set up before the Hasura platform ca
 
 Navigate to your **Google Cloud Console**
 
-1. From the **Container Engine** section, create a new GKE container cluster in whichever region you prefer. We'll select the region ``asia-east1-a`` and name the cluster as ``myco-hasura``.
+1. From the **Kubernetes Engine** section, create a new Kubernetes Cluster in whichever region you prefer. We'll select the region ``asia-east1-a`` and name the cluster as ``myco-hasura``.
 
-2. From the **Compute Engine** section, add 3 disks:
+2. From the **Compute Engine > Disks** section, create 3 disks:
 
    1. ``myco-hasura-posgtres``
    2. ``myco-hasura-redis``
    3. ``myco-hasura-filestore``
 
-   Make sure that they are large enough to hold your data (min 10 GB each), located in the same region as your GKE cluster, the ``Source type`` option is set to ``None (blank disk)`` and preferably are SSDs.
+   Make sure that they are large enough to hold your data (min 10 GB each), located in the same region as your Kubernetes cluster, the ``Source type`` option is set to ``None (blank disk)`` and preferably are SSDs.
 
-3. From the **VPC network** section add an external static IP address (no need to attach to any particular pool). Map your domain ``myco-hasura.hasura-app.io`` to this IP.
+3. From the **VPC Network > External IP Addresses** section, reserve a static IP address (no need to attach to any particular pool).
+
+4. Map your domain (let's call it ``myco-hasura.my-domain.com``) to this IP from your DNS provider's dashboard by creating an A record.
 
 Get the credentials for the GKE cluster
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Set up the kube context using the ``gcloud container clusters get-credentials ...`` command from the GKE console.
+Set up the kube context using the ``gcloud container clusters get-credentials ...`` command from the Kubernetes Engine console.
 
 Note the context set by this command since we'll be needing it later. Use ``kubectl config current-context`` (or ``get-contexts``) and note the context.
 
 Installing the Hasura platform
 ------------------------------
 
-Setup a local project
-^^^^^^^^^^^^^^^^^^^^^
+Create ``cluster-data.yaml``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you have an existing Hasura project, skip to editing the ``clusters.yaml``.
-
-Clone the base repo from Hasura Hub into a local directory:
-
-.. code-block:: console
-
-   $ hasura clone hasura/base
-
-Editing cluster.yaml
-^^^^^^^^^^^^^^^^^^^^
-
-Edit the ``clusters.yaml`` to look like this:
+Create a file named ``cluster-data.yaml`` with the content as shown below. This file defines a cluster.
 
 .. literalinclude:: clusters.yaml
    :language: yaml
-   :caption: clusters.yaml
+   :caption: cluster-data.yaml
    :linenos:
-   :emphasize-lines: 1,3,11,14,37,42,45
+   :emphasize-lines: 1,2,4,10,33,38,43
 
 We're now ready to install the Hasura platform on the ``myco-hasura`` cluster!
 
@@ -71,20 +62,32 @@ To install the Hasura platform, run:
 
 .. code-block:: console
 
-   $ hasura cluster install --file clusters.yaml --provider gke --domain myco-hasura.hasura-app.io
+   $ hasura cluster install --file cluster-data.yaml --domain myco-hasura.my-domain.com
 
 Wait for some time for all the components of the cluster to come up. You may use ``kubectl get pods -n hasura`` to see if all the pods are up.
 
-Set up git remotes
-^^^^^^^^^^^^^^^^^^
+Setup a local project
+^^^^^^^^^^^^^^^^^^^^^
 
-To set up git remote and hooks, run:
+If you have an existing Hasura project, skip to the cluster add part.
+
+Clone the base repo from Hasura Hub into a local directory:
 
 .. code-block:: console
 
-   $ hasura cluster setup -c myco-hasura
+   $ hasura clone hasura/base
 
-Make sure that the remotes point correctly to the cluster.
+Add the cluster
+^^^^^^^^^^^^^^^
+
+To add this cluster to the project,
+
+.. code-block:: console
+
+   $ cd [project-directory]
+   $ hasura cluster add --file=/path/to/cluster-data.yaml
+
+This will add the cluster defined in ``cluster-data.yaml`` to the current project, sets up required remotes, hooks and ssh keys.
 
 Deploy project to the cluster
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

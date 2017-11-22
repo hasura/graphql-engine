@@ -99,8 +99,8 @@ def generateIndexFile(app, pagename, templatename, context, doctree):
     content = ''
     image = ''
 
-    # If the page name is not the part of the below list
-    if ( pagename not in ['ref/index', 'tutorials/index', 'guides/index', 'search', 'genindex', 'manual/index'] and "ref/" not in pagename ):
+    # If the page name is not part of the below list
+    if ( pagename not in ['ref/index', 'tutorials/index', 'guides/index', 'search', 'genindex', 'manual/index'] and ( "ref/" not in pagename ) and ( "tutorials/" not in pagename ) and ("guides/" not in pagename)):
         if ( 'body' in context ):
             content = context['body']
 
