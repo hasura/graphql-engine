@@ -18,22 +18,22 @@ Your GKE cluster needs to have a few things set up before the Hasura platform ca
 
 Navigate to your **Google Cloud Console**
 
-1. From the **Container Engine** section, create a new GKE container cluster in whichever region you prefer. We'll select the region ``asia-east1-a`` and name the cluster as ``myco-hasura``.
+1. From the **Kubernetes Engine** section, create a new Kubernetes Cluster in whichever region you prefer. We'll select the region ``asia-east1-a`` and name the cluster as ``myco-hasura``.
 
-2. From the **Compute Engine** section, add 3 disks:
+2. From the **Compute Engine > Disks** section, create 3 disks:
 
    1. ``myco-hasura-posgtres``
    2. ``myco-hasura-redis``
    3. ``myco-hasura-filestore``
 
-   Make sure that they are large enough to hold your data (min 10 GB each), located in the same region as your GKE cluster, the ``Source type`` option is set to ``None (blank disk)`` and preferably are SSDs.
+   Make sure that they are large enough to hold your data (min 10 GB each), located in the same region as your Kubernetes cluster, the ``Source type`` option is set to ``None (blank disk)`` and preferably are SSDs.
 
-3. From the **VPC network** section add an external static IP address (no need to attach to any particular pool). Map your domain ``myco-hasura.hasura-app.io`` to this IP.
+3. From the **VPC Network > External IP Addresses** section, reserve a static IP address (no need to attach to any particular pool). Map your domain (let's call it ``myco-hasura.my-domain.com``) to this IP from your DNS provider's dashboard by creating an A record.
 
 Get the credentials for the GKE cluster
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Set up the kube context using the ``gcloud container clusters get-credentials ...`` command from the GKE console.
+Set up the kube context using the ``gcloud container clusters get-credentials ...`` command from the Kubernetes Engine console.
 
 Note the context set by this command since we'll be needing it later. Use ``kubectl config current-context`` (or ``get-contexts``) and note the context.
 
