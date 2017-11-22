@@ -401,7 +401,7 @@ Logout
 Data Service
 ============
 
-Hasura provides out of the box data apis on the tables and views you make in your project. To learn more about how they work, check out the :doc:`docs <../users>`.
+Hasura provides out of the box data apis on the tables and views you make in your project. To learn more about how they work, check out the :doc:`docs <../users/index>`.
 
 .. code-block:: java
 

@@ -52,8 +52,8 @@ def setup(app):
     )
     app.add_directive('django-admin-option', Cmdoption)
     app.add_config_value('django_next_version', '0.0', True)
-    app.add_directive('versionadded', VersionDirective)
-    app.add_directive('versionchanged', VersionDirective)
+    # app.add_directive('versionadded', VersionDirective)
+    # app.add_directive('versionchanged', VersionDirective)
     app.add_builder(DjangoStandaloneHTMLBuilder)
 
     # register the snippet directive

@@ -15,17 +15,15 @@ If you've already written your custom API  using your favourite framework, and w
 to deploy it on Hasura, check out :ref:`deploy-webapp`!
 
 
-Serverless Functions on Hasura
-------------------------------
-
-Serverless functions are short lived stateless functions that run on http or
-event triggers. Hasura provides a simple way to set up and use serverless
-functions through the Fission framework.
-
-Serverless functions are basically used when the developer does not need to
-build a full app, and just needs to run a few small functions on http calls or
-other event triggers. These functions are inexpensive and efficient, and are
-easy to scale under load.
-
-To learn more about serverless functions on Hasura, check out our tutorial at
-:ref:`faas-tutorial`!
+..
+   Serverless Functions on Hasura
+   ------------------------------
+   Serverless functions are short lived stateless functions that run on http or
+   event triggers. Hasura provides a simple way to set up and use serverless
+   functions through the Fission framework.
+   Serverless functions are basically used when the developer does not need to
+   build a full app, and just needs to run a few small functions on http calls or
+   other event triggers. These functions are inexpensive and efficient, and are
+   easy to scale under load.
+   To learn more about serverless functions on Hasura, check out our tutorial at
+   :ref:`faas-tutorial`!
