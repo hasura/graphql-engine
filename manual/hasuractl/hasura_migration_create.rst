@@ -1,6 +1,6 @@
-.. _hasura_migration_status:
+.. _hasura_migration_create:
 
-hasura migration status
+hasura migration create
 -----------------------
 
 
@@ -9,27 +9,26 @@ Synopsis
 ~~~~~~~~
 
 
-Get the current version of migration applied to a cluster
+Creaete sql and yaml files required for a migration
 
 ::
 
-  hasura migration status [flags]
+  hasura migration create [migration-name] [flags]
 
 Examples
 ~~~~~~~~
 
 ::
 
-  # Get the current version of migration applied to a cluster:
-  $ hasura migration status -c hasura
+    # Create the sql and yaml files required for a migration:
+    $ hasura migration create migration-name -c hasura
 
 Options
 ~~~~~~~
 
 ::
 
-  -c, --cluster string   hasura cluster against which database migrations have to be applied
-  -h, --help             help for status
+  -h, --help   help for create
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
