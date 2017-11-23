@@ -59,6 +59,7 @@ Commands
    hasura_microservice_port-forward
    hasura_microservice_remove
    hasura_microservice_template-list
+   hasura_microservice_status
    hasura_migration
    hasura_migration_apply
    hasura_migration_db-reset
@@ -70,6 +71,7 @@ Commands
    hasura_secret_list
    hasura_secret_update
    hasura_setup
+   hasura_search
    hasura_ssh-key
    hasura_ssh-key_add
    hasura_ssh-key_list
