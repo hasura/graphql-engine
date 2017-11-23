@@ -104,7 +104,7 @@ Info about the clusters added to this project can be found in this file. Each cl
      data: null  
 
 conf/
-^^^^
+^^^^^
 
 This directory contains the project configuration files such as HTTP routes, continuous integration remotes, etc. You can find more information about each conf file at the top of the file itself.
 

@@ -82,13 +82,13 @@ again!
 
 
 Option 2: Using your own Dockerfile (advanced users)
-------------------------------------
+----------------------------------------------------
 
 Make sure you are inside the directory of your Hasura project.
 
 
 Create a new microservice
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: shell
 
@@ -101,7 +101,7 @@ Move all your code and Dockerfile into the ``services/myapp`` directory. Change
 the ports in the Kubernetes specs according to your code.
 
 Create a route for the microservice
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Now to expose the above created microservice, we have to create a route for it.
 
@@ -110,11 +110,12 @@ Now to expose the above created microservice, we have to create a route for it.
   $ hasura route generate myapp
 
 Create a remote for the microservice
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 As we are creating a git-push enabled microservice, we have to add a git remote for
 the microservice.
 
 .. code-block:: shell
+		
   $ hasura remote generate myapp
 
 **NOTE**: In the ``conf/remotes.yaml`` file make sure the path to your Dockerfile is

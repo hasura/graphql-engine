@@ -2,9 +2,9 @@
    :description: How microservices work on a Hasura cluster
    :keywords: hasura, getting started, step 2
 
-==================================
+===================================
 Communicating between microservices
-==================================
+===================================
 
 Every microservice has an ``internal URL`` at which other microservices
 can reach it. The URL is typically of the structure: ``http://<microservice-name>.<namespace>``.

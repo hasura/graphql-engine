@@ -36,7 +36,7 @@ directory with Kubernetes specs (where the docker image and port is set
 according to the above specified flags).
 
 Create a route for the microservice
-----------------------------------
+-----------------------------------
 Now to expose our ``blog`` microservice externally, we have to create a route
 for it.
 

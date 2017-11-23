@@ -9,7 +9,7 @@ Part VIII: Explore the data APIs
 Now that you've created the data models, you can use HTTP JSON APIs to query your data directly.
 
 The ``data`` microservice
---------------------
+-------------------------
 
 Every Hasura project comes with a data microservice. The ``data`` microservice provides an HTTP API over PostgreSQL, an extremely versatile open source relational database. We create tables in Postgres and access the data using the APIs provided by the ``data`` microservice.
 

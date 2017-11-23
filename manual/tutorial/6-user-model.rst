@@ -37,7 +37,7 @@ This will open up the ``api-console`` and show you the ``API explorer`` page whi
 
 
 The ``auth`` microservice
---------------------
+-------------------------
 
 The ``auth`` microservice is a part of every hasura project. It has extensive APIs to manage users, roles and integrates with various social login providers. These are the endpoints that we are interested in to build our ether app.
 
