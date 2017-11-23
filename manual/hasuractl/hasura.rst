@@ -9,7 +9,6 @@ Synopsis
 ~~~~~~~~
 
 
-[33m
 
       __
      / /_   ____ _ _____ __  __ _____ ____ _
@@ -18,7 +17,7 @@ Synopsis
   /_/ /_/ \__,_//____/ \__,_//_/    \__,_/
 
   hasura cli manages a Hasura project
-[0m
+
 
 Options
 ~~~~~~~
