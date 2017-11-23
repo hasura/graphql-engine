@@ -3,7 +3,7 @@
 hasura example
 --------------
 
-
+Show some examples for using hasura
 
 Synopsis
 ~~~~~~~~

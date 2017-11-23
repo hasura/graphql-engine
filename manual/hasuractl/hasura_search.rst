@@ -3,7 +3,7 @@
 hasura search
 -------------
 
-
+Search for hasura projects
 
 Synopsis
 ~~~~~~~~

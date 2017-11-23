@@ -3,7 +3,7 @@
 hasura microservice apply
 -------------------------
 
-
+Apply changes to microservices
 
 Synopsis
 ~~~~~~~~

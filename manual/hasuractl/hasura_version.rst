@@ -3,7 +3,7 @@
 hasura version
 --------------
 
-
+Prints the version of hasura
 
 Synopsis
 ~~~~~~~~

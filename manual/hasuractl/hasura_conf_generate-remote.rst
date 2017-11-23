@@ -3,7 +3,7 @@
 hasura conf generate-remote
 ---------------------------
 
-
+Generate a remote conf for a gitpush microservice
 
 Synopsis
 ~~~~~~~~

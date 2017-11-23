@@ -3,7 +3,7 @@
 hasura completion
 -----------------
 
-
+Generate auto completion code
 
 Synopsis
 ~~~~~~~~

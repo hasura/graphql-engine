@@ -3,7 +3,7 @@
 hasura conf generate-domain
 ---------------------------
 
-
+Generate a domain configuration for a cluster
 
 Synopsis
 ~~~~~~~~

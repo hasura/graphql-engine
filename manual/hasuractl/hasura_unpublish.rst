@@ -3,7 +3,7 @@
 hasura unpublish
 ----------------
 
-
+Unpublish a hasura project
 
 Synopsis
 ~~~~~~~~

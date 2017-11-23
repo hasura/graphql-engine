@@ -3,7 +3,7 @@
 hasura setup
 ------------
 
-
+Sets up remotes and hooks for your Hasura project
 
 Synopsis
 ~~~~~~~~

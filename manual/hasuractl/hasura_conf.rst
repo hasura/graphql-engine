@@ -3,7 +3,7 @@
 hasura conf
 -----------
 
-
+Manage configuration on the cluster
 
 Synopsis
 ~~~~~~~~

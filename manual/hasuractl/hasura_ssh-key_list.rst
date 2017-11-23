@@ -3,7 +3,7 @@
 hasura ssh-key list
 -------------------
 
-
+List all SSH keys
 
 Synopsis
 ~~~~~~~~

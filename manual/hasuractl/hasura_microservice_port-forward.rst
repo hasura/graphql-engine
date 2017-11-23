@@ -3,7 +3,7 @@
 hasura microservice port-forward
 --------------------------------
 
-
+Forward a microservice port to localhost
 
 Synopsis
 ~~~~~~~~

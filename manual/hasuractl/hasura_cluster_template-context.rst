@@ -3,7 +3,7 @@
 hasura cluster template-context
 -------------------------------
 
-
+Show the context used to template files
 
 Synopsis
 ~~~~~~~~

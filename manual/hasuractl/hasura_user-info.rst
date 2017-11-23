@@ -3,7 +3,7 @@
 hasura user-info
 ----------------
 
-
+Get details for current logged in user
 
 Synopsis
 ~~~~~~~~

@@ -3,7 +3,7 @@
 hasura cluster get-credentials
 ------------------------------
 
-
+Get access credentials for a cluster
 
 Synopsis
 ~~~~~~~~

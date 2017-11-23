@@ -3,7 +3,7 @@
 hasura microservice logs
 ------------------------
 
-
+Show logs for microservices
 
 Synopsis
 ~~~~~~~~

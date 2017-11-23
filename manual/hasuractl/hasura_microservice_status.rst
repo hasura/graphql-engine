@@ -3,7 +3,7 @@
 hasura microservice status
 --------------------------
 
-
+Get status of a microservice
 
 Synopsis
 ~~~~~~~~

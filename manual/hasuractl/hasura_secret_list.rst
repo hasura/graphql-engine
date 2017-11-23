@@ -3,7 +3,7 @@
 hasura secret list
 ------------------
 
-
+List secrets from a cluster
 
 Synopsis
 ~~~~~~~~

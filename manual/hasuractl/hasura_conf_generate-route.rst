@@ -3,7 +3,7 @@
 hasura conf generate-route
 --------------------------
 
-
+Generate route for accessing a microservice
 
 Synopsis
 ~~~~~~~~

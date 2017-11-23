@@ -3,7 +3,7 @@
 hasura migration apply
 ----------------------
 
-
+Apply all migrations on the cluster
 
 Synopsis
 ~~~~~~~~

@@ -3,7 +3,7 @@
 hasura migration status
 -----------------------
 
-
+Get the current version of migration
 
 Synopsis
 ~~~~~~~~

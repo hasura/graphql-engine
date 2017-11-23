@@ -3,7 +3,7 @@
 hasura update-cli
 -----------------
 
-
+Update hasura to latest version
 
 Synopsis
 ~~~~~~~~

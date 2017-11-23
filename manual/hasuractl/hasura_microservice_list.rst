@@ -3,7 +3,7 @@
 hasura microservice list
 ------------------------
 
-
+List the microservices running in a cluster
 
 Synopsis
 ~~~~~~~~

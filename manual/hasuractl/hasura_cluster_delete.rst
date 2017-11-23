@@ -3,7 +3,7 @@
 hasura cluster delete
 ---------------------
 
-
+Delete a Hasura cluster
 
 Synopsis
 ~~~~~~~~

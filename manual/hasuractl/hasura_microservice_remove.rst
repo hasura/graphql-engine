@@ -3,7 +3,7 @@
 hasura microservice remove
 --------------------------
 
-
+Remove a microservice from cluster
 
 Synopsis
 ~~~~~~~~

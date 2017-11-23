@@ -3,7 +3,7 @@
 hasura migration db-reset
 -------------------------
 
-
+Reset database for a cluster
 
 Synopsis
 ~~~~~~~~

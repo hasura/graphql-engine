@@ -3,7 +3,7 @@
 hasura ssh-key remove
 ---------------------
 
-
+Remove a SSH key
 
 Synopsis
 ~~~~~~~~

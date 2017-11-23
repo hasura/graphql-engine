@@ -3,7 +3,7 @@
 hasura cluster list
 -------------------
 
-
+List existing hasura clusters
 
 Synopsis
 ~~~~~~~~

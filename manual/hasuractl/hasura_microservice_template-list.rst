@@ -3,7 +3,7 @@
 hasura microservice template-list
 ---------------------------------
 
-
+Prints out a list of all the available microservice templates
 
 Synopsis
 ~~~~~~~~

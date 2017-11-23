@@ -3,7 +3,7 @@
 hasura microservice create
 --------------------------
 
-
+Create spec files for a microservice
 
 Synopsis
 ~~~~~~~~

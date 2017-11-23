@@ -3,7 +3,7 @@
 hasura migration create
 -----------------------
 
-
+Create files required for a migration
 
 Synopsis
 ~~~~~~~~

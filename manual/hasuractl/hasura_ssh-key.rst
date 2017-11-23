@@ -3,7 +3,7 @@
 hasura ssh-key
 --------------
 
-
+Manage SSH keys on a cluster
 
 Synopsis
 ~~~~~~~~

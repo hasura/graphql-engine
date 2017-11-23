@@ -3,7 +3,7 @@
 hasura conf diff
 ----------------
 
-
+Diff configuration of clusters
 
 Synopsis
 ~~~~~~~~
@@ -21,9 +21,9 @@ Examples
 ::
 
     # Show diff of the local config for a cluster called 'staging' with its server:
-    $ hasura cluster diff -c staging
+    $ hasura conf diff -c staging
     # Show diff of a cluster called 'staging' against another cluster called 'production':
-    $ hasura cluster diff -c staging -c production
+    $ hasura conf diff -c staging -c production
 
 Options
 ~~~~~~~
