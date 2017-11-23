@@ -72,7 +72,8 @@ The project (a.k.a. project directory) has a particular directory structure and 
 hasura.yaml
 ^^^^^^^^^^^
 
-This file contains some metadata about the project, namely a name, description, repoUrl, keywords and some media data. Also contains `platformVersion` which says which Hasura platform version is compatible with this project.
+This file contains some metadata about the project, namely a name, description, repoUrl, keywords and some media data. Also contains `platformVersion` which says which Hasura platform version is compatible with this project. It is kind of like a
+``requirements.txt`` or a ``package.json`` file you would find in ``python`` & ``nodejs`` apps respectively, and is not a file you have to worry about much during your day to day development effort.
 
 .. code-block:: yaml
 
