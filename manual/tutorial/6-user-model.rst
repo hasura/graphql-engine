@@ -49,8 +49,11 @@ The ``auth`` microservice is a part of every hasura project. It has extensive AP
      Content-Type: application/json
 
      {
-         "username" : "hasura-test",
-         "password" : "hasura-test-123"
+       "provider" : "username",
+       "data" : {
+          "username": "johnsmith",
+          "password": "somepass123"
+       }
      }
 
 
@@ -79,8 +82,11 @@ The ``auth`` microservice is a part of every hasura project. It has extensive AP
       Content-Type: application/json
 
       {
-           "username" : "hasura-test",
-           "password" : "hasura-test-123"
+        "provider" : "username",
+        "data" : {
+           "username": "johnsmith",
+           "password": "somepass123"
+        }
       }
 
 
