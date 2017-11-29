@@ -57,6 +57,7 @@ To add permissions, click the *Add permissions for a new role* button:
 .. figure:: ../../img/tutorial-9-add-permission.png
 	    
 	    You can add permissions for the query types Select, Insert, Update, Delete for different roles (default anonymous and user).
+	    
 Add permissions for the **Select** query for the **anonymous** role:
 
 .. figure:: ../../img/tutorial-9-permissions-anon-select.png
@@ -418,6 +419,7 @@ To define permissions on all tables you can follow the method above for each tab
 	    }
 	]
     }
+    
 Next: Add relationships
 ------------------------
 

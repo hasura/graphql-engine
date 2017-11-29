@@ -176,7 +176,7 @@ This means that your custom microservice will be available at the url ``https://
 
 
 Contacting internal URLs on microservices
-------------------------------------
+-----------------------------------------
 
 The Hasura BaaS APIs can be contacted through two URLs, or endpoints.
 
