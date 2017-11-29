@@ -39,6 +39,8 @@ Adding a custom domain
 
 .. code-block:: bash
 
-   $ hasuractl cluster apply #add -c <cluster-name> in case you have multiple clusters
+   $ git add conf/domains.yaml
+   $ git commit -m "added custom domain"
+   $ git push hasura master # change 'hasura' to the cluster alias that you are using
 
 Now, SSL certificates will automatically be generated and your microservices will be accessible on this domain!
