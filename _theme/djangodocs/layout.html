@@ -88,7 +88,7 @@
                 <div class="search_head_wrapper">
                   <div class="inline-block input_search_box">
                     <span class="fa fa-search"></span>
-                    <input type="text" class="search_element" placeholder="Search documentation..." />
+                    <input type="text" class="search_element" placeholder="Type search term and press <enter> ..." />
                   </div>
                   <div class="header_links inline-block">
                     <div class="buttons">
@@ -226,39 +226,42 @@
         var searchHtmlTemplate = $('.search_wrapper_template').html();
         clearInterval(delayTimer);
 
-        if ( e.target.value.length === 0 ) {
-          enableContent();
-          hideLoading();
-          window.history.replaceState({ "url": "" }, 'Search Page', window.history.state.url );
-        } else {
-          var template = _.template(_.unescape(searchHtmlTemplate));
-          if ( searchFunc ) {
-            /* Wait for 1 seconds */
-            if ( e.target.value.length > 0 ) {
-              function callback(err, content ) {
-                var templated_html = template({"objs": content.hits, "searchString": content.query, "totalResults": content.nbHits });
-                $(".search_wrapper").html(templated_html);
-                window.history.pushState({"url": ( window.location.pathname +'?query=' + e.target.value + '' ) }, 'Search Page', '?query=' + e.target.value + '' );
-                enableSearch();
-                hideLoading();
-                trackga('docs', 'search', content.query, content.nbHits);
-              }
-
-              delayTimer = setTimeout( function() {
-                if ( e.target.value.length > 0 ) {
-                  showLoading();
-                  if ( lastSearched !== e.target.value ) {
-                    lastSearched = e.target.value;
-                    objs = searchFunc(e.target.value, callback, 1, [], ['url', 'description', 'title', 'image', 'tags']);
-                  } else {
-                    hideLoading();
-                  }
-                } else {
-                  window.history.replaceState({ "url": "" }, 'Search Page', window.history.state.url );
+        // Execute on enter only
+        if ( e.keyCode === 13 ) {
+          if ( e.target.value.length === 0 ) {
+            enableContent();
+            hideLoading();
+            window.history.replaceState({ "url": "" }, 'Search Page', window.history.state.url );
+          } else {
+            var template = _.template(_.unescape(searchHtmlTemplate));
+            if ( searchFunc ) {
+              /* Wait for 1 seconds */
+              if ( e.target.value.length > 0 ) {
+                function callback(err, content ) {
+                  var templated_html = template({"objs": content.hits, "searchString": content.query, "totalResults": content.nbHits });
+                  $(".search_wrapper").html(templated_html);
+                  window.history.pushState({"url": ( window.location.pathname +'?query=' + e.target.value + '' ) }, 'Search Page', '?query=' + e.target.value + '' );
+                  enableSearch();
                   hideLoading();
-                  enableContent();
+                  trackga('docs', 'search', content.query, content.nbHits);
                 }
-              }, 500 );
+
+                delayTimer = setTimeout( function() {
+                  if ( e.target.value.length > 0 ) {
+                    showLoading();
+                    if ( lastSearched !== e.target.value ) {
+                      lastSearched = e.target.value;
+                      objs = searchFunc(e.target.value, callback, 1, [], ['url', 'description', 'title', 'image', 'tags']);
+                    } else {
+                      hideLoading();
+                    }
+                  } else {
+                    window.history.replaceState({ "url": "" }, 'Search Page', window.history.state.url );
+                    hideLoading();
+                    enableContent();
+                  }
+                }, 500 );
+              }
             }
           }
         }
