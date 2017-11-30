@@ -17,7 +17,9 @@ users through email and SMS.
 
 Email
 -----
-Notify currently supports sending emails via `SMTP`_ or `Sparkpost`_.
+Notify currently supports sending emails via `SMTP`_, `Sparkpost`_.
+
+Also, for testing out ``Notify``, we have our own email provider called ``HasuraTestDrive`` which will allow you to send 10 emails per day. 
 
 The simplest way to send emails is by configuring SMTP. Your existing email
 address (like GMail, Yahoo, Live.com etc.) can be used to send emails via SMTP.
@@ -141,6 +143,35 @@ To see all the secrets in your cluster:
   $ hasura secrets list
 
 
+Configuring HasuraTestDrive
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To send emails using ``HasuraTestDrive``, follow the steps below.
+
+* Set ``HasuraTestDrive`` as the default email provider in ``conf/notify.yaml`` inside the project directory.
+
+.. code-block:: yaml
+
+  email:
+    default: hasuraTestDrive
+
+
+* Get your user information.
+
+.. code-block:: shell
+
+  $ hasura user-info
+
+* Copy the ``Token`` and update it as a secret
+
+.. code-block:: shell
+
+  $ hasura secrets update notify.hasuratestdrive.token "<token>"
+
+``HasuraTestDrive`` is now configured as your default email provider. You can start using it to send emails.
+
+.. note::
+  You can only send 10 emails per day using HasuraTestDrive.
+
 Sending an email
 ^^^^^^^^^^^^^^^^
 
@@ -194,6 +225,8 @@ browser, since ``Cookie`` will be set.
 SMS
 ---
 Notify currently supports sending SMS via `Twilio`_ or `MSG91`_.
+
+Also, for testing out ``Notify``, we have our own SMS provider called ``HasuraTestDrive`` which will allow you to send 10 SMS per day. 
 
 Configuring Twilio
 ^^^^^^^^^^^^^^^^^^
@@ -300,6 +333,37 @@ To see all the secrets in your cluster:
 
   $ hasura secrets list
 
+
+Configuring HasuraTestDrive
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To send SMS using ``HasuraTestDrive``, follow the steps below.
+
+* Set ``HasuraTestDrive`` as the default SMS provider in ``conf/notify.yaml`` inside the
+project directory.
+
+.. code-block:: yaml
+
+  sms:
+    default: hasuraTestDrive
+
+
+* Get your user information.
+
+.. code:: shell
+
+  $ hasura user-info
+
+* Copy the ``Token`` and update it as a secret
+
+.. code:: shell
+
+  $ hasura secrets update notify.hasuratestdrive.token "<token>"
+
+``HasuraTestDrive`` is now configured as your default SMS provider. You can start using it to send SMS.
+
+.. note::
+  You can only send 10 SMS per day using HasuraTestDrive.
 
 Sending SMS
 ^^^^^^^^^^^
