@@ -87,3 +87,4 @@ microservices.
   develop-custom-services/index
   Hosting Docker containers <deploy-docker/index>
   serve-static/index
+  Connecting to PostgreSQL from microservices <connecting-to-postgres-from-microservice>
