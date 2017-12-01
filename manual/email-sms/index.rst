@@ -19,7 +19,7 @@ Email
 -----
 Notify currently supports sending emails via `SMTP`_, `Sparkpost`_.
 
-Also, for testing out ``Notify``, we have our own email provider called ``HasuraTestDrive`` which will allow you to send 10 emails per day. 
+Also, for testing out ``Notify``, we have our own test provider called ``Hasura`` which will allow you to send 10 emails per day. 
 
 The simplest way to send emails is by configuring SMTP. Your existing email
 address (like GMail, Yahoo, Live.com etc.) can be used to send emails via SMTP.
@@ -143,16 +143,16 @@ To see all the secrets in your cluster:
   $ hasura secrets list
 
 
-Configuring HasuraTestDrive
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-To send emails using ``HasuraTestDrive``, follow the steps below.
+Configuring Hasura Test Provider
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To send emails using ``Hasura``, follow the steps below.
 
-* Set ``HasuraTestDrive`` as the default email provider in ``conf/notify.yaml`` inside the project directory.
+* Set ``Hasura`` as the default email provider in ``conf/notify.yaml`` inside the project directory.
 
 .. code-block:: yaml
 
   email:
-    default: hasuraTestDrive
+    default: hasura
 
 
 * Get your user information.
@@ -165,12 +165,12 @@ To send emails using ``HasuraTestDrive``, follow the steps below.
 
 .. code-block:: shell
 
-  $ hasura secrets update notify.hasuratestdrive.token "<token>"
+  $ hasura secrets update notify.hasura.token "<token>"
 
-``HasuraTestDrive`` is now configured as your default email provider. You can start using it to send emails.
+``Hasura`` is now configured as your default email provider. You can start using it to send emails.
 
 .. note::
-  You can only send 10 emails per day using HasuraTestDrive.
+  You can only send 10 emails per day using ``Hasura``.
 
 Sending an email
 ^^^^^^^^^^^^^^^^
@@ -226,7 +226,7 @@ SMS
 ---
 Notify currently supports sending SMS via `Twilio`_ or `MSG91`_.
 
-Also, for testing out ``Notify``, we have our own SMS provider called ``HasuraTestDrive`` which will allow you to send 10 SMS per day. 
+Also, for testing out ``Notify``, we have our own SMS test provider called ``Hasura`` which will allow you to send 10 SMS per day. 
 
 Configuring Twilio
 ^^^^^^^^^^^^^^^^^^
@@ -334,18 +334,18 @@ To see all the secrets in your cluster:
   $ hasura secrets list
 
 
-Configuring HasuraTestDrive
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Configuring Hasura Test Provider
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To send SMS using ``HasuraTestDrive``, follow the steps below.
+To send SMS using ``Hasura``, follow the steps below.
 
-* Set ``HasuraTestDrive`` as the default SMS provider in ``conf/notify.yaml`` inside the
+* Set ``Hasura`` as the default SMS provider in ``conf/notify.yaml`` inside the
 project directory.
 
 .. code-block:: yaml
 
   sms:
-    default: hasuraTestDrive
+    default: hasura
 
 
 * Get your user information.
@@ -358,12 +358,12 @@ project directory.
 
 .. code:: shell
 
-  $ hasura secrets update notify.hasuratestdrive.token "<token>"
+  $ hasura secrets update notify.hasura.token "<token>"
 
-``HasuraTestDrive`` is now configured as your default SMS provider. You can start using it to send SMS.
+``Hasura`` is now configured as your default SMS provider. You can start using it to send SMS.
 
 .. note::
-  You can only send 10 SMS per day using HasuraTestDrive.
+  You can only send 10 SMS per day using Hasura.
 
 Sending SMS
 ^^^^^^^^^^^
