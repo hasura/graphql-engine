@@ -36,6 +36,8 @@ Your custom provider should be a http(s) microservice which provides the followi
 * signup: For signing-up a new user
 * login: For logging-in user
 * merge: For merging user with a pre-existing Hasura user
+* createUser: For creating user as admin
+* deleteUser: For deleting user as admin
 
 The functionality and interface of these APIs is described in subsequent sections.
 
@@ -57,6 +59,8 @@ To enable a custom provider, you need to add the following configuration in
         signup: String
         login: String
         merge: String
+        createUser: String
+        deleteUser: String
 
 * **providerName**: A name for the provider
 * **enabled**: Whether this provider should be enabled
@@ -64,6 +68,8 @@ To enable a custom provider, you need to add the following configuration in
 * **signup**: Signup hook of your provider. For e.g. http://myprovider.hasura-app.io/signup
 * **login**: Login hook of your provider. For e.g. http://myprovider.hasura-app.io/login
 * **merge**: Merge hook of your provider. For e.g. http://myprovider.hasura-app.io/merge
+* **createUser**: Create user hook of your provider. For e.g. http://myprovider.hasura-app.io/create-user
+* **deleteUser**: Delete user hook of your provider. For e.g. http://myprovider.hasura-app.io/delete-user
 
 Below, we will describe the functionality and interface for each of the APIs in detail.
 
@@ -180,6 +186,77 @@ password. This API will receive JSON data from Hasura Auth:
       }
 
 * **success**: Boolean flag indicating whether the merge was successful
+
+Create User
+-----------
+
+This API should be used to create a new user with your provider. This API
+will receive the following JSON data from Hasura Auth:
+
+.. code-block:: json
+
+    {
+      "hasura_id": "Int",
+      "data": "Object"
+    }
+
+* **hasura_id**: A unique id used to identify user in Hasura Auth
+
+* **data**: A JSON object which is specific to your provider (same as the
+  ``data`` object passed to Hasura Auth during create-user request)
+
+Hasura Auth expects the following response upon successful creating user:
+
+**Response**:
+
+.. sourcecode:: http
+
+  HTTP/1.1 200 OK
+  Content-Type: application/json
+
+  {
+    "hasura_id": "Int",
+    "user_data": {"email": "String"},
+    "extra_info": "Object"
+  }
+
+* **hasura_id**: Same as received in request.
+
+* **user_data**: A JSON object with one or more of these three fields:
+  "username", "email", "mobile". This is used to merge accounts if any of the
+  fields matches with a user already existing in Hasura Auth.
+
+* **extra_info**: A JSON object which contains extra information about user created ( It is sent
+  back to client as ``extra_info`` object in response)
+
+Delete User
+-----------
+
+This API should be used to delete a user with your provider. This API
+will receive the following JSON data from Hasura Auth:
+
+.. code-block:: json
+
+    {
+      "hasura_id": "Int"
+    }
+
+* **hasura_id**: A unique id used to identify user in Hasura Auth
+
+Hasura Auth expects the following response upon successful delete:
+
+**Response**:
+
+.. sourcecode:: http
+
+  HTTP/1.1 200 OK
+  Content-Type: application/json
+
+  {
+    "success": "Bool",
+  }
+
+* **success**: Boolean flag indicating whether the delete user was successful
 
 Errors
 ------
