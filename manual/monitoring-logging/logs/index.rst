@@ -18,7 +18,7 @@ To fetch logs of a custom microservice, say blog, run:
 
 .. code-block:: bash
 
-   $ hasuractl microservice logs blog
+   $ hasura microservice logs blog
 
 This would output all the logs of that pod.
 
@@ -26,5 +26,5 @@ If you are interested in the logs of any hasura microservice, say auth, run:
 
 .. code-block:: bash
 
-   $ hasuractl microservice logs auth -n hasura
+   $ hasura microservice logs auth -n hasura
 

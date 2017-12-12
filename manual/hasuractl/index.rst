@@ -80,4 +80,3 @@ Commands
    hasura_update-cli
    hasura_user-info
    hasura_version
-   hasuractl-guide
