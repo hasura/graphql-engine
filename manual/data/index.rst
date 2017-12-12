@@ -32,3 +32,4 @@ roles.
   Reset Database <db-reset>
   Aggregations <aggregations>
   Accessing postgres directly <access-postgres>
+  Importing data from SQL files <import-sql>
