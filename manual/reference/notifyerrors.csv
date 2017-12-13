@@ -1,0 +1,9 @@
+Status Code,Code,Message,Description
+400,invalid_payload,Error in $: When parsing the record EmailPayload of type Hasura.Notify.Types.EmailPayload the key to was not present.,When required keys are not met in request payload
+400,invalid_provider,sending templates is not available for <provider-name>,when 'send/email-template' is not supported by email provider specified in project conf
+401,unauthorized,Only role: admin is allowed,When notify is requested by user not having 'admin' role
+500,default_not_found,No default email/sms provider set,when default provider for sms for email not set in notify project conf
+500,config_not_found,No <provider-name> config found,when config is not given for provider specified in 'default' field
+500,unexpected,unexpected response from mandrill,when api response from mandrill is not expected
+500,unexpected,fallback 500 error handler,
+500,response_changed,<response from provider>,when api response from sms and email provider is unexpected

@@ -2,8 +2,8 @@
    :description: Homepage of the reference documentation for Hasura's Data  microservice and a Table of Contents
    :keywords: hasura, docs, data, home, toc, table of contents
 
-Data
-=====
+Data API
+========
 
 The data microservice on Hasura exposes an HTTP/JSON API over a PostgreSQL database.
 This API is designed to be used by any web client (speaking JSON), especially

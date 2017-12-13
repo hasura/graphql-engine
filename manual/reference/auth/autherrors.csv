@@ -1,0 +1,35 @@
+Status Code,Code,Message,Explanation,Recommendation
+400,invalid-args,Error in $: When parsing the record the key <key-name> was not present.,when required keys are not supplied in request payload.,Look into API docs and find appropiate payload keys for that API
+400,bad-headers,<if required headers are not present>,,
+400,invalid-creds,invalid credentials,when login info is not valid,"Check for correct credentials like mobile number, country code, email, username and password"
+400,invalid-provider,invalid provider,,Check for correct provider name in '/v1/login' and '/v1/signup' request payload
+400,not-enabled,provider is disabled,,Check whether provider you are sending request to is enabled in project conf
+400,no-user,no such user exists,,Check for correct hasura_id of a user. If still error exists user with that hasura_id might not exists
+400,not-active,user is deactivated. Can't login,,Activate your account through admin. And try logging in again.
+400,user-exists,user already exists,,User with credentials provided by you already exists. Try recovering the account or signup with different credentials
+400,email-exists,user with email already exists,,Try recovering your account or signup with different email id.
+400,no-role,given role does not exists,when admin tries to assign role to user that does not exists,Add role by using '/v1/admin/create-role' API.
+400,role-error,<role-name> role already exists,when admin tries to add a role that already exists,Role already exists. Try creating another role.
+400,invalid-email,email not found,when user tries to resend verification token with an email which is not used to send verification token earlier,Check for email address provided by you is used for signing up earlier.
+400,invalid-email,bad email address,when email is not valid,Check for correct email id.
+400,invalid-password,min password length is <min-pass-len> characters,,Retry with password that satisfies minimum character condition.
+400,bad-conf,google client id is not present in the conf,,Check for google client id included in project conf.
+400,bad-conf,facebook client id is not present in the conf,,Check for facebook client id included in project conf
+400,bad-token,given access token is not valid for the client id present in the conf (google and facebook),,Check for correct access token provided in request payload. 
+400,bad-conf,Linkedin conf is not present in the conf,,Check whether linkedin conf is provided in project conf
+400,bad-conf,Github conf is not present in the conf,,Check whether github conf is provided in project conf
+400,invalid-token,no user found with specified token,when user tries to verifies email with incorrect token,email verification token is incorrect.
+400,invalid-token,token is not valid,when token is very old or expired,Token is expired. Try resend verification token
+400,token-expired,token is expired,,Token is expired. Try resend verification token
+400,invalid-otp,OTP is incorrect/verified/expired. Please get a new OTP,,Try resend OTP
+400,not-verified,user has not verified OTP,when user tries to login without verifying mobile,Please verify your account by validating OTP provided
+400,invalid-mobile,mobile number is invalid or otp is verified/expired,,Check for correct mobile number in request payload which is used for sending OTP.
+400,no-user-role-delete,User role cannot be unassigned,when admin tries to remove 'user' role.,"You cannot delete ""user"" role"
+500,unexpected-state,user not found in password db,when user does not have password set,User does not have password credentials or user was created with provider which does not requires password for authentication (Mobile only).
+500,unexpected-state,something went wrong,,Internal Server error. Check auth logs for more details.
+500,unexpected-state,notify: <exceptions from notify service>,,Exception received from notify service. Check notify logs for more details.
+500,unexpected-state,google: <exception from google>,,Exceptions from Google servers. 
+500,postgres-exception,<postgres transcation or connection errors>,,
+401,unauthorized,no session information found; has to be logged in user,,Please login as user and perform this action again.
+403,not-verified,verification of account pending,,User account is not verified hence he can't login. Try verifying account by resending verification token or OTP.
+404,not-found,this URL does not exists,when user tries to call invalid endpoint,The API url does not exists. Check for correct url. Please refer docs.
