@@ -1,0 +1,12 @@
+Status Code,Code,Message,Description
+400,bad_request,missing header: <header-name>,when expected header is not found in the request
+400,bad_request,missing parameter: <parameter-name>,when expected parameter is not found in the request
+400,bad_request,X-Hasura-User-Id should be an integer,X-Hasura-User-Id' header value should be an integer
+400,bad_request,expected one and atmost one byte range in the header,
+400,bad_request,failed to parse range/x-hasura-filestore-range header,
+400,bad_request,range not satisfiable,
+400,bad_request,file already exists : <file-id>,when user trying to write a file with existing file_id
+403,access_denied,no permission for role <role-name>,when user is not allowed to p
+403,access_denied,access denied,when configured filestore hook does not allow user to perform action
+404,not_found,file not found : <file-id>,when user tries to read the file that does not exist
+500,fatal_internal_error,internal server error,"when user tries to fetch file info, when file not exists in filesystem, unexpected status from filestore hook"

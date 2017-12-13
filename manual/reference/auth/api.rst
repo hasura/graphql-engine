@@ -5,4 +5,15 @@
 Auth API
 =========
 
-.. swaggerv2doc:: ../../../_static/swagger.json
+.. 
+  .. swaggerv2doc:: ../../../_static/swagger.json
+
+Error Codes
+-----------
+
+.. csv-table::
+   :file: autherrors.csv
+   :widths: 10, 20, 30, 30, 30
+   :header-rows: 1
+
+

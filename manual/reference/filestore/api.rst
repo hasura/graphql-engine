@@ -162,3 +162,12 @@ Errors
           {
               "error" : String
           }
+
+Error Codes
+-----------
+
+.. csv-table::
+   :file: filestoreerrors.csv
+   :widths: 10, 20, 30, 30
+   :header-rows: 1
+

@@ -3,10 +3,10 @@
    :keywords: hasura, docs, File, fileStore, API reference
 
 Notify API
-=============
+==========
 
 ``POST /v1/send/email``
----------------------------
+-----------------------
 
 This POST endpoint lets you send an email.
 
@@ -111,3 +111,12 @@ Errors
               "code"  : String,
               "message" : String
           }
+
+Error Codes
+-----------
+
+.. csv-table::
+   :file: notifyerrors.csv
+   :widths: 10, 20, 30, 30
+   :header-rows: 1
+
