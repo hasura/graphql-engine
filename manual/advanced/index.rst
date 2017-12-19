@@ -18,3 +18,4 @@ This section required familiarity with Kubernetes, Docker and cloud platforms su
    :maxdepth: 2
 
    hasura-on-gke
+   separate-microservice-git-repository
