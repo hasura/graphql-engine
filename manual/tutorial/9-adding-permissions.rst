@@ -52,21 +52,17 @@ This is the permissions section for the ``article`` table, which looks like this
 
 .. figure:: ../../img/tutorial-9-vanilla-screen.png
 
-To add permissions, click the *Add permissions for a new role* button:
+To add permissions, click the *Edit icon to the corresponding role and query type*:
 
 .. figure:: ../../img/tutorial-9-add-permission.png
 	    
 	    You can add permissions for the query types Select, Insert, Update, Delete for different roles (default anonymous and user).
 	    
-Add permissions for the **Select** query for the **anonymous** role:
-
-.. figure:: ../../img/tutorial-9-permissions-anon-select.png
-
-Similarly, add *Select* permissions for the *user* role.
+Add permissions for the *Select* query for the *user* role.
 
 .. figure:: ../../img/tutorial-9-permissions-user-select.png
 
-Click *Save changes* to apply the permissions.
+Click *Save permissions* to apply the permissions.
 
 You can use the same UI to add permissions for other query types. 
 
