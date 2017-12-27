@@ -17,16 +17,16 @@ Run the following command:
 .. code-block:: console
 
    $ hasura clone hasura/base
-   
-::
-   
-   INFO Getting app details...                        app=hasura/base
-   INFO Found on Hasura hub                          
-   INFO Downloading...                               
-   INFO Downloaded app to directory                   app=hasura/base directory=/home/sid/gen/base
-   INFO Cloned app successfully                      
 
-   
+::
+
+   INFO Getting app details...                        app=hasura/base
+   INFO Found on Hasura hub
+   INFO Downloading...
+   INFO Downloaded app to directory                   app=hasura/base directory=/home/sid/gen/base
+   INFO Cloned app successfully
+
+
 This will 'clone' a base project from `hasura.io/hub <https://hasura.io/hub>`_.
 Note, you can clone any project from the hub and use that as a starting point for your new project.
 
@@ -95,14 +95,14 @@ clusters.yaml
 Info about the clusters added to this project can be found in this file. Each cluster is defined by it's name allotted by Hasura. While adding the cluster to the project you are prompted to give an alias, which is just hasura by default. The kubeContext mentions the name of kubernetes context used to access the cluster, which is also managed by hasura. The config key denotes the location of cluster's metadata on the cluster itself. This information is parsed and cluster's metadata is appended while conf is rendered. data key is for holding custom variables that you can define.
 
 .. code-block:: bash
-   
+
    - name: h34-ambitious93-stg
      alias: hasura
      kubeContext: h34-ambitious93-stg
      config:
       configmap: controller-conf
       namespace: hasura
-     data: null  
+     data: null
 
 conf/
 ^^^^^
@@ -115,8 +115,8 @@ migrations/
 
 This directory contains database migrations.
 
-services/
-^^^^^^^^^
+microservices/
+^^^^^^^^^^^^^^
 
 This directory contains everything related to the microservices that you create; such as the Kuberenetes configuration, source code etc.
 
