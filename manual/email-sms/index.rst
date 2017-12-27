@@ -215,7 +215,7 @@ browser, since ``Cookie`` will be set.
 
 .. note::
 
-  If you are writing backed code and want to send email from that code, you can
+  If you are writing backend code and want to send email from that code, you can
   directly contact the ``Notify`` microservice using the URL
   ``http://notify.hasura/v1/send/email``. You will also need to set headers
   ``X-Hasura-User-Id: 1`` and ``X-Hasura-User-Role: admin`` to make the request
@@ -402,7 +402,7 @@ browser, since ``Cookie`` will be set.
 
 .. note::
 
-  If you are writing backed code and want to send SMS, you can directly contact
+  If you are writing backend code and want to send SMS, you can directly contact
   the ``Notify`` microservice using the URL
   ``http://notify.hasura/v1/send/sms``. You will also need to set headers
   ``X-Hasura-User-Id: 1`` and ``X-Hasura-User-Role: admin`` to make the request
