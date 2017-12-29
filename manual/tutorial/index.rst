@@ -59,7 +59,7 @@ This tutorial is split across the following sections:
   6-user-model
   7-data-modelling
   8-explore-data-apis
-  9-adding-permissions
-  10-adding-relationships
+  9-adding-relationships
+  10-adding-permissions
   11-aggregations-views
   12-custom-api

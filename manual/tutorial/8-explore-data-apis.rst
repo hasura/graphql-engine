@@ -199,7 +199,7 @@ The request to delete data takes a ``where`` clause indicating what to delete. T
    }
 
 
-Next: Add permissions and access control
-----------------------------------------
+Next: Add relationships
+------------------------
 
-Next, head to :doc:`Add permissions & access control to your data models <9-adding-permissions>`.
+Next, head to :doc:`Add relationships to your data models <9-adding-relationships>`.
