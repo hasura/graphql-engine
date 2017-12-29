@@ -25,6 +25,7 @@ To signup a user, make a request to the signup endpoint : ``/v1/signup``.
      "provider" : "mobile-password",
      "data" : {
         "mobile": "9876543210",
+        "country_code": "91",
         "password": "somepass123"
      }
    }
@@ -120,6 +121,7 @@ To login a user make a request to the login endpoint: ``/v1/login``.
      "provider": "mobile-password",
      "data": {
         "mobile": "9876543210",
+        "country_code": "91",
         "password": "somepass123"
      }
    }
