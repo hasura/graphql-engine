@@ -1195,3 +1195,15 @@ ol, ul
     background: #f1f9ff;
     border: 1px solid #c9e0f0;
 }
+
+.figure {
+  width:  45%;
+  display:  inline-block;
+}
+.figure img {
+  width:  100%;
+}
+
+
+
+
