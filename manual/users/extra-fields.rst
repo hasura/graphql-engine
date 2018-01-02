@@ -8,19 +8,16 @@
 Extra user profile information
 ===============================
 
-.. todo::
-
-   * Make language more positive
+.. .. todo::
    * Show an example of a profile table with user_id and the permissions
 
 It is a common use-case to store extra information about your users other than
-authentication related data (like name, age, address etc.). But Hasura Auth
-APIs does not have provision to store any extra information. Hence you would
-have to store it in your own table(s).
+authentication related data (like name, age, address etc.).  For this you
+should create custom tables and use that to store extra user information.
 
 To store extra information about your users:
 
-1. Create a table (e.g ``users``) in Hasura DB. (refer TODO)
+1. Create a table (e.g ``users``) in the data microservice. (refer :doc:`../data/create-tables`)
 2. Along with all the columns you want to add to the table, add a column called
    ``hasura_id`` of type Integer.
 3. Whenever a successful signup happens, enter a row about that user in your
