@@ -14,7 +14,7 @@ Create file
 
 The POST endpoint let's you upload files.
 
-You are required to generate a unique ``file_id`` for the file, and the send
+You are required to generate a unique ``file_id`` for the file, and then send
 the file contents in the request body and setting the ``Content-Type`` header
 set to the file's MIME type.
 
