@@ -13,7 +13,7 @@ Hasura project directory:
 
 .. code-block:: yaml
 
-  email:
+  sms:
     default: msg91
 
 * Under ``sms`` -> ``providers`` -> ``msg91``

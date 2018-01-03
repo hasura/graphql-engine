@@ -14,7 +14,7 @@ Hasura project directory:
 
 .. code-block:: yaml
 
-  email:
+  sms:
     default: twilio
 
 * Under ``sms`` -> ``providers`` -> ``twilio``

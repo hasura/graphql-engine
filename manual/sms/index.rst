@@ -8,7 +8,7 @@ SMS
 
 This section covers the documentation about configuring Notify to send SMS. Notify currently supports sending SMS via Twilio and MSG91.
 
-Also, for testing out Notify, Hasura has its own test provider called `Hasura` which you can use to send 10 SMS per day.
+Also, for testing out Notify, Hasura has its own test provider called ``Hasura`` which you can use to send 10 SMS per day.
 
 .. toctree::
   :maxdepth: 1

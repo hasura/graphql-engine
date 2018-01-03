@@ -6,9 +6,9 @@
 Email
 =====
 
-This section covers the documentation about configuring Notify to send Emails. Notify currently supports sending emails via SparkPost and SMTP.
+This section covers the documentation about configuring Notify to send emails. Notify currently supports sending emails via `SparkPost <https://www.sparkpost.com>`_ and `SMTP <https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol>`_.
 
-Also, for testing out Notify, Hasura has its own test provider called `Hasura` which you can use to send 10 emails per day.
+Also, for testing out Notify, Hasura has its own test provider called ``Hasura`` which you can use to send 10 emails per day.
 
 .. toctree::
   :maxdepth: 1
