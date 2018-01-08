@@ -20,7 +20,7 @@ your project to the hub.
 hasura.yaml
 ^^^^^^^^^^^
 
-This file some metadata viz. a name, description, repoUrl (link to github/bitbucket/gitlab or similar), keywords and some media data. Also contains `platformVersion` which says which Hasura platform version is compatible with this project.
+This file contains some metadata about the project, namely a name, description, repoUrl, keywords and some media data. Also contains `platformVersion` which says which Hasura platform version is compatible with this project.
 
 .. code-block:: yaml
 
@@ -35,4 +35,3 @@ This file some metadata viz. a name, description, repoUrl (link to github/bitbuc
     videos:
     - <video_link_1>
   platformVersion: v0.15.3
-

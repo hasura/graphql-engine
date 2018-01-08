@@ -168,7 +168,7 @@ The standard practice is to access these parameters as environment variables and
 
       conn = psycopg2.connect(
           database='hasuradb',
-          user=os.environ['POSTGRES_USER'],
+          user=os.environ['POSTGRES_USERNAME'],
           password=os.environ['POSTGRES_PASSWORD'],
           host=os.environ['POSTGRES_HOSTNAME'],
           port=os.environ['POSTGRES_PORT']

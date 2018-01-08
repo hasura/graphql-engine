@@ -3,7 +3,7 @@
    :keywords: hasura, getting started, step 2
 
 ===========================================
-Part X: Adding relationships to data models
+Part IX: Adding relationships to data models
 ===========================================
 
 Exploiting relationships in your data
@@ -459,8 +459,7 @@ We can also use ``where``, ``limit``, ``offset`` inside array relationships. Let
        }
    }
 
+Next: Add permissions and access control
+----------------------------------------
 
-Next: Add aggregations and views
---------------------------------
-
-Next, head to :doc:`Add aggregations & views to your data models <11-aggregations-views>`.
+Next, head to :doc:`Add permissions & access control to your data models <10-adding-permissions>`.

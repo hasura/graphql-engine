@@ -196,6 +196,7 @@ To logout a user, make the following request.
    custom_provider
    config
    admin_endpoints
+   uikit
 
 
 .. _recaptcha: https://www.google.com/recaptcha/intro/index.html

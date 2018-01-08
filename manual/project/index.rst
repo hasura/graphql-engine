@@ -108,7 +108,6 @@ This file contains some metadata about the project, namely a name, description, 
     - <video_link_1>
   platformVersion: v0.15.3
 
-
 * `clusters.yaml`
 
 Info about the clusters added to this project can be found in this file. Each
