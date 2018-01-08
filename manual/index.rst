@@ -27,6 +27,8 @@ This is the reference documentation of the entire Hasura platform.
   data-modelling/index
   Files <files/index>
   Emails/SMS <email-sms/index>
+  Emails <email/index>
+  SMS <sms/index>
   API gateway <gateway/index>
   custom-microservices/index
   git-push configuration <git-push/index>
