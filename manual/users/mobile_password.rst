@@ -258,8 +258,8 @@ The reset password endpoint takes the OTP and the new password of the user.
    Content-Type: application/json
 
    {
-     "country_code" : "91",
      "mobile" : "9876543210",
+     "country_code" : "91",
      "otp": "1231",
      "password": "newpass123"
    }
