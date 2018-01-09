@@ -165,3 +165,4 @@ holding custom variables that you can define.
   :titlesonly:
 
   secrets
+  collaboration
