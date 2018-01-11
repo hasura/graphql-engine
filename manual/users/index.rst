@@ -187,7 +187,7 @@ To logout a user, make the following request.
    email
    mobile
    mobile_password
-   extra_fields
+   extra-fields
    sessions
    google
    facebook
