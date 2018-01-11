@@ -31,11 +31,13 @@ def manage_indexes(index_name, data, settings):
 
     index.set_settings(
         {
-            "searchableAttributes": ["category", "content", "title", "tags",
+            "searchableAttributes": ["title", "category", "content", "tags",
             "description", "keywords", "url", "image"],
             "replicas": [
                 "docs_by_date_desc",
             ],
+            "distinct": 1,
+            "attributeForDistinct": "title"
         })
 
     # index.set_settings({
@@ -84,7 +86,24 @@ def docs_index(data_source):
 
     settings = []
     # print (json_d)
-    manage_indexes(index_name, json_d, settings)
+    newJson = []
+
+    for n in json_d:
+        if ( len ( n['content'] ) < 20000 ):
+            newJson.append(n)
+        else:
+            newObj = json.loads(json.dumps(n))
+
+            MAX_LENGTH = 18000
+
+            splittedContents = [ newObj['content'][i:i+MAX_LENGTH] for i in range(0, len(newObj['content']), MAX_LENGTH)]
+
+            for elem in splittedContents:
+                newObj = json.loads(json.dumps(n))
+                newObj['content'] = elem
+                newJson.append(newObj)
+
+    manage_indexes(index_name, newJson, settings)
     read_indexed_data(index_name)
 
 # docs_index('./sample.json')

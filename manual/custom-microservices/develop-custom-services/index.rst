@@ -174,6 +174,34 @@ So now the cluster status will show:
 
 This means that your custom microservice will be available at the url ``https://my-service.cluster-name.hasura-app.io``. Visiting this url now will show you a "Hello World!" message.
 
+Running your app on other than port 8080
+----------------------------------------
+
+Your microservices on hasura cluster runs on port 8080 by deafault. To run your app on hasura cluster, you can do the followings.
+
+1. Create new microservice
+
+You can simply run the command while generting a new microserivce:
+
+.. code:: bash
+
+    $ hasura microservice create <name-of-ms>  --port <port number>
+
+2. For Existing microservice running on port 8080
+
+If you already have an app on a exisisting microservice ( which is running on port 8080), you have to  assign values of containerPort and targetPort to <port-number> in your ``/microservice/<microservice-name>/k8s.yaml`` file:
+
+``containerPort: <port-number>``
+
+``targetPort: <port-number>``
+
+To apply this configuration on your cluster ``git commit`` and ``git push`` the project directory:
+
+.. code:: bash
+
+    $ git commit -m "<microservice-name> port changed"
+    $ git push hasura master
+
 
 Contacting internal URLs on microservices
 -----------------------------------------

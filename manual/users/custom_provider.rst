@@ -245,6 +245,9 @@ will receive the following JSON data from Hasura Auth:
 
 Hasura Auth expects the following response upon successful delete:
 
+**Note**: Do not throw any HTTP errors if user not found or delete user was unsuccessful. Instead convey the information in response through boolean flags specified below.
+
+
 **Response**:
 
 .. sourcecode:: http
@@ -253,10 +256,14 @@ Hasura Auth expects the following response upon successful delete:
   Content-Type: application/json
 
   {
-    "success": "Bool",
+    "user_exists": "Bool",
+    "user_deleted": "Bool"
   }
 
-* **success**: Boolean flag indicating whether the delete user was successful
+* **user_exists**: Boolean flag indicating whether the user exists or not. If user does not exist, set ``user_deleted`` to ``false``.
+* **user_deleted**: Boolean flag indicating whether the delete user was successful.
+
+
 
 Errors
 ------

@@ -47,7 +47,7 @@ Assuming the owner have shared the repo URL and added you as a collaborator to t
 
      $ hasura setup
 
-* You can now access these clusters and push to them
+* You can now access these clusters
 
   .. code-block:: bash
 
@@ -58,6 +58,12 @@ Assuming the owner have shared the repo URL and added you as a collaborator to t
   .. code-block:: bash
 
      $ hasura cluster set-default [cluster-alias]
+
+* Add your SSH key to the cluster
+
+  .. code-block:: bash
+
+     $ hasura ssh-key add
 
 * Make changes and push
 
