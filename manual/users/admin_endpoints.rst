@@ -172,7 +172,7 @@ Delete User
 -----------
 
 To remove existing user, make a request to the delete-user endpoint : ``/v1/admin/delete-user``.
-It is provider specific endpoint. Specify ``provider`` in request payload.
+Hasura Auth deletes user in all providers.
 
 .. code-block:: http
 
@@ -180,7 +180,6 @@ It is provider specific endpoint. Specify ``provider`` in request payload.
    Content-Type: application/json
 
    {
-      "provider": "username",
       "hasura_id": 2
    }
 
@@ -194,10 +193,21 @@ Typical response of the ``/v1/admin/delete-user`` request is :
    Content-Type: application/json
 
    {
-      "message": "user with user_id = 2 deleted"
+      "details":{
+          "username": "deleted",
+          "email": "not-found",
+          "mobile": "not-found",
+          "mobile-password": "not-found",
+          "google": "not-found",
+          "facebook": "not-found",
+          "github": "not-found",
+          "linkedin": "not-found",
+       },
+      "message": "User with hasura_id = 2 is deleted"
    }
 
 * ``hasura_id``  is the hasura identifier of the user.
+* ``details``  gives delete status of all providers. Status messages are ``deleted``, ``not-found``, ``not-deleted`` or HTTP exceptions from delete hooks.
 
 
 User Activate
