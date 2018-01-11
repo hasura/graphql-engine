@@ -5,6 +5,41 @@ Hasura Test Provider
 
 To send emails using ``Hasura``, follow the steps below.
 
+* Add ``hasura`` as a provider to ``conf/notify.yaml`` (if it is not there) and set it as default. The email section of ``conf/notify.yaml`` should look like the codeblock below:
+
+.. code-block:: yaml
+
+  email:
+    # default can take values 'smtp', 'sparkPost' or 'mandrill'
+    default: hasura
+    providers:
+      hasura:
+        authToken:
+          secretKeyRef:
+            key: notify.hasura.token
+            name: hasura-secrets
+      mandrill:
+        apiKey:
+          secretKeyRef:
+            key: notify.mandrill.key
+            name: hasura-secrets
+      smtp:
+        hostname: ""
+        password:
+          secretKeyRef:
+            key: notify.smtp.password
+            name: hasura-secrets
+        port: 465
+        username:
+          secretKeyRef:
+            key: notify.smtp.username
+            name: hasura-secrets
+      sparkPost:
+        apiKey:
+          secretKeyRef:
+            key: notify.sparkpost.key
+            name: hasura-secrets
+
 * Set ``Hasura`` as the default email provider in ``conf/notify.yaml`` inside the project directory.
 
 .. code-block:: yaml
@@ -29,5 +64,3 @@ To send emails using ``Hasura``, follow the steps below.
 
 .. note::
   You can only send 10 emails per day using ``Hasura``.
-
-

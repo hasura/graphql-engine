@@ -5,6 +5,37 @@ Hasura Test Provider
 
 To start sending SMS using ``Hasura``, follow the steps below.
 
+* Add ``hasura`` as a provider to ``conf/notify.yaml`` (if it is not there) and set it as default. The sms section of ``conf/notify.yaml`` should look like the codeblock below:
+
+.. code-block:: yaml
+
+  sms:
+    # default can take values 'msg91' or 'twilio'
+    default: hasura
+    providers:
+      hasura:
+        authToken:
+          secretKeyRef:
+            key: notify.hasura.token
+            name: hasura-secrets
+      msg91:
+        from: ""
+        authKey:
+          secretKeyRef:
+            key: notify.msg91.key
+            name: hasura-secrets
+      twilio:
+        from: ""
+        accountSid:
+          secretKeyRef:
+            key: notify.twilio.accountsid
+            name: hasura-secrets
+        authToken:
+          secretKeyRef:
+            key: notify.twilio.authtoken
+            name: hasura-secrets
+
+
 * Set ``Hasura`` as the default sms provider in ``conf/notify.yaml`` inside the project directory.
 
 .. code-block:: yaml
@@ -29,5 +60,3 @@ To start sending SMS using ``Hasura``, follow the steps below.
 
 .. note::
   You can only send 10 SMS per day using ``Hasura``.
-
-
