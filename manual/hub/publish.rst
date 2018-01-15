@@ -4,8 +4,21 @@
 Publish your project to /hub
 ============================
 
+Video tutorial
+^^^^^^^^^^^^^^
+
+Watch this quick video to learn how to publish, maintain content and unpublish projects on hub.
+
+.. raw:: html
+
+   <iframe src="https://player.vimeo.com/video/251167051" width="640" height="400" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
+
+hasura CLI publish
+^^^^^^^^^^^^^^^^^^
+
 Any Hasura project can be published to `/hub <https://hasura.io/hub>`_.
-The details of what gets published are mentioned in ``hasura.yaml``.
+The project name that you want to publish at is specified in ``hasura.yaml``.
 
 
 .. code-block:: bash
@@ -25,13 +38,4 @@ This file contains some metadata about the project, namely a name, description, 
 .. code-block:: yaml
 
   name: <project_name>
-  description: <description_text>
-  keywords: <tag1>, <tag2>
-  repoUrl: <public_code_repo_link>
-  media:
-    images:
-    - <image_link_1>
-    - <image_link_2>
-    videos:
-    - <video_link_1>
   platformVersion: v0.15.3
