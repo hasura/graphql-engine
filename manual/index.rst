@@ -38,6 +38,7 @@ This is the reference documentation of the entire Hasura platform.
   hasura.io/hub guide <hub/index>
   Platform reference <reference/index>
   Advanced <advanced/index>
+  full-reference/index
 
 ..
   ..monitoring-logging/index
