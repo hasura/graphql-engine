@@ -19,3 +19,4 @@ This section required familiarity with Kubernetes, Docker and cloud platforms su
 
    hasura-on-gke
    separate-microservice-git-repository
+   converting-git-repo-to-hasura-project
