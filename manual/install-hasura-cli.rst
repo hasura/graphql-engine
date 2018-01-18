@@ -42,8 +42,8 @@ Step 1: Install
 
          Download the ``hasura`` installer:
 
-         * `hasura (64-bit Windows installer) <https://hasura.io/install.msi>`_
-         * `hasura (32-bit Windows installer) <https://storage.googleapis.com/hasuractl/stable/windows-386/hasura.msi>`_
+         * `hasura (64-bit Windows installer) <https://hasura.io/install/windows-amd64>`_
+         * `hasura (32-bit Windows installer) <https://hasura.io/install/windows-386>`_
          
          **Note:** Please run the installer as Administrator to avoid PATH updation errors. If you're still getting a `command not found` error after installing Hasura, please restart Gitbash. 
 
