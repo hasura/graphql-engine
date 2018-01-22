@@ -2,7 +2,7 @@ Permission Webhooks
 -------------------
   **Configuring Webhooks**
 
-  You need to configure the following options in filestore.yaml in cluster/<clusterName> directory:
+  You need to configure the following options in filestore.yaml in conf directory:
 
   .. code-block:: yaml
 
