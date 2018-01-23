@@ -9,18 +9,25 @@ Developing & hosting custom microservices
 =========================================
 
 A Hasura project is composed of a set of microservices.
-These include certain Hasura microservices like, ``postgres``, ``nginx``, ``data API``, ``auth API`` and more but can also
+These include certain Hasura microservices but can also
 include your own microservices.
 
-Some typical examples of microservices you would add to your application:
+Some typical examples of microservices you would add to your application include, an API service,
+a webapp, a microservice that serves static files, for a simple HTML site or a SPA (eg: React),
+a ready made microservice like the ghost blog-engine or a 'stateful' microservice like a database.
 
-1. A custom API written in python-flask
-2. A webapp that serves a UI written with the express framework in nodejs
-3. A microservice that serves static files, for a simple HTML site, or a SPA in React or Angular
-4. A ready made microservice like the ghost blog-engine
-5. A 'stateful' microservice like a database
+**NOTE**: If you're starting a new hasura project, head to `hasura.io/hub <https://hasura.io/hub>`_ to
+find the right stack boilerplate and follow the guide there!
 
-Hasura makes it easy for you to build and deploy custom microservices.
+If you're thinking about adding a new microservice to your existing Hasura project, pick up one of the following guides:
+
+* :doc:`Use a template for your stack <add-microservice-from-template>`:
+
+  - Ideal for webapps, APIs, static file-hosting
+  - Use this if you don't know how to use a Dockerfile
+
+* :doc:`Use your own Dockerfile and source-code <add-custom-dockerfile>`
+* :doc:`Use an existing docker image <add-docker-image>`
 
 Here's what your Hasura cluster looks like before and after you add custom microservices:
 
@@ -28,63 +35,33 @@ Here's what your Hasura cluster looks like before and after you add custom micro
 
 These are the 3 key steps you need to follow for deploying any microservice:
 
-1. Generate a microservice inside your project, using ``hasura generate
-   microservice``. This will create a directory with the microservice name
-   inside the ``microservice`` directory.  This will contain Kuberenetes specs
-   for the microservice, optionally it can contain the source code and
-   Dockerfile too.
+1. Create a folder inside the ``microservices`` directory in your project.
+2. Configure ``git push hasura master`` to build and deploy your microservice.
+3. Expose the microservice externally to the world by adding a route (subdomain, or path).
 
-2. Add a route (subdomain, or path) on which this microservice may be exposed
-   to the external world.
+This is what your project folder might look like once you've added a microservice:
 
-3. Optionally, add it to the ``hasura`` remote, so that the microservice is
-   deployed whenever you ``git push``.
+.. code:: bash
 
+   ├── microservices/
+       └── app/              # a new folder to contain microservice code/config
+           ├── k8s.yaml
+           ├── Dockerfile
+           └── src/
+   └── conf/
+       ├── routes.yaml       # a new route entry in this file
+       └── ci.yaml           # a new entry here to enable git-push
 
-.. .. todo::
-   Recommended sections/pages in this section:
-   1. How custom microservices work on a Hasura cluster
-   2. Developing & hosting webapps:
-      - Quickstart
-      - Dockerfile, directory setup, git push
-      - Contacting internal microservices
-      - Using session middleware
-      - local-development
-      - Get logs
-   3. Developing & hosting APIs
-      - Repeats as in 2
-   4. Developing & hosting static files
-      - Repeats as in 2
-   5. Developing & hosting docker containers
-      - Repeats as in 2
-   6. Routing
-   7. Configuring git-push
-   8. Adding persistent storage
-   9. Monitoring and logs
-   10. Deploying non-HTTP microservices
-   11. Deploying kubernetes objects
-  TOCTREE:
-  Communicating between microservices <communicating-between-microservices>
-  Hosting webapps
-  Hosting APIs
-  Hosting static files
-  develop-custom-services/index
-  Hosting Docker containers <deploy-docker/index>
-  Routing <routing>
-  serve-static/index
-  persistent-services
-  deploy-non-http
-  deploy-k8s-objects
-
-Read in details about the various ways to develop and deploy custom
-microservices.
+Now that you're familiar with the basic concepts
+of what a microservice is, pick up one of the following
+guides and get started:
 
 .. toctree::
   :maxdepth: 1
   :titlesonly:
 
+  Use a template for your stack <add-microservice-from-template>
+  Use your own Dockerfile <add-custom-dockerfile>
+  Using an exsisting docker image <add-docker-image>
   Communicating between microservices <communicating-between-microservices>
-  develop-custom-services/index
-  Hosting Docker containers <deploy-docker/index>
-  serve-static/index
   Connecting to PostgreSQL from microservices <connecting-to-postgres-from-microservice>

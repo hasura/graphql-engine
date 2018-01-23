@@ -4,14 +4,12 @@
 
 .. _deploy-host-webapps:
 
-==============================
-Developing and hosting webapps
-==============================
+==========================
+Developing webapps or APIs
+==========================
 
-This section will attempt to discuss everything you need to know about developing and hosting webapps on Hasura.
-
-Quickstarts
------------
+Adding a microservice to an existing Hasura project
+---------------------------------------------------
 
 Hasura provides a very simple and powerful system to develop, deploy and host your custom webapps easily. This is facilitated by the `Hasura Hub <https://hasura.io/hub>`_, a user contributed repository of working projects that are just one command away from a running app.
 
