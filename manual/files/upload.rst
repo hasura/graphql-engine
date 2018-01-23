@@ -79,6 +79,6 @@ The second API is described as follows.
 
 Uploaded files will be visible on the console.
 
-For more details, see  :ref:`API reference <filestore-api-upload>`.
+For more details, see  :ref:`API reference <filestore-api-upsert>`.
 
 

@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: API reference for Hasura's File  microservice. POST, GET and DELETE endpoinds for uploading, downloading and deleting files respectively.
+   :description: API reference for Hasura's File  microservice. POST, PUT, GET and DELETE endpoinds for uploading, upserting, downloading and deleting files respectively.
    :keywords: hasura, docs, File, fileStore, API reference
 
 Filestore API
@@ -26,6 +26,49 @@ Request
 .. code-block:: http
 
      POST filestore.<cluster-name>.hasura-app.io/v1/file/05c40f1e-cdaf-4e29-8976-38c899 HTTP/1.1
+     Content-Type: image/png
+
+     <contents of the file>
+
+Response
+^^^^^^^^
+An example response looks like:
+
+.. code-block:: http
+
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+
+    {
+      "file_id": "05c40f1e-cdaf-4e29-8976-38c899",
+      "content_type": "image/png",
+      "file_status": "uploaded",
+      "file_size": 351667,
+      "user_id": 42,
+      "user_role": "user",
+      "created_at": "2017-04-25T08:26:22.834266+00:00"
+    }
+
+.. _filestore-api-upsert:
+
+Upsert file
+--------------
+
+``PUT filestore.<cluster-name>.hasura-app.io/v1/file/<file_id>``
+
+The PUT endpoint let's you update existing file or create a file.
+
+the file contents in the request body and setting the ``Content-Type`` header
+set to the file's MIME type.
+
+A typical request is as follows:
+
+Request
+^^^^^^^
+
+.. code-block:: http
+
+     PUT filestore.<cluster-name>.hasura-app.io/v1/file/05c40f1e-cdaf-4e29-8976-38c899 HTTP/1.1
      Content-Type: image/png
 
      <contents of the file>
@@ -111,12 +154,7 @@ An example response looks like:
 
     {
       "file_id": "05c40f1e-cdaf-4e29-8976-38c899",
-      "content_type": "image/png",
-      "file_status": "uploaded",
-      "file_size": 351667,
-      "user_id": 42,
-      "user_role": "user",
-      "created_at": "2017-04-25T08:26:22.834266+00:00"
+      "status": "deleted"
     }
 
 
@@ -143,8 +181,8 @@ Errors
      - .. code-block:: haskell
 
           {
-              "path"  : String,
-              "error" : String
+              "code"  : String,
+              "message" : String
           }
 
    * - ``401``
@@ -152,7 +190,8 @@ Errors
      - .. code-block:: haskell
 
           {
-              "error" : String
+              "code" : String,
+              "message" : String
           }
 
    * - ``500``
@@ -160,7 +199,8 @@ Errors
      - .. code-block:: haskell
 
           {
-              "error" : String
+              "code" : String,
+              "message" : String
           }
 
 Error Codes
