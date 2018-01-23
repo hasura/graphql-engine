@@ -23,12 +23,7 @@ The unique file_id is used to delete an uploaded file.
 
       {
         "file_id": "05c40f1e-cdaf-4e29-8976-38c899",
-        "content_type": "image/png",
-        "file_status": "uploaded",
-        "file_size": 351667,
-        "user_id": 42,
-        "user_role": "user",
-        "created_at": "2017-04-25T08:26:22.834266+00:00"
+        "status": "deleted"
       }
 
 .. note::

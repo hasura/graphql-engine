@@ -11,6 +11,7 @@ File APIs on Hasura lets users upload and store files on a Hasura project and al
    :maxdepth: 1
   
    Upload<upload>
+   Upsert<upsert>
    Download<download>
    Delete<delete>
    Basic permission<permission>
