@@ -69,14 +69,20 @@ To add a cluster to a project we use:
   INFO remote "hasura" added: [ssh://hasura@alarming52.hasura-app.io:22/~/git/alarming52]
   INFO pre-push hook added
 
+  $ hasura ssh-key add -c hasura
+
 
 The ``-c`` flags tells to create a alias ``hasura`` the for the cluster. This
 name can be anything. We can then use this alias in various other commands
 including git push.
 
+.. note::
+
+  If you already have a cluster added with an alias, say ``hasura``, delete its entry from ``clusters.yaml`` before trying to add another cluster with the same alias.
+
 
 Deleting a cluster
-----------------
+------------------
 To delete a cluster, use the ``hasura`` CLI.
 
 .. code-block:: bash
