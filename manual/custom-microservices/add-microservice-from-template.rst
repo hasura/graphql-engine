@@ -97,7 +97,7 @@ automatically deploy your source code, build the docker image, and rollout the u
 
 .. code:: bash
 
-   $ hasura conf generate-remotes my-service >> conf/ci.yaml
+   $ hasura conf generate-remote my-service >> conf/ci.yaml
 
 .. admonition:: Behind The Scenes
 
@@ -114,7 +114,7 @@ default routes configuration for your custom microservice:
 
 .. code:: bash
 
-    $ hasura conf generate-routes my-service >> conf/routes.yaml
+    $ hasura conf generate-route my-service >> conf/routes.yaml
 
 This command above will add the default route configuration for your microservice to the ``conf/routes.yaml`` file.
 
