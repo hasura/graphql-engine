@@ -118,11 +118,11 @@ If the signup request is successful:
    Content-Type: application/json
    
    {
-    "provider": "username",
-    "data": {
-        "username": "johnsmith",
-        "password": "js@hasura"
-    }
+     "provider": "username",
+     "data": {
+       "username": "johnsmith",
+       "password": "js@hasura"
+     }
    }
 
 
@@ -132,14 +132,15 @@ Typical response is :
 
    HTTP/1.1 200 OK
    Content-Type: application/json
-      {
-      "auth_token": "f876712c2fdbb3xcvxcvxvc2b376a3ad2dg31324bfee",
-      "username": "johnsmith",
-      "hasura_id": 2,
-      "hasura_roles": [
-        "user"
-      ]
-      }
+
+   {
+     "auth_token": "f876712c2fdbb3xcvxcvxvc2b376a3ad2dg31324bfee",
+     "username": "johnsmith",
+     "hasura_id": 2,
+     "hasura_roles": [
+       "user"
+     ]
+   }
 
 
 Logging In
@@ -160,11 +161,11 @@ The request payload of the login endpoint is similar to the signup endpoint.
    Content-Type: application/json
    
    {
-    "provider": "username",
-    "data": {
-        "username": "johnsmith",
-        "password": "js@hasura"
-    }
+     "provider": "username",
+     "data": {
+       "username": "johnsmith",
+       "password": "js@hasura"
+     }
    }
 
 
@@ -174,14 +175,15 @@ Typical response is :
 
    HTTP/1.1 200 OK
    Content-Type: application/json
-      {
-      "auth_token": "f876712c2fdbfdbbcbcvbcvbvc8606931324bfee",
-      "username": "johnsmith",
-      "hasura_id": 2,
-      "hasura_roles": [
-        "user"
-      ]
-      }
+
+   {
+     "auth_token": "f876712c2fdbfdbbcbcvbcvbvc8606931324bfee",
+     "username": "johnsmith",
+     "hasura_id": 2,
+     "hasura_roles": [
+       "user"
+     ]
+   }
 
 
 Pending Verification
@@ -217,7 +219,7 @@ Typical response is :
      "email": "johndoe@example.com",
      "hasura_id": 79,
      "hasura_roles": [
-         "user"
+       "user"
      ]
    }
 
