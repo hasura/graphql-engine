@@ -35,16 +35,12 @@ Assuming the owner have shared the repo URL and added you as a collaborator to t
 * Execute :ref:`hasura cluster list <hasura_cluster_list>`
 * You should be able to see the clusters available to you and clusters added to the project
 * For each cluster added to the project, make sure it is listed as available with the actual owner's email. If not, request the owner to check your email address
-* Get credentials for each cluster:
+* Setup the project:
 
   .. code-block:: bash
 
-     $ hasura cluster get-credentials -c [cluster-alias]
-
-* Setup the hooks and remotes:
-
-  .. code-block:: bash
-
+     # this command will fetch credentials, adds your ssh key to each cluster and sets up hooks and remotes
+     # note: this command is only available in this form from v0.2.37 onwards
      $ hasura setup
 
 * You can now access these clusters
@@ -58,12 +54,6 @@ Assuming the owner have shared the repo URL and added you as a collaborator to t
   .. code-block:: bash
 
      $ hasura cluster set-default [cluster-alias]
-
-* Add your SSH key to the cluster
-
-  .. code-block:: bash
-
-     $ hasura ssh-key add
 
 * Make changes and push
 
