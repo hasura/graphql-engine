@@ -81,6 +81,24 @@ including git push.
   If you already have a cluster added with an alias, say ``hasura``, delete its entry from ``clusters.yaml`` before trying to add another cluster with the same alias.
 
 
+Your clusters
+-------------
+To get the list of your clusters, use the ``hasura`` CLI.
+
+.. code-block:: bash
+
+  $ hasura clusters list
+
+  INFO Getting clusters list...
+  Clusters available In your account:
+  NO   NAME         OWNER
+  1    alarming52   you
+
+  Clusters added to this project:
+  NO   NAME         ALIAS
+  1    alarming52   hasura
+
+
 Deleting a cluster
 ------------------
 To delete a cluster, use the ``hasura`` CLI.
