@@ -5,4 +5,4 @@
 Custom domains & SSL
 ====================
 
-Refer to :ref:`API gateway/custom domains and SSL <custom-domains>`.
+Refer to :doc:`API gateway/custom domains and SSL <./gateway/custom-domains-ssl>`.

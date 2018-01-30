@@ -1,5 +1,5 @@
 CORS Settings
-====================
+==============
 
 Browers enforce the `same-origin policy <https://en.wikipedia.org/wiki/Same_origin_policy>`_ which prevents JavaScript from making requests across domain boundaries. By default, the gateway has CORS policy which is configured to allows requests from ``*.<cluster-name>.hasura-app.io``.
 

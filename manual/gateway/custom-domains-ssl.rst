@@ -20,11 +20,15 @@ Adding a custom domain
 
    $ ping cluster-name.hasura-app.io
 
-- Point your domain's DNS to the cluster's IP from your registrar's dashboard by adding a A record for your domain pointing to the IP above
+- Point your domain's DNS to the cluster's IP from your registrar's dashboard by adding 2 A records for your domain pointing to the IP above
 
 +---+----------------+---------+
 | A | `*.domain.com` | 1.1.1.1 |
 +---+----------------+---------+
+| A | `domain.com`   | 1.1.1.1 |
++---+----------------+---------+
+
+- Both of these entries are important for the LetsEncrypt agent to be able to generate all your SSL certificates properly
 
 - Goto ``conf/domains.yaml`` and add the following block to the file where ``domain.com`` is your domain:
 
