@@ -2,7 +2,7 @@
    :description: Describing the hasura project directory structure
    :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasuracli
 
-.. _hasuractl-manual:
+.. _hasura-secrets-manual:
 
 .. highlight:: bash
 

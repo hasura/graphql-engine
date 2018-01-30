@@ -164,5 +164,7 @@ holding custom variables that you can define.
   :maxdepth: 1
   :titlesonly:
 
-  secrets
   collaboration
+  using-templates
+  secrets
+  directory-structure/index

@@ -2,6 +2,8 @@
    :description: Connecting to Hasura PostgreSQL database from your microservice deployed on Hasura
    :keywords: hasura, microservice, postgres
 
+.. _connecting-to-postgres:
+
 ==========================================================
 Connecting to Hasura PostgreSQL database from microservice
 ==========================================================

@@ -9,6 +9,8 @@ Your Hasura cluster comes with a SSL enabled `hasura-app.io` domain. You can als
 
 Hasura provisions free SSL certificates for each domain you add using `LetsEncrypt <https://letsencrypt.org/>`_. All of your microservices will be available on each of these domains.
 
+.. _adding-custom-domain:
+
 Adding a custom domain
 ----------------------
 
