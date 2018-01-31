@@ -16,7 +16,6 @@ This is the reference documentation of the entire Hasura platform.
 
   getting-started/index
   install-hasura-cli
-  Moving to v0.15 (existing Hasura users) <migration-v0_15/index>
   The complete tutorial<tutorial/index>
   Hasura project <project/index>
   Hasura cluster <cluster/index>
@@ -38,6 +37,7 @@ This is the reference documentation of the entire Hasura platform.
   hasura.io/hub guide <hub/index>
   Platform reference <reference/index>
   Advanced <advanced/index>
+  Moving to v0.15 (existing Hasura users) <migration-v0_15/index>
   full-reference/index
 
 ..
