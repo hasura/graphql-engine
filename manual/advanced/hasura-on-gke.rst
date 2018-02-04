@@ -28,7 +28,7 @@ Navigate to your **Google Cloud Console**
 
    Make sure that they are large enough to hold your data (min 10 GB each), located in the same region as your Kubernetes cluster, the ``Source type`` option is set to ``None (blank disk)`` and preferably are SSDs.
 
-3. From the **VPC Network > External IP Addresses** section, reserve a static IP address (no need to attach to any particular pool).
+3. From the **VPC Network > External IP Addresses** section, reserve a static IP address in the same region as the Kubernetes cluster (no need to attach to any particular pool).
 
 4. Map your domain (let's call it ``myco-hasura.my-domain.com``) to this IP from your DNS provider's dashboard by creating an A record.
 
@@ -88,6 +88,13 @@ To add this cluster to the project,
    $ hasura cluster add --file=/path/to/cluster-data.yaml
 
 This will add the cluster defined in ``cluster-data.yaml`` to the current project, sets up required remotes, hooks and ssh keys.
+
+Add your SSH key
+^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   $ hasura ssh-key add -c [cluster-alias]
 
 Deploy project to the cluster
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
