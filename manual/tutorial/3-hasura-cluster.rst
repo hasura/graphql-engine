@@ -22,30 +22,30 @@ Step 1: Create a free Hasura cluster
 ::
    
    INFO Creating a Hasura cluster...
-   INFO Hasura cluster created                        cluster=h34-depute95-stg
+   INFO Hasura cluster created                        cluster=depute95
    INFO Initializing the cluster...
    INFO Cluster initialized
    INFO Add this cluster to your project:
-    > hasura cluster add h34-test42-stg -c h34-test42-stg
+    > hasura cluster add test42 -c test42
 
 Run the ``cluster create`` command and you will see output similar to what you see above.
 
 Step 2: Add this cluster to your project
 ----------------------------------------
 
-Take a note of your cluster name, in the example above ``h34-test42-stg``.
+Take a note of your cluster name, in the example above ``test42``.
 
 .. code-block:: bash
 
    # Add the cluster and alias it to an easier name
-   $ hasura cluster add h34-test42-stg -c hasura
+   $ hasura cluster add test42 -c hasura
 
 ::
    
-   INFO Adding cluster...                             cluster-alias=hasura cluster-name=h34-test42-stg
+   INFO Adding cluster...                             cluster-alias=hasura cluster-name=test42
    INFO Cluster added to project
    INFO Setting up git remotes and pre-push hook...
-   INFO remote "hasura" added: [ssh://hasura@h34-test42-stg.hasura-app.io:22/~/git/h34-test42-stg]
+   INFO remote "hasura" added: [ssh://hasura@test42.hasura-app.io:22/~/git/test42]
    INFO pre-push hook added
 
 The command above, adds the cluster to your project and renames it (or aliases it) to ``hasura`` so that we don't

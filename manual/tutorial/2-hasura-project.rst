@@ -96,9 +96,9 @@ Info about the clusters added to this project can be found in this file. Each cl
 
 .. code-block:: bash
 
-   - name: h34-ambitious93-stg
+   - name: ambitious93
      alias: hasura
-     kubeContext: h34-ambitious93-stg
+     kubeContext: ambitious93
      config:
       configmap: controller-conf
       namespace: hasura

@@ -59,9 +59,9 @@ This will give you cluster status, which looks like:
 .. code:: bash
 
           INFO Status:
-          Cluster Name:       h34-excise98-stg
+          Cluster Name:       excise98
           Cluster Alias:      hasura
-          Kube Context:       h34-excise98-stg
+          Kube Context:       excise98
           Platform Version:   v0.15.3
           Cluster State:      Synced
 
@@ -78,7 +78,7 @@ To deploy your app:
     $ git commit -m "Initial Commit"
     $ git push hasura master
 
-Once the above commands are executed successfully, head over to ``https://app.cluster-name.hasura-app.io`` (in this case, ``https://app.h34-excise98-stg.hasura-app.io``) to view your flask app.
+Once the above commands are executed successfully, head over to ``https://app.cluster-name.hasura-app.io`` (in this case, ``https://app.excise98.hasura-app.io``) to view your flask app.
 
 API Console
 """""""""""
