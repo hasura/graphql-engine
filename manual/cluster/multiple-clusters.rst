@@ -19,7 +19,7 @@ To create a new cluster, use the ``hasura`` CLI.
   $ hasura cluster create --type free
 
 
-As an exmaple, let us create two clusters, one for staging and one for
+As an example, let us create two clusters, one for staging and one for
 production.
 
 .. code-block:: bash
