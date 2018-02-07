@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: API reference for Hasura's File  microservice. POST, GET and DELETE endpoinds for uploading, downloading and deleting files respectively.
+   :description: API reference for Hasura's File  microservice. POST, GET and DELETE endpoints for uploading, downloading and deleting files respectively.
    :keywords: hasura, docs, File, fileStore, API reference
 
 Separate git repository for a microservice
@@ -102,7 +102,7 @@ This is what you need to modify it to:
    :emphasize-lines: 20-26
 
 
-Notice how a new ``remote`` called ``www`` was added, and the lines describing the Dockefile path, and the context path have been moved from the default remote, to inside the new remote.
+Notice how a new ``remote`` called ``www`` was added, and the lines describing the Dockerfile path, and the context path have been moved from the default remote, to inside the new remote.
 
 Also, notice the changes to the Dockerfile and context path variables. These variables now reflect the path relative to the new git repo that we have created.
 

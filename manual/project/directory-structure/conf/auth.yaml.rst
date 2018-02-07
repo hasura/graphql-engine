@@ -14,4 +14,4 @@ Configuration for Hasura Auth microservice is defined in this file.
    All values in this configuration are strings, including boolean and integer values.
 
 
-By default, this file is extensively commented to indicate usage and possible values for each key. If you need to refer to the orginal version, checkout `conf/auth.yaml <https://github.com/hasura/base/blob/master/conf/auth.yaml>`_ in the base repo.
+By default, this file is extensively commented to indicate usage and possible values for each key. If you need to refer to the original version, checkout `conf/auth.yaml <https://github.com/hasura/base/blob/master/conf/auth.yaml>`_ in the base repo.

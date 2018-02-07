@@ -2,10 +2,10 @@ Services & Routing
 ==================
 
 The API gateway is responsible for routing sub-domains to the correct upstream
-microservice. It also terminates SSL conections. 
+microservice. It also terminates SSL connections.
 
 For example, in the cluster ``test42.hasura-app.io``, if one makes a request
-``https://auth.test42.hasura-app.io`` the gatway will terminate the SSL
+``https://auth.test42.hasura-app.io`` the gateway will terminate the SSL
 connection, resolve sessions, and proxy the request to the upstream ``Auth``
 microservice.
 

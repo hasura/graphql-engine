@@ -76,7 +76,7 @@ Use the above project config to initialise Hasura.
 
     Hasura.initialise(config: config, enableLogs: true)
 
-**Note**: The above method can throw a ``HasuraInitError`` incase the project config provided is incorrect.
+**Note**: The above method can throw a ``HasuraInitError`` in case the project config provided is incorrect.
 
 .. tip:: Initialisation **must** be done before you use the SDK. The best place to initialise Hasura would be in your ``AppDelegate`` class.
 
@@ -266,7 +266,7 @@ Facebook
 
 * **Step1**: Integrate facebook login with your Hasura Project, check out the :doc:`docs <../users/facebook>`.
 
-* **Step2**: Intergate facebook login in your iOS app. Check out the facebook `docs <https://developers.facebook.com/docs/facebook-login/ios/>`_ to do this.
+* **Step2**: Integrate facebook login in your iOS app. Check out the facebook `docs <https://developers.facebook.com/docs/facebook-login/ios/>`_ to do this.
 
 * **Step3**: Perform facebook login in the app and receive the ``access token``.
 

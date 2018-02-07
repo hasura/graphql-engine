@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: API reference for Hasura's File  microservice. POST, PUT, GET and DELETE endpoinds for uploading, upserting, downloading and deleting files respectively.
+   :description: API reference for Hasura's File  microservice. POST, PUT, GET and DELETE endpoints for uploading, upserting, downloading and deleting files respectively.
    :keywords: hasura, docs, File, fileStore, API reference
 
 Filestore API

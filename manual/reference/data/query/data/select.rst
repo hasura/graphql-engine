@@ -134,4 +134,4 @@ Syntax
 
 Response
 ^^^^^^^^
-   An array of `Object <Object>`. The structkre of each object is defined by the ``columns`` of the query.
+   An array of `Object <Object>`. The structure of each object is defined by the ``columns`` of the query.

@@ -24,7 +24,7 @@ Syntax
    * - $set
      - false
      - Object (:ref:`PGColumn <PGColumn>` : Value)
-     - Sets the columns to the corresponding values. Note that each value has to be compatible with the type of the corsesponding column
+     - Sets the columns to the corresponding values. Note that each value has to be compatible with the type of the corresponding column
    * - $inc
      - false
      - Object (:ref:`PGColumn <PGColumn>` : Integer)

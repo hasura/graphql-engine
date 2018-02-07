@@ -46,11 +46,11 @@ project from the hub and use that as a starting point for your new project.
 .. admonition:: Note
 
    ``hasura/hello-world`` is another project that contains a few database
-   migrations, some sample data and even a sample mircoservice to get started quickly.
+   migrations, some sample data and even a sample microservice to get started quickly.
 
 .. note::
 
-  This command automatically intializes a git repository
+  This command automatically initializes a git repository
 
 
 Files and directories

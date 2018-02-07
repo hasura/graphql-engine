@@ -9,7 +9,7 @@ Synopsis
 ~~~~~~~~
 
 
-Creaete sql and yaml files required for a migration
+Create sql and yaml files required for a migration
 
 ::
 

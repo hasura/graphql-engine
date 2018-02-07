@@ -53,7 +53,7 @@ To add foreign key constraints, after creating the tables go to *Modify* and edi
 
 	    Adding foreign key constraints to ``article``
 
-Now similarly create the other tables and add foreign key contraints.
+Now similarly create the other tables and add foreign key constraints.
 	    
 In SQL, the structure of these tables is as follows:
 

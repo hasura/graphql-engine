@@ -1,5 +1,5 @@
 .. .. meta::
-   :description: API reference for Hasura's File  microservice. POST, GET and DELETE endpoinds for uploading, downloading and deleting files respectively.
+   :description: API reference for Hasura's File  microservice. POST, GET and DELETE endpoints for uploading, downloading and deleting files respectively.
    :keywords: hasura, docs, File, fileStore, API reference
 
 Hasura on GKE
@@ -22,7 +22,7 @@ Navigate to your **Google Cloud Console**
 
 2. From the **Compute Engine > Disks** section, create 3 disks:
 
-   1. ``myco-hasura-posgtres``
+   1. ``myco-hasura-postgres``
    2. ``myco-hasura-redis``
    3. ``myco-hasura-filestore``
 

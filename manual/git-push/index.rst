@@ -10,7 +10,7 @@ microservices) can all be applied to your Hasura cluster with a ``git push
 hasura master`` command.
 
 However, you can tweak this behaviour to apply each and every type of change
-seperately.
+separately.
 
 
 How ``git push hasura master`` works

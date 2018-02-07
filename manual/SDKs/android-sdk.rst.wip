@@ -319,7 +319,7 @@ Facebook
 
 * **Step1**: Integrate facebook login with your Hasura Project, check out the :doc:`docs <../users/facebook>`.
 
-* **Step2**: Intergate facebook login in your Android app. Check out the facebook `docs <https://developers.facebook.com/docs/facebook-login/android/>`_ to do this.
+* **Step2**: Integrate facebook login in your Android app. Check out the facebook `docs <https://developers.facebook.com/docs/facebook-login/android/>`_ to do this.
 
 * **Step3**: Perform facebook login in the app and receive the ``access token``.
 
@@ -467,7 +467,7 @@ would look like so:
 
 * ``.expectResponseType()``: Specify the POJO representation of the expected response.
 
-    If the HasuraUser in the HasuraClient is loggedin/signedup then every call made by the HasuraClient will be authenticated by default with "user" as the default role (This default role can be changed when building the project config).
+    If the HasuraUser in the HasuraClient is logged in/signed up then every call made by the HasuraClient will be authenticated by default with "user" as the default role (This default role can be changed when building the project config).
 
 
 In case you want to make the above call for an ``anonymous`` role.
@@ -569,7 +569,7 @@ The upload file method accepts the following:
 
 ``FileUploadResponse`` object in the above response contains the following:
 
-* ``file_id``: The uniqiue Id of the file that was uploaded.
+* ``file_id``: The unique Id of the file that was uploaded.
 * ``user_id``: The id of the user who uploaded the file.
 * ``created_at`` : The time string for when this file was uploaded/created.
 

@@ -15,7 +15,7 @@ default services (data, auth, filestore, notify etc.) on the platform are
 exposed on their respective subdomains.
 
 The configuration syntax is fairly simple. It is a simple map, where the keys
-are subdomains, while the values are the corsesponding subdomain configuration
+are subdomains, while the values are the corresponding subdomain configuration
 
 So, the structure of this file looks like this:
 
@@ -80,7 +80,7 @@ Example 2:
          namespace: {{ cluster.metadata.namespaces.user }}
        upstreamServicePath: /
        upstreamServicePort: 80
-     /recommed:
+     /recommend:
        upstreamService:
          name: recommend
          namespace: {{ cluster.metadata.namespaces.user }}
@@ -138,7 +138,7 @@ The following options are available:
     The path to which the request has to be forwarded
 
 - enableAuth:
-    This enables the session middlaware on the gateway to intercept the
+    This enables the session middleware on the gateway to intercept the
     request and resolve the user's session based on Authorization header
     or the Cookie
 
@@ -177,7 +177,7 @@ The following options are available:
              restrictToRoles: ["admin"]
              noSessionRedirectUrl: https://auth.{{ cluster.name }}.hasura-app.io/ui/
 
-    So if there is no session, the gateway redirects the user to the auth serivce's ui to login.
+    So if there is no session, the gateway redirects the user to the auth service's ui to login.
 
     Sometimes, additionally we may want to redirect users which do not have access to this page
 

@@ -1,7 +1,7 @@
 Managing multiple clusters
 ==========================
 
-Multiple Hasura clusters can be added to a single Hasura project. Infact, this
+Multiple Hasura clusters can be added to a single Hasura project. In fact, this
 is a common use-case in production workflows.
 
 For example, for a project one might have a ``staging`` cluster, which

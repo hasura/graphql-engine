@@ -135,7 +135,7 @@ The ``auth`` microservice is a part of every hasura project. It has extensive AP
           "email": null
       }
 
-   Now let's get the ``admin`` user's information. The admin token is infact the ``admin`` user's session token. Let's use the admin token in the ``Authorization`` header.
+   Now let's get the ``admin`` user's information. The admin token is in fact the ``admin`` user's session token. Let's use the admin token in the ``Authorization`` header.
 
    .. code-block:: http
       :emphasize-lines: 2

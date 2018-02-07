@@ -111,7 +111,7 @@ Understanding Auth conf
     # "{{otp}}" as it is. It will be used by the auth microservice to inject the
     # actual token.
     smsTemplate: |
-      Verify your acccount with MyAwesomeApp! Your OTP is {{ "{{otp}}" }}.
+      Verify your account with MyAwesomeApp! Your OTP is {{ "{{otp}}" }}.
     # OTP expiry time in minutes
     otpExpiryTime: "15"
 
@@ -121,7 +121,7 @@ Understanding Auth conf
     # "{{otp}}" as it is. It will be used by the auth microservice to inject the
     # actual token.
     smsTemplate: |
-      Verify your acccount with MyAwesomeApp! Your OTP is {{ "{{otp}}" }}.
+      Verify your account with MyAwesomeApp! Your OTP is {{ "{{otp}}" }}.
     # OTP expiry time in minutes
     otpExpiryTime: "15"
 

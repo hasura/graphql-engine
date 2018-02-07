@@ -143,7 +143,7 @@ Viewing logs/events
   * - Old workflow (<= v0.14.x)
     - New workflow (>= v0.15.x)
   * - Login to the cluster console, head to particular microservice's page. Go
-      to Logs page from there to view that micorservice's logs.
+      to Logs page from there to view that microservice's logs.
     - Using the hasura cli. ``hasura microservice logs <microservice-name>``.
       For more details, refer :doc:`../hasuractl/hasura_microservice_logs`.
 

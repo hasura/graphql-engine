@@ -9,7 +9,7 @@
 Project secrets
 ===============
 
-Project secrets are variables that your microserivces need, but variables that are not safe to put in your git repository.
+Project secrets are variables that your microservices need, but variables that are not safe to put in your git repository.
 Here are some typical examples:
 
 - Postgres (database) password

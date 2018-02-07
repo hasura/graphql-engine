@@ -10,7 +10,7 @@ The ``hasura`` CLI is a command line utility to help you get your backend setup 
 
 .. admonition:: Note
 
-   ``hasura`` works using a CLI experience only so that you can mantain all the files that contain your configuration,
+   ``hasura`` works using a CLI experience only so that you can maintain all the files that contain your configuration,
    source code and database schema information on your filesystem directly. This makes it easy for you to collaborate using
    tools like git.
 
@@ -53,7 +53,7 @@ Step 1: Install
          * `hasura (64-bit Windows installer) <https://hasura.io/install/windows-amd64>`_
          * `hasura (32-bit Windows installer) <https://hasura.io/install/windows-386>`_
          
-         **Note:** Please run the installer as Administrator to avoid PATH updation errors. If you're still getting a `command not found` error after installing Hasura, please restart Gitbash. 
+         **Note:** Please run the installer as Administrator to avoid PATH update errors. If you're still getting a `command not found` error after installing Hasura, please restart Gitbash.
 
 Step 2: Login
 -------------

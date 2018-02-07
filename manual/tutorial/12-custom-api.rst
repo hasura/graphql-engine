@@ -112,7 +112,7 @@ To add a custom microservice, in your project directory execute:
    $ hasura microservice generate adminer --image clue/adminer --port 80
 
 This will create a directory inside the ``microservices`` directory called ``adminer`` which will contain a ``k8s.yaml`` file.
-This file describes the Kubenernetes configuration for your microservice. 
+This file describes the Kubernetes configuration for your microservice.
 
 Next, generate the routes for this microservice:
 

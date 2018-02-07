@@ -2,7 +2,7 @@
    :description: Any git repo can be made into a Hasura project by creating a particular folder and file structure. 
    :keywords: hasura, project, microservices, git, conf, migrations, directory
 
-.. _convert-exitsting-git-repo:
+.. _convert-existing-git-repo:
 
 Converting an existing git repo to a Hasura project
 ===================================================

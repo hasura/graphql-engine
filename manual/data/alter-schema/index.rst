@@ -128,7 +128,7 @@ You can delete a ``relationship`` via Relationship page of API console UI (just 
 
    .. image:: ../../../img/manual/data/remove-constraint.png
 
-Note: You can also see Suggested relationships in the UI. Thats the easiest way to quickly add a relationship. The suggested relationship is determined by the foreign key definition across the tables.
+Note: You can also see Suggested relationships in the UI. That's the easiest way to quickly add a relationship. The suggested relationship is determined by the foreign key definition across the tables.
 
 2. Using the API to delete a ``relationship``:
 
@@ -159,7 +159,7 @@ You can delete a ``permission`` via Permission page of API console UI (just like
 
    .. image:: ../../../img/manual/data/delete-permissions.png
 
-Note: You can also quick apply permissions in the UI. Thats the easiest way to quickly add a permission. ``Public`` and ``Read only`` are the most common scenarios that can be quickly applied for a particular role.
+Note: You can also quick apply permissions in the UI. That's the easiest way to quickly add a permission. ``Public`` and ``Read only`` are the most common scenarios that can be quickly applied for a particular role.
 
 2. Using the API to delete a ``permission``:
 

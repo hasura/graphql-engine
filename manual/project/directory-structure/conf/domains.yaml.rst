@@ -17,7 +17,7 @@ Domain configuration for the gateway is defined in this file. Hasura allots a ``
        conf:
          account: {{ cluster.name }}
 
-An example configurtaion for a domain without SSL:
+An example configuration for a domain without SSL:
 
 .. code-block:: yaml
 

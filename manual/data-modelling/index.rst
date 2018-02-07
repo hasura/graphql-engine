@@ -14,7 +14,7 @@ Storing duplicate data is a data management problem. Maintenance is a big overhe
 Add constraints for relationships
 ---------------------------------
 
-If many records will refer to the same data it is more efficient and less error prone to update a single record and keep references to it in other places. Thats where foreign key constraints come in. The foreign key constraint will ensure consistency of data and no overheads on update.
+If many records will refer to the same data it is more efficient and less error prone to update a single record and keep references to it in other places. That's where foreign key constraints come in. The foreign key constraint will ensure consistency of data and no overheads on update.
 
 Derive Views
 ------------
@@ -39,9 +39,9 @@ Hasura Data API allows permissions to be defined for row-level and column-level 
 Migrations in Version Control
 -----------------------------
 
-Migration action can be either up (go forward) or down (go backward). A database can easily bring itself upto date by running the migrations that are in version control. Migrations are designed to be committed in version control (git) and distributed across developers building the application. 
+Migration action can be either up (go forward) or down (go backward). A database can easily bring itself up to date by running the migrations that are in version control. Migrations are designed to be committed in version control (git) and distributed across developers building the application.
 
-At any point of time, the application developer should be able to go back to an old feature tied to the data model, apply the migrations necessary and get it working (even if it means doing manually). Sometimes going back cannot be automated due to the complexity of the data models, but maintaining a history of schema changes will ensure that it can be done atleast manually in complex cases.
+At any point of time, the application developer should be able to go back to an old feature tied to the data model, apply the migrations necessary and get it working (even if it means doing manually). Sometimes going back cannot be automated due to the complexity of the data models, but maintaining a history of schema changes will ensure that it can be done at least manually in complex cases.
 
 Migrations should never be created in production, should only be applied. Hence testing the migrations in a staging environment is crucial before going to production.
 

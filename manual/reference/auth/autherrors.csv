@@ -1,5 +1,5 @@
 Status Code,Code,Message,Explanation,Recommendation
-400,invalid-args,Error in $: When parsing the record the key <key-name> was not present.,when required keys are not supplied in request payload.,Look into API docs and find appropiate payload keys for that API
+400,invalid-args,Error in $: When parsing the record the key <key-name> was not present.,when required keys are not supplied in request payload.,Look into API docs and find appropriate payload keys for that API
 400,bad-headers,<if required headers are not present>,,
 400,invalid-creds,invalid credentials,when login info is not valid,"Check for correct credentials like mobile number, country code, email, username and password"
 400,invalid-provider,invalid provider,,Check for correct provider name in '/v1/login' and '/v1/signup' request payload
@@ -29,7 +29,7 @@ Status Code,Code,Message,Explanation,Recommendation
 500,unexpected-state,something went wrong,,Internal Server error. Check auth logs for more details.
 500,unexpected-state,notify: <exceptions from notify service>,,Exception received from notify service. Check notify logs for more details.
 500,unexpected-state,google: <exception from google>,,Exceptions from Google servers. 
-500,postgres-exception,<postgres transcation or connection errors>,,
+500,postgres-exception,<postgres transaction or connection errors>,,
 401,unauthorized,no session information found; has to be logged in user,,Please login as user and perform this action again.
 403,not-verified,verification of account pending,,User account is not verified hence he can't login. Try verifying account by resending verification token or OTP.
 404,not-found,this URL does not exists,when user tries to call invalid endpoint,The API url does not exists. Check for correct url. Please refer docs.

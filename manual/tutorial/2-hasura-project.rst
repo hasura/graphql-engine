@@ -6,7 +6,7 @@
 Part II: Create a Hasura project
 ================================
 
-A Hasura project is a folder (representing a code repo) that contains all the configuration files, the database migrations and the source code and cofiguration for your custom microservices. This project folder should be a git repo, so that you can `git push hasura master` to deploy everything in the repo to the cluster.
+A Hasura project is a folder (representing a code repo) that contains all the configuration files, the database migrations and the source code and configuration for your custom microservices. This project folder should be a git repo, so that you can `git push hasura master` to deploy everything in the repo to the cluster.
 
 
 Create a 'base' project
@@ -33,7 +33,7 @@ Note, you can clone any project from the hub and use that as a starting point fo
 .. admonition:: Note
 
    ``hasura/hello-world`` is another project that contains a few database
-   migrations, some sample data and even a sample mircoservice to get started quickly.
+   migrations, some sample data and even a sample microservice to get started quickly.
 
 Understand the project structure
 --------------------------------
@@ -118,7 +118,7 @@ This directory contains database migrations.
 microservices/
 ^^^^^^^^^^^^^^
 
-This directory contains everything related to the microservices that you create; such as the Kuberenetes configuration, source code etc.
+This directory contains everything related to the microservices that you create; such as the Kubernetes configuration, source code etc.
 
 For more information regarding each directory, you can look at the README.md present in it.
 

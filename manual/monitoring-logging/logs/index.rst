@@ -12,7 +12,7 @@ To check the logs of any microservice running on a cluster, run:
 
 .. code-block:: bash
 
-   $ hasura microservice logs <microservice-name> -n <namepace>
+   $ hasura microservice logs <microservice-name> -n <namespace>
 
 To fetch logs of a custom microservice, say blog, run:
 

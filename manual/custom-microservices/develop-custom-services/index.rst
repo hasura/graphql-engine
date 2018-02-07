@@ -45,7 +45,7 @@ This command will do the following:
 5. Add you SSH key to the cluster
    
 
-Getting cluster infromation
+Getting cluster information
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Every hasura project is run on a Hasura cluster. To get details about the cluster this project is running on:
@@ -175,11 +175,11 @@ This means that your custom microservice will be available at the url ``https://
 Running your app on other than port 8080
 ----------------------------------------
 
-Your microservices on hasura cluster runs on port 8080 by deafault. To run your app on hasura cluster, you can do the followings.
+Your microservices on hasura cluster runs on port 8080 by default. To run your app on hasura cluster, you can do the followings.
 
 1. Create new microservice
 
-You can simply run the command while generting a new microserivce:
+You can simply run the command while generating a new microservice:
 
 .. code:: bash
 
@@ -187,7 +187,7 @@ You can simply run the command while generting a new microserivce:
 
 2. For Existing microservice running on port 8080
 
-If you already have an app on a exisisting microservice ( which is running on port 8080), you have to  assign values of containerPort and targetPort to <port-number> in your ``/microservice/<microservice-name>/k8s.yaml`` file:
+If you already have an app on a existing microservice ( which is running on port 8080), you have to  assign values of containerPort and targetPort to <port-number> in your ``/microservice/<microservice-name>/k8s.yaml`` file:
 
 ``containerPort: <port-number>``
 
@@ -206,7 +206,7 @@ Contacting internal URLs on microservices
 
 The Hasura BaaS APIs can be contacted through two URLs, or endpoints.
 
-1. The external URL (external endpoint) - this is of the form ``htpps://service-name.cluster-name.hasura-app.io``
+1. The external URL (external endpoint) - this is of the form ``https://service-name.cluster-name.hasura-app.io``
 
 This is a https url, protected by ssl certificates that Hasura generates through LetsEncrypt. The authentication for this is handled by the gateway, which converts the Authorization token sent along with the query into two headers, the ``X-Hasura-User-Id`` and the ``X-Hasura-Roles``. These two Headers are used by Hasura to manage session. Check out the documentation on ``Session Middleware`` for more information!
 This URL can be used to contact the service from anywhere on the internet.

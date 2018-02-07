@@ -5,7 +5,7 @@ Auth API changes
 ================
 
 The Auth microservice has been completely re-written with a new internal
-architecutre. The new version of Hasura Auth is available from Hasura v0.15.
+architecture. The new version of Hasura Auth is available from Hasura v0.15.
 This was done so that custom authentication methods can be plugged-in very
 easily.
 

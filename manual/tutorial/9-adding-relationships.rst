@@ -132,7 +132,7 @@ Creating relationships
 
 You can create relationship metadata for tables via the API console.
 
-Let's say you wish to add an object relationsip for ``article(author_id) -> author(hasura_id)``. Navigate to the *Relationships* tab in the ``article`` table.
+Let's say you wish to add an object relationship for ``article(author_id) -> author(hasura_id)``. Navigate to the *Relationships* tab in the ``article`` table.
 
 You'll see an entry in *suggested object relationships*:
 

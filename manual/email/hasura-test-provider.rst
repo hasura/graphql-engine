@@ -5,7 +5,7 @@ Hasura Test Provider
 
 To send emails using ``Hasura``, follow the steps below.
 
-* Add ``hasura`` as a provider to ``conf/notify.yaml`` (if it is not there) and set it as default. The email section of ``conf/notify.yaml`` should look like the codeblock below:
+* Add ``hasura`` as a provider to ``conf/notify.yaml`` (if it is not there) and set it as default. The email section of ``conf/notify.yaml`` should look like the code block below:
 
 .. code-block:: yaml
    :emphasize-lines: 3, 5-9

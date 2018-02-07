@@ -62,7 +62,7 @@ guides and get started:
 
   Use a template for your stack <add-microservice-from-template>
   Use your own Dockerfile <add-custom-dockerfile>
-  Using an exsisting docker image <add-docker-image>
+  Using an existing docker image <add-docker-image>
   Debugging <debugging/index>
   Communicating between microservices <communicating-between-microservices>
   Connecting to PostgreSQL from microservices <connecting-to-postgres-from-microservice>

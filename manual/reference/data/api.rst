@@ -102,7 +102,7 @@ The various values that ``type`` and ``args`` can take are listed in the followi
 
    * - ``"drop_select_permission"``
      - :ref:`drop_select_permission <drop_select_permission>`
-     - Remove existing select permisison
+     - Remove existing select permission
 
    * - ``"create_update_permission"``
      - :ref:`create_update_permission <create_update_permission>`
@@ -110,7 +110,7 @@ The various values that ``type`` and ``args`` can take are listed in the followi
 
    * - ``"drop_update_permission"``
      - :ref:`drop_update_permission <drop_update_permission>`
-     - Remove existing update permisison
+     - Remove existing update permission
 
    * - ``"create_delete_permission"``
      - :ref:`create_delete_permission <create_delete_permission>`
@@ -118,7 +118,7 @@ The various values that ``type`` and ``args`` can take are listed in the followi
 
    * - ``"drop_delete_permission"``
      - :ref:`drop_delete_permission <drop_delete_permission>`
-     - Remove existing delete permisison
+     - Remove existing delete permission
 
    * - ``"set_permission_comment"``
      - :ref:`set_permission_comment <set_permission_comment>`

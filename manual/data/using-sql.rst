@@ -119,7 +119,7 @@ Syntax
 Response
 ^^^^^^^^
 
-The respone is a JSON Object with the following structure.
+The response is a JSON Object with the following structure.
 
 .. list-table::
    :header-rows: 1
