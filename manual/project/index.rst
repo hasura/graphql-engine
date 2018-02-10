@@ -121,9 +121,9 @@ holding custom variables that you can define.
 
 .. code-block:: yaml
 
-  - name: h34-ambitious93-stg
+  - name: ambitious93
     alias: hasura
-    kubeContext: h34-ambitious93-stg
+    kubeContext: ambitious93
     config:
       configmap: controller-conf
       namespace: hasura
