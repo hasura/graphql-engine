@@ -1,27 +1,27 @@
-.. _hasura_microservice_restart:
+.. _hasura_microservice_scale:
 
-hasura microservice restart
----------------------------
+hasura microservice scale
+-------------------------
 
-Restart a running microservice
+Scale a microservice
 
 Synopsis
 ~~~~~~~~
 
 
-Stop and start a microservice
+Scale a microservice
 
 ::
 
-  hasura microservice restart [microservice-name] [flags]
+  hasura microservice scale [microservice-name] [scale-value] [flags]
 
 Examples
 ~~~~~~~~
 
 ::
 
-    # Restart a microservice called www:
-    $ hasura microservice restart www
+    # Scale a microservice called www:
+    $ hasura microservice scale www 2
 
 Options
 ~~~~~~~
@@ -29,7 +29,7 @@ Options
 ::
 
   -c, --cluster string     alias of cluster to connect to
-  -h, --help               help for restart
+  -h, --help               help for scale
   -n, --namespace string   namespace of the microservice (user: custom microservice, hasura: hasura microservice) (default "user")
 
 Options inherited from parent commands

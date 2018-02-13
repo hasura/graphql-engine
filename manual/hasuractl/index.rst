@@ -26,7 +26,6 @@ Commands
    :maxdepth: 1
    :titlesonly:
 
-   
    hasura
    hasura_api-console
    hasura_clone
@@ -51,7 +50,7 @@ Commands
    hasura_login
    hasura_logout
    hasura_microservice_apply
-   hasura_microservice_cp
+   hasura_microservice_copy
    hasura_microservice_create
    hasura_microservice_exec
    hasura_microservice_list
@@ -61,6 +60,10 @@ Commands
    hasura_microservice_remove
    hasura_microservice_restart
    hasura_microservice
+   hasura_microservice_scale
+   hasura_microservice_start
+   hasura_microservice_status
+   hasura_microservice_stop
    hasura_microservice_template-list
    hasura_migration_apply
    hasura_migration_create

@@ -20,3 +20,8 @@ Hasura makes 2 of the most common tasks easy.
 
    View logs <logs.rst>
    Exec into containers <exec-container.rst>
+
+Apart from the above, there could be scenarios where your microservice is unable to start. In those cases, since the microservice is not running, logs will not be available and you will not be able to "exec". In such a scenario,
+
+1. Use :ref:`hasura microservice list <hasura_microservice_list>` to see the current state of the microservice.
+2. Use :ref:`hasura microservice status <hasura_microservice_status>` to get a detailed status report on the microservice.
