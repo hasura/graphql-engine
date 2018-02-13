@@ -1,27 +1,30 @@
-.. _hasura_microservice_open:
+.. _hasura_microservice_status:
 
-hasura microservice open
-------------------------
+hasura microservice status
+--------------------------
 
-Open a microservice url in browser
+Get status of a microservice
 
 Synopsis
 ~~~~~~~~
 
 
-Open the external url for a microservice in browser
+Get detailed status of a microservice running on the cluster
 
 ::
 
-  hasura microservice open [flags]
+  hasura microservice status [microservice-name] [flags]
 
 Examples
 ~~~~~~~~
 
 ::
 
-    # Open external url for microservice 'api'
-    $ hasura microservice open api
+    # Get detailed status of the microservice 'app' from default cluster:
+    $ hasura microservice status app
+
+    # Get status for microservice from cluster with alias 'production'
+    $ hasura microservice status app -c production
 
 Options
 ~~~~~~~
@@ -29,7 +32,7 @@ Options
 ::
 
   -c, --cluster string     cluster alias on which the command has to be executed
-  -h, --help               help for open
+  -h, --help               help for status
   -n, --namespace string   use --namespace=hasura for hasura microservices (default "user")
 
 Options inherited from parent commands

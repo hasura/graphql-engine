@@ -33,7 +33,7 @@ Run:
 
 .. code-block:: bash
 
-   $ hasura microservice list-templates
+   $ hasura microservice template-list
    • Updating templates...
 
    csharp-aspnet
@@ -101,7 +101,7 @@ automatically deploy your source code, build the docker image, and rollout the u
 
 .. admonition:: Behind The Scenes
 
-   TODO: Reference docs on ci.yaml structure
+   Checkout :ref:`ci.yaml <hasura-dir-conf-ci.yaml>` to learn more about this file 
 
 Step 4: Optional: Expose this microservice to the world
 -------------------------------------------------------
@@ -120,7 +120,7 @@ This command above will add the default route configuration for your microservic
 
 .. admonition:: Behind The Scenes
 
-   TODO: Reference docs on routes..yaml structure
+   Checkout :ref:`routes.yaml <hasura-dir-conf-routes.yaml>` to learn more about this file 
 
 Step 5: Git push and deploy!
 ---------------------------
