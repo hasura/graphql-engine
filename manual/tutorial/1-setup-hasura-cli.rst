@@ -27,7 +27,7 @@ Step 1: Install
 
          .. code-block:: bash
 
-            curl -L https://hasura.io/install.sh | bash
+            curl -L https://cli.hasura.io/install.sh | bash
 
          This will install the ``hasura`` CLI tool in ``/usr/local/bin``. You might have to provide
          your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
@@ -38,7 +38,7 @@ Step 1: Install
 
          .. code-block:: bash
 
-            curl -L https://hasura.io/install.sh | bash
+            curl -L https://cli.hasura.io/install.sh | bash
 
          This will install the ``hasura`` CLI in ``/usr/local/bin``. You might have to provide
          your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
@@ -53,8 +53,8 @@ Step 1: Install
 
          Download the ``hasura`` installer:
 
-         * `hasura (64-bit Windows installer) <https://hasura.io/install/windows-amd64>`_
-         * `hasura (32-bit Windows installer) <https://hasura.io/install/windows-386>`_
+         * `hasura (64-bit Windows installer) <https://cli.hasura.io/install/windows-amd64>`_
+         * `hasura (32-bit Windows installer) <https://cli.hasura.io/install/windows-386>`_
          
          **Note:** Please run the installer as Administrator to avoid PATH update errors. If you're still getting a `command not found` error after installing Hasura, please restart Gitbash.
 
