@@ -12,7 +12,7 @@ Auth UI Kit can be configured for a theme or default redirect url. In ``conf/aut
 
 .. code-block:: yaml
 
-  authUIKit:
+  uiKit:
     theme: "dark"
     redirectUrl: "https://auth.{{ cluster.name }}.hasura-app.io/v1/user/info"
 
