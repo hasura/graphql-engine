@@ -246,7 +246,7 @@ To logout a user, make the following request.
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :hidden:
 
    username
