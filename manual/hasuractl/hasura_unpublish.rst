@@ -3,13 +3,13 @@
 hasura unpublish
 ----------------
 
-Unpublish a hasura project
+Delete from Hasura Hub
 
 Synopsis
 ~~~~~~~~
 
 
-Remove a project from hasura hub
+Delete a project from Hasura Hub
 
 ::
 
