@@ -1,27 +1,27 @@
-.. _hasura_microservice_restart:
+.. _hasura_microservice_stop:
 
-hasura microservice restart
----------------------------
+hasura microservice stop
+------------------------
 
-Restart a running microservice
+Stop a microservice
 
 Synopsis
 ~~~~~~~~
 
 
-Stop and start a microservice
+Stop a microservice
 
 ::
 
-  hasura microservice restart [microservice-name] [flags]
+  hasura microservice stop [microservice-name] [flags]
 
 Examples
 ~~~~~~~~
 
 ::
 
-    # Restart a microservice called www:
-    $ hasura microservice restart www
+    # Stop a microservice called www:
+    $ hasura microservice stop www
 
 Options
 ~~~~~~~
@@ -29,7 +29,7 @@ Options
 ::
 
   -c, --cluster string     alias of cluster to connect to
-  -h, --help               help for restart
+  -h, --help               help for stop
   -n, --namespace string   namespace of the microservice (user: custom microservice, hasura: hasura microservice) (default "user")
 
 Options inherited from parent commands

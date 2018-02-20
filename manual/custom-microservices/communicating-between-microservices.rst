@@ -28,16 +28,16 @@ To get the URLs of externally exposed microservices running on a hasura cluster 
    $ hasura microservices list
    INFO Custom microservices:
    NAME   STATUS    URL
-   app    Running   https://app.h34-doyenne73-stg.hasura-app.io
+   app    Running   https://app.doyenne73.hasura-app.io
 
    INFO Hasura microservices:
    NAME            STATUS    URL
-   auth            Running   https://auth.h34-doyenne73-stg.hasura-app.io
-   data            Running   https://data.h34-doyenne73-stg.hasura-app.io
-   filestore       Running   https://filestore.h34-doyenne73-stg.hasura-app.io
+   auth            Running   https://auth.doyenne73.hasura-app.io
+   data            Running   https://data.doyenne73.hasura-app.io
+   filestore       Running   https://filestore.doyenne73.hasura-app.io
    gateway         Running
    le-agent        Running
-   notify          Running   https://notify.h34-doyenne73-stg.hasura-app.io
+   notify          Running   https://notify.doyenne73.hasura-app.io
    platform-sync   Running
    postgres        Running
    session-redis   Running

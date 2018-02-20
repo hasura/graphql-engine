@@ -26,9 +26,9 @@ the output of which looks like:
 
   INFO Reading cluster status...                    
   INFO Status:                                      
-  Cluster Name:       h34-archness84-stg
+  Cluster Name:       archness84
   Cluster Alias:      hasura
-  Kube Context:       h34-archness84-stg
+  Kube Context:       archness84
   Platform Version:   v0.15.3
   Cluster State:      Synced
 
@@ -40,16 +40,16 @@ the output of which looks like:
 
   INFO Custom microservices:                             
   NAME      STATUS    ENDPOINT
-  adminer   Running   https://adminer.h34-archness84-stg.hasura-app.io
+  adminer   Running   https://adminer.archness84.hasura-app.io
 
   INFO Hasura microservices:                             
   NAME            STATUS    ENDPOINT
-  auth            Running   https://auth.h34-archness84-stg.hasura-app.io
-  data            Running   https://data.h34-archness84-stg.hasura-app.io
-  filestore       Running   https://filestore.h34-archness84-stg.hasura-app.io
+  auth            Running   https://auth.archness84.hasura-app.io
+  data            Running   https://data.archness84.hasura-app.io
+  filestore       Running   https://filestore.archness84.hasura-app.io
   gateway         Running   
   le-agent        Running   
-  notify          Running   https://notify.h34-archness84-stg.hasura-app.io
+  notify          Running   https://notify.archness84.hasura-app.io
   platform-sync   Running   
   postgres        Running   
   session-redis   Running   
