@@ -4,7 +4,7 @@ var promise_ajax = function(url, data, type) {
     req.open(type, url, true);
     req.setRequestHeader("Content-type", "application/json");
     req.onload = function() {
-      if (req.status == 200) {
+      if (req.status === 200) {
         resolve(req.response);
       } else {
         reject(req.response);
@@ -18,17 +18,13 @@ var promise_ajax = function(url, data, type) {
   });
 };
 
-var searchFunc = function( query, callback, page=1, restrictAttributes, attributesToRetrieve ) {
-
+var searchFunc = function( query, callback, page, restrictAttributes, attributesToRetrieve ) {
   var APPLICATION_ID = "{{ APPLICATION_ID }}";
   var SEARCH_ONLY_KEY = "{{ APPLICATION_SEARCH_KEY }}";
 
   var hitsPerPage = 100;
   var page_no = parseInt(page) - 1;
-  var offset = (hitsPerPage * (page - 1))
-  // var offset = 0;
-
-  var queries = {};
+  var offset = (hitsPerPage * (page - 1));
 
   var indexName = "docs_search";
 
@@ -36,11 +32,11 @@ var searchFunc = function( query, callback, page=1, restrictAttributes, attribut
     indexName = "docs_by_date_desc";
   }
 
-  var client = algoliasearch(APPLICATION_ID, SEARCH_ONLY_KEY, {"protocol":"https:"}); // localhost
   //var client = algoliasearch(APPLICATION_ID, SEARCH_ONLY_KEY);
+  var client = algoliasearch(APPLICATION_ID, SEARCH_ONLY_KEY, {"protocol":"https:"}); // localhost
   var index = client.initIndex(indexName);
   
-  queries = {
+  var queries = {
     query: query,
     hitsPerPage: hitsPerPage,
     page: page_no,

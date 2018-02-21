@@ -65,7 +65,7 @@
           {% set p = pagename.split('/') %}
           {% set c = '' %}
           {% if p[0] != 'manual' %}
-          {% set c = 'padding_top' %}
+            {% set c = 'padding_top' %}
           {% endif %}
           <div class="content_inner_wrapper {{ c }}">
             {%- if ( pagename.split('/')[1] != 'index' and pagename.split('/')[0] != 'manual' ) %}
@@ -201,15 +201,13 @@
       app_id: "rucirpb3"
     };
   </script>
+
   <script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/rucirpb3';var
-    x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})()</script>
+    x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})()
+  </script>
+
   <script type="text/javascript">
-    const urlParams = {};
     $(document).ready( function() {
-      var re = /query=(.*)$/
-
-      var delayTimer = 0;
-
       var lastSearched = "";
 
       const enableContent = function() {
@@ -222,82 +220,84 @@
         $('.search_wrapper').removeClass('hide');
       };
 
-      $('.search_element').on('keyup', function( e ) {
-        var searchHtmlTemplate = $('.search_wrapper_template').html();
-        clearInterval(delayTimer);
+      const search = function(searchTerm) {
+        if ( searchTerm.length === 0 ) {
+          hideLoading();
+          enableContent();
+          lastSearched = '';
+          window.history.replaceState({ "url": "" }, 'Search Page', window.history.state.url );
 
+          return;
+        }
+
+        if ( !searchFunc ) {
+          return;
+        }
+
+        function callback(err, content ) {
+          const searchHtmlTemplate = $('.search_wrapper_template').html();
+          const template = _.template(_.unescape(searchHtmlTemplate));
+          const templated_html = template({
+            "objs": content.hits,
+            "searchString": content.query,
+            "totalResults": content.nbHits
+          });
+
+          $(".search_wrapper").html(templated_html);
+
+          window.history.pushState({"url": ( window.location.pathname +'?query=' + searchTerm + '' ) }, 'Search Page', '?query=' + searchTerm + '' );
+
+          enableSearch();
+          hideLoading();
+
+          trackga('docs', 'search', content.query, content.nbHits);
+        }
+
+        showLoading();
+
+        if ( lastSearched !== searchTerm ) {
+          lastSearched = searchTerm;
+          searchFunc(searchTerm, callback, 1, [], ['url', 'description', 'title', 'image', 'tags']);
+        } else {
+          hideLoading();
+        }
+      };
+
+      $('.search_element').on('keyup', function(e) {
         // Execute on enter only
         if ( e.keyCode === 13 ) {
-          if ( e.target.value.length === 0 ) {
-            enableContent();
-            hideLoading();
-            window.history.replaceState({ "url": "" }, 'Search Page', window.history.state.url );
-          } else {
-            var template = _.template(_.unescape(searchHtmlTemplate));
-            if ( searchFunc ) {
-              /* Wait for 1 seconds */
-              if ( e.target.value.length > 0 ) {
-                function callback(err, content ) {
-                  var templated_html = template({"objs": content.hits, "searchString": content.query, "totalResults": content.nbHits });
-                  $(".search_wrapper").html(templated_html);
-                  window.history.pushState({"url": ( window.location.pathname +'?query=' + e.target.value + '' ) }, 'Search Page', '?query=' + e.target.value + '' );
-                  enableSearch();
-                  hideLoading();
-                  trackga('docs', 'search', content.query, content.nbHits);
-                }
-
-                delayTimer = setTimeout( function() {
-                  if ( e.target.value.length > 0 ) {
-                    showLoading();
-                    if ( lastSearched !== e.target.value ) {
-                      lastSearched = e.target.value;
-                      objs = searchFunc(e.target.value, callback, 1, [], ['url', 'description', 'title', 'image', 'tags']);
-                    } else {
-                      hideLoading();
-                    }
-                  } else {
-                    window.history.replaceState({ "url": "" }, 'Search Page', window.history.state.url );
-                    hideLoading();
-                    enableContent();
-                  }
-                }, 500 );
-              }
-            }
-          }
+          search(e.target.value);
         }
       });
 
       const handleQueryParams = function() {
-        const values = re.exec(window.location.search)
-        if ( values && values[1].length > 0 ) {
-          var searchElement = $('.search_element');
-          if ( searchElement.length > 0 ) {
-            searchElement[0].value = decodeURIComponent(values[1]);
-            searchElement.keyup();
-          }
-        } else {
-          hideLoading();
-          enableContent();
-          $('.search_element').val('');
-          lastSearched = '';
-        }
-      }
+        const re = /query=(.*)$/;
+        const match = re.exec(window.location.search);
 
-      const handleStatePop = function( e) {
-        handleQueryParams();
+        if ( match ) {
+          const searchValue = decodeURIComponent(match[1]);
+          $('.search_element').val(searchValue);
+          search(searchValue);
+        } else {
+            hideLoading();
+            enableContent();
+            $('.search_element').val('');
+            lastSearched = '';
+        }
+
       };
 
-      const handleSupportBtnClick = function(e) {
+      const supportBtnObj = document.getElementById("supportBtn");
+      const handleSupportBtnClick = function() {
         if ( window.Intercom ) {
           window.Intercom('show');
         }
-      }
-
-      const supportBtnObj = document.getElementById("supportBtn");
-
+      };
       supportBtnObj.addEventListener("click", handleSupportBtnClick);
 
-      window.onpopstate = handleStatePop;
+      window.onpopstate = function() {
+        handleQueryParams();
+      };
 
       window.location.search.length > 0 ? handleQueryParams() : '';
     });

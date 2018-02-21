@@ -562,7 +562,7 @@ p
   top: 13px;
   left: 10px;
   font-size: 18px;
-  color: #A6A6A5;
+  color: #FEC53D;
 }
 
 .input_search_box input {
@@ -580,7 +580,7 @@ p
   -webkit-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
   transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
   border: 0;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #FEC53D;
 
 }
 .input_search_box input:focus
