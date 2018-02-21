@@ -36,7 +36,7 @@ ALGOLIA_SECRETS = {
     },
     "production": {
         "APPLICATION_ID": "WCBB1VVLRC",
-        "APPLICATION_SEARCH_KEY": "11b1fdcf3e6d3961ac30c8708d9bbdd9"
+        "APPLICATION_SEARCH_KEY": "0ca574a476e8fe0db465410151288730"
     }
 }
 
