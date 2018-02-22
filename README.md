@@ -1,58 +1,33 @@
-To build, contribute and view docs:
+**To run docs locally and to contribute:**
 
 * Make sure you have `pip` installed on your system
 
-* Install Sphinx, beautifulsoup4, algoliasearch
+* Install dependencies (Sphinx, beautifulsoup4, algoliasearch, etc.)
+    ```
+    pip3 install -r requirements.txt
+    ```
 
-```
-pip3 install -r requirements.txt
-```
+* For development, live reload and auto build
+    ```bash
+    make livehtml
+    ```
 
-* Live reload and auto build
+* Build docs to produce HTML files. 
+    ```
+    ENV=<development|production> make html-images
+    ```
+    * The generated docs are in `_build/html`. 
+    * View the built files by running a webserver. eg:
+        ```
+        cd _build/html && http-server
+        ```
+        or
 
-```bash
-make livehtml
-```
+        ```
+        cd _build/html && python3 -m http.server 8080
+        ```
 
-* To prioritize articles
 
-```
-  Add a meta tag as follow
+* To deploy docs, follow [this](https://github.com/hasura/docs/wiki/How-to-deploy-docs)
 
-  :created-on: 2017-07-28T10:20:35.073Z
-```
-
-* Now build the docs to produce HTML files. Inside the docs folder:
-```
-ENV=development make html-images
-
-ENV will be development/production depending on the environment docs is built for.
-```
-
-* To index the documents to algolia, run the following command with the correct parameters
-
-`` make algolia_index ALGOLIA_APPLICATION_ID=<ALGOLIA_APP_ID > ALGOLIA_SEARCH_KEY=< ALGOLIA_SEARCH_KEY > ALGOLIA_ADMIN_KEY=<ALGOLIA_ADMIN_KEY >``
-
-* The generated docs are in `_build/html`. Navigate to the HTML files by using
-a webserver or opening them in the browser. Eg: 
-
-``cd _build/html && http-server``
-
-or
-
-``cd _build/html && python3 -m http.server 8080``
-
-a webserver or opening them in the browser. Eg: ``cd _build/html && http-server``
-
-To deploy release versions and view docs:
-
-* Push your release branch `release-0.13` where 0.13 is the platform version.
-
-* Clone https://github.com/hasura/hasura.io
-
-* Go to hasura.io/docs.
-
-* Update the timestamp value inside ``Dockerfile`` to update staging or ``Dockerfile_prod`` to update production.
-
-* git push to appropriate remote ( staging/production ) to deploy .
-`` git push hasura_stg master ``
+* To update docs search index, follow [this](https://github.com/hasura/docs/wiki/How-to-update-algolia-index)
