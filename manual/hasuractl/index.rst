@@ -26,6 +26,7 @@ Commands
    :maxdepth: 1
    :titlesonly:
 
+   troubleshooting
    hasura
    hasura_api-console
    hasura_clone
