@@ -11,7 +11,6 @@ optional keyword arguments are available:
   the maximum depth of the tree; set it to -1 to allow unlimited depth
 """
 
-import docutils
 import os
 import json
 from bs4 import BeautifulSoup
@@ -23,7 +22,8 @@ import xml.etree.ElementTree as ET
 
 indexObjs = []
 
-def checkDirectory( path ):
+
+def check_directory(path):
     directory = os.path.dirname(path)
     try:
         if not os.path.exists(directory):
@@ -31,93 +31,107 @@ def checkDirectory( path ):
     except OSError as e:
         raise
 
-def onFinishBuilding(app, exception):
-    currentVersion = app.env.config["version"]
+
+def on_finish_building(app, exception):
+    current_version = app.env.config["version"]
     if "latest_docs_version" in app.env.config["html_context"].keys():
-        latestVersion = app.env.config["html_context"]["latest_docs_version"]
+        latest_version = app.env.config["html_context"]["latest_docs_version"]
     else:
-        latestVersion = "dev"
+        latest_version = "dev"
     base_domain = app.env.config["html_context"]["SITEMAP_DOMAIN"]
 
-    file_path = "./_build/algolia_index/index.json"
-    sitemap_path = "./_build/sitemap/sitemap_" + currentVersion + ".xml"
+    index_file_path = "./_build/algolia_index/index.json"
+    sitemap_path = "./_build/sitemap/sitemap_" + current_version + ".xml"
 
-    checkDirectory(file_path)
-    checkDirectory(sitemap_path)
+    check_directory(index_file_path)
+    check_directory(sitemap_path)
 
-    f = open(file_path, 'w+')
+    f = open(index_file_path, 'w+')
 
     root = ET.Element("urlset")
     root.set("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9")
 
     for link in indexObjs:
         url = ET.SubElement(root, "url")
-        ET.SubElement(url, "loc").text = base_domain + str(currentVersion) + "/" + link["url"]
+        ET.SubElement(url, "loc").text = base_domain + str(current_version) + "/" + link["url"]
         ET.SubElement(url, "changefreq").text = "daily"
-        ET.SubElement(url, "priority").text = "1" if ( currentVersion == latestVersion ) else "0.5"
+        ET.SubElement(url, "priority").text = "1" if (current_version == latest_version) else "0.5"
 
     ET.ElementTree(root).write(sitemap_path)
 
     f.write(json.dumps(indexObjs))
 
-def generateIndexFile(app, pagename, templatename, context, doctree):
 
-    title = ''
-    keyword = ''
-    description = ''
-    tagsVal = ''
-    createdVal = 0
-
-    if ( 'title' in context ):
-        title = context['title']
-
-    if ( 'metatags' in context ):
-        metatags = context['metatags']
-        if ( len(metatags) > 0 ):
-            soup = BeautifulSoup(metatags, 'html.parser')
-            descriptions = soup.findAll("meta", { "name" : "description" })
-            keywords = soup.findAll("meta", { "name" : "keywords" })
-            tags = soup.findAll("meta", { "name": "content-tags" })
-            created_at = soup.findAll("meta", { "name": "created-on" })
-
-            if ( len(descriptions) > 0 ):
-                description = descriptions[0]['content']
-
-            if ( len(keywords) > 0 ):
-                keyword = keywords[0]['content']
-
-            if ( len(tags) > 0 ):
-                tagsVal = tags[0]['content']
-
-            if ( len ( created_at ) > 0 ):
-                createdVal = created_at[0]['content']
-                createdVal = datetime.datetime.strptime(createdVal, "%Y-%m-%dT%H:%M:%S.%fZ")
-                createdVal = calendar.timegm(createdVal.utctimetuple())
-            else:
-                createdVal = 0
-
-    content = ''
-    image = ''
-
+def generate_index_file(app, pagename, templatename, context, doctree):
     # If the page name is not part of the below list
-    if ( pagename not in ['ref/index', 'tutorials/index', 'guides/index', 'search', 'genindex' ] and ( "ref/" not in pagename ) and ( "tutorials/" not in pagename ) and ("guides/" not in pagename)):
-        if ( 'body' in context ):
-            content = context['body']
+    if (pagename not in ['ref/index', 'tutorials/index', 'guides/index', 'manual/index', 'search', 'genindex']
+            and ("ref/" not in pagename) and ("tutorials/" not in pagename) and ("guides/" not in pagename)):
+        title = ''
+        keyword = ''
+        description = ''
+        tags_val = ''
+        content = ''
+        image = ''
+        created_val = 0
 
-            soup = BeautifulSoup(content, 'html.parser')
+        if 'title' in context:
+            title = context['title']
 
-            imgs = soup.findAll("img", { "class" : "featured-image" })
+        if 'metatags' in context:
+            metatags = context['metatags']
+            if len(metatags) > 0:
+                soup = BeautifulSoup(metatags, 'html.parser')
+                descriptions = soup.findAll("meta", {"name": "description"})
+                keywords = soup.findAll("meta", {"name": "keywords"})
+                tags = soup.findAll("meta", {"name": "content-tags"})
+                created_at = soup.findAll("meta", {"name": "created-on"})
 
-            if ( len(imgs) > 0 ):
+                if len(descriptions) > 0:
+                    description = descriptions[0]['content']
+
+                if len(keywords) > 0:
+                    keyword = keywords[0]['content']
+
+                if len(tags) > 0:
+                    tags_val = tags[0]['content']
+
+                if len(created_at) > 0:
+                    created_val = created_at[0]['content']
+                    created_val = datetime.datetime.strptime(created_val, "%Y-%m-%dT%H:%M:%S.%fZ")
+                    created_val = calendar.timegm(created_val.utctimetuple())
+                else:
+                    created_val = 0
+
+        if 'body' in context:
+            body = context['body']
+            soup = BeautifulSoup(body, 'html.parser')
+
+            content = soup.get_text()
+
+            imgs = soup.findAll("img", {"class": "featured-image"})
+            if len(imgs) > 0:
                 image = imgs[0]['src'].split('/')[-1]
 
         url = pagename + '.html'
         category = pagename.split('/')[0]
 
-        indexObj = { "title": title, "content": content, "url": url, "category": category, "image": image, "description": description, "keywords": keyword, "tags": tagsVal, "created_at": createdVal }
+        index_obj = {
+            "title": title,
+            "content": content,
+            "url": url,
+            "category": category,
+            "image": image,
+            "description": description,
+            "keywords": keyword,
+            "tags": tags_val,
+            "created_at": created_val
+        }
 
-        indexObjs.append(indexObj)
+        indexObjs.append(index_obj)
+    else:
+        print('\nIGNORED FOR INDEXING\n')
+
 
 def setup(app):
-    app.connect('build-finished', onFinishBuilding)
-    app.connect('html-page-context', generateIndexFile)
+    app.connect('build-finished', on_finish_building)
+    app.connect('html-page-context', generate_index_file)

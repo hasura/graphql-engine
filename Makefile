@@ -56,7 +56,7 @@ release-images:
 
 .PHONY: html
 html:
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) -D version=$(BUILDVERSION) -D release=$(BUILDVERSION) -A latest_docs_version="0.15" $(BUILDDIR)/html
+	$(SPHINXBUILD) -a -b html $(ALLSPHINXOPTS) -D version=$(BUILDVERSION) -D release=$(BUILDVERSION) -A latest_docs_version="0.15" $(BUILDDIR)/html
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 .PHONY: html-images
@@ -80,10 +80,9 @@ __check_defined = \
 algolia_index:
 	# Checking if all the variables are available
 	$(call check_defined, ALGOLIA_APPLICATION_ID)
-	$(call check_defined, ALGOLIA_SEARCH_KEY)
 	$(call check_defined, ALGOLIA_ADMIN_KEY)
 
-	export ALGOLIA_APPLICATION_ID=${ALGOLIA_APPLICATION_ID} ALGOLIA_SEARCH_KEY=${ALGOLIA_SEARCH_KEY} ALGOLIA_ADMIN_KEY=${ALGOLIA_ADMIN_KEY}
+	export ALGOLIA_APPLICATION_ID=${ALGOLIA_APPLICATION_ID} ALGOLIA_ADMIN_KEY=${ALGOLIA_ADMIN_KEY}
 	python ./algolia_index/algolia_index.py _build/algolia_index/index.json
 
 
