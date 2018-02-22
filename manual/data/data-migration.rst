@@ -49,14 +49,14 @@ The above command generates 4 files inside your project's migrations folder
 - timestamp_create_table_likes.down.sql
 - timestamp_create_table_likes.down.yaml
 
-You can now open these files to modify according to your requirement. 
+You can now open these files to modify according to your requirement.
 Lets say you wanted to manually create the table ``likes`` using commandline. Open the create_table_likes.up.sql and put in the actual CREATE TABLE syntax in that file. It is recommended that you also write the down migration to revert back to original state. In this case it would be ``DROP TABLE likes`` command inside create_table_likes.down.sql
 
 Once you are done making changes to migration files, you can now ``apply`` the changes to the cluster.
 
 .. code-block:: bash
 
-  hasura cluster apply
+  hasura migration apply
 
 You can also do a git push to the hasura remote (if you have already generated one).
 
@@ -68,7 +68,7 @@ You can also do a git push to the hasura remote (if you have already generated o
 Applying migrations to a new cluster
 ------------------------------------
 
-Lets say you have been added as a collaborator to an existing Hasura project, or you have cloned one of the hasura projects from Hasura Hub, you would like to apply the migrations to your new cluster. 
+Lets say you have been added as a collaborator to an existing Hasura project, or you have cloned one of the hasura projects from Hasura Hub, you would like to apply the migrations to your new cluster.
 
 .. code-block:: bash
 
@@ -76,4 +76,3 @@ Lets say you have been added as a collaborator to an existing Hasura project, or
   git add .
   git commit -m "Going to apply hasura migrations"
   git push hasura master
-
