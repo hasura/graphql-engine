@@ -19,8 +19,8 @@ var promise_ajax = function(url, data, type) {
 };
 
 var searchFunc = function( query, callback, page, restrictAttributes, attributesToRetrieve ) {
-  var APPLICATION_ID = "{{ APPLICATION_ID }}";
-  var SEARCH_ONLY_KEY = "{{ APPLICATION_SEARCH_KEY }}";
+  var ALGOLIA_APPLICATION_ID = "{{ ALGOLIA_APPLICATION_ID }}";
+  var ALGOLIA_SEARCH_KEY = "{{ ALGOLIA_SEARCH_KEY }}";
 
   var hitsPerPage = 100;
   var page_no = parseInt(page) - 1;
@@ -33,7 +33,7 @@ var searchFunc = function( query, callback, page, restrictAttributes, attributes
   }
 
   //var client = algoliasearch(APPLICATION_ID, SEARCH_ONLY_KEY);
-  var client = algoliasearch(APPLICATION_ID, SEARCH_ONLY_KEY, {"protocol":"https:"}); // localhost
+  var client = algoliasearch(ALGOLIA_APPLICATION_ID, ALGOLIA_SEARCH_KEY, {"protocol":"https:"}); // localhost
   var index = client.initIndex(indexName);
   
   var queries = {
