@@ -19,6 +19,7 @@ This is the reference documentation of the entire Hasura platform.
   The complete tutorial<tutorial/index>
   Hasura project <project/index>
   Hasura cluster <cluster/index>
+  Paid clusters <paid-clusters/index>
   api-console/index
   users/index
   roles/index
