@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import time
 
 from algoliasearch import algoliasearch
 
@@ -62,6 +63,7 @@ def docs_index(data_source):
     processed_json_d = process_data(json_d)
 
     update_index(processed_json_d)
+    time.sleep(2)
     output_indexed_data()
 
 
