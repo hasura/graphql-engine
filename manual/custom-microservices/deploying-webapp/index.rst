@@ -23,7 +23,7 @@ Option 1: Using the Quickstart Apps
 ------------------------------------
 
 Apps or Services deployed on Hasura run on Docker images, built according to a
-Dockerfile. We've prepared `starter kits https://hub.hasura.io`_ for all your
+Dockerfile. We've prepared `starter kits <https://hasura.io/hub>`_ for all your
 favourite frameworks, that already contain pre-configured Dockerfiles for you
 to quickly setup your app!
 
