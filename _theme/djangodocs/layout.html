@@ -94,7 +94,7 @@
                     <div class="buttons">
                       <div class="inline-block">
                         <!-- a target="_blank" href="https://dashboard.hasura.io/login" -->
-                          <button class="indiv_btns black" id="supportBtn"> Support </button>
+                          <button class="indiv_btns black supportBtn"> Support </button>
                         <!--/ a -->
                       </div>
                       <div class="inline-block">
@@ -181,7 +181,7 @@
             <div class="buttons">
               <div class="inline-block">
                 <!-- a target="_blank" href="https://dashboard.hasura.io/login" -->
-                <button class="indiv_btns black" id="supportBtn"> Support </button>
+                <button class="indiv_btns black supportBtn"> Support </button>
                 <!--/ a -->
               </div>
               <div class="inline-block">
@@ -230,13 +230,12 @@
 
   <script type="text/javascript">
     $(document).ready( function() {
-      const supportBtnObj = document.getElementById("supportBtn");
-      const handleSupportBtnClick = function() {
+      const supportbtnHandler = function() {
         if ( window.Intercom ) {
           window.Intercom('show');
         }
       };
-      supportBtnObj.addEventListener("click", handleSupportBtnClick);
+      $('.supportBtn').on('click', supportbtnHandler);
 
       // search
       var lastSearched = "";
