@@ -283,27 +283,30 @@
         const re = /query=(.*)$/;
         const match = re.exec(window.location.search);
 
+        var searchTerm = '';
         if ( match ) {
-          const searchTerm = decodeURIComponent(match[1]);
-          $('.search_element').val(searchTerm);
+          searchTerm = decodeURIComponent(match[1]);
 
           if (searchTerm) {
-            if (searchTerm !== lastSearched) {
-              search(searchTerm);
-            }
+            search(searchTerm);
           } else {
             showContent();
           }
-
-          lastSearched = searchTerm;
+        } else {
+          showContent();
         }
+
+        $('.search_element').val(searchTerm);
+        lastSearched = searchTerm;
       };
 
       const searchHandler = function(e) {
         // Execute on enter only
         if (e.keyCode === 13) {
-          window.history.pushState({"url": ( window.location.pathname +'?query=' + e.target.value + '' ) }, 'Search Page', '?query=' + e.target.value + '' );
-          handleQueryParams();
+          if (lastSearched !== e.target.value) {
+            window.history.pushState({"url": (window.location.pathname + '?query=' + e.target.value + '')}, 'Search Page', '?query=' + e.target.value + '');
+            handleQueryParams();
+          }
         }
       };
       $('.search_element').on('keyup', searchHandler);
