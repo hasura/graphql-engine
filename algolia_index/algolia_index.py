@@ -24,10 +24,10 @@ def output_indexed_data():
     res = index.browse_all({"query": ""})
 
     count = 0
-    print("INDEXED PAGES:")
+    # print("INDEXED PAGES:")
     for hit in res:
         count += 1
-        print('\t' + hit['title'] + ' (' + hit['url'] + ')')
+        # print('\t' + hit['title'] + ' (' + hit['url'] + ')')
 
     print('\nTOTAL INDEXED: ' + str(count))
 
