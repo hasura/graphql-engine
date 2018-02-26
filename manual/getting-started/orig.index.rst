@@ -70,7 +70,7 @@ Step 3: Create a hasura project based on a starter kit
 This creates a folder in your current folder with the above name and
 initialises a Hasura project.
 
-You can browse a list of community contributed starter kits at: `hub.hasura.io <https://hub.hasura.io>`_
+You can browse a list of community contributed starter kits at: `hasura.io/hub <https://hasura.io/hub>`_
 
 *Note: The first time you run the quickstart command, your free cluster also gets created.*
 
