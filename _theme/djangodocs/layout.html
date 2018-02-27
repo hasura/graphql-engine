@@ -43,7 +43,7 @@
           {% block sidebarwrapper %}
             {% set currPage = pagename.split('/')[0] %}
             {% if ( currPage == 'manual' or currPage == 'guides' ) %}
-              <div class="yui-b" id="sidebar">
+              <div class="yui-b mobile-hide" id="sidebar">
                 {%- if last_updated %}
                   <span><b>Last updated:</b> {{ last_updated }}</span>
                 {%- endif %}
@@ -85,7 +85,7 @@
                     </div>
                   </div>
                 </div -->
-                <div class="mobile-logo">
+                <div class="mobile-logo mobile-only">
                   <a href="https://hasura.io/" target="_blank">
                     <div class="img_wrapper inline-block">
                       <img class="responsive logo_img" src="{{ pathto('_images/logo.svg', 1) }}" />
@@ -94,6 +94,9 @@
                   <a href="{{ BASE_DOMAIN }}" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
                 </div>
                 <div class="search_head_wrapper">
+                  <div class="inline-block mobile-only" id="nav_tree_icon">
+                    <span class="fa fa-bars"></span>
+                  </div>
                   <div class="inline-block input_search_box">
                     <span class="fa fa-search"></span>
                     <input type="text" class="search_element" placeholder="Type search term and press <enter> ..." />
@@ -317,6 +320,16 @@
         }
       };
       $('.search_element').on('keyup', searchHandler);
+
+      const navTreeHandler = function(e) {
+        const sidebar = $('#sidebar');
+        if (sidebar.hasClass('mobile-hide')) {
+          sidebar.removeClass('mobile-hide');
+        } else {
+          sidebar.addClass('mobile-hide');
+        }
+      };
+      $('#nav_tree_icon').on('click', navTreeHandler);
 
       window.onpopstate = function() {
         handleQueryParams();
