@@ -323,10 +323,13 @@
 
       const navTreeHandler = function(e) {
         const sidebar = $('#sidebar');
+        const background = $('.content_inner_wrapper');
         if (sidebar.hasClass('mobile-hide')) {
           sidebar.removeClass('mobile-hide');
+          background.addClass('no_scroll');
         } else {
           sidebar.addClass('mobile-hide');
+          background.removeClass('no_scroll');
         }
       };
       $('#nav_tree_icon').on('click', navTreeHandler);

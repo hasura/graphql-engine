@@ -1066,6 +1066,10 @@ ol, ul
   font-family: 'Gudea';
   font-size: 16px;
 }
+
+.no_scroll {
+  overflow: hidden !important;
+}
 /* Reference Page ends here */
 
 /* Media Query */
