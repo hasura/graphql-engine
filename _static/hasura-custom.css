@@ -13,7 +13,7 @@ html {
 }
 body
 {
-  min-width: 1220px;
+  min-width: 100%;
   overflow-y: auto;
 }
 h1 a:visited, h2 a:visited, h3 a:visited, h4 a:visited, h5 a:visited, h6 a:visited
@@ -514,14 +514,14 @@ p
 /* Common Header CSS */
 .main_container_wrapper
 {
-  min-width: 1220px;
+  min-width: 90%;
   overflow-y: auto;
 }
 .header_wrapper {
   font-family: 'Gudea';
   background-color: white;
   padding: 20px;
-  min-width: 1220px;
+  min-width: 90%;
   position: sticky;
   top: 0;
   position: -webkit-sticky;
@@ -912,7 +912,7 @@ p
 }
 [role="main"]
 {
-  width: 800px !important;
+  width: 90% !important;
   max-width: 800px !important;
   border: none !important;
   padding-bottom: 0 !important;
@@ -1016,7 +1016,7 @@ p
   vertical-align: middle;
   font-size: 21px;
   font-weight: 600;
-  margin-left: 90px;
+  margin-left: calc(24vw - 240px);
 }
 
 #sidebar .sphinxsidebar .sphinxsidebarwrapper h4
@@ -1065,7 +1065,7 @@ ol, ul
 {
   body
   {
-    min-width: 1220px !important;
+    min-width: 100% !important;
     overflow-y: auto;
   }
   html
@@ -1204,6 +1204,64 @@ ol, ul
   width:  100%;
 }
 
+.mobile-logo {
+  display: none;
+}
+
+.mobile-logo-docs {
+  margin-left:10px;
+  text-decoration: none;
+  color: #333 !important;
+}
+
+@media (max-width: 1024px) {
+  body {
+    max-width: 100%;
+    min-width: 0px !important;
+  }
+
+  .yui-b {
+    display: none;
+  }
+
+  .main_container_wrapper {
+    min-width: 0px !important;
+  }
+
+  .content_inner_wrapper {
+    width: 100% !important;
+  }
+
+  [role="main"] {
+    float: none !important;
+    width: 90% !important;
+    margin: 0 auto !important;
+  }
+
+  .mobile-logo {
+    display: flex;
+    margin-top: 20px;
+  }
+
+  .search_head_wrapper {
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .input_search_box {
+    width: 100%;
+  }
+
+  .header_links {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .buttons {
+    float: none !important;
+  }
+}
 
 
 
