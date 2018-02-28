@@ -1246,9 +1246,12 @@ ol, ul
   }
 
   #sidebar {
-    width: 90% !important;
     position: absolute;
-    left: 4%;
+    width: 90% !important;
+    max-width: 800px !important;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
     top: 120px;
   }
 
