@@ -3,12 +3,12 @@
    :keywords: hasura, docs, File, fileStore, API reference
 
 Filestore API
-================
+=============
 
 .. _filestore-api-upload:
 
 Create file
---------------
+-----------
 
 ``POST filestore.<cluster-name>.hasura-app.io/v1/file/<file_id>``
 
@@ -52,7 +52,7 @@ An example response looks like:
 .. _filestore-api-upsert:
 
 Upsert file
---------------
+-----------
 
 ``PUT filestore.<cluster-name>.hasura-app.io/v1/file/<file_id>``
 
@@ -95,7 +95,7 @@ An example response looks like:
 .. _filestore-api-download:
 
 Retrieve file
-------------------
+-------------
 
 ``GET /v1/file/<file_id>``
 
@@ -123,7 +123,7 @@ file's MIME type.
 .. _filestore-api-delete:
 
 Delete file
----------------
+-----------
 
 ``DELETE /v1/file/<file_id>``
 

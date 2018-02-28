@@ -9,8 +9,8 @@
 
 .. _Hasura_ microservices:
 
-Reference
-====================
+API Reference
+=============
 
 This section provides a detailed reference of all the APIs that are provided by the Baas components of Hasura.
 

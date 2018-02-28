@@ -33,9 +33,10 @@ This is the reference documentation of the entire Hasura platform.
   git-push configuration <git-push/index>
   custom-domains-ssl
   Logs <monitoring-logging/logs/index>
-  hasura CLI reference <hasuractl/index>
   hasura.io/hub guide <hub/index>
-  Platform reference <reference/index>
+  hasura CLI reference <hasuractl/index>
+  hasura API reference <api-reference/index>
+  architecture/index
   Advanced <advanced/index>
   Moving to v0.15 (existing Hasura users) <migration-v0_15/index>
 

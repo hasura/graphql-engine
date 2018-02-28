@@ -1,11 +1,19 @@
 .. .. meta::
-   :description: Reference documentation for Hasura's Kubernetes based architecture. The architecture is explained by following the life-cycle of a project. 
+   :description: Reference documentation for Hasura's Kubernetes based
+   architecture. The architecture is explained by following the life-cycle of a
+   project. 
    :keywords: hasura, docs, architecture reference, architecture, Kubernetes
 
 .. _platform-architecture:
 
-Understanding Hasura
-====================
+Hasura architecture
+===================
+
+.. note::
+  This is an advanced guide to the internals of Hasura. If you're an advanced
+  user or know Kubernetes details you can go ahead and read this.  Please note
+  **you do not need to know this** to use Hasura.
+
 
 The Hasura platform is a set of kubernetes resources. A controller
 initialises, manages and updates these resources. This controller

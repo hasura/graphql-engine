@@ -39,30 +39,29 @@ Concept #3: Deploying to the hasura cluster
 -------------------------------------------
 
 Once you have a Hasura cluster that is added to your Hasura project, running ``git push hasura master`` will
-deploy your Hasura project. Your configurations, database schema, and your microservices will be deployed in a single go. Note, you can deploy changes selectively with select commands which are helpful for advanced workflows.
-
-hasura CLI tool
----------------
-
-The ``hasura`` CLI tool will help you manage your work with Hasura. You will run ``hasura`` commands in your
-terminal or your command-prompt (windows).
-
-Here's a list of the top 4 things you'll need:
-
-1. :doc:`Install <../install-hasura-cli>` the ``hasura`` CLI
-2. Quickstart (create a hasura project + free cluster) ``hasura quickstart hasura/hello-world``
-
-   - You can replace ``hasura/hello-word`` with any project from `hasura.io/hub <https://hasura.io/hub>`_
-
-3. Open the API console to manage your data models and test your APIs: ``hasura api-console``
-4. Deploy your project or changes you make to the cluster: ``git push hasura master``
+deploy your Hasura project. Your configurations, database schema, and your microservices will all be deployed in a single go. Note, you can also deploy selected changes only with some other advanced commands.
 
 You're ready to start!
 ----------------------
 
-Head to the `hello-world quickstart project <https://hasura.io/hub/project/hasura/hello-world>`_. 
+Here's a list of your first steps:
 
-The ``hello-world`` project contains a sample blog-engine schema and a custom nodejs microservice and will guide you through the basics of using a Hasura project.
+- :doc:`Install <../install-hasura-cli>` the ``hasura`` CLI
+- Quickstart (clone a hasura project + create a free cluster)
+
+  - ``hasura quickstart hasura/hello-world``.
+  - You can replace ``hasura/hello-word`` with any project from `hasura.io/hub <https://hasura.io/hub>`_
+
+- Deploy your project or changes you make to the cluster
+
+  - ``git push hasura master``
+
+- Open the API console to manage your data models and test your APIs
+
+  - ``hasura api-console``
+
+The `hello-world <https://hasura.io/hub/project/hasura/hello-world>`_ project contains a sample blog-engine schema and a custom nodejs microservice and will guide you through the basics of using a Hasura project.
+
 
 Deep dive
 ---------

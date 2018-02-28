@@ -91,7 +91,9 @@ Step 2: Login
          This command will open up the browser and
          allow you to register with a new account (or login to your existing account).
 
-Adding shell completion (optional)
-----------------------------------
+(Optional) Add shell completion
+-------------------------------
+
+To add command auto completion in the shell
 
 Refer to :ref:`hasura completion <hasura_completion>`

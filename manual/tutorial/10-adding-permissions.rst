@@ -3,7 +3,7 @@
    :keywords: hasura, getting started, step 6, access control, role based access control
 
 ====================================================
-Part : Permissions & access control on data models
+Part X: Permissions & access control on data models
 ====================================================
 
 We've mentioned that by default, the ``data`` APIs can only be accessed by users with the ``admin`` role. However, we should never include the admin token in any client applications. So, we need to allow access to the ``data`` APIs for roles other than ``admin``. This is handled by the permission layer of the ``data`` microservice, which lets you define row level and column level access control policies for various roles.

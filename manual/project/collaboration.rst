@@ -17,18 +17,19 @@ clusters through `Hasura Dashboard <https://dashboard.hasura.io/clusters/>`_.
 Adding collaborators to your project
 ------------------------------------
 
-Assuming you already have a Hasura project,
+Assuming you already have a Hasura project and clusters,
 
+* Push your project to an online git repository (like |github-link|) and share the URL with all collaborators to share the project source code
 * Open |dashboard-link|
-* Click on the cluster name that is added to the project
+* Click on a cluster name that is added to the project
 * Click on ``Collaborators`` tab
-* Add emails of those who you want to add as collaborators
-* Push your project to an online git repository like |github-link| and share the URL with collaborators
+* Add emails of those who you want to add as collaborators to give access to the cluster
+* Repeat for any other clusters
 
 Joining as a collaborator to a project
 --------------------------------------
 
-Assuming the owner have shared the repo URL and added you as a collaborator to the clusters,
+Assuming the owner has shared the repo URL and added you as a collaborator to the clusters,
 
 * :ref:`Login using Hasura CLI <hasura_login>` with the account having email added as collaborator
 * Clone and cd into the repo
