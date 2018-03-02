@@ -26,10 +26,9 @@ var searchFunc = function( query, callback, page, restrictAttributes, attributes
   var page_no = parseInt(page) - 1;
   var offset = (hitsPerPage * (page - 1));
 
-  var indexName = "docs_search";
-
+  var indexName = "{{ ALGOLIA_INDEX_NAME }}";
   if ( query === "tutorials" || query === "guides" ) {
-    indexName = "docs_by_date_desc";
+    indexName = "{{ ALGOLIA_INDEX_NAME_SEC }}";
   }
 
   //var client = algoliasearch(APPLICATION_ID, SEARCH_ONLY_KEY);

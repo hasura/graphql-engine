@@ -7,9 +7,10 @@ from algoliasearch import algoliasearch
 
 APPLICATION_ID = os.environ["ALGOLIA_APPLICATION_ID"]
 ADMIN_KEY = os.environ["ALGOLIA_ADMIN_KEY"]
+ALGOLIA_INDEX_NAME = os.environ["ALGOLIA_INDEX_NAME"]
 
 client = algoliasearch.Client(APPLICATION_ID, ADMIN_KEY)
-index = client.init_index("docs_search")
+index = client.init_index(ALGOLIA_INDEX_NAME)
 
 
 def update_index(data):
