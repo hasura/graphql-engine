@@ -32,13 +32,13 @@ support@hasura.io.
 
 .. note::
 
-  Please **do not host** production projects on these free clusters as they don't
+  Please **do not host production projects** on these free clusters as they don't
   have production SLAs and can go down (although unlikely).
 
 .. toctree::
    :maxdepth: 1
 
-   create
+   create-cluster
    add-cluster
    list-clusters
    delete-cluster

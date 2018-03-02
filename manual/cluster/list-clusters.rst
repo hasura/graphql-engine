@@ -5,7 +5,7 @@
 List your clusters
 ==================
 
-To get the list of your clusters, use the ``hasura`` CLI.
+To get the list of all your created clusters, use the ``hasura`` CLI.
 
 .. code-block:: bash
 
