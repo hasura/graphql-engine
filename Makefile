@@ -81,8 +81,9 @@ algolia_index:
 	# Checking if all the variables are available
 	$(call check_defined, ALGOLIA_APPLICATION_ID)
 	$(call check_defined, ALGOLIA_ADMIN_KEY)
+	$(call check_defined, ALGOLIA_INDEX_NAME)
 
-	export ALGOLIA_APPLICATION_ID=${ALGOLIA_APPLICATION_ID} ALGOLIA_ADMIN_KEY=${ALGOLIA_ADMIN_KEY}
+	export ALGOLIA_APPLICATION_ID=${ALGOLIA_APPLICATION_ID} ALGOLIA_ADMIN_KEY=${ALGOLIA_ADMIN_KEY} ALGOLIA_INDEX_NAME=${ALGOLIA_INDEX_NAME}
 	python ./algolia_index/algolia_index.py _build/algolia_index/index.json
 
 
