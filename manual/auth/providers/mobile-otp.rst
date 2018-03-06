@@ -3,8 +3,8 @@
    :keywords: hasura, users, signup, login, mobile, verify mobile
 
 
-Mobile/OTP Provider
-===================
+Mobile/OTP based authentication
+===============================
 
 This provider supports mobile based **password-less** authentication. The way it
 works is, user's mobile number is sent to get an OTP on their mobile phone.

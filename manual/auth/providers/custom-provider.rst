@@ -3,8 +3,8 @@
    :keywords: hasura, docs, auth, authentication, custom, provider
 
 
-Custom Provider
-===============
+Custom provider based authentication
+====================================
 
 Hasura Auth provides APIs to signup and login users. You can integrate your own
 authentication to work with Hasura Auth by configuring a custom provider in the

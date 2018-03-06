@@ -7,7 +7,8 @@
 Authentication Providers
 ========================
 
-Hasura Auth has providers to support different modes of authentication.
+Hasura Auth has **"providers"** to support different modes of authentication.
+
 It has the following providers by default.
 
 .. list-table::
@@ -45,27 +46,27 @@ It has the following providers by default.
 Choose a provider from above based on your requirement.
 
 You can enable/disable providers in your auth configuration. Once a provider is
-enabled you can use them to signup your users. You **can** have multiple
-providers enabled at the same time.
+enabled you can use them to signup your users. **You can have multiple
+providers enabled at the same time.**
 
-You can also create your custom provider (i.e if you have any custom
+You can also **create your custom provider** (i.e if you have any custom
 authentication logic) and configure it with Hasura Auth.
 
-Providers:
-^^^^^^^^^^
+Authentication Providers List:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 1
 
-   username
-   email
-   mobile-otp
-   mobile-password
-   google
-   facebook
-   github
-   linkedin
-   custom-provider
+   Username <username>
+   Email <email>
+   Mobile/OTP <mobile-otp>
+   Mobile/password <mobile-password>
+   Google <google>
+   Facebook <facebook>
+   Github <github>
+   LinkedIn <linkedin>
+   Custom provider <custom-provider>
 
 .. _recaptcha: https://www.google.com/recaptcha/intro/index.html
 .. _Google: https://google.com

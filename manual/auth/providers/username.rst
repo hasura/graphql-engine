@@ -3,8 +3,8 @@
    :keywords: hasura, users, signup, login, username
 
 
-Username Provider
-=================
+Username based authentication
+=============================
 
 This provider supports basic username/password based authentication. The
 identity of the user is not verified in this method.
@@ -167,7 +167,7 @@ endpoint.
 
 
 Forgot Password
-----------------
+---------------
 
 The Username provider does not have a forgot password feature. This is by
 design, as it does not have any channel (like email) to send a forgot password

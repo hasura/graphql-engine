@@ -2,8 +2,8 @@
    :description: Reference documentation for integrating Facebook OAuth2.0 based user signup & login with Hasura's Auth microservice for your web and mobile applications.
    :keywords: hasura, docs, auth, facebook signup, facebook login, social login, facebook OAuth, facebook OAuth2.0, integration
 
-Facebook Provider
-=================
+Facebook authentication
+=======================
 
 Pre-requisites
 --------------

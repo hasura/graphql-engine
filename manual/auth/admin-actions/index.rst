@@ -18,8 +18,6 @@ these APIs are open to users with admin role.
    Get user info <user-info>
    Activate user <activate-user>
    Deactivate user <deactivate-user>
-   Add role to user <add-role>
-   Remove role from user <remove-role>
    Create user session <create-session>
    Remove user session <remove-session>
    Remove all user sessions <remove-all-sessions>

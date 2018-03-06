@@ -3,8 +3,8 @@
    :keywords: hasura, users, signup, login, email, verify email
 
 
-Email Provider
-==============
+Email based authentication
+==========================
 
 This provider supports email/password based authentication.  The user's email
 is verified by sending a verification email. To use this provider there are
@@ -95,7 +95,7 @@ If it is successful, then your application should ask the user to login.
 
 
 Login
-------
+-----
 
 To login a user make a request to the login endpoint: ``/v1/login``.
 
@@ -136,7 +136,7 @@ Typical response of the ``/v1/login`` request is :
 
 
 Getting user info
-------------------
+-----------------
 To get the logged in user's details, or to check if a session token is valid
 you can use this endpoint.
 
@@ -203,7 +203,7 @@ endpoint.
    }
 
 
-Forgot password / Password reset
+Forgot password / password reset
 --------------------------------
 
 If a user has forgotten their password, it can be reset.

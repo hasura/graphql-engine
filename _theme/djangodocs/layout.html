@@ -324,12 +324,16 @@
       const navTreeHandler = function(e) {
         const sidebar = $('#sidebar');
         const background = $('.content_inner_wrapper');
+        const body = $('body');
+
         if (sidebar.hasClass('mobile-hide')) {
           sidebar.removeClass('mobile-hide');
           background.addClass('no_scroll');
+          body.addClass('no_scroll');
         } else {
           sidebar.addClass('mobile-hide');
           background.removeClass('no_scroll');
+          body.removeClass('no_scroll');
         }
       };
       $('#nav_tree_icon').on('click', navTreeHandler);

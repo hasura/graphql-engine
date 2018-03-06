@@ -16,3 +16,5 @@ Hasura Auth provides APIs for users to manage signup and sessions.
    Login <login>
    Logout <logout>
    Get user info <user-info>
+   Change password <change-password>
+   Forgot password <forgot-password>

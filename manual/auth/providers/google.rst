@@ -2,8 +2,8 @@
    :description: Reference documentation for integrating Google OAuth2.0 based user signup & login with Hasura's Auth microservice for your web and mobile applications.
    :keywords: hasura, docs, auth, Google signup, Google login, social login, Google OAuth, Google OAuth2.0, integration
 
-Google Provider
-===============
+Google authentication
+=====================
 
 
 Pre-requisites

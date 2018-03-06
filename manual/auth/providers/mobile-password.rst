@@ -3,8 +3,8 @@
    :keywords: hasura, users, signup, login, mobile, verify mobile
 
 
-Mobile/Password Provider
-========================
+Mobile/Password based authentication
+====================================
 
 This provider supports mobile/password based authentication.  The user's mobile
 is verified by sending an OTP via SMS to the user's mobile number. To use this
@@ -219,7 +219,7 @@ endpoint.
    }
 
 
-Forgot password / Password reset
+Forgot password / password reset
 --------------------------------
 
 If a user has forgotten their password, it can be reset.
