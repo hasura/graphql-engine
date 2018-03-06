@@ -12,9 +12,9 @@ The UI Kit runs on ``auth.<cluster-name>.hasura-app.io/ui``
 
 There are two theme options to choose from. Dark theme is the default choice while light theme can be configured via auth conf.
 
-.. figure:: ../../../img/uikit-dark.png
+.. figure:: ../../img/uikit-dark.png
    :class: 'dark'
-.. figure:: ../../../img/uikit-light.png
+.. figure:: ../../img/uikit-light.png
    :class: 'light'
 
 
