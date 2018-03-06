@@ -92,8 +92,8 @@ Let's add the newly created two clusters to our projects.
 Now we have two clusters setup for the same project.
 
 
-Deploy to cluster
------------------
+Deploy to a cluster
+-------------------
 Now whenever we make changes to out project, in database schema, cluster
 configuration or custom microservices, we just have to git-push to the correct
 cluster to apply all our changes.

@@ -2,8 +2,8 @@
 
 .. highlight:: bash
 
-Directory Structure
-===================
+Project Directory Structure
+===========================
 
 The project (a.k.a. project directory) has a particular directory structure and
 it has to be maintained strictly, else hasura cli would not work as expected. A

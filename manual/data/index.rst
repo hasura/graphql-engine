@@ -3,16 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Data
-====
+Data APIs
+=========
 
-This section assumes that you have already created a project and know how to
-launch your API console. If not, please head to :ref:`getting-started`.
-
-The data APIs can be used to store and retrieve data. The actual data is stored
-in Postgres tables. To fetch associated data, one can define relationships on
+Hasura comes with data APIs which run on top of a **Postgres database** to store and retrieve data. To fetch associated data, one can define relationships on
 tables. Permissions can then be used to authorize the access to data based on
-roles.
+user roles.
 
 .. toctree::
   :maxdepth: 1
@@ -33,3 +29,4 @@ roles.
   Aggregations <aggregations>
   Accessing postgres directly <access-postgres>
   Importing data from SQL files <import-sql>
+  data-modelling

@@ -29,6 +29,6 @@ microservices, database migrations and project configuration.
 
   create
   collaboration
-  using-templates
+  conf-files
   secrets
-  directory-structure/index
+  directory-structure/index>

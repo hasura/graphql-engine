@@ -5,8 +5,8 @@
 
 .. _uikit-conf:
 
-Configuration
-=============
+Auth UI Kit: Configuration
+==========================
 
 Auth UI Kit can be configured for a theme or default redirect url. In ``conf/auth.yaml`` of your hasura project,
 

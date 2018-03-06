@@ -5,8 +5,8 @@
 
 .. _uikit-usage:
 
-Usage
-=====
+Auth UI Kit: Usage
+==================
 
 The UI Kit runs on ``auth.<cluster-name>.hasura-app.io/ui``
 

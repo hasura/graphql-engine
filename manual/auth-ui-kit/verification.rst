@@ -5,8 +5,8 @@
 
 .. _uikit-verification:
 
-Verification Pages
-==================
+Auth UI Kit: Verification Pages
+===============================
 
 ``Verify Email and Reset Password Pages``
 

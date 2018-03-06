@@ -3,8 +3,8 @@
    :keywords: hasura, users, sessions
 
 
-Understanding Sessions
-======================
+Understanding user sessions
+===========================
 
 When a user is logged-in, a session is attached.
 

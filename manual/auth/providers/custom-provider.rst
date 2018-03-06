@@ -33,11 +33,11 @@ Prerequisites
 
 Your custom provider should be a http(s) microservice which provides the following APIs:
 
-* signup: For signing-up a new user
-* login: For logging-in user
-* merge: For merging user with a pre-existing Hasura user
-* createUser: For creating user as admin
-* deleteUser: For deleting user as admin
+* **signup**: For signing-up a new user
+* **login**: For logging-in user
+* **merge**: For merging user with a pre-existing Hasura user
+* **createUser**: For creating user as admin
+* **deleteUser**: For deleting user as admin
 
 The functionality and interface of these APIs is described in subsequent sections.
 
@@ -47,7 +47,7 @@ Configuring custom provider
 To enable a custom provider, you need to add the following configuration in
 ``conf/auth.yaml`` in your hasura project:
 
-* Under **customProviders**
+* Under ``customProviders``
 
 .. code-block:: yaml
 

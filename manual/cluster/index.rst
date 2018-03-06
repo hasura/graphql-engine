@@ -38,10 +38,10 @@ support@hasura.io.
 .. toctree::
    :maxdepth: 1
 
-   create-cluster
-   add-cluster
-   list-clusters
-   delete-cluster
+   create
+   add
+   list
+   delete
    multiple-clusters
 
 ..

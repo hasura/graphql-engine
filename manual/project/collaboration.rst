@@ -6,8 +6,8 @@
 
 .. highlight:: bash
 
-Collaborating on a Hasura Project
-=================================
+Collaborating on a project
+==========================
 
 Many developers can work on a single Hasura project and all the clusters added to it,
 since all the configuration is in files, managed by git.

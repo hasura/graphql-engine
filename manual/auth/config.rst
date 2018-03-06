@@ -1,5 +1,5 @@
-Auth Microservice Configuration
-===============================
+Auth configuration
+==================
 
 .. ..todo::
    Auth configuration: this can link to hasura project/conf/auth
@@ -15,8 +15,8 @@ To change the settings of Hasura Auth running in a particular cluster:
 2. Apply the changes by git-committing the changes and doing git-push to that
    cluster.
 
-Understanding Auth conf
------------------------
+Auth conf file structure
+------------------------
 
 .. code-block:: yaml
 

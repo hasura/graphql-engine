@@ -20,10 +20,10 @@ This is the reference documentation of the entire Hasura platform.
   Hasura project <project/index>
   Hasura cluster <cluster/index>
   api-console/index
-  users/index
-  roles/index
+  auth/index
+  user-roles/index
+  auth-ui-kit/index
   data/index
-  data-modelling/index
   Files <files/index>
   Emails/SMS <email-sms/index>
   Emails <email/index>

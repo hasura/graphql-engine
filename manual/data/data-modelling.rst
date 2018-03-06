@@ -100,10 +100,3 @@ So we can define the following relationships for the above scenarios.
 2. ``articles`` in ``author`` table
 
 - Examples (many-to-one, many-to-many)
-
-Data Model Examples
--------------------
-
-.. toctree::
-   :hidden:
-   :maxdepth: 2
