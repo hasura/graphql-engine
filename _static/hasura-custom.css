@@ -1253,6 +1253,7 @@ ol, ul
     right: 0;
     margin: 0 auto;
     top: 120px;
+    height: calc(100% - 120px);
   }
 
   .main_container_wrapper {
@@ -1287,6 +1288,7 @@ ol, ul
 
   #sidebar {
     top: 170px;
+    height: calc(100% - 170px);
   }
 
   .header_links {
