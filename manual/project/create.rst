@@ -9,7 +9,9 @@
 Creating a project
 ==================
 
-The following will 'clone' the project `hasura/base <https://hasura.io/hub/project/hasura/base>`_ to your system from `hasura hub <https://hasura.io/hub>`_.
+You can create a hasura project by cloning a project from the collection on `hasura hub <https://hasura.io/hub>`_
+
+The following will 'clone' the project `hasura/base <https://hasura.io/hub/project/hasura/base>`_ (an empty hasura project) to your system.
 
 .. code:: bash
 
@@ -21,12 +23,10 @@ The following will 'clone' the project `hasura/base <https://hasura.io/hub/proje
    # creates a directory called `my-project` and initializes an empty Hasura project
 
 
-.. admonition:: Note
+You can clone any project from `hasura hub <https://hasura.io/hub>`_ and use that as a starting point for your new project.
 
-   You can clone any project from `hasura hub <https://hasura.io/hub>`_ and use that as a starting point for your new project.
-
-   ``hasura/hello-world`` is a good starter project that contains a few database
-   migrations, some sample data and even a sample microservice to learn about hasura quickly.
+`hasura/hello-world <https://hasura.io/hub/project/hasura/hello-world>`_ is a good starter project that contains a few database
+migrations, some sample data and even a sample microservice to help learn about hasura features quickly.
 
 .. note::
 

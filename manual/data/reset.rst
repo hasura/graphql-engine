@@ -1,5 +1,5 @@
-Reset Database
---------------
+Reset database
+==============
 
 Sometimes you might want to delete all the data from the database and start from scratch. You can do that by the ``db-reset`` command.
 

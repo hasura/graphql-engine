@@ -6,7 +6,7 @@
 Auth user actions
 =================
 
-Hasura Auth provides APIs for users to manage signup and sessions.
+Hasura Auth provides APIs to manage user account and sessions.
 
 
 .. toctree::

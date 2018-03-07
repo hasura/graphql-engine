@@ -1,8 +1,8 @@
-User roles FAQ
-==============
+User roles: FAQ
+===============
 
 Why is the user role given by default?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Because, this role can be then leveraged by any microservice (running inside the
 project) to provide authorization and access control mechanisms very easily.
 
@@ -15,7 +15,7 @@ when the request reaches the upstream microservice. This microservice can then l
 the headers and perform its own authorization and access control easily.
 
 What if the user role is removed from an user?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The user won't be able to access any profile management(account info, password
 change, password reset, email change etc. - basically any API behind
 ``/user/``) APIs, if the ``user`` role is removed from an user.
@@ -29,4 +29,4 @@ What if a new role needs to be assigned to a user?
 You can create custom roles, and use the admin APIs of Hasura Auth to assign
 roles to an user.
 
-You can also use the project console to assign roles to an user.
+You can also use the api console to assign roles to an user.

@@ -202,6 +202,7 @@ endpoint.
      "new_password": "newpassword"
    }
 
+.. _forgot_password_email:
 
 Forgot password / password reset
 --------------------------------

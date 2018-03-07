@@ -57,7 +57,7 @@ Typical response of the ``/v1/signup`` request is :
 
 
 Login
-------
+-----
 
 To login a user make a request to the login endpoint: ``/v1/login``.
 
@@ -98,7 +98,8 @@ Typical response of the ``/v1/login`` request is :
 
 
 Getting user info
-------------------
+-----------------
+
 To get the logged in user's details, or to check if a session token is valid
 you can use this endpoint.
 

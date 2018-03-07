@@ -1,7 +1,9 @@
-Delete data 
--------------------
+Deleting data
+=============
 
-The request to delete data takes a ``where`` clause indicating what to delete. The syntax of where clause is same as in the `select` query. For the full syntax of delete request, see :ref:`here <data_delete>`.
+The request to delete data takes a ``where`` clause indicating what to delete. The syntax of where clause is same as in the ``select`` query.
+
+The full syntax of a ``delete`` query can be found :ref:`here <data_delete>`.
 
 .. code-block:: http
 

@@ -23,12 +23,16 @@ It follows a particular :doc:`directory structure <directory-structure/index>` t
 You can ``git push hasura master`` to deploy everything, including your custom
 microservices, database migrations and project configuration.
 
+See:
+^^^^
+
 .. toctree::
   :maxdepth: 1
   :titlesonly:
 
   create
+  deploy
   collaboration
   conf-files
   secrets
-  directory-structure/index>
+  directory-structure/index

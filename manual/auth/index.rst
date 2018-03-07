@@ -21,20 +21,14 @@ this identity.
 Hasura Auth APIs also has a bunch of admin APIs to perform administrative tasks
 on your user accounts.
 
-Accessing the Auth API
-----------------------
+
+Exploring the Auth APIs
+-----------------------
 
 The base URL for the Auth microservice would be:
 ``https://auth.<cluster-name>.hasura-app.io``.
 
-All APIs accept and respond only in JSON. Which means that you have to make
-sure that all requests you send, should contain the ``Content-Type:
-application/json`` header.
-
-Exploring the Auth API
-----------------------
-
-Use the API console to browse various Auth APIs.
+Use the API console to browse the various Auth APIs.
 
 .. code-block:: bash
 
@@ -48,8 +42,8 @@ See:
    :maxdepth: 1
 
    providers/index
-   user-actions/index
-   admin-actions/index
+   User actions <user-actions/index>
+   Admin actions <admin-actions/index>
    config
    sessions
    extra-user-info

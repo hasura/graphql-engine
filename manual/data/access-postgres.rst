@@ -5,16 +5,16 @@
 Accessing Postgres directly
 ===========================
 
-Run the following ``hasura`` CLI commands, from your project directory:
+To get direct access to the database, run the following hasura CLI command from your project directory:
 
 .. code-block:: bash
 
    # Open a tunnel to postgres
    hasura microservice port-forward postgres -n hasura --local-port 6432
 
-The command above will allow direct access to postgres at ``localhost:6432``.
+The above command will allow direct access to postgres at ``localhost:6432``.
 
-Now, you can run psql (or any other postgres client) from your localhost to access the hasuradb database:
+Now, you can run ``psql`` (or any other postgres client) from your localhost to access the ``hasuradb`` database:
 
 .. code-block:: bash
 

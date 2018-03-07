@@ -218,6 +218,7 @@ endpoint.
      "new_password": "newpassword"
    }
 
+.. _forgot_password_mobile_password:
 
 Forgot password / password reset
 --------------------------------

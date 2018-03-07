@@ -1,7 +1,9 @@
 Inserting data
-----------------
+==============
 
-Consider Let's insert a couple of categories. The full definition of `insert` request can be found :ref:`here <data_insert>`.
+The following will insert a couple of new categories to the ``category`` table.
+
+The full syntax of an ``insert`` query can be found :ref:`here <data_insert>`.
 
 .. code-block:: http
    :emphasize-lines: 13

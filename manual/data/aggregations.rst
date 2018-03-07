@@ -1,9 +1,9 @@
-Aggregations
-------------
+Data aggregations / views
+=========================
 
 The JSON based query language in ``select`` query is designed to be simple yet powerful. There will be queries that you cannot express with the ``select`` query. For example, getting the number of likes for each article. Aggregations (like counting the number of likes) are not supported in the ``select`` query syntax. This is conscious decision we've made to keep the query language small.
 
-To express complex queries like aggregations, window functions, custom joins etc, use SQL, which is designed for this purpose. If you can express your query in SQL, define a view with it, you can use the ``data`` APIs on these views.
+To express complex queries like aggregations, window functions, custom joins etc, use SQL, which is designed for this purpose. **If you can express your query in SQL, define a view with it**, you can use the data APIs on these views.
 
 Let's see how we can get the likes of an article.
 

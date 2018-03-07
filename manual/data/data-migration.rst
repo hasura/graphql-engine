@@ -4,8 +4,8 @@
 
 .. _schema_migrations:
 
-Schema migrations
-=================
+Data/schema migrations
+======================
 
 Why are migrations required?
 ----------------------------

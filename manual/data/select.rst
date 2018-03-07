@@ -1,9 +1,14 @@
 Retrieving data
-----------------
+===============
 
 The JSON based query language lets you make simple to complex queries.
 
-Let's look at a simple `select` query on the article table. The full definition of a `select` query can be found :ref:`here <data_select>`
+Selecting data
+--------------
+
+Let's look at a simple `select` query on the article table.
+
+The full syntax of a ``select`` query can be found :ref:`here <data_select>`.
 
 .. code-block:: http
 
@@ -34,7 +39,7 @@ This query returns ``id`` and ``title`` of rows from ``article`` table where ``i
 
      { "is_published": { "$eq": true } }
 
-Boolean operators like ``$and``, ``$or``, ``$not`` can be used in a ``where`` clause. See :ref:`here <BoolExp>` for a full list of supported Boolean operators.
+Boolean operators like ``$and``, ``$or``, ``$not`` can be used in a ``where`` clause. See :ref:`this <BoolExp>` for a full list of supported Boolean operators.
 
 .. code-block:: http
 
@@ -88,7 +93,12 @@ Example,
        }
    }
 
-Now let's look at a simple `count` query on the article table. The full definition of a `count` query can be found :ref:`here <data_count>`
+Counting data
+-------------
+
+Now let's look at a simple `count` query on the article table.
+
+The full syntax of a ``count`` query can be found :ref:`here <data_count>`.
 
 .. code-block:: http
 

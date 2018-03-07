@@ -17,7 +17,7 @@ should create a custom table and use that to store extra user information.
 
 **To store extra information about your users:**
 
-1. Create a table (e.g ``users``) in the data microservice. (refer :doc:`../data/create-tables`)
+1. Create a table (e.g ``users``) in the data microservice. (refer :doc:`../data/create-table`)
 2. Along with all the columns you want to add to the table, add a column called
    ``hasura_id`` of type Integer.
 3. Whenever a successful signup happens, enter a row about that user in your

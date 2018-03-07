@@ -1,13 +1,13 @@
-Relationships
----------------
+Data relationships
+==================
 
 There is usually some kind of association between tables in a database. These associations are typically captured by foreign key constraints when the data is modelled. The data APIs lets you define relationships based on these foreign key constraints.
 
 For example, an ``article`` table might have a column called ``category_id`` which points to a row in the ``category`` table. Because of this, you may wish to fetch the *articles* of each category when fetching categories, or fetch the *category* of an article when fetching articles.
 
-These additional properties, *articles* of a category and *category* of an article, made possible because of foreign key constraints are what we call relationships. *articles* of category is an array relationship while *category* of article is an object relationship.
+These additional properties, *articles* of a *category* and *category* of an *article*, made possible because of foreign key constraints are what we call relationships. *articles* of *category* is an **array relationship** while *category* of *article* is an **object relationship**.
 
-Head to the Relationships section of a table in the console. It'll suggest you the appropriate relationships based on the foreign key constraints that the table is involved in.
+Head to the ``Relationships`` section of a table in the API console. It'll suggest you the appropriate relationships based on the foreign key constraints that the table is involved in.
 
 To obtain the **author**'s name from the article table, we issue,
 

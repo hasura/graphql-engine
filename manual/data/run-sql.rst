@@ -2,17 +2,36 @@
    :description: Manual for using sql directly in the data query
    :keywords: hasura, docs, sql
 
-Using SQL
-=========
-
-The ``run_sql`` endpoint of the Hasura Data microservice can be used to run SQL
-statements directly on the data.
-
-
 .. _run_sql:
 
-run_sql
---------
+Running SQL commands on database
+================================
+
+If you want to run SQL statements directly on the database, this can be done in the following ways:
+
+.. note::
+   Currently, renaming of tables and columns are not allowed using SQL statements.
+
+
+**1. Using the console UI - SQL page**
+
+First launch the API console:
+
+.. code-block:: bash
+
+   $ hasura api-console
+
+Head to ``Data > SQL`` section in the console.
+
+.. image:: ../../img/manual/data/alter-column-sql.png
+
+.. note::
+   You should click on ``This is a migration`` option before executing the query if you want to retain the query as a db migration.
+
+**2. Using the API:**
+
+The ``run_sql`` endpoint of the Data microservice can be used to run SQL
+statements directly on the data.
 
 ``run_sql`` is used to run arbitrary SQL statements. Multiple SQL statements can be separated by a ``;``, however, only the result of the last sql statement will be returned.
 

@@ -1,7 +1,9 @@
-Bulk Query
-----------------
+Bulk Data Queries
+=================
 
-To select from multiple tables in the same request make a ``bulk`` query as follows
+To make multiple queries as a part of the same request you can sent them as parts of one bulk query.
+
+To select from multiple tables in the same request, make a ``bulk`` query as follows
 
 .. code-block:: http
    :emphasize-lines: 13
@@ -47,7 +49,7 @@ A sample response will look like below
        [{
            "rating": 4,
            "author_id": 12,
-           "content": "Vestibulum accumsan neque et nunc. Quisque ornare tortor at risus. Nunc ac sem ut dolor dapibus gravida. Aliquam tincidunt, nunc ac mattis ornare, lectus ante dictum mi, ac mattis velit justo nec ante. Maecenas mi felis, adipiscing fringilla, porttitor vulputate, posuere vulputate, lacus. Cras interdum. Nunc sollicitudin commodo ipsum. Suspendisse non leo. Vivamus nibh dolor, nonummy ac, feugiat non, lobortis quis, pede. Suspendisse dui. Fusce diam nunc, ullamcorper eu, euismod ac, fermentum vel, mauris. Integer sem elit, pharetra ut, pharetra sed, hendrerit a, arcu. Sed et libero. Proin mi. Aliquam gravida mauris ut mi. Duis risus odio, auctor vitae, aliquet nec, imperdiet nec, leo. Morbi neque tellus, imperdiet non, vestibulum nec, euismod in, dolor. Fusce feugiat. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aliquam auctor, velit eget laoreet posuere, enim nisl",
+           "content": "Vestibulum accumsan neque. Quisque ornare tortor.",
            "id": 1,
            "title": "sem ut dolor dapibus gravida."
        }],
@@ -57,4 +59,6 @@ A sample response will look like below
        }]
    ]
 
-Note we are sending two ``select`` queries in the above example. it can be any of the query type supported by Hasura you can find the complete list :ref:`here <data_query_main>`.
+.. note::
+
+   In the above example we are sending two ``select`` queries in the bulk query. They can be any of the query types supported by Hasura. You can find the complete list :ref:`here <data_query_types>`.
