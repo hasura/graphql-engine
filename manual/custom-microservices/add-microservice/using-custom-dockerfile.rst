@@ -2,8 +2,8 @@
    :description: How to serve static files using hasura
    :keywords: hasura, manual, static files, custom microservice, nginx
 
-Add a microservice with your own Dockerfile and source-code
-===========================================================
+Adding a microservice using your own Dockerfile and source-code
+===============================================================
 
 If you want to deploy your own source code as a microservice on Hasura, all you need to do is to write a Dockerfile for the same. Hasura's CI system can build and deploy the microservice based on the Dockerfile and source code pushed to a cluster.
 

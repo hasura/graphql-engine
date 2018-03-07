@@ -1,5 +1,6 @@
-Uploading a file
-----------------
+Uploading files
+===============
+
 One of the basic usage of File API is to upload and store a file for later retrieval. It has two APIs to upload a file. The first API is described as follows:
 
 

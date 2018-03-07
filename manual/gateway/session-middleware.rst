@@ -1,7 +1,7 @@
-Session Middleware
-==================
+API gateway: Session Middleware
+===============================
 
-The gateway has a session middleware built into it. This means, for all
+The API gateway has a session middleware built into it. This means, for all
 external requests (i.e requests coming from outside the cluster) the gateway
 looks for a Cookie or an ``Authorization`` header, resolves a session based on
 those information, and proxies the request to the correct upstream microservice

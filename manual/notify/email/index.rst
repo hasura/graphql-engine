@@ -1,9 +1,24 @@
+.. Hasura Platform documentation master file, created by
+   sphinx-quickstart on Thu Jun 30 19:38:30 2016.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+.. _hasura-notify-email:
+
+Sending emails
+==============
+
+This section covers configuring Hasura ``notify`` microservice to send emails. Notify currently supports sending emails via `SparkPost <https://www.sparkpost.com>`_ and `SMTP <https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol>`_.
+
+Also, for testing out Notify, Hasura has its own test provider called ``Hasura`` which you can use to send 10 emails per day.
+
 Sending an email
 ----------------
 
 Before sending emails, you must have configured one of the providers for sending Emails.
 
 .. note::
+
   ``Notify`` is an admin-only microservice. Hence, only users with ``admin`` role
   will be able to access these APIs
 
@@ -49,3 +64,12 @@ browser, since ``Cookie`` will be set.
   ``X-Hasura-User-Id: 1`` and ``X-Hasura-User-Role: admin`` to make the request
   as ``admin``.
 
+Email providers:
+^^^^^^^^^^^^^^^^
+
+.. toctree::
+  :maxdepth: 1
+
+  Hasura Test Provider <hasura-test-provider>
+  SparkPost <sparkpost>
+  SMTP <smtp>

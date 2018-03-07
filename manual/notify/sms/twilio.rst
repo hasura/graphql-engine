@@ -1,5 +1,5 @@
-Twilio
-------
+Sending SMSs: Twilio
+====================
 
 `Twilio`_ is a SMS, Voice and Video provider. You can `signup
 <https://www.twilio.com/try-twilio>`_ for a free account and start sending SMS

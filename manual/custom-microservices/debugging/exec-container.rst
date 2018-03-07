@@ -2,9 +2,8 @@
    :description: How microservices work on a Hasura cluster
    :keywords: hasura, getting started, step 2
 
-====================
-Exec into containers
-====================
+Exec into microservice containers
+=================================
 
 If you've used typical hosting or cloud providers before, you might be used to having the ability to ``SSH`` into your server to be able to check up on environment variables, network reachability, ``top`` commands etc. You can do the same thing with Hasura, but the analog to ``SSH`` is to ``exec`` into a microservice's container.
 

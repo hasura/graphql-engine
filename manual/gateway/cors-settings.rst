@@ -1,5 +1,5 @@
 CORS Settings
-==============
+=============
 
 Browsers enforce the `same-origin policy <https://en.wikipedia.org/wiki/Same_origin_policy>`_ which prevents JavaScript from making requests across domain boundaries. By default, the gateway has CORS policy which is configured to allows requests from ``*.<cluster-name>.hasura-app.io``.
 
@@ -20,15 +20,15 @@ Can take the following 3 values:
 
 For an app running locally, this is usually something like localhost:3000 (note that the port is necessary, wherever your local app is running) and this would come under array of allowed origins.
 
-Example:
+**Example:**
 
 .. code-block:: yaml
 
-api:
-  /:
-    upstreamService:
-      name: auth
-      namespace: {{ cluster.metadata.namespaces.hasura }}
-    upstreamServicePath: /
-    upstreamServicePort: 80
-    corsPolicy: allow_all
+    api:
+      /:
+        upstreamService:
+          name: auth
+          namespace: {{ cluster.metadata.namespaces.hasura }}
+        upstreamServicePath: /
+        upstreamServicePort: 80
+        corsPolicy: allow_all

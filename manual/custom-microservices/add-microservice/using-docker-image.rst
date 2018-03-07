@@ -3,8 +3,8 @@
    :keywords: hasura, manual, docker, image, custom microservice
 
 
-Deploying custom microservices using Docker images
-==================================================
+Adding a microservice using an existing Docker image
+====================================================
 
 Follow this manual if you already have a ``docker`` image,
 and want to run it as a microservice on

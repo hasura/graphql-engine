@@ -1,5 +1,6 @@
-Downloading a file
-------------------
+Downloading files
+=================
+
 A file can be downloaded using the unique ID that was used to upload it. This ID can be stored as a reference to the file in your own table.
 
 For example, if your application is storing user's profile pictures, this unique ID can simply be the ``hasura_id`` and can be easily referred to again. Another option is to generate a unique string and save it in the user table and later use it to retrieve the file.

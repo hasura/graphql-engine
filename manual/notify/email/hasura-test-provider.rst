@@ -1,5 +1,5 @@
-Hasura Test Provider
---------------------
+Sending emails: Hasura Test Provider
+====================================
 
 `Hasura` is a test provider that helps you send Emails and SMS with Notify. Since it is a test provider, you are restricted to up till 10 emails and SMS per day.
 

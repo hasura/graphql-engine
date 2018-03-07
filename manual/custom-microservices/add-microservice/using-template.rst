@@ -1,8 +1,7 @@
 .. _deploy-host-webapps:
 
-Add microservice from a template
-================================
-
+Adding a microservice from a template
+=====================================
 
 If you're starting with a new project head to `hasura.io/hub <https://hasura.io/hub>`_
 and get started with a

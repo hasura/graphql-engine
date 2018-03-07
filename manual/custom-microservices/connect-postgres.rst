@@ -4,7 +4,6 @@
 
 .. _connecting-to-postgres:
 
-==========================================================
 Connecting to Hasura PostgreSQL database from microservice
 ==========================================================
 

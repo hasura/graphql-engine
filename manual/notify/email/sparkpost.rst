@@ -1,5 +1,5 @@
-SparkPost
----------
+Sending emails: SparkPost
+=========================
 
 To start sending emails using SparkPost, `signup <https://www.sparkpost.com/>`_
 for an account and create a sending domain. You have to obtain an API key after

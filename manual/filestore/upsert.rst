@@ -1,5 +1,6 @@
-Upserting a file
-----------------
+Upserting files
+===============
+
 The unique file_id is used to update an uploaded file or create a file if file_id does not exist.
 
 

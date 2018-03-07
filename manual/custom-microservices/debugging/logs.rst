@@ -2,9 +2,8 @@
    :description: How microservices work on a Hasura cluster
    :keywords: hasura, getting started, step 2
 
-======================
-View microservice logs
-======================
+Viewing microservice logs
+=========================
 
 STDOUT output (``print()``, ``console.log()`` ) from microservices get
 captured as logs.

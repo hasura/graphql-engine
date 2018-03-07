@@ -1,5 +1,6 @@
-Deleting a file
----------------
+Deleting files
+==============
+
 The unique file_id is used to delete an uploaded file.
 
 .. http:delete:: /v1/file/(file_id)

@@ -1,5 +1,5 @@
-SMTP
-----
+Sending emails: SMTP
+====================
 
 You need to configure the following options in the file ``conf/notify.yaml`` in
 your Hasura project directory.
