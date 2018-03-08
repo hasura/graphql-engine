@@ -2,8 +2,8 @@
    :description: Manual for using configuring and using custom domains on Hasura. Hasura provides free SSL certificates for your domain using LetsEncrypt.
    :keywords: hasura, docs, manual, custom domain, domain, ssl, letsencrypt
 
-Custom domains & SSL
-====================
+Using custom domains & SSL
+==========================
 
 Your Hasura cluster comes with a SSL enabled `hasura-app.io` domain. You can also point your own domain to the cluster so that your microservices/website is available on the domain.
 

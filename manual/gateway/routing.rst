@@ -1,5 +1,5 @@
-API gateway: Routing
-====================
+Routing using API gateway
+=========================
 
 The API gateway is responsible for routing sub-domains to the correct upstream
 microservice. It also terminates SSL connections.

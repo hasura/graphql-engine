@@ -17,8 +17,8 @@ a ready made microservice like the ghost blog-engine or a 'stateful' microservic
 
 .. note::
 
-    If you're starting a new hasura project, head to `hasura.io/hub <https://hasura.io/hub>`_ to
-    find the right starting point project and follow the guide there!
+    If you are starting a new hasura project, head to `hasura.io/hub <https://hasura.io/hub>`_ to
+    find the right boilerplate project for you and follow the guide there!
 
 Here's what your Hasura cluster looks like before and after you add custom microservices:
 

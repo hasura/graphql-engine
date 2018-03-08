@@ -21,6 +21,6 @@ See:
 
    Routing <routing>
    Session Middleware <session-middleware>
-   Custom HTTP directives <custom-http-directives>
+   custom-http-directives
    custom-domains-ssl
    cors-settings

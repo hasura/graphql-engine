@@ -11,7 +11,7 @@ a smooth development workflow.
 Hasura makes 2 of the most common tasks easy.
 
 1. You can :doc:`access the logs <logs>` of your service or stream them.
-2. You can :doc:`"ssh"<exec-container>` into the environment where your microservice is running. At it's simplest, this means that you can open up a shell prompt (bash) in your microservice container and run commands. Technically, this is referred to as "exec"-ing a command in your container.
+2. You can :doc:`"ssh"<exec-container>` into the environment where your microservice is running. At it's simplest, this means that you can open up a shell prompt (bash) in your microservice container and run commands. Technically, this is referred to as **"exec"-ing** a command in your container.
 
 Apart from the above, there could be scenarios where your microservice is unable to start. In those cases, since the microservice is not running, logs will not be available and you will not be able to "exec". In such a scenario,
 
@@ -23,6 +23,6 @@ Apart from the above, there could be scenarios where your microservice is unable
    :maxdepth: 1
    :hidden:
 
-   View logs <logs>
-   Exec into containers <exec-container>
+   Viewing logs <logs>
+   Exec/SSH into containers <exec-container>
 

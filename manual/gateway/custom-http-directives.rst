@@ -1,5 +1,5 @@
-API gateway: Custom HTTP directives
-===================================
+Adding custom HTTP directives
+=============================
 
 Custom Nginx HTTP directives can also be added to the API gateway.
 
