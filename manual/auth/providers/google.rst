@@ -26,9 +26,11 @@ Pre-requisites
 
       google:
         clientIds: ["String"]
+        clientSecret: "String"
 
 
 * **clientId**: The client IDs obtained when creating the application.
+* **clientSecret**: The client secret obtained when creating the application. This can be a string or a reference to a kubernetes secret.
 
 * Choose your device and Google SDK from here:
   https://developers.google.com/identity/choose-auth
