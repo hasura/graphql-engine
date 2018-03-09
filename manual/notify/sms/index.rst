@@ -8,7 +8,7 @@
 Sending SMS
 ===========
 
-This section covers configuring Hasura ``notify`` microservice to send SMS. Notify currently supports sending SMS via `Twilio <https://www.twilio.com>`_ and `MSG91 <https://msg91.com>`_.
+This section covers configuring Hasura ``notify`` microservice to send SMS. Notify currently supports sending SMS via :doc:`Twilio <twilio>` and :doc:`MSG91 <msg91>`.
 
 Also, for testing out Notify, Hasura has its own test provider called ``Hasura`` which you can use to send 10 SMS per day.
 
@@ -55,19 +55,12 @@ browser, since ``Cookie`` will be set.
   ``X-Hasura-User-Id: 1`` and ``X-Hasura-User-Role: admin`` to make the request
   as ``admin``.
 
-
-.. _Sparkpost: https://sparkpost.com
-.. _SMTP: https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol
-.. _Twilio: https://www.twilio.com/
-.. _MSG91: https://msg91.com/
-
-
 SMS Providers:
 ^^^^^^^^^^^^^^
 
 .. toctree::
   :maxdepth: 1
 
-  Hasura Test Provider <hasura-test-provider>
   Twilio <twilio>
   MSG91 <msg91>
+  Hasura Test Provider <hasura-test-provider>

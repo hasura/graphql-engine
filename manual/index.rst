@@ -20,7 +20,8 @@ This is the reference documentation of the entire Hasura platform.
   Hasura project <project/index>
   Hasura cluster <cluster/index>
   Project microservices <microservices/index>
-  api-console/index
+  Hasura Hub <hub/index>
+  API Console <api-console/index>
   auth/index
   user-roles/index
   auth-ui-kit/index
@@ -28,9 +29,6 @@ This is the reference documentation of the entire Hasura platform.
   filestore/index
   notify/index
   API gateway <gateway/index>
-  git-push configuration <git-push/index>
-  Logs <monitoring-logging/logs/index>
-  hasura.io/hub guide <hub/index>
   hasura CLI reference <hasuractl/index>
   hasura API reference <api-reference/index>
   architecture/index

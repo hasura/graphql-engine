@@ -1,6 +1,6 @@
 .. meta::
    :description: Reference docs for Hasura Auth service's config params in the console- settings for user account, Email/Mobile, Facebook, Google,  LinkedIn, Recaptca. 
-   :keywords: hasura, docs, auth, configuration, console, zccount settings, email configuration, mobile configuration, Sparkpost configuration, MSG91 configuration, facebook configuration, google configuration, linkedin configuration, Recaptcha configuration
+   :keywords: hasura, docs, auth, configuration, console, zccount settings, email configuration, mobile configuration, SparkPost configuration, MSG91 configuration, facebook configuration, google configuration, linkedin configuration, Recaptcha configuration
 
 Configuration
 =============
@@ -49,7 +49,7 @@ If you enable recaptcha, basically you can use recaptcha in your sign up forms.
 Check all the fields that you want to be verified.
 
 **NOTE**: Most verifications will require additional setup. For example, to
-enable email verification you need to provide a valid Sparkpost API Key. See
+enable email verification you need to provide a valid SparkPost API Key. See
 :ref:`email`. Same goes for mobile and social logins.
 
 Other Settings
@@ -86,24 +86,24 @@ accounts for specific time.
 Email
 -----
 
-Right now Hasura Auth supports only `Sparkpost <https://www.sparkpost.com/>`_.
+Right now Hasura Auth supports only `SparkPost <https://www.sparkpost.com/>`_.
 But very soon, it will support `Mandrill <https://mandrill.com>`_ and `AWS
 <https://aws.amazon.com/ses/>`_.
 
-To start sending emails, signup for `Sparkpost <https://www.sparkpost.com/>`_.
+To start sending emails, signup for `SparkPost <https://www.sparkpost.com/>`_.
 Then create a sending domain, verify the domain and then obtain an API key.
-Sparkpost provides helful interface to guide through the process.
+SparkPost provides helful interface to guide through the process.
 
 Please remember that you have to setup SPF and DKIM records for your domain
 to start sending emails from your domain. Otherwise, any email provider will
 reject sending emails.
 
-Sparkpost resources for setting up SPF/DKIM:
+SparkPost resources for setting up SPF/DKIM:
 `<https://support.sparkpost.com/customer/portal/articles/1933360-verify-sending-domains>`_
 `<https://www.sparkpost.com/blog/understanding-spf-and-dkim-in-sixth-grade-english/>`_
 
 
-* **Sparkpost API Key**: The API key obtained from your Sparkpost account.
+* **SparkPost API Key**: The API key obtained from your SparkPost account.
 
 * **Sender email address**: Email address of the sender.
 

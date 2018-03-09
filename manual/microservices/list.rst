@@ -5,7 +5,7 @@
 List running microservices
 ==========================
 
-To get the list of all running microservices on a cluster, aliased ``hasura``, use the ``hasura`` CLI.
+To get the list of all running microservices on a cluster, aliased say ``hasura``, use the hasura CLI.
 
 .. code-block:: bash
 

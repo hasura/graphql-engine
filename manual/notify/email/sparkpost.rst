@@ -1,7 +1,7 @@
 Sending emails: SparkPost
 =========================
 
-To start sending emails using SparkPost, `signup <https://www.sparkpost.com/>`_
+To use `SparkPost <https://www.sparkpost.com/>`_ to start sending emails, `signup <https://app.sparkpost.com/join>`_
 for an account and create a sending domain. You have to obtain an API key after
 verifying the sending domain. SparkPost provides helpful interface to guide
 through the process. SparkPost's free plan should be enough to cover your
@@ -22,14 +22,14 @@ and setting up `SPF/DKIM:
 You need to configure the following options in ``conf/notify.yaml`` inside the
 project directory:
 
-* Make Sparkpost to be the default provider, under ``email``
+* Make SparkPost to be the default provider, under ``email``
 
 .. code-block:: yaml
 
   email:
     default: sparkPost
 
-* Now we need to configure Notify with the Sparkpost API key. To do this we
+* Now we need to configure Notify with the SparkPost API key. To do this we
   don't store the key directly in the ``notify.yaml`` file. Instead, we refer
   to a secret value in the conf, and our actual API key in the secret.
 

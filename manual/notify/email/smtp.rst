@@ -1,7 +1,7 @@
 Sending emails: SMTP
 ====================
 
-You need to configure the following options in the file ``conf/notify.yaml`` in
+To send emails using `SMTP <https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol>`_, you need to configure the following options in the file ``conf/notify.yaml`` in
 your Hasura project directory.
 
 * Make SMTP to be the default provider, under ``email``

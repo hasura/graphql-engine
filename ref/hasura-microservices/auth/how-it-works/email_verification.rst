@@ -13,11 +13,11 @@ How to use it
 -------------
 
 You can setup verification of user's email by enabling email verification in
-the project console. Right now only `Sparkpost <https://www.sparkpost.com/>`_
+the project console. Right now only `SparkPost <https://www.sparkpost.com/>`_
 is supported.
 
 To use email verification, you would also need to provide the API key of
-Sparkpost. See details :ref:`here <email>`.
+SparkPost. See details :ref:`here <email>`.
 
 Once email verification is enabled, ``email`` becomes a mandatory parameter in
 the :ref:`signup <signup>` request.

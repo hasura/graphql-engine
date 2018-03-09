@@ -42,3 +42,5 @@ from which the SMS will be sent.
 Where, **<your-msg91-key>** is the Unique identifier obtained from MSG91
 Dashboard.
 
+.. _MSG91: https://msg91.com/
+

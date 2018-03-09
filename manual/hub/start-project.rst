@@ -1,15 +1,14 @@
 .. _hub:
 
-==============================
-Start with a project from /hub
-==============================
+Starting with a project from /hub
+=================================
 
 Head to `hasura.io/hub <https://hasura.io/hub>`_ and choose a project that you want to start with.
 For eg: ``user/my-nodejs-project``.
 
 Here are some useful projects to start with:
 
-1. ``hasura/hello-*``: Projects that are published by the ``hasura`` user are projects that we have published for different frameworks to help you get started. `Hub projects list`_
+1. ``hasura/hello-*``: Projects that are published by the ``hasura`` user are projects that we have published for different frameworks to help you get started. See `Starter hub projects:`_
 2. ``hasura/base``: Use the base project to start off on a completely empty project. You can add your own microservices, schemas and configurations to this.
 
 
@@ -55,8 +54,8 @@ Then, run the following instructions on your terminal or command line:
 
 Now, you'll have the project source code on your computer.
 
-Hub projects list
------------------
+Starter hub projects:
+^^^^^^^^^^^^^^^^^^^^^
 
 - `hello-csharp-aspnet <https://hasura.io/hub/project/hasura/hello-csharp-aspnet>`_
 - `hello-ghost <https://hasura.io/hub/project/hasura/hello-ghost>`_
