@@ -17,12 +17,12 @@ If you're thinking about adding a new microservice to your existing Hasura proje
 * :doc:`Using your own Dockerfile and source-code <using-custom-dockerfile>`
 * :doc:`Using an existing Docker image <using-docker-image>`
 
-This is what your project folder might look like once you've added a microservice:
+This is what your project directory might look like once you've added a microservice called ``app``:
 
 .. code:: bash
 
    ├── microservices/
-       └── app/              # a new folder to contain microservice code/config
+       └── app/              # a new directory to contain microservice code/config
            ├── k8s.yaml
            ├── Dockerfile
            └── src/

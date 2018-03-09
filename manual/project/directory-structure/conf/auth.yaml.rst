@@ -1,7 +1,7 @@
 .. _hasura-dir-conf-auth.yaml:
 
-auth.yaml
-==========
+Project structure: conf/auth.yaml
+=================================
 
 .. note::
 

@@ -1,7 +1,7 @@
 .. _hasura-dir-conf-notify.yaml:
 
-notify.yaml
-===========
+Project structure: conf/notify.yaml
+===================================
 
 .. note::
 

@@ -1,8 +1,8 @@
 .. _hasura-project-directory-conf:
 
 
-conf/
-=====
+Project structure: conf/
+========================
 
 Configuration required to get a cluster ready for a project is stored as various files in this directory. When a configurations is applied on a cluster using either ``git push`` or ``conf apply`` command, these files are read to build a complete configuration object, also called ``hasura-conf``.
 
@@ -18,15 +18,15 @@ Following are the files present in this directory:
 
 .. toctree::
 
-   authorized-keys.yaml.rst
-   auth.yaml.rst
-   ci.yaml.rst
-   dev-mode.yaml.rst
-   domains.yaml.rst
-   filestore.yaml.rst
-   gateway.yaml.rst
-   notify.yaml.rst
-   postgres.yaml.rst
-   routes.yaml.rst
-   session-store.yaml.rst
-   http-directives.conf.rst
+   authorized-keys.yaml <authorized-keys.yaml>
+   auth.yaml <auth.yaml
+   ci.yaml <ci.yaml>
+   dev-mode.yaml <dev-mode.yaml>
+   domains.yaml <domains.yaml>
+   filestore.yaml <filestore.yaml>
+   gateway.yaml <gateway.yaml>
+   notify.yaml <notify.yaml>
+   postgres.yaml <postgres.yaml>
+   routes.yaml <routes.yaml>
+   session-store.yaml <session-store.yaml>
+   http-directives.conf <http-directives.conf>

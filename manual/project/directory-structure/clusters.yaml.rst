@@ -1,7 +1,7 @@
 .. _hasura-project-directory-clusters-yaml:
 
-clusters.yaml
-=============
+Project structure: clusters.yaml
+================================
 
 Info about the clusters added to this project can be found in this file. Each
 cluster is defined by it's name allotted by Hasura, and an alias that the user choose.

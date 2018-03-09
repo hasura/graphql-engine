@@ -1,7 +1,7 @@
 .. _hasura-dir-conf-session-store.yaml:
 
-session-store.yaml
-==================
+Project structure: conf/session-store.yaml
+==========================================
 
 .. note::
 

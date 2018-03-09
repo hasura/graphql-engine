@@ -1,7 +1,7 @@
 .. _hasura-dir-conf-routes.yaml:
 
-routes.yaml
-===========
+Project structure: conf/routes.yaml
+===================================
 
 .. note::
 

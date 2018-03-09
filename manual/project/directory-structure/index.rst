@@ -11,11 +11,11 @@ representative project is shown below:
 
 .. toctree::
 
-   hasura.yaml
-   clusters.yaml
-   conf/index
-   migrations/index
-   microservices/index
+   hasura.yaml <hasura.yaml>
+   clusters.yaml <clusters.yaml>
+   conf/ <conf/index>
+   migrations/ <migrations/index>
+   microservices/ <microservices/index>
 
 .. note::
 

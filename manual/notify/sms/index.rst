@@ -5,8 +5,8 @@
 
 .. _hasura-notify-sms:
 
-Sending SMSs
-============
+Sending SMS
+===========
 
 This section covers configuring Hasura ``notify`` microservice to send SMS. Notify currently supports sending SMS via `Twilio <https://www.twilio.com>`_ and `MSG91 <https://msg91.com>`_.
 

@@ -1,7 +1,7 @@
 .. _hasura-dir-conf-dev-mode.yaml:
 
-dev-mode.yaml
-=============
+Project structure: conf/dev-mode.yaml
+=====================================
 
 .. note::
 

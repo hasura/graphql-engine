@@ -16,9 +16,10 @@ This is the reference documentation of the entire Hasura platform.
 
   getting-started/index
   install-hasura-cli
-  The complete tutorial<tutorial/index>
+  The complete tutorial <tutorial/index>
   Hasura project <project/index>
   Hasura cluster <cluster/index>
+  Project microservices <microservices/index>
   api-console/index
   auth/index
   user-roles/index
@@ -27,9 +28,7 @@ This is the reference documentation of the entire Hasura platform.
   filestore/index
   notify/index
   API gateway <gateway/index>
-  custom-microservices/index
   git-push configuration <git-push/index>
-  custom-domains-ssl
   Logs <monitoring-logging/logs/index>
   hasura.io/hub guide <hub/index>
   hasura CLI reference <hasuractl/index>

@@ -33,6 +33,6 @@ See:
   create
   deploy
   collaboration
-  conf-files
-  secrets
-  directory-structure/index
+  Conf files templating <conf-files-templating>
+  Secrets <secrets>
+  Directory structure <directory-structure/index>

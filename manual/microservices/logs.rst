@@ -5,24 +5,25 @@
 Viewing microservice logs
 =========================
 
-STDOUT output (``print()``, ``console.log()`` ) from microservices get
+All STDOUT output, like ``print()``, ``console.log()``, etc. from microservices gets
 captured as logs.
 
-The ``hasura microservice logs`` command will get logs for your microservice. Note: ``hasura ms`` is an alias for ``hasura microservice``, useful if you want to save on a few keystrokes.
+The command ``hasura microservice logs``, or ``hasura ms logs`` for short, will get logs for your microservice.
 
-**Fetch all the logs till now in one shot:**
+
+**Fetch all the logs till now of microservice `app` in one shot:**
 
 .. code-block:: bash
 
    $ hasura ms logs app
 
-**Fetch the last 100 log lines:**
+**Fetch the last 100 log lines of microservice `app`:**
 
 .. code-block:: bash
 
    $ hasura ms logs app --tail 100
 
-**Stream (follow) logs:**
+**Stream (follow) logs of microservice `app`:**
 
 The command will not exit and log lines will keep coming up on your terminal:
 
@@ -30,7 +31,7 @@ The command will not exit and log lines will keep coming up on your terminal:
 
    $ hasura ms logs app -f
 
-**Get logs of a hasura microservice, say auth**
+**Get logs of a hasura microservice, say `auth`**
 
 .. code-block:: bash
 

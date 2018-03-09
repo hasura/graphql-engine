@@ -1,5 +1,5 @@
-Sending SMSs: MSG91
-===================
+Sending SMS: MSG91
+==================
 
 `MSG91`_ is a SMS provider where you can `signup <https://msg91.com/signup>`_
 and get an API key to use with Hasura. Take a look at `this

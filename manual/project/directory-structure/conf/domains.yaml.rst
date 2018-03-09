@@ -1,7 +1,7 @@
 .. _hasura-dir-conf-domains.yaml:
 
-domains.yaml
-============
+Project structure: conf/domains.yaml
+====================================
 
 .. note::
 

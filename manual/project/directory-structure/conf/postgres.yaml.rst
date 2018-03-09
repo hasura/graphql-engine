@@ -1,7 +1,7 @@
 .. _hasura-dir-conf-postgres.yaml:
 
-postgres.yaml
-=============
+Project structure: conf/postgres.yaml
+=====================================
 
 .. note::
 

@@ -1,7 +1,7 @@
 .. _hasura-dir-conf-authorized-keys.yaml:
 
-authorized-keys.yaml
-====================
+Project structure: conf/authorized-keys.yaml
+============================================
 
 .. note::
 

@@ -1,7 +1,7 @@
 .. _hasura-dir-conf-filestore.yaml:
 
-filestore.yaml
-==============
+Project structure: conf/filestore.yaml
+======================================
 
 .. note::
 

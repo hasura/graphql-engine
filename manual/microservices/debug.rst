@@ -17,12 +17,3 @@ Apart from the above, there could be scenarios where your microservice is unable
 
 1. Use :ref:`hasura microservice list <hasura_microservice_list>` to see the current state of the microservice.
 2. Use :ref:`hasura microservice status <hasura_microservice_status>` to get a detailed status report on the microservice.
-
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   Viewing logs <logs>
-   Exec/SSH into containers <exec-container>
-

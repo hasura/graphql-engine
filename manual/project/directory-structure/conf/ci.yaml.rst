@@ -1,7 +1,7 @@
 .. _hasura-dir-conf-ci.yaml:
 
-ci.yaml
-=======
+Project structure: conf/ci.yaml
+===============================
 
 .. note::
 

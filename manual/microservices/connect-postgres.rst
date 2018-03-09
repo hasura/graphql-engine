@@ -4,8 +4,8 @@
 
 .. _connecting-to-postgres:
 
-Connecting to Hasura PostgreSQL database from microservice
-==========================================================
+Connecting to Hasura Postgres database from microservices
+=========================================================
 
 To connect to any PostgreSQL instance, we need the hostname, port, username and password. You can find out hostnames (URLs) for all the microservices running in the cluster by executing the following command:
 

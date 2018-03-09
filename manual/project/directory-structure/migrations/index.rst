@@ -1,8 +1,8 @@
 .. _hasura-project-directory-migrations:
 
 
-migrations/
-===========
+Project structure: migrations/
+==============================
 
 All database migrations created using :ref:`API Console <data-create-tables>`  as well as :ref:`hasura migration create <hasura_migration_create>` are stored as ``yaml`` and ``sql`` in this directory.
 

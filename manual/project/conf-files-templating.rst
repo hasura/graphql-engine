@@ -1,7 +1,7 @@
 .. _using-templates:
 
-Project conf files
-==================
+Project conf files templating
+=============================
 
 Certain files inside a Hasura project are rendered as templates, namely all the files inside :ref:`conf directory <hasura-project-directory-conf>` and :ref:`microservices/*/k8s.yaml <hasura-dir-ms-k8s.yaml>`.
 

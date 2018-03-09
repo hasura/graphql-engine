@@ -1,7 +1,7 @@
 .. _hasura-dir-conf-gateway.yaml:
 
-gateway.yaml
-============
+Project structure: conf/gateway.yaml
+====================================
 
 .. note::
 

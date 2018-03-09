@@ -1,7 +1,7 @@
 .. _hasura-dir-conf-http-directives.conf:
 
-http-directives.conf
-====================
+Project structure: conf/http-directives.conf
+============================================
 
 .. note::
 
