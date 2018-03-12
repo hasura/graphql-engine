@@ -40,12 +40,14 @@ def html_page_context(app, pagename, templatename, context, doctree):
     if "toctree" not in context:
         # json builder doesn't use toctree func, so nothing to replace
         return
+
     def make_toctree(collapse=True, maxdepth=-1, includehidden=True):
         return get_rendered_toctree(app.builder,
                                     pagename,
                                     prune=False,
                                     collapse=collapse,
                                     )
+
     context['toctree'] = make_toctree
 
 
