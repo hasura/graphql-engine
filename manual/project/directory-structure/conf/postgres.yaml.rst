@@ -5,7 +5,7 @@ Project structure: conf/postgres.yaml
 
 .. note::
 
-   This file is rendered as a template. Refer to :ref:`Using Templates <using-templates>` for more details.
+   This file is rendered as a template. Refer to :ref:`Conf files templating <conf-templating>` for more details.
 
 Config for PostgreSQL database running on Hasura can be found here. Changing them is not recommended.
 

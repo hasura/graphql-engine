@@ -5,7 +5,7 @@ Project structure: microservices/*/k8s.yaml
 
 .. note::
 
-   This file is rendered as a template. Refer to :ref:`Using Templates <using-templates>` for more details.
+   This file is rendered as a template. Refer to :ref:`Conf files templating <conf-templating>` for more details.
 
 A microservice on Hasura is defined as a `Kubernetes Deployment <https://kubernetes.io/docs/concepts/workloads/controllers/deployment/>`_ and a corresponding `Kubernetes Service <https://kubernetes.io/docs/concepts/services-networking/service/>`_. Both of these objects are saved in a single file, ``k8s.yaml`` as a Kubernetes List object.
 

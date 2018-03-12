@@ -5,7 +5,7 @@ Project structure: conf/routes.yaml
 
 .. note::
 
-   This file is rendered as a template. Refer to :ref:`Using Templates <using-templates>` for more details.
+   This file is rendered as a template. Refer to :ref:`Conf files templating <conf-templating>` for more details.
 
 This section lets you define the mapping between HTTP(S) routes on your domain(s) ond
 the microservices running on your cluster

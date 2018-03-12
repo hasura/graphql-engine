@@ -5,7 +5,7 @@ Project structure: conf/ci.yaml
 
 .. note::
 
-   This file is rendered as a template. Refer to :ref:`Using Templates <using-templates>` for more details.
+   This file is rendered as a template. Refer to :ref:`Conf files templating <conf-templating>` for more details.
 
 Continuous integration settings for a cluster is specified in this file. Two parameters together define continuous integration: ``remotes`` and ``registry``.
 

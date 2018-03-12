@@ -5,7 +5,7 @@ Project structure: conf/session-store.yaml
 
 .. note::
 
-   This file is rendered as a template. Refer to :ref:`Using Templates <using-templates>` for more details.
+   This file is rendered as a template. Refer to :ref:`Conf files templating <conf-templating>` for more details.
 
 Config for Redis microservice, which is used for storing session information by auth and gateway, are present here.
 

@@ -1,4 +1,4 @@
-.. _using-templates:
+.. _conf-templating:
 
 Project conf files templating
 =============================

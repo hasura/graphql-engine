@@ -8,7 +8,7 @@ Configuration required to get a cluster ready for a project is stored as various
 
 .. note::
 
-   All files in this directory are rendered as a templates. Refer to :ref:`Using Templates <using-templates>` for more details.
+   All files in this directory are rendered as a templates. Refer to :ref:`Conf files templating <conf-templating>` for more details.
 
 You can apply configuration on a cluster either by doing ``git push`` or by using the :ref:`hasura conf apply <hasura_conf_apply>` command.
 
@@ -19,7 +19,7 @@ Following are the files present in this directory:
 .. toctree::
 
    authorized-keys.yaml <authorized-keys.yaml>
-   auth.yaml <auth.yaml
+   auth.yaml <auth.yaml>
    ci.yaml <ci.yaml>
    dev-mode.yaml <dev-mode.yaml>
    domains.yaml <domains.yaml>

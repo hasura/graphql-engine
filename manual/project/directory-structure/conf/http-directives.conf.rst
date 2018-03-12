@@ -5,7 +5,7 @@ Project structure: conf/http-directives.conf
 
 .. note::
 
-   This file is rendered as a template. Refer to :ref:`Using Templates <using-templates>` for more details.
+   This file is rendered as a template. Refer to :ref:`Conf files templating <conf-templating>` for more details.
 
 Any extra nginx directives that can go into the 'http' section of the gateway can be mentioned here. For example, the below snippet is added by default.
 

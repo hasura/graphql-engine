@@ -5,7 +5,7 @@ Project structure: conf/authorized-keys.yaml
 
 .. note::
 
-   This file is rendered as a template. Refer to :ref:`Using Templates <using-templates>` for more details.
+   This file is rendered as a template. Refer to :ref:`Conf files templating <conf-templating>` for more details.
 
 Defines where SSH keys are stored on the cluster. These keys are used to give ``git push`` access to the cluster.
 

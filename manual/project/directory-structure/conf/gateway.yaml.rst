@@ -5,7 +5,7 @@ Project structure: conf/gateway.yaml
 
 .. note::
 
-   This file is rendered as a template. Refer to :ref:`Using Templates <using-templates>` for more details.
+   This file is rendered as a template. Refer to :ref:`Conf files templating <conf-templating>` for more details.
 
 Configuration for opening the the API Gateway to the external world can be found in this file. It is usually filled in from cluster metadata, which also contains Kubernetes specific configuration.
 
