@@ -132,7 +132,7 @@ def generate_index_file(app, pagename, templatename, context, doctree):
 
         indexObjs.append(index_obj)
     else:
-        print('\nIGNORED FOR INDEXING\n')
+        print('\t\t\t\t\t\t\t\t\t\t\t\tIGNORED FOR INDEXING')
 
 
 def setup(app):
