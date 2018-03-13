@@ -12,7 +12,7 @@ to help you `git push` to deploy easily.
 
 
 Get cluster information and the microservices running
-------------------------------------------------
+-----------------------------------------------------
 
 Inside your project directory, run:
 

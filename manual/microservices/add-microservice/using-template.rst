@@ -1,4 +1,7 @@
-.. _deploy-host-webapps:
+.. .. meta::
+   :description: How to deploy microservices using hasura templates
+   :keywords: hasura, manual, template, custom microservice
+
 
 Adding a microservice from a template
 =====================================

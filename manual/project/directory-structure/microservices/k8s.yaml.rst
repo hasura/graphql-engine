@@ -1,7 +1,7 @@
 .. _hasura-dir-ms-k8s.yaml:
 
-Project structure: microservices/*/k8s.yaml
-===========================================
+Project structure: microservices/\*/k8s.yaml
+============================================
 
 .. note::
 
