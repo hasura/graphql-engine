@@ -1,4 +1,4 @@
-.. _hub:
+.. _hub_start:
 
 Starting with a project from /hub
 =================================

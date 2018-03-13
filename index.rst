@@ -14,7 +14,7 @@ Hasura Documentation
 
 This documentation is broadly divided into 2 parts:
 
-* The :ref:`getting_started` section : start reading this section if you are
+* The :ref:`getting-started` section : start reading this section if you are
   new to Hasura.
 
 Table of Contents

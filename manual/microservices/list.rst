@@ -1,6 +1,6 @@
 .. .. meta::
-:description: Listing created hasura clusters
-:keywords: cluster, list
+  :description: Listing created hasura clusters
+  :keywords: cluster, list
 
 List running microservices
 ==========================

@@ -31,7 +31,7 @@ You can provide environment variables (env vars) for microservices to use by edi
 
 Let's say you need to add two variables called ``CLUSTER_NAME`` and ``RELEASE_MODE``. Cluster name should get the name of the cluster and release mode should be ``production`` for cluster with alias ``prod`` and ``dev`` for all other clusters. Deployment section in ``k8s.yaml`` for such a configuration would look like the following:
 
-.. code-block:: yaml
+.. code-block:: yaml+jinja
    :emphasize-lines: 21-29
 
    apiVersion: extensions/v1beta1

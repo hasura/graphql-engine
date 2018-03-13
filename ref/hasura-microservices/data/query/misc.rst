@@ -5,10 +5,10 @@
 Miscellaneous
 =============
 
-.. _run_sql:
+.. _ref_run_sql:
 
 run_sql
---------
+-------
 
 ``run_sql`` is used to run arbitrary SQL statements. Multiple SQL statements can be separated by a ``;``, however, only the result of the last sql statement will be returned.
 

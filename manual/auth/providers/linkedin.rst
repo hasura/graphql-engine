@@ -141,3 +141,6 @@ The flow
 * To logout, make a call to ``/v1/user/logout``.
 
 * To get Hasura credentials of current logged in user, ``/v1/user/info``.
+
+.. _implicit grant flow: http://tools.ietf.org/html/rfc6749#section-4.2
+.. _CSRF: http://en.wikipedia.org/wiki/Cross-site_request_forgery

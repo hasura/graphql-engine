@@ -38,4 +38,4 @@ The command will not exit and log lines will keep coming up on your terminal:
    $ hasura ms logs auth -n hasura
 
 
-For more details, read the full CLI reference for :doc:`hasura microservice logs <../../hasuractl/hasura_microservice_logs>`.
+For more details, read the full CLI reference for :doc:`hasura microservice logs <../hasuractl/hasura_microservice_logs>`.

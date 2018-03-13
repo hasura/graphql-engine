@@ -58,7 +58,7 @@ Creating tables
       Table page to create a table.
     - Open the API console by using ``hasura api-console``. Head to Data ->
       Schema page.  Use Create Table page to create a table. For more details
-      refer :doc:`../data/create-tables`.
+      refer :doc:`../data/create-table`.
 
 
 Configuring auth/notify/filestore
@@ -73,8 +73,8 @@ Configuring auth/notify/filestore
     - Edit the appropriate files in ``conf/{auth,notify,filestore}.yaml`` to
       change Auth, Notify and Filestore settings. To apply these changes to a
       cluster, git commit and push to that cluster. ``git commit && git push
-      hasura master``. Refer :doc:`../users/config`, :doc:`../email-sms/index`,
-      :doc:`../files/index`.
+      hasura master``. Refer :doc:`../auth/config`, :doc:`../notify/index`,
+      :doc:`../filestore/index`.
 
 
 Adding a git-push microservice
@@ -86,11 +86,11 @@ Adding a git-push microservice
     - New workflow (>= v0.15.x)
   * - Login to the cluster console, head to Git Push Microservices page. Use
       Create page to create a git push microservice.
-    - Use the hasura cli. Refer :doc:`../custom-microservices/index`.
+    - Use the hasura cli. Refer :doc:`../microservices/add-microservice/index`.
 
 
 Adding a docker microservice
-------------------------
+----------------------------
 .. list-table::
   :header-rows: 1
 
@@ -98,7 +98,7 @@ Adding a docker microservice
     - New workflow (>= v0.15.x)
   * - Login to the cluster console, head to Git Push Microservices page. Use
       Create page to create a git push microservice.
-    - Use the hasura cli. Refer :doc:`../custom-microservices/index`.
+    - Use the hasura cli. Refer :doc:`../microservices/add-microservice/index`.
 
 
 API gateway settings

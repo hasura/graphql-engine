@@ -9,7 +9,7 @@ Project structure: conf/http-directives.conf
 
 Any extra nginx directives that can go into the 'http' section of the gateway can be mentioned here. For example, the below snippet is added by default.
 
-.. code-block::  conf
+.. code-block::  nginx
 
    gzip               on;
    gzip_http_version  1.1;

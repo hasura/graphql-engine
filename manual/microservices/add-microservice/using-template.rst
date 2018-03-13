@@ -64,11 +64,11 @@ Run:
 
 If you're choosing a template from any of the above, continue, otherwise you'll have to create a ``Dockerfile`` and a ``k8s.yaml`` file yourself.
 
-To create the files yourself, head to :doc:`Add a custom Dockerfile <add-custom-dockerfile>`.
+To create the files yourself, head to :doc:`Add a custom Dockerfile <using-custom-dockerfile>`.
 Otherwise, continue with Step 2 below!
 
 Step 2: Add the microservice template to your microservices folder
--------------------------------------------------------------------
+------------------------------------------------------------------
 
 Let's say you want to use ``nodejs-express`` and you name the microservice ``my-app``. Now run:
 
@@ -122,7 +122,7 @@ This command above will add the default route configuration for your microservic
    Checkout :ref:`routes.yaml <hasura-dir-conf-routes.yaml>` to learn more about this file 
 
 Step 5: Git push and deploy!
----------------------------
+----------------------------
 
 .. code:: bash
 

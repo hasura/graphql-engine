@@ -9,5 +9,6 @@ To log user out, make the following request.
    Authorization: Bearer <auth_token>
 
 .. note::
-The logout request is a POST request with an empty body.
+
+   The logout request is a POST request with an empty body.
 

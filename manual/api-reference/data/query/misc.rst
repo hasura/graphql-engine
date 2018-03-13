@@ -5,8 +5,6 @@
 Data API Reference: Miscellaneous queries
 =========================================
 
-.. _run_sql:
-
 run_sql
 -------
 

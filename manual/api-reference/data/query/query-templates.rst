@@ -450,12 +450,11 @@ Syntax
 .. _drop_query_template:
 
 drop_query_template
-----------------------
+-------------------
 
 ``drop_query_template`` is used to drop an existing query template.
 
 .. code-block:: http
-   :emphasize-lines: 14
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json

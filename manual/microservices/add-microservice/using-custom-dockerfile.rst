@@ -76,7 +76,7 @@ This command above will add the default route configuration for your microservic
    Checkout :ref:`routes.yaml <hasura-dir-conf-routes.yaml>` to learn more about this file 
 
 Step 5: Git push and deploy!
----------------------------
+----------------------------
 
 .. code:: bash
 
