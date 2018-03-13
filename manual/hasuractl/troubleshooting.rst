@@ -1,5 +1,5 @@
-Troubleshooting
-===============
+Hasura CLI: Troubleshooting
+===========================
 
 [1000] Directory is not a Hasura project
 ----------------------------------------
