@@ -1,22 +1,25 @@
-.. tabs::
+Sample Intro 1
+==============
 
-   tabs:
-     - id: shell
-       content: |
-          This page includes examples of Shell
+.. .. tabs::
 
-     - id: python
-       content: |
-          This page includes examples in python
+..    tabs:
+..     - id: shell
+..        content: |
+..           This page includes examples of Shell
 
-     - id: nodejs
-       content: |
-          This page includes examples in nodejs
+..     - id: python
+..        content: |
+..           This page includes examples in python
 
-     - id: go
-       content: |
-          This page includes examples in golang
+..     - id: nodejs
+..        content: |
+..           This page includes examples in nodejs
 
-     - id: haskell 
-       content: |
-          This page includes examples in haskell
+..     - id: go
+..        content: |
+..           This page includes examples in golang
+
+..     - id: haskell
+..        content: |
+..           This page includes examples in haskell

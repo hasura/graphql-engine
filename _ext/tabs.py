@@ -4,17 +4,23 @@ import template
 
 PAT_RST_SECTION = re.compile(r'(.*)\n((?:^----+$)|(?:^====+$)|(?:^~~~~+$)|(?:^````+$))', re.M)
 # List of tuples with language tab ( ID, Display Name)
-LANGUAGES_RAW = [ ('linux', 'Linux'),
-             ('mac', 'Mac'),
-             ('windows', 'Windows'),
-             #('java-async', 'Java (Async)'),
-             #('c', 'C'),
-             #('cpp11', 'C++11'),
-             #('csharp', 'C#'),
-             #('perl', 'Perl'),
-             #('ruby', 'Ruby'),
-             #('scala', 'Scala')
-             ]
+LANGUAGES_RAW = [
+    ('linux', 'Linux'),
+    ('mac', 'Mac'),
+    ('windows', 'Windows'),
+    # ('shell', 'Shell'),
+    # ('python', 'Python'),
+    # ('nodejs', 'Nodejs'),
+    # ('haskell', 'Haskell'),
+    # ('go', 'Go'),
+    # ('java-async', 'Java (Async)'),
+    # ('c', 'C'),
+    # ('cpp11', 'C++11'),
+    # ('csharp', 'C#'),
+    # ('perl', 'Perl'),
+    # ('ruby', 'Ruby'),
+    # ('scala', 'Scala')
+]
 LANGUAGES_IDS = [lang[0] for lang in LANGUAGES_RAW]
 LANGUAGES_DISPLAY = [lang[1] for lang in LANGUAGES_RAW]
 
@@ -107,16 +113,17 @@ H4_TEMPLATE = '''
    <h4>{{ title }}</h4>
 '''
 
+
 def setup(app):
     directive = template.create_directive('h1', H1_TEMPLATE, template.BUILT_IN_PATH, True)
     app.add_directive('h1', directive)
-    
+
     directive = template.create_directive('h2', H2_TEMPLATE, template.BUILT_IN_PATH, True)
     app.add_directive('h2', directive)
-    
+
     directive = template.create_directive('h3', H3_TEMPLATE, template.BUILT_IN_PATH, True)
     app.add_directive('h3', directive)
-    
+
     directive = template.create_directive('h4', H4_TEMPLATE, template.BUILT_IN_PATH, True)
     app.add_directive('h4', directive)
 
@@ -137,12 +144,16 @@ def convertSections(tabContent):
         lambda match: '.. h{}:: {}'.format(Options.HEADING_LEVELS.index(match.group(2)[0]) + 1, match.group(1)),
         tabContent)
 
+
 fett.Template.FILTERS['convertSections'] = convertSections
+
 
 def numberOfLanguages(tabData):
     return len(LANGUAGES_RAW)
 
+
 fett.Template.FILTERS['numberOfLanguages'] = numberOfLanguages
+
 
 def getLanguageNames(tabData):
     for tab in tabData:
@@ -151,22 +162,25 @@ def getLanguageNames(tabData):
 
     return tabData
 
+
 fett.Template.FILTERS['getLanguageNames'] = getLanguageNames
+
 
 def sortLanguages(tabData):
     # Create a list for the sorted data
     sorted = [None] * len(LANGUAGES_RAW)
-    
+
     for tab in tabData:
         index = LANGUAGES_IDS.index(tab['id'])
         tab['name'] = LANGUAGES_DISPLAY[index]
         sorted[index] = tab
-    
+
     # Fill in any missing languages with empty content
     for index in range(len(sorted)):
         if sorted[index] is None:
             sorted[index] = {'id': LANGUAGES_IDS[index], 'name': LANGUAGES_DISPLAY[index], 'content': ''}
 
     return sorted
+
 
 fett.Template.FILTERS['sortLanguages'] = sortLanguages

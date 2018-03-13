@@ -45,7 +45,7 @@ conf. Rather we store them in secrets and refer to them here.
 .. note::
   If you are using GMail as your SMTP provider, you have to enable access to
   "Less Secure Apps" on your Google account. You can read about it `here
-  <https://support.google.com/accounts/answer/6010255>`_.  GMail also enforces
+  <https://support.google.com/accounts/answer/6010255>`__.  GMail also enforces
   limits on emails sent (default 500/day).
 
 .. note::
@@ -55,4 +55,4 @@ conf. Rather we store them in secrets and refer to them here.
   make sure that your SMTP provider have alternate ports like 2525 in case you
   want to deploy on Google Cloud. You can find more details and possible
   solutions `here
-  <https://cloud.google.com/compute/docs/tutorials/sending-mail/>`_.
+  <https://cloud.google.com/compute/docs/tutorials/sending-mail/>`__.
