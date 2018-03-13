@@ -8,11 +8,11 @@ The request payload of the login endpoint is similar to the signup endpoint.
    examples.
 
 
-   Make a request to the endpoint: ``/v1/user/login``.
+   Make a request to the endpoint: ``/v1/login``.
 
 .. code-block:: http
 
-   GET auth.<cluster-name>.hasura-app.io/v1/user/login HTTP/1.1
+   GET auth.<cluster-name>.hasura-app.io/v1/login HTTP/1.1
    Content-Type: application/json
 
    {

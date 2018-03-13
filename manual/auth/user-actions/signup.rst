@@ -16,11 +16,11 @@ If the signup request is successful:
 2. If the provider has any verification step (e.g. ``mobile``, ``email``), it
    will not login the user, and will return ``null`` as the session token.
 
-   Make a request to the endpoint: ``/v1/user/signup``.
+   Make a request to the endpoint: ``/v1/signup``.
 
 .. code-block:: http
 
-   GET auth.<cluster-name>.hasura-app.io/v1/user/signup HTTP/1.1
+   GET auth.<cluster-name>.hasura-app.io/v1/signup HTTP/1.1
    Content-Type: application/json
 
    {
