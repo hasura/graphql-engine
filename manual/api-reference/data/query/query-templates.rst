@@ -2,8 +2,8 @@
    :description: Query templates: Learn how to template Data microservice queries and to define and manage your own REST interfaces with detailed examples.
    :keywords: hasura, docs, data, query templates, REST interface, REST endpoint, RESTful API
 
-Query Templates
-===============
+Data API Reference: Query Templates
+===================================
 
 Query templates are used to template queries and to define your own REST interface. Let's jump into some examples.
 

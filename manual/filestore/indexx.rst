@@ -106,13 +106,3 @@ perform the required authorization checks. If you want to grant the access to
 the user then the webhook should return a ``200`` response. If you want to deny
 access to the user then your webhook should return a ``403`` response.
 
-
-API
----
-
-To perform the actual file operations, the following APIs are provided.
-
-.. toctree::
-  :maxdepth: 2
-
-  api

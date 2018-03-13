@@ -2,8 +2,14 @@
    :description: Overview of the single query endpoint, /v1/query, exposed by Hasura's Data microservice and its Request and Response structure.
    :keywords: hasura, docs, data, query endpoint
 
-API
-===
+Data API Reference: Query endpoints
+===================================
+
+``/v1/template``
+----------------
+
+This endpoint is used to execute an existing query template. You can read more about this :ref:`here <execute_query_template>`.
+
 
 ``/v1/query``
 -------------
@@ -149,10 +155,6 @@ Response
 
 The response structure is dependent on the type of query that is executed.
 
-``/v1/template``
-----------------
-
-This endpoint is used to execute an existing query template. You can read more about this :ref:`here <execute_query_template>`.
 
 Errors
 ------
@@ -203,4 +205,3 @@ Error Codes
    :file: dataerrors.csv
    :widths: 10, 20, 70
    :header-rows: 1
-

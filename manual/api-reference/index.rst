@@ -17,7 +17,7 @@ This section provides a detailed reference of all the APIs that are provided by 
 .. toctree::
   :maxdepth: 2
 
-  auth/api
-  data/index
-  filestore/api
-  notify
+  Auth API <auth/index>
+  Data API <data/index>
+  Filestore API <filestore/index>
+  Notify API <notify/index>

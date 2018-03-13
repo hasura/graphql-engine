@@ -2,8 +2,8 @@
    :description: API reference for Hasura's File  microservice. POST, GET and DELETE endpoints for uploading, downloading and deleting files respectively.
    :keywords: hasura, docs, File, fileStore, API reference
 
-Notify API
-==========
+Notify API reference
+====================
 
 ``POST /v1/send/email``
 -----------------------
@@ -55,7 +55,7 @@ An example response looks like:
   For SMTP email provider, the ``provider-reference-id`` will be ``NA``.
 
 ``POST /v1/send/sms``
---------------------------
+---------------------
 
 This endpoint can be used to send SMS.
 

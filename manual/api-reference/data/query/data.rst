@@ -4,14 +4,14 @@
 
 .. _data_query_types:
 
-Selecting/modifying data
-========================
+Data API Reference: Selecting/modifying data
+============================================
 
 .. toctree::
    :maxdepth: 1
 
-   data/insert.rst
-   data/update.rst
-   data/delete.rst
-   data/select.rst
-   data/count.rst
+   insert <data/insert.rst>
+   select <data/select.rst>
+   update <data/update.rst>
+   delete <data/delete.rst>
+   count <data/count.rst>

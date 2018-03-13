@@ -4,8 +4,8 @@
 
 .. _data_count:
 
-count
------
+Data API Reference: count
+-------------------------
 
 Syntax
 ^^^^^^

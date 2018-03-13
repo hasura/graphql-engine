@@ -5,8 +5,8 @@
 
 .. _data_insert:
 
-insert
-------
+Data API Reference: insert
+--------------------------
 
 Syntax
 ^^^^^^

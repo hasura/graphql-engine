@@ -4,8 +4,8 @@
 
 .. _data_delete:
 
-delete
-------
+Data API Reference: delete
+--------------------------
 
 Syntax
 ^^^^^^

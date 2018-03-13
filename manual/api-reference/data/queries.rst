@@ -2,17 +2,17 @@
    :description: List of topics for detailed reference docs for all the queries supported by Hasura's Data microservice and Syntax definitions.
    :keywords: hasura, docs, data, reference home, syntax definition, topics
 
-Queries
-===========
+Data API Reference: Queries
+===========================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   query/data.rst
-   query/relationship.rst
-   query/query-templates.rst
-   query/permission.rst
-   query/misc.rst
+   Selecting/modifying data <query/data.rst>
+   Relationships <query/relationship.rst>
+   Query Templates <query/query-templates.rst>
+   Permissions <query/permission.rst>
+   Miscellaneous Queries <query/misc.rst>
 
 ------------------------------------------------------------------------------
 

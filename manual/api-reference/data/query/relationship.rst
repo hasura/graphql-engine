@@ -3,8 +3,8 @@
    :keywords: hasura, docs, data, relationships
 
 
-Relationships
-=============
+Data API Reference: Relationships
+=================================
 
 Relationships are used to capture the connectedness of data amongst tables. In a relational database, when modelling data we add foreign key constraints to establish connections between various tables.
 

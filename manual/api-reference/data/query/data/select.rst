@@ -4,8 +4,8 @@
 
 .. _data_select:
 
-select
-------
+Data API Reference: select
+--------------------------
 
 Syntax
 ^^^^^^

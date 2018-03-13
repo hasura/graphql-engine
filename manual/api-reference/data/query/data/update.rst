@@ -4,8 +4,8 @@
 
 .. _data_update:
 
-update
-------
+Data API Reference: update
+--------------------------
 
 Syntax
 ^^^^^^
