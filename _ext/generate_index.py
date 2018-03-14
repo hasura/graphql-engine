@@ -66,8 +66,8 @@ def on_finish_building(app, exception):
 
 def generate_index_file(app, pagename, templatename, context, doctree):
     # If the page name is not part of the below list and is present in toc-tree
-    if (pagename not in ['ref/index', 'tutorials/index', 'guides/index', 'manual/index', 'index', 'search', 'genindex']
-            and ("ref/" not in pagename) and ("tutorials/" not in pagename) and ("guides/" not in pagename)
+    if (pagename not in ['manual/index', 'index', 'search', 'genindex']
+            and not (pagename.startswith("ref/") or pagename.startswith("tutorials/") or pagename.startswith("guides/"))
             and re.search('<a[^>]*class="[^"]*current[^"]*"[^>]*>', context['toc_full'])):
         title = ''
         keyword = ''
