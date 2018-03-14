@@ -9,7 +9,7 @@ Synopsis
 ~~~~~~~~
 
 
-Clone just a microservice from a project on https://hasura-stg.hasura-app.io/hub
+Clone just a microservice from a project on https://hasura.io/hub
 
 ::
 

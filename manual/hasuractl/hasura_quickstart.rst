@@ -9,7 +9,7 @@ Synopsis
 ~~~~~~~~
 
 
-Quickest way to get started with a Hasura project. Clones the project from https://hasura-stg.hasura-app.io/hub and creates a cluster for deploying it.
+Quickest way to get started with a Hasura project. Clones the project from https://hasura.io/hub and creates a cluster for deploying it.
 
 ::
 
@@ -29,7 +29,7 @@ Examples
     # search for more quickstarts (say python based)
     $ hasura search python
 
-    # or visit https://hasura-stg.hasura-app.io/hub
+    # or visit https://hasura.io/hub
 
 Options
 ~~~~~~~

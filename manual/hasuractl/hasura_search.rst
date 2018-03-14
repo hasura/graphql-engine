@@ -9,7 +9,7 @@ Synopsis
 ~~~~~~~~
 
 
-Search for hasura quickstarts and projects on Hasura Hub (https://hasura-stg.hasura-app.io/hub)
+Search for hasura quickstarts and projects on Hasura Hub (https://hasura.io/hub)
 
 ::
 
@@ -21,7 +21,7 @@ Examples
 ::
 
 
-    # search Hasura projects and quickstarts on Hasura Hub (https://hasura-stg.hasura-app.io/hub):
+    # search Hasura projects and quickstarts on Hasura Hub (https://hasura.io/hub):
     $ hasura search <search-query>
 
     # search for 'python' on Hub
