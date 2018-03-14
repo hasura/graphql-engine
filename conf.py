@@ -69,7 +69,7 @@ html_context = {
     "ALGOLIA_INDEX_NAME": ALGOLIA_INDEX_NAME,
     "ALGOLIA_INDEX_NAME_SEC": ALGOLIA_INDEX_NAME_SEC,
     "SITEMAP_DOMAIN": "https://docs.hasura.io/",
-    "BASE_DOMAIN": "https://docs.hasura.io" if BASE_DOMAIN == "production" else "https://docs.hasura-stg.hasura-app.io"
+    "BASE_DOMAIN": "hasura.io" if BASE_DOMAIN == "production" else "hasura-stg.hasura-app.io"
 }
 
 # End of it

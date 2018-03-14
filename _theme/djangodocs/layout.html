@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
   {%- if version != latest_docs_version %}
-    <link ref="canonical" href="https://docs.hasura.io/{{latest_docs_version}}/{{pagename}}.html" />
+    <link ref="canonical" href="https://docs.{{ BASE_DOMIAN }}/{{latest_docs_version}}/{{pagename}}.html" />
   {% endif %}
   <script src="{{ pathto('_static/vendor.js', 1) }}"></script>
   {% block javascript %}
@@ -86,12 +86,12 @@
                   </div>
                 </div -->
                 <div class="mobile-logo mobile-only">
-                  <a href="https://hasura.io/" target="_blank">
+                  <a href="https://{{ BASE_DOMAIN }}/" target="_blank">
                     <div class="img_wrapper inline-block">
                       <img class="responsive logo_img" src="{{ pathto('_images/logo.svg', 1) }}" />
                     </div>
                   </a>
-                  <a href="{{ BASE_DOMAIN }}" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
+                  <a href="https://docs.{{ BASE_DOMAIN }}" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
                 </div>
                 <div class="search_head_wrapper">
                   <div class="inline-block mobile-only" id="nav_tree_icon">
@@ -104,12 +104,12 @@
                   <div class="header_links inline-block">
                     <div class="buttons">
                       <div class="inline-block">
-                        <!-- a target="_blank" href="https://dashboard.hasura.io/login" -->
+                        <!-- a target="_blank" href="https://dashboard.{{ BASE_DOMAIN }}/login" -->
                           <button class="indiv_btns black supportBtn"> Support </button>
                         <!--/ a -->
                       </div>
                       <div class="inline-block">
-                        <a target="_blank" href="https://hasura.io/get-started">
+                        <a target="_blank" href="https://dashboard.{{ BASE_DOMAIN }}/">
                           <button class="indiv_btns">Get started</button>
                         </a>
                       </div>
@@ -191,12 +191,12 @@
           <div class="header_links inline-block">
             <div class="buttons">
               <div class="inline-block">
-                <!-- a target="_blank" href="https://dashboard.hasura.io/login" -->
+                <!-- a target="_blank" href="https://dashboard.{{ BASE_DOMAIN }}/login" -->
                 <button class="indiv_btns black supportBtn"> Support </button>
                 <!--/ a -->
               </div>
               <div class="inline-block">
-                <a target="_blank" href="https://hasura.io/get-started">
+                <a target="_blank" href="https://dashboard.{{ BASE_DOMAIN }}/">
                   <button class="indiv_btns">Get started</button>
                 </a>
               </div>

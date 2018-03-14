@@ -1,6 +1,6 @@
 {%- if display_toc %}
   <div class="header_main_logo inline-block mobile-hide">
-    <a href="https://hasura.io/" target="_blank">
+    <a href="https://{{ BASE_DOMAIN }}/" target="_blank">
       <div class="img_wrapper inline-block">
         <img class="responsive logo_img" src="{{ pathto('_images/logo1.svg', 1) }}" />
       </div>
@@ -11,19 +11,19 @@
     <a class="version_txt">
       <select value="{{ version }}" onchange="location = this.value;" class="selected">
         {%- if version == '0.13' %}
-          <option class="option_val" value="{{ BASE_DOMAIN }}/0.13" selected="selected">v0.13</option>
+          <option class="option_val" value="https://docs.{{ BASE_DOMAIN }}/0.13" selected="selected">v0.13</option>
         {%- else -%}
-          <option class="option_val" value="{{ BASE_DOMAIN }}/0.13">v0.13</option>
+          <option class="option_val" value="https://docs.{{ BASE_DOMAIN }}/0.13">v0.13</option>
         {% endif %}
         {%- if version == '0.14' %}
-          <option class="option_val" value="{{ BASE_DOMAIN }}/0.14/manual" selected="selected">v0.14</option>
+          <option class="option_val" value="https://docs.{{ BASE_DOMAIN }}/0.14/manual" selected="selected">v0.14</option>
         {%- else -%}
-          <option class="option_val" value="{{ BASE_DOMAIN }}/0.14/manual">v0.14</option>
+          <option class="option_val" value="https://docs.{{ BASE_DOMAIN }}/0.14/manual">v0.14</option>
         {% endif %}
         {%- if version == '0.15' %}
-          <option class="option_val" value="{{ BASE_DOMAIN }}/0.15" selected="selected">v0.15</option>
+          <option class="option_val" value="https://docs.{{ BASE_DOMAIN }}/0.15" selected="selected">v0.15</option>
         {%- else -%}
-          <option class="option_val" value="{{ BASE_DOMAIN }}/0.15">v0.15</option>
+          <option class="option_val" value="https://docs.{{ BASE_DOMAIN }}/0.15">v0.15</option>
         {% endif %}
       </select>
     </a>
