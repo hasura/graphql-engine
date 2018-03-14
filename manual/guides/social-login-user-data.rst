@@ -24,7 +24,7 @@ To do this:
        "args":{
            "table":"user_details",
            "objects":[
-               {"user_id":<user-id>, "access_token": <facebook-access-token>},
+               {"user_id":"<user-id>", "access_token": "<facebook-access-token>"},
            ]
        }
    }
