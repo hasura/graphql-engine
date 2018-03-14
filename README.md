@@ -1,6 +1,6 @@
 **To run docs locally and to contribute:**
 
-* Make sure you have `pip` installed on your system
+* Make sure you have `pip3` installed on your system
 
 * Install dependencies (Sphinx, beautifulsoup4, algoliasearch, etc.)
     ```

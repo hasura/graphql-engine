@@ -10,7 +10,7 @@ The ``hasura`` CLI is a command line utility to help you get your backend setup 
 
 .. note::
 
-   ``hasura`` works using a CLI experience only so that you can mantain all the files that contain your configuration,
+   ``hasura`` works using a CLI experience only so that you can maintain all the files that contain your configuration,
    source code and database schema information on your filesystem directly. This makes it easy for you to collaborate using
    tools like git.
 

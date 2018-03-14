@@ -7,8 +7,8 @@ Mobile/OTP based authentication
 ===============================
 
 This provider supports mobile based **password-less** authentication. The way it
-works is, user's mobile number is sent to get an OTP on their mobile phone.
-Once they receive an OTP, they can use that to signup or login.
+works is, user's mobile number is used to send an OTP (One Time Password) on their mobile phone.
+Once they receive the OTP, they can use that to signup or login.
 
 Signup
 ------

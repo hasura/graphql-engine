@@ -38,5 +38,6 @@ Now that you're familiar with the basic concepts of what a microservice is, See:
   logs
   exec-container
   list
+  env-variables
   communicating-between-microservices
   Connecting to Postgres from microservices <connect-postgres>

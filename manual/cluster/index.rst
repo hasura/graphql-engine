@@ -47,6 +47,7 @@ See:
    delete
    multiple-clusters
    set-default
+   connect-kubectl
 
 ..
   uncomment this when we have danava

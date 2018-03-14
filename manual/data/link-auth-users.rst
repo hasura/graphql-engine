@@ -5,7 +5,7 @@
 Linking data to auth users
 ==========================
 
-It is a common requirement to link data in a table with users mantained by the Auth microservice.
+It is a common requirement to link data in a table with users maintained by the Auth microservice.
 
 This can be achieved by adding a new field called ``user_id`` (or any other name) of type ``integer`` to the table and storing the ``hasura_id`` of the user maintained by the Auth microservice in it.
 
