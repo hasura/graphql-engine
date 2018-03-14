@@ -46,6 +46,7 @@ See:
    list
    delete
    multiple-clusters
+   set-default
 
 ..
   uncomment this when we have danava
