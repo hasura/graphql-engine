@@ -9,20 +9,20 @@ If you've used typical hosting or cloud providers before, you might be used to h
 
 ``exec`` into a container basically means that you can ``exec`` whatever process or command you want, in the container. To make this equivalent to ``SSH``, ``exec`` a shell in your container!
 
-**Open a bash shell in your microservice `app`:**
+**Open a bash shell in your microservice `<my-app>`:**
 
 .. code-block:: bash
 
-   $ hasura ms exec app -ti -- /bin/bash
+   $ hasura ms exec <my-app> -ti -- /bin/bash
    $> # This is a bash prompt in your container
 
-**Open a shell in your microservice `app`:**
+**Open a shell in your microservice `<my-app>`:**
 
 Sometimes, your container might not have ``bash``, and might only have ``sh``.
 
 .. code-block:: bash
 
-   $ hasura ms exec app -ti -- /bin/sh
+   $ hasura ms exec <my-app> -ti -- /bin/sh
    $ # This is a sh prompt in your container
 
 **Open psql in your hasura `postgres` container:**

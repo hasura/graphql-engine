@@ -6,7 +6,7 @@ To make multiple queries as a part of the same request you can sent them as part
 To select from multiple tables in the same request, make a ``bulk`` query as follows
 
 .. code-block:: http
-   :emphasize-lines: 13
+   :emphasize-lines: 7,22
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
@@ -14,24 +14,22 @@ To select from multiple tables in the same request, make a ``bulk`` query as fol
 
    {
        "type": "bulk",
-       "args": [{
-           "type": "select",
-           "args": {
-               "table": "article",
-               "columns": [
-                   "*"
-               ]
+       "args": [
+           {
+               "type": "select",
+               "args": {
+                   "table": "article",
+                   "columns": ["*"]
+               }
+           },
+           {
+               "type": "select",
+               "args": {
+                   "table": "author",
+                   "columns": ["*"]
+               }
            }
-       },
-       {
-           "type": "select",
-           "args": {
-               "table": "author",
-               "columns": [
-                   "*"
-               ]
-           }
-       }]
+       ]
    }
 
 The response of the above query will be an array of two elements with first one containing the result from the ``article`` table and second one containing the result from the ``author`` table

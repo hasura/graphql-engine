@@ -48,8 +48,8 @@ To list the secrets currently available on the cluster:
 Using the secrets in your configuration
 ---------------------------------------
 
-Let's say you have a microservice called ``api`` that needs the postgres password to access the database directly.
-You can edit the ``microservices/api/k8s.yaml`` to add an environment variable that refers to the this secret.
+Let's say you have a microservice called ``<my-microservice>`` that needs the postgres password to access the database directly.
+You can edit the ``microservices/<my-microservice>/k8s.yaml`` to add an environment variable that refers to the this secret.
 When the microservice container is run, the value of the secret will be made available as an environment variable to
 the container.
 
@@ -92,9 +92,9 @@ You can add new or modify old secrets by using this command:
 
 .. code-block:: bash
 
-   $ hasura secrets update my.new.key 1234-some-secret-value-6789
+   $ hasura secrets update <my.new.key> <1234-some-secret-value-6789>
 
-Here ``my.new.key`` is the name of the secret and ``1234-some-secret-value-6789`` is the value of the secret.
+Here ``<my.new.key>`` is the name of the secret and ``<1234-some-secret-value-6789>`` is the value of the secret.
 
 List secrets
 ------------

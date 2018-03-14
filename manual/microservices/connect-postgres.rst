@@ -15,8 +15,8 @@ To connect to any PostgreSQL instance, we need the hostname, port, username and 
    $ hasura microservice list
    • Getting microservices...
    • Custom microservices:
-   NAME   STATUS    INTERNAL-URL   EXTERNAL-URL
-   app    Running   app.default    http://app.gram29.hasura-app.io
+   NAME      STATUS    INTERNAL-URL      EXTERNAL-URL
+   my-app    Running   my-app.default    http://my-app.gram29.hasura-app.io
 
    • Hasura microservices:
    NAME            STATUS    INTERNAL-URL           EXTERNAL-URL
@@ -62,9 +62,9 @@ While you can add hostname, port, username, password to your code, it is not rec
 
 The standard practice is to access these parameters as environment variables and Hasura provides a convenient method to do so. Let's look at the steps to add these environment variables.
 
-(The following section assumes that you have a Hasura cluster and project ready, with at least one microservice [say ``app``])
+(The following section assumes that you have a Hasura cluster and project ready, with at least one microservice [say ``<my-app>``])
 
-1. Edit ``k8s.yaml`` file inside ``microservices/app`` directory and add the highlighted code:
+1. Edit ``k8s.yaml`` file inside ``microservices/<my-app>`` directory and add the highlighted code:
 
    .. code-block:: yaml
       :emphasize-lines: 23-37
@@ -76,9 +76,9 @@ The standard practice is to access these parameters as environment variables and
       metadata:
         creationTimestamp: null
         labels:
-          app: app
+          app: my-app
           hasuraService: custom
-        name: app
+        name: my-app
         namespace: '{{ cluster.metadata.namespaces.user }}'
       spec:
         replicas: 1
@@ -87,7 +87,7 @@ The standard practice is to access these parameters as environment variables and
           metadata:
             creationTimestamp: null
             labels:
-              app: app
+              app: my-app
           spec:
             containers:
             - image: hasura/hello-world:latest
@@ -107,7 +107,7 @@ The standard practice is to access these parameters as environment variables and
                     name: hasura-secrets
                     key: postgres.password
               imagePullPolicy: IfNotPresent
-              name: app
+              name: my-app
               ports:
               - containerPort: 8080
                 protocol: TCP
@@ -120,9 +120,9 @@ The standard practice is to access these parameters as environment variables and
       metadata:
         creationTimestamp: null
         labels:
-          app: app
+          app: my-app
           hasuraService: custom
-        name: app
+        name: my-app
         namespace: '{{ cluster.metadata.namespaces.user }}'
       spec:
         ports:
@@ -130,7 +130,7 @@ The standard practice is to access these parameters as environment variables and
           protocol: TCP
           targetPort: 8080
         selector:
-          app: app
+          app: my-app
         type: ClusterIP
       status:
         loadBalancer: {}
@@ -141,7 +141,7 @@ The standard practice is to access these parameters as environment variables and
 
    .. code-block:: bash
 
-      $ git add microservices/app/k8s.yaml
+      $ git add microservices/<my-app>/k8s.yaml
       $ git commit -m "add postgres credentials"
       $ git push hasura master
 

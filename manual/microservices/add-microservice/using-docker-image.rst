@@ -23,29 +23,29 @@ First, make sure you already have a Hasura project.
 Step 1: Create a new microservice
 ---------------------------------
 
-Let's say you name the microservice ``blog``. Run the following command:
+Let's say you name the microservice ``<my-blog>``. Run the following command:
 
 .. code-block:: shell
 
-  $ hasura microservice create blog --image ghost:latest --port 2368
+  $ hasura microservice create <my-blog> --image ghost:latest --port 2368
 
-This will create a new directory called ``blog`` in the ``microservices``
+This will create a new directory called ``<my-blog>`` in the ``microservices``
 directory with Kubernetes specs file ``k8s.yaml``:
 
 .. code-block:: bash
 
    ├── microservices/
-       └── blog/
+       └── <my-blog>/
            └── k8s.yaml
 
 Step 2: Create a route for the microservice
 --------------------------------------------
-Now to expose our ``blog`` microservice externally, we have to create a route
+Now to expose our ``<my-blog>`` microservice externally, we have to create a route
 for it.
 
 .. code-block:: bash
 
-  $ hasura conf generate-route blog >> conf/routes.yaml
+  $ hasura conf generate-route <my-blog> >> conf/routes.yaml
 
 This will generate a route for the microservice and append it to
 ``conf/routes.yaml``.
@@ -59,7 +59,7 @@ Step 3: Git push and deploy!
 
 .. code:: bash
 
-    $ git add microservices/blog
+    $ git add microservices/<my-blog>
     $ git add conf/routes.yaml
     $ git commit -am 'Adds ghost docker image, and route config'
     $ git push hasura master
@@ -74,11 +74,11 @@ Check out the running microservices:
 
     INFO Custom microservices:
     NAME          STATUS    URL
-    blog          Running   https://blog.cluster-name.hasura-app.io
+    my-blog          Running   https://my-blog.cluster-name.hasura-app.io
 
 
 Open the microservice in your browser:
 
 .. code:: bash
 
-   $ hasura microservices open blog
+   $ hasura microservices open <my-blog>

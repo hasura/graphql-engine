@@ -15,7 +15,7 @@ The full definition of an `update` query can be found :ref:`here <data_update>`.
        "type" : "update",
        "args" : {
            "table" : "article",
-           "$set": {"title": "Mysterious affair at Styles"},
+           "$set": {"title": "Article 4", "description": "Sample article 4"},
            "where": {
                "id": 4
            }

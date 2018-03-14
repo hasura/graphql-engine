@@ -5,15 +5,16 @@
 Hasura project microservices
 ============================
 
-A Hasura project is composed of a set of microservices.
+A :doc:`Hasura project <../project/index>` is composed of a set of microservices.
 These include certain Hasura microservices but can also
 include your own custom microservices.
+Microservices are basically the individual 'apps' that run on a :doc:`cluster <../cluster/index>`.
+
+Hasura microservices run in the **hasura namespace** while custom microservices run in the **default namespace** on a cluster.
 
 Hasura microservices include the backend APIs provided by Hasura and other components of the Hasura platform.
 
-Hasura microservices run in the **hasura namespace** and custom microservices run in the **default namespace**.
-
-Some typical examples of microservices you would add to your application include, an API service,
+Some typical examples of custom microservices you would add to your project include, an API service,
 a webapp, a microservice that serves static files, for a simple HTML site or a SPA (eg: React),
 a ready made microservice like the ghost blog-engine or a 'stateful' microservice like a database.
 

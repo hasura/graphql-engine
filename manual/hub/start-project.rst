@@ -4,7 +4,6 @@ Starting with a project from /hub
 =================================
 
 Head to `hasura.io/hub <https://hasura.io/hub>`_ and choose a project that you want to start with.
-For eg: ``user/my-nodejs-project``.
 
 Here are some useful projects to start with:
 
@@ -21,8 +20,8 @@ Then, run the following instructions on your terminal or command line:
 
 .. code-block:: bash
 
-   hasura quickstart user/my-nodejs-project
-   cd my-nodejs-project
+   hasura quickstart <user/my-project>
+   cd <my-project>
    git add . && git commit -m 'Initial commit'
    git push hasura master
 
@@ -49,8 +48,8 @@ Then, run the following instructions on your terminal or command line:
 
 .. code-block:: bash
 
-   hasura clone user/my-nodejs-project
-   cd my-nodejs-project
+   hasura clone <user/my-project>
+   cd <my-project>
 
 Now, you'll have the project source code on your computer.
 

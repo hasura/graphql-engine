@@ -10,6 +10,7 @@ it has to be maintained strictly, else hasura cli would not work as expected. A
 representative project is shown below:
 
 .. toctree::
+  :titlesonly:
 
    hasura.yaml <hasura.yaml>
    clusters.yaml <clusters.yaml>

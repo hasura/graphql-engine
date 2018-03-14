@@ -11,25 +11,25 @@ captured as logs.
 The command ``hasura microservice logs``, or ``hasura ms logs`` for short, will get logs for your microservice.
 
 
-**Fetch all the logs till now of microservice `app` in one shot:**
+**Fetch all the logs till now of microservice `<my-app>` in one shot:**
 
 .. code-block:: bash
 
-   $ hasura ms logs app
+   $ hasura ms logs <my-app>
 
-**Fetch the last 100 log lines of microservice `app`:**
+**Fetch the last 100 log lines of microservice `<my-app>`:**
 
 .. code-block:: bash
 
-   $ hasura ms logs app --tail 100
+   $ hasura ms logs <my-app> --tail 100
 
-**Stream (follow) logs of microservice `app`:**
+**Stream (follow) logs of microservice `<my-app>`:**
 
 The command will not exit and log lines will keep coming up on your terminal:
 
 .. code-block:: bash
 
-   $ hasura ms logs app -f
+   $ hasura ms logs <my-app> -f
 
 **Get logs of a hasura microservice, say `auth`**
 

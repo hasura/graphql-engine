@@ -9,6 +9,8 @@ To add a cluster to a project we use:
 
 .. code-block:: bash
 
+  # in project directory
+  # to add cluster named 'alarming52' as alias 'hasura' to project
   $ hasura cluster add alarming52 -c hasura
 
   INFO Adding cluster...                             cluster-alias=hasura cluster-name=alarming52

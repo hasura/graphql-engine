@@ -12,7 +12,7 @@ This microservice discovery is powered by kubernetes's internal DNS.
 Examples:
 
 1. Hasura Data API: ``http://data.hasura``
-2. Custom webapp called app: ``http://app.default``
+2. Custom webapp called my-app: ``http://my-app.default``
 
 This is because Hasura microservices run in the ``hasura`` namespace and custom microservices run in the ``default`` namespace.
 
@@ -57,8 +57,8 @@ Examples:
    # port forward the postgres microservice in namespace hasura to local port 6432
    $ hasura microservice port-forward postgres -n hasura --local-port 6432
 
-   # port forward the custom microservice www to local port 8080
-   $ hasura microservice port-forward www --local-port=8080
+   # port forward the custom microservice <my-app> to local port 8080
+   $ hasura microservice port-forward <my-app> --local-port=8080
 
 
 Run the command ``hasura microservice port-forward -h`` for more information on the command options.

@@ -41,8 +41,11 @@ Assuming the owner has shared the repo URL and added you as a collaborator to th
   .. code-block:: bash
 
      # this command will fetch credentials, adds your ssh key to each cluster and sets up hooks and remotes
-     # note: this command is only available in this form from v0.2.37 onwards
      $ hasura setup
+
+  .. note::
+
+     this command is only available in this form from Hasura CLI v0.2.37 onwards
 
 * You can now access these clusters
 

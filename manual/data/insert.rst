@@ -1,7 +1,7 @@
 Inserting data
 ==============
 
-The following will insert a couple of new categories to the ``category`` table.
+The following will insert a couple of new articles to the ``article`` table.
 
 The full syntax of an ``insert`` query can be found :ref:`here <data_insert>`.
 
@@ -15,14 +15,14 @@ The full syntax of an ``insert`` query can be found :ref:`here <data_insert>`.
    {
        "type":"insert",
        "args":{
-           "table":"category",
+           "table":"article",
            "objects":[
-               {"name":"News"},
-               {"name":"Movies"}
+               {"title":"Article 1", "description": "Sample article 1"},
+               {"title":"Article 2", "description": "Sample article 2"}
            ],
-           "returning":["id"]
+           "returning":["id", "title"]
        }
    }
 
-Note the ``returning`` key. We would like to get the auto incremented id for each inserted row. The ``returning`` key is optional.
+Note the ``returning`` key. We would like to get back the auto incremented id for each inserted row along with the title in the response. The ``returning`` key is optional.
 

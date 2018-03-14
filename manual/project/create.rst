@@ -15,18 +15,19 @@ The following will 'clone' the project `hasura/base <https://hasura.io/hub/proje
 
 .. code:: bash
 
-   $ hasura clone base my-project
+   # creates a directory called '<my-project-dir>'
+   # clones the Hasura project 'hasura/base' into it
+   $ hasura clone hasura/base <my-project-dir>
 
       Cloning project...
-      ✓ Project cloned directory=<base-dir>/my-project
+      ✓ Project cloned directory=<base-dir>/my-project-dir
 
-   # creates a directory called `my-project` and initializes an empty Hasura project
 
 
 You can clone any project from `hasura hub <https://hasura.io/hub>`_ and use that as a starting point for your new project.
 
 `hasura/hello-world <https://hasura.io/hub/project/hasura/hello-world>`_ is a good starter project that contains a few database
-migrations, some sample data and even a sample microservice to help learn about hasura features quickly.
+migrations, some sample data and even a sample microservice to help learn about Hasura features quickly.
 
 .. note::
 

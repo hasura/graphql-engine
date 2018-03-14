@@ -73,18 +73,18 @@ Otherwise, continue with Step 2 below!
 Step 2: Add the microservice template to your microservices folder
 ------------------------------------------------------------------
 
-Let's say you want to use ``nodejs-express`` and you name the microservice ``my-app``. Now run:
+Let's say you want to use ``nodejs-express`` and you name the microservice ``<my-app>``. Now run:
 
 .. code-block:: bash
 
-   $ hasura ms create my-app --template=nodejs-express
+   $ hasura ms create <my-app> --template=nodejs-express
 
 This will create the following in your projects directory:
 
 .. code-block:: bash
 
    ├── microservices/
-       └── my-app/              # a new folder to contain microservice code/config
+       └── <my-app>/              # a new folder to contain microservice code/config
            ├── k8s.yaml
            ├── Dockerfile
            └── app/
@@ -99,7 +99,7 @@ automatically deploy your source code, build the docker image, and rollout the u
 
 .. code:: bash
 
-   $ hasura conf generate-remote my-service >> conf/ci.yaml
+   $ hasura conf generate-remote <my-app> >> conf/ci.yaml
 
 .. admonition:: Behind The Scenes
 
@@ -108,7 +108,7 @@ automatically deploy your source code, build the docker image, and rollout the u
 Step 4: Optional: Expose this microservice to the world
 -------------------------------------------------------
 
-Let's expose this microservice to the external world on the subdomain ``my-app``.
+Let's expose this microservice to the external world on the subdomain ``<my-app>``.
 The configuration for routes for all the microservices on your Hasura project
 are configured in ``conf/routes.yaml``.
 The ``hasura`` CLI provides a handy command to generate the
@@ -116,7 +116,7 @@ default routes configuration for your custom microservice:
 
 .. code:: bash
 
-    $ hasura conf generate-route my-service >> conf/routes.yaml
+    $ hasura conf generate-route <my-app> >> conf/routes.yaml
 
 This command above will add the default route configuration for your microservice to the ``conf/routes.yaml`` file.
 
@@ -129,10 +129,10 @@ Step 5: Git push and deploy!
 
 .. code:: bash
 
-    $ git add microservices/my-app
+    $ git add microservices/<my-app>
     $ git add conf/ci.yaml
     $ git add conf/routes.yaml
-    $ git commit -am 'Adds my-app microservice boilerplate, ci and route config'
+    $ git commit -am 'Adds <my-app> microservice boilerplate, ci and route config'
     $ git push hasura master
 
 That's it! And you'll have a shiny new microservice deployed to your cluster.
@@ -152,5 +152,5 @@ Open the microservice in your browser:
 
 .. code:: bash
 
-   $ hasura microservices open my-app
+   $ hasura microservices open <my-app>
 

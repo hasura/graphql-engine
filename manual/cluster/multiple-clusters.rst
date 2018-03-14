@@ -62,15 +62,17 @@ To add a cluster to a project we use:
 
 .. code-block:: bash
 
-  $ hasura cluster add caddy89 -c production
+  # in project directory
+  $ hasura cluster add <cluster-name> -c <cluster-alias>
 
-The ``-c`` flags tells to create a alias ``production`` the for the cluster. We
+The ``-c`` flags tells to create an alias for the cluster. We
 can then use this alias in various other commands including git push.
 
 Let's add the newly created two clusters to our projects.
 
 .. code-block:: bash
 
+  # in project directory
   $ hasura cluster add alarming52 -c staging
 
   INFO Adding cluster...                             cluster-alias=staging cluster-name=alarming52

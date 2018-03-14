@@ -28,7 +28,7 @@ See :doc:`../cluster/add`
 
 **Step 3: Deploy project to cluster**
 
-Commit all the files in the project folder and run ``git push hasura master`` (where ``hasura`` is the cluster alias)
+Commit all the files in the project folder and run ``git push hasura master`` (ie: git push ``<cluster-alias>`` master)
 
 This will deploy everything, including your custom microservices, database migrations and project configuration to the cluster.
 

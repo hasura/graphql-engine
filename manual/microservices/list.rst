@@ -5,12 +5,12 @@
 List running microservices
 ==========================
 
-To get the list of all running microservices on a cluster, aliased say ``hasura``, use the hasura CLI.
+To get the list of all running microservices on a cluster, use the hasura CLI.
 
 .. code-block:: bash
 
-  $ hasura microservices list -c hasura
-  # or hasura ms list -c hasura
+  $ hasura microservices list    # optionally -c <cluster-alias>
+  # or hasura ms list
 
   USER MS NAME  STATUS   REPLICAS  INTERNAL-URL                   EXTERNAL-URL
   app           Running  1/1       app.alarming52-user:80  http://app.alarming52.hasura-app.io/
