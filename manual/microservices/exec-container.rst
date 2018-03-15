@@ -27,8 +27,6 @@ Sometimes, your container might not have ``bash``, and might only have ``sh``.
 
 **Open psql in your hasura `postgres` container:**
 
-Sometimes, your container might not have ``bash``, and might only have ``sh``.
-
 .. code-block:: bash
 
    $ hasura ms exec postgres -n hasura -ti -- /bin/bash

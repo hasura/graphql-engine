@@ -9,7 +9,15 @@
 Deploying a project
 ===================
 
-A Hasura project can be deployed on a :doc:`../cluster/index` by simply running ``git push hasura master``
+A Hasura project can be deployed on a :doc:`Hasura cluster <../cluster/index>` by simply running ``git push hasura master``
+
+.. note::
+
+    The command is actually ``git push <cluster-alias> master``.
+
+    The above happens to be the case when the cluster is aliased as ``hasura``. If you have a different cluster alias, use the alias as the
+    remote in the git push command. For example, if your cluster is aliased as ``staging`` then use ``git push staging master`` to apply all changes.
+
 
 By default, any changes to your project (configuration, schema
 migrations, microservice configuration, added/removed
@@ -17,6 +25,8 @@ microservices) will all be applied to your cluster with the ``git push
 hasura master`` command.
 
 You can also apply each type of change separately as well as described :ref:`here <partial-deploy>`.
+
+**To deploy:**
 
 **Step 1: Get a Hasura cluster**
 
@@ -28,18 +38,9 @@ See :doc:`../cluster/add`
 
 **Step 3: Deploy project to cluster**
 
-Commit all the files in the project folder and run ``git push hasura master`` (ie: git push ``<cluster-alias>`` master)
+Commit all the files in the project folder and run ``git push hasura master``
 
 This will deploy everything, including your custom microservices, database migrations and project configuration to the cluster.
-
-.. note::
-
-   The above assumes that you are deploying to a  cluster which is aliased to ``hasura``.
-
-   If you have a different cluster name, use the cluster name or alias as the
-   remote in the git push command. For example, if your cluster is aliased as
-   ``staging`` then use ``git push staging master`` to apply all changes.
-
 
 How ``git push hasura master`` works
 ------------------------------------
@@ -99,4 +100,4 @@ configuration, migrations etc.), then you can use:
 
 .. code-block:: bash
 
-  $ git push <cluster-name/alias> master --no-verify
+  $ git push hasura master --no-verify  # where 'hasura' is the cluster-alias

@@ -5,8 +5,8 @@
 Communicating between microservices
 ===================================
 
-Every microservice has an ``internal URL`` at which other microservices
-can reach it. The URL is typically of the structure: ``http://<microservice-name>.<namespace>``.
+Every microservice has an ``internal endpoint`` at which other microservices
+can reach it. The internal URL is typically of the structure: ``http://<microservice-name>.<namespace>``.
 This microservice discovery is powered by kubernetes's internal DNS.
 
 Examples:
@@ -24,24 +24,24 @@ To get the URLs of externally exposed microservices running on a hasura cluster 
 
 .. code-block:: bash
 
-   $ hasura microservices list
-   INFO Custom microservices:
-   NAME   STATUS    URL
-   app    Running   https://app.doyenne73.hasura-app.io
+   $ hasura microservice list
+   • Getting microservices...
+   • Custom microservices:
+   NAME      STATUS    INTERNAL-URL      EXTERNAL-URL
+   my-app    Running   my-app.default    http://my-app.gram29.hasura-app.io
 
-   INFO Hasura microservices:
-   NAME            STATUS    URL
-   auth            Running   https://auth.doyenne73.hasura-app.io
-   data            Running   https://data.doyenne73.hasura-app.io
-   filestore       Running   https://filestore.doyenne73.hasura-app.io
-   gateway         Running
-   le-agent        Running
-   notify          Running   https://notify.doyenne73.hasura-app.io
-   platform-sync   Running
-   postgres        Running
-   session-redis   Running
-   sshd            Running
-   vahana          Running
+   • Hasura microservices:
+   NAME            STATUS    INTERNAL-URL           EXTERNAL-URL
+   auth            Running   auth.hasura            http://auth.gram29.hasura-app.io
+   data            Running   data.hasura            http://data.gram29.hasura-app.io
+   filestore       Running   filestore.hasura       http://filestore.gram29.hasura-app.io
+   gateway         Running   gateway.hasura
+   le-agent        Running   le-agent.hasura
+   notify          Running   notify.hasura          http://notify.gram29.hasura-app.io
+   platform-sync   Running   platform-sync.hasura
+   postgres        Running   postgres.hasura
+   session-redis   Running   session-redis.hasura
+   sshd            Running   sshd.hasura
 
 
 Contacting other microservices during local development of a microservice
