@@ -30,6 +30,6 @@ Sometimes, your container might not have ``bash``, and might only have ``sh``.
 .. code-block:: bash
 
    $ hasura ms exec postgres -n hasura -ti -- /bin/bash
-   root@postgres-3391217220-6jbq7:/$ #You can now run psql, pg_dump and other commands
+   root@postgres-3391217220-6jbq7:/$ # You can now run psql, pg_dump and other commands
 
 For more details, read the full CLI reference for :doc:`hasura microservice exec <../hasuractl/hasura_microservice_exec>`.

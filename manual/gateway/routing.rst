@@ -9,8 +9,24 @@ For example, in the cluster ``test42.hasura-app.io``, if one makes a request
 connection, resolve sessions, and proxy the request to the upstream ``Auth``
 microservice.
 
-The routing is done via configuration, using the ``hasura`` CLI. Refer to
-:doc:`../hasuractl/hasura_conf_generate-route` for more details.
+The routing configuration is stored in the ``conf/routes.yaml``
+file in the project directory.
 
-Once the route configuration is applied, the gateway reads the config and
+During deployment, the API gateway reads the ``routes.yaml`` file and
 templates Nginx with the new route configuration.
+
+Add a new route for a microservice:
+-----------------------------------
+
+A new route for a microservice can be added using the ``hasura`` CLI. See :doc:`../hasuractl/hasura_conf_generate-route`
+
+Change subdomain of a microservice:
+-----------------------------------
+
+To change the subdomain a microservice is exposed at, see :doc:`../microservices/change-subdomain`
+
+Detailed routing:
+-----------------
+
+For a detailed understanding of how you can customise your projects routing config, check out :doc:`../project/directory-structure/conf/routes.yaml`
+

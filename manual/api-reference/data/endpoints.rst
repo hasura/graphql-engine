@@ -2,8 +2,8 @@
    :description: Overview of the single query endpoint, /v1/query, exposed by Hasura's Data microservice and its Request and Response structure.
    :keywords: hasura, docs, data, query endpoint
 
-Data API Reference: Query endpoints
-===================================
+Data API endpoints & error codes
+================================
 
 ``/v1/template``
 ----------------

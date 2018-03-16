@@ -10,6 +10,12 @@ This provider supports mobile/password based authentication.  The user's mobile
 is verified by sending an OTP via SMS to the user's mobile number. To use this
 provider there are extra steps to be performed to verify the user's mobile.
 
+.. note::
+
+  For this provider to send OTP via SMS, you have to :doc:`enable a SMS provider <../../notify/sms/index>` in
+  the Hasura Notify microservice.
+
+
 
 Signup
 ------
@@ -32,11 +38,6 @@ To signup a user, make a request to the signup endpoint : ``/v1/signup``.
 
 If the request is successful, Hasura Auth will send a verification SMS to the
 given mobile number and will return a response with user details.
-
-.. note::
-
-  For this provider to send SMS, you have to enable a SMS provider in the
-  Hasura Notify microservice.
 
 
 This will not login the user automatically (unlike the ``username`` provider),
@@ -77,9 +78,6 @@ To verify the mobile number, Hasura Auth will send a SMS with a one time
 password or OTP to the user's mobile number, and within a configurable amount of
 time, the user has to submit the OTP to a Hasura Auth API endpoint to verify
 the mobile number.
-
-.. note::
-  For OTP to be sent, you have to enable SMS provider in Hasura Notify microservice.
 
 To verify the mobile number, make the following request.
 

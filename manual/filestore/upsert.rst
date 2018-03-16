@@ -44,5 +44,5 @@ The unique file_id is used to update an uploaded file or create a file if file_i
 
 Uploaded files will be visible on the console.
 
-For more details, see  :ref:`API reference <filestore-api-upload>`.
+For more details, see  :ref:`API reference <filestore-api-upsert>`.
 

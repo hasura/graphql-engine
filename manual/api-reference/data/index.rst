@@ -22,6 +22,6 @@ See:
 .. toctree::
   :maxdepth: 2
 
-  Query endpoints <endpoints>
-  Queries <queries>
+  Endpoints & Error Codes <endpoints>
+  Query types <queries>
   FAQ <faq>

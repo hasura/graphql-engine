@@ -9,7 +9,7 @@ Google authentication
 Pre-requisites
 --------------
 
-* To use Google login with Hasura, create an Project on
+* To use Google login with Hasura, create a Project on
   https://console.developers.google.com/.  You can know more about using Google
   login from https://developers.google.com/identity/.
 

@@ -17,7 +17,8 @@ See:
 ^^^^
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
+   :titlesonly:
 
    Routing <routing>
    Session Middleware <session-middleware>

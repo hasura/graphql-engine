@@ -33,11 +33,13 @@ Now that you're familiar with the basic concepts of what a microservice is, See:
   :maxdepth: 1
   :titlesonly:
 
-  Adding microservices <add-microservice/index>
+  hasura-microservices
+  add-microservice/index
   debug
   logs
   exec-container
   list
   env-variables
+  change-subdomain
   communicating-between-microservices
   Connecting to Postgres from microservices <connect-postgres>

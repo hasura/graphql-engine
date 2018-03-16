@@ -10,6 +10,12 @@ This provider supports mobile based **password-less** authentication. The way it
 works is, user's mobile number is used to send an OTP (One Time Password) on their mobile phone.
 Once they receive the OTP, they can use that to signup or login.
 
+
+.. note::
+
+  For this provider to send OTP via SMS, you have to :doc:`enable a SMS provider <../../notify/sms/index>` in
+  the Hasura Notify microservice.
+
 Signup
 ------
 
@@ -26,12 +32,6 @@ To get an OTP, use the ``/v1/providers/mobile/send-otp`` endpoint.
       "mobile": "9876543210",
       "country_code": "91"
    }
-
-
-.. note::
-
-  For this provider to send SMS, you have to enable a SMS provider in
-  the Hasura Notify microservice.
 
 
 Once the OTP is obtained, then the user should make a signup request.
@@ -93,12 +93,6 @@ To get an OTP, use the ``/v1/providers/mobile/send-otp`` endpoint.
       "mobile": "9876543210",
       "country_code": "91"
    }
-
-
-.. note::
-
-  For this provider to send SMS, you have to enable a SMS provider in
-  the Hasura Notify microservice.
 
 
 Once the OTP is obtained, then the user should make a login request.

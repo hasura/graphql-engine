@@ -17,6 +17,7 @@ To see what the differences in configuration across clusters are, or even betwee
 Following are the files present in this directory:
 
 .. toctree::
+   :titlesonly:
 
    authorized-keys.yaml <authorized-keys.yaml>
    auth.yaml <auth.yaml>

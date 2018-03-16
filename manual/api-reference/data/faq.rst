@@ -1,5 +1,5 @@
-Data API Reference: FAQ
-=======================
+Data API FAQs
+=============
 
 How do I make aggregation or analytics queries?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

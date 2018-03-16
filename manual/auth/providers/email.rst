@@ -10,6 +10,11 @@ This provider supports email/password based authentication.  The user's email
 is verified by sending a verification email. To use this provider there are
 extra steps to be performed to verify the user's email.
 
+.. note::
+
+  For this provider to send emails, you have to :doc:`enable an email provider <../../notify/email/index>` in
+  the Hasura Notify microservice.
+
 
 Signup
 ------
@@ -32,11 +37,6 @@ To signup a user, make a request to the signup endpoint : ``/v1/signup``.
 
 If the request is successful, Hasura Auth will send a verification email to the
 given email address and will return a response with user details.
-
-.. note::
-  For this provider to send emails, you have to enable an email provider in
-  the Hasura Notify microservice.
-
 
 This will not login the user automatically (unlike the ``username`` provider),
 because at this point the email verification is pending.
