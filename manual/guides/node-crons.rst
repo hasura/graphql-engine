@@ -16,6 +16,22 @@ The name of the microservice is ``cron``, to get this cron job in your project:
 
 You will now have this microservice inside your ``microservices/cron`` directory. You can find the source code for the cron job inside ``microservices/cron/src/server.js``
 
+Next, we have to ensure that HasuraCtl knows that this microservice needs to be `git pushed`. To do this, we need to add configuration to your conf/ci.yaml file so that git push hasura master will automatically deploy your source code, build the docker image, and rollout the update!
+
+.. code-block:: bash
+
+  $ hasura conf generate-remote cron >> conf/ci.yaml
+  
+Since this is a microservice running a cron, it can be a headless microservice which is not exposed via an external URL. 
+
+
+Optionally, if you do want to expose the microservice via an external URL
+
+.. code-block:: bash
+
+  $ hasura conf generate-route cron >> conf/routes.yaml
+
+
 To deploy this microservice to your cluster:
 
 .. code-block:: bash
