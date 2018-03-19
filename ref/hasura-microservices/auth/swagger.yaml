@@ -517,7 +517,7 @@ paths:
   /password/reset:
     post:
       summary: Endpoint which reset password of a user
-      description: Use this endpoint to reset password of an user. It requires
+      description: Use this endpoint to reset password of a user. It requires
         a token and a new password. This token is sent with the forgot pasword
         email.
       parameters:
@@ -545,7 +545,7 @@ paths:
 
   /user/account/change-username:
     post:
-      summary: Change username of an user
+      summary: Change username of a user
       description: Change the username of currently logged in user.
       parameters:
         - name: username
@@ -568,7 +568,7 @@ paths:
   /user/account/delete:
     post:
       summary: Endpoint to delete user account
-      description: Delete an user account by submitting the password of the user.
+      description: Delete a user account by submitting the password of the user.
       parameters:
         - name: password
           in: formData

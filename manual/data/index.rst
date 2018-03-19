@@ -38,7 +38,7 @@ See:
   Bulk queries <bulk>
   Linking to auth users <link-auth-users>
   Permissions and access control <permissions>
-  Relationships <relationships>
+  relationships
   data-migration
   Altering the schema <alter-schema>
   Aggregations/Views <aggregations>

@@ -1,5 +1,5 @@
-Changing sub-domain of a microservice
-=====================================
+Changing subdomain of a microservice
+====================================
 
 A microservice can be contacted externally (ie: from outside a cluster) on a subdomain which is configurable.
 The subdomain of a microservice is generally the same as the name of the microservice but it can be changed.
@@ -12,7 +12,7 @@ A typical routing config block looks as follows:
 .. code-block:: yaml
    :emphasize-lines: 1,5
 
-   myapp:  # the sub-domain
+   myapp:  # the subdomain
      /:
        corsPolicy: allow_all
        upstreamService:
@@ -21,12 +21,12 @@ A typical routing config block looks as follows:
        upstreamServicePath: /
        upstreamServicePort: 80
 
-To serve the microservice <myapp> at the sub-domain <newsubdom>, update the config block as follows:
+To serve the microservice <myapp> at the subdomain <newsubdom>, update the config block as follows:
 
 .. code-block:: yaml
-   :emphasize-lines: 1,5
+   :emphasize-lines: 1
 
-      newsubdom:  # the sub-domain
+      newsubdom:  # the subdomain
         /:
           corsPolicy: allow_all
           upstreamService:

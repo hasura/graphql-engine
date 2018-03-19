@@ -30,5 +30,5 @@ See:
   deploy
   collaboration
   Conf files templating <conf-files-templating>
-  Secrets <secrets>
+  Secrets <secrets/index>
   Directory structure <directory-structure/index>

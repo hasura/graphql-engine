@@ -10,7 +10,7 @@ Sessions
 
 When a user is logged-in, a session token is attached to that user. A session
 token is nothing but a unique, un-guessable identifier attached to that user
-for that session. This way an user can make subsequent requests without having
+for that session. This way a user can make subsequent requests without having
 to authenticate, with credentials, on every request.
 
 Each API request to Hasura can contain an ``Authorization`` bearer token or a

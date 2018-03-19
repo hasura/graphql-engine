@@ -11,10 +11,10 @@ info:
     1. The anonymous category means all those requests can be made by a user who
     is not logged in.
 
-    2. The user category means all those requests can be made by an user who is
+    2. The user category means all those requests can be made by a user who is
     logged in.
 
-    3. The admin category means all those requests can be made by an user who is
+    3. The admin category means all those requests can be made by a user who is
     logged in and has the admin role.
 
     The user and the admin category of requests require the "Authorization"

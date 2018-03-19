@@ -10,7 +10,7 @@ Hasura Auth APIs let's you create, authenticate and manage user accounts on
 your Hasura project. It also let's you manage sessions and roles for users.
 
 Like any other authentication API, Hasura Auth has support for multiple ways to
-authenticate an user (e.g. username-based, email-based, mobile-based etc.).
+authenticate a user (e.g. username-based, email-based, mobile-based etc.).
 Hasura Auth calls each authentication method a "provider".
 
 Once a user is registered (or signed-up) on Hasura, it attaches a Hasura

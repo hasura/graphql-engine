@@ -7,7 +7,7 @@ For example, an ``article`` table might have a column called ``category_id`` whi
 
 These additional properties, *articles* of a *category* and *category* of an *article*, made possible because of foreign key constraints are what we call relationships. *articles* of *category* is an **array relationship** while *category* of *article* is an **object relationship**.
 
-Head to the ``Relationships`` section of a table in the API console. It'll suggest you the appropriate relationships based on the foreign key constraints that the table is involved in.
+In the ``Data`` section of the :doc:`API console <../api-console/index>`, choose a table and head to the ``Relationships`` tab to view the current relationships and also possible relationships based on the foreign key constraints that the table is involved in.
 
 To obtain the **author**'s name from the article table, we issue,
 
