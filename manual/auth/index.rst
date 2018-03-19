@@ -6,8 +6,8 @@
 Users & Authentication
 ======================
 
-Hasura Auth APIs let's you create, authenticate and manage user accounts on
-your Hasura project. It also let's you manage sessions and roles for users.
+Hasura Auth APIs lets you create, authenticate and manage user accounts on
+your Hasura project. It also lets you manage sessions and roles for users.
 
 Like any other authentication API, Hasura Auth has support for multiple ways to
 authenticate a user (e.g. username-based, email-based, mobile-based etc.).
