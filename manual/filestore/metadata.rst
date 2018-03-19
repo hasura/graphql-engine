@@ -1,7 +1,7 @@
 Storing file metadata
 ======================
 
-It is a common use-case to store extra information or metadata along with a file. For this you
+It is a common use-case to store extra information or metadata along with a file. For this, you
 should create a custom table in the ``data`` microservice and use that to store the file metadata.
 
 **To store file metadata:**
