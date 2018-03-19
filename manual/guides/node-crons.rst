@@ -1,5 +1,3 @@
-.. _node-cron
-
 Adding a nodejs cron job to your Hasura Project
 ===============================================
 

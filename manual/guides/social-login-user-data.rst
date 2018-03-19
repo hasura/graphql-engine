@@ -1,5 +1,3 @@
-.. _social-login-user-data
-
 Integrating social login with user table
 ========================================
 

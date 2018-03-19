@@ -1,2 +1,0 @@
-Monitoring resource consumption
-===============================
