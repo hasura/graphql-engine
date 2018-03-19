@@ -1,7 +1,5 @@
-.. .. meta::
-   :description: Learn how to use Hasura Users
-   :keywords: hasura, users, signup, login, email, mobile, email verification, mobile verification, password forgot, password reset, social login, google, facebook, github, linkedin
-
+.. meta::
+   :keywords: hasura_id
 
 Users & Authentication
 ======================
@@ -13,8 +11,8 @@ Like any other authentication API, Hasura Auth has support for multiple ways to
 authenticate a user (e.g. username-based, email-based, mobile-based etc.).
 Hasura Auth calls each authentication method a "provider".
 
-Once a user is registered (or signed-up) on Hasura, it attaches a Hasura
-Identity or (``hasura_id``) to every user.  A Hasura identity is an integer.
+Once a user is registered (or signed-up) on Hasura, it attaches a ``Hasura
+Identity`` or (``hasura_id``) to every user.  A Hasura identity is an integer.
 You can use this value in your application to tie your application's user to
 this identity.
 
