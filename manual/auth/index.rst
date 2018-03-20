@@ -20,11 +20,7 @@ Hasura Auth APIs also has a bunch of admin APIs to perform administrative tasks
 on your user accounts.
 
 
-Exploring the Auth APIs
------------------------
-
-The base URL for the Auth microservice would be:
-``https://auth.<cluster-name>.hasura-app.io``.
+**Explore the Auth APIs**
 
 Use the API console to browse the various Auth APIs.
 

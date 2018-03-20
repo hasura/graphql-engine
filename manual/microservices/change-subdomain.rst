@@ -26,7 +26,7 @@ To serve the microservice <myapp> at the subdomain <newsubdom>, update the confi
 .. code-block:: yaml
    :emphasize-lines: 1
 
-      newsubdom:  # the subdomain
+      newsubdom:  # the new subdomain
         /:
           corsPolicy: allow_all
           upstreamService:

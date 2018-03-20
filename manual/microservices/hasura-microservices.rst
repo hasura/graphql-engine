@@ -10,19 +10,6 @@ Hasura microservices are the default Hasura specific microservices that run on y
 Hasura microservices run in the **hasura namespace** on a cluster. Most ``hasura microservice *`` commands
 will take the ``-n hasura`` flag while dealing with a service in the hasura namespace.
 
-The Hasura microservices that run on a cluster are:
-
-- auth
-- data
-- filestore
-- notify
-- gateway
-- sshd
-- postgres
-- le-agent
-- platform-sync
-- session-redis
-
 The following command lists the Hasura microservices that are running on a cluster along with their contact endpoints:
 
 .. code-block:: bash
@@ -41,3 +28,45 @@ The following command lists the Hasura microservices that are running on a clust
   postgres        Running  1/1       postgres.alarming52-hasura:5432
   session-redis   Running  1/1       session-redis.alarming52-hasura:6379
   sshd            Running  1/1
+
+The Hasura microservices that run on a cluster are:
+
+auth
+^^^^
+The auth microservice handles user authentication for your Hasura cluster.
+
+data
+^^^^
+The data microservice on Hasura exposes an HTTP/JSON API over a PostgreSQL database.
+
+filestore
+^^^^^^^^^
+The filestore microservice lets users upload and store files on the Hasura project and also download when required.
+
+gateway
+^^^^^^^
+This microservice exposes your project to the outside world. It authenticates and redirects external requests to the appropriate microservice inside the cluster.
+
+le-agent
+^^^^^^^^
+This is the LetsEncrypt agent which is responsible for generating SSL certificates.
+
+notify
+^^^^^^
+This microservice handles the Email/SMS communication.
+
+platform-sync
+^^^^^^^^^^^^^
+This microservice keeps the cluster in sync with the configuration.
+
+postgres
+^^^^^^^^
+This microservice hosts the PostgreSQL database.
+
+session-redis
+^^^^^^^^^^^^^
+This is a Redis instance used by the auth microservice.
+
+sshd
+^^^^
+This microservice handles SSH access to the cluster.

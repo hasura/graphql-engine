@@ -95,7 +95,7 @@ This microservice keeps the cluster in sync with the configuration.
 
 postgres
 ^^^^^^^^
-This microservice hosts the PostgrSQL database.
+This microservice hosts the PostgreSQL database.
 
 session-redis
 ^^^^^^^^^^^^^

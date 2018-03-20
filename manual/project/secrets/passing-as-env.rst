@@ -40,4 +40,4 @@ the container called ``MY_SECRET_VARIABLE``.
    ...
 
 
-See :doc:`this <../../microservices/env-variables>` for more info on passing ENV variables.
+See :doc:`this <../../microservices/env-variables>` for more info on passing ENV variables to microservices.

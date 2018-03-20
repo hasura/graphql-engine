@@ -22,60 +22,12 @@ For microservices with continuous integration enabled, i.e. their name appears i
 Secrets
 -------
 
-Checkout :ref:`this page <hasura-secrets-manual>` for more info on using secrets.
+Check out :doc:`this page <../../secrets/index>` for more info on using secrets.
 
 Environment Variables
 ---------------------
 
-You can provide environment variables (env vars) for microservices to use by editing this file and adding a few lines. By combining this with templating capabilities, you get a highly configurable environment.
-
-Let's say you need to add two variables called ``CLUSTER_NAME`` and ``RELEASE_MODE``. Cluster name should get the name of the cluster and release mode should be ``production`` for cluster with alias ``prod`` and ``dev`` for all other clusters. Deployment section in ``k8s.yaml`` for such a configuration would look like the following:
-
-.. code-block:: yaml+jinja
-   :emphasize-lines: 21-29
-
-   apiVersion: extensions/v1beta1
-   kind: Deployment
-   metadata:
-     creationTimestamp: null
-     labels:
-       app: app
-       hasuraService: custom
-     name: app
-     namespace: '{{ cluster.metadata.namespaces.user }}'
-   spec:
-     replicas: 1
-     strategy: {}
-     template:
-       metadata:
-         creationTimestamp: null
-         labels:
-           app: app
-       spec:
-         containers:
-         - image: hasura/hello-world:latest
-           env:
-           - name: CLUSTER_NAME
-             value: '{{ cluster.name }}'
-           - name: RELEASE_MODE
-           {% if cluster.alias == "prod" %}
-             value: production
-           {% else %}
-             value: dev
-           {% endif %}
-           imagePullPolicy: IfNotPresent
-           name: app
-           ports:
-           - containerPort: 8080
-             protocol: TCP
-           resources: {}
-         securityContext: {}
-         terminationGracePeriodSeconds: 0
-   status: {}
-
-These variables can be consumed from the application code within the microservice.
-
-For instructions on how to access Postgres database from within a microservice, refer to :ref:`Connecting to Hasura PostgreSQL database from microservice <connecting-to-postgres>`.
+Check out :doc:`this page <../../../microservices/env-variables>` for more info on passing ENV variables to a microservice.
 
 Ports
 -----

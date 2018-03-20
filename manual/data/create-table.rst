@@ -31,7 +31,9 @@ You can also create tables using SQL by heading to ``Data > SQL`` section in the
 
 .. image:: ../../img/manual/data/run_sql.png
 
-Note: You should click on ``This is a migration`` option before executing the query if you want to retain the migration.
+.. note::
+
+  You should click on ``This is a migration`` option before executing the query if you want to retain the query as a database migration.
 
 Using the API
 -------------
