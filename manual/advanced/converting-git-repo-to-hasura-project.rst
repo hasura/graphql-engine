@@ -25,7 +25,7 @@ Copy the following files and directories from ``base`` to the root of your own g
 
 - ``conf/``
 
-  Copy this directory and all it's contents from ``base`` to the root of the repo. ``conf/`` directory contains ``yaml`` files which together define the configuration of a cluster on-to which the project will be deployed.
+  Copy this directory and all its contents from ``base`` to the root of the repo. ``conf/`` directory contains ``yaml`` files which together define the configuration of a cluster on-to which the project will be deployed.
 
 - ``migrations/``
 
