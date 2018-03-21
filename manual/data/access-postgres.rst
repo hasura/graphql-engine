@@ -5,7 +5,7 @@
 Accessing Postgres directly
 ===========================
 
-The postgres database runs as a microservice on a Hasura cluster.
+The Postgres database runs as a microservice on a Hasura cluster. You can directly access Postgres via the following options:
 
 Getting direct CLI access via port forwarding:
 ----------------------------------------------
@@ -27,7 +27,7 @@ Now, you can run ``psql`` (or any other postgres client) from your localhost to 
 
    psql -U admin -h localhost -p 6432 -d hasuradb
 
-Getting direct CLI access via exec / SSH:
+Getting direct CLI access via exec (SSH):
 -----------------------------------------
 
 To get direct CLI access to the database, you can :doc:`exec <../microservices/exec-container>` (equivalent to SSH) into the postgres microservice container.
@@ -38,8 +38,6 @@ Run the following hasura CLI command from your project directory:
 
    $ hasura ms exec postgres -n hasura -ti -- /bin/bash
    root@postgres-3391217220-6jbq7:/$ # You can now run psql, pg_dump and other commands
-
-Note: This method will only work with Hasura paid plans.
 
 Accessing database directly from a microservice:
 ------------------------------------------------
