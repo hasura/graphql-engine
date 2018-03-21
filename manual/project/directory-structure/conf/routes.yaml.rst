@@ -7,7 +7,7 @@ Project structure: conf/routes.yaml
 
    This file is rendered as a template. Refer to :ref:`Conf files templating <conf-templating>` for more details.
 
-This section lets you define the mapping between HTTP(S) routes on your domain(s) ond
+This section lets you define the mapping between HTTP(S) routes on your domain(s) and
 the microservices running on your cluster
 
 The standard convention is to expose a microservice on a subdomain. The
