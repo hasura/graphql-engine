@@ -129,6 +129,9 @@
     <meta http-equiv="Content-Type" content="text/html; charset={{ encoding }}" />
     {%- endif %}
     {{- metatags }}
+    {%- if pagename == "manual/404" %}
+    <base href="/{{ version }}/{{ pagename }}">
+    {% endif %}
     {%- block htmltitle %}
     <title>{{ title|striptags|e }}{{ titlesuffix }}</title>
     {%- endblock %}
