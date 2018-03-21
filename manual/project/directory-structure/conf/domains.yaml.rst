@@ -24,6 +24,22 @@ An example configuration for a domain without SSL:
    example-domain.com:
      ssl: null
 
+OR (only for Hasura CLI versions >= v0.2.50)
+
+.. code-block:: yaml
+
+   # Example configurtaion for a domain with SSL
+
+   - domain: example-domain.com
+     ssl:
+       type: LetsEncrypt
+       conf: {}
+   
+   # Example configurtaion for a domain without SSL
+   
+   - domain: example-domain.com
+     ssl: null
+
 If you own a domain and need point that domain to a Hasura cluster, you just need to point the domain to the cluster IP and add a domain configuration here.
 
 Checkout :ref:`Adding a custom domain <adding-custom-domain>` for more details.

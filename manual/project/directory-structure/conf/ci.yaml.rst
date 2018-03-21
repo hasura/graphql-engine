@@ -22,6 +22,21 @@ Details under a remote indicate which microservices has to be updated when a git
          path: microservices/app                  # path where image has to be built
          dockerfile: microservices/app/Dockerfile # dockerfile for building the image
 
+OR (only for Hasura CLI versions >= v0.2.50)
+
+.. code-block:: yaml
+
+   name: remote-name                  # name of the remote
+   deployments:
+   - name: deployment-name            # name of deployments to be updated
+     namespace: deployment-namespace  # namespace of deployment
+     containers:
+     - name: container-name:          # name of container in deployment to be updated
+       dockerBuild:                   # docker build context path and dockerfile
+         contextPath: microservices/app
+         dockerfilePath: microservices/app/Dockerfile
+
+
 registry
 --------
 

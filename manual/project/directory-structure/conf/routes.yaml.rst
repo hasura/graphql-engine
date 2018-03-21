@@ -215,3 +215,27 @@ The following options are available:
     location block
 
 You can find the default file at `conf/routes.yaml <https://github.com/hasura/base/blob/master/conf/routes.yaml>`_ in the base repo.
+
+OR (only for Hasura CLI versions >= v0.2.50)
+
+.. code-block:: yaml
+
+   - subdomain: pghero
+     paths:
+     - path: /
+       upstreamService:
+         name: pghero
+         namespace: {{ cluster.metadata.namespaces.user }}
+         path: /
+         port: 80
+       authorizationPolicy:
+         restrictToRoles: ["admin"]
+         noSessionRedirectUrl: https://auth.{{ cluster.name }}.hasura-app.io/ui/
+         noAccessRedirectUrl: https://auth.{{ cluster.name }}.hasura-app.io/ui/restricted
+       enableAuth: true
+       corsPolicy: allow_all
+       enableWebsockets: true
+       locationDirectives: |
+         proxy_request_buffering off;
+         client_max_body_size 100M;
+ 
