@@ -6,10 +6,11 @@
 Database
 ========
 
-Hasura comes with data APIs which run on top of a **Postgres database** to store and retrieve data. To fetch associated data, one can define relationships on
-tables. Permissions can then be used to authorize the access to data based on
-user roles.
+Hasura comes with data APIs which run on top of a **Postgres database** to store and retrieve data.
 
+To fetch associated data with ease, one can define :doc:`relationships <relationships>` on
+tables. To authorize the access to data, :doc:`permissions <permissions>` can be added based on
+user roles.
 
 **Explore the Data APIs**
 

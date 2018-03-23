@@ -7,6 +7,10 @@ Accessing Postgres directly
 
 The Postgres database runs as a microservice on a Hasura cluster. You can directly access Postgres via the following options:
 
+.. note::
+
+   All the data is stored in a database called ``hasuradb`` in Postgres.
+
 Getting direct CLI access via port forwarding:
 ----------------------------------------------
 

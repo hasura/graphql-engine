@@ -1,7 +1,7 @@
-GraphQL
-=======
+Querying data over GraphQL
+==========================
 
-Starting from version ``v0.15.31``, the data service supports querying over `GraphQL <https://graphql.org/>`_ in addition to the JSON based query language (``/v1/query``). The api-console has `GraphiQL <https://github.com/graphql/graphiql>`_ integrated, so that is the best place for getting started with GraphQL on Hasura.
+Starting from version ``v0.15.31``, the data microservice supports querying over `GraphQL <https://graphql.org/>`_ in addition to the JSON based query language (``/v1/query``). The :doc:`api-console <../api-console/index>` has `GraphiQL <https://github.com/graphql/graphiql>`_ integrated, so that is the best place for getting started with GraphQL on Hasura.
 
 The following are the current limitations:
 
@@ -12,7 +12,7 @@ The following are the current limitations:
 GraphQL endpoints
 -----------------
 
-The data serivce exposes the GraphQL interface at ``/v1alpha1/graphql``. So the publicly accessible URL will be ``https://data.<project-name>.hasura-app.io/v1alpha1/graphql``. It accepts a ``POST`` request as follows:
+The data microservice exposes the GraphQL interface at ``/v1alpha1/graphql``. So the publicly accessible URL will be ``https://data.<project-name>.hasura-app.io/v1alpha1/graphql``. It accepts a ``POST`` request as follows:
 
 .. code-block:: http
 
@@ -167,7 +167,7 @@ Examples:
 
      mutation {
        delete_author (
-         where: { name: {_eq: "srishti"} }
+         where: { name: {_eq: "shukra"} }
        ) {
          affected_rows
          returning {
