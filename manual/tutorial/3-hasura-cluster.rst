@@ -51,7 +51,7 @@ Take a note of your cluster name, in the example above ``test42``.
 The command above, adds the cluster to your project and renames it (or aliases it) to ``hasura`` so that we don't
 have to remember the cluster name.
 
-Now, in all subsequent commands we can refer to this cluster with the name ``hasura``. You could've name this to ``dev``, or
+Now, in all subsequent commands we can refer to this cluster with the name ``hasura``. You could've named this to ``dev``, or
 ``staging`` or ``qa`` or anything of your preference.
 
 
