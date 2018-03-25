@@ -92,7 +92,7 @@ This file contains some metadata about the project, namely a name, description, 
 clusters.yaml
 ^^^^^^^^^^^^^
 
-Info about the clusters added to this project can be found in this file. Each cluster is defined by it's name allotted by Hasura. While adding the cluster to the project you are prompted to give an alias, which is just hasura by default. The kubeContext mentions the name of kubernetes context used to access the cluster, which is also managed by hasura. The config key denotes the location of cluster's metadata on the cluster itself. This information is parsed and cluster's metadata is appended while conf is rendered. data key is for holding custom variables that you can define.
+Info about the clusters added to this project can be found in this file. Each cluster is defined by its name allotted by Hasura. While adding the cluster to the project you are prompted to give an alias, which is just hasura by default. The kubeContext mentions the name of kubernetes context used to access the cluster, which is also managed by hasura. The config key denotes the location of cluster's metadata on the cluster itself. This information is parsed and cluster's metadata is appended while conf is rendered. The data key is for holding custom variables that you can define.
 
 .. code-block:: bash
 
