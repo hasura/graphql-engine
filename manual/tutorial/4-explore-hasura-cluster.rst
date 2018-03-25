@@ -7,7 +7,7 @@ Part IV: Explore the Hasura cluster
 ===================================
 
 A Hasura cluster is essentially a kubernetes cluster that has 4 Hasura APIs,
-a controller to manage configuration changes across the cluster, and a SSH/git-push microservice
+a controller to manage configuration changes across the cluster, and an SSH/git-push microservice
 to help you `git push` to deploy easily.
 
 
