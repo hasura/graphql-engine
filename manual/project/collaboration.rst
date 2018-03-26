@@ -45,7 +45,7 @@ Assuming the owner has shared the repo URL and added you as a collaborator to th
 
   .. note::
 
-     this command is only available in this form from Hasura CLI v0.2.37 onwards
+     This command is only available in this form from Hasura CLI v0.2.37 onwards.
 
 * You can now access these clusters
 
