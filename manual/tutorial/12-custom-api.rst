@@ -149,7 +149,7 @@ the familiar ``adminer`` UI.
    The Hasura platform automatically creates Grade A SSL certificates using LetsEncrypt.
 
    SSL certificate creation can take a few minutes. During this time ``https://adminer.test42.hasura-app.io``
-   will not served, and you'll have to access your microservice on ``http`` instead. As soon as
+   will not be served, and you'll have to access your microservice on ``http`` instead. As soon as
    the certificate is ready, ``http://adminer.test42.hasura-app.io`` will automatically
    start redirecting to the ``https`` version.
 
