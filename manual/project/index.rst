@@ -11,7 +11,7 @@ Hasura project
 
 A Hasura project is a *"git-able"* directory in the file system, which captures
 all the information regarding clusters, microservices and migrations. It can also be
-used to keep source code for custom microservices that you write.
+used to keep the source code for custom microservices that you write.
 It follows a particular :doc:`directory structure <directory-structure/index>` to ensure everything works.
 
 A Hasura project can be deployed on a :doc:`Hasura cluster <../cluster/index>` and is composed of multiple :doc:`microservices <../microservices/index>` which run together.
