@@ -139,7 +139,7 @@ Next, generate the routes for this microservice:
 
 Add this output to the ``conf/routes.yaml`` file.
 
-Finally use ``git commit`` and ``git push`` to deploy the configuration and microservices to the cluster.
+Finally, use ``git commit`` and ``git push`` to deploy the configuration and microservices to the cluster.
 
 That's all you need to do. If you head to ``https://adminer.<cluster-name>.hasura-app.io`` you'll see
 the familiar ``adminer`` UI.
