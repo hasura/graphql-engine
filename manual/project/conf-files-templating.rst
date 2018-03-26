@@ -5,7 +5,7 @@ Project conf files templating
 
 Certain files inside a Hasura project are rendered as templates, namely all the files inside :ref:`conf directory <hasura-project-directory-conf>` and :ref:`microservices/*/k8s.yaml <hasura-dir-ms-k8s.yaml>`.
 
-Templates makes it easy for seamlessly using these files across multiple clusters. Templating also helps with the management of different kinds of clusters, for example you may have a dev, staging and production clusters where the configuration might differ slightly. The templates are written in `pongo2 <https://github.com/flosch/pongo2>`_, a Jinja2 like templating language, which follows `Django Template Syntax <https://docs.djangoproject.com/en/2.0/topics/templates/>`_.
+Templates make it easy for seamlessly using these files across multiple clusters. Templating also helps with the management of different kinds of clusters, for example you may have a dev, staging and production clusters where the configuration might differ slightly. The templates are written in `pongo2 <https://github.com/flosch/pongo2>`_, a Jinja2 like templating language, which follows `Django Template Syntax <https://docs.djangoproject.com/en/2.0/topics/templates/>`_.
 
 A context variable called ``cluster`` is available to be used in the templates. This is an extension of the cluster object present in ``clusters.yaml`` file. Apart from the keys present in ``clusters.yaml``, a key called ``metadata`` with some cluster specific information will be present.
 
