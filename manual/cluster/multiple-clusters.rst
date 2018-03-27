@@ -65,7 +65,7 @@ To add a cluster to a project we use:
   # in project directory
   $ hasura cluster add <cluster-name> -c <cluster-alias>
 
-The ``-c`` flags tells to create an alias for the cluster. We
+The ``-c`` flag tells to create an alias for the cluster. We
 can then use this alias in various other commands including git push.
 
 Let's add the newly created two clusters to our projects.
@@ -96,7 +96,7 @@ Now we have two clusters setup for the same project.
 
 Deploy to a cluster
 -------------------
-Now whenever we make changes to out project, in database schema, cluster
+Now whenever we make changes to our project, in the database schema, cluster
 configuration or custom microservices, we just have to git-push to the correct
 cluster to apply all our changes.
 
