@@ -5,8 +5,8 @@
 
 .. _uikit-admin-usecase:
 
-Auth UI Kit: Restrict to Admin Only
-===================================
+Auth UI Kit: Restrict to Admin/User Only
+========================================
 
 
 There are cases where you would like to deploy some microservices which are accessible only by admin or a particular set of people (based on authentication roles). 

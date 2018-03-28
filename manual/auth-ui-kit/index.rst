@@ -40,3 +40,7 @@ See:
   Configuration <conf>
   Restrict to Admin Only <admin-only>
   Verification Pages <verification>
+  Add Login to App <add-login>
+  Get User Data <get-user-data>
+  Add Logout to App <add-logout>
+  Protect your App <protect-app>
