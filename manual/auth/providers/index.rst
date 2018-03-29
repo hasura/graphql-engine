@@ -9,7 +9,14 @@ Authentication Providers
 
 Hasura Auth has **"providers"** to support different modes of authentication.
 
-It has the following providers by default.
+You can enable/disable providers in your auth configuration. Once a provider is
+enabled you can use them to signup your users. **You can have multiple
+providers enabled at the same time.**
+
+You can also **create your own custom provider** (i.e if you have any custom
+authentication logic) and configure it with Hasura Auth.
+
+The following providers come by default with Hasura Auth:
 
 .. list-table::
    :header-rows: 1
@@ -43,17 +50,10 @@ It has the following providers by default.
      - Github login based authentication.
 
 
-Choose a provider from above based on your requirement.
+Choose providers from the above based on your requirement.
 
-You can enable/disable providers in your auth configuration. Once a provider is
-enabled you can use them to signup your users. **You can have multiple
-providers enabled at the same time.**
-
-You can also **create your custom provider** (i.e if you have any custom
-authentication logic) and configure it with Hasura Auth.
-
-Authentication Providers List:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+See:
+^^^^
 
 .. toctree::
    :maxdepth: 1
