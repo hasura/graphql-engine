@@ -28,7 +28,7 @@ After adding the cluster to the project, run the follwing to add your ssh key to
 
 .. note::
 
-    The ``-c`` flags tells to create a alias ``hasura`` the for the cluster. This
+    The ``-c`` flag tells to create an alias ``hasura`` the for the cluster. This
     name can be anything. We can then use this alias in various other commands
     including git push.
 

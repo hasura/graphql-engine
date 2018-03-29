@@ -22,7 +22,7 @@ Hasura cluster
 
 A Hasura cluster is a `Kubernetes <https://kubernetes.io>`_ cluster, with
 Hasura backend APIs and some internal microservices (like Postgres, Nginx etc.)
-installed on it.  This Kubernetes cluster is usually runs on a cloud
+installed on it.  This Kubernetes cluster is usually running on a cloud
 infrastructure like Google Cloud, Azure or AWS.
 
 All Hasura clusters are free for development purposes or for hobby projects.
