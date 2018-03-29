@@ -8,14 +8,22 @@
 Auth UI Kit: Add a Login Page to your App
 =========================================
 
-Using Hasura's Auth UI Kit, you can quickly add a login page to your existing application. 
+Using Hasura's Auth UI Kit, you can quickly add a login page to your existing application. The APIs are already integrated in the UI and hence all you need to do is just point your user to come to the UI Kit of your app.
 
+For example:
+
+Let's say you have your main website running at `www` subdomain.
 Usually your application would have a `Login` button at the top (likely in the header). You can just hyperlink that button to the UI Kit's login page.
 
-The URL to hyperlink - https://auth.cluster-name.hasura-app.io/ui/login (replace cluster name with your own cluster name).
 
-You should also be passing a redirect URL so that once the user completes their login flow, they will be redirected back to your application page automatically.
+.. code-block:: html
 
-In the URL to redirect, you will add a query parameter called `redirect_url`. For example
+  <a href="https://auth.awesome45.hasura-app.io/ui/login?redirect_url=https://www.awesome45.hasura-app.io">
+    <button class="btn">Login</button>
+  </a>
 
-https://auth.catalpa92.hasura-app.io/ui/login?redirect_url=https://myapp.cluster-name.hasura-app.io (In this case, we are redirecting the user to myapp service. Replace values appropriately).
+The URL to hyperlink - https://auth.awesome45.hasura-app.io/ui/login?redirect_url=https://wwww.awesome45.hasura-app.io (replace awesome45 with your own cluster name).
+
+So when your website user clicks on this link, they will be redirected to the UI Kit's Login page.
+
+As you can see above, redirect URL has been passed as a query parameter `redirect_url` so that once the user completes their login flow, they will be redirected back to your application page automatically.
