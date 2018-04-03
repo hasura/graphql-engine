@@ -13,12 +13,12 @@ Auth UI Kit
 The Auth UI Kit is a ready to use frontend interface for your web apps that comes pre-loaded with the Hasura Auth Microservice.
 
 It allows your application users to login/signup seamlessly using the :doc:`authentication providers <../auth/providers/index>` configured in the :doc:`auth conf <../project/directory-structure/conf/auth.yaml>`. The UI adapts automatically to display
-the enabled auth providers. Just configure the auth conf of your Hasura Project and the UI Kit will immediatedly start working on the new changes.
+the enabled auth providers. Just configure the auth conf of your Hasura Project and the UI Kit will immediately start working on the new changes.
 
 **Features:**
 
 - Instantly add authentication UI for your web app without writing any code.
-- Built-in UI for handling forgot password, reset password, email and sms verification.
+- Built-in UI for handling forgot password, reset password, email and SMS verification.
 - Redirect user to your own app after performing the requests successfully.
 - Supports all authentication providers of the Auth API (ie: Username, Email, Mobile, Social Login).
 - Adapts automatically to display only enabled auth providers.
