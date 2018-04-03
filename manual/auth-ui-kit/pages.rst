@@ -37,7 +37,7 @@ Logout page
 
 Email verification page
 -----------------------
-``/ui/verify-email`` - Accepts a ``token`` query parameter for verifying the email. Usually users come to this page after clicking on this link from their email.
+``/ui/verify-email`` - Accepts a ``token`` query parameter for verifying the email. Usually, users come to this page after clicking on this link from their email.
 Example - /ui/verify-email?token=<verification-token>
 
 Forgot password page
@@ -46,7 +46,7 @@ Forgot password page
 
 Reset password page
 -------------------
-``/ui/reset-password`` - Accepts a ``token`` query parameter for verifying the email. Usually users come to this page after clicking on the link from their email. The user then enters their new password on this page to reset their password. The flow for this page would be Forgot Password -> Email Sent -> Reset Password.
+``/ui/reset-password`` - Accepts a ``token`` query parameter for verifying the email. Usually, users come to this page after clicking on the link from their email. The user then enters their new password on this page to reset their password. The flow for this page would be Forgot Password -> Email Sent -> Reset Password.
 Example - /ui/reset-password?token=<verification-token>
 
 Restricted access page
