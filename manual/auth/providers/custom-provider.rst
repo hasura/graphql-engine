@@ -245,7 +245,7 @@ will receive the following JSON data from Hasura Auth:
 
 Hasura Auth expects the following response upon successful delete:
 
-**Note**: Do not throw any HTTP errors if user not found or delete user was unsuccessful. Instead convey the information in response through boolean flags specified below.
+**Note**: Do not throw any HTTP errors if user not found or delete user was unsuccessful. Instead, convey the information in response through boolean flags specified below.
 
 
 **Response**:
