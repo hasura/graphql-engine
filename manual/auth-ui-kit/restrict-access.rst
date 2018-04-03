@@ -43,8 +43,8 @@ Note the usage of ``restrictToRoles``, ``noSessionRedirectUrl`` and ``noAccessRe
 In the ``restrictToRoles`` key, we add the roles that have access to the app. Only ``admin`` in this case.
 
 In the ``noSessionRedirectUrl`` key, we add the url to which the :doc:`API gateway <../gateway/index>` should redirect to
-if the user does not have a session. ie: is not logged in. In this case it is the url of the UI Kit's login page.
+if the user does not have a session. ie: is not logged in. In this case, it is the url of the UI Kit's login page.
 
 In the ``noAccessRedirectUrl`` key, we add the url to which the :doc:`API gateway <../gateway/index>` should redirect to
-if the user does not have access to the page. In this case it is the url of the UI Kit's ``restricted`` page which asks the user to
+if the user does not have access to the page. In this case, it is the url of the UI Kit's ``restricted`` page which asks the user to
 logout and login as a user that is allowed to access the page.
