@@ -3,7 +3,7 @@ Adding a Login Page to your app using Auth UI Kit
 
 Using Hasura's Auth UI Kit, you can quickly add a login page to your existing application. The APIs are already integrated in the UI and hence all you need to do is just send your user to come to the UI Kit page.
 
-Usually your application would have a ``Login`` button at the top (likely in the header). You can just hyperlink that button to the UI Kit's login page.
+Usually, your application would have a ``Login`` button at the top (likely in the header). You can just hyperlink that button to the UI Kit's login page.
 
 The URL to hyperlink - ``https://auth.<cluster-name>.hasura-app.io/ui/login``
 
