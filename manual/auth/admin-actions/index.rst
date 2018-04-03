@@ -6,7 +6,7 @@
 Auth admin actions
 ==================
 
-Hasura Auth provides admin APIs to manage users, user sessions, roles etc. As name suggests
+Hasura Auth provides admin APIs to manage users, user sessions, roles etc. As the name suggests
 these APIs are open to users with admin role.
 
 
