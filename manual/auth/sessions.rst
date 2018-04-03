@@ -11,7 +11,7 @@ When a user is logged-in, a session is attached.
 A session is nothing but a unique, un-guessable identifier  attached to that
 Hasura Auth user account (referred to as ``auth_token``) for that session. This
 way a user can make subsequent requests without having to authenticate with
-credentials on every request. Instead, on every request the user can present
+credentials on every request. Instead, on every request, the user can present
 the ``auth_token`` to identify themself.
 
 Every microservice benefits from having the user's information (id and roles) with
