@@ -1,7 +1,7 @@
 Assigning user roles
 ====================
 
-A user can be assigned roles. This can only done by the admin user.
+A user can be assigned roles. This can only be done by the admin user.
 
 To add a role to a user, make a request to ``/admin/user/add-role``
 endpoint.
