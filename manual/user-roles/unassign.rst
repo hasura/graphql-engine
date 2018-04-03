@@ -1,7 +1,7 @@
 Unassigning user roles
 ======================
 
-A user can be unassigned roles. This can only done by an admin user.
+A user can be unassigned roles. This can only be done by an admin user.
 
 To remove a role from a user, make a request to ``/admin/user/remove-role``
 endpoint.
