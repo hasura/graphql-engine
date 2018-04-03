@@ -12,7 +12,7 @@ Storing extra user information
    * Show an example of a profile table with user_id and the permissions
 
 It is a common use-case to store extra information about your users other than
-authentication related data to create a proper user profile (like name, age, address etc.).  For this you
+authentication related data to create a proper user profile (like name, age, address etc.).  For this, you
 should create a custom table in the ``data`` microservice and use that to store the extra user information.
 
 **To store extra information about your users:**
