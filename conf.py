@@ -26,7 +26,7 @@ sys.setrecursionlimit(2000)
 
 from sphinx.builders.html import StandaloneHTMLBuilder
 from sphinx.util.osutil import relative_uri
-StandaloneHTMLBuilder.script_files = []
+StandaloneHTMLBuilder.script_files = ["_static/vendor.js"]
 #StandaloneHTMLBuilder.imgpath = relative_uri("v0.13", '_images')
 
 ALGOLIA_SECRETS = {
@@ -98,7 +98,8 @@ extensions = [
     "sphinxcontrib.swaggerdoc",
     "sphinxcontrib.httpdomain",
     "sphinx.ext.todo",
-    "tabs"
+    "tabs",
+    "sphinx_tabs.tabs",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

@@ -17,7 +17,7 @@ The ``hasura`` CLI is a command line utility to help you get your backend setup 
 Step 1: Install
 ---------------
 
-.. tabs::
+.. tabs_custom::
 
    tabs:
      - id: linux
@@ -27,18 +27,19 @@ Step 1: Install
 
          .. code-block:: bash
 
-            curl -L https://cli.hasura.io/install.sh | bash
+            $ curl -L https://cli.hasura.io/install.sh | bash
 
          This will install the ``hasura`` CLI tool in ``/usr/local/bin``. You might have to provide
          your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
 
      - id: mac
        content: |
+
          In your terminal enter the following command:
 
          .. code-block:: bash
 
-            curl -L https://cli.hasura.io/install.sh | bash
+            $ curl -L https://cli.hasura.io/install.sh | bash
 
          This will install the ``hasura`` CLI in ``/usr/local/bin``. You might have to provide
          your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
@@ -49,19 +50,19 @@ Step 1: Install
          .. note::
 
             You should have ``git bash`` installed to use ``hasura`` CLI. Download git bash using the following `(link) <https://git-scm.com/download/win>`_.
-            Also, make sure you install it in ``MinTTY`` mode, instead on Windows' default console.      
+            Also, make sure you install it in ``MinTTY`` mode, instead on Windows' default console.
 
          Download the ``hasura`` installer:
 
          * `hasura (64-bit Windows installer) <https://cli.hasura.io/install/windows-amd64>`_
          * `hasura (32-bit Windows installer) <https://cli.hasura.io/install/windows-386>`_
-         
+
          **Note:** Please run the installer as Administrator to avoid PATH update errors. If you're still getting a `command not found` error after installing Hasura, please restart Gitbash.
 
 Step 2: Login
 -------------
 
-.. tabs::
+.. tabs_custom::
 
    tabs:
      - id: linux
@@ -71,29 +72,31 @@ Step 2: Login
 
          .. code-block:: bash
 
-            hasura login
+            $ hasura login
 
          This command will open up the browser and
          allow you to register with a new account (or login to your existing account).
 
      - id: mac
        content: |
+
          Next, login or register by running the following command:
 
          .. code-block:: bash
 
-            hasura login
+            $ hasura login
 
          This command will open up the browser and
          allow you to register with a new account (or login to your existing account).
 
      - id: windows
        content: |
+
          Next, open ``git-bash`` and login/register:
 
          .. code-block:: bash
 
-            hasura login
+            $ hasura login
 
          This command will open up the browser and
          allow you to register with a new account (or login to your existing account).
@@ -101,7 +104,7 @@ Step 2: Login
 Next: Create a Hasura project
 -----------------------------
 
-Next, let's head to :doc:`Part II: Create a Hasura project<2-hasura-project>`.
+Next, let's head to :doc:`hasura-project`.
 
 ..
      - id: windows
@@ -115,4 +118,3 @@ Next, let's head to :doc:`Part II: Create a Hasura project<2-hasura-project>`.
             hasura.exe login
          This command will open up the browser and
          allow you to register with a new account (or login to your existing account).
-

@@ -127,8 +127,8 @@ def setup(app):
     directive = template.create_directive('h4', H4_TEMPLATE, template.BUILT_IN_PATH, True)
     app.add_directive('h4', directive)
 
-    directive = template.create_directive('tabs', TABS_TEMPLATE, template.BUILT_IN_PATH, True)
-    app.add_directive('tabs', directive)
+    directive = template.create_directive('tabs_custom', TABS_TEMPLATE, template.BUILT_IN_PATH, True)
+    app.add_directive('tabs_custom', directive)
 
     directive = template.create_directive('tabs-gs', TABSGS_TEMPLATE, template.BUILT_IN_PATH, True)
     app.add_directive('tabs-gs', directive)

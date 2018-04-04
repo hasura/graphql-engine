@@ -9,7 +9,7 @@ Installing the hasura CLI
 Step 1: Install
 ---------------
 
-.. tabs::
+.. tabs_custom::
 
    tabs:
      - id: linux
@@ -54,7 +54,7 @@ Step 1: Install
 Step 2: Login
 -------------
 
-.. tabs::
+.. tabs_custom::
 
    tabs:
      - id: linux

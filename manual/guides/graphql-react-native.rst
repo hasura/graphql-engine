@@ -14,48 +14,78 @@ Configuration
 
 2. Create an `ApolloClient <https://www.apollographql.com/docs/react/basics/setup.html#ApolloClient>`_ instance and point it to the Hasura Data GraphQL URL via `Apollo Link <https://www.apollographql.com/docs/link/>`_.
 
-.. code-block:: javascript
+   .. code-block:: javascript
 
-  import { ApolloClient } from 'apollo-client';
-  import { HttpLink } from 'apollo-link-http';
-  import { InMemoryCache } from 'apollo-cache-inmemory';
+    import { ApolloClient } from 'apollo-client';
+    import { HttpLink } from 'apollo-link-http';
+    import { InMemoryCache } from 'apollo-cache-inmemory';
 
-  const GRAPHQL_URL = "https://data.<cluster-name>.hasura-app.io/v1alpha1/graphql";
+    const GRAPHQL_URL = "https://data.<cluster-name>.hasura-app.io/v1alpha1/graphql";
+    const httpLink = new HttpLink({ uri: GRAPHQL_URL});
 
-  const client = new ApolloClient({
-    link: new HttpLink({uri: GRAPHQL_URL}),
-    cache: new InMemoryCache({
-      addTypename: false
-    })
-  });
+    const client = new ApolloClient({
+      link: httpLink,
+      cache: new InMemoryCache({
+        addTypename: false
+      })
+    });
 
-.. note::
-  Important: You have to configure ``addTypename`` to false in the ``InMemoryCache`` constructor.*
+   .. note::
+
+     Important: You have to configure ``addTypename`` to false in the ``InMemoryCache`` constructor.
+
+   If you have to authorize your queries and mutations, you need to pass request headers to the Apollo Client using a middleware.
+
+   .. code-block:: javascript
+
+    const GRAPHQL_URL = `https://data.<cluster-name>.hasura-app.io/v1alpha1/graphql`
+    const httpLink = new HttpLink({ uri: GRAPHQL_URL});
+
+    // adding auth headers
+    const authMiddleware = new ApolloLink((operation, forward) => {
+      AsyncStorage.getItem("@<cluster-name>:myapp").then((session) => {
+        operation.setContext({
+          headers: {
+            authorization: session ? "Bearer " + session.token : null
+          }
+        });
+      })
+      return forward(operation);
+    });
+
+    // Creating a client instance with auth middlewar
+    const client = new ApolloClient({
+      link: concat(authMiddleware, httpLink),
+      cache: new InMemoryCache({
+        addTypename: false
+      })
+    });
+
 
 3. Connect the client to your component tree using the ``ApolloProvider`` component. It is important to put ``ApolloProvider`` above every component where you need the GraphQL data. For example, it could be before registering your root component.
 
-.. code-block:: javascript
+   .. code-block:: javascript
 
-  import { ApolloProvider } from 'react-apollo';
-  import { ApolloClient } from 'apollo-client';
-  import { HttpLink } from 'apollo-link-http';
-  import { InMemoryCache } from 'apollo-cache-inmemory';
-  import { App } from './App';
+    import { ApolloProvider } from 'react-apollo';
+    import { ApolloClient } from 'apollo-client';
+    import { HttpLink } from 'apollo-link-http';
+    import { InMemoryCache } from 'apollo-cache-inmemory';
+    import { App } from './App';
 
-  const GRAPHQL_URL = "https://data.<cluster-name>.hasura-app.io/v1alpha1/graphql";
+    const GRAPHQL_URL = "https://data.<cluster-name>.hasura-app.io/v1alpha1/graphql";
 
-  const client = new ApolloClient({
-    link: new HttpLink({uri: GRAPHQL_URL}),
-    cache: new InMemoryCache()
-  });
+    const client = new ApolloClient({
+      link: new HttpLink({uri: GRAPHQL_URL}),
+      cache: new InMemoryCache()
+    });
 
-  const AppWithClient= () => (
-    <ApolloProvider client={client}>
-      <App/>
-    </ApolloProvider>
-  );
+    const AppWithClient= () => (
+      <ApolloProvider client={client}>
+        <App/>
+      </ApolloProvider>
+    );
 
-  AppRegistry.registerComponent('MyApplication', () => AppWithClient);
+    AppRegistry.registerComponent('MyApplication', () => AppWithClient);
 
 
 That's it. You can now make queries and mutations in all the children components.

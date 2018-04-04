@@ -31,3 +31,4 @@ sphinxcontrib-websupport==1.0.1
 tornado==4.5.2
 urllib3==1.22
 watchdog==0.8.3
+sphinx_tabs==1.1.7

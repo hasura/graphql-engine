@@ -1,3 +1,5 @@
+.. _htp-sms:
+
 Sending SMS: Hasura Test Provider
 =================================
 

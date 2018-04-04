@@ -6,90 +6,38 @@
 Adding a microservice from a template
 =====================================
 
-If you're starting with a new project head to `hasura.io/hub <https://hasura.io/hub>`_
-and get started with a
-new hasura project that already has the boilerplate for your stack.
+.. note::
+
+   If you're starting with a new project head to `hasura.io/hub <https://hasura.io/hub>`_ and get started with a new hasura project that already has the boilerplate for your stack.
 
 Use this guide if you are adding a microservice to your existing Hasura project.
 
-Microservice stack templates
-----------------------------
+Step 1: Choosing a microservice template from Hub
+--------------------------------------------------
 
-We maintain a list of `stack templates <https://github.com/hasura/microservice-templates>`_
-so that it's easy for you to add a microservice boilerplate to
-your project. Every template consists of:
+You can clone microservices from any of the projects on `hasura.io/hub <https://hasura.io/hub>`_ and use them as a template for your microservice.
 
-1. A ``Dockerfile``
-2. Source code
-3. A ``k8s.yaml`` file
+Go to `hasura.io/hub <https://hasura.io/hub>`_ and find a boilerplate project you want to clone from. Most projects should have an ``Included microservices`` section which describes the microservices available in the project.  See `Popular hub microservices:`_
 
-The Dockerfile defines how the source code gets built, and the ``k8s.yaml`` is the kubernetes spec
-file that defines how this microservice gets deployed. You can go edit the ``Dockerfile`` and the
-``k8s.yaml`` as you want if you know what you're doing. However, you don't have to know how docker
-and kubernetes work to get started.
+Step 2: Cloning the microservice to your project
+------------------------------------------------
 
-Step 1: Find your template name
--------------------------------
-
-Run:
+To add the microservice to your project, you can use the ``hasura microservice clone`` command from the project directory.
 
 .. code-block:: bash
 
-   $ hasura microservice template-list
-   • Updating templates...
+    $ hasura microservice clone [[microservice-1] [microservice-2]...] --from [hub-user/hub-project-name] [flags]
 
-   csharp-aspnet
-   docker
-   elasticsearch
-   go-gin
-   go-iris
-   go-raw
-   go-simple-server
-   haskell-spock
-   java-play
-   java-spark
-   java-spring-boot
-   js-angularjs
-   mysql
-   nginx
-   nodejs-express
-   nodejs-express-sass
-   php-apache
-   php-laravel
-   python-cron
-   python-flask
-   r-shiny
-   react
-   schemaspy
-   swift-perfect
-   swift-vapor
-   typescript-angular
-
-If you're choosing a template from any of the above, continue, otherwise you'll have to create a ``Dockerfile`` and a ``k8s.yaml`` file yourself.
-
-To create the files yourself, head to :doc:`Add a custom Dockerfile <using-custom-dockerfile>`.
-Otherwise, continue with Step 2 below!
-
-Step 2: Add the microservice template to your microservices folder
-------------------------------------------------------------------
-
-Let's say you want to use ``nodejs-express`` and you name the microservice ``<my-app>``. Now run:
+Examples:
 
 .. code-block:: bash
 
-   $ hasura ms create <my-app> --template=nodejs-express
-
-This will create the following in your projects directory:
-
-.. code-block:: bash
-
-   ├── microservices/
-       └── <my-app>/              # a new folder to contain microservice code/config
-           ├── k8s.yaml
-           ├── Dockerfile
-           └── app/
-
-The exact folder names might be different depending on what you do, however the ``k8s.yaml`` file and the ``Dockerfile`` will always be there.
+    # Clone microservice 'app' from 'hasura/hello-python-flask':
+    $ hasura microservice clone app --from hasura/hello-python-flask
+    # Clone all microservices from 'hasura/hello-react'
+    $ hasura microservice clone --from hasura/hello-react
+    # Clone microservices 'api' and 'ui' from 'hasura/hello-react'
+    $ hasura microservice clone api ui --from hasura/hello-react
 
 Step 3: Tell the hasura CLI that you want to git-push to deploy this microservice
 ---------------------------------------------------------------------------------
@@ -99,16 +47,16 @@ automatically deploy your source code, build the docker image, and rollout the u
 
 .. code:: bash
 
-   $ hasura conf generate-remote <my-app> >> conf/ci.yaml
+   $ hasura conf generate-remote <new-app> >> conf/ci.yaml
 
 .. admonition:: Behind The Scenes
 
-   Checkout :ref:`ci.yaml <hasura-dir-conf-ci.yaml>` to learn more about this file 
+   Checkout :ref:`ci.yaml <hasura-dir-conf-ci.yaml>` to learn more about this file
 
-Step 4: Optional: Expose this microservice to the world
--------------------------------------------------------
+Step 4: (Optional) Expose this microservice to the world
+---------------------------------------------------------
 
-Let's expose this microservice to the external world on the subdomain ``<my-app>``.
+Let's expose this microservice to the external world on the subdomain ``<new-app>``.
 The configuration for routes for all the microservices on your Hasura project
 are configured in ``conf/routes.yaml``.
 The ``hasura`` CLI provides a handy command to generate the
@@ -116,23 +64,20 @@ default routes configuration for your custom microservice:
 
 .. code:: bash
 
-    $ hasura conf generate-route <my-app> >> conf/routes.yaml
+    $ hasura conf generate-route <new-app> >> conf/routes.yaml
 
 This command above will add the default route configuration for your microservice to the ``conf/routes.yaml`` file.
 
 .. admonition:: Behind The Scenes
 
-   Checkout :ref:`routes.yaml <hasura-dir-conf-routes.yaml>` to learn more about this file 
+   Checkout :ref:`routes.yaml <hasura-dir-conf-routes.yaml>` to learn more about this file
 
 Step 5: Git push and deploy!
 ----------------------------
 
 .. code:: bash
 
-    $ git add microservices/<my-app>
-    $ git add conf/ci.yaml
-    $ git add conf/routes.yaml
-    $ git commit -am 'Adds <my-app> microservice boilerplate, ci and route config'
+    $ git add . && git commit -m 'Added <new-app>'
     $ git push hasura master
 
 That's it! And you'll have a shiny new microservice deployed to your cluster.
@@ -143,14 +88,34 @@ Check out the running microservices:
 
    $ hasura microservices list
 
-    INFO Custom microservices:
-    NAME          STATUS    URL
-    my-app        Running   https://my-app.cluster-name.hasura-app.io
-
-
 Open the microservice in your browser:
 
 .. code:: bash
 
-   $ hasura microservices open <my-app>
+   $ hasura microservices open <new-app>
+
+
+Popular hub microservices:
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here are a few popular microservices you can choose from:
+
+- ``app`` from `hasura/hello-python-flask <https://hasura.io/hub/project/hasura/hello-python-flask>`_
+- ``ui`` from `hasura/hello-react <https://hasura.io/hub/project/hasura/hello-react>`_
+- ``api`` from `hasura/hello-nodejs-express <https://hasura.io/hub/project/hasura/hello-nodejs-express>`_
+- ``api`` from `hasura/hello-php-apache <https://hasura.io/hub/project/hasura/hello-php-apache>`_
+- ``app`` from `hasura/hello-python-django <https://hasura.io/hub/project/hasura/hello-python-django>`_
+- ``www`` from `hasura/hello-java-springboot <https://hasura.io/hub/project/hasura/hello-java-springboot>`_
+- ``www`` from `hasura/hello-nginx <https://hasura.io/hub/project/hasura/hello-nginx>`_
+- ``app`` from `hasura/hello-golang-raw <https://hasura.io/hub/project/hasura/hello-golang-raw>`_
+- ``app`` from `hasura/docker-base <https://hasura.io/hub/project/hasura/docker-base>`_
+- ``www`` from `hasura/hello-angularjs <https://hasura.io/hub/project/hasura/hello-angularjs>`_
+- ``api`` from `hasura/hello-golang-iris <https://hasura.io/hub/project/hasura/hello-golang-iris>`_
+- ``www`` from `hasura/hello-r-shiny <https://hasura.io/hub/project/hasura/hello-r-shiny>`_
+- ``api`` from `hasura/hello-java-spark <https://hasura.io/hub/project/hasura/hello-java-spark>`_
+- ``app`` from `hasura/hello-ruby-rails <https://hasura.io/hub/project/hasura/hello-ruby-rails>`_
+- ``app`` from `hasura/hello-ruby-sinatra <https://hasura.io/hub/project/hasura/hello-ruby-sinatra>`_
+- ``www`` from `hasura/hello-csharp-aspnet <https://hasura.io/hub/project/hasura/hello-csharp-aspnet>`_
+- ``api`` from `hasura/hello-swift-vapor <https://hasura.io/hub/project/hasura/hello-swift-vapor>`_
+- ``api`` from `hasura/hello-swift-perfect <https://hasura.io/hub/project/hasura/hello-swift-perfect>`_
 

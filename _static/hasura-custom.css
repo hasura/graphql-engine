@@ -1280,6 +1280,20 @@ ol, ul
   }
 }
 
+.api-tabs .docutils {
+    font-size: 16px !important;
+    margin: 0;
+    max-width: 100%;
+    padding: 0px;
+
+}
+.api-tabs.container {
+    margin: 0;
+    max-width: 100%;
+    padding: 0px;
+
+}
+
 @media (max-width: 768px) {
   .input_search_box {
     width: 90%;

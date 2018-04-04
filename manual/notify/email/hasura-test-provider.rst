@@ -1,3 +1,5 @@
+.. _htp-email:
+
 Sending emails: Hasura Test Provider
 ====================================
 

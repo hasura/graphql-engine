@@ -2,9 +2,9 @@
    :description: Part 3 of a set of learning exercises meant for exploring Hasura in detail. This part takes you over data modeling & introduces the data microservice's API.
    :keywords: hasura, getting started, step 3, data modeling
 
-=========================================
-Part VII: Data modelling for the blog app
-=========================================
+==========================================
+Part VIII: Data modelling for the blog app
+==========================================
 
 Our basic data requirements are as follows:
 
@@ -30,7 +30,7 @@ As you would normally do with any relational database, data is modelled as table
 +========================================+========================================+
 |author                                  |id, name                                |
 +----------------------------------------+----------------------------------------+
-|article                                 |id, title, author_id, rating            |
+|article                                 |id, title, content, rating, author_id   |
 +----------------------------------------+----------------------------------------+
 |like                                    |user_id, article_id                     |
 +----------------------------------------+----------------------------------------+
@@ -39,29 +39,25 @@ As you would normally do with any relational database, data is modelled as table
 
 You can Create tables and model foreign key constraints via the API console like this:
 
-.. figure:: ../../img/tutorial-7-create-author.png
+Create Table ``author``
 
-	    Creating the ``author`` table
+.. image:: ../../img/complete-tutorial/tutorial-create-author.png
 
-.. figure:: ../../img/tutorial-7-create-article.png
+Create Table ``article``
 
-	    Creating the ``article`` table
+.. image:: ../../img/complete-tutorial/tutorial-create-article.png
+
 
 To add foreign key constraints, after creating the tables go to *Modify* and edit the columns for which you wish to add foreign keys.
 	    
-.. figure:: ../../img/tutorial-7-article-add-fk.png
+Adding foreign key constraints to ``article``
 
-	    Adding foreign key constraints to ``article``
+.. image:: ../../img/complete-tutorial/tutorial-article-add-fk.png
+
 
 Now similarly create the other tables and add foreign key constraints.
 	    
-In SQL, the structure of these tables is as follows:
-
-.. literalinclude:: blog-schema.sql
-   :language: sql
-
-
 Next: Explore the Data APIs
-----------------------------
+---------------------------
 
-Next, head to :doc:`Explore Data APIs <8-explore-data-apis>`.
+Next, head to :doc:`explore-data-apis`.

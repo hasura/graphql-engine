@@ -1,3 +1,5 @@
+.. _sparkpost:
+
 Sending emails: SparkPost
 =========================
 

@@ -20,7 +20,6 @@
   {%- if version != latest_docs_version %}
     <link ref="canonical" href="https://docs.{{ BASE_DOMIAN }}/{{latest_docs_version}}/{{pagename}}.html" />
   {% endif %}
-  <script src="{{ pathto('_static/vendor.js', 1) }}"></script>
   {% block javascript %}
     <script type="text/javascript">
       {% include 'static/search.js' %}

@@ -1,3 +1,5 @@
+.. _data-permissions:
+
 Data permissions and access control
 ===================================
 
