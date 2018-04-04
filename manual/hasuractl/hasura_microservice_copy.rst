@@ -50,6 +50,7 @@ Options
   -c, --cluster string     cluster alias to connect
       --container string   container name. If omitted, the first container in the pod will be chosen (use only if you know what this means)
   -h, --help               help for copy
+  -n, --namespace string   namespace of the microservice (user: Custom microservices, hasura: Hasura microservices) (default "user")
   -p, --pod string         pod name
 
 Options inherited from parent commands

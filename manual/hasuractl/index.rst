@@ -67,6 +67,7 @@ Commands
    hasura microservice start <hasura_microservice_start>
    hasura microservice status <hasura_microservice_status>
    hasura microservice stop <hasura_microservice_stop>
+   hasura microservice sync <hasura_microservice_sync>
    hasura microservice template-list <hasura_microservice_template-list>
    hasura migration <hasura_migration>
    hasura migration apply <hasura_migration_apply>

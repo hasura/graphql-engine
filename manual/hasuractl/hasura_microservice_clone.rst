@@ -21,7 +21,7 @@ Examples
 ::
 
     # Clone microservice 'app' from 'hasura/hello-python-flask':
-    $ hasura microservice clone app --from hasura/hello-python flask
+    $ hasura microservice clone app --from hasura/hello-python-flask
 
     # Clone all microservices from 'hasura/hello-react'
     $ hasura microservice clone --from hasura/hello-react

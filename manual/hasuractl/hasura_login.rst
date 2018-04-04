@@ -23,12 +23,16 @@ Examples
     # Login using browser:
     $ hasura login
 
+    # Login using an authentication token obtained from https://dashboard.hasura.io
+    $ hasura login --token=<auth-token>
+
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for login
+  -h, --help           help for login
+  -t, --token string   authentication token
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
