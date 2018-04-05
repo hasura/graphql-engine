@@ -20,17 +20,29 @@ Pre-requisites
 * To configure, go to ``auth.yaml`` in ``conf`` directory inside your Hasura
   project.
 
-* Under ``google``, set the array of ``clientIds``
+* Under ``google``, set the array of ``clientIds``.
+
+    Note: The ``google`` key might be commented out. Make sure to uncomment it if it is.
 
 .. code-block:: yaml
+  :filename: auth.yaml
 
       google:
         clientIds: ["String"]
-        clientSecret: "String"
+        clientSecret:
+          secretKeyRef:
+            key: auth.google.client_secret
+            name: hasura-secrets
 
 
-* **clientId**: The client IDs obtained when creating the application.
-* **clientSecret**: The client secret obtained when creating the application. This can be a string or a reference to a kubernetes secret.
+* **clientIds**: The client IDs obtained when creating the application. This is an array of strings. For example, it could be an array of your web client ID, iOS client ID etc.
+
+* **clientSecret**: The client secret obtained when creating the application. As you see in the above code snippet, client secret is a reference to a :ref:`hasura project secret <hasura-secrets-manual>` called ``auth.google.client_secret``.
+  To add your client secret to ``hasura project secrets``, run the following command from your project directory.
+
+  .. code-block:: bash
+
+    $ hasura secret update auth.google.client_secret
 
 * Choose your device and Google SDK from here:
   https://developers.google.com/identity/choose-auth

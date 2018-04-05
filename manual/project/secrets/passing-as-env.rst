@@ -1,5 +1,5 @@
-Passing project secrets as ENV variables
-========================================
+Passing project secrets as environment variables
+================================================
 
 Let's say you have a microservice called ``<my-microservice>`` that needs the secret ``<my.secret.var>`` in its code.
 You can edit the ``microservices/<my-microservice>/k8s.yaml`` to add a variable ``<MY_SECRET_VARIABLE>`` that refers to this secret.
