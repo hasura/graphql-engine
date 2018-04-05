@@ -22,17 +22,18 @@ Pre-requisites
 
 * Under ``google``, set the array of ``clientIds``.
 
-    Note: The ``google`` key might be commented out. Make sure to uncomment it if it is.
+.. note::
+     The ``google`` key might be commented out. Make sure to uncomment it if it is.
 
-.. code-block:: yaml
+.. snippet:: yaml
   :filename: auth.yaml
 
-      google:
-        clientIds: ["String"]
-        clientSecret:
-          secretKeyRef:
-            key: auth.google.client_secret
-            name: hasura-secrets
+  google:
+    clientIds: ["String"]
+    clientSecret:
+      secretKeyRef:
+        key: auth.google.client_secret
+        name: hasura-secrets
 
 
 * **clientIds**: The client IDs obtained when creating the application. This is an array of strings. For example, it could be an array of your web client ID, iOS client ID etc.
