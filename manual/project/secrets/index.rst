@@ -26,4 +26,4 @@ See:
 
    Adding/updating secrets <add>
    Listing secrets <list>
-   Passing secrets as ENV <passing-as-env>
+   Passing secrets as environment variables <passing-as-env>

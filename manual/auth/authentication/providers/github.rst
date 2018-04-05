@@ -47,13 +47,28 @@ Pre-requisites
 * To configure, go to ``auth.yaml`` in ``conf`` directory inside your Hasura
   project.
 
-* Under ``github``, set ``clientId`` and ``clientSecret``
+* Under ``github``, set the ``clientId``.
+
+    Note: The ``github`` key might be commented out. Make sure to uncomment it.
 
 .. code-block:: yaml
 
       github:
         clientId: "String"
-        clientSecret: "String"
+        clientSecret:
+          secretKeyRef:
+            key: auth.github.client_secret
+            name: hasura-secrets
+
+* **clientId**: The client ID obtained when creating the application.
+
+* **clientSecret**: The client secret obtained when creating the application. As you see in the above code snippet, client secret is a reference to a :ref:`hasura project secret <hasura-secrets-manual>` called ``auth.github.client_secret``.
+  To add your client secret to ``hasura project secrets``, run the following command from your project directory.
+
+  .. code-block:: bash
+
+    $ hasura secret update auth.github.client_secret
+
 
 The flow
 ++++++++
