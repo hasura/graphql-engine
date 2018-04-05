@@ -12,7 +12,7 @@ provider there are extra steps to be performed to verify the user's mobile.
 
 .. note::
 
-  For this provider to send OTP via SMS, you have to :doc:`enable a SMS provider <../../notify/sms/index>` in
+  For this provider to send OTP via SMS, you have to :doc:`enable a SMS provider <../../../notify/sms/index>` in
   the Hasura Notify microservice.
 
 

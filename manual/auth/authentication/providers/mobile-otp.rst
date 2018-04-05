@@ -13,7 +13,7 @@ Once they receive the OTP, they can use that to signup or login.
 
 .. note::
 
-  For this provider to send OTP via SMS, you have to :doc:`enable a SMS provider <../../notify/sms/index>` in
+  For this provider to send OTP via SMS, you have to :doc:`enable a SMS provider <../../../notify/sms/index>` in
   the Hasura Notify microservice.
 
 Signup

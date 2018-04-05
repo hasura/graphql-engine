@@ -25,7 +25,7 @@ The filestore service has the following built in hooks:
 
 - Read Only: Anybody can read, but no one can upload (``http://localhost:8080/v1/hooks/public-read``)
 
-- Custom Permission URL: For any other custom permissions, you need to define your own microservice. More details can be found at :ref:`Authorization webhooks <../../filestore/webhook>`.
+- Custom Permission URL: For any other custom permissions, you need to define your own microservice. More details can be found at :doc:`Authorization webhooks <../../../filestore/webhook>`.
 
 volume
 ------

@@ -19,7 +19,7 @@ In the previous section, we learned and tried some basic auth APIs. However, if 
 
 The UI kit runs on the url: ``auth.<cluster-name>.hasura-app.io/ui``.
 
-It allows your application users to login/signup seamlessly using the :doc:`authentication providers <../auth/providers/index>` configured in the :doc:`auth conf <../project/directory-structure/conf/auth.yaml>`. The UI adapts automatically to display
+It allows your application users to login/signup seamlessly using the :doc:`authentication providers <../auth/authentication/providers/index>` configured in the :doc:`auth conf <../project/directory-structure/conf/auth.yaml>`. The UI adapts automatically to display
 the enabled auth providers. Just configure the auth conf of your Hasura Project and the UI Kit will immediatedly start working on the new changes.
 
 By default, it is configured to login using only ``Username Password``. You can enable other auth providers by changing the auth conf. We will demonstrate below how to enable ``auth with Email and Google``. For enabling other providers, :ref:`read the instructions here <providers>`.

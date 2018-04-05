@@ -12,7 +12,7 @@ extra steps to be performed to verify the user's email.
 
 .. note::
 
-  For this provider to send emails, you have to :doc:`enable an email provider <../../notify/email/index>` in
+  For this provider to send emails, you have to :doc:`enable an email provider <../../../notify/email/index>` in
   the Hasura Notify microservice.
 
 

@@ -1,4 +1,3 @@
-
 Auth UI Kit Themes
 ==================
 
@@ -13,7 +12,7 @@ The Auth UI kit comes with two theme options to choose from. The dark theme is e
 Changing the theme:
 -------------------
 
-The UI kit theme can be changed by editing the :doc:`conf/auth.yaml <../project/directory-structure/conf/auth.yaml>` file in your hasura project.
+The UI kit theme can be changed by editing the :doc:`conf/auth.yaml <../../project/directory-structure/conf/auth.yaml>` file in your hasura project.
 
 .. code-block:: yaml
    :emphasize-lines: 2

@@ -12,7 +12,7 @@ In this case, once login or signup happens successfully, the user will be redire
 Configuring a default redirect_url
 ----------------------------------
 
-A default redirect_url can also be defined by editing the :doc:`conf/auth.yaml <../project/directory-structure/conf/auth.yaml>` file in your hasura project.
+A default redirect_url can also be defined by editing the :doc:`conf/auth.yaml <../../project/directory-structure/conf/auth.yaml>` file in your hasura project.
 
 .. code-block:: yaml
    :emphasize-lines: 3
