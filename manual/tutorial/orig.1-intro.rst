@@ -22,6 +22,7 @@ Step 1: Install the hasura CLI tool
    tabs:
      - id: linux
        content: |
+
          Open your linux shell and run the following command:
 
          .. code-block:: bash
@@ -33,6 +34,7 @@ Step 1: Install the hasura CLI tool
 
      - id: mac
        content: |
+
          In your terminal enter the following command:
 
          .. code-block:: bash

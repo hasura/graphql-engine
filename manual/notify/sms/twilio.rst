@@ -1,9 +1,7 @@
-.. _twilio:
-
 Sending SMS: Twilio
 ===================
 
-`Twilio`_ is a SMS, Voice and Video provider. You can `signup
+`Twilio <https://www.twilio.com/>`_ is a SMS, Voice and Video provider. You can `signup
 <https://www.twilio.com/try-twilio>`_ for a free account and start sending SMS
 using Twilio. Once you have signed up and created a Twilio phone number, grab
 the *Account SID* and *Auth Token* from `Twilio Console
@@ -48,5 +46,3 @@ Where,
 API Credentials section of Twilio Console.
 
 **<twilio-auth-token>**: Password like secret key for the account.
-
-.. _Twilio: https://www.twilio.com/

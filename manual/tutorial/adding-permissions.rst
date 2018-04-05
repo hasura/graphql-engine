@@ -35,6 +35,7 @@ Let us consider the ``article`` table. The following are the permissions we'd li
    * - user
      - all columns
      - all rows
+
 There are 2 methods to define permissions for a table: via the console UI and via a REST query.
 
 Using the UI

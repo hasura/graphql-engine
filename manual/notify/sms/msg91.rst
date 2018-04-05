@@ -1,9 +1,7 @@
-.. _msg91:
-
 Sending SMS: MSG91
 ==================
 
-`MSG91`_ is a SMS provider where you can `signup <https://msg91.com/signup>`_
+`MSG91 <https://msg91.com/>`_ is a SMS provider where you can `signup <https://msg91.com/signup>`_
 and get an API key to use with Hasura. Take a look at `this
 <http://help.msg91.com/article/177-where-can-i-find-my-authentication-key>`_
 guide by MSG91 to obtain your API key.
@@ -43,6 +41,4 @@ from which the SMS will be sent.
 
 Where, **<your-msg91-key>** is the Unique identifier obtained from MSG91
 Dashboard.
-
-.. _MSG91: https://msg91.com/
 
