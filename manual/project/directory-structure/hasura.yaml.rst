@@ -3,9 +3,11 @@
 Project structure: hasura.yaml
 ==============================
 
-This file contains some metadata about the project, namely a `name` and a `platformVersion` which says which Hasura platform version is compatible with this project.
+This file contains some metadata about the project, namely a ``name``, and a ``version`` which defines the project structure.
 
 .. code-block:: yaml
 
   name: my-hasura-project
+  version: v1
+  # optional
   platformVersion: v0.15.23

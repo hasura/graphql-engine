@@ -19,6 +19,7 @@ This is the reference documentation of the entire Hasura platform.
   The complete tutorial <tutorial/index>
   Hasura project <project/index>
   Hasura cluster <cluster/index>
+  Pro-tier cluster <pro-tier-cluster/index>
   Project microservices <microservices/index>
   API Console <api-console/index>
   Auth <auth/index>

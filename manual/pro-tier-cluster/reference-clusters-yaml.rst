@@ -1,7 +1,14 @@
-.. _hasura-project-directory-clusters-yaml:
+.. .. meta::
+   :description: Reference docs for clusters.yaml configuration
+   :keywords: hasura, CLI, cluster,
 
-Project structure: clusters.yaml
-================================
+
+Reference for clusters.yaml
+===========================
+This is the reference documentation for the structure of the ``clusters.yaml`` config file and other details.
+
+What is clusters.yaml
+---------------------
 
 ``clusters.yaml`` is a file containing the configuration of your infrastructure.
 It is located at the top-level of a Hasura project directory.
@@ -163,6 +170,8 @@ String
 ^^^^^^
 Any string value.
 
-You can list all your clusters using :ref:`hasura cluster list <hasura_cluster_list>` and add any of them to the project using :ref:`hasura cluster add <hasura_cluster_add>`.
 
-If you need to remove a cluster from a project, just remove the entry from ``clusters.yaml``.
+Examples
+--------
+
+For sample ``clusters.yaml`` configurations, see :doc:`this <./sample-cluster-configs>`.

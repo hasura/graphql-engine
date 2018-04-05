@@ -1,0 +1,37 @@
+.. _hasura-project-directory-dot-hasura:
+
+Project structure: .hasura
+==========================
+
+Info about the actual clusters added to this project can be found in this file. Each
+cluster is defined by it's name allotted by Hasura, and an alias that matches with one in :ref:`clusters.yaml <hasura-project-directory-clusters-yaml>`.
+
+.. note::
+
+   ``.hasura`` is git-ignored by default so that you can easily share your Hasura Project with infrastructure configuration, but without any actual cluster details. But, if you want to version control this file also, you can do so by removing ``.hasura`` from ``.gitignore``.
+
+The ``kubeContext`` mentions the name of Kubernetes context used to access the
+cluster and can be used with ``kubectl`` also.
+
+The ``config`` key denotes the location
+of cluster's metadata on the cluster itself. This information is parsed and
+cluster's metadata is appended while conf is rendered.
+
+.. code-block:: yaml
+
+   clusters:
+   - alias: hasura
+     config:
+       configmap: controller-conf
+       namespace: hasura
+     data: null
+     kubeContext: h33-blinders97
+     name: h33-blinders97
+   defaultCluster: hasura
+
+
+Use :ref:`hasura cluster set-default <hasura_cluster_set-default>` to set a ``defaultCluster``.
+
+You can list all your clusters using :ref:`hasura cluster list <hasura_cluster_list>` and add any of them to the project using :ref:`hasura cluster add <hasura_cluster_add>`.
+
+If you need to remove a cluster from a project, just remove the entry from ``.hasura``.

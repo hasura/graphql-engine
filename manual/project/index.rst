@@ -31,4 +31,5 @@ See:
   collaboration
   Conf files templating <conf-files-templating>
   Secrets <secrets/index>
+  Project version: v0 & v1 <project-version-v0-v1>
   Directory structure <directory-structure/index>

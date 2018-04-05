@@ -14,6 +14,7 @@ representative project is shown below:
 
    hasura.yaml <hasura.yaml>
    clusters.yaml <clusters.yaml>
+   .hasura <.hasura>
    conf/ <conf/index>
    migrations/ <migrations/index>
    microservices/ <microservices/index>
