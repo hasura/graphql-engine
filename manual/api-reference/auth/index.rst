@@ -5,6 +5,16 @@
 Auth API Reference
 ==================
 
+User APIs
+---------
+
+For user apis, see :doc:`../../auth/user-actions/index`
+
+Admin APIs
+----------
+
+For admin apis, see :doc:`../../auth/admin-actions/index`
+
 .. 
   .. swaggerv2doc:: ../../../_static/swagger.json
 

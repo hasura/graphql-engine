@@ -159,8 +159,8 @@ An example response looks like:
 
 
 
-Errors
-------
+Response structure
+------------------
 
 .. list-table::
    :widths: 10 10 30

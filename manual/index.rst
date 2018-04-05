@@ -28,12 +28,12 @@ This is the reference documentation of the entire Hasura platform.
   Notify (Sending emails/SMS) <notify/index>
   API gateway <gateway/index>
   Hasura Hub <hub/index>
-  hasura CLI reference <hasuractl/index>
-  hasura API reference <api-reference/index>
-  architecture/index
+  Hasura CLI reference <hasuractl/index>
+  Hasura API reference <api-reference/index>
   Guides <guides/index>
+  architecture/index
   Advanced <advanced/index>
-  Moving to v0.15 (existing Hasura users) <migration-v0_15/index>
+  Moving to v0.15 (old Hasura users) <migration-v0_15/index>
 
 ..
   ..monitoring-logging/index

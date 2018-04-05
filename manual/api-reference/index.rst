@@ -9,10 +9,10 @@
 
 .. _Hasura_ microservices:
 
-API Reference
-=============
+Hasura microservices API reference
+==================================
 
-This section provides a detailed reference of all the APIs that are provided by the Baas components of Hasura.
+This section provides a reference to all the APIs that are provided by the Hasura microservices.
 
 .. toctree::
   :maxdepth: 2

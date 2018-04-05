@@ -1,18 +1,14 @@
-.. .. meta::
-   :description: Overview of the single query endpoint, /v1/query, exposed by Hasura's Data microservice and its Request and Response structure.
-   :keywords: hasura, docs, data, query endpoint
+Data API endpoints
+==================
 
-Data API endpoints & error codes
-================================
-
-``/v1/template``
-----------------
+/v1/template
+------------
 
 This endpoint is used to execute an existing query template. You can read more about this :ref:`here <execute_query_template>`.
 
 
-``/v1/query``
--------------
+/v1/query
+---------
 
 The data microservice unifies all operations that can be performed on the database under
 a single 'query' interface. A query is ``POST`` ed to ``/v1/query``.
@@ -154,54 +150,3 @@ Response
 ^^^^^^^^
 
 The response structure is dependent on the type of query that is executed.
-
-
-Errors
-------
-
-.. list-table::
-   :widths: 10 10 30
-   :header-rows: 1
-
-   * - Status code
-     - Description
-     - Response structure
-
-   * - ``200``
-     - Success
-     - .. parsed-literal::
-
-          Request specific
-
-   * - ``400``
-     - Bad request
-     - .. code-block:: haskell
-
-          {
-              "path"  : String,
-              "error" : String
-          }
-
-   * - ``401``
-     - Unauthorized
-     - .. code-block:: haskell
-
-          {
-              "error" : String
-          }
-
-   * - ``500``
-     - Internal server error
-     - .. code-block:: haskell
-
-          {
-              "error" : String
-          }
-
-Error Codes
------------
-
-.. csv-table::
-   :file: dataerrors.csv
-   :widths: 10, 20, 70
-   :header-rows: 1

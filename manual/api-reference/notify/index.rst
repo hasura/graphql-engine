@@ -5,8 +5,8 @@
 Notify API reference
 ====================
 
-``POST /v1/send/email``
------------------------
+POST /v1/send/email
+-------------------
 
 This POST endpoint lets you send an email.
 
@@ -54,8 +54,8 @@ An example response looks like:
 
   For SMTP email provider, the ``provider-reference-id`` will be ``NA``.
 
-``POST /v1/send/sms``
----------------------
+POST /v1/send/sms
+-----------------
 
 This endpoint can be used to send SMS.
 
@@ -92,8 +92,8 @@ A typical response will look like this:
     }
 
 
-Errors
-------
+Response structure
+------------------
 
 .. list-table::
    :widths: 10 10 30
@@ -103,12 +103,36 @@ Errors
      - Description
      - Response structure
 
-   * - ``<status-code>``
-     -  Status
+   * - ``200``
+     - Success
      - .. parsed-literal::
+
+          Request specific
+
+   * - ``400``
+     - Bad request
+     - .. code-block:: haskell
 
           {
               "code"  : String,
+              "message" : String
+          }
+
+   * - ``401``
+     - Unauthorized
+     - .. code-block:: haskell
+
+          {
+              "code" : String,
+              "message" : String
+          }
+
+   * - ``500``
+     - Internal server error
+     - .. code-block:: haskell
+
+          {
+              "code" : String,
               "message" : String
           }
 

@@ -4,8 +4,8 @@
 
 .. _migration-v0_15:
 
-Existing users: Moving to Hasura platform v0.15
-===============================================
+Moving to Hasura platform v0.15 from an older version
+=====================================================
 
 .. toctree::
   :maxdepth: 1
