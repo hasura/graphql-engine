@@ -3,8 +3,8 @@
    :keywords: hasura, api gateway, routing, session middleware, cors, custom domains, domains, ssl
 
 
-API Gateway
-===========
+Hasura API Gateway
+==================
 
 The Hasura API Gateway (or simply the gateway) is a microservice consisting of
 a custom Lua scripted Nginx, a Let's Encrypt agent and a Redis instance.

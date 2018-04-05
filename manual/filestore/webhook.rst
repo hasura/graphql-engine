@@ -1,5 +1,3 @@
-.. _filestore-authz-webhooks:
-
 Filestore authorization webhooks
 ================================
 

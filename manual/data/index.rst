@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Database
-========
+Hasura Database
+===============
 
 Hasura comes with data APIs which run on top of a **Postgres database** to store and retrieve data.
 

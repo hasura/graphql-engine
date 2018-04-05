@@ -76,7 +76,7 @@ The second API is described as follows.
 ``Authorization`` header is not required if the request is being made from a browser, since ``Cookie`` will be set.
 
 .. note::
-   By default, File APIs are only accessible to those users with ``admin`` role. Goto Permissions tab under File Service in the console and enable ``Private`` webhook to enable ``user`` role also to upload and download files. This default permissions are based only on role and not on user ID. Hence, anybody with a ``user`` role can download a file another user has uploaded. For a more fine grained access control, refer to :ref:`Custom Webhooks <filestore-authz-webhooks>`.
+   By default, File APIs are only accessible to those users with ``admin`` role. Goto Permissions tab under File Service in the console and enable ``Private`` webhook to enable ``user`` role also to upload and download files. This default permissions are based only on role and not on user ID. Hence, anybody with a ``user`` role can download a file another user has uploaded. For a more fine grained access control, refer to :doc:`Authorization webhooks <webhook>`.
 
 Uploaded files will be visible on the console.
 

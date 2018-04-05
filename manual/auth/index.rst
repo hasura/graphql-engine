@@ -1,8 +1,8 @@
 .. meta::
    :keywords: hasura_id
 
-Auth
-====
+Hasura Auth
+===========
 
 Hasura Auth APIs lets you create, authenticate and manage user accounts on
 your Hasura project. It also lets you manage sessions and roles for users.
