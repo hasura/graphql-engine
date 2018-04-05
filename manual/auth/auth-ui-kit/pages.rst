@@ -1,5 +1,5 @@
-All Auth UI Kit pages
-=====================
+List of all Auth UI Kit pages
+=============================
 
 The Auth UI Kit comes with the following pre-built pages:
 

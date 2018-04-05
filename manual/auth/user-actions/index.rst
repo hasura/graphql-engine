@@ -1,8 +1,3 @@
-.. .. meta::
-    :description: Hasura Auth Admin APIs
-    :keywords: hasura, admin, users, remove session, add session, add user, remove user, user activate, user deactivate
-
-
 Auth user actions
 =================
 

@@ -23,4 +23,11 @@ The following default urls are available on filestore microservice for configuri
     Anybody can read, but no one can upload
       URL: http://filestore.hasura/v2/hooks/public-read
 - Custom Permission URL:
-    For any other custom permissions, you need to define your own microservice. Refer to :ref:`Authorization webhooks <filestore-authz-webhooks>` to see how this can be done.
+    For any other custom permissions, you need to define your own microservice. Refer to :doc:`authorization webhooks <webhook>` to see how this can be done.
+
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   webhook

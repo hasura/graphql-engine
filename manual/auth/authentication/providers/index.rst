@@ -4,8 +4,8 @@
 
 .. _providers:
 
-Authentication Providers
-========================
+Authentication methods a.k.a. Providers
+=======================================
 
 Hasura Auth has **"providers"** to support different modes of authentication.
 
@@ -52,8 +52,7 @@ The following providers come by default with Hasura Auth:
 
 Choose providers from the above based on your requirement.
 
-See:
-^^^^
+**See detailed usage of the providers:**
 
 .. toctree::
    :maxdepth: 1

@@ -1,5 +1,5 @@
-User: Get user info
-===================
+Get user info (as user)
+=======================
 
 To get the logged in user's details, or to check if a session token is valid
 you can use this endpoint.

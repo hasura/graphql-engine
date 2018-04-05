@@ -1,5 +1,5 @@
-User: Signup
-============
+User Signup
+===========
 
 The signup endpoint of Hasura Auth works in the following way. It takes two
 parameters.

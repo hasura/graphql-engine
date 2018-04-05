@@ -1,5 +1,5 @@
-Admin: Delete user
-==================
+Delete user (as admin)
+======================
 
 To remove existing user, make a request to the delete-user endpoint : ``/v1/admin/delete-user``.
 Hasura Auth deletes user in all providers.

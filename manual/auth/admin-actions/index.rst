@@ -22,3 +22,7 @@ these APIs are open to users with admin role.
    Remove user session <remove-session>
    Remove all user sessions <remove-all-sessions>
    Reset user password <reset-user-password>
+   Create user role <create-role>
+   Assign role to user <assign-role>
+   Unassign role to user <unassign-role>
+   Delete user role <delete-role>

@@ -1,5 +1,5 @@
-User: Forgot password / password reset
-======================================
+User Forgot password / password reset
+=====================================
 
 If a user has forgotten their password, it can be reset.
 

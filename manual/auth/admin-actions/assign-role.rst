@@ -1,5 +1,5 @@
-Assigning user roles
-====================
+Assign role to user
+===================
 
 A user can be assigned roles. This can only be done by the admin user.
 

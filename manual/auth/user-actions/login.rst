@@ -1,5 +1,5 @@
-User: Login
-===========
+User Login
+==========
 
 The request payload of the login endpoint is similar to the signup endpoint.
 

@@ -1,7 +1,7 @@
-Deleting user roles
-===================
+Delete user role
+================
 
-Deleting roles can be done by users having ``admin`` roles.
+Deleting roles can be done by users having the ``admin`` role.
 
 To delete a role, make a request to the ``/admin/delete-role`` endpoint.
 
@@ -14,3 +14,7 @@ To delete a role, make a request to the ``/admin/delete-role`` endpoint.
      "role" : "merchant"
    }
 
+
+.. note::
+
+   You cannot delete the default roles, ie: ``anonymous``, ``user`` and ``admin``, from the system.

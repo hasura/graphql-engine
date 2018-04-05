@@ -6,29 +6,33 @@
 Understanding user sessions
 ===========================
 
-When a user is logged-in, a session is attached.
+Whenever a user logs in, a session is created and attached to the user.
 
-A session is nothing but a unique, un-guessable identifier  attached to that
-Hasura Auth user account (referred to as ``auth_token``) for that session. This
-way a user can make subsequent requests without having to authenticate with
-credentials on every request. Instead, on every request, the user can present
-the ``auth_token`` to identify themself.
+A session is identified by an ``auth_token``, which is a unique, un-guessable
+identifier attached to that user's account. This way a user can make subsequent
+requests without having to authenticate with credentials on every request. Instead,
+on every request, the user can present the ``auth_token`` to identify themself.
+Every new session of a user will have a new ``auth_token`` created for it.
+This ``auth_token`` is mapped with the user's information and stored in the session store.
 
 Every microservice benefits from having the user's information (id and roles) with
-each request. In the Hasura platform, every request goes through the API
-Gateway. So, the API Gateway integrates with the session store to act as a
+each request. In the Hasura platform, every request goes through the :doc:`API Gateway <../gateway/index>`.
+The API Gateway integrates with the session store to act as a
 session middleware for all microservices.
 
-When the gateway receives a request, it looks for a session token in the
-``Bearer`` token of ``Authorization`` header or in the cookie. It then
-retrieves the user's id and roles attached to this session token from the
+When the gateway receives a request, it looks for a session auth token in the
+``Bearer`` token of the ``Authorization`` header or in the ``cookie``. It then
+retrieves the user hasura_id and roles attached to this session token from the
 session store. This information is sent as ``X-Hasura-User-Id`` and
 ``X-Hasura-Role`` headers to the upstream microservice.
 
-When the session token is absent from both header and cookie, the gateway
-considers it an anonymous request and adds the header ``X-Hasura-Role:
-anonymous``. The ``X-Hasura-User-Id`` header is **not** set in this case.
+When the session token is absent from both the Authorization header and cookie, the gateway
+considers it as an ``anonymous`` request and adds the header ``X-Hasura-Role:
+anonymous``. The ``X-Hasura-User-Id`` header is **not set** in this case.
 
+For example, the image below demonstrates the gateway's behaviour when two different kinds of incoming requests are made to ``data.test42.hasura-app.io`` from an HTTP client:
+
+.. image:: ../../img/manual/auth/session-middleware.png
 
 .. _session-expiry:
 
@@ -42,26 +46,16 @@ A user session will expire:
 * sessions are expired explicitly by any admin user
 
 Handling/Storing session tokens
---------------------------------
-
-Sessions are managed by Hasura Auth and the API Gateway. Whenever a request is
-made API Gateway resolves the session from ``Authorization`` header or
-**cookies**.
+-------------------------------
 
 Web-apps
 ~~~~~~~~
-If you are building browser-based apps, then Hasura Auth APIs already sends
-appropriate cookie headers. You don't have to do any additional work to manage
-sessions tokens, except making appropriate API calls and browser handles the
-rest for you.
+If you are building browser-based apps, then you don't have to do any additional work to
+manage sessions tokens. Hasura Auth APIs send appropriate cookie headers on session creation.
+The browser then handles setting the cookie for you on subsequent requests.
 
 Mobile / other device apps
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 If you are building mobile/device apps, then you have to make your own
-mechanism for storing session tokens (``auth_token``) and managing them. That
-is - storing, updating and deleting them whenever a Hasura Auth API returns a
-new session token, and remove all existing tokens (``auth_token``) on the above
-conditions.
-
-.. :ref:`these conditions <session-expiry>`.
-
+mechanism for managing session tokens. That is - storing the token when a session is created
+and deleting it when a session has expired.

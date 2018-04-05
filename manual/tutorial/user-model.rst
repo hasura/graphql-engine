@@ -39,7 +39,7 @@ When the session token is absent from both header and cookie, the gateway consid
 
 For example, the image below demonstrates the gateway's behaviour when two different kinds of incoming requests are made to ``data.test42.hasura-app.io`` from an HTTP client:
 
-.. image:: session-middleware.png
+.. image:: ../../img/manual/auth/session-middleware.png
 
 Before you begin: Open the API console
 --------------------------------------

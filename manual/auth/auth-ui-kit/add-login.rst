@@ -16,4 +16,7 @@ The URL to hyperlink - ``https://auth.<cluster-name>.hasura-app.io/ui/login``
 
 So when your website users click on this link, they will be sent to the UI Kit's Login page.
 
-You can add the query parameter :doc:`redirect_url <redirect>` to the URL so that once the user completes their login flow, they will be redirected back to your application's page automatically.
+
+.. note::
+
+  You can add the query parameter :doc:`redirect_url <redirect>` to the URL so that once the user completes their login flow, they will be redirected back to your application's page automatically.

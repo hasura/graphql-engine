@@ -1,5 +1,5 @@
-User: Logout
-============
+User Logout
+===========
 
 To log user out, make the following request.
 

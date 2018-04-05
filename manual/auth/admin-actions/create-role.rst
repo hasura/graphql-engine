@@ -1,5 +1,5 @@
-Creating user roles
-===================
+Create user role
+================
 
 Creating roles can be done by users having ``admin`` roles.
 

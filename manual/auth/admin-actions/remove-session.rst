@@ -1,5 +1,5 @@
-Admin: Create user session
-==========================
+Create user session (as admin)
+==============================
 
 To create a session to a user, make a request to the admin endpoint : ``/v1/admin/user/create-session``
 

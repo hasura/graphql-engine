@@ -1,5 +1,5 @@
-Admin: Get user info
-====================
+Get user info (as admin)
+========================
 
 To get a user info, make a get request to the admin get user endpoint : ``/v1/admin/user/<user_id>``
 

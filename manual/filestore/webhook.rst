@@ -1,41 +1,16 @@
-.. Hasura Platform documentation master file, created by
-   sphinx-quickstart on Thu Jun 30 19:38:30 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-.. .. meta::
-   :description: Reference documentation for Hasura's ``File``  microservice. The microservice is used to upload & download files and has built-in access control.
-   :keywords: hasura, docs, fileStore, file, file upload, file download
-
-====
-File
-====
-
-The ``File`` microservice on Hasura let's you upload and download files. This can
-be used to store user data files.
-
-The File microservice, just like the data microservice, allows configuring access
-control on files based on roles.
-
-The ``File`` API provides the following features:
-
-1. CRUD APIs to download, upload and delete files.
-2. Role based access control per file.
-
-
 .. _filestore-authz-webhooks:
 
-Authorization webhooks
-----------------------
+Filestore authorization webhooks
+================================
 
-File needs to authorize if the current user is allowed to call a ``File``
+Filestore needs to authorize if the current user is allowed to call a ``Filestore``
 API (say to upload or download a file). This authorization is done via a
 webhook.
 
-By default, only the ``admin`` role has access to the ``File`` APIs, for other
+By default, only the ``admin`` role has access to the ``Filestore`` APIs, for other
 roles the webhook has to be configured.
 
-The File microservice contacts the webhook with the following parameters:
+The Filestore microservice contacts the webhook with the following parameters:
 
 1. The File ID: the unique id of the file.
 2. The operation on the file: one of ``create``, ``read``, ``delete``.
@@ -47,7 +22,7 @@ The user's information is passed in the request headers as
 
     The headers ``X-Hasura-User-Id``, ``X-Hasura-User-Role`` and
     ``X-Hasura-Allowed-Roles`` are a Hasura platform feature to enable access
-    control. To know more about it read here.
+    control. To know more about it read :doc:`here <../gateway/session-middleware>`.
 
 
 Webhook response
@@ -80,7 +55,7 @@ and if it returns ``403`` response, then the file operation is denied.
 Setting up the webhook
 ----------------------
 
-As a user, you are supposed to provide the ``File`` microservice with a webhook, which is a
+As a user, you are supposed to provide the ``Filestore`` microservice with a webhook, which is a
 HTTP URL running inside the Hasura cluster.
 
 Which means, you need to write a custom endpoint which receives the above

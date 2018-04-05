@@ -5,8 +5,8 @@
 
 .. _hasura-notify:
 
-Sending emails/SMS
-==================
+Notify (Sending emails/SMS)
+===========================
 
 Hasura comes with a ``Notify`` microservice which lets you send communication to users via emails and SMS
 

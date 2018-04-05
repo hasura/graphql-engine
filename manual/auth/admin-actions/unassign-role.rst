@@ -1,5 +1,5 @@
-Unassigning user roles
-======================
+Unassign role to user
+=====================
 
 A user can be unassigned roles. This can only be done by an admin user.
 

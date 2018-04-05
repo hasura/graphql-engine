@@ -31,7 +31,7 @@ Apart from this, your application will probably have custom microservices too, w
 Concept #2: A hasura cluster
 ----------------------------
 
-A Hasura cluster is a cluster of nodes (VMs) on the cloud that can host any Hasura project. It has all the Hasura microservices running and the necessary tooling for you to deploy your Hasura project.
+A Hasura cluster is a Kubernetes cluster on the cloud that can host any Hasura project. It has all the Hasura microservices running and the necessary tooling for you to deploy your Hasura project.
 
 .. image:: hasura-cluster.png
 

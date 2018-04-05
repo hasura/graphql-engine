@@ -4,9 +4,9 @@ Auth UI Kit Themes
 
 The Auth UI kit comes with two theme options to choose from. The dark theme is enabled by default.
 
-.. figure:: ../../img/uikit-dark.png
+.. figure:: ../../../img/uikit-dark.png
    :class: 'dark'
-.. figure:: ../../img/uikit-light.png
+.. figure:: ../../../img/uikit-light.png
    :class: 'light'
 
 

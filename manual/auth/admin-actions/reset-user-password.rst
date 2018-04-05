@@ -1,5 +1,5 @@
-Admin: Reset user password
-==========================
+Reset user password (as admin)
+==============================
 
 To reset password of a user, make a request to the admin endpoint : ``/v1/admin/user/reset-password``
 

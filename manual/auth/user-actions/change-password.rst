@@ -1,5 +1,5 @@
-User: Change Password
-=====================
+User Change Password
+====================
 
 If the user is logged in, they can change their password using the following
 endpoint

@@ -18,4 +18,6 @@ The URL to hyperlink - ``https://auth.<cluster-name>.hasura-app.io/ui/logout``.
 
 So when your website users click on this link, they will be redirected to the UI Kit's Logout page.
 
-You can add the query parameter :doc:`redirect_url <redirect>` to the URL so that once the user completes their logout flow, they will be redirected back to your application's page automatically, where you can display custom messaging if required.
+.. note::
+
+  You can add the query parameter :doc:`redirect_url <redirect>` to the URL so that once the user completes their logout flow, they will be redirected back to your application's page automatically, where you can display custom messaging if required.

@@ -1,5 +1,5 @@
-Admin: Remove all user sessions
-===============================
+Remove all user sessions (as admin)
+===================================
 
 To remove all sessions of a user, make a request to the admin endpoint : ``/v1/admin/user/remove-all-session``
 

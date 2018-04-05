@@ -1,5 +1,5 @@
-Admin: Activate user
-====================
+Activate user (as admin)
+========================
 
 To activate a user, make a request to the admin endpoint : ``/v1/admin/user/activate``
 

@@ -1,5 +1,5 @@
-Admin: Deactivate user
-======================
+Deactivate user (as admin)
+==========================
 
 To deactivate a user, make a request to the admin endpoint : ``/v1/admin/user/deactivate``
 

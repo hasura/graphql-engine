@@ -1,5 +1,5 @@
-Admin: Create user
-==================
+Create user (as admin)
+======================
 
 To create a new user, make a request to the admin create-user endpoint : ``/v1/admin/create-user``.
 It is provider specific endpoint. Specify ``provider`` in request payload.

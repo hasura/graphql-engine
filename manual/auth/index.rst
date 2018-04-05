@@ -1,28 +1,27 @@
 .. meta::
    :keywords: hasura_id
 
-Users & Authentication
-======================
+Auth
+====
 
 Hasura Auth APIs lets you create, authenticate and manage user accounts on
 your Hasura project. It also lets you manage sessions and roles for users.
 
-Like any other authentication API, Hasura Auth has support for multiple ways to
-authenticate a user (e.g. username-based, email-based, mobile-based etc.).
-Hasura Auth calls each authentication method a "provider".
+Once a user is registered (or signed-up) on Hasura, the Auth microservice attaches a ``Hasura
+Identity`` or ``hasura_id`` as well as a default role ``'user'`` to the user.
 
-Once a user is registered (or signed-up) on Hasura, it attaches a ``Hasura
-Identity`` or (``hasura_id``) to every user.  A Hasura identity is an integer.
-You can use this value in your application to tie your application's user to
-this identity.
+The ``hasura_id`` is a unique integer value assigned to every registered user.
+This value can be used across microservices to refer to the user registered by the Auth microservice.
 
-Hasura Auth APIs also has a bunch of admin APIs to perform administrative tasks
+To understand how microservices receive the ``hasura_id`` and roles of a user, check out :doc:`sessions`
+
+Hasura Auth provides a bunch of admin APIs to perform administrative tasks
 on your user accounts.
 
 
 **Explore the Auth APIs**
 
-Use the API console to browse the various Auth APIs.
+Use the API console to try out the various Auth APIs.
 
 .. code-block:: bash
 
@@ -35,12 +34,14 @@ See:
 .. toctree::
    :maxdepth: 1
 
-   providers/index
+   authentication/index
+   authorization/index
+   sessions
    User actions <user-actions/index>
    Admin actions <admin-actions/index>
    config
-   sessions
    extra-user-info
+   auth-ui-kit/index
 
 
 .. _recaptcha: https://www.google.com/recaptcha/intro/index.html
