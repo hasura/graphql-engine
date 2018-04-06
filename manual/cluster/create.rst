@@ -5,11 +5,11 @@
 Creating a cluster
 ==================
 
-To create a new cluster, use the ``hasura`` CLI.
+To create a new free Hasura cluster, use the ``hasura`` CLI:
 
 .. code-block:: bash
 
-  $ hasura cluster create --type free
+  $ hasura cluster create --infra free
 
   INFO Creating a Hasura cluster...
   INFO Hasura cluster created                        cluster=alarming52
@@ -19,3 +19,6 @@ To create a new cluster, use the ``hasura`` CLI.
 
 .. note::
     You can only create 2 free Hasura clusters.
+
+    For creating pro-tier clusters, refer :doc:`pro-tier/create`
+

@@ -1,4 +1,4 @@
-.. _hasura-project-version
+.. _hasura-project-version:
 
 Hasura project version: v0 & v1
 ===============================

@@ -14,3 +14,4 @@ Guides
    hasura-on-gke
    separate-microservice-git-repository
    converting-git-repo-to-hasura-project
+   complete-cluster-migration

@@ -58,16 +58,15 @@ Step 4: Create a Hasura cluster and add to the project
 
 .. code-block:: bash
 
-   $ hasura cluster create --type=free
+   $ hasura cluster create --infra free
    $ hasura cluster add [cluster-name] -c hasura
    $ hasura cluster set-default hasura
 
-Step 5: Add your SSH key and push to the cluster
-------------------------------------------------
+Step 5: Push to the cluster
+---------------------------
 
 .. code-block:: bash
 
-   $ hasura ssh-key add
    $ git push hasura master
 
 .. |base-github-link| raw:: html

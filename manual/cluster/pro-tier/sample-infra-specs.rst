@@ -1,11 +1,10 @@
-Sample Cluster Configurations
-=============================
+Sample cluster infra specs
+==========================
 
-This section has sample configurations that can be used to create or modify paid
-clusters.
+This section has sample configurations that can be used to create or modify :doc:`pro-tier
+clusters <index>`.
 
-For details about the structure of this configuration see :doc:`reference
-<./reference-clusters-yaml>`.
+For details about the structure of this configuration see :doc:`infra-spec`.
 
 Hobby project - Basic
 ---------------------

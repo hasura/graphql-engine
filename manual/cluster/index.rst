@@ -25,14 +25,15 @@ Hasura backend APIs and some internal microservices (like Postgres, Nginx etc.)
 installed on it.  This Kubernetes cluster is usually running on a cloud
 infrastructure like Google Cloud, Azure or AWS.
 
-All Hasura clusters are free for development purposes or for hobby projects.
+Hasura provides free clusters as well as paid :doc:`pro-tier clusters <pro-tier/index>`.
 
-For hosting production projects, please get in touch with us at
-support@hasura.io.
+Hasura free-tier clusters are for development purposes or for hobby projects.
+
+For hosting production projects, Hasura pro-tier clusters should be used.
 
 .. note::
 
-  Please **do not host production projects** on these free clusters as they don't
+  Do not host production projects on free clusters as they don't
   have production SLAs and can go down (although unlikely).
 
 See:
@@ -45,18 +46,8 @@ See:
    add
    list
    delete
+   upgrade
    multiple-clusters
    set-default
    connect-kubectl
-
-..
-  uncomment this when we have danava
-  Free clusters
-  -------------
-  One can get a free cluster
-  There are free clusters that a user can create.
-  Free clusters are free forever, but they have limited resources.
-  Paid clusters
-  -------------
-  There are paid clusters as well. In a paid cluster, the user has a choice of
-  the cluster (CPU/RAM/Disk Size etc.) and region they want to install on.
+   pro-tier/index

@@ -1,11 +1,8 @@
-.. .. meta::
-   :description: Reference docs for clusters.yaml configuration
-   :keywords: hasura, CLI, cluster,
+Updating infra specs for project clusters
+=========================================
 
-
-Reference for clusters.yaml
-===========================
-This is the reference documentation for the structure of the ``clusters.yaml`` config file and other details.
+This is the reference documentation for the structure of the ``clusters.yaml`` config file which
+contains the infrastructure specifications for clusters required by a project.
 
 What is clusters.yaml
 ---------------------
@@ -59,8 +56,6 @@ Following fields make up the infra spec:
      size: 10
 
 
-.. _Version:
-
 Version
 ^^^^^^^
 Version of the spec. This is an internal key. It is currently ``v1``.
@@ -71,8 +66,6 @@ Version of the spec. This is an internal key. It is currently ``v1``.
    String_
 
 
-.. _Provider:
-
 Provider
 ^^^^^^^^
 Name of the provider. Currently only ``digital-ocean`` is supported.
@@ -82,8 +75,6 @@ Name of the provider. Currently only ``digital-ocean`` is supported.
 
    String_
 
-
-.. _Region:
 
 Region
 ^^^^^^
@@ -97,8 +88,6 @@ regions https://developers.digitalocean.com/documentation/v2/#list-all-regions
 
    String_
 
-
-.. _Node:
 
 Node
 ^^^^
@@ -114,8 +103,6 @@ An object containing the type of node/machine and its labels.
    }
 
 
-.. _Volume:
-
 Volume
 ^^^^^^
 An object containing the name of the volume and its size in GB.
@@ -128,8 +115,6 @@ An object containing the name of the volume and its size in GB.
        "size" : DiskSize_
    }
 
-.. _NodeType:
-
 NodeType
 ^^^^^^^^
 The type of node (or machine) to be used. Basically, this type represents the
@@ -139,8 +124,6 @@ provider specific.
 For Digital Ocean, the value of this field is any valid ``slug`` in this list:
 https://developers.digitalocean.com/documentation/v2/#list-all-sizes
 
-
-.. _Label:
 
 Label
 ^^^^^
@@ -158,13 +141,11 @@ These labels can also be used in your Kubernetes manifests as node selectors.
    }
 
 
-.. _DiskSize:
 
 DiskSize
 ^^^^^^^^
 An integer value in GigaBytes (GB). This value cannot be zero.
 
-.. _String:
 
 String
 ^^^^^^
@@ -174,4 +155,4 @@ Any string value.
 Examples
 --------
 
-For sample ``clusters.yaml`` configurations, see :doc:`this <./sample-cluster-configs>`.
+For sample ``clusters.yaml`` configurations, see :doc:`this <sample-infra-specs>`.
