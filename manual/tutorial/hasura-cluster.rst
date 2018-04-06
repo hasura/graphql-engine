@@ -19,7 +19,7 @@ The following creates a free tier Hasura cluster.
 
 .. code-block:: bash
 
-   $ hasura cluster create --type=free
+   $ hasura cluster create --infra free
 
 ::
    
@@ -69,26 +69,7 @@ to refer to this cluster in all commands in the future using the ``-c`` flag.
    ✓ Cluster set as default cluster-alias=hasura
 
 
-Step 4: Add your SSH key to the cluster
----------------------------------------
-
-To execute ``git push`` commands to deploy to the cluster, you need to put your SSH public key on the cluster so that
-your cluster's git remote can identify you securely.
-
-.. code-block:: bash
-
-   # Add an SSH key to the default cluster
-   $ hasura ssh-key add
-
-::
-
-   Adding SSH key from <dir-path>/.ssh/id_rsa.pub ...
-   Waiting for configureation to be synced...
-   ✓ SSH key (<dir-path>/.ssh/id_rsa.pub) added cluster=hasura [test42]
-
-If you don't have an SSH key already, an SSH key will get created for you in your ``~/.ssh`` folder.
-
-Step 5: Deploy the project to the cluster
+Step 4: Deploy the project to the cluster
 -----------------------------------------
 
 To deploy the project to the cluster, run the following:

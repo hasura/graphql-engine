@@ -16,7 +16,7 @@ To create a new cluster, use the ``hasura`` CLI.
 
 .. code-block:: bash
 
-  $ hasura cluster create --type free
+  $ hasura cluster create --infra free
 
 
 As an example, let us create two clusters, one for staging and one for
@@ -24,7 +24,7 @@ production.
 
 .. code-block:: bash
 
-  $ hasura cluster create --type free
+  $ hasura cluster create --infra free
 
   INFO Creating a Hasura cluster...
   INFO Hasura cluster created                        cluster=alarming52
@@ -32,7 +32,7 @@ production.
   INFO Cluster initialized
   INFO Kubernetes context has been added to this system  context=alarming52
 
-  $ hasura cluster create --type free
+  $ hasura cluster create --infra free
 
   INFO Creating a Hasura cluster...
   INFO Hasura cluster created                        cluster=ambitious93
@@ -65,8 +65,10 @@ To add a cluster to a project we use:
   # in project directory
   $ hasura cluster add <cluster-name> -c <cluster-alias>
 
-The ``-c`` flag tells to create an alias for the cluster. We
-can then use this alias in various other commands including git push.
+
+.. note::
+
+   The ``-c`` flag tells to create an alias for the cluster. We can then use this alias in various other commands including git push.
 
 Let's add the newly created two clusters to our projects.
 
