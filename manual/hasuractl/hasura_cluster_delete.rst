@@ -35,7 +35,7 @@ Options
 
 ::
 
-      --force   skip the confirmation prompt and force delete
+      --force   skip the confirmation prompt and force action
   -h, --help    help for delete
 
 Options inherited from parent commands

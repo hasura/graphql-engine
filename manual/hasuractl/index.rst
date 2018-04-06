@@ -41,6 +41,7 @@ Commands
    hasura cluster status <hasura_cluster_status>
    hasura cluster template-context <hasura_cluster_template-context>
    hasura cluster top <hasura_cluster_top>
+   hsaura cluster upgrade <hasura_cluster_upgrade>
    hasura completion <hasura_completion>
    hasura conf <hasura_conf>
    hasura conf apply <hasura_conf_apply>

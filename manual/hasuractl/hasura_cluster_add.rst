@@ -20,8 +20,12 @@ Examples
 
 ::
 
-    # Add a hasura cluster called 'caddy89' shown on the dashboard to the project with an alias 'production':
+    # Add a hasura cluster called 'caddy89' to the project with an alias 'production':
     $ hasura cluster add caddy89 -c production
+
+    # Add cluster named 'caddy89' to current project, with alias 'staging'
+    # over-write any existing cluster with same name
+    $ hasura cluster add caddy89 -c staging --overwrite
 
     # Add a cluster defined in a file called 'cluster.yaml' to this project
     $ hasura cluster add --file=cluster.yaml
@@ -32,9 +36,10 @@ Options
 
 ::
 
-  -c, --cluster string   Alias the cluster to a more relevant name. Cluster will be added to the project with this name and can be further referred to using the same
+  -c, --cluster string   alias the cluster to a more relevant name. Cluster will be added to the project with this name and can be further referred to using the alias with -c flag
   -f, --file string      path to cluster metadata file
   -h, --help             help for add
+      --overwrite        skip confirmation and over-write if a cluster with same alias already exist
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

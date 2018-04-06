@@ -13,15 +13,19 @@ Show details and state of configuration of a cluster
 
 ::
 
-  hasura cluster status [flags]
+  hasura cluster status [cluster-name] [-c [cluster-alias]] [flags]
 
 Examples
 ~~~~~~~~
 
 ::
 
-    # Get status of a cluster called 'production':
+    # Get status of a cluster called 'production' while in a project directory:
     $ hasura cluster status -c production
+
+    # Get status of a cluster by name:
+    $ hasura cluster status [cluster-name]
+
 
 Options
 ~~~~~~~

@@ -37,7 +37,7 @@ Options
 ::
 
   -h, --help          help for quickstart
-  -t, --type string   Infrastructure provider on which cluster is created. Available providers: free (default "free")
+  -t, --type string   type of cluster (free, paid) (default "free")
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
