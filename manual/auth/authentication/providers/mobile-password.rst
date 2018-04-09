@@ -18,7 +18,7 @@ provider there are extra steps to be performed to verify the user's mobile.
 Configuration
 -------------
 
-You can configure Mobile/Password provider settings in the ``auth.yaml`` from the ``conf`` directory in your project. Find a top level key called ``mobilePassword`` in the ``auth.yaml``. By default the mobile-password conf looks like this:
+You can configure Mobile/Password provider settings in the :doc:`conf/auth.yaml <../../../project/directory-structure/conf/auth.yaml>` file in your project. Find a top level key called ``mobilePassword`` in the ``auth.yaml``. By default the mobile-password conf looks like this:
 
 .. snippet:: yaml
     :filename: auth.yaml

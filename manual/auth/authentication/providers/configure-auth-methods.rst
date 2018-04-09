@@ -2,7 +2,7 @@ Enabling/disabling authentication methods
 =========================================
 
 All the configuration related to the authentication methods a.k.a providers,
-is present in ``conf/auth.yaml`` file in your project drectory. The default
+is present in :doc:`conf/auth.yaml <../../../project/directory-structure/conf/auth.yaml>` file in your project drectory. The default
 providers of ``auth.yaml`` look something like the snippet below:
 
 .. snippet:: yaml

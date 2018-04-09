@@ -16,7 +16,7 @@ Configuration
 
 * Now you need to configure Hasura Auth microservice with these credentials.
 
-* To configure, go to ``auth.yaml`` in ``conf`` directory inside your Hasura
+* To configure, go to :doc:`conf/auth.yaml <../../../project/directory-structure/conf/auth.yaml>` file inside your Hasura
   project.
 
 * Under ``google``, set the array of ``clientIds``.

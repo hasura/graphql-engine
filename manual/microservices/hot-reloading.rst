@@ -1,5 +1,5 @@
-Hot reloading
-=============
+Hot reloading local changes to a microservice
+=============================================
 
 Using Hasura, you can hot reload code changes to microservices running on a cluster. If the language/framework tooling supports live reloading, you can do the same on a Hasura cluster so that your changes are deployed live to a HTTPS url.
 

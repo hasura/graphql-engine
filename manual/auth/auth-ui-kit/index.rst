@@ -51,4 +51,4 @@ See:
   Adding Logout to your app <add-logout>
   Redirecting users back to your app <redirect>
   Restricting access to your app <restrict-access>
-  List of all pages <pages>
+  List of all UI kit pages <pages>

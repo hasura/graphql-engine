@@ -3,11 +3,32 @@ Data relationships
 
 There is usually some kind of association between tables in a database. These associations are typically captured by foreign key constraints when the data is modelled. The data APIs lets you define relationships based on these foreign key constraints.
 
-For example, an ``article`` table might have a column called ``category_id`` which points to a row in the ``category`` table. Because of this, you may wish to fetch the *articles* of each category when fetching categories, or fetch the *category* of an article when fetching articles.
+For example, an ``article`` table might have a column called ``author_id`` which points to a row in the ``author`` table. Because of this, you may wish to fetch the *articles* of each category when fetching authors, or fetch the *author* of an article when fetching articles.
 
-These additional properties, *articles* of a *category* and *category* of an *article*, made possible because of foreign key constraints are what we call relationships. *articles* of *category* is an **array relationship** while *category* of *article* is an **object relationship**.
+These additional properties, *articles* of an *author* and *author* of an *article*, made possible because of foreign key constraints are what we call relationships. *articles* of *author* is an **array relationship** while *author* of *article* is an **object relationship**.
 
-In the ``Data`` section of the :doc:`API console <../api-console/index>`, choose a table and head to the ``Relationships`` tab to view the current relationships and also possible relationships based on the foreign key constraints that the table is involved in.
+Creating relationships
+----------------------
+
+You can create relationship metadata for tables via the API console.
+
+Let's say you wish to add an object relationship for ``article(author_id) -> author(hasura_id)``. Navigate to the *Relationships* tab in the ``article`` table.
+
+You'll see an entry in *suggested object relationships*:
+
+.. image:: ../../img/complete-tutorial/tutorial-10-new-rel-article.png
+
+Click on *Add* to add a new object relationship and name the relationship:
+
+.. image:: ../../img/complete-tutorial/tutorial-add-relationship.png
+
+The relationship is created:
+
+.. image:: ../../img/complete-tutorial/tutorial-added-relationship.png
+
+
+Fetching over relationships
+---------------------------
 
 To obtain the **author**'s name from the article table, we issue,
 
@@ -152,5 +173,3 @@ We can also use ``where``, ``limit``, ``offset`` inside array relationships. Let
            ]
        }
    }
-
-

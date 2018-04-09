@@ -16,7 +16,7 @@ To create a role, make a request to the ``/admin/create-role`` endpoint.
    }
 
 
-You can also do this from the API-Console. Go to the ``auth`` tab on top and click on ``Roles`` on the left panel.
+You can also do this from the :doc:`API console <../../api-console/index>`. Go to the ``auth`` tab on top and click on ``Roles`` on the left panel.
 
 .. image:: ../../../img/auth/console-create-role.png
 

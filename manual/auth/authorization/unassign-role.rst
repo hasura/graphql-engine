@@ -17,7 +17,7 @@ endpoint.
    }
 
 
-You can also do this from the API-Console.
+You can also do this from the :doc:`API console <../../api-console/index>`.
 
 1. Go to the ``Auth`` section on top and click on the ``Browse Users`` tab.
 

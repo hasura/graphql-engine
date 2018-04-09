@@ -19,7 +19,7 @@ Once they receive the OTP, they can use that to signup or login.
 Configuration
 -------------
 
-You can configure Mobile/OTP provider settings in the ``auth.yaml`` from the ``conf`` directory in your project. Find a top level key called ``mobile`` in the ``auth.yaml``. By default the mobile conf looks like this:
+You can configure Mobile/OTP provider settings in the :doc:`conf/auth.yaml <../../../project/directory-structure/conf/auth.yaml>` file in your project. Find a top level key called ``mobile`` in the ``auth.yaml``. By default the mobile conf looks like this:
 
 .. snippet:: yaml
     :filename: auth.yaml

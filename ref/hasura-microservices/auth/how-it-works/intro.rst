@@ -50,7 +50,7 @@ A session is nothing but a unique, un-guessable identifier  attached to that
 Hasura identity (referred to as ``auth_token``) for that session. This way an
 user can make subsequent requests without having to authenticate, with
 credentials, on every request. Instead, on every request the user can present
-the ``auth_token`` to identify herself.
+the ``auth_token`` to identify themself.
 
 .. _session-expiry:
 

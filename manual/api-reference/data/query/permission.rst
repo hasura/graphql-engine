@@ -8,7 +8,12 @@ Data API Reference: Permissions
 
 The permission layer is designed to restrict the operations that can be performed by various users. Permissions can be defined on various operations (insert/select/update/delete) at a role level granularity. By default, the admin role has unrestricted access to all operations.
 
-It is highly recommended that you read about the session middleware on Hasura. To summarise, the data microservice gets the current user's (the one who made the request) information (id and role) along with the request. So, the data microservice applies the permissions as appropriate, for the operation(s) in the request.
+.. note::
+
+   The hasura API gateway forwards ``X-Hasura-*`` headers with each request to the data microservice. So, when a data
+   API call is made with an ``auth_token`` representing some user, the data microservice knows the user's roles and a
+   variable called ``X-HASURA-USER-ID`` is updated with the ``hasura_id`` of the user making the call. This variable can now
+   be used to describe the access permissions for rows in tables.
 
 .. _create_insert_permission:
 
@@ -17,7 +22,7 @@ create_insert_permission
 
 An insert permission is used to enforce constraints on the data that is being inserted.
 
-Let's look at an example, a permission for the ``user`` role to insert into ``article`` table. What is the constraint that we would like to enforce here? *A user can only insert articles for herself*
+Let's look at an example, a permission for the ``user`` role to insert into ``article`` table. What is the constraint that we would like to enforce here? *A user can only insert articles for themself*
 
 .. code-block:: http
 
@@ -153,7 +158,7 @@ create_select_permission
 
 A select permission is used to restrict access to only the specified columns and rows.
 
-Let's look at an example, a permission for the ``user`` role to select from ``article`` table: all columns can be read, and rows that have been published or authored by herself.
+Let's look at an example, a permission for the ``user`` role to select from ``article`` table: all columns can be read, and rows that have been published or authored by themself.
 
 .. code-block:: http
 

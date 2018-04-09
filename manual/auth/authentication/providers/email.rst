@@ -18,7 +18,7 @@ extra steps to be performed to verify the user's email.
 Configuration
 -------------
 
-You can configure email provider settings in the ``auth.yaml`` from the ``conf`` directory in your project. Find a top level key called ``email`` in the ``auth.yaml``. By default the email conf looks like this:
+You can configure email provider settings in the :doc:`conf/auth.yaml <../../../project/directory-structure/conf/auth.yaml>` file in your project. Find a top level key called ``email`` in the ``auth.yaml``. By default the email conf looks like this:
 
 .. snippet:: yaml
     :filename: auth.yaml
