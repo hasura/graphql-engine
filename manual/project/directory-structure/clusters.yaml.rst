@@ -82,7 +82,7 @@ Region
 ^^^^^^
 The slug (string value) of the region name of the provider.
 
-Currently, slug of any valid Digital Ocean region. See this link for all valid
+Currently, slug of any valid ``Digital Ocean`` region. See this link for all valid
 regions https://developers.digitalocean.com/documentation/v2/#list-all-regions
 
 .. parsed-literal::
@@ -129,7 +129,7 @@ The type of node (or machine) to be used. Basically, this type represents the
 CPU, memory (optionally disk size) of the VM or node. The value of this field is
 provider specific.
 
-For Digital Ocean, the value of this field is any valid ``slug`` in this list:
+For ``Digital Ocean``, the value of this field is any valid ``slug`` in this list:
 https://developers.digitalocean.com/documentation/v2/#list-all-sizes
 
 

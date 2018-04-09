@@ -10,7 +10,7 @@ Converting an existing git repo to a Hasura project
 A Hasura project is a collection of certain directories and files in a specific format. Hence, any git repo can be converted to a Hasura project just by recreating these directories and files.
 
 Step 1: Clone `hasura/base`
------------------------------
+---------------------------
 
 |base-github-link| is a blank Hasura project, with all the default configuration, but no migrations and no microservices. It is the single reference point for the structure of a Hasura project. Clone this repo to a particular location:
 

@@ -1,20 +1,24 @@
 Completely migrate a cluster to another cluster
 ===============================================
 
-This guide will help you to get a new cluster and push your
-existing project including data of the existing cluster into the new one. After
-following this you will have a new cluster with an exact replica of your source
+This guide will help you push your
+existing project including data of the existing cluster into a new one. After
+following this you will have a cluster with an exact replica of your source
 cluster including data.
 
 .. note::
 
-   This guide creates a new cluster, which means you will get a new domain.
+   The new cluster will have a different domain from the source.
 
 
 Create a new cluster
 --------------------
 
 Create a new  cluster by following :doc:`this <../cluster/create>`.
+
+.. note::
+
+    Ignore this step if you already have a cluster you want to migrate to.
 
 Copy the postgres data
 ----------------------

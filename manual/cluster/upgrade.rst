@@ -1,13 +1,15 @@
 Upgrading a cluster
 ===================
 
-.. note::
+.. admonition:: Free cluster to pro-tier cluster
 
    Currently upgrading a free cluster to a pro-tier cluster is a manual process.
-   We are working on a more seamless experience. See :doc:`../guides/complete-cluster-migration`
+   We are working on a more seamless experience.
+
+   For now, create a pro-tier cluster and follow :doc:`../guides/complete-cluster-migration`
 
 
-Upgrading a cluster is only possible for a :doc:`pro-tier cluster <index>`.
+Upgrading (ie: scaling) a cluster is only possible for a :doc:`pro-tier cluster <index>`.
 
 A cluster's initial configuration is set in ``clusters.yaml``.
 
@@ -19,7 +21,7 @@ these changes.
 
 .. note::
 
-   On Digital Ocean, a cluster cannot be scaled down below the initial
+   On ``Digital Ocean``, a cluster cannot be scaled down below the initial
    configuration of the cluster.
 
 

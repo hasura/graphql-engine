@@ -2,8 +2,8 @@
    :description: Listing created hasura clusters
    :keywords: cluster, list
 
-List your clusters
-==================
+Listing your clusters
+=====================
 
 To get the list of all your created clusters and those added to the current project, use the ``hasura`` CLI.
 

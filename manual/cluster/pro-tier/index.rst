@@ -18,7 +18,7 @@ version controlled in a Hasura project.
 
   * For pricing details for the pro-tier, see `Hasura pricing <https://hasura.io/pricing>`_.
   
-  * Currently only Digital Ocean is supported as a cloud provider. Other cloud providers are coming soon!
+  * Currently only ``Digital Ocean`` is supported as a cloud provider. Other cloud providers are coming soon!
 
 See:
 ^^^^
