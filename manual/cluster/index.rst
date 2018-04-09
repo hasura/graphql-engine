@@ -49,5 +49,6 @@ See:
    upgrade
    multiple-clusters
    set-default
+   reusing-a-cluster
    connect-kubectl
    pro-tier/index
