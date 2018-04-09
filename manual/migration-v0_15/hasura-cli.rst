@@ -5,7 +5,7 @@ From Hasura v0.15, the workflow for Hasura has changed considerably.
 If you were using ``hasuractl`` before, you have to update to the new
 ``hasura`` CLI tool.
 
-For this you have to delete your old ``hasuractl``, and then install the new
+For this, you have to delete your old ``hasuractl``, and then install the new
 ``hasura`` CLI tool.
 
 Step 1: Remove old hasuractl
