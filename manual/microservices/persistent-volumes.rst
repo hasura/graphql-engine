@@ -1,5 +1,5 @@
-Adding persistent volumes to microservice
-=========================================
+Adding persistent volumes to a microservice
+===========================================
 
 You might want to use a persistent volume for your microservice to persist data.
 For example, you might want to run mysql or ghost blog and persist the data.
@@ -9,16 +9,17 @@ save in the filesystem inside your code is not persisted. If the microservice
 restarts, the files/data would get destroyed with the container.
 
 To persist any data, you should use persistent volumes. This can be done in
-pro-tier clusters currently.
+:doc:`pro-tier clusters <../cluster/pro-tier/index>` currently.
 
 To use persistent volumes:
 
 1. Create a new volume in a pro-tier cluster.
-2. Configure your microservice in ``k8s.yaml`` to use the volume.
+2. Configure your microservice's ``k8s.yaml`` to use the volume.
 
 
 Create a new volume
---------------------
+-------------------
+
 Edit your ``clusters.yaml`` and add a new volume of your chosen size.
 
 Example:
