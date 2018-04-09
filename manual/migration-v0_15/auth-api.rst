@@ -9,7 +9,7 @@ architecture. The new version of Hasura Auth is available from Hasura v0.15.
 This was done so that custom authentication methods can be plugged-in very
 easily.
 
-As a result, the user facing APIs and the configuration settings has changed
+As a result, the user facing APIs and the configuration settings have changed
 completely.
 
 Please look at the current Auth documentation to see what has changed.
