@@ -66,7 +66,7 @@ You can also make a REST query to the *data* microservice to accomplish the same
 
 For **Select**, the HTTP query equivalent to the above UI-based flow can be found here - :ref:`Permissions <data-permissions>`
 
-As discussed in Part VI, we know that the gateway forwards ``X-Hasura-*`` headers with each request. So, when a ``select`` query on ``article`` is made with a token representing some user with the role ``user``, the ``REQ_USER_ID`` is substituted with the ``X-Hasura-User-Id`` value and then the ``filter`` condition is applied.
+As discussed in Part VI, we know that the gateway forwards ``X-Hasura-*`` headers with each request. So, when a ``select`` query on ``article`` is made with a token representing some user with the role ``user``, the ``X-HASURA-USER-ID`` is substituted with the ``X-Hasura-User-Id`` value and then the ``filter`` condition is applied.
 
 Update
 ------
@@ -143,7 +143,7 @@ To define permissions on all tables you can follow the method above for each tab
 		    "role": "user",
 		    "permission": {
 			"check": {
-			    "id": "REQ_USER_ID"
+			    "id": "X-HASURA-USER-ID"
 			}
 		    }
 		}
@@ -177,7 +177,7 @@ To define permissions on all tables you can follow the method above for each tab
 		    "role": "user",
 		    "permission": {
 			"check": {
-			    "author_id": "REQ_USER_ID"
+			    "author_id": "X-HASURA-USER-ID"
 			}
 		    }
 		}
@@ -203,7 +203,7 @@ To define permissions on all tables you can follow the method above for each tab
 			    "comment"
 			],
 			"filter": {
-			    "author_id": "REQ_USER_ID"
+			    "author_id": "X-HASURA-USER-ID"
 			}
 		    }
 		}

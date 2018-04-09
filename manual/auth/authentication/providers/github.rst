@@ -5,8 +5,11 @@
 Github authentication
 =====================
 
+Setup
+-----
+
 Web apps
---------
+~~~~~~~~
 
 For web apps using Github, we have to use the "Authorization Code" grant flow
 (or the traditional web server flow) as Github doesn't support the `implicit
@@ -14,7 +17,7 @@ grant flow`_. So this flow needs a backend server to handle intermediate
 requests.
 
 Overview
-++++++++
+~~~~~~~~
 
 First, you have setup and configure your Github application.  Then, you have
 to make a request to Github API for an "authorization code", specifying a
@@ -27,7 +30,7 @@ Auth endpoint. Hasura will validate the token, and will login the user (if the
 user is seen for the first time then Hasura will also create the user).
 
 Pre-requisites
-++++++++++++++
+~~~~~~~~~~~~~~
 
 * Register an application with Github, obtain the Client ID and Client secret.
 
@@ -41,6 +44,9 @@ Pre-requisites
 
   * Now you should see your application's settings page, which also lists the
     client ID and secret. Copy and keep them safe.
+
+Configuration
+~~~~~~~~~~~~~
 
 * Now you need to configure Hasura Auth to tell it to use these credentials.
 
@@ -71,7 +77,7 @@ Pre-requisites
 
 
 The flow
-++++++++
+--------
 
 * Redirect the browser (full page or popup) to
   ``https://github.com/login/oauth/authorize`` with the following set of

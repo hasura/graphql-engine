@@ -6,7 +6,7 @@ LinkedIn authentication
 =======================
 
 Web apps
---------
+~~~~~~~~
 
 For web apps using LinkedIn, we have to use the "Authorization Code" grant flow
 (or the traditional web server flow) as LinkedIn doesn't support the `implicit
@@ -14,7 +14,7 @@ grant flow`_. So this flow needs a backend server to handle intermediate
 requests.
 
 Overview
-++++++++
+~~~~~~~~
 
 First, you have setup and configure your LinkedIn application.  Then, you have
 to make a request to LinkedIn API for an "authorization code", specifying a
@@ -27,7 +27,7 @@ Auth endpoint. Hasura will validate the token, and will login the user (if the
 user is seen for the first time then Hasura will also create the user).
 
 Pre-requisites
-++++++++++++++
+~~~~~~~~~~~~~~
 
 * Register an application with LinkedIn, obtain the Client ID and Client secret.
 
@@ -46,6 +46,9 @@ Pre-requisites
   your application can read the email address of the user. **This is
   important**. If you fail to do this, Hasura Auth won't be able to fetch your
   user's email address.
+
+Configuration
+~~~~~~~~~~~~~
 
 * Now you need to configure Hasura Auth microservice with these credentials.
 
@@ -77,7 +80,7 @@ Pre-requisites
 
 
 The flow
-++++++++
+--------
 
 * Redirect the browser (full page or popup) to
   ``https://www.linkedin.com/oauth/v2/authorization`` with the following set of

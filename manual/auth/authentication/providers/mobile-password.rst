@@ -15,10 +15,38 @@ provider there are extra steps to be performed to verify the user's mobile.
   For this provider to send OTP via SMS, you have to :doc:`enable a SMS provider <../../../notify/sms/index>` in
   the Hasura Notify microservice.
 
+Configuration
+-------------
 
+You can configure Mobile/Password provider settings in the ``auth.yaml`` from the ``conf`` directory in your project. Find a top level key called ``mobilePassword`` in the ``auth.yaml``. By default the mobile-password conf looks like this:
+
+.. snippet:: yaml
+    :filename: auth.yaml
+
+    mobilePassword:
+      # Template for the SMS that is sent. This is a Jinja template. Leave the
+      # "{{otp}}" as it is. It will be used by the auth service to inject the
+      # actual token.
+      smsTemplate: |
+        Verify your acccount with {{ cluster.name }}! Your OTP is {{ "{{otp}}" }}.
+      # OTP expiry time in minutes
+      otpExpiryTime: "15"
+      # OTP length is optional. default value is 6
+      # otpLength: "4"
+
+You can modify it as you wish and then apply the modifcations to the cluster by running a git push:
+
+.. code-block:: bash
+
+  $ git add conf/auth.yaml
+  $ git commit -m "Changed conf for Mobile/Password provider"
+  $ git push hasura master
+
+API
+---
 
 Signup
-------
+~~~~~~
 
 To signup a user, make a request to the signup endpoint : ``/v1/signup``.
 
@@ -71,8 +99,8 @@ Typical response of the ``/v1/signup`` request is :
 * ``hasura_id``  is the hasura identifier of the user.
 
 
-Verifying Mobile
-----------------
+Verify mobile
+~~~~~~~~~~~~~
 
 To verify the mobile number, Hasura Auth will send a SMS with a one time
 password or OTP to the user's mobile number, and within a configurable amount of
@@ -106,7 +134,7 @@ If it is successful, then your application should ask the user to login.
 
 
 Login
-------
+~~~~~
 
 To login a user make a request to the login endpoint: ``/v1/login``.
 
@@ -148,8 +176,9 @@ Typical response of the ``/v1/login`` request is :
 * ``hasura_id``  is the hasura identifier of the user.
 
 
-Getting user info
-------------------
+Get user info
+~~~~~~~~~~~~~
+
 To get the logged in user's details, or to check if a session token is valid
 you can use this endpoint.
 
@@ -187,7 +216,7 @@ Typical response is :
 
 
 Logout
-------
+~~~~~~
 
 To logout a user, make the following request.
 
@@ -199,9 +228,9 @@ To logout a user, make the following request.
 .. note::
     The logout request is a POST request with an empty body.
 
- 
-Changing Password
------------------
+
+Change password
+~~~~~~~~~~~~~~~
 
 If the user is logged in, they can change their password using the following
 endpoint.
@@ -219,7 +248,7 @@ endpoint.
 .. _forgot_password_mobile_password:
 
 Forgot password / password reset
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If a user has forgotten their password, it can be reset.
 

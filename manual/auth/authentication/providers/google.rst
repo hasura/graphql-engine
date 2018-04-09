@@ -5,9 +5,8 @@
 Google authentication
 =====================
 
-
-Pre-requisites
---------------
+Configuration
+~~~~~~~~~~~~~
 
 * To use Google login with Hasura, create a Project on
   https://console.developers.google.com/.  You can know more about using Google
@@ -50,7 +49,7 @@ Pre-requisites
 
 
 Web apps
---------
+~~~~~~~~
 
 For web apps, use the Google SDK to integrate with Hasura Auth.
 
@@ -59,7 +58,7 @@ https://developers.google.com/identity/sign-in/web/
 
 
 Mobile apps
------------
+~~~~~~~~~~~
 
 For mobile apps, you can use Google SDK to integrate with Hasura Auth.
 
@@ -68,9 +67,11 @@ See here for more information:
 * Android: https://developers.google.com/identity/sign-in/android/
 * iOS: https://developers.google.com/identity/sign-in/ios/
 
+API
+---
 
-Login/Signup a user with Hasura Auth
-------------------------------------
+Login/Signup
+~~~~~~~~~~~~
 
 * Use Google SDK from above to obtain ``id_token`` (or ``idToken``) of the
   logged in Google user. (In some older platforms you might receive

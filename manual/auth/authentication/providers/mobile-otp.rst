@@ -16,8 +16,38 @@ Once they receive the OTP, they can use that to signup or login.
   For this provider to send OTP via SMS, you have to :doc:`enable a SMS provider <../../../notify/sms/index>` in
   the Hasura Notify microservice.
 
+Configuration
+-------------
+
+You can configure Mobile/OTP provider settings in the ``auth.yaml`` from the ``conf`` directory in your project. Find a top level key called ``mobile`` in the ``auth.yaml``. By default the mobile conf looks like this:
+
+.. snippet:: yaml
+    :filename: auth.yaml
+
+    mobile:
+      # Template for the SMS that is sent. This is a Jinja template. Leave the
+      # "{{otp}}" as it is. It will be used by the auth service to inject the
+      # actual token.
+      smsTemplate: |
+        Verify your acccount with {{ cluster.name }}! Your OTP is {{ "{{otp}}" }}.
+      # OTP expiry time in minutes
+      otpExpiryTime: "15"
+      # OTP length is optional. default value is 6
+      otpLength: "6"
+
+You can modify it as you wish and then apply the modifcations to the cluster by running a git push:
+
+.. code-block:: bash
+
+  $ git add conf/auth.yaml
+  $ git commit -m "Changed conf for Mobile/OTP provider"
+  $ git push hasura master
+
+API
+---
+
 Signup
-------
+~~~~~~
 
 To signup a user, first the user has to get an OTP on their mobile number.
 
@@ -78,7 +108,7 @@ Typical response of the ``/v1/signup`` request is :
 
 
 Login
-------
+~~~~~
 
 To login a user, first the user has to get an OTP on their mobile number.
 
@@ -138,8 +168,9 @@ Typical response of the ``/v1/login`` request is :
 * ``hasura_id``  is the hasura identifier of the user.
 
 
-Getting user info
-------------------
+Get user info
+~~~~~~~~~~~~~
+
 To get the logged in user's details, or to check if a session token is valid
 you can use this endpoint.
 
@@ -176,7 +207,7 @@ Typical response is :
 
 
 Logout
-------
+~~~~~~
 
 To logout a user, make the following request.
 

@@ -3,7 +3,7 @@
    :keywords: hasura, getting started, step 5, SQL views and relationships
 
 ===============================
-Part V: Build a blog engine app
+Part V: Build a blog app engine
 ===============================
 
 Let's build a simple clone of the popular publishing platform `medium <https://medium.com/>`_ and use that to learn about the features provided by the Hasura platform. Our clone blog app will have the following features:

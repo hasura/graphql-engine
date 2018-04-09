@@ -9,10 +9,13 @@ Username based authentication
 This provider supports basic username/password based authentication. The
 identity of the user is not verified in this method.
 
+API
+---
+
 .. _signup:
 
 Signup
-------
+~~~~~~
 
 To signup a user, make a request to the signup endpoint : ``/v1/signup``.
 
@@ -57,7 +60,7 @@ Typical response of the ``/v1/signup`` request is :
 
 
 Login
------
+~~~~~
 
 To login a user make a request to the login endpoint: ``/v1/login``.
 
@@ -97,8 +100,8 @@ Typical response of the ``/v1/login`` request is :
 * ``hasura_id``  is the hasura identifier of the user.
 
 
-Getting user info
------------------
+Get user info
+~~~~~~~~~~~~~
 
 To get the logged in user's details, or to check if a session token is valid
 you can use this endpoint.
@@ -137,7 +140,7 @@ Typical response is :
 
 
 Logout
-------
+~~~~~~
 
 To logout a user, make the following request.
 
@@ -149,9 +152,9 @@ To logout a user, make the following request.
 .. note::
     The logout request is a POST request with an empty body.
 
- 
-Changing Password
------------------
+
+Change password
+~~~~~~~~~~~~~~~~~
 
 If the user is logged in, they can change their password using the following
 endpoint.
@@ -167,8 +170,8 @@ endpoint.
    }
 
 
-Forgot Password
----------------
+Forgot password
+~~~~~~~~~~~~~~~
 
 The Username provider does not have a forgot password feature. This is by
 design, as it does not have any channel (like email) to send a forgot password

@@ -21,7 +21,7 @@ First launch the API console:
 
 This will open the API console. Head to ``Data > Schema``.
 
-   .. image:: ../../img/manual/data/create-table.png
+.. image:: ../../img/manual/data/create-table.png
 
 
 Using SQL

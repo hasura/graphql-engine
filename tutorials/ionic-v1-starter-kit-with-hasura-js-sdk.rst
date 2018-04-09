@@ -165,7 +165,7 @@ In order to use Data APIs, you need to create tables and create permission using
 * Click Create
 * Goto Permissions tab, click on 'Add permissions for a new role'
 * Select ``user`` from the dropdown
-* Enter ``{"user_id": "REQ_USER_ID"}`` in all the Check and Filter fields
+* Enter ``{"user_id": "X-HASURA-USER-ID"}`` in all the Check and Filter fields
 * Toggle All for Select section
 * Tick ``completed`` on Update section
 * Save changes

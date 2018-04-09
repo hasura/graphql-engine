@@ -19,7 +19,7 @@ Any logged-in user is attached the ``user`` role by default.
 
 Every unauthenticated user, ie: any non logged-in user, is attached the ``anonymous`` role.
 
-New custom roles can be created/deleted and roles can be assigned/unassigned to users by using Hasura Auth APIs.
+New custom roles can be :doc:`created <create-role>`/:doc:`deleted <delete-role>` and roles can be :doc:`assigned <assign-role>`/:doc:`unassigned <unassign-role>` to users by using Hasura Auth APIs or the API console.
 These actions can be carried out by users with the ``admin`` role.
 
 Roles can be leveraged by any microservice (running inside the
@@ -27,14 +27,17 @@ project) to authorize and control access very easily.
 
 For example, the Auth microservice itself uses the ``user`` role to allow access to profile management APIs
 of a user. (ie: APIs starting with ``/user``. Like the email change, password reset APIs.)
-
 If the ``user`` role is removed for a user, the user won't be able to access any profile management APIs.
 
 For details on how the microservices receive the roles for a user, see :doc:`../sessions`
 
 See:
 ^^^^
-- :doc:`../admin-actions/create-role`
-- :doc:`../admin-actions/assign-role`
-- :doc:`../admin-actions/unassign-role`
-- :doc:`../admin-actions/delete-role`
+
+.. toctree::
+   :maxdepth: 1
+
+   Creating roles <create-role>
+   Assigning roles to users <assign-role>
+   Removing roles from users <unassign-role>
+   Deleting roles <delete-role>

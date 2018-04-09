@@ -9,7 +9,7 @@ Authentication methods a.k.a. Providers
 
 Hasura Auth has **"providers"** to support different modes of authentication.
 
-You can enable/disable providers in your auth configuration. Once a provider is
+You can :doc:`enable/disable providers <configure-auth-methods>` in your auth configuration. Once a provider is
 enabled you can use them to signup your users. **You can have multiple
 providers enabled at the same time.**
 
@@ -27,7 +27,7 @@ The following providers come by default with Hasura Auth:
    * - Username
      - ``username``
      - Basic username and password based authentication.
-   * - Email 
+   * - Email
      - ``email``
      - Email and password based authentication, with email verification.
    * - Mobile/OTP
@@ -52,11 +52,12 @@ The following providers come by default with Hasura Auth:
 
 Choose providers from the above based on your requirement.
 
-**See detailed usage of the providers:**
+**See more about providers:**
 
 .. toctree::
    :maxdepth: 1
 
+   configure-auth-methods
    Username <username>
    Email <email>
    Mobile/OTP <mobile-otp>

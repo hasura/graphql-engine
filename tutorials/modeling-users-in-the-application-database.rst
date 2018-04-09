@@ -49,9 +49,9 @@ Under Permissions, click on **Add Permissions for new Role** to add a new permis
 
 .. image:: ../img/add_permissions_userdetails.png
 
-``Check : {"user_id":"REQ_USER_ID"}``
+``Check : {"user_id":"X-HASURA-USER-ID"}``
 
-The above statement says that allow access only if value of ``user_id`` equals ``REQ_USER_ID`` where "REQ_USER_ID" is a special variable used by the Hasura Data Service that holds the Hasura-User-Id of the currently logged in user.
+The above statement says that allow access only if value of ``user_id`` equals ``X-HASURA-USER-ID`` where "X-HASURA-USER-ID" is a special variable used by the Hasura Data Service that holds the Hasura-User-Id of the currently logged in user.
 
 
 **To show how to use the Hasura Data Service, we will be building a simple android app that gets the profile information of the user**

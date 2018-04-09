@@ -15,9 +15,61 @@ extra steps to be performed to verify the user's email.
   For this provider to send emails, you have to :doc:`enable an email provider <../../../notify/email/index>` in
   the Hasura Notify microservice.
 
+Configuration
+-------------
+
+You can configure email provider settings in the ``auth.yaml`` from the ``conf`` directory in your project. Find a top level key called ``email`` in the ``auth.yaml``. By default the email conf looks like this:
+
+.. snippet:: yaml
+    :filename: auth.yaml
+
+    email:
+      # email address of the sender for verification emails
+      verifyEmailFrom: getstarteduser@hasura.io
+      # Name of the sender for verification emails
+      verifEmailFromName: Admin
+      # Subject for verification emails
+      verifyEmailSubject: Verify your account - {{ cluster.name }}
+      # Template for verification emails. HTML can be used in the template. The
+      # template is a Jinja template. Leave the "{{token}}" as it is. It will be
+      # used by the auth service to inject the actual token when sending the email.
+      verifyTemplate: |
+        Hi, Please click on <br/>
+        https://auth.{{ cluster.name }}.hasura-app.io/ui/verify-email?token={{ "{{token}}" }}
+        to verify your email.
+      # Email verification token expiry time in days
+      verifyTokenExpires: "7"
+
+      # email address of the sender for forgot password emails
+      forgotPassEmailFrom: getstarteduser@hasura.io
+      # Name of the sender for forgot password emails
+      forgotPassEmailFromName: Admin
+      # Subject for forgot password emails
+      forgotPassEmailSubject: Reset password request - {{ cluster.name }}
+      # Template for forgot password emails. HTML can be used in the template. The
+      # template is a Jinja template. Leave the "{{token}}" as it is. It will be
+      # used by the auth service to inject the actual token when sending the email.
+      forgotPassTemplate: |
+        Hi, <br/> Click on
+        https://auth.{{ cluster.name }}.hasura-app.io/ui/reset-password?token={{ "{{token}}" }}
+        to reset your password.
+      # Forgot password reset token expiry time in days
+      resetTokenExpires: "7"
+
+You can modify it as you wish and then apply the modifcations to the cluster by running a git push:
+
+.. code-block:: bash
+
+  $ git add conf/auth.yaml
+  $ git commit -m "Changed conf for email provider"
+  $ git push hasura master
+
+
+API
+---
 
 Signup
-------
+~~~~~~
 
 To signup a user, make a request to the signup endpoint : ``/v1/signup``.
 
@@ -70,7 +122,7 @@ Typical response of the ``/v1/signup`` request is :
 
 
 Verifying Email
----------------
+~~~~~~~~~~~~~~~
 
 To verify the email address upon signup, Hasura Auth will send an email with a
 unique token to the user's email address. The email template can be configured
@@ -95,7 +147,7 @@ If it is successful, then your application should ask the user to login.
 
 
 Login
------
+~~~~~
 
 To login a user make a request to the login endpoint: ``/v1/login``.
 
@@ -135,8 +187,9 @@ Typical response of the ``/v1/login`` request is :
 * ``hasura_id``  is the hasura identifier of the user.
 
 
-Getting user info
------------------
+Get user info
+~~~~~~~~~~~~~
+
 To get the logged in user's details, or to check if a session token is valid
 you can use this endpoint.
 
@@ -173,7 +226,7 @@ Typical response is :
 
 
 Logout
-------
+~~~~~~
 
 To logout a user, make the following request.
 
@@ -185,9 +238,9 @@ To logout a user, make the following request.
 .. note::
     The logout request is a POST request with an empty body.
 
- 
-Changing Password
------------------
+
+Change password
+~~~~~~~~~~~~~~~
 
 If the user is logged in, they can change their password using the following
 endpoint.
@@ -205,7 +258,7 @@ endpoint.
 .. _forgot_password_email:
 
 Forgot password / password reset
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If a user has forgotten their password, it can be reset.
 
@@ -252,4 +305,3 @@ user.
      "token": "<token-sent-in-the-email>",
      "password": "newpass123"
    }
-

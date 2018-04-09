@@ -63,10 +63,10 @@ Under Permissions, click on **Add Permissions** for new Role to add a new permis
 
 .. image:: ../img/permissions_user_details.png
 
-``Check : {"user_id":"REQ_USER_ID"}``
+``Check : {"user_id":"X-HASURA-USER-ID"}``
 
 
-The above statement says that allow access only if value of ``user_id`` equals ``REQ_USER_ID`` where "REQ_USER_ID" is a special varialbe used by the Hasura Data Service that holds the Hasura-User-Id corresponding to the Authorization Header.
+The above statement says that allow access only if value of ``user_id`` equals ``X-HASURA-USER-ID`` where "X-HASURA-USER-ID" is a special varialbe used by the Hasura Data Service that holds the Hasura-User-Id corresponding to the Authorization Header.
 
 
 ``ChatMessage table:``
@@ -76,10 +76,10 @@ Under Permissions, click on **Add Permissions** for new Role to add a new permis
 
 .. image:: ../img/permissions_chat_message.png
 
-``{"$or":[{"sender_id":"REQ_USER_ID"},{"receiver_id":"REQ_USER_ID"}]}``
+``{"$or":[{"sender_id":"X-HASURA-USER-ID"},{"receiver_id":"X-HASURA-USER-ID"}]}``
 
 
-A chat is associated with a user if he either sends or receives the message. Thus, we give access to messages where either the ``sender_id`` or the ``receiver_id`` of a chat message is equal to ``REQ_USER_ID``.
+A chat is associated with a user if he either sends or receives the message. Thus, we give access to messages where either the ``sender_id`` or the ``receiver_id`` of a chat message is equal to ``X-HASURA-USER-ID``.
 
 2: Configuring the Hasura Android SDK:
 ======================================

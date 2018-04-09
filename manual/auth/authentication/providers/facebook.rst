@@ -5,8 +5,11 @@
 Facebook authentication
 =======================
 
-Pre-requisites
---------------
+Setup
+-----
+
+Configuration
+~~~~~~~~~~~~~
 
 * To use Facebook login with Hasura, create an App on Facebook from
   https://developers.facebook.com/.
@@ -41,12 +44,8 @@ Pre-requisites
 
     $ hasura secret update auth.facebook.client_secret
 
-* Choose your device and Facebook SDK from here:
-  https://developers.facebook.com/docs/facebook-login
-
-
 Web apps
---------
+~~~~~~~~
 
 For web apps, use the Facebook Login for Web Javascript SDK to integrate with
 Hasura Auth.
@@ -55,7 +54,7 @@ See here on how to use it:
 https://developers.facebook.com/docs/facebook-login/web/
 
 Mobile apps
------------
+~~~~~~~~~~~
 
 For mobile apps, you Facebook mobile SDKs to integrate with Hasura Auth.
 
@@ -65,8 +64,11 @@ See here on how to use it:
 * iOS: https://developers.facebook.com/docs/facebook-login/ios/
 
 
-Login/Signup a user with Hasura Auth
-------------------------------------
+API
+---
+
+Login/Signup
+~~~~~~~~~~~~
 
 * Use Facebook SDK from above to obtain ``accessToken`` (or ``access_token``)
   of the logged in Facebook user.
