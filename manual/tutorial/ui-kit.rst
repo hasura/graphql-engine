@@ -49,7 +49,8 @@ Enable auth with email
 
 #. Navigate to ``auth.<cluster-name>.hasura-app.io/ui`` and you will see the ``auth with email`` enabled.
 
-    You are allowed only 10 emails per day with Hasura Test Provider. For a permanent solution, you have to configure either :doc:`smtp <../../notify/email/smtp>` or :doc:`sparkpost <../../notify/email/sparkpost>`.
+.. note::
+    You are allowed only 10 emails per day with Hasura Test Provider. For a permanent solution, you have to configure either :doc:`smtp <../notify/email/smtp>` or :doc:`sparkpost <../notify/email/sparkpost>`.
 
 Enable auth with Google
 -----------------------

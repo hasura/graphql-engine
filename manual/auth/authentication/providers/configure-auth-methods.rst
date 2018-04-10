@@ -75,6 +75,9 @@ If you make any change in the ``auth.yaml``, you must run a git push to apply th
   $ git commit -m "Changed auth configuration"
   $ git push hasura master
 
+Additional configuration
+------------------------
+
 Most auth providers might require further configuration for use cases such as
 
 - Changing email verification template
@@ -83,7 +86,7 @@ Most auth providers might require further configuration for use cases such as
 - Changing OTP expiry time
 - Configuring client IDs and client secrets for social auth providers.
 
-To learn about configuring auth providers, check:
+For more details on configuring auth providers, check:
 
 - :doc:`Email <email>`
 - :doc:`Mobile/OTP <mobile-otp>`

@@ -12,8 +12,8 @@ Auth UI Kit
 
 The Auth UI Kit is a ready to use frontend interface for your web apps that comes pre-loaded with the Hasura Auth Microservice.
 
-It allows your application users to login/signup seamlessly using the :doc:`authentication providers <../authentication/providers/index>` configured in the :doc:`auth conf <../../project/directory-structure/conf/auth.yaml>`. The UI adapts automatically to display
-the enabled auth providers. Just configure the auth conf of your Hasura Project and the UI Kit will immediately start working on the new changes.
+It allows your application users to login/signup seamlessly using the :doc:`authentication providers <../authentication/providers/index>` configured in the :doc:`conf/auth.yaml <../../project/directory-structure/conf/auth.yaml>` file. The UI adapts automatically to display
+the enabled auth providers.
 
 **Features:**
 
@@ -45,8 +45,8 @@ See:
 .. toctree::
   :maxdepth: 1
 
-  enable-more-providers
   Themes <themes>
+  Adding/removing authentication methods <configure-auth-methods>
   Adding a Login page to your app <add-login>
   Getting user info after logging in <get-user-data>
   Adding Logout to your app <add-logout>
