@@ -162,7 +162,7 @@ Things to be noted:
 
 - ``where: {id: {_eq: $todoId}}`` checks that the ``id`` of the row that is being updated is the same as the value of ``$todoId`` which will be passed as a variable to this mutation.
 
-- The ``returning`` key is optional. You need not specify it, unless you wan the data returned after the mutation.
+- The ``returning`` key is optional. You need not specify it, unless you want the data returned after the mutation.
 
 To **delete** a row in the table, the mutation looks like:
 
