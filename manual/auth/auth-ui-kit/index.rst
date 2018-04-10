@@ -45,6 +45,7 @@ See:
 .. toctree::
   :maxdepth: 1
 
+  enable-more-providers
   Themes <themes>
   Adding a Login page to your app <add-login>
   Getting user info after logging in <get-user-data>
