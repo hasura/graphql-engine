@@ -5,6 +5,9 @@
 LinkedIn authentication
 =======================
 
+Setup
+-----
+
 Web apps
 ~~~~~~~~
 

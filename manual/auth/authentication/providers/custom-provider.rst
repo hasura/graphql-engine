@@ -73,9 +73,11 @@ To enable a custom provider, you need to add the following configuration in
 
 Below, we will describe the functionality and interface for each of the APIs in detail.
 
+API
+---
 
 Signup
-------
+~~~~~~
 
 This API should be used to register a new user with your provider. This API
 will receive the following JSON data from Hasura Auth:
@@ -122,7 +124,7 @@ Hasura Auth expects the following response upon successful signup:
 
 
 Login
------
+~~~~~
 
 This API should be used to login a user with your provider. This API will
 receive the following JSON data from Hasura Auth:
@@ -156,7 +158,7 @@ receive the following JSON data from Hasura Auth:
 
 
 Merge
------
+~~~~~
 
 This API should be used to merge an existing user with another user. A merge
 may be required when a new user signs up with an identifier field same as an
@@ -188,7 +190,7 @@ password. This API will receive JSON data from Hasura Auth:
 * **success**: Boolean flag indicating whether the merge was successful
 
 Create User
------------
+~~~~~~~~~~~
 
 This API should be used to create a new user with your provider. This API
 will receive the following JSON data from Hasura Auth:
@@ -230,7 +232,7 @@ Hasura Auth expects the following response upon successful creating user:
   back to client as ``extra_info`` object in response)
 
 Delete User
------------
+~~~~~~~~~~~
 
 This API should be used to delete a user with your provider. This API
 will receive the following JSON data from Hasura Auth:
@@ -266,7 +268,7 @@ Hasura Auth expects the following response upon successful delete:
 
 
 Errors
-------
+~~~~~~
 
 All errors should return a JSON object of the following form:
 

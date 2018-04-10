@@ -5,11 +5,8 @@
 Facebook authentication
 =======================
 
-Setup
------
-
 Configuration
-~~~~~~~~~~~~~
+-------------
 
 * To use Facebook login with Hasura, create an App on Facebook from
   https://developers.facebook.com/.
@@ -24,7 +21,9 @@ Configuration
 
 * Under ``facebook``, set your ``clientId``.
 
-    Note: The ``facebook`` key might be commented out. Make sure to uncomment it.
+.. note::
+    The ``facebook`` key might be commented out. Make sure to uncomment it.
+
 
 .. code-block:: yaml
 

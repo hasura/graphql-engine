@@ -6,7 +6,7 @@ Google authentication
 =====================
 
 Configuration
-~~~~~~~~~~~~~
+-------------
 
 * To use Google login with Hasura, create a Project on
   https://console.developers.google.com/.  You can know more about using Google
