@@ -1,28 +1,8 @@
-.. .. meta::
-   :description: Part 7 of a set of learning exercises meant for exploring Hasura in detail. This part introduces the Auth UI Kit.
-   :keywords: hasura, getting started, step 7, tutorial
+====================================
+Enabling more authentication methods
+====================================
 
-===============================
-Part VII: Using the Auth UI Kit
-===============================
-
-.. figure:: ../../img/uikit-dark.png
-    :class: 'dark'
-.. figure:: ../../img/uikit-light.png
-    :class: 'light'
-
-.. admonition:: Note
-
-  You can skip this section if you want to write your own frontend for auth.
-
-In the previous section, we learned and tried some basic auth APIs. However, if you do not want to write auth code, you can use a ready to use frontend interface for your web apps that comes pre-loaded with the Hasura Auth Microservice.
-
-The UI kit runs on the url: ``auth.<cluster-name>.hasura-app.io/ui``.
-
-It allows your application users to login/signup seamlessly using the :doc:`authentication providers <../auth/authentication/providers/index>` configured in the :doc:`auth conf <../project/directory-structure/conf/auth.yaml>`. The UI adapts automatically to display
-the enabled auth providers. Just configure the auth conf of your Hasura Project and the UI Kit will immediatedly start working on the new changes.
-
-By default, it is configured to login using only ``Username Password``. You can enable other auth providers by changing the auth conf. We will demonstrate below how to enable ``auth with Email and Google``. For enabling other providers, :ref:`read the instructions here <providers>`.
+By default, the Auth UI Kit is configured with only auth with ``Username Password``. You can enable other auth providers by changing the auth conf. We will demonstrate below how to enable ``auth with Email and Google``. For more authentication providers, check the :ref:`detailed instructions <more_auth_providers>`.
 
 Enable auth with email
 ----------------------
@@ -88,8 +68,15 @@ Enable auth with Google
 
 #. Navigate to ``auth.<cluster-name>.hasura-app.io/ui`` and you will see the ``auth with Google`` enabled.
 
+.. _more_auth_providers:
 
-Next: Create your data models
------------------------------
+Configuring more authentication methods
+------------------------------------
 
-Next, head to :doc:`data-modelling`.
+For enabling more providers, check how to configure:
+
+- :doc:`Mobile OTP <../authentication/providers/mobile-otp>`
+- :doc:`Mobile Password <../authentication/providers/mobile-password>`
+- :doc:`Facebook <../authentication/providers/facebook>`
+- :doc:`Linkedin <../authentication/providers/linkedin>`
+- :doc:`Github <../authentication/providers/github>`
