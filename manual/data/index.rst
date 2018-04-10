@@ -43,5 +43,5 @@ See:
   Running SQL commands <run-sql>
   Accessing postgres directly <access-postgres>
   Importing data from SQL files <import-sql>
-  data-modelling
   graphql
+  data-modelling

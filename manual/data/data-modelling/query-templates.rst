@@ -1,9 +1,6 @@
-.. .. meta::
-   :description: Query templates: Learn how to template Data microservice queries and to define and manage your own REST interfaces with detailed examples.
-   :keywords: hasura, docs, data, query templates, REST interface, REST endpoint, RESTful API
-
-Data API Reference: Query Templates
-===================================
+=====================
+Using query templates
+=====================
 
 Query templates are used to template queries and to define your own REST interface. Let's jump into some examples.
 
@@ -160,8 +157,6 @@ Permissions on query templates
 
 When executing a query template, the template is essentially converted into a query. So, the permissions on the query automatically apply. For example, if there are *no* permissions for ``anonymous`` role to ``select`` from a table, then, there are *no* permissions for ``anonymous`` role to execute a templated ``select`` query on the table.
 
-.. _create_query_template:
-
 create_query_template
 ---------------------
 
@@ -211,8 +206,6 @@ Here is an example for a select query which uses the ``default`` values in the t
 The ``limit`` and ``offset`` parameters each define a default value. These are used when these parameters are not provided during the execution.
 
 The following section describes the syntax of ``create_query_template`` and the parts of each query that can be templated.
-
-.. _create_query_template_syntax:
 
 Syntax
 ^^^^^^
@@ -342,8 +335,6 @@ Here's an example for an ``update`` query.
 
 In the above example, we are trying to update the author of all articles which are published. Note that ``$set`` has the templated param ``author_id``.
 
-.. _execute_query_template:
-
 execute_query_template
 ----------------------
 
@@ -447,8 +438,6 @@ Syntax
      - Object (TemplateParam : Value)
      - An object with parameter names for keys and template arguments for values
 
-.. _drop_query_template:
-
 drop_query_template
 -------------------
 
@@ -481,8 +470,6 @@ Syntax
      - true
      - String
      - Name of the query template
-
-.. _set_query_template_comment:
 
 set_query_template_comment
 --------------------------
