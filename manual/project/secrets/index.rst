@@ -27,3 +27,4 @@ See:
    Adding/updating secrets <add>
    Listing secrets <list>
    Passing secrets as environment variables <passing-as-env>
+   mounting-secret-as-file
