@@ -13,16 +13,14 @@ To open the API console, ``cd`` into the project directory and run:
 
 This will run a local server on your system and will open up the api console in a browser window at `http://localhost:9695 <http://localhost:9695>`_. The API explorer section of the console will be open by default.
 
-API explorer
-------------
+This is a quick overview of the prominent features of the API-Console:
 
-If you are using Hasura APIs like Data, Auth, Filestore and Notify,
-use the API explorer to try out and explore the Hasura APIs.
+.. toctree::
+   :maxdepth: 2
+   :titlesonly:
 
-.. image:: console-screenshot.png
-
-.. note::
-
-  The API console also allows you to generate API client code. For eg: you can
-  easily export a sample ``curl`` command for an API request you make from the
-  API explorer.
+  api-explorer
+  data
+  auth
+  filestore
+  notify
