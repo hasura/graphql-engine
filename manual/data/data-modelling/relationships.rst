@@ -14,7 +14,7 @@ Creating a one-to-many relationship
 
 To add a one-to-many relationship from ``author`` to ``article``,
 
-#. :doc:`Create a foreign key constraint on the "article" table <adding-a-fk-constraint>`.
+#. :doc:`Create a foreign key constraint on the "article" table <adding-foreign-key-constraint>`.
 #. Open the API console and go to the ``author`` table.
 #. Open the relationships tab.
 #. Add the suggested array relationship and give it a desired name.
@@ -62,7 +62,7 @@ Creating a many-to-one relationship
 
 To add a many-to-one relationship from ``article`` to ``author``,
 
-#. :doc:`Create a foreign key constraint on the "article" table <adding-a-fk-constraint>`.
+#. :doc:`Create a foreign key constraint on the "article" table <adding-foreign-key-constraint>`.
 #. Open the API console and go to the ``article`` table.
 #. Open the relationships tab.
 #. Add the suggested object relationship and give it a desired name.
