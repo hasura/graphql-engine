@@ -19,10 +19,9 @@ Here is a quick overview of the prominent features of the API-Console:
 
 .. toctree::
    :maxdepth: 2
-   :titlesonly:
 
-  API-Explorer <api-explorer>
-  Data <data>
-  Auth <auth>
-  Filestore <filestore>
-  Notify <notify>
+    API-Explorer <api-explorer>
+    Data <data>
+    Auth <auth>
+    Filestore <filestore>
+    Notify <notify>

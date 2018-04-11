@@ -6,7 +6,7 @@ In this section, you will get a quick overview of the ``DATA`` section of the :d
 Create Table
 ------------
 
-To create a table, just click on the ``Create Tabel`` button.
+To create a table, just click on the ``Create Table`` button.
 
 .. image:: img/api-console-data-create-table.png
 

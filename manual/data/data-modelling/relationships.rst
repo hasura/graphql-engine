@@ -100,7 +100,7 @@ One to one relationship
 To obtain one-to-one relationships, just :doc:`create a view <creating-views>` joining the two tables.
 
 Many to many relationship
-------------------------
+-------------------------
 
 A many-to-many relationship is a type of cardinality that refers to the relationship between two entities **A** and **B** in which **A** may contain a parent instance for which there are many children in **B** and vice versa.
 

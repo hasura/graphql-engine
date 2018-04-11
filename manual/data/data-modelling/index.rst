@@ -6,7 +6,7 @@ Data Modelling
   :maxdepth: 1
 
   permissions
-  adding-a-fk-constraint
+  adding-foreign-key-constraint
   relationships
   creating-views
   adding-not-null-constraint
