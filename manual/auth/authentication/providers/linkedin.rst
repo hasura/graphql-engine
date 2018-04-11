@@ -60,7 +60,8 @@ Configuration
 
 * Under ``linkedin``, set the ``clientId``
 
-    Note: The ``linkedin`` key might be commented out. Make sure to uncomment it.
+.. note::
+    The ``linkedin`` key might be commented out. Make sure to uncomment it.
 
 .. code-block:: yaml
 

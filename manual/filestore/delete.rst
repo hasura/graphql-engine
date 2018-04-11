@@ -28,7 +28,7 @@ The unique file_id is used to delete an uploaded file.
       }
 
 .. note::
-    If the permissions webhook is set to ``Public`` on the console. The files will be available to the public, i.e. anyone on the internet with the link can download the file.
+    If the permissions webhook is set to ``Public`` on the console. The files will be available to the public, i.e. anyone on the internet with the link can delete the file.
 
 ``Authorization`` header is not required from a web browser, since ``Cookie`` will be sent.
 

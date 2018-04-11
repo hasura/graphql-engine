@@ -55,7 +55,8 @@ Configuration
 
 * Under ``github``, set the ``clientId``.
 
-    Note: The ``github`` key might be commented out. Make sure to uncomment it.
+.. note::
+    The ``github`` key might be commented out. Make sure to uncomment it.
 
 .. code-block:: yaml
 
