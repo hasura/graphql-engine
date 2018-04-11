@@ -1,9 +1,8 @@
-============
-API-Explorer
-============
+Hasura API Console: API-Explorer
+================================
 
 If you are using Hasura APIs like Data, Auth, Filestore and Notify,
-use the API explorer to try out and explore the Hasura APIs.
+use the API explorer section of the :doc:`API console <index>` to try out and explore the Hasura APIs.
 
 GraphiQL
 --------

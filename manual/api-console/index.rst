@@ -3,6 +3,8 @@
 Hasura API Console
 ==================
 
+.. image:: img/console-screenshot.png
+
 The Hasura API console is an easy-to-use UI that lets you explore the Data, Auth, Filestore and Notify Hasura APIs on a cluster and also lets you manage the data & configuration of these microservices.
 
 To open the API console, ``cd`` into the project directory and run:
@@ -11,16 +13,16 @@ To open the API console, ``cd`` into the project directory and run:
 
   $ hasura api-console # optionally -c <cluster-alias>
 
-This will run a local server on your system and will open up the api console in a browser window at `http://localhost:9695 <http://localhost:9695>`_. The API explorer section of the console will be open by default.
+This will run a local server on your system and will open up the api console in a browser window at ``http://localhost:9695``. By default, the API explorer section of the console will be open.
 
-This is a quick overview of the prominent features of the API-Console:
+Here is a quick overview of the prominent features of the API-Console:
 
 .. toctree::
    :maxdepth: 2
    :titlesonly:
 
-  api-explorer
-  data
-  auth
-  filestore
-  notify
+  API-Explorer <api-explorer>
+  Data <data>
+  Auth <auth>
+  Filestore <filestore>
+  Notify <notify>

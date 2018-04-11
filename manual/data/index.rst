@@ -37,7 +37,7 @@ See:
   Permissions and access control <permissions>
   relationships
   data-migration
-  Altering the schema <alter-schema>
+  Altering the schema <alter-schema/index>
   Aggregations/Views <aggregations>
   reset
   Running SQL commands <run-sql>

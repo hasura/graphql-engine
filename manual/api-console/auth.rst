@@ -1,8 +1,7 @@
-====
-Auth
-====
+Hasura Api Console: Auth
+========================
 
-In this section, you will get a quick overview of the ``AUTH`` section of the API-Console. Go to the ``AUTH`` tab on the top to navigate to this section.
+In this section, you will get a quick overview of the ``AUTH`` section of the :doc:`API console <index>`. Go to the ``AUTH`` tab on the top to navigate to this section.
 
 Manage users
 ------------
