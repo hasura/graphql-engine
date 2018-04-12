@@ -37,25 +37,27 @@ As you would normally do with any relational database, data is modelled as table
 |comment                                 |id, user_id, article_id, comment        |
 +----------------------------------------+----------------------------------------+
 
+**Note:** If you are using ``hello-world`` quickstart, tables ``author`` and ``article`` has been already imported via migrations 
+
 You can Create tables and model foreign key constraints via the API console like this:
 
-Create Table ``author``
+Create Table ``like``
 
-.. image:: ../../img/complete-tutorial/tutorial-create-author.png
+.. image:: ../../img/complete-tutorial/tutorial-create-table-like.png
 
-Create Table ``article``
+Create Table ``comment``
 
-.. image:: ../../img/complete-tutorial/tutorial-create-article.png
+.. image:: ../../img/complete-tutorial/tutorial-create-table-comment.png
 
 
 To add foreign key constraints, after creating the tables go to *Modify* and edit the columns for which you wish to add foreign keys.
 	    
-Adding foreign key constraints to ``article``
+Adding foreign key constraints to ``article_id`` of ``like`` table.
 
-.. image:: ../../img/complete-tutorial/tutorial-article-add-fk.png
-
+.. image:: ../../img/complete-tutorial/tutorial-modify-table-like.png
 
 Now similarly create the other tables and add foreign key constraints.
+
 	    
 Next: Explore the Data APIs
 ---------------------------
