@@ -136,7 +136,7 @@ Let's say you wish to add an object relationship for ``article(author_id) -> aut
 
 You'll see an entry in *suggested object relationships*:
 
-.. image:: ../../img/complete-tutorial/tutorial-10-new-rel-article.png
+.. image:: ../../img/complete-tutorial/tutorial-suggested-relationships.png
 
 Click on *Add* to add a new object relationship and name the relationship:
 
