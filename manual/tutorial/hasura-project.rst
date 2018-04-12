@@ -9,22 +9,22 @@ Part II: Create a Hasura project
 A Hasura project is a folder (representing a code repo) that contains all the configuration files, the database migrations and the source code and configuration for your custom microservices. This project folder should be a git repo, so that you can ``git push hasura master`` to deploy everything in the repo to the cluster.
 
 
-Create a 'base' project
+Create a 'hello-world' project
 -----------------------
 
 Run the following command:
 
 .. code-block:: bash
 
-   $ hasura clone hasura/base
+   $ hasura clone hasura/hello-world
 
 ::
 
    Cloning project...
-   ✓ Project cloned directory=<dir-path>/base
+   ✓ Project cloned directory=<dir-path>/hello-world
 
 
-This will 'clone' the `hasura/base <https://hasura.io/hub/projects/hasura/base>`_ project from `hasura.io/hub <https://hasura.io/hub>`_.
+This will 'clone' the `hasura/hello-world <https://hasura.io/hub/projects/hasura/hello-world>`_ project from `hasura.io/hub <https://hasura.io/hub>`_.
 Note, you can clone any project from the hub and use that as a starting point for your new project.
 
 .. admonition:: Note
@@ -42,7 +42,7 @@ Run the following command:
 
 .. code-block:: bash
 
-   $ cd base
+   $ cd hello-world
 
 
 A representative project is shown below:
@@ -80,7 +80,7 @@ A representative project is shown below:
 
 .. note::
 
-   In our base project, the ``migrations`` and ``microservices`` directories will by empty right now
+   In our hello-world project, the ``migrations`` and ``microservices`` directories will by empty right now
 
 hasura.yaml
 ^^^^^^^^^^^
