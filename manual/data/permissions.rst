@@ -18,9 +18,10 @@ We need to define permissions on all the tables that we have created for all ava
 
 The hasura ``API gateway`` forwards ``X-Hasura-*`` headers with each request to the ``data`` microservice. So, when an
 API call is made with an ``auth_token`` representing some user, a variable called ``X-Hasura-User-Id`` is updated with the
-``hasura_id`` of the user and a variable called ``X-Hasura-Role`` is updated with the ``role`` of the user making the call
-or with the ``X-Hasura-Role`` header value if passed with the request. These variables can now be used to describe the access
-permissions for rows in tables.
+``hasura_id`` of the user and a variable called ``X-Hasura-Role`` is updated with the role of the user making the call.
+These variables can now be used to describe the access permissions for rows in tables. If the ``X-Hasura-Role`` header is passed
+with the request, its value is passed to the ``data`` microservice if the user has that
+particular role or else the request is rejected with a ``403 Forbidden`` response.
 
 We can use :doc:`data APIs <../api-reference/data/query/permission>` or the :doc:`API console <../api-console/index>` to set these permissions.
 

@@ -21,7 +21,7 @@ See:
    :titlesonly:
 
    Routing <routing>
-   Session Middleware <session-middleware>
+   Gateway as Session Middleware <session-middleware>
    custom-http-directives
    custom-domains-ssl
    cors-settings

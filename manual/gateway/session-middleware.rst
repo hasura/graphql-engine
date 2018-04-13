@@ -1,10 +1,10 @@
-API gateway: Session Middleware
-===============================
+API gateway as Session Middleware
+=================================
 
 The API gateway has a session middleware built into it. This means, for all
 external requests (i.e requests coming from outside the cluster) the gateway
-looks for a Cookie or an ``Authorization`` header, resolves a session based on
-those information, and proxies the request to the correct upstream microservice
+looks for a ``Cookie`` or an ``Authorization`` header, resolves a session based on
+that information, and proxies the request to the correct upstream microservice
 with the session information in special HTTP headers. Specifically, these
 headers are ``X-Hasura-User-Id``, ``X-Hasura-Role`` and
 ``X-Hasura-Allowed-Roles``.
@@ -14,6 +14,11 @@ resolving session from the request. It can just read the special headers
 forwarded by the gateway to determine which user made that request, what is the
 role of the user etc. Based on this information it can then implement its own
 authorization logic.
+
+By default the gateway sets the ``X-Hasura-Role`` value to the first role assigned to a user.
+If a request is made with a specific ``X-Hasura-Role`` header, the gateway will pass that value
+to the upstream microservice if the user has that particular role or else will reject the request
+with a ``403 Forbidden`` response.
 
 For logged in users
 ~~~~~~~~~~~~~~~~~~~
@@ -35,11 +40,3 @@ gateway will add anonymous values in the ``X-Hasura-*`` headers.
 
 * ``X-Hasura-User-Id`` : Value will be ``0``.
 * ``X-Hasura-Role`` : Value will be ``anonymous``.
-
-.. admonition:: Specific user role
-
-    By default the gateway sets the ``X-Hasura-Role`` value to the first role assigned to a user.
-    If a particular request has to be made with a specific role only, an additional header is set to specify
-    the role to make the request with. This is necessary to ensure that the correct access is granted for
-    users having multiple roles assigned.
-

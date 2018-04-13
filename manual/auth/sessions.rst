@@ -25,13 +25,8 @@ When the gateway receives a request, it looks for a session auth token in the
 retrieves the user ``hasura_id`` and roles attached to this user from the
 session store. This information is sent as ``X-Hasura-User-Id`` and
 ``X-Hasura-Role`` headers to the upstream microservice.
-
-.. admonition:: Specific user role
-
-    By default the gateway sets the ``X-Hasura-Role`` value to the first role assigned to a user.
-    If a particular request has to be made with a specific role only, an additional header is set to specify
-    the role to make the request with. This is necessary to ensure that the correct access is granted for
-    users having multiple roles assigned.
+If the ``X-Hasura-Role`` header is passed with the request, its value is passed to the upstream service if the
+user has that particular role or else the request is rejected with a ``403 Forbidden`` response.
 
 When the session token is absent from both the Authorization header and cookie, the gateway
 considers it as an ``anonymous`` request and adds the header ``X-Hasura-Role:

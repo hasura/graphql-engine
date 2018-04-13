@@ -10,7 +10,7 @@ What are the typical roles other than ``admin``?
 
 We need to define permissions on all the tables that we have created so far (where applicable) for ``user`` and ``anonymous`` roles. We can use the data API to create permissions.
 
-The hasura API gateway forwards ``X-Hasura-*`` headers with each request to the data microservice. So, when a data API call is made with an ``auth_token`` representing some user, the data microservice knows the user's roles and a variable called ``REQ_USER_ID`` is updated with the ``hasura_id`` of the user making the call. This variable can now be used to describe the access permissions for rows in tables.
+The hasura API gateway forwards ``X-Hasura-*`` headers with each request to the data microservice. So, when a data API call is made with an ``auth_token`` representing some user, the data microservice knows the user's roles and a variable called ``X_HASURA_USER_ID`` is updated with the ``hasura_id`` of the user making the call. This variable can now be used to describe the access permissions for rows in tables.
 
 Select permissions
 ------------------
