@@ -6,14 +6,18 @@
 Data API Reference: Permissions
 ===============================
 
-The permission layer is designed to restrict the operations that can be performed by various users. Permissions can be defined on various operations (insert/select/update/delete) at a role level granularity. By default, the admin role has unrestricted access to all operations.
+The permission layer is designed to restrict the operations that can be performed by various users. Permissions can be defined
+on various operations (insert/select/update/delete) at a role level granularity. By default, the admin role has unrestricted
+access to all operations.
+
 
 .. note::
 
-   The hasura API gateway forwards ``X-Hasura-*`` headers with each request to the data microservice. So, when a data
-   API call is made with an ``auth_token`` representing some user, the data microservice knows the user's roles and a
-   variable called ``X-HASURA-USER-ID`` is updated with the ``hasura_id`` of the user making the call. This variable can now
-   be used to describe the access permissions for rows in tables.
+   The hasura ``API gateway`` forwards ``X-Hasura-*`` headers with each request to the ``data`` microservice. So, when an API
+   call is made with an ``auth_token`` representing some user, a variable called ``X-Hasura-User-Id`` is updated with the
+   ``hasura_id`` of the user and a variable called ``X-Hasura-Role`` is updated with the ``role`` of the user making the call
+   or with the ``X-Hasura-Role`` header value if passed with the request. These variables can now be used to describe the access
+   permissions for rows in tables.
 
 .. _create_insert_permission:
 

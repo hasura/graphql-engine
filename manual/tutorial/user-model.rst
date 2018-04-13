@@ -30,6 +30,11 @@ Every microservice benefits from having the user's information (id and roles) wi
 
 When the gateway receives a request, it looks for a session token in the ``Bearer`` token of ``Authorization`` header or in the cookie. It then retrieves the user's id and roles attached to this session token from the session store. This information is sent as ``X-Hasura-User-Id`` and ``X-Hasura-Role`` headers to the upstream microservice.
 
+.. admonition:: X-HASURA-ROLE header
+
+    If the ``X-HASURA-ROLE`` header is passed with a request, its value is passed to the upstream services as it is. This header
+    is passed in a request if the request needs to be made with a particular role only.
+
 When the session token is absent from both header and cookie, the gateway considers it an anonymous request and adds the header ``X-Hasura-Role: anonymous``. The ``X-Hasura-User-Id`` header is **not** set in this case.
 
 For example, the image below demonstrates the gateway's behaviour when two different kinds of incoming requests are made to ``data.test42.hasura-app.io`` from an HTTP client:

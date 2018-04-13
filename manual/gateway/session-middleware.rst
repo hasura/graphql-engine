@@ -35,3 +35,11 @@ gateway will add anonymous values in the ``X-Hasura-*`` headers.
 
 * ``X-Hasura-User-Id`` : Value will be ``0``.
 * ``X-Hasura-Role`` : Value will be ``anonymous``.
+
+.. admonition:: Specific user role
+
+    By default the gateway sets the ``X-Hasura-Role`` value to the first role assigned to a user.
+    If a particular request has to be made with a specific role only, an additional header is set to specify
+    the role to make the request with. This is necessary to ensure that the correct access is granted for
+    users having multiple roles assigned.
+
