@@ -1,13 +1,10 @@
 Querying data over GraphQL
 ==========================
 
-Starting from version ``v0.15.31``, the data microservice supports querying over `GraphQL <https://graphql.org/>`_ in addition to the JSON based query language (``/v1/query``). The :doc:`api-console <../api-console/index>` has `GraphiQL <https://github.com/graphql/graphiql>`_ integrated, so that is the best place for getting started with GraphQL on Hasura.
-
-The following are the current limitations:
-
-1. No support for fragments.
-2. No support for introspection. However, you can fetch the GrahpQL schema at a different endpoint (just not through the introspection query). This schema can be used in various client libraries. See :ref:`generate-schema-json` for detailed instructions.
-3. Error messages may not point to the exact location of syntax error.
+Starting from version ``v0.15.31``, the data microservice supports querying over `GraphQL <https://graphql.org/>`_
+in addition to the JSON based query language (``/v1/query``). The :doc:`api-console <../api-console/index>` has
+`GraphiQL <https://github.com/graphql/graphiql>`_ integrated, so that is the best place for getting started with GraphQL
+on Hasura.
 
 GraphQL endpoints
 -----------------
@@ -196,3 +193,11 @@ Now that you have the GraphQL schema, you can generate ``schema.json`` as follow
 .. code-block:: Bash
 
    $ apollo-codegen introspect-schema schema.graphql --output schema.json
+
+Current limitations
+-------------------
+
+1. No support for fragments.
+2. No support for introspection. However, you can fetch the GrahpQL schema at a different endpoint (just not through the introspection query). This schema can be used in various client libraries. See :ref:`generate-schema-json` for detailed instructions.
+3. Error messages may not point to the exact location of syntax error.
+
