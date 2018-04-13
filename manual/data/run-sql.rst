@@ -41,7 +41,7 @@ An example:
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type": "run_sql",
@@ -58,7 +58,7 @@ For example, if we were to drop 'bio' column from the article table (let's say t
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type": "run_sql",
@@ -84,7 +84,7 @@ We can however, cascade these changes.
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type": "run_sql",
@@ -174,7 +174,7 @@ A query returning results.
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type": "run_sql",

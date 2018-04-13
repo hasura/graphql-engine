@@ -13,7 +13,7 @@ Next, we need to fetch the graphql schema
 
 .. code-block:: Bash
 
-   $ curl -H 'Authorization: Bearer <admin-token>' 'https://data.<cluster-name>.hasura-app.io/v1alpha1/graphql/schema' | jq -r '.schema' > schema.graphql
+   $ curl -H 'Authorization: Bearer <auth-token>' 'https://data.<cluster-name>.hasura-app.io/v1alpha1/graphql/schema' | jq -r '.schema' > schema.graphql
 
 Now that you have the GraphQL schema, you can generate ``schema.json`` as follows:
 

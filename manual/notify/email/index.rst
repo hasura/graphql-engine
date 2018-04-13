@@ -28,7 +28,7 @@ Send an email as per the options given is request body.
 
   POST https://notify.<cluster-name>.hasura-app.io/v1/send/email HTTP/1.1
   Content-Type: application/json
-  Authorization: Bearer <admin-token>
+  Authorization: Bearer <auth-token>
 
   {
     "to": "Example User <user@example.com>",

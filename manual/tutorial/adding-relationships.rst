@@ -170,7 +170,7 @@ To obtain the **author**'s name from the article table, we issue,
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: <admin-token>
+         Authorization: <auth-token>
 
          {
              "type" : "select",
@@ -210,7 +210,7 @@ The same syntax can be used to obtain the titles of all articles across all **au
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: <admin-token>
+         Authorization: <auth-token>
 
          {
              "type" : "select",
@@ -248,7 +248,7 @@ You can use relationships inside ``where`` clause. For example, if we wish to on
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: <admin-token>
+         Authorization: <auth-token>
 
          {
              "type" : "select",
@@ -286,7 +286,7 @@ Let's fetch authors who has not written a article with rating less than 3
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: <admin-token>
+         Authorization: <auth-token>
 
          {
              "type" : "select",
@@ -331,7 +331,7 @@ As you probably guessed, relationships can be nested. Let's get all articles wit
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: <admin-token>
+         Authorization: <auth-token>
 
          {
              "type" : "select",
@@ -381,7 +381,7 @@ We can also use ``where``, ``limit``, ``offset`` inside array relationships. Let
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: <admin-token>
+         Authorization: <auth-token>
 
          {
              "type" : "select",

@@ -15,7 +15,7 @@ The data microservice exposes the GraphQL interface at ``/v1alpha1/graphql``. So
 
    POST data.<project-name>.hasura-app.io/v1alpha1/graphql HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <token>
+   Authorization: Bearer <auth-token>
 
    {
        "operationName" : "some-operation-name",
@@ -32,7 +32,7 @@ The schema is exposed separately at this endpoint (as introspection is not yet s
 .. code-block:: http
 
    GET data.<project-name>.hasura-app.io/v1alpha1/graphql/schema HTTP/1.1
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
 Queries and mutations
 ---------------------
@@ -186,7 +186,7 @@ As we don't yet support introspection over the graphql endpoint, the standard to
 
 .. code-block:: Bash
 
-   $ curl -H 'Authorization: Bearer <admin-token>' 'https://data.<cluster-name>.hasura-app.io/v1alpha1/graphql/schema' | jq -r '.schema' > schema.graphql
+   $ curl -H 'Authorization: Bearer <auth-token>' 'https://data.<cluster-name>.hasura-app.io/v1alpha1/graphql/schema' | jq -r '.schema' > schema.graphql
 
 Now that you have the GraphQL schema, you can generate ``schema.json`` as follows:
 

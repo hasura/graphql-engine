@@ -26,7 +26,7 @@ Let's define these relationships:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type": "create_object_relationship",
@@ -50,7 +50,7 @@ Create an *object relationship* ``author`` on ``article`` *table*,  *using* the 
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type": "create_array_relationship",
@@ -95,7 +95,7 @@ Let's say we have a view called ``article_detail`` which has three columns ``art
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type": "create_object_relationship",
@@ -305,7 +305,7 @@ An example:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type": "drop_relationship",
@@ -354,7 +354,7 @@ An example:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type": "set_relationship_comment",

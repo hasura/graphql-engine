@@ -35,7 +35,7 @@ Adding a view via SQL. Don't forget to check *This is a migration*
 
 ..      POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
 ..      Content-Type: application/json
-..      Authorization: Bearer <admin-token>
+..      Authorization: Bearer <auth-token>
 ..      {
 ..        "type" : "run_sql",
 ..        "args" : {
@@ -56,7 +56,7 @@ The equivalent REST request is:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
      "type" : "add_existing_table_or_view",
@@ -96,7 +96,7 @@ Let's fetch author details with their average rating.
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type" : "select",

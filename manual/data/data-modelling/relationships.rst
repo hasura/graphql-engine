@@ -30,7 +30,7 @@ To fetch an ``author`` with ``name = "Clara"`` and all the ``articles`` authored
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: <admin-token>
+   Authorization: <auth-token>
 
    {
        "type" : "select",
@@ -78,7 +78,7 @@ To fetch the list of all ``articles`` along with the name of each of their ``aut
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: <admin-token>
+   Authorization: <auth-token>
 
    {
        "type" : "select",
@@ -126,7 +126,7 @@ To fetch the list of all ``students`` along with the ``courses`` they are enroll
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: <admin-token>
+   Authorization: <auth-token>
 
    {
        "type" : "select",

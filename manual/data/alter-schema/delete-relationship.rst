@@ -17,7 +17,7 @@ You can remove a relationship by heading to ``Data > Schema > [table-name] > Rel
 .. code-block:: http
 
       POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
-      Authorization: Bearer <admin-token>
+      Authorization: Bearer <auth-token>
       Content-Type: application/json
 
       {

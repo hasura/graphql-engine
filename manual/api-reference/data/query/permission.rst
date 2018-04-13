@@ -33,7 +33,7 @@ Let's look at an example, a permission for the ``user`` role to insert into ``ar
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: <admin-token>
+   Authorization: <auth-token>
 
    {
        "type" : "create_insert_permission",
@@ -60,7 +60,7 @@ The argument for ``check`` is a boolean expression which has the same syntax as 
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: <admin-token>
+   Authorization: <auth-token>
 
    {
        "type" : "create_insert_permission",
@@ -169,7 +169,7 @@ Let's look at an example, a permission for the ``user`` role to select from ``ar
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: <admin-token>
+   Authorization: <auth-token>
 
    {
        "type" : "create_select_permission",
@@ -281,7 +281,7 @@ An example:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: <admin-token>
+   Authorization: <auth-token>
 
    {
        "type" : "create_update_permission",
@@ -392,7 +392,7 @@ An example:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: <admin-token>
+   Authorization: <auth-token>
 
    {
        "type" : "create_delete_permission",
@@ -494,7 +494,7 @@ An example:
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type": "set_permission_comment",

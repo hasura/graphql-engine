@@ -10,7 +10,7 @@ To select from multiple tables in the same request, make a ``bulk`` query as fol
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type": "bulk",
@@ -41,7 +41,7 @@ A sample response will look like below
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    [
        [{

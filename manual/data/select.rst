@@ -14,7 +14,7 @@ The full syntax of a ``select`` query can be found :ref:`here <data_select>`.
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type" : "select",
@@ -45,7 +45,7 @@ Boolean operators like ``$and``, ``$or``, ``$not`` can be used in a ``where`` cl
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type" : "select",
@@ -80,7 +80,7 @@ Example,
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type" : "select",
@@ -104,7 +104,7 @@ The full syntax of a ``count`` query can be found :ref:`here <data_count>`.
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type" : "count",

@@ -24,7 +24,7 @@ Sending an SMS
 
       POST https://notify.<cluster-name>.hasura-app.io/v1/send/sms HTTP/1.1
       Content-Type: application/json
-      Authorization: Bearer <admin-token>
+      Authorization: Bearer <auth-token>
 
       {
         "to": "9876543210",

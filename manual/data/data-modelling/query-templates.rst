@@ -11,7 +11,7 @@ Let's say we would like to query the article table to fetch ``id`` and ``title``
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type" : "select",
@@ -32,7 +32,7 @@ Now, if we find ourselves using this query quite often but with a different valu
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type" : "create_query_template",
@@ -61,7 +61,7 @@ In the above request, we've templated the ``author_id`` in the ``select`` query 
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type" : "execute_query_template",
@@ -84,7 +84,7 @@ Query templates also let you define a REST interface for your application. For e
 
    GET data.<cluster-name>.hasura-app.io/v1/template/article_minimal?author_id=1 HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
 While the above example uses the ``GET`` method, you can also use ``PUT``, ``DELETE``, ``POST`` as appropriate to the query that you have templated.
 
@@ -95,7 +95,7 @@ Here is another example where a delete query is templated:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type" : "create_query_template",
@@ -130,7 +130,7 @@ We would like to allow authors to delete a tag on articles if they are not yet p
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type" : "execute_query_template",
@@ -150,7 +150,7 @@ or
 
    DELETE data.<cluster-name>.hasura-app.io/v1/template/delete_article_tag?article_id=1&tag_name=opinion HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
 Permissions on query templates
 ------------------------------
@@ -169,7 +169,7 @@ Here is an example for a select query which uses the ``default`` values in the t
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type" : "create_query_template",
@@ -281,7 +281,7 @@ Here's an example for an ``insert`` query.
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type" : "create_query_template",
@@ -308,7 +308,7 @@ Here's an example for an ``update`` query.
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type" : "create_query_template",
@@ -345,7 +345,7 @@ Execute any query template. Let's execute the query template defined above:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type" : "execute_query_template",
@@ -383,13 +383,13 @@ For example, the ``article_homepage`` template can be executed by any of the fol
 
    GET data.<cluster-name>.hasura-app.io/v1/template/article_homepage?is_published=true&like_count_min=20&limit=50 HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
 .. code-block:: http
 
    POST data.<cluster-name>.hasura-app.io/v1/template/article_homepage?is_published=true&limit=20 HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "article_like_count" : 20,
@@ -400,7 +400,7 @@ For example, the ``article_homepage`` template can be executed by any of the fol
 
    PUT data.<cluster-name>.hasura-app.io/v1/template/article_homepage?is_published=true&limit=20 HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "article_like_count" : 20,
@@ -411,7 +411,7 @@ For example, the ``article_homepage`` template can be executed by any of the fol
 
    DELETE data.<cluster-name>.hasura-app.io/v1/template/article_homepage?is_published=true&like_count_min=20&limit=50 HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
 In the above example, in case of ``POST`` and ``PUT``, the parameters in the body override the url parameters and hence they are all equivalent.
 
@@ -447,7 +447,7 @@ drop_query_template
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type" : "drop_query_template",
@@ -480,7 +480,7 @@ set_query_template_comment
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type": "set_query_template_comment",
@@ -524,7 +524,7 @@ You can also issue the following query to the data microservice.
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type": "select",

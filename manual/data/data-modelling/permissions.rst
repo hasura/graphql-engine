@@ -63,7 +63,7 @@ For ``anonymous`` role:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: <admin-token>
+   Authorization: <auth-token>
 
    {
       "type" : "create_select_permission",
@@ -98,7 +98,7 @@ For ``user`` role:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: <admin-token>
+   Authorization: <auth-token>
 
    {
        "type" : "create_select_permission",
@@ -163,7 +163,7 @@ For ``user`` role:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: <admin-token>
+   Authorization: <auth-token>
 
    {
        "type" : "create_update_permission",
@@ -216,7 +216,7 @@ Using the REST query
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: <admin-token>
+   Authorization: <auth-token>
 
    {
        "type" : "create_insert_permission",
@@ -278,7 +278,7 @@ For ``user`` role:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: <admin-token>
+   Authorization: <auth-token>
 
    {
        "type" : "create_update_permission",

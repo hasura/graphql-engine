@@ -10,7 +10,7 @@ The full syntax of an ``insert`` query can be found :ref:`here <data_insert>`.
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <admin-token>
+   Authorization: Bearer <auth-token>
 
    {
        "type":"insert",

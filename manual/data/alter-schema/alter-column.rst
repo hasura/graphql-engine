@@ -24,7 +24,7 @@ You can also alter column using SQL by heading to ``Data > SQL`` section in the 
 .. code-block:: http
 
       POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
-      Authorization: Bearer <admin-token>
+      Authorization: Bearer <auth-token>
       Content-Type: application/json
 
       {

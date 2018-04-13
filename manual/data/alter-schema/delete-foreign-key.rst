@@ -14,7 +14,7 @@ You can remove a foreign key constraint by heading to ``Data > Schema > [table-n
 .. code-block:: http
 
       POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
-      Authorization: Bearer <admin-token>
+      Authorization: Bearer <auth-token>
       Content-Type: application/json
 
       {	
