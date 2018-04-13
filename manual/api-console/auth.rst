@@ -20,7 +20,7 @@ You can create, assign, unassign and delete roles from this section. Select the 
 Config
 ------
 
-In this section, you can ``view`` your auth config. To edit the config, check the :doc:`auth config docs <../auth/authentication/providers/configure-auth-methods>`.
+In this section, you can ``view`` your auth config. To edit the config, check the :doc:`auth config docs <../auth/authentication/configure-auth-methods>`.
 
 .. image:: img/api-console-auth-config.png
 
