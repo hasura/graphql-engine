@@ -47,24 +47,7 @@ have to remember the cluster name.
 Now, in all subsequent commands we can refer to this cluster with the name ``hasura``. You could have named this to ``dev``, or
 ``staging`` or ``qa`` or anything of your preference.
 
-Step 3: Set this as the default cluster
----------------------------------------
-
-Because you can create multiple clusters, let's set the cluster just created as the default cluster so that you don't have
-to refer to this cluster in all commands in the future using the ``-c`` flag.
-
-.. code-block:: bash
-
-   # Set this cluster as the default
-   $ hasura cluster set-default hasura
-
-::
-
-   Setting default cluster...
-   ✓ Cluster set as default cluster-alias=hasura
-
-
-Step 4: Deploy the project to the cluster
+Step 3: Deploy the project to the cluster
 -----------------------------------------
 
 To deploy the project to the cluster, run the following:
