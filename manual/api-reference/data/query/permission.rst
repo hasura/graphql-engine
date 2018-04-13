@@ -33,7 +33,8 @@ Let's look at an example, a permission for the ``user`` role to insert into ``ar
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "create_insert_permission",
@@ -60,7 +61,8 @@ The argument for ``check`` is a boolean expression which has the same syntax as 
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "create_insert_permission",
@@ -169,7 +171,8 @@ Let's look at an example, a permission for the ``user`` role to select from ``ar
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "create_select_permission",
@@ -281,7 +284,8 @@ An example:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "create_update_permission",
@@ -392,7 +396,8 @@ An example:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "create_delete_permission",
@@ -494,7 +499,8 @@ An example:
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type": "set_permission_comment",

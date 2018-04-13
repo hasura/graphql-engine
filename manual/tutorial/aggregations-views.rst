@@ -56,7 +56,8 @@ The equivalent REST request is:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
      "type" : "add_existing_table_or_view",
@@ -96,7 +97,8 @@ Let's fetch author details with their average rating.
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "select",

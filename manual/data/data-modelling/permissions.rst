@@ -63,7 +63,8 @@ For ``anonymous`` role:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
       "type" : "create_select_permission",
@@ -98,7 +99,8 @@ For ``user`` role:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "create_select_permission",
@@ -163,7 +165,8 @@ For ``user`` role:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "create_update_permission",
@@ -216,7 +219,8 @@ Using the REST query
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "create_insert_permission",
@@ -278,7 +282,8 @@ For ``user`` role:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "create_update_permission",

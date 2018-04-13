@@ -270,7 +270,8 @@ This query clears the entire metadata of the data microservice. This can be used
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type": "clean_metadata",
@@ -294,7 +295,8 @@ This query exports the entire metadata of the data microservice.
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type": "export_metadata",
@@ -319,7 +321,8 @@ This query lets you set the metadata of the ``data`` microservice. Note that the
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type": "set_metadata",

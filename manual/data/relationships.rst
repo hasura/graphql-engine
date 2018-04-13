@@ -36,7 +36,8 @@ To obtain the **author**'s name from the article table, we issue,
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "select",
@@ -59,7 +60,8 @@ The same syntax can be used to obtain the titles of all articles across all **au
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "select",
@@ -81,7 +83,8 @@ You can use relationships inside ``where`` clause. For example, if we wish to on
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "select",
@@ -103,7 +106,8 @@ Let's fetch authors who have never published anything.
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "select",
@@ -124,7 +128,8 @@ As you probably guessed, relationships can be nested. Let's get all published ar
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "select",
@@ -157,7 +162,8 @@ We can also use ``where``, ``limit``, ``offset`` inside array relationships. Let
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "select",

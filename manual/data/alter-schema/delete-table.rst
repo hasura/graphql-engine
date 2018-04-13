@@ -15,7 +15,8 @@ You can remove a table by heading to ``Data > Schema > [table-name] > Modify`` s
 .. code-block:: http
 
       POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
-      Authorization: Bearer <auth-token>
+      Authorization: Bearer <auth-token> # optional if cookie is set
+      X-Hasura-Role: <role>  # optional. Required if request needs particular user role
       Content-Type: application/json
 
       {	

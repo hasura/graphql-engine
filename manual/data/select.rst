@@ -14,7 +14,8 @@ The full syntax of a ``select`` query can be found :ref:`here <data_select>`.
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "select",
@@ -45,7 +46,8 @@ Boolean operators like ``$and``, ``$or``, ``$not`` can be used in a ``where`` cl
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "select",
@@ -80,7 +82,8 @@ Example,
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "select",
@@ -104,7 +107,8 @@ The full syntax of a ``count`` query can be found :ref:`here <data_count>`.
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "count",

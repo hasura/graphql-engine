@@ -30,7 +30,8 @@ To fetch an ``author`` with ``name = "Clara"`` and all the ``articles`` authored
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "select",
@@ -78,7 +79,8 @@ To fetch the list of all ``articles`` along with the name of each of their ``aut
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "select",
@@ -126,7 +128,8 @@ To fetch the list of all ``students`` along with the ``courses`` they are enroll
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "select",

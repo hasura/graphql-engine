@@ -57,7 +57,8 @@ Let's insert a couple of authors. The full definition of `insert` request can be
 
          POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: Bearer <auth-token>
+         Authorization: Bearer <auth-token> # optional if cookie is set
+         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
          {
              "type":"insert",
@@ -101,7 +102,8 @@ Let's look at a simple `select` query on the article table. The full definition 
 
          POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: Bearer <auth-token>
+         Authorization: Bearer <auth-token> # optional if cookie is set
+         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
          {
              "type" : "select",
@@ -139,7 +141,8 @@ In the above query, we can have a ``where`` clause to apply filters on the data.
 
          POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: Bearer <auth-token>
+         Authorization: Bearer <auth-token> # optional if cookie is set
+         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
          {
              "type" : "select",
@@ -191,7 +194,8 @@ Example,
 
          POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: Bearer <auth-token>
+         Authorization: Bearer <auth-token> # optional if cookie is set
+         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
          {
              "type" : "select",

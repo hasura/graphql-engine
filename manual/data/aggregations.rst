@@ -20,7 +20,8 @@ Let us define a view in `SQL <https://www.postgresql.org/docs/current/static/sql
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
      "type" : "run_sql",
@@ -35,7 +36,8 @@ Let us then add this view, using the ``add_existing_table_or_view`` query type:
 
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
      "type" : "add_existing_table_or_view",
@@ -61,7 +63,8 @@ All the relationships that we've defined till now use foreign key constraints. H
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type": "create_object_relationship",
@@ -85,7 +88,8 @@ Let's fetch articles ordered by the number of likes.
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "type" : "select",

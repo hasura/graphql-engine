@@ -15,7 +15,8 @@ The data microservice exposes the GraphQL interface at ``/v1alpha1/graphql``. So
 
    POST data.<project-name>.hasura-app.io/v1alpha1/graphql HTTP/1.1
    Content-Type: application/json
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
    {
        "operationName" : "some-operation-name",
@@ -32,7 +33,8 @@ The schema is exposed separately at this endpoint (as introspection is not yet s
 .. code-block:: http
 
    GET data.<project-name>.hasura-app.io/v1alpha1/graphql/schema HTTP/1.1
-   Authorization: Bearer <auth-token>
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
 
 Queries and mutations
 ---------------------
