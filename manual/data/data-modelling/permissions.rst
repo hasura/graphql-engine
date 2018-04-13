@@ -10,7 +10,7 @@ What are the typical roles other than ``admin``?
 
 We need to define permissions on all the tables that we have created so far (where applicable) for ``user`` and ``anonymous`` roles. We can use the data API to create permissions.
 
-The hasura API gateway forwards ``X-Hasura-*`` headers with each request to the data microservice. So, when a data API call is made with an ``auth_token`` representing some user, the data microservice knows the user's roles and a variable called ``X_HASURA_USER_ID`` is updated with the ``hasura_id`` of the user making the call. This variable can now be used to describe the access permissions for rows in tables.
+The hasura API gateway forwards ``X-Hasura-*`` headers with each request to the data microservice. So, when a data API call is made with an ``auth_token`` representing some user, the data microservice knows the user's roles and a variable called ``X-HASURA-USER-ID`` is updated with the ``hasura_id`` of the user making the call. This variable can now be used to describe the access permissions for rows in tables.
 
 Select permissions
 ------------------
@@ -91,7 +91,7 @@ The response would be as follows:
        "message" : "success"
    }
 
-We've specified ``*`` for ``columns`` as a short hand notation for all columns. ``filter`` is used to specify the rows that can be read. You may have noticed that the syntax is similar to that of ``where`` in ``select`` query. In fact, they are exactly the same. The only difference is that, in ``filter`` you can use a special placeholder variable ``REQ_USER_ID`` for the ``id`` of the user who makes the query. We'll see this in action when defining the select permission for ``user`` role on ``article`` table.
+We've specified ``*`` for ``columns`` as a short hand notation for all columns. ``filter`` is used to specify the rows that can be read. You may have noticed that the syntax is similar to that of ``where`` in ``select`` query. In fact, they are exactly the same. The only difference is that, in ``filter`` you can use a special placeholder variable ``X-HASURA-USER-ID`` for the ``id`` of the user who makes the query. We'll see this in action when defining the select permission for ``user`` role on ``article`` table.
 
 For ``user`` role:
 
@@ -112,7 +112,7 @@ For ``user`` role:
               "filter" : {
                 "$or" : [
                     { "is_published" : true },
-                    { "author_id" : "REQ_USER_ID" }
+                    { "author_id" : "X-HASURA-USER-ID" }
                 ]
              }
            }
@@ -176,7 +176,7 @@ For ``user`` role:
            "permission": {
              "columns" : ["title", "content", "is_published"],
              "filter" : {
-                 "author_id" : "REQ_USER_ID"
+                 "author_id" : "X-HASURA-USER-ID"
              }
            }
        }
@@ -229,7 +229,7 @@ Using the REST query
            "role" : "user",
            "permission": {
              "check" : {
-                 "author_id" : "REQ_USER_ID"
+                 "author_id" : "X-HASURA-USER-ID"
              }
            }
        }
@@ -293,7 +293,7 @@ For ``user`` role:
            "permission": {
               "columns": ["title", "content"],
               "filter" : {
-                 "author_id" : "REQ_USER_ID"
+                 "author_id" : "X-HASURA-USER-ID"
              }
            }
        }

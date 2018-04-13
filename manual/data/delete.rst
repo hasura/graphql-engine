@@ -5,19 +5,36 @@ The request to delete data takes a ``where`` clause indicating what to delete. T
 
 The full syntax of a ``delete`` query can be found :ref:`here <data_delete>`.
 
-.. code-block:: http
+.. rst-class:: api_tabs
+.. tabs::
 
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
+   .. tab:: GraphQL
 
-   {
-       "type" : "delete",
-       "args" : {
-           "table" : "article",
-           "where": {
-              "rating": { "$lte" : 1 }
+      .. code-block:: none
+
+         mutation delete_article {
+           delete_article (where: {rating: {_lte: 1}}) {
+               affected_rows
            }
-       }
-   }
+         }
+
+   .. tab:: JSON API
+
+      .. code-block:: http
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         Authorization: Bearer <auth-token> # optional if cookie is set
+         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+
+         {
+             "type" : "delete",
+             "args" : {
+                 "table" : "article",
+                 "where": {
+                    "rating": { "$lte" : 1 }
+                 }
+             }
+         }
 
 

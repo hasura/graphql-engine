@@ -43,7 +43,7 @@ Let's insert a couple of authors. The full definition of `insert` request can be
       .. code-block:: none
 
          mutation insert_author {
-           insert_category (objects: [{name: "Warren"},{name: "Greg"}]) {
+           insert_author (objects: [{name: "Warren"},{name: "Greg"}]) {
              returning {
                id
              }
