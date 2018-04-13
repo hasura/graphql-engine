@@ -45,8 +45,8 @@ Pre-requisites
   URLs". This is where you will put your application's endpoint/URL which
   will receive the authorization code.
 
-* Under "Default Application Permissions", check the "r_emailaddress", so that
-  your application can read the email address of the user. **This is
+* Under "Default Application Permissions", check the "r_basicprofile" and "r_emailaddress" checkboxes, so that
+  your application can read the basic profile and the email address of the user. **This is
   important**. If you fail to do this, Hasura Auth won't be able to fetch your
   user's email address.
 

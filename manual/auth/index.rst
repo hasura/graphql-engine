@@ -34,7 +34,7 @@ See:
 .. toctree::
    :maxdepth: 1
 
-   authentication/index
+   Authentication Methods <authentication/index>
    authorization/index
    sessions
    User actions <user-actions/index>
