@@ -1,16 +1,11 @@
-.. .. meta::
-   :description: Part 2 of a set of learning exercises meant for exploring Hasura in detail. This part explains the directory and file structure of a Hasura project.
-   :keywords: hasura, getting started, step 2
-
-================================
-Part II: Create a Hasura project
-================================
+Part I: Create a Hasura project
+===============================
 
 A Hasura project is a folder (representing a code repo) that contains all the configuration files, the database migrations and the source code and configuration for your custom microservices. This project folder should be a git repo, so that you can ``git push hasura master`` to deploy everything in the repo to the cluster.
 
 
 Create a 'hello-world' project
------------------------
+------------------------------
 
 Run the following command:
 
@@ -25,12 +20,13 @@ Run the following command:
 
 
 This will 'clone' the `hasura/hello-world <https://hasura.io/hub/projects/hasura/hello-world>`_ project from `hasura.io/hub <https://hasura.io/hub>`_.
-Note, you can clone any project from the hub and use that as a starting point for your new project.
 
 .. admonition:: Note
 
-   ``hasura/hello-world`` is another starter project that contains a few database
-   migrations, some sample data and even a sample microservice to get started quickly.
+   ``hasura/hello-world`` is a starter project that contains a few database
+   migrations to add a sample schema and and some sample data to start experimenting quickly.
+
+   You can clone any project from the hub and use that as a starting point for your new project.
 
 Understand the project structure
 --------------------------------
@@ -45,7 +41,7 @@ Run the following command:
    $ cd hello-world
 
 
-A representative project is shown below:
+Every Hasura project follows the below structure:
 
 .. code-block:: bash
 
@@ -80,7 +76,7 @@ A representative project is shown below:
 
 .. note::
 
-   In our hello-world project, the ``migrations`` and ``microservices`` directories will by empty right now
+   In our hello-world project, the ``microservices`` directories will by empty right now
 
 hasura.yaml
 ^^^^^^^^^^^

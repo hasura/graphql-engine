@@ -1,9 +1,4 @@
-.. .. meta::
-   :description: Part 7 of a set of learning exercises meant for exploring Hasura in detail. This part introduces the Auth UI Kit.
-   :keywords: hasura, getting started, step 7, tutorial
-
-===============================
-Part VII: Using the Auth UI Kit
+Part XII: Using the Auth UI Kit
 ===============================
 
 .. figure:: ../../img/uikit-dark.png
@@ -15,7 +10,9 @@ Part VII: Using the Auth UI Kit
 
   You can skip this section if you want to write your own frontend for auth.
 
-In the previous section, we learned and tried some basic auth APIs. However, if you do not want to write auth code, you can use a ready to use frontend interface for your web apps that comes pre-loaded with the Hasura Auth Microservice.
+In the previous section, we deployed our own custom app. If you want to add authentication to your app and do not want
+to write auth code, you can use the Auth UI kit which is a ready to use frontend interface that comes pre-loaded with
+the Hasura Auth Microservice.
 
 The UI kit runs on the url: ``auth.<cluster-name>.hasura-app.io/ui``.
 
@@ -88,9 +85,3 @@ Enable auth with Google
       $ git push hasura master
 
 #. Navigate to ``auth.<cluster-name>.hasura-app.io/ui`` and you will see the ``auth with Google`` enabled.
-
-
-Next: Create your data models
------------------------------
-
-Next, head to :doc:`data-modelling`.

@@ -1,16 +1,11 @@
-.. .. meta::
-   :description: Part 3 of a set of learning exercises meant for exploring Hasura in detail. This part takes you over data modeling & introduces the data microservice's API.
-   :keywords: hasura, getting started, step 3, data modeling
+Part II: Create a Hasura cluster
+================================
 
-=================================
-Part III: Create a Hasura cluster
-=================================
+Now that we have a project, we need to have a Hasura cluster that will become the target of where this project is deployed.
+As you can guess, each project can have multiple Hasura clusters as targets. This can be used to create different environments
+like development, staging, production, etc.
 
-Now that we have a project, we need to have a Hasura cluster that becomes the target of where these projects are deployed.
-As you can guess, each project can have multiple Hasura clusters as targets which would typically represent development, staging and production environments.
-
-For now, however, let's get started with a free Hasura cluster.
-
+Let's get started with a free Hasura cluster.
 
 Step 1: Create a free Hasura cluster
 ------------------------------------

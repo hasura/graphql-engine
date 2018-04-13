@@ -1,10 +1,5 @@
-.. .. meta::
-   :description: Part 5 of a set of learning exercises meant for exploring Hasura in detail. This part shows you how to create a custom microservice (Docker & git push)
-   :keywords: hasura, getting started, step 7, custom microservice, Docker, git push
-
-========================================
-Part XIII: Custom code and microservices
-========================================
+Part XI: Custom code and microservices
+======================================
 
 Not all requirements for your app will be met by the Hasura APIs.
 Custom APIs and microservices like API integrations or UI microservices will always
@@ -125,3 +120,8 @@ the familiar ``adminer`` UI.
    will not be served, and you'll have to access your microservice on ``http`` instead. As soon as
    the certificate is ready, ``http://adminer.test42.hasura-app.io`` will automatically
    start redirecting to the ``https`` version.
+
+Next: Using the Auth UI Kit
+---------------------------
+
+Next, head to :doc:`ui-kit`.

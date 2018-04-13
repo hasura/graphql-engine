@@ -1,10 +1,5 @@
-.. .. meta::
-   :description: Part 4 of a set of learning exercises meant for exploring Hasura in detail. This part shows you how to consume the data microservice's instant JSON API.
-   :keywords: hasura, getting started, step 4, data API
-
-===================================
-Part IV: Explore the Hasura cluster
-===================================
+Part III: Explore the Hasura cluster
+====================================
 
 A Hasura cluster is essentially a kubernetes cluster that has Hasura APIs,
 a controller to manage configuration changes across the cluster, and an SSH/git-push microservice

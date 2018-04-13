@@ -1,9 +1,4 @@
-.. .. meta::
-   :description: Part 6 of a set of learning exercises meant for exploring Hasura in detail. This part introduces access control for data when using the data API.
-   :keywords: hasura, getting started, step 6, access control, role based access control
-
-====================================================
-Part XI: Permissions & access control on data models
+Part IX: Permissions & access control on data models
 ====================================================
 
 We've mentioned that by default, the ``data`` APIs can only be accessed by users with the ``admin`` role. However, we should never include the admin token in any client applications. So, we need to allow access to the ``data`` APIs for roles other than ``admin``. This is handled by the permission layer of the ``data`` microservice, which lets you define row level and column level access control policies for various roles.
@@ -16,10 +11,10 @@ In our blog app, what roles do we have other than ``admin``?
 We need to define permissions on all the tables that we have created so far (where applicable) for ``user`` and ``anonymous`` roles. As you've probably guessed, we can use both the console UI and the data API to create permissions.
 
 Defining permissions
-====================
+--------------------
 
 Select
-------
+~~~~~~
 
 Let us consider the ``article`` table. The following are the permissions we'd like to define for select queries on this table:
 
@@ -69,7 +64,7 @@ For **Select**, the HTTP query equivalent to the above UI-based flow can be foun
 As discussed in Part VI, we know that the gateway forwards ``X-Hasura-*`` headers with each request. So, when a ``select`` query on ``article`` is made with a token representing some user with the role ``user``, the ``X-HASURA-USER-ID`` is substituted with the ``X-Hasura-User-Id`` value and then the ``filter`` condition is applied.
 
 Update
-------
+~~~~~~
 
 ``anonymous`` role cannot update the data in ``article``, in fact, any table. You don't need to configure anything for this as only ``admin`` role has permissions by default while the other permissions have to be configured.
 
@@ -91,7 +86,7 @@ Update
 To set the permissions, you can use the api-console UI based workflow described above or the REST call:
 
 Delete
-------
+~~~~~~
 
 ``anonymous`` role cannot delete the data in ``article`` table.
 
@@ -112,7 +107,7 @@ With delete, you only get to specify the rows that are allowed to be deleted wit
 .. image:: ../../img/complete-tutorial/tutorial-delete-permission.png
 
 Insert
-------
+~~~~~~
 
 ``anonymous`` cannot insert into ``article`` table. If you are a user, you should only be able to create an article with you as the author, i.e, you should not be allowed to set arbitrary ``author_id`` when inserting into ``article`` table. This is an assertion that must be verified before the data is persisted.
 
@@ -121,7 +116,7 @@ Insert
 To set the permissions, you can use the api-console UI based workflow described above or the REST API way.
 
 Permissions for all tables
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We've looked at the permissions on ``article`` table. Let's wrap this section by defining the permissions on all tables.
 
@@ -223,6 +218,6 @@ To define permissions on all tables you can follow the method above for each tab
     }
 
 Next: Add aggregations and views
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Next, head to :doc:`aggregations-views`.

@@ -1,10 +1,5 @@
-.. .. meta::
-   :description: Part 7 of a set of learning exercises meant for exploring Hasura in detail. This part takes you over data modeling & introduces the data microservice's API.
-   :keywords: hasura, getting started, step 3, data modeling
-
-==============================
-Part IX: Explore the data APIs
-==============================
+Part VII: Explore the data APIs
+===============================
 
 Now that you've created the data models, you can use Hasura's GraphQL / HTTP JSON APIs to query your data directly.
 

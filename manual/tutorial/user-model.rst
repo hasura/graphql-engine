@@ -1,10 +1,5 @@
-.. .. meta::
-   :description: Part 2 of a set of learning exercises meant for exploring Hasura in detail. This part introduces the Auth microservice's User & Session management model.
-   :keywords: hasura, getting started, step 2
-
-==================================
-Part VI: Users, roles and sessions
-==================================
+Part V: Users, roles and sessions
+=================================
 
 ..
    `User management on Hasura <https://www.youtube.com/watch?v=Qbon0cgbneo>`_
@@ -157,7 +152,7 @@ Other Login Providers
 You can also perform auth with ``Mobile``, ``Email``, ``Google`` and several more providers. Read more :ref:`here <providers>`.
 
 
-Next: Using the Auth UI Kit
----------------------------
+Next: Create your data models
+-----------------------------
 
-Next, head to :doc:`ui-kit`.
+Next, head to :doc:`data-modelling`.

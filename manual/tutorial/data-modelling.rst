@@ -1,10 +1,5 @@
-.. .. meta::
-   :description: Part 3 of a set of learning exercises meant for exploring Hasura in detail. This part takes you over data modeling & introduces the data microservice's API.
-   :keywords: hasura, getting started, step 3, data modeling
-
-==========================================
-Part VIII: Data modelling for the blog app
-==========================================
+Part VI: Data modelling for the blog app
+========================================
 
 Our basic data requirements are as follows:
 

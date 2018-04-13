@@ -1,10 +1,5 @@
-.. .. meta::
-   :description: Part 5 of a set of learning exercises meant for exploring Hasura in detail. This part covers using the data API along with SQL views & relationships.
-   :keywords: hasura, getting started, step 5, SQL views and relationships
-
-===============================
-Part V: Build a blog app engine
-===============================
+Part IV: Build a blog app engine
+================================
 
 Let's build a simple clone of the popular publishing platform `medium <https://medium.com/>`_ and use that to learn about the features provided by the Hasura platform. Our clone blog app will have the following features:
 

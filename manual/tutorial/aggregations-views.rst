@@ -1,10 +1,5 @@
-.. .. meta::
-   :description: Part 5 of a set of learning exercises meant for exploring Hasura in detail. This part covers using the data API along with SQL views & relationships.
-   :keywords: hasura, getting started, step 5, SQL views and relationships
-
-======================================================
-Part XII: Aggregations, views and custom relationships
-======================================================
+Part X: Aggregations, views and custom relationships
+====================================================
 
 The JSON based query language in ``select`` query is designed to be simple yet powerful. There will be queries that you cannot express with the ``select`` query. For example, getting the number of likes for each article. Aggregations (like counting the number of likes) are not supported in the ``select`` query syntax. This is a conscious decision we've made to keep the query language small.
 
@@ -13,7 +8,7 @@ To express complex queries like aggregations, window functions, custom joins etc
 Let's see how we can get the likes of an article.
 
 Data APIs on Postgres views
-===========================
+---------------------------
 
 ..
    `Aggregations and Views <https://www.youtube.com/watch?v=d6VHJ7FiJTg>`_
@@ -79,7 +74,7 @@ As soon as the view is tracked by the Data API, you can use ``select`` as if ``a
    insert/update/delete items from the view.
 
 Relationships to/from views
-===========================
+---------------------------
 
 We've seen how we can get author's average rating using the ``data`` APIs. However, additional information of each author can be attached to the author_average_rating view using an object relationship say, ``author``.
 
@@ -121,6 +116,6 @@ Let's fetch author details with their average rating.
 ``Note:`` The above query will work only after adding permissions to the view ``author_average_rating``.
 
 Next: Custom code and microservices
------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Next, head to :doc:`custom-api`.
