@@ -127,7 +127,7 @@ To define permissions on all tables you can follow the method above for each tab
 
   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
   Content-Type: application/json
-  Authorization: <auth-token>
+  Authorization: Bearer <auth-token>
 
     {
 	"type": "bulk",
