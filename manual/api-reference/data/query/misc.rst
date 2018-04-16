@@ -26,7 +26,7 @@ An example:
        }
    }
 
-While ``run_sql`` lets you run any SQL, it tries to ensure that the data microservice's state (relationships, permissions etc.) is consistent. i.e, you cannot drop a column on which any metadata is dependent on (say a permission or a relationship). The effects however can be cascaded.
+While ``run_sql`` lets you run any SQL, it tries to ensure that the data microservice's state (relationships, permissions etc.) is consistent. i.e, you cannot drop a column on which any metadata is dependent on (say a permission or a relationship). The effects, however, can be cascaded.
 
 For example, if we were to drop 'bio' column from the article table (let's say the column is used in some permission), you would see an error.
 
