@@ -14,5 +14,4 @@ To set a cluster as the default cluster for a project (so that you don't have to
 
 ::
 
-   INFO Setting default cluster...                    cluster-alias=hasura
-   INFO Cluster set as default
+   ✓ Cluster set as default cluster-alias=hasura

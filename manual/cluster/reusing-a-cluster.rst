@@ -21,6 +21,17 @@ Sometimes, you might want to start using a cluster for an entirely different pro
 
       $ hasura migration db-reset
 
+   ::
+
+      • This will erase all data from the database including schema. Are you sure? (yes/no)
+      yes
+      ✓ The database on cluster has been reset cluster=hasura [colliery88]
+        # You can now remove your migrations completely by deleting the local migration files:
+        $ rm migrations/*.{sql,yaml}
+
+        # OR apply your migrations again:
+        $ hasura migration apply
+
 #. Finally, apply the configurations, migrations and microservices of the new project to cluster.
 
    .. code-block:: bash

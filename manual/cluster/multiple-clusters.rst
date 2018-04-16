@@ -77,21 +77,13 @@ Let's add the newly created two clusters to our projects.
   # in project directory
   $ hasura cluster add alarming52 -c staging
 
-  INFO Adding cluster...                             cluster-alias=staging cluster-name=alarming52
-  INFO Kubernetes context has been added to this system  context=alarming52
-  INFO Cluster added to project
-  INFO Setting up git remotes and pre-push hook...
-  INFO remote "staging" added: [ssh://hasura@alarming52.hasura-app.io:22/~/git/alarming52]
-  INFO pre-push hook added
+  ✓ SSH key (/home/wawhal/.ssh/id_rsa.pub) added to the cluster
+  ✓ Cluster added to project
 
   $ hasura cluster add ambitious93 -c production
-  INFO Adding cluster...                           cluster-alias=production cluster-name=ambitious93
-  INFO Kubernetes context has been added to this system  context=ambitious93
-  INFO Cluster added to project
-  INFO Setting up git remotes and pre-push hook...
-  INFO remote "staging" added: [ssh://hasura@ambitious93.hasura-app.io:22/~/git/ambitious93]
-  INFO pre-push hook added
 
+  ✓ SSH key (/home/wawhal/.ssh/id_rsa.pub) added to the cluster
+  ✓ Cluster added to project
 
 Now we have two clusters setup for the same project.
 
@@ -103,10 +95,9 @@ configuration or custom microservices, we just have to git-push to the correct
 cluster to apply all our changes.
 
 .. code-block:: bash
-  
+
   # Make changes to the project directory and deploy to staging
   $ git push staging master
 
   # Finally ready to deploy to production
   $ git push production master
-

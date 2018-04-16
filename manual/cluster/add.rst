@@ -13,12 +13,10 @@ To add a cluster to a project we use:
   # to add cluster named 'alarming52' as alias 'hasura' to project
   $ hasura cluster add alarming52 -c hasura
 
-  INFO Adding cluster...                             cluster-alias=hasura cluster-name=alarming52
-  INFO Kubernetes context has been added to this system  context=alarming52
-  INFO Cluster added to project
-  INFO Setting up git remotes and pre-push hook...
-  INFO remote "hasura" added: [ssh://hasura@alarming52.hasura-app.io:22/~/git/alarming52]
-  INFO pre-push hook added
+::
+  
+  ✓ SSH key (/home/wawhal/.ssh/id_rsa.pub) added to the cluster
+  ✓ Cluster added to project
 
 .. note::
 
