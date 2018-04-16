@@ -3,12 +3,15 @@ Part VII: Explore the data APIs
 
 Now that you've created the data models, you can use Hasura's GraphQL / HTTP JSON APIs to query your data directly.
 
-The ``data`` microservice
--------------------------
+The "data" microservice
+-----------------------
 
-Every Hasura project comes with a data microservice. The ``data`` microservice provides an Graph API and an HTTP API over PostgreSQL, an extremely versatile open source relational database. We create tables in Postgres and access the data using the APIs provided by the ``data`` microservice.
+Every Hasura project comes with a data microservice. The ``data`` microservice provides a GraphQL API and an HTTP JSON API
+over PostgreSQL, an extremely versatile open source relational database. We create tables in Postgres and access the
+data using the APIs provided by the ``data`` microservice.
 
-Any user with the ``admin`` role has full-access to the data microservice. All requests to the ``data`` microservice are ``POST`` requests to ``/v1alpha1/graphql`` (for GraphQL queries) and ``/v1/query`` (for JSON APIs) endpoints. 
+Any user with the ``admin`` role has full-access to the data microservice. All requests to the ``data`` microservice
+are ``POST`` requests to ``/v1alpha1/graphql`` and ``/v1/query`` endpoints for the GraphQL and JSON APIs respectively.
 
 Explore using the API explorer & the query builder
 --------------------------------------------------
@@ -20,7 +23,8 @@ Run:
    # Run this command inside your project directory
    $ hasura api-console
 
-This will open up the ``api-console`` and show you the ``API explorer`` page which you can use to understand the APIs.
+This will open up the ``API console`` and show you the ``API explorer`` page which you can use to understand the APIs
+provided by the Data microservice.
 
 .. image:: ../../img/complete-tutorial/tutorial-api-console.png
 
@@ -28,7 +32,8 @@ This will open up the ``api-console`` and show you the ``API explorer`` page whi
 
    You can try out all of the API examples below in the API explorer.
    
-   Head to ``API explorer > Data > GraphQL`` for GraphQL APIs and Head to ``API explorer > Data > JSON Query Builder`` for JSON APIs
+   Head to ``API explorer > Data > GraphQL`` for GraphQL APIs or head to ``API explorer > Data > JSON Query Builder``
+   for JSON APIs
 
 Inserting Data
 --------------
@@ -53,12 +58,12 @@ Let's insert a couple of authors. The full definition of `insert` request can be
    .. tab:: JSON API
 
       .. code-block:: http
-         :emphasize-lines: 13
+         :emphasize-lines: 14
 
          POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
          Content-Type: application/json
          Authorization: Bearer <auth-token> # optional if cookie is set
-         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+         X-Hasura-Role: admin
 
          {
              "type":"insert",
@@ -73,14 +78,15 @@ Let's insert a couple of authors. The full definition of `insert` request can be
          }
 
 
-Note the ``returning`` key. We would like to get the auto incremented id for each inserted row.
+Note the ``returning`` key. We would like to get the auto incremented ``id`` for each inserted row.
 
 Querying Data
 -------------
 
 The query language lets you make simple to complex queries.
 
-Let's look at a simple `select` query on the article table. The full definition of a `select` query can be found :ref:`here <data_select>`
+Let's look at a simple `select` query on the article table. The full definition of a `select` query can be
+found :ref:`here <data_select>`
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -103,7 +109,7 @@ Let's look at a simple `select` query on the article table. The full definition 
          POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
          Content-Type: application/json
          Authorization: Bearer <auth-token> # optional if cookie is set
-         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+         X-Hasura-Role: admin
 
          {
              "type" : "select",
@@ -117,7 +123,8 @@ Let's look at a simple `select` query on the article table. The full definition 
 This query returns ``id`` and ``title`` of rows from ``article`` table.
 
 
-In the above query, we can have a ``where`` clause to apply filters on the data. Boolean operators like ``$and``, ``$or``, ``$not`` can be used in a ``where`` clause. See :ref:`here <BoolExp>` for a full list of supported Boolean operators.
+In the above query, we can have a ``where`` clause to apply filters on the data. Boolean operators like ``$and``, ``$or``,
+``$not`` can be used in a ``where`` clause. See :ref:`here <BoolExp>` for a full list of supported Boolean operators.
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -142,7 +149,7 @@ In the above query, we can have a ``where`` clause to apply filters on the data.
          POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
          Content-Type: application/json
          Authorization: Bearer <auth-token> # optional if cookie is set
-         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+         X-Hasura-Role: admin
 
          {
              "type" : "select",
@@ -170,7 +177,8 @@ In the above query, we can have a ``where`` clause to apply filters on the data.
 
            { "author_id": { "$eq": 6 } }
 
-``order_by`` is used to sort the results by a column. A prefix of ``+`` or ``-`` indicates ascending or descending order respectively. ``limit`` and ``offset`` are used to slice the result set.
+``order_by`` is used to sort the results by a column. A prefix of ``+`` or ``-`` indicates ascending or descending order
+respectively. ``limit`` and ``offset`` are used to slice the result set.
 
 Example,
 
@@ -195,7 +203,7 @@ Example,
          POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
          Content-Type: application/json
          Authorization: Bearer <auth-token> # optional if cookie is set
-         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+         X-Hasura-Role: admin
 
          {
              "type" : "select",
@@ -211,7 +219,8 @@ Example,
 Updating Data
 -------------
 
-The request to update data consists of two parts - the new values and a ``where`` indicating what to update. The syntax of where clause is same as in the `select` query. For the full syntax of update request, see :ref:`here <data_update>`.
+The request to update data consists of two parts - the new values and a ``where`` indicating what to update. The syntax
+of where clause is same as in the `select` query. For the full syntax of update request, see :ref:`here <data_update>`.
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -221,7 +230,7 @@ The request to update data consists of two parts - the new values and a ``where`
       .. code-block:: none
 
         mutation update_article {
-          update_article(where: {id: {_eq: 4}} _set: {title: "Mysterious affair at Styles"}) {
+          update_article(where: {id: {_eq: 4}} _set: {title: "Mystery affair at Styles"}) {
             affected_rows
           }
         }
@@ -237,7 +246,7 @@ The request to update data consists of two parts - the new values and a ``where`
              "type" : "update",
              "args" : {
                  "table" : "article",
-                 "$set": {"title": "Mysterious affair at Styles"},
+                 "$set": {"title": "Mystery affair at Styles"},
                  "where": {
                      "id": 4
                  }
@@ -248,7 +257,8 @@ The request to update data consists of two parts - the new values and a ``where`
 Delete Data
 -----------
 
-The request to delete data takes a ``where`` clause indicating what to delete. The syntax of where clause is same as in the `select` query. For the full syntax of delete request, see :ref:`here <data_delete>`.
+The request to delete data takes a ``where`` clause indicating what to delete. The syntax of where clause is same as in
+the `select` query. For the full syntax of delete request, see :ref:`here <data_delete>`.
 
 .. rst-class:: api_tabs
 .. tabs::

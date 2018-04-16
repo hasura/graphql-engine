@@ -1,9 +1,8 @@
 Part III: Explore the Hasura cluster
 ====================================
 
-A Hasura cluster is essentially a kubernetes cluster that has Hasura APIs,
-a controller to manage configuration changes across the cluster, and an SSH/git-push microservice
-to help you `git push` to deploy easily.
+A Hasura cluster is essentially a kubernetes cluster that has your custom microservices, Hasura APIs, an SSH/git-push
+microservice to help you `git push` to deploy, and other Hasura platform components running on it.
 
 
 Get cluster information
@@ -38,11 +37,12 @@ Microservices
 
 Microservices are basically the individual ‘apps’ that run on the cluster.
 
-Hasura microservices are the default Hasura specific microservices that run on your cluster. These include the backend APIs provided by Hasura and other components of the Hasura platform.
+Hasura microservices are the default Hasura specific microservices that run on your cluster. These include the backend
+APIs provided by Hasura and other components of the Hasura platform.
 
 You can also add your own custom microservices to your project.
 
-To list the microservices running in your Hasura cluster, run the following command from the project directory.
+To list the microservices running on your Hasura cluster, run the following command from the project directory.
 
 .. code-block:: bash
 
@@ -66,7 +66,8 @@ To list the microservices running in your Hasura cluster, run the following comm
 
 
 
-Currently, there are no custom user microservices running on the cluster. The Hasura microservices running on the cluster are as follows:
+Currently, there are no custom user microservices running on the cluster. The Hasura microservices running on the cluster
+are as follows:
 
 auth
 ^^^^
@@ -74,15 +75,16 @@ The auth microservice handles user authentication for your Hasura cluster.
 
 data
 ^^^^
-The data microservice on Hasura exposes an HTTP/JSON API over a PostgreSQL database.
+The data microservice on Hasura exposes an HTTP/JSON API and a GraphQL API over a PostgreSQL database.
 
 filestore
 ^^^^^^^^^
-The filestore microservice lets users upload and store files on the Hasura project and also download when required.
+The filestore microservice lets users upload and store files on the Hasura cluster and also download when required.
 
 gateway
 ^^^^^^^
-This microservice exposes your project to the outside world. It authenticates and redirects external requests to the appropriate microservice inside the cluster.
+This microservice exposes your project to the outside world. It authenticates and redirects external requests to the
+appropriate microservice inside the cluster.
 
 le-agent
 ^^^^^^^^
@@ -102,14 +104,14 @@ This microservice hosts the PostgreSQL database.
 
 session-redis
 ^^^^^^^^^^^^^
-This is a Redis instance used by the auth microservice.
+This is a Redis instance used by the auth microservice to handle sessions.
 
 sshd
 ^^^^
 This microservice handles SSH access to the cluster.
 
 
-Next: Start building a blog-engine app!
----------------------------------------
+Next: Start building a back-end for a Blog app!
+-----------------------------------------------
 
 Next, head to :doc:`build-blog-app`

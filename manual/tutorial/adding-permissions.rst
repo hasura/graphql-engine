@@ -1,18 +1,23 @@
 Part IX: Permissions & access control on data models
 ====================================================
 
-By default, the ``data`` APIs can only be accessed by users with the ``admin`` role. However,
-most users will not have the admin role assigned. So, we need to allow access to the ``data`` APIs for roles other than ``admin``. This is handled by the permission layer of the ``data`` microservice, which lets you define row level and column level access control policies for various roles.
+By default, the data APIs can only be accessed by users with the ``admin`` role. However,
+our blog app users will not have the admin role assigned. So, we need to allow access to the data APIs for
+roles other than ``admin``. This is handled by the permission layer of the ``data`` microservice,
+which lets you define row level and column level access control policies for all the roles for different query types.
 
 In our blog app, what roles do we have other than ``admin``?
 
 #. ``user`` for logged in users
 #. ``anonymous`` for users who haven't logged in.
 
-We need to define permissions on all the tables that we have created so far (where applicable) for ``user`` and ``anonymous`` roles. As you've probably guessed, we can use both the console UI and the data API to create permissions.
+We need to define permissions on all the tables that we have created so far (where applicable) for ``user`` and
+``anonymous`` roles.
 
-Defining permissions
---------------------
+Defining permissions for different query types:
+-----------------------------------------------
+
+We can use the ``API console`` UI to add permissions.
 
 Select
 ~~~~~~
@@ -32,11 +37,7 @@ Let us consider the ``article`` table. The following are the permissions we'd li
      - all columns
      - all rows
 
-There are 2 methods to define permissions for a table: via the console UI and via a REST query.
-
-Using the UI
-^^^^^^^^^^^^
-In the api-console, navigate to *Data -> article -> Permissions*.
+In the ``API console``, navigate to *Data -> article -> Permissions*.
 
 This is the permissions section for the ``article`` table, which looks like this:
 
@@ -55,14 +56,6 @@ Add permissions for the *Select* query for the *user* role.
 Click *Save permissions* to apply the permissions.
 
 You can use the same UI to add permissions for other query types.
-
-Using a REST Query
-^^^^^^^^^^^^^^^^^^
-You can also make a REST query to the *data* microservice to accomplish the same task as the above mentioned UI and more.
-
-For **Select**, the HTTP query equivalent to the above UI-based flow can be found here - :ref:`Permissions <data-permissions>`
-
-As discussed in Part VI, we know that the gateway forwards ``X-Hasura-*`` headers with each request. So, when a ``select`` query on ``article`` is made with a token representing some user with the role ``user``, the ``X-HASURA-USER-ID`` is substituted with the ``X-Hasura-User-Id`` value and then the ``filter`` condition is applied.
 
 Update
 ~~~~~~
@@ -84,7 +77,7 @@ Update
 
 .. image:: ../../img/complete-tutorial/tutorial-update-permission.png
 
-To set the permissions, you can use the api-console UI based workflow described above or the REST call:
+Set the permissions similarly to the Select query.
 
 Delete
 ~~~~~~
@@ -101,7 +94,7 @@ Delete
    * - user
      - those written by the user
 
-To set the permissions, you can use the api-console UI based workflow described above or the following REST call:
+Set the permissions similarly to the Select query.
 
 With delete, you only get to specify the rows that are allowed to be deleted with ``filter``.
 
@@ -114,7 +107,7 @@ Insert
 
 .. image:: ../../img/complete-tutorial/tutorial-insert-permission.png
 
-To set the permissions, you can use the api-console UI based workflow described above or the REST API way.
+Set the permissions similarly to the Select query.
 
 Permissions for all tables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

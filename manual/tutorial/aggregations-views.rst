@@ -1,17 +1,15 @@
 Part X: Aggregations, views and custom relationships
 ====================================================
 
-The JSON based query language in ``select`` query is designed to be simple yet powerful. There will be queries that you cannot express with the ``select`` query. For example, getting the number of likes for each article. Aggregations (like counting the number of likes) are not supported in the ``select`` query syntax. This is a conscious decision we've made to keep the query language small.
+The data API ``select`` query is designed to be simple yet powerful. But there are some queries that you cannot express with
+the ``select`` query syntax. For example, getting the number of likes for each article. Aggregations (like counting the number
+of likes) are not supported in the ``select`` query syntax. This is a conscious decision we have made to keep the query
+language small.
 
-To express complex queries like aggregations, window functions, custom joins etc, use SQL, which is designed for this purpose. If you can express your query in SQL, define a view with it, you can use the ``data`` layer APIs on these views.
+To express complex queries like aggregations, window functions, custom joins etc, use SQL, which is designed for this purpose.
+If you can express your query in SQL, you can define a view with it on which you can use the data APIs.
 
-Let's see how we can get the likes of an article.
-
-Data APIs on Postgres views
----------------------------
-
-..
-   `Aggregations and Views <https://www.youtube.com/watch?v=d6VHJ7FiJTg>`_
+For example, let's see how we can get the average rating of all articles written by an author.
 
 Let us define a view in `SQL <https://www.postgresql.org/docs/current/static/sql-createview.html>`_:
 

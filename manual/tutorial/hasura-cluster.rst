@@ -44,8 +44,8 @@ Run the following from inside your project directory:
 The command above, adds the cluster to your project and aliases it to ``hasura`` so that we don't
 have to remember the cluster name.
 
-Now, in all subsequent commands we can refer to this cluster with the name ``hasura``. You could have named this to ``dev``, or
-``staging`` or ``qa`` or anything of your preference.
+Now, in all subsequent commands we can refer to this cluster with the alias ``hasura``. You could have aliased this to ``dev``,
+or ``staging`` or anything else according to your preference.
 
 Step 3: Deploy the project to the cluster
 -----------------------------------------

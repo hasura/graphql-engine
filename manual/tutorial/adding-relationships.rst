@@ -4,8 +4,10 @@ Part VIII: Adding relationships to data models
 Exploiting relationships in your data
 -------------------------------------
 
-If our data API microservice could understand the different relationships in data, then
-we would be able to make more complex and interesting queries to fetch data.
+The Data microservice allows to setup different relationships between data, which allows us to be able to make more
+complex and interesting queries to fetch data.
+
+For example:
 
 .. code-block:: javascript
 
@@ -32,33 +34,34 @@ we would be able to make more complex and interesting queries to fetch data.
 
 Let's look at the different relationships we have in our data models:
 
-* author:
+* ``author``:
 
   * has ``articles`` written by them
-  * has ``comments`` posted by them
-  * has ``liked_articles`` liked by them
 
-* comment:
-
-  * has an ``author`` who is the poster
-  * has an ``article`` on which it was posted
-
-* article:
+* ``article``:
 
   * has an ``author``
   * has ``comments``
+  * has ``likes``
 
-* like:
+* ``comment``:
 
-  * has an ``author`` who has liked
+  * has an ``article`` on which it was posted
+
+* ``like``:
+
   * has an ``article`` that has been liked
 
-These relationships are captured by foreign key constraints where possible. If we were to represent rows of our table in JSON, as objects, then we can express these relationships as nested arrays or objects. Eg: Every ``author`` object can have a key called ``articles`` which is an array of article objects. Similarly, every ``article`` object can have a key called ``author`` which is an author object.
+These relationships can be captured by foreign key constraints. If we were to represent rows of our table in JSON, as
+objects, then we can express these relationships as nested arrays or objects. Eg: Every ``author`` object can have
+a key called ``articles`` which is an array of article objects. Similarly, every ``article`` object can have a key
+called ``author`` which is an author object.
 
-Let's see how these relationships are established.
+Let's see how these relationships are established:
 
 .. list-table::
    :header-rows: 1
+   :widths: 18 18 18 46
 
    * - Table
      - Relationship
@@ -67,81 +70,49 @@ Let's see how these relationships are established.
    * - author
      - articles
      - array
-     - ``article(author_id) -> blog_user(hasura_id)``
-   * - author
-     - comments
-     - array
-     - ``comment(author_id) -> blog_user(hasura_id)``
-   * - author
-     - liked_articles
-     - array
-     - ``article_like(user_id) -> blog_user(hasura_id)``
-
+     - ``article::author_id -> author::id``
    * - article
      - author
      - object
-     - ``article(author_id) -> blog_user(hasura_id)``
+     - ``article::author_id -> author::id``
    * - article
      - comments
      - array
-     - ``comment(article_id) -> article(id)``
+     - ``comment::article_id -> article::id``
    * - article
-     - categories
+     - likes
      - array
-     - ``category(article_id) -> article(id)``
-
-   * - article_like
-     - liked_by
-     - object
-     - ``article_like(user_id) -> blog_user(hasura_id)``
-   * - article_like
-     - article
-     - object
-     - ``article_like(article_id) -> article(id)``
-
-   * - comment
-     - commented_by
-     - object
-     - ``comment(author_id) -> blog_user(hasura_id)``
+     - ``like::article_id -> article::id``
    * - comment
      - article
      - object
-     - ``comment(article_id) -> article(id)``
-
-   * - category
-     - articles
-     - array
-     - ``article_category(article_id) -> article(article_id)``
-
-   * - article_category
+     - ``comment::article_id -> article::id``
+   * - like
      - article
      - object
-     - ``article_category(article_id) -> article(id)``
-   * - article_category
-     - category
-     - object
-     - ``article_category(category_id) -> category(id)``
+     - ``like::article_id -> article::id``
 
 Creating relationships
 ----------------------
 
-You can create relationship metadata for tables via the API console.
+You can create relationships for tables via the ``API console``.
 
-Let's say you wish to add an object relationship for ``article(author_id) -> author(hasura_id)``. Navigate to the *Relationships* tab in the ``article`` table.
+Let's say you wish to add the object relationship, ``author`` for the ``article`` table.
+Click on the ``article`` table and navigate to the *Relationships* tab.
 
-You'll see an entry in *suggested object relationships*:
+You'll see an entry in *suggested object relationships* for ``author_id -> author::id``:
 
 .. image:: ../../img/complete-tutorial/tutorial-suggested-relationships.png
 
-Click on *Add* to add a new object relationship and name the relationship:
+Click on *Add* to add a new object relationship and give name ``author`` to the relationship:
 
-.. image:: ../../img/complete-tutorial/tutorial-add-relationship.png
+.. image:: ../../img/complete-tutorial/tutorial-create-relationship.png
 
 The relationship is created:
 
-.. image:: ../../img/complete-tutorial/tutorial-added-relationship.png
+.. image:: ../../img/complete-tutorial/tutorial-created-relationship.png
 
-You can create relationships for other constraints similarly.
+You can create the other relationships similarly.
 
 Queries using relationships
 ---------------------------
@@ -171,7 +142,7 @@ To obtain the **author**'s name from the article table, we issue,
          POST /v1/query HTTP/1.1
          Content-Type: application/json
          Authorization: Bearer <auth-token> # optional if cookie is set
-         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+         X-Hasura-Role: admin
 
          {
              "type" : "select",
@@ -212,7 +183,7 @@ The same syntax can be used to obtain the titles of all articles across all **au
          POST /v1/query HTTP/1.1
          Content-Type: application/json
          Authorization: Bearer <auth-token> # optional if cookie is set
-         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+         X-Hasura-Role: admin
 
          {
              "type" : "select",
@@ -228,7 +199,8 @@ The same syntax can be used to obtain the titles of all articles across all **au
              }
          }
 
-You can use relationships inside ``where`` clause. For example, if we wish to only fetch articles having a rating of 5 by author with name ``Warren`` , we could :
+You can use relationships inside ``where`` clause. For example, if we wish to only fetch articles having a rating
+of 5 by author with name ``Warren`` , we could use:
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -251,7 +223,7 @@ You can use relationships inside ``where`` clause. For example, if we wish to on
          POST /v1/query HTTP/1.1
          Content-Type: application/json
          Authorization: Bearer <auth-token> # optional if cookie is set
-         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+         X-Hasura-Role: admin
 
          {
              "type" : "select",
@@ -268,7 +240,7 @@ You can use relationships inside ``where`` clause. For example, if we wish to on
          }
 
 
-Let's fetch authors who has not written a article with rating less than 3
+Let's fetch authors who has not written a article with rating less than 3:
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -290,7 +262,7 @@ Let's fetch authors who has not written a article with rating less than 3
          POST /v1/query HTTP/1.1
          Content-Type: application/json
          Authorization: Bearer <auth-token> # optional if cookie is set
-         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+         X-Hasura-Role: admin
 
          {
              "type" : "select",
@@ -305,7 +277,7 @@ Let's fetch authors who has not written a article with rating less than 3
              }
          }
 
-As you probably guessed, relationships can be nested. Let's get all articles with author information, comments and the author who posted the comment.
+As you probably guessed, relationships can be nested. Let's get all authors, with their articles, with their comments.
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -315,16 +287,13 @@ As you probably guessed, relationships can be nested. Let's get all articles wit
       .. code-block:: none
 
          query fetch_article {
-           article {
-             title
-             author {
-              name
-             }
-             comments {
-              comment 
-              commented_by {
-                name
-              }
+           author {
+             name
+             article {
+               title
+               comments {
+                 comment
+               }
              }
            }
          }
@@ -336,26 +305,22 @@ As you probably guessed, relationships can be nested. Let's get all articles wit
          POST /v1/query HTTP/1.1
          Content-Type: application/json
          Authorization: Bearer <auth-token> # optional if cookie is set
-         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+         X-Hasura-Role: admin
 
          {
              "type" : "select",
              "args" : {
-                 "table" : "article",
+                 "table" : "author",
                  "columns": [
-                     "title",
+                     "name",
                      {
-                         "name": "author",
-                         "columns": ["name"]
-                     },
-                     {
-                         "name" : "comments",
-                         "columns" : [
-                             "comment",
-                             {
-                                 "name" : "commented_by",
-                                 "columns" : ["name"]
-                             }
+                         "name": "articles",
+                         "columns": [
+                            "title",
+                            {
+                                "name": "comments",
+                                "columns": ["comment"]
+                            }
                          ]
                      }
                  ]
@@ -387,7 +352,7 @@ We can also use ``where``, ``limit``, ``offset`` inside array relationships. Let
          POST /v1/query HTTP/1.1
          Content-Type: application/json
          Authorization: Bearer <auth-token> # optional if cookie is set
-         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+         X-Hasura-Role: admin
 
          {
              "type" : "select",
