@@ -12,7 +12,7 @@ Create file
 
 ``POST filestore.<cluster-name>.hasura-app.io/v1/file/<file_id>``
 
-The POST endpoint let's you upload files.
+The POST endpoint lets you upload files.
 
 You are required to generate a unique ``file_id`` for the file, and then send
 the file contents in the request body and setting the ``Content-Type`` header
@@ -56,7 +56,7 @@ Upsert file
 
 ``PUT filestore.<cluster-name>.hasura-app.io/v1/file/<file_id>``
 
-The PUT endpoint let's you update existing file or create a file.
+The PUT endpoint lets you update existing file or create a file.
 
 the file contents in the request body and setting the ``Content-Type`` header
 set to the file's MIME type.
