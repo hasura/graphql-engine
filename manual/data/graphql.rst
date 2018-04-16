@@ -39,7 +39,7 @@ The schema is exposed separately at this endpoint (as introspection is not yet s
 Queries and mutations
 ---------------------
 
-All tracked tables in the ``public`` schema of ``hasuradb`` database can be queried and modified over the GraphQL enpoint. The top level query type is ``query_root`` whose fields are the table names. The top level mutation type is ``mutation_root`` whose fields are ``insert_<table-name>``, ``update_<table-name>``, ``delete_<table-name>`` for all tables.
+All tracked tables in the ``public`` schema of ``hasuradb`` database can be queried and modified over the GraphQL endpoint. The top level query type is ``query_root`` whose fields are the table names. The top level mutation type is ``mutation_root`` whose fields are ``insert_<table-name>``, ``update_<table-name>``, ``delete_<table-name>`` for all tables.
 
 For example, if you have an ``author`` table defined, the GraphQL schema for ``query_root`` looks as follows:
 
