@@ -18,7 +18,7 @@ Status Code,Code,Message,Explanation,Recommendation
 400,bad-token,given access token is not valid for the client id present in the conf (google and facebook),,Check for correct access token provided in request payload. 
 400,bad-conf,Linkedin conf is not present in the conf,,Check whether linkedin conf is provided in project conf
 400,bad-conf,Github conf is not present in the conf,,Check whether github conf is provided in project conf
-400,invalid-token,no user found with specified token,when user tries to verifies email with incorrect token,email verification token is incorrect.
+400,invalid-token,no user found with specified token,when user tries to verify email with incorrect token,email verification token is incorrect.
 400,invalid-token,token is not valid,when token is very old or expired,Token is expired. Try resend verification token
 400,token-expired,token is expired,,Token is expired. Try resend verification token
 400,invalid-otp,OTP is incorrect/verified/expired. Please get a new OTP,,Try resend OTP

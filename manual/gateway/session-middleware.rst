@@ -15,7 +15,7 @@ forwarded by the gateway to determine which user made that request, what is the
 role of the user etc. Based on this information it can then implement its own
 authorization logic.
 
-By default the gateway sets the ``X-Hasura-Role`` value to the first role assigned to a user.
+By default, the gateway sets the ``X-Hasura-Role`` value to the first role assigned to a user.
 If a request is made with a specific ``X-Hasura-Role`` header, the gateway will pass that value
 to the upstream microservice if the user has that particular role or else will reject the request
 with a ``403 Forbidden`` response.

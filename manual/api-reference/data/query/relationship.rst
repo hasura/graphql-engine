@@ -10,7 +10,7 @@ Relationships are used to capture the connectedness of data amongst tables. In a
 
 Let's consider a simple scenario where there are two tables ``article`` and ``author``. The ``article`` table (child) has a column ``author_id`` which points to the ``id`` column of ``author`` table (parent). When we fetch a row from the article table, we may need the author information along with article columns. Similarly, when we fetch a row from the author table, we may need the articles written by the author along with the author columns.
 
-In general, when retrieving data from tables, it is very helpful if we can also fetch the related data along side the columns. This is where relationships come in. They can be considered as pseudo columns for a table to access the related data. In the above example, the relationships that we can define are
+In general, when retrieving data from tables, it is very helpful if we can also fetch the related data alongside the columns. This is where relationships come in. They can be considered as pseudo columns for a table to access the related data. In the above example, the relationships that we can define are
 
 1. ``author`` in ``article`` table
 2. ``articles`` in ``author`` table
