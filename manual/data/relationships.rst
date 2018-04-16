@@ -12,19 +12,19 @@ Creating relationships
 
 You can create relationship metadata for tables via the API console.
 
-Let's say you wish to add an object relationship for ``article(author_id) -> author(hasura_id)``. Navigate to the *Relationships* tab in the ``article`` table.
+Let's say you wish to add an object relationship for ``article::author_id -> author::id``. Navigate to the *Relationships* tab in the ``article`` table.
 
 You'll see an entry in *suggested object relationships*:
 
-.. image:: ../../img/complete-tutorial/tutorial-10-new-rel-article.png
+.. image:: ../../img/complete-tutorial/tutorial-suggested-relationships.png
 
 Click on *Add* to add a new object relationship and name the relationship:
 
-.. image:: ../../img/complete-tutorial/tutorial-add-relationship.png
+.. image:: ../../img/complete-tutorial/tutorial-create-relationship.png
 
 The relationship is created:
 
-.. image:: ../../img/complete-tutorial/tutorial-added-relationship.png
+.. image:: ../../img/complete-tutorial/tutorial-created-relationship.png
 
 
 Fetching over relationships
