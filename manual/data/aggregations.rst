@@ -21,7 +21,7 @@ Let us define a view in `SQL <https://www.postgresql.org/docs/current/static/sql
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <auth-token> # optional if cookie is set
-   X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+   X-Hasura-Role: admin
 
    {
      "type" : "run_sql",

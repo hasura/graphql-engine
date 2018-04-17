@@ -42,7 +42,7 @@ Using the API
 
   POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
   Authorization: Bearer <auth-token> # optional if cookie is set
-  X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+  X-Hasura-Role: admin
   Content-Type: application/json
 
   {
