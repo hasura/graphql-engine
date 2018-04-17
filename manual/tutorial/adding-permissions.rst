@@ -11,206 +11,306 @@ In our blog app, what roles do we have other than ``admin``?
 #. ``user`` for logged in users
 #. ``anonymous`` for users who haven't logged in.
 
-We need to define permissions on all the tables that we have created so far (where applicable) for ``user`` and
-``anonymous`` roles.
+We need to define permissions on all the tables that we have created so far for ``user`` and ``anonymous`` roles.
 
-Defining permissions for different query types:
------------------------------------------------
+Let's look at the access conditions we should set up for our tables:
 
-We can use the ``API console`` UI to add permissions.
+.. rst-class:: api_tabs
+.. tabs::
 
-Select
-~~~~~~
+   .. tab:: article
 
-Let us consider the ``article`` table. The following are the permissions we'd like to define for select queries on this table:
+      .. list-table::
+         :header-rows: 1
+         :widths: 20 20 25 35
+
+         * - Role
+           - Query type
+           - Columns
+           - Rows
+         * - anonymous
+           - select
+           - all columns
+           - all rows
+         * - anonymous
+           - insert
+           - --
+           - not allowed
+         * - anonymous
+           - update
+           - none
+           - not allowed
+         * - anonymous
+           - delete
+           - --
+           - not allowed
+         * - user
+           - select
+           - all columns
+           - all rows
+         * - user
+           - insert
+           - --
+           - if user is the author
+         * - user
+           - update
+           - title, content
+           - if user is the author
+         * - user
+           - delete
+           - --
+           - if user is the author
+
+   .. tab:: author
+
+      .. list-table::
+         :header-rows: 1
+         :widths: 20 20 25 35
+
+         * - Role
+           - Query type
+           - Columns
+           - Rows
+         * - anonymous
+           - select
+           - all columns
+           - all rows
+         * - anonymous
+           - insert
+           - --
+           - not allowed
+         * - anonymous
+           - update
+           - none
+           - not allowed
+         * - anonymous
+           - delete
+           - --
+           - not allowed
+         * - user
+           - select
+           - all columns
+           - all rows
+         * - user
+           - insert
+           - --
+           - their own row
+         * - user
+           - update
+           - name
+           - their own row
+         * - user
+           - delete
+           - --
+           - their own row
+
+   .. tab:: like
+
+      .. list-table::
+         :header-rows: 1
+         :widths: 20 20 25 35
+
+         * - Role
+           - Query type
+           - Columns
+           - Rows
+         * - anonymous
+           - select
+           - all columns
+           - all rows
+         * - anonymous
+           - insert
+           - --
+           - not allowed
+         * - anonymous
+           - update
+           - none
+           - not allowed
+         * - anonymous
+           - delete
+           - --
+           - not allowed
+         * - user
+           - select
+           - all columns
+           - all rows
+         * - user
+           - insert
+           - --
+           - if user is giving the like
+         * - user
+           - update
+           - none
+           - not allowed
+         * - user
+           - delete
+           - --
+           - if user gave the like
+
+   .. tab:: comment
+
+      .. list-table::
+         :header-rows: 1
+         :widths: 20 20 25 35
+
+         * - Role
+           - Query type
+           - Columns
+           - Rows
+         * - anonymous
+           - select
+           - all columns
+           - all rows
+         * - anonymous
+           - insert
+           - --
+           - not allowed
+         * - anonymous
+           - update
+           - none
+           - not allowed
+         * - anonymous
+           - delete
+           - --
+           - not allowed
+         * - user
+           - select
+           - all columns
+           - all rows
+         * - user
+           - insert
+           - --
+           - if user is writing the comment
+         * - user
+           - update
+           - comment
+           - if user wrote the comment
+         * - user
+           - delete
+           - --
+           - if user wrote the comment or is author of the article
+
+To summarize:
+
+* ``anonymous`` role users can select (read) all the data
+* ``anonymous`` role users cannot modify (insert/delete/update) any data.
+* ``user`` role users can select (read) all the data.
+* ``user`` role users can insert/delete "their own data" and update only certain fields once inserted.
+
+To define "their own data", we can describe a condition using the value of the ``X-Hasura-User-Id`` header passed to
+the data microservice by the API gateway (as explained in the :doc:`user, roles & sessions <user-model>` section).
+
+The following are the conditions we will use while setting up the row level permissions described above:
 
 .. list-table::
    :header-rows: 1
+   :widths: 15 20 25 40
 
-   * - Role
-     - Columns
-     - Rows
-   * - anonymous
-     - all columns
-     - all rows
-   * - user
-     - all columns
-     - all rows
+   * - Table
+     - Definition
+     - Condition
+     - Representation
+   * - All tables
+     - allow all rows
+     - Without any checks
+     -
+       .. code-block:: json
 
-In the ``API console``, navigate to *Data -> article -> Permissions*.
+          {}
 
-This is the permissions section for the ``article`` table, which looks like this:
+   * - article
+     - user is author
+     - user-id is equal to ``author_id``
+     -
+       .. code-block:: json
 
-.. image:: ../../img/complete-tutorial/tutorial-9-vanilla-screen.png
+          {
+            "author_id": {
+              "$eq": "X-Hasura-User-Id"
+            }
+          }
 
-To add permissions, click the *Edit icon to the corresponding role and query type*:
+   * - author
+     - user's own row
+     - user-id is equal to ``id``
+     -
+       .. code-block:: json
 
-.. image:: ../../img/complete-tutorial/tutorial-9-add-permission.png
-	    
-You can add permissions for the query types Select, Insert, Update, Delete for different roles (default anonymous and user).
-	    
-Add permissions for the *Select* query for the *user* role.
+          {
+            "id": {
+              "$eq": "X-Hasura-User-Id"
+            }
+          }
 
-.. image:: ../../img/complete-tutorial/tutorial-user-select-permission.png
+   * - like
+     - user gave like
+     - user-id is equal to ``user_id``
+     -
+       .. code-block:: json
 
-Click *Save permissions* to apply the permissions.
+          {
+            "user_id": {
+              "$eq": "X-Hasura-User-Id"
+            }
+          }
 
-You can use the same UI to add permissions for other query types.
+   * - comment
+     - user wrote comment
+     - user-id is equal to ``user_id``
+     -
+       .. code-block:: json
 
-Update
-~~~~~~
+          {
+            "user_id": {
+              "$eq": "X-Hasura-User-Id"
+            }
+          }
 
-``anonymous`` role cannot update the data in ``article``, in fact, any table. You don't need to configure anything for this as only ``admin`` role has permissions by default while the other permissions have to be configured.
+   * - comment
+     - user wrote comment or is author of article
+     - user-id is equal to ``user_id`` or user-id is equal to ``article's author_id``
+     -
+       .. code-block:: json
 
-.. list-table::
-   :header-rows: 1
+          {
+            "$or": [
+              {
+                "user_id": {
+                  "$eq": "X-Hasura-User-Id"
+                }
+              },
+              {
+                "author": {
+                  "author_id": {
+                    "$eq": "X-Hasura-User-Id"
+                  }
+                }
+              }
+            ]
+          }
 
-   * - Role
-     - Columns
-     - Rows
-   * - anonymous
-     - None
-     - None
-   * - user
-     - title, content
-     - those written by the user
+Defining permissions:
+---------------------
+We can use the ``API console`` UI to add permissions for our tables. Head to *Data -> [table-name] -> Permissions* to
+see/modify the permissions on the table.
 
-.. image:: ../../img/complete-tutorial/tutorial-update-permission.png
+**For example**, let's set the ``update`` permissions for ``user`` role on the ``article`` table:
 
-Set the permissions similarly to the Select query.
+The *Permissions* tab of the ``article`` table should look like this:
 
-Delete
-~~~~~~
+.. image:: ../../img/complete-tutorial/tutorial-permissions-tab.png
 
-``anonymous`` role cannot delete the data in ``article`` table.
+Click on the *Edit* icon next to the user/update cell. It should open up an edit section like this:
 
-.. list-table::
-   :header-rows: 1
+.. image:: ../../img/complete-tutorial/tutorial-permissions-edit-empty.png
 
-   * - Role
-     - Rows
-   * - anonymous
-     - None
-   * - user
-     - those written by the user
+Now, set the permissions as described above. It should finally look like this:
 
-Set the permissions similarly to the Select query.
+.. image:: ../../img/complete-tutorial/tutorial-permissions-edit-filled.png
 
-With delete, you only get to specify the rows that are allowed to be deleted with ``filter``.
+Hit *Save permissions* to save our changes.
 
-.. image:: ../../img/complete-tutorial/tutorial-delete-permission.png
-
-Insert
-~~~~~~
-
-``anonymous`` cannot insert into ``article`` table. If you are a user, you should only be able to create an article with you as the author, i.e, you should not be allowed to set arbitrary ``author_id`` when inserting into ``article`` table. This is an assertion that must be verified before the data is persisted.
-
-.. image:: ../../img/complete-tutorial/tutorial-insert-permission.png
-
-Set the permissions similarly to the Select query.
-
-Permissions for all tables
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-We've looked at the permissions on ``article`` table. Let's wrap this section by defining the permissions on all tables.
-
-To define permissions on all tables you can follow the method above for each table. A better way to do it is to wrap all the queries into a **bulk** HTTP request:
-
-.. code-block:: http
-
-  POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
-  Content-Type: application/json
-  Authorization: Bearer <auth-token> # optional if cookie is set
-  X-Hasura-Role: <role>  # optional. Required if request needs particular user role
-
-    {
-	"type": "bulk",
-	"args": [
-	    {
-		"type": "create_insert_permission",
-		"args": {
-		    "table": "author",
-		    "role": "user",
-		    "permission": {
-			"check": {
-			    "id": "X-HASURA-USER-ID"
-			}
-		    }
-		}
-	    },
-	    {
-		"type": "create_select_permission",
-		"args": {
-		    "table": "author",
-		    "role": "user",
-		    "permission": {
-			"columns": "*",
-			"filter": {}
-		    }
-		}
-	    },
-	    {
-		"type": "create_select_permission",
-		"args": {
-		    "table": "author",
-		    "role": "anonymous",
-		    "permission": {
-			"columns": "*",
-			"filter": {}
-		    }
-		}
-	    },
-	    {
-		"type": "create_insert_permission",
-		"args": {
-		    "table": "comment",
-		    "role": "user",
-		    "permission": {
-			"check": {
-			    "author_id": "X-HASURA-USER-ID"
-			}
-		    }
-		}
-	    },
-	    {
-		"type": "create_select_permission",
-		"args": {
-		    "table": "comment",
-		    "role": "user",
-		    "permission": {
-			"columns": "*",
-			"filter": {}
-		    }
-		}
-	    },
-	    {
-		"type": "create_update_permission",
-		"args": {
-		    "table": "comment",
-		    "role": "user",
-		    "permission": {
-			"columns": [
-			    "comment"
-			],
-			"filter": {
-			    "author_id": "X-HASURA-USER-ID"
-			}
-		    }
-		}
-	    },
-	    {
-		"type": "create_select_permission",
-		"args": {
-		    "table": "comment",
-		    "role": "anonymous",
-		    "permission": {
-			"columns": "*",
-			"filter": {}
-		    }
-		}
-	    }
-	]
-    }
+Similary, set permissions for all the cases we have described above.
 
 Next: Add aggregations and views
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

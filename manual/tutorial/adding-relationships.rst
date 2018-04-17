@@ -4,14 +4,15 @@ Part VIII: Adding relationships to data models
 Exploiting relationships in your data
 -------------------------------------
 
-The Data microservice allows to setup different relationships between data, which allows us to be able to make more
+The Data microservice allows to setup different relationships between data, which enables you to make more
 complex and interesting queries to fetch data.
 
 For example:
 
 .. code-block:: javascript
+   :emphasize-lines: 6, 14-16
 
-   // Current output of select query
+   // Normal output of select query
    [{
       "id": 1,
       "title": "My first article",
@@ -19,12 +20,11 @@ For example:
       "author_id": 3
    }]
 
-   // Desired output of select query
+   // Output of select query using a relationship
    [{
       "id": 1,
       "title": "My first article",
       "content": "Lots of content...",
-      "author_id": 3,
       "author": {
          "name": "Ramu"
          "id": 3
@@ -36,21 +36,21 @@ Let's look at the different relationships we have in our data models:
 
 * ``author``:
 
-  * has ``articles`` written by them
+  * has multiple ``articles`` written by them
 
 * ``article``:
 
-  * has an ``author``
-  * has ``comments``
-  * has ``likes``
+  * has one ``author``
+  * has multiple ``comments``
+  * has multiple ``likes``
 
 * ``comment``:
 
-  * has an ``article`` on which it was posted
+  * has one ``article`` on which it was posted
 
 * ``like``:
 
-  * has an ``article`` that has been liked
+  * has one ``article`` that has been liked
 
 These relationships can be captured by foreign key constraints. If we were to represent rows of our table in JSON, as
 objects, then we can express these relationships as nested arrays or objects. Eg: Every ``author`` object can have

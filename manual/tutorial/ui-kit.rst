@@ -6,20 +6,19 @@ Part XII: Using the Auth UI Kit
 .. figure:: ../../img/uikit-light.png
     :class: 'light'
 
-.. admonition:: Note
-
-  You can skip this section if you want to write your own frontend for auth.
-
 In the previous section, we deployed our own custom app. If you want to add authentication to your app and do not want
 to write auth code, you can use the Auth UI kit which is a ready to use frontend interface that comes pre-loaded with
-the Hasura Auth Microservice.
+the Hasura Auth microservice.
 
 The UI kit runs on the url: ``auth.<cluster-name>.hasura-app.io/ui``.
 
-It allows your application users to login/signup seamlessly using the :doc:`authentication providers <../auth/authentication/index>` configured in the :doc:`auth conf <../project/directory-structure/conf/auth.yaml>`. The UI adapts automatically to display
-the enabled auth providers. Just configure the auth conf of your Hasura Project and the UI Kit will immediatedly start working on the new changes.
+It allows your application users to login/signup seamlessly using the :doc:`authentication providers <../auth/authentication/index>`
+configured in the ``conf/auth.yaml`` file. The UI adapts automatically to display the enabled auth providers. Just
+configure the auth conf of your Hasura Project and the UI Kit will immediatedly start working with the new changes.
 
-By default, it is configured to login using only ``Username Password``. You can enable other auth providers by changing the auth conf. We will demonstrate below how to enable ``auth with Email and Google``. For enabling other providers, :ref:`read the instructions here <providers>`.
+By default, auth is configured to login using only ``Username Password``. You can enable other auth providers by modifying
+the ``conf/auth.yaml`` file. The below section will demonstrate how to enable ``auth with Email and Google``. For
+enabling other providers, :ref:`read the instructions here <providers>`.
 
 Enable auth with email
 ----------------------

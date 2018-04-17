@@ -78,7 +78,7 @@ Let's insert a couple of authors. The full definition of `insert` request can be
          }
 
 
-Note the ``returning`` key. We would like to get the auto incremented ``id`` for each inserted row.
+Note the ``returning`` key. We would like to get back the ``id`` assigned for each inserted row.
 
 Querying Data
 -------------
