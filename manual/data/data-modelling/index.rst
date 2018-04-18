@@ -1,14 +1,14 @@
-==============
-Data Modelling
-==============
+====================
+Data Modelling Guide
+====================
 
 .. toctree::
   :maxdepth: 1
 
-  permissions
-  adding-foreign-key-constraint
-  relationships
-  creating-views
-  adding-not-null-constraint
-  adding-unique-constraint
-  query-templates
+  simple-joins
+  aggregations
+  one-to-many
+  many-to-one
+  many-to-many
+  one-to-one
+  self-referencing

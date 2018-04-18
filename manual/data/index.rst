@@ -35,13 +35,13 @@ See:
   Bulk queries <bulk>
   Linking to auth users <link-auth-users>
   Permissions and access control <permissions>
-  relationships
+  Data Relationships <relationships/index>
   data-migration
   Altering the schema <alter-schema/index>
-  Aggregations/Views <aggregations>
+  Aggregations and Views <aggregations>
   reset
   Running SQL commands <run-sql>
   Accessing postgres directly <access-postgres>
   Importing data from SQL files <import-sql>
   graphql
-  data-modelling
+  data-modelling/index

@@ -1,15 +1,16 @@
 Altering database schema
 ========================
 
-After creating tables, you would want to modify the table's columns, constraints, relationships and permissions. This section walks through common schema modification scenarios.
+After creating tables, you might want to modify the table's columns, constraints, relationships, etc.
 
-See:
-^^^^
+Below are some common schema modification scenarios:
+
 .. toctree::
    :maxdepth: 1
 
    alter-column
-   alter-constraint
+   alter-primary-key
+   adding-foreign-key-constraint
+   adding-not-null-constraint
+   adding-unique-constraint
    delete-table
-   delete-foreign-key
-   delete-relationship
