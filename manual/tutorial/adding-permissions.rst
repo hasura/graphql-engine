@@ -268,7 +268,8 @@ The following are the conditions we will use while setting up the row level perm
 
    * - comment
      - user wrote comment or is author of article
-     - user-id is equal to ``user_id`` or user-id is equal to ``article's author_id``
+     - user-id is equal to ``user_id`` or user-id is equal to ``article's author_id`` (this requires a relationship
+       called ``article`` to be defined first)
      -
        .. code-block:: json
 
@@ -280,7 +281,7 @@ The following are the conditions we will use while setting up the row level perm
                 }
               },
               {
-                "author": {
+                "article": {
                   "author_id": {
                     "$eq": "X-Hasura-User-Id"
                   }
