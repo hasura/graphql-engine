@@ -29,10 +29,10 @@ the total number of likes for each article.
     WHERE a.id = l.article_id
     GROUP BY a.id;
 
-Ensure that you check the ``Track Table`` button when you :doc:`run the SQL <../run-sql>` on the api console.
+Head to *Data > SQL* section of the :doc:`API console <../../api-console/index>` and run the above SQL command.
+Ensure that you check the ``Track Table`` checkbox before running the query so that you can use Data APIs to query the view.
 
-Next, let's create a :doc:`manual relationship <../relationships/create-relationship-manual>` to this view on the
-``article`` table.
+Next, let's :ref:`create a relationship <relationship_without_fkey>` to this view on the ``article`` table.
 
 - Relationship Type will be ``Object Relationship``
 - Relationship Name can be "total_likes"
