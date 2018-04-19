@@ -15,7 +15,7 @@ These additional properties, *articles* of an *author* and *author* of an *artic
 See:
 ^^^^
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    Creating relationships <create-relationships>
    fetch-over-relationships

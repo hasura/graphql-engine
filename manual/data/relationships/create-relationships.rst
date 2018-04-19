@@ -1,7 +1,13 @@
 Creating data relationships
 ===========================
 
-You can create relationships for tables via the :doc:`API console <../../api-console/index>`.
+You can create relationships for tables via the :doc:`API console <../../api-console/index>`. The Data microservice
+automatically detects and suggests possible relationships based on foreign keys. But it is not always possible to connect
+tables via foreign keys. Hence you can also create relationships without using foreign keys. This is typically required
+when you want a relationship between a table and a view as we cannot create foreign keys to/on views.
+
+Using foreign keys
+------------------
 
 Let's say you wish to add an object relationship based on the foreign key ``article::author_id -> author::id``.
 Navigate to the *Relationships* tab of the ``article`` table.
@@ -20,12 +26,8 @@ The relationship is created:
 
 .. _relationship_without_fkey:
 
-Creating relationships without using foreign keys
--------------------------------------------------
-
-For cases when it is not possible to connect two tables via foreign keys, you will have to create a relationship manually
-between them. This is typically required when you want a relationship between a table and a view as we cannot create
-foreign keys to/on views.
+Without using foreign keys
+--------------------------
 
 Let's say you have an ``article`` table and a ``article_total_likes`` view which has the total number of likes each
 article has received. To create an object relationship for ``article::id -> article_total_likes::article_id``:
