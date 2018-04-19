@@ -81,7 +81,7 @@ To insert data into the ``user`` table, you have to execute an :doc:`insert quer
          POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
          Content-Type: application/json
          Authorization: Bearer <auth-token> # optional if cookie is set
-         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+         X-Hasura-Role: <role>  # optional. Required if only specific user role has access
 
          {
            "type": "insert",
@@ -159,7 +159,7 @@ You can now filter the ``user`` table by city or pincode
          POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
          Content-Type: application/json
          Authorization: Bearer <auth-token> # optional if cookie is set
-         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+         X-Hasura-Role: <role>  # optional. Required if only specific user role has access
 
          {
             "type": "select",
