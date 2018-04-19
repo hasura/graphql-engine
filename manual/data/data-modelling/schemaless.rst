@@ -126,6 +126,65 @@ This will create a view called ``user_address`` with ``user_id``, ``city`` and `
 
 We can now :doc:`fetch data <../select>` from this view just like you would from a table.
 
+Moreover, you can also :ref:`create a manual relationship <relationship_without_fkey>` to this view from your user table on the `user_id` column.
+
+- Relationship Type will be ``Object Relationship``
+- Relationship Name can be "address_info"
+- Configuration: ``id :: address_info -> user_id``
+
+You can now filter the ``user`` table by city or pincode
+
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: GraphQL
+
+      .. code-block:: none
+
+        query {
+          user(where: {address_info: {city: {_eq: "Chennai" }}}) {
+            id
+            name
+            address_info{
+              city
+              pincode
+            }
+          }
+        }
+
+   .. tab:: JSON API
+
+      .. code-block:: http
+
+         POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
+         Content-Type: application/json
+         Authorization: Bearer <auth-token> # optional if cookie is set
+         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+
+         {
+            "type": "select",
+            "args": {
+                "table": "user",
+                "columns": [
+                    "id",
+                    "name",
+                    "address",
+                    {
+                        "name": "address_info",
+                        "columns": [
+                            "city",
+                            "pincode"
+                            ]
+                    }
+                ],
+                "where": {
+                    "address_info": {
+                        "city": "Chennai"
+                    }
+                }
+            }
+         }
+
 Updating JSON data
 -------------------------------
 
