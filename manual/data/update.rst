@@ -26,7 +26,7 @@ The full definition of an `update` query can be found :ref:`here <data_update>`.
          POST /v1/query HTTP/1.1
          Content-Type: application/json
          Authorization: Bearer <admin-token> # optional if cookie is set
-         X-HASURA-ROLE: <role>  # optional. Required if request needs particular user role
+         X-HASURA-ROLE: <role>  # optional. Required if only specific user role has access
 
          {
              "type" : "update",

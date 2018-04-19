@@ -29,7 +29,7 @@ Send an email as per the options given is request body.
   POST https://notify.<cluster-name>.hasura-app.io/v1/send/email HTTP/1.1
   Content-Type: application/json
   Authorization: Bearer <auth-token> # optional if cookie is set
-  X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+  X-Hasura-Role: <role>  # optional. Required if only specific user role has access
 
   {
     "to": "Example User <user@example.com>",

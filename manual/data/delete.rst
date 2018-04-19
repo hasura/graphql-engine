@@ -1,7 +1,8 @@
 Deleting data
 =============
 
-The request to delete data takes a ``where`` clause indicating what to delete. The syntax of where clause is same as in the ``select`` query.
+The request to delete data takes a ``where`` clause indicating what to delete. The syntax of where clause is same as in
+the ``select`` query.
 
 The full syntax of a ``delete`` query can be found :ref:`here <data_delete>`.
 
@@ -25,7 +26,7 @@ The full syntax of a ``delete`` query can be found :ref:`here <data_delete>`.
          POST /v1/query HTTP/1.1
          Content-Type: application/json
          Authorization: Bearer <auth-token> # optional if cookie is set
-         X-Hasura-Role: <role>  # optional. Required if request needs particular user role
+         X-Hasura-Role: <role>  # optional. Required if only specific user role has access
 
          {
              "type" : "delete",
