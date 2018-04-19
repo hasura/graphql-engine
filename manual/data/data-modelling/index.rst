@@ -12,3 +12,4 @@ Data Modelling Guide
   many-to-many
   one-to-one
   self-referencing
+  schemaless
