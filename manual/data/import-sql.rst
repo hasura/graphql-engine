@@ -2,8 +2,8 @@
    :description: Manual for accessing postgres directly
    :keywords: hasura, docs, postgres, sql, import sql, data, import data
 
-Importing data from SQL files
-=============================
+Importing from SQL files
+========================
 
 - Create a directory called ``sql`` in the Postgres microservice container.
 
