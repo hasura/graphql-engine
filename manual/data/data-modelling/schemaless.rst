@@ -126,7 +126,7 @@ This will create a view called ``user_address`` with ``user_id``, ``city`` and `
 
 We can now :doc:`fetch data <../select>` from this view just like you would from a table.
 
-Moreover, you can also :def:`create a manual relationship <../relationships/create-relationships>` to this view from your user table on the `user_id` column.
+Moreover, you can also :doc:`create a manual relationship <../relationships/create-relationships>` to this view from your user table on the `user_id` column.
 
 - Relationship Type will be ``Object Relationship``
 - Relationship Name can be "address_info"
