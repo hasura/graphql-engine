@@ -38,10 +38,10 @@ In the case of ``person`` table, ``id`` is a primary key and therefore already u
    #. Check the ``This is a migration`` checkbox so that the query is saved as a migration.
    #. Hit ``Run``.
 
-#. :ref:`Create an object relationship <relationship_without_fkey>` from ``person``
+#. :doc:`Create an object relationship <../relationships/create-relationships>` from ``person``
    to ``voter``.
 
-#. Similarly, :ref:`create an object relationship <relationship_without_fkey>` from
+#. Similarly, :doc:`create an object relationship <../relationships/create-relationships>` from
    ``voter`` to ``person``.
 
 Fetching over a one-to-one relationship
