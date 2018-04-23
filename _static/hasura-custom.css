@@ -652,7 +652,7 @@ p
 .img_wrapper {
   padding: 0px;
   padding-top: 0px;
-  padding-bottom: px;
+  padding-bottom: 0px;
 }
 
 .logo_img {
@@ -1284,14 +1284,23 @@ ol, ul
     font-size: 16px !important;
     margin: 0;
     max-width: 100%;
-    padding: 0px;
+    padding: 0;
 
 }
 .api-tabs.container {
     margin: 0;
     max-width: 100%;
     padding: 0px;
+}
 
+.api-tabs .ui.tab {
+  padding: 20px
+}
+
+.api-tabs .ui.tab > :first-child > .highlight,
+.api-tabs .ui.tab > p:first-child,
+.api-tabs .ui.tab > :first-child > li {
+  margin-top: 0;
 }
 
 @media (max-width: 768px) {
@@ -1312,5 +1321,9 @@ ol, ul
 
   .buttons {
     float: none !important;
+  }
+
+  .api-tabs .ui.tab {
+    padding: 10px
   }
 }

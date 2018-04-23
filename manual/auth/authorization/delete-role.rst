@@ -3,20 +3,25 @@ Deleting user roles
 
 Deleting roles can be done by users having the ``admin`` role.
 
-To delete a role, make a request to the ``/admin/delete-role`` endpoint.
+.. rst-class:: api_tabs
+.. tabs::
 
-.. code-block:: http
+   .. tab:: API-Console
 
-   POST auth.<cluster-name>.hasura-app.io/admin/delete-role HTTP/1.1
-   Content-Type: application/json
+      Go to the ``auth`` tab on top and click on ``Roles`` on the left panel.
 
-   {
-     "role" : "merchant"
-   }
+      .. image:: ../../../img/auth/console-delete-role.png
 
-You can also do this from the :doc:`API console <../../api-console/index>`. Go to the ``auth`` tab on top and click on ``Roles`` on the left panel.
+   .. tab:: REST API
 
-.. image:: ../../../img/auth/console-delete-role.png
+      .. code-block:: http
+
+         POST auth.<cluster-name>.hasura-app.io/admin/delete-role HTTP/1.1
+         Content-Type: application/json
+
+         {
+           "role" : "merchant"
+         }
 
 .. note::
 

@@ -8,51 +8,52 @@
 Creating a table
 ================
 
+
 To add/create a new table in the database, the following options are available:
 
-Using the console UI
---------------------
 
-First launch the API console:
+.. rst-class:: api_tabs
+.. tabs::
 
-.. code-block:: bash
+   .. tab:: API-Console
 
-  $ hasura api-console
+      First launch the API console:
 
-This will open the API console. Head to ``Data > Schema``.
+      .. code-block:: bash
 
-.. image:: ../../img/manual/data/create-table.png
+         $ hasura api-console
+
+      This will open the API console. Head to ``Data > Schema``.
+
+      .. image:: ../../img/manual/data/create-table.png
 
 
-Using SQL
----------
+   .. tab:: SQL
 
-You can also create tables using SQL by heading to ``Data > SQL`` section in the API console.
+      You can create tables using SQL by heading to ``Data > SQL`` section in the API console.
 
-.. image:: ../../img/manual/data/run_sql.png
+      .. image:: ../../img/manual/data/run_sql.png
 
-.. note::
+      .. note::
 
-  You should click on ``This is a migration`` option before executing the query if you want to retain the query as a database migration.
+        You should click on ``This is a migration`` option before executing the query if you want to retain the query as a database migration.
 
-Using the API
--------------
+   .. tab:: REST API
 
-.. code-block:: http
+      .. code-block:: http
 
-  POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
-  Authorization: Bearer <auth-token> # optional if cookie is set
-  X-Hasura-Role: admin
-  Content-Type: application/json
+        POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
+        Authorization: Bearer <auth-token> # optional if cookie is set
+        X-Hasura-Role: admin
+        Content-Type: application/json
 
-  {
-      "type" : "run_sql",
-      "args" : {
-          "sql" : "CREATE TABLE article (
-                       id SERIAL NOT NULL PRIMARY KEY,
-                       title TEXT NOT NULL,
-                       description TEXT
-                   );"
-      }
-  }
-
+        {
+            "type" : "run_sql",
+            "args" : {
+                "sql" : "CREATE TABLE article (
+                             id SERIAL NOT NULL PRIMARY KEY,
+                             title TEXT NOT NULL,
+                             description TEXT
+                         );"
+            }
+        }

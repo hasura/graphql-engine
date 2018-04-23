@@ -13,199 +13,49 @@ If you want to run SQL statements directly on the database, this can be done in 
    Currently, renaming of tables and columns are not allowed using SQL statements.
 
 
-**1. Using the console UI - SQL page**
+.. rst-class:: api_tabs
+.. tabs::
 
-First launch the API console:
+   .. tab:: API-Console
 
-.. code-block:: bash
+      First launch the API console:
 
-   $ hasura api-console
+      .. code-block:: bash
 
-Head to ``Data > SQL`` section in the console.
+         $ hasura api-console
 
-.. image:: ../../img/manual/data/alter-column-sql.png
+      Head to ``Data > SQL`` section in the console.
 
-.. note::
-   You should click on ``This is a migration`` option before executing the query if you want to retain the query as a db migration.
+      .. image:: ../../img/manual/data/alter-column-sql.png
 
-**2. Using the API:**
+      .. note::
+         You should click on ``This is a migration`` option before executing the query if you want to retain the query as a db migration.
 
-The ``run_sql`` endpoint of the Data microservice can be used to run SQL
-statements directly on the data.
 
-``run_sql`` is used to run arbitrary SQL statements. Multiple SQL statements can be separated by a ``;``, however, only the result of the last sql statement will be returned.
+   .. tab:: REST API
 
-An example:
+      The ``run_sql`` endpoint of the Data microservice can be used to run SQL
+      statements directly on the data.
 
-.. code-block:: http
+      ``run_sql`` is used to run arbitrary SQL statements. Multiple SQL statements can be separated by a ``;``, however, only the result of the last sql statement will be returned.
 
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   Authorization: Bearer <auth-token> # optional if cookie is set
-   X-Hasura-Role: admin
+      An example:
 
-   {
-       "type": "run_sql",
-       "args": {
-           "sql": "CREATE UNIQUE INDEX ON films (title);"
-       }
-   }
+      .. code-block:: http
 
-While ``run_sql`` lets you run any SQL, it tries to ensure that the data microservice's state (relationships, permissions etc.) is consistent. i.e, you cannot drop a column on which any metadata is dependent on (say a permission or a relationship). The effects however can be cascaded.
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         Authorization: Bearer <auth-token> # optional if cookie is set
+         X-Hasura-Role: admin
 
-For example, if we were to drop 'bio' column from the article table (let's say the column is used in some permission), you would see an error.
+         {
+             "type": "run_sql",
+             "args": {
+                 "sql": "CREATE UNIQUE INDEX ON films (title);"
+             }
+         }
 
-.. code-block:: http
+      .. note::
+         You cannot save the query as a migration using the API
 
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   Authorization: Bearer <auth-token> # optional if cookie is set
-   X-Hasura-Role: admin
-
-   {
-       "type": "run_sql",
-       "args": {
-           "sql": "ALTER TABLE author DROP COLUMN name"
-       }
-   }
-
-.. code-block:: http
-
-   HTTP/1.1 400 BAD REQUEST
-   Content-Type: application/json
-
-   {
-       "path": "$.args",
-       "error": "cannot drop due to the following dependent objects : permission author.user.select"
-   }
-
-We can however, cascade these changes.
-
-.. code-block:: http
-   :emphasize-lines: 10
-
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   Authorization: Bearer <auth-token> # optional if cookie is set
-   X-Hasura-Role: admin
-
-   {
-       "type": "run_sql",
-       "args": {
-           "sql": "ALTER TABLE author DROP COLUMN bio",
-           "cascade" : true
-       }
-   }
-
-.. code-block:: http
-
-   HTTP/1.1 200 OK
-   Content-Type: application/json
-
-   {
-       "result_type": "CommandOk"
-   }
-
-With the above query, the dependent permission is also dropped. In general, the SQL operations that will affect hasuradb objects are
-
-1. Dropping columns
-2. Dropping tables
-3. Altering types of columns
-
-In case of 1 and 2, the dependent objects (if any) can be dropped using ``cascade``. However, when altering type, if any objects are affected, the change cannot be cascaded. So, those dependent objects have to be manually dropped before the sql statement.
-
-``run_sql`` can only be executed by a user with the ``admin`` role. This is deliberate as it is hard to enforce any sort of permissions on arbitrary sql. If you find yourselves in the need of using ``run_sql`` to run custom DML queries, consider creating a view. You can now define permissions on that particular view for various roles.
-
-.. note::
-   Currently, renames of tables and columns are not allowed in the SQL statement.
-
-Syntax
-^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - sql
-     - true
-     - String
-     - The sql to be executed
-   * - cascade
-     - false
-     - Boolean
-     - When set to ``true``, the effect (if possible) is cascaded to any hasuradb dependent objects (relationships, permissions, templates).
-
-Response
-^^^^^^^^
-
-The response is a JSON Object with the following structure.
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Always present
-     - Schema
-     - Description
-   * - result_type
-     - true
-     - String
-     - One of "CommandOk" or "TuplesOk"
-   * - result
-     - false
-     - ``[[Text]]`` (An array of rows, each row an array of columns)
-     - This is present only when the ``result_type`` is "TuplesOk"
-
-.. note::
-   The first row in the ``result`` (when present) will be the names of the columns.
-
-Use cases
-^^^^^^^^^
-
-1. To execute DDL operations that are not supported by the console (like indexes).
-2. Run custom DML queries from backend microservices instead of installing libraries to speak to Postgres.
-
-More examples
-^^^^^^^^^^^^^
-
-A query returning results.
-
-.. code-block:: http
-
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   Authorization: Bearer <auth-token> # optional if cookie is set
-   X-Hasura-Role: <role>  # optional. Required if only specific user role has access
-
-   {
-       "type": "run_sql",
-       "args": {
-           "sql": "select user_id, first_name from author limit 2;"
-       }
-   }
-
-.. code-block:: http
-
-   HTTP/1.1 200 OK
-   Content-Type: application/json
-
-   {
-       "result_type": "TuplesOk",
-       "result": [
-           [
-               "user_id",
-               "first_name"
-           ],
-           [
-               "1",
-               "andre"
-           ],
-           [
-               "2",
-               "angela"
-           ]
-       ]
-   }
+      See the :doc:`API reference <../api-reference/data/query/misc>` for the caveats and other details.

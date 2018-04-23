@@ -1,22 +1,26 @@
 Creating user roles
 ===================
 
-Creating roles can be done by users having ``admin`` roles.
+Creating roles can be done by users having ``admin`` roles. It can be done in the following ways:
 
-To create a role, make a request to the ``/admin/create-role`` endpoint.
+.. rst-class:: api_tabs
+.. tabs::
 
-.. code-block:: http
+   .. tab:: API-Console
+
+      Go to the ``auth`` tab on top and click on ``Roles`` on the left panel.
+
+      .. image:: ../../../img/auth/console-create-role.png
+
+   .. tab:: REST API
 
 
-   POST auth.<cluster-name>.hasura-app.io/admin/create-role HTTP/1.1
-   Content-Type: application/json
-
-   {
-     "role" : "merchant"
-   }
+      .. code-block:: http
 
 
-You can also do this from the :doc:`API console <../../api-console/index>`. Go to the ``auth`` tab on top and click on ``Roles`` on the left panel.
+         POST auth.<cluster-name>.hasura-app.io/admin/create-role HTTP/1.1
+         Content-Type: application/json
 
-.. image:: ../../../img/auth/console-create-role.png
-
+         {
+           "role" : "merchant"
+         }
