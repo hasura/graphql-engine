@@ -37,7 +37,7 @@ Let us then add this view, using the ``add_existing_table_or_view`` query type:
    POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <auth-token> # optional if cookie is set
-   X-Hasura-Role: <role>  # optional. Required if only specific user role has access
+   X-Hasura-Role: <role>  # optional. Pass if only specific user role has access
 
    {
      "type" : "add_existing_table_or_view",
@@ -64,7 +64,7 @@ All the relationships that we've defined till now use foreign key constraints. H
    POST /v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <auth-token> # optional if cookie is set
-   X-Hasura-Role: <role>  # optional. Required if only specific user role has access
+   X-Hasura-Role: <role>  # optional. Pass if only specific user role has access
 
    {
        "type": "create_object_relationship",
@@ -89,7 +89,7 @@ Let's fetch articles ordered by the number of likes.
    POST /v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <auth-token> # optional if cookie is set
-   X-Hasura-Role: <role>  # optional. Required if only specific user role has access
+   X-Hasura-Role: <role>  # optional. Pass if only specific user role has access
 
    {
        "type" : "select",

@@ -25,7 +25,7 @@ Sending an SMS
       POST https://notify.<cluster-name>.hasura-app.io/v1/send/sms HTTP/1.1
       Content-Type: application/json
       Authorization: Bearer <auth-token> # optional if cookie is set
-      X-Hasura-Role: <role>  # optional. Required if only specific user role has access
+      X-Hasura-Role: <role>  # optional. Pass if only specific user role has access
 
       {
         "to": "9876543210",

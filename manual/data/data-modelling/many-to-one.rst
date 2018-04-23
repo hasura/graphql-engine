@@ -29,7 +29,7 @@ To fetch the list of all ``articles`` along with the name of each of their ``aut
    POST /v1/query HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <auth-token> # optional if cookie is set
-   X-Hasura-Role: <role>  # optional. Required if only specific user role has access
+   X-Hasura-Role: <role>  # optional. Pass if only specific user role has access
 
    
 
