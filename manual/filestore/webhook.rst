@@ -73,7 +73,7 @@ operation, like so:
 
 Where ``operation`` is one of ``create``, ``read``, ``delete``.
 
-Once you get this information about the file and the file operation, and
+Once you get this information about the file and the file operation and
 retrieve the user and roles information from the Hasura headers, you should
 perform the required authorization checks. If you want to grant the access to
 the user then the webhook should return a ``200`` response. If you want to deny
