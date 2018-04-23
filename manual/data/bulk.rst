@@ -1,7 +1,7 @@
 Bulk Data Queries
 =================
 
-To make multiple queries as a part of the same request you can sent them as parts of one bulk query.
+To make multiple queries as a part of the same request you can send them as parts of one bulk query.
 
 To select from multiple tables in the same request, make a ``bulk`` query as follows
 
@@ -33,7 +33,7 @@ To select from multiple tables in the same request, make a ``bulk`` query as fol
        ]
    }
 
-The response of the above query will be an array of two elements with first one containing the result from the ``article`` table and second one containing the result from the ``author`` table
+The response of the above query will be an array of two elements with the first one containing the result from the ``article`` table and the second one containing the result from the ``author`` table.
 
 A sample response will look like below
 
