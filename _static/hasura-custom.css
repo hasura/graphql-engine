@@ -1312,6 +1312,7 @@ ol, ul
   #sidebar {
     top: 170px;
     height: calc(100% - 170px);
+    z-index: 1;
   }
 
   .header_links {
