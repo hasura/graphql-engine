@@ -16,3 +16,4 @@ Guides
    converting-git-repo-to-hasura-project
    importing-existing-database
    complete-cluster-migration
+   heroku-migration
