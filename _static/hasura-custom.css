@@ -1303,6 +1303,68 @@ ol, ul
   margin-top: 0;
 }
 
+.feedback_wrapper {
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+  margin-bottom: 20px;
+}
+
+.thank_you {
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+  margin-bottom: 20px;
+}
+
+.feedback_wrapper .feedback {
+  position: relative;
+}
+
+.feedback_wrapper .feedback .display_inl {
+  display: inline-block;
+}
+
+.feedback_wrapper .feedback .actions {
+  width: 21px;
+  cursor: pointer;
+}
+
+.feedback_wrapper .feedback .actions.thumb_up {
+  position: absolute;
+  top: 1px;
+  left: 170px;
+}
+
+.feedback_wrapper .feedback .actions.thumb_down {
+  position: absolute;
+  left: 210px;
+  top: 4px;
+}
+
+.thumb_up:hover svg path {
+  fill: green;
+}
+
+.thumb_down:hover svg path {
+  fill: darkred;
+}
+
+.feedback_wrapper .feedback .actions img {
+  width: 100%;
+}
+
+.feedback_btn
+{
+  margin-top: 10px;
+  padding: 5px 10px;
+  background-color: #FEC53D;
+  color: #000;
+  border-radius: 5px;
+  border: 1px solid #FEC53D;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Gudea';
+}
+
 @media (max-width: 768px) {
   .input_search_box {
     width: 90%;

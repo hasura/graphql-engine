@@ -121,6 +121,40 @@
 
               </div>
               <div class="nav">{{ secondnav() }}</div>
+
+              <div class="feedback_wrapper">
+                <div class="feedback">
+                  Was this page helpful?
+                  <div class="display_inl actions thumb_up">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="21px" height="21px" viewBox="0 0 561 561" style="enable-background:new 0 0 561 561;" xml:space="preserve">
+                      <g>
+	                    <g id="thumb-up">
+		                  <path d="M0,535.5h102v-306H0V535.5z M561,255c0-28.05-22.95-51-51-51H349.35l25.5-117.3c0-2.55,0-5.1,0-7.65    c0-10.2-5.1-20.4-10.199-28.05L336.6,25.5L168.3,193.8c-10.2,7.65-15.3,20.4-15.3,35.7v255c0,28.05,22.95,51,51,51h229.5    c20.4,0,38.25-12.75,45.9-30.6l76.5-181.051c2.55-5.1,2.55-12.75,2.55-17.85v-51H561C561,257.55,561,255,561,255z" fill="#787878"/>
+	                    </g>
+                      </g>
+                    </svg>
+                  </div>
+                  <div class="display_inl actions thumb_down">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="21px" height="21px" viewBox="0 0 561 561" style="enable-background:new 0 0 561 561;" xml:space="preserve">
+                      <g>
+                        <g id="thumb-down">
+                            <path d="M357,25.5H127.5c-20.4,0-38.25,12.75-45.9,30.6L5.1,237.15C2.55,242.25,0,247.35,0,255v48.45l0,0V306    c0,28.05,22.95,51,51,51h160.65l-25.5,117.3c0,2.55,0,5.101,0,7.65c0,10.2,5.1,20.399,10.2,28.05l28.05,25.5l168.3-168.3    c10.2-10.2,15.3-22.95,15.3-35.7v-255C408,48.45,385.05,25.5,357,25.5z M459,25.5v306h102v-306H459z" fill="#787878"/>
+                        </g>
+                      </g>
+                    </svg>
+                  </div>
+                </div>
+                <div class="detailed_feedback hide">
+                  <div class="feedback_detail_msg"></div>
+                  <textarea rows="4" cols="75" id="feedback_box" data-id="0"></textarea>
+                  <br/>
+                  <button class="feedback_btn">Submit</button>
+                </div>
+                <div class="thank_you hide">
+                  Thank you for your feedback!
+                </div>
+              </div>
+
               <div class="footer-hasura-custom">
                 Want to contribute or report missing content? Check out the <a target="_blank" href="https://github.com/hasura/docs">github repo for docs</a>.<br>
                 Powered by <a target="_blank" href="http://www.sphinx-doc.org">Sphinx</a>.
@@ -239,6 +273,8 @@
   </script>
 
   <script type="text/javascript">
+    var baseDomain = "{{ BASE_DOMAIN }}";
+
     $(document).ready( function() {
       const supportbtnHandler = function() {
         if ( window.Intercom ) {
@@ -336,6 +372,76 @@
         }
       };
       $('#nav_tree_icon').on('click', navTreeHandler);
+
+      const feedbackUrl = baseDomain ? 'https://data.' + baseDomain + '/v1/query' : 'https://data.hasura-stg.hasura-app.io/v1/query';
+
+      const sendFeedback = function(feedback, feedbackDetailMsg) {
+        const insertQuery = {
+          'type': 'insert',
+          'args': {
+            'table': 'docs_feedback',
+            'objects': [
+              {
+                'page': window.location.pathname,
+                'feedback': feedback
+              }
+            ],
+            'returning': ['id']
+          }
+        };
+
+        promise_ajax(feedbackUrl, insertQuery, 'POST')
+          .then( function(response) {
+            const data = JSON.parse(response);
+
+            $('#feedback_box').data('id', data['returning'][0]['id']);
+            $('.feedback_detail_msg').html(feedbackDetailMsg);
+            $('.feedback').addClass('hide');
+            $('.detailed_feedback').removeClass('hide');
+          })
+          .catch( function(err) {
+            alert('Error capturing feedback');
+            console.log(err);
+          });
+      };
+
+      const handleThumbUpClick = function(e) {
+        sendFeedback('positive', 'Great to hear that. Would you like to share any other feedback:');
+      };
+      $('.thumb_up').on('click', handleThumbUpClick);
+
+      const handleThumbDownClick = function(e) {
+        sendFeedback('negative', 'Sorry to hear that. Could you please tell us what you were looking for:');
+      };
+      $('.thumb_down').on('click', handleThumbDownClick);
+
+      const handleFeedbackBtnClick = function(e) {
+        const feedbackBox = $('#feedback_box');
+        const feedbackId = feedbackBox.data('id');
+        const feedbackContent = feedbackBox.val();
+
+        const updateQuery = {
+          'type': 'update',
+          'args': {
+            'table': 'docs_feedback',
+            '$set': {
+              'feedback_content': feedbackContent
+            },
+            'where': {'id': feedbackId}
+          }
+        };
+
+        promise_ajax(feedbackUrl, updateQuery, 'POST')
+          .then( function(response) {
+            $('.detailed_feedback').addClass('hide');
+            $('.thank_you').removeClass('hide');
+          })
+          .catch( function(err) {
+            alert('Error capturing feedback');
+            console.log(err);
+          });
+      };
+      $('.feedback_btn').on('click', handleFeedbackBtnClick);
 
       window.onpopstate = function() {
         handleQueryParams();
