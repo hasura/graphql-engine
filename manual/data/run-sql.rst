@@ -29,7 +29,10 @@ If you want to run SQL statements directly on the database, this can be done in 
       .. image:: ../../img/manual/data/alter-column-sql.png
 
       .. note::
-         You should click on ``This is a migration`` option before executing the query if you want to retain the query as a db migration.
+         Check the ``This is a migration`` option before executing the query if you want to retain the query as a db migration.
+
+         Check the ``Track table`` option before executing a query to create a table/view if you want the Data microservice
+         to track it and enable access to it via the APIs.
 
 
    .. tab:: REST API
@@ -58,4 +61,6 @@ If you want to run SQL statements directly on the database, this can be done in 
       .. note::
          You cannot save the query as a migration using the API
 
-      See the :doc:`API reference <../api-reference/data/query/misc>` for the caveats and other details.
+         See the :doc:`API reference <../api-reference/data/query/misc>` for other
+         caveats and details.
+

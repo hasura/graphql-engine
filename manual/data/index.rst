@@ -38,7 +38,8 @@ See:
   Data Relationships <relationships/index>
   data-migration
   Altering the schema <alter-schema/index>
-  Aggregations and Views <aggregations>
+  Views <views>
+  Aggregations <aggregations>
   reset
   Running SQL commands <run-sql>
   Accessing postgres directly <access-postgres>

@@ -1,8 +1,8 @@
-Managing multiple clusters
-==========================
+Setting up multiple environments using clusters
+===============================================
 
-Multiple Hasura clusters can be added to a single Hasura project. In fact, this
-is a common use-case in production workflows to simulate different environments.
+Multiple Hasura clusters can be added to a single Hasura project. This is a common use-case in development workflows
+to simulate different environments.
 
 For example, for a project one might have, a ``dev`` cluster for use during development, a ``staging`` cluster, which
 replicates the production environment and is used to test before making the
