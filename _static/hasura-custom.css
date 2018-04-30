@@ -1304,15 +1304,9 @@ ol, ul
 }
 
 .feedback_wrapper {
-  border-top: 1px solid #eee;
-  padding-top: 20px;
-  margin-bottom: 20px;
-}
-
-.thank_you {
-  border-top: 1px solid #eee;
-  padding-top: 20px;
-  margin-bottom: 20px;
+  background-color: #eee;
+  padding: 20px;
+  margin: 20px 0;
 }
 
 .feedback_wrapper .feedback {
@@ -1363,6 +1357,10 @@ ol, ul
   font-size: 14px;
   font-weight: 600;
   font-family: 'Gudea';
+}
+
+#feedback_box {
+  max-width: 100%;
 }
 
 @media (max-width: 768px) {
