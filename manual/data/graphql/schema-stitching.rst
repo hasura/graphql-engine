@@ -1,6 +1,6 @@
-================
-Schema Stitching
-================
+========================
+GraphQL Schema Stitching
+========================
 
 Schema stitching is the process of creating a single GraphQL schema from multiple underlying GraphQL APIs.
 

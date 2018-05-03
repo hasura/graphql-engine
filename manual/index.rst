@@ -22,7 +22,7 @@ This is the reference documentation of the entire Hasura platform.
   Project microservices <microservices/index>
   API Console <api-console/index>
   Auth <auth/index>
-  Database <data/index>
+  Data (GraphQL) <data/index>
   Filestore <filestore/index>
   Notify (Sending emails/SMS) <notify/index>
   API gateway <gateway/index>

@@ -1,6 +1,6 @@
-================
-Custom Resolvers
-================
+========================
+GraphQL Custom Resolvers
+========================
 
 The Hasura platform allows you to deploy custom code as microservices with a git push. Your microservices can act as a graphql proxy where you can add custom resolvers and then connect to Hasura GraphQL engine.
 

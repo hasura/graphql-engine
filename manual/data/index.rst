@@ -3,10 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Hasura Database
-===============
+Hasura Data
+===========
 
-Hasura comes with data APIs which run on top of a **Postgres database** to store and retrieve data.
+Hasura comes with JSON as well as :doc:`GraphQL <graphql/index>` data APIs which run on top of a **Postgres database**
+to store and retrieve data.
 
 To fetch associated data with ease, one can define :doc:`relationships <relationships/index>` on
 tables. To authorize the access to data, :doc:`permissions <permissions>` can be added based on
@@ -27,6 +28,7 @@ See:
 .. toctree::
   :maxdepth: 1
 
+  GraphQL <graphql/index>
   create-table
   insert
   select
@@ -45,5 +47,4 @@ See:
   Accessing postgres directly <access-postgres>
   Importing data from SQL files <import-sql>
   exporting-data
-  graphql
   data-modelling/index
