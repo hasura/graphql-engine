@@ -3,13 +3,13 @@ Filestore permissions
 
 Access control to the filestore for users can be defined by configuring a webhook in the filestore conf:
 
-  **Configuring Webhooks**
+**Configuring Webhooks**
 
-  You need to configure the following options in filestore.yaml in conf directory:
+You need to configure the following options in filestore.yaml in conf directory:
 
-  .. code-block:: yaml
+.. code-block:: yaml
 
-        hookUrl: "String"
+    hookUrl: "String"
 
 The following default urls are available on filestore microservice for configuring webhooks:
 
