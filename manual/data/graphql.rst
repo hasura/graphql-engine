@@ -1,3 +1,5 @@
+.. _data-graphql:
+
 Querying data over GraphQL
 ==========================
 
@@ -213,4 +215,3 @@ Current limitations
    the introspection query). This schema can be used in various client libraries. See :ref:`generate-schema-json` for
    detailed instructions.
 3. Error messages may not point to the exact location of syntax error.
-

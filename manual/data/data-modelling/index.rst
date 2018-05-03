@@ -1,3 +1,5 @@
+.. _data-modelling:
+
 ====================
 Data Modelling Guide
 ====================

@@ -2,6 +2,8 @@
    :description: Manual for accessing postgres directly
    :keywords: hasura, docs, postgres, sql, import sql, data, import data
 
+.. _guide-import-existing-database:
+
 Importing an existing PostgreSQL database
 =========================================
 

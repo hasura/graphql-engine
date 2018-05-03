@@ -1,3 +1,5 @@
+.. _guide-graphql-eslint:
+
 Setting up Eslint for Graphql and Apollo Client
 ===============================================
 

@@ -1,3 +1,5 @@
+.. _data-create-relationships:
+
 Creating data relationships
 ===========================
 

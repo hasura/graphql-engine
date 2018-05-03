@@ -23,6 +23,7 @@ This is the reference documentation of the entire Hasura platform.
   API Console <api-console/index>
   Auth <auth/index>
   Database <data/index>
+  graphql/index
   Filestore <filestore/index>
   Notify (Sending emails/SMS) <notify/index>
   API gateway <gateway/index>

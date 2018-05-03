@@ -1,3 +1,5 @@
+.. _data-fetching-relationships:
+
 Fetching data over relationships
 ================================
 
