@@ -6,7 +6,8 @@ community around it. Hasura comes with a pre-installed PostgreSQL database which
 on a cluster. An admin user for the database is also configured by default.
 
 The :doc:`Data microservice <../data/index>` provides JSON and GraphQL APIs over the Postgres database. Also, the ``Data``
-section of the :doc:`API console <../api-console/index>` provides a UI to interact with the database.
+section of the :doc:`API console <../api-console/index>` provides a UI to interact with the database. Due to these, one
+hardly ever has to deal with the database directly for most common use cases.
 
 See:
 ^^^^

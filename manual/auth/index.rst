@@ -7,12 +7,10 @@ Hasura Auth
 The Hasura ``Auth microservice`` provides APIs which let you create, authenticate and manage user accounts on
 your Hasura project. It also lets you manage sessions and roles for users.
 
-Once a user is registered (or signed-up) on Hasura, the Auth microservice attaches a ``Hasura
-Identity`` or ``hasura_id`` as well as a default role ``'user'`` to the user.
+Once a user is registered (signed-up) on Hasura, the Auth microservice attaches a unique integer
+value called ``Hasura Identity`` or ``hasura_id`` and a default role ``'user'`` to the user.
 
-The ``hasura_id`` is a unique integer value assigned to every registered user.
-This value can be used across microservices to refer to the user registered by the Auth microservice.
-
+These value can be used across microservices to refer to the user registered by the Auth microservice.
 To understand how microservices receive the ``hasura_id`` and roles of a user, check out :doc:`sessions`
 
 Hasura Auth provides a bunch of admin APIs to perform administrative tasks

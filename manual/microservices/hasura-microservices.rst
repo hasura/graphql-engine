@@ -5,7 +5,8 @@
 Hasura microservices
 ====================
 
-Hasura microservices are the default Hasura specific microservices that run on your cluster. These include the backend APIs provided by Hasura and other components of the Hasura platform.
+Hasura microservices are the default Hasura specific microservices that run on your cluster. These include the backend
+APIs provided by Hasura, a Postgres database and other components of the Hasura platform.
 
 Hasura microservices run in the **hasura namespace** on a cluster. Most ``hasura microservice *`` commands
 will take the ``-n hasura`` flag while dealing with a service in the hasura namespace.

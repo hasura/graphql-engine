@@ -12,24 +12,15 @@
 Hasura cluster
 ==============
 
-..
-   - What is a hasura cluster?: k8s cluster, runs on some infra, free vs paid
-   - Kubernetes architecture of the hasura platform: the hasura platform in k8s terms
-   - Configuration: Declarative configuration under the user's control that the controller applies
-   - Control loop of the controller
-   - Provisioning
+A Hasura cluster is basically a `Kubernetes <https://kubernetes.io>`_ cluster underneath, which is usually running on a
+cloud infrastructure like ``Digital Ocean``, ``Google Cloud``, ``Azure`` or ``AWS``.
 
+Hasura clusters are used to deploy :doc:`Hasura projects <../project/index>` and host its constituent
+:doc:`microservices <../microservices/index>` (ie: a Postgres database, Hasura backend APIs, custom microservices, etc).
 
-A Hasura cluster is a `Kubernetes <https://kubernetes.io>`_ cluster, with
-Hasura backend APIs and some internal microservices (like Postgres, Nginx etc.)
-installed on it.  This Kubernetes cluster is usually running on a cloud
-infrastructure like ``Digital Ocean``, ``Google Cloud``, ``Azure`` or ``AWS``.
-
-Hasura provides free clusters as well as paid :doc:`pro-tier clusters <pro-tier/index>`.
-
-Hasura free-tier clusters are for development purposes or for hobby projects.
-
-For hosting production projects, Hasura pro-tier clusters should be used.
+Hasura provides free clusters as well as paid pro-tier clusters.
+Hasura free-tier clusters are for development purposes or for hobby projects. For hosting production projects,
+Hasura :doc:`pro-tier clusters <pro-tier/index>` should be used.
 
 .. note::
 

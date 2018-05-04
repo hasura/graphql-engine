@@ -6,11 +6,11 @@
 Hasura API Gateway
 ==================
 
-The Hasura ``Gateway microservice`` consists of a custom Lua scripted Nginx.
+The Hasura ``Gateway microservice`` is responsible for routing all external requests to the correct upstream (acting
+as a reverse proxy), terminating SSL connections and resolving sessions for upstream microservices
+(acting as a session middleware).
 
-It is responsible for routing all external requests to the correct upstream
-(acting as a reverse proxy), terminating SSL connections and resolving sessions
-for upstream microservices (acting as a session middleware).
+It is basically a custom Lua scripted Nginx underneath.
 
 See:
 ^^^^

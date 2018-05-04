@@ -16,8 +16,8 @@ It follows a particular :doc:`directory structure <directory-structure/index>` t
 
 A Hasura project can be deployed on a :doc:`Hasura cluster <../cluster/index>` and is composed of multiple :doc:`microservices <../microservices/index>` which run together.
 
-You can ``git push hasura master`` to deploy everything, including your custom
-microservices, database migrations and project configuration.
+You can simply ``git push`` to deploy everything, including your custom microservices, database migrations
+and project configuration to a cluster.
 
 See:
 ^^^^
