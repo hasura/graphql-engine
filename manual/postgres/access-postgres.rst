@@ -2,8 +2,8 @@
    :description: Manual for accessing postgres directly
    :keywords: hasura, docs, postgres, tunnel
 
-Accessing Postgres directly
-===========================
+Accessing Postgres
+==================
 
 The Postgres database runs as a microservice on a Hasura cluster. You can directly access Postgres via the following options:
 
@@ -48,6 +48,3 @@ The Postgres database runs as a microservice on a Hasura cluster. You can direct
 
 
 If you are trying to connect to postgres from a custom microservice, see: :doc:`../microservices/connect-postgres`.
-
-.. ..todo::
-   * Describe postgres, data API, and API gateway architecture

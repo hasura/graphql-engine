@@ -25,6 +25,7 @@ This is the reference documentation of the entire Hasura platform.
   Data (GraphQL) <data/index>
   Filestore <filestore/index>
   Notify (Sending emails/SMS) <notify/index>
+  postgres/index
   API gateway <gateway/index>
   Hasura Hub <hub/index>
   Hasura CLI reference <hasuractl/index>

@@ -6,8 +6,8 @@
 Hasura Data
 ===========
 
-Hasura comes with JSON as well as :doc:`GraphQL <graphql/index>` data APIs which run on top of a **Postgres database**
-to store and retrieve data.
+Hasura comes with JSON as well as :doc:`GraphQL <graphql/index>` data APIs which run on top of a
+:doc:`Postgres database <../postgres/index>` to store and retrieve data.
 
 To fetch associated data with ease, one can define :doc:`relationships <relationships/index>` on
 tables. To authorize the access to data, :doc:`permissions <permissions>` can be added based on
@@ -35,16 +35,12 @@ See:
   update
   delete
   Bulk queries <bulk>
-  Linking to auth users <link-auth-users>
+  Running SQL commands <run-sql>
   Permissions and access control <permissions>
-  Data Relationships <relationships/index>
+  relationships/index
+  link-auth-users
   data-migration
-  Altering the schema <alter-schema/index>
   Views <views>
   Aggregations <aggregations>
-  reset
-  Running SQL commands <run-sql>
-  Accessing postgres directly <access-postgres>
-  Importing data from SQL files <import-sql>
-  exporting-data
+  Altering the schema <alter-schema/index>
   data-modelling/index

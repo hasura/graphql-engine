@@ -2,7 +2,7 @@
 Exporting data as SQL
 =====================
 
-Since Hasura uses Postgres, you can export your schema and data with `pg_dump <https://www.postgresql.org/docs/9.3/static/app-pgdump.html>`_.
+You can export your schema and data with `pg_dump <https://www.postgresql.org/docs/9.3/static/app-pgdump.html>`_.
 
 You will need to have ``pg_dump`` installed.
 
@@ -20,4 +20,5 @@ You will need to have ``pg_dump`` installed.
 
       $ pg_dump -U admin hasuradb --host=localhost --port=6432 > backup.sql
 
-   After the above command succeeds, you will have your backup in ``backup.sql``. You can replace ``backup.sql`` with path to the file you wish to have your data in.  
+   After the above command succeeds, you will have your backup in ``backup.sql``. You can replace ``backup.sql`` with
+   path to the file you wish to have your data in.

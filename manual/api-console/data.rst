@@ -10,10 +10,10 @@ To create a table, just click on the ``Create Table`` button.
 
 .. image:: img/api-console-data-create-table.png
 
-View Table
-----------
+View/Modify Table
+-----------------
 
-To view, manage and delete a table, choose the table from the left panel.
+To view, modify and delete a table, choose the table from the left panel.
 
 .. image:: img/api-console-data-table.png
 
