@@ -8,7 +8,7 @@
 Hasura Notify (Sending emails/SMS)
 ==================================
 
-Hasura comes with a ``Notify`` microservice which lets you send communication to users via emails and SMS
+The Hasura ``Notify microservice`` lets you send communication to your app users via emails and SMS.
 
 See:
 ^^^^

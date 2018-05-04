@@ -1,8 +1,8 @@
 Hasura Filestore
 ================
 
-File APIs on Hasura lets users upload and store files on a Hasura project and also
-download when required. The API exposes upload, download and delete methods as well
+The Hasura ``Filestore microservice`` provides APIs which let users upload and store files on a Hasura project and also
+download them when required. The API exposes upload, download and delete methods as well
 as provide permission options based on user's ID or Role to decide who can create,
 read or delete files.
 

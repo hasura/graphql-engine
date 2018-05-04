@@ -3,9 +3,8 @@ GraphQL on Hasura
 =================
 
 Starting from version ``v0.15.31``, the data microservice supports querying over `GraphQL <https://graphql.org/>`_
-in addition to the JSON based query language. The :doc:`API explorer <../../api-console/api-explorer>` section of the API
-console has `GraphiQL <https://github.com/graphql/graphiql>`_ integrated, so that is the best place for getting started
-with GraphQL on Hasura.
+in addition to the JSON based query language. The ``API Explorer`` section of the :doc:`API console <../../api-console/index>`
+has `GraphiQL <https://github.com/graphql/graphiql>`_ integrated to let you explore the GraphQL APIs of Hasura.
 
 Quick overview
 --------------
@@ -30,11 +29,12 @@ Quick overview
    - Set :ref:`permissions <data-permissions>` over your tables.
    - Once you set permissions, the GraphQL queries and mutations will respect these permissions.
 
-To know about the GraphQL API in detail, check out :ref:`the reference <data-graphql>`.
+To know about the GraphQL API in detail, check out the :ref:`reference <data-graphql>`.
 
 .. admonition:: Note
 
-    If you already have a Postgres database and wish to have GraphQL APIs over it, we have a quick guide for migrating your database :ref:`here <guide-import-existing-database>`.
+    If you already have a Postgres database and wish to have GraphQL APIs over it, we have a quick guide for migrating
+    your database :ref:`here <guide-import-existing-database>`.
 
 See:
 ^^^^

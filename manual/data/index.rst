@@ -6,7 +6,7 @@
 Hasura Data
 ===========
 
-Hasura comes with JSON as well as :doc:`GraphQL <graphql/index>` data APIs which run on top of a
+The Hasura ``Data microsevice`` provides GraphQL as well as JSON APIs which run on top of a
 :doc:`Postgres database <../postgres/index>` to store and retrieve data.
 
 To fetch associated data with ease, one can define :doc:`relationships <relationships/index>` on

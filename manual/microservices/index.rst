@@ -15,7 +15,7 @@ Hasura microservices run in the **hasura namespace** while custom microservices 
 Hasura microservices include the backend APIs provided by Hasura and other components of the Hasura platform.
 
 Some typical examples of custom microservices you would add to your project include, an API service,
-a webapp, a microservice that serves static files, for a simple HTML site or a SPA (eg: React),
+a webapp, a microservice that serves static files for a simple HTML site or a single-page app (eg: React),
 a ready made microservice like the ghost blog-engine or a 'stateful' microservice like a database.
 
 .. note::

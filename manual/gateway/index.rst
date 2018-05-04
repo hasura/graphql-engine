@@ -6,8 +6,7 @@
 Hasura API Gateway
 ==================
 
-The Hasura API Gateway (or simply the gateway) is a microservice consisting of
-a custom Lua scripted Nginx, a Let's Encrypt agent and a Redis instance.
+The Hasura ``Gateway microservice`` consists of a custom Lua scripted Nginx.
 
 It is responsible for routing all external requests to the correct upstream
 (acting as a reverse proxy), terminating SSL connections and resolving sessions

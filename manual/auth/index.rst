@@ -4,7 +4,7 @@
 Hasura Auth
 ===========
 
-Hasura Auth APIs lets you create, authenticate and manage user accounts on
+The Hasura ``Auth microservice`` provides APIs which let you create, authenticate and manage user accounts on
 your Hasura project. It also lets you manage sessions and roles for users.
 
 Once a user is registered (or signed-up) on Hasura, the Auth microservice attaches a ``Hasura
