@@ -1,9 +1,9 @@
-Hot reloading local changes to a microservice
+Live reloading local changes to a microservice
 =============================================
 
 The biggest advantage with developing on a local machine is that you get
 immediate feedback for whatever changes you make to code. Most of the languages
-have some tooling around them which enables live reloading or hot reloading of
+have some tooling around them which enables live reloading of
 the code changes on a running instance of the program.
 
 But, your local development environment and the production deployment
@@ -20,16 +20,16 @@ within the cluster using the internal endpoint without authentication.
 Using Hasura, you can develop applications on the cluster just like you do on
 your local system. :ref:`hasura microservice sync <hasura_microservice_sync>`
 command can sync files from a local directory to any directory inside the
-running container on the cluster. Using ``sync`` and hot-reloading capabilities
+running container on the cluster. Using ``sync`` and live-reloading capabilities
 of the language/framework, you can make use of all the Hasura features, like
 internal endpoints for contacting other microservices, id/role resolution for
-cookie/tokens etc. 
+cookie/tokens etc.
 
 This is the easiest and fastest way to develop applications on a Kubernetes
 cluster.
 
 Most of the Hasura published quickstarts on the Hub comes with documentation for
-how to enable hot reloading.
+how to enable live reloading.
 
 Below are some examples for various languages:
 

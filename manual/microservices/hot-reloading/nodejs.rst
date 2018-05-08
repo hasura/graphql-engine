@@ -24,31 +24,31 @@ will reload the server with latest code.
 
 We can replicate the same workflow on a Hasura cluster also. Let's see how we
 can modify the typical ``Dockerfile`` for the above microservice to include
-``nodemon`` and enable hot reloading.
+``nodemon`` and enable live reloading.
 
 .. code-block:: dockerfile
 
    # Step 1: Pulls a simple ubuntu image with node 8 installed in it
    FROM node:8
-   
+
    # Step 2: install nodemon
    RUN npm install -g nodemon
 
    # Step 3: Make a new directory called "src"
    RUN mkdir /src
-   
+
    # Step 4: Copy the package.json file from your local directory and paste it inside the container, inside the src directory
    COPY src/package.json /src/package.json
-   
+
    # Step 5: cd into the src directory and run npm install to install application dependencies
    RUN cd /src && npm install
-   
+
    # Step 6: Add all source code into the src directory from your local src directory
    ADD src /src
-   
+
    # Step 7: Set src as our current work directory
    WORKDIR /src
-   
+
    # Step 8: run the nodemon command
    CMD ["nodemon", "server.js"]
 

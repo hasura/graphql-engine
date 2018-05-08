@@ -54,7 +54,7 @@ reload the web server and the connected website so that new code is available.
 The ``app`` directory from the microservice is added as ``/app`` in the docker
 image for the container, as given in step 5. The, in step 7, we can see that
 ``npm start`` is executed. When we commit and push this dockerfile, the
-microservice will be running a development webserver that can hot-reload
+microservice will be running a development webserver that can live-reload
 changes.
 
 You also need to create a file called ``.env`` in your root directory and add the following line to it.

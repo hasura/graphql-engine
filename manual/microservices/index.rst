@@ -42,5 +42,5 @@ Now that you're familiar with the basic concepts of what a microservice is, See:
   change-subdomain
   communicating-between-microservices
   Connecting to Postgres from microservices <connect-postgres>
-  Hot reloading changes to a microservice <hot-reloading/index>
+  Live reloading changes to a microservice <hot-reloading/index>
   persistent-volumes
