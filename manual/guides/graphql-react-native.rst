@@ -110,72 +110,62 @@ We will use a simple TODO-list schema for demonstrating queries with React Nativ
 +-----------+-----------------------------+
 
 
-Queries
-~~~~~~~
+Queries and mutations
+~~~~~~~~~~~~~~~~~~~~~
 
-To fetch all todos, and render the tasks as a  list of `<Text>`, you can use
+Firstly, we will define our required queries and mutations as graphql strings.
 
-.. code-block:: javascript
+.. snippet:: javascript
+  :filename: graphqlStrings.js
 
-  export default graphql(gql`
-    query fetch_todos{
-      todos {
-        id
-        task
-        completed
-        user_id
-      }
-    }
-  `)((props) => {
-    return props.data.todos.map((todo, index) => {
-      return (
-        <Text>{todo.task}</Text>
-      );
-    });
-  });
-
-``todos`` above is the name of the table. This is the convention followed by Hasura for GraphQL queries.
-
-
-Mutations
-~~~~~~~~~
-
-Insert
-^^^^^^
-
-Below is the code snippet for a ``Button`` that ``inserts`` an element in the ``todos`` table.
-
-.. code-block:: javascript
-
-  export default graphql(gql`
-    mutation insert_todos ($objects: [todos_input!]){
-      insert_todos(objects: $objects) {
-        affected_rows
-        returning {
+    const FETCH_TODOS = gql`
+      query fetch_todos{
+        todos {
           id
+          task
+          completed
+          user_id
         }
       }
-    }
-  `)((props) => {
-    return (
-      <Button
-        title="Insert Todo"
-        onPress={() => {
-          props.mutate({
-            variables: {
-              objects: [{
-                task: "New task",
-                completed: false,
-                user_id: 34
-              }]
-            }
-          });
-        }}
-      />
-    );
-  });
+    `;
 
-There are a few things to be noted here:
+    const INSERT_TODO = gql`
+      mutation insert_todos ($objects: [todos_input!]){
+        insert_todos(objects: $objects) {
+          affected_rows
+          returning {
+            id
+          }
+        }
+      }
+    `;
+
+    const UPDATE_TODO = gql`
+      mutation update_todos{
+        update_todos(where: {id: {_eq: $todo_id}} _set: {completed: $completed}) {
+          affected_rows
+        }
+      }
+    `;
+
+    const DELETE_TODO = gql`
+      mutation delete_todos{
+        delete_todos(where: {id: {_eq: $todo_id}}) {
+          affected_rows
+        }
+      }
+    `;
+
+    export {
+      INSERT_TODO,
+      FETCH_TODOS,
+      UPDATE_TODO,
+      DELETE_TODO
+    }
+
+In the above queries:
+
+* ``todos`` above is the name of the table. This is the convention followed by Hasura for GraphQL queries.
 
 * ``insert_todos`` is a convention when inserting data into a table. It is of type ``insert_<TABLE_NAME>``, where <TABLE_NAME> is to be replaced with the name of the table to which data is being inserted.
 
@@ -187,6 +177,86 @@ There are a few things to be noted here:
 
 * The ``returning`` key specifies the data you want returned after a successful insertion. In this case, we are asking for the ``id``, ``task`` and ``completed`` columns.
 
+* ``update_todos`` is a convention when updating data in a table. It is of type ``update_<TABLE_NAME>``, where <TABLE_NAME> is to be replaced with the name of the table where you want to update data.
+
+* ``where: {id: {_eq: 4}}`` checks that the ``id`` of the row that is being updated is ``4``.
+
+* The ``delete_todos`` query is very similar to the update mutation, the only difference is that the convention to delete data from a table is ``delete_<TABLE_NAME>`` where <TABLE_NAME> is to be replaced with the name of the table where you want to delete data.
+
+Now lets write sample React Native components that use these queries.
+
+Query Components
+~~~~~~~~~~~~~~~~
+
+To fetch all todos, and render the tasks as a  list of `<Text>`, you can use
+
+.. code-block:: javascript
+
+
+  const TodoListComponent = () => (
+    <Query
+      query={FETCH_TODOS}
+    >
+      {({loading, error, data}) => {
+        return data.todos.map((todo, index) => {
+          return (
+            <Text>{todo.task}</Text>
+          );
+        });
+      }}
+    </Query>
+  )
+
+
+Mutation Components
+~~~~~~~~~~~~~~~~~~~
+
+Insert
+^^^^^^
+
+Below is the code snippet for a ``Button`` that ``inserts`` an element in the ``todos`` table.
+
+.. code-block:: javascript
+
+  const AddButton = (props) => (
+    <Mutation
+      mutation={INSERT_TODO}
+      {(insert_todos, {data}) => (
+        <Button
+          title="Insert Todo"
+          style={props.style}
+          onPress={() => {
+            insert_todos({
+              variables: {
+                objects: [{
+                  task: "Sample todo task",
+                  completed: false,
+                  user_id: 44
+                }]
+              }
+            });
+          }}
+        />
+      )}
+    </Mutation>
+  )
+
+In most cases, you also need to update the memory cache of the Apollo cache in order to reflect changes in the UI. To do that, you just have to add an update prop in the ``Mutation`` component:
+
+.. code-block:: javascript
+
+    update= {(cache, {data: {insert_todos}}) => {
+      const data = cache.readQuery({ query: FETCH_TODOS});
+      const newTodo = {
+        task: "Sample todo task"
+        completed: false,
+        user_id: 44,
+        id: insert_todos.returning[0].id
+      }
+      data.todos.push(newTodo);
+      cache.writeQuery({query: FETCH_TODOS, data})
+    }}
+
 Update
 ^^^^^^
 
@@ -194,28 +264,62 @@ The ``Button`` below, sets the ``completed`` status of a task (id = 4) to ``true
 
 .. code-block:: javascript
 
-  export default graphql(gql`
-    mutation update_todos{
-      update_todos(where: {id: {_eq: 4}} _set: {completed: true}) {
-        affected_rows
-      }
-    }
-  `)((props) => {
+  // this component should receive a prop called `todo` which is the todo item object to be updated
+  const UpdateButton= (props) => {
     return (
-      <Button
-        title="Update Todo"
-        onPress={() => {
-          props.mutate();
-        }}
-      />
-    );
-  });
+      <Mutation
+        mutation={
+          gql`
+            mutation update_todos{
+              update_todos(where: {id: {_eq: 4}} _set: {completed: true}) {
+                affected_rows
+              }
+            }
+          `
+        }
+      >
+        {
+          (update_todos) => (
+            <Button
+              onPress={() => {
+                update_todos({
+                  variables: {
+                    todo_id: props.todo.id,
+                    completed: !props.todo.completed
+                  }
+                })
+              }}
+              title="Update todo"
+            >
+          )
+        }
+      </Mutation>
+    )
+  }
 
-Things to be noted:
+To update the Apollo cache after performing the mutation, you just have to add an update prop in the ``Mutation`` component:
 
-- ``update_todos`` is a convention when updating data in a table. It is of type ``update_<TABLE_NAME>``, where <TABLE_NAME> is to be replaced with the name of the table where you want to update data.
+.. code-block:: javascript
 
-- ``where: {id: {_eq: 4}}`` checks that the ``id`` of the row that is being updated is ``4``.
+    update={(cache) => {
+      const data = cache.readQuery({ query: FETCH_TODOS});
+      cache.writeQuery({
+        query: FETCH_TODOS,
+        data: {
+          ...data,
+          todos: data.todos.map((todo) => {
+            if (todo.id === props.todo.id) {
+              return {
+                ...todo,
+                completed: !todo.completed
+              }
+            }
+            return todo;
+          })
+        }
+      })
+    }}
+
 
 Delete
 ^^^^^^
@@ -224,24 +328,43 @@ Finally, if you want a ``Button`` to delete a task with ``id = 4``, you can use
 
 .. code-block:: javascript
 
-  export default graphql(gql`
-    mutation delete_todos{
-      delete_todos(where: {id: {_eq: 4}}) {
-        affected_rows
-      }
-    }
-  `)((props) => {
-    return (
-      <Button
-        title="Delete Todo"
-        onPress={() => {
-          props.mutate();
-        }}
-      />
-    );
-  });
+    // this component should receive a prop called `todo` which is the todo item to be updated
+    const DeleteButton = (props) => (
+      <Mutation
+        mutation={DELETE_TODO}
 
-The query is very similar to the update mutation, the only difference is that the convention to delete data from a table is ``delete_<TABLE_NAME>`` where <TABLE_NAME> is to be replaced with the name of the table where you want to delete data.
+      >
+        {(delete_todos, {data}) => (
+          <Button
+            title="Delete"
+            style={props.style}
+            onPress={() => {
+              delete_todos({
+                variables: {
+                  todo_id: props.todo.id
+                }
+              });
+            }}
+          />
+        )}
+      </Mutation>
+    );
+
+
+To update the cache after deletion, add the following ``update`` prop to the Mutation component:
+
+.. code-block:: javascript
+
+    update= {(cache) => {
+      const data = cache.readQuery({ query: FETCH_TODOS});
+      cache.writeQuery({
+        query: FETCH_TODOS,
+        data: {
+          ...data,
+          todos: data.todos.filter((todo) => (props.todo.id !== todo.id))
+        }
+      })
+    }}
 
 Reference
 ----------
