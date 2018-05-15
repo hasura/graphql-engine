@@ -24,6 +24,11 @@ h1 a:visited, h2 a:visited, h3 a:visited, h4 a:visited, h5 a:visited, h6 a:visit
   margin: 0 auto;
 }
 
+.schema {
+  display: inline-block;
+  width: 60%;
+}
+
 /* Loader */
 .loader {
   border: 1px solid #cc401b;
@@ -1388,3 +1393,4 @@ ol, ul
     padding: 10px
   }
 }
+
