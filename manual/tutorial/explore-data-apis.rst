@@ -48,7 +48,7 @@ Let's insert a couple of authors. The full definition of `insert` request can be
       .. code-block:: none
 
          mutation insert_author {
-           insert_author (objects: [{name: "Warren"},{name: "Greg"}]) {
+           insert_author (objects: [{id: 100, name: "Sam"}, {id: 101, name: "Greg"}]) {
              returning {
                id
              }
@@ -62,7 +62,7 @@ Let's insert a couple of authors. The full definition of `insert` request can be
 
          POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: Bearer <auth-token> # optional if cookie is set
+         Authorization: Bearer <auth-token>
          X-Hasura-Role: admin
 
          {
@@ -70,8 +70,8 @@ Let's insert a couple of authors. The full definition of `insert` request can be
              "args":{
                  "table":"author",
                  "objects":[
-                     {"name":"Warren"},
-                     {"name":"Greg"}
+                     {"id": 100, "name":"Sam"},
+                     {"id": 101, "name":"Greg"}
                  ],
                  "returning":["id"]
              }
@@ -108,7 +108,7 @@ found :ref:`here <data_select>`
 
          POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: Bearer <auth-token> # optional if cookie is set
+         Authorization: Bearer <auth-token>
          X-Hasura-Role: admin
 
          {
@@ -148,7 +148,7 @@ In the above query, we can have a ``where`` clause to apply filters on the data.
 
          POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: Bearer <auth-token> # optional if cookie is set
+         Authorization: Bearer <auth-token>
          X-Hasura-Role: admin
 
          {
@@ -202,7 +202,7 @@ Example,
 
          POST data.<cluster-name>.hasura-app.io/v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: Bearer <auth-token> # optional if cookie is set
+         Authorization: Bearer <auth-token>
          X-Hasura-Role: admin
 
          {
@@ -241,6 +241,8 @@ of where clause is same as in the `select` query. For the full syntax of update 
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
+         Authorization: Bearer <auth-token>
+         X-Hasura-Role: admin
 
          {
              "type" : "update",
@@ -279,6 +281,8 @@ the `select` query. For the full syntax of delete request, see :ref:`here <data_
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
+         Authorization: Bearer <auth-token>
+         X-Hasura-Role: admin
 
          {
              "type" : "delete",
