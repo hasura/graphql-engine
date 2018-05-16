@@ -1,6 +1,5 @@
-==============================
-Adding a uniqueness constraint
-==============================
+Adding a uniqueness constraint to table column
+==============================================
 
 **Indexes** can be used to enforce uniqueness of a column's value, or the uniqueness of the combined values of more than one column.
 

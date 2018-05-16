@@ -1,5 +1,5 @@
-Altering schema of a table
-==========================
+Add/delete/alter table columns
+==============================
 
 You can add/delete columns to a table as well as alter the existing columns' type, default value and Nullable properties using
 the following methods:
@@ -11,7 +11,7 @@ the following methods:
 
       Head to ``Data > Schema > [table-name] > Modify`` section of :doc:`API console <../../api-console/index>`.
 
-      Click on ``Edit`` for the column you want to alter/delete. A new column can be added via the Add column section at the bottom.
+      A new column can be added via the *Add column* button at the bottom. Click on *Edit* to alter/delete a column.
 
       .. image:: ../../../img/manual/data/alter-table.png
 

@@ -1,4 +1,4 @@
-Deleting a Table
+Deleting a table
 ----------------
 
 You can delete a ``table`` via the :doc:`API console <../../api-console/index>` or via the API.

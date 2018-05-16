@@ -30,12 +30,12 @@ See:
 
   GraphQL <graphql/index>
   create-table
+  alter-schema/index
   insert
   select
   update
   delete
   Bulk queries <bulk>
-  Altering the schema <alter-schema/index>
   Running SQL commands <run-sql>
   Permissions and access control <permissions>
   relationships/index
