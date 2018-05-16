@@ -8,9 +8,9 @@ Below are some common schema modification scenarios:
 .. toctree::
    :maxdepth: 1
 
-   alter-column
+   alter-table
+   delete-table
    alter-primary-key
    adding-foreign-key-constraint
    adding-not-null-constraint
    adding-unique-constraint
-   delete-table

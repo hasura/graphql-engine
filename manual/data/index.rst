@@ -35,6 +35,7 @@ See:
   update
   delete
   Bulk queries <bulk>
+  Altering the schema <alter-schema/index>
   Running SQL commands <run-sql>
   Permissions and access control <permissions>
   relationships/index
@@ -42,5 +43,4 @@ See:
   data-migration
   Views <views>
   Aggregations <aggregations>
-  Altering the schema <alter-schema/index>
   data-modelling/index
