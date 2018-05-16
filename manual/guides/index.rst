@@ -7,6 +7,7 @@ Guides
    :maxdepth: 1
 
    Adding a nodejs cron job to your Hasura Project <node-crons>
+   sync-tables-using-python-cron
    Integrating social login with user table <social-login-user-data>
    Using GraphQL with React and Apollo Client <graphql-react>
    Using GraphQL with React Native and Apollo Client <graphql-react-native>
