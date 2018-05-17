@@ -1,6 +1,5 @@
-===============================
-Adding a foreign key constraint
-===============================
+Adding a foreign key constraint to table column
+===============================================
 
 If many records will refer to the same data, it is more efficient and less error prone to update a single record and keep references to it in other places. That's where foreign key constraints come in. The foreign key constraint will ensure consistency of data and no overheads on update.
 

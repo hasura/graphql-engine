@@ -62,25 +62,47 @@ table to ``author_average_rating`` view:
 
 Now, let's fetch author details with their average rating:
 
-.. code-block:: http
+.. rst-class:: api_tabs
+.. tabs::
 
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
+   .. tab:: GraphQL
 
-   {
-       "type" : "select",
-       "args" : {
-           "table" : "author",
-           "columns": [
-               "id", "name",
-               {
-                   "name" : "average_rating",
-                   "columns" : ["avg"]
-               }
-           ],
-           "order_by" : "+name"
-       }
-   }
+      .. code-block:: none
+
+         query fetch_author {
+           author(order_by: ["+name"]) {
+             id
+             name
+             average_rating {
+               avg
+             }
+           }
+         }
+
+
+   .. tab:: JSON API
+
+      .. code-block:: http
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         Authorization: Bearer <auth-token>
+         X-Hasura-Role: admin
+
+         {
+             "type" : "select",
+             "args" : {
+                 "table" : "author",
+                 "columns": [
+                     "id", "name",
+                     {
+                         "name" : "average_rating",
+                         "columns" : ["avg"]
+                     }
+                 ],
+                 "order_by" : "+name"
+             }
+         }
 
 .. note::
    The above query will work only after adding permissions to the ``author_average_rating`` view.

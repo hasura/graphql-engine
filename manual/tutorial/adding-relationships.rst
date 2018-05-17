@@ -97,20 +97,22 @@ Creating relationships
 
 You can create relationships for tables via the ``API console``.
 
-Let's say you wish to add the object relationship, ``author`` for the ``article`` table.
-Click on the ``article`` table and navigate to the *Relationships* tab.
+By default the object relationship, ``author`` for the ``article`` table has already been created. Click on the
+``article`` table and navigate to the *Relationships* tab.
 
-You'll see an entry in *suggested object relationships* for ``author_id -> author::id``:
+You'll see an entry in *object relationships* for ``author_id -> author::id``:
 
-.. image:: ../../img/complete-tutorial/tutorial-suggested-relationships.png
+.. image:: ../../img/complete-tutorial/tutorial-article-relationships-page.png
 
-Click on *Add* to add a new object relationship and give name ``author`` to the relationship:
+Let's say you wish to add the array relationship, ``comments`` for the ``article`` table.
+You'll see entries under *suggested relationships*, if you had added all the foreign key constraints that were mentioned
+in the previous part. Click on *Add* to add a new array relationship and give name ``comments`` to the relationship:
 
-.. image:: ../../img/complete-tutorial/tutorial-create-relationship.png
+.. image:: ../../img/complete-tutorial/tutorial-add-relationship-comments.png
 
 The relationship is created:
 
-.. image:: ../../img/complete-tutorial/tutorial-created-relationship.png
+.. image:: ../../img/complete-tutorial/tutorial-added-relationship-comments.png
 
 You can create the other relationships similarly.
 
@@ -141,7 +143,7 @@ To obtain the **author**'s name from the article table, we issue,
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: Bearer <auth-token> # optional if cookie is set
+         Authorization: Bearer <auth-token>
          X-Hasura-Role: admin
 
          {
@@ -182,7 +184,7 @@ The same syntax can be used to obtain the titles of all articles across all **au
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: Bearer <auth-token> # optional if cookie is set
+         Authorization: Bearer <auth-token>
          X-Hasura-Role: admin
 
          {
@@ -222,7 +224,7 @@ of 5 by author with name ``Warren`` , we could use:
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: Bearer <auth-token> # optional if cookie is set
+         Authorization: Bearer <auth-token>
          X-Hasura-Role: admin
 
          {
@@ -261,7 +263,7 @@ Let's fetch authors who has not written a article with rating less than 3:
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: Bearer <auth-token> # optional if cookie is set
+         Authorization: Bearer <auth-token>
          X-Hasura-Role: admin
 
          {
@@ -289,7 +291,7 @@ As you probably guessed, relationships can be nested. Let's get all authors, wit
          query fetch_article {
            author {
              name
-             article {
+             articles {
                title
                comments {
                  comment
@@ -304,7 +306,7 @@ As you probably guessed, relationships can be nested. Let's get all authors, wit
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: Bearer <auth-token> # optional if cookie is set
+         Authorization: Bearer <auth-token>
          X-Hasura-Role: admin
 
          {
@@ -351,7 +353,7 @@ We can also use ``where``, ``limit``, ``offset`` inside array relationships. Let
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
-         Authorization: Bearer <auth-token> # optional if cookie is set
+         Authorization: Bearer <auth-token>
          X-Hasura-Role: admin
 
          {

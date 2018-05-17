@@ -21,6 +21,13 @@ Whenever a new user signs up or an existing user logs in, a session token called
 represents the user session. This ``auth_token`` is mapped with the user's information and stored in the *session_store*.
 
 
+.. admonition:: Note
+
+    Hasura Auth microservice comes with a default user called **'admin'** with ``hasura_id`` = ``1`` and roles ``admin``
+    and ``user``.
+
+
+
 A bit about sessions
 --------------------
 
@@ -129,12 +136,12 @@ Lets explore the endpoints that we are interested in to build our blog app using
 
    .. image:: ../../img/tutorial-6-user-info.png
 
-   Now let's get the ``admin`` user's information. The admin token is in fact the ``admin`` user's session token. Let's
-   use the admin token in the ``Authorization`` header.
+   Now let's get the default user ``admin``'s information. The admin token is in fact the user ``admin``'s session token.
+   Let's use the admin token in the ``Authorization`` header.
 
    .. image:: ../../img/tutorial-6-admin-user-info.png
 
-   You can see that the ``admin`` user has an ``admin`` role in addition to the ``user`` role.
+   You can see that the user ``admin`` has an ``admin`` role in addition to the ``user`` role.
 
 #. **Logout**
 

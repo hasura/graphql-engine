@@ -59,6 +59,11 @@ configuration, or microservice config changes; commit the changes and execute
 
 Under the hood, there is a git pre-push hook that runs and does all of the above.
 
+.. note::
+
+    You cannot run ``git pull hasura master`` to get the project files from the cluster. It is a 'push-only' repo. To
+    manage your project, push  it to an online git repository (like Github).
+
 .. _partial-deploy:
 
 Applying configuration changes only

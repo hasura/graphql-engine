@@ -30,6 +30,7 @@ See:
 
   GraphQL <graphql/index>
   create-table
+  alter-schema/index
   insert
   select
   update
@@ -42,5 +43,4 @@ See:
   data-migration
   Views <views>
   Aggregations <aggregations>
-  Altering the schema <alter-schema/index>
   data-modelling/index

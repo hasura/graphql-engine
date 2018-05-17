@@ -1,6 +1,5 @@
-============================
-Adding a not-null constraint
-============================
+Adding a not-null constraint to table column
+============================================
 
 In database theory, NULL is unknown or missing information. The NULL value is different from an empty string or number zero. For example, you can ask a person for an email address, if you don’t know, you use the NULL value for inserting into the email column. This indicates that the information at the time of inserting is unknown. In case the person does not have any email address, you can update it to an empty string.
 

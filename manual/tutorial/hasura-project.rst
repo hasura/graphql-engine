@@ -22,7 +22,7 @@ Run the following command:
 
 
 This will 'clone' the `hasura/hello-world <https://hasura.io/hub/projects/hasura/hello-world>`_ project from
-`hasura.io/hub <https://hasura.io/hub>`_.
+`hasura.io/hub <https://hasura.io/hub>`_ into your current directory.
 
 .. admonition:: Note
 
@@ -124,7 +124,7 @@ infrastructure so that you can create instances of your infra on-demand.
 .hasura
 ^^^^^^^
 
-Info about the actual clusters added to this project can be found in this file. Each cluster is defined by it’s ``name``
+Information about the actual clusters added to this project can be found in this file. Each cluster is defined by it’s ``name``
 allotted by Hasura, and an ``alias`` that matches with one in ``clusters.yaml``. While adding the cluster to the project
 you are prompted to give an alias, which is just ``hasura`` by default.
 The ``kubeContext`` mentions the name of kubernetes context used to access the cluster, which is also managed by hasura.
@@ -158,7 +158,7 @@ microservices/
 ^^^^^^^^^^^^^^
 
 This directory contains everything related to the microservices that you create; such as the Kubernetes configuration,
-source code etc.
+Dockerfile for building the docker image and application source code etc.
 
 
 Next: Create a Hasura cluster
