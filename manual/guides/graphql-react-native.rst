@@ -241,7 +241,7 @@ Below is the code snippet for a ``Button`` that ``inserts`` an element in the ``
     </Mutation>
   )
 
-In most cases, you also need to update the memory cache of the Apollo cache in order to reflect changes in the UI. To do that, you just have to add an update prop in the ``Mutation`` component:
+In most cases, you also need to update the memory cache of the Apollo client in order to reflect changes in the UI. To do that, you just have to add an update prop in the ``Mutation`` component:
 
 .. code-block:: javascript
 
