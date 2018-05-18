@@ -96,7 +96,7 @@ found :ref:`here <data_select>`
       .. code-block:: none
 
         query fetch_article {
-          author {
+          article {
             id
             title
           }
@@ -190,9 +190,10 @@ Example,
       .. code-block:: none
 
         query fetch_article {
-          author (limit: 10, order_by: ["+author_id"]) {
+          article (limit: 10, order_by: ["+author_id"]) {
             id
             title
+            author_id
           }
         }
 
