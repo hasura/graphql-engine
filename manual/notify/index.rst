@@ -18,3 +18,4 @@ See:
 
    Email <email/index>
    SMS <sms/index>
+   Email Templates <email-templates/index>
