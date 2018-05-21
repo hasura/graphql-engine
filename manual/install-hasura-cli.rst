@@ -91,6 +91,13 @@ Step 2: Login
          This command will open up the browser and
          allow you to register with a new account (or login to your existing account).
 
+
+Troubleshooting
+---------------
+
+If you face any issue while logging in, checkout the :ref:`Troubleshooting
+<hasuractl_alternate_login>` section for an alternate login method. 
+
 (Optional) Add shell completion
 -------------------------------
 
