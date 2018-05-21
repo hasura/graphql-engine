@@ -1,5 +1,5 @@
 Sending email templates: Mandrill
-=========================
+=================================
 
 To use `Mandrill <https://www.mandrill.com/>`_ to start sending emails, `signup <https://www.mandrill.com/signup>`_
 for an account and create a sending domain. You have to obtain an API key after verifying the sending domain. You can learn creating and adding templates in Mandrill `here <https://mandrill.zendesk.com/hc/en-us/articles/205582507-Getting-Started-with-Templates>`_. Use template names in API requests.

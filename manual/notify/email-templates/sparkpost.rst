@@ -1,5 +1,5 @@
 Sending email templates: SparkPost
-=========================
+==================================
 
 To use `SparkPost <https://www.sparkpost.com/>`_ to start sending email templates, `signup <https://app.sparkpost.com/join>`_
 for an account and create a sending domain. You have to obtain an API key after

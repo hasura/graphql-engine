@@ -1,5 +1,5 @@
 Sending emails: Mandrill
-=========================
+========================
 
 To use `Mandrill <https://www.mandrill.com/>`_ to start sending emails, `signup <https://www.mandrill.com/signup>`_
 for an account and create a sending domain. You have to obtain an API key after verifying the sending domain.
