@@ -6,12 +6,12 @@
 .. _hasura-notify-email-templates:
 
 Sending email templates
-==============
+=======================
 
 This section covers configuring Hasura ``notify`` microservice to send email templates. Notify currently supports sending email templates via :doc:`SparkPost <sparkpost>` and :doc:`Mandrill <mandrill>`.
 
 Sending an email template
-----------------
+-------------------------
 
 Before sending email templates, you must have configured one of the providers for sending Email Templates.
 
@@ -68,7 +68,7 @@ browser, since ``Cookie`` will be set.
   as ``admin``.
 
 Email Template providers:
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
   :maxdepth: 1
