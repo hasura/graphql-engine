@@ -25,13 +25,14 @@ Similarly, you can have other patterns like maintaining an ``is_synced`` or ``st
 Handling deletes also can be made simple by having an ``is_deleted`` column in ``tableA``. So instead of actually deleting the row, you would update its ``is_deleted`` value to true and then handle this change on ``tableB``.
 
 To implement our simple example of syncing data between ``tableA`` and ``tableB``, we are going to do the following:
-  - Clone an existing python cron microservice from Hasura Hub into our Hasura Project.
-  - Create a new file where the code to sync the tables goes in.
-  - Syncing Logic would be as follows
 
-    * Fetch the row from ``tableB`` with the latest value for ``last_updated``
-    * Fetch all rows from ``tableA`` after the latest ``last_updated`` timestamp of ``tableB``
-    * Insert/Update this data into ``tableA``
+- Clone an existing python cron microservice from Hasura Hub into our Hasura Project.
+- Create a new file where the code to sync the tables goes in.
+- Syncing Logic would be as follows
+
+  * Fetch the row from ``tableB`` with the latest value for ``last_updated``
+  * Fetch all rows from ``tableA`` after the latest ``last_updated`` timestamp of ``tableB``
+  * Insert/Update this data into ``tableA``
 
 Alright, let's get started.
 
@@ -75,7 +76,7 @@ Fetching latest value of ``last_updated`` from ``tableB``
     lastUpdatedTimestamp = jsonData[0]['last_updated'] if len(jsonData) > 0 else None
     return lastUpdatedTimestamp
 
-The ``order_by`` key is used to order the results in the descending order of ``last_updated``. The ``-`` symbol is used for descending and a ``+`` symbol for ascending. The ``limit`` key specifies the number of rows we want, in this case ``1``, thereby fetching us the row with the latest value of ``last_updated``.
+The ``order_by`` key is used to order the results in the descending order of ``last_updated``. The ``'-'`` symbol is used for descending and a ``'+'`` symbol for ascending. The ``limit`` key specifies the number of rows we want, in this case ``1``, thereby fetching us the row with the latest value of ``last_updated``.
 
 Fetching new values from ``tableA`` after latest timestamp
 ----------------------------------------------------------

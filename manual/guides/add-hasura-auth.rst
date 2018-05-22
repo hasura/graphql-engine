@@ -4,7 +4,7 @@
    :content-tags: app architecture, build apps
 
 Add auth checks to your react/react-native applications
-==========================================================
+=======================================================
 
 Introduction
 ------------
@@ -25,7 +25,7 @@ There are multiple ways to solve the problem. In this guide we will take a look 
 
 .. note::
 
-  react-check-auth uses React's context API which is part of the react 16.3 release. It shouldn't be used with applications using React version < 16.3
+  ``react-check-auth`` uses React's context API which is part of the react 16.3 release. It shouldn't be used with applications using React version < 16.3
 
 Step 1: Installation
 --------------------
@@ -35,7 +35,7 @@ Step 1: Installation
    $ npm install react-check-auth --save
 
 Step 2: Usage
--------------------------------------------
+-------------
 
 Step 2.1: Add AuthProvider
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

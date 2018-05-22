@@ -93,7 +93,7 @@ Step 2: Login
 
 
 Troubleshooting
----------------
+^^^^^^^^^^^^^^^
 
 If you face any issue while logging in, checkout the :ref:`Troubleshooting
 <hasuractl_alternate_login>` section for an alternate login method. 
