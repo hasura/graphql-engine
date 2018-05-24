@@ -42,7 +42,8 @@ See:
 .. toctree::
   :maxdepth: 1
 
-    GraphQL schema <schema>
-    Custom Resolvers <resolvers>
+    GraphQL Schema <schema>
+    Custom Resolvers using Views <customise-schema-views>
+    Write your own resolver <write-your-own-resolvers>
     Schema Stitching <schema-stitching>
     Reference <reference>

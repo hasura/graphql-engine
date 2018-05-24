@@ -17,6 +17,7 @@ This is the reference documentation of the entire Hasura platform.
   getting-started/index
   install-hasura-cli
   The complete tutorial <tutorial/index>
+  GraphQL tutorial <graphql-tutorial/index>
   Hasura project <project/index>
   Hasura cluster <cluster/index>
   Project microservices <microservices/index>
