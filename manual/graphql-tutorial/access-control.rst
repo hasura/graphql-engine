@@ -233,7 +233,7 @@ To summarize:
 * ``user`` role users can insert/delete "their own data" and update only certain fields once inserted.
 
 To define "their own data", we can describe a condition using the value of the ``X-Hasura-User-Id`` header passed to
-the data microservice by the API gateway (as explained in the :doc:`user, roles & sessions <user-model>` section).
+the data microservice by the API gateway.
 
 The following are the conditions we will use while setting up the row level permissions described above:
 
