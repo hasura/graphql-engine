@@ -9,7 +9,7 @@ To delete a cluster, use the ``hasura`` CLI.
 
 .. code-block:: bash
 
-  # to delete cluster named 'alarming52'
+  # to delete cluster named 'absolve54'
   $ hasura cluster delete absolve54
 
   This action will permanently delete cluster:
