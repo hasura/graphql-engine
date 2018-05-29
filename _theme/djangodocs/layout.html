@@ -97,8 +97,8 @@
                     <span class="fa fa-bars"></span>
                   </div>
                   <div class="inline-block input_search_box">
-                    <span class="fa fa-search"></span>
-                    <input type="text" class="search_element" placeholder="Type search term and press <enter> ..." />
+                    <span class="fa fa-search search_icon"></span>
+                    <input type="text" class="search_element" placeholder="Search docs..." />
                   </div>
                   <div class="header_links inline-block">
                     <div class="buttons">
@@ -218,8 +218,8 @@
       <div class="wd_80">
         <div class="search_head_wrapper">
           <div class="inline-block input_search_box">
-            <span class="fa fa-search"></span>
-            <input type="text" class="search_element" placeholder="Type search term and press <enter> ..." />
+            <span class="fa fa-search search_icon"></span>
+            <input type="text" class="search_element" placeholder="Search docs..." />
           </div>
           <div class="header_links inline-block">
             <div class="buttons">
@@ -345,16 +345,25 @@
         lastSearched = searchTerm;
       };
 
-      const searchHandler = function(e) {
-        // Execute on enter only
-        if (e.keyCode === 13) {
-          if (lastSearched !== e.target.value) {
-            window.history.pushState({"url": (window.location.pathname + '?query=' + e.target.value + '')}, 'Search Page', '?query=' + e.target.value + '');
-            handleQueryParams();
-          }
+      const doSearch = function(value) {
+        if (lastSearched !== value) {
+          window.history.pushState({"url": (window.location.pathname + '?query=' + value + '')}, 'Search Page', '?query=' + value + '');
+          handleQueryParams();
         }
       };
-      $('.search_element').on('keyup', searchHandler);
+
+      const inputSearchHandler = function(e) {
+        // Execute on enter only
+        if (e.keyCode === 13) {
+          doSearch(e.target.value)
+        }
+      };
+      $('.search_element').on('keyup', inputSearchHandler);
+
+      const iconSearchHandler = function(e) {
+        doSearch(e.target.nextSibling.nextSibling.value)
+      };
+      $('.fa-search').on('click', iconSearchHandler);
 
       const navTreeHandler = function(e) {
         const sidebar = $('#sidebar');

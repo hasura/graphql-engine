@@ -572,12 +572,13 @@ p
   width: 64%;
 }
 
-.input_search_box .fa-search {
+.search_icon {
   position: absolute;
   top: 13px;
   left: 10px;
   font-size: 18px;
   color: #FEC53D;
+  cursor: pointer;
 }
 
 .input_search_box input {
