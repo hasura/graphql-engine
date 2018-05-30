@@ -17,7 +17,7 @@ apps), use the following cluster configuration:
    provider: digital-ocean
    region: sfo2
    nodes:
-   - type: s-1vcpu-1gb
+   - type: s-1vcpu-2gb
      labels:
        app: postgres
    volumes:
@@ -39,7 +39,7 @@ Single-node cluster for on-demand staging environments for simple apps
    provider: digital-ocean
    region: sfo2
    nodes:
-   - type: s-2vcpu-2gb
+   - type: s-2vcpu-4gb
      labels:
        app: postgres
    volumes:
@@ -52,18 +52,19 @@ Single-node cluster for on-demand staging environments for simple apps
 
 Staging environment - Moderate
 ------------------------------
-Single-node cluster for on-demand staging environments for powerful apps, with
+Multi-node cluster for on-demand staging environments for powerful apps, with
 your own volume for persistent microservices.
 
 .. code-block:: yaml
 
    version: v1
-   provider: digital-ocean
-   region: sfo2
+   provider: gke
+   zone: us-west1-b
    nodes:
-   - type: s-2vcpu-4gb
+   - type: n1-standard-2
      labels:
        app: postgres
+   - type: n1-standard-2
    volumes:
    - name: postgres
      size: 10
@@ -78,23 +79,24 @@ your own volume for persistent microservices.
 
 Production environment - Advanced
 ---------------------------------
-Single-node cluster for production environments for powerful apps, with your own
+Multi-node cluster for production environments for powerful apps, with your own
 volume for persistent microservices.
 
 .. code-block:: yaml
 
    version: v1
-   provider: digital-ocean
-   region: sfo2
+   provider: gke
+   zone: us-west1-b
    nodes:
-   - type: s-4vcpu-8gb
+   - type: n1-standard-4
      labels:
        app: postgres
+   - type: n1-standard-4
    volumes:
    - name: postgres
-     size: 30
+     size: 50
    - name: filestore
-     size: 30
+     size: 50
    - name: sessionstore
      size: 10
    # custom volume

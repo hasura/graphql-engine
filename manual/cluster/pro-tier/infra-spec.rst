@@ -30,7 +30,7 @@ Following fields make up the infra spec:
 
 * ``version``  : A Version_ string
 * ``provider`` : Provider_ name.
-* ``region``   : Region_ of the cluster
+* ``region`` or ``zone``   : Region_ or Zone_ of the cluster
 * ``nodes``    : A list of Node_ of the cluster.
 * ``volumes``  : A list of Volume_ of the cluster.
 
@@ -68,7 +68,10 @@ Version of the spec. This is an internal key. It is currently ``v1``.
 
 Provider
 ^^^^^^^^
-Name of the provider. Currently only ``digital-ocean`` is supported.
+Name of the provider. It can be any of the following:
+
+1. ``digital-ocean``
+2. ``gke``
 
 .. parsed-literal::
    :class: haskell-pre
@@ -87,6 +90,24 @@ regions https://developers.digitalocean.com/documentation/v2/#list-all-regions
    :class: haskell-pre
 
    String_
+
+
+Zone
+^^^^
+The slug (string value) of the zone name of the provider.
+
+Currently, slug of any valid ``Google Cloud`` zone. See this link for all valid
+zones https://cloud.google.com/compute/docs/regions-zones/
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String_
+
+.. note::
+
+   All zones do not have GKE support. Please see `Hasura pricing
+   <https://hasura.io/pricing>`_ to see all the available zones.
 
 
 Node
@@ -121,8 +142,11 @@ The type of node (or machine) to be used. Basically, this type represents the
 CPU, memory (optionally disk size) of the VM or node. The value of this field is
 provider specific.
 
-For ``Digital Ocean``, the value of this field is any valid ``slug`` in this list:
+For ``digital-ocean``, the value of this field is any valid ``slug`` in this list:
 https://developers.digitalocean.com/documentation/v2/#list-all-sizes
+
+For ``gke``, the value of this field is any valid ``slug`` in this list:
+https://cloud.google.com/compute/docs/machine-types
 
 
 Label
