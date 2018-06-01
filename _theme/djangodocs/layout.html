@@ -273,8 +273,7 @@
   </script>
 
   <script type="text/javascript">
-    var baseDomain = "{{ BASE_DOMAIN }}";
-
+    // support button
     $(document).ready( function() {
       const supportbtnHandler = function() {
         if ( window.Intercom ) {
@@ -282,8 +281,12 @@
         }
       };
       $('.supportBtn').on('click', supportbtnHandler);
+    });
+    </script>
 
-      // search
+  <script type="text/javascript">
+    // search
+    $(document).ready( function() {
       var lastSearched = "";
 
       const showContent = function() {
@@ -365,6 +368,20 @@
       };
       $('.fa-search').on('click', iconSearchHandler);
 
+      // handle state
+      window.onpopstate = function() {
+        handleQueryParams();
+      };
+
+      if (window.location.search.length > 0) {
+        handleQueryParams();
+      }
+    });
+  </script>
+
+  <script type="text/javascript">
+    // mobile sidebar
+    $(document).ready( function() {
       const navTreeHandler = function(e) {
         const sidebar = $('#sidebar');
         const background = $('.content_inner_wrapper');
@@ -381,7 +398,13 @@
         }
       };
       $('#nav_tree_icon').on('click', navTreeHandler);
+    });
+  </script>
 
+  <script type="text/javascript">
+    // feedback
+    $(document).ready( function() {
+      var baseDomain = "{{ BASE_DOMAIN }}";
       const feedbackUrl = baseDomain ? 'https://data.' + baseDomain + '/v1/query' : 'https://data.hasura-stg.hasura-app.io/v1/query';
 
       const sendFeedback = function(feedback, feedbackDetailMsg) {
@@ -451,14 +474,6 @@
           });
       };
       $('.feedback_btn').on('click', handleFeedbackBtnClick);
-
-      window.onpopstate = function() {
-        handleQueryParams();
-      };
-
-      if (window.location.search.length > 0) {
-        handleQueryParams();
-      }
     });
   </script>
 
