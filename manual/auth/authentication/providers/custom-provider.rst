@@ -3,14 +3,12 @@
    :keywords: hasura, docs, auth, authentication, custom, provider
 
 
-Custom provider based authentication
-====================================
+Custom authentication provider
+==============================
 
-Hasura Auth provides APIs to signup and login users. You can integrate your own
-authentication to work with Hasura Auth by configuring a custom provider in the
-auth config. Users can authenticate with your custom provider similar to the
-way they authenticate with default providers i.e. by giving the provider name
-along with any custom data in the POST body of auth APIs.
+If you have an existing user authentication system which you would like to use for your Hasura project, you can integrate
+it to work with Hasura Auth by configuring a custom provider in the auth config. Hasura Auth will provide APIs to
+authenticate users with your custom provider similar to the default providers.
 
 An example for signing up with custom provider:
 

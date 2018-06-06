@@ -38,6 +38,7 @@ See:
    User actions <user-actions/index>
    Admin actions <admin-actions/index>
    config
+   customize-flows
    extra-user-info
    auth-ui-kit/index
 

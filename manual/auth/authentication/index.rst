@@ -15,8 +15,8 @@ You can :doc:`enable/disable providers <configure-auth-methods>` in your auth co
 enabled you can use them to signup your users. **You can have multiple
 providers enabled at the same time.**
 
-You can also **create your own custom provider** (i.e if you have any custom
-authentication logic) and configure it with Hasura Auth.
+Also, if you have an **existing custom authentication system** you can create a
+:doc:`custom provider <providers/custom-provider>` and configure it with Hasura Auth.
 
 The following providers come by default with Hasura Auth:
 

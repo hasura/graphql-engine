@@ -43,7 +43,6 @@ See:
 .. toctree::
    :maxdepth: 1
 
-   Customizing signup/login <customizing>
    Creating roles <create-role>
    Assigning roles to users <assign-role>
    Removing roles from users <unassign-role>
