@@ -4,7 +4,8 @@ Reusing a cluster with a different project
 
 Sometimes, you might want to start using a cluster for an entirely different project. This section talks about the instructions to do exactly that:
 
-  Note: You will lose all your data. Do it only if you are **absolutely sure**.
+.. attention::
+      You will lose all your data from the current project. Do it only if you are **absolutely sure**.
 
 #. Add the cluster to your new project. Run the following from the ``new`` project directory.
 

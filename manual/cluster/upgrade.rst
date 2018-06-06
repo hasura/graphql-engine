@@ -3,10 +3,10 @@ Upgrading a cluster
 
 .. admonition:: Free cluster to pro-tier cluster
 
-   Currently upgrading a free cluster to a pro-tier cluster is a manual process.
+   Currently upgrading a free cluster to a pro-tier cluster is a manual migration process.
    We are working on a more seamless experience.
 
-   For now, create a pro-tier cluster and follow :doc:`../guides/complete-cluster-migration`
+   For now, :doc:`create a pro-tier cluster <pro-tier/create>` and follow :doc:`../guides/complete-cluster-migration`
 
 
 Upgrading (ie: scaling) a cluster is only possible for a :doc:`pro-tier cluster <index>`.
