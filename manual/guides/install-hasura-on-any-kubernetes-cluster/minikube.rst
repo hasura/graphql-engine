@@ -45,7 +45,7 @@ Once you're in the minikube VM, you can create a directory:
 
 .. code:: bash
 
-   sudo mkdir -p /data/hasura-data
+   sudo mkdir /data/hasura-data
    # (Ctrl+D to exit)
 
 Minikube is configured to persist files stored under ``/data`` directory. (see
@@ -93,7 +93,7 @@ into an existing project. You can then use :ref:`hasura cluster add
      --kube-context=minikube
 
 This command will add the cluster called ``minikube-hasura-cluster`` (name we used with
-`--name`` flag earlier in the install command), that can be contacted using the
+``--name`` flag earlier in the install command), that can be contacted using the
 kube context ``minikube``, to the current project with an alias ``minikube``.
 
 Step 5: Configure domains in the project
