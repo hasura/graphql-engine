@@ -138,6 +138,15 @@ The following is the base structure of the file. It comes with instructions expl
       # minimum length of the password allowed.
       minLength: "8"
 
+    # Configuration for authorization webhooks
+    # https://docs.hasura.io/0.15/manual/auth/authorization/customizing.html
+    # This is an optional field to customize the signup/login flow
+    # authorizationHooks:
+    #   # Optional field. This webhook is called before each signup request
+    #   preSignupHook: 'http://myapp.default/signup-hook'
+    #   # Optional field. This webhook is called before each login request
+    #   preLoginHook: 'http://myapp.default/login-hook'
+
     # Below fields are all optional
     #
     # Configuration for google provider
