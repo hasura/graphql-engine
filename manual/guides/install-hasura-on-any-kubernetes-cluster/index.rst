@@ -14,6 +14,6 @@ Docker for Desktop.
    Minikube <minikube>
    Docker for Desktop <docker-for-desktop>
    Google Kubernetes Engine (GKE) <gke>
-   Azure Kubernetes Service <aks>
-   Amazon EKS <eks>
    others 
+..   Azure Kubernetes Service <aks>
+..   Amazon EKS <eks>

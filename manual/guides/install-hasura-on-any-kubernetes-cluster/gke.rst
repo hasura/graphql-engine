@@ -85,13 +85,6 @@ To add this cluster to the project,
 
 This will add the cluster defined in ``cluster-data.yaml`` to the current project, sets up required remotes, hooks and ssh keys.
 
-Add your SSH key
-^^^^^^^^^^^^^^^^
-
-.. code-block:: bash
-
-   $ hasura ssh-key add -c [cluster-alias]
-
 Deploy project to the cluster
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
