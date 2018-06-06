@@ -1,9 +1,5 @@
-.. .. meta::
-   :description: API reference for Hasura's File  microservice. POST, GET and DELETE endpoints for uploading, downloading and deleting files respectively.
-   :keywords: hasura, docs, File, fileStore, API reference
-
-Setting up Hasura on GKE
-========================
+Install Hasura on GKE
+=====================
 
 This section describes:
 

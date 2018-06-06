@@ -12,10 +12,10 @@ Guides
    Using GraphQL with React and Apollo Client <graphql-react>
    Using GraphQL with React Native and Apollo Client <graphql-react-native>
    Setting up Eslint for Graphql and Apollo Client <graphql-eslint>
-   hasura-on-gke
    separate-microservice-git-repository
    converting-git-repo-to-hasura-project
    importing-existing-database
    complete-cluster-migration
    heroku-migration
    Add auth checks to your react/react-native applications <add-hasura-auth>
+   install-hasura-on-any-kubernetes-cluster/index
