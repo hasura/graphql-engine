@@ -1,5 +1,5 @@
-PostgreSQL database
-===================
+PostgreSQL on Hasura
+====================
 
 `PostgreSQL <https://www.postgresql.org>`_ is one of the most advanced open source relational database with a great
 community around it. Hasura comes with a pre-installed PostgreSQL database which runs as the ``Postgres microservice``
