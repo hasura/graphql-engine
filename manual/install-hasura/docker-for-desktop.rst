@@ -1,5 +1,5 @@
-Install Hasura on Docker for Desktop
-====================================
+Installing Hasura on Docker for Desktop
+=======================================
 
 If you have a Mac or a Windows machine, you can install Docker for Mac or Docker
 for Windows (from Edge channel) to get a Kubernetes cluster. This is a

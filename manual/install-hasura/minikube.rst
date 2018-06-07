@@ -1,5 +1,5 @@
-Install Hasura on Minikube
-==========================
+Installing Hasura on Minikube
+=============================
 
 `Minikube <https://kubernetes.io/docs/tasks/tools/install-minikube/>`_ is the
 "go-to" tool by the Kubernetes community to run a single-node cluster locally as
