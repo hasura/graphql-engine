@@ -1,9 +1,5 @@
-.. .. meta::
-   :description: API reference for Hasura's File  microservice. POST, GET and DELETE endpoints for uploading, downloading and deleting files respectively.
-   :keywords: hasura, docs, File, fileStore, API reference
-
-Setting up Hasura on GKE
-========================
+Install Hasura on GKE
+=====================
 
 This section describes:
 
@@ -89,13 +85,6 @@ To add this cluster to the project,
 
 This will add the cluster defined in ``cluster-data.yaml`` to the current project, sets up required remotes, hooks and ssh keys.
 
-Add your SSH key
-^^^^^^^^^^^^^^^^
-
-.. code-block:: bash
-
-   $ hasura ssh-key add -c [cluster-alias]
-
 Deploy project to the cluster
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -104,3 +93,18 @@ Finally push your project to the newly created cluster:
 .. code-block:: console
 
    $ git push myco-hasura master
+
+Tearing down
+------------
+
+You can delete all the resources Hasura created by executing the following
+commands:
+
+.. code-block:: bash
+ 
+   kubectl delete namespace hasura
+   kubectl delete configmap hasura-conf hasura-status ssh-authorized-keys
+   kubectl delete secret hasura-secrets
+   kubectl delete clusterrolebinding hasura-cluster-admin-binding
+
+   # Next, delete all the infrastructure components like disks, ip address etc.
