@@ -5,15 +5,17 @@
 Accessing Postgres
 ==================
 
-The Postgres database runs as a microservice on a Hasura cluster.
+The Postgres database runs as the ``Postgres microservice`` on a Hasura cluster. The Postgres microservice can only
+be accessed from within the Hasura cluster and is not exposed to the outside world
 
+To connect to postgres from another microservice, see: :doc:`../microservices/connect-postgres`.
 
-If you are trying to connect to postgres from a microservice, see: :doc:`../microservices/connect-postgres`.
-
-You can access Postgres directly via the following options:
+Though, you can manually access the Postgres database directly via the following options:
 
 .. note::
    All the data is stored in a database called ``hasuradb`` in Postgres.
+
+   The :doc:`Data microservice <../data/index>` provides APIs over the Postgres database which are exposed to the outside.
 
 .. rst-class:: api_tabs
 .. tabs::
