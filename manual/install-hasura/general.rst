@@ -214,7 +214,7 @@ If you have multiple clusters in the same project, you will need the following
 template to handle domain configuration for this cluster as well as Hasura
 provisioned clusters.
 
-.. code-block:: yaml
+.. code-block:: yaml+jinja
 
    {% if cluster.infra.provider == "custom" %}
    - domain: "<insert-your-domain-here>"

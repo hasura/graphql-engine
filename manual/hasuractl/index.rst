@@ -36,6 +36,7 @@ Commands
    hasura cluster delete <hasura_cluster_delete>
    hasura cluster get-credentials <hasura_cluster_get-credentials>
    hasura cluster get-default <hasura_cluster_get-default>
+   hasura cluster install <hasura_cluster_install>
    hasura cluster list <hasura_cluster_list>
    hasura cluster set-default <hasura_cluster_set-default>
    hasura cluster status <hasura_cluster_status>
