@@ -36,6 +36,7 @@ SEE ALSO
 * :ref:`hasura cluster delete <hasura_cluster_delete>` 	 - Delete a Hasura cluster
 * :ref:`hasura cluster get-credentials <hasura_cluster_get-credentials>` 	 - Get access credentials for a cluster
 * :ref:`hasura cluster get-default <hasura_cluster_get-default>` 	 - Print the default cluster
+* :ref:`hasura cluster install <hasura_cluster_install>` 	 - Install Hasura on any Kubernetes cluster
 * :ref:`hasura cluster list <hasura_cluster_list>` 	 - List existing hasura clusters
 * :ref:`hasura cluster set-default <hasura_cluster_set-default>` 	 - Set default cluster to contact
 * :ref:`hasura cluster status <hasura_cluster_status>` 	 - Show status of a cluster

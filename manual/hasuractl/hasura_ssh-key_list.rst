@@ -15,6 +15,8 @@ List all the SSH keys present on a cluster
 
   hasura ssh-key list [flags]
 
+Alias: ls
+
 Examples
 ~~~~~~~~
 

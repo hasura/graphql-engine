@@ -30,16 +30,22 @@ Examples
     # Add a cluster defined in a file called 'cluster.yaml' to this project
     $ hasura cluster add --file=cluster.yaml
 
+    # Add a cluster using it's kubecontext
+    $ hasura cluster add <cluster-name> -c <cluster-alias> --kube-context <kube-context>
+
 
 Options
 ~~~~~~~
 
 ::
 
-  -c, --cluster string   alias the cluster to a more relevant name. Cluster will be added to the project with this name and can be further referred to using the alias with -c flag
-  -f, --file string      path to cluster metadata file
-  -h, --help             help for add
-      --overwrite        skip confirmation and over-write if a cluster with same alias already exist
+  -c, --cluster string            alias the cluster to a more relevant name. Cluster will be added to the project with this name and can be further referred to using the alias with -c flag
+      --config-map string         k8s config map where hasura config metadata is present (default "controller-conf")
+      --config-namespace string   namespace where hasura config metadata is present (default "hasura")
+  -f, --file string               path to cluster data file
+  -h, --help                      help for add
+      --kube-context string       kube-context to connect to the cluster
+      --overwrite                 skip confirmation and over-write if a cluster with same alias already exist
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

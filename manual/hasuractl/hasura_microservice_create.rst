@@ -24,19 +24,13 @@ Examples
 
     # Creates the configuration files required for a new microservice in the microservices directory:
 
-    # Get a list of templates:
-      $ hasura microservice template-list
-
-    # To generate a microservice using a template (let's say you want to go with python-flask)
-      $ hasura microservice create mymicroservice --template=python-flask
-
     # To create a microservice using any docker image
       $ hasura microservice create mymicroservice --image library/ghost:latest --port 2368
 
     # Expose the microservice on a URL
       $ hasura conf generate-route mymicroservice >> conf/routes.yaml
 
-    # Setup git-push to deploy (only if you're using a template)
+    # Setup git-push to deploy (if there is a dockerfile)
       $ hasura conf generate-remote mymicroservice >> conf/ci.yaml
 
 
@@ -45,10 +39,9 @@ Options
 
 ::
 
-  -h, --help              help for create
-  -i, --image string      Docker image to be used for the microservice
-  -p, --port int32        Port on which the microservice will listen at (default 8080)
-      --template string   Template to scaffold the microservice. Refer to https://github.com/hasura/microservice-templates for templates
+  -h, --help           help for create
+  -i, --image string   Docker image to be used for the microservice
+  -p, --port int32     Port on which the microservice will listen at (default 8080)
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
