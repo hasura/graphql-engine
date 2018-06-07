@@ -32,6 +32,7 @@ This is the reference documentation of the entire Hasura platform.
   Hasura CLI reference <hasuractl/index>
   Hasura API reference <api-reference/index>
   Guides <guides/index>
+  install-hasura/index
   architecture/index
   billing/index
   Moving to v0.15 (old Hasura users) <migration-v0_15/index>

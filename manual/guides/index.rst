@@ -18,4 +18,3 @@ Guides
    complete-cluster-migration
    heroku-migration
    Add auth checks to your react/react-native applications <add-hasura-auth>
-   install-hasura-on-any-kubernetes-cluster/index

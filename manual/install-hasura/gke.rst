@@ -1,5 +1,5 @@
-Install Hasura on GKE
-=====================
+Installing Hasura on GKE
+========================
 
 This section describes:
 

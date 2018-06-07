@@ -1,2 +1,0 @@
-Install Hasura on EKS
-=====================

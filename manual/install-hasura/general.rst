@@ -1,7 +1,7 @@
-Install Hasura on other Kubernetes Clusters
+Installing Hasura on any Kubernetes Cluster
 ===========================================
 
-Installing Hasura on any other Kubernetes clusters is as easy as writing the
+Installing Hasura on any Kubernetes cluster is as easy as writing the
 configuration required in a yaml file and using it to execute :ref:`hasura
 cluster install <hasura_cluster_install>`.
 
@@ -99,19 +99,19 @@ gateway``).
 
 - ``postgres``
 
-``volume`` indicates the `Kuberentes Volume
+``volume`` indicates the `Kubernetes Volume
 <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#volume-v1-core>`_
 to be used for storing Hasura Postgres data. 
 
 - ``filestore``
 
-``volume`` indicates the `Kuberentes Volume
+``volume`` indicates the `Kubernetes Volume
 <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#volume-v1-core>`_
 to be used for storing Hasura Filestore data.
 
 - ``sessionStore``
 
-``volume`` indicates the `Kuberentes Volume
+``volume`` indicates the `Kubernetes Volume
 <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#volume-v1-core>`_
 to be used for storing Hasura Redis data.
 

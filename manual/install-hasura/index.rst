@@ -1,8 +1,8 @@
-Install Hasura on any Kubernetes Cluster
-========================================
+Installing Hasura on a Kubernetes Cluster
+=========================================
 
-With the introduction of a new CLI command :ref:`hasura cluster install
-<hasura_cluster_install>`, you can install Hasura on any Kubernetes cluster.
+With the introduction of the new Hasura CLI command :ref:`hasura cluster install
+<hasura_cluster_install>` (from ``v0.2.60`` onwards), you can install Hasura on any Kubernetes cluster.
 
 While generic configuration method is available by writing cluster definition
 in a yaml file, we have made it very easy to install Hasura on Minikube and
@@ -14,6 +14,6 @@ Docker for Desktop.
    Minikube <minikube>
    Docker for Desktop <docker-for-desktop>
    Google Kubernetes Engine (GKE) <gke>
-   others 
+   general
 ..   Azure Kubernetes Service <aks>
 ..   Amazon EKS <eks>
