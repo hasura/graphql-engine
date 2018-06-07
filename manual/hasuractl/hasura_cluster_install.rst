@@ -3,7 +3,8 @@
 Hasura CLI: hasura cluster install
 ----------------------------------
 
-Install Hasura on any Kubernetes cluster
+For a step-by-step guide about installing Hasura on any Kubernetes cluster, refer to the `docs page <https://docs.hasura.io/0.15/manual/install-hasura/index.html>`_.
+
 
 Synopsis
 ~~~~~~~~
@@ -54,7 +55,7 @@ Options
   -h, --help                      help for install
       --kube-context string       kube-context to connect to the cluster
       --name string               name for the cluster (cluster should be added with this name) (default "hasura")
-      --platform-version string   platform version to be installed on the cluster (default "v0.15.32")
+      --platform-version string   platform version to be installed on the cluster (default "v0.15.34")
       --provider string           kubernetes provider (use 'minikube')
 
 Options inherited from parent commands
