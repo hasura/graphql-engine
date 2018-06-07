@@ -15,12 +15,12 @@ Step 1: Install Docker for Mac/Windows
 MacOS
 ^^^^^
 
-Install Docker CE for Mac (Edge) from `Docker Store <https://store.docker.com/editions/community/docker-ce-desktop-mac>`_.
+Install Docker CE for Mac (Edge) from `Docker Store <https://store.docker.com/editions/community/docker-ce-desktop-mac>`__.
 
 Windows
 ^^^^^^^
 
-Install Docker CE for Windows (Edge) from `Docker Store <https://store.docker.com/editions/community/docker-ce-desktop-windows>`_.
+Install Docker CE for Windows (Edge) from `Docker Store <https://store.docker.com/editions/community/docker-ce-desktop-windows>`__.
 
 .. note::
 
