@@ -93,3 +93,18 @@ Finally push your project to the newly created cluster:
 .. code-block:: console
 
    $ git push myco-hasura master
+
+Tearing down
+------------
+
+You can delete all the resources Hasura created by executing the following
+commands:
+
+.. code-block:: bash
+ 
+   kubectl delete namespace hasura
+   kubectl delete configmap hasura-conf hasura-status ssh-authorized-keys
+   kubectl delete secret hasura-secrets
+   kubectl delete clusterrolebinding hasura-cluster-admin-binding
+
+   # Next, delete all the infrastructure components like disks, ip address etc.
