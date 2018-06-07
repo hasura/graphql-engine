@@ -126,7 +126,7 @@ If you have multiple clusters in the same project, you will need the following
 template to handle domain configuration for Docker for Desktop as well as Hasura
 provisioned clusters.
 
-.. code-block:: yaml
+.. code-block:: yaml+jinja
 
    {% if cluster.infra.provider == "docker-for-desktop" %}
    - domain: "127.0.0.1.xip.io"

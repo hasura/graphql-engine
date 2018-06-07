@@ -127,7 +127,7 @@ If you have multiple clusters in the same project, you will need the following
 template to handle domain configuration for minikube as well as Hasura
 provisioned clusters.
 
-.. code-block:: yaml
+.. code-block:: yaml+jinja
 
    {% if cluster.infra.provider == "minikube" %}
    - domain: "{{ cluster.metadata.gateway.externalIPs.0 }}.xip.io"
