@@ -37,7 +37,7 @@ Copy the following files and directories from ``base`` to the root of your own g
 
 - ``clusters.yaml``
   
-  Details about the clusters added to the project is kept in this file. An empty file indicates that no clusters have been added to the project. But, the files should exist.
+  Details about the clusters added to the project are kept in this file. An empty file indicates that no clusters have been added to the project. But, the files should exist.
 
 - ``hasura.yaml``
 
