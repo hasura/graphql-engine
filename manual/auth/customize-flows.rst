@@ -19,7 +19,7 @@ Signup/Login flow
 -----------------
 1. Auth receives signup/login request from the client.
 2. Auth forwards the entire request from client to the webhook, if configured.
-3. If Auth gets back any succesful response then it continues with the flow or
+3. If Auth gets back any successful response then it continues with the flow or
    else aborts the request by returning the webhook response to the client.
 
 This signup/login webhook flows work for all providers, including Hasura's
