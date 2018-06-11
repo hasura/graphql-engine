@@ -27,9 +27,6 @@ var searchFunc = function( query, callback, page, restrictAttributes, attributes
   var offset = (hitsPerPage * (page - 1));
 
   var indexName = "{{ ALGOLIA_INDEX_NAME }}";
-  if ( query === "tutorials" || query === "guides" ) {
-    indexName = "{{ ALGOLIA_INDEX_NAME_SEC }}";
-  }
 
   //var client = algoliasearch(APPLICATION_ID, SEARCH_ONLY_KEY);
   var client = algoliasearch(ALGOLIA_APPLICATION_ID, ALGOLIA_SEARCH_KEY, {"protocol":"https:"}); // localhost
