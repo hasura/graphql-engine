@@ -34,7 +34,7 @@ Enable auth with email
        $ git push hasura master
 
 
-#. You will need an email service to programmatically send emails. You can either configure one of :doc:`smtp <../notify/email/smtp>` and :doc:`sparkpost <../notify/email/sparkpost>` or use the free trial service by Hasura called :doc:`Hasura Test Provider<../notify/email/hasura-test-provider>`. The ``Hasura Test Provider`` is enabled by default, so you can start using the service by running the below commands from the project directory.
+#. You will need an email service to programmatically send emails. You can either configure one of :doc:`sparkpost <../notify/email/sparkpost>` and :doc:`mandrill <../notify/email/mandrill>` or use the free trial service by Hasura called :doc:`Hasura Test Provider<../notify/email/hasura-test-provider>`. The ``Hasura Test Provider`` is enabled by default, so you can start using the service by running the below commands from the project directory.
 
    .. code-block:: bash
 
@@ -46,7 +46,7 @@ Enable auth with email
 #. Navigate to ``auth.<cluster-name>.hasura-app.io/ui`` and you will see the ``auth with email`` enabled.
 
 .. note::
-    You are allowed only 10 emails per day with Hasura Test Provider. For a permanent solution, you have to configure either :doc:`smtp <../notify/email/smtp>` or :doc:`sparkpost <../notify/email/sparkpost>`.
+    You are allowed only 10 emails per day with Hasura Test Provider. For a permanent solution, you have to configure either :doc:`sparkpost <../notify/email/sparkpost>` or :doc:`mandrill <../notify/email/mandrill>`.
 
 Enable auth with Google
 -----------------------

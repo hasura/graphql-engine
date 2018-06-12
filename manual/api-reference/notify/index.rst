@@ -31,7 +31,7 @@ Request
 
 .. note ::
 
-  * Make sure that the *from* field you will be using to send emails is from the sending domain you have configured with the SparkPost or the exact email for which you are using SMTP with. For example, if your sending domain is ``project.com``, you can only send emails from ``<something>@project.com``, like ``admin@project.com``.
+  * Make sure that the *from* field you will be using to send emails is from the sending domain you have configured with SparkPost or Mandrill. For example, if your sending domain is ``project.com``, you can only send emails from ``<something>@project.com``, like ``admin@project.com``.
 
   * Either **text** or **html** key should be present. Both can also be provided.
   * **fromName** is optional.
@@ -49,10 +49,6 @@ An example response looks like:
       "id": "<provider-reference-id>",
       "detail": "<details>"
     }
-
-.. note ::
-
-  For SMTP email provider, the ``provider-reference-id`` will be ``NA``.
 
 POST /v1/send/sms
 -----------------

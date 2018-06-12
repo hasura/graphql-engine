@@ -13,7 +13,7 @@ To send emails using ``Hasura``, follow the steps below.
    :emphasize-lines: 3, 5-9
 
    email:
-     # default can take values 'smtp', 'sparkPost' or 'mandrill'
+     # default can take values 'sparkPost' or 'mandrill'
      default: hasura
      providers:
        hasura:
@@ -25,17 +25,6 @@ To send emails using ``Hasura``, follow the steps below.
          apiKey:
            secretKeyRef:
              key: notify.mandrill.key
-             name: hasura-secrets
-       smtp:
-         hostname: ""
-         password:
-           secretKeyRef:
-             key: notify.smtp.password
-             name: hasura-secrets
-         port: 465
-         username:
-           secretKeyRef:
-             key: notify.smtp.username
              name: hasura-secrets
        sparkPost:
          apiKey:

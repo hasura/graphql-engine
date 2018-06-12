@@ -22,7 +22,5 @@ To see all the secrets that are saved on your cluster:
    auth.facebook.client_secret---| 
    auth.google.client_secret-----| 
    ssh.authorizedKeys------------| 
-   notify.smtp.password----------| 
-   notify.smtp.username----------| 
-   auth.recaptcha.secret---------| 
+   auth.recaptcha.secret---------|
    auth.admin.password-----------|xxxxxxxxxxxx-xxxxxxxxxxxxx-xxxxxxxxx-xxxx

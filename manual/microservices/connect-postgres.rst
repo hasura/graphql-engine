@@ -40,7 +40,6 @@ Username and password can be accessed through Hasura Secrets.
 
    $ hasura secrets list
    auth.facebook.client_secret---| 
-   notify.smtp.password----------| 
    auth.admin.password-----------|xxxxxxxxxxxxxxxxxxxxxxxx
    notify.sparkpost.key----------| 
    auth.secretKey----------------|xxxxxxxxxxxxxxxxxxxxxxxx
@@ -50,8 +49,7 @@ Username and password can be accessed through Hasura Secrets.
    notify.twilio.authtoken-------| 
    auth.msg91.key----------------| 
    auth.sparkpost.key------------| 
-   notify.smtp.username----------| 
-   auth.google.client_secret-----| 
+   auth.google.client_secret-----|
    ssh.authorizedKeys------------| 
    auth.github.client_secret-----| 
    auth.recaptcha.secret---------| 
