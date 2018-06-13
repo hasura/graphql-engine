@@ -4,4 +4,5 @@ CMD raven \
     --database-url $DATABASE_URL \
     serve \
     --server-port $PORT \
-    --access-key $ACCESS_KEY
+    --access-key $ACCESS_KEY \
+    --cors-domain "*"

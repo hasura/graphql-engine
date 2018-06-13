@@ -30,4 +30,22 @@
   heroku logs -a <app-name>
   ```
 
+## Configure
 
+(Assuming you have already executed `hasura init`)
+
+- Edit `config.yaml` and add `endpoint` as the Heroku App URL
+  ```yaml
+  endpoint: https://<app-name>.herokuapp.com
+  ```
+- Edit `.env` and add the access key created earlier
+  ```env
+  HASURA_GRAPHQL_ACCESS_KEY=<access-key>
+  ```
+
+## Console
+
+Open the console and start exploring APIs / manage tables/views:
+```bash
+hasura console
+```
