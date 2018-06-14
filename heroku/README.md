@@ -29,7 +29,7 @@ $ heroku addons:create heroku-postgresql:hobby-dev -a thawing-savannah-75305
   $ ls
   Dockerfile README.md
   ```
-- Make sure you're logged in:
+- Make sure you're logged in to heroku's container registry:
   ```
   $ heroku container:login
   ```
