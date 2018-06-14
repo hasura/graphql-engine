@@ -1,8 +1,7 @@
-FROM hasuranightly/raven:f73f9f1
+FROM hasuranightly/raven:c9a69e1
 
 CMD raven \
     --database-url $DATABASE_URL \
     serve \
     --server-port $PORT \
-    --access-key $ACCESS_KEY \
-    --cors-domain "*"
+    --cors-domain "http://localhost:9695"
