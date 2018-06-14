@@ -18,7 +18,7 @@
   docker run --name hasura-graphql-engine \
              -p 9000:9000 \
              --link hasura-postgres:postgres -d \
-             hasuranightly/raven:c9a69e1 \
+             hasuranightly/raven:94a0141 \
              raven \
              --database-url postgres://postgres:mysecretpassword@postgres:5432/postgres \
              serve \
