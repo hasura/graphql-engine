@@ -25,11 +25,14 @@ $ heroku addons:create heroku-postgresql:hobby-dev -a thawing-savannah-75305
 ## Deploy
 
 - Switch to the `heroku/setup` directory. You should have a `Dockerfile` when you hit `ls`:
-```bash
-$ ls
-Dockerfile README.md
-```
-
+  ```bash
+  $ ls
+  Dockerfile README.md
+  ```
+- Make sure you're logged in:
+  ```
+  $ heroku container:login
+  ```
 - Execute the following commands to deploy
   ```bash
   heroku container:push web -a <app-name>
