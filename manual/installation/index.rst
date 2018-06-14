@@ -8,3 +8,10 @@ Installation guides
 - Helm
 - RDS
 
+See:
+^^^^
+
+.. toctree::
+   :maxdepth: 1
+
+   dockerfile
