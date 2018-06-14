@@ -47,7 +47,7 @@ header ``X-Hasura-Role: anonymous``. The ``X-Hasura-User-Id`` header is **not** 
 For example, the image below demonstrates the gateway's behaviour when two different kinds of incoming requests are made
 to ``data.test42.hasura-app.io`` from an HTTP client:
 
-.. image:: ../../img/manual/auth/session-middleware.png
+.. image:: ../../../img/manual/auth/session-middleware.png
 
 Before you begin: Open the API console
 --------------------------------------
@@ -76,7 +76,7 @@ Lets explore the endpoints that we are interested in to build our blog app using
    Click on ``Signup`` from the *Username Password* dropdown under ``Auth`` in the left panel. Enter the username and
    password and hit ``Send``.
 
-   .. image:: ../../img/tutorial-6-username-signup.png
+   .. image:: ../../../img/tutorial-6-username-signup.png
 
    The response will be as follows:
 
@@ -100,7 +100,7 @@ Lets explore the endpoints that we are interested in to build our blog app using
    Lets try to login with the username and password that we just registered with. Select ``Login`` in the left panel.
 
 
-   .. image:: ../../img/tutorial-6-username-login.png
+   .. image:: ../../../img/tutorial-6-username-login.png
 
    The response will be as follows:
 
@@ -134,12 +134,12 @@ Lets explore the endpoints that we are interested in to build our blog app using
 
     If the ``Authorization`` header is absent, session token is read from cookie.
 
-   .. image:: ../../img/tutorial-6-user-info.png
+   .. image:: ../../../img/tutorial-6-user-info.png
 
    Now let's get the default user ``admin``'s information. The admin token is in fact the user ``admin``'s session token.
    Let's use the admin token in the ``Authorization`` header.
 
-   .. image:: ../../img/tutorial-6-admin-user-info.png
+   .. image:: ../../../img/tutorial-6-admin-user-info.png
 
    You can see that the user ``admin`` has an ``admin`` role in addition to the ``user`` role.
 
@@ -148,7 +148,7 @@ Lets explore the endpoints that we are interested in to build our blog app using
    To logout the logged in user, use the ``/user/logout`` endpoint. Select the ``Logout`` API from the *Logged in User
    Actions* dropdown in the left panel.
 
-   .. image:: ../../img/tutorial-6-logout.png
+   .. image:: ../../../img/tutorial-6-logout.png
 
    When the user logs out, the session token is deleted from the session store and the cookie is set to expire.
 

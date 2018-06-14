@@ -10,7 +10,7 @@ Creating roles can be done by users having ``admin`` roles. It can be done in th
 
       Go to the ``auth`` tab on top and click on ``Roles`` on the left panel.
 
-      .. image:: ../../../img/auth/console-create-role.png
+      .. image:: ../../../../img/auth/console-create-role.png
 
    .. tab:: REST API
 

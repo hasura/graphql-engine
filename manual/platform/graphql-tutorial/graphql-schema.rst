@@ -57,17 +57,17 @@ Run:
 This will open up the ``API console`` and show you the ``API explorer`` page which you can use to understand the APIs
 provided by the Data microservice.
 
-.. image:: ../../img/complete-tutorial/tutorial-api-console.png
+.. image:: ../../../img/complete-tutorial/tutorial-api-console.png
 
 Head to *Data -> Add Table*.
 
 Create Table ``like``:
 
-.. image:: ../../img/complete-tutorial/tutorial-create-table-like.png
+.. image:: ../../../img/complete-tutorial/tutorial-create-table-like.png
 
 Create Table ``comment``:
 
-.. image:: ../../img/complete-tutorial/tutorial-create-table-comment.png
+.. image:: ../../../img/complete-tutorial/tutorial-create-table-comment.png
 
 Create the ``author`` and ``article`` tables similarly if not already created.
 
@@ -87,7 +87,7 @@ to add foreign keys.
 	    
 Adding foreign key constraint to ``article_id`` of ``like`` table:
 
-.. image:: ../../img/complete-tutorial/tutorial-modify-table-like.png
+.. image:: ../../../img/complete-tutorial/tutorial-modify-table-like.png
 
 Similarly, add the other foreign key constraints.
 

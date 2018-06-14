@@ -1,9 +1,9 @@
 Part XII: Using the Auth UI Kit
 ===============================
 
-.. figure:: ../../img/uikit-dark.png
+.. figure:: ../../../img/uikit-dark.png
     :class: 'dark'
-.. figure:: ../../img/uikit-light.png
+.. figure:: ../../../img/uikit-light.png
     :class: 'light'
 
 In the previous section, we deployed our own custom app. If you want to add authentication to your app and do not want

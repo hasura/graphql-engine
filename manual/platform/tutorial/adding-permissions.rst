@@ -299,15 +299,15 @@ see/modify the permissions on the table.
 
 The *Permissions* tab of the ``article`` table should look like this:
 
-.. image:: ../../img/complete-tutorial/tutorial-permissions-tab.png
+.. image:: ../../../img/complete-tutorial/tutorial-permissions-tab.png
 
 Click on the *Edit* icon next to the user/update cell. It should open up an edit section like this:
 
-.. image:: ../../img/complete-tutorial/tutorial-permissions-edit-empty.png
+.. image:: ../../../img/complete-tutorial/tutorial-permissions-edit-empty.png
 
 Now, set the permissions as described above. It should finally look like this:
 
-.. image:: ../../img/complete-tutorial/tutorial-permissions-edit-filled.png
+.. image:: ../../../img/complete-tutorial/tutorial-permissions-edit-filled.png
 
 Hit *Save permissions* to save our changes.
 

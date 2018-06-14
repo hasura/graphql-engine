@@ -70,7 +70,7 @@ Moving the Schema
 
 #. Go to the ``Data`` section. You can find your tables under the ``Untracked Tables``. Just click on ``Add all`` to track them.
 
-   .. image:: ../../img/manual/data/track-untracked-tables.png
+   .. image:: ../../../img/manual/data/track-untracked-tables.png
 
 Your schema has been migrated. Lets move on to migrating the data.
 

@@ -43,7 +43,7 @@ Ensure the *This is a migration*
 and *Track table* boxes are checked so that the query is added as a database migration and the Data microservice is
 aware of the created view.
 
-.. image:: ../../img/complete-tutorial/tutorial-create-view.png
+.. image:: ../../../img/complete-tutorial/tutorial-create-view.png
 
 Hit *Run* to create the view on the Postgres database and to track it in the Data microservice (ie: allow querying via
 Data APIs).
@@ -81,13 +81,13 @@ constraints on/to views. So, in these cases, we have to manually define a relati
 
 Here, we are defining a relationship from a ``author_average_rating`` view to ``author`` table:
 
-.. image:: ../../img/complete-tutorial/tutorial-add-manual-relationship.png
+.. image:: ../../../img/complete-tutorial/tutorial-add-manual-relationship.png
 
 The above relationship will allow you to fetch author's details when querying the view. But we might want to fetch
 author's average rating when querying the author table itself. So we will now create a relationship from ``author``
 table to ``author_average_rating`` view:
 
-.. image:: ../../img/complete-tutorial/tutorial-add-manual-rel-from-table.png
+.. image:: ../../../img/complete-tutorial/tutorial-add-manual-rel-from-table.png
 
 Now, let's fetch author details with their average rating:
 

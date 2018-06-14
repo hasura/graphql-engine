@@ -12,7 +12,7 @@ Roles can be removed from users. This can only be done by an admin user.
 
       2. Click the user that you wish to remove a role from.
 
-      .. image:: ../../../img/auth/console-remove-role.png
+      .. image:: ../../../../img/auth/console-remove-role.png
 
    .. tab:: REST API
 

@@ -13,13 +13,13 @@ the following methods:
 
       A new column can be added via the *Add column* button at the bottom. Click on *Edit* to alter/delete a column.
 
-      .. image:: ../../../img/manual/data/alter-table.png
+      .. image:: ../../../../img/manual/data/alter-table.png
 
    .. tab:: API-Console SQL page
 
       You can also alter column using SQL by heading to ``Data > SQL`` section of :doc:`API console <../../api-console/index>`.
 
-      .. image:: ../../../img/manual/data/alter-column-sql.png
+      .. image:: ../../../../img/manual/data/alter-column-sql.png
 
       .. note::
             You should click on ``This is a migration`` option before executing the query if you want to retain the migration.

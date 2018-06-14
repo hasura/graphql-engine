@@ -10,7 +10,7 @@ Deleting roles can be done by users having the ``admin`` role.
 
       Go to the ``auth`` tab on top and click on ``Roles`` on the left panel.
 
-      .. image:: ../../../img/auth/console-delete-role.png
+      .. image:: ../../../../img/auth/console-delete-role.png
 
    .. tab:: REST API
 

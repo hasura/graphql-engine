@@ -26,7 +26,7 @@ If you want to run SQL statements directly on the database, this can be done in 
 
       Head to ``Data > SQL`` section in the console.
 
-      .. image:: ../../img/manual/data/alter-column-sql.png
+      .. image:: ../../../img/manual/data/alter-column-sql.png
 
       .. note::
          Check the ``This is a migration`` option before executing the query if you want to retain the query as a db migration.

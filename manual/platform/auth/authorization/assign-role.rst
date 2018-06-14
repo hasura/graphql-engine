@@ -12,7 +12,7 @@ A user can be assigned roles. This can only be done by the admin user.
 
       2. Click the user that you wish to assign a role.
 
-      .. image:: ../../../img/auth/console-assign-role.png
+      .. image:: ../../../../img/auth/console-assign-role.png
 
    .. tab:: REST API
 

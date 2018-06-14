@@ -4,9 +4,9 @@ Auth UI Kit
 .. ..todo::
    Auth configuration: this can link to hasura project/conf/auth
 
-.. figure:: ../../../img/uikit-dark.png
+.. figure:: ../../../../img/uikit-dark.png
     :class: 'dark'
-.. figure:: ../../../img/uikit-light.png
+.. figure:: ../../../../img/uikit-light.png
     :class: 'light'
 
 

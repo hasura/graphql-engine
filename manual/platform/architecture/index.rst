@@ -60,7 +60,7 @@ runs on a Kubernetes cluster.
 
 First, we start off with a bare kubernetes cluster:
 
-.. image:: ../../img/1-bare.png
+.. image:: ../../../img/1-bare.png
    :width: 50%
 
 2. Adding the ``hasura`` namespace
@@ -69,7 +69,7 @@ First, we start off with a bare kubernetes cluster:
 Second, we create a hasura namespace where the Hasura platform
 services will live:
 
-.. image:: ../../img/2-hasura-ns.png
+.. image:: ../../../img/2-hasura-ns.png
    :width: 50%
 
 3. Specifying the initial configuration
@@ -85,7 +85,7 @@ Two important pieces of information are required to initialise a Hasura project:
 
 These are added as configmaps and secrets to the ``default`` namespace:
 
-.. image:: ../../img/3-project-conf.png
+.. image:: ../../../img/3-project-conf.png
    :height: 300px
 
 4. Initialising the hasura platform state: controller *init*
@@ -106,7 +106,7 @@ a configmap called ``hasura-project-status``.
 This is what the kubernetes cluster would look like after a successful
 ``init``:
 
-.. image:: ../../img/4-init.png
+.. image:: ../../../img/4-init.png
 
 5. Deploying the hasura platform: controller *sync*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -125,7 +125,7 @@ a configmap called ``hasura-project-status``.
 This is what the kubernetes cluster would look like after a successful
 ``sync``:
 
-.. image:: ../../img/5-sync.png
+.. image:: ../../../img/5-sync.png
 
 It is important to note, that the data, auth & filestore APIs depend on the
 postgres server to initialise and maintain their state.

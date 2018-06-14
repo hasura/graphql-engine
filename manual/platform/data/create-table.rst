@@ -25,14 +25,14 @@ To add/create a new table in the database, the following options are available:
 
       This will open the API console. Head to ``Data > Schema``.
 
-      .. image:: ../../img/manual/data/create-table.png
+      .. image:: ../../../img/manual/data/create-table.png
 
 
    .. tab:: SQL
 
       You can create tables using SQL by heading to ``Data > SQL`` section in the API console.
 
-      .. image:: ../../img/manual/data/run_sql.png
+      .. image:: ../../../img/manual/data/run_sql.png
 
       .. note::
 

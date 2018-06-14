@@ -102,17 +102,17 @@ By default the object relationship, ``author`` for the ``article`` table has alr
 
 You'll see an entry in *object relationships* for ``author_id -> author::id``:
 
-.. image:: ../../img/complete-tutorial/tutorial-article-relationships-page.png
+.. image:: ../../../img/complete-tutorial/tutorial-article-relationships-page.png
 
 Let's say you wish to add the array relationship, ``comments`` for the ``article`` table.
 You'll see entries under *suggested relationships*, if you had added all the foreign key constraints that were mentioned
 in the previous part. Click on *Add* to add a new array relationship and give name ``comments`` to the relationship:
 
-.. image:: ../../img/complete-tutorial/tutorial-add-relationship-comments.png
+.. image:: ../../../img/complete-tutorial/tutorial-add-relationship-comments.png
 
 The relationship is created:
 
-.. image:: ../../img/complete-tutorial/tutorial-added-relationship-comments.png
+.. image:: ../../../img/complete-tutorial/tutorial-added-relationship-comments.png
 
 You can create the other relationships similarly.
 

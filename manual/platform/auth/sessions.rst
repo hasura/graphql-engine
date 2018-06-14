@@ -34,7 +34,7 @@ anonymous``. The ``X-Hasura-User-Id`` header is **not set** in this case.
 
 For example, the image below demonstrates the gateway's behaviour when two different kinds of incoming requests are made to ``data.test42.hasura-app.io`` from an HTTP client:
 
-.. image:: ../../img/manual/auth/session-middleware.png
+.. image:: ../../../img/manual/auth/session-middleware.png
 
 .. _session-expiry:
 

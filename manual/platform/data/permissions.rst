@@ -41,11 +41,11 @@ We can use data APIs or the API console to set permissions on tables.
 
       This is the permissions section for the ``article`` table, which looks like this:
 
-      .. image:: ../../img/complete-tutorial/tutorial-9-vanilla-screen.png
+      .. image:: ../../../img/complete-tutorial/tutorial-9-vanilla-screen.png
 
       To add permissions, click the *Edit icon* for the corresponding role and query type:
 
-      .. image:: ../../img/complete-tutorial/tutorial-9-add-permission.png
+      .. image:: ../../../img/complete-tutorial/tutorial-9-add-permission.png
 
       Here you can add permissions for the Select, Insert, Update, Delete query types for all available roles.
 

@@ -8,5 +8,3 @@ Introduction
   - Postgraphile
   - Prisma
   - Writing my own GraphQL server
-
-.. image:: ../../img/how-it-works.png

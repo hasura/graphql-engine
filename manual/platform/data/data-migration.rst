@@ -30,7 +30,7 @@ Go to your project directory where a hasura cluster is setup.
 
 Here's a sample of migration files that have been generated in a hasura project's migrations folder.
 
-.. image:: ../../img/manual/data/migrations.png
+.. image:: ../../../img/manual/data/migrations.png
 
 How to manually create migrations?
 ----------------------------------
