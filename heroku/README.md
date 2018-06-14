@@ -9,14 +9,18 @@
 ## Setting up
 
 - Create a Heroku App
+```
+$ heroku create
+Creating app... done, ⬢ thawing-savannah-75305
+https://thawing-savannah-75305.herokuapp.com/ | https://git.heroku.com/thawing-savannah-75305.git
+```
+Note the app name `thawing-savannah-75305` from the command above. 
+In the next commands, substitute `<app-name>` with `thawing-savannah-75305`
+
 - Create a Heroku Postgres Addon for this app
-- Get the Database URL which starts with `postgres://...`
-- Generate an access key, to be used as the secret key to contact Hasura GraphQL Engine
-- Set config variables:
-  ```bash
-  heroku config:set ACCESS_KEY="<access-key>" -a "<app-name>"
-  heroku config:set DATABASE_URL="<database-url-with-creds>" -a "<app-name>"
-  ```
+```bash
+$ heroku addons:create heroku-postgresql:hobby-dev -a thawing-savannah-75305
+```
 
 ## Deploy
 
