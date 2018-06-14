@@ -51,10 +51,6 @@ $ heroku addons:create heroku-postgresql:hobby-dev -a thawing-savannah-75305
   ```yaml
   endpoint: https://<app-name>.herokuapp.com
   ```
-- Edit `.env` and add the access key created earlier
-  ```env
-  HASURA_GRAPHQL_ACCESS_KEY=<access-key>
-  ```
 
 ## Console
 
