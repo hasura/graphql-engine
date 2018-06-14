@@ -6,16 +6,11 @@
 .. sectionauthor:: Tanmai Gopal <tanmaig@hasura.io>
 
 .. meta::
-   :description: Homepage for all of Hasura's documentation. Links to Reference docs, Guides and Tutorials.
+   :description: Homepage for all of Hasura's documentation.
    :keywords: hasura, docs, home
 
 Hasura Documentation
 ====================
-
-This documentation is broadly divided into 2 parts:
-
-* The :ref:`getting-started` section : start reading this section if you are
-  new to Hasura.
 
 Table of Contents
 =================

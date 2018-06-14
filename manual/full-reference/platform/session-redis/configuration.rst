@@ -1,7 +1,0 @@
-Configuration
-=============
-
-*TODO*
-
-
-
