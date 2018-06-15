@@ -2,14 +2,14 @@
 @import url('https://fonts.googleapis.com/css?family=Khula:400,700');
 
 html {
-    background-color: #f8f8f8 !important;
+  background-color: #f8f8f8 !important;
 }
 ::-moz-selection { /* Code for Firefox */
-    background: #b2d7fe !important;
+  background: #b2d7fe !important;
 }
 
 ::selection {
-    background: #b2d7fe !important;
+  background: #b2d7fe !important;
 }
 body
 {
@@ -73,10 +73,10 @@ h1 a:visited, h2 a:visited, h3 a:visited, h4 a:visited, h5 a:visited, h6 a:visit
 
 .subhead_wrapper_loader
 {
-	color: #4d4d4d;
-	font-size: 20px;
-	font-family: 'Khula';
-	font-weight: 300;
+  color: #4d4d4d;
+  font-size: 20px;
+  font-family: 'Khula';
+  font-weight: 300;
 }
 
 /* End of Loading */
@@ -293,12 +293,12 @@ tt, code, kbd, pre, samp
   color: #333;
 }
 pre.haskell-pre a {
-    border-bottom: 1px dotted #000;
-    text-decoration: none;
+  border-bottom: 1px dotted #000;
+  text-decoration: none;
 }
 
 td div.highlight {
-    margin: 0;
+  margin: 0;
 }
 
 h3 code {
@@ -308,7 +308,7 @@ h3 code {
 .rst-content .section ol ol,
 .rst-content ol.arabic ol,
 article ol ol {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 /* **** BEGIN landing.html ******************************* */
@@ -328,8 +328,8 @@ p
   width: 80%;
 }
 .hcl_half {
-    width: 50%;
-    float: left;
+  width: 50%;
+  float: left;
 }
 .box_wrapper
 {
@@ -434,9 +434,9 @@ p
 }
 .sign_in_wrapper
 {
-    text-align: left;
-    display: flex;
-    align-items: center;
+  text-align: left;
+  display: flex;
+  align-items: center;
 }
 .tutorial_in_wrapper
 {
@@ -487,7 +487,7 @@ p
 }
 .tags_btn
 {
-    text-align: left;
+  text-align: left;
 }
 .tags_wrapper .tags_btn
 {
@@ -531,8 +531,8 @@ p
   top: 0;
   position: -webkit-sticky;
   position: -moz-sticky;
-   position: -o-sticky;
-   position: -ms-sticky;
+  position: -o-sticky;
+  position: -ms-sticky;
   z-index: 100;
 }
 
@@ -962,7 +962,7 @@ p
   background-color: transparent;
   border: 0;
   color: #FFF;
-  // color: #000;
+// color: #000;
   font-size: 18px;
 }
 
@@ -1096,53 +1096,53 @@ ol, ul
  * Display and hide the appropriate tab content
  */
 .tab {
-    display: none;
+  display: none;
 }
 
 .tab-active {
-    display: block;
+  display: block;
 }
 
 /*Clear the padding above the tabs*/
 .tab-strip__element {
-    padding-top: 0;
+  padding-top: 0;
 }
 
 .tab-strip {
-    list-style: none;
-    padding-left: 0;
-    margin-left: 0 !important;
+  list-style: none;
+  padding-left: 0;
+  margin-left: 0 !important;
 }
 
 /*Styles for inactive & unhovered tabs*/
 .tab-strip__element {
-    background-color: #f4f6f6;
-    border-radius: 4px 4px 0 0;
-    border: 0.5px solid #babdbe;
-    color: #babdbe;
-    display: table-cell;
-    font-weight: bold;
-    height: 34px;
-    padding: 0 !important;
-    text-align: center;
-    vertical-align: middle;
-    width: 1%;
+  background-color: #f4f6f6;
+  border-radius: 4px 4px 0 0;
+  border: 0.5px solid #babdbe;
+  color: #babdbe;
+  display: table-cell;
+  font-weight: bold;
+  height: 34px;
+  padding: 0 !important;
+  text-align: center;
+  vertical-align: middle;
+  width: 1%;
 }
 
 /*Styles for active tabs*/
 .tab-strip__element[aria-selected=true],
 .tab-strip__element[aria-selected=true]:focus,
 .tab-strip__element[aria-selected=true]:hover {
-    color: #6ba442;
-    font-weight: bold;
-    background-color: #fff;
-    border: 0.5px solid #babdbe;
-    border-bottom-color: transparent;
+  color: #6ba442;
+  font-weight: bold;
+  background-color: #fff;
+  border: 0.5px solid #babdbe;
+  border-bottom-color: transparent;
 }
 
 /*White background on hover*/
 .tab-strip__element:hover {
-    background: #fff;
+  background: #fff;
 }
 
 /*
@@ -1152,66 +1152,66 @@ ol, ul
 .tab-strip__element[aria-selected=true] > .caret,
 .tab-strip__element[aria-selected=true]:focus > .caret,
 .tab-strip__element[aria-selected=true]:hover > .caret {
-    border-top-color: #6ba442;
-    border-bottom-color: #6ba442;
+  border-top-color: #6ba442;
+  border-bottom-color: #6ba442;
 }
 
 .tab-strip__element[aria-selected=true] > .caret,
 .tab-strip__element[aria-selected=true]:hover > .caret {
-    border-top-color: #babdbe;
-    border-bottom-color: #babdbe;
+  border-top-color: #babdbe;
+  border-bottom-color: #babdbe;
 }
 
 /*Make dropdown list width the same as dropdown tab*/
 .tab-strip__dropdown {
-     min-width: 0;
-     width: 100%;
-     background-color: #fff;
+  min-width: 0;
+  width: 100%;
+  background-color: #fff;
 }
 
 /*Dropdown hover highlight mongo green*/
 .tab-strip__dropdown > li:hover {
-     background-color: #6ba442;
+  background-color: #6ba442;
 }
 
 /*White background for dropdown items*/
 .tab-strip__dropdown > li {
-    background-color: #fff;
-    color: #333;
-    font-weight: 400;
-    padding: 3px 20px;
-    text-align: left;
+  background-color: #fff;
+  color: #333;
+  font-weight: 400;
+  padding: 3px 20px;
+  text-align: left;
 }
 
 .tab-strip .dropdown-toggle {
-    color: inherit;
-    display: block;
-    padding: 5px 15px;
-    text-decoration: none;
+  color: inherit;
+  display: block;
+  padding: 5px 15px;
+  text-decoration: none;
 }
 
 .dropdown-menu > li:hover {
-    color: #fff;
+  color: #fff;
 }
 
 .tab-strip .dropdown-toggle > .caret {
-    border-top-color: inherit;
+  border-top-color: inherit;
 }
 
 /*Dropdown will always have the cursor*/
 .tab-strip .dropdown-toggle:hover {
-    color: inherit;
-    text-decoration: none;
+  color: inherit;
+  text-decoration: none;
 }
 
 .tab-strip [aria-selected]:hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 /* Note overrides */
 .note, .admonition, .help-block {
-    background: #f1f9ff;
-    border: 1px solid #c9e0f0;
+  background: #f1f9ff;
+  border: 1px solid #c9e0f0;
 }
 
 .figure {
@@ -1287,16 +1287,16 @@ ol, ul
 }
 
 .api-tabs .docutils {
-    font-size: 16px !important;
-    margin: 0;
-    max-width: 100%;
-    padding: 0;
+  font-size: 16px !important;
+  margin: 0;
+  max-width: 100%;
+  padding: 0;
 
 }
 .api-tabs.container {
-    margin: 0;
-    max-width: 100%;
-    padding: 0px;
+  margin: 0;
+  max-width: 100%;
+  padding: 0px;
 }
 
 .api-tabs .ui.tab {
@@ -1367,6 +1367,15 @@ ol, ul
 
 #feedback_box {
   max-width: 100%;
+}
+
+.graphiql {
+  height: 300px;
+  margin-bottom: 20px;
+}
+
+.graphiql .query, .graphiql .response {
+    display: none;
 }
 
 @media (max-width: 768px) {

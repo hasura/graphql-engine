@@ -1,6 +1,7 @@
 {% extends "basic/layout.html" %}
 
 {% set css_files = css_files + ['_static/hasura-custom.css', '_static/djangosite.css'] %}
+{% set css_files = css_files + ['_static/graphiql/graphiql.css'] %}
 
 {%- macro secondnav() %}
   {%- if prev %}
@@ -475,6 +476,101 @@
       };
       $('.feedback_btn').on('click', handleFeedbackBtnClick);
     });
+  </script>
+
+  <script type="text/javascript">
+    // graphiql
+
+    // load script file
+    function loadScript(url, callback)
+    {
+      var head = document.getElementsByTagName('head')[0];
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = url;
+
+      // Then bind the event to the callback function.
+      // There are several events for cross browser compatibility.
+      script.onreadystatechange = callback;
+      script.onload = callback;
+
+      // Fire the loading
+      head.appendChild(script);
+    }
+
+    // create GraphiQL components and embed into HTML
+    function setupGraphiQL() {
+      function embedGraphiQL(graphQLFetcher) {
+        if (typeof(React) === 'undefined' || typeof(ReactDOM) === 'undefined') {
+          return;
+        }
+
+        const targets = document.getElementsByClassName('graphiql');
+
+        for (let i = 0; i < targets.length; i++) {
+          const graphiQLElement = React.createElement(GraphiQL, {
+            fetcher: graphQLFetcher,
+            schema: null, // TODO: pass actual schema
+            query: targets[i].getElementsByClassName("query")[0].innerHTML.trim(),
+            response: targets[i].getElementsByClassName("response")[0].innerHTML.trim()
+          });
+
+          ReactDOM.render(graphiQLElement, targets[i]);
+        }
+      }
+
+      function graphQLFetcher(graphQLParams) {
+        const endpoint = 'https://data.ethos64.hasura-app.io/v1alpha1/graphql';
+
+        const params = {
+          method: 'post',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(graphQLParams),
+          credentials: 'include',
+        };
+
+        return fetch(endpoint, params)
+          .then(function (response) {
+            return response.text();
+          })
+          .then(function (responseBody) {
+            try {
+              return JSON.parse(responseBody);
+            } catch (error) {
+              return responseBody;
+            }
+          });
+      }
+
+      embedGraphiQL(graphQLFetcher);
+    }
+
+    // if graphiql elements present, load react/graphiql js files and setup graphiql
+    if ($('.graphiql').length > 0) {
+      const loadingStatus = {'react': false, 'reactDom': false, 'graphiQL': false};
+
+      function checkLoading (loadedFile) {
+        return function () {
+          loadingStatus[loadedFile] = true;
+
+          // return if all files not yet loaded
+          for (var file in loadingStatus) {
+            if (!loadingStatus[file]) {
+              return;
+            }
+          }
+
+          setupGraphiQL();
+        }
+      }
+
+      loadScript("{{ pathto('_static/react/react.min.js', 1) }}", checkLoading('react'));
+      loadScript("{{ pathto('_static/react/react-dom.min.js', 1) }}", checkLoading('reactDom'));
+      loadScript("{{ pathto('_static/graphiql/graphiql.min.js', 1) }}", checkLoading('graphiQL'));
+    }
   </script>
 
   <script src="{{ pathto('_static/componentTabs.js', 1) }}"></script>
