@@ -1,6 +1,40 @@
 Queries
 =======
 
+Sample query
+------------
+
+.. graphiql::
+   :query:
+      query fetch_article {
+        article {
+          title
+          comments {
+            comment
+          }
+        }
+      }
+   :response:
+      {
+         "data": {
+           "article": [
+             {
+               "title": "primis in faucibus orci luctus",
+               "comments": []
+             },
+             {
+               "title": "erat eget ipsum. Suspendisse sagittis.",
+               "comments": []
+             },
+             {
+               "title": "arcu. Sed et libero. Proin",
+               "comments": []
+             }
+           ]
+         }
+       }
+
+
 Bulk queries
 ------------
 
