@@ -1,19 +1,5 @@
-Dockerfile Configuration
-========================
-
-.. code-block:: Dockerfile
-
-   FROM hasuranightly/raven:94a0141
-
-   CMD raven \
-       --database-url $DATABASE_URL \
-       serve \
-       --server-port $PORT \
-       --access-key $ACCESS_KEY
-
-
-Options
--------
+GraphQL Server Options
+======================
 
 For ``raven`` command these are the flags available
 
@@ -49,28 +35,3 @@ For ``serve`` subcommand these are the flags available
                            serializable
       --root-dir           This static dir is served at / and takes precedence over
                            all routes
-
-
-Server behaviour based on ``--access-key`` and ``--auth-hook``
---------------------------------------------------------------
-
-Case 1: ``--access-key`` is set and ``--auth-hook`` is not set
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-``X-Hasura-Access-Key`` header is always expected. Server authorizes based on access key sent.
-Required ``X-Hasura-*`` headers are expected in the request.
-
-
-Case 2: ``--access-key`` is not set and ``--auth-hook`` is set
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-Server authorizes and fetches headers from provided hook. See :doc:`Authorization hook <../auth/hook>` .
-
-
-Case 3: Both ``--access-key`` and ``--auth-hook`` are not set
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-No authorization required. Server expects required ``X-Hasura-*`` headers in the request
-
-
-Case 4: Both ``--access-key`` and ``--auth-hook`` are set
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-If ``X-Hasura-Access-Key`` is sent then key is validated and hook is ignored. Server expects required ``X-Hasura-*`` headers in the request.
-If ``X-Hasura-Access-Key`` header is not found then server authorizes and fetches headers from provided hook (See :doc:`Authorization hook <../auth/hook>`).

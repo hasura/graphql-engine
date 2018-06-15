@@ -1,9 +1,72 @@
 Authorization / Permissions
 ===========================
 
-- Authentication
+Authorization
+-------------
+You can run Hasura's GraphQL Engine in three modes
 
-  - Write your own authentication hook (see :doc:`Authorization Webhook <hook>`)
-  - Set Access key (see :doc:`Dockerfile Configuration <../installation/dockerfile>`) 
+1. No Authentication mode
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- When ``--access-key`` and ``--auth-hook`` are not set
+
+- It is useful when you're developing . It is not recomended to use in production but however you can have proxy gateway that will set (``X-Hasura-Access-Key``) header and other required ``X-Hasura-*`` headers.
+
+Run server in this mode using following docker command.
+
+.. code-block:: bash
+
+   docker run --name hasura-graphql-engine -p 9000:9000 \
+              --link hasura-postgres:postgres \
+              -d hasuranightly/raven:8df5234 raven \
+              --database-url \
+                postgres://postgres:mysecretpassword@postgres:5432/postgres \
+                serve --server-port 9000 --cors-domain "*"
+
+
+2. Access key mode
+^^^^^^^^^^^^^^^^^^
+
+- When only ``--access-key`` is set. See :doc:`GraphQL Server Options<../installation/ravenOpts>`
+
+- Server authenticates based on ``X-Hasura-Access-Key`` header and expects all other required ``X-Hasura-*`` headers.
+
+Run server in this mode using following docker command.
+
+.. code-block:: bash
+
+   docker run --name hasura-graphql-engine -p 9000:9000 \
+              --link hasura-postgres:postgres \
+              -d hasuranightly/raven:8df5234 raven \
+              --database-url \
+                postgres://postgres:mysecretpassword@postgres:5432/postgres \
+                serve --server-port 9000 --access-key myAccKey \
+                  --cors-domain "*"
+
+
+3. Access key and Authorization webhook mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- When both ``--access-key`` and ``--auth-hook`` are set
+
+- This mode is useful in production. When server founds ``X-Hasura-Access-Key`` header it ignores webhook and expects all other required ``X-Hasura*`` headers
+
+- If ``X-Hasura-Access-key`` header not found then server authenticaters through webhook. See :doc:`Authorization Webhook<hook>`
+
+Run server in this mode using following docker command.
+
+.. code-block:: bash
+
+   docker run --name hasura-graphql-engine -p 9000:9000 \
+              --link hasura-postgres:postgres \
+              -d hasuranightly/raven:8df5234 raven \
+              --database-url \
+                postgres://postgres:mysecretpassword@postgres:5432/postgres \
+                serve --server-port 9000 --access-key myAccKey \
+                  --auth-hook http://myAuthhook/ --cors-domain "*"
+
+
+Permissions
+-----------
 
 - Role and user-id based rules
