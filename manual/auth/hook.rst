@@ -32,7 +32,7 @@ Success
 +++++++
 Successful responsne means the webhook authorized request and server will continue to perform query. Only ``200`` response is considered successful.
 
-If request is successful you should send ``X-Hasura-*`` header parameters in response as json object.
+If request is successful you should send required ``X-Hasura-*`` headers in parameters object in response.
 
 .. code-block:: http
 
