@@ -1,5 +1,5 @@
-Introduction
-============
+Understanding Hasura
+====================
 
 - Philosophy / goals
 - Design overview / architecture

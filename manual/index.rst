@@ -8,23 +8,31 @@
 
 .. rubric:: Hasura Documentation
 
-This is the reference documentation of Hasura.
+This the documentation section for the Hasura GraphQL engine. If you're searching for the Hasura platform
+documentation that used to live here, please head to :doc:`Hasura platform documentation <./platform/index>`.
+
+Show sections or boxes:
+
+- Understanding Hasura
+- Installing Hasura
+- Queries & Mutations
+- Authentication & Authorization
+- Version control & collaboration
+
+Forums
+
+..  introduction/index
 
 .. toctree::
   :maxdepth: 1
   :titlesonly:
 
-  introduction/index
-  tutorial/index
-  installation/index
+  getting-started/index
   schema/index
   queries/index
   mutations/index
-  subscriptions/index
-  customize/index
-  migrations/index
   auth/index
-  performance/index
   version-control/index
-  integration/index
+  production/index
+  faq/index
   Platform documentation <platform/index>
