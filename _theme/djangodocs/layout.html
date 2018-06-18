@@ -1,6 +1,7 @@
 {% extends "basic/layout.html" %}
 
-{% set css_files = css_files + ['_static/hasura-custom.css', '_static/djangosite.css'] %}
+{% set css_files = css_files + ['_static/hasura-custom.css', '_static/djangosite.css', '_static/jquery-ui.css'] %}
+{% set css_files = css_files + ['_static/fullpage_tabs/tabs.css'] %}
 {% set css_files = css_files + ['_static/graphiql/graphiql.css'] %}
 
 {%- macro secondnav() %}
@@ -16,16 +17,7 @@
 {% block extrahead %}
   <!--<meta name="viewport" content="user-scalable=no">-->
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
-  {%- if version != latest_docs_version %}
-    <link ref="canonical" href="https://docs.{{ BASE_DOMIAN }}/{{latest_docs_version}}/{{pagename}}.html" />
-  {% endif %}
-  {% block javascript %}
-    <script type="text/javascript">
-      {% include 'static/search.js' %}
-    </script>
-  {% endblock %}
 {% endblock %}
 
 {% block document %}
@@ -35,44 +27,18 @@
       <div id="" class="content_wrapper">
         {%- if pagename == 'index' %}
           {% include 'pages/landing.html' %}
-        {%- elif pagename == 'guides/index' %}
-          {% include 'pages/guides.html' %}
-        {%- elif pagename == 'tutorials/index' %}
-          {% include 'pages/tutorials.html' %}
         {%- else %}
+          {% set rootpage = 'common' %}
+          {% set pagenameSplit = pagename.split('/') %}
           {% block sidebarwrapper %}
-            {% set currPage = pagename.split('/')[0] %}
-            {% if ( currPage == 'manual' or currPage == 'guides' ) %}
-              <div class="yui-b mobile-hide" id="sidebar">
-                {%- if last_updated %}
-                  <span><b>Last updated:</b> {{ last_updated }}</span>
-                {%- endif %}
-                {{ sidebar() }}
-              </div>
-            {% endif %}
+            <div class="yui-b mobile-hide" id="sidebar">
+              {%- if last_updated %}
+                <span><b>Last updated:</b> {{ last_updated }}</span>
+              {%- endif %}
+              {{ sidebar() }}
+            </div>
           {% endblock %}
-          {% set splittedPage = pagename.split('/') %}
-          {%- if splittedPage[0] == 'manual' %}
-            {% set rootpage='manual' %}
-          {%- else %}
-            {% set rootpage='common' %}
-          {% endif %}
-          {%- if rootpage == 'common' %}
-            {%- if splittedPage[1] != 'index' %}
-
-            {% endif %}
-          {% endif %}
-          {% set p = pagename.split('/') %}
-          {% set c = '' %}
-          {% if p[0] != 'manual' %}
-            {% set c = 'padding_top' %}
-          {% endif %}
-          <div class="content_inner_wrapper {{ c }}">
-            {%- if ( pagename.split('/')[1] != 'index' and pagename.split('/')[0] != 'manual' ) %}
-              <div class="back_link" id={{ pagename.split('/')[0] }}>
-                <a href="{{ pathto('', 1) }}{{splittedPage[0] }}"> <i class="fa fa-long-arrow-left" aria-hidden="true"></i>Back to {{ splittedPage[0] }} </a>
-              </div>
-            {% endif %}
+          <div class="content_inner_wrapper">
             <div role="main" parent={{ rootpage }}>
               <div id="docs-content">
                 <!-- div class="media_wrapper details_media">
@@ -88,7 +54,7 @@
                 <div class="mobile-logo mobile-only">
                   <a href="https://{{ BASE_DOMAIN }}/" target="_blank">
                     <div class="img_wrapper inline-block">
-                      <img class="responsive logo_img" src="{{ pathto('_images/logo.svg', 1) }}" />
+                      <img class="responsive logo_img" src="{{ pathto('_images/layout/logo2.svg', 1) }}" />
                     </div>
                   </a>
                   <a href="https://docs.{{ BASE_DOMAIN }}" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
@@ -127,22 +93,10 @@
                 <div class="feedback">
                   Was this page helpful?
                   <div class="display_inl actions thumb_up">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="21px" height="21px" viewBox="0 0 561 561" style="enable-background:new 0 0 561 561;" xml:space="preserve">
-                      <g>
-	                    <g id="thumb-up">
-		                  <path d="M0,535.5h102v-306H0V535.5z M561,255c0-28.05-22.95-51-51-51H349.35l25.5-117.3c0-2.55,0-5.1,0-7.65    c0-10.2-5.1-20.4-10.199-28.05L336.6,25.5L168.3,193.8c-10.2,7.65-15.3,20.4-15.3,35.7v255c0,28.05,22.95,51,51,51h229.5    c20.4,0,38.25-12.75,45.9-30.6l76.5-181.051c2.55-5.1,2.55-12.75,2.55-17.85v-51H561C561,257.55,561,255,561,255z" fill="#787878"/>
-	                    </g>
-                      </g>
-                    </svg>
+                    <img class="responsive logo_img" src="{{ pathto('_images/layout/thumbs-up.svg', 1) }}" />
                   </div>
                   <div class="display_inl actions thumb_down">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="21px" height="21px" viewBox="0 0 561 561" style="enable-background:new 0 0 561 561;" xml:space="preserve">
-                      <g>
-                        <g id="thumb-down">
-                            <path d="M357,25.5H127.5c-20.4,0-38.25,12.75-45.9,30.6L5.1,237.15C2.55,242.25,0,247.35,0,255v48.45l0,0V306    c0,28.05,22.95,51,51,51h160.65l-25.5,117.3c0,2.55,0,5.101,0,7.65c0,10.2,5.1,20.399,10.2,28.05l28.05,25.5l168.3-168.3    c10.2-10.2,15.3-22.95,15.3-35.7v-255C408,48.45,385.05,25.5,357,25.5z M459,25.5v306h102v-306H459z" fill="#787878"/>
-                        </g>
-                      </g>
-                    </svg>
+                    <img class="responsive logo_img" src="{{ pathto('_images/layout/thumbs-down.svg', 1) }}" />
                   </div>
                 </div>
                 <div class="detailed_feedback hide">
@@ -178,7 +132,7 @@
               powered by
             </span>
             <span>
-              <img class="algolia_image" src="{{ pathto('_images/algolia-logo.svg', 1) }}" alt="Algolia Hasura Search" />
+              <img class="algolia_image" src="{{ pathto('_images/layout/algolia-logo.svg', 1) }}" alt="Algolia Hasura Search" />
             </span>
           </div>
         </h3>
@@ -274,6 +228,61 @@
   </script>
 
   <script type="text/javascript">
+    // utils
+
+    // load script file
+    const loadScript = function(url, callback) {
+      var head = document.getElementsByTagName('head')[0];
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = url;
+
+      // Then bind the event to the callback function.
+      // There are several events for cross browser compatibility.
+      script.onreadystatechange = callback;
+      script.onload = callback;
+
+      // Fire the loading
+      head.appendChild(script);
+    };
+
+    // make ajax call
+    const promise_ajax = function(url, data, type) {
+      return new Promise(function(resolve, reject) {
+        var req = new XMLHttpRequest();
+        req.open(type, url, true);
+        req.setRequestHeader("Content-type", "application/json");
+        req.onload = function() {
+          if (req.status === 200) {
+            resolve(req.response);
+          } else {
+            reject(req.response);
+          }
+        };
+        req.onerror = function() {
+          reject(Error("Network Error"));
+        };
+        // Make the request
+        req.send(JSON.stringify(data));
+      });
+    };
+
+    // Track GA event
+    const trackga = function ( category, action, label, value ) {
+      // If ga is available
+      if ( ga ) {
+        ga('send', {
+          hitType: 'event',
+          eventCategory: category,
+          eventAction: action,
+          eventLabel: label,
+          eventValue: value
+        });
+      }
+    };
+  </script>
+
+  <script type="text/javascript">
     // support button
     $(document).ready( function() {
       const supportbtnHandler = function() {
@@ -283,7 +292,7 @@
       };
       $('.supportBtn').on('click', supportbtnHandler);
     });
-    </script>
+  </script>
 
   <script type="text/javascript">
     // search
@@ -300,11 +309,36 @@
         $('.search_wrapper').removeClass('hide');
       };
 
-      const search = function(searchTerm) {
-        if ( !searchFunc ) {
-          return;
+      const searchFunc = function( query, callback, page, restrictAttributes, attributesToRetrieve ) {
+        var ALGOLIA_APPLICATION_ID = "{{ ALGOLIA_APPLICATION_ID }}";
+        var ALGOLIA_SEARCH_KEY = "{{ ALGOLIA_SEARCH_KEY }}";
+
+        var hitsPerPage = 100;
+        var page_no = parseInt(page) - 1;
+        var offset = (hitsPerPage * (page - 1));
+
+        var indexName = "{{ ALGOLIA_INDEX_NAME }}";
+
+        //var client = algoliasearch(APPLICATION_ID, SEARCH_ONLY_KEY);
+        var client = algoliasearch(ALGOLIA_APPLICATION_ID, ALGOLIA_SEARCH_KEY, {"protocol":"https:"}); // localhost
+        var index = client.initIndex(indexName);
+
+        var queries = {
+          query: query,
+          hitsPerPage: hitsPerPage,
+          page: page_no,
+          offset: offset,
+          restrictSearchableAttributes : restrictAttributes
+        };
+
+        if ( attributesToRetrieve ) {
+          queries["attributesToRetrieve"] = attributesToRetrieve;
         }
 
+        index.search(queries, callback );
+      };
+
+      const search = function(searchTerm) {
         function callback(err, content ) {
           const searchHtmlTemplate = $('.search_wrapper_template').html();
           const template = _.template(_.unescape(searchHtmlTemplate));
@@ -481,23 +515,6 @@
   <script type="text/javascript">
     // graphiql
 
-    // load script file
-    function loadScript(url, callback)
-    {
-      var head = document.getElementsByTagName('head')[0];
-      var script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.src = url;
-
-      // Then bind the event to the callback function.
-      // There are several events for cross browser compatibility.
-      script.onreadystatechange = callback;
-      script.onload = callback;
-
-      // Fire the loading
-      head.appendChild(script);
-    }
-
     // create GraphiQL components and embed into HTML
     function setupGraphiQL() {
       function embedGraphiQL(graphQLFetcher) {
@@ -573,6 +590,9 @@
     }
   </script>
 
-  <script src="{{ pathto('_static/componentTabs.js', 1) }}"></script>
+  <script type="text/javascript">
+    // fullpage_tabs
+    loadScript("{{ pathto('_static/fullpage_tabs/tabs.js', 1) }}", function(){});
+  </script>
 
 {% endblock %}

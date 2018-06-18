@@ -26,13 +26,13 @@ class GraphiQLDirective(Directive):
 '''
 
     def run(self):
-        graphiql_template = fett.Template(self.GRAPHIQL_TEMPLATE)
+        raw_template = fett.Template(self.GRAPHIQL_TEMPLATE)
         try:
-            rendered = graphiql_template.render(self.options)
+            rendered_template = raw_template.render(self.options)
         except Exception as error:
             raise self.severe('Failed to render template: {}'.format(ErrorString(error)))
 
-        rendered_lines = statemachine.string2lines(rendered, 4, convert_whitespace=1)
+        rendered_lines = statemachine.string2lines(rendered_template, 4, convert_whitespace=1)
 
         self.state_machine.insert_input(rendered_lines, '')
 

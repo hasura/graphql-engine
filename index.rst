@@ -3,8 +3,6 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. sectionauthor:: Tanmai Gopal <tanmaig@hasura.io>
-
 .. meta::
    :description: Homepage for all of Hasura's documentation.
    :keywords: hasura, docs, home
@@ -19,4 +17,5 @@ Table of Contents
   :maxdepth: 2
   :titlesonly:
 
-  manual/index
+  Hasura GraphQL Engine <graphql/manual/index>
+  Hasura Platform <platform//manual/index>
