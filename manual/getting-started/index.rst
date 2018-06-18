@@ -5,7 +5,7 @@ Getting started
 - Deploy
 
   - :doc:`Heroku <deploy/heroku>`
-  - :doc:`Docker <deploy/dockerfile>`
+  - Docker
 
 - Create schema
 - Use with existing data
@@ -16,5 +16,4 @@ Getting started
 
    install-hasura-cli
    deploy/heroku
-   deploy/hasura
    deploy/raven-opts

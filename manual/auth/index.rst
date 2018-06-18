@@ -27,7 +27,7 @@ Run server in this mode using following docker command.
 2. Access key mode
 ^^^^^^^^^^^^^^^^^^
 
-- When only ``--access-key`` is set. See :doc:`GraphQL Server Options<../installation/ravenOpts>`
+- When only ``--access-key`` is set. See :doc:`GraphQL Server Options <../getting-started/deploy/raven-opts>`
 
 - Server authenticates based on ``X-Hasura-Access-Key`` header and expects all other required ``X-Hasura-*`` headers.
 
@@ -51,7 +51,7 @@ Run server in this mode using following docker command.
 
 - This mode is useful in production. When server founds ``X-Hasura-Access-Key`` header it ignores webhook and expects all other required ``X-Hasura*`` headers
 
-- If ``X-Hasura-Access-key`` header not found then server authenticaters through webhook. See :doc:`Authorization Webhook<hook>`
+- If ``X-Hasura-Access-key`` header not found then server authenticaters through webhook. See :doc:`Authorization Webhook <hook>`
 
 Run server in this mode using following docker command.
 
@@ -70,3 +70,11 @@ Permissions
 -----------
 
 - Role and user-id based rules
+
+See:
+----
+
+.. toctree::
+   :maxdepth: 1
+
+   hook

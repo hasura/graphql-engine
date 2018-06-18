@@ -9,7 +9,7 @@
 .. rubric:: Hasura Documentation
 
 This the documentation section for the Hasura GraphQL engine. If you're searching for the Hasura platform
-documentation that used to live here, please head to :doc:`Hasura platform documentation <./platform/index>`.
+documentation that used to live here, please head to :doc:`Hasura platform documentation <platform/index>`.
 
 Show sections or boxes:
 
