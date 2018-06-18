@@ -17,3 +17,4 @@ Getting started
    install-hasura-cli
    deploy/heroku
    deploy/hasura
+   deploy/raven-opts

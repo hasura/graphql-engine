@@ -1,16 +1,15 @@
 Authorization Webhook
 =====================
 
-You can configure a webhook (see :doc:`Dockerfile configuration <../installation/dockerfile>`) to authenticate all incoming requests to Hasura GraphQL server.
+You can configure a webhook (see :doc:`GraphQL Server Options <../installation/ravenOpts>`) to authenticate all incoming requests to Hasura GraphQL server.
 
 .. note::
-   If webhook is not configured then server expects required ``X-Hasura-*`` headers
+   1. If webhook is not configured then server expects required ``X-Hasura-*`` headers
+   2. Configuring webhook requires Access key (``--access-key``) to be set
 
-Configured webook is called when
-- ``Access key`` is not set
-- ``Access key`` is set but ``X-Hasura-Access-Key`` header is not found in the request
 
-Configured webhook is ignored when ``Access key`` is set and ``X-Hasura-Access-Key`` header is found in the request.
+- Configured webook is called when ``X-Hasura-Access-Key`` header is not found in the request
+- Configured webhook is ignored when ``X-Hasura-Access-Key`` header is found in the request.
 
 
 Spec for the webhook
