@@ -15,7 +15,7 @@ If you want to run just the Hasura graphql engine and connect it to your own Pos
 curl -L https://storage.googleapis.com/hasuractl/install-dev.sh | bash 
 ```
 
-If you already have Hasura installed, then once the download is complete, hit ctrl-c before you're prompted for your password. And then move the file manually:
+Once the download is complete, hit ctrl-c before you're prompted for your password and then move the file manually. We're doing this because this is a preview release of the hasura CLI!
 
 ```
 mv /tmp/hasura /usr/local/bin/hasura-dev
