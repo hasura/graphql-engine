@@ -1,60 +1,64 @@
 # Hasura GraphQL Engine on Heroku
 
-## Prerequisites
+## Install the Hasura CLI
 
-- Heroku CLI
-- Heroku Account
-- Docker
-
-## Setting up
-
-- Create a Heroku App
-```
-$ heroku create
-Creating app... done, ⬢ thawing-savannah-75305
-https://thawing-savannah-75305.herokuapp.com/ | https://git.heroku.com/thawing-savannah-75305.git
-```
-Note the app name `thawing-savannah-75305` from the command above. 
-In the next commands, substitute `<app-name>` with `thawing-savannah-75305`
-
-- Create a Heroku Postgres Addon for this app
 ```bash
-$ heroku addons:create heroku-postgresql:hobby-dev -a thawing-savannah-75305
+curl -L https://storage.googleapis.com/hasuractl/install-dev.sh | bash 
 ```
 
-## Deploy
+Once the download is complete, hit ctrl-c before you're prompted for your password and then move the file manually. We're doing this because this is a preview release of the hasura CLI!
 
-- Switch to the `heroku/setup` directory. You should have a `Dockerfile` when you hit `ls`:
-  ```bash
-  $ ls
-  Dockerfile README.md
-  ```
-- Make sure you're logged in to heroku's container registry:
-  ```
-  $ heroku container:login
-  ```
-- Execute the following commands to deploy
-  ```bash
-  heroku container:push web -a <app-name>
-  heroku container:release web -a <app-name>
-  ```
-- Check the logs to verify if everything is ok:
-  ```bash
-  heroku logs -a <app-name>
-  ```
-
-## Configure
-
-(Assuming you have already executed `hasura init`)
-
-- Edit `config.yaml` and add `endpoint` as the Heroku App URL
-  ```yaml
-  endpoint: https://<app-name>.herokuapp.com
-  ```
-
-## Console
-
-Open the console and start exploring APIs / manage tables/views:
 ```bash
+mv /tmp/hasura /usr/local/bin/hasura-dev
+```
+
+## Option 1: Deploy on Heroku free tier (recommended for getting started)
+
+### Step 1: Deploy on heroku
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/karthikvt26/heroku-push)
+
+### Step 2: Initialise a project directory and open console
+
+```bash
+hasura init --directory my-project --endpoint https://HEROKU_APP_NAME.herokuapp.com
+cd my-project
+hasura console
+```
+
+----------------------------------------
+
+
+## Option 2: Deploy via git
+
+### Step 1: Initialise a project directory
+
+```bash
+hasura init --directory my-project
+```
+
+### Step 2: Deploy to heroku
+
+```bash
+cd my-project
+cd __install/heroku
+git init
+git commit -am 'first commit'
+git remote add heroku HEROKU_GIT_REMOTE
+git push heroku master
+```
+
+### Step 3: Open the hasura console
+
+In the `my-project/config.yaml` file set the endpoint:
+
+```yaml
+endpoint: https://HEROKU_APP_NAME.herokuapp.com
+```
+
+Now, open the hasura console:
+
+```bash
+# Run this command in the my-project/ directory
 hasura console
 ```
