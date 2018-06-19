@@ -17,50 +17,36 @@ If you already have Hasura installed, then once the download is complete, hit ct
 mv /tmp/hasura /usr/local/bin/hasura-dev
 ```
 
-
-## Deploy postgres (optional)
-
-- Start a Postgres container if you don't have postgres running already:
-  ```bash
-  docker run -p 5432:5432  -d postgres
-  ```
-
 ## Deploy
 
 - Start Hasura GraphQL Engine container and link to Postgres with the `database-url` flag:
 
-#### Mac
   ```bash
   docker run -p 8080:8080 \
              hasuranightly/raven:8df5234 \
              raven \
-             --database-url postgres://postgres:@host.docker.internal:5432/postgres \
+             --database-url postgres://username:password@hostname:port/dbname \
              serve
   ```
 
-#### Linux
-  ```bash
-  docker run -p 8080:8080 \
-             hasuranightly/raven:8df5234 \
-             raven \
-             --database-url postgres://postgres:@$DOCKER_HOST_IP:5432/postgres \
-             serve
-  ```
+#### Examples of `database-url`
 
-**Note:** Change the database-url value to your own postgres if `postgres://username:password@postgres:5432/dbname` or if you have no password `postgres://username:@postgres:5432/dbname`
- 
+- If the username and database is called admin: `postgres://admin:password@localhost:5432/admin`
+- If there is no password: `postgres://admin:@localhost:5432/admin`
+
 ## Set up your project
- 
+
+Run this command: 
+
 ```bash
-$ mkdir -p my-project/migrations
-$ cd my-project
-$ echo 'endpoint: http://localhost:8080' > config.yaml
+hasura init --endpoint http://localhost:8080 --directory my-project
 ```
 
 ## Open the console
 
-Open the console and start exploring APIs / managing tables/views:
+Open the console and start exploring GraphQL APIs & managing tables/views:
 
 ```bash
+cd my-project
 hasura-dev console
 ```
