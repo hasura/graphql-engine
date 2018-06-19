@@ -6,7 +6,7 @@ Schema stitching is the process of creating a single GraphQL schema from multipl
 
 Schema stitching allows you to have one unified API that allows the client to query multiple GraphQL Schemas at the same time, including relations between the schemas.
 
-.. image:: img/graphql-schema-stitching.png
+.. image:: ../../../../img/platform/manual/data/graphql/graphql-schema-stitching.png
     :scale: 50%
 
 In the above architecture, we see that there are multiple decoupled graphql services running somewhere and a central server acts as a GraphQL Proxy server and it combines the different schemas into a unified API that the client can query on.

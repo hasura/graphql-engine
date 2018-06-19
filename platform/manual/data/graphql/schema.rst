@@ -22,7 +22,7 @@ To get your GraphQL schema:
 
 4. Hit send
 
-   .. image:: img/graphql-get-schema.png
+   .. image:: ../../../../img/platform/manual/data/graphql/graphql-get-schema.png
 
 
 Using the community tooling around the schema
