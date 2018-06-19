@@ -25,7 +25,7 @@ mv /tmp/hasura /usr/local/bin/hasura-dev
 
 - Initialise a Hasura project directory.
 ```bash
-hasura init --directory my-project
+hasura-dev init --directory my-project
 ```
 
 ## Bring up postgres and hasura
