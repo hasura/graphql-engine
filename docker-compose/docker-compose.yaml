@@ -1,0 +1,23 @@
+version: '3.6'
+services:
+  postgres:
+    image: postgres
+    environment:
+    - "POSTGRES_PASSWORD:mysecretpassword"
+    volumes:
+    - db_data:/var/lib/postgresql/data
+  raven:
+    image: hasuranightly/raven:94a0141
+    ports:
+    - "8080:8080"
+    depends_on:
+    - "postgres"
+    restart: always
+    environment:
+    - "POSTGRES_PASSWORD:mysecretpassword"
+    command: >
+      /bin/sh -c "
+      raven --database-url postgres://postgres:$${POSTGRES_PASSWORD}@postgres:5432/postgres serve;
+      "
+volumes:
+  db_data:
