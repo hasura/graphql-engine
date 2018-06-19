@@ -1,7 +1,7 @@
 {% extends "basic/layout.html" %}
 
 {% set css_files = css_files + ['_static/hasura-custom.css', '_static/djangosite.css', '_static/jquery-ui.css'] %}
-{% set css_files = css_files + ['_static/fullpage_tabs/tabs.css'] %}
+{% set css_files = css_files + ['_static/global_tabs/global_tabs.css'] %}
 {% set css_files = css_files + ['_static/graphiql/graphiql.css'] %}
 
 {%- macro secondnav() %}
@@ -591,8 +591,8 @@
   </script>
 
   <script type="text/javascript">
-    // fullpage_tabs
-    loadScript("{{ pathto('_static/fullpage_tabs/tabs.js', 1) }}", function(){});
+    // global_tabs
+    loadScript("{{ pathto('_static/global_tabs/global_tabs.js', 1) }}", function(){});
   </script>
 
 {% endblock %}

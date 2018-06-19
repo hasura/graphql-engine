@@ -94,7 +94,7 @@ extensions = [
     "sphinxcontrib.swaggerdoc",
     "sphinxcontrib.httpdomain",
     "sphinx.ext.todo",
-    "fullpage_tabs",
+    "global_tabs",
     "sphinx_tabs.tabs",
     "graphiql",
 ]

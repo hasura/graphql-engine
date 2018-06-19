@@ -6,7 +6,7 @@
 Installing the hasura CLI
 =========================
 
-.. fullpage_tabs::
+.. global_tabs::
 
    tabs:
      - id: linux
