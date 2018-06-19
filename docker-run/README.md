@@ -52,7 +52,7 @@ mv /tmp/hasura /usr/local/bin/hasura-dev
 ## Set up your project
  
 ```bash
-$ mkdir my-project
+$ mkdir -p my-project/migrations
 $ cd my-project
 $ echo 'endpoint: http://localhost:8080' > config.yaml
 ```
