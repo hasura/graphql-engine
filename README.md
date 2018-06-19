@@ -1,2 +1,2 @@
 # graphql-engine-install-manifests
-Various installation manifests for Hasura's GraphQL Engine
+Various installation manifests for Hasura GraphQL Engine
