@@ -2,40 +2,54 @@
 
 ## Prerequisites
 
-- Docker
+- Install [docker](https://docs.docker.com/install/)
+
+
+## Install the Hasura CLI
+
+```
+curl -L https://storage.googleapis.com/hasuractl/install-dev.sh | bash 
+```
+
+If you already have Hasura installed, then once the download is complete, hit ctrl-c before you're prompted for your password. And then move the file manually:
+
+```
+mv /tmp/hasura /usr/local/bin/hasura-dev
+```
+
 
 ## Setting up
 
-- Start a Postgres container:
+- Start a Postgres container if you don't have postgres running already:
   ```bash
-  docker run --name hasura-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+  docker run -p 5432:5432  -d postgres
   ```
 
 ## Deploy
 
 - Start Hasura GraphQL Engine container, expose it at port 9000 and link to the running Postgres container:
   ```bash
-  docker run --name hasura-graphql-engine \
-             -p 8080:8080 \
-             --link hasura-postgres:postgres -d \
-             hasuranightly/raven:94a0141 \
+  docker run -p 8080:8080 \
+             hasuranightly/raven:8df5234 \
              raven \
-             --database-url postgres://postgres:mysecretpassword@postgres:5432/postgres \
+             --database-url postgres://postgres:@localhost:5432/postgres \
              serve
   ```
-
-## Configure
-
-(Assuming you have already executed `hasura init`)
-
-- Edit `config.yaml` and add `endpoint`:
-  ```yaml
-  endpoint: http://localhost:8080
-  ```
-
-## Console
-
-Open the console and start exploring APIs / manage tables/views:
+  
+ - Change the database-url value to your own postgres if `postgres://username:password@postgres:5432/dbname` or if you have no password `postgres://username:@postgres:5432/dbname`
+ 
+## Set up your project
+ 
 ```bash
-hasura console
+$ mkdir my-project
+$ cd my-project
+$ echo 'endpoint: http://localhost:8080' > config.yaml
+```
+
+## Open the console
+
+Open the console and start exploring APIs / managing tables/views:
+
+```bash
+hasura-dev console
 ```
