@@ -59,10 +59,17 @@ ALGOLIA_INDEX_NAME = ALGOLIA_SECRETS[CURRENT_ENV]["ALGOLIA_INDEX_NAME"]
 if os.getenv("ALGOLIA_INDEX_NAME"):
     ALGOLIA_INDEX_NAME = os.getenv("ALGOLIA_INDEX_NAME")
 
+# GraphiQL defaults
+GRAPHIQL_DEFAULT_ENDPOINT = "https://data.ethos64.hasura-app.io/v1alpha1/graphql"
+# Get from env if set
+if os.getenv("GRAPHIQL_DEFAULT_ENDPOINT"):
+    GRAPHIQL_DEFAULT_ENDPOINT = os.getenv("GRAPHIQL_DEFAULT_ENDPOINT")
+
 # set context
 html_context = {
     "SITEMAP_DOMAIN": "https://docs.hasura.io/",
     "BASE_DOMAIN": "hasura.io" if BASE_DOMAIN == "production" else "hasura-stg.hasura-app.io",
+    "GRAPHIQL_DEFAULT_ENDPOINT": GRAPHIQL_DEFAULT_ENDPOINT,
     "ALGOLIA_APPLICATION_ID": ALGOLIA_APPLICATION_ID,
     "ALGOLIA_SEARCH_KEY": ALGOLIA_SEARCH_KEY,
     "ALGOLIA_INDEX_NAME": ALGOLIA_INDEX_NAME

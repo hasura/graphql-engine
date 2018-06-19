@@ -515,38 +515,19 @@
   <script type="text/javascript">
     // graphiql
 
-    // create GraphiQL components and embed into HTML
-    function setupGraphiQL() {
-      function embedGraphiQL(graphQLFetcher) {
-        if (typeof(React) === 'undefined' || typeof(ReactDOM) === 'undefined') {
-          return;
-        }
+    // graphql query fetcher
+    const graphQLFetcher = function(endpoint) {
+      endpoint = endpoint || "{{ GRAPHIQL_DEFAULT_ENDPOINT }}";
 
-        const targets = document.getElementsByClassName('graphiql');
-
-        for (let i = 0; i < targets.length; i++) {
-          const graphiQLElement = React.createElement(GraphiQL, {
-            fetcher: graphQLFetcher,
-            schema: null, // TODO: pass actual schema
-            query: targets[i].getElementsByClassName("query")[0].innerHTML.trim(),
-            response: targets[i].getElementsByClassName("response")[0].innerHTML.trim()
-          });
-
-          ReactDOM.render(graphiQLElement, targets[i]);
-        }
-      }
-
-      function graphQLFetcher(graphQLParams) {
-        const endpoint = 'https://data.ethos64.hasura-app.io/v1alpha1/graphql';
-
+      return function(graphQLParams) {
         const params = {
           method: 'post',
           headers: {
             'Accept': 'application/json',
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify(graphQLParams),
-          credentials: 'include',
+          credentials: 'include'
         };
 
         return fetch(endpoint, params)
@@ -561,15 +542,39 @@
             }
           });
       }
+    };
 
-      embedGraphiQL(graphQLFetcher);
-    }
+    // create GraphiQL components and embed into HTML
+    const setupGraphiQL = function() {
+      if (typeof(React) === 'undefined' || typeof(ReactDOM) === 'undefined') {
+        return;
+      }
+
+      const targets = document.getElementsByClassName('graphiql');
+
+      for (let i = 0; i < targets.length; i++) {
+        const target = targets[i];
+
+        const endpoint = target.getElementsByClassName("endpoint")[0].innerHTML.trim();
+        const query = target.getElementsByClassName("query")[0].innerHTML.trim();
+        const response = target.getElementsByClassName("response")[0].innerHTML.trim();
+
+        const graphiQLElement = React.createElement(GraphiQL, {
+          fetcher: graphQLFetcher(endpoint),
+          schema: null, // TODO: pass actual schema
+          query: query,
+          response: response
+        });
+
+        ReactDOM.render(graphiQLElement, target);
+      }
+    };
 
     // if graphiql elements present, load react/graphiql js files and setup graphiql
     if ($('.graphiql').length > 0) {
       const loadingStatus = {'react': false, 'reactDom': false, 'graphiQL': false};
 
-      function checkLoading (loadedFile) {
+      const checkLoading = function(loadedFile) {
         return function () {
           loadingStatus[loadedFile] = true;
 
@@ -582,7 +587,7 @@
 
           setupGraphiQL();
         }
-      }
+      };
 
       loadScript("{{ pathto('_static/react/react.min.js', 1) }}", checkLoading('react'));
       loadScript("{{ pathto('_static/react/react-dom.min.js', 1) }}", checkLoading('reactDom'));
