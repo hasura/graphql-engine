@@ -1,5 +1,5 @@
-Install Hasura GraphQL Engine using docker
-===================================
+Install Hasura GraphQL Engine using docker compose
+==================================================
 
 Prerequisites:
 **************
@@ -7,19 +7,7 @@ Prerequisites:
 To proceed with the installation, please ensure that you have a working setup of the following
 
 - `Docker <https://docs.docker.com/install/>`_
-
-Step 0: Setting up a postgres server
-************************************
-
-.. note::
-
-  Please ignore this step if you already have a postgres server running.
-
-Run a postgres container using the following commnad
-
-.. code-block:: bash
-
-  $ docker run --name hasura-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+- `Docker Compose <https://docs.docker.com/compose/install/>`_
 
 Step 1: Initialize a project directory
 **************************************
@@ -34,10 +22,8 @@ Step 2: Installing GraphQL Engine
 .. code-block:: bash
 
   $ cd my-project
-  $ cd __install/docker
-  $ ./docker-run.sh
-
-If you face any issues running the GraphQL Engine, kindly check the docker-run.sh and validate whether ``database-url`` is correct.
+  $ cd __install/docker-compose
+  $ docker-compose up -d
 
 Step 3: Validate the setup
 **************************
@@ -51,7 +37,6 @@ Run the following command
 You should be able to see the output as in the screenshot below.
 
 .. image:: ../../img/InstallSuccessDocker1.jpg
-
 
 Please visit `http://localhost:8080 <http://localhost:8080>`_ and you should see the page as in the screenshot below.
 

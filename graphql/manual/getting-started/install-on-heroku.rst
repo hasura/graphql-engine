@@ -1,5 +1,5 @@
 Install Hasura GraphQL Engine on Heroku
-================================
+=======================================
 
 Prerequisites:
 **************
