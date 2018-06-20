@@ -32,7 +32,7 @@ Response
 Success
 +++++++
 To allow the GraphQL request to go through, your webhook must return a ``200`` status code.
-You should send the ``X-Hasura-*`` "session variables" your permission rules in Hasura may need as a ``parameters`` object in the response.
+You should send the ``X-Hasura-*`` "session variables" your permission rules in Hasura.
 
 .. code-block:: http
 
@@ -40,16 +40,14 @@ You should send the ``X-Hasura-*`` "session variables" your permission rules in 
    Content-Type: application/json
 
    {
-       "parameters": {
-           "X-Hasura-User-Id": "25",
-           "X-Hasura-Role": "user",
-           "X-Hasura-Is-Owner": "true",
-           "X-Hasura-Custom": "custom value",
-       }
+       "X-Hasura-User-Id": "25",
+       "X-Hasura-Role": "user",
+       "X-Hasura-Is-Owner": "true",
+       "X-Hasura-Custom": "custom value"
    }
 
 .. note::
-   All values in ``parameters`` object should be ``String``, they will be converted to the right type automatically.
+   All values should be ``String``, they will be converted to the right type automatically.
 
 Failure
 +++++++
