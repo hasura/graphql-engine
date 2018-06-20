@@ -15,3 +15,10 @@ Hasura let's you do ANYTHING you usually do with Postgres by giving you GraphQL 
 - Custom mutations using SQL functions/procedures
 - Using custom postgres extensions and types
 - Exporting the Hasura GraphQL schema
+
+.. toctree::
+  :maxdepth: 1
+  :titlesonly:
+
+  Basics <basics>
+

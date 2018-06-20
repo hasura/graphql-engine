@@ -2,7 +2,7 @@ Mutations
 =========
 GraphQL mutations are used to modify server-side data i.e. write, update or delete data. As with queries, mutation fields are auto-generated on the Postgres schema. Here’s a sample mutation field from our reference Authors/Articles schema:
 
-.. code-block:: graphql
+.. code-block:: none
 
     insert_article(
       objects: [article_input!] 

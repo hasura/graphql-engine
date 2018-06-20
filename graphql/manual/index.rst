@@ -5,20 +5,14 @@
 Hasura GraphQL Engine documentation
 ===================================
 
-This the documentation section for the Hasura GraphQL engine. If you're searching for the Hasura platform
-documentation that used to live here, please head to :ref:`Hasura platform documentation <platform_manual>`.
+.. admonition:: Hasura platform documnentaion
+
+    This is the documentation section for the Hasura GraphQL Engine. If you're searching for the Hasura platform
+    documentation that used to live here, please head to :ref:`Hasura platform documentation <platform_manual>`.
 
 Show sections or boxes:
 
 - Understanding Hasura
-- Installing Hasura
-- Queries & Mutations
-- Authentication & Authorization
-- Version control & collaboration
-
-Forums
-
-..  introduction/index
 
 .. toctree::
   :maxdepth: 1
@@ -32,5 +26,3 @@ Forums
   version-control/index
   deployment/index
   faq/index
-
-- :ref:`Platform documentation <platform_manual>`
