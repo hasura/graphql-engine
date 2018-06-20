@@ -8,7 +8,7 @@ The fastest way to get the engine up and running is by clicking the below button
   :target: https://heroku.com/deploy?template=https://github.com/karthikvt26/heroku-push
 
 .. note::
-   This will setup an instance of Postgres, an instance of Hasura GraphQL engine, and link the two on `Heroku
+   This will setup an instance of Postgres linked to an instance of Hasura GraphQL engine on `Heroku
    <https://www.heroku.com/platform>`_ 's free tier.
 
 You can also run the Hasura GraphQL engine anywhere else using Docker.
@@ -16,8 +16,8 @@ You can also run the Hasura GraphQL engine anywhere else using Docker.
 The following other options are available to run the Hasura GraphQL engine:
 
 - :doc:`Manually on Heroku <on-heroku>`
-- :doc:`Using docker <using-docker>`
-- :doc:`Using docker-compose <using-docker-compose>`
+- :doc:`Using docker-compose <using-docker-compose>` (Setup graphql engine + postgres together)
+- :doc:`Using docker <using-docker>` (Setup graphql engine)
 
 .. toctree::
   :maxdepth: 1
