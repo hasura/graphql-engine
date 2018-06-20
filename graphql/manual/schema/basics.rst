@@ -1,6 +1,6 @@
 
-Basics
-======
+Schema Basics
+=============
 
 Open the console
 ----------------

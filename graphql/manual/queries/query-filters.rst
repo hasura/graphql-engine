@@ -5,7 +5,7 @@ You can use the ``where`` argument in your queries to filter the results based o
 
 For e.g. Fetch data for an author whose name is “Mallorie”:
 
-.. code-block:: JSON
+.. code-block:: none
 
     query {
         author(where: {name: {_eq: "Mallorie"}}) {
