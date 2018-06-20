@@ -9,13 +9,16 @@ class GraphiQLDirective(Directive):
     required_arguments = 0
     optional_arguments = 0
     final_argument_whitespace = True
-    option_spec = {"query": str, "response": str}
+    option_spec = {"query": str, "response": str, "endpoint": str}
 
     GRAPHIQL_TEMPLATE = '''
 .. raw:: html
 
    <div class="graphiql">
    Loading...
+   <div class="endpoint">
+   {{ endpoint }}
+   </div>
    <div class="query">
    {{ query }}
    </div>
