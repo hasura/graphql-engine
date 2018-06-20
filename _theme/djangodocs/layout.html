@@ -1,6 +1,8 @@
 {% extends "basic/layout.html" %}
 
-{% set css_files = css_files + ['_static/hasura-custom.css', '_static/djangosite.css'] %}
+{% set css_files = css_files + ['_static/hasura-custom.css', '_static/djangosite.css', '_static/jquery-ui.css'] %}
+{% set css_files = css_files + ['_static/global_tabs/global_tabs.css'] %}
+{% set css_files = css_files + ['_static/graphiql/graphiql.css'] %}
 
 {%- macro secondnav() %}
   {%- if prev %}
@@ -15,16 +17,7 @@
 {% block extrahead %}
   <!--<meta name="viewport" content="user-scalable=no">-->
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
-  {%- if version != latest_docs_version %}
-    <link ref="canonical" href="https://docs.{{ BASE_DOMIAN }}/{{latest_docs_version}}/{{pagename}}.html" />
-  {% endif %}
-  {% block javascript %}
-    <script type="text/javascript">
-      {% include 'static/search.js' %}
-    </script>
-  {% endblock %}
 {% endblock %}
 
 {% block document %}
@@ -34,44 +27,18 @@
       <div id="" class="content_wrapper">
         {%- if pagename == 'index' %}
           {% include 'pages/landing.html' %}
-        {%- elif pagename == 'guides/index' %}
-          {% include 'pages/guides.html' %}
-        {%- elif pagename == 'tutorials/index' %}
-          {% include 'pages/tutorials.html' %}
         {%- else %}
+          {% set rootpage = 'common' %}
+          {% set pagenameSplit = pagename.split('/') %}
           {% block sidebarwrapper %}
-            {% set currPage = pagename.split('/')[0] %}
-            {% if ( currPage == 'manual' or currPage == 'guides' ) %}
-              <div class="yui-b mobile-hide" id="sidebar">
-                {%- if last_updated %}
-                  <span><b>Last updated:</b> {{ last_updated }}</span>
-                {%- endif %}
-                {{ sidebar() }}
-              </div>
-            {% endif %}
+            <div class="yui-b mobile-hide" id="sidebar">
+              {%- if last_updated %}
+                <span><b>Last updated:</b> {{ last_updated }}</span>
+              {%- endif %}
+              {{ sidebar() }}
+            </div>
           {% endblock %}
-          {% set splittedPage = pagename.split('/') %}
-          {%- if splittedPage[0] == 'manual' %}
-            {% set rootpage='manual' %}
-          {%- else %}
-            {% set rootpage='common' %}
-          {% endif %}
-          {%- if rootpage == 'common' %}
-            {%- if splittedPage[1] != 'index' %}
-
-            {% endif %}
-          {% endif %}
-          {% set p = pagename.split('/') %}
-          {% set c = '' %}
-          {% if p[0] != 'manual' %}
-            {% set c = 'padding_top' %}
-          {% endif %}
-          <div class="content_inner_wrapper {{ c }}">
-            {%- if ( pagename.split('/')[1] != 'index' and pagename.split('/')[0] != 'manual' ) %}
-              <div class="back_link" id={{ pagename.split('/')[0] }}>
-                <a href="{{ pathto('', 1) }}{{splittedPage[0] }}"> <i class="fa fa-long-arrow-left" aria-hidden="true"></i>Back to {{ splittedPage[0] }} </a>
-              </div>
-            {% endif %}
+          <div class="content_inner_wrapper">
             <div role="main" parent={{ rootpage }}>
               <div id="docs-content">
                 <!-- div class="media_wrapper details_media">
@@ -87,7 +54,7 @@
                 <div class="mobile-logo mobile-only">
                   <a href="https://{{ BASE_DOMAIN }}/" target="_blank">
                     <div class="img_wrapper inline-block">
-                      <img class="responsive logo_img" src="{{ pathto('_images/logo.svg', 1) }}" />
+                      <img class="responsive logo_img" src="{{ pathto('_images/layout/logo2.svg', 1) }}" />
                     </div>
                   </a>
                   <a href="https://docs.{{ BASE_DOMAIN }}" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
@@ -125,6 +92,7 @@
               <div class="feedback_wrapper">
                 <div class="feedback">
                   Was this page helpful?
+                  <!-- inline svgs to allow color manipulation on hover -->
                   <div class="display_inl actions thumb_up">
                     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="21px" height="21px" viewBox="0 0 561 561" style="enable-background:new 0 0 561 561;" xml:space="preserve">
                       <g>
@@ -177,7 +145,7 @@
               powered by
             </span>
             <span>
-              <img class="algolia_image" src="{{ pathto('_images/algolia-logo.svg', 1) }}" alt="Algolia Hasura Search" />
+              <img class="algolia_image" src="{{ pathto('_images/layout/algolia-logo.svg', 1) }}" alt="Algolia Hasura Search" />
             </span>
           </div>
         </h3>
@@ -273,6 +241,61 @@
   </script>
 
   <script type="text/javascript">
+    // utils
+
+    // load script file
+    const loadScript = function(url, callback) {
+      var head = document.getElementsByTagName('head')[0];
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = url;
+
+      // Then bind the event to the callback function.
+      // There are several events for cross browser compatibility.
+      script.onreadystatechange = callback;
+      script.onload = callback;
+
+      // Fire the loading
+      head.appendChild(script);
+    };
+
+    // make ajax call
+    const promise_ajax = function(url, data, type) {
+      return new Promise(function(resolve, reject) {
+        var req = new XMLHttpRequest();
+        req.open(type, url, true);
+        req.setRequestHeader("Content-type", "application/json");
+        req.onload = function() {
+          if (req.status === 200) {
+            resolve(req.response);
+          } else {
+            reject(req.response);
+          }
+        };
+        req.onerror = function() {
+          reject(Error("Network Error"));
+        };
+        // Make the request
+        req.send(JSON.stringify(data));
+      });
+    };
+
+    // Track GA event
+    const trackga = function ( category, action, label, value ) {
+      // If ga is available
+      if ( ga ) {
+        ga('send', {
+          hitType: 'event',
+          eventCategory: category,
+          eventAction: action,
+          eventLabel: label,
+          eventValue: value
+        });
+      }
+    };
+  </script>
+
+  <script type="text/javascript">
     // support button
     $(document).ready( function() {
       const supportbtnHandler = function() {
@@ -282,7 +305,7 @@
       };
       $('.supportBtn').on('click', supportbtnHandler);
     });
-    </script>
+  </script>
 
   <script type="text/javascript">
     // search
@@ -299,11 +322,36 @@
         $('.search_wrapper').removeClass('hide');
       };
 
-      const search = function(searchTerm) {
-        if ( !searchFunc ) {
-          return;
+      const searchFunc = function( query, callback, page, restrictAttributes, attributesToRetrieve ) {
+        var ALGOLIA_APPLICATION_ID = "{{ ALGOLIA_APPLICATION_ID }}";
+        var ALGOLIA_SEARCH_KEY = "{{ ALGOLIA_SEARCH_KEY }}";
+
+        var hitsPerPage = 100;
+        var page_no = parseInt(page) - 1;
+        var offset = (hitsPerPage * (page - 1));
+
+        var indexName = "{{ ALGOLIA_INDEX_NAME }}";
+
+        //var client = algoliasearch(APPLICATION_ID, SEARCH_ONLY_KEY);
+        var client = algoliasearch(ALGOLIA_APPLICATION_ID, ALGOLIA_SEARCH_KEY, {"protocol":"https:"}); // localhost
+        var index = client.initIndex(indexName);
+
+        var queries = {
+          query: query,
+          hitsPerPage: hitsPerPage,
+          page: page_no,
+          offset: offset,
+          restrictSearchableAttributes : restrictAttributes
+        };
+
+        if ( attributesToRetrieve ) {
+          queries["attributesToRetrieve"] = attributesToRetrieve;
         }
 
+        index.search(queries, callback );
+      };
+
+      const search = function(searchTerm) {
         function callback(err, content ) {
           const searchHtmlTemplate = $('.search_wrapper_template').html();
           const template = _.template(_.unescape(searchHtmlTemplate));
@@ -477,6 +525,92 @@
     });
   </script>
 
-  <script src="{{ pathto('_static/componentTabs.js', 1) }}"></script>
+  <script type="text/javascript">
+    // graphiql
+
+    // graphql query fetcher
+    const graphQLFetcher = function(endpoint) {
+      endpoint = endpoint || "{{ GRAPHIQL_DEFAULT_ENDPOINT }}";
+
+      return function(graphQLParams) {
+        const params = {
+          method: 'post',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(graphQLParams),
+          credentials: 'include'
+        };
+
+        return fetch(endpoint, params)
+          .then(function (response) {
+            return response.text();
+          })
+          .then(function (responseBody) {
+            try {
+              return JSON.parse(responseBody);
+            } catch (error) {
+              return responseBody;
+            }
+          });
+      }
+    };
+
+    // create GraphiQL components and embed into HTML
+    const setupGraphiQL = function() {
+      if (typeof(React) === 'undefined' || typeof(ReactDOM) === 'undefined') {
+        return;
+      }
+
+      const targets = document.getElementsByClassName('graphiql');
+
+      for (let i = 0; i < targets.length; i++) {
+        const target = targets[i];
+
+        const endpoint = target.getElementsByClassName("endpoint")[0].innerHTML.trim();
+        const query = target.getElementsByClassName("query")[0].innerHTML.trim();
+        const response = target.getElementsByClassName("response")[0].innerHTML.trim();
+
+        const graphiQLElement = React.createElement(GraphiQL, {
+          fetcher: graphQLFetcher(endpoint),
+          schema: null, // TODO: pass actual schema
+          query: query,
+          response: response
+        });
+
+        ReactDOM.render(graphiQLElement, target);
+      }
+    };
+
+    // if graphiql elements present, load react/graphiql js files and setup graphiql
+    if ($('.graphiql').length > 0) {
+      const loadingStatus = {'react': false, 'reactDom': false, 'graphiQL': false};
+
+      const checkLoading = function(loadedFile) {
+        return function () {
+          loadingStatus[loadedFile] = true;
+
+          // return if all files not yet loaded
+          for (var file in loadingStatus) {
+            if (!loadingStatus[file]) {
+              return;
+            }
+          }
+
+          setupGraphiQL();
+        }
+      };
+
+      loadScript("{{ pathto('_static/react/react.min.js', 1) }}", checkLoading('react'));
+      loadScript("{{ pathto('_static/react/react-dom.min.js', 1) }}", checkLoading('reactDom'));
+      loadScript("{{ pathto('_static/graphiql/graphiql.min.js', 1) }}", checkLoading('graphiQL'));
+    }
+  </script>
+
+  <script type="text/javascript">
+    // global_tabs
+    loadScript("{{ pathto('_static/global_tabs/global_tabs.js', 1) }}", function(){});
+  </script>
 
 {% endblock %}
