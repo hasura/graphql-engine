@@ -1,9 +1,8 @@
 Access control basics
 =====================
 
-In this section, we're going to setup simple access control rules on a table. We're working with a simple
-article, author schema where authors have some information stored about themselves in the author table and
-articles written by an author are stored in an article table.
+In this section, we're going to setup a simple access control rule for restricting querying on a table.
+We're working with a simple author table where users have some information stored about themselves in the author table.
 
 Create a author table
 ----------------------
@@ -88,36 +87,31 @@ Now, let's make the same query as above but include the 2 dynamic authorization 
 
 You can notice above, how the same query now only includes the right slice of data.
 
-Adding permissions for insert, update, delete
----------------------------------------------
+.. code-block:: none
 
-We can use the ``API console`` UI to add permissions for our tables. Head to *Data -> [table-name] -> Permissions* to
-see/modify the permissions on the table.
-
-**For example**, let's set the ``update`` permissions for ``user`` role on the ``article`` table:
-
-The *Permissions* tab of the ``article`` table should look like this:
-
-.. image:: ../../../img/platform/manual/graphql-tutorial/tutorial-permissions-tab.png
-
-Click on the *Edit* icon next to the user/update cell. It should open up an edit section like this:
-
-.. image:: ../../../img/platform/manual/graphql-tutorial/tutorial-permissions-edit-empty.png
-
-Now, set the permissions as described above. It should finally look like this:
-
-.. image:: ../../../img/platform/manual/graphql-tutorial/tutorial-permissions-edit-filled.png
-
-Hit *Save permissions* to save our changes.
-
-Similary, set permissions for all the cases we have described above.
-
-Once you have set the permissions, you can try the anonymous query to fetch the articles along with comments and it will work because we have set anonymous read permissions on all the tables:
-
-.. image:: ../../../img/platform/manual/graphql-tutorial/graphql_query_perm_success.png
+  #Query with X-Hasura-User-Id: 3
+  query {
+      author {
+        id
+        name
+      }
+  }
 
 
-Next: Customise Schema with Postgres Views
-------------------------------------------
+  # Response
+  "data": {
+    "author": [
+      {
+        "id": 3,
+        "name": "raj"
+      }
+    ]
+  }
 
-N
+
+Next, learn more about how permissions work
+-------------------------------------------
+
+Next: :doc:`Roles and dynamic variables<roles-variables>`
+
+
