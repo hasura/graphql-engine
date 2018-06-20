@@ -1,5 +1,5 @@
-Install Hasura GraphQL Engine using docker compose
-==================================================
+Run Hasura GraphQL Engine using docker compose
+==============================================
 
 Prerequisites:
 **************
@@ -17,7 +17,7 @@ Step 1: Initialize a project directory
   hasura-dev init --directory my-project
 
 Step 2: Install GraphQL Engine
-*********************************
+******************************
 
 .. code-block:: bash
 
@@ -36,11 +36,11 @@ Run the following command
 
 You should be able to see the output as in the screenshot below.
 
-.. image:: ../../../img/InstallSuccessDocker1.jpg
+.. image:: ../../../../img/InstallSuccessDocker1.jpg
 
 Please visit `http://localhost:8080 <http://localhost:8080>`_ and you should see the page as in the screenshot below.
 
-.. image:: ../../../img/InstallSuccess.jpg
+.. image:: ../../../../img/InstallSuccess.jpg
   :alt: Heroku installation success
 
 Step 4: Open the hasura console
@@ -59,4 +59,4 @@ Now, open the hasura console:
   # Run this command in the my-project/ directory
   $ hasura-dev console
 
-Checkout our :doc:`../schema/index` section to know more about how to create tables, interact with them.
+Checkout our :doc:`../../schema/index` section to know more about how to create tables, interact with them.

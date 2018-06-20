@@ -1,25 +1,27 @@
-Connecting to existing postgres
-===============================
+Connecting to Postgres
+======================
 
-Lets say I have a postgres database running and I would like to connect Hasura GraphQL Engine to communicate with that database.
-
-.. note:: 
-
-  The `Step 0: Setting up postgres db`_ is used to set up a postgres database server, you can skip if you already have one running. 
+Lets say you have a postgres database running and you would like Hasura GraphQL Engine to run on top of that
+database.
 
 Step 0: Setting up postgres db
 ******************************
 
+.. note::
+
+  This step is used to set up a postgres database server, you can skip if you already have one running.
+
 Running postgres db
 ^^^^^^^^^^^^^^^^^^^
 
-I am setting up my postgres container using the command below
+You can set up a postgres container using the command below:
 
 .. code-block:: bash
 
   $ docker run --name hasura-postgres -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 -d postgres
 
-I am importing `this <https://raw.githubusercontent.com/xivSolutions/ChinookDb_Pg_Modified/pg_names/chinook_pg_serial_pk_proper_naming.sql>`_ schema.
+You can import a schema such as `this sample <https://raw.githubusercontent
+.com/xivSolutions/ChinookDb_Pg_Modified/pg_names/chinook_pg_serial_pk_proper_naming.sql>`_ using the command below:
 
 .. code-block:: bash
 

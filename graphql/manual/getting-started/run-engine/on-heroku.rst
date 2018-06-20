@@ -1,5 +1,5 @@
-Install Hasura GraphQL Engine on Heroku
-=======================================
+Run Hasura GraphQL Engine on Heroku
+===================================
 
 Prerequisites:
 **************
@@ -61,7 +61,7 @@ Step 3: Deploy to heroku
 
 Please visit `https://graphql-on-postgres.herokuapp.com <https://graphql-on-postgres.herokuapp.com>`_ (Please note to replace ``graphql-on-postgres`` with your app name) and you should see the page as in the screenshot below.
 
-.. image:: ../../../img/InstallSuccess.jpg
+.. image:: ../../../../img/InstallSuccess.jpg
   :alt: Heroku installation success
 
 
@@ -81,4 +81,4 @@ Now, open the hasura console:
   # Run this command in the my-project/ directory
   $ hasura-dev console
 
-Checkout our :doc:`../schema/index` section to know more about how to create tables, interact with them.
+Checkout our :doc:`schema <../../schema/index>` section to know more about how to create tables, interact with them.
