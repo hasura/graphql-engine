@@ -3,7 +3,7 @@
 Custom Hasura GraphQL Installation
 ==================================
 
-Some text
+If you would like to install Hasura GraphQL Engine on your own laptop or on a custom heroku app, you can get started with the specific links below
 
 .. toctree::
   :maxdepth: 1

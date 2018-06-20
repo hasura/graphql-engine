@@ -4,7 +4,7 @@ Install Hasura GraphQL Engine using docker
 Prerequisites:
 **************
 
-To proceed with the installation, please ensure that you have a working setup of the following
+To proceed with the installation, please ensure that you have a working setup of the following software
 
 - `Docker <https://docs.docker.com/install/>`_
 
@@ -19,7 +19,7 @@ Run a postgres container using the following commnad
 
 .. code-block:: bash
 
-  $ docker run --name hasura-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+  $ docker run --name hasura-postgres -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 -d postgres
 
 Step 1: Initialize a project directory
 **************************************
@@ -28,7 +28,7 @@ Step 1: Initialize a project directory
 
   hasura init --directory my-project
 
-Step 2: Installing GraphQL Engine
+Step 2: Install GraphQL Engine
 *********************************
 
 .. code-block:: bash
@@ -50,12 +50,12 @@ Run the following command
 
 You should be able to see the output as in the screenshot below.
 
-.. image:: ../../img/InstallSuccessDocker1.jpg
+.. image:: ../../../img/InstallSuccessDocker1.jpg
 
 
 Please visit `http://localhost:8080 <http://localhost:8080>`_ and you should see the page as in the screenshot below.
 
-.. image:: ../../img/InstallSuccess.jpg
+.. image:: ../../../img/InstallSuccess.jpg
   :alt: Heroku installation success
 
 Step 4: Open the hasura console
@@ -65,7 +65,7 @@ In the my-project/config.yaml file set the endpoint:
 
 .. code-block:: bash
 
-  endpoint: https://HEROKU_APP_NAME.herokuapp.com
+  endpoint: http://localhost:8080
 
 Now, open the hasura console:
 
