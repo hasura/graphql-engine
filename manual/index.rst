@@ -15,6 +15,7 @@ This is the reference documentation of Hasura.
   :titlesonly:
 
   introduction/index
+  getting-started/index
   tutorial/index
   installation/index
   schema/index
