@@ -30,7 +30,7 @@ Forums
   mutations/index
   auth/index
   version-control/index
-  production/index
+  deployment/index
   faq/index
 
 - :ref:`Platform documentation <platform_manual>`
