@@ -1,19 +1,5 @@
 Getting started
-===================
+================
 
-- :doc:`Install hasura CLI <install-hasura-cli>`
-- Deploy
+Choose an installation method from: https://github.com/hasura/graphql-engine-install-manifests
 
-  - :doc:`Heroku <deploy/heroku>`
-  - Docker
-
-- Create schema
-- Use with existing data
-
-
-.. toctree::
-   :hidden:
-
-   install-hasura-cli
-   deploy/heroku
-   deploy/raven-opts

@@ -1,24 +1,17 @@
 Schema
 ======
 
-- Concepts:
+Hasura's GraphQL engine automatically generates your GraphQL schema and resolvers once you create tables or views in Postgres.
+You don't need to write a GraphQL schema, you don't need to write resolvers.
 
-  - How is creating tables/views equivalently powerful to defining your own schema
-  - Hasura GraphQL schema structure (queries, mutations, fields, types, arguments, etc.)
+Hasura's console gives you UI tools that speed up your data-modelling process or working with your existing database. The console also automatically generates migrations or metadata files that you can edit directly and check into your version control.
 
-- Tables
-- Relationships
-- Views
-- Data types
+Hasura let's you do ANYTHING you usually do with Postgres by giving you GraphQL over native Postgres constructs.
 
-  - Integer
-  - String
-  - UUID
-  - Text
-  - JSON/JSONB
-  - Geolocation
-  - Other postgres types
-
-- Custom schema design (link to: schema stitching)
-
-
+- Basics
+- Relationships or connections between tables/views
+- Using your existing database
+- Customise schema with views
+- Custom mutations using SQL functions/procedures
+- Using custom postgres extensions and types
+- Exporting the Hasura GraphQL schema
