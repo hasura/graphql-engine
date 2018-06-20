@@ -49,7 +49,7 @@ Install Hasura CLI
 Installation
 ************
 
-Hasura GraphQL engine can be installed on heroku or on your local machine. The easiest way to get the engine up and running is on Heroku free tier.
+You can install Hasura GraphQL engine on Heroku or on your local machine using Docker. The easiest way to get the engine up and running is on Heroku free tier.
 
 .. image:: https://camo.githubusercontent.com/83b0e95b38892b49184e07ad572c94c8038323fb/68747470733a2f2f7777772e6865726f6b7563646e2e636f6d2f6465706c6f792f627574746f6e2e737667
     :alt: heroku_deploy_button
@@ -58,7 +58,6 @@ Hasura GraphQL engine can be installed on heroku or on your local machine. The e
 If you want a custom installation, please checkout :ref:`custom_graphql_installation`.
 
 .. toctree::
-  :includehidden:
   :hidden:
 
   install
