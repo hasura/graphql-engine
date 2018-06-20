@@ -1,5 +1,6 @@
-Control access
-==============
+Control access to certain data
+==============================
+
 If you want to control access to sensitive fields in a table, use views to expose only the safe fields. Here’s how you can do this. Our aim here is to mask access to the ``article`` table and only expose the ``id``, ``title`` and ``rating`` columns from this table.
 
 Create a view

@@ -1,5 +1,5 @@
-GraphQL Server Options
-======================
+Hasura GraphQL Engine Options
+=============================
 
 For ``raven`` command these are the flags available
 

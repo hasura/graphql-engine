@@ -49,7 +49,8 @@ Run server in this mode using following docker command.
 
 - This mode is useful in production. When server founds ``X-Hasura-Access-Key`` header it ignores webhook and expects all other required ``X-Hasura*`` headers
 
-- If ``X-Hasura-Access-key`` header not found then server authenticaters through webhook. See :doc:`Authorization Webhook <hook>`
+- If ``X-Hasura-Access-key`` header not found then server authenticaters through webhook. See :doc:`Authorization
+  Webhook <webhook>`
 
 Run server in this mode using following docker command.
 
