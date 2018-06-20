@@ -6,7 +6,7 @@ Hasura GraphQL engine lets you setup your own GraphQL server in minutes. To get 
 .. note::
 
   What is Hasura GraphQL engine? 
-  Watch this 3 minute video to know more. if you have any queries kindly ping us on chat.
+  Watch this `4 minute video <https://www.youtube.com/watch?time_continue=2&v=oFRwAFWXHuE>`_ to know more. if you have any queries kindly ping us on chat.
 
 Install Hasura CLI
 ******************

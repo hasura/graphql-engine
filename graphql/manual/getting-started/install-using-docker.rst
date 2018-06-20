@@ -26,7 +26,7 @@ Step 1: Initialize a project directory
 
 .. code-block:: bash
 
-  hasura init --directory my-project
+  hasura-dev init --directory my-project
 
 Step 2: Install GraphQL Engine
 *********************************
@@ -72,6 +72,6 @@ Now, open the hasura console:
 .. code-block:: bash
 
   # Run this command in the my-project/ directory
-  $ hasura console
+  $ hasura-dev console
 
 Checkout our :doc:`../schema/index` section to know more about how to create tables, interact with them.
