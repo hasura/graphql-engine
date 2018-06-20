@@ -61,5 +61,4 @@ If you want a custom installation, please checkout :ref:`custom_graphql_installa
   :hidden:
 
   install
-  graphql-api-explorer
   work-with-existing-schema

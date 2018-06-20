@@ -3,7 +3,9 @@ Connecting to existing postgres
 
 Lets say I have a postgres database running and I would like to connect Hasura GraphQL Engine to communicate with that database.
 
-The `Step 0: Setting up postgres db`_ is used to set up a postgres database server, you can skip if you already have one running. 
+.. note:: 
+
+  The `Step 0: Setting up postgres db`_ is used to set up a postgres database server, you can skip if you already have one running. 
 
 Step 0: Setting up postgres db
 ******************************
@@ -40,8 +42,28 @@ Step 1: Initialize a project directory
 
   hasura init --directory my-project
 
+Step 2: Install GraphQL Engine
+*********************************
 
-Step 2: Open the hasura console
+.. code-block:: bash
+
+  $ cd my-project
+  $ cd __install/docker
+
+Here is my ``docker-run.sh`` configuration which connects to my postgres database running locally
+
+.. code-block:: bash
+
+  docker run -p 8080:8080 \
+         --link hasura-postgres:postgres \                                                                                                             
+         hasuranightly/raven:8df5234 \
+         raven \
+         --database-url postgres://postgres:mysecretpassword@postgres:5432/postgres  \
+         serve
+
+Please modify the ``--database-url`` parameter in the above file to connect to your database.
+
+Step 3: Open the hasura console
 *******************************
 
 In the my-project/config.yaml file set the endpoint:
