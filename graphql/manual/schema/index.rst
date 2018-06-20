@@ -8,10 +8,15 @@ Hasura's console gives you UI tools that speed up your data-modelling process or
 
 Hasura let's you do ANYTHING you usually do with Postgres by giving you GraphQL over native Postgres constructs.
 
-- Basics
-- Relationships or connections between tables/views
-- Using your existing database
-- Customise schema with views
-- Custom mutations using SQL functions/procedures
-- Using custom postgres extensions and types
-- Exporting the Hasura GraphQL schema
+.. toctree::
+  :maxdepth: 1
+
+  basics
+  relationships
+  views
+  export-graphql-schema
+
+.. Using your existing database
+
+.. Custom mutations using SQL functions/procedures
+.. Using custom postgres extensions and types

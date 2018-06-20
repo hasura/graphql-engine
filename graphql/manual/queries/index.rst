@@ -25,5 +25,5 @@ You can explore the entire schema and the available queries using the GraphiQL i
   pagination
   multiple-arguments
   multiple-queries
-  hasura-cluster
+  aggregations
   control-access
