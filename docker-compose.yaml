@@ -6,7 +6,7 @@ services:
     - "POSTGRES_PASSWORD:mysecretpassword"
     volumes:
     - db_data:/var/lib/postgresql/data
-  raven:
+  graphql-engine:
     image: hasura/graphql-engine:latest
     ports:
     - "8080:8080"
@@ -17,7 +17,7 @@ services:
     - "POSTGRES_PASSWORD:mysecretpassword"
     command: >
       /bin/sh -c "
-      raven --database-url postgres://postgres:$${POSTGRES_PASSWORD}@postgres:5432/postgres serve;
+      graphql-engine --database-url postgres://postgres:$${POSTGRES_PASSWORD}@postgres:5432/postgres serve;
       "
 volumes:
   db_data:
