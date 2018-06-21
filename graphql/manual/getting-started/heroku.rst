@@ -55,7 +55,7 @@ By default, it connects to the primary database in your app which is available a
 
    # Change $DATABASE_URL to your heroku postgres URL if you're not using
    # the primary postgres instance in your app
-   CMD raven \
+   CMD graphql-engine \
        --database-url $DATABASE_URL \
        serve \
        --server-port $PORT
@@ -115,7 +115,7 @@ Remember to change HEROKU_GIT_REMOTE to your git remote below. In our case: http
 
 Visit `https://graphql-on-postgres.herokuapp.com <https://graphql-on-postgres.herokuapp.com>`_ (Please note to replace ``graphql-on-postgres`` with your app name) and you should see the page below.
 
-.. image:: ../../../../img/InstallSuccess.jpg
+.. image:: ../../../img/InstallSuccess.jpg
   :alt: Heroku installation success
 
 Initliase a Hasura project

@@ -16,7 +16,7 @@ Run server in this mode using following docker command.
 
    docker run --name hasura-graphql-engine -p 9000:9000 \
               --link hasura-postgres:postgres \
-              -d hasuranightly/raven:8df5234 raven \
+              -d hasura/graphql-engine:latest graphql-engine \
               --database-url \
                 postgres://postgres:mysecretpassword@postgres:5432/postgres \
                 serve --server-port 9000 --cors-domain "*"
@@ -25,7 +25,7 @@ Run server in this mode using following docker command.
 2. Access key mode
 ^^^^^^^^^^^^^^^^^^
 
-- When only ``--access-key`` is set. See :doc:`GraphQL Server Options <../getting-started/deploy/raven-opts>`
+- When only ``--access-key`` is set. See :doc:`GraphQL Server Options <../deployment/options>`
 
 - Server authenticates based on ``X-Hasura-Access-Key`` header and expects all other required ``X-Hasura-*`` headers.
 
@@ -35,7 +35,7 @@ Run server in this mode using following docker command.
 
    docker run --name hasura-graphql-engine -p 9000:9000 \
               --link hasura-postgres:postgres \
-              -d hasuranightly/raven:8df5234 raven \
+              -d hasura/graphql-engine:latest graphql-engine \
               --database-url \
                 postgres://postgres:mysecretpassword@postgres:5432/postgres \
                 serve --server-port 9000 --access-key myAccKey \
@@ -58,10 +58,8 @@ Run server in this mode using following docker command.
 
    docker run --name hasura-graphql-engine -p 9000:9000 \
               --link hasura-postgres:postgres \
-              -d hasuranightly/raven:8df5234 raven \
+              -d hasura/graphql-engine:latest graphql-engine \
               --database-url \
                 postgres://postgres:mysecretpassword@postgres:5432/postgres \
                 serve --server-port 9000 --access-key myAccKey \
                   --auth-hook http://myAuthhook/ --cors-domain "*"
-
-
