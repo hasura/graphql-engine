@@ -9,8 +9,3 @@ Hasura console migrations
 The Hasura console automatically generates migrations as you use the UI, as long as you are in the "migrations mode".
 
 Once you create a table on the console, head to the ``migrations/`` directory in your project and you'll see the migrations being created.
-
-
-hasura migrate CLI
-------------------
-

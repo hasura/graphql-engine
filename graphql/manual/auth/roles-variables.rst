@@ -95,13 +95,13 @@ Option 1: Development & Testing
 
 While you're developing or testing, just indicate your role and your session variables by passing headers along with the request:
 
-.. image:: ./dev-mode-role-header.png
+.. image:: ../../../img/graphql/manual/auth/dev-mode-role-header.png
 
 If you've enable Hasura with an access key, make sure you add the ACCESS_KEY header as well. This will allow you to use Hasura
 as if you were in development/testing mode. This is useful when you want to test against a Hasura instance that is already serving
 a production application.
 
-.. image:: ./dev-mode-role-header-access-key.png
+.. image:: ../../../img/graphql/manual/auth/dev-mode-role-header-access-key.png
 
 Option 2: In production, from apps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

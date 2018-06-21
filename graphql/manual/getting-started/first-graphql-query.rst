@@ -25,7 +25,7 @@ Head to your console and create the author table the following columns:
 | name     | text   |
 +----------+--------+
 
-.. image:: ./create-profile-table.png
+.. image:: ../../../img/graphql/manual/getting-started/create-profile-table.png
    :width: 50%
 
 Insert some sample data into the table:
@@ -58,7 +58,7 @@ Head to the API explorer tab in the console and try running the following query 
 
 You'll see that you get all the responses!
 
-.. image:: ./profile-query.png
+.. image:: ../../../img/graphql/manual/getting-started/profile-query.png
 
 Try out other GraphQL queries
 -----------------------------

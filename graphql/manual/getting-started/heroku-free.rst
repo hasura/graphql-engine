@@ -16,7 +16,7 @@ Deploy to Heroku by clicking:
 
 **Note:** You might need to sign up on Heroku. You won't need a credit card, and once you sign up you'll be redirected to your heroku app creation page.
 
-.. image:: ./heroku-app.png
+.. image:: ../../../img/graphql/manual/getting-started/heroku-app.png
 
 Note that heroku's free postgres add-on is also automatically provisioned!
 
@@ -26,7 +26,7 @@ Step 2: Open your Heroku app & download the Hasura CLI
 That's it!  Head to https://YOUR_HEROKU_APP.herokuapp.com and open your app.
 You should see the Hasura GraphQL engine landing page!
 
-.. image:: ./heroku-app-deployed.png
+.. image:: ../../../img/graphql/manual/getting-started/heroku-app-deployed.png
 
 Follow the instructions to download the Hasura CLI.
 
@@ -72,7 +72,7 @@ Run the following commands which will result in having the Hasura console up:
 Your browser window should open up automatically at http://localhost:9695 with your Hasura console pointing to the
 heroku app where Hasura GraphQL engine is running!
 
-.. image:: console.png
+.. image:: ../../../img/graphql/manual/getting-started/console.png
 
 Next: Make your first GraphQL query!
 ------------------------------------
