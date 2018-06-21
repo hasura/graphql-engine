@@ -10,7 +10,7 @@ Create a author table
 Head to your console and create the author table the following columns:
 
 +----------+--------+
-| id       | integer|
+|      id  | integer|
 +----------+--------+
 | name     | text   |
 +----------+--------+
@@ -20,7 +20,7 @@ Head to your console and create the author table the following columns:
 Insert some sample data into the table:
 
 +-------------+----------+
-| **user_id** | **name** |
+|      **id** | **name** |
 +-------------+----------+
 | 1           |  john    |
 +-------------+----------+
@@ -70,7 +70,7 @@ Let's add a **select** permission for the **user** role on the author table:
 
    * - author
      - user's own row
-     - user-id is equal to ``id``
+     - ``id`` in the row is equal to ``user-id`` from the request session
      -
        .. code-block:: json
 

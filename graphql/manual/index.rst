@@ -7,12 +7,6 @@ Hasura GraphQL Engine documentation
 
 Hasura GraphQL engine lets you setup your own GraphQL server in minutes.
 
-.. admonition:: Hasura platform documentation
-
-    This is the documentation section for the Hasura GraphQL Engine. If you're searching for the Hasura platform
-    documentation that used to live here, please head to :ref:`Hasura platform documentation <platform_manual>`.
-
-
 
 .. toctree::
   :maxdepth: 1
@@ -24,3 +18,8 @@ Hasura GraphQL engine lets you setup your own GraphQL server in minutes.
   mutations/index
   auth/index
   Deploying <deployment/index>
+
+.. admonition:: Hasura platform documentation
+
+    If you're searching for the Hasura platform documentation that used to live here, please head to :ref:`Hasura platform documentation <platform_manual>`.
+
