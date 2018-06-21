@@ -14,7 +14,7 @@ Insert a new object in the author table or, if the unique constraint, ``author_n
 
 .. graphiql::
    :query:
-        mutation insert_author {
+        mutation upsert_author {
             insert_author (
                     objects: [
                         {
@@ -47,7 +47,7 @@ Insert a new object into the author table or, if the unique constraint, ``author
 
 .. graphiql::
    :query:
-        mutation insert_author {
+        mutation upsert_author {
             insert_author (
                     objects: [
                         {
@@ -80,7 +80,7 @@ Insert a new object into the author table or, if a unique constraint on the spec
 
 .. graphiql::
    :query:
-        mutation insert_author {
+        mutation upsert_author {
             insert_author (
                     objects: [
                         {
@@ -111,7 +111,7 @@ Insert a new object into the author table or, if a unique constraint on the spec
 
 .. graphiql::
    :query:
-        mutation insert_author {
+        mutation upsert_author {
             insert_author (
                     objects: [
                         {

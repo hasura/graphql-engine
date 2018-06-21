@@ -18,6 +18,7 @@ Hasura GraphQL engine lets you setup your own GraphQL server in minutes.
   mutations/index
   auth/index
   Deploying <deployment/index>
+  API Reference <api-reference/index> 
 
 .. admonition:: Hasura platform documentation
 
