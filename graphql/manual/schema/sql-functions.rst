@@ -14,18 +14,14 @@ Here's a simple example:
 Create a table
 --------------
 
-``sql_function_table (id serial, input text, output text nullable)``
+Create the following table: ``sql_function_table (id serial, input text, output text nullable)``
 
-.. note::
+Head to ``Data -> Create table``
 
-   TODO
+.. image:: ../../../img/graphql/manual/schema/create-sql-fn-table.png
 
 Create a trigger
 ----------------
-
-.. note::
-
-   TODO
 
 .. code-block:: sql
 
@@ -39,10 +35,36 @@ Create a trigger
      CREATE TRIGGER test_trigger BEFORE INSERT OR UPDATE ON sql_function_table
          FOR EACH ROW EXECUTE PROCEDURE test_fun();
 
+Head to ``Data -> SQL`` and run the above SQL:
+
+.. image:: ../../../img/graphql/manual/schema/create-trigger.png
+
 Run an insert mutation
 ----------------------
 
 Run a mutation to insert an object with (input = "test", output=null) and you'll get a return value (output="test")
-.. note::
 
-   TODO
+.. graphiql::
+   :query:
+      mutation insert_sql_fn {
+        insert_sql_function_table(objects: [{input: "test", output: null}]) {
+          returning {
+            input
+            output
+          }
+        }
+      }
+   :response:
+      {
+        "data": {
+          "insert_sql_function_table": {
+            "affected_rows": 1,
+            "returning": [
+              {
+                "input": "test",
+                "output": "test"
+              }
+            ]
+          }
+        }
+      }
