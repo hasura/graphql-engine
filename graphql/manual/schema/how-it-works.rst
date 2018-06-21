@@ -1,5 +1,5 @@
 How Hasura's GraphQL schema generation works
-===========================================
+============================================
 
 Given your postgres database, Hasura can automatically generate a GraphQL schema and process GraphQL queries and mutations.
 

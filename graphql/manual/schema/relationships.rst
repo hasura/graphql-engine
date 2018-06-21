@@ -7,13 +7,13 @@ Add foreign-key constraint
 --------------------------
 In the console, navigate to the **Modify** tab of the ``article`` table. Edit the ``author_id`` column and configure it as a foreign-key for the ``id`` column in the ``author`` table.
 
-.. image:: add-foreign-key.png
+.. image:: ../../../img/graphql/manual/schema/add-foreign-key.png
 
 Create 1:1 relationship
 -----------------------
 Each article has one author. This is an example of a 1:1 relationship a.k.a an *object* relationship. The console infers this and recommends potential relationships in the **Relationships** tab. Let's add a 1:1 relationship named *author* as shown here:
 
-.. image:: add-1-1-relationship.png
+.. image:: ../../../img/graphql/manual/schema/add-1-1-relationship.png
 
 Please note that the name of the relationship will also be used to reference the nested object. For e.g. we can now run a nested object query that is based on just this one 1:1 relationship i.e. fetch a list of articles and each article's author:
 

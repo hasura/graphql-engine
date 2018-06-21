@@ -43,27 +43,27 @@ Navigate to `http://localhost:9695/data/schema <http://localhost:9695/data/schem
 
 You should see the list of tables which are yet to be tracked in your public schema. It should look like the screenshot below
 
-.. image:: ../../../img/UntrackedTables.jpg
+.. image:: ../../../img/graphql/manual/getting-started/UntrackedTables.jpg
   :alt: List of untracked tables
 
 Click on the ``Add all`` button as shown in the image below to track all the tables.
 
-.. image:: ../../../img/TrackTable.jpg
+.. image:: ../../../img/graphql/manual/getting-started/TrackTable.jpg
   :alt: Track the list of untracked table
 
 Once all the tables are tracked, you'll see that tables come up in the sidebar:
 
-.. image:: ../../../img/TableTracked.jpg
+.. image:: ../../../img/graphql/manual/getting-started/TableTracked.jpg
   :alt: Tables successfully tracked
 
 
 Now we have successfully tracked the tables, let's open API Explorer and make a GraphQL query:
 
 
-.. image:: ../../../img/GraphQLAPI.jpg
+.. image:: ../../../img/graphql/manual/getting-started/GraphQLAPI.jpg
   :alt: Make a simple fetch call to query actors
 
-.. code-block:: graphql
+.. code-block:: none
 
   # Query                  |            # Response
   query {                  |            {

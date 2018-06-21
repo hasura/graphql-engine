@@ -20,7 +20,7 @@ Let's say we want to create two simple tables:
 
 Click on the "Create Table" button in the **Data** section to open up an interface to create tables. For e.g. here's the schema for the ``author`` table in this interface:
 
-.. image:: create-table-graphql.png
+.. image:: ../../../img/graphql/manual/schema/create-table-graphql.png
 
 As soon as a table is created, the corresponding GraphQL schema and resolvers are automatically created/updated. For e.g. the following *query* and *mutation* fields are generated for the tables we just created:
 

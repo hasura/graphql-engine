@@ -116,8 +116,8 @@ Read more about :doc:`configuring webhook authentication for Hasura<webhook>`.
 
 There are 4 different types of operations for which you can define permissions on a table.
 
-- :doc:`Select permissions<select>`
-- :doc:`Insert permissions<insert>`
-- :doc:`Update permissions<update>`
-- :doc:`Delete permissions<delete>`
+- Select permissions
+- Insert permissions
+- Update permissions
+- Delete permissions
 
