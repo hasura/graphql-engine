@@ -11,20 +11,37 @@ each other so that you can query them as a "graph".
 Track tables
 ------------
 
-.. note::
+``Tracking a table or a view`` means telling Hasura that you want to expose that table/view over GraphQL. To track a table or a view:
 
-   TODO
+#. Go to http://localhost:9695/data/schema
+#. Under the heading ``Untracked Tables/Views``, click on the ``Add`` button next to the table/view name.
+#. You can also track all the tables and views present in the database by clicking the ``Add all`` button.
 
 Track foreign-keys
 ------------------
 
-.. note::
+``Tracking a foreign key`` means automatically creating a relationship based on the foreign key. Read more about relationships :doc:`here <./relationships>`.
 
-   TODO
+To track the foreign keys of all tables in the database:
+
+#. Go to http://localhost:9695/data/schema
+#. Under the heading ``Untracked Relations``, click on the ``Track Available Relations`` to automatically create relationships based on the foreign keys.
+
+Hasura also automatically generates relationship names based on the table names and the foreign key names. The name is generated in the following format:
+
+- For object relationships,
+
+  .. code-block:: none
+
+      Camel case of (foreignTableName + By + columnName)
+
+- For array relationships,
+
+  .. code-block:: none
+
+      Camel case of (foreignTableName + s + By + foreignKeyOfForeigntable)
 
 Create new relationships
 ------------------------
 
-.. note::
-
-   TODO
+To create new relationships, refer to the :doc:`relationships section <./relationships>`.
