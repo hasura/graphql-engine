@@ -1,7 +1,8 @@
 Run Hasura GraphQL Engine on Heroku's free tier
 ===============================================
 
-Following this guide will take you about 2 minutes.
+This guide will help you get Hasura and Postgres running on Heroku's free tier.
+It's the easiest and fastest way of trying Hasura out if you don't have docker!
 
 Step 1: Deploy to Heroku
 ------------------------
