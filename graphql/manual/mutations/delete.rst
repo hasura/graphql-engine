@@ -7,6 +7,7 @@ Filter on an object's fields
 Delete all articles rated less than 3:
 
 .. graphiql::
+   :view_only: true
    :query:
         mutation delete_low_rated_articles{
             delete_article(

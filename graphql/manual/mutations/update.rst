@@ -7,6 +7,7 @@ Update based on a filter on an object's fields
 Update the ``name`` of the author with a given ``id``:
 
 .. graphiql::
+   :view_only: true
    :query:
         mutation update_author{
             update_author(
@@ -30,6 +31,7 @@ Update based on a filter on a nested object's fields
 Update the ``rating`` of all articles that belong to an author:
 
 .. graphiql::
+   :view_only: true
    :query:
         mutation update_ratings{
             update_article(

@@ -13,6 +13,7 @@ With unique constraint name (update)
 Insert a new object in the author table or, if the unique constraint, ``author_name_key``, is violated, update the existing object:
 
 .. graphiql::
+   :view_only: true
    :query:
         mutation upsert_author {
             insert_author (
@@ -46,6 +47,7 @@ With unique constraint name (ignore)
 Insert a new object into the author table or, if the unique constraint, ``author_name_key``, is violated, ignore the request:
 
 .. graphiql::
+   :view_only: true
    :query:
         mutation upsert_author {
             insert_author (
@@ -79,6 +81,7 @@ With columns having unique constraint (update)
 Insert a new object into the author table or, if a unique constraint on the specified columns, in this case - ``name``, is violated, update the existing object with values from the fields (in this case - ``id``):
 
 .. graphiql::
+   :view_only: true
    :query:
         mutation upsert_author {
             insert_author (
@@ -110,6 +113,7 @@ With columns having unique constraint (ignore)
 Insert a new object into the author table or, if a unique constraint on the specified columns, in this case - ``name``, is violated, ignore the request:
 
 .. graphiql::
+   :view_only: true
    :query:
         mutation upsert_author {
             insert_author (
