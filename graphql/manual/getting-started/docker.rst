@@ -64,7 +64,7 @@ Edit the ``--database-url`` flag command, so that you can connect to your postgr
    #! /bin/bash
    docker run -p 8080:8080 \
        hasura/graphql-engine:latest \
-       raven \
+       graphql-engine \
        --database-url postgres://username:password@hostname:port/dbname \
        serve
 

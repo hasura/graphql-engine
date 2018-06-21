@@ -12,7 +12,7 @@ Run server in this mode using following docker command:
 
 .. code-block:: bash
 
-   docker run -P -d hasuranightly/raven:8df5234 raven \
+   docker run -P -d hasura/graphql-engine:latest graphql-engine \
               --database-url postgres://username:password@host:5432/dbname \
                 serve \
                 --access-key XXXXXXXXXXXXXXXX
@@ -21,7 +21,7 @@ Typically, you will also have a webhook for authentication:
 
 .. code-block:: bash
 
-   docker run -P -d hasuranightly/raven:8df5234 raven \
+   docker run -P -d hasura/graphql-engine:latest graphql-engine \
               --database-url postgres://username:password@host:5432/dbname \
                 serve \
                 --access-key XXXXXXXXXXXXXXXX
@@ -37,7 +37,7 @@ For example:
 
 .. code-block:: bash
 
-   docker run -P -d hasuranightly/raven:8df5234 raven \
+   docker run -P -d hasura/graphql-engine:latest graphql-engine \
               --database-url postgres://username:password@host:5432/dbname \
                 serve \
                 --access-key XXXXXXXXXXXXXXXX

@@ -55,7 +55,7 @@ By default, it connects to the primary database in your app which is available a
 
    # Change $DATABASE_URL to your heroku postgres URL if you're not using
    # the primary postgres instance in your app
-   CMD raven \
+   CMD graphql-engine \
        --database-url $DATABASE_URL \
        serve \
        --server-port $PORT
