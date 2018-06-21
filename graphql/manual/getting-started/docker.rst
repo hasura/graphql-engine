@@ -1,7 +1,7 @@
 Run Hasura GraphQL Engine using docker
 ======================================
 
-This guide assumes that you already have postgres running.
+This guide assumes that you already have postgres running and helps you set up Hasura GraphQL engine that talks to your postgres database.
 
 In case you don't have postgres running and want a quick setup,
 head to :doc:`Deploy with docker compose<docker-compose>`.
