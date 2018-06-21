@@ -1,7 +1,7 @@
 Authorization Webhook
 =====================
 
-You can configure a webhook (see :doc:`GraphQL Server Options <../getting-started/deploy/raven-opts>`) to authenticate all incoming requests to Hasura GraphQL server.
+You can configure a webhook (see :doc:`GraphQL Server Options <../deployment/options>`) to authenticate all incoming requests to Hasura GraphQL server.
 
 .. image:: ./webhook-auth.png
 

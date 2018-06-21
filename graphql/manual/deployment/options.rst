@@ -1,7 +1,7 @@
 Hasura GraphQL Engine Options
 =============================
 
-For ``raven`` command these are the flags available
+For ``graphql-engine`` command these are the flags available
 
 ::
 
@@ -16,12 +16,12 @@ For ``raven`` command these are the flags available
   -u, --user               Database user name
   -p, --password           Password of the user
   -d, --dbname             Database name to connect to
-     
+
 For ``serve`` subcommand these are the flags available
 
 ::
 
-      --server-port        Port on which raven should be served (default: 8080)
+      --server-port        Port on which graphql-engine should be served (default: 8080)
       --access-key         Secret access key, required to access this instance.
                            If specified client needs to send 'X-Hasura-Access-Key'
                            header
