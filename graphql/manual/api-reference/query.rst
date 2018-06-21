@@ -9,7 +9,7 @@ Query syntax
 .. parsed-literal::
    :class: haskell-pre
 
-    object [(arguments)]{
+    object [([argument])]{
         object-fields
     }
 
@@ -24,10 +24,10 @@ Query syntax
      - true
      - GraphQLObject_
      - Name of the table/object
-   * - arguments
+   * - argument
      - false
      - ArgExp_
-     - Return these columns of the selected rows
+     - one or more of filter criteria, instructions for sort order or pagination
 
 **E.g.**:
 
@@ -35,7 +35,7 @@ Query syntax
    :class: haskell-pre
 
     query {
-      author( where: {articles: {id: {_gt: 10}}}) {
+      author( where: {articles: {id: {_gt: 10}}} order_by: ["-name"]) {
         id
         name
       }
@@ -70,9 +70,9 @@ E.g.
    :class: haskell-pre
 
    author {
-      id #scalar field
-      name #scalar field
-      article { #nested object
+      id # scalar field
+      name # scalar field
+      article { # nested object
         title
       }
    }

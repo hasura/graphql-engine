@@ -99,7 +99,7 @@ Update syntax
 
     mutation [<mutation-name>] {
         <mutation-field-name> (
-            [where-argument!]
+            [where-argument!],
             [set-argument!]
         )
         [mutation-response!]
@@ -123,7 +123,7 @@ Update syntax
    * - where-argument
      - true
      - whereArgExp_
-     - selection of rows to update
+     - selection criteria for rows to be updated
    * - set-argument
      - true
      - setArgExp_
@@ -146,6 +146,59 @@ Update syntax
             affected_rows
         }
     }
+
+Delete syntax
+-------------
+
+.. parsed-literal::
+   :class: haskell-pre
+
+    mutation [<mutation-name>] {
+        <mutation-field-name> (
+            [where-argument!]
+        )
+        [mutation-response!]
+    }
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - mutation-name
+     - false
+     - Value
+     - Name of mutation for observability
+   * - mutation-field-name
+     - true
+     - Value
+     - name of the auto-generated delete mutation field. E.g. *delete_author*
+   * - where-argument
+     - true
+     - whereArgExp_
+     - selection criteria for rows to delete
+   * - mutation-response
+     - true
+     - MutationResponse_
+     - Object to be returned after mutation succeeds.
+
+**E.g. DELETE**:
+
+.. parsed-literal::
+   :class: haskell-pre
+    
+    mutation delete_articles {
+        delete_article(
+            where: {author: {id: {_eq: 7}}}) {
+                affected_rows
+                returning {
+                    id
+                }
+        }
+    }
+
 
 .. note::
     
@@ -192,7 +245,12 @@ Mutation Response
    :class: haskell-pre
    
     { 
-            [affected_rows | response-field1 |response-field2| .. ]
+            affected_rows
+            returning {
+                response-field1
+                response-field2
+                .. 
+            }
     }
 
 E.g.:
@@ -202,8 +260,10 @@ E.g.:
 
     {
             affected_rows
-            id
-            author_id
+            returning {
+                id
+                author_id
+            }
     }
 
 .. _ConflictClause:
