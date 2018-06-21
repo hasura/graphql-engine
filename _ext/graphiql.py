@@ -9,12 +9,12 @@ class GraphiQLDirective(Directive):
     required_arguments = 0
     optional_arguments = 0
     final_argument_whitespace = True
-    option_spec = {"query": str, "response": str, "endpoint": str}
+    option_spec = {"query": str, "response": str, "endpoint": str, "view_only": bool}
 
     GRAPHIQL_TEMPLATE = '''
 .. raw:: html
 
-   <div class="graphiql">
+   <div class="graphiql {{ if view_only }}view-only{{end}}">
    Loading...
    <div class="endpoint">
    {{ endpoint }}

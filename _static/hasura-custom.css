@@ -1262,6 +1262,10 @@ ol, ul
     display: none;
 }
 
+.graphiql .variable-editor, .graphiql a[title="Show History"], .graphiql.view-only .execute-button {
+  display: none !important;
+}
+
 @media (max-width: 768px) {
   .input_search_box {
     width: 90%;
