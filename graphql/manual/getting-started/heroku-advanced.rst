@@ -175,7 +175,7 @@ Replace ``HEROKU_APP_URL`` with your apps URL. In our case, https://graphql-on-p
 
 .. code-block:: bash
 
-  hasura-dev init --directory my-project --endpoint HEROKU_APP_URL
+  hasura init --directory my-project --endpoint HEROKU_APP_URL
 
 
 Step 4: Open the hasura console
@@ -185,7 +185,7 @@ Step 4: Open the hasura console
 
   # Run this command in the my-project/ directory
   $ cd my-project
-  $ hasura-dev console
+  $ hasura console
 
 
 Next: Make your first GraphQL query!

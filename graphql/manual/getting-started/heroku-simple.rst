@@ -13,7 +13,7 @@ Deploy to Heroku by clicking:
   :width: 200px
   :alt: heroku_deploy_button
   :class: no-shadow
-  :target: https://heroku.com/deploy?template=https://github.com/karthikvt26/heroku-push
+  :target: https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku
 
 **Note:** You might need to sign up on Heroku. You won't need a credit card, and once you sign up you'll be redirected to your heroku app creation page.
 
@@ -81,9 +81,9 @@ Run the following commands which will result in having the Hasura console up:
 
 .. code-block:: none
 
-   hasura-dev init --directory my-project --endpoint https://YOUR_HEROKU_APP.herokuapp.com/
+   hasura init --directory my-project --endpoint https://YOUR_HEROKU_APP.herokuapp.com/
    cd my-project
-   hasura-dev console
+   hasura console
 
 Your browser window should open up automatically at http://localhost:9695 with your Hasura console pointing to the
 Heroku app where Hasura GraphQL engine is running!

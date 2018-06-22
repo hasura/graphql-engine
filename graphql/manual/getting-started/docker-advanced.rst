@@ -64,7 +64,7 @@ Create a Hasura project directory.
 
 .. code-block:: bash
 
-  hasura-dev init --directory my-project
+  hasura init --directory my-project
 
 Step 3: Run the hasura docker container
 ---------------------------------------
@@ -111,7 +111,7 @@ Now, open the hasura console:
 .. code-block:: bash
 
   # Run this command in the my-project/ directory
-  $ hasura-dev console
+  $ hasura console
 
 
 Next, make your first GraphQL query

@@ -59,7 +59,7 @@ Step 2: Initialize a project
 
 .. code-block:: none
 
-  hasura-dev init --directory my-project
+  hasura init --directory my-project
 
 Step 3: Run Hasura & Postgres
 -----------------------------
@@ -93,7 +93,7 @@ Now, open the hasura console:
 .. code-block:: bash
 
   # Run this command in the my-project/ directory
-  hasura-dev console
+  hasura console
 
 Next: Make your first GraphQL query!
 ------------------------------------

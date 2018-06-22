@@ -39,7 +39,7 @@ Now, open the hasura console:
 .. code-block:: bash
 
   # Run this command in the my-project/ directory
-  $ hasura-dev console
+  $ hasura console
 
 Navigate to `http://localhost:9695/data/schema <http://localhost:9695/data/schema>`_
 
