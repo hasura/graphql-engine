@@ -69,7 +69,7 @@ Create a Hasura project directory.
 Step 3: Run the hasura docker container
 ---------------------------------------
 
-You'll see a sample docker run command at ``my-project/__install/docker-run.sh``.
+You'll see a sample docker run command at ``my-project/install-scripts/docker-run.sh``.
 
 Edit the ``--database-url`` flag command, so that you can connect to your postgres instance.
 

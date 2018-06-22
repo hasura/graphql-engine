@@ -66,7 +66,7 @@ Step 3: Run Hasura & Postgres
 
 .. code-block::  none
 
-   cd my-project/__install
+   cd my-project/install-scripts
    docker-compose up -d
 
 Check if the containers are running:
