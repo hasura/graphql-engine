@@ -23,6 +23,9 @@ Head to ``Data -> Create table``
 Create a trigger
 ----------------
 
+The below SQL defines a ``trigger`` which will simply copy the value passed in the ``input`` field to the ``output``
+field whenever an insert or update is made to the ``sql_function_table``.
+
 .. code-block:: sql
 
    CREATE FUNCTION test_fun() RETURNS trigger AS $emp_stamp$

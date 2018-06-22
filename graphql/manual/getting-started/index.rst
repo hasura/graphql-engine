@@ -8,11 +8,11 @@ Getting started
 
 To use Hasura, you need to:
 
-#. Run the Hasura GraphQL engine that has access to a postgres database
+#. Run the Hasura GraphQL engine with access to a postgres database
 #. Use the Hasura console (an admin UI) that connects to the Hasura GraphQL engine to help you build your schema and run GraphQL queries
 
 .. image:: ../../../img/graphql/manual/getting-started/running-hasura.png
-   :width: 50%
+   :width: 75%
    :class: no-shadow
 
 Choose a getting started guide:

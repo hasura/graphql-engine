@@ -1,5 +1,6 @@
-Upsert
-======
+Upsert mutation
+===============
+
 To convert an *insert* mutation into an *upsert* one, you need to specify the unique constraint(s) and the action to be taken in the case of a conflict or violation. There are two ways to specify unique constraints, either specify the name of a unique constraint (using the ``constraint`` argument) or a list of columns that have unique constraints on them (using the ``constraint_on`` argument). On conflict, you can choose to either ignore the mutation (``action: "ignore"``) or update the row that caused the conflict (``action: "update"``).
 
 For the following examples, assume there's a unique constraint on the ``name`` column of the ``author`` table.

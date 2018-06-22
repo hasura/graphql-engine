@@ -23,10 +23,10 @@ Let's use this reference Authors/Articles schema to look at different types of m
 .. toctree::
   :maxdepth: 1
 
-  insert
-  update
-  delete
-  upsert
+  Insert <insert>
+  Update <update>
+  Delete <delete>
+  Upsert <upsert>
   multiple-mutations
   
   

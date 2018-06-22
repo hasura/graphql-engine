@@ -1,5 +1,5 @@
-Insert
-======
+Insert mutation
+===============
 
 Insert single object
 --------------------

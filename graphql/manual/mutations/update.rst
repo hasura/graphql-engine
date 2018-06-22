@@ -1,5 +1,6 @@
-Update
-======
+Update mutation
+===============
+
 Objects can be updated based on filters on their own fields or those in their nested objects. 
 
 Update based on a filter on an object's fields
