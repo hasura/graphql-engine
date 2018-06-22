@@ -43,4 +43,4 @@ Other guides:
    Setup with Docker (advanced) <docker-advanced>
    first-graphql-query
    using-existing-database
-   postgres-credentials
+..   postgres-credentials
