@@ -1,11 +1,11 @@
-Run Hasura GraphQL Engine on Heroku's free tier
-===============================================
+Run Hasura GraphQL Engine on Heroku (Simple)
+============================================
 
-This guide will help you get Hasura and Postgres running on Heroku's free tier.
-It's the easiest and fastest way of trying Hasura out if you don't have docker!
+This guide will help you get Hasura GraphQL engine and Postgres running on **Heroku's free tier**.
+It is the easiest and fastest way of trying Hasura out if you don't have Docker!
 
-Step 1: Deploy to Heroku
-------------------------
+Step 1: Deploy to Heroku & open your Heroku app
+-----------------------------------------------
 
 Deploy to Heroku by clicking:
 
@@ -19,15 +19,15 @@ Deploy to Heroku by clicking:
 
 .. image:: ../../../img/graphql/manual/getting-started/heroku-app.png
 
-Note that heroku's free postgres add-on is also automatically provisioned!
-
-Step 2: Open your Heroku app & download the Hasura CLI
-------------------------------------------------------
+Note that **Heroku's free Postgres add-on** is also automatically provisioned!
 
 That's it!  Head to https://YOUR_HEROKU_APP.herokuapp.com and open your app.
 You should see the Hasura GraphQL engine landing page!
 
 .. image:: ../../../img/graphql/manual/getting-started/heroku-app-deployed.png
+
+Step 2: Download the Hasura CLI
+------------------------------------------------------
 
 Follow the instructions to download the Hasura CLI.
 
@@ -71,7 +71,7 @@ Run the following commands which will result in having the Hasura console up:
    hasura-dev console
 
 Your browser window should open up automatically at http://localhost:9695 with your Hasura console pointing to the
-heroku app where Hasura GraphQL engine is running!
+Heroku app where Hasura GraphQL engine is running!
 
 .. image:: ../../../img/graphql/manual/getting-started/console.png
 

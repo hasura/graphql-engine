@@ -1,8 +1,9 @@
-Run Hasura GraphQL Engine on Heroku
-===================================
+Run Hasura GraphQL Engine on Heroku (Advanced)
+==============================================
 
-This guide will help you get Hasura running as a "git push" to deploy app on Heroku.
-This is recommended for users that already know how to run apps and postgres on Heroku.
+This guide will help you get Hasura GraphQL engine running as a "git push to deploy" app on Heroku and connecting it
+to a Heroku Postgres instance.
+This is recommended for users that already know how to run apps and Postgres on Heroku.
 
 Clone the Hasura GraphQL engine heroku app
 ------------------------------------------

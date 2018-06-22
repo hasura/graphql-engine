@@ -8,8 +8,9 @@ Getting started
 
 To use Hasura, you need to:
 
-#. Run the Hasura GraphQL engine with access to a postgres database
-#. Use the Hasura console (an admin UI) that connects to the Hasura GraphQL engine to help you build your schema and run GraphQL queries
+#. Run the Hasura GraphQL engine with access to a Postgres database
+#. Use the Hasura console (an admin UI) that connects to the Hasura GraphQL engine to help you build your schema and
+   run GraphQL queries
 
 .. image:: ../../../img/graphql/manual/getting-started/running-hasura.png
    :width: 75%
@@ -18,24 +19,28 @@ To use Hasura, you need to:
 Choose a getting started guide:
 -------------------------------
 
-- :doc:`Heroku free tier <heroku-free>` **(recommended)**: Get started in under 60s with no setup required to host the Hasura GraphQL engine or postgres.
-- :doc:`Local development <docker-compose>`: Run a local development setup with docker that sets up Hasura and Postgres.
+- :doc:`On Heroku <heroku-simple>` **(recommended)**: Get started in under 60 seconds with no setup required to host
+  the Hasura GraphQL engine and Postgres on **Heroku's free tier**.
+- :doc:`Using Docker <docker-simple>`: Run a **local development** setup that sets up the Hasura GraphQL
+  engine and Postgres using Docker.
 
 Other guides:
 -------------
 
-- :doc:`Heroku advanced <heroku>`: A guide to hosting Hasura GraphQL engine on Heroku with your Heroku postgres
-- :doc:`Docker <docker>`: A guide to running Hasura GraphQL engine as a docker container connected to your Postgres database
+- :doc:`Heroku advanced <heroku-advanced>`: A guide to hosting Hasura GraphQL engine on Heroku manually with your
+  Heroku Postgres database
+- :doc:`Docker advanced <docker-advanced>`: A guide to running Hasura GraphQL engine as a Docker container connected to
+  your Postgres database
 
 .. toctree::
    :maxdepth: 2
    :titlesonly:
    :hidden:
 
-   Setup on Heroku free tier <heroku-free>
-   Setup for local development <docker-compose>
-   Setup on Heroku (advanced) <heroku>
-   Setup with docker <docker>
+   Setup on Heroku (simple) <heroku-simple>
+   Setup with Docker (simple) <docker-simple>
+   Setup on Heroku (advanced) <heroku-advanced>
+   Setup with Docker (advanced) <docker-advanced>
    first-graphql-query
    using-existing-database
    postgres-credentials
