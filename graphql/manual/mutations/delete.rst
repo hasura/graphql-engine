@@ -32,6 +32,7 @@ Filter on a nested object's fields
 Delete all articles written by an author:
 
 .. graphiql::
+   :view_only: true
    :query:
         mutation delete_authors_articles{
             delete_article(
