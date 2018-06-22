@@ -1,9 +1,11 @@
 Using your existing database
 ============================
 
-Lets say you have a postgres database with data in it, and you'd like to get instant GraphQL on it.
+Lets say you have a Postgres database with data in it, and you'd like to get instant GraphQL on it.
 
-This section assumes that you already have Hasura and Postgres setup. If you want to run Hasura with an existing database head to :doc:`Setup with Docker<./docker>` or :doc:`Setup with Heroku (advanced)<./heroku>`.
+This section assumes that you already have Hasura and Postgres setup. If you want to run Hasura with an existing
+database head to :doc:`Setup with Docker (advanced) <docker-advanced>` or
+:doc:`Setup on Heroku (advanced) <heroku-advanced>`.
 
 As a tutorial, this section will use a sample dataset that we'll import to see how Hasura works with existing databases.
 

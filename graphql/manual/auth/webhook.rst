@@ -7,7 +7,7 @@ You can configure a webhook (see :doc:`GraphQL Server Options <../deployment/opt
 
 .. note::
    Configuring webhook requires Hasura to run with an access key (``--access-key``).
-   :doc:`Read more<config>`.
+..   :doc:`Read more<config>`.
 
 
 - The configured webook is  **called** when ``X-Hasura-Access-Key`` header is not found in the request.
