@@ -12,6 +12,7 @@ Deploy to Heroku by clicking:
 .. image:: https://camo.githubusercontent.com/83b0e95b38892b49184e07ad572c94c8038323fb/68747470733a2f2f7777772e6865726f6b7563646e2e636f6d2f6465706c6f792f627574746f6e2e737667
   :width: 200px
   :alt: heroku_deploy_button
+  :class: no-shadow
   :target: https://heroku.com/deploy?template=https://github.com/karthikvt26/heroku-push
 
 **Note:** You might need to sign up on Heroku. You won't need a credit card, and once you sign up you'll be redirected to your heroku app creation page.
@@ -63,7 +64,7 @@ Step 3: Setup a Hasura project and open the console
 
 Run the following commands which will result in having the Hasura console up:
 
-.. code-block:: bash
+.. code-block:: none
 
    hasura-dev init --directory my-project --endpoint https://YOUR_HEROKU_APP.herokuapp.com/
    cd my-project

@@ -13,6 +13,7 @@ To use Hasura, you need to:
 
 .. image:: ../../../img/graphql/manual/getting-started/running-hasura.png
    :width: 50%
+   :class: no-shadow
 
 Choose a getting started guide:
 -------------------------------

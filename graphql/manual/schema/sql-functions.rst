@@ -48,9 +48,12 @@ Run a mutation to insert an object with (input = "test", output=null) and you'll
    :view_only: true
    :query:
       mutation insert_sql_fn {
-        insert_sql_function_table(objects: [{input: "test", output: null}]) {
+        insert_sql_function_table(objects: [
+          {
+            input: "test",
+            output: null
+          }]) {
           returning {
-            input
             output
           }
         }
@@ -62,7 +65,6 @@ Run a mutation to insert an object with (input = "test", output=null) and you'll
             "affected_rows": 1,
             "returning": [
               {
-                "input": "test",
                 "output": "test"
               }
             ]

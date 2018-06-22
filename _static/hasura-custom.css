@@ -1,6 +1,18 @@
 @import url('https://fonts.googleapis.com/css?family=Gudea');
 @import url('https://fonts.googleapis.com/css?family=Khula:400,700');
 
+/* GraphiQL overrides */
+
+.graphiql-container .topBar {
+  background: #f7f7f7 !important;
+  border-top-left-radius: 3px !important;
+}
+
+.graphiql-container .docExplorerShow {
+  background: #f7f7f7 !important;
+  border-top-right-radius: 3px !important;
+}
+
 html {
   background-color: #f8f8f8 !important;
 }
@@ -217,9 +229,8 @@ h3
 }
 #docs-content h1, #docs-content h2, #docs-content h3, #docs-content h4, #docs-content h5, #docs-content h6
 {
-  font-family: sans-serif;
   font-weight: 400;
-  color: #333;
+  color: #555;
 }
 tt, code, kbd, pre, samp
 {
@@ -885,7 +896,7 @@ p
   font-family: 'Gudea' !important;
   font-size: 16px;
   height: 100vh;
-  overflow-y: scroll;
+  overflow-y: auto;
   padding-left: 15px !important;
 }
 [parent] {
@@ -895,7 +906,7 @@ p
 {
   width: 75% !important;
   height: 100vh;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 .search_head_wrapper
 {

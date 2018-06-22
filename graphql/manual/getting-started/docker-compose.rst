@@ -43,21 +43,21 @@ Step 1: Install the Hasura CLI
 Step 2: Initialize a project
 ----------------------------
 
-.. code-block:: bash
+.. code-block:: none
 
   hasura-dev init --directory my-project
 
 Step 3: Run Hasura & Postgres
 -----------------------------
 
-.. code-block:: bash
+.. code-block::  none
 
-  $ cd my-project/__install
-  $ docker-compose up -d
+   cd my-project/__install
+   docker-compose up -d
 
-Check if your container are running:
+Check if the containers are running:
 
-.. code-block:: bash
+.. code-block:: none
 
   $ docker ps
 
@@ -70,7 +70,7 @@ Step 4: Open the hasura console
 
 In the ``my-project/config.yaml`` file set the endpoint:
 
-.. code-block:: bash
+.. code-block:: yaml
 
   endpoint: http://localhost:8080
 
@@ -79,7 +79,7 @@ Now, open the hasura console:
 .. code-block:: bash
 
   # Run this command in the my-project/ directory
-  $ hasura-dev console
+  hasura-dev console
 
 Next: Make your first GraphQL query!
 ------------------------------------
