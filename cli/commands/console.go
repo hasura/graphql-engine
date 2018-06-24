@@ -12,14 +12,17 @@ import (
 	"github.com/fatih/color"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate/api"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
+	v := viper.New()
 	opts := &consoleOptions{
 		EC: ec,
 	}
@@ -33,11 +36,11 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Start console on a different address and ports:
   hasura console --address 0.0.0.0 --console-port 8080 --api-port 8081`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			ec.Viper = v
+			return ec.Validate()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := ec.Validate()
-			if err != nil {
-				return errors.Wrap(err, "cmd validation failed")
-			}
 			return opts.Run()
 		},
 	}
@@ -46,6 +49,13 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.APIPort, "api-port", "9693", "port for serving migrate api")
 	f.StringVar(&opts.ConsolePort, "console-port", "9695", "port for serving console")
 	f.StringVar(&opts.Address, "address", "localhost", "address to use")
+
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+
+	// need to create a new viper because https://github.com/spf13/viper/issues/233
+	v.BindPFlag("endpoint", f.Lookup("endpoint"))
+	v.BindPFlag("access_key", f.Lookup("access-key"))
 	return consoleCmd
 }
 
@@ -203,7 +213,7 @@ func serveConsole(opts gin.H) (*gin.Engine, error) {
 	r := gin.New()
 
 	// Template index.html
-	templateRender, err := util.LoadTemplates("db/manifests/", "console.html")
+	templateRender, err := util.LoadTemplates("manifests/", "console.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch template")
 	}

@@ -18,10 +18,6 @@ func NewMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "Display current status of migrations on a database",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := ec.Validate()
-			if err != nil {
-				return errors.Wrap(err, "validation failed")
-			}
 			return opts.Run()
 		},
 	}

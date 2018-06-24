@@ -32,7 +32,9 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura init --directory <my-directory>
 
   # Create a directory with an endpoint configured:
-  hasura --directory <my-directory> --endpoint <graphql-engine-endpoint>`,
+  hasura --directory <my-directory> --endpoint <graphql-engine-endpoint>
+
+  # See https://docs.hasura.io/0.15/graphql/manual/getting-started for more details`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := ec.Prepare()
@@ -84,14 +86,14 @@ func (o *initOptions) Run() error {
 		o.EC.Spin("Downloading install manifests... ")
 		defer o.EC.Spinner.Stop()
 
-		err := getInstallManifests(o.EC.InstallManifestsRepo.ZipURL(), o.EC.InstallManifestsDirectory)
+		src, err := o.EC.InstallManifestsRepo.Download()
 		if err != nil {
 			return errors.Wrap(err, "getting manifests failed")
 		}
+		defer os.RemoveAll(src)
 		o.EC.Spinner.Stop()
 		o.EC.Logger.Info("Manifests downloaded")
 
-		src := filepath.Join(o.EC.InstallManifestsDirectory)
 		dst := filepath.Join(o.EC.ExecutionDirectory, MANIFESTS_DIR)
 
 		if _, err := os.Stat(dst); err == nil {
@@ -110,7 +112,7 @@ func (o *initOptions) Run() error {
 			return errors.Wrap(err, "error copying files")
 		}
 		o.EC.Spinner.Stop()
-		infoMsg = fmt.Sprintf("manifests created at [%s]. Follow instructions at [%s] for further steps", dst, o.EC.InstallManifestsRepo.GetDocsURL())
+		infoMsg = fmt.Sprintf("manifests created at [%s]", dst)
 	} else {
 		if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
 			return errors.Errorf("directory '%s' already exist", o.EC.ExecutionDirectory)

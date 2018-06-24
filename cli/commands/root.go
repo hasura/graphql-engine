@@ -1,6 +1,9 @@
 package commands
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/hasura/graphql-engine/cli"
+	"github.com/spf13/cobra"
+)
 
 var rootCmd = &cobra.Command{
 	Use:           "hasura",
@@ -10,7 +13,15 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand()
+	ec := &cli.ExecutionContext{}
+	rootCmd.AddCommand(
+		NewInitCmd(ec),
+		NewConsoleCmd(ec),
+		NewMetadataCmd(ec),
+		NewMigrateCmd(ec),
+	)
+	f := rootCmd.PersistentFlags()
+	f.StringVar(&ec.LogLevel, "log-level", "INFO", "log level (DEBUG, INFO, WARN, ERROR, FATAL)")
 }
 
 func Execute() error {

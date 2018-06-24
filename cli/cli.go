@@ -1,10 +1,14 @@
-package db
+// Package cli and it's sub packages implements the command line tool for Hasura
+// GraphQL Engine. The CLI operates on a directory, denoted by
+// "ExecutionDirectory" in the "ExecutionContext" struct.
+//
+// The ExecutionContext is passed to all the subcommands so that a singleton
+// context is available for the execution. Logger and Spinner comes from the same
+// context.
+package cli
 
 import (
 	"bytes"
-	"fmt"
-	"io/ioutil"
-	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,98 +17,106 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
-	"github.com/ghodss/yaml"
-	"github.com/joho/godotenv"
+	"github.com/hasura/graphql-engine/cli/util"
 	colorable "github.com/mattn/go-colorable"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
+// Environment variable names recognised by the CLI.
 const (
-	ENV_ENDPOINT   = "HASURA_GRAPHQL_ENDPOINT"
+	// ENV_ENDPOINT is the name of env var which indicates the Hasura GraphQL
+	// Engine endpoint URL.
+	ENV_ENDPOINT = "HASURA_GRAPHQL_ENDPOINT"
+	// ENV_ACCESS_KEY is the name of env var that has the access key for GraphQL
+	// Engine endpoint.
 	ENV_ACCESS_KEY = "HASURA_GRAPHQL_ACCESS_KEY"
 )
 
-type InstallManifestsRepo struct {
-	Namespace string
-	Name      string
-}
+// version is set at build time, denotes the CLI version.
+var version string
 
-func (i *InstallManifestsRepo) ZipURL() string {
-	u := url.URL{
-		Scheme: "https",
-		Host:   "github.com",
-		Path:   fmt.Sprintf("%s/%s/archive/master.zip", i.Namespace, i.Name),
-	}
-	return u.String()
-}
-
-func (i *InstallManifestsRepo) ZipExtractedDirectory() string {
-	return fmt.Sprintf("%s-master", i.Name)
-}
-
-func (i *InstallManifestsRepo) GetReadmeURL() string {
-	u := url.URL{
-		Scheme: "https",
-		Host:   "github.com",
-		Path:   fmt.Sprintf("%s/%s/blob/master/README.md", i.Namespace, i.Name),
-	}
-	return u.String()
-}
-
-func (i *InstallManifestsRepo) GetDocsURL() string {
-	return "https://docs.hasura.io/0.15/graphql/manual/getting-started"
-}
-
-type DatabaseConfig struct {
-	Host         string
-	Port         int32
-	DatabaseName string
-	Username     string
-	Password     string
-}
-
+// HasuraGraphQLConfig has the config values required to contact the server.
 type HasuraGraphQLConfig struct {
-	Endpoint  string `json:"endpoint"`
-	AccessKey string `json:"access_key,omitempty"` // FIXME: should we have this here?
+	// Endpoint for the GraphQL Engine
+	Endpoint string `json:"endpoint"`
+	// AccessKey (optional) required to query the endpoint
+	AccessKey string `json:"access_key,omitempty"`
 }
 
+// ExecutionContext contains various contextual information required by the cli
+// at various points of it's execution. Values are filled in by the
+// initializers and passed on to each command. Commands can also fill in values
+// to be used further down the line.
 type ExecutionContext struct {
+	// CMDName is the name of CMD (os.Args[0]). To be filled in later to
+	// correctly render example strings etc.
 	CMDName string
+
+	// Spinner is the global spinner object used to show progress across the cli.
 	Spinner *spinner.Spinner
-	Logger  *logrus.Logger
+	// Logger is the global logger object to print logs.
+	Logger *logrus.Logger
 
+	// ExecutionDirectory is the directory in which command is being executed.
 	ExecutionDirectory string
-	MigrationDir       string
-	ConfigFile         string
-	EnvFile            string
-	Config             *HasuraGraphQLConfig
+	// MigrationDir is the name of directory where migrations are stored.
+	MigrationDir string
+	// ConfigFile is the file where endpoint etc. are stored.
+	ConfigFile string
+	// MetadataFile (optional) is a yaml file where Hasura metadata is stored.
+	MetadataFile string
 
-	GlobalConfigDir           string
-	GlobalConfigFile          string
-	InstallManifestsDirectory string
+	// Config is the configuration object storing the endpoint and access key
+	// information after reading from config file or env var.
+	Config *HasuraGraphQLConfig
 
-	InstallManifestsRepo *InstallManifestsRepo
+	// GlobalConfigDir is the ~/.hasura-graphql directory to store configuration
+	// globally.
+	GlobalConfigDir string
+	// GlobalConfigFile is the file inside GlobalConfigDir where values are
+	// stored.
+	GlobalConfigFile string
 
+	// InstallManifestsRepo is the object referring to the github repo where
+	// installation scripts/manifests for Hasura GraphQL Engine are located.
+	InstallManifestsRepo *util.InstallManifestsRepo
+
+	// IsStableRelease indicates if the CLI release is stable or not.
 	IsStableRelease bool
+	// Version indicates the CLI build version
+	Version string
+
+	// Viper indicates the viper object for the execution
+	Viper *viper.Viper
+
+	// LogLevel indicates the logrus default logging level
+	LogLevel string
 }
 
+// Spin stops any existing spinner and starts a new one with the given message.
 func (ec *ExecutionContext) Spin(message string) {
 	ec.Spinner.Stop()
 	ec.Spinner.Prefix = message
 	ec.Spinner.Start()
 }
 
+// Prepare as the name suggests, prepares the ExecutionContext ec by
+// initializing most of the variables to sensible defaults, if it is not already
+// set.
 func (ec *ExecutionContext) Prepare() error {
+	// set the command name
 	cmdName := os.Args[0]
 	if len(cmdName) == 0 {
 		cmdName = "hasura"
 	}
 	ec.CMDName = cmdName
 
+	// set the install manifests repo
 	if ec.InstallManifestsRepo == nil {
-		ec.InstallManifestsRepo = &InstallManifestsRepo{
+		ec.InstallManifestsRepo = &util.InstallManifestsRepo{
 			Name:      "graphql-engine-install-manifests",
 			Namespace: "hasura",
 		}
@@ -116,82 +128,77 @@ func (ec *ExecutionContext) Prepare() error {
 	// set logger
 	ec.setupLogger()
 
-	// setup config directory
+	// setup global config directory
 	err := ec.setupGlobalConfigDir()
 	if err != nil {
 		return errors.Wrap(err, "setting up config directory failed")
 	}
 
+	// initialize a blank config
+	ec.Config = &HasuraGraphQLConfig{}
+
 	return nil
 }
 
+// Validate prepares the ExecutionContext ec and then validates the
+// ExecutionDirectory to see if all the required files and directories are in
+// place.
 func (ec *ExecutionContext) Validate() error {
+	// prepare the context
 	err := ec.Prepare()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed preparing context")
 	}
 
-	// set directories and config
-	err = ec.setupDirectory()
+	// validate execution directory
+	err = ec.validateDirectory()
 	if err != nil {
-		return errors.Wrap(err, "setup")
+		return errors.Wrap(err, "validating current directory failed")
 	}
 
+	// set names of files and directories
 	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, "migrations")
 	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
-	ec.EnvFile = filepath.Join(ec.ExecutionDirectory, ".env")
+	ec.MetadataFile = filepath.Join(ec.ExecutionDirectory, "metadata.yaml")
 
+	// read config and parse the values into Config
 	err = ec.readConfig()
 	if err != nil {
 		return errors.Wrap(err, "cannot read config")
 	}
 
+	ec.Logger.Debug("graphql engine endpoint: ", ec.Config.Endpoint)
+	ec.Logger.Debug("graphql engine access_key: ", ec.Config.AccessKey)
+
 	return nil
 }
 
-func (ec *ExecutionContext) readConfigFromEnvVars() error {
-	var config HasuraGraphQLConfig
-	endpoint := os.Getenv(ENV_ENDPOINT)
-	if len(endpoint) == 0 {
-		return errors.Errorf("%s not set", ENV_ENDPOINT)
-	}
-	config.Endpoint = endpoint
-	accessKey := os.Getenv(ENV_ACCESS_KEY)
-	if len(accessKey) == 0 {
-		return errors.Errorf("%s not set", ENV_ACCESS_KEY)
-	}
-	config.AccessKey = accessKey
-	ec.Config = &config
-	return nil
-}
-
+// readConfig reads the configuration from config file, flags and env vars,
+// through viper.
 func (ec *ExecutionContext) readConfig() error {
-	var config HasuraGraphQLConfig
-	data, err := ioutil.ReadFile(ec.ConfigFile)
+	// need to get existing viper because https://github.com/spf13/viper/issues/233
+	v := ec.Viper
+	v.SetDefault("endpoint", "http://localhost:8080")
+	v.SetDefault("access_key", "")
+	v.SetEnvPrefix("HASURA_GRAPHQL")
+	v.AutomaticEnv()
+	v.SetConfigName("config")
+	v.AddConfigPath(ec.ExecutionDirectory)
+	err := v.ReadInConfig()
 	if err != nil {
-		return errors.Wrap(err, "cannot read config file")
-	}
-	err = yaml.Unmarshal(data, &config)
-	if err != nil {
-		return errors.Wrap(err, "cannot parse config file")
+		ec.Logger.WithError(err).Error("cannot read config file")
+		return errors.Wrap(err, "cannor read config file")
 	}
 
-	err = godotenv.Load(ec.EnvFile)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			return errors.Wrap(err, "Error loading .env file")
-		}
-	} else {
-		accessKey := os.Getenv(ENV_ACCESS_KEY)
-		if len(accessKey) != 0 {
-			config.AccessKey = accessKey
-		}
+	ec.Config = &HasuraGraphQLConfig{
+		Endpoint:  v.GetString("endpoint"),
+		AccessKey: v.GetString("access_key"),
 	}
-	ec.Config = &config
-
 	return nil
 }
 
+// setupSpinner creates a default spinner if the context does not already have
+// one.
 func (ec *ExecutionContext) setupSpinner() {
 	if ec.Spinner == nil {
 		spnr := spinner.New(spinner.CharSets[7], 100*time.Millisecond)
@@ -200,6 +207,7 @@ func (ec *ExecutionContext) setupSpinner() {
 	}
 }
 
+// setupLogger creates a default logger if context does not have one set.
 func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
@@ -210,8 +218,19 @@ func (ec *ExecutionContext) setupLogger() {
 		logger.Out = colorable.NewColorableStdout()
 		ec.Logger = logger
 	}
+
+	if ec.LogLevel != "" {
+		level, err := logrus.ParseLevel(ec.LogLevel)
+		if err != nil {
+			ec.Logger.WithError(err).Error("error parsing log-level flag")
+			return
+		}
+		ec.Logger.SetLevel(level)
+	}
 }
 
+// setupGlobalConfigDir ensures that global config directory exists and the
+// paths are correctly set.
 func (ec *ExecutionContext) setupGlobalConfigDir() error {
 	if len(ec.GlobalConfigDir) == 0 {
 		home, err := homedir.Dir()
@@ -226,11 +245,18 @@ func (ec *ExecutionContext) setupGlobalConfigDir() error {
 		return errors.Wrap(err, "cannot create config directory")
 	}
 	ec.GlobalConfigFile = filepath.Join(ec.GlobalConfigDir, "config.json")
-	ec.InstallManifestsDirectory = filepath.Join(ec.GlobalConfigDir, ec.InstallManifestsRepo.ZipExtractedDirectory())
 	return nil
 }
 
-func (ec *ExecutionContext) setupDirectory() error {
+// validateDirectory sets execution directory and validate it to see that or any
+// of the parent directory is a valid project directory. A valid project
+// directory contains the following:
+// 1. migrations directory
+// 2. config.yaml file
+// 3. metadata.yaml (optional)
+// If the current directory or any parent directory (upto filesystem root) is
+// found to have these files, ExecutionDirectory is set as that directory.
+func (ec *ExecutionContext) validateDirectory() error {
 	if len(ec.ExecutionDirectory) == 0 {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -242,7 +268,7 @@ func (ec *ExecutionContext) setupDirectory() error {
 	ed, err := os.Stat(ec.ExecutionDirectory)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return errors.Wrap(err, "did not find 'db/' directory. use 'init'?")
+			return errors.Wrap(err, "did not find required directory. use 'init'?")
 		} else {
 			return errors.Wrap(err, "error getting directory details")
 		}
@@ -262,25 +288,17 @@ func (ec *ExecutionContext) setupDirectory() error {
 	return nil
 }
 
-func (ec *ExecutionContext) RenderText(in string) (out string) {
-	t, err := template.New("r").Parse(in)
-	if err != nil {
-		ec.Logger.Debug(errors.Wrap(err, "failed parsing template"))
-		return ""
-	}
-	b := &bytes.Buffer{}
-	if err := t.Execute(b, ec); err != nil {
-		ec.Logger.Debug(errors.Wrap(err, "failed rendering template"))
-		return ""
-	}
-	return b.String()
-}
-
+// filesRequired are the files that are mandatory to qualify for a project
+// directory.
 var filesRequired = []string{
 	"config.yaml",
 	"migrations",
 }
 
+// recursivelyValidateDirectory tries to parse 'startFrom' as a project
+// directory by checking for the 'filesRequired'. If the parent of 'startFrom'
+// (nextDir) is filesystem root, error is returned. Otherwise, 'nextDir' is
+// validated, recursively.
 func recursivelyValidateDirectory(startFrom string) (validDir string, err error) {
 	err = validateDirectory(startFrom)
 	if err != nil {
@@ -297,6 +315,8 @@ func recursivelyValidateDirectory(startFrom string) (validDir string, err error)
 	return startFrom, nil
 }
 
+// validateDirectory tries to parse dir for the filesRequired and returns error
+// if any one of them is missing.
 func validateDirectory(dir string) error {
 	notFound := []string{}
 	for _, f := range filesRequired {
@@ -312,4 +332,28 @@ func validateDirectory(dir string) error {
 		return errors.Errorf("cannot validate directory '%s': [%s] not found", dir, strings.Join(notFound, ", "))
 	}
 	return nil
+}
+
+// setVersion sets the version inside context, according to the variable
+// 'version' set during build context.
+func (ec *ExecutionContext) setVersion() {
+	if version != "" && ec.Version != "" {
+		ec.Version = version
+	}
+}
+
+// RenderTextWithContext renders the template text passed as 'in' with the
+// ExecutionContext as the template context and returns 'out'.
+func (ec *ExecutionContext) RenderTextWithContext(in string) (out string) {
+	t, err := template.New("r").Parse(in)
+	if err != nil {
+		ec.Logger.Debug(errors.Wrap(err, "failed parsing template"))
+		return ""
+	}
+	b := &bytes.Buffer{}
+	if err := t.Execute(b, ec); err != nil {
+		ec.Logger.Debug(errors.Wrap(err, "failed rendering template"))
+		return ""
+	}
+	return b.String()
 }

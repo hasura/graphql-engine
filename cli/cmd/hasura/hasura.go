@@ -1,3 +1,4 @@
+// Package main is the entrypoint for the the command line executable.
 package main
 
 import (
@@ -5,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// main is the entrypoint function
 func main() {
 	err := commands.Execute()
 	if err != nil {

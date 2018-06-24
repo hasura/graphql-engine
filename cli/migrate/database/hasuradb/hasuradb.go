@@ -14,8 +14,8 @@ import (
 	"github.com/Masterminds/semver"
 	yaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
-	log "github.com/sirupsen/logrus"
 	"github.com/parnurzeal/gorequest"
+	log "github.com/sirupsen/logrus"
 )
 
 func init() {

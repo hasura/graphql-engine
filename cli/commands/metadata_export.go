@@ -22,10 +22,6 @@ func NewMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura metadata export`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := ec.Validate()
-			if err != nil {
-				return errors.Wrap(err, "validation failed")
-			}
 			return opts.Run()
 		},
 	}

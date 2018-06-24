@@ -21,10 +21,6 @@ func NewMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := ec.Validate()
-			if err != nil {
-				return errors.Wrap(err, "validation failed")
-			}
 			opts.name = args[0]
 			return opts.Run()
 		},
