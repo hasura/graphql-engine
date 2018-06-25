@@ -15,7 +15,7 @@ Deploy to Heroku by clicking:
   :class: no-shadow
   :target: https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku
 
-**Note:** You might need to sign up on Heroku. You won't need a credit card, and once you sign up you'll be redirected to your heroku app creation page.
+**Note:** You might need to sign up on Heroku. You won't need a credit card, and once you sign up you'll be redirected to your Heroku app creation page.
 
 .. image:: ../../../img/graphql/manual/getting-started/heroku-app.png
 
