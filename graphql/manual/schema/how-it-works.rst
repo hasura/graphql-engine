@@ -49,7 +49,7 @@ Hasura's GraphQL syntax is also optimised to expose the power of the underlying 
 Metadata
 --------
 
-All the metadata mentioned above, is stored by Hasura in 2 specific postgres schemas in your database. Hasura also does a lot of work to ensure that your metadata can be kept in sync with your actual Postgres schema.
+All the metadata mentioned above is stored by Hasura in 2 specific postgres schemas in your database. Hasura also does a lot of work to ensure that your metadata can be kept in sync with your actual Postgres schema.
 
 #. You can run DDL queries through Hasura to check if the postgres schema change will cause some metadata to fail
 #. You can ask Hasura to validate the current metadata it has against your postgres schema and spit out invalid metadata so that you can correct them
