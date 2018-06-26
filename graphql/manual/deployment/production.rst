@@ -30,13 +30,19 @@ Typically, you will also have a webhook for authentication:
 Using console with access key
 -----------------------------
 
-In your project's root directory, open ``.env`` file to set the access key.
+In the ``my-project/config.yaml`` file set the endpoint:
 
 .. code-block:: yaml
 
-  HASURA_GRAPHQL_ACCESS_KEY=XXXXXXXXXXXXXXXX
+  access_key: XXXXXXXXXXXXXXXX
 
 The console can now contact the GraphQL APIs with the specified Access Key.
+
+The alternate way to pass on the access key value to console would be to pass it as environment variable on runtime.
+
+.. code-block:: bash
+
+  HASURA_GRAPHQL_ACCESS_KEY=xxxxx hasura console
 
 Configure CORS
 --------------
