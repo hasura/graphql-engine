@@ -42,7 +42,7 @@ As soon as a table is created, the corresponding GraphQL schema and resolvers ar
 
 .. note::
     
-    If you are connecting to a database instance that has already has data, you will need to explicitly *track* those tables using the console in the **Schema** section. You will be shown a list of untracked tables from which you can choose the tables to be included in the GraphQL schema.
+    If you are connecting to a database instance that already has data, you will need to explicitly *track* those tables using the console in the **Schema** section. You will be shown a list of untracked tables from which you can choose the tables to be included in the GraphQL schema.
 
 
 
