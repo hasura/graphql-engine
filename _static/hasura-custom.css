@@ -1,6 +1,18 @@
 @import url('https://fonts.googleapis.com/css?family=Gudea');
 @import url('https://fonts.googleapis.com/css?family=Khula:400,700');
 
+/* GraphiQL overrides */
+
+.graphiql-container .topBar {
+  background: #f7f7f7 !important;
+  border-top-left-radius: 3px !important;
+}
+
+.graphiql-container .docExplorerShow {
+  background: #f7f7f7 !important;
+  border-top-right-radius: 3px !important;
+}
+
 html {
   background-color: #f8f8f8 !important;
 }
@@ -224,19 +236,9 @@ tt, code, kbd, pre, samp
 {
   font-size: 15px !important;
 }
-#docs-content {
+#docs-content
+{
   font-size: 16px !important;
-  margin-left: 40px; margin-right: 40px;
-}
-#docs-content img {
-  -webkit-box-shadow: -1px 2px 20px 2px rgba(217,217,217,1);
-  -moz-box-shadow: -1px 2px 20px 2px rgba(217,217,217,1);
-  box-shadow: -1px 2px 20px 2px rgba(217,217,217,1);
-}
-#docs-content img.no-shadow {
-  -webkit-box-shadow: none;
-  -moz-box-shadow: none;
-  box-shadow: none;
 }
 .wd_100
 {
@@ -1177,11 +1179,6 @@ ol, ul
   .search_head_wrapper {
     margin-top: 20px;
   }
-
-  #docs-content {
-    margin-left: 0;
-    margin-right: 0;
-  }
 }
 
 .api-tabs .docutils {
@@ -1267,7 +1264,6 @@ ol, ul
   max-width: 100%;
 }
 
-/* GraphiQL overrides */
 .graphiql {
   height: 300px;
   margin-bottom: 20px;
@@ -1275,16 +1271,6 @@ ol, ul
 
 .graphiql .query, .graphiql .response {
     display: none;
-}
-
-.graphiql-container .topBar {
-  background: #f7f7f7 !important;
-  border-top-left-radius: 3px !important;
-}
-
-.graphiql-container .docExplorerShow {
-  background: #f7f7f7 !important;
-  border-top-right-radius: 3px !important;
 }
 
 .graphiql .variable-editor, .graphiql a[title="Show History"], .graphiql.view-only .execute-button {
