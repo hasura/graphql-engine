@@ -41,7 +41,7 @@ Step 1: Install
          .. note::
 
             You should have ``git bash`` installed to use ``hasura`` CLI. Download git bash using the following `(link) <https://git-scm.com/download/win>`_.
-            Also, make sure you install it in ``MinTTY`` mode, instead on Windows' default console.      
+            Also, make sure you install it in ``MinTTY`` mode, instead of Windows' default console.
 
          Download the ``hasura`` installer:
 
