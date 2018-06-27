@@ -52,8 +52,8 @@ The console can now contact the GraphQL APIs with the specified access key.
    If you're setting ``access_key`` in ``config.yaml`` please make sure you do
    not check this file into a public repository.
 
-An alternate way and safe way is to pass on the access key value to the command
-would be to set it as environment variable:
+An alternate and safe way is to pass the access key value to the command
+as an environment variable:
 
 .. code-block:: bash
 
