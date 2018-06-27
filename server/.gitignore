@@ -1,0 +1,29 @@
+__pycache__/
+dist
+cabal-dev
+*.o
+*.hi
+*.chi
+*.chs.h
+*.dyn_o
+*.dyn_hi
+.virtualenv
+.hpc
+.hsenv
+.cabal-sandbox/
+cabal.sandbox.config
+cabal.config
+*.prof
+*.aux
+*.hp
+TAGS
+.stack-work
+
+# ws related
+ws/
+build/rootfs
+
+random*.sql
+
+# example related
+sample/data

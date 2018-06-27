@@ -1,0 +1,181 @@
+type: bulk
+args:
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: hdb_table
+
+- type: add_existing_table_or_view
+  args:
+    schema: information_schema
+    name: tables
+
+- type: create_object_relationship
+  args:
+    name: detail
+    table:
+      schema: hdb_catalog
+      name: hdb_table
+    using:
+      manual_configuration:
+        remote_table:
+          schema: information_schema
+          name: tables
+        column_mapping:
+          table_schema : table_schema
+          table_name : table_name
+
+- type: add_existing_table_or_view
+  args:
+    schema: information_schema
+    name: schemata
+
+- type: add_existing_table_or_view
+  args:
+    schema: information_schema
+    name: views
+
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: hdb_primary_key
+
+- type: create_object_relationship
+  args:
+    name: primary_key
+    table:
+      schema: hdb_catalog
+      name: hdb_table
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_primary_key
+        column_mapping:
+          table_schema : table_schema
+          table_name : table_name
+
+- type: add_existing_table_or_view
+  args:
+    schema: information_schema
+    name: columns
+
+- type: create_array_relationship
+  args:
+    name: columns
+    table:
+      schema: hdb_catalog
+      name: hdb_table
+    using:
+      manual_configuration:
+        remote_table:
+          schema: information_schema
+          name: columns
+        column_mapping:
+          table_schema : table_schema
+          table_name : table_name
+
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: hdb_foreign_key_constraint
+
+- type: create_array_relationship
+  args:
+    name: foreign_key_constraints
+    table:
+      schema: hdb_catalog
+      name: hdb_table
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_foreign_key_constraint
+        column_mapping:
+          table_schema : table_schema
+          table_name : table_name
+
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: hdb_relationship
+
+- type: create_array_relationship
+  args:
+    name: relationships
+    table:
+      schema: hdb_catalog
+      name: hdb_table
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_relationship
+        column_mapping:
+          table_schema : table_schema
+          table_name : table_name
+
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: hdb_permission_agg
+
+- type: create_array_relationship
+  args:
+    name: permissions
+    table:
+      schema: hdb_catalog
+      name: hdb_table
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_permission_agg
+        column_mapping:
+          table_schema : table_schema
+          table_name : table_name
+
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: hdb_check_constraint
+
+- type: create_array_relationship
+  args:
+    name: check_constraints
+    table:
+      schema: hdb_catalog
+      name: hdb_table
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_check_constraint
+        column_mapping:
+          table_schema : table_schema
+          table_name : table_name
+
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: hdb_unique_constraint
+
+- type: create_array_relationship
+  args:
+    name: unique_constraints
+    table:
+      schema: hdb_catalog
+      name: hdb_table
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_unique_constraint
+        column_mapping:
+          table_schema : table_schema
+          table_name : table_name
+
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: hdb_query_template
