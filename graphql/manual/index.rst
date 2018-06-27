@@ -23,5 +23,6 @@ Hasura GraphQL engine lets you setup your own GraphQL server in minutes.
 
 .. admonition:: Hasura platform documentation
 
-    If you're searching for the Hasura platform documentation that used to live here, please head to :ref:`Hasura platform documentation <platform_manual>`.
+    If you're searching for the Hasura platform documentation that used to live here, please head to
+    `Hasura platform documentation <//docs.platform.hasura.io>`_
 

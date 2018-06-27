@@ -18,4 +18,3 @@ Table of Contents
   :titlesonly:
 
   Hasura GraphQL Engine <graphql/manual/index>
-  Hasura Platform <platform//manual/index>
