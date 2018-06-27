@@ -35,6 +35,14 @@ const (
 	ENV_ACCESS_KEY = "HASURA_GRAPHQL_ACCESS_KEY"
 )
 
+// Other constants used in the package
+const (
+	// Name of the global configuration directory
+	GLOBAL_CONFIG_DIR_NAME = ".hasura-graphql"
+	// Name of the global configuration file
+	GLOBAL_CONFIG_FILE_NAME = "config.json"
+)
+
 // version is set at build time, denotes the CLI version.
 var version string
 
@@ -94,13 +102,6 @@ type ExecutionContext struct {
 
 	// LogLevel indicates the logrus default logging level
 	LogLevel string
-}
-
-// Spin stops any existing spinner and starts a new one with the given message.
-func (ec *ExecutionContext) Spin(message string) {
-	ec.Spinner.Stop()
-	ec.Spinner.Prefix = message
-	ec.Spinner.Start()
 }
 
 // Prepare as the name suggests, prepares the ExecutionContext ec by
@@ -207,6 +208,13 @@ func (ec *ExecutionContext) setupSpinner() {
 	}
 }
 
+// Spin stops any existing spinner and starts a new one with the given message.
+func (ec *ExecutionContext) Spin(message string) {
+	ec.Spinner.Stop()
+	ec.Spinner.Prefix = message
+	ec.Spinner.Start()
+}
+
 // setupLogger creates a default logger if context does not have one set.
 func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
@@ -237,14 +245,14 @@ func (ec *ExecutionContext) setupGlobalConfigDir() error {
 		if err != nil {
 			return errors.Wrap(err, "cannot get home directory")
 		}
-		globalConfigDir := filepath.Join(home, ".hasura-graphql")
+		globalConfigDir := filepath.Join(home, GLOBAL_CONFIG_DIR_NAME)
 		ec.GlobalConfigDir = globalConfigDir
 	}
 	err := os.MkdirAll(ec.GlobalConfigDir, os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "cannot create config directory")
 	}
-	ec.GlobalConfigFile = filepath.Join(ec.GlobalConfigDir, "config.json")
+	ec.GlobalConfigFile = filepath.Join(ec.GlobalConfigDir, GLOBAL_CONFIG_FILE_NAME)
 	return nil
 }
 

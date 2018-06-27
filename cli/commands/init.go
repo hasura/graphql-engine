@@ -20,6 +20,7 @@ const (
 	MANIFESTS_DIR    = "install-scripts"
 )
 
+// NewInitCmd is the definition for init command
 func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &initOptions{
 		EC: ec,
@@ -36,11 +37,10 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 
   # See https://docs.hasura.io/0.15/graphql/manual/getting-started for more details`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return ec.Prepare()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := ec.Prepare()
-			if err != nil {
-				return errors.Wrap(err, "cmd prep failed")
-			}
 			return opts.Run()
 		},
 	}
@@ -65,6 +65,7 @@ func (o *initOptions) Run() error {
 		o.EC.ExecutionDirectory = o.InitDir
 	}
 
+	// prompt for init directory if it's not set already
 	if len(o.InitDir) == 0 {
 		p := promptui.Prompt{
 			Label:   "Name of project directory ",
@@ -82,6 +83,7 @@ func (o *initOptions) Run() error {
 	}
 
 	var infoMsg string
+	// If endpoint is not provided, download installation manifests
 	if len(o.Endpoint) == 0 {
 		o.EC.Spin("Downloading install manifests... ")
 		defer o.EC.Spinner.Stop()
@@ -107,13 +109,17 @@ func (o *initOptions) Run() error {
 			return errors.Wrap(err, "error creating setup directories")
 		}
 
+		// copy manifests to manifests directory (dst)
 		err = util.CopyDir(src, dst)
 		if err != nil {
 			return errors.Wrap(err, "error copying files")
 		}
 		o.EC.Spinner.Stop()
 		infoMsg = fmt.Sprintf("manifests created at [%s]", dst)
+
 	} else {
+
+		// if endpoint is set, just create the execution directory
 		if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
 			return errors.Errorf("directory '%s' already exist", o.EC.ExecutionDirectory)
 		}
@@ -128,94 +134,52 @@ func (o *initOptions) Run() error {
 `, o.EC.ExecutionDirectory, o.EC.CMDName)
 	}
 
+	// create other required files, like config.yaml, migrations directory
 	err := o.createFiles()
 	if err != nil {
 		return err
 	}
 
-	o.EC.Logger.Infof(infoMsg)
+	o.EC.Logger.Info(infoMsg)
 	return nil
 }
 
+// createFiles creates files required by the CLI in the ExecutionDirectory
 func (o *initOptions) createFiles() error {
+	// create the directory
 	err := os.MkdirAll(filepath.Dir(o.EC.ExecutionDirectory), os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "error creating setup directories")
 	}
+	// set config object
 	config := &cli.HasuraGraphQLConfig{
 		Endpoint: "http://localhost:8080",
 	}
-
-	o.EC.ConfigFile = filepath.Join(o.EC.ExecutionDirectory, "config.yaml")
-
-	// if o.Endpoint == "" {
-	// 	 p := promptui.Prompt{
-	// 	 	Label:   "Hasura GraphQL Engine endpoint",
-	// 	 	Default: config.Endpoint,
-	// 	 }
-	// 	 r, err := p.Run()
-	// 	 if err != nil {
-	// 	 	return handlePromptError(err)
-	// 	 }
-	// 	 o.Endpoint = r
-	// }
-	if o.Endpoint == "" {
-		o.Endpoint = config.Endpoint
-	} else {
+	if o.Endpoint != "" {
 		config.Endpoint = o.Endpoint
 	}
+	if o.AccessKey != "" {
+		config.AccessKey = o.AccessKey
+	}
 
+	// write the config file
 	data, err := yaml.Marshal(config)
 	if err != nil {
 		return errors.Wrap(err, "cannot convert to yaml")
 	}
+	o.EC.ConfigFile = filepath.Join(o.EC.ExecutionDirectory, "config.yaml")
 	err = ioutil.WriteFile(o.EC.ConfigFile, data, 0644)
 	if err != nil {
 		return errors.Wrap(err, "cannot write config file")
 	}
 
-	// if o.AccessKey == "" {
-	// 	p := promptui.Prompt{
-	// 		Label:   "Hasura GraphQL Engine access key",
-	// 		Default: "<hasura-graphql-engine-access-key>",
-	// 	}
-	// 	r, err := p.Run()
-	// 	if err != nil {
-	// 		return handlePromptError(err)
-	// 	}
-	// 	o.AccessKey = r
-	// }
-	if o.AccessKey == "" {
-		o.AccessKey = "<hasura-graphql-engine-access-key>"
-	}
-	err = ioutil.WriteFile(filepath.Join(o.EC.ExecutionDirectory, ".env"),
-		[]byte(fmt.Sprintf("%s=%s", cli.ENV_ACCESS_KEY, o.AccessKey)), 0644)
-	if err != nil {
-		return errors.Wrap(err, "cannot write dotenv file")
-	}
-
+	// create migrations directory
 	o.EC.MigrationDir = filepath.Join(o.EC.ExecutionDirectory, "migrations")
 	err = os.MkdirAll(o.EC.MigrationDir, os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "cannot write migration directory")
 	}
 
-	return nil
-}
-
-func getInstallManifests(url, target string) error {
-	err := util.Download(url, target+".zip")
-	if err != nil {
-		return errors.Wrap(err, "failed downloading manifests")
-	}
-	err = os.RemoveAll(target)
-	if err != nil {
-		return errors.Wrap(err, "failed cleaning manifests")
-	}
-	err = util.Unzip(target+".zip", filepath.Dir(target))
-	if err != nil {
-		return errors.Wrap(err, "failed extracting manifests")
-	}
 	return nil
 }
 

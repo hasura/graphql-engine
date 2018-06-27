@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"sync"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/gin-contrib/cors"
@@ -49,6 +48,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.APIPort, "api-port", "9693", "port for serving migrate api")
 	f.StringVar(&opts.ConsolePort, "console-port", "9695", "port for serving console")
 	f.StringVar(&opts.Address, "address", "localhost", "address to use")
+	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
@@ -65,6 +65,10 @@ type consoleOptions struct {
 	APIPort     string
 	ConsolePort string
 	Address     string
+
+	DontOpenBrowser bool
+
+	WG *sync.WaitGroup
 }
 
 func (o *consoleOptions) Run() error {
@@ -110,6 +114,7 @@ func (o *consoleOptions) Run() error {
 
 	// Create WaitGroup for running 3 servers
 	wg := &sync.WaitGroup{}
+	o.WG = wg
 	wg.Add(1)
 	go func() {
 		err = router.Run(o.Address + ":" + o.APIPort)
@@ -129,15 +134,16 @@ func (o *consoleOptions) Run() error {
 
 	consoleURL := fmt.Sprintf("http://%s:%s", o.Address, o.ConsolePort)
 
-	o.EC.Spin(color.CyanString("Opening console using default browser..."))
-	defer o.EC.Spinner.Stop()
+	if !o.DontOpenBrowser {
+		o.EC.Spin(color.CyanString("Opening console using default browser..."))
+		defer o.EC.Spinner.Stop()
 
-	err = open.Run(consoleURL)
-	if err != nil {
-		o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url manually?")
+		err = open.Run(consoleURL)
+		if err != nil {
+			o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url manually?")
+		}
 	}
 
-	time.Sleep(2 * time.Second)
 	o.EC.Spinner.Stop()
 	log.Infof("console running at: %s", consoleURL)
 

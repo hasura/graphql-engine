@@ -1,3 +1,5 @@
+// Package commands contains the definition for all the commands present in
+// Hasura CLI.
 package commands
 
 import (
@@ -5,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// rootCmd is the main "hasura" command
 var rootCmd = &cobra.Command{
 	Use:           "hasura",
 	Short:         "Hasura GraphQL Engine command line tool",
@@ -24,6 +27,7 @@ func init() {
 	f.StringVar(&ec.LogLevel, "log-level", "INFO", "log level (DEBUG, INFO, WARN, ERROR, FATAL)")
 }
 
+// Execute executes the command and returns the error
 func Execute() error {
 	return rootCmd.Execute()
 }

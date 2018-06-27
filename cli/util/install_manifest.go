@@ -67,13 +67,3 @@ func (i *InstallManifestsRepo) Download() (dir string, err error) {
 func (i *InstallManifestsRepo) ZipExtractedDirectory() string {
 	return fmt.Sprintf("%s-master", i.Name)
 }
-
-// ReadmeURL returns the GitHub URL to README.md file in the repo root.
-func (i *InstallManifestsRepo) ReadmeURL() string {
-	u := url.URL{
-		Scheme: "https",
-		Host:   "github.com",
-		Path:   fmt.Sprintf("%s/%s/blob/master/README.md", i.Namespace, i.Name),
-	}
-	return u.String()
-}
