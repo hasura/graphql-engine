@@ -7,17 +7,17 @@ OUTPUT_DIR := _output
 
 # compile assets
 assets:
-	go get github.com/hasura/go-bindata/go-bindata
 	go-bindata --pkg assets -o manifests/assets.go manifests/console.html
 
 # get dependencies
 deps:
-	go get -u github.com/golang/dep/cmd/dep
+	go get github.com/golang/dep/cmd/dep
+	go get github.com/mitchellh/gox
+	go get github.com/hasura/go-bindata/go-bindata
 	dep ensure
 
 # build cli locally, for all given platform/arch
 build:
-	go get github.com/mitchellh/gox
 	gox -ldflags "-X github.com/hasura/graphql-engine/cli.version=$(VERSION)" \
 	-os="linux darwin windows" \
 	-arch="amd64" \
@@ -32,7 +32,7 @@ test:
 clean:
 	rm -rf "$(OUTPUT_DIR)"
 
-all: assets deps test build
+all: deps assets test build
 
 # build cli inside a docker container
 all-in-docker:
