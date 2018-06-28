@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
+func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &metadataExportOptions{
 		EC:         ec,
 		actionType: "export",

@@ -19,7 +19,7 @@ var (
 
 const FLAG_NOT_SET = ""
 
-func NewMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
+func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &migrateApplyOptions{
 		EC: ec,
 	}

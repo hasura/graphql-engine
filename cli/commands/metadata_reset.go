@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewMetadataResetCmd(ec *cli.ExecutionContext) *cobra.Command {
+func newMetadataResetCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &metadataResetOptions{
 		EC:         ec,
 		actionType: "reset",

@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
+func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &metadataApplyOptions{
 		EC:         ec,
 		actionType: "apply",

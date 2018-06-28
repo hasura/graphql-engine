@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
+func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &migrateStatusOptions{
 		EC: ec,
 	}
