@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Masterminds/semver"
 	yaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/parnurzeal/gorequest"
@@ -53,14 +52,6 @@ type HasuraDB struct {
 	migrations     *database.Migrations
 	migrationQuery HasuraInterfaceBulk
 	isLocked       bool
-}
-
-func parsePlatformVersion(version string) (*semver.Version, error) {
-	platformVersion, err := semver.NewVersion(strings.TrimPrefix(version, "v"))
-	if err != nil {
-		return nil, err
-	}
-	return platformVersion, nil
 }
 
 func WithInstance(config *Config) (database.Driver, error) {
@@ -231,22 +222,22 @@ func (h *HasuraDB) ResetQuery() {
 	h.migrationQuery.ResetArgs()
 }
 
-func (h *HasuraDB) InsertVersion(version int) error {
+func (h *HasuraDB) InsertVersion(version int64) error {
 	query := HasuraQuery{
 		Type: "run_sql",
 		Args: HasuraArgs{
-			SQL: `INSERT INTO ` + fmt.Sprintf("%s.%s", DefaultSchema, h.config.MigrationsTable) + ` (version, dirty) VALUES (` + strconv.Itoa(version) + `, ` + fmt.Sprintf("%t", false) + `)`,
+			SQL: `INSERT INTO ` + fmt.Sprintf("%s.%s", DefaultSchema, h.config.MigrationsTable) + ` (version, dirty) VALUES (` + strconv.FormatInt(version, 10) + `, ` + fmt.Sprintf("%t", false) + `)`,
 		},
 	}
 	h.migrationQuery.Args = append(h.migrationQuery.Args, query)
 	return nil
 }
 
-func (h *HasuraDB) RemoveVersion(version int) error {
+func (h *HasuraDB) RemoveVersion(version int64) error {
 	query := HasuraQuery{
 		Type: "run_sql",
 		Args: HasuraArgs{
-			SQL: `DELETE FROM ` + fmt.Sprintf("%s.%s", DefaultSchema, h.config.MigrationsTable) + ` WHERE version = ` + strconv.Itoa(version),
+			SQL: `DELETE FROM ` + fmt.Sprintf("%s.%s", DefaultSchema, h.config.MigrationsTable) + ` WHERE version = ` + strconv.FormatInt(version, 10),
 		},
 	}
 	h.migrationQuery.Args = append(h.migrationQuery.Args, query)

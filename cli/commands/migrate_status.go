@@ -37,5 +37,10 @@ func (o *migrateStatusOptions) run() error {
 
 	dbURL.Scheme = "hasuradb"
 	dbURL.User = url.UserPassword("admin", o.EC.Config.AccessKey)
-	return util.ExecuteStatus("file://"+o.EC.MigrationDir, dbURL.String())
+	status, err := util.ExecuteStatus("file://"+o.EC.MigrationDir, dbURL.String())
+	if err != nil {
+		return errors.Wrap(err, "cannot fetch migrate status")
+	}
+	o.EC.Logger.Println(status)
+	return nil
 }
