@@ -65,7 +65,7 @@ parseRawConnInfo =
                   value "" <>
                   help "Password of the user" )
   <*> optional (strOption ( long "database-url" <>
-                  metavar "DataBase-URL" <>
+                  metavar "DATABASE-URL" <>
                   help "Postgres database URL. Example postgres://foo:bar@example.com:2345/database"))
   <*> optional (strOption ( long "dbname" <>
                   short 'd' <>
