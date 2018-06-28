@@ -3,17 +3,16 @@
 
 module Hasura.Server.Init where
 
-import qualified Database.PG.Query                   as Q
+import qualified Database.PG.Query    as Q
 
-import           Database.PostgreSQL.Simple.Internal (ConnectInfo (..))
-import           Database.PostgreSQL.Simple.URL      (parseDatabaseUrl)
 import           Options.Applicative
-import           System.Exit                         (exitFailure)
+import           System.Exit          (exitFailure)
 
-import qualified Data.Text                           as T
+import qualified Data.Text            as T
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Utils
+import           Hasura.Server.Utils
 
 data InitError
   = InitError !String
@@ -83,17 +82,15 @@ mkConnInfo (RawConnInfo mHost mPort mUser pass mURL mDB opts) =
     (Just host, Just port, Just user, Just db, Nothing) ->
       return $ Q.ConnInfo host port user pass db opts
 
-    (_, _, _, _, Just dbURL) -> parseURL dbURL opts
+    (_, _, _, _, Just dbURL) -> maybe (throwError invalidUrlMsg)
+                                return $ parseDatabaseUrl dbURL opts
     _ -> throwError $ "Invalid options. "
                     ++ "Expecting all database connection params "
                     ++ "(host, port, user, dbname, password) or "
                     ++ "database-url"
-
-parseURL :: String -> Maybe String -> Either String Q.ConnInfo
-parseURL url opts = case parseDatabaseUrl url of
-  Just (ConnectInfo host port user pass db) ->
-    return $ Q.ConnInfo host (fromIntegral port) user pass db opts
-  Nothing -> throwError "Invalid database-url. Example postgres://foo:bar@example.com:2345/database"
+  where
+    invalidUrlMsg = "Invalid database-url. "
+                    ++ "Example postgres://foo:bar@example.com:2345/database"
 
 readIsoLevel :: String -> Either String Q.TxIsolation
 readIsoLevel isoS =
