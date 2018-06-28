@@ -3,11 +3,11 @@ PARENT_DIR := $(shell dirname $(PWD))
 VERSION := $(shell build/get-version.sh)
 OUTPUT_DIR := _output
 
-.PHONY: build test clean
+.PHONY: build test clean assets all
 
 # compile assets
 assets:
-	go-bindata --pkg assets -o manifests/assets.go manifests/console.html
+	go-bindata --pkg assets -o assets/assets.go assets/console.html
 
 # get dependencies
 deps:

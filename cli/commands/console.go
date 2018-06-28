@@ -219,7 +219,7 @@ func serveConsole(opts gin.H) (*gin.Engine, error) {
 	r := gin.New()
 
 	// Template index.html
-	templateRender, err := util.LoadTemplates("manifests/", "console.html")
+	templateRender, err := util.LoadTemplates("assets/", "console.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch template")
 	}
