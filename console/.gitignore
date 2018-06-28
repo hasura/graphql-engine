@@ -1,0 +1,6 @@
+.env
+cypress/videos
+cypress/screenshots
+.nyc_output
+node_modules
+static/dist

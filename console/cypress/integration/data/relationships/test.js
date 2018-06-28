@@ -1,0 +1,46 @@
+/* eslint no-unused-vars: 0 */
+/* eslint import/prefer-default-export: 0 */
+
+import {
+  passRTCreateTables,
+  passRTMoveToTable,
+  passRTDeleteTables,
+  passRTAddManualObjRel,
+  passRTAddManualArrayRel,
+  passRTAddForeignKey,
+  passRTDeleteRelationships,
+  passRTAddSuggestedRel,
+  failRTAddSuggestedRel,
+} from './spec';
+
+import { setMetaData } from '../../validators/validators';
+
+const setup = () => {
+  describe('Check Data Tab', () => {
+    it('Clicking on Data tab opens the correct route', () => {
+      // Visit the index route
+      cy.visit('/data/schema/public');
+      cy.wait(7000);
+      // Get and set validation metadata
+      setMetaData();
+    });
+  });
+};
+
+export const runRelationshipsTests = () => {
+  describe('Relationships', () => {
+    it('Creating testing tables', passRTCreateTables);
+    it('Moving to the table', passRTMoveToTable);
+    it('Adding Manual Relationship Object', passRTAddManualObjRel);
+    it('Adding Manual Relationship Array', passRTAddManualArrayRel);
+    it('Adding a Foreign Key', passRTAddForeignKey);
+    it('Deleting the relationships', passRTDeleteRelationships);
+    it('Adding Suggested Relationships Error', failRTAddSuggestedRel);
+    it('Adding Suggested Relationships', passRTAddSuggestedRel);
+    it('Deleting the relationships', passRTDeleteRelationships);
+    it('Deleting testing tables', passRTDeleteTables);
+  });
+};
+
+// setup();
+// runRelationshipsTests();

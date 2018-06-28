@@ -1,0 +1,139 @@
+const suggestedRelationshipsRaw = (tableName, allSchemas) => {
+  const objRels = [];
+  const arrRels = [];
+  const currentTableSchema = allSchemas.find(t => t.table_name === tableName);
+  const currentTableRelationships = currentTableSchema.relationships;
+  const currentObjRels = currentTableRelationships.filter(
+    r => r.rel_type === 'object'
+  );
+  const currentArrRels = currentTableRelationships.filter(
+    r => r.rel_type !== 'object'
+  );
+  for (let i = 0; i < allSchemas.length; i++) {
+    const schema = allSchemas[i];
+    const foreignKeyConstraints = schema.foreign_key_constraints;
+    for (let j = 0; j < foreignKeyConstraints.length; j++) {
+      const constraint = foreignKeyConstraints[j];
+      if (constraint.table_name === tableName) {
+        /* Object Relationships */
+        const lcol = Object.keys(constraint.column_mapping)[0];
+        let isExistingObjRel = false;
+        for (let k = 0; k < currentObjRels.length; k++) {
+          // check if this is already an existing relationship
+          if (currentObjRels[k].rel_def.foreign_key_constraint_on === lcol) {
+            // existing relationship
+            isExistingObjRel = true;
+          }
+        }
+        if (!isExistingObjRel) {
+          objRels.push({
+            tableName: tableName,
+            isObjRel: true,
+            name: null,
+            lcol: lcol,
+            rcol:
+              constraint.column_mapping[
+                Object.keys(constraint.column_mapping)[0]
+              ],
+            rTable: constraint.ref_table,
+          });
+        }
+      } else if (constraint.ref_table === tableName) {
+        /* Array Relationships */
+        const rcol = Object.keys(constraint.column_mapping)[0];
+        const rTable = constraint.table_name;
+        let isExistingArrayRel = false;
+
+        for (let k = 0; k < currentArrRels.length; k++) {
+          // check if this is already an existing relationship
+          const relDef = currentArrRels[k].rel_def;
+          let currTable = null;
+          let currRCol = null;
+
+          if (relDef.foreign_key_constraint_on) {
+            currTable = relDef.foreign_key_constraint_on.table;
+            currRCol = relDef.foreign_key_constraint_on.column;
+          } else {
+            currTable = relDef.manual_configuration.remote_table;
+            currRCol = Object.values(
+              relDef.manual_configuration.column_mapping
+            )[0];
+          }
+
+          if (currRCol === rcol && currTable === constraint.table_name) {
+            // existing relationship
+            isExistingArrayRel = true;
+          }
+        }
+        if (!isExistingArrayRel) {
+          arrRels.push({
+            tableName: tableName,
+            isObjRel: false,
+            name: null,
+            rcol: rcol,
+            lcol:
+              constraint.column_mapping[
+                Object.keys(constraint.column_mapping)[0]
+              ],
+            rTable: rTable,
+          });
+        }
+      }
+
+      /* Self Referencing Array Relationships */
+      if (
+        constraint.ref_table === tableName &&
+        constraint.table_name === tableName
+      ) {
+        const rcol = Object.keys(constraint.column_mapping)[0];
+        const rTable = constraint.table_name;
+        let isExistingArrayRel = false;
+
+        for (let k = 0; k < currentArrRels.length; k++) {
+          // check if this is already an existing relationship
+          if (
+            currentArrRels[k].rel_def.foreign_key_constraint_on.column ===
+              rcol &&
+            currentArrRels[k].rel_def.foreign_key_constraint_on.table ===
+              constraint.table_name
+          ) {
+            // existing relationship
+            isExistingArrayRel = true;
+          }
+        }
+        if (!isExistingArrayRel) {
+          arrRels.push({
+            tableName: tableName,
+            isObjRel: false,
+            name: null,
+            rcol: rcol,
+            lcol:
+              constraint.column_mapping[
+                Object.keys(constraint.column_mapping)[0]
+              ],
+            rTable: rTable,
+          });
+        }
+      }
+    }
+  }
+
+  const length =
+    objRels.length > arrRels.length ? objRels.length : arrRels.length;
+  const finalObjRel = [];
+  const finalArrayRel = [];
+  for (let i = 0; i < length; i++) {
+    const objRel = objRels[i] ? objRels[i] : null;
+    const arrRel = arrRels[i] ? arrRels[i] : null;
+    if (objRel !== null) {
+      finalObjRel.push(objRel);
+    }
+    if (arrRel !== null) {
+      finalArrayRel.push(arrRel);
+    }
+  }
+
+  return { objectRel: finalObjRel, arrayRel: finalArrayRel };
+};
+
+export default suggestedRelationshipsRaw;

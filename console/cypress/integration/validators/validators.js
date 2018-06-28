@@ -1,0 +1,220 @@
+/* eslint-disable prefer-destructuring */
+
+import { makeDataAPIOptions, getColName } from '../../helpers/dataHelpers';
+import {
+  toggleOnMigrationMode,
+  migrateModeUrl,
+} from '../data/migration-mode/utils';
+// ***************** UTIL FUNCTIONS **************************
+
+let accessKey;
+let dataApiUrl;
+
+export const setMetaData = () => {
+  cy.window().then(win => {
+    const { __env } = win;
+    accessKey = __env.accessKey;
+    dataApiUrl = __env.dataApiUrl;
+    toggleOnMigrationMode();
+  });
+};
+
+export const createView = sql => {
+  const reqBody = {
+    type: 'run_sql',
+    args: {
+      sql,
+    },
+  };
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions);
+};
+
+// ******************* VALIDATION FUNCTIONS *******************************
+
+// ****************** Table Validator *********************
+
+export const validateCT = (tableName, result) => {
+  const reqBody = {
+    type: 'select',
+    args: {
+      table: tableName,
+      columns: ['*'],
+    },
+  };
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === 'success') {
+      expect(response.status === 200).to.be.true;
+    } else {
+      expect(response.status === 200).to.be.false;
+    }
+  });
+};
+
+// **************** View Validator *******************
+
+export const validateView = (viewName, result) => {
+  validateCT(viewName, result);
+};
+
+// *************** Column Validator *******************
+
+export const validateColumn = (tableName, column, result) => {
+  const reqBody = {
+    type: 'select',
+    args: {
+      table: tableName,
+      columns: column,
+    },
+  };
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === 'success') {
+      expect(response.status === 200).to.be.true;
+    } else {
+      expect(response.status === 200).to.be.false;
+    }
+  });
+};
+
+export const validateColumnWhere = (tableName, column, where, result) => {
+  const reqBody = {
+    type: 'select',
+    args: {
+      table: tableName,
+      columns: column,
+      where,
+    },
+  };
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    cy.log(JSON.stringify(response));
+    if (result === 'success') {
+      expect(response.body.length > 0).to.be.true;
+    } else {
+      expect(response.body.length === 0).to.be.true;
+    }
+  });
+};
+
+// ******************** Validate Insert *********************
+
+export const validateInsert = (tableName, rows) => {
+  const reqBody = {
+    type: 'count',
+    args: {
+      table: tableName,
+    },
+  };
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    cy.log(JSON.stringify(response));
+    expect(response.body.count === rows).to.be.true;
+  });
+};
+
+// ******************* Permissiosn Validator ****************
+
+const compareChecks = (permObj, check, query, columns, allowUpsert) => {
+  if (check === 'none') {
+    if (query === 'insert') {
+      expect(Object.keys(permObj.check).length === 0).to.be.true;
+      expect(permObj.allow_upsert === allowUpsert).to.be.true;
+    } else {
+      expect(Object.keys(permObj.filter).length === 0).to.be.true;
+      if (query === 'select' || query === 'update') {
+        [0, 1, 2].forEach(index => {
+          expect(permObj.columns.includes(getColName(index)));
+        });
+      }
+    }
+  } else if (query === 'insert') {
+    // eslint-disable-line no-lonely-if
+    expect(permObj.check[getColName(0)].$eq === '1').to.be.true; // eslint-dsable-line eqeqeq
+    expect(permObj.allow_upsert === allowUpsert).to.be.true;
+  } else {
+    expect(permObj.filter[getColName(0)].$eq === '1').to.be.true;
+    if (query === 'select' || query === 'update') {
+      columns.forEach((col, index) => {
+        expect(permObj.columns.includes(getColName(index)));
+      });
+    }
+  }
+};
+
+const handlePermValidationResponse = (
+  tableSchema,
+  role,
+  query,
+  check,
+  result,
+  columns,
+  allowUpsert
+) => {
+  const rolePerms = tableSchema.permissions.find(
+    permission => permission.role_name === role
+  );
+  if (rolePerms) {
+    const permObj = rolePerms.permissions[query];
+    if (permObj) {
+      compareChecks(permObj, check, query, columns, allowUpsert, result);
+    } else {
+      // this block can be reached only if the permission doesn't exist (failure case)
+      expect(result === 'failure').to.be.true;
+    }
+  } else {
+    // this block can be reached only if the permission doesn't exist (failure case)
+    expect(result === 'failure').to.be.true;
+  }
+};
+
+export const validatePermission = (
+  tableName,
+  role,
+  query,
+  check,
+  result,
+  columns,
+  allowUpsert
+) => {
+  const reqBody = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'hdb_table',
+        schema: 'hdb_catalog',
+      },
+      columns: ['*.*'],
+      where: {
+        table_schema: 'public',
+      },
+    },
+  };
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    cy.log(JSON.stringify(response));
+    const tableSchema = response.body.find(
+      table => table.table_name === tableName
+    );
+    handlePermValidationResponse(
+      tableSchema,
+      role,
+      query,
+      check,
+      result,
+      columns,
+      allowUpsert
+    );
+  });
+};
+// ********************** Validate Migration mode ******************
+
+export const validateMigrationMode = mode => {
+  cy.request({
+    method: 'GET',
+    url: migrateModeUrl,
+  }).then(response => {
+    expect(response.body.migration_mode == mode.toString()).to.be.true; // eslint-disable-line
+  });
+};

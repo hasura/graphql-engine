@@ -1,0 +1,429 @@
+import { makeMigrationCall, loadUntrackedRelations } from '../DataActions';
+import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
+import { showErrorNotification } from '../Notification';
+import suggestedRelationshipsRaw from './autoRelations';
+
+export const REL_SET_TYPE = 'ModifyTable/REL_SET_TYPE';
+export const REL_SET_RTABLE = 'ModifyTable/REL_SET_RTABLE';
+export const REL_SET_LCOL = 'ModifyTable/REL_SET_LCOL';
+export const REL_SET_RCOL = 'ModifyTable/REL_SET_RCOL';
+export const REL_RESET = 'ModifyTable/REL_RESET';
+export const REL_SELECTION_CHANGED = 'ModifyTable/REL_SELECTION_CHANGED';
+export const REL_NAME_CHANGED = 'ModifyTable/REL_NAME_CHANGED';
+export const REL_ADD_NEW_CLICKED = 'ModifyTable/REL_ADD_NEW_CLICKED';
+export const REL_SET_MANUAL_COLUMNS = 'ModifyTable/REL_SET_MANUAL_COLUMNS';
+export const REL_ADD_MANUAL_CLICKED = 'ModifyTable/REL_ADD_MANUAL_CLICKED';
+
+const resetRelationshipForm = () => ({ type: REL_RESET });
+const addNewRelClicked = () => ({ type: REL_ADD_NEW_CLICKED });
+const relManualAddClicked = () => ({ type: REL_ADD_MANUAL_CLICKED });
+const relSelectionChanged = selectedRelationship => ({
+  type: REL_SELECTION_CHANGED,
+  rel: selectedRelationship,
+});
+const relNameChanged = relName => ({
+  type: REL_NAME_CHANGED,
+  relName,
+});
+const relTypeChange = isObjRel => ({
+  type: REL_SET_TYPE,
+  isObjRel: isObjRel === 'true',
+});
+const relRTableChange = rTable => ({ type: REL_SET_RTABLE, rTable });
+
+const deleteRelMigrate = (tableName, relName) => (dispatch, getState) => {
+  const currentSchema = getState().tables.currentSchema;
+  const relChangesUp = [
+    {
+      type: 'drop_relationship',
+      args: {
+        table: { name: tableName, schema: currentSchema },
+        relationship: relName,
+      },
+    },
+  ];
+  // pending
+  const relChangesDown = [
+    {
+      type: 'drop_relationship',
+      args: {
+        table: { name: tableName, schema: currentSchema },
+        relationship: relName,
+      },
+    },
+  ];
+
+  // Apply migrations
+  const migrationName = `drop_relationship_${relName}_${currentSchema}_table_${tableName}`;
+
+  const requestMsg = 'Deleting Relationship...';
+  const successMsg = 'Relationship deleted';
+  const errorMsg = 'Deleting relationship failed';
+
+  const customOnSuccess = () => {};
+  const customOnError = () => {};
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    relChangesUp,
+    relChangesDown,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+const addRelNewFromStateMigrate = () => (dispatch, getState) => {
+  const state = getState().tables.modify.relAdd;
+  const currentSchema = getState().tables.currentSchema;
+  const isObjRel = state.isObjRel;
+  const relChangesUp = [
+    {
+      type: isObjRel
+        ? 'create_object_relationship'
+        : 'create_array_relationship',
+      args: {
+        name: state.name,
+        table: { name: state.tableName, schema: currentSchema },
+        using: isObjRel
+          ? { foreign_key_constraint_on: state.lcol }
+          : {
+            foreign_key_constraint_on: {
+              table: { name: state.rTable, schema: currentSchema },
+              column: state.rcol,
+            },
+          },
+      },
+    },
+  ];
+  const relChangesDown = [
+    {
+      type: isObjRel
+        ? 'create_object_relationship'
+        : 'create_array_relationship',
+      args: {
+        name: state.name,
+        table: { name: state.tableName, schema: currentSchema },
+        using: isObjRel
+          ? { foreign_key_constraint_on: state.lcol }
+          : {
+            foreign_key_constraint_on: {
+              table: { name: state.rTable, schema: currentSchema },
+              column: state.rcol,
+            },
+          },
+      },
+    },
+  ];
+
+  // Apply migrations
+  const migrationName = `add_relationship_${
+    state.name
+  }_table_${currentSchema}_${state.tableName}`;
+
+  const requestMsg = 'Adding Relationship...';
+  const successMsg = 'Relationship created';
+  const errorMsg = 'Creating relationship failed';
+
+  const customOnSuccess = () => {
+    dispatch(resetRelationshipForm());
+  };
+  const customOnError = () => {};
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    relChangesUp,
+    relChangesDown,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+const relTableChange = tableName => (dispatch, getState) => {
+  // set table name state
+  dispatch({ type: REL_SET_RTABLE, rTable: tableName });
+  // fetch columns of the selected table
+  const tableSchema = getState().tables.allSchemas.find(
+    t => t.table_name === tableName
+  );
+  const tableColumns = tableSchema.columns;
+  dispatch({ type: REL_SET_MANUAL_COLUMNS, data: tableColumns });
+};
+
+const addRelMigrate = (tableName, name, lcol, rcol, form) => (
+  dispatch,
+  getState
+) => {
+  const state = getState().tables.modify.relAdd;
+  const currentSchema = getState().tables.currentSchema;
+  const isObjRel = state.isObjRel;
+  const relChangesUp = [
+    {
+      type: isObjRel
+        ? 'create_object_relationship'
+        : 'create_array_relationship',
+      args: {
+        name,
+        table: { name: tableName, schema: currentSchema },
+        using: isObjRel
+          ? { foreign_key_constraint_on: lcol }
+          : {
+            foreign_key_constraint_on: {
+              table: { name: state.rTable, schema: currentSchema },
+              column: rcol,
+            },
+          },
+      },
+    },
+  ];
+  const relChangesDown = [
+    {
+      type: 'drop_relationship',
+      args: {
+        name,
+        table: { name: tableName, schema: currentSchema },
+      },
+    },
+  ];
+
+  // Apply migrations
+  const migrationName = `create_relationship_${name}_${currentSchema}_table_${tableName}`;
+
+  const requestMsg = 'Adding Relationship...';
+  const successMsg = 'Relationship created';
+  const errorMsg = 'Creating relationship failed';
+
+  const customOnSuccess = () => {
+    form.reset();
+  };
+  const customOnError = () => {};
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    relChangesUp,
+    relChangesDown,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+const addRelViewMigrate = tableName => (dispatch, getState) => {
+  const state = getState().tables.modify.relAdd;
+  const currentSchema = getState().tables.currentSchema;
+  const isObjRel = state.isObjRel;
+  const name = state.name;
+  const lcol = state.lcol;
+  const rcol = state.rcol;
+  const columnMapping = {};
+
+  columnMapping[lcol] = rcol;
+  const relChangesUp = [
+    {
+      type: isObjRel
+        ? 'create_object_relationship'
+        : 'create_array_relationship',
+      args: {
+        name,
+        table: { name: tableName, schema: currentSchema },
+        using: {
+          manual_configuration: {
+            remote_table: { name: state.rTable, schema: currentSchema },
+            column_mapping: columnMapping,
+          },
+        },
+      },
+    },
+  ];
+  const relChangesDown = [
+    {
+      type: 'drop_relationship',
+      args: {
+        name,
+        table: { name: tableName, schema: currentSchema },
+      },
+    },
+  ];
+
+  // Apply migrations
+  const migrationName = `create_relationship_${name}_${currentSchema}_table_${tableName}`;
+
+  const requestMsg = 'Adding Relationship...';
+  const successMsg = 'Relationship created';
+  const errorMsg = 'Creating relationship failed';
+
+  const customOnSuccess = () => {};
+  const customOnError = () => {};
+
+  // perform validations and make call
+  if (!name.trim()) {
+    dispatch(
+      showErrorNotification(
+        'Error adding relationship!',
+        'Please select a name for the relationship',
+        '',
+        { custom: 'Relationship name cannot be empty' }
+      )
+    );
+  } else if (!gqlPattern.test(name)) {
+    dispatch(
+      showErrorNotification(
+        gqlRelErrorNotif[0],
+        gqlRelErrorNotif[1],
+        gqlRelErrorNotif[2],
+        gqlRelErrorNotif[3]
+      )
+    );
+  } else {
+    makeMigrationCall(
+      dispatch,
+      getState,
+      relChangesUp,
+      relChangesDown,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  }
+};
+
+const sanitizeRelName = arg =>
+  arg
+    .trim()
+    .toLowerCase()
+    .replace(/([^A-Z]+)(.)/gi, function modifyRel() {
+      return arguments[2].toUpperCase();
+    });
+
+const formRelName = relMeta => {
+  let finalRelName;
+  // remove special chars and change first letter after underscore to uppercase
+  const targetTable = sanitizeRelName(relMeta.rTable);
+  if (relMeta.isObjRel) {
+    const objLCol = sanitizeRelName(relMeta.lcol);
+    finalRelName = `${targetTable}By${objLCol}`;
+  } else {
+    const arrRCol = sanitizeRelName(relMeta.rcol);
+    finalRelName =
+      `${
+        targetTable
+        // (targetTable[targetTable.length - 1] !== 's' ? 's' : '') + // add s only if the last char is not s
+      }s` + `By${arrRCol}`;
+  }
+  return finalRelName;
+};
+
+const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
+  const tableRelMapping = allSchemas.map(table => ({
+    table_name: table.table_name,
+    relations: suggestedRelationshipsRaw(table.table_name, allSchemas),
+  }));
+  const bulkRelTrack = [];
+  tableRelMapping.map(table => {
+    // check relations.obj and relations.arr length and form queries
+    if (table.relations.objectRel.length) {
+      table.relations.objectRel.map(indivObjectRel => {
+        bulkRelTrack.push({
+          type: 'create_object_relationship',
+          args: {
+            name: formRelName(indivObjectRel), // name logic
+            table: {
+              name: indivObjectRel.tableName,
+              schema: currentSchema,
+            },
+            using: { foreign_key_constraint_on: indivObjectRel.lcol },
+          },
+        });
+      });
+    }
+    if (table.relations.arrayRel.length) {
+      table.relations.arrayRel.map(indivArrayRel => {
+        bulkRelTrack.push({
+          type: 'create_array_relationship',
+          args: {
+            name: formRelName(indivArrayRel), // name logic
+            table: {
+              name: indivArrayRel.tableName,
+              schema: currentSchema,
+            },
+            using: {
+              foreign_key_constraint_on: {
+                table: {
+                  name: indivArrayRel.rTable,
+                  schema: currentSchema,
+                },
+                column: indivArrayRel.rcol,
+              },
+            },
+          },
+        });
+      });
+    }
+  });
+  return bulkRelTrack;
+};
+
+const autoTrackRelations = () => (dispatch, getState) => {
+  const allSchemas = getState().tables.allSchemas;
+  const currentSchema = getState().tables.currentSchema;
+  const bulkRelTrack = getAllUnTrackedRelations(allSchemas, currentSchema);
+  // Apply migrations
+  const migrationName = 'track_all_relationships';
+
+  const requestMsg = 'Adding Relationship...';
+  const successMsg = 'Relationship created';
+  const errorMsg = 'Creating relationship failed';
+  const customOnSuccess = () => {
+    dispatch(loadUntrackedRelations());
+  };
+  const customOnError = () => {};
+
+  const relChangesDown = [];
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    bulkRelTrack,
+    relChangesDown,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+export {
+  deleteRelMigrate,
+  addNewRelClicked,
+  relTypeChange,
+  relRTableChange,
+  addRelMigrate,
+  addRelViewMigrate,
+  relTableChange,
+  relSelectionChanged,
+  addRelNewFromStateMigrate,
+  relNameChanged,
+  resetRelationshipForm,
+  relManualAddClicked,
+  autoTrackRelations,
+  formRelName,
+  getAllUnTrackedRelations,
+};
