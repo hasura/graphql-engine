@@ -41,6 +41,7 @@ library
                      , transformers-base
                      , http-types
                      , attoparsec
+                     , attoparsec-iso8601 >= 1.0
                      , time
                      , scientific
                      , Spock-core
@@ -48,10 +49,7 @@ library
                      , optparse-applicative
                      , wai-extra
                      , containers
-                     , hashtables
-                     , resource-pool
                      , monad-control
-                     , regex-tdfa
                      , wai-logger
                      , fast-logger
                      , wai
@@ -60,7 +58,6 @@ library
 
                      -- Encoder related
                      , uuid
-                     , reinterpret-cast
                      , vector
 
                      -- Logging related
@@ -69,13 +66,6 @@ library
 
                      -- hashing for logging
                      , cryptonite
-
-                     -- Transaction related
-                     , focus
-                     , list-t
-                     , stm
-                     , stm-containers
-                     , alarmclock
 
                      -- Server related
                      , warp
@@ -100,7 +90,6 @@ library
                      , connection
 
                      --
-                     , protolude
                      , data-has
 
   exposed-modules:     Hasura.Server.App
