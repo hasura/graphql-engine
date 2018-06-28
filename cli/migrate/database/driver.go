@@ -65,15 +65,15 @@ type Driver interface {
 	// Reset Migration Query Args
 	ResetQuery()
 
-	// SetVersion saves version and dirty state.
+	// InsertVersion saves version
 	// Migrate will call this function before and after each call to Run.
 	// version must be >= -1. -1 means NilVersion.
-	InsertVersion(version int) error
+	InsertVersion(version int64) error
 
 	// SetVersion saves version and dirty state.
 	// Migrate will call this function before and after each call to Run.
 	// version must be >= -1. -1 means NilVersion.
-	RemoveVersion(version int) error
+	RemoveVersion(version int64) error
 
 	// Version returns the currently active version and if the database is dirty.
 	// When no migration has been applied, it must return version -1.

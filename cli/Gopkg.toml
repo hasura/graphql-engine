@@ -24,7 +24,6 @@
 #   go-tests = true
 #   unused-packages = true
 
-
 [[constraint]]
   name = "github.com/Masterminds/semver"
   version = "1.4.2"

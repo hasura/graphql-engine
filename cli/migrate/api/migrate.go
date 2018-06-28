@@ -90,7 +90,7 @@ func MigrateAPI(c *gin.Context) {
 		}
 
 		// Rescan file system
-		err = t.SourceReScan()
+		err = t.ReScan()
 		if err != nil {
 			deleteErr := cmd.DeleteCmd(dirPtr, timestamp)
 			if deleteErr != nil {

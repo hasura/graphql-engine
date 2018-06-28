@@ -128,10 +128,6 @@ func New(sourceUrl string, databaseUrl string, cmd bool) (*Migrate, error) {
 	}
 
 	m.status = NewMigrations()
-	err = m.calculateStatus()
-	if err != nil {
-		return nil, err
-	}
 
 	return m, nil
 }
@@ -146,13 +142,20 @@ func newCommon(cmd bool) *Migrate {
 	}
 }
 
-func (m *Migrate) SourceReScan() error {
+func (m *Migrate) ReScan() error {
 	sourceDrv, err := source.Open(m.sourceURL)
 	if err != nil {
 		log.Debug(err)
 		return err
 	}
 	m.sourceDrv = sourceDrv
+
+	databaseDrv, err := database.Open(m.databaseURL, m.isCMD)
+	if err != nil {
+		log.Debug(err)
+		return err
+	}
+	m.databaseDrv = databaseDrv
 
 	err = m.calculateStatus()
 	if err != nil {
@@ -173,6 +176,7 @@ func (m *Migrate) Close() (source error) {
 }
 
 func (m *Migrate) calculateStatus() (err error) {
+	m.status = NewMigrations()
 	err = m.readStatusFromSource()
 	if err != nil {
 		return err
@@ -257,8 +261,12 @@ func (m *Migrate) newMigrationStatus(version uint64, driverType string) *Migrati
 	return migrStatus
 }
 
-func (m *Migrate) GetStatus() *Status {
-	return m.status
+func (m *Migrate) GetStatus() (*Status, error) {
+	err := m.calculateStatus()
+	if err != nil {
+		return nil, err
+	}
+	return m.status, nil
 }
 
 func (m *Migrate) GetSetting(name string) (string, error) {
@@ -782,12 +790,12 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 
 				if int64(migr.Version) == migr.TargetVersion {
 					// Insert Version number into the table
-					if err := m.databaseDrv.InsertVersion(int(migr.Version)); err != nil {
+					if err := m.databaseDrv.InsertVersion(int64(migr.Version)); err != nil {
 						return err
 					}
 				} else {
 					// Delete Version number from the table
-					if err := m.databaseDrv.RemoveVersion(int(migr.Version)); err != nil {
+					if err := m.databaseDrv.RemoveVersion(int64(migr.Version)); err != nil {
 						return err
 					}
 				}

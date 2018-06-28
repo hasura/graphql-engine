@@ -2,10 +2,10 @@
 
 
 [[projects]]
-  name = "github.com/Masterminds/semver"
+  name = "github.com/Microsoft/go-winio"
   packages = ["."]
-  revision = "c7af12943936e8c39859482e61f0574c2fd7fc75"
-  version = "v1.4.2"
+  revision = "7da180ee92d8bd8bb8c37fc560e673e6557c392f"
+  version = "v0.4.7"
 
 [[projects]]
   name = "github.com/briandowns/spinner"
@@ -24,6 +24,60 @@
   packages = ["md2man"]
   revision = "20f5889cbdc3c73dbd2862796665e7c465ade7d1"
   version = "v1.0.8"
+
+[[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
+
+[[projects]]
+  name = "github.com/docker/distribution"
+  packages = [
+    "digest",
+    "reference"
+  ]
+  revision = "48294d928ced5dd9b378f7fd7c6f5da3ff3f2c89"
+  version = "v2.6.2"
+
+[[projects]]
+  name = "github.com/docker/docker"
+  packages = [
+    "api/types",
+    "api/types/blkiodev",
+    "api/types/container",
+    "api/types/events",
+    "api/types/filters",
+    "api/types/mount",
+    "api/types/network",
+    "api/types/reference",
+    "api/types/registry",
+    "api/types/strslice",
+    "api/types/swarm",
+    "api/types/time",
+    "api/types/versions",
+    "api/types/volume",
+    "client",
+    "pkg/tlsconfig"
+  ]
+  revision = "092cba3727bb9b4a2f0e922cd6c0f93ea270e363"
+  version = "v1.13.1"
+
+[[projects]]
+  name = "github.com/docker/go-connections"
+  packages = [
+    "nat",
+    "sockets",
+    "tlsconfig"
+  ]
+  revision = "3ede32e2033de7505e6500d6c868c2b9ed9f169d"
+  version = "v0.3.0"
+
+[[projects]]
+  name = "github.com/docker/go-units"
+  packages = ["."]
+  revision = "47565b4f722fb6ceae66b95f853feed578a4a51c"
+  version = "v0.3.3"
 
 [[projects]]
   name = "github.com/elazarl/go-bindata-assetfs"
@@ -116,6 +170,15 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/lib/pq"
+  packages = [
+    ".",
+    "oid"
+  ]
+  revision = "90697d60dd844d5ef6ff15135d0203f65d2f53b8"
+
+[[projects]]
+  branch = "master"
   name = "github.com/lunixbochs/vtclean"
   packages = ["."]
   revision = "2d01aacdc34a083dca635ba869909f5fc0cd4f41"
@@ -185,6 +248,12 @@
   version = "v0.8.0"
 
 [[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/russross/blackfriday"
   packages = ["."]
   revision = "55d61fa8aa702f59229e6cff85793c22e580eaf5"
@@ -192,7 +261,10 @@
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
-  packages = ["."]
+  packages = [
+    ".",
+    "hooks/test"
+  ]
   revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
   version = "v1.0.5"
 
@@ -245,6 +317,12 @@
   version = "v1.0.2"
 
 [[projects]]
+  name = "github.com/stretchr/testify"
+  packages = ["assert"]
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
+
+[[projects]]
   name = "github.com/ugorji/go"
   packages = ["codec"]
   revision = "c88ee250d0221a57af388746f5cf03768c21d6e2"
@@ -259,7 +337,11 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = [
+    "context",
+    "context/ctxhttp",
     "idna",
+    "internal/socks",
+    "proxy",
     "publicsuffix"
   ]
   revision = "afe8f62b1d6bbd81f31868121a50b06d8188e1f9"
@@ -309,6 +391,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4d9150aac2625f1969be5c783ac30587d3cddf4dcca34b4bfbe8c1ac33c71d25"
+  inputs-digest = "7ec74b32df538feff4b0ec0f0c2594271d5ec472d10aaa4802e8ae889d4cc87c"
   solver-name = "gps-cdcl"
   solver-version = 1
