@@ -30,4 +30,4 @@ Read complete docs [here](docs/hasura.md).
 
 ## Contributing
 
-Checkout the [contributing guide](CONTRIBUTING.md)
+Checkout the [contributing guide](CONTRIBUTING.md).
