@@ -7,8 +7,10 @@ import (
 	"path/filepath"
 )
 
-// https://gist.github.com/svett/424e6784facc0ba907ae
+// from  https://gist.github.com/svett/424e6784facc0ba907ae
 
+// Unzip unzips the archive to target. Both archive and target should be paths
+// in the filesystem. target is created if it doesn't exist already.
 func Unzip(archive, target string) error {
 	reader, err := zip.OpenReader(archive)
 	if err != nil {

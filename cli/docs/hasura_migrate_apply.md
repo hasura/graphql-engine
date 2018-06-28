@@ -15,9 +15,9 @@ hasura migrate apply [flags]
 ```
       --down string      apply all or N down migration steps
   -h, --help             help for apply
-      --type string      migrate the database to a specific version specified by the timestamp
+      --type string      type of migration (up, down) to be used with version flag (default "up")
       --up string        apply all or N up migration steps
-      --version string   migrate the database to a specific version specified by the timestamp
+      --version string   migrate the database to a specific version
 ```
 
 ### Options inherited from parent commands

@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
+func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &metadataApplyOptions{
 		EC:         ec,
 		actionType: "apply",
@@ -22,7 +22,7 @@ func NewMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura metadata apply`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.Run()
+			return opts.run()
 		},
 	}
 
@@ -35,7 +35,7 @@ type metadataApplyOptions struct {
 	actionType string
 }
 
-func (o *metadataApplyOptions) Run() error {
+func (o *metadataApplyOptions) run() error {
 	dbURL, err := url.Parse(o.EC.Config.Endpoint)
 	if err != nil {
 		return errors.Wrap(err, "error parsing Endpoint")

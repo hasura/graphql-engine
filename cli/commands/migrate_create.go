@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
+func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &migrateCreateOptions{
 		EC: ec,
 	}
@@ -22,7 +22,7 @@ func NewMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Args:         cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.name = args[0]
-			return opts.Run()
+			return opts.run()
 		},
 	}
 
@@ -35,7 +35,7 @@ type migrateCreateOptions struct {
 	name string
 }
 
-func (o *migrateCreateOptions) Run() error {
+func (o *migrateCreateOptions) run() error {
 	timestamp := getTime()
 	err := mig.CreateCmd(o.EC.MigrationDir, timestamp, o.name)
 	if err != nil {

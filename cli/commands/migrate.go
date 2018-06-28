@@ -20,9 +20,9 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 	}
 	migrateCmd.AddCommand(
-		NewMigrateApplyCmd(ec),
-		NewMigrateStatusCmd(ec),
-		NewMigrateCreateCmd(ec),
+		newMigrateApplyCmd(ec),
+		newMigrateStatusCmd(ec),
+		newMigrateCreateCmd(ec),
 	)
 	f := migrateCmd.PersistentFlags()
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
