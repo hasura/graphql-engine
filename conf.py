@@ -37,13 +37,13 @@ BASE_DOMAIN = os.getenv("BASE_DOMAIN", "development")
 ALGOLIA_SECRETS = {
     "development": {
         "APPLICATION_ID": "WCBB1VVLRC",
-        "APPLICATION_SEARCH_KEY": "19a7f1bbd9ca23d0b8ae2b5e655ebeb9",
-        "ALGOLIA_INDEX_NAME": "stg_docs_search",
+        "APPLICATION_SEARCH_KEY": "a50259f1da0f835fbb5e4d421b97b2de",
+        "ALGOLIA_INDEX_NAME": "stg_graphql_docs_search",
     },
     "production": {
         "APPLICATION_ID": "WCBB1VVLRC",
-        "APPLICATION_SEARCH_KEY": "0ca574a476e8fe0db465410151288730",
-        "ALGOLIA_INDEX_NAME": "docs_search",
+        "APPLICATION_SEARCH_KEY": "dea0d2c67378878fad5678396a532c95",
+        "ALGOLIA_INDEX_NAME": "graphql_docs_search",
     }
 }
 
