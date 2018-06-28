@@ -12,16 +12,16 @@ module Hasura.GraphQL.Validate.Field
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                         as J
-import qualified Data.Aeson.Casing                  as J
-import qualified Data.Aeson.TH                      as J
-import qualified Data.HashMap.Strict                as Map
-import qualified Data.List                          as L
-import qualified Data.Sequence                      as Seq
-import qualified Data.Text                          as T
-import qualified Hasura.GraphQL.NonEmptySeq         as NE
-import qualified Hasura.GraphQL.OrderedMap          as OMap
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Data.Aeson                          as J
+import qualified Data.Aeson.Casing                   as J
+import qualified Data.Aeson.TH                       as J
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.HashMap.Strict.InsOrd.Extended as OMap
+import qualified Data.List                           as L
+import qualified Data.Sequence                       as Seq
+import qualified Data.Sequence.NonEmpty              as NE
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.InputValue

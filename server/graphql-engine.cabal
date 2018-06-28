@@ -89,6 +89,9 @@ library
                      , http-client-tls
                      , connection
 
+                     -- ordered map
+                     , insert-ordered-containers
+
                      --
                      , data-has
 
@@ -128,8 +131,6 @@ library
                      , Hasura.GraphQL.Execute
                      , Hasura.GraphQL.Execute.Result
                      , Hasura.GraphQL.Schema
-                     , Hasura.GraphQL.OrderedMap
-                     , Hasura.GraphQL.NonEmptySeq
                      , Hasura.GraphQL.Utils
                      , Hasura.GraphQL.Validate.Types
                      , Hasura.GraphQL.Validate.Context
@@ -143,6 +144,8 @@ library
                      , Hasura.GraphQL.Resolve.Select
 
                      , Data.Text.Extended
+                     , Data.Sequence.NonEmpty
+                     , Data.HashMap.Strict.InsOrd.Extended
 
                      , Hasura.SQL.DML
                      , Hasura.SQL.Types
