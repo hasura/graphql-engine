@@ -3,7 +3,7 @@ PARENT_DIR := $(shell dirname $(PWD))
 VERSION := $(shell build/get-version.sh)
 OUTPUT_DIR := _output
 
-.PHONY: build test clean assets all
+.PHONY: build test clean assets all docs
 
 # compile assets
 assets:
@@ -27,6 +27,11 @@ build:
 # run tests
 test:
 	go test ./...
+
+# generate docs
+docs:
+	rm -fr docs
+	go run cmd/hasura/hasura.go docs --type md --directory docs
 
 # clean the output directory
 clean:
