@@ -11,14 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	UP_MIGRATION_HELP      = "apply all or N up migration steps"
-	DOWN_MIGRATION_HELP    = "apply all or N down migration steps"
-	VERSION_MIGRATION_HELP = "migrate the database to a specific version specified by the timestamp"
-)
-
-const FLAG_NOT_SET = ""
-
 func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &migrateApplyOptions{
 		EC: ec,
@@ -33,10 +25,10 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	f := migrateApplyCmd.Flags()
 
-	f.StringVar(&opts.upMigration, "up", FLAG_NOT_SET, UP_MIGRATION_HELP)
-	f.StringVar(&opts.downMigration, "down", FLAG_NOT_SET, DOWN_MIGRATION_HELP)
-	f.StringVar(&opts.versionMigration, "version", FLAG_NOT_SET, VERSION_MIGRATION_HELP)
-	f.StringVar(&opts.typeMigration, "type", FLAG_NOT_SET, VERSION_MIGRATION_HELP)
+	f.StringVar(&opts.upMigration, "up", "", "apply all or N up migration steps")
+	f.StringVar(&opts.downMigration, "down", "", "apply all or N down migration steps")
+	f.StringVar(&opts.versionMigration, "version", "", "migrate the database to a specific version")
+	f.StringVar(&opts.migrationType, "type", "up", "type of migration (up, down) to be used with version flag")
 	return migrateApplyCmd
 }
 
@@ -46,11 +38,11 @@ type migrateApplyOptions struct {
 	upMigration      string
 	downMigration    string
 	versionMigration string
-	typeMigration    string
+	migrationType    string
 }
 
 func (o *migrateApplyOptions) run() error {
-	migrationType, step, err := getMigrationTypeAndStep(o.upMigration, o.downMigration, o.versionMigration, o.typeMigration)
+	migrationType, step, err := getMigrationTypeAndStep(o.upMigration, o.downMigration, o.versionMigration, o.migrationType)
 	if err != nil {
 		return errors.Wrap(err, "error validating flags")
 	}
@@ -75,24 +67,25 @@ func (o *migrateApplyOptions) run() error {
 	return nil
 }
 
-//Only one flag out of up,down and goto can be set at a time. This function checks whether that is the case and returns an error is not
-func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, typeMigration string) (string, int64, error) {
+// Only one flag out of up, down and version can be set at a time. This function
+// checks whether that is the case and returns an error is not
+func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migrationType string) (string, int64, error) {
 	var flagCount = 0
 	var stepString = "all"
 	var migrationName = "up"
-	if upMigration != FLAG_NOT_SET {
+	if upMigration != "" {
 		stepString = upMigration
 		flagCount++
 	}
-	if downMigration != FLAG_NOT_SET {
+	if downMigration != "" {
 		migrationName = "down"
 		stepString = downMigration
 		flagCount++
 	}
-	if versionMigration != FLAG_NOT_SET {
+	if versionMigration != "" {
 		migrationName = "version"
 		stepString = versionMigration
-		if typeMigration != FLAG_NOT_SET {
+		if migrationType == "down" {
 			stepString = "-" + stepString
 		}
 		flagCount++
