@@ -18,7 +18,7 @@ func NewMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "Display current status of migrations on a database",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.Run()
+			return opts.run()
 		},
 	}
 
@@ -29,7 +29,7 @@ type migrateStatusOptions struct {
 	EC *cli.ExecutionContext
 }
 
-func (o *migrateStatusOptions) Run() error {
+func (o *migrateStatusOptions) run() error {
 	dbURL, err := url.Parse(o.EC.Config.Endpoint)
 	if err != nil {
 		return errors.Wrap(err, "error parsing Endpoint")

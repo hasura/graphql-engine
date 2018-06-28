@@ -28,7 +28,7 @@ func NewMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "Apply migrations on the database",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.Run()
+			return opts.run()
 		},
 	}
 	f := migrateApplyCmd.Flags()
@@ -49,7 +49,7 @@ type migrateApplyOptions struct {
 	typeMigration    string
 }
 
-func (o *migrateApplyOptions) Run() error {
+func (o *migrateApplyOptions) run() error {
 	migrationType, step, err := getMigrationTypeAndStep(o.upMigration, o.downMigration, o.versionMigration, o.typeMigration)
 	if err != nil {
 		return errors.Wrap(err, "error validating flags")

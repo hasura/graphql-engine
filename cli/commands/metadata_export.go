@@ -22,7 +22,7 @@ func NewMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura metadata export`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.Run()
+			return opts.run()
 		},
 	}
 
@@ -35,7 +35,7 @@ type metadataExportOptions struct {
 	actionType string
 }
 
-func (o *metadataExportOptions) Run() error {
+func (o *metadataExportOptions) run() error {
 	dbURL, err := url.Parse(o.EC.Config.Endpoint)
 	if err != nil {
 		return errors.Wrap(err, "error parsing Endpoint")
