@@ -187,6 +187,7 @@ pgColTyToScalar = \case
   PGBoolean -> "Boolean"
   PGFloat   -> "Float"
   PGText    -> "String"
+  PGVarchar -> "String"
   t         -> T.pack $ show t
 
 mkScalarTy :: PGColType -> G.NamedType
