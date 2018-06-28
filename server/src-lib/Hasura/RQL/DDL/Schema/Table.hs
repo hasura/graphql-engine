@@ -206,6 +206,11 @@ unTrackExistingTableOrViewP1 ut@(UntrackTable vn _) = do
 unTrackExistingTableOrViewP2 :: (P2C m)
                              => UntrackTable -> TableInfo -> m RespBody
 unTrackExistingTableOrViewP2 (UntrackTable vn cascade) tableInfo = do
+  -- Check if table/view is system defined
+  isSystemDefined <- liftTx isSystemDefinedTx
+  when isSystemDefined $ throw400 NotSupported $
+    vn <<> " is system defined. Untrack not supported"
+
   sc <- askSchemaCache
 
   -- Get Foreign key constraints to this table
@@ -236,13 +241,20 @@ unTrackExistingTableOrViewP2 (UntrackTable vn cascade) tableInfo = do
   return successMsg
   where
     QualifiedTable sn tn = vn
+    isSystemDefinedTx = Q.catchE defaultTxErrorHandler $
+      runIdentity . Q.getRow <$> Q.withQ [Q.sql|
+                   SELECT is_system_defined
+                     FROM hdb_catalog.hdb_table
+                    WHERE table_schema = $1
+                      AND table_name = $2
+                   |] (sn, tn) False
     getFKeyTables = Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
                     SELECT constraint_name,
                            table_schema,
                            table_name
                      FROM  hdb_catalog.hdb_foreign_key_constraint
                      WHERE ref_table_table_schema = $1
-                       AND ref_table =$2
+                       AND ref_table = $2
                    |] (sn, tn) False
     filterTables tables tc = flip filter tables $ \(_, s, t) ->
       isJust $ M.lookup (QualifiedTable s t) tc
