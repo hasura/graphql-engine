@@ -16,6 +16,7 @@ import {
   SET_TRACK_TABLE_CHECKED,
 } from './Actions';
 import { modalOpen, modalClose } from './Actions';
+import globals from '../../../../Globals';
 
 const migrationTip = (
   <Tooltip id="tooltip-migration">
@@ -192,7 +193,7 @@ const RawSQL = ({
             }}
           />
           <hr />
-          {migrationMode ? (
+          {migrationMode && globals.consoleMode === 'cli' ? (
             <div>
               <input
                 checked={isMigrationChecked}

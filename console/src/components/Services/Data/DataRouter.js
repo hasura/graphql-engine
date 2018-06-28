@@ -1,6 +1,7 @@
 import React from 'react';
 // import {push} fropm 'react-router-redux';
 import { Route, IndexRedirect } from 'react-router';
+import globals from '../../../Globals';
 
 import {
   schemaConnector,
@@ -32,7 +33,8 @@ const makeDataRouter = (
   store,
   composeOnEnterHooks,
   requireSchema,
-  migrationRedirects
+  migrationRedirects,
+  consoleModeRedirects
 ) => {
   return (
     <Route
@@ -112,7 +114,7 @@ const makeDataRouter = (
       />
       <Route
         path="migrations"
-        onEnter={requireSchema}
+        onEnter={composeOnEnterHooks([requireSchema, consoleModeRedirects])}
         component={migrationsConnector(connect)}
       />
     </Route>
@@ -163,13 +165,21 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
     }
     cb();
   };
+  const consoleModeRedirects = (nextState, replaceState, cb) => {
+    if (globals.consoleMode === 'hasuradb') {
+      replaceState('/data/schema');
+      cb();
+    }
+    cb();
+  };
   return {
     makeDataRouter: makeDataRouter(
       connect,
       store,
       composeOnEnterHooks,
       requireSchema,
-      migrationRedirects
+      migrationRedirects,
+      consoleModeRedirects
     ),
     requireSchema,
     migrationRedirects,

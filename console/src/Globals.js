@@ -12,6 +12,17 @@ const globals = {
   apiHost: window.__env.apiHost,
   apiPort: window.__env.apiPort,
   dataApiUrl: checkExtraSlashes(window.__env.dataApiUrl),
+  nodeEnv: window.__env.nodeEnv,
+  devDataApiUrl: window.__env.devDataApiUrl,
   accessKey: window.__env.accessKey,
+  consoleMode: window.__env.consoleMode,
 };
+if (globals.consoleMode === 'hasuradb') {
+  const windowUrl = window.location.protocol + '//' + window.location.host;
+  globals.dataApiUrl = windowUrl;
+  if (globals.nodeEnv === 'development') {
+    globals.dataApiUrl = globals.devDataApiUrl;
+  }
+}
+
 export default globals;

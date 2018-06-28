@@ -11,6 +11,7 @@ import {
   loadSchema,
   loadUntrackedSchema,
 } from './DataActions';
+import globals from '../../../Globals';
 
 const DataHeader = ({
   schema,
@@ -31,6 +32,19 @@ const DataHeader = ({
       dispatch(loadUntrackedSchema()),
     ]);
   };
+  let migrationSection = null;
+  if (globals.consoleMode === 'cli') {
+    migrationSection = (
+      <li
+        role="presentation"
+        className={
+          currentLocation.indexOf('migrations') !== -1 ? styles.active : ''
+        }
+      >
+        <Link to={appPrefix + '/migrations'}>Migrations</Link>
+      </li>
+    );
+  }
   return (
     <div>
       <Helmet title={'Data | Hasura'} />
@@ -90,16 +104,7 @@ const DataHeader = ({
               >
                 <Link to={appPrefix + '/sql'}>SQL</Link>
               </li>
-              <li
-                role="presentation"
-                className={
-                  currentLocation.indexOf('migrations') !== -1
-                    ? styles.active
-                    : ''
-                }
-              >
-                <Link to={appPrefix + '/migrations'}>Migrations</Link>
-              </li>
+              {migrationSection}
             </ul>
           </div>
         </div>
