@@ -125,13 +125,6 @@ func New(sourceUrl string, databaseUrl string, cmd bool) (*Migrate, error) {
 	}
 	m.databaseDrv = databaseDrv
 
-	// Check for first migration
-	// FIXME: do we need this here
-	if _, err = m.sourceDrv.First(); err != nil && m.isCMD {
-		log.Debug(err)
-		return m, ErrNoMigrationFiles
-	}
-
 	m.status = NewMigrations()
 
 	return m, nil
