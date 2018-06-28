@@ -44,7 +44,7 @@ const (
 )
 
 // version is set at build time, denotes the CLI version.
-var version string
+var version = "v0.0.0-unset"
 
 // HasuraGraphQLConfig has the config values required to contact the server.
 type HasuraGraphQLConfig struct {
@@ -128,6 +128,9 @@ func (ec *ExecutionContext) Prepare() error {
 
 	// set logger
 	ec.setupLogger()
+
+	// populate version
+	ec.setVersion()
 
 	// setup global config directory
 	err := ec.setupGlobalConfigDir()
@@ -342,12 +345,17 @@ func validateDirectory(dir string) error {
 	return nil
 }
 
-// setVersion sets the version inside context, according to the variable
+// SetVersion sets the version inside context, according to the variable
 // 'version' set during build context.
 func (ec *ExecutionContext) setVersion() {
-	if version != "" && ec.Version != "" {
+	if version != "" && ec.Version == "" {
 		ec.Version = version
 	}
+}
+
+// GetVersion returns the version set in execution context
+func (ec *ExecutionContext) GetVersion() string {
+	return ec.Version
 }
 
 // RenderTextWithContext renders the template text passed as 'in' with the
@@ -364,4 +372,9 @@ func (ec *ExecutionContext) RenderTextWithContext(in string) (out string) {
 		return ""
 	}
 	return b.String()
+}
+
+// GetVersion returns the version set in the package
+func GetVersion() string {
+	return version
 }

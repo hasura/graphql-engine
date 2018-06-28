@@ -7,7 +7,7 @@ import (
 
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gin-gonic/contrib/renders/multitemplate"
-	assets "github.com/hasura/graphql-engine/cli/manifests"
+	"github.com/hasura/graphql-engine/cli/assets"
 )
 
 type binaryFileSystem struct {
