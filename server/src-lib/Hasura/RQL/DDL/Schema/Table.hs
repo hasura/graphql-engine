@@ -209,7 +209,7 @@ unTrackExistingTableOrViewP2 (UntrackTable vn cascade) tableInfo = do
   -- Check if table/view is system defined
   isSystemDefined <- liftTx isSystemDefinedTx
   when isSystemDefined $ throw400 NotSupported $
-    vn <<> " is system defined. Untrack not supported"
+    vn <<> " is system defined, cannot untrack"
 
   sc <- askSchemaCache
 
