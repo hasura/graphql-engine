@@ -16,6 +16,7 @@ const globals = {
   devDataApiUrl: window.__env.devDataApiUrl,
   accessKey: window.__env.accessKey,
   consoleMode: window.__env.consoleMode,
+  urlPrefix: checkExtraSlashes(window.__env.urlPrefix),
 };
 if (globals.consoleMode === 'hasuradb') {
   const windowUrl = window.location.protocol + '//' + window.location.host;

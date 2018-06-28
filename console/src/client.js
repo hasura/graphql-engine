@@ -13,6 +13,7 @@ import { Provider } from 'react-redux';
 import { Router, browserHistory } from 'react-router';
 import { routerMiddleware, syncHistoryWithStore } from 'react-router-redux';
 import { compose, createStore, applyMiddleware } from 'redux';
+import { useBasename } from 'history';
 
 import getRoutes from './routes';
 
@@ -73,7 +74,7 @@ if (__DEVELOPMENT__ && module.hot) {
 // Main routes and rendering
 const main = (
   <Router
-    history={history}
+    history={useBasename(() => history)({ basename: '/console' })}
     routes={getRoutes(store)}
     onUpdate={hashLinkScroll}
   />

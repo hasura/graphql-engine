@@ -3,11 +3,11 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
-import { push } from 'react-router-redux';
+import globals from '../../../../Globals';
 
 import { LISTING_SCHEMA } from '../DataActions';
 
-const appPrefix = '/data';
+const appPrefix = globals.urlPrefix + '/data';
 
 const PageContainer = ({
   schema,

@@ -244,9 +244,10 @@ const RawSQL = ({
             onClick={() => {
               // check migration mode global
               if (migrationMode) {
-                const isMigration = document.getElementById(
+                const checkboxElem = document.getElementById(
                   'migration-checkbox'
-                ).checked;
+                );
+                const isMigration = checkboxElem ? checkboxElem.checked : false;
                 if (!isMigration) {
                   // if migration is not checked, check if the sql text has any of 'create', 'alter', 'drop'
                   const formattedSql = sql.toLowerCase();

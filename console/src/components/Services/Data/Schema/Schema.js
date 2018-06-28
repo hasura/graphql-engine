@@ -22,8 +22,9 @@ import {
 } from '../DataActions';
 import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
 import AutoAddRelationsConnector from './AutoAddRelations';
+import globals from '../../../../Globals';
 
-const appPrefix = '/data';
+const appPrefix = globals.urlPrefix + '/data';
 
 class Schema extends Component {
   componentWillMount() {

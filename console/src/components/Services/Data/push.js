@@ -1,6 +1,7 @@
 import { push } from 'react-router-redux';
+import globals from '../../../Globals';
 
-const appPrefix = '/data';
+const appPrefix = globals.urlPrefix + '/data';
 
 const _push = path => push(appPrefix + path);
 
