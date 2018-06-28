@@ -24,7 +24,7 @@ func testMigrateStatus(t *testing.T, endpoint string, migrationsDir string, expe
 		},
 	}
 
-	err := opts.Run()
+	err := opts.run()
 	if err != nil {
 		t.Fatalf("failed fetching migration status: %v", err)
 	}

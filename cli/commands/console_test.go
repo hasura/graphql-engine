@@ -33,7 +33,7 @@ func TestConsoleCmd(t *testing.T) {
 		opts.WG.Done()
 		opts.WG.Done()
 	}()
-	err := opts.Run()
+	err := opts.run()
 	if err != nil {
 		t.Fatalf("failed running console: %v", err)
 	}

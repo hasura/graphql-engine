@@ -24,7 +24,7 @@ func TestMigrateCreateCmd(t *testing.T) {
 		name: "create_article",
 	}
 
-	err := opts.Run()
+	err := opts.run()
 	if err != nil {
 		t.Fatalf("failed creating migration: %v", err)
 	}

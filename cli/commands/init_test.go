@@ -41,7 +41,7 @@ func TestInitCmd(t *testing.T) {
 			if err != nil {
 				t.Fatalf("%s: prep failed: %v", tc.name, err)
 			}
-			err = tc.opts.Run()
+			err = tc.opts.run()
 			if err != tc.err {
 				t.Fatalf("%s: expected %v, got %v", tc.name, tc.err, err)
 			} else {

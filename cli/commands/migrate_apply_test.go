@@ -25,7 +25,7 @@ func testMigrateApply(t *testing.T, endpoint string, migrationsDir string) {
 		upMigration: "1",
 	}
 
-	err := opts.Run()
+	err := opts.run()
 	if err != nil {
 		t.Fatalf("failed applying migration: %v", err)
 	}
