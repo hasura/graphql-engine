@@ -77,7 +77,8 @@ library
                      , wai-middleware-static
 
                      -- URL parser related
-                     , network-uri
+                     , postgresql-simple-url
+                     , postgresql-simple
 
                      -- String related
                      , case-insensitive
