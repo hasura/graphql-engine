@@ -29,6 +29,7 @@ accessKeyHeader :: T.Text
 accessKeyHeader = "x-hasura-access-key"
 
 -- Parsing postgres database url
+-- from: https://github.com/futurice/postgresql-simple-url/
 parseDatabaseUrl :: String -> Maybe String -> Maybe Q.ConnInfo
 parseDatabaseUrl databaseUrl opts = parseURI databaseUrl >>= uriToConnectInfo opts
 
