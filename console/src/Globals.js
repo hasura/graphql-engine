@@ -26,4 +26,17 @@ if (globals.consoleMode === 'hasuradb') {
   }
 }
 
+// set defaults
+if (!window.__env.urlPrefix) {
+  globals.urlPrefix = '/';
+}
+
+if (!window.__env.consoleMode) {
+  globals.consoleMode = 'hasuradb';
+}
+
+if (!window.__env.accessKey) {
+  globals.accessKey = null;
+}
+
 export default globals;

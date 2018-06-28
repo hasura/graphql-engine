@@ -47,7 +47,7 @@ export default class Html extends Component {
                 consoleMode: '${process.env.CONSOLE_MODE}',
                 nodeEnv: '${process.env.NODE_ENV}',
                 devDataApiUrl: '${process.env.DEV_DATA_API_URL}',
-                urlPrefix: '/console'
+                urlPrefix: '${process.env.URL_PREFIX}'
               };`,
             }}
           />

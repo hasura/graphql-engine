@@ -18,6 +18,7 @@ import { useBasename } from 'history';
 import getRoutes from './routes';
 
 import reducer from './reducer';
+import globals from './Globals';
 
 // Create the store
 let _finalCreateStore;
@@ -74,7 +75,7 @@ if (__DEVELOPMENT__ && module.hot) {
 // Main routes and rendering
 const main = (
   <Router
-    history={useBasename(() => history)({ basename: '/console' })}
+    history={useBasename(() => history)({ basename: globals.urlPrefix })}
     routes={getRoutes(store)}
     onUpdate={hashLinkScroll}
   />

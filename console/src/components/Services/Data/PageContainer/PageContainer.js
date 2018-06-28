@@ -7,7 +7,7 @@ import globals from '../../../../Globals';
 
 import { LISTING_SCHEMA } from '../DataActions';
 
-const appPrefix = globals.urlPrefix + '/data';
+const appPrefix = '/data';
 
 const PageContainer = ({
   schema,

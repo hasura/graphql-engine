@@ -38,7 +38,15 @@ const ViewHeader = ({ tableName, tabName, tableComment, currentSchema }) => {
           <i className="fa fa-angle-right" aria-hidden="true" />{' '}
           <Link to={'/data/schema/' + currentSchema}>Schema</Link>{' '}
           <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link to={'/data/schema/' + currentSchema + '/views/' + tableName}>
+          <Link
+            to={
+              '/data/schema/' +
+              currentSchema +
+              '/views/' +
+              tableName +
+              '/browse'
+            }
+          >
             {tableName}
           </Link>{' '}
           <i className="fa fa-angle-right" aria-hidden="true" /> {activeTab}
