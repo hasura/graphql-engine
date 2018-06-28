@@ -1,3 +1,8 @@
+// Package migrate implements migrations on Hasura GraphQL Engine.
+//
+// This package is borrowed from https://github.com/golang-migrate/migrate with
+// additions for Hasura specific yaml file support and a improved Rails-like
+// migration pattern.
 package migrate
 
 import (
