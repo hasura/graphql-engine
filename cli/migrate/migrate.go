@@ -624,7 +624,7 @@ func (m *Migrate) readUp(limit int64, ret chan<- interface{}) {
 
 			// reached end, and didn't apply any migrations
 			if limit > 0 && count == 0 {
-				ret <- os.ErrNotExist
+				ret <- ErrNoChange
 				return
 			}
 
@@ -702,13 +702,19 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 
 	// can't go over limit if already at nil version
 	if from == -1 && limit > 0 {
-		ret <- os.ErrNotExist
+		ret <- ErrNoChange
 		return
 	}
 
 	count := int64(0)
 	for count < limit || limit == -1 {
 		if m.stop() {
+			return
+		}
+
+		err = m.versionDownExists(suint64(from))
+		if err != nil {
+			ret <- err
 			return
 		}
 
@@ -809,10 +815,10 @@ func (m *Migrate) versionUpExists(version uint64) error {
 	// try up migration first
 	directions := m.sourceDrv.GetDirections(version)
 	if !directions[source.Up] && !directions[source.MetaUp] {
-		return fmt.Errorf("%d migration not found", version)
+		return fmt.Errorf("%d up migration not found", version)
 	}
 
-	if directions["up"] {
+	if directions[source.Up] {
 		up, _, _, err := m.sourceDrv.ReadUp(version)
 		if err == nil {
 			defer up.Close()
@@ -847,7 +853,7 @@ func (m *Migrate) versionDownExists(version uint64) error {
 	// try up migration first
 	directions := m.sourceDrv.GetDirections(version)
 	if !directions[source.Down] && !directions[source.MetaDown] {
-		return fmt.Errorf("%d migration not found", version)
+		return fmt.Errorf("%d down migration not found", version)
 	}
 
 	if directions[source.Down] {
