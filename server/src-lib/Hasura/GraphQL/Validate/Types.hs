@@ -22,6 +22,7 @@ module Hasura.GraphQL.Validate.Types
   , ScalarTyInfo(..)
   , DirectiveInfo(..)
   , defaultDirectives
+  , defDirectivesMap
   , defaultSchema
   , TypeInfo(..)
   , isObjTy
@@ -253,6 +254,9 @@ defaultDirectives =
            G.TypeNamed $ G.NamedType $ G.Name "Boolean"
     dirLocs = map G.DLExecutable
               [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
+
+defDirectivesMap :: Map.HashMap G.Name DirectiveInfo
+defDirectivesMap = mapFromL _diName defaultDirectives
 
 data FragDef
   = FragDef

@@ -27,6 +27,7 @@ import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
+import           Hasura.SQL.Value
 
 -- data ScalarInfo
 --   = SIBuiltin !GBuiltin
@@ -119,9 +120,34 @@ withDirectives
   => [G.Directive]
   -> m a
   -> m (Maybe a)
-withDirectives dirs act =
-  -- TODO, use the directives
-  Just <$> act
+withDirectives dirs act = do
+
+  dirDefs <- onLeft (mkMapWith G._dName dirs) $ \dups ->
+    throwVE $ "the following directives are used more than once: " <>
+    showNames dups
+
+  procDirs <- flip Map.traverseWithKey dirDefs $ \name dir ->
+    withPathK (G.unName name) $ do
+      dirInfo <- onNothing (Map.lookup (G._dName dir) defDirectivesMap) $
+                 throwVE $ "unexpected directive: " <> showName name
+      procArgs <- withPathK "args" $ processArgs (_diParams dirInfo)
+                  (G._dArguments dir)
+      getIfArg procArgs
+
+  let shouldSkip    = fromMaybe False $ Map.lookup "skip" procDirs
+      shouldInclude = fromMaybe True $ Map.lookup "include" procDirs
+
+  if not shouldSkip && shouldInclude
+    then Just <$> act
+    else return Nothing
+
+  where
+    getIfArg m = do
+      val <- onNothing (Map.lookup "if" m) $ throw500
+              "missing if argument in the directive"
+      case val of
+        AGScalar _ (Just (PGValBoolean v)) -> return v
+        _ -> throw500 "did not find boolean scalar for if argument"
 
 denormSel
   :: ( MonadReader ValidationCtx m
@@ -146,10 +172,10 @@ denormSel visFrags parObjTyInfo sel = case sel of
 processArgs
   :: ( MonadReader ValidationCtx m
      , MonadError QErr m)
-  => ObjFldInfo
+  => ParamMap
   -> [G.Argument]
   -> m (Map.HashMap G.Name AnnGValue)
-processArgs (ObjFldInfo _ fldName fldParams fldTy) argsL = do
+processArgs fldParams argsL = do
 
   args <- onLeft (mkMapWith G._aName argsL) $ \dups ->
     throwVE $ "the following arguments are defined more than once: " <>
@@ -165,17 +191,14 @@ processArgs (ObjFldInfo _ fldName fldParams fldTy) argsL = do
   forM_ requiredParams $ \argDef -> do
     let param = _iviName argDef
     onNothing (Map.lookup param inpArgs) $ throwVE $ mconcat
-      [ "the required argument ", showName param
-      , " is missing on field ", showName fldName
-      ]
+      [ "the required argument ", showName param, " is missing"]
 
   return inpArgs
 
   where
     getArgTy argName =
       onNothing (_iviType <$> Map.lookup argName fldParams) $ throwVE $
-      "no such argument " <> showName argName <> " defined on " <>
-      "field " <> showName fldName
+      "no such argument " <> showName argName <> " is expected"
 
 denormFld
   :: ( MonadReader ValidationCtx m
@@ -191,7 +214,7 @@ denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
 
   fldTyInfo <- getTyInfo fldBaseTy
 
-  argMap <- withPathK "args" $ processArgs fldInfo args
+  argMap <- withPathK "args" $ processArgs (_fiParams fldInfo) args
 
   fields <- case (fldTyInfo, selSet) of
 
@@ -214,7 +237,7 @@ denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
       throwVE $ "field " <> showName name <> " must not have a "
       <> "selection since type " <> G.showGT fldTy <> " has no subfields"
 
-  withDirectives dirs $ return $
+  withPathK "directives" $ withDirectives dirs $ return $
     Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap fields
 
 denormInlnFrag
@@ -230,8 +253,8 @@ denormInlnFrag visFrags fldTyInfo inlnFrag = do
   when (fldTy /= fragTy) $
     throwVE $ "inline fragment is expected on type " <>
     showNamedTy fldTy <> " but found " <> showNamedTy fragTy
-  withDirectives directives $ fmap (FieldGroup FGSInlnFrag) $
-    denormSelSet visFrags fldTyInfo selSet
+  withPathK "directives" $ withDirectives directives $
+    fmap (FieldGroup FGSInlnFrag) $ denormSelSet visFrags fldTyInfo selSet
   where
     G.InlineFragment tyM directives selSet = inlnFrag
 
@@ -280,9 +303,6 @@ mergeFields flds =
         <> " under the same alias: "
         <> showName (G.unAlias fldAl)
       return fld
-
-onJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
-onJust m act = maybe (return ()) act m
 
 denormFrag
   :: ( MonadReader ValidationCtx m
