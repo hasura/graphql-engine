@@ -279,7 +279,7 @@ schemaR fld =
     "types"        -> fmap J.toJSON $ mapM (namedTypeR' subFld) $
                       sortBy (comparing getNamedTy) $ Map.elems tyMap
     "queryType"    -> J.toJSON <$> namedTypeR (G.NamedType "query_root") subFld
-    "mutationType" -> J.toJSON <$> namedTypeR (G.NamedType "mutation_root") subFld
+    "mutationType" -> typeR' "mutation_root" subFld
     "directives"   -> J.toJSON <$> mapM (directiveR subFld)
                       (sortBy (comparing _diName) defaultDirectives)
     _              -> return J.Null
@@ -289,14 +289,21 @@ typeR
      , MonadError QErr m)
   => Field -> m J.Value
 typeR fld = do
-  tyMap <- asks getter
   name <- withArg args "name" $ \arg -> do
     (_, pgColVal) <- asPGColVal arg
     case pgColVal of
       PGValText t -> return t
       _           -> throw500 "expecting string for name arg of __type"
-  case Map.lookup (G.NamedType (G.Name name)) tyMap of
-    Nothing     -> return J.Null
-    Just tyInfo -> J.Object <$> namedTypeR' fld tyInfo
+  typeR' (G.Name name) fld
   where
     args = _fArguments fld
+
+typeR'
+  :: ( MonadReader r m, Has TypeMap r
+     , MonadError QErr m)
+  => G.Name -> Field -> m J.Value
+typeR' n fld = do
+  tyMap <- asks getter
+  case Map.lookup (G.NamedType n) tyMap of
+    Nothing     -> return J.Null
+    Just tyInfo -> J.Object <$> namedTypeR' fld tyInfo
