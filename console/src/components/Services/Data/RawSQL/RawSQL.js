@@ -248,7 +248,7 @@ const RawSQL = ({
                   'migration-checkbox'
                 );
                 const isMigration = checkboxElem ? checkboxElem.checked : false;
-                if (!isMigration) {
+                if (!isMigration && globals.consoleMode === 'cli') {
                   // if migration is not checked, check if the sql text has any of 'create', 'alter', 'drop'
                   const formattedSql = sql.toLowerCase();
                   if (

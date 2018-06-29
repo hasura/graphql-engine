@@ -175,7 +175,6 @@ const createTableSql = () => {
     if (globals.consoleMode === 'hasuradb') {
       finalReqBody = schemaMigration.up;
     }
-    console.log(finalReqBody);
     const requestMsg = 'Creating table...';
     const successMsg = 'Table Created';
     const errorMsg = 'Create table failed';
