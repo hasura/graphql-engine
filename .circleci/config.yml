@@ -1,0 +1,64 @@
+version: 2
+jobs:
+  build_tagged:
+    docker:
+    - image: busybox
+    working_directory: /home/hasura/graphql-engine
+    steps:
+    - run: echo doing nothing for tagged build.
+  build_untagged:
+    docker:
+    - image: busybox
+    working_directory: /home/hasura/graphql-engine
+    steps:
+    - run: echo doing nothing for untagged build.
+  build_cli:
+    docker:
+    - image: hasura/graphql-engine-cli-builder:v0.1
+    working_directory: /go/src/github.com/hasura/graphql-engine
+    steps:
+    - checkout
+    - restore_cache:
+        keys:
+        - cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
+        - cli-vendor-
+    - run:
+        name: get dependencies
+        working_directory: /go/src/github.com/hasura/graphql-engine/cli
+        command: make deps
+    - save_cache:
+        key: cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
+        paths:
+        - cli/vendor
+    # - run:
+    #     name: test cli
+    #     command: .circleci/cli-test.sh
+    - run:
+        name: build cli
+        working_directory: /go/src/github.com/hasura/graphql-engine/cli
+        command: |
+          make assets
+          make build
+          make compress
+    - store_artifacts:
+        path: cli/_output
+        destination: cli 
+workflows:
+  version: 2
+  un-tagged-build:
+    jobs:
+    - build_untagged:
+        filters:
+          tags:
+            ignore: /^v.*/
+  tagged-build:
+    jobs:
+    - build_tagged:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v.*/
+  build_cli:
+    jobs:
+    - build_cli
