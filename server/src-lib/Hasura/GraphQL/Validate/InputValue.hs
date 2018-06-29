@@ -89,9 +89,9 @@ jsonParser =
     jEnum J.Null       = pNull
     jEnum _            = throwVE "expecting a JSON string for Enum"
 
-    jList (J.Array v) = pVal $ V.toList v
+    jList (J.Array l) = pVal $ V.toList l
     jList J.Null      = pNull
-    jList _           = throwVE "expecting a JSON array"
+    jList v           = pVal [v]
 
     jObject (J.Object m) = pVal [(G.Name t, v) | (t, v) <- Map.toList m]
     jObject J.Null       = pNull
@@ -115,7 +115,7 @@ valueParser =
     pList (G.VVariable var) = pVar var
     pList (G.VList lv)      = pVal $ G.unListValue lv
     pList G.VNull           = pNull
-    pList _                 = throwVE "expecting a list"
+    pList v                 = pVal [v]
 
     pObject (G.VVariable var)    = pVar var
     pObject (G.VObject ov)       = pVal
@@ -144,7 +144,7 @@ constValueParser =
 
     pList (G.VCList lv) = pVal $ G.unListValue lv
     pList G.VCNull      = pNull
-    pList _             = throwVE "expecting a list"
+    pList v             = pVal [v]
 
     pObject (G.VCObject ov)       = pVal
       [(G._ofName oFld, G._ofValue oFld) | oFld <- G.unObjectValue ov]
