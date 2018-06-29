@@ -1,21 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
-import { push } from 'react-router-redux';
+// import { push } from 'react-router-redux';
 
 import PageContainer from './PageContainer/PageContainer';
 
 import { appPrefix } from './push';
+/*
 import {
   UPDATE_CURRENT_SCHEMA,
   loadSchema,
   loadUntrackedSchema,
 } from './DataActions';
+*/
 import globals from '../../../Globals';
 
 const DataHeader = ({
   schema,
-  schemaList,
+  // schemaList,
   currentSchema,
   children,
   location,
@@ -23,6 +25,7 @@ const DataHeader = ({
 }) => {
   const styles = require('./TableCommon/Table.scss');
   const currentLocation = location.pathname;
+  /*
   const handleSchemaChange = e => {
     const updatedSchema = e.target.value;
     dispatch(push(globals.urlPrefix + '/data/schema/' + updatedSchema));
@@ -32,6 +35,7 @@ const DataHeader = ({
       dispatch(loadUntrackedSchema()),
     ]);
   };
+  */
   let migrationSection = null;
   if (globals.consoleMode === 'cli') {
     migrationSection = (
@@ -70,6 +74,7 @@ const DataHeader = ({
                     </Link>
                   </div>
                   <div className={styles.schemaSidebarSection}>
+                    {/* disable dropdown selection for now
                     <select
                       onChange={handleSchemaChange}
                       className={'form-control'}
@@ -87,6 +92,7 @@ const DataHeader = ({
                         );
                       })}
                     </select>
+                    */}
                   </div>
                 </div>
                 <PageContainer
