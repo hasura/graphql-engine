@@ -131,12 +131,14 @@ denormSel
   -> G.Selection
   -> m (Maybe (Either Field FieldGroup))
 denormSel visFrags parObjTyInfo sel = case sel of
-  G.SelectionField fld -> do
+  G.SelectionField fld -> withPathK (G.unName $ G._fName fld) $ do
     fldInfo <- getFieldInfo parObjTyInfo $ G._fName fld
     fmap Left <$> denormFld visFrags fldInfo fld
   G.SelectionFragmentSpread fragSprd ->
+    withPathK (G.unName $ G._fsName fragSprd) $
     fmap Right <$> denormFrag visFrags parTy fragSprd
   G.SelectionInlineFragment inlnFrag ->
+    withPathK "inlineFragment" $
     fmap Right <$> denormInlnFrag visFrags parObjTyInfo inlnFrag
   where
     parTy = _otiName parObjTyInfo
@@ -155,9 +157,10 @@ processArgs (ObjFldInfo _ fldName fldParams fldTy) argsL = do
 
   let requiredParams = Map.filter (G.isNotNull . _iviType) fldParams
 
-  inpArgs <- forM args $ \(G.Argument argName argVal) -> do
-    argTy <- getArgTy argName
-    validateInputValue valueParser argTy argVal
+  inpArgs <- forM args $ \(G.Argument argName argVal) ->
+    withPathK (G.unName argName) $ do
+      argTy <- getArgTy argName
+      validateInputValue valueParser argTy argVal
 
   forM_ requiredParams $ \argDef -> do
     let param = _iviName argDef
@@ -188,7 +191,7 @@ denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
 
   fldTyInfo <- getTyInfo fldBaseTy
 
-  argMap <- processArgs fldInfo args
+  argMap <- withPathK "args" $ processArgs fldInfo args
 
   fields <- case (fldTyInfo, selSet) of
 
@@ -239,9 +242,10 @@ denormSelSet
   -> ObjTyInfo
   -> G.SelectionSet
   -> m (Seq.Seq Field)
-denormSelSet visFrags fldTyInfo selSet = do
-  resFlds <- catMaybes <$> mapM (denormSel visFrags fldTyInfo) selSet
-  mergeFields $ foldl' flatten Seq.empty resFlds
+denormSelSet visFrags fldTyInfo selSet =
+  withPathK "selectionSet" $ do
+    resFlds <- catMaybes <$> mapM (denormSel visFrags fldTyInfo) selSet
+    mergeFields $ foldl' flatten Seq.empty resFlds
   where
     flatten s (Left fld) = s Seq.|> fld
     flatten s (Right (FieldGroup _ flds)) =
@@ -255,8 +259,8 @@ mergeFields
 mergeFields flds =
   fmap Seq.fromList $ forM fldGroups $ \fieldGroup -> do
     newFld <- checkMergeability fieldGroup
-    childFields <- mergeFields $ foldl' (\l f -> l Seq.>< _fSelSet f) Seq.empty $
-                   NE.toSeq fieldGroup
+    childFields <- mergeFields $ foldl' (\l f -> l Seq.>< _fSelSet f) Seq.empty
+                   $ NE.toSeq fieldGroup
     return $ newFld {_fSelSet = childFields}
   where
     fldGroups = OMap.elems $ OMap.groupListWith _fAlias flds
@@ -291,7 +295,8 @@ denormFrag visFrags parTy (G.FragmentSpread name directives) = do
 
   -- check for cycles
   when (name `elem` visFrags) $
-    throwVE $ "cannot spread fragment " <> showName name <> " within itself via "
+    throwVE $ "cannot spread fragment " <> showName name
+    <> " within itself via "
     <> T.intercalate "," (map G.unName visFrags)
 
   (FragDef _ fragTyInfo selSet) <- getFragInfo
@@ -303,7 +308,7 @@ denormFrag visFrags parTy (G.FragmentSpread name directives) = do
     throwVE $ "cannot spread fragment " <> showName name <> " defined on " <>
     showNamedTy fragTy <> " when selecting fields of type " <> showNamedTy parTy
 
-  resFlds <- withPathK "selset" $ denormSelSet (name:visFrags) fragTyInfo selSet
+  resFlds <- denormSelSet (name:visFrags) fragTyInfo selSet
 
   withPathK "directives" $ withDirectives directives $
     return $ FieldGroup (FGSFragSprd  name) resFlds
