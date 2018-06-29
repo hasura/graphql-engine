@@ -18,9 +18,9 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 	}
 	metadataCmd.AddCommand(
-		NewMetadataExportCmd(ec),
-		NewMetadataResetCmd(ec),
-		NewMetadataApplyCmd(ec),
+		newMetadataExportCmd(ec),
+		newMetadataResetCmd(ec),
+		newMetadataApplyCmd(ec),
 	)
 	f := metadataCmd.PersistentFlags()
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")

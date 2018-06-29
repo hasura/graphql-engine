@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewMetadataResetCmd(ec *cli.ExecutionContext) *cobra.Command {
+func newMetadataResetCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &metadataResetOptions{
 		EC:         ec,
 		actionType: "reset",
@@ -22,7 +22,7 @@ func NewMetadataResetCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura metadata reset`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.Run()
+			return opts.run()
 		},
 	}
 
@@ -35,7 +35,7 @@ type metadataResetOptions struct {
 	actionType string
 }
 
-func (o *metadataResetOptions) Run() error {
+func (o *metadataResetOptions) run() error {
 	dbURL, err := url.Parse(o.EC.Config.Endpoint)
 	if err != nil {
 		return errors.Wrap(err, "error parsing Endpoint")

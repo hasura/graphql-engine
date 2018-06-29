@@ -1,13 +1,14 @@
-{-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Hasura.Server.App where
 
 import           Control.Concurrent.MVar
-import           Control.Lens
+import           Control.Lens                  hiding ((.=))
 import           Data.Char                     (isSpace)
 import           Data.IORef
 
@@ -15,7 +16,6 @@ import           Crypto.Hash                   (Digest, SHA1, hash)
 import           Data.Aeson                    hiding (json)
 import qualified Data.ByteString.Lazy          as BL
 import           Data.CaseInsensitive          (CI (..), original)
-import qualified Data.FileEmbed                as FE
 import qualified Data.HashMap.Strict           as M
 import qualified Data.String.Conversions       as CS
 import qualified Data.Text                     as T
@@ -28,6 +28,7 @@ import qualified Network.HTTP.Client.TLS       as HT
 import           Network.Wai                   (strictRequestBody)
 import qualified Network.Wreq                  as Wq
 import qualified Network.Wreq.Types            as WqT
+import qualified Data.FileEmbed                as FE
 
 import           Web.Spock.Core
 
@@ -37,27 +38,27 @@ import qualified Network.Wai.Middleware.Static as MS
 
 import qualified Data.Text.Encoding.Error      as TE
 import qualified Database.PG.Query             as Q
-import qualified Hasura.GraphQL.Execute         as GE
-import qualified Hasura.GraphQL.Execute.Result  as GE
-import qualified Hasura.GraphQL.Schema          as GS
+import qualified Hasura.GraphQL.Execute        as GE
+import qualified Hasura.GraphQL.Execute.Result as GE
+import qualified Hasura.GraphQL.Schema         as GS
 
+import           Hasura.Prelude                hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.Explain
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Prelude                hiding (get, put)
-import           Hasura.Server.Middleware       (corsMiddleware,
+import           Hasura.Server.Middleware      (corsMiddleware,
                                                 mkDefaultCorsPolicy)
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
-landingPage :: String
-landingPage = $(FE.embedStringFile "src-rsr/landing_page.html")
-
 type RavenLogger = ServerLogger (BL.ByteString, Either QErr BL.ByteString)
+
+consoleHTML :: T.Text
+consoleHTML = $(FE.embedStringFile "src-rsr/console.html")
 
 ravenLogGen :: LogDetailG (BL.ByteString, Either QErr BL.ByteString)
 ravenLogGen _ (reqBody, res) =
@@ -361,8 +362,9 @@ app
   -> Q.PGPool
   -> AuthMode
   -> CorsConfig
+  -> Bool
   -> SpockT IO ()
-app isoLevel mRootDir logger pool mode corsCfg = do
+app isoLevel mRootDir logger pool mode corsCfg enableConsole = do
     cacheRef <- lift $ do
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
@@ -376,13 +378,14 @@ app isoLevel mRootDir logger pool mode corsCfg = do
 
     liftIO $ putStrLn "HasuraDB is now waiting for connections"
 
-    maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
-
     -- cors middleware
     unless (ccDisabled corsCfg) $
       middleware $ corsMiddleware (mkDefaultCorsPolicy $ ccDomain corsCfg)
 
-    get root $ html $ T.pack landingPage
+    -- API Console and Root Dir
+    if enableConsole then serveApiConsole consoleHTML
+    else maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
+
     get    ("v1/template" <//> var) $ tmpltGetOrDeleteH serverCtx
     post   ("v1/template" <//> var) $ tmpltPutOrPostH serverCtx
     put    ("v1/template" <//> var) $ tmpltPutOrPostH serverCtx
@@ -428,3 +431,7 @@ app isoLevel mRootDir logger pool mode corsCfg = do
     mkQTemplateAction tmpltName tmpltArgs =
       v1QueryHandler $ RQExecuteQueryTemplate $
       ExecQueryTemplate (TQueryName tmpltName) tmpltArgs
+
+    serveApiConsole htmlFile = do
+      get root $ redirect "/console"
+      get ("console" <//> wildcard) $ const $ html htmlFile

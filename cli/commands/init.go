@@ -41,7 +41,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.Run()
+			return opts.run()
 		},
 	}
 
@@ -60,7 +60,7 @@ type initOptions struct {
 	InitDir   string
 }
 
-func (o *initOptions) Run() error {
+func (o *initOptions) run() error {
 	if o.EC.ExecutionDirectory == "" {
 		o.EC.ExecutionDirectory = o.InitDir
 	}

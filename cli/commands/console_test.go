@@ -6,13 +6,14 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus/hooks/test"
 )
 
 func TestConsoleCmd(t *testing.T) {
+	logger, _ := test.NewNullLogger()
 	opts := &consoleOptions{
 		EC: &cli.ExecutionContext{
-			Logger:  logrus.New(),
+			Logger:  logger,
 			Spinner: spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			Config: &cli.HasuraGraphQLConfig{
 				Endpoint:  "http://localhost:8080",
@@ -33,7 +34,7 @@ func TestConsoleCmd(t *testing.T) {
 		opts.WG.Done()
 		opts.WG.Done()
 	}()
-	err := opts.Run()
+	err := opts.run()
 	if err != nil {
 		t.Fatalf("failed running console: %v", err)
 	}

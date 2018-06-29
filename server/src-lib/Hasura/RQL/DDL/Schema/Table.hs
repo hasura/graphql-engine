@@ -48,8 +48,8 @@ saveTableToCatalog (QualifiedTable sn tn) =
                 |] (sn, tn) False
 
 -- Build the TableInfo with all its columns
-getTableInfo :: QualifiedTable -> Q.TxE QErr TableInfo
-getTableInfo qt@(QualifiedTable sn tn) = do
+getTableInfo :: QualifiedTable -> Bool -> Q.TxE QErr TableInfo
+getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
   tableExists <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
             SELECT true from information_schema.tables
              WHERE table_schema = $1
@@ -67,7 +67,7 @@ getTableInfo qt@(QualifiedTable sn tn) = do
              WHERE table_schema = $1
                AND table_name = $2
                            |] (sn, tn) False
-  return $ mkTableInfo qt $ map (fmap Q.getAltJ) colData
+  return $ mkTableInfo qt isSystemDefined $ map (fmap Q.getAltJ) colData
 
 newtype TrackTable
   = TrackTable
@@ -81,14 +81,15 @@ trackExistingTableOrViewP1 (TrackTable vn) = do
   when (M.member vn $ scTables rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> vn
 
-trackExistingTableOrViewP2Setup :: (P2C m) => QualifiedTable -> m ()
-trackExistingTableOrViewP2Setup tn = do
-  ti <- liftTx $ getTableInfo tn
+trackExistingTableOrViewP2Setup :: (P2C m) => QualifiedTable -> Bool -> m ()
+trackExistingTableOrViewP2Setup tn isSystemDefined = do
+  ti <- liftTx $ getTableInfo tn isSystemDefined
   addTableToCache ti
 
-trackExistingTableOrViewP2 :: (P2C m) => QualifiedTable -> m RespBody
-trackExistingTableOrViewP2 vn = do
-  trackExistingTableOrViewP2Setup vn
+trackExistingTableOrViewP2
+  :: (P2C m) => QualifiedTable -> Bool -> m RespBody
+trackExistingTableOrViewP2 vn isSystemDefined = do
+  trackExistingTableOrViewP2Setup vn isSystemDefined
   liftTx $ Q.catchE defaultTxErrorHandler $
     saveTableToCatalog vn
   return successMsg
@@ -98,7 +99,7 @@ instance HDBQuery TrackTable where
   type Phase1Res TrackTable = ()
   phaseOne = trackExistingTableOrViewP1
 
-  phaseTwo (TrackTable tn) _ = trackExistingTableOrViewP2 tn
+  phaseTwo (TrackTable tn) _ = trackExistingTableOrViewP2 tn False
 
   schemaCachePolicy = SCPReload
 
@@ -199,7 +200,11 @@ unTrackExistingTableOrViewP1 ut@(UntrackTable vn _) = do
   adminOnly
   rawSchemaCache <- getSchemaCache <$> lift ask
   case M.lookup vn (scTables rawSchemaCache) of
-    Just ti -> return (ut, ti)
+    Just ti -> do
+      -- Check if table/view is system defined
+      when (tiSystemDefined ti) $ throw400 NotSupported $
+        vn <<> " is system defined, cannot untrack"
+      return (ut, ti)
     Nothing -> throw400 AlreadyUntracked $
       "view/table already untracked : " <>> vn
 
@@ -242,7 +247,7 @@ unTrackExistingTableOrViewP2 (UntrackTable vn cascade) tableInfo = do
                            table_name
                      FROM  hdb_catalog.hdb_foreign_key_constraint
                      WHERE ref_table_table_schema = $1
-                       AND ref_table =$2
+                       AND ref_table = $2
                    |] (sn, tn) False
     filterTables tables tc = flip filter tables $ \(_, s, t) ->
       isJust $ M.lookup (QualifiedTable s t) tc
@@ -271,9 +276,9 @@ instance HDBQuery UntrackTable where
 buildSchemaCache :: Q.TxE QErr SchemaCache
 buildSchemaCache = flip execStateT emptySchemaCache $ do
   tables <- lift $ Q.catchE defaultTxErrorHandler fetchTables
-  forM_ tables $ \(sn, tn) ->
+  forM_ tables $ \(sn, tn, isSystemDefined) ->
     modifyErr (\e -> "table " <> tn <<> "; " <> e) $
-    trackExistingTableOrViewP2Setup $ QualifiedTable sn tn
+    trackExistingTableOrViewP2Setup (QualifiedTable sn tn) isSystemDefined
 
   -- Fetch all the relationships
   relationships <- lift $ Q.catchE defaultTxErrorHandler fetchRelationships
@@ -319,7 +324,8 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
 
     fetchTables =
       Q.listQ [Q.sql|
-                SELECT table_schema, table_name from hdb_catalog.hdb_table
+                SELECT table_schema, table_name, is_system_defined
+                  FROM hdb_catalog.hdb_table
                     |] () False
 
     fetchRelationships =

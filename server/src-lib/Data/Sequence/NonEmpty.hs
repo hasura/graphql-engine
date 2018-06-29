@@ -1,6 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-
-module Hasura.GraphQL.NonEmptySeq
+module Data.Sequence.NonEmpty
   ( NESeq
   , (<|)
   , (|>)
@@ -10,7 +8,7 @@ module Hasura.GraphQL.NonEmptySeq
   ) where
 
 import qualified Data.Sequence as Seq
-import           Hasura.Prelude     hiding (head)
+import           Prelude       (Eq, Show, fst, (.))
 
 infixr 5 <|
 infixl 5 |>

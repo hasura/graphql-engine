@@ -40,7 +40,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.Run()
+			return opts.run()
 		},
 	}
 	f := consoleCmd.Flags()
@@ -71,7 +71,7 @@ type consoleOptions struct {
 	WG *sync.WaitGroup
 }
 
-func (o *consoleOptions) Run() error {
+func (o *consoleOptions) run() error {
 	log := o.EC.Logger
 	// Switch to "release" mode in production.
 	gin.SetMode(gin.ReleaseMode)
@@ -219,7 +219,7 @@ func serveConsole(opts gin.H) (*gin.Engine, error) {
 	r := gin.New()
 
 	// Template index.html
-	templateRender, err := util.LoadTemplates("manifests/", "console.html")
+	templateRender, err := util.LoadTemplates("assets/", "console.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch template")
 	}

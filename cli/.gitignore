@@ -1,2 +1,4 @@
-vendor
-.realize
+vendor/
+vendor.orig/
+_output/
+*.temp

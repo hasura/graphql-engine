@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/sirupsen/logrus/hooks/test"
 )
 
 func init() {
@@ -16,19 +17,24 @@ func init() {
 }
 
 func TestInitCmd(t *testing.T) {
+	logger, _ := test.NewNullLogger()
 	tt := []struct {
 		name string
 		opts *initOptions
 		err  error
 	}{
 		{"only-init-dir", &initOptions{
-			EC:        &cli.ExecutionContext{},
+			EC: &cli.ExecutionContext{
+				Logger: logger,
+			},
 			Endpoint:  "",
 			AccessKey: "",
 			InitDir:   filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
 		}, nil},
 		{"with-endpoint-flag", &initOptions{
-			EC:        &cli.ExecutionContext{},
+			EC: &cli.ExecutionContext{
+				Logger: logger,
+			},
 			Endpoint:  "https://localhost:8080",
 			AccessKey: "",
 			InitDir:   filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
@@ -41,7 +47,7 @@ func TestInitCmd(t *testing.T) {
 			if err != nil {
 				t.Fatalf("%s: prep failed: %v", tc.name, err)
 			}
-			err = tc.opts.Run()
+			err = tc.opts.run()
 			if err != tc.err {
 				t.Fatalf("%s: expected %v, got %v", tc.name, tc.err, err)
 			} else {

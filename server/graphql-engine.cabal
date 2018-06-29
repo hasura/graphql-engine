@@ -41,6 +41,7 @@ library
                      , transformers-base
                      , http-types
                      , attoparsec
+                     , attoparsec-iso8601 >= 1.0
                      , time
                      , scientific
                      , Spock-core
@@ -48,10 +49,7 @@ library
                      , optparse-applicative
                      , wai-extra
                      , containers
-                     , hashtables
-                     , resource-pool
                      , monad-control
-                     , regex-tdfa
                      , wai-logger
                      , fast-logger
                      , wai
@@ -60,7 +58,6 @@ library
 
                      -- Encoder related
                      , uuid
-                     , reinterpret-cast
                      , vector
 
                      -- Logging related
@@ -69,13 +66,6 @@ library
 
                      -- hashing for logging
                      , cryptonite
-
-                     -- Transaction related
-                     , focus
-                     , list-t
-                     , stm
-                     , stm-containers
-                     , alarmclock
 
                      -- Server related
                      , warp
@@ -99,8 +89,10 @@ library
                      , http-client-tls
                      , connection
 
+                     -- ordered map
+                     , insert-ordered-containers
+
                      --
-                     , protolude
                      , data-has
 
   exposed-modules:     Hasura.Server.App
@@ -139,8 +131,6 @@ library
                      , Hasura.GraphQL.Execute
                      , Hasura.GraphQL.Execute.Result
                      , Hasura.GraphQL.Schema
-                     , Hasura.GraphQL.OrderedMap
-                     , Hasura.GraphQL.NonEmptySeq
                      , Hasura.GraphQL.Utils
                      , Hasura.GraphQL.Validate.Types
                      , Hasura.GraphQL.Validate.Context
@@ -154,6 +144,8 @@ library
                      , Hasura.GraphQL.Resolve.Select
 
                      , Data.Text.Extended
+                     , Data.Sequence.NonEmpty
+                     , Data.HashMap.Strict.InsOrd.Extended
 
                      , Hasura.SQL.DML
                      , Hasura.SQL.Types
