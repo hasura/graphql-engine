@@ -54,7 +54,6 @@ library
                      , fast-logger
                      , wai
                      , postgresql-binary
-                     , file-embed
 
                      -- Encoder related
                      , uuid
@@ -91,6 +90,9 @@ library
 
                      -- ordered map
                      , insert-ordered-containers
+
+                     -- Mustache Templating
+                     , mustache
 
                      --
                      , data-has

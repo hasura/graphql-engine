@@ -235,7 +235,7 @@ raven_app rlogger pool =
   do
     _ <- liftIO $ runExceptT $ Q.runTx pool defTxMode resetStateTx
     let corsCfg = CorsConfig "*" True  -- cors is disabled
-    spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg -- no access key and no webhook
+    spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
 
 main :: IO ()
 main = withStdoutLogger ravenLogGen $ \rlogger -> do
