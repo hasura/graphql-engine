@@ -1,3 +1,5 @@
+### This is the documentation for the Hasura GraphQL engine
+
 **To run docs locally and to contribute:**
 
 * Make sure you have `pip3` installed on your system
