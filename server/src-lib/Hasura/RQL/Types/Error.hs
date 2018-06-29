@@ -30,6 +30,7 @@ module Hasura.RQL.Types.Error
        , withPathI
        , indexedFoldM
        , indexedForM
+       , indexedMapM
        , indexedForM_
        ) where
 
@@ -226,6 +227,10 @@ indexedForM :: (QErrM m)
 indexedForM l f =
   forM (zip [0..] l) $ \(i, a) ->
     withPathE (Index i) (f a)
+
+indexedMapM :: (QErrM m)
+            => (a -> m b) -> [a] -> m [b]
+indexedMapM = flip indexedForM
 
 indexedForM_ :: (QErrM m)
              => [a] -> (a -> m ()) -> m ()

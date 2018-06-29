@@ -1256,7 +1256,7 @@ span.CodeMirror-selectedtext {
   -ms-flex: 1;
   flex: 1;
   font-weight: bold;
-  overflow-x: hidden;
+  overflow-x: initial;
   padding: 10px 0 10px 10px;
   text-align: center;
   text-overflow: ellipsis;

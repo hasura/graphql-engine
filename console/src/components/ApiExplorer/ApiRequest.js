@@ -197,7 +197,7 @@ class ApiRequest extends Component {
 
   getHeaderTitleView() {
     let addAdminToken = null;
-    if (globals.accessKey !== '') {
+    if (globals.accessKey && globals.accessKey !== '') {
       addAdminToken = (
         <span className={styles.addAdminToken}>
           <button

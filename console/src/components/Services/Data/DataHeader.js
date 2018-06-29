@@ -1,20 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
-import { push } from 'react-router-redux';
+// import { push } from 'react-router-redux';
 
 import PageContainer from './PageContainer/PageContainer';
 
 import { appPrefix } from './push';
+/*
 import {
   UPDATE_CURRENT_SCHEMA,
   loadSchema,
   loadUntrackedSchema,
 } from './DataActions';
+*/
+import globals from '../../../Globals';
 
 const DataHeader = ({
   schema,
-  schemaList,
+  // schemaList,
   currentSchema,
   children,
   location,
@@ -22,15 +25,30 @@ const DataHeader = ({
 }) => {
   const styles = require('./TableCommon/Table.scss');
   const currentLocation = location.pathname;
+  /*
   const handleSchemaChange = e => {
     const updatedSchema = e.target.value;
-    dispatch(push('/data/schema/' + updatedSchema));
+    dispatch(push(globals.urlPrefix + '/data/schema/' + updatedSchema));
     Promise.all([
       dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
       dispatch(loadSchema()),
       dispatch(loadUntrackedSchema()),
     ]);
   };
+  */
+  let migrationSection = null;
+  if (globals.consoleMode === 'cli') {
+    migrationSection = (
+      <li
+        role="presentation"
+        className={
+          currentLocation.indexOf('migrations') !== -1 ? styles.active : ''
+        }
+      >
+        <Link to={appPrefix + '/migrations'}>Migrations</Link>
+      </li>
+    );
+  }
   return (
     <div>
       <Helmet title={'Data | Hasura'} />
@@ -56,6 +74,7 @@ const DataHeader = ({
                     </Link>
                   </div>
                   <div className={styles.schemaSidebarSection}>
+                    {/* disable dropdown selection for now
                     <select
                       onChange={handleSchemaChange}
                       className={'form-control'}
@@ -73,6 +92,7 @@ const DataHeader = ({
                         );
                       })}
                     </select>
+                    */}
                   </div>
                 </div>
                 <PageContainer
@@ -90,16 +110,7 @@ const DataHeader = ({
               >
                 <Link to={appPrefix + '/sql'}>SQL</Link>
               </li>
-              <li
-                role="presentation"
-                className={
-                  currentLocation.indexOf('migrations') !== -1
-                    ? styles.active
-                    : ''
-                }
-              >
-                <Link to={appPrefix + '/migrations'}>Migrations</Link>
-              </li>
+              {migrationSection}
             </ul>
           </div>
         </div>

@@ -33,13 +33,14 @@ data RavenOptions
 
 data ServeOptions
   = ServeOptions
-  { soPort       :: !Int
-  , soConnParams :: !Q.ConnParams
-  , soTxIso      :: !Q.TxIsolation
-  , soRootDir    :: !(Maybe String)
-  , soAccessKey  :: !(Maybe AccessKey)
-  , soCorsConfig :: !CorsConfig
-  , soWebHook    :: !(Maybe T.Text)
+  { soPort          :: !Int
+  , soConnParams    :: !Q.ConnParams
+  , soTxIso         :: !Q.TxIsolation
+  , soRootDir       :: !(Maybe String)
+  , soAccessKey     :: !(Maybe AccessKey)
+  , soCorsConfig    :: !CorsConfig
+  , soWebHook       :: !(Maybe T.Text)
+  , soEnableConsole :: !Bool
   } deriving (Show, Eq)
 
 data RavenMode
@@ -70,6 +71,7 @@ parseRavenMode = subparser
                 <*> parseAccessKey
                 <*> parseCorsConfig
                 <*> parseWebHook
+                <*> parseEnableConsole
 
 parseArgs :: IO RavenOptions
 parseArgs = execParser opts
@@ -101,7 +103,7 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
     return $ mkConnInfo rci
   printConnInfo ci
   case ravenMode of
-    ROServe (ServeOptions port cp isoL mRootDir mAccessKey corsCfg mWebHook) -> do
+    ROServe (ServeOptions port cp isoL mRootDir mAccessKey corsCfg mWebHook enableConsole) -> do
       am <- either ((>> exitFailure) . putStrLn) return $
         mkAuthMode mAccessKey mWebHook
       initialise ci
@@ -109,7 +111,7 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
       pool <- Q.initPGPool ci cp
       runSpockNoBanner port $ do
         putStrLn $ "server: running on port " ++ show port
-        spockT id $ app isoL mRootDir rlogger pool am corsCfg
+        spockT id $ app isoL mRootDir rlogger pool am corsCfg enableConsole
     ROExport -> do
       res <- runTx ci fetchMetadata
       either ((>> exitFailure) . printJSON) printJSON res

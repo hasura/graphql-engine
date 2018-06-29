@@ -56,7 +56,7 @@
     "deep-equal": "^1.0.1",
     "graphiql": "^0.11.11",
     "graphql": "^0.13.2",
-    "history": "^4.7.2",
+    "history": "^3.0.0",
     "hoist-non-react-statics": "^1.0.3",
     "invariant": "^2.2.0",
     "isomorphic-fetch": "^2.2.1",

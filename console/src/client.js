@@ -13,10 +13,12 @@ import { Provider } from 'react-redux';
 import { Router, browserHistory } from 'react-router';
 import { routerMiddleware, syncHistoryWithStore } from 'react-router-redux';
 import { compose, createStore, applyMiddleware } from 'redux';
+import { useBasename } from 'history';
 
 import getRoutes from './routes';
 
 import reducer from './reducer';
+import globals from './Globals';
 
 // Create the store
 let _finalCreateStore;
@@ -73,7 +75,7 @@ if (__DEVELOPMENT__ && module.hot) {
 // Main routes and rendering
 const main = (
   <Router
-    history={history}
+    history={useBasename(() => history)({ basename: globals.urlPrefix })}
     routes={getRoutes(store)}
     onUpdate={hashLinkScroll}
   />

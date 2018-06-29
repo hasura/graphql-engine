@@ -7,10 +7,13 @@ We use [dotenv](https://github.com/motdotla/dotenv) for setting environment vari
 ```
 PORT=3000
 NODE_ENV=development
+DATA_API_URL=http://localhost:9000
 API_HOST=http://localhost
 API_PORT=9693
-DATA_API_URL=http://localhost:8080
-ACCESS_KEY=1234
+ACCESS_KEY=abcd
+CONSOLE_MODE=hasuradb
+DEV_DATA_API_URL=http://localhost:9000
+URL_PREFIX=/
 ```
 
 **Note**

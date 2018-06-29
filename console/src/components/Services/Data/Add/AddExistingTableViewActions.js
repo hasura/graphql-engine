@@ -1,16 +1,15 @@
 import defaultState from './AddExistingTableViewState';
-import { globalCookiePolicy } from '../../../../Endpoints';
 import _push from '../push';
-import { loadSchema, LOAD_UNTRACKED_RELATIONS } from '../DataActions';
 import {
-  showErrorNotification,
-  showSuccessNotification,
-} from '../Notification';
-import dataHeaders from '../Common/Headers';
+  loadSchema,
+  LOAD_UNTRACKED_RELATIONS,
+  makeMigrationCall,
+} from '../DataActions';
+import { showSuccessNotification } from '../Notification';
 import { loadMigrationStatus } from '../../../Main/Actions.js';
 import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
 
-import returnMigrateUrl from '../Common/getMigrateUrl';
+import globals from '../../../../Globals';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
@@ -26,10 +25,8 @@ const addExistingTableSql = () => {
     dispatch({ type: MAKING_REQUEST });
     dispatch(showSuccessNotification('Adding an existing table...'));
     const state = getState().addTable.existingTableView;
-    const currMigrationMode = getState().main.migrationMode;
     const currentSchema = getState().tables.currentSchema;
 
-    const migrateUrl = returnMigrateUrl(currMigrationMode);
     const requestBody = {
       type: 'add_existing_table_or_view',
       args: {
@@ -52,99 +49,67 @@ const addExistingTableSql = () => {
       up: upQuery.args,
       down: [],
     };
-    const options = {
-      method: 'POST',
-      credentials: globalCookiePolicy,
-      headers: dataHeaders,
-      body: JSON.stringify(schemaMigration),
-    };
-    fetch(migrateUrl, options).then(
-      response => {
-        if (response.ok) {
-          dispatch(loadMigrationStatus());
-          dispatch(showSuccessNotification('Existing table/view added!'));
-          dispatch({ type: REQUEST_SUCCESS });
-          dispatch(loadSchema()).then(() => {
-            const newTable = getState().tables.allSchemas.find(
-              t => t.table_name === state.tableName.trim()
-            );
-            const isTable = newTable.detail.table_type === 'BASE TABLE';
-            if (isTable) {
-              dispatch(
-                _push(
-                  '/schema/' +
-                    currentSchema +
-                    '/tables/' +
-                    state.tableName.trim() +
-                    '/modify'
-                )
-              );
-            } else {
-              dispatch(
-                _push(
-                  '/schema/' +
-                    currentSchema +
-                    '/views/' +
-                    state.tableName.trim() +
-                    '/browse'
-                )
-              );
-            }
-          });
-          return;
+    let finalReqBody = schemaMigration.up;
+    if (globals.consoleMode === 'hasuradb') {
+      finalReqBody = schemaMigration.up;
+    }
+    const requestMsg = 'Adding existing table/view...';
+    const successMsg = 'Existing table/view added';
+    const errorMsg = 'Adding existing table/view failed';
+    const customOnSuccess = () => {
+      dispatch(loadMigrationStatus());
+      dispatch(showSuccessNotification('Existing table/view added!'));
+      dispatch({ type: REQUEST_SUCCESS });
+      dispatch(loadSchema()).then(() => {
+        const newTable = getState().tables.allSchemas.find(
+          t => t.table_name === state.tableName.trim()
+        );
+        const isTable = newTable.detail.table_type === 'BASE TABLE';
+        if (isTable) {
+          dispatch(
+            _push(
+              '/schema/' +
+                currentSchema +
+                '/tables/' +
+                state.tableName.trim() +
+                '/modify'
+            )
+          );
+        } else {
+          dispatch(
+            _push(
+              '/schema/' +
+                currentSchema +
+                '/views/' +
+                state.tableName.trim() +
+                '/browse'
+            )
+          );
         }
-        response.json().then(
-          errorMsg => {
-            const parsedErrorMsg = errorMsg;
-            // data_api_error code is a JSON else its a string
-            if (errorMsg.code === 'data_api_error') {
-              parsedErrorMsg.message = JSON.parse(errorMsg.message);
-            } else {
-              parsedErrorMsg.message = errorMsg.message;
-            }
-            dispatch(
-              showErrorNotification(
-                'Adding existing table/view failed!',
-                parsedErrorMsg.message.error,
-                requestBody,
-                parsedErrorMsg
-              )
-            );
-            dispatch({ type: REQUEST_ERROR, data: errorMsg });
-          },
-          () => {
-            dispatch(
-              showErrorNotification(
-                'Adding existing table/view failed!',
-                'Something is wrong. Please check your configuration again'
-              )
-            );
-            dispatch({
-              type: REQUEST_ERROR,
-              data: 'Something is wrong. Please check your configuration again',
-            });
-          }
-        );
-      },
-      error => {
-        console.error(error);
-        dispatch(
-          showErrorNotification(
-            'Adding existing table/view failed!',
-            'Cannot connect to server'
-          )
-        );
-        dispatch({ type: REQUEST_ERROR, data: 'server-connection-failed' });
-      }
+      });
+      return;
+    };
+    const customOnError = err => {
+      dispatch({ type: REQUEST_ERROR, data: err });
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      finalReqBody,
+      [],
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
     );
   };
 };
 
 const addAllUntrackedTablesSql = tableList => {
   return (dispatch, getState) => {
-    const currMigrationMode = getState().main.migrationMode;
-
-    const migrateUrl = returnMigrateUrl(currMigrationMode);
     const currentSchema = getState().tables.currentSchema;
 
     dispatch({ type: MAKING_REQUEST });
@@ -172,72 +137,43 @@ const addAllUntrackedTablesSql = tableList => {
       up: upQuery.args,
       down: [],
     };
-    const options = {
-      method: 'POST',
-      credentials: globalCookiePolicy,
-      headers: dataHeaders,
-      body: JSON.stringify(schemaMigration),
+    let finalReqBody = schemaMigration.up;
+    if (globals.consoleMode === 'hasuradb') {
+      finalReqBody = schemaMigration.up;
+    }
+    const requestMsg = 'Adding existing table/view...';
+    const successMsg = 'Existing table/view added';
+    const errorMsg = 'Adding existing table/view failed';
+    const customOnSuccess = () => {
+      dispatch(loadMigrationStatus());
+      dispatch(showSuccessNotification('Existing table/view added!'));
+      dispatch({ type: REQUEST_SUCCESS });
+      dispatch(loadSchema()).then(() => {
+        const allSchemas = getState().tables.allSchemas;
+        const untrackedRelations = getAllUnTrackedRelations(allSchemas);
+        dispatch({
+          type: LOAD_UNTRACKED_RELATIONS,
+          untrackedRelations: untrackedRelations,
+        });
+        dispatch(_push('/schema/' + currentSchema));
+      });
+      return;
     };
-    fetch(migrateUrl, options).then(
-      response => {
-        if (response.ok) {
-          dispatch(loadMigrationStatus());
-          dispatch(showSuccessNotification('Existing table/view added!'));
-          dispatch({ type: REQUEST_SUCCESS });
-          dispatch(loadSchema()).then(() => {
-            const allSchemas = getState().tables.allSchemas;
-            const untrackedRelations = getAllUnTrackedRelations(allSchemas);
-            dispatch({
-              type: LOAD_UNTRACKED_RELATIONS,
-              untrackedRelations: untrackedRelations,
-            });
-            dispatch(_push('/schema/' + currentSchema));
-          });
-          return;
-        }
-        response.json().then(
-          errorMsg => {
-            const parsedErrorMsg = errorMsg;
-            // data_api_error code is a JSON else its a string
-            if (errorMsg.code === 'data_api_error') {
-              parsedErrorMsg.message = JSON.parse(errorMsg.message);
-            } else {
-              parsedErrorMsg.message = errorMsg.message;
-            }
-            dispatch(
-              showErrorNotification(
-                'Adding existing table/view failed!',
-                parsedErrorMsg.message.error,
-                upQuery,
-                parsedErrorMsg
-              )
-            );
-            dispatch({ type: REQUEST_ERROR, data: errorMsg });
-          },
-          () => {
-            dispatch(
-              showErrorNotification(
-                'Adding existing table/view failed!',
-                'Something is wrong. Please check your configuration again'
-              )
-            );
-            dispatch({
-              type: REQUEST_ERROR,
-              data: 'Something is wrong. Please check your configuration again',
-            });
-          }
-        );
-      },
-      error => {
-        console.error(error);
-        dispatch(
-          showErrorNotification(
-            'Adding existing table/view failed!',
-            'Cannot connect to server'
-          )
-        );
-        dispatch({ type: REQUEST_ERROR, data: 'server-connection-failed' });
-      }
+    const customOnError = err => {
+      dispatch({ type: REQUEST_ERROR, data: err });
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      finalReqBody,
+      [],
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
     );
   };
 };

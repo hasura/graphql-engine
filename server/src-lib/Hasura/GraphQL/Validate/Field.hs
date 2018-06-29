@@ -27,6 +27,7 @@ import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
+import           Hasura.SQL.Value
 
 -- data ScalarInfo
 --   = SIBuiltin !GBuiltin
@@ -119,9 +120,34 @@ withDirectives
   => [G.Directive]
   -> m a
   -> m (Maybe a)
-withDirectives dirs act =
-  -- TODO, use the directives
-  Just <$> act
+withDirectives dirs act = do
+
+  dirDefs <- onLeft (mkMapWith G._dName dirs) $ \dups ->
+    throwVE $ "the following directives are used more than once: " <>
+    showNames dups
+
+  procDirs <- flip Map.traverseWithKey dirDefs $ \name dir ->
+    withPathK (G.unName name) $ do
+      dirInfo <- onNothing (Map.lookup (G._dName dir) defDirectivesMap) $
+                 throwVE $ "unexpected directive: " <> showName name
+      procArgs <- withPathK "args" $ processArgs (_diParams dirInfo)
+                  (G._dArguments dir)
+      getIfArg procArgs
+
+  let shouldSkip    = fromMaybe False $ Map.lookup "skip" procDirs
+      shouldInclude = fromMaybe True $ Map.lookup "include" procDirs
+
+  if not shouldSkip && shouldInclude
+    then Just <$> act
+    else return Nothing
+
+  where
+    getIfArg m = do
+      val <- onNothing (Map.lookup "if" m) $ throw500
+              "missing if argument in the directive"
+      case val of
+        AGScalar _ (Just (PGValBoolean v)) -> return v
+        _ -> throw500 "did not find boolean scalar for if argument"
 
 denormSel
   :: ( MonadReader ValidationCtx m
@@ -131,12 +157,14 @@ denormSel
   -> G.Selection
   -> m (Maybe (Either Field FieldGroup))
 denormSel visFrags parObjTyInfo sel = case sel of
-  G.SelectionField fld -> do
+  G.SelectionField fld -> withPathK (G.unName $ G._fName fld) $ do
     fldInfo <- getFieldInfo parObjTyInfo $ G._fName fld
     fmap Left <$> denormFld visFrags fldInfo fld
   G.SelectionFragmentSpread fragSprd ->
+    withPathK (G.unName $ G._fsName fragSprd) $
     fmap Right <$> denormFrag visFrags parTy fragSprd
   G.SelectionInlineFragment inlnFrag ->
+    withPathK "inlineFragment" $
     fmap Right <$> denormInlnFrag visFrags parObjTyInfo inlnFrag
   where
     parTy = _otiName parObjTyInfo
@@ -144,10 +172,10 @@ denormSel visFrags parObjTyInfo sel = case sel of
 processArgs
   :: ( MonadReader ValidationCtx m
      , MonadError QErr m)
-  => ObjFldInfo
+  => ParamMap
   -> [G.Argument]
   -> m (Map.HashMap G.Name AnnGValue)
-processArgs (ObjFldInfo _ fldName fldParams fldTy) argsL = do
+processArgs fldParams argsL = do
 
   args <- onLeft (mkMapWith G._aName argsL) $ \dups ->
     throwVE $ "the following arguments are defined more than once: " <>
@@ -155,24 +183,22 @@ processArgs (ObjFldInfo _ fldName fldParams fldTy) argsL = do
 
   let requiredParams = Map.filter (G.isNotNull . _iviType) fldParams
 
-  inpArgs <- forM args $ \(G.Argument argName argVal) -> do
-    argTy <- getArgTy argName
-    validateInputValue valueParser argTy argVal
+  inpArgs <- forM args $ \(G.Argument argName argVal) ->
+    withPathK (G.unName argName) $ do
+      argTy <- getArgTy argName
+      validateInputValue valueParser argTy argVal
 
   forM_ requiredParams $ \argDef -> do
     let param = _iviName argDef
     onNothing (Map.lookup param inpArgs) $ throwVE $ mconcat
-      [ "the required argument ", showName param
-      , " is missing on field ", showName fldName
-      ]
+      [ "the required argument ", showName param, " is missing"]
 
   return inpArgs
 
   where
     getArgTy argName =
       onNothing (_iviType <$> Map.lookup argName fldParams) $ throwVE $
-      "no such argument " <> showName argName <> " defined on " <>
-      "field " <> showName fldName
+      "no such argument " <> showName argName <> " is expected"
 
 denormFld
   :: ( MonadReader ValidationCtx m
@@ -188,7 +214,7 @@ denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
 
   fldTyInfo <- getTyInfo fldBaseTy
 
-  argMap <- processArgs fldInfo args
+  argMap <- withPathK "args" $ processArgs (_fiParams fldInfo) args
 
   fields <- case (fldTyInfo, selSet) of
 
@@ -211,7 +237,7 @@ denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
       throwVE $ "field " <> showName name <> " must not have a "
       <> "selection since type " <> G.showGT fldTy <> " has no subfields"
 
-  withDirectives dirs $ return $
+  withPathK "directives" $ withDirectives dirs $ return $
     Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap fields
 
 denormInlnFrag
@@ -227,8 +253,8 @@ denormInlnFrag visFrags fldTyInfo inlnFrag = do
   when (fldTy /= fragTy) $
     throwVE $ "inline fragment is expected on type " <>
     showNamedTy fldTy <> " but found " <> showNamedTy fragTy
-  withDirectives directives $ fmap (FieldGroup FGSInlnFrag) $
-    denormSelSet visFrags fldTyInfo selSet
+  withPathK "directives" $ withDirectives directives $
+    fmap (FieldGroup FGSInlnFrag) $ denormSelSet visFrags fldTyInfo selSet
   where
     G.InlineFragment tyM directives selSet = inlnFrag
 
@@ -239,9 +265,10 @@ denormSelSet
   -> ObjTyInfo
   -> G.SelectionSet
   -> m (Seq.Seq Field)
-denormSelSet visFrags fldTyInfo selSet = do
-  resFlds <- catMaybes <$> mapM (denormSel visFrags fldTyInfo) selSet
-  mergeFields $ foldl' flatten Seq.empty resFlds
+denormSelSet visFrags fldTyInfo selSet =
+  withPathK "selectionSet" $ do
+    resFlds <- catMaybes <$> mapM (denormSel visFrags fldTyInfo) selSet
+    mergeFields $ foldl' flatten Seq.empty resFlds
   where
     flatten s (Left fld) = s Seq.|> fld
     flatten s (Right (FieldGroup _ flds)) =
@@ -255,8 +282,8 @@ mergeFields
 mergeFields flds =
   fmap Seq.fromList $ forM fldGroups $ \fieldGroup -> do
     newFld <- checkMergeability fieldGroup
-    childFields <- mergeFields $ foldl' (\l f -> l Seq.>< _fSelSet f) Seq.empty $
-                   NE.toSeq fieldGroup
+    childFields <- mergeFields $ foldl' (\l f -> l Seq.>< _fSelSet f) Seq.empty
+                   $ NE.toSeq fieldGroup
     return $ newFld {_fSelSet = childFields}
   where
     fldGroups = OMap.elems $ OMap.groupListWith _fAlias flds
@@ -277,9 +304,6 @@ mergeFields flds =
         <> showName (G.unAlias fldAl)
       return fld
 
-onJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
-onJust m act = maybe (return ()) act m
-
 denormFrag
   :: ( MonadReader ValidationCtx m
      , MonadError QErr m)
@@ -291,7 +315,8 @@ denormFrag visFrags parTy (G.FragmentSpread name directives) = do
 
   -- check for cycles
   when (name `elem` visFrags) $
-    throwVE $ "cannot spread fragment " <> showName name <> " within itself via "
+    throwVE $ "cannot spread fragment " <> showName name
+    <> " within itself via "
     <> T.intercalate "," (map G.unName visFrags)
 
   (FragDef _ fragTyInfo selSet) <- getFragInfo
@@ -303,7 +328,7 @@ denormFrag visFrags parTy (G.FragmentSpread name directives) = do
     throwVE $ "cannot spread fragment " <> showName name <> " defined on " <>
     showNamedTy fragTy <> " when selecting fields of type " <> showNamedTy parTy
 
-  resFlds <- withPathK "selset" $ denormSelSet (name:visFrags) fragTyInfo selSet
+  resFlds <- denormSelSet (name:visFrags) fragTyInfo selSet
 
   withPathK "directives" $ withDirectives directives $
     return $ FieldGroup (FGSFragSprd  name) resFlds
