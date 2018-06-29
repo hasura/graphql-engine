@@ -171,3 +171,8 @@ parseWebHook = optional $ strOption ( long "auth-hook" <>
                             metavar "AUTHENTICATION WEB HOOK" <>
                             help "The authentication webhook, required to authenticate requests"
                           )
+
+parseEnableConsole :: Parser Bool
+parseEnableConsole = switch ( long "enable-console" <>
+                              help "Enable API Console"
+                            )
