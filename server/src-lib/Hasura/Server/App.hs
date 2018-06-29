@@ -28,8 +28,7 @@ import qualified Network.HTTP.Client.TLS       as HT
 import           Network.Wai                   (strictRequestBody)
 import qualified Network.Wreq                  as Wq
 import qualified Network.Wreq.Types            as WqT
-import qualified Text.Mustache                 as M
-import qualified Text.Mustache.Compile         as M
+import qualified Data.FileEmbed                as FE
 
 import           Web.Spock.Core
 
@@ -58,9 +57,8 @@ import           Hasura.SQL.Types
 
 type RavenLogger = ServerLogger (BL.ByteString, Either QErr BL.ByteString)
 
-consoleTmplt :: M.Template
-consoleTmplt =
-  $(M.embedSingleTemplate "src-rsr/console.html")
+consoleHTML :: T.Text
+consoleHTML = $(FE.embedStringFile "src-rsr/console.html")
 
 ravenLogGen :: LogDetailG (BL.ByteString, Either QErr BL.ByteString)
 ravenLogGen _ (reqBody, res) =
@@ -357,18 +355,6 @@ legacyQueryHandler tn queryType =
   where
     qt = QualifiedTable publicSchema tn
 
-mkConsoleHtml :: AuthMode -> IO T.Text
-mkConsoleHtml am = do
-  bool (initErrExit $ show errs) (return txt) $ null errs
-  where
-    quote t = T.singleton '"' <> t <> T.singleton '"'
-    accessKey = case am of
-      AMNoAuth               -> quote ""
-      AMAccessKey t          -> quote t
-      AMAccessKeyAndHook t _ -> quote t
-    (errs, txt) = M.checkedSubstitute consoleTmplt $
-                   object ["accessKey" .= accessKey]
-
 app
   :: Q.TxIsolation
   -> Maybe String
@@ -397,9 +383,7 @@ app isoLevel mRootDir logger pool mode corsCfg enableConsole = do
       middleware $ corsMiddleware (mkDefaultCorsPolicy $ ccDomain corsCfg)
 
     -- API Console and Root Dir
-    if enableConsole then do
-      consoleHTML <- lift $ mkConsoleHtml mode
-      serveApiConsole consoleHTML
+    if enableConsole then serveApiConsole consoleHTML
     else maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
 
     get    ("v1/template" <//> var) $ tmpltGetOrDeleteH serverCtx
