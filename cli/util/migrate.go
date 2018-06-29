@@ -44,6 +44,7 @@ func ExecuteMigration(cmd, dir, db string, stepOrVersion int64) error {
 			direction = "up"
 		} else {
 			direction = "down"
+			stepOrVersion = -(stepOrVersion)
 		}
 		err = mig.GotoCmd(t, uint64(stepOrVersion), direction)
 	default:
