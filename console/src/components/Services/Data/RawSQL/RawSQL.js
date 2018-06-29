@@ -16,6 +16,7 @@ import {
   SET_TRACK_TABLE_CHECKED,
 } from './Actions';
 import { modalOpen, modalClose } from './Actions';
+import globals from '../../../../Globals';
 
 const migrationTip = (
   <Tooltip id="tooltip-migration">
@@ -192,7 +193,7 @@ const RawSQL = ({
             }}
           />
           <hr />
-          {migrationMode ? (
+          {migrationMode && globals.consoleMode === 'cli' ? (
             <div>
               <input
                 checked={isMigrationChecked}
@@ -243,10 +244,11 @@ const RawSQL = ({
             onClick={() => {
               // check migration mode global
               if (migrationMode) {
-                const isMigration = document.getElementById(
+                const checkboxElem = document.getElementById(
                   'migration-checkbox'
-                ).checked;
-                if (!isMigration) {
+                );
+                const isMigration = checkboxElem ? checkboxElem.checked : false;
+                if (!isMigration && globals.consoleMode === 'cli') {
                   // if migration is not checked, check if the sql text has any of 'create', 'alter', 'drop'
                   const formattedSql = sql.toLowerCase();
                   if (

@@ -13,19 +13,25 @@ import { composeOnEnterHooks } from 'utils/router';
 
 import generatedApiExplorer from './components/ApiExplorer/ApiExplorerGenerator';
 
+import globals from './Globals';
+
 const routes = store => {
   // load hasuractl migration status
   const requireMigrationStatus = (nextState, replaceState, cb) => {
-    store.dispatch(loadMigrationStatus()).then(
-      () => {
-        cb();
-      },
-      () => {
-        alert(
-          'Not able to reach the cluster. Check if hasura console server is running or if cluster exists and try again'
-        );
-      }
-    );
+    if (globals.consoleMode === 'cli') {
+      store.dispatch(loadMigrationStatus()).then(
+        () => {
+          cb();
+        },
+        () => {
+          alert(
+            'Not able to reach the cluster. Check if hasura console server is running or if cluster exists and try again'
+          );
+        }
+      );
+    } else {
+      cb();
+    }
     return;
   };
 

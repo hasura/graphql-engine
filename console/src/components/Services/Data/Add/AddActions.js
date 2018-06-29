@@ -1,19 +1,13 @@
 import defaultState from './AddState';
-import { globalCookiePolicy } from '../../../../Endpoints';
 import _push from '../push';
-import { loadSchema } from '../DataActions';
-import {
-  showSuccessNotification,
-  showErrorNotification,
-} from '../Notification';
-import dataHeaders from '../Common/Headers';
+import { loadSchema, makeMigrationCall } from '../DataActions';
+import { showSuccessNotification } from '../Notification';
 import {
   loadMigrationStatus,
   UPDATE_MIGRATION_STATUS_ERROR,
 } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
-
-import returnMigrateUrl from '../Common/getMigrateUrl';
+import globals from '../../../../Globals';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
@@ -85,23 +79,10 @@ const createTableSql = () => {
     const state = getState().addTable.table;
     const currentSchema = getState().tables.currentSchema;
 
-    const currMigrationMode = getState().main.migrationMode;
-
-    const migrateUrl = returnMigrateUrl(currMigrationMode);
-
     // validations
     if (state.tableName.trim() === '') {
       alert('Table name cannot be empty');
     }
-    /*
-    CREATE TABLE COMPANY(
-       ID INT PRIMARY KEY     NOT NULL,
-       NAME           TEXT    NOT NULL,
-       AGE            INT     NOT NULL,
-       ADDRESS        CHAR(50),
-       SALARY         REAL
-    );
-    */
     let tableColumns = '';
     const currentCols = state.columns.filter(c => c.name !== '');
     const pKeys = state.primaryKeys
@@ -190,77 +171,52 @@ const createTableSql = () => {
       // down: downQuery.args,
       down: [],
     };
-    const options = {
-      method: 'POST',
-      credentials: globalCookiePolicy,
-      headers: dataHeaders,
-      body: JSON.stringify(schemaMigration),
-    };
-    fetch(migrateUrl, options).then(
-      response => {
-        if (response.ok) {
-          // update migration state
-          dispatch(loadMigrationStatus());
-          dispatch(showSuccessNotification('Table created!'));
-          dispatch({ type: REQUEST_SUCCESS });
-          dispatch({ type: SET_DEFAULTS });
-          dispatch(setTable(state.tableName.trim()));
-          dispatch(loadSchema()).then(() =>
-            dispatch(
-              _push(
-                '/schema/' +
-                  currentSchema +
-                  '/tables/' +
-                  state.tableName.trim() +
-                  '/modify'
-              )
-            )
-          );
-          return;
-        }
-        response.json().then(
-          errorMsg => {
-            // handle migration error cases
-            // any other unhandled codes
-            const requestMsg = 'Create Table';
-            const parsedErrorMsg = errorMsg;
-            parsedErrorMsg.message = JSON.parse(errorMsg.message);
-            dispatch(
-              showErrorNotification(
-                'Creating table failed!',
-                errorMsg.code,
-                requestMsg,
-                parsedErrorMsg
-              )
-            );
-            // dispatch(showErrorNotification('Creating table failed!', errorMsg.error, schemaMigration, errorMsg));
-            dispatch({ type: REQUEST_ERROR, data: errorMsg });
-          },
-          () => {
-            dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: response });
-            dispatch(
-              showErrorNotification(
-                'Creating table failed',
-                'Something is wrong. Please check your configuration again'
-              )
-            );
-            dispatch({
-              type: REQUEST_ERROR,
-              data: 'Something is wrong. Please check your configuration again',
-            });
-          }
-        );
-      },
-      error => {
+    let finalReqBody = schemaMigration.up;
+    if (globals.consoleMode === 'hasuradb') {
+      finalReqBody = schemaMigration.up;
+    }
+    const requestMsg = 'Creating table...';
+    const successMsg = 'Table Created';
+    const errorMsg = 'Create table failed';
+
+    const customOnSuccess = () => {
+      dispatch(_push('/'));
+      // update migration state
+      dispatch(loadMigrationStatus());
+      dispatch(showSuccessNotification('Table created!'));
+      dispatch({ type: REQUEST_SUCCESS });
+      dispatch({ type: SET_DEFAULTS });
+      dispatch(setTable(state.tableName.trim()));
+      dispatch(loadSchema()).then(() =>
         dispatch(
-          showErrorNotification(
-            'Creating table failed!',
-            'Unable to reach your cluster.\nPlease check if hasura console server is running.\nRestart and try again.'
+          _push(
+            '/schema/' +
+              currentSchema +
+              '/tables/' +
+              state.tableName.trim() +
+              '/modify'
           )
-        );
-        dispatch({ type: REQUEST_ERROR, data: 'server-connection-failed' });
-        console.error(error);
-      }
+        )
+      );
+      return;
+    };
+    const customOnError = err => {
+      dispatch({ type: REQUEST_ERROR, data: errorMsg });
+      dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+      return;
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      finalReqBody,
+      [],
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
     );
   };
 };

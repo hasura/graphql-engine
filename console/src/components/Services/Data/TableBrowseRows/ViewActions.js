@@ -160,7 +160,6 @@ const vCloseRel = (path, relname) => {
 };
 /* ************ helpers ************************/
 const defaultSubQuery = (relname, tableSchema) => {
-  console.log(tableSchema);
   return {
     name: relname,
     columns: tableSchema.columns.map(c => c.column_name),

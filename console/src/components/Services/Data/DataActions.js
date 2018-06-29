@@ -10,6 +10,7 @@ import { showErrorNotification, showSuccessNotification } from './Notification';
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
+import globals from '../../../Globals';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_SCHEMA = 'Data/LOAD_SCHEMA';
@@ -175,7 +176,10 @@ const setTable = tableName => ({ type: SET_TABLE, tableName });
 
 const handleMigrationErrors = (title, errorMsg) => dispatch => {
   const requestMsg = title;
-  if (errorMsg.code === 'migration_failed') {
+  if (globals.consoleMode === 'hasuradb') {
+    // handle errors for run_sql based workflow
+    dispatch(showErrorNotification(title, errorMsg.code, requestMsg, errorMsg));
+  } else if (errorMsg.code === 'migration_failed') {
     dispatch(
       showErrorNotification(title, 'Migration Failed', requestMsg, errorMsg)
     );
@@ -233,12 +237,18 @@ const makeMigrationCall = (
 
   const migrateUrl = returnMigrateUrl(currMigrationMode);
 
+  let finalReqBody;
+  if (globals.consoleMode === 'hasuradb') {
+    finalReqBody = upQuery;
+  } else if (globals.consoleMode === 'cli') {
+    finalReqBody = migrationBody;
+  }
   const url = migrateUrl;
   const options = {
     method: 'POST',
     credentials: globalCookiePolicy,
     headers: dataHeaders,
-    body: JSON.stringify(migrationBody),
+    body: JSON.stringify(finalReqBody),
   };
 
   const onSuccess = () => {

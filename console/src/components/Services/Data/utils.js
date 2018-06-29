@@ -9,7 +9,6 @@ const ordinalColSort = (a, b) => {
 };
 
 const findFKConstraint = (curTable, column) => {
-  console.log(curTable);
   const fkConstraints = curTable.foreign_key_constraints;
 
   return fkConstraints.find(
