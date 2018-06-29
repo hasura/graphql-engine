@@ -690,7 +690,7 @@ mkGCtxMapTable
   => TableCache
   -> TableInfo
   -> m (Map.HashMap RoleName (TyAgg, RootFlds))
-mkGCtxMapTable tableCache (TableInfo tn fields rolePerms) = do
+mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms) = do
   m <- Map.traverseWithKey (mkGCtxRole tableCache tn fields) rolePerms
   let adminCtx = mkGCtxRole' tn (Just colInfos)
                  (Just selFlds) (Just colInfos) (Just ())
@@ -714,7 +714,8 @@ mkGCtxMap
   :: (MonadError QErr m)
   => TableCache -> m (Map.HashMap RoleName GCtx)
 mkGCtxMap tableCache = do
-  typesMapL <- mapM (mkGCtxMapTable tableCache) $ Map.elems tableCache
+  typesMapL <- mapM (mkGCtxMapTable tableCache) $
+               filter (not . tiSystemDefined) $ Map.elems tableCache
   let typesMap = foldr (Map.unionWith mappend) Map.empty typesMapL
   return $ Map.map (uncurry mkGCtx) typesMap
 

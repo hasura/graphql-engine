@@ -71,11 +71,11 @@ module Hasura.RQL.Types.SchemaCache
        , isDependentOn
        ) where
 
+import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
-import           Hasura.Prelude
 import qualified Hasura.SQL.DML              as S
 import           Hasura.SQL.Types
 
@@ -305,15 +305,16 @@ type RolePermInfoMap = M.HashMap RoleName RolePermInfo
 data TableInfo
   = TableInfo
   { tiName            :: !QualifiedTable
+  , tiSystemDefined   :: !Bool
   , tiFieldInfoMap    :: !FieldInfoMap
   , tiRolePermInfoMap :: !RolePermInfoMap
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 
-mkTableInfo :: QualifiedTable -> [(PGCol, PGColType)] -> TableInfo
-mkTableInfo tn cols =
-  TableInfo tn colMap $ M.fromList []
+mkTableInfo :: QualifiedTable -> Bool -> [(PGCol, PGColType)] -> TableInfo
+mkTableInfo tn isSystemDefined cols =
+  TableInfo tn isSystemDefined colMap $ M.fromList []
   where
     colMap     = M.fromList $ map f cols
     f (cn, ct) = (fromPGCol cn, FIColumn $ PGColInfo cn ct)
@@ -568,13 +569,13 @@ getDependentObjsOfTableWith f objId ti =
 
 getDependentRelsOfTable :: (T.Text -> Bool) -> SchemaObjId
                         -> TableInfo -> [SchemaObjId]
-getDependentRelsOfTable rsnFn objId (TableInfo tn fim _) =
+getDependentRelsOfTable rsnFn objId (TableInfo tn _ fim _) =
     map (SOTableObj tn . TORel . riName) $
     filter (isDependentOn rsnFn objId) $ getRels fim
 
 getDependentPermsOfTable :: (T.Text -> Bool) -> SchemaObjId
                          -> TableInfo -> [SchemaObjId]
-getDependentPermsOfTable rsnFn objId (TableInfo tn _ rpim) =
+getDependentPermsOfTable rsnFn objId (TableInfo tn _ _ rpim) =
   concat $ flip M.mapWithKey rpim $
   \rn rpi -> map (SOTableObj tn . TOPerm rn) $ getDependentPerms' rsnFn objId rpi
 

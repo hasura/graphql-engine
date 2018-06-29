@@ -190,7 +190,7 @@ applyQP2 (ReplaceMetadata tables templates) = do
 
     -- tables and views
     indexedForM_ (map _tmTable tables) $ \tableName ->
-      void $ DT.trackExistingTableOrViewP2 tableName
+      void $ DT.trackExistingTableOrViewP2 tableName False
 
     -- Relationships
     indexedForM_ tables $ \table -> do
