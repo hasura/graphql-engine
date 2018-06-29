@@ -3,40 +3,60 @@ PARENT_DIR := $(shell dirname $(PWD))
 VERSION := $(shell build/get-version.sh)
 OUTPUT_DIR := _output
 
-.PHONY: build test clean assets all docs
-
 # compile assets
+.PHONY: assets
 assets:
 	go-bindata --pkg assets -o assets/assets.go assets/console.html
 
+HAS_GOX := $(shell command -v gox;)
+HAS_DEP := $(shell command -v dep;)
+HAS_BINDATA := $(shell command -v go-bindata;)
+
+.PHONY: deps
 # get dependencies
 deps:
-	go get github.com/golang/dep/cmd/dep
+ifndef HAS_DEP
+	go get -u github.com/golang/dep/cmd/dep
+endif
+ifndef HAS_GOX
 	go get github.com/mitchellh/gox
+endif
+ifndef HAS_BINDATA
 	go get github.com/hasura/go-bindata/go-bindata
-	dep ensure
+endif
+	if [ ! -d "vendor" ]; then dep ensure -v -vendor-only; fi
 
 # build cli locally, for all given platform/arch
+.PHONY: build
 build:
-	gox -ldflags "-X github.com/hasura/graphql-engine/cli.version=$(VERSION)" \
+	gox -ldflags "-X github.com/hasura/graphql-engine/cli.version=$(VERSION)" -ldflags "-s -w" \
 	-os="linux darwin windows" \
 	-arch="amd64" \
 	-output="$(OUTPUT_DIR)/$(VERSION)/hasura-{{.OS}}-{{.Arch}}" \
 	./cmd/hasura/
 
+# compress
+.PHONY: compress
+compress:
+	ls $(OUTPUT_DIR)/$(VERSION)/hasura-* | xargs upx
+
 # run tests
+.PHONY: test
 test:
 	go test ./...
 
 # generate docs
+.PHONY: docs
 docs:
 	rm -fr docs
 	go run cmd/hasura/hasura.go docs --type md --directory docs
 
 # clean the output directory
+.PHONY: clean
 clean:
 	rm -rf "$(OUTPUT_DIR)"
 
+.PHONY: all
 all: deps assets test build
 
 # build cli inside a docker container
