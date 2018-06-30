@@ -1,18 +1,31 @@
 version: 2
 jobs:
-  build_tagged:
+  server:
     docker:
-    - image: busybox
-    working_directory: /home/hasura/graphql-engine
+      - image: busybox
     steps:
-    - run: echo doing nothing for tagged build.
-  build_untagged:
+      - run: echo doing nothing for server job
+  console:
     docker:
-    - image: busybox
-    working_directory: /home/hasura/graphql-engine
+      - image: busybox
     steps:
-    - run: echo doing nothing for untagged build.
-  build_cli:
+      - run: echo doing nothing for console job
+  update_console:
+    docker:
+      - image: busybox
+    steps:
+      - run: echo doing nothing for update_console job
+  send_pr:
+    docker:
+      - image: busybox
+    steps:
+      - run: echo doing nothing for send_pr job
+  github_release:
+    docker:
+      - image: busybox
+    steps:
+      - run: echo doing nothing for github_release job
+  cli:
     docker:
     - image: hasura/graphql-engine-cli-builder:v0.1
     working_directory: /go/src/github.com/hasura/graphql-engine
@@ -23,7 +36,7 @@ jobs:
         - cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
         - cli-vendor-
     - run:
-        name: get dependencies
+        name: get cli dependencies
         working_directory: /go/src/github.com/hasura/graphql-engine/cli
         command: make deps
     - save_cache:
@@ -37,7 +50,6 @@ jobs:
         name: build cli
         working_directory: /go/src/github.com/hasura/graphql-engine/cli
         command: |
-          make assets
           make build
           make compress
     - store_artifacts:
@@ -45,20 +57,35 @@ jobs:
         destination: cli 
 workflows:
   version: 2
-  un-tagged-build:
+  build_and_maybe_release:
     jobs:
-    - build_untagged:
-        filters:
-          tags:
-            ignore: /^v.*/
-  tagged-build:
+      - server: &filter_all_branches_all_tags
+          filters:
+            tags:
+              only:  /.*/
+      - cli:
+          << : *filter_all_branches_all_tags
+          requires:
+            - server
+      - console:
+          << : *filter_all_branches_all_tags
+          requires:
+            - cli
+      - github_release:
+          filters: &only_vtags_ignore_branches
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+          requires:
+            - console
+      - send_pr:
+          filters: *only_vtags_ignore_branches
+          requires:
+            - github_release
+  update_release:
     jobs:
-    - build_tagged:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v.*/
-  build_cli:
-    jobs:
-    - build_cli
+      - update_console:
+          filters:
+            branches:
+              only: /^release-v.*/
