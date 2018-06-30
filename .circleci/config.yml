@@ -59,16 +59,18 @@ workflows:
   version: 2
   build_and_maybe_release:
     jobs:
-      - server: &filter_all_branches_all_tags
+      - server: &filter_ignore_release_branches_only_all_tags
           filters:
+            branches:
+              ignore: /^release-v.*/
             tags:
               only:  /.*/
       - cli:
-          << : *filter_all_branches_all_tags
+          << : *filter_ignore_release_branches_only_all_tags
           requires:
             - server
       - console:
-          << : *filter_all_branches_all_tags
+          << : *filter_ignore_release_branches_only_all_tags
           requires:
             - cli
       - github_release:
