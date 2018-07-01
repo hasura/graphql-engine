@@ -47,6 +47,17 @@ saveTableToCatalog (QualifiedTable sn tn) =
             INSERT INTO "hdb_catalog"."hdb_table" VALUES ($1, $2)
                 |] (sn, tn) False
 
+updateTableInCatalog :: QualifiedTable -> QualifiedTable -> Q.Tx ()
+updateTableInCatalog oldTable newTable =
+  Q.unitQ [Q.sql|
+           UPDATE "hdb_catalog"."hdb_table"
+              SET table_schema = $1, table_name = $2
+            WHERE table_schema = $3 AND table_name = $4
+                |] (nsn, ntn, osn, otn) False
+  where
+    QualifiedTable osn otn = oldTable
+    QualifiedTable nsn ntn = newTable
+
 -- Build the TableInfo with all its columns
 getTableInfo :: QualifiedTable -> Bool -> Q.TxE QErr TableInfo
 getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
@@ -124,8 +135,12 @@ purgeDep schemaObjId = case schemaObjId of
 processTableChanges :: (P2C m) => TableInfo -> TableDiff -> m ()
 processTableChanges ti tableDiff = do
 
-  when (isJust mNewName) $
-    throw400 NotSupported $ "table renames are not yet supported : " <>> tn
+  case mNewName of
+    Just newTable -> liftTx $ Q.catchE defaultTxErrorHandler $
+      updateTableInCatalog tn newTable
+    Nothing -> return ()
+  -- when (isJust mNewName) $
+  --   throw400 NotSupported $ "table renames are not yet supported : " <>> tn
 
   -- for all the dropped columns
   forM_ droppedCols $ \droppedCol ->
@@ -143,23 +158,22 @@ processTableChanges ti tableDiff = do
 
   sc <- askSchemaCache
   -- for rest of the columns
-  forM_ alteredCols $ \(PGColInfo oColName oColTy, nci@(PGColInfo nColName nColTy)) ->
-    if | oColName /= nColName ->
-           throw400 NotSupported $ "column renames are not yet supported : " <>
-             tn <<> "." <>> oColName
+  forM_ alteredCols $ \(PGColInfo oColName oColTy, (PGColInfo nColName nColTy)) ->
+    if | oColName /= nColName -> do
+           -- throw400 NotSupported $ "column renames are not yet supported : "
+           --   <> tn <<> "." <>> oColName
+           let colId = SOTableObj tn $ TOCol oColName
+               depObjs = getDependentObjsWith (== "untype") sc colId
+           unless (null depObjs) $ throw400 DependencyError $ "cannot rename the column " <> oColName <<> " in table " <> tn <<> " because of following dependencies : " <> reportSchemaObjs depObjs
+
        | oColTy /= nColTy -> do
            let colId   = SOTableObj tn $ TOCol oColName
                depObjs = getDependentObjsWith (== "on_type") sc colId
-           if null depObjs
-             then updateFldInCache oColName $ FIColumn nci
-             else throw400 DependencyError $ "cannot change type of column " <> oColName <<> " in table "
+           unless (null depObjs) $ throw400 DependencyError $ "cannot change type of column " <> oColName <<> " in table "
                   <> tn <<> " because of the following dependencies : " <>
                   reportSchemaObjs depObjs
        | otherwise -> return ()
   where
-    updateFldInCache cn ci = do
-      delFldFromCache (fromPGCol cn) tn
-      addFldToCache (fromPGCol cn) ci tn
     tn = tiName ti
     TableDiff mNewName droppedCols addedCols alteredCols _ = tableDiff
 
@@ -392,7 +406,8 @@ runSqlP2 (RunSQL t cascade) = do
   -- update the schema cache with the changes
   processSchemaChanges schemaDiff
 
-  postSc <- askSchemaCache
+  postSc <- liftTx buildSchemaCache
+  writeSchemaCache postSc
   -- recreate the insert permission infra
   forM_ (M.elems $ scTables postSc) $ \ti -> do
     let tn = tiName ti
