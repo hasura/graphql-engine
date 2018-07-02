@@ -50,7 +50,5 @@ export const runModifyTableTests = () => {
   });
 };
 
-if (testMode !== 'cli') {
-  setup();
-  runModifyTableTests();
-}
+setup();
+runModifyTableTests();
