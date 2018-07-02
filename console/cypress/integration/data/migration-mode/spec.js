@@ -32,3 +32,14 @@ export const checkToggleButton = () => {
     }
   });
 };
+
+export const checkToggleButton = () => {
+  cy.window().then(win => {
+    const { consoleMode } = win.__env;
+    if (consoleMode === 'cli') {
+      testToggleButton();
+    } else {
+      cy.get('[class=react-toggle-track]').should('not.exist');
+    }
+  });
+};
