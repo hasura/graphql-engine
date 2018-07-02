@@ -18,7 +18,7 @@ follow the instructions below to make sure the import paths are correct.
 ## Development workflow
 
 We suggest using [realize](https://github.com/oxequa/realize) for faster dev
-workflow. The `.realize` config is already included in the repo.
+workflow. The `.realize.yaml` config is already included in the repo.
 
 - Install realize
   ```bash
