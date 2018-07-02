@@ -110,15 +110,8 @@ class ApiRequest extends Component {
   };
 
   getUrlBar() {
-    const dropDown = require('./Dropdown.svg');
     const { explorerData, bodyType } = this.props;
 
-    /*
-    let isDisabled = false;
-    if (bodyType === 'graphql') {
-      isDisabled = true;
-    }
-    */
     return (
       <div
         id="stickyHeader"
@@ -131,29 +124,28 @@ class ApiRequest extends Component {
         }
       >
         <div className={'col-xs-12 ' + styles.padd_remove}>
-          <div className={'input-group ' + styles.inputGroupWrapper}>
+          <div
+            className={
+              'input-group ' +
+              styles.inputGroupWrapper +
+              ' ' +
+              styles.cursorNotAllowed
+            }
+          >
             <div className={'input-group-btn ' + styles.inputGroupBtn}>
-              <button
-                type="button"
-                className={'btn btn-default dropdown-toggle'}
-                data-toggle="dropdown"
-              >
+              <button type="button" className={'btn btn-default'}>
                 {this.props.method}
-                <span className={styles.caret}>
-                  <img
-                    className={'img-responsive'}
-                    src={dropDown}
-                    alt={'Drop down icon'}
-                  />
-                </span>
               </button>
-              <ul className={'dropdown-menu'}>{this.getHTTPMethods()}</ul>
             </div>
             <input
               onChange={this.onUrlChanged}
               value={this.props.url}
               type="text"
-              className={styles.inputGroupInput + ' form-control'}
+              className={
+                styles.inputGroupInput +
+                ' form-control ' +
+                styles.cursorNotAllowed
+              }
             />
           </div>
         </div>
