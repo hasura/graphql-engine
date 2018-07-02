@@ -1,5 +1,3 @@
-/* eslint-disable prefer-destructuring */
-
 import { makeDataAPIOptions, getColName } from '../../helpers/dataHelpers';
 import {
   toggleOnMigrationMode,
@@ -12,10 +10,12 @@ let dataApiUrl;
 
 export const setMetaData = () => {
   cy.window().then(win => {
-    const { __env } = win;
-    accessKey = __env.accessKey;
-    dataApiUrl = __env.dataApiUrl;
-    toggleOnMigrationMode();
+    accessKey = win.__env.accessKey;
+    dataApiUrl = win.__env.dataApiUrl;
+    const { consoleMode } = win.__env;
+    if (consoleMode === 'cli') {
+      toggleOnMigrationMode();
+    }
   });
 };
 
@@ -131,10 +131,10 @@ const compareChecks = (permObj, check, query, columns, allowUpsert) => {
     }
   } else if (query === 'insert') {
     // eslint-disable-line no-lonely-if
-    expect(permObj.check[getColName(0)].$eq === '1').to.be.true; // eslint-dsable-line eqeqeq
+    expect(permObj.check[getColName(0)]._eq === '1').to.be.true; // eslint-dsable-line eqeqeq
     expect(permObj.allow_upsert === allowUpsert).to.be.true;
   } else {
-    expect(permObj.filter[getColName(0)].$eq === '1').to.be.true;
+    expect(permObj.filter[getColName(0)]._eq === '1').to.be.true;
     if (query === 'select' || query === 'update') {
       columns.forEach((col, index) => {
         expect(permObj.columns.includes(getColName(index)));

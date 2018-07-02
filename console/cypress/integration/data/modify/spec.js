@@ -99,7 +99,7 @@ export const Addcolumn = () => {
   cy.get('input[placeholder = "column name"]').type('{selectall}{del}');
   const name = makeid();
   cy.get('input[placeholder = "column name"]').type(name);
-  cy.get('select').select('integer');
+  cy.get(getElementFromAlias('data-type')).select('integer');
   cy.get('input[placeholder = "default value"]').type('{selectall}{del}');
   cy.get('[data-test=nullable-checkbox]').check();
   cy.get(getElementFromAlias('add-column-button')).click();
@@ -110,7 +110,6 @@ export const Addcolumn = () => {
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
   );
-
   validateColumn(getTableName(0), [name], 'success');
 };
 
@@ -234,7 +233,7 @@ export const passMTDeleteTable = () => {
     .contains('Delete table')
     .click();
   cy.on('window:confirm', () => true);
-  cy.wait(7000);
+  cy.wait(5000);
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
   validateCT(getTableName(0), 'failure');
 };

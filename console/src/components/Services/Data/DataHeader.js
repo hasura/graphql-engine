@@ -65,7 +65,10 @@ const DataHeader = ({
                 }
               >
                 <div className={styles.schemaWrapper}>
-                  <div className={styles.schemaSidebarSection}>
+                  <div
+                    className={styles.schemaSidebarSection}
+                    data-test="schema"
+                  >
                     <Link
                       className={styles.schemaBorder}
                       to={appPrefix + '/schema'}

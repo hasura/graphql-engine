@@ -8,7 +8,7 @@ import {
 
 import { setMetaData } from '../../validators/validators';
 
-import { testPermissions, permRemove, createView } from './utils';
+import { testPermissions, permRemove, createView, trackView } from './utils';
 
 export const passPTCreateTable = () => {
   // Click on create tabel
@@ -66,28 +66,17 @@ export const passPTRemovePerms = () => {
   queryTypes.forEach(query => {
     permRemove(getTableName(0), query);
   });
-  // track view
-  cy.get('a')
-    .contains('Data')
-    .click();
-  cy.wait(7000);
-  cy.get(getElementFromAlias(`add-track-table-${getTableName(1)}`)).click();
-  cy.wait(10000);
-  // Move to permissions
-  cy.get('a')
-    .contains('Permissions')
-    .click();
 };
 
 export const passPVCreateView = () => {
   // create a view
   createView(getTableName(1), getTableName(0));
   cy.wait(5000);
-  // move to the table
-  cy.get(getElementFromAlias(getTableName(0))).click();
 };
 
 export const passPVPermissions = () => {
+  // Track the view
+  trackView();
   // Type role
   cy.get(getElementFromAlias('role-textbox')).type('role0');
   // Test permissions
@@ -97,7 +86,6 @@ export const passPVPermissions = () => {
 
 export const passPVRemovePerms = () => {
   permRemove(getTableName(1), 'select');
-  // Move to the view
 };
 
 export const passPVDeleteView = () => {

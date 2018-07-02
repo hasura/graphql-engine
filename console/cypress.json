@@ -1,9 +1,10 @@
 {
   "baseUrl": "http://localhost:3000",
   "env": {
-    "BASE_URL": "http://localhost:3000"
+    "BASE_URL": "http://localhost:3000",
+    "TEST_MODE": "complete"
   },
-  "ignoreTestFiles": ["*spec.js", "validators.js, utils.js"],
+  "ignoreTestFiles": ["*spec.js", "validators.js", "utils.js"],
   "viewportWidth": 1280,
   "viewportHeight": 720,
   "chromeWebSecurity": false,

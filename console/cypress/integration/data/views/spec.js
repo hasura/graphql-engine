@@ -468,7 +468,7 @@ export const passVDeleteView = () => {
   cy.on('window:confirm', str => {
     expect(str === 'Are you sure').to.be.true;
   });
-  cy.wait(7000);
+  cy.wait(5000);
   cy.get('h4').contains('View deleted');
   validateView('author_average_rating', 'failure');
 };

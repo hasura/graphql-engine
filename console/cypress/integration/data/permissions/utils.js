@@ -1,5 +1,6 @@
 import {
   getElementFromAlias,
+  getTableName,
   getColName,
   queryTypes,
   makeDataAPIOptions,
@@ -116,6 +117,20 @@ export const testPermissions = (tableName, check, isView) => {
       permCustomCheck(tableName, query, first);
     });
   }
+};
+
+export const trackView = () => {
+  // track view
+  cy.get('a')
+    .contains('Data')
+    .click();
+  cy.wait(7000);
+  cy.get(getElementFromAlias(`add-track-table-${getTableName(1)}`)).click();
+  cy.wait(10000);
+  // Move to permissions
+  cy.get('a')
+    .contains('Permissions')
+    .click();
 };
 
 export const createView = (viewName, tableName) => {
