@@ -348,7 +348,7 @@ func validateDirectory(dir string) error {
 // SetVersion sets the version inside context, according to the variable
 // 'version' set during build context.
 func (ec *ExecutionContext) setVersion() {
-	if version != "" && ec.Version == "" {
+	if version != "" {
 		ec.Version = version
 	}
 }
