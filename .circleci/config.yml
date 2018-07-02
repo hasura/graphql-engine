@@ -1,30 +1,36 @@
 version: 2
 jobs:
+  # build (test) and push server to docker hub
   server:
     docker:
       - image: busybox
     steps:
       - run: echo doing nothing for server job
+  # build (test) and push console - version will be vMAJOR.MINOR for tags
   console:
     docker:
       - image: busybox
     steps:
       - run: echo doing nothing for console job
+  # build (test) and update vMAJOR.MINOR console assets for release-v* branch updates
   update_console:
     docker:
       - image: busybox
     steps:
       - run: echo doing nothing for update_console job
+  # send pull requests to install manifests and heroku repo to update new server image tag
   send_pr:
     docker:
       - image: busybox
     steps:
       - run: echo doing nothing for send_pr job
+  # upload cli binaries to github releases page for the tag
   github_release:
     docker:
       - image: busybox
     steps:
       - run: echo doing nothing for github_release job
+  # build (test) and upload cli binaries to circleci artifacts
   cli:
     docker:
     - image: hasura/graphql-engine-cli-builder:v0.1
@@ -57,34 +63,37 @@ jobs:
         destination: cli 
 workflows:
   version: 2
+  # executed for all branches except release-v* and for all tags v*
+  # release jobs are only executed for v* tags
   build_and_maybe_release:
     jobs:
-      - server: &filter_ignore_release_branches_only_all_tags
+      - server: &filter_ignore_release_branches_only_vtags
           filters:
             branches:
               ignore: /^release-v.*/
             tags:
-              only:  /.*/
+              only:  /^v.*/
       - cli:
-          << : *filter_ignore_release_branches_only_all_tags
+          << : *filter_ignore_release_branches_only_vtags
           requires:
             - server
       - console:
-          << : *filter_ignore_release_branches_only_all_tags
+          << : *filter_ignore_release_branches_only_vtags
           requires:
             - cli
       - github_release:
           filters: &only_vtags_ignore_branches
-            tags:
-              only: /^v.*/
             branches:
               ignore: /.*/
+            tags:
+              only: /^v.*/
           requires:
             - console
       - send_pr:
           filters: *only_vtags_ignore_branches
           requires:
             - github_release
+  # executed when release-v* branches are updated, to renew console assets
   update_release:
     jobs:
       - update_console:
