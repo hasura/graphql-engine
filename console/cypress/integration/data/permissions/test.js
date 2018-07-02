@@ -43,5 +43,5 @@ export const runPermissionsTests = () => {
   });
 };
 
-setup();
-runPermissionsTests();
+// setup();
+// runPermissionsTests();

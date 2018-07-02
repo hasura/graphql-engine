@@ -47,7 +47,5 @@ export const runViewsTest = () => {
   });
 };
 
-if (testMode !== 'cli') {
-  setup();
-  runViewsTest();
-}
+setup();
+runViewsTest();

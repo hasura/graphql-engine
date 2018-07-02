@@ -83,7 +83,7 @@ export const passTrackTable = () => {
     .click();
   cy.wait(7000);
   cy.get(getElementFromAlias('add-track-table-author_average_rating')).click();
-  cy.wait(7000);
+  cy.wait(5000);
   cy.get('h4').contains('Existing table/view added');
   validateView('author_average_rating', 'success');
 };
