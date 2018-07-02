@@ -54,6 +54,7 @@ const PageContainer = ({
                   tableName +
                   '/browse'
                 }
+                data-test={tableName}
               >
                 <i
                   className={styles.tableIcon + ' fa fa-table'}
