@@ -11,10 +11,10 @@ export const savePermission = () => {
   cy.get('button')
     .contains('Save permissions')
     .click();
-  cy.wait(7000);
+  cy.wait(5500);
   // Check for success notif
   cy.get('[class=notification-title]', { timeout: 5000 }).contains(
-    'Permissions Updated',
+    'Permissions updated',
     { timeout: 5000 }
   );
 };
@@ -71,7 +71,7 @@ export const permCustomCheck = (tableName, query) => {
   // Select operator
   cy.get('select')
     .last()
-    .select(`${getColName(0)}.$eq`);
+    .select(`${getColName(0)}._eq`);
   // Set filter to 1
   cy.get(getElementFromAlias('perm-check-textbox')).type('1');
   // Save
@@ -96,10 +96,10 @@ export const permRemove = (tableName, query) => {
   cy.get('button')
     .contains('Remove all access')
     .click();
-  cy.wait(7000);
+  cy.wait(5500);
   // Check for notif
   cy.get('[class=notification-title]', { timeout: 5000 }).contains(
-    'Permissions Deleted',
+    'Permissions deleted',
     { timeout: 5000 }
   );
   cy.wait(5000);

@@ -106,7 +106,7 @@ export const failMTDuplicateColumns = () => {
     .contains('+ Add column')
     .click();
   // Check for an alert
-  cy.wait(10000);
+  cy.wait(5500);
   cy.get('[class=notification-title]')
     .contains('Adding column failed')
     .click();
@@ -127,7 +127,7 @@ export const Addcolumn = () => {
   cy.get('button')
     .contains('+ Add column')
     .click();
-  cy.wait(7000);
+  cy.wait(5500);
   cy.get('[class=notification-title]').contains('Column added');
   cy.wait(7000);
   cy.url().should(
@@ -146,7 +146,7 @@ export const Addcolumnnullable = () => {
   cy.get('button')
     .contains('+ Add column')
     .click();
-  cy.wait(7000);
+  cy.wait(5500);
   cy.get('[class=notification-title]')
     .contains('Adding column failed')
     .click();
@@ -165,7 +165,7 @@ export const failMTWrongDefault = () => {
   cy.get('button')
     .contains('+ Add column')
     .click();
-  cy.wait(7000);
+  cy.wait(5500);
   cy.get('[class=notification-title]').contains('Adding column failed');
   cy.url().should(
     'eq',
@@ -182,7 +182,7 @@ export const Addcolumnname = name => {
   cy.get('button')
     .contains('+ Add column')
     .click();
-  cy.wait(7000);
+  cy.wait(5500);
   cy.get('[class=notification-title]')
     .contains('Column added')
     .click();
@@ -217,7 +217,7 @@ export const passMTChangeColType = () => {
   cy.get('button')
     .contains('Save')
     .click();
-  cy.wait(7000);
+  cy.wait(5500);
   cy.get('[class=notification-title]')
     .contains('Column modified')
     .click();
@@ -243,7 +243,7 @@ export const passMTDeleteCol = () => {
   cy.on('window:alert', str => {
     expect(str === 'Are you sure you want to delete?').to.be.true;
   });
-  cy.wait(7000);
+  cy.wait(5500);
   cy.get('[class=notification-title]')
     .contains('Column deleted')
     .click();

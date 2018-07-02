@@ -44,7 +44,7 @@ const PageContainer = ({
         }
         if (tables[tableName].detail.table_type === 'BASE TABLE') {
           return (
-            <li className={activeTableClass} key={i} data-test={tableName}>
+            <li className={activeTableClass} key={i}>
               <Link
                 to={
                   appPrefix +
@@ -54,6 +54,7 @@ const PageContainer = ({
                   tableName +
                   '/browse'
                 }
+                data-test={tableName}
               >
                 <i
                   className={styles.tableIcon + ' fa fa-table'}

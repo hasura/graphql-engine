@@ -8,6 +8,8 @@ import { setMetaData, validateCT } from '../../validators/validators';
 
 export const checkCreateTableRoute = () => {
   //    Click on the create table button
+  cy.visit('/data/schema');
+  cy.wait(15000);
   cy.get('button')
     .contains('Create Table')
     .click();
@@ -80,7 +82,7 @@ export const passCT = () => {
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   //  Click on create
   cy.get(getElementFromAlias('table-create')).click();
-  cy.wait(7000);
+  cy.wait(10000);
   //  Check if the table got created and navigatied to modify table
   cy.url().should(
     'eq',
@@ -107,8 +109,9 @@ export const failCTDuplicateTable = () => {
   cy.get('button')
     .contains('Create')
     .click();
+  cy.wait(7000);
   //  Detect error
-  cy.get('div').contains('Creating table failed');
+  cy.get('div').contains('Create table failed');
 };
 
 export const deleteCTTestTable = () => {
