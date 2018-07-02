@@ -4,7 +4,6 @@ import { Link } from 'react-router';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import * as tooltip from './Tooltips';
-import globals from 'Globals';
 import 'react-toggle/style.css';
 import Spinner from '../Common/Spinner/Spinner';
 
@@ -92,19 +91,7 @@ const Main = ({ children, location, migrationModeProgress, currentSchema }) => {
               </OverlayTrigger>
             </ul>
           </div>
-          <div className={styles.clusterInfoWrapper}>
-            <div className="dropdown">
-              <button
-                className={
-                  styles.clusterBtn + ' btn btn-secondary dropdown-toggle'
-                }
-                type="button"
-                id="dropdownMenuButton"
-              >
-                {globals.dataApiUrl}
-              </button>
-            </div>
-          </div>
+          <div className={styles.clusterInfoWrapper} />
         </div>
         <div className={styles.main + ' container-fluid'}>{mainContent}</div>
       </div>

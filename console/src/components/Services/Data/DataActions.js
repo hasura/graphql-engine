@@ -252,7 +252,9 @@ const makeMigrationCall = (
   };
 
   const onSuccess = () => {
-    dispatch(loadMigrationStatus());
+    if (globals.consoleMode === 'cli') {
+      dispatch(loadMigrationStatus()); // don't call for hasuradb mode
+    }
     dispatch(loadSchema());
     customOnSuccess();
     if (successMsg) {
