@@ -44,7 +44,7 @@ const (
 )
 
 // version is set at build time, denotes the CLI version.
-var version = "v0.0.0-unset"
+var version = "dev"
 
 // HasuraGraphQLConfig has the config values required to contact the server.
 type HasuraGraphQLConfig struct {

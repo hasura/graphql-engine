@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"sync"
 
+	"github.com/Masterminds/semver"
 	"github.com/fatih/color"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -93,19 +94,20 @@ func (o *consoleOptions) run() error {
 
 	router.setRoutes(u.Host, o.EC.Config.AccessKey, o.EC.MigrationDir)
 
-	var releaseSuffix string
-	if !o.EC.IsStableRelease {
-		releaseSuffix = "-stg"
+	assetsVersion := o.EC.GetVersion()
+	v, err := semver.NewVersion(assetsVersion)
+	if err == nil {
+		assetsVersion = fmt.Sprintf("v%d.%d", v.Major(), v.Minor())
 	}
 
 	consoleRouter, err := serveConsole(gin.H{
 		"apiHost":        "http://" + o.Address,
 		"apiPort":        o.APIPort,
-		"cliVersion":     "",
+		"cliVersion":     o.EC.GetVersion(),
 		"dataApiUrl":     o.EC.Config.Endpoint,
 		"dataApiVersion": "",
 		"accessKey":      o.EC.Config.AccessKey,
-		"releaseSuffix":  releaseSuffix,
+		"assetsVersion":  assetsVersion,
 	})
 
 	if err != nil {
