@@ -146,6 +146,7 @@ const PageContainer = ({
               >
                 <button
                   className={styles.add_mar_right + ' btn btn-xs btn-default'}
+                  data-test="sidebar-add-table"
                 >
                   Add Table
                 </button>
