@@ -11,7 +11,7 @@ DATA_API_URL=http://localhost:9000
 API_HOST=http://localhost
 API_PORT=9693
 ACCESS_KEY=abcd
-CONSOLE_MODE=hasuradb
+CONSOLE_MODE=cli
 DEV_DATA_API_URL=http://localhost:9000
 URL_PREFIX=/
 ```

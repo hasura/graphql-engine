@@ -107,8 +107,9 @@ export const failCTDuplicateTable = () => {
   cy.get('button')
     .contains('Create')
     .click();
+  cy.wait(5000);
   //  Detect error
-  cy.get('div').contains('Creating table failed');
+  cy.get('div').contains('Create table failed');
 };
 
 export const deleteCTTestTable = () => {
