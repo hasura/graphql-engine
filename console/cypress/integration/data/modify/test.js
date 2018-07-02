@@ -50,5 +50,5 @@ export const runModifyTableTests = () => {
   });
 };
 
-setup();
-runModifyTableTests();
+// setup();
+// runModifyTableTests();

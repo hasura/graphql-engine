@@ -12,12 +12,9 @@ export const savePermission = () => {
   cy.get('button')
     .contains('Save permissions')
     .click();
-  cy.wait(5500);
+  cy.wait(5000);
   // Check for success notif
-  cy.get('[class=notification-title]', { timeout: 5000 }).contains(
-    'Permissions updated',
-    { timeout: 5000 }
-  );
+  cy.get('[class=notification-title]').contains('Permissions updated');
 };
 
 export const permNoCheck = (tableName, query, first) => {
@@ -97,12 +94,18 @@ export const permRemove = (tableName, query) => {
   cy.get('button')
     .contains('Remove all access')
     .click();
+<<<<<<< HEAD
   cy.wait(5500);
   // Check for notif
   cy.get('[class=notification-title]', { timeout: 5000 }).contains(
     'Permissions deleted',
     { timeout: 5000 }
   );
+=======
+  cy.wait(5000);
+  // Check for notif
+  cy.get('[class=notification-title]').contains('Permissions deleted');
+>>>>>>> console: fix permissiosn tests
   cy.wait(5000);
   // Validate
   validatePermission(tableName, 'role0', query, 'custom', 'failure');
