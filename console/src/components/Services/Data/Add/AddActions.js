@@ -182,7 +182,9 @@ const createTableSql = () => {
     const customOnSuccess = () => {
       dispatch(_push('/'));
       // update migration state
-      dispatch(loadMigrationStatus());
+      if (globals.consoleMode === 'cli') {
+        dispatch(loadMigrationStatus());
+      }
       dispatch(showSuccessNotification('Table created!'));
       dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: SET_DEFAULTS });

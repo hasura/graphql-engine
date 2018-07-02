@@ -37,6 +37,10 @@
 .requestInFocus {
   
 }
+.cursorNotAllowed {
+  cursor: not-allowed;
+  pointer-events: none;
+}
 .apiExplorerWrapper
 {
   display: flex;
@@ -280,7 +284,6 @@
     .apiRequestContent
     {
       font-size: 14px;
-      // padding-bottom: 10px;
       a
       {
         color: #FEC53D;
