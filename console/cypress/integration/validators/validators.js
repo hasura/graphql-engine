@@ -1,5 +1,3 @@
-/* eslint-disable prefer-destructuring */
-
 import { makeDataAPIOptions, getColName } from '../../helpers/dataHelpers';
 import {
   toggleOnMigrationMode,
@@ -12,10 +10,12 @@ let dataApiUrl;
 
 export const setMetaData = () => {
   cy.window().then(win => {
-    const { __env } = win;
-    accessKey = __env.accessKey;
-    dataApiUrl = __env.dataApiUrl;
-    toggleOnMigrationMode();
+    accessKey = win.__env.accessKey;
+    dataApiUrl = win.__env.dataApiUrl;
+    const { consoleMode } = win.__env;
+    if (consoleMode === 'cli') {
+      toggleOnMigrationMode();
+    }
   });
 };
 

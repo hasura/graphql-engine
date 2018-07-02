@@ -4,7 +4,7 @@ import { validateMigrationMode } from '../../validators/validators';
 
 import { toggleOnMigrationMode, toggleOffMigrationMode } from './utils';
 
-export const checkToggleButton = () => {
+export const testToggleButton = () => {
   // eslint-disable-line
   // Turn off migration mode
   toggleOffMigrationMode();
@@ -18,4 +18,15 @@ export const checkToggleButton = () => {
   // Validate
   validateMigrationMode(true);
   cy.wait(7000);
+};
+
+export const checkToggleButton = () => {
+  cy.window().then(win => {
+    const { consoleMode } = win.__env;
+    if (consoleMode === 'cli') {
+      testToggleButton();
+    } else {
+      cy.get('[class=react-toggle-track]').should('not.exist');
+    }
+  });
 };
