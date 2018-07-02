@@ -37,12 +37,5 @@ export const runCreateTableTests = () => {
   });
 };
 
-<<<<<<< HEAD
-if (testMode !== 'cli') {
-  setup();
-  runCreateTableTests();
-}
-=======
 setup();
 runCreateTableTests();
->>>>>>> console: fix create-table tests
