@@ -37,5 +37,5 @@ export const runCreateTableTests = () => {
   });
 };
 
-setup();
-runCreateTableTests();
+// setup();
+// runCreateTableTests();
