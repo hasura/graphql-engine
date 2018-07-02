@@ -11,21 +11,13 @@ import {
 } from '../../validators/validators';
 
 export const passMTCreateTable = () => {
-  cy.get('button')
-    .contains('Create Table')
-    .click();
+  cy.get(getElementFromAlias('data-create-table')).click();
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   cy.get(getElementFromAlias('tableName')).type(getTableName(0));
-  cy.get('input[placeholder="column_name"]').type('id');
-  cy.get('select')
-    .first()
-    .select('Integer');
-  cy.get('select')
-    .last()
-    .select('id');
-  cy.get('button')
-    .contains('Create')
-    .click();
+  cy.get(getElementFromAlias('column-0')).type('id');
+  cy.get(getElementFromAlias('col-type-0')).select('Integer');
+  cy.get(getElementFromAlias('primary-key-select-0')).select('id');
+  cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
   cy.url().should(
     'eq',
@@ -59,9 +51,7 @@ export const passMTCheckRoute = () => {
 };
 
 export const passMTMoveToTable = () => {
-  cy.get('a')
-    .contains(getTableName(0))
-    .click();
+  cy.get(getElementFromAlias(getTableName(0))).click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0)}/browse`
@@ -69,12 +59,8 @@ export const passMTMoveToTable = () => {
 };
 
 export const failMTWithoutColName = () => {
-  cy.get('button')
-    .contains('+ Add column')
-    .click();
-  cy.get('[class=notification-title]')
-    .contains('Error adding column!')
-    .click();
+  cy.get(getElementFromAlias('add-column-button')).click();
+  cy.get('.notification-error').click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
@@ -85,12 +71,8 @@ export const failMTWithoutColName = () => {
 
 export const failMTWithoutColType = () => {
   cy.get('input[placeholder = "column name"]').type('something');
-  cy.get('button')
-    .contains('+ Add column')
-    .click();
-  cy.get('[class=notification-title]')
-    .contains('Error creating column!')
-    .click();
+  cy.get(getElementFromAlias('add-column-button')).click();
+  cy.get('.notification-error').click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
@@ -102,14 +84,10 @@ export const failMTDuplicateColumns = () => {
   cy.get('input[placeholder = "column name"]').type('{selectall}{del}');
   cy.get('input[placeholder = "column name"]').type('id');
   cy.get('select').select('integer');
-  cy.get('button')
-    .contains('+ Add column')
-    .click();
+  cy.get(getElementFromAlias('add-column-button')).click();
   // Check for an alert
   cy.wait(5500);
-  cy.get('[class=notification-title]')
-    .contains('Adding column failed')
-    .click();
+  cy.get('.notification-error').click();
   // Check if the route didn't change
   cy.url().should(
     'eq',
@@ -124,11 +102,9 @@ export const Addcolumn = () => {
   cy.get('select').select('integer');
   cy.get('input[placeholder = "default value"]').type('{selectall}{del}');
   cy.get('[data-test=nullable-checkbox]').check();
-  cy.get('button')
-    .contains('+ Add column')
-    .click();
+  cy.get(getElementFromAlias('add-column-button')).click();
   cy.wait(5500);
-  cy.get('[class=notification-title]').contains('Column added');
+  cy.get('.notification-success').click();
   cy.wait(7000);
   cy.url().should(
     'eq',
@@ -143,13 +119,9 @@ export const Addcolumnnullable = () => {
   cy.get('input[placeholder = "column name"]').type('some');
   cy.get('select').select('Text');
   cy.get('[data-test=nullable-checkbox]').uncheck();
-  cy.get('button')
-    .contains('+ Add column')
-    .click();
+  cy.get(getElementFromAlias('add-column-button')).click();
   cy.wait(5500);
-  cy.get('[class=notification-title]')
-    .contains('Adding column failed')
-    .click();
+  cy.get('.notification-error').click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
@@ -162,11 +134,9 @@ export const failMTWrongDefault = () => {
   cy.get('input[placeholder = "column name"]').type('some');
   cy.get('input[placeholder = "default value"]').type('some');
   cy.get('select').select('Integer');
-  cy.get('button')
-    .contains('+ Add column')
-    .click();
+  cy.get(getElementFromAlias('add-column-button')).click();
   cy.wait(5500);
-  cy.get('[class=notification-title]').contains('Adding column failed');
+  cy.get('.notification-error').click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
@@ -179,13 +149,9 @@ export const Addcolumnname = name => {
   cy.get('input[placeholder = "column name"]').type(name);
   cy.get('select').select('integer');
 
-  cy.get('button')
-    .contains('+ Add column')
-    .click();
+  cy.get(getElementFromAlias('add-column-button')).click();
   cy.wait(5500);
-  cy.get('[class=notification-title]')
-    .contains('Column added')
-    .click();
+  cy.get('.notification-success').click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
@@ -218,9 +184,7 @@ export const passMTChangeColType = () => {
     .contains('Save')
     .click();
   cy.wait(5500);
-  cy.get('[class=notification-title]')
-    .contains('Column modified')
-    .click();
+  cy.get('.notification-success').click();
   cy.get('button')
     .contains('Close')
     .click();
@@ -244,9 +208,7 @@ export const passMTDeleteCol = () => {
     expect(str === 'Are you sure you want to delete?').to.be.true;
   });
   cy.wait(5500);
-  cy.get('[class=notification-title]')
-    .contains('Column deleted')
-    .click();
+  cy.get('.notification-success').click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`

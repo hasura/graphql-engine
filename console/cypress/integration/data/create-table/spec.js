@@ -10,9 +10,7 @@ export const checkCreateTableRoute = () => {
   //    Click on the create table button
   cy.visit('/data/schema');
   cy.wait(15000);
-  cy.get('button')
-    .contains('Create Table')
-    .click();
+  cy.get(getElementFromAlias('data-create-table')).click();
   //   Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
 };
@@ -21,9 +19,7 @@ export const failCTWithoutColumns = () => {
   //    Type table name
   cy.get(getElementFromAlias('tableName')).type(getTableName(0));
   //    Click on create
-  cy.get('button')
-    .contains('Create')
-    .click();
+  cy.get(getElementFromAlias('table-create')).click();
   //    Check for an error
   cy.get('div').contains('Column name cannot be empty');
   //    Check if the route didn't change
@@ -37,9 +33,7 @@ export const failCTWithoutPK = () => {
   cy.get(getElementFromAlias('column-0')).type(getColName(0));
   cy.get(getElementFromAlias('col-type-0')).select('serial');
   //   Click on create
-  cy.get('button')
-    .contains('Create')
-    .click();
+  cy.get(getElementFromAlias('table-create')).click();
   //   Check for an error
   cy.get('div').contains(
     'You should have atleast one column as a primary key.'
@@ -57,9 +51,7 @@ export const failCTDuplicateColumns = () => {
   //   Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   //   Click on create
-  cy.get('button')
-    .contains('Create')
-    .click();
+  cy.get(getElementFromAlias('table-create')).click();
   //   Check for an alert
   cy.on('window:alert', str => {
     expect(
@@ -95,9 +87,7 @@ export const passCT = () => {
 
 export const failCTDuplicateTable = () => {
   //  Visit data page
-  cy.get('button')
-    .contains('Add Table')
-    .click();
+  cy.get(getElementFromAlias('sidebar-add-table')).click();
   //  Type table name
   cy.get(getElementFromAlias('tableName')).type(getTableName(0));
   //   Set column
@@ -106,9 +96,7 @@ export const failCTDuplicateTable = () => {
   //   Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   //  Click on create
-  cy.get('button')
-    .contains('Create')
-    .click();
+  cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
   //  Detect error
   cy.get('div').contains('Create table failed');
@@ -116,14 +104,10 @@ export const failCTDuplicateTable = () => {
 
 export const deleteCTTestTable = () => {
   //   Go to the modify section of the table
-  cy.get('a')
-    .contains(`${getTableName(0)}`)
-    .click();
+  cy.get(getElementFromAlias(`${getTableName(0)}`));
   cy.get(getElementFromAlias('table-modify')).click();
   //   Click on delete
-  cy.get('button')
-    .contains('Delete table')
-    .click();
+  cy.get(getElementFromAlias('delete-table')).click();
   //   Confirm
   cy.on('window:confirm', str => {
     expect(str === 'Are you sure?').to.be.true;

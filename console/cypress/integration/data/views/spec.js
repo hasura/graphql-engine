@@ -333,9 +333,7 @@ export const passVFilterQueryEq = () => {
     .last()
     .type(userId);
   // Run query
-  cy.get('button')
-    .contains('Run query')
-    .click();
+  cy.get(getElementFromAlias('run-query')).click();
   cy.wait(5000);
   // Check if the query was successful
   checkQuerySuccess();
@@ -389,9 +387,7 @@ export const passVAscendingSort = () => {
     .last()
     .select('id');
   // Run query
-  cy.get('button')
-    .contains('Run query')
-    .click();
+  cy.get(getElementFromAlias('run-query')).click();
   // Check order
   checkOrder('asc');
 };

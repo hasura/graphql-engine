@@ -576,7 +576,11 @@ class ModifyTable extends Component {
                   } input-sm form-control`}
                   ref={n => (colDefaultInput = n)}
                 />
-                <button type="submit" className="btn btn-sm btn-warning">
+                <button
+                  type="submit"
+                  className="btn btn-sm btn-warning"
+                  data-test="add-column-button"
+                >
                   + Add column
                 </button>
               </form>
@@ -592,6 +596,7 @@ class ModifyTable extends Component {
                   dispatch(deleteTableSql(tableName, tableSchema));
                 }
               }}
+              data-test="delete-table"
             >
               Delete table
             </button>
