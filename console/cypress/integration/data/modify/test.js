@@ -50,5 +50,7 @@ export const runModifyTableTests = () => {
   });
 };
 
-// setup();
-// runModifyTableTests();
+if (testMode !== 'complete') {
+  setup();
+  runModifyTableTests();
+}

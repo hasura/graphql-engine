@@ -43,5 +43,7 @@ export const runPermissionsTests = () => {
   });
 };
 
-// setup();
-// runPermissionsTests();
+if (testMode !== 'complete') {
+  setup();
+  runPermissionsTests();
+}

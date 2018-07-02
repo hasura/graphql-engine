@@ -47,5 +47,7 @@ export const runViewsTest = () => {
   });
 };
 
-setup();
-runViewsTest();
+if (testMode !== 'complete') {
+  setup();
+  runViewsTest();
+}
