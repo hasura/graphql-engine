@@ -1,6 +1,8 @@
 /* eslint no-unused-vars: 0 */
 /* eslint import/prefer-default-export: 0 */
 
+import { testMode } from '../../../helpers/common';
+
 import {
   passBICreateTable,
   deleteBITestTable,
@@ -50,5 +52,7 @@ export const runInsertBrowseTests = () => {
   });
 };
 
-// setup();
-// runInsertBrowseTests();
+if (testMode !== 'complete') {
+  setup();
+  runInsertBrowseTests();
+}
