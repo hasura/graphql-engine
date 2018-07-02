@@ -2,7 +2,6 @@
 
 {% set css_files = css_files + ['_static/hasura-custom.css', '_static/djangosite.css', '_static/jquery-ui.css'] %}
 {% set css_files = css_files + ['_static/global_tabs/global_tabs.css'] %}
-{% set css_files = css_files + ['_static/graphiql/graphiql.css'] %}
 
 {%- macro secondnav() %}
   {%- if prev %}
@@ -210,6 +209,8 @@
 {% block sidebar1 %}{% endblock %}
 {% block sidebar2 %}{% endblock %}
 {% block footer %}
+
+  <!-- GA -->
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
         (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -220,19 +221,18 @@
     ga('send', 'pageview');
   </script>
 
+  <!-- intercom -->
   <script>
     window.intercomSettings = {
       app_id: "rucirpb3"
     };
   </script>
-
   <script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/rucirpb3';var
     x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})()
   </script>
 
+  <!-- utils -->
   <script type="text/javascript">
-    // utils
-
     // load script file
     const loadScript = function(url, callback) {
       var head = document.getElementsByTagName('head')[0];
@@ -247,6 +247,23 @@
 
       // Fire the loading
       head.appendChild(script);
+    };
+
+    // load css file
+    const loadCss = function(url, callback) {
+      var head = document.getElementsByTagName('head')[0];
+      var link = document.createElement('link');
+      link.type = 'text/css';
+      link.rel = 'stylesheet';
+      link.href = url;
+
+      // Then bind the event to the callback function.
+      // There are several events for cross browser compatibility.
+      link.onreadystatechange = callback;
+      link.onload = callback;
+
+      // Fire the loading
+      head.appendChild(link);
     };
 
     // make ajax call
@@ -285,8 +302,8 @@
     };
   </script>
 
+  <!-- support button -->
   <script type="text/javascript">
-    // support button
     $(document).ready( function() {
       const supportbtnHandler = function() {
         if ( window.Intercom ) {
@@ -297,8 +314,8 @@
     });
   </script>
 
+  <!-- search -->
   <script type="text/javascript">
-    // search
     $(document).ready( function() {
       var lastSearched = "";
 
@@ -417,8 +434,8 @@
     });
   </script>
 
+  <!-- mobile sidebar -->
   <script type="text/javascript">
-    // mobile sidebar
     $(document).ready( function() {
       const navTreeHandler = function(e) {
         const sidebar = $('#sidebar');
@@ -439,8 +456,8 @@
     });
   </script>
 
+  <!-- feedback -->
   <script type="text/javascript">
-    // feedback
     $(document).ready( function() {
       var baseDomain = "{{ BASE_DOMAIN }}";
       const feedbackUrl = baseDomain ? 'https://data.' + baseDomain + '/v1/query' : 'https://data.hasura-stg.hasura-app.io/v1/query';
@@ -515,9 +532,8 @@
     });
   </script>
 
+  <!-- graphiql -->
   <script type="text/javascript">
-    // graphiql
-
     // graphql query fetcher
     const graphQLFetcher = function(endpoint) {
       endpoint = endpoint || "{{ GRAPHIQL_DEFAULT_ENDPOINT }}";
@@ -549,7 +565,7 @@
 
     // create GraphiQL components and embed into HTML
     const setupGraphiQL = function() {
-      if (typeof(React) === 'undefined' || typeof(ReactDOM) === 'undefined') {
+      if (typeof(React) === 'undefined' || typeof(ReactDOM) === 'undefined' || typeof(GraphiQL) === 'undefined') {
         return;
       }
 
@@ -592,15 +608,14 @@
         }
       };
 
+      loadCss("{{ pathto('_static/graphiql/graphiql.css', 1) }}", function(){});
       loadScript("{{ pathto('_static/react/react.min.js', 1) }}", checkLoading('react'));
       loadScript("{{ pathto('_static/react/react-dom.min.js', 1) }}", checkLoading('reactDom'));
       loadScript("{{ pathto('_static/graphiql/graphiql.min.js', 1) }}", checkLoading('graphiQL'));
     }
   </script>
 
-  <script type="text/javascript">
-    // global_tabs
-    loadScript("{{ pathto('_static/global_tabs/global_tabs.js', 1) }}", function(){});
-  </script>
+  <!-- global_tabs -->
+  <script src="{{ pathto('_static/global_tabs/global_tabs.js', 1) }}"></script>
 
 {% endblock %}
