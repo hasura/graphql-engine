@@ -30,6 +30,6 @@
         ```
 
 
-* To deploy docs, follow [this](https://github.com/hasura/docs/wiki/How-to-deploy-docs)
+* To deploy docs, follow [this](https://github.com/hasura/docs_graphql/wiki/How-to-deploy-docs)
 
-* To update docs search index, follow [this](https://github.com/hasura/docs/wiki/How-to-update-algolia-index)
+* To manually update docs search index, follow [this](https://github.com/hasura/docs_graphql/wiki/How-to-update-algolia-index)
