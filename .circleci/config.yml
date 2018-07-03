@@ -103,11 +103,10 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/assets
-      - run: echo $GITHUB_TOKEN
       - run:
           name: upload assets
           working_directory: /tmp/assets
-          command: ghr -draft "$(ls .)" "$(ls .)"
+          command: ghr -draft -u "$GITHUB_USER" "$(ls .)" "$(ls .)"
   # build (test) and upload cli binaries to circleci artifacts
   cli:
     docker:
