@@ -32,11 +32,6 @@ Commands
    hasura completion <hasura_completion>
    hasura console <hasura_console>
    hasura example <hasura_example>
-   hasura hub:clone <hasura_hub:clone>
-   hasura hub:publish <hasura_hub:publish>
-   hasura hub:quickstart <hasura_hub:quickstart>
-   hasura hub:search <hasura_hub:search>
-   hasura hub:unpublish <hasura_hub:unpublish>
    hasura init <hasura_init>
    hasura login <hasura_login>
    hasura logout <hasura_logout>
