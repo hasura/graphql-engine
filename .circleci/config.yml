@@ -21,14 +21,14 @@ jobs:
             mv /tmp/docker/* /usr/bin
       - restore_cache:
           keys:
-          - server-stack-{{ checksum "server/stack.yaml" }}-{{ checksum "server/graphql-engine.cabal" }}
+          - server-cache-{{ checksum "server/stack.yaml" }}-{{ checksum "server/graphql-engine.cabal" }}
       - run:
           name: Build the image
           working_directory: ./server
           command: |
             make circleci
       - save_cache:
-          key: server-stack-{{ checksum "server/stack.yaml" }}-{{ checksum "server/graphql-engine.cabal" }}
+          key: server-cache-{{ checksum "server/stack.yaml" }}-{{ checksum "server/graphql-engine.cabal" }}
           paths:
           - server/.stack-work
           - ~/.stack
