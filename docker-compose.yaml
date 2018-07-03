@@ -17,7 +17,7 @@ services:
     - "POSTGRES_PASSWORD:mysecretpassword"
     command: >
       /bin/sh -c "
-      graphql-engine --database-url postgres://postgres:$${POSTGRES_PASSWORD}@postgres:5432/postgres serve;
+      graphql-engine --database-url postgres://postgres:$${POSTGRES_PASSWORD}@postgres:5432/postgres serve --enable-console;
       "
 volumes:
   db_data:
