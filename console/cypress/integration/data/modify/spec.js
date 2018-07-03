@@ -48,9 +48,7 @@ export const makeid = () => {
 
 export const passMTCheckRoute = () => {
   // Click on the create table button
-  cy.get('a')
-    .contains('Modify')
-    .click();
+  cy.get(getElementFromAlias('table-modify')).click();
   // Match the URL
   cy.url().should(
     'eq',
@@ -84,13 +82,9 @@ export const failMTWithoutColName = () => {
 };
 
 export const failMTWithoutColType = () => {
-  cy.get('input[placeholder = "column name"]').type('something');
-  cy.get('button')
-    .contains('+ Add column')
-    .click();
-  cy.get('[class=notification-title]')
-    .contains('Error creating column!')
-    .click();
+  cy.get(getElementFromAlias('column-name')).type('something');
+  cy.get(getElementFromAlias('add-column-button')).click();
+  cy.get('.notification-error').click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
@@ -99,47 +93,46 @@ export const failMTWithoutColType = () => {
 };
 
 export const failMTDuplicateColumns = () => {
-  cy.get('input[placeholder = "column name"]').type('{selectall}{del}');
-  cy.get('input[placeholder = "column name"]').type('id');
-  cy.get('select').select('integer');
-  cy.get('button')
-    .contains('+ Add column')
-    .click();
-  cy.wait(5000);
-  cy.get('[class=notification-title]')
-    .contains('Adding column failed')
-    .click();
+  cy.get(getElementFromAlias('column-name')).type('{selectall}{del}');
+  cy.get(getElementFromAlias('column-name')).type('id');
+  cy.get(getElementFromAlias('data-type')).select('integer');
+  cy.get(getElementFromAlias('add-column-button')).click();
+  // Check for an alert
+  cy.wait(5500);
+  cy.get('.notification-error').click();
+  // Check if the route didn't change
+  cy.url().should(
+    'eq',
+    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
+  );
 };
 
 export const Addcolumn = () => {
-  cy.get('input[placeholder = "column name"]').type('{selectall}{del}');
+  cy.get(getElementFromAlias('column-name')).type('{selectall}{del}');
   const name = makeid();
-  cy.get('input[placeholder = "column name"]').type(name);
+  cy.get(getElementFromAlias('column-name')).type(name);
   cy.get(getElementFromAlias('data-type')).select('integer');
-  cy.get('input[placeholder = "default value"]').type('{selectall}{del}');
-  cy.get('[data-test=nullable-checkbox]').check();
-  cy.get('button')
-    .contains('+ Add column')
-    .click();
-  cy.wait(5000);
-  cy.get('[class=notification-title]').contains('Column added');
-  cy.wait(5000);
-
+  cy.get(getElementFromAlias('default-value')).type('{selectall}{del}');
+  cy.get(getElementFromAlias('nullable-checkbox')).check();
+  cy.get(getElementFromAlias('add-column-button')).click();
+  cy.wait(5500);
+  cy.get('.notification-success').click();
+  cy.wait(7000);
+  cy.url().should(
+    'eq',
+    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
+  );
   validateColumn(getTableName(0), [name], 'success');
 };
 
 export const Addcolumnnullable = () => {
-  cy.get('input[placeholder = "column name"]').type('{selectall}{del}');
-  cy.get('input[placeholder = "column name"]').type('some');
-  cy.get('select').select('Text');
-  cy.get('[data-test=nullable-checkbox]').uncheck();
-  cy.get('button')
-    .contains('+ Add column')
-    .click();
-  cy.wait(5000);
-  cy.get('[class=notification-title]')
-    .contains('Adding column failed')
-    .click();
+  cy.get(getElementFromAlias('column-name')).type('{selectall}{del}');
+  cy.get(getElementFromAlias('column-name')).type('some');
+  cy.get(getElementFromAlias('data-type')).select('Text');
+  cy.get(getElementFromAlias('nullable-checkbox')).uncheck();
+  cy.get(getElementFromAlias('add-column-button')).click();
+  cy.wait(5500);
+  cy.get('.notification-error').click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
@@ -148,15 +141,13 @@ export const Addcolumnnullable = () => {
 };
 
 export const failMTWrongDefault = () => {
-  cy.get('input[placeholder = "column name"]').type('{selectall}{del}');
-  cy.get('input[placeholder = "column name"]').type('some');
-  cy.get('input[placeholder = "default value"]').type('some');
-  cy.get('select').select('Integer');
-  cy.get('button')
-    .contains('+ Add column')
-    .click();
-  cy.wait(5000);
-  cy.get('[class=notification-title]').contains('Adding column failed');
+  cy.get(getElementFromAlias('column-name')).type('{selectall}{del}');
+  cy.get(getElementFromAlias('column-name')).type('some');
+  cy.get(getElementFromAlias('default-value')).type('some');
+  cy.get(getElementFromAlias('data-type')).select('Integer');
+  cy.get(getElementFromAlias('add-column-button')).click();
+  cy.wait(5500);
+  cy.get('.notification-error').click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
@@ -165,9 +156,9 @@ export const failMTWrongDefault = () => {
 };
 
 export const Addcolumnname = name => {
-  cy.get('input[placeholder = "column name"]').type('{selectall}{del}');
-  cy.get('input[placeholder = "column name"]').type(name);
-  cy.get('select').select('integer');
+  cy.get(getElementFromAlias('column-name')).type('{selectall}{del}');
+  cy.get(getElementFromAlias('column-name')).type(name);
+  cy.get(getElementFromAlias('data-type')).select('integer');
 
   cy.get('button')
     .contains('+ Add column')
@@ -190,11 +181,7 @@ export const passMTAddTwoCols = () => {
 
 export const Movetocolumn = () => {
   Addcolumnname('somes');
-  cy.get('h5')
-    .contains('somes')
-    .parent()
-    .contains('Edit')
-    .click();
+  cy.get(getElementFromAlias('edit-somes')).click();
 };
 
 export const passMTChangeColType = () => {
@@ -204,13 +191,9 @@ export const passMTChangeColType = () => {
     .get('select')
     .first()
     .select('Text');
-  cy.get('button')
-    .contains('Save')
-    .click();
-  cy.wait(5000);
-  cy.get('[class=notification-title]')
-    .contains('Column modified')
-    .click();
+  cy.get(getElementFromAlias('save-button')).click();
+  cy.wait(5500);
+  cy.get('.notification-success').click();
   cy.get('button')
     .contains('Close')
     .click();
@@ -222,11 +205,7 @@ export const passMTChangeColType = () => {
 };
 
 export const passMTDeleteCol = () => {
-  cy.get('h5')
-    .contains('somes')
-    .parent()
-    .contains('Edit')
-    .click();
+  cy.get(getElementFromAlias('edit-somes')).click();
   cy.get('button')
     .contains('Remove')
     .click();
@@ -245,9 +224,7 @@ export const passMTDeleteCol = () => {
 };
 
 export const passMTDeleteTableCancel = () => {
-  cy.get('button')
-    .contains('Delete table')
-    .click();
+  cy.get(getElementFromAlias('delete-table')).click();
   cy.on('window:confirm', () => false);
   cy.url().should(
     'eq',
@@ -258,9 +235,7 @@ export const passMTDeleteTableCancel = () => {
 };
 
 export const passMTDeleteTable = () => {
-  cy.get('button')
-    .contains('Delete table')
-    .click();
+  cy.get(getElementFromAlias('delete-table')).click();
   cy.on('window:confirm', () => true);
   cy.wait(5000);
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
@@ -268,22 +243,14 @@ export const passMTDeleteTable = () => {
 };
 
 export const failMTRemoveNullable = () => {
-  cy.get('a')
-    .contains('Insert Row')
-    .click();
+  cy.get(getElementFromAlias('table-insert-rows')).click();
   cy.get('input[placeholder = "integer"]').type('{selectall}{del}');
   cy.get('input[placeholder="integer"]').type(123);
-  cy.get('button')
-    .contains('Save')
-    .click();
+  cy.get(getElementFromAlias('insert-save-button')).click();
   cy.get('input[placeholder = "integer"]').type('{selectall}{del}');
   cy.get('input[placeholder="integer"]').type(1234);
-  cy.get('button')
-    .contains('Insert Again')
-    .click();
-  cy.get('a')
-    .contains('Modify')
-    .click();
+  cy.get(getElementFromAlias('insert-save-button')).click();
+  cy.get(getElementFromAlias('table-modify')).click();
   Addcolumnnullable();
 };
 
@@ -313,9 +280,7 @@ export const Createtable = (name, dict) => {
   cy.get('select')
     .last()
     .select('id');
-  cy.get('button')
-    .contains('Create')
-    .click();
+  cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
   cy.url().should(
     'eq',
@@ -326,13 +291,9 @@ export const Createtable = (name, dict) => {
 };
 
 export const Createtables = () => {
-  cy.get('button')
-    .contains('Create Table')
-    .click();
+  cy.get(getElementFromAlias('data-create-table')).click();
   Createtable('author', { id: 'Integer', name: 'Text' });
-  cy.get('button')
-    .contains('Add Table')
-    .click();
+  cy.get(getElementFromAlias('sidebar-add-table')).click();
   Createtable('article', {
     id: 'Integer',
     title: 'Text',
@@ -343,53 +304,35 @@ export const Createtables = () => {
 };
 
 export const Createview = () => {
-  cy.get('a')
-    .contains('SQL')
-    .click();
+  cy.get(getElementFromAlias('sql-link')).click();
   cy.get('textarea').type(`CREATE VIEW author_average_rating AS
     SELECT author_table.id, avg(article_table.rating)
     From author_table, article_table
     WHERE author_table.id = article_table.author_id
     GROUP BY author_table.id`);
-  cy.get('button')
-    .contains('Run!')
-    .click();
+  cy.get(getElementFromAlias('run-sql')).click();
   validateCT('author_average_rating', 'success');
 };
 
 export const Checkviewtable = () => {
-  cy.get('a')
-    .contains('author_average_rating')
-    .click();
+  cy.get(getElementFromAlias('author_average_rating')).click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/views/author_average_rating/browse`
   );
-  cy.get('a')
-    .contains('Modify')
-    .click();
-  cy.get('button')
-    .contains('Modify')
-    .last()
-    .click();
+  cy.get(getElementFromAlias('table-modify')).click();
+  cy.get(getElementFromAlias('modify-view')).click();
   cy.url().should('eq', `${baseUrl}/data/sql`);
 };
 
 export const Checkviewtabledelete = () => {
-  cy.get('a')
-    .contains('author_average_rating')
-    .click();
+  cy.get(getElementFromAlias('author_average_rating')).click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/views/author_average_rating/browse`
   );
-  cy.get('a')
-    .contains('Modify')
-    .click();
-  cy.get('button')
-    .contains('Delete view')
-    .last()
-    .click();
+  cy.get(getElementFromAlias('table-modify')).click();
+  cy.get(getElementFromAlias('delete-view')).click();
   cy.on('window:confirm', str => {
     expect(str === 'Are you sure?').to.be.true;
     return true;

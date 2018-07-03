@@ -16,23 +16,11 @@ export const Createtable = (name, dict) => {
   const keys = Object.keys(dict).map(k => k);
   const values = Object.keys(dict).map(k => dict[k]);
   for (let i = 0; i < keys.length; i += 1) {
-    cy.get('input[placeholder="column_name"]')
-      .last()
-      .type(keys[i]);
-    cy.get('select')
-      .find('option')
-      .contains('-- type --')
-      .parent()
-      .last()
-      .select(values[i]);
+    cy.get(getElementFromAlias(`column-${i}`)).type(keys[i]);
+    cy.get(getElementFromAlias(`col-type-${i}`)).select(values[i]);
   }
-
-  cy.get('select')
-    .last()
-    .select('id');
-  cy.get('button')
-    .contains('Create')
-    .click();
+  cy.get(getElementFromAlias('primary-key-select-0')).select('id');
+  cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
   cy.url().should(
     'eq',
@@ -43,13 +31,9 @@ export const Createtable = (name, dict) => {
 };
 
 export const passVCreateTables = () => {
-  cy.get('button')
-    .contains('Create Table')
-    .click();
+  cy.get(getElementFromAlias('data-create-table')).click();
   Createtable('author', { id: 'Integer', name: 'Text' });
-  cy.get('button')
-    .contains('Add Table')
-    .click();
+  cy.get(getElementFromAlias('sidebar-add-table')).click();
   Createtable('article', {
     id: 'Integer',
     title: 'Text',
@@ -57,9 +41,7 @@ export const passVCreateTables = () => {
     author_id: 'Integer',
     rating: 'Integer',
   });
-  cy.get('button')
-    .contains('Add Table')
-    .click();
+  cy.get(getElementFromAlias('sidebar-add-table')).click();
   Createtable('comment', {
     id: 'Integer',
     user_id: 'Integer',
@@ -83,15 +65,13 @@ export const passTrackTable = () => {
     .click();
   cy.wait(7000);
   cy.get(getElementFromAlias('add-track-table-author_average_rating')).click();
-  cy.wait(5000);
-  cy.get('h4').contains('Existing table/view added');
+  cy.wait(7000);
+  cy.get('.notification-success');
   validateView('author_average_rating', 'success');
 };
 
 export const passViewRoute = () => {
-  cy.get('a')
-    .contains('author_average_rating')
-    .click();
+  cy.get(getElementFromAlias('author_average_rating')).click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/views/author_average_rating/browse`
@@ -161,13 +141,9 @@ export const passVAddDataarticle = (data, index) => {
     .last()
     .type(data[4]);
   if (index) {
-    cy.get('button')
-      .contains('Insert Again')
-      .click();
+    cy.get(getElementFromAlias('insert-save-button')).click();
   } else {
-    cy.get('button')
-      .contains('Save')
-      .click();
+    cy.get(getElementFromAlias('insert-save-button')).click();
   }
 
   cy.wait(5000);
@@ -199,13 +175,9 @@ export const passVAddDataauthor = (data, index) => {
     .last()
     .type(data[1]);
   if (index) {
-    cy.get('button')
-      .contains('Insert Again')
-      .click();
+    cy.get(getElementFromAlias('insert-save-button')).click();
   } else {
-    cy.get('button')
-      .contains('Save')
-      .click();
+    cy.get(getElementFromAlias('insert-save-button')).click();
   }
   cy.wait(5000);
 };
@@ -260,13 +232,9 @@ export const passVAddDatacomment = (data, index) => {
     .last()
     .type(data[3]);
   if (index) {
-    cy.get('button')
-      .contains('Insert Again')
-      .click();
+    cy.get(getElementFromAlias('insert-save-button')).click();
   } else {
-    cy.get('button')
-      .contains('Save')
-      .click();
+    cy.get(getElementFromAlias('insert-save-button')).click();
   }
   cy.wait(5000);
 };
@@ -281,9 +249,7 @@ const checkQuerySuccess = () => {
 
 export const passVAddData = () => {
   let data;
-  cy.get('a')
-    .contains('article_table')
-    .click();
+  cy.get(getElementFromAlias('article_table')).click();
   cy.get(getElementFromAlias('table-insert-rows')).click();
   data = [1, 'A', 'Sontent', userId, 4];
   passVAddDataarticle(data, 0);
@@ -291,18 +257,14 @@ export const passVAddData = () => {
   passVAddDataarticle(data, 1);
   data = [3, 'C', 'Sontentb', userId, 4];
   passVAddDataarticle(data, 2);
-  cy.get('a')
-    .contains('author_table')
-    .click();
+  cy.get(getElementFromAlias('author_table')).click();
   cy.get(getElementFromAlias('table-insert-rows')).click();
 
   data = [userId, 'A'];
   passVAddDataauthor(data, 0);
   data = [2, 'B'];
   passVAddDataauthor(data, 1);
-  cy.get('a')
-    .contains('comment_table')
-    .click();
+  cy.get(getElementFromAlias('comment_table')).click();
   cy.get(getElementFromAlias('table-insert-rows')).click();
 
   data = [1, 1, 1, 'new comment'];
@@ -393,9 +355,7 @@ export const passVAscendingSort = () => {
 };
 
 export const passModifyView = () => {
-  cy.get('a')
-    .contains('Modify')
-    .click();
+  cy.get(getElementFromAlias('table-modify')).click();
   cy.get('button')
     .contains('Modify')
     .last()
@@ -404,13 +364,9 @@ export const passModifyView = () => {
 };
 
 export const passVAddManualObjRel = () => {
-  cy.get('a')
-    .contains('author_average_rating')
-    .click();
+  cy.get(getElementFromAlias('author_average_rating')).click();
   cy.wait(2000);
-  cy.get('a')
-    .contains('Relationships')
-    .click();
+  cy.get(getElementFromAlias('table-relationships')).click();
   cy.wait(2000);
   cy.get(getElementFromAlias('data-rel-type')).select('object_rel');
   cy.get("input[placeholder='Enter relationship name']").type('author');
@@ -437,12 +393,8 @@ export const passVAddManualObjRel = () => {
 };
 
 export const passVDeleteRelationships = () => {
-  cy.get('a')
-    .contains('author_average_rating')
-    .click();
-  cy.get('a')
-    .contains('Relationships')
-    .click();
+  cy.get(getElementFromAlias('author_average_rating')).click();
+  cy.get(getElementFromAlias('table-relationships')).click();
   cy.get('button')
     .contains('Remove')
     .first()
@@ -459,30 +411,20 @@ export const passVDeleteRelationships = () => {
 };
 
 export const passVDeleteView = () => {
-  cy.get('a')
-    .contains('Modify')
-    .click();
-  cy.get('button')
-    .contains('Delete view')
-    .click();
+  cy.get(getElementFromAlias('table-modify')).click();
+  cy.get(getElementFromAlias('delete-view')).click();
   cy.on('window:confirm', str => {
     expect(str === 'Are you sure').to.be.true;
   });
   cy.wait(5000);
-  cy.get('h4').contains('View deleted');
+  cy.get('.notification-success');
   validateView('author_average_rating', 'failure');
 };
 
 export const Deletetable = name => {
-  cy.get('a')
-    .contains(name)
-    .click();
-  cy.get('a')
-    .contains('Modify')
-    .click();
-  cy.get('button')
-    .contains('Delete table')
-    .click();
+  cy.get(getElementFromAlias(name)).click();
+  cy.get(getElementFromAlias('table-modify')).click();
+  cy.get(getElementFromAlias('delete-table')).click();
   cy.on('window:alert', str => {
     expect(str === 'Are you sure?').to.be.true;
   });

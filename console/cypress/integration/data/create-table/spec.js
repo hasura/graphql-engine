@@ -109,11 +109,7 @@ export const failCTDuplicateTable = () => {
   cy.get('button')
     .contains('Create')
     .click();
-<<<<<<< HEAD
-  cy.wait(5000);
-=======
   cy.wait(7000);
->>>>>>> console: fix console tests
   //  Detect error
   cy.get('div').contains('Create table failed');
 };
