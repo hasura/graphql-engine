@@ -58,7 +58,7 @@ jobs:
       - run:
           name: build console
           working_directory: ./console
-          command: VERSION=$(../scripts/get-version-circleci.sh) make build
+          command: make build
       - run:
           name: store gcloud service account to file 
           command: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
@@ -83,9 +83,15 @@ jobs:
   # upload cli binaries to github releases page for the tag
   github_release:
     docker:
-      - image: busybox
+      - image: hasura/graphql-engine-cli-builder:v0.1
     steps:
-      - run: echo doing nothing for github_release job
+      - attach_workspace:
+          at: /tmp/assets
+      - run: echo $GITHUB_TOKEN
+      - run:
+          name: upload assets
+          working_directory: /tmp/assets
+          command: ghr -draft "$(ls .)" "$(ls .)"
   # build (test) and upload cli binaries to circleci artifacts
   cli:
     docker:
@@ -116,6 +122,10 @@ jobs:
     - store_artifacts:
         path: cli/_output
         destination: cli
+    - persist_to_workspace:
+        root: cli
+        paths:
+          - _output
 workflows:
   version: 2
   # executed for all branches except release-v* and for all tags v*
@@ -130,12 +140,12 @@ workflows:
               only:  /^v.*/
       - cli:
           << : *filter_ignore_release_branches_only_vtags
-          requires:
-            - server
+          # requires:
+          #   - server
       - console:
           << : *filter_ignore_release_branches_only_vtags
-          requires:
-            - cli
+          # requires:
+          #   - cli
       - github_release:
           filters: &only_vtags_ignore_branches
             branches:
@@ -143,11 +153,11 @@ workflows:
             tags:
               only: /^v.*/
           requires:
-            - console
+            - cli
       - send_pr:
           filters: *only_vtags_ignore_branches
           requires:
-            - github_release
+            - server
   # executed when release-v* branches are updated, to renew console assets
   update_release:
     jobs:
