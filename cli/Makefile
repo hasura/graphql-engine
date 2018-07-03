@@ -1,6 +1,6 @@
 PWD := $(shell pwd)
 PARENT_DIR := $(shell dirname $(PWD))
-VERSION := $(shell ../scripts/get-version.sh)
+VERSION ?= $(shell ../scripts/get-version.sh)
 OUTPUT_DIR := _output
 
 # compile assets

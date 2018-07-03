@@ -1,7 +1,7 @@
 export PATH := node_modules/.bin:$(PATH)
 DIST_PATH = ./static/dist
 BUCKET_NAME ?= hasura-graphql-engine
-VERSION := $(shell ../scripts/get-version.sh)
+VERSION ?= $(shell ../scripts/get-version.sh)
 
 all: deps build gcloud-cp-stable gcloud-set-metadata
 

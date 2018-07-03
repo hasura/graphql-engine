@@ -1,40 +1,4 @@
 version: 2
-references:
-  # Console references
-  console_container_config: &console_container_config
-    docker:
-      - image: circleci/node:8
-    working_directory: ~/graphql-engine
-
-  update_npm: &update_npm
-    run:
-      name: Update npm
-      command: 'sudo npm install -g npm@5'
-
-  npm_cache_key: &npm_cache_key
-    console-dependency-cache-{{ checksum "console/package.json" }}
-
-  restore_console_cache: &restore_console_cache
-    restore_cache:
-      key: *npm_cache_key
-
-  install_console_deps: &install_console_deps
-    run:
-      name: install console dependencies
-      working_directory: ./console
-      command: make deps
-
-  console_build: &console_build
-    run:
-      name: build console
-      working_directory: ./console
-      command: make build
-
-  persist_assets: &persist_assets
-    persist_to_workspace:
-      root: console/static
-      paths:
-        - dist
 jobs:
   # build (test) and push server to docker hub
   server:
@@ -44,51 +8,41 @@ jobs:
       - run: echo doing nothing for server job
   # build (test) and push console - version will be vMAJOR.MINOR for tags
   console:
-    <<: *console_container_config
-    steps:
-      - checkout
-      - *update_npm
-      - *restore_console_cache
-      - *install_console_deps
-      - save_cache:
-          key: npm_cache_key
-          paths:
-            - ./console/node_modules
-      - *console_build
-      - *persist_assets
-  # build (test) and update vMAJOR.MINOR console assets for release-v* branch updates
-  update_console:
-    <<: *console_container_config
-    steps:
-      - checkout
-      - *update_npm
-      - *restore_console_cache
-      - *install_console_deps
-      - save_cache:
-          key: npm_cache_key
-          paths:
-            - ./console/node_modules
-      - *console_build
-      - *persist_assets
-  gcloud:
-    working_directory: ~/graphql-engine
     docker:
-      - image: google/cloud-sdk:latest
+      - image: hasura/graphql-engine-console-builder:v0.1
+    working_directory: ~/graphql-engine
     steps:
-      - run:
-          name: Store Service Account
-          command: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-      - run: |
-          gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
-          gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-          apt-get install make
       - checkout
-      - attach_workspace:
-          at: ~/graphql-engine/console/static
+      - restore_cache:
+          key: 
+            console-npm-cache-{{ checksum "console/package.json" }}
       - run:
-          name: copy assets to gcloud and set Content-Type
+          name: install dependencies
+          working_directory: ./console
+          command: make deps
+      - save_cache:
+          key: 
+            console-npm-cache-{{ checksum "console/package.json" }}
+          paths:
+            - ~/.npm/_cacache
+      # run tests
+      - run:
+          name: build console
+          working_directory: ./console
+          command: VERSION=$(../scripts/get-version-circleci.sh) make build
+      - run:
+          name: store gcloud service account to file 
+          command: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+      - run:
+          name: setup gcloud
+          command: |
+            gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
+            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+      - run:
+          name: copy assets to gcloud
           working_directory: ./console
           command: |
+            export VERSION=$(../scripts/get-version-circleci.sh)
             make gcloud-cp-stable
             make gcloud-set-metadata
   # send pull requests to install manifests and heroku repo to update new server image tag
@@ -154,10 +108,6 @@ workflows:
           << : *filter_ignore_release_branches_only_vtags
           requires:
             - cli
-      - gcloud:
-          << : *filter_ignore_release_branches_only_vtags
-          requires:
-            - console
       - github_release:
           filters: &only_vtags_ignore_branches
             branches:
@@ -165,7 +115,7 @@ workflows:
             tags:
               only: /^v.*/
           requires:
-            - gcloud
+            - console
       - send_pr:
           filters: *only_vtags_ignore_branches
           requires:
@@ -173,11 +123,7 @@ workflows:
   # executed when release-v* branches are updated, to renew console assets
   update_release:
     jobs:
-      - update_console: &filter_only_release_branches
+      - console:
           filters:
             branches:
               only: /^release-v.*/
-      - gcloud:
-          << : *filter_only_release_branches
-          requires:
-          - update_console
