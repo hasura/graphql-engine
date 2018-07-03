@@ -543,6 +543,7 @@ class ModifyTable extends Component {
                   className={`${styles.select} input-sm form-control`}
                   defaultValue=""
                   ref={n => (colTypeInput = n)}
+                  data-test="data-type"
                 >
                   <option disabled value="">
                     -- type --

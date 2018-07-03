@@ -1,6 +1,6 @@
 PWD := $(shell pwd)
 PARENT_DIR := $(shell dirname $(PWD))
-VERSION := $(shell ../scripts/get-version.sh)
+VERSION ?= $(shell ../scripts/get-version.sh)
 OUTPUT_DIR := _output
 
 # compile assets
@@ -29,7 +29,7 @@ endif
 # build cli locally, for all given platform/arch
 .PHONY: build
 build:
-	gox -ldflags "-X github.com/hasura/graphql-engine/cli.version=$(VERSION)" -ldflags "-s -w" \
+	gox -ldflags "-X github.com/hasura/graphql-engine/cli.version=$(VERSION) -s -w" \
 	-os="linux darwin windows" \
 	-arch="amd64" \
 	-output="$(OUTPUT_DIR)/$(VERSION)/hasura-{{.OS}}-{{.Arch}}" \

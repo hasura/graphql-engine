@@ -2,6 +2,7 @@
 /* eslint import/prefer-default-export: 0 */
 
 import { checkToggleButton } from './spec';
+import { testMode } from '../../../helpers/common';
 
 import { setMetaData } from '../../validators/validators';
 
@@ -23,5 +24,7 @@ export const runMigrationModeTests = () => {
   });
 };
 
-// setup();
-// runMigrationModeTests();
+if (testMode !== 'cli') {
+  setup();
+  runMigrationModeTests();
+}

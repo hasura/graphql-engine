@@ -201,7 +201,7 @@ export const passBI20RowsExist = () => {
   // Check pagination string
 };
 
-export const passBIAscendingSort = () => {
+export const passBISort = order => {
   // Scroll to top TODO responsive is messy
   cy.wait(7000);
   // cy.scrollTo('top');
@@ -209,14 +209,16 @@ export const passBIAscendingSort = () => {
   const serialIndex = dataTypes.indexOf('serial');
   cy.get(getElementFromAlias('sort-column-0')).select(getColName(serialIndex));
   // Select order as `descending`
-  cy.get(getElementFromAlias('sort-order-0')).select('Asc');
+  cy.get(getElementFromAlias('sort-order-0')).select(
+    order === 'asc' ? 'Asc' : 'Desc'
+  );
   // Run query
   cy.get('button')
     .contains('Run query')
     .click();
   cy.wait(5000);
   // Check order
-  checkOrder('asc');
+  checkOrder(order);
 
   // Clear filter
   cy.get(getElementFromAlias('clear-sorts-0')).click();
