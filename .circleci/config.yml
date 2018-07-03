@@ -3,7 +3,7 @@ jobs:
   # build (test) and push server to docker hub
   server:
     docker:
-      - image: ubuntu:16.04
+      - image: fpco/stack-build:lts-11.15
     working_directory: /build/hasura/graphql-engine
     steps:
       - checkout
@@ -14,7 +14,7 @@ jobs:
           name: Setup - Install docker client and other build dependencies
           command: |
             set -ex
-            apt-get -y update && apt-get install -y make curl git
+            apt-get -y update && apt-get install -y make curl git upx
             VER="17.09.0-ce"
             curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
             tar -xz -C /tmp -f /tmp/docker-$VER.tgz
@@ -24,20 +24,22 @@ jobs:
           - server-stack-{{ checksum "server/stack.yaml" }}-{{ checksum "server/graphql-engine.cabal" }}
       - run:
           name: Build the image
-          working_directory: /build/hasura/graphql-engine/server
+          working_directory: ./server
           command: |
-            make release-image
+            make circleci
       - save_cache:
           key: server-stack-{{ checksum "server/stack.yaml" }}-{{ checksum "server/graphql-engine.cabal" }}
           paths:
           - server/.stack-work
+          - ~/.stack
       #- run:
       #    name: Test the image
+      #    working_directory: ./server
       #    command: |
       #      make test
       - run:
           name: Push the image to registry
-          working_directory: /build/hasura/graphql-engine/server
+          working_directory: ./server
           command: |
             make push
 
