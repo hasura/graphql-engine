@@ -6,8 +6,13 @@ import qualified Database.PG.Query.Connection as Q
 
 import           Data.List.Split
 import           Network.URI
+import           System.Exit
+import           System.Process
 
 import qualified Data.Text                    as T
+import qualified Data.Text.IO                 as TI
+import qualified Language.Haskell.TH.Syntax   as TH
+
 import           Hasura.Prelude
 
 dropAndSnakeCase :: T.Text -> T.Text
@@ -21,6 +26,9 @@ toSnakeCase = T.pack . map change . T.unpack
 
 isXHasuraTxt :: T.Text -> Bool
 isXHasuraTxt = T.isInfixOf "x-hasura-" . T.toLower
+
+jsonHeader :: (T.Text, T.Text)
+jsonHeader = ("Content-Type", "application/json; charset=utf-8")
 
 userRoleHeader :: T.Text
 userRoleHeader = "x-hasura-role"
@@ -65,3 +73,15 @@ uriAuthParameters uriAuth = port . host . auth
                  [u]    -> \info -> info { Q.connUser = dropLast u }
                  [u, p] -> \info -> info { Q.connUser = u, Q.connPassword = dropLast p }
                  _      -> id
+
+-- Running shell script during compile time
+runScript :: FilePath -> TH.Q TH.Exp
+runScript fp = do
+  TH.addDependentFile fp
+  fileContent <- TH.runIO $ TI.readFile fp
+  (exitCode, stdOut, stdErr) <- TH.runIO $
+    readProcessWithExitCode "/bin/sh" [] $ T.unpack fileContent
+  when (exitCode /= ExitSuccess) $ fail $
+    "Running shell script " ++ fp ++ " failed with exit code : "
+    ++ show exitCode ++ " and with error : " ++ stdErr
+  TH.lift stdOut
