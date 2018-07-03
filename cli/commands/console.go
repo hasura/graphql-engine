@@ -94,13 +94,18 @@ func (o *consoleOptions) run() error {
 
 	router.setRoutes(u.Host, o.EC.Config.AccessKey, o.EC.MigrationDir)
 
-	assetsVersion := o.EC.GetVersion()
-	v, err := semver.NewVersion(assetsVersion)
+	assetsVersion := o.EC.ServerVersion
+	if assetsVersion == "" {
+		assetsVersion = "1.0-dev"
+	}
+	consoleTemplateVersion := "1.0-dev"
+	v, err := semver.NewVersion(o.EC.ServerVersion)
 	if err == nil {
 		assetsVersion = fmt.Sprintf("v%d.%d", v.Major(), v.Minor())
+		consoleTemplateVersion = assetsVersion
 	}
 
-	consoleRouter, err := serveConsole(gin.H{
+	consoleRouter, err := serveConsole(consoleTemplateVersion, gin.H{
 		"apiHost":        "http://" + o.Address,
 		"apiPort":        o.APIPort,
 		"cliVersion":     o.EC.GetVersion(),
@@ -216,12 +221,12 @@ func allowCors() gin.HandlerFunc {
 	return cors.New(config)
 }
 
-func serveConsole(opts gin.H) (*gin.Engine, error) {
+func serveConsole(assetsVersion string, opts gin.H) (*gin.Engine, error) {
 	// An Engine instance with the Logger and Recovery middleware already attached.
 	r := gin.New()
 
 	// Template index.html
-	templateRender, err := util.LoadTemplates("assets/", "console.html")
+	templateRender, err := util.LoadTemplates("assets/"+assetsVersion+"/", "console.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch template")
 	}
