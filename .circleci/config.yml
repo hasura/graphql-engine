@@ -3,35 +3,46 @@ jobs:
   # build (test) and push server to docker hub
   server:
     docker:
-      - image: hasura/graphql-engine-server-builder:v0.1
+      - image: fpco/stack-build:lts-11.15
     working_directory: /build/hasura/graphql-engine
     steps:
       - checkout
       - setup_remote_docker:
           version: 17.09.0-ce
           docker_layer_caching: true
+      - run:
+          name: Setup - Install docker client and other build dependencies
+          command: |
+            set -ex
+            apt-get -y update && apt-get install -y make curl git upx
+            VER="17.09.0-ce"
+            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            mv /tmp/docker/* /usr/bin
       - restore_cache:
           keys:
           - server-stack-{{ checksum "server/stack.yaml" }}-{{ checksum "server/graphql-engine.cabal" }}
       - run:
           name: Build the image
-          working_directory: /build/hasura/graphql-engine/server
+          working_directory: ./server
           command: |
-            make release-image
+            make circleci
       - save_cache:
           key: server-stack-{{ checksum "server/stack.yaml" }}-{{ checksum "server/graphql-engine.cabal" }}
           paths:
           - server/.stack-work
+          - ~/.stack
       #- run:
       #    name: Test the image
+      #    working_directory: ./server
       #    command: |
       #      make test
       - run:
-          name: docker login
+          name: Login to docker hub
           command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
       - run:
           name: Push the image to registry
-          working_directory: /build/hasura/graphql-engine/server
+          working_directory: ./server
           command: |
             make push
 
@@ -87,7 +98,6 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/assets
-      - run: echo $GITHUB_TOKEN
       - run:
           name: upload assets
           working_directory: /tmp/assets
