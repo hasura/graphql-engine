@@ -46,15 +46,6 @@ SEE ALSO
 * :ref:`hasura logout <hasura_logout>` 	 - Logout from hasura.io
 * :ref:`hasura metadata <hasura_metadata>` 	 - Manage Hausra GraphQL Engine metdata saved in the database
 * :ref:`hasura migrate <hasura_migrate>` 	 - Manage migrations on the database
-* :ref:`hasura platform:api-console <hasura_platform:api-console>` 	 - Opens a Console UI connected to a cluster
-* :ref:`hasura platform:cluster <hasura_platform:cluster>` 	 - Manage hasura clusters
-* :ref:`hasura platform:conf <hasura_platform:conf>` 	 - Manage configuration on the cluster
-* :ref:`hasura platform:help <hasura_platform:help>` 	 - Show platform commands
-* :ref:`hasura platform:microservice <hasura_platform:microservice>` 	 - Manage microservices on hasura
-* :ref:`hasura platform:migration <hasura_platform:migration>` 	 - Database migrations on Hasura
-* :ref:`hasura platform:secret <hasura_platform:secret>` 	 - Manage secrets on a cluster
-* :ref:`hasura platform:setup <hasura_platform:setup>` 	 - Setup a new Hasura project
-* :ref:`hasura platform:ssh-key <hasura_platform:ssh-key>` 	 - Manage SSH keys on a cluster
 * :ref:`hasura update-cli <hasura_update-cli>` 	 - Update hasura to latest version
 * :ref:`hasura user-info <hasura_user-info>` 	 - Get details for current logged in user
 * :ref:`hasura version <hasura_version>` 	 - Prints the version of hasura
