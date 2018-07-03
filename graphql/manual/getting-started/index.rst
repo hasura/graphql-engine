@@ -19,28 +19,19 @@ To use Hasura, you need to:
 Choose a getting started guide:
 -------------------------------
 
-- :doc:`On Heroku <heroku-simple>` **(recommended)**: Get started in under 60 seconds with no setup required to host
+- :doc:`On Heroku <heroku/index>` **(recommended)**: Get started in under 60 seconds with no setup required to host
   the Hasura GraphQL engine and Postgres on **Heroku's free tier**.
-- :doc:`Using Docker <docker-simple>`: Run a **local development** setup that sets up the Hasura GraphQL
+- :doc:`Using Docker <docker/index>`: Run a **local development** setup that sets up the Hasura GraphQL
   engine and Postgres using Docker.
-
-Other guides:
--------------
-
-- :doc:`Heroku advanced <heroku-advanced>`: A guide to hosting Hasura GraphQL engine on Heroku manually with your
-  Heroku Postgres database
-- :doc:`Docker advanced <docker-advanced>`: A guide to running Hasura GraphQL engine as a Docker container connected to
-  your Postgres database
 
 .. toctree::
    :maxdepth: 2
    :titlesonly:
    :hidden:
 
-   Setup on Heroku (simple) <heroku-simple>
-   Setup with Docker (simple) <docker-simple>
-   Setup on Heroku (advanced) <heroku-advanced>
-   Setup with Docker (advanced) <docker-advanced>
+   Setup on Heroku <heroku/index>
+   Setup with Docker <docker/index>
    first-graphql-query
+   securing-graphql-endpoint
    using-existing-database
    postgres-credentials

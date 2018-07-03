@@ -3,15 +3,6 @@ Making your first GraphQL query
 
 Let's take a look at how to create tables using the Console, a UI tool meant for doing exactly this. We'll use a typical author/articles schema as a reference for all the following examples.
 
-Open the console
-----------------
-
-Run the following command using the Hasura CLI tool.
-
-.. code:: bash
-
-   hasura console
-
 Create a profile table
 ----------------------
 
