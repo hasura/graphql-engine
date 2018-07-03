@@ -36,7 +36,3 @@ schema:
     - ../../docs
     - ../../build
     - ../../vendor.orig
-    scripts:
-    - type: after
-      command: go run hasura.go docs --type md --directory ../../docs
-      output: true
