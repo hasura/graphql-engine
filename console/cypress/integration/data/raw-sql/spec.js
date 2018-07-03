@@ -10,7 +10,7 @@ export const openRawSQL = () => {
     .contains('Data')
     .click();
   cy.wait(3000);
-  cy.get(getElementFromAlias('SQL')).click();
+  cy.get(getElementFromAlias('sql-link')).click();
   cy.wait(3000);
   // Match URL
   cy.url().should('eq', `${baseUrl}/data/sql`);
