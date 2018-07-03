@@ -18,3 +18,4 @@ Hasura lets you do anything you would usually do with Postgres by giving you Gra
   sql-functions
   how-it-works
   export-graphql-schema
+  schema-stitching
