@@ -94,17 +94,18 @@ func (o *consoleOptions) run() error {
 
 	router.setRoutes(u.Host, o.EC.Config.AccessKey, o.EC.MigrationDir)
 
-	assetsVersion := ""
-	if o.EC.ServerVersion == "" {
+	assetsVersion := o.EC.ServerVersion
+	if assetsVersion == "" {
 		assetsVersion = "1.0-dev"
-	} else {
-		v, err := semver.NewVersion(o.EC.ServerVersion)
-		if err == nil {
-			assetsVersion = fmt.Sprintf("v%d.%d", v.Major(), v.Minor())
-		}
+	}
+	consoleTemplateVersion := "1.0-dev"
+	v, err := semver.NewVersion(o.EC.ServerVersion)
+	if err == nil {
+		assetsVersion = fmt.Sprintf("v%d.%d", v.Major(), v.Minor())
+		consoleTemplateVersion = assetsVersion
 	}
 
-	consoleRouter, err := serveConsole(assetsVersion, gin.H{
+	consoleRouter, err := serveConsole(consoleTemplateVersion, gin.H{
 		"apiHost":        "http://" + o.Address,
 		"apiPort":        o.APIPort,
 		"cliVersion":     o.EC.GetVersion(),
