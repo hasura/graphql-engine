@@ -23,15 +23,20 @@ jobs:
           keys:
           - server-cache-{{ checksum "server/stack.yaml" }}-{{ checksum "server/graphql-engine.cabal" }}
       - run:
-          name: Build the image
+          name: Compile and build the binary
           working_directory: ./server
           command: |
-            make circleci
+            make ci-binary
       - save_cache:
           key: server-cache-{{ checksum "server/stack.yaml" }}-{{ checksum "server/graphql-engine.cabal" }}
           paths:
           - server/.stack-work
           - ~/.stack
+      - run:
+          name: Package and build the docker image
+          working_directory: ./server
+          command: |
+            make ci-image
       #- run:
       #    name: Test the image
       #    working_directory: ./server
