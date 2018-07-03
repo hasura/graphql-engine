@@ -69,6 +69,7 @@ module Hasura.RQL.Types.SchemaCache
        , getDependentPermsOfTable
        , getDependentRelsOfTable
        , isDependentOn
+       , getAllRelations
        ) where
 
 import           Hasura.Prelude
@@ -591,3 +592,8 @@ getDependentPerms' rsnFn objId (RolePermInfo mipi mspi mupi mdpi) =
     toPermRow :: forall a. (CachedSchemaObj a) => PermType -> a -> Maybe PermType
     toPermRow pt =
       bool Nothing (Just pt) . isDependentOn rsnFn objId
+
+getAllRelations :: TableCache -> [(QualifiedTable, [RelInfo])]
+getAllRelations tc = map getRelInfo $ M.toList tc
+  where
+    getRelInfo (qt, ti) = (qt, getRels $ tiFieldInfoMap ti)
