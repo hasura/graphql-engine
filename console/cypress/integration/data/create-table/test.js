@@ -1,6 +1,6 @@
 /* eslint no-unused-vars: 0 */
 /* eslint import/prefer-default-export: 0 */
-
+import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
 
 import {
@@ -37,5 +37,7 @@ export const runCreateTableTests = () => {
   });
 };
 
-// setup();
-// runCreateTableTests();
+if (testMode !== 'cli') {
+  setup();
+  runCreateTableTests();
+}

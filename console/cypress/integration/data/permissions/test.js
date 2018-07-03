@@ -13,7 +13,7 @@ import {
   passPVDeleteView,
   passPTDeleteTable,
 } from './spec';
-
+import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
 
 const setup = () => {
@@ -43,5 +43,7 @@ export const runPermissionsTests = () => {
   });
 };
 
-// setup();
-// runPermissionsTests();
+if (testMode !== 'cli') {
+  setup();
+  runPermissionsTests();
+}
