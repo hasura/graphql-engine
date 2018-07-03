@@ -3,7 +3,7 @@ jobs:
   # build (test) and push server to docker hub
   server:
     docker:
-      - image: hasura/graphql-engine-server-builder:v0.1
+      - image: fpco/stack-build:lts-11.15
     working_directory: /build/hasura/graphql-engine
     steps:
       - checkout
