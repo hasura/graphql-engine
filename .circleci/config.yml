@@ -21,16 +21,20 @@ jobs:
             mv /tmp/docker/* /usr/bin
       - restore_cache:
           keys:
-          - server-cache-{{ checksum "server/stack.yaml" }}-{{ checksum "server/graphql-engine.cabal" }}
+          - server-app-cache-{{ .Branch }}-{{ .Revision }}
+          - server-deps-cache
       - run:
           name: Compile and build the binary
           working_directory: ./server
           command: |
             make ci-binary
       - save_cache:
-          key: server-cache-{{ checksum "server/stack.yaml" }}-{{ checksum "server/graphql-engine.cabal" }}
+          key: server-app-cache-{{ .Branch }}-{{ .Revision }}
           paths:
           - server/.stack-work
+      - save_cache:
+          key: server-deps-cache
+          paths:
           - ~/.stack
       - run:
           name: Package and build the docker image
