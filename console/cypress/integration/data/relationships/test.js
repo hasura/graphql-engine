@@ -42,7 +42,7 @@ export const runRelationshipsTests = () => {
   });
 };
 
-if (testMode !== 'complete') {
+if (testMode !== 'cli') {
   setup();
   runRelationshipsTests();
 }

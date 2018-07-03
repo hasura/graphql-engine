@@ -37,7 +37,7 @@ export const runCreateTableTests = () => {
   });
 };
 
-if (testMode !== 'complete') {
+if (testMode !== 'cli') {
   setup();
   runCreateTableTests();
 }

@@ -1,4 +1,4 @@
-export const migrateModeUrl = 'http://localhost:9693/apis/migrate/settings';
+import { migrateModeUrl } from '../../../helpers/common';
 
 export const toggleOnMigrationMode = () => {
   cy.request({
@@ -7,7 +7,9 @@ export const toggleOnMigrationMode = () => {
   }).then(response => {
     if (response.body.migration_mode === 'false') {
       // Go to migrations section
-      cy.get('a').click();
+      cy.get('a')
+        .contains('Migrations')
+        .click();
       cy.wait(3000);
       // Toggle Migration mode
       cy.get('[class=react-toggle-track]').click();

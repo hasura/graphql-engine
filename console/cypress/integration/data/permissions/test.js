@@ -43,7 +43,7 @@ export const runPermissionsTests = () => {
   });
 };
 
-if (testMode !== 'complete') {
+if (testMode !== 'cli') {
   setup();
   runPermissionsTests();
 }

@@ -24,7 +24,7 @@ export const runMigrationModeTests = () => {
   });
 };
 
-if (testMode !== 'complete') {
+if (testMode !== 'cli') {
   setup();
   runMigrationModeTests();
 }

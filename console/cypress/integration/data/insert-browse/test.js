@@ -52,7 +52,7 @@ export const runInsertBrowseTests = () => {
   });
 };
 
-if (testMode !== 'complete') {
+if (testMode !== 'cli') {
   setup();
   runInsertBrowseTests();
 }

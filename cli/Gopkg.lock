@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/Masterminds/semver"
+  packages = ["."]
+  revision = "c7af12943936e8c39859482e61f0574c2fd7fc75"
+  version = "v1.4.2"
+
+[[projects]]
   name = "github.com/Microsoft/go-winio"
   packages = ["."]
   revision = "7da180ee92d8bd8bb8c37fc560e673e6557c392f"
@@ -391,6 +397,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7ec74b32df538feff4b0ec0f0c2594271d5ec472d10aaa4802e8ae889d4cc87c"
+  inputs-digest = "ab9236de6672340050c57a88b6009fac10f7c6a8135b44c57f544c5f3d5d70e4"
   solver-name = "gps-cdcl"
   solver-version = 1

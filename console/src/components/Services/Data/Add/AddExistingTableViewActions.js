@@ -57,7 +57,9 @@ const addExistingTableSql = () => {
     const successMsg = 'Existing table/view added';
     const errorMsg = 'Adding existing table/view failed';
     const customOnSuccess = () => {
-      dispatch(loadMigrationStatus());
+      if (globals.consoleMode === 'cli') {
+        dispatch(loadMigrationStatus());
+      }
       dispatch(showSuccessNotification('Existing table/view added!'));
       dispatch({ type: REQUEST_SUCCESS });
       dispatch(loadSchema()).then(() => {
@@ -145,7 +147,9 @@ const addAllUntrackedTablesSql = tableList => {
     const successMsg = 'Existing table/view added';
     const errorMsg = 'Adding existing table/view failed';
     const customOnSuccess = () => {
-      dispatch(loadMigrationStatus());
+      if (globals.consoleMode === 'cli') {
+        dispatch(loadMigrationStatus());
+      }
       dispatch(showSuccessNotification('Existing table/view added!'));
       dispatch({ type: REQUEST_SUCCESS });
       dispatch(loadSchema()).then(() => {

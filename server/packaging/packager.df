@@ -1,5 +1,5 @@
 FROM hasura/haskell-docker-packager:1.1
 MAINTAINER vamshi@34cross.in
 
-RUN apt-get update && apt-get install -y libpq5 \
+RUN apt-get update && apt-get install -y libpq5 upx \
  && rm -rf /var/lib/apt/lists/*

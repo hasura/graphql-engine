@@ -2,7 +2,8 @@
   "baseUrl": "http://localhost:3000",
   "env": {
     "BASE_URL": "http://localhost:3000",
-    "TEST_MODE": "complete"
+    "TEST_MODE": "cli",
+    "MIGRATE_URL": "http://localhost:9693/apis/migrate"
   },
   "ignoreTestFiles": ["*spec.js", "validators.js", "utils.js"],
   "viewportWidth": 1280,
