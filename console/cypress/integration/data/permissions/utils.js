@@ -1,5 +1,6 @@
 import {
   getElementFromAlias,
+  getTableName,
   getColName,
   queryTypes,
   makeDataAPIOptions,
@@ -11,12 +12,9 @@ export const savePermission = () => {
   cy.get('button')
     .contains('Save permissions')
     .click();
-  cy.wait(7000);
+  cy.wait(5000);
   // Check for success notif
-  cy.get('[class=notification-title]', { timeout: 5000 }).contains(
-    'Permissions Updated',
-    { timeout: 5000 }
-  );
+  cy.get('[class=notification-title]').contains('Permissions updated');
 };
 
 export const permNoCheck = (tableName, query, first) => {
@@ -71,7 +69,7 @@ export const permCustomCheck = (tableName, query) => {
   // Select operator
   cy.get('select')
     .last()
-    .select(`${getColName(0)}.$eq`);
+    .select(`${getColName(0)}._eq`);
   // Set filter to 1
   cy.get(getElementFromAlias('perm-check-textbox')).type('1');
   // Save
@@ -96,12 +94,9 @@ export const permRemove = (tableName, query) => {
   cy.get('button')
     .contains('Remove all access')
     .click();
-  cy.wait(7000);
+  cy.wait(5000);
   // Check for notif
-  cy.get('[class=notification-title]', { timeout: 5000 }).contains(
-    'Permissions Deleted',
-    { timeout: 5000 }
-  );
+  cy.get('[class=notification-title]').contains('Permissions deleted');
   cy.wait(5000);
   // Validate
   validatePermission(tableName, 'role0', query, 'custom', 'failure');
@@ -122,6 +117,20 @@ export const testPermissions = (tableName, check, isView) => {
       permCustomCheck(tableName, query, first);
     });
   }
+};
+
+export const trackView = () => {
+  // track view
+  cy.get('a')
+    .contains('Data')
+    .click();
+  cy.wait(7000);
+  cy.get(getElementFromAlias(`add-track-table-${getTableName(1)}`)).click();
+  cy.wait(10000);
+  // Move to permissions
+  cy.get('a')
+    .contains('Permissions')
+    .click();
 };
 
 export const createView = (viewName, tableName) => {

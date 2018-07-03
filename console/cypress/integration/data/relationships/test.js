@@ -12,7 +12,7 @@ import {
   passRTAddSuggestedRel,
   failRTAddSuggestedRel,
 } from './spec';
-
+import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
 
 const setup = () => {
@@ -42,5 +42,7 @@ export const runRelationshipsTests = () => {
   });
 };
 
-// setup();
-// runRelationshipsTests();
+if (testMode !== 'cli') {
+  setup();
+  runRelationshipsTests();
+}

@@ -17,6 +17,7 @@ import {
   failMTWrongDefault,
 } from './spec';
 
+import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
 
 const setup = () => {
@@ -49,5 +50,7 @@ export const runModifyTableTests = () => {
   });
 };
 
-// setup();
-// runModifyTableTests();
+if (testMode !== 'cli') {
+  setup();
+  runModifyTableTests();
+}
