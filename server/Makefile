@@ -28,7 +28,9 @@ release-image: $(project).cabal
 circleci: $(project).cabal
 	mkdir -p packaging/build/rootfs
 	stack --system-ghc build
-	docker run --rm -v $(build_dir)/$(project)/$(project):/root/$(project) $(registry)/graphql-engine-packager:$(packager_ver) /build.sh $(project) | tar -x -C packaging/build/rootfs
+	docker create -v /root/ --name dummy alpine:3.4 /bin/true
+	docker cp $(build_dir)/$(project)/$(project) dummy:/root/
+	docker run --rm --volumes-from dummy $(registry)/graphql-engine-packager:$(packager_ver) /build.sh $(project) | tar -x -C packaging/build/rootfs
 	strip --strip-unneeded packaging/build/rootfs/bin/$(project)
 	upx packaging/build/rootfs/bin/$(project)
 	docker build -t $(registry)/$(project):$(version) packaging/build/
