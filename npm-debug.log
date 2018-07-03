@@ -1,12 +1,12 @@
 0 info it worked if it ends with ok
-1 verbose cli [ '/usr/bin/node', '/usr/bin/npm', 'run', 'cypress' ]
+1 verbose cli [ '/usr/bin/node', '/usr/bin/npm', 'run', 'test' ]
 2 info using npm@3.5.2
 3 info using node@v8.10.0
 4 verbose config Skipping project config: /home/aswin1999/.npmrc. (matches userconfig)
 5 verbose stack Error: ENOENT: no such file or directory, open '/home/aswin1999/package.json'
 6 verbose cwd /home/aswin1999/graphql-engine
 7 error Linux 4.15.0-23-generic
-8 error argv "/usr/bin/node" "/usr/bin/npm" "run" "cypress"
+8 error argv "/usr/bin/node" "/usr/bin/npm" "run" "test"
 9 error node v8.10.0
 10 error npm  v3.5.2
 11 error path /home/aswin1999/package.json
