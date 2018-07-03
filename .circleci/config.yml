@@ -44,16 +44,16 @@ jobs:
       - checkout
       - restore_cache:
           key: 
-            console-npm-cache-{{ checksum "console/package.json" }}
+            console-node-modules-{{ checksum "console/package.json" }}
       - run:
           name: install dependencies
           working_directory: ./console
           command: make deps
       - save_cache:
           key: 
-            console-npm-cache-{{ checksum "console/package.json" }}
+            console-node-modules-{{ checksum "console/package.json" }}
           paths:
-            - ~/.npm/_cacache
+            - console/node_modules
       # run tests
       - run:
           name: build console
@@ -96,7 +96,6 @@ jobs:
     - restore_cache:
         keys:
         - cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
-        - cli-vendor-
     - run:
         name: get cli dependencies
         working_directory: /go/src/github.com/hasura/graphql-engine/cli

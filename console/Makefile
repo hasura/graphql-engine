@@ -6,7 +6,7 @@ VERSION ?= $(shell ../scripts/get-version.sh)
 all: deps build gcloud-cp-stable gcloud-set-metadata
 
 deps:
-	npm install
+	if [ ! -d "node_modules" ]; then npm install; fi
 
 build:
 	npm run build
