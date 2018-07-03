@@ -3,7 +3,13 @@
 ## Running all tests to generate coverage
 
 1.  Set the `TEST_MODE` field in `cypress.json` to `cli`
-2.  Run the command `npm run test` from the `comsole` directory to run all the tests.
+2.  Run the command `npm run test` from the `console` directory to run all the tests.
+
+You can also run the complete tests from the cypress electron app:
+
+1.  Set the `TEST_MODE` field in `cypress.json` to `cli`
+2.  Run `npm run cypress` from the `console` directory.
+3.  Click on `test_complete.js`
 
 ## Running tests individually
 
