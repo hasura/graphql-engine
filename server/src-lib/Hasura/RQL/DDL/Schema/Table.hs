@@ -1,10 +1,11 @@
 {-# LANGUAGE DeriveLift                 #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE MultiWayIf                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE QuasiQuotes                #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeApplications           #-}
 {-# LANGUAGE TypeFamilies               #-}
@@ -18,22 +19,23 @@ import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema.Diff
+import           Hasura.RQL.DDL.Schema.Table.Internal
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query                  as Q
+import qualified Database.PG.Query                    as Q
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Instances.TH.Lift                  ()
-import           Language.Haskell.TH.Syntax         (Lift)
+import           Instances.TH.Lift                    ()
+import           Language.Haskell.TH.Syntax           (Lift)
 
-import qualified Data.HashMap.Strict                as M
-import qualified Data.Text                          as T
-import qualified Data.Text.Encoding                 as TE
-import qualified Database.PostgreSQL.LibPQ          as PQ
+import qualified Data.HashMap.Strict                  as M
+import qualified Data.Text                            as T
+import qualified Data.Text.Encoding                   as TE
+import qualified Database.PostgreSQL.LibPQ            as PQ
 
 delTableFromCatalog :: QualifiedTable -> Q.Tx ()
 delTableFromCatalog (QualifiedTable sn tn) =
@@ -47,17 +49,6 @@ saveTableToCatalog (QualifiedTable sn tn) =
   Q.unitQ [Q.sql|
             INSERT INTO "hdb_catalog"."hdb_table" VALUES ($1, $2)
                 |] (sn, tn) False
-
-updateTableInCatalog :: QualifiedTable -> QualifiedTable -> Q.Tx ()
-updateTableInCatalog oldTable newTable =
-  Q.unitQ [Q.sql|
-           UPDATE "hdb_catalog"."hdb_table"
-              SET table_schema = $1, table_name = $2
-            WHERE table_schema = $3 AND table_name = $4
-                |] (nsn, ntn, osn, otn) False
-  where
-    QualifiedTable osn otn = oldTable
-    QualifiedTable nsn ntn = newTable
 
 -- Build the TableInfo with all its columns
 getTableInfo :: QualifiedTable -> Bool -> Q.TxE QErr TableInfo
@@ -132,193 +123,52 @@ purgeDep schemaObjId = case schemaObjId of
 
   _                              -> throw500 $
     "unexpected dependent object : " <> reportSchemaObj schemaObjId
-updateObjRelDef :: (P2C m) => QualifiedTable
-                -> QualifiedTable -> RelName -> m ()
-updateObjRelDef newQT qt rn = do
-  oldDefV <- liftTx $ getRelDef qt rn
-  oldDef :: ObjRelUsing <- decodeValue oldDefV
-  case oldDef of
-    RUFKeyOn _ -> return ()
-    RUManual (ObjRelManualConfig (RelManualConfig _ rmCols)) -> do
-      let newDef = mkObjRelUsing rmCols
-      liftTx $ updateRel qt rn $ toJSON (newDef :: ObjRelUsing)
-  where
-    mkObjRelUsing colMap = RUManual $ ObjRelManualConfig $
-      RelManualConfig newQT colMap
 
-updateArrRelDef :: (P2C m) => QualifiedTable
-                -> QualifiedTable -> RelName -> m ()
-updateArrRelDef newQT qt rn = do
-  oldDefV <- liftTx $ getRelDef qt rn
-  oldDef  <- decodeValue oldDefV
-  liftTx $ updateRel qt rn $ toJSON $ mkNewArrRelUsing oldDef
-  where
-    mkNewArrRelUsing arrRelUsing = case arrRelUsing of
-      RUFKeyOn (ArrRelUsingFKeyOn _ c) ->
-        RUFKeyOn $ ArrRelUsingFKeyOn newQT c
-      RUManual (ArrRelManualConfig (RelManualConfig _ rmCols)) ->
-        RUManual $ ArrRelManualConfig $ RelManualConfig newQT rmCols
-
-getRelDef :: QualifiedTable -> RelName -> Q.TxE QErr Value
-getRelDef (QualifiedTable sn tn) rn =
-  Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
-    [Q.sql|
-     SELECT rel_def::json FROM hdb_catalog.hdb_relationship
-      WHERE table_schema = $1 AND table_name = $2
-        AND rel_name = $3
-    |] (sn, tn, rn) True
-
-updateRelDefs
-  :: (P2C m)
-  => QualifiedTable
-  -> QualifiedTable
-  -> (QualifiedTable, [RelInfo])
-  -> m ()
-updateRelDefs newQT oldQT (qt, rels) =
-  forM_ rels $ \rel -> when (oldQT == riRTable rel) $
-    case riType rel of
-      ObjRel -> updateObjRelDef newQT qt $ riName rel
-      ArrRel -> updateArrRelDef newQT qt $ riName rel
-
-updateCols :: PGCol -> PGCol -> PermColSpec -> (PermColSpec, Bool)
-updateCols oCol nCol cols = case cols of
-  PCStar -> (cols, False)
-  PCCols c -> ( PCCols $ flip map c $ \col -> if col == oCol then nCol else col
-              , any (== oCol) c
-              )
-
-updateBoolExp :: PGCol -> PGCol -> BoolExp -> (BoolExp, Bool)
-updateBoolExp oCol nCol boolExp = case boolExp of
-  BoolAnd exps -> ( BoolAnd $ fst $ updateExps exps
-                  , or $ snd $ updateExps exps
-                  )
-  BoolOr exps -> ( BoolOr $ fst $ updateExps exps
-                 , or $ snd $ updateExps exps
-                 )
-  be@(BoolCol (ColExp c v)) -> if oCol == PGCol (getFieldNameTxt c)
-                               then ( BoolCol $ ColExp (fromPGCol nCol) v
-                                    , True
-                                    )
-                               else (be, False)
-  BoolNot be -> let updatedExp = updateBoolExp oCol nCol be
-                in ( BoolNot $ fst updatedExp
-                   , snd updatedExp
-                   )
-  where
-    updateExps exps = unzip $ flip map exps $ updateBoolExp oCol nCol
-
-updateInsPermCols :: (P2C m) => PGCol -> PGCol -> CreateInsPerm -> m ()
-updateInsPermCols oCol nCol (WithTable qt (PermDef rn (InsPerm chk _) _)) = do
-  let updatedBoolExp = updateBoolExp oCol nCol chk
-  if snd updatedBoolExp
-  then liftTx $ updatePermInCatalog PTInsert qt $
-    PermDef rn (InsPerm (fst updatedBoolExp) Nothing) Nothing
-  else return ()
-
-updateSelPermCols :: (P2C m) => PGCol -> PGCol -> CreateSelPerm -> m ()
-updateSelPermCols oCol nCol (WithTable qt (PermDef rn (SelPerm cols fltr) _)) = do
-  if or [updNeededFromCols, updNeededFromBoolExp] then
-    liftTx $ updatePermInCatalog PTSelect qt $
-      PermDef rn (SelPerm updCols updBoolExp) Nothing
-  else return ()
-  where
-    (updCols, updNeededFromCols) = updateCols oCol nCol cols
-    (updBoolExp, updNeededFromBoolExp) = updateBoolExp oCol nCol fltr
-
-updateUpdPermCols :: (P2C m) => PGCol -> PGCol -> CreateUpdPerm -> m ()
-updateUpdPermCols oCol nCol (WithTable qt (PermDef rn (UpdPerm cols fltr) _)) = do
-  if or [updNeededFromCols, updNeededFromBoolExp] then
-    liftTx $ updatePermInCatalog PTUpdate qt $
-      PermDef rn (UpdPerm updCols updBoolExp) Nothing
-  else return ()
-  where
-    (updCols, updNeededFromCols) = updateCols oCol nCol cols
-    (updBoolExp, updNeededFromBoolExp) = updateBoolExp oCol nCol fltr
-
-updateDelPermCols :: (P2C m) => PGCol -> PGCol -> CreateDelPerm -> m ()
-updateDelPermCols oCol nCol (WithTable qt (PermDef rn (DelPerm fltr)_)) = do
-  let updatedFltrExp = updateBoolExp oCol nCol fltr
-  if snd updatedFltrExp then
-    liftTx $ updatePermInCatalog PTDelete qt $
-      PermDef rn (DelPerm $ fst updatedFltrExp) Nothing
-  else return ()
-
-updatePermCols :: (P2C m) => PGCol -> PGCol -> QualifiedTable -> m ()
-updatePermCols oCol nCol qt@(QualifiedTable sn tn) = do
-  perms <- liftTx fetchPerms
-  forM_ perms $ \(rn, ty, Q.AltJ (pDef :: Value)) -> do
-    case ty of
-      PTInsert -> do
-        perm <- decodeValue pDef
-        updateInsPermCols oCol nCol $
-          WithTable qt $ PermDef rn perm Nothing
-      PTSelect -> do
-        perm <- decodeValue pDef
-        updateSelPermCols oCol nCol $
-          WithTable qt $ PermDef rn perm Nothing
-      PTUpdate -> do
-        perm <- decodeValue pDef
-        updateUpdPermCols oCol nCol $
-          WithTable qt $ PermDef rn perm Nothing
-      PTDelete -> do
-        perm <- decodeValue pDef
-        updateDelPermCols oCol nCol $
-          WithTable qt $ PermDef rn perm Nothing
-  where
-    fetchPerms = Q.listQE defaultTxErrorHandler [Q.sql|
-                  SELECT role_name, perm_type, perm_def::json
-                    FROM hdb_catalog.hdb_permission
-                   WHERE table_schema = $1
-                     AND table_name = $2
-                 |] (sn, tn) True
+reloadSchemaCache :: (CacheRWM m, MonadTx m) => m ()
+reloadSchemaCache = do
+  sc <- liftTx buildSchemaCache
+  writeSchemaCache sc
 
 processTableChanges :: (P2C m) => TableInfo -> TableDiff -> m ()
 processTableChanges ti tableDiff = do
+  newtn <- do
+    let tn = tiName ti
+    case mNewName of
+      Just newQT -> do
+        renameTable newQT tn
+        return newQT
+      Nothing -> return tn
+
   sc <- askSchemaCache
 
-  case mNewName of
-    Just newqt -> do
-      let allRels = getAllRelations $ scTables sc
-      -- Update depended relations on this table with new name
-      forM_ allRels $ \rel -> updateRelDefs newqt tn rel
-      -- Update table name in hdb_catalog
-      liftTx $ Q.catchE defaultTxErrorHandler $
-        updateTableInCatalog tn newqt
-    Nothing -> return ()  -- when (isJust mNewName) $
-  --   throw400 NotSupported $ "table renames are not yet supported : " <>> tn
-
   -- for all the dropped columns
-  forM_ droppedCols $ \droppedCol ->
-    -- Drop the column from the cache
-    delFldFromCache (fromPGCol droppedCol) tn
+  -- forM_ droppedCols $ \droppedCol ->
+  --   -- Drop the column from the cache
+  --   delFldFromCache (fromPGCol droppedCol) newtn
 
   -- In the newly added columns check that there is no conflict with relationships
-  forM_ addedCols $ \colInfo@(PGColInfo colName _) ->
+  forM_ addedCols $ \(PGColInfo colName _) ->
     case M.lookup (fromPGCol colName) $ tiFieldInfoMap ti of
       Just (FIRelationship _) ->
         throw400 AlreadyExists $ "cannot add column " <> colName
-        <<> " in table " <> tn <<>
+        <<> " in table " <> newtn <<>
         " as a relationship with the name already exists"
-      _ -> addFldToCache (fromPGCol colName) (FIColumn colInfo) tn
+      _ -> return () --addFldToCache (fromPGCol colName) (FIColumn colInfo) newtn
 
   -- for rest of the columns
   forM_ alteredCols $ \(PGColInfo oColName oColTy, (PGColInfo nColName nColTy)) ->
-    if | oColName /= nColName -> do
-           -- Update cols in permissions
-           updatePermCols oColName nColName tn
-           -- Update cols in relations
-           -- throw400 NotSupported $ "column renames are not yet supported : "
-           --   <> tn <<> "." <>> oColName
+    if | oColName /= nColName ->
+         renameColumn oColName nColName newtn ti
+
        | oColTy /= nColTy -> do
-           let colId   = SOTableObj tn $ TOCol oColName
+           let colId   = SOTableObj newtn $ TOCol oColName
                depObjs = getDependentObjsWith (== "on_type") sc colId
            unless (null depObjs) $ throw400 DependencyError $ "cannot change type of column " <> oColName <<> " in table "
-                  <> tn <<> " because of the following dependencies : " <>
+                  <> newtn <<> " because of the following dependencies : " <>
                   reportSchemaObjs depObjs
        | otherwise -> return ()
   where
-    tn = tiName ti
-    TableDiff mNewName droppedCols addedCols alteredCols _ = tableDiff
+    TableDiff mNewName _ addedCols alteredCols _ = tableDiff
 
 processSchemaChanges :: (P2C m) => SchemaDiff -> m ()
 processSchemaChanges schemaDiff = do
@@ -344,88 +194,6 @@ processSchemaChanges schemaDiff = do
     processTableChanges ti tableDiff
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
-
-data UntrackTable =
-  UntrackTable
-  { utTable   :: !QualifiedTable
-  , utCascade :: !(Maybe Bool)
-  } deriving (Show, Eq, Lift)
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UntrackTable)
-
-unTrackExistingTableOrViewP1 :: UntrackTable -> P1 (UntrackTable, TableInfo)
-unTrackExistingTableOrViewP1 ut@(UntrackTable vn _) = do
-  adminOnly
-  rawSchemaCache <- getSchemaCache <$> lift ask
-  case M.lookup vn (scTables rawSchemaCache) of
-    Just ti -> do
-      -- Check if table/view is system defined
-      when (tiSystemDefined ti) $ throw400 NotSupported $
-        vn <<> " is system defined, cannot untrack"
-      return (ut, ti)
-    Nothing -> throw400 AlreadyUntracked $
-      "view/table already untracked : " <>> vn
-
-unTrackExistingTableOrViewP2 :: (P2C m)
-                             => UntrackTable -> TableInfo -> m RespBody
-unTrackExistingTableOrViewP2 (UntrackTable vn cascade) tableInfo = do
-  sc <- askSchemaCache
-
-  -- Get Foreign key constraints to this table
-  fKeyTables <- liftTx getFKeyTables
-  let fKeyDepIds = mkFKeyObjIds $ filterTables fKeyTables $ scTables sc
-
-  -- Report back with an error if any fkey object ids are present
-  when (fKeyDepIds /= []) $ reportDepsExt fKeyDepIds []
-
-  -- Get relational and query template dependants
-  let allRels = getAllRelations $ scTables sc
-      directRelDep = (vn, getRels $ tiFieldInfoMap tableInfo)
-      relDeps = directRelDep : foldl go [] allRels
-      relDepIds = concatMap mkObjIdFromRel relDeps
-      queryTDepIds = getDependentObjsOfQTemplateCache (SOTable vn)
-                     (scQTemplates sc)
-      allDepIds = relDepIds <> queryTDepIds
-
-  -- Report bach with an error if cascade is not set
-  when (allDepIds /= [] && not (or cascade)) $ reportDepsExt allDepIds []
-
-  -- Purge all the dependants from state
-  mapM_ purgeDep allDepIds
-
-  -- update the schema cache with the changes
-  processSchemaChanges $ SchemaDiff [vn] []
-
-  return successMsg
-  where
-    QualifiedTable sn tn = vn
-    getFKeyTables = Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
-                    SELECT constraint_name,
-                           table_schema,
-                           table_name
-                     FROM  hdb_catalog.hdb_foreign_key_constraint
-                     WHERE ref_table_table_schema = $1
-                       AND ref_table = $2
-                   |] (sn, tn) False
-    filterTables tables tc = flip filter tables $ \(_, s, t) ->
-      isJust $ M.lookup (QualifiedTable s t) tc
-
-    mkFKeyObjIds tables = flip map tables $ \(cn, s, t) ->
-                     SOTableObj (QualifiedTable s t) (TOCons cn)
-
-    go l (qt, ris) = if any isDep ris
-                     then (qt, filter isDep ris):l
-                     else l
-    isDep relInfo = vn == riRTable relInfo
-    mkObjIdFromRel (qt, ris) = flip map ris $ \ri ->
-      SOTableObj qt (TORel $ riName ri)
-
-instance HDBQuery UntrackTable where
-  type Phase1Res UntrackTable = (UntrackTable, TableInfo)
-  phaseOne = unTrackExistingTableOrViewP1
-
-  phaseTwo _ = uncurry unTrackExistingTableOrViewP2
-
-  schemaCachePolicy = SCPReload
 
 buildSchemaCache :: Q.TxE QErr SchemaCache
 buildSchemaCache = flip execStateT emptySchemaCache $ do
@@ -498,11 +266,6 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
       Q.listQ [Q.sql|
                 SELECT template_name, template_defn :: json FROM hdb_catalog.hdb_query_template
                   |] () False
-
-reloadSchemaCache :: (CacheRWM m, MonadTx m) => m ()
-reloadSchemaCache = do
-  sc <- liftTx buildSchemaCache
-  writeSchemaCache sc
 
 data RunSQL
   = RunSQL
@@ -603,3 +366,85 @@ instance Q.FromRes RunSQLRes where
   fromRes (Q.ResultOkData res) = do
     csvRows <- resToCSV res
     return $ RunSQLRes "TuplesOk" $ toJSON csvRows
+
+data UntrackTable =
+  UntrackTable
+  { utTable   :: !QualifiedTable
+  , utCascade :: !(Maybe Bool)
+  } deriving (Show, Eq, Lift)
+$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UntrackTable)
+
+unTrackExistingTableOrViewP1 :: UntrackTable -> P1 (UntrackTable, TableInfo)
+unTrackExistingTableOrViewP1 ut@(UntrackTable vn _) = do
+  adminOnly
+  rawSchemaCache <- getSchemaCache <$> lift ask
+  case M.lookup vn (scTables rawSchemaCache) of
+    Just ti -> do
+      -- Check if table/view is system defined
+      when (tiSystemDefined ti) $ throw400 NotSupported $
+        vn <<> " is system defined, cannot untrack"
+      return (ut, ti)
+    Nothing -> throw400 AlreadyUntracked $
+      "view/table already untracked : " <>> vn
+
+unTrackExistingTableOrViewP2 :: (P2C m)
+                             => UntrackTable -> TableInfo -> m RespBody
+unTrackExistingTableOrViewP2 (UntrackTable vn cascade) tableInfo = do
+  sc <- askSchemaCache
+
+  -- Get Foreign key constraints to this table
+  fKeyTables <- liftTx getFKeyTables
+  let fKeyDepIds = mkFKeyObjIds $ filterTables fKeyTables $ scTables sc
+
+  -- Report back with an error if any fkey object ids are present
+  when (fKeyDepIds /= []) $ reportDepsExt fKeyDepIds []
+
+  -- Get relational and query template dependants
+  let allRels = getAllRelations $ scTables sc
+      directRelDep = (vn, getRels $ tiFieldInfoMap tableInfo)
+      relDeps = directRelDep : foldl go [] allRels
+      relDepIds = concatMap mkObjIdFromRel relDeps
+      queryTDepIds = getDependentObjsOfQTemplateCache (SOTable vn)
+                     (scQTemplates sc)
+      allDepIds = relDepIds <> queryTDepIds
+
+  -- Report bach with an error if cascade is not set
+  when (allDepIds /= [] && not (or cascade)) $ reportDepsExt allDepIds []
+
+  -- Purge all the dependants from state
+  mapM_ purgeDep allDepIds
+
+  -- update the schema cache with the changes
+  processSchemaChanges $ SchemaDiff [vn] []
+
+  return successMsg
+  where
+    QualifiedTable sn tn = vn
+    getFKeyTables = Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
+                    SELECT constraint_name,
+                           table_schema,
+                           table_name
+                     FROM  hdb_catalog.hdb_foreign_key_constraint
+                     WHERE ref_table_table_schema = $1
+                       AND ref_table = $2
+                   |] (sn, tn) False
+    filterTables tables tc = flip filter tables $ \(_, s, t) ->
+      isJust $ M.lookup (QualifiedTable s t) tc
+
+    mkFKeyObjIds tables = flip map tables $ \(cn, s, t) ->
+                     SOTableObj (QualifiedTable s t) (TOCons cn)
+
+    go l (qt, ris) = if any isDep ris
+                     then (qt, filter isDep ris):l
+                     else l
+    isDep relInfo = vn == riRTable relInfo
+    mkObjIdFromRel (qt, ris) = flip map ris $ \ri ->
+      SOTableObj qt (TORel $ riName ri)
+
+instance HDBQuery UntrackTable where
+  type Phase1Res UntrackTable = (UntrackTable, TableInfo)
+  phaseOne = unTrackExistingTableOrViewP1
+
+  phaseTwo _ = uncurry unTrackExistingTableOrViewP2
+
+  schemaCachePolicy = SCPReload
