@@ -1,8 +1,6 @@
 import { makeDataAPIOptions, getColName } from '../../helpers/dataHelpers';
-import {
-  toggleOnMigrationMode,
-  migrateModeUrl,
-} from '../data/migration-mode/utils';
+import { migrateModeUrl } from '../../helpers/common';
+import { toggleOnMigrationMode } from '../data/migration-mode/utils';
 // ***************** UTIL FUNCTIONS **************************
 
 let accessKey;

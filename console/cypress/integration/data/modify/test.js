@@ -50,7 +50,7 @@ export const runModifyTableTests = () => {
   });
 };
 
-if (testMode !== 'complete') {
+if (testMode !== 'cli') {
   setup();
   runModifyTableTests();
 }

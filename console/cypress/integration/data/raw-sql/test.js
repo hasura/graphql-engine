@@ -23,7 +23,7 @@ export const runRawSQLTests = () => {
   });
 };
 
-if (testMode !== 'complete') {
+if (testMode !== 'cli') {
   setup();
   runRawSQLTests();
 }

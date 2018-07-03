@@ -2,7 +2,8 @@
 
 ## Running all tests to generate coverage
 
-Run the command `npm run test` from the `comsole` directory to run all the tests.
+1.  Set the `TEST_MODE` field in `cypress.json` to `cli`
+2.  Run the command `npm run test` from the `comsole` directory to run all the tests.
 
 ## Running tests individually
 
@@ -20,12 +21,12 @@ Tests are modularized into following modules:
 
 To run the tests for the modules individually (say for create table),
 
-- Go to the `cypress.json` and set the `env > TEST_MODE` variable to `individual`.
+- Go to the `cypress.json` and set the `env > TEST_MODE` variable to `ui`.
 
   ```
   {
       "env": {
-          "TEST_MODE": "individual"
+          "TEST_MODE": "ui"
       }
   }
   ```

@@ -1,4 +1,4 @@
-export const migrateModeUrl = 'http://localhost:9693/apis/migrate/settings';
+import { migrateModeUrl } from '../../../helpers/common';
 
 export const toggleOnMigrationMode = () => {
   cy.request({
