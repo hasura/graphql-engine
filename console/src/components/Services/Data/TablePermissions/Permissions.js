@@ -639,6 +639,7 @@ class Permissions extends Component {
         className={`${styles.editActionButton} button btn ${customClasses}`}
         onClick={onClickFn}
         disabled={disabled}
+        data-test={`${value.split(' ').join('-')}-button`}
       >
         {value}
       </button>

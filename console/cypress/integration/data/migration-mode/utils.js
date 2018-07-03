@@ -8,9 +8,7 @@ export const toggleOnMigrationMode = () => {
     if (response.body.migration_mode === 'false') {
 <<<<<<< HEAD
       // Go to migrations section
-      cy.get('a')
-        .contains('Migrations')
-        .click();
+      cy.get('a').click();
       cy.wait(3000);
       // Toggle Migration mode
 =======

@@ -59,7 +59,6 @@ const PageContainer = ({
                 <i
                   className={styles.tableIcon + ' fa fa-table'}
                   aria-hidden="true"
-                  data-test={tableName}
                 />
                 {tableName}
               </Link>
@@ -77,6 +76,7 @@ const PageContainer = ({
                 tableName +
                 '/browse'
               }
+              data-test={tableName}
             >
               <i
                 className={styles.tableIcon + ' fa fa-table'}
