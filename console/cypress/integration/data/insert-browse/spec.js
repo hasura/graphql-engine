@@ -106,9 +106,7 @@ export const passBICreateTable = () => {
 
 export const checkInsertRoute = () => {
   // Click on Insert tab
-  cy.get('a')
-    .contains(getTableName(0))
-    .click();
+  cy.get(getElementFromAlias(getTableName(0))).click();
   cy.get(getElementFromAlias('table-insert-rows')).click();
   // Match URL
   cy.url().should(
@@ -335,7 +333,9 @@ export const passEditButton = () => {
   );
   cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type('new-text');
   cy.get(getElementFromAlias('save-button')).click();
-  cy.get('h4').contains('Edited!', { timeout: 7000 });
+  // cy.get('h4').contains('Edited!', { timeout: 7000 });
+  cy.get('.notification-success');
+  cy.wait(7000);
 };
 
 export const passCloneButton = () => {
@@ -355,6 +355,6 @@ export const passDeleteRow = () => {
   cy.on('window:confirm', str => {
     expect(str === 'Permanently delete this row?').to.be.true;
   });
-  cy.get('h4').contains('Row deleted!', { timeout: 7000 });
-  cy.wait(7000);
+  cy.get('.notification-success');
+  cy.wait(14000);
 };

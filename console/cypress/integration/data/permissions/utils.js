@@ -9,9 +9,7 @@ import {
 import { validatePermission } from '../../validators/validators';
 
 export const savePermission = () => {
-  cy.get('button')
-    .contains('Save permissions')
-    .click();
+  cy.get(getElementFromAlias('Save-permissions-button')).click();
   cy.wait(5500);
   // Check for success notif
   cy.get('.notification-success').click();
@@ -91,9 +89,7 @@ export const permRemove = (tableName, query) => {
   // click on the query type to edit permission
   cy.get(getElementFromAlias(`role0-${query}`)).click();
   // Remove permission
-  cy.get('button')
-    .contains('Remove all access')
-    .click();
+  cy.get(getElementFromAlias('Remove-all-access-button')).click();
   cy.wait(5500);
   // Check for notif
   cy.get('.notification-success').click();
@@ -128,9 +124,7 @@ export const trackView = () => {
   cy.get(getElementFromAlias(`add-track-table-${getTableName(1)}`)).click();
   cy.wait(10000);
   // Move to permissions
-  cy.get('a')
-    .contains('Permissions')
-    .click();
+  cy.get(getElementFromAlias('table-permissions')).click();
 };
 
 export const createView = (viewName, tableName) => {

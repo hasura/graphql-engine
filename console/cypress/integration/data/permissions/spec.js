@@ -12,9 +12,7 @@ import { testPermissions, permRemove, createView, trackView } from './utils';
 
 export const passPTCreateTable = () => {
   // Click on create tabel
-  cy.get('button')
-    .contains('Create Table')
-    .click();
+  cy.get(getElementFromAlias('data-create-table')).click();
   // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   // Type table name
@@ -31,9 +29,7 @@ export const passPTCreateTable = () => {
   // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   // Create
-  cy.get('button')
-    .contains('Create')
-    .click();
+  cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
   cy.url().should(
     'eq',
@@ -90,13 +86,9 @@ export const passPVRemovePerms = () => {
 
 export const passPVDeleteView = () => {
   // Go to modify table
-  cy.get('a')
-    .contains('Modify')
-    .click();
+  cy.get(getElementFromAlias('table-modify')).click();
   // Delete table
-  cy.get('button')
-    .contains('Delete view')
-    .click();
+  cy.get(getElementFromAlias('delete-view')).click();
   cy.wait(7000);
 };
 
@@ -107,9 +99,7 @@ export const passPTDeleteTable = () => {
   // Go to modify table
   cy.get(getElementFromAlias('table-modify')).click();
   // Delete table
-  cy.get('button')
-    .contains('Delete table')
-    .click();
+  cy.get(getElementFromAlias('delete-table')).click();
   cy.wait(7000);
 };
 

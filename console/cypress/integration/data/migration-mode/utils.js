@@ -7,9 +7,7 @@ export const toggleOnMigrationMode = () => {
   }).then(response => {
     if (response.body.migration_mode === 'false') {
       // Go to migrations section
-      cy.get('a')
-        .contains('Migrations')
-        .click();
+      cy.get('a').click();
       cy.wait(3000);
       // Toggle Migration mode
       cy.get('[class=react-toggle-track]').click();
