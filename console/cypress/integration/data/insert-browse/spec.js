@@ -186,6 +186,19 @@ export const passBI20RowsExist = () => {
   // Check if the 20 inserted elements reflect in the UI
   cy.get(getElementFromAlias('table-browse-rows')).contains('21');
   // Check pagination string
+  cy.get('.-pageJump > input').should('have.value', '1');
+  cy.get('.-totalPages').contains('3');
+  cy.get('.-pageSizeOptions > select').should('have.value', '10');
+  cy.get('.-next > button').click();
+  cy.get(
+    '.rt-tbody > div:nth-child(1) > div > div:nth-child(2) > div'
+  ).contains('11');
+  cy.get('.-pageJump > input').should('have.value', '2');
+  cy.get('.-previous > button').click();
+  cy.get('.-pageJump > input').should('have.value', '1');
+  cy.get('.-pageSizeOptions > select').select('5 rows');
+  cy.wait(3000);
+  cy.get('.-totalPages').contains('5');
 };
 
 export const passBISort = order => {
