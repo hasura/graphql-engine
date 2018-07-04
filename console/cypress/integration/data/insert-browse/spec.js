@@ -195,12 +195,14 @@ export const checkPagination = () => {
   // Check if the default value of rows displayed is 10
   cy.get('.-pageSizeOptions > select').should('have.value', '10');
   cy.get('.-next > button').click();
+  cy.wait(3000);
   // Check if the page changed
   cy.get(
     '.rt-tbody > div:nth-child(1) > div > div:nth-child(2) > div'
   ).contains('11');
   cy.get('.-pageJump > input').should('have.value', '2');
   cy.get('.-previous > button').click();
+  cy.wait(3000);
   // Check if the page changed
   cy.get('.-pageJump > input').should('have.value', '1');
   cy.get('.-pageSizeOptions > select').select('5 rows');
