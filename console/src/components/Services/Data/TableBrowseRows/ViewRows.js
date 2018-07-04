@@ -474,6 +474,7 @@ const ViewRows = ({
     } else if (count === 0) {
       return <div> No rows found. </div>;
     }
+    let shouldSortColumn = true;
     return (
       <ReactTable
         className="-highlight"
@@ -485,9 +486,20 @@ const ViewRows = ({
         minRows={0}
         getTheadThProps={(finalState, some, column) => ({
           onClick: () => {
-            if (column.Header !== 'Actions') {
-              dispatch(sortByColumn(column.Header));
+            if (
+              column.Header &&
+              shouldSortColumn &&
+              column.Header !== 'Actions'
+            ) {
+              sortByColumn(column.Header);
             }
+            shouldSortColumn = true;
+          },
+        })}
+        getResizerProps={(finalState, none, column, ctx) => ({
+          onMouseDown: e => {
+            shouldSortColumn = false;
+            ctx.resizeColumnStart(e, column, false);
           },
         })}
         showPagination={count > curFilter.limit}
