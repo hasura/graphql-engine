@@ -1,6 +1,8 @@
 /* eslint no-unused-vars: 0 */
 /* eslint import/prefer-default-export: 0 */
 
+import { testMode } from '../../../helpers/common';
+
 import {
   passBICreateTable,
   deleteBITestTable,
@@ -11,7 +13,7 @@ import {
   passBIInsert20Rows,
   checkBrowseRoute,
   passBI20RowsExist,
-  passBIAscendingSort,
+  passBISort,
   passBIFilterQueryEq,
   passEditButton,
   passCloneButton,
@@ -40,7 +42,8 @@ export const runInsertBrowseTests = () => {
     it('Fail for adding same data for Unique keys', failBIUniqueKeys);
     it('Check browser rows route', checkBrowseRoute);
     it('20 Inserted rows reflect in browse rows', passBI20RowsExist);
-    it('Descending sort works as expected', passBIAscendingSort);
+    it('Ascending sort works as expected', () => passBISort('asc'));
+    it('Descending sort works as expected', () => passBISort('desc'));
     it('FIlter query works as expected with $eq', passBIFilterQueryEq);
     it('Check edit button', passEditButton);
     it('Check for clone clear', passCloneButton);
@@ -49,5 +52,7 @@ export const runInsertBrowseTests = () => {
   });
 };
 
-// setup();
-// runInsertBrowseTests();
+if (testMode !== 'cli') {
+  setup();
+  runInsertBrowseTests();
+}

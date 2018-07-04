@@ -15,7 +15,7 @@ import {
   passVDeleteView,
   passVDeleteTables,
 } from './spec';
-
+import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
 
 const setup = () => {
@@ -47,5 +47,7 @@ export const runViewsTest = () => {
   });
 };
 
-// setup();
-// runViewsTest();
+if (testMode !== 'cli') {
+  setup();
+  runViewsTest();
+}

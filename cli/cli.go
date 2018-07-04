@@ -9,6 +9,10 @@ package cli
 
 import (
 	"bytes"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -16,7 +20,9 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/Masterminds/semver"
 	"github.com/briandowns/spinner"
+	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/util"
 	colorable "github.com/mattn/go-colorable"
 	homedir "github.com/mitchellh/go-homedir"
@@ -44,7 +50,7 @@ const (
 )
 
 // version is set at build time, denotes the CLI version.
-var version = "v0.0.0-unset"
+var version = "dev"
 
 // HasuraGraphQLConfig has the config values required to contact the server.
 type HasuraGraphQLConfig struct {
@@ -96,6 +102,8 @@ type ExecutionContext struct {
 	IsStableRelease bool
 	// Version indicates the CLI build version
 	Version string
+	// ServerVersion indicates the version of configured server
+	ServerVersion string
 
 	// Viper indicates the viper object for the execution
 	Viper *viper.Viper
@@ -174,6 +182,62 @@ func (ec *ExecutionContext) Validate() error {
 	ec.Logger.Debug("graphql engine endpoint: ", ec.Config.Endpoint)
 	ec.Logger.Debug("graphql engine access_key: ", ec.Config.AccessKey)
 
+	// get version from the server and match with the cli version
+	return ec.checkServerVersion()
+}
+
+type serverVersionResponse struct {
+	Version string `json:"version"`
+}
+
+func (ec *ExecutionContext) checkServerVersion() error {
+	ep, err := url.Parse(ec.Config.Endpoint)
+	if err != nil {
+		return errors.Wrap(err, "cannot parse endpoint as a valid url")
+	}
+	versionEndpoint := fmt.Sprintf("%s/v1/version", ep.String())
+	response, err := http.Get(versionEndpoint)
+	if err != nil {
+		return errors.Wrap(err, "failed making version api call")
+	}
+	if response.StatusCode != http.StatusOK {
+		switch response.StatusCode {
+		case http.StatusNotFound:
+			ec.ServerVersion = ""
+			return nil
+		default:
+			return errors.Errorf("GET %s failed - [%s]", versionEndpoint, response.StatusCode)
+		}
+	}
+	defer response.Body.Close()
+	data, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		errors.Wrap(err, "cannot read version api response")
+	}
+	var v serverVersionResponse
+	err = yaml.Unmarshal(data, &v)
+	if err != nil {
+		errors.Wrap(err, "failed to parse version api response")
+	}
+	ec.ServerVersion = v.Version
+
+	sv, err := semver.NewVersion(ec.ServerVersion)
+	if err != nil {
+		// parsing semver failed, cli and server versions should match
+		if ec.ServerVersion != ec.Version {
+			return errors.Errorf("[cli: %s] [server: %s] unstable/dev release, cli and server versions should match", ec.Version, ec.ServerVersion)
+		}
+	} else {
+		// parsing semver succeeded
+		cv, err := semver.NewVersion(ec.Version)
+		// cli is dev version
+		if err != nil {
+			return nil
+		}
+		if !(cv.Major() == sv.Major() && cv.Minor() == sv.Minor()) {
+			return errors.Errorf("[cli: %s] [server: %s] version mismatch, cli and server versions should match", ec.Version, ec.ServerVersion)
+		}
+	}
 	return nil
 }
 
@@ -348,7 +412,7 @@ func validateDirectory(dir string) error {
 // SetVersion sets the version inside context, according to the variable
 // 'version' set during build context.
 func (ec *ExecutionContext) setVersion() {
-	if version != "" && ec.Version == "" {
+	if version != "" {
 		ec.Version = version
 	}
 }

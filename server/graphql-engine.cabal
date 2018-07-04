@@ -54,7 +54,7 @@ library
                      , fast-logger
                      , wai
                      , postgresql-binary
-                     , file-embed
+                     , process
 
                      -- Encoder related
                      , uuid
@@ -92,6 +92,12 @@ library
                      -- ordered map
                      , insert-ordered-containers
 
+                     -- Parsing SemVer
+                     , semver
+
+                     -- Templating
+                     , mustache
+
                      --
                      , data-has
 
@@ -101,6 +107,7 @@ library
                      , Hasura.Server.Logging
                      , Hasura.Server.Query
                      , Hasura.Server.Utils
+                     , Hasura.Server.Version
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache

@@ -28,7 +28,8 @@ import qualified Network.HTTP.Client.TLS       as HT
 import           Network.Wai                   (strictRequestBody)
 import qualified Network.Wreq                  as Wq
 import qualified Network.Wreq.Types            as WqT
-import qualified Data.FileEmbed                as FE
+import qualified Text.Mustache                 as M
+import qualified Text.Mustache.Compile         as M
 
 import           Web.Spock.Core
 
@@ -53,12 +54,22 @@ import           Hasura.Server.Middleware      (corsMiddleware,
                                                 mkDefaultCorsPolicy)
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
+import           Hasura.Server.Version
 import           Hasura.SQL.Types
 
 type RavenLogger = ServerLogger (BL.ByteString, Either QErr BL.ByteString)
 
-consoleHTML :: T.Text
-consoleHTML = $(FE.embedStringFile "src-rsr/console.html")
+consoleTmplt :: M.Template
+consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
+
+mkConsoleHTML :: IO T.Text
+mkConsoleHTML =
+  bool (initErrExit errMsg) (return res) (null errs)
+  where
+    (errs, res) = M.checkedSubstitute consoleTmplt $
+                   object ["version" .= consoleVersion]
+    errMsg = "Fatal Error : console template rendering failed"
+             ++ show errs
 
 ravenLogGen :: LogDetailG (BL.ByteString, Either QErr BL.ByteString)
 ravenLogGen _ (reqBody, res) =
@@ -137,9 +148,6 @@ buildQCtx = do
   userInfo <- parseUserInfo
   cache <- liftIO $ readIORef scRef
   return $ QCtx userInfo $ fst cache
-
-jsonHeader :: (T.Text, T.Text)
-jsonHeader = ("Content-Type", "application/json; charset=utf-8")
 
 fromWebHook
   :: (MonadIO m)
@@ -383,8 +391,12 @@ app isoLevel mRootDir logger pool mode corsCfg enableConsole = do
       middleware $ corsMiddleware (mkDefaultCorsPolicy $ ccDomain corsCfg)
 
     -- API Console and Root Dir
-    if enableConsole then serveApiConsole consoleHTML
+    if enableConsole then do
+      consoleHTML <- lift mkConsoleHTML
+      serveApiConsole consoleHTML
     else maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
+
+    get "v1/version" getVersion
 
     get    ("v1/template" <//> var) $ tmpltGetOrDeleteH serverCtx
     post   ("v1/template" <//> var) $ tmpltPutOrPostH serverCtx
