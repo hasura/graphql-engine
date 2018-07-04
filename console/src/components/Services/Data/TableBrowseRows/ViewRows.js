@@ -491,7 +491,7 @@ const ViewRows = ({
               shouldSortColumn &&
               column.Header !== 'Actions'
             ) {
-              dispatch(sortByColumn(column.Header));
+              sortByColumn(column.Header);
             }
             shouldSortColumn = true;
           },
