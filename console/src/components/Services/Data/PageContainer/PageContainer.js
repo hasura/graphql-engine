@@ -54,11 +54,11 @@ const PageContainer = ({
                   tableName +
                   '/browse'
                 }
+                data-test={tableName}
               >
                 <i
                   className={styles.tableIcon + ' fa fa-table'}
                   aria-hidden="true"
-                  data-test={tableName}
                 />
                 {tableName}
               </Link>
@@ -76,6 +76,7 @@ const PageContainer = ({
                 tableName +
                 '/browse'
               }
+              data-test={tableName}
             >
               <i
                 className={styles.tableIcon + ' fa fa-table'}
@@ -145,6 +146,7 @@ const PageContainer = ({
               >
                 <button
                   className={styles.add_mar_right + ' btn btn-xs btn-default'}
+                  data-test="sidebar-add-table"
                 >
                   Add Table
                 </button>

@@ -316,6 +316,7 @@ class EditItem extends Component {
                   });
                   dispatch(editItem(tableName, inputValues));
                 }}
+                data-test="save-button"
               >
                 {buttonText}
               </button>

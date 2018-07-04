@@ -9,12 +9,10 @@ import {
 import { validatePermission } from '../../validators/validators';
 
 export const savePermission = () => {
-  cy.get('button')
-    .contains('Save permissions')
-    .click();
-  cy.wait(5000);
+  cy.get(getElementFromAlias('Save-permissions-button')).click();
+  cy.wait(5500);
   // Check for success notif
-  cy.get('[class=notification-title]').contains('Permissions updated');
+  cy.get('.notification-success').click();
 };
 
 export const permNoCheck = (tableName, query, first) => {
@@ -91,12 +89,10 @@ export const permRemove = (tableName, query) => {
   // click on the query type to edit permission
   cy.get(getElementFromAlias(`role0-${query}`)).click();
   // Remove permission
-  cy.get('button')
-    .contains('Remove all access')
-    .click();
-  cy.wait(5000);
+  cy.get(getElementFromAlias('Remove-all-access-button')).click();
+  cy.wait(5500);
   // Check for notif
-  cy.get('[class=notification-title]').contains('Permissions deleted');
+  cy.get('.notification-success').click();
   cy.wait(5000);
   // Validate
   validatePermission(tableName, 'role0', query, 'custom', 'failure');
@@ -128,9 +124,7 @@ export const trackView = () => {
   cy.get(getElementFromAlias(`add-track-table-${getTableName(1)}`)).click();
   cy.wait(10000);
   // Move to permissions
-  cy.get('a')
-    .contains('Permissions')
-    .click();
+  cy.get(getElementFromAlias('table-permissions')).click();
 };
 
 export const createView = (viewName, tableName) => {
