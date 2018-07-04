@@ -185,19 +185,27 @@ export const checkBrowseRoute = () => {
 export const passBI20RowsExist = () => {
   // Check if the 20 inserted elements reflect in the UI
   cy.get(getElementFromAlias('table-browse-rows')).contains('21');
-  // Check pagination string
+};
+
+export const checkPagination = () => {
+  // Check if the current page is 1
   cy.get('.-pageJump > input').should('have.value', '1');
+  // Check if the total number of pages is 3
   cy.get('.-totalPages').contains('3');
+  // Check if the default value of rows displayed is 10
   cy.get('.-pageSizeOptions > select').should('have.value', '10');
   cy.get('.-next > button').click();
+  // Check if the page changed
   cy.get(
     '.rt-tbody > div:nth-child(1) > div > div:nth-child(2) > div'
   ).contains('11');
   cy.get('.-pageJump > input').should('have.value', '2');
   cy.get('.-previous > button').click();
+  // Check if the page changed
   cy.get('.-pageJump > input').should('have.value', '1');
   cy.get('.-pageSizeOptions > select').select('5 rows');
   cy.wait(3000);
+  // Check if the total number of pages changed
   cy.get('.-totalPages').contains('5');
 };
 
