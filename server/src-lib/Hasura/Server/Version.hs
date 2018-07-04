@@ -21,7 +21,7 @@ version :: T.Text
 version = T.dropWhileEnd (== '\n') $ $(runScript "../scripts/get-version.sh")
 
 consoleVersion :: T.Text
-consoleVersion = case V.fromText version of
+consoleVersion = case V.fromText $ T.dropWhile (== 'v') version of
   Right ver -> mkVersion ver
   Left _    -> version
 
