@@ -18,6 +18,7 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/version"
 	colorable "github.com/mattn/go-colorable"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
@@ -42,9 +43,6 @@ const (
 	// Name of the global configuration file
 	GLOBAL_CONFIG_FILE_NAME = "config.json"
 )
-
-// version is set at build time, denotes the CLI version.
-var version = "dev"
 
 // HasuraGraphQLConfig has the config values required to contact the server.
 type HasuraGraphQLConfig struct {
@@ -94,8 +92,8 @@ type ExecutionContext struct {
 
 	// IsStableRelease indicates if the CLI release is stable or not.
 	IsStableRelease bool
-	// Version indicates the CLI build version
-	Version string
+	// Version indicates the version object
+	Version *version.Version
 
 	// Viper indicates the viper object for the execution
 	Viper *viper.Viper
@@ -174,6 +172,22 @@ func (ec *ExecutionContext) Validate() error {
 	ec.Logger.Debug("graphql engine endpoint: ", ec.Config.Endpoint)
 	ec.Logger.Debug("graphql engine access_key: ", ec.Config.AccessKey)
 
+	// get version from the server and match with the cli version
+	return ec.checkServerVersion()
+}
+
+func (ec *ExecutionContext) checkServerVersion() error {
+	v, err := version.FetchServerVersion(ec.Config.Endpoint)
+	if err != nil {
+		return errors.Wrap(err, "failed to get version from server")
+	}
+	ec.Version.SetServerVersion(v)
+	isCompatible, reason := ec.Version.CheckCLIServerCompatibility()
+	ec.Logger.Debugf("versions: cli: [%s] server: [%s]", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion())
+	ec.Logger.Debugf("compatibility check: [%v] %v", isCompatible, reason)
+	if !isCompatible {
+		return errors.Errorf("[cli: %s] [server: %s] versions incompatible: %s", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion(), reason)
+	}
 	return nil
 }
 
@@ -348,14 +362,9 @@ func validateDirectory(dir string) error {
 // SetVersion sets the version inside context, according to the variable
 // 'version' set during build context.
 func (ec *ExecutionContext) setVersion() {
-	if version != "" {
-		ec.Version = version
+	if ec.Version == nil {
+		ec.Version = version.New()
 	}
-}
-
-// GetVersion returns the version set in execution context
-func (ec *ExecutionContext) GetVersion() string {
-	return ec.Version
 }
 
 // RenderTextWithContext renders the template text passed as 'in' with the
@@ -372,9 +381,4 @@ func (ec *ExecutionContext) RenderTextWithContext(in string) (out string) {
 		return ""
 	}
 	return b.String()
-}
-
-// GetVersion returns the version set in the package
-func GetVersion() string {
-	return version
 }

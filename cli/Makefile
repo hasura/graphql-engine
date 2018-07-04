@@ -1,12 +1,12 @@
 PWD := $(shell pwd)
 PARENT_DIR := $(shell dirname $(PWD))
-VERSION := $(shell build/get-version.sh)
+VERSION ?= $(shell ../scripts/get-version.sh)
 OUTPUT_DIR := _output
 
 # compile assets
 .PHONY: assets
 assets:
-	go-bindata --pkg assets -o assets/assets.go assets/console.html
+	go-bindata --pkg assets -o assets/assets.go assets/**/*.html
 
 HAS_GOX := $(shell command -v gox;)
 HAS_DEP := $(shell command -v dep;)
@@ -29,7 +29,7 @@ endif
 # build cli locally, for all given platform/arch
 .PHONY: build
 build:
-	gox -ldflags "-X github.com/hasura/graphql-engine/cli.version=$(VERSION)" -ldflags "-s -w" \
+	gox -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION) -s -w" \
 	-os="linux darwin windows" \
 	-arch="amd64" \
 	-output="$(OUTPUT_DIR)/$(VERSION)/hasura-{{.OS}}-{{.Arch}}" \
