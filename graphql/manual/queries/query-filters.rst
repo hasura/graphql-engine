@@ -36,23 +36,23 @@ Example: Integer (works with Double, Float, Numeric, etc.)
 Fetches data about exactly one author whose ``id`` (*an integer field*) is equal to 3:
 
 .. graphiql::
-   :query:
-        query {
-            author(where: {id: {_eq: 3}}) {
-                id
-                name
-            }
-        }
-   :response:
+  :query:
+    query {
+      author(where: {id: {_eq: 3}}) {
+        id
+        name
+      }
+    }
+  :response:
     {
-        "data": {
-            "author": [
-                {
-                    "id": 3,
-                    "name": "Mallorie"
-                }
-            ]
-        }
+      "data": {
+        "author": [
+          {
+            "id": 3,
+            "name": "Mallorie"
+          }
+        ]
+      }
     }
 
 Example: String or Text
@@ -60,50 +60,50 @@ Example: String or Text
 Fetch a list of authors who have written articles with the title “GraphQL examples” (``title`` is a TEXT field):
 
 .. graphiql::
-   :query:
-        query {
-            author(where: {articles: {title: {_eq: "GraphQL examples"}}}) {
-                id
-                name
-            }
-        }
-   :response:
-        {
-            "data": {
-                "author": []
-            }
-        }
+  :query:
+    query {
+      author(where: {articles: {title: {_eq: "GraphQL examples"}}}) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": []
+      }
+    }
 
 Example: Boolean
 ^^^^^^^^^^^^^^^^
 Fetch a list of articles that have been published (``is_published`` is a boolean field):
 
 .. graphiql::
-   :query:
-        query {
-            article (where: {is_published: {_eq: true}}) {
-                id
-                title
-                content
-            }
-        }
-   :response:
-        {
-            "data": {
-                "article": [
-                {
-                    "id": 6,
-                    "title": "some title",
-                    "content": "some content"
-                },
-                {
-                    "id": 2,
-                    "title": "a some title",
-                    "content": "some content"
-                }
-                ]
-            }
-        }
+  :query:
+    query {
+      article (where: {is_published: {_eq: true}}) {
+        id
+        title
+        content
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 6,
+            "title": "some title",
+            "content": "some content"
+          },
+          {
+            "id": 2,
+            "title": "a some title",
+            "content": "some content"
+          }
+        ]
+      }
+    }
 
 
 Example: Date (works with Time, Timezone, etc.)
@@ -111,26 +111,26 @@ Example: Date (works with Time, Timezone, etc.)
 Fetch a list of articles that were published on a certain date(``published_on`` is Date field):
 
 .. graphiql::
-   :query:
-        query {
-            article (where: {published_on: {_eq: "2018-06-14"}}) {
-                id
-                title
-                content
-            }
-        }
-   :response:
-        {
-            "data": {
-                "article": [
-                    {
-                        "id": 2,
-                        "title": "a some title",
-                        "content": "some content"
-                    }
-                ]
-            }
-        }
+  :query:
+    query {
+      article (where: {published_on: {_eq: "2018-06-14"}}) {
+        id
+        title
+        content
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 2,
+            "title": "a some title",
+            "content": "some content"
+          }
+        ]
+      }
+    }
 
 Greater than or less than operators (_gt, _lt, _gte, _lte)
 ----------------------------------------------------------
@@ -142,99 +142,99 @@ Example: Integer (works with Double, Float, etc.)
 Fetches a list of articles rated 3.5 or more:
 
 .. graphiql::
-   :query:
-        query {
-            article (where: {rating: {_gt: 3.5}}) {
-                id
-                title
-                rating
-            }
-        }
-   :response:
-        {
-            "data": {
-                "article": [
-                {
-                    "id": 3,
-                    "title": "some title",
-                    "rating": 4
-                },
-                {
-                    "id": 4,
-                    "title": "some title",
-                    "rating": 4
-                },
-                {
-                    "id": 8,
-                    "title": "some title",
-                    "rating": 4
-                },
-                {
-                    "id": 10,
-                    "title": "some title",
-                    "rating": 5
-                }
-                ]
-            }
-        }
+  :query:
+    query {
+      article (where: {rating: {_gt: 3.5}}) {
+        id
+        title
+        rating
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 3,
+            "title": "some title",
+            "rating": 4
+          },
+          {
+            "id": 4,
+            "title": "some title",
+            "rating": 4
+          },
+          {
+            "id": 8,
+            "title": "some title",
+            "rating": 4
+          },
+          {
+            "id": 10,
+            "title": "some title",
+            "rating": 5
+          }
+        ]
+      }
+    }
 
 Example: String or Text
 ^^^^^^^^^^^^^^^^^^^^^^^
 Fetch a list of authors whose names begin with S or any letter that follows S (*essentially, a filter based on a dictionary sort*):
 
 .. graphiql::
-   :query:
-        query {
-            author(where: {name: {_gt: "S"}}) {
-                id
-                name
-            }
-        }
-   :response:
-        {
-            "data": {
-                "author": [
-                    {
-                        "id": 20,
-                        "name": "Saunderson"
-                    },
-                    {
-                        "id": 21,
-                        "name": "Sophey"
-                    },
-                    {
-                        "id": 26,
-                        "name": "Wenda"
-                    }
-                ]
-            }
-        }
+  :query:
+    query {
+      author(where: {name: {_gt: "S"}}) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 20,
+            "name": "Saunderson"
+          },
+          {
+            "id": 21,
+            "name": "Sophey"
+          },
+          {
+            "id": 26,
+            "name": "Wenda"
+          }
+        ]
+      }
+    }
 
 Example: Date (works with Time, Timezone, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Fetch a list of articles that were published on or after a certain date:
 
 .. graphiql::
-   :query:
-        query {
-            article (where: {published_on: {_gte: "2018-06-14"}}) {
-                id
-                title
-                content
-            }
-        }
-   :response:
-        {
-            "data": {
-                "article": [
-                    {
-                        "id": 2,
-                        "title": "a some title",
-                        "content": "some content"
-                    }
-                ]
-            }
-        }
+  :query:
+    query {
+      article (where: {published_on: {_gte: "2018-06-14"}}) {
+        id
+        title
+        content
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 2,
+            "title": "a some title",
+            "content": "some content"
+          }
+        ]
+      }
+    }
 
 List based search operators (_in, _nin)
 ---------------------------------------
@@ -245,160 +245,160 @@ Example: Integer (works with Double, Float, etc.)
 Fetches a list of articles rated 1, 3 or 5:
 
 .. graphiql::
-   :query:
-        query {
-            article (where: {rating: {_in: [1,3,5]}}) {
-                id
-                title
-                rating
-            }
-        }
-   :response:
-        {
-            "data": {
-                "article": [
-                     {
-                        "id": 5,
-                        "title": "some title",
-                        "rating": 3
-                    },
-                    {
-                        "id": 9,
-                        "title": "some title",
-                        "rating": 1
-                    },
-                    {
-                        "id": 10,
-                        "title": "some title",
-                        "rating": 5
-                    }
-                ]
-            }
-        }
+  :query:
+    query {
+      article (where: {rating: {_in: [1,3,5]}}) {
+        id
+        title
+        rating
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 5,
+            "title": "some title",
+            "rating": 3
+          },
+          {
+            "id": 9,
+            "title": "some title",
+            "rating": 1
+          },
+          {
+            "id": 10,
+            "title": "some title",
+            "rating": 5
+          }
+        ]
+      }
+    }
 
 Example: String or Text
 ^^^^^^^^^^^^^^^^^^^^^^^
 Fetch a list of those authors whose names are NOT part of a list: 
 
 .. graphiql::
-   :query:
-        query {
-            author (where: {name: {_nin: ["Axel","Quintus","Niki"]}}) {
-                id
-                name
-            }
-        }
-   :response:
-        {
-            "data": {
-                "author": [
-                    {
-                        "id": 1,
-                        "name": "Chrissie"
-                    },
-                    {
-                        "id": 2,
-                        "name": "Aubrey"
-                    },
-                    {
-                        "id": 3,
-                        "name": "Mallorie"
-                    },
-                    {
-                        "id": 5,
-                        "name": "Dreddy"
-                    },
-                    {
-                        "id": 6,
-                        "name": "Bernhard"
-                    },
-                    {
-                        "id": 7,
-                        "name": "Eleonore"
-                    },
-                    {
-                        "id": 8,
-                        "name": "Khalil"
-                    },
-                    {
-                        "id": 9,
-                        "name": "Dorris"
-                    },
-                    {
-                        "id": 10,
-                        "name": "Obie"
-                    },
-                    {
-                        "id": 11,
-                        "name": "Rubi"
-                    },
-                    {
-                        "id": 12,
-                        "name": "Ricoriki"
-                    },
-                    {
-                        "id": 14,
-                        "name": "Chrotoem"
-                    },
-                    {
-                        "id": 15,
-                        "name": "Ericka"
-                    },
-                    {
-                        "id": 16,
-                        "name": "Catherin"
-                    },
-                    {
-                        "id": 17,
-                        "name": "Lin"
-                    },
-                    {
-                        "id": 18,
-                        "name": "Marten"
-                    },
-                    {
-                        "id": 19,
-                        "name": "Lida"
-                    },
-                    {
-                        "id": 20,
-                        "name": "Saunderson"
-                    },
-                    {
-                        "id": 21,
-                        "name": "Sophey"
-                    },
-                    {
-                        "id": 22,
-                        "name": "Conny"
-                    },
-                    {
-                        "id": 23,
-                        "name": "Edithe"
-                    },
-                    {
-                        "id": 24,
-                        "name": "Jeri"
-                    },
-                    {
-                        "id": 26,
-                        "name": "Wenda"
-                    },
-                    {
-                        "id": 27,
-                        "name": "Ashby"
-                    },
-                    {
-                        "id": 28,
-                        "name": "Derril"
-                    },
-                    {
-                        "id": 29,
-                        "name": "Carmella"
-                    }
-                ]
-            }
-        }
+  :query:
+    query {
+      author (where: {name: {_nin: ["Axel","Quintus","Niki"]}}) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Chrissie"
+          },
+          {
+            "id": 2,
+            "name": "Aubrey"
+          },
+          {
+            "id": 3,
+            "name": "Mallorie"
+          },
+          {
+            "id": 5,
+            "name": "Dreddy"
+          },
+          {
+            "id": 6,
+            "name": "Bernhard"
+          },
+          {
+            "id": 7,
+            "name": "Eleonore"
+          },
+          {
+            "id": 8,
+            "name": "Khalil"
+          },
+          {
+            "id": 9,
+            "name": "Dorris"
+          },
+          {
+            "id": 10,
+            "name": "Obie"
+          },
+          {
+            "id": 11,
+            "name": "Rubi"
+          },
+          {
+            "id": 12,
+            "name": "Ricoriki"
+          },
+          {
+            "id": 14,
+            "name": "Chrotoem"
+          },
+          {
+            "id": 15,
+            "name": "Ericka"
+          },
+          {
+            "id": 16,
+            "name": "Catherin"
+          },
+          {
+            "id": 17,
+            "name": "Lin"
+          },
+          {
+            "id": 18,
+            "name": "Marten"
+          },
+          {
+            "id": 19,
+            "name": "Lida"
+          },
+          {
+            "id": 20,
+            "name": "Saunderson"
+          },
+          {
+            "id": 21,
+            "name": "Sophey"
+          },
+          {
+            "id": 22,
+            "name": "Conny"
+          },
+          {
+            "id": 23,
+            "name": "Edithe"
+          },
+          {
+            "id": 24,
+            "name": "Jeri"
+          },
+          {
+            "id": 26,
+            "name": "Wenda"
+          },
+          {
+            "id": 27,
+            "name": "Ashby"
+          },
+          {
+            "id": 28,
+            "name": "Derril"
+          },
+          {
+            "id": 29,
+            "name": "Carmella"
+          }
+        ]
+      }
+    }
 
 Text search / filter or pattern matching operators
 --------------------------------------------------
@@ -409,56 +409,56 @@ Example: _like
 Fetch a list of authors with articles whose titles begin with “The”: 
 
 .. graphiql::
-   :query:
-        query {
-            author (where: { articles: {title: {_like: "The%"}}})
-            {
-                id
-                name
-            }
-        }
-   :response:
-        {
-            "data": {
-                "author": []
-            }
-        }
+  :query:
+    query {
+      author (where: { articles: {title: {_like: "The%"}}})
+      {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": []
+      }
+    }
 
 Example: _similar
 ^^^^^^^^^^^^^^^^^
 Fetch a list of authors whose names begin with A or C (``similar`` is case-sensitive):
 
 .. graphiql::
-   :query:
-        query {
-            author(where: {name: {_similar: "(A|C)%"}}) {
-                id
-                name
-            }
-        }
-   :response:
-        {
-            "data": {
-                "author": [
-                    {
-                        "id": 1,
-                        "name": "Chrissie"
-                    },
-                    {
-                        "id": 2,
-                        "name": "Aubrey"
-                    },
-                    {
-                        "id": 4,
-                        "name": "Axel"
-                    },
-                    {
-                        "id": 14,
-                        "name": "Chrotoem"
-                    }
-                ]
-            }
-        }
+  :query:
+    query {
+      author(where: {name: {_similar: "(A|C)%"}}) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Chrissie"
+          },
+          {
+            "id": 2,
+            "name": "Aubrey"
+          },
+          {
+            "id": 4,
+            "name": "Axel"
+          },
+          {
+            "id": 14,
+            "name": "Chrotoem"
+          }
+        ]
+      }
+    }
 
 Filter or check for null values
 -------------------------------
@@ -469,36 +469,36 @@ Example: Filter null values in a field
 Fetch a list of articles that have some boolean value in the `is_published` field:
 
 .. graphiql::
-   :query:
-        query {
-            article (where: {is_published: {_neq: null}}) {
-                id
-                title
-                is_published
-            }
-        }
-   :response:
-        {
-            "data": {
-                "article": [
-                    {
-                        "id": 6,
-                        "title": "some title",
-                        "is_published": true
-                    },
-                    {
-                        "id": 2,
-                        "title": "a some title",
-                        "is_published": true
-                    },
-                    {
-                        "id": 1,
-                        "title": "b-something",
-                        "is_published": false
-                    }
-                ]
-            }
-        }
+  :query:
+    query {
+      article (where: {is_published: {_neq: null}}) {
+        id
+        title
+        is_published
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 6,
+            "title": "some title",
+            "is_published": true
+          },
+          {
+            "id": 2,
+            "title": "a some title",
+            "is_published": true
+          },
+          {
+            "id": 1,
+            "title": "b-something",
+            "is_published": false
+          }
+        ]
+      }
+    }
 
 Using multiple filters in the same query
 ----------------------------------------
@@ -509,74 +509,80 @@ Example:  _and
 Fetch a list of articles published in a specific time-frame:
 
 .. graphiql::
-   :query:
-        query {
-            article ( where: {
-                _and: [
-                    { published_on: {_gte: "2016-06-13"}}, 
-                    { published_on: {_lte: "2018-06-17"}}
-                ]
-            })
-            {
-                id
-                title
-                author_id
-            }
+  :query:
+    query {
+      article (
+        where: {
+          _and: [
+            { published_on: {_gte: "2016-06-13"}},
+            { published_on: {_lte: "2018-06-17"}}
+          ]
         }
-   :response:
-        {
-            "data": {
-                "article": [
-                    {
-                        "id": 6,
-                        "title": "some title",
-                        "author_id": 20
-                    },
-                    {
-                        "id": 2,
-                        "title": "a some title",
-                        "author_id": 10
-                    }
-                ]
-            }
-        }
+      )
+      {
+        id
+        title
+        author_id
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 6,
+            "title": "some title",
+            "author_id": 20
+          },
+          {
+            "id": 2,
+            "title": "a some title",
+            "author_id": 10
+          }
+        ]
+      }
+    }
 
 Example:  _or
 ^^^^^^^^^^^^^
 Fetch a list of articles rated more than 4 or published after a certain date:
 
 .. graphiql::
-   :query:
-        query {
-            article (where: {
-                _or: [
-                    {rating: {_gt: 4}}, 
-                    {published_on: {_gt: "2016-06-14"}}
-                ]}) {
-                id
-                title
-                author_id
-            }
+  :query:
+    query {
+      article (
+        where: {
+          _or: [
+            {rating: {_gt: 4}},
+            {published_on: {_gt: "2016-06-14"}}
+          ]
         }
-   :response:
-        {
-            "data": {
-                "article": [
-                    {
-                        "id": 6,
-                        "rating": 2,
-                        "published_on": "2018-06-11"
-                    },
-                    {
-                        "id": 10,
-                        "rating": 5,
-                        "published_on": null
-                    },
-                    {
-                        "id": 79,
-                        "rating": 5,
-                        "published_on": null
-                    }
-                ]
-            }
-        }
+      )
+      {
+        id
+        title
+        author_id
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 6,
+            "rating": 2,
+            "published_on": "2018-06-11"
+          },
+          {
+            "id": 10,
+            "rating": 5,
+            "published_on": null
+          },
+          {
+            "id": 79,
+            "rating": 5,
+            "published_on": null
+          }
+        ]
+      }
+    }

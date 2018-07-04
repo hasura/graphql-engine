@@ -59,56 +59,59 @@ Here are a couple of examples:
 - Query all rows in the ``article`` table
 
 .. graphiql::
-   :query:
-      query {
-        article {
+  :query:
+    query {
+      article {
         id
         title
         author_id
-        }
       }
-   :response:
-        {
-            "data": {
-                "article": [
-                {
-                    "id": 3,
-                    "title": "some title",
-                    "author_id": 28
-                },
-                {
-                    "id": 4,
-                    "title": "some title",
-                    "author_id": 5
-                },
-                {
-                    "id": 8,
-                    "title": "some title",
-                    "author_id": 6
-                }
-                ]
-            }
-        }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 3,
+            "title": "some title",
+            "author_id": 28
+          },
+          {
+            "id": 4,
+            "title": "some title",
+            "author_id": 5
+          },
+          {
+            "id": 8,
+            "title": "some title",
+            "author_id": 6
+          }
+        ]
+      }
+    }
 
 - Insert data in the ``author`` table
 
 .. graphiql::
-   :view_only: true
-   :query:
-        mutation add_author {
-            insert_author (objects: [
-                {id: 2121, name:"Paul Graham"}
-            ]) {
-                affected_rows
-            } 
+  :view_only: true
+  :query:
+    mutation add_author {
+      insert_author (
+        objects: [
+          {id: 2121, name:"Paul Graham"}
+        ]
+      )
+      {
+        affected_rows
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "affected_rows": 1
         }
-   :response:
-        {
-            "data": {
-                "insert_author": {
-                "affected_rows": 1
-                }
-            }
-        }
+      }
+    }
 
 You can try out the examples :doc:`here <../queries/index>` (*except nested object queries, for which you'll need to connect your tables- see the next section*).

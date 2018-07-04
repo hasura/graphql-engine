@@ -12,77 +12,77 @@ Example: Nested object query over a 1:many relationship
 Fetch a list of authors and a nested list of the each author’s articles:
 
 .. graphiql::
-   :query:
-        query {
-          author {
-            id
-            name
-            articles {
-              id
-              title
-            }
-          }
+  :query:
+    query {
+      author {
+        id
+        name
+        articles {
+          id
+          title
         }
-   :response:
-        {
-        "data": {
-            "author": [
-            {
-                "id": 1,
-                "name": "Chrissie",
-                "articles": [
-                {
-                    "id": 98,
-                    "title": "some title"
-                },
-                {
-                    "id": 73,
-                    "title": "some title"
-                },
-                {
-                    "id": 87,
-                    "title": "some title"
-                }
-                ]
-            },
-            {
-                "id": 2,
-                "name": "Aubrey",
-                "articles": [
-                {
-                    "id": 51,
-                    "title": "some title"
-                },
-                {
-                    "id": 41,
-                    "title": "some title"
-                },
-                {
-                    "id": 19,
-                    "title": "some title"
-                }
-                ]
-            },
-            {
-                "id": 29,
-                "name": "Carmella",
-                "articles": [
-                {
-                    "id": 78,
-                    "title": "some title"
-                },
-                {
-                    "id": 64,
-                    "title": "some title"
-                }
-                ]
-            }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Chrissie",
+            "articles": [
+              {
+                "id": 98,
+                "title": "some title"
+              },
+              {
+                "id": 73,
+                "title": "some title"
+              },
+              {
+                "id": 87,
+                "title": "some title"
+              }
             ]
-        }
-        }
+          },
+          {
+            "id": 2,
+            "name": "Aubrey",
+            "articles": [
+              {
+                "id": 51,
+                "title": "some title"
+              },
+              {
+                "id": 41,
+                "title": "some title"
+              },
+              {
+                "id": 19,
+                "title": "some title"
+              }
+            ]
+          },
+          {
+            "id": 29,
+            "name": "Carmella",
+            "articles": [
+              {
+                "id": 78,
+                "title": "some title"
+              },
+              {
+                "id": 64,
+                "title": "some title"
+              }
+            ]
+          }
+        ]
+      }
+    }
 
 Query using a 1:1 relationship
----------------------------------
+------------------------------
 The following is an example of nested object query using the 1:1 or an object relationship between an article and an author.
 
 Example: Nested object query over a 1:1 relationship
@@ -90,51 +90,51 @@ Example: Nested object query over a 1:1 relationship
 Fetch a list of articles and the name of each article’s author:
 
 .. graphiql::
-   :query:
-        query {
-          article {
-            id
-            title
-            author {
-              name
+  :query:
+    query {
+      article {
+        id
+        title
+        author {
+          name
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 3,
+            "title": "some title",
+            "author": {
+              "name": "Derril"
+            }
+          },
+          {
+            "id": 4,
+            "title": "some title",
+            "author": {
+              "name": "Dreddy"
+            }
+          },
+          {
+            "id": 5,
+            "title": "some title",
+            "author": {
+              "name": "Mallorie"
+            }
+          },
+          {
+            "id": 6,
+            "title": "some title",
+            "author": {
+              "name": "Saunderson"
             }
           }
-        }
-   :response:
-        {
-        "data": {
-            "article": [
-            {
-                "id": 3,
-                "title": "some title",
-                "author": {
-                "name": "Derril"
-                }
-            },
-            {
-                "id": 4,
-                "title": "some title",
-                "author": {
-                "name": "Dreddy"
-                }
-            },
-            {
-                "id": 5,
-                "title": "some title",
-                "author": {
-                "name": "Mallorie"
-                }
-            },
-            {
-                "id": 6,
-                "title": "some title",
-                "author": {
-                "name": "Saunderson"
-                }
-            }
-            ]
-        }
-        }
+        ]
+      }
+    }
 
 .. note::
     
