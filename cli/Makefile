@@ -1,12 +1,12 @@
 PWD := $(shell pwd)
 PARENT_DIR := $(shell dirname $(PWD))
-VERSION := $(shell build/get-version.sh)
+VERSION ?= $(shell ../scripts/get-version.sh)
 OUTPUT_DIR := _output
 
 # compile assets
 .PHONY: assets
 assets:
-	go-bindata --pkg assets -o assets/assets.go assets/console.html
+	go-bindata --pkg assets -o assets/assets.go assets/**/*.html
 
 HAS_GOX := $(shell command -v gox;)
 HAS_DEP := $(shell command -v dep;)
