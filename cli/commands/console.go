@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/Masterminds/semver"
 	"github.com/fatih/color"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -94,25 +93,19 @@ func (o *consoleOptions) run() error {
 
 	router.setRoutes(u.Host, o.EC.Config.AccessKey, o.EC.MigrationDir)
 
-	assetsVersion := o.EC.ServerVersion
-	if assetsVersion == "" {
-		assetsVersion = "1.0-dev"
-	}
-	consoleTemplateVersion := "1.0-dev"
-	v, err := semver.NewVersion(o.EC.ServerVersion)
-	if err == nil {
-		assetsVersion = fmt.Sprintf("v%d.%d", v.Major(), v.Minor())
-		consoleTemplateVersion = assetsVersion
-	}
+	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
+	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
+
+	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
 	consoleRouter, err := serveConsole(consoleTemplateVersion, gin.H{
 		"apiHost":        "http://" + o.Address,
 		"apiPort":        o.APIPort,
-		"cliVersion":     o.EC.GetVersion(),
+		"cliVersion":     o.EC.Version.GetCLIVersion(),
 		"dataApiUrl":     o.EC.Config.Endpoint,
 		"dataApiVersion": "",
 		"accessKey":      o.EC.Config.AccessKey,
-		"assetsVersion":  assetsVersion,
+		"assetsVersion":  consoleAssetsVersion,
 	})
 
 	if err != nil {
