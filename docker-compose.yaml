@@ -4,6 +4,7 @@ services:
     image: postgres
     environment:
     - "POSTGRES_PASSWORD:mysecretpassword"
+    restart: always
     volumes:
     - db_data:/var/lib/postgresql/data
   graphql-engine:
