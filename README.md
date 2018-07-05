@@ -12,7 +12,7 @@ It has boilerplate code written for auth0 and firebase auth. There is also a gen
 
    [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/sample-auth-webhook)
 
-2. Go to settings of your app and set the following environment variables if you want to use the respective providers.
+2. Once it is deployed, go to `Manage App > Settings` of your app and set the following environment variables if you want to use the associated providers.
 
    - **AUTH_ZERO_DOMAIN**: Example `test.auth0.com`
    - **FIREBASE_CONFIG**: Copy the contents of your serviceAccount JSON file for this field. Example:
