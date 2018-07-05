@@ -31,7 +31,7 @@ It has boilerplate code written for auth0 and firebase auth. There is also a gen
         }
      ```
 
-If you are not using an auth provider, you need not enter the environment variable associated with it
+   If you are not using an auth provider, you need not enter the environment variable associated with it
 
 ### Deploy using [Now](https://zeit.co/now)
 
@@ -71,27 +71,27 @@ $ now -e \
 
 2. Add the following environment variables in the `.env` file on glitch.
 
-  ```env
-  AUTH_ZERO_DOMAIN='test.auth0.com'
-  FIREBASE_CONFIG='{
-    "type": "service_account",
-    "project_id": "testapp-2222",
-    "private_key_id": "f02aca08952f702de43ed577b428f405efe2d377",
-    "private_key": "-----BEGIN PRIVATE KEY-----\n<your-private-key>\n-----END PRIVATE KEY-----\n",
-    "client_email": "firebase-adminsdk-t4sik@testapp-24a60.iam.gserviceaccount.com",
-    "client_id": "113608616484852272199",
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://accounts.google.com/o/oauth2/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-t4sik%40testapp-22222.iam.gserviceaccount.com"
-  }'
-  ```
+   ```env
+   AUTH_ZERO_DOMAIN='test.auth0.com'
+   FIREBASE_CONFIG='{
+     "type": "service_account",
+     "project_id": "testapp-2222",
+     "private_key_id": "f02aca08952f702de43ed577b428f405efe2d377",
+     "private_key": "-----BEGIN PRIVATE KEY-----\n<your-private-key>\n-----END PRIVATE KEY-----\n",
+     "client_email": "firebase-adminsdk-t4sik@testapp-24a60.iam.gserviceaccount.com",
+     "client_id": "113608616484852272199",
+     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+     "token_uri": "https://accounts.google.com/o/oauth2/token",
+     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+     "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-t4sik%40testapp-22222.iam.gserviceaccount.com"
+   }'
+   ```
 
-If you are not using an auth provider, you need not enter the environment variable associated with it. For example, if you are not using firebase, the command last command you should run is,
+   If you are not using an auth provider, you need not enter the environment variable associated with it. For example, if you are not using firebase, the command last command you should run is,
 
-```env
-  AUTH_ZERO_DOMAIN='test.auth0.com'
-```
+   ```env
+     AUTH_ZERO_DOMAIN='test.auth0.com'
+   ```
 
 ## Usage with Hasura GraphQL engine
 
