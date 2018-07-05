@@ -3,8 +3,8 @@
 // init project
 var express = require('express');
 var app = express();
-
 var requestClient = require('request');
+var port = process.env.PORT || 3000;
 
 /* A simple sample
    Flow:
@@ -49,6 +49,6 @@ app.use('/auth0', auth0Router);
 
 
 // listen for requests :)
-var listener = app.listen(3000, function () {
-  console.log('Your app is listening on port ' + listener.address().port);
+var listener = app.listen(port, function () {
+  console.log('Your app is listening on port ' + port);
 });
