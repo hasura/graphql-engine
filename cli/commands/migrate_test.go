@@ -69,7 +69,7 @@ func isReadyRaven(i mt.Instance) bool {
 	return false
 }
 
-func TestMigrateCmd(t *testing.T) {
+func testMigrateWithDocker(t *testing.T, migrationsDir, executionDir string) {
 	mt.ParallelTest(t, postgresVersions, isReadyPostgres,
 		func(t *testing.T, pi mt.Instance) {
 			for i, v := range ravenVersions {
@@ -80,7 +80,7 @@ func TestMigrateCmd(t *testing.T) {
 					defer pi.Remove()
 					defer ri.Remove()
 
-					endpoint := fmt.Sprintf("http://%s:%d", ri.Host(), ri.Port())
+					endpointURL := fmt.Sprintf("http://%s:%d", ri.Host(), ri.Port())
 					// Create migration Dir
 					migrationsDir, err := ioutil.TempDir("", "")
 					if err != nil {
@@ -94,59 +94,82 @@ func TestMigrateCmd(t *testing.T) {
 					}
 					defer os.RemoveAll(executionDir)
 
-					// Create 1_create_table_test.up.sql which creates table test
-					mustWriteFile(t, migrationsDir, "1_create_table_test.up.sql", `CREATE TABLE "test"("id" serial NOT NULL, PRIMARY KEY ("id") )`)
-					// Create 1_create_table_test.down.sql which creates table test
-					mustWriteFile(t, migrationsDir, "1_create_table_test.down.sql", `DROP TABLE "test";`)
-					// Create 2_add_table_test.up.yaml which adds table test to metadata
-					mustWriteFile(t, migrationsDir, "2_add_table_test.up.yaml", `- args:
+					testMigrate(t, endpointURL, migrationsDir, executionDir)
+				})
+		})
+}
+
+func TestMigrateCmd(t *testing.T) {
+	endpointURL := os.Getenv("GRAPHQL_ENDPOINT_URL")
+	// Create migration Dir
+	migrationsDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(migrationsDir)
+
+	// Create Execution Dir
+	executionDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(executionDir)
+
+	testMigrate(t, endpointURL, migrationsDir, executionDir)
+}
+
+func testMigrate(t *testing.T, endpoint, migrationsDir, executionDir string) {
+	// Create 1_create_table_test.up.sql which creates table test
+	mustWriteFile(t, migrationsDir, "1_create_table_test.up.sql", `CREATE TABLE "test"("id" serial NOT NULL, PRIMARY KEY ("id") )`)
+	// Create 1_create_table_test.down.sql which creates table test
+	mustWriteFile(t, migrationsDir, "1_create_table_test.down.sql", `DROP TABLE "test";`)
+	// Create 2_add_table_test.up.yaml which adds table test to metadata
+	mustWriteFile(t, migrationsDir, "2_add_table_test.up.yaml", `- args:
     name: test
   type: add_existing_table_or_view
 `)
-					mustWriteFile(t, migrationsDir, "2_add_table_test.down.yaml", `- args:
+	mustWriteFile(t, migrationsDir, "2_add_table_test.down.yaml", `- args:
     table: test
   type: untrack_table
 `)
 
-					// Apply 1_create_table_test.up.sql
-					testMigrateApply(t, endpoint, migrationsDir, "1", "", "", "")
+	// Apply 1_create_table_test.up.sql
+	testMigrateApply(t, endpoint, migrationsDir, "1", "", "", "")
 
-					// Check Migration status
-					testMigrateStatus(t, endpoint, migrationsDir, "VERSION  SOURCE STATUS  DATABASE STATUS\n1        Present        Present\n2        Present        Not Present\n")
+	// Check Migration status
+	testMigrateStatus(t, endpoint, migrationsDir, "VERSION  SOURCE STATUS  DATABASE STATUS\n1        Present        Present\n2        Present        Not Present\n")
 
-					// Apply 2_add_table_test.up.yaml
-					testMigrateApply(t, endpoint, migrationsDir, "", "", "2", "")
+	// Apply 2_add_table_test.up.yaml
+	testMigrateApply(t, endpoint, migrationsDir, "", "", "2", "")
 
-					// Check Migration status
-					testMigrateStatus(t, endpoint, migrationsDir, "VERSION  SOURCE STATUS  DATABASE STATUS\n1        Present        Present\n2        Present        Present\n")
+	// Check Migration status
+	testMigrateStatus(t, endpoint, migrationsDir, "VERSION  SOURCE STATUS  DATABASE STATUS\n1        Present        Present\n2        Present        Present\n")
 
-					// Apply 2_add_table_test.down.yaml
-					testMigrateApply(t, endpoint, migrationsDir, "", "1", "", "")
+	// Apply 2_add_table_test.down.yaml
+	testMigrateApply(t, endpoint, migrationsDir, "", "1", "", "")
 
-					// Check Migration status
-					testMigrateStatus(t, endpoint, migrationsDir, "VERSION  SOURCE STATUS  DATABASE STATUS\n1        Present        Present\n2        Present        Not Present\n")
+	// Check Migration status
+	testMigrateStatus(t, endpoint, migrationsDir, "VERSION  SOURCE STATUS  DATABASE STATUS\n1        Present        Present\n2        Present        Not Present\n")
 
-					// Apply 1_create_table_test.down.sql
-					testMigrateApply(t, endpoint, migrationsDir, "", "", "1", "down")
+	// Apply 1_create_table_test.down.sql
+	testMigrateApply(t, endpoint, migrationsDir, "", "", "1", "down")
 
-					// Check Migration status
-					testMigrateStatus(t, endpoint, migrationsDir, "VERSION  SOURCE STATUS  DATABASE STATUS\n1        Present        Not Present\n2        Present        Not Present\n")
+	// Check Migration status
+	testMigrateStatus(t, endpoint, migrationsDir, "VERSION  SOURCE STATUS  DATABASE STATUS\n1        Present        Not Present\n2        Present        Not Present\n")
 
-					// Apply both 1 and 2
-					testMigrateApply(t, endpoint, migrationsDir, "", "", "", "")
+	// Apply both 1 and 2
+	testMigrateApply(t, endpoint, migrationsDir, "", "", "", "")
 
-					testMetadataExport(t, executionDir, endpoint)
-					compareMetadata(t, executionDir, testMetadata["metadata"])
+	testMetadataExport(t, executionDir, endpoint)
+	compareMetadata(t, executionDir, testMetadata["metadata"])
 
-					testMetadataApply(t, executionDir, endpoint)
-					testMetadataExport(t, executionDir, endpoint)
-					compareMetadata(t, executionDir, testMetadata["metadata"])
+	testMetadataApply(t, executionDir, endpoint)
+	testMetadataExport(t, executionDir, endpoint)
+	compareMetadata(t, executionDir, testMetadata["metadata"])
 
-					testMetadataReset(t, executionDir, endpoint)
-					testMetadataExport(t, executionDir, endpoint)
-					compareMetadata(t, executionDir, testMetadata["empty-metadata"])
-				})
-		})
+	testMetadataReset(t, executionDir, endpoint)
+	testMetadataExport(t, executionDir, endpoint)
+	compareMetadata(t, executionDir, testMetadata["empty-metadata"])
 }
 
 func mustWriteFile(t testing.TB, dir, file string, body string) {

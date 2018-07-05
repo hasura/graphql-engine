@@ -93,6 +93,9 @@ func (o *consoleOptions) run() error {
 
 	router.setRoutes(u.Host, o.EC.Config.AccessKey, o.EC.MigrationDir)
 
+	if o.EC.Version == nil {
+		return errors.Wrap(errors.New("version object is nil"), "cannot validate version")
+	}
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
 
@@ -218,7 +221,7 @@ func serveConsole(assetsVersion string, opts gin.H) (*gin.Engine, error) {
 	// An Engine instance with the Logger and Recovery middleware already attached.
 	r := gin.New()
 
-	// Template index.html
+	// Template console.html
 	templateRender, err := util.LoadTemplates("assets/"+assetsVersion+"/", "console.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch template")
