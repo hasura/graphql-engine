@@ -1,9 +1,13 @@
 version: 2
 jobs:
-  # build (test) and push server to docker hub
-  server:
+  # test build the server binary
+  build_test_server:
     docker:
       - image: fpco/stack-build:lts-11.15
+      - image: circleci/postgres:10-alpine
+        environment:
+          POSTGRES_USER: gql_test
+          POSTGRES_DB: gql_test
     working_directory: /build/hasura/graphql-engine
     steps:
       - checkout
@@ -23,8 +27,19 @@ jobs:
           keys:
           - server-app-cache-{{ .Branch }}-{{ .Revision }}
           - server-deps-cache
+      # image should have 'nc' installed
       - run:
-          name: Compile and build the binary
+          name: waiting for postgres to be ready
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z localhost 5432 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for Postgres && exit 1
+      - run:
+          name: Compile and build and test binary
           working_directory: ./server
           command: |
             make ci-binary
@@ -36,27 +51,49 @@ jobs:
           key: server-deps-cache
           paths:
           - ~/.stack
-      - run:
-          name: Package and build the docker image
-          working_directory: ./server
-          command: |
-            make ci-image
-      #- run:
-      #    name: Test the image
-      #    working_directory: ./server
-      #    command: |
-      #      make test
-      - run:
-          name: Login to docker hub
-          command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
-      - run:
-          name: Push the image to registry
-          working_directory: ./server
-          command: |
-            make push
+      - store_artifacts:
+          path: /build/_server_output
+          destination: server
+      - persist_to_workspace:
+          root: /build
+          paths:
+            - _server_output # binary is called graphql-engine
 
-  # build (test) and push console - version will be vMAJOR.MINOR for tags and release-v* branches
-  console:
+  # build cli
+  build_cli:
+    docker:
+    - image: hasura/graphql-engine-cli-builder:v0.1
+    working_directory: /go/src/github.com/hasura/graphql-engine
+    steps:
+    - checkout
+    - restore_cache:
+        keys:
+        - cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
+    - run:
+        name: get cli dependencies
+        working_directory: /go/src/github.com/hasura/graphql-engine/cli
+        command: make deps
+    - save_cache:
+        key: cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
+        paths:
+        - cli/vendor
+    - run:
+        name: build cli
+        working_directory: /go/src/github.com/hasura/graphql-engine/cli
+        command: |
+          make build
+          make compress
+          make ci-copy-binary
+    - store_artifacts:
+        path: /build/_cli_output
+        destination: cli
+    - persist_to_workspace:
+        root: /build
+        paths:
+          - _cli_output
+
+  # build console - version will be vMAJOR.MINOR for tags and release-v* branches
+  build_console:
     docker:
       - image: hasura/graphql-engine-console-builder:v0.1
     working_directory: ~/graphql-engine
@@ -74,77 +111,108 @@ jobs:
             console-node-modules-{{ checksum "console/package.json" }}
           paths:
             - console/node_modules
-      # run tests
       - run:
           name: build console
           working_directory: ./console
-          command: make build
-      - run:
-          name: store gcloud service account to file 
-          command: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-      - run:
-          name: setup gcloud
           command: |
-            gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
-            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-      - run:
-          name: copy assets to gcloud
-          working_directory: ./console
-          command: |
-            export VERSION=$(../scripts/get-version-circleci.sh)
-            make gcloud-cp-stable
-            make gcloud-set-metadata
-  # send pull requests to install manifests and heroku repo to update new server image tag
-  send_pr:
+            make build
+            make ci-copy-assets
+      - store_artifacts:
+          path: /build/_console_output
+          destination: console
+      - persist_to_workspace:
+          root: /build
+          paths:
+            - _console_output # main.{js,css}, vendor.js
+  
+  # test cli
+  test_cli:
     docker:
-      - image: busybox
-    steps:
-      - run: echo doing nothing for send_pr job
-  # upload cli binaries to github releases page for the tag
-  github_release:
-    docker:
-      - image: hasura/graphql-engine-cli-builder:v0.1
-    steps:
-      - attach_workspace:
-          at: /tmp/assets
-      - run:
-          name: upload assets
-          working_directory: /tmp/assets
-          command: ghr -draft -u "$GITHUB_USER" "$(ls .)" "$(ls .)"
-  # build (test) and upload cli binaries to circleci artifacts
-  cli:
-    docker:
-    - image: hasura/graphql-engine-cli-builder:v0.1
+    - image: hasura/graphql-engine-tester:v0.1
+    - image: circleci/postgres:10-alpine
+      environment:
+        POSTGRES_USER: gql_test
+        POSTGRES_DB: gql_test
     working_directory: /go/src/github.com/hasura/graphql-engine
     steps:
     - checkout
+    - attach_workspace:
+        at: /build
     - restore_cache:
         keys:
         - cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
+      # image should have 'nc' installed
     - run:
-        name: get cli dependencies
-        working_directory: /go/src/github.com/hasura/graphql-engine/cli
+        name: waiting for postgres to be ready
+        command: |
+          for i in `seq 1 10`;
+          do
+            nc -z localhost 5432 && echo Success && exit 0
+            echo -n .
+            sleep 1
+          done
+          echo Failed waiting for Postgres && exit 1
+    - run:
+        name: start graphql-engine
+        command: |
+          /build/_server_output/graphql-engine --database-url postgres://gql_test@localhost:5432/gql_test serve
+    - run:
+        name: test cli
+        # TODO: set params for test
+        command: make test
+
+  # test console
+  test:
+    docker:
+    - image: hasura/graphql-engine-tester:v0.1
+    - image: circleci/postgres:10-alpine
+      environment:
+        POSTGRES_USER: gql_test
+        POSTGRES_DB: gql_test
+    working_directory: ~/graphql-engine
+    steps:
+    - checkout
+    - attach_workspace:
+        at: /build
+    - restore_cache:
+        key: 
+          console-node-modules-{{ checksum "console/package.json" }}
+    - run:
+        name: install dependencies
+        working_directory: ./console
         command: make deps
     - save_cache:
-        key: cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
+        key: 
+          console-node-modules-{{ checksum "console/package.json" }}
         paths:
-        - cli/vendor
-    # - run:
-    #     name: test cli
-    #     command: .circleci/cli-test.sh
+          - console/node_modules
     - run:
-        name: build cli
-        working_directory: /go/src/github.com/hasura/graphql-engine/cli
+        name: waiting for postgres to be ready
         command: |
-          make build
-          make compress
-    - store_artifacts:
-        path: cli/_output
-        destination: cli
-    - persist_to_workspace:
-        root: cli
-        paths:
-          - _output
+          for i in `seq 1 10`;
+          do
+            nc -z localhost 5432 && echo Success && exit 0
+            echo -n .
+            sleep 1
+          done
+          echo Failed waiting for Postgres && exit 1
+    - run:
+        name: start graphql-engine
+        command: |
+          /build/_server_output/graphql-engine --database-url postgres://gql_test@localhost:5432/gql_test serve
+    - run:
+        name: start cli
+        working_directory: /build/_cli_output
+        command: |
+          hasura-linux-amd64 init --directory gql-test
+          cd gql-test
+          ../hasura-linux-amd64 console --no-browser
+    - run:
+        name: test console
+        working_directory: ./console
+        command: make test
+
+# TODO: update workflows
 workflows:
   version: 2
   # executed for all branches except release-v* and for all tags v*

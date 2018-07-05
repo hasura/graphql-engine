@@ -40,6 +40,11 @@ build:
 compress:
 	ls $(OUTPUT_DIR)/$(VERSION)/hasura-* | xargs upx
 
+# to be executed in circle-ci only
+ci-copy-binary:
+	mkdir -p /build/_cli_output
+	cp $(OUTPUT_DIR)/$(VERSION)/hasura-* /build
+
 # run tests
 .PHONY: test
 test:

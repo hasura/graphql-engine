@@ -28,6 +28,8 @@ release-image: $(project).cabal
 ci-binary: $(project).cabal
 	mkdir -p packaging/build/rootfs
 	stack --system-ghc build
+	mkdir -p /build/_server_output
+	cp $(build_dir)/$(project)/$(project) /build/_server_output/
 
 # assumes this is built in circleci
 ci-image:

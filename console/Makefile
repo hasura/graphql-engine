@@ -14,6 +14,11 @@ build:
 test:
 	npm run test
 
+# to be run inside circle-ci
+ci-copy-assets:
+	mkdir -p /build/_console_output
+	cp $(DIST_PATH)/* /build/_console_output/
+
 gcloud-cp-stable:
 	gsutil cp -r $(DIST_PATH)/main.css gs://$(BUCKET_NAME)/console/$(VERSION)/main.css
 	gsutil cp -r $(DIST_PATH)/main.js gs://$(BUCKET_NAME)/console/$(VERSION)/main.js
