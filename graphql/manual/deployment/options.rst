@@ -6,8 +6,8 @@ For ``graphql-engine`` command these are the flags available
 ::
 
       --database-url       Postgres database URL
-                           <scheme>://<user>:<password>@<host>:<port>/<db-name>
-                           Example: http://admin:mypass@mydomain.com:5432/mydb
+                           <postgres/postgresql>://<user>:<password>@<host>:<port>/<db-name>
+                           Example: postgres://admin:mypass@mydomain.com:5432/mydb
 
   Or either you can specifiy following options
 
@@ -26,6 +26,7 @@ For ``serve`` subcommand these are the flags available
                            If specified client needs to send 'X-Hasura-Access-Key'
                            header
       --cors-domain        The domain, including sheme and port, to allow CORS for
+      --disable-cors       Disable CORS handling
       --auth-hook          The authentication webhook, required to authenticate
                            incoming request
   -s, --stripes            Number of stripes
@@ -35,3 +36,25 @@ For ``serve`` subcommand these are the flags available
                            serializable
       --root-dir           This static dir is served at / and takes precedence over
                            all routes
+      --enable-console     Enable API console. It is served at '/' and '/console'
+
+
+Graphql Engine Environment Variables
+------------------------------------
+
+Hasura ``graphql-engine`` accepts following environment variables in case if you don't want to specify corresponding flags.
+
+
++-----------------------------------+--------------------+
+| Environment variable              | Flag               |
++===================================+====================+
+| HASURA_GRAPHQL_DATABASE_URL       | ``--database-url`` |
++-----------------------------------+--------------------+
+| HASURA_GRAPHQL_ACCESS_KEY         | ``--access-key``   |
++-----------------------------------+--------------------+
+| HASURA_GRAPHQL_AUTH_HOOK          | ``--auth-hook``    |
++-----------------------------------+--------------------+
+| HASURA_GRAPHQL_CORS_DOMAIN        | ``--cors-domain``  |
++-----------------------------------+--------------------+
+
+**Note:** Always server flags take precedence over environment variables
