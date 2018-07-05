@@ -1273,21 +1273,63 @@ ol, ul
   margin-bottom: 20px;
 }
 
-.graphiql .query, .graphiql .response {
-    display: none;
+.graphiql .query,
+.graphiql .response {
+  display: none;
 }
 
-.graphiql-container .topBar {
-  background: #f7f7f7 !important;
-  border-top-left-radius: 3px !important;
+.graphiql-container {
+  min-height: 300px;
+  border: 1px solid #eee;
+  -webkit-box-shadow: -1px 2px 20px 2px rgba(217,217,217,1);
+  -moz-box-shadow: -1px 2px 20px 2px rgba(217,217,217,1);
+  box-shadow: -1px 2px 20px 2px rgba(217,217,217,1);
 }
 
-.graphiql-container .docExplorerShow {
-  background: #f7f7f7 !important;
-  border-top-right-radius: 3px !important;
+.graphiql-container .topBarWrap {
+  height: 0;
 }
 
-.graphiql .variable-editor, .graphiql a[title="Show History"], .graphiql.view-only .execute-button {
+.graphiql-container .execute-button-wrap {
+  z-index: 3;
+  top: -2px;
+  left: calc(50% - 50px);
+  margin: 0 !important;
+  height: 28px !important;
+}
+
+.graphiql-container .execute-button {
+  height: 28px !important;
+  width: 28px !important;
+}
+
+.graphiql-container .execute-button svg{
+  position: relative;
+  top: -3px;
+  left: -3px;
+}
+
+.graphiql-container .CodeMirror pre {
+  padding: 0 15px;
+}
+
+.graphiql-container .CodeMirror-lines {
+  padding: 15px 0 !important;
+}
+
+.graphiql-container .CodeMirror-gutter-wrapper,
+.graphiql-container .CodeMirror-gutters {
+  display: none;
+}
+
+.graphiql-container .title,
+.graphiql-container .docExplorerShow,
+.graphiql-container .toolbar,
+.graphiql-container .variable-editor {
+  display: none !important;
+}
+
+.graphiql.view-only .execute-button {
   display: none !important;
 }
 

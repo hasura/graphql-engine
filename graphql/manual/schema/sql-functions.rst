@@ -48,29 +48,33 @@ Run an insert mutation
 Run a mutation to insert an object with (input = "test", output=null) and you'll get a return value (output="test")
 
 .. graphiql::
-   :view_only: true
-   :query:
-      mutation insert_sql_fn {
-        insert_sql_function_table(objects: [
+  :view_only: true
+  :query:
+    mutation insert_sql_fn {
+      insert_sql_function_table(
+        objects: [
           {
             input: "test",
             output: null
-          }]) {
-          returning {
-            output
           }
-        }
-      }
-   :response:
+        ]
+      )
       {
-        "data": {
-          "insert_sql_function_table": {
-            "affected_rows": 1,
-            "returning": [
-              {
-                "output": "test"
-              }
-            ]
-          }
+        returning {
+          output
         }
       }
+    }
+  :response:
+    {
+      "data": {
+        "insert_sql_function_table": {
+          "affected_rows": 1,
+          "returning": [
+            {
+              "output": "test"
+            }
+          ]
+        }
+      }
+    }

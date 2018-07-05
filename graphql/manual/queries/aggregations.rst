@@ -28,43 +28,43 @@ Example: aggregate data
 Fetch a list of articles along with the total number of likes received by each one:
 
 .. graphiql::
-   :query:
-        query  {
-            article {
-                id
-                rating
-                total_likes{
-                    like_count
-                }
-            }
+  :query:
+    query {
+      article {
+        id
+        rating
+        total_likes {
+          like_count
         }
-   :response:
-        {
-            "data": {
-                "article": [
-                    {
-                        "id": 3,
-                        "rating": 4,
-                        "total_likes": {
-                        "like_count": 2
-                        }
-                    },
-                    {
-                        "id": 4,
-                        "rating": 4,
-                        "total_likes": {
-                        "like_count": 1
-                        }
-                    },
-                    {
-                        "id": 10,
-                        "rating": 5,
-                        "total_likes": {
-                        "like_count": 2
-                        }
-                    }
-                ]
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 3,
+            "rating": 4,
+            "total_likes": {
+              "like_count": 2
             }
-        }
+          },
+          {
+            "id": 4,
+            "rating": 4,
+            "total_likes": {
+              "like_count": 1
+            }
+          },
+          {
+            "id": 10,
+            "rating": 5,
+            "total_likes": {
+              "like_count": 2
+            }
+          }
+        ]
+      }
+    }
 
 This example can be easily extended to cover any use-case involving a SQL aggregate function that you may want to use.
