@@ -156,7 +156,7 @@ processTableChanges ti tableDiff = do
       _ -> return () --addFldToCache (fromPGCol colName) (FIColumn colInfo) newtn
 
   -- for rest of the columns
-  forM_ alteredCols $ \(PGColInfo oColName oColTy, (PGColInfo nColName nColTy)) ->
+  forM_ alteredCols $ \(PGColInfo oColName oColTy, PGColInfo nColName nColTy) ->
     if | oColName /= nColName ->
          renameColumn oColName nColName newtn ti
 

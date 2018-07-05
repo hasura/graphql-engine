@@ -17,8 +17,12 @@ import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
 
+import           Control.Arrow                      ((***))
 import           Data.Aeson
 import qualified Data.Map.Strict                    as Map
+
+type ColMapModifier = (PGCol -> PGCol) -> Map.Map PGCol PGCol -> Map.Map PGCol PGCol
+type ColAccessor = (PGCol, PGCol) -> PGCol
 
 updateObjRelDef :: (P2C m) => QualifiedTable
                 -> QualifiedTable -> RelName -> m ()
@@ -34,9 +38,6 @@ updateObjRelDef newQT qt rn = do
     mkObjRelUsing colMap = RUManual $ ObjRelManualConfig $
       RelManualConfig newQT colMap
 
-type ColMapModifier = (PGCol -> PGCol) -> Map.Map PGCol PGCol -> Map.Map PGCol PGCol
-type ColAccessor = (PGCol, PGCol) -> PGCol
-
 updateColForManualConfig
   :: PGCol -> PGCol
   -> ColMapModifier -> ColAccessor
@@ -46,7 +47,7 @@ updateColForManualConfig oCol nCol modFn accFn (RelManualConfig tn rmCols) =
         flip modFn rmCols $ \col -> if col == oCol then nCol else col
   in
   ( RelManualConfig tn updatedColMap
-  , any (== oCol) $ map accFn (Map.toList rmCols)
+  , oCol `elem` map accFn (Map.toList rmCols)
   )
 
 updateObjRelRCol :: (P2C m) => PGCol -> PGCol
@@ -59,10 +60,9 @@ updateObjRelRCol oCol nCol qt rn = do
     RUManual (ObjRelManualConfig manConf) -> do
       let (updatedManualConf, updNeeded) =
             updateColForManualConfig oCol nCol Map.map snd manConf
-      if updNeeded then
+      when updNeeded $
         liftTx $ updateRel qt rn $ toJSON
           (RUManual $ ObjRelManualConfig updatedManualConf :: ObjRelUsing)
-      else return ()
 
 updateObjRelLCol :: (P2C m) => PGCol -> PGCol
                  -> QualifiedTable -> RelName -> m ()
@@ -76,10 +76,9 @@ updateObjRelLCol oCol nCol qt rn = do
     RUManual (ObjRelManualConfig manConf) -> do
       let (updatedManualConf, updNeeded) =
             updateColForManualConfig oCol nCol Map.mapKeys fst manConf
-      if updNeeded then
+      when updNeeded $
         liftTx $ updateRel qt rn $ toJSON
           (RUManual $ ObjRelManualConfig updatedManualConf :: ObjRelUsing)
-      else return ()
 
 updateArrRelDef :: (P2C m) => QualifiedTable
                 -> QualifiedTable -> RelName -> m ()
@@ -172,17 +171,15 @@ updateCols :: PGCol -> PGCol -> PermColSpec -> (PermColSpec, Bool)
 updateCols oCol nCol cols = case cols of
   PCStar -> (cols, False)
   PCCols c -> ( PCCols $ flip map c $ \col -> if col == oCol then nCol else col
-              , any (== oCol) c
+              , oCol `elem` c
               )
 
 updateBoolExp :: PGCol -> PGCol -> BoolExp -> (BoolExp, Bool)
 updateBoolExp oCol nCol boolExp = case boolExp of
-  BoolAnd exps -> ( BoolAnd $ fst $ updateExps exps
-                  , or $ snd $ updateExps exps
-                  )
-  BoolOr exps -> ( BoolOr $ fst $ updateExps exps
-                 , or $ snd $ updateExps exps
-                 )
+  BoolAnd exps -> (BoolAnd *** or) (updateExps exps)
+
+  BoolOr exps -> (BoolOr *** or) (updateExps exps)
+
   be@(BoolCol (ColExp c v)) -> if oCol == PGCol (getFieldNameTxt c)
                                then ( BoolCol $ ColExp (fromPGCol nCol) v
                                     , True
@@ -198,27 +195,24 @@ updateBoolExp oCol nCol boolExp = case boolExp of
 updateInsPermCols :: (P2C m) => PGCol -> PGCol -> CreateInsPerm -> m ()
 updateInsPermCols oCol nCol (WithTable qt (PermDef rn (InsPerm chk _) _)) = do
   let updatedBoolExp = updateBoolExp oCol nCol chk
-  if snd updatedBoolExp
-  then liftTx $ updatePermInCatalog PTInsert qt $
-    PermDef rn (InsPerm (fst updatedBoolExp) Nothing) Nothing
-  else return ()
+  when (snd updatedBoolExp) $
+    liftTx $ updatePermInCatalog PTInsert qt $
+      PermDef rn (InsPerm (fst updatedBoolExp) Nothing) Nothing
 
 updateSelPermCols :: (P2C m) => PGCol -> PGCol -> CreateSelPerm -> m ()
-updateSelPermCols oCol nCol (WithTable qt (PermDef rn (SelPerm cols fltr) _)) = do
-  if or [updNeededFromCols, updNeededFromBoolExp] then
+updateSelPermCols oCol nCol (WithTable qt (PermDef rn (SelPerm cols fltr) _)) =
+  when ( updNeededFromCols || updNeededFromBoolExp) $
     liftTx $ updatePermInCatalog PTSelect qt $
       PermDef rn (SelPerm updCols updBoolExp) Nothing
-  else return ()
   where
     (updCols, updNeededFromCols) = updateCols oCol nCol cols
     (updBoolExp, updNeededFromBoolExp) = updateBoolExp oCol nCol fltr
 
 updateUpdPermCols :: (P2C m) => PGCol -> PGCol -> CreateUpdPerm -> m ()
-updateUpdPermCols oCol nCol (WithTable qt (PermDef rn (UpdPerm cols fltr) _)) = do
-  if or [updNeededFromCols, updNeededFromBoolExp] then
+updateUpdPermCols oCol nCol (WithTable qt (PermDef rn (UpdPerm cols fltr) _)) =
+  when ( updNeededFromCols || updNeededFromBoolExp) $
     liftTx $ updatePermInCatalog PTUpdate qt $
       PermDef rn (UpdPerm updCols updBoolExp) Nothing
-  else return ()
   where
     (updCols, updNeededFromCols) = updateCols oCol nCol cols
     (updBoolExp, updNeededFromBoolExp) = updateBoolExp oCol nCol fltr
@@ -226,15 +220,14 @@ updateUpdPermCols oCol nCol (WithTable qt (PermDef rn (UpdPerm cols fltr) _)) = 
 updateDelPermCols :: (P2C m) => PGCol -> PGCol -> CreateDelPerm -> m ()
 updateDelPermCols oCol nCol (WithTable qt (PermDef rn (DelPerm fltr)_)) = do
   let updatedFltrExp = updateBoolExp oCol nCol fltr
-  if snd updatedFltrExp then
+  when (snd updatedFltrExp) $
     liftTx $ updatePermInCatalog PTDelete qt $
       PermDef rn (DelPerm $ fst updatedFltrExp) Nothing
-  else return ()
 
 updatePermCols :: (P2C m) => PGCol -> PGCol -> QualifiedTable -> m ()
 updatePermCols oCol nCol qt@(QualifiedTable sn tn) = do
   perms <- liftTx fetchPerms
-  forM_ perms $ \(rn, ty, Q.AltJ (pDef :: Value)) -> do
+  forM_ perms $ \(rn, ty, Q.AltJ (pDef :: Value)) ->
     case ty of
       PTInsert -> do
         perm <- decodeValue pDef
