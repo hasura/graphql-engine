@@ -12,7 +12,7 @@ const userId = 5555;
 
 export const Createtable = (name, dict) => {
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
-  cy.get(getElementFromAlias('tableName')).type(`${name}_table`);
+  cy.get(getElementFromAlias('tableName')).type(`${name}_table_vt`);
   const keys = Object.keys(dict).map(k => k);
   const values = Object.keys(dict).map(k => dict[k]);
   for (let i = 0; i < keys.length; i += 1) {
@@ -52,10 +52,10 @@ export const passVCreateTables = () => {
 
 export const passVCreateViews = () => {
   createView(`CREATE VIEW author_average_rating AS
-    SELECT author_table.id, avg(article_table.rating)
-    From author_table, article_table
-    WHERE author_table.id = article_table.author_id
-    GROUP BY author_table.id`);
+    SELECT author_table_vt.id, avg(article_table_vt.rating)
+    From author_table_vt, article_table_vt
+    WHERE author_table_vt.id = article_table_vt.author_id
+    GROUP BY author_table_vt.id`);
 };
 
 export const passTrackTable = () => {
@@ -249,7 +249,7 @@ const checkQuerySuccess = () => {
 
 export const passVAddData = () => {
   let data;
-  cy.get(getElementFromAlias('article_table')).click();
+  cy.get(getElementFromAlias('article_table_vt')).click();
   cy.get(getElementFromAlias('table-insert-rows')).click();
   data = [1, 'A', 'Sontent', userId, 4];
   passVAddDataarticle(data, 0);
@@ -257,14 +257,14 @@ export const passVAddData = () => {
   passVAddDataarticle(data, 1);
   data = [3, 'C', 'Sontentb', userId, 4];
   passVAddDataarticle(data, 2);
-  cy.get(getElementFromAlias('author_table')).click();
+  cy.get(getElementFromAlias('author_table_vt')).click();
   cy.get(getElementFromAlias('table-insert-rows')).click();
 
   data = [userId, 'A'];
   passVAddDataauthor(data, 0);
   data = [2, 'B'];
   passVAddDataauthor(data, 1);
-  cy.get(getElementFromAlias('comment_table')).click();
+  cy.get(getElementFromAlias('comment_table_vt')).click();
   cy.get(getElementFromAlias('table-insert-rows')).click();
 
   data = [1, 1, 1, 'new comment'];
@@ -379,7 +379,7 @@ export const passVAddManualObjRel = () => {
     .find('option')
     .contains('Remote Table')
     .parent()
-    .select('author_table');
+    .select('author_table_vt');
   cy.get('select')
     .last()
     .select('id');
@@ -434,9 +434,9 @@ export const Deletetable = name => {
 };
 
 export const passVDeleteTables = () => {
-  Deletetable('comment_table');
-  Deletetable('article_table');
-  Deletetable('author_table');
+  Deletetable('comment_table_vt');
+  Deletetable('article_table_vt');
+  Deletetable('author_table_vt');
 };
 
 // //////////////////////////////////////////////////////////////////////////////////////

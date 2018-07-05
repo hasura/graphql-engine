@@ -8,6 +8,8 @@ import {
 
 import { validatePermission } from '../../validators/validators';
 
+const testName = 'perm';
+
 export const savePermission = () => {
   cy.get(getElementFromAlias('Save-permissions-button')).click();
   cy.wait(5500);
@@ -121,7 +123,9 @@ export const trackView = () => {
     .contains('Data')
     .click();
   cy.wait(7000);
-  cy.get(getElementFromAlias(`add-track-table-${getTableName(1)}`)).click();
+  cy.get(
+    getElementFromAlias(`add-track-table-${getTableName(1, testName)}`)
+  ).click();
   cy.wait(10000);
   // Move to permissions
   cy.get(getElementFromAlias('table-permissions')).click();

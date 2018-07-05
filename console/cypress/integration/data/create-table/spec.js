@@ -6,6 +6,8 @@ import {
 } from '../../../helpers/dataHelpers';
 import { setMetaData, validateCT } from '../../validators/validators';
 
+const testName = 'ct';
+
 export const checkCreateTableRoute = () => {
   //    Click on the create table button
   cy.visit('/data/schema');
@@ -17,7 +19,7 @@ export const checkCreateTableRoute = () => {
 
 export const failCTWithoutColumns = () => {
   //    Type table name
-  cy.get(getElementFromAlias('tableName')).type(getTableName(0));
+  cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
   //    Click on create
   cy.get(getElementFromAlias('table-create')).click();
   //    Check for an error
@@ -26,7 +28,7 @@ export const failCTWithoutColumns = () => {
   //    Check if the route didn't change
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   //   Validate
-  validateCT(getTableName(0), 'failure');
+  validateCT(getTableName(0, testName), 'failure');
 };
 
 export const failCTWithoutPK = () => {
@@ -40,7 +42,7 @@ export const failCTWithoutPK = () => {
   //   Check if the route didn't change
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   //   Validate
-  validateCT(getTableName(0), 'failure');
+  validateCT(getTableName(0, testName), 'failure');
 };
 
 export const failCTDuplicateColumns = () => {
@@ -60,7 +62,7 @@ export const failCTDuplicateColumns = () => {
   //   Check if the route didn't change
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   //   Validate
-  validateCT(getTableName(0), 'failure');
+  validateCT(getTableName(0, testName), 'failure');
 };
 
 export const passCT = () => {
@@ -77,18 +79,18 @@ export const passCT = () => {
   //  Check if the table got created and navigatied to modify table
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
-  cy.get(getElementFromAlias(getTableName(0)));
+  cy.get(getElementFromAlias(getTableName(0, testName)));
   //   Validate
-  validateCT(getTableName(0), 'success');
+  validateCT(getTableName(0, testName), 'success');
 };
 
 export const failCTDuplicateTable = () => {
   //  Visit data page
   cy.get(getElementFromAlias('sidebar-add-table')).click();
   //  Type table name
-  cy.get(getElementFromAlias('tableName')).type(getTableName(0));
+  cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
   //   Set column
   cy.get(getElementFromAlias('column-0')).type(getColName(1));
   cy.get(getElementFromAlias('col-type-0')).select('serial');
@@ -103,7 +105,7 @@ export const failCTDuplicateTable = () => {
 
 export const deleteCTTestTable = () => {
   //   Go to the modify section of the table
-  cy.get(getElementFromAlias(`${getTableName(0)}`)).click();
+  cy.get(getElementFromAlias(`${getTableName(0, testName)}`)).click();
   cy.get(getElementFromAlias('table-modify')).click();
   //   Click on delete
   cy.get(getElementFromAlias('delete-table')).click();
@@ -116,7 +118,7 @@ export const deleteCTTestTable = () => {
   //   Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
   //   Validate
-  validateCT(getTableName(0), 'failure');
+  validateCT(getTableName(0, testName), 'failure');
 };
 
 export const setValidationMetaData = () => {

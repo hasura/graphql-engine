@@ -8,7 +8,7 @@ import {
 
 export const Createtable = (name, dict) => {
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
-  cy.get(getElementFromAlias('tableName')).type(`${name}_table`);
+  cy.get(getElementFromAlias('tableName')).type(`${name}_table_rt`);
   const keys = Object.keys(dict).map(k => k);
   const values = Object.keys(dict).map(k => dict[k]);
   for (let i = 0; i < keys.length; i += 1) {
@@ -48,7 +48,7 @@ export const passRTCreateTables = () => {
 };
 
 export const passRTMoveToTable = () => {
-  cy.get(getElementFromAlias('article_table')).click();
+  cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
 };
 
@@ -64,13 +64,13 @@ export const Deletetable = name => {
 };
 
 export const passRTDeleteTables = () => {
-  Deletetable('comment_table');
-  Deletetable('article_table');
-  Deletetable('author_table');
+  Deletetable('comment_table_rt');
+  Deletetable('article_table_rt');
+  Deletetable('author_table_rt');
 };
 
 export const passRTAddDataarticle = data => {
-  cy.get(getElementFromAlias('article_table')).click();
+  cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-insert-rows')).click();
   cy.get('label')
     .contains('id')
@@ -109,7 +109,7 @@ export const passRTAddDataarticle = data => {
 };
 
 export const passRTAddDataauthor = data => {
-  cy.get(getElementFromAlias('author_table')).click();
+  cy.get(getElementFromAlias('author_table_rt')).click();
   cy.get(getElementFromAlias('table-insert-rows')).click();
   cy.get('label')
     .contains('id')
@@ -128,7 +128,7 @@ export const passRTAddDataauthor = data => {
 };
 
 export const passRTAddDatacomment = data => {
-  cy.get(getElementFromAlias('comment_table')).click();
+  cy.get(getElementFromAlias('comment_table_rt')).click();
   cy.get(getElementFromAlias('table-insert-rows')).click();
   cy.get('label')
     .contains('id')
@@ -179,7 +179,7 @@ export const passRTAddData = () => {
 };
 
 export const passRTAddManualObjRel = () => {
-  cy.get(getElementFromAlias('article_table')).click();
+  cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('add-manual-relationship')).click();
   cy.get('select')
@@ -195,7 +195,7 @@ export const passRTAddManualObjRel = () => {
     .find('option')
     .contains('Remote Table')
     .parent()
-    .select('author_table');
+    .select('author_table_rt');
   cy.get('select')
     .last()
     .select('id');
@@ -205,14 +205,14 @@ export const passRTAddManualObjRel = () => {
     .click();
   cy.wait(7000);
   validateColumn(
-    'article_table',
+    'article_table_rt',
     ['title', { name: 'author', columns: ['name'] }],
     'success'
   );
 };
 
 export const passRTAddManualArrayRel = () => {
-  cy.get(getElementFromAlias('article_table')).click();
+  cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('add-manual-relationship')).click();
   cy.get('select')
@@ -228,7 +228,7 @@ export const passRTAddManualArrayRel = () => {
     .find('option')
     .contains('Remote Table')
     .parent()
-    .select('comment_table');
+    .select('comment_table_rt');
   cy.get('select')
     .last()
     .select('article_id');
@@ -238,14 +238,14 @@ export const passRTAddManualArrayRel = () => {
     .click();
   cy.wait(7000);
   validateColumn(
-    'article_table',
+    'article_table_rt',
     ['title', { name: 'comments', columns: ['comment'] }],
     'success'
   );
 };
 
 export const passRTAddForeignKey = () => {
-  cy.get(getElementFromAlias('article_table')).click();
+  cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-modify')).click();
   cy.get('b')
     .contains('author_id')
@@ -256,7 +256,7 @@ export const passRTAddForeignKey = () => {
     .find('option')
     .contains('Reference table')
     .parent()
-    .select('author_table');
+    .select('author_table_rt');
   cy.get('select')
     .find('option')
     .contains('Reference column')
@@ -264,7 +264,7 @@ export const passRTAddForeignKey = () => {
     .select('id');
   cy.get(getElementFromAlias('save-button')).click();
   cy.wait(7000);
-  cy.get(getElementFromAlias('comment_table')).click();
+  cy.get(getElementFromAlias('comment_table_rt')).click();
   cy.get(getElementFromAlias('table-modify')).click();
   cy.get('b')
     .contains('article_id')
@@ -275,7 +275,7 @@ export const passRTAddForeignKey = () => {
     .find('option')
     .contains('Reference table')
     .parent()
-    .select('article_table');
+    .select('article_table_rt');
   cy.get('select')
     .find('option')
     .contains('Reference column')
@@ -286,7 +286,7 @@ export const passRTAddForeignKey = () => {
 };
 
 export const passRTDeleteRelationships = () => {
-  cy.get(getElementFromAlias('article_table')).click();
+  cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('remove-button'))
     .first()
@@ -296,11 +296,11 @@ export const passRTDeleteRelationships = () => {
   });
   cy.wait(7000);
   validateColumn(
-    'article_table',
+    'article_table_rt',
     ['title', { name: 'author', columns: ['name'] }],
     'failure'
   );
-  cy.get(getElementFromAlias('article_table')).click();
+  cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('remove-button'))
     .first()
@@ -310,14 +310,14 @@ export const passRTDeleteRelationships = () => {
   });
   cy.wait(7000);
   validateColumn(
-    'article_table',
+    'article_table_rt',
     ['title', { name: 'comments', columns: ['comment'] }],
     'failure'
   );
 };
 
 export const passRTAddSuggestedRel = () => {
-  cy.get(getElementFromAlias('article_table')).click();
+  cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('obj-rel-add-0'))
     .contains('Add')
@@ -329,11 +329,11 @@ export const passRTAddSuggestedRel = () => {
   cy.get(getElementFromAlias('obj-rel-save-0')).click();
   cy.wait(7000);
   validateColumn(
-    'article_table',
+    'article_table_rt',
     ['title', { name: 'author', columns: ['name'] }],
     'success'
   );
-  cy.get(getElementFromAlias('article_table')).click();
+  cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('arr-rel-add-0'))
     .contains('Add')
@@ -345,14 +345,14 @@ export const passRTAddSuggestedRel = () => {
   cy.get(getElementFromAlias('arr-rel-save-0')).click();
   cy.wait(7000);
   validateColumn(
-    'article_table',
+    'article_table_rt',
     ['title', { name: 'comments', columns: ['comment'] }],
     'success'
   );
 };
 
 export const failRTAddSuggestedRel = () => {
-  cy.get(getElementFromAlias('article_table')).click();
+  cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('obj-rel-add-0'))
     .contains('Add')
@@ -370,11 +370,11 @@ export const failRTAddSuggestedRel = () => {
   cy.get('.notification-error');
   cy.wait(10000);
   validateColumn(
-    'article_table',
+    'article_table_rt',
     ['title', { name: 'author', columns: ['name'] }],
     'failure'
   );
-  cy.get(getElementFromAlias('article_table')).click();
+  cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('obj-rel-add-0'))
     .last()
@@ -385,11 +385,11 @@ export const failRTAddSuggestedRel = () => {
   cy.get(getElementFromAlias('obj-rel-save-0')).click();
   cy.wait(10000);
   validateColumn(
-    'article_table',
+    'article_table_rt',
     ['title', { name: 'author', columns: ['name'] }],
     'success'
   );
-  cy.get(getElementFromAlias('article_table')).click();
+  cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('arr-rel-add-0'))
     .contains('Add')
@@ -404,7 +404,7 @@ export const failRTAddSuggestedRel = () => {
   cy.wait(7000);
   cy.get('.notification-error');
   cy.wait(7000);
-  cy.get(getElementFromAlias('article_table')).click();
+  cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('remove-button'))
     .first()

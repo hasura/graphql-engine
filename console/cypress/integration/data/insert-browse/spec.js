@@ -14,6 +14,7 @@ import {
 } from '../../validators/validators';
 
 const numOfDataTypes = dataTypes.length;
+const testName = 'ib';
 
 //* ******************** Util functions ************************
 
@@ -93,7 +94,7 @@ export const passBICreateTable = () => {
   // Click create table button
   cy.get(getElementFromAlias('data-create-table')).click();
   // Type table name
-  cy.get(getElementFromAlias('tableName')).type(getTableName(0));
+  cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
   // Set columns with all fields
   setColumns();
   // Set primary key
@@ -101,17 +102,17 @@ export const passBICreateTable = () => {
   // Click on create
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
-  validateCT(getTableName(0), 'success');
+  validateCT(getTableName(0, testName), 'success');
 };
 
 export const checkInsertRoute = () => {
   // Click on Insert tab
-  cy.get(getElementFromAlias(getTableName(0))).click();
+  cy.get(getElementFromAlias(getTableName(0, testName))).click();
   cy.get(getElementFromAlias('table-insert-rows')).click();
   // Match URL
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/insert`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/insert`
   );
 };
 
@@ -134,7 +135,7 @@ export const failBIWrongDataType = () => {
       cy.get(getElementFromAlias(`typed-input-default-${i}`)).check();
     }
 
-    validateInsert(getTableName(0), 0);
+    validateInsert(getTableName(0, testName), 0);
   }
 };
 
@@ -164,7 +165,7 @@ export const passBIInsert20Rows = () => {
           .substring(7)
       );
     cy.get(getElementFromAlias('insert-save-button')).click();
-    validateInsert(getTableName(0), i + 1);
+    validateInsert(getTableName(0, testName), i + 1);
   }
   // Wait for insert notifications to disappear
   cy.wait(7000);
@@ -172,13 +173,13 @@ export const passBIInsert20Rows = () => {
 
 export const checkBrowseRoute = () => {
   // Click on Browse tab
-  cy.get(getElementFromAlias(getTableName(0))).click();
+  cy.get(getElementFromAlias(getTableName(0, testName))).click();
   cy.get(getElementFromAlias('table-browse-rows')).click();
   cy.wait(2000);
   // Match URL
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/browse`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/browse`
   );
 };
 
@@ -272,7 +273,7 @@ export const deleteBITestTable = () => {
   cy.wait(7000);
   // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
-  validateCT(getTableName(0), 'failure');
+  validateCT(getTableName(0, testName), 'failure');
 };
 
 export const failBINullKeys = () => {
@@ -292,7 +293,7 @@ export const failBINullKeys = () => {
   cy.get('.notification-error').click();
   // Wait for insert notifications to disappear
   cy.wait(7000);
-  validateInsert(getTableName(0), 20);
+  validateInsert(getTableName(0, testName), 20);
 };
 
 export const failBIUniqueKeys = () => {
@@ -318,7 +319,7 @@ export const failBIUniqueKeys = () => {
 
   cy.get(getElementFromAlias(`typed-input-default-${textIndex}`)).check();
 
-  validateInsert(getTableName(0), 21);
+  validateInsert(getTableName(0, testName), 21);
   cy.wait(7000);
   cy.get(getElementFromAlias(`typed-input-${textIndex}`))
     .clear()
@@ -334,7 +335,7 @@ export const failBIUniqueKeys = () => {
 
   cy.get('.notification-error').click();
   cy.wait(7000);
-  validateInsert(getTableName(0), 21);
+  validateInsert(getTableName(0, testName), 21);
 };
 export const setValidationMetaData = () => {
   setMetaData();
@@ -348,7 +349,7 @@ export const passEditButton = () => {
   cy.wait(2000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/edit`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/edit`
   );
   const textIndex = dataTypes.indexOf('text');
   cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type(
@@ -367,7 +368,7 @@ export const passCloneButton = () => {
   cy.get(getElementFromAlias('row-clone-button-0')).click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/insert`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/insert`
   );
 };
 

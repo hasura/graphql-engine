@@ -10,10 +10,12 @@ import {
   validateColumn,
 } from '../../validators/validators';
 
+const testName = 'mod';
+
 export const passMTCreateTable = () => {
   cy.get(getElementFromAlias('data-create-table')).click();
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
-  cy.get(getElementFromAlias('tableName')).type(getTableName(0));
+  cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
   cy.get(getElementFromAlias('column-0')).type('id');
   cy.get(getElementFromAlias('col-type-0')).select('Integer');
   cy.get(getElementFromAlias('primary-key-select-0')).select('id');
@@ -21,10 +23,10 @@ export const passMTCreateTable = () => {
   cy.wait(7000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
 
-  validateCT(getTableName(0), 'success');
+  validateCT(getTableName(0, testName), 'success');
 };
 
 export const makeid = () => {
@@ -44,15 +46,15 @@ export const passMTCheckRoute = () => {
   // Match the URL
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
 };
 
 export const passMTMoveToTable = () => {
-  cy.get(getElementFromAlias(getTableName(0))).click();
+  cy.get(getElementFromAlias(getTableName(0, testName))).click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/browse`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/browse`
   );
 };
 
@@ -61,10 +63,10 @@ export const failMTWithoutColName = () => {
   cy.get('.notification-error').click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
 
-  validateColumn(getTableName(0), ['something'], 'failure');
+  validateColumn(getTableName(0, testName), ['something'], 'failure');
 };
 
 export const failMTWithoutColType = () => {
@@ -73,9 +75,9 @@ export const failMTWithoutColType = () => {
   cy.get('.notification-error').click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
-  validateColumn(getTableName(0), ['something'], 'failure');
+  validateColumn(getTableName(0, testName), ['something'], 'failure');
 };
 
 export const failMTDuplicateColumns = () => {
@@ -89,7 +91,7 @@ export const failMTDuplicateColumns = () => {
   // Check if the route didn't change
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
 };
 
@@ -106,9 +108,9 @@ export const Addcolumn = () => {
   cy.wait(7000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
-  validateColumn(getTableName(0), [name], 'success');
+  validateColumn(getTableName(0, testName), [name], 'success');
 };
 
 export const Addcolumnnullable = () => {
@@ -121,9 +123,9 @@ export const Addcolumnnullable = () => {
   cy.get('.notification-error').click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
-  validateColumn(getTableName(0), ['some'], 'failure');
+  validateColumn(getTableName(0, testName), ['some'], 'failure');
 };
 
 export const failMTWrongDefault = () => {
@@ -136,9 +138,9 @@ export const failMTWrongDefault = () => {
   cy.get('.notification-error').click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
-  validateColumn(getTableName(0), ['some'], 'failure');
+  validateColumn(getTableName(0, testName), ['some'], 'failure');
 };
 
 export const Addcolumnname = name => {
@@ -151,9 +153,9 @@ export const Addcolumnname = name => {
   cy.get('.notification-success').click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
-  validateColumn(getTableName(0), [name], 'success');
+  validateColumn(getTableName(0, testName), [name], 'success');
 };
 
 export const passMTAddTwoCols = () => {
@@ -181,9 +183,9 @@ export const passMTChangeColType = () => {
     .click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
-  validateColumn(getTableName(0), ['somes'], 'success');
+  validateColumn(getTableName(0, testName), ['somes'], 'success');
 };
 
 export const passMTDeleteCol = () => {
@@ -198,9 +200,9 @@ export const passMTDeleteCol = () => {
   cy.get('.notification-success').click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
-  validateColumn(getTableName(0), ['somes'], 'failure');
+  validateColumn(getTableName(0, testName), ['somes'], 'failure');
 };
 
 export const passMTDeleteTableCancel = () => {
@@ -208,10 +210,10 @@ export const passMTDeleteTableCancel = () => {
   cy.on('window:confirm', () => false);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/modify`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
 
-  validateCT(getTableName(0), 'success');
+  validateCT(getTableName(0, testName), 'success');
 };
 
 export const passMTDeleteTable = () => {
@@ -219,7 +221,7 @@ export const passMTDeleteTable = () => {
   cy.on('window:confirm', () => true);
   cy.wait(5000);
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
-  validateCT(getTableName(0), 'failure');
+  validateCT(getTableName(0, testName), 'failure');
 };
 
 export const failMTRemoveNullable = () => {
