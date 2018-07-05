@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/hasura/graphql-engine/cli/migrate"
 	mt "github.com/hasura/graphql-engine/cli/migrate/testing"
 	_ "github.com/lib/pq"
 	"github.com/parnurzeal/gorequest"
@@ -137,25 +138,69 @@ func testMigrate(t *testing.T, endpoint, migrationsDir, executionDir string) {
 	testMigrateApply(t, endpoint, migrationsDir, "1", "", "", "")
 
 	// Check Migration status
-	testMigrateStatus(t, endpoint, migrationsDir, "VERSION  SOURCE STATUS  DATABASE STATUS\n1        Present        Present\n2        Present        Not Present\n")
+	expectedStatus := migrate.NewStatus()
+	expectedStatus.Append(&migrate.MigrationStatus{
+		Version:   1,
+		IsApplied: true,
+		IsPresent: true,
+	})
+	expectedStatus.Append(&migrate.MigrationStatus{
+		Version:   2,
+		IsApplied: false,
+		IsPresent: true,
+	})
+	testMigrateStatus(t, endpoint, migrationsDir, expectedStatus)
 
 	// Apply 2_add_table_test.up.yaml
 	testMigrateApply(t, endpoint, migrationsDir, "", "", "2", "")
 
 	// Check Migration status
-	testMigrateStatus(t, endpoint, migrationsDir, "VERSION  SOURCE STATUS  DATABASE STATUS\n1        Present        Present\n2        Present        Present\n")
+	expectedStatus = migrate.NewStatus()
+	expectedStatus.Append(&migrate.MigrationStatus{
+		Version:   1,
+		IsApplied: true,
+		IsPresent: true,
+	})
+	expectedStatus.Append(&migrate.MigrationStatus{
+		Version:   2,
+		IsApplied: true,
+		IsPresent: true,
+	})
+	testMigrateStatus(t, endpoint, migrationsDir, expectedStatus)
 
 	// Apply 2_add_table_test.down.yaml
 	testMigrateApply(t, endpoint, migrationsDir, "", "1", "", "")
 
 	// Check Migration status
-	testMigrateStatus(t, endpoint, migrationsDir, "VERSION  SOURCE STATUS  DATABASE STATUS\n1        Present        Present\n2        Present        Not Present\n")
+	expectedStatus = migrate.NewStatus()
+	expectedStatus.Append(&migrate.MigrationStatus{
+		Version:   1,
+		IsApplied: true,
+		IsPresent: true,
+	})
+	expectedStatus.Append(&migrate.MigrationStatus{
+		Version:   2,
+		IsApplied: false,
+		IsPresent: true,
+	})
+	testMigrateStatus(t, endpoint, migrationsDir, expectedStatus)
 
 	// Apply 1_create_table_test.down.sql
 	testMigrateApply(t, endpoint, migrationsDir, "", "", "1", "down")
 
 	// Check Migration status
-	testMigrateStatus(t, endpoint, migrationsDir, "VERSION  SOURCE STATUS  DATABASE STATUS\n1        Present        Not Present\n2        Present        Not Present\n")
+	expectedStatus = migrate.NewStatus()
+	expectedStatus.Append(&migrate.MigrationStatus{
+		Version:   1,
+		IsApplied: false,
+		IsPresent: true,
+	})
+	expectedStatus.Append(&migrate.MigrationStatus{
+		Version:   2,
+		IsApplied: false,
+		IsPresent: true,
+	})
+	testMigrateStatus(t, endpoint, migrationsDir, expectedStatus)
 
 	// Apply both 1 and 2
 	testMigrateApply(t, endpoint, migrationsDir, "", "", "", "")
