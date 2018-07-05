@@ -18,17 +18,17 @@ module Hasura.RQL.DDL.Schema.Diff
   , getSchemaChangeDeps
   ) where
 
+import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.Prelude
 
-import qualified Database.PG.Query    as Q
+import qualified Database.PG.Query   as Q
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Data.HashMap.Strict  as M
-import qualified Data.HashSet         as HS
+import qualified Data.HashMap.Strict as M
+import qualified Data.HashSet        as HS
 
 data PGColMeta
   = PGColMeta

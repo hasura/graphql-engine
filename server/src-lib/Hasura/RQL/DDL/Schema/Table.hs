@@ -141,25 +141,17 @@ processTableChanges ti tableDiff = do
 
   sc <- askSchemaCache
 
-  -- for all the dropped columns
-  -- forM_ droppedCols $ \droppedCol ->
-  --   -- Drop the column from the cache
-  --   delFldFromCache (fromPGCol droppedCol) newtn
-
-  -- In the newly added columns check that there is no conflict with relationships
   forM_ addedCols $ \(PGColInfo colName _) ->
     case M.lookup (fromPGCol colName) $ tiFieldInfoMap ti of
       Just (FIRelationship _) ->
         throw400 AlreadyExists $ "cannot add column " <> colName
         <<> " in table " <> newtn <<>
         " as a relationship with the name already exists"
-      _ -> return () --addFldToCache (fromPGCol colName) (FIColumn colInfo) newtn
+      _ -> return ()
 
   -- for rest of the columns
-  forM_ alteredCols $ \(PGColInfo oColName oColTy, (PGColInfo nColName nColTy)) ->
-    if | oColName /= nColName ->
-         renameColumn oColName nColName newtn ti
-
+  forM_ alteredCols $ \(PGColInfo oColName oColTy, PGColInfo nColName nColTy) ->
+    if | oColName /= nColName -> renameColumn oColName nColName newtn ti
        | oColTy /= nColTy -> do
            let colId   = SOTableObj newtn $ TOCol oColName
                depObjs = getDependentObjsWith (== "on_type") sc colId
