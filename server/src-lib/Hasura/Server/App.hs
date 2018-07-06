@@ -21,7 +21,8 @@ import qualified Data.String.Conversions       as CS
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as TL
 import qualified Data.Text.Lazy.Encoding       as TLE
-import           Data.Time.Clock               (getCurrentTime)
+import           Data.Time.Clock               (UTCTime,
+                                                getCurrentTime)
 import qualified Network.Connection            as NC
 import qualified Network.HTTP.Client           as H
 import qualified Network.HTTP.Client.TLS       as HT
@@ -234,6 +235,19 @@ fetchHeaders req authMode =
       flip map hdrsRaw $ \(hdrName, hdrVal) ->
       (CS.cs $ original hdrName, CS.cs hdrVal)
 
+logResult
+  :: (MonadIO m)
+  => ServerCtx
+  -> Either QErr BL.ByteString
+  -> Maybe (UTCTime, UTCTime)
+  -> ActionT m ()
+logResult sc res qTime = do
+  req <- request
+  reqBody <- liftIO $ strictRequestBody req
+  liftIO $ logger req (reqBody, res) qTime
+  where
+    logger = scLogger sc
+
 mkSpockAction
   :: (MonadIO m)
   => (T.Text -> QErr -> Value)
@@ -253,11 +267,10 @@ mkSpockAction qErrEncoder serverCtx handler = do
   result <- liftIO $ runReaderT (runExceptT handler) handlerState
   t2 <- liftIO getCurrentTime -- for measuring response time purposes
 
-  liftIO $ logger req (reqBody, result) $ Just (t1, t2)
+  -- log result
+  logResult serverCtx result $ Just (t1, t2)
   either (qErrToResp role) resToResp result
   where
-    logger = scLogger serverCtx
-
     -- encode error response
     qErrToResp mRole qErr = do
       setStatus $ qeStatus qErr
@@ -421,8 +434,11 @@ app isoLevel mRootDir logger pool mode corsCfg enableConsole = do
     post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
       mkSpockAction encodeQErr serverCtx $ legacyQueryHandler (TableName tableName) queryType
 
-    hookAny GET $ \_ -> mkSpockAction encodeQErr serverCtx $
-      throw404 NotFound "resource does not exist"
+    hookAny GET $ \_ -> do
+      let qErr = err404 NotFound "resource does not exist"
+      logResult serverCtx (Left qErr) Nothing
+      uncurry setHeader jsonHeader
+      lazyBytes $ encode qErr
 
   where
     tmpltGetOrDeleteH serverCtx tmpltName = do
