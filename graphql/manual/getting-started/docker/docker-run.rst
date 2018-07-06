@@ -5,7 +5,7 @@ This guide assumes that you already have Postgres running and helps you set up H
 your Postgres database.
 
 In case you don't have Postgres running and want a quick setup, head to:
-:doc:`Setup with Docker (Simple) <docker-simple>`.
+:doc:`Setup with Docker <index>`.
 
 **Prerequisites**:
 
@@ -117,4 +117,4 @@ Now, open the hasura console:
 Next, make your first GraphQL query
 -----------------------------------
 
-Next, make your :doc:`first graphql query<first-graphql-query>`.
+Next, make your :doc:`first graphql query <../first-graphql-query>`.

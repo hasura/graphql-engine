@@ -32,6 +32,5 @@ Choose a getting started guide:
    Setup on Heroku <heroku/index>
    Setup with Docker <docker/index>
    first-graphql-query
-   securing-graphql-endpoint
    using-existing-database
    postgres-credentials

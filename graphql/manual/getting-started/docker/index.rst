@@ -100,7 +100,7 @@ Now, open the hasura console:
 Next: Make your first GraphQL query!
 ------------------------------------
 
-Next, make your :doc:`first graphql query<first-graphql-query>`.
+Next, make your :doc:`first graphql query <../first-graphql-query>`.
 
 Advanced:
 ---------
