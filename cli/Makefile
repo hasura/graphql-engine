@@ -43,7 +43,7 @@ compress:
 # to be executed in circle-ci only
 ci-copy-binary:
 	mkdir -p /build/_cli_output
-	cp $(OUTPUT_DIR)/$(VERSION)/hasura-* /build
+	cp $(OUTPUT_DIR)/$(VERSION)/hasura-* /build/_cli_output
 
 # run tests
 .PHONY: test
