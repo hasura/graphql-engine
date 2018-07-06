@@ -94,7 +94,7 @@ func (o *consoleOptions) run() error {
 	router.setRoutes(u.Host, o.EC.Config.AccessKey, o.EC.MigrationDir)
 
 	if o.EC.Version == nil {
-		return errors.Wrap(errors.New("version object is nil"), "cannot validate version")
+		return errors.New("cannot validate version, object is nil")
 	}
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
