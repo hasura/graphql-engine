@@ -44,6 +44,7 @@ compress:
 ci-copy-binary:
 	mkdir -p /build/_cli_output
 	cp $(OUTPUT_DIR)/$(VERSION)/hasura-* /build/_cli_output
+	echo "$(VERSION)" > /build/_cli_output/version.txt
 
 # run tests
 .PHONY: test

@@ -30,6 +30,7 @@ ci-binary: $(project).cabal
 	stack --system-ghc build
 	mkdir -p /build/_server_output
 	cp $(build_dir)/$(project)/$(project) /build/_server_output/
+	echo "$(VERSION)" > /build/_server_output/version.txt
 
 # assumes this is built in circleci
 ci-image:
