@@ -171,16 +171,18 @@ jobs:
         at: /build
     - restore_cache:
         key: 
-          console-node-modules-{{ checksum "console/package.json" }}
+          console-npm-cache-{{ checksum "console/package.json" }}
     - run:
         name: install dependencies
         working_directory: ./console
-        command: make deps
+        command: make ci-deps
     - save_cache:
         key: 
-          console-node-modules-{{ checksum "console/package.json" }}
+          console-npm-cache-{{ checksum "console/package.json" }}
         paths:
           - console/node_modules
+          - ~/.npm
+          - ~/.cache
     - run:
         name: waiting for postgres to be ready
         command: |
