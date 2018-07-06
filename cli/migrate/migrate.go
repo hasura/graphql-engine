@@ -125,7 +125,7 @@ func New(sourceUrl string, databaseUrl string, cmd bool) (*Migrate, error) {
 	}
 	m.databaseDrv = databaseDrv
 
-	m.status = NewMigrations()
+	m.status = NewStatus()
 
 	return m, nil
 }
@@ -174,7 +174,7 @@ func (m *Migrate) Close() (source error) {
 }
 
 func (m *Migrate) calculateStatus() (err error) {
-	m.status = NewMigrations()
+	m.status = NewStatus()
 	err = m.readStatusFromSource()
 	if err != nil {
 		return err
