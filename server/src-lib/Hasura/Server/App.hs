@@ -244,6 +244,9 @@ logResult sc res qTime = do
   where
     logger = scLogger sc
 
+logError :: MonadIO m => ServerCtx -> QErr -> ActionT m ()
+logError sc qErr = logResult sc (Left qErr) Nothing
+
 mkSpockAction
   :: (MonadIO m)
   => (T.Text -> QErr -> Value)
@@ -258,7 +261,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
   accKeyHeader <- header accessKeyHeader
   headersRes <- runExceptT $
     fetchHeaders req accKeyHeader $ scServerMode serverCtx
-  headers <- either (qErrToResp role) return headersRes
+  headers <- either (logAndThrow role) return headersRes
 
   let handlerState = HandlerCtx serverCtx reqBody headers
 
@@ -271,9 +274,13 @@ mkSpockAction qErrEncoder serverCtx handler = do
   either (qErrToResp role) resToResp result
   where
     -- encode error response
-    qErrToResp mRole qErr = do
+    qErrToResp role qErr = do
       setStatus $ qeStatus qErr
-      json $ qErrEncoder mRole qErr
+      json $ qErrEncoder role qErr
+
+    logAndThrow role qErr = do
+      logError serverCtx qErr
+      qErrToResp role qErr
 
     resToResp resp = do
       uncurry setHeader jsonHeader
@@ -435,7 +442,7 @@ app isoLevel mRootDir logger pool mode corsCfg enableConsole = do
 
     hookAny GET $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
-      logResult serverCtx (Left qErr) Nothing
+      logError serverCtx qErr
       uncurry setHeader jsonHeader
       lazyBytes $ encode qErr
 
