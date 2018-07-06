@@ -128,7 +128,7 @@ jobs:
   # test cli
   test_cli:
     docker:
-    - image: hasura/graphql-engine-cli-builder:v0.2
+    - image: hasura/graphql-engine-cli-builder:v0.3
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
@@ -157,9 +157,9 @@ jobs:
         command: .circleci/test-cli.sh
 
   # test console
-  test:
+  test_console:
     docker:
-    - image: hasura/graphql-engine-console-builder:v0.2
+    - image: hasura/graphql-engine-console-builder:v0.3
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
@@ -194,6 +194,7 @@ jobs:
     - run:
         name: test console
         command: .circleci/test-console.sh
+
 
 workflows:
   version: 2
