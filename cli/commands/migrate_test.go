@@ -101,7 +101,7 @@ func testMigrateWithDocker(t *testing.T, migrationsDir, executionDir string) {
 }
 
 func TestMigrateCmd(t *testing.T) {
-	endpointURL := os.Getenv("GRAPHQL_ENDPOINT_URL")
+	endpointURL := os.Getenv("HASURA_GRAPHQL_TEST_ENDPOINT")
 	// Create migration Dir
 	migrationsDir, err := ioutil.TempDir("", "")
 	if err != nil {
