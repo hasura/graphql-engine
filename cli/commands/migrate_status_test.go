@@ -10,12 +10,13 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 )
 
-func testMigrateStatus(t *testing.T, endpoint string, migrationsDir string, expectedStatus string) {
-	logger, hook := test.NewNullLogger()
+func testMigrateStatus(t *testing.T, endpoint string, migrationsDir string, expectedStatus *migrate.Status) {
+	logger, _ := test.NewNullLogger()
 	opts := &migrateStatusOptions{
 		EC: &cli.ExecutionContext{
 			Logger:       logger,
@@ -28,11 +29,11 @@ func testMigrateStatus(t *testing.T, endpoint string, migrationsDir string, expe
 		},
 	}
 
-	err := opts.run()
+	status, err := opts.run()
 	if err != nil {
 		t.Fatalf("failed fetching migration status: %v", err)
 	}
-	assert.Equal(t, expectedStatus, hook.LastEntry().Message)
+	assert.Equal(t, expectedStatus, status)
 }
 
 func TestMigrateStatusWithInvalidEndpoint(t *testing.T) {
@@ -49,7 +50,7 @@ func TestMigrateStatusWithInvalidEndpoint(t *testing.T) {
 		},
 	}
 
-	err := opts.run()
+	_, err := opts.run()
 	if err == nil {
 		t.Fatalf("expected err not to be nil")
 	}
