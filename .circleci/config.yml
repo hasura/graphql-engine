@@ -18,7 +18,7 @@ jobs:
           name: Setup - Install docker client and other build dependencies
           command: |
             set -ex
-            apt-get -y update && apt-get install -y make curl git upx
+            apt-get -y update && apt-get install -y make curl git upx netcat
             VER="17.09.0-ce"
             curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
             tar -xz -C /tmp -f /tmp/docker-$VER.tgz
@@ -62,7 +62,7 @@ jobs:
   # build cli
   build_cli:
     docker:
-    - image: hasura/graphql-engine-cli-builder:v0.1
+    - image: hasura/graphql-engine-cli-builder:v0.2
     working_directory: /go/src/github.com/hasura/graphql-engine
     steps:
     - checkout
@@ -95,7 +95,7 @@ jobs:
   # build console - version will be vMAJOR.MINOR for tags and release-v* branches
   build_console:
     docker:
-      - image: hasura/graphql-engine-console-builder:v0.1
+      - image: hasura/graphql-engine-console-builder:v0.2
     working_directory: ~/graphql-engine
     steps:
       - checkout
