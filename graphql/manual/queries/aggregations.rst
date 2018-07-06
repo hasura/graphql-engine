@@ -17,7 +17,7 @@ A view that sums up the number of likes for each article is to be created, using
 
 Add a relationship
 ------------------
-Relationships are generally defined using foreign key constraints. However, you cannot define foreign key constraints on/to views. So, in these cases, we can define a relationship without using a foreign keys as described `here <https://docs.hasura.io/0.15/manual/data/relationships/create-relationships.html>_` (we create an object relationship, ``total_likes``, by mapping ``article``:``id`` -> ``article_like_count``:``article_id``).
+Relationships are generally defined using foreign key constraints. However, you cannot define foreign key constraints on/to views. So, in these cases, we can define a relationship without using a foreign key as described `here <https://docs.hasura.io/0.15/manual/data/relationships/create-relationships.html>_` (we create an object relationship, ``total_likes``, by mapping ``article``:``id`` -> ``article_like_count``:``article_id``).
 
 Query using the relationship
 ----------------------------

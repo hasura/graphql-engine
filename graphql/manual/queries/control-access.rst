@@ -23,7 +23,7 @@ You will need to revoke permission (if already granted) from the source table an
 
 Query the view
 --------------
-You can now query the newly created view like you would a regular table. For e.g. the following query will accesses only the *safe* fields:
+You can now query the newly created view like you would a regular table. For e.g. the following query will access only the *safe* fields:
 
 .. graphiql::
   :query:
