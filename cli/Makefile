@@ -49,7 +49,7 @@ ci-copy-binary:
 # run tests
 .PHONY: test
 test:
-	go test ./...
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" ./...
 
 # generate docs
 .PHONY: docs
