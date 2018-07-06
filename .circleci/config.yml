@@ -31,7 +31,7 @@ jobs:
       - run:
           name: waiting for postgres to be ready
           command: |
-            for i in `seq 1 10`;
+            for i in `seq 1 60`;
             do
               nc -z localhost 5432 && echo Success && exit 0
               echo -n .
@@ -145,7 +145,7 @@ jobs:
     - run:
         name: waiting for postgres to be ready
         command: |
-          for i in `seq 1 10`;
+          for i in `seq 1 60`;
           do
             nc -z localhost 5432 && echo Success && exit 0
             echo -n .
@@ -184,7 +184,7 @@ jobs:
     - run:
         name: waiting for postgres to be ready
         command: |
-          for i in `seq 1 10`;
+          for i in `seq 1 60`;
           do
             nc -z localhost 5432 && echo Success && exit 0
             echo -n .
