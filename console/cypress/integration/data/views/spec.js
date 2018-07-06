@@ -27,7 +27,7 @@ export const Createtable = (name, dict) => {
     `${baseUrl}/data/schema/public/tables/${name}_table_vt/modify`
   );
 
-  validateCT(`${name}_table`, 'success');
+  validateCT(`${name}_table_vt`, 'success');
 };
 
 export const passVCreateTables = () => {
@@ -404,7 +404,7 @@ export const passVDeleteRelationships = () => {
   cy.on('window:alert', str => {
     expect(str === 'Are you sure?').to.be.true;
   });
-  cy.wait(5000);
+  cy.wait(7000);
   validateColumn(
     'author_average_rating_vt',
     ['avg', { name: 'author', columns: ['name'] }],
@@ -418,7 +418,7 @@ export const passVDeleteView = () => {
   cy.on('window:confirm', str => {
     expect(str === 'Are you sure').to.be.true;
   });
-  cy.wait(5000);
+  cy.wait(7000);
   // cy.get('.notification-error');
   validateView('author_average_rating_vt', 'failure');
 };

@@ -12,7 +12,7 @@ const testName = 'perm';
 
 export const savePermission = () => {
   cy.get(getElementFromAlias('Save-permissions-button')).click();
-  cy.wait(2500);
+  cy.wait(7000);
   // Check for success notif
   // cy.get('.notification-success').click();
 };

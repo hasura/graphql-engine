@@ -149,7 +149,7 @@ export const Addcolumnname = name => {
   cy.get(getElementFromAlias('data-type')).select('integer');
 
   cy.get(getElementFromAlias('add-column-button')).click();
-  cy.wait(2500);
+  cy.wait(5000);
   // cy.get('.notification-success').click();
   cy.url().should(
     'eq',
@@ -176,7 +176,7 @@ export const passMTChangeColType = () => {
     .first()
     .select('Text');
   cy.get(getElementFromAlias('save-button')).click();
-  cy.wait(2500);
+  cy.wait(5000);
   // cy.get('.notification-success').click();
   cy.get('button')
     .contains('Close')
@@ -196,7 +196,7 @@ export const passMTDeleteCol = () => {
   cy.on('window:alert', str => {
     expect(str === 'Are you sure you want to delete?').to.be.true;
   });
-  cy.wait(2500);
+  cy.wait(5000);
   // cy.get('.notification-success').click();
   cy.url().should(
     'eq',
