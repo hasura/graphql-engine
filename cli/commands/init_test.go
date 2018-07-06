@@ -8,7 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/util/fake"
 	"github.com/sirupsen/logrus/hooks/test"
 )
 
@@ -25,7 +27,8 @@ func TestInitCmd(t *testing.T) {
 	}{
 		{"only-init-dir", &initOptions{
 			EC: &cli.ExecutionContext{
-				Logger: logger,
+				Logger:  logger,
+				Spinner: spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			},
 			Endpoint:  "",
 			AccessKey: "",
@@ -33,7 +36,8 @@ func TestInitCmd(t *testing.T) {
 		}, nil},
 		{"with-endpoint-flag", &initOptions{
 			EC: &cli.ExecutionContext{
-				Logger: logger,
+				Logger:  logger,
+				Spinner: spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			},
 			Endpoint:  "https://localhost:8080",
 			AccessKey: "",
@@ -43,6 +47,7 @@ func TestInitCmd(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
+			tc.opts.EC.Spinner.Writer = &fake.FakeWriter{}
 			err := tc.opts.EC.Prepare()
 			if err != nil {
 				t.Fatalf("%s: prep failed: %v", tc.name, err)

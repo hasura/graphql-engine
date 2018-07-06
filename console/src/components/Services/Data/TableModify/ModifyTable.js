@@ -270,7 +270,11 @@ const ColumnEditor = ({
         </div>
         {checkExistingForeignKey()}
         <div className="row">
-          <button type="submit" className={`${styles.yellow_button} btn`}>
+          <button
+            type="submit"
+            className={`${styles.yellow_button} btn`}
+            data-test="save-button"
+          >
             Save
           </button>
           {!isPrimaryKey ? (
@@ -281,6 +285,7 @@ const ColumnEditor = ({
                 e.preventDefault();
                 onDelete();
               }}
+              data-test="remove-button"
             >
               Remove
             </button>
@@ -439,6 +444,7 @@ class ModifyTable extends Component {
                   onClick={() => {
                     dispatch({ type: TOGGLE_ACTIVE_COLUMN, column: colName });
                   }}
+                  data-test={`edit-${colName}`}
                 >
                   {btnText}
                 </button>
@@ -538,6 +544,7 @@ class ModifyTable extends Component {
                   type="text"
                   className={`${styles.input} input-sm form-control`}
                   ref={n => (colNameInput = n)}
+                  data-test="column-name"
                 />
                 <select
                   className={`${styles.select} input-sm form-control`}
@@ -576,8 +583,13 @@ class ModifyTable extends Component {
                     styles.defaultInput
                   } input-sm form-control`}
                   ref={n => (colDefaultInput = n)}
+                  data-test="default-value"
                 />
-                <button type="submit" className="btn btn-sm btn-warning">
+                <button
+                  type="submit"
+                  className="btn btn-sm btn-warning"
+                  data-test="add-column-button"
+                >
                   + Add column
                 </button>
               </form>
@@ -593,6 +605,7 @@ class ModifyTable extends Component {
                   dispatch(deleteTableSql(tableName, tableSchema));
                 }
               }}
+              data-test="delete-table"
             >
               Delete table
             </button>

@@ -201,7 +201,11 @@ class FilterQuery extends Component {
             </div>
           </div>
           <div className={`${styles.padd_right} ${styles.clear_fix}`}>
-            <button type="submit" className={`btn ${styles.yellow_button}`}>
+            <button
+              type="submit"
+              className={`btn ${styles.yellow_button}`}
+              data-test="run-query"
+            >
               Run query
             </button>
             {/* <div className={styles.count + ' alert alert-info'}><i>Total <b>{tableName}</b> rows in the database for current query: {count} </i></div> */}

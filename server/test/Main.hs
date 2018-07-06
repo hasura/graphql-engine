@@ -234,7 +234,7 @@ raven_app :: RavenLogger -> PGQ.PGPool -> IO Application
 raven_app rlogger pool =
   do
     _ <- liftIO $ runExceptT $ Q.runTx pool defTxMode resetStateTx
-    let corsCfg = CorsConfig "*" True  -- cors is disabled
+    let corsCfg = CorsConfigG "*" True  -- cors is disabled
     spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
 
 main :: IO ()
@@ -242,7 +242,7 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
   Options rci cp args <- parseArgs
 
   ci <- either ((>> exitFailure) . (putStrLn . connInfoErrModifier))
-    return $ mkConnInfo rci
+    return $ mkConnInfo Nothing rci
 
   pool <- Q.initPGPool ci cp
 

@@ -8,6 +8,7 @@ module Hasura.RQL.Types.Error
        , encodeQErr
        , nonAdminQErrEnc
        , err400
+       , err404
        , err401
        , err500
 
@@ -37,12 +38,12 @@ module Hasura.RQL.Types.Error
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Aeson.Types
-import qualified Database.PG.Query    as Q
+import qualified Database.PG.Query   as Q
 import           Hasura.Prelude
-import           Text.Show            (Show (..))
+import           Text.Show           (Show (..))
 
-import qualified Data.Text            as T
-import qualified Network.HTTP.Types   as N
+import qualified Data.Text           as T
+import qualified Network.HTTP.Types  as N
 
 data Code
   = PermissionDenied

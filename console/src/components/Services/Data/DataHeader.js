@@ -111,7 +111,9 @@ const DataHeader = ({
                   currentLocation.indexOf('sql') !== -1 ? styles.active : ''
                 }
               >
-                <Link to={appPrefix + '/sql'}>SQL</Link>
+                <Link to={appPrefix + '/sql'} data-test="sql-link">
+                  SQL
+                </Link>
               </li>
               {migrationSection}
             </ul>

@@ -8,8 +8,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/commands"
+	"github.com/hasura/graphql-engine/cli/util/fake"
+	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/spf13/viper"
 )
 
@@ -18,7 +21,12 @@ func init() {
 }
 
 func TestPrepare(t *testing.T) {
-	ec := &cli.ExecutionContext{}
+	logger, _ := test.NewNullLogger()
+	ec := &cli.ExecutionContext{
+		Logger:  logger,
+		Spinner: spinner.New(spinner.CharSets[7], 100*time.Millisecond),
+	}
+	ec.Spinner.Writer = &fake.FakeWriter{}
 	err := ec.Prepare()
 	if err != nil {
 		t.Fatalf("prepare failed: %v", err)
@@ -44,7 +52,12 @@ func TestPrepare(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
-	ec := &cli.ExecutionContext{}
+	logger, _ := test.NewNullLogger()
+	ec := &cli.ExecutionContext{
+		Logger:  logger,
+		Spinner: spinner.New(spinner.CharSets[7], 100*time.Millisecond),
+	}
+	ec.Spinner.Writer = &fake.FakeWriter{}
 	ec.ExecutionDirectory = filepath.Join(os.TempDir(), "hasura-gql-tests-"+strconv.Itoa(rand.Intn(1000)))
 	ec.Viper = viper.New()
 
