@@ -19,6 +19,15 @@ refs:
     filters:
       branches:
         only: /^release-v.*/
+  filter_only_dev_branches: &filter_only_dev_branches
+    filters:
+      branches:
+        only: /^dev.*/
+  filter_ignore_branches: &filter_ignore_branches
+    filters:
+      branches:
+        ignore: /.*/
+  
 
 
 version: 2
@@ -40,7 +49,7 @@ jobs:
     - restore_cache:
         keys:
         - server-app-cache-{{ .Branch }}-{{ .Revision }}
-        - server-deps-cache
+        - server-deps-cache-v1
     - *wait_for_postgres
     - run:
         name: test and build server binary
@@ -53,7 +62,7 @@ jobs:
         paths:
         - server/.stack-work
     - save_cache:
-        key: server-deps-cache
+        key: server-deps-cache-v1
         paths:
         - ~/.stack
     - store_artifacts:
@@ -214,4 +223,6 @@ workflows:
         requires:
         - test_and_build_server
         - test_and_build_cli
-    - deploy: *filter_only_release_branches
+    - deploy: 
+        <<: *filter_only_dev_branches
+        <<: *filter_only_vtags
