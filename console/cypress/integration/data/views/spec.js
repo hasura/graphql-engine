@@ -24,7 +24,7 @@ export const Createtable = (name, dict) => {
   cy.wait(7000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${name}_table/modify`
+    `${baseUrl}/data/schema/public/tables/${name}_table_vt/modify`
   );
 
   validateCT(`${name}_table`, 'success');
@@ -51,7 +51,7 @@ export const passVCreateTables = () => {
 };
 
 export const passVCreateViews = () => {
-  createView(`CREATE VIEW author_average_rating AS
+  createView(`CREATE VIEW author_average_rating_vt AS
     SELECT author_table_vt.id, avg(article_table_vt.rating)
     From author_table_vt, article_table_vt
     WHERE author_table_vt.id = article_table_vt.author_id
@@ -64,17 +64,19 @@ export const passTrackTable = () => {
     .last()
     .click();
   cy.wait(7000);
-  cy.get(getElementFromAlias('add-track-table-author_average_rating')).click();
+  cy.get(
+    getElementFromAlias('add-track-table-author_average_rating_vt')
+  ).click();
   cy.wait(7000);
-  cy.get('.notification-success');
-  validateView('author_average_rating', 'success');
+  // cy.get('.notification-error');
+  validateView('author_average_rating_vt', 'success');
 };
 
 export const passViewRoute = () => {
-  cy.get(getElementFromAlias('author_average_rating')).click();
+  cy.get(getElementFromAlias('author_average_rating_vt')).click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/views/author_average_rating/browse`
+    `${baseUrl}/data/schema/public/views/author_average_rating_vt/browse`
   );
 };
 
@@ -364,7 +366,7 @@ export const passModifyView = () => {
 };
 
 export const passVAddManualObjRel = () => {
-  cy.get(getElementFromAlias('author_average_rating')).click();
+  cy.get(getElementFromAlias('author_average_rating_vt')).click();
   cy.wait(2000);
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.wait(2000);
@@ -386,14 +388,14 @@ export const passVAddManualObjRel = () => {
   cy.get(getElementFromAlias('view-add-relationship')).click();
   cy.wait(7000);
   validateColumn(
-    'author_average_rating',
+    'author_average_rating_vt',
     ['avg', { name: 'author', columns: ['name'] }],
     'success'
   );
 };
 
 export const passVDeleteRelationships = () => {
-  cy.get(getElementFromAlias('author_average_rating')).click();
+  cy.get(getElementFromAlias('author_average_rating_vt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get('button')
     .contains('Remove')
@@ -404,7 +406,7 @@ export const passVDeleteRelationships = () => {
   });
   cy.wait(5000);
   validateColumn(
-    'author_average_rating',
+    'author_average_rating_vt',
     ['avg', { name: 'author', columns: ['name'] }],
     'failure'
   );
@@ -417,8 +419,8 @@ export const passVDeleteView = () => {
     expect(str === 'Are you sure').to.be.true;
   });
   cy.wait(5000);
-  cy.get('.notification-success');
-  validateView('author_average_rating', 'failure');
+  // cy.get('.notification-error');
+  validateView('author_average_rating_vt', 'failure');
 };
 
 export const Deletetable = name => {

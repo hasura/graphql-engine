@@ -60,7 +60,7 @@ export const passMTMoveToTable = () => {
 
 export const failMTWithoutColName = () => {
   cy.get(getElementFromAlias('add-column-button')).click();
-  cy.get('.notification-error').click();
+  // cy.get('.notification-error').click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
@@ -72,7 +72,7 @@ export const failMTWithoutColName = () => {
 export const failMTWithoutColType = () => {
   cy.get(getElementFromAlias('column-name')).type('something');
   cy.get(getElementFromAlias('add-column-button')).click();
-  cy.get('.notification-error').click();
+  // cy.get('.notification-error').click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
@@ -86,8 +86,8 @@ export const failMTDuplicateColumns = () => {
   cy.get(getElementFromAlias('data-type')).select('integer');
   cy.get(getElementFromAlias('add-column-button')).click();
   // Check for an alert
-  cy.wait(5500);
-  cy.get('.notification-error').click();
+  cy.wait(2500);
+  // cy.get('.notification-error').click();
   // Check if the route didn't change
   cy.url().should(
     'eq',
@@ -103,8 +103,8 @@ export const Addcolumn = () => {
   cy.get(getElementFromAlias('default-value')).type('{selectall}{del}');
   cy.get(getElementFromAlias('nullable-checkbox')).check();
   cy.get(getElementFromAlias('add-column-button')).click();
-  cy.wait(5500);
-  cy.get('.notification-success').click();
+  cy.wait(2500);
+  // cy.get('.notification-success').click();
   cy.wait(7000);
   cy.url().should(
     'eq',
@@ -119,8 +119,8 @@ export const Addcolumnnullable = () => {
   cy.get(getElementFromAlias('data-type')).select('Text');
   cy.get(getElementFromAlias('nullable-checkbox')).uncheck();
   cy.get(getElementFromAlias('add-column-button')).click();
-  cy.wait(5500);
-  cy.get('.notification-error').click();
+  cy.wait(2500);
+  // cy.get('.notification-error').click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
@@ -134,8 +134,8 @@ export const failMTWrongDefault = () => {
   cy.get(getElementFromAlias('default-value')).type('some');
   cy.get(getElementFromAlias('data-type')).select('Integer');
   cy.get(getElementFromAlias('add-column-button')).click();
-  cy.wait(5500);
-  cy.get('.notification-error').click();
+  cy.wait(2500);
+  // cy.get('.notification-error').click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
@@ -149,8 +149,8 @@ export const Addcolumnname = name => {
   cy.get(getElementFromAlias('data-type')).select('integer');
 
   cy.get(getElementFromAlias('add-column-button')).click();
-  cy.wait(5500);
-  cy.get('.notification-success').click();
+  cy.wait(2500);
+  // cy.get('.notification-success').click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
@@ -176,8 +176,8 @@ export const passMTChangeColType = () => {
     .first()
     .select('Text');
   cy.get(getElementFromAlias('save-button')).click();
-  cy.wait(5500);
-  cy.get('.notification-success').click();
+  cy.wait(2500);
+  // cy.get('.notification-success').click();
   cy.get('button')
     .contains('Close')
     .click();
@@ -196,8 +196,8 @@ export const passMTDeleteCol = () => {
   cy.on('window:alert', str => {
     expect(str === 'Are you sure you want to delete?').to.be.true;
   });
-  cy.wait(5500);
-  cy.get('.notification-success').click();
+  cy.wait(2500);
+  // cy.get('.notification-success').click();
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
@@ -244,7 +244,7 @@ export const setValidationMetaData = () => {
 
 export const Createtable = (name, dict) => {
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
-  cy.get(getElementFromAlias('tableName')).type(`${name}_table`);
+  cy.get(getElementFromAlias('tableName')).type(`${name}_table_mod`);
   const keys = Object.keys(dict).map(k => k);
   const values = Object.keys(dict).map(k => dict[k]);
   for (let i = 0; i < keys.length; i += 1) {
@@ -266,10 +266,10 @@ export const Createtable = (name, dict) => {
   cy.wait(7000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${name}_table/modify`
+    `${baseUrl}/data/schema/public/tables/${name}_table_mod/modify`
   );
 
-  validateCT(`${name}_table`, 'success');
+  validateCT(`${name}_table_mod`, 'success');
 };
 
 export const Createtables = () => {
@@ -287,20 +287,20 @@ export const Createtables = () => {
 
 export const Createview = () => {
   cy.get(getElementFromAlias('sql-link')).click();
-  cy.get('textarea').type(`CREATE VIEW author_average_rating AS
-    SELECT author_table.id, avg(article_table.rating)
-    From author_table, article_table
-    WHERE author_table.id = article_table.author_id
-    GROUP BY author_table.id`);
+  cy.get('textarea').type(`CREATE VIEW author_average_rating_mod AS
+    SELECT author_table_mod.id, avg(article_table.rating)
+    From author_table_mod, article_table_mod
+    WHERE author_table_mod.id = article_table_mod.author_id
+    GROUP BY author_table_mod.id`);
   cy.get(getElementFromAlias('run-sql')).click();
-  validateCT('author_average_rating', 'success');
+  validateCT('author_average_rating_mod', 'success');
 };
 
 export const Checkviewtable = () => {
-  cy.get(getElementFromAlias('author_average_rating')).click();
+  cy.get(getElementFromAlias('author_average_rating_mod')).click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/views/author_average_rating/browse`
+    `${baseUrl}/data/schema/public/views/author_average_rating_mod/browse`
   );
   cy.get(getElementFromAlias('table-modify')).click();
   cy.get(getElementFromAlias('modify-view')).click();
@@ -308,10 +308,10 @@ export const Checkviewtable = () => {
 };
 
 export const Checkviewtabledelete = () => {
-  cy.get(getElementFromAlias('author_average_rating')).click();
+  cy.get(getElementFromAlias('author_average_rating_mod')).click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/views/author_average_rating/browse`
+    `${baseUrl}/data/schema/public/views/author_average_rating_mod/browse`
   );
   cy.get(getElementFromAlias('table-modify')).click();
   cy.get(getElementFromAlias('delete-view')).click();
@@ -321,7 +321,7 @@ export const Checkviewtabledelete = () => {
   });
 
   cy.wait(7000);
-  validateCT('author_average_rating', 'failure');
+  validateCT('author_average_rating_mod', 'failure');
 };
 
 export const Issue = () => {

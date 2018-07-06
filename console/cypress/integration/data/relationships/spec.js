@@ -21,10 +21,10 @@ export const Createtable = (name, dict) => {
   cy.wait(10000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${name}_table/modify`
+    `${baseUrl}/data/schema/public/tables/${name}_table_rt/modify`
   );
 
-  validateCT(`${name}_table`, 'success');
+  validateCT(`${name}_table_rt`, 'success');
 };
 
 export const passRTCreateTables = () => {
@@ -359,7 +359,7 @@ export const failRTAddSuggestedRel = () => {
     .last()
     .click();
   cy.get(getElementFromAlias('obj-rel-save-0')).click();
-  cy.get('.notification-error');
+  // cy.get('.notification-error');
   cy.wait(7000);
   cy.get('input')
     .last()
@@ -367,7 +367,7 @@ export const failRTAddSuggestedRel = () => {
   cy.get('button')
     .contains('Save')
     .click();
-  cy.get('.notification-error');
+  // cy.get('.notification-error');
   cy.wait(10000);
   validateColumn(
     'article_table_rt',
@@ -402,7 +402,7 @@ export const failRTAddSuggestedRel = () => {
     .contains('Save')
     .click();
   cy.wait(7000);
-  cy.get('.notification-error');
+  // cy.get('.notification-error');
   cy.wait(7000);
   cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();

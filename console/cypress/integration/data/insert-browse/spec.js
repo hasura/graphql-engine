@@ -130,7 +130,7 @@ export const failBIWrongDataType = () => {
       // cy.get('[class=notification-title]')
       //   .contains('Insert failed')
       //   .click();
-      cy.get('.notification-error').click();
+      // cy.get('.notification-error').click();
       // Check the default radio of curret column
       cy.get(getElementFromAlias(`typed-input-default-${i}`)).check();
     }
@@ -290,7 +290,7 @@ export const failBINullKeys = () => {
   // Click the Insert Again button.
   cy.get(getElementFromAlias('insert-save-button')).click();
 
-  cy.get('.notification-error').click();
+  // cy.get('.notification-error').click();
   // Wait for insert notifications to disappear
   cy.wait(7000);
   validateInsert(getTableName(0, testName), 20);
@@ -333,7 +333,7 @@ export const failBIUniqueKeys = () => {
     .type('name');
   cy.get(getElementFromAlias('insert-save-button')).click();
 
-  cy.get('.notification-error').click();
+  // cy.get('.notification-error').click();
   cy.wait(7000);
   validateInsert(getTableName(0, testName), 21);
 };
@@ -358,7 +358,7 @@ export const passEditButton = () => {
   cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type('new-text');
   cy.get(getElementFromAlias('save-button')).click();
   // cy.get('h4').contains('Edited!', { timeout: 7000 });
-  cy.get('.notification-success');
+  // cy.get('.notification-error');
   cy.wait(7000);
 };
 
@@ -379,6 +379,6 @@ export const passDeleteRow = () => {
   cy.on('window:confirm', str => {
     expect(str === 'Permanently delete this row?').to.be.true;
   });
-  cy.get('.notification-success');
+  // cy.get('.notification-error');
   cy.wait(14000);
 };

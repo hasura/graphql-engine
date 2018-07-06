@@ -24,7 +24,7 @@ export const failCTWithoutColumns = () => {
   cy.get(getElementFromAlias('table-create')).click();
   //    Check for an error
   // cy.get('div').contains('Column name cannot be empty');
-  cy.get('.notification-error');
+  // cy.get('.notification-error');
   //    Check if the route didn't change
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   //   Validate
@@ -38,7 +38,7 @@ export const failCTWithoutPK = () => {
   //   Click on create
   cy.get(getElementFromAlias('table-create')).click();
   //   Check for an error
-  cy.get('.notification-error');
+  // cy.get('.notification-error');
   //   Check if the route didn't change
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   //   Validate
@@ -100,7 +100,7 @@ export const failCTDuplicateTable = () => {
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
   //  Detect error
-  cy.get('.notification-error');
+  // cy.get('.notification-error');
 };
 
 export const deleteCTTestTable = () => {

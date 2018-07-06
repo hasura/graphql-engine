@@ -12,9 +12,9 @@ const testName = 'perm';
 
 export const savePermission = () => {
   cy.get(getElementFromAlias('Save-permissions-button')).click();
-  cy.wait(5500);
+  cy.wait(2500);
   // Check for success notif
-  cy.get('.notification-success').click();
+  // cy.get('.notification-success').click();
 };
 
 export const permNoCheck = (tableName, query, first) => {
@@ -92,9 +92,9 @@ export const permRemove = (tableName, query) => {
   cy.get(getElementFromAlias(`role0-${query}`)).click();
   // Remove permission
   cy.get(getElementFromAlias('Remove-all-access-button')).click();
-  cy.wait(5500);
+  cy.wait(2500);
   // Check for notif
-  cy.get('.notification-success').click();
+  // cy.get('.notification-success').click();
   cy.wait(5000);
   // Validate
   validatePermission(tableName, 'role0', query, 'custom', 'failure');
