@@ -153,13 +153,9 @@ jobs:
           done
           echo Failed waiting for Postgres && exit 1
     - run:
-        name: start graphql-engine
-        command: |
-          /build/_server_output/graphql-engine --database-url postgres://gql_test@localhost:5432/gql_test serve
-    - run:
         name: test cli
         # TODO: set params for test
-        command: make test
+        command: .circleci/test-cli.sh
 
   # test console
   test:
@@ -197,20 +193,8 @@ jobs:
           done
           echo Failed waiting for Postgres && exit 1
     - run:
-        name: start graphql-engine
-        command: |
-          /build/_server_output/graphql-engine --database-url postgres://gql_test@localhost:5432/gql_test serve
-    - run:
-        name: start cli
-        working_directory: /build/_cli_output
-        command: |
-          hasura-linux-amd64 init --directory gql-test
-          cd gql-test
-          ../hasura-linux-amd64 console --no-browser
-    - run:
         name: test console
-        working_directory: ./console
-        command: make test
+        command: .circleci/test-console.sh
 
 # TODO: update workflows
 workflows:
