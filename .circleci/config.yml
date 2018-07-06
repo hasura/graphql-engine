@@ -154,7 +154,6 @@ jobs:
           echo Failed waiting for Postgres && exit 1
     - run:
         name: test cli
-        # TODO: set params for test
         command: .circleci/test-cli.sh
 
   # test console
@@ -196,43 +195,17 @@ jobs:
         name: test console
         command: .circleci/test-console.sh
 
-# TODO: update workflows
 workflows:
   version: 2
-  # executed for all branches except release-v* and for all tags v*
-  # release jobs are only executed for v* tags
-  build_and_maybe_release:
+  build_and_test:
     jobs:
-      - server: &filter_ignore_release_branches_only_vtags
-          filters:
-            branches:
-              ignore: /^release-v.*/
-            tags:
-              only:  /^v.*/
-      - cli:
-          << : *filter_ignore_release_branches_only_vtags
-          # requires:
-          #   - server
-      - console:
-          << : *filter_ignore_release_branches_only_vtags
-          # requires:
-          #   - cli
-      - github_release:
-          filters: &only_vtags_ignore_branches
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
-          requires:
-            - cli
-      - send_pr:
-          filters: *only_vtags_ignore_branches
-          requires:
-            - server
-  # executed when release-v* branches are updated, to renew console assets
-  update_release:
-    jobs:
-      - console:
-          filters:
-            branches:
-              only: /^release-v.*/
+    - build_test_server
+    - build_cli
+    - build_console
+    - test_cli:
+        requires:
+        - build_test_server
+    - test_console:
+        requires:
+        - build_test_server
+        - build_cli
