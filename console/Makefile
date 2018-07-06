@@ -1,5 +1,5 @@
 export PATH := node_modules/.bin:$(PATH)
-DIST_PATH = ./static/dist
+DIST_PATH ?= ./static/dist
 BUCKET_NAME ?= hasura-graphql-engine
 VERSION ?= $(shell ../scripts/get-version.sh)
 

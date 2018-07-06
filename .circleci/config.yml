@@ -206,6 +206,7 @@ jobs:
         working_directory: console
         command: |
           export VERSION=$(../scripts/get-version-circleci.sh)
+          export DIST_PATH="/build/_console_output"
           make gcloud-cp-stable
           make gcloud-set-metadata
 
