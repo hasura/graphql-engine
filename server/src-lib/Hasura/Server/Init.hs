@@ -75,9 +75,10 @@ parseRawConnInfo =
 connInfoErrModifier :: String -> String
 connInfoErrModifier s = "Fatal Error : " ++ s
 
-mkConnInfo :: RawConnInfo -> Either String Q.ConnInfo
-mkConnInfo (RawConnInfo mHost mPort mUser pass mURL mDB opts) =
-  case (mHost, mPort, mUser, mDB, mURL) of
+mkConnInfo :: Maybe String -> RawConnInfo -> Either String Q.ConnInfo
+mkConnInfo mEnvDbUrl (RawConnInfo mHost mPort mUser pass mURL mDB opts) = do
+  let mFinalDBUrl = ifNothingTakeEnv mURL
+  case (mHost, mPort, mUser, mDB, mFinalDBUrl) of
 
     (Just host, Just port, Just user, Just db, Nothing) ->
       return $ Q.ConnInfo host port user pass db opts
@@ -87,10 +88,12 @@ mkConnInfo (RawConnInfo mHost mPort mUser pass mURL mDB opts) =
     _ -> throwError $ "Invalid options. "
                     ++ "Expecting all database connection params "
                     ++ "(host, port, user, dbname, password) or "
-                    ++ "database-url"
+                    ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
   where
-    invalidUrlMsg = "Invalid database-url. "
+    invalidUrlMsg = "Invalid database-url (HASURA_GRAPHQL_DATABASE_URL). "
                     ++ "Example postgres://foo:bar@example.com:2345/database"
+    ifNothingTakeEnv Nothing = mEnvDbUrl
+    ifNothingTakeEnv t       = t
 
 readIsoLevel :: String -> Either String Q.TxIsolation
 readIsoLevel isoS =
@@ -147,21 +150,22 @@ parseAccessKey = optional $ strOption ( long "access-key" <>
                              help "Secret access key, required to access this instance"
                            )
 
-data CorsConfig
-  = CorsConfig
-  { ccDomain   :: !T.Text
+data CorsConfigG a
+  = CorsConfigG
+  { ccDomain   :: !a
   , ccDisabled :: !Bool
   } deriving (Show, Eq)
 
-parseCorsConfig :: Parser CorsConfig
+type CorsConfigFlags = CorsConfigG (Maybe T.Text)
+type CorsConfig = CorsConfigG T.Text
+
+parseCorsConfig :: Parser CorsConfigFlags
 parseCorsConfig =
-  CorsConfig
-  <$> strOption ( long "cors-domain" <>
+  CorsConfigG
+  <$> optional (strOption ( long "cors-domain" <>
                   metavar "CORS DOMAIN" <>
-                  value "*" <>
-                  showDefault <>
                   help "The domain, including scheme and port, to allow CORS for"
-                )
+                 ))
   <*> switch ( long "disable-cors" <>
                help "Disable CORS handling"
              )
