@@ -1357,9 +1357,5 @@ ol, ul
   .api-tabs .ui.tab {
     padding: 10px
   }
-
-  .graphiql-container .topBarWrap .execute-button-wrap {
-    top: 240px;
-  }
 }
 
