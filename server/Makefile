@@ -34,6 +34,7 @@ ci-binary: $(project).cabal
 
 # assumes this is built in circleci
 ci-image:
+	cp /build/_server_output/ $(build_dir)/$(project)/$(project)/
 	docker create -v /root/ --name dummy alpine:3.4 /bin/true
 	docker cp $(build_dir)/$(project)/$(project) dummy:/root/
 	docker run --rm --volumes-from dummy $(registry)/graphql-engine-packager:$(packager_ver) /build.sh $(project) | tar -x -C packaging/build/rootfs
