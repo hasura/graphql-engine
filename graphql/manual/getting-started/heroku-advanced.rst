@@ -11,40 +11,8 @@ Clone the Hasura GraphQL engine heroku app
 The Hasura app with Heroku buildpack/configuration is available at:
 https://github.com/hasura/graphql-engine-heroku
 
-Change the dyno and postgres configurations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Open ``app.json`` to edit the dyno and postgres addon sizes.
-
-.. code-block:: json
-   :emphasize-lines: 13,14,20
-
-   {
-     "name": "Hasura GraphQL Engine",
-     "description": "Hasura GraphQL Engine <> heroku",
-     "keywords": [
-       "graphql",
-       "heroku",
-       "postgres",
-       "hasura"
-     ],
-     "repository": "https://github.com/hasura/graphql-engine-heroku",
-     "formation": {
-       "web": {
-         "quantity": 1,
-         "size": "free"
-       }
-     },
-     "stack": "container",
-     "addons": [
-       {
-         "plan": "heroku-postgresql:hobby-dev"
-       }
-     ]
-   }
-
-DATABASE_URL settings
-^^^^^^^^^^^^^^^^^^^^^
+DATABASE_URL & other settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Edit the command in the ``Dockerfile`` to change which database Hasura connects to.
 By default, it connects to the primary database in your app which is available at ``DATABASE_URL``.
@@ -109,8 +77,7 @@ Remember to change HEROKU_GIT_REMOTE to your git remote below. In our case: http
 
 .. code-block:: bash
 
-  git init && git add .
-  git commit -am 'first commit'
+  git commit -am 'my first commit'
   git remote add heroku HEROKU_GIT_REMOTE
   git push heroku master
 
