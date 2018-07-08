@@ -65,6 +65,7 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
     initialise pool = do
       currentTime <- getCurrentTime
       res <- runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ initCatalogSafe currentTime
+      res <- runExceptT $ Q.runTx pool defTxMode $ initCatalogSafe currentTime
       either ((>> exitFailure) . (BLC.putStrLn . J.encode)) putStrLn res
 
 
