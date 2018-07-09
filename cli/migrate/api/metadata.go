@@ -20,11 +20,7 @@ func MetadataAPI(c *gin.Context) {
 		return
 	}
 
-	sourceURL, err := url.Parse(sourcePtr.(string))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
-		return
-	}
+	sourceURL := sourcePtr.(url.URL)
 
 	// Get hasuradb url
 	databasePtr, ok := c.Get("dbpath")
@@ -36,7 +32,7 @@ func MetadataAPI(c *gin.Context) {
 	databaseURL := databasePtr.(url.URL)
 
 	// Create new migrate
-	t, err := migrate.New(sourcePtr.(string), databaseURL.String(), false)
+	t, err := migrate.New(sourceURL.String(), databaseURL.String(), false)
 	if err != nil {
 		if strings.HasPrefix(err.Error(), DataAPIError) {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "data_api_error", Message: err.Error()})

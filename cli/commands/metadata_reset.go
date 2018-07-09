@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"net/url"
-
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
@@ -36,14 +34,8 @@ type metadataResetOptions struct {
 }
 
 func (o *metadataResetOptions) run() error {
-	dbURL, err := url.Parse(o.EC.Config.Endpoint)
-	if err != nil {
-		return errors.Wrap(err, "error parsing Endpoint")
-	}
-
-	dbURL.Scheme = "hasuradb"
-	dbURL.User = url.UserPassword("admin", o.EC.Config.AccessKey)
-	err = util.ExecuteMetadata(o.actionType, "file://"+o.EC.MigrationDir, dbURL.String(), o.EC.ExecutionDirectory)
+	dbURL := util.GetDataPath(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey)
+	err := util.ExecuteMetadata(o.actionType, "file://"+o.EC.MigrationDir, dbURL, o.EC.ExecutionDirectory)
 	if err != nil {
 		return errors.Wrap(err, "Cannot reset metadata")
 	}

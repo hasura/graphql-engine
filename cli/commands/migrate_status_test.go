@@ -2,6 +2,7 @@ package commands
 
 import (
 	"math/rand"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -15,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testMigrateStatus(t *testing.T, endpoint string, migrationsDir string, expectedStatus *migrate.Status) {
+func testMigrateStatus(t *testing.T, endpoint *url.URL, migrationsDir string, expectedStatus *migrate.Status) {
 	logger, _ := test.NewNullLogger()
 	opts := &migrateStatusOptions{
 		EC: &cli.ExecutionContext{
@@ -23,8 +24,9 @@ func testMigrateStatus(t *testing.T, endpoint string, migrationsDir string, expe
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: migrationsDir,
 			Config: &cli.HasuraGraphQLConfig{
-				Endpoint:  endpoint,
-				AccessKey: "",
+				Endpoint:       endpoint.String(),
+				AccessKey:      "",
+				ParsedEndpoint: endpoint,
 			},
 		},
 	}
@@ -44,8 +46,9 @@ func TestMigrateStatusWithInvalidEndpoint(t *testing.T) {
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
 			Config: &cli.HasuraGraphQLConfig{
-				Endpoint:  ":",
-				AccessKey: "",
+				Endpoint:       ":",
+				AccessKey:      "",
+				ParsedEndpoint: &url.URL{},
 			},
 		},
 	}

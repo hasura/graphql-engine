@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"net/url"
 	"strconv"
 
 	"github.com/hasura/graphql-engine/cli"
@@ -47,15 +46,10 @@ func (o *migrateApplyOptions) run() error {
 		return errors.Wrap(err, "error validating flags")
 	}
 
-	dbURL, err := url.Parse(o.EC.Config.Endpoint)
-	if err != nil {
-		return errors.Wrap(err, "error parsing endpoint")
-	}
+	dbURL := util.GetDataPath(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey)
+	sourceURL := util.GetFilePath(o.EC.MigrationDir)
 
-	dbURL.Scheme = "hasuradb"
-	dbURL.User = url.UserPassword("admin", o.EC.Config.AccessKey)
-
-	err = util.ExecuteMigration(migrationType, "file://"+o.EC.MigrationDir, dbURL.String(), step)
+	err = util.ExecuteMigration(migrationType, sourceURL, dbURL, step)
 	if err != nil {
 		if err == migrate.ErrNoChange {
 			o.EC.Logger.Info("nothing to apply")

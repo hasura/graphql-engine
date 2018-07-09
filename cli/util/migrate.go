@@ -4,12 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"path/filepath"
+	"runtime"
 	"strconv"
 
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
+	_ "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
+	_ "github.com/hasura/graphql-engine/cli/migrate/source/file"
 	"github.com/pkg/errors"
 )
 
@@ -25,10 +29,10 @@ func GetValidStepFromString(stepString string) (step int64, err error) {
 	return step, nil
 }
 
-func ExecuteMigration(cmd, dir, db string, stepOrVersion int64) error {
+func ExecuteMigration(cmd string, dir, db *url.URL, stepOrVersion int64) error {
 	var err error
 
-	t, err := migrate.New(dir, db, true)
+	t, err := migrate.New(dir.String(), db.String(), true)
 	if err != nil {
 		return errors.Wrap(err, "cannot create migrate instance")
 	}
@@ -54,10 +58,10 @@ func ExecuteMigration(cmd, dir, db string, stepOrVersion int64) error {
 	return err
 }
 
-func ExecuteMetadata(cmd, dir, db, metadata string) error {
+func ExecuteMetadata(cmd, dir string, db *url.URL, metadata string) error {
 	var err error
 
-	t, err := migrate.New(dir, db, true)
+	t, err := migrate.New(dir, db.String(), true)
 	if err != nil {
 		return errors.Wrap(err, "cannot create migrate instance")
 	}
@@ -108,10 +112,10 @@ func ExecuteMetadata(cmd, dir, db, metadata string) error {
 	return nil
 }
 
-func ExecuteStatus(dir, db string) (*migrate.Status, error) {
+func ExecuteStatus(dir string, db *url.URL) (*migrate.Status, error) {
 	var err error
 
-	t, err := migrate.New(dir, db, true)
+	t, err := migrate.New(dir, db.String(), true)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create migrate instance")
 	}
@@ -121,4 +125,36 @@ func ExecuteStatus(dir, db string) (*migrate.Status, error) {
 		return nil, err
 	}
 	return status, nil
+}
+
+func GetDataPath(nurl *url.URL, accessKey string) *url.URL {
+	host := &url.URL{
+		Scheme: "hasuradb",
+		User:   url.UserPassword("admin", accessKey),
+		Host:   nurl.Host,
+		Path:   nurl.Path,
+	}
+	q := nurl.Query()
+	// Set sslmode in query
+	switch scheme := nurl.Scheme; scheme {
+	case "https":
+		q.Set("sslmode", "enable")
+	default:
+		q.Set("sslmode", "disable")
+	}
+	host.RawQuery = q.Encode()
+	return host
+}
+
+func GetFilePath(dir string) *url.URL {
+	host := &url.URL{
+		Scheme: "file",
+		Path:   dir,
+	}
+
+	// Add Prefix / to path if runtime.GOOS equals to windows
+	if runtime.GOOS == "windows" {
+		host.Path = "/" + host.Path
+	}
+	return host
 }

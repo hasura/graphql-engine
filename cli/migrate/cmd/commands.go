@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -22,6 +23,9 @@ var ext = []string{sqlFile, yamlFile}
 
 func DeleteCmd(dir string, timestamp int64) error {
 	count := 0
+	if runtime.GOOS == "windows" {
+		dir = strings.TrimPrefix(dir, "/")
+	}
 	fileName := fmt.Sprintf("%v_", timestamp)
 	// scan directory
 	files, err := ioutil.ReadDir(dir)
@@ -48,6 +52,9 @@ func DeleteCmd(dir string, timestamp int64) error {
 }
 
 func CreateCmd(dir string, timestamp int64, name string, options ...interface{}) error {
+	if runtime.GOOS == "windows" {
+		dir = strings.TrimPrefix(dir, "/")
+	}
 	fileName := fmt.Sprintf("%v_%v.", timestamp, name)
 	base := filepath.Join(dir, fileName)
 	err := os.MkdirAll(dir, os.ModePerm)

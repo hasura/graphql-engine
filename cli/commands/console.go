@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"path/filepath"
-	"runtime"
 	"sync"
 
 	"github.com/fatih/color"
@@ -86,12 +84,7 @@ func (o *consoleOptions) run() error {
 		r,
 	}
 
-	u, err := url.Parse(o.EC.Config.Endpoint)
-	if err != nil {
-		return errors.Wrap(err, "cannot parse endpoint as url")
-	}
-
-	router.setRoutes(u.Host, o.EC.Config.AccessKey, o.EC.MigrationDir)
+	router.setRoutes(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.MigrationDir)
 
 	if o.EC.Version == nil {
 		return errors.New("cannot validate version, object is nil")
@@ -105,7 +98,7 @@ func (o *consoleOptions) run() error {
 		"apiHost":        "http://" + o.Address,
 		"apiPort":        o.APIPort,
 		"cliVersion":     o.EC.Version.GetCLIVersion(),
-		"dataApiUrl":     o.EC.Config.Endpoint,
+		"dataApiUrl":     o.EC.Config.ParsedEndpoint.String(),
 		"dataApiVersion": "",
 		"accessKey":      o.EC.Config.AccessKey,
 		"assetsVersion":  consoleAssetsVersion,
@@ -158,14 +151,14 @@ type consoleRouter struct {
 	*gin.Engine
 }
 
-func (router *consoleRouter) setRoutes(host, accessKey, migrationDir string) {
+func (router *consoleRouter) setRoutes(nurl *url.URL, accessKey, migrationDir string) {
 	apis := router.Group("/apis")
 	{
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
 		{
 			migrateAPIs.Use(setFilePath(migrationDir))
-			migrateAPIs.Use(setDataPath(host, accessKey))
+			migrateAPIs.Use(setDataPath(nurl, accessKey))
 			settingsAPIs := migrateAPIs.Group("/settings")
 			{
 				settingsAPIs.Any("", api.SettingsAPI)
@@ -176,19 +169,16 @@ func (router *consoleRouter) setRoutes(host, accessKey, migrationDir string) {
 		metadataAPIs := apis.Group("/metadata")
 		{
 			metadataAPIs.Use(setFilePath(migrationDir))
-			metadataAPIs.Use(setDataPath(host, accessKey))
+			metadataAPIs.Use(setDataPath(nurl, accessKey))
 			metadataAPIs.Any("", api.MetadataAPI)
 		}
 	}
 }
 
-func setDataPath(hostName, accessKey string) gin.HandlerFunc {
+func setDataPath(nurl *url.URL, accessKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host := url.URL{
-			Scheme: "hasuradb",
-			User:   url.UserPassword("admin", accessKey),
-			Host:   hostName,
-		}
+		host := util.GetDataPath(nurl, accessKey)
+
 		c.Set("dbpath", host)
 		c.Next()
 	}
@@ -196,11 +186,8 @@ func setDataPath(hostName, accessKey string) gin.HandlerFunc {
 
 func setFilePath(dir string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if runtime.GOOS == "windows" {
-			c.Set("filedir", "file:///"+filepath.Clean(dir))
-		} else {
-			c.Set("filedir", "file://"+filepath.Clean(dir))
-		}
+		host := util.GetFilePath(dir)
+		c.Set("filedir", host)
 		c.Next()
 	}
 }

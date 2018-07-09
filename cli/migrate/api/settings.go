@@ -21,6 +21,8 @@ func SettingsAPI(c *gin.Context) {
 		return
 	}
 
+	sourceURL := sourcePtr.(url.URL)
+
 	// Get hasuradb url
 	databasePtr, ok := c.Get("dbpath")
 	if !ok {
@@ -31,7 +33,7 @@ func SettingsAPI(c *gin.Context) {
 	databaseURL := databasePtr.(url.URL)
 
 	// Create new migrate
-	t, err := migrate.New(sourcePtr.(string), databaseURL.String(), false)
+	t, err := migrate.New(sourceURL.String(), databaseURL.String(), false)
 	if err != nil {
 		if strings.HasPrefix(err.Error(), DataAPIError) {
 			c.JSON(500, &Response{Code: "data_api_error", Message: err.Error()})

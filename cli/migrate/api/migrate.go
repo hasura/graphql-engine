@@ -3,7 +3,6 @@ package api
 import (
 	"net/http"
 	"net/url"
-	"runtime"
 	"strings"
 	"time"
 
@@ -43,16 +42,11 @@ func MigrateAPI(c *gin.Context) {
 	}
 
 	// Convert to url.URL
-	databaseURL := databasePtr.(url.URL)
-
-	sourceURL, err := url.Parse(sourcePtr.(string))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
-		return
-	}
+	databaseURL := databasePtr.(*url.URL)
+	sourceURL := sourcePtr.(url.URL)
 
 	// Create new migrate
-	t, err := migrate.New(sourcePtr.(string), databaseURL.String(), false)
+	t, err := migrate.New(sourceURL.String(), databaseURL.String(), false)
 	if err != nil {
 		if strings.HasPrefix(err.Error(), DataAPIError) {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "data_api_error", Message: err.Error()})
@@ -74,16 +68,10 @@ func MigrateAPI(c *gin.Context) {
 		}
 
 		startTime := time.Now()
-		// Conver to Millisecond
+		// Convert to Millisecond
 		timestamp := startTime.UnixNano() / int64(time.Millisecond)
-		var dirPtr string
-		if runtime.GOOS == "windows" {
-			dirPtr = strings.Trim(sourceURL.Path, "/")
-		} else {
-			dirPtr = "/" + strings.Trim(sourceURL.Path, "/") + "/"
-		}
 
-		err = cmd.CreateCmd(dirPtr, timestamp, request.Name, request.Up)
+		err = cmd.CreateCmd(sourceURL.Path, timestamp, request.Name, request.Up)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
 			return
@@ -92,7 +80,7 @@ func MigrateAPI(c *gin.Context) {
 		// Rescan file system
 		err = t.ReScan()
 		if err != nil {
-			deleteErr := cmd.DeleteCmd(dirPtr, timestamp)
+			deleteErr := cmd.DeleteCmd(sourceURL.Path, timestamp)
 			if deleteErr != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "delete_file_error", Message: deleteErr.Error()})
 				return
@@ -102,7 +90,7 @@ func MigrateAPI(c *gin.Context) {
 		}
 
 		if err = t.Migrate(uint64(timestamp), "up"); err != nil {
-			deleteErr := cmd.DeleteCmd(dirPtr, timestamp)
+			deleteErr := cmd.DeleteCmd(sourceURL.Path, timestamp)
 			if deleteErr != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "delete_file_error", Message: deleteErr.Error()})
 				return
