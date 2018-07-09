@@ -58,7 +58,7 @@ const requestAction = (
                   statusCode: response.status,
                 });
               }
-              if (response.status === 401) {
+              if (msg.code && msg.code === 'access-denied') {
                 dispatch({
                   type: UPDATE_DATA_HEADERS,
                   data: {
