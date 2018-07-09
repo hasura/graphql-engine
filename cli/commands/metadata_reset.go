@@ -2,7 +2,6 @@ package commands
 
 import (
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -34,9 +33,9 @@ type metadataResetOptions struct {
 }
 
 func (o *metadataResetOptions) run() error {
-	dbURL := util.GetDataPath(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey)
-	fileURL := util.GetFilePath(o.EC.MigrationDir)
-	err := util.ExecuteMetadata(o.actionType, fileURL, dbURL, o.EC.ExecutionDirectory)
+	dbURL := getDataPath(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey)
+	fileURL := getFilePath(o.EC.MigrationDir)
+	err := executeMetadata(o.actionType, fileURL, dbURL, o.EC.ExecutionDirectory)
 	if err != nil {
 		return errors.Wrap(err, "Cannot reset metadata")
 	}

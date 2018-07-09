@@ -177,7 +177,7 @@ func (router *consoleRouter) setRoutes(nurl *url.URL, accessKey, migrationDir st
 
 func setDataPath(nurl *url.URL, accessKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host := util.GetDataPath(nurl, accessKey)
+		host := getDataPath(nurl, accessKey)
 
 		c.Set("dbpath", host)
 		c.Next()
@@ -186,7 +186,7 @@ func setDataPath(nurl *url.URL, accessKey string) gin.HandlerFunc {
 
 func setFilePath(dir string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host := util.GetFilePath(dir)
+		host := getFilePath(dir)
 		c.Set("filedir", host)
 		c.Next()
 	}

@@ -5,7 +5,6 @@ import (
 
 	"github.com/hasura/graphql-engine/cli"
 	migrate "github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -46,10 +45,10 @@ func (o *migrateApplyOptions) run() error {
 		return errors.Wrap(err, "error validating flags")
 	}
 
-	dbURL := util.GetDataPath(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey)
-	sourceURL := util.GetFilePath(o.EC.MigrationDir)
+	dbURL := getDataPath(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey)
+	sourceURL := getFilePath(o.EC.MigrationDir)
 
-	err = util.ExecuteMigration(migrationType, sourceURL, dbURL, step)
+	err = executeMigration(migrationType, sourceURL, dbURL, step)
 	if err != nil {
 		if err == migrate.ErrNoChange {
 			o.EC.Logger.Info("nothing to apply")

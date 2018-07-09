@@ -38,8 +38,9 @@ type migrateStatusOptions struct {
 }
 
 func (o *migrateStatusOptions) run() (*migrate.Status, error) {
-	dbURL := util.GetDataPath(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey)
-	status, err := util.ExecuteStatus("file://"+o.EC.MigrationDir, dbURL)
+	dbURL := getDataPath(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey)
+	fileURL := getFilePath(o.EC.MigrationDir)
+	status, err := executeStatus(fileURL, dbURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch migrate status")
 	}

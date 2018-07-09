@@ -2,7 +2,6 @@ package commands
 
 import (
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +32,7 @@ type metadataExportOptions struct {
 }
 
 func (o *metadataExportOptions) run() error {
-	dbURL := util.GetDataPath(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey)
-	fileURL := util.GetFilePath(o.EC.MigrationDir)
-	return util.ExecuteMetadata(o.actionType, fileURL, dbURL, o.EC.ExecutionDirectory)
+	dbURL := getDataPath(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey)
+	fileURL := getFilePath(o.EC.MigrationDir)
+	return executeMetadata(o.actionType, fileURL, dbURL, o.EC.ExecutionDirectory)
 }
