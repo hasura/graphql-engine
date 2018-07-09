@@ -1,4 +1,4 @@
-export const baseUrl = Cypress.env('BASE_URL');
+export const baseUrl = Cypress.config('baseUrl');
 export const dataTypes = [
   'serial',
   'bigserial',

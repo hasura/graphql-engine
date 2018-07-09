@@ -108,17 +108,17 @@ func ExecuteMetadata(cmd, dir, db, metadata string) error {
 	return nil
 }
 
-func ExecuteStatus(dir, db string) (string, error) {
+func ExecuteStatus(dir, db string) (*migrate.Status, error) {
 	var err error
 
 	t, err := migrate.New(dir, db, true)
 	if err != nil {
-		return "", errors.Wrap(err, "cannot create migrate instance")
+		return nil, errors.Wrap(err, "cannot create migrate instance")
 	}
 
 	status, err := t.GetStatus()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return status.String(), nil
+	return status, nil
 }
