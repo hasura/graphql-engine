@@ -27,7 +27,7 @@ You should see the Hasura GraphQL engine landing page!
 .. image:: ../../../img/graphql/manual/getting-started/heroku-app-deployed.png
 
 Step 2: Download the Hasura CLI
-------------------------------------------------------
+-------------------------------
 
 Follow the instructions to download the Hasura CLI.
 
@@ -72,23 +72,22 @@ Follow the instructions to download the Hasura CLI.
       **Note:** Please run the installer as Administrator to avoid PATH update errors. If you're still
       getting a `command not found` error after installing Hasura, please restart Gitbash.
 
+Step 3: Open the console
+------------------------
 
+Visit `https://graphql-on-postgres.herokuapp.com <https://graphql-on-postgres.herokuapp.com>`_ (Please note to replace ``graphql-on-postgres`` with your app name) and you should see the page below.
 
-Step 3: Setup a Hasura project and open the console
----------------------------------------------------
+.. image:: ../../../img/graphql/manual/getting-started/hasura-graphql-console.png
+  :alt: Heroku installation success
 
-Run the following commands which will result in having the Hasura console up:
+Step 4: Secure your endpoint - (recommended)
+--------------------------------------------
 
-.. code-block:: none
+By default, the GraphQL endpoints and the console interface has open permissions and is accessible to everyone. You can secure this by adding an ``HASURA_GRAPHQL_ACCESS_KEY`` environment variable.
 
-   hasura init --directory my-project --endpoint https://YOUR_HEROKU_APP.herokuapp.com/
-   cd my-project
-   hasura console
+Under Manage your app, click on ``Settings`` tab and add a config var like the example below
 
-Your browser window should open up automatically at http://localhost:9695 with your Hasura console pointing to the
-Heroku app where Hasura GraphQL engine is running!
-
-.. image:: ../../../img/graphql/manual/getting-started/console.png
+.. image:: ../../../img/graphql/manual/getting-started/heroku-env.png
 
 Next: Make your first GraphQL query!
 ------------------------------------

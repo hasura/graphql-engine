@@ -60,6 +60,7 @@ By default, it connects to the primary database in your app which is available a
        --database-url $DATABASE_URL \
        serve \
        --server-port $PORT
+       --enable-console
 
 
 Read about more configuration options :doc:`here<../deployment/options>`.
@@ -116,12 +117,24 @@ Remember to change HEROKU_GIT_REMOTE to your git remote below. In our case: http
 
 Visit `https://graphql-on-postgres.herokuapp.com <https://graphql-on-postgres.herokuapp.com>`_ (Please note to replace ``graphql-on-postgres`` with your app name) and you should see the page below.
 
-.. image:: ../../../img/graphql/manual/getting-started/InstallSuccess.jpg
+.. image:: ../../../img/graphql/manual/getting-started/hasura-graphql-console.png
   :alt: Heroku installation success
+
+Step 4: Secure your endpoint
+----------------------------
+
+By default, the GraphQL endpoints and the console interface has open permissions and is accessible to everyone. You can secure this by adding an ``HASURA_GRAPHQL_ACCESS_KEY`` environment variable.
+
+Under Manage your app, click on ``Settings`` tab and add a config var like the example below
+
+.. image:: ../../../img/graphql/manual/getting-started/heroku-env.png
+
+Now that we have Hasura and postgres running, let's open up the Hasura console and start making GraphQL queries!
 
 Initliase a Hasura project
 --------------------------
-Now that we have Hasura and postgres running, let's open up the Hasura console and start making GraphQL queries!
+
+The Hasura console served by GraphQL Engine doesn't support migrations. You will need to install the CLI to manage migrations locally.
 
 Install the Hasura CLI
 ^^^^^^^^^^^^^^^^^^^^^^
