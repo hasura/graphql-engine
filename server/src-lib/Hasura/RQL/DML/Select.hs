@@ -404,9 +404,10 @@ mkJoinCond annRel =
 --
 --     { "col1" : v1, "col2" : v2 }
 
-mkInnerSelExtr :: (FieldName, AnnFld) -> (T.Text, S.SQLExp)
+mkInnerSelExtr :: (FieldName, AnnFld) -> S.Extractor
 mkInnerSelExtr (alias, annFld) =
-  (getFieldNameTxt alias, colExp)
+  S.mkAliasedExtrFromExp colExp $
+  Just alias
   where
     colExp = case annFld of
       FCol (pgCol, _) -> S.mkQIdenExp (TableName "r")  pgCol
@@ -420,20 +421,18 @@ mkLJCol (RelName rTxt) (PGCol cTxt) =
 -- | Generates
 --
 --   IF (r.__r_col IS NULL) THEN 'null' ELSE row_to_json(..)
-mkObjRelExtr :: PGCol -> RelName -> [(T.Text, S.SQLExp)] -> S.Extractor
+mkObjRelExtr :: PGCol -> RelName -> [S.Extractor] -> S.Extractor
 mkObjRelExtr compCol relName flds =
   let idCol   = S.mkQIdenExp (TableName "r") compCol
       rowExp  = S.mkRowExp flds
-      -- objAgg  = S.SEFnApp "row_to_json" [rowExp] Nothing
-      condExp = S.SECond (S.BENull idCol) (S.SELit "null") rowExp
+      objAgg  = S.SEFnApp "row_to_json" [rowExp] Nothing
+      condExp = S.SECond (S.BENull idCol) (S.SELit "null") objAgg
   in S.mkAliasedExtrFromExp condExp $ Just relName
 
 -- | Generates
 --
 --   IF (first(r.__r_col) IS NULL) THEN '[]' ELSE json_agg(..)
-mkArrRelExtr
-  :: (Maybe S.OrderByExp) -> PGCol
-  -> RelName -> [(T.Text, S.SQLExp)] -> S.Extractor
+mkArrRelExtr :: (Maybe S.OrderByExp) -> PGCol -> RelName -> [S.Extractor] -> S.Extractor
 mkArrRelExtr mOb compCol relName flds =
   let refCol  = S.SEFnApp "hdb_catalog.first"
                 [ S.mkQIdenExp (TableName "r") compCol ] Nothing
