@@ -342,7 +342,10 @@ const AddRelationship = ({
   if (suggestedRelationshipsArray.length < 1) {
     return (
       <div className={`${styles.remove_margin_bottom} form-group`}>
-        <label> You have no possible relationships that can be added </label>
+        <label>
+          {' '}
+          You have no new relationships that can be added. Add a foreign key{' '}
+        </label>
       </div>
     );
   }

@@ -469,6 +469,7 @@ class AddTable extends Component {
             <input
               type="text"
               data-test="tableName"
+              placeholder="table_name"
               className={`${styles.tableNameInput} form-control`}
               onChange={e => {
                 dispatch(setTableName(e.target.value));

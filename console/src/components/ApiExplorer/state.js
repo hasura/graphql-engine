@@ -27,7 +27,7 @@ dataApisContent.push({
   details: {
     title: 'GraphQL API',
     description:
-      'Hasura provides GraphQL APIs which can be used to perform CRUD operations on the tables that you create',
+      'GraphQL API for CRUD operations on tables/views in your database',
     category: 'data',
   },
   request: {
