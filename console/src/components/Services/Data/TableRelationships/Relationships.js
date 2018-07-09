@@ -45,6 +45,7 @@ const getObjArrayRelationshipList = relationships => {
 
 /* This function sets the styling to the way the relationship looks, for eg: id -> user::user_id */
 const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
+  const finalRTable = rTable.name ? rTable.name : rTable;
   const getGrayText = value => <i>{value}</i>;
   return isObjRel ? (
     <span>
@@ -52,7 +53,7 @@ const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
     </span>
   ) : (
     <span>
-      &nbsp;{rTable.name} :: {rcol}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{getGrayText(
+      &nbsp;{finalRTable} :: {rcol}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{getGrayText(
         lcol
       )}
     </span>
@@ -153,7 +154,10 @@ const suggestedRelationships = (tableName, allSchemas) => {
           let currRCol = null;
 
           if (relDef.foreign_key_constraint_on) {
-            currTable = relDef.foreign_key_constraint_on.table.name;
+            const tempTable = relDef.foreign_key_constraint_on.table;
+            currTable = tempTable.name
+              ? relDef.foreign_key_constraint_on.table.name
+              : tempTable;
             currRCol = relDef.foreign_key_constraint_on.column;
           } else {
             currTable = relDef.manual_configuration.remote_table;
@@ -342,7 +346,10 @@ const AddRelationship = ({
   if (suggestedRelationshipsArray.length < 1) {
     return (
       <div className={`${styles.remove_margin_bottom} form-group`}>
-        <label> You have no possible relationships that can be added </label>
+        <label>
+          {' '}
+          You have no new relationships that can be added. Add a foreign key{' '}
+        </label>
       </div>
     );
   }

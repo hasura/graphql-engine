@@ -1,6 +1,6 @@
 import React from 'react';
 import AceEditor from 'react-ace';
-import { showNotification } from '../../App/Actions';
+import { showNotification, showTempNotification } from '../../App/Actions';
 import { notifExpand, notifMsg } from '../../App/Actions';
 
 const styles = require('./TableCommon/Table.scss');
@@ -128,6 +128,19 @@ const showSuccessNotification = (title, message) => {
   };
 };
 
+const showTempErrorNotification = (title, message) => {
+  return dispatch => {
+    dispatch(
+      showTempNotification({
+        level: 'error',
+        title,
+        message: message ? message : null,
+        autoDismiss: 3,
+      })
+    );
+  };
+};
+
 const showInfoNotification = title => {
   return dispatch => {
     dispatch(
@@ -139,4 +152,9 @@ const showInfoNotification = title => {
   };
 };
 
-export { showErrorNotification, showSuccessNotification, showInfoNotification };
+export {
+  showErrorNotification,
+  showSuccessNotification,
+  showInfoNotification,
+  showTempErrorNotification,
+};

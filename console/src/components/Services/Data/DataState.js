@@ -110,6 +110,8 @@ const defaultState = {
   untrackedRelations: [],
   schemaList: ['public'],
   currentSchema: 'public',
+  accessKeyError: false,
+  dataHeaders: { 'Content-Type': 'application/json' },
 };
 
 export default defaultState;
