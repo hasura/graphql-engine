@@ -1,21 +1,18 @@
 package commands
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/url"
-	"path/filepath"
 	"runtime"
 	"strings"
 
-	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
 	_ "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	_ "github.com/hasura/graphql-engine/cli/migrate/source/file"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -46,13 +43,18 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return migrateCmd
 }
 
-func executeMigration(cmd string, dir, db *url.URL, stepOrVersion int64) error {
-	var err error
-
-	t, err := migrate.New(dir.String(), db.String(), true)
+func newMigrate(dir string, db *url.URL, accessKey string, logger *logrus.Logger) (*migrate.Migrate, error) {
+	dbURL := getDataPath(db, accessKey)
+	fileURL := getFilePath(dir)
+	t, err := migrate.New(fileURL.String(), dbURL.String(), true, logger)
 	if err != nil {
-		return errors.Wrap(err, "cannot create migrate instance")
+		return nil, errors.Wrap(err, "cannot create migrate instance")
 	}
+	return t, nil
+}
+
+func executeMigration(cmd string, t *migrate.Migrate, stepOrVersion int64) error {
+	var err error
 
 	switch cmd {
 	case "up":
@@ -75,68 +77,7 @@ func executeMigration(cmd string, dir, db *url.URL, stepOrVersion int64) error {
 	return err
 }
 
-func executeMetadata(cmd string, dir, db *url.URL, metadata string) error {
-	var err error
-
-	t, err := migrate.New(dir.String(), db.String(), true)
-	if err != nil {
-		return errors.Wrap(err, "cannot create migrate instance")
-	}
-
-	switch cmd {
-	case "export":
-		metaData, err := t.ExportMetadata()
-		if err != nil {
-			return errors.Wrap(err, "Cannot export metadata")
-		}
-
-		t, err := json.Marshal(metaData)
-		if err != nil {
-			return errors.Wrap(err, "Cannot Marshal metadata")
-		}
-
-		data, err := yaml.JSONToYAML(t)
-		if err != nil {
-			return err
-		}
-
-		err = ioutil.WriteFile(filepath.Join(metadata, "metadata.yaml"), data, 0644)
-		if err != nil {
-			return errors.Wrap(err, "cannot save metadata")
-		}
-	case "reset":
-		err := t.ResetMetadata()
-		if err != nil {
-			return errors.Wrap(err, "Cannot reset Metadata")
-		}
-	case "apply":
-		data, err := ioutil.ReadFile(filepath.Join(metadata, "metadata.yaml"))
-		if err != nil {
-			return errors.Wrap(err, "cannot read metadata file")
-		}
-
-		var q interface{}
-		err = yaml.Unmarshal(data, &q)
-		if err != nil {
-			return errors.Wrap(err, "cannot parse metadata file")
-		}
-
-		err = t.ApplyMetadata(q)
-		if err != nil {
-			return errors.Wrap(err, "cannot apply metadata on the database")
-		}
-	}
-	return nil
-}
-
-func executeStatus(dir, db *url.URL) (*migrate.Status, error) {
-	var err error
-
-	t, err := migrate.New(dir.String(), db.String(), true)
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot create migrate instance")
-	}
-
+func executeStatus(t *migrate.Migrate) (*migrate.Status, error) {
 	status, err := t.GetStatus()
 	if err != nil {
 		return nil, err

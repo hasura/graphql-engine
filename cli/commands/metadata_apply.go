@@ -32,7 +32,9 @@ type metadataApplyOptions struct {
 }
 
 func (o *metadataApplyOptions) run() error {
-	dbURL := getDataPath(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey)
-	fileURL := getFilePath(o.EC.MigrationDir)
-	return executeMetadata(o.actionType, fileURL, dbURL, o.EC.ExecutionDirectory)
+	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.Logger)
+	if err != nil {
+		return err
+	}
+	return executeMetadata(o.actionType, migrateDrv, o.EC.ExecutionDirectory)
 }

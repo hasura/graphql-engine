@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/sirupsen/logrus"
 )
 
 type SettingReqeust struct {
@@ -32,8 +33,15 @@ func SettingsAPI(c *gin.Context) {
 	// Convert to url.URL
 	databaseURL := databasePtr.(*url.URL)
 
+	// Get Logger
+	loggerPtr, ok := c.Get("logger")
+	if !ok {
+		return
+	}
+	logger := loggerPtr.(*logrus.Logger)
+
 	// Create new migrate
-	t, err := migrate.New(sourceURL.String(), databaseURL.String(), false)
+	t, err := migrate.New(sourceURL.String(), databaseURL.String(), false, logger)
 	if err != nil {
 		if strings.HasPrefix(err.Error(), DataAPIError) {
 			c.JSON(500, &Response{Code: "data_api_error", Message: err.Error()})

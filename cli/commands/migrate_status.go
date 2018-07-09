@@ -38,9 +38,11 @@ type migrateStatusOptions struct {
 }
 
 func (o *migrateStatusOptions) run() (*migrate.Status, error) {
-	dbURL := getDataPath(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey)
-	fileURL := getFilePath(o.EC.MigrationDir)
-	status, err := executeStatus(fileURL, dbURL)
+	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.Logger)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot create migrate instance")
+	}
+	status, err := executeStatus(migrateDrv)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch migrate status")
 	}

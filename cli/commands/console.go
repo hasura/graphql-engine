@@ -13,6 +13,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/migrate/api"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -84,7 +85,7 @@ func (o *consoleOptions) run() error {
 		r,
 	}
 
-	router.setRoutes(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.MigrationDir)
+	router.setRoutes(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.MigrationDir, o.EC.Logger)
 
 	if o.EC.Version == nil {
 		return errors.New("cannot validate version, object is nil")
@@ -151,14 +152,15 @@ type consoleRouter struct {
 	*gin.Engine
 }
 
-func (router *consoleRouter) setRoutes(nurl *url.URL, accessKey, migrationDir string) {
+func (router *consoleRouter) setRoutes(nurl *url.URL, accessKey, migrationDir string, logger *logrus.Logger) {
 	apis := router.Group("/apis")
 	{
+		apis.Use(setLogger(logger))
+		apis.Use(setFilePath(migrationDir))
+		apis.Use(setDataPath(nurl, accessKey))
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
 		{
-			migrateAPIs.Use(setFilePath(migrationDir))
-			migrateAPIs.Use(setDataPath(nurl, accessKey))
 			settingsAPIs := migrateAPIs.Group("/settings")
 			{
 				settingsAPIs.Any("", api.SettingsAPI)
@@ -168,8 +170,6 @@ func (router *consoleRouter) setRoutes(nurl *url.URL, accessKey, migrationDir st
 		// Migrate api endpoints and middleware
 		metadataAPIs := apis.Group("/metadata")
 		{
-			metadataAPIs.Use(setFilePath(migrationDir))
-			metadataAPIs.Use(setDataPath(nurl, accessKey))
 			metadataAPIs.Any("", api.MetadataAPI)
 		}
 	}
@@ -188,6 +188,13 @@ func setFilePath(dir string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		host := getFilePath(dir)
 		c.Set("filedir", host)
+		c.Next()
+	}
+}
+
+func setLogger(logger *logrus.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("logger", logger)
 		c.Next()
 	}
 }

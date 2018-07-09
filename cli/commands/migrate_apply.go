@@ -45,10 +45,12 @@ func (o *migrateApplyOptions) run() error {
 		return errors.Wrap(err, "error validating flags")
 	}
 
-	dbURL := getDataPath(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey)
-	sourceURL := getFilePath(o.EC.MigrationDir)
+	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.Logger)
+	if err != nil {
+		return err
+	}
 
-	err = executeMigration(migrationType, sourceURL, dbURL, step)
+	err = executeMigration(migrationType, migrateDrv, step)
 	if err != nil {
 		if err == migrate.ErrNoChange {
 			o.EC.Logger.Info("nothing to apply")

@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -23,16 +21,16 @@ func (h *HasuraDB) ensureSettingsTable() error {
 
 	resp, body, err := h.sendQuery(query)
 	if err != nil {
-		log.Debug(err)
+		h.logger.Debug(err)
 		return err
 	}
-	log.Debug("response: ", string(body))
+	h.logger.Debug("response: ", string(body))
 
 	var horror HasuraError
 	if resp.StatusCode != http.StatusOK {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
-			log.Debug(err)
+			h.logger.Debug(err)
 			return err
 		}
 		return horror.Error(h.config.isCMD)
@@ -42,7 +40,7 @@ func (h *HasuraDB) ensureSettingsTable() error {
 
 	err = json.Unmarshal(body, &hres)
 	if err != nil {
-		log.Debug(err)
+		h.logger.Debug(err)
 		return err
 	}
 
@@ -66,7 +64,7 @@ func (h *HasuraDB) ensureSettingsTable() error {
 	if err != nil {
 		return err
 	}
-	log.Debug("response: ", string(body))
+	h.logger.Debug("response: ", string(body))
 
 	if resp.StatusCode != http.StatusOK {
 		err = json.Unmarshal(body, &horror)
@@ -116,7 +114,7 @@ func (h *HasuraDB) setDefaultSettings() error {
 	if resp.StatusCode != http.StatusOK {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
-			log.Debug(err)
+			h.logger.Debug(err)
 			return err
 		}
 		return horror.Error(h.config.isCMD)
@@ -138,7 +136,7 @@ func (h *HasuraDB) GetSetting(name string) (value string, err error) {
 	if err != nil {
 		return value, err
 	}
-	log.Debug("response: ", string(body))
+	h.logger.Debug("response: ", string(body))
 
 	var horror HasuraError
 
@@ -187,7 +185,7 @@ func (h *HasuraDB) UpdateSetting(name string, value string) error {
 	if err != nil {
 		return err
 	}
-	log.Debug("response: ", string(body))
+	h.logger.Debug("response: ", string(body))
 
 	var horror HasuraError
 
