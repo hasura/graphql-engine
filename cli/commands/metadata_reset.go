@@ -35,7 +35,8 @@ type metadataResetOptions struct {
 
 func (o *metadataResetOptions) run() error {
 	dbURL := util.GetDataPath(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey)
-	err := util.ExecuteMetadata(o.actionType, "file://"+o.EC.MigrationDir, dbURL, o.EC.ExecutionDirectory)
+	fileURL := util.GetFilePath(o.EC.MigrationDir)
+	err := util.ExecuteMetadata(o.actionType, fileURL, dbURL, o.EC.ExecutionDirectory)
 	if err != nil {
 		return errors.Wrap(err, "Cannot reset metadata")
 	}

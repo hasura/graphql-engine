@@ -34,5 +34,6 @@ type metadataApplyOptions struct {
 
 func (o *metadataApplyOptions) run() error {
 	dbURL := util.GetDataPath(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey)
-	return util.ExecuteMetadata(o.actionType, "file://"+o.EC.MigrationDir, dbURL, o.EC.ExecutionDirectory)
+	fileURL := util.GetFilePath(o.EC.MigrationDir)
+	return util.ExecuteMetadata(o.actionType, fileURL, dbURL, o.EC.ExecutionDirectory)
 }

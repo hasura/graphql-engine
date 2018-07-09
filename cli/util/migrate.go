@@ -59,10 +59,10 @@ func ExecuteMigration(cmd string, dir, db *url.URL, stepOrVersion int64) error {
 	return err
 }
 
-func ExecuteMetadata(cmd, dir string, db *url.URL, metadata string) error {
+func ExecuteMetadata(cmd string, dir, db *url.URL, metadata string) error {
 	var err error
 
-	t, err := migrate.New(dir, db.String(), true)
+	t, err := migrate.New(dir.String(), db.String(), true)
 	if err != nil {
 		return errors.Wrap(err, "cannot create migrate instance")
 	}
