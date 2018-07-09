@@ -273,6 +273,7 @@ const RawSQL = ({
                 dispatch(executeSQL(false));
               }
             }}
+            data-test="run-sql"
           >
             Run!
           </button>

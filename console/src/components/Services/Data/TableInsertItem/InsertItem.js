@@ -449,6 +449,7 @@ class InsertItem extends Component {
                     this.nextInsert();
                   });
                 }}
+                data-test="insert-save-button"
               >
                 {this.state.insertedRows > 0 ? 'Insert Again' : 'Save'}
               </button>

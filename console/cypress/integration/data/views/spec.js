@@ -12,44 +12,28 @@ const userId = 5555;
 
 export const Createtable = (name, dict) => {
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
-  cy.get(getElementFromAlias('tableName')).type(`${name}_table`);
+  cy.get(getElementFromAlias('tableName')).type(`${name}_table_vt`);
   const keys = Object.keys(dict).map(k => k);
   const values = Object.keys(dict).map(k => dict[k]);
   for (let i = 0; i < keys.length; i += 1) {
-    cy.get('input[placeholder="column_name"]')
-      .last()
-      .type(keys[i]);
-    cy.get('select')
-      .find('option')
-      .contains('-- type --')
-      .parent()
-      .last()
-      .select(values[i]);
+    cy.get(getElementFromAlias(`column-${i}`)).type(keys[i]);
+    cy.get(getElementFromAlias(`col-type-${i}`)).select(values[i]);
   }
-
-  cy.get('select')
-    .last()
-    .select('id');
-  cy.get('button')
-    .contains('Create')
-    .click();
+  cy.get(getElementFromAlias('primary-key-select-0')).select('id');
+  cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${name}_table/modify`
+    `${baseUrl}/data/schema/public/tables/${name}_table_vt/modify`
   );
 
-  validateCT(`${name}_table`, 'success');
+  validateCT(`${name}_table_vt`, 'success');
 };
 
 export const passVCreateTables = () => {
-  cy.get('button')
-    .contains('Create Table')
-    .click();
+  cy.get(getElementFromAlias('data-create-table')).click();
   Createtable('author', { id: 'Integer', name: 'Text' });
-  cy.get('button')
-    .contains('Add Table')
-    .click();
+  cy.get(getElementFromAlias('sidebar-add-table')).click();
   Createtable('article', {
     id: 'Integer',
     title: 'Text',
@@ -57,9 +41,7 @@ export const passVCreateTables = () => {
     author_id: 'Integer',
     rating: 'Integer',
   });
-  cy.get('button')
-    .contains('Add Table')
-    .click();
+  cy.get(getElementFromAlias('sidebar-add-table')).click();
   Createtable('comment', {
     id: 'Integer',
     user_id: 'Integer',
@@ -69,11 +51,11 @@ export const passVCreateTables = () => {
 };
 
 export const passVCreateViews = () => {
-  createView(`CREATE VIEW author_average_rating AS
-    SELECT author_table.id, avg(article_table.rating)
-    From author_table, article_table
-    WHERE author_table.id = article_table.author_id
-    GROUP BY author_table.id`);
+  createView(`CREATE VIEW author_average_rating_vt AS
+    SELECT author_table_vt.id, avg(article_table_vt.rating)
+    From author_table_vt, article_table_vt
+    WHERE author_table_vt.id = article_table_vt.author_id
+    GROUP BY author_table_vt.id`);
 };
 
 export const passTrackTable = () => {
@@ -82,19 +64,19 @@ export const passTrackTable = () => {
     .last()
     .click();
   cy.wait(7000);
-  cy.get(getElementFromAlias('add-track-table-author_average_rating')).click();
-  cy.wait(5000);
-  cy.get('h4').contains('Existing table/view added');
-  validateView('author_average_rating', 'success');
+  cy.get(
+    getElementFromAlias('add-track-table-author_average_rating_vt')
+  ).click();
+  cy.wait(7000);
+  // cy.get('.notification-error');
+  validateView('author_average_rating_vt', 'success');
 };
 
 export const passViewRoute = () => {
-  cy.get('a')
-    .contains('author_average_rating')
-    .click();
+  cy.get(getElementFromAlias('author_average_rating_vt')).click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/views/author_average_rating/browse`
+    `${baseUrl}/data/schema/public/views/author_average_rating_vt/browse`
   );
 };
 
@@ -161,13 +143,9 @@ export const passVAddDataarticle = (data, index) => {
     .last()
     .type(data[4]);
   if (index) {
-    cy.get('button')
-      .contains('Insert Again')
-      .click();
+    cy.get(getElementFromAlias('insert-save-button')).click();
   } else {
-    cy.get('button')
-      .contains('Save')
-      .click();
+    cy.get(getElementFromAlias('insert-save-button')).click();
   }
 
   cy.wait(5000);
@@ -199,13 +177,9 @@ export const passVAddDataauthor = (data, index) => {
     .last()
     .type(data[1]);
   if (index) {
-    cy.get('button')
-      .contains('Insert Again')
-      .click();
+    cy.get(getElementFromAlias('insert-save-button')).click();
   } else {
-    cy.get('button')
-      .contains('Save')
-      .click();
+    cy.get(getElementFromAlias('insert-save-button')).click();
   }
   cy.wait(5000);
 };
@@ -260,13 +234,9 @@ export const passVAddDatacomment = (data, index) => {
     .last()
     .type(data[3]);
   if (index) {
-    cy.get('button')
-      .contains('Insert Again')
-      .click();
+    cy.get(getElementFromAlias('insert-save-button')).click();
   } else {
-    cy.get('button')
-      .contains('Save')
-      .click();
+    cy.get(getElementFromAlias('insert-save-button')).click();
   }
   cy.wait(5000);
 };
@@ -281,9 +251,7 @@ const checkQuerySuccess = () => {
 
 export const passVAddData = () => {
   let data;
-  cy.get('a')
-    .contains('article_table')
-    .click();
+  cy.get(getElementFromAlias('article_table_vt')).click();
   cy.get(getElementFromAlias('table-insert-rows')).click();
   data = [1, 'A', 'Sontent', userId, 4];
   passVAddDataarticle(data, 0);
@@ -291,18 +259,14 @@ export const passVAddData = () => {
   passVAddDataarticle(data, 1);
   data = [3, 'C', 'Sontentb', userId, 4];
   passVAddDataarticle(data, 2);
-  cy.get('a')
-    .contains('author_table')
-    .click();
+  cy.get(getElementFromAlias('author_table_vt')).click();
   cy.get(getElementFromAlias('table-insert-rows')).click();
 
   data = [userId, 'A'];
   passVAddDataauthor(data, 0);
   data = [2, 'B'];
   passVAddDataauthor(data, 1);
-  cy.get('a')
-    .contains('comment_table')
-    .click();
+  cy.get(getElementFromAlias('comment_table_vt')).click();
   cy.get(getElementFromAlias('table-insert-rows')).click();
 
   data = [1, 1, 1, 'new comment'];
@@ -333,9 +297,7 @@ export const passVFilterQueryEq = () => {
     .last()
     .type(userId);
   // Run query
-  cy.get('button')
-    .contains('Run query')
-    .click();
+  cy.get(getElementFromAlias('run-query')).click();
   cy.wait(5000);
   // Check if the query was successful
   checkQuerySuccess();
@@ -389,17 +351,13 @@ export const passVAscendingSort = () => {
     .last()
     .select('id');
   // Run query
-  cy.get('button')
-    .contains('Run query')
-    .click();
+  cy.get(getElementFromAlias('run-query')).click();
   // Check order
   checkOrder('asc');
 };
 
 export const passModifyView = () => {
-  cy.get('a')
-    .contains('Modify')
-    .click();
+  cy.get(getElementFromAlias('table-modify')).click();
   cy.get('button')
     .contains('Modify')
     .last()
@@ -408,13 +366,9 @@ export const passModifyView = () => {
 };
 
 export const passVAddManualObjRel = () => {
-  cy.get('a')
-    .contains('author_average_rating')
-    .click();
+  cy.get(getElementFromAlias('author_average_rating_vt')).click();
   cy.wait(2000);
-  cy.get('a')
-    .contains('Relationships')
-    .click();
+  cy.get(getElementFromAlias('table-relationships')).click();
   cy.wait(2000);
   cy.get(getElementFromAlias('data-rel-type')).select('object_rel');
   cy.get("input[placeholder='Enter relationship name']").type('author');
@@ -427,26 +381,22 @@ export const passVAddManualObjRel = () => {
     .find('option')
     .contains('Remote Table')
     .parent()
-    .select('author_table');
+    .select('author_table_vt');
   cy.get('select')
     .last()
     .select('id');
   cy.get(getElementFromAlias('view-add-relationship')).click();
   cy.wait(7000);
   validateColumn(
-    'author_average_rating',
+    'author_average_rating_vt',
     ['avg', { name: 'author', columns: ['name'] }],
     'success'
   );
 };
 
 export const passVDeleteRelationships = () => {
-  cy.get('a')
-    .contains('author_average_rating')
-    .click();
-  cy.get('a')
-    .contains('Relationships')
-    .click();
+  cy.get(getElementFromAlias('author_average_rating_vt')).click();
+  cy.get(getElementFromAlias('table-relationships')).click();
   cy.get('button')
     .contains('Remove')
     .first()
@@ -454,39 +404,29 @@ export const passVDeleteRelationships = () => {
   cy.on('window:alert', str => {
     expect(str === 'Are you sure?').to.be.true;
   });
-  cy.wait(5000);
+  cy.wait(7000);
   validateColumn(
-    'author_average_rating',
+    'author_average_rating_vt',
     ['avg', { name: 'author', columns: ['name'] }],
     'failure'
   );
 };
 
 export const passVDeleteView = () => {
-  cy.get('a')
-    .contains('Modify')
-    .click();
-  cy.get('button')
-    .contains('Delete view')
-    .click();
+  cy.get(getElementFromAlias('table-modify')).click();
+  cy.get(getElementFromAlias('delete-view')).click();
   cy.on('window:confirm', str => {
     expect(str === 'Are you sure').to.be.true;
   });
-  cy.wait(5000);
-  cy.get('h4').contains('View deleted');
-  validateView('author_average_rating', 'failure');
+  cy.wait(7000);
+  // cy.get('.notification-error');
+  validateView('author_average_rating_vt', 'failure');
 };
 
 export const Deletetable = name => {
-  cy.get('a')
-    .contains(name)
-    .click();
-  cy.get('a')
-    .contains('Modify')
-    .click();
-  cy.get('button')
-    .contains('Delete table')
-    .click();
+  cy.get(getElementFromAlias(name)).click();
+  cy.get(getElementFromAlias('table-modify')).click();
+  cy.get(getElementFromAlias('delete-table')).click();
   cy.on('window:alert', str => {
     expect(str === 'Are you sure?').to.be.true;
   });
@@ -496,9 +436,9 @@ export const Deletetable = name => {
 };
 
 export const passVDeleteTables = () => {
-  Deletetable('comment_table');
-  Deletetable('article_table');
-  Deletetable('author_table');
+  Deletetable('comment_table_vt');
+  Deletetable('article_table_vt');
+  Deletetable('author_table_vt');
 };
 
 // //////////////////////////////////////////////////////////////////////////////////////

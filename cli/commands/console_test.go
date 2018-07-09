@@ -6,6 +6,8 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/util/fake"
+	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/sirupsen/logrus/hooks/test"
 )
 
@@ -19,12 +21,14 @@ func TestConsoleCmd(t *testing.T) {
 				Endpoint:  "http://localhost:8080",
 				AccessKey: "",
 			},
+			Version: version.New(),
 		},
 		APIPort:         "9693",
 		ConsolePort:     "9695",
 		Address:         "localhost",
 		DontOpenBrowser: true,
 	}
+	opts.EC.Spinner.Writer = &fake.FakeWriter{}
 
 	go func() {
 		t.Log("waiting for console to start")

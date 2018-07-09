@@ -14,6 +14,7 @@ import {
 } from '../../validators/validators';
 
 const numOfDataTypes = dataTypes.length;
+const testName = 'ib';
 
 //* ******************** Util functions ************************
 
@@ -44,13 +45,9 @@ const setColumns = () => {
 
 const clickSaveOrInsert = (firstIndex, currentIndex) => {
   if (currentIndex === firstIndex) {
-    cy.get('button')
-      .contains('Save')
-      .click();
+    cy.get(getElementFromAlias('insert-save-button')).click();
   } else {
-    cy.get('button')
-      .contains('Insert Again')
-      .click();
+    cy.get(getElementFromAlias('insert-save-button')).click();
   }
   cy.wait(2000);
 };
@@ -95,11 +92,9 @@ const checkOrder = order => {
 export const passBICreateTable = () => {
   cy.wait(7000);
   // Click create table button
-  cy.get('button')
-    .contains('Create Table')
-    .click();
+  cy.get(getElementFromAlias('data-create-table')).click();
   // Type table name
-  cy.get(getElementFromAlias('tableName')).type(getTableName(0));
+  cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
   // Set columns with all fields
   setColumns();
   // Set primary key
@@ -107,19 +102,17 @@ export const passBICreateTable = () => {
   // Click on create
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
-  validateCT(getTableName(0), 'success');
+  validateCT(getTableName(0, testName), 'success');
 };
 
 export const checkInsertRoute = () => {
   // Click on Insert tab
-  cy.get('a')
-    .contains(getTableName(0))
-    .click();
+  cy.get(getElementFromAlias(getTableName(0, testName))).click();
   cy.get(getElementFromAlias('table-insert-rows')).click();
   // Match URL
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/insert`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/insert`
   );
 };
 
@@ -134,14 +127,15 @@ export const failBIWrongDataType = () => {
       // Click the Save/Insert Again button.
       clickSaveOrInsert(2, i);
       // Check for error and dismiss it
-      cy.get('[class=notification-title]')
-        .contains('Insert failed')
-        .click();
-      // Check the default radio of current column
+      // cy.get('[class=notification-title]')
+      //   .contains('Insert failed')
+      //   .click();
+      // cy.get('.notification-error').click();
+      // Check the default radio of curret column
       cy.get(getElementFromAlias(`typed-input-default-${i}`)).check();
     }
 
-    validateInsert(getTableName(0), 0);
+    validateInsert(getTableName(0, testName), 0);
   }
 };
 
@@ -157,9 +151,7 @@ export const passBIInsert20Rows = () => {
       cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type(
         'filter-text'
       );
-      cy.get('button')
-        .contains('Insert Again')
-        .click();
+      cy.get(getElementFromAlias('insert-save-button')).click();
       continue; // eslint-disable-line
     }
     cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type(
@@ -172,10 +164,8 @@ export const passBIInsert20Rows = () => {
           .toString(36)
           .substring(7)
       );
-    cy.get('button')
-      .contains('Insert Again')
-      .click();
-    validateInsert(getTableName(0), i + 1);
+    cy.get(getElementFromAlias('insert-save-button')).click();
+    validateInsert(getTableName(0, testName), i + 1);
   }
   // Wait for insert notifications to disappear
   cy.wait(7000);
@@ -183,22 +173,43 @@ export const passBIInsert20Rows = () => {
 
 export const checkBrowseRoute = () => {
   // Click on Browse tab
-  cy.get('a')
-    .contains(getTableName(0))
-    .click();
+  cy.get(getElementFromAlias(getTableName(0, testName))).click();
   cy.get(getElementFromAlias('table-browse-rows')).click();
   cy.wait(2000);
   // Match URL
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/browse`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/browse`
   );
 };
 
 export const passBI20RowsExist = () => {
   // Check if the 20 inserted elements reflect in the UI
   cy.get(getElementFromAlias('table-browse-rows')).contains('21');
-  // Check pagination string
+};
+
+export const checkPagination = () => {
+  // Check if the current page is 1
+  cy.get('.-pageJump > input').should('have.value', '1');
+  // Check if the total number of pages is 3
+  cy.get('.-totalPages').contains('3');
+  // Check if the default value of rows displayed is 10
+  cy.get('.-pageSizeOptions > select').should('have.value', '10');
+  cy.get('.-next > button').click();
+  cy.wait(3000);
+  // Check if the page changed
+  cy.get(
+    '.rt-tbody > div:nth-child(1) > div > div:nth-child(2) > div'
+  ).contains('11');
+  cy.get('.-pageJump > input').should('have.value', '2');
+  cy.get('.-previous > button').click();
+  cy.wait(3000);
+  // Check if the page changed
+  cy.get('.-pageJump > input').should('have.value', '1');
+  cy.get('.-pageSizeOptions > select').select('5 rows');
+  cy.wait(3000);
+  // Check if the total number of pages changed
+  cy.get('.-totalPages').contains('5');
 };
 
 export const passBISort = order => {
@@ -213,9 +224,7 @@ export const passBISort = order => {
     order === 'asc' ? 'Asc' : 'Desc'
   );
   // Run query
-  cy.get('button')
-    .contains('Run query')
-    .click();
+  cy.get(getElementFromAlias('run-query')).click();
   cy.wait(5000);
   // Check order
   checkOrder(order);
@@ -223,9 +232,7 @@ export const passBISort = order => {
   // Clear filter
   cy.get(getElementFromAlias('clear-sorts-0')).click();
   // Run query
-  cy.get('button')
-    .contains('Run query')
-    .click();
+  cy.get(getElementFromAlias('run-query')).click();
   cy.wait(5000);
 };
 
@@ -240,9 +247,7 @@ export const passBIFilterQueryEq = () => {
     .last()
     .type('filter-text');
   // Run query
-  cy.get('button')
-    .contains('Run query')
-    .click();
+  cy.get(getElementFromAlias('run-query')).click();
   cy.wait(2000);
   // Check if the query was successful
   checkQuerySuccess();
@@ -250,9 +255,7 @@ export const passBIFilterQueryEq = () => {
   // Clear filter
   cy.get(getElementFromAlias('clear-filter-0')).click();
   // Run query
-  cy.get('button')
-    .contains('Run query')
-    .click();
+  cy.get(getElementFromAlias('run-query')).click();
   cy.wait(5000);
 };
 
@@ -261,9 +264,7 @@ export const deleteBITestTable = () => {
   cy.get(getElementFromAlias('table-modify')).click();
   cy.wait(2000);
   // Click on delete
-  cy.get('button')
-    .contains('Delete table')
-    .click();
+  cy.get(getElementFromAlias('delete-table')).click();
   // Confirm
   cy.on('window:confirm', str => {
     expect(str === 'Are you sure?').to.be.true;
@@ -272,7 +273,7 @@ export const deleteBITestTable = () => {
   cy.wait(7000);
   // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
-  validateCT(getTableName(0), 'failure');
+  validateCT(getTableName(0, testName), 'failure');
 };
 
 export const failBINullKeys = () => {
@@ -287,16 +288,12 @@ export const failBINullKeys = () => {
     .type('{selectall}{del}');
 
   // Click the Insert Again button.
-  cy.get('button')
-    .contains('Insert Again')
-    .click();
+  cy.get(getElementFromAlias('insert-save-button')).click();
 
-  cy.get('[class=notification-title]')
-    .contains('Insert failed')
-    .click();
+  // cy.get('.notification-error').click();
   // Wait for insert notifications to disappear
   cy.wait(7000);
-  validateInsert(getTableName(0), 20);
+  validateInsert(getTableName(0, testName), 20);
 };
 
 export const failBIUniqueKeys = () => {
@@ -317,14 +314,12 @@ export const failBIUniqueKeys = () => {
   cy.get('input[placeholder="text"]')
     .first()
     .type('name');
-  cy.get('button')
-    .contains('Insert Again')
-    .click();
+  cy.get(getElementFromAlias('insert-save-button')).click();
   // Check default for next insert
 
   cy.get(getElementFromAlias(`typed-input-default-${textIndex}`)).check();
 
-  validateInsert(getTableName(0), 21);
+  validateInsert(getTableName(0, testName), 21);
   cy.wait(7000);
   cy.get(getElementFromAlias(`typed-input-${textIndex}`))
     .clear()
@@ -336,15 +331,11 @@ export const failBIUniqueKeys = () => {
   cy.get('input[placeholder="text"]')
     .first()
     .type('name');
-  cy.get('button')
-    .contains('Insert Again')
-    .click();
+  cy.get(getElementFromAlias('insert-save-button')).click();
 
-  cy.get('[class=notification-title]')
-    .contains('Insert failed')
-    .click();
+  // cy.get('.notification-error').click();
   cy.wait(7000);
-  validateInsert(getTableName(0), 21);
+  validateInsert(getTableName(0, testName), 21);
 };
 export const setValidationMetaData = () => {
   setMetaData();
@@ -358,18 +349,17 @@ export const passEditButton = () => {
   cy.wait(2000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/edit`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/edit`
   );
   const textIndex = dataTypes.indexOf('text');
   cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type(
     '{selectall}{del}'
   );
   cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type('new-text');
-  cy.get('button')
-    .contains('Save')
-    .last()
-    .click();
-  cy.get('h4').contains('Edited!', { timeout: 7000 });
+  cy.get(getElementFromAlias('save-button')).click();
+  // cy.get('h4').contains('Edited!', { timeout: 7000 });
+  // cy.get('.notification-error');
+  cy.wait(7000);
 };
 
 export const passCloneButton = () => {
@@ -378,7 +368,7 @@ export const passCloneButton = () => {
   cy.get(getElementFromAlias('row-clone-button-0')).click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0)}/insert`
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/insert`
   );
 };
 
@@ -389,6 +379,6 @@ export const passDeleteRow = () => {
   cy.on('window:confirm', str => {
     expect(str === 'Permanently delete this row?').to.be.true;
   });
-  cy.get('h4').contains('Row deleted!', { timeout: 7000 });
-  cy.wait(7000);
+  // cy.get('.notification-error');
+  cy.wait(14000);
 };

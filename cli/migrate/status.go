@@ -1,9 +1,7 @@
 package migrate
 
 import (
-	"bytes"
 	"sort"
-	"text/tabwriter"
 )
 
 type MigrationStatus struct {
@@ -22,7 +20,7 @@ type Status struct {
 	Migrations map[uint64]*MigrationStatus
 }
 
-func NewMigrations() *Status {
+func NewStatus() *Status {
 	return &Status{
 		Index:      make(uint64Slice, 0),
 		Migrations: make(map[uint64]*MigrationStatus),
@@ -68,33 +66,6 @@ func (i *Status) findPos(version uint64) int {
 		}
 	}
 	return -1
-}
-
-func (i *Status) String() string {
-	out := new(tabwriter.Writer)
-	buf := &bytes.Buffer{}
-	out.Init(buf, 0, 8, 2, ' ', 0)
-	w := NewPrefixWriter(out)
-	w.Write(LEVEL_0, "VERSION\tSOURCE STATUS\tDATABASE STATUS\n")
-	for _, version := range i.Index {
-		w.Write(LEVEL_0, "%d\t%s\t%s\n",
-			version,
-			convertBool(i.Migrations[version].IsPresent),
-			convertBool(i.Migrations[version].IsApplied),
-		)
-	}
-	out.Flush()
-	return string(buf.String())
-}
-
-func convertBool(ok bool) string {
-	switch ok {
-	case true:
-		return "Present"
-	case false:
-		return "Not Present"
-	}
-	return ""
 }
 
 type uint64Slice []uint64

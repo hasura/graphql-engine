@@ -67,6 +67,7 @@ const ViewHeader = ({ tableName, tabName, tableComment, currentSchema }) => {
                   tableName +
                   '/browse'
                 }
+                data-test="table-browse-rows"
               >
                 Browse Rows
               </Link>
@@ -84,6 +85,7 @@ const ViewHeader = ({ tableName, tabName, tableComment, currentSchema }) => {
                   tableName +
                   '/modify'
                 }
+                data-test="table-modify"
               >
                 Modify
               </Link>
@@ -101,6 +103,7 @@ const ViewHeader = ({ tableName, tabName, tableComment, currentSchema }) => {
                   tableName +
                   '/relationships'
                 }
+                data-test="table-relationships"
               >
                 Relationships
               </Link>
@@ -118,6 +121,7 @@ const ViewHeader = ({ tableName, tabName, tableComment, currentSchema }) => {
                   tableName +
                   '/permissions'
                 }
+                data-test="table-permissions"
               >
                 Permissions
               </Link>

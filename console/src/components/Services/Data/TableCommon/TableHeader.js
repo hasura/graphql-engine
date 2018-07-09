@@ -70,7 +70,6 @@ const TableHeader = ({
             <li
               role="presentation"
               className={tabName === 'view' ? styles.active : ''}
-              data-test="table-browse-rows"
             >
               <Link
                 to={
@@ -81,6 +80,7 @@ const TableHeader = ({
                   tableName +
                   '/browse'
                 }
+                data-test="table-browse-rows"
               >
                 Browse Rows {showCount}
               </Link>
@@ -88,7 +88,6 @@ const TableHeader = ({
             <li
               role="presentation"
               className={tabName === 'insert' ? styles.active : ''}
-              data-test="table-insert-rows"
             >
               <Link
                 to={
@@ -99,6 +98,7 @@ const TableHeader = ({
                   tableName +
                   '/insert'
                 }
+                data-test="table-insert-rows"
               >
                 Insert Row
               </Link>
@@ -107,7 +107,6 @@ const TableHeader = ({
               <li
                 role="presentation"
                 className={tabName === 'modify' ? styles.active : ''}
-                data-test="table-modify"
               >
                 <Link
                   to={
@@ -118,6 +117,7 @@ const TableHeader = ({
                     tableName +
                     '/modify'
                   }
+                  data-test="table-modify"
                 >
                   Modify
                 </Link>
@@ -126,7 +126,6 @@ const TableHeader = ({
             <li
               role="presentation"
               className={tabName === 'relationships' ? styles.active : ''}
-              data-test="table-relationships"
             >
               <Link
                 to={
@@ -137,6 +136,7 @@ const TableHeader = ({
                   tableName +
                   '/relationships'
                 }
+                data-test="table-relationships"
               >
                 Relationships
               </Link>
@@ -144,7 +144,6 @@ const TableHeader = ({
             <li
               role="presentation"
               className={tabName === 'permissions' ? styles.active : ''}
-              data-test="table-permissions"
             >
               <Link
                 to={
@@ -155,6 +154,7 @@ const TableHeader = ({
                   tableName +
                   '/permissions'
                 }
+                data-test="table-permissions"
               >
                 Permissions
               </Link>

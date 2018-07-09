@@ -3,8 +3,10 @@ package commands
 import (
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
+// NewVersionCmd returns the version command
 func NewVersionCmd(ec *cli.ExecutionContext) *cobra.Command {
 	versionCmd := &cobra.Command{
 		Use:          "version",
@@ -14,7 +16,15 @@ func NewVersionCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ec.Logger.Infof("hasura cli version: %s", ec.GetVersion())
+			ec.Logger.WithField("version", ec.Version.GetCLIVersion()).Info("hasura cli")
+			ec.Viper = viper.New()
+			err := ec.Validate()
+			if err == nil {
+				ec.Logger.
+					WithField("endpoint", ec.Config.Endpoint).
+					WithField("version", ec.Version.GetServerVersion()).
+					Info("hasura graphql engine")
+			}
 			return nil
 		},
 	}

@@ -78,7 +78,11 @@ const relationshipView = (
   return (
     <td>
       <div>
-        <button className="btn btn-sm btn-danger" onClick={onDelete}>
+        <button
+          className="btn btn-sm btn-danger"
+          onClick={onDelete}
+          data-test="remove-button"
+        >
           Remove
         </button>
         &nbsp;
