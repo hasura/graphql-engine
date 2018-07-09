@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	nurl "net/url"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -90,6 +91,20 @@ func (h *HasuraDB) Open(url string, isCMD bool) (database.Driver, error) {
 		log.Debug(err)
 		return nil, err
 	}
+	// Use sslMode to set Scheme
+	values := hurl.Query()
+	sslMode := values.Get("sslmode")
+	if sslMode == "enable" {
+		hurl.Scheme = "https"
+	} else {
+		hurl.Scheme = "http"
+	}
+	values.Del("sslmode")
+	hurl.RawQuery = values.Encode()
+	// Remove UserInfo
+	hurl.User = nil
+	// Add v1/query to path
+	hurl.Path = path.Join(hurl.Path, "v1/query")
 
 	var user, pass string
 	switch hurl.User {
@@ -443,16 +458,7 @@ func (h *HasuraDB) ensureVersionTable() error {
 func (h *HasuraDB) sendQuery(m interface{}) (resp *http.Response, body []byte, err error) {
 	request := gorequest.New()
 
-	newURL := h.config.URL
-
-	newURL.Scheme = "http"
-	newURL.User = nil
-
-	if !strings.Contains(newURL.Path, "v1/query") {
-		newURL.Path = SingleJoiningSlash(newURL.Path, "v1/query")
-	}
-
-	request = request.Post(newURL.String()).Send(m)
+	request = request.Post(h.config.URL.String()).Send(m)
 
 	if h.config.UserID != "" {
 		request = request.Set(ACCESS_KEY_HEADER, h.config.UserID)
