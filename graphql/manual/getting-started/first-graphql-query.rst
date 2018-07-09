@@ -12,6 +12,8 @@ Run the following command using the Hasura CLI tool.
 
    hasura console
 
+Alternatively, you can open console using your GraphQL Engine URL.
+
 Create a profile table
 ----------------------
 

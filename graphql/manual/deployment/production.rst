@@ -29,6 +29,11 @@ Typically, you will also have a webhook for authentication:
                 --access-key XXXXXXXXXXXXXXXX
                 --auth-hook https://myauth.mywebsite.com/user/session-info
 
+In addition to flags, the GraphQL Engine also accepts Environment variables.
+
+In the above case, for adding an access key you will use the ``HASURA_GRAPHQL_ACCESS_KEY``
+and for the webhook, you will use the ``HASURA_GRAPHQL_AUTH_HOOK`` environment variables.
+
 Using CLI commands with access key
 ----------------------------------
 
