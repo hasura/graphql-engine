@@ -43,7 +43,7 @@ func MigrateAPI(c *gin.Context) {
 
 	// Convert to url.URL
 	databaseURL := databasePtr.(*url.URL)
-	sourceURL := sourcePtr.(url.URL)
+	sourceURL := sourcePtr.(*url.URL)
 
 	// Create new migrate
 	t, err := migrate.New(sourceURL.String(), databaseURL.String(), false)

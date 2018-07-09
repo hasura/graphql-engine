@@ -21,7 +21,7 @@ func SettingsAPI(c *gin.Context) {
 		return
 	}
 
-	sourceURL := sourcePtr.(url.URL)
+	sourceURL := sourcePtr.(*url.URL)
 
 	// Get hasuradb url
 	databasePtr, ok := c.Get("dbpath")
@@ -30,7 +30,7 @@ func SettingsAPI(c *gin.Context) {
 	}
 
 	// Convert to url.URL
-	databaseURL := databasePtr.(url.URL)
+	databaseURL := databasePtr.(*url.URL)
 
 	// Create new migrate
 	t, err := migrate.New(sourceURL.String(), databaseURL.String(), false)
