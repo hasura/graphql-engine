@@ -182,7 +182,6 @@ class ApiRequest extends Component {
 
   getHeaderRows() {
     const rows = this.props.headers.map((header, i) => {
-      console.log(header);
       return (
         <tr key={i}>
           {header.isNewHeader ? null : (
