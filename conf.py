@@ -60,7 +60,7 @@ if os.getenv("ALGOLIA_INDEX_NAME"):
     ALGOLIA_INDEX_NAME = os.getenv("ALGOLIA_INDEX_NAME")
 
 # GraphiQL defaults
-GRAPHIQL_DEFAULT_ENDPOINT = "https://data.gill83.hasura-app.io/v1alpha1/graphql"
+GRAPHIQL_DEFAULT_ENDPOINT = "https://data.accouterments35.hasura-app.io/v1alpha1/graphql"
 # Get from env if set
 if os.getenv("GRAPHIQL_DEFAULT_ENDPOINT"):
     GRAPHIQL_DEFAULT_ENDPOINT = os.getenv("GRAPHIQL_DEFAULT_ENDPOINT")
