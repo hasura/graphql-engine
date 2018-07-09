@@ -21,7 +21,7 @@ Delete all articles rated less than 3:
     {
       "data": {
         "delete_low_rated_articles": {
-          "affected_rows": 49
+          "affected_rows": 8
         }
       }
     }
@@ -36,7 +36,7 @@ Delete all articles written by an author:
   :query:
     mutation delete_authors_articles {
       delete_article(
-        where: {author: {id: {_eq: 7}}}
+        where: {author: {id: {_eq: 6}}}
       ) {
         affected_rows
       }
@@ -45,7 +45,7 @@ Delete all articles written by an author:
     {
       "data": {
         "delete_authors_articles": {
-          "affected_rows": 1
+          "affected_rows": 2
         }
       }
     }

@@ -9,7 +9,7 @@ Insert a new ``article`` object and return the inserted article object in the re
   :view_only: true
   :query:
     mutation insert_article {
-      insert_article (
+      insert_article(
         objects: [
           {
             title: "Article 1",
@@ -17,8 +17,7 @@ Insert a new ``article`` object and return the inserted article object in the re
             author_id: 3
           }
         ]
-      )
-      {
+      ) {
         returning {
           id
           title
@@ -32,7 +31,7 @@ Insert a new ``article`` object and return the inserted article object in the re
           "affected_rows": 1,
           "returning": [
             {
-              "id": 102,
+              "id": 21,
               "title": "Article 1"
             }
           ]
@@ -48,7 +47,7 @@ Insert 2 new ``article`` objects and return both the article objects in the resp
   :view_only: true
   :query:
     mutation insert_article {
-      insert_article (
+      insert_article(
         objects: [
           {
             title: "Article 2",
@@ -61,8 +60,7 @@ Insert 2 new ``article`` objects and return both the article objects in the resp
             author_id: 5
           }
         ]
-      )
-      {
+      ) {
         returning {
           id
           title
@@ -73,14 +71,14 @@ Insert 2 new ``article`` objects and return both the article objects in the resp
     {
       "data": {
         "insert_article": {
-          "affected_rows": 1,
+          "affected_rows": 2,
           "returning": [
             {
-              "id": 102,
-              "title": "Article 1"
+              "id": 22,
+              "title": "Article 2"
             },
             {
-              "id": 104,
+              "id": 23,
               "title": "Article 3"
             }
           ]

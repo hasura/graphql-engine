@@ -1,48 +1,46 @@
 Paginate query results
 ======================
-The operators ``limit`` and ``offset`` are used for pagination, etc. ``limit`` specifies the number of rows to retain from the result set and ``offset`` determines which slice to retain from the results. The following are examples of pagination in different scenarios.
+The operators ``limit`` and ``offset`` are used for pagination, etc. ``limit`` specifies the number of rows to retain
+from the result set and ``offset`` determines which slice to retain from the results. The following are examples of
+pagination in different scenarios.
 
 Limit results
 -------------
-Fetch the first 5 authors from a list of all authors:
+Fetch the first 5 authors from the list of all authors:
 
 .. graphiql::
   :query:
     query {
-      article(limit: 5) {
+      author(
+        limit: 5
+      ) {
         id
-        title
-        content
+        name
       }
     }
   :response:
     {
       "data": {
-        "article": [
+        "author": [
+          {
+            "id": 1,
+            "name": "Justin"
+          },
+          {
+            "id": 2,
+            "name": "Beltran"
+          },
           {
             "id": 3,
-            "title": "some title",
-            "content": "some content"
+            "name": "Sidney"
           },
           {
             "id": 4,
-            "title": "some title",
-            "content": "some content"
+            "name": "Anjela"
           },
           {
             "id": 5,
-            "title": "some title",
-            "content": "some content"
-          },
-          {
-            "id": 6,
-            "title": "some title",
-            "content": "some content"
-          },
-          {
-            "id": 8,
-            "title": "some title",
-            "content": "some content"
+            "name": "Amii"
           }
         ]
       }
@@ -50,45 +48,42 @@ Fetch the first 5 authors from a list of all authors:
 
 Limit results from an offset
 ----------------------------
-Fetch 5 authors from a list of all authors, starting with the 11th one:
+Fetch 5 authors from the list of all authors, starting with the 6th one:
 
 .. graphiql::
   :query:
     query {
-      article(limit: 5, offset:10) {
+      author(
+        limit: 5,
+        offset:5
+      ) {
         id
-        title
-        content
+        name
       }
     }
   :response:
     {
       "data": {
-        "article": [
+        "author": [
           {
-            "id": 14,
-            "title": "some title",
-            "content": "some content"
+            "id": 6,
+            "name": "Corny"
           },
           {
-            "id": 78,
-            "title": "some title",
-            "content": "some content"
+            "id": 7,
+            "name": "Berti"
           },
           {
-            "id": 79,
-            "title": "some title",
-            "content": "some content"
+            "id": 8,
+            "name": "April"
           },
           {
-            "id": 80,
-            "title": "some title",
-            "content": "some content"
+            "id": 9,
+            "name": "Ninnetta"
           },
           {
-            "id": 22,
-            "title": "some title",
-            "content": "some content"
+            "id": 10,
+            "name": "Lyndsay"
           }
         ]
       }
@@ -96,7 +91,7 @@ Fetch 5 authors from a list of all authors, starting with the 11th one:
 
 Limit results in a nested object
 --------------------------------
-Fetch a list of authors and a list of 5 of each of their most recently published articles:
+Fetch a list of authors and a list of 2 of each of their rticles:
 
 .. graphiql::
   :query:
@@ -104,9 +99,11 @@ Fetch a list of authors and a list of 5 of each of their most recently published
       author {
         id
         name
-        articles (order_by: ["-published_on"], limit:5)  {
+        articles (
+          limit:2
+        ) {
           id
-          published_on
+          title
         }
       }
     }
@@ -116,47 +113,57 @@ Fetch a list of authors and a list of 5 of each of their most recently published
         "author": [
           {
             "id": 1,
-            "name": "Chrissie",
+            "name": "Justin",
             "articles": [
               {
-                "id": 73,
-                "published_on": null
+                "id": 15,
+                "title": "vel dapibus at"
               },
               {
-                "id": 87,
-                "published_on": null
-              },
-              {
-                "id": 98,
-                "published_on": null
+                "id": 16,
+                "title": "sem duis aliquam"
               }
             ]
           },
           {
-            "id": 20,
-            "name": "Saunderson",
+            "id": 2,
+            "name": "Beltran",
             "articles": [
               {
-                "id": 60,
-                "published_on": null
+                "id": 2,
+                "title": "a nibh"
               },
+              {
+                "id": 9,
+                "title": "sit amet"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "name": "Sidney",
+            "articles": [
               {
                 "id": 6,
-                "published_on": "2018-06-11"
+                "title": "sapien ut"
+              },
+              {
+                "id": 11,
+                "title": "turpis eget"
               }
             ]
           },
           {
-            "id": 29,
-            "name": "Carmella",
+            "id": 4,
+            "name": "Anjela",
             "articles": [
               {
-                "id": 78,
-                "published_on": null
+                "id": 1,
+                "title": "sit amet"
               },
               {
-                "id": 64,
-                "published_on": null
+                "id": 3,
+                "title": "amet justo morbi"
               }
             ]
           }

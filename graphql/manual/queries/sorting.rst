@@ -1,15 +1,20 @@
 Sort query results
 ==================
-Results from your query can be sorted by using the ``order_by`` argument. The argument can be used to sort based on fields in nested objects too. The sort order (ascending vs. descending) is set by specifying the ``+`` or ``-`` in front of the column name in the ``order_by`` argument. The ``order_by`` argument takes an array of parameters to allow sorting by multiple columns. The following are examples of sorting different types of queries.
+Results from your query can be sorted by using the ``order_by`` argument. The argument can be used to sort based on
+fields in nested objects too. The sort order (ascending vs. descending) is set by specifying the ``+`` or ``-`` in
+front of the column name in the ``order_by`` argument. The ``order_by`` argument takes an array of parameters to allow
+sorting by multiple columns. The following are examples of sorting different types of queries.
 
 Sorting in a simple object query
 --------------------------------
-Fetch a list of authors that is sorted by their names in a descending order:
+Fetch list of authors sorted by their names in an ascending order:
 
 .. graphiql::
   :query:
     query {
-      author(order_by: ["-name"]) {
+      author(
+        order_by: ["+name"]
+      ) {
         id
         name
       }
@@ -19,28 +24,28 @@ Fetch a list of authors that is sorted by their names in a descending order:
       "data": {
         "author": [
           {
-            "id": 26,
-            "name": "Wenda"
+            "id": 5,
+            "name": "Amii"
           },
           {
-            "id": 21,
-            "name": "Sophey"
+            "id": 4,
+            "name": "Anjela"
           },
           {
-            "id": 20,
-            "name": "Saunderson"
+            "id": 8,
+            "name": "April"
           },
           {
-            "id": 11,
-            "name": "Rubi"
+            "id": 2,
+            "name": "Beltran"
           },
           {
-            "id": 12,
-            "name": "Ricoriki"
+            "id": 7,
+            "name": "Berti"
           },
           {
-            "id": 13,
-            "name": "Quintus"
+            "id": 6,
+            "name": "Corny"
           }
         ]
       }
@@ -48,17 +53,18 @@ Fetch a list of authors that is sorted by their names in a descending order:
 
 Sorting a nested object query
 -----------------------------
-Fetch a list of authors that is sorted by their names and a list of each of their articles that is sorted in the reverse chronological order of their publication date:
+Fetch a list of authors sorted by their names with a list of their articles that is sorted by their rating:
 
 .. graphiql::
   :query:
     query {
-      author(order_by: ["-id"]) {
+      author(order_by: ["+name"]) {
         id
         name
-        articles (order_by: ["-published_on"]) {
+        articles(order_by: ["-rating"]) {
           id
-          published_on
+          title
+          rating
         }
       }
     }
@@ -67,64 +73,55 @@ Fetch a list of authors that is sorted by their names and a list of each of thei
       "data": {
         "author": [
           {
-            "id": 29,
-            "name": "Carmella",
+            "id": 5,
+            "name": "Amii",
             "articles": [
               {
-                "id": 78,
-                "published_on": null
-              },
-              {
-                "id": 64,
-                "published_on": null
-              }
-            ]
-          },
-          {
-            "id": 28,
-            "name": "Derril",
-            "articles": [
-              {
-                "id": 3,
-                "published_on": null
-              },
-              {
-                "id": 10,
-                "published_on": null
-              },
-              {
-                "id": 34,
-                "published_on": null
-              },
-              {
-                "id": 38,
-                "published_on": null
-              },
-              {
-                "id": 59,
-                "published_on": null
-              },
-              {
-                "id": 88,
-                "published_on": null
-              }
-            ]
-          },
-          {
-            "id": 27,
-            "name": "Ashby",
-            "articles": [
-              {
+                "rating": 5,
                 "id": 17,
-                "published_on": null
+                "title": "montes nascetur ridiculus"
               },
               {
-                "id": 7,
-                "published_on": null
+                "rating": 3,
+                "id": 12,
+                "title": "volutpat quam pede"
               },
               {
-                "id": 99,
-                "published_on": null
+                "rating": 2,
+                "id": 4,
+                "title": "vestibulum ac est"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "name": "Anjela",
+            "articles": [
+              {
+                "rating": 4,
+                "id": 3,
+                "title": "amet justo morbi"
+              },
+              {
+                "rating": 1,
+                "id": 1,
+                "title": "sit amet"
+              }
+            ]
+          },
+          {
+            "id": 8,
+            "name": "April",
+            "articles": [
+              {
+                "rating": 4,
+                "id": 13,
+                "title": "vulputate elementum"
+              },
+              {
+                "rating": 2,
+                "id": 20,
+                "title": "eu nibh"
               }
             ]
           }
@@ -134,15 +131,16 @@ Fetch a list of authors that is sorted by their names and a list of each of thei
 
 Sorting by multiple fields
 --------------------------
-Fetch a list of articles that is sorted by the date they were published (descending) and then on their title(alphabetically):
+Fetch a list of articles that is sorted by their rating (descending) and then on their published date (ascending):
 
 .. graphiql::
   :query:
     query {
-      article(order_by: ["-published_on", "+title"]) {
+      article(
+        order_by: ["-rating", "+published_on"]
+      ) {
         id
-        title
-        content
+        rating
         published_on
       }
     }
@@ -151,16 +149,24 @@ Fetch a list of articles that is sorted by the date they were published (descend
       "data": {
         "article": [
           {
-            "id": 2,
-            "title": "a some title",
-            "content": "some content",
-            "published_on": "2018-06-14"
+            "id": 17,
+            "rating": 5,
+            "published_on": null
           },
           {
-            "id": 6,
-            "title": "some title",
-            "content": "some content",
-            "published_on": "2018-06-11"
+            "id": 7,
+            "rating": 4,
+            "published_on": "2016-07-09"
+          },
+          {
+            "id": 3,
+            "rating": 4,
+            "published_on": "2017-05-26"
+          },
+          {
+            "id": 15,
+            "rating": 4,
+            "published_on": "2018-01-02"
           }
         ]
       }

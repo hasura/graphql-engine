@@ -10,11 +10,11 @@ Insert/Upsert syntax
    :class: haskell-pre
 
     mutation [<mutation-name>] {
-        <mutation-field-name> (
-            [<input-object>!]
-            [conflict-clause]
-        )
-        [mutation-response!]
+      <mutation-field-name> (
+        [<input-object>!]
+        [conflict-clause]
+      )
+      [mutation-response!]
     }
 
 .. list-table::
@@ -51,21 +51,20 @@ Insert/Upsert syntax
    :class: haskell-pre
     
     mutation insert_article {
-        insert_article (
-            objects: [
-                {
-                    title: "Software is gluttonous",
-                    content: "Something happened in HP",
-                    author_id: 3
-                }
-            ]
-        )
-        {
-            returning {
-            id
-            title
-            }
+      insert_article(
+        objects: [
+          {
+            title: "Software is gluttonous",
+            content: "Something happened in HP",
+            author_id: 3
+          }
+        ]
+      ) {
+        returning {
+          id
+          title
         }
+      }
     }
 
 **E.g. UPSERT**:
@@ -74,20 +73,20 @@ Insert/Upsert syntax
    :class: haskell-pre
     
     mutation upsert_author {
-        insert_author (
-                objects: [
-                { 
-                    name: "john doe",
-                    id:1231
-                }
-                ],
-                on_conflict: {
-                    constraint: "author_name_key",
-                    action: "update"
-                }
-        ) {
-            affected_rows
+      insert_author (
+        objects: [
+          {
+            name: "John",
+            id:12
+          }
+        ],
+        on_conflict: {
+          constraint: "author_name_key",
+          action: "update"
         }
+      ) {
+        affected_rows
+      }
     }
 
 
@@ -98,11 +97,11 @@ Update syntax
    :class: haskell-pre
 
     mutation [<mutation-name>] {
-        <mutation-field-name> (
-            [where-argument!],
-            [set-argument!]
-        )
-        [mutation-response!]
+      <mutation-field-name> (
+        [where-argument!],
+        [set-argument!]
+      )
+      [mutation-response!]
     }
 
 .. list-table::
@@ -139,12 +138,12 @@ Update syntax
    :class: haskell-pre
     
     mutation update_author{
-        update_author(
-            where: { id: { _eq : 3}},
-            _set: { name: "Jane Doe"}
-        ) {
-            affected_rows
-        }
+      update_author(
+        where: {id: {_eq: 3}},
+        _set: {name: "Jane"}
+      ) {
+        affected_rows
+      }
     }
 
 Delete syntax
@@ -154,10 +153,10 @@ Delete syntax
    :class: haskell-pre
 
     mutation [<mutation-name>] {
-        <mutation-field-name> (
-            [where-argument!]
-        )
-        [mutation-response!]
+      <mutation-field-name> (
+        [where-argument!]
+      )
+      [mutation-response!]
     }
 
 .. list-table::
@@ -190,13 +189,14 @@ Delete syntax
    :class: haskell-pre
     
     mutation delete_articles {
-        delete_article(
-            where: {author: {id: {_eq: 7}}}) {
-                affected_rows
-                returning {
-                    id
-                }
+      delete_article(
+        where: {author: {id: {_eq: 7}}}
+      ) {
+        affected_rows
+        returning {
+          id
         }
+      }
     }
 
 
@@ -216,12 +216,12 @@ Input Object
    :class: haskell-pre
 
     objects: [
-        {
-            field1: value,
-            field2: value,
-            ..
-        },
+      {
+        field1: value,
+        field2: value,
         ..
+      },
+      ..
     ]
     # no nested objects
 
@@ -231,10 +231,10 @@ E.g.:
    :class: haskell-pre
     
     objects: [
-        {
-            title: "Software is eating the world",
-            content: "This week, Hewlett-Packard...",
-        }
+      {
+        title: "Software is eating the world",
+        content: "This week, Hewlett-Packard...",
+      }
     ]
 
 .. _MutationResponse:
@@ -244,13 +244,13 @@ Mutation Response
 .. parsed-literal::
    :class: haskell-pre
    
-    { 
-            affected_rows
-            returning {
-                response-field1
-                response-field2
-                .. 
-            }
+    {
+      affected_rows
+      returning {
+        response-field1
+        response-field2
+        ..
+      }
     }
 
 E.g.:
@@ -259,11 +259,11 @@ E.g.:
    :class: haskell-pre
 
     {
-            affected_rows
-            returning {
-                id
-                author_id
-            }
+      affected_rows
+      returning {
+        id
+        author_id
+      }
     }
 
 .. _ConflictClause:
@@ -273,9 +273,9 @@ Conflict Clause
 .. parsed-literal::
    :class: haskell-pre
     
-    on_conflict:{
-        [constraint: <unique_constraint_name>| constraint_on : ["column-name1","column-name2",..!]],
-        action: ["update"|"ignore"]
+    on_conflict: {
+      [constraint: <unique_constraint_name> | constraint_on: ["column-name1","column-name2",..!]],
+      action: ["update"|"ignore"]
     }
 
 E.g.:
@@ -283,9 +283,9 @@ E.g.:
 .. parsed-literal::
    :class: haskell-pre
 
-    on_conflict:{
-            constraint_on: ["name"],
-            action: "ignore"
+    on_conflict: {
+      constraint_on: ["name"],
+      action: "ignore"
     }
 
 .. _whereArgExp:
@@ -296,7 +296,7 @@ E.g.:
 .. parsed-literal::
    :class: haskell-pre
 
-   ( where : BoolExp_)
+    (where: BoolExp_)
 
 .. _BoolExp:
 
@@ -306,7 +306,7 @@ BoolExp
 .. parsed-literal::
    :class: haskell-pre
 
-   AndExp_ | OrExp_ | NotExp_ | ColumnExp_
+    AndExp_ | OrExp_ | NotExp_ | ColumnExp_
 
 AndExp
 ######
@@ -314,9 +314,9 @@ AndExp
 .. parsed-literal::
    :class: haskell-pre
 
-   {
-        _and: [ColumnExp_]
-   }
+    {
+      _and: [ColumnExp_]
+    }
 
 
 OrExp
@@ -325,9 +325,9 @@ OrExp
 .. parsed-literal::
    :class: haskell-pre
 
-   {
-        _or: [ColumnExp_]
-   }
+    {
+      _or: [ColumnExp_]
+    }
 
 NotExp
 ######
@@ -335,9 +335,9 @@ NotExp
 .. parsed-literal::
    :class: haskell-pre
 
-   {
-        _not: [ColumnExp_]
-   }
+    {
+      _not: [ColumnExp_]
+    }
 
 ColumnExp
 #########
@@ -345,9 +345,9 @@ ColumnExp
 .. parsed-literal::
    :class: haskell-pre
 
-   {
-       field-name : { Operator_ : Value }
-   }
+    {
+      field-name: {Operator_: Value }
+    }
 
 Operator
 ########
@@ -383,14 +383,14 @@ Text related operators :
 .. _setArgExp:
 
 ``_set`` argument
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 
 .. parsed-literal::
    :class: haskell-pre
 
-   _set: { 
-        field-name-1 : value,
-        field-name-2 : value,
-        ..
+    _set: {
+      field-name-1 : value,
+      field-name-2 : value,
+      ..
     }
 
