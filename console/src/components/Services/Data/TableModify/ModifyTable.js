@@ -43,6 +43,7 @@ const ColumnEditor = ({
   fkAdd,
   tableName,
   dispatch,
+  currentSchema,
 }) => {
   //  eslint-disable-line no-unused-vars
   const c = column;
@@ -101,7 +102,7 @@ const ColumnEditor = ({
                       .join(',')}
                   </span>
                   <Link
-                    to={`${appPrefix}/schema/tables/${tableName}/relationships`}
+                    to={`${appPrefix}/schema/${currentSchema}/tables/${tableName}/relationships`}
                   >
                     <button
                       className={`${styles.default_button} btn`}
@@ -380,6 +381,7 @@ class ModifyTable extends Component {
               tableName={tableName}
               dispatch={dispatch}
               allSchemas={allSchemas}
+              currentSchema={currentSchema}
             />
           );
         } else {
@@ -392,6 +394,7 @@ class ModifyTable extends Component {
               tableName={tableName}
               dispatch={dispatch}
               allSchemas={allSchemas}
+              currentSchema={currentSchema}
             />
           );
         }
