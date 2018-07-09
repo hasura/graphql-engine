@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -81,7 +82,10 @@ func testMigrateWithDocker(t *testing.T, migrationsDir, executionDir string) {
 					defer pi.Remove()
 					defer ri.Remove()
 
-					endpointURL := fmt.Sprintf("http://%s:%d", ri.Host(), ri.Port())
+					endpointURL, err := url.Parse(fmt.Sprintf("http://%s:%d", ri.Host(), ri.Port()))
+					if err != nil {
+						t.Fatal(err)
+					}
 					// Create migration Dir
 					migrationsDir, err := ioutil.TempDir("", "")
 					if err != nil {
@@ -101,7 +105,10 @@ func testMigrateWithDocker(t *testing.T, migrationsDir, executionDir string) {
 }
 
 func TestMigrateCmd(t *testing.T) {
-	endpointURL := os.Getenv("HASURA_GRAPHQL_TEST_ENDPOINT")
+	endpointURL, err := url.Parse(os.Getenv("HASURA_GRAPHQL_TEST_ENDPOINT"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	// Create migration Dir
 	migrationsDir, err := ioutil.TempDir("", "")
 	if err != nil {
@@ -119,7 +126,7 @@ func TestMigrateCmd(t *testing.T) {
 	testMigrate(t, endpointURL, migrationsDir, executionDir)
 }
 
-func testMigrate(t *testing.T, endpoint, migrationsDir, executionDir string) {
+func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir, executionDir string) {
 	// Create 1_create_table_test.up.sql which creates table test
 	mustWriteFile(t, migrationsDir, "1_create_table_test.up.sql", `CREATE TABLE "test"("id" serial NOT NULL, PRIMARY KEY ("id") )`)
 	// Create 1_create_table_test.down.sql which creates table test

@@ -29,6 +29,10 @@ func TestConsoleCmd(t *testing.T) {
 		DontOpenBrowser: true,
 	}
 	opts.EC.Spinner.Writer = &fake.FakeWriter{}
+	err := opts.EC.Config.ParseEndpoint()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	go func() {
 		t.Log("waiting for console to start")
@@ -38,7 +42,7 @@ func TestConsoleCmd(t *testing.T) {
 		opts.WG.Done()
 		opts.WG.Done()
 	}()
-	err := opts.run()
+	err = opts.run()
 	if err != nil {
 		t.Fatalf("failed running console: %v", err)
 	}

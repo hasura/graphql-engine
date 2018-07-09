@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"net/url"
 	"testing"
 	"time"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus/hooks/test"
 )
 
-func testMetadataExport(t *testing.T, executionDir string, endpoint string) {
+func testMetadataExport(t *testing.T, executionDir string, endpoint *url.URL) {
 	logger, _ := test.NewNullLogger()
 	opts := &metadataExportOptions{
 		EC: &cli.ExecutionContext{
@@ -17,8 +18,9 @@ func testMetadataExport(t *testing.T, executionDir string, endpoint string) {
 			Spinner:            spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			ExecutionDirectory: executionDir,
 			Config: &cli.HasuraGraphQLConfig{
-				Endpoint:  endpoint,
-				AccessKey: "",
+				Endpoint:       endpoint.String(),
+				AccessKey:      "",
+				ParsedEndpoint: endpoint,
 			},
 		},
 		actionType: "export",

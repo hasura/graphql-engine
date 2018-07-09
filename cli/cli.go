@@ -9,6 +9,7 @@ package cli
 
 import (
 	"bytes"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -50,6 +51,18 @@ type HasuraGraphQLConfig struct {
 	Endpoint string `json:"endpoint"`
 	// AccessKey (optional) required to query the endpoint
 	AccessKey string `json:"access_key,omitempty"`
+
+	ParsedEndpoint *url.URL
+}
+
+// ParseEndpoint ensures the endpoint is valid.
+func (hgc *HasuraGraphQLConfig) ParseEndpoint() error {
+	nurl, err := url.Parse(hgc.Endpoint)
+	if err != nil {
+		return err
+	}
+	hgc.ParsedEndpoint = nurl
+	return nil
 }
 
 // ExecutionContext contains various contextual information required by the cli
@@ -204,15 +217,14 @@ func (ec *ExecutionContext) readConfig() error {
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {
-		ec.Logger.WithError(err).Error("cannot read config file")
 		return errors.Wrap(err, "cannor read config file")
 	}
-
 	ec.Config = &HasuraGraphQLConfig{
 		Endpoint:  v.GetString("endpoint"),
 		AccessKey: v.GetString("access_key"),
 	}
-	return nil
+	err = ec.Config.ParseEndpoint()
+	return err
 }
 
 // setupSpinner creates a default spinner if the context does not already have
