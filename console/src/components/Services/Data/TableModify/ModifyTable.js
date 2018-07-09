@@ -314,7 +314,9 @@ class ModifyTable extends Component {
     const styles = require('./Modify.scss');
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
     const hasPrimaryKeys =
-      tableSchema.primary_key && tableSchema.primary_key.columns.length > 0;
+      tableSchema &&
+      tableSchema.primary_key &&
+      tableSchema.primary_key.columns.length > 0;
     const primaryKeyDict = hasPrimaryKeys
       ? convertListToDict(tableSchema.primary_key.columns)
       : {};
@@ -600,7 +602,6 @@ class ModifyTable extends Component {
             <br />
           </div>
         </div>
-        <div className={`hidden col-xs-2 ${styles.fixed}`}>{alert}</div>
       </div>
     );
   }

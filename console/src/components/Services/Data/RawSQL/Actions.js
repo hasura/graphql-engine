@@ -84,7 +84,7 @@ const executeSQL = isMigration => (dispatch, getState) => {
   const options = {
     method: 'POST',
     credentials: globalCookiePolicy,
-    headers: dataHeaders,
+    headers: dataHeaders(getState),
     body: JSON.stringify(requestBody),
   };
   fetch(url, options).then(

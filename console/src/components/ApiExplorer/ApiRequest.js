@@ -1,8 +1,5 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
-import globals from 'Globals';
 
 import {
   generateApiCodeClicked,
@@ -17,15 +14,7 @@ import {
   editGeneratedJson,
 } from './Actions';
 
-// Import query builder
-
 import GraphiQLWrapper from './GraphiQLWrapper';
-
-const adminToken = (
-  <Tooltip id="tooltip-admin-token">
-    The access key is the static key for querying Data API as Admin
-  </Tooltip>
-);
 
 const styles = require('./ApiExplorer.scss');
 
@@ -62,7 +51,7 @@ class ApiRequest extends Component {
     const index = parseInt(e.target.getAttribute('data-header-id'), 10);
     const key = e.target.getAttribute('data-element-name');
     const newValue = e.target.value;
-    this.props.dispatch(changeRequestHeader(index, key, newValue));
+    this.props.dispatch(changeRequestHeader(index, key, newValue, false));
   }
 
   onDeleteHeaderClicked(e) {
@@ -85,12 +74,6 @@ class ApiRequest extends Component {
       );
     }
   }
-
-  onAddAdminTokenClicked = () => {
-    this.props.dispatch(
-      addRequestHeader('X-HASURA-ACCESS-KEY', globals.accessKey)
-    );
-  };
 
   getHTTPMethods = () => {
     const httpMethods = ['POST'];
@@ -188,38 +171,10 @@ class ApiRequest extends Component {
   }
 
   getHeaderTitleView() {
-    let addAdminToken = null;
-    if (globals.accessKey && globals.accessKey !== '') {
-      addAdminToken = (
-        <span className={styles.addAdminToken}>
-          <button
-            onClick={this.onAddAdminTokenClicked}
-            type="button"
-            className={'btn btn-default btn-xs'}
-          >
-            Add Access Key
-          </button>
-          <OverlayTrigger placement="right" overlay={adminToken}>
-            <i
-              className={
-                styles.admin_token_align +
-                ' ' +
-                styles.padd_small_left +
-                ' fa fa-info-circle'
-              }
-              aria-hidden="true"
-            />
-          </OverlayTrigger>
-        </span>
-      );
-    }
     return (
       <div className={styles.responseWrapper}>
         <div className={'col-xs-12 ' + styles.padd_remove}>
-          <div className={styles.responseHeader}>
-            Request Headers
-            {addAdminToken}
-          </div>
+          <div className={styles.responseHeader}>Request Headers</div>
         </div>
       </div>
     );
@@ -227,6 +182,7 @@ class ApiRequest extends Component {
 
   getHeaderRows() {
     const rows = this.props.headers.map((header, i) => {
+      console.log(header);
       return (
         <tr key={i}>
           {header.isNewHeader ? null : (
@@ -266,6 +222,7 @@ class ApiRequest extends Component {
             <input
               className={'form-control ' + styles.responseTableInput}
               value={header.key}
+              disabled={header.isDisabled === true ? true : false}
               data-header-id={i}
               placeholder="Enter Key"
               data-element-name="key"
@@ -288,6 +245,7 @@ class ApiRequest extends Component {
             <input
               className={'form-control ' + styles.responseTableInput}
               value={header.value}
+              disabled={header.isDisabled === true ? true : false}
               data-header-id={i}
               placeholder="Enter Value"
               data-element-name="value"

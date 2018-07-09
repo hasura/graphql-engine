@@ -2,6 +2,7 @@ import React from 'react';
 // import {push} fropm 'react-router-redux';
 import { Route, IndexRedirect } from 'react-router';
 import globals from '../../../Globals';
+import { loadAccessKeyState } from '../../AppState';
 
 import {
   schemaConnector,
@@ -26,7 +27,12 @@ import {
   loadUntrackedSchema,
   fetchSchemaList,
   UPDATE_CURRENT_SCHEMA,
+  UPDATE_DATA_HEADERS,
+  ACCESS_KEY_ERROR,
 } from './DataActions';
+
+import { changeRequestHeader } from '../../ApiExplorer/Actions';
+import { validateLogin } from '../../Main/Actions';
 
 const makeDataRouter = (
   connect,
@@ -37,17 +43,9 @@ const makeDataRouter = (
   consoleModeRedirects
 ) => {
   return (
-    <Route
-      path="data"
-      component={dataHeaderConnector(connect)}
-      onEnter={composeOnEnterHooks([requireSchema])}
-    >
+    <Route path="data" component={dataHeaderConnector(connect)}>
       <IndexRedirect to="schema/public" />
-      <Route
-        path="schema"
-        component={schemaContainerConnector(connect)}
-        onEnter={requireSchema}
-      >
+      <Route path="schema" component={schemaContainerConnector(connect)}>
         <IndexRedirect to="public" />
         <Route path=":schema" component={schemaConnector(connect)} />
         <Route path=":schema/tables" component={schemaConnector(connect)} />
@@ -99,22 +97,17 @@ const makeDataRouter = (
       </Route>
       <Route
         path="schema/:schema/table/add"
-        onEnter={composeOnEnterHooks([requireSchema, migrationRedirects])}
+        onEnter={composeOnEnterHooks([migrationRedirects])}
         component={addTableConnector(connect)}
       />
       <Route
         path="schema/:schema/existing-table-view/add"
-        onEnter={requireSchema}
         component={addExistingTableViewConnector(connect)}
       />
-      <Route
-        path="sql"
-        onEnter={requireSchema}
-        component={rawSQLConnector(connect)}
-      />
+      <Route path="sql" component={rawSQLConnector(connect)} />
       <Route
         path="migrations"
-        onEnter={composeOnEnterHooks([requireSchema, consoleModeRedirects])}
+        onEnter={composeOnEnterHooks([consoleModeRedirects])}
         component={migrationsConnector(connect)}
       />
     </Route>
@@ -123,6 +116,11 @@ const makeDataRouter = (
 
 const dataRouter = (connect, store, composeOnEnterHooks) => {
   const requireSchema = (nextState, replaceState, cb) => {
+    // check if access key is available in localstorage. if so use that.
+    // if localstorage access key didn't work, redirect to login (meaning value has changed)
+    // if access key is not available in localstorage, check if cli is giving it via window.__env
+    // if access key is not available in localstorage and cli, make a api call to data without access key.
+    // if the api fails, then redirect to login - this is a fresh user/browser flow
     const {
       tables: { allSchemas },
     } = store.getState();
@@ -138,24 +136,73 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
     ) {
       currentSchema = 'public';
     }
-    Promise.all([
-      store.dispatch({
-        type: UPDATE_CURRENT_SCHEMA,
-        currentSchema: currentSchema,
-      }),
-      store.dispatch(fetchSchemaList()),
-      store.dispatch(loadSchema()),
-      store.dispatch(loadUntrackedSchema()),
-    ]).then(
-      () => {
-        cb();
-      },
-      () => {
-        alert('Could not load schema.');
-        replaceState('/');
-        cb();
-      }
-    );
+    // assume cli provides access key
+    let finalAccessKey = globals.accessKey;
+    const localStorageAccessKey = loadAccessKeyState('CONSOLE_ACCESS_KEY');
+    // check if accessKey is in localstorage
+    if (localStorageAccessKey !== null) {
+      // localstorage has the access key
+      globals.accessKey = localStorageAccessKey;
+      finalAccessKey = localStorageAccessKey;
+    }
+    // if access key is available, update the headers
+    if (
+      finalAccessKey !== '' &&
+      finalAccessKey !== undefined &&
+      finalAccessKey !== null
+    ) {
+      Promise.all([
+        store.dispatch({
+          type: UPDATE_DATA_HEADERS,
+          data: {
+            'Content-Type': 'application/json',
+            'X-Hasura-Access-Key': finalAccessKey,
+          },
+        }),
+        store.dispatch(
+          changeRequestHeader(1, 'key', 'X-Hasura-Access-Key', true)
+        ),
+        store.dispatch(changeRequestHeader(1, 'value', finalAccessKey, true)),
+      ]);
+    }
+    // redirect to login page if error in access key
+    if (store.getState().tables.accessKeyError) {
+      replaceState('/login');
+      cb();
+    } else {
+      // validate login
+      store.dispatch(validateLogin(true)).then(
+        () => {
+          Promise.all([
+            store.dispatch({
+              type: UPDATE_CURRENT_SCHEMA,
+              currentSchema: currentSchema,
+            }),
+            store.dispatch(fetchSchemaList()),
+            store.dispatch(loadSchema()),
+            store.dispatch(loadUntrackedSchema()),
+          ]).then(
+            () => {
+              cb();
+            },
+            () => {
+              // alert('Could not load schema.');
+              replaceState('/');
+              cb();
+            }
+          );
+        },
+        error => {
+          console.error(JSON.stringify(error));
+          Promise.all([
+            store.dispatch({ type: ACCESS_KEY_ERROR, data: true }),
+          ]).then(() => {
+            replaceState('/login');
+            cb();
+          });
+        }
+      );
+    }
   };
   const migrationRedirects = (nextState, replaceState, cb) => {
     const state = store.getState();

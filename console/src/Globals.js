@@ -18,13 +18,6 @@ const globals = {
   consoleMode: window.__env.consoleMode,
   urlPrefix: checkExtraSlashes(window.__env.urlPrefix),
 };
-if (globals.consoleMode === 'hasuradb') {
-  const windowUrl = window.location.protocol + '//' + window.location.host;
-  globals.dataApiUrl = windowUrl;
-  if (globals.nodeEnv === 'development') {
-    globals.dataApiUrl = globals.devDataApiUrl;
-  }
-}
 
 // set defaults
 if (!window.__env.urlPrefix) {
@@ -37,6 +30,14 @@ if (!window.__env.consoleMode) {
 
 if (!window.__env.accessKey) {
   globals.accessKey = null;
+}
+
+if (globals.consoleMode === 'hasuradb') {
+  const windowUrl = window.location.protocol + '//' + window.location.host;
+  globals.dataApiUrl = windowUrl;
+  if (globals.nodeEnv === 'development') {
+    globals.dataApiUrl = globals.devDataApiUrl;
+  }
 }
 
 export default globals;

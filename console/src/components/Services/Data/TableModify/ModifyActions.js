@@ -13,10 +13,7 @@ import {
   showSuccessNotification,
 } from '../Notification';
 import dataHeaders from '../Common/Headers';
-import {
-  loadMigrationStatus,
-  UPDATE_MIGRATION_STATUS_ERROR,
-} from '../../../Main/Actions';
+import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
 
 const TOGGLE_ACTIVE_COLUMN = 'ModifyTable/TOGGLE_ACTIVE_COLUMN';
@@ -106,13 +103,11 @@ const untrackTableSql = tableName => {
     const errorMsg = 'Untrack table failed';
 
     const customOnSuccess = () => {
-      dispatch(loadSchema()).then(() => {
-        const allSchemas = getState().tables.allSchemas;
-        const untrackedRelations = getAllUnTrackedRelations(allSchemas);
-        dispatch({
-          type: LOAD_UNTRACKED_RELATIONS,
-          untrackedRelations: untrackedRelations,
-        });
+      const allSchemas = getState().tables.allSchemas;
+      const untrackedRelations = getAllUnTrackedRelations(allSchemas);
+      dispatch({
+        type: LOAD_UNTRACKED_RELATIONS,
+        untrackedRelations: untrackedRelations,
       });
       dispatch(_push('/'));
     };
@@ -154,7 +149,7 @@ const fetchViewDefinition = (viewName, isRedirect) => {
     const options = {
       method: 'POST',
       credentials: globalCookiePolicy,
-      headers: dataHeaders,
+      headers: dataHeaders(getState),
       body: JSON.stringify(reqBody),
     };
     return dispatch(
@@ -1455,10 +1450,7 @@ const saveColChangesWithFkSql = (
     const errorMsg = 'Modifying column failed';
 
     const customOnSuccess = () => {
-      dispatch(loadMigrationStatus()).then(() => {
-        dispatch(addFkSql(tableName, true));
-        dispatch(loadSchema());
-      });
+      dispatch(addFkSql(tableName, true));
     };
     const customOnError = () => {};
 

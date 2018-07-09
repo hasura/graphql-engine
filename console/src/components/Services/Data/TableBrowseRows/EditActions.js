@@ -72,7 +72,7 @@ const editItem = (tableName, colValues) => {
     const options = {
       method: 'POST',
       credentials: globalCookiePolicy,
-      headers: dataHeaders,
+      headers: dataHeaders(getState),
       body: JSON.stringify(reqBody),
     };
     const url = Endpoints.query;
@@ -88,7 +88,6 @@ const editItem = (tableName, colValues) => {
         );
       },
       err => {
-        console.log(err);
         dispatch(
           showErrorNotification('Edit failed!', err.error, reqBody, err)
         );
