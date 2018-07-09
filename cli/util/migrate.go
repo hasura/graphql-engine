@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/migrate"
@@ -153,7 +154,7 @@ func GetFilePath(dir string) *url.URL {
 	}
 
 	// Add Prefix / to path if runtime.GOOS equals to windows
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == "windows" && !strings.HasPrefix(host.Path, "/") {
 		host.Path = "/" + host.Path
 	}
 	return host
