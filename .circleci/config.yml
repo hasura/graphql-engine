@@ -27,6 +27,10 @@ refs:
     filters:
       branches:
         ignore: /.*/
+  filter_ignore_release_branches: &filter_ignore_release_branches
+    filters:
+      branches:
+        ignore: /^release-v.*/
   
 
 
@@ -35,7 +39,7 @@ jobs:
   # test build the server binary
   test_and_build_server:
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.1
+    - image: hasura/graphql-engine-server-builder:v0.2
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
@@ -57,6 +61,8 @@ jobs:
         command: |
           # TODO: make test
           make ci-binary
+          make ci-image
+          make ci-save-image
     - save_cache:
         key: server-app-cache-{{ .Branch }}-{{ .Revision }}
         paths:
@@ -76,7 +82,7 @@ jobs:
   # test and build cli
   test_and_build_cli:
     docker:
-    - image: hasura/graphql-engine-cli-builder:v0.1
+    - image: hasura/graphql-engine-cli-builder:v0.2
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
@@ -119,7 +125,7 @@ jobs:
   # test and build console
   test_and_build_console:
     docker:
-    - image: hasura/graphql-engine-console-builder:v0.1
+    - image: hasura/graphql-engine-console-builder:v0.2
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
@@ -161,54 +167,20 @@ jobs:
         paths:
           - _console_output
 
-  # needs: DOCKER_USER, DOCKER_PASSWORD, GCLOUD_SERVICE_KEY, GOOGLE_PROJECT_ID, GITHUB_TOKEN
   deploy:
     docker:
-    - image: hasura/graphql-engine-deployer:v0.1
+    - image: hasura/graphql-engine-deployer:v0.2
     working_directory: ~/graphql-engine
     steps:
     - setup_remote_docker:
         version: 17.09.0-ce
         docker_layer_caching: true
-    - run:
-        name: login to docker hub
-        command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
     - checkout
     - attach_workspace:
         at: /build
     - run:
-        name: deploy server
-        working_directory: server
-        command: |
-          make ci-image
-          make push
-          echo "open pull request to each repo"
-    - run: 
-        name: deploy cli
-        command: |
-          ghr -t "$GITHUB_TOKEN" \
-              -u "$CIRCLE_PROJECT_USERNAME" \
-              -r "$CIRCLE_PROJECT_REPONAME" \
-              -b "$CIRCLE_TAG" \
-              -draft \
-           "$CIRCLE_TAG" /build/_cli_output/
-
-    - run:
-        name: store gcloud service account to file 
-        command: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-    - run:
-        name: setup gcloud
-        command: |
-          gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
-          gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-    - run:
-        name: copy assets to gcloud
-        working_directory: console
-        command: |
-          export VERSION=$(../scripts/get-version-circleci.sh)
-          export DIST_PATH="/build/_console_output"
-          make gcloud-cp-stable
-          make gcloud-set-metadata
+        name: deploy
+        command: .circleci/deploy.sh
 
 workflows:
   version: 2
@@ -225,5 +197,6 @@ workflows:
         - test_and_build_server
         - test_and_build_cli
     - deploy: 
-        <<: *filter_only_dev_branches
         <<: *filter_only_vtags
+        requires:
+        - test_and_build_console
