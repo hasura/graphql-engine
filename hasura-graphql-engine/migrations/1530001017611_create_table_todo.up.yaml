@@ -1,0 +1,7 @@
+- args:
+    sql: CREATE TABLE "todo"("id" serial NOT NULL, "task" text NOT NULL, "completed"
+      boolean NOT NULL, "user_id" text NOT NULL, PRIMARY KEY ("id") )
+  type: run_sql
+- args:
+    name: todo
+  type: add_existing_table_or_view

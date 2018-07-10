@@ -1,0 +1,10 @@
+- args:
+    permission:
+      columns:
+      - completed
+      filter:
+        user_id:
+          _eq: X-HASURA-USER-ID
+    role: user
+    table: todo
+  type: create_update_permission
