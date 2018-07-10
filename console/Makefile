@@ -1,18 +1,27 @@
 export PATH := node_modules/.bin:$(PATH)
-DIST_PATH = ./static/dist
+DIST_PATH ?= ./static/dist
 BUCKET_NAME ?= hasura-graphql-engine
 VERSION ?= $(shell ../scripts/get-version.sh)
 
 all: deps build gcloud-cp-stable gcloud-set-metadata
 
 deps:
-	if [ ! -d "node_modules" ]; then npm install; fi
+	npm install
+
+ci-deps:
+	if [ ! -d "node_modules" ]; then npm ci; fi
 
 build:
 	npm run build
 
 test:
 	npm run test
+
+# to be run inside circle-ci
+ci-copy-assets:
+	mkdir -p /build/_console_output
+	cp $(DIST_PATH)/* /build/_console_output/
+	echo "$(VERSION)" > /build/_console_output/version.txt
 
 gcloud-cp-stable:
 	gsutil cp -r $(DIST_PATH)/main.css gs://$(BUCKET_NAME)/console/$(VERSION)/main.css
