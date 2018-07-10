@@ -18,4 +18,4 @@ Step 2: Configure the CLI to use your endpoint
 Step 3: Set an access key on the GraphQL engine
 -----------------------------------------------
 
-If you're looking at adding authentication and access control to your GraphQL API then head to :doc:`Authentication / access control <../auth/index>`.
+If you're looking at adding authentication and access control to your GraphQL API then head to :doc:`Authentication / access control <../../auth/index>`.

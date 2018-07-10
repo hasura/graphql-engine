@@ -26,7 +26,7 @@ By default, it connects to the primary database in your app which is available a
        --server-port $PORT \
        --enable-console
 
-Read about more configuration options :doc:`here<../deployment/options>`.
+Read about more configuration options :doc:`here <../../deployment/options>`.
 
 Deploying
 ---------
@@ -80,5 +80,5 @@ Remember to change HEROKU_GIT_REMOTE to your git remote below. In our case: http
 
 Visit `https://graphql-on-postgres.herokuapp.com <https://graphql-on-postgres.herokuapp.com>`_ (Please note to replace ``graphql-on-postgres`` with your app name) and you should see the page below.
 
-.. image:: ../../../img/graphql/manual/getting-started/InstallSuccess.jpg
+.. image:: ../../../../img/graphql/manual/getting-started/InstallSuccess.jpg
   :alt: Heroku installation success

@@ -32,6 +32,5 @@ Choose a getting started guide:
    Heroku quickstart <heroku-simple>
    Docker quickstart <docker-simple>
    first-graphql-query
-   securing-graphql-endpoint
    using-existing-database
    postgres-credentials
