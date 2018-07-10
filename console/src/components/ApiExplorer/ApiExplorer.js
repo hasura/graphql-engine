@@ -46,11 +46,6 @@ class ApiExplorer extends Component {
 
   render() {
     const styles = require('./ApiExplorer.scss');
-    const {
-      exploreOnBoardingSidebar,
-      showOnBoarding,
-      welcomeStep,
-    } = this.props;
     let wrapperClass = styles.apiExplorerWrapper;
     let panelStyles = '';
     let requestStyles = '';
@@ -69,11 +64,13 @@ class ApiExplorer extends Component {
         dispatch={this.props.dispatch}
         wdStyles={wdClass}
         route={this.props.route}
+        dataHeaders={this.props.dataHeaders}
       />
     );
 
     return (
       <div className={'container-fluid ' + styles.padd_remove}>
+        <Helmet title="API Explorer | Hasura" />
         <div className={wrapperClass}>{requestWrapper}</div>
       </div>
     );

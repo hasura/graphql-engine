@@ -2,6 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import globals from '../../Globals';
 
 import * as tooltip from './Tooltips';
 import 'react-toggle/style.css';
@@ -26,6 +27,16 @@ const Main = ({ children, location, migrationModeProgress, currentSchema }) => {
     );
   } else {
     mainContent = children && React.cloneElement(children);
+  }
+  let accessKeyHtml = null;
+  if (globals.accessKey === '' || globals.accessKey === null) {
+    accessKeyHtml = (
+      <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/production.html">
+        <button className={'btn btn-danger ' + styles.add_mar_right}>
+          Secure your endpoint
+        </button>
+      </a>
+    );
   }
 
   return (
@@ -91,7 +102,7 @@ const Main = ({ children, location, migrationModeProgress, currentSchema }) => {
               </OverlayTrigger>
             </ul>
           </div>
-          <div className={styles.clusterInfoWrapper} />
+          <div className={styles.clusterInfoWrapper}>{accessKeyHtml}</div>
         </div>
         <div className={styles.main + ' container-fluid'}>{mainContent}</div>
       </div>

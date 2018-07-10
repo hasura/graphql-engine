@@ -3,7 +3,6 @@ package commands
 import (
 	"bytes"
 	"fmt"
-	"net/url"
 	"text/tabwriter"
 
 	"github.com/hasura/graphql-engine/cli"
@@ -39,14 +38,11 @@ type migrateStatusOptions struct {
 }
 
 func (o *migrateStatusOptions) run() (*migrate.Status, error) {
-	dbURL, err := url.Parse(o.EC.Config.Endpoint)
+	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.Logger)
 	if err != nil {
-		return nil, errors.Wrap(err, "error parsing Endpoint")
+		return nil, errors.Wrap(err, "cannot create migrate instance")
 	}
-
-	dbURL.Scheme = "hasuradb"
-	dbURL.User = url.UserPassword("admin", o.EC.Config.AccessKey)
-	status, err := util.ExecuteStatus("file://"+o.EC.MigrationDir, dbURL.String())
+	status, err := executeStatus(migrateDrv)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch migrate status")
 	}

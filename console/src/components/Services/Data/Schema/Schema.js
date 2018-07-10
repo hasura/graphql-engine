@@ -8,7 +8,7 @@ import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
-import { dataAPI, untrackedTip, untrackedRelTip } from './Tooltips';
+import { untrackedTip, untrackedRelTip } from './Tooltips';
 import {
   setTableName,
   addExistingTableSql,
@@ -145,24 +145,6 @@ class Schema extends Component {
                 Create Table
               </button>
             ) : null}
-            &nbsp; &nbsp;
-            <button
-              className={styles.default_button}
-              onClick={e => {
-                e.preventDefault();
-                dispatch(
-                  push(
-                    `${appPrefix}/schema/${currentSchema}/existing-table-view/add`
-                  )
-                );
-              }}
-            >
-              Add Existing Table/View
-            </button>
-            &nbsp; &nbsp;
-            <OverlayTrigger placement="right" overlay={dataAPI}>
-              <i className="fa fa-info-circle" aria-hidden="true" />
-            </OverlayTrigger>
           </div>
           <hr />
           <div className={styles.padd_bottom}>

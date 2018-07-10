@@ -8,6 +8,7 @@
 module Hasura.Server.App where
 
 import           Control.Concurrent.MVar
+import           Control.Exception             (try)
 import           Control.Lens                  hiding ((.=))
 import           Data.Char                     (isSpace)
 import           Data.IORef
@@ -150,11 +151,20 @@ buildQCtx = do
   cache <- liftIO $ readIORef scRef
   return $ QCtx userInfo $ fst cache
 
+httpToQErr :: H.HttpException -> QErr
+httpToQErr e = case e of
+  H.InvalidUrlException _ _ -> err500 Unexpected "Invalid Webhook Url"
+  H.HttpExceptionRequest _ H.ConnectionTimeout -> err500 Unexpected
+    "Webhook : Connection timeout"
+  H.HttpExceptionRequest _ H.ResponseTimeout -> err500 Unexpected
+    "Webhook : Response timeout"
+  _ -> err500 Unexpected "HTTP Exception from Webhook"
+
 fromWebHook
   :: (MonadIO m)
   => T.Text
   -> [N.Header]
-  -> ActionT m [(T.Text, T.Text)]
+  -> ExceptT QErr m [(T.Text, T.Text)]
 fromWebHook urlT reqHeaders = do
   manager <- liftIO $
     H.newManager $ HT.mkManagerSettings tlsSimple Nothing
@@ -163,11 +173,13 @@ fromWebHook urlT reqHeaders = do
         , WqT.checkResponse = Just (\_ _ -> return ())
         , WqT.manager = Right manager
         }
-  resp <- liftIO $ Wq.getWith options $ T.unpack urlT
+  respWithExcept <- liftIO $ try $ Wq.getWith options $ T.unpack urlT
+  resp <- either (throwError . httpToQErr) return respWithExcept
   let status = resp ^. Wq.responseStatus
   validateStatus status
   webHookResp <- decodeBS $ resp ^. Wq.responseBody
   return $ M.toList webHookResp
+
   where
     filteredHeaders = flip filter reqHeaders $ \(n, _) ->
       n /= "Content-Length" && n /= "User-Agent" && n /= "Host"
@@ -176,39 +188,31 @@ fromWebHook urlT reqHeaders = do
 
     validateStatus statusCode
       | statusCode == N.status200 = return ()
-      | statusCode == N.status401 = raiseAPIException N.status401 $
-         err401 AccessDenied
+      | statusCode == N.status401 = throw401
          "Authentication hook unauthorized this request"
-      | otherwise = raiseAPIException N.status500 $
-        err500 Unexpected
+      | otherwise = throw500
         "Invalid response from authorization hook"
 
     decodeBS bs = case eitherDecode bs of
-      Left e -> raiseAPIException N.status500 $ err500 Unexpected $
+      Left e -> throw500 $
         "Invalid response from authorization hook; " <> T.pack e
       Right a -> return a
-
-    raiseAPIException st qErr = do
-      setStatus st
-      uncurry setHeader jsonHeader
-      lazyBytes $ encode qErr
 
 fetchHeaders
   :: (MonadIO m)
   => WI.Request
+  -> Maybe T.Text
   -> AuthMode
-  ->  ActionT m [(T.Text, T.Text)]
-fetchHeaders req authMode =
+  ->  ExceptT QErr m [(T.Text, T.Text)]
+fetchHeaders req mReqAccessKey authMode =
   case authMode of
     AMNoAuth -> return headers
 
     AMAccessKey accKey -> do
-      mReqAccessKey <- header accessKeyHeader
       reqAccessKey <- maybe accessKeyAuthErr return mReqAccessKey
       validateKeyAndReturnHeaders accKey reqAccessKey
 
-    AMAccessKeyAndHook accKey hook -> do
-      mReqAccessKey <- header accessKeyHeader
+    AMAccessKeyAndHook accKey hook ->
       maybe (fromWebHook hook rawHeaders)
             (validateKeyAndReturnHeaders accKey)
             mReqAccessKey
@@ -220,16 +224,8 @@ fetchHeaders req authMode =
       when (reqKey /= key) accessKeyAuthErr
       return headers
 
-    accessKeyAuthErr = do
-      setStatus N.status401
-      uncurry setHeader jsonHeader
-      lazyBytes $ encode accessKeyErrMsg
-
-    accessKeyErrMsg :: M.HashMap T.Text T.Text
-    accessKeyErrMsg = M.fromList
-                      [ ("message", "access keys don't match or not found")
-                      , ("code", "access-key-error")
-                      ]
+    accessKeyAuthErr = throw400 AccessDenied $
+          "access keys don't match or not found"
 
     headersTxt hdrsRaw =
       flip map hdrsRaw $ \(hdrName, hdrVal) ->
@@ -248,6 +244,9 @@ logResult sc res qTime = do
   where
     logger = scLogger sc
 
+logError :: MonadIO m => ServerCtx -> QErr -> ActionT m ()
+logError sc qErr = logResult sc (Left qErr) Nothing
+
 mkSpockAction
   :: (MonadIO m)
   => (T.Text -> QErr -> Value)
@@ -257,10 +256,13 @@ mkSpockAction
 mkSpockAction qErrEncoder serverCtx handler = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
-
-  headers <- fetchHeaders req $ scServerMode serverCtx
-
   role <- fromMaybe "admin" <$> header userRoleHeader
+
+  accKeyHeader <- header accessKeyHeader
+  headersRes <- runExceptT $
+    fetchHeaders req accKeyHeader $ scServerMode serverCtx
+  headers <- either (logAndThrow role) return headersRes
+
   let handlerState = HandlerCtx serverCtx reqBody headers
 
   t1 <- liftIO getCurrentTime -- for measuring response time purposes
@@ -272,9 +274,13 @@ mkSpockAction qErrEncoder serverCtx handler = do
   either (qErrToResp role) resToResp result
   where
     -- encode error response
-    qErrToResp mRole qErr = do
+    qErrToResp role qErr = do
       setStatus $ qeStatus qErr
-      json $ qErrEncoder mRole qErr
+      json $ qErrEncoder role qErr
+
+    logAndThrow role qErr = do
+      logError serverCtx qErr
+      qErrToResp role qErr
 
     resToResp resp = do
       uncurry setHeader jsonHeader
@@ -436,7 +442,7 @@ app isoLevel mRootDir logger pool mode corsCfg enableConsole = do
 
     hookAny GET $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
-      logResult serverCtx (Left qErr) Nothing
+      logError serverCtx qErr
       uncurry setHeader jsonHeader
       lazyBytes $ encode qErr
 

@@ -2,10 +2,7 @@ import defaultState from './AddState';
 import _push from '../push';
 import { loadSchema, makeMigrationCall } from '../DataActions';
 import { showSuccessNotification } from '../Notification';
-import {
-  loadMigrationStatus,
-  UPDATE_MIGRATION_STATUS_ERROR,
-} from '../../../Main/Actions';
+import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 import globals from '../../../../Globals';
 
@@ -180,12 +177,6 @@ const createTableSql = () => {
     const errorMsg = 'Create table failed';
 
     const customOnSuccess = () => {
-      dispatch(_push('/'));
-      // update migration state
-      if (globals.consoleMode === 'cli') {
-        dispatch(loadMigrationStatus());
-      }
-      dispatch(showSuccessNotification('Table created!'));
       dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: SET_DEFAULTS });
       dispatch(setTable(state.tableName.trim()));

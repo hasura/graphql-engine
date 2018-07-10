@@ -37,6 +37,7 @@ class ApiRequestWrapper extends Component {
           params={this.props.request.params}
           explorerData={this.props.explorerData}
           dispatch={this.props.dispatch}
+          dataHeaders={this.props.dataHeaders}
         />
         {this.props.request.bodyType !== 'graphql' ? (
           <ApiResponse

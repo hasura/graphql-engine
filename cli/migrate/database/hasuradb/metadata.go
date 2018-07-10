@@ -3,8 +3,6 @@ package hasuradb
 import (
 	"encoding/json"
 	"net/http"
-
-	log "github.com/sirupsen/logrus"
 )
 
 func (h *HasuraDB) ExportMetadata() (interface{}, error) {
@@ -15,16 +13,16 @@ func (h *HasuraDB) ExportMetadata() (interface{}, error) {
 
 	resp, body, err := h.sendQuery(query)
 	if err != nil {
-		log.Debug(err)
+		h.logger.Debug(err)
 		return nil, err
 	}
-	log.Debug("response: ", string(body))
+	h.logger.Debug("response: ", string(body))
 
 	var horror HasuraError
 	if resp.StatusCode != http.StatusOK {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
-			log.Debug(err)
+			h.logger.Debug(err)
 			return nil, err
 		}
 		return nil, horror.Error(h.config.isCMD)
@@ -33,7 +31,7 @@ func (h *HasuraDB) ExportMetadata() (interface{}, error) {
 	var hres interface{}
 	err = json.Unmarshal(body, &hres)
 	if err != nil {
-		log.Debug(err)
+		h.logger.Debug(err)
 		return nil, err
 	}
 
@@ -48,16 +46,16 @@ func (h *HasuraDB) ResetMetadata() error {
 
 	resp, body, err := h.sendQuery(query)
 	if err != nil {
-		log.Debug(err)
+		h.logger.Debug(err)
 		return err
 	}
-	log.Debug("response: ", string(body))
+	h.logger.Debug("response: ", string(body))
 
 	var horror HasuraError
 	if resp.StatusCode != http.StatusOK {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
-			log.Debug(err)
+			h.logger.Debug(err)
 			return err
 		}
 		return horror.Error(h.config.isCMD)
@@ -82,16 +80,16 @@ func (h *HasuraDB) ApplyMetadata(data interface{}) error {
 
 	resp, body, err := h.sendQuery(query)
 	if err != nil {
-		log.Debug(err)
+		h.logger.Debug(err)
 		return err
 	}
-	log.Debug("response: ", string(body))
+	h.logger.Debug("response: ", string(body))
 
 	var horror HasuraError
 	if resp.StatusCode != http.StatusOK {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
-			log.Debug(err)
+			h.logger.Debug(err)
 			return err
 		}
 		return horror.Error(h.config.isCMD)
@@ -107,16 +105,16 @@ func (h *HasuraDB) Query(data []interface{}) error {
 
 	resp, body, err := h.sendQuery(query)
 	if err != nil {
-		log.Debug(err)
+		h.logger.Debug(err)
 		return err
 	}
-	log.Debug("response: ", string(body))
+	h.logger.Debug("response: ", string(body))
 
 	var horror HasuraError
 	if resp.StatusCode != http.StatusOK {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
-			log.Debug(err)
+			h.logger.Debug(err)
 			return err
 		}
 		return horror.Error(h.config.isCMD)

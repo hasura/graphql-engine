@@ -51,6 +51,29 @@ const showNotification = ({
   };
 };
 
+const showTempNotification = ({
+  level = 'info',
+  position = 'tr',
+  json,
+  ...options
+} = {}) => {
+  return dispatch => {
+    dispatch(Notifications.removeAll());
+    dispatch(
+      Notifications.show(
+        {
+          position,
+          autoDismiss: 2,
+          dismissible: 'both',
+          children: json ? jsonFormat(json) : null,
+          ...options,
+        },
+        level
+      )
+    );
+  };
+};
+
 const notifExpand = isExpanded => ({ type: NOTIF_EXPANDED, data: isExpanded });
 const notifMsg = finalMsg => ({ type: NOTIF_MSG, data: finalMsg });
 
@@ -138,4 +161,5 @@ export {
   notifExpand,
   notifMsg,
   showNotification,
+  showTempNotification,
 };

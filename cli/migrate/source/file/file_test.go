@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	st "github.com/hasura/graphql-engine/cli/migrate/source/testing"
+	"github.com/sirupsen/logrus/hooks/test"
 )
 
 func Test(t *testing.T) {
@@ -35,8 +36,9 @@ func Test(t *testing.T) {
 	mustWriteFile(t, tmpDir, "8_foobar.up.sql", "7 up")
 	mustWriteFile(t, tmpDir, "8_foobar.down.sql", "7 down")
 
+	logger, _ := test.NewNullLogger()
 	f := &File{}
-	d, err := f.Open("file://" + tmpDir)
+	d, err := f.Open("file://"+tmpDir, logger)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,8 +60,9 @@ func TestOpen(t *testing.T) {
 		t.Fatal("expected tmpDir to be absolute path")
 	}
 
+	logger, _ := test.NewNullLogger()
 	f := &File{}
-	_, err = f.Open("file://" + tmpDir) // absolute path
+	_, err = f.Open("file://"+tmpDir, logger) // absolute path
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,10 +91,11 @@ func TestOpenWithRelativePath(t *testing.T) {
 
 	mustWriteFile(t, filepath.Join(tmpDir, "foo"), "1_foobar.up.sql", "")
 
+	logger, _ := test.NewNullLogger()
 	f := &File{}
 
 	// dir: foo
-	d, err := f.Open("file://foo")
+	d, err := f.Open("file://foo", logger)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +105,7 @@ func TestOpenWithRelativePath(t *testing.T) {
 	}
 
 	// dir: ./foo
-	d, err = f.Open("file://./foo")
+	d, err = f.Open("file://./foo", logger)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,8 +121,9 @@ func TestOpenDefaultsToCurrentDirectory(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	logger, _ := test.NewNullLogger()
 	f := &File{}
-	d, err := f.Open("file://")
+	d, err := f.Open("file://", logger)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,24 +143,27 @@ func TestOpenWithDuplicateVersion(t *testing.T) {
 	mustWriteFile(t, tmpDir, "1_foo.up.sql", "") // 1 up
 	mustWriteFile(t, tmpDir, "1_bar.up.sql", "") // 1 up
 
+	logger, _ := test.NewNullLogger()
 	f := &File{}
-	_, err = f.Open("file://" + tmpDir)
+	_, err = f.Open("file://"+tmpDir, logger)
 	if err == nil {
 		t.Fatal("expected err")
 	}
 }
 
 func TestOpenWithInvalidFileURL(t *testing.T) {
+	logger, _ := test.NewNullLogger()
 	f := &File{}
-	_, err := f.Open(":")
+	_, err := f.Open(":", logger)
 	if err == nil {
 		t.Fatal("exepected err to be not nil")
 	}
 }
 
 func TestWithEmptyMigration(t *testing.T) {
+	logger, _ := test.NewNullLogger()
 	s := &File{}
-	d, err := s.Open("")
+	d, err := s.Open("", logger)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -171,8 +179,9 @@ func TestWithEmptyMigration(t *testing.T) {
 }
 
 func TestWithInvalidDirectory(t *testing.T) {
+	logger, _ := test.NewNullLogger()
 	s := &File{}
-	_, err := s.Open("file://invalidir")
+	_, err := s.Open("file://invalidir", logger)
 	if err == nil {
 		t.Fatal("exepected err to be not nil")
 	}
@@ -185,8 +194,9 @@ func TestClose(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
+	logger, _ := test.NewNullLogger()
 	f := &File{}
-	d, err := f.Open("file://" + tmpDir)
+	d, err := f.Open("file://"+tmpDir, logger)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -211,21 +221,23 @@ func mustCreateBenchmarkDir(t *testing.B) (dir string) {
 }
 
 func BenchmarkOpen(b *testing.B) {
+	logger, _ := test.NewNullLogger()
 	dir := mustCreateBenchmarkDir(b)
 	defer os.RemoveAll(dir)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		f := &File{}
-		f.Open("file://" + dir)
+		f.Open("file://"+dir, logger)
 	}
 	b.StopTimer()
 }
 
 func BenchmarkNext(b *testing.B) {
+	logger, _ := test.NewNullLogger()
 	dir := mustCreateBenchmarkDir(b)
 	defer os.RemoveAll(dir)
 	f := &File{}
-	d, _ := f.Open("file://" + dir)
+	d, _ := f.Open("file://"+dir, logger)
 	b.ResetTimer()
 	v, err := d.First()
 	for n := 0; n < b.N; n++ {

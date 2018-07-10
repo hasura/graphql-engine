@@ -12,19 +12,24 @@ import (
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli/migrate/source"
+	log "github.com/sirupsen/logrus"
 )
 
 type File struct {
 	url        string
 	path       string
 	migrations *source.Migrations
+	logger     *log.Logger
 }
 
 func init() {
 	source.Register("file", &File{})
 }
 
-func (f *File) Open(url string) (source.Driver, error) {
+func (f *File) Open(url string, logger *log.Logger) (source.Driver, error) {
+	if logger == nil {
+		logger = log.New()
+	}
 	u, err := nurl.Parse(url)
 	if err != nil {
 		return nil, err
@@ -62,6 +67,7 @@ func (f *File) Open(url string) (source.Driver, error) {
 
 	nf := &File{
 		url:        url,
+		logger:     logger,
 		path:       p,
 		migrations: source.NewMigrations(),
 	}

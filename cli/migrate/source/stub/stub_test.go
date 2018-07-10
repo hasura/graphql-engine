@@ -5,11 +5,13 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 	st "github.com/hasura/graphql-engine/cli/migrate/source/testing"
+	"github.com/sirupsen/logrus/hooks/test"
 )
 
 func Test(t *testing.T) {
+	logger, _ := test.NewNullLogger()
 	s := &Stub{}
-	d, err := s.Open("")
+	d, err := s.Open("", logger)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,8 +34,9 @@ func Test(t *testing.T) {
 }
 
 func TestWithEmptyMigration(t *testing.T) {
+	logger, _ := test.NewNullLogger()
 	s := &Stub{}
-	d, err := s.Open("")
+	d, err := s.Open("", logger)
 	if err != nil {
 		t.Fatal(err)
 	}

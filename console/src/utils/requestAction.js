@@ -1,4 +1,7 @@
 import fetch from 'isomorphic-fetch';
+import { push } from 'react-router-redux';
+import globals from 'Globals';
+import { UPDATE_DATA_HEADERS } from 'components/Services/Data/DataActions';
 
 import {
   LOAD_REQUEST,
@@ -7,6 +10,8 @@ import {
   ERROR_REQUEST,
   CONNECTION_FAILED,
 } from 'components/App/Actions';
+
+import { LOGIN_IN_PROGRESS, LOGIN_ERROR } from 'components/Main/Actions';
 
 const requestAction = (
   url,
@@ -52,6 +57,18 @@ const requestAction = (
                   params: options.body,
                   statusCode: response.status,
                 });
+              }
+              if (msg.code && msg.code === 'access-denied') {
+                dispatch({
+                  type: UPDATE_DATA_HEADERS,
+                  data: {
+                    'Content-Type': 'application/json',
+                    'X-Hasura-Access-Key': globals.accessKey,
+                  },
+                });
+                dispatch({ type: LOGIN_IN_PROGRESS, data: false });
+                dispatch({ type: LOGIN_ERROR, data: false });
+                dispatch(push('/login'));
               }
               reject(msg);
             });

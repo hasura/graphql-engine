@@ -5,7 +5,6 @@ import (
 	sqldriver "database/sql/driver"
 	"fmt"
 	"io"
-	"testing"
 
 	mt "github.com/hasura/graphql-engine/cli/migrate/testing"
 	_ "github.com/lib/pq"
@@ -48,7 +47,7 @@ func isReadyRaven(i mt.Instance) bool {
 	return false
 }
 
-// FIXME: disabling this test for now
+/*
 func testHasuraDB(t *testing.T) {
 	mt.ParallelTest(t, postgresVersions, isReadyPostgres,
 		func(t *testing.T, pi mt.Instance) {
@@ -70,3 +69,4 @@ func testHasuraDB(t *testing.T) {
 				})
 		})
 }
+*/
