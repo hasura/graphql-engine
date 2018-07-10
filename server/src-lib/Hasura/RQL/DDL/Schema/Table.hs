@@ -129,17 +129,16 @@ reloadSchemaCache = do
   sc <- liftTx buildSchemaCache
   writeSchemaCache sc
 
-processTableChanges :: (P2C m) => TableInfo -> TableDiff -> m ()
-processTableChanges ti tableDiff = do
+processTableChanges :: (MonadTx m, QErrM m)
+                    => SchemaCache -> TableInfo -> TableDiff -> m ()
+processTableChanges sc ti tableDiff = do
   newtn <- do
     let tn = tiName ti
     case mNewName of
       Just newQT -> do
-        renameTable newQT tn
+        renameTable sc newQT tn
         return newQT
       Nothing -> return tn
-
-  sc <- askSchemaCache
 
   forM_ addedCols $ \(PGColInfo colName _) ->
     case M.lookup (fromPGCol colName) $ tiFieldInfoMap ti of
@@ -151,7 +150,7 @@ processTableChanges ti tableDiff = do
 
   -- for rest of the columns
   forM_ alteredCols $ \(PGColInfo oColName oColTy, PGColInfo nColName nColTy) ->
-    if | oColName /= nColName -> renameColumn oColName nColName newtn ti
+    if | oColName /= nColName -> renameColumn sc oColName nColName newtn ti
        | oColTy /= nColTy -> do
            let colId   = SOTableObj newtn $ TOCol oColName
                depObjs = getDependentObjsWith (== "on_type") sc colId
@@ -162,10 +161,10 @@ processTableChanges ti tableDiff = do
   where
     TableDiff mNewName _ addedCols alteredCols _ = tableDiff
 
-processSchemaChanges :: (P2C m) => SchemaDiff -> m ()
-processSchemaChanges schemaDiff = do
+processCatalogChanges :: (MonadTx m, QErrM m) => SchemaCache -> SchemaDiff -> m ()
+processCatalogChanges sc schemaDiff = do
   -- Purge the dropped tables
-  forM_ droppedTables $ \qtn@(QualifiedTable sn tn) -> do
+  forM_ droppedTables $ \qtn@(QualifiedTable sn tn) ->
     liftTx $ Q.catchE defaultTxErrorHandler $ do
       Q.unitQ [Q.sql|
                DELETE FROM "hdb_catalog"."hdb_relationship"
@@ -176,14 +175,12 @@ processSchemaChanges schemaDiff = do
                WHERE table_schema = $1 AND table_name = $2
                 |] (sn, tn) False
       delTableFromCatalog qtn
-    delTableFromCache qtn
-  -- Get schema cache
-  sc <- askSchemaCache
+
   forM_ alteredTables $ \(oldQtn, tableDiff) -> do
     ti <- case M.lookup oldQtn $ scTables sc of
       Just ti -> return ti
       Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
-    processTableChanges ti tableDiff
+    processTableChanges sc ti tableDiff
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
@@ -303,8 +300,9 @@ runSqlP2 (RunSQL t cascade) = do
   -- Purge all the indirect dependents from state
   mapM_ purgeDep indirectDeps
 
-  -- update the schema cache with the changes
-  processSchemaChanges schemaDiff
+  postPurgeSc <- askSchemaCache
+  -- update the hdb_catalog with the changes
+  processCatalogChanges postPurgeSc schemaDiff
 
   -- Reload SchemaCache
   reloadSchemaCache
@@ -406,8 +404,10 @@ unTrackExistingTableOrViewP2 (UntrackTable vn cascade) tableInfo = do
   -- Purge all the dependants from state
   mapM_ purgeDep allDepIds
 
-  -- update the schema cache with the changes
-  processSchemaChanges $ SchemaDiff [vn] []
+  postPurgeSc <- askSchemaCache
+  -- update the hdb_catalog with the changes
+  processCatalogChanges postPurgeSc $ SchemaDiff [vn] []
+  delTableFromCache vn
 
   return successMsg
   where
