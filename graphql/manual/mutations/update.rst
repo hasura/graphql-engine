@@ -12,8 +12,8 @@ Update the ``name`` of the author with a given ``id``:
   :query:
     mutation update_author {
       update_author(
-        where: {id: {_eq:3}},
-        _set: {name: "Jane Doe"}
+        where: {id: {_eq: 3}},
+        _set: {name: "Jane"}
       ) {
         affected_rows
       }
@@ -36,9 +36,9 @@ Update the ``rating`` of all articles that belong to an author:
   :query:
     mutation update_ratings {
       update_article(
-        where: {author: {name: {_eq:"John Doe"}}},
+        where: {author: {name: {_eq: "Sidney"}}},
         _set: {rating: 1}
-      ){
+      ) {
         affected_rows
       }
     }
@@ -46,7 +46,7 @@ Update the ``rating`` of all articles that belong to an author:
     {
       "data": {
         "update_article": {
-          "affected_rows": 7
+          "affected_rows": 3
         }
       }
     }

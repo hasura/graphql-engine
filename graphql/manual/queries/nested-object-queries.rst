@@ -1,11 +1,13 @@
 Nested object queries
 =====================
 
-You can use the 1:1 (object)  or 1:m (array) relationships defined in your schema (in the API-console) to make a nested query i.e. fetch data for a type along with data from a nested or related type.
+You can use the 1:1 (object)  or 1:m (array) relationships defined in your schema (in the API-console) to make a
+nested query i.e. fetch data for a type along with data from a nested or related type.
 
 Query using a 1:many relationship
 ---------------------------------
-The following is an example of nested object query using the 1:many or an array relationship between an author and articles.
+The following is an example of nested object query using the 1:many or an array relationship between an author and
+articles.
 
 Example: Nested object query over a 1:many relationship
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -29,51 +31,47 @@ Fetch a list of authors and a nested list of the each author’s articles:
         "author": [
           {
             "id": 1,
-            "name": "Chrissie",
+            "name": "Justin",
             "articles": [
               {
-                "id": 98,
-                "title": "some title"
+                "id": 15,
+                "title": "vel dapibus at"
               },
               {
-                "id": 73,
-                "title": "some title"
-              },
-              {
-                "id": 87,
-                "title": "some title"
+                "id": 16,
+                "title": "sem duis aliquam"
               }
             ]
           },
           {
             "id": 2,
-            "name": "Aubrey",
+            "name": "Beltran",
             "articles": [
               {
-                "id": 51,
-                "title": "some title"
+                "id": 2,
+                "title": "a nibh"
               },
               {
-                "id": 41,
-                "title": "some title"
-              },
-              {
-                "id": 19,
-                "title": "some title"
+                "id": 9,
+                "title": "sit amet"
               }
             ]
           },
           {
-            "id": 29,
-            "name": "Carmella",
+            "id": 3,
+            "name": "Sidney",
             "articles": [
               {
-                "id": 78,
-                "title": "some title"
+                "id": 6,
+                "title": "sapien ut"
               },
               {
-                "id": 64,
-                "title": "some title"
+                "id": 11,
+                "title": "turpis eget"
+              },
+              {
+                "id": 14,
+                "title": "congue etiam justo"
               }
             ]
           }
@@ -83,7 +81,8 @@ Fetch a list of authors and a nested list of the each author’s articles:
 
 Query using a 1:1 relationship
 ------------------------------
-The following is an example of nested object query using the 1:1 or an object relationship between an article and an author.
+The following is an example of nested object query using the 1:1 or an object relationship between an article and an
+author.
 
 Example: Nested object query over a 1:1 relationship
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -105,31 +104,24 @@ Fetch a list of articles and the name of each article’s author:
       "data": {
         "article": [
           {
+            "id": 1,
+            "title": "sit amet",
+            "author": {
+              "name": "Anjela"
+            }
+          },
+          {
+            "id": 2,
+            "title": "a nibh",
+            "author": {
+              "name": "Beltran"
+            }
+          },
+          {
             "id": 3,
-            "title": "some title",
+            "title": "amet justo morbi",
             "author": {
-              "name": "Derril"
-            }
-          },
-          {
-            "id": 4,
-            "title": "some title",
-            "author": {
-              "name": "Dreddy"
-            }
-          },
-          {
-            "id": 5,
-            "title": "some title",
-            "author": {
-              "name": "Mallorie"
-            }
-          },
-          {
-            "id": 6,
-            "title": "some title",
-            "author": {
-              "name": "Saunderson"
+              "name": "Anjela"
             }
           }
         ]
@@ -138,4 +130,5 @@ Fetch a list of articles and the name of each article’s author:
 
 .. note::
     
-    The name of the nested object is the same as the name of the `1:many` or `1:1` relationship configured in the API-Console
+    The name of the nested object is the same as the name of the `1:many` or `1:1` relationship configured in the
+    console

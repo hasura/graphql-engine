@@ -1,35 +1,39 @@
 Upsert mutation
 ===============
 
-To convert an *insert* mutation into an *upsert* one, you need to specify the unique constraint(s) and the action to be taken in the case of a conflict or violation. There are two ways to specify unique constraints, either specify the name of a unique constraint (using the ``constraint`` argument) or a list of columns that have unique constraints on them (using the ``constraint_on`` argument). On conflict, you can choose to either ignore the mutation (``action: "ignore"``) or update the row that caused the conflict (``action: "update"``).
+To convert an *insert* mutation into an *upsert* one, you need to specify the unique constraint(s) and the action
+to be taken in the case of a conflict or violation. There are two ways to specify unique constraints, either
+specify the name of a unique constraint (using the ``constraint`` argument) or a list of columns that have
+unique constraints on them (using the ``constraint_on`` argument). On conflict, you can choose to either
+ignore the mutation (``action: "ignore"``) or update the row that caused the conflict (``action: "update"``).
 
 For the following examples, assume there's a unique constraint on the ``name`` column of the ``author`` table.
 
 .. note::
     
-    You can fetch the name of unqiue constraints by quering the ``information_schema.table_constraints`` table. Typically, the constraint is automatically named as ``<table-name>_<column-name>_key`` when using the console to add it. The API-console will soon carry this information in the ``Data`` section.
+    You can fetch the name of unqiue constraints by quering the ``information_schema.table_constraints`` table.
+    Typically, the constraint is automatically named as ``<table-name>_<column-name>_key`` when using the console
+    to add it. The API-console will soon carry this information in the ``Data`` section.
 
 With unique constraint name (update)
 ------------------------------------
-Insert a new object in the author table or, if the unique constraint, ``author_name_key``, is violated, update the existing object:
+Insert a new object in the author table or, if the unique constraint, ``author_name_key``, is violated, update
+the existing object:
 
 .. graphiql::
   :view_only: true
   :query:
     mutation upsert_author {
-      insert_author (
+      insert_author(
         objects: [
-          {
-            name: "john doe",
-            id:1231
-          }
+          {name: "John", id: 10}
         ],
-        on_conflict:{
+        on_conflict: {
           constraint: "author_name_key",
           action: "update"
         }
       ) {
-       affected_rows
+        affected_rows
       }
     }
   :response:
@@ -41,24 +45,23 @@ Insert a new object in the author table or, if the unique constraint, ``author_n
       }
     }
 
-The response shown above assumes that the name of the author in our object is not unique and then *updates* the corresponding row in the database.
+The response shown above assumes that the name of the author in our object is not unique and then
+*updates* the corresponding row in the database.
 
 With unique constraint name (ignore)
 ------------------------------------
-Insert a new object into the author table or, if the unique constraint, ``author_name_key``, is violated, ignore the request:
+Insert a new object into the author table or, if the unique constraint, ``author_name_key``, is violated,
+ignore the request:
 
 .. graphiql::
   :view_only: true
   :query:
     mutation upsert_author {
-      insert_author (
+      insert_author(
         objects: [
-          {
-            name: "john doe",
-            id:1231
-          }
+          {name: "John", id: 10}
         ],
-        on_conflict:{
+        on_conflict: {
           constraint: "author_name_key",
           action: "ignore"
         }
@@ -79,20 +82,18 @@ In this case, the insert mutation is ignored because there is a conflict.
 
 With columns having unique constraint (update)
 ----------------------------------------------
-Insert a new object into the author table or, if a unique constraint on the specified columns, in this case - ``name``, is violated, update the existing object with values from the fields (in this case - ``id``):
+Insert a new object into the author table or, if a unique constraint on the specified columns, in this case
+- ``name``, is violated, update the existing object with values from the fields (in this case - ``id``):
 
 .. graphiql::
   :view_only: true
   :query:
     mutation upsert_author {
-      insert_author (
+      insert_author(
         objects: [
-          {
-            name: "john doe",
-            id:1231
-          }
+          {name: "Jane", id: 10}
         ],
-        on_conflict:{
+        on_conflict: {
           constraint_on: ["name"],
           action: "update"
         }
@@ -117,14 +118,11 @@ Insert a new object into the author table or, if a unique constraint on the spec
   :view_only: true
   :query:
     mutation upsert_author {
-      insert_author (
+      insert_author(
         objects: [
-          {
-            name: "john doe",
-            id:1231
-          }
+          {name: "Jane", id: 10}
         ],
-        on_conflict:{
+        on_conflict: {
           constraint_on: ["name"],
           action: "ignore"
         }
