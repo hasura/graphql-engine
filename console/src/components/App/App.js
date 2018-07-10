@@ -9,7 +9,6 @@ import { NOTIF_EXPANDED } from './Actions';
 import AceEditor from 'react-ace';
 import 'brace/mode/json';
 import ErrorBoundary from './ErrorBoundary';
-import UncaughtException from '../../utils/exceptions';
 
 class App extends Component {
   componentDidMount() {
@@ -40,10 +39,7 @@ class App extends Component {
     } = this.props;
 
     if (requestError && error) {
-      console.error(
-        'uncaught exception',
-        new UncaughtException(requestError, error)
-      );
+      // console.error(requestError, error);
     }
 
     const notificationStyle = {

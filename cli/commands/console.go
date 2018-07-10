@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"path/filepath"
-	"runtime"
 	"sync"
 
 	"github.com/fatih/color"
@@ -15,6 +13,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/migrate/api"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -86,13 +85,11 @@ func (o *consoleOptions) run() error {
 		r,
 	}
 
-	u, err := url.Parse(o.EC.Config.Endpoint)
-	if err != nil {
-		return errors.Wrap(err, "cannot parse endpoint as url")
+	router.setRoutes(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.MigrationDir, o.EC.Logger)
+
+	if o.EC.Version == nil {
+		return errors.New("cannot validate version, object is nil")
 	}
-
-	router.setRoutes(u.Host, o.EC.Config.AccessKey, o.EC.MigrationDir)
-
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
 
@@ -102,7 +99,7 @@ func (o *consoleOptions) run() error {
 		"apiHost":        "http://" + o.Address,
 		"apiPort":        o.APIPort,
 		"cliVersion":     o.EC.Version.GetCLIVersion(),
-		"dataApiUrl":     o.EC.Config.Endpoint,
+		"dataApiUrl":     o.EC.Config.ParsedEndpoint.String(),
 		"dataApiVersion": "",
 		"accessKey":      o.EC.Config.AccessKey,
 		"assetsVersion":  consoleAssetsVersion,
@@ -155,14 +152,15 @@ type consoleRouter struct {
 	*gin.Engine
 }
 
-func (router *consoleRouter) setRoutes(host, accessKey, migrationDir string) {
+func (router *consoleRouter) setRoutes(nurl *url.URL, accessKey, migrationDir string, logger *logrus.Logger) {
 	apis := router.Group("/apis")
 	{
+		apis.Use(setLogger(logger))
+		apis.Use(setFilePath(migrationDir))
+		apis.Use(setDataPath(nurl, accessKey))
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
 		{
-			migrateAPIs.Use(setFilePath(migrationDir))
-			migrateAPIs.Use(setDataPath(host, accessKey))
 			settingsAPIs := migrateAPIs.Group("/settings")
 			{
 				settingsAPIs.Any("", api.SettingsAPI)
@@ -172,20 +170,15 @@ func (router *consoleRouter) setRoutes(host, accessKey, migrationDir string) {
 		// Migrate api endpoints and middleware
 		metadataAPIs := apis.Group("/metadata")
 		{
-			metadataAPIs.Use(setFilePath(migrationDir))
-			metadataAPIs.Use(setDataPath(host, accessKey))
 			metadataAPIs.Any("", api.MetadataAPI)
 		}
 	}
 }
 
-func setDataPath(hostName, accessKey string) gin.HandlerFunc {
+func setDataPath(nurl *url.URL, accessKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host := url.URL{
-			Scheme: "hasuradb",
-			User:   url.UserPassword("admin", accessKey),
-			Host:   hostName,
-		}
+		host := getDataPath(nurl, accessKey)
+
 		c.Set("dbpath", host)
 		c.Next()
 	}
@@ -193,11 +186,15 @@ func setDataPath(hostName, accessKey string) gin.HandlerFunc {
 
 func setFilePath(dir string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if runtime.GOOS == "windows" {
-			c.Set("filedir", "file:///"+filepath.Clean(dir))
-		} else {
-			c.Set("filedir", "file://"+filepath.Clean(dir))
-		}
+		host := getFilePath(dir)
+		c.Set("filedir", host)
+		c.Next()
+	}
+}
+
+func setLogger(logger *logrus.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("logger", logger)
 		c.Next()
 	}
 }
@@ -218,7 +215,7 @@ func serveConsole(assetsVersion string, opts gin.H) (*gin.Engine, error) {
 	// An Engine instance with the Logger and Recovery middleware already attached.
 	r := gin.New()
 
-	// Template index.html
+	// Template console.html
 	templateRender, err := util.LoadTemplates("assets/"+assetsVersion+"/", "console.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch template")

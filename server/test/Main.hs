@@ -50,7 +50,7 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
   ConnectionParams rci cp <- parseArgs
   -- form the postgres connection info
   ci <- either ((>> exitFailure) . (putStrLn . connInfoErrModifier))
-    return $ mkConnInfo rci
+    return $ mkConnInfo Nothing rci
   -- intialize the pool
   pool <- Q.initPGPool ci cp
   -- reset state in the database

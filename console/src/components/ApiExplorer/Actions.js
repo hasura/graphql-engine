@@ -155,13 +155,14 @@ const changeRequestParams = newParams => {
   };
 };
 
-const changeRequestHeader = (index, key, newValue) => {
+const changeRequestHeader = (index, key, newValue, isDisabled) => {
   return {
     type: REQUEST_HEADER_CHANGED,
     data: {
       index: index,
       keyName: key,
       newValue: newValue,
+      isDisabled: isDisabled,
     },
   };
 };
@@ -255,6 +256,7 @@ const getChangedHeaders = (headers, changedHeaderDetails) => {
   if (newHeaders[changedHeaderDetails.index].isNewHeader) {
     newHeaders[changedHeaderDetails.index].isNewHeader = false;
     newHeaders[changedHeaderDetails.index].isActive = true;
+    newHeaders[changedHeaderDetails.index].isDisabled = false;
   }
   if (changedHeaderDetails.keyName === 'isActive') {
     newHeaders[changedHeaderDetails.index].isActive = !newHeaders[
@@ -264,6 +266,11 @@ const getChangedHeaders = (headers, changedHeaderDetails) => {
     newHeaders[changedHeaderDetails.index][changedHeaderDetails.keyName] =
       changedHeaderDetails.newValue;
   }
+  if (changedHeaderDetails.isDisabled === true) {
+    newHeaders[changedHeaderDetails.index].isDisabled = true;
+  } else {
+    newHeaders[changedHeaderDetails.index].isDisabled = false;
+  }
   const nonEmptyHeaders = newHeaders.filter(header => {
     return !header.isNewHeader;
   });
@@ -272,6 +279,7 @@ const getChangedHeaders = (headers, changedHeaderDetails) => {
     value: '',
     isActive: false,
     isNewHeader: true,
+    isDisabled: false,
   });
   return nonEmptyHeaders;
 };

@@ -67,6 +67,9 @@ type Migrate struct {
 	databaseURL  string
 	databaseDrv  database.Driver
 
+	// Logger is the global logger object to print logs.
+	Logger *log.Logger
+
 	// GracefulStop accepts `true` and will stop executing migrations
 	// as soon as possible at a safe break point, so that the database
 	// is not corrupted.
@@ -92,7 +95,7 @@ type Migrate struct {
 
 // New returns a new Migrate instance from a source URL and a database URL.
 // The URL scheme is defined by each driver.
-func New(sourceUrl string, databaseUrl string, cmd bool) (*Migrate, error) {
+func New(sourceUrl string, databaseUrl string, cmd bool, logger *log.Logger) (*Migrate, error) {
 	m := newCommon(cmd)
 
 	sourceName, err := schemeFromUrl(sourceUrl)
@@ -111,21 +114,25 @@ func New(sourceUrl string, databaseUrl string, cmd bool) (*Migrate, error) {
 	m.databaseName = databaseName
 	m.databaseURL = databaseUrl
 
-	sourceDrv, err := source.Open(sourceUrl)
+	if logger == nil {
+		logger = log.New()
+	}
+
+	sourceDrv, err := source.Open(sourceUrl, logger)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
 	}
 	m.sourceDrv = sourceDrv
 
-	databaseDrv, err := database.Open(databaseUrl, cmd)
+	databaseDrv, err := database.Open(databaseUrl, cmd, logger)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
 	}
 	m.databaseDrv = databaseDrv
 
-	m.status = NewMigrations()
+	m.status = NewStatus()
 
 	return m, nil
 }
@@ -141,16 +148,16 @@ func newCommon(cmd bool) *Migrate {
 }
 
 func (m *Migrate) ReScan() error {
-	sourceDrv, err := source.Open(m.sourceURL)
+	sourceDrv, err := source.Open(m.sourceURL, m.Logger)
 	if err != nil {
-		log.Debug(err)
+		m.Logger.Debug(err)
 		return err
 	}
 	m.sourceDrv = sourceDrv
 
-	databaseDrv, err := database.Open(m.databaseURL, m.isCMD)
+	databaseDrv, err := database.Open(m.databaseURL, m.isCMD, m.Logger)
 	if err != nil {
-		log.Debug(err)
+		m.Logger.Debug(err)
 		return err
 	}
 	m.databaseDrv = databaseDrv
@@ -174,7 +181,7 @@ func (m *Migrate) Close() (source error) {
 }
 
 func (m *Migrate) calculateStatus() (err error) {
-	m.status = NewMigrations()
+	m.status = NewStatus()
 	err = m.readStatusFromSource()
 	if err != nil {
 		return err

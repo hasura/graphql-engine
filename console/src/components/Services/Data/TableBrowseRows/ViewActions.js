@@ -75,7 +75,7 @@ const vMakeRequest = () => {
     const options = {
       method: 'POST',
       body: JSON.stringify(requestBody),
-      headers: dataHeaders,
+      headers: dataHeaders(getState),
       credentials: globalCookiePolicy,
     };
     return dispatch(requestAction(url, options)).then(
@@ -120,7 +120,7 @@ const deleteItem = pkClause => {
     const options = {
       method: 'POST',
       body: JSON.stringify(reqBody),
-      headers: dataHeaders,
+      headers: dataHeaders(getState),
       credentials: globalCookiePolicy,
     };
     dispatch(requestAction(url, options)).then(

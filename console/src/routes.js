@@ -13,6 +13,8 @@ import { composeOnEnterHooks } from 'utils/router';
 
 import generatedApiExplorer from './components/ApiExplorer/ApiExplorerGenerator';
 
+import generatedLoginConnector from './components/Login/Login';
+
 import globals from './Globals';
 
 const routes = store => {
@@ -42,20 +44,17 @@ const routes = store => {
 
   return (
     <Route path="/" component={App}>
+      <Route path="login" component={generatedLoginConnector(connect)} />
       <Route
         path=""
         component={Main}
-        onEnter={composeOnEnterHooks([requireMigrationStatus])}
+        onEnter={composeOnEnterHooks([requireSchema, requireMigrationStatus])}
       >
         <Route path="">
-          <IndexRoute
-            onEnter={requireSchema}
-            component={generatedApiExplorer(connect)}
-          />
+          <IndexRoute component={generatedApiExplorer(connect)} />
           <Route
             path="api-explorer"
             component={generatedApiExplorer(connect)}
-            onEnter={requireSchema}
           />
           {makeDataRouter}
         </Route>

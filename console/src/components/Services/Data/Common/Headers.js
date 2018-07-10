@@ -1,13 +1,4 @@
-import globals from 'Globals';
-
-const dataHeaders = {
-  'Content-Type': 'application/json',
+const dataHeaders = currentState => {
+  return currentState().tables.dataHeaders;
 };
-if (
-  globals.accessKey !== null &&
-  globals.accessKey !== '' &&
-  globals.accessKey !== undefined
-) {
-  dataHeaders['X-HASURA-ACCESS-KEY'] = globals.accessKey;
-}
 export default dataHeaders;

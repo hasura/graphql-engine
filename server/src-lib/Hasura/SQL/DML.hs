@@ -122,25 +122,20 @@ mkSelFromExp isLateral sel tn =
   where
     alias = Alias $ toIden tn
 
-mkRowExp :: [(T.Text, SQLExp)] -> SQLExp
-mkRowExp extrs =
-  SEFnApp "json_build_object" args Nothing
-  where
-    args = concat [[SELit t, r] | (t, r) <- extrs]
+mkRowExp :: [Extractor] -> SQLExp
+mkRowExp extrs = let
+  innerSel = mkSelect { selExtr = extrs }
 
-  -- let
-  -- innerSel = mkSelect { selExtr = extrs }
+  innerSelName = TableName "e"
 
-  -- innerSelName = TableName "e"
-
-  -- -- SELECT r FROM (SELECT col1, col2, .. ) AS r
-  -- outerSel = mkSelect
-  --            { selExtr = [mkExtr innerSelName]
-  --            , selFrom = Just $ FromExp
-  --                        [mkSelFromExp False innerSel innerSelName]
-  --            }
-  -- in
-  --   SESelect outerSel
+  -- SELECT r FROM (SELECT col1, col2, .. ) AS r
+  outerSel = mkSelect
+             { selExtr = [mkExtr innerSelName]
+             , selFrom = Just $ FromExp
+                         [mkSelFromExp False innerSel innerSelName]
+             }
+  in
+    SESelect outerSel
 
 newtype HavingExp
   = HavingExp BoolExp

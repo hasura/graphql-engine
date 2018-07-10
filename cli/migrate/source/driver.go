@@ -5,6 +5,8 @@ import (
 	"io"
 	nurl "net/url"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var driversMu sync.RWMutex
@@ -32,7 +34,7 @@ type Driver interface {
 	// Open returns a a new driver instance configured with parameters
 	// coming from the URL string. Migrate will call this function
 	// only once per instance.
-	Open(url string) (Driver, error)
+	Open(url string, logger *log.Logger) (Driver, error)
 
 	// Close closes the underlying source instance managed by the driver.
 	// Migrate will call this function only once per instance.
@@ -91,7 +93,7 @@ type Driver interface {
 }
 
 // Open returns a new driver instance.
-func Open(url string) (Driver, error) {
+func Open(url string, logger *log.Logger) (Driver, error) {
 	u, err := nurl.Parse(url)
 	if err != nil {
 		return nil, err
@@ -108,7 +110,11 @@ func Open(url string) (Driver, error) {
 		return nil, fmt.Errorf("source driver: unknown driver %v (forgotten import?)", u.Scheme)
 	}
 
-	return d.Open(url)
+	if logger == nil {
+		logger = log.New()
+	}
+
+	return d.Open(url, logger)
 }
 
 // Register globally registers a driver.

@@ -1,186 +1,208 @@
+# anchor refs to be used elsewhere
+refs:
+  wait_for_postgres: &wait_for_postgres
+    run:
+      name: waiting for postgres to be ready
+      command: |
+        for i in `seq 1 60`;
+        do
+          nc -z localhost 5432 && echo Success && exit 0
+          echo -n .
+          sleep 1
+        done
+        echo Failed waiting for Postgres && exit 1
+  filter_only_vtags: &filter_only_vtags
+    filters:
+      tags:
+        only: /^v.*/
+  filter_only_release_branches: &filter_only_release_branches
+    filters:
+      branches:
+        only: /^release-v.*/
+  filter_only_dev_branches: &filter_only_dev_branches
+    filters:
+      branches:
+        only: /^dev.*/
+  filter_only_dev_release_branches: &filter_only_dev_release_branches
+    filters:
+      branches:
+        only: /^(dev|release).*/
+  filter_ignore_branches: &filter_ignore_branches
+    filters:
+      branches:
+        ignore: /.*/
+  filter_ignore_release_branches: &filter_ignore_release_branches
+    filters:
+      branches:
+        ignore: /^release-v.*/
+  
+
+
 version: 2
 jobs:
-  # build (test) and push server to docker hub
-  server:
+  # test build the server binary
+  test_and_build_server:
     docker:
-      - image: fpco/stack-build:lts-11.15
-    working_directory: /build/hasura/graphql-engine
-    steps:
-      - checkout
-      - setup_remote_docker:
-          version: 17.09.0-ce
-          docker_layer_caching: true
-      - run:
-          name: Setup - Install docker client and other build dependencies
-          command: |
-            set -ex
-            apt-get -y update && apt-get install -y make curl git upx
-            VER="17.09.0-ce"
-            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
-            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-            mv /tmp/docker/* /usr/bin
-      - restore_cache:
-          keys:
-          - server-app-cache-{{ .Branch }}-{{ .Revision }}
-          - server-deps-cache
-      - run:
-          name: Compile and build the binary
-          working_directory: ./server
-          command: |
-            make ci-binary
-      - save_cache:
-          key: server-app-cache-{{ .Branch }}-{{ .Revision }}
-          paths:
-          - server/.stack-work
-      - save_cache:
-          key: server-deps-cache
-          paths:
-          - ~/.stack
-      - run:
-          name: Package and build the docker image
-          working_directory: ./server
-          command: |
-            make ci-image
-      #- run:
-      #    name: Test the image
-      #    working_directory: ./server
-      #    command: |
-      #      make test
-      - run:
-          name: Login to docker hub
-          command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
-      - run:
-          name: Push the image to registry
-          working_directory: ./server
-          command: |
-            make push
-
-  # build (test) and push console - version will be vMAJOR.MINOR for tags and release-v* branches
-  console:
-    docker:
-      - image: hasura/graphql-engine-console-builder:v0.1
+    - image: hasura/graphql-engine-server-builder:v0.2
+    - image: circleci/postgres:10-alpine
+      environment:
+        POSTGRES_USER: gql_test
+        POSTGRES_DB: gql_test
     working_directory: ~/graphql-engine
     steps:
-      - checkout
-      - restore_cache:
-          key: 
-            console-node-modules-{{ checksum "console/package.json" }}
-      - run:
-          name: install dependencies
-          working_directory: ./console
-          command: make deps
-      - save_cache:
-          key: 
-            console-node-modules-{{ checksum "console/package.json" }}
-          paths:
-            - console/node_modules
-      # run tests
-      - run:
-          name: build console
-          working_directory: ./console
-          command: make build
-      - run:
-          name: store gcloud service account to file 
-          command: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-      - run:
-          name: setup gcloud
-          command: |
-            gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
-            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-      - run:
-          name: copy assets to gcloud
-          working_directory: ./console
-          command: |
-            export VERSION=$(../scripts/get-version-circleci.sh)
-            make gcloud-cp-stable
-            make gcloud-set-metadata
-  # send pull requests to install manifests and heroku repo to update new server image tag
-  send_pr:
+    - checkout
+    - setup_remote_docker:
+        version: 17.09.0-ce
+        docker_layer_caching: true
+    - restore_cache:
+        keys:
+        - server-app-cache-{{ .Branch }}-{{ .Revision }}
+        - server-deps-cache-v1
+    - *wait_for_postgres
+    - run:
+        name: test and build server binary
+        working_directory: ./server
+        command: |
+          # TODO: make test
+          make ci-binary
+          make ci-image
+          make ci-save-image
+    - save_cache:
+        key: server-app-cache-{{ .Branch }}-{{ .Revision }}
+        paths:
+        - server/.stack-work
+    - save_cache:
+        key: server-deps-cache-v1
+        paths:
+        - ~/.stack
+    - store_artifacts:
+        path: /build/_server_output
+        destination: server
+    - persist_to_workspace:
+        root: /build
+        paths:
+          - _server_output # binary is called graphql-engine
+
+  # test and build cli
+  test_and_build_cli:
     docker:
-      - image: busybox
-    steps:
-      - run: echo doing nothing for send_pr job
-  # upload cli binaries to github releases page for the tag
-  github_release:
-    docker:
-      - image: hasura/graphql-engine-cli-builder:v0.1
-    steps:
-      - attach_workspace:
-          at: /tmp/assets
-      - run:
-          name: upload assets
-          working_directory: /tmp/assets
-          command: ghr -draft -u "$GITHUB_USER" "$(ls .)" "$(ls .)"
-  # build (test) and upload cli binaries to circleci artifacts
-  cli:
-    docker:
-    - image: hasura/graphql-engine-cli-builder:v0.1
+    - image: hasura/graphql-engine-cli-builder:v0.2
+    - image: circleci/postgres:10-alpine
+      environment:
+        POSTGRES_USER: gql_test
+        POSTGRES_DB: gql_test
     working_directory: /go/src/github.com/hasura/graphql-engine
     steps:
     - checkout
+    - attach_workspace:
+        at: /build
     - restore_cache:
         keys:
         - cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
     - run:
         name: get cli dependencies
-        working_directory: /go/src/github.com/hasura/graphql-engine/cli
+        working_directory: cli
         command: make deps
     - save_cache:
         key: cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
         paths:
         - cli/vendor
-    # - run:
-    #     name: test cli
-    #     command: .circleci/cli-test.sh
+    - *wait_for_postgres
+    - run:
+        name: test cli
+        command: .circleci/test-cli.sh
     - run:
         name: build cli
-        working_directory: /go/src/github.com/hasura/graphql-engine/cli
+        working_directory: cli
         command: |
           make build
           make compress
+          make ci-copy-binary
     - store_artifacts:
-        path: cli/_output
+        path: /build/_cli_output
         destination: cli
     - persist_to_workspace:
-        root: cli
+        root: /build
         paths:
-          - _output
+          - _cli_output
+
+  # test and build console
+  test_and_build_console:
+    docker:
+    - image: hasura/graphql-engine-console-builder:v0.2
+    - image: circleci/postgres:10-alpine
+      environment:
+        POSTGRES_USER: gql_test
+        POSTGRES_DB: gql_test
+    working_directory: ~/graphql-engine
+    steps:
+    - checkout
+    - attach_workspace:
+        at: /build
+    - restore_cache:
+        key: 
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+    - run:
+        name: install dependencies
+        working_directory: console
+        command: make ci-deps
+    - save_cache:
+        key: 
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+        paths:
+        - console/node_modules
+        - ~/.npm
+        - ~/.cache
+    - *wait_for_postgres
+    # ignore console test for now
+    # - run:
+    #     name: test console
+    #     command: .circleci/test-console.sh
+    - run:
+        name: build console
+        working_directory: console
+        command: |
+          make build
+          make ci-copy-assets
+    - store_artifacts:
+        path: /build/_console_output
+        destination: console
+    - persist_to_workspace:
+        root: /build
+        paths:
+          - _console_output
+
+  deploy:
+    docker:
+    - image: hasura/graphql-engine-deployer:v0.2
+    working_directory: ~/graphql-engine
+    steps:
+    - setup_remote_docker:
+        version: 17.09.0-ce
+        docker_layer_caching: true
+    - checkout
+    - attach_workspace:
+        at: /build
+    - run:
+        name: deploy
+        command: .circleci/deploy.sh
+
 workflows:
   version: 2
-  # executed for all branches except release-v* and for all tags v*
-  # release jobs are only executed for v* tags
-  build_and_maybe_release:
+  build_and_test:
     jobs:
-      - server: &filter_ignore_release_branches_only_vtags
-          filters:
-            branches:
-              ignore: /^release-v.*/
-            tags:
-              only:  /^v.*/
-      - cli:
-          << : *filter_ignore_release_branches_only_vtags
-          # requires:
-          #   - server
-      - console:
-          << : *filter_ignore_release_branches_only_vtags
-          # requires:
-          #   - cli
-      - github_release:
-          filters: &only_vtags_ignore_branches
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
-          requires:
-            - cli
-      - send_pr:
-          filters: *only_vtags_ignore_branches
-          requires:
-            - server
-  # executed when release-v* branches are updated, to renew console assets
-  update_release:
-    jobs:
-      - console:
-          filters:
-            branches:
-              only: /^release-v.*/
+    - test_and_build_server: *filter_only_vtags
+    - test_and_build_cli: 
+        <<: *filter_only_vtags
+        requires:
+        - test_and_build_server
+    - test_and_build_console:
+        <<: *filter_only_vtags
+        requires:
+        - test_and_build_server
+        - test_and_build_cli
+    - deploy: 
+        <<: *filter_only_vtags
+        <<: *filter_only_dev_release_branches
+        requires:
+        - test_and_build_console

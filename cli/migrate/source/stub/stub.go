@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/hasura/graphql-engine/cli/migrate/source"
+	log "github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -21,13 +22,18 @@ type Stub struct {
 	Instance   interface{}
 	Migrations *source.Migrations
 	Config     *Config
+	logger     *log.Logger
 }
 
-func (s *Stub) Open(url string) (source.Driver, error) {
+func (s *Stub) Open(url string, logger *log.Logger) (source.Driver, error) {
+	if logger == nil {
+		logger = log.New()
+	}
 	return &Stub{
 		Url:        url,
 		Migrations: source.NewMigrations(),
 		Config:     &Config{},
+		logger:     logger,
 	}, nil
 }
 

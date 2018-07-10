@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import fetch from 'isomorphic-fetch';
 import { getHeadersAsJSON } from './utils';
 import ErrorBoundary from './ErrorBoundary';
-import globals from 'Globals';
 
 import './GraphiQL.css';
 
@@ -19,18 +18,22 @@ class GraphiQLWrapper extends Component {
     };
   }
 
-  componentDidMount() {
-    const headers = {};
-    headers['Content-Type'] = 'application/json';
-    if (globals.accessKey !== '' && globals.accessKey !== null) {
-      headers['X-HASURA-ACCESS-KEY'] = globals.accessKey;
-    }
-  }
-
   render() {
     const styles = require('../Common/Common.scss');
     const headers = getHeadersAsJSON(this.props.data.headers);
     const graphqlUrl = this.props.data.url;
+    const filterAccessKeyHeader = this.props.data.headers.filter(
+      elem => elem.key === 'X-Hasura-Access-Key'
+    )[0];
+
+    if (
+      this.props.data.dataHeaders['X-Hasura-Access-Key'] &&
+      !filterAccessKeyHeader
+    ) {
+      headers['X-Hasura-Access-Key'] = this.props.data.dataHeaders[
+        'X-Hasura-Access-Key'
+      ];
+    }
     const graphQLFetcher = graphQLParams => {
       return fetch(graphqlUrl, {
         method: 'POST',

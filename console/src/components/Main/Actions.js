@@ -1,7 +1,14 @@
+import { push } from 'react-router-redux';
 import defaultState from './State';
 import Endpoints from '../../Endpoints';
 import requestAction from '../../utils/requestAction';
 import { globalCookiePolicy } from '../../Endpoints';
+import { saveAccessKeyState } from '../AppState';
+import {
+  ACCESS_KEY_ERROR,
+  UPDATE_DATA_HEADERS,
+} from '../Services/Data/DataActions';
+import { changeRequestHeader } from '../ApiExplorer/Actions';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
@@ -12,6 +19,9 @@ const UPDATE_MIGRATION_MODE = 'Main/UPDATE_MIGRATION_MODE';
 const UPDATE_MIGRATION_MODE_PROGRESS = 'Main/UPDATE_MIGRATION_MODE_PROGRESS';
 const EXPORT_METADATA_SUCCESS = 'Main/EXPORT_METADATA_SUCCESS';
 const EXPORT_METADATA_ERROR = 'Main/EXPORT_METADATA_ERROR';
+const UPDATE_ACCESS_KEY_INPUT = 'Main/UPDATE_ACCESS_KEY_INPUT';
+const LOGIN_IN_PROGRESS = 'Main/LOGIN_IN_PROGRESS';
+const LOGIN_ERROR = 'Main/LOGIN_ERROR';
 
 const loadMigrationStatus = () => dispatch => {
   const url = Endpoints.hasuractlMigrateSettings;
@@ -28,6 +38,62 @@ const loadMigrationStatus = () => dispatch => {
       SET_MIGRATION_STATUS_ERROR
     )
   );
+};
+
+const validateLogin = isInitialLoad => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const currentSchema = getState().tables.currentSchema;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: getState().tables.dataHeaders,
+    body: JSON.stringify({
+      type: 'select',
+      args: {
+        table: {
+          name: 'hdb_table',
+          schema: 'hdb_catalog',
+        },
+        columns: ['*'],
+        where: { table_schema: currentSchema },
+      },
+    }),
+  };
+  if (isInitialLoad) {
+    return dispatch(requestAction(url, options));
+  }
+  return dispatch(requestAction(url, options)).then(
+    () => {
+      dispatch(push('/'));
+    },
+    error => {
+      dispatch({ type: LOGIN_IN_PROGRESS, data: false });
+      dispatch({ type: LOGIN_ERROR, data: true });
+      console.error('Failed to validate access key ' + JSON.stringify(error));
+    }
+  );
+};
+
+const loginClicked = () => (dispatch, getState) => {
+  // set localstorage
+  dispatch({ type: LOGIN_IN_PROGRESS, data: true });
+  const accessKeyInput = getState().main.accessKeyInput;
+  saveAccessKeyState(accessKeyInput);
+  // redirect to / to test the accessKeyInput;
+  const updatedDataHeaders = {
+    'Content-Type': 'application/json',
+    'X-Hasura-Access-Key': accessKeyInput,
+  };
+  Promise.all([
+    dispatch({ type: ACCESS_KEY_ERROR, data: false }),
+    dispatch({ type: UPDATE_DATA_HEADERS, data: updatedDataHeaders }),
+    dispatch(changeRequestHeader(1, 'key', 'X-Hasura-Access-Key', true)),
+    dispatch(changeRequestHeader(1, 'value', accessKeyInput, true)),
+    // dispatch(push('/'))
+  ]).then(() => {
+    // make a sample query. check error code and push to /
+    dispatch(validateLogin(false));
+  });
 };
 
 const updateMigrationModeStatus = () => (dispatch, getState) => {
@@ -113,6 +179,12 @@ const mainReducer = (state = defaultState, action) => {
     case UPDATE_MIGRATION_MODE:
       const currentMode = state.migrationMode;
       return { ...state, migrationMode: !currentMode };
+    case UPDATE_ACCESS_KEY_INPUT:
+      return { ...state, accessKeyInput: action.data };
+    case LOGIN_IN_PROGRESS:
+      return { ...state, loginInProgress: action.data };
+    case LOGIN_ERROR:
+      return { ...state, loginError: action.data };
 
     default:
       return state;
@@ -124,6 +196,11 @@ export {
   HASURACTL_URL_ENV,
   UPDATE_MIGRATION_STATUS_SUCCESS,
   UPDATE_MIGRATION_STATUS_ERROR,
+  UPDATE_ACCESS_KEY_INPUT,
   loadMigrationStatus,
   updateMigrationModeStatus,
+  loginClicked,
+  LOGIN_IN_PROGRESS,
+  LOGIN_ERROR,
+  validateLogin,
 };

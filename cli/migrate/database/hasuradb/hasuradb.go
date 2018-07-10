@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	nurl "net/url"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -52,11 +53,12 @@ type HasuraDB struct {
 	migrations     *database.Migrations
 	migrationQuery HasuraInterfaceBulk
 	isLocked       bool
+	logger         *log.Logger
 }
 
-func WithInstance(config *Config) (database.Driver, error) {
+func WithInstance(config *Config, logger *log.Logger) (database.Driver, error) {
 	if config == nil {
-		log.Debug(ErrNilConfig)
+		logger.Debug(ErrNilConfig)
 		return nil, ErrNilConfig
 	}
 
@@ -64,15 +66,16 @@ func WithInstance(config *Config) (database.Driver, error) {
 		config:     config,
 		migrations: database.NewMigrations(),
 		settings:   database.Settings,
+		logger:     logger,
 	}
 
 	if err := hx.ensureVersionTable(); err != nil {
-		log.Debug(err)
+		logger.Debug(err)
 		return nil, err
 	}
 
 	if err := hx.ensureSettingsTable(); err != nil {
-		log.Debug(err)
+		logger.Debug(err)
 		return nil, err
 	}
 
@@ -84,12 +87,29 @@ func WithInstance(config *Config) (database.Driver, error) {
 	return hx, nil
 }
 
-func (h *HasuraDB) Open(url string, isCMD bool) (database.Driver, error) {
+func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Driver, error) {
+	if logger == nil {
+		logger = log.New()
+	}
 	hurl, err := nurl.Parse(url)
 	if err != nil {
-		log.Debug(err)
+		logger.Debug(err)
 		return nil, err
 	}
+	// Use sslMode to set Scheme
+	values := hurl.Query()
+	sslMode := values.Get("sslmode")
+	if sslMode == "enable" {
+		hurl.Scheme = "https"
+	} else {
+		hurl.Scheme = "http"
+	}
+	values.Del("sslmode")
+	hurl.RawQuery = values.Encode()
+	// Remove UserInfo
+	hurl.User = nil
+	// Add v1/query to path
+	hurl.Path = path.Join(hurl.Path, "v1/query")
 
 	var user, pass string
 	switch hurl.User {
@@ -117,10 +137,10 @@ func (h *HasuraDB) Open(url string, isCMD bool) (database.Driver, error) {
 		Role:            user,
 		UserID:          pass,
 		isCMD:           isCMD,
-	})
+	}, logger)
 
 	if err != nil {
-		log.Debug(err)
+		logger.Debug(err)
 		return nil, err
 	}
 
@@ -374,17 +394,17 @@ func (h *HasuraDB) ensureVersionTable() error {
 
 	resp, body, err := h.sendQuery(query)
 	if err != nil {
-		log.Debug(err)
+		h.logger.Debug(err)
 		return err
 	}
-	log.Debug("response: ", string(body))
+	h.logger.Debug("response: ", string(body))
 
 	var horror HasuraError
 
 	if resp.StatusCode != http.StatusOK {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
-			log.Debug(err)
+			h.logger.Debug(err)
 			return err
 		}
 		return horror.Error(h.config.isCMD)
@@ -394,7 +414,7 @@ func (h *HasuraDB) ensureVersionTable() error {
 
 	err = json.Unmarshal(body, &hres)
 	if err != nil {
-		log.Debug(err)
+		h.logger.Debug(err)
 		return err
 	}
 
@@ -443,16 +463,7 @@ func (h *HasuraDB) ensureVersionTable() error {
 func (h *HasuraDB) sendQuery(m interface{}) (resp *http.Response, body []byte, err error) {
 	request := gorequest.New()
 
-	newURL := h.config.URL
-
-	newURL.Scheme = "http"
-	newURL.User = nil
-
-	if !strings.Contains(newURL.Path, "v1/query") {
-		newURL.Path = SingleJoiningSlash(newURL.Path, "v1/query")
-	}
-
-	request = request.Post(newURL.String()).Send(m)
+	request = request.Post(h.config.URL.String()).Send(m)
 
 	if h.config.UserID != "" {
 		request = request.Set(ACCESS_KEY_HEADER, h.config.UserID)
