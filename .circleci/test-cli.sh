@@ -8,7 +8,7 @@ cd "$CLI_ROOT"
 
 # start graphql-engine
 /build/_server_output/graphql-engine \
-    --database-url postgres://gql_test@localhost:5432/gql_test serve &
+    --database-url postgres://gql_test@localhost:5432/gql_test serve > /build/_cli_output/server.log 2>&1 &
 #PID=$!
 
 # test cli

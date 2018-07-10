@@ -8,11 +8,11 @@ cd "$CONSOLE_ROOT"
 
 # start graphql-engine
 /build/_server_output/graphql-engine \
-    --database-url postgres://gql_test@localhost:5432/gql_test serve &
+    --database-url postgres://gql_test@localhost:5432/gql_test serve > /build/_console_output/server.log 2>&1 &
 
 # start cli
 /build/_cli_output/hasura-linux-amd64 init --directory gql-test && cd gql-test
-/build/_cli_output/hasura-linux-amd64 console --no-browser &
+/build/_cli_output/hasura-linux-amd64 console --no-browser > /build/_console_output/cli.log 2>&1 &
 
 cd ..
 
