@@ -162,6 +162,9 @@ jobs:
     - store_artifacts:
         path: /build/_console_output
         destination: console
+    - store_artifacts:
+        path: console/cypress
+        destination: cypress
     - persist_to_workspace:
         root: /build
         paths:
