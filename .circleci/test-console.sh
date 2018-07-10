@@ -17,4 +17,5 @@ cd "$CONSOLE_ROOT"
 cd ..
 
 # test console
-make test
+npm run dev &
+npm run test
