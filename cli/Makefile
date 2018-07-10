@@ -29,7 +29,7 @@ endif
 # build cli locally, for all given platform/arch
 .PHONY: build
 build:
-	gox -ldflags "-X github.com/hasura/graphql-engine/cli.version=$(VERSION) -s -w" \
+	gox -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION) -s -w" \
 	-os="linux darwin windows" \
 	-arch="amd64" \
 	-output="$(OUTPUT_DIR)/$(VERSION)/hasura-{{.OS}}-{{.Arch}}" \
@@ -40,10 +40,16 @@ build:
 compress:
 	ls $(OUTPUT_DIR)/$(VERSION)/hasura-* | xargs upx
 
+# to be executed in circle-ci only
+ci-copy-binary:
+	mkdir -p /build/_cli_output
+	cp $(OUTPUT_DIR)/$(VERSION)/hasura-* /build/_cli_output
+	echo "$(VERSION)" > /build/_cli_output/version.txt
+
 # run tests
 .PHONY: test
 test:
-	go test ./...
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" ./...
 
 # generate docs
 .PHONY: docs

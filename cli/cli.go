@@ -9,9 +9,6 @@ package cli
 
 import (
 	"bytes"
-	"fmt"
-	"io/ioutil"
-	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -20,10 +17,9 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/Masterminds/semver"
 	"github.com/briandowns/spinner"
-	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/version"
 	colorable "github.com/mattn/go-colorable"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
@@ -49,15 +45,24 @@ const (
 	GLOBAL_CONFIG_FILE_NAME = "config.json"
 )
 
-// version is set at build time, denotes the CLI version.
-var version = "dev"
-
 // HasuraGraphQLConfig has the config values required to contact the server.
 type HasuraGraphQLConfig struct {
 	// Endpoint for the GraphQL Engine
 	Endpoint string `json:"endpoint"`
 	// AccessKey (optional) required to query the endpoint
 	AccessKey string `json:"access_key,omitempty"`
+
+	ParsedEndpoint *url.URL
+}
+
+// ParseEndpoint ensures the endpoint is valid.
+func (hgc *HasuraGraphQLConfig) ParseEndpoint() error {
+	nurl, err := url.Parse(hgc.Endpoint)
+	if err != nil {
+		return err
+	}
+	hgc.ParsedEndpoint = nurl
+	return nil
 }
 
 // ExecutionContext contains various contextual information required by the cli
@@ -100,10 +105,8 @@ type ExecutionContext struct {
 
 	// IsStableRelease indicates if the CLI release is stable or not.
 	IsStableRelease bool
-	// Version indicates the CLI build version
-	Version string
-	// ServerVersion indicates the version of configured server
-	ServerVersion string
+	// Version indicates the version object
+	Version *version.Version
 
 	// Viper indicates the viper object for the execution
 	Viper *viper.Viper
@@ -186,57 +189,17 @@ func (ec *ExecutionContext) Validate() error {
 	return ec.checkServerVersion()
 }
 
-type serverVersionResponse struct {
-	Version string `json:"version"`
-}
-
 func (ec *ExecutionContext) checkServerVersion() error {
-	ep, err := url.Parse(ec.Config.Endpoint)
+	v, err := version.FetchServerVersion(ec.Config.Endpoint)
 	if err != nil {
-		return errors.Wrap(err, "cannot parse endpoint as a valid url")
+		return errors.Wrap(err, "failed to get version from server")
 	}
-	versionEndpoint := fmt.Sprintf("%s/v1/version", ep.String())
-	response, err := http.Get(versionEndpoint)
-	if err != nil {
-		return errors.Wrap(err, "failed making version api call")
-	}
-	if response.StatusCode != http.StatusOK {
-		switch response.StatusCode {
-		case http.StatusNotFound:
-			ec.ServerVersion = ""
-			return nil
-		default:
-			return errors.Errorf("GET %s failed - [%s]", versionEndpoint, response.StatusCode)
-		}
-	}
-	defer response.Body.Close()
-	data, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		errors.Wrap(err, "cannot read version api response")
-	}
-	var v serverVersionResponse
-	err = yaml.Unmarshal(data, &v)
-	if err != nil {
-		errors.Wrap(err, "failed to parse version api response")
-	}
-	ec.ServerVersion = v.Version
-
-	sv, err := semver.NewVersion(ec.ServerVersion)
-	if err != nil {
-		// parsing semver failed, cli and server versions should match
-		if ec.ServerVersion != ec.Version {
-			return errors.Errorf("[cli: %s] [server: %s] unstable/dev release, cli and server versions should match", ec.Version, ec.ServerVersion)
-		}
-	} else {
-		// parsing semver succeeded
-		cv, err := semver.NewVersion(ec.Version)
-		// cli is dev version
-		if err != nil {
-			return nil
-		}
-		if !(cv.Major() == sv.Major() && cv.Minor() == sv.Minor()) {
-			return errors.Errorf("[cli: %s] [server: %s] version mismatch, cli and server versions should match", ec.Version, ec.ServerVersion)
-		}
+	ec.Version.SetServerVersion(v)
+	isCompatible, reason := ec.Version.CheckCLIServerCompatibility()
+	ec.Logger.Debugf("versions: cli: [%s] server: [%s]", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion())
+	ec.Logger.Debugf("compatibility check: [%v] %v", isCompatible, reason)
+	if !isCompatible {
+		return errors.Errorf("[cli: %s] [server: %s] versions incompatible: %s", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion(), reason)
 	}
 	return nil
 }
@@ -254,15 +217,14 @@ func (ec *ExecutionContext) readConfig() error {
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {
-		ec.Logger.WithError(err).Error("cannot read config file")
 		return errors.Wrap(err, "cannor read config file")
 	}
-
 	ec.Config = &HasuraGraphQLConfig{
 		Endpoint:  v.GetString("endpoint"),
 		AccessKey: v.GetString("access_key"),
 	}
-	return nil
+	err = ec.Config.ParseEndpoint()
+	return err
 }
 
 // setupSpinner creates a default spinner if the context does not already have
@@ -412,14 +374,9 @@ func validateDirectory(dir string) error {
 // SetVersion sets the version inside context, according to the variable
 // 'version' set during build context.
 func (ec *ExecutionContext) setVersion() {
-	if version != "" {
-		ec.Version = version
+	if ec.Version == nil {
+		ec.Version = version.New()
 	}
-}
-
-// GetVersion returns the version set in execution context
-func (ec *ExecutionContext) GetVersion() string {
-	return ec.Version
 }
 
 // RenderTextWithContext renders the template text passed as 'in' with the
@@ -436,9 +393,4 @@ func (ec *ExecutionContext) RenderTextWithContext(in string) (out string) {
 		return ""
 	}
 	return b.String()
-}
-
-// GetVersion returns the version set in the package
-func GetVersion() string {
-	return version
 }

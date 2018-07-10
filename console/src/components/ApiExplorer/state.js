@@ -1,4 +1,4 @@
-import Globals from 'Globals';
+import globals from '../../Globals';
 
 const defaultHeader = [
   {
@@ -6,37 +6,18 @@ const defaultHeader = [
     value: 'application/json',
     isActive: true,
     isNewHeader: false,
-  },
-  {
-    key: '',
-    value: '',
-    isActive: false,
-    isNewHeader: true,
+    isDisabled: true,
   },
 ];
-const incompleteAuthHeader = [
-  {
-    key: 'Content-Type',
-    value: 'application/json',
-    isActive: true,
-    isNewHeader: false,
-  },
-  {
-    key: 'Authorization',
-    value: 'Bearer <auth-token>',
-    isActive: false,
-    isNewHeader: false,
-  },
-  {
-    key: '',
-    value: '',
-    isActive: false,
-    isNewHeader: true,
-  },
-];
+defaultHeader.push({
+  key: '',
+  value: '',
+  isActive: false,
+  isNewHeader: true,
+});
 
 const getUrl = path => {
-  return `${Globals.dataApiUrl}${path}`;
+  return `${globals.dataApiUrl}${path}`;
 };
 
 const dataApisContent = [];
@@ -46,7 +27,7 @@ dataApisContent.push({
   details: {
     title: 'GraphQL API',
     description:
-      'Hasura provides GraphQL APIs which can be used to perform CRUD operations on the tables that you create',
+      'GraphQL API for CRUD operations on tables/views in your database',
     category: 'data',
   },
   request: {
@@ -85,4 +66,4 @@ const defaultState = {
 
 export default defaultState;
 
-export { defaultApi, defaultHeader, incompleteAuthHeader };
+export { defaultApi, defaultHeader };

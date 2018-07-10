@@ -5,8 +5,8 @@
 
 module Hasura.RQL.DML.Returning where
 
-import           Hasura.RQL.DML.Internal
 import           Hasura.Prelude
+import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -37,8 +37,8 @@ mkRetFldsExp :: RetFlds -> S.SQLExp
 mkRetFldsExp retFlds =
   S.mkRowExp $ flip map (Map.toList retFlds) $ \(k, retFld) ->
   case retFld of
-    RExp t       -> (k, S.SELit t)
-    RCol colInfo -> (k, mkColExp colInfo)
+    RExp t       -> S.mkAliasedExtrFromExp (S.SELit t) $ Just $ PGCol k
+    RCol colInfo -> mkColExtrAl (Just $ PGCol k) colInfo
 
 data MutFld
   = MCount

@@ -20,18 +20,20 @@ const LISTING_SCHEMA = 'Data/LISTING_SCHEMA';
 const LOAD_UNTRACKED_RELATIONS = 'Data/LOAD_UNTRACKED_RELATIONS';
 const FETCH_SCHEMA_LIST = 'Data/FETCH_SCHEMA_LIST';
 const UPDATE_CURRENT_SCHEMA = 'Data/UPDATE_CURRENT_SCHEMA';
+const ACCESS_KEY_ERROR = 'Data/ACCESS_KEY_ERROR';
+const UPDATE_DATA_HEADERS = 'Data/UPDATE_DATA_HEADERS';
 
 const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
 
 /* ************ action creators *********************** */
-const fetchSchemaList = () => dispatch => {
+const fetchSchemaList = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
-    headers: dataHeaders,
+    headers: dataHeaders(getState),
     body: JSON.stringify({
       type: 'select',
       args: {
@@ -48,11 +50,7 @@ const fetchSchemaList = () => dispatch => {
       dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data });
     },
     error => {
-      console.error('Failed to fetch schema');
-      console.error(error);
-      dispatch(
-        showErrorNotification('Schema Error', 'Could not fetch schema.')
-      );
+      console.error('Failed to fetch schema ' + JSON.stringify(error));
     }
   );
 };
@@ -63,7 +61,7 @@ const loadSchema = () => (dispatch, getState) => {
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
-    headers: dataHeaders,
+    headers: dataHeaders(getState),
     body: JSON.stringify({
       type: 'select',
       args: {
@@ -81,14 +79,7 @@ const loadSchema = () => (dispatch, getState) => {
       dispatch({ type: LOAD_SCHEMA, allSchemas: data });
     },
     error => {
-      console.error('Failed to load schema');
-      console.error(error);
-      dispatch(
-        showErrorNotification(
-          'Schema Error',
-          'Could not load schema. Please refresh the page!'
-        )
-      );
+      console.error('Failed to load schema ' + JSON.stringify(error));
     }
   );
 };
@@ -99,7 +90,7 @@ const loadUntrackedSchema = () => (dispatch, getState) => {
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
-    headers: dataHeaders,
+    headers: dataHeaders(getState),
     body: JSON.stringify({
       type: 'select',
       args: {
@@ -119,14 +110,7 @@ const loadUntrackedSchema = () => (dispatch, getState) => {
       dispatch({ type: LOAD_UNTRACKED_SCHEMA, untrackedSchemas: data });
     },
     error => {
-      console.error('Failed to load schema');
-      console.error(error);
-      dispatch(
-        showErrorNotification(
-          'Schema Error',
-          'Could not load public schema. Please refresh the page!'
-        )
-      );
+      console.error('Failed to load schema ' + JSON.stringify(error));
     }
   );
 };
@@ -151,7 +135,7 @@ const fetchTableComment = tableName => (dispatch, getState) => {
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
-    headers: dataHeaders,
+    headers: dataHeaders(getState),
     body: JSON.stringify({
       type: 'run_sql',
       args: {
@@ -247,7 +231,7 @@ const makeMigrationCall = (
   const options = {
     method: 'POST',
     credentials: globalCookiePolicy,
-    headers: dataHeaders,
+    headers: dataHeaders(getState),
     body: JSON.stringify(finalReqBody),
   };
 
@@ -340,6 +324,10 @@ const dataReducer = (state = defaultState, action) => {
       return { ...state, schemaList: action.schemaList };
     case UPDATE_CURRENT_SCHEMA:
       return { ...state, currentSchema: action.currentSchema };
+    case ACCESS_KEY_ERROR:
+      return { ...state, accessKeyError: action.data };
+    case UPDATE_DATA_HEADERS:
+      return { ...state, dataHeaders: action.data };
     default:
       return state;
   }
@@ -358,4 +346,6 @@ export {
   UPDATE_CURRENT_SCHEMA,
   loadUntrackedRelations,
   fetchSchemaList,
+  ACCESS_KEY_ERROR,
+  UPDATE_DATA_HEADERS,
 };

@@ -1,7 +1,14 @@
 package commands
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"path/filepath"
+
+	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -30,4 +37,51 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v.BindPFlag("endpoint", f.Lookup("endpoint"))
 	v.BindPFlag("access_key", f.Lookup("access-key"))
 	return metadataCmd
+}
+
+func executeMetadata(cmd string, t *migrate.Migrate, metadata string) error {
+	switch cmd {
+	case "export":
+		metaData, err := t.ExportMetadata()
+		if err != nil {
+			return errors.Wrap(err, "Cannot export metadata")
+		}
+
+		t, err := json.Marshal(metaData)
+		if err != nil {
+			return errors.Wrap(err, "Cannot Marshal metadata")
+		}
+
+		data, err := yaml.JSONToYAML(t)
+		if err != nil {
+			return err
+		}
+
+		err = ioutil.WriteFile(filepath.Join(metadata, "metadata.yaml"), data, 0644)
+		if err != nil {
+			return errors.Wrap(err, "cannot save metadata")
+		}
+	case "reset":
+		err := t.ResetMetadata()
+		if err != nil {
+			return errors.Wrap(err, "Cannot reset Metadata")
+		}
+	case "apply":
+		data, err := ioutil.ReadFile(filepath.Join(metadata, "metadata.yaml"))
+		if err != nil {
+			return errors.Wrap(err, "cannot read metadata file")
+		}
+
+		var q interface{}
+		err = yaml.Unmarshal(data, &q)
+		if err != nil {
+			return errors.Wrap(err, "cannot parse metadata file")
+		}
+
+		err = t.ApplyMetadata(q)
+		if err != nil {
+			return errors.Wrap(err, "cannot apply metadata on the database")
+		}
+	}
+	return nil
 }

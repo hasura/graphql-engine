@@ -11,16 +11,15 @@ import './ReactToggle.css';
 
 const migrationTip = (
   <Tooltip id="tooltip-migration">
-    Any modifications to schema are recommended to be part of migrations.
+    Modifications to the underlying postgres schema should be tracked as
+    migrations.
   </Tooltip>
 );
 
 const MigrationsHome = ({ dispatch, migrationMode }) => {
   const styles = require('./Styles.scss');
   const handleMigrationModeToggle = () => {
-    const isConfirm = window.confirm(
-      'Are you sure you want to toggle migration mode?'
-    );
+    const isConfirm = window.confirm('Are you sure?');
     if (isConfirm) {
       dispatch(updateMigrationModeStatus());
     }
@@ -34,7 +33,7 @@ const MigrationsHome = ({ dispatch, migrationMode }) => {
         </OverlayTrigger>
         <div className={styles.migration_mode}>
           <label>
-            <span> Migration Mode </span>
+            <span> Allow postgres schema changes </span>
             <Toggle
               checked={migrationMode}
               icons={false}

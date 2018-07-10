@@ -2,6 +2,7 @@ package commands
 
 import (
 	"math/rand"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testMigrateApply(t *testing.T, endpoint string, migrationsDir string, up string, down string, version string, versionType string) {
+func testMigrateApply(t *testing.T, endpoint *url.URL, migrationsDir string, up string, down string, version string, versionType string) {
 	logger, hook := test.NewNullLogger()
 	opts := &migrateApplyOptions{
 		EC: &cli.ExecutionContext{
@@ -22,8 +23,9 @@ func testMigrateApply(t *testing.T, endpoint string, migrationsDir string, up st
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: migrationsDir,
 			Config: &cli.HasuraGraphQLConfig{
-				Endpoint:  endpoint,
-				AccessKey: "",
+				Endpoint:       endpoint.String(),
+				AccessKey:      "",
+				ParsedEndpoint: endpoint,
 			},
 		},
 		upMigration:      up,
@@ -48,8 +50,9 @@ func TestMigrateApplyWithInvalidEndpoint(t *testing.T) {
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
 			Config: &cli.HasuraGraphQLConfig{
-				Endpoint:  ":",
-				AccessKey: "",
+				Endpoint:       ":",
+				AccessKey:      "",
+				ParsedEndpoint: &url.URL{},
 			},
 		},
 	}
@@ -76,7 +79,12 @@ func TestMigrateApplyWithMultipleFlags(t *testing.T) {
 		downMigration: "2",
 	}
 
-	err := opts.run()
+	err := opts.EC.Config.ParseEndpoint()
+	if err == nil {
+		t.Fatalf("expected err not to be nil")
+	}
+
+	err = opts.run()
 	if err == nil {
 		t.Fatalf("expected err not to be nil")
 	}

@@ -20,13 +20,14 @@ import globals from '../../../../Globals';
 
 const migrationTip = (
   <Tooltip id="tooltip-migration">
-    Any modifications to schema are recommended to be part of migrations.
+    Modifications to the underlying postgres schema should be tracked as
+    migrations
   </Tooltip>
 );
 const trackTableTip = (
   <Tooltip id="tooltip-tracktable">
-    If you are creating a table/view, you can track them to query them using
-    APIs.
+    If you are creating a table/view, you can track them to query them with
+    GraphQL
   </Tooltip>
 );
 
@@ -272,6 +273,7 @@ const RawSQL = ({
                 dispatch(executeSQL(false));
               }
             }}
+            data-test="run-sql"
           >
             Run!
           </button>

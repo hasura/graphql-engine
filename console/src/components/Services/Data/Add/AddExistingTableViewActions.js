@@ -6,7 +6,6 @@ import {
   makeMigrationCall,
 } from '../DataActions';
 import { showSuccessNotification } from '../Notification';
-import { loadMigrationStatus } from '../../../Main/Actions.js';
 import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
 
 import globals from '../../../../Globals';
@@ -57,10 +56,6 @@ const addExistingTableSql = () => {
     const successMsg = 'Existing table/view added';
     const errorMsg = 'Adding existing table/view failed';
     const customOnSuccess = () => {
-      if (globals.consoleMode === 'cli') {
-        dispatch(loadMigrationStatus());
-      }
-      dispatch(showSuccessNotification('Existing table/view added!'));
       dispatch({ type: REQUEST_SUCCESS });
       dispatch(loadSchema()).then(() => {
         const newTable = getState().tables.allSchemas.find(
@@ -147,9 +142,6 @@ const addAllUntrackedTablesSql = tableList => {
     const successMsg = 'Existing table/view added';
     const errorMsg = 'Adding existing table/view failed';
     const customOnSuccess = () => {
-      if (globals.consoleMode === 'cli') {
-        dispatch(loadMigrationStatus());
-      }
       dispatch(showSuccessNotification('Existing table/view added!'));
       dispatch({ type: REQUEST_SUCCESS });
       dispatch(loadSchema()).then(() => {

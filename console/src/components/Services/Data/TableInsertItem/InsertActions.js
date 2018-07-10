@@ -77,7 +77,7 @@ const insertItem = (tableName, colValues) => {
     const options = {
       method: 'POST',
       credentials: globalCookiePolicy,
-      headers: dataHeaders,
+      headers: dataHeaders(getState),
       body: JSON.stringify(reqBody),
     };
     const url = Endpoints.query;
