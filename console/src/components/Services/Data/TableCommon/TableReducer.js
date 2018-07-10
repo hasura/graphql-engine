@@ -144,6 +144,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           lcol: '',
           rTable: null,
           rcol: '',
+          manualColumns: [],
         },
       };
     case REL_SET_TYPE:

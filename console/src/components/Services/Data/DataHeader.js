@@ -28,7 +28,7 @@ const DataHeader = ({
   /*
   const handleSchemaChange = e => {
     const updatedSchema = e.target.value;
-    dispatch(push(globals.urlPrefix + '/data/schema/' + updatedSchema));
+    dispatch(push('/data/schema/' + updatedSchema));
     Promise.all([
       dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
       dispatch(loadSchema()),

@@ -1,4 +1,8 @@
-import { makeMigrationCall, loadUntrackedRelations } from '../DataActions';
+import {
+  makeMigrationCall,
+  loadUntrackedRelations,
+  loadSchema,
+} from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../Notification';
 import suggestedRelationshipsRaw from './autoRelations';
@@ -410,6 +414,78 @@ const autoTrackRelations = () => (dispatch, getState) => {
   );
 };
 
+const autoAddRelName = obj => (dispatch, getState) => {
+  const currentSchema = getState().tables.currentSchema;
+  const isObjRel = obj.isObjRel;
+  const relName = formRelName(obj);
+
+  const relChangesUp = [
+    {
+      type: isObjRel
+        ? 'create_object_relationship'
+        : 'create_array_relationship',
+      args: {
+        name: relName,
+        table: { name: obj.tableName, schema: currentSchema },
+        using: isObjRel
+          ? { foreign_key_constraint_on: obj.lcol }
+          : {
+            foreign_key_constraint_on: {
+              table: { name: obj.rTable, schema: currentSchema },
+              column: obj.rcol,
+            },
+          },
+      },
+    },
+  ];
+  const relChangesDown = [
+    {
+      type: isObjRel
+        ? 'create_object_relationship'
+        : 'create_array_relationship',
+      args: {
+        name: relName,
+        table: { name: obj.tableName, schema: currentSchema },
+        using: isObjRel
+          ? { foreign_key_constraint_on: obj.lcol }
+          : {
+            foreign_key_constraint_on: {
+              table: { name: obj.rTable, schema: currentSchema },
+              column: obj.rcol,
+            },
+          },
+      },
+    },
+  ];
+
+  // Apply migrations
+  const migrationName = `add_relationship_${relName}_table_${currentSchema}_${
+    obj.tableName
+  }`;
+
+  const requestMsg = 'Adding Relationship...';
+  const successMsg = 'Relationship created';
+  const errorMsg = 'Creating relationship failed';
+
+  const customOnSuccess = () => {
+    Promise.all([dispatch(loadSchema()), dispatch(loadUntrackedRelations())]);
+  };
+  const customOnError = () => {};
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    relChangesUp,
+    relChangesDown,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
 export {
   deleteRelMigrate,
   addNewRelClicked,
@@ -424,6 +500,7 @@ export {
   resetRelationshipForm,
   relManualAddClicked,
   autoTrackRelations,
+  autoAddRelName,
   formRelName,
   getAllUnTrackedRelations,
 };

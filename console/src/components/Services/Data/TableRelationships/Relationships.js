@@ -46,16 +46,13 @@ const getObjArrayRelationshipList = relationships => {
 /* This function sets the styling to the way the relationship looks, for eg: id -> user::user_id */
 const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
   const finalRTable = rTable.name ? rTable.name : rTable;
-  const getGrayText = value => <i>{value}</i>;
   return isObjRel ? (
     <span>
-      &nbsp;{getGrayText(lcol)}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{rTable} :: {rcol}
+      &nbsp;{lcol}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{rTable} :: {rcol}
     </span>
   ) : (
     <span>
-      &nbsp;{finalRTable} :: {rcol}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{getGrayText(
-        lcol
-      )}
+      &nbsp;{finalRTable} :: {rcol}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{lcol}
     </span>
   );
 };
@@ -777,4 +774,4 @@ const relationshipsConnector = connect =>
 
 export default relationshipsConnector;
 
-export { suggestedRelationships };
+export { suggestedRelationships, getRelationshipLine };

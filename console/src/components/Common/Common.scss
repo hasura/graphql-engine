@@ -380,6 +380,10 @@ input {
 {
   padding-left: 5px;
 }
+.padd_small_right
+{
+  padding-right: 5px;
+}
 .border_bottom
 {
   border-bottom: 1px solid #e7e7e7;
@@ -494,6 +498,10 @@ code
 .ul_padd_left
 {
   -webkit-padding-start: 15px;
+}
+.add_pad_bottom
+{
+  padding-bottom: 20px;
 }
 .add_padd_bottom
 {
@@ -985,6 +993,7 @@ code
 
 .graphQLHeight {
   height: 100vh;
+  margin-bottom: 50px;
 }
 
 /* container height subtracting top header and bottom scroll bar */

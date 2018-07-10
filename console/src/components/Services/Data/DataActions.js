@@ -42,6 +42,16 @@ const fetchSchemaList = () => (dispatch, getState) => {
           schema: 'information_schema',
         },
         columns: ['schema_name'],
+        where: {
+          schema_name: {
+            $nin: [
+              'information_schema',
+              'pg_catalog',
+              'hdb_catalog',
+              'hdb_views',
+            ],
+          },
+        },
       },
     }),
   };
