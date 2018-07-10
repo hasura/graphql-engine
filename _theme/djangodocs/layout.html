@@ -580,7 +580,7 @@
 
         const graphiQLElement = React.createElement(GraphiQL, {
           fetcher: graphQLFetcher(endpoint),
-          schema: null, // TODO: pass actual schema
+          schema: null, // TODO: pass undefined if introspection supported
           query: query,
           response: response
         });
