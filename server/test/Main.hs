@@ -44,7 +44,6 @@ ravenApp rlogger pool = do
   let corsCfg = CorsConfig "*" True  -- cors is disabled
   spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
 
-
 main :: IO ()
 main = withStdoutLogger ravenLogGen $ \rlogger -> do
   -- parse CLI flags for connection params
@@ -62,9 +61,9 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
   withArgs [] $ hspecWith defaultConfig  $ with (ravenApp rlogger pool) specs
 
   where
+    initialise :: Q.PGPool -> IO ()
     initialise pool = do
       currentTime <- getCurrentTime
-      res <- runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ initCatalogSafe currentTime
       res <- runExceptT $ Q.runTx pool defTxMode $ initCatalogSafe currentTime
       either ((>> exitFailure) . (BLC.putStrLn . J.encode)) putStrLn res
 

@@ -1,0 +1,10 @@
+type: bulk
+args:
+  - type: track_table
+    args:
+      schema: public
+      name: author
+  - type: track_table
+    args:
+      schema: public
+      name: article

@@ -224,6 +224,6 @@ test-suite graphql-engine-test
                      , unordered-containers
                      , pg-client
                      , time
+                     , yaml
 
-  other-modules:       Queries
-                     , Spec
+  other-modules:     Spec

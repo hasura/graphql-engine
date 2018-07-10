@@ -1,0 +1,28 @@
+query: |
+  mutation insert_article {
+    insert_article (
+      objects: [
+      {
+        title: "Article 1",
+        content: "Sample article content",
+        author_id: 1
+      },
+      {
+        title: "Article 2",
+        content: "Sample article content",
+        author_id: 1
+      },
+      {
+        title: "Article 3",
+        content: "Sample article content",
+        author_id: 2
+      }
+      ]
+    ) {
+      returning {
+        id
+        title
+        content
+      }
+    }
+  } 

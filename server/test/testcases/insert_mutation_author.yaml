@@ -1,0 +1,18 @@
+query: |
+  mutation insert_author {
+    insert_author(
+      objects: [
+        {
+          name: "Author 1"
+        },
+        {
+          name: "Author 2"
+        }
+      ]
+    ) {
+      returning {
+        id
+        name
+      }
+    }
+  } 

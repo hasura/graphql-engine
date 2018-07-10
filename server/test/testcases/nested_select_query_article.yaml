@@ -1,0 +1,12 @@
+query: |
+  query {
+    article {
+      id
+      title
+      content
+      author {
+        id
+        name
+      }
+    }
+  }
