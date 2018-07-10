@@ -5,6 +5,8 @@ IFS=$'\n\t'
 CLI_ROOT="${BASH_SOURCE[0]%/*}/../cli"
 
 cd "$CLI_ROOT"
+mkdir -p /build/_cli_output
+touch /build/_cli_output/server.log
 
 # start graphql-engine
 /build/_server_output/graphql-engine \

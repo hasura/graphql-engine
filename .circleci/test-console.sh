@@ -6,6 +6,10 @@ CONSOLE_ROOT="${BASH_SOURCE[0]%/*}/../console"
 
 cd "$CONSOLE_ROOT"
 
+mkdir -p /build/_console_output
+touch /build/_console_output/server.log
+touch /build/_console_output/cli.log
+
 # start graphql-engine
 /build/_server_output/graphql-engine \
     --database-url postgres://gql_test@localhost:5432/gql_test serve > /build/_console_output/server.log 2>&1 &
