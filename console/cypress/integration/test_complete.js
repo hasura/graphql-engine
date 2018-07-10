@@ -14,7 +14,7 @@ import { runApiExplorerTests } from './api-explorer/graphql/test';
 const setup = () => {
   it('Visit the index route', () => {
     // Wait for the server to start
-    cy.wait(20000);
+    cy.wait(60000);
     // Visit the index route
     cy.visit('/data/schema/public');
     cy.wait(7000);
