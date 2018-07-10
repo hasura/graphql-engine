@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE DeriveLift                 #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
@@ -14,8 +15,8 @@ module Hasura.RQL.Types.Permission
        , PermId(..)
        ) where
 
-import           Hasura.SQL.Types
 import           Hasura.Prelude
+import           Hasura.SQL.Types
 
 import qualified Database.PG.Query          as Q
 
@@ -25,6 +26,7 @@ import           Data.Word
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
+import qualified Data.HashMap.Strict        as Map
 import qualified Data.Text                  as T
 import qualified PostgreSQL.Binary.Decoding as PD
 
@@ -45,11 +47,13 @@ newtype UserId = UserId { getUserId :: Word64 }
 data UserInfo
   = UserInfo
   { userRole    :: !RoleName
-  , userHeaders :: ![(T.Text, T.Text)]
-  } deriving (Show, Eq)
+  , userHeaders :: !(Map.HashMap T.Text T.Text)
+  } deriving (Show, Eq, Generic)
+
+instance Hashable UserInfo
 
 adminUserInfo :: UserInfo
-adminUserInfo = UserInfo adminRole [("X-Hasura-User-Id", "0")]
+adminUserInfo = UserInfo adminRole Map.empty
 
 data PermType
   = PTInsert

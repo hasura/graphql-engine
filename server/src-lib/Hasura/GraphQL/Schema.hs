@@ -31,9 +31,9 @@ import qualified Language.GraphQL.Draft.Syntax  as G
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
 
+import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.Prelude
 
 import qualified Hasura.SQL.DML                 as S
 
@@ -61,6 +61,7 @@ data GCtx
   , _gOrdByEnums :: !OrdByResolveCtx
   , _gQueryRoot  :: !ObjTyInfo
   , _gMutRoot    :: !(Maybe ObjTyInfo)
+  , _gSubRoot    :: !(Maybe ObjTyInfo)
   , _gOpCtxMap   :: !OpCtxMap
   } deriving (Show, Eq)
 
@@ -728,9 +729,14 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) =
       scalarTys = map (TIScalar . mkScalarTyInfo) colTys
       compTys   = map (TIInpObj . mkCompExpInp) colTys
       allTys    = Map.union tyInfos $ mkTyInfoMap $
-                  catMaybes [Just $ TIObj queryRoot, TIObj <$> mutRootM] <>
+                  catMaybes [ Just $ TIObj queryRoot
+                            , TIObj <$> mutRootM
+                            , TIObj <$> subRootM
+                            ] <>
                   scalarTys <> compTys <> defaultTypes
-  in GCtx allTys fldInfos ordByEnums queryRoot mutRootM $ Map.map fst flds
+  -- for now subscription root is query root
+  in GCtx allTys fldInfos ordByEnums queryRoot mutRootM (Just queryRoot) $
+     Map.map fst flds
   where
 
     mkMutRoot =
@@ -738,6 +744,12 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) =
       mapFromL _fiName
 
     mutRootM = bool (Just $ mkMutRoot mFlds) Nothing $ null mFlds
+
+    mkSubRoot =
+      mkObjTyInfo (Just "subscription root") (G.NamedType "subscription_root") .
+      mapFromL _fiName
+
+    subRootM = bool (Just $ mkSubRoot qFlds) Nothing $ null qFlds
 
     (qFlds, mFlds) = partitionEithers $ map snd $ Map.elems flds
 

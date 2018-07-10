@@ -39,14 +39,13 @@ import           System.FilePath.Posix
 
 import           Hasura.Server.Init
 import           Hasura.Prelude
-import           Hasura.Server.App                  (ravenLogGen, RavenLogger, app, AuthMode(..))
+import           Hasura.Server.App                  (ravenLogGen, RavenLogger, mkWaiApp)
+import           Hasura.Server.Auth                 (AuthMode(..))
 import           Hasura.Server.Logging              (withStdoutLogger)
 import qualified Database.PG.Query                    as Q
 
 
 import qualified Database.PG.Query                    as PGQ
-
-import           Web.Spock.Core                    (spockT, spockAsApp)
 
 import qualified Network.HTTP.Types                as H
 import           Network.Wai                       (Application)
@@ -235,7 +234,7 @@ raven_app rlogger pool =
   do
     _ <- liftIO $ runExceptT $ Q.runTx pool defTxMode resetStateTx
     let corsCfg = CorsConfigG "*" True  -- cors is disabled
-    spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
+    mkWaiApp Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
 
 main :: IO ()
 main = withStdoutLogger ravenLogGen $ \rlogger -> do
