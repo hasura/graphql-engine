@@ -40,10 +40,16 @@ build:
 compress:
 	ls $(OUTPUT_DIR)/$(VERSION)/hasura-* | xargs upx
 
+# to be executed in circle-ci only
+ci-copy-binary:
+	mkdir -p /build/_cli_output
+	cp $(OUTPUT_DIR)/$(VERSION)/hasura-* /build/_cli_output
+	echo "$(VERSION)" > /build/_cli_output/version.txt
+
 # run tests
 .PHONY: test
 test:
-	go test ./...
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" ./...
 
 # generate docs
 .PHONY: docs

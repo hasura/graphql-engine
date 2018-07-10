@@ -7,6 +7,8 @@ packager_ver := 1.1
 project_dir := $(shell pwd)
 build_dir := $(project_dir)/$(shell stack --system-ghc path --dist-dir)/build
 
+build_output := /build/_server_output
+
 image: $(project).cabal
 	docker build -t "$(registry)/$(project):$(version)" \
 		-f packaging/Dockerfile \
@@ -28,6 +30,9 @@ release-image: $(project).cabal
 ci-binary: $(project).cabal
 	mkdir -p packaging/build/rootfs
 	stack --system-ghc build
+	mkdir -p $(build_output)
+	cp $(build_dir)/$(project)/$(project) $(build_output)
+	echo "$(version)" > $(build_output)/version.txt
 
 # assumes this is built in circleci
 ci-image:
@@ -38,6 +43,11 @@ ci-image:
 	upx packaging/build/rootfs/bin/$(project)
 	docker build -t $(registry)/$(project):$(version) packaging/build/
 
+ci-save-image:
+	docker save -o $(build_output)/image.tar $(registry)/$(project):$(version)
+
+ci-load-image:
+	docker load -i $(build_output)/image.tar
 
 push: $(project).cabal
 	docker push $(registry)/$(project):$(version)
