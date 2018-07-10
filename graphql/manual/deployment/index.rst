@@ -7,6 +7,12 @@ for easier development. Please visit the :doc:`using in production<./production>
 See:
 
 .. toctree::
+   :maxdepth: 1
+   :titlesonly:
 
-   production
-   options
+   securing-graphql-endpoint
+   using-existing-database
+   Heroku <heroku/index>
+   Docker <docker/index>
+   postgres-credentials
+   GraphQL engine server flags <graphql-engine-flags/index>
