@@ -12,7 +12,7 @@ build:
 	npm run build
 
 test:
-	npm run test
+	npm run dev & npm run test
 
 gcloud-cp-stable:
 	gsutil cp -r $(DIST_PATH)/main.css gs://$(BUCKET_NAME)/console/$(VERSION)/main.css
