@@ -1,167 +1,173 @@
 Sort query results
 ==================
-Results from your query can be sorted by using the ``order_by`` argument. The argument can be used to sort based on fields in nested objects too. The sort order (ascending vs. descending) is set by specifying the ``+`` or ``-`` in front of the column name in the ``order_by`` argument. The ``order_by`` argument takes an array of parameters to allow sorting by multiple columns. The following are examples of sorting different types of queries.
+Results from your query can be sorted by using the ``order_by`` argument. The argument can be used to sort based on
+fields in nested objects too. The sort order (ascending vs. descending) is set by specifying the ``+`` or ``-`` in
+front of the column name in the ``order_by`` argument. The ``order_by`` argument takes an array of parameters to allow
+sorting by multiple columns. The following are examples of sorting different types of queries.
 
 Sorting in a simple object query
 --------------------------------
-Fetch a list of authors that is sorted by their names in a descending order:
+Fetch list of authors sorted by their names in an ascending order:
 
 .. graphiql::
-   :query:
-        query {
-            author(order_by: ["-name"]) {
-                id
-                name
-            }
-        }
-   :response:
-        {
-            "data": {
-                "author": [
-                    {
-                        "id": 26,
-                        "name": "Wenda"
-                    },
-                    {
-                        "id": 21,
-                        "name": "Sophey"
-                    },
-                    {
-                        "id": 20,
-                        "name": "Saunderson"
-                    },
-                    {
-                        "id": 11,
-                        "name": "Rubi"
-                    },
-                    {
-                        "id": 12,
-                        "name": "Ricoriki"
-                    },
-                    {
-                        "id": 13,
-                        "name": "Quintus"
-                    }
-                ]
-            }
-        }
+  :query:
+    query {
+      author(
+        order_by: ["+name"]
+      ) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 5,
+            "name": "Amii"
+          },
+          {
+            "id": 4,
+            "name": "Anjela"
+          },
+          {
+            "id": 8,
+            "name": "April"
+          },
+          {
+            "id": 2,
+            "name": "Beltran"
+          },
+          {
+            "id": 7,
+            "name": "Berti"
+          },
+          {
+            "id": 6,
+            "name": "Corny"
+          }
+        ]
+      }
+    }
 
 Sorting a nested object query
 -----------------------------
-Fetch a list of authors that is sorted by their names and a list of each of their articles that is sorted in the reverse chronological order of their publication date:
+Fetch a list of authors sorted by their names with a list of their articles that is sorted by their rating:
 
 .. graphiql::
-   :query:
-        query {
-            author(order_by: ["-id"]) {
-                id
-                name
-                articles (order_by: ["-published_on"])  {
-                    id
-                    published_on
-                }
-            }
+  :query:
+    query {
+      author(order_by: ["+name"]) {
+        id
+        name
+        articles(order_by: ["-rating"]) {
+          id
+          title
+          rating
         }
-   :response:
-        {
-            "data": {
-                "author": [
-                    {
-                        "id": 29,
-                        "name": "Carmella",
-                        "articles": [
-                        {
-                            "id": 78,
-                            "published_on": null
-                        },
-                        {
-                            "id": 64,
-                            "published_on": null
-                        }
-                        ]
-                    },
-                    {
-                        "id": 28,
-                        "name": "Derril",
-                        "articles": [
-                        {
-                            "id": 3,
-                            "published_on": null
-                        },
-                        {
-                            "id": 10,
-                            "published_on": null
-                        },
-                        {
-                            "id": 34,
-                            "published_on": null
-                        },
-                        {
-                            "id": 38,
-                            "published_on": null
-                        },
-                        {
-                            "id": 59,
-                            "published_on": null
-                        },
-                        {
-                            "id": 88,
-                            "published_on": null
-                        }
-                        ]
-                    },
-                    {
-                        "id": 27,
-                        "name": "Ashby",
-                        "articles": [
-                        {
-                            "id": 17,
-                            "published_on": null
-                        },
-                        {
-                            "id": 7,
-                            "published_on": null
-                        },
-                        {
-                            "id": 99,
-                            "published_on": null
-                        }
-                        ]
-                    }
-                ]
-            }
-        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 5,
+            "name": "Amii",
+            "articles": [
+              {
+                "rating": 5,
+                "id": 17,
+                "title": "montes nascetur ridiculus"
+              },
+              {
+                "rating": 3,
+                "id": 12,
+                "title": "volutpat quam pede"
+              },
+              {
+                "rating": 2,
+                "id": 4,
+                "title": "vestibulum ac est"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "name": "Anjela",
+            "articles": [
+              {
+                "rating": 4,
+                "id": 3,
+                "title": "amet justo morbi"
+              },
+              {
+                "rating": 1,
+                "id": 1,
+                "title": "sit amet"
+              }
+            ]
+          },
+          {
+            "id": 8,
+            "name": "April",
+            "articles": [
+              {
+                "rating": 4,
+                "id": 13,
+                "title": "vulputate elementum"
+              },
+              {
+                "rating": 2,
+                "id": 20,
+                "title": "eu nibh"
+              }
+            ]
+          }
+        ]
+      }
+    }
 
 Sorting by multiple fields
 --------------------------
-Fetch a list of articles that is sorted by the date they were published (descending) and then on their title(alphabetically):
+Fetch a list of articles that is sorted by their rating (descending) and then on their published date (ascending):
 
 .. graphiql::
-   :query:
-        query {
-            article(order_by: ["-published_on", "+title"]) {
-                id
-                title
-                content
-                published_on
-            }
-        }
-   :response:
-        {
-            "data": {
-                "article": [
-                {
-                    "id": 2,
-                    "title": "a some title",
-                    "content": "some content",
-                    "published_on": "2018-06-14"
-                },
-                {
-                    "id": 6,
-                    "title": "some title",
-                    "content": "some content",
-                    "published_on": "2018-06-11"
-                }
-                ]
-            }
-        }
+  :query:
+    query {
+      article(
+        order_by: ["-rating", "+published_on"]
+      ) {
+        id
+        rating
+        published_on
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 17,
+            "rating": 5,
+            "published_on": null
+          },
+          {
+            "id": 7,
+            "rating": 4,
+            "published_on": "2016-07-09"
+          },
+          {
+            "id": 3,
+            "rating": 4,
+            "published_on": "2017-05-26"
+          },
+          {
+            "id": 15,
+            "rating": 4,
+            "published_on": "2018-01-02"
+          }
+        ]
+      }
+    }

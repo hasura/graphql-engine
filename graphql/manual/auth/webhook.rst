@@ -10,7 +10,7 @@ You can configure a webhook (see :doc:`GraphQL Server Options <../deployment/opt
 ..   :doc:`Read more<config>`.
 
 
-- The configured webook is  **called** when ``X-Hasura-Access-Key`` header is not found in the request.
+- The configured webhook is  **called** when ``X-Hasura-Access-Key`` header is not found in the request.
 - The configured webhook is **ignored** when ``X-Hasura-Access-Key`` header is found in the request.
 
 

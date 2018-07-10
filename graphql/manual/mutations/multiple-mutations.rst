@@ -4,49 +4,58 @@ If multiple mutations are part of the same request, they are executed **sequenti
 
 Insert objects of different unrelated types in the same mutation
 ----------------------------------------------------------------
-Insert an ``article`` object and an unrelated ``review`` object:
+Insert an ``author`` object and an unrelated ``article`` object:
 
 .. graphiql::
-   :view_only: true
-   :query:
-        mutation insert_article_and_review {
-          insert_article(objects: [{title: "Article 6", content: "Sample article content", author_id: 4}]) {
-            returning {
-              id
-              title
-            }
-          }
-          insert_reviews(objects: [{content: "Nice Article!", article_id: 9}]) {
-            affected_rows
-            returning {
-              id
-              article_id
-            }
-          }
+  :view_only: true
+  :query:
+    mutation insert_author_and_article {
+      insert_author(
+        objects: [
+          {id: 11, name: "Jane"}
+        ]
+      ) {
+        affected_rows,
+        returning {
+          id
+          name
         }
-   :response:
-        {
-          "data": {
-            "insert_article": {
-              "affected_rows": 1,
-              "returning": [
-                {
-                  "id": 109,
-                  "title": "Article 6"
-                }
-              ]
-            },
-            "insert_reviews": {
-              "affected_rows": 1,
-              "returning": [
-                {
-                  "id": 3,
-                  "article_id": 9
-                }
-              ]
-            }
-          }
+      }
+      insert_article(
+        objects: [
+          {id: 21, title: "Article 1", content: "Sample content", author_id: 9}
+        ]
+      ) {
+        affected_rows,
+        returning {
+          id
+          title
         }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "affected_rows": 1,
+          "returning": [
+            {
+              "id": 11,
+              "name": "Jane"
+            }
+          ]
+        },
+        "insert_article": {
+          "affected_rows": 1,
+          "returning": [
+            {
+              "id": 21,
+              "title": "Article 1"
+            }
+          ]
+        }
+      }
+    }
 
 Insert and object and a nested object in the same mutation
 ----------------------------------------------------------

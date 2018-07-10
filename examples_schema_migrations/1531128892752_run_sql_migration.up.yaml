@@ -1,0 +1,9 @@
+- args:
+    sql: |-
+      CREATE VIEW article_safe AS
+      SELECT id, title, rating
+      FROM article;
+  type: run_sql
+- args:
+    name: article_safe
+  type: add_existing_table_or_view

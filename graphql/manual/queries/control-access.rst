@@ -23,41 +23,41 @@ You will need to revoke permission (if already granted) from the source table an
 
 Query the view
 --------------
-You can now query the newly created view like you would a regular table. For e.g. the following query will accesses only the *safe* fields:
+You can now query the newly created view like you would a regular table. For e.g. the following query will access only the *safe* fields:
 
 .. graphiql::
-   :query:
-        query {
-            article_safe {
-                id
-                title
-                rating
-            }
-        }
-   :response:
-        {
-            "data": {
-                "article_safe": [
-                    {
-                        "id": 3,
-                        "title": "some title",
-                        "rating": 4
-                    },
-                    {
-                        "id": 4,
-                        "title": "some title",
-                        "rating": 4
-                    },
-                    {
-                        "id": 5,
-                        "title": "some title",
-                        "rating": 3
-                    },
-                    {
-                        "id": 6,
-                        "title": "some title",
-                        "rating": 2
-                    }
-                ]
-            }
-        }
+  :query:
+    query {
+      article_safe {
+        id
+        title
+        rating
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article_safe": [
+          {
+            "id": 1,
+            "title": "sit amet",
+            "rating": 1
+          },
+          {
+            "id": 2,
+            "title": "a nibh",
+            "rating": 3
+          },
+          {
+            "id": 3,
+            "title": "amet justo morbi",
+            "rating": 4
+          },
+          {
+            "id": 4,
+            "title": "vestibulum ac est",
+            "rating": 2
+          }
+        ]
+      }
+    }
