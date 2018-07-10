@@ -224,8 +224,7 @@ fetchHeaders req mReqAccessKey authMode =
       when (reqKey /= key) accessKeyAuthErr
       return headers
 
-    accessKeyAuthErr = throw400 AccessDenied $
-          "access keys don't match or not found"
+    accessKeyAuthErr = throw401 "access keys don't match or not found"
 
     headersTxt hdrsRaw =
       flip map hdrsRaw $ \(hdrName, hdrVal) ->
