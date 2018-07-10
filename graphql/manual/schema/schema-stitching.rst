@@ -4,6 +4,10 @@ GraphQL Schema Stitching
 
 Schema stitching is the process of creating a single GraphQL schema from multiple underlying GraphQL APIs.
 
+.. note::
+
+  If you are looking for ``graphql-bindings``, please check out `this git repository <https://github.com/hasura/generate-graphql-bindings>`_.
+
 Schema stitching allows you to have one unified API that allows the client to query multiple GraphQL Schemas at the same time, including relations between the schemas.
 
 .. image:: ../../../img/graphql/manual/schema/graphql-schema-stitching.png
@@ -37,7 +41,7 @@ The GraphQL query in Hasura Data API for the above table would look like:
 
 This is a simple select on table person.
 
-On the other hand, we have a GraphQL server for fetching weather information that connects to ``Meta Weather API``. 
+On the other hand, we have a GraphQL server for fetching weather information that connects to ``Meta Weather API``.
 
 The GraphQL schema for this weather API looks like:
 
@@ -73,7 +77,7 @@ The GraphQL query to fetch this weather information would look like:
 
 Explore this API on `Apollo LaunchPad <https://launchpad.graphql.com/nxw8w0z9q7>`_
 
-Note the usage of ``city_name`` as an argument for ``cityWeather`` query. Using this we can extend our original Postgres's ``person`` schema to include weather information based on the ``city`` column of the person table. 
+Note the usage of ``city_name`` as an argument for ``cityWeather`` query. Using this we can extend our original Postgres's ``person`` schema to include weather information based on the ``city`` column of the person table.
 
 .. code-block:: none
 
