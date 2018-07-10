@@ -35,7 +35,7 @@ refs:
     filters:
       branches:
         ignore: /^release-v.*/
-  
+
 
 
 version: 2
@@ -140,14 +140,14 @@ jobs:
     - attach_workspace:
         at: /build
     - restore_cache:
-        key: 
+        key:
           console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
     - run:
         name: install dependencies
         working_directory: console
         command: make ci-deps
     - save_cache:
-        key: 
+        key:
           console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
         paths:
         - console/node_modules
@@ -155,9 +155,9 @@ jobs:
         - ~/.cache
     - *wait_for_postgres
     # ignore console test for now
-    # - run:
-    #     name: test console
-    #     command: .circleci/test-console.sh
+    - run:
+        name: test console
+        command: .circleci/test-console.sh
     - run:
         name: build console
         working_directory: console
@@ -192,7 +192,7 @@ workflows:
   build_and_test:
     jobs:
     - test_and_build_server: *filter_only_vtags
-    - test_and_build_cli: 
+    - test_and_build_cli:
         <<: *filter_only_vtags
         requires:
         - test_and_build_server
@@ -201,7 +201,7 @@ workflows:
         requires:
         - test_and_build_server
         - test_and_build_cli
-    - deploy: 
+    - deploy:
         <<: *filter_only_vtags
         <<: *filter_only_dev_release_branches
         requires:
