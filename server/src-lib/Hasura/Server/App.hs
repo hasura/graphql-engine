@@ -206,7 +206,7 @@ fetchHeaders
   ->  ExceptT QErr m [(T.Text, T.Text)]
 fetchHeaders req mReqAccessKey authMode =
   case authMode of
-    AMNoAuth -> return headers
+    AMNoAuth -> assertNoAccKeyHdr >> return headers
 
     AMAccessKey accKey -> do
       reqAccessKey <- maybe accessKeyAuthErr return mReqAccessKey
@@ -226,6 +226,10 @@ fetchHeaders req mReqAccessKey authMode =
 
     accessKeyAuthErr = throw400 AccessDenied $
           "access keys don't match or not found"
+
+    assertNoAccKeyHdr =
+      when (isJust mReqAccessKey) $ throw400 Unexpected
+      "access key header is not expected when access key is not set"
 
     headersTxt hdrsRaw =
       flip map hdrsRaw $ \(hdrName, hdrVal) ->
