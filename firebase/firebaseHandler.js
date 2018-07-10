@@ -27,9 +27,9 @@ firebaseRouter.route("/webhook").get((request, response) => {
   }
   // Get authorization headers
   var authHeaders = request.get('Authorization');
-  // Send 401 if there are no auth headers
+  // Send anonymous role if there are no auth headers
   if (!authHeaders) {
-    response.status(401).send('No authorization token');
+    response.json({'x-hasura-role': 'anonymous'});
     return;
   } else {
     // Validate the received id_token
@@ -48,7 +48,7 @@ firebaseRouter.route("/webhook").get((request, response) => {
       .catch((e) => {
         // Throw authentication error
         console.log(e);
-        response.status(401).send('Could not authenticate the request');
+        response.json({'x-hasura-role': 'anonymous'});
       });
   }
 });

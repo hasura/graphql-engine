@@ -23,7 +23,7 @@ auth0Router.route('/webhook').get((request, response) => {
   var token = request.get('Authorization');
 
   if (!token) {
-    response.status(401).send('No authorization token');
+    response.json({'x-hasura-role': 'anonymous'});
     return;
   } else {
     // Fetch information about this user from
@@ -50,7 +50,8 @@ auth0Router.route('/webhook').get((request, response) => {
       } else {
         // Error response from auth0
         console.log(err, res, body);
-        response.status(401).send('Invalid response from auth0');
+        response.json({'x-hasura-role': 'anonymous'});
+        return;
       }
     });
   }
