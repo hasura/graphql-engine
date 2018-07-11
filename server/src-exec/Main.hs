@@ -80,7 +80,7 @@ parseArgs = execParser opts
     optParser = RavenOptions <$> parseRawConnInfo <*> parseRavenMode
     opts = info (helper <*> optParser)
            ( fullDesc <>
-             header "graphql-engine - Hasura's datastore")
+             header "Hasura's graphql-engine - Exposes Postgres over GraphQL")
 
 printJSON :: (A.ToJSON a) => a -> IO ()
 printJSON = BLC.putStrLn . A.encode
