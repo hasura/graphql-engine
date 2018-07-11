@@ -52,7 +52,7 @@ type HasuraGraphQLConfig struct {
 	// AccessKey (optional) required to query the endpoint
 	AccessKey string `json:"access_key,omitempty"`
 
-	ParsedEndpoint *url.URL
+	ParsedEndpoint *url.URL `json:"-"`
 }
 
 // ParseEndpoint ensures the endpoint is valid.
