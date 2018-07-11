@@ -18,15 +18,3 @@ URL_PREFIX=/
 
 **Note**
 The .env file should not be in version control.
-
-## Contributing
-
-To suggest a feature, create an issue if it does not already exist. If you would like to help develop a suggested feature follow these steps:
-
-- Fork this repo
-- Install dependencies with $ npm install
-- Implement your source code changes to files in the src/ directory
-- Write your tests in the cypress/ directory
-- Run the hasura console production server by executing `hasura console`
-- Run the hasura console locally with $ npm run dev
-- Submit PR for review
