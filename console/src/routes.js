@@ -27,7 +27,7 @@ const routes = store => {
         },
         () => {
           alert(
-            'Not able to reach the cluster. Check if hasura console server is running or if cluster exists and try again'
+            'Not able to reach the graphql server. Check if hasura console server is running or if graphql server is running and try again'
           );
         }
       );

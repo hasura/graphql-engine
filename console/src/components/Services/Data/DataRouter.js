@@ -167,7 +167,7 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
     }
     // redirect to login page if error in access key
     if (store.getState().tables.accessKeyError) {
-      replaceState('/login');
+      replaceState(globals.urlPrefix + '/login');
       cb();
     } else {
       // validate login
@@ -187,7 +187,7 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
             },
             () => {
               // alert('Could not load schema.');
-              replaceState('/');
+              replaceState(globals.urlPrefix);
               cb();
             }
           );
@@ -207,14 +207,14 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
   const migrationRedirects = (nextState, replaceState, cb) => {
     const state = store.getState();
     if (!state.main.migrationMode) {
-      replaceState('/data/schema');
+      replaceState(globals.urlPrefix + '/data/schema');
       cb();
     }
     cb();
   };
   const consoleModeRedirects = (nextState, replaceState, cb) => {
     if (globals.consoleMode === 'hasuradb') {
-      replaceState('/data/schema');
+      replaceState(globals.urlPrefix + '/data/schema');
       cb();
     }
     cb();
