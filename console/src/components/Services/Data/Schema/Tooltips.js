@@ -10,15 +10,13 @@ export const dataAPI = (
 
 export const untrackedTip = (
   <Tooltip id="tooltip-data-service">
-    These are the tables/views in the schema which are not tracked by Data
-    Microservice
+    Tables or views that are not exposed over GraphQL
   </Tooltip>
 );
 
 export const untrackedRelTip = (
   <Tooltip id="tooltip-data-rel-service">
-    These are the relations in the schema which are not tracked by Data
-    Microservice
+    Foreign keys between tracked tables that are not relationships
   </Tooltip>
 );
 

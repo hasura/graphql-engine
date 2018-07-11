@@ -106,11 +106,6 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 	}
 	values.Del("sslmode")
 	hurl.RawQuery = values.Encode()
-	// Remove UserInfo
-	hurl.User = nil
-	// Add v1/query to path
-	hurl.Path = path.Join(hurl.Path, "v1/query")
-
 	var user, pass string
 	switch hurl.User {
 	case nil:
@@ -129,6 +124,10 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 			pass = tmpPass
 		}
 	}
+	// Remove UserInfo
+	hurl.User = nil
+	// Add v1/query to path
+	hurl.Path = path.Join(hurl.Path, "v1/query")
 
 	hx, err := WithInstance(&Config{
 		MigrationsTable: DefaultMigrationsTable,

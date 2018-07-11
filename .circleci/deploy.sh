@@ -35,6 +35,7 @@ deploy_console() {
     cd "$ROOT/console"
     export VERSION=$(../scripts/get-version-circleci.sh)
     export DIST_PATH="/build/_console_output"
+    make gzip-assets
     make gcloud-cp-stable
     make gcloud-set-metadata
     unset VERSION

@@ -1,0 +1,18 @@
+description: Runs a bulk SQL query to create tables
+url: /v1/query
+status: 200
+query:
+  type: bulk
+  args:
+    - type: run_sql
+      args:
+        sql: "CREATE TABLE author (id SERIAL PRIMARY KEY, name TEXT)"
+    - type: run_sql
+      args:
+        sql: |
+          CREATE TABLE article (
+            id SERIAL PRIMARY KEY,
+            title TEXT,
+            content TEXT,
+            author_id INTEGER REFERENCES author(id)
+          )

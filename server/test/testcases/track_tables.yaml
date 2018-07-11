@@ -1,0 +1,14 @@
+description: Track the above created tables
+url: /v1/query
+status: 200
+query:
+  type: bulk
+  args:
+    - type: track_table
+      args:
+        schema: public
+        name: author
+    - type: track_table
+      args:
+        schema: public
+        name: article

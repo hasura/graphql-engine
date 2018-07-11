@@ -23,8 +23,10 @@ refs:
     filters:
       branches:
         only: /^dev.*/
-  filter_only_dev_release_branches: &filter_only_dev_release_branches
+  filter_only_vtags_dev_release_branches: &filter_only_vtags_dev_release_branches
     filters:
+      tags:
+        only: /^v.*/
       branches:
         only: /^(dev|release).*/
   filter_ignore_branches: &filter_ignore_branches
@@ -64,7 +66,7 @@ jobs:
         working_directory: ./server
         command: |
           # TODO: make test
-          make ci-binary
+          DATABASE_URL="postgres://gql_test:@localhost:5432/gql_test" make ci-binary-and-test
           make ci-image
           make ci-save-image
     - save_cache:
@@ -202,7 +204,6 @@ workflows:
         - test_and_build_server
         - test_and_build_cli
     - deploy:
-        <<: *filter_only_vtags
-        <<: *filter_only_dev_release_branches
+        <<: *filter_only_vtags_dev_release_branches
         requires:
         - test_and_build_console
