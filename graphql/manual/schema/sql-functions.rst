@@ -1,9 +1,10 @@
 Creating custom SQL functions
 =============================
 
-Let's say you want to run custom SQL functions or stored procedures via GraphQL.
+Let's say you want to run custom SQL functions or stored procedures via GraphQL. Hasura allows you to run your SQL
+functions via mutations.
 
-Hasura allows you to run your SQL functions via mutations. At a high-level:
+At a high-level:
 
 #. Create a table with columns that capture the input, and columns that capture the output of the SQL function along
    with an auto-generated id column
@@ -53,13 +54,10 @@ Run a mutation to insert an object with (input = "test", output=null) and you'll
 .. graphiql::
   :view_only: true
   :query:
-    mutation insert_sql_fn {
-      insert_sql_function_table(
+    mutation {
+      insert_sql_function_table (
         objects: [
-          {
-            input: "test",
-            output: null
-          }
+          {input: "test"}
         ]
       ) {
         returning {
@@ -71,7 +69,6 @@ Run a mutation to insert an object with (input = "test", output=null) and you'll
     {
       "data": {
         "insert_sql_function_table": {
-          "affected_rows": 1,
           "returning": [
             {
               "output": "TEST"

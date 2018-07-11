@@ -14,9 +14,9 @@ For ``graphql-engine`` command these are the flags available
 
 .. code-block:: none
 
-  --database-url       Postgres database URL
-                           <scheme>://<user>:<password>@<host>:<port>/<db-name>
-                           Example: http://admin:mypass@mydomain.com:5432/mydb
+      --database-url       Postgres database URL
+                           <postgres/postgresql>://<user>:<password>@<host>:<port>/<db-name>
+                           Example: postgres://admin:mypass@mydomain.com:5432/mydb
 
   Or either you can specifiy following options
 
@@ -33,13 +33,14 @@ For ``serve`` subcommand these are the flags available
 
 .. code-block:: none
 
-   --server-port        Port on which graphql-engine should be served (default: 8080)
-   --access-key         Secret access key, required to access this instance.
-                        If specified client needs to send 'X-Hasura-Access-Key'
-                        header
-   --cors-domain        The domain, including sheme and port, to allow CORS for
-   --auth-hook          The authentication webhook, required to authenticate
-                        incoming request
+       --server-port        Port on which graphql-engine should be served (default: 8080)
+       --access-key         Secret access key, required to access this instance.
+                            If specified client needs to send 'X-Hasura-Access-Key'
+                            header
+       --cors-domain        The domain, including sheme and port, to allow CORS for
+       --disable-cors       Disable CORS handling
+       --auth-hook          The authentication webhook, required to authenticate
+                            incoming request
    -s, --stripes            Number of stripes
    -c, --connections        Number of connections that need to be opened to Postgres
        --timeout            Each connection's idle time before it is closed
@@ -47,6 +48,7 @@ For ``serve`` subcommand these are the flags available
                             serializable
        --root-dir           This static dir is served at / and takes precedence over
                             all routes
+       --enable-console     Enable API console. It is served at '/' and '/console'
 
 
 Default environment variables
@@ -71,8 +73,8 @@ For example,
 .. code-block::
 
    HASURA_GRAPHQL_DATABASE_URL   Postgres database URL
-                                 <scheme>://<user>:<password>@<host>:<port>/<db-name>
-                                 Example: http://admin:mypass@mydomain.com:5432/mydb
+                                 <postgres/postgresql>://<user>:<password>@<host>:<port>/<db-name>
+                                 Example: postgres://admin:mypass@mydomain.com:5432/mydb
 
    HASURA_GRAPHQL_ACCESS_KEY     Secret access key, required to access this instance.
                                  If specified client needs to send 'X-Hasura-Access-Key'
