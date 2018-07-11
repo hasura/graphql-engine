@@ -65,6 +65,7 @@ class ApiExplorer extends Component {
         wdStyles={wdClass}
         route={this.props.route}
         dataHeaders={this.props.dataHeaders}
+        numberOfTables={this.props.tables.length}
       />
     );
 
@@ -82,6 +83,7 @@ ApiExplorer.propTypes = {
   displayedApi: PropTypes.object.isRequired,
   dispatch: PropTypes.func.isRequired,
   route: PropTypes.object.isRequired,
+  tables: PropTypes.array.isRequierd,
 };
 
 export default ApiExplorer;

@@ -32,7 +32,7 @@ const Main = ({ children, location, migrationModeProgress, currentSchema }) => {
   if (globals.accessKey === '' || globals.accessKey === null) {
     accessKeyHtml = (
       <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>
-        <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/production.html">
+        <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html">
           <button className={'btn btn-danger ' + styles.add_mar_right}>
             <i
               className={
