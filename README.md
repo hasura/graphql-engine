@@ -13,11 +13,9 @@ integrates with your auth
 * Postgres ❤️: supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with
 mutations
 
-## Quickstart
+## Quickstart - Setup on Heroku
 
-### Setup on Heroku (recommended)
-
-:information_source: *no credit-card required*; Sign-up required
+:information_source: *no credit-card required*; Sign-up may be required
 
 1. Click on the following button to deploy GraphQL Engine on Heroku and provision the free Postgres add-on:
 
@@ -31,70 +29,9 @@ mutations
 
    Create test tables and instantly run your first query. Follow this [simple guide] (https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
 
+### Other deployment methods
 
-
-### Setup using Docker
-
-1. Install the Hasura CLI:
-
-    * For Mac or Linux: run the following command in your terminal/shell<sup>*</sup>
-      
-      ```bash
-      curl -L https://cli.hasura.io/install.sh | bash
-      ```
-      <sup>*</sup> *installs the CLI in `/usr/local/bin` (Mac) or `/usr/local/bin` (Linux). `sudo` password may be required.*
-
-    * For Windows: Download relevant installer<sup>*</sup>
-        * [64-bit Windows installer](https://cli.hasura.io/install/windows-amd64)
-        * [32-bit Windows installer](https://cli.hasura.io/install/windows-386)
-
-        <sup>*</sup> *run the installer as `Administrator`. CLI needs [git bash](https://git-scm.com/download/win). Restart `git bash` if you see a `command not found` error after installation.*
-
-2. Initialize a project using CLI
-
-   ```bash
-      hasura init --directory my-project
-   ```
-
-3. Run Hasura & Postgres
-
-   ```bash
-      cd my-project/install-scripts
-      docker-compose up -d
-   ```
-
-4. Open the admin console
-
-    * Edit the `my-project/config.yaml` file to set the endpoint:
-      
-      ```yaml
-      endpoint: http://localhost:8080
-      ```
-
-    * Open console:
-      
-      ```bash
-      # Run this command in the my-project/ directory
-      hasura console
-      ```
-
-5. Make your first GraphQL query
-
-   Create test tables and instantly run your first query. Follow this [simple guide] (https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
-
-
-:information_source: See detailed deployment guides [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html)
-
-[//]: # (Remove if we can add a link at the top)
-
-## Documentation
-
-[Hasura GraphQL Engine docs](https://docs.hasura.io)
-
-## Examples
-
-* GitLab schema
-* ??
+See deployment guides [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) for Docker-based deployment and advanced configuration options.
 
 ## Architecture
 
@@ -104,7 +41,7 @@ The GraphQL Engine is a standalone, multi-core aware component that can be scale
 
 ![alt text](https://hasura.io/rstatic/dist/3021ad7d73fb15e8f7bdf86612ebd8a9.png "GraphQL Engine basic architecture")
 
-You can also place the engine behind a central GrapQL proxy that fronts multiple GraphQL APIs via schema stitching.
+You can also place the engine behind a central GraphQL proxy that fronts multiple GraphQL APIs via schema stitching.
 
 ![alt text](https://docs.platform.hasura.io/0.15/_images/graphql-schema-stitching.png "GraphQL Engine schema-stitched architecture")
 
@@ -121,8 +58,9 @@ GraphQL Engine has a burgeoning community of amazing developers! Come join the c
 - [Twitter](https://twitter.com/hasurahq)
 - [Email](mailto:build@hasura.io)
 - [Facebook](https://www.facebook.com/HasuraHQ/)
+- [Docs](https://docs.hasura.io)
 
-Hasura follows the CNCF code of conduct....
+Hasura follows the CNCF code of conduct.
 
 ## Contributing
 
@@ -133,5 +71,3 @@ Checkout our [contributing guide](CONTRIBUTING.md) for more details.
 GraphQL Engine is available under the [GNU Affero General Public License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0). [Why AGPL](https://gist.github.com/hasura-bot/9c36a0201a7563f7762b265a12b044d5).
 
 :information_source: If you are not satisfied with this license, commercial licenses are available on request. Please feel free to contact us at build@hasura.io or [hasura.io/help](https://hasura.io/help).
-
-
