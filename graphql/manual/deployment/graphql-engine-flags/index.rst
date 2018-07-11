@@ -1,10 +1,11 @@
 GraphQL engine server flags
 ===========================
 
-Hasura supports various flags and options for customising how you're running
-the GraphQL engine in your environment.
+Hasura supports various flags and options for customising how you're running the GraphQL engine in your environment.
 
-Read the :doc:`reference<options>` or browse some common examples below:
+Read the :doc:`reference <reference>` for all the available flags.
+
+Check out some common configuration examples:
 
 Example 1: Add an access key
 ----------------------------
@@ -102,4 +103,4 @@ For example:
 .. toctree::
    :hidden:
 
-   options
+   Server flags reference <reference>

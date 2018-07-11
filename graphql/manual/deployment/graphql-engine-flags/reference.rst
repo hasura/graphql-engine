@@ -1,9 +1,9 @@
-Server flags reference
-======================
+GraphQL engine server flags reference
+=====================================
 
 Every GraphQL engine command is structured as:
 
-.. code-block::
+.. code-block:: bash
 
    graphql-engine <server-flags> serve <command-flags>
 
@@ -56,24 +56,20 @@ Default environment variables
 
 You can use environment variables to configure defaults instead of using flags:
 
-.. code-block::
+For example:
+
+.. code-block:: bash
 
    HASURA_GRAPHQL_DATABASE_URL=postgres://user:pass@host:5432/dbname graphql-engine serve
 
 
 There are environment variables which are available:
 
-For example,
-
-.. code-block::
-
-   graphql-engine <server-flags> serve <command-flags>
-
-
-.. code-block::
+.. code-block:: none
 
    HASURA_GRAPHQL_DATABASE_URL   Postgres database URL
-                                 <postgres/postgresql>://<user>:<password>@<host>:<port>/<db-name>
+                                 <postgres/postgresql>://<user>:<password>@<host>:<port>/<db-
+                                 name>
                                  Example: postgres://admin:mypass@mydomain.com:5432/mydb
 
    HASURA_GRAPHQL_ACCESS_KEY     Secret access key, required to access this instance.
@@ -86,4 +82,5 @@ For example,
    HASURA_GRAPHQL_CORS_DOMAIN    The domain, including sheme and port, to allow CORS for
 
 
-When the equivalent flags for environment variables are used, the flags will take precedence.
+.. note::
+  When the equivalent flags for environment variables are used, the flags will take precedence.

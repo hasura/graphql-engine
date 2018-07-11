@@ -2,7 +2,7 @@ Exporting the Hasura GraphQL schema
 ===================================
 If you need to share or export the GraphQL schema, you can use the **GET** ``/v1alpha1/graphql/schema`` API to do so.
 
-.. code-block:: Bash
+.. code-block:: bash
 
    # If Hasura is running locally at localhost:8080
    # without an access key
@@ -13,7 +13,7 @@ If you need to share or export the GraphQL schema, you can use the **GET** ``/v1
 
 Once you have this schema, you can use community tooling to do things like codegen.
 
-.. code-block:: Bash
+.. code-block:: bash
 
    $ npm install -g apollo-codegen
    $ apollo-codegen introspect-schema schema.graphql --output schema.json

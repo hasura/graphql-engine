@@ -19,8 +19,9 @@ Let's say we want to create two simple tables:
 
 - ``article`` with columns ``id``, ``title``, ``content``, ``author_id``
 
-Click on the "Create Table" button in the **Data** section to open up an interface to create tables. For e.g. here's
-the schema for the ``author`` table in this interface:
+Head to the ``Data`` tab and click the ``Create Table`` button to open up an interface to create tables.
+
+For example, here is the schema for the ``article`` table in this interface:
 
 .. image:: ../../../img/graphql/manual/schema/create-table-graphql.png
 
@@ -29,12 +30,12 @@ e.g. the following *query* and *mutation* fields are generated for the tables we
 
 .. code-block:: none
 
-    author (
-      where: author_bool_exp
+    article (
+      where: article_bool_exp
       limit: Int
       offset: Int
       order_by: [String]
-    ): [author]
+    ): [article]
 
 .. code-block:: none
 
@@ -42,13 +43,6 @@ e.g. the following *query* and *mutation* fields are generated for the tables we
         objects: [article_input!]
         on_conflict: conflict_clause
     ): article_mutation_response
-
-.. note::
-    
-    If you are connecting to a database instance that already has data, you will need to explicitly *track* those
-    tables using the console in the **Schema** section. You will be shown a list of untracked tables from which you
-    can choose the tables to be included in the GraphQL schema.
-
 
 
 Try basic GraphQL queries
@@ -110,7 +104,7 @@ Here are a couple of examples:
     mutation add_author {
       insert_author(
         objects: [
-          {id: 11, name: "Julian"}
+          {id: 11, name: "Jane"}
         ]
       ) {
         affected_rows
@@ -124,6 +118,3 @@ Here are a couple of examples:
         }
       }
     }
-
-You can try out the examples :doc:`here <../queries/index>` (*except nested object queries, for which you'll need to
-connect your tables- see the next section*).

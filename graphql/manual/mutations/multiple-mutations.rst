@@ -57,6 +57,7 @@ Insert an ``author`` object and an unrelated ``article`` object:
       }
     }
 
-Insert and object and a nested object in the same mutation
-----------------------------------------------------------
-*This is currently work in progress*.
+..
+  Insert an object and a nested object in the same mutation
+  ---------------------------------------------------------
+  *This is currently work in progress*.

@@ -1,62 +1,61 @@
 Making your first GraphQL query
 ===============================
 
-Let's take a look at how to create tables using the Console, a UI tool meant for doing exactly this. We'll use a typical author/articles schema as a reference for all the following examples.
+Let's create a sample table and query from it using the Console, a UI tool meant for doing exactly this:
 
-Create a profile table
-----------------------
+Create a table
+--------------
 
-Head to your console and create the author table the following columns:
+Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
+the following columns:
 
-+----------+--------+
-| **profile**       |
-+----------+--------+
-| id       | integer|
-+----------+--------+
-| name     | text   |
-+----------+--------+
++----------+----------+
+|   **profile**       |
++----------+----------+
+| id       | integer  |
++----------+----------+
+| name     | text     |
++----------+----------+
 
 .. image:: ../../../img/graphql/manual/getting-started/create-profile-table.png
-   :width: 50%
 
 Insert some sample data into the table:
 
-+-------------+----------+
-|      **id** | **name** |
-+-------------+----------+
-| 1           |  john    |
-+-------------+----------+
-| 2           |  shruti  |
-+-------------+----------+
-| 3           |  celine  |
-+-------------+----------+
-| 4           |  raj     |
-+-------------+----------+
++-----------+------------+
+| **id**    | **name**   |
++-----------+------------+
+| 1         |  john      |
++-----------+------------+
+| 2         |  shruti    |
++-----------+------------+
+| 3         |  celine    |
++-----------+------------+
+| 4         |  raj       |
++-----------+------------+
 
 Try out a query
 ---------------
 
-Head to the API explorer tab in the console and try running the following query in GraphiQL:
+Head to the ``API explorer`` tab in the console and try running the following query in GraphiQL:
 
 .. code-block:: none
 
-  query {
+    query {
       profile {
         id
         name
       }
-  }
+    }
 
-You'll see that you get all the responses!
+You'll see that you get all the inserted data!
 
 .. image:: ../../../img/graphql/manual/getting-started/profile-query.png
 
 Try out other GraphQL queries
 -----------------------------
 
-Explore GraphiQL via its autocomplete or its docs section to see other kinds of queries you can run.
-
-To learn more:
+See:
+^^^^
 
 - :doc:`Building your schema<../schema/index>`
 - :doc:`Queries<../queries/index>`

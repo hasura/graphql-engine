@@ -36,7 +36,7 @@ Delete all articles written by an author:
   :query:
     mutation delete_authors_articles {
       delete_article(
-        where: {author: {id: {_eq: 6}}}
+        where: {author: {name: {_eq: "Corny"}}}
       ) {
         affected_rows
       }

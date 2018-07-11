@@ -1,15 +1,13 @@
-Run Hasura GraphQL Engine and Postgres using Docker
-===================================================
+Run Hasura GraphQL Engine using Docker
+======================================
 
-This guide will help you get Hasura Graphql engine and Postgres running as Docker containers using Docker Compose.
-This is the easiest way of setting up Hasura on your **local environment**.
-
-If you're looking for instructions on how to run the Hasura GraphQL engine connected to an existing postgres database, head to :doc:`Run Hasura with docker <docker-run>`.
+This guide assumes that you already have Postgres running and helps you set up Hasura GraphQL engine using Docker
+that talks to your Postgres database.
 
 **Prerequisites**:
 
 - `Docker <https://docs.docker.com/install/>`_
-- `Docker Compose <https://docs.docker.com/compose/install/>`_
+
 
 Step 1: Install the Hasura CLI
 ------------------------------
@@ -56,37 +54,52 @@ Step 1: Install the Hasura CLI
       getting a `command not found` error after installing Hasura, please restart Gitbash.
 
 
-Step 2: Initialize a project
-----------------------------
+Step 2: Initialise a Hasura project
+-----------------------------------
 
-.. code-block:: none
+Create a Hasura project directory.
+
+.. code-block:: bash
 
   hasura init --directory my-project
 
-Step 3: Run Hasura & Postgres
------------------------------
+Step 3: Run the hasura docker container
+---------------------------------------
 
-.. code-block::  none
+You'll see a sample docker run command at ``my-project/install-scripts/docker-run.sh``.
 
-   cd my-project/install-scripts
-   docker-compose up -d
+Edit the ``--database-url`` flag command, so that you can connect to your postgres instance.
 
-Check if the containers are running:
+.. code-block:: bash
+   :emphasize-lines: 5
 
-.. code-block:: none
+    #! /bin/bash
+    docker run -p 8080:8080 \
+     hasura/graphql-engine:latest \
+     graphql-engine \
+     --database-url postgres://username:password@hostname:port/dbname \
+     serve
 
-  $ docker ps
+Examples of `database-url`:
 
-  CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
-  097f58433a2b hasura/graphql-engine ... 1m ago  Up 1m  8080->8080/tcp ...
-  b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
+- If the username and database is called admin: ``postgres://admin:password@localhost:5432/admin``
+- If there is no password: ``postgres://admin:@localhost:5432/admin``
+
+Check if everything is running well:
+
+.. code-block:: bash
+
+   $ docker ps
+
+   CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
+   097f58433a2b hasura/graphql-engine ... 1m ago  Up 1m  8080->8080/tcp ...
 
 Step 4: Open the hasura console
 -------------------------------
 
 In the ``my-project/config.yaml`` file set the endpoint:
 
-.. code-block:: yaml
+.. code-block:: bash
 
   endpoint: http://localhost:8080
 
@@ -95,12 +108,8 @@ Now, open the hasura console:
 .. code-block:: bash
 
   # Run this command in the my-project/ directory
-  hasura console
+  $ hasura console
 
-Next: Make your first GraphQL query!
-------------------------------------
-
-Next, make your :doc:`first graphql query <../first-graphql-query>`.
 
 Advanced:
 ---------
@@ -108,6 +117,4 @@ Advanced:
 .. toctree::
    :titlesonly:
 
-   Run Hasura with your postgres <docker-run>
-   securing-graphql-endpoint
-   import-database
+..   securing-graphql-endpoint

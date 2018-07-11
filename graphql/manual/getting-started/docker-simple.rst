@@ -1,10 +1,8 @@
-Run Hasura GraphQL Engine and Postgres using Docker
-===================================================
+Quickstart with Docker
+======================
 
-This guide will help you get Hasura Graphql engine and Postgres running as Docker containers using Docker Compose.
-This is the easiest way of setting up Hasura on your **local environment**.
-
-If you're looking for instructions on how to run the Hasura GraphQL engine connected to an existing postgres database, head to :doc:`Run Hasura with docker <docker-run>`.
+This guide will help you get Hasura GraphQL engine and Postgres running as Docker containers using Docker Compose.
+This is the easiest way of setting up Hasura GraphQL engine on your **local environment**.
 
 **Prerequisites**:
 
@@ -100,14 +98,10 @@ Now, open the hasura console:
 Next: Make your first GraphQL query!
 ------------------------------------
 
-Next, make your :doc:`first graphql query<first-graphql-query>`.
+Next, make your :doc:`first graphql query <first-graphql-query>`.
 
 Advanced:
 ---------
 
-.. toctree::
-   :titlesonly:
-
-   Run Hasura with your postgres <docker-run>
-   securing-graphql-endpoint
-   import-database
+This was a quickstart guide to get the Hasura GraphQL engine up and running quickly. For more detailed instructions
+on deploying using Docker, check out :doc:`../deployment/docker/index`

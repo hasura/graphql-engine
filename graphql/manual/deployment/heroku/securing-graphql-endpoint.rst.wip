@@ -1,5 +1,5 @@
-Securing your GraphQL endpoint
-==============================
+Securing your Heroku GraphQL endpoint
+=====================================
 
 To make sure that your Hasura GraphQL endpoint is not publicly accessible, you need to configure an access key.
 

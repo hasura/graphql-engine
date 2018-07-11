@@ -1,7 +1,8 @@
 Authorization Webhook
 =====================
 
-You can configure a webhook (see :doc:`GraphQL Server Options <../deployment/options>`) to authenticate all incoming requests to Hasura GraphQL server.
+You can configure a webhook (see :doc:`GraphQL Server Options <../deployment/graphql-engine-flags/reference>`) to
+authenticate all incoming requests to Hasura GraphQL engine server.
 
 .. image:: ../../../img/graphql/manual/auth/webhook-auth.png
 
@@ -58,4 +59,5 @@ If you want to deny the GraphQL request return a ``401 Unauthorized`` exception.
    HTTP/1.1 401 Unauthorized
 
 .. note::
-   Anything other than ``200`` or ``401`` response from webhook then server raises ``500 Internal Server Error`` exception
+   Anything other than ``200`` or ``401`` response from webhook then server raises ``500 Internal Server Error``
+   exception

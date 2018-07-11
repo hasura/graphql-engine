@@ -1,5 +1,5 @@
-Creating custom SQL functions
-=============================
+Running custom SQL functions
+============================
 
 Let's say you want to run custom SQL functions or stored procedures via GraphQL. Hasura allows you to run your SQL
 functions via mutations.

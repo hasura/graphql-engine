@@ -1,18 +1,30 @@
 Deploying Hasura GraphQL Engine
 ===============================
 
-The Hasura GraphQL engine is a binary that is shipped as a docker container. By default, Hasura runs in a very permissive mode
-for easier development. Please visit the :doc:`using in production<./production>` guide for how to configure Hasura for your production environment.
+.. note::
+  This section talks about deloying the Hasura GraphQL engine to a **production environment**. If you would like to
+  quickly take the Hasura GraphQL engine for a spin, check out our
+  :doc:`Getting started guide <../getting-started/index>`.
 
-See:
+The Hasura GraphQL engine is a binary that is shipped as a Docker container. Choose from the following guides to
+deploy the Hasura GraphQL engine and connect it to a Postgres database.
+
+- :doc:`Deploy using Heroku <heroku/index>`
+- :doc:`Deploy using Docker <docker/index>`
+
+By default, Hasura GraphQL engine runs in a very permissive mode for easier development. Check out the below docs to
+configure Hasura GraphQL engine for your production environment.
+
+- :doc:`postgres-credentials`
+- :doc:`GraphQL engine server flags <graphql-engine-flags/index>`
+
 
 .. toctree::
    :maxdepth: 1
    :titlesonly:
+   :hidden:
 
-   securing-graphql-endpoint
-   using-existing-database
-   Heroku <heroku/index>
-   Docker <docker/index>
+   Using Heroku <heroku/index>
+   Using Docker <docker/index>
    postgres-credentials
-   GraphQL engine server flags <graphql-engine-flags/index>
+   graphql-engine-flags/index
