@@ -4,11 +4,11 @@
 
 Hasura GraphQL Engine is a performant GraphQL server that provides a **ready-to-use GraphQL API over Postgres** by auto-generating a GraphQL schema and corresponding resolvers. 
 
-* Make powerful queries: built-in filtering, pagination and pattern search arguments and operators
-* ??: add it to an existing, living Postgres database
+* Make powerful queries: built-in filtering, pagination, and pattern search arguments and operators
+* Work with your Postgres database : point it to an existing, living Postgres database to get instant GraphQL API
 * Fine-grained access control: dynamic access control that
 integrates with your auth
-* Lightweight & blazing fast: stats + link to Performance Benchmarks section
+* Lightweight & blazing fast: 15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
 * Dev friendly: Admin UI & Rails-inspired schema migrations
 * Postgres ❤️: supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with
 mutations
@@ -23,7 +23,7 @@ mutations
 
 2. Open the admin console
 
-   Visit https://\<app-name\>.herokuapp.com (replace \<app-name\> with your app name) to open the admin console.
+   Visit https://\<app-name\>.herokuapp.com (*replace \<app-name\> with your app name*) to open the admin console.
 
 3. Make your first GraphQL query
 
@@ -31,13 +31,13 @@ mutations
 
 ### Other deployment methods
 
-See deployment guides [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) for Docker-based deployment and advanced configuration options.
+For Docker-based deployment and advanced configuration options, see deployment guides [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) .
 
 ## Architecture
 
 The Hasura GraphQL Engine fronts a Postgres database instance and can serve as an API Gateway for all data requests from client apps. It can be configured to work with your existing Auth middleware to handle access control to data using field-level rules with dynamic variables.
 
-The GraphQL Engine is a standalone, multi-core aware component that can be scaled vertically and horizontally.**??**
+The GraphQL Engine is a standalone, multi-core aware component that can be scaled vertically and horizontally.
 
 ![alt text](https://hasura.io/rstatic/dist/3021ad7d73fb15e8f7bdf86612ebd8a9.png "GraphQL Engine basic architecture")
 
