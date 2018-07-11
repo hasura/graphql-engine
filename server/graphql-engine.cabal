@@ -205,23 +205,24 @@ test-suite graphql-engine-test
   Hs-Source-Dirs:     test
   ghc-options:        -O2 -Wall
   Build-Depends:       Spock-core >= 0.11
-                     , aeson
                      , base
+                     , aeson
+                     , aeson-casing
                      , bytestring
-                     , directory
-                     , fgl
+                     --, directory
+                     --, fgl
                      , filepath
                      , hspec
                      , hspec-core
                      , hspec-wai
-                     , http-types
+                     --, http-types
                      , optparse-applicative
                      , graphql-engine -any
                      , text
                      , transformers
                      , wai
                      , wai-extra
-                     , unordered-containers
+                     --, unordered-containers
                      , pg-client
                      , time
                      , yaml
