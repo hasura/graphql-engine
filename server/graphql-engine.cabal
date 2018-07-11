@@ -25,6 +25,7 @@ flag developer
 library
   default-extensions:  NoImplicitPrelude
   hs-source-dirs:      src-lib
+                     , src-exec
   default-language:    Haskell2010
   build-depends:       base
                      , pg-client
@@ -100,6 +101,9 @@ library
 
                      --
                      , data-has
+                     -- for src-exec
+                     , yaml
+                     , template-haskell >= 2.11
 
   exposed-modules:     Hasura.Server.App
                      , Hasura.Server.Init
@@ -160,6 +164,8 @@ library
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time
                      , Hasura.Prelude
+                     , Ops
+                     , TH
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
@@ -179,41 +185,46 @@ executable graphql-engine
                      , mtl
                      , optparse-applicative >= 0.12
                      , yaml
-                     , template-haskell >= 2.11
-                     , time >= 1.6
+                     , template-haskell >= 2.11 , time >= 1.6
                      , text
                      , lens
                      , unordered-containers >= 0.2
                      , pg-client
-  other-modules:       Ops
-                       TH
+  other-modules:     Ops
+                     TH
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
   ghc-options: -O2 -Wall -threaded
 
-executable graphql-engine-test
+test-suite graphql-engine-test
+  type:               exitcode-stdio-1.0
   main-is:            Main.hs
   Default-Language:   Haskell2010
   Hs-Source-Dirs:     test
   ghc-options:        -O2 -Wall
   Build-Depends:       Spock-core >= 0.11
-                     , aeson
                      , base
+                     , aeson
+                     , aeson-casing
                      , bytestring
-                     , directory
-                     , fgl
+                     --, directory
+                     --, fgl
                      , filepath
                      , hspec
                      , hspec-core
                      , hspec-wai
-                     , http-types
+                     --, http-types
                      , optparse-applicative
                      , graphql-engine -any
                      , text
                      , transformers
                      , wai
                      , wai-extra
-                     , unordered-containers
+                     --, unordered-containers
                      , pg-client
+                     , time
+                     , yaml
+
+  other-modules:     Spec
