@@ -56,9 +56,9 @@ parseRavenMode = subparser
   ( command "serve" (info (helper <*> serveOptsParser)
       ( progDesc "Start the HTTP api server" ))
     <> command "export" (info (pure ROExport)
-      ( progDesc "Export raven's schema to stdout" ))
+      ( progDesc "Export graphql-engine's schema to stdout" ))
     <> command "clean" (info (pure ROClean)
-      ( progDesc "Clean raven's metadata to start afresh" ))
+      ( progDesc "Clean graphql-engine's metadata to start afresh" ))
     <> command "execute" (info (pure ROExecute)
       ( progDesc "Execute a query" ))
   )
@@ -80,7 +80,7 @@ parseArgs = execParser opts
     optParser = RavenOptions <$> parseRawConnInfo <*> parseRavenMode
     opts = info (helper <*> optParser)
            ( fullDesc <>
-             header "raven - Hasura's datastore")
+             header "Hasura's graphql-engine - Exposes Postgres over GraphQL")
 
 printJSON :: (A.ToJSON a) => a -> IO ()
 printJSON = BLC.putStrLn . A.encode
@@ -146,7 +146,7 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
       res <- runTx ci $ migrateCatalog currentTime
       either ((>> exitFailure) . printJSON) putStrLn res
 
-    cleanSuccess = putStrLn "successfully cleaned raven related data"
+    cleanSuccess = putStrLn "successfully cleaned graphql-engine related data"
 
     printConnInfo ci =
       putStrLn $
