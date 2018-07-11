@@ -43,8 +43,10 @@ tag, or a combination of branch name and git commit SHA.
 ## Common guidelines
 
 - Please make sure there is an issue associated with the work that you're doing.
+
 - If you're working on an issue, please comment that you are doing so to prevent
   duplicate work by others also.
+
 - Squash your commits and refer to the issue using `fix #<issue-no>` or `close
   #<issue-no>` in the commit message, at the end.
   For example: `resolve answers to everything (fix #42)` or `resolve answers to everything, fix #42`
@@ -54,8 +56,11 @@ tag, or a combination of branch name and git commit SHA.
  - The first line should be a summary of the changes - not execeeding 50
    characters. Followed by an optional body which has more details about the
    changes. (https://github.com/erlang/otp/wiki/writing-good-commit-messages)
+
  - Use the imperative present tense: "add/fix/change", not "added/fixed/changed" nor "adds/fixes/changes".
+
  - Don't capitalize the first letter of the summary line.
+
  - Do not add a period/dot (.) at the end in the summary line.
 
 
