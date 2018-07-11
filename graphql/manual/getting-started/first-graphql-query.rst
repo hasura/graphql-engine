@@ -36,7 +36,7 @@ Insert some sample data into the table:
 Try out a query
 ---------------
 
-Head to the ``API explorer`` tab in the console and try running the following query in GraphiQL:
+Head to the ``GraphiQL`` tab in the console and try running the following query:
 
 .. code-block:: none
 
