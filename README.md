@@ -2,12 +2,12 @@
 
 Blazing fast, instant GraphQL APIs on Postgres with fine grained access control.
 
-[![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 [![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://docs.hasura.io)
 [![Release](https://img.shields.io/github/release/hasura/graphql-engine/all.svg?style=flat)](https://github.com/hasura/graphql-engine/releases)
-[![Deploy to Heroku](https://img.shields.io/badge/%E2%86%91_Deploy_to-Heroku-7056bf.svg?style=flat)](https://docs.hasura.io)
+[![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 [![Docker Stars](https://img.shields.io/docker/pulls/hasura/graphql-engine.svg?style=flat)](https://hub.docker.com/r/hasura/graphql-engine/)
 ![Docker image size](https://img.shields.io/microbadger/image-size/hasura/graphql-engine/latest.svg)
+
 [![Chat on Discord](https://img.shields.io/discord/407792526867693568.svg?logo=discord&style=flat)](https://discord.gg/AnmPAz3)
 [![Follow on Twitter](https://img.shields.io/twitter/follow/HasuraHQ.svg?style=flat&logo=twitter)](https://twitter.com/intent/follow?screen_name=HasuraHQ)
 
