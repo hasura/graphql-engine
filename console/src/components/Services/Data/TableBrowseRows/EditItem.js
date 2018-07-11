@@ -313,6 +313,7 @@ class EditItem extends Component {
                     } else {
                       inputValues[colName] = refs[colName].valueNode.value; // TypedInput is an input inside a div
                     }
+                    console.log(inputValues[colName]);
                   });
                   dispatch(editItem(tableName, inputValues));
                 }}
