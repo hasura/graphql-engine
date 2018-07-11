@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
 import GraphiQL from 'graphiql';
 import PropTypes from 'prop-types';
-import fetch from 'isomorphic-fetch';
-import { getHeadersAsJSON } from './utils';
 import ErrorBoundary from './ErrorBoundary';
+import { graphQLFetcherFinal } from './Actions';
 
 import './GraphiQL.css';
 
@@ -18,28 +17,22 @@ class GraphiQLWrapper extends Component {
     };
   }
 
+  shouldComponentUpdate() {
+    // shouldn't re-render if headers change. play button will trigger the query
+    return false;
+  }
+
   render() {
     const styles = require('../Common/Common.scss');
-    const headers = getHeadersAsJSON(this.props.data.headers);
-    const graphqlUrl = this.props.data.url;
-    const filterAccessKeyHeader = this.props.data.headers.filter(
-      elem => elem.key === 'X-Hasura-Access-Key'
-    )[0];
 
-    if (
-      this.props.data.dataHeaders['X-Hasura-Access-Key'] &&
-      !filterAccessKeyHeader
-    ) {
-      headers['X-Hasura-Access-Key'] = this.props.data.dataHeaders[
-        'X-Hasura-Access-Key'
-      ];
-    }
+    const graphqlUrl = this.props.data.url;
+
     const graphQLFetcher = graphQLParams => {
-      return fetch(graphqlUrl, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(graphQLParams),
-      }).then(response => response.json());
+      return graphQLFetcherFinal(
+        graphQLParams,
+        graphqlUrl,
+        this.props.data.headers
+      );
     };
 
     // let content = "fetching schema";
