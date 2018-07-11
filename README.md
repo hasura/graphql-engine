@@ -16,7 +16,7 @@ Hasura GraphQL Engine is a performant GraphQL server that provides **ready-to-us
 * **Make powerful queries**: built-in filtering, pagination, and pattern search arguments and operators
 * **Works with existing database**: point it to an existing, living Postgres database to instantly get a ready-to-use GraphQL API
 * **Fine-grained access control**: dynamic access control that integrates with your Auth
-* **Light-weight & performant**: 20MB docker image; ~60MB RAM @ 1000 req/s; multi-core aware
+* **Light-weight & performant**: ~20MB docker image; ~60MB RAM @ 1000 req/s; multi-core aware
 * **Dev friendly**: admin UI & Rails-inspired schema migrations
 * **Postgres** ❤️: supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
 
@@ -46,11 +46,11 @@ The Hasura GraphQL Engine fronts a Postgres database instance and can serve as a
 
 The GraphQL Engine is a standalone, multi-core aware component that can be scaled vertically and horizontally.
 
-![Hasura GraphQL Engine architecture](https://hasura.io/rstatic/dist/3021ad7d73fb15e8f7bdf86612ebd8a9.png)
+![Hasura GraphQL Engine architecture](assets/arch.png)
 
 You can also place the engine behind a central GraphQL proxy that fronts multiple GraphQL APIs via schema stitching.
 
-![GraphQL Engine schema-stitched architecture](https://docs.platform.hasura.io/0.15/_images/graphql-schema-stitching.png)
+![GraphQL Engine schema-stitched architecture](assets/arch-stitching.png)
 
 ## Client-side tooling
 
