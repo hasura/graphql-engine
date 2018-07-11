@@ -38,4 +38,4 @@ gcloud-cp-stable:
 gcloud-set-metadata:
 	gsutil setmeta -h "Content-Type: application/javascript" gs://$(BUCKET_NAME)/console/$(VERSION)/*.js
 	gsutil setmeta -h "Content-Type: text/css" gs://$(BUCKET_NAME)/console/$(VERSION)/*.css
-	gsutil setmeta -h "Content-Encoding: gzip" gs:// + $(BUCKET_NAME) + '/console/' + $(VERSION) + '/*'
+	gsutil setmeta -h "Content-Encoding: gzip" gs:// + $(BUCKET_NAME)/console/$(VERSION)/*
