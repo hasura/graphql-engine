@@ -60,7 +60,7 @@ GraphQL Engine has a burgeoning community of amazing developers! Come join the c
 - [Facebook](https://www.facebook.com/HasuraHQ/)
 - [Docs](https://docs.hasura.io)
 
-Hasura follows the CNCF code of conduct.
+We are committed to fostering an open and welcoming environment in the community. Please see the [Code of Conduct](code-of-conduct.md) (*adapted from the [Contributor Covenant][https://www.contributor-covenant.org])*).
 
 ## Contributing
 
