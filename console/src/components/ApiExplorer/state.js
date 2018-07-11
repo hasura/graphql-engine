@@ -27,7 +27,7 @@ dataApisContent.push({
   details: {
     title: 'GraphQL API',
     description:
-      'GraphQL API for CRUD operations on tables/views in your database',
+      'GraphQL API for CRUD operations on tables & views in your database',
     category: 'data',
   },
   request: {

@@ -129,7 +129,7 @@ const PageContainer = ({
               styles.padd_left_remove
             }
           >
-            Tables
+            Tables ({schema.length})
           </div>
           {migrationMode ? (
             <div
