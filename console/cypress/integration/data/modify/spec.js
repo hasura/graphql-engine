@@ -101,7 +101,7 @@ export const Addcolumn = () => {
   cy.get(getElementFromAlias('column-name')).type(name);
   cy.get(getElementFromAlias('data-type')).select('integer');
   cy.get(getElementFromAlias('default-value')).type('{selectall}{del}');
-  cy.get(getElementFromAlias('nullable-checkbox')).check();
+  cy.get(getElementFromAlias('nullable-checkbox')).check({ force: true });
   cy.get(getElementFromAlias('add-column-button')).click();
   cy.wait(2500);
   // cy.get('.notification-success').click();
@@ -117,7 +117,7 @@ export const Addcolumnnullable = () => {
   cy.get(getElementFromAlias('column-name')).type('{selectall}{del}');
   cy.get(getElementFromAlias('column-name')).type('some');
   cy.get(getElementFromAlias('data-type')).select('Text');
-  cy.get(getElementFromAlias('nullable-checkbox')).uncheck();
+  cy.get(getElementFromAlias('nullable-checkbox')).uncheck({ force: true });
   cy.get(getElementFromAlias('add-column-button')).click();
   cy.wait(2500);
   // cy.get('.notification-error').click();
