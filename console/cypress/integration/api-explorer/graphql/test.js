@@ -4,6 +4,7 @@
 import { openAPIExplorer } from './spec';
 
 import { setMetaData } from '../../validators/validators';
+import { testMode } from '../../../helpers/common';
 
 const setup = () => {
   describe('Setup route', () => {
@@ -23,5 +24,7 @@ export const runApiExplorerTests = () => {
   });
 };
 
-// setup();
-// runApiExplorerTests();
+if (testMode !== 'cli') {
+  setup();
+  runApiExplorerTests();
+}

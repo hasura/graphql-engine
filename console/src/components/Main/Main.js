@@ -75,7 +75,7 @@ const Main = ({ children, location, migrationModeProgress, currentSchema }) => {
                     }
                     to={appPrefix + '/api-explorer'}
                   >
-                    <div className={styles.iconCenter}>
+                    <div className={styles.iconCenter} data-test="api-explorer">
                       <i
                         title="API Explorer"
                         className="fa fa-flask"
