@@ -36,7 +36,13 @@ const editItem = (tableName, colValues) => {
       } else if (Reals.indexOf(colSchema.data_type) > 0) {
         insertObject[colName] = parseFloat(colValues[colName], 10);
       } else if (colSchema.data_type === 'boolean') {
-        insertObject[colName] = colValues[colName] === 'true' ? true : false;
+        if (colValues[colName] === 'true') {
+          insertObject[colName] = true;
+        } else if (colValues[colName] === 'false') {
+          insertObject[colName] = false;
+        } else {
+          insertObject[colName] = null;
+        }
       } else if (colType === 'json' || colType === 'jsonb') {
         try {
           const val = JSON.parse(colValues[colName]);

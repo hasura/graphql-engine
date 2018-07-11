@@ -1,7 +1,7 @@
 export const boolOperators = {
-  _and: '_and',
-  _not: '_not',
-  _or: '_or',
+  and: '_and',
+  not: '_not',
+  or: '_or',
 };
 
 export const columnOperators = [
