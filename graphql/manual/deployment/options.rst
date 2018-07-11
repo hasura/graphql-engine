@@ -48,8 +48,8 @@ There are environment variables which are available:
 ::
 
       HASURA_GRAPHQL_DATABASE_URL   Postgres database URL
-                                    <scheme>://<user>:<password>@<host>:<port>/<db-name>
-                                    Example: http://admin:mypass@mydomain.com:5432/mydb
+                                    <postgres/postgresql>://<user>:<password>@<host>:<port>/<db-name>
+                                    Example: postgres://admin:mypass@mydomain.com:5432/mydb
 
       HASURA_GRAPHQL_ACCESS_KEY     Secret access key, required to access this instance.
                                     If specified client needs to send 'X-Hasura-Access-Key'
