@@ -29,7 +29,7 @@ Create a trigger
 The below SQL defines a ``trigger`` which will simply uppercase the value passed in the ``input`` field and set it to
 the ``output`` field whenever an insert or update is made to the ``sql_function_table``.
 
-.. code-block:: sql
+.. code-block:: plpgsql
 
    CREATE FUNCTION test_func() RETURNS trigger AS $emp_stamp$
          BEGIN
