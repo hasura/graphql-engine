@@ -14,7 +14,7 @@
 Hasura GraphQL Engine is a performant GraphQL server that provides **ready-to-use GraphQL API over Postgres** by auto-generating GraphQL schema and corresponding resolvers. 
 
 * **Make powerful queries**: built-in filtering, pagination, and pattern search arguments and operators
-* **Works with existing database**: point it to an existing, living Postgres database to get instant GraphQL API
+* **Works with existing database**: point it to an existing, living Postgres database to instantly get a GraphQL API
 * **Fine-grained access control**: dynamic access control that
 integrates with your auth
 * **Light-weight & performant**: 20MB docker image; ~60MB RAM @ 1000 req/s; multi-core aware
@@ -60,20 +60,18 @@ GraphQL Engine provides an HTTP API. This means you can use any client-side tool
 
 ## Community
 
-GraphQL Engine has a burgeoning community of amazing developers! Come join the community using your preferred means of communication:
+Please join our burgeoning community of amazing developers and contributors:
 
 - [Discord](https://discord.gg/vBPpJkS)
 - [Intercom chat](https://hasura.io/help)
 - [Twitter](https://twitter.com/hasurahq)
 - [Email](mailto:build@hasura.io)
-- [Facebook](https://www.facebook.com/HasuraHQ/)
-- [Docs](https://docs.hasura.io)
 
-We are committed to fostering an open and welcoming environment in the community. Please see the [Code of Conduct](code-of-conduct.md) (*adapted from the [Contributor Covenant](https://www.contributor-covenant.org])*).
+We are committed to fostering an open and welcoming environment in the community. Please see the [Code of Conduct](code-of-conduct.md).
 
 ## Contributing
 
-Checkout our [contributing guide](CONTRIBUTING.md) for more details.
+Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
 ## License
 
