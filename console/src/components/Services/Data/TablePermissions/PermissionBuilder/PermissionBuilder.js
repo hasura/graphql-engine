@@ -59,10 +59,7 @@ class PermissionBuilder extends React.Component {
       const operation = prefixSplit[0];
 
       if (prefixSplit.length !== 1) {
-        if (
-          operation === boolOperators.$or ||
-          operation === boolOperators.$and
-        ) {
+        if (operation === boolOperators.or || operation === boolOperators.and) {
           const position = parseInt(prefixSplit[1], 10);
           _where[operation] = conditions[operation];
           _where[operation][position] = getFilter(
@@ -73,7 +70,7 @@ class PermissionBuilder extends React.Component {
           if (Object.keys(_where[operation][position]).length === 0) {
             _where[operation].splice(position, 1);
           }
-        } else if (operation === boolOperators.$not) {
+        } else if (operation === boolOperators.not) {
           _where[operation] = getFilter(
             conditions[operation],
             prefixSplit.slice(1).join('.'),
@@ -99,11 +96,11 @@ class PermissionBuilder extends React.Component {
         if (operation === '--') {
           // blank where
         } else if (
-          operation === boolOperators.$or ||
-          operation === boolOperators.$and
+          operation === boolOperators.or ||
+          operation === boolOperators.and
         ) {
           _where[operation] = [];
-        } else if (operation === boolOperators.$not) {
+        } else if (operation === boolOperators.not) {
           _where[operation] = {};
         } else if (arrayColumnOperators.indexOf(operation) !== -1) {
           _where[operation] = value || [];
@@ -405,10 +402,7 @@ class PermissionBuilder extends React.Component {
       let boolExpValue = null;
       if (operation) {
         const newPrefix = addToPrefix(prefix, operation);
-        if (
-          operation === boolOperators.$or ||
-          operation === boolOperators.$and
-        ) {
+        if (operation === boolOperators.or || operation === boolOperators.and) {
           boolExpValue = renderBoolExpArray(
             dispatchFunc,
             condition[operation],
@@ -416,7 +410,7 @@ class PermissionBuilder extends React.Component {
             tableSchemas,
             newPrefix
           );
-        } else if (operation === boolOperators.$not) {
+        } else if (operation === boolOperators.not) {
           boolExpValue = renderBoolExp(
             dispatchFunc,
             condition[operation],
