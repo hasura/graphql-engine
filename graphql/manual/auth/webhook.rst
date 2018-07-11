@@ -59,3 +59,24 @@ If you want to deny the GraphQL request return a ``401 Unauthorized`` exception.
 
 .. note::
    Anything other than ``200`` or ``401`` response from webhook then server raises ``500 Internal Server Error`` exception
+
+Sample Auth Webhook
+-------------------
+
+We have a sample webhook written in NodeJS that you can deploy with a single click. You can either `check out the code here <https://github.com/hasura/sample-auth-webhook/blob/master/server.js#L25>`_ or click on the button below to directly deploy it with `glitch <https://glitch.com/>`_.
+
+.. image:: https://raw.githubusercontent.com/hasura/sample-auth-webhook/master/assets/deploy-glitch.png
+  :width: 200px
+  :alt: deploy_auth_webhook_with_glitch
+  :class: no-shadow
+  :target: http://glitch.com/edit/#!/import/github/hasura/sample-auth-webhook
+
+Once deployed, you can use any of the following endpoints as your auth webhook in the GraphQL engine:
+
+- ``/simple/webhook``
+- ``/auth0/webhook``
+- ``/firebase/webhook``
+
+.. note::
+
+    If you are using ``auth0`` or ``firebase`` you will have to set the associated environment variables.
