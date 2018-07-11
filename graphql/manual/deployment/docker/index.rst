@@ -117,4 +117,4 @@ Advanced:
 .. toctree::
    :titlesonly:
 
-   securing-graphql-endpoint
+   Securing your GraphQL endpoint <securing-graphql-endpoint>

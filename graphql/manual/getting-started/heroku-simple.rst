@@ -27,7 +27,7 @@ Open the Hasura console
 -----------------------
 
 That's it!  Head to https://YOUR_HEROKU_APP.herokuapp.com and open your app.
-You should see the hasura console.
+You should see the Hasura console.
 
 .. image:: ../../../img/graphql/manual/getting-started/heroku-app-deployed.png
 
