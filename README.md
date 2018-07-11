@@ -5,9 +5,15 @@
   Set your auth0 domain in `auth-webhook/constants.js`.
   Also allow callbacks for `http://localhost:3000/callback` in your `auth0` dashboard.
 
-* STEP 2: Deploy the auth Webhook (using ngrok, hasura, heroku or whatever)
+* STEP 2: Deploy the auth Webhook (using ngrok, glitch, heroku or whatever)
+
+  [![glitch-deploy-button](https://raw.githubusercontent.com/hasura/sample-auth-webhook/master/assets/deploy-glitch.png)](https://glitch.com/edit/#!/thundering-brick)
 
 * STEP 3: Start GraphQL engine with the the auth-hook as the webhook URL and access key of your choice
+
+  Deploy GraphQL engine to Heroku if you do not have it deployed anywhere.
+
+  [![Deploy to heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
 * STEP 4: Apply the migrations
 

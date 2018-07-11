@@ -15,7 +15,7 @@ const TodoList = () => (
       }
       if (error) {
         return (
-          <div>{JSON.stringify(error)}</div>
+          <div>{""}</div>
         );
       }
       return (

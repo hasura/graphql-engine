@@ -1,0 +1,3 @@
+- args:
+    sql: ALTER TABLE public."apic_test_table_mod_0" ADD COLUMN "DgWVR" integer NULL
+  type: run_sql

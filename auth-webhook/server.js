@@ -2,7 +2,7 @@ const express = require('express');
 const request = require('request');
 const app = express();
 
-const { authDomain } = require('./constants.js');
+const authDomain = require('./constants.js');
 
 if (!authDomain) {
   console.log('Please set your auth0 domain as an environment variable: AUTH_ZERO_DOMAIN');
