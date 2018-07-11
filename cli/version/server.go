@@ -30,7 +30,7 @@ func FetchServerVersion(endpoint string) (version string, err error) {
 		case http.StatusNotFound:
 			return "", nil
 		default:
-			return "", errors.Errorf("GET %s failed - [%s]", versionEndpoint, response.StatusCode)
+			return "", errors.Errorf("GET %s failed - [%d]", versionEndpoint, response.StatusCode)
 		}
 	} else {
 		defer response.Body.Close()
