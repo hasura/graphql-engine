@@ -5,10 +5,10 @@
 Hasura GraphQL Engine is a performant GraphQL server that provides a **ready-to-use GraphQL API over Postgres** by auto-generating a GraphQL schema and corresponding resolvers. 
 
 * Make powerful queries: built-in filtering, pagination, and pattern search arguments and operators
-* Work with your Postgres database : point it to an existing, living Postgres database to get instant GraphQL API
+* Work with existing database: point it to an existing, living Postgres database to get instant GraphQL API
 * Fine-grained access control: dynamic access control that
 integrates with your auth
-* Lightweight & blazing fast: 15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
+* Lightweight & performant: 15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
 * Dev friendly: Admin UI & Rails-inspired schema migrations
 * Postgres ❤️: supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with
 mutations
