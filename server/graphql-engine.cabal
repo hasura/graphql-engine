@@ -3,11 +3,11 @@ version:             1.0.0
 synopsis:            GraphQL API over Postgres
 -- description:
 homepage:            https://www.hasura.io
-license:             AllRightsReserved
--- license-file:        LICENSE
+license:             AGPL-3.0
+-- license-file:        LICENSE.md
 author:              Vamshi Surabhi
 maintainer:          vamshi@hasura.io
-copyright:           2015 - 2017, 34 Cross Systems Pvt. Ltd, 2017-2018 Hasura Techonologies Pvt. Ltd
+copyright:           2017-2018 Hasura Techonologies Pvt. Ltd
 category:            Database
 build-type:          Simple
 -- extra-source-files:  README.md

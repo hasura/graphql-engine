@@ -31,11 +31,18 @@ const Main = ({ children, location, migrationModeProgress, currentSchema }) => {
   let accessKeyHtml = null;
   if (globals.accessKey === '' || globals.accessKey === null) {
     accessKeyHtml = (
-      <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/production.html">
-        <button className={'btn btn-danger ' + styles.add_mar_right}>
-          Secure your endpoint
-        </button>
-      </a>
+      <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>
+        <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/production.html">
+          <button className={'btn btn-danger ' + styles.add_mar_right}>
+            <i
+              className={
+                styles.padd_small_right + ' fa fa-exclamation-triangle'
+              }
+            />
+            Secure your endpoint
+          </button>
+        </a>
+      </OverlayTrigger>
     );
   }
 
@@ -75,7 +82,7 @@ const Main = ({ children, location, migrationModeProgress, currentSchema }) => {
                         aria-hidden="true"
                       />
                     </div>
-                    <p>API Explorer</p>
+                    <p>GraphiQL</p>
                   </Link>
                 </li>
               </OverlayTrigger>
