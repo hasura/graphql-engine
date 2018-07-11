@@ -15,7 +15,7 @@ build:
 	npm run build
 
 test:
-	npm run test
+	npm run dev & npm run test
 
 # to be run inside circle-ci
 ci-copy-assets:
