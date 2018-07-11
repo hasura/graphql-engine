@@ -15,6 +15,7 @@ deploy the Hasura GraphQL engine and connect it to a Postgres database.
 By default, Hasura GraphQL engine runs in a very permissive mode for easier development. Check out the below docs to
 configure Hasura GraphQL engine for your production environment.
 
+- :doc:`securing-graphql-endpoint`
 - :doc:`postgres-credentials`
 - :doc:`GraphQL engine server flags <graphql-engine-flags/index>`
 
@@ -26,5 +27,6 @@ configure Hasura GraphQL engine for your production environment.
 
    Using Heroku <heroku/index>
    Using Docker <docker/index>
+   securing-graphql-endpoint
    postgres-credentials
    graphql-engine-flags/index

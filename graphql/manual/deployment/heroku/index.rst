@@ -92,5 +92,5 @@ Advanced:
 .. toctree::
    :titlesonly:
 
-..   securing-graphql-endpoint
-..   using-existing-heroku-database
+   securing-graphql-endpoint
+   using-existing-heroku-database

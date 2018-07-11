@@ -23,7 +23,7 @@ Click the button below to deploy to Heroku:
 
 Note that **Heroku's free Postgres add-on** is also automatically provisioned!
 
-Open the hasura console
+Open the Hasura console
 -----------------------
 
 That's it!  Head to https://YOUR_HEROKU_APP.herokuapp.com and open your app.

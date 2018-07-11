@@ -61,8 +61,8 @@ Step 2: Initialize a project
 
   hasura init --directory my-project
 
-Step 3: Run Hasura & Postgres
------------------------------
+Step 3: Run Hasura GraphQL engine & Postgres
+--------------------------------------------
 
 .. code-block::  none
 
@@ -79,21 +79,10 @@ Check if the containers are running:
   097f58433a2b hasura/graphql-engine ... 1m ago  Up 1m  8080->8080/tcp ...
   b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
 
-Step 4: Open the hasura console
+Step 4: Open the Hasura console
 -------------------------------
 
-In the ``my-project/config.yaml`` file set the endpoint:
-
-.. code-block:: yaml
-
-  endpoint: http://localhost:8080
-
-Now, open the hasura console:
-
-.. code-block:: bash
-
-  # Run this command in the my-project/ directory
-  hasura console
+Head to http://localhost:8080/console to open the Hasura console.
 
 Next: Make your first GraphQL query!
 ------------------------------------
