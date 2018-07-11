@@ -42,19 +42,23 @@ For ``serve`` subcommand these are the flags available
 Graphql Engine Environment Variables
 ------------------------------------
 
-Hasura ``graphql-engine`` accepts following environment variables in case if you don't want to specify corresponding flags.
+There are environment variables which are available:
 
 
-+-----------------------------------+--------------------+
-| Environment variable              | Flag               |
-+===================================+====================+
-| HASURA_GRAPHQL_DATABASE_URL       | ``--database-url`` |
-+-----------------------------------+--------------------+
-| HASURA_GRAPHQL_ACCESS_KEY         | ``--access-key``   |
-+-----------------------------------+--------------------+
-| HASURA_GRAPHQL_AUTH_HOOK          | ``--auth-hook``    |
-+-----------------------------------+--------------------+
-| HASURA_GRAPHQL_CORS_DOMAIN        | ``--cors-domain``  |
-+-----------------------------------+--------------------+
+::
 
-**Note:** Always server flags take precedence over environment variables
+      HASURA_GRAPHQL_DATABASE_URL   Postgres database URL
+                                    <scheme>://<user>:<password>@<host>:<port>/<db-name>
+                                    Example: http://admin:mypass@mydomain.com:5432/mydb
+
+      HASURA_GRAPHQL_ACCESS_KEY     Secret access key, required to access this instance.
+                                    If specified client needs to send 'X-Hasura-Access-Key'
+                                    header
+
+      HASURA_GRAPHQL_AUTH_HOOK      The authentication webhook, required to authenticate
+                                    incoming request  
+
+      HASURA_GRAPHQL_CORS_DOMAIN    The domain, including sheme and port, to allow CORS for
+
+
+**Note:** When the equivalent flags for environment variables are used, the flags will take precedence.

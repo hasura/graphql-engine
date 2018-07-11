@@ -1,17 +1,19 @@
 Multiple queries in a request
 =============================
-If multiple queries are part of the same request, they are executed **parallely**, the individual responses are collated and returned. You can fetch objects of different unrelated types in the same query. For e.g. to fetch a list of ``authors`` and a list of ``reviews``:
+If multiple queries are part of the same request, they are executed **parallely**, the individual responses are
+collated and returned. You can fetch objects of different unrelated types in the same query. For e.g. to fetch a
+list of ``authors`` and a list of ``articles``:
 
 .. graphiql::
   :query:
     query {
-      author (limit: 2){
+      author(limit: 2) {
         id
         name
-      },
-      reviews{
-        content
-        article_id
+      }
+      article(limit: 2) {
+        id
+        title
       }
     }
   :response:
@@ -20,21 +22,21 @@ If multiple queries are part of the same request, they are executed **parallely*
         "author": [
           {
             "id": 1,
-            "name": "Chrissie"
+            "name": "Justin"
           },
           {
             "id": 2,
-            "name": "Aubrey"
+            "name": "Beltran"
           }
         ],
-        "reviews": [
+        "article": [
           {
-            "content": "Great article!",
-            "article_id": 8
+            "id": 1,
+            "title": "sit amet"
           },
           {
-            "content": "such content, much wow!",
-            "article_id": 10
+            "id": 2,
+            "title": "a nibh"
           }
         ]
       }

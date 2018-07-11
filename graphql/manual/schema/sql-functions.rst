@@ -1,13 +1,17 @@
 Creating custom SQL functions
 =============================
 
-Let's say you want to run custom SQL functions or stored procedures via GraphQL.
+Let's say you want to run custom SQL functions or stored procedures via GraphQL. Hasura allows you to run your SQL
+functions via mutations.
 
-Hasura allows you to run your SQL functions via mutations. At a high-level:
+At a high-level:
 
-#. Create a table with columns that capture the input, and columns that capture the output of the SQL function along with an auto-generated id column
-#. Create an insert/update trigger on that table that calls your SQL function and sets the output values in the output columns
-#. Use the insert or update mutation to pass values to the SQL function by setting values in the input columns and getting output from the function via the ``returning`` field
+#. Create a table with columns that capture the input, and columns that capture the output of the SQL function along
+   with an auto-generated id column
+#. Create an insert/update trigger on that table that calls your SQL function and sets the output values in the output
+   columns
+#. Use the insert or update mutation to pass values to the SQL function by setting values in the input columns and
+   getting output from the function via the ``returning`` field
 
 Here's a simple example:
 
@@ -23,20 +27,20 @@ Head to ``Data -> Create table``
 Create a trigger
 ----------------
 
-The below SQL defines a ``trigger`` which will simply copy the value passed in the ``input`` field to the ``output``
-field whenever an insert or update is made to the ``sql_function_table``.
+The below SQL defines a ``trigger`` which will simply uppercase the value passed in the ``input`` field and set it to
+the ``output`` field whenever an insert or update is made to the ``sql_function_table``.
 
 .. code-block:: sql
 
-   CREATE FUNCTION test_fun() RETURNS trigger AS $emp_stamp$
+   CREATE FUNCTION test_func() RETURNS trigger AS $emp_stamp$
          BEGIN
-             NEW.output := NEW.input;
+             NEW.output := UPPER(NEW.input);
              RETURN NEW;
          END;
      $emp_stamp$ LANGUAGE plpgsql;
 
      CREATE TRIGGER test_trigger BEFORE INSERT OR UPDATE ON sql_function_table
-         FOR EACH ROW EXECUTE PROCEDURE test_fun();
+         FOR EACH ROW EXECUTE PROCEDURE test_func();
 
 Head to ``Data -> SQL`` and run the above SQL:
 
@@ -45,21 +49,17 @@ Head to ``Data -> SQL`` and run the above SQL:
 Run an insert mutation
 ----------------------
 
-Run a mutation to insert an object with (input = "test", output=null) and you'll get a return value (output="test")
+Run a mutation to insert an object with (input = "test", output=null) and you'll get a return value (output="TEST")
 
 .. graphiql::
   :view_only: true
   :query:
-    mutation insert_sql_fn {
-      insert_sql_function_table(
+    mutation {
+      insert_sql_function_table (
         objects: [
-          {
-            input: "test",
-            output: null
-          }
+          {input: "test"}
         ]
-      )
-      {
+      ) {
         returning {
           output
         }
@@ -69,10 +69,9 @@ Run a mutation to insert an object with (input = "test", output=null) and you'll
     {
       "data": {
         "insert_sql_function_table": {
-          "affected_rows": 1,
           "returning": [
             {
-              "output": "test"
+              "output": "TEST"
             }
           ]
         }

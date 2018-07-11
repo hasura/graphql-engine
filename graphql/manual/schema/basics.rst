@@ -1,6 +1,7 @@
 Schema design basics
 ====================
-Let's take a look at how to create tables using the Console, a UI tool meant for doing exactly this. We'll use a typical author/articles schema as a reference for all the following examples.
+Let's take a look at how to create tables using the Console, a UI tool meant for doing exactly this. We'll use a
+typical author/articles schema as a reference for all the following examples.
 
 Open the console
 ----------------
@@ -18,11 +19,13 @@ Let's say we want to create two simple tables:
 
 - ``article`` with columns ``id``, ``title``, ``content``, ``author_id``
 
-Click on the "Create Table" button in the **Data** section to open up an interface to create tables. For e.g. here's the schema for the ``author`` table in this interface:
+Click on the "Create Table" button in the **Data** section to open up an interface to create tables. For e.g. here's
+the schema for the ``author`` table in this interface:
 
 .. image:: ../../../img/graphql/manual/schema/create-table-graphql.png
 
-As soon as a table is created, the corresponding GraphQL schema and resolvers are automatically created/updated. For e.g. the following *query* and *mutation* fields are generated for the tables we just created:
+As soon as a table is created, the corresponding GraphQL schema and resolvers are automatically created/updated. For
+e.g. the following *query* and *mutation* fields are generated for the tables we just created:
 
 .. code-block:: none
 
@@ -42,17 +45,21 @@ As soon as a table is created, the corresponding GraphQL schema and resolvers ar
 
 .. note::
     
-    If you are connecting to a database instance that already has data, you will need to explicitly *track* those tables using the console in the **Schema** section. You will be shown a list of untracked tables from which you can choose the tables to be included in the GraphQL schema.
+    If you are connecting to a database instance that already has data, you will need to explicitly *track* those
+    tables using the console in the **Schema** section. You will be shown a list of untracked tables from which you
+    can choose the tables to be included in the GraphQL schema.
 
 
 
 Try basic GraphQL queries
 -------------------------
-At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables using the API Explorer in the console(*you may want to add some test data in the tables*). 
+At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables using the API
+Explorer in the console(*you may want to add some test data in the tables*).
 
 .. note::
     
-    You can either use the admin token to run them or modify the permissions for these tables to temporarily allow anonymous access to data in the **Permissions** tab of each table.
+    You can either use the admin token to run them or modify the permissions for these tables to temporarily allow
+    anonymous access to data in the **Permissions** tab of each table.
 
 Here are a couple of examples:
 
@@ -72,19 +79,24 @@ Here are a couple of examples:
       "data": {
         "article": [
           {
+            "id": 1,
+            "title": "sit amet",
+            "author_id": 4
+          },
+          {
+            "id": 2,
+            "title": "a nibh",
+            "author_id": 2
+          },
+          {
             "id": 3,
-            "title": "some title",
-            "author_id": 28
+            "title": "amet justo morbi",
+            "author_id": 4
           },
           {
             "id": 4,
-            "title": "some title",
+            "title": "vestibulum ac est",
             "author_id": 5
-          },
-          {
-            "id": 8,
-            "title": "some title",
-            "author_id": 6
           }
         ]
       }
@@ -96,12 +108,11 @@ Here are a couple of examples:
   :view_only: true
   :query:
     mutation add_author {
-      insert_author (
+      insert_author(
         objects: [
-          {id: 2121, name:"Paul Graham"}
+          {id: 11, name: "Julian"}
         ]
-      )
-      {
+      ) {
         affected_rows
       }
     }
@@ -114,4 +125,5 @@ Here are a couple of examples:
       }
     }
 
-You can try out the examples :doc:`here <../queries/index>` (*except nested object queries, for which you'll need to connect your tables- see the next section*).
+You can try out the examples :doc:`here <../queries/index>` (*except nested object queries, for which you'll need to
+connect your tables- see the next section*).

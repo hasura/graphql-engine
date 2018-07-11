@@ -97,7 +97,7 @@ While you're developing or testing, just indicate your role and your session var
 
 .. image:: ../../../img/graphql/manual/auth/dev-mode-role-header.png
 
-If you've enable Hasura with an access key, make sure you add the ACCESS_KEY header as well. This will allow you to use Hasura
+If you've enabled Hasura with an access key, make sure you add the ACCESS_KEY header as well. This will allow you to use Hasura
 as if you were in development/testing mode. This is useful when you want to test against a Hasura instance that is already serving
 a production application.
 

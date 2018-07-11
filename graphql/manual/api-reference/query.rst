@@ -10,7 +10,7 @@ Query syntax
    :class: haskell-pre
 
     object [([argument])]{
-        object-fields
+      object-fields
     }
 
 .. list-table::
@@ -35,7 +35,7 @@ Query syntax
    :class: haskell-pre
 
     query {
-      author( where: {articles: {id: {_gt: 10}}} order_by: ["-name"]) {
+      author(where: {articles: {id: {_gt: 10}}} order_by: ["-name"]) {
         id
         name
       }
@@ -103,9 +103,9 @@ AndExp
 .. parsed-literal::
    :class: haskell-pre
 
-   {
-        _and: [ColumnExp_]
-   }
+    {
+      _and: [ColumnExp_]
+    }
 
 
 OrExp
@@ -114,9 +114,9 @@ OrExp
 .. parsed-literal::
    :class: haskell-pre
 
-   {
-        _or: [ColumnExp_]
-   }
+    {
+      _or: [ColumnExp_]
+    }
 
 NotExp
 ######
@@ -124,9 +124,9 @@ NotExp
 .. parsed-literal::
    :class: haskell-pre
 
-   {
-        _not: [ColumnExp_]
-   }
+    {
+      _not: [ColumnExp_]
+    }
 
 ColumnExp
 #########
@@ -134,9 +134,9 @@ ColumnExp
 .. parsed-literal::
    :class: haskell-pre
 
-   {
-       field-name : { Operator_ : Value }
-   }
+    {
+      field-name : {Operator_: Value }
+    }
 
 Operator
 ########
