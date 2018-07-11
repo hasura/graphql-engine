@@ -60,20 +60,18 @@ GraphQL Engine provides an HTTP API. This means you can use any client-side tool
 
 ## Community
 
-GraphQL Engine has a burgeoning community of amazing developers! Come join the community using your preferred means of communication:
+Please join our burgeoning community of amazing developers and contributors:
 
 - [Discord](https://discord.gg/vBPpJkS)
 - [Intercom chat](https://hasura.io/help)
 - [Twitter](https://twitter.com/hasurahq)
 - [Email](mailto:build@hasura.io)
-- [Facebook](https://www.facebook.com/HasuraHQ/)
-- [Docs](https://docs.hasura.io)
 
 We are committed to fostering an open and welcoming environment in the community. Please see the [Code of Conduct](code-of-conduct.md) (*adapted from the [Contributor Covenant](https://www.contributor-covenant.org])*).
 
 ## Contributing
 
-Checkout our [contributing guide](CONTRIBUTING.md) for more details.
+Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
 ## License
 
