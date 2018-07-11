@@ -14,13 +14,11 @@
 Hasura GraphQL Engine is a performant GraphQL server that provides **ready-to-use GraphQL API over Postgres** by auto-generating GraphQL schema and corresponding resolvers. 
 
 * **Make powerful queries**: built-in filtering, pagination, and pattern search arguments and operators
-* **Works with existing database**: point it to an existing, living Postgres database to get instant GraphQL API
-* **Fine-grained access control**: dynamic access control that
-integrates with your auth
+* **Works with existing database**: point it to an existing, living Postgres database to instantly get a ready-to-use GraphQL API
+* **Fine-grained access control**: dynamic access control that integrates with your Auth
 * **Light-weight & performant**: 20MB docker image; ~60MB RAM @ 1000 req/s; multi-core aware
 * **Dev friendly**: admin UI & Rails-inspired schema migrations
-* **Postgres** ❤️: supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with
-mutations
+* **Postgres** ❤️: supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
 
 ## Quickstart - Setup on Heroku
 
@@ -60,23 +58,26 @@ GraphQL Engine provides an HTTP API. This means you can use any client-side tool
 
 ## Community
 
-GraphQL Engine has a burgeoning community of amazing developers! Come join the community using your preferred means of communication:
+Please join our amazing community of developers and contributors:
 
 - [Discord](https://discord.gg/vBPpJkS)
-- [Intercom chat](https://hasura.io/help)
 - [Twitter](https://twitter.com/hasurahq)
-- [Email](mailto:build@hasura.io)
-- [Facebook](https://www.facebook.com/HasuraHQ/)
-- [Docs](https://docs.hasura.io)
 
-We are committed to fostering an open and welcoming environment in the community. Please see the [Code of Conduct](code-of-conduct.md) (*adapted from the [Contributor Covenant](https://www.contributor-covenant.org])*).
+## Support & Troubleshooting
+
+The documentation and community will help you troubleshoot most issues. However, if you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
+
+* [Github issues](https://github.com/hasura/graphql-engine/issues)
+* Talk to us using [Intercom chat](https://hasura.io) or drop an email to build@hasura.io
+
+We are committed to fostering an open and welcoming environment in the community. Please see the [Code of Conduct](code-of-conduct.md).
 
 ## Contributing
 
-Checkout our [contributing guide](CONTRIBUTING.md) for more details.
+Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
 ## License
 
 GraphQL Engine is available under the [GNU Affero General Public License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0). [Why AGPL?](https://gist.github.com/hasura-bot/9c36a0201a7563f7762b265a12b044d5).
 
-:information_source: Commercial licenses are available on request. Please feel free to contact us at build@hasura.io or [hasura.io/help](https://hasura.io/help).
+:information_source: Commercial licenses are available on request. Please feel free to contact us at build@hasura.io or using [Intercom chat](https://hasura.io).
