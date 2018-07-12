@@ -128,6 +128,8 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
     table: test
   type: untrack_table
 `)
+	mustWriteFile(t, migrationsDir, "2_add_table_test.up.sql", `CREATE TABLE "author"("id" serial NOT NULL, PRIMARY KEY ("id") )`)
+	mustWriteFile(t, migrationsDir, "2_add_table_test.down.sql", `DROP TABLE "author";`)
 
 	// Apply 1_create_table_test.up.sql
 	testMigrateApply(t, endpoint, migrationsDir, "1", "", "", "")
