@@ -1,20 +1,21 @@
 Migrations
 ==========
 
-Hasura comes with powerful migration tooling to keep track of the changes being made to your database schema. These
-can be used to quickly setup a clone of your database.
+By default, when you run the GraphQL engine you can use the Hasura console served by the GraphQL engine to make changes to your schema.
 
-As you use the Hasura console UI to make changes to your schema, migration files are automatically generated
-in the ``migrations/`` directory in your project.
+However, if you have different environments or are adding GraphQL to an existing application or database, you'll need migrations to make sure that your iteration and CI/CD process is smooth.
 
-You can also manually add or edit migration files and check them into version control as well.
+Hasura comes with powerful rails-inspired migration tooling to help you keep track of the changes you make to your schema. As you use the Hasura console, the hasura CLI will spit out migration files for you that you can put in version control and even edit manually.
 
-No migrations mode
-------------------
+Follow the guide that best fits your use-case:
 
-In case you do not want to allow any changes to be made to your Postgres schema using the Hasura console, you can toggle
-the console to a "No migrations" mode which basically disables all functionalities which alter the schema.
+- :doc:`Enable migrations <enable-migrations>`: In case you already have a Hasura GraphQL engine setup and want to start using migrations.
+- :doc:`Working on a new app <new-app>`: Use Hasura for tracking both database and GraphQL schema migrations. Ideal when you're building a new app.
+- :doc:`Working on an existing app <existing-database>`: Use Hasura only for GraphQL schema changes and not database migrations.
 
-To toggle the migrations mode, head to the ``Data -> Migrations`` section on the Hasura console.
+.. toctree::
+   :hidden:
 
-.. image:: ../../../img/graphql/manual/migrations/toggle-migrations-mode.png
+   enable-migrations
+   new-app
+   existing-database
