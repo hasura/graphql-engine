@@ -1269,7 +1269,6 @@ ol, ul
 
 /* GraphiQL overrides */
 .graphiql {
-  height: 300px;
   margin-bottom: 20px;
 }
 

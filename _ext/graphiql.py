@@ -15,7 +15,13 @@ class GraphiQLDirective(Directive):
 .. raw:: html
 
    <div class="graphiql {{ if view_only }}view-only{{end}}">
-   Loading...
+   
+.. code-block:: none
+
+   {{ query }}
+   
+.. raw:: html
+   
    <div class="endpoint">
    {{ endpoint }}
    </div>
