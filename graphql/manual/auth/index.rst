@@ -15,7 +15,7 @@ Your app will likely only send an authorization token or cookie that originated 
 
 .. image:: ../../../img/graphql/manual/auth/webhook-auth.png
 
-Next, let's setup some :doc:`basic access control rules<basics>`.
+Next, let's setup some :doc:`basic access control rules <basics>`.
 
 See:
 ----
@@ -26,4 +26,4 @@ See:
    basics
    roles-variables
    webhook
-   guide
+   basic-auth-guide
