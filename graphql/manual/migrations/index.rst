@@ -11,7 +11,7 @@ Follow the guide that best fits your use-case:
 
 - :doc:`Enable migrations <enable-migrations>`: In case you already have a Hasura GraphQL engine setup and want to start using migrations.
 - :doc:`Working on a new app <new-app>`: Use Hasura for tracking both database and GraphQL schema migrations. Ideal when you're building a new app.
-- :doc:`Working on an existing app <existing-database>`: Use Hasura only for GraphQL schema changes and not database migrations.
+- :doc:`Working alongside an existing database or migration system <existing-database>`: Use Hasura only for GraphQL schema changes and not database migrations.
 
 .. toctree::
    :hidden:
