@@ -30,7 +30,7 @@ draft_github_release() {
         -r "$CIRCLE_PROJECT_REPONAME" \
         -b "$CIRCLE_TAG" \
         -draft \
-     "$CIRCLE_TAG" /build/_cli_output/
+     "$CIRCLE_TAG" /build/_cli_output/binaries/
 }
 
 deploy_console() {
