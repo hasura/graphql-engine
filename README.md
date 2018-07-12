@@ -1,20 +1,20 @@
 # Hasura GraphQL Engine
 
 [![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://docs.hasura.io)
-[![Release](https://img.shields.io/github/release/hasura/graphql-engine/all.svg?style=flat)](https://github.com/hasura/graphql-engine/releases)
+<a href="https://github.com/hasura/graphql-engine/releases"><img src="https://img.shields.io/github/release/hasura/graphql-engine/all.svg?style=flat"/></a>
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
-[![Docker pull](https://img.shields.io/docker/pulls/hasura/graphql-engine.svg?style=flat)](https://hub.docker.com/r/hasura/graphql-engine/)
-![Docker image size](https://img.shields.io/microbadger/image-size/hasura/graphql-engine/latest.svg)
+<a href="https://hub.docker.com/r/hasura/graphql-engine/"><img src="https://img.shields.io/docker/pulls/hasura/graphql-engine.svg?style=flat"/></a>
 
-[![Chat on Discord](https://img.shields.io/discord/407792526867693568.svg?logo=discord&style=flat)](https://discord.gg/AnmPAz3)
-[![Follow on Twitter](https://img.shields.io/twitter/follow/HasuraHQ.svg?style=flat&logo=twitter)](https://twitter.com/intent/follow?screen_name=HasuraHQ)
+
+<a href="https://discord.gg/vBPpJkS"><img src="https://img.shields.io/discord/407792526867693568.svg?logo=discord&style=flat"></a>
+<a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/twitter/follow/HasuraHQ.svg?style=flat&logo=twitter"></a>
 
 ![Hasura GraphQL Engine Banner](assets/banner.png)
 
 Hasura GraphQL Engine is a performant GraphQL server that provides **ready-to-use GraphQL API over Postgres** by auto-generating GraphQL schema and corresponding resolvers. 
 
 * **Make powerful queries**: built-in filtering, pagination, and pattern search arguments and operators
-* **Works with existing database**: point it to an existing, living Postgres database to instantly get a ready-to-use GraphQL API
+* **Works with existing database**: point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
 * **Fine-grained access control**: dynamic access control that integrates with your Auth
 * **Light-weight & performant**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
 * **Dev friendly**: admin UI & Rails-inspired schema migrations
