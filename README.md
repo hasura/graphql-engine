@@ -58,10 +58,7 @@ GraphQL Engine provides an HTTP API. This means you can use any client-side tool
 
 ## Community
 
-Please join our amazing community of developers and contributors:
-
-- [Discord](https://discord.gg/vBPpJkS)
-- [Twitter](https://twitter.com/hasurahq)
+Please join our amazing community of developers and contributors on [Discord](https://discord.gg/vBPpJkS).
 
 ## Support & Troubleshooting
 
