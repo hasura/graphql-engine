@@ -93,13 +93,7 @@ func testMigrateWithDocker(t *testing.T, migrationsDir, executionDir string) {
 					}
 					defer os.RemoveAll(migrationsDir)
 
-					executionDir, err := ioutil.TempDir("", "")
-					if err != nil {
-						t.Fatal(err)
-					}
-					defer os.RemoveAll(executionDir)
-
-					testMigrate(t, endpointURL, migrationsDir, executionDir)
+					testMigrate(t, endpointURL, migrationsDir)
 				})
 		})
 }
@@ -116,17 +110,11 @@ func TestMigrateCmd(t *testing.T) {
 	}
 	defer os.RemoveAll(migrationsDir)
 
-	// Create Execution Dir
-	executionDir, err := ioutil.TempDir("", "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(executionDir)
-
-	testMigrate(t, endpointURL, migrationsDir, executionDir)
+	testMigrate(t, endpointURL, migrationsDir)
 }
 
-func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir, executionDir string) {
+func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
+	metadataFile := filepath.Join(migrationsDir, "metadata.yaml")
 	// Create 1_create_table_test.up.sql which creates table test
 	mustWriteFile(t, migrationsDir, "1_create_table_test.up.sql", `CREATE TABLE "test"("id" serial NOT NULL, PRIMARY KEY ("id") )`)
 	// Create 1_create_table_test.down.sql which creates table test
@@ -212,16 +200,16 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir, executionDir st
 	// Apply both 1 and 2
 	testMigrateApply(t, endpoint, migrationsDir, "", "", "", "")
 
-	testMetadataExport(t, executionDir, endpoint)
-	compareMetadata(t, executionDir, testMetadata["metadata"])
+	testMetadataExport(t, metadataFile, endpoint)
+	compareMetadata(t, metadataFile, testMetadata["metadata"])
 
-	testMetadataApply(t, executionDir, endpoint)
-	testMetadataExport(t, executionDir, endpoint)
-	compareMetadata(t, executionDir, testMetadata["metadata"])
+	testMetadataApply(t, metadataFile, endpoint)
+	testMetadataExport(t, metadataFile, endpoint)
+	compareMetadata(t, metadataFile, testMetadata["metadata"])
 
-	testMetadataReset(t, executionDir, endpoint)
-	testMetadataExport(t, executionDir, endpoint)
-	compareMetadata(t, executionDir, testMetadata["empty-metadata"])
+	testMetadataReset(t, metadataFile, endpoint)
+	testMetadataExport(t, metadataFile, endpoint)
+	compareMetadata(t, metadataFile, testMetadata["empty-metadata"])
 }
 
 func mustWriteFile(t testing.TB, dir, file string, body string) {
@@ -230,8 +218,8 @@ func mustWriteFile(t testing.TB, dir, file string, body string) {
 	}
 }
 
-func compareMetadata(t testing.TB, executionDir string, actualData []byte) {
-	data, err := ioutil.ReadFile(filepath.Join(executionDir, "metadata.yaml"))
+func compareMetadata(t testing.TB, metadataFile string, actualData []byte) {
+	data, err := ioutil.ReadFile(metadataFile)
 	if err != nil {
 		t.Fatalf("error reading metadata %s", err)
 	}
