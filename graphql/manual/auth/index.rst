@@ -26,3 +26,4 @@ See:
    basics
    roles-variables
    webhook
+   guide
