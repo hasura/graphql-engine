@@ -13,6 +13,13 @@ deploy_server() {
     make push
 }
 
+deploy_server_latest() {
+  echo "deloying server latest tag"
+  cd "$ROOT/server"
+  docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
+  make push-latest
+}
+
 # TODO: open pull requests
 
 draft_github_release() {
@@ -69,5 +76,6 @@ fi
 deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
+    deploy_server_latest
     draft_github_release
 fi
