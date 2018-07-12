@@ -38,7 +38,7 @@ build:
 # compress
 .PHONY: compress
 compress:
-	ls $(OUTPUT_DIR)/$(VERSION)/hasura-* | xargs upx
+	ls $(OUTPUT_DIR)/$(VERSION)/cli-hasura-* | xargs upx
 
 # to be executed in circle-ci only
 ci-copy-binary:
