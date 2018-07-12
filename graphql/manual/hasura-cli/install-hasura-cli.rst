@@ -9,7 +9,7 @@ Installing the hasura CLI
 Step 1: Install
 ---------------
 
-.. global_tabs::
+.. global-tabs::
 
    tabs:
      - id: linux
@@ -54,7 +54,7 @@ Step 1: Install
 Step 2: Login
 -------------
 
-.. global_tabs::
+.. global-tabs::
 
    tabs:
      - id: linux
