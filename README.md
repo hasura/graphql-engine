@@ -1,13 +1,12 @@
 # Hasura GraphQL Engine
 
 [![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://docs.hasura.io)
-<a href="https://github.com/hasura/graphql-engine/releases"><img src="https://img.shields.io/github/release/hasura/graphql-engine/all.svg?style=flat"/></a>
+<a href="https://github.com/hasura/graphql-engine/releases"><img src="https://img.shields.io/badge/release-v1.0.0alpha-brightgreen.svg?style=flat"/></a>
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
-<a href="https://hub.docker.com/r/hasura/graphql-engine/"><img src="https://img.shields.io/docker/pulls/hasura/graphql-engine.svg?style=flat"/></a>
 
 
-<a href="https://discord.gg/vBPpJkS"><img src="https://img.shields.io/discord/407792526867693568.svg?logo=discord&style=flat"></a>
-<a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/twitter/follow/HasuraHQ.svg?style=flat&logo=twitter"></a>
+<a href="https://discord.gg/vBPpJkS"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
+<a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 
 ![Hasura GraphQL Engine Banner](assets/banner.png)
 
