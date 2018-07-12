@@ -1,6 +1,4 @@
-/*
- * Display and hide the appropriate tab content
- */
+/*Display and hide the appropriate tab content*/
 .tab {
     display: none;
 }
@@ -51,9 +49,6 @@
     background: #fff;
 }
 
-/*
- *Dropdown styles
- */
 /*Caret styling*/
 .tab-strip__element[aria-selected=true] > .caret,
 .tab-strip__element[aria-selected=true]:focus > .caret,
@@ -66,48 +61,6 @@
 .tab-strip__element[aria-selected=true]:hover > .caret {
     border-top-color: #babdbe;
     border-bottom-color: #babdbe;
-}
-
-/*Make dropdown list width the same as dropdown tab*/
-.tab-strip__dropdown {
-     min-width: 0;
-     width: 100%;
-     background-color: #fff;
-}
-
-/*Dropdown hover highlight mongo green*/
-.tab-strip__dropdown > li:hover {
-     background-color: #6ba442;
-}
-
-/*White background for dropdown items*/
-.tab-strip__dropdown > li {
-    background-color: #fff;
-    color: #333;
-    font-weight: 400;
-    padding: 3px 20px;
-    text-align: left;
-}
-
-.tab-strip .dropdown-toggle {
-    color: inherit;
-    display: block;
-    padding: 5px 15px;
-    text-decoration: none;
-}
-
-.dropdown-menu > li:hover {
-    color: #fff;
-}
-
-.tab-strip .dropdown-toggle > .caret {
-    border-top-color: inherit;
-}
-
-/*Dropdown will always have the cursor*/
-.tab-strip .dropdown-toggle:hover {
-    color: inherit;
-    text-decoration: none;
 }
 
 .tab-strip [aria-selected]:hover {

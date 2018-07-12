@@ -1,7 +1,6 @@
 {% extends "basic/layout.html" %}
 
 {% set css_files = css_files + ['_static/hasura-custom.css', '_static/djangosite.css'] %}
-{% set css_files = css_files + ['_static/global_tabs/global_tabs.css'] %}
 
 {%- macro secondnav() %}
   {%- if prev %}
@@ -616,6 +615,11 @@
   </script>
 
   <!-- global_tabs -->
-  <script src="{{ pathto('_static/global_tabs/global_tabs.js', 1) }}"></script>
+  <script type="text/javascript">
+    if ($('.global-tabs').length > 0) {
+      loadCss("{{ pathto('_static/global_tabs/global_tabs.css', 1) }}", function(){});
+      loadScript("{{ pathto('_static/global_tabs/global_tabs.js', 1) }}", function(){});
+    }
+  </script>
 
 {% endblock %}

@@ -6,7 +6,7 @@
 function showHideTabContent(currentAttrValue) {
     $('.tabs__content').children().
         hide();
-    $(`.tabs .tabpanel-${currentAttrValue}`).show();
+    $(`.global-tabs .tabpanel-${currentAttrValue}`).show();
 }
 
 class TabsSingleton {
@@ -15,11 +15,11 @@ class TabsSingleton {
         this.tabStrip = document.querySelector('.tab-strip--singleton');
     }
 
-    get languagePref() {
+    get tabPref() {
         return window.localStorage.getItem(this.key);
     }
 
-    set languagePref(value) {
+    set tabPref(value) {
         window.localStorage.setItem(this.key, value);
     }
 
@@ -27,7 +27,7 @@ class TabsSingleton {
      * Return the first singleton tab ID on the page.
      * @returns {string} The first singleton tab ID found.
      */
-    getFirstLanguage() {
+    getFirstTab() {
         const tabsElement = this.tabStrip.querySelector('.tab-strip__element[aria-selected=true]');
         if (!tabsElement) { return null; }
 
@@ -47,7 +47,7 @@ class TabsSingleton {
                 // Check to make sure value is not null, i.e., don't do anything on "other"
                 if (currentAttrValue) {
                     // Save the users preference and re-render
-                    this.languagePref = currentAttrValue;
+                    this.tabPref = currentAttrValue;
                     this.update();
 
                     e.preventDefault();
@@ -61,51 +61,34 @@ class TabsSingleton {
     update() {
         if (!this.tabStrip) { return; }
 
-        let languagePref = this.languagePref;
-        if (!languagePref) {
-            languagePref = this.getFirstLanguage();
-        } else if (!this.tabStrip.querySelector(`[data-tabid="${languagePref}"]`)) {
-            // Confirm a tab for their languagePref exists at the top of the page
-            languagePref = this.getFirstLanguage();
+        let tabPref = this.tabPref;
+        if (!tabPref) {
+            tabPref = this.getFirstTab();
+        } else if (!this.tabStrip.querySelector(`[data-tabid="${tabPref}"]`)) {
+            // Confirm a tab for their tabPref exists at the top of the page
+            tabPref = this.getFirstTab();
         }
 
-        if (!languagePref) { return; }
+        if (!tabPref) { return; }
 
         // Show the appropriate tab content and mark the tab as active
-        showHideTabContent(languagePref);
-        this.showHideSelectedTab(languagePref);
+        showHideTabContent(tabPref);
+        this.showHideSelectedTab(tabPref);
     }
 
     /**
-     * Marks the selected tab as active, handles special cases for the dropdown
+     * Marks the selected tab as active
      * @param {string} currentAttrValue The currently selected tab ID.
      * @returns {void}
      */
     showHideSelectedTab(currentAttrValue) {
         // Get the <a>, <li> and <ul> of the selected tab
         const tabLink = $(this.tabStrip.querySelector(`[data-tabid="${currentAttrValue}"]`));
-        const tabList = tabLink.parent('ul');
-
-        // Get the dropdown <a> and <li> for active and label management
-        const dropdownLink = $(this.tabStrip.querySelector('.dropdown-toggle'));
-        const dropdownListItem = $(this.tabStrip.querySelector('.dropdown'));
-
-        // Set the active tab, if it's on the dropdown set it to active and change label
-        if (tabList.hasClass('dropdown-menu')) {
-            // Use first so text doesn't repeat if more than one set of tabs
-            dropdownLink.text(`${tabLink.first().text()}`).append('<span class="caret"></span>');
-            dropdownListItem.
-                attr('aria-selected', true).
-                siblings().
-                attr('aria-selected', false);
-        } else {
-            // Set a non-dropdown tab to active, and change the dropdown label back to "Other"
-            tabLink.
-                attr('aria-selected', true).
-                siblings().
-                attr('aria-selected', false);
-            dropdownLink.text('Other ').append('<span class="caret"></span>');
-        }
+        // Set a tab to active
+        tabLink.
+            attr('aria-selected', true).
+            siblings().
+            attr('aria-selected', false);
     }
 
     /**
@@ -126,4 +109,4 @@ class TabsSingleton {
     }
 }
 
-(new TabsSingleton('languagePref')).setup();
+(new TabsSingleton('tabPref')).setup();
