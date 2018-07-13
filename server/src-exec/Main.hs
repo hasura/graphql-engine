@@ -120,9 +120,9 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
       pool <- Q.initPGPool ci cp
       putStrLn $ "server: running on port " ++ show port
       app <- mkWaiApp isoL mRootDir rlogger pool am finalCorsCfg enableConsole
-      -- let warpSettings = Warp.setPort port $
-      --                    Warp.setHost "*" Warp.defaultSettings
-      Warp.runSettings Warp.defaultSettings app
+      let warpSettings = Warp.setPort port Warp.defaultSettings
+                         -- Warp.setHost "*" Warp.defaultSettings
+      Warp.runSettings warpSettings app
     ROExport -> do
       res <- runTx ci fetchMetadata
       either ((>> exitFailure) . printJSON) printJSON res
