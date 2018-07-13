@@ -3,6 +3,13 @@
 set -eo pipefail
 IFS=$'\n\t'
 ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
+LATEST_TAG=$(git describe --tags --abbrev=0)
+PREVIOUS_TAG=$(git describe --tags $(git rev-list --tags --max-count=2) --abbrev=0 | sed -n 2p)
+CHANGELOG_TEXT=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty=format:'- %s' --reverse)
+RELEASE_BODY=$(eval "cat <<EOF
+$(<release_notes.template.md)
+EOF
+")
 
 ## deploy functions
 deploy_server() {
@@ -28,7 +35,7 @@ draft_github_release() {
     ghr -t "$GITHUB_TOKEN" \
         -u "$CIRCLE_PROJECT_USERNAME" \
         -r "$CIRCLE_PROJECT_REPONAME" \
-        -b "$CIRCLE_TAG" \
+        -b "${RELEASE_BODY}" \
         -draft \
      "$CIRCLE_TAG" /build/_cli_output/binaries/
 }
