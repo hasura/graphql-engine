@@ -1,4 +1,5 @@
 import { push } from 'react-router-redux';
+import globals from 'Globals';
 import defaultState from './State';
 import Endpoints from '../../Endpoints';
 import requestAction from '../../utils/requestAction';
@@ -64,7 +65,7 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
   }
   return dispatch(requestAction(url, options)).then(
     () => {
-      dispatch(push('/'));
+      dispatch(push(globals.urlPrefix));
     },
     error => {
       dispatch({ type: LOGIN_IN_PROGRESS, data: false });

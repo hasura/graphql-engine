@@ -117,6 +117,7 @@ mkCompExpInp colTy =
   [ map (mk colScalarTy) typedOps
   , map (mk $ G.toLT colScalarTy) listOps
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
+  , [InpValInfo Nothing "_is_null" $ G.TypeNamed $ G.NamedType "Boolean"]
   ]
   where
     tyDesc = mconcat

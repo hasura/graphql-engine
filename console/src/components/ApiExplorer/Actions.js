@@ -1,4 +1,5 @@
 import defaultState from './state';
+import fetch from 'isomorphic-fetch';
 
 const CHANGE_TAB = 'ApiExplorer/CHANGE_TAB';
 const CHANGE_API_SELECTION = 'ApiExplorer/CHANGE_API_SELECTION';
@@ -153,6 +154,18 @@ const changeRequestParams = newParams => {
     }
     dispatch({ type: REQUEST_PARAMS_CHANGED, data: newParams });
   };
+};
+
+const graphQLFetcherFinal = (graphQLParams, url, headers) => {
+  const graphqlUrl = url;
+  const currentHeaders = headers;
+  const headersFinal = getHeadersAsJSON(currentHeaders);
+
+  return fetch(graphqlUrl, {
+    method: 'POST',
+    headers: headersFinal,
+    body: JSON.stringify(graphQLParams),
+  }).then(response => response.json());
 };
 
 const changeRequestHeader = (index, key, newValue, isDisabled) => {
@@ -539,4 +552,5 @@ export {
   clearHistory,
   updateFileObject,
   editGeneratedJson,
+  graphQLFetcherFinal,
 };

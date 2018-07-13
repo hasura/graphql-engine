@@ -7,6 +7,8 @@ packager_ver := 1.1
 project_dir := $(shell pwd)
 build_dir := $(project_dir)/$(shell stack --system-ghc path --dist-dir)/build
 
+build_output := /build/_server_output
+
 image: $(project).cabal
 	docker build -t "$(registry)/$(project):$(version)" \
 		-f packaging/Dockerfile \
@@ -25,9 +27,12 @@ release-image: $(project).cabal
 		.
 
 # assumes this is built in circleci
-ci-binary: $(project).cabal
+ci-binary-and-test: $(project).cabal
 	mkdir -p packaging/build/rootfs
-	stack --system-ghc build
+	stack test --coverage --test-arguments --database-url=$(DATABASE_URL)
+	mkdir -p $(build_output)
+	cp $(build_dir)/$(project)/$(project) $(build_output)
+	echo "$(version)" > $(build_output)/version.txt
 
 # assumes this is built in circleci
 ci-image:
@@ -38,6 +43,11 @@ ci-image:
 	upx packaging/build/rootfs/bin/$(project)
 	docker build -t $(registry)/$(project):$(version) packaging/build/
 
+ci-save-image:
+	docker save -o $(build_output)/image.tar $(registry)/$(project):$(version)
+
+ci-load-image:
+	docker load -i $(build_output)/image.tar
 
 push: $(project).cabal
 	docker push $(registry)/$(project):$(version)
@@ -45,4 +55,4 @@ push: $(project).cabal
 packager: packaging/packager.df
 	docker build -t "$(registry)/graphql-engine-packager:$(packager_ver)" -f packaging/packager.df ./packaging/
 
-.PHONY: image release-image push packager
+.PHONY: image release-image push packager ci-binary-and-test ci-image ci-save-image ci-load-image

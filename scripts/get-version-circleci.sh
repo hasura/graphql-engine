@@ -25,4 +25,6 @@ fi
 
 if [ -z "$VERSION" ]; then VERSION="$($ROOT/get-version.sh)"; fi
 
+VERSION="$(echo $VERSION | tr -cd '[[:alnum:]]._-')"
+
 echo $VERSION

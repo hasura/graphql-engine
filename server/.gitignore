@@ -9,6 +9,7 @@ cabal-dev
 *.dyn_hi
 .virtualenv
 .hpc
+*.tix
 .hsenv
 .cabal-sandbox/
 cabal.sandbox.config

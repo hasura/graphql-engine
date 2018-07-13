@@ -52,7 +52,7 @@ type HasuraGraphQLConfig struct {
 	// AccessKey (optional) required to query the endpoint
 	AccessKey string `json:"access_key,omitempty"`
 
-	ParsedEndpoint *url.URL
+	ParsedEndpoint *url.URL `json:"-"`
 }
 
 // ParseEndpoint ensures the endpoint is valid.
@@ -174,7 +174,7 @@ func (ec *ExecutionContext) Validate() error {
 	// set names of files and directories
 	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, "migrations")
 	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
-	ec.MetadataFile = filepath.Join(ec.ExecutionDirectory, "metadata.yaml")
+	ec.MetadataFile = filepath.Join(ec.MigrationDir, "metadata.yaml")
 
 	// read config and parse the values into Config
 	err = ec.readConfig()

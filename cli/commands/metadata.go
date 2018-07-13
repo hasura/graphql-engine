@@ -3,7 +3,6 @@ package commands
 import (
 	"encoding/json"
 	"io/ioutil"
-	"path/filepath"
 
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
@@ -39,7 +38,7 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return metadataCmd
 }
 
-func executeMetadata(cmd string, t *migrate.Migrate, metadata string) error {
+func executeMetadata(cmd string, t *migrate.Migrate, metadataPath string) error {
 	switch cmd {
 	case "export":
 		metaData, err := t.ExportMetadata()
@@ -57,7 +56,7 @@ func executeMetadata(cmd string, t *migrate.Migrate, metadata string) error {
 			return err
 		}
 
-		err = ioutil.WriteFile(filepath.Join(metadata, "metadata.yaml"), data, 0644)
+		err = ioutil.WriteFile(metadataPath, data, 0644)
 		if err != nil {
 			return errors.Wrap(err, "cannot save metadata")
 		}
@@ -67,7 +66,7 @@ func executeMetadata(cmd string, t *migrate.Migrate, metadata string) error {
 			return errors.Wrap(err, "Cannot reset Metadata")
 		}
 	case "apply":
-		data, err := ioutil.ReadFile(filepath.Join(metadata, "metadata.yaml"))
+		data, err := ioutil.ReadFile(metadataPath)
 		if err != nil {
 			return errors.Wrap(err, "cannot read metadata file")
 		}

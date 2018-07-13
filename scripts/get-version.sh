@@ -8,4 +8,6 @@ GIT_DIRTY=$(test -n "`git status --porcelain`" && echo "-dirty" || echo "")
 VERSION="${GIT_TAG_EXACT}"
 test -n "$VERSION" || VERSION="${GIT_BRANCH}-${GIT_SHA}${GIT_DIRTY}"
 
+VERSION="$(echo $VERSION | tr -cd '[[:alnum:]]._-')"
+
 echo "$VERSION"
