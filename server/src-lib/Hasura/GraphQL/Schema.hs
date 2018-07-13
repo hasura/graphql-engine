@@ -31,9 +31,9 @@ import qualified Language.GraphQL.Draft.Syntax  as G
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
 
+import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.Prelude
 
 import qualified Hasura.SQL.DML                 as S
 
@@ -116,6 +116,7 @@ mkCompExpInp colTy =
   [ map (mk colScalarTy) typedOps
   , map (mk $ G.toLT colScalarTy) listOps
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
+  , [InpValInfo Nothing "_is_null" $ G.TypeNamed $ G.NamedType "Boolean"]
   ]
   where
     tyDesc = mconcat
