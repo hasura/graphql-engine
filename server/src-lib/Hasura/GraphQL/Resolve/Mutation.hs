@@ -66,19 +66,66 @@ convertRowObj val =
     prepExp <- asPGColVal v >>= prepare
     return (PGCol $ G.unName k, prepExp)
 
--- TODO: add conflict clause
+mkConflictClause
+  :: (MonadError QErr m)
+  => [PGCol]
+  -> ConflictAction
+  -> Maybe ConstraintName
+  -> m RI.ConflictClauseP1
+mkConflictClause cols act conM = case (act , conM) of
+  (CAIgnore, Nothing) -> return $ RI.CP1DoNothing Nothing
+  (CAIgnore, Just cons) -> return $ RI.CP1DoNothing $ Just $ RI.Constraint cons
+  (CAUpdate, Nothing) -> throw400 Unexpected
+    "expecting \"constraint\" when \"action\" is \"update\" "
+  (CAUpdate, Just cons) -> return $ RI.CP1Update (RI.Constraint cons) cols
+
+parseAction
+  :: (MonadError QErr m)
+  => AnnGObject -> m ConflictAction
+parseAction obj = do
+  val <- onNothing (Map.lookup "action" obj) $ throw500
+    "\"action\" field is expected but not found"
+  (enumTy, enumVal) <- asEnumVal val
+  case G.unName $ G.unEnumValue enumVal of
+    "ignore" -> return CAIgnore
+    "update" -> return CAUpdate
+    _ -> throw500 $ "only \"ignore\" and \"updated\" allowed for enum type " <> showNamedTy enumTy
+
+parseConstraint
+  :: (MonadError QErr m)
+  => AnnGObject -> m (Maybe ConstraintName)
+parseConstraint obj = do
+  t <- mapM parseVal $ Map.lookup "constraint" obj
+  return $ fmap ConstraintName t
+  where
+    parseVal v = do
+      (_, enumVal) <- asEnumVal v
+      return $ G.unName $ G.unEnumValue enumVal
+
+parseOnConflict
+  :: (MonadError QErr m)
+  => [PGCol] -> AnnGValue -> m RI.ConflictClauseP1
+parseOnConflict cols val =
+  flip withObject val $ \_ obj -> do
+    action <- parseAction obj
+    constraintM <- parseConstraint obj
+    withPathK "on_conflict" $ mkConflictClause cols action constraintM
+
 convertInsert
   :: (QualifiedTable, QualifiedTable) -- table, view
   -> [PGCol] -- all the columns in this table
   -> Field -- the mutation field
   -> Convert RespTx
 convertInsert (tn, vn) tableCols fld = do
-  rows    <- withArg (_fArguments fld) "objects" asRowExps
+  rows    <- withArg arguments "objects" asRowExps
+  onConflictM <- withArgM arguments "on_conflict" $
+                 parseOnConflict tableCols
   mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
   args <- get
-  let p1 = RI.InsertQueryP1 tn vn tableCols rows Nothing mutFlds
+  let p1 = RI.InsertQueryP1 tn vn tableCols rows onConflictM mutFlds
   return $ RI.insertP2 (p1, args)
   where
+    arguments = _fArguments fld
     asRowExps = withArray (const $ mapM rowExpWithDefaults)
     rowExpWithDefaults val = do
       givenCols <- convertRowObj val

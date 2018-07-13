@@ -31,9 +31,9 @@ import qualified Language.GraphQL.Draft.Syntax  as G
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
 
+import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.Prelude
 
 import qualified Hasura.SQL.DML                 as S
 
@@ -404,6 +404,16 @@ mkInsInpTy :: QualifiedTable -> G.NamedType
 mkInsInpTy tn =
   G.NamedType $ qualTableToName tn <> "_insert_input"
 
+-- table_on_conflict
+mkOnConflictInpTy :: QualifiedTable -> G.NamedType
+mkOnConflictInpTy tn =
+  G.NamedType $ qualTableToName tn <> "_on_conflict"
+
+-- table_constraint
+mkConstraintInpTy :: QualifiedTable -> G.NamedType
+mkConstraintInpTy tn =
+  G.NamedType $ qualTableToName tn <> "_constraint"
+
 {-
 
 input table_insert_input {
@@ -424,11 +434,40 @@ mkInsInp tn cols =
     desc = G.Description $
       "input type for inserting data into table " <>> tn
 
--- insert_table(objects: [table_insert_input!]!): table_mutation_response
+{-
+
+input table_on_conflict {
+  action: conflict_action!
+  constraint: table_constraint
+}
+
+-}
+
+mkOnConflictInp :: QualifiedTable -> InpObjTyInfo
+mkOnConflictInp tn =
+  InpObjTyInfo (Just desc) (mkOnConflictInpTy tn) $ fromInpValL
+  [actionInpVal, constraintInpVal]
+  where
+    desc = G.Description $
+      "on conflict condition type for table " <>> tn
+
+    actionInpVal = InpValInfo Nothing (G.Name "action") $
+      G.toGT $ G.toNT $ G.NamedType "conflict_action"
+
+    constraintInpVal = InpValInfo Nothing (G.Name "constraint") $
+      G.toGT $ mkConstraintInpTy tn
+{-
+
+insert_table(
+  objects: [table_insert_input!]!
+  on_conflict: table_on_conflict
+  ): table_mutation_response!
+-}
+
 mkInsMutFld
   :: QualifiedTable -> ObjFldInfo
 mkInsMutFld tn =
-  ObjFldInfo (Just desc) fldName (fromInpValL [objectsArg]) $
+  ObjFldInfo (Just desc) fldName (fromInpValL [objectsArg, onConflictArg]) $
   G.toGT $ mkMutRespTy tn
   where
     desc = G.Description $
@@ -440,6 +479,41 @@ mkInsMutFld tn =
     objectsArg =
       InpValInfo (Just objsArgDesc) "objects" $ G.toGT $
       G.toNT $ G.toLT $ G.toNT $ mkInsInpTy tn
+
+    onConflictDesc = "on conflict condition"
+    onConflictArg =
+      InpValInfo (Just onConflictDesc) "on_conflict" $ G.toGT $ mkOnConflictInpTy tn
+
+mkConstriantTy :: QualifiedTable -> [TableConstraint] -> EnumTyInfo
+mkConstriantTy tn cons = enumTyInfo
+  where
+    enumTyInfo = EnumTyInfo (Just desc) (mkConstraintInpTy tn) $
+                 mapFromL _eviVal $ map (mkConstraintEnumVal . tcName ) $
+                 filter isUniqueOrPrimary cons
+
+    desc = G.Description $
+      "unique or primary key constraints on table " <>> tn
+
+    isUniqueOrPrimary (TableConstraint ty _) = case ty of
+      CTCHECK      -> False
+      CTFOREIGNKEY -> False
+      CTPRIMARYKEY -> True
+      CTUNIQUE     -> True
+
+    mkConstraintEnumVal (ConstraintName n) =
+      EnumValInfo (Just "unique or primary key constraint")
+      (G.EnumValue $ G.Name n) False
+
+mkConflictActionTy :: EnumTyInfo
+mkConflictActionTy = EnumTyInfo (Just desc) ty $ mapFromL _eviVal
+                     [enumValIgnore, enumValUpdate]
+  where
+    desc = G.Description "conflict action"
+    ty = G.NamedType "conflict_action"
+    enumValIgnore = EnumValInfo (Just "conflict action is ignore")
+                    (G.EnumValue "ignore") False
+    enumValUpdate = EnumValInfo (Just "conflict action update")
+                    (G.EnumValue "update") False
 
 mkOrdByTy :: QualifiedTable -> G.NamedType
 mkOrdByTy tn =
@@ -464,6 +538,7 @@ mkOrdByCtx tn cols =
     toResolveCtxPair (v, _, ctx) = ((enumTy, G.EnumValue v), ctx)
 
     enumValsInt = concatMap mkOrdByEnumsOfCol cols
+
 
 mkOrdByEnumsOfCol
   :: PGColInfo
@@ -513,15 +588,21 @@ mkGCtxRole'
   -> Maybe [PGColInfo]
   -- delete cols
   -> Maybe ()
+  -- constraints
+  -> [TableConstraint]
   -> TyAgg
-mkGCtxRole' tn insColsM selFldsM updColsM delPermM =
+mkGCtxRole' tn insColsM selFldsM updColsM delPermM constraints =
   TyAgg (mkTyInfoMap allTypes) fieldMap ordByEnums
 
   where
 
     ordByEnums = fromMaybe Map.empty ordByResCtxM
+    onConflictTypes = [ TIEnum mkConflictActionTy
+                      , TIEnum $ mkConstriantTy tn constraints
+                      , TIInpObj $ mkOnConflictInp tn
+                      ]
 
-    allTypes = catMaybes
+    allTypes = onConflictTypes <> catMaybes
       [ TIInpObj <$> insInpObjM
       , TIInpObj <$> updSetInpObjM
       , TIInpObj <$> boolExpInpObjM
@@ -654,15 +735,16 @@ mkGCtxRole
   => TableCache
   -> QualifiedTable
   -> FieldInfoMap
+  -> [TableConstraint]
   -> RoleName
   -> RolePermInfo
   -> m (TyAgg, RootFlds)
-mkGCtxRole tableCache tn fields role permInfo = do
+mkGCtxRole tableCache tn fields constraints role permInfo = do
   selFldsM <- mapM (getSelFlds tableCache fields role) $ _permSel permInfo
   let insColsM = const colInfos <$> _permIns permInfo
       updColsM = filterColInfos . upiCols <$> _permUpd permInfo
       tyAgg = mkGCtxRole' tn insColsM selFldsM updColsM
-              (void $ _permDel permInfo)
+              (void $ _permDel permInfo) constraints
       rootFlds = getRootFldsRole tn fields permInfo
   return (tyAgg, rootFlds)
   where
@@ -690,10 +772,10 @@ mkGCtxMapTable
   => TableCache
   -> TableInfo
   -> m (Map.HashMap RoleName (TyAgg, RootFlds))
-mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms) = do
-  m <- Map.traverseWithKey (mkGCtxRole tableCache tn fields) rolePerms
+mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints) = do
+  m <- Map.traverseWithKey (mkGCtxRole tableCache tn fields constraints) rolePerms
   let adminCtx = mkGCtxRole' tn (Just colInfos)
-                 (Just selFlds) (Just colInfos) (Just ())
+                 (Just selFlds) (Just colInfos) (Just ()) constraints
   return $ Map.insert adminRole (adminCtx, adminRootFlds) m
   where
     colInfos = fst $ partitionFieldInfos $ Map.elems fields
