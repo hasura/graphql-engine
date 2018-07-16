@@ -77,14 +77,24 @@ Instead of using the console at ``http://my-grapqhl.herokuapp.com/console`` you 
    # With access key
    hasura console --access-key mysecretkey
 
+Step 5: Disable migrations
+--------------------------
 
-Step 5: Untract a table, or modify a relationship/permission
+Since you are using other tools to manage migrations, you should disable
+migrations on Hasura console to prevent edits to the database schema. But, you
+can still do actions related to metadata that Hasura stores, like tracking a
+table or creating/editing relationships or modifying permissions.
+
+To disable migrations, head to ``Data -> Migrations`` on the console and then
+disable the toggle "Allow postgres schema changes". 
+
+Step 6: Track a table, or modify a relationship/permission
 ------------------------------------------------------------
 
 As you use the console to track/untrack tables, views or update relationships and permissions you'll see how the metadata file changes
 automatically at ``migrations/metadata.yaml``.
 
-Step 6: Apply the metadata.yaml file to another instance of GraphQL engine
+Step 7: Apply the metadata.yaml file to another instance of GraphQL engine
 --------------------------------------------------------------------------
 
 - Edit ``config.yaml`` and change the endpoint to another instance, say ``https://my-another-grapqhl.herokuapp.com``
@@ -100,7 +110,7 @@ Step 6: Apply the metadata.yaml file to another instance of GraphQL engine
 
      hasura metadata apply
 
-Step 7: Refer to the ``hasura metadata`` CLI reference
-------------------------------------------------------
+Step 8: Other metadata commands 
+-------------------------------
 
 To clear, export, apply metadata refer to :ref:`hasura metadata <hasura_metadata>` command.
