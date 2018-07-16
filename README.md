@@ -25,7 +25,7 @@ _Insert GIF here_
 
 Read more at: [https://hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
 
-##Demos
+## Demos
 
 
 * [**Add to Gitlab**](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 mins*)
