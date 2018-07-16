@@ -51,18 +51,18 @@ You can also place the engine behind a central GraphQL proxy that fronts multipl
 
 ## Client-side tooling
 
-GraphQL Engine provides an HTTP API. This means you can use any client-side tool or library to query the endpoint. To fully leverage GraphQL, it is recommended that you use GraphQL specific client-side tooling like [Apollo Client](https://github.com/apollographql/apollo-client), [Relay](https://github.com/facebook/relay), etc. See [awesome-graphql](https://github.com/chentsulin/awesome-graphql) for a list of such tools.
+Hasura works with any HTTP GraphQL client. We recommend using [Apollo Client](https://github.com/apollographql/apollo-client). See [awesome-graphql](https://github.com/chentsulin/awesome-graphql) for a list of such tools.
 
-## Community
 
-Please join our amazing community of developers and contributors on [Discord](https://discord.gg/vBPpJkS).
 
 ## Support & Troubleshooting
 
 The documentation and community will help you troubleshoot most issues. However, if you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
 
-* [Github issues](https://github.com/hasura/graphql-engine/issues)
-* Talk to us using [Intercom chat](https://hasura.io) or drop an email to build@hasura.io
+* Support & feedaback: [Discord](https://discord.gg/vBPpJkS)
+* Issue & bug tracking: [Github issues](https://github.com/hasura/graphql-engine/issues)
+* Follow product updates: [@HasuraHQ](https://twitter.com/hasurahq)
+* Talk to us on our [website chat](https://hasura.io)
 
 We are committed to fostering an open and welcoming environment in the community. Please see the [Code of Conduct](code-of-conduct.md).
 
@@ -72,6 +72,6 @@ Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
 ## License
 
-GraphQL Engine is available under the [GNU Affero General Public License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0). [Why AGPL?](https://gist.github.com/hasura-bot/9c36a0201a7563f7762b265a12b044d5).
+GraphQL Engine is available under the [GNU Affero General Public License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0), the same license as [MongoDB](https://www.mongodb.com/community/licensing). [Read more](https://gist.github.com/hasura-bot/9c36a0201a7563f7762b265a12b044d5).
 
 Commercial licenses are available on request. Please feel free to contact us at build@hasura.io or on our [website chat](https://hasura.io).
