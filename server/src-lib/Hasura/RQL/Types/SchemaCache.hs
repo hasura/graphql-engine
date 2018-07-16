@@ -14,6 +14,7 @@ module Hasura.RQL.Types.SchemaCache
        , TableInfo(..)
        , TableConstraint(..)
        , ConstraintType(..)
+       , isUniqueOrPrimary
        , mkTableInfo
        , addTableToCache
        , modTableInCache
@@ -341,6 +342,13 @@ data TableConstraint
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableConstraint)
+
+isUniqueOrPrimary :: TableConstraint -> Bool
+isUniqueOrPrimary (TableConstraint ty _) = case ty of
+  CTCHECK      -> False
+  CTFOREIGNKEY -> False
+  CTPRIMARYKEY -> True
+  CTUNIQUE     -> True
 
 data TableInfo
   = TableInfo

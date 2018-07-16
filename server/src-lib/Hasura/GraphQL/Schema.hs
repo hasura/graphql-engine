@@ -465,11 +465,14 @@ insert_table(
 -}
 
 mkInsMutFld
-  :: QualifiedTable -> ObjFldInfo
-mkInsMutFld tn =
-  ObjFldInfo (Just desc) fldName (fromInpValL [objectsArg, onConflictArg]) $
+  :: QualifiedTable -> [TableConstraint] -> ObjFldInfo
+mkInsMutFld tn constraints =
+  ObjFldInfo (Just desc) fldName (fromInpValL inputVals) $
   G.toGT $ mkMutRespTy tn
   where
+    inputVals = catMaybes [ Just objectsArg
+                          , onConflictInpVal
+                          ]
     desc = G.Description $
       "insert data into the table: " <>> tn
 
@@ -480,6 +483,10 @@ mkInsMutFld tn =
       InpValInfo (Just objsArgDesc) "objects" $ G.toGT $
       G.toNT $ G.toLT $ G.toNT $ mkInsInpTy tn
 
+    onConflictInpVal = case filter isUniqueOrPrimary constraints of
+      [] -> Nothing
+      _  -> Just onConflictArg
+
     onConflictDesc = "on conflict condition"
     onConflictArg =
       InpValInfo (Just onConflictDesc) "on_conflict" $ G.toGT $ mkOnConflictInpTy tn
@@ -488,17 +495,10 @@ mkConstriantTy :: QualifiedTable -> [TableConstraint] -> EnumTyInfo
 mkConstriantTy tn cons = enumTyInfo
   where
     enumTyInfo = EnumTyInfo (Just desc) (mkConstraintInpTy tn) $
-                 mapFromL _eviVal $ map (mkConstraintEnumVal . tcName ) $
-                 filter isUniqueOrPrimary cons
+                 mapFromL _eviVal $ map (mkConstraintEnumVal . tcName ) cons
 
     desc = G.Description $
       "unique or primary key constraints on table " <>> tn
-
-    isUniqueOrPrimary (TableConstraint ty _) = case ty of
-      CTCHECK      -> False
-      CTFOREIGNKEY -> False
-      CTPRIMARYKEY -> True
-      CTUNIQUE     -> True
 
     mkConstraintEnumVal (ConstraintName n) =
       EnumValInfo (Just "unique or primary key constraint")
@@ -578,6 +578,14 @@ instance Monoid RootFlds where
   mempty = RootFlds Map.empty
   mappend  = (<>)
 
+mkOnConflictTypes :: QualifiedTable -> [TableConstraint] -> [TypeInfo]
+mkOnConflictTypes tn c = case filter isUniqueOrPrimary c of
+  [] -> []
+  constraints -> [ TIEnum mkConflictActionTy
+                 , TIEnum $ mkConstriantTy tn constraints
+                 , TIInpObj $ mkOnConflictInp tn
+                 ]
+
 mkGCtxRole'
   :: QualifiedTable
   -- insert cols
@@ -597,10 +605,7 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM constraints =
   where
 
     ordByEnums = fromMaybe Map.empty ordByResCtxM
-    onConflictTypes = [ TIEnum mkConflictActionTy
-                      , TIEnum $ mkConstriantTy tn constraints
-                      , TIInpObj $ mkOnConflictInp tn
-                      ]
+    onConflictTypes = mkOnConflictTypes tn constraints
 
     allTypes = onConflictTypes <> catMaybes
       [ TIInpObj <$> insInpObjM
@@ -675,13 +680,14 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM constraints =
 
 getRootFldsRole'
   :: QualifiedTable
+  -> [TableConstraint]
   -> FieldInfoMap
   -> Maybe (QualifiedTable, [T.Text]) -- insert view
   -> Maybe (S.BoolExp, [T.Text]) -- select filter
   -> Maybe (S.BoolExp, [T.Text]) -- update filter
   -> Maybe (S.BoolExp, [T.Text]) -- delete filter
   -> RootFlds
-getRootFldsRole' tn fields insM selM updM delM =
+getRootFldsRole' tn constraints fields insM selM updM delM =
   RootFlds mFlds
   where
     mFlds = mapFromL (either _fiName _fiName . snd) $ catMaybes
@@ -689,7 +695,7 @@ getRootFldsRole' tn fields insM selM updM delM =
             , getUpdDet <$> updM, getDelDet <$> delM]
     colInfos = fst $ partitionFieldInfos $ Map.elems fields
     getInsDet (vn, hdrs) =
-      (OCInsert tn vn (map pgiName colInfos) hdrs, Right $ mkInsMutFld tn)
+      (OCInsert tn vn (map pgiName colInfos) hdrs, Right $ mkInsMutFld tn constraints)
     getUpdDet (updFltr, hdrs) =
       (OCUpdate tn updFltr hdrs, Right $ mkUpdMutFld tn)
     getDelDet (delFltr, hdrs) =
@@ -745,7 +751,7 @@ mkGCtxRole tableCache tn fields constraints role permInfo = do
       updColsM = filterColInfos . upiCols <$> _permUpd permInfo
       tyAgg = mkGCtxRole' tn insColsM selFldsM updColsM
               (void $ _permDel permInfo) constraints
-      rootFlds = getRootFldsRole tn fields permInfo
+      rootFlds = getRootFldsRole tn constraints fields permInfo
   return (tyAgg, rootFlds)
   where
     colInfos = fst $ partitionFieldInfos $ Map.elems fields
@@ -754,11 +760,12 @@ mkGCtxRole tableCache tn fields constraints role permInfo = do
 
 getRootFldsRole
   :: QualifiedTable
+  -> [TableConstraint]
   -> FieldInfoMap
   -> RolePermInfo
   -> RootFlds
-getRootFldsRole tn fields (RolePermInfo insM selM updM delM) =
-  getRootFldsRole' tn fields
+getRootFldsRole tn constraints fields (RolePermInfo insM selM updM delM) =
+  getRootFldsRole' tn constraints fields
   (mkIns <$> insM) (mkSel <$> selM)
   (mkUpd <$> updM) (mkDel <$> delM)
   where
@@ -784,7 +791,7 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints) = do
       FIRelationship relInfo -> Right (relInfo, noFilter)
     noFilter = S.BELit True
     adminRootFlds =
-      getRootFldsRole' tn fields (Just (tn, [])) (Just (noFilter, []))
+      getRootFldsRole' tn constraints fields (Just (tn, [])) (Just (noFilter, []))
       (Just (noFilter, [])) (Just (noFilter, []))
 
 mkScalarTyInfo :: PGColType -> ScalarTyInfo

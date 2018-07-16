@@ -86,7 +86,7 @@ parseAction obj = do
   val <- onNothing (Map.lookup "action" obj) $ throw500
     "\"action\" field is expected but not found"
   (enumTy, enumVal) <- asEnumVal val
-  case G.unName $ G.unEnumValue enumVal of
+  withPathK "action" $ case G.unName $ G.unEnumValue enumVal of
     "ignore" -> return CAIgnore
     "update" -> return CAUpdate
     _ -> throw500 $ "only \"ignore\" and \"updated\" allowed for enum type " <> showNamedTy enumTy
@@ -109,7 +109,7 @@ parseOnConflict cols val =
   flip withObject val $ \_ obj -> do
     action <- parseAction obj
     constraintM <- parseConstraint obj
-    withPathK "on_conflict" $ mkConflictClause cols action constraintM
+    mkConflictClause cols action constraintM
 
 convertInsert
   :: (QualifiedTable, QualifiedTable) -- table, view
@@ -118,7 +118,8 @@ convertInsert
   -> Convert RespTx
 convertInsert (tn, vn) tableCols fld = do
   rows    <- withArg arguments "objects" asRowExps
-  onConflictM <- withArgM arguments "on_conflict" $
+  onConflictM <- withPathK "on_conflict" $
+                 withArgM arguments "on_conflict" $
                  parseOnConflict tableCols
   mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
   args <- get
