@@ -69,12 +69,12 @@ Step 4: Open the console via the CLI & disable postgres schema changes
 
 Instead of using the console at ``http://my-grapqhl.herokuapp.com/console`` you should now use the console by running:
 
-.. code-block::
+.. code-block:: bash
 
-   #Without access key
+   # Without access key
    hasura console
 
-   #With access key
+   # With access key
    hasura console --access-key mysecretkey
 
 
@@ -87,15 +87,20 @@ automatically at ``migrations/metadata.yaml``.
 Step 6: Apply the metadata.yaml file to another instance of GraphQL engine
 --------------------------------------------------------------------------
 
-.. note:: TODO
+- Edit ``config.yaml`` and change the endpoint to another instance, say ``https://my-another-grapqhl.herokuapp.com``
 
-   Shahidh/Arvi please fill this
+  .. code-block:: yaml
+
+     # config.yaml
+     endpoint: https://my-another-grapqhl.herokuapp.com
+
+- Apply metadata present in the ``migrations/metadata.yaml`` on this new instance:
+
+  .. code-block:: bash
+
+     hasura metadata apply
 
 Step 7: Refer to the ``hasura metadata`` CLI reference
 ------------------------------------------------------
 
-To clear, export, apply metadata refer to
-
-.. note:: TODO
-
-   Shahidh/Arvi please fill this
+To clear, export, apply metadata refer to :ref:`hasura metadata <hasura_metadata>` command.
