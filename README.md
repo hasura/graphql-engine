@@ -25,6 +25,13 @@ _Insert GIF here_
 
 Read more at: [https://hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
 
+**Demos:**
+
+* Add to Gitlab
+* Integrate with Auth0
+* Process 10 million rows and use PostGIS for geo-location
+
+
 ## Quickstart - One-click deploy on Heroku
 
 The fastest way to try Hasura out is via Heroku.
