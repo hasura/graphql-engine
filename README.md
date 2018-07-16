@@ -8,20 +8,18 @@
 <a href="https://discord.gg/vBPpJkS"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 
-![Hasura GraphQL Engine Banner](assets/banner.png)
+Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant GraphQL APIs over Postgres** by auto-generating the GraphQL schema and corresponding resolvers.
 
-Hasura GraphQL Engine is a performant GraphQL server that provides **ready-to-use GraphQL API over Postgres** by auto-generating GraphQL schema and corresponding resolvers. 
-
-* **Make powerful queries**: built-in filtering, pagination, and pattern search arguments and operators
-* **Works with existing database**: point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
-* **Fine-grained access control**: dynamic access control that integrates with your Auth
+* **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations.
+* **Works with existing database**: Point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
+* **Fine-grained access control**: Dynamic access control that integrates with your auth system
 * **Light-weight & performant**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
-* **Dev friendly**: admin UI & Rails-inspired schema migrations
+* **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
 * **Postgres** ❤️: supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
 
 ## Quickstart - Setup on Heroku
 
-:information_source: *no credit-card required*; sign-up may be required
+*no credit-card required*; sign-up may be required
 
 1. Click on the following button to deploy GraphQL Engine on Heroku and provision the free Postgres add-on:
 
