@@ -28,15 +28,18 @@ Read more at: [https://hasura.io](https://hasura.io) and the [docs](https://docs
 ## Demos
 
 
-* [Add to GitLab](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 mins*)
-* [Integrate with Auth0](https://www.youtube.com/watch?v=15ITBYnccgc) (*4:00 mins*)
-* [Process 10 million rows and use PostGIS for geo-location](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 mins*)
+* [Add GraphQL to a self-hosted GitLab instance](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 mins*)
+* [Todo app with Auth0 and GraphQL backend](https://www.youtube.com/watch?v=15ITBYnccgc) (*4:00 mins*)
+* [GraphQL on GitLab integrated with GitLab auth](https://www.youtube.com/watch?v=m1ChRhRLq7o) (*4:05 mins*)
+* [Dashboard for 10million rides with geo-location (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 mins*)
 
-## Quickstart: One-click deployment on Heroku
+## Quickstart: 
+
+### One-click deployment on Heroku
 
 The fastest way to try Hasura out is via Heroku.
 
-1. Click on the following button to deploy GraphQL Engine on Heroku and provision the free Postgres add-on:
+1. Click on the following button to deploy GraphQL Engine on Heroku with the free Postgres add-on:
 
     [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
