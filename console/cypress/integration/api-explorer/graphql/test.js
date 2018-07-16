@@ -1,7 +1,7 @@
 /* eslint no-unused-vars: 0 */
 /* eslint import/prefer-default-export: 0 */
 
-import { openAPIExplorer } from './spec';
+import { openAPIExplorer, checkExecuteQueryButton } from './spec';
 
 import { setMetaData } from '../../validators/validators';
 import { testMode } from '../../../helpers/common';
@@ -21,6 +21,7 @@ const setup = () => {
 export const runApiExplorerTests = () => {
   describe('API Explorer', () => {
     it('Open API Explorer', openAPIExplorer);
+    // it('Run Query button works', checkExecuteQueryButton);
   });
 };
 
