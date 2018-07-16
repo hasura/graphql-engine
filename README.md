@@ -12,7 +12,7 @@ Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant 
 
 ------------------
 
-_Insert GIF here_
+![Hasura GraphQL Enigne Demo](assets/demo.gif)
 
 -------------------
 
