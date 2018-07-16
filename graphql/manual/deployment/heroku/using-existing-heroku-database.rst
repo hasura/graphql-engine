@@ -8,6 +8,18 @@ Let's say you have an existing Heroku Postgres database with data in it, and you
    In case you're exposing an existing database (esp. if it is production), please configure an access key
    for the console and the graphql endpoint.
 
+Step 0: Deploy Hasura on Heroku
+-------------------------------
+
+Deploy Hasura on Heroku by clicking on this button:
+
+.. image:: https://camo.githubusercontent.com/83b0e95b38892b49184e07ad572c94c8038323fb/68747470733a2f2f7777772e6865726f6b7563646e2e636f6d2f6465706c6f792f627574746f6e2e737667
+  :width: 200px
+  :alt: heroku_deploy_button
+  :class: no-shadow
+  :target: https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku
+
+Follow the heroku instructions to deploy, check if the Hasura console loads up when you **View app** and then head to the **Manage App** screen on your Heroku dashboard.
 
 Step 1: Remove the existing postgres addon in the app
 -----------------------------------------------------

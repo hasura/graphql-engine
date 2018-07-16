@@ -1,7 +1,8 @@
-Guide: Basic auth setup
+Guide: Basic roles setup
 =======================
 
 This is a guide to help you set up a basic authorization architecture for your GraphQL fields.
+
 Here are some examples of common use-cases.
 
 Anonymous (not logged in) users
