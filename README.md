@@ -17,7 +17,7 @@ Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant 
 -------------------
 
 * **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations.
-* **Works with existing,live databases**: Point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
+* **Works with existing, live databases**: Point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
 * **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
 * **High-performance & low-footprint**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
 * **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
@@ -39,17 +39,17 @@ Read more at: [https://hasura.io](https://hasura.io) and the [docs](https://docs
 | **Integrate with Auth0** | <a href="http://www.youtube.com/watch?feature=player_embedded&v=15ITBYnccgc" target="_blank"><img src="https://img.youtube.com/vi/15ITBYnccgc/hqdefault.jpg" alt="Integrate with Auth0" width="240" height="180" /></a> |
 | **Process 10 million rows and use PostGIS for geo-location** | <a href="http://www.youtube.com/watch?feature=player_embedded&v=tsY573yyGWA" target="_blank"><img src="https://img.youtube.com/vi/tsY573yyGWA/hqdefault.jpg" alt="PostGIS with GraphQL" width="240" height="180" /></a> |
 
-## Quickstart - One-click deploy on Heroku
+## Quickstart - One-click deployment on Heroku
 
 The fastest way to try Hasura out is via Heroku.
 
 1. Click on the following button to deploy GraphQL Engine on Heroku and provision the free Postgres add-on:
 
-    [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
+    [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
 2. Open the Hasura console
 
-   Visit https://\<app-name\>.herokuapp.com (*replace \<app-name\> with your app name*) to open the admin console.
+   Visit `https://<app-name>.herokuapp.com` (*replace \<app-name\> with your app name*) to open the admin console.
 
 3. Make your first GraphQL query
 
@@ -57,7 +57,7 @@ The fastest way to try Hasura out is via Heroku.
 
 ### Other deployment methods
 
-For Docker-based deployment and advanced configuration options, see deployment guides [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
+For Docker-based deployment and advanced configuration options, see [deployment guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
 
 ## Architecture
 
@@ -89,6 +89,6 @@ Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
 ## License
 
-GraphQL Engine is available under the [GNU Affero General Public License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0), the same license as [MongoDB](https://www.mongodb.com/community/licensing). We have written more about what you can and cannot do under AGPL [here](https://gist.github.com/hasura-bot/9c36a0201a7563f7762b265a12b044d5).
+GraphQL Engine is available under the [GNU Affero General Public License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0), the same license as [MongoDB](https://www.mongodb.com/community/licensing). We have written more about what you can and cannot do under AGPL [here](https://github.com/hasura/graphql-engine/wiki/License-Explained).
 
 **Commercial licenses are available on request**. Please feel free to contact us at build@hasura.io or on our [website chat](https://hasura.io).
