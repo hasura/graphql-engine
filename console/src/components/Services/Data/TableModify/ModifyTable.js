@@ -107,6 +107,7 @@ const ColumnEditor = ({
                     <button
                       className={`${styles.default_button} btn`}
                       type="button"
+                      data-test="add-rel-mod"
                     >
                       +Add relationship
                     </button>
@@ -149,6 +150,7 @@ const ColumnEditor = ({
             disabled={fkAdd.fkCheckBox === false}
             value={refTable}
             onChange={onFKRefTableChange}
+            data-test="ref-table"
           >
             <option disabled value="">
               Reference table
@@ -166,6 +168,7 @@ const ColumnEditor = ({
             disabled={fkAdd.fkCheckBox === false}
             value={rcol}
             onChange={onFKRefColumnChange}
+            data-test="ref-col"
           >
             <option disabled value="">
               Reference column
