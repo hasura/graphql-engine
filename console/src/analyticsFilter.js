@@ -14,7 +14,6 @@ const filterPayloadAllowList = [
   'Home/LOAD_PLATFORM_ERROR',
   'ViewTable/FilterQuery/SET_FILTEROP',
   'ViewTable/FilterQuery/SET_ORDERTYPE',
-  'Login/REQUEST_SUCCESS',
 ];
 
 export { filterEventsBlockList, filterPayloadAllowList };

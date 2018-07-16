@@ -15,6 +15,8 @@ import { routerMiddleware, syncHistoryWithStore } from 'react-router-redux';
 import { compose, createStore, applyMiddleware } from 'redux';
 import { useBasename } from 'history';
 
+const Hashes = require('jshashes');
+
 import getRoutes from './routes';
 
 import reducer from './reducer';
@@ -70,8 +72,10 @@ function analyticsLogger() {
       const uuid =
         globals.uuid !== undefined && globals.uuid !== '' ? globals.uuid : null;
 
+      const projectNameHashed = new Hashes.SHA1().b64(projectName);
+
       const reqBody = {
-        project_name: projectName,
+        project_name: projectNameHashed,
         project_version: projectVersion,
         project_type: projectType,
         hasura_id: hasuraId,
