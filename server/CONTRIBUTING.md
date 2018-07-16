@@ -16,8 +16,7 @@ own machine, and how to contribute.
 - Clone your forked repo: `git clone https://github.com/<your-username>/graphql-engine`
 
 ### Compile
-- `cd graphql-engine`
-- `stack init`
+- `cd graphql-engine/server`
 - `stack build --fast`
 
 ### Run
