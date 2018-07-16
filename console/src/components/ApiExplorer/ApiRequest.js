@@ -27,16 +27,13 @@ class ApiRequest extends Component {
   }
 
   componentWillMount() {
-    console.log(this.props.numberOfTables);
     if (this.props.numberOfTables !== 0) {
       const graphqlQueryInLS = window.localStorage.getItem('graphiql:query');
-      console.log(graphqlQueryInLS);
       if (graphqlQueryInLS && graphqlQueryInLS.indexOf('do not have') !== -1) {
-        console.log('Clearing');
         window.localStorage.removeItem('graphiql:query');
-        console.log('Cleared');
       }
     }
+    this.props.dispatch(addRequestHeader('x-hasura-role', 'user'));
   }
 
   onGenerateApiCodeClicked = () => {
@@ -325,6 +322,8 @@ class ApiRequest extends Component {
           <GraphiQLWrapper
             data={this.props}
             numberOfTables={this.props.numberOfTables}
+            dispatch={this.props.dispatch}
+            webSocketClient={this.props.webSocketClient}
           />
         );
       default:
@@ -362,6 +361,7 @@ ApiRequest.propTypes = {
   bodyType: PropTypes.string.isRequired,
   route: PropTypes.object.isRequired,
   numberOfTables: PropTypes.number.isRequired,
+  webSocketClient: PropTypes.object.isRequired,
 };
 
 export default ApiRequest;

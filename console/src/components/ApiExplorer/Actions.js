@@ -1,5 +1,10 @@
 import defaultState from './state';
-import fetch from 'isomorphic-fetch';
+// import fetch from 'isomorphic-fetch';
+
+import { SubscriptionClient } from 'subscriptions-transport-ws';
+import { WebSocketLink } from 'apollo-link-ws';
+import { parse } from 'graphql';
+import { execute } from 'apollo-link';
 
 const CHANGE_TAB = 'ApiExplorer/CHANGE_TAB';
 const CHANGE_API_SELECTION = 'ApiExplorer/CHANGE_API_SELECTION';
@@ -25,6 +30,8 @@ const API_REQUEST_FAILURE = 'ApiExplorer/API_REQUEST_FAILURE';
 
 const CLEAR_HISTORY = 'ApiExplorer/CLEAR_HISTORY';
 const UPDATE_FILE_OBJECT = 'ApiExplorer/UPDATE_FILE_OBJECT';
+
+const CREATE_WEBSOCKET_CLIENT = 'ApiExplorer/CREATE_WEBSOCKET_CLIENT';
 
 import requestAction from '../Common/makeRequest';
 import Endpoints from 'Endpoints';
@@ -156,37 +163,65 @@ const changeRequestParams = newParams => {
   };
 };
 
-const graphQLFetcherFinal = (graphQLParams, url, headers) => {
-  const graphqlUrl = url;
-  const currentHeaders = headers;
-  const headersFinal = getHeadersAsJSON(currentHeaders);
+const createWsClient = () => {
+  return (dispatch, getState) => {
+    const existingSocket = getState().apiexplorer.webSocketClient;
+    if (existingSocket) {
+      existingSocket.close();
+    }
+    const { url, headers } = getState().apiexplorer.displayedApi.request;
+    const headersFinal = getHeadersAsJSON(headers);
+    const graphqlUrl = `ws://${url.split('//')[1]}`;
+    const client = new SubscriptionClient(graphqlUrl, {
+      connectionParams: {
+        ...headersFinal,
+      },
+    });
+    dispatch({ type: CREATE_WEBSOCKET_CLIENT, data: client });
+  };
+};
 
-  return fetch(graphqlUrl, {
-    method: 'POST',
-    headers: headersFinal,
-    body: JSON.stringify(graphQLParams),
-  }).then(response => response.json());
+const graphQLFetcherFinal = (graphQLParams, client) => {
+  if (!client) {
+    createWsClient();
+  }
+  const link = new WebSocketLink(client);
+  const fetcher = operation => {
+    operation.query = parse(operation.query);
+    return execute(link, operation);
+  };
+  return fetcher(graphQLParams);
 };
 
 const changeRequestHeader = (index, key, newValue, isDisabled) => {
-  return {
-    type: REQUEST_HEADER_CHANGED,
-    data: {
-      index: index,
-      keyName: key,
-      newValue: newValue,
-      isDisabled: isDisabled,
-    },
+  return (dispatch, getState) => {
+    dispatch({
+      type: REQUEST_HEADER_CHANGED,
+      data: {
+        index: index,
+        keyName: key,
+        newValue: newValue,
+        isDisabled: isDisabled,
+      },
+    });
+    if (getState().apiexplorer.webSocketClient) {
+      dispatch(createWsClient());
+    }
   };
 };
 
 const addRequestHeader = (key, value) => {
-  return {
-    type: REQUEST_HEADER_ADDED,
-    data: {
-      key: key,
-      value: value,
-    },
+  return (dispatch, getState) => {
+    dispatch({
+      type: REQUEST_HEADER_ADDED,
+      data: {
+        key: key,
+        value: value,
+      },
+    });
+    if (getState().apiexplorer.webSocketClient) {
+      dispatch(createWsClient());
+    }
   };
 };
 
@@ -527,6 +562,11 @@ const apiExplorerReducer = (state = defaultState, action) => {
           enableResponseSection: false,
         },
       };
+    case CREATE_WEBSOCKET_CLIENT:
+      return {
+        ...state,
+        webSocketClient: action.data,
+      };
     default:
       return state;
   }
@@ -553,4 +593,5 @@ export {
   updateFileObject,
   editGeneratedJson,
   graphQLFetcherFinal,
+  createWsClient,
 };

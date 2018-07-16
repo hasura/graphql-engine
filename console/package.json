@@ -51,6 +51,8 @@
     }
   },
   "dependencies": {
+    "apollo-link": "^1.2.2",
+    "apollo-link-ws": "^1.0.8",
     "babel-polyfill": "^6.26.0",
     "brace": "^0.11.1",
     "deep-equal": "^1.0.1",
@@ -90,6 +92,7 @@
     "redux-logger": "^3.0.6",
     "redux-thunk": "^2.2.0",
     "semver": "^5.3.0",
+    "subscriptions-transport-ws": "^0.9.12",
     "superagent": "^1.4.0",
     "uuid": "^3.0.1",
     "valid-url": "^1.0.9"

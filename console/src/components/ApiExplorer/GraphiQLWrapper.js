@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import GraphiQL from 'graphiql';
 import PropTypes from 'prop-types';
 import ErrorBoundary from './ErrorBoundary';
-import { graphQLFetcherFinal } from './Actions';
+import { graphQLFetcherFinal, createWsClient } from './Actions';
+import Spinner from '../Common/Spinner/Spinner';
 
 import './GraphiQL.css';
 
@@ -17,29 +18,24 @@ class GraphiQLWrapper extends Component {
     };
   }
 
-  shouldComponentUpdate() {
-    // shouldn't re-render if headers change. play button will trigger the query
-    return false;
+  componentWillMount() {
+    this.props.dispatch(createWsClient());
   }
 
   render() {
-    console.log(this.props.numberOfTables);
     const styles = require('../Common/Common.scss');
-
-    const graphqlUrl = this.props.data.url;
-
     const graphQLFetcher = graphQLParams => {
-      return graphQLFetcherFinal(
-        graphQLParams,
-        graphqlUrl,
-        this.props.data.headers
-      );
+      return graphQLFetcherFinal(graphQLParams, this.props.webSocketClient);
     };
 
     // let content = "fetching schema";
     let content = (
       <i className={'fa fa-spinner fa-spin ' + styles.graphSpinner} />
     );
+
+    if (!this.props.webSocketClient) {
+      return <Spinner />;
+    }
 
     if (!this.state.error && this.props.numberOfTables !== 0) {
       content = <GraphiQL fetcher={graphQLFetcher} />;
