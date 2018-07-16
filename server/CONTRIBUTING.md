@@ -17,6 +17,7 @@ own machine, and how to contribute.
 
 ### Compile
 - `cd graphql-engine`
+- `stack init`
 - `stack build --fast`
 
 ### Run
