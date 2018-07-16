@@ -13,11 +13,13 @@ Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant 
 * **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations.
 * **Works with existing,live databases**: Point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
 * **Fine-grained access control**: Dynamic access control that integrates with your auth system
-* **Light-weight & performant**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
+* **High-performance & low-footprint**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
 * **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
 * **Postgres** ❤️: supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
 
-## Quickstart - Setup on Heroku
+Read more at: [https://hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
+
+## Quickstart - One-click deploy on Heroku
 
 *no credit-card required*; sign-up may be required
 
@@ -25,13 +27,13 @@ Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant 
 
     [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
-2. Open the admin console
+2. Open the Hasura console
 
    Visit https://\<app-name\>.herokuapp.com (*replace \<app-name\> with your app name*) to open the admin console.
 
 3. Make your first GraphQL query
 
-   Create test tables and instantly run your first query. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+   Create a table and instantly run your first query. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
 
 ### Other deployment methods
 
@@ -39,9 +41,7 @@ For Docker-based deployment and advanced configuration options, see deployment g
 
 ## Architecture
 
-The Hasura GraphQL Engine fronts a Postgres database instance and can serve as an API Gateway for all data requests from client apps. It can be configured to work with your existing Auth middleware to handle access control to data using field-level rules with dynamic variables.
-
-The GraphQL Engine is a standalone, multi-core aware component that can be scaled vertically and horizontally.
+The Hasura GraphQL Engine fronts a Postgres database instance and can accept GraphQL requests from your client apps. It can be configured to work with your existing auth system and can handle access control using field-level rules with dynamic variables from your auth system.
 
 ![Hasura GraphQL Engine architecture](assets/arch.png)
 
@@ -74,4 +74,4 @@ Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
 GraphQL Engine is available under the [GNU Affero General Public License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0). [Why AGPL?](https://gist.github.com/hasura-bot/9c36a0201a7563f7762b265a12b044d5).
 
-:information_source: Commercial licenses are available on request. Please feel free to contact us at build@hasura.io or using [Intercom chat](https://hasura.io).
+Commercial licenses are available on request. Please feel free to contact us at build@hasura.io or on our [website chat](https://hasura.io).
