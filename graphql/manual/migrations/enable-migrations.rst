@@ -119,6 +119,10 @@ Step 5: Add a new table and see how a migration is added
 As you use the Hasura console UI to make changes to your schema, migration files are automatically generated
 in the ``migrations/`` directory in your project.
 
+.. note::
+
+   Migrations are only created when using the Console though CLI.
+
 Step 6: Apply the migrations to another instance of the GraphQL engine
 ----------------------------------------------------------------------
 

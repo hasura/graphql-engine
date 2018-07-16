@@ -64,38 +64,53 @@ Skip this step if you already have a project directory.
 
   hasura init --directory my-project --endpoint http://my-graphql.herokuapp.com
 
-Step 4: Open the console via the CLI & disable postgres schema changes
+Step 3: Open the console via the CLI & disable postgres schema changes
 -----------------------------------------------------------------------
 
 Instead of using the console at ``http://my-grapqhl.herokuapp.com/console`` you should now use the console by running:
 
-.. code-block::
+.. code-block:: bash
 
-   #Without access key
+   # Without access key
    hasura console
 
-   #With access key
+   # With access key
    hasura console --access-key mysecretkey
 
+Step 4: Disable migrations
+--------------------------
 
-Step 5: Untract a table, or modify a relationship/permission
-------------------------------------------------------------
+Since you are using other tools to manage migrations, you should disable
+migrations on Hasura console to prevent edits to the database schema. But, you
+can still do actions related to metadata that Hasura stores, like tracking a
+table or creating/editing relationships or modifying permissions.
+
+To disable migrations, head to ``Data -> Migrations`` on the console and then
+disable the toggle "Allow postgres schema changes". 
+
+Step 5: Track a table, or modify a relationship/permission
+----------------------------------------------------------
 
 As you use the console to track/untrack tables, views or update relationships and permissions you'll see how the metadata file changes
 automatically at ``migrations/metadata.yaml``.
 
-Step 6: Apply the metadata.yaml file to another instance of GraphQL engine
---------------------------------------------------------------------------
+Step 6: Apply the metadata to another instance of GraphQL engine
+----------------------------------------------------------------
 
-.. note:: TODO
+- Edit ``config.yaml`` and change the endpoint to another instance, say ``https://my-another-grapqhl.herokuapp.com``
 
-   Shahidh/Arvi please fill this
+  .. code-block:: yaml
 
-Step 7: Refer to the ``hasura metadata`` CLI reference
-------------------------------------------------------
+     # config.yaml
+     endpoint: https://my-another-grapqhl.herokuapp.com
 
-To clear, export, apply metadata refer to
+- Apply metadata present in the ``migrations/metadata.yaml`` on this new instance:
 
-.. note:: TODO
+  .. code-block:: bash
 
-   Shahidh/Arvi please fill this
+     hasura metadata apply
+
+Step 7: Other metadata commands 
+-------------------------------
+
+To clear, export, apply metadata refer to :ref:`hasura metadata <hasura_metadata>` command.
