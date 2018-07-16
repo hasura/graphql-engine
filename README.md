@@ -89,6 +89,6 @@ Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
 ## License
 
-GraphQL Engine is available under the [GNU Affero General Public License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0), the same license as [MongoDB](https://www.mongodb.com/community/licensing). [Read more](https://gist.github.com/hasura-bot/9c36a0201a7563f7762b265a12b044d5).
+GraphQL Engine is available under the [GNU Affero General Public License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0), the same license as [MongoDB](https://www.mongodb.com/community/licensing). We have written more about what you can and cannot do under AGPL [here](https://gist.github.com/hasura-bot/9c36a0201a7563f7762b265a12b044d5).
 
-Commercial licenses are available on request. Please feel free to contact us at build@hasura.io or on our [website chat](https://hasura.io).
+**Commercial licenses are available on request**. Please feel free to contact us at build@hasura.io or on our [website chat](https://hasura.io).
