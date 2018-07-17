@@ -18,7 +18,7 @@ For ``graphql-engine`` command these are the flags available
                            <postgres/postgresql>://<user>:<password>@<host>:<port>/<db-name>
                            Example: postgres://admin:mypass@mydomain.com:5432/mydb
 
-  Or either you can specifiy following options
+  Or either you can specify following options
 
       --host               Postgres server host
   -p, --port               Postgres server port
@@ -63,7 +63,7 @@ For example:
    HASURA_GRAPHQL_DATABASE_URL=postgres://user:pass@host:5432/dbname graphql-engine serve
 
 
-There are environment variables which are available:
+These are the environment variables which are available:
 
 .. code-block:: none
 
