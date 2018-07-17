@@ -25,7 +25,12 @@ class GraphiQLWrapper extends Component {
   render() {
     const styles = require('../Common/Common.scss');
     const graphQLFetcher = graphQLParams => {
-      return graphQLFetcherFinal(graphQLParams, this.props.webSocketClient);
+      return graphQLFetcherFinal(
+        graphQLParams,
+        this.props.webSocketClient,
+        this.props.data.url,
+        this.props.data.headers
+      );
     };
 
     // let content = "fetching schema";

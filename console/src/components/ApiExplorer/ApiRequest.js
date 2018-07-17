@@ -33,7 +33,6 @@ class ApiRequest extends Component {
         window.localStorage.removeItem('graphiql:query');
       }
     }
-    this.props.dispatch(addRequestHeader('x-hasura-role', 'user'));
   }
 
   onGenerateApiCodeClicked = () => {

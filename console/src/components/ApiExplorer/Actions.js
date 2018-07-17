@@ -181,16 +181,41 @@ const createWsClient = () => {
   };
 };
 
-const graphQLFetcherFinal = (graphQLParams, client) => {
+const graphqlSubscriber = (graphQLParams, client) => {
   if (!client) {
     createWsClient();
   }
+
   const link = new WebSocketLink(client);
   const fetcher = operation => {
     operation.query = parse(operation.query);
     return execute(link, operation);
   };
   return fetcher(graphQLParams);
+};
+
+const isSubscription = graphQlParams => {
+  const queryDoc = parse(graphQlParams.query);
+  for (const definition of queryDoc.definitions) {
+    if (definition.kind === 'OperationDefinition') {
+      const operation = definition.operation;
+      if (operation === 'subscription') {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+const graphQLFetcherFinal = (graphQLParams, client, url, headers) => {
+  if (isSubscription(graphQLParams)) {
+    return graphqlSubscriber(graphQLParams, client);
+  }
+  return fetch(url, {
+    method: 'POST',
+    headers: getHeadersAsJSON(headers),
+    body: JSON.stringify(graphQLParams),
+  }).then(response => response.json());
 };
 
 const changeRequestHeader = (index, key, newValue, isDisabled) => {
