@@ -1,11 +1,6 @@
 Getting started
 ===============
 
-.. .. admonition:: What is Hasura GraphQL engine?
-..  
-..   Watch this `4 minute video <https://www.youtube.com/watch?time_continue=2&v=oFRwAFWXHuE>`_ to know more. If you
-..   have any queries kindly ping us on chat.
-
 To use the Hasura GraphQL engine, you need to:
 
 #. Run the Hasura GraphQL engine with access to a Postgres database
