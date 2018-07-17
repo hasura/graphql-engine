@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"path/filepath"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -38,6 +37,12 @@ func MetadataAPI(c *gin.Context) {
 		return
 	}
 	logger := loggerPtr.(*logrus.Logger)
+
+	metadataFilePtr, ok := c.Get("metadataFile")
+	if !ok {
+		return
+	}
+	metadataFile := metadataFilePtr.(string)
 
 	// Create new migrate
 	t, err := migrate.New(sourceURL.String(), databaseURL.String(), false, logger)
@@ -84,7 +89,7 @@ func MetadataAPI(c *gin.Context) {
 				return
 			}
 
-			err = ioutil.WriteFile(filepath.Join(sourceURL.Path, "../metadata.yaml"), data, 0644)
+			err = ioutil.WriteFile(metadataFile, data, 0644)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 				return
@@ -138,7 +143,7 @@ func MetadataAPI(c *gin.Context) {
 			return
 		}
 
-		err = ioutil.WriteFile(filepath.Join(sourceURL.Path, "../metadata.yaml"), data, 0644)
+		err = ioutil.WriteFile(metadataFile, data, 0644)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return

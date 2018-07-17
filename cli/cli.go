@@ -181,7 +181,7 @@ func (ec *ExecutionContext) Validate() error {
 	// set names of files and directories
 	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, "migrations")
 	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
-	ec.MetadataFile = filepath.Join(ec.ExecutionDirectory, "metadata.yaml")
+	ec.MetadataFile = filepath.Join(ec.MigrationDir, "metadata.yaml")
 
 	// read config and parse the values into Config
 	err = ec.readConfig()

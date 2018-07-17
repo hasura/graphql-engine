@@ -1,9 +1,9 @@
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE LambdaCase           #-}
-{-# LANGUAGE MultiWayIf           #-}
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE MultiWayIf            #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
 
 module Hasura.RQL.GBoolExp where
 
@@ -39,6 +39,9 @@ data AnnValOpExpG a
 
   | ASIMILAR !a -- similar, regex
   | ANSIMILAR !a-- not similar, regex
+
+  | ANISNULL -- IS NULL
+  | ANISNOTNULL -- IS NOT NULL
 
   deriving (Eq, Show)
 
@@ -445,6 +448,8 @@ mkBoolExpBuilder rhsBldr lhs = \case
   ANILIKE val   -> mkSimpleBoolExpBuilder (S.BECompare S.SNILIKE) val
   ASIMILAR val  -> mkSimpleBoolExpBuilder (S.BECompare S.SSIMILAR) val
   ANSIMILAR val -> mkSimpleBoolExpBuilder (S.BECompare S.SNSIMILAR) val
+  ANISNULL      -> return $ S.BENull lhs
+  ANISNOTNULL   -> return $ S.BENotNull lhs
   where
     mkSimpleBoolExpBuilder beF pgColVal =
       beF lhs <$> rhsBldr pgColVal

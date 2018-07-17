@@ -85,7 +85,7 @@ func (o *consoleOptions) run() error {
 		r,
 	}
 
-	router.setRoutes(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.MigrationDir, o.EC.Logger)
+	router.setRoutes(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger)
 
 	if o.EC.Version == nil {
 		return errors.New("cannot validate version, object is nil")
@@ -153,7 +153,7 @@ type consoleRouter struct {
 	*gin.Engine
 }
 
-func (router *consoleRouter) setRoutes(nurl *url.URL, accessKey, migrationDir string, logger *logrus.Logger) {
+func (router *consoleRouter) setRoutes(nurl *url.URL, accessKey, migrationDir, metadataFile string, logger *logrus.Logger) {
 	apis := router.Group("/apis")
 	{
 		apis.Use(setLogger(logger))
@@ -171,6 +171,7 @@ func (router *consoleRouter) setRoutes(nurl *url.URL, accessKey, migrationDir st
 		// Migrate api endpoints and middleware
 		metadataAPIs := apis.Group("/metadata")
 		{
+			metadataAPIs.Use(setMetadataFile(metadataFile))
 			metadataAPIs.Any("", api.MetadataAPI)
 		}
 	}
@@ -189,6 +190,13 @@ func setFilePath(dir string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		host := getFilePath(dir)
 		c.Set("filedir", host)
+		c.Next()
+	}
+}
+
+func setMetadataFile(file string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("metadataFile", file)
 		c.Next()
 	}
 }

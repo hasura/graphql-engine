@@ -782,6 +782,7 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 // to stop execution because it might have received a stop signal on the
 // GracefulStop channel.
 func (m *Migrate) runMigrations(ret <-chan interface{}) error {
+	var lastInsertVersion int64
 	for r := range ret {
 		if m.stop() {
 			return nil
@@ -799,14 +800,18 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 					return err
 				}
 
-				if int64(migr.Version) == migr.TargetVersion {
-					// Insert Version number into the table
-					if err := m.databaseDrv.InsertVersion(int64(migr.Version)); err != nil {
-						return err
+				version := int64(migr.Version)
+				if version == migr.TargetVersion {
+					if version != lastInsertVersion {
+						// Insert Version number into the table
+						if err := m.databaseDrv.InsertVersion(version); err != nil {
+							return err
+						}
+						lastInsertVersion = version
 					}
 				} else {
 					// Delete Version number from the table
-					if err := m.databaseDrv.RemoveVersion(int64(migr.Version)); err != nil {
+					if err := m.databaseDrv.RemoveVersion(version); err != nil {
 						return err
 					}
 				}
