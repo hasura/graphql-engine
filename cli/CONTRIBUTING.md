@@ -22,7 +22,7 @@ follow the instructions below to make sure the import paths are correct:
 - `make deps`
 - Work on the feature/fix
 - If you modify files in `assets/`, run `make assets`
-- Add tests and ensure all tests are passing (`make test`)
+- Add tests and ensure all tests are passing (check [Tests](#tests) section below)
 - Commit, push and submit PR
 
 ## Development workflow
@@ -50,7 +50,7 @@ When you're adding a new feature, it is encouraged to add integration tests (uni
 The tests expect a GraphQL Engine server instance to be running. You can point the tests to any GraphQL Engine server but please note that **the database should be empty**. The easiest way to do this is to run an Postgres and GraphQL Engine using [Docker Compose](https://github.com/hasura/graphql-engine-install-manifests). Once the server is running, you can run the tests by executing the make command:
 
 ```bash
-HASURA_GRAPHQL_TEST_ENDPOINT=http://localhost:8080 make test
+HASURA_GRAPHQL_TEST_ENDPOINT=http://localhost:8080 VERSION=dev make test
 ```
 
 ## Builds
