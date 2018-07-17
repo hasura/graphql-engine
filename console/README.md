@@ -14,6 +14,7 @@ ACCESS_KEY=abcd
 CONSOLE_MODE=cli
 DEV_DATA_API_URL=http://localhost:9000
 URL_PREFIX=/
+DISABLE_USAGE_REPORTING=false
 ```
 
 **Note**

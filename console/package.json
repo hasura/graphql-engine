@@ -2,7 +2,7 @@
   "name": "hasura-console",
   "description": "Console for Hasura GraphQL Engine",
   "author": "Hasura (https://github.com/hasura/graphql-engine)",
-  "license": "MIT",
+  "license": "AGPL-3.0",
   "version": "0.1.0",
   "repository": {
     "type": "git",
@@ -60,6 +60,7 @@
     "hoist-non-react-statics": "^1.0.3",
     "invariant": "^2.2.0",
     "isomorphic-fetch": "^2.2.1",
+    "jshashes": "^1.0.7",
     "less": "^2.7.1",
     "lru-memoize": "^1.0.0",
     "map-props": "^1.0.0",
