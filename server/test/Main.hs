@@ -11,22 +11,22 @@ import           System.Exit                (exitFailure)
 import           Test.Hspec.Core.Runner
 import           Test.Hspec.Formatters
 import           Test.Hspec.Wai
-import           Web.Spock.Core             (spockAsApp, spockT)
 
 import qualified Data.Aeson                 as J
 import qualified Data.ByteString.Lazy.Char8 as BLC
 
-import           Hasura.Prelude
-import           Hasura.Server.App          (AuthMode (..), RavenLogger, app,
-                                             ravenLogGen)
-import           Hasura.Server.Init
-import           Hasura.Server.Logging      (withStdoutLogger)
-import           Ops                        (initCatalogSafe)
-import           Spec                       (mkSpecs)
-
 import qualified Database.PG.Query          as Q
+import           Hasura.Prelude
+import           Hasura.Server.App          (RavenLogger, mkWaiApp, ravenLogGen)
+import           Hasura.Server.Auth         (AuthMode (..))
+import           Hasura.Server.Logging      (withStdoutLogger)
+
+
 import qualified Database.PG.Query          as PGQ
 
+import           Hasura.Server.Init
+import           Ops                        (initCatalogSafe)
+import           Spec                       (mkSpecs)
 
 data ConnectionParams = ConnectionParams RawConnInfo Q.ConnParams
 
@@ -43,7 +43,8 @@ resetStateTx = do
 ravenApp :: RavenLogger -> PGQ.PGPool -> IO Application
 ravenApp rlogger pool = do
   let corsCfg = CorsConfigG "*" True  -- cors is disabled
-  spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
+  -- spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
+  mkWaiApp Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
 
 main :: IO ()
 main = withStdoutLogger ravenLogGen $ \rlogger -> do

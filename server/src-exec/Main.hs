@@ -6,10 +6,10 @@ module Main where
 import           Ops
 
 import           Data.Time.Clock            (getCurrentTime)
+import qualified Network.Wai.Handler.Warp   as Warp
 import           Options.Applicative
 import           System.Environment         (lookupEnv)
 import           System.Exit                (exitFailure)
-import           Web.Spock.Core             (runSpockNoBanner, spockT)
 
 import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Char8      as BC
@@ -20,7 +20,8 @@ import qualified Data.Yaml                  as Y
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
-import           Hasura.Server.App          (AuthMode (..), app, ravenLogGen)
+import           Hasura.Server.App          (mkWaiApp, ravenLogGen)
+import           Hasura.Server.Auth         (AuthMode (..))
 import           Hasura.Server.Init
 import           Hasura.Server.Logging      (withStdoutLogger)
 
@@ -117,9 +118,11 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
       initialise ci
       migrate ci
       pool <- Q.initPGPool ci cp
-      runSpockNoBanner port $ do
-        putStrLn $ "server: running on port " ++ show port
-        spockT id $ app isoL mRootDir rlogger pool am finalCorsCfg enableConsole
+      putStrLn $ "server: running on port " ++ show port
+      app <- mkWaiApp isoL mRootDir rlogger pool am finalCorsCfg enableConsole
+      let warpSettings = Warp.setPort port Warp.defaultSettings
+                         -- Warp.setHost "*" Warp.defaultSettings
+      Warp.runSettings warpSettings app
     ROExport -> do
       res <- runTx ci fetchMetadata
       either ((>> exitFailure) . printJSON) printJSON res
