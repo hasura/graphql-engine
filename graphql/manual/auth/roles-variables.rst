@@ -68,7 +68,7 @@ Examples:
 
           {
             "user_id": {
-              "$eq": "X-Hasura-User-Id"
+              "_eq": "X-Hasura-User-Id"
             }
           }
 
@@ -80,7 +80,7 @@ Examples:
 
           {
             "project_id": {
-              "$eq": "X-Hasura-Project-Id"
+              "_eq": "X-Hasura-Project-Id"
             }
           }
 

@@ -76,7 +76,7 @@ Let's add a **select** permission for the **user** role on the author table:
 
           {
             "id": {
-              "$eq": "X-Hasura-User-Id"
+              "_eq": "X-Hasura-User-Id"
             }
           }
 
@@ -87,31 +87,31 @@ Now, let's make the same query as above but include the 2 dynamic authorization 
 
 You can notice above, how the same query now only includes the right slice of data.
 
-.. code-block:: none
-
-  #Query with X-Hasura-User-Id: 3
-  query {
+.. graphiql::
+  :view_only: true
+  :query:
+    # Query with X-Hasura-User-Id: 3
+    query {
       author {
         id
         name
       }
-  }
-
-
-  # Response
-  "data": {
-    "author": [
-      {
-        "id": 3,
-        "name": "raj"
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 3,
+            "name": "Sidney"
+          }
+        ]
       }
-    ]
-  }
-
+    }
 
 Next, learn more about how permissions work
 -------------------------------------------
 
-Next: :doc:`Roles and dynamic variables<roles-variables>`
+Next: :doc:`Roles and dynamic variables <roles-variables>`
 
 
