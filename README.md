@@ -1,6 +1,10 @@
 ### This is the documentation for the Hasura GraphQL engine
 
-**To run docs locally and to contribute:**
+This documentation project is built using [Sphinx](http://www.sphinx-doc.org/en/master/).
+
+Please raise PRs to contribute.
+
+**To run docs locally:**
 
 * Make sure you have `pip3` installed on your system
 
@@ -27,9 +31,7 @@
 
         ```
         cd _build/html && python3 -m http.server 8080
-        ```
-
-
-* To deploy docs, follow [this](https://github.com/hasura/docs_graphql/wiki/How-to-deploy-docs)
-
-* To manually update docs search index, follow [this](https://github.com/hasura/docs_graphql/wiki/How-to-update-algolia-index)
+        ```        
+        
+* **Note:** The search is powered by [Algolia](https://www.algolia.com/) and is updated on every deployment. Your local 
+  changes will not reflect in search results.        
