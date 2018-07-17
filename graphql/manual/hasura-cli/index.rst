@@ -27,7 +27,6 @@ Commands
    :titlesonly:
 
    install-hasura-cli
-   Troubleshooting <troubleshooting>
    hasura <hasura>
    hasura completion <hasura_completion>
    hasura console <hasura_console>
