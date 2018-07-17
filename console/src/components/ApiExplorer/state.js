@@ -62,7 +62,7 @@ const defaultState = {
   },
   explorerData,
   authApiExpanded: 'Username-password Login',
-  webSocketClient: null,
+  typingHeader: false,
 };
 
 export default defaultState;

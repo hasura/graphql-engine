@@ -66,7 +66,7 @@ class ApiExplorer extends Component {
         route={this.props.route}
         dataHeaders={this.props.dataHeaders}
         numberOfTables={this.props.tables.length}
-        webSocketClient={this.props.webSocketClient}
+        typingHeader={this.props.typingHeader}
       />
     );
 
@@ -85,7 +85,7 @@ ApiExplorer.propTypes = {
   dispatch: PropTypes.func.isRequired,
   route: PropTypes.object.isRequired,
   tables: PropTypes.array.isRequierd,
-  webSocketClient: PropTypes.object.isRequired,
+  typingHeader: PropTypes.bool.isRequired,
 };
 
 export default ApiExplorer;

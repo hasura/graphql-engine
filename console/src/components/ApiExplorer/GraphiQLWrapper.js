@@ -2,24 +2,24 @@ import React, { Component } from 'react';
 import GraphiQL from 'graphiql';
 import PropTypes from 'prop-types';
 import ErrorBoundary from './ErrorBoundary';
-import { graphQLFetcherFinal, createWsClient } from './Actions';
-import Spinner from '../Common/Spinner/Spinner';
+import { graphQLFetcherFinal } from './Actions';
 
 import './GraphiQL.css';
 
 class GraphiQLWrapper extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       schema: null,
       error: false,
       noSchema: false,
       onBoardingEnabled: false,
+      typingHeader: this.props.typingHeader,
     };
   }
 
-  componentWillMount() {
-    this.props.dispatch(createWsClient());
+  shouldComponentUpdate() {
+    return !this.state.typingHeader;
   }
 
   render() {
@@ -27,7 +27,6 @@ class GraphiQLWrapper extends Component {
     const graphQLFetcher = graphQLParams => {
       return graphQLFetcherFinal(
         graphQLParams,
-        this.props.webSocketClient,
         this.props.data.url,
         this.props.data.headers
       );
@@ -37,10 +36,6 @@ class GraphiQLWrapper extends Component {
     let content = (
       <i className={'fa fa-spinner fa-spin ' + styles.graphSpinner} />
     );
-
-    if (!this.props.webSocketClient) {
-      return <Spinner />;
-    }
 
     if (!this.state.error && this.props.numberOfTables !== 0) {
       content = <GraphiQL fetcher={graphQLFetcher} />;
@@ -80,6 +75,7 @@ GraphiQLWrapper.propTypes = {
   dispatch: PropTypes.func.isRequired,
   data: PropTypes.object.isRequired,
   numberOfTables: PropTypes.number.isRequired,
+  typingHeader: PropTypes.bool.isRequired,
 };
 
 export default GraphiQLWrapper;

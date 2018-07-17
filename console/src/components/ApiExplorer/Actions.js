@@ -33,6 +33,9 @@ const UPDATE_FILE_OBJECT = 'ApiExplorer/UPDATE_FILE_OBJECT';
 
 const CREATE_WEBSOCKET_CLIENT = 'ApiExplorer/CREATE_WEBSOCKET_CLIENT';
 
+const TYPING_HEADER_START = 'ApiExplorer/TYPING_HEADER_START';
+const TYPING_HEADER_STOP = 'ApiExplorer/TYPING_HEADER_STOP';
+
 import requestAction from '../Common/makeRequest';
 import Endpoints from 'Endpoints';
 import { getHeadersAsJSON } from './utils';
@@ -106,6 +109,9 @@ const sendExplorerReq = requestType => {
   };
 };
 
+const startTypingHeader = () => ({ type: TYPING_HEADER_START });
+const stopTypingHeader = () => ({ type: TYPING_HEADER_STOP });
+
 const copyCodeToClipboard = isCopying => {
   return {
     type: CODE_GENERATOR_COPY_TO_CLIPBOARD,
@@ -163,30 +169,22 @@ const changeRequestParams = newParams => {
   };
 };
 
-const createWsClient = () => {
-  return (dispatch, getState) => {
-    const existingSocket = getState().apiexplorer.webSocketClient;
-    if (existingSocket) {
-      existingSocket.close();
-    }
-    const { url, headers } = getState().apiexplorer.displayedApi.request;
-    const headersFinal = getHeadersAsJSON(headers);
-    const graphqlUrl = `ws://${url.split('//')[1]}`;
-    const client = new SubscriptionClient(graphqlUrl, {
-      connectionParams: {
+const createWsClient = (url, headers) => {
+  const headersFinal = getHeadersAsJSON(headers);
+  setTimeout(() => null, 500);
+  const graphqlUrl = `ws://${url.split('//')[1]}`;
+  const client = new SubscriptionClient(graphqlUrl, {
+    connectionParams: {
+      headers: {
         ...headersFinal,
       },
-    });
-    dispatch({ type: CREATE_WEBSOCKET_CLIENT, data: client });
-  };
+    },
+  });
+  return client;
 };
 
-const graphqlSubscriber = (graphQLParams, client) => {
-  if (!client) {
-    createWsClient();
-  }
-
-  const link = new WebSocketLink(client);
+const graphqlSubscriber = (graphQLParams, url, headers) => {
+  const link = new WebSocketLink(createWsClient(url, headers));
   const fetcher = operation => {
     operation.query = parse(operation.query);
     return execute(link, operation);
@@ -194,61 +192,47 @@ const graphqlSubscriber = (graphQLParams, client) => {
   return fetcher(graphQLParams);
 };
 
-const isSubscription = graphQlParams => {
-  const queryDoc = parse(graphQlParams.query);
-  for (const definition of queryDoc.definitions) {
-    if (definition.kind === 'OperationDefinition') {
-      const operation = definition.operation;
-      if (operation === 'subscription') {
-        return true;
-      }
-    }
-  }
-  return false;
+// const isSubscription = graphQlParams => {
+//   const queryDoc = parse(graphQlParams.query);
+//   for (const definition of queryDoc.definitions) {
+//     if (definition.kind === 'OperationDefinition') {
+//       const operation = definition.operation;
+//       if (operation === 'subscription') {
+//         return true;
+//       }
+//     }
+//   }
+//   return false;
+// };
+
+const graphQLFetcherFinal = (graphQLParams, url, headers) => {
+  // if (isSubscription(graphQLParams)) {
+  return graphqlSubscriber(graphQLParams, url, headers);
+  // }
+  // return fetch(url, {
+  //   method: 'POST',
+  //   headers: getHeadersAsJSON(headers),
+  //   body: JSON.stringify(graphQLParams),
+  // }).then(response => response.json());
 };
 
-const graphQLFetcherFinal = (graphQLParams, client, url, headers) => {
-  if (isSubscription(graphQLParams)) {
-    return graphqlSubscriber(graphQLParams, client);
-  }
-  return fetch(url, {
-    method: 'POST',
-    headers: getHeadersAsJSON(headers),
-    body: JSON.stringify(graphQLParams),
-  }).then(response => response.json());
-};
+const changeRequestHeader = (index, key, newValue, isDisabled) => ({
+  type: REQUEST_HEADER_CHANGED,
+  data: {
+    index: index,
+    keyName: key,
+    newValue: newValue,
+    isDisabled: isDisabled,
+  },
+});
 
-const changeRequestHeader = (index, key, newValue, isDisabled) => {
-  return (dispatch, getState) => {
-    dispatch({
-      type: REQUEST_HEADER_CHANGED,
-      data: {
-        index: index,
-        keyName: key,
-        newValue: newValue,
-        isDisabled: isDisabled,
-      },
-    });
-    if (getState().apiexplorer.webSocketClient) {
-      dispatch(createWsClient());
-    }
-  };
-};
-
-const addRequestHeader = (key, value) => {
-  return (dispatch, getState) => {
-    dispatch({
-      type: REQUEST_HEADER_ADDED,
-      data: {
-        key: key,
-        value: value,
-      },
-    });
-    if (getState().apiexplorer.webSocketClient) {
-      dispatch(createWsClient());
-    }
-  };
-};
+const addRequestHeader = (key, value) => ({
+  type: REQUEST_HEADER_ADDED,
+  data: {
+    key: key,
+    value: value,
+  },
+});
 
 const removeRequestHeader = index => {
   return {
@@ -592,6 +576,16 @@ const apiExplorerReducer = (state = defaultState, action) => {
         ...state,
         webSocketClient: action.data,
       };
+    case TYPING_HEADER_STOP:
+      return {
+        ...state,
+        typingHeader: false,
+      };
+    case TYPING_HEADER_START:
+      return {
+        ...state,
+        typingHeader: true,
+      };
     default:
       return state;
   }
@@ -619,4 +613,6 @@ export {
   editGeneratedJson,
   graphQLFetcherFinal,
   createWsClient,
+  startTypingHeader,
+  stopTypingHeader,
 };
