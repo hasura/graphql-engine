@@ -510,9 +510,9 @@ mkConflictActionTy = EnumTyInfo (Just desc) ty $ mapFromL _eviVal
   where
     desc = G.Description "conflict action"
     ty = G.NamedType "conflict_action"
-    enumValIgnore = EnumValInfo (Just "conflict action is ignore")
+    enumValIgnore = EnumValInfo (Just "ignore the insert on this row")
                     (G.EnumValue "ignore") False
-    enumValUpdate = EnumValInfo (Just "conflict action update")
+    enumValUpdate = EnumValInfo (Just "update the row with the given values")
                     (G.EnumValue "update") False
 
 mkOrdByTy :: QualifiedTable -> G.NamedType
