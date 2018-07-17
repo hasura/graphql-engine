@@ -96,10 +96,11 @@ accessKeyHeader = "x-hasura-access-key"
 
 getUserInfo
   :: (MonadIO m, MonadError QErr m)
-  => [N.Header]
+  => H.Manager
+  -> [N.Header]
   -> AuthMode
   -> m UserInfo
-getUserInfo rawHeaders = \case
+getUserInfo manager rawHeaders = \case
 
   AMNoAuth -> return userInfoFromHeaders
 
@@ -110,7 +111,7 @@ getUserInfo rawHeaders = \case
 
   AMAccessKeyAndHook accKey hook ->
     maybe
-      (userInfoFromWebhook undefined hook rawHeaders)
+      (userInfoFromWebhook manager hook rawHeaders)
       (userInfoWhenAccessKey accKey) $
       getHeader accessKeyHeader
 

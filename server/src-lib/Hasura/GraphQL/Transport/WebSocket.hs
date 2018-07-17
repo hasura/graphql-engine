@@ -16,6 +16,7 @@ import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified ListT
+import qualified Network.HTTP.Client                         as H
 import qualified Network.HTTP.Types.Status                   as H
 import qualified Network.WebSockets                          as WS
 import qualified STMContainers.Map                           as STMMap
@@ -71,6 +72,7 @@ data WSServerEnv
   , _wseRunTx    :: !TxRunner
   , _wseLiveQMap :: !LiveQueryMap
   , _wseGCtxMap  :: !(IORef (SchemaCache, GCtxMap))
+  , _wseHManager :: !H.Manager
   }
 
 onConn :: WS.OnConnH WSConnData
@@ -132,7 +134,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndSend $ do
       sendMsg wsConn $ SMComplete $ CompletionMsg opId
 
   where
-    (WSServerEnv _ runTx lqMap gCtxMapRef) = serverEnv
+    (WSServerEnv _ runTx lqMap gCtxMapRef _) = serverEnv
     wsId = WS.getWSId wsConn
     (WSConnData userInfoR opMap) = WS.getData wsConn
 
@@ -158,7 +160,8 @@ onMessage authMode serverEnv wsConn msgRaw =
     Left e    -> sendMsg wsConn $ SMConnErr $
                  ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
     Right msg -> case msg of
-      CMConnInit params -> onConnInit wsConn authMode params
+      CMConnInit params -> onConnInit (_wseHManager serverEnv)
+                           wsConn authMode params
       CMStart startMsg  -> onStart serverEnv wsConn startMsg
       CMStop stopMsg    -> onStop serverEnv wsConn stopMsg
       CMConnTerm        -> WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
@@ -176,9 +179,11 @@ onStop serverEnv wsConn (StopMsg opId) = do
     wsId  = WS.getWSId wsConn
     opMap = _wscOpMap $ WS.getData wsConn
 
-onConnInit :: (MonadIO m) => WSConn -> AuthMode -> ConnParams -> m ()
-onConnInit wsConn authMode connParams = do
-  res <- runExceptT $ getUserInfo headers authMode
+onConnInit
+  :: (MonadIO m)
+  => H.Manager -> WSConn -> AuthMode -> ConnParams -> m ()
+onConnInit manager wsConn authMode connParams = do
+  res <- runExceptT $ getUserInfo manager headers authMode
   case res of
     Left e  ->
       liftIO $ WS.closeConn wsConn $
@@ -207,11 +212,12 @@ onClose lqMap _ wsConn = do
     wsId  = WS.getWSId wsConn
     opMap = _wscOpMap $ WS.getData wsConn
 
-createWSServerEnv :: IORef (SchemaCache, GCtxMap) -> TxRunner -> IO WSServerEnv
-createWSServerEnv gCtxMapRef runTx = do
+createWSServerEnv :: H.Manager -> IORef (SchemaCache, GCtxMap)
+                  -> TxRunner -> IO WSServerEnv
+createWSServerEnv httpManager gCtxMapRef runTx = do
   (wsServer, lqMap) <-
     STM.atomically $ (,) <$> WS.createWSServer <*> LQ.newLiveQueryMap
-  return $ WSServerEnv wsServer runTx lqMap gCtxMapRef
+  return $ WSServerEnv wsServer runTx lqMap gCtxMapRef httpManager
 
 createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp
 createWSServerApp authMode serverEnv =

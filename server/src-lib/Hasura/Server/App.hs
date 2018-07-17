@@ -27,6 +27,8 @@ import qualified Text.Mustache.Compile                  as M
 
 import           Web.Spock.Core
 
+import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Client.TLS                as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wai.Middleware.Static          as MS
 
@@ -96,6 +98,7 @@ data ServerCtx
   , scCacheRef  :: IORef (SchemaCache, GS.GCtxMap)
   , scCacheLock :: MVar ()
   , scAuthMode  :: AuthMode
+  , scManager   :: HTTP.Manager
   }
 
 data HandlerCtx
@@ -160,8 +163,9 @@ mkSpockAction qErrEncoder serverCtx handler = do
   reqBody <- liftIO $ strictRequestBody req
   let headers  = requestHeaders req
       authMode = scAuthMode serverCtx
+      manager = scManager serverCtx
 
-  userInfoE <- liftIO $ runExceptT $ getUserInfo headers authMode
+  userInfoE <- liftIO $ runExceptT $ getUserInfo manager headers authMode
   userInfo <- either (logAndThrow False) return userInfoE
 
   let handlerState = HandlerCtx serverCtx reqBody userInfo
@@ -300,17 +304,19 @@ mkWaiApp isoLevel mRootDir logger pool mode corsCfg enableConsole = do
         (,) sc <$> GS.mkGCtxMap (scTables sc)
       either initErrExit return pgResp >>= newIORef
 
+    httpManager <- HTTP.newManager HTTP.tlsManagerSettings
+
     cacheLock <- newMVar ()
 
-    let serverCtx = ServerCtx isoLevel pool logger cacheRef cacheLock mode
+    let serverCtx = ServerCtx isoLevel pool logger cacheRef
+                    cacheLock mode httpManager
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp mRootDir corsCfg serverCtx enableConsole
 
-
     let runTx tx = runExceptT $ Q.runTx pool (isoLevel, Nothing) tx
 
-    wsServerEnv <- WS.createWSServerEnv cacheRef runTx
+    wsServerEnv <- WS.createWSServerEnv httpManager cacheRef runTx
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return $ WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
 
