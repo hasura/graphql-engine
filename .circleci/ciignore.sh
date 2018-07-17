@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -evo pipefail
+set -eo pipefail
 ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
 echo $ROOT
 
@@ -17,7 +17,6 @@ mapfile -t blacklist < "$ROOT/.ciignore"
 
 for i in "${blacklist[@]}"
 do
-    echo "removing ** $i **"
 	  # Remove the current pattern from the list of changes
 	  changes=( ${changes[@]/$i/} )
 
