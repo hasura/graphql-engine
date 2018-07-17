@@ -64,12 +64,18 @@ type RavenLogger = ServerLogger (BL.ByteString, Either QErr BL.ByteString)
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
 
-mkConsoleHTML :: IO T.Text
-mkConsoleHTML =
+boolToTxt :: Bool -> T.Text
+boolToTxt True = "true"
+boolToTxt False = "false"
+
+mkConsoleHTML :: Bool -> IO T.Text
+mkConsoleHTML disableAnalytics =
   bool (initErrExit errMsg) (return res) (null errs)
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
-                   object ["version" .= consoleVersion]
+                   object [ "version" .= consoleVersion
+                          , "disableAnalytics" .= boolToTxt disableAnalytics
+                          ]
     errMsg = "Fatal Error : console template rendering failed"
              ++ show errs
 
@@ -389,8 +395,9 @@ app
   -> AuthMode
   -> CorsConfig
   -> Bool
+  -> Bool
   -> SpockT IO ()
-app isoLevel mRootDir logger pool mode corsCfg enableConsole = do
+app isoLevel mRootDir logger pool mode corsCfg enableConsole disableAnalytics = do
     cacheRef <- lift $ do
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
@@ -410,7 +417,7 @@ app isoLevel mRootDir logger pool mode corsCfg enableConsole = do
 
     -- API Console and Root Dir
     if enableConsole then do
-      consoleHTML <- lift mkConsoleHTML
+      consoleHTML <- lift $ mkConsoleHTML disableAnalytics
       serveApiConsole consoleHTML
     else maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
 
