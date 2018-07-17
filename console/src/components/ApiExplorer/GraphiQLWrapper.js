@@ -23,6 +23,7 @@ class GraphiQLWrapper extends Component {
   }
 
   render() {
+    console.log(this.props.numberOfTables);
     const styles = require('../Common/Common.scss');
 
     const graphqlUrl = this.props.data.url;
@@ -40,15 +41,9 @@ class GraphiQLWrapper extends Component {
       <i className={'fa fa-spinner fa-spin ' + styles.graphSpinner} />
     );
 
-    if (!this.state.error && !this.state.noSchema) {
-      content = (
-        <GraphiQL
-          fetcher={graphQLFetcher}
-          defaultQuery={''}
-          schema={undefined}
-        />
-      );
-    } else if (this.state.noSchema) {
+    if (!this.state.error && this.props.numberOfTables !== 0) {
+      content = <GraphiQL fetcher={graphQLFetcher} />;
+    } else if (this.props.numberOfTables === 0) {
       content = (
         <GraphiQL
           fetcher={graphQLFetcher}
@@ -83,6 +78,7 @@ class GraphiQLWrapper extends Component {
 GraphiQLWrapper.propTypes = {
   dispatch: PropTypes.func.isRequired,
   data: PropTypes.object.isRequired,
+  numberOfTables: PropTypes.number.isRequired,
 };
 
 export default GraphiQLWrapper;

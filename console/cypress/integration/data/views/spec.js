@@ -370,7 +370,7 @@ export const passVAddManualObjRel = () => {
   cy.wait(2000);
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.wait(2000);
-  cy.get(getElementFromAlias('data-rel-type')).select('object_rel');
+  cy.get(getElementFromAlias('rel-type')).select('object_rel');
   cy.get("input[placeholder='Enter relationship name']").type('author');
   cy.get('select')
     .find('option')

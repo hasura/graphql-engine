@@ -100,22 +100,36 @@ buildConflictClause tableInfo (OnConflict mTCol mTCons act) = case (mTCol, mTCon
   (Just col, Nothing, CAIgnore)   -> do
     validateCols col
     return $ CP1DoNothing $ Just $ Column $ getPGCols col
-  (Nothing, Just cons, CAIgnore)  -> return $ CP1DoNothing $ Just $ Constraint cons
+  (Nothing, Just cons, CAIgnore)  -> do
+    validateConstraint cons
+    return $ CP1DoNothing $ Just $ Constraint cons
   (Nothing, Nothing, CAUpdate)    -> throw400 UnexpectedPayload
     "Expecting 'constraint' or 'constraint_on' when the 'action' is 'update'"
   (Just col, Nothing, CAUpdate)   -> do
     validateCols col
     return $ CP1Update (Column $ getPGCols col) columns
-  (Nothing, Just cons, CAUpdate)  -> return $ CP1Update (Constraint cons) columns
+  (Nothing, Just cons, CAUpdate)  -> do
+    validateConstraint cons
+    return $ CP1Update (Constraint cons) columns
   (Just _, Just _, _)             -> throw400 UnexpectedPayload
     "'constraint' and 'constraint_on' cannot be set at a time"
   where
     fieldInfoMap = tiFieldInfoMap tableInfo
     columns = map pgiName $ getCols fieldInfoMap
+
     validateCols c = do
       let targetcols = getPGCols c
       void $ withPathK "constraint_on" $ indexedForM targetcols $
         \pgCol -> askPGType fieldInfoMap pgCol ""
+
+    validateConstraint c = do
+      let tableConsNames = map tcName $ tiConstraints tableInfo
+      withPathK "constraint" $
+       unless (c `elem` tableConsNames) $
+       throw400 Unexpected $ "constraint " <> getConstraintTxt c
+                   <<> " for table " <> tiName tableInfo
+                   <<> " does not exist"
+
 
 convInsertQuery
   :: (P1C m)
