@@ -18,6 +18,7 @@ import           Data.Maybe             as M (catMaybes, fromMaybe, isJust,
                                               maybeToList)
 import           Data.Ord               as M (comparing)
 import           Data.Semigroup         as M (Semigroup (..))
+import           Data.String            as M (IsString)
 import           Data.Text              as M (Text)
 import           GHC.Generics           as M (Generic)
 import           Prelude                as M hiding (fail, init, lookup)

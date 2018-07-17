@@ -5,6 +5,7 @@
 
 module Hasura.GraphQL.Transport.WebSocket.Protocol
   ( OperationId(..)
+  , ConnParams(..)
   , StartMsg(..)
   , StopMsg(..)
   , ClientMsg(..)
@@ -20,6 +21,7 @@ import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
 import qualified Data.ByteString.Lazy                   as BL
+import qualified Data.HashMap.Strict                    as Map
 
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
@@ -42,17 +44,23 @@ data StopMsg
 $(J.deriveFromJSON (J.aesonDrop 3 J.snakeCase) ''StopMsg)
 
 data ClientMsg
-  = CMConnInit
+  = CMConnInit !ConnParams
   | CMStart !StartMsg
   | CMStop !StopMsg
   | CMConnTerm
   deriving (Show, Eq)
 
+data ConnParams
+  = ConnParams
+  { _cpHeaders :: Maybe (Map.HashMap Text Text)
+  } deriving (Show, Eq)
+$(J.deriveFromJSON (J.aesonDrop 3 J.snakeCase) ''ConnParams)
+
 instance J.FromJSON ClientMsg where
   parseJSON = J.withObject "ClientMessage" $ \obj -> do
     t <- obj J..: "type"
     case t of
-      "connection_init" -> return CMConnInit
+      "connection_init" -> CMConnInit <$> obj J..: "payload"
       "start" -> CMStart <$> J.parseJSON (J.Object obj)
       "stop" -> CMStop <$> J.parseJSON (J.Object obj)
       "connection_terminate" -> return CMConnTerm
@@ -78,7 +86,7 @@ newtype CompletionMsg
 
 newtype ConnErrMsg
   = ConnErrMsg { unConnErrMsg :: Text }
-  deriving (Show, Eq, J.ToJSON, J.FromJSON)
+  deriving (Show, Eq, J.ToJSON, J.FromJSON, IsString)
 
 data ServerMsg
   = SMConnAck

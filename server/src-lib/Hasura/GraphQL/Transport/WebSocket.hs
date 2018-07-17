@@ -10,15 +10,20 @@ import qualified Control.Concurrent.Async                    as A
 import qualified Control.Concurrent.STM                      as STM
 import qualified Data.Aeson                                  as J
 import qualified Data.ByteString.Lazy                        as BL
+import qualified Data.CaseInsensitive                        as CI
+import qualified Data.HashMap.Strict                         as Map
 import qualified Data.Text                                   as T
+import qualified Data.Text.Encoding                          as TE
 import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified ListT
 import qualified Network.HTTP.Types.Status                   as H
 import qualified Network.WebSockets                          as WS
 import qualified STMContainers.Map                           as STMMap
 
-import           Data.IORef                                  (IORef, readIORef)
-import           Control.Concurrent       (threadDelay)
+import           Control.Concurrent                          (threadDelay)
+import           Data.IORef                                  (IORef, newIORef,
+                                                              readIORef,
+                                                              writeIORef)
 
 import           Hasura.GraphQL.Resolve                      (resolveSelSet)
 import           Hasura.GraphQL.Resolve.Context              (RespTx)
@@ -43,9 +48,8 @@ type OperationMap
 
 data WSConnData
   = WSConnData
-  -- the role and headers are read on
-  -- connection initialisation
-  { _wscUser  :: !UserInfo
+  -- the role and headers are set only on connection_init message
+  { _wscUser  :: !(IORef (Maybe UserInfo))
   -- we only care about subscriptions,
   -- the other operations (query/mutations)
   -- are not tracked here
@@ -69,20 +73,19 @@ data WSServerEnv
   , _wseGCtxMap  :: !(IORef (SchemaCache, GCtxMap))
   }
 
-onConn :: AuthMode -> WS.OnConnH WSConnData
-onConn authMode wsId requestHead = do
-  res <- runExceptT $ do
-    checkPath
-    getUserInfo (WS.requestHeaders requestHead) authMode
+onConn :: WS.OnConnH WSConnData
+onConn wsId requestHead = do
+  res <- runExceptT checkPath
   either (return . Left . toRejectReq) (fmap Right . onSuccess) res
   where
-    onSuccess userInfo = do
-      connData <- WSConnData userInfo <$> STMMap.newIO
+    keepAliveAction wsConn = forever $ do
+      sendMsg wsConn SMConnKeepAlive
+      threadDelay $ 5 * 1000 * 1000
+
+    onSuccess _ = do
+      connData <- WSConnData <$> newIORef Nothing <*> STMMap.newIO
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
-          keepAliveAction wsConn = forever $ do
-            sendMsg wsConn SMConnKeepAlive
-            threadDelay $ 5 * 1000 * 1000
       return (connData, acceptRequest, Just keepAliveAction)
 
     toRejectReq qErr =
@@ -90,6 +93,7 @@ onConn authMode wsId requestHead = do
         (H.statusCode $ qeStatus qErr)
         (H.statusMessage $ qeStatus qErr) []
         (BL.toStrict $ J.encode $ encodeQErr False qErr)
+
     checkPath =
       when (WS.requestPath requestHead /= "/v1alpha1/graphql") $
       throw404 "only /v1alpha1/graphql is supported on websockets"
@@ -102,6 +106,12 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndSend $ do
   when (isJust opM) $ withExceptT preExecErr $
     throw400 UnexpectedPayload $
     "an operation already exists with this id: " <> unOperationId opId
+
+  userInfoM <- liftIO $ readIORef userInfoR
+  userInfo <- case userInfoM of
+    Just userInfo -> return userInfo
+    Nothing       -> throwError $
+      SMConnErr "start received before the connection is initialised"
 
   -- validate and build tx
   gCtxMap <- fmap snd $ liftIO $ readIORef gCtxMapRef
@@ -124,7 +134,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndSend $ do
   where
     (WSServerEnv _ runTx lqMap gCtxMapRef) = serverEnv
     wsId = WS.getWSId wsConn
-    (WSConnData userInfo opMap) = WS.getData wsConn
+    (WSConnData userInfoR opMap) = WS.getData wsConn
 
     -- on change, send message on the websocket
     liveQOnChange resp = WS.sendMsg wsConn $ encodeServerMsg $ SMData $
@@ -140,17 +150,18 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndSend $ do
       either (sendMsg wsConn) return res
 
 onMessage
-  :: WSServerEnv
+  :: AuthMode
+  -> WSServerEnv
   -> WSConn -> BL.ByteString -> IO ()
-onMessage serverEnv wsConn msgRaw =
+onMessage authMode serverEnv wsConn msgRaw =
   case J.eitherDecode msgRaw of
     Left e    -> sendMsg wsConn $ SMConnErr $
                  ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
     Right msg -> case msg of
-      CMConnInit       -> onConnInit wsConn
-      CMStart startMsg -> onStart serverEnv wsConn startMsg
-      CMStop stopMsg   -> onStop serverEnv wsConn stopMsg
-      CMConnTerm       -> WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
+      CMConnInit params -> onConnInit wsConn authMode params
+      CMStart startMsg  -> onStart serverEnv wsConn startMsg
+      CMStop stopMsg    -> onStop serverEnv wsConn stopMsg
+      CMConnTerm        -> WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
 
 onStop :: WSServerEnv -> WSConn -> StopMsg -> IO ()
 onStop serverEnv wsConn (StopMsg opId) = do
@@ -165,12 +176,23 @@ onStop serverEnv wsConn (StopMsg opId) = do
     wsId  = WS.getWSId wsConn
     opMap = _wscOpMap $ WS.getData wsConn
 
-onConnInit :: (MonadIO m) => WSConn -> m ()
-onConnInit wsConn = do
-  sendMsg wsConn SMConnAck
-  -- TODO: send it periodically? Why doesn't apollo's protocol use
-  -- ping/pong frames of websocket spec?
-  sendMsg wsConn SMConnKeepAlive
+onConnInit :: (MonadIO m) => WSConn -> AuthMode -> ConnParams -> m ()
+onConnInit wsConn authMode connParams = do
+  res <- runExceptT $ getUserInfo headers authMode
+  case res of
+    Left e  ->
+      liftIO $ WS.closeConn wsConn $
+      BL.fromStrict $ TE.encodeUtf8 $ qeError e
+    Right userInfo -> do
+      liftIO $ writeIORef (_wscUser $ WS.getData wsConn) $ Just userInfo
+      sendMsg wsConn SMConnAck
+      -- TODO: send it periodically? Why doesn't apollo's protocol use
+      -- ping/pong frames of websocket spec?
+      sendMsg wsConn SMConnKeepAlive
+  where
+    headers = [ (CI.mk $ TE.encodeUtf8 h, TE.encodeUtf8 v)
+              | (h, v) <- maybe [] Map.toList $ _cpHeaders connParams
+              ]
 
 onClose
   :: LiveQueryMap
@@ -197,6 +219,6 @@ createWSServerApp authMode serverEnv =
   where
     handlers =
       WS.WSHandlers
-      (onConn authMode)
-      (onMessage serverEnv)
+      onConn
+      (onMessage authMode serverEnv)
       (onClose $ _wseLiveQMap serverEnv)
