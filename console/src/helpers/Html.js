@@ -48,7 +48,7 @@ export default class Html extends Component {
                 nodeEnv: '${process.env.NODE_ENV}',
                 devDataApiUrl: '${process.env.DEV_DATA_API_URL}',
                 urlPrefix: '${process.env.URL_PREFIX}',
-                isAnalyticsEnabled: '${process.env.IS_ANALYTICS_ENABLED}',
+                disableUsageReporting: '${process.env.DISABLE_USAGE_REPORTING}',
               };`,
             }}
           />

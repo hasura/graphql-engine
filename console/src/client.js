@@ -54,7 +54,7 @@ function analyticsLogger() {
     // Call the next dispatch method in the middleware chain.
     const returnValue = next(action);
     // check if analytics tracking is enabled
-    if (globals.isAnalyticsEnabled) {
+    if (!globals.disableUsageReporting) {
       const projectName = globals.dataApiUrl;
 
       const projectVersion =
