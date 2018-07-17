@@ -35,9 +35,16 @@ querySpecFiles =
 
 gqlSpecFiles :: [FilePath]
 gqlSpecFiles =
-  [ "insert_mutation_author.yaml"
+  [ "introspection.yaml"
+  , "insert_mutation_author.yaml"
   , "simple_select_query_author.yaml"
   , "insert_mutation_article.yaml"
+  , "insert_mutation_article_on_conflict.yaml"
+  , "insert_mutation_article_on_conflict_ignore.yaml"
+  , "insert_mutation_article_on_conflict_ignore_constraint.yaml"
+  , "insert_mutation_article_on_conflict_error_01.yaml"
+  , "insert_mutation_article_on_conflict_error_02.yaml"
+  , "insert_mutation_article_on_conflict_error_03.yaml"
   , "nested_select_query_article.yaml"
   ]
 
