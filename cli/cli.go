@@ -35,6 +35,9 @@ const (
 	// ENV_ACCESS_KEY is the name of env var that has the access key for GraphQL
 	// Engine endpoint.
 	ENV_ACCESS_KEY = "HASURA_GRAPHQL_ACCESS_KEY"
+	// ENV_DISABLE_USAGE_REPORTING is the name of env var that has to be set to
+	// "true" in order to disable anonymous usage reporting to hasura.io
+	ENV_DISABLE_USAGE_REPORTING = "HASURA_GRAPHQL_DISABLE_USAGE_REPORTING"
 )
 
 // Other constants used in the package
@@ -52,6 +55,7 @@ type HasuraGraphQLConfig struct {
 	// AccessKey (optional) required to query the endpoint
 	AccessKey string `json:"access_key,omitempty"`
 
+	// ParsedEndpoint is the net/url.URL object for the Endpoint
 	ParsedEndpoint *url.URL `json:"-"`
 }
 
@@ -59,7 +63,7 @@ type HasuraGraphQLConfig struct {
 func (hgc *HasuraGraphQLConfig) ParseEndpoint() error {
 	nurl, err := url.Parse(hgc.Endpoint)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "parsing endpoint as a url failed")
 	}
 	hgc.ParsedEndpoint = nurl
 	return nil
@@ -113,6 +117,9 @@ type ExecutionContext struct {
 
 	// LogLevel indicates the logrus default logging level
 	LogLevel string
+	// DisableUsageReporting can be set to disable cli or console from sending
+	// anonymous usage statistics.
+	DisableUsageReporting bool
 }
 
 // Prepare as the name suggests, prepares the ExecutionContext ec by
@@ -174,7 +181,7 @@ func (ec *ExecutionContext) Validate() error {
 	// set names of files and directories
 	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, "migrations")
 	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
-	ec.MetadataFile = filepath.Join(ec.ExecutionDirectory, "metadata.yaml")
+	ec.MetadataFile = filepath.Join(ec.MigrationDir, "metadata.yaml")
 
 	// read config and parse the values into Config
 	err = ec.readConfig()
@@ -217,12 +224,18 @@ func (ec *ExecutionContext) readConfig() error {
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {
-		return errors.Wrap(err, "cannor read config file")
+		return errors.Wrap(err, "cannot read config file")
 	}
 	ec.Config = &HasuraGraphQLConfig{
 		Endpoint:  v.GetString("endpoint"),
 		AccessKey: v.GetString("access_key"),
 	}
+	// if DisableUsageReporting is not set already, check for the configuration
+	// again to see if it is set by other means
+	if ec.DisableUsageReporting == false {
+		ec.DisableUsageReporting = v.GetBool("disable_usage_reporting")
+	}
+	ec.Logger.Debugf("should disable usage reporting? %v", ec.DisableUsageReporting)
 	err = ec.Config.ParseEndpoint()
 	return err
 }
