@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-set -eo pipefail
+set -evo pipefail
 IFS=$'\n\t'
 ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
 LATEST_TAG=$(git describe --tags --abbrev=0)
 PREVIOUS_TAG=$(git describe --tags $(git rev-list --tags --max-count=2) --abbrev=0 | sed -n 2p)
 CHANGELOG_TEXT=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty=format:'- %s' --reverse)
 RELEASE_BODY=$(eval "cat <<EOF
-$(<release_notes.template.md)
+$(<$ROOT/.circleci/release_notes.template.md)
 EOF
 ")
 
@@ -23,7 +23,7 @@ deploy_server() {
 deploy_server_latest() {
   echo "deloying server latest tag"
   cd "$ROOT/server"
-  docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
+  echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
   make push-latest
 }
 
