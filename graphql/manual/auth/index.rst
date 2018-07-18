@@ -26,4 +26,4 @@ See:
    basics
    roles-variables
    webhook
-   basic-auth-guide
+   Examples <common-roles-auth-examples>

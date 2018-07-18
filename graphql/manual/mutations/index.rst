@@ -27,8 +27,7 @@ Let's use this reference Authors/Articles schema to look at different types of m
   Update <update>
   Delete <delete>
   multiple-mutations
-  
-  
+  sql-functions
 
 
 

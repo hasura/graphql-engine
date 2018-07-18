@@ -17,11 +17,10 @@ See:
 .. toctree::
   :maxdepth: 1
 
-  basics
-  relationships
+  Basics <basics>
+  Relationships/connections <relationships>
   views
   using-existing-database
-  sql-functions
-  how-it-works
-  export-graphql-schema
-  schema-stitching
+  How schema generation works <how-it-works>
+  Export GraphQL schema <export-graphql-schema>
+  Customise with schema stitching <schema-stitching>
