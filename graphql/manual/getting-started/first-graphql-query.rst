@@ -1,7 +1,7 @@
 Making your first GraphQL query
 ===============================
 
-Let's create a sample table and query from it using the Console, a UI tool meant for doing exactly this:
+Let's create a sample table and query from it using the Hasura console, a UI tool meant for doing exactly this:
 
 Create a table
 --------------

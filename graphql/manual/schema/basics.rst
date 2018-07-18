@@ -1,6 +1,6 @@
 Schema design basics
 ====================
-Let's take a look at how to create tables using the Console, a UI tool meant for doing exactly this. We'll use a
+Let's take a look at how to create tables using the Hasura console, a UI tool meant for doing exactly this. We'll use a
 typical author/articles schema as a reference for all the following examples.
 
 Open the console

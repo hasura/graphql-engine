@@ -5,7 +5,7 @@ This guide will help you get Hasura GraphQL engine and Postgres running on **Her
 It is the easiest and fastest way of trying Hasura out.
 
 If you'd like to link this to an existing database, please head to this guide instead:
-:doc:`Using an existing database on Heroku<../deployment/heroku/using-existing-heroku-database>`.
+:doc:`Using an existing database on Heroku <../deployment/heroku/using-existing-heroku-database>`.
 
 Deploy to Heroku
 ----------------
@@ -29,7 +29,7 @@ Note that **Heroku's free Postgres add-on** is also automatically provisioned!
 Open the Hasura console
 -----------------------
 
-That's it!  Head to https://YOUR_HEROKU_APP.herokuapp.com and open your app.
+That's it!  Head to ``https://<YOUR_HEROKU_APP>.herokuapp.com`` and open your app.
 You should see the Hasura console.
 
 .. image:: ../../../img/graphql/manual/getting-started/heroku-app-deployed.png
