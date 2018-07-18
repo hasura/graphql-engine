@@ -23,7 +23,6 @@ class GraphiQLWrapper extends Component {
   }
 
   render() {
-    console.log(this.props.numberOfTables);
     const styles = require('../Common/Common.scss');
 
     const graphqlUrl = this.props.data.url;

@@ -259,6 +259,8 @@ class AddTable extends Component {
         defPlaceholder = 'example: now()';
       } else if (column.type === 'date') {
         defPlaceholder = '';
+      } else if (column.type === 'uuid') {
+        defPlaceholder = 'example: gen_random_uuid()';
       }
       return (
         <div key={i} className={`${styles.display_flex} form-group`}>
