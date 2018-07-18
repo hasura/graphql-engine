@@ -5,7 +5,7 @@
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
 
-<a href="https://discord.gg/vBPpJkS"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
+<a href="https://discord.gg/3FNQnWj"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="http://eepurl.com/dzefQj"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
@@ -73,7 +73,7 @@ Hasura works with any GraphQL client. We recommend using [Apollo Client](https:/
 
 ## Support & Troubleshooting
 
-The documentation and community will help you troubleshoot most issues. However, if you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
+The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
 
 * Support & feedback: [Discord](https://discord.gg/3FNQnWj)
 * Issue & bug tracking: [Github issues](https://github.com/hasura/graphql-engine/issues)
