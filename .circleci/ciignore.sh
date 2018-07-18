@@ -9,7 +9,7 @@ fi
 
 changes="$(git diff-tree --no-commit-id --name-only -r origin/master..HEAD)"
 
-echo "CHANGES:"
+echo "CHANGES FROM ORIGIN/MASTER:"
 echo $changes
 echo
 
