@@ -107,7 +107,6 @@ func (o *consoleOptions) run() error {
 		"dataApiVersion": "",
 		"accessKey":      o.EC.Config.AccessKey,
 		"assetsVersion":  consoleAssetsVersion,
-		"cliStaticDir":   o.StaticDir,
 	})
 	if err != nil {
 		return errors.Wrap(err, "error serving console")
@@ -236,6 +235,7 @@ func serveConsole(assetsVersion, staticDir string, opts gin.H) (*gin.Engine, err
 
 	if staticDir != "" {
 		r.Use(static.Serve("/static", static.LocalFile(staticDir, false)))
+		opts["cliStaticDir"] = staticDir
 	}
 	r.GET("/*action", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "console.html", &opts)
