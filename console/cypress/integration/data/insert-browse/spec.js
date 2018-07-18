@@ -282,6 +282,7 @@ export const passBIFilterQueryEq = () => {
 };
 
 export const deleteBITestTable = () => {
+  cy.get(getElementFromAlias(getTableName(2, testName))).click();
   // Go to the modify section of the table
   cy.get(getElementFromAlias('table-modify')).click();
   cy.wait(2000);
@@ -295,8 +296,23 @@ export const deleteBITestTable = () => {
   cy.wait(7000);
   // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
-  validateCT(getTableName(0, testName), 'failure');
+  validateCT(getTableName(2, testName), 'failure');
   cy.get(getElementFromAlias(getTableName(1, testName))).click();
+  // Go to the modify section of the table
+  cy.get(getElementFromAlias('table-modify')).click();
+  cy.wait(2000);
+  // Click on delete
+  cy.get(getElementFromAlias('delete-table')).click();
+  // Confirm
+  cy.on('window:confirm', str => {
+    expect(str === 'Are you sure?').to.be.true;
+    return true;
+  });
+  cy.wait(7000);
+  // Match the URL
+  cy.url().should('eq', `${baseUrl}/data/schema/public`);
+  validateCT(getTableName(1, testName), 'failure');
+  cy.get(getElementFromAlias(getTableName(0, testName))).click();
   // Go to the modify section of the table
   cy.get(getElementFromAlias('table-modify')).click();
   cy.wait(2000);
@@ -409,6 +425,51 @@ export const passCloneButton = () => {
   );
   cy.get(getElementFromAlias('clear-button')).click();
   cy.get(getElementFromAlias('typed-input-0')).should('have.value', '');
+};
+
+export const checkViewRelationship = () => {
+  cy.get(getElementFromAlias('sidebar-add-table')).click();
+  // Type table name
+  cy.get(getElementFromAlias('tableName')).type(getTableName(2, testName));
+  cy.get(getElementFromAlias('column-0')).type('id');
+  cy.get(getElementFromAlias('col-type-0')).select('serial');
+  cy.get(getElementFromAlias('column-1')).type('someID');
+  cy.get(getElementFromAlias('col-type-1')).select('integer');
+  // Set primary key
+  cy.get(getElementFromAlias('primary-key-select-0')).select('0');
+  // Click on create
+  cy.get(getElementFromAlias('table-create')).click();
+  cy.wait(7000);
+  validateCT(getTableName(0, testName), 'success');
+  // Add foreign key
+  cy.get(getElementFromAlias('edit-someID')).click();
+  cy.get(getElementFromAlias('foreign-key-checkbox')).check();
+  cy.get(getElementFromAlias('ref-table')).select(getTableName(0, testName));
+  cy.get(getElementFromAlias('ref-col')).select(getColName(0));
+  cy.get(getElementFromAlias('save-button')).click();
+  cy.wait(300);
+  // Add relationship
+  cy.get(getElementFromAlias('add-rel-mod')).click();
+  cy.get(getElementFromAlias('obj-rel-add-0')).click();
+  cy.get(getElementFromAlias('suggested-rel-name')).type('someRel');
+  cy.get(getElementFromAlias('obj-rel-save-0')).click();
+  cy.wait(300);
+  // Insert a row
+  cy.get(getElementFromAlias('table-insert-rows')).click();
+  cy.get(getElementFromAlias('typed-input-1')).type('1');
+  cy.get(getElementFromAlias('insert-save-button')).click();
+  cy.wait(300);
+  cy.get(getElementFromAlias('table-browse-rows')).click();
+  cy.wait(300);
+  cy.get('a')
+    .contains('View')
+    .first()
+    .click();
+  cy.wait(300);
+  cy.get('a')
+    .contains('Close')
+    .first()
+    .click();
 };
 
 export const passDeleteRow = () => {

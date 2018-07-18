@@ -19,6 +19,7 @@ import {
   passEditButton,
   passSearchTables,
   passCloneButton,
+  checkViewRelationship,
   passDeleteRow,
 } from './spec';
 
@@ -52,6 +53,7 @@ export const runInsertBrowseTests = () => {
     it('Check edit button', passEditButton);
     it('Check for clone clear', passCloneButton);
     it('Delete the row', passDeleteRow);
+    it('Check view relationship', checkViewRelationship);
     it('Delete test table', deleteBITestTable);
   });
 };
