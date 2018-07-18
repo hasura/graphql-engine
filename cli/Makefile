@@ -32,18 +32,18 @@ build:
 	gox -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION) -s -w" \
 	-os="linux darwin windows" \
 	-arch="amd64" \
-	-output="$(OUTPUT_DIR)/$(VERSION)/hasura-{{.OS}}-{{.Arch}}" \
+	-output="$(OUTPUT_DIR)/$(VERSION)/cli-hasura-{{.OS}}-{{.Arch}}" \
 	./cmd/hasura/
 
 # compress
 .PHONY: compress
 compress:
-	ls $(OUTPUT_DIR)/$(VERSION)/hasura-* | xargs upx
+	ls $(OUTPUT_DIR)/$(VERSION)/cli-hasura-* | xargs upx
 
 # to be executed in circle-ci only
 ci-copy-binary:
-	mkdir -p /build/_cli_output
-	cp $(OUTPUT_DIR)/$(VERSION)/hasura-* /build/_cli_output
+	mkdir -p /build/_cli_output/binaries
+	cp $(OUTPUT_DIR)/$(VERSION)/cli-hasura-* /build/_cli_output/binaries
 	echo "$(VERSION)" > /build/_cli_output/version.txt
 
 # run tests
