@@ -3,6 +3,7 @@
 set -evo pipefail
 IFS=$'\n\t'
 ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
+REVIEWERS="shahidhk,coco98,arvi3411301"
 LATEST_TAG=$(git describe --tags --abbrev=0)
 PREVIOUS_TAG=$(git describe --tags $(git rev-list --tags --max-count=2) --abbrev=0 | sed -n 2p)
 CHANGELOG_TEXT=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty=format:'- %s' --reverse)
@@ -38,6 +39,17 @@ draft_github_release() {
         -b "${RELEASE_BODY}" \
         -draft \
      "$CIRCLE_TAG" /build/_cli_output/binaries/
+}
+
+manifests_pr() {
+  git clone git@github.com:hasura/$1.git ~/$1
+  cd ~/$1
+  git checkout -b ${LATEST_TAG}
+  find . -type f -exec sed -i "s/\(hasura\/graphql-engine:\).*$/\1${LATEST_TAG}/" {} \;
+  git add .
+  git commit -m "update docker tag to ${LATEST_TAG}"
+  git push origin ${LATEST_TAG}
+  hub pull-request -F- <<<"Update Docker Tag To ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
 }
 
 deploy_console() {
@@ -85,4 +97,6 @@ deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
     deploy_server_latest
     draft_github_release
+    manifests_pr graphql-engine-install-manifests
+    manifests_pr graphql-engine-heroku
 fi
