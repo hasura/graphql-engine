@@ -73,7 +73,7 @@ Hasura works with any GraphQL client. We recommend using [Apollo Client](https:/
 
 ## Support & Troubleshooting
 
-The documentation and community will help you troubleshoot most issues. However, if you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
+The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
 
 * Support & feedback: [Discord](https://discord.gg/3FNQnWj)
 * Issue & bug tracking: [Github issues](https://github.com/hasura/graphql-engine/issues)
