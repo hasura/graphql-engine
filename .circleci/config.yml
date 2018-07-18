@@ -42,6 +42,17 @@ refs:
 
 version: 2
 jobs:
+  # check if this should be built or not, fails if
+  # changes only contains files in .ciignore
+  check_build_worthiness:
+    docker:
+    - image: hasura/graphql-engine-cli-builder:v0.2
+    working_directory: ~/graphql-engine
+    steps:
+    - checkout
+    - run:
+        name: check build worthiness
+        command: .circleci/ciignore.sh
   # test build the server binary
   test_and_build_server:
     docker:
@@ -65,7 +76,6 @@ jobs:
         name: test and build server binary
         working_directory: ./server
         command: |
-          # TODO: make test
           DATABASE_URL="postgres://gql_test:@localhost:5432/gql_test" make ci-binary-and-test
           make ci-image
           make ci-save-image
@@ -156,7 +166,6 @@ jobs:
         - ~/.npm
         - ~/.cache
     - *wait_for_postgres
-    # ignore console test for now
     - run:
         name: test console
         command: .circleci/test-console.sh
@@ -193,7 +202,11 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-    - test_and_build_server: *filter_only_vtags
+    - check_build_worthiness: *filter_only_vtags
+    - test_and_build_server:
+        <<: *filter_only_vtags
+        requires:
+        - check_build_worthiness
     - test_and_build_cli:
         <<: *filter_only_vtags
         requires:
@@ -201,7 +214,6 @@ workflows:
     - test_and_build_console:
         <<: *filter_only_vtags
         requires:
-        - test_and_build_server
         - test_and_build_cli
     - deploy:
         <<: *filter_only_vtags_dev_release_branches
