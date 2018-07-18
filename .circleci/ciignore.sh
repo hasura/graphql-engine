@@ -7,9 +7,7 @@ if [[ ! -a "$ROOT/.ciignore" ]]; then
 	  exit # If .ciignore doesn't exists, just quit this script
 fi
 
-COMMIT_RANGE=$(echo $CIRCLE_COMPARE_URL | sed 's:^.*/compare/::g')
-echo "COMMIT RANGE: $COMMIT_RANGE"
-changes="$(git diff $COMMIT_RANGE --name-only)"
+changes="$(git diff-tree --no-commit-id --name-only -r origin/master..HEAD)"
 
 echo "CHANGES:"
 echo $changes
@@ -32,9 +30,9 @@ done
 
 if [[ ${#changes[@]} -gt 0 ]]; then
 	  # If there's still changes left, then we have stuff to build, leave the commit alone.
-    echo "Need to build, succeed the job"
+    echo "Files that are not ignored present in commits, need to build, succeed the job"
 	  exit
 fi
 
-echo "No need to build, fail the job"
+echo "Only ignored files are present in commits, no need to build, fail the job"
 exit 1
