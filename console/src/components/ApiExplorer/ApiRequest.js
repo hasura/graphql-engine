@@ -12,6 +12,8 @@ import {
   removeRequestHeader,
   updateFileObject,
   editGeneratedJson,
+  focusHeaderTextbox,
+  unfocusTypingHeader,
 } from './Actions';
 
 import GraphiQLWrapper from './GraphiQLWrapper';
@@ -24,17 +26,14 @@ class ApiRequest extends Component {
     this.state = {};
     this.state.bodyAllowedMethods = ['POST'];
     this.state.tabIndex = 0;
+    this.timer = null;
   }
 
   componentWillMount() {
-    console.log(this.props.numberOfTables);
     if (this.props.numberOfTables !== 0) {
       const graphqlQueryInLS = window.localStorage.getItem('graphiql:query');
-      console.log(graphqlQueryInLS);
       if (graphqlQueryInLS && graphqlQueryInLS.indexOf('do not have') !== -1) {
-        console.log('Clearing');
         window.localStorage.removeItem('graphiql:query');
-        console.log('Cleared');
       }
     }
   }
@@ -73,10 +72,12 @@ class ApiRequest extends Component {
   }
 
   onNewHeaderKeyChanged(e) {
+    this.handleTypingTimeouts();
     this.props.dispatch(addRequestHeader(e.target.value, ''));
   }
 
   onNewHeaderValueChanged(e) {
+    this.handleTypingTimeouts();
     this.props.dispatch(addRequestHeader('', e.target.value));
   }
 
@@ -239,6 +240,8 @@ class ApiRequest extends Component {
               placeholder="Enter Key"
               data-element-name="key"
               onChange={this.onHeaderValueChanged.bind(this)}
+              onFocus={this.handleFocus}
+              onBlur={this.handleBlur}
               type="text"
             />
           </td>
@@ -262,6 +265,8 @@ class ApiRequest extends Component {
               placeholder="Enter Value"
               data-element-name="value"
               onChange={this.onHeaderValueChanged.bind(this)}
+              onFocus={this.handleFocus}
+              onBlur={this.handleBlur}
               type="text"
             />
           </td>
@@ -325,12 +330,22 @@ class ApiRequest extends Component {
           <GraphiQLWrapper
             data={this.props}
             numberOfTables={this.props.numberOfTables}
+            dispatch={this.props.dispatch}
+            headerFocus={this.props.headerFocus}
           />
         );
       default:
         return '';
     }
   }
+
+  handleFocus = () => {
+    this.props.dispatch(focusHeaderTextbox());
+  };
+
+  handleBlur = () => {
+    this.props.dispatch(unfocusTypingHeader());
+  };
 
   handleFileChange(e) {
     if (e.target.files.length > 0) {
@@ -362,6 +377,7 @@ ApiRequest.propTypes = {
   bodyType: PropTypes.string.isRequired,
   route: PropTypes.object.isRequired,
   numberOfTables: PropTypes.number.isRequired,
+  headerFocus: PropTypes.bool.isRequired,
 };
 
 export default ApiRequest;
