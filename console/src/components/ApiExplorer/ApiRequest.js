@@ -12,8 +12,8 @@ import {
   removeRequestHeader,
   updateFileObject,
   editGeneratedJson,
-  startTypingHeader,
-  stopTypingHeader,
+  focusHeaderTextbox,
+  unfocusTypingHeader,
 } from './Actions';
 
 import GraphiQLWrapper from './GraphiQLWrapper';
@@ -60,12 +60,10 @@ class ApiRequest extends Component {
   };
 
   onHeaderValueChanged(e) {
-    this.handleTypingTimeouts();
     const index = parseInt(e.target.getAttribute('data-header-id'), 10);
     const key = e.target.getAttribute('data-element-name');
     const newValue = e.target.value;
     this.props.dispatch(changeRequestHeader(index, key, newValue, false));
-    this.setTimer();
   }
 
   onDeleteHeaderClicked(e) {
@@ -76,13 +74,11 @@ class ApiRequest extends Component {
   onNewHeaderKeyChanged(e) {
     this.handleTypingTimeouts();
     this.props.dispatch(addRequestHeader(e.target.value, ''));
-    this.setTimer();
   }
 
   onNewHeaderValueChanged(e) {
     this.handleTypingTimeouts();
     this.props.dispatch(addRequestHeader('', e.target.value));
-    this.setTimer();
   }
 
   onKeyUpAtNewHeaderField(e) {
@@ -92,13 +88,6 @@ class ApiRequest extends Component {
       );
     }
   }
-
-  setTimer = () => {
-    this.timer = setTimeout(
-      () => this.props.dispatch(stopTypingHeader()),
-      1000
-    );
-  };
 
   getHTTPMethods = () => {
     const httpMethods = ['POST'];
@@ -251,6 +240,8 @@ class ApiRequest extends Component {
               placeholder="Enter Key"
               data-element-name="key"
               onChange={this.onHeaderValueChanged.bind(this)}
+              onFocus={this.handleFocus}
+              onBlur={this.handleBlur}
               type="text"
             />
           </td>
@@ -274,6 +265,8 @@ class ApiRequest extends Component {
               placeholder="Enter Value"
               data-element-name="value"
               onChange={this.onHeaderValueChanged.bind(this)}
+              onFocus={this.handleFocus}
+              onBlur={this.handleBlur}
               type="text"
             />
           </td>
@@ -338,7 +331,7 @@ class ApiRequest extends Component {
             data={this.props}
             numberOfTables={this.props.numberOfTables}
             dispatch={this.props.dispatch}
-            typingHeader={this.props.typingHeader}
+            headerFocus={this.props.headerFocus}
           />
         );
       default:
@@ -346,17 +339,12 @@ class ApiRequest extends Component {
     }
   }
 
-  handleTypingTimeouts = () => {
-    this.clearTimer();
-    this.startTyping();
+  handleFocus = () => {
+    this.props.dispatch(focusHeaderTextbox());
   };
 
-  startTyping = () => {
-    this.props.dispatch(startTypingHeader());
-  };
-
-  clearTimer = () => {
-    clearTimeout(this.timer);
+  handleBlur = () => {
+    this.props.dispatch(unfocusTypingHeader());
   };
 
   handleFileChange(e) {
@@ -389,7 +377,7 @@ ApiRequest.propTypes = {
   bodyType: PropTypes.string.isRequired,
   route: PropTypes.object.isRequired,
   numberOfTables: PropTypes.number.isRequired,
-  typingHeader: PropTypes.bool.isRequired,
+  headerFocus: PropTypes.bool.isRequired,
 };
 
 export default ApiRequest;

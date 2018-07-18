@@ -39,7 +39,7 @@ class ApiRequestWrapper extends Component {
           dispatch={this.props.dispatch}
           dataHeaders={this.props.dataHeaders}
           numberOfTables={this.props.numberOfTables}
-          typingHeader={this.props.typingHeader}
+          headerFocus={this.props.headerFocus}
         />
         {this.props.request.bodyType !== 'graphql' ? (
           <ApiResponse
@@ -69,7 +69,7 @@ ApiRequestWrapper.propTypes = {
   wdStyles: PropTypes.string,
   dispatch: PropTypes.func,
   numberOfTables: PropTypes.number,
-  typingHeader: PropTypes.bool.isRequired,
+  headerFocus: PropTypes.bool.isRequired,
 };
 
 export default ApiRequestWrapper;

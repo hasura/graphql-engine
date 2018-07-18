@@ -62,7 +62,7 @@ const defaultState = {
   },
   explorerData,
   authApiExpanded: 'Username-password Login',
-  typingHeader: false,
+  headerFocus: false,
 };
 
 export default defaultState;

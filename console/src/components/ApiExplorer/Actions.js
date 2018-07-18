@@ -33,8 +33,8 @@ const UPDATE_FILE_OBJECT = 'ApiExplorer/UPDATE_FILE_OBJECT';
 
 const CREATE_WEBSOCKET_CLIENT = 'ApiExplorer/CREATE_WEBSOCKET_CLIENT';
 
-const TYPING_HEADER_START = 'ApiExplorer/TYPING_HEADER_START';
-const TYPING_HEADER_STOP = 'ApiExplorer/TYPING_HEADER_STOP';
+const FOCUS_ROLE_HEADER = 'ApiExplorer/FOCUS_ROLE_HEADER';
+const UNFOCUS_ROLE_HEADER = 'ApiExplorer/UNFOCUS_ROLE_HEADER';
 
 import requestAction from '../Common/makeRequest';
 import Endpoints from 'Endpoints';
@@ -109,8 +109,8 @@ const sendExplorerReq = requestType => {
   };
 };
 
-const startTypingHeader = () => ({ type: TYPING_HEADER_START });
-const stopTypingHeader = () => ({ type: TYPING_HEADER_STOP });
+const focusHeaderTextbox = () => ({ type: FOCUS_ROLE_HEADER });
+const unfocusTypingHeader = () => ({ type: UNFOCUS_ROLE_HEADER });
 
 const copyCodeToClipboard = isCopying => {
   return {
@@ -581,15 +581,15 @@ const apiExplorerReducer = (state = defaultState, action) => {
         ...state,
         webSocketClient: action.data,
       };
-    case TYPING_HEADER_STOP:
+    case UNFOCUS_ROLE_HEADER:
       return {
         ...state,
-        typingHeader: false,
+        headerFocus: false,
       };
-    case TYPING_HEADER_START:
+    case FOCUS_ROLE_HEADER:
       return {
         ...state,
-        typingHeader: true,
+        headerFocus: true,
       };
     default:
       return state;
@@ -618,6 +618,6 @@ export {
   editGeneratedJson,
   graphQLFetcherFinal,
   createWsClient,
-  startTypingHeader,
-  stopTypingHeader,
+  focusHeaderTextbox,
+  unfocusTypingHeader,
 };

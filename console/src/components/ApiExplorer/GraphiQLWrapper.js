@@ -14,17 +14,19 @@ class GraphiQLWrapper extends Component {
       error: false,
       noSchema: false,
       onBoardingEnabled: false,
-      typingHeader: this.props.typingHeader,
     };
   }
 
-  shouldComponentUpdate() {
-    return !this.state.typingHeader;
+  shouldComponentUpdate(nextProps) {
+    return !nextProps.headerFocus;
   }
 
   render() {
     const styles = require('../Common/Common.scss');
     const graphQLFetcher = graphQLParams => {
+      if (this.state.headerFocus) {
+        return null;
+      }
       return graphQLFetcherFinal(
         graphQLParams,
         this.props.data.url,
@@ -75,7 +77,7 @@ GraphiQLWrapper.propTypes = {
   dispatch: PropTypes.func.isRequired,
   data: PropTypes.object.isRequired,
   numberOfTables: PropTypes.number.isRequired,
-  typingHeader: PropTypes.bool.isRequired,
+  headerFocus: PropTypes.bool.isRequired,
 };
 
 export default GraphiQLWrapper;
