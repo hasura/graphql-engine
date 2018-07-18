@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# Exit with error if diff with origin/master only contains files mentioned in
+# .ciignore so that the build can be stopped.
+#
+# Adapted from:
+# https://circleci.com/blog/circleci-hacks-automate-the-decision-to-skip-builds-using-a-git-hook/
+# https://github.com/dollarshaveclub/harmless-changes/blob/master/index.sh
+
 set -eo pipefail
 ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
 
