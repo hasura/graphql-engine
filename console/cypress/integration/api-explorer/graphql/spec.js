@@ -10,9 +10,6 @@ export const openAPIExplorer = () => {
 };
 
 export const checkExecuteQueryButton = () => {
-  cy.get('.execute-button');
+  cy.get('.execute-button').click();
   cy.get('.cm-def').contains('errors');
-  cy.get('textarea')
-    .first()
-    .type('{enter}{uparrow}query', { force: true });
 };

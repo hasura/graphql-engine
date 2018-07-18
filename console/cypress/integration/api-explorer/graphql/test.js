@@ -21,7 +21,7 @@ const setup = () => {
 export const runApiExplorerTests = () => {
   describe('API Explorer', () => {
     it('Open API Explorer', openAPIExplorer);
-    // it('Run Query button works', checkExecuteQueryButton);
+    it('Run Query button works', checkExecuteQueryButton);
   });
 };
 
