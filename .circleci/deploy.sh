@@ -3,6 +3,13 @@
 set -eo pipefail
 IFS=$'\n\t'
 ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
+LATEST_TAG=$(git describe --tags --abbrev=0)
+PREVIOUS_TAG=$(git describe --tags $(git rev-list --tags --max-count=2) --abbrev=0 | sed -n 2p)
+CHANGELOG_TEXT=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty=format:'- %s' --reverse)
+RELEASE_BODY=$(eval "cat <<EOF
+$(<release_notes.template.md)
+EOF
+")
 
 ## deploy functions
 deploy_server() {
@@ -13,6 +20,13 @@ deploy_server() {
     make push
 }
 
+deploy_server_latest() {
+  echo "deloying server latest tag"
+  cd "$ROOT/server"
+  docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
+  make push-latest
+}
+
 # TODO: open pull requests
 
 draft_github_release() {
@@ -21,9 +35,9 @@ draft_github_release() {
     ghr -t "$GITHUB_TOKEN" \
         -u "$CIRCLE_PROJECT_USERNAME" \
         -r "$CIRCLE_PROJECT_REPONAME" \
-        -b "$CIRCLE_TAG" \
+        -b "${RELEASE_BODY}" \
         -draft \
-     "$CIRCLE_TAG" /build/_cli_output/
+     "$CIRCLE_TAG" /build/_cli_output/binaries/
 }
 
 deploy_console() {
@@ -69,5 +83,6 @@ fi
 deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
+    deploy_server_latest
     draft_github_release
 fi
