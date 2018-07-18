@@ -3,7 +3,7 @@
 set -evo pipefail
 IFS=$'\n\t'
 ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
-REVIEWERS="shahidhk,coco98,arvi3411301"
+
 LATEST_TAG=$(git describe --tags --abbrev=0)
 PREVIOUS_TAG=$(git describe --tags $(git rev-list --tags --max-count=2) --abbrev=0 | sed -n 2p)
 CHANGELOG_TEXT=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty=format:'- %s' --reverse)
@@ -11,6 +11,9 @@ RELEASE_BODY=$(eval "cat <<EOF
 $(<$ROOT/.circleci/release_notes.template.md)
 EOF
 ")
+
+# reviewers for pull requests opened to update installation manifests
+REVIEWERS="shahidhk,coco98,arvi3411301"
 
 ## deploy functions
 deploy_server() {
@@ -28,8 +31,6 @@ deploy_server_latest() {
   make push-latest
 }
 
-# TODO: open pull requests
-
 draft_github_release() {
     cd "$ROOT"
     echo "drafting github release"
@@ -41,15 +42,15 @@ draft_github_release() {
      "$CIRCLE_TAG" /build/_cli_output/binaries/
 }
 
-manifests_pr() {
+send_pr_to_repo() {
   git clone git@github.com:hasura/$1.git ~/$1
   cd ~/$1
   git checkout -b ${LATEST_TAG}
   find . -type f -exec sed -i "s/\(hasura\/graphql-engine:\).*$/\1${LATEST_TAG}/" {} \;
   git add .
-  git commit -m "update docker tag to ${LATEST_TAG}"
+  git commit -m "update image version to ${LATEST_TAG}"
   git push origin ${LATEST_TAG}
-  hub pull-request -F- <<<"Update Docker Tag To ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
+  hub pull-request -F- <<<"Update image version to ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
 }
 
 deploy_console() {
@@ -97,6 +98,6 @@ deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
     deploy_server_latest
     draft_github_release
-    manifests_pr graphql-engine-install-manifests
-    manifests_pr graphql-engine-heroku
+    send_pr_to_repo graphql-engine-install-manifests
+    send_pr_to_repo graphql-engine-heroku
 fi
