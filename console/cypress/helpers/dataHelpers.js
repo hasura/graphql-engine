@@ -4,6 +4,7 @@ export const dataTypes = [
   'bigserial',
   'integer',
   'bigint',
+  'uuid',
   'text',
   'numeric',
   'date',
@@ -14,6 +15,7 @@ export const dataTypes = [
 export const typeDefaults = {
   integer: '5555',
   bigint: '5555555555',
+  uuid: 'gen_random_uuid()',
   text: 'test-text',
   numeric: '0.55555',
   date: 'now()',
