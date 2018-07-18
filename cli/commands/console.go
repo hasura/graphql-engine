@@ -99,7 +99,7 @@ func (o *consoleOptions) run() error {
 
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
-	consoleRouter, err := serveConsole(consoleTemplateVersion, gin.H{
+	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, gin.H{
 		"apiHost":        "http://" + o.Address,
 		"apiPort":        o.APIPort,
 		"cliVersion":     o.EC.Version.GetCLIVersion(),
@@ -111,10 +111,6 @@ func (o *consoleOptions) run() error {
 	})
 	if err != nil {
 		return errors.Wrap(err, "error serving console")
-	}
-
-	if o.StaticDir != "" {
-		consoleRouter.Use(static.Serve("/cli-static", static.LocalFile(o.StaticDir, false)))
 	}
 
 	// Create WaitGroup for running 3 servers
@@ -137,7 +133,7 @@ func (o *consoleOptions) run() error {
 		wg.Done()
 	}()
 
-	consoleURL := fmt.Sprintf("http://%s:%s/console", o.Address, o.ConsolePort)
+	consoleURL := fmt.Sprintf("http://%s:%s/", o.Address, o.ConsolePort)
 
 	if !o.DontOpenBrowser {
 		o.EC.Spin(color.CyanString("Opening console using default browser..."))
@@ -227,7 +223,7 @@ func allowCors() gin.HandlerFunc {
 	return cors.New(config)
 }
 
-func serveConsole(assetsVersion string, opts gin.H) (*gin.Engine, error) {
+func serveConsole(assetsVersion, staticDir string, opts gin.H) (*gin.Engine, error) {
 	// An Engine instance with the Logger and Recovery middleware already attached.
 	r := gin.New()
 
@@ -238,7 +234,10 @@ func serveConsole(assetsVersion string, opts gin.H) (*gin.Engine, error) {
 	}
 	r.HTMLRender = templateRender
 
-	r.GET("/console/*action", func(c *gin.Context) {
+	if staticDir != "" {
+		r.Use(static.Serve("/static", static.LocalFile(staticDir, false)))
+	}
+	r.GET("/*action", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "console.html", &opts)
 	})
 

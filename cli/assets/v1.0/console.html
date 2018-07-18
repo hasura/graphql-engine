@@ -9,7 +9,7 @@
        dataApiUrl: {{.dataApiUrl}},
        dataApiVersion: {{.dataApiVersion}},
        accessKey: {{.accessKey}},
-       urlPrefix: "/console",
+       urlPrefix: "/",
        consoleMode: "cli"
      };
     </script>
@@ -51,9 +51,9 @@
 
     {{ if .cliStaticDir }}
 
-    <link rel="stylesheet" href="/cli-static/main.css" charset="UTF-8"/>
-    <script src="/cli-static/vendor.js" charset="UTF-8"></script>
-    <script src="/cli-static/main.js" charset="UTF-8"></script>
+    <link rel="stylesheet" href="/static/main.css" charset="UTF-8"/>
+    <script src="/static/vendor.js" charset="UTF-8"></script>
+    <script src="/static/main.js" charset="UTF-8"></script>
 
     {{ else }}
 
