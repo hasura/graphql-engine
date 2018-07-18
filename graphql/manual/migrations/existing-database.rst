@@ -1,5 +1,5 @@
-Existing database
-=================
+Migrations over an existing database
+====================================
 
 This guide will help you setup migrations in case you're working with an existing application or database that already has database migration tooling.
 

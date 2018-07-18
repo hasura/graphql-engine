@@ -22,8 +22,3 @@ Hasura GraphQL engine lets you setup a GraphQL server over a Postgres database i
   hasura-cli/index
   API Reference <api-reference/index> 
 
-.. admonition:: Hasura platform documentation
-
-    If you're searching for the Hasura platform documentation that used to live here, please head to
-    `Hasura platform documentation <//docs.platform.hasura.io>`_
-

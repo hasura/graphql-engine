@@ -1,5 +1,5 @@
-New application
-===============
+Migrations for a new application
+================================
 
 This guide will help you if you're building a new application using Hasura. You can use the Hasura CLI to help you track database and schema migrations as well.
 
