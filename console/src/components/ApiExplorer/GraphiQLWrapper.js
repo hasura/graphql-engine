@@ -7,31 +7,27 @@ import { graphQLFetcherFinal } from './Actions';
 import './GraphiQL.css';
 
 class GraphiQLWrapper extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       schema: null,
       error: false,
       noSchema: false,
       onBoardingEnabled: false,
+      typingHeader: this.props.typingHeader,
     };
   }
 
   shouldComponentUpdate() {
-    // shouldn't re-render if headers change. play button will trigger the query
-    return false;
+    return !this.state.typingHeader;
   }
 
   render() {
-    console.log(this.props.numberOfTables);
     const styles = require('../Common/Common.scss');
-
-    const graphqlUrl = this.props.data.url;
-
     const graphQLFetcher = graphQLParams => {
       return graphQLFetcherFinal(
         graphQLParams,
-        graphqlUrl,
+        this.props.data.url,
         this.props.data.headers
       );
     };
@@ -79,6 +75,7 @@ GraphiQLWrapper.propTypes = {
   dispatch: PropTypes.func.isRequired,
   data: PropTypes.object.isRequired,
   numberOfTables: PropTypes.number.isRequired,
+  typingHeader: PropTypes.bool.isRequired,
 };
 
 export default GraphiQLWrapper;

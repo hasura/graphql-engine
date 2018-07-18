@@ -12,6 +12,8 @@ import {
   removeRequestHeader,
   updateFileObject,
   editGeneratedJson,
+  startTypingHeader,
+  stopTypingHeader,
 } from './Actions';
 
 import GraphiQLWrapper from './GraphiQLWrapper';
@@ -24,17 +26,14 @@ class ApiRequest extends Component {
     this.state = {};
     this.state.bodyAllowedMethods = ['POST'];
     this.state.tabIndex = 0;
+    this.timer = null;
   }
 
   componentWillMount() {
-    console.log(this.props.numberOfTables);
     if (this.props.numberOfTables !== 0) {
       const graphqlQueryInLS = window.localStorage.getItem('graphiql:query');
-      console.log(graphqlQueryInLS);
       if (graphqlQueryInLS && graphqlQueryInLS.indexOf('do not have') !== -1) {
-        console.log('Clearing');
         window.localStorage.removeItem('graphiql:query');
-        console.log('Cleared');
       }
     }
   }
@@ -61,10 +60,12 @@ class ApiRequest extends Component {
   };
 
   onHeaderValueChanged(e) {
+    this.handleTypingTimeouts();
     const index = parseInt(e.target.getAttribute('data-header-id'), 10);
     const key = e.target.getAttribute('data-element-name');
     const newValue = e.target.value;
     this.props.dispatch(changeRequestHeader(index, key, newValue, false));
+    this.setTimer();
   }
 
   onDeleteHeaderClicked(e) {
@@ -73,11 +74,15 @@ class ApiRequest extends Component {
   }
 
   onNewHeaderKeyChanged(e) {
+    this.handleTypingTimeouts();
     this.props.dispatch(addRequestHeader(e.target.value, ''));
+    this.setTimer();
   }
 
   onNewHeaderValueChanged(e) {
+    this.handleTypingTimeouts();
     this.props.dispatch(addRequestHeader('', e.target.value));
+    this.setTimer();
   }
 
   onKeyUpAtNewHeaderField(e) {
@@ -87,6 +92,13 @@ class ApiRequest extends Component {
       );
     }
   }
+
+  setTimer = () => {
+    this.timer = setTimeout(
+      () => this.props.dispatch(stopTypingHeader()),
+      1000
+    );
+  };
 
   getHTTPMethods = () => {
     const httpMethods = ['POST'];
@@ -325,12 +337,27 @@ class ApiRequest extends Component {
           <GraphiQLWrapper
             data={this.props}
             numberOfTables={this.props.numberOfTables}
+            dispatch={this.props.dispatch}
+            typingHeader={this.props.typingHeader}
           />
         );
       default:
         return '';
     }
   }
+
+  handleTypingTimeouts = () => {
+    this.clearTimer();
+    this.startTyping();
+  };
+
+  startTyping = () => {
+    this.props.dispatch(startTypingHeader());
+  };
+
+  clearTimer = () => {
+    clearTimeout(this.timer);
+  };
 
   handleFileChange(e) {
     if (e.target.files.length > 0) {
@@ -362,6 +389,7 @@ ApiRequest.propTypes = {
   bodyType: PropTypes.string.isRequired,
   route: PropTypes.object.isRequired,
   numberOfTables: PropTypes.number.isRequired,
+  typingHeader: PropTypes.bool.isRequired,
 };
 
 export default ApiRequest;
