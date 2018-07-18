@@ -1,5 +1,5 @@
 Guide: Basic roles setup
-=======================
+========================
 
 This is a guide to help you set up a basic authorization architecture for your GraphQL fields.
 
