@@ -16,7 +16,7 @@ As you can see from the schema, you can:
 
 .. note::
 
-    As of now you cannot return a nested object in the response *(we are working on this feature)*.
+    As of now you cannot return a nested object in the mutation response *(we are working on this feature)*.
 
 Let's use this reference Authors/Articles schema to look at different types of mutations.
 
