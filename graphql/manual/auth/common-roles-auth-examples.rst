@@ -1,5 +1,5 @@
-Guide: Basic roles setup
-=======================
+Common roles and auth examples
+==============================
 
 This is a guide to help you set up a basic authorization architecture for your GraphQL fields.
 
@@ -14,13 +14,19 @@ Anonymous (not logged in) users
 - If you don't have a condition, then just set the permission to ``Without any checks`` represented by a ``{}``.
 - Choose the right set of columns that will get exposed in the GraphQL schema as fields. Take care of not exposing sensitive information.
 
+.. image:: ../../../img/graphql/manual/auth/anonymous-role-examples.png
+   :class: no-shadow
+
 Logged-in users
 ---------------
 
 - Create a role called ``user``
 - Access control rules in this case are usually dependent on a ``user_id`` or a ``owner_id`` column in your data model
 - Setup a permission for insert/select/update/delete that uses said column. Eg: ``author_id: {_eq: "X-Hasura-User-Id"}`` for an article table.
-- Note that the ``X-Hasura-User-Id`` is a value that comes in from your auth webhook's response, or as a request as a header if you're testing.
+- Note that the ``X-Hasura-User-Id`` is a :doc:`dynamic session variable<./roles-variables>` that comes in from your :doc:`auth webhook's<./webhook>` response, or as a request as a header if you're testing.
+
+.. image:: ../../../img/graphql/manual/auth/user-select-graphiql.png
+   :class: no-shadow
 
 
 Managers of an organisation in a multi-tenant app
@@ -30,7 +36,10 @@ Suppose you have a multi-tenant application where managers of a particular organ
 
 - Create a role called ``manager``
 - Create a permission for select, which has the condition: ``org_id: {_eq: "X-Hasura-Org-Id"}``.
-- ``X-Hasura-Org-Id`` is a dynamic variable that is returned by your auth webhook for an incoming GraphQL request
+- ``X-Hasura-Org-Id`` is a :doc:`dynamic variable<./roles-variables>` that is returned by your :doc:`auth webhook <./webhook>` for an incoming GraphQL request
+
+.. image:: ../../../img/graphql/manual/auth/org-manager-graphiql.png
+   :class: no-shadow
 
 Collaborators of an article
 ---------------------------
@@ -46,6 +55,8 @@ Let's say the "ownership" or "visibility" information for a data model (table) i
 
   - This reads as: Allow the role collaborator to select if ``article.collaborators`` has a ``collaborator_id`` equal to that of ``X-Hasura-User-Id``
 
+.. image:: ../../../img/graphql/manual/auth/org-manager-graphiql.png
+   :class: no-shadow
 
 Role based schemas
 ------------------

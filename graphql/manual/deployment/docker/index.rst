@@ -74,7 +74,7 @@ Edit the ``--database-url`` flag command, so that you can connect to your postgr
    :emphasize-lines: 5
 
     #! /bin/bash
-    docker run -p 8080:8080 \
+    docker run -d -p 8080:8080 \
      hasura/graphql-engine:latest \
      graphql-engine \
      --database-url postgres://username:password@hostname:port/dbname \
@@ -84,6 +84,21 @@ Examples of `database-url`:
 
 - If the username and database is called admin: ``postgres://admin:password@localhost:5432/admin``
 - If there is no password: ``postgres://admin:@localhost:5432/admin``
+
+.. note:: Docker networking
+
+   If your postgres database is running on localhost:5432, add the ``--net=host`` flag.
+   This is what your command might look like:
+
+   .. code-block:: bash
+      :emphasize-lines: 5
+
+       #! /bin/bash
+       docker run -d --net=host -p 8080:8080 \
+         hasura/graphql-engine:latest \
+         graphql-engine \
+         --database-url postgres://username:password@localhost:5432/dbname \
+         serve
 
 Check if everything is running well:
 
@@ -110,6 +125,12 @@ Now, open the hasura console:
   # Run this command in the my-project/ directory
   $ hasura console
 
+Step 5: Track existing tables and relationships
+-----------------------------------------------
+
+On the console page, you'll see your existing tables as "untracked tables" in the console.
+
+.. image:: ../../../../img/graphql/manual/getting-started/TrackTable.jpg
 
 Advanced:
 ---------
