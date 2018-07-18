@@ -29,8 +29,8 @@ touch /build/_console_output/cli.log
 wait_for_port 8080
 
 # start cli
-/build/_cli_output/hasura-linux-amd64 init --directory gql-test && cd gql-test
-/build/_cli_output/hasura-linux-amd64 console --no-browser > /build/_console_output/cli.log 2>&1 &
+/build/_cli_output/binaries/cli-hasura-linux-amd64 init --directory gql-test && cd gql-test
+/build/_cli_output/binaries/cli-hasura-linux-amd64 console --no-browser > /build/_console_output/cli.log 2>&1 &
 
 cd ..
 
