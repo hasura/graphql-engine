@@ -27,14 +27,10 @@ class ApiRequest extends Component {
   }
 
   componentWillMount() {
-    console.log(this.props.numberOfTables);
     if (this.props.numberOfTables !== 0) {
       const graphqlQueryInLS = window.localStorage.getItem('graphiql:query');
-      console.log(graphqlQueryInLS);
       if (graphqlQueryInLS && graphqlQueryInLS.indexOf('do not have') !== -1) {
-        console.log('Clearing');
         window.localStorage.removeItem('graphiql:query');
-        console.log('Cleared');
       }
     }
   }
