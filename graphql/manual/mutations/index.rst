@@ -15,8 +15,8 @@ As you can see from the schema, you can:
 #. Return objects, from the affected rows, in the response.
 
 .. note::
-    
-    You cannot return a nested object in the response. This is not supported by the GraphQL specification (*we are working on this as a feature*).
+
+    As of now you cannot return a nested object in the response *(we are working on this feature)*.
 
 Let's use this reference Authors/Articles schema to look at different types of mutations.
 
