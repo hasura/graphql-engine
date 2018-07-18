@@ -180,3 +180,7 @@ parseEnableConsole :: Parser Bool
 parseEnableConsole = switch ( long "enable-console" <>
                               help "Enable API Console"
                             )
+
+parseDisableAnalytics :: Parser Bool
+parseDisableAnalytics = switch ( long "disable-console-usage-reporting"
+                                <> help "Disable sending usage statistics to hasura.io from console")

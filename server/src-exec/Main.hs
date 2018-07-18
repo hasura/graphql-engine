@@ -34,14 +34,25 @@ data RavenOptions
 
 data ServeOptions
   = ServeOptions
-  { soPort          :: !Int
-  , soConnParams    :: !Q.ConnParams
-  , soTxIso         :: !Q.TxIsolation
-  , soRootDir       :: !(Maybe String)
-  , soAccessKey     :: !(Maybe AccessKey)
-  , soCorsConfig    :: !CorsConfigFlags
-  , soWebHook       :: !(Maybe T.Text)
-  , soEnableConsole :: !Bool
+  { soPort             :: !Int
+  , soConnParams       :: !Q.ConnParams
+  , soTxIso            :: !Q.TxIsolation
+  , soRootDir          :: !(Maybe String)
+  , soAccessKey        :: !(Maybe AccessKey)
+  , soCorsConfig       :: !CorsConfigFlags
+  , soWebHook          :: !(Maybe T.Text)
+  , soEnableConsole    :: !Bool
+  , soDisableAnalytics :: !Bool
+  } deriving (Show, Eq)
+
+data ServerConfig
+  = ServerConfig
+  { scRootDir          :: !(Maybe String)
+  , scAccessKey        :: !(Maybe AccessKey)
+  , scCorsConfig       :: !CorsConfig
+  , scWebHook          :: !(Maybe T.Text)
+  , scEnableConsole    :: !Bool
+  , scDisableAnalytics :: !Bool
   } deriving (Show, Eq)
 
 data RavenMode
@@ -73,6 +84,7 @@ parseRavenMode = subparser
                 <*> parseCorsConfig
                 <*> parseWebHook
                 <*> parseEnableConsole
+                <*> parseDisableAnalytics
 
 parseArgs :: IO RavenOptions
 parseArgs = execParser opts
@@ -98,6 +110,39 @@ mkAuthMode mAccessKey mWebHook =
       ++ " requires --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
     (Just key, Just hook) -> return $ AMAccessKeyAndHook key hook
 
+mkServerConfig :: ServeOptions -> IO ServerConfig
+mkServerConfig serveOpts = do
+  mAccessKey <- considerEnv accessKeyEnvVar mAccKeyF
+  mWebHook <- considerEnv webHookEnvVar mWebHookF
+  corsDomain <- fromMaybe "*" <$> considerEnv corsDomanEnvVar mDomainF
+  disableAnalytics <- fromFlag disableAnalyticsF
+  let corsCfg = CorsConfigG corsDomain corsEnabled
+  return $ ServerConfig mRootDir mAccessKey corsCfg
+                        mWebHook enableConsole disableAnalytics
+  where
+    ServeOptions _ _ _ mRootDir mAccKeyF corsCfgF mWebHookF
+                 enableConsole disableAnalyticsF = serveOpts
+
+    CorsConfigG mDomainF corsEnabled = corsCfgF
+
+    accessKeyEnvVar = "HASURA_GRAPHQL_ACCESS_KEY"
+    webHookEnvVar = "HASURA_GRAPHQL_AUTH_HOOK"
+    corsDomanEnvVar = "HASURA_GRAPHQL_CORS_DOMAIN"
+    disableAnalyticsEnvVar = "HASURA_GRAPHQL_DISABLE_USAGE_REPORTING"
+
+    -- if flags given are Nothing consider it's value from Env
+    considerEnv _ (Just t) = return $ Just t
+    considerEnv e Nothing  = fmap T.pack <$> lookupEnv e
+
+    -- if flag is not set consider from environment variable
+    fromFlag b = if b then return b
+                 else do
+                 fromEnv <- lookupEnv disableAnalyticsEnvVar
+                 return $ envToBool fromEnv
+
+    envToBool (Just "true") = True
+    envToBool _             = False
+
 main :: IO ()
 main = withStdoutLogger ravenLogGen $ \rlogger -> do
   (RavenOptions rci ravenMode) <- parseArgs
@@ -106,20 +151,18 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
     return $ mkConnInfo mEnvDbUrl rci
   printConnInfo ci
   case ravenMode of
-    ROServe (ServeOptions port cp isoL mRootDir mAccessKey corsCfg mWebHook enableConsole) -> do
-      mFinalAccessKey <- considerEnv "HASURA_GRAPHQL_ACCESS_KEY" mAccessKey
-      mFinalWebHook <- considerEnv "HASURA_GRAPHQL_AUTH_HOOK" mWebHook
+    ROServe serveOpts -> do
+      ServerConfig mRootDir mAccessKey corsCfg mWebHook
+                   enableConsole disableAnalytics <- mkServerConfig serveOpts
+      let ServeOptions port cp isoL _ _ _ _ _ _ = serveOpts
       am <- either ((>> exitFailure) . putStrLn) return $
-        mkAuthMode mFinalAccessKey mFinalWebHook
-      finalCorsDomain <- fromMaybe "*" <$> considerEnv "HASURA_GRAPHQL_CORS_DOMAIN" (ccDomain corsCfg)
-      let finalCorsCfg =
-            CorsConfigG finalCorsDomain $ ccDisabled corsCfg
+        mkAuthMode mAccessKey mWebHook
       initialise ci
       migrate ci
       pool <- Q.initPGPool ci cp
       runSpockNoBanner port $ do
         putStrLn $ "server: running on port " ++ show port
-        spockT id $ app isoL mRootDir rlogger pool am finalCorsCfg enableConsole
+        spockT id $ app isoL mRootDir rlogger pool am corsCfg enableConsole disableAnalytics
     ROExport -> do
       res <- runTx ci fetchMetadata
       either ((>> exitFailure) . printJSON) printJSON res
@@ -155,7 +198,3 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
         ++ "\n    Port: " ++ show (Q.connPort ci)
         ++ "\n    User: " ++ Q.connUser ci
         ++ "\n    Database: " ++ Q.connDatabase ci
-
-    -- if flags given are Nothing consider it's value from Env
-    considerEnv _ (Just t) = return $ Just t
-    considerEnv e Nothing  = fmap T.pack <$> lookupEnv e

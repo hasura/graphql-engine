@@ -17,6 +17,9 @@ const globals = {
   accessKey: window.__env.accessKey,
   consoleMode: window.__env.consoleMode,
   urlPrefix: checkExtraSlashes(window.__env.urlPrefix),
+  analyticsUrl: 'wss://analytics.stats.hasura.io/v1/ws',
+  disableUsageReporting: window.__env.disableUsageReporting,
+  projectVersion: window.__env.projectVersion,
 };
 
 // set defaults
@@ -30,6 +33,10 @@ if (!window.__env.consoleMode) {
 
 if (!window.__env.accessKey) {
   globals.accessKey = null;
+}
+
+if (window.__env.disableUsageReporting !== true) {
+  globals.disableUsageReporting = false;
 }
 
 if (globals.consoleMode === 'hasuradb') {

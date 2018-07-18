@@ -43,7 +43,7 @@ resetStateTx = do
 ravenApp :: RavenLogger -> PGQ.PGPool -> IO Application
 ravenApp rlogger pool = do
   let corsCfg = CorsConfigG "*" True  -- cors is disabled
-  spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
+  spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True False -- no access key and no webhook
 
 main :: IO ()
 main = withStdoutLogger ravenLogGen $ \rlogger -> do
