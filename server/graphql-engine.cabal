@@ -231,20 +231,13 @@ test-suite graphql-engine-test
                      , aeson
                      , aeson-casing
                      , bytestring
-                     -- , directory
-                     --, fgl
-                     , filepath
                      , hspec
                      , hspec-core
                      , hspec-wai
-                     --, http-types
                      , optparse-applicative
                      , graphql-engine -any
                      , text
-                     , transformers
                      , wai
-                     , wai-extra
-                     --, unordered-containers
                      , pg-client
                      , time
                      , yaml
