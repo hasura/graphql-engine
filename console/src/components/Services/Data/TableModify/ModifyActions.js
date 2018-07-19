@@ -83,14 +83,23 @@ const deleteTableSql = tableName => {
 const untrackTableSql = tableName => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
-    const sqlUpQueries = [
+    const upQueries = [
       {
         type: 'untrack_table',
         args: {
           table: {
-            name: tableName,
+            name: tableName.trim(),
             schema: currentSchema,
           },
+        },
+      },
+    ];
+    const downQueries = [
+      {
+        type: 'add_existing_table_or_view',
+        args: {
+          name: tableName.trim(),
+          schema: currentSchema,
         },
       },
     ];
@@ -118,8 +127,8 @@ const untrackTableSql = tableName => {
     makeMigrationCall(
       dispatch,
       getState,
-      sqlUpQueries,
-      [],
+      upQueries,
+      downQueries,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -363,15 +372,25 @@ const addColSql = (
         sql: runSqlQueryUp,
       },
     });
-    /*
-    const runSqlQueryDown = 'ALTER TABLE ' + '"' + tableName + '"' + ' DROP COLUMN ' + '"' + colName + '"';
-    const schemaChangesDown = [{
-      type: 'run_sql',
-      args: {
-        'sql': runSqlQueryDown
-      }
-    }];
-    */
+    const runSqlQueryDown =
+      'ALTER TABLE ' +
+      currentSchema +
+      '.' +
+      '"' +
+      tableName +
+      '"' +
+      ' DROP COLUMN ' +
+      '"' +
+      colName +
+      '"';
+    const schemaChangesDown = [
+      {
+        type: 'run_sql',
+        args: {
+          sql: runSqlQueryDown,
+        },
+      },
+    ];
 
     // Apply migrations
     const migrationName =
@@ -395,7 +414,7 @@ const addColSql = (
       dispatch,
       getState,
       schemaChangesUp,
-      [],
+      schemaChangesDown,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -515,10 +534,10 @@ const addFkSql = (tableName, isInsideEdit) => {
     }
 
     // ALTER TABLE <table> ADD FOREIGN KEY (my_field) REFERENCES <foreign_table>;
-    let fkQuery =
+    let fkUpQuery =
       'ALTER TABLE ' + currentSchema + '.' + '"' + tableName + '"' + ' ';
-    fkQuery += 'ADD FOREIGN KEY (' + '"' + state.lcol + '"' + ') ';
-    fkQuery +=
+    fkUpQuery += 'ADD FOREIGN KEY (' + '"' + state.lcol + '"' + ') ';
+    fkUpQuery +=
       'REFERENCES ' +
       currentSchema +
       '.' +
@@ -532,23 +551,26 @@ const addFkSql = (tableName, isInsideEdit) => {
       ')';
     // fkQuery += 'ON UPDATE ' + onUpdate + ' ';
     // fkQuery += 'ON DELETE ' + onDelete + ' ';
+    let fkDownQuery =
+      'ALTER TABLE ' + currentSchema + '.' + '"' + tableName + '"' + ' ';
+    fkDownQuery +=
+      'DROP CONSTRAINT ' + tableName + '_' + state.lcol + '_fkey' + '"';
     const schemaChangesUp = [
       {
         type: 'run_sql',
         args: {
-          sql: fkQuery,
+          sql: fkUpQuery,
         },
       },
     ];
-    /*
-    // pending
-    const schemaChangesDown = [{
-      type: 'run_sql',
-      args: {
-        'sql': fkQuery
-      }
-    }];
-    */
+    const schemaChangesDown = [
+      {
+        type: 'run_sql',
+        args: {
+          sql: fkDownQuery,
+        },
+      },
+    ];
 
     // Apply migrations
     const migrationName =
@@ -569,7 +591,7 @@ const addFkSql = (tableName, isInsideEdit) => {
       dispatch,
       getState,
       schemaChangesUp,
-      [],
+      schemaChangesDown,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -650,24 +672,24 @@ const saveColumnChangesSql = (
     const schemaChangesUp =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesUpQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesUpQuery,
             },
-          ]
+          },
+        ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesDownQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesDownQuery,
             },
-          ]
+          },
+        ]
         : [];
 
     /* column default up/down migration */
@@ -1017,7 +1039,7 @@ const saveColumnChangesSql = (
         dispatch,
         getState,
         schemaChangesUp,
-        [],
+        schemaChangesDown,
         migrationName,
         customOnSuccess,
         customOnError,
@@ -1097,24 +1119,24 @@ const saveColChangesWithFkSql = (
     const schemaChangesUp =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesUpQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesUpQuery,
             },
-          ]
+          },
+        ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesDownQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesDownQuery,
             },
-          ]
+          },
+        ]
         : [];
 
     /* column default up/down migration */
@@ -1207,6 +1229,10 @@ const saveColChangesWithFkSql = (
           schemaChangesUp.push({
             type: 'run_sql',
             sql: 'CREATE EXTENSION IF NOT EXISTS pgcrypto;',
+          });
+          schemaChangesDown.push({
+            type: 'run_sql',
+            sql: 'DROP EXTENSION pgcrypto;',
           });
         }
         schemaChangesUp.push({
@@ -1473,7 +1499,7 @@ const saveColChangesWithFkSql = (
         dispatch,
         getState,
         schemaChangesUp,
-        [],
+        schemaChangesDown,
         migrationName,
         customOnSuccess,
         customOnError,

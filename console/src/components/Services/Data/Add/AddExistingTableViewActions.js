@@ -8,8 +8,6 @@ import {
 import { showSuccessNotification } from '../Notification';
 import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
 
-import globals from '../../../../Globals';
-
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
 const MAKING_REQUEST = 'AddExistingTable/MAKING_REQUEST';
@@ -26,11 +24,20 @@ const addExistingTableSql = () => {
     const state = getState().addTable.existingTableView;
     const currentSchema = getState().tables.currentSchema;
 
-    const requestBody = {
+    const requestBodyUp = {
       type: 'add_existing_table_or_view',
       args: {
         name: state.tableName.trim(),
         schema: currentSchema,
+      },
+    };
+    const requestBodyDown = {
+      type: 'untrack_table',
+      args: {
+        table: {
+          name: state.tableName.trim(),
+          schema: currentSchema,
+        },
       },
     };
     const migrationName =
@@ -40,18 +47,13 @@ const addExistingTableSql = () => {
       state.tableName.trim();
     const upQuery = {
       type: 'bulk',
-      args: [requestBody],
+      args: [requestBodyUp],
+    };
+    const downQuery = {
+      type: 'bulk',
+      args: [requestBodyDown],
     };
 
-    const schemaMigration = {
-      name: migrationName,
-      up: upQuery.args,
-      down: [],
-    };
-    let finalReqBody = schemaMigration.up;
-    if (globals.consoleMode === 'hasuradb') {
-      finalReqBody = schemaMigration.up;
-    }
     const requestMsg = 'Adding existing table/view...';
     const successMsg = 'Existing table/view added';
     const errorMsg = 'Adding existing table/view failed';
@@ -93,8 +95,8 @@ const addExistingTableSql = () => {
     makeMigrationCall(
       dispatch,
       getState,
-      finalReqBody,
-      [],
+      upQuery.args,
+      downQuery.args,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -111,14 +113,24 @@ const addAllUntrackedTablesSql = tableList => {
 
     dispatch({ type: MAKING_REQUEST });
     dispatch(showSuccessNotification('Existing table/view added!'));
-    const bulkQuery = [];
+    const bulkQueryUp = [];
+    const bulkQueryDown = [];
     for (let i = 0; i < tableList.length; i++) {
       if (tableList[i].table_name !== 'schema_migrations') {
-        bulkQuery.push({
+        bulkQueryUp.push({
           type: 'add_existing_table_or_view',
           args: {
             name: tableList[i].table_name,
             schema: currentSchema,
+          },
+        });
+        bulkQueryDown.push({
+          type: 'untrack_table',
+          args: {
+            table: {
+              name: tableList[i].table_name,
+              schema: currentSchema,
+            },
           },
         });
       }
@@ -126,18 +138,13 @@ const addAllUntrackedTablesSql = tableList => {
     const migrationName = 'add_all_existing_table_or_view_' + currentSchema;
     const upQuery = {
       type: 'bulk',
-      args: bulkQuery,
+      args: bulkQueryUp,
+    };
+    const downQuery = {
+      type: 'bulk',
+      args: bulkQueryDown,
     };
 
-    const schemaMigration = {
-      name: migrationName,
-      up: upQuery.args,
-      down: [],
-    };
-    let finalReqBody = schemaMigration.up;
-    if (globals.consoleMode === 'hasuradb') {
-      finalReqBody = schemaMigration.up;
-    }
     const requestMsg = 'Adding existing table/view...';
     const successMsg = 'Existing table/view added';
     const errorMsg = 'Adding existing table/view failed';
@@ -162,8 +169,8 @@ const addAllUntrackedTablesSql = tableList => {
     makeMigrationCall(
       dispatch,
       getState,
-      finalReqBody,
-      [],
+      upQuery.args,
+      downQuery.args,
       migrationName,
       customOnSuccess,
       customOnError,

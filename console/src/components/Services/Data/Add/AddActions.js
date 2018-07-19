@@ -4,7 +4,6 @@ import { loadSchema, makeMigrationCall } from '../DataActions';
 import { showSuccessNotification } from '../Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
-import globals from '../../../../Globals';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
@@ -161,28 +160,16 @@ const createTableSql = () => {
       type: 'bulk',
       args: upQueryArgs,
     };
-    /*
     const sqlDropTable = 'DROP TABLE ' + '"' + state.tableName.trim() + '"';
     const downQuery = {
       type: 'bulk',
       args: [
         {
           type: 'run_sql',
-          args: { 'sql': sqlDropTable }
-        }
-      ]
+          args: { sql: sqlDropTable },
+        },
+      ],
     };
-    */
-    const schemaMigration = {
-      name: migrationName,
-      up: upQuery.args,
-      // down: downQuery.args,
-      down: [],
-    };
-    let finalReqBody = schemaMigration.up;
-    if (globals.consoleMode === 'hasuradb') {
-      finalReqBody = schemaMigration.up;
-    }
     const requestMsg = 'Creating table...';
     const successMsg = 'Table Created';
     const errorMsg = 'Create table failed';
@@ -213,8 +200,8 @@ const createTableSql = () => {
     makeMigrationCall(
       dispatch,
       getState,
-      finalReqBody,
-      [],
+      upQuery.args,
+      downQuery.args,
       migrationName,
       customOnSuccess,
       customOnError,

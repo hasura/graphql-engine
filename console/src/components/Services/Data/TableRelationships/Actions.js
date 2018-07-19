@@ -47,15 +47,7 @@ const deleteRelMigrate = (tableName, relName) => (dispatch, getState) => {
     },
   ];
   // pending
-  const relChangesDown = [
-    {
-      type: 'drop_relationship',
-      args: {
-        table: { name: tableName, schema: currentSchema },
-        relationship: relName,
-      },
-    },
-  ];
+  const relChangesDown = [];
 
   // Apply migrations
   const migrationName = `drop_relationship_${relName}_${currentSchema}_table_${tableName}`;
@@ -106,20 +98,10 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   ];
   const relChangesDown = [
     {
-      type: isObjRel
-        ? 'create_object_relationship'
-        : 'create_array_relationship',
+      type: 'drop_relationship',
       args: {
-        name: state.name,
         table: { name: state.tableName, schema: currentSchema },
-        using: isObjRel
-          ? { foreign_key_constraint_on: state.lcol }
-          : {
-            foreign_key_constraint_on: {
-              table: { name: state.rTable, schema: currentSchema },
-              column: state.rcol,
-            },
-          },
+        relationship: state.name,
       },
     },
   ];
@@ -163,68 +145,6 @@ const relTableChange = tableName => (dispatch, getState) => {
   dispatch({ type: REL_SET_MANUAL_COLUMNS, data: tableColumns });
 };
 
-const addRelMigrate = (tableName, name, lcol, rcol, form) => (
-  dispatch,
-  getState
-) => {
-  const state = getState().tables.modify.relAdd;
-  const currentSchema = getState().tables.currentSchema;
-  const isObjRel = state.isObjRel;
-  const relChangesUp = [
-    {
-      type: isObjRel
-        ? 'create_object_relationship'
-        : 'create_array_relationship',
-      args: {
-        name,
-        table: { name: tableName, schema: currentSchema },
-        using: isObjRel
-          ? { foreign_key_constraint_on: lcol }
-          : {
-            foreign_key_constraint_on: {
-              table: { name: state.rTable, schema: currentSchema },
-              column: rcol,
-            },
-          },
-      },
-    },
-  ];
-  const relChangesDown = [
-    {
-      type: 'drop_relationship',
-      args: {
-        name,
-        table: { name: tableName, schema: currentSchema },
-      },
-    },
-  ];
-
-  // Apply migrations
-  const migrationName = `create_relationship_${name}_${currentSchema}_table_${tableName}`;
-
-  const requestMsg = 'Adding Relationship...';
-  const successMsg = 'Relationship created';
-  const errorMsg = 'Creating relationship failed';
-
-  const customOnSuccess = () => {
-    form.reset();
-  };
-  const customOnError = () => {};
-
-  makeMigrationCall(
-    dispatch,
-    getState,
-    relChangesUp,
-    relChangesDown,
-    migrationName,
-    customOnSuccess,
-    customOnError,
-    requestMsg,
-    successMsg,
-    errorMsg
-  );
-};
-
 const addRelViewMigrate = tableName => (dispatch, getState) => {
   const state = getState().tables.modify.relAdd;
   const currentSchema = getState().tables.currentSchema;
@@ -256,8 +176,8 @@ const addRelViewMigrate = tableName => (dispatch, getState) => {
     {
       type: 'drop_relationship',
       args: {
-        name,
         table: { name: tableName, schema: currentSchema },
+        relationship: name,
       },
     },
   ];
@@ -440,20 +360,10 @@ const autoAddRelName = obj => (dispatch, getState) => {
   ];
   const relChangesDown = [
     {
-      type: isObjRel
-        ? 'create_object_relationship'
-        : 'create_array_relationship',
+      type: 'drop_relationship',
       args: {
-        name: relName,
         table: { name: obj.tableName, schema: currentSchema },
-        using: isObjRel
-          ? { foreign_key_constraint_on: obj.lcol }
-          : {
-            foreign_key_constraint_on: {
-              table: { name: obj.rTable, schema: currentSchema },
-              column: obj.rcol,
-            },
-          },
+        relationship: relName,
       },
     },
   ];
@@ -491,7 +401,6 @@ export {
   addNewRelClicked,
   relTypeChange,
   relRTableChange,
-  addRelMigrate,
   addRelViewMigrate,
   relTableChange,
   relSelectionChanged,
