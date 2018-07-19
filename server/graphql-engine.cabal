@@ -209,7 +209,7 @@ test-suite graphql-engine-test
                      , aeson
                      , aeson-casing
                      , bytestring
-                     --, directory
+                     -- , directory
                      --, fgl
                      , filepath
                      , hspec

@@ -9,7 +9,6 @@ import           Options.Applicative
 import           System.Environment         (withArgs)
 import           System.Exit                (exitFailure)
 import           Test.Hspec.Core.Runner
-import           Test.Hspec.Formatters
 import           Test.Hspec.Wai
 import           Web.Spock.Core             (spockAsApp, spockT)
 
@@ -42,7 +41,7 @@ resetStateTx = do
 
 ravenApp :: RavenLogger -> PGQ.PGPool -> IO Application
 ravenApp rlogger pool = do
-  let corsCfg = CorsConfigG "*" True  -- cors is disabled
+  let corsCfg = CorsConfigG "*" False -- cors is disabled
   spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
 
 main :: IO ()
@@ -58,10 +57,10 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
   void $ liftIO $ runExceptT $ Q.runTx pool defTxMode resetStateTx
   -- intialize state for graphql-engine in the database
   liftIO $ initialise pool
+  -- generate the test specs
   specs <- mkSpecs
   -- run the tests
-  withArgs [] $ hspecWith defaultConfig {configFormatter = Just progress} $
-    with (ravenApp rlogger pool) specs
+  withArgs [] $ hspecWith defaultConfig $ with (ravenApp rlogger pool) specs
 
   where
     initialise :: Q.PGPool -> IO ()
