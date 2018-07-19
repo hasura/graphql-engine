@@ -38,6 +38,25 @@ refs:
       branches:
         ignore: /^release-v.*/
 
+  # ref pg environment for testing
+  test_pg_env: &test_pg_env
+    environment:
+      POSTGRES_USER: gql_test
+      POSTGRES_DB: gql_test
+
+  # ref test server job
+  test_server: &test_server
+    working_directory: ~/graphql-engine
+    steps:
+    - checkout
+    - attach_workspace:
+        at: /build
+    - *wait_for_postgres
+    - run:
+        name: test the server
+        working_directory: ./server
+        command: |
+          DATABASE_URL="postgres://gql_test:@localhost:5432/gql_test" make ci-test
 
 
 version: 2
@@ -53,14 +72,11 @@ jobs:
     - run:
         name: check build worthiness
         command: .circleci/ciignore.sh
-  # test build the server binary
-  test_and_build_server:
+
+  # build the server binary, and package into docker image
+  build_server:
     docker:
     - image: hasura/graphql-engine-server-builder:v0.2
-    - image: circleci/postgres:10-alpine
-      environment:
-        POSTGRES_USER: gql_test
-        POSTGRES_DB: gql_test
     working_directory: ~/graphql-engine
     steps:
     - checkout
@@ -69,20 +85,22 @@ jobs:
         docker_layer_caching: true
     - restore_cache:
         keys:
-        - server-app-cache-{{ .Branch }}-{{ .Revision }}
         - server-deps-cache-v1
-    - *wait_for_postgres
+    - restore_cache:
+        keys:
+        - server-app-cache-v1
     - run:
-        name: test and build server binary
+        name: Build the server
         working_directory: ./server
         command: |
-          DATABASE_URL="postgres://gql_test:@localhost:5432/gql_test" make ci-binary-and-test
+          make ci-binary
           make ci-image
           make ci-save-image
     - save_cache:
-        key: server-app-cache-{{ .Branch }}-{{ .Revision }}
+        # FIXME: change this!!!
+        key: server-app-cache-v1
         paths:
-        - server/.stack-work
+        - ./server/.stack-work
     - save_cache:
         key: server-deps-cache-v1
         paths:
@@ -94,6 +112,45 @@ jobs:
         root: /build
         paths:
           - _server_output # binary is called graphql-engine
+
+  # job to execute when all server tests pass. later we can collect test
+  # reports and publish them etc.
+  all_server_tests_pass:
+    docker:
+    - image: alpine:edge
+    steps:
+    - run:
+        name: All server tests passed
+        command: echo 'all tests passed!'
+
+  # test the server with postgres versions >= 9.4
+  test_server_pg_10.4:
+    <<: *test_server
+    docker:
+    - image: hasura/graphql-engine-cli-builder:v0.2
+    - image: circleci/postgres:10.4-alpine
+      <<: *test_pg_env
+
+  test_server_pg_9.6:
+    <<: *test_server
+    docker:
+    - image: hasura/graphql-engine-cli-builder:v0.2
+    - image: circleci/postgres:9.6-alpine
+      <<: *test_pg_env
+
+  test_server_pg_9.5:
+    <<: *test_server
+    docker:
+    - image: hasura/graphql-engine-cli-builder:v0.2
+    - image: circleci/postgres:9.5-alpine
+      <<: *test_pg_env
+
+  test_server_pg_9.4:
+    <<: *test_server
+    docker:
+    - image: hasura/graphql-engine-cli-builder:v0.2
+    - image: circleci/postgres:9.4-alpine
+      <<: *test_pg_env
 
   # test and build cli
   test_and_build_cli:
@@ -203,14 +260,36 @@ workflows:
   build_and_test:
     jobs:
     - check_build_worthiness: *filter_only_vtags
-    - test_and_build_server:
+    - build_server:
         <<: *filter_only_vtags
         requires:
         - check_build_worthiness
+    - test_server_pg_10.4:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - test_server_pg_9.6:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - test_server_pg_9.5:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - test_server_pg_9.4:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - all_server_tests_pass:
+        requires:
+        - test_server_pg_10.4
+        - test_server_pg_9.6
+        - test_server_pg_9.5
+        - test_server_pg_9.4
     - test_and_build_cli:
         <<: *filter_only_vtags
         requires:
-        - test_and_build_server
+        - build_server
     - test_and_build_console:
         <<: *filter_only_vtags
         requires:
@@ -219,3 +298,4 @@ workflows:
         <<: *filter_only_vtags_dev_release_branches
         requires:
         - test_and_build_console
+        - all_server_tests_pass
