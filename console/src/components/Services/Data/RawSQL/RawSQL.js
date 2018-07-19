@@ -12,12 +12,19 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import {
   executeSQL,
   SET_SQL,
+  SET_CASCADE_CHECKED,
   SET_MIGRATION_CHECKED,
   SET_TRACK_TABLE_CHECKED,
 } from './Actions';
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
 
+const cascadeTip = (
+  <Tooltip id="tooltip-cascade">
+    Cascade all the dependent metadata references like relationships and
+    permissions.
+  </Tooltip>
+);
 const migrationTip = (
   <Tooltip id="tooltip-migration">
     Modifications to the underlying postgres schema should be tracked as
@@ -41,6 +48,7 @@ const RawSQL = ({
   lastError,
   lastSuccess,
   isModalOpen,
+  isCascadeChecked,
   isMigrationChecked,
   isTableTrackChecked,
   migrationMode,
@@ -194,6 +202,27 @@ const RawSQL = ({
             }}
           />
           <hr />
+          <div>
+            <input
+              checked={isCascadeChecked}
+              className={styles.add_mar_right_small}
+              id="cascade-checkbox"
+              type="checkbox"
+              onChange={() => {
+                dispatch({
+                  type: SET_CASCADE_CHECKED,
+                  data: !isCascadeChecked,
+                });
+              }}
+            />
+            Cascade relationships or permissions metadata
+            <OverlayTrigger placement="right" overlay={cascadeTip}>
+              <i
+                className={`${styles.padd_small_left} fa fa-info-circle`}
+                aria-hidden="true"
+              />
+            </OverlayTrigger>
+          </div>
           {migrationMode && globals.consoleMode === 'cli' ? (
             <div>
               <input
@@ -238,7 +267,9 @@ const RawSQL = ({
               </div>
               <hr />
             </div>
-          ) : null}
+          ) : (
+            <hr />
+          )}
           <button
             type="submit"
             className={styles.yellow_button}
