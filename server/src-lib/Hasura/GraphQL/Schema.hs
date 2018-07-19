@@ -366,7 +366,7 @@ mkUpdIncInp
   :: QualifiedTable -> Maybe [PGColInfo] -> Maybe InpObjTyInfo
 mkUpdIncInp tn = maybe Nothing mkType
   where
-    mkType cols = case filter isIntegerType cols of
+    mkType cols = case filter (isIntegerType . pgiType) cols of
       [] -> Nothing
       intCols -> Just $
         InpObjTyInfo (Just desc) (mkUpdIncTy tn) $ fromInpValL $
@@ -418,13 +418,13 @@ input table_delete_at_path_input {
 
 mkUpdJSONOpInp
   :: QualifiedTable -> [PGColInfo] -> [InpObjTyInfo]
-mkUpdJSONOpInp tn cols = case filter isJSONBType cols of
+mkUpdJSONOpInp tn cols = case filter (isJSONBType . pgiType) cols of
   [] -> []
   _ -> [ concatInpObj, deleteKeyInpObj
        , deleteElemInpObj, deleteAtPathInpObj
        ]
   where
-    jsonbCols = filter isJSONBType cols
+    jsonbCols = filter (isJSONBType . pgiType) cols
     jsonbColNames = map pgiName jsonbCols
 
     concatDesc = "concat with new jsonb value"
@@ -468,7 +468,7 @@ update_table(
 -}
 
 mkIncInpVal :: QualifiedTable -> [PGColInfo] -> [InpValInfo]
-mkIncInpVal tn cols = case filter isIntegerType cols of
+mkIncInpVal tn cols = case filter (isIntegerType . pgiType) cols of
   [] -> []
   _  -> [incArg]
   where
@@ -477,7 +477,7 @@ mkIncInpVal tn cols = case filter isIntegerType cols of
       InpValInfo (Just incArgDesc) "_inc" $ G.toGT $ mkUpdIncTy tn
 
 mkJSONOpInpVals :: QualifiedTable -> [PGColInfo] -> [InpValInfo]
-mkJSONOpInpVals tn cols = case filter isJSONBType cols of
+mkJSONOpInpVals tn cols = case filter (isJSONBType . pgiType) cols of
   [] -> []
   _  -> [concatArg, deleteKeyArg, deleteElemArg, deleteAtPathArg]
   where
