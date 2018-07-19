@@ -1,10 +1,11 @@
 Migrations for a new application
 ================================
 
-This guide will help you if you're building a new application using Hasura. You can use the Hasura CLI to help you track database and schema migrations as well.
+This guide will help you if you're starting with a fresh Hasura GraphQL engine instance. You can use the Hasura CLI
+to help you track database schema and graphql schema migrations as well.
 
-Step 0: Take a note of your current GraphQL engine endpoint
------------------------------------------------------------
+Step 0: Take a note of your  GraphQL engine endpoint
+----------------------------------------------------
 
 Let's say you've deployed the GraphQL engine on Heroku, then this endpoint is: ``http://my-graphql.herokuapp.com``.
 In case you've deployed this on a VM the URL might be ``http://xx.xx.xx.xx:8080``.

@@ -1,12 +1,14 @@
-Migrations over an existing database
+Migrations with an existing database
 ====================================
 
-This guide will help you setup migrations in case you're working with an existing application or database that already has database migration tooling.
+This guide will help you setup metadata migrations in case you're working with an existing database that already
+has database migration tooling.
 
-In this case, you'll be using Hasura only to manage changes to the Hasura metadata which affect your GraphQL schema and not the underlying database.
+In this case, you'll be using Hasura only to manage changes to the Hasura metadata which affect your GraphQL schema
+and not the underlying database.
 
-Step 0: Take a note of your current GraphQL engine endpoint
------------------------------------------------------------
+Step 0: Take a note of your GraphQL engine endpoint
+---------------------------------------------------
 
 Let's say you've deployed the GraphQL engine on Heroku, then this endpoint is: ``http://my-graphql.herokuapp.com``.
 In case you've deployed this on a VM the URL might be ``http://xx.xx.xx.xx:8080``.
@@ -65,7 +67,7 @@ Skip this step if you already have a project directory.
   hasura init --directory my-project --endpoint http://my-graphql.herokuapp.com
 
 Step 3: Open the console via the CLI & disable postgres schema changes
------------------------------------------------------------------------
+----------------------------------------------------------------------
 
 Instead of using the console at ``http://my-grapqhl.herokuapp.com/console`` you should now use the console by running:
 
@@ -77,22 +79,22 @@ Instead of using the console at ``http://my-grapqhl.herokuapp.com/console`` you 
    # With access key
    hasura console --access-key mysecretkey
 
-Step 4: Disable migrations
---------------------------
+Step 4: Disable database schema modifications
+---------------------------------------------
 
-Since you are using other tools to manage migrations, you should disable
-migrations on Hasura console to prevent edits to the database schema. But, you
+Since you are using other tools to manage migrations, you should disable the database schema modification
+tools on Hasura console to prevent edits to the database schema. But, you
 can still do actions related to metadata that Hasura stores, like tracking a
 table or creating/editing relationships or modifying permissions.
 
-To disable migrations, head to ``Data -> Migrations`` on the console and then
-disable the toggle "Allow postgres schema changes". 
+To disable schema modifications, head to ``Data -> Migrations`` on the console and then
+disable the toggle ``Allow postgres schema changes``.
 
 Step 5: Track a table, or modify a relationship/permission
 ----------------------------------------------------------
 
-As you use the console to track/untrack tables, views or update relationships and permissions you'll see how the metadata file changes
-automatically at ``migrations/metadata.yaml``.
+As you use the console to track/untrack tables, views or update relationships and permissions you'll see how the
+metadata file changes automatically at ``migrations/metadata.yaml``.
 
 Step 6: Apply the metadata to another instance of GraphQL engine
 ----------------------------------------------------------------

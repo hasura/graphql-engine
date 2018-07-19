@@ -1,16 +1,18 @@
-Enable migrations
-=================
+Migrations for an existing project
+==================================
 
-This guide will help you if you've already setup your GraphQL backend with Hasura and now want to start using migrations to help you track schema changes and create a CI/CD workflow.
+This guide will help you if you've already setup your GraphQL backend with Hasura GraphQl engine and now want
+to start using migrations to help you track schema changes and create a CI/CD workflow.
 
 These are the steps you need to follow:
 
 #. Install the Hasura CLI
 #. Initialise migrations
-#. For further changes, use the hasura CLI console (``http://localhost:9695``) instead of the console served by the graphql engine (Eg: ``http://my-graphql.herokuapp.com``)
+#. For further changes, use the Hasura CLI console (``http://localhost:9695``) instead of the console served by the
+   GraphQL engine (Eg: ``http://my-graphql.herokuapp.com``)
 
-Step 0: Take a note of your current GraphQL engine endpoint
------------------------------------------------------------
+Step 0: Take a note of your GraphQL engine endpoint
+---------------------------------------------------
 
 Let's say you've deployed the GraphQL engine on Heroku, then this endpoint is: ``http://my-graphql.herokuapp.com``.
 In case you've deployed this on a VM the URL might be ``http://xx.xx.xx.xx:8080``.
@@ -70,7 +72,7 @@ Skip this step if you already have a project directory.
 Step 3: Initialise the migrations as per your current state
 -----------------------------------------------------------
 
-- Install pg_dump (or use docker) and run the following command to download the public schema as ``public-schema.sql``:
+- Install ``pg_dump`` (or use docker) and run the following command to download the public schema as ``public-schema.sql``:
 
   .. code-block:: bash
   
@@ -114,7 +116,7 @@ Instead of using the console at ``http://my-grapqhl.herokuapp.com/console`` you 
    hasura console --access-key mysecretkey
 
 Step 5: Add a new table and see how a migration is added
----------------------------------------------------------
+--------------------------------------------------------
 
 As you use the Hasura console UI to make changes to your schema, migration files are automatically generated
 in the ``migrations/`` directory in your project.
