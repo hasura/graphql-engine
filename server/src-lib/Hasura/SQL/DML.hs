@@ -212,6 +212,7 @@ data SQLExp
   | SECond !BoolExp !SQLExp !SQLExp
   | SEBool !BoolExp
   | SEExcluded !T.Text
+  | SEArray ![SQLExp]
   deriving (Show, Eq)
 
 newtype Alias
@@ -251,6 +252,8 @@ instance ToSQL SQLExp where
   toSQL (SEBool be) = toSQL be
   toSQL (SEExcluded t) = BB.string7 "EXCLUDED."
                          <> toSQL (PGCol t)
+  toSQL (SEArray exps) = BB.string7 "ARRAY" <> BB.char7 '['
+                         <> (", " <+> exps) <> BB.char7 ']'
 
 data Extractor = Extractor !SQLExp !(Maybe Alias)
                deriving (Show, Eq)

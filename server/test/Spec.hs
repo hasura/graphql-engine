@@ -36,16 +36,25 @@ querySpecFiles =
 gqlSpecFiles :: [FilePath]
 gqlSpecFiles =
   [ "introspection.yaml"
-  , "insert_mutation_author.yaml"
+  , "insert_mutation/author.yaml"
   , "simple_select_query_author.yaml"
-  , "insert_mutation_article.yaml"
-  , "insert_mutation_article_on_conflict.yaml"
-  , "insert_mutation_article_on_conflict_ignore.yaml"
-  , "insert_mutation_article_on_conflict_ignore_constraint.yaml"
-  , "insert_mutation_article_on_conflict_error_01.yaml"
-  , "insert_mutation_article_on_conflict_error_02.yaml"
-  , "insert_mutation_article_on_conflict_error_03.yaml"
+  , "insert_mutation/article.yaml"
+  , "insert_mutation/article_on_conflict.yaml"
+  , "insert_mutation/article_on_conflict_ignore.yaml"
+  , "insert_mutation/article_on_conflict_ignore_constraint.yaml"
+  , "insert_mutation/article_on_conflict_error_01.yaml"
+  , "insert_mutation/article_on_conflict_error_02.yaml"
+  , "insert_mutation/article_on_conflict_error_03.yaml"
+  , "insert_mutation/person.yaml"
+  , "insert_mutation/person_array.yaml"
   , "nested_select_query_article.yaml"
+  , "update_mutation/person_set.yaml"
+  , "update_mutation/person_concat.yaml"
+  , "update_mutation/person_delete_key.yaml"
+  , "update_mutation/person_delete_elem.yaml"
+  , "update_mutation/person_delete_at_path.yaml"
+  , "update_mutation/person_inc.yaml"
+  , "update_mutation/person_error_01.yaml"
   ]
 
 readTestCase :: FilePath -> IO TestCase

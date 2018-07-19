@@ -14,6 +14,8 @@ module Hasura.RQL.Types.SchemaCache
        , TableInfo(..)
        , TableConstraint(..)
        , ConstraintType(..)
+       , isIntegerType
+       , isJSONBType
        , isUniqueOrPrimary
        , mkTableInfo
        , addTableToCache
@@ -182,6 +184,16 @@ data PGColInfo
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''PGColInfo)
+
+isIntegerType :: PGColInfo -> Bool
+isIntegerType (PGColInfo _ PGInteger)  = True
+isIntegerType (PGColInfo _ PGSmallInt) = True
+isIntegerType (PGColInfo _ PGBigInt)   = True
+isIntegerType _                        = False
+
+isJSONBType :: PGColInfo -> Bool
+isJSONBType (PGColInfo _ PGJSONB) = True
+isJSONBType _                     = False
 
 data RelInfo
   = RelInfo

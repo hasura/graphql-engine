@@ -16,3 +16,10 @@ query:
             content TEXT,
             author_id INTEGER REFERENCES author(id)
           )
+    - type: run_sql
+      args:
+        sql: |
+          CREATE TABLE person (
+            id SERIAL PRIMARY KEY,
+            details JSONB NOT NULL
+          )

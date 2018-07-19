@@ -339,30 +339,172 @@ input table_set_input {
   coln: coltyn
 }
 -}
-mkUpdInp
+mkUpdSetInp
   :: QualifiedTable -> [PGColInfo] -> InpObjTyInfo
-mkUpdInp tn cols  =
+mkUpdSetInp tn cols  =
   InpObjTyInfo (Just desc) (mkUpdSetTy tn) $ fromInpValL $
   map mkPGColInp cols
   where
     desc = G.Description $
       "input type for updating data in table " <>> tn
 
+-- table_inc_input
+mkUpdIncTy :: QualifiedTable -> G.NamedType
+mkUpdIncTy tn =
+  G.NamedType $ qualTableToName tn <> "_inc_input"
+
+{-
+input table_inc_input {
+  integer-col1: int
+  .
+  .
+  integer-col2: int
+}
+-}
+
+mkUpdIncInp
+  :: QualifiedTable -> Maybe [PGColInfo] -> Maybe InpObjTyInfo
+mkUpdIncInp tn = maybe Nothing mkType
+  where
+    mkType cols = case filter isIntegerType cols of
+      [] -> Nothing
+      intCols -> Just $
+        InpObjTyInfo (Just desc) (mkUpdIncTy tn) $ fromInpValL $
+        map mkPGColInp intCols
+    desc = G.Description $
+      "input type for incrementing integer columne in table " <>> tn
+
+-- table_<json-op>_input
+mkJSONOpTy :: QualifiedTable -> T.Text -> G.NamedType
+mkJSONOpTy tn op =
+  G.NamedType $ qualTableToName tn <> G.Name op <> "_input"
+
+-- json ops are _concat, _delete_key, _delete_elem, _delete_at_path
+{-
+input table_concat_input {
+  jsonb-col1: json
+  .
+  .
+  jsonb-coln: json
+}
+-}
+
+{-
+input table_delete_key_input {
+  jsonb-col1: string
+  .
+  .
+  jsonb-coln: string
+}
+-}
+
+{-
+input table_delete_elem_input {
+  jsonb-col1: int
+  .
+  .
+  jsonb-coln: int
+}
+-}
+
+{-
+input table_delete_at_path_input {
+  jsonb-col1: [string]
+  .
+  .
+  jsonb-coln: [string]
+}
+-}
+
+mkUpdJSONOpInp
+  :: QualifiedTable -> [PGColInfo] -> [InpObjTyInfo]
+mkUpdJSONOpInp tn cols = case filter isJSONBType cols of
+  [] -> []
+  _ -> [ concatInpObj, deleteKeyInpObj
+       , deleteElemInpObj, deleteAtPathInpObj
+       ]
+  where
+    jsonbCols = filter isJSONBType cols
+    jsonbColNames = map pgiName jsonbCols
+
+    concatDesc = "concat with new jsonb value"
+    concatInpObj =
+      InpObjTyInfo (Just concatDesc) (mkJSONOpTy tn "_concat") $
+      fromInpValL $ map mkPGColInp jsonbCols
+
+    deleteKeyDesc = "delete key/value pair with matched key"
+    deleteKeyInpObj =
+      InpObjTyInfo (Just deleteKeyDesc) (mkJSONOpTy tn "_delete_key") $
+      fromInpValL $ map deleteKeyInpVal jsonbColNames
+    deleteKeyInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) $
+      G.toGT $ G.NamedType "String"
+
+    deleteElemDesc = "delete the array element with specified index"
+    deleteElemInpObj =
+      InpObjTyInfo (Just deleteElemDesc) (mkJSONOpTy tn "_delete_elem") $
+      fromInpValL $ map deleteElemInpVal jsonbColNames
+    deleteElemInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) $
+      G.toGT $ G.NamedType "Int"
+
+    deleteAtPathDesc = "delete the field or element with specified path"
+    deleteAtPathInpObj =
+      InpObjTyInfo (Just deleteAtPathDesc) (mkJSONOpTy tn "_delete_at_path") $
+      fromInpValL $ map deleteAtPathInpVal jsonbColNames
+    deleteAtPathInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) $
+      G.toGT $ G.toLT $ G.NamedType "String"
+
 {-
 
 update_table(
   where : table_bool_exp!
-  _set  : table_set_input!
+  _set  : table_set_input
+  _inc  : table_inc_input
+  _concat: table_concat_input
+  _delete_key: table_delete_key_input
+  _delete_elem: table_delete_elem_input
+  _delete_path_at: table_delete_path_at_input
 ): table_mutation_response
 
 -}
 
+mkIncInpVal :: QualifiedTable -> [PGColInfo] -> [InpValInfo]
+mkIncInpVal tn cols = case filter isIntegerType cols of
+  [] -> []
+  _  -> [incArg]
+  where
+    incArgDesc = "increments the integer columns with given value of the filtered values"
+    incArg =
+      InpValInfo (Just incArgDesc) "_inc" $ G.toGT $ mkUpdIncTy tn
+
+mkJSONOpInpVals :: QualifiedTable -> [PGColInfo] -> [InpValInfo]
+mkJSONOpInpVals tn cols = case filter isJSONBType cols of
+  [] -> []
+  _  -> [concatArg, deleteKeyArg, deleteElemArg, deleteAtPathArg]
+  where
+    concatArgDesc = "concat the jsonb columns with given jsonb value"
+    concatArg =
+      InpValInfo (Just concatArgDesc) "_concat" $ G.toGT $ mkJSONOpTy tn "_concat"
+
+    deleteKeyArgDesc = "delete the key/value pair of jsonb columns of filtered rows"
+    deleteKeyArg =
+      InpValInfo (Just deleteKeyArgDesc) "_delete_key" $ G.toGT $ mkJSONOpTy tn "_delete_key"
+
+    deleteElemArgDesc = "delete the array element of jsonb columns of filtered rows"
+    deleteElemArg =
+      InpValInfo (Just deleteElemArgDesc) "_delete_elem" $ G.toGT $ mkJSONOpTy tn "_delete_elem"
+
+    deleteAtPathArgDesc = "delete the field or element with specified path of jsonb columns of filtered rows"
+    deleteAtPathArg =
+      InpValInfo (Just deleteAtPathArgDesc) "_delete_at_path" $ G.toGT $ mkJSONOpTy tn "_delete_at_path"
+
 mkUpdMutFld
-  :: QualifiedTable -> ObjFldInfo
-mkUpdMutFld tn =
-  ObjFldInfo (Just desc) fldName (fromInpValL [filterArg, setArg]) $
+  :: QualifiedTable -> [PGColInfo] -> ObjFldInfo
+mkUpdMutFld tn cols =
+  ObjFldInfo (Just desc) fldName (fromInpValL inputValues) $
   G.toGT $ mkMutRespTy tn
   where
+    inputValues = [filterArg, setArg] <> mkIncInpVal tn cols
+                  <> mkJSONOpInpVals tn cols
     desc = G.Description $ "update data of the table: " <>> tn
 
     fldName = "update_" <> qualTableToName tn
@@ -374,8 +516,10 @@ mkUpdMutFld tn =
 
     setArgDesc = "sets the columns of the filtered rows to the given values"
     setArg =
-      InpValInfo (Just setArgDesc) "_set" $ G.toGT $
-      G.toNT $ mkUpdSetTy tn
+      InpValInfo (Just setArgDesc) "_set" $ G.toGT $ mkUpdSetTy tn
+
+
+
 
 {-
 
@@ -607,10 +751,12 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM constraints =
 
     ordByEnums = fromMaybe Map.empty ordByResCtxM
     onConflictTypes = mkOnConflictTypes tn constraints
+    jsonOpTys = fromMaybe [] updJSONOpInpObjTysM
 
-    allTypes = onConflictTypes <> catMaybes
+    allTypes = onConflictTypes <> jsonOpTys <> catMaybes
       [ TIInpObj <$> insInpObjM
       , TIInpObj <$> updSetInpObjM
+      , TIInpObj <$> updIncInpObjM
       , TIInpObj <$> boolExpInpObjM
       , TIObj <$> noRelsObjM
       , TIObj <$> mutRespObjM
@@ -636,7 +782,12 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM constraints =
     insInpObjFldsM = mkColFldMap (mkInsInpTy tn) <$> insColsM
 
     -- update set input type
-    updSetInpObjM = mkUpdInp tn <$> updColsM
+    updSetInpObjM = mkUpdSetInp tn <$> updColsM
+    -- update increment input type
+    updIncInpObjM = mkUpdIncInp tn updColsM
+    -- update json operator input type
+    updJSONOpInpObjsM = mkUpdJSONOpInp tn <$> updColsM
+    updJSONOpInpObjTysM = map TIInpObj <$> updJSONOpInpObjsM
     -- fields used in set input object
     updSetInpObjFldsM = mkColFldMap (mkUpdSetTy tn) <$> updColsM
 
@@ -685,20 +836,24 @@ getRootFldsRole'
   -> FieldInfoMap
   -> Maybe (QualifiedTable, [T.Text]) -- insert view
   -> Maybe (S.BoolExp, [T.Text]) -- select filter
-  -> Maybe (S.BoolExp, [T.Text]) -- update filter
+  -> Maybe ([PGCol], S.BoolExp, [T.Text]) -- update filter
   -> Maybe (S.BoolExp, [T.Text]) -- delete filter
   -> RootFlds
 getRootFldsRole' tn constraints fields insM selM updM delM =
   RootFlds mFlds
   where
+    getUpdColInfos cols = flip filter (getCols fields) $ \c ->
+                      pgiName c `elem` cols
     mFlds = mapFromL (either _fiName _fiName . snd) $ catMaybes
             [ getInsDet <$> insM, getSelDet <$> selM
             , getUpdDet <$> updM, getDelDet <$> delM]
     colInfos = fst $ partitionFieldInfos $ Map.elems fields
     getInsDet (vn, hdrs) =
       (OCInsert tn vn (map pgiName colInfos) hdrs, Right $ mkInsMutFld tn constraints)
-    getUpdDet (updFltr, hdrs) =
-      (OCUpdate tn updFltr hdrs, Right $ mkUpdMutFld tn)
+    getUpdDet (updCols, updFltr, hdrs) =
+      ( OCUpdate tn updFltr hdrs
+      , Right $ mkUpdMutFld tn $ getUpdColInfos updCols
+      )
     getDelDet (delFltr, hdrs) =
       (OCDelete tn delFltr hdrs, Right $ mkDelMutFld tn)
     getSelDet (selFltr, hdrs) =
@@ -772,7 +927,10 @@ getRootFldsRole tn constraints fields (RolePermInfo insM selM updM delM) =
   where
     mkIns i = (ipiView i, ipiRequiredHeaders i)
     mkSel s = (spiFilter s, spiRequiredHeaders s)
-    mkUpd u = (upiFilter u, upiRequiredHeaders u)
+    mkUpd u = ( Set.toList $ upiCols u
+              , upiFilter u
+              , upiRequiredHeaders u
+              )
     mkDel d = (dpiFilter d, dpiRequiredHeaders d)
 
 mkGCtxMapTable
@@ -787,13 +945,14 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints) = do
   return $ Map.insert adminRole (adminCtx, adminRootFlds) m
   where
     colInfos = fst $ partitionFieldInfos $ Map.elems fields
+    allCols = map pgiName colInfos
     selFlds = flip map (Map.elems fields) $ \case
       FIColumn pgColInfo     -> Left pgColInfo
       FIRelationship relInfo -> Right (relInfo, noFilter)
     noFilter = S.BELit True
     adminRootFlds =
       getRootFldsRole' tn constraints fields (Just (tn, [])) (Just (noFilter, []))
-      (Just (noFilter, [])) (Just (noFilter, []))
+      (Just (allCols, noFilter, [])) (Just (noFilter, []))
 
 mkScalarTyInfo :: PGColType -> ScalarTyInfo
 mkScalarTyInfo = ScalarTyInfo Nothing

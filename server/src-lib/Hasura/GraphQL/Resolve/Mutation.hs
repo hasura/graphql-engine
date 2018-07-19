@@ -1,7 +1,8 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiWayIf            #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Hasura.GraphQL.Resolve.Mutation
   ( convertUpdate
@@ -13,6 +14,7 @@ import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Delete             as RD
@@ -29,6 +31,7 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value
 
 withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m (Map.HashMap Text a)
 withSelSet selSet f =
@@ -133,6 +136,30 @@ convertInsert (tn, vn) tableCols fld = do
       return $ Map.elems $ Map.union (Map.fromList givenCols) defVals
     defVals = Map.fromList $ zip tableCols (repeat $ S.SEUnsafe "DEFAULT")
 
+convObjWithOp
+  :: (MonadError QErr m)
+  => T.Text -> T.Text -> AnnGValue -> m [(PGCol, S.SQLExp)]
+convObjWithOp op annTy val =
+  flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
+  (_, colVal) <- asPGColVal v
+  let pgCol = PGCol $ G.unName k
+      encVal = txtEncoder colVal
+      annEncVal = S.SETyAnn encVal annTy
+      sqlExp = S.SEOpApp op [S.SEIden $ toIden pgCol, annEncVal]
+  return (pgCol, sqlExp)
+
+convDeleteAtPathObj
+  :: (MonadError QErr m)
+  => AnnGValue -> m [(PGCol, S.SQLExp)]
+convDeleteAtPathObj val =
+  flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
+    vals <- flip withArray v $ \_ annVals -> mapM asPGColVal annVals
+    let valExps = map (txtEncoder . snd) vals
+        pgCol = PGCol $ G.unName k
+        annEncVal = S.SETyAnn (S.SEArray valExps) "text[]"
+        sqlExp = S.SEOpApp "#-" [S.SEIden $ toIden pgCol, annEncVal]
+    return (pgCol, sqlExp)
+
 convertUpdate
   :: QualifiedTable -- table
   -> S.BoolExp -- the filter expression
@@ -140,14 +167,28 @@ convertUpdate
   -> Convert RespTx
 convertUpdate tn filterExp fld = do
   -- a set expression is same as a row object
-  setExp   <- withArg args "_set" convertRowObj
+  setExpM   <- withArgM args "_set" convertRowObj
   whereExp <- withArg args "where" $ convertBoolExp tn
+  incExpM <- withArgM args "_inc" $ convObjWithOp incOp "int"
+  concatExpM <- withArgM args "_concat" $ convObjWithOp concatOp "jsonb"
+  deleteKeyExpM <- withArgM args "_delete_key" $ convObjWithOp deleteOp "text"
+  deleteElemExpM <- withArgM args "_delete_elem" $ convObjWithOp deleteOp "int"
+  deleteAtPathExpM <- withArgM args "_delete_at_path" convDeleteAtPathObj
   mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
   prepArgs <- get
-  let p1 = RU.UpdateQueryP1 tn setExp (filterExp, whereExp) mutFlds
+  let updExpsM = [setExpM, incExpM, concatExpM, deleteKeyExpM, deleteElemExpM, deleteAtPathExpM]
+      updExp = concat $ catMaybes updExpsM
+  -- atleast one of update operators is expected
+  unless (any isJust updExpsM) $ throw400 Unexpected $
+    "atleast any one of _set, _inc, _concat, _delete_key, _delete_elem and "
+    <> " _delete_at_path operator is expected"
+  let p1 = RU.UpdateQueryP1 tn updExp (filterExp, whereExp) mutFlds
   return $ RU.updateP2 (p1, prepArgs)
   where
     args = _fArguments fld
+    incOp = "+"
+    concatOp = "||"
+    deleteOp = "-"
 
 convertDelete
   :: QualifiedTable -- table
