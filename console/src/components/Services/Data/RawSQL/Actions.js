@@ -14,6 +14,7 @@ import returnMigrateUrl from '../Common/getMigrateUrl';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
+const SET_CASCADE_CHECKED = 'RawSQL/SET_CASCADE_CHECKED';
 const SET_MIGRATION_CHECKED = 'RawSQL/SET_MIGRATION_CHECKED';
 const SET_TRACK_TABLE_CHECKED = 'RawSQL/SET_TRACK_TABLE_CHECKED';
 const REQUEST_SUCCESS = 'RawSQL/REQUEST_SUCCESS';
@@ -34,11 +35,12 @@ const executeSQL = isMigration => (dispatch, getState) => {
 
   const migrateUrl = returnMigrateUrl(currMigrationMode);
   const currentSchema = getState().tables.currentSchema;
+  const isCascadeChecked = getState().rawSQL.isCascadeChecked;
 
   let url = Endpoints.rawSQL;
   let requestBody = {
     type: 'run_sql',
-    args: { sql },
+    args: { sql: sql, cascade: isCascadeChecked },
   };
   // check if its a migration and send to hasuractl migrate
   if (isMigration) {
@@ -46,7 +48,7 @@ const executeSQL = isMigration => (dispatch, getState) => {
     const schemaChangesUp = [
       {
         type: 'run_sql',
-        args: { sql },
+        args: { sql: sql, cascade: isCascadeChecked },
       },
     ];
     // check if track view enabled
@@ -138,6 +140,8 @@ const executeSQL = isMigration => (dispatch, getState) => {
             } else {
               parsedErrorMsg.message = { error: parsedErrorMsg.error };
             }
+          } else if (parsedErrorMsg.code === 'dependency-error') {
+            parsedErrorMsg.message = errorMsg.error;
           }
           dispatch(
             showErrorNotification(
@@ -181,6 +185,8 @@ const rawSQLReducer = (state = defaultState, action) => {
       return { ...state, sql: action.data };
     case SET_MIGRATION_CHECKED:
       return { ...state, isMigrationChecked: action.data };
+    case SET_CASCADE_CHECKED:
+      return { ...state, isCascadeChecked: action.data };
     case SET_TRACK_TABLE_CHECKED:
       return {
         ...state,
@@ -234,6 +240,7 @@ export default rawSQLReducer;
 export {
   executeSQL,
   SET_SQL,
+  SET_CASCADE_CHECKED,
   SET_MIGRATION_CHECKED,
   SET_TRACK_TABLE_CHECKED,
   modalOpen,
