@@ -2,22 +2,19 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
 module Hasura.Server.App where
 
 import           Control.Concurrent.MVar
-import           Data.Char                              (isSpace)
 import           Data.IORef
 
-import           Crypto.Hash                            (Digest, SHA1, hash)
 import           Data.Aeson                             hiding (json)
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as M
 import qualified Data.Text                              as T
-import qualified Data.Text.Lazy                         as TL
-import qualified Data.Text.Lazy.Encoding                as TLE
 import           Data.Time.Clock                        (UTCTime,
                                                          getCurrentTime)
 import           Network.Wai                            (requestHeaders,
@@ -29,10 +26,8 @@ import           Web.Spock.Core
 
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Client.TLS                as HTTP
-import qualified Network.HTTP.Types                     as N
 import qualified Network.Wai.Middleware.Static          as MS
 
-import qualified Data.Text.Encoding.Error               as TE
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
@@ -56,9 +51,8 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.SQL.Types
 
+import qualified Hasura.Logging                         as L
 import           Hasura.Server.Auth                     (AuthMode, getUserInfo)
-
-type RavenLogger = ServerLogger (BL.ByteString, Either QErr BL.ByteString)
 
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
@@ -72,29 +66,11 @@ mkConsoleHTML =
     errMsg = "Fatal Error : console template rendering failed"
              ++ show errs
 
-ravenLogGen :: LogDetailG (BL.ByteString, Either QErr BL.ByteString)
-ravenLogGen _ (reqBody, res) =
-
-  (status, toJSON <$> logDetail, Just qh, Just size)
-  where
-    status = either qeStatus (const N.status200) res
-    logDetail = either (Just . qErrToLogDetail) (const Nothing) res
-    reqBodyTxt = TL.filter (not . isSpace) $ decodeLBS reqBody
-    qErrToLogDetail qErr =
-      LogDetail reqBodyTxt $ toJSON qErr
-    size = BL.length $ either encode id res
-    qh = T.pack . show $ sha1 reqBody
-    sha1 :: BL.ByteString -> Digest SHA1
-    sha1 = hash . BL.toStrict
-
-decodeLBS :: BL.ByteString -> TL.Text
-decodeLBS = TLE.decodeUtf8With TE.lenientDecode
-
 data ServerCtx
   = ServerCtx
   { scIsolation :: Q.TxIsolation
   , scPGPool    :: Q.PGPool
-  , scLogger    :: RavenLogger
+  , scLogger    :: L.Logger
   , scCacheRef  :: IORef (SchemaCache, GS.GCtxMap)
   , scCacheLock :: MVar ()
   , scAuthMode  :: AuthMode
@@ -145,7 +121,7 @@ logResult
 logResult sc res qTime = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
-  liftIO $ logger req (reqBody, res) qTime
+  liftIO $ logger $ mkAccessLog req (reqBody, res) qTime
   where
     logger = scLogger sc
 
@@ -290,13 +266,13 @@ legacyQueryHandler tn queryType =
 mkWaiApp
   :: Q.TxIsolation
   -> Maybe String
-  -> RavenLogger
+  -> L.LoggerCtx
   -> Q.PGPool
   -> AuthMode
   -> CorsConfig
   -> Bool
   -> IO Wai.Application
-mkWaiApp isoLevel mRootDir logger pool mode corsCfg enableConsole = do
+mkWaiApp isoLevel mRootDir loggerCtx pool mode corsCfg enableConsole = do
     cacheRef <- do
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
@@ -308,15 +284,16 @@ mkWaiApp isoLevel mRootDir logger pool mode corsCfg enableConsole = do
 
     cacheLock <- newMVar ()
 
-    let serverCtx = ServerCtx isoLevel pool logger cacheRef
-                    cacheLock mode httpManager
+    let serverCtx =
+          ServerCtx isoLevel pool (L.mkLogger loggerCtx) cacheRef
+          cacheLock mode httpManager
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp mRootDir corsCfg serverCtx enableConsole
 
     let runTx tx = runExceptT $ Q.runTx pool (isoLevel, Nothing) tx
 
-    wsServerEnv <- WS.createWSServerEnv httpManager cacheRef runTx
+    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager cacheRef runTx
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return $ WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
 

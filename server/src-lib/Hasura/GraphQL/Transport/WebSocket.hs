@@ -1,5 +1,7 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes        #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Hasura.GraphQL.Transport.WebSocket
   ( createWSServerApp
@@ -9,9 +11,12 @@ module Hasura.GraphQL.Transport.WebSocket
 import qualified Control.Concurrent.Async                    as A
 import qualified Control.Concurrent.STM                      as STM
 import qualified Data.Aeson                                  as J
+import qualified Data.Aeson.Casing                           as J
+import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString.Lazy                        as BL
 import qualified Data.CaseInsensitive                        as CI
 import qualified Data.HashMap.Strict                         as Map
+import qualified Data.TByteString                            as TBS
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Language.GraphQL.Draft.Syntax               as G
@@ -22,9 +27,7 @@ import qualified Network.WebSockets                          as WS
 import qualified STMContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
-import           Data.IORef                                  (IORef, newIORef,
-                                                              readIORef,
-                                                              writeIORef)
+import qualified Data.IORef                                  as IORef
 
 import           Hasura.GraphQL.Resolve                      (resolveSelSet)
 import           Hasura.GraphQL.Resolve.Context              (RespTx)
@@ -34,6 +37,7 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import           Hasura.GraphQL.Validate                     (validateGQ)
+import qualified Hasura.Logging                              as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode,
@@ -50,7 +54,7 @@ type OperationMap
 data WSConnData
   = WSConnData
   -- the role and headers are set only on connection_init message
-  { _wscUser  :: !(IORef (Maybe UserInfo))
+  { _wscUser  :: !(IORef.IORef (Maybe UserInfo))
   -- we only care about subscriptions,
   -- the other operations (query/mutations)
   -- are not tracked here
@@ -64,34 +68,82 @@ type WSConn = WS.WSConn WSConnData
 sendMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
 sendMsg wsConn =
   liftIO . WS.sendMsg wsConn . encodeServerMsg
-  -- liftIO . WS.sendMsg wsConn . traceShowId . encodeServerMsg
+
+data SubsDetail
+  = SDStarted
+  | SDStopped
+  deriving (Show, Eq)
+$(J.deriveToJSON
+  J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 2
+                   , J.sumEncoding = J.TaggedObject "type" "detail"
+                   }
+  ''SubsDetail)
+
+data OpDetail
+  = ODCompleted
+  | ODError !QErr
+  deriving (Show, Eq)
+$(J.deriveToJSON
+  J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 2
+                   , J.sumEncoding = J.TaggedObject "type" "detail"
+                   }
+  ''OpDetail)
+
+data WSEvent
+  = EAccepted
+  | ERejected !QErr
+  | EProtocolError !TBS.TByteString !ConnErrMsg
+  | EOperation !OperationId !OpDetail
+  | ESubscription !OperationId !SubsDetail
+  | EClosed
+  deriving (Show, Eq)
+$(J.deriveToJSON
+  J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 1
+                   , J.sumEncoding = J.TaggedObject "type" "detail"
+                   }
+  ''WSEvent)
+
+data WSLog
+  = WSLog
+  { _wslWebsocketId :: !WS.WSId
+  , _wslEvent       :: !WSEvent
+  } deriving (Show, Eq)
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLog)
+
+instance L.ToEngineLog WSLog where
+  toEngineLog wsLog =
+    (L.LevelInfo, "ws-handler", J.toJSON wsLog)
 
 data WSServerEnv
   = WSServerEnv
-  { _wseServer   :: !WSServer
+  { _wseLogger   :: !L.Logger
+  , _wseServer   :: !WSServer
   , _wseRunTx    :: !TxRunner
   , _wseLiveQMap :: !LiveQueryMap
-  , _wseGCtxMap  :: !(IORef (SchemaCache, GCtxMap))
+  , _wseGCtxMap  :: !(IORef.IORef (SchemaCache, GCtxMap))
   , _wseHManager :: !H.Manager
   }
 
-onConn :: WS.OnConnH WSConnData
-onConn wsId requestHead = do
+onConn :: L.Logger -> WS.OnConnH WSConnData
+onConn logger wsId requestHead = do
   res <- runExceptT checkPath
-  either (return . Left . toRejectReq) (fmap Right . onSuccess) res
+  either reject accept res
   where
+
     keepAliveAction wsConn = forever $ do
       sendMsg wsConn SMConnKeepAlive
       threadDelay $ 5 * 1000 * 1000
 
-    onSuccess _ = do
-      connData <- WSConnData <$> newIORef Nothing <*> STMMap.newIO
+    accept _ = do
+      logger $ WSLog wsId EAccepted
+      connData <- WSConnData <$> IORef.newIORef Nothing <*> STMMap.newIO
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
-      return (connData, acceptRequest, Just keepAliveAction)
+      return $ Right (connData, acceptRequest, Just keepAliveAction)
 
-    toRejectReq qErr =
-      WS.RejectRequest
+    reject qErr = do
+      logger $ WSLog wsId $ ERejected qErr
+      return $ Left $ WS.RejectRequest
         (H.statusCode $ qeStatus qErr)
         (H.statusMessage $ qeStatus qErr) []
         (BL.toStrict $ J.encode $ encodeQErr False qErr)
@@ -101,24 +153,30 @@ onConn wsId requestHead = do
       throw404 "only /v1alpha1/graphql is supported on websockets"
 
 onStart :: WSServerEnv -> WSConn -> StartMsg -> IO ()
-onStart serverEnv wsConn (StartMsg opId q) = catchAndSend $ do
+onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndSend $ do
 
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
-  when (isJust opM) $ withExceptT preExecErr $
+  when (isJust opM) $ withExceptT preExecErr $ loggingQErr $
     throw400 UnexpectedPayload $
     "an operation already exists with this id: " <> unOperationId opId
 
-  userInfoM <- liftIO $ readIORef userInfoR
+  userInfoM <- liftIO $ IORef.readIORef userInfoR
   userInfo <- case userInfoM of
     Just userInfo -> return userInfo
-    Nothing       -> throwError $
-      SMConnErr "start received before the connection is initialised"
+    Nothing       -> do
+      let err = "start received before the connection is initialised"
+      liftIO $ logger $ WSLog wsId $
+        -- TODO: we are encoding the start msg back into a bytestring
+        -- should we be throwing protocol error here?
+        EProtocolError (TBS.fromLBS $ J.encode msg) err
+      throwError $ SMConnErr err
 
   -- validate and build tx
-  gCtxMap <- fmap snd $ liftIO $ readIORef gCtxMapRef
+  gCtxMap <- fmap snd $ liftIO $ IORef.readIORef gCtxMapRef
   let gCtx = getGCtx (userRole userInfo) gCtxMap
-  (opTy, fields) <- withExceptT preExecErr $ runReaderT (validateGQ q) gCtx
+  (opTy, fields) <- withExceptT preExecErr $ loggingQErr $
+                    runReaderT (validateGQ q) gCtx
   let qTx = resolveSelSet userInfo gCtx opTy fields
 
   case opTy of
@@ -127,20 +185,26 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndSend $ do
       liftIO $ STM.atomically $ STMMap.insert lq opId opMap
       liftIO $ LQ.addLiveQuery runTx lqMap lq
        qTx (wsId, opId) liveQOnChange
+      liftIO $ logger $ WSLog wsId $ ESubscription opId SDStarted
 
-    _ -> withExceptT postExecErr $ do
+    _ -> withExceptT postExecErr $ loggingQErr $ do
       resp <- ExceptT $ runTx qTx
       sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess resp
       sendMsg wsConn $ SMComplete $ CompletionMsg opId
+      liftIO $ logger $ WSLog wsId $ EOperation opId ODCompleted
 
   where
-    (WSServerEnv _ runTx lqMap gCtxMapRef _) = serverEnv
+    (WSServerEnv logger _ runTx lqMap gCtxMapRef _) = serverEnv
     wsId = WS.getWSId wsConn
     (WSConnData userInfoR opMap) = WS.getData wsConn
 
     -- on change, send message on the websocket
     liveQOnChange resp = WS.sendMsg wsConn $ encodeServerMsg $ SMData $
                         DataMsg opId resp
+
+    loggingQErr m = catchError m $ \qErr -> do
+      liftIO $ logger $ WSLog wsId $ EOperation opId $ ODError qErr
+      throwError qErr
 
     preExecErr qErr  = SMErr $ ErrorMsg opId $ encodeQErr False qErr
     postExecErr qErr = SMData $ DataMsg opId $ GQExecError
@@ -157,27 +221,36 @@ onMessage
   -> WSConn -> BL.ByteString -> IO ()
 onMessage authMode serverEnv wsConn msgRaw =
   case J.eitherDecode msgRaw of
-    Left e    -> sendMsg wsConn $ SMConnErr $
-                 ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
+    Left e    -> do
+      let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
+      liftIO $ logger $ WSLog (WS.getWSId wsConn) $
+        EProtocolError (TBS.fromLBS msgRaw) err
+      sendMsg wsConn $ SMConnErr err
+
     Right msg -> case msg of
       CMConnInit params -> onConnInit (_wseHManager serverEnv)
                            wsConn authMode params
       CMStart startMsg  -> onStart serverEnv wsConn startMsg
       CMStop stopMsg    -> onStop serverEnv wsConn stopMsg
       CMConnTerm        -> WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
+  where
+    logger = _wseLogger serverEnv
 
 onStop :: WSServerEnv -> WSConn -> StopMsg -> IO ()
 onStop serverEnv wsConn (StopMsg opId) = do
   -- probably wrap the whole thing in a single tx?
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   case opM of
-    Just liveQ -> LQ.removeLiveQuery lqMap liveQ (wsId, opId)
+    Just liveQ -> do
+      liftIO $ logger $ WSLog wsId $ ESubscription opId SDStopped
+      LQ.removeLiveQuery lqMap liveQ (wsId, opId)
     Nothing    -> return ()
   STM.atomically $ STMMap.delete opId opMap
   where
-    lqMap = _wseLiveQMap serverEnv
-    wsId  = WS.getWSId wsConn
-    opMap = _wscOpMap $ WS.getData wsConn
+    logger = _wseLogger serverEnv
+    lqMap  = _wseLiveQMap serverEnv
+    wsId   = WS.getWSId wsConn
+    opMap  = _wscOpMap $ WS.getData wsConn
 
 onConnInit
   :: (MonadIO m)
@@ -189,7 +262,7 @@ onConnInit manager wsConn authMode connParams = do
       liftIO $ WS.closeConn wsConn $
       BL.fromStrict $ TE.encodeUtf8 $ qeError e
     Right userInfo -> do
-      liftIO $ writeIORef (_wscUser $ WS.getData wsConn) $ Just userInfo
+      liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $ Just userInfo
       sendMsg wsConn SMConnAck
       -- TODO: send it periodically? Why doesn't apollo's protocol use
       -- ping/pong frames of websocket spec?
@@ -200,11 +273,13 @@ onConnInit manager wsConn authMode connParams = do
               ]
 
 onClose
-  :: LiveQueryMap
+  :: L.Logger
+  -> LiveQueryMap
   -> WS.ConnectionException
   -> WSConn
   -> IO ()
-onClose lqMap _ wsConn = do
+onClose logger lqMap _ wsConn = do
+  logger $ WSLog wsId EClosed
   operations <- STM.atomically $ ListT.toList $ STMMap.stream opMap
   void $ A.forConcurrently operations $ \(opId, liveQ) ->
     LQ.removeLiveQuery lqMap liveQ (wsId, opId)
@@ -212,12 +287,14 @@ onClose lqMap _ wsConn = do
     wsId  = WS.getWSId wsConn
     opMap = _wscOpMap $ WS.getData wsConn
 
-createWSServerEnv :: H.Manager -> IORef (SchemaCache, GCtxMap)
-                  -> TxRunner -> IO WSServerEnv
-createWSServerEnv httpManager gCtxMapRef runTx = do
+createWSServerEnv
+  :: L.Logger
+  -> H.Manager -> IORef.IORef (SchemaCache, GCtxMap)
+  -> TxRunner -> IO WSServerEnv
+createWSServerEnv logger httpManager gCtxMapRef runTx = do
   (wsServer, lqMap) <-
-    STM.atomically $ (,) <$> WS.createWSServer <*> LQ.newLiveQueryMap
-  return $ WSServerEnv wsServer runTx lqMap gCtxMapRef httpManager
+    STM.atomically $ (,) <$> WS.createWSServer logger <*> LQ.newLiveQueryMap
+  return $ WSServerEnv logger wsServer runTx lqMap gCtxMapRef httpManager
 
 createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp
 createWSServerApp authMode serverEnv =
@@ -225,6 +302,6 @@ createWSServerApp authMode serverEnv =
   where
     handlers =
       WS.WSHandlers
-      onConn
+      (onConn $ _wseLogger serverEnv)
       (onMessage authMode serverEnv)
-      (onClose $ _wseLiveQMap serverEnv)
+      (onClose (_wseLogger serverEnv) $ _wseLiveQMap serverEnv)

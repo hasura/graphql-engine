@@ -43,9 +43,13 @@ instance J.FromJSON GraphQLQuery where
       Left _  -> fail "parsing the graphql query failed"
       Right q -> return $ GraphQLQuery $ G.getExecutableDefinitions q
 
+instance J.ToJSON GraphQLQuery where
+  -- TODO, add pretty printer in graphql-parser
+  toJSON _ = J.String "toJSON not implemented for GraphQLQuery"
+
 newtype OperationName
   = OperationName { _unOperationName :: G.Name }
-  deriving (Show, Eq, Hashable)
+  deriving (Show, Eq, Hashable, J.ToJSON)
 
 instance J.FromJSON OperationName where
   parseJSON v = OperationName . G.Name <$> J.parseJSON v
@@ -59,7 +63,7 @@ data GraphQLRequest
   , _grVariables     :: !(Maybe VariableValues)
   } deriving (Show, Eq, Generic)
 
-$(J.deriveFromJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True}
+$(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True}
   ''GraphQLRequest
  )
 

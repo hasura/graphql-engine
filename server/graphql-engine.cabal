@@ -114,6 +114,10 @@ library
                      , list-t
                      , async
 
+                     -- logging related
+                     , base64-bytestring >= 1.0
+                     , auto-update
+
   exposed-modules:     Hasura.Server.App
                      , Hasura.Server.Auth
                      , Hasura.Server.Init
@@ -172,6 +176,7 @@ library
 
                      , Data.Text.Extended
                      , Data.Sequence.NonEmpty
+                     , Data.TByteString
                      , Data.HashMap.Strict.InsOrd.Extended
 
                      , Hasura.SQL.DML
@@ -180,6 +185,7 @@ library
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time
                      , Hasura.Prelude
+                     , Hasura.Logging
                      , Ops
                      , TH
 

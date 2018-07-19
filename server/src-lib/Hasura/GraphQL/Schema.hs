@@ -39,7 +39,6 @@ import qualified Hasura.SQL.DML                 as S
 
 defaultTypes :: [TypeInfo]
 defaultTypes = $(fromSchemaDocQ defaultSchema)
--- defaultTypes = undefined
 
 type OpCtxMap = Map.HashMap G.Name OpCtx
 
