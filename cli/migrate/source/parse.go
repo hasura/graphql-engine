@@ -3,8 +3,12 @@ package source
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"regexp"
 	"strconv"
+
+	yaml "github.com/ghodss/yaml"
 )
 
 var (
@@ -22,7 +26,7 @@ var (
 var Regex = regexp.MustCompile(`^([0-9]+)_(.*)\.(` + string(Down) + `|` + string(Up) + `)\.(.*)$`)
 
 // Parse returns Migration for matching Regex pattern.
-func Parse(raw string) (*Migration, error) {
+func Parse(raw string, directory string) (*Migration, error) {
 	var direction Direction
 	m := Regex.FindStringSubmatch(raw)
 	if len(m) == 5 {
@@ -40,6 +44,18 @@ func Parse(raw string) (*Migration, error) {
 			} else {
 				return nil, errors.New("Invalid Direction type")
 			}
+			data, err := ioutil.ReadFile(filepath.Join(directory, raw))
+			if err != nil {
+				return nil, err
+			}
+			var t []interface{}
+			err = yaml.Unmarshal(data, &t)
+			if err != nil {
+				return nil, err
+			}
+			if len(t) == 0 {
+				return nil, errors.New("Empty metadata file")
+			}
 		} else if m[4] == "sql" {
 			if m[3] == "up" {
 				direction = Up
@@ -47,6 +63,13 @@ func Parse(raw string) (*Migration, error) {
 				direction = Down
 			} else {
 				return nil, errors.New("Invalid Direction type")
+			}
+			data, err := ioutil.ReadFile(filepath.Join(directory, raw))
+			if err != nil {
+				return nil, err
+			}
+			if string(data[:]) == "" {
+				return nil, errors.New("Empty SQL file")
 			}
 		}
 

@@ -37,7 +37,9 @@ type migrateCreateOptions struct {
 
 func (o *migrateCreateOptions) run() error {
 	timestamp := getTime()
-	err := mig.CreateCmd(o.EC.MigrationDir, timestamp, o.name)
+	createOptions := mig.New(timestamp, o.name, o.EC.MigrationDir)
+	createOptions.IsCMD = true
+	err := createOptions.Create()
 	if err != nil {
 		return errors.Wrap(err, "error creating migration files")
 	}
