@@ -24,6 +24,7 @@ Let's use this reference Authors/Articles schema to look at different types of m
   :maxdepth: 1
 
   Insert <insert>
+  Upsert <upsert>
   Update <update>
   Delete <delete>
   multiple-mutations
