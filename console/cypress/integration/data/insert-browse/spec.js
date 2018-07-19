@@ -26,12 +26,8 @@ const setColumns = () => {
     // Select column type
     cy.get(getElementFromAlias(`col-type-${i}`)).select(dataTypes[i]);
 
-    if (i === 4) {
-      cy.get(getElementFromAlias(`col-type-${i}`))
-        .parent()
-        .find('[type="checkbox"]')
-        .last()
-        .check();
+    if (i === dataTypes.indexOf('text')) {
+      cy.get(getElementFromAlias(`unique-${i}`)).check();
       // cy.get('[type="checkbox"]').last().check()
     }
     // Set appropriate default if the type is not serial
@@ -299,21 +295,18 @@ export const failBINullKeys = () => {
 export const failBIUniqueKeys = () => {
   // Type a string in the text type fields of some rows  (to be tested in Browse rows)
   const textIndex = dataTypes.indexOf('text');
-  cy.get("input[placeholder='float']")
-    .first()
-    .type(0.5555);
-
+  const floatIndex = dataTypes.indexOf('numeric');
+  cy.get(getElementFromAlias(`typed-input-${floatIndex}`)).type(0.5555);
   cy.get(getElementFromAlias(`typed-input-${textIndex}`))
     .clear()
     .type('filter-text');
 
   // Click the Insert Again button.
-  cy.get('input[placeholder="text"]')
-    .first()
-    .type('{selectall}{del}');
-  cy.get('input[placeholder="text"]')
-    .first()
-    .type('name');
+  cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type(
+    '{selectall}{del}'
+  );
+  cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type('name');
+
   cy.get(getElementFromAlias('insert-save-button')).click();
   // Check default for next insert
 
@@ -325,12 +318,10 @@ export const failBIUniqueKeys = () => {
     .clear()
     .type('filter-text');
   // Click the Insert Again button.
-  cy.get('input[placeholder="text"]')
-    .first()
-    .type('{selectall}{del}');
-  cy.get('input[placeholder="text"]')
-    .first()
-    .type('name');
+  cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type(
+    '{selectall}{del}'
+  );
+  cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type('name');
   cy.get(getElementFromAlias('insert-save-button')).click();
 
   // cy.get('.notification-error').click();

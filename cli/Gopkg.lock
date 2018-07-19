@@ -123,6 +123,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/gin-contrib/static"
+  packages = ["."]
+  revision = "73da7037e716e63aa2b0ffceb630dfa7be299086"
+
+[[projects]]
+  branch = "master"
   name = "github.com/gin-gonic/contrib"
   packages = ["renders/multitemplate"]
   revision = "39cfb9727134fef3120d2458fce5fab14265a46c"
@@ -397,6 +403,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ab9236de6672340050c57a88b6009fac10f7c6a8135b44c57f544c5f3d5d70e4"
+  inputs-digest = "7ccdaac1d19b4713c51034dd3d36a9dfe1b37316904227576c454618103a9f29"
   solver-name = "gps-cdcl"
   solver-version = 1

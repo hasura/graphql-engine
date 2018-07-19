@@ -36,8 +36,8 @@ import qualified Data.CaseInsensitive     as CI
 import qualified Data.HashMap.Strict      as M
 import qualified Network.HTTP.Types       as N
 
-import           Hasura.Server.Utils
 import           Hasura.Prelude
+import           Hasura.Server.Utils
 
 
 data ServerLog
