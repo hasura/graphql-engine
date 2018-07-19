@@ -21,8 +21,8 @@ import globals from '../../../../Globals';
 
 const cascadeTip = (
   <Tooltip id="tooltip-cascade">
-    Cascade will delete all the dependent metadata references like relationships
-    and permissions.
+    Cascade all the dependent metadata references like relationships and
+    permissions.
   </Tooltip>
 );
 const migrationTip = (
@@ -215,7 +215,7 @@ const RawSQL = ({
                 });
               }}
             />
-            Cascade drop relationships or permissions metadata
+            Cascade relationships or permissions metadata
             <OverlayTrigger placement="right" overlay={cascadeTip}>
               <i
                 className={`${styles.padd_small_left} fa fa-info-circle`}
