@@ -53,7 +53,7 @@ const executeSQL = isMigration => (dispatch, getState) => {
     ];
     // check if track view enabled
     if (getState().rawSQL.isTableTrackChecked) {
-      const regExp = /create (view|table) (\S+)/;
+      const regExp = /create (view|table) (\S+)/i;
       const matches = sql.match(regExp);
       let trackViewName = matches[2];
       if (trackViewName.indexOf('.') !== -1) {
