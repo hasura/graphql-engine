@@ -20,7 +20,7 @@ export const openRawSQL = () => {
 };
 
 export const passCreateTable = () => {
-  prevStr = 'CREATE TABLE apic_test_table_rsql(id serial PRIMARY KEY);';
+  prevStr = 'CREATE TABLE apic_test_table_rsql (id serial PRIMARY KEY);';
   cy.get('textarea').type(prevStr, { force: true });
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
@@ -44,6 +44,8 @@ export const passAlterTable = () => {
   }
   prevStr = 'ALTER TABLE apic_test_table_rsql ADD COLUMN name text;';
   cy.get('textarea').type(prevStr, { force: true });
+  // Untrack table
+  cy.get(getElementFromAlias('raw-sql-track-check')).uncheck();
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
   // validateCT('apic_test_table_rsql', 'success');
@@ -55,6 +57,8 @@ export const passCreateView = () => {
   }
   prevStr = 'CREATE VIEW abcd AS SELECT * FROM apic_test_table_rsql;';
   cy.get('textarea').type(prevStr, { force: true });
+  // Track table
+  cy.get(getElementFromAlias('raw-sql-track-check')).check();
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
   // validateCT('apic_test_table_rsql', 'success');
