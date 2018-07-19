@@ -259,6 +259,8 @@ class AddTable extends Component {
         defPlaceholder = 'example: now()';
       } else if (column.type === 'date') {
         defPlaceholder = '';
+      } else if (column.type === 'uuid') {
+        defPlaceholder = 'example: gen_random_uuid()';
       }
       return (
         <div key={i} className={`${styles.display_flex} form-group`}>
@@ -456,16 +458,7 @@ class AddTable extends Component {
           <div
             className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
           >
-            <h4 className={styles.subheading_text}>
-              Table name: &nbsp; &nbsp;
-              <OverlayTrigger
-                placement="right"
-                overlay={tooltip.databaseNamingScheme}
-              >
-                <i className="fa fa-question-circle" aria-hidden="true" />
-              </OverlayTrigger>{' '}
-              &nbsp; &nbsp;
-            </h4>
+            <h4 className={styles.subheading_text}>Table name &nbsp; &nbsp;</h4>
             <input
               type="text"
               data-test="tableName"
@@ -480,7 +473,7 @@ class AddTable extends Component {
             {cols}
             <hr />
             <h4 className={styles.subheading_text}>
-              Primary Key: &nbsp; &nbsp;
+              Primary Key &nbsp; &nbsp;
               <OverlayTrigger
                 placement="right"
                 overlay={tooltip.primaryKeyDescription}

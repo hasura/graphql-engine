@@ -68,7 +68,7 @@ const requestAction = (
                 });
                 dispatch({ type: LOGIN_IN_PROGRESS, data: false });
                 dispatch({ type: LOGIN_ERROR, data: false });
-                dispatch(push('/login'));
+                dispatch(push(globals.urlPrefix + '/login'));
               }
               reject(msg);
             });

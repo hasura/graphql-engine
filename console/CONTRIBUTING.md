@@ -1,37 +1,39 @@
-# Contributing Guidelines
+## Contributing
 
-Some basic conventions for contributing to this project.
+This guide is for setting-up the console for development on your own machine, and how to contribute.
 
-### General
+### Pre-requisites
 
-Please make sure that there aren't existing pull requests attempting to address the issue mentioned.
-Likewise, please check for issues related to update, as someone else may be working on the issue in a branch or fork.
+- Node.js (v8.9+)
+- Hasura CLI (for working with migrations)
+- Hasura GraphQL Engine Server
 
-- Non-trivial changes should be discussed in an issue first
-- Develop in a topic branch, not master
-- Squash your commits
+## Development Workflow
 
-### Linting
+### Fork and clone
 
-There's a pre-commit hook which uses Prettier.io for linting and indenting code. This is automated.
+- Fork the repo on GitHub
+- Clone your forked repo: `git clone https://github.com/<your-username>/graphql-engine`
 
-### Commit Message Format
+### Setup
 
-Each commit message should include a **console:**, a **subject**:
+- Run `npm install` to install the modules.
+- Make sure the graphql-engine server is running. It can be either local or pointing to a cloud url.
+- Run `npm run build` to build the console.
 
-```
- console: <subject>
-```
+### Develop
 
-Lines should not exceed 100 characters. This allows the message to be easier to read on github as well as in various git tools and produces a nice, neat commit log ie:
+- Configure .env file according to [README.md](./README.md), where you specify environment variables for the development setup.
+- Run `npm run dev` to start console in development mode.
+- Run `hasura console` in case the `CONSOLE_MODE` is `cli`.
 
-```
- #459  console: fix graphiql scroll
- #463  console: add react dependency
-```
+### Test
 
-#### General Commit Message Rules
+- Run tests: `npm run test`
+- Write your tests in the `cypress` directory, integration.
 
-- use the imperative, present tense: "change" not "changed" nor "changes"
-- don't capitalize first letter
-- no dot (.) at the end
+### Create Pull Request
+
+- Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md).
+- Create a pull request from your forked repo to the main repo.
+- Every pull request will automatically build and run the tests.

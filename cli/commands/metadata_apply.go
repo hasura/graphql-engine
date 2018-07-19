@@ -36,5 +36,5 @@ func (o *metadataApplyOptions) run() error {
 	if err != nil {
 		return err
 	}
-	return executeMetadata(o.actionType, migrateDrv, o.EC.ExecutionDirectory)
+	return executeMetadata(o.actionType, migrateDrv, o.EC.MetadataFile)
 }

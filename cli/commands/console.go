@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate/api"
@@ -48,6 +49,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.ConsolePort, "console-port", "9695", "port for serving console")
 	f.StringVar(&opts.Address, "address", "localhost", "address to use")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
+	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
@@ -68,6 +70,8 @@ type consoleOptions struct {
 	DontOpenBrowser bool
 
 	WG *sync.WaitGroup
+
+	StaticDir string
 }
 
 func (o *consoleOptions) run() error {
@@ -81,11 +85,11 @@ func (o *consoleOptions) run() error {
 	r.Use(allowCors())
 
 	// My Router struct
-	router := &consoleRouter{
+	router := &cRouter{
 		r,
 	}
 
-	router.setRoutes(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.MigrationDir, o.EC.Logger)
+	router.setRoutes(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger)
 
 	if o.EC.Version == nil {
 		return errors.New("cannot validate version, object is nil")
@@ -95,7 +99,7 @@ func (o *consoleOptions) run() error {
 
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
-	consoleRouter, err := serveConsole(consoleTemplateVersion, gin.H{
+	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, gin.H{
 		"apiHost":        "http://" + o.Address,
 		"apiPort":        o.APIPort,
 		"cliVersion":     o.EC.Version.GetCLIVersion(),
@@ -104,7 +108,6 @@ func (o *consoleOptions) run() error {
 		"accessKey":      o.EC.Config.AccessKey,
 		"assetsVersion":  consoleAssetsVersion,
 	})
-
 	if err != nil {
 		return errors.Wrap(err, "error serving console")
 	}
@@ -129,7 +132,7 @@ func (o *consoleOptions) run() error {
 		wg.Done()
 	}()
 
-	consoleURL := fmt.Sprintf("http://%s:%s", o.Address, o.ConsolePort)
+	consoleURL := fmt.Sprintf("http://%s:%s/", o.Address, o.ConsolePort)
 
 	if !o.DontOpenBrowser {
 		o.EC.Spin(color.CyanString("Opening console using default browser..."))
@@ -148,11 +151,11 @@ func (o *consoleOptions) run() error {
 	return nil
 }
 
-type consoleRouter struct {
+type cRouter struct {
 	*gin.Engine
 }
 
-func (router *consoleRouter) setRoutes(nurl *url.URL, accessKey, migrationDir string, logger *logrus.Logger) {
+func (router *cRouter) setRoutes(nurl *url.URL, accessKey, migrationDir, metadataFile string, logger *logrus.Logger) {
 	apis := router.Group("/apis")
 	{
 		apis.Use(setLogger(logger))
@@ -170,6 +173,7 @@ func (router *consoleRouter) setRoutes(nurl *url.URL, accessKey, migrationDir st
 		// Migrate api endpoints and middleware
 		metadataAPIs := apis.Group("/metadata")
 		{
+			metadataAPIs.Use(setMetadataFile(metadataFile))
 			metadataAPIs.Any("", api.MetadataAPI)
 		}
 	}
@@ -188,6 +192,13 @@ func setFilePath(dir string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		host := getFilePath(dir)
 		c.Set("filedir", host)
+		c.Next()
+	}
+}
+
+func setMetadataFile(file string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("metadataFile", file)
 		c.Next()
 	}
 }
@@ -211,7 +222,7 @@ func allowCors() gin.HandlerFunc {
 	return cors.New(config)
 }
 
-func serveConsole(assetsVersion string, opts gin.H) (*gin.Engine, error) {
+func serveConsole(assetsVersion, staticDir string, opts gin.H) (*gin.Engine, error) {
 	// An Engine instance with the Logger and Recovery middleware already attached.
 	r := gin.New()
 
@@ -222,7 +233,11 @@ func serveConsole(assetsVersion string, opts gin.H) (*gin.Engine, error) {
 	}
 	r.HTMLRender = templateRender
 
-	r.Any("/*action", func(c *gin.Context) {
+	if staticDir != "" {
+		r.Use(static.Serve("/static", static.LocalFile(staticDir, false)))
+		opts["cliStaticDir"] = staticDir
+	}
+	r.GET("/*action", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "console.html", &opts)
 	})
 

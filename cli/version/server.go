@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
+	yaml "github.com/ghodss/yaml"
 	"github.com/pkg/errors"
-	yaml "gopkg.in/yaml.v2"
 )
 
 type serverVersionResponse struct {
@@ -30,7 +30,7 @@ func FetchServerVersion(endpoint string) (version string, err error) {
 		case http.StatusNotFound:
 			return "", nil
 		default:
-			return "", errors.Errorf("GET %s failed - [%s]", versionEndpoint, response.StatusCode)
+			return "", errors.Errorf("GET %s failed - [%d]", versionEndpoint, response.StatusCode)
 		}
 	} else {
 		defer response.Body.Close()

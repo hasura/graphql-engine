@@ -1,4 +1,3 @@
-/* eslint no-unused-vars: 0 */
 /* eslint import/prefer-default-export: 0 */
 
 import {
@@ -7,14 +6,10 @@ import {
   passMTCreateTable,
   failMTWithoutColName,
   failMTWithoutColType,
-  failMTDuplicateColumns,
-  passMTAddTwoCols,
+  passMTAddColumn,
   passMTDeleteTableCancel,
   passMTDeleteCol,
-  passMTChangeColType,
   passMTDeleteTable,
-  failMTRemoveNullable,
-  failMTWrongDefault,
 } from './spec';
 
 import { testMode } from '../../../helpers/common';
@@ -39,11 +34,7 @@ export const runModifyTableTests = () => {
     it('Modify table button opens the correct route', passMTCheckRoute);
     it('Fails to add column without column name', failMTWithoutColName);
     it('Fails without type selected', failMTWithoutColType);
-    it('Fail duplicate column', failMTDuplicateColumns);
-    it('Fail for removing nullable after addition', failMTRemoveNullable);
-    it('Fail with wrong default', failMTWrongDefault);
-    it('Add 2 Columns', passMTAddTwoCols);
-    it('Moving to column and change type', passMTChangeColType);
+    it('Add a column', passMTAddColumn);
     it('Delete the column', passMTDeleteCol);
     it('Delete Table Cancel', passMTDeleteTableCancel);
     it('Delete table', passMTDeleteTable);

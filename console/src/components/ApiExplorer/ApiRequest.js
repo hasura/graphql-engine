@@ -26,6 +26,15 @@ class ApiRequest extends Component {
     this.state.tabIndex = 0;
   }
 
+  componentWillMount() {
+    if (this.props.numberOfTables !== 0) {
+      const graphqlQueryInLS = window.localStorage.getItem('graphiql:query');
+      if (graphqlQueryInLS && graphqlQueryInLS.indexOf('do not have') !== -1) {
+        window.localStorage.removeItem('graphiql:query');
+      }
+    }
+  }
+
   onGenerateApiCodeClicked = () => {
     this.props.dispatch(generateApiCodeClicked());
   };
@@ -308,7 +317,12 @@ class ApiRequest extends Component {
   getValidBody() {
     switch (this.props.bodyType) {
       case 'graphql':
-        return <GraphiQLWrapper data={this.props} />;
+        return (
+          <GraphiQLWrapper
+            data={this.props}
+            numberOfTables={this.props.numberOfTables}
+          />
+        );
       default:
         return '';
     }
@@ -343,6 +357,7 @@ ApiRequest.propTypes = {
   credentials: PropTypes.object.isRequired,
   bodyType: PropTypes.string.isRequired,
   route: PropTypes.object.isRequired,
+  numberOfTables: PropTypes.number.isRequired,
 };
 
 export default ApiRequest;

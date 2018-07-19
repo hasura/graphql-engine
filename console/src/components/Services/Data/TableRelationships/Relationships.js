@@ -46,16 +46,13 @@ const getObjArrayRelationshipList = relationships => {
 /* This function sets the styling to the way the relationship looks, for eg: id -> user::user_id */
 const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
   const finalRTable = rTable.name ? rTable.name : rTable;
-  const getGrayText = value => <i>{value}</i>;
   return isObjRel ? (
     <span>
-      &nbsp;{getGrayText(lcol)}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{rTable} :: {rcol}
+      &nbsp;{lcol}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{rTable} :: {rcol}
     </span>
   ) : (
     <span>
-      &nbsp;{finalRTable} :: {rcol}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{getGrayText(
-        lcol
-      )}
+      &nbsp;{finalRTable} :: {rcol}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{lcol}
     </span>
   );
 };
@@ -81,7 +78,7 @@ const relationshipView = (
         <button
           className="btn btn-sm btn-danger"
           onClick={onDelete}
-          data-test="remove-button"
+          data-test={`remove-button-${relName}`}
         >
           Remove
         </button>
@@ -310,6 +307,7 @@ const addRelationshipCellView = (
               className="input-sm form-control"
               value={selectedRelationshipName}
               onChange={onRelationshipNameChanged}
+              data-test="suggested-rel-name"
             />{' '}
             &nbsp;
             <button
@@ -493,7 +491,11 @@ const AddManualRelationship = ({
           Relationship Type
         </div>
         <div className={`${styles.relBlockInline} ${styles.relBlockRight}`}>
-          <select className="form-control" onChange={onRelTypeChange}>
+          <select
+            className="form-control"
+            onChange={onRelTypeChange}
+            data-test="rel-type"
+          >
             <option key="select_type" value="select_type">
               Select relationship type
             </option>
@@ -515,6 +517,7 @@ const AddManualRelationship = ({
             onChange={onRelNameChange}
             className="form-control"
             placeholder="Enter relationship name"
+            data-test="rel-name"
           />
         </div>
       </div>
@@ -525,6 +528,7 @@ const AddManualRelationship = ({
         <select
           className={`${styles.relBlockInline} form-control`}
           onChange={onRelLColChange}
+          data-test="current-col"
         >
           <option key="default_column">Current Column</option>
           {tableSchema.columns.map((c, i) => (
@@ -535,7 +539,11 @@ const AddManualRelationship = ({
         </select>
         <span> :: </span>
         <div className={styles.relBlockInline}>
-          <select className="form-control" onChange={onTableChange}>
+          <select
+            className="form-control"
+            onChange={onTableChange}
+            data-test="remote-table"
+          >
             <option key="default_table">Remote Table</option>
             {allSchemas.map((s, i) => (
               <option key={i} value={s.table_name}>
@@ -546,7 +554,11 @@ const AddManualRelationship = ({
         </div>
         <span> -> </span>
         <div className={styles.relBlockInline}>
-          <select className="form-control" onChange={onRelRColChange}>
+          <select
+            className="form-control"
+            onChange={onRelRColChange}
+            data-test="remote-table-col"
+          >
             <option key="default_table_column">Remote Table Column:</option>
             {manualColumns.map((c, i) => (
               <option key={c + i} value={c.column_name}>
@@ -777,4 +789,4 @@ const relationshipsConnector = connect =>
 
 export default relationshipsConnector;
 
-export { suggestedRelationships };
+export { suggestedRelationships, getRelationshipLine };
