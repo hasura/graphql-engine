@@ -198,6 +198,44 @@ instance ToSQL QIden where
   toSQL (QIden qual iden) =
     mconcat [toSQL qual, BB.char7 '.', toSQL iden]
 
+newtype SQLOp
+  = SQLOp {sqlOpTxt :: T.Text}
+  deriving (Show, Eq)
+
+incOp :: SQLOp
+incOp = SQLOp "+"
+
+mulOp :: SQLOp
+mulOp = SQLOp "*"
+
+jsonbConcatOp :: SQLOp
+jsonbConcatOp = SQLOp "||"
+
+jsonbDeleteOp :: SQLOp
+jsonbDeleteOp = SQLOp "-"
+
+jsonbDeleteAtPathOp :: SQLOp
+jsonbDeleteAtPathOp = SQLOp "#-"
+
+newtype AnnType
+  = AnnType {unAnnType :: T.Text}
+  deriving (Show, Eq)
+
+intType :: AnnType
+intType = AnnType "int"
+
+textType :: AnnType
+textType = AnnType "text"
+
+textArrType :: AnnType
+textArrType = AnnType "text[]"
+
+jsonType :: AnnType
+jsonType = AnnType "json"
+
+jsonbType :: AnnType
+jsonbType = AnnType "jsonb"
+
 data SQLExp
   = SEPrep !Int
   | SELit !T.Text
@@ -207,8 +245,8 @@ data SQLExp
   | SEIden !Iden
   | SEQIden !QIden
   | SEFnApp !T.Text ![SQLExp] !(Maybe OrderByExp)
-  | SEOpApp !T.Text ![SQLExp]
-  | SETyAnn !SQLExp !T.Text
+  | SEOpApp !SQLOp ![SQLExp]
+  | SETyAnn !SQLExp !AnnType
   | SECond !BoolExp !SQLExp !SQLExp
   | SEBool !BoolExp
   | SEExcluded !T.Text
@@ -241,9 +279,10 @@ instance ToSQL SQLExp where
   toSQL (SEFnApp name args mObe) =
     TE.encodeUtf8Builder name <> paren ((", " <+> args)  <-> toSQL mObe)
   toSQL (SEOpApp op args) =
-     paren (op <+> args)
+     paren (sqlOpTxt op <+> args)
   toSQL (SETyAnn e ty) =
-     paren (toSQL e) <> BB.string7 "::" <> TE.encodeUtf8Builder ty
+     paren (toSQL e) <> BB.string7 "::"
+     <> TE.encodeUtf8Builder (unAnnType ty)
   toSQL (SECond cond te fe) =
     BB.string7 "CASE WHEN" <-> toSQL cond <->
     BB.string7 "THEN" <-> toSQL te <->
@@ -568,3 +607,4 @@ instance ToSQL SelectWith where
     "WITH " <> (", " <+> map f ctes) <-> toSQL sel
     where
       f (Alias al, q) = toSQL al <-> "AS" <-> paren (toSQL q)
+

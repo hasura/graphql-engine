@@ -14,7 +14,6 @@ import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
-import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Delete             as RD
@@ -138,7 +137,7 @@ convertInsert (tn, vn) tableCols fld = do
 
 convObjWithOp
   :: (MonadError QErr m)
-  => T.Text -> T.Text -> AnnGValue -> m [(PGCol, S.SQLExp)]
+  => S.SQLOp -> S.AnnType -> AnnGValue -> m [(PGCol, S.SQLExp)]
 convObjWithOp op annTy val =
   flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
   (_, colVal) <- asPGColVal v
@@ -156,8 +155,9 @@ convDeleteAtPathObj val =
     vals <- flip withArray v $ \_ annVals -> mapM asPGColVal annVals
     let valExps = map (txtEncoder . snd) vals
         pgCol = PGCol $ G.unName k
-        annEncVal = S.SETyAnn (S.SEArray valExps) "text[]"
-        sqlExp = S.SEOpApp "#-" [S.SEIden $ toIden pgCol, annEncVal]
+        annEncVal = S.SETyAnn (S.SEArray valExps) S.textArrType
+        sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp
+                 [S.SEIden $ toIden pgCol, annEncVal]
     return (pgCol, sqlExp)
 
 convertUpdate
@@ -169,10 +169,13 @@ convertUpdate tn filterExp fld = do
   -- a set expression is same as a row object
   setExpM   <- withArgM args "_set" convertRowObj
   whereExp <- withArg args "where" $ convertBoolExp tn
-  incExpM <- withArgM args "_inc" $ convObjWithOp incOp "int"
-  concatExpM <- withArgM args "_concat" $ convObjWithOp concatOp "jsonb"
-  deleteKeyExpM <- withArgM args "_delete_key" $ convObjWithOp deleteOp "text"
-  deleteElemExpM <- withArgM args "_delete_elem" $ convObjWithOp deleteOp "int"
+  incExpM <- withArgM args "_inc" $ convObjWithOp S.incOp S.intType
+  concatExpM <- withArgM args "_concat" $
+    convObjWithOp S.jsonbConcatOp S.jsonbType
+  deleteKeyExpM <- withArgM args "_delete_key" $
+    convObjWithOp S.jsonbDeleteOp S.textType
+  deleteElemExpM <- withArgM args "_delete_elem" $
+    convObjWithOp S.jsonbDeleteOp S.intType
   deleteAtPathExpM <- withArgM args "_delete_at_path" convDeleteAtPathObj
   mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
   prepArgs <- get
@@ -186,9 +189,6 @@ convertUpdate tn filterExp fld = do
   return $ RU.updateP2 (p1, prepArgs)
   where
     args = _fArguments fld
-    incOp = "+"
-    concatOp = "||"
-    deleteOp = "-"
 
 convertDelete
   :: QualifiedTable -- table

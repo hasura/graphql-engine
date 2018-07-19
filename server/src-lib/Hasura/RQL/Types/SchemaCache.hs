@@ -14,8 +14,8 @@ module Hasura.RQL.Types.SchemaCache
        , TableInfo(..)
        , TableConstraint(..)
        , ConstraintType(..)
-       , isIntegerType
-       , isJSONBType
+       , onlyIntCols
+       , onlyJSONBCols
        , isUniqueOrPrimary
        , mkTableInfo
        , addTableToCache
@@ -184,6 +184,12 @@ data PGColInfo
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''PGColInfo)
+
+onlyIntCols :: [PGColInfo] -> [PGColInfo]
+onlyIntCols = filter (isIntegerType . pgiType)
+
+onlyJSONBCols :: [PGColInfo] -> [PGColInfo]
+onlyJSONBCols = filter (isJSONBType . pgiType)
 
 data RelInfo
   = RelInfo
