@@ -12,6 +12,12 @@ const dataTypes = [
     hasuraDatatype: null,
   },
   {
+    name: 'UUID',
+    value: 'uuid',
+    description: 'universal unique identifier',
+    hasuraDatatype: 'uuid',
+  },
+  {
     name: 'Big Integer',
     value: 'bigint',
     description: 'signed eight-byte integer',

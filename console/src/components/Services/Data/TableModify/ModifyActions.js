@@ -348,14 +348,21 @@ const addColSql = (
     if (colDefault !== '') {
       runSqlQueryUp += ' DEFAULT ' + defWithQuotes;
     }
-    const schemaChangesUp = [
-      {
+    const schemaChangesUp = [];
+    if (colType === 'uuid' && colDefault !== '') {
+      schemaChangesUp.push({
         type: 'run_sql',
         args: {
-          sql: runSqlQueryUp,
+          sql: 'CREATE EXTENSION IF NOT EXISTS pgcrypto;',
         },
+      });
+    }
+    schemaChangesUp.push({
+      type: 'run_sql',
+      args: {
+        sql: runSqlQueryUp,
       },
-    ];
+    });
     /*
     const runSqlQueryDown = 'ALTER TABLE ' + '"' + tableName + '"' + ' DROP COLUMN ' + '"' + colName + '"';
     const schemaChangesDown = [{
@@ -643,24 +650,24 @@ const saveColumnChangesSql = (
     const schemaChangesUp =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesUpQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesUpQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesDownQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesDownQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
 
     /* column default up/down migration */
@@ -1090,24 +1097,24 @@ const saveColChangesWithFkSql = (
     const schemaChangesUp =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesUpQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesUpQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesDownQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesDownQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
 
     /* column default up/down migration */
@@ -1196,6 +1203,12 @@ const saveColChangesWithFkSql = (
 
       // check if default is unchanged and then do a drop. if not skip
       if (originalColDefault !== def.trim()) {
+        if (colType === 'uuid') {
+          schemaChangesUp.push({
+            type: 'run_sql',
+            sql: 'CREATE EXTENSION IF NOT EXISTS pgcrypto;',
+          });
+        }
         schemaChangesUp.push({
           type: 'run_sql',
           args: {

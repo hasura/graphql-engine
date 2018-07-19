@@ -49,8 +49,12 @@ ci-save-image:
 ci-load-image:
 	docker load -i $(build_output)/image.tar
 
-push: $(project).cabal
+push:
 	docker push $(registry)/$(project):$(version)
+
+push-latest:
+	docker tag $(registry)/$(project):$(version) $(registry)/$(project):latest
+	docker push $(registry)/$(project):latest
 
 packager: packaging/packager.df
 	docker build -t "$(registry)/graphql-engine-packager:$(packager_ver)" -f packaging/packager.df ./packaging/
