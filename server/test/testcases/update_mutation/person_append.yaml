@@ -1,4 +1,4 @@
-description: Updated person data using _concat operator
+description: Updated person data using _append operator
 url: /v1alpha1/graphql
 status: 200
 query:
@@ -11,7 +11,7 @@ query:
     mutation update_person($value: jsonb) {
       update_person(
         where: {id: {_eq: 1}},
-        _concat: {
+        _append: {
           details: $value
         }
       ){

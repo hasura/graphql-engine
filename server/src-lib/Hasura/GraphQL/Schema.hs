@@ -375,9 +375,9 @@ mkUpdIncInp tn = maybe Nothing mkType
       "input type for incrementing integer columne in table " <>> tn
 
 -- table_<json-op>_input
-mkJSONOpTy :: QualifiedTable -> T.Text -> G.NamedType
+mkJSONOpTy :: QualifiedTable -> G.Name -> G.NamedType
 mkJSONOpTy tn op =
-  G.NamedType $ qualTableToName tn <> G.Name op <> "_input"
+  G.NamedType $ qualTableToName tn <> op <> "_input"
 
 -- json ops are _concat, _delete_key, _delete_elem, _delete_at_path
 {-
@@ -416,6 +416,40 @@ input table_delete_at_path_input {
 }
 -}
 
+-- jsonb operators and descriptions
+prependOp :: G.Name
+prependOp = "_prepend"
+
+prependDesc :: G.Description
+prependDesc = "prepend existing jsonb value of filtered columns with new jsonb value"
+
+appendOp :: G.Name
+appendOp = "_append"
+
+appendDesc :: G.Description
+appendDesc = "append existing jsonb value of filtered columns with new jsonb value"
+
+deleteKeyOp :: G.Name
+deleteKeyOp = "_delete_key"
+
+deleteKeyDesc :: G.Description
+deleteKeyDesc = "delete key/value pair or string element."
+                <> " key/value pairs are matched based on their key value"
+
+deleteElemOp :: G.Name
+deleteElemOp = "_delete_elem"
+
+deleteElemDesc :: G.Description
+deleteElemDesc = "delete the array element with specified index (negative integers count from the end)."
+                 <> " throws an error if top level container is not an array"
+
+deleteAtPathOp :: G.Name
+deleteAtPathOp = "_delete_at_path"
+
+deleteAtPathDesc :: G.Description
+deleteAtPathDesc = "delete the field or element with specified path"
+                   <> " (for JSON arrays, negative integers count from the end)"
+
 mkUpdJSONOpInp
   :: QualifiedTable -> [PGColInfo] -> [InpObjTyInfo]
 mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
@@ -423,32 +457,32 @@ mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
     jsonbCols = onlyJSONBCols cols
     jsonbColNames = map pgiName jsonbCols
 
-    inpObjs = [ concatInpObj, deleteKeyInpObj
+    inpObjs = [ prependInpObj, appendInpObj, deleteKeyInpObj
               , deleteElemInpObj, deleteAtPathInpObj
               ]
 
-    concatDesc = "concat with new jsonb value"
-    concatInpObj =
-      InpObjTyInfo (Just concatDesc) (mkJSONOpTy tn "_concat") $
+    appendInpObj =
+      InpObjTyInfo (Just appendDesc) (mkJSONOpTy tn appendOp) $
       fromInpValL $ map mkPGColInp jsonbCols
 
-    deleteKeyDesc = "delete key/value pair with matched key"
+    prependInpObj =
+      InpObjTyInfo (Just prependDesc) (mkJSONOpTy tn prependOp) $
+      fromInpValL $ map mkPGColInp jsonbCols
+
     deleteKeyInpObj =
-      InpObjTyInfo (Just deleteKeyDesc) (mkJSONOpTy tn "_delete_key") $
+      InpObjTyInfo (Just deleteKeyDesc) (mkJSONOpTy tn deleteKeyOp) $
       fromInpValL $ map deleteKeyInpVal jsonbColNames
     deleteKeyInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) $
       G.toGT $ G.NamedType "String"
 
-    deleteElemDesc = "delete the array element with specified index"
     deleteElemInpObj =
-      InpObjTyInfo (Just deleteElemDesc) (mkJSONOpTy tn "_delete_elem") $
+      InpObjTyInfo (Just deleteElemDesc) (mkJSONOpTy tn deleteElemOp) $
       fromInpValL $ map deleteElemInpVal jsonbColNames
     deleteElemInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) $
       G.toGT $ G.NamedType "Int"
 
-    deleteAtPathDesc = "delete the field or element with specified path"
     deleteAtPathInpObj =
-      InpObjTyInfo (Just deleteAtPathDesc) (mkJSONOpTy tn "_delete_at_path") $
+      InpObjTyInfo (Just deleteAtPathDesc) (mkJSONOpTy tn deleteAtPathOp) $
       fromInpValL $ map deleteAtPathInpVal jsonbColNames
     deleteAtPathInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) $
       G.toGT $ G.toLT $ G.NamedType "String"
@@ -479,28 +513,25 @@ mkJSONOpInpVals :: QualifiedTable -> [PGColInfo] -> [InpValInfo]
 mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
   where
     jsonbCols = onlyJSONBCols cols
-    jsonbOpArgs = [concatArg, deleteKeyArg, deleteElemArg, deleteAtPathArg]
-    concatArgDesc = "concat the jsonb columns with given jsonb value"
-    concatArg =
-      InpValInfo (Just concatArgDesc) "_concat" $ G.toGT $ mkJSONOpTy tn "_concat"
+    jsonbOpArgs = [appendArg, prependArg, deleteKeyArg, deleteElemArg, deleteAtPathArg]
 
-    deleteKeyArgDesc =
-      "delete the key/value pair of jsonb columns of filtered rows"
+    appendArg =
+      InpValInfo (Just appendDesc) appendOp $ G.toGT $ mkJSONOpTy tn appendOp
+
+    prependArg =
+      InpValInfo (Just prependDesc) prependOp $ G.toGT $ mkJSONOpTy tn prependOp
+
     deleteKeyArg =
-      InpValInfo (Just deleteKeyArgDesc) "_delete_key" $
-      G.toGT $ mkJSONOpTy tn "_delete_key"
+      InpValInfo (Just deleteKeyDesc) deleteKeyOp $
+      G.toGT $ mkJSONOpTy tn deleteKeyOp
 
-    deleteElemArgDesc =
-      "delete the array element of jsonb columns of filtered rows"
     deleteElemArg =
-      InpValInfo (Just deleteElemArgDesc) "_delete_elem" $
-      G.toGT $ mkJSONOpTy tn "_delete_elem"
+      InpValInfo (Just deleteElemDesc) deleteElemOp $
+      G.toGT $ mkJSONOpTy tn deleteElemOp
 
-    deleteAtPathArgDesc =
-      "delete the field or element with specified path of jsonb columns of filtered rows"
     deleteAtPathArg =
-      InpValInfo (Just deleteAtPathArgDesc) "_delete_at_path" $
-      G.toGT $ mkJSONOpTy tn "_delete_at_path"
+      InpValInfo (Just deleteAtPathDesc) deleteAtPathOp $
+      G.toGT $ mkJSONOpTy tn deleteAtPathOp
 
 mkUpdMutFld
   :: QualifiedTable -> [PGColInfo] -> ObjFldInfo

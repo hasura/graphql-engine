@@ -135,16 +135,24 @@ convertInsert (tn, vn) tableCols fld = do
       return $ Map.elems $ Map.union (Map.fromList givenCols) defVals
     defVals = Map.fromList $ zip tableCols (repeat $ S.SEUnsafe "DEFAULT")
 
+type ApplySQLOp = S.SQLOp -> PGCol -> S.SQLExp -> S.SQLExp
+
+rhsExpOp :: ApplySQLOp
+rhsExpOp op col = S.mkSQLOpExp op (S.SEIden $ toIden col)
+
+lhsExpOp :: ApplySQLOp
+lhsExpOp op col e = S.mkSQLOpExp op e $ S.SEIden $ toIden col
+
 convObjWithOp
   :: (MonadError QErr m)
-  => S.SQLOp -> S.AnnType -> AnnGValue -> m [(PGCol, S.SQLExp)]
-convObjWithOp op annTy val =
+  => ApplySQLOp -> S.SQLOp -> S.AnnType -> AnnGValue -> m [(PGCol, S.SQLExp)]
+convObjWithOp opFn op annTy val =
   flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
   (_, colVal) <- asPGColVal v
   let pgCol = PGCol $ G.unName k
       encVal = txtEncoder colVal
       annEncVal = S.SETyAnn encVal annTy
-      sqlExp = S.SEOpApp op [S.SEIden $ toIden pgCol, annEncVal]
+      sqlExp = opFn op pgCol annEncVal
   return (pgCol, sqlExp)
 
 convDeleteAtPathObj
@@ -168,22 +176,35 @@ convertUpdate
 convertUpdate tn filterExp fld = do
   -- a set expression is same as a row object
   setExpM   <- withArgM args "_set" convertRowObj
+  -- where bool expression to filter column
   whereExp <- withArg args "where" $ convertBoolExp tn
-  incExpM <- withArgM args "_inc" $ convObjWithOp S.incOp S.intType
-  concatExpM <- withArgM args "_concat" $
-    convObjWithOp S.jsonbConcatOp S.jsonbType
+  -- increment operator on integer columns
+  incExpM <- withArgM args "_inc" $
+    convObjWithOp rhsExpOp S.incOp S.intType
+  -- append jsonb value
+  appendExpM <- withArgM args "_append" $
+    convObjWithOp rhsExpOp S.jsonbConcatOp S.jsonbType
+  -- prepend jsonb value
+  prependExpM <- withArgM args "_prepend" $
+    convObjWithOp lhsExpOp S.jsonbConcatOp S.jsonbType
+  -- delete a key in jsonb object
   deleteKeyExpM <- withArgM args "_delete_key" $
-    convObjWithOp S.jsonbDeleteOp S.textType
+    convObjWithOp rhsExpOp S.jsonbDeleteOp S.textType
+  -- delete an element in jsonb array
   deleteElemExpM <- withArgM args "_delete_elem" $
-    convObjWithOp S.jsonbDeleteOp S.intType
+    convObjWithOp rhsExpOp S.jsonbDeleteOp S.intType
+  -- delete at path in jsonb value
   deleteAtPathExpM <- withArgM args "_delete_at_path" convDeleteAtPathObj
+
   mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
   prepArgs <- get
-  let updExpsM = [setExpM, incExpM, concatExpM, deleteKeyExpM, deleteElemExpM, deleteAtPathExpM]
+  let updExpsM = [ setExpM, incExpM, appendExpM, prependExpM
+                 , deleteKeyExpM, deleteElemExpM, deleteAtPathExpM
+                 ]
       updExp = concat $ catMaybes updExpsM
   -- atleast one of update operators is expected
   unless (any isJust updExpsM) $ throw400 Unexpected $
-    "atleast any one of _set, _inc, _concat, _delete_key, _delete_elem and "
+    "atleast any one of _set, _inc, _append, _prepend, _delete_key, _delete_elem and "
     <> " _delete_at_path operator is expected"
   let p1 = RU.UpdateQueryP1 tn updExp (filterExp, whereExp) mutFlds
   return $ RU.updateP2 (p1, prepArgs)

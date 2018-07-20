@@ -297,6 +297,13 @@ instance ToSQL SQLExp where
 data Extractor = Extractor !SQLExp !(Maybe Alias)
                deriving (Show, Eq)
 
+mkSQLOpExp
+  :: SQLOp
+  -> SQLExp -- lhs
+  -> SQLExp -- rhs
+  -> SQLExp -- result
+mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
+
 getExtrAlias :: Extractor -> Maybe Alias
 getExtrAlias (Extractor _ ma) = ma
 
