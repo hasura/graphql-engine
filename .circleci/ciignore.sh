@@ -10,12 +10,18 @@
 set -eo pipefail
 ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
 
+# always build default branch
+if [[ "$CIRCLE_BRANCH" == "master" ]]; then
+    echo "Skipping check for master branch"
+    exit
+fi
+
 if [[ ! -a "$ROOT/.ciignore" ]]; then
+    echo "Skipping check since .ciignore is not found"
 	  exit # If .ciignore doesn't exists, just quit this script
 fi
 
-# If branch is master, diff with origin/master will always be empty. Depend on
-# CIRCLE_COMPARE_URL first and if its not set, check for diff with master.
+# Check CIRCLE_COMPARE_URL first and if its not set, check for diff with master.
 if [[ ! -z "$CIRCLE_COMPARE_URL" ]]; then
     # CIRCLE_COMPARE_URL is not empty, use it to get the diff
     COMMIT_RANGE=$(echo $CIRCLE_COMPARE_URL | sed 's:^.*/compare/::g')

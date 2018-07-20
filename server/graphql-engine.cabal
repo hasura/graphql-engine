@@ -105,7 +105,21 @@ library
                      , yaml
                      , template-haskell >= 2.11
 
+                     -- websockets interface related
+                     , websockets
+                     , wai-websockets
+                     , hashtables
+                     , stm
+                     , stm-containers
+                     , list-t
+                     , async
+
+                     -- logging related
+                     , base64-bytestring >= 1.0
+                     , auto-update
+
   exposed-modules:     Hasura.Server.App
+                     , Hasura.Server.Auth
                      , Hasura.Server.Init
                      , Hasura.Server.Middleware
                      , Hasura.Server.Logging
@@ -139,14 +153,20 @@ library
                      , Hasura.RQL.DML.QueryTemplate
                      , Hasura.RQL.GBoolExp
 
-                     , Hasura.GraphQL.Execute
-                     , Hasura.GraphQL.Execute.Result
+                     , Hasura.GraphQL.Transport.HTTP.Protocol
+                     , Hasura.GraphQL.Transport.HTTP
+                     , Hasura.GraphQL.Transport.WebSocket.Protocol
+                     , Hasura.GraphQL.Transport.WebSocket.Server
+                     , Hasura.GraphQL.Transport.WebSocket
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Utils
+                     , Hasura.GraphQL.Validate
                      , Hasura.GraphQL.Validate.Types
                      , Hasura.GraphQL.Validate.Context
                      , Hasura.GraphQL.Validate.Field
                      , Hasura.GraphQL.Validate.InputValue
+                     , Hasura.GraphQL.Resolve
+                     , Hasura.GraphQL.Resolve.LiveQuery
                      , Hasura.GraphQL.Resolve.BoolExp
                      , Hasura.GraphQL.Resolve.Context
                      , Hasura.GraphQL.Resolve.InputValue
@@ -156,6 +176,7 @@ library
 
                      , Data.Text.Extended
                      , Data.Sequence.NonEmpty
+                     , Data.TByteString
                      , Data.HashMap.Strict.InsOrd.Extended
 
                      , Hasura.SQL.DML
@@ -164,6 +185,7 @@ library
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time
                      , Hasura.Prelude
+                     , Hasura.Logging
                      , Ops
                      , TH
 
@@ -178,7 +200,7 @@ executable graphql-engine
   default-language:  Haskell2010
   hs-source-dirs:    src-exec
   build-depends:       base
-                     , Spock-core >= 0.11
+                     , warp >= 3.2
                      , graphql-engine
                      , aeson >= 1.0
                      , bytestring >= 0.10
@@ -209,7 +231,7 @@ test-suite graphql-engine-test
                      , aeson
                      , aeson-casing
                      , bytestring
-                     --, directory
+                     -- , directory
                      --, fgl
                      , filepath
                      , hspec

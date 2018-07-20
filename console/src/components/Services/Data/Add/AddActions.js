@@ -85,6 +85,7 @@ const createTableSql = () => {
     const pKeys = state.primaryKeys
       .filter(p => p !== '')
       .map(p => state.columns[p].name);
+    let isUUIDDefault = false;
     for (let i = 0; i < currentCols.length; i++) {
       tableColumns +=
         '"' + currentCols[i].name + '"' + ' ' + currentCols[i].type + ' ';
@@ -104,6 +105,9 @@ const createTableSql = () => {
           // if a column type is text and if it has a default value, add a single quote by default
           tableColumns += " DEFAULT '" + currentCols[i].default.value + "'";
         } else {
+          if (currentCols[i].type === 'uuid') {
+            isUUIDDefault = true;
+          }
           tableColumns += ' DEFAULT ' + currentCols[i].default.value;
         }
       }
@@ -121,6 +125,7 @@ const createTableSql = () => {
       tableColumns += ') ';
     }
     // const sqlCreateTable = 'CREATE TABLE ' + '\'' + state.tableName.trim() + '\'' + '(' + tableColumns + ')';
+    const sqlCreateExtension = 'CREATE EXTENSION IF NOT EXISTS pgcrypto;';
     const sqlCreateTable =
       'CREATE TABLE ' +
       currentSchema +
@@ -134,21 +139,27 @@ const createTableSql = () => {
     // apply migrations
     const migrationName =
       'create_table_' + currentSchema + '_' + state.tableName.trim();
+    const upQueryArgs = [];
+    if (isUUIDDefault) {
+      upQueryArgs.push({
+        type: 'run_sql',
+        args: { sql: sqlCreateExtension },
+      });
+    }
+    upQueryArgs.push({
+      type: 'run_sql',
+      args: { sql: sqlCreateTable },
+    });
+    upQueryArgs.push({
+      type: 'add_existing_table_or_view',
+      args: {
+        name: state.tableName.trim(),
+        schema: currentSchema,
+      },
+    });
     const upQuery = {
       type: 'bulk',
-      args: [
-        {
-          type: 'run_sql',
-          args: { sql: sqlCreateTable },
-        },
-        {
-          type: 'add_existing_table_or_view',
-          args: {
-            name: state.tableName.trim(),
-            schema: currentSchema,
-          },
-        },
-      ],
+      args: upQueryArgs,
     };
     /*
     const sqlDropTable = 'DROP TABLE ' + '"' + state.tableName.trim() + '"';

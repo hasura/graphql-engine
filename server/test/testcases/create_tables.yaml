@@ -14,7 +14,9 @@ query:
             id SERIAL PRIMARY KEY,
             title TEXT,
             content TEXT,
-            author_id INTEGER REFERENCES author(id)
+            author_id INTEGER REFERENCES author(id),
+            is_published BOOLEAN,
+            published_on TIMESTAMP
           )
     - type: run_sql
       args:
