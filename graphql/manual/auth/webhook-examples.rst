@@ -14,9 +14,9 @@ We've put together a github nodejs repo that has some auth webhook examples conf
 
 Once deployed, you can use any of the following endpoints as your auth webhook in the GraphQL engine:
 
-- ``/simple/webhook``   (`View source <https://github.com/hasura/sample-auth-webhook/blob/master/server.js#L25>`_)
-- ``/auth0/webhook``    (`View source <https://github.com/hasura/sample-auth-webhook/tree/master/firebase>`_)
-- ``/firebase/webhook`` (`View source <https://github.com/hasura/sample-auth-webhook/tree/master/auth0>`_)
+- ``/simple/webhook``   (`View source <https://github.com/hasura/sample-auth-webhook/blob/master/server.js#L25>`__)
+- ``/auth0/webhook``    (`View source <https://github.com/hasura/sample-auth-webhook/tree/master/firebase>`__)
+- ``/firebase/webhook`` (`View source <https://github.com/hasura/sample-auth-webhook/tree/master/auth0>`__)
 
 .. note::
 
