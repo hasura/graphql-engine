@@ -135,24 +135,29 @@ convertInsert (tn, vn) tableCols fld = do
       return $ Map.elems $ Map.union (Map.fromList givenCols) defVals
     defVals = Map.fromList $ zip tableCols (repeat $ S.SEUnsafe "DEFAULT")
 
-type ApplySQLOp = S.SQLOp -> PGCol -> S.SQLExp -> S.SQLExp
+type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
 
-rhsExpOp :: ApplySQLOp
-rhsExpOp op col = S.mkSQLOpExp op (S.SEIden $ toIden col)
+rhsExpOp :: S.SQLOp -> S.AnnType -> ApplySQLOp
+rhsExpOp op annTy (col, e) =
+  S.mkSQLOpExp op (S.SEIden $ toIden col) annExp
+  where
+    annExp = S.SETyAnn e annTy
 
-lhsExpOp :: ApplySQLOp
-lhsExpOp op col e = S.mkSQLOpExp op e $ S.SEIden $ toIden col
+lhsExpOp :: S.SQLOp -> S.AnnType -> ApplySQLOp
+lhsExpOp op annTy (col, e) =
+  S.mkSQLOpExp op annExp $ S.SEIden $ toIden col
+  where
+    annExp = S.SETyAnn e annTy
 
 convObjWithOp
   :: (MonadError QErr m)
-  => ApplySQLOp -> S.SQLOp -> S.AnnType -> AnnGValue -> m [(PGCol, S.SQLExp)]
-convObjWithOp opFn op annTy val =
+  => ApplySQLOp -> AnnGValue -> m [(PGCol, S.SQLExp)]
+convObjWithOp opFn val =
   flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
   (_, colVal) <- asPGColVal v
   let pgCol = PGCol $ G.unName k
       encVal = txtEncoder colVal
-      annEncVal = S.SETyAnn encVal annTy
-      sqlExp = opFn op pgCol annEncVal
+      sqlExp = opFn (pgCol, encVal)
   return (pgCol, sqlExp)
 
 convDeleteAtPathObj
@@ -180,19 +185,19 @@ convertUpdate tn filterExp fld = do
   whereExp <- withArg args "where" $ convertBoolExp tn
   -- increment operator on integer columns
   incExpM <- withArgM args "_inc" $
-    convObjWithOp rhsExpOp S.incOp S.intType
+    convObjWithOp $ rhsExpOp S.incOp S.intType
   -- append jsonb value
   appendExpM <- withArgM args "_append" $
-    convObjWithOp rhsExpOp S.jsonbConcatOp S.jsonbType
+    convObjWithOp $ rhsExpOp S.jsonbConcatOp S.jsonbType
   -- prepend jsonb value
   prependExpM <- withArgM args "_prepend" $
-    convObjWithOp lhsExpOp S.jsonbConcatOp S.jsonbType
+    convObjWithOp $ lhsExpOp S.jsonbConcatOp S.jsonbType
   -- delete a key in jsonb object
   deleteKeyExpM <- withArgM args "_delete_key" $
-    convObjWithOp rhsExpOp S.jsonbDeleteOp S.textType
+    convObjWithOp $ rhsExpOp S.jsonbDeleteOp S.textType
   -- delete an element in jsonb array
   deleteElemExpM <- withArgM args "_delete_elem" $
-    convObjWithOp rhsExpOp S.jsonbDeleteOp S.intType
+    convObjWithOp $ rhsExpOp S.jsonbDeleteOp S.intType
   -- delete at path in jsonb value
   deleteAtPathExpM <- withArgM args "_delete_at_path" convDeleteAtPathObj
 
