@@ -8,6 +8,7 @@ import {
   checkMutation,
   createTestTable,
   insertValue,
+  checkSub,
   delTestTable,
 } from './spec';
 
@@ -34,6 +35,7 @@ export const runApiExplorerTests = () => {
     it('Check Run Query button', checkExecuteQueryButton);
     it('Check query result', checkQuery);
     it('Check mutation result', checkMutation);
+    it('Check subscription result', checkSub);
     it('Delete test table', delTestTable);
   });
 };

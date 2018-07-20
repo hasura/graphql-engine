@@ -2,8 +2,23 @@
 
 import { getElementFromAlias, baseUrl } from '../../../helpers/dataHelpers';
 import { validateCT } from '../../validators/validators';
+import { makeDataAPIOptions } from '../../../helpers/dataHelpers';
+import { toggleOnMigrationMode } from '../../data/migration-mode/utils';
+// ***************** UTIL FUNCTIONS **************************
+
+let accessKey;
+let dataApiUrl;
 
 export const createTestTable = () => {
+  cy.window().then(win => {
+    accessKey = win.__env.accessKey;
+    dataApiUrl = win.__env.dataApiUrl;
+    const { consoleMode } = win.__env;
+    if (consoleMode === 'cli') {
+      toggleOnMigrationMode();
+    }
+  });
+
   //    Click on the create table button
   cy.visit('/data/schema');
   cy.wait(15000);
@@ -68,6 +83,42 @@ export const checkMutation = () => {
   cy.get('.execute-button').click();
   cy.get('.cm-property').contains('id');
   cy.get('.cm-number').contains('2');
+};
+
+export const checkSub = () => {
+  // Make a subscription
+  cy.get('textarea')
+    .first()
+    .type(
+      '{enter}{uparrow}#{leftarrow}{enter}{uparrow}subscription{{}users{{}name}}',
+      { force: true }
+    );
+  cy.get('.execute-button').click();
+  cy.get('.cm-property').contains('name');
+  cy.get('.cm-string').contains('someName');
+  // Update the user with id 1
+  const reqBody = {
+    type: 'update',
+    args: {
+      table: {
+        name: 'users',
+      },
+      where: {
+        id: '1',
+      },
+      $set: {
+        name: 'someOtherName',
+      },
+    },
+  };
+  // Make the request
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(res => {
+    cy.log(JSON.stringify(res));
+    cy.wait(3000);
+    cy.get('.cm-string').contains('someOtherName');
+    // cy.get('.cm-number').contains('1');
+  });
 };
 
 export const delTestTable = () => {
