@@ -298,7 +298,11 @@ const RawSQL = ({
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={onModalClose}>Cancel</Button>
-          <Button onClick={onConfirmNoMigration} bsStyle="primary">
+          <Button
+            onClick={onConfirmNoMigration}
+            bsStyle="primary"
+            data-test="not-migration-confirm"
+          >
             Yes, i confirm
           </Button>
         </Modal.Footer>

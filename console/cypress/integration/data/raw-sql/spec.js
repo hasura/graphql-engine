@@ -70,7 +70,9 @@ export const delTestTables = () => {
   }
   prevStr = 'DROP TABLE apic_test_table_rsql CASCADE;';
   cy.get('textarea').type(prevStr, { force: true });
+  cy.get(getElementFromAlias('raw-sql-migration-check')).uncheck();
   cy.get(getElementFromAlias('run-sql')).click();
+  cy.get(getElementFromAlias('not-migration-confirm')).click();
   cy.wait(5000);
   for (let i = 0; i < prevStr.length; i++) {
     cy.get('textarea').type('{backspace}', { force: true });
