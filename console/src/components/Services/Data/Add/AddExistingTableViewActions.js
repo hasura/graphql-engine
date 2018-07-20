@@ -153,7 +153,10 @@ const addAllUntrackedTablesSql = tableList => {
       dispatch({ type: REQUEST_SUCCESS });
       dispatch(loadSchema()).then(() => {
         const allSchemas = getState().tables.allSchemas;
-        const untrackedRelations = getAllUnTrackedRelations(allSchemas);
+        const untrackedRelations = getAllUnTrackedRelations(
+          allSchemas,
+          currentSchema
+        ).bulkRelTrack;
         dispatch({
           type: LOAD_UNTRACKED_RELATIONS,
           untrackedRelations: untrackedRelations,

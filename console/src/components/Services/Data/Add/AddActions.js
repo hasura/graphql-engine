@@ -160,7 +160,8 @@ const createTableSql = () => {
       type: 'bulk',
       args: upQueryArgs,
     };
-    const sqlDropTable = 'DROP TABLE ' + '"' + state.tableName.trim() + '"';
+    const sqlDropTable =
+      'DROP TABLE ' + currentSchema + '.' + '"' + state.tableName.trim() + '"';
     const downQuery = {
       type: 'bulk',
       args: [
