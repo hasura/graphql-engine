@@ -1,7 +1,8 @@
-Securing your GraphQL endpoint (Heroku)
-=======================================
+Securing the GraphQL endpoint (Heroku)
+======================================
 
-To make sure that your Hasura GraphQL endpoint is not publicly accessible, you need to configure an access key.
+To make sure that your GraphQL endpoint and the Hasura console are not publicly accessible, you need to
+configure an access key.
 
 
 Add the HASURA_GRAPHQL_ACCESS_KEY env var
@@ -11,7 +12,8 @@ Head to the config-vars URL on your Heroku dashboard and set the environment var
 
 .. image:: ../../../../img/graphql/manual/deployment/secure-heroku.png
 
-Setting this environment variable will automatically restart the dyno. Now when you access your console, you'll be prompted for the access key.
+Setting this environment variable will automatically restart the dyno. Now when you access your console, you'll be
+prompted for the access key.
 
 .. image:: ../../../../img/graphql/manual/deployment/access-key-console.png
 
@@ -19,7 +21,7 @@ Setting this environment variable will automatically restart the dyno. Now when 
 (optional) Use the access key with the CLI
 ------------------------------------------
 
-In case you're using the CLI to open the hasura console, use the access-key flag when you open the console:
+In case you're using the CLI to open the Hasura console, use the ``access-key`` flag when you open the console:
 
 .. code-block:: bash
 

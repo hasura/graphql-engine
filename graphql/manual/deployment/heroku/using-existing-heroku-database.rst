@@ -1,12 +1,12 @@
-Using existing database
-=======================
+Using existing Heroku database
+==============================
 
 Let's say you have an existing Heroku Postgres database with data in it, and you'd like add GraphQL on it.
 
 .. note::
 
    In case you're exposing an existing database (esp. if it is production), please configure an access key
-   for the console and the graphql endpoint.
+   for the console and the GraphQL endpoint.
 
 Step 0: Deploy Hasura on Heroku
 -------------------------------
@@ -19,7 +19,8 @@ Deploy Hasura on Heroku by clicking on this button:
   :class: no-shadow
   :target: https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku
 
-Follow the heroku instructions to deploy, check if the Hasura console loads up when you **View app** and then head to the **Manage App** screen on your Heroku dashboard.
+Follow the heroku instructions to deploy, check if the Hasura console loads up when you **View app** and then head
+to the **Manage App** screen on your Heroku dashboard.
 
 Step 1: Remove the existing postgres addon in the app
 -----------------------------------------------------
@@ -31,7 +32,7 @@ Head to your Heroku dashboard and delete the postgres addon:
 Step 2: Configure the DATABASE_URL environment variable
 -------------------------------------------------------
 
-Now configure the `DATABASE_URL` with your existing heroku postgres database URL.
+Now configure the `DATABASE_URL` with your existing Heroku Postgres database URL.
 
 .. image:: ../../../../img/graphql/manual/deployment/heroku-database-url-access.png
 

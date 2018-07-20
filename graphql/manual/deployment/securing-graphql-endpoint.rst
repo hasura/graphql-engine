@@ -1,7 +1,8 @@
 Securing the GraphQL endpoint
 =============================
 
-To make sure that your Hasura GraphQL endpoint is not publicly accessible, you need to configure an access key.
+To make sure that your GraphQL endpoint and the Hasura console are not publicly accessible, you need to
+configure an access key.
 
 Depending on your deployment method, follow one of these guides to configure an access key, and prevent public
 access to your GraphQL endpoint and the Hasura console:

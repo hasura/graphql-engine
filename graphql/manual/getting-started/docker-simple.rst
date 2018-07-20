@@ -27,7 +27,7 @@ Step 1: Install the Hasura CLI
 
          curl -L https://cli.hasura.io/install.sh | bash
 
-      This will install the ``hasura`` CLI in ``/usr/local/bin``. You might have to provide
+      This will install the Hasura CLI in ``/usr/local/bin``. You might have to provide
       your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
 
    .. tab:: Linux
@@ -38,14 +38,14 @@ Step 1: Install the Hasura CLI
 
          curl -L https://cli.hasura.io/install.sh | bash
 
-      This will install the ``hasura`` CLI tool in ``/usr/local/bin``. You might have to provide
+      This will install the Hasura CLI tool in ``/usr/local/bin``. You might have to provide
       your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
 
    .. tab:: Windows
 
       .. note::
 
-         You should have ``git bash`` installed to use ``hasura`` CLI. Download git bash using the following `(link)
+         You should have ``git bash`` installed to use Hasura CLI. Download ``git bash`` using this `link
          <https://git-scm.com/download/win>`_. Also, make sure you install it in ``MinTTY`` mode, instead of Windows'
          default console.
 
@@ -54,8 +54,8 @@ Step 1: Install the Hasura CLI
       * `hasura (64-bit Windows installer) <https://cli.hasura.io/install/windows-amd64>`_
       * `hasura (32-bit Windows installer) <https://cli.hasura.io/install/windows-386>`_
 
-      **Note:** Please run the installer as Administrator to avoid PATH update errors. If you're still
-      getting a `command not found` error after installing Hasura, please restart Gitbash.
+      **Note:** Please run the installer as ``Administrator`` to avoid PATH update errors. If you're still
+      getting a "command not found" error after installing Hasura CLI, please restart ``git bash``.
 
 
 Step 2: Initialize a project

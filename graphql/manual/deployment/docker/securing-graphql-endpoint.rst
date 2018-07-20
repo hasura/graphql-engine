@@ -1,9 +1,10 @@
-Securing your GraphQL endpoint (Docker)
-=======================================
+Securing the GraphQL endpoint (Docker)
+======================================
 
-To make sure that your Hasura GraphQL endpoint is not publicly accessible, you need to configure an access key.
+To make sure that your GraphQL endpoint and the Hasura console are not publicly accessible, you need to
+configure an access key.
 
-Run the docker command with an access key flag
+Run the docker command with an access-key flag
 ----------------------------------------------
 
 .. code-block:: bash

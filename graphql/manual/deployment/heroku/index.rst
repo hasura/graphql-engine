@@ -2,7 +2,8 @@ Run Hasura GraphQL Engine on Heroku
 ===================================
 
 This guide will help you get Hasura GraphQL engine running as a “git push to deploy” app on Heroku and connecting it
-to a Heroku Postgres instance. If you want a simple, quick deployment on Heroku, follow this guide on :doc:`Deploy Hasura on Heroku in 1 click<../../getting-started/heroku-simple>`.
+to a Heroku Postgres instance. If you want a simple, quick deployment on Heroku, follow this
+:doc:`Heroku quickstart guide <../../getting-started/heroku-simple>`.
 
 Clone the Hasura GraphQL engine Heroku app
 ------------------------------------------
@@ -51,8 +52,8 @@ You should change this name to whatever you'd like your app to be called.
 
 **Note**:
 
-- ``HEROKU_GIT_REMOTE``: https://git.heroku.com/graphql-on-postgres.git
-- ``HEROKU_APP_URL``: https://graphql-on-postgres.herokuapp.com/
+- ``HEROKU_GIT_REMOTE``: ``https://git.heroku.com/graphql-on-postgres.git``
+- ``HEROKU_APP_URL``: ``https://graphql-on-postgres.herokuapp.com/``
 
 Step 2: Create the Heroku Postgres Addon
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -72,7 +73,8 @@ Create the postgres addon in your heroku app.
 
 Step 3: git push to deploy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Remember to change HEROKU_GIT_REMOTE to your git remote below. In our case: https://git.heroku.com/graphql-on-postgres.git
+Remember to change HEROKU_GIT_REMOTE to your git remote below. In our case:
+``https://git.heroku.com/graphql-on-postgres.git``
 
 .. code-block:: bash
 
@@ -81,8 +83,8 @@ Remember to change HEROKU_GIT_REMOTE to your git remote below. In our case: http
   git remote add heroku HEROKU_GIT_REMOTE
   git push heroku master
 
-Visit `https://graphql-on-postgres.herokuapp.com <https://graphql-on-postgres.herokuapp.com>`_ (Please note to
-replace ``graphql-on-postgres`` with your app name) and you should see the Hasura console.
+Visit ``https://graphql-on-postgres.herokuapp.com`` (replace ``graphql-on-postgres`` with your app name) and
+you should see the Hasura console.
 
 Advanced:
 ---------

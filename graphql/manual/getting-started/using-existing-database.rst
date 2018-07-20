@@ -1,8 +1,10 @@
-Using an existing database
-==========================
+Getting started with an existing database
+=========================================
 
-Depending on your deployment method, follow one of these guides to use an existing database:
+Follow one of these guides to setup Hasura GraphQL engine use an existing database:
 
-- :doc:`For Heroku <../deployment/heroku/using-existing-heroku-database>`
-- :doc:`For Docker <../deployment/docker/index>`
+- :doc:`Using Heroku <../deployment/heroku/using-existing-heroku-database>`: Run on Heroku using an existing Heroku
+  Postgres database.
+- :doc:`Using Docker <../deployment/docker/index>`: Run as a docker container and connect to an existing Postgres
+  database.
 

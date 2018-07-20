@@ -1,4 +1,4 @@
-Postgres credentials
+Postgres permissions
 ====================
 
 If you're running in a controlled environment, you might need to configure Hasura GraphQL engine to use a

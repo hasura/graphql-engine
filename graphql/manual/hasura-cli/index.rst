@@ -22,9 +22,29 @@ Refer to :doc:`install-hasura-cli`.
 Commands
 --------
 
+- :doc:`hasura <hasura>`
+- :doc:`hasura completion <hasura_completion>`
+- :doc:`hasura console <hasura_console>`
+- :doc:`hasura example <hasura_example>`
+- :doc:`hasura init <hasura_init>`
+- :doc:`hasura login <hasura_login>`
+- :doc:`hasura logout <hasura_logout>`
+- :doc:`hasura metadata <hasura_metadata>`
+- :doc:`hasura metadata apply <hasura_metadata_apply>`
+- :doc:`hasura metadata export <hasura_metadata_export>`
+- :doc:`hasura metadata reset <hasura_metadata_reset>`
+- :doc:`hasura migrate <hasura_migrate>`
+- :doc:`hasura migrate apply <hasura_migrate_apply>`
+- :doc:`hasura migrate create <hasura_migrate_create>`
+- :doc:`hasura migrate status <hasura_migrate_status>`
+- :doc:`hasura update-cli <hasura_update-cli>`
+- :doc:`hasura user-info <hasura_user-info>`
+- :doc:`hasura version <hasura_version>`
+
 .. toctree::
    :maxdepth: 1
    :titlesonly:
+   :hidden:
 
    install-hasura-cli
    hasura <hasura>
