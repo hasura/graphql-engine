@@ -25,5 +25,6 @@ See:
 
    basics
    roles-variables
+   Permissions examples <common-roles-auth-examples>
    webhook
-   Examples <common-roles-auth-examples>
+   webhook-examples

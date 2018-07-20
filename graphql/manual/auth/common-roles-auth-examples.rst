@@ -55,7 +55,7 @@ Let's say the "ownership" or "visibility" information for a data model (table) i
 
   - This reads as: Allow the role collaborator to select if ``article.collaborators`` has a ``collaborator_id`` equal to that of ``X-Hasura-User-Id``
 
-.. image:: ../../../img/graphql/manual/auth/org-manager-graphiql.png
+.. image:: ../../../img/graphql/manual/auth/collaborator-relationship.png
    :class: no-shadow
 
 Role based schemas

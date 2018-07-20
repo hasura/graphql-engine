@@ -73,12 +73,12 @@ Edit the ``--database-url`` flag command, so that you can connect to your postgr
 .. code-block:: bash
    :emphasize-lines: 5
 
-    #! /bin/bash
-    docker run -d -p 8080:8080 \
-     hasura/graphql-engine:latest \
-     graphql-engine \
-     --database-url postgres://username:password@hostname:port/dbname \
-     serve
+   #! /bin/bash
+   docker run -d -p 8080:8080 \
+          hasura/graphql-engine:v1.0.0-alpha08 \
+          graphql-engine \
+          --database-url postgres://username:password@hostname:port/dbname \
+   serve --enable-console
 
 Examples of `database-url`:
 
@@ -93,12 +93,13 @@ Examples of `database-url`:
    .. code-block:: bash
       :emphasize-lines: 5
 
-       #! /bin/bash
-       docker run -d --net=host -p 8080:8080 \
-         hasura/graphql-engine:latest \
-         graphql-engine \
-         --database-url postgres://username:password@localhost:5432/dbname \
-         serve
+      #! /bin/bash
+      docker run -d -p 8080:8080 \
+             hasura/graphql-engine:v1.0.0-alpha08 \
+             graphql-engine \
+             --database-url postgres://username:password@hostname:port/dbname \
+      serve --enable-console
+
 
 Check if everything is running well:
 
