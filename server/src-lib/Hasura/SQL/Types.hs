@@ -303,3 +303,13 @@ pgTypeOid PGJSONB       = PTI.jsonb
 pgTypeOid PGGeometry    = PTI.text
 pgTypeOid PGGeography   = PTI.text
 pgTypeOid (PGUnknown _) = PTI.auto
+
+isIntegerType :: PGColType -> Bool
+isIntegerType PGInteger  = True
+isIntegerType PGSmallInt = True
+isIntegerType PGBigInt   = True
+isIntegerType _          = False
+
+isJSONBType :: PGColType -> Bool
+isJSONBType PGJSONB = True
+isJSONBType _       = False

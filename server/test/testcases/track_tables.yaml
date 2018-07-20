@@ -12,3 +12,7 @@ query:
       args:
         schema: public
         name: article
+    - type: track_table
+      args:
+        schema: public
+        name: person

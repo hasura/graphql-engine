@@ -1,7 +1,8 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiWayIf            #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Hasura.GraphQL.Resolve.Mutation
   ( convertUpdate
@@ -29,6 +30,7 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value
 
 withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m (Map.HashMap Text a)
 withSelSet selSet f =
@@ -133,6 +135,44 @@ convertInsert (tn, vn) tableCols fld = do
       return $ Map.elems $ Map.union (Map.fromList givenCols) defVals
     defVals = Map.fromList $ zip tableCols (repeat $ S.SEUnsafe "DEFAULT")
 
+type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
+
+rhsExpOp :: S.SQLOp -> S.AnnType -> ApplySQLOp
+rhsExpOp op annTy (col, e) =
+  S.mkSQLOpExp op (S.SEIden $ toIden col) annExp
+  where
+    annExp = S.SETyAnn e annTy
+
+lhsExpOp :: S.SQLOp -> S.AnnType -> ApplySQLOp
+lhsExpOp op annTy (col, e) =
+  S.mkSQLOpExp op annExp $ S.SEIden $ toIden col
+  where
+    annExp = S.SETyAnn e annTy
+
+convObjWithOp
+  :: (MonadError QErr m)
+  => ApplySQLOp -> AnnGValue -> m [(PGCol, S.SQLExp)]
+convObjWithOp opFn val =
+  flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
+  (_, colVal) <- asPGColVal v
+  let pgCol = PGCol $ G.unName k
+      encVal = txtEncoder colVal
+      sqlExp = opFn (pgCol, encVal)
+  return (pgCol, sqlExp)
+
+convDeleteAtPathObj
+  :: (MonadError QErr m)
+  => AnnGValue -> m [(PGCol, S.SQLExp)]
+convDeleteAtPathObj val =
+  flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
+    vals <- flip withArray v $ \_ annVals -> mapM asPGColVal annVals
+    let valExps = map (txtEncoder . snd) vals
+        pgCol = PGCol $ G.unName k
+        annEncVal = S.SETyAnn (S.SEArray valExps) S.textArrType
+        sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp
+                 [S.SEIden $ toIden pgCol, annEncVal]
+    return (pgCol, sqlExp)
+
 convertUpdate
   :: QualifiedTable -- table
   -> S.BoolExp -- the filter expression
@@ -140,11 +180,38 @@ convertUpdate
   -> Convert RespTx
 convertUpdate tn filterExp fld = do
   -- a set expression is same as a row object
-  setExp   <- withArg args "_set" convertRowObj
+  setExpM   <- withArgM args "_set" convertRowObj
+  -- where bool expression to filter column
   whereExp <- withArg args "where" $ convertBoolExp tn
+  -- increment operator on integer columns
+  incExpM <- withArgM args "_inc" $
+    convObjWithOp $ rhsExpOp S.incOp S.intType
+  -- append jsonb value
+  appendExpM <- withArgM args "_append" $
+    convObjWithOp $ rhsExpOp S.jsonbConcatOp S.jsonbType
+  -- prepend jsonb value
+  prependExpM <- withArgM args "_prepend" $
+    convObjWithOp $ lhsExpOp S.jsonbConcatOp S.jsonbType
+  -- delete a key in jsonb object
+  deleteKeyExpM <- withArgM args "_delete_key" $
+    convObjWithOp $ rhsExpOp S.jsonbDeleteOp S.textType
+  -- delete an element in jsonb array
+  deleteElemExpM <- withArgM args "_delete_elem" $
+    convObjWithOp $ rhsExpOp S.jsonbDeleteOp S.intType
+  -- delete at path in jsonb value
+  deleteAtPathExpM <- withArgM args "_delete_at_path" convDeleteAtPathObj
+
   mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
   prepArgs <- get
-  let p1 = RU.UpdateQueryP1 tn setExp (filterExp, whereExp) mutFlds
+  let updExpsM = [ setExpM, incExpM, appendExpM, prependExpM
+                 , deleteKeyExpM, deleteElemExpM, deleteAtPathExpM
+                 ]
+      updExp = concat $ catMaybes updExpsM
+  -- atleast one of update operators is expected
+  unless (any isJust updExpsM) $ throw400 Unexpected $
+    "atleast any one of _set, _inc, _append, _prepend, _delete_key, _delete_elem and "
+    <> " _delete_at_path operator is expected"
+  let p1 = RU.UpdateQueryP1 tn updExp (filterExp, whereExp) mutFlds
   return $ RU.updateP2 (p1, prepArgs)
   where
     args = _fArguments fld
