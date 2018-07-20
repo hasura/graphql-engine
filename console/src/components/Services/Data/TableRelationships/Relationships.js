@@ -69,7 +69,9 @@ const relationshipView = (
     e.preventDefault();
     const isOk = confirm('Are you sure?');
     if (isOk) {
-      dispatch(deleteRelMigrate(tableName, relName));
+      dispatch(
+        deleteRelMigrate(tableName, relName, lcol, rtable, rcol, isObjRel)
+      );
     }
   };
   return (

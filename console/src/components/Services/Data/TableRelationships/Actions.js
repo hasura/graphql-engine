@@ -35,7 +35,10 @@ const relTypeChange = isObjRel => ({
 });
 const relRTableChange = rTable => ({ type: REL_SET_RTABLE, rTable });
 
-const deleteRelMigrate = (tableName, relName) => (dispatch, getState) => {
+const deleteRelMigrate = (tableName, relName, lcol, rtable, rcol, isObjRel) => (
+  dispatch,
+  getState
+) => {
   const currentSchema = getState().tables.currentSchema;
   const relChangesUp = [
     {
@@ -46,8 +49,25 @@ const deleteRelMigrate = (tableName, relName) => (dispatch, getState) => {
       },
     },
   ];
-  // pending
-  const relChangesDown = [];
+  const relChangesDown = [
+    {
+      type: isObjRel
+        ? 'create_object_relationship'
+        : 'create_array_relationship',
+      args: {
+        name: relName,
+        table: { name: tableName, schema: currentSchema },
+        using: isObjRel
+          ? { foreign_key_constraint_on: lcol }
+          : {
+            foreign_key_constraint_on: {
+              table: { name: rtable, schema: currentSchema },
+              column: rcol,
+            },
+          },
+      },
+    },
+  ];
 
   // Apply migrations
   const migrationName = `drop_relationship_${relName}_${currentSchema}_table_${tableName}`;
@@ -259,6 +279,7 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
     relations: suggestedRelationshipsRaw(table.table_name, allSchemas),
   }));
   const bulkRelTrack = [];
+  const bulkRelTrackDown = [];
   tableRelMapping.map(table => {
     // check relations.obj and relations.arr length and form queries
     if (table.relations.objectRel.length) {
@@ -272,6 +293,13 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
               schema: currentSchema,
             },
             using: { foreign_key_constraint_on: indivObjectRel.lcol },
+          },
+        });
+        bulkRelTrackDown.push({
+          type: 'drop_relationship',
+          args: {
+            table: { name: indivObjectRel.tableName, schema: currentSchema },
+            relationship: formRelName(indivObjectRel),
           },
         });
       });
@@ -297,16 +325,26 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
             },
           },
         });
+        bulkRelTrackDown.push({
+          type: 'drop_relationship',
+          args: {
+            table: { name: indivArrayRel.tableName, schema: currentSchema },
+            relationship: formRelName(indivArrayRel),
+          },
+        });
       });
     }
   });
-  return bulkRelTrack;
+  return { bulkRelTrack: bulkRelTrack, bulkRelTrackDown: bulkRelTrackDown };
 };
 
 const autoTrackRelations = () => (dispatch, getState) => {
   const allSchemas = getState().tables.allSchemas;
   const currentSchema = getState().tables.currentSchema;
-  const bulkRelTrack = getAllUnTrackedRelations(allSchemas, currentSchema);
+  const relChangesUp = getAllUnTrackedRelations(allSchemas, currentSchema)
+    .bulkRelTrack;
+  const relChangesDown = getAllUnTrackedRelations(allSchemas, currentSchema)
+    .bulkRelTrackDown;
   // Apply migrations
   const migrationName = 'track_all_relationships';
 
@@ -318,12 +356,10 @@ const autoTrackRelations = () => (dispatch, getState) => {
   };
   const customOnError = () => {};
 
-  const relChangesDown = [];
-
   makeMigrationCall(
     dispatch,
     getState,
-    bulkRelTrack,
+    relChangesUp,
     relChangesDown,
     migrationName,
     customOnSuccess,

@@ -148,8 +148,17 @@ const permChangePermissions = changeType => {
           role: role,
         },
       };
+      const createQuery = {
+        type: 'create_' + query + '_permission',
+        args: {
+          table: { name: table, schema: currentSchema },
+          role: role,
+          permission: permissionsState[query],
+        },
+      };
 
       permissionsUpQueries.push(deleteQuery);
+      permissionsDownQueries.push(createQuery);
     }
 
     if (changeType === permChangeTypes.save) {
@@ -161,7 +170,7 @@ const permChangePermissions = changeType => {
           permission: permissionsState[query],
         },
       };
-      const dropQuery = {
+      const deleteQuery = {
         type: 'drop_' + query + '_permission',
         args: {
           table: { name: table, schema: currentSchema },
@@ -170,7 +179,7 @@ const permChangePermissions = changeType => {
       };
 
       permissionsUpQueries.push(createQuery);
-      permissionsDownQueries.push(dropQuery);
+      permissionsDownQueries.push(deleteQuery);
     }
 
     // Apply migration

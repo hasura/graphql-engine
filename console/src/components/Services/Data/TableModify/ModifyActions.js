@@ -113,7 +113,10 @@ const untrackTableSql = tableName => {
 
     const customOnSuccess = () => {
       const allSchemas = getState().tables.allSchemas;
-      const untrackedRelations = getAllUnTrackedRelations(allSchemas);
+      const untrackedRelations = getAllUnTrackedRelations(
+        allSchemas,
+        currentSchema
+      ).bulkRelTrack;
       dispatch({
         type: LOAD_UNTRACKED_RELATIONS,
         untrackedRelations: untrackedRelations,
@@ -456,19 +459,12 @@ const deleteConstraintSql = (tableName, cName) => {
       },
     ];
 
-    /*
     // pending
-    const schemaChangesDown = [{
-      type: 'run_sql',
-      args: {
-        'sql': dropContraintQuery
-      }
-    }];
-    */
+    const schemaChangesDown = [];
 
     // Apply migrations
     const migrationName =
-      'alter_table_' + currentSchema + '_' + tableName + '_add_foreign_key';
+      'alter_table_' + currentSchema + '_' + tableName + '_drop_foreign_key';
 
     const requestMsg = 'Deleting Constraint...';
     const successMsg = 'Constraint deleted';
@@ -481,7 +477,7 @@ const deleteConstraintSql = (tableName, cName) => {
       dispatch,
       getState,
       schemaChangesUp,
-      [],
+      schemaChangesDown,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -554,7 +550,7 @@ const addFkSql = (tableName, isInsideEdit) => {
     let fkDownQuery =
       'ALTER TABLE ' + currentSchema + '.' + '"' + tableName + '"' + ' ';
     fkDownQuery +=
-      'DROP CONSTRAINT ' + tableName + '_' + state.lcol + '_fkey' + '"';
+      'DROP CONSTRAINT ' + '"' + tableName + '_' + state.lcol + '_fkey' + '"';
     const schemaChangesUp = [
       {
         type: 'run_sql',
