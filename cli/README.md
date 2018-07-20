@@ -1,5 +1,7 @@
 # Hasura GraphQL Engine CLI
 
+[![GoDoc](https://godoc.org/github.com/hasura/graphql-engine/cli?status.svg)](https://godoc.org/github.com/hasura/graphql-engine/cli;)
+
 ## Installation
 
 ### Download GraphQL Engine CLI bundled with Hasura CLI
