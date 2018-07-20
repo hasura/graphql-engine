@@ -17,6 +17,7 @@ import {
 import {
   loadSchema,
   loadUntrackedSchema,
+  loadUntrackedRelations,
   fetchSchemaList,
   LOAD_UNTRACKED_RELATIONS,
   UPDATE_CURRENT_SCHEMA,
@@ -37,7 +38,7 @@ class Schema extends Component {
     const untrackedRelations = getAllUnTrackedRelations(
       this.props.schema,
       this.props.currentSchema
-    );
+    ).bulkRelTrack;
     this.props.dispatch({
       type: LOAD_UNTRACKED_RELATIONS,
       untrackedRelations,
@@ -48,7 +49,7 @@ class Schema extends Component {
     const untrackedRelations = getAllUnTrackedRelations(
       this.props.schema,
       this.props.currentSchema
-    );
+    ).bulkRelTrack;
     this.props.dispatch({
       type: LOAD_UNTRACKED_RELATIONS,
       untrackedRelations,
@@ -73,6 +74,7 @@ class Schema extends Component {
         dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
         dispatch(loadSchema()),
         dispatch(loadUntrackedSchema()),
+        dispatch(loadUntrackedRelations()),
       ]);
     };
 
