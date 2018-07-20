@@ -242,7 +242,7 @@ mkColExtrAl alM (c, pct) =
 -- validate headers
 validateHeaders :: (P1C m) => [T.Text] -> m ()
 validateHeaders depHeaders = do
-  headers <- (map fst) . userHeaders <$> askUserInfo
+  headers <- M.keys . userHeaders <$> askUserInfo
   forM_ depHeaders $ \hdr ->
     unless (hdr `elem` map T.toLower headers) $
     throw400 NotFound $ hdr <<> " header is expected but not found"

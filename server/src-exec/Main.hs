@@ -6,10 +6,10 @@ module Main where
 import           Ops
 
 import           Data.Time.Clock            (getCurrentTime)
+import qualified Network.Wai.Handler.Warp   as Warp
 import           Options.Applicative
 import           System.Environment         (lookupEnv)
 import           System.Exit                (exitFailure)
-import           Web.Spock.Core             (runSpockNoBanner, spockT)
 
 import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Char8      as BC
@@ -18,11 +18,12 @@ import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Text                  as T
 import qualified Data.Yaml                  as Y
 
+import           Hasura.Logging             (mkLoggerCtx, defaultLoggerSettings)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
-import           Hasura.Server.App          (AuthMode (..), app, ravenLogGen)
+import           Hasura.Server.App          (mkWaiApp)
+import           Hasura.Server.Auth         (AuthMode (..))
 import           Hasura.Server.Init
-import           Hasura.Server.Logging      (withStdoutLogger)
 
 import qualified Database.PG.Query          as Q
 
@@ -99,12 +100,13 @@ mkAuthMode mAccessKey mWebHook =
     (Just key, Just hook) -> return $ AMAccessKeyAndHook key hook
 
 main :: IO ()
-main = withStdoutLogger ravenLogGen $ \rlogger -> do
+main =  do
   (RavenOptions rci ravenMode) <- parseArgs
   mEnvDbUrl <- lookupEnv "HASURA_GRAPHQL_DATABASE_URL"
   ci <- either ((>> exitFailure) . putStrLn . connInfoErrModifier)
     return $ mkConnInfo mEnvDbUrl rci
   printConnInfo ci
+  loggerCtx <- mkLoggerCtx defaultLoggerSettings
   case ravenMode of
     ROServe (ServeOptions port cp isoL mRootDir mAccessKey corsCfg mWebHook enableConsole) -> do
       mFinalAccessKey <- considerEnv "HASURA_GRAPHQL_ACCESS_KEY" mAccessKey
@@ -117,9 +119,11 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
       initialise ci
       migrate ci
       pool <- Q.initPGPool ci cp
-      runSpockNoBanner port $ do
-        putStrLn $ "server: running on port " ++ show port
-        spockT id $ app isoL mRootDir rlogger pool am finalCorsCfg enableConsole
+      putStrLn $ "server: running on port " ++ show port
+      app <- mkWaiApp isoL mRootDir loggerCtx pool am finalCorsCfg enableConsole
+      let warpSettings = Warp.setPort port Warp.defaultSettings
+                         -- Warp.setHost "*" Warp.defaultSettings
+      Warp.runSettings warpSettings app
     ROExport -> do
       res <- runTx ci fetchMetadata
       either ((>> exitFailure) . printJSON) printJSON res

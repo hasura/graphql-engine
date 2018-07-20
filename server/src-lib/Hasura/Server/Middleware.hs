@@ -14,14 +14,12 @@ import qualified Data.Text             as T
 import qualified Data.Text.Encoding    as TE
 import qualified Network.HTTP.Types    as H
 
-
 data CorsPolicy
   = CorsPolicy
   { cpDomain  :: !T.Text
   , cpMethods :: ![T.Text]
   , cpMaxAge  :: !Int
   } deriving (Show, Eq)
-
 
 mkDefaultCorsPolicy :: T.Text -> CorsPolicy
 mkDefaultCorsPolicy domain =
@@ -30,7 +28,6 @@ mkDefaultCorsPolicy domain =
   , cpMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
   , cpMaxAge = 1728000
   }
-
 
 corsMiddleware :: CorsPolicy -> Middleware
 corsMiddleware policy app req sendResp =
