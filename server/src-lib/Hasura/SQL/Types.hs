@@ -12,7 +12,6 @@ import           Hasura.Prelude
 
 import           Data.Aeson
 import           Data.Aeson.Encoding        (text)
-import           GHC.Generics
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
