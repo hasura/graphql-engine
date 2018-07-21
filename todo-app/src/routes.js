@@ -56,7 +56,7 @@ const handleAuthentication = ({location}) => {
 export const makeMainRoutes = () => {
   return (
     <Router history={history}>
-      <div>
+      <div className="container">
         <Route
           path="/"
           render={(props) => provideClient(<App auth={auth} {...props} />)}
