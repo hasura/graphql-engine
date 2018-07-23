@@ -130,7 +130,7 @@ const loadUntrackedRelations = () => (dispatch, getState) => {
     const untrackedRelations = getAllUnTrackedRelations(
       getState().tables.allSchemas,
       getState().tables.currentSchema
-    );
+    ).bulkRelTrack;
     dispatch({
       type: LOAD_UNTRACKED_RELATIONS,
       untrackedRelations,

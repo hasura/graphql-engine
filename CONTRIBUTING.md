@@ -31,8 +31,6 @@ tag, or a combination of branch name and git commit SHA.
 - Make sure you test against the latest released version. It is possible we
   already fixed the bug you're experiencing.
 
-- Also check the `CHANGELOG.md` to see if any unreleased changes affect the issue.
-
 - Provide steps to reproduce the issue, including Postgres version,
   graphql-engine version and the provider you are running on (Heroku, Docker
   etc.).
@@ -50,6 +48,8 @@ tag, or a combination of branch name and git commit SHA.
 - Squash your commits and refer to the issue using `fix #<issue-no>` or `close
   #<issue-no>` in the commit message, at the end.
   For example: `resolve answers to everything (fix #42)` or `resolve answers to everything, fix #42`
+
+- Rebase master with your branch before submitting pull request.
 
 ## Commit messages
 

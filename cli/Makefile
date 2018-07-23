@@ -28,8 +28,10 @@ endif
 
 # build cli locally, for all given platform/arch
 .PHONY: build
+build: export CGO_ENABLED=0
 build:
-	gox -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION) -s -w" \
+	gox -ldflags '-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION) -s -w -extldflags "-static"' \
+	-rebuild \
 	-os="linux darwin windows" \
 	-arch="amd64" \
 	-output="$(OUTPUT_DIR)/$(VERSION)/cli-hasura-{{.OS}}-{{.Arch}}" \

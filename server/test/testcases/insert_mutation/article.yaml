@@ -9,32 +9,17 @@ query:
         {
           title: "Article 1",
           content: "Sample article content",
-          author_id: 1,
-          is_published: true
+          author_id: 1
         },
         {
           title: "Article 2",
           content: "Sample article content",
-          author_id: 1,
-          is_published: true
+          author_id: 1
         },
         {
           title: "Article 3",
           content: "Sample article content",
-          author_id: 2,
-          is_published: true
-        },
-        {
-          title: "Article 4",
-          content: "Sample article content",
-          author_id: 1,
-          is_published: false
-        },
-        {
-          title: "Article 5",
-          content: "Sample article content",
-          author_id: 2,
-          is_published: false
+          author_id: 2
         }
         ]
       ) {

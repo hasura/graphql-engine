@@ -10,6 +10,12 @@
 set -eo pipefail
 ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
 
+# always build tagged builds
+if [[ ! -z "$CIRCLE_TAG" ]]; then
+    echo "Skipping check for tags"
+    exit
+fi
+
 # always build default branch
 if [[ "$CIRCLE_BRANCH" == "master" ]]; then
     echo "Skipping check for master branch"
