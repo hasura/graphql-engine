@@ -42,14 +42,19 @@ draft_github_release() {
      "$CIRCLE_TAG" /build/_cli_output/binaries/
 }
 
+configure_git() {
+  git config --global user.email "accounts@hasura.io"
+  git config --global user.name "Hasura Bot"
+}
+
 send_pr_to_repo() {
-  git clone git@github.com:hasura/$1.git ~/$1
+  git clone https://github.com/hasura/$1.git ~/$1
   cd ~/$1
   git checkout -b ${LATEST_TAG}
   find . -type f -exec sed -i "s/\(hasura\/graphql-engine:\).*$/\1${LATEST_TAG}/" {} \;
   git add .
   git commit -m "update image version to ${LATEST_TAG}"
-  git push origin ${LATEST_TAG}
+  git push -q https://${GITHUB_TOKEN}@github.com/hasura/$1.git ${LATEST_TAG}
   hub pull-request -F- <<<"Update image version to ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
 }
 
@@ -98,6 +103,7 @@ deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
     deploy_server_latest
     draft_github_release
+    configure_git
     send_pr_to_repo graphql-engine-install-manifests
     send_pr_to_repo graphql-engine-heroku
 fi
