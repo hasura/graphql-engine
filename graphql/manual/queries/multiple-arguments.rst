@@ -7,6 +7,7 @@ the results and then use the ``order_by`` argument to sort them, you can use a q
 fetches a list of authors and only 2 of their published articles that are sorted by their date of publication:
 
 .. graphiql::
+  :view_only: true
   :query:
     query {
       author {
