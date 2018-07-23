@@ -1,0 +1,43 @@
+Name,Aliases,Description,GraphQL Engine Input Type
+bigint,int8,signed eight-byte integer,Int_
+bigserial,serial8,autoincrementing eight-byte integer,Int_
+bit [ (n) ],,fixed-length bit string,Unsupported_
+bit varying [ (n) ],varbit [ (n) ],variable-length bit string,Unsupported_
+boolean,bool,logical Boolean (true/false),Bool_
+box,,rectangular box on a plane,Unsupported_
+bytea,,binary data (“byte array”),Unsupported_
+character [ (n) ],char [ (n) ],fixed-length character string,Char_
+character varying [ (n) ],varchar [ (n) ],variable-length character string,String_
+cidr,,IPv4 or IPv6 network address, Unsupported_
+circle,,circle on a plane,Unsupported_
+date,,"calendar date (year, month, day)",Date_
+double precision,float8,double precision floating-point number (8 bytes),Float_
+inet,,IPv4 or IPv6 host address,Unsupported_
+integer,"int, int4",signed four-byte integer,Int_
+interval [ fields ] [ (p) ],,time span,Unsupported_
+json,,textual JSON data,JSON_
+jsonb,,"binary JSON data, decomposed",JSONB_
+line,,infinite line on a plane,Unsupported_
+lseg,,line segment on a plane, Unsupported_
+macaddr,,MAC (Media Access Control) address, Unsupported_
+macaddr8,,MAC (Media Access Control) address (EUI-64 format), Unsupported_
+money,,currency amount,Unsupported_
+"numeric [ (p, s) ]","decimal [ (p, s) ]",exact numeric of selectable precision,             Numeric_
+path,,geometric path on a plane,Unsupported_
+pg_lsn,,PostgreSQL Log Sequence Number,Unsupported_
+point,,geometric point on a plane,Unsupported_
+polygon,,closed geometric path on a plane,Unsupported_
+real,float4,single precision floating-point number (4 bytes),Float_
+smallint,int2,signed two-byte integer,Int_
+smallserial,serial2,autoincrementing two-byte integer,Int_
+serial,serial4,autoincrementing four-byte integer,Int_
+text,,variable-length character string,String_
+time [ (p) ] [ without time zone ],,time of day (no time zone),Unsupported_                         
+time [ (p) ] with time zone,timetz,"time of day, including time zone",Timetz_
+timestamp [ (p) ] [ without time zone ],,date and time (no time zone),Unsupported_
+timestamp [ (p) ] with time zone,timestamptz,"date and time, including time zone",Timestamptz_
+tsquery,,text search query,Unsupported_
+tsvector,,text search document,Unsupported_
+txid_snapshot,,user-level transaction ID snapshot,Unsupported_
+uuid,,universally unique identifier,Unsupported_
+xml,,XML data,Unsupported_
