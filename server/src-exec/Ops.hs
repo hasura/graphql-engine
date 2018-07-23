@@ -1,9 +1,9 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE MultiWayIf        #-}
-
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE MultiWayIf          #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE QuasiQuotes         #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 
 module Ops
   ( initCatalogSafe
@@ -25,11 +25,12 @@ import qualified Database.PG.Query           as Q
 import           Data.Time.Clock             (UTCTime)
 
 import qualified Data.Aeson                  as A
+import qualified Data.ByteString.Builder     as BB
 import qualified Data.ByteString.Lazy        as BL
 import qualified Data.Text                   as T
 
 curCatalogVer :: T.Text
-curCatalogVer = "1"
+curCatalogVer = "1.1"
 
 initCatalogSafe :: UTCTime -> Q.TxE QErr String
 initCatalogSafe initTime =  do
@@ -121,16 +122,62 @@ getCatalogVersion = do
                     |] () False
   return $ runIdentity $ Q.getRow res
 
+dropFKeyConstraints :: QualifiedTable -> Q.TxE QErr ()
+dropFKeyConstraints (QualifiedTable sn tn) = do
+  constraints <- map runIdentity <$>
+    Q.listQE defaultTxErrorHandler [Q.sql|
+           SELECT constraint_name
+           FROM information_schema.table_constraints
+           WHERE table_schema = $1
+             AND table_name = $2
+             AND constraint_type = 'FOREIGN KEY'
+          |] (sn, tn) False
+  forM_ constraints $ \constraint ->
+    Q.unitQE defaultTxErrorHandler (dropConstQ constraint) () False
+  where
+    dropConstQ cName = Q.fromBuilder $ BB.string7 $ T.unpack $
+                       "ALTER TABLE " <> getSchemaTxt sn <> "."
+                       <> getTableTxt tn
+                       <> " DROP CONSTRAINT " <> cName
+
+addFKeyOnUpdateCascade :: QualifiedTable -> Q.TxE QErr ()
+addFKeyOnUpdateCascade (QualifiedTable sn tn) =
+  Q.unitQE defaultTxErrorHandler addFKeyQ () False
+  where
+    addFKeyQ = Q.fromBuilder $ BB.string7 $ T.unpack $
+      "ALTER TABLE " <> getSchemaTxt sn <> "."
+      <> getTableTxt tn <> " ADD FOREIGN KEY (table_schema, table_name)"
+      <> " REFERENCES hdb_catalog.hdb_table(table_schema, table_name)"
+      <> " ON UPDATE CASCADE"
+
+migrateFrom10 :: Q.TxE QErr ()
+migrateFrom10 = do
+  dropFKeyConstraints $ QualifiedTable hdbCatSchema permTable
+  addFKeyOnUpdateCascade $ QualifiedTable hdbCatSchema permTable
+  dropFKeyConstraints $ QualifiedTable hdbCatSchema relTable
+  addFKeyOnUpdateCascade $ QualifiedTable hdbCatSchema relTable
+  where
+    hdbCatSchema = SchemaName "hdb_catalog"
+    permTable = TableName "hdb_permission"
+    relTable = TableName "hdb_relationship"
+
 migrateFrom08 :: Q.TxE QErr ()
-migrateFrom08 = Q.catchE defaultTxErrorHandler $ do
-  Q.unitQ "ALTER TABLE hdb_catalog.hdb_relationship ADD COLUMN comment TEXT NULL" () False
-  Q.unitQ "ALTER TABLE hdb_catalog.hdb_permission ADD COLUMN comment TEXT NULL" () False
-  Q.unitQ "ALTER TABLE hdb_catalog.hdb_query_template ADD COLUMN comment TEXT NULL" () False
-  Q.unitQ [Q.sql|
+migrateFrom08 = do
+  -- From 0.8 to 1
+  Q.catchE defaultTxErrorHandler $ do
+    Q.unitQ "ALTER TABLE hdb_catalog.hdb_relationship ADD COLUMN comment TEXT NULL" () False
+    Q.unitQ "ALTER TABLE hdb_catalog.hdb_permission ADD COLUMN comment TEXT NULL" () False
+    Q.unitQ "ALTER TABLE hdb_catalog.hdb_query_template ADD COLUMN comment TEXT NULL" () False
+    Q.unitQ [Q.sql|
           UPDATE hdb_catalog.hdb_query_template
              SET template_defn =
                  json_build_object('type', 'select', 'args', template_defn->'select');
                 |] () False
+
+  -- From 1 to 1.1
+  migrateFrom10
+
+
 
 migrateCatalog :: UTCTime -> Q.TxE QErr String
 migrateCatalog migrationTime = do
@@ -142,11 +189,19 @@ migrateCatalog migrationTime = do
          -- update the catalog version
          updateVersion
          -- clean hdb_views
-         Q.unitQE defaultTxErrorHandler "DROP SCHEMA IF EXISTS hdb_views CASCADE" () False
-         Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_views" () False
+         cleanHdbViews
          -- try building the schema cache
          void buildSchemaCache
-         return "migrate: successfully migrated"
+         returnSuccMsg
+     | preVer == "1" -> do
+         migrateFrom10
+         -- update the catalog version
+         updateVersion
+         -- clean hdb_views
+         cleanHdbViews
+         -- try building the schema cache
+         void buildSchemaCache
+         returnSuccMsg
      | otherwise -> throw400 NotSupported $
                     "migrate: unsupported version : " <> preVer
   where
@@ -157,6 +212,11 @@ migrateCatalog migrationTime = do
                        "upgraded_on" = $2
                     |] (curCatalogVer, migrationTime) False
 
+    cleanHdbViews = do
+         Q.unitQE defaultTxErrorHandler "DROP SCHEMA IF EXISTS hdb_views CASCADE" () False
+         Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_views" () False
+
+    returnSuccMsg = return "migrate: successfully migrated"
 execQuery :: BL.ByteString -> Q.TxE QErr BL.ByteString
 execQuery queryBs = do
   query <- case A.decode queryBs of
