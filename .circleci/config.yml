@@ -38,6 +38,50 @@ refs:
       branches:
         ignore: /^release-v.*/
 
+  # individual server build steps
+  server_container_config: &server_container_config
+    docker:
+    - image: hasura/graphql-engine-server-builder:v0.2
+    working_directory: ~/graphql-engine
+
+  setup_remote_docker: &setup_remote_docker
+    setup_remote_docker:
+      version: 17.09.0-ce
+      docker_layer_caching: true
+
+  server_restore_deps_cache: &server_restore_deps_cache
+    restore_cache:
+      keys:
+      - server-deps-cache-v1
+
+  server_restore_app_cache: &server_restore_app_cache
+    restore_cache:
+      keys:
+      - server-app-cache-{{ .Branch }}-{{ .Revision }}
+
+  server_save_app_cache: &server_save_app_cache
+    save_cache:
+      key: server-app-cache-{{ .Branch }}-{{ .Revision }}
+      paths:
+      - ./server/.stack-work
+
+  server_save_deps_cache: &server_save_deps_cache
+    save_cache:
+      key: server-deps-cache-v1
+      paths:
+      - ~/.stack
+
+  server_store_artifacts: &server_store_artifacts
+    store_artifacts:
+      path: /build/_server_output
+      destination: server
+
+  server_persist_workspace: &server_persist_workspace
+    persist_to_workspace:
+      root: /build
+      paths:
+        - _server_output # binary is called graphql-engine
+
   # ref pg environment for testing
   test_pg_env: &test_pg_env
     environment:
@@ -76,82 +120,44 @@ jobs:
   # for PRs. non-optimized build
   # build the server binary, and package into docker image
   build_server:
-    docker:
-    - image: hasura/graphql-engine-server-builder:v0.2
-    working_directory: ~/graphql-engine
+    <<: *server_container_config
     steps:
     - checkout
-    - setup_remote_docker:
-        version: 17.09.0-ce
-        docker_layer_caching: true
-    - restore_cache:
-        keys:
-        - server-deps-cache-v1
-    - restore_cache:
-        keys:
-        - server-app-cache-{{ .Branch }}-{{ .Revision }}
+    - *setup_remote_docker
+    - *server_restore_deps_cache
+    - *server_restore_app_cache
     - run:
-        name: Build the server
+        name: Build the server (dev build, not optimized)
         working_directory: ./server
         command: |
           BUILD_FLAGS="--fast" make ci-binary
           make ci-image
           make ci-save-image
-    - save_cache:
-        key: server-app-cache-{{ .Branch }}-{{ .Revision }}
-        paths:
-        - ./server/.stack-work
-    - save_cache:
-        key: server-deps-cache-v1
-        paths:
-        - ~/.stack
-    - store_artifacts:
-        path: /build/_server_output
-        destination: server
-    - persist_to_workspace:
-        root: /build
-        paths:
-          - _server_output # binary is called graphql-engine
+    - *server_save_deps_cache
+    - *server_save_app_cache
+    - *server_store_artifacts
+    - *server_persist_workspace
 
-
+  # for releases. optimized build.
   # build the server binary, and package into docker image
   build_server_release:
-    docker:
-    - image: hasura/graphql-engine-server-builder:v0.2
-    working_directory: ~/graphql-engine
+    <<: *server_container_config
     steps:
     - checkout
-    - setup_remote_docker:
-        version: 17.09.0-ce
-        docker_layer_caching: true
-    - restore_cache:
-        keys:
-        - server-deps-cache-v1
-    - restore_cache:
-        keys:
-        - server-app-cache-{{ .Branch }}-{{ .Revision }}
+    - *setup_remote_docker
+    - *server_restore_deps_cache
+    - *server_restore_app_cache
     - run:
-        name: Build the server
+        name: Build the server (release build)
         working_directory: ./server
         command: |
           make ci-binary
           make ci-image
           make ci-save-image
-    - save_cache:
-        key: server-app-cache-{{ .Branch }}-{{ .Revision }}
-        paths:
-        - ./server/.stack-work
-    - save_cache:
-        key: server-deps-cache-v1
-        paths:
-        - ~/.stack
-    - store_artifacts:
-        path: /build/_server_output
-        destination: server
-    - persist_to_workspace:
-        root: /build
-        paths:
-          - _server_output # binary is called graphql-engine
+    - *server_save_deps_cache
+    - *server_save_app_cache
+    - *server_store_artifacts
+    - *server_persist_workspace
 
   # job to execute when all server tests pass. later we can collect test
   # reports and publish them etc.
@@ -285,9 +291,7 @@ jobs:
     - image: hasura/graphql-engine-deployer:v0.2
     working_directory: ~/graphql-engine
     steps:
-    - setup_remote_docker:
-        version: 17.09.0-ce
-        docker_layer_caching: true
+    - *setup_remote_docker
     - checkout
     - attach_workspace:
         at: /build
