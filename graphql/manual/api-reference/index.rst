@@ -15,3 +15,12 @@ You can make the following types of requests using the GraphQL API:
   
   Query <query>
   Mutation <mutation>
+
+PostgreSQL Types
+--------------
+You can refer the following to know about all PostgreSQL types in GraphQL Engine
+
+.. toctree::
+   :maxdepth: 1
+
+  PostgreSQL Types <postgresql-types>
