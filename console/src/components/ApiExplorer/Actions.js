@@ -1,5 +1,10 @@
 import defaultState from './state';
-import fetch from 'isomorphic-fetch';
+// import fetch from 'isomorphic-fetch';
+
+import { SubscriptionClient } from 'subscriptions-transport-ws';
+import { WebSocketLink } from 'apollo-link-ws';
+import { parse } from 'graphql';
+import { execute } from 'apollo-link';
 
 const CHANGE_TAB = 'ApiExplorer/CHANGE_TAB';
 const CHANGE_API_SELECTION = 'ApiExplorer/CHANGE_API_SELECTION';
@@ -25,6 +30,11 @@ const API_REQUEST_FAILURE = 'ApiExplorer/API_REQUEST_FAILURE';
 
 const CLEAR_HISTORY = 'ApiExplorer/CLEAR_HISTORY';
 const UPDATE_FILE_OBJECT = 'ApiExplorer/UPDATE_FILE_OBJECT';
+
+const CREATE_WEBSOCKET_CLIENT = 'ApiExplorer/CREATE_WEBSOCKET_CLIENT';
+
+const FOCUS_ROLE_HEADER = 'ApiExplorer/FOCUS_ROLE_HEADER';
+const UNFOCUS_ROLE_HEADER = 'ApiExplorer/UNFOCUS_ROLE_HEADER';
 
 import requestAction from '../Common/makeRequest';
 import Endpoints from 'Endpoints';
@@ -99,6 +109,9 @@ const sendExplorerReq = requestType => {
   };
 };
 
+const focusHeaderTextbox = () => ({ type: FOCUS_ROLE_HEADER });
+const unfocusTypingHeader = () => ({ type: UNFOCUS_ROLE_HEADER });
+
 const copyCodeToClipboard = isCopying => {
   return {
     type: CODE_GENERATOR_COPY_TO_CLIPBOARD,
@@ -156,39 +169,81 @@ const changeRequestParams = newParams => {
   };
 };
 
-const graphQLFetcherFinal = (graphQLParams, url, headers) => {
-  const graphqlUrl = url;
-  const currentHeaders = headers;
-  const headersFinal = getHeadersAsJSON(currentHeaders);
+const createWsClient = (url, headers) => {
+  const gqlUrl = new URL(url);
+  const windowUrl = new URL(window.location);
+  let websocketProtocol = 'ws';
+  if (gqlUrl.protocol === 'https:' && windowUrl.protocol === 'https:') {
+    websocketProtocol = 'wss';
+  }
+  const headersFinal = getHeadersAsJSON(headers);
+  setTimeout(() => null, 500);
+  const graphqlUrl = `${websocketProtocol}://${url.split('//')[1]}`;
+  const client = new SubscriptionClient(graphqlUrl, {
+    connectionParams: {
+      headers: {
+        ...headersFinal,
+      },
+    },
+  });
+  return client;
+};
 
-  return fetch(graphqlUrl, {
+const graphqlSubscriber = (graphQLParams, url, headers) => {
+  const link = new WebSocketLink(createWsClient(url, headers));
+  try {
+    const fetcher = operation => {
+      operation.query = parse(operation.query);
+      return execute(link, operation);
+    };
+    return fetcher(graphQLParams);
+  } catch (e) {
+    console.log(e);
+    return e.json();
+  }
+};
+
+const isSubscription = graphQlParams => {
+  const queryDoc = parse(graphQlParams.query);
+  for (const definition of queryDoc.definitions) {
+    if (definition.kind === 'OperationDefinition') {
+      const operation = definition.operation;
+      if (operation === 'subscription') {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+const graphQLFetcherFinal = (graphQLParams, url, headers) => {
+  if (isSubscription(graphQLParams)) {
+    return graphqlSubscriber(graphQLParams, url, headers);
+  }
+  return fetch(url, {
     method: 'POST',
-    headers: headersFinal,
+    headers: getHeadersAsJSON(headers),
     body: JSON.stringify(graphQLParams),
   }).then(response => response.json());
 };
 
-const changeRequestHeader = (index, key, newValue, isDisabled) => {
-  return {
-    type: REQUEST_HEADER_CHANGED,
-    data: {
-      index: index,
-      keyName: key,
-      newValue: newValue,
-      isDisabled: isDisabled,
-    },
-  };
-};
+const changeRequestHeader = (index, key, newValue, isDisabled) => ({
+  type: REQUEST_HEADER_CHANGED,
+  data: {
+    index: index,
+    keyName: key,
+    newValue: newValue,
+    isDisabled: isDisabled,
+  },
+});
 
-const addRequestHeader = (key, value) => {
-  return {
-    type: REQUEST_HEADER_ADDED,
-    data: {
-      key: key,
-      value: value,
-    },
-  };
-};
+const addRequestHeader = (key, value) => ({
+  type: REQUEST_HEADER_ADDED,
+  data: {
+    key: key,
+    value: value,
+  },
+});
 
 const removeRequestHeader = index => {
   return {
@@ -527,6 +582,21 @@ const apiExplorerReducer = (state = defaultState, action) => {
           enableResponseSection: false,
         },
       };
+    case CREATE_WEBSOCKET_CLIENT:
+      return {
+        ...state,
+        webSocketClient: action.data,
+      };
+    case UNFOCUS_ROLE_HEADER:
+      return {
+        ...state,
+        headerFocus: false,
+      };
+    case FOCUS_ROLE_HEADER:
+      return {
+        ...state,
+        headerFocus: true,
+      };
     default:
       return state;
   }
@@ -553,4 +623,7 @@ export {
   updateFileObject,
   editGeneratedJson,
   graphQLFetcherFinal,
+  createWsClient,
+  focusHeaderTextbox,
+  unfocusTypingHeader,
 };

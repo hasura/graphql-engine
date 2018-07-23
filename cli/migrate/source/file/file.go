@@ -74,7 +74,7 @@ func (f *File) Open(url string, logger *log.Logger) (source.Driver, error) {
 
 	for _, fi := range files {
 		if !fi.IsDir() {
-			m, err := source.DefaultParse(fi.Name())
+			m, err := source.DefaultParse(fi.Name(), p)
 			if err != nil {
 				continue // ignore files that we can't parse
 			}

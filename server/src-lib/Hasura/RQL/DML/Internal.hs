@@ -236,13 +236,13 @@ mkColExtrAl :: (IsIden a) => Maybe a -> (PGCol, PGColType) -> S.Extractor
 mkColExtrAl alM (c, pct) =
   if pct == PGGeometry || pct == PGGeography
   then S.mkAliasedExtrFromExp
-    ((S.SEFnApp "ST_AsGeoJSON" [S.mkSIdenExp c] Nothing) `S.SETyAnn` "json") alM
+    ((S.SEFnApp "ST_AsGeoJSON" [S.mkSIdenExp c] Nothing) `S.SETyAnn` S.jsonType) alM
   else S.mkAliasedExtr c alM
 
 -- validate headers
 validateHeaders :: (P1C m) => [T.Text] -> m ()
 validateHeaders depHeaders = do
-  headers <- (map fst) . userHeaders <$> askUserInfo
+  headers <- M.keys . userHeaders <$> askUserInfo
   forM_ depHeaders $ \hdr ->
     unless (hdr `elem` map T.toLower headers) $
     throw400 NotFound $ hdr <<> " header is expected but not found"

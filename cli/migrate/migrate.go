@@ -859,7 +859,7 @@ func (m *Migrate) versionUpExists(version uint64) error {
 	return os.ErrNotExist
 }
 
-// versionUpExists checks the source if either the up or down migration for
+// versionDownExists checks the source if either the up or down migration for
 // the specified migration version exists.
 func (m *Migrate) versionDownExists(version uint64) error {
 	// try up migration first

@@ -5,30 +5,26 @@
 -- This is taken from wai-logger and customised for our use
 
 module Hasura.Server.Logging
-       ( ServerLogger
-       , withStdoutLogger
-       , ServerLog(..)
-       , LogDetail(..)
-       , LogDetailG
-       , getRequestHeader
-       ) where
+  ( mkAccessLog
+  , getRequestHeader
+  ) where
 
-import           Control.Exception        (bracket)
+import           Crypto.Hash              (Digest, SHA1, hash)
 import           Data.Aeson
 import           Data.Bits                (shift, (.&.))
 import           Data.ByteString.Char8    (ByteString)
+import qualified Data.ByteString.Lazy     as BL
 import           Data.Int                 (Int64)
 import           Data.List                (find)
+import qualified Data.TByteString         as TBS
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as TE
 import qualified Data.Text.Encoding.Error as TE
-import qualified Data.Text.Lazy           as TL
 import           Data.Time.Clock
 import           Data.Word                (Word32)
 import           Network.Socket           (SockAddr (..))
 import           Network.Wai              (Request (..))
 import           System.ByteOrder         (ByteOrder (..), byteOrder)
-import           System.Log.FastLogger
 import           Text.Printf              (printf)
 
 import qualified Data.ByteString.Char8    as BS
@@ -36,51 +32,51 @@ import qualified Data.CaseInsensitive     as CI
 import qualified Data.HashMap.Strict      as M
 import qualified Network.HTTP.Types       as N
 
+import qualified Hasura.Logging           as L
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
 
-
-data ServerLog
-  = ServerLog
-  { slStatus         :: !N.Status
-  , slMethod         :: !T.Text
-  , slSource         :: !T.Text
-  , slPath           :: !T.Text
-  , slTimestamp      :: !T.Text
-  , slHttpVersion    :: !N.HttpVersion
-  , slDetail         :: !(Maybe Value)
-  , slRequestId      :: !(Maybe T.Text)
-  -- , slHasuraId       :: !(Maybe T.Text)
-  , slHasuraRole     :: !(Maybe T.Text)
-  , slHasuraMetadata :: !(Maybe Value)
-  , slQueryHash      :: !(Maybe T.Text)
-  , slResponseSize   :: !(Maybe Int64)
-  , slResponseTime   :: !(Maybe T.Text)
+data AccessLog
+  = AccessLog
+  { alStatus         :: !N.Status
+  , alMethod         :: !T.Text
+  , alSource         :: !T.Text
+  , alPath           :: !T.Text
+  , alHttpVersion    :: !N.HttpVersion
+  , alDetail         :: !(Maybe Value)
+  , alRequestId      :: !(Maybe T.Text)
+  , alHasuraRole     :: !(Maybe T.Text)
+  , alHasuraMetadata :: !(Maybe Value)
+  , alQueryHash      :: !(Maybe T.Text)
+  , alResponseSize   :: !(Maybe Int64)
+  , alResponseTime   :: !(Maybe T.Text)
   } deriving (Show, Eq)
 
-instance ToJSON ServerLog where
-  toJSON (ServerLog st met src path ts hv det reqId hRole hMd qh rs rt) =
+instance L.ToEngineLog AccessLog where
+  toEngineLog accessLog =
+    (L.LevelInfo, "http-log", toJSON accessLog)
+
+instance ToJSON AccessLog where
+  toJSON (AccessLog st met src path hv det reqId hRole hMd qh rs rt) =
     object [ "status" .= N.statusCode st
            , "method" .= met
            , "ip" .= src
            , "url" .= path
-           , "timestamp" .= ts
            , "http_version" .= show hv
            , "detail" .= det
            , "request_id" .= reqId
-           -- , "hasura_id" .= hId
            , "hasura_role" .= hRole
            , "hasura_metadata" .= hMd
            , "query_hash" .= qh
            , "response_size" .= rs
-           -- , "response_time" .= rt
            , "query_execution_time" .= rt
            ]
 
 data LogDetail
   = LogDetail
-  { ldQuery :: !TL.Text
-  , ldError :: !Value
+  { _ldQuery :: !TBS.TByteString
+  , _ldError :: !Value
   } deriving (Show, Eq)
 
 instance ToJSON LogDetail where
@@ -90,52 +86,64 @@ instance ToJSON LogDetail where
            ]
 
 -- type ServerLogger = Request -> BL.ByteString -> Either QErr BL.ByteString -> IO ()
-type ServerLogger r = Request -> r -> Maybe (UTCTime, UTCTime) -> IO ()
+-- type ServerLogger r = Request -> r -> Maybe (UTCTime, UTCTime) -> IO ()
 
-type LogDetailG r = Request -> r -> (N.Status, Maybe Value, Maybe T.Text, Maybe Int64)
+-- type LogDetailG r = Request -> r -> (N.Status, Maybe Value, Maybe T.Text, Maybe Int64)
 
-withStdoutLogger :: LogDetailG r -> (ServerLogger r -> IO a) -> IO a
-withStdoutLogger detailF appf =
-  bracket setup teardown $ \(rlogger, _) -> appf rlogger
+-- withStdoutLogger :: LogDetailG r -> (ServerLogger r -> IO a) -> IO a
+-- withStdoutLogger detailF appf =
+--   bracket setup teardown $ \(rlogger, _) -> appf rlogger
+--   where
+--     setup = do
+--       getter <- newTimeCache "%FT%T%z"
+--       lgrset <- newStdoutLoggerSet defaultBufSize
+--       let logger req env timeT = do
+--             zdata <- getter
+--             let serverLog = mkAccessLog detailF zdata req env timeT
+--             pushLogStrLn lgrset $ toLogStr $ encode serverLog
+--             when (isJust $ slDetail serverLog) $ flushLogStr lgrset
+--           remover = rmLoggerSet lgrset
+--       return (logger, remover)
+--     teardown (_, remover) = void remover
+
+ravenLogGen
+  :: (BL.ByteString, Either QErr BL.ByteString)
+  -> (N.Status, Maybe Value, Maybe T.Text, Maybe Int64)
+ravenLogGen (reqBody, res) =
+  (status, toJSON <$> logDetail, Just qh, Just size)
   where
-    setup = do
-      getter <- newTimeCache "%FT%T%z"
-      lgrset <- newStdoutLoggerSet defaultBufSize
-      let logger req env timeT = do
-            zdata <- getter
-            let serverLog = mkServerLog detailF zdata req env timeT
-            pushLogStrLn lgrset $ toLogStr $ encode serverLog
-            when (isJust $ slDetail serverLog) $ flushLogStr lgrset
-          remover = rmLoggerSet lgrset
-      return (logger, remover)
-    teardown (_, remover) = void remover
+    status = either qeStatus (const N.status200) res
+    logDetail = either (Just . qErrToLogDetail) (const Nothing) res
+    reqBodyTxt = TBS.fromLBS reqBody
+    qErrToLogDetail qErr =
+      LogDetail reqBodyTxt $ toJSON qErr
+    size = BL.length $ either encode id res
+    qh = T.pack . show $ sha1 reqBody
+    sha1 :: BL.ByteString -> Digest SHA1
+    sha1 = hash . BL.toStrict
 
-mkServerLog
-  :: LogDetailG r
-  -> FormattedTime
-  -> Request
-  -> r
+mkAccessLog
+  :: Request
+  -> (BL.ByteString, Either QErr BL.ByteString)
   -> Maybe (UTCTime, UTCTime)
-  -> ServerLog
-mkServerLog detailF tmstr req r mTimeT =
-  ServerLog
-  { slStatus      = status
-  , slMethod      = decodeBS $ requestMethod req
-  , slSource      = decodeBS $ getSourceFromFallback req
-  , slPath        = decodeBS $ rawPathInfo req
-  , slTimestamp   = decodeBS tmstr
-  , slHttpVersion = httpVersion req
-  , slDetail      = mDetail
-  , slRequestId   = decodeBS <$> getRequestId req
-  -- , slHasuraId    = decodeBS <$> getHasuraId req
-  , slHasuraRole  = decodeBS <$> getHasuraRole req
-  , slHasuraMetadata = getHasuraMetadata req
-  , slResponseSize = size
-  , slResponseTime = T.pack . show <$> diffTime
-  , slQueryHash = queryHash
+  -> AccessLog
+mkAccessLog req r mTimeT =
+  AccessLog
+  { alStatus      = status
+  , alMethod      = decodeBS $ requestMethod req
+  , alSource      = decodeBS $ getSourceFromFallback req
+  , alPath        = decodeBS $ rawPathInfo req
+  , alHttpVersion = httpVersion req
+  , alDetail      = mDetail
+  , alRequestId   = decodeBS <$> getRequestId req
+  , alHasuraRole  = decodeBS <$> getHasuraRole req
+  , alHasuraMetadata = getHasuraMetadata req
+  , alResponseSize = size
+  , alResponseTime = T.pack . show <$> diffTime
+  , alQueryHash = queryHash
   }
   where
-    (status, mDetail, queryHash, size) = detailF req r
+    (status, mDetail, queryHash, size) = ravenLogGen r
     diffTime = case mTimeT of
       Nothing       -> Nothing
       Just (t1, t2) -> Just $ diffUTCTime t2 t1
@@ -175,9 +183,9 @@ newtype HasuraMetadata
   = HasuraMetadata { unHM :: M.HashMap T.Text T.Text } deriving (Show)
 
 instance ToJSON HasuraMetadata where
-  toJSON hash = toJSON $ M.fromList $ map (\(k,v) -> (format k, v)) hdrs
+  toJSON h = toJSON $ M.fromList $ map (\(k,v) -> (format k, v)) hdrs
     where
-      hdrs = M.toList $ unHM hash
+      hdrs = M.toList $ unHM h
       format = T.map underscorify . T.drop 2
       underscorify '-' = '_'
       underscorify c   = c

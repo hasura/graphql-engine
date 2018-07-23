@@ -39,7 +39,6 @@ import qualified Hasura.SQL.DML                 as S
 
 defaultTypes :: [TypeInfo]
 defaultTypes = $(fromSchemaDocQ defaultSchema)
--- defaultTypes = undefined
 
 type OpCtxMap = Map.HashMap G.Name OpCtx
 
@@ -61,6 +60,7 @@ data GCtx
   , _gOrdByEnums :: !OrdByResolveCtx
   , _gQueryRoot  :: !ObjTyInfo
   , _gMutRoot    :: !(Maybe ObjTyInfo)
+  , _gSubRoot    :: !(Maybe ObjTyInfo)
   , _gOpCtxMap   :: !OpCtxMap
   } deriving (Show, Eq)
 
@@ -339,30 +339,208 @@ input table_set_input {
   coln: coltyn
 }
 -}
-mkUpdInp
+mkUpdSetInp
   :: QualifiedTable -> [PGColInfo] -> InpObjTyInfo
-mkUpdInp tn cols  =
+mkUpdSetInp tn cols  =
   InpObjTyInfo (Just desc) (mkUpdSetTy tn) $ fromInpValL $
   map mkPGColInp cols
   where
     desc = G.Description $
       "input type for updating data in table " <>> tn
 
+-- table_inc_input
+mkUpdIncTy :: QualifiedTable -> G.NamedType
+mkUpdIncTy tn =
+  G.NamedType $ qualTableToName tn <> "_inc_input"
+
+{-
+input table_inc_input {
+  integer-col1: int
+  .
+  .
+  integer-coln: int
+}
+-}
+
+mkUpdIncInp
+  :: QualifiedTable -> Maybe [PGColInfo] -> Maybe InpObjTyInfo
+mkUpdIncInp tn = maybe Nothing mkType
+  where
+    mkType cols = let intCols = onlyIntCols cols
+                      incObjTy =
+                        InpObjTyInfo (Just desc) (mkUpdIncTy tn) $
+                        fromInpValL $ map mkPGColInp intCols
+                  in bool (Just incObjTy) Nothing $ null intCols
+    desc = G.Description $
+      "input type for incrementing integer columne in table " <>> tn
+
+-- table_<json-op>_input
+mkJSONOpTy :: QualifiedTable -> G.Name -> G.NamedType
+mkJSONOpTy tn op =
+  G.NamedType $ qualTableToName tn <> op <> "_input"
+
+-- json ops are _concat, _delete_key, _delete_elem, _delete_at_path
+{-
+input table_concat_input {
+  jsonb-col1: json
+  .
+  .
+  jsonb-coln: json
+}
+-}
+
+{-
+input table_delete_key_input {
+  jsonb-col1: string
+  .
+  .
+  jsonb-coln: string
+}
+-}
+
+{-
+input table_delete_elem_input {
+  jsonb-col1: int
+  .
+  .
+  jsonb-coln: int
+}
+-}
+
+{-
+input table_delete_at_path_input {
+  jsonb-col1: [string]
+  .
+  .
+  jsonb-coln: [string]
+}
+-}
+
+-- jsonb operators and descriptions
+prependOp :: G.Name
+prependOp = "_prepend"
+
+prependDesc :: G.Description
+prependDesc = "prepend existing jsonb value of filtered columns with new jsonb value"
+
+appendOp :: G.Name
+appendOp = "_append"
+
+appendDesc :: G.Description
+appendDesc = "append existing jsonb value of filtered columns with new jsonb value"
+
+deleteKeyOp :: G.Name
+deleteKeyOp = "_delete_key"
+
+deleteKeyDesc :: G.Description
+deleteKeyDesc = "delete key/value pair or string element."
+                <> " key/value pairs are matched based on their key value"
+
+deleteElemOp :: G.Name
+deleteElemOp = "_delete_elem"
+
+deleteElemDesc :: G.Description
+deleteElemDesc = "delete the array element with specified index (negative integers count from the end)."
+                 <> " throws an error if top level container is not an array"
+
+deleteAtPathOp :: G.Name
+deleteAtPathOp = "_delete_at_path"
+
+deleteAtPathDesc :: G.Description
+deleteAtPathDesc = "delete the field or element with specified path"
+                   <> " (for JSON arrays, negative integers count from the end)"
+
+mkUpdJSONOpInp
+  :: QualifiedTable -> [PGColInfo] -> [InpObjTyInfo]
+mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
+  where
+    jsonbCols = onlyJSONBCols cols
+    jsonbColNames = map pgiName jsonbCols
+
+    inpObjs = [ prependInpObj, appendInpObj, deleteKeyInpObj
+              , deleteElemInpObj, deleteAtPathInpObj
+              ]
+
+    appendInpObj =
+      InpObjTyInfo (Just appendDesc) (mkJSONOpTy tn appendOp) $
+      fromInpValL $ map mkPGColInp jsonbCols
+
+    prependInpObj =
+      InpObjTyInfo (Just prependDesc) (mkJSONOpTy tn prependOp) $
+      fromInpValL $ map mkPGColInp jsonbCols
+
+    deleteKeyInpObj =
+      InpObjTyInfo (Just deleteKeyDesc) (mkJSONOpTy tn deleteKeyOp) $
+      fromInpValL $ map deleteKeyInpVal jsonbColNames
+    deleteKeyInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) $
+      G.toGT $ G.NamedType "String"
+
+    deleteElemInpObj =
+      InpObjTyInfo (Just deleteElemDesc) (mkJSONOpTy tn deleteElemOp) $
+      fromInpValL $ map deleteElemInpVal jsonbColNames
+    deleteElemInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) $
+      G.toGT $ G.NamedType "Int"
+
+    deleteAtPathInpObj =
+      InpObjTyInfo (Just deleteAtPathDesc) (mkJSONOpTy tn deleteAtPathOp) $
+      fromInpValL $ map deleteAtPathInpVal jsonbColNames
+    deleteAtPathInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) $
+      G.toGT $ G.toLT $ G.NamedType "String"
+
 {-
 
 update_table(
   where : table_bool_exp!
-  _set  : table_set_input!
+  _set  : table_set_input
+  _inc  : table_inc_input
+  _concat: table_concat_input
+  _delete_key: table_delete_key_input
+  _delete_elem: table_delete_elem_input
+  _delete_path_at: table_delete_path_at_input
 ): table_mutation_response
 
 -}
 
+mkIncInpVal :: QualifiedTable -> [PGColInfo] -> Maybe InpValInfo
+mkIncInpVal tn cols = bool (Just incArg) Nothing $ null intCols
+  where
+    intCols = onlyIntCols cols
+    incArgDesc = "increments the integer columns with given value of the filtered values"
+    incArg =
+      InpValInfo (Just incArgDesc) "_inc" $ G.toGT $ mkUpdIncTy tn
+
+mkJSONOpInpVals :: QualifiedTable -> [PGColInfo] -> [InpValInfo]
+mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
+  where
+    jsonbCols = onlyJSONBCols cols
+    jsonbOpArgs = [appendArg, prependArg, deleteKeyArg, deleteElemArg, deleteAtPathArg]
+
+    appendArg =
+      InpValInfo (Just appendDesc) appendOp $ G.toGT $ mkJSONOpTy tn appendOp
+
+    prependArg =
+      InpValInfo (Just prependDesc) prependOp $ G.toGT $ mkJSONOpTy tn prependOp
+
+    deleteKeyArg =
+      InpValInfo (Just deleteKeyDesc) deleteKeyOp $
+      G.toGT $ mkJSONOpTy tn deleteKeyOp
+
+    deleteElemArg =
+      InpValInfo (Just deleteElemDesc) deleteElemOp $
+      G.toGT $ mkJSONOpTy tn deleteElemOp
+
+    deleteAtPathArg =
+      InpValInfo (Just deleteAtPathDesc) deleteAtPathOp $
+      G.toGT $ mkJSONOpTy tn deleteAtPathOp
+
 mkUpdMutFld
-  :: QualifiedTable -> ObjFldInfo
-mkUpdMutFld tn =
-  ObjFldInfo (Just desc) fldName (fromInpValL [filterArg, setArg]) $
+  :: QualifiedTable -> [PGColInfo] -> ObjFldInfo
+mkUpdMutFld tn cols =
+  ObjFldInfo (Just desc) fldName (fromInpValL inputValues) $
   G.toGT $ mkMutRespTy tn
   where
+    inputValues = [filterArg, setArg] <> incArg
+                  <> mkJSONOpInpVals tn cols
     desc = G.Description $ "update data of the table: " <>> tn
 
     fldName = "update_" <> qualTableToName tn
@@ -374,8 +552,9 @@ mkUpdMutFld tn =
 
     setArgDesc = "sets the columns of the filtered rows to the given values"
     setArg =
-      InpValInfo (Just setArgDesc) "_set" $ G.toGT $
-      G.toNT $ mkUpdSetTy tn
+      InpValInfo (Just setArgDesc) "_set" $ G.toGT $ mkUpdSetTy tn
+
+    incArg = maybeToList $ mkIncInpVal tn cols
 
 {-
 
@@ -484,9 +663,8 @@ mkInsMutFld tn constraints =
       InpValInfo (Just objsArgDesc) "objects" $ G.toGT $
       G.toNT $ G.toLT $ G.toNT $ mkInsInpTy tn
 
-    onConflictInpVal = case filter isUniqueOrPrimary constraints of
-      [] -> Nothing
-      _  -> Just onConflictArg
+    uniqueOrPrimaryCons = filter isUniqueOrPrimary constraints
+    onConflictInpVal = bool (Just onConflictArg) Nothing $ null uniqueOrPrimaryCons
 
     onConflictDesc = "on conflict condition"
     onConflictArg =
@@ -580,12 +758,13 @@ instance Monoid RootFlds where
   mappend  = (<>)
 
 mkOnConflictTypes :: QualifiedTable -> [TableConstraint] -> [TypeInfo]
-mkOnConflictTypes tn c = case filter isUniqueOrPrimary c of
-  [] -> []
-  constraints -> [ TIEnum mkConflictActionTy
-                 , TIEnum $ mkConstriantTy tn constraints
-                 , TIInpObj $ mkOnConflictInp tn
-                 ]
+mkOnConflictTypes tn c = bool tyInfos [] $ null constraints
+  where
+    tyInfos = [ TIEnum mkConflictActionTy
+              , TIEnum $ mkConstriantTy tn constraints
+              , TIInpObj $ mkOnConflictInp tn
+              ]
+    constraints = filter isUniqueOrPrimary c
 
 mkGCtxRole'
   :: QualifiedTable
@@ -607,10 +786,12 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM constraints =
 
     ordByEnums = fromMaybe Map.empty ordByResCtxM
     onConflictTypes = mkOnConflictTypes tn constraints
+    jsonOpTys = fromMaybe [] updJSONOpInpObjTysM
 
-    allTypes = onConflictTypes <> catMaybes
+    allTypes = onConflictTypes <> jsonOpTys <> catMaybes
       [ TIInpObj <$> insInpObjM
       , TIInpObj <$> updSetInpObjM
+      , TIInpObj <$> updIncInpObjM
       , TIInpObj <$> boolExpInpObjM
       , TIObj <$> noRelsObjM
       , TIObj <$> mutRespObjM
@@ -636,7 +817,12 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM constraints =
     insInpObjFldsM = mkColFldMap (mkInsInpTy tn) <$> insColsM
 
     -- update set input type
-    updSetInpObjM = mkUpdInp tn <$> updColsM
+    updSetInpObjM = mkUpdSetInp tn <$> updColsM
+    -- update increment input type
+    updIncInpObjM = mkUpdIncInp tn updColsM
+    -- update json operator input type
+    updJSONOpInpObjsM = mkUpdJSONOpInp tn <$> updColsM
+    updJSONOpInpObjTysM = map TIInpObj <$> updJSONOpInpObjsM
     -- fields used in set input object
     updSetInpObjFldsM = mkColFldMap (mkUpdSetTy tn) <$> updColsM
 
@@ -685,20 +871,24 @@ getRootFldsRole'
   -> FieldInfoMap
   -> Maybe (QualifiedTable, [T.Text]) -- insert view
   -> Maybe (S.BoolExp, [T.Text]) -- select filter
-  -> Maybe (S.BoolExp, [T.Text]) -- update filter
+  -> Maybe ([PGCol], S.BoolExp, [T.Text]) -- update filter
   -> Maybe (S.BoolExp, [T.Text]) -- delete filter
   -> RootFlds
 getRootFldsRole' tn constraints fields insM selM updM delM =
   RootFlds mFlds
   where
+    getUpdColInfos cols = flip filter (getCols fields) $ \c ->
+                      pgiName c `elem` cols
     mFlds = mapFromL (either _fiName _fiName . snd) $ catMaybes
             [ getInsDet <$> insM, getSelDet <$> selM
             , getUpdDet <$> updM, getDelDet <$> delM]
     colInfos = fst $ partitionFieldInfos $ Map.elems fields
     getInsDet (vn, hdrs) =
       (OCInsert tn vn (map pgiName colInfos) hdrs, Right $ mkInsMutFld tn constraints)
-    getUpdDet (updFltr, hdrs) =
-      (OCUpdate tn updFltr hdrs, Right $ mkUpdMutFld tn)
+    getUpdDet (updCols, updFltr, hdrs) =
+      ( OCUpdate tn updFltr hdrs
+      , Right $ mkUpdMutFld tn $ getUpdColInfos updCols
+      )
     getDelDet (delFltr, hdrs) =
       (OCDelete tn delFltr hdrs, Right $ mkDelMutFld tn)
     getSelDet (selFltr, hdrs) =
@@ -772,7 +962,10 @@ getRootFldsRole tn constraints fields (RolePermInfo insM selM updM delM) =
   where
     mkIns i = (ipiView i, ipiRequiredHeaders i)
     mkSel s = (spiFilter s, spiRequiredHeaders s)
-    mkUpd u = (upiFilter u, upiRequiredHeaders u)
+    mkUpd u = ( Set.toList $ upiCols u
+              , upiFilter u
+              , upiRequiredHeaders u
+              )
     mkDel d = (dpiFilter d, dpiRequiredHeaders d)
 
 mkGCtxMapTable
@@ -787,13 +980,14 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints) = do
   return $ Map.insert adminRole (adminCtx, adminRootFlds) m
   where
     colInfos = fst $ partitionFieldInfos $ Map.elems fields
+    allCols = map pgiName colInfos
     selFlds = flip map (Map.elems fields) $ \case
       FIColumn pgColInfo     -> Left pgColInfo
       FIRelationship relInfo -> Right (relInfo, noFilter)
     noFilter = S.BELit True
     adminRootFlds =
       getRootFldsRole' tn constraints fields (Just (tn, [])) (Just (noFilter, []))
-      (Just (noFilter, [])) (Just (noFilter, []))
+      (Just (allCols, noFilter, [])) (Just (noFilter, []))
 
 mkScalarTyInfo :: PGColType -> ScalarTyInfo
 mkScalarTyInfo = ScalarTyInfo Nothing
@@ -818,9 +1012,14 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) =
       scalarTys = map (TIScalar . mkScalarTyInfo) colTys
       compTys   = map (TIInpObj . mkCompExpInp) colTys
       allTys    = Map.union tyInfos $ mkTyInfoMap $
-                  catMaybes [Just $ TIObj queryRoot, TIObj <$> mutRootM] <>
+                  catMaybes [ Just $ TIObj queryRoot
+                            , TIObj <$> mutRootM
+                            , TIObj <$> subRootM
+                            ] <>
                   scalarTys <> compTys <> defaultTypes
-  in GCtx allTys fldInfos ordByEnums queryRoot mutRootM $ Map.map fst flds
+  -- for now subscription root is query root
+  in GCtx allTys fldInfos ordByEnums queryRoot mutRootM (Just queryRoot) $
+     Map.map fst flds
   where
 
     mkMutRoot =
@@ -828,6 +1027,12 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) =
       mapFromL _fiName
 
     mutRootM = bool (Just $ mkMutRoot mFlds) Nothing $ null mFlds
+
+    mkSubRoot =
+      mkObjTyInfo (Just "subscription root") (G.NamedType "subscription_root") .
+      mapFromL _fiName
+
+    subRootM = bool (Just $ mkSubRoot qFlds) Nothing $ null qFlds
 
     (qFlds, mFlds) = partitionEithers $ map snd $ Map.elems flds
 

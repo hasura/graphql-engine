@@ -6,7 +6,7 @@ module Hasura.RQL.Types.Error
        ( Code(..)
        , QErr(..)
        , encodeQErr
-       , nonAdminQErrEnc
+       , noInternalQErrEnc
        , err400
        , err404
        , err401
@@ -121,17 +121,18 @@ instance ToJSON QErr where
     , "internal" .= ie
     ]
 
-nonAdminQErrEnc :: QErr -> Value
-nonAdminQErrEnc (QErr jPath _ msg code _) =
+noInternalQErrEnc :: QErr -> Value
+noInternalQErrEnc (QErr jPath _ msg code _) =
   object
   [ "path"  .= encodeJSONPath jPath
   , "error" .= msg
   , "code"  .= show code
   ]
 
-encodeQErr :: T.Text -> QErr -> Value
-encodeQErr "admin" = toJSON
-encodeQErr _       = nonAdminQErrEnc
+-- whether internal should be included or not
+encodeQErr :: Bool -> QErr -> Value
+encodeQErr True = toJSON
+encodeQErr _    = noInternalQErrEnc
 
 encodeJSONPath :: JSONPath -> String
 encodeJSONPath = format "$"
@@ -171,8 +172,8 @@ type QErrM m = (MonadError QErr m)
 throw400 :: (QErrM m) => Code -> T.Text -> m a
 throw400 c t = throwError $ err400 c t
 
-throw404 :: (QErrM m) => Code -> T.Text -> m a
-throw404 c t = throwError $ err404 c t
+throw404 :: (QErrM m) => T.Text -> m a
+throw404 t = throwError $ err404 NotFound t
 
 throw401 :: (QErrM m) => T.Text -> m a
 throw401 t = throwError $ err401 AccessDenied t
