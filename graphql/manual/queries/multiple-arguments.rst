@@ -1,8 +1,10 @@
 Using multiple arguments
 ========================
-Multiple arguments can be used together in the same query. For e.g. if you want to use the ``where`` argument to filter
-the results and then use the ``order_by`` argument to sort them, you can use a query similar to the following one to
-fetch a list of authors and only 2 of their published articles that are sorted by the date of publication (descending):
+Multiple arguments can be used together in the same query.
+
+For e.g. if you want to use the ``where`` argument to filter
+the results and then use the ``order_by`` argument to sort them, you can use a query similar to the following one which
+fetches a list of authors and only 2 of their published articles that are sorted by their date of publication:
 
 .. graphiql::
   :query:
@@ -12,7 +14,7 @@ fetch a list of authors and only 2 of their published articles that are sorted b
         name
         articles(
           where: {is_published: {_eq: true}},
-          order_by: ["-published_on"],
+          order_by: published_on_desc,
           limit: 2
         ) {
           id

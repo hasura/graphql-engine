@@ -41,7 +41,7 @@ Query/Subscription syntax
    :class: haskell-pre
 
     query {
-      author(where: {articles: {rating: {_gte: 4}}} order_by: ["-name"]) {
+      author(where: {articles: {rating: {_gte: 4}}} order_by: name_asc) {
         id
         name
       }
@@ -53,7 +53,7 @@ Query/Subscription syntax
    :class: haskell-pre
 
     subscription {
-      author(where: {articles: rating: {_gte: 4}}} order_by: ["-name"]) {
+      author(where: {articles: rating: {_gte: 4}}} order_by: name_asc) {
         id
         name
       }

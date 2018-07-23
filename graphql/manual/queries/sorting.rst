@@ -1,9 +1,12 @@
 Sort query results
 ==================
 Results from your query can be sorted by using the ``order_by`` argument. The argument can be used to sort based on
-fields in nested objects too. The sort order (ascending vs. descending) is set by specifying the ``+`` or ``-`` in
-front of the column name in the ``order_by`` argument. The ``order_by`` argument takes an array of parameters to allow
-sorting by multiple columns. The following are examples of sorting different types of queries.
+fields in nested objects too. The sort order (ascending vs. descending) is set by specifying ``_asc`` or ``_desc``
+after the column name in the ``order_by`` argument e.g. ``name_desc``. Null values can be fetched first by adding
+``_nulls_first`` after the sorting order e.g. ``name_desc_nulls_first``. The ``order_by`` argument takes an array of
+parameters to allow sorting by multiple columns.
+
+The following are example queries for different sorting use cases:
 
 Sorting in a simple object query
 --------------------------------
@@ -13,7 +16,7 @@ Fetch list of authors sorted by their names in an ascending order:
   :query:
     query {
       author(
-        order_by: ["+name"]
+        order_by: name_asc
       ) {
         id
         name
@@ -58,10 +61,10 @@ Fetch a list of authors sorted by their names with a list of their articles that
 .. graphiql::
   :query:
     query {
-      author(order_by: ["+name"]) {
+      author(order_by: name_asc) {
         id
         name
-        articles(order_by: ["-rating"]) {
+        articles(order_by: rating_desc) {
           id
           title
           rating
@@ -131,13 +134,14 @@ Fetch a list of authors sorted by their names with a list of their articles that
 
 Sorting by multiple fields
 --------------------------
-Fetch a list of articles that is sorted by their rating (descending) and then on their published date (ascending):
+Fetch a list of articles that is sorted by their rating (descending) and then on their published date (ascending with
+nulls first):
 
 .. graphiql::
   :query:
     query {
       article(
-        order_by: ["-rating", "+published_on"]
+        order_by: [rating_desc, published_on_asc_nulls_first]
       ) {
         id
         rating
@@ -154,6 +158,11 @@ Fetch a list of articles that is sorted by their rating (descending) and then on
             "published_on": null
           },
           {
+            "id": 14,
+            "rating": 4,
+            "published_on": null
+          },
+          {
             "id": 7,
             "rating": 4,
             "published_on": "2016-07-09"
@@ -162,11 +171,6 @@ Fetch a list of articles that is sorted by their rating (descending) and then on
             "id": 3,
             "rating": 4,
             "published_on": "2017-05-26"
-          },
-          {
-            "id": 15,
-            "rating": 4,
-            "published_on": "2018-01-02"
           }
         ]
       }

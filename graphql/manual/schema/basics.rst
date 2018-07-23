@@ -34,7 +34,7 @@ e.g. the following *query* and *mutation* fields are generated for the tables we
       where: article_bool_exp
       limit: Int
       offset: Int
-      order_by: [String]
+      order_by: article_order_by_exp
     ): [article]
 
 .. code-block:: none
