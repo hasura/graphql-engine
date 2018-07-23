@@ -33,10 +33,10 @@ refs:
     filters:
       branches:
         ignore: /.*/
-  filter_ignore_release_branches: &filter_ignore_release_branches
+  filter_ignore_dev_release_branches: &filter_ignore_dev_release_branches
     filters:
       branches:
-        ignore: /^release-v.*/
+        ignore: /^(dev|release).*/
 
   # individual server build steps
   server_container_config: &server_container_config
@@ -52,7 +52,7 @@ refs:
   server_restore_deps_cache: &server_restore_deps_cache
     restore_cache:
       keys:
-      - server-deps-cache-v1
+      - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
 
   server_restore_app_cache: &server_restore_app_cache
     restore_cache:
@@ -67,7 +67,7 @@ refs:
 
   server_save_deps_cache: &server_save_deps_cache
     save_cache:
-      key: server-deps-cache-v1
+      key: server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
       paths:
       - ~/.stack
 
@@ -303,40 +303,40 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-    - check_build_worthiness: *filter_only_vtags
+    - check_build_worthiness: *filter_ignore_dev_release_branches
     - build_server:
-        <<: *filter_only_vtags
+        <<: *filter_ignore_dev_release_branches
         requires:
         - check_build_worthiness
     - test_server_pg_10.4:
-        <<: *filter_only_vtags
+        <<: *filter_ignore_dev_release_branches
         requires:
         - build_server
     - test_server_pg_9.6:
-        <<: *filter_only_vtags
+        <<: *filter_ignore_dev_release_branches
         requires:
         - build_server
     - test_server_pg_9.5:
-        <<: *filter_only_vtags
+        <<: *filter_ignore_dev_release_branches
         requires:
         - build_server
     - test_server_pg_9.4:
-        <<: *filter_only_vtags
+        <<: *filter_ignore_dev_release_branches
         requires:
         - build_server
     - all_server_tests_pass:
-        <<: *filter_only_vtags
+        <<: *filter_ignore_dev_release_branches
         requires:
         - test_server_pg_10.4
         - test_server_pg_9.6
         - test_server_pg_9.5
         - test_server_pg_9.4
     - test_and_build_cli:
-        <<: *filter_only_vtags
+        <<: *filter_ignore_dev_release_branches
         requires:
         - build_server
     - test_and_build_console:
-        <<: *filter_only_vtags
+        <<: *filter_ignore_dev_release_branches
         requires:
         - test_and_build_cli
 
