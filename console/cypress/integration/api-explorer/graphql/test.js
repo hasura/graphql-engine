@@ -32,8 +32,8 @@ export const runApiExplorerTests = () => {
     it('Create test table', createTestTable);
     it('Insert row into test table', insertValue);
     it('Open API Explorer', openAPIExplorer);
-    it('Check Run Query button', checkExecuteQueryButton);
-    // it('Check query result', checkQuery);
+    // it('Check Run Query button', checkExecuteQueryButton);
+    it('Check query result', checkQuery);
     it('Check mutation result', checkMutation);
     it('Check subscription result', checkSub);
     it('Delete test table', delTestTable);

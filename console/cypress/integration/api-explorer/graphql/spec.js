@@ -65,6 +65,9 @@ export const checkExecuteQueryButton = () => {
 };
 
 export const checkQuery = () => {
+  cy.get(getElementFromAlias('header-key-2')).type('someKey');
+  cy.get(getElementFromAlias('header-value-2')).type('someValue');
+
   cy.get('textarea')
     .first()
     .type('{enter}{uparrow}query{{}users{{}id}}', { force: true });

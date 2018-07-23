@@ -243,6 +243,7 @@ class ApiRequest extends Component {
               onFocus={this.handleFocus}
               onBlur={this.handleBlur}
               type="text"
+              data-test={`header-key-${i}`}
             />
           </td>
           <td
@@ -268,6 +269,7 @@ class ApiRequest extends Component {
               onFocus={this.handleFocus}
               onBlur={this.handleBlur}
               type="text"
+              data-test={`header-value-${i}`}
             />
           </td>
           {header.isNewHeader ? null : (
