@@ -1,14 +1,13 @@
-.. title:: API Reference - PostgreSQL Types
+API Reference - Supported PostgreSQL Types
+==========================================
 
-API Reference - PostgreSQL Types
-==============================
-List of PostgreSQL types supported by GraphQL Engine explicitly.
+List of PostgreSQL types supported by the Hasura GraphQL engine with their equivalent GraphQL engine types:
 
 .. _table:
 
 .. csv-table::
    :file: pgtypes.csv
-   :widths: 10, 10, 30, 20
+   :widths: 10, 10, 25, 10
    :header-rows: 1
 
 .. _Int:
@@ -17,7 +16,7 @@ Int
 ---
 GraphQL default scalar with name **Int**.
 
-E.g.:
+E.g.
 
 .. parsed-literal::
    :class: haskell-pre
@@ -35,7 +34,7 @@ Float
 -----
 GraphQL custom scalar type with name **float8**.
 
-E.g.:
+E.g.
 
 .. parsed-literal::
    :class: haskell-pre
@@ -53,7 +52,7 @@ Numeric
 -------
 GraphQL custom scalar type with name **numeric**.
 
-E.g.:
+E.g.
 
 .. parsed-literal::
    :class: haskell-pre
@@ -71,7 +70,7 @@ Bool
 ----
 GraphQL default Scalar with name **Boolean**. The **Boolean** scalar type represents ``true`` or ``false``.
 
-E.g.:
+E.g.
 
 .. parsed-literal::
    :class: haskell-pre
@@ -89,7 +88,7 @@ Char
 ----
 GraphQL custom scalar with name **character**. It is a ``String`` with single character.
 
-E.g.:
+E.g.
 
 .. parsed-literal::
    :class: haskell-pre
@@ -109,7 +108,7 @@ String
 GraphQL default scalar with name **String**. The **String** scalar type represents textual data, represented as UTF-8 character sequences.
 The String type is most often used by GraphQL to represent free-form human-readable text.
 
-E.g.:
+E.g.
 
 .. parsed-literal::
    :class: haskell-pre
@@ -128,7 +127,7 @@ Date
 ----
 GraphQL custom scalar with name **date**. Date (no time of day). Allowed values are yyyy-mm-dd
 
-E.g.:
+E.g.
 
 .. parsed-literal::
    :class: haskell-pre
@@ -147,7 +146,7 @@ Time with time zone
 Graphql custom scalar type with name **timetz**. Time of day only, with time zone. Allowed values should be of ISO8601 format.
 Eg. 17:30:15Z, 17:30:15+05:30, 17:30:15.234890+05:30
 
-E.g.:
+E.g.
 
 .. parsed-literal::
    :class: haskell-pre
@@ -166,7 +165,7 @@ Timestamp with time zone
 Graphql custom scalar type with name **timestamptz**. Both date and time, with time zone. Allowed values should be of ISO8601 format.
 Eg. 2016-07-20T17:30:15Z, 2016-07-20T17:30:15+05:30, 2016-07-20T17:30:15.234890+05:30
 
-E.g.:
+E.g.
 
 .. parsed-literal::
    :class: haskell-pre
@@ -184,7 +183,7 @@ JSON
 ----
 GraphQL custom scalar type with name **json**. It is a stringified json value.
 
-E.g.:
+E.g.
 
 .. parsed-literal::
    :class: haskell-pre
@@ -202,7 +201,7 @@ JSONB
 -----
 GraphQL custom scalar type with name **jsonb**. Value should be given through a variable of type **jsonb**.
 
-E.g.:
+E.g.
 
 .. parsed-literal::
    :class: haskell-pre
@@ -234,14 +233,15 @@ variable:-
      }
    }
 
-.. _Unsupported:
+.. _Implicit:
 
 Implicitly Supported types
 --------------------------
-All ``Unsupported`` types in above table_ are implicitly supported by GraphQL Engine. You've to provide value in **String**.
+All ``Implicit`` types in above table_ are implicitly supported by GraphQL Engine. You have to provide the value in
+**String**.
 
 
-E.g.: For time without time zone type
+E.g. For time without time zone type
 
 In ISO 8601 format
 
@@ -255,7 +255,7 @@ In ISO 8601 format
      }
    ]
 
-E.g.: For macaddr type
+E.g. For macaddr type
 
 .. parsed-literal::
    :class: haskell-pre
