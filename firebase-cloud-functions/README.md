@@ -1,4 +1,4 @@
-# Sample Firebase Clound Function Auth Webhook for Hasura GraphQL engine
+# Sample Firebase Cloud Function Auth Webhook for Hasura GraphQL engine
 
 ## What is this?
 
@@ -18,8 +18,75 @@ Further reading: [Firebase SDK for Cloud Functions](https://firebase.google.com/
  1. Install Cloud Functions dependencies locally by running: `cd functions; npm install`
  1. Deploy to Firebase Cloud Functions by `firebase deploy`
 
- Once deployed you will get an endpoint like:
+ Once deployed endpoint like this will be created and displayed:
 
   ```bash
     https://us-central1-xxxxx-auth.cloudfunctions.net/hasuraWebhook
+  ```
+
+## How to setup webhook on Hasura GraphQL
+
+  Set `--auth-hook` or `HASURA_GRAPHQL_AUTH_HOOK` to the endpoint obtained above.
+  [GraphQL engine server flags reference](https://docs.hasura.io/1.0/graphql/manual/deployment/graphql-engine-flags/reference.html)
+
+## How to call webhook from frontend JS code (React, VueJS, Angular etc...)
+
+  postAxios.js
+  ```bash
+  import axiosBase from 'axios'
+  import * as firebase from 'firebase'
+
+  const getIdToken = async () => {
+    return new Promise((resolve, reject) => {
+      firebase.auth().onAuthStateChanged(function (user) {
+        if (user) {
+          resolve(firebase.auth().currentUser.getIdToken())
+        } else {
+          reject(Error('user logged out'))
+        }
+      })
+    })
+  }
+
+  export const postAxios = async (queryString) => {
+    const idToken = await getIdToken()
+
+    const axios = axiosBase.create({
+      baseURL: 'https://YOURHASURADOMAIN/v1alpha1/graphql',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + idToken
+      },
+      responseType: 'json',
+      method: 'post'
+    })
+
+    return await axios({
+      data: {
+        query: queryString
+      }
+    }).catch(({response: r}) => console.log(r))
+  }
+  ```
+
+  userService.js
+  ```bash
+  import { postAxios } from './postAxios'
+
+  export default {
+    async getUsers () {
+      const queryString = `
+      query {
+        user
+        {
+          id
+          name
+        }
+      }
+      `
+
+      const result = await postAxios(queryString)
+      return result.data.data.user
+    }
+  }
   ```
