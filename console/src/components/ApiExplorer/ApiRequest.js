@@ -24,6 +24,7 @@ class ApiRequest extends Component {
   constructor(props) {
     super(props);
     this.state = {};
+    this.state.accessKeyVisible = false;
     this.state.bodyAllowedMethods = ['POST'];
     this.state.tabIndex = 0;
     this.timer = null;
@@ -69,6 +70,10 @@ class ApiRequest extends Component {
   onDeleteHeaderClicked(e) {
     const index = parseInt(e.target.getAttribute('data-header-id'), 10);
     this.props.dispatch(removeRequestHeader(index));
+  }
+
+  onShowAccessKeyClicked() {
+    this.setState({ accessKeyVisible: !this.state.accessKeyVisible });
   }
 
   onNewHeaderKeyChanged(e) {
@@ -268,12 +273,25 @@ class ApiRequest extends Component {
               onChange={this.onHeaderValueChanged.bind(this)}
               onFocus={this.handleFocus}
               onBlur={this.handleBlur}
-              type="text"
               data-test={`header-value-${i}`}
+              type={
+                header.key === 'X-Hasura-Access-Key' &&
+                !this.state.accessKeyVisible
+                  ? 'password'
+                  : 'text'
+              }
             />
           </td>
           {header.isNewHeader ? null : (
             <td>
+              {header.key === 'X-Hasura-Access-Key' ? (
+                <i
+                  className={styles.showAccessKey + ' fa fa-eye'}
+                  data-header-id={i}
+                  aria-hidden="true"
+                  onClick={this.onShowAccessKeyClicked.bind(this)}
+                />
+              ) : null}
               <i
                 className={styles.closeHeader + ' fa fa-times'}
                 data-header-id={i}
