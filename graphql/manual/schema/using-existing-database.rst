@@ -1,5 +1,5 @@
-Using an existing database
-==========================
+Setting up schema using an existing database
+============================================
 
 When you have an existing database with a schema already present, you don't need to create tables or views or run
 DDL through the Hasura console.

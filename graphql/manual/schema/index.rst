@@ -20,7 +20,7 @@ See:
   Basics <basics>
   Relationships/connections <relationships>
   views
-  using-existing-database
+  Using an existing database <using-existing-database>
   sql-functions
   Customise with schema stitching <schema-stitching>
   Export GraphQL schema <export-graphql-schema>
