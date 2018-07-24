@@ -257,6 +257,16 @@
     cursor: pointer;
     padding-top: 8px;
     font-size: 16px;
+    float: right;
+    display: inline-block;
+  }
+  .showAccessKey{
+    cursor: pointer;
+    padding-top: 8px;
+    padding-right: 8px;
+    font-size: 16px;
+    float: left;
+    display: inline-block;
   }
   .apiRequestWrapper
   {
@@ -569,6 +579,7 @@
           border-top: 0;
           // padding: 5px;
           padding: 0px 5px;
+          min-width: 50px;
           .responseTableInput
           {
             background-color: transparent;
