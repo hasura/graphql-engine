@@ -29,7 +29,7 @@ exports.hasuraWebhook = functions.https.onRequest((request, response) => {
     .then((decodedToken) => {
       console.log('decodedToken', decodedToken);
       var hasuraVariables = {
-        'X-Hasura-Firebase-Uid': decodedToken.uid,
+        'X-Hasura-User-Id': decodedToken.uid,
         'X-Hasura-Role': 'user'
       };
       console.log(hasuraVariables); // For debug
