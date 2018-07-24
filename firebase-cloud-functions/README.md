@@ -76,14 +76,14 @@ Further reading: [Firebase SDK for Cloud Functions](https://firebase.google.com/
   export default {
     async getUsers () {
       const queryString = `
-      query {
-        user
-        {
-          id
-          name
+        query {
+          user
+          {
+            id
+            name
+          }
         }
-      }
-      `
+    　`
 
       const result = await postAxios(queryString)
       return result.data.data.user
