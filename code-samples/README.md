@@ -1,5 +1,12 @@
 # Code samples for auth webhook
 
-This directory is a compilation of code samples that can be used (copy-pasted) to implement custom auth webhooks for the Hasura GraphQL engine.
+This directory is a compilation of code samples that can be used to implement custom auth webhooks for the Hasura GraphQL engine.
 
-Code samples coming soon.
+## Contributing
+
+- Please fork this repo and submit a PR with your changes
+- Please create a directory name, lowercase, hyphenated
+- Please add a helpful README that has the following sections:
+  - Overview
+  - Deployment instructions
+  - Creation of any specific environment variables or secrets
