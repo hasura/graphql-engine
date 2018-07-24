@@ -7,7 +7,7 @@ We'll deploy Auth triggered Functions that send a welcome email when a new user 
 Further reading: [Firebase SDK for Cloud Functions](https://firebase.google.com/docs/functions/)
 
 
-## How to install and deploy
+## Install and deploy
 
  1. Create a Firebase Project using the [Firebase Console](https://console.firebase.google.com).
  1. Clone or download this repo and go to `cd firebase-cloud-functions` directory.
@@ -24,10 +24,18 @@ Further reading: [Firebase SDK for Cloud Functions](https://firebase.google.com/
     https://us-central1-xxxxx-auth.cloudfunctions.net/hasuraWebhook
   ```
 
-## How to setup webhook on Hasura GraphQL
+## Add webhook endpoint to Hasura GraphQL
 
   Set `--auth-hook` or `HASURA_GRAPHQL_AUTH_HOOK` to the endpoint obtained above.
-  [GraphQL engine server flags reference](https://docs.hasura.io/1.0/graphql/manual/deployment/graphql-engine-flags/reference.html)
+
+  [GraphQL engine server flags reference](https://docs.hasura.io/1.0/graphql/manual/deployment/graphql-engine-flags/reference.html) for details.
+
+## Create table and set permission
+
+  Follow [Common roles and auth examples](https://docs.hasura.io/1.0/graphql/manual/auth/common-roles-auth-examples.html)
+  on Hasura doc for details of how to setup permission to a table.
+
+  Make sure to change id column of user table to TXT type as uid sent from webhook is firebase User UID format (e.g. 0LnvZc7405TjRTbjURhZYYVXPI52)
 
 ## How to call webhook from frontend JS code (React, VueJS, Angular etc...)
 
