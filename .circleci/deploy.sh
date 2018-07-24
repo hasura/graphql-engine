@@ -43,8 +43,8 @@ draft_github_release() {
 }
 
 configure_git() {
-  git config --global user.email "accounts@hasura.io"
-  git config --global user.name "Hasura Bot"
+  git config --global user.email "build@hasura.io"
+  git config --global user.name "hasura-bot"
 }
 
 send_pr_to_repo() {
