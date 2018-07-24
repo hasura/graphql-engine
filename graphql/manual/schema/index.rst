@@ -21,6 +21,7 @@ See:
   Relationships/connections <relationships>
   views
   using-existing-database
-  How schema generation works <how-it-works>
-  Export GraphQL schema <export-graphql-schema>
+  sql-functions
   Customise with schema stitching <schema-stitching>
+  Export GraphQL schema <export-graphql-schema>
+  How schema generation works <how-it-works>

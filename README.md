@@ -4,7 +4,7 @@ This documentation project is built using [Sphinx](http://www.sphinx-doc.org/en/
 
 To contribute, please raise PRs to the project.
 
-The Sphinx documentation files are written using the RST markup language. Here is a 
+Sphinx documentation files are written in the RST markup language. Here is a 
 [guide to the RST markup language](http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html).
 
 **To run docs locally:**

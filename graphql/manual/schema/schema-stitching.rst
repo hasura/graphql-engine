@@ -6,7 +6,7 @@ Schema stitching is the process of creating a single GraphQL schema from multipl
 
 If you need to add custom business logic or customize your GraphQL schema then we recommend using schema stitching.
 
-These are 2 common use-cases:
+Here are 2 common use cases:
 
 - Fetch data from sources that are not in the database (eg: a weather API)
 - Customize mutations (eg: running validations before inserts)
