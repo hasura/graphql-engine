@@ -41,6 +41,8 @@ import {
   PERM_TOGGLE_COLUMN,
   PERM_TOGGLE_ALL_COLUMNS,
   PERM_ALLOW_ALL,
+  PERM_TOGGLE_ENABLE_LIMIT,
+  PERM_TOGGLE_MODIFY_LIMIT,
   PERM_TOGGLE_ALLOW_UPSERT,
   PERM_CUSTOM_CHECKED,
   PERM_REMOVE_ACCESS,
@@ -280,6 +282,27 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ...updatePermissionsState(
             modifyState.permissionsState,
             'allow_upsert',
+            action.data
+          ),
+        },
+      };
+
+    case PERM_TOGGLE_ENABLE_LIMIT:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          limitEnabled: true,
+        },
+      };
+
+    case PERM_TOGGLE_MODIFY_LIMIT:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...updatePermissionsState(
+            modifyState.permissionsState,
+            'limit',
             action.data
           ),
         },

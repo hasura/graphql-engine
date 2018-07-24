@@ -8,6 +8,8 @@ export const PERM_SET_FILTER_SAME_AS = 'ModifyTable/PERM_SET_FILTER_SAME_AS';
 export const PERM_TOGGLE_COLUMN = 'ModifyTable/PERM_TOGGLE_COLUMN';
 export const PERM_TOGGLE_ALL_COLUMNS = 'ModifyTable/PERM_TOGGLE_ALL_COLUMNS';
 export const PERM_ALLOW_ALL = 'ModifyTable/PERM_ALLOW_ALL';
+export const PERM_TOGGLE_ENABLE_LIMIT = 'ModifyTable/PERM_TOGGLE_ENABLE_LIMIT';
+export const PERM_TOGGLE_MODIFY_LIMIT = 'ModifyTable/PERM_TOGGLE_MODIFY_LIMIT';
 export const PERM_TOGGLE_ALLOW_UPSERT = 'ModifyTable/PERM_TOGGLE_ALLOW_UPSERT';
 export const PERM_CUSTOM_CHECKED = 'ModifyTable/PERM_CUSTOM_CHECKED';
 
@@ -49,6 +51,14 @@ const _permRemoveAccess = () => ({ type: PERM_REMOVE_ACCESS });
 const permToggleAllowUpsert = checked => ({
   type: PERM_TOGGLE_ALLOW_UPSERT,
   data: checked,
+});
+const permToggleEnableLimit = checked => ({
+  type: PERM_TOGGLE_ENABLE_LIMIT,
+  data: checked,
+});
+const permToggleModifyLimit = limit => ({
+  type: PERM_TOGGLE_MODIFY_LIMIT,
+  data: limit,
 });
 const permCustomChecked = () => ({ type: PERM_CUSTOM_CHECKED });
 
@@ -218,6 +228,8 @@ export {
   permChangePermissions,
   permAllowAll,
   permToggleAllowUpsert,
+  permToggleEnableLimit,
+  permToggleModifyLimit,
   permCustomChecked,
   toggleColumn,
   toggleAllColumns,
