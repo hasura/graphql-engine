@@ -3,7 +3,7 @@ registry := hasura
 version  := $(shell ../scripts/get-version.sh)
 
 stack_resolver := lts-11.15
-packager_ver := 1.1
+packager_ver := 1.2
 project_dir := $(shell pwd)
 build_dir := $(project_dir)/$(shell stack --system-ghc path --dist-dir)/build
 

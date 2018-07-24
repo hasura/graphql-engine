@@ -177,7 +177,6 @@ const createWsClient = (url, headers) => {
     websocketProtocol = 'wss';
   }
   const headersFinal = getHeadersAsJSON(headers);
-  setTimeout(() => null, 500);
   const graphqlUrl = `${websocketProtocol}://${url.split('//')[1]}`;
   const client = new SubscriptionClient(graphqlUrl, {
     connectionParams: {
@@ -185,6 +184,7 @@ const createWsClient = (url, headers) => {
         ...headersFinal,
       },
     },
+    reconnect: true,
   });
   return client;
 };
