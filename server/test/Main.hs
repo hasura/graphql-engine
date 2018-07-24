@@ -42,11 +42,7 @@ resetStateTx = do
 
 ravenApp :: L.LoggerCtx -> PGQ.PGPool -> IO Application
 ravenApp loggerCtx pool = do
-<<<<<<< HEAD
-  let corsCfg = CorsConfigG "*" True  -- cors is disabled
-=======
   let corsCfg = CorsConfigG "*" False -- cors is enabled
->>>>>>> master
   -- spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
   mkWaiApp Q.Serializable Nothing loggerCtx pool AMNoAuth corsCfg True -- no access key and no webhook
 
@@ -67,12 +63,7 @@ main = do
   specs <- mkSpecs
   loggerCtx <- L.mkLoggerCtx L.defaultLoggerSettings
   -- run the tests
-<<<<<<< HEAD
-  withArgs [] $ hspecWith defaultConfig {configFormatter = Just progress} $
-    with (ravenApp loggerCtx pool) specs
-=======
   withArgs [] $ hspecWith defaultConfig $ with (ravenApp loggerCtx pool) specs
->>>>>>> master
 
   where
     initialise :: Q.PGPool -> IO ()
