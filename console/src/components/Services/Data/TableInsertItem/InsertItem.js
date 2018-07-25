@@ -486,6 +486,7 @@ class InsertItem extends Component {
                     }
                   }
                 }}
+                data-test="clear-button"
               >
                 Clear
               </button>

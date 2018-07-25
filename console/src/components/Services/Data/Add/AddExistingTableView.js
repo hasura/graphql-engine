@@ -79,12 +79,14 @@ class AddExistingTableView extends Component {
                 onChange={e => {
                   dispatch(setTableName(e.target.value));
                 }}
+                data-test="existing-table"
               />
               <hr />
               <input
                 value="Add"
                 type="submit"
                 className={'btn ' + styles.yellow_button}
+                data-test="add-existing-table-button"
               />
             </form>
             <div />

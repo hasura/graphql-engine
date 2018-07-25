@@ -110,8 +110,35 @@ export const Movetocolumn = () => {
   cy.get(getElementFromAlias(`edit-${getColName(1)}`)).click();
 };
 
-export const passMTDeleteCol = () => {
+export const failMCWithWrongDefaultValue = () => {
   cy.get(getElementFromAlias(`edit-${getColName(0)}`)).click();
+  cy.get(getElementFromAlias('edit-col-default')).type('abcd');
+  cy.get(getElementFromAlias('save-button')).click();
+};
+
+export const passMCWithRightDefaultValue = () => {
+  cy.get(getElementFromAlias('edit-col-default'))
+    .clear()
+    .type('1234');
+  cy.get(getElementFromAlias('save-button')).click();
+};
+
+export const passCreateForeignKey = () => {
+  cy.get(getElementFromAlias('edit-col-unique')).select('True');
+  cy.get(getElementFromAlias('foreign-key-checkbox')).check();
+  cy.get(getElementFromAlias('ref-table')).select(getTableName(0, testName));
+  cy.get(getElementFromAlias('ref-col')).select(getColName(0));
+  cy.get(getElementFromAlias('save-button')).click();
+  cy.wait(500);
+};
+
+export const passRemoveForeignKey = () => {
+  cy.get(getElementFromAlias('remove-constraint-button')).click();
+};
+
+export const passMTDeleteCol = () => {
+  // cy.get(getElementFromAlias(`edit-${getColName(0)}`)).click();
+  // cy.wait(500);
   cy.get(getElementFromAlias('remove-button')).click();
   cy.on('window:alert', str => {
     expect(str === 'Are you sure you want to delete?').to.be.true;
