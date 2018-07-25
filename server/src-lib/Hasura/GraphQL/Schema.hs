@@ -90,6 +90,30 @@ qualTableToName = G.Name <$> \case
   QualifiedTable (SchemaName "public") tn -> getTableTxt tn
   QualifiedTable sn tn -> getSchemaTxt sn <> "_" <> getTableTxt tn
 
+isTableEligible :: QualifiedTable -> Bool
+isTableEligible = isGraphQLConform . qualTableToName
+
+fieldFltr :: FieldInfo -> Bool
+fieldFltr = \case
+  FIColumn (PGColInfo col _) -> isColEligible col
+  FIRelationship (RelInfo rn _ _ remTab _) -> isRelEligible rn remTab
+  where
+    isColEligible = isGraphQLConform . G.Name . getPGColTxt
+    isRelEligible rn rt = isGraphQLConform (G.Name $ getRelTxt rn)
+                          && isTableEligible rt
+
+toSafeFieldInfos :: FieldInfoMap -> [FieldInfo]
+toSafeFieldInfos = filter fieldFltr . Map.elems
+
+safePartitionFieldInfoMap :: FieldInfoMap -> ([PGColInfo], [RelInfo])
+safePartitionFieldInfoMap = partitionFieldInfos . toSafeFieldInfos
+
+mkSafeConstraints :: [TableConstraint] -> [TableConstraint]
+mkSafeConstraints = filter isSafe
+  where
+    isSafe (TableConstraint _ n) =
+      isGraphQLConform $ G.Name $ getConstraintTxt n
+
 mkCompExpName :: PGColType -> G.Name
 mkCompExpName pgColTy =
   G.Name $ T.pack (show pgColTy) <> "_comparison_exp"
@@ -882,7 +906,7 @@ getRootFldsRole' tn constraints fields insM selM updM delM =
     mFlds = mapFromL (either _fiName _fiName . snd) $ catMaybes
             [ getInsDet <$> insM, getSelDet <$> selM
             , getUpdDet <$> updM, getDelDet <$> delM]
-    colInfos = fst $ partitionFieldInfos $ Map.elems fields
+    colInfos = fst $ safePartitionFieldInfoMap fields
     getInsDet (vn, hdrs) =
       (OCInsert tn vn (map pgiName colInfos) hdrs, Right $ mkInsMutFld tn constraints)
     getUpdDet (updCols, updFltr, hdrs) =
@@ -903,6 +927,7 @@ getRootFldsRole' tn constraints fields insM selM updM delM =
 
 -- gets all the selectable fields (cols and rels) of a
 -- table for a role
+
 getSelFlds
   :: (MonadError QErr m)
   => TableCache
@@ -912,7 +937,7 @@ getSelFlds
   -> RoleName -> SelPermInfo
   -> m [SelField]
 getSelFlds tableCache fields role selPermInfo =
-  fmap catMaybes $ forM (Map.elems fields) $ \case
+  fmap catMaybes $ forM (toSafeFieldInfos fields) $ \case
     FIColumn pgColInfo ->
       return $ fmap Left $ bool Nothing (Just pgColInfo) $
       Set.member (pgiName pgColInfo) allowedCols
@@ -945,7 +970,7 @@ mkGCtxRole tableCache tn fields constraints role permInfo = do
       rootFlds = getRootFldsRole tn constraints fields permInfo
   return (tyAgg, rootFlds)
   where
-    colInfos = fst $ partitionFieldInfos $ Map.elems fields
+    colInfos = fst $ safePartitionFieldInfoMap fields
     filterColInfos allowedSet =
       filter ((`Set.member` allowedSet) . pgiName) colInfos
 
@@ -974,14 +999,15 @@ mkGCtxMapTable
   -> TableInfo
   -> m (Map.HashMap RoleName (TyAgg, RootFlds))
 mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints) = do
-  m <- Map.traverseWithKey (mkGCtxRole tableCache tn fields constraints) rolePerms
+  m <- Map.traverseWithKey (mkGCtxRole tableCache tn fields safeConstraints) rolePerms
   let adminCtx = mkGCtxRole' tn (Just colInfos)
-                 (Just selFlds) (Just colInfos) (Just ()) constraints
+                 (Just selFlds) (Just colInfos) (Just ()) safeConstraints
   return $ Map.insert adminRole (adminCtx, adminRootFlds) m
   where
-    colInfos = fst $ partitionFieldInfos $ Map.elems fields
+    safeConstraints = mkSafeConstraints constraints
+    colInfos = fst $ safePartitionFieldInfoMap fields
     allCols = map pgiName colInfos
-    selFlds = flip map (Map.elems fields) $ \case
+    selFlds = flip map (toSafeFieldInfos fields) $ \case
       FIColumn pgColInfo     -> Left pgColInfo
       FIRelationship relInfo -> Right (relInfo, noFilter)
     noFilter = S.BELit True
@@ -999,9 +1025,12 @@ mkGCtxMap
   => TableCache -> m (Map.HashMap RoleName GCtx)
 mkGCtxMap tableCache = do
   typesMapL <- mapM (mkGCtxMapTable tableCache) $
-               filter (not . tiSystemDefined) $ Map.elems tableCache
+               filter tableFltr $ Map.elems tableCache
   let typesMap = foldr (Map.unionWith mappend) Map.empty typesMapL
   return $ Map.map (uncurry mkGCtx) typesMap
+  where
+    tableFltr ti = not (tiSystemDefined ti)
+                   && isTableEligible (tiName ti)
 
 mkGCtx :: TyAgg -> RootFlds -> GCtx
 mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) =

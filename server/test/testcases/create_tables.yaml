@@ -25,3 +25,10 @@ query:
             id SERIAL PRIMARY KEY,
             details JSONB NOT NULL
           )
+    - type: run_sql
+      args:
+        sql: |
+          CREATE TABLE dollar$test (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL
+          )
