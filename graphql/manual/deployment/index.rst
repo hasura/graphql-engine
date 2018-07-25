@@ -28,5 +28,6 @@ to configure Hasura GraphQL engine for your production environment.
    Using Heroku <heroku/index>
    Using Docker <docker/index>
    securing-graphql-endpoint
+   updating
    postgres-permissions
    GraphQL engine server configuration <graphql-engine-flags/index>

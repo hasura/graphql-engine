@@ -140,3 +140,4 @@ Advanced:
    :titlesonly:
 
    Securing your GraphQL endpoint <securing-graphql-endpoint>
+   Updating <updating>

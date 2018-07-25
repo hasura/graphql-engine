@@ -94,3 +94,4 @@ Advanced:
 
    Securing your GraphQL endpoint <securing-graphql-endpoint>
    using-existing-heroku-database
+   Updating <updating>
