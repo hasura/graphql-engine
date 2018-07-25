@@ -51,7 +51,8 @@ const typeDescriptionDict = convertListToDictUsingKV(
 );
 
 class AddTable extends Component {
-  componentWillMount() {
+  constructor(props) {
+    super(props);
     this.props.dispatch(setDefaults());
     const { columns, dispatch } = this.props;
     columns.map((column, i) => {
@@ -65,6 +66,7 @@ class AddTable extends Component {
       }
     });
   }
+
   componentWillUnmount() {
     this.props.dispatch(setDefaults());
   }

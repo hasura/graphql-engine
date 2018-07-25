@@ -168,9 +168,6 @@ class FilterQuery extends Component {
     dispatch(setDefaultQuery(this.props.curQuery));
   }
 
-  //  componentWillReceiveProps (nextProps) {
-  //  }
-
   render() {
     const { dispatch, whereAnd, tableSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
     const styles = require('./FilterQuery.scss');

@@ -63,15 +63,17 @@ const genRow = (row, headings) => {
 };
 
 class ViewTable extends Component {
-  componentWillMount() {
+  constructor(props) {
+    super(props);
     // Initialize this table
+    console.log(props);
+    this.state = {
+      dispatch: props.dispatch,
+      tableName: props.tableName,
+    };
+    // this.state.dispatch = props.dispatch;
+    // this.state.tableName = props.tablename;
     const dispatch = this.props.dispatch;
-    /*
-    dispatch(setTable(this.props.tableName));
-    dispatch(vSetDefaults(this.props.tableName));
-    dispatch(vMakeRequest());
-    dispatch(fetchTableComment(this.props.tableName));
-    */
     Promise.all([
       dispatch(setTable(this.props.tableName)),
       dispatch(vSetDefaults(this.props.tableName)),
@@ -80,9 +82,10 @@ class ViewTable extends Component {
     ]);
   }
 
-  componentWillReceiveProps(nextProps) {
-    const dispatch = this.props.dispatch;
-    if (nextProps.tableName !== this.props.tableName) {
+  static getDerivedStateFromProps(nextProps, prevState) {
+    console.log(nextProps, prevState);
+    const dispatch = prevState.dispatch;
+    if (nextProps.tableName !== prevState.tableName) {
       dispatch(setTable(nextProps.tableName));
       dispatch(vSetDefaults(nextProps.tableName));
       dispatch(vMakeRequest());
@@ -97,7 +100,7 @@ class ViewTable extends Component {
     );
   }
 
-  componentWillUpdate() {
+  getSnapshotBeforeUpdate() {
     this.shouldScrollBottom =
       window.innerHeight ===
       document.body.offsetHeight - document.body.scrollTop;

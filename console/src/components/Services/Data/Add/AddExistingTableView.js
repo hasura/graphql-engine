@@ -8,7 +8,8 @@ import {
 } from './AddExistingTableViewActions';
 
 class AddExistingTableView extends Component {
-  componentWillMount() {
+  constructor(props) {
+    super(props);
     this.props.dispatch(setDefaults());
   }
 
