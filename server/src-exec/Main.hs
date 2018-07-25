@@ -6,23 +6,25 @@ module Main where
 import           Ops
 
 import           Data.Time.Clock            (getCurrentTime)
-import qualified Network.Wai.Handler.Warp   as Warp
 import           Options.Applicative
 import           System.Environment         (lookupEnv)
 import           System.Exit                (exitFailure)
 
+import qualified Control.Concurrent         as C
 import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Char8      as BC
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Text                  as T
 import qualified Data.Yaml                  as Y
+import qualified Network.Wai.Handler.Warp   as Warp
 
-import           Hasura.Logging             (mkLoggerCtx, defaultLoggerSettings)
+import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.Server.App          (mkWaiApp)
 import           Hasura.Server.Auth         (AuthMode (..))
+import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
 
 import qualified Database.PG.Query          as Q
@@ -109,6 +111,7 @@ main =  do
   loggerCtx <- mkLoggerCtx defaultLoggerSettings
   case ravenMode of
     ROServe (ServeOptions port cp isoL mRootDir mAccessKey corsCfg mWebHook enableConsole) -> do
+
       mFinalAccessKey <- considerEnv "HASURA_GRAPHQL_ACCESS_KEY" mAccessKey
       mFinalWebHook <- considerEnv "HASURA_GRAPHQL_AUTH_HOOK" mWebHook
       am <- either ((>> exitFailure) . putStrLn) return $
@@ -123,7 +126,12 @@ main =  do
       app <- mkWaiApp isoL mRootDir loggerCtx pool am finalCorsCfg enableConsole
       let warpSettings = Warp.setPort port Warp.defaultSettings
                          -- Warp.setHost "*" Warp.defaultSettings
+
+      -- start a background thread to check for updates
+      void $ C.forkIO checkForUpdates
+
       Warp.runSettings warpSettings app
+
     ROExport -> do
       res <- runTx ci fetchMetadata
       either ((>> exitFailure) . printJSON) printJSON res

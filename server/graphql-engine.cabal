@@ -126,6 +126,7 @@ library
                      , Hasura.Server.Query
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
+                     , Hasura.Server.CheckUpdates
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache

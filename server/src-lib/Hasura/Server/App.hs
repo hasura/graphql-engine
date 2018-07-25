@@ -54,6 +54,7 @@ import           Hasura.SQL.Types
 import qualified Hasura.Logging                         as L
 import           Hasura.Server.Auth                     (AuthMode, getUserInfo)
 
+
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
 
@@ -311,7 +312,9 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
       serveApiConsole consoleHTML
     else maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
 
-    get "v1/version" getVersion
+    get "v1/version" $ do
+      uncurry setHeader jsonHeader
+      lazyBytes $ encode $ object [ "version" .= currentVersion ]
 
     get    ("v1/template" <//> var) tmpltGetOrDeleteH
     post   ("v1/template" <//> var) tmpltPutOrPostH

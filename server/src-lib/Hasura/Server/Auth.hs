@@ -76,8 +76,7 @@ userInfoFromWebhook manager urlT reqHeaders = do
 
   where
     filteredHeaders = flip filter reqHeaders $ \(n, _) ->
-      n /= "Content-Length" && n /= "User-Agent" && n /= "Host"
-      && n /= "Origin" && n /= "Referer"
+      n `notElem` ["Content-Length", "User-Agent", "Host", "Origin", "Referer"]
 
     validateStatus statusCode
       | statusCode == N.status200 = return ()
