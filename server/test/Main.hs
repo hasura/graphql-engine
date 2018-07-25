@@ -40,36 +40,28 @@ resetStateTx = do
   Q.unitQE PGQ.PGExecErrTx "DROP SCHEMA public CASCADE" () False
   Q.unitQE PGQ.PGExecErrTx "CREATE SCHEMA public" () False
 
-ravenApp :: L.LoggerCtx -> PGQ.PGPool -> IO Application
-ravenApp loggerCtx pool = do
+ravenApp :: L.LoggerCtx -> PGQ.PGPool -> AuthMode -> IO Application
+ravenApp loggerCtx pool authMode = do
   let corsCfg = CorsConfigG "*" False -- cors is enabled
   -- spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
-  mkWaiApp Q.Serializable Nothing loggerCtx pool AMNoAuth corsCfg True -- no access key and no webhook
+  mkWaiApp Q.Serializable Nothing loggerCtx pool authMode corsCfg True
 
-main :: IO ()
-main = do
-  -- parse CLI flags for connection params
-  ConnectionParams rci cp <- parseArgs
-  -- form the postgres connection info
-  ci <- either ((>> exitFailure) . (putStrLn . connInfoErrModifier))
-    return $ mkConnInfo Nothing rci
-  -- intialize the pool
-  pool <- Q.initPGPool ci cp
+runTests :: PGQ.PGPool -> IO Application -> IO ()
+runTests pool app = do
   -- reset state in the database
   void $ liftIO $ runExceptT $ Q.runTx pool defTxMode resetStateTx
   -- intialize state for graphql-engine in the database
   liftIO $ initialise pool
   -- generate the test specs
   specs <- mkSpecs
-  loggerCtx <- L.mkLoggerCtx L.defaultLoggerSettings
   -- run the tests
-  withArgs [] $ hspecWith defaultConfig $ with (ravenApp loggerCtx pool) specs
+  withArgs [] $ hspecWith defaultConfig $ with app specs
 
   where
     initialise :: Q.PGPool -> IO ()
-    initialise pool = do
+    initialise pool' = do
       currentTime <- getCurrentTime
-      res <- runExceptT $ Q.runTx pool defTxMode $ initCatalogSafe currentTime
+      res <- runExceptT $ Q.runTx pool' defTxMode $ initCatalogSafe currentTime
       either ((>> exitFailure) . (BLC.putStrLn . J.encode)) putStrLn res
 
 
@@ -81,3 +73,23 @@ parseArgs = execParser opts
     opts = info (helper <*> optParser)
            ( fullDesc <>
              header "graphql-engine-test")
+
+main :: IO ()
+main = do
+  -- parse CLI flags for connection params
+  ConnectionParams rci cp <- parseArgs
+  -- form the postgres connection info
+  ci <- either ((>> exitFailure) . (putStrLn . connInfoErrModifier))
+    return $ mkConnInfo Nothing rci
+  -- intialize the pool and the logger
+  pool <- Q.initPGPool ci cp
+  loggerCtx <- L.mkLoggerCtx L.defaultLoggerSettings
+
+  let am = AMAccessKeyAndHook "abcd" "https://us-central1-hasura-io.cloudfunctions.net/graphql-engine-webhook-test"
+      noHookApp = ravenApp loggerCtx pool AMNoAuth
+      appWHook  = ravenApp loggerCtx pool am
+
+  putStrLn "Running tests without webhook"
+  runTests pool noHookApp
+  putStrLn "Running tests with webhook"
+  runTests pool appWHook
