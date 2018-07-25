@@ -32,7 +32,7 @@ Query/Subscription syntax
      - Name of the table/object
    * - argument
      - false
-     - ArgExp_
+     - Argument_
      - one or more of filter criteria, instructions for sort order or pagination
 
 **E.g. QUERY**:
@@ -95,7 +95,7 @@ E.g.
       }
    }
 
-.. _ArgExp:
+.. _Argument:
 
 Argument
 ^^^^^^^^
@@ -115,7 +115,7 @@ WhereExp
 
    where: BoolExp_
 
-.. _BoolExp:
+.. _BoolExp_:
 
 BoolExp
 """""""
