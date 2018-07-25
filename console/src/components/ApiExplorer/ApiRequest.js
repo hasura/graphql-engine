@@ -248,6 +248,7 @@ class ApiRequest extends Component {
               onFocus={this.handleFocus}
               onBlur={this.handleBlur}
               type="text"
+              data-test={`header-key-${i}`}
             />
           </td>
           <td
@@ -272,6 +273,7 @@ class ApiRequest extends Component {
               onChange={this.onHeaderValueChanged.bind(this)}
               onFocus={this.handleFocus}
               onBlur={this.handleBlur}
+              data-test={`header-value-${i}`}
               type={
                 header.key === 'X-Hasura-Access-Key' &&
                 !this.state.accessKeyVisible

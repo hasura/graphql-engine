@@ -116,6 +116,7 @@ const ColumnEditor = ({
                   <button
                     className="btn btn-danger btn-sm"
                     onClick={onDeleteFK}
+                    data-test="remove-constraint-button"
                   >
                     {' '}
                     Remove Constraint{' '}
@@ -240,6 +241,7 @@ const ColumnEditor = ({
               className="input-sm form-control"
               defaultValue={c.is_nullable === 'NO' ? 'false' : 'true'}
               disabled={isPrimaryKey}
+              data-test="edit-col-nullable"
             >
               <option value="true">True</option>
               <option value="false">False</option>
@@ -254,6 +256,7 @@ const ColumnEditor = ({
               className="input-sm form-control"
               defaultValue={isUnique.toString()}
               disabled={isPrimaryKey}
+              data-test="edit-col-unique"
             >
               <option value="true">True</option>
               <option value="false">False</option>
@@ -269,6 +272,7 @@ const ColumnEditor = ({
               defaultValue={c.column_default ? c.column_default : null}
               type="text"
               disabled={isPrimaryKey}
+              data-test="edit-col-default"
             />
           </div>
         </div>
@@ -483,6 +487,7 @@ class ModifyTable extends Component {
             dispatch(untrackTableSql(tableName));
           }
         }}
+        data-test="untrack-table"
       >
         Untrack Table
       </button>

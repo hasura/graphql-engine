@@ -236,6 +236,7 @@ const RawSQL = ({
                     data: !isMigrationChecked,
                   });
                 }}
+                data-test="raw-sql-migration-check"
               />
               This is a migration
               <OverlayTrigger placement="right" overlay={migrationTip}>
@@ -256,6 +257,7 @@ const RawSQL = ({
                       data: !isTableTrackChecked,
                     });
                   }}
+                  data-test="raw-sql-track-check"
                 />
                 Track table
                 <OverlayTrigger placement="right" overlay={trackTableTip}>
@@ -327,7 +329,11 @@ const RawSQL = ({
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={onModalClose}>Cancel</Button>
-          <Button onClick={onConfirmNoMigration} bsStyle="primary">
+          <Button
+            onClick={onConfirmNoMigration}
+            bsStyle="primary"
+            data-test="not-migration-confirm"
+          >
             Yes, i confirm
           </Button>
         </Modal.Footer>
