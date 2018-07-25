@@ -2,7 +2,7 @@ Query filters or search queries
 ===============================
 
 You can use the ``where`` argument in your queries to filter the results based on a fields’s values (including in a
-nested object’s fields). You can even use multiple filters in the same ``where`` *clause* using the ``_and`` or the
+nested object’s fields). You can even use multiple filters in the same ``where`` clause using the ``_and`` or the
 ``_or`` operators.
 
 For e.g. Fetch data for an author whose name is "Sidney":
@@ -383,13 +383,13 @@ pattern matching on string/Text fields.
 
 Example: _like
 ^^^^^^^^^^^^^^
-Fetch a list of articles titles begin with “ve”:
+Fetch a list of articles whose titles contain the word “amet”:
 
 .. graphiql::
   :query:
     query {
       article(
-        where: {title: {_like: "ve%"}}
+        where: {title: {_like: "%amet%"}}
       ) {
         id
         title
@@ -397,19 +397,22 @@ Fetch a list of articles titles begin with “ve”:
     }
   :response:
     {
-      "data": {
-        "article": [
-          {
-            "id": 4,
-            "title": "vestibulum ac est"
-          },
-          {
-            "id": 15,
-            "title": "vel dapibus at"
-          }
-        ]
-      }
-    }
+    "data": {
+      "article": [
+        {
+          "id": 1,
+          "title": "sit amet"
+        },
+        {
+          "id": 3,
+          "title": "amet justo morbi"
+        },
+        {
+          "id": 9,
+          "title": "sit amet"
+        }
+      ]
+
 
 Example: _similar
 ^^^^^^^^^^^^^^^^^

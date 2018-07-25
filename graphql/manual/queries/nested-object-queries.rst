@@ -1,12 +1,12 @@
 Nested object queries
 =====================
 
-You can use the 1:1 (object)  or 1:m (array) relationships defined in your schema (in the API-console) to make a
+You can use the 1:1 (object)  or 1:m (array) relationships defined in your schema (using the console) to make a
 nested query i.e. fetch data for a type along with data from a nested or related type.
 
 Query using a 1:many relationship
 ---------------------------------
-The following is an example of nested object query using the 1:many or an array relationship between an author and
+The following is an example of nested object query using the 1:many or an ``array relationship`` between an author and
 articles.
 
 Example: Nested object query over a 1:many relationship
@@ -81,7 +81,7 @@ Fetch a list of authors and a nested list of the each author’s articles:
 
 Query using a 1:1 relationship
 ------------------------------
-The following is an example of nested object query using the 1:1 or an object relationship between an article and an
+The following is an example of nested object query using the 1:1 or an ``object relationship`` between an article and an
 author.
 
 Example: Nested object query over a 1:1 relationship
@@ -130,5 +130,5 @@ Fetch a list of articles and the name of each article’s author:
 
 .. note::
     
-    The name of the nested object is the same as the name of the `1:many` or `1:1` relationship configured in the
+    The name of the nested object is the same as the name of the object or array relationship configured in the
     console

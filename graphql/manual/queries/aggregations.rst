@@ -2,12 +2,13 @@ Aggregations in queries
 =======================
 GraphQL’s query language for a "select" query is designed to be simple yet powerful. There will still be certain
 queries that you cannot express with a GraphQL query. For example, getting the average rating of articles by an
-author. To express complex queries like aggregations (or custom joins etc.), use SQL, which is designed for this
+author.
+
+To express complex queries like aggregations (or custom joins etc.), use SQL, which is designed for this
 purpose. If you can express your aggregation query in SQL, define a view with it and then use the newly created
 type in the GraphQL query.
 
-Let’s see an example of how to do that with our reference schema, assuming we also have a table ``article`` with a
-field ``rating``
+Let’s see an example of how to do this with our author/article schema:
 
 Create a view
 -------------
@@ -25,8 +26,8 @@ Add a relationship
 ------------------
 Relationships are generally defined using foreign key constraints. However, you cannot define foreign key constraints
 on/to views. So, in these cases, we can define a relationship without using a foreign key as described
-`here <https://docs.platform.hasura.io/0.15/platform/manual/data/relationships/create-relationships.html>`__ (create
-an object relationship, ``avg_rating``, by mapping ``author:id -> author_average_rating:id``).
+:doc:`here <../schema/relationships>`. Create an object relationship, ``avg_rating``, by mapping
+``author:id -> author_average_rating:id``.
 
 Query using the relationship
 ----------------------------

@@ -16,7 +16,7 @@ types, ``query_root`` and ``mutation_root`` respectively. For e.g. the auto-gene
       where: author_bool_exp
       limit: Int
       offset: Int
-      order_by: author_order_by_exp
+      order_by:  [author_order_by!]
     ): [author]
 
 **Note:** If the table is in a Postgres schema other than ``public`` the query field will be of the format
