@@ -65,12 +65,53 @@ export const failCTDuplicateColumns = () => {
   validateCT(getTableName(0, testName), 'failure');
 };
 
+export const failCTDuplicatePrimaryKey = () => {
+  //   Set second column
+  cy.get(getElementFromAlias('column-1'))
+    .clear()
+    .type(getColName(1));
+  cy.get(getElementFromAlias('col-type-1')).select('serial');
+  //   Set primary key
+  cy.get(getElementFromAlias('primary-key-select-0')).select('0');
+  cy.get(getElementFromAlias('primary-key-select-1')).select('0');
+  cy.on('window:alert', str => {
+    expect(
+      str ===
+        `You key [${getColName(
+          0
+        )}] is already present in the current set of primary keys.`
+    ).to.be.true;
+  });
+  //   Check if the route didn't change
+  cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
+  //   Validate
+  validateCT(getTableName(0, testName), 'failure');
+};
+
+export const failCTWrongDefaultValue = () => {
+  //   Set second column
+  cy.get(getElementFromAlias('column-1'))
+    .clear()
+    .type(getColName(1));
+  cy.get(getElementFromAlias('col-type-1')).select('integer');
+  cy.get(getElementFromAlias('col-default-1')).type('qwerty');
+  //   Set primary key
+  cy.get(getElementFromAlias('primary-key-select-0')).select('0');
+  //   Click on create
+  cy.get(getElementFromAlias('table-create')).click();
+  //   Check if the route didn't change
+  cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
+  //   Validate
+  validateCT(getTableName(0, testName), 'failure');
+};
+
 export const passCT = () => {
   //   Set second column
   cy.get(getElementFromAlias('column-1'))
     .clear()
     .type(getColName(1));
   cy.get(getElementFromAlias('col-type-1')).select('serial');
+  cy.get(getElementFromAlias('col-default-1')).clear();
   //   Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   //  Click on create
@@ -84,6 +125,31 @@ export const passCT = () => {
   cy.get(getElementFromAlias(getTableName(0, testName)));
   //   Validate
   validateCT(getTableName(0, testName), 'success');
+};
+
+export const failAddExistingTable = () => {
+  cy.visit(`${baseUrl}/data/schema/public/existing-table-view/add`);
+  cy.get(getElementFromAlias('existing-table')).type(getTableName(0, testName));
+  cy.get(getElementFromAlias('add-existing-table-button')).click();
+  cy.url().should(
+    'eq',
+    `${baseUrl}/data/schema/public/existing-table-view/add`
+  );
+  cy.get(getElementFromAlias(getTableName(0, testName))).click();
+  cy.get(getElementFromAlias('table-modify')).click();
+  cy.get(getElementFromAlias('untrack-table')).click();
+  cy.on('window:confirm', () => true);
+  cy.wait(5000);
+};
+
+export const passAddExistingTable = () => {
+  cy.visit(`${baseUrl}/data/schema/public/existing-table-view/add`);
+  cy.get(getElementFromAlias('existing-table')).type(getTableName(0, testName));
+  cy.get(getElementFromAlias('add-existing-table-button')).click();
+  cy.url().should(
+    'eq',
+    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
+  );
 };
 
 export const failCTDuplicateTable = () => {

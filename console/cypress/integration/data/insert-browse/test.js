@@ -17,7 +17,9 @@ import {
   passBISort,
   passBIFilterQueryEq,
   passEditButton,
+  passSearchTables,
   passCloneButton,
+  checkViewRelationship,
   passDeleteRow,
 } from './spec';
 
@@ -36,6 +38,7 @@ const setup = () => {
 export const runInsertBrowseTests = () => {
   describe('Table: Browse and Insert', () => {
     it('Create a table with fields of all data types', passBICreateTable);
+    it('Search for tables', passSearchTables);
     it('Check Insert Route', checkInsertRoute);
     it('Fails when entered wrong data type', failBIWrongDataType);
     it('Insert 20 rows', passBIInsert20Rows);
@@ -50,6 +53,7 @@ export const runInsertBrowseTests = () => {
     it('Check edit button', passEditButton);
     it('Check for clone clear', passCloneButton);
     it('Delete the row', passDeleteRow);
+    it('Check view relationship', checkViewRelationship);
     it('Delete test table', deleteBITestTable);
   });
 };

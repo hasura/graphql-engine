@@ -10,6 +10,10 @@ import {
   passMTDeleteTableCancel,
   passMTDeleteCol,
   passMTDeleteTable,
+  passMCWithRightDefaultValue,
+  failMCWithWrongDefaultValue,
+  passCreateForeignKey,
+  passRemoveForeignKey,
 } from './spec';
 
 import { testMode } from '../../../helpers/common';
@@ -35,6 +39,10 @@ export const runModifyTableTests = () => {
     it('Fails to add column without column name', failMTWithoutColName);
     it('Fails without type selected', failMTWithoutColType);
     it('Add a column', passMTAddColumn);
+    it('Fail modify with wrong default value', failMCWithWrongDefaultValue);
+    it('Pass modify with wrong default value', passMCWithRightDefaultValue);
+    it('Pass create foreign-key', passCreateForeignKey);
+    it('Pass remove foreign-key', passRemoveForeignKey);
     it('Delete the column', passMTDeleteCol);
     it('Delete Table Cancel', passMTDeleteTableCancel);
     it('Delete table', passMTDeleteTable);
