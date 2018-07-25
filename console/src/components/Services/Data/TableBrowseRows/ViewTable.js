@@ -83,7 +83,6 @@ class ViewTable extends Component {
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
-    console.log(nextProps, prevState);
     const dispatch = prevState.dispatch;
     if (nextProps.tableName !== prevState.tableName) {
       dispatch(setTable(nextProps.tableName));
