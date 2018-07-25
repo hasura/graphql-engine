@@ -32,7 +32,7 @@ The following are examples to create relationships:
     .. image:: ../../../img/graphql/manual/schema/add-1-1-relationship.png
 
     Please note that the name of the relationship will also be used to reference the nested object. For e.g. we can now
-    run a nested object query that is based on just this one ``object relationship`` i.e. fetch a list of articles and each
+    run a nested object query that is based on this ``object relationship`` i.e. fetch a list of articles and each
     article's author:
 
     .. graphiql::
@@ -175,8 +175,8 @@ The following are examples to create relationships:
 
       Now click on the *Add* button to create the relationship.
 
-      We can now run a nested object query that is based on just this ``object relationship``
-      i.e. fetch a list of authors with the average rating of theor articles:
+      We can now run a nested object query that is based on this ``object relationship``
+      i.e. fetch a list of authors with the average rating of their articles:
 
       .. graphiql::
         :query:

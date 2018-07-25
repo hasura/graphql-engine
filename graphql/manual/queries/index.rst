@@ -19,7 +19,7 @@ types, ``query_root`` and ``mutation_root`` respectively. For e.g. the auto-gene
       order_by:  [author_order_by!]
     ): [author]
 
-**Note:** If the table is in a Postgres schema other than ``public`` the query field will be of the format
+**Note:** If a table is in any Postgres schema other than the ``public`` schema the query field will be of the format
 ``<schema_name>_<table_name>``.
 
 You can explore the entire schema and the available queries using the GraphiQL interface in the Hasura console.

@@ -7,6 +7,8 @@ upstream. The Hasura GraphQL engine supports subscriptions for all kind of queri
 
 You can turn any query into a subscription by simply replacing ``query`` with ``subscription`` as the operation type.
 
+Example:
+
 .. graphiql::
   :view_only: true
   :query:
