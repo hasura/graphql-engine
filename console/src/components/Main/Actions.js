@@ -59,13 +59,13 @@ const loadServerVersion = () => dispatch => {
       let parsedVersion;
       try {
         parsedVersion = JSON.parse(data);
+        dispatch({
+          type: SET_SERVER_VERSION_SUCCESS,
+          data: parsedVersion.version,
+        });
       } catch (e) {
         console.error(e);
       }
-      dispatch({
-        type: SET_SERVER_VERSION_SUCCESS,
-        data: parsedVersion.version,
-      });
     },
     error => {
       console.error(error);
@@ -89,13 +89,13 @@ const checkServerUpdates = () => (dispatch, getState) => {
       let parsedVersion;
       try {
         parsedVersion = JSON.parse(data);
+        dispatch({
+          type: SET_LATEST_SERVER_VERSION_SUCCESS,
+          data: parsedVersion.latest,
+        });
       } catch (e) {
         console.error(e);
       }
-      dispatch({
-        type: SET_LATEST_SERVER_VERSION_SUCCESS,
-        data: parsedVersion.latest,
-      });
     },
     error => {
       console.error(error);
