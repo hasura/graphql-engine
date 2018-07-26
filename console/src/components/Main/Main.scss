@@ -9,6 +9,44 @@
   // display: flex;
 }
 
+.updateBannerWrapper {
+    position: fixed;
+    right: 0;
+    bottom: 0px;
+    width: 100%;
+    z-index: 3;
+    text-align: center;
+    background-color: #FFC627;
+    color: #43495a;
+    padding: 10px 10px;
+  .updateBanner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    a {
+      color: #43495a;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+  }
+  .updateBannerClose {
+    cursor: pointer;
+    margin-left: 10px;
+  }
+  .versionUpdateText {
+    font-weight: bold;
+    padding: 0px 5px;
+  }
+  .updateLink {
+    font-weight: bold;
+  }
+  .middot {
+    line-height: 0;
+    font-size: 20px;
+    padding: 0px 10px;
+  }
+}
+
 .add_btn {
   margin: 10px 0;
 }

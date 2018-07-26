@@ -7,6 +7,8 @@ const defaultState = {
   accessKeyInput: null,
   loginInProgress: false,
   loginError: false,
+  serverVersion: null,
+  latestServerVersion: null,
 };
 
 export default defaultState;

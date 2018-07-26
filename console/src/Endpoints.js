@@ -12,6 +12,8 @@ const Endpoints = {
   schemaChange: `${baseUrl}/v1/query`,
   query: `${baseUrl}/v1/query`,
   rawSQL: `${baseUrl}/v1/query`,
+  version: `${baseUrl}/v1/version`,
+  updateCheck: 'https://releases.hasura.io/graphql-engine',
   hasuractlMigrate: `${hasuractlUrl}/apis/migrate`,
   hasuractlMetadata: `${hasuractlUrl}/apis/metadata`,
   hasuractlMigrateSettings: `${hasuractlUrl}/apis/migrate/settings`,

@@ -3,6 +3,7 @@ import globals from 'Globals';
 import defaultState from './State';
 import Endpoints from '../../Endpoints';
 import requestAction from '../../utils/requestAction';
+import requestActionPlain from '../../utils/requestActionPlain';
 import { globalCookiePolicy } from '../../Endpoints';
 import { saveAccessKeyState } from '../AppState';
 import {
@@ -13,6 +14,11 @@ import { changeRequestHeader } from '../ApiExplorer/Actions';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
+const SET_SERVER_VERSION_SUCCESS = 'Main/SET_SERVER_VERSION_SUCCESS';
+const SET_SERVER_VERSION_ERROR = 'Main/SET_SERVER_VERSION_ERROR';
+const SET_LATEST_SERVER_VERSION_SUCCESS =
+  'Main/SET_LATEST_SERVER_VERSION_SUCCESS';
+const SET_LATEST_SERVER_VERSION_ERROR = 'Main/SET_LATEST_SERVER_VERSION_ERROR';
 const UPDATE_MIGRATION_STATUS_SUCCESS = 'Main/UPDATE_MIGRATION_STATUS_SUCCESS';
 const UPDATE_MIGRATION_STATUS_ERROR = 'Main/UPDATE_MIGRATION_STATUS_ERROR';
 const HASURACTL_URL_ENV = 'Main/HASURACTL_URL_ENV';
@@ -38,6 +44,63 @@ const loadMigrationStatus = () => dispatch => {
       SET_MIGRATION_STATUS_SUCCESS,
       SET_MIGRATION_STATUS_ERROR
     )
+  );
+};
+
+const loadServerVersion = () => dispatch => {
+  const url = Endpoints.version;
+  const options = {
+    method: 'GET',
+    credentials: globalCookiePolicy,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  return dispatch(requestActionPlain(url, options)).then(
+    data => {
+      let parsedVersion;
+      try {
+        parsedVersion = JSON.parse(data);
+      } catch (e) {
+        console.error(e);
+      }
+      dispatch({
+        type: SET_SERVER_VERSION_SUCCESS,
+        data: parsedVersion.version,
+      });
+    },
+    error => {
+      console.error(error);
+      dispatch({ type: SET_SERVER_VERSION_ERROR, data: null });
+    }
+  );
+};
+
+const checkServerUpdates = () => (dispatch, getState) => {
+  const url =
+    Endpoints.updateCheck +
+    '?agent=console&version=' +
+    getState().main.serverVersion;
+  const options = {
+    method: 'GET',
+    credentials: globalCookiePolicy,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  return dispatch(requestActionPlain(url, options)).then(
+    data => {
+      let parsedVersion;
+      try {
+        parsedVersion = JSON.parse(data);
+      } catch (e) {
+        console.error(e);
+      }
+      dispatch({
+        type: SET_LATEST_SERVER_VERSION_SUCCESS,
+        data: parsedVersion.latest,
+      });
+    },
+    error => {
+      console.error(error);
+      dispatch({ type: SET_LATEST_SERVER_VERSION_ERROR, data: null });
+    }
   );
 };
 
@@ -149,6 +212,27 @@ const mainReducer = (state = defaultState, action) => {
         ...state,
         migrationMode: action.data.migration_mode === 'true',
       };
+    case SET_SERVER_VERSION_SUCCESS:
+      return {
+        ...state,
+        serverVersion: action.data,
+      };
+    case SET_SERVER_VERSION_ERROR:
+      return {
+        ...state,
+        serverVersion: null,
+      };
+
+    case SET_LATEST_SERVER_VERSION_SUCCESS:
+      return {
+        ...state,
+        latestServerVersion: action.data,
+      };
+    case SET_LATEST_SERVER_VERSION_ERROR:
+      return {
+        ...state,
+        latestServerVersion: null,
+      };
     case UPDATE_MIGRATION_STATUS_SUCCESS:
       return {
         ...state,
@@ -204,4 +288,6 @@ export {
   LOGIN_IN_PROGRESS,
   LOGIN_ERROR,
   validateLogin,
+  loadServerVersion,
+  checkServerUpdates,
 };
