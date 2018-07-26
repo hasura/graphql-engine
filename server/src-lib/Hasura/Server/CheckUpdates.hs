@@ -18,6 +18,7 @@ import qualified Network.HTTP.Client   as H
 import qualified Network.Wreq          as Wreq
 import qualified System.Log.FastLogger as FL
 
+import           Hasura.Logging        (LoggerCtx (..))
 import           Hasura.Prelude
 import           Hasura.Server.Version (currentVersion)
 
@@ -29,9 +30,8 @@ newtype UpdateInfo
 
 $(A.deriveJSON (A.aesonDrop 2 A.snakeCase) ''UpdateInfo)
 
-checkForUpdates :: IO ()
-checkForUpdates = do
-  loggerSet <- FL.newStdoutLoggerSet FL.defaultBufSize
+checkForUpdates :: LoggerCtx -> IO ()
+checkForUpdates (LoggerCtx loggerSet _ _) =
   forever $ do
     resp <- try $ Wreq.get $ T.unpack url
     case resp of
@@ -39,11 +39,12 @@ checkForUpdates = do
       Right bs -> do
         UpdateInfo latestVersion <- decodeResp $ bs L.^. Wreq.responseBody
         when (latestVersion /= currentVersion) $
-          FL.pushLogStrLn loggerSet $ FL.toLogStr ("Update: A new version is available: " <> latestVersion)
+          FL.pushLogStrLn loggerSet $ FL.toLogStr $ updateMsg latestVersion
 
     C.threadDelay aDay
 
   where
+    updateMsg v = "Update: A new version is available: " <> v
     url = "https://releases.hasura.io/graphql-engine?agent=server&version="
           <> currentVersion
     aDay = 86400 * 1000 * 1000

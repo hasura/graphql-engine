@@ -128,7 +128,7 @@ main =  do
                          -- Warp.setHost "*" Warp.defaultSettings
 
       -- start a background thread to check for updates
-      void $ C.forkIO checkForUpdates
+      void $ C.forkIO $ checkForUpdates loggerCtx
 
       Warp.runSettings warpSettings app
 
