@@ -622,4 +622,34 @@
     }
   </script>
 
+  <!-- javascript to replace latest tag -->
+  <script type="text/javascript">
+    (function() {
+
+      var request = new XMLHttpRequest();
+      request.open('GET', 'https://releases.hasura.io/graphql-engine?agent=server&version=v1.0.0-alpha09', true);
+
+      request.onload = function() {
+        if (request.status >= 200 && request.status < 400) {
+          // Success!
+          var version = JSON.parse(request.responseText).latest;
+          console.log(version);
+          var elements = document.getElementsByClassName('github-release-tag');
+          [].forEach.call(elements, function (e) {
+            e.innerHTML = version;
+          });
+        } else {
+          // We reached our target server, but it returned an error
+        }
+      };
+
+      request.onerror = function() {
+        // There was a connection error of some sort
+      };
+
+      request.send();
+
+    })();
+  </script>
+
 {% endblock %}
