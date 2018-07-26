@@ -91,15 +91,15 @@ qualTableToName = G.Name <$> \case
   QualifiedTable sn tn -> getSchemaTxt sn <> "_" <> getTableTxt tn
 
 isTableEligible :: QualifiedTable -> Bool
-isTableEligible = isGraphQLConform . qualTableToName
+isTableEligible = isValidName . qualTableToName
 
 fieldFltr :: FieldInfo -> Bool
 fieldFltr = \case
   FIColumn (PGColInfo col _) -> isColEligible col
   FIRelationship (RelInfo rn _ _ remTab _) -> isRelEligible rn remTab
   where
-    isColEligible = isGraphQLConform . G.Name . getPGColTxt
-    isRelEligible rn rt = isGraphQLConform (G.Name $ getRelTxt rn)
+    isColEligible = isValidName . G.Name . getPGColTxt
+    isRelEligible rn rt = isValidName (G.Name $ getRelTxt rn)
                           && isTableEligible rt
 
 toSafeFieldInfos :: FieldInfoMap -> [FieldInfo]
@@ -112,7 +112,7 @@ mkSafeConstraints :: [TableConstraint] -> [TableConstraint]
 mkSafeConstraints = filter isSafe
   where
     isSafe (TableConstraint _ n) =
-      isGraphQLConform $ G.Name $ getConstraintTxt n
+      isValidName $ G.Name $ getConstraintTxt n
 
 mkCompExpName :: PGColType -> G.Name
 mkCompExpName pgColTy =

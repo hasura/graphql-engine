@@ -15,7 +15,7 @@ module Hasura.GraphQL.Utils
   , mkMapWith
   , onLeft
   , showNames
-  , isGraphQLConform
+  , isValidName
   ) where
 
 import           Hasura.RQL.Types
@@ -91,8 +91,8 @@ showNames names =
   T.intercalate ", " $ map G.unName $ toList names
 
 -- Ref: http://facebook.github.io/graphql/June2018/#sec-Names
-isGraphQLConform :: G.Name -> Bool
-isGraphQLConform =
+isValidName :: G.Name -> Bool
+isValidName =
   isJust . R.matchRegex regex . T.unpack . G.unName
   where
     regex = R.mkRegex "^[_a-zA-Z][_a-zA-Z0-9]*$"
