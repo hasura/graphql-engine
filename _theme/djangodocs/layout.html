@@ -626,34 +626,30 @@
     });
   </script>
 
-  <!-- javascript to replace latest tag -->
+  <!-- replace latest release tag -->
   <script type="text/javascript">
-    (function() {
+    $(document).ready( function() {
+      // if latest release tag elements present, replace with latest release tag
+      if ($('.latest-release-tag').length > 0) {
+        const releaseUrl = 'https://releases.hasura.io/graphql-engine?agent=docs.hasura.io';
 
-      var request = new XMLHttpRequest();
-      request.open('GET', 'https://releases.hasura.io/graphql-engine?agent=server&version=v1.0.0-alpha09', true);
+        promise_ajax(releaseUrl, null, 'GET')
+          .then(function (response) {
+            const data = JSON.parse(response);
+            const latest_version = data.latest;
 
-      request.onload = function() {
-        if (request.status >= 200 && request.status < 400) {
-          // Success!
-          var version = JSON.parse(request.responseText).latest;
-          console.log(version);
-          var elements = document.getElementsByClassName('github-release-tag');
-          [].forEach.call(elements, function (e) {
-            e.innerHTML = version;
+            const targets = document.getElementsByClassName('latest-release-tag');
+            for (let i = 0; i < targets.length; i++) {
+              const target = targets[i];
+
+              target.innerHTML = latest_version;
+            }
+          })
+          .catch(function (err) {
+            console.log(err);
           });
-        } else {
-          // We reached our target server, but it returned an error
-        }
-      };
-
-      request.onerror = function() {
-        // There was a connection error of some sort
-      };
-
-      request.send();
-
-    })();
+      }
+    });
   </script>
 
 {% endblock %}

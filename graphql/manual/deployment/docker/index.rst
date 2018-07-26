@@ -75,7 +75,7 @@ Edit the ``--database-url`` flag command, so that you can connect to your Postgr
 
    #! /bin/bash
    docker run -d -p 8080:8080 \
-          hasura/graphql-engine:v1.0.0-alpha08 \
+          hasura/graphql-engine:latest \
           graphql-engine \
           --database-url postgres://username:password@hostname:port/dbname \
    serve --enable-console
@@ -95,7 +95,7 @@ Examples of `database-url`:
 
       #! /bin/bash
       docker run -d -p 8080:8080 \
-             hasura/graphql-engine:v1.0.0-alpha08 \
+             hasura/graphql-engine:latest \
              graphql-engine \
              --database-url postgres://username:password@hostname:port/dbname \
       serve --enable-console
@@ -140,4 +140,4 @@ Advanced:
    :titlesonly:
 
    Securing your GraphQL endpoint <securing-graphql-endpoint>
-   Updating <updating>
+   Updating GraphQL engine <updating>
