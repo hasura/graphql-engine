@@ -66,7 +66,7 @@ Skip this step if you already have a project directory.
 
   hasura init --directory my-project --endpoint http://my-graphql.herokuapp.com
 
-Step 3: Open the console via the CLI & disable postgres schema changes
+Step 3: Open the console via the CLI & disable Postgres schema changes
 ----------------------------------------------------------------------
 
 Instead of using the console at ``http://my-grapqhl.herokuapp.com/console`` you should now use the console by running:

@@ -22,8 +22,8 @@ By default, it connects to the primary database in your app which is available a
 
    FROM hasura/graphql-engine:latest
 
-   # Change $DATABASE_URL to your heroku postgres URL if you're not using
-   # the primary postgres instance in your app
+   # Change $DATABASE_URL to your Heroku Postgres URL if you're not using
+   # the primary Postgres instance in your app
    CMD graphql-engine \
      --database-url $DATABASE_URL \
      serve \
@@ -58,7 +58,7 @@ You should change this name to whatever you'd like your app to be called.
 Step 2: Create the Heroku Postgres Addon
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Create the postgres addon in your heroku app.
+Create the Postgres addon in your Heroku app.
 
 .. code-block:: none
 

@@ -19,13 +19,13 @@ Deploy Hasura on Heroku by clicking on this button:
   :class: no-shadow
   :target: https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku
 
-Follow the heroku instructions to deploy, check if the Hasura console loads up when you **View app** and then head
+Follow the Heroku instructions to deploy, check if the Hasura console loads up when you **View app** and then head
 to the **Manage App** screen on your Heroku dashboard.
 
-Step 1: Remove the existing postgres addon in the app
+Step 1: Remove the existing Postgres addon in the app
 -----------------------------------------------------
 
-Head to your Heroku dashboard and delete the postgres addon:
+Head to your Heroku dashboard and delete the Postgres addon:
 
 .. image:: ../../../../img/graphql/manual/deployment/remove-heroku-postgres-addon.png
 

@@ -21,21 +21,21 @@ If you already have this, then pull the latest changes (which will have the upda
    # origin is https://github.com/hasura/graphql-engine-heroku
    git pull origin master
 
-2) Attach your heroku app
+2) Attach your Heroku app
 -------------------------
 
-Let's say your heroku app is called ``hasura-heroku`` and is on ``https://hasura-heroku.herokuapp.com``.
+Let's say your Heroku app is called ``hasura-heroku`` and is on ``https://hasura-heroku.herokuapp.com``.
 Configure the git repo you cloned in step 2, to be able to push to this app.
 
 .. code-block:: bash
 
-   # Replace hasura-heroku with your heroku app's name
+   # Replace hasura-heroku with your Heroku app's name
    heroku git:remote -a hasura-heroku
 
 3) Git push to deploy the latest Hasura graphql-engine
 ------------------------------------------------------
 
-When you git push to deploy, the heroku app will get updated with the latest changes:
+When you git push to deploy, the Heroku app will get updated with the latest changes:
 
 .. code-block:: bash
 

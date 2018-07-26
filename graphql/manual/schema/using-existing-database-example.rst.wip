@@ -10,7 +10,7 @@ As a tutorial, this section will use a sample dataset that we'll import to see h
 Step 1 (optional): Import a sample dataset
 ------------------------------------------
 
-You can skip this step if your postgres database already has data.
+You can skip this step if your Postgres database already has data.
 
 Let's use the `Chinook database <https://raw.githubusercontent.com/xivSolutions/ChinookDb_Pg_Modified/pg_names/chinook_pg_serial_pk_proper_naming.sql>`_ as an example.
 

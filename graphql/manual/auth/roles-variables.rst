@@ -1,7 +1,8 @@
 Roles & Session variables
 =========================
 
-The permissions system offered by Hasura is extremely flexible and is built to capture complex use-cases conveniently.
+The permissions system offered by Hasura GraphQL engine is extremely flexible and is built to capture complex
+use-cases conveniently.
 
 Roles
 -----
@@ -97,9 +98,9 @@ While you're developing or testing, just indicate your role and your session var
 
 .. image:: ../../../img/graphql/manual/auth/dev-mode-role-header.png
 
-If you've enabled Hasura with an access key, make sure you add the ACCESS_KEY header as well. This will allow you to use Hasura
-as if you were in development/testing mode. This is useful when you want to test against a Hasura instance that is already serving
-a production application.
+If you've enabled Hasura GraphQL engine with an access key, make sure you add the ACCESS_KEY header as well.
+This will allow you to use Hasura GraphQL engine as if you were in development/testing mode. This is useful when
+you want to test against a Hasura GraphQL engine instance that is already serving a production application.
 
 .. image:: ../../../img/graphql/manual/auth/dev-mode-role-header-access-key.png
 
@@ -114,10 +115,7 @@ session token (authorization token, JWT, cookie etc.) that your app normally use
 
 Read more about :doc:`configuring webhook authentication for Hasura<webhook>`.
 
-There are 4 different types of operations for which you can define permissions on a table.
+There are 4 different types of operations for which you can define permissions on a table, ie: Select, Insert,
+Update and Delete.
 
-- Select permissions
-- Insert permissions
-- Update permissions
-- Delete permissions
 

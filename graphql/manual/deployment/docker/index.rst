@@ -68,7 +68,7 @@ Step 3: Run the hasura docker container
 
 You'll see a sample docker run command at ``my-project/install-scripts/docker-run.sh``.
 
-Edit the ``--database-url`` flag command, so that you can connect to your postgres instance.
+Edit the ``--database-url`` flag command, so that you can connect to your Postgres instance.
 
 .. code-block:: bash
    :emphasize-lines: 5
@@ -87,7 +87,7 @@ Examples of `database-url`:
 
 .. note:: Docker networking
 
-   If your postgres database is running on localhost:5432, add the ``--net=host`` flag.
+   If your Postgres database is running on localhost:5432, add the ``--net=host`` flag.
    This is what your command might look like:
 
    .. code-block:: bash
