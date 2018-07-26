@@ -18,7 +18,7 @@
     text-align: center;
     background-color: #FFC627;
     color: #43495a;
-    padding: 10px 10px;
+    padding: 14.5px 10px;
   .updateBanner {
     display: flex;
     align-items: center;
@@ -31,7 +31,8 @@
   }
   .updateBannerClose {
     cursor: pointer;
-    margin-left: 10px;
+    position: absolute;
+    right: 10px;
   }
   .versionUpdateText {
     font-weight: bold;
