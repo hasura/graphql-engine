@@ -533,93 +533,97 @@
 
   <!-- graphiql -->
   <script type="text/javascript">
-    // graphql query fetcher
-    const graphQLFetcher = function(endpoint) {
-      endpoint = endpoint || "{{ GRAPHIQL_DEFAULT_ENDPOINT }}";
+    $(document).ready( function() {
+      // graphql query fetcher
+      const graphQLFetcher = function(endpoint) {
+        endpoint = endpoint || "{{ GRAPHIQL_DEFAULT_ENDPOINT }}";
 
-      return function(graphQLParams) {
-        const params = {
-          method: 'post',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(graphQLParams),
-          credentials: 'include'
-        };
+        return function(graphQLParams) {
+          const params = {
+            method: 'post',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(graphQLParams),
+            credentials: 'include'
+          };
 
-        return fetch(endpoint, params)
-          .then(function (response) {
-            return response.text();
-          })
-          .then(function (responseBody) {
-            try {
-              return JSON.parse(responseBody);
-            } catch (error) {
-              return responseBody;
-            }
-          });
-      }
-    };
-
-    // create GraphiQL components and embed into HTML
-    const setupGraphiQL = function() {
-      if (typeof(React) === 'undefined' || typeof(ReactDOM) === 'undefined' || typeof(GraphiQL) === 'undefined') {
-        return;
-      }
-
-      const targets = document.getElementsByClassName('graphiql');
-
-      for (let i = 0; i < targets.length; i++) {
-        const target = targets[i];
-
-        const endpoint = target.getElementsByClassName("endpoint")[0].innerHTML.trim();
-        const query = target.getElementsByClassName("query")[0].innerHTML.trim();
-        const response = target.getElementsByClassName("response")[0].innerHTML.trim();
-
-        const graphiQLElement = React.createElement(GraphiQL, {
-          fetcher: graphQLFetcher(endpoint),
-          schema: null, // TODO: pass undefined if introspection supported
-          query: query,
-          response: response
-        });
-
-        ReactDOM.render(graphiQLElement, target);
-      }
-    };
-
-    // if graphiql elements present, load react/graphiql js files and setup graphiql
-    if ($('.graphiql').length > 0) {
-      const loadingStatus = {'react': false, 'reactDom': false, 'graphiQL': false};
-
-      const checkLoading = function(loadedFile) {
-        return function () {
-          loadingStatus[loadedFile] = true;
-
-          // return if all files not yet loaded
-          for (var file in loadingStatus) {
-            if (!loadingStatus[file]) {
-              return;
-            }
-          }
-
-          setupGraphiQL();
+          return fetch(endpoint, params)
+            .then(function (response) {
+              return response.text();
+            })
+            .then(function (responseBody) {
+              try {
+                return JSON.parse(responseBody);
+              } catch (error) {
+                return responseBody;
+              }
+            });
         }
       };
 
-      loadCss("{{ pathto('_static/graphiql/graphiql.css', 1) }}", function(){});
-      loadScript("{{ pathto('_static/react/react.min.js', 1) }}", checkLoading('react'));
-      loadScript("{{ pathto('_static/react/react-dom.min.js', 1) }}", checkLoading('reactDom'));
-      loadScript("{{ pathto('_static/graphiql/graphiql.min.js', 1) }}", checkLoading('graphiQL'));
-    }
+      // create GraphiQL components and embed into HTML
+      const setupGraphiQL = function() {
+        if (typeof(React) === 'undefined' || typeof(ReactDOM) === 'undefined' || typeof(GraphiQL) === 'undefined') {
+          return;
+        }
+
+        const targets = document.getElementsByClassName('graphiql');
+
+        for (let i = 0; i < targets.length; i++) {
+          const target = targets[i];
+
+          const endpoint = target.getElementsByClassName("endpoint")[0].innerHTML.trim();
+          const query = target.getElementsByClassName("query")[0].innerHTML.trim();
+          const response = target.getElementsByClassName("response")[0].innerHTML.trim();
+
+          const graphiQLElement = React.createElement(GraphiQL, {
+            fetcher: graphQLFetcher(endpoint),
+            schema: null, // TODO: pass undefined if introspection supported
+            query: query,
+            response: response
+          });
+
+          ReactDOM.render(graphiQLElement, target);
+        }
+      };
+
+      // if graphiql elements present, load react/graphiql js files and setup graphiql
+      if ($('.graphiql').length > 0) {
+        const loadingStatus = {'react': false, 'reactDom': false, 'graphiQL': false};
+
+        const checkLoading = function(loadedFile) {
+          return function () {
+            loadingStatus[loadedFile] = true;
+
+            // return if all files not yet loaded
+            for (var file in loadingStatus) {
+              if (!loadingStatus[file]) {
+                return;
+              }
+            }
+
+            setupGraphiQL();
+          }
+        };
+
+        loadCss("{{ pathto('_static/graphiql/graphiql.css', 1) }}", function(){});
+        loadScript("{{ pathto('_static/react/react.min.js', 1) }}", checkLoading('react'));
+        loadScript("{{ pathto('_static/react/react-dom.min.js', 1) }}", checkLoading('reactDom'));
+        loadScript("{{ pathto('_static/graphiql/graphiql.min.js', 1) }}", checkLoading('graphiQL'));
+      }
+    });
   </script>
 
   <!-- global_tabs -->
   <script type="text/javascript">
-    if ($('.global-tabs').length > 0) {
-      loadCss("{{ pathto('_static/global_tabs/global_tabs.css', 1) }}", function(){});
-      loadScript("{{ pathto('_static/global_tabs/global_tabs.js', 1) }}", function(){});
-    }
+    $(document).ready( function() {
+      if ($('.global-tabs').length > 0) {
+        loadCss("{{ pathto('_static/global_tabs/global_tabs.css', 1) }}", function(){});
+        loadScript("{{ pathto('_static/global_tabs/global_tabs.js', 1) }}", function(){});
+      }
+    });
   </script>
 
   <!-- javascript to replace latest tag -->
