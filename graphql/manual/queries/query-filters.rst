@@ -461,6 +461,7 @@ Example: Filter null values in a field
 Fetch a list of articles that have a value in the ``published_on`` field:
 
 .. graphiql::
+  :view_only: true
   :query:
     query {
       article(
