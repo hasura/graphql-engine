@@ -197,6 +197,10 @@ Text related operators :
 - ``_similar``
 - ``_nsimilar``
 
+Checking for ``null`` values :
+
+- ``_is_null`` (takes true/false as values)
+
 .. _OrderByExp:
 
 OrderByExp

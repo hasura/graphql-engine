@@ -454,7 +454,7 @@ Fetch a list of authors whose names begin with A or C (``similar`` is case-sensi
 
 Filter or check for null values
 -------------------------------
-Checking for null values is pretty straightforward using the ``_eq`` or ``_neq`` operators.
+Checking for null values is pretty straightforward using the ``_is_null`` operator.
 
 Example: Filter null values in a field
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -464,7 +464,7 @@ Fetch a list of articles that have a value in the ``published_on`` field:
   :query:
     query {
       article(
-        where: {published_on: {_neq: null}}
+        where: {published_on: {_is_null: false}}
       ) {
         id
         title
