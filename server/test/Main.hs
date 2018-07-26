@@ -3,7 +3,6 @@
 
 module Main where
 
-import           Control.Monad.Trans.Except
 import           Data.Time.Clock            (getCurrentTime)
 import           Network.Wai                (Application)
 import           Options.Applicative

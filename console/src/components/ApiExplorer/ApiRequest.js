@@ -28,9 +28,6 @@ class ApiRequest extends Component {
     this.state.bodyAllowedMethods = ['POST'];
     this.state.tabIndex = 0;
     this.timer = null;
-  }
-
-  componentWillMount() {
     if (this.props.numberOfTables !== 0) {
       const graphqlQueryInLS = window.localStorage.getItem('graphiql:query');
       if (graphqlQueryInLS && graphqlQueryInLS.indexOf('do not have') !== -1) {
