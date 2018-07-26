@@ -6,6 +6,7 @@ import globals from '../../Globals';
 import * as tooltip from './Tooltips';
 import 'react-toggle/style.css';
 import Spinner from '../Common/Spinner/Spinner';
+import { loadServerVersion, checkServerUpdates } from './Actions';
 
 const semver = require('semver');
 
@@ -15,24 +16,31 @@ class Main extends React.Component {
     this.state = {
       showBannerNotification: false,
     };
-    let isUpdateAvailable = false;
-    try {
-      isUpdateAvailable = semver.gt(
-        this.props.latestServerVersion,
-        this.props.serverVersion
-      );
-      const isClosedBefore = window.localStorage.getItem(
-        this.props.latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
-      );
-      if (isClosedBefore === 'true') {
-        isUpdateAvailable = false;
-        this.state.showBannerNotification = false;
-      } else {
-        this.state.showBannerNotification = isUpdateAvailable;
-      }
-    } catch (e) {
-      console.error(e);
-    }
+  }
+  componentDidMount() {
+    const { dispatch } = this.props;
+    dispatch(loadServerVersion()).then(() => {
+      dispatch(checkServerUpdates()).then(() => {
+        let isUpdateAvailable = false;
+        try {
+          isUpdateAvailable = semver.gt(
+            this.props.latestServerVersion,
+            this.props.serverVersion
+          );
+          const isClosedBefore = window.localStorage.getItem(
+            this.props.latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
+          );
+          if (isClosedBefore === 'true') {
+            isUpdateAvailable = false;
+            this.setState({ showBannerNotification: false });
+          } else {
+            this.setState({ showBannerNotification: isUpdateAvailable });
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      });
+    });
   }
   closeUpdateBanner() {
     const { latestServerVersion } = this.props;

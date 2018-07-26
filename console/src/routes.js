@@ -7,11 +7,7 @@ import { App, Main, PageNotFound } from 'components';
 
 import { dataRouter } from './components/Services/Data';
 
-import {
-  loadMigrationStatus,
-  loadServerVersion,
-  checkServerUpdates,
-} from './components/Main/Actions';
+import { loadMigrationStatus } from './components/Main/Actions';
 
 import { composeOnEnterHooks } from 'utils/router';
 
@@ -41,27 +37,6 @@ const routes = store => {
     return;
   };
 
-  const requireServerVersion = (nextState, replaceState, cb) => {
-    store.dispatch(loadServerVersion()).then(
-      () => {
-        store.dispatch(checkServerUpdates()).then(
-          () => {
-            cb();
-          },
-          () => {
-            cb();
-          }
-        );
-      },
-      () => {
-        alert(
-          'Not able to reach the graphql server. Check if hasura console server is running or if graphql server is running and try again'
-        );
-      }
-    );
-    return;
-  };
-
   // loads schema
   const dataRouterUtils = dataRouter(connect, store, composeOnEnterHooks);
   const requireSchema = dataRouterUtils.requireSchema;
@@ -73,11 +48,7 @@ const routes = store => {
       <Route
         path=""
         component={Main}
-        onEnter={composeOnEnterHooks([
-          requireSchema,
-          requireMigrationStatus,
-          requireServerVersion,
-        ])}
+        onEnter={composeOnEnterHooks([requireSchema, requireMigrationStatus])}
       >
         <Route path="">
           <IndexRoute component={generatedApiExplorer(connect)} />
