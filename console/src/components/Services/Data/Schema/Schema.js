@@ -29,7 +29,8 @@ import globals from '../../../../Globals';
 const appPrefix = globals.urlPrefix + '/data';
 
 class Schema extends Component {
-  componentWillMount() {
+  constructor(props) {
+    super(props);
     // Initialize this table
     const dispatch = this.props.dispatch;
     dispatch(fetchSchemaList());
