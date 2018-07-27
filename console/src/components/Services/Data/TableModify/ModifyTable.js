@@ -4,6 +4,11 @@ import { Link } from 'react-router';
 import { appPrefix } from '../push';
 import TableHeader from '../TableCommon/TableHeader';
 import {
+  activateCommentEdit,
+  updateCommentInput,
+  saveTableCommentSql,
+} from './ModifyActions';
+import {
   fkRefTableChange,
   fkLColChange,
   fkRColChange,
@@ -25,7 +30,11 @@ import {
   convertListToDictUsingKV,
   convertListToDict,
 } from '../../../../utils/data';
-import { setTable } from '../DataActions';
+import {
+  setTable,
+  fetchTableComment,
+  fetchColumnComment,
+} from '../DataActions';
 import { showErrorNotification } from '../Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
 
@@ -44,11 +53,18 @@ const ColumnEditor = ({
   tableName,
   dispatch,
   currentSchema,
+  columnComment,
 }) => {
   //  eslint-disable-line no-unused-vars
   const c = column;
   const styles = require('./Modify.scss');
-  let [inullable, iunique, idefault, itype] = [null, null, null, null];
+  let [inullable, iunique, idefault, icomment, itype] = [
+    null,
+    null,
+    null,
+    null,
+    null,
+  ];
   // NOTE: the datatypes is filtered of serial and bigserial where hasuraDatatype === null
   const refTable = fkAdd.refTable;
   const tableSchema = allSchemas.find(t => t.table_name === tableName);
@@ -215,6 +231,7 @@ const ColumnEditor = ({
             inullable.value,
             iunique.value,
             idefault.value,
+            icomment.value,
             column
           );
         }}
@@ -276,6 +293,18 @@ const ColumnEditor = ({
             />
           </div>
         </div>
+        <div className={`${styles.display_flex} form-group`}>
+          <label className="col-xs-3 text-right">Comment</label>
+          <div className="col-xs-6">
+            <input
+              ref={n => (icomment = n)}
+              className="input-sm form-control"
+              defaultValue={columnComment ? columnComment.result[1] : null}
+              type="text"
+              data-test="edit-col-comment"
+            />
+          </div>
+        </div>
         {checkExistingForeignKey()}
         <div className="row">
           <button
@@ -309,9 +338,10 @@ const ColumnEditor = ({
 
 class ModifyTable extends Component {
   componentDidMount() {
-    this.props.dispatch({ type: RESET });
-
-    this.props.dispatch(setTable(this.props.tableName));
+    const { dispatch } = this.props;
+    dispatch({ type: RESET });
+    dispatch(setTable(this.props.tableName));
+    dispatch(fetchTableComment(this.props.tableName));
   }
 
   render() {
@@ -323,6 +353,9 @@ class ModifyTable extends Component {
       fkAdd,
       migrationMode,
       currentSchema,
+      tableComment,
+      columnComment,
+      tableCommentEdit,
     } = this.props;
     const styles = require('./Modify.scss');
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
@@ -340,7 +373,7 @@ class ModifyTable extends Component {
       let colEditor = null;
       let bg = '';
       const colName = c.column_name;
-      const onSubmit = (type, nullable, unique, def, column) => {
+      const onSubmit = (type, nullable, unique, def, comment, column) => {
         // dispatch(saveColumnChangesSql(tableName, colName, type, nullable, def, column));
         if (fkAdd.fkCheckBox === true) {
           dispatch(fkLColChange(column.column_name));
@@ -352,6 +385,7 @@ class ModifyTable extends Component {
               nullable,
               unique,
               def,
+              comment,
               column
             )
           );
@@ -364,6 +398,7 @@ class ModifyTable extends Component {
               nullable,
               unique,
               def,
+              comment,
               column
             )
           );
@@ -394,6 +429,7 @@ class ModifyTable extends Component {
               dispatch={dispatch}
               allSchemas={allSchemas}
               currentSchema={currentSchema}
+              columnComment={columnComment}
             />
           );
         } else {
@@ -407,6 +443,7 @@ class ModifyTable extends Component {
               dispatch={dispatch}
               allSchemas={allSchemas}
               currentSchema={currentSchema}
+              columnComment={columnComment}
             />
           );
         }
@@ -453,10 +490,23 @@ class ModifyTable extends Component {
               <h5 className={styles.padd_bottom}>
                 <button
                   className={`${styles.add_mar_small} btn btn-xs btn-default`}
-                  onClick={() => {
-                    dispatch({ type: TOGGLE_ACTIVE_COLUMN, column: colName });
-                  }}
                   data-test={`edit-${colName}`}
+                  onClick={() => {
+                    if (activeEdit.column === colName) {
+                      // just closing the column
+                      dispatch({ type: TOGGLE_ACTIVE_COLUMN, column: colName });
+                    } else {
+                      // fetch column comment
+                      dispatch(fetchColumnComment(tableName, colName)).then(
+                        () => {
+                          dispatch({
+                            type: TOGGLE_ACTIVE_COLUMN,
+                            column: colName,
+                          });
+                        }
+                      );
+                    }
+                  }}
                 >
                   {btnText}
                 </button>
@@ -476,7 +526,6 @@ class ModifyTable extends Component {
     let colUniqueInput;
     let colDefaultInput;
 
-    // check if platform version is >= 0.15.33 and show untrack
     const untrackBtn = (
       <button
         type="submit"
@@ -493,6 +542,76 @@ class ModifyTable extends Component {
       </button>
     );
 
+    const editCommentClicked = () => {
+      dispatch(activateCommentEdit(true, tableComment));
+    };
+    const commentEdited = e => {
+      dispatch(updateCommentInput(e.target.value));
+    };
+    const commentEditSave = () => {
+      dispatch(saveTableCommentSql(true));
+    };
+    const commentEditCancel = () => {
+      dispatch(activateCommentEdit(false, null));
+    };
+    const commentText = tableComment ? tableComment.result[1] : null;
+    let commentHtml = (
+      <div className={styles.add_pad_bottom}>
+        <div className={styles.commentText}>Add a comment</div>
+        <div onClick={editCommentClicked} className={styles.commentEdit}>
+          <i className="fa fa-edit" />
+        </div>
+      </div>
+    );
+    if (commentText && !tableCommentEdit.enabled) {
+      commentHtml = (
+        <div>
+          <div className={styles.commentText + ' alert alert-warning'}>
+            {commentText}
+          </div>
+          <div onClick={editCommentClicked} className={styles.commentEdit}>
+            <i className="fa fa-edit" />
+          </div>
+        </div>
+      );
+    } else if (tableCommentEdit.enabled) {
+      commentHtml = (
+        <div className={styles.mar_bottom}>
+          <input
+            onChange={commentEdited}
+            className={'form-control ' + styles.commentInput}
+            type="text"
+            value={tableCommentEdit.value}
+            defaultValue={tableComment.result[1]}
+          />
+          <div
+            onClick={commentEditSave}
+            className={
+              styles.display_inline +
+              ' ' +
+              styles.add_pad_left +
+              ' ' +
+              styles.comment_action
+            }
+          >
+            Save
+          </div>
+          <div
+            onClick={commentEditCancel}
+            className={
+              styles.display_inline +
+              ' ' +
+              styles.add_pad_left +
+              ' ' +
+              styles.comment_action
+            }
+          >
+            Cancel
+          </div>
+        </div>
+      );
+    }
+
     // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
@@ -506,6 +625,7 @@ class ModifyTable extends Component {
         <br />
         <div className={`container-fluid ${styles.padd_left_remove}`}>
           <div className={`col-xs-9 ${styles.padd_left_remove}`}>
+            {commentHtml}
             <h4 className={styles.subheading_text}>Columns</h4>
             {columnEditors}
             <div className={styles.activeEdit}>
@@ -636,6 +756,8 @@ ModifyTable.propTypes = {
   currentSchema: PropTypes.string.isRequired,
   allSchemas: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
+  tableComment: PropTypes.string.isRequired,
+  columnComment: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
   fkAdd: PropTypes.object.isRequired,
   relAdd: PropTypes.object.isRequired,
@@ -651,6 +773,8 @@ const mapStateToProps = (state, ownProps) => ({
   allSchemas: state.tables.allSchemas,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
+  tableComment: state.tables.tableComment,
+  columnComment: state.tables.columnComment,
   ...state.tables.modify,
 });
 

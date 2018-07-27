@@ -38,49 +38,43 @@ const executeSQL = isMigration => (dispatch, getState) => {
   const isCascadeChecked = getState().rawSQL.isCascadeChecked;
 
   let url = Endpoints.rawSQL;
+  const schemaChangesUp = [
+    {
+      type: 'run_sql',
+      args: { sql: sql, cascade: isCascadeChecked },
+    },
+  ];
+  // check if track view enabled
+  if (getState().rawSQL.isTableTrackChecked) {
+    const regExp = /create (view|table) (\S+)/i;
+    const matches = sql.match(regExp);
+    let trackViewName = matches ? matches[2] : '';
+    if (trackViewName.indexOf('.') !== -1) {
+      trackViewName = matches[2].split('.')[1];
+    }
+    const trackQuery = {
+      type: 'add_existing_table_or_view',
+      args: {
+        name: trackViewName.trim(),
+        schema: currentSchema,
+      },
+    };
+    if (trackViewName !== '') {
+      schemaChangesUp.push(trackQuery);
+    }
+  }
   let requestBody = {
-    type: 'run_sql',
-    args: { sql: sql, cascade: isCascadeChecked },
+    type: 'bulk',
+    args: schemaChangesUp,
   };
   // check if its a migration and send to hasuractl migrate
   if (isMigration) {
     url = migrateUrl;
-    const schemaChangesUp = [
-      {
-        type: 'run_sql',
-        args: { sql: sql, cascade: isCascadeChecked },
-      },
-    ];
-    // check if track view enabled
-    if (getState().rawSQL.isTableTrackChecked) {
-      const regExp = /create (view|table) (\S+)/i;
-      const matches = sql.match(regExp);
-      let trackViewName = matches[2];
-      if (trackViewName.indexOf('.') !== -1) {
-        trackViewName = matches[2].split('.')[1];
-      }
-      const trackQuery = {
-        type: 'add_existing_table_or_view',
-        args: {
-          name: trackViewName.trim(),
-          schema: currentSchema,
-        },
-      };
-      schemaChangesUp.push(trackQuery);
-    }
-    const upQuery = {
-      type: 'bulk',
-      args: schemaChangesUp,
-    };
-    const downQuery = {
-      type: 'bulk',
-      args: [],
-    };
     const migrationName = 'run_sql_migration';
     requestBody = {
       name: migrationName,
-      up: upQuery.args,
-      down: downQuery.args,
+      up: schemaChangesUp,
+      down: [],
     };
   }
   const options = {
@@ -201,7 +195,11 @@ const rawSQLReducer = (state = defaultState, action) => {
         lastSuccess: null,
       };
     case REQUEST_SUCCESS:
-      if (action.data && action.data.result_type === 'CommandOk') {
+      if (
+        action.data &&
+        action.data[0] &&
+        action.data[0].result_type === 'CommandOk'
+      ) {
         return {
           ...state,
           ongoingRequest: false,
@@ -217,8 +215,8 @@ const rawSQLReducer = (state = defaultState, action) => {
         lastError: null,
         lastSuccess: true,
         resultType: 'tuples',
-        result: action.data.result.slice(1),
-        resultHeaders: action.data.result[0],
+        result: action.data[0].result.slice(1),
+        resultHeaders: action.data[0].result[0],
       };
     case REQUEST_ERROR:
       return {

@@ -5,6 +5,7 @@ import {
   handleMigrationErrors,
   makeMigrationCall,
   LOAD_UNTRACKED_RELATIONS,
+  fetchTableComment,
 } from '../DataActions';
 import _push from '../push';
 import { SET_SQL } from '../RawSQL/Actions';
@@ -22,6 +23,8 @@ const RESET = 'ModifyTable/RESET';
 const VIEW_DEF_REQUEST_SUCCESS = 'ModifyTable/VIEW_DEF_REQUEST_SUCCESS';
 const VIEW_DEF_REQUEST_ERROR = 'ModifyTable/VIEW_DEF_REQUEST_ERROR';
 
+const TABLE_COMMENT_EDIT = 'ModifyTable/TABLE_COMMENT_EDIT';
+const TABLE_COMMENT_INPUT_EDIT = 'ModifyTable/TABLE_COMMENT_INPUT_EDIT';
 const FK_SET_REF_TABLE = 'ModifyTable/FK_SET_REF_TABLE';
 const FK_SET_L_COL = 'ModifyTable/FK_SET_L_COL';
 const FK_SET_R_COL = 'ModifyTable/FK_SET_R_COL';
@@ -431,6 +434,14 @@ const addColSql = (
 // TABLE FOREIGN KEYS
 const fkRefTableChange = refTable => ({ type: FK_SET_REF_TABLE, refTable });
 const fkReset = () => ({ type: FK_RESET });
+const activateCommentEdit = (isEnabled, value) => ({
+  type: TABLE_COMMENT_EDIT,
+  data: { enabled: isEnabled, value: value },
+});
+const updateCommentInput = value => ({
+  type: TABLE_COMMENT_INPUT_EDIT,
+  value: value,
+});
 const fkLColChange = lcol => ({ type: FK_SET_L_COL, lcol });
 const fkRColChange = rcol => ({ type: FK_SET_R_COL, rcol });
 const fkAddPair = (lcol, rcol) => ({ type: FK_ADD_PAIR, lcol, rcol });
@@ -598,6 +609,73 @@ const addFkSql = (tableName, isInsideEdit) => {
   };
 };
 
+const saveTableCommentSql = isTable => {
+  return (dispatch, getState) => {
+    const updatedComment = getState().tables.modify.tableCommentEdit
+      .editedValue;
+    const currentSchema = getState().tables.currentSchema;
+    const tableName = getState().tables.currentTable;
+
+    const commentQueryBase =
+      'COMMENT ON ' +
+      (isTable ? 'TABLE' : 'VIEW') +
+      ' ' +
+      currentSchema +
+      '.' +
+      '"' +
+      tableName +
+      '"' +
+      ' IS ';
+    const commentUpQuery = commentQueryBase + "'" + updatedComment + "'";
+
+    const commentDownQuery = commentQueryBase + 'NULL';
+    const schemaChangesUp = [
+      {
+        type: 'run_sql',
+        args: {
+          sql: commentUpQuery,
+        },
+      },
+    ];
+    const schemaChangesDown = [
+      {
+        type: 'run_sql',
+        args: {
+          sql: commentDownQuery,
+        },
+      },
+    ];
+
+    // Apply migrations
+    const migrationName =
+      'alter_table_' + currentSchema + '_' + tableName + '_update_comment';
+
+    const requestMsg = 'Updating Comment...';
+    const successMsg = 'Comment Updated';
+    const errorMsg = 'Updating comment failed';
+
+    const customOnSuccess = () => {
+      dispatch(fetchTableComment(tableName)).then(() => {
+        dispatch(activateCommentEdit(false, null));
+      });
+    };
+    const customOnError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      schemaChangesUp,
+      schemaChangesDown,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
 const isColumnUnique = (tableSchema, colName) => {
   return (
     tableSchema.unique_constraints.filter(constraint =>
@@ -613,6 +691,7 @@ const saveColumnChangesSql = (
   nullable,
   unique,
   def,
+  comment,
   column
 ) => {
   // eslint-disable-line no-unused-vars
@@ -625,9 +704,14 @@ const saveColumnChangesSql = (
     } else {
       defWithQuotes = def;
     }
+    let currentColumnComment = getState().tables.columnComment;
+    currentColumnComment = currentColumnComment
+      ? currentColumnComment.result[1]
+      : null;
     // check if column type has changed before making it part of the migration
     const originalColType = column.data_type; // "value"
     const originalColDefault = column.column_default; // null or "value"
+    const originalColComment = currentColumnComment; // null or "value"
     const originalColNullable = column.is_nullable; // "YES" or "NO"
     const originalColUnique = isColumnUnique(
       getState().tables.allSchemas.find(
@@ -1014,6 +1098,56 @@ const saveColumnChangesSql = (
       }
     }
 
+    /* column comment up/down migration */
+    if (comment.trim() !== '') {
+      const columnCommentUpQuery =
+        'COMMENT ON COLUMN ' +
+        currentSchema +
+        '.' +
+        '"' +
+        tableName +
+        '"' +
+        '.' +
+        '"' +
+        colName +
+        '"' +
+        ' IS ' +
+        "'" +
+        comment +
+        "'";
+      const columnCommentDownQuery =
+        'COMMENT ON COLUMN ' +
+        currentSchema +
+        '.' +
+        '"' +
+        tableName +
+        '"' +
+        '.' +
+        '"' +
+        colName +
+        '"' +
+        ' IS ' +
+        "'" +
+        originalColComment +
+        "'";
+
+      // check if comment is unchanged and then do an update. if not skip
+      if (originalColComment !== comment.trim()) {
+        schemaChangesUp.push({
+          type: 'run_sql',
+          args: {
+            sql: columnCommentUpQuery,
+          },
+        });
+        schemaChangesDown.push({
+          type: 'run_sql',
+          args: {
+            sql: columnCommentDownQuery,
+          },
+        });
+      }
+    }
+
     // Apply migrations
     const migrationName =
       'alter_table_' +
@@ -1060,6 +1194,7 @@ const saveColChangesWithFkSql = (
   nullable,
   unique,
   def,
+  comment,
   column
 ) => {
   // ALTER TABLE <table> ALTER COLUMN <column> TYPE <column_type>;
@@ -1072,9 +1207,14 @@ const saveColChangesWithFkSql = (
   }
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
+    let currentColumnComment = getState().tables.columnComment;
+    currentColumnComment = currentColumnComment
+      ? currentColumnComment.result[1]
+      : null;
     // check if column type has changed before making it part of the migration
     const originalColType = column.data_type; // "value"
     const originalColDefault = column.column_default; // null or "value"
+    const originalColComment = currentColumnComment; // null or "value"
     const originalColNullable = column.is_nullable; // "YES" or "NO"
     const originalColUnique = isColumnUnique(
       getState().tables.allSchemas.find(
@@ -1470,6 +1610,55 @@ const saveColChangesWithFkSql = (
         });
       }
     }
+    /* column comment up/down migration */
+    if (comment.trim() !== '') {
+      const columnCommentUpQuery =
+        'COMMENT ON COLUMN ' +
+        currentSchema +
+        '.' +
+        '"' +
+        tableName +
+        '"' +
+        '.' +
+        '"' +
+        colName +
+        '"' +
+        ' IS ' +
+        "'" +
+        comment +
+        "'";
+      const columnCommentDownQuery =
+        'COMMENT ON COLUMN ' +
+        currentSchema +
+        '.' +
+        '"' +
+        tableName +
+        '"' +
+        '.' +
+        '"' +
+        colName +
+        '"' +
+        ' IS ' +
+        "'" +
+        originalColComment +
+        "'";
+
+      // check if comment is unchanged and then do an update. if not skip
+      if (originalColComment !== comment.trim()) {
+        schemaChangesUp.push({
+          type: 'run_sql',
+          args: {
+            sql: columnCommentUpQuery,
+          },
+        });
+        schemaChangesDown.push({
+          type: 'run_sql',
+          args: {
+            sql: columnCommentDownQuery,
+          },
+        });
+      }
+    }
 
     // Apply migrations
     const migrationName =
@@ -1522,6 +1711,8 @@ export {
   FK_ADD_FORM_ERROR,
   FK_RESET,
   TOGGLE_FK_CHECKBOX,
+  TABLE_COMMENT_EDIT,
+  TABLE_COMMENT_INPUT_EDIT,
   fetchViewDefinition,
   handleMigrationErrors,
   saveColumnChangesSql,
@@ -1539,4 +1730,7 @@ export {
   fkAddPair,
   toggleFKCheckBox,
   isColumnUnique,
+  activateCommentEdit,
+  updateCommentInput,
+  saveTableCommentSql,
 };

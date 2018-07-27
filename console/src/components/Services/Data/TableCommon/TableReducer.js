@@ -15,6 +15,8 @@ import {
   FK_ADD_FORM_ERROR,
   FK_RESET,
   TOGGLE_FK_CHECKBOX,
+  TABLE_COMMENT_EDIT,
+  TABLE_COMMENT_INPUT_EDIT,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -241,6 +243,23 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         fkAdd: {
           ...modifyState.fkAdd,
           fkCheckBox: action.checked,
+        },
+      };
+    case TABLE_COMMENT_EDIT:
+      return {
+        ...modifyState,
+        tableCommentEdit: {
+          ...modifyState.tableCommentEdit,
+          enabled: action.data.enabled,
+          editedValue: action.data.value,
+        },
+      };
+    case TABLE_COMMENT_INPUT_EDIT:
+      return {
+        ...modifyState,
+        tableCommentEdit: {
+          ...modifyState.tableCommentEdit,
+          editedValue: action.value,
         },
       };
 
