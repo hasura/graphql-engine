@@ -94,7 +94,8 @@ Examples of `database-url`:
       :emphasize-lines: 5
 
       #! /bin/bash
-      docker run -d -p 8080:8080 \
+
+      docker run -d --net=host \
              hasura/graphql-engine:latest \
              graphql-engine \
              --database-url postgres://username:password@hostname:port/dbname \
