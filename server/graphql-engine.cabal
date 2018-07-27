@@ -118,6 +118,9 @@ library
                      , base64-bytestring >= 1.0
                      , auto-update
 
+                     -- regex related
+                     , regex-compat
+
   exposed-modules:     Hasura.Server.App
                      , Hasura.Server.Auth
                      , Hasura.Server.Init
