@@ -90,28 +90,28 @@ qualTableToName = G.Name <$> \case
   QualifiedTable (SchemaName "public") tn -> getTableTxt tn
   QualifiedTable sn tn -> getSchemaTxt sn <> "_" <> getTableTxt tn
 
-isTableEligible :: QualifiedTable -> Bool
-isTableEligible = isValidName . qualTableToName
+isValidTableName :: QualifiedTable -> Bool
+isValidTableName = isValidName . qualTableToName
 
-fieldFltr :: FieldInfo -> Bool
-fieldFltr = \case
+isValidField :: FieldInfo -> Bool
+isValidField = \case
   FIColumn (PGColInfo col _) -> isColEligible col
   FIRelationship (RelInfo rn _ _ remTab _) -> isRelEligible rn remTab
   where
     isColEligible = isValidName . G.Name . getPGColTxt
     isRelEligible rn rt = isValidName (G.Name $ getRelTxt rn)
-                          && isTableEligible rt
+                          && isValidTableName rt
 
-toSafeFieldInfos :: FieldInfoMap -> [FieldInfo]
-toSafeFieldInfos = filter fieldFltr . Map.elems
+toValidFieldInfos :: FieldInfoMap -> [FieldInfo]
+toValidFieldInfos = filter isValidField . Map.elems
 
-safePartitionFieldInfoMap :: FieldInfoMap -> ([PGColInfo], [RelInfo])
-safePartitionFieldInfoMap = partitionFieldInfos . toSafeFieldInfos
+validPartitionFieldInfoMap :: FieldInfoMap -> ([PGColInfo], [RelInfo])
+validPartitionFieldInfoMap = partitionFieldInfos . toValidFieldInfos
 
-mkSafeConstraints :: [TableConstraint] -> [TableConstraint]
-mkSafeConstraints = filter isSafe
+mkValidConstraints :: [TableConstraint] -> [TableConstraint]
+mkValidConstraints = filter isValid
   where
-    isSafe (TableConstraint _ n) =
+    isValid (TableConstraint _ n) =
       isValidName $ G.Name $ getConstraintTxt n
 
 mkCompExpName :: PGColType -> G.Name
@@ -906,7 +906,7 @@ getRootFldsRole' tn constraints fields insM selM updM delM =
     mFlds = mapFromL (either _fiName _fiName . snd) $ catMaybes
             [ getInsDet <$> insM, getSelDet <$> selM
             , getUpdDet <$> updM, getDelDet <$> delM]
-    colInfos = fst $ safePartitionFieldInfoMap fields
+    colInfos = fst $ validPartitionFieldInfoMap fields
     getInsDet (vn, hdrs) =
       (OCInsert tn vn (map pgiName colInfos) hdrs, Right $ mkInsMutFld tn constraints)
     getUpdDet (updCols, updFltr, hdrs) =
@@ -937,7 +937,7 @@ getSelFlds
   -> RoleName -> SelPermInfo
   -> m [SelField]
 getSelFlds tableCache fields role selPermInfo =
-  fmap catMaybes $ forM (toSafeFieldInfos fields) $ \case
+  fmap catMaybes $ forM (toValidFieldInfos fields) $ \case
     FIColumn pgColInfo ->
       return $ fmap Left $ bool Nothing (Just pgColInfo) $
       Set.member (pgiName pgColInfo) allowedCols
@@ -970,7 +970,7 @@ mkGCtxRole tableCache tn fields constraints role permInfo = do
       rootFlds = getRootFldsRole tn constraints fields permInfo
   return (tyAgg, rootFlds)
   where
-    colInfos = fst $ safePartitionFieldInfoMap fields
+    colInfos = fst $ validPartitionFieldInfoMap fields
     filterColInfos allowedSet =
       filter ((`Set.member` allowedSet) . pgiName) colInfos
 
@@ -999,15 +999,15 @@ mkGCtxMapTable
   -> TableInfo
   -> m (Map.HashMap RoleName (TyAgg, RootFlds))
 mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints) = do
-  m <- Map.traverseWithKey (mkGCtxRole tableCache tn fields safeConstraints) rolePerms
+  m <- Map.traverseWithKey (mkGCtxRole tableCache tn fields validConstraints) rolePerms
   let adminCtx = mkGCtxRole' tn (Just colInfos)
-                 (Just selFlds) (Just colInfos) (Just ()) safeConstraints
+                 (Just selFlds) (Just colInfos) (Just ()) validConstraints
   return $ Map.insert adminRole (adminCtx, adminRootFlds) m
   where
-    safeConstraints = mkSafeConstraints constraints
-    colInfos = fst $ safePartitionFieldInfoMap fields
+    validConstraints = mkValidConstraints constraints
+    colInfos = fst $ validPartitionFieldInfoMap fields
     allCols = map pgiName colInfos
-    selFlds = flip map (toSafeFieldInfos fields) $ \case
+    selFlds = flip map (toValidFieldInfos fields) $ \case
       FIColumn pgColInfo     -> Left pgColInfo
       FIRelationship relInfo -> Right (relInfo, noFilter)
     noFilter = S.BELit True
@@ -1030,7 +1030,7 @@ mkGCtxMap tableCache = do
   return $ Map.map (uncurry mkGCtx) typesMap
   where
     tableFltr ti = not (tiSystemDefined ti)
-                   && isTableEligible (tiName ti)
+                   && isValidTableName (tiName ti)
 
 mkGCtx :: TyAgg -> RootFlds -> GCtx
 mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) =
