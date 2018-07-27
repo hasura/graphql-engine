@@ -6,10 +6,10 @@ module Hasura.Server.CheckUpdates
   ) where
 
 import           Control.Exception     (try)
+import           Control.Lens
 import           Control.Monad         (forever)
 
 import qualified Control.Concurrent    as C
-import qualified Control.Lens          as L
 import qualified Data.Aeson            as A
 import qualified Data.Aeson.Casing     as A
 import qualified Data.Aeson.TH         as A
@@ -30,14 +30,18 @@ newtype UpdateInfo
 
 $(A.deriveJSON (A.aesonDrop 2 A.snakeCase) ''UpdateInfo)
 
-checkForUpdates :: LoggerCtx -> IO ()
-checkForUpdates (LoggerCtx loggerSet _ _) =
+checkForUpdates :: LoggerCtx -> H.Manager -> IO ()
+checkForUpdates (LoggerCtx loggerSet _ _) manager = do
+  let options = Wreq.defaults
+                & Wreq.checkResponse ?~ (\_ _ -> return ())
+                & Wreq.manager .~ Right manager
+
   forever $ do
-    resp <- try $ Wreq.get $ T.unpack url
+    resp <- try $ Wreq.getWith options $ T.unpack url
     case resp of
       Left ex -> ignoreHttpErr ex
       Right bs -> do
-        UpdateInfo latestVersion <- decodeResp $ bs L.^. Wreq.responseBody
+        UpdateInfo latestVersion <- decodeResp $ bs ^. Wreq.responseBody
         when (latestVersion /= currentVersion) $
           FL.pushLogStrLn loggerSet $ FL.toLogStr $ updateMsg latestVersion
 

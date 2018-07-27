@@ -17,6 +17,8 @@ import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Text                  as T
 import qualified Data.Yaml                  as Y
+import qualified Network.HTTP.Client        as HTTP
+import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
 import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
@@ -109,6 +111,7 @@ main =  do
     return $ mkConnInfo mEnvDbUrl rci
   printConnInfo ci
   loggerCtx <- mkLoggerCtx defaultLoggerSettings
+  httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case ravenMode of
     ROServe (ServeOptions port cp isoL mRootDir mAccessKey corsCfg mWebHook enableConsole) -> do
 
@@ -123,12 +126,12 @@ main =  do
       migrate ci
       pool <- Q.initPGPool ci cp
       putStrLn $ "server: running on port " ++ show port
-      app <- mkWaiApp isoL mRootDir loggerCtx pool am finalCorsCfg enableConsole
+      app <- mkWaiApp isoL mRootDir loggerCtx pool httpManager am finalCorsCfg enableConsole
       let warpSettings = Warp.setPort port Warp.defaultSettings
                          -- Warp.setHost "*" Warp.defaultSettings
 
       -- start a background thread to check for updates
-      void $ C.forkIO $ checkForUpdates loggerCtx
+      void $ C.forkIO $ checkForUpdates loggerCtx httpManager
 
       Warp.runSettings warpSettings app
 

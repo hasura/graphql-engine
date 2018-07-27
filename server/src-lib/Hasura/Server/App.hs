@@ -25,7 +25,6 @@ import qualified Text.Mustache.Compile                  as M
 import           Web.Spock.Core
 
 import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Client.TLS                as HTTP
 import qualified Network.Wai.Middleware.Static          as MS
 
 import qualified Database.PG.Query                      as Q
@@ -39,7 +38,7 @@ import qualified Network.WebSockets                     as WS
 
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DML.Explain
+--import           Hasura.RQL.DML.Explain
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
@@ -269,19 +268,18 @@ mkWaiApp
   -> Maybe String
   -> L.LoggerCtx
   -> Q.PGPool
+  -> HTTP.Manager
   -> AuthMode
   -> CorsConfig
   -> Bool
   -> IO Wai.Application
-mkWaiApp isoLevel mRootDir loggerCtx pool mode corsCfg enableConsole = do
+mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole = do
     cacheRef <- do
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
         sc <- buildSchemaCache
         (,) sc <$> GS.mkGCtxMap (scTables sc)
       either initErrExit return pgResp >>= newIORef
-
-    httpManager <- HTTP.newManager HTTP.tlsManagerSettings
 
     cacheLock <- newMVar ()
 

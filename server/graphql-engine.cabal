@@ -213,6 +213,9 @@ executable graphql-engine
                      , lens
                      , unordered-containers >= 0.2
                      , pg-client
+                     , http-client
+                     , http-client-tls
+
   other-modules:     Ops
                      TH
 
@@ -242,5 +245,7 @@ test-suite graphql-engine-test
                      , pg-client
                      , time
                      , yaml
+                     , http-client
+                     , http-client-tls
 
   other-modules:     Spec
