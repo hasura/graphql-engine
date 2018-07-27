@@ -20,6 +20,7 @@ See:
   Basics <basics>
   Relationships/connections <relationships>
   views
+  enums
   Using an existing database <using-existing-database>
   sql-functions
   Customise with schema stitching <schema-stitching>
