@@ -81,8 +81,8 @@ Insert/Upsert syntax
           }
         ],
         on_conflict: {
-          constraint: "author_name_key",
-          action: "update"
+          constraint: author_name_key,
+          action: update
         }
       ) {
         affected_rows
@@ -298,8 +298,8 @@ Conflict Clause
    :class: haskell-pre
     
     on_conflict: {
-      [constraint: <unique_constraint_name> | constraint_on: ["column-name1","column-name2",..!]],
-      action: ["update"|"ignore"]
+      action: [update|ignore],
+      [constraint: <unique_constraint_name>]
     }
 
 E.g.:
@@ -308,8 +308,8 @@ E.g.:
    :class: haskell-pre
 
     on_conflict: {
-      constraint_on: ["name"],
-      action: "ignore"
+      action: ignore,
+      constraint: author_name_key
     }
 
 .. _whereArgExp:
