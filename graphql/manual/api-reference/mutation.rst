@@ -439,7 +439,7 @@ Checking for ``null`` values :
 .. _appendArgExp:
 
 ``_append`` argument
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 .. parsed-literal::
    :class: haskell-pre
@@ -460,7 +460,7 @@ Checking for ``null`` values :
 .. _prependArgExp:
 
 ``_prepend`` argument
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 
 .. parsed-literal::
    :class: haskell-pre
@@ -481,7 +481,7 @@ Checking for ``null`` values :
 .. _deleteKeyArgExp:
 
 ``_delete_key`` argument
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. parsed-literal::
    :class: haskell-pre
@@ -495,7 +495,7 @@ Checking for ``null`` values :
 .. _deleteElemArgExp:
 
 ``_delete_elem`` argument
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. parsed-literal::
    :class: haskell-pre
@@ -509,7 +509,7 @@ Checking for ``null`` values :
 .. _deleteAtPathArgExp:
 
 ``_delete_at_path`` argument
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. parsed-literal::
    :class: haskell-pre

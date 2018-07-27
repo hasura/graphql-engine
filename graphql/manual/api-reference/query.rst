@@ -115,7 +115,7 @@ WhereExp
 
    where: BoolExp_
 
-.. _BoolExp_:
+.. _BoolExp:
 
 BoolExp
 """""""
