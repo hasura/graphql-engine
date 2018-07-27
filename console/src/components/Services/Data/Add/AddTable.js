@@ -10,6 +10,7 @@ import { showErrorNotification } from '../Notification';
 
 import {
   setTableName,
+  setTableComment,
   removeColumn,
   setColName,
   setColType,
@@ -460,7 +461,7 @@ class AddTable extends Component {
           <div
             className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
           >
-            <h4 className={styles.subheading_text}>Table name &nbsp; &nbsp;</h4>
+            <h4 className={styles.subheading_text}>Table Name &nbsp; &nbsp;</h4>
             <input
               type="text"
               data-test="tableName"
@@ -485,6 +486,17 @@ class AddTable extends Component {
               &nbsp; &nbsp;
             </h4>
             {pks}
+            <hr />
+            <h4 className={styles.subheading_text}>Comment &nbsp; &nbsp;</h4>
+            <input
+              type="text"
+              data-test="tableComment"
+              placeholder="comment"
+              className={`${styles.tableNameInput} form-control`}
+              onChange={e => {
+                dispatch(setTableComment(e.target.value));
+              }}
+            />
             <hr />
             <button
               type="submit"
