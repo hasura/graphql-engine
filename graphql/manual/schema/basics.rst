@@ -99,7 +99,7 @@ Here are a couple of examples:
 - Insert data in the ``author`` table
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     mutation add_author {
       insert_author(

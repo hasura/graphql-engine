@@ -14,7 +14,7 @@ Update based on a filter on an object's fields
 Update the ``name`` of the author with a given ``id``:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     mutation update_author {
       update_author(
@@ -38,7 +38,7 @@ Update based on a filter on a nested object's fields
 Update the ``rating`` of all articles that belong to an author:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     mutation update_ratings {
       update_article(
@@ -64,7 +64,7 @@ Update any ``int`` column by incrementing it with given value.
 Increment the ``likes`` of an article:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     mutation update_likes {
       update_article(
@@ -108,7 +108,7 @@ provided through a variable
 Append the ``extra_info`` of an article:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     mutation update_extra_info($value: jsonb) {
       update_article(
@@ -153,7 +153,7 @@ provided through a variable
 Prepend the ``extra_info`` of an article:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     mutation update_extra_info($value: jsonb) {
       update_article(
@@ -198,7 +198,7 @@ Update any ``jsonb`` column by deleting a top level key. Input value should be a
 Delete the key ``key3`` in the ``extra_info`` of an article:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     mutation update_extra_info {
       update_article(
@@ -235,7 +235,7 @@ Update any ``jsonb`` column by deleting a array element with given index value. 
 Delete the element at ``2`` in ``jsonb`` array ``["a", "b", "c"]`` of column ``extra_info`` of an article:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     mutation update_extra_info {
       update_article(
@@ -269,7 +269,7 @@ Update any ``jsonb`` column by deleting field or element with specified path. In
 Delete element at json path ``name.last`` in ``extra_info`` column of author table:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     mutation update_extra_info {
       update_author(

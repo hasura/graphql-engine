@@ -53,7 +53,7 @@ Run a mutation to insert an object with (input = "yabba dabba doo!", output=null
 value (output="YABBA DABBA DOO!")
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     mutation {
       insert_sql_function_table (

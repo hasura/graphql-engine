@@ -7,7 +7,7 @@ Insert objects of different unrelated types in the same mutation
 Insert an ``author`` object and an unrelated ``article`` object:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     mutation insert_author_and_article {
       insert_author(

@@ -88,7 +88,7 @@ Now, let's make the same query as above but include the 2 dynamic authorization 
 You can notice above, how the same query now only includes the right slice of data.
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     # Query with X-Hasura-User-Id: 3
     query {

@@ -6,7 +6,7 @@ Insert single object
 Insert a new ``article`` object and return the inserted article object in the response:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     mutation insert_article {
       insert_article(
@@ -44,7 +44,7 @@ Insert multiple objects of the same type in the same mutation
 Insert 2 new ``article`` objects and return both the article objects in the response:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     mutation insert_article {
       insert_article(

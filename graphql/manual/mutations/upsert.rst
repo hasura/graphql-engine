@@ -19,7 +19,7 @@ Insert a new object in the author table or, if the unique constraint, ``author_n
 the existing object:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     mutation upsert_author {
       insert_author(
@@ -52,7 +52,7 @@ Insert a new object into the author table or, if the unique constraint, ``author
 ignore the request:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     mutation upsert_author {
       insert_author(

@@ -18,7 +18,7 @@ Sorting in a simple object query
 Fetch list of authors sorted by their names in an ascending order:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     query {
       author(
@@ -65,7 +65,7 @@ Sorting a nested object query
 Fetch a list of authors sorted by their names with a list of their articles that is sorted by their rating:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     query {
       author(order_by: name_asc) {
@@ -145,7 +145,7 @@ Fetch a list of articles that is sorted by their rating (descending) and then on
 nulls first):
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     query {
       article(

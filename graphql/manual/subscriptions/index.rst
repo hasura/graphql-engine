@@ -10,7 +10,7 @@ You can turn any query into a subscription by simply replacing ``query`` with ``
 Example:
 
 .. graphiql::
-  :view_only: true
+  :view_only:
   :query:
     subscription {
       article (
