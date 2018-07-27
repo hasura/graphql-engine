@@ -124,9 +124,33 @@ Update syntax
      - whereArgExp_
      - selection criteria for rows to be updated
    * - set-argument
-     - true
+     - false
      - setArgExp_
      - Data to be updated in the table
+   * - inc-argument
+     - false
+     - incArgExp_
+     - Integer value to be incremented to Int columns in the table
+   * - append-argument
+     - false
+     - appendArgExp_
+     - JSON value to be appended to JSONB columns in the table
+   * - prepend-argument
+     - false
+     - prependArgExp_
+     - JSON value to be prepended to JSONB columns in the table
+   * - delete-key-argument
+     - false
+     - deleteKeyArgExp_
+     - key to be deleted in the value of JSONB columns in the table
+   * - delete-elem-argument
+     - false
+     - deleteElemArgExp_
+     - array element to be deleted in the value of JSONB columns in the table
+   * - delete-at-path-argument
+     - false
+     - deleteAtPathArgExp_
+     - element at path to be deleted in the value of JSONB columns in the table
    * - mutation-response
      - true
      - MutationResponse_
@@ -394,3 +418,100 @@ Text related operators :
       ..
     }
 
+.. _incArgExp:
+
+``_inc`` argument
+^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   _inc: {
+     field-name-1 : int-value,
+     filed-name-2 : int-value,
+     ..
+   }
+
+.. _appendArgExp:
+
+``_append`` argument
+^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   _append: {
+     field-name-1 : $json-variable-1,
+     filed-name-2 : $json-variable-1,
+     ..
+   }
+
+.. code-block:: json
+
+   {
+     "json-variable-1": "value",
+     "json-variable-2": "value"
+   }
+
+.. _prependArgExp:
+
+``_prepend`` argument
+^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   _prepend: {
+     field-name-1 : $json-variable-1,
+     filed-name-2 : $json-variable-1,
+     ..
+   }
+
+.. code-block:: json
+
+   {
+     "json-variable-1": "value",
+     "json-variable-2": "value"
+   }
+
+.. _deleteKeyArgExp:
+
+``_delete_key`` argument
+^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   _delete_key: {
+     field-name-1 : "key",
+     filed-name-2 : "key",
+     ..
+   }
+
+.. _deleteElemArgExp:
+
+``_delete_elem`` argument
+^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   _delete_elem: {
+     field-name-1 : int-index,
+     filed-name-2 : int-index,
+     ..
+   }
+
+.. _deleteAtPathArgExp:
+
+``_delete_at_path`` argument
+^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   _delete_at_path: {
+     field-name-1 : ["path-array"],
+     filed-name-2 : ["path-array"],
+     ..
+   }
