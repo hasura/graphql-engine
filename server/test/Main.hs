@@ -22,6 +22,8 @@ import           Hasura.Server.Auth         (AuthMode (..))
 
 
 import qualified Database.PG.Query          as PGQ
+import qualified Network.HTTP.Client        as HTTP
+import qualified Network.HTTP.Client.TLS    as HTTP
 
 import           Hasura.Server.Init
 import           Ops                        (initCatalogSafe)
@@ -42,8 +44,9 @@ resetStateTx = do
 ravenApp :: L.LoggerCtx -> PGQ.PGPool -> IO Application
 ravenApp loggerCtx pool = do
   let corsCfg = CorsConfigG "*" False -- cors is enabled
+  httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   -- spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
-  mkWaiApp Q.Serializable Nothing loggerCtx pool AMNoAuth corsCfg True -- no access key and no webhook
+  mkWaiApp Q.Serializable Nothing loggerCtx pool httpManager AMNoAuth corsCfg True -- no access key and no webhook
 
 main :: IO ()
 main = do

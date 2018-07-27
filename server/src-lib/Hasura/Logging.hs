@@ -16,7 +16,7 @@ module Hasura.Logging
   , Logger
   , LogLevel(..)
   , mkLogger
-  , LoggerCtx
+  , LoggerCtx(..)
   , mkLoggerCtx
   , cleanLoggerCtx
   ) where
