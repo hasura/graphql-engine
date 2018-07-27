@@ -44,6 +44,16 @@ data RawConnInfo =
   , connOptions  :: !(Maybe String)
   } deriving (Eq, Read, Show)
 
+data CorsConfigG a
+  = CorsConfigG
+  { ccDomain   :: !a
+  , ccDisabled :: !Bool
+  } deriving (Show, Eq)
+
+type CorsConfigFlags = CorsConfigG (Maybe T.Text)
+type CorsConfig = CorsConfigG T.Text
+
+
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo
@@ -150,15 +160,6 @@ parseAccessKey = optional $ strOption ( long "access-key" <>
                              help "Secret access key, required to access this instance"
                            )
 
-data CorsConfigG a
-  = CorsConfigG
-  { ccDomain   :: !a
-  , ccDisabled :: !Bool
-  } deriving (Show, Eq)
-
-type CorsConfigFlags = CorsConfigG (Maybe T.Text)
-type CorsConfig = CorsConfigG T.Text
-
 parseCorsConfig :: Parser CorsConfigFlags
 parseCorsConfig =
   CorsConfigG
@@ -175,6 +176,13 @@ parseWebHook = optional $ strOption ( long "auth-hook" <>
                             metavar "AUTHENTICATION WEB HOOK" <>
                             help "The authentication webhook, required to authenticate requests"
                           )
+
+parseJwtSecret :: Parser (Maybe T.Text)
+parseJwtSecret =  optional $ strOption ( long "jwt-secret" <>
+                            metavar "HMAC-SHA256 SHARED SECRET" <>
+                            help "The shared secret for HMAC-SHA256"
+                          )
+
 
 parseEnableConsole :: Parser Bool
 parseEnableConsole = switch ( long "enable-console" <>

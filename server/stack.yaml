@@ -19,6 +19,7 @@ extra-deps:
   commit: 77995388cab656f9180b851f33f3d603cf1017c7
 - git: https://github.com/hasura/graphql-parser-hs.git
   commit: eae59812ec537b3756c3ddb5f59a7cc59508869b
+- jose-0.7.0.0
 
 # Override default flag values for local packages and extra-deps
 flags: {}

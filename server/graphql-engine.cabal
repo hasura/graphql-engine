@@ -67,6 +67,8 @@ library
 
                      -- hashing for logging
                      , cryptonite
+                     -- for jwt verification
+                     , jose
 
                      -- Server related
                      , warp
@@ -124,6 +126,7 @@ library
   exposed-modules:     Hasura.Server.App
                      , Hasura.Server.Auth
                      , Hasura.Server.Init
+                     , Hasura.Server.JWT
                      , Hasura.Server.Middleware
                      , Hasura.Server.Logging
                      , Hasura.Server.Query

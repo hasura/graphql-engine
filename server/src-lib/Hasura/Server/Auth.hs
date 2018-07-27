@@ -8,6 +8,9 @@
 module Hasura.Server.Auth
   ( getUserInfo
   , AuthMode(..)
+  , processJwt
+  , RawJWT
+  , SharedSecret
   ) where
 
 import           Control.Exception        (try)
@@ -26,6 +29,7 @@ import qualified Network.Wreq             as Wreq
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Auth.JWT
 
 bsToTxt :: B.ByteString -> T.Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
@@ -34,6 +38,7 @@ data AuthMode
   = AMNoAuth
   | AMAccessKey !T.Text
   | AMAccessKeyAndHook !T.Text !T.Text
+  | AMAccessKeyAndJWT !T.Text !T.Text
   deriving (Show, Eq)
 
 httpToQErr :: H.HttpException -> QErr
@@ -109,12 +114,15 @@ getUserInfo manager rawHeaders = \case
       Nothing -> throw401 "x-hasura-access-key required, but not found"
 
   AMAccessKeyAndHook accKey hook ->
-    maybe
-      (userInfoFromWebhook manager hook rawHeaders)
-      (userInfoWhenAccessKey accKey) $
-      getHeader accessKeyHeader
+    whenAccessKeyAbsent accKey (userInfoFromWebhook manager hook rawHeaders)
+
+  AMAccessKeyAndJWT accKey jwtSecret ->
+    whenAccessKeyAbsent accKey (processJwt jwtSecret rawHeaders)
 
   where
+    -- when access key is absent, run the action to retrieve UserInfo, otherwise accesskey override
+    whenAccessKeyAbsent ak action =
+      maybe action (userInfoWhenAccessKey ak) $ getHeader accessKeyHeader
 
     headers =
       M.fromList $ filter (T.isPrefixOf "x-hasura-" . fst) $
