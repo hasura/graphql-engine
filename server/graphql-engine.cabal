@@ -51,6 +51,7 @@ library
                      , wai-extra
                      , containers
                      , monad-control
+                     , monad-time
                      , wai-logger
                      , fast-logger
                      , wai
@@ -125,8 +126,8 @@ library
 
   exposed-modules:     Hasura.Server.App
                      , Hasura.Server.Auth
+                     , Hasura.Server.Auth.JWT
                      , Hasura.Server.Init
-                     , Hasura.Server.JWT
                      , Hasura.Server.Middleware
                      , Hasura.Server.Logging
                      , Hasura.Server.Query
