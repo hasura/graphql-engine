@@ -543,7 +543,9 @@ class ModifyTable extends Component {
     );
 
     const editCommentClicked = () => {
-      dispatch(activateCommentEdit(true, tableComment));
+      let commentText = tableComment ? tableComment.result[1][0] : null;
+      commentText = commentText !== 'NULL' ? commentText : null;
+      dispatch(activateCommentEdit(true, commentText));
     };
     const commentEdited = e => {
       dispatch(updateCommentInput(e.target.value));
@@ -552,9 +554,10 @@ class ModifyTable extends Component {
       dispatch(saveTableCommentSql(true));
     };
     const commentEditCancel = () => {
-      dispatch(activateCommentEdit(false, null));
+      dispatch(activateCommentEdit(false, ''));
     };
-    const commentText = tableComment ? tableComment.result[1] : null;
+    let commentText = tableComment ? tableComment.result[1][0] : null;
+    commentText = commentText !== 'NULL' ? commentText : null;
     let commentHtml = (
       <div className={styles.add_pad_bottom}>
         <div className={styles.commentText}>Add a comment</div>
@@ -565,7 +568,7 @@ class ModifyTable extends Component {
     );
     if (commentText && !tableCommentEdit.enabled) {
       commentHtml = (
-        <div>
+        <div className={styles.mar_bottom}>
           <div className={styles.commentText + ' alert alert-warning'}>
             {commentText}
           </div>
@@ -582,7 +585,7 @@ class ModifyTable extends Component {
             className={'form-control ' + styles.commentInput}
             type="text"
             value={tableCommentEdit.value}
-            defaultValue={tableComment.result[1]}
+            defaultValue={commentText}
           />
           <div
             onClick={commentEditSave}

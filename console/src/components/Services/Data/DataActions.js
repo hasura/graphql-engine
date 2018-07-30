@@ -142,7 +142,8 @@ const loadUntrackedRelations = () => (dispatch, getState) => {
 const fetchTableComment = tableName => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const currentSchema = getState().tables.currentSchema;
-  const commentSql = `select description from pg_description join pg_class on pg_description.objoid = pg_class.oid join pg_namespace on pg_class.relnamespace = pg_namespace.oid where relname = '${tableName}' and nspname='${currentSchema}' `;
+  const commentSql = `select obj_description('${currentSchema}.${tableName}'::regclass) as description from pg_class
+    WHERE relkind = 'r' AND relname = '${tableName}'`;
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',

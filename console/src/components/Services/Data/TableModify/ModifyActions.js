@@ -611,8 +611,10 @@ const addFkSql = (tableName, isInsideEdit) => {
 
 const saveTableCommentSql = isTable => {
   return (dispatch, getState) => {
-    const updatedComment = getState().tables.modify.tableCommentEdit
-      .editedValue;
+    let updatedComment = getState().tables.modify.tableCommentEdit.editedValue;
+    if (!updatedComment) {
+      updatedComment = '';
+    }
     const currentSchema = getState().tables.currentSchema;
     const tableName = getState().tables.currentTable;
 
@@ -626,7 +628,10 @@ const saveTableCommentSql = isTable => {
       tableName +
       '"' +
       ' IS ';
-    const commentUpQuery = commentQueryBase + "'" + updatedComment + "'";
+    const commentUpQuery =
+      updatedComment === ''
+        ? commentQueryBase + 'NULL'
+        : commentQueryBase + "'" + updatedComment + "'";
 
     const commentDownQuery = commentQueryBase + 'NULL';
     const schemaChangesUp = [
@@ -1099,53 +1104,54 @@ const saveColumnChangesSql = (
     }
 
     /* column comment up/down migration */
-    if (comment.trim() !== '') {
-      const columnCommentUpQuery =
-        'COMMENT ON COLUMN ' +
-        currentSchema +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        '.' +
-        '"' +
-        colName +
-        '"' +
-        ' IS ' +
-        "'" +
-        comment +
-        "'";
-      const columnCommentDownQuery =
-        'COMMENT ON COLUMN ' +
-        currentSchema +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        '.' +
-        '"' +
-        colName +
-        '"' +
-        ' IS ' +
-        "'" +
-        originalColComment +
-        "'";
+    const columnCommentUpQuery =
+      'COMMENT ON COLUMN ' +
+      currentSchema +
+      '.' +
+      '"' +
+      tableName +
+      '"' +
+      '.' +
+      '"' +
+      colName +
+      '"' +
+      ' IS ' +
+      "'" +
+      comment +
+      "'";
+    const columnCommentDownQuery =
+      'COMMENT ON COLUMN ' +
+      currentSchema +
+      '.' +
+      '"' +
+      tableName +
+      '"' +
+      '.' +
+      '"' +
+      colName +
+      '"' +
+      ' IS ' +
+      "'" +
+      originalColComment +
+      "'";
 
-      // check if comment is unchanged and then do an update. if not skip
-      if (originalColComment !== comment.trim()) {
-        schemaChangesUp.push({
-          type: 'run_sql',
-          args: {
-            sql: columnCommentUpQuery,
-          },
-        });
-        schemaChangesDown.push({
-          type: 'run_sql',
-          args: {
-            sql: columnCommentDownQuery,
-          },
-        });
-      }
+    // check if comment is unchanged and then do an update. if not skip
+    if (
+      (originalColComment !== undefined && originalColComment[0]) !==
+      comment.trim()
+    ) {
+      schemaChangesUp.push({
+        type: 'run_sql',
+        args: {
+          sql: columnCommentUpQuery,
+        },
+      });
+      schemaChangesDown.push({
+        type: 'run_sql',
+        args: {
+          sql: columnCommentDownQuery,
+        },
+      });
     }
 
     // Apply migrations
