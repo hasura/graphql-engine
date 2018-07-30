@@ -29,6 +29,7 @@ import qualified Network.HTTP.Types         as HTTP
 type SharedSecret = T.Text
 type RawJWT = BL.ByteString
 
+
 processJwt
   :: ( MonadIO m
      , MonadError QErr m)
@@ -47,16 +48,20 @@ processJwt secret headers = do
   let jwt = tokenParts !! 1
   claims <- liftJWTError invalidJWTError $ verifyJwt secret jwt
 
+  -- filter only x-hasura claims
+  let claimsMap = Map.filterWithKey (\k _ -> T.isPrefixOf "x-hasura-" k) $
+        claims ^. unregisteredClaims
+
   -- transform the map of text:aeson-value -> text:text
-  claimsMap <- mapM parseJSONToTxt $ claims ^. unregisteredClaims
+  metadataWithRole <- decodeJSON $ A.Object claimsMap
 
   -- throw error if role is not in claims
-  let mRole = Map.lookup userRoleHeader claimsMap
+  let mRole = Map.lookup userRoleHeader metadataWithRole
   role <- maybe missingRoleClaim return mRole
 
-  -- filter only x-hasura claims to form UserInfo
-  let metadata = Map.filterWithKey (\_ -> T.isPrefixOf "x-hasura-") $
-        Map.delete userRoleHeader claimsMap
+  -- delete the x-hasura-role key from this map
+  let metadata = Map.delete userRoleHeader metadataWithRole
+
   return $ UserInfo (RoleName role) metadata
 
   where
@@ -65,12 +70,12 @@ processJwt secret headers = do
       res <- runExceptT action
       either (throwError . ef) return res
 
+    decodeJSON val = case A.fromJSON val of
+      A.Error e   -> throw400 JWTInvalidClaims ("x-hasura-* claims: " <> T.pack e)
+      A.Success a -> return a
+
     invalidJWTError e =
       err400 JWTInvalid $ "Could not verify JWT: " <> T.pack (show e)
-
-    parseJSONToTxt (A.String t) = return t
-    parseJSONToTxt _ =
-      throw400 JWTInvalidClaims "x-hasura-* values cannot be JSON. should be string"
 
     missingRoleClaim =
       throw400 JWTRoleClaimMissing "Your JWT claim should contain x-hasura-role"
@@ -89,6 +94,9 @@ verifyJwt
   -> m ClaimsSet
 verifyJwt secret rawJWT = do
   let secret' = BL.fromStrict . TE.encodeUtf8 $ secret
+  -- this will work with HS256 algo, on HS384 and higher there will
+  -- JWSInvalidSignature error
+  -- https://github.com/frasertweedale/hs-jose/issues/46
   when (BL.length secret' < 32) $ throwError $ JWSError KeySizeTooSmall
   let jwkey = fromOctets secret' -- turn raw secret into symmetric JWK
   jwt <- decodeCompact rawJWT    -- decode JWT

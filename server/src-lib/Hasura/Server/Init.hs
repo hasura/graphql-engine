@@ -156,22 +156,26 @@ parseServerPort =
            help "Port on which graphql-engine should be served")
 
 parseAccessKey :: Parser (Maybe AccessKey)
-parseAccessKey = optional $ strOption ( long "access-key" <>
-                             metavar "SECRET ACCESS KEY" <>
-                             help "Secret access key, required to access this instance"
-                           )
+parseAccessKey =
+  optional $ strOption ( long "access-key" <>
+                         metavar "SECRET ACCESS KEY" <>
+                         help "Secret access key, required to access this instance"
+                       )
 
 parseWebHook :: Parser (Maybe Webhook)
-parseWebHook = optional $ strOption ( long "auth-hook" <>
-                            metavar "AUTHENTICATION WEB HOOK" <>
-                            help "The authentication webhook, required to authenticate requests"
-                          )
+parseWebHook =
+  optional $ strOption ( long "auth-hook" <>
+                         metavar "AUTHENTICATION WEB HOOK" <>
+                         help "The authentication webhook, required to authenticate requests"
+                       )
 
 parseJwtSecret :: Parser (Maybe SharedSecret)
-parseJwtSecret =  optional $ strOption ( long "jwt-secret" <>
-                            metavar "HMAC-SHA256 SHARED SECRET" <>
-                            help "The shared secret for HMAC-SHA256"
-                          )
+parseJwtSecret =
+  optional $ strOption ( long "jwt-secret" <>
+                         metavar "HMAC-SHA256 SHARED SECRET" <>
+                         help ("The shared secret for verifying HMAC-SHA256 "
+                              <> "signed JWTs (must be >= 32 characters)")
+                       )
 
 
 parseCorsConfig :: Parser CorsConfigFlags
