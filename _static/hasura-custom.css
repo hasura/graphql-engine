@@ -1288,7 +1288,8 @@ ol, ul {
 }
 
 #feedback_box {
-  max-width: 100%;
+  max-width: 95%;
+  padding: 5px;
 }
 
 /* GraphiQL overrides */
