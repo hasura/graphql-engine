@@ -543,7 +543,10 @@ class ModifyTable extends Component {
     );
 
     const editCommentClicked = () => {
-      let commentText = tableComment ? tableComment.result[1][0] : null;
+      let commentText =
+        tableComment && tableComment.result[1] && tableComment.result[1][0]
+          ? tableComment.result[1][0]
+          : null;
       commentText = commentText !== 'NULL' ? commentText : null;
       dispatch(activateCommentEdit(true, commentText));
     };
@@ -556,7 +559,10 @@ class ModifyTable extends Component {
     const commentEditCancel = () => {
       dispatch(activateCommentEdit(false, ''));
     };
-    let commentText = tableComment ? tableComment.result[1][0] : null;
+    let commentText =
+      tableComment && tableComment.result[1] && tableComment.result[1][0]
+        ? tableComment.result[1][0]
+        : null;
     commentText = commentText !== 'NULL' ? commentText : null;
     let commentHtml = (
       <div className={styles.add_pad_bottom}>
