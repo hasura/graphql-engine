@@ -1,8 +1,8 @@
-Running custom SQL functions
-============================
+Executing SQL functions/stored procedures
+=========================================
 
-Let's say you want to run custom SQL functions or stored procedures via GraphQL. Hasura GraphQL engine allows you to
-run your SQL functions via mutations.
+Let's say you want to run custom SQL functions or stored procedures on some input and get back the output via GraphQL.
+Hasura GraphQL engine allows you to run your SQL functions or stored procedures using mutations.
 
 At a high-level:
 
@@ -13,10 +13,10 @@ At a high-level:
 #. Use the insert or update mutation to pass values to the SQL function by setting values in the input columns and
    getting output from the function via the ``returning`` field
 
-Here's a simple example:
+For example, let's define a mutation that takes an input string value, uppercases it and then returns it:
 
-Create a table
---------------
+1) Create a table
+-----------------
 
 Create the following table: ``sql_function_table (id serial, input text, output text nullable)``
 
@@ -24,8 +24,8 @@ Head to ``Data -> Create table``
 
 .. image:: ../../../img/graphql/manual/schema/create-sql-fn-table.png
 
-Create a trigger
-----------------
+2) Create a trigger
+-------------------
 
 The below SQL defines a ``trigger`` which will simply uppercase the value passed in the ``input`` field and set it to
 the ``output`` field whenever an insert or update is made to the ``sql_function_table``.
@@ -46,8 +46,8 @@ Head to ``Data -> SQL`` and run the above SQL:
 
 .. image:: ../../../img/graphql/manual/schema/create-trigger.png
 
-Run an insert mutation
-----------------------
+3) Run an insert mutation
+-------------------------
 
 Run a mutation to insert an object with (input = "yabba dabba doo!", output=null) and you'll get a return
 value (output="YABBA DABBA DOO!")

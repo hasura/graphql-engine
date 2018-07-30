@@ -9,7 +9,7 @@ Hasura GraphQL engine comes with powerful Rails-inspired migration tooling to he
 you make to your schema. As you use the Hasura console, the Hasura CLI will spit out migration files for
 you that you can put in version control and even edit manually.
 
-Follow the guide that best fits your use-case:
+Follow the guide that best fits your scenario:
 
 - :doc:`Migrations for a new project <new-project>`: If you haven't yet started setting up your schema.
 - :doc:`Migrations for an existing project <existing-project>`: In case you already have set up a schema

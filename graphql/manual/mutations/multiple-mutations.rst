@@ -1,5 +1,5 @@
-Multiple mutations
-==================
+Multiple mutations in a request
+===============================
 If multiple mutations are part of the same request, they are executed **sequentially**.
 
 Insert objects of different unrelated types in the same mutation

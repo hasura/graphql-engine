@@ -1,12 +1,21 @@
 Relationships between tables/views
 ==================================
-To make nested object queries, the tables/views in your database need to be connected using relationships.
+To make :doc:`nested object queries <../queries/nested-object-queries>`, the tables/views in your database need to be
+connected using relationships.
+
+Relationships can be of two types:
+
+- 1:1 or ``object relationships``. For example, one article will have only one author
+- 1:many or ``array relationships``. For example, one author can write many articles
+
+Each relationship has a name which is used to refer to the nested objects in queries. For example, ``"articles"`` of
+an ``author`` and ``"author"`` of an ``article``
 
 Typically relationships are defined using foreign-key constraints. But in some cases, it might not be possible to
-create foreign key constraints to create the link. For e.g. while trying to create a relationship involving a view
-as foreign keys can't be created on views.
+use foreign-key constraints to create the relation. For e.g. while trying to create a relationship involving a view
+as foreign-keys can't be created on views.
 
-The following are examples to create relationships:
+Here are examples to create relationships using the two methods:
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -16,24 +25,26 @@ The following are examples to create relationships:
     In the previous section, we created two tables, ``author`` and ``article``. Let us now connect these tables to
     enable nested queries:
 
-    **Add foreign-key constraint**
+    **1) Add foreign-key constraint**
 
     In the console, navigate to the ``Modify`` tab of the ``article`` table. Edit the ``author_id`` column and configure
-    it as a foreign-key for the ``id`` column in the ``author`` table.
+    it as a foreign-key for the ``id`` column in the ``author`` table:
 
     .. image:: ../../../img/graphql/manual/schema/add-foreign-key.png
 
-    **Create 1:1 relationship**
+    **2) Create object relationship**
 
-    Each article has one author. This is an example of a 1:1 relationship a.k.a an ``object relationship``. The console
-    infers this and recommends potential relationships in the ``Relationships`` tab. Let's add an ``object relationship``
-    named ``author`` as shown here:
+    Each article has one author. This is an ``object relationship``. The console
+    infers this using the foreign-key and recommends the potential relationship in the ``Relationships`` tab
+    of the ``article`` table.
+
+    Add an ``object relationship`` named ``author`` as shown here:
 
     .. image:: ../../../img/graphql/manual/schema/add-1-1-relationship.png
 
-    Please note that the name of the relationship will also be used to reference the nested object. For e.g. we can now
-    run a nested object query that is based on this ``object relationship`` i.e. fetch a list of articles and each
-    article's author:
+    We can now run a nested object query that is based on this ``object relationship``
+
+    Fetch a list of articles and each article's author:
 
     .. graphiql::
       :view_only:
@@ -80,15 +91,17 @@ The following are examples to create relationships:
           }
         }
 
-    **Create 1:many relationship**
+    **3) Create array relationship**
 
-    An author can write multiple articles. This is an example of a 1:many relationship a.ka. an ``array relationship``.
-    You add an ``array relationship`` exactly how you add an ``object relationship`` in the console.
+    An author can write multiple articles. This is an ``array relationship``.
+
+    You can add an ``array relationship`` exactly how you added an ``object relationship`` as shown above:
 
     .. image:: ../../../img/graphql/manual/schema/add-1-many-relationship.png
 
-    We can now run a nested object query that is based on this ``array relationship`` i.e. fetch a list of authors and a
-    nested list of each author's articles:
+    We can now run a nested object query that is based on this ``array relationship``.
+
+    Fetch a list of authors and a nested list of each author's articles:
 
     .. graphiql::
       :view_only:
@@ -160,12 +173,15 @@ The following are examples to create relationships:
   .. tab:: Without Foreign Keys
 
     Let's say you have an ``author`` table and an ``author_avg_rating`` view with fields ``(id, avg)`` which has the
-    average rating of articles for each author. To create an ``object relationship`` for ``author::id -> author_avg_rating::id``,
-    navigate to the ``Relationships`` tab of the ``author`` table in the console:
+    average rating of articles for each author.
+
+    To create an ``object relationship`` for the ``author`` table with the ``author_avg_rating`` view, navigate
+    to the ``Relationships`` tab of the ``author`` table in the console and click on the ``+ Add a manual relationship``
+    button:
 
     .. image:: ../../../img/graphql/manual/schema/manual-relationship-btn.png
 
-    Click on *+ Add a manual relationship* button. This will open up a section as shown below:
+    This will open up a section as shown below:
 
     .. image:: ../../../img/graphql/manual/schema/manual-relationship-create.png
 
@@ -175,10 +191,11 @@ The following are examples to create relationships:
     - Relationship Name can be: ``avg_rating``
     - Configuration: ``id :: author_avg_rating -> id``
 
-    Now click on the *Add* button to create the relationship.
+    Now click on the ``Add`` button to create the relationship.
 
-    We can now run a nested object query that is based on this ``object relationship``
-    i.e. fetch a list of authors with the average rating of their articles:
+    We can now run a nested object query that is based on this ``object relationship``.
+
+    Fetch a list of authors with the average rating of their articles:
 
     .. graphiql::
       :view_only:
@@ -220,6 +237,3 @@ The following are examples to create relationships:
             ]
           }
         }
-
-
-For a list of all the different types of queries you can make, please see :doc:`this <../queries/index>`.

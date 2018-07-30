@@ -1,8 +1,9 @@
 Paginate query results
 ======================
 The operators ``limit`` and ``offset`` are used for pagination, etc. ``limit`` specifies the number of rows to retain
-from the result set and ``offset`` determines which slice to retain from the results. The following are examples of
-pagination in different scenarios.
+from the result set and ``offset`` determines which slice to retain from the results.
+
+The following are examples of pagination in different scenarios:
 
 Limit results
 -------------

@@ -1,11 +1,11 @@
-Query filters or search queries
-===============================
+Filter query results / search queries
+=====================================
 
 You can use the ``where`` argument in your queries to filter the results based on a fields’s values (including in a
 nested object’s fields). You can even use multiple filters in the same ``where`` clause using the ``_and`` or the
 ``_or`` operators.
 
-For e.g. Fetch data for an author whose name is "Sidney":
+For example, fetch data for an author whose name is "Sidney":
 
 .. code-block:: none
    :emphasize-lines: 3

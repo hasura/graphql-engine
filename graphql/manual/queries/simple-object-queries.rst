@@ -3,7 +3,7 @@ Simple object queries
 
 You can fetch a single node or multiple nodes of the same type using a simple object query. 
 
-E.g. Fetch a list of authors:
+For example, fetch a list of authors:
 
 .. graphiql::
   :view_only:

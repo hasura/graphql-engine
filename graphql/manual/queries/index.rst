@@ -35,7 +35,8 @@ based on a typical author/article schema for reference.
   query-filters
   sorting
   pagination
-  multiple-arguments
+  Using multiple arguments <multiple-arguments>
   multiple-queries
   aggregations
+  sql-functions
   control-access

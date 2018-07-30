@@ -1,16 +1,14 @@
 Nested object queries
 =====================
 
-You can use the 1:1 (object)  or 1:m (array) relationships defined in your schema (using the console) to make a
-nested query i.e. fetch data for a type along with data from a nested or related type.
+You can use the object (1:1) or array (1:many) :doc:`relationships <../schema/relationships>` defined in your schema
+to make a nested query i.e. fetch data for a type along with data from a nested or related type.
 
-Query using a 1:many relationship
+Query using an array relationship
 ---------------------------------
-The following is an example of nested object query using the 1:many or an ``array relationship`` between an author and
+The following is an example of a nested object query using the ``array relationship`` between an author and
 articles.
 
-Example: Nested object query over a 1:many relationship
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Fetch a list of authors and a nested list of the each author’s articles:
 
 .. graphiql::
@@ -80,13 +78,11 @@ Fetch a list of authors and a nested list of the each author’s articles:
       }
     }
 
-Query using a 1:1 relationship
-------------------------------
-The following is an example of nested object query using the 1:1 or an ``object relationship`` between an article and an
+Query using an object relationship
+----------------------------------
+The following is an example of a nested object query using the ``object relationship`` between an article and an
 author.
 
-Example: Nested object query over a 1:1 relationship
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Fetch a list of articles and the name of each article’s author:
 
 .. graphiql::

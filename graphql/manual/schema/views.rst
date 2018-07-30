@@ -1,12 +1,14 @@
 Customise schema with views
 ===========================
 
-You may want to customise your GraphQL schema for reasons like:
+You may want to customise your GraphQL schema to:
 
-- Limit scope: expose only a subset of the columns in a table
+- Limit scope i.e. expose only a subset of the columns in a table
 - Fetch derived data (*aggregations like count, average, etc.*) in queries
 
-Please see the following pages on how to support these use-cases using views:
+These use-cases can be supported using database views.
+
+Please see the following pages for the above use-cases:
 
 - :doc:`../queries/control-access`
 

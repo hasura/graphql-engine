@@ -21,7 +21,6 @@ See:
   Relationships <relationships>
   Customise with views <views>
   enums
-  sql-functions
   Customise with schema stitching <schema-stitching>
   Using an existing database <using-existing-database>
   Export GraphQL schema <export-graphql-schema>

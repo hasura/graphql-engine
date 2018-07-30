@@ -1,7 +1,6 @@
 Schema design basics
 ====================
-Let's take a look at how to create tables using the Hasura console, a UI tool meant for doing exactly this. We'll use a
-typical author/articles schema as a reference for all the following examples.
+Let's take a look at how to create tables using the Hasura console, a UI tool meant for doing exactly this.
 
 Open the console
 ----------------
@@ -13,7 +12,7 @@ Run the following command using the Hasura CLI tool.
 
 Create tables
 -------------
-Let's say we want to create two simple tables:
+Let's say we want to create two simple tables for an article/author schema:
 
 - ``author`` with columns ``id``, ``name``
 
@@ -26,7 +25,7 @@ For example, here is the schema for the ``article`` table in this interface:
 .. image:: ../../../img/graphql/manual/schema/create-table-graphql.png
 
 As soon as a table is created, the corresponding GraphQL schema and resolvers are automatically created/updated. For
-e.g. the following *query* and *mutation* fields are generated for the tables we just created:
+example, the following *query* and *mutation* fields are generated for the ``article`` table we just created:
 
 .. code-block:: none
 
@@ -47,13 +46,8 @@ e.g. the following *query* and *mutation* fields are generated for the tables we
 
 Try basic GraphQL queries
 -------------------------
-At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables using the API
-Explorer in the console(*you may want to add some test data in the tables*).
-
-.. note::
-    
-    You can either use the admin token to run them or modify the permissions for these tables to temporarily allow
-    anonymous access to data in the **Permissions** tab of each table.
+At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables using the
+console ``GraphiQL`` tab (*you may want to add some test data in the tables first*).
 
 Here are a couple of examples:
 
