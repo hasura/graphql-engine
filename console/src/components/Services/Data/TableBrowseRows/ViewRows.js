@@ -514,7 +514,6 @@ const ViewRows = ({
 
   return (
     <div className={isVisible ? '' : 'hide '}>
-      <div className={`hide ${styles.tableComment}`}>This is a comment</div>
       {filterQuery}
       <hr />
       {primaryKeyMsg}

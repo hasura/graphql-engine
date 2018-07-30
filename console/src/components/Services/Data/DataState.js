@@ -82,6 +82,7 @@ const defaultModifyState = {
   lastSuccess: null,
   viewDefinition: null,
   viewDefinitionError: null,
+  tableCommentEdit: { enabled: false, editedValue: null },
 };
 
 const defaultState = {
@@ -107,6 +108,7 @@ const defaultState = {
   untrackedSchemas: [],
   information_schema: [],
   tableComment: null,
+  columnComment: null,
   untrackedRelations: [],
   schemaList: ['public'],
   currentSchema: 'public',

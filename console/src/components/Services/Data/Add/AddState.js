@@ -1,5 +1,6 @@
 const defaultState = {
   tableName: null,
+  tableComment: null,
   columns: [{ name: '', type: '', nullable: false }],
   primaryKeys: [''],
   ongoingRequest: false,

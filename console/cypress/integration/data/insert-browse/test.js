@@ -49,7 +49,7 @@ export const runInsertBrowseTests = () => {
     it('Check pagination in Browse Rows table', checkPagination);
     it('Ascending sort works as expected', () => passBISort('asc'));
     it('Descending sort works as expected', () => passBISort('desc'));
-    it('FIlter query works as expected with $eq', passBIFilterQueryEq);
+    it('Filter query works as expected with $eq', passBIFilterQueryEq);
     it('Check edit button', passEditButton);
     it('Check for clone clear', passCloneButton);
     it('Delete the row', passDeleteRow);

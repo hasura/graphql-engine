@@ -234,6 +234,7 @@ class RelationshipsView extends Component {
       dispatch,
       relAdd,
       currentSchema,
+      migrationMode,
     } = this.props;
     const styles = require('../TableModify/Modify.scss');
     const tableStyles = require('../TableCommon/TableStyles.scss');
@@ -329,6 +330,7 @@ class RelationshipsView extends Component {
           tableName={tableName}
           tabName="relationships"
           currentSchema={currentSchema}
+          migrationMode={migrationMode}
         />
         <br />
         <div className={`${styles.padd_left_remove} container-fluid`}>
@@ -387,6 +389,7 @@ const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   allSchemas: state.tables.allSchemas,
   currentSchema: state.tables.currentSchema,
+  migrationMode: state.main.migrationMode,
   ...state.tables.modify,
 });
 

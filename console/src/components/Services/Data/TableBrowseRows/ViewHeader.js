@@ -4,19 +4,10 @@ import Helmet from 'react-helmet';
 
 import { appPrefix } from '../push';
 
-const ViewHeader = ({ tableName, tabName, tableComment, currentSchema }) => {
+const ViewHeader = ({ tableName, tabName, currentSchema, migrationMode }) => {
   const styles = require('../TableCommon/Table.scss');
   let capitalised = tabName;
   capitalised = capitalised[0].toUpperCase() + capitalised.slice(1);
-  const commentText = tableComment ? tableComment.result[1] : null;
-  let commentHtml = null;
-  if (commentText) {
-    commentHtml = (
-      <div className={styles.commentText + ' alert alert-warning'}>
-        {commentText}
-      </div>
-    );
-  }
   let activeTab;
   if (tabName === 'view') {
     activeTab = 'Browse Rows';
@@ -72,24 +63,26 @@ const ViewHeader = ({ tableName, tabName, tableComment, currentSchema }) => {
                 Browse Rows
               </Link>
             </li>
-            <li
-              role="presentation"
-              className={tabName === 'modify' ? styles.active : ''}
-            >
-              <Link
-                to={
-                  appPrefix +
-                  '/schema/' +
-                  currentSchema +
-                  '/views/' +
-                  tableName +
-                  '/modify'
-                }
-                data-test="table-modify"
+            {migrationMode ? (
+              <li
+                role="presentation"
+                className={tabName === 'modify' ? styles.active : ''}
               >
-                Modify
-              </Link>
-            </li>
+                <Link
+                  to={
+                    appPrefix +
+                    '/schema/' +
+                    currentSchema +
+                    '/views/' +
+                    tableName +
+                    '/modify'
+                  }
+                  data-test="table-modify"
+                >
+                  Modify
+                </Link>
+              </li>
+            ) : null}
             <li
               role="presentation"
               className={tabName === 'relationships' ? styles.active : ''}
@@ -130,7 +123,6 @@ const ViewHeader = ({ tableName, tabName, tableComment, currentSchema }) => {
         </div>
         <div className="clearfix" />
       </div>
-      <div>{commentHtml}</div>
     </div>
   );
 };
