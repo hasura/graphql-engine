@@ -25,8 +25,13 @@ import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.Server.App          (mkWaiApp)
+<<<<<<< HEAD
 import           Hasura.Server.Auth         (AuthMode (..))
 import           Hasura.Server.CheckUpdates (checkForUpdates)
+=======
+import           Hasura.Server.Auth         (AccessKey, AuthMode (..),
+                                             SharedSecret, Webhook)
+>>>>>>> Improve auth mode types
 import           Hasura.Server.Init
 
 import qualified Database.PG.Query          as Q
@@ -45,8 +50,8 @@ data ServeOptions
   , soRootDir       :: !(Maybe String)
   , soAccessKey     :: !(Maybe AccessKey)
   , soCorsConfig    :: !CorsConfigFlags
-  , soWebHook       :: !(Maybe T.Text)
-  , soJwtSecret     :: !(Maybe T.Text)
+  , soWebHook       :: !(Maybe Webhook)
+  , soJwtSecret     :: !(Maybe SharedSecret)
   , soEnableConsole :: !Bool
   } deriving (Show, Eq)
 

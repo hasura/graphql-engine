@@ -8,9 +8,11 @@
 module Hasura.Server.Auth
   ( getUserInfo
   , AuthMode(..)
-  , processJwt
+  , AccessKey
+  , Webhook
   , RawJWT
   , SharedSecret
+  , processJwt
   ) where
 
 import           Control.Exception        (try)
@@ -34,11 +36,14 @@ import           Hasura.Server.Auth.JWT
 bsToTxt :: B.ByteString -> T.Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
 
+type AccessKey = T.Text
+type Webhook = T.Text
+
 data AuthMode
   = AMNoAuth
-  | AMAccessKey !T.Text
-  | AMAccessKeyAndHook !T.Text !T.Text
-  | AMAccessKeyAndJWT !T.Text !T.Text
+  | AMAccessKey !AccessKey
+  | AMAccessKeyAndHook !AccessKey !Webhook
+  | AMAccessKeyAndJWT !AccessKey !SharedSecret
   deriving (Show, Eq)
 
 httpToQErr :: H.HttpException -> QErr

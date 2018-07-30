@@ -12,7 +12,9 @@ import qualified Data.Text            as T
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Utils
+import           Hasura.Server.Auth
 import           Hasura.Server.Utils
+
 
 data InitError
   = InitError !String
@@ -24,7 +26,6 @@ instance Q.FromPGConnErr InitError where
 instance Q.FromPGTxErr InitError where
   fromPGTxErr = InitError . show
 
-type AccessKey = T.Text
 
 initErrExit :: (Show e) => e -> IO a
 initErrExit e = print e >> exitFailure
@@ -160,6 +161,19 @@ parseAccessKey = optional $ strOption ( long "access-key" <>
                              help "Secret access key, required to access this instance"
                            )
 
+parseWebHook :: Parser (Maybe Webhook)
+parseWebHook = optional $ strOption ( long "auth-hook" <>
+                            metavar "AUTHENTICATION WEB HOOK" <>
+                            help "The authentication webhook, required to authenticate requests"
+                          )
+
+parseJwtSecret :: Parser (Maybe SharedSecret)
+parseJwtSecret =  optional $ strOption ( long "jwt-secret" <>
+                            metavar "HMAC-SHA256 SHARED SECRET" <>
+                            help "The shared secret for HMAC-SHA256"
+                          )
+
+
 parseCorsConfig :: Parser CorsConfigFlags
 parseCorsConfig =
   CorsConfigG
@@ -170,19 +184,6 @@ parseCorsConfig =
   <*> switch ( long "disable-cors" <>
                help "Disable CORS handling"
              )
-
-parseWebHook :: Parser (Maybe T.Text)
-parseWebHook = optional $ strOption ( long "auth-hook" <>
-                            metavar "AUTHENTICATION WEB HOOK" <>
-                            help "The authentication webhook, required to authenticate requests"
-                          )
-
-parseJwtSecret :: Parser (Maybe T.Text)
-parseJwtSecret =  optional $ strOption ( long "jwt-secret" <>
-                            metavar "HMAC-SHA256 SHARED SECRET" <>
-                            help "The shared secret for HMAC-SHA256"
-                          )
-
 
 parseEnableConsole :: Parser Bool
 parseEnableConsole = switch ( long "enable-console" <>
