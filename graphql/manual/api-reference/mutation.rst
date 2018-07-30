@@ -432,7 +432,7 @@ Checking for ``null`` values :
 
    _inc: {
      field-name-1 : int-value,
-     filed-name-2 : int-value,
+     field-name-2 : int-value,
      ..
    }
 
@@ -446,7 +446,7 @@ Checking for ``null`` values :
 
    _append: {
      field-name-1 : $json-variable-1,
-     filed-name-2 : $json-variable-1,
+     field-name-2 : $json-variable-1,
      ..
    }
 
@@ -467,7 +467,7 @@ Checking for ``null`` values :
 
    _prepend: {
      field-name-1 : $json-variable-1,
-     filed-name-2 : $json-variable-1,
+     field-name-2 : $json-variable-1,
      ..
    }
 
@@ -488,7 +488,7 @@ Checking for ``null`` values :
 
    _delete_key: {
      field-name-1 : "key",
-     filed-name-2 : "key",
+     field-name-2 : "key",
      ..
    }
 
@@ -502,7 +502,7 @@ Checking for ``null`` values :
 
    _delete_elem: {
      field-name-1 : int-index,
-     filed-name-2 : int-index,
+     field-name-2 : int-index,
      ..
    }
 
@@ -516,6 +516,6 @@ Checking for ``null`` values :
 
    _delete_at_path: {
      field-name-1 : ["path-array"],
-     filed-name-2 : ["path-array"],
+     field-name-2 : ["path-array"],
      ..
    }
