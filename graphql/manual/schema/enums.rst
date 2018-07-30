@@ -7,11 +7,11 @@ In a relational database such as Postgres, an enum type field in a table can be 
 to another table which contains the reference list of allowed values. This ensures a value can be set into the field
 only if it exists in the reference table.
 
+Here is how you make a field of enum type:
+
 For example, let's say we have a table ``magazine`` with fields (``id``, ``title``, ``issue_month``, ``issue_year``)
 and we would like to restrict the values of the ``issue_month`` field to just the months of the year, ie: January,
 February and so on.
-
-Here is how you make a field of enum type:
 
 1) Create a reference table for the enum
 ----------------------------------------
@@ -32,12 +32,12 @@ Head to the GraphiQL tab of the console and run an insert mutation to insert the
 -------------------------------------------
 
 Head to the ``Modify`` tab of the ``magazine`` table and set a foreign key to the ``months_of_the_year`` table
-using the ``magazine :: issue_month -> months_of_the_year :: month`` fields.
+using the fields: ``issue_month -> months_of_the_year :: month``.
 
 .. image:: ../../../img/graphql/manual/schema/enum-set-foreign-key.png
 
 Now the ``issue_month`` field can only take values from the months of the year.
 
 .. note::
-  This will not provide auto complete or query validation on the client side using the GraphQL schema as of now
+  This will not provide auto-complete or query validation on the client side using the GraphQL schema as of now
   but will ensure consistency in the database.

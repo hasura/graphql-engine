@@ -18,11 +18,11 @@ See:
   :maxdepth: 1
 
   Basics <basics>
-  Relationships/connections <relationships>
-  views
+  Relationships <relationships>
+  Customise with views <views>
   enums
-  Using an existing database <using-existing-database>
   sql-functions
   Customise with schema stitching <schema-stitching>
+  Using an existing database <using-existing-database>
   Export GraphQL schema <export-graphql-schema>
   How schema generation works <how-it-works>

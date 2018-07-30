@@ -1,5 +1,5 @@
-Relationships or connections between tables/views
-=================================================
+Relationships between tables/views
+==================================
 To make nested object queries, the tables/views in your database need to be connected using relationships.
 
 Typically relationships are defined using foreign-key constraints. But in some cases, it might not be possible to
@@ -157,66 +157,66 @@ The following are examples to create relationships:
 
   .. tab:: Without Foreign Keys
 
-      Let's say you have an ``author`` table and an ``author_avg_rating`` view with fields ``(id, avg)`` which has the
-      average rating of articles for each author. To create an ``object relationship`` for ``author::id -> author_avg_rating::id``,
-      navigate to the ``Relationships`` tab of the ``author`` table in the console:
+    Let's say you have an ``author`` table and an ``author_avg_rating`` view with fields ``(id, avg)`` which has the
+    average rating of articles for each author. To create an ``object relationship`` for ``author::id -> author_avg_rating::id``,
+    navigate to the ``Relationships`` tab of the ``author`` table in the console:
 
-      .. image:: ../../../img/graphql/manual/schema/manual-relationship-btn.png
+    .. image:: ../../../img/graphql/manual/schema/manual-relationship-btn.png
 
-      Click on *+ Add a manual relationship* button. This will open up a section as shown below:
+    Click on *+ Add a manual relationship* button. This will open up a section as shown below:
 
-      .. image:: ../../../img/graphql/manual/schema/manual-relationship-create.png
+    .. image:: ../../../img/graphql/manual/schema/manual-relationship-create.png
 
-      For our case:
+    For our case:
 
-      - Relationship Type will be: ``Object Relationship``
-      - Relationship Name can be: ``avg_rating``
-      - Configuration: ``id :: author_avg_rating -> id``
+    - Relationship Type will be: ``Object Relationship``
+    - Relationship Name can be: ``avg_rating``
+    - Configuration: ``id :: author_avg_rating -> id``
 
-      Now click on the *Add* button to create the relationship.
+    Now click on the *Add* button to create the relationship.
 
-      We can now run a nested object query that is based on this ``object relationship``
-      i.e. fetch a list of authors with the average rating of their articles:
+    We can now run a nested object query that is based on this ``object relationship``
+    i.e. fetch a list of authors with the average rating of their articles:
 
-      .. graphiql::
-        :query:
-          query {
-            author {
-              id
-              name
-              avg_rating {
-                avg
-              }
+    .. graphiql::
+      :query:
+        query {
+          author {
+            id
+            name
+            avg_rating {
+              avg
             }
           }
-        :response:
-          {
-            "data": {
-              "author": [
-                {
-                  "id": 1,
-                  "name": "Justin",
-                  "avg_rating": {
-                    "avg": 2.5
-                  }
-                },
-                {
-                  "id": 2,
-                  "name": "Beltran",
-                  "avg_rating": {
-                    "avg": 3
-                  }
-                },
-                {
-                  "id": 3,
-                  "name": "Sidney",
-                  "avg_rating": {
-                    "avg": 2.6666666666666665
-                  }
+        }
+      :response:
+        {
+          "data": {
+            "author": [
+              {
+                "id": 1,
+                "name": "Justin",
+                "avg_rating": {
+                  "avg": 2.5
                 }
-              ]
-            }
+              },
+              {
+                "id": 2,
+                "name": "Beltran",
+                "avg_rating": {
+                  "avg": 3
+                }
+              },
+              {
+                "id": 3,
+                "name": "Sidney",
+                "avg_rating": {
+                  "avg": 2.6666666666666665
+                }
+              }
+            ]
           }
+        }
 
 
 For a list of all the different types of queries you can make, please see :doc:`this <../queries/index>`.

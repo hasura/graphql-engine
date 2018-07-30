@@ -1,10 +1,13 @@
-Aggregations in queries
+.. meta::
+  :keywords: computed fields, derived data, aggregations
+
+Derived data in queries
 =======================
 GraphQL’s query language for a "select" query is designed to be simple yet powerful. There will still be certain
 queries that you cannot express with a GraphQL query. For example, getting the average rating of articles by an
 author.
 
-To express complex queries like aggregations (or custom joins etc.), use SQL, which is designed for this
+To express complex queries for derived data like aggregations or custom joins etc., use SQL, which is designed for this
 purpose. If you can express your aggregation query in SQL, define a view with it and then use the newly created
 type in the GraphQL query.
 
