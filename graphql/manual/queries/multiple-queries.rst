@@ -6,6 +6,7 @@ collated and returned. You can fetch objects of different unrelated types in the
 For e.g. to fetch a list of ``authors`` and a list of ``articles``:
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       author(limit: 2) {

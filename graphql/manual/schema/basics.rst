@@ -60,6 +60,7 @@ Here are a couple of examples:
 - Query all rows in the ``article`` table
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       article {

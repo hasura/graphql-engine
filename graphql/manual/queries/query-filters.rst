@@ -49,6 +49,7 @@ Example: Integer (works with Double, Float, Numeric, etc.)
 Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       author(
@@ -75,6 +76,7 @@ Example: String or Text
 Fetch a list of authors with ``name`` *(a text field)* as "Sidney"
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       author(
@@ -101,6 +103,7 @@ Example: Boolean
 Fetch a list of articles that have not been published (``is_published`` is a boolean field):
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       article(
@@ -145,6 +148,7 @@ Example: Date (works with Time, Timezone, etc.)
 Fetch a list of articles that were published on a certain date (``published_on`` is a Date field):
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       article(
@@ -181,6 +185,7 @@ Example: Integer (works with Double, Float, etc.)
 Fetch a list of articles rated 4 or more (``rating`` is an integer field):
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       article(
@@ -220,6 +225,7 @@ Fetch a list of authors whose names begin with M or any letter that follows M *(
 dictionary sort)*:
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       author(
@@ -250,6 +256,7 @@ Example: Date (works with Time, Timezone, etc.)
 Fetch a list of articles that were published on or after date "01/01/2018":
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       article(
@@ -299,6 +306,7 @@ Example: Integer (works with Double, Float, etc.)
 Fetches a list of articles rated 1, 3 or 5:
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       article(
@@ -342,6 +350,7 @@ Example: String or Text
 Fetch a list of those authors whose names are NOT part of a list: 
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       author(
@@ -386,6 +395,7 @@ Example: _like
 Fetch a list of articles whose titles contain the word “amet”:
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       article(
@@ -419,6 +429,7 @@ Example: _similar
 Fetch a list of authors whose names begin with A or C (``similar`` is case-sensitive):
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       author(
@@ -510,6 +521,7 @@ Example:  _and
 Fetch a list of articles published in a specific time-frame (for example: in year 2017):
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       article (
@@ -559,6 +571,7 @@ Example:  _or
 Fetch a list of articles rated more than 4 or published after "01/01/2018":
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       article (

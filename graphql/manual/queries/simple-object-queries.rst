@@ -6,6 +6,7 @@ You can fetch a single node or multiple nodes of the same type using a simple ob
 E.g. Fetch a list of authors:
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       author {

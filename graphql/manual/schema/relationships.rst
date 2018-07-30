@@ -36,6 +36,7 @@ The following are examples to create relationships:
     article's author:
 
     .. graphiql::
+      :view_only:
       :query:
         query {
           article {
@@ -90,6 +91,7 @@ The following are examples to create relationships:
     nested list of each author's articles:
 
     .. graphiql::
+      :view_only:
       :query:
         query {
           author {
@@ -179,6 +181,7 @@ The following are examples to create relationships:
     i.e. fetch a list of authors with the average rating of their articles:
 
     .. graphiql::
+      :view_only:
       :query:
         query {
           author {

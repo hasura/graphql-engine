@@ -14,6 +14,7 @@ Example: Nested object query over a 1:many relationship
 Fetch a list of authors and a nested list of the each author’s articles:
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       author {
@@ -89,6 +90,7 @@ Example: Nested object query over a 1:1 relationship
 Fetch a list of articles and the name of each article’s author:
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       article {

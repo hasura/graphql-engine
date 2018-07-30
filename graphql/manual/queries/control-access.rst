@@ -29,6 +29,7 @@ Query the view
 You can now query the newly created view like you would a regular table. For e.g. the following query will access only the *safe* fields:
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       article_safe {

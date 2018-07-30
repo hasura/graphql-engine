@@ -42,6 +42,7 @@ Example: aggregate data
 Fetch a list of authors along with their average article rating:
 
 .. graphiql::
+  :view_only:
   :query:
     query {
       author {
