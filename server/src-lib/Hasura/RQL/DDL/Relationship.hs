@@ -189,6 +189,7 @@ objRelP2Setup qt (RelDef rn ru _) = do
                      , SchemaDependency (SOTableObj qt $ TOCol cn) "using_col"
                      ]
               refqt = QualifiedTable refsn reftn
+          void $ askTabInfo refqt
           return $ RelInfo rn ObjRel colMapping refqt deps
         _  -> throw400 ConstraintError
                 "more than one foreign key constraint exists on the given column"
