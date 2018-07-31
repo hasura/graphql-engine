@@ -1,10 +1,11 @@
 Multiple mutations in a request
 ===============================
-If multiple mutations are part of the same request, they are executed **sequentially**.
+If multiple mutations are part of the same request, they are executed **sequentially**. If any of the mutations fail,
+all the executed mutations will be rolled back. i.e. all the mutations are run as a **transaction**.
 
-Insert objects of different unrelated types in the same mutation
-----------------------------------------------------------------
-Insert an ``author`` object and an unrelated ``article`` object:
+Example: Insert objects of different types in the same mutation
+---------------------------------------------------------------
+Insert an ``author`` object and an ``article`` object written by the author:
 
 .. graphiql::
   :view_only:
@@ -23,13 +24,17 @@ Insert an ``author`` object and an unrelated ``article`` object:
       }
       insert_article(
         objects: [
-          {id: 21, title: "Article 1", content: "Sample content", author_id: 9}
+          {id: 21, title: "Article 1", content: "Sample content", author_id: 11}
         ]
       ) {
         affected_rows,
         returning {
           id
           title
+          author {
+            id
+            name
+          }
         }
       }
     }
