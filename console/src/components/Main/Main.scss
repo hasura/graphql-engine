@@ -79,6 +79,10 @@
   {
     display: flex;
     align-items: center;
+    a {
+      display: flex;
+      align-items: center;
+    }
     .logo
     {
       display: inline-block;
@@ -95,6 +99,16 @@
       padding: 10px 10px !important;
     }
   }
+}
+.project_version {
+  font-family: Gudea;
+  color: #fff;
+  text-transform: lowercase;
+  display: inline-block;
+  padding-left: 10px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  font-weight: 300;
 }
 .toggleSidebar {
   position: absolute;
