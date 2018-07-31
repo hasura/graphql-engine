@@ -71,6 +71,7 @@ data Code
   | JWTRoleClaimMissing
   | JWTInvalidClaims
   | JWTInvalid
+  | JWTInvalidKey
   -- Graphql error
   | NoTables
   | ValidationFailed
@@ -103,6 +104,7 @@ instance Show Code where
   show JWTRoleClaimMissing = "jwt-role-claim-missing"
   show JWTInvalidClaims    = "jwt-invalid-claims"
   show JWTInvalid          = "invalid-jwt"
+  show JWTInvalidKey       = "invalid-jwt-key"
 
 data QErr
   = QErr

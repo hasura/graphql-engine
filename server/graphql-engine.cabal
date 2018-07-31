@@ -70,6 +70,8 @@ library
                      , cryptonite
                      -- for jwt verification
                      , jose
+                     , pem
+                     , x509
 
                      -- Server related
                      , warp

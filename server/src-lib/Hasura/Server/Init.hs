@@ -169,7 +169,7 @@ parseWebHook =
                          help "The authentication webhook, required to authenticate requests"
                        )
 
-parseJwtSecret :: Parser (Maybe SharedSecret)
+parseJwtSecret :: Parser (Maybe Text)
 parseJwtSecret =
   optional $ strOption ( long "jwt-secret" <>
                          metavar "HMAC-SHA256 SHARED SECRET" <>

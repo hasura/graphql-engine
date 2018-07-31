@@ -11,7 +11,7 @@ module Hasura.Server.Auth
   , AccessKey
   , Webhook
   , RawJWT
-  , SharedSecret
+  , JWTConfig (..)
   , processJwt
   ) where
 
@@ -43,7 +43,7 @@ data AuthMode
   = AMNoAuth
   | AMAccessKey !AccessKey
   | AMAccessKeyAndHook !AccessKey !Webhook
-  | AMAccessKeyAndJWT !AccessKey !SharedSecret
+  | AMAccessKeyAndJWT !AccessKey !JWTConfig
   deriving (Show, Eq)
 
 httpToQErr :: H.HttpException -> QErr
@@ -122,7 +122,7 @@ getUserInfo manager rawHeaders = \case
     whenAccessKeyAbsent accKey (userInfoFromWebhook manager hook rawHeaders)
 
   AMAccessKeyAndJWT accKey jwtSecret ->
-    whenAccessKeyAbsent accKey (processJwt jwtSecret rawHeaders)
+    whenAccessKeyAbsent accKey (processJwt (jcKey jwtSecret) rawHeaders)
 
   where
     -- when access key is absent, run the action to retrieve UserInfo, otherwise accesskey override

@@ -16,6 +16,7 @@ import qualified Data.ByteString.Char8      as BC
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Text                  as T
+import qualified Data.Text.Encoding         as TE
 import qualified Data.Yaml                  as Y
 import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
@@ -25,13 +26,8 @@ import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.Server.App          (mkWaiApp)
-<<<<<<< HEAD
-import           Hasura.Server.Auth         (AuthMode (..))
+import           Hasura.Server.Auth         (AccessKey, AuthMode (..), Webhook)
 import           Hasura.Server.CheckUpdates (checkForUpdates)
-=======
-import           Hasura.Server.Auth         (AccessKey, AuthMode (..),
-                                             SharedSecret, Webhook)
->>>>>>> Improve auth mode types
 import           Hasura.Server.Init
 
 import qualified Database.PG.Query          as Q
@@ -51,7 +47,7 @@ data ServeOptions
   , soAccessKey     :: !(Maybe AccessKey)
   , soCorsConfig    :: !CorsConfigFlags
   , soWebHook       :: !(Maybe Webhook)
-  , soJwtSecret     :: !(Maybe SharedSecret)
+  , soJwtSecret     :: !(Maybe Text)
   , soEnableConsole :: !Bool
   } deriving (Show, Eq)
 
@@ -106,7 +102,10 @@ mkAuthMode mAccessKey mWebHook mJwtSecret =
     (Nothing,  Nothing,   Nothing)     -> return AMNoAuth
     (Just key, Nothing,   Nothing)     -> return $ AMAccessKey key
     (Just key, Just hook, Nothing)     -> return $ AMAccessKeyAndHook key hook
-    (Just key, Nothing,   Just secret) -> return $ AMAccessKeyAndJWT key secret
+    (Just key, Nothing,   Just jwtConf) -> do
+      -- the JWT Conf as JSON string; try to parse it
+      config <- A.eitherDecodeStrict $ TE.encodeUtf8 jwtConf
+      return $ AMAccessKeyAndJWT key config
 
     (Nothing, Just _, Nothing)     -> throwError $
       "Fatal Error : --auth-hook (HASURA_GRAPHQL_AUTH_HOOK)"
