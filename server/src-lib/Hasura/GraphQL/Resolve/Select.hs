@@ -1,8 +1,9 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiWayIf            #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Hasura.GraphQL.Resolve.Select
   ( convertSelect
@@ -23,6 +24,7 @@ import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.DML.Internal           (onlyPositiveInt)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -103,7 +105,10 @@ parseOrderBy v = do
 parseLimit :: ( MonadError QErr m ) => AnnGValue -> m Int
 parseLimit v = do
   (_, pgColVal) <- asPGColVal v
-  maybe noIntErr return $ pgColValueToInt pgColVal
+  limit <- maybe noIntErr return $ pgColValueToInt pgColVal
+  -- validate int value
+  onlyPositiveInt $ Just limit
+  return limit
   where
     noIntErr = throw400 Unexpected "expecting Integer value for \"limit\""
 

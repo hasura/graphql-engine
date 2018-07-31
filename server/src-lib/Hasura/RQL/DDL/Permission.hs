@@ -50,6 +50,7 @@ module Hasura.RQL.DDL.Permission
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission.Internal
+import           Hasura.RQL.DML.Internal            (onlyPositiveInt)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -214,6 +215,8 @@ buildSelPermInfo tabInfo sp = do
   let deps = mkParentDep tn : beDeps ++ map (mkColDep "untyped" tn) pgCols
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
+
+  withPathK "limit" $ onlyPositiveInt mLimit
 
   return $ SelPermInfo (HS.fromList pgCols) tn be mLimit deps depHeaders
 

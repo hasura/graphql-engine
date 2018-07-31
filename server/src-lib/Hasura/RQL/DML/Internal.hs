@@ -281,3 +281,10 @@ simplifyError txErr = do
       -- invalid parameter value
       ("22023", msg) -> return msg
       _              -> Nothing
+
+
+-- validate limit and offset int values
+onlyPositiveInt :: MonadError QErr m => Maybe Int -> m ()
+onlyPositiveInt Nothing = return ()
+onlyPositiveInt (Just i) = when (i < 0) $ throw400 NotSupported
+  "negative values are not supported"

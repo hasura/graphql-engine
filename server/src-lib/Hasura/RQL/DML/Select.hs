@@ -302,15 +302,20 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
   -- Convert order by
   sqlOrderBy <- mapM convOrderByExp $ sqOrderBy selQ
 
+  -- validate limit and offset values
+  withPathK "limit" $ onlyPositiveInt mQueryLimit
+  withPathK "offset" $ onlyPositiveInt mQueryOffset
+
   -- convert limit expression
   let limitExp = applyPermLimit mPermLimit mQueryLimit
   -- convert offset expression
-      offsetExp = S.intToSQLExp <$> sqOffset selQ
+      offsetExp = S.intToSQLExp <$> mQueryOffset
 
   return $ SelectData newAnnFlds (spiTable selPermInfo)
     (spiFilter selPermInfo, wClause) sqlOrderBy [] limitExp offsetExp
 
   where
+    mQueryOffset = sqOffset selQ
     mQueryLimit = sqLimit selQ
     mPermLimit = spiLimit selPermInfo
 
