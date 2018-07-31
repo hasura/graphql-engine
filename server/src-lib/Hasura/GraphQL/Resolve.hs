@@ -32,8 +32,8 @@ buildTx userInfo gCtx fld = do
   opCxt <- getOpCtx $ _fName fld
   join $ fmap fst $ runConvert (fldMap, orderByCtx) $ case opCxt of
 
-    OCSelect tn permFilter hdrs ->
-      validateHdrs hdrs >> RS.convertSelect tn permFilter fld
+    OCSelect tn permFilter permLimit hdrs ->
+      validateHdrs hdrs >> RS.convertSelect tn permFilter permLimit fld
       -- RS.convertSelect tn permFilter fld
     OCInsert tn vn cols hdrs    ->
       validateHdrs hdrs >> RM.convertInsert (tn, vn) cols fld

@@ -264,6 +264,7 @@ data SelPermInfo
   { spiCols            :: !(HS.HashSet PGCol)
   , spiTable           :: !QualifiedTable
   , spiFilter          :: !S.BoolExp
+  , spiLimit           :: !(Maybe Int)
   , spiDeps            :: ![SchemaDependency]
   , spiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
