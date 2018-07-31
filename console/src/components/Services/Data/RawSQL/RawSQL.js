@@ -223,8 +223,30 @@ const RawSQL = ({
               />
             </OverlayTrigger>
           </div>
+          <div className={styles.padd_top}>
+            <input
+              checked={isTableTrackChecked}
+              className={styles.add_mar_right_small}
+              id="track-checkbox"
+              type="checkbox"
+              onChange={() => {
+                dispatch({
+                  type: SET_TRACK_TABLE_CHECKED,
+                  data: !isTableTrackChecked,
+                });
+              }}
+              data-test="raw-sql-track-check"
+            />
+            Track table
+            <OverlayTrigger placement="right" overlay={trackTableTip}>
+              <i
+                className={`${styles.padd_small_left} fa fa-info-circle`}
+                aria-hidden="true"
+              />
+            </OverlayTrigger>
+          </div>
           {migrationMode && globals.consoleMode === 'cli' ? (
-            <div>
+            <div className={styles.padd_top}>
               <input
                 checked={isMigrationChecked}
                 className={styles.add_mar_right_small}
@@ -245,28 +267,6 @@ const RawSQL = ({
                   aria-hidden="true"
                 />
               </OverlayTrigger>
-              <div className={styles.padd_top_medium}>
-                <input
-                  checked={isTableTrackChecked}
-                  className={styles.add_mar_right_small}
-                  id="track-checkbox"
-                  type="checkbox"
-                  onChange={() => {
-                    dispatch({
-                      type: SET_TRACK_TABLE_CHECKED,
-                      data: !isTableTrackChecked,
-                    });
-                  }}
-                  data-test="raw-sql-track-check"
-                />
-                Track table
-                <OverlayTrigger placement="right" overlay={trackTableTip}>
-                  <i
-                    className={`${styles.padd_small_left} fa fa-info-circle`}
-                    aria-hidden="true"
-                  />
-                </OverlayTrigger>
-              </div>
               <hr />
             </div>
           ) : (

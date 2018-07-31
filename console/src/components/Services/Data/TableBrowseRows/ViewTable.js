@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { vSetDefaults, vMakeRequest, vExpandHeading } from './ViewActions'; // eslint-disable-line no-unused-vars
-import { setTable, fetchTableComment } from '../DataActions';
+import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from './ViewHeader';
 import ViewRows from './ViewRows';
@@ -66,7 +66,6 @@ class ViewTable extends Component {
   constructor(props) {
     super(props);
     // Initialize this table
-    console.log(props);
     this.state = {
       dispatch: props.dispatch,
       tableName: props.tableName,
@@ -78,17 +77,15 @@ class ViewTable extends Component {
       dispatch(setTable(this.props.tableName)),
       dispatch(vSetDefaults(this.props.tableName)),
       dispatch(vMakeRequest()),
-      dispatch(fetchTableComment(this.props.tableName)),
     ]);
   }
 
-  static getDerivedStateFromProps(nextProps, prevState) {
-    const dispatch = prevState.dispatch;
-    if (nextProps.tableName !== prevState.tableName) {
+  componentWillReceiveProps(nextProps) {
+    const dispatch = this.props.dispatch;
+    if (nextProps.tableName !== this.props.tableName) {
       dispatch(setTable(nextProps.tableName));
       dispatch(vSetDefaults(nextProps.tableName));
       dispatch(vMakeRequest());
-      dispatch(fetchTableComment(nextProps.tableName));
     }
   }
 
@@ -99,7 +96,7 @@ class ViewTable extends Component {
     );
   }
 
-  getSnapshotBeforeUpdate() {
+  componentWillUpdate() {
     this.shouldScrollBottom =
       window.innerHeight ===
       document.body.offsetHeight - document.body.scrollTop;

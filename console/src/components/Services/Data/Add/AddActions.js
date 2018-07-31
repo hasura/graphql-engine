@@ -7,6 +7,7 @@ import { setTable } from '../DataActions.js';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
+const SET_TABLECOMMENT = 'AddTable/SET_TABLECOMMENT';
 const REMOVE_COLUMN = 'AddTable/REMOVE_COLUMN';
 const SET_COLNAME = 'AddTable/SET_COLNAME';
 const SET_COLTYPE = 'AddTable/SET_COLTYPE';
@@ -26,6 +27,7 @@ const RESET_VALIDATION_ERROR = 'AddTable/RESET_VALIDATION_ERROR';
 
 const setDefaults = () => ({ type: SET_DEFAULTS });
 const setTableName = value => ({ type: SET_TABLENAME, value });
+const setTableComment = value => ({ type: SET_TABLECOMMENT, value });
 const removeColumn = i => ({ type: REMOVE_COLUMN, index: i });
 const setColName = (name, index, isNull) => ({
   type: SET_COLNAME,
@@ -125,7 +127,7 @@ const createTableSql = () => {
     }
     // const sqlCreateTable = 'CREATE TABLE ' + '\'' + state.tableName.trim() + '\'' + '(' + tableColumns + ')';
     const sqlCreateExtension = 'CREATE EXTENSION IF NOT EXISTS pgcrypto;';
-    const sqlCreateTable =
+    let sqlCreateTable =
       'CREATE TABLE ' +
       currentSchema +
       '.' +
@@ -134,7 +136,21 @@ const createTableSql = () => {
       '"' +
       '(' +
       tableColumns +
-      ')';
+      ');';
+    // add comment if applicable
+    if (state.tableComment && state.tableComment !== '') {
+      sqlCreateTable +=
+        ' COMMENT ON TABLE ' +
+        currentSchema +
+        '.' +
+        '"' +
+        state.tableName.trim() +
+        '"' +
+        ' IS ' +
+        "'" +
+        state.tableComment +
+        "'";
+    }
     // apply migrations
     const migrationName =
       'create_table_' + currentSchema + '_' + state.tableName.trim();
@@ -244,6 +260,8 @@ const addTableReducer = (state = defaultState, action) => {
       return { ...state, internalError: action.error, lastSuccess: null };
     case SET_TABLENAME:
       return { ...state, tableName: action.value };
+    case SET_TABLECOMMENT:
+      return { ...state, tableComment: action.value };
     case REMOVE_COLUMN:
       // Removes the index of the removed column from the array of primaryKeys.
       const primaryKeys = state.primaryKeys.filter(
@@ -352,6 +370,7 @@ export default addTableReducer;
 export {
   setDefaults,
   setTableName,
+  setTableComment,
   removeColumn,
   setColName,
   setColType,

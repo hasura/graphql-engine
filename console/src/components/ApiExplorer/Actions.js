@@ -198,7 +198,6 @@ const graphqlSubscriber = (graphQLParams, url, headers) => {
     };
     return fetcher(graphQLParams);
   } catch (e) {
-    console.log(e);
     return e.json();
   }
 };

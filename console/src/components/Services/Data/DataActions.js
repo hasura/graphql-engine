@@ -16,6 +16,7 @@ const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_SCHEMA = 'Data/LOAD_SCHEMA';
 const LOAD_UNTRACKED_SCHEMA = 'Data/LOAD_UNTRACKED_SCHEMA';
 const LOAD_TABLE_COMMENT = 'Data/LOAD_TABLE_COMMENT';
+const LOAD_COLUMN_COMMENT = 'Data/LOAD_COLUMN_COMMENT';
 const LISTING_SCHEMA = 'Data/LISTING_SCHEMA';
 const LOAD_UNTRACKED_RELATIONS = 'Data/LOAD_UNTRACKED_RELATIONS';
 const FETCH_SCHEMA_LIST = 'Data/FETCH_SCHEMA_LIST';
@@ -141,7 +142,8 @@ const loadUntrackedRelations = () => (dispatch, getState) => {
 const fetchTableComment = tableName => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const currentSchema = getState().tables.currentSchema;
-  const commentSql = `select description from pg_description join pg_class on pg_description.objoid = pg_class.oid join pg_namespace on pg_class.relnamespace = pg_namespace.oid where relname = '${tableName}' and nspname='${currentSchema}' `;
+  const commentSql = `select obj_description('${currentSchema}.${tableName}'::regclass) as description from pg_class
+    WHERE relkind = 'r' AND relname = '${tableName}'`;
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -156,6 +158,36 @@ const fetchTableComment = tableName => (dispatch, getState) => {
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: LOAD_TABLE_COMMENT, data });
+    },
+    error => {
+      console.error('Failed to load table comment');
+      console.error(error);
+    }
+  );
+};
+
+const fetchColumnComment = (tableName, colName) => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const currentSchema = getState().tables.currentSchema;
+  const commentSql = `SELECT pgd.description FROM pg_catalog.pg_statio_all_tables as st
+    inner join pg_catalog.pg_description pgd on (pgd.objoid=st.relid)
+    inner join information_schema.columns c on (pgd.objsubid=c.ordinal_position
+    and  c.table_schema=st.schemaname and c.table_name=st.relname)
+    WHERE column_name = '${colName}' AND table_name = '${tableName}' AND table_schema = '${currentSchema}';`;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify({
+      type: 'run_sql',
+      args: {
+        sql: commentSql,
+      },
+    }),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      dispatch({ type: LOAD_COLUMN_COMMENT, data });
     },
     error => {
       console.error('Failed to load table comment');
@@ -326,6 +358,8 @@ const dataReducer = (state = defaultState, action) => {
       };
     case LOAD_TABLE_COMMENT:
       return { ...state, tableComment: action.data };
+    case LOAD_COLUMN_COMMENT:
+      return { ...state, columnComment: action.data };
     case LISTING_SCHEMA:
       return { ...state, listingSchemas: action.updatedSchemas };
     case SET_TABLE:
@@ -349,6 +383,7 @@ export {
   loadSchema,
   loadUntrackedSchema,
   fetchTableComment,
+  fetchColumnComment,
   handleMigrationErrors,
   makeMigrationCall,
   LISTING_SCHEMA,
