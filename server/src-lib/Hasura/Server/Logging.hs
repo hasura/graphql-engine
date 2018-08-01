@@ -7,6 +7,7 @@
 module Hasura.Server.Logging
   ( mkAccessLog
   , getRequestHeader
+  , WebHookLog(..)
   ) where
 
 import           Crypto.Hash              (Digest, SHA1, hash)
@@ -30,12 +31,38 @@ import           Text.Printf              (printf)
 import qualified Data.ByteString.Char8    as BS
 import qualified Data.CaseInsensitive     as CI
 import qualified Data.HashMap.Strict      as M
+import qualified Network.HTTP.Client      as H
 import qualified Network.HTTP.Types       as N
 
 import qualified Hasura.Logging           as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
+
+data WebHookLog
+  = WebHookLog
+  { whlUrl   :: !T.Text
+  , whlError :: !H.HttpException
+  } deriving (Show)
+
+instance L.ToEngineLog WebHookLog where
+  toEngineLog webHookLog =
+    (L.LevelError, "webhook-log", toJSON webHookLog)
+
+instance ToJSON H.HttpException where
+  toJSON (H.InvalidUrlException _ e) =
+    object [ "type" .= ("invalid_url" :: T.Text)
+           , "message" .= e
+           ]
+  toJSON (H.HttpExceptionRequest _ cont) =
+    object [ "type" .= ("http_exception" :: T.Text)
+           , "message" .= show cont
+           ]
+
+instance ToJSON WebHookLog where
+  toJSON whl = object [ "url" .= whlUrl whl
+                      , "error" .= whlError whl
+                      ]
 
 data AccessLog
   = AccessLog

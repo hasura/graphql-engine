@@ -3,6 +3,7 @@
 {-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 
 module Hasura.Server.Auth
@@ -26,6 +27,7 @@ import qualified Network.Wreq             as Wreq
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Logging
 
 bsToTxt :: B.ByteString -> T.Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
@@ -36,25 +38,17 @@ data AuthMode
   | AMAccessKeyAndHook !T.Text !T.Text
   deriving (Show, Eq)
 
-httpToQErr :: H.HttpException -> QErr
-httpToQErr e = case e of
-  H.InvalidUrlException _ _ -> err500 Unexpected "Invalid Webhook Url"
-  H.HttpExceptionRequest _ H.ConnectionTimeout -> err500 Unexpected
-    "Webhook : Connection timeout"
-  H.HttpExceptionRequest _ H.ResponseTimeout -> err500 Unexpected
-    "Webhook : Response timeout"
-  _ -> err500 Unexpected "HTTP Exception from Webhook"
-
 userRoleHeader :: T.Text
 userRoleHeader = "x-hasura-role"
 
 userInfoFromWebhook
   :: (MonadIO m, MonadError QErr m)
-  => H.Manager
+  => (WebHookLog -> IO ())
+  -> H.Manager
   -> T.Text
   -> [N.Header]
   -> m UserInfo
-userInfoFromWebhook manager urlT reqHeaders = do
+userInfoFromWebhook logger manager urlT reqHeaders = do
   let options =
         Wreq.defaults
         & Wreq.headers .~ filteredHeaders
@@ -62,7 +56,7 @@ userInfoFromWebhook manager urlT reqHeaders = do
         & Wreq.manager .~ Right manager
 
   res <- liftIO $ try $ Wreq.getWith options $ T.unpack urlT
-  resp <- either (throwError . httpToQErr) return res
+  resp <- either logAndThrow return res
   let status = resp ^. Wreq.responseStatus
 
   validateStatus status
@@ -75,6 +69,10 @@ userInfoFromWebhook manager urlT reqHeaders = do
     Just v  -> return $ UserInfo (RoleName v) headers
 
   where
+    logAndThrow err = do
+      liftIO $ logger $ WebHookLog urlT err
+      throw500 "Internal Server Error"
+
     filteredHeaders = flip filter reqHeaders $ \(n, _) ->
       n `notElem` ["Content-Length", "User-Agent", "Host", "Origin", "Referer"]
 
@@ -95,11 +93,12 @@ accessKeyHeader = "x-hasura-access-key"
 
 getUserInfo
   :: (MonadIO m, MonadError QErr m)
-  => H.Manager
+  => (WebHookLog -> IO ())
+  -> H.Manager
   -> [N.Header]
   -> AuthMode
   -> m UserInfo
-getUserInfo manager rawHeaders = \case
+getUserInfo logger manager rawHeaders = \case
 
   AMNoAuth -> return userInfoFromHeaders
 
@@ -110,7 +109,7 @@ getUserInfo manager rawHeaders = \case
 
   AMAccessKeyAndHook accKey hook ->
     maybe
-      (userInfoFromWebhook manager hook rawHeaders)
+      (userInfoFromWebhook logger manager hook rawHeaders)
       (userInfoWhenAccessKey accKey) $
       getHeader accessKeyHeader
 
