@@ -136,6 +136,9 @@ processTableChanges ti tableDiff = do
   when (isJust mNewName) $
     throw400 NotSupported $ "table renames are not yet supported : " <>> tn
 
+  -- replace constraints
+  replaceConstraints
+
   -- for all the dropped columns
   forM_ droppedCols $ \droppedCol ->
     -- Drop the column from the cache
@@ -169,8 +172,10 @@ processTableChanges ti tableDiff = do
     updateFldInCache cn ci = do
       delFldFromCache (fromPGCol cn) tn
       addFldToCache (fromPGCol cn) ci tn
+    replaceConstraints = flip modTableInCache tn $ \tInfo ->
+      return $ tInfo {tiConstraints = constraints}
     tn = tiName ti
-    TableDiff mNewName droppedCols addedCols alteredCols _ = tableDiff
+    TableDiff mNewName droppedCols addedCols alteredCols _ constraints = tableDiff
 
 processSchemaChanges :: (P2C m) => SchemaDiff -> m ()
 processSchemaChanges schemaDiff = do

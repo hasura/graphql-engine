@@ -687,7 +687,7 @@ mkInsMutFld tn constraints =
       InpValInfo (Just objsArgDesc) "objects" $ G.toGT $
       G.toNT $ G.toLT $ G.toNT $ mkInsInpTy tn
 
-    uniqueOrPrimaryCons = filter isUniqueOrPrimary constraints
+    uniqueOrPrimaryCons = filter (isUniqueOrPrimary . tcType) constraints
     onConflictInpVal = bool (Just onConflictArg) Nothing $ null uniqueOrPrimaryCons
 
     onConflictDesc = "on conflict condition"
@@ -788,7 +788,7 @@ mkOnConflictTypes tn c = bool tyInfos [] $ null constraints
               , TIEnum $ mkConstriantTy tn constraints
               , TIInpObj $ mkOnConflictInp tn
               ]
-    constraints = filter isUniqueOrPrimary c
+    constraints = filter (isUniqueOrPrimary . tcType) c
 
 mkGCtxRole'
   :: QualifiedTable

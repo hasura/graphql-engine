@@ -169,6 +169,18 @@ WHERE
 GROUP BY
     tc.table_schema, tc.table_name, tc.constraint_name;
 
+CREATE VIEW hdb_catalog.hdb_table_constraint AS
+SELECT
+    tc.table_schema,
+    tc.table_name,
+    tc.constraint_name,
+    tc.constraint_type,
+    r.oid::integer as constraint_oid
+FROM
+    information_schema.table_constraints tc
+    JOIN pg_catalog.pg_constraint r
+    ON tc.constraint_name = r.conname;
+
 CREATE FUNCTION hdb_catalog.inject_table_defaults(view_schema text, view_name text, tab_schema text, tab_name text) RETURNS void
 LANGUAGE plpgsql AS $$
     DECLARE

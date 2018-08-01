@@ -17,6 +17,7 @@ module Hasura.RQL.Types.SchemaCache
        , onlyIntCols
        , onlyJSONBCols
        , isUniqueOrPrimary
+       , isForeignKey
        , mkTableInfo
        , addTableToCache
        , modTableInCache
@@ -323,8 +324,6 @@ data ConstraintType
   | CTUNIQUE
   deriving Eq
 
-$(deriveToJSON defaultOptions{constructorTagModifier = drop 2} ''ConstraintType)
-
 constraintTyToTxt :: ConstraintType -> T.Text
 constraintTyToTxt ty = case ty of
   CTCHECK      -> "CHECK"
@@ -335,6 +334,18 @@ constraintTyToTxt ty = case ty of
 instance Show ConstraintType where
   show = T.unpack . constraintTyToTxt
 
+instance FromJSON ConstraintType where
+  parseJSON (String "CHECK") = return CTCHECK
+  parseJSON (String "FOREIGN KEY") = return CTFOREIGNKEY
+  parseJSON (String "PRIMARY KEY") = return CTPRIMARYKEY
+  parseJSON (String "UNIQUE") = return CTUNIQUE
+  parseJSON (String _) = fail
+    "expecting 'CHECK', 'FOREIGN KEY', 'PRIMARY KEY' and 'UNIQUE' for constraint_type"
+  parseJSON _ = fail "expecting String for constraint_type"
+
+instance ToJSON ConstraintType where
+  toJSON = String . constraintTyToTxt
+
 instance Q.FromCol ConstraintType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
     "CHECK"       -> Just CTCHECK
@@ -343,6 +354,18 @@ instance Q.FromCol ConstraintType where
     "UNIQUE"      -> Just CTUNIQUE
     _             -> Nothing
 
+isUniqueOrPrimary :: ConstraintType -> Bool
+isUniqueOrPrimary = \case
+  CTCHECK      -> False
+  CTFOREIGNKEY -> False
+  CTPRIMARYKEY -> True
+  CTUNIQUE     -> True
+
+isForeignKey :: ConstraintType -> Bool
+isForeignKey = \case
+  CTFOREIGNKEY -> True
+  _            -> False
+
 data TableConstraint
   = TableConstraint
   { tcType :: !ConstraintType
@@ -350,13 +373,6 @@ data TableConstraint
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableConstraint)
-
-isUniqueOrPrimary :: TableConstraint -> Bool
-isUniqueOrPrimary (TableConstraint ty _) = case ty of
-  CTCHECK      -> False
-  CTFOREIGNKEY -> False
-  CTPRIMARYKEY -> True
-  CTUNIQUE     -> True
 
 data TableInfo
   = TableInfo

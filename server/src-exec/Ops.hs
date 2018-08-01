@@ -29,7 +29,7 @@ import qualified Data.ByteString.Lazy        as BL
 import qualified Data.Text                   as T
 
 curCatalogVer :: T.Text
-curCatalogVer = "1"
+curCatalogVer = "1.1"
 
 initCatalogSafe :: UTCTime -> Q.TxE QErr String
 initCatalogSafe initTime =  do
@@ -132,6 +132,23 @@ migrateFrom08 = Q.catchE defaultTxErrorHandler $ do
                  json_build_object('type', 'select', 'args', template_defn->'select');
                 |] () False
 
+migrateFrom10 :: Q.TxE QErr ()
+migrateFrom10 =
+  Q.unitQE defaultTxErrorHandler
+    [Q.sql|
+      CREATE VIEW hdb_catalog.hdb_table_constraint AS
+      SELECT
+        tc.table_schema,
+        tc.table_name,
+        tc.constraint_name,
+        tc.constraint_type,
+        r.oid::integer as constraint_oid
+      FROM
+        information_schema.table_constraints tc
+        JOIN pg_catalog.pg_constraint r
+        ON tc.constraint_name = r.conname;
+    |] () False
+
 migrateCatalog :: UTCTime -> Q.TxE QErr String
 migrateCatalog migrationTime = do
   preVer <- getCatalogVersion
@@ -139,17 +156,24 @@ migrateCatalog migrationTime = do
        return "migrate: already at the latest version"
      | preVer == "0.8" -> do
          migrateFrom08
-         -- update the catalog version
-         updateVersion
-         -- clean hdb_views
-         Q.unitQE defaultTxErrorHandler "DROP SCHEMA IF EXISTS hdb_views CASCADE" () False
-         Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_views" () False
-         -- try building the schema cache
-         void buildSchemaCache
-         return "migrate: successfully migrated"
+         migrateFrom10
+         afterMigrate
+     | preVer == "1" -> do
+         migrateFrom10
+         afterMigrate
      | otherwise -> throw400 NotSupported $
                     "migrate: unsupported version : " <> preVer
   where
+    afterMigrate = do
+      -- update the catalog version
+      updateVersion
+      -- clean hdb_views
+      Q.unitQE defaultTxErrorHandler "DROP SCHEMA IF EXISTS hdb_views CASCADE" () False
+      Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_views" () False
+      -- try building the schema cache
+      void buildSchemaCache
+      return "migrate: successfully migrated"
+
     updateVersion =
       Q.unitQE defaultTxErrorHandler [Q.sql|
                 UPDATE "hdb_catalog"."hdb_version"
