@@ -3,7 +3,7 @@
 
 Derived data in queries
 =======================
-GraphQL’s query language for a "select" query is designed to be simple yet powerful. There will still be certain
+GraphQL’s "select" query language is designed to be simple yet powerful. But there are still certain
 queries that you cannot express with a GraphQL query. For example, getting the average rating of articles by an
 author.
 

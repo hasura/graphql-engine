@@ -1,16 +1,16 @@
-Auth Webhook Examples
-=====================
+Auth webhook samples
+====================
 
-We've put together a github nodejs repo that has some auth webhook examples configured.
+We have put together a `GitHub Node.js repo <https://github.com/hasura/sample-auth-webhook>`__ that has some sample auth
+webhooks configured.
 
-- `View on github <https://github.com/hasura/sample-auth-webhook/blob/master/server.js#L25>`__
-- Deploy with `glitch <https://glitch.com/>`__.
+You can deploy these samples using `glitch <https://glitch.com/>`__:
 
-  .. image:: https://raw.githubusercontent.com/hasura/sample-auth-webhook/master/assets/deploy-glitch.png
-    :width: 200px
-    :alt: deploy_auth_webhook_with_glitch
-    :class: no-shadow
-    :target: http://glitch.com/edit/#!/import/github/hasura/sample-auth-webhook
+.. image:: https://raw.githubusercontent.com/hasura/sample-auth-webhook/master/assets/deploy-glitch.png
+  :width: 200px
+  :alt: deploy_auth_webhook_with_glitch
+  :class: no-shadow
+  :target: http://glitch.com/edit/#!/import/github/hasura/sample-auth-webhook
 
 Once deployed, you can use any of the following endpoints as your auth webhook in the GraphQL engine:
 

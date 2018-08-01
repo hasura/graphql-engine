@@ -85,16 +85,15 @@ Examples of `database-url`:
 - If the username and database is called admin: ``postgres://admin:password@localhost:5432/admin``
 - If there is no password: ``postgres://admin:@localhost:5432/admin``
 
-.. note:: Docker networking
+.. admonition:: Docker networking
 
-   If your Postgres database is running on localhost:5432, add the ``--net=host`` flag.
+   If your Postgres database is running on ``localhost:5432``, add the ``--net=host`` flag.
    This is what your command might look like:
 
    .. code-block:: bash
-      :emphasize-lines: 5
+      :emphasize-lines: 2
 
       #! /bin/bash
-
       docker run -d --net=host \
              hasura/graphql-engine:latest \
              graphql-engine \
@@ -116,7 +115,7 @@ Step 4: Open the hasura console
 
 In the ``my-project/config.yaml`` file set the endpoint:
 
-.. code-block:: bash
+.. code-block:: yaml
 
   endpoint: http://localhost:8080
 
