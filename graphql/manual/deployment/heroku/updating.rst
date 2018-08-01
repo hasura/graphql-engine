@@ -18,22 +18,14 @@ Follow these steps to update Hasura GraphQL engine to the lastest version:
 The Hasura app with Heroku buildpack/configuration is available at:
 https://github.com/hasura/graphql-engine-heroku
 
-.. code-block:: none
-
-   $ git clone hasura/graphql-engine-heroku
-
-If you already have this, then pull the latest changes (which will have the updated GraphQL engine docker image).
-
-.. code-block:: bash
-
-   # origin is https://github.com/hasura/graphql-engine-heroku
-   $ git pull origin master
+If you already have this, then pull the latest changes which will have the updated GraphQL engine docker image.
 
 2) Attach your Heroku app
 -------------------------
 
-Let's say your Heroku app is called ``hasura-heroku`` and is on ``https://hasura-heroku.herokuapp.com``.
-Configure the git repo you cloned in step 1, to be able to push to this app.
+Let's say your Heroku app is called ``hasura-heroku`` and is running on ``https://hasura-heroku.herokuapp.com``.
+Use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`_ to configure the git repo you cloned in Step 1
+to be able to push to this app.
 
 .. code-block:: bash
 
@@ -52,7 +44,7 @@ When you ``git push`` to deploy, the Heroku app will get updated with the latest
 Deploy a specific version of Hasura GraphQL engine
 --------------------------------------------------
 
-Head to the ``Dockerfile`` in the git repo you cloned in step 1.
+Head to the ``Dockerfile`` in the git repo you cloned in Step 1.
 Change the ``FROM`` line to the specific version you want. A list of all releases can be found
 at https://github.com/hasura/graphql-engine/releases
 

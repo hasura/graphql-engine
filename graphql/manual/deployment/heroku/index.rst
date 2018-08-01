@@ -1,9 +1,10 @@
 Run Hasura GraphQL Engine on Heroku
 ===================================
 
-This guide will help you get Hasura GraphQL engine running as a “git push to deploy” app on Heroku and connecting it
-to a Heroku Postgres instance. If you want a simple, quick deployment on Heroku, follow this
-:doc:`Heroku quickstart guide <../../getting-started/heroku-simple>`.
+This guide will help you get Hasura GraphQL engine running as a "git push to deploy" app on
+`Heroku <https://www.heroku.com/platform>`_ and connecting it to a `Heroku Postgres <https://www.heroku.com/postgres>`_
+instance. If you want a simple, quick deployment on Heroku, follow this :doc:`Heroku quickstart
+guide <../../getting-started/heroku-simple>`.
 
 Clone the Hasura GraphQL engine Heroku app
 ------------------------------------------
@@ -40,11 +41,12 @@ These are some sample deployment instructions while creating a new app.
 Step 1: Create app with ``--stack=container``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We're creating an app named ``graphql-on-postgres``.
-You should change this name to whatever you'd like your app to be called.
+Use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`_ to create a new Heroku app. Let's call
+the app ``graphql-on-postgres``.
 
-.. code-block:: none
+.. code-block:: bash
 
+  # Replace graphql-on-postgres with whatever you'd like your app to be called
   $ heroku create graphql-on-postgres --stack=container
 
   Creating ⬢ graphql-on-postgres... done, stack is container
@@ -52,15 +54,15 @@ You should change this name to whatever you'd like your app to be called.
 
 **Note**:
 
-- ``HEROKU_GIT_REMOTE``: ``https://git.heroku.com/graphql-on-postgres.git``
-- ``HEROKU_APP_URL``: ``https://graphql-on-postgres.herokuapp.com/``
+- ``HEROKU_GIT_REMOTE``: `https://git.heroku.com/graphql-on-postgres.git`
+- ``HEROKU_APP_URL``: `https://graphql-on-postgres.herokuapp.com/`
 
 Step 2: Create the Heroku Postgres Addon
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Create the Postgres addon in your Heroku app.
 
-.. code-block:: none
+.. code-block:: bash
 
   $ heroku addons:create heroku-postgresql:hobby-dev -a graphql-on-postgres
 
@@ -73,7 +75,7 @@ Create the Postgres addon in your Heroku app.
 
 Step 3: git push to deploy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Remember to change HEROKU_GIT_REMOTE to your git remote below. In our case:
+Remember to change ``HEROKU_GIT_REMOTE`` to your git remote below. In our case:
 ``https://git.heroku.com/graphql-on-postgres.git``
 
 .. code-block:: bash

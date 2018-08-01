@@ -1,7 +1,8 @@
 Using existing Heroku database
 ==============================
 
-Let's say you have an existing Heroku Postgres database with data in it, and you'd like add GraphQL on it.
+Let's say you have an existing `Heroku Postgres <https://www.heroku.com/postgres>`_ database with data in it, and you'd
+like add GraphQL on it.
 
 .. note::
 

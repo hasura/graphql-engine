@@ -1,7 +1,7 @@
 Quickstart with Heroku
 ======================
 
-This guide will help you get Hasura GraphQL engine and Postgres running on **Heroku's free tier**.
+This guide will help you get Hasura GraphQL engine and Postgres running on `Heroku's free tier <https://www.heroku.com/free>`_.
 It is the easiest and fastest way of trying Hasura out.
 
 If you'd like to link this to an existing database, please head to this guide instead:
