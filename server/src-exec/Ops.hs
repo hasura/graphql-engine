@@ -6,7 +6,7 @@ module Ops
   ) where
 
 import           Data.Time.Clock              (UTCTime)
-import           Language.Haskell.TH.Syntax (Q, TExp, unTypeQ)
+import           Language.Haskell.TH.Syntax   (Q, TExp, unTypeQ)
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
@@ -18,7 +18,7 @@ import           Hasura.SQL.Types
 import qualified Data.Aeson                   as A
 import qualified Data.ByteString.Lazy         as BL
 import qualified Data.Text                    as T
-import qualified Data.Yaml.TH               as Y
+import qualified Data.Yaml.TH                 as Y
 
 import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q

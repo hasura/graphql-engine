@@ -173,7 +173,7 @@ upsertable :: [TableConstraint] -> Bool -> Bool -> Bool
 upsertable constraints isUpsertAllowed view =
   not (null uniqueOrPrimaryCons) && isUpsertAllowed && not view
   where
-    uniqueOrPrimaryCons = filter isUniqueOrPrimary constraints
+    uniqueOrPrimaryCons = filter (isUniqueOrPrimary . tcType) constraints
 
 toValidFieldInfos :: FieldInfoMap -> [FieldInfo]
 toValidFieldInfos = filter isValidField . Map.elems
@@ -1263,7 +1263,7 @@ mkOnConflictTypes tn c cols =
               , TIEnum $ mkUpdColumnTy tn cols
               , TIInpObj $ mkOnConflictInp tn
               ]
-    constraints = filter isUniqueOrPrimary c
+    constraints = filter (isUniqueOrPrimary . tcType) c
     isUpdAllowed = not $ null cols
 
 mkGCtxRole'
@@ -1667,7 +1667,7 @@ checkSchemaConflicts gCtx remoteCtx = do
                     (\k _ -> G.unNamedType k `notElem` builtinTy ++ rmRootNames)
                     $ _gTypes remoteCtx
 
-      isTyInfoSame ty = any (\t -> tyinfoEq t ty) hTypes
+      isTyInfoSame ty = any (`tyinfoEq` ty) hTypes
       -- name is same and structure is not same
       isSame n ty = G.unNamedType n `elem` hTyNames &&
                     not (isTyInfoSame ty)

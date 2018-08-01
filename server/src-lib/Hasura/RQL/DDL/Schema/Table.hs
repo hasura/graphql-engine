@@ -201,6 +201,9 @@ processTableChanges ti tableDiff = do
   when (isJust mNewName) $
     throw400 NotSupported $ "table renames are not yet supported : " <>> tn
 
+  -- replace constraints
+  replaceConstraints
+
   -- for all the dropped columns
   forM_ droppedCols $ \droppedCol ->
     -- Drop the column from the cache
@@ -234,8 +237,10 @@ processTableChanges ti tableDiff = do
     updateFldInCache cn ci = do
       delColFromCache cn tn
       addColToCache cn ci tn
+    replaceConstraints = flip modTableInCache tn $ \tInfo ->
+      return $ tInfo {tiConstraints = constraints}
     tn = tiName ti
-    TableDiff mNewName droppedCols addedCols alteredCols _ = tableDiff
+    TableDiff mNewName droppedCols addedCols alteredCols _ constraints = tableDiff
 
 delTableAndDirectDeps
   :: (QErrM m, CacheRWM m, MonadTx m) => QualifiedTable -> m ()
