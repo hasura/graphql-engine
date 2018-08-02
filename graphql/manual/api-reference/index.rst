@@ -27,3 +27,4 @@ You can refer the following to know about all PostgreSQL types supported by the 
   Query/Subscription <query>
   Mutation <mutation>
   Supported PostgreSQL types <postgresql-types>
+  Common GraphQL Engine Errors <common-errors/index>
