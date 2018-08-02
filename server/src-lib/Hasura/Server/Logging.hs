@@ -41,13 +41,16 @@ import           Hasura.Server.Utils
 
 data WebHookLog
   = WebHookLog
-  { whlUrl   :: !T.Text
-  , whlError :: !H.HttpException
+  { whlLogLevel   :: !L.LogLevel
+  , whlStatusCode :: !(Maybe N.Status)
+  , whlUrl        :: !T.Text
+  , whlError      :: !(Maybe H.HttpException)
+  , whlResponse   :: !(Maybe T.Text)
   } deriving (Show)
 
 instance L.ToEngineLog WebHookLog where
   toEngineLog webHookLog =
-    (L.LevelError, "webhook-log", toJSON webHookLog)
+    (whlLogLevel webHookLog, "webhook-log", toJSON webHookLog)
 
 instance ToJSON H.HttpException where
   toJSON (H.InvalidUrlException _ e) =
@@ -60,8 +63,10 @@ instance ToJSON H.HttpException where
            ]
 
 instance ToJSON WebHookLog where
-  toJSON whl = object [ "url" .= whlUrl whl
-                      , "error" .= whlError whl
+  toJSON whl = object [ "status_code" .= (N.statusCode <$> whlStatusCode whl)
+                      , "url" .= whlUrl whl
+                      , "http_error" .= whlError whl
+                      , "response" .= whlResponse whl
                       ]
 
 data AccessLog

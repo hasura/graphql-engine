@@ -17,6 +17,7 @@ import           Data.Aeson
 import           Data.CaseInsensitive     (CI (..), original)
 
 import qualified Data.ByteString          as B
+import qualified Data.ByteString.Lazy     as BL
 import qualified Data.HashMap.Strict      as M
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as TE
@@ -29,6 +30,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Logging
 
+import qualified Hasura.Logging           as L
+
 bsToTxt :: B.ByteString -> T.Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
 
@@ -38,12 +41,54 @@ data AuthMode
   | AMAccessKeyAndHook !T.Text !T.Text
   deriving (Show, Eq)
 
+type WebHookLogger = WebHookLog -> IO ()
+
 userRoleHeader :: T.Text
 userRoleHeader = "x-hasura-role"
 
+mkUserInfoFromResp
+  :: (MonadIO m, MonadError QErr m)
+  => WebHookLogger
+  -> T.Text
+  -> N.Status
+  -> BL.ByteString
+  -> m UserInfo
+mkUserInfoFromResp logger url statusCode respBody
+  | statusCode == N.status200 =
+    case eitherDecode respBody of
+      Left e -> do
+        logError
+        throw500 $ "Invalid response from authorization hook: " <> T.pack e
+      Right rawHeaders -> getUserInfoFromHdrs rawHeaders
+
+  | statusCode == N.status401 = do
+    logError
+    throw401 "Authentication hook unauthorized this request"
+
+  | otherwise = do
+    logError
+    throw500 "Invalid response from authorization hook"
+  where
+    getUserInfoFromHdrs rawHeaders = do
+      let headers = M.fromList [(T.toLower k, v) | (k, v) <- M.toList rawHeaders]
+      case M.lookup userRoleHeader headers of
+        Nothing -> do
+          logError
+          throw500 "missing x-hasura-role key in webhook response"
+        Just v  -> do
+          logWebHookResp L.LevelInfo Nothing
+          return $ UserInfo (RoleName v) headers
+
+    logError =
+      logWebHookResp L.LevelError $ Just respBody
+
+    logWebHookResp logLevel mResp =
+      liftIO $ logger $ WebHookLog logLevel (Just statusCode)
+        url Nothing $ fmap (bsToTxt . BL.toStrict) mResp
+
 userInfoFromWebhook
   :: (MonadIO m, MonadError QErr m)
-  => (WebHookLog -> IO ())
+  => WebHookLogger
   -> H.Manager
   -> T.Text
   -> [N.Header]
@@ -58,42 +103,23 @@ userInfoFromWebhook logger manager urlT reqHeaders = do
   res <- liftIO $ try $ Wreq.getWith options $ T.unpack urlT
   resp <- either logAndThrow return res
   let status = resp ^. Wreq.responseStatus
+      respBody = resp ^. Wreq.responseBody
 
-  validateStatus status
-  rawHeaders <- decodeResp $ resp ^. Wreq.responseBody
-
-  let headers = M.fromList [(T.toLower k, v) | (k, v) <- M.toList rawHeaders]
-
-  case M.lookup userRoleHeader headers of
-    Nothing -> throw500 "missing x-hasura-role key in webhook response: "
-    Just v  -> return $ UserInfo (RoleName v) headers
-
+  mkUserInfoFromResp logger urlT status respBody
   where
     logAndThrow err = do
-      liftIO $ logger $ WebHookLog urlT err
+      liftIO $ logger $ WebHookLog L.LevelError Nothing urlT (Just err) Nothing
       throw500 "Internal Server Error"
 
     filteredHeaders = flip filter reqHeaders $ \(n, _) ->
       n `notElem` ["Content-Length", "User-Agent", "Host", "Origin", "Referer"]
-
-    validateStatus statusCode
-      | statusCode == N.status200 = return ()
-      | statusCode == N.status401 =
-        throw401 "Authentication hook unauthorized this request"
-      | otherwise =
-        throw500 "Invalid response from authorization hook"
-
-    decodeResp bs = case eitherDecode bs of
-      Left e -> throw500 $
-        "Invalid response from authorization hook: " <> T.pack e
-      Right a -> return a
 
 accessKeyHeader :: T.Text
 accessKeyHeader = "x-hasura-access-key"
 
 getUserInfo
   :: (MonadIO m, MonadError QErr m)
-  => (WebHookLog -> IO ())
+  => WebHookLogger
   -> H.Manager
   -> [N.Header]
   -> AuthMode
