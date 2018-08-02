@@ -1,48 +1,66 @@
 Schema design basics
 ====================
-Let's take a look at how to create tables using the Hasura console, a UI tool meant for doing exactly this.
 
-Open the console
-----------------
-Run the following command using the Hasura CLI tool. 
+The Hasura GraphQL engine creates GraphQL schema object types and corresponding query/mutation fields with resolvers
+automatically as we create tables/views in the Postgres database.
 
-.. code:: bash
+Let's take a look at how to create tables using the Hasura console, a UI tool meant for doing exactly this, and what
+GraphQL schema it generates.
 
-   hasura console
-
-Create tables
--------------
 Let's say we want to create two simple tables for an article/author schema:
 
 - ``author`` with columns ``id``, ``name``
 
-- ``article`` with columns ``id``, ``title``, ``content``, ``author_id``
+- ``article`` with columns ``id``, ``title``, ``content``, ``rating``, ``author_id``
 
-Head to the ``Data`` tab and click the ``Create Table`` button to open up an interface to create tables.
+Create tables
+-------------
+
+Open the Hasura console and head to the ``Data`` tab and click the ``Create Table`` button to open up an interface to
+create tables.
+
+As soon as a table is created, the corresponding GraphQL schema types and query/mutation resolvers will be
+automatically generated.
 
 For example, here is the schema for the ``article`` table in this interface:
 
 .. image:: ../../../img/graphql/manual/schema/create-table-graphql.png
 
-As soon as a table is created, the corresponding GraphQL schema and resolvers are automatically created/updated. For
-example, the following *query* and *mutation* fields are generated for the ``article`` table we just created:
+The following *object type* and *query/mutation* fields are generated for the ``article`` table we just created:
 
 .. code-block:: none
 
-    article (
-      where: article_bool_exp
-      limit: Int
-      offset: Int
-      order_by: [article_order_by!]
-    ): [article]
+  type Article {
+    id: Int
+    title: String
+    content: String
+    rating: Int
+    author_id: Int
+  }
 
-.. code-block:: none
+  article (
+    where: article_bool_exp
+    limit: Int
+    offset: Int
+    order_by: [article_order_by!]
+  ): [article!]!
 
-    insert_article (
-        objects: [article_input!]
-        on_conflict: conflict_clause
-    ): article_mutation_response
+  insert_article (
+    objects: [article_insert_input!]!
+    on_conflict: article_on_conflict
+  ): article_mutation_response
 
+  update_article (
+    where: article_bool_exp!
+    _inc: article_inc_input
+    _set: article_set_input
+  ): article_mutation_response
+
+  delete_article (
+    where: article_bool_exp!
+  ): article_mutation_response
+
+See the :doc:`API reference <../api-reference/index>` for more details.
 
 Try basic GraphQL queries
 -------------------------
