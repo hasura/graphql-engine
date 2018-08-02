@@ -71,7 +71,7 @@ getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
   -- Fetch the constraint details
   rawConstraints <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
            SELECT constraint_type, constraint_name
-             FROM information_schema.table_constraints
+             FROM hdb_catalog.hdb_table_constraint
              WHERE table_schema = $1
                AND table_name = $2
                            |] (sn, tn) False
