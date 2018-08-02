@@ -33,7 +33,7 @@ Head to your Heroku dashboard and delete the Postgres addon:
 Step 2: Configure the DATABASE_URL environment variable
 -------------------------------------------------------
 
-Now configure the `DATABASE_URL` with your existing Heroku Postgres database URL.
+Now configure the ``DATABASE_URL`` with your existing Heroku Postgres database URL.
 
 .. image:: ../../../../img/graphql/manual/deployment/heroku-database-url-access.png
 

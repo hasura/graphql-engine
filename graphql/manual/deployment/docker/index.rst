@@ -80,15 +80,15 @@ Edit the ``--database-url`` flag command, so that you can connect to your Postgr
           --database-url postgres://username:password@hostname:port/dbname \
    serve --enable-console
 
-Examples of `database-url`:
+Examples of ``database-url``:
 
-- If the username and database is called admin: ``postgres://admin:password@localhost:5432/admin``
-- If there is no password: ``postgres://admin:@localhost:5432/admin``
+- ``postgres://admin:password@localhost:5432/my-db``
+- ``postgres://admin:@localhost:5432/my-db`` *(if there is no password)*
 
-.. admonition:: Docker networking
+.. admonition:: Postgres on localhost
 
-   If your Postgres database is running on ``localhost:5432``, add the ``--net=host`` flag.
-   This is what your command might look like:
+   If your Postgres database is running on ``localhost``, add the ``--net=host`` flag to allow the Docker container to
+   access the host's network. This is what your command should look like:
 
    .. code-block:: bash
       :emphasize-lines: 2
