@@ -1,9 +1,9 @@
 Common GraphQL Engine Errors
 ============================
 
-We will look at the common issues which occur due to manipulation of the database schema via psql or via any other mode. Hasura GraphQL engine reads the state from the database and provides GraphQL API's. Once the GraphQL engine successfully starts, any modifications to the schema should be done via the console to avoid corrupting the GraphQL engine state. 
+We will look at the common issues which occur due to manipulation of the database schema via psql or using any other postgresql client. Hasura GraphQL engine reads the state (schema) from the database and provides a GraphQL endpoint. Once the GraphQL engine successfully starts, any modifications to the schema should be done via the console to avoid corrupting the GraphQL engine state. 
 
-The following are the list of error messages provided by the Hasura GraphQL engine if it encounters such inconsistent state and ways to troubleshoot the error.
+The following are the list of error messages returned by the GraphQL Engine when it encounters an inconsistent state.
 
 .. note::
   This section requires a basic knowledge of how GraphQL engine works. Kindly checkout this url for more info.
