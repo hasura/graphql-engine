@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { Link } from 'react-router';
-import { appPrefix } from '../push';
 import TableHeader from '../TableCommon/TableHeader';
 import {
   activateCommentEdit,
@@ -37,6 +36,8 @@ import {
 } from '../DataActions';
 import { showErrorNotification } from '../Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
+
+const appPrefix = '/data';
 
 const alterTypeOptions = dataTypes.map((datatype, index) => (
   <option value={datatype.value} key={index} title={datatype.description}>

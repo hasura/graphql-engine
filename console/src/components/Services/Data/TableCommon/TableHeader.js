@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
-import { appPrefix } from '../push';
 
 const TableHeader = ({
   tableName,
@@ -62,7 +61,6 @@ const TableHeader = ({
             >
               <Link
                 to={
-                  appPrefix +
                   '/schema/' +
                   currentSchema +
                   '/tables/' +
@@ -80,7 +78,6 @@ const TableHeader = ({
             >
               <Link
                 to={
-                  appPrefix +
                   '/schema/' +
                   currentSchema +
                   '/tables/' +
@@ -99,7 +96,6 @@ const TableHeader = ({
               >
                 <Link
                   to={
-                    appPrefix +
                     '/schema/' +
                     currentSchema +
                     '/tables/' +
@@ -118,7 +114,6 @@ const TableHeader = ({
             >
               <Link
                 to={
-                  appPrefix +
                   '/schema/' +
                   currentSchema +
                   '/tables/' +
@@ -136,7 +131,6 @@ const TableHeader = ({
             >
               <Link
                 to={
-                  appPrefix +
                   '/schema/' +
                   currentSchema +
                   '/tables/' +
@@ -151,7 +145,6 @@ const TableHeader = ({
             <li role="presentation" className={'hide'}>
               <Link
                 to={
-                  appPrefix +
                   '/schema/' +
                   currentSchema +
                   '/tables/' +

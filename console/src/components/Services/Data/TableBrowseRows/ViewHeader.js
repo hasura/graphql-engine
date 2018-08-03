@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 
-import { appPrefix } from '../push';
+const appPrefix = '/data';
 
 const ViewHeader = ({ tableName, tabName, currentSchema, migrationMode }) => {
   const styles = require('../TableCommon/Table.scss');

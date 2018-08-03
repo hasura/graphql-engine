@@ -463,7 +463,10 @@ class Permissions extends Component {
         ? permsState.limitEnabled
         : false;
       const query = permsState.query;
-      const limitValue = permsState.select.limit ? permsState.select.limit : '';
+      const limitValue =
+        permsState.select && permsState.select.limit
+          ? permsState.select.limit
+          : '';
 
       let limitInputHtml;
       if (query === 'select') {
