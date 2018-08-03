@@ -37,20 +37,20 @@ import { primaryKeyAlreadyPresentMsg, fieldRepeatedMsg } from './AddWarning';
 
 import {
   listDulplicate,
-  convertListToDictUsingKV,
+  // convertListToDictUsingKV,
 } from '../../../../utils/data';
 
 import gqlPattern, {
   gqlTableErrorNotif,
   gqlColumnErrorNotif,
 } from '../Common/GraphQLValidation';
-
+/*
 const typeDescriptionDict = convertListToDictUsingKV(
   'value',
   'description',
   dataTypes
 );
-
+*/
 class AddTable extends Component {
   constructor(props) {
     super(props);
@@ -242,7 +242,7 @@ class AddTable extends Component {
     const cols = columns.map((column, i) => {
       let removeIcon;
       if (i + 1 === columns.length) {
-        removeIcon = null;
+        removeIcon = <i className={`${styles.fontAwosomeClose}`} />;
       } else {
         removeIcon = (
           <i
@@ -308,7 +308,7 @@ class AddTable extends Component {
               </option>
             ))}
           </select>
-          {removeIcon}
+          {/*
           {typeDescriptionDict && typeDescriptionDict[column.type] ? (
             <span>
               &nbsp; &nbsp;
@@ -323,6 +323,7 @@ class AddTable extends Component {
               &nbsp; &nbsp;
             </span>
           ) : null}
+          */}
           <input
             className={`${styles.inputCheckbox} form-control `}
             checked={columns[i].nullable}
@@ -364,6 +365,7 @@ class AddTable extends Component {
             data-test={`col-default-${i}`}
           />{' '}
           <label>Default</label>
+          {removeIcon}
         </div>
       );
     });
