@@ -20,6 +20,8 @@ import {
   permSetRoleName,
   permChangePermissions,
   permToggleAllowUpsert,
+  permToggleEnableLimit,
+  permToggleModifyLimit,
   permCustomChecked,
 } from './Actions';
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
@@ -361,9 +363,9 @@ class Permissions extends Component {
           ? permsState.insert.allow_upsert
           : false;
 
-        // TODO: Fix the controlled component shit
+        // TODO: Fix the controlled component
         _upsertSection = (
-          <div className={styles.editPermissionsSection}>
+          <div>
             <div className="radio">
               <label>
                 <input
@@ -373,7 +375,7 @@ class Permissions extends Component {
                   value="toggle_upsert"
                   onClick={e => dispatchToggleAllowUpsert(e.target.checked)}
                 />
-                <span>
+                <span className={styles.mar_left}>
                   Allow role '{permsState.role}' to make upsert queries
                 </span>
               </label>
@@ -445,6 +447,46 @@ class Permissions extends Component {
       }
 
       return _columnSection;
+    };
+
+    const getLimitSection = permsState => {
+      const dispatchToggleEnableLimit = checked => {
+        dispatch(permToggleEnableLimit(checked));
+      };
+      const dispatchLimit = limit => {
+        dispatch(permToggleModifyLimit(limit));
+      };
+      const limitEnabled = permsState.limitEnabled
+        ? permsState.limitEnabled
+        : false;
+      const query = permsState.query;
+
+      if (query === 'select') {
+        const _limitSection = (
+          <div className={styles.mar_small_neg_left}>
+            <div className="radio">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={limitEnabled}
+                  value="toggle_upsert"
+                  onClick={e => dispatchToggleEnableLimit(e.target.checked)}
+                />
+                <span className={styles.mar_small_left}>
+                  Limit the no of rows
+                </span>
+              </label>
+              <input
+                className={styles.mar_small_left}
+                onChange={e => dispatchLimit(e.target.value)}
+                type="text"
+              />
+            </div>
+            <div className={styles.clear_fix} />
+          </div>
+        );
+        return _limitSection;
+      }
     };
 
     const getFilterQueries = (queryTypes, permsState) => {
@@ -708,6 +750,7 @@ class Permissions extends Component {
         <div>
           {getRowSection(queryTypes, permsState)}
           {getColumnSection(tableSchema, permsState)}
+          {getLimitSection(permsState)}
           {getUpsertSection(permsState)}
           {getButtonsSection(tableSchema, permsState)}
         </div>
