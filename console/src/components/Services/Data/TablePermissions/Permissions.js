@@ -454,32 +454,54 @@ class Permissions extends Component {
         dispatch(permToggleEnableLimit(checked));
       };
       const dispatchLimit = limit => {
-        dispatch(permToggleModifyLimit(limit));
+        const parsedLimit = parseInt(limit, 10);
+        if (!isNaN(parsedLimit) || parsedLimit <= -1) {
+          dispatch(permToggleModifyLimit(parsedLimit));
+        }
       };
       const limitEnabled = permsState.limitEnabled
         ? permsState.limitEnabled
         : false;
       const query = permsState.query;
+      const limitValue = permsState.select.limit ? permsState.select.limit : '';
 
+      let limitInputHtml;
       if (query === 'select') {
+        if (limitEnabled) {
+          limitInputHtml = (
+            <input
+              type="checkbox"
+              checked="checked"
+              value="toggle_upsert"
+              onClick={e => dispatchToggleEnableLimit(e.target.checked)}
+            />
+          );
+        } else {
+          limitInputHtml = (
+            <input
+              type="checkbox"
+              value="toggle_upsert"
+              onClick={e => dispatchToggleEnableLimit(e.target.checked)}
+            />
+          );
+        }
         const _limitSection = (
           <div className={styles.mar_small_neg_left}>
             <div className="radio">
               <label>
-                <input
-                  type="checkbox"
-                  checked={limitEnabled}
-                  value="toggle_upsert"
-                  onClick={e => dispatchToggleEnableLimit(e.target.checked)}
-                />
+                {limitInputHtml}
                 <span className={styles.mar_small_left}>
                   Limit the no of rows
                 </span>
               </label>
               <input
-                className={styles.mar_small_left}
+                className={
+                  styles.mar_small_left + ' form-control ' + styles.limitInput
+                }
+                value={limitValue}
                 onChange={e => dispatchLimit(e.target.value)}
-                type="text"
+                type="number"
+                min="0"
               />
             </div>
             <div className={styles.clear_fix} />
@@ -649,9 +671,9 @@ class Permissions extends Component {
 
       return (
         <div className={styles.editPermissionsSection}>
-          Allow {getIngForm(permsState.query)} <b>rows</b> for role '{
-            permsState.role
-          }':
+          Allow {getIngForm(permsState.query)} <b>rows</b> for role '
+          {permsState.role}
+          ':
           <div>
             {getFilterOptions(queryTypes, permsState, filterString)}
             <AceEditor
@@ -744,7 +766,8 @@ class Permissions extends Component {
     const getEditPermissions = (tableSchema, queryTypes, permsState) => (
       <div className={styles.activeEdit}>
         <div className={styles.editPermissionsHeading}>
-          Role: {permsState.role}&nbsp;&nbsp;&nbsp;Query: {permsState.query}
+          Role: {permsState.role}
+          &nbsp;&nbsp;&nbsp;Query: {permsState.query}
         </div>
         <hr className={styles.remove_margin} />
         <div>

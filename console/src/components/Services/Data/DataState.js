@@ -27,7 +27,7 @@ const defaultPermissionsState = {
   query: '',
   custom_checked: false,
   newRole: '',
-  limitEnabled: false,
+  limitEnabled: true,
 };
 
 const defaultQueryPermissions = {

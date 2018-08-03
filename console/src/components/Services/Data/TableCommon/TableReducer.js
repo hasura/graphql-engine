@@ -292,7 +292,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
-          limitEnabled: true,
+          limitEnabled: action.data,
         },
       };
 

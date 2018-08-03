@@ -137,6 +137,7 @@ const permChangePermissions = changeType => {
     const allSchemas = getState().tables.allSchemas;
     const currentSchema = getState().tables.currentSchema;
     const permissionsState = getState().tables.modify.permissionsState;
+    const limitEnabled = permissionsState.limitEnabled;
 
     const table = permissionsState.table;
     const role = permissionsState.role;
@@ -149,6 +150,9 @@ const permChangePermissions = changeType => {
 
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
+    if (query === 'select' && !limitEnabled) {
+      delete permissionsState[query].limit;
+    }
 
     if (currRolePermissions && currRolePermissions.permissions[query]) {
       const deleteQuery = {
@@ -166,7 +170,6 @@ const permChangePermissions = changeType => {
           permission: permissionsState[query],
         },
       };
-
       permissionsUpQueries.push(deleteQuery);
       permissionsDownQueries.push(createQuery);
     }
