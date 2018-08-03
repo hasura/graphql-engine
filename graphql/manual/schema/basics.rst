@@ -30,6 +30,7 @@ The following *object type* and *query/mutation* fields are generated for the ``
 
 .. code-block:: none
 
+  # Object type
   type Article {
     id: Int
     title: String
@@ -38,6 +39,7 @@ The following *object type* and *query/mutation* fields are generated for the ``
     author_id: Int
   }
 
+  # Query
   article (
     where: article_bool_exp
     limit: Int
@@ -45,17 +47,20 @@ The following *object type* and *query/mutation* fields are generated for the ``
     order_by: [article_order_by!]
   ): [article!]!
 
+  # insert/upsert mutation
   insert_article (
     objects: [article_insert_input!]!
     on_conflict: article_on_conflict
   ): article_mutation_response
 
+  # update mutation
   update_article (
     where: article_bool_exp!
     _inc: article_inc_input
     _set: article_set_input
   ): article_mutation_response
 
+  # delete mutation
   delete_article (
     where: article_bool_exp!
   ): article_mutation_response

@@ -6,10 +6,10 @@ author/article schema:
 
 .. code-block:: none
 
-    insert_article(
-      objects: [article_input!] 
-      on_conflict: conflict_clause
-      ): article_mutation_response
+  insert_article (
+    objects: [article_insert_input!]!
+    on_conflict: article_on_conflict
+  ): article_mutation_response
 
 As you can see from the schema, you can:
 
