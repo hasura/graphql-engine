@@ -72,6 +72,8 @@ library
                      , jose
                      , pem
                      , x509
+                     , asn1-encoding
+                     , asn1-types
 
                      -- Server related
                      , warp

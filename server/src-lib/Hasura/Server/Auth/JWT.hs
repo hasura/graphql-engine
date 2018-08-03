@@ -12,13 +12,20 @@ import           Control.Lens
 import           Crypto.JOSE.Types          (Base64Integer (..))
 import           Crypto.JWT
 import           Crypto.PubKey.RSA          (PublicKey (..))
+import           Data.ASN1.BinaryEncoding   (DER (..))
+import           Data.ASN1.Encoding         (decodeASN1')
+import           Data.ASN1.Types            (ASN1 (End, IntVal, Start),
+                                             ASN1ConstructionType (Sequence),
+                                             fromASN1)
 import           Data.List                  (find)
 import           Data.Time.Clock            (getCurrentTime)
+--import           Debug.Trace
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils        (userRoleHeader)
 
 import qualified Data.Aeson                 as A
+-- import qualified Data.ByteString.Base64     as B64
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.CaseInsensitive       as CI
@@ -111,7 +118,8 @@ data JWTConfig
   , jcKey  :: !JWK
   } deriving (Show, Eq)
 
--- | Parse from a {"key": "RS256", "key": <bytestring>} to JWTConfig
+-- | Parse from a json string like `{"type": "RS256", "key": <bytestring>}` to
+-- | JWTConfig
 instance A.FromJSON JWTConfig where
 
   parseJSON = A.withObject "foo" $ \o -> do
@@ -135,39 +143,81 @@ instance A.FromJSON JWTConfig where
 
       parseRsaKey ktype key = do
         let res = fromRawPem (BL.fromStrict $ TE.encodeUtf8 key)
-        case res of
-          Left e  -> invalidJwk ("Could not decode PEM: " <> T.unpack e)
-          Right a -> return $ JWTConfig ktype a
+            err e = "Could not decode PEM: " <> T.unpack e
+        either (invalidJwk . err) (return . JWTConfig ktype) res
 
       invalidJwk msg = fail ("Invalid JWK: " <> msg)
 
 
 -- | Helper functions to decode PEM bytestring to RSA public key
 
+-- try PKCS first, then x509
 fromRawPem :: BL.ByteString -> Either Text JWK
-fromRawPem k = fromCertRaw k >>= certToJwk
+fromRawPem bs = -- pubKeyToJwk <=< fromPkcsPem
+  case fromPkcsPem bs of
+    Right pk -> pubKeyToJwk pk
+    Left e ->
+      case fromX509Pem bs of
+        Right pk1 -> pubKeyToJwk pk1
+        Left e1   -> Left (e <> " " <> e1)
 
-fromCertRaw :: BL.ByteString -> Either Text X509.Certificate
-fromCertRaw s = do
+-- decode a PKCS1 or PKCS8 PEM to obtain the public key
+fromPkcsPem :: BL.ByteString -> Either Text PublicKey
+fromPkcsPem bs = do
+  pems <- fmapL T.pack $ PEM.pemParseLBS bs
+  pem  <- getAtleastOnePem pems
+  res  <- fmapL asn1ErrToText $ decodeASN1' DER $ PEM.pemContent pem
+  -- trace ("ASN1 decodes: " ++ show res) (return ())
+  case res of
+    -- PKCS#1 format
+    [Start Sequence, IntVal n, IntVal e, End Sequence] ->
+      return $ PublicKey (calculateSize n) n e
+    -- try and see if its a PKCS#8 format
+    asn1 -> do
+      (pub, []) <- fmapL T.pack $ fromASN1 asn1
+      case pub of
+        X509.PubKeyRSA pk -> return pk
+        _                 -> Left "Could not decode RSA public key"
+  where
+    asn1ErrToText = T.pack . show
+
+-- decode a x509 certificate containing the RSA public key
+fromX509Pem :: BL.ByteString -> Either Text PublicKey
+fromX509Pem s = do
   -- try to parse bytestring to a [PEM]
   pems <- fmapL T.pack $ PEM.pemParseLBS s
   -- fail if [PEM] is empty
   pem <- getAtleastOnePem pems
+
   -- decode the bytestring to a certificate
   signedExactCert <- fmapL T.pack $ X509.decodeSignedCertificate $
                      PEM.pemContent pem
-  return $ X509.signedObject $ X509.getSigned signedExactCert
-  where
-    fmapL fn (Left e) = Left $ fn e
-    fmapL _ (Right x) = pure x
+  let cert = X509.signedObject $ X509.getSigned signedExactCert
+      pubKey = X509.certPubKey cert
 
-    getAtleastOnePem []    = Left "No pem found"
-    getAtleastOnePem (x:_) = Right x
+  case pubKey of
+    X509.PubKeyRSA pk -> return pk
+    _ -> Left "Could not decode RSA public key from x509 cert"
 
-certToJwk :: X509.Certificate -> Either Text JWK
-certToJwk cert = do
-  let X509.PubKeyRSA (PublicKey _ n e) = X509.certPubKey cert
-      jwk' = fromKeyMaterial $ RSAKeyMaterial $ rsaKeyParams n e
+
+pubKeyToJwk :: PublicKey -> Either Text JWK
+pubKeyToJwk (PublicKey _ n e) = do
+  let jwk' = fromKeyMaterial $ RSAKeyMaterial rsaKeyParams
   return $ jwk' & jwkKeyOps .~ Just [Verify]
   where
-    rsaKeyParams n e = RSAKeyParameters (Base64Integer n) (Base64Integer e) Nothing
+    rsaKeyParams = RSAKeyParameters (Base64Integer n) (Base64Integer e) Nothing
+
+
+fmapL :: (a -> a') -> Either a b -> Either a' b
+fmapL fn (Left e) = Left (fn e)
+fmapL _ (Right x) = pure x
+
+getAtleastOnePem :: [PEM.PEM] -> Either Text PEM.PEM
+getAtleastOnePem []    = Left "No pem found"
+getAtleastOnePem (x:_) = Right x
+
+calculateSize :: Integer -> Int
+calculateSize = go 1
+  where
+    go i n | 2 ^ (i * 8) > n = i
+           | otherwise       = go (i + 1) n
