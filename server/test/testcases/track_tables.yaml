@@ -20,3 +20,8 @@ query:
       args:
         schema: public
         name: dollar$test
+    - type: track_table
+      args:
+        schema: public
+        name: address
+

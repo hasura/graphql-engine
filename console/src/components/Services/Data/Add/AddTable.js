@@ -10,6 +10,7 @@ import { showErrorNotification } from '../Notification';
 
 import {
   setTableName,
+  setTableComment,
   removeColumn,
   setColName,
   setColType,
@@ -36,20 +37,20 @@ import { primaryKeyAlreadyPresentMsg, fieldRepeatedMsg } from './AddWarning';
 
 import {
   listDulplicate,
-  convertListToDictUsingKV,
+  // convertListToDictUsingKV,
 } from '../../../../utils/data';
 
 import gqlPattern, {
   gqlTableErrorNotif,
   gqlColumnErrorNotif,
 } from '../Common/GraphQLValidation';
-
+/*
 const typeDescriptionDict = convertListToDictUsingKV(
   'value',
   'description',
   dataTypes
 );
-
+*/
 class AddTable extends Component {
   constructor(props) {
     super(props);
@@ -241,7 +242,7 @@ class AddTable extends Component {
     const cols = columns.map((column, i) => {
       let removeIcon;
       if (i + 1 === columns.length) {
-        removeIcon = null;
+        removeIcon = <i className={`${styles.fontAwosomeClose}`} />;
       } else {
         removeIcon = (
           <i
@@ -307,7 +308,7 @@ class AddTable extends Component {
               </option>
             ))}
           </select>
-          {removeIcon}
+          {/*
           {typeDescriptionDict && typeDescriptionDict[column.type] ? (
             <span>
               &nbsp; &nbsp;
@@ -322,6 +323,7 @@ class AddTable extends Component {
               &nbsp; &nbsp;
             </span>
           ) : null}
+          */}
           <input
             className={`${styles.inputCheckbox} form-control `}
             checked={columns[i].nullable}
@@ -363,6 +365,7 @@ class AddTable extends Component {
             data-test={`col-default-${i}`}
           />{' '}
           <label>Default</label>
+          {removeIcon}
         </div>
       );
     });
@@ -460,7 +463,7 @@ class AddTable extends Component {
           <div
             className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
           >
-            <h4 className={styles.subheading_text}>Table name &nbsp; &nbsp;</h4>
+            <h4 className={styles.subheading_text}>Table Name &nbsp; &nbsp;</h4>
             <input
               type="text"
               data-test="tableName"
@@ -485,6 +488,17 @@ class AddTable extends Component {
               &nbsp; &nbsp;
             </h4>
             {pks}
+            <hr />
+            <h4 className={styles.subheading_text}>Comment &nbsp; &nbsp;</h4>
+            <input
+              type="text"
+              data-test="tableComment"
+              placeholder="comment"
+              className={`${styles.tableNameInput} form-control`}
+              onChange={e => {
+                dispatch(setTableComment(e.target.value));
+              }}
+            />
             <hr />
             <button
               type="submit"

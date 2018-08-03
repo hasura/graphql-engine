@@ -34,6 +34,7 @@ querySpecFiles =
   , "track_tables.yaml"
   , "create_author_article_relationship.yaml"
   , "create_author_article_permissions.yaml"
+  , "create_address_resident_relationship_error.yaml"
   ]
 
 gqlSpecFiles :: [FilePath]

@@ -57,6 +57,7 @@ class Main extends React.Component {
       location,
       migrationModeProgress,
       currentSchema,
+      serverVersion,
       latestServerVersion,
     } = this.props;
     const styles = require('./Main.scss');
@@ -109,6 +110,7 @@ class Main extends React.Component {
                 </div>
                 <Link to="/">
                   <div className={styles.header_project_name}>HASURA</div>
+                  <div className={styles.project_version}>{serverVersion}</div>
                 </Link>
               </div>
             </div>
