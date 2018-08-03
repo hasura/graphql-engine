@@ -8,6 +8,7 @@
     "type": "git",
     "url": "https://github.com/hasura/graphql-engine"
   },
+  "main": "index.js",
   "homepage": "https://hasura.io/",
   "keywords": [],
   "scripts": {
