@@ -27,6 +27,7 @@ const defaultPermissionsState = {
   query: '',
   custom_checked: false,
   newRole: '',
+  limitEnabled: false,
 };
 
 const defaultQueryPermissions = {
@@ -37,6 +38,7 @@ const defaultQueryPermissions = {
   select: {
     columns: [],
     filter: {},
+    limit: null,
   },
   update: {
     columns: [],
