@@ -455,9 +455,7 @@ class Permissions extends Component {
       };
       const dispatchLimit = limit => {
         const parsedLimit = parseInt(limit, 10);
-        if (!isNaN(parsedLimit) || parsedLimit <= -1) {
-          dispatch(permToggleModifyLimit(parsedLimit));
-        }
+        dispatch(permToggleModifyLimit(parsedLimit));
       };
       const limitEnabled = permsState.limitEnabled
         ? permsState.limitEnabled
