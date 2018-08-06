@@ -112,7 +112,11 @@ userInfoFromWebhook logger manager urlT reqHeaders = do
       throw500 "Internal Server Error"
 
     filteredHeaders = flip filter reqHeaders $ \(n, _) ->
-      n `notElem` ["Content-Length", "User-Agent", "Host", "Origin", "Referer"]
+      n `notElem` [ "Content-Length", "Content-MD5", "User-Agent", "Host"
+                  , "Origin", "Referer" , "Accept", "Accept-Encoding"
+                  , "Accept-Language", "Accept-Datetime"
+                  , "Cache-Control", "Connection", "DNT"
+                  ]
 
 accessKeyHeader :: T.Text
 accessKeyHeader = "x-hasura-access-key"
