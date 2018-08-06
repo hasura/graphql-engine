@@ -633,7 +633,13 @@ class ModifyTable extends Component {
         />
         <br />
         <div className={`container-fluid ${styles.padd_left_remove}`}>
-          <div className={`col-xs-9 ${styles.padd_left_remove}`}>
+          <div
+            className={
+              `col-xs-9 ${styles.padd_left_remove}` +
+              ' ' +
+              styles.modifyMinWidth
+            }
+          >
             {commentHtml}
             <h4 className={styles.subheading_text}>Columns</h4>
             {columnEditors}
