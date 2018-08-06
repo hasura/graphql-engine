@@ -9,6 +9,7 @@ module Hasura.Server.Auth.JWT
   ) where
 
 import           Control.Lens
+import           Control.Monad              (when)
 import           Crypto.JOSE.Types          (Base64Integer (..))
 import           Crypto.JWT
 import           Crypto.PubKey.RSA          (PublicKey (..))
@@ -19,13 +20,11 @@ import           Data.ASN1.Types            (ASN1 (End, IntVal, Start),
                                              fromASN1)
 import           Data.List                  (find)
 import           Data.Time.Clock            (getCurrentTime)
---import           Debug.Trace
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils        (userRoleHeader)
 
 import qualified Data.Aeson                 as A
--- import qualified Data.ByteString.Base64     as B64
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.CaseInsensitive       as CI
@@ -162,50 +161,52 @@ fromRawPem bs = -- pubKeyToJwk <=< fromPkcsPem
         Left e1   -> Left (e <> " " <> e1)
 
 -- decode a PKCS1 or PKCS8 PEM to obtain the public key
-fromPkcsPem :: BL.ByteString -> Either Text PublicKey
+fromPkcsPem :: BL.ByteString -> Either Text X509.PubKey
 fromPkcsPem bs = do
   pems <- fmapL T.pack $ PEM.pemParseLBS bs
   pem  <- getAtleastOnePem pems
   res  <- fmapL asn1ErrToText $ decodeASN1' DER $ PEM.pemContent pem
-  -- trace ("ASN1 decodes: " ++ show res) (return ())
   case res of
     -- PKCS#1 format
     [Start Sequence, IntVal n, IntVal e, End Sequence] ->
-      return $ PublicKey (calculateSize n) n e
+      return $ X509.PubKeyRSA $ PublicKey (calculateSize n) n e
     -- try and see if its a PKCS#8 format
     asn1 -> do
-      (pub, []) <- fmapL T.pack $ fromASN1 asn1
-      case pub of
-        X509.PubKeyRSA pk -> return pk
-        _                 -> Left "Could not decode RSA public key"
+      (pub, xs) <- fmapL T.pack $ fromASN1 asn1
+      unless (null xs) (Left "Could not decode public key")
+      return pub
   where
     asn1ErrToText = T.pack . show
 
+
 -- decode a x509 certificate containing the RSA public key
-fromX509Pem :: BL.ByteString -> Either Text PublicKey
+fromX509Pem :: BL.ByteString -> Either Text X509.PubKey
 fromX509Pem s = do
   -- try to parse bytestring to a [PEM]
   pems <- fmapL T.pack $ PEM.pemParseLBS s
   -- fail if [PEM] is empty
   pem <- getAtleastOnePem pems
-
   -- decode the bytestring to a certificate
   signedExactCert <- fmapL T.pack $ X509.decodeSignedCertificate $
                      PEM.pemContent pem
   let cert = X509.signedObject $ X509.getSigned signedExactCert
       pubKey = X509.certPubKey cert
-
   case pubKey of
-    X509.PubKeyRSA pk -> return pk
+    X509.PubKeyRSA pk -> return $ X509.PubKeyRSA pk
     _ -> Left "Could not decode RSA public key from x509 cert"
 
 
-pubKeyToJwk :: PublicKey -> Either Text JWK
-pubKeyToJwk (PublicKey _ n e) = do
-  let jwk' = fromKeyMaterial $ RSAKeyMaterial rsaKeyParams
+pubKeyToJwk :: X509.PubKey -> Either Text JWK
+pubKeyToJwk pubKey = do
+  jwk' <- mkJwk
   return $ jwk' & jwkKeyOps .~ Just [Verify]
   where
-    rsaKeyParams = RSAKeyParameters (Base64Integer n) (Base64Integer e) Nothing
+    mkJwk = case pubKey of
+      X509.PubKeyRSA (PublicKey _ n e) ->
+        return $ fromKeyMaterial $ RSAKeyMaterial (rsaKeyParams n e)
+      _ -> Left "This key type is not supported"
+    rsaKeyParams n e =
+      RSAKeyParameters (Base64Integer n) (Base64Integer e) Nothing
 
 
 fmapL :: (a -> a') -> Either a b -> Either a' b

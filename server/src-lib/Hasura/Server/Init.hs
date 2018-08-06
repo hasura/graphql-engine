@@ -169,13 +169,18 @@ parseWebHook =
                          help "The authentication webhook, required to authenticate requests"
                        )
 
+
 parseJwtSecret :: Parser (Maybe Text)
 parseJwtSecret =
   optional $ strOption ( long "jwt-secret" <>
-                         metavar "HMAC-SHA256 SHARED SECRET" <>
-                         help ("The shared secret for verifying HMAC-SHA256 "
-                              <> "signed JWTs (must be >= 32 characters)")
+                         metavar "JWK" <>
+                         help jwtSecretHelp
                        )
+
+jwtSecretHelp :: String
+jwtSecretHelp = "The JSON containing type and the JWK used for verifying. e.g: "
+              <> "`{\"type\": \"HS256\", \"key\": \"<your-hmac-shared-secret>\"}`,"
+              <> "`{\"type\": \"RS256\", \"key\": \"<your-PEM-RSA-public-key>\"}`"
 
 
 parseCorsConfig :: Parser CorsConfigFlags
