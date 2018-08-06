@@ -51,7 +51,7 @@ send_pr_to_repo() {
   git clone https://github.com/hasura/$1.git ~/$1
   cd ~/$1
   git checkout -b ${LATEST_TAG}
-  find . -type f -exec sed -i "s/\(hasura\/graphql-engine:\).*$/\1${LATEST_TAG}/" {} \;
+  find . -type f -exec sed -i -E 's#(hasura/graphql-engine:)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?( \\)*$#\1'"${LATEST_TAG}"'\9#' {} \;
   git add .
   git commit -m "update image version to ${LATEST_TAG}"
   git push -q https://${GITHUB_TOKEN}@github.com/hasura/$1.git ${LATEST_TAG}
