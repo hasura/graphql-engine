@@ -2,8 +2,6 @@ version: '3.6'
 services:
   postgres:
     image: postgres
-    environment:
-    - "POSTGRES_PASSWORD:mysecretpassword"
     restart: always
     volumes:
     - db_data:/var/lib/postgresql/data
@@ -15,10 +13,10 @@ services:
     - "postgres"
     restart: always
     environment:
-    - "POSTGRES_PASSWORD:mysecretpassword"
-    command: >
-      /bin/sh -c "
-      graphql-engine --database-url postgres://postgres:$${POSTGRES_PASSWORD}@postgres:5432/postgres serve --enable-console;
-      "
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:@postgres:5432/postgres
+    command:
+      - graphql-engine
+      - serve
+      - --enable-console
 volumes:
   db_data:

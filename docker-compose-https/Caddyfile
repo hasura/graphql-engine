@@ -1,0 +1,5 @@
+<your-domain.com> {
+	proxy / graphql-engine:8080 {
+		websocket
+	}
+}
