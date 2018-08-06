@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import GraphiQL from 'graphiql';
+import GraphiQL from 'hasura-console-graphiql';
 import PropTypes from 'prop-types';
 import ErrorBoundary from './ErrorBoundary';
 import { graphQLFetcherFinal } from './Actions';
@@ -7,8 +7,8 @@ import { graphQLFetcherFinal } from './Actions';
 import './GraphiQL.css';
 
 class GraphiQLWrapper extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       schema: null,
       error: false,
@@ -17,20 +17,19 @@ class GraphiQLWrapper extends Component {
     };
   }
 
-  shouldComponentUpdate() {
-    // shouldn't re-render if headers change. play button will trigger the query
-    return false;
+  shouldComponentUpdate(nextProps) {
+    return !nextProps.headerFocus;
   }
 
   render() {
     const styles = require('../Common/Common.scss');
-
-    const graphqlUrl = this.props.data.url;
-
     const graphQLFetcher = graphQLParams => {
+      if (this.state.headerFocus) {
+        return null;
+      }
       return graphQLFetcherFinal(
         graphQLParams,
-        graphqlUrl,
+        this.props.data.url,
         this.props.data.headers
       );
     };
@@ -40,15 +39,9 @@ class GraphiQLWrapper extends Component {
       <i className={'fa fa-spinner fa-spin ' + styles.graphSpinner} />
     );
 
-    if (!this.state.error && !this.state.noSchema) {
-      content = (
-        <GraphiQL
-          fetcher={graphQLFetcher}
-          defaultQuery={''}
-          schema={undefined}
-        />
-      );
-    } else if (this.state.noSchema) {
+    if (!this.state.error && this.props.numberOfTables !== 0) {
+      content = <GraphiQL fetcher={graphQLFetcher} />;
+    } else if (this.props.numberOfTables === 0) {
       content = (
         <GraphiQL
           fetcher={graphQLFetcher}
@@ -83,6 +76,8 @@ class GraphiQLWrapper extends Component {
 GraphiQLWrapper.propTypes = {
   dispatch: PropTypes.func.isRequired,
   data: PropTypes.object.isRequired,
+  numberOfTables: PropTypes.number.isRequired,
+  headerFocus: PropTypes.bool.isRequired,
 };
 
 export default GraphiQLWrapper;

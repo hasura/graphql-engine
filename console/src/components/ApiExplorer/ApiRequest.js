@@ -12,6 +12,8 @@ import {
   removeRequestHeader,
   updateFileObject,
   editGeneratedJson,
+  focusHeaderTextbox,
+  unfocusTypingHeader,
 } from './Actions';
 
 import GraphiQLWrapper from './GraphiQLWrapper';
@@ -22,8 +24,16 @@ class ApiRequest extends Component {
   constructor(props) {
     super(props);
     this.state = {};
+    this.state.accessKeyVisible = false;
     this.state.bodyAllowedMethods = ['POST'];
     this.state.tabIndex = 0;
+    this.timer = null;
+    if (this.props.numberOfTables !== 0) {
+      const graphqlQueryInLS = window.localStorage.getItem('graphiql:query');
+      if (graphqlQueryInLS && graphqlQueryInLS.indexOf('do not have') !== -1) {
+        window.localStorage.removeItem('graphiql:query');
+      }
+    }
   }
 
   onGenerateApiCodeClicked = () => {
@@ -59,11 +69,17 @@ class ApiRequest extends Component {
     this.props.dispatch(removeRequestHeader(index));
   }
 
+  onShowAccessKeyClicked() {
+    this.setState({ accessKeyVisible: !this.state.accessKeyVisible });
+  }
+
   onNewHeaderKeyChanged(e) {
+    this.handleTypingTimeouts();
     this.props.dispatch(addRequestHeader(e.target.value, ''));
   }
 
   onNewHeaderValueChanged(e) {
+    this.handleTypingTimeouts();
     this.props.dispatch(addRequestHeader('', e.target.value));
   }
 
@@ -226,7 +242,10 @@ class ApiRequest extends Component {
               placeholder="Enter Key"
               data-element-name="key"
               onChange={this.onHeaderValueChanged.bind(this)}
+              onFocus={this.handleFocus}
+              onBlur={this.handleBlur}
               type="text"
+              data-test={`header-key-${i}`}
             />
           </td>
           <td
@@ -249,11 +268,27 @@ class ApiRequest extends Component {
               placeholder="Enter Value"
               data-element-name="value"
               onChange={this.onHeaderValueChanged.bind(this)}
-              type="text"
+              onFocus={this.handleFocus}
+              onBlur={this.handleBlur}
+              data-test={`header-value-${i}`}
+              type={
+                header.key === 'X-Hasura-Access-Key' &&
+                !this.state.accessKeyVisible
+                  ? 'password'
+                  : 'text'
+              }
             />
           </td>
           {header.isNewHeader ? null : (
             <td>
+              {header.key === 'X-Hasura-Access-Key' ? (
+                <i
+                  className={styles.showAccessKey + ' fa fa-eye'}
+                  data-header-id={i}
+                  aria-hidden="true"
+                  onClick={this.onShowAccessKeyClicked.bind(this)}
+                />
+              ) : null}
               <i
                 className={styles.closeHeader + ' fa fa-times'}
                 data-header-id={i}
@@ -308,11 +343,26 @@ class ApiRequest extends Component {
   getValidBody() {
     switch (this.props.bodyType) {
       case 'graphql':
-        return <GraphiQLWrapper data={this.props} />;
+        return (
+          <GraphiQLWrapper
+            data={this.props}
+            numberOfTables={this.props.numberOfTables}
+            dispatch={this.props.dispatch}
+            headerFocus={this.props.headerFocus}
+          />
+        );
       default:
         return '';
     }
   }
+
+  handleFocus = () => {
+    this.props.dispatch(focusHeaderTextbox());
+  };
+
+  handleBlur = () => {
+    this.props.dispatch(unfocusTypingHeader());
+  };
 
   handleFileChange(e) {
     if (e.target.files.length > 0) {
@@ -343,6 +393,8 @@ ApiRequest.propTypes = {
   credentials: PropTypes.object.isRequired,
   bodyType: PropTypes.string.isRequired,
   route: PropTypes.object.isRequired,
+  numberOfTables: PropTypes.number.isRequired,
+  headerFocus: PropTypes.bool.isRequired,
 };
 
 export default ApiRequest;

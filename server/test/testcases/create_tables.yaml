@@ -14,5 +14,39 @@ query:
             id SERIAL PRIMARY KEY,
             title TEXT,
             content TEXT,
-            author_id INTEGER REFERENCES author(id)
+            author_id INTEGER REFERENCES author(id),
+            is_published BOOLEAN,
+            published_on TIMESTAMP
+          )
+    - type: run_sql
+      args:
+        sql: |
+          CREATE TABLE person (
+            id SERIAL PRIMARY KEY,
+            details JSONB NOT NULL
+          )
+    - type: run_sql
+      args:
+        sql: |
+          CREATE TABLE dollar$test (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL
+          )
+    - type: run_sql
+      args:
+        sql: |
+          CREATE TABLE resident (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            age INTEGER NOT NULL
+          )
+    - type: run_sql
+      args:
+        sql: |
+          CREATE TABLE address (
+            id SERIAL PRIMARY KEY,
+            door_no TEXT NOT NULL,
+            street TEXT NOT NULL,
+            city TEXT NOT NULL,
+            resident_id INTEGER REFERENCES resident(id)
           )

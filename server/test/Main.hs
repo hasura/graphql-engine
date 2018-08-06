@@ -1,32 +1,33 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes        #-}
 
 module Main where
 
-import           Control.Monad.Trans.Except
 import           Data.Time.Clock            (getCurrentTime)
 import           Network.Wai                (Application)
 import           Options.Applicative
 import           System.Environment         (withArgs)
 import           System.Exit                (exitFailure)
 import           Test.Hspec.Core.Runner
-import           Test.Hspec.Formatters
 import           Test.Hspec.Wai
-import           Web.Spock.Core             (spockAsApp, spockT)
 
 import qualified Data.Aeson                 as J
 import qualified Data.ByteString.Lazy.Char8 as BLC
 
+import qualified Database.PG.Query          as Q
+import qualified Hasura.Logging             as L
 import           Hasura.Prelude
-import           Hasura.Server.App          (AuthMode (..), RavenLogger, app,
-                                             ravenLogGen)
+import           Hasura.Server.App          (mkWaiApp)
+import           Hasura.Server.Auth         (AuthMode (..))
+
+
+import qualified Database.PG.Query          as PGQ
+import qualified Network.HTTP.Client        as HTTP
+import qualified Network.HTTP.Client.TLS    as HTTP
+
 import           Hasura.Server.Init
-import           Hasura.Server.Logging      (withStdoutLogger)
 import           Ops                        (initCatalogSafe)
 import           Spec                       (mkSpecs)
-
-import qualified Database.PG.Query          as Q
-import qualified Database.PG.Query          as PGQ
-
 
 data ConnectionParams = ConnectionParams RawConnInfo Q.ConnParams
 
@@ -40,13 +41,15 @@ resetStateTx = do
   Q.unitQE PGQ.PGExecErrTx "DROP SCHEMA public CASCADE" () False
   Q.unitQE PGQ.PGExecErrTx "CREATE SCHEMA public" () False
 
-ravenApp :: RavenLogger -> PGQ.PGPool -> IO Application
-ravenApp rlogger pool = do
-  let corsCfg = CorsConfigG "*" True  -- cors is disabled
-  spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
+ravenApp :: L.LoggerCtx -> PGQ.PGPool -> IO Application
+ravenApp loggerCtx pool = do
+  let corsCfg = CorsConfigG "*" False -- cors is enabled
+  httpManager <- HTTP.newManager HTTP.tlsManagerSettings
+  -- spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
+  mkWaiApp Q.Serializable Nothing loggerCtx pool httpManager AMNoAuth corsCfg True -- no access key and no webhook
 
 main :: IO ()
-main = withStdoutLogger ravenLogGen $ \rlogger -> do
+main = do
   -- parse CLI flags for connection params
   ConnectionParams rci cp <- parseArgs
   -- form the postgres connection info
@@ -58,10 +61,11 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
   void $ liftIO $ runExceptT $ Q.runTx pool defTxMode resetStateTx
   -- intialize state for graphql-engine in the database
   liftIO $ initialise pool
+  -- generate the test specs
   specs <- mkSpecs
+  loggerCtx <- L.mkLoggerCtx L.defaultLoggerSettings
   -- run the tests
-  withArgs [] $ hspecWith defaultConfig {configFormatter = Just progress} $
-    with (ravenApp rlogger pool) specs
+  withArgs [] $ hspecWith defaultConfig $ with (ravenApp loggerCtx pool) specs
 
   where
     initialise :: Q.PGPool -> IO ()

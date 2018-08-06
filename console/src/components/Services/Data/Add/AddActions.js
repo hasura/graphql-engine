@@ -4,10 +4,10 @@ import { loadSchema, makeMigrationCall } from '../DataActions';
 import { showSuccessNotification } from '../Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
-import globals from '../../../../Globals';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
+const SET_TABLECOMMENT = 'AddTable/SET_TABLECOMMENT';
 const REMOVE_COLUMN = 'AddTable/REMOVE_COLUMN';
 const SET_COLNAME = 'AddTable/SET_COLNAME';
 const SET_COLTYPE = 'AddTable/SET_COLTYPE';
@@ -27,6 +27,7 @@ const RESET_VALIDATION_ERROR = 'AddTable/RESET_VALIDATION_ERROR';
 
 const setDefaults = () => ({ type: SET_DEFAULTS });
 const setTableName = value => ({ type: SET_TABLENAME, value });
+const setTableComment = value => ({ type: SET_TABLECOMMENT, value });
 const removeColumn = i => ({ type: REMOVE_COLUMN, index: i });
 const setColName = (name, index, isNull) => ({
   type: SET_COLNAME,
@@ -85,6 +86,7 @@ const createTableSql = () => {
     const pKeys = state.primaryKeys
       .filter(p => p !== '')
       .map(p => state.columns[p].name);
+    let isUUIDDefault = false;
     for (let i = 0; i < currentCols.length; i++) {
       tableColumns +=
         '"' + currentCols[i].name + '"' + ' ' + currentCols[i].type + ' ';
@@ -104,6 +106,9 @@ const createTableSql = () => {
           // if a column type is text and if it has a default value, add a single quote by default
           tableColumns += " DEFAULT '" + currentCols[i].default.value + "'";
         } else {
+          if (currentCols[i].type === 'uuid') {
+            isUUIDDefault = true;
+          }
           tableColumns += ' DEFAULT ' + currentCols[i].default.value;
         }
       }
@@ -121,7 +126,8 @@ const createTableSql = () => {
       tableColumns += ') ';
     }
     // const sqlCreateTable = 'CREATE TABLE ' + '\'' + state.tableName.trim() + '\'' + '(' + tableColumns + ')';
-    const sqlCreateTable =
+    const sqlCreateExtension = 'CREATE EXTENSION IF NOT EXISTS pgcrypto;';
+    let sqlCreateTable =
       'CREATE TABLE ' +
       currentSchema +
       '.' +
@@ -130,48 +136,57 @@ const createTableSql = () => {
       '"' +
       '(' +
       tableColumns +
-      ')';
+      ');';
+    // add comment if applicable
+    if (state.tableComment && state.tableComment !== '') {
+      sqlCreateTable +=
+        ' COMMENT ON TABLE ' +
+        currentSchema +
+        '.' +
+        '"' +
+        state.tableName.trim() +
+        '"' +
+        ' IS ' +
+        "'" +
+        state.tableComment +
+        "'";
+    }
     // apply migrations
     const migrationName =
       'create_table_' + currentSchema + '_' + state.tableName.trim();
+    const upQueryArgs = [];
+    if (isUUIDDefault) {
+      upQueryArgs.push({
+        type: 'run_sql',
+        args: { sql: sqlCreateExtension },
+      });
+    }
+    upQueryArgs.push({
+      type: 'run_sql',
+      args: { sql: sqlCreateTable },
+    });
+    upQueryArgs.push({
+      type: 'add_existing_table_or_view',
+      args: {
+        name: state.tableName.trim(),
+        schema: currentSchema,
+      },
+    });
     const upQuery = {
       type: 'bulk',
-      args: [
-        {
-          type: 'run_sql',
-          args: { sql: sqlCreateTable },
-        },
-        {
-          type: 'add_existing_table_or_view',
-          args: {
-            name: state.tableName.trim(),
-            schema: currentSchema,
-          },
-        },
-      ],
+      args: upQueryArgs,
     };
-    /*
-    const sqlDropTable = 'DROP TABLE ' + '"' + state.tableName.trim() + '"';
+    const sqlDropTable =
+      'DROP TABLE ' + currentSchema + '.' + '"' + state.tableName.trim() + '"';
     const downQuery = {
       type: 'bulk',
       args: [
         {
           type: 'run_sql',
-          args: { 'sql': sqlDropTable }
-        }
-      ]
+          args: { sql: sqlDropTable },
+        },
+      ],
     };
-    */
-    const schemaMigration = {
-      name: migrationName,
-      up: upQuery.args,
-      // down: downQuery.args,
-      down: [],
-    };
-    let finalReqBody = schemaMigration.up;
-    if (globals.consoleMode === 'hasuradb') {
-      finalReqBody = schemaMigration.up;
-    }
     const requestMsg = 'Creating table...';
     const successMsg = 'Table Created';
     const errorMsg = 'Create table failed';
@@ -202,8 +217,8 @@ const createTableSql = () => {
     makeMigrationCall(
       dispatch,
       getState,
-      finalReqBody,
-      [],
+      upQuery.args,
+      downQuery.args,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -245,6 +260,8 @@ const addTableReducer = (state = defaultState, action) => {
       return { ...state, internalError: action.error, lastSuccess: null };
     case SET_TABLENAME:
       return { ...state, tableName: action.value };
+    case SET_TABLECOMMENT:
+      return { ...state, tableComment: action.value };
     case REMOVE_COLUMN:
       // Removes the index of the removed column from the array of primaryKeys.
       const primaryKeys = state.primaryKeys.filter(
@@ -353,6 +370,7 @@ export default addTableReducer;
 export {
   setDefaults,
   setTableName,
+  setTableComment,
   removeColumn,
   setColName,
   setColType,

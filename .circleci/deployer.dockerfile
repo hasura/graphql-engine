@@ -4,6 +4,7 @@ ARG docker_ver="17.09.0-ce"
 ARG upx_version="3.94"
 ARG gcloud_version="207.0.0"
 ARG ghr_version="0.10.0"
+ARG hub_version="2.5.0"
 
 RUN apt-get -y update \
     && apt-get -y upgrade \
@@ -21,6 +22,9 @@ RUN apt-get -y update \
     && curl -Lo /tmp/gcloud-${gcloud_version}.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${gcloud_version}-linux-x86_64.tar.gz \
     && tar -xzf /tmp/gcloud-${gcloud_version}.tar.gz -C /usr/local \
     && /usr/local/google-cloud-sdk/install.sh \
+    && curl -Lo /tmp/hub-linux-amd64-${hub_version}.tgz  https://github.com/github/hub/releases/download/v${hub_version}/hub-linux-amd64-${hub_version}.tgz \
+    && tar -xz -C /tmp -f /tmp/hub-linux-amd64-${hub_version}.tgz \
+    && mv /tmp/hub-linux-amd64-${hub_version}/bin/hub /usr/bin/ \
     && apt-get -y purge curl \
     && apt-get -y auto-remove \
     && apt-get -y clean \

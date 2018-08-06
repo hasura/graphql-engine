@@ -26,12 +26,8 @@ const setColumns = () => {
     // Select column type
     cy.get(getElementFromAlias(`col-type-${i}`)).select(dataTypes[i]);
 
-    if (i === 4) {
-      cy.get(getElementFromAlias(`col-type-${i}`))
-        .parent()
-        .find('[type="checkbox"]')
-        .last()
-        .check();
+    if (i === dataTypes.indexOf('text')) {
+      cy.get(getElementFromAlias(`unique-${i}`)).check();
       // cy.get('[type="checkbox"]').last().check()
     }
     // Set appropriate default if the type is not serial
@@ -105,6 +101,25 @@ export const passBICreateTable = () => {
   validateCT(getTableName(0, testName), 'success');
 };
 
+export const passSearchTables = () => {
+  // Click add table button
+  cy.get(getElementFromAlias('sidebar-add-table')).click();
+  // Type table name
+  cy.get(getElementFromAlias('tableName')).type(getTableName(1, testName));
+  // Type column name
+  cy.get(getElementFromAlias('column-0')).type(getColName(0));
+  // Select column type
+  cy.get(getElementFromAlias('col-type-0')).select('integer');
+  // Set primary key
+  cy.get(getElementFromAlias('primary-key-select-0')).select('0');
+  // Click on create
+  cy.get(getElementFromAlias('table-create')).click();
+  cy.wait(7000);
+  validateCT(getTableName(0, testName), 'success');
+  cy.get(getElementFromAlias('search-tables')).type('0');
+  cy.get(getElementFromAlias('table-links')).should('not.contain', '1');
+};
+
 export const checkInsertRoute = () => {
   // Click on Insert tab
   cy.get(getElementFromAlias(getTableName(0, testName))).click();
@@ -126,6 +141,7 @@ export const failBIWrongDataType = () => {
       cy.get(getElementFromAlias(`typed-input-${i}`)).type(sureFailString);
       // Click the Save/Insert Again button.
       clickSaveOrInsert(2, i);
+      cy.get(getElementFromAlias(`typed-input-${i}`)).clear();
       // Check for error and dismiss it
       // cy.get('[class=notification-title]')
       //   .contains('Insert failed')
@@ -164,7 +180,9 @@ export const passBIInsert20Rows = () => {
           .toString(36)
           .substring(7)
       );
+    cy.get(getElementFromAlias(`typed-input-default-${textIndex + 1}`)).check();
     cy.get(getElementFromAlias('insert-save-button')).click();
+    cy.wait(300);
     validateInsert(getTableName(0, testName), i + 1);
   }
   // Wait for insert notifications to disappear
@@ -260,6 +278,37 @@ export const passBIFilterQueryEq = () => {
 };
 
 export const deleteBITestTable = () => {
+  cy.get(getElementFromAlias(getTableName(2, testName))).click();
+  // Go to the modify section of the table
+  cy.get(getElementFromAlias('table-modify')).click();
+  cy.wait(2000);
+  // Click on delete
+  cy.get(getElementFromAlias('delete-table')).click();
+  // Confirm
+  cy.on('window:confirm', str => {
+    expect(str === 'Are you sure?').to.be.true;
+    return true;
+  });
+  cy.wait(7000);
+  // Match the URL
+  cy.url().should('eq', `${baseUrl}/data/schema/public`);
+  validateCT(getTableName(2, testName), 'failure');
+  cy.get(getElementFromAlias(getTableName(1, testName))).click();
+  // Go to the modify section of the table
+  cy.get(getElementFromAlias('table-modify')).click();
+  cy.wait(2000);
+  // Click on delete
+  cy.get(getElementFromAlias('delete-table')).click();
+  // Confirm
+  cy.on('window:confirm', str => {
+    expect(str === 'Are you sure?').to.be.true;
+    return true;
+  });
+  cy.wait(7000);
+  // Match the URL
+  cy.url().should('eq', `${baseUrl}/data/schema/public`);
+  validateCT(getTableName(1, testName), 'failure');
+  cy.get(getElementFromAlias(getTableName(0, testName))).click();
   // Go to the modify section of the table
   cy.get(getElementFromAlias('table-modify')).click();
   cy.wait(2000);
@@ -299,21 +348,18 @@ export const failBINullKeys = () => {
 export const failBIUniqueKeys = () => {
   // Type a string in the text type fields of some rows  (to be tested in Browse rows)
   const textIndex = dataTypes.indexOf('text');
-  cy.get("input[placeholder='float']")
-    .first()
-    .type(0.5555);
-
+  const floatIndex = dataTypes.indexOf('numeric');
+  cy.get(getElementFromAlias(`typed-input-${floatIndex}`)).type(0.5555);
   cy.get(getElementFromAlias(`typed-input-${textIndex}`))
     .clear()
     .type('filter-text');
 
   // Click the Insert Again button.
-  cy.get('input[placeholder="text"]')
-    .first()
-    .type('{selectall}{del}');
-  cy.get('input[placeholder="text"]')
-    .first()
-    .type('name');
+  cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type(
+    '{selectall}{del}'
+  );
+  cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type('name');
+
   cy.get(getElementFromAlias('insert-save-button')).click();
   // Check default for next insert
 
@@ -325,12 +371,10 @@ export const failBIUniqueKeys = () => {
     .clear()
     .type('filter-text');
   // Click the Insert Again button.
-  cy.get('input[placeholder="text"]')
-    .first()
-    .type('{selectall}{del}');
-  cy.get('input[placeholder="text"]')
-    .first()
-    .type('name');
+  cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type(
+    '{selectall}{del}'
+  );
+  cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type('name');
   cy.get(getElementFromAlias('insert-save-button')).click();
 
   // cy.get('.notification-error').click();
@@ -370,6 +414,53 @@ export const passCloneButton = () => {
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/insert`
   );
+  cy.get(getElementFromAlias('clear-button')).click();
+  cy.get(getElementFromAlias('typed-input-0')).should('have.value', '');
+};
+
+export const checkViewRelationship = () => {
+  cy.get(getElementFromAlias('sidebar-add-table')).click();
+  // Type table name
+  cy.get(getElementFromAlias('tableName')).type(getTableName(2, testName));
+  cy.get(getElementFromAlias('column-0')).type('id');
+  cy.get(getElementFromAlias('col-type-0')).select('serial');
+  cy.get(getElementFromAlias('column-1')).type('someID');
+  cy.get(getElementFromAlias('col-type-1')).select('integer');
+  // Set primary key
+  cy.get(getElementFromAlias('primary-key-select-0')).select('0');
+  // Click on create
+  cy.get(getElementFromAlias('table-create')).click();
+  cy.wait(7000);
+  validateCT(getTableName(0, testName), 'success');
+  // Add foreign key
+  cy.get(getElementFromAlias('edit-someID')).click();
+  cy.get(getElementFromAlias('foreign-key-checkbox')).check();
+  cy.get(getElementFromAlias('ref-table')).select(getTableName(0, testName));
+  cy.get(getElementFromAlias('ref-col')).select(getColName(0));
+  cy.get(getElementFromAlias('save-button')).click();
+  cy.wait(300);
+  // Add relationship
+  cy.get(getElementFromAlias('add-rel-mod')).click();
+  cy.get(getElementFromAlias('obj-rel-add-0')).click();
+  cy.get(getElementFromAlias('suggested-rel-name')).type('someRel');
+  cy.get(getElementFromAlias('obj-rel-save-0')).click();
+  cy.wait(300);
+  // Insert a row
+  cy.get(getElementFromAlias('table-insert-rows')).click();
+  cy.get(getElementFromAlias('typed-input-1')).type('1');
+  cy.get(getElementFromAlias('insert-save-button')).click();
+  cy.wait(300);
+  cy.get(getElementFromAlias('table-browse-rows')).click();
+  cy.wait(300);
+  cy.get('a')
+    .contains('View')
+    .first()
+    .click();
+  cy.wait(300);
+  cy.get('a')
+    .contains('Close')
+    .first()
+    .click();
 };
 
 export const passDeleteRow = () => {

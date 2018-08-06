@@ -2,11 +2,8 @@ import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 
-import { appPrefix } from '../push';
-
 const TableHeader = ({
   tableName,
-  tableComment,
   tabName,
   count,
   migrationMode,
@@ -18,15 +15,6 @@ const TableHeader = ({
   let showCount = '';
   if (!(count === null || count === undefined)) {
     showCount = '(' + count + ')';
-  }
-  const commentText = tableComment ? tableComment.result[1] : null;
-  let commentHtml = null;
-  if (commentText) {
-    commentHtml = (
-      <div className={styles.commentText + ' alert alert-warning'}>
-        {commentText}
-      </div>
-    );
   }
   let activeTab;
   if (tabName === 'view') {
@@ -73,8 +61,7 @@ const TableHeader = ({
             >
               <Link
                 to={
-                  appPrefix +
-                  '/schema/' +
+                  '/data/schema/' +
                   currentSchema +
                   '/tables/' +
                   tableName +
@@ -91,8 +78,7 @@ const TableHeader = ({
             >
               <Link
                 to={
-                  appPrefix +
-                  '/schema/' +
+                  '/data/schema/' +
                   currentSchema +
                   '/tables/' +
                   tableName +
@@ -110,8 +96,7 @@ const TableHeader = ({
               >
                 <Link
                   to={
-                    appPrefix +
-                    '/schema/' +
+                    '/data/schema/' +
                     currentSchema +
                     '/tables/' +
                     tableName +
@@ -129,8 +114,7 @@ const TableHeader = ({
             >
               <Link
                 to={
-                  appPrefix +
-                  '/schema/' +
+                  '/data/schema/' +
                   currentSchema +
                   '/tables/' +
                   tableName +
@@ -147,8 +131,7 @@ const TableHeader = ({
             >
               <Link
                 to={
-                  appPrefix +
-                  '/schema/' +
+                  '/data/schema/' +
                   currentSchema +
                   '/tables/' +
                   tableName +
@@ -162,8 +145,7 @@ const TableHeader = ({
             <li role="presentation" className={'hide'}>
               <Link
                 to={
-                  appPrefix +
-                  '/schema/' +
+                  '/data/schema/' +
                   currentSchema +
                   '/tables/' +
                   tableName +
@@ -177,7 +159,6 @@ const TableHeader = ({
         </div>
         <div className="clearfix" />
       </div>
-      <div>{commentHtml}</div>
     </div>
   );
 };

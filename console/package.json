@@ -51,16 +51,19 @@
     }
   },
   "dependencies": {
+    "apollo-link": "^1.2.2",
+    "apollo-link-ws": "^1.0.8",
     "babel-polyfill": "^6.26.0",
     "brace": "^0.11.1",
     "deep-equal": "^1.0.1",
     "graphiql": "^0.11.11",
     "graphql": "^0.13.2",
+    "hasura-console-graphiql": "0.0.1",
     "history": "^3.0.0",
     "hoist-non-react-statics": "^1.0.3",
     "invariant": "^2.2.0",
     "isomorphic-fetch": "^2.2.1",
-    "less": "^2.7.1",
+    "less": "^3.7.1",
     "lru-memoize": "^1.0.0",
     "map-props": "^1.0.0",
     "multireducer": "^1.0.2",
@@ -90,7 +93,7 @@
     "redux-logger": "^3.0.6",
     "redux-thunk": "^2.2.0",
     "semver": "^5.3.0",
-    "superagent": "^1.4.0",
+    "subscriptions-transport-ws": "^0.9.12",
     "uuid": "^3.0.1",
     "valid-url": "^1.0.9"
   },
@@ -112,7 +115,7 @@
     "clean-webpack-plugin": "^0.1.17",
     "concurrently": "^3.5.0",
     "css-loader": "^0.28.11",
-    "cypress": "^3.0.1",
+    "cypress": "3.0.2",
     "dotenv": "^5.0.1",
     "eslint": "^4.19.1",
     "eslint-config-airbnb": "16.1.0",
@@ -130,13 +133,12 @@
     "font-awesome-webpack": "0.0.4",
     "husky": "^0.14.3",
     "ignore-loader": "^0.1.2",
-    "jest": "^21.2.1",
     "jquery": "^3.3.1",
     "json-loader": "^0.5.4",
     "less-loader": "^4.1.0",
     "lint-staged": "^6.1.1",
     "mini-css-extract-plugin": "^0.4.0",
-    "node-sass": "^4.9.0",
+    "node-sass": "^4.9.2",
     "nyc": "^12.0.2",
     "optimize-css-assets-webpack-plugin": "^4.0.2",
     "react-a11y": "^0.2.6",
@@ -161,6 +163,6 @@
     "webpack-isomorphic-tools": "^3.0.5"
   },
   "engines": {
-    "node": "8.9.1"
+    "node": ">=8.9.1"
   }
 }

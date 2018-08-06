@@ -56,7 +56,7 @@ mkAdminRolePermInfo ti =
 
     tn = tiName ti
     i = InsPermInfo tn (S.BELit True) True [] []
-    s = SelPermInfo (HS.fromList pgCols) tn (S.BELit True) [] []
+    s = SelPermInfo (HS.fromList pgCols) tn (S.BELit True) Nothing [] []
     u = UpdPermInfo (HS.fromList pgCols) tn (S.BELit True) [] []
     d = DelPermInfo tn (S.BELit True) [] []
 
@@ -236,13 +236,13 @@ mkColExtrAl :: (IsIden a) => Maybe a -> (PGCol, PGColType) -> S.Extractor
 mkColExtrAl alM (c, pct) =
   if pct == PGGeometry || pct == PGGeography
   then S.mkAliasedExtrFromExp
-    ((S.SEFnApp "ST_AsGeoJSON" [S.mkSIdenExp c] Nothing) `S.SETyAnn` "json") alM
+    ((S.SEFnApp "ST_AsGeoJSON" [S.mkSIdenExp c] Nothing) `S.SETyAnn` S.jsonType) alM
   else S.mkAliasedExtr c alM
 
 -- validate headers
 validateHeaders :: (P1C m) => [T.Text] -> m ()
 validateHeaders depHeaders = do
-  headers <- (map fst) . userHeaders <$> askUserInfo
+  headers <- M.keys . userHeaders <$> askUserInfo
   forM_ depHeaders $ \hdr ->
     unless (hdr `elem` map T.toLower headers) $
     throw400 NotFound $ hdr <<> " header is expected but not found"
@@ -281,3 +281,9 @@ simplifyError txErr = do
       -- invalid parameter value
       ("22023", msg) -> return msg
       _              -> Nothing
+
+
+-- validate limit and offset int values
+onlyPositiveInt :: MonadError QErr m => Int -> m ()
+onlyPositiveInt i = when (i < 0) $ throw400 NotSupported
+  "unexpected negative value"

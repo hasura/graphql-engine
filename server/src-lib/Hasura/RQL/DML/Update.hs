@@ -59,7 +59,7 @@ convInc
   -> m (PGCol, S.SQLExp)
 convInc f col colType val = do
   prepExp <- f colType val
-  return (col, S.SEOpApp "+" [S.mkSIdenExp col, prepExp])
+  return (col, S.SEOpApp S.incOp [S.mkSIdenExp col, prepExp])
 
 convMul
   :: (QErrM m)
@@ -70,7 +70,7 @@ convMul
   -> m (PGCol, S.SQLExp)
 convMul f col colType val = do
   prepExp <- f colType val
-  return (col, S.SEOpApp "*" [S.mkSIdenExp col, prepExp])
+  return (col, S.SEOpApp S.mulOp [S.mkSIdenExp col, prepExp])
 
 convSet
   :: (QErrM m)

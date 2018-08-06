@@ -1,0 +1,7 @@
+*.md
+LICENSE
+scripts/*
+assets/*
+.circleci/*
+.ciignore
+.gitignore

@@ -1,8 +1,19 @@
 #!/usr/bin/env bash
 
-set -eo pipefail
+set -evo pipefail
 IFS=$'\n\t'
 ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
+
+LATEST_TAG=$(git describe --tags --abbrev=0)
+PREVIOUS_TAG=$(git describe --tags $(git rev-list --tags --max-count=2) --abbrev=0 | sed -n 2p)
+CHANGELOG_TEXT=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty=format:'- %s' --reverse)
+RELEASE_BODY=$(eval "cat <<EOF
+$(<$ROOT/.circleci/release_notes.template.md)
+EOF
+")
+
+# reviewers for pull requests opened to update installation manifests
+REVIEWERS="shahidhk,coco98,arvi3411301"
 
 ## deploy functions
 deploy_server() {
@@ -13,7 +24,12 @@ deploy_server() {
     make push
 }
 
-# TODO: open pull requests
+deploy_server_latest() {
+  echo "deloying server latest tag"
+  cd "$ROOT/server"
+  echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+  make push-latest
+}
 
 draft_github_release() {
     cd "$ROOT"
@@ -21,9 +37,25 @@ draft_github_release() {
     ghr -t "$GITHUB_TOKEN" \
         -u "$CIRCLE_PROJECT_USERNAME" \
         -r "$CIRCLE_PROJECT_REPONAME" \
-        -b "$CIRCLE_TAG" \
+        -b "${RELEASE_BODY}" \
         -draft \
-     "$CIRCLE_TAG" /build/_cli_output/
+     "$CIRCLE_TAG" /build/_cli_output/binaries/
+}
+
+configure_git() {
+  git config --global user.email "build@hasura.io"
+  git config --global user.name "hasura-bot"
+}
+
+send_pr_to_repo() {
+  git clone https://github.com/hasura/$1.git ~/$1
+  cd ~/$1
+  git checkout -b ${LATEST_TAG}
+  find . -type f -exec sed -i -E 's#(hasura/graphql-engine:)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?( \\)*$#\1'"${LATEST_TAG}"'\9#' {} \;
+  git add .
+  git commit -m "update image version to ${LATEST_TAG}"
+  git push -q https://${GITHUB_TOKEN}@github.com/hasura/$1.git ${LATEST_TAG}
+  hub pull-request -F- <<<"Update image version to ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
 }
 
 deploy_console() {
@@ -69,5 +101,9 @@ fi
 deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
+    deploy_server_latest
     draft_github_release
+    configure_git
+    send_pr_to_repo graphql-engine-install-manifests
+    send_pr_to_repo graphql-engine-heroku
 fi

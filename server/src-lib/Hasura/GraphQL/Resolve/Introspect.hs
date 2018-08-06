@@ -280,6 +280,7 @@ schemaR fld =
                       sortBy (comparing getNamedTy) $ Map.elems tyMap
     "queryType"    -> J.toJSON <$> namedTypeR (G.NamedType "query_root") subFld
     "mutationType" -> typeR' "mutation_root" subFld
+    "subscriptionType" -> typeR' "subscription_root" subFld
     "directives"   -> J.toJSON <$> mapM (directiveR subFld)
                       (sortBy (comparing _diName) defaultDirectives)
     _              -> return J.Null

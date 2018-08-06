@@ -12,7 +12,6 @@ import           Hasura.Prelude
 
 import           Data.Aeson
 import           Data.Aeson.Encoding        (text)
-import           GHC.Generics
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -304,3 +303,13 @@ pgTypeOid PGJSONB       = PTI.jsonb
 pgTypeOid PGGeometry    = PTI.text
 pgTypeOid PGGeography   = PTI.text
 pgTypeOid (PGUnknown _) = PTI.auto
+
+isIntegerType :: PGColType -> Bool
+isIntegerType PGInteger  = True
+isIntegerType PGSmallInt = True
+isIntegerType PGBigInt   = True
+isIntegerType _          = False
+
+isJSONBType :: PGColType -> Bool
+isJSONBType PGJSONB = True
+isJSONBType _       = False

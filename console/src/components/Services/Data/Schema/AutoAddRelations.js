@@ -12,9 +12,6 @@ import { getRelationshipLine } from '../TableRelationships/Relationships';
 import suggestedRelationshipsRaw from '../TableRelationships/autoRelations';
 
 class AutoAddRelations extends Component {
-  componentWillMount() {
-    // Initialize
-  }
   trackAllRelations = () => {
     this.props.dispatch(autoTrackRelations());
   };

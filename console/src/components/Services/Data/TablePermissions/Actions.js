@@ -8,6 +8,8 @@ export const PERM_SET_FILTER_SAME_AS = 'ModifyTable/PERM_SET_FILTER_SAME_AS';
 export const PERM_TOGGLE_COLUMN = 'ModifyTable/PERM_TOGGLE_COLUMN';
 export const PERM_TOGGLE_ALL_COLUMNS = 'ModifyTable/PERM_TOGGLE_ALL_COLUMNS';
 export const PERM_ALLOW_ALL = 'ModifyTable/PERM_ALLOW_ALL';
+export const PERM_TOGGLE_ENABLE_LIMIT = 'ModifyTable/PERM_TOGGLE_ENABLE_LIMIT';
+export const PERM_TOGGLE_MODIFY_LIMIT = 'ModifyTable/PERM_TOGGLE_MODIFY_LIMIT';
 export const PERM_TOGGLE_ALLOW_UPSERT = 'ModifyTable/PERM_TOGGLE_ALLOW_UPSERT';
 export const PERM_CUSTOM_CHECKED = 'ModifyTable/PERM_CUSTOM_CHECKED';
 
@@ -49,6 +51,14 @@ const _permRemoveAccess = () => ({ type: PERM_REMOVE_ACCESS });
 const permToggleAllowUpsert = checked => ({
   type: PERM_TOGGLE_ALLOW_UPSERT,
   data: checked,
+});
+const permToggleEnableLimit = checked => ({
+  type: PERM_TOGGLE_ENABLE_LIMIT,
+  data: checked,
+});
+const permToggleModifyLimit = limit => ({
+  type: PERM_TOGGLE_MODIFY_LIMIT,
+  data: limit,
 });
 const permCustomChecked = () => ({ type: PERM_CUSTOM_CHECKED });
 
@@ -127,6 +137,7 @@ const permChangePermissions = changeType => {
     const allSchemas = getState().tables.allSchemas;
     const currentSchema = getState().tables.currentSchema;
     const permissionsState = getState().tables.modify.permissionsState;
+    const limitEnabled = permissionsState.limitEnabled;
 
     const table = permissionsState.table;
     const role = permissionsState.role;
@@ -137,7 +148,11 @@ const permChangePermissions = changeType => {
       p => p.role_name === role
     );
 
-    const permissionsChangeQueries = [];
+    const permissionsUpQueries = [];
+    const permissionsDownQueries = [];
+    if (query === 'select' && !limitEnabled) {
+      delete permissionsState[query].limit;
+    }
 
     if (currRolePermissions && currRolePermissions.permissions[query]) {
       const deleteQuery = {
@@ -147,8 +162,16 @@ const permChangePermissions = changeType => {
           role: role,
         },
       };
-
-      permissionsChangeQueries.push(deleteQuery);
+      const createQuery = {
+        type: 'create_' + query + '_permission',
+        args: {
+          table: { name: table, schema: currentSchema },
+          role: role,
+          permission: permissionsState[query],
+        },
+      };
+      permissionsUpQueries.push(deleteQuery);
+      permissionsDownQueries.push(createQuery);
     }
 
     if (changeType === permChangeTypes.save) {
@@ -160,8 +183,16 @@ const permChangePermissions = changeType => {
           permission: permissionsState[query],
         },
       };
+      const deleteQuery = {
+        type: 'drop_' + query + '_permission',
+        args: {
+          table: { name: table, schema: currentSchema },
+          role: role,
+        },
+      };
 
-      permissionsChangeQueries.push(createQuery);
+      permissionsUpQueries.push(createQuery);
+      permissionsDownQueries.push(deleteQuery);
     }
 
     // Apply migration
@@ -194,8 +225,8 @@ const permChangePermissions = changeType => {
     makeMigrationCall(
       dispatch,
       getState,
-      permissionsChangeQueries,
-      [],
+      permissionsUpQueries,
+      permissionsDownQueries,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -218,6 +249,8 @@ export {
   permChangePermissions,
   permAllowAll,
   permToggleAllowUpsert,
+  permToggleEnableLimit,
+  permToggleModifyLimit,
   permCustomChecked,
   toggleColumn,
   toggleAllColumns,

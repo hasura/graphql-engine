@@ -65,7 +65,9 @@ const relationshipView = (
     e.preventDefault();
     const isOk = confirm('Are you sure?');
     if (isOk) {
-      dispatch(deleteRelMigrate(tableName, relName));
+      dispatch(
+        deleteRelMigrate(tableName, relName, lcol, rtable, rcol, isObjRel)
+      );
     }
   };
   return (
@@ -128,6 +130,7 @@ const AddRelationship = ({
               data-test="data-rel-type"
               className="form-control"
               onChange={onRelTypeChange}
+              data-test="rel-type"
             >
               <option key="select_type" value="select_type">
                 Select relationship type
@@ -150,6 +153,7 @@ const AddRelationship = ({
               onChange={onRelNameChange}
               className="form-control"
               placeholder="Enter relationship name"
+              data-test="rel-name"
             />
           </div>
         </div>
@@ -160,6 +164,7 @@ const AddRelationship = ({
           <select
             className={`${styles.relBlockInline} form-control`}
             onChange={onRelLColChange}
+            data-test="current-col"
           >
             <option key="default_column">Current Column</option>
             {tableSchema.columns.map((c, i) => (
@@ -170,7 +175,11 @@ const AddRelationship = ({
           </select>
           <span> :: </span>
           <div className={styles.relBlockInline}>
-            <select className="form-control" onChange={onTableChange}>
+            <select
+              className="form-control"
+              onChange={onTableChange}
+              data-test="remote-table"
+            >
               <option key="default_table">Remote Table</option>
               {allSchemas.map((s, i) => (
                 <option key={i} value={s.table_name}>
@@ -181,7 +190,11 @@ const AddRelationship = ({
           </div>
           <span> -> </span>
           <div className={styles.relBlockInline}>
-            <select className="form-control" onChange={onRelRColChange}>
+            <select
+              className="form-control"
+              onChange={onRelRColChange}
+              data-test="remote-table-col"
+            >
               <option key="default_table_column">Remote Table Column:</option>
               {manualColumns.map((c, i) => (
                 <option key={c + i} value={c.column_name}>
@@ -221,6 +234,7 @@ class RelationshipsView extends Component {
       dispatch,
       relAdd,
       currentSchema,
+      migrationMode,
     } = this.props;
     const styles = require('../TableModify/Modify.scss');
     const tableStyles = require('../TableCommon/TableStyles.scss');
@@ -316,6 +330,7 @@ class RelationshipsView extends Component {
           tableName={tableName}
           tabName="relationships"
           currentSchema={currentSchema}
+          migrationMode={migrationMode}
         />
         <br />
         <div className={`${styles.padd_left_remove} container-fluid`}>
@@ -374,6 +389,7 @@ const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   allSchemas: state.tables.allSchemas,
   currentSchema: state.tables.currentSchema,
+  migrationMode: state.main.migrationMode,
   ...state.tables.modify,
 });
 
