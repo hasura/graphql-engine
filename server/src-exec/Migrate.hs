@@ -116,7 +116,9 @@ migrateFrom10 = do
     dropFKeyConstraints $ QualifiedTable hdbCatalogSchema t
     addFKeyOnUpdateCascade $ QualifiedTable hdbCatalogSchema t
 
-  Q.catchE defaultTxErrorHandler initDefaultViews
+  -- remove all views in hdb_views and add system defined views
+  cleanHdbViews
+  -- build schema cache before dropping views in hdb_catalog
   preMigrateSchema <- buildSchemaCache
   Q.catchE defaultTxErrorHandler dropViewsInHdbCatalog
   updateCatalogWithNewViews preMigrateSchema
