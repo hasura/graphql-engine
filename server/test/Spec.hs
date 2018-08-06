@@ -37,10 +37,12 @@ querySpecFiles =
   , "create_address_resident_relationship_error.yaml"
   ]
 
+gqlIntrospection :: FilePath
+gqlIntrospection = "introspection.yaml"
+
 gqlSpecFiles :: [FilePath]
 gqlSpecFiles =
-  [ "introspection.yaml"
-  , "insert_mutation/author.yaml"
+  ["insert_mutation/author.yaml"
   , "simple_select_query_author.yaml"
   , "insert_mutation/article.yaml"
   , "insert_mutation/article_on_conflict.yaml"
@@ -63,6 +65,9 @@ gqlSpecFiles =
   , "update_mutation/person_error_01.yaml"
   , "delete_mutation/article.yaml"
   ]
+
+alterTable :: FilePath
+alterTable = "alter_table.yaml"
 
 readTestCase :: FilePath -> IO TestCase
 readTestCase fpath = do
@@ -87,6 +92,8 @@ mkSpecs :: IO (SpecWith Application)
 mkSpecs = do
   ddlTc <- mapM readTestCase querySpecFiles
   gqlTc <- mapM readTestCase gqlSpecFiles
+  gqlIntrospectionTc <- readTestCase gqlIntrospection
+  alterTabTc <- readTestCase alterTable
   return $ do
     describe "version API" $
       it "responds with version" $
@@ -104,4 +111,11 @@ mkSpecs = do
 
     describe "Query API" $ mapM_ mkSpec ddlTc
 
+    describe "GraphQL Introspection" $ mkSpec gqlIntrospectionTc
+
     describe "GraphQL API" $ mapM_ mkSpec gqlTc
+
+    describe "Alter Table" $ mkSpec alterTabTc
+
+    describe "GraphQL Introspection after altering a table"
+      $ mkSpec gqlIntrospectionTc

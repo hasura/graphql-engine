@@ -1012,7 +1012,7 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints) = do
       FIRelationship relInfo -> Right (relInfo, noFilter)
     noFilter = S.BELit True
     adminRootFlds =
-      getRootFldsRole' tn constraints fields (Just (tn, [])) (Just (noFilter, []))
+      getRootFldsRole' tn validConstraints fields (Just (tn, [])) (Just (noFilter, []))
       (Just (allCols, noFilter, [])) (Just (noFilter, []))
 
 mkScalarTyInfo :: PGColType -> ScalarTyInfo
