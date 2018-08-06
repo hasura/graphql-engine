@@ -113,12 +113,14 @@ instance FromJSON ClearMetadata where
   parseJSON _ = return ClearMetadata
 
 clearMetadata :: Q.TxE QErr ()
-clearMetadata = Q.catchE defaultTxErrorHandler $ do
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_query_template WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
-  Q.unitQ clearHdbViews () False
+clearMetadata = do
+  Q.catchE defaultTxErrorHandler $ do
+    Q.unitQ "DELETE FROM hdb_catalog.hdb_query_template WHERE is_system_defined <> 'true'" () False
+    Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
+    Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
+    Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
+  -- clean hdb_views metadata
+  cleanHdbViews
 
 instance HDBQuery ClearMetadata where
 

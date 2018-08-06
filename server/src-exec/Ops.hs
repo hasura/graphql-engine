@@ -16,6 +16,7 @@ import           TH
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
+import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.Server.Query
 import           Hasura.SQL.Types
@@ -75,8 +76,8 @@ initCatalogStrict createSchema initTime =  do
     case flExtExists of
       True  -> Q.unitQ "CREATE EXTENSION first_last_agg SCHEMA hdb_catalog" () False
       False -> Q.multiQ $(Q.sqlFromFile "src-rsr/first_last.sql") >>= \(Q.Discard _) -> return ()
-    Q.Discard () <- Q.multiQ $(Q.sqlFromFile "src-rsr/initialise.sql")
-    return ()
+    Q.Discard () <- Q.multiQ $(Q.sqlFromFile "src-rsr/init_catalog.sql")
+    initDefaultViews
 
   -- Build the metadata query
   tx <- liftEither $ buildTxAny adminUserInfo emptySchemaCache metadataQuery
@@ -132,22 +133,16 @@ migrateFrom08 = Q.catchE defaultTxErrorHandler $ do
                  json_build_object('type', 'select', 'args', template_defn->'select');
                 |] () False
 
+dropViewsInHdbCatalog :: Q.Tx ()
+dropViewsInHdbCatalog = do
+  Q.unitQ "DROP VIEW hdb_catalog.hdb_permission_agg" () False
+  Q.unitQ "DROP VIEW hdb_catalog.hdb_foreign_key_constraint" () False
+  Q.unitQ "DROP VIEW hdb_catalog.hdb_check_constraint" () False
+  Q.unitQ "DROP VIEW hdb_catalog.hdb_unique_constraint" () False
+  Q.unitQ "DROP VIEW hdb_catalog.hdb_primary_key" () False
+
 migrateFrom10 :: Q.TxE QErr ()
-migrateFrom10 =
-  Q.unitQE defaultTxErrorHandler
-    [Q.sql|
-      CREATE VIEW hdb_catalog.hdb_table_constraint AS
-      SELECT
-        tc.table_schema,
-        tc.table_name,
-        tc.constraint_name,
-        tc.constraint_type,
-        r.oid::integer as constraint_oid
-      FROM
-        information_schema.table_constraints tc
-        JOIN pg_catalog.pg_constraint r
-        ON tc.constraint_name = r.conname;
-    |] () False
+migrateFrom10 = Q.catchE defaultTxErrorHandler dropViewsInHdbCatalog
 
 migrateCatalog :: UTCTime -> Q.TxE QErr String
 migrateCatalog migrationTime = do
@@ -170,6 +165,8 @@ migrateCatalog migrationTime = do
       -- clean hdb_views
       Q.unitQE defaultTxErrorHandler "DROP SCHEMA IF EXISTS hdb_views CASCADE" () False
       Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_views" () False
+      Q.catchE defaultTxErrorHandler initDefaultViews
+
       -- try building the schema cache
       void buildSchemaCache
       return "migrate: successfully migrated"

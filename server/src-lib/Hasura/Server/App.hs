@@ -39,6 +39,7 @@ import qualified Network.WebSockets                     as WS
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
 --import           Hasura.RQL.DML.Explain
+import           Hasura.RQL.DDL.Utils                   (cleanHdbViews)
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
@@ -276,7 +277,7 @@ mkWaiApp
 mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole = do
     cacheRef <- do
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
-        Q.catchE defaultTxErrorHandler initStateTx
+        cleanHdbViews
         sc <- buildSchemaCache
         (,) sc <$> GS.mkGCtxMap (scTables sc)
       either initErrExit return pgResp >>= newIORef

@@ -198,7 +198,7 @@ objRelP2Setup qt (RelDef rn ru _) = do
     fetchFKeyDetail cn =
       Q.listQ [Q.sql|
            SELECT constraint_name, ref_table_table_schema, ref_table, column_mapping
-             FROM hdb_catalog.hdb_foreign_key_constraint
+             FROM hdb_views.hdb_foreign_key_constraint
             WHERE table_schema = $1
               AND table_name = $2
               AND (column_mapping ->> $3) IS NOT NULL
@@ -292,7 +292,7 @@ arrRelP2Setup qt (RelDef rn ru _) = do
     QualifiedTable sn tn = qt
     fetchFKeyDetail refsn reftn refcn = Q.listQ [Q.sql|
            SELECT constraint_name, column_mapping
-             FROM hdb_catalog.hdb_foreign_key_constraint
+             FROM hdb_views.hdb_foreign_key_constraint
             WHERE table_schema = $1
               AND table_name = $2
               AND (column_mapping -> $3) IS NOT NULL

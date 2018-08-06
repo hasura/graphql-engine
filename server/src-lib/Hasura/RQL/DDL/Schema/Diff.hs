@@ -59,48 +59,13 @@ data TableMeta
 fetchTableMeta :: Q.Tx [TableMeta]
 fetchTableMeta = do
   res <- Q.listQ [Q.sql|
-    SELECT
-        t.table_schema,
-        t.table_name,
-        t.table_oid,
-        c.columns,
-        coalesce(f.constraints, '[]') as constraints
-    FROM
-        (SELECT
-             c.oid as table_oid,
-             c.relname as table_name,
-             n.nspname as table_schema
-         FROM
-             pg_catalog.pg_class c
-         JOIN
-             pg_catalog.pg_namespace as n
-           ON
-             c.relnamespace = n.oid
-        ) t
-        INNER JOIN
-        (SELECT
-             table_schema,
-             table_name,
-             json_agg((SELECT r FROM (SELECT column_name, udt_name AS data_type, ordinal_position) r)) as columns
-         FROM
-             information_schema.columns
-         GROUP BY
-             table_schema, table_name) c
-        ON (t.table_schema = c.table_schema AND t.table_name = c.table_name)
-        LEFT OUTER JOIN
-        (SELECT
-             table_schema,
-             table_name,
-             json_agg((SELECT r FROM (SELECT constraint_name, constraint_oid, constraint_type) r)) as constraints
-         FROM
-             hdb_catalog.hdb_table_constraint r
-         GROUP BY
-             table_schema, table_name) f
-        ON (t.table_schema = f.table_schema AND t.table_name = f.table_name)
-    WHERE
-        t.table_schema NOT LIKE 'pg_%'
-        AND t.table_schema <> 'information_schema'
-        AND t.table_schema <> 'hdb_catalog'
+    SELECT table_schema,
+           table_name,
+           table_oid,
+           columns,
+           constraints
+    FROM hdb_views.hdb_table_meta
+    WHERE table_schema NOT LIKE 'hdb_%'
                 |] () False
   forM res $ \(ts, tn, toid, cols, constrnts) ->
     return $ TableMeta toid (QualifiedTable ts tn) (Q.getAltJ cols) (Q.getAltJ constrnts)

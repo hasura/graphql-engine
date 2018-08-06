@@ -71,7 +71,7 @@ getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
   -- Fetch the constraint details
   rawConstraints <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
            SELECT constraint_type, constraint_name
-             FROM hdb_catalog.hdb_table_constraint
+             FROM hdb_views.hdb_table_constraint
              WHERE table_schema = $1
                AND table_name = $2
                            |] (sn, tn) False
@@ -259,7 +259,7 @@ unTrackExistingTableOrViewP2 (UntrackTable vn cascade) tableInfo = do
                     SELECT constraint_name,
                            table_schema,
                            table_name
-                     FROM  hdb_catalog.hdb_foreign_key_constraint
+                     FROM  hdb_views.hdb_foreign_key_constraint
                      WHERE ref_table_table_schema = $1
                        AND ref_table = $2
                    |] (sn, tn) False
@@ -379,9 +379,7 @@ runSqlP2 :: (P2C m) => RunSQL -> m RespBody
 runSqlP2 (RunSQL t cascade) = do
 
   -- Drop hdb_views so no interference is caused to the sql query
-  liftTx $ Q.catchE defaultTxErrorHandler $
-    Q.unitQ clearHdbViews () False
-
+  liftTx cleanHdbViews
   -- Get the metadata before the sql query, everything, need to filter this
   oldMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
 

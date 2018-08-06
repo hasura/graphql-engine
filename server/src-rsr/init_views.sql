@@ -1,65 +1,4 @@
-CREATE TABLE hdb_catalog.hdb_version (
-    version TEXT NOT NULL,
-    upgraded_on TIMESTAMPTZ NOT NULL
-);
-
-CREATE UNIQUE INDEX hdb_version_one_row
-ON hdb_catalog.hdb_version((version IS NOT NULL));
-
-CREATE TABLE hdb_catalog.hdb_table
-(
-    table_schema TEXT,
-    table_name TEXT,
-    is_system_defined boolean default false,
-
-    PRIMARY KEY (table_schema, table_name)
-);
-
-CREATE FUNCTION hdb_catalog.hdb_table_oid_check() RETURNS trigger AS
-$function$
-  BEGIN
-    IF (EXISTS (SELECT 1 FROM information_schema.tables st WHERE st.table_schema = NEW.table_schema AND st.table_name = NEW.table_name)) THEN
-      return NEW;
-    ELSE
-      RAISE foreign_key_violation using message = 'table_schema, table_name not in information_schema.tables';
-      return NULL;
-    END IF;
-  END;
-$function$
-LANGUAGE plpgsql;
-
-CREATE TRIGGER hdb_table_oid_check BEFORE INSERT OR UPDATE ON hdb_catalog.hdb_table
-       FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.hdb_table_oid_check();
-
-CREATE TABLE hdb_catalog.hdb_relationship
-(
-    table_schema TEXT,
-    table_name TEXT,
-    rel_name   TEXT,
-    rel_type   TEXT CHECK (rel_type IN ('object', 'array')),
-    rel_def    JSONB NOT NULL,
-    comment    TEXT NULL,
-    is_system_defined boolean default false,
-
-    PRIMARY KEY (table_schema, table_name, rel_name),
-    FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name)
-);
-
-CREATE TABLE hdb_catalog.hdb_permission
-(
-    table_schema TEXT,
-    table_name TEXT,
-    role_name  TEXT,
-    perm_type  TEXT CHECK(perm_type IN ('insert', 'select', 'update', 'delete')),
-    perm_def   JSONB NOT NULL,
-    comment    TEXT NULL,
-    is_system_defined boolean default false,
-
-    PRIMARY KEY (table_schema, table_name, role_name, perm_type),
-    FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name)
-);
-
-CREATE VIEW hdb_catalog.hdb_permission_agg AS
+CREATE VIEW hdb_views.hdb_permission_agg AS
 SELECT
     table_schema,
     table_name,
@@ -70,15 +9,7 @@ FROM
 GROUP BY
     table_schema, table_name, role_name;
 
-CREATE TABLE hdb_catalog.hdb_query_template
-(
-    template_name TEXT PRIMARY KEY,
-    template_defn JSONB NOT NULL,
-    comment    TEXT NULL,
-    is_system_defined boolean default false
-);
-
-CREATE VIEW hdb_catalog.hdb_foreign_key_constraint AS
+CREATE VIEW hdb_views.hdb_foreign_key_constraint AS
 SELECT
     q.table_schema :: text,
     q.table_name :: text,
@@ -124,7 +55,8 @@ FROM
          AND q.ref_table_id = afc.attrelid
 GROUP BY q.table_schema, q.table_name, q.constraint_name;
 
-CREATE VIEW hdb_catalog.hdb_check_constraint AS
+
+CREATE VIEW hdb_views.hdb_check_constraint AS
 SELECT
     n.nspname :: text AS table_schema,
     ct.relname :: text AS table_name,
@@ -139,7 +71,7 @@ FROM
 WHERE
     r.contype = 'c';
 
-CREATE VIEW hdb_catalog.hdb_unique_constraint AS
+CREATE VIEW hdb_views.hdb_unique_constraint AS
 SELECT
     tc.table_name,
     tc.constraint_schema AS table_schema,
@@ -154,7 +86,7 @@ WHERE
 GROUP BY
     tc.table_name, tc.constraint_schema, tc.constraint_name;
 
-CREATE VIEW hdb_catalog.hdb_primary_key AS
+CREATE VIEW hdb_views.hdb_primary_key AS
 SELECT
     tc.table_schema,
     tc.table_name,
@@ -169,7 +101,7 @@ WHERE
 GROUP BY
     tc.table_schema, tc.table_name, tc.constraint_name;
 
-CREATE VIEW hdb_catalog.hdb_table_constraint AS
+CREATE VIEW hdb_views.hdb_table_constraint AS
 SELECT
     tc.table_schema,
     tc.table_name,
@@ -181,13 +113,46 @@ FROM
     JOIN pg_catalog.pg_constraint r
     ON tc.constraint_name = r.conname;
 
-CREATE FUNCTION hdb_catalog.inject_table_defaults(view_schema text, view_name text, tab_schema text, tab_name text) RETURNS void
-LANGUAGE plpgsql AS $$
-    DECLARE
-        r RECORD;
-    BEGIN
-      FOR r IN SELECT column_name, column_default FROM information_schema.columns WHERE table_schema = tab_schema AND table_name = tab_name AND column_default IS NOT NULL LOOP
-          EXECUTE format('ALTER VIEW %I.%I ALTER COLUMN %I SET DEFAULT %s;', view_schema, view_name, r.column_name, r.column_default);
-      END LOOP;
-    END;
-$$;
+CREATE VIEW hdb_views.hdb_table_meta AS (
+    SELECT
+        t.table_schema,
+        t.table_name,
+        t.table_oid,
+        c.columns,
+        coalesce(f.constraints, '[]') as constraints
+    FROM
+        (SELECT
+             c.oid as table_oid,
+             c.relname as table_name,
+             n.nspname as table_schema
+         FROM
+             pg_catalog.pg_class c
+         JOIN
+             pg_catalog.pg_namespace as n
+           ON
+             c.relnamespace = n.oid
+        ) t
+        INNER JOIN
+        (SELECT
+             table_schema,
+             table_name,
+             json_agg((SELECT r FROM (SELECT column_name, udt_name AS data_type, ordinal_position) r)) as columns
+         FROM
+             information_schema.columns
+         GROUP BY
+             table_schema, table_name) c
+        ON (t.table_schema = c.table_schema AND t.table_name = c.table_name)
+        LEFT OUTER JOIN
+        (SELECT
+             table_schema,
+             table_name,
+             json_agg((SELECT r FROM (SELECT constraint_name, constraint_oid, constraint_type) r)) as constraints
+         FROM
+             hdb_views.hdb_table_constraint r
+         GROUP BY
+             table_schema, table_name) f
+        ON (t.table_schema = f.table_schema AND t.table_name = f.table_name)
+    WHERE
+        t.table_schema NOT LIKE 'pg_%'
+        AND t.table_schema <> 'information_schema'
+)

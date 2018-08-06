@@ -3,15 +3,14 @@
 
 module Hasura.Server.Init where
 
-import qualified Database.PG.Query    as Q
+import qualified Database.PG.Query   as Q
 
 import           Options.Applicative
-import           System.Exit          (exitFailure)
+import           System.Exit         (exitFailure)
 
-import qualified Data.Text            as T
+import qualified Data.Text           as T
 
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Utils
 import           Hasura.Server.Utils
 
 data InitError
@@ -28,10 +27,6 @@ type AccessKey = T.Text
 
 initErrExit :: (Show e) => e -> IO a
 initErrExit e = print e >> exitFailure
-
--- clear the hdb_views schema
-initStateTx :: Q.Tx ()
-initStateTx = Q.unitQ clearHdbViews () False
 
 data RawConnInfo =
   RawConnInfo
