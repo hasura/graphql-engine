@@ -10,7 +10,6 @@ This Docker Compose setup runs [Hasura GraphQL Engine](https://github.com/hasura
 ## Usage
 
 - Clone this repo on a machine where you'd like to deploy graphql engine
-- Edit `docker-compose.yaml` and change `HASURA_GRAPHQL_ACCESS_KEY` to something secure
 - `docker-compose up -d`
 
 GraphQL endpoint will be `https://<your-domain.com>/v1alpha1/graphql`
