@@ -216,7 +216,7 @@ buildSelPermInfo tabInfo sp = do
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
 
-  withPathK "limit" $ onlyPositiveInt mLimit
+  withPathK "limit" $ mapM_ onlyPositiveInt mLimit
 
   return $ SelPermInfo (HS.fromList pgCols) tn be mLimit deps depHeaders
 

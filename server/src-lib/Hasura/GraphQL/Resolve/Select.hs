@@ -50,12 +50,16 @@ fromSelSet fldTy flds =
                          (riMapping relInfo) relSelData
             return (rqlFldName, RS.FRel annRel)
 
+fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
+fieldAsPath fld = nameAsPath $ _fName fld
+
 fromField
   :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RS.SelectData
-fromField tn permFilter permLimit fld = do
+fromField tn permFilter permLimit fld = fieldAsPath fld $ do
   whereExpM  <- withArgM args "where" $ convertBoolExp tn
   ordByExpM  <- withArgM args "order_by" parseOrderBy
-  limitExpM  <- RS.applyPermLimit permLimit <$> withArgM args "limit" parseLimit
+  limitExpM  <- RS.applyPermLimit permLimit
+                <$> withArgM args "limit" parseLimit
   offsetExpM <- withArgM args "offset" $ asPGColVal >=> prepare
   annFlds    <- fromSelSet (_fType fld) $ _fSelSet fld
   return $ RS.SelectData annFlds tn (permFilter, whereExpM) ordByExpM
@@ -107,7 +111,7 @@ parseLimit v = do
   (_, pgColVal) <- asPGColVal v
   limit <- maybe noIntErr return $ pgColValueToInt pgColVal
   -- validate int value
-  onlyPositiveInt $ Just limit
+  onlyPositiveInt limit
   return limit
   where
     noIntErr = throw400 Unexpected "expecting Integer value for \"limit\""
@@ -115,6 +119,7 @@ parseLimit v = do
 convertSelect
   :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RespTx
 convertSelect qt permFilter permLimit fld = do
-  selData <- fromField qt permFilter permLimit fld
+  selData <- withPathK "selectionSet" $
+             fromField qt permFilter permLimit fld
   prepArgs <- get
   return $ RS.selectP2 (selData, prepArgs)

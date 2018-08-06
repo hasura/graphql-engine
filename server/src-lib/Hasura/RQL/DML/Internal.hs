@@ -284,7 +284,6 @@ simplifyError txErr = do
 
 
 -- validate limit and offset int values
-onlyPositiveInt :: MonadError QErr m => Maybe Int -> m ()
-onlyPositiveInt Nothing = return ()
-onlyPositiveInt (Just i) = when (i < 0) $ throw400 NotSupported
-  "negative values are not supported"
+onlyPositiveInt :: MonadError QErr m => Int -> m ()
+onlyPositiveInt i = when (i < 0) $ throw400 NotSupported
+  "unexpected negative value"

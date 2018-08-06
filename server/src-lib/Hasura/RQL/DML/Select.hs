@@ -303,8 +303,8 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
   sqlOrderBy <- mapM convOrderByExp $ sqOrderBy selQ
 
   -- validate limit and offset values
-  withPathK "limit" $ onlyPositiveInt mQueryLimit
-  withPathK "offset" $ onlyPositiveInt mQueryOffset
+  withPathK "limit" $ mapM_ onlyPositiveInt mQueryLimit
+  withPathK "offset" $ mapM_ onlyPositiveInt mQueryOffset
 
   -- convert limit expression
   let limitExp = applyPermLimit mPermLimit mQueryLimit
