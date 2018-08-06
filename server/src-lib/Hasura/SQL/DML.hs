@@ -294,6 +294,11 @@ instance ToSQL SQLExp where
   toSQL (SEArray exps) = BB.string7 "ARRAY" <> BB.char7 '['
                          <> (", " <+> exps) <> BB.char7 ']'
 
+intToSQLExp :: Int -> SQLExp
+intToSQLExp i = SETyAnn e intType
+  where
+    e = SELit $ T.pack $ show i
+
 data Extractor = Extractor !SQLExp !(Maybe Alias)
                deriving (Show, Eq)
 
