@@ -61,7 +61,7 @@ const TableHeader = ({
             >
               <Link
                 to={
-                  '/schema/' +
+                  '/data/schema/' +
                   currentSchema +
                   '/tables/' +
                   tableName +
@@ -78,7 +78,7 @@ const TableHeader = ({
             >
               <Link
                 to={
-                  '/schema/' +
+                  '/data/schema/' +
                   currentSchema +
                   '/tables/' +
                   tableName +
@@ -96,7 +96,7 @@ const TableHeader = ({
               >
                 <Link
                   to={
-                    '/schema/' +
+                    '/data/schema/' +
                     currentSchema +
                     '/tables/' +
                     tableName +
@@ -114,7 +114,7 @@ const TableHeader = ({
             >
               <Link
                 to={
-                  '/schema/' +
+                  '/data/schema/' +
                   currentSchema +
                   '/tables/' +
                   tableName +
@@ -131,7 +131,7 @@ const TableHeader = ({
             >
               <Link
                 to={
-                  '/schema/' +
+                  '/data/schema/' +
                   currentSchema +
                   '/tables/' +
                   tableName +
@@ -145,7 +145,7 @@ const TableHeader = ({
             <li role="presentation" className={'hide'}>
               <Link
                 to={
-                  '/schema/' +
+                  '/data/schema/' +
                   currentSchema +
                   '/tables/' +
                   tableName +
