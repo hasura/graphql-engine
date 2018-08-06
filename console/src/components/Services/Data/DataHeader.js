@@ -1,23 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
-// import { push } from 'react-router-redux';
 
 import PageContainer from './PageContainer/PageContainer';
 
 import { appPrefix } from './push';
-/*
-import {
-  UPDATE_CURRENT_SCHEMA,
-  loadSchema,
-  loadUntrackedSchema,
-} from './DataActions';
-*/
 import globals from '../../../Globals';
 
 const DataHeader = ({
   schema,
-  // schemaList,
   currentSchema,
   children,
   location,
@@ -25,17 +16,6 @@ const DataHeader = ({
 }) => {
   const styles = require('./TableCommon/Table.scss');
   const currentLocation = location.pathname;
-  /*
-  const handleSchemaChange = e => {
-    const updatedSchema = e.target.value;
-    dispatch(push(globals.urlPrefix + '/data/schema/' + updatedSchema));
-    Promise.all([
-      dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
-      dispatch(loadSchema()),
-      dispatch(loadUntrackedSchema()),
-    ]);
-  };
-  */
   let migrationSection = null;
   if (globals.consoleMode === 'cli') {
     migrationSection = (
@@ -75,27 +55,6 @@ const DataHeader = ({
                     >
                       Schema
                     </Link>
-                  </div>
-                  <div className={styles.schemaSidebarSection}>
-                    {/* disable dropdown selection for now
-                    <select
-                      onChange={handleSchemaChange}
-                      className={'form-control'}
-                    >
-                      {schemaList.map(s => {
-                        if (s.schema_name === currentSchema) {
-                          return (
-                            <option key={s.schema_name} selected="selected">
-                              {s.schema_name}
-                            </option>
-                          );
-                        }
-                        return (
-                          <option key={s.schema_name}>{s.schema_name}</option>
-                        );
-                      })}
-                    </select>
-                    */}
                   </div>
                 </div>
                 <PageContainer

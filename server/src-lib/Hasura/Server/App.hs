@@ -2,64 +2,57 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
 module Hasura.Server.App where
 
 import           Control.Concurrent.MVar
-import           Control.Exception             (try)
-import           Control.Lens                  hiding ((.=))
-import           Data.Char                     (isSpace)
 import           Data.IORef
 
-import           Crypto.Hash                   (Digest, SHA1, hash)
-import           Data.Aeson                    hiding (json)
-import qualified Data.ByteString.Lazy          as BL
-import           Data.CaseInsensitive          (CI (..), original)
-import qualified Data.HashMap.Strict           as M
-import qualified Data.String.Conversions       as CS
-import qualified Data.Text                     as T
-import qualified Data.Text.Lazy                as TL
-import qualified Data.Text.Lazy.Encoding       as TLE
-import           Data.Time.Clock               (UTCTime,
-                                                getCurrentTime)
-import qualified Network.Connection            as NC
-import qualified Network.HTTP.Client           as H
-import qualified Network.HTTP.Client.TLS       as HT
-import           Network.Wai                   (strictRequestBody)
-import qualified Network.Wreq                  as Wq
-import qualified Network.Wreq.Types            as WqT
-import qualified Text.Mustache                 as M
-import qualified Text.Mustache.Compile         as M
+import           Data.Aeson                             hiding (json)
+import qualified Data.ByteString.Lazy                   as BL
+import qualified Data.HashMap.Strict                    as M
+import qualified Data.Text                              as T
+import           Data.Time.Clock                        (UTCTime,
+                                                         getCurrentTime)
+import           Network.Wai                            (requestHeaders,
+                                                         strictRequestBody)
+import qualified Text.Mustache                          as M
+import qualified Text.Mustache.Compile                  as M
 
 import           Web.Spock.Core
 
-import qualified Network.HTTP.Types            as N
-import qualified Network.Wai.Internal          as WI
-import qualified Network.Wai.Middleware.Static as MS
+import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.Wai.Middleware.Static          as MS
 
-import qualified Data.Text.Encoding.Error      as TE
-import qualified Database.PG.Query             as Q
-import qualified Hasura.GraphQL.Execute        as GE
-import qualified Hasura.GraphQL.Execute.Result as GE
-import qualified Hasura.GraphQL.Schema         as GS
+import qualified Database.PG.Query                      as Q
+import qualified Hasura.GraphQL.Schema                  as GS
+import qualified Hasura.GraphQL.Transport.HTTP          as GH
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.GraphQL.Transport.WebSocket     as WS
+import qualified Network.Wai                            as Wai
+import qualified Network.Wai.Handler.WebSockets         as WS
+import qualified Network.WebSockets                     as WS
 
-import           Hasura.Prelude                hiding (get, put)
+import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DML.Explain
+--import           Hasura.RQL.DML.Explain
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Middleware      (corsMiddleware,
-                                                mkDefaultCorsPolicy)
+import           Hasura.Server.Middleware               (corsMiddleware,
+                                                         mkDefaultCorsPolicy)
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.SQL.Types
 
-type RavenLogger = ServerLogger (BL.ByteString, Either QErr BL.ByteString)
+import qualified Hasura.Logging                         as L
+import           Hasura.Server.Auth                     (AuthMode, getUserInfo)
+
 
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
@@ -73,50 +66,27 @@ mkConsoleHTML =
     errMsg = "Fatal Error : console template rendering failed"
              ++ show errs
 
-ravenLogGen :: LogDetailG (BL.ByteString, Either QErr BL.ByteString)
-ravenLogGen _ (reqBody, res) =
-
-  (status, toJSON <$> logDetail, Just qh, Just size)
-  where
-    status = either qeStatus (const N.status200) res
-    logDetail = either (Just . qErrToLogDetail) (const Nothing) res
-    reqBodyTxt = TL.filter (not . isSpace) $ decodeLBS reqBody
-    qErrToLogDetail qErr =
-      LogDetail reqBodyTxt $ toJSON qErr
-    size = BL.length $ either encode id res
-    qh = T.pack . show $ sha1 reqBody
-    sha1 :: BL.ByteString -> Digest SHA1
-    sha1 = hash . BL.toStrict
-
-decodeLBS :: BL.ByteString -> TL.Text
-decodeLBS = TLE.decodeUtf8With TE.lenientDecode
-
-data AuthMode
-  = AMNoAuth
-  | AMAccessKey !T.Text
-  | AMAccessKeyAndHook !T.Text !T.Text
-  deriving (Show, Eq)
-
 data ServerCtx
   = ServerCtx
-  { scIsolation  :: Q.TxIsolation
-  , scPGPool     :: Q.PGPool
-  , scLogger     :: RavenLogger
-  , scCacheRef   :: IORef (SchemaCache, GS.GCtxMap)
-  , scCacheLock  :: MVar ()
-  , scServerMode :: AuthMode
+  { scIsolation :: Q.TxIsolation
+  , scPGPool    :: Q.PGPool
+  , scLogger    :: L.Logger
+  , scCacheRef  :: IORef (SchemaCache, GS.GCtxMap)
+  , scCacheLock :: MVar ()
+  , scAuthMode  :: AuthMode
+  , scManager   :: HTTP.Manager
   }
 
 data HandlerCtx
   = HandlerCtx
   { hcServerCtx :: ServerCtx
   , hcReqBody   :: BL.ByteString
-  , hcHeaders   :: [(T.Text, T.Text)]
+  , hcUser      :: UserInfo
   }
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
 
-{-# SCC parseBody #-}
+-- {-# SCC parseBody #-}
 parseBody :: (FromJSON a) => Handler a
 parseBody = do
   reqBody <- hcReqBody <$> ask
@@ -129,163 +99,74 @@ filterHeaders hdrs = flip filter hdrs $ \(h, _) ->
   isXHasuraTxt h && (T.toLower h /= userRoleHeader)
   && (T.toLower h /= accessKeyHeader)
 
-parseUserInfo :: Handler UserInfo
-parseUserInfo = do
-  headers <- hcHeaders <$> ask
-  let mUserRoleTuple = flip find headers $ \hdr ->
-        userRoleHeader == T.toLower (fst hdr)
-      mUserRoleV = snd <$> mUserRoleTuple
-      userRoleV = fromMaybe "admin" mUserRoleV
-  return $ UserInfo (RoleName userRoleV) $ filterHeaders headers
-
 onlyAdmin :: Handler ()
 onlyAdmin = do
-  (UserInfo uRole _) <- parseUserInfo
+  uRole <- asks (userRole . hcUser)
   when (uRole /= adminRole) $
     throw400 AccessDenied "You have to be an admin to access this endpoint"
 
 buildQCtx ::  Handler QCtx
 buildQCtx = do
   scRef    <- scCacheRef . hcServerCtx <$> ask
-  userInfo <- parseUserInfo
+  userInfo <- asks hcUser
   cache <- liftIO $ readIORef scRef
   return $ QCtx userInfo $ fst cache
 
-httpToQErr :: H.HttpException -> QErr
-httpToQErr e = case e of
-  H.InvalidUrlException _ _ -> err500 Unexpected "Invalid Webhook Url"
-  H.HttpExceptionRequest _ H.ConnectionTimeout -> err500 Unexpected
-    "Webhook : Connection timeout"
-  H.HttpExceptionRequest _ H.ResponseTimeout -> err500 Unexpected
-    "Webhook : Response timeout"
-  _ -> err500 Unexpected "HTTP Exception from Webhook"
-
-fromWebHook
-  :: (MonadIO m)
-  => T.Text
-  -> [N.Header]
-  -> ExceptT QErr m [(T.Text, T.Text)]
-fromWebHook urlT reqHeaders = do
-  manager <- liftIO $
-    H.newManager $ HT.mkManagerSettings tlsSimple Nothing
-  let options = Wq.defaults
-        { WqT.headers = filteredHeaders
-        , WqT.checkResponse = Just (\_ _ -> return ())
-        , WqT.manager = Right manager
-        }
-  respWithExcept <- liftIO $ try $ Wq.getWith options $ T.unpack urlT
-  resp <- either (throwError . httpToQErr) return respWithExcept
-  let status = resp ^. Wq.responseStatus
-  validateStatus status
-  webHookResp <- decodeBS $ resp ^. Wq.responseBody
-  return $ M.toList webHookResp
-
-  where
-    filteredHeaders = flip filter reqHeaders $ \(n, _) ->
-      n /= "Content-Length" && n /= "User-Agent" && n /= "Host"
-      && n /= "Origin" && n /= "Referer"
-    tlsSimple = NC.TLSSettingsSimple True False False
-
-    validateStatus statusCode
-      | statusCode == N.status200 = return ()
-      | statusCode == N.status401 = throw401
-         "Authentication hook unauthorized this request"
-      | otherwise = throw500
-        "Invalid response from authorization hook"
-
-    decodeBS bs = case eitherDecode bs of
-      Left e -> throw500 $
-        "Invalid response from authorization hook; " <> T.pack e
-      Right a -> return a
-
-fetchHeaders
-  :: (MonadIO m)
-  => WI.Request
-  -> Maybe T.Text
-  -> AuthMode
-  ->  ExceptT QErr m [(T.Text, T.Text)]
-fetchHeaders req mReqAccessKey authMode =
-  case authMode of
-    AMNoAuth -> return headers
-
-    AMAccessKey accKey -> do
-      reqAccessKey <- maybe accessKeyAuthErr return mReqAccessKey
-      validateKeyAndReturnHeaders accKey reqAccessKey
-
-    AMAccessKeyAndHook accKey hook ->
-      maybe (fromWebHook hook rawHeaders)
-            (validateKeyAndReturnHeaders accKey)
-            mReqAccessKey
-  where
-    rawHeaders = WI.requestHeaders req
-    headers = headersTxt rawHeaders
-
-    validateKeyAndReturnHeaders key reqKey = do
-      when (reqKey /= key) accessKeyAuthErr
-      return headers
-
-    accessKeyAuthErr = throw400 AccessDenied $
-          "access keys don't match or not found"
-
-    headersTxt hdrsRaw =
-      flip map hdrsRaw $ \(hdrName, hdrVal) ->
-      (CS.cs $ original hdrName, CS.cs hdrVal)
-
 logResult
   :: (MonadIO m)
-  => ServerCtx
-  -> Either QErr BL.ByteString
-  -> Maybe (UTCTime, UTCTime)
-  -> ActionT m ()
-logResult sc res qTime = do
-  req <- request
-  reqBody <- liftIO $ strictRequestBody req
-  liftIO $ logger req (reqBody, res) qTime
+  => Wai.Request -> BL.ByteString -> ServerCtx
+  -> Either QErr BL.ByteString -> Maybe (UTCTime, UTCTime)
+  -> m ()
+logResult req reqBody sc res qTime =
+  liftIO $ logger $ mkAccessLog req (reqBody, res) qTime
   where
     logger = scLogger sc
 
-logError :: MonadIO m => ServerCtx -> QErr -> ActionT m ()
-logError sc qErr = logResult sc (Left qErr) Nothing
+logError
+  :: MonadIO m
+  => Wai.Request -> BL.ByteString -> ServerCtx -> QErr -> m ()
+logError req reqBody sc qErr = logResult req reqBody sc (Left qErr) Nothing
 
 mkSpockAction
   :: (MonadIO m)
-  => (T.Text -> QErr -> Value)
+  => (Bool -> QErr -> Value)
   -> ServerCtx
   -> Handler BL.ByteString
   -> ActionT m ()
 mkSpockAction qErrEncoder serverCtx handler = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
-  role <- fromMaybe "admin" <$> header userRoleHeader
+  let headers  = requestHeaders req
+      authMode = scAuthMode serverCtx
+      manager = scManager serverCtx
 
-  accKeyHeader <- header accessKeyHeader
-  headersRes <- runExceptT $
-    fetchHeaders req accKeyHeader $ scServerMode serverCtx
-  headers <- either (logAndThrow role) return headersRes
+  userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
+  userInfo <- either (logAndThrow req reqBody False) return userInfoE
 
-  let handlerState = HandlerCtx serverCtx reqBody headers
+  let handlerState = HandlerCtx serverCtx reqBody userInfo
 
   t1 <- liftIO getCurrentTime -- for measuring response time purposes
   result <- liftIO $ runReaderT (runExceptT handler) handlerState
   t2 <- liftIO getCurrentTime -- for measuring response time purposes
 
   -- log result
-  logResult serverCtx result $ Just (t1, t2)
-  either (qErrToResp role) resToResp result
-  where
-    -- encode error response
-    qErrToResp role qErr = do
-      setStatus $ qeStatus qErr
-      json $ qErrEncoder role qErr
+  logResult req reqBody serverCtx result $ Just (t1, t2)
+  either (qErrToResp $ userRole userInfo == adminRole) resToResp result
 
-    logAndThrow role qErr = do
-      logError serverCtx qErr
-      qErrToResp role qErr
+  where
+    logger = scLogger serverCtx
+    -- encode error response
+    qErrToResp includeInternal qErr = do
+      setStatus $ qeStatus qErr
+      json $ qErrEncoder includeInternal qErr
+
+    logAndThrow req reqBody includeInternal qErr = do
+      logError req reqBody serverCtx qErr
+      qErrToResp includeInternal qErr
 
     resToResp resp = do
       uncurry setHeader jsonHeader
       lazyBytes resp
-
 
 withLock :: (MonadIO m, MonadError e m)
          => MVar () -> m a -> m a
@@ -299,21 +180,21 @@ withLock lk action = do
     acquireLock = liftIO $ takeMVar lk
     releaseLock = liftIO $ putMVar lk ()
 
-v1ExplainHandler :: RQLExplain -> Handler BL.ByteString
-v1ExplainHandler expQuery = dbAction
-  where
-    dbAction = do
-      onlyAdmin
-      scRef <- scCacheRef . hcServerCtx <$> ask
-      schemaCache <- liftIO $ readIORef scRef
-      pool <- scPGPool . hcServerCtx <$> ask
-      isoL <- scIsolation . hcServerCtx <$> ask
-      runExplainQuery pool isoL userInfo (fst schemaCache) selectQ
+-- v1ExplainHandler :: RQLExplain -> Handler BL.ByteString
+-- v1ExplainHandler expQuery = dbAction
+--   where
+--     dbAction = do
+--       onlyAdmin
+--       scRef <- scCacheRef . hcServerCtx <$> ask
+--       schemaCache <- liftIO $ readIORef scRef
+--       pool <- scPGPool . hcServerCtx <$> ask
+--       isoL <- scIsolation . hcServerCtx <$> ask
+--       runExplainQuery pool isoL userInfo (fst schemaCache) selectQ
 
-    selectQ = rqleQuery expQuery
-    role = rqleRole expQuery
-    headers = M.toList $ rqleHeaders expQuery
-    userInfo = UserInfo role headers
+--     selectQ = rqleQuery expQuery
+--     role = rqleRole expQuery
+--     headers = M.toList $ rqleHeaders expQuery
+--     userInfo = UserInfo role headers
 
 v1QueryHandler :: RQLQuery -> Handler BL.ByteString
 v1QueryHandler query = do
@@ -323,7 +204,7 @@ v1QueryHandler query = do
   where
     -- Hit postgres
     dbAction = do
-      userInfo <- parseUserInfo
+      userInfo <- asks hcUser
       scRef <- scCacheRef . hcServerCtx <$> ask
       schemaCache <- liftIO $ readIORef scRef
       pool <- scPGPool . hcServerCtx <$> ask
@@ -338,14 +219,14 @@ v1QueryHandler query = do
       liftIO $ writeIORef scRef (newSc, newGCtxMap)
       return resp
 
-v1Alpha1GQHandler :: GE.GraphQLRequest -> Handler BL.ByteString
+v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler BL.ByteString
 v1Alpha1GQHandler query = do
-  userInfo <- parseUserInfo
+  userInfo <- asks hcUser
   scRef <- scCacheRef . hcServerCtx <$> ask
   cache <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  GE.runGQ pool isoL userInfo (snd cache) query
+  GH.runGQ pool isoL userInfo (snd cache) query
 
 -- v1Alpha1GQSchemaHandler :: Handler BL.ByteString
 -- v1Alpha1GQSchemaHandler = do
@@ -378,31 +259,45 @@ legacyQueryHandler :: TableName -> T.Text -> Handler BL.ByteString
 legacyQueryHandler tn queryType =
   case M.lookup queryType queryParsers of
     Just queryParser -> getQueryParser queryParser qt >>= v1QueryHandler
-    Nothing          -> throw404 NotFound "No such resource exists"
+    Nothing          -> throw404 "No such resource exists"
   where
     qt = QualifiedTable publicSchema tn
 
-app
+mkWaiApp
   :: Q.TxIsolation
   -> Maybe String
-  -> RavenLogger
+  -> L.LoggerCtx
   -> Q.PGPool
+  -> HTTP.Manager
   -> AuthMode
   -> CorsConfig
   -> Bool
-  -> SpockT IO ()
-app isoLevel mRootDir logger pool mode corsCfg enableConsole = do
-    cacheRef <- lift $ do
+  -> IO Wai.Application
+mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole = do
+    cacheRef <- do
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
         sc <- buildSchemaCache
         (,) sc <$> GS.mkGCtxMap (scTables sc)
       either initErrExit return pgResp >>= newIORef
 
-    cacheLock <- lift $ newMVar ()
+    cacheLock <- newMVar ()
 
-    let serverCtx = ServerCtx isoLevel pool logger cacheRef cacheLock mode
+    let serverCtx =
+          ServerCtx isoLevel pool (L.mkLogger loggerCtx) cacheRef
+          cacheLock mode httpManager
 
+    spockApp <- spockAsApp $ spockT id $
+                httpApp mRootDir corsCfg serverCtx enableConsole
+
+    let runTx tx = runExceptT $ Q.runTx pool (isoLevel, Nothing) tx
+
+    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager cacheRef runTx
+    let wsServerApp = WS.createWSServerApp mode wsServerEnv
+    return $ WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
+
+httpApp :: Maybe String -> CorsConfig -> ServerCtx -> Bool -> SpockT IO ()
+httpApp mRootDir corsCfg serverCtx enableConsole = do
     liftIO $ putStrLn "HasuraDB is now waiting for connections"
 
     -- cors middleware
@@ -415,22 +310,24 @@ app isoLevel mRootDir logger pool mode corsCfg enableConsole = do
       serveApiConsole consoleHTML
     else maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
 
-    get "v1/version" getVersion
+    get "v1/version" $ do
+      uncurry setHeader jsonHeader
+      lazyBytes $ encode $ object [ "version" .= currentVersion ]
 
-    get    ("v1/template" <//> var) $ tmpltGetOrDeleteH serverCtx
-    post   ("v1/template" <//> var) $ tmpltPutOrPostH serverCtx
-    put    ("v1/template" <//> var) $ tmpltPutOrPostH serverCtx
-    delete ("v1/template" <//> var) $ tmpltGetOrDeleteH serverCtx
+    get    ("v1/template" <//> var) tmpltGetOrDeleteH
+    post   ("v1/template" <//> var) tmpltPutOrPostH
+    put    ("v1/template" <//> var) tmpltPutOrPostH
+    delete ("v1/template" <//> var) tmpltGetOrDeleteH
 
     post "v1/query" $ mkSpockAction encodeQErr serverCtx $ do
       query <- parseBody
       v1QueryHandler query
 
-    post "v1/query/explain" $ mkSpockAction encodeQErr serverCtx $ do
-      expQuery <- parseBody
-      v1ExplainHandler expQuery
+    -- post "v1/query/explain" $ mkSpockAction encodeQErr serverCtx $ do
+    --   expQuery <- parseBody
+    --   v1ExplainHandler expQuery
 
-    post "v1alpha1/graphql" $ mkSpockAction GE.encodeGQErr serverCtx $ do
+    post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr serverCtx $ do
       query <- parseBody
       v1Alpha1GQHandler query
 
@@ -438,20 +335,23 @@ app isoLevel mRootDir logger pool mode corsCfg enableConsole = do
     --   mkSpockAction encodeQErr serverCtx v1Alpha1GQSchemaHandler
 
     post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
-      mkSpockAction encodeQErr serverCtx $ legacyQueryHandler (TableName tableName) queryType
+      mkSpockAction encodeQErr serverCtx $
+      legacyQueryHandler (TableName tableName) queryType
 
     hookAny GET $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
-      logError serverCtx qErr
+      req <- request
+      reqBody <- liftIO $ strictRequestBody req
+      logError req reqBody serverCtx qErr
       uncurry setHeader jsonHeader
       lazyBytes $ encode qErr
 
   where
-    tmpltGetOrDeleteH serverCtx tmpltName = do
+    tmpltGetOrDeleteH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
       mkSpockAction encodeQErr serverCtx $ mkQTemplateAction tmpltName tmpltArgs
 
-    tmpltPutOrPostH serverCtx tmpltName = do
+    tmpltPutOrPostH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
       mkSpockAction encodeQErr serverCtx $ do
         bodyTmpltArgs <- parseBody

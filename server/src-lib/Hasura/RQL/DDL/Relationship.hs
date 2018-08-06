@@ -202,6 +202,7 @@ objRelP2Setup qt (RelDef rn ru _) = do
                      , SchemaDependency (SOTableObj qt $ TOCol cn) "using_col"
                      ]
               refqt = QualifiedTable refsn reftn
+          void $ askTabInfo refqt
           return $ RelInfo rn ObjRel colMapping refqt deps
         _  -> throw400 ConstraintError
                 "more than one foreign key constraint exists on the given column"
@@ -214,7 +215,7 @@ objRelP2Setup qt (RelDef rn ru _) = do
              FROM hdb_catalog.hdb_foreign_key_constraint
             WHERE table_schema = $1
               AND table_name = $2
-              AND column_mapping ->> $3 IS NOT NULL
+              AND (column_mapping ->> $3) IS NOT NULL
                 |] (sn, tn, cn) False
     processRes (consn, refsn, reftn, mapping) =
       case M.toList (Q.getAltJ mapping) of
@@ -308,7 +309,7 @@ arrRelP2Setup qt (RelDef rn ru _) = do
              FROM hdb_catalog.hdb_foreign_key_constraint
             WHERE table_schema = $1
               AND table_name = $2
-              AND column_mapping -> $3 IS NOT NULL
+              AND (column_mapping -> $3) IS NOT NULL
               AND ref_table_table_schema = $4
               AND ref_table = $5
                 |] (refsn, reftn, refcn, sn, tn) False

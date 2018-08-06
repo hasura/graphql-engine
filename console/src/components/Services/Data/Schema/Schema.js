@@ -17,8 +17,10 @@ import {
 import {
   loadSchema,
   loadUntrackedSchema,
+  loadUntrackedRelations,
   fetchSchemaList,
   LOAD_UNTRACKED_RELATIONS,
+  UPDATE_CURRENT_SCHEMA,
 } from '../DataActions';
 import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
 import AutoAddRelationsConnector from './AutoAddRelations';
@@ -27,7 +29,8 @@ import globals from '../../../../Globals';
 const appPrefix = globals.urlPrefix + '/data';
 
 class Schema extends Component {
-  componentWillMount() {
+  constructor(props) {
+    super(props);
     // Initialize this table
     const dispatch = this.props.dispatch;
     dispatch(fetchSchemaList());
@@ -36,7 +39,7 @@ class Schema extends Component {
     const untrackedRelations = getAllUnTrackedRelations(
       this.props.schema,
       this.props.currentSchema
-    );
+    ).bulkRelTrack;
     this.props.dispatch({
       type: LOAD_UNTRACKED_RELATIONS,
       untrackedRelations,
@@ -47,7 +50,7 @@ class Schema extends Component {
     const untrackedRelations = getAllUnTrackedRelations(
       this.props.schema,
       this.props.currentSchema
-    );
+    ).bulkRelTrack;
     this.props.dispatch({
       type: LOAD_UNTRACKED_RELATIONS,
       untrackedRelations,
@@ -57,12 +60,25 @@ class Schema extends Component {
   render() {
     const {
       schema,
+      schemaList,
       untracked,
       migrationMode,
       untrackedRelations,
       currentSchema,
       dispatch,
     } = this.props;
+
+    const handleSchemaChange = e => {
+      const updatedSchema = e.target.value;
+      dispatch(push('/data/schema/' + updatedSchema));
+      Promise.all([
+        dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
+        dispatch(loadSchema()),
+        dispatch(loadUntrackedSchema()),
+        dispatch(loadUntrackedRelations()),
+      ]);
+    };
+
     const styles = require('../PageContainer/PageContainer.scss');
 
     let relationships = 0;
@@ -89,7 +105,6 @@ class Schema extends Component {
 
     const untrackedHtml = [];
     for (let i = 0; i < untrackedTables.length; i++) {
-      // if (untrackedTables[i].table_name !== 'schema_migrations') {
       untrackedHtml.push(
         <div className={styles.padd_bottom} key={`${i}untracked`}>
           <div className={`${styles.display_inline} ${styles.padd_right}`}>
@@ -110,7 +125,6 @@ class Schema extends Component {
           </div>
         </div>
       );
-      // }
     }
     if (!untrackedHtml.length) {
       untrackedHtml.push(
@@ -147,18 +161,35 @@ class Schema extends Component {
             ) : null}
           </div>
           <hr />
-          <div className={styles.padd_bottom}>
-            There are <b>{schema.length}</b> tables tracked in the{' '}
-            {currentSchema} schema, with <b>{relationships}</b> relationships.
+          <div>
+            <div className={styles.display_inline}>Current postgres schema</div>
+            <div className={styles.display_inline}>
+              <select
+                onChange={handleSchemaChange}
+                className={styles.changeSchema + ' form-control'}
+              >
+                {schemaList.map(s => {
+                  if (s.schema_name === currentSchema) {
+                    return (
+                      <option key={s.schema_name} selected="selected">
+                        {s.schema_name}
+                      </option>
+                    );
+                  }
+                  return <option key={s.schema_name}>{s.schema_name}</option>;
+                })}
+              </select>
+            </div>
           </div>
-          <div className={styles.padd_top}>
+          <hr />
+          <div className={styles.add_pad_bottom}>
             <div>
               <h4
                 className={`${styles.subheading_text} ${
                   styles.heading_tooltip
                 }`}
               >
-                Untracked Tables/Views
+                Untracked tables or views
               </h4>
               <OverlayTrigger placement="right" overlay={untrackedTip}>
                 <i className="fa fa-info-circle" aria-hidden="true" />
@@ -181,28 +212,27 @@ class Schema extends Component {
               {untrackedHtml}
             </div>
           </div>
-          <div className={styles.padd_top}>
-            <div className={styles.padd_top}>
+          <hr />
+          <div>
+            <div>
               <h4
                 className={`${styles.subheading_text} ${
                   styles.heading_tooltip
                 }`}
               >
-                Untracked Relations
+                Untracked foreign-key relations
               </h4>
               <OverlayTrigger placement="right" overlay={untrackedRelTip}>
                 <i className="fa fa-info-circle" aria-hidden="true" />
               </OverlayTrigger>
               <div className={`${styles.padd_left_remove} col-xs-12`}>
-                {untrackedRelations.length === 0 ? (
-                  <div key="no-untracked-rel">
-                    There are no untracked relations
-                  </div>
-                ) : null}
-                <AutoAddRelationsConnector
-                  untrackedRelations={untrackedRelations}
-                  dispatch={dispatch}
-                />
+                <div>
+                  <AutoAddRelationsConnector
+                    untrackedRelations={untrackedRelations}
+                    schema={schema}
+                    dispatch={dispatch}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -223,6 +253,7 @@ Schema.propTypes = {
 
 const mapStateToProps = state => ({
   schema: state.tables.allSchemas,
+  schemaList: state.tables.schemaList,
   untracked: state.tables.untrackedSchemas,
   migrationMode: state.main.migrationMode,
   untrackedRelations: state.tables.untrackedRelations,

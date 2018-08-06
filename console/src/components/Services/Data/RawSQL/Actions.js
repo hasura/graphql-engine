@@ -14,6 +14,7 @@ import returnMigrateUrl from '../Common/getMigrateUrl';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
+const SET_CASCADE_CHECKED = 'RawSQL/SET_CASCADE_CHECKED';
 const SET_MIGRATION_CHECKED = 'RawSQL/SET_MIGRATION_CHECKED';
 const SET_TRACK_TABLE_CHECKED = 'RawSQL/SET_TRACK_TABLE_CHECKED';
 const REQUEST_SUCCESS = 'RawSQL/REQUEST_SUCCESS';
@@ -34,51 +35,46 @@ const executeSQL = isMigration => (dispatch, getState) => {
 
   const migrateUrl = returnMigrateUrl(currMigrationMode);
   const currentSchema = getState().tables.currentSchema;
+  const isCascadeChecked = getState().rawSQL.isCascadeChecked;
 
   let url = Endpoints.rawSQL;
+  const schemaChangesUp = [
+    {
+      type: 'run_sql',
+      args: { sql: sql, cascade: isCascadeChecked },
+    },
+  ];
+  // check if track view enabled
+  if (getState().rawSQL.isTableTrackChecked) {
+    const regExp = /create (view|table) (\S+)/i;
+    const matches = sql.match(regExp);
+    let trackViewName = matches ? matches[2] : '';
+    if (trackViewName.indexOf('.') !== -1) {
+      trackViewName = matches[2].split('.')[1];
+    }
+    const trackQuery = {
+      type: 'add_existing_table_or_view',
+      args: {
+        name: trackViewName.trim(),
+        schema: currentSchema,
+      },
+    };
+    if (trackViewName !== '') {
+      schemaChangesUp.push(trackQuery);
+    }
+  }
   let requestBody = {
-    type: 'run_sql',
-    args: { sql },
+    type: 'bulk',
+    args: schemaChangesUp,
   };
   // check if its a migration and send to hasuractl migrate
   if (isMigration) {
     url = migrateUrl;
-    const schemaChangesUp = [
-      {
-        type: 'run_sql',
-        args: { sql },
-      },
-    ];
-    // check if track view enabled
-    if (getState().rawSQL.isTableTrackChecked) {
-      const regExp = /create (view|table) (\S+)/;
-      const matches = sql.match(regExp);
-      let trackViewName = matches[2];
-      if (trackViewName.indexOf('.') !== -1) {
-        trackViewName = matches[2].split('.')[1];
-      }
-      const trackQuery = {
-        type: 'add_existing_table_or_view',
-        args: {
-          name: trackViewName.trim(),
-          schema: currentSchema,
-        },
-      };
-      schemaChangesUp.push(trackQuery);
-    }
-    const upQuery = {
-      type: 'bulk',
-      args: schemaChangesUp,
-    };
-    const downQuery = {
-      type: 'bulk',
-      args: [],
-    };
     const migrationName = 'run_sql_migration';
     requestBody = {
       name: migrationName,
-      up: upQuery.args,
-      down: downQuery.args,
+      up: schemaChangesUp,
+      down: [],
     };
   }
   const options = {
@@ -138,6 +134,8 @@ const executeSQL = isMigration => (dispatch, getState) => {
             } else {
               parsedErrorMsg.message = { error: parsedErrorMsg.error };
             }
+          } else if (parsedErrorMsg.code === 'dependency-error') {
+            parsedErrorMsg.message = errorMsg.error;
           }
           dispatch(
             showErrorNotification(
@@ -181,6 +179,8 @@ const rawSQLReducer = (state = defaultState, action) => {
       return { ...state, sql: action.data };
     case SET_MIGRATION_CHECKED:
       return { ...state, isMigrationChecked: action.data };
+    case SET_CASCADE_CHECKED:
+      return { ...state, isCascadeChecked: action.data };
     case SET_TRACK_TABLE_CHECKED:
       return {
         ...state,
@@ -195,7 +195,11 @@ const rawSQLReducer = (state = defaultState, action) => {
         lastSuccess: null,
       };
     case REQUEST_SUCCESS:
-      if (action.data && action.data.result_type === 'CommandOk') {
+      if (
+        action.data &&
+        action.data[0] &&
+        action.data[0].result_type === 'CommandOk'
+      ) {
         return {
           ...state,
           ongoingRequest: false,
@@ -211,8 +215,8 @@ const rawSQLReducer = (state = defaultState, action) => {
         lastError: null,
         lastSuccess: true,
         resultType: 'tuples',
-        result: action.data.result.slice(1),
-        resultHeaders: action.data.result[0],
+        result: action.data[0].result.slice(1),
+        resultHeaders: action.data[0].result[0],
       };
     case REQUEST_ERROR:
       return {
@@ -234,6 +238,7 @@ export default rawSQLReducer;
 export {
   executeSQL,
   SET_SQL,
+  SET_CASCADE_CHECKED,
   SET_MIGRATION_CHECKED,
   SET_TRACK_TABLE_CHECKED,
   modalOpen,

@@ -1,7 +1,8 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiWayIf            #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
@@ -25,6 +26,7 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value
 
 parseOpExps
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
@@ -35,6 +37,7 @@ parseOpExps annVal = do
       "_eq"       -> fmap RA.AEQ <$> asPGColValM v
       "_ne"       -> fmap RA.ANE <$> asPGColValM v
       "_neq"      -> fmap RA.ANE <$> asPGColValM v
+      "_is_null"  -> resolveIsNull v
 
       "_in"       -> fmap (RA.AIN . catMaybes) <$> parseMany asPGColValM v
       "_nin"      -> fmap (RA.ANIN . catMaybes) <$> parseMany asPGColValM v
@@ -59,6 +62,13 @@ parseOpExps annVal = do
           <> ": "
           <> showName k
   return $ map RA.OEVal $ catMaybes $ fromMaybe [] opExpsM
+  where
+    resolveIsNull v = case v of
+      AGScalar _ Nothing -> return Nothing
+      AGScalar _ (Just (PGValBoolean b)) ->
+        return $ Just $ bool RA.ANISNOTNULL RA.ANISNULL b
+      AGScalar _ _ -> throw500 "boolean value is expected"
+      _ -> tyMismatch "pgvalue" v
 
 parseColExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)

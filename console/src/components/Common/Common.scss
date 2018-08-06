@@ -100,14 +100,31 @@ table thead tr th
 .breadCrumbSeparator {
   margin-bottom: 17px !important;
 }
-.commentText
-{
-  margin-top: 20px;
-  margin-bottom: 10px !important;
+
+.commentText {
+  display: inline-block;
+  padding: 5px !important;
+  margin-bottom: 0px;
 }
+.commentEdit {
+  display: inline-block;
+  padding-left: 10px;
+  cursor: pointer;
+}
+.comment_action {
+  text-decoration: underline;
+  cursor: pointer;
+}
+.commentInput {
+  width: 30%;
+  display: inline-block;
+}
+
 .fontAwosomeClose
 {
   margin-left: 10px;
+  width: 15px;
+  min-width: 15px;
 }
 .display_flex
 {
@@ -380,6 +397,10 @@ input {
 {
   padding-left: 5px;
 }
+.padd_small_right
+{
+  padding-right: 5px;
+}
 .border_bottom
 {
   border-bottom: 1px solid #e7e7e7;
@@ -494,6 +515,10 @@ code
 .ul_padd_left
 {
   -webkit-padding-start: 15px;
+}
+.add_pad_bottom
+{
+  padding-bottom: 20px;
 }
 .add_padd_bottom
 {
@@ -778,7 +803,7 @@ code
   text-transform: uppercase;
   display: inline-block;
   padding-left: 20px;
-  font-size: 20px;
+  font-size: 18px;
   letter-spacing: 1px;
   font-weight: 700;
 }
@@ -985,6 +1010,7 @@ code
 
 .graphQLHeight {
   height: 100vh;
+  margin-bottom: 50px;
 }
 
 /* container height subtracting top header and bottom scroll bar */

@@ -1,0 +1,14 @@
+description: Create relevant permissions
+url: /v1/query
+status: 200
+query:
+  type: create_select_permission
+  args:
+    table: article
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        $or:
+        - author_id: X-HASURA-USER-ID
+        - is_published: true

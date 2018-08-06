@@ -116,6 +116,7 @@ const PageContainer = ({
             onChange={tableSearch.bind(this)}
             className="form-control"
             placeholder="search table/view"
+            data-test="search-tables"
           />
         </div>
       </div>
@@ -129,7 +130,7 @@ const PageContainer = ({
               styles.padd_left_remove
             }
           >
-            Tables
+            Tables ({schema.length})
           </div>
           {migrationMode ? (
             <div
@@ -154,7 +155,9 @@ const PageContainer = ({
             </div>
           ) : null}
         </div>
-        <ul className={styles.schemaListUl}>{tableLinks}</ul>
+        <ul className={styles.schemaListUl} data-test="table-links">
+          {tableLinks}
+        </ul>
       </div>
     </div>
   );

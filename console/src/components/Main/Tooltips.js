@@ -6,5 +6,11 @@ export const data = (
 );
 
 export const apiexplorer = (
-  <Tooltip id="tooltip-api-explorer">Test the Hasura APIs</Tooltip>
+  <Tooltip id="tooltip-api-explorer">Test the GraphQL APIs</Tooltip>
+);
+
+export const secureEndpoint = (
+  <Tooltip id="tooltip-secure-endpoint">
+    This graphql endpoint is public and you should add an access key
+  </Tooltip>
 );

@@ -1,5 +1,8 @@
 FROM hasura/haskell-docker-packager:1.1
 MAINTAINER vamshi@34cross.in
 
-RUN apt-get update && apt-get install -y libpq5 upx \
+RUN apt-get update && apt-get install -y libpq5 upx ca-certificates \
+ && update-ca-certificates \
+ && mkdir -p /usr/src/busybox/rootfs/etc/ssl/certs \
+ && cp -L /etc/ssl/certs/* /usr/src/busybox/rootfs/etc/ssl/certs/ \
  && rm -rf /var/lib/apt/lists/*

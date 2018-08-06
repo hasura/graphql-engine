@@ -9,20 +9,25 @@ import           Data.Time.Clock            (getCurrentTime)
 import           Options.Applicative
 import           System.Environment         (lookupEnv)
 import           System.Exit                (exitFailure)
-import           Web.Spock.Core             (runSpockNoBanner, spockT)
 
+import qualified Control.Concurrent         as C
 import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Char8      as BC
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Text                  as T
 import qualified Data.Yaml                  as Y
+import qualified Network.HTTP.Client        as HTTP
+import qualified Network.HTTP.Client.TLS    as HTTP
+import qualified Network.Wai.Handler.Warp   as Warp
 
+import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
-import           Hasura.Server.App          (AuthMode (..), app, ravenLogGen)
+import           Hasura.Server.App          (mkWaiApp)
+import           Hasura.Server.Auth         (AuthMode (..))
+import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
-import           Hasura.Server.Logging      (withStdoutLogger)
 
 import qualified Database.PG.Query          as Q
 
@@ -56,9 +61,9 @@ parseRavenMode = subparser
   ( command "serve" (info (helper <*> serveOptsParser)
       ( progDesc "Start the HTTP api server" ))
     <> command "export" (info (pure ROExport)
-      ( progDesc "Export raven's schema to stdout" ))
+      ( progDesc "Export graphql-engine's schema to stdout" ))
     <> command "clean" (info (pure ROClean)
-      ( progDesc "Clean raven's metadata to start afresh" ))
+      ( progDesc "Clean graphql-engine's metadata to start afresh" ))
     <> command "execute" (info (pure ROExecute)
       ( progDesc "Execute a query" ))
   )
@@ -80,7 +85,7 @@ parseArgs = execParser opts
     optParser = RavenOptions <$> parseRawConnInfo <*> parseRavenMode
     opts = info (helper <*> optParser)
            ( fullDesc <>
-             header "raven - Hasura's datastore")
+             header "Hasura's graphql-engine - Exposes Postgres over GraphQL")
 
 printJSON :: (A.ToJSON a) => a -> IO ()
 printJSON = BLC.putStrLn . A.encode
@@ -99,14 +104,17 @@ mkAuthMode mAccessKey mWebHook =
     (Just key, Just hook) -> return $ AMAccessKeyAndHook key hook
 
 main :: IO ()
-main = withStdoutLogger ravenLogGen $ \rlogger -> do
+main =  do
   (RavenOptions rci ravenMode) <- parseArgs
   mEnvDbUrl <- lookupEnv "HASURA_GRAPHQL_DATABASE_URL"
   ci <- either ((>> exitFailure) . putStrLn . connInfoErrModifier)
     return $ mkConnInfo mEnvDbUrl rci
   printConnInfo ci
+  loggerCtx <- mkLoggerCtx defaultLoggerSettings
+  httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case ravenMode of
     ROServe (ServeOptions port cp isoL mRootDir mAccessKey corsCfg mWebHook enableConsole) -> do
+
       mFinalAccessKey <- considerEnv "HASURA_GRAPHQL_ACCESS_KEY" mAccessKey
       mFinalWebHook <- considerEnv "HASURA_GRAPHQL_AUTH_HOOK" mWebHook
       am <- either ((>> exitFailure) . putStrLn) return $
@@ -117,9 +125,16 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
       initialise ci
       migrate ci
       pool <- Q.initPGPool ci cp
-      runSpockNoBanner port $ do
-        putStrLn $ "server: running on port " ++ show port
-        spockT id $ app isoL mRootDir rlogger pool am finalCorsCfg enableConsole
+      putStrLn $ "server: running on port " ++ show port
+      app <- mkWaiApp isoL mRootDir loggerCtx pool httpManager am finalCorsCfg enableConsole
+      let warpSettings = Warp.setPort port Warp.defaultSettings
+                         -- Warp.setHost "*" Warp.defaultSettings
+
+      -- start a background thread to check for updates
+      void $ C.forkIO $ checkForUpdates loggerCtx httpManager
+
+      Warp.runSettings warpSettings app
+
     ROExport -> do
       res <- runTx ci fetchMetadata
       either ((>> exitFailure) . printJSON) printJSON res
@@ -146,7 +161,7 @@ main = withStdoutLogger ravenLogGen $ \rlogger -> do
       res <- runTx ci $ migrateCatalog currentTime
       either ((>> exitFailure) . printJSON) putStrLn res
 
-    cleanSuccess = putStrLn "successfully cleaned raven related data"
+    cleanSuccess = putStrLn "successfully cleaned graphql-engine related data"
 
     printConnInfo ci =
       putStrLn $

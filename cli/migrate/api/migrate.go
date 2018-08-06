@@ -27,6 +27,7 @@ type Response struct {
 type Request struct {
 	Name string        `json:"name"`
 	Up   []interface{} `json:"up"`
+	Down []interface{} `json:"down"`
 }
 
 func MigrateAPI(c *gin.Context) {
@@ -79,7 +80,19 @@ func MigrateAPI(c *gin.Context) {
 		// Convert to Millisecond
 		timestamp := startTime.UnixNano() / int64(time.Millisecond)
 
-		err = cmd.CreateCmd(sourceURL.Path, timestamp, request.Name, request.Up)
+		createOptions := cmd.New(timestamp, request.Name, sourceURL.Path)
+		err = createOptions.SetMetaUp(request.Up)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+			return
+		}
+		err = createOptions.SetMetaDown(request.Down)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+			return
+		}
+
+		err = createOptions.Create()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
 			return
@@ -88,7 +101,7 @@ func MigrateAPI(c *gin.Context) {
 		// Rescan file system
 		err = t.ReScan()
 		if err != nil {
-			deleteErr := cmd.DeleteCmd(sourceURL.Path, timestamp)
+			deleteErr := createOptions.Delete()
 			if deleteErr != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "delete_file_error", Message: deleteErr.Error()})
 				return
@@ -98,7 +111,7 @@ func MigrateAPI(c *gin.Context) {
 		}
 
 		if err = t.Migrate(uint64(timestamp), "up"); err != nil {
-			deleteErr := cmd.DeleteCmd(sourceURL.Path, timestamp)
+			deleteErr := createOptions.Delete()
 			if deleteErr != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "delete_file_error", Message: deleteErr.Error()})
 				return

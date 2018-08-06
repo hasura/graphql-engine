@@ -22,16 +22,28 @@ func Test(t *testing.T) {
 	// write files that meet driver test requirements
 	mustWriteFile(t, tmpDir, "1_foobar.up.sql", "1 up")
 	mustWriteFile(t, tmpDir, "1_foobar.down.sql", "1 down")
-	mustWriteFile(t, tmpDir, "1_foobar.up.yaml", "1 metaup")
-	mustWriteFile(t, tmpDir, "1_foobar.down.yaml", "1 metadown")
+	mustWriteFile(t, tmpDir, "1_foobar.up.yaml", `- args:
+    name: test
+  type: add_existing_table_or_view
+`)
+	mustWriteFile(t, tmpDir, "1_foobar.down.yaml", `- args:
+    name: test
+  type: add_existing_table_or_view
+`)
 
 	mustWriteFile(t, tmpDir, "3_foobar.up.sql", "3 up")
 
-	mustWriteFile(t, tmpDir, "4_foobar.up.yaml", "4 metaup")
+	mustWriteFile(t, tmpDir, "4_foobar.up.yaml", `- args:
+    name: test
+  type: add_existing_table_or_view
+`)
 
 	mustWriteFile(t, tmpDir, "5_foobar.down.sql", "5 down")
 
-	mustWriteFile(t, tmpDir, "6_foobar.down.yaml", "6 metadown")
+	mustWriteFile(t, tmpDir, "6_foobar.down.yaml", `- args:
+    name: test
+  type: add_existing_table_or_view
+`)
 
 	mustWriteFile(t, tmpDir, "8_foobar.up.sql", "7 up")
 	mustWriteFile(t, tmpDir, "8_foobar.down.sql", "7 down")
@@ -89,7 +101,7 @@ func TestOpenWithRelativePath(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	mustWriteFile(t, filepath.Join(tmpDir, "foo"), "1_foobar.up.sql", "")
+	mustWriteFile(t, filepath.Join(tmpDir, "foo"), "1_foobar.up.sql", "test")
 
 	logger, _ := test.NewNullLogger()
 	f := &File{}
@@ -140,8 +152,8 @@ func TestOpenWithDuplicateVersion(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	mustWriteFile(t, tmpDir, "1_foo.up.sql", "") // 1 up
-	mustWriteFile(t, tmpDir, "1_bar.up.sql", "") // 1 up
+	mustWriteFile(t, tmpDir, "1_foo.up.sql", "test") // 1 up
+	mustWriteFile(t, tmpDir, "1_bar.up.sql", "test") // 1 up
 
 	logger, _ := test.NewNullLogger()
 	f := &File{}

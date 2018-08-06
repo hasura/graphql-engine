@@ -7,6 +7,7 @@ const generatedApiExplorer = connect => {
       credentials: {},
       dataApiExplorerData: { ...state.dataApiExplorer },
       dataHeaders: state.tables.dataHeaders,
+      tables: state.tables.allSchemas,
     };
   };
   return connect(mapStateToProps)(ApiExplorer);

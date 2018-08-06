@@ -9,6 +9,45 @@
   // display: flex;
 }
 
+.updateBannerWrapper {
+    position: fixed;
+    right: 0;
+    bottom: 0px;
+    width: 100%;
+    z-index: 10;
+    text-align: center;
+    background-color: #FFC627;
+    color: #43495a;
+    padding: 14.5px 10px;
+  .updateBanner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    a {
+      color: #43495a;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+  }
+  .updateBannerClose {
+    cursor: pointer;
+    position: absolute;
+    right: 10px;
+  }
+  .versionUpdateText {
+    font-weight: bold;
+    padding: 0px 5px;
+  }
+  .updateLink {
+    font-weight: bold;
+  }
+  .middot {
+    line-height: 0;
+    font-size: 20px;
+    padding: 0px 10px;
+  }
+}
+
 .add_btn {
   margin: 10px 0;
 }
@@ -40,6 +79,10 @@
   {
     display: flex;
     align-items: center;
+    a {
+      display: flex;
+      align-items: center;
+    }
     .logo
     {
       display: inline-block;
@@ -56,6 +99,16 @@
       padding: 10px 10px !important;
     }
   }
+}
+.project_version {
+  font-family: Gudea;
+  color: #fff;
+  text-transform: lowercase;
+  display: inline-block;
+  padding-left: 10px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  font-weight: 300;
 }
 .toggleSidebar {
   position: absolute;

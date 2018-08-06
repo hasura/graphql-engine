@@ -1,15 +1,14 @@
 import React, { Component } from 'react';
-import GraphiQL from 'graphiql';
+import GraphiQL from 'hasura-console-graphiql';
 import PropTypes from 'prop-types';
-import fetch from 'isomorphic-fetch';
-import { getHeadersAsJSON } from './utils';
 import ErrorBoundary from './ErrorBoundary';
+import { graphQLFetcherFinal } from './Actions';
 
 import './GraphiQL.css';
 
 class GraphiQLWrapper extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       schema: null,
       error: false,
@@ -18,28 +17,21 @@ class GraphiQLWrapper extends Component {
     };
   }
 
+  shouldComponentUpdate(nextProps) {
+    return !nextProps.headerFocus;
+  }
+
   render() {
     const styles = require('../Common/Common.scss');
-    const headers = getHeadersAsJSON(this.props.data.headers);
-    const graphqlUrl = this.props.data.url;
-    const filterAccessKeyHeader = this.props.data.headers.filter(
-      elem => elem.key === 'X-Hasura-Access-Key'
-    )[0];
-
-    if (
-      this.props.data.dataHeaders['X-Hasura-Access-Key'] &&
-      !filterAccessKeyHeader
-    ) {
-      headers['X-Hasura-Access-Key'] = this.props.data.dataHeaders[
-        'X-Hasura-Access-Key'
-      ];
-    }
     const graphQLFetcher = graphQLParams => {
-      return fetch(graphqlUrl, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(graphQLParams),
-      }).then(response => response.json());
+      if (this.state.headerFocus) {
+        return null;
+      }
+      return graphQLFetcherFinal(
+        graphQLParams,
+        this.props.data.url,
+        this.props.data.headers
+      );
     };
 
     // let content = "fetching schema";
@@ -47,15 +39,9 @@ class GraphiQLWrapper extends Component {
       <i className={'fa fa-spinner fa-spin ' + styles.graphSpinner} />
     );
 
-    if (!this.state.error && !this.state.noSchema) {
-      content = (
-        <GraphiQL
-          fetcher={graphQLFetcher}
-          defaultQuery={''}
-          schema={undefined}
-        />
-      );
-    } else if (this.state.noSchema) {
+    if (!this.state.error && this.props.numberOfTables !== 0) {
+      content = <GraphiQL fetcher={graphQLFetcher} />;
+    } else if (this.props.numberOfTables === 0) {
       content = (
         <GraphiQL
           fetcher={graphQLFetcher}
@@ -90,6 +76,8 @@ class GraphiQLWrapper extends Component {
 GraphiQLWrapper.propTypes = {
   dispatch: PropTypes.func.isRequired,
   data: PropTypes.object.isRequired,
+  numberOfTables: PropTypes.number.isRequired,
+  headerFocus: PropTypes.bool.isRequired,
 };
 
 export default GraphiQLWrapper;

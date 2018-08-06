@@ -27,7 +27,7 @@ dataApisContent.push({
   details: {
     title: 'GraphQL API',
     description:
-      'GraphQL API for CRUD operations on tables/views in your database',
+      'GraphQL API for CRUD operations on tables & views in your database',
     category: 'data',
   },
   request: {
@@ -62,6 +62,7 @@ const defaultState = {
   },
   explorerData,
   authApiExpanded: 'Username-password Login',
+  headerFocus: false,
 };
 
 export default defaultState;

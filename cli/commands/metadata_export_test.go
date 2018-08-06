@@ -10,13 +10,13 @@ import (
 	"github.com/sirupsen/logrus/hooks/test"
 )
 
-func testMetadataExport(t *testing.T, executionDir string, endpoint *url.URL) {
+func testMetadataExport(t *testing.T, metadataFile string, endpoint *url.URL) {
 	logger, _ := test.NewNullLogger()
 	opts := &metadataExportOptions{
 		EC: &cli.ExecutionContext{
-			Logger:             logger,
-			Spinner:            spinner.New(spinner.CharSets[7], 100*time.Millisecond),
-			ExecutionDirectory: executionDir,
+			Logger:       logger,
+			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
+			MetadataFile: metadataFile,
 			Config: &cli.HasuraGraphQLConfig{
 				Endpoint:       endpoint.String(),
 				AccessKey:      "",

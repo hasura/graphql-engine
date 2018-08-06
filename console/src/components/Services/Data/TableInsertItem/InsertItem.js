@@ -100,7 +100,6 @@ class InsertItem extends Component {
 
     const elements = columns.map((col, i) => {
       const colName = col.column_name;
-
       const isDefault = col.column_default && col.column_default.trim() !== '';
       const isNullable = col.is_nullable && col.is_nullable !== 'NO';
 
@@ -219,6 +218,19 @@ class InsertItem extends Component {
         typedInput = (
           <input
             placeholder={`${time}Z or ${time}+05:30`}
+            type="text"
+            className={'form-control ' + styles.insertBox}
+            onClick={clicker}
+            ref={inputRef}
+            defaultValue={clone && colName in clone ? clone[colName] : ''}
+            data-test={`typed-input-${i}`}
+          />
+        );
+      } else if (colType === 'uuid') {
+        // UUID
+        typedInput = (
+          <input
+            placeholder={'UUID'}
             type="text"
             className={'form-control ' + styles.insertBox}
             onClick={clicker}
@@ -474,6 +486,7 @@ class InsertItem extends Component {
                     }
                   }
                 }}
+                data-test="clear-button"
               >
                 Clear
               </button>

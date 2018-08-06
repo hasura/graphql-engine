@@ -70,7 +70,16 @@ getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
              WHERE table_schema = $1
                AND table_name = $2
                            |] (sn, tn) False
-  return $ mkTableInfo qt isSystemDefined $ map (fmap Q.getAltJ) colData
+
+  -- Fetch the constraint details
+  rawConstraints <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
+           SELECT constraint_type, constraint_name
+             FROM information_schema.table_constraints
+             WHERE table_schema = $1
+               AND table_name = $2
+                           |] (sn, tn) False
+  return $ mkTableInfo qt isSystemDefined rawConstraints $
+    map (fmap Q.getAltJ) colData
 
 newtype TrackTable
   = TrackTable

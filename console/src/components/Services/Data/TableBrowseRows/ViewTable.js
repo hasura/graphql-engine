@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { vSetDefaults, vMakeRequest, vExpandHeading } from './ViewActions'; // eslint-disable-line no-unused-vars
-import { setTable, fetchTableComment } from '../DataActions';
+import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from './ViewHeader';
 import ViewRows from './ViewRows';
@@ -63,20 +63,20 @@ const genRow = (row, headings) => {
 };
 
 class ViewTable extends Component {
-  componentWillMount() {
+  constructor(props) {
+    super(props);
     // Initialize this table
+    this.state = {
+      dispatch: props.dispatch,
+      tableName: props.tableName,
+    };
+    // this.state.dispatch = props.dispatch;
+    // this.state.tableName = props.tablename;
     const dispatch = this.props.dispatch;
-    /*
-    dispatch(setTable(this.props.tableName));
-    dispatch(vSetDefaults(this.props.tableName));
-    dispatch(vMakeRequest());
-    dispatch(fetchTableComment(this.props.tableName));
-    */
     Promise.all([
       dispatch(setTable(this.props.tableName)),
       dispatch(vSetDefaults(this.props.tableName)),
       dispatch(vMakeRequest()),
-      dispatch(fetchTableComment(this.props.tableName)),
     ]);
   }
 
@@ -86,7 +86,6 @@ class ViewTable extends Component {
       dispatch(setTable(nextProps.tableName));
       dispatch(vSetDefaults(nextProps.tableName));
       dispatch(vMakeRequest());
-      dispatch(fetchTableComment(nextProps.tableName));
     }
   }
 

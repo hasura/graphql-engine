@@ -74,7 +74,7 @@ func (f *File) Open(url string, logger *log.Logger) (source.Driver, error) {
 
 	for _, fi := range files {
 		if !fi.IsDir() {
-			m, err := source.DefaultParse(fi.Name())
+			m, err := source.DefaultParse(fi.Name(), p)
 			if err != nil {
 				continue // ignore files that we can't parse
 			}
@@ -94,7 +94,7 @@ func (f *File) Close() error {
 
 func (f *File) First() (version uint64, err error) {
 	if v, ok := f.migrations.First(); !ok {
-		return 0, &os.PathError{"first", f.path, os.ErrNotExist}
+		return 0, &os.PathError{Op: "first", Path: f.path, Err: os.ErrNotExist}
 	} else {
 		return v, nil
 	}
@@ -110,7 +110,7 @@ func (f *File) GetUnappliedMigrations(version uint64) (versions []uint64) {
 
 func (f *File) Prev(version uint64) (prevVersion uint64, err error) {
 	if v, ok := f.migrations.Prev(version); !ok {
-		return 0, &os.PathError{fmt.Sprintf("prev for version %v", version), f.path, os.ErrNotExist}
+		return 0, &os.PathError{Op: fmt.Sprintf("prev for version %v", version), Path: f.path, Err: os.ErrNotExist}
 	} else {
 		return v, nil
 	}
@@ -118,7 +118,7 @@ func (f *File) Prev(version uint64) (prevVersion uint64, err error) {
 
 func (f *File) Next(version uint64) (nextVersion uint64, err error) {
 	if v, ok := f.migrations.Next(version); !ok {
-		return 0, &os.PathError{fmt.Sprintf("next for version %v", version), f.path, os.ErrNotExist}
+		return 0, &os.PathError{Op: fmt.Sprintf("next for version %v", version), Path: f.path, Err: os.ErrNotExist}
 	} else {
 		return v, nil
 	}
@@ -136,7 +136,7 @@ func (f *File) ReadUp(version uint64) (r io.ReadCloser, identifier string, fileN
 		}
 		return r, m.Identifier, m.Raw, nil
 	}
-	return nil, "", "", &os.PathError{fmt.Sprintf("read version %v", version), f.path, os.ErrNotExist}
+	return nil, "", "", &os.PathError{Op: fmt.Sprintf("read version %v", version), Path: f.path, Err: os.ErrNotExist}
 }
 
 func (f *File) ReadMetaUp(version uint64) (r io.ReadCloser, identifier string, fileName string, err error) {
@@ -147,7 +147,7 @@ func (f *File) ReadMetaUp(version uint64) (r io.ReadCloser, identifier string, f
 		}
 		return r, m.Identifier, m.Raw, nil
 	}
-	return nil, "", "", &os.PathError{fmt.Sprintf("read version %v", version), f.path, os.ErrNotExist}
+	return nil, "", "", &os.PathError{Op: fmt.Sprintf("read version %v", version), Path: f.path, Err: os.ErrNotExist}
 }
 
 func (f *File) ReadDown(version uint64) (r io.ReadCloser, identifier string, fileName string, err error) {
@@ -158,7 +158,7 @@ func (f *File) ReadDown(version uint64) (r io.ReadCloser, identifier string, fil
 		}
 		return r, m.Identifier, m.Raw, nil
 	}
-	return nil, "", "", &os.PathError{fmt.Sprintf("read version %v", version), f.path, os.ErrNotExist}
+	return nil, "", "", &os.PathError{Op: fmt.Sprintf("read version %v", version), Path: f.path, Err: os.ErrNotExist}
 }
 
 func (f *File) ReadMetaDown(version uint64) (r io.ReadCloser, identifier string, fileName string, err error) {
@@ -169,5 +169,5 @@ func (f *File) ReadMetaDown(version uint64) (r io.ReadCloser, identifier string,
 		}
 		return r, m.Identifier, m.Raw, nil
 	}
-	return nil, "", "", &os.PathError{fmt.Sprintf("read version %v", version), f.path, os.ErrNotExist}
+	return nil, "", "", &os.PathError{Op: fmt.Sprintf("read version %v", version), Path: f.path, Err: os.ErrNotExist}
 }

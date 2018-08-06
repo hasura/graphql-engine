@@ -1,4 +1,8 @@
-import { makeMigrationCall, loadUntrackedRelations } from '../DataActions';
+import {
+  makeMigrationCall,
+  loadUntrackedRelations,
+  loadSchema,
+} from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../Notification';
 import suggestedRelationshipsRaw from './autoRelations';
@@ -31,7 +35,10 @@ const relTypeChange = isObjRel => ({
 });
 const relRTableChange = rTable => ({ type: REL_SET_RTABLE, rTable });
 
-const deleteRelMigrate = (tableName, relName) => (dispatch, getState) => {
+const deleteRelMigrate = (tableName, relName, lcol, rtable, rcol, isObjRel) => (
+  dispatch,
+  getState
+) => {
   const currentSchema = getState().tables.currentSchema;
   const relChangesUp = [
     {
@@ -42,13 +49,22 @@ const deleteRelMigrate = (tableName, relName) => (dispatch, getState) => {
       },
     },
   ];
-  // pending
   const relChangesDown = [
     {
-      type: 'drop_relationship',
+      type: isObjRel
+        ? 'create_object_relationship'
+        : 'create_array_relationship',
       args: {
+        name: relName,
         table: { name: tableName, schema: currentSchema },
-        relationship: relName,
+        using: isObjRel
+          ? { foreign_key_constraint_on: lcol }
+          : {
+            foreign_key_constraint_on: {
+              table: { name: rtable, schema: currentSchema },
+              column: rcol,
+            },
+          },
       },
     },
   ];
@@ -102,20 +118,10 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   ];
   const relChangesDown = [
     {
-      type: isObjRel
-        ? 'create_object_relationship'
-        : 'create_array_relationship',
+      type: 'drop_relationship',
       args: {
-        name: state.name,
         table: { name: state.tableName, schema: currentSchema },
-        using: isObjRel
-          ? { foreign_key_constraint_on: state.lcol }
-          : {
-            foreign_key_constraint_on: {
-              table: { name: state.rTable, schema: currentSchema },
-              column: state.rcol,
-            },
-          },
+        relationship: state.name,
       },
     },
   ];
@@ -159,68 +165,6 @@ const relTableChange = tableName => (dispatch, getState) => {
   dispatch({ type: REL_SET_MANUAL_COLUMNS, data: tableColumns });
 };
 
-const addRelMigrate = (tableName, name, lcol, rcol, form) => (
-  dispatch,
-  getState
-) => {
-  const state = getState().tables.modify.relAdd;
-  const currentSchema = getState().tables.currentSchema;
-  const isObjRel = state.isObjRel;
-  const relChangesUp = [
-    {
-      type: isObjRel
-        ? 'create_object_relationship'
-        : 'create_array_relationship',
-      args: {
-        name,
-        table: { name: tableName, schema: currentSchema },
-        using: isObjRel
-          ? { foreign_key_constraint_on: lcol }
-          : {
-            foreign_key_constraint_on: {
-              table: { name: state.rTable, schema: currentSchema },
-              column: rcol,
-            },
-          },
-      },
-    },
-  ];
-  const relChangesDown = [
-    {
-      type: 'drop_relationship',
-      args: {
-        name,
-        table: { name: tableName, schema: currentSchema },
-      },
-    },
-  ];
-
-  // Apply migrations
-  const migrationName = `create_relationship_${name}_${currentSchema}_table_${tableName}`;
-
-  const requestMsg = 'Adding Relationship...';
-  const successMsg = 'Relationship created';
-  const errorMsg = 'Creating relationship failed';
-
-  const customOnSuccess = () => {
-    form.reset();
-  };
-  const customOnError = () => {};
-
-  makeMigrationCall(
-    dispatch,
-    getState,
-    relChangesUp,
-    relChangesDown,
-    migrationName,
-    customOnSuccess,
-    customOnError,
-    requestMsg,
-    successMsg,
-    errorMsg
-  );
-};
-
 const addRelViewMigrate = tableName => (dispatch, getState) => {
   const state = getState().tables.modify.relAdd;
   const currentSchema = getState().tables.currentSchema;
@@ -252,8 +196,8 @@ const addRelViewMigrate = tableName => (dispatch, getState) => {
     {
       type: 'drop_relationship',
       args: {
-        name,
         table: { name: tableName, schema: currentSchema },
+        relationship: name,
       },
     },
   ];
@@ -335,6 +279,7 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
     relations: suggestedRelationshipsRaw(table.table_name, allSchemas),
   }));
   const bulkRelTrack = [];
+  const bulkRelTrackDown = [];
   tableRelMapping.map(table => {
     // check relations.obj and relations.arr length and form queries
     if (table.relations.objectRel.length) {
@@ -348,6 +293,13 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
               schema: currentSchema,
             },
             using: { foreign_key_constraint_on: indivObjectRel.lcol },
+          },
+        });
+        bulkRelTrackDown.push({
+          type: 'drop_relationship',
+          args: {
+            table: { name: indivObjectRel.tableName, schema: currentSchema },
+            relationship: formRelName(indivObjectRel),
           },
         });
       });
@@ -373,16 +325,26 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
             },
           },
         });
+        bulkRelTrackDown.push({
+          type: 'drop_relationship',
+          args: {
+            table: { name: indivArrayRel.tableName, schema: currentSchema },
+            relationship: formRelName(indivArrayRel),
+          },
+        });
       });
     }
   });
-  return bulkRelTrack;
+  return { bulkRelTrack: bulkRelTrack, bulkRelTrackDown: bulkRelTrackDown };
 };
 
 const autoTrackRelations = () => (dispatch, getState) => {
   const allSchemas = getState().tables.allSchemas;
   const currentSchema = getState().tables.currentSchema;
-  const bulkRelTrack = getAllUnTrackedRelations(allSchemas, currentSchema);
+  const relChangesUp = getAllUnTrackedRelations(allSchemas, currentSchema)
+    .bulkRelTrack;
+  const relChangesDown = getAllUnTrackedRelations(allSchemas, currentSchema)
+    .bulkRelTrackDown;
   // Apply migrations
   const migrationName = 'track_all_relationships';
 
@@ -394,12 +356,72 @@ const autoTrackRelations = () => (dispatch, getState) => {
   };
   const customOnError = () => {};
 
-  const relChangesDown = [];
+  makeMigrationCall(
+    dispatch,
+    getState,
+    relChangesUp,
+    relChangesDown,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+const autoAddRelName = obj => (dispatch, getState) => {
+  const currentSchema = getState().tables.currentSchema;
+  const isObjRel = obj.isObjRel;
+  const relName = formRelName(obj);
+
+  const relChangesUp = [
+    {
+      type: isObjRel
+        ? 'create_object_relationship'
+        : 'create_array_relationship',
+      args: {
+        name: relName,
+        table: { name: obj.tableName, schema: currentSchema },
+        using: isObjRel
+          ? { foreign_key_constraint_on: obj.lcol }
+          : {
+            foreign_key_constraint_on: {
+              table: { name: obj.rTable, schema: currentSchema },
+              column: obj.rcol,
+            },
+          },
+      },
+    },
+  ];
+  const relChangesDown = [
+    {
+      type: 'drop_relationship',
+      args: {
+        table: { name: obj.tableName, schema: currentSchema },
+        relationship: relName,
+      },
+    },
+  ];
+
+  // Apply migrations
+  const migrationName = `add_relationship_${relName}_table_${currentSchema}_${
+    obj.tableName
+  }`;
+
+  const requestMsg = 'Adding Relationship...';
+  const successMsg = 'Relationship created';
+  const errorMsg = 'Creating relationship failed';
+
+  const customOnSuccess = () => {
+    Promise.all([dispatch(loadSchema()), dispatch(loadUntrackedRelations())]);
+  };
+  const customOnError = () => {};
 
   makeMigrationCall(
     dispatch,
     getState,
-    bulkRelTrack,
+    relChangesUp,
     relChangesDown,
     migrationName,
     customOnSuccess,
@@ -415,7 +437,6 @@ export {
   addNewRelClicked,
   relTypeChange,
   relRTableChange,
-  addRelMigrate,
   addRelViewMigrate,
   relTableChange,
   relSelectionChanged,
@@ -424,6 +445,7 @@ export {
   resetRelationshipForm,
   relManualAddClicked,
   autoTrackRelations,
+  autoAddRelName,
   formRelName,
   getAllUnTrackedRelations,
 };

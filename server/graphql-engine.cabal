@@ -3,11 +3,11 @@ version:             1.0.0
 synopsis:            GraphQL API over Postgres
 -- description:
 homepage:            https://www.hasura.io
-license:             AllRightsReserved
--- license-file:        LICENSE
+license:             AGPL-3.0
+-- license-file:        LICENSE.md
 author:              Vamshi Surabhi
 maintainer:          vamshi@hasura.io
-copyright:           2015 - 2017, 34 Cross Systems Pvt. Ltd, 2017-2018 Hasura Techonologies Pvt. Ltd
+copyright:           2017-2018 Hasura Techonologies Pvt. Ltd
 category:            Database
 build-type:          Simple
 -- extra-source-files:  README.md
@@ -25,6 +25,7 @@ flag developer
 library
   default-extensions:  NoImplicitPrelude
   hs-source-dirs:      src-lib
+                     , src-exec
   default-language:    Haskell2010
   build-depends:       base
                      , pg-client
@@ -100,14 +101,35 @@ library
 
                      --
                      , data-has
+                     -- for src-exec
+                     , yaml
+                     , template-haskell >= 2.11
+
+                     -- websockets interface related
+                     , websockets
+                     , wai-websockets
+                     , hashtables
+                     , stm
+                     , stm-containers
+                     , list-t
+                     , async
+
+                     -- logging related
+                     , base64-bytestring >= 1.0
+                     , auto-update
+
+                     -- regex related
+                     , regex-compat
 
   exposed-modules:     Hasura.Server.App
+                     , Hasura.Server.Auth
                      , Hasura.Server.Init
                      , Hasura.Server.Middleware
                      , Hasura.Server.Logging
                      , Hasura.Server.Query
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
+                     , Hasura.Server.CheckUpdates
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
@@ -136,14 +158,20 @@ library
                      , Hasura.RQL.DML.QueryTemplate
                      , Hasura.RQL.GBoolExp
 
-                     , Hasura.GraphQL.Execute
-                     , Hasura.GraphQL.Execute.Result
+                     , Hasura.GraphQL.Transport.HTTP.Protocol
+                     , Hasura.GraphQL.Transport.HTTP
+                     , Hasura.GraphQL.Transport.WebSocket.Protocol
+                     , Hasura.GraphQL.Transport.WebSocket.Server
+                     , Hasura.GraphQL.Transport.WebSocket
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Utils
+                     , Hasura.GraphQL.Validate
                      , Hasura.GraphQL.Validate.Types
                      , Hasura.GraphQL.Validate.Context
                      , Hasura.GraphQL.Validate.Field
                      , Hasura.GraphQL.Validate.InputValue
+                     , Hasura.GraphQL.Resolve
+                     , Hasura.GraphQL.Resolve.LiveQuery
                      , Hasura.GraphQL.Resolve.BoolExp
                      , Hasura.GraphQL.Resolve.Context
                      , Hasura.GraphQL.Resolve.InputValue
@@ -153,6 +181,7 @@ library
 
                      , Data.Text.Extended
                      , Data.Sequence.NonEmpty
+                     , Data.TByteString
                      , Data.HashMap.Strict.InsOrd.Extended
 
                      , Hasura.SQL.DML
@@ -161,6 +190,9 @@ library
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time
                      , Hasura.Prelude
+                     , Hasura.Logging
+                     , Ops
+                     , TH
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
@@ -173,48 +205,51 @@ executable graphql-engine
   default-language:  Haskell2010
   hs-source-dirs:    src-exec
   build-depends:       base
-                     , Spock-core >= 0.11
+                     , warp >= 3.2
                      , graphql-engine
                      , aeson >= 1.0
                      , bytestring >= 0.10
                      , mtl
                      , optparse-applicative >= 0.12
                      , yaml
-                     , template-haskell >= 2.11
-                     , time >= 1.6
+                     , template-haskell >= 2.11 , time >= 1.6
                      , text
                      , lens
                      , unordered-containers >= 0.2
                      , pg-client
-  other-modules:       Ops
-                       TH
+                     , http-client
+                     , http-client-tls
+
+  other-modules:     Ops
+                     TH
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
   ghc-options: -O2 -Wall -threaded
 
-executable graphql-engine-test
+test-suite graphql-engine-test
+  type:               exitcode-stdio-1.0
   main-is:            Main.hs
   Default-Language:   Haskell2010
   Hs-Source-Dirs:     test
   ghc-options:        -O2 -Wall
   Build-Depends:       Spock-core >= 0.11
-                     , aeson
                      , base
+                     , aeson
+                     , aeson-casing
                      , bytestring
-                     , directory
-                     , fgl
-                     , filepath
                      , hspec
                      , hspec-core
                      , hspec-wai
-                     , http-types
                      , optparse-applicative
                      , graphql-engine -any
                      , text
-                     , transformers
                      , wai
-                     , wai-extra
-                     , unordered-containers
                      , pg-client
+                     , time
+                     , yaml
+                     , http-client
+                     , http-client-tls
+
+  other-modules:     Spec

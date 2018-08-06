@@ -21,14 +21,104 @@ const (
 
 var ext = []string{sqlFile, yamlFile}
 
-func DeleteCmd(dir string, timestamp int64) error {
-	count := 0
+type CreateOptions struct {
+	Version   int64
+	Directory string
+	Name      string
+	IsCMD     bool
+	MetaUp    []byte
+	MetaDown  []byte
+	SQLUp     []byte
+	SQLDown   []byte
+}
+
+func New(version int64, name, directory string) *CreateOptions {
 	if runtime.GOOS == "windows" {
-		dir = strings.TrimPrefix(dir, "/")
+		directory = strings.TrimPrefix(directory, "/")
 	}
-	fileName := fmt.Sprintf("%v_", timestamp)
+	return &CreateOptions{
+		Version:   version,
+		Directory: directory,
+		Name:      name,
+		MetaUp:    []byte(`[]`),
+		MetaDown:  []byte(`[]`),
+		SQLUp:     []byte{},
+		SQLDown:   []byte{},
+	}
+}
+
+func (c *CreateOptions) SetMetaUp(data interface{}) error {
+	t, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	yamlData, err := yaml.JSONToYAML(t)
+	if err != nil {
+		return err
+	}
+	c.MetaUp = yamlData
+	return nil
+}
+
+func (c *CreateOptions) SetMetaDown(data interface{}) error {
+	t, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	yamlData, err := yaml.JSONToYAML(t)
+	if err != nil {
+		return err
+	}
+	c.MetaDown = yamlData
+	return nil
+}
+
+func (c *CreateOptions) SetSQLUp(data string) error {
+	c.SQLUp = []byte(data)
+	return nil
+}
+
+func (c *CreateOptions) SetSQLDown(data string) error {
+	c.SQLDown = []byte(data)
+	return nil
+}
+
+func (c *CreateOptions) Create() error {
+	fileName := fmt.Sprintf("%v_%v.", c.Version, c.Name)
+	base := filepath.Join(c.Directory, fileName)
+	err := os.MkdirAll(c.Directory, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	// Create MetaUp
+	err = createFile(base+"up.yaml", c.MetaUp)
+	if err != nil {
+		return err
+	}
+	// Create MetaDown
+	err = createFile(base+"down.yaml", c.MetaDown)
+	if err != nil {
+		return err
+	}
+
+	if c.IsCMD {
+		err = createFile(base+"up.sql", c.SQLUp)
+		if err != nil {
+			return err
+		}
+		err = createFile(base+"down.sql", c.SQLDown)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *CreateOptions) Delete() error {
+	count := 0
+	fileName := fmt.Sprintf("%v_", c.Version)
 	// scan directory
-	files, err := ioutil.ReadDir(dir)
+	files, err := ioutil.ReadDir(c.Directory)
 	if err != nil {
 		return err
 	}
@@ -36,7 +126,7 @@ func DeleteCmd(dir string, timestamp int64) error {
 	for _, fi := range files {
 		if !fi.IsDir() {
 			if strings.HasPrefix(fi.Name(), fileName) {
-				base := filepath.Join(dir, fi.Name())
+				base := filepath.Join(c.Directory, fi.Name())
 				err = deleteFile(base)
 				if err != nil {
 					return err
@@ -47,76 +137,6 @@ func DeleteCmd(dir string, timestamp int64) error {
 	}
 	if count == 0 {
 		return errors.New("Cannot find any migration file")
-	}
-	return nil
-}
-
-func CreateCmd(dir string, timestamp int64, name string, options ...interface{}) error {
-	if runtime.GOOS == "windows" {
-		dir = strings.TrimPrefix(dir, "/")
-	}
-	fileName := fmt.Sprintf("%v_%v.", timestamp, name)
-	base := filepath.Join(dir, fileName)
-	err := os.MkdirAll(dir, os.ModePerm)
-	if err != nil {
-		return err
-	}
-
-	// If len(options) == 0, cmd else, api
-	if len(options) == 0 {
-		return createForCMD(base)
-	}
-	return createForAPI(base, options[0])
-}
-
-func createForCMD(base string) error {
-	var data []byte
-	var err error
-	for _, v := range ext {
-		switch v {
-		case sqlFile:
-			data = []byte{}
-		case yamlFile:
-			bytes := []byte(`[]`)
-			data, err = yaml.JSONToYAML(bytes)
-			if err != nil {
-				return err
-			}
-		}
-		err = createFile(base+"up"+v, data)
-		if err != nil {
-			return err
-		}
-		err = createFile(base+"down"+v, data)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func createForAPI(base string, options interface{}) error {
-	var data []byte
-	for _, v := range ext {
-		switch v {
-		// Only yaml file for api-console
-		case yamlFile:
-			// Up file
-			t, err := json.Marshal(options)
-			if err != nil {
-				return err
-			}
-
-			data, err = yaml.JSONToYAML(t)
-			if err != nil {
-				return err
-			}
-
-			err = createFile(base+"up"+v, data)
-			if err != nil {
-				return err
-			}
-		}
 	}
 	return nil
 }

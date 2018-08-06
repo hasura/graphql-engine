@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs             #-}
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes        #-}
 {-# LANGUAGE TemplateHaskell   #-}
@@ -11,6 +12,11 @@ module Hasura.RQL.Types.SchemaCache
        , SchemaCache(..)
        , emptySchemaCache
        , TableInfo(..)
+       , TableConstraint(..)
+       , ConstraintType(..)
+       , onlyIntCols
+       , onlyJSONBCols
+       , isUniqueOrPrimary
        , mkTableInfo
        , addTableToCache
        , modTableInCache
@@ -72,6 +78,7 @@ module Hasura.RQL.Types.SchemaCache
        , getAllRelations
        ) where
 
+import qualified Database.PG.Query           as Q
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
@@ -89,6 +96,7 @@ import           GHC.Generics                (Generic)
 import qualified Data.HashMap.Strict         as M
 import qualified Data.HashSet                as HS
 import qualified Data.Text                   as T
+import qualified PostgreSQL.Binary.Decoding  as PD
 
 data TableObjId
   = TOCol !PGCol
@@ -177,6 +185,12 @@ data PGColInfo
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''PGColInfo)
+
+onlyIntCols :: [PGColInfo] -> [PGColInfo]
+onlyIntCols = filter (isIntegerType . pgiType)
+
+onlyJSONBCols :: [PGColInfo] -> [PGColInfo]
+onlyJSONBCols = filter (isJSONBType . pgiType)
 
 data RelInfo
   = RelInfo
@@ -303,20 +317,65 @@ makeLenses ''RolePermInfo
 
 type RolePermInfoMap = M.HashMap RoleName RolePermInfo
 
+data ConstraintType
+  = CTCHECK
+  | CTFOREIGNKEY
+  | CTPRIMARYKEY
+  | CTUNIQUE
+  deriving Eq
+
+$(deriveToJSON defaultOptions{constructorTagModifier = drop 2} ''ConstraintType)
+
+constraintTyToTxt :: ConstraintType -> T.Text
+constraintTyToTxt ty = case ty of
+  CTCHECK      -> "CHECK"
+  CTFOREIGNKEY -> "FOREIGN KEY"
+  CTPRIMARYKEY -> "PRIMARY KEY"
+  CTUNIQUE     -> "UNIQUE"
+
+instance Show ConstraintType where
+  show = T.unpack . constraintTyToTxt
+
+instance Q.FromCol ConstraintType where
+  fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
+    "CHECK"       -> Just CTCHECK
+    "FOREIGN KEY" -> Just CTFOREIGNKEY
+    "PRIMARY KEY" -> Just CTPRIMARYKEY
+    "UNIQUE"      -> Just CTUNIQUE
+    _             -> Nothing
+
+data TableConstraint
+  = TableConstraint
+  { tcType :: !ConstraintType
+  , tcName :: !ConstraintName
+  } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 2 snakeCase) ''TableConstraint)
+
+isUniqueOrPrimary :: TableConstraint -> Bool
+isUniqueOrPrimary (TableConstraint ty _) = case ty of
+  CTCHECK      -> False
+  CTFOREIGNKEY -> False
+  CTPRIMARYKEY -> True
+  CTUNIQUE     -> True
+
 data TableInfo
   = TableInfo
   { tiName            :: !QualifiedTable
   , tiSystemDefined   :: !Bool
   , tiFieldInfoMap    :: !FieldInfoMap
   , tiRolePermInfoMap :: !RolePermInfoMap
+  , tiConstraints     :: ![TableConstraint]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 
-mkTableInfo :: QualifiedTable -> Bool -> [(PGCol, PGColType)] -> TableInfo
-mkTableInfo tn isSystemDefined cols =
-  TableInfo tn isSystemDefined colMap $ M.fromList []
+mkTableInfo :: QualifiedTable -> Bool -> [(ConstraintType, ConstraintName)]
+            -> [(PGCol, PGColType)] -> TableInfo
+mkTableInfo tn isSystemDefined rawCons cols =
+  TableInfo tn isSystemDefined colMap (M.fromList []) constraints
   where
+    constraints = flip map rawCons $ uncurry TableConstraint
     colMap     = M.fromList $ map f cols
     f (cn, ct) = (fromPGCol cn, FIColumn $ PGColInfo cn ct)
 
@@ -570,13 +629,13 @@ getDependentObjsOfTableWith f objId ti =
 
 getDependentRelsOfTable :: (T.Text -> Bool) -> SchemaObjId
                         -> TableInfo -> [SchemaObjId]
-getDependentRelsOfTable rsnFn objId (TableInfo tn _ fim _) =
+getDependentRelsOfTable rsnFn objId (TableInfo tn _ fim _ _) =
     map (SOTableObj tn . TORel . riName) $
     filter (isDependentOn rsnFn objId) $ getRels fim
 
 getDependentPermsOfTable :: (T.Text -> Bool) -> SchemaObjId
                          -> TableInfo -> [SchemaObjId]
-getDependentPermsOfTable rsnFn objId (TableInfo tn _ _ rpim) =
+getDependentPermsOfTable rsnFn objId (TableInfo tn _ _ rpim _) =
   concat $ flip M.mapWithKey rpim $
   \rn rpi -> map (SOTableObj tn . TOPerm rn) $ getDependentPerms' rsnFn objId rpi
 
