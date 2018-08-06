@@ -24,6 +24,7 @@ import           Hasura.SQL.Types
 
 import qualified Database.PG.Query   as Q
 
+import           Control.Arrow       ((***))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
@@ -82,9 +83,6 @@ getDifference getKey left right =
   where
     mkMap = M.fromList . map (\v -> (getKey v, v))
 
-fromConstraintMeta :: ConstraintMeta -> TableConstraint
-fromConstraintMeta (ConstraintMeta n _ ty) = TableConstraint ty n
-
 data TableDiff
   = TableDiff
   { _tdNewName         :: !(Maybe QualifiedTable)
@@ -92,17 +90,15 @@ data TableDiff
   , _tdAddedCols       :: ![PGColInfo]
   , _tdAlteredCols     :: ![(PGColInfo, PGColInfo)]
   , _tdDroppedFKeyCons :: ![ConstraintName]
-  , _tdAllCons         :: ![TableConstraint]
   } deriving (Show, Eq)
 
 getTableDiff :: TableMeta -> TableMeta -> TableDiff
 getTableDiff oldtm newtm =
-  TableDiff mNewName droppedCols addedCols alteredCols droppedFKeyConstraints allCons
+  TableDiff mNewName droppedCols addedCols alteredCols droppedFKeyConstraints
   where
     mNewName = bool (Just $ tmTable newtm) Nothing $ tmTable oldtm == tmTable newtm
     oldCols = tmColumns oldtm
     newCols = tmColumns newtm
-    allCons = map fromConstraintMeta $ tmConstraints newtm
 
     droppedCols =
       map pcmColumnName $ getDifference pcmOrdinalPosition oldCols newCols
@@ -116,8 +112,7 @@ getTableDiff oldtm newtm =
       = PGColInfo colName colType
 
     alteredCols =
-      flip map (filter (uncurry (/=)) existingCols) $ \(pcmo, pcmn) ->
-      (pcmToPci pcmo, pcmToPci pcmn)
+      flip map (filter (uncurry (/=)) existingCols) $ pcmToPci *** pcmToPci
 
     droppedFKeyConstraints = map cmConstraintName $
       filter (isForeignKey . cmConstraintType) $ getDifference cmConstraintOid
@@ -131,13 +126,13 @@ getTableChangeDeps ti tableDiff = do
     let objId = SOTableObj tn $ TOCol droppedCol
     return $ getDependentObjs sc objId
   -- for all dropped constraints
-  droppedConsDeps <- fmap concat $ forM droppedFKeyConstraints $ \droppedCons -> do
+  droppedConsDeps <- fmap concat $ forM droppedConstraints $ \droppedCons -> do
     let objId = SOTableObj tn $ TOCons droppedCons
     return $ getDependentObjs sc objId
   return $ droppedConsDeps <> droppedColDeps
   where
     tn = tiName ti
-    TableDiff _ droppedCols _ _ droppedFKeyConstraints _ = tableDiff
+    TableDiff _ droppedCols _ _ droppedConstraints = tableDiff
 
 data SchemaDiff
   = SchemaDiff
@@ -171,5 +166,5 @@ getSchemaChangeDeps schemaDiff = do
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
-    isDirectDep (SOTableObj tn _) = tn `HS.member` (HS.fromList droppedTables)
+    isDirectDep (SOTableObj tn _) = tn `HS.member` HS.fromList droppedTables
     isDirectDep _                 = False

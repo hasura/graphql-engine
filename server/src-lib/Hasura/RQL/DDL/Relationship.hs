@@ -130,6 +130,19 @@ persistRel (QualifiedTable sn tn) rn relType relDef comment =
            VALUES ($1, $2, $3, $4, $5 :: jsonb, $6)
                 |] (sn, tn, rn, relTypeToTxt relType, Q.AltJ relDef, comment) True
 
+updateRel :: QualifiedTable
+          -> RelName
+          -> Value
+          -> Q.TxE QErr ()
+updateRel (QualifiedTable sn tn) rn relDef =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+           UPDATE hdb_catalog.hdb_relationship
+              SET rel_def = $1 :: jsonb
+            WHERE table_schema = $2
+              AND table_name = $3
+              AND rel_name = $4
+                |] (Q.AltJ relDef, sn , tn, rn) True
+
 checkForColConfilct
   :: (MonadError QErr m)
   => TableInfo
@@ -189,6 +202,7 @@ objRelP2Setup qt (RelDef rn ru _) = do
                      , SchemaDependency (SOTableObj qt $ TOCol cn) "using_col"
                      ]
               refqt = QualifiedTable refsn reftn
+          void $ askTabInfo refqt
           return $ RelInfo rn ObjRel colMapping refqt deps
         _  -> throw400 ConstraintError
                 "more than one foreign key constraint exists on the given column"

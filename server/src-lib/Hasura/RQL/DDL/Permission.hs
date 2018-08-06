@@ -46,23 +46,25 @@ module Hasura.RQL.DDL.Permission
     , IsPerm(..)
     , addPermP1
     , addPermP2
+
+    , dropView
     ) where
 
+import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.Prelude
 
-import qualified Database.PG.Query                 as Q
+import qualified Database.PG.Query                  as Q
 import qualified Hasura.SQL.DML                     as S
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax        (Lift)
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.ByteString.Builder           as BB
-import qualified Data.HashSet                      as HS
-import qualified Data.Text                         as T
+import qualified Data.ByteString.Builder            as BB
+import qualified Data.HashSet                       as HS
+import qualified Data.Text                          as T
 
 -- Insert permission
 data InsPerm
