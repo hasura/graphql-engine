@@ -31,11 +31,9 @@ fi
     
 if [[ ! -z "$CIRCLE_COMPARE_URL" ]]; then
     # CIRCLE_COMPARE_URL is not empty, use it to get the diff
-    if [[ ! -z "$CIRCLE_PULL_REQUEST" ]]; then
-        # build is not a pull request
+    if [[ $CIRCLE_COMPARE_URL = *"commit"* ]]; then
         COMMIT_RANGE=$(echo $CIRCLE_COMPARE_URL | sed 's:^.*/commit/::g')~1
     else
-        # build is a pull request
         COMMIT_RANGE=$(echo $CIRCLE_COMPARE_URL | sed 's:^.*/compare/::g')
     fi
     echo "Diff: $COMMIT_RANGE"
