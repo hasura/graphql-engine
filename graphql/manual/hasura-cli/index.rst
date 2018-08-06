@@ -41,6 +41,11 @@ Commands
 - :doc:`hasura user-info <hasura_user-info>`
 - :doc:`hasura version <hasura_version>`
 
+Uninstall
+---------
+
+Refer to :doc:`uninstall-hasura-cli`.
+
 .. toctree::
    :maxdepth: 1
    :titlesonly:
@@ -65,3 +70,4 @@ Commands
    hasura update-cli <hasura_update-cli>
    hasura user-info <hasura_user-info>
    hasura version <hasura_version>
+   uninstall-hasura-cli

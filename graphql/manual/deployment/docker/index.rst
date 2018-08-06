@@ -17,7 +17,7 @@ contains all installation manifests required to deploy Hasura anywhere. Get the 
 
 .. code-block:: bash
 
-   wget https://raw.githubusercontent.com/hasura/graphql-engine-install-manifests/master/docker-run/docker-run.sh
+   $ wget https://raw.githubusercontent.com/hasura/graphql-engine-install-manifests/master/docker-run/docker-run.sh
 
 Step 2: Run the hasura docker container
 ---------------------------------------
