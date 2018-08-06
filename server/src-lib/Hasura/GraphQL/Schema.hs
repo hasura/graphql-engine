@@ -45,8 +45,8 @@ type OpCtxMap = Map.HashMap G.Name OpCtx
 data OpCtx
   -- tn, vn, cols, req hdrs
   = OCInsert QualifiedTable QualifiedTable [PGCol] [T.Text]
-  -- tn, filter exp, req hdrs
-  | OCSelect QualifiedTable S.BoolExp [T.Text]
+  -- tn, filter exp, limit, req hdrs
+  | OCSelect QualifiedTable S.BoolExp (Maybe Int) [T.Text]
   -- tn, filter exp, req hdrs
   | OCUpdate QualifiedTable S.BoolExp [T.Text]
   -- tn, filter exp, req hdrs
@@ -83,7 +83,7 @@ instance Monoid TyAgg where
   mempty = TyAgg Map.empty Map.empty Map.empty
   mappend = (<>)
 
-type SelField = Either PGColInfo (RelInfo, S.BoolExp)
+type SelField = Either PGColInfo (RelInfo, S.BoolExp, Maybe Int)
 
 qualTableToName :: QualifiedTable -> G.Name
 qualTableToName = G.Name <$> \case
@@ -239,7 +239,8 @@ mkTableObj
 mkTableObj tn allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) $ mapFromL _fiName flds
   where
-    flds = map (either mkPGColFld (mkRelFld . fst)) allowedFlds
+    flds = map (either mkPGColFld (mkRelFld . fst')) allowedFlds
+    fst' (a, _, _) = a
     desc = G.Description $
       "columns and relationships of " <>> tn
 
@@ -342,7 +343,7 @@ mkBoolExpInp tn fields =
     mkFldExpInp = \case
       Left (PGColInfo colName colTy) ->
         mk (G.Name $ getPGColTxt colName) (mkCompExpTy colTy)
-      Right (RelInfo relName _ _ remTab _, _) ->
+      Right (RelInfo relName _ _ remTab _, _, _) ->
         mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
 
 mkPGColInp :: PGColInfo -> InpValInfo
@@ -830,7 +831,7 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM constraints =
 
     nameFromSelFld = \case
       Left colInfo -> G.Name $ getPGColTxt $ pgiName colInfo
-      Right (relInfo, _) -> G.Name $ getRelTxt $ riName relInfo
+      Right (relInfo, _, _) -> G.Name $ getRelTxt $ riName relInfo
 
     -- helper
     mkColFldMap ty = mapFromL ((ty,) . nameFromSelFld) . map Left
@@ -894,7 +895,7 @@ getRootFldsRole'
   -> [TableConstraint]
   -> FieldInfoMap
   -> Maybe (QualifiedTable, [T.Text]) -- insert view
-  -> Maybe (S.BoolExp, [T.Text]) -- select filter
+  -> Maybe (S.BoolExp, Maybe Int, [T.Text]) -- select filter
   -> Maybe ([PGCol], S.BoolExp, [T.Text]) -- update filter
   -> Maybe (S.BoolExp, [T.Text]) -- delete filter
   -> RootFlds
@@ -915,8 +916,8 @@ getRootFldsRole' tn constraints fields insM selM updM delM =
       )
     getDelDet (delFltr, hdrs) =
       (OCDelete tn delFltr hdrs, Right $ mkDelMutFld tn)
-    getSelDet (selFltr, hdrs) =
-      (OCSelect tn selFltr hdrs, Left $ mkSelFld tn)
+    getSelDet (selFltr, pLimit, hdrs) =
+      (OCSelect tn selFltr pLimit hdrs, Left $ mkSelFld tn)
 
 -- getRootFlds
 --   :: TableCache
@@ -945,7 +946,8 @@ getSelFlds tableCache fields role selPermInfo =
       remTableInfo <- getTabInfo $ riRTable relInfo
       let remTableSelPermM =
             Map.lookup role (tiRolePermInfoMap remTableInfo) >>= _permSel
-      return $ fmap (Right . (relInfo,) . spiFilter) remTableSelPermM
+      return $ flip fmap remTableSelPermM $
+        \rmSelPermM -> Right $ (relInfo, spiFilter rmSelPermM, spiLimit rmSelPermM)
   where
     allowedCols = spiCols selPermInfo
     getTabInfo tn =
@@ -986,7 +988,7 @@ getRootFldsRole tn constraints fields (RolePermInfo insM selM updM delM) =
   (mkUpd <$> updM) (mkDel <$> delM)
   where
     mkIns i = (ipiView i, ipiRequiredHeaders i)
-    mkSel s = (spiFilter s, spiRequiredHeaders s)
+    mkSel s = (spiFilter s, spiLimit s, spiRequiredHeaders s)
     mkUpd u = ( Set.toList $ upiCols u
               , upiFilter u
               , upiRequiredHeaders u
@@ -1009,10 +1011,10 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints) = do
     allCols = map pgiName colInfos
     selFlds = flip map (toValidFieldInfos fields) $ \case
       FIColumn pgColInfo     -> Left pgColInfo
-      FIRelationship relInfo -> Right (relInfo, noFilter)
+      FIRelationship relInfo -> Right (relInfo, noFilter, Nothing)
     noFilter = S.BELit True
     adminRootFlds =
-      getRootFldsRole' tn validConstraints fields (Just (tn, [])) (Just (noFilter, []))
+      getRootFldsRole' tn validConstraints fields (Just (tn, [])) (Just (noFilter, Nothing, []))
       (Just (allCols, noFilter, [])) (Just (noFilter, []))
 
 mkScalarTyInfo :: PGColType -> ScalarTyInfo

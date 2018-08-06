@@ -19,7 +19,9 @@ module Hasura.RQL.Types.DML
        , Wildcard(..)
        , SelCol(..)
        , SelectQ
+       , SelectQT
        , SelectQuery
+       , SelectQueryT
 
        , InsObj
        , InsertQuery(..)
@@ -137,19 +139,19 @@ orderByParser =
            <|> (return Nothing)
     colP = orderByColFromTxt <$> Atto.takeText
 
-data SelectG a b
+data SelectG a b c
   = SelectG
   { sqColumns :: ![a]                -- Postgres columns and relationships
   , sqWhere   :: !(Maybe b)          -- Filter
   , sqOrderBy :: !(Maybe OrderByExp) -- Ordering
-  , sqLimit   :: !(Maybe Value)      -- Limit
-  , sqOffset  :: !(Maybe Value)      -- Offset
+  , sqLimit   :: !(Maybe c)          -- Limit
+  , sqOffset  :: !(Maybe c)          -- Offset
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelectG)
 
-selectGToPairs :: (KeyValue kv, ToJSON a, ToJSON b)
-               => SelectG a b -> [kv]
+selectGToPairs :: (KeyValue kv, ToJSON a, ToJSON b, ToJSON c)
+               => SelectG a b c -> [kv]
 selectGToPairs (SelectG selCols mWh mOb mLt mOf) =
   [ "columns" .= selCols
   , "where" .= mWh
@@ -205,11 +207,17 @@ instance ToJSON SelCol where
              , "alias" .= mrn
              ] ++ selectGToPairs selq
 
-type SelectQ = SelectG SelCol BoolExp
+type SelectQ = SelectG SelCol BoolExp Int
+type SelectQT = SelectG SelCol BoolExp Value
 
 type SelectQuery = DMLQuery SelectQ
+type SelectQueryT = DMLQuery SelectQT
 
 instance ToJSON SelectQuery where
+  toJSON (DMLQuery qt selQ) =
+    object $ "table" .= qt : selectGToPairs selQ
+
+instance ToJSON SelectQueryT where
   toJSON (DMLQuery qt selQ) =
     object $ "table" .= qt : selectGToPairs selQ
 
@@ -317,7 +325,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CountQuery)
 
 data QueryT
   = QTInsert !InsertQuery
-  | QTSelect !SelectQuery
+  | QTSelect !SelectQueryT
   | QTUpdate !UpdateQuery
   | QTDelete !DeleteQuery
   | QTCount !CountQuery

@@ -15,6 +15,7 @@ module Hasura.GraphQL.Resolve.Context
   , getArg
   , withArg
   , withArgM
+  , nameAsPath
   , PrepArgs
   , Convert
   , runConvert
@@ -41,7 +42,7 @@ import           Hasura.SQL.Value
 import qualified Hasura.SQL.DML                as S
 
 type FieldMap
-  = Map.HashMap (G.NamedType, G.Name) (Either PGColInfo (RelInfo, S.BoolExp))
+  = Map.HashMap (G.NamedType, G.Name) (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int))
 
 data OrdTy
   = OAsc
@@ -63,7 +64,7 @@ type OrdByResolveCtx
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> G.Name -> m (Either PGColInfo (RelInfo, S.BoolExp))
+  => G.NamedType -> G.Name -> m (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int))
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $
@@ -90,13 +91,23 @@ getArg args arg =
   onNothing (Map.lookup arg args) $
   throw500 $ "missing argument: " <> showName arg
 
+prependArgsInPath
+  :: (MonadError QErr m)
+  => m a -> m a
+prependArgsInPath = withPathK "args"
+
+nameAsPath
+  :: (MonadError QErr m)
+  => G.Name -> m a -> m a
+nameAsPath name = withPathK (G.unName name)
+
 withArg
   :: (MonadError QErr m)
   => ArgsMap
   -> G.Name
   -> (AnnGValue -> m a)
   -> m a
-withArg args arg f =
+withArg args arg f = prependArgsInPath $ nameAsPath arg $
   getArg args arg >>= f
 
 withArgM
@@ -105,7 +116,7 @@ withArgM
   -> G.Name
   -> (AnnGValue -> m a)
   -> m (Maybe a)
-withArgM args arg f =
+withArgM args arg f = prependArgsInPath $ nameAsPath arg $
   mapM f $ Map.lookup arg args
 
 type PrepArgs = Seq.Seq Q.PrepArg

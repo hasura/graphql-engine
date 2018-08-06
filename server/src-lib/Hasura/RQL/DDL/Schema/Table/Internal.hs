@@ -144,10 +144,10 @@ updateInsPermCols oCol nCol (WithTable qt (PermDef rn (InsPerm chk _) _)) = do
       PermDef rn (InsPerm (fst updatedBoolExp) Nothing) Nothing
 
 updateSelPermCols :: (MonadTx m, QErrM m) => PGCol -> PGCol -> CreateSelPerm -> m ()
-updateSelPermCols oCol nCol (WithTable qt (PermDef rn (SelPerm cols fltr) _)) =
+updateSelPermCols oCol nCol (WithTable qt (PermDef rn (SelPerm cols fltr limit) _)) =
   when ( updNeededFromCols || updNeededFromBoolExp) $
     liftTx $ updatePermInCatalog PTSelect qt $
-      PermDef rn (SelPerm updCols updBoolExp) Nothing
+      PermDef rn (SelPerm updCols updBoolExp limit) Nothing
   where
     (updCols, updNeededFromCols) = updateCols oCol nCol cols
     (updBoolExp, updNeededFromBoolExp) = updateBoolExp oCol nCol fltr
