@@ -3,6 +3,7 @@
 
 module Main where
 
+import           Migrate                    (migrateCatalog)
 import           Ops
 
 import           Data.Time.Clock            (getCurrentTime)

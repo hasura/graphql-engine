@@ -192,6 +192,7 @@ library
                      , Hasura.Prelude
                      , Hasura.Logging
                      , Ops
+                     , Migrate
                      , TH
 
   if flag(developer)
@@ -221,6 +222,7 @@ executable graphql-engine
                      , http-client-tls
 
   other-modules:     Ops
+                     Migrate
                      TH
 
   if flag(developer)
