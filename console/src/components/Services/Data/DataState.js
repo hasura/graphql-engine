@@ -113,7 +113,11 @@ const defaultState = {
   schemaList: ['public'],
   currentSchema: 'public',
   accessKeyError: false,
-  dataHeaders: { 'Content-Type': 'application/json' },
+  dataHeaders: {
+    'Content-Type': 'application/json',
+    'X-Hasura-Role': 'admin',
+    'X-Hasura-User-Id': '1',
+  },
 };
 
 export default defaultState;
