@@ -9,18 +9,20 @@ and connect it to your Postgres database.
 - `Docker <https://docs.docker.com/install/>`_
 
 
-Step 1: Get the bash script
----------------------------
+Step 1: Get the docker run bash script
+--------------------------------------
+
+The `hasura/graphql-engine-install-manifests <https://github.com/hasura/graphql-engine-install-manifests>`_ repo
+contains all installation manifests required to deploy Hasura anywhere. Get the docker run bash script from there:
 
 .. code-block:: bash
 
    wget https://raw.githubusercontent.com/hasura/graphql-engine-install-manifests/master/docker-run/docker-run.sh
 
-
 Step 2: Run the hasura docker container
 ---------------------------------------
 
-Check the sample docker run command at ``docker-run.sh``.
+Check the sample docker run command in ``docker-run.sh``.
 
 Edit the ``--database-url`` flag command, so that you can connect to your Postgres instance.
 
@@ -67,18 +69,7 @@ Check if everything is running well:
 Step 3: Open the hasura console
 -------------------------------
 
-In the ``my-project/config.yaml`` file set the endpoint:
-
-.. code-block:: yaml
-
-  endpoint: http://localhost:8080
-
-Now, open the hasura console:
-
-.. code-block:: bash
-
-  # Run this command in the my-project/ directory
-  $ hasura console
+Head to http://localhost:8080/console to open the Hasura console.
 
 Step 4: Track existing tables and relationships
 -----------------------------------------------
@@ -90,10 +81,13 @@ On the console page, you'll see your existing tables as "untracked tables" in th
 Advanced:
 ---------
 
-Checkout :ref:`Setting up migrations <migrations>` if you plan to track schema changes to your database.
+- :doc:`Securing your GraphQL endpoint <securing-graphql-endpoint>`
+- :doc:`Updating GraphQL engine <updating>`
+- :doc:`Setting up migrations <../../migrations/index>`
 
 .. toctree::
    :titlesonly:
+   :hidden:
 
    Securing your GraphQL endpoint <securing-graphql-endpoint>
    Updating GraphQL engine <updating>
