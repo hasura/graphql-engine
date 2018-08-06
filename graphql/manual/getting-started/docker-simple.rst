@@ -23,7 +23,7 @@ required to deploy Hasura anywhere. Get the docker compose file from there:
 .. code-block:: none
 
    # in a new directory
-   wget https://github.com/hasura/graphql-engine-install-manifests/blob/restructure/docker-compose/docker-compose.yaml
+   wget https://raw.githubusercontent.com/hasura/graphql-engine-install-manifests/master/docker-compose/docker-compose.yaml
 
 Step 2: Run Hasura GraphQL engine & Postgres
 --------------------------------------------

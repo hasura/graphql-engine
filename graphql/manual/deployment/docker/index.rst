@@ -14,7 +14,7 @@ Step 1: Get the bash script
 
 .. code-block:: bash
 
-   wget https://github.com/hasura/graphql-engine-install-manifests/blob/restructure/docker-run/docker-run.sh
+   wget https://raw.githubusercontent.com/hasura/graphql-engine-install-manifests/master/docker-run/docker-run.sh
 
 
 Step 2: Run the hasura docker container
