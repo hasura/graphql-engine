@@ -80,10 +80,10 @@ Remember to change ``HEROKU_GIT_REMOTE`` to your git remote below. In our case:
 
 .. code-block:: bash
 
-  git init && git add .
-  git commit -am 'first commit'
-  git remote add heroku HEROKU_GIT_REMOTE
-  git push heroku master
+  $ git init && git add .
+  $ git commit -m "first commit"
+  $ git remote add heroku HEROKU_GIT_REMOTE
+  $ git push heroku master
 
 Visit ``https://graphql-on-postgres.herokuapp.com`` (replace ``graphql-on-postgres`` with your app name) and
 you should see the Hasura console.
@@ -91,8 +91,14 @@ you should see the Hasura console.
 Advanced:
 ---------
 
+- :doc:`Securing your GraphQL endpoint <securing-graphql-endpoint>`
+- :doc:`using-existing-heroku-database`
+- :doc:`Updating GraphQL engine <updating>`
+- :doc:`Setting up migrations <../../migrations/index>`
+
 .. toctree::
    :titlesonly:
+   :hidden:
 
    Securing your GraphQL endpoint <securing-graphql-endpoint>
    using-existing-heroku-database

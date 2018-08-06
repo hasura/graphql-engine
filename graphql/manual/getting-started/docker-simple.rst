@@ -17,24 +17,24 @@ guide to :doc:`deploy the Hasura GraphQL engine as a standalone docker container
 Step 1: Get the docker-compose file
 -----------------------------------
 
-hasura/graphql-engine-install-manifests repo contains all installation manifests
-required to deploy Hasura anywhere. Get the docker compose file from there:
+The `hasura/graphql-engine-install-manifests <https://github.com/hasura/graphql-engine-install-manifests>`_ repo
+contains all installation manifests required to deploy Hasura anywhere. Get the docker compose file from there:
 
-.. code-block:: none
+.. code-block:: bash
 
    # in a new directory
-   wget https://github.com/hasura/graphql-engine-install-manifests/blob/restructure/docker-compose/docker-compose.yaml
+   $ wget https://github.com/hasura/graphql-engine-install-manifests/blob/restructure/docker-compose/docker-compose.yaml
 
 Step 2: Run Hasura GraphQL engine & Postgres
 --------------------------------------------
 
-.. code-block::  none
+.. code-block::  bash
 
-   docker-compose up -d
+   $ docker-compose up -d
 
 Check if the containers are running:
 
-.. code-block:: none
+.. code-block:: bash
 
   $ docker ps
 
