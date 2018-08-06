@@ -100,11 +100,11 @@ dropViewsInHdbCatalog :: Q.Tx ()
 dropViewsInHdbCatalog =
   mapM_ (dropView . QualifiedTable hdbCatalogSchema) allViews
 
-applyCatalogChanges :: SchemaCache -> Q.TxE QErr ()
-applyCatalogChanges sc = processCatalogChanges sc schemaDiff
+updateCatalogWithNewViews :: SchemaCache -> Q.TxE QErr ()
+updateCatalogWithNewViews sc = processCatalogChanges sc schemaDiff
   where
-    schemaDiff = SchemaDiff [] alterTabs
-    alterTabs = flip map allViews $ \v ->
+    schemaDiff = SchemaDiff [] alteredViews
+    alteredViews = flip map allViews $ \v ->
       let qt = QualifiedTable hdbCatalogSchema v
           tdiff = TableDiff (Just $ QualifiedTable hdbViewsSchema v)
                             [] [] [] []
@@ -119,7 +119,7 @@ migrateFrom10 = do
   Q.catchE defaultTxErrorHandler initDefaultViews
   preMigrateSchema <- buildSchemaCache
   Q.catchE defaultTxErrorHandler dropViewsInHdbCatalog
-  applyCatalogChanges preMigrateSchema
+  updateCatalogWithNewViews preMigrateSchema
   where
     permTable = TableName "hdb_permission"
     relTable = TableName "hdb_relationship"
