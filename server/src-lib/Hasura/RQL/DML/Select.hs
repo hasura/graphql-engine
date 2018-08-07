@@ -30,7 +30,7 @@ import qualified Hasura.SQL.DML             as S
 -- Stage 1 : Convert input query into an annotated AST
 -- Stage 2 : Convert annotated AST to SQL Select
 
-type SelectQExt = SelectG ExtCol BoolExp
+type SelectQExt = SelectG ExtCol BoolExp Int
 -- Columns in RQL
 data ExtCol
   = ECSimple !PGCol
@@ -101,7 +101,7 @@ convWildcard
   -> SelPermInfo
   -> Wildcard
   -> m [ExtCol]
-convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _) wildcard =
+convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _) wildcard =
   case wildcard of
   Star         -> return simpleCols
   (StarDot wc) -> (simpleCols ++) <$> (catMaybes <$> relExtCols wc)
@@ -243,6 +243,19 @@ partitionExtCols = foldr f ([], [])
    f (ECSimple pgCol)     ~(l, r)        = (pgCol:l, r)
    f (ECRel relName mAlias selQ) ~(l, r) = (l, (relName, mAlias, selQ):r)
 
+-- If query limit > permission limit then consider permission limit Else consider query limit
+applyPermLimit
+  :: Maybe Int -- Permission limit
+  -> Maybe Int -- Query limit
+  -> Maybe S.SQLExp -- Return SQL exp
+applyPermLimit mPermLimit mQueryLimit =
+  S.intToSQLExp <$> maybe mQueryLimit compareWithPermLimit mPermLimit
+  where
+    compareWithPermLimit pLimit =
+      maybe (Just pLimit) (compareLimits pLimit) mQueryLimit
+    compareLimits pLimit qLimit = Just $
+      if qLimit > pLimit then pLimit else qLimit
+
 convSelectQ
   :: (P1C m)
   => FieldInfoMap  -- Table information of current table
@@ -289,14 +302,22 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
   -- Convert order by
   sqlOrderBy <- mapM convOrderByExp $ sqOrderBy selQ
 
-  -- convert limit expression
-  limitExp <- mapM (prepValBuilder PGBigInt) $ sqLimit selQ
+  -- validate limit and offset values
+  withPathK "limit" $ mapM_ onlyPositiveInt mQueryLimit
+  withPathK "offset" $ mapM_ onlyPositiveInt mQueryOffset
 
-  -- convert offest value
-  offsetExp <- mapM (prepValBuilder PGBigInt) $ sqOffset selQ
+  -- convert limit expression
+  let limitExp = applyPermLimit mPermLimit mQueryLimit
+  -- convert offset expression
+      offsetExp = S.intToSQLExp <$> mQueryOffset
 
   return $ SelectData newAnnFlds (spiTable selPermInfo)
     (spiFilter selPermInfo, wClause) sqlOrderBy [] limitExp offsetExp
+
+  where
+    mQueryOffset = sqOffset selQ
+    mQueryLimit = sqLimit selQ
+    mPermLimit = spiLimit selPermInfo
 
 convExtSimple
   :: (P1C m)

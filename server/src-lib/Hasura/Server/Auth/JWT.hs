@@ -117,11 +117,12 @@ data JWTConfig
   , jcKey  :: !JWK
   } deriving (Show, Eq)
 
--- | Parse from a json string like `{"type": "RS256", "key": <bytestring>}` to
--- | JWTConfig
+-- | Parse from a json string like:
+-- | `{"type": "RS256", "key": "<PEM-encoded-public-key-or-X509-cert>"}`
+-- | to JWTConfig
 instance A.FromJSON JWTConfig where
 
-  parseJSON = A.withObject "foo" $ \o -> do
+  parseJSON = A.withObject "JWTConfig" $ \o -> do
     keyType <- o A..: "type"
     rawKey  <- o A..: "key"
     case keyType of

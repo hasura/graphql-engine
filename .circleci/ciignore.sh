@@ -28,9 +28,14 @@ if [[ ! -a "$ROOT/.ciignore" ]]; then
 fi
 
 # Check CIRCLE_COMPARE_URL first and if its not set, check for diff with master.
+    
 if [[ ! -z "$CIRCLE_COMPARE_URL" ]]; then
     # CIRCLE_COMPARE_URL is not empty, use it to get the diff
-    COMMIT_RANGE=$(echo $CIRCLE_COMPARE_URL | sed 's:^.*/compare/::g')
+    if [[ $CIRCLE_COMPARE_URL = *"commit"* ]]; then
+        COMMIT_RANGE=$(echo $CIRCLE_COMPARE_URL | sed 's:^.*/commit/::g')~1
+    else
+        COMMIT_RANGE=$(echo $CIRCLE_COMPARE_URL | sed 's:^.*/compare/::g')
+    fi
     echo "Diff: $COMMIT_RANGE"
     changes="$(git diff $COMMIT_RANGE --name-only)"
 else
