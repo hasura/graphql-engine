@@ -65,7 +65,8 @@ convertRowObj
   -> m [(PGCol, S.SQLExp)]
 convertRowObj val =
   flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
-    prepExp <- asPGColVal v >>= prepare
+    prepExpM <- asPGColValM v >>= mapM prepare
+    let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (PGCol $ G.unName k, prepExp)
 
 mkConflictClause
