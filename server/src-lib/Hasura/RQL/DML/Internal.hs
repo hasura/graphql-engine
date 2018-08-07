@@ -236,7 +236,7 @@ mkColExtrAl :: (IsIden a) => Maybe a -> (PGCol, PGColType) -> S.Extractor
 mkColExtrAl alM (c, pct) =
   if pct == PGGeometry || pct == PGGeography
   then S.mkAliasedExtrFromExp
-    ((S.SEFnApp "ST_AsGeoJSON" [S.mkSIdenExp c] Nothing) `S.SETyAnn` S.jsonType) alM
+    (S.SEFnApp "ST_AsGeoJSON" [S.mkSIdenExp c] Nothing `S.SETyAnn` S.jsonType) alM
   else S.mkAliasedExtr c alM
 
 -- validate headers
@@ -251,44 +251,36 @@ simplifyError :: Q.PGTxErr -> Maybe (Code, T.Text)
 simplifyError txErr = do
   stmtErr <- Q.getPGStmtErr txErr
   codeMsg <- getPGCodeMsg stmtErr
-  errTxt <- extractError codeMsg
-  let errCode = mkCode $ fst codeMsg
-  return (errCode, errTxt)
+  extractError codeMsg
   where
     getPGCodeMsg pged =
       (,) <$> Q.edStatusCode pged <*> Q.edMessage pged
     extractError = \case
       -- restrict violation
       ("23501", msg) ->
-        return $ "Can not delete or update due to data being referred. " <> msg
+        return (PostgresError, "Can not delete or update due to data being referred. " <> msg)
       -- not null violation
       ("23502", msg) ->
-        return $ "Not-NULL violation. " <> msg
+        return (PostgresError, "Not-NULL violation. " <> msg)
       -- foreign key violation
       ("23503", msg) ->
-        return $ "Foreign key violation. " <> msg
+        return  (PostgresError, "Foreign key violation. " <> msg)
       -- unique violation
       ("23505", msg) ->
-        return $ "Uniqueness violation. " <> msg
+        return  (PostgresError, "Uniqueness violation. " <> msg)
       -- check violation
       ("23514", msg) ->
-        return $ "Check constraint violation. " <> msg
+        return (PermissionError, "Check constraint violation. " <> msg)
       -- invalid text representation
-      ("22P02", msg) -> return msg
+      ("22P02", msg) -> return (PostgresError, msg)
       -- no unique constraint on the columns
       ("42P10", _)   ->
-        return "there is no unique or exclusion constraint on target column(s)"
+        return (PostgresError, "there is no unique or exclusion constraint on target column(s)")
       -- no constraint
-      ("42704", msg) -> return msg
+      ("42704", msg) -> return (PostgresError, msg)
       -- invalid parameter value
-      ("22023", msg) -> return msg
+      ("22023", msg) -> return (PostgresError, msg)
       _              -> Nothing
-
-    mkCode = \case
-      -- for check violation it is permission error
-      "23514" -> PermissionError
-      _       -> PostgresError
-
 
 -- validate limit and offset int values
 onlyPositiveInt :: MonadError QErr m => Int -> m ()
