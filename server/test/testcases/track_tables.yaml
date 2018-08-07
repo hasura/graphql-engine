@@ -24,4 +24,8 @@ query:
       args:
         schema: public
         name: address
+    - type: track_table
+      args:
+        schema: public
+        name: orders
 

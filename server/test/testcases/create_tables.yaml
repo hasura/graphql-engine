@@ -50,3 +50,11 @@ query:
             city TEXT NOT NULL,
             resident_id INTEGER REFERENCES resident(id)
           )
+    - type: run_sql
+      args:
+        sql: |
+          CREATE TABLE orders (
+            id SERIAL PRIMARY KEY,
+            placed TIMESTAMPTZ NOT NULL,
+            shipped TIMESTAMPTZ
+          )
