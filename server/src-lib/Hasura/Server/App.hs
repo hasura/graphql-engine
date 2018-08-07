@@ -114,19 +114,18 @@ buildQCtx = do
 
 logResult
   :: (MonadIO m)
-  => ServerCtx
-  -> Either QErr BL.ByteString
-  -> Maybe (UTCTime, UTCTime)
-  -> ActionT m ()
-logResult sc res qTime = do
-  req <- request
-  reqBody <- liftIO $ strictRequestBody req
+  => Wai.Request -> BL.ByteString -> ServerCtx
+  -> Either QErr BL.ByteString -> Maybe (UTCTime, UTCTime)
+  -> m ()
+logResult req reqBody sc res qTime =
   liftIO $ logger $ mkAccessLog req (reqBody, res) qTime
   where
     logger = scLogger sc
 
-logError :: MonadIO m => ServerCtx -> QErr -> ActionT m ()
-logError sc qErr = logResult sc (Left qErr) Nothing
+logError
+  :: MonadIO m
+  => Wai.Request -> BL.ByteString -> ServerCtx -> QErr -> m ()
+logError req reqBody sc qErr = logResult req reqBody sc (Left qErr) Nothing
 
 mkSpockAction
   :: (MonadIO m)
@@ -141,8 +140,8 @@ mkSpockAction qErrEncoder serverCtx handler = do
       authMode = scAuthMode serverCtx
       manager = scManager serverCtx
 
-  userInfoE <- liftIO $ runExceptT $ getUserInfo manager headers authMode
-  userInfo <- either (logAndThrow False) return userInfoE
+  userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
+  userInfo <- either (logAndThrow req reqBody False) return userInfoE
 
   let handlerState = HandlerCtx serverCtx reqBody userInfo
 
@@ -151,17 +150,18 @@ mkSpockAction qErrEncoder serverCtx handler = do
   t2 <- liftIO getCurrentTime -- for measuring response time purposes
 
   -- log result
-  logResult serverCtx result $ Just (t1, t2)
+  logResult req reqBody serverCtx result $ Just (t1, t2)
   either (qErrToResp $ userRole userInfo == adminRole) resToResp result
 
   where
+    logger = scLogger serverCtx
     -- encode error response
     qErrToResp includeInternal qErr = do
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
 
-    logAndThrow includeInternal qErr = do
-      logError serverCtx qErr
+    logAndThrow req reqBody includeInternal qErr = do
+      logError req reqBody serverCtx qErr
       qErrToResp includeInternal qErr
 
     resToResp resp = do
@@ -340,7 +340,9 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
 
     hookAny GET $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
-      logError serverCtx qErr
+      req <- request
+      reqBody <- liftIO $ strictRequestBody req
+      logError req reqBody serverCtx qErr
       uncurry setHeader jsonHeader
       lazyBytes $ encode qErr
 

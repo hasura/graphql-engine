@@ -228,7 +228,8 @@ onMessage authMode serverEnv wsConn msgRaw =
       sendMsg wsConn $ SMConnErr err
 
     Right msg -> case msg of
-      CMConnInit params -> onConnInit (_wseHManager serverEnv)
+      CMConnInit params -> onConnInit (_wseLogger serverEnv)
+                           (_wseHManager serverEnv)
                            wsConn authMode params
       CMStart startMsg  -> onStart serverEnv wsConn startMsg
       CMStop stopMsg    -> onStop serverEnv wsConn stopMsg
@@ -254,9 +255,9 @@ onStop serverEnv wsConn (StopMsg opId) = do
 
 onConnInit
   :: (MonadIO m)
-  => H.Manager -> WSConn -> AuthMode -> ConnParams -> m ()
-onConnInit manager wsConn authMode connParams = do
-  res <- runExceptT $ getUserInfo manager headers authMode
+  => L.Logger -> H.Manager -> WSConn -> AuthMode -> ConnParams -> m ()
+onConnInit logger manager wsConn authMode connParams = do
+  res <- runExceptT $ getUserInfo logger manager headers authMode
   case res of
     Left e  ->
       liftIO $ WS.closeConn wsConn $

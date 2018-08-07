@@ -2,8 +2,6 @@ import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 
-import { appPrefix } from '../push';
-
 const ViewHeader = ({ tableName, tabName, currentSchema, migrationMode }) => {
   const styles = require('../TableCommon/Table.scss');
   let capitalised = tabName;
@@ -51,8 +49,7 @@ const ViewHeader = ({ tableName, tabName, currentSchema, migrationMode }) => {
             >
               <Link
                 to={
-                  appPrefix +
-                  '/schema/' +
+                  '/data/schema/' +
                   currentSchema +
                   '/views/' +
                   tableName +
@@ -70,8 +67,7 @@ const ViewHeader = ({ tableName, tabName, currentSchema, migrationMode }) => {
               >
                 <Link
                   to={
-                    appPrefix +
-                    '/schema/' +
+                    '/data/schema/' +
                     currentSchema +
                     '/views/' +
                     tableName +
@@ -89,8 +85,7 @@ const ViewHeader = ({ tableName, tabName, currentSchema, migrationMode }) => {
             >
               <Link
                 to={
-                  appPrefix +
-                  '/schema/' +
+                  '/data/schema/' +
                   currentSchema +
                   '/views/' +
                   tableName +
@@ -107,8 +102,7 @@ const ViewHeader = ({ tableName, tabName, currentSchema, migrationMode }) => {
             >
               <Link
                 to={
-                  appPrefix +
-                  '/schema/' +
+                  '/data/schema/' +
                   currentSchema +
                   '/views/' +
                   tableName +

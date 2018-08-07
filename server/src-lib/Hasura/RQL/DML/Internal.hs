@@ -56,7 +56,7 @@ mkAdminRolePermInfo ti =
 
     tn = tiName ti
     i = InsPermInfo tn (S.BELit True) True [] []
-    s = SelPermInfo (HS.fromList pgCols) tn (S.BELit True) [] []
+    s = SelPermInfo (HS.fromList pgCols) tn (S.BELit True) Nothing [] []
     u = UpdPermInfo (HS.fromList pgCols) tn (S.BELit True) [] []
     d = DelPermInfo tn (S.BELit True) [] []
 
@@ -281,3 +281,9 @@ simplifyError txErr = do
       -- invalid parameter value
       ("22023", msg) -> return msg
       _              -> Nothing
+
+
+-- validate limit and offset int values
+onlyPositiveInt :: MonadError QErr m => Int -> m ()
+onlyPositiveInt i = when (i < 0) $ throw400 NotSupported
+  "unexpected negative value"

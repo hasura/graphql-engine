@@ -123,6 +123,8 @@ table thead tr th
 .fontAwosomeClose
 {
   margin-left: 10px;
+  width: 15px;
+  min-width: 15px;
 }
 .display_flex
 {
@@ -410,6 +412,14 @@ input {
 .mar_left
 {
   margin-left: 15px;
+}
+.mar_small_left
+{
+  margin-left: 5px;
+}
+.mar_small_neg_left
+{
+  margin-left: -5px;
 }
 .padd_remove
 {

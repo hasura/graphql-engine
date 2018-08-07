@@ -32,3 +32,29 @@ query:
             id SERIAL PRIMARY KEY,
             name TEXT NOT NULL
           )
+    - type: run_sql
+      args:
+        sql: |
+          CREATE TABLE resident (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            age INTEGER NOT NULL
+          )
+    - type: run_sql
+      args:
+        sql: |
+          CREATE TABLE address (
+            id SERIAL PRIMARY KEY,
+            door_no TEXT NOT NULL,
+            street TEXT NOT NULL,
+            city TEXT NOT NULL,
+            resident_id INTEGER REFERENCES resident(id)
+          )
+    - type: run_sql
+      args:
+        sql: |
+          CREATE TABLE orders (
+            id SERIAL PRIMARY KEY,
+            placed TIMESTAMPTZ NOT NULL,
+            shipped TIMESTAMPTZ
+          )
