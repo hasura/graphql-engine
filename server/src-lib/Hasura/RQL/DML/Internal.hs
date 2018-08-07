@@ -224,7 +224,7 @@ dmlTxErrorHandler :: Q.PGTxErr -> QErr
 dmlTxErrorHandler p2Res =
   case err of
     Nothing  -> defaultTxErrorHandler p2Res
-    Just msg -> err400 PostgresError msg
+    Just (code, msg) -> err400 code msg
   where err = simplifyError p2Res
 
 -- | col_name as col_name
@@ -247,11 +247,13 @@ validateHeaders depHeaders = do
     unless (hdr `elem` map T.toLower headers) $
     throw400 NotFound $ hdr <<> " header is expected but not found"
 
-simplifyError :: Q.PGTxErr -> Maybe T.Text
+simplifyError :: Q.PGTxErr -> Maybe (Code, T.Text)
 simplifyError txErr = do
   stmtErr <- Q.getPGStmtErr txErr
   codeMsg <- getPGCodeMsg stmtErr
-  extractError codeMsg
+  errTxt <- extractError codeMsg
+  let errCode = mkCode $ fst codeMsg
+  return (errCode, errTxt)
   where
     getPGCodeMsg pged =
       (,) <$> Q.edStatusCode pged <*> Q.edMessage pged
@@ -281,6 +283,11 @@ simplifyError txErr = do
       -- invalid parameter value
       ("22023", msg) -> return msg
       _              -> Nothing
+
+    mkCode = \case
+      -- for check violation it is permission error
+      "23514" -> PermissionError
+      _       -> PostgresError
 
 
 -- validate limit and offset int values
