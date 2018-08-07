@@ -10,6 +10,7 @@ import {
   getTableRelationshipNames,
   getTableRelationship,
   boolOperators,
+  legacyBoolOperators,
   columnOperators,
   arrayColumnOperators,
 } from './utils';
@@ -52,6 +53,27 @@ class PermissionBuilder extends React.Component {
       return _tableSchemas;
     };
 
+    const isNotOperator = value => {
+      return value === boolOperators.not || value === legacyBoolOperators.not;
+    };
+
+    const isAndOrOperator = value => {
+      return (
+        value === boolOperators.or ||
+        value === legacyBoolOperators.or ||
+        value === boolOperators.and ||
+        value === legacyBoolOperators.and
+      );
+    };
+
+    const isArrayColumnOperator = value => {
+      return arrayColumnOperators.indexOf(value) !== -1;
+    };
+
+    const isColumnOperator = value => {
+      return columnOperators.indexOf(value) !== -1;
+    };
+
     const getFilter = (conditions, prefix, value = '') => {
       const _where = {};
 
@@ -59,7 +81,7 @@ class PermissionBuilder extends React.Component {
       const operation = prefixSplit[0];
 
       if (prefixSplit.length !== 1) {
-        if (operation === boolOperators.or || operation === boolOperators.and) {
+        if (isAndOrOperator(operation)) {
           const position = parseInt(prefixSplit[1], 10);
           _where[operation] = conditions[operation];
           _where[operation][position] = getFilter(
@@ -70,13 +92,13 @@ class PermissionBuilder extends React.Component {
           if (Object.keys(_where[operation][position]).length === 0) {
             _where[operation].splice(position, 1);
           }
-        } else if (operation === boolOperators.not) {
+        } else if (isNotOperator(operation)) {
           _where[operation] = getFilter(
             conditions[operation],
             prefixSplit.slice(1).join('.'),
             value
           );
-        } else if (arrayColumnOperators.indexOf(operation) !== -1) {
+        } else if (isArrayColumnOperator(operation)) {
           const position = parseInt(prefixSplit[1], 10);
           _where[operation] = conditions[operation] || [];
           if (value) {
@@ -95,16 +117,13 @@ class PermissionBuilder extends React.Component {
       } else {
         if (operation === '--') {
           // blank where
-        } else if (
-          operation === boolOperators.or ||
-          operation === boolOperators.and
-        ) {
+        } else if (isAndOrOperator(operation)) {
           _where[operation] = [];
-        } else if (operation === boolOperators.not) {
+        } else if (isNotOperator(operation)) {
           _where[operation] = {};
-        } else if (arrayColumnOperators.indexOf(operation) !== -1) {
+        } else if (isArrayColumnOperator(operation)) {
           _where[operation] = value || [];
-        } else if (columnOperators.indexOf(operation) !== -1) {
+        } else if (isColumnOperator(operation)) {
           _where[operation] = value;
           // if (operation === '$eq') {
           //   _where = value
@@ -261,7 +280,7 @@ class PermissionBuilder extends React.Component {
 
       let valueInput = '';
       if (operator) {
-        if (arrayColumnOperators.indexOf(operator) !== -1) {
+        if (isArrayColumnOperator(operator)) {
           valueInput = renderInputArray(
             dispatchFunc,
             operationValue,
@@ -402,7 +421,7 @@ class PermissionBuilder extends React.Component {
       let boolExpValue = null;
       if (operation) {
         const newPrefix = addToPrefix(prefix, operation);
-        if (operation === boolOperators.or || operation === boolOperators.and) {
+        if (isAndOrOperator(operation)) {
           boolExpValue = renderBoolExpArray(
             dispatchFunc,
             condition[operation],
@@ -410,7 +429,7 @@ class PermissionBuilder extends React.Component {
             tableSchemas,
             newPrefix
           );
-        } else if (operation === boolOperators.not) {
+        } else if (isNotOperator(operation)) {
           boolExpValue = renderBoolExp(
             dispatchFunc,
             condition[operation],

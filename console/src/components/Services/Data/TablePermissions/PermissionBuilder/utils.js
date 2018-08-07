@@ -4,6 +4,12 @@ export const boolOperators = {
   or: '_or',
 };
 
+export const legacyBoolOperators = {
+  and: '$and',
+  not: '$not',
+  or: '$or',
+};
+
 export const columnOperators = [
   '_eq',
   '_ne',
