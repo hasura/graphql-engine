@@ -28,7 +28,8 @@ import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from '../TableBrowseRows/ViewHeader';
 import { setTable } from '../DataActions';
-import { getIngForm } from '../utils';
+import { getIngForm, escapeRegExp } from '../utils';
+import { legacyOperatorsMap } from './PermissionBuilder/utils';
 
 class Permissions extends Component {
   componentDidMount() {
@@ -669,6 +670,16 @@ class Permissions extends Component {
       if (permsState[query]) {
         filterString = JSON.stringify(permsState[query][filterKey]);
       }
+
+      // replace legacy operator values
+      Object.keys(legacyOperatorsMap).forEach(legacyOperator => {
+        const legacyString = '"' + legacyOperator + '"';
+        const currentString = '"' + legacyOperatorsMap[legacyOperator] + '"';
+        filterString = filterString.replace(
+          new RegExp(escapeRegExp(legacyString), 'g'),
+          currentString
+        );
+      });
 
       return (
         <div className={styles.editPermissionsSection}>
