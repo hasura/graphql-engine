@@ -51,7 +51,11 @@ gqlSpecFiles =
   , "insert_mutation/article_on_conflict_error_03.yaml"
   , "insert_mutation/person.yaml"
   , "insert_mutation/person_array.yaml"
+  , "insert_mutation/order.yaml"
   , "nested_select_query_article.yaml"
+  , "select_query_article_limit_offset.yaml"
+  , "select_query_article_limit_offset_error_01.yaml"
+  , "select_query_article_limit_offset_error_02.yaml"
   , "update_mutation/author.yaml"
   , "update_mutation/person_set.yaml"
   , "update_mutation/person_append.yaml"
@@ -62,6 +66,7 @@ gqlSpecFiles =
   , "update_mutation/person_inc.yaml"
   , "update_mutation/person_error_01.yaml"
   , "delete_mutation/article.yaml"
+  , "delete_mutation/article_returning.yaml"
   ]
 
 readTestCase :: FilePath -> IO TestCase

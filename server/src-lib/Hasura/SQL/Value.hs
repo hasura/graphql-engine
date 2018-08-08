@@ -10,12 +10,12 @@ import qualified Database.PG.Query          as Q
 import qualified Database.PG.Query.PTI      as PTI
 import qualified Hasura.SQL.DML             as S
 
-import           Hasura.Prelude
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Int
 import           Data.Scientific
 import           Data.Time
+import           Hasura.Prelude
 
 import qualified Data.Aeson.Text            as AE
 import qualified Data.Aeson.Types           as AT
@@ -195,3 +195,9 @@ toPrepParam i pct =
   if pct == PGGeometry || pct == PGGeography
   then S.SEFnApp "ST_GeomFromGeoJSON" [S.SEPrep i] Nothing
   else S.SEPrep i
+
+pgColValueToInt :: PGColValue -> Maybe Int
+pgColValueToInt (PGValInteger i)  = Just $ fromIntegral i
+pgColValueToInt (PGValSmallInt i) = Just $ fromIntegral i
+pgColValueToInt (PGValBigInt i)   = Just $ fromIntegral i
+pgColValueToInt _                 = Nothing

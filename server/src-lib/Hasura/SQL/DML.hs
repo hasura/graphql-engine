@@ -294,6 +294,11 @@ instance ToSQL SQLExp where
   toSQL (SEArray exps) = BB.string7 "ARRAY" <> BB.char7 '['
                          <> (", " <+> exps) <> BB.char7 ']'
 
+intToSQLExp :: Int -> SQLExp
+intToSQLExp i = SETyAnn e intType
+  where
+    e = SELit $ T.pack $ show i
+
 data Extractor = Extractor !SQLExp !(Maybe Alias)
                deriving (Show, Eq)
 
@@ -303,6 +308,9 @@ mkSQLOpExp
   -> SQLExp -- rhs
   -> SQLExp -- result
 mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
+
+toEmptyArrWhenNull :: SQLExp -> SQLExp
+toEmptyArrWhenNull e = SEFnApp "coalesce" [e, SELit "[]"] Nothing
 
 getExtrAlias :: Extractor -> Maybe Alias
 getExtrAlias (Extractor _ ma) = ma

@@ -1,8 +1,9 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiWayIf            #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Hasura.GraphQL.Resolve.Select
   ( convertSelect
@@ -23,8 +24,10 @@ import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.DML.Internal           (onlyPositiveInt)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value
 
 fromSelSet
   :: G.NamedType
@@ -40,19 +43,23 @@ fromSelSet fldTy flds =
         fldInfo <- getFldInfo fldTy fldName
         case fldInfo of
           Left (PGColInfo pgCol colTy) -> return (rqlFldName, RS.FCol (pgCol, colTy))
-          Right (relInfo, tableFilter) -> do
+          Right (relInfo, tableFilter, tableLimit) -> do
             let relTN = riRTable relInfo
-            relSelData <- fromField relTN tableFilter fld
+            relSelData <- fromField relTN tableFilter tableLimit fld
             let annRel = RS.AnnRel (riName relInfo) (riType relInfo)
                          (riMapping relInfo) relSelData
             return (rqlFldName, RS.FRel annRel)
 
+fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
+fieldAsPath fld = nameAsPath $ _fName fld
+
 fromField
-  :: QualifiedTable -> S.BoolExp -> Field -> Convert RS.SelectData
-fromField tn permFilter fld = do
+  :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RS.SelectData
+fromField tn permFilter permLimit fld = fieldAsPath fld $ do
   whereExpM  <- withArgM args "where" $ convertBoolExp tn
   ordByExpM  <- withArgM args "order_by" parseOrderBy
-  limitExpM  <- withArgM args "limit" $ asPGColVal >=> prepare
+  limitExpM  <- RS.applyPermLimit permLimit
+                <$> withArgM args "limit" parseLimit
   offsetExpM <- withArgM args "offset" $ asPGColVal >=> prepare
   annFlds    <- fromSelSet (_fType fld) $ _fSelSet fld
   return $ RS.SelectData annFlds tn (permFilter, whereExpM) ordByExpM
@@ -99,9 +106,20 @@ parseOrderBy v = do
       NFirst -> S.NFirst
       NLast  -> S.NLast
 
+parseLimit :: ( MonadError QErr m ) => AnnGValue -> m Int
+parseLimit v = do
+  (_, pgColVal) <- asPGColVal v
+  limit <- maybe noIntErr return $ pgColValueToInt pgColVal
+  -- validate int value
+  onlyPositiveInt limit
+  return limit
+  where
+    noIntErr = throw400 Unexpected "expecting Integer value for \"limit\""
+
 convertSelect
-  :: QualifiedTable -> S.BoolExp -> Field -> Convert RespTx
-convertSelect qt permFilter fld = do
-  selData <- fromField qt permFilter fld
+  :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RespTx
+convertSelect qt permFilter permLimit fld = do
+  selData <- withPathK "selectionSet" $
+             fromField qt permFilter permLimit fld
   prepArgs <- get
   return $ RS.selectP2 (selData, prepArgs)

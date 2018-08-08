@@ -7,6 +7,7 @@
 
 module Hasura.RQL.DML.QueryTemplate where
 
+import           Hasura.Prelude
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning     (encodeJSONVector)
@@ -14,7 +15,6 @@ import           Hasura.RQL.GBoolExp          (txtRHSBuilder)
 import           Hasura.RQL.Instances         ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.Prelude
 
 import qualified Database.PG.Query            as Q
 import qualified Hasura.RQL.DML.Count         as R
@@ -82,6 +82,21 @@ buildPrepArg args pct val =
     withParamErrMsg tpc t =
       "when processing parameter " <> tpcParam tpc  <<> " : " <> t
 
+decodeIntValue :: TemplateArgs -> Value -> EQTP1 Int
+decodeIntValue args val =
+  case val of
+   Object _ -> do
+     tpc <- decodeValue val
+     v <- getParamValue args tpc
+     decodeValue v
+   _        -> decodeValue val
+
+mkSelQWithArgs :: SelectQueryT -> TemplateArgs -> EQTP1 SelectQuery
+mkSelQWithArgs (DMLQuery tn (SelectG c w o lim offset)) args = do
+  intLim <- mapM (decodeIntValue args) lim
+  intOffset <- mapM (decodeIntValue args) offset
+  return $ DMLQuery tn $ SelectG c w o intLim intOffset
+
 convQT
   :: (P1C m)
   => TemplateArgs
@@ -90,7 +105,8 @@ convQT
 convQT args qt = case qt of
   QTInsert q -> fmap QTPInsert $ peelSt $
                 R.convInsertQuery decodeParam binRHSBuilder q
-  QTSelect q -> fmap QTPSelect $ peelSt $ R.convSelectQuery f q
+  QTSelect q -> fmap QTPSelect $ peelSt $
+                mkSelQWithArgs q args >>= R.convSelectQuery f
   QTUpdate q -> fmap QTPUpdate $ peelSt $ R.convUpdateQuery f q
   QTDelete q -> fmap QTPDelete $ peelSt $ R.convDeleteQuery f q
   QTCount q  -> fmap QTPCount $ peelSt $ R.countP1 f q

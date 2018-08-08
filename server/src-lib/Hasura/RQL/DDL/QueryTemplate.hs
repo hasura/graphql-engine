@@ -18,11 +18,11 @@ module Hasura.RQL.DDL.QueryTemplate
   , SetQueryTemplateComment(..)
   ) where
 
+import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp        (txtRHSBuilder)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.Prelude
 
 import qualified Database.PG.Query          as Q
 import qualified Hasura.RQL.DML.Count       as R
@@ -74,6 +74,20 @@ validateParam pct val =
     validateDefault =
       void . runAesonParser (convToBin pct)
 
+mkSelQ :: SelectQueryT -> P1 SelectQuery
+mkSelQ (DMLQuery tn (SelectG c w o lim offset)) = do
+  intLim <- withPathK "limit" $ maybe returnNothing parseAsInt lim
+  intOffset <- withPathK "offset" $ maybe returnNothing parseAsInt offset
+  return $ DMLQuery tn $ SelectG c w o intLim intOffset
+  where
+    returnNothing = return Nothing
+    parseAsInt v = case v of
+      Object _ -> do
+        tpc <- decodeValue v
+        withPathK "default" $
+          mapM decodeValue $ tpcDefault tpc
+      _ -> Just <$> decodeValue v
+
 data QueryTP1
   = QTP1Insert R.InsertQueryP1
   | QTP1Select R.SelectData
@@ -88,7 +102,7 @@ validateTQuery
   -> P1 QueryTP1
 validateTQuery qt = withPathK "args" $ case qt of
   QTInsert q -> QTP1Insert <$> R.convInsertQuery decodeInsObjs validateParam q
-  QTSelect q -> QTP1Select <$> R.convSelectQuery validateParam q
+  QTSelect q -> QTP1Select <$> (mkSelQ q >>= R.convSelectQuery validateParam)
   QTUpdate q -> QTP1Update <$> R.convUpdateQuery validateParam q
   QTDelete q -> QTP1Delete <$> R.convDeleteQuery validateParam q
   QTCount q  -> QTP1Count <$> R.countP1 validateParam q

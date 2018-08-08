@@ -8,17 +8,14 @@
 package cli
 
 import (
-	"bytes"
 	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/briandowns/spinner"
-	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/hasura/graphql-engine/cli/version"
 	colorable "github.com/mattn/go-colorable"
 	homedir "github.com/mitchellh/go-homedir"
@@ -99,10 +96,6 @@ type ExecutionContext struct {
 	// stored.
 	GlobalConfigFile string
 
-	// InstallManifestsRepo is the object referring to the github repo where
-	// installation scripts/manifests for Hasura GraphQL Engine are located.
-	InstallManifestsRepo *util.InstallManifestsRepo
-
 	// IsStableRelease indicates if the CLI release is stable or not.
 	IsStableRelease bool
 	// Version indicates the version object
@@ -125,14 +118,6 @@ func (ec *ExecutionContext) Prepare() error {
 		cmdName = "hasura"
 	}
 	ec.CMDName = cmdName
-
-	// set the install manifests repo
-	if ec.InstallManifestsRepo == nil {
-		ec.InstallManifestsRepo = &util.InstallManifestsRepo{
-			Name:      "graphql-engine-install-manifests",
-			Namespace: "hasura",
-		}
-	}
 
 	// set spinner
 	ec.setupSpinner()
@@ -377,20 +362,4 @@ func (ec *ExecutionContext) setVersion() {
 	if ec.Version == nil {
 		ec.Version = version.New()
 	}
-}
-
-// RenderTextWithContext renders the template text passed as 'in' with the
-// ExecutionContext as the template context and returns 'out'.
-func (ec *ExecutionContext) RenderTextWithContext(in string) (out string) {
-	t, err := template.New("r").Parse(in)
-	if err != nil {
-		ec.Logger.Debug(errors.Wrap(err, "failed parsing template"))
-		return ""
-	}
-	b := &bytes.Buffer{}
-	if err := t.Execute(b, ec); err != nil {
-		ec.Logger.Debug(errors.Wrap(err, "failed rendering template"))
-		return ""
-	}
-	return b.String()
 }
