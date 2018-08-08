@@ -25,10 +25,7 @@ func init() {
 
 const (
 	DefaultMigrationsTable = "schema_migrations"
-	DefaultRole            = "admin"
-	DefaultUserID          = "0"
 	DefaultSchema          = "hdb_catalog"
-	ACCESS_KEY_HEADER      = "X-Hasura-Access-Key"
 )
 
 var (
@@ -42,8 +39,7 @@ type Config struct {
 	MigrationsTable string
 	SettingsTable   string
 	URL             *nurl.URL
-	Role            string
-	UserID          string
+	Headers         map[string]string
 	isCMD           bool
 }
 
@@ -96,46 +92,36 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 		logger.Debug(err)
 		return nil, err
 	}
-	// Use sslMode to set Scheme
-	values := hurl.Query()
-	sslMode := values.Get("sslmode")
+	// Use sslMode query param to set Scheme
+	var scheme string
+	params := hurl.Query()
+	sslMode := params.Get("sslmode")
 	if sslMode == "enable" {
-		hurl.Scheme = "https"
+		scheme = "https"
 	} else {
-		hurl.Scheme = "http"
+		scheme = "http"
 	}
-	values.Del("sslmode")
-	hurl.RawQuery = values.Encode()
-	var user, pass string
-	switch hurl.User {
-	case nil:
-		user = DefaultRole
-		pass = DefaultUserID
-	default:
-		user = hurl.User.Username()
-		if user == "" {
-			user = DefaultRole
-		}
-		tmpPass, ok := hurl.User.Password()
-		if !ok {
-			// If Pass not set
-			pass = DefaultUserID
-		} else {
-			pass = tmpPass
+
+	headers := make(map[string]string)
+	if queryHeaders, ok := params["headers"]; ok {
+		for _, header := range queryHeaders {
+			headerValue := strings.SplitN(header, ":", 2)
+			if len(headerValue) == 2 && headerValue[1] != "" {
+				headers[headerValue[0]] = headerValue[1]
+			}
 		}
 	}
-	// Remove UserInfo
-	hurl.User = nil
-	// Add v1/query to path
-	hurl.Path = path.Join(hurl.Path, "v1/query")
 
 	hx, err := WithInstance(&Config{
 		MigrationsTable: DefaultMigrationsTable,
 		SettingsTable:   DefaultSettingsTable,
-		URL:             hurl,
-		Role:            user,
-		UserID:          pass,
-		isCMD:           isCMD,
+		URL: &nurl.URL{
+			Scheme: scheme,
+			Host:   hurl.Host,
+			Path:   path.Join(hurl.Path, "v1/query"),
+		},
+		isCMD:   isCMD,
+		Headers: headers,
 	}, logger)
 
 	if err != nil {
@@ -464,8 +450,8 @@ func (h *HasuraDB) sendQuery(m interface{}) (resp *http.Response, body []byte, e
 
 	request = request.Post(h.config.URL.String()).Send(m)
 
-	if h.config.UserID != "" {
-		request = request.Set(ACCESS_KEY_HEADER, h.config.UserID)
+	for headerName, headerValue := range h.config.Headers {
+		request.Set(headerName, headerValue)
 	}
 
 	resp, body, errs := request.EndBytes()
@@ -477,18 +463,6 @@ func (h *HasuraDB) sendQuery(m interface{}) (resp *http.Response, body []byte, e
 	}
 
 	return resp, body, err
-}
-
-func SingleJoiningSlash(a, b string) string {
-	aslash := strings.HasSuffix(a, "/")
-	bslash := strings.HasPrefix(b, "/")
-	switch {
-	case aslash && bslash:
-		return a + b[1:]
-	case !aslash && !bslash:
-		return a + "/" + b
-	}
-	return a + b
 }
 
 func (h *HasuraDB) First() (version uint64, ok bool) {

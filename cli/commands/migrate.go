@@ -88,7 +88,6 @@ func executeStatus(t *migrate.Migrate) (*migrate.Status, error) {
 func getDataPath(nurl *url.URL, accessKey string) *url.URL {
 	host := &url.URL{
 		Scheme: "hasuradb",
-		User:   url.UserPassword("admin", accessKey),
 		Host:   nurl.Host,
 		Path:   nurl.Path,
 	}
@@ -99,6 +98,9 @@ func getDataPath(nurl *url.URL, accessKey string) *url.URL {
 		q.Set("sslmode", "enable")
 	default:
 		q.Set("sslmode", "disable")
+	}
+	if accessKey != "" {
+		q.Add("headers", "X-Hasura-Access-Key:"+accessKey)
 	}
 	host.RawQuery = q.Encode()
 	return host
