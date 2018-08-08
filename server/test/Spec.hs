@@ -66,6 +66,7 @@ gqlSpecFiles =
   , "update_mutation/person_inc.yaml"
   , "update_mutation/person_error_01.yaml"
   , "delete_mutation/article.yaml"
+  , "delete_mutation/article_returning.yaml"
   ]
 
 readTestCase :: FilePath -> IO TestCase
