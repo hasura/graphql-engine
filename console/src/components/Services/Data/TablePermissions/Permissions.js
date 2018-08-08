@@ -23,6 +23,7 @@ import {
   permToggleEnableLimit,
   permToggleModifyLimit,
   permCustomChecked,
+  permRemoveRole,
 } from './Actions';
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
@@ -181,12 +182,35 @@ class Permissions extends Component {
       const dispatchRoleNameChange = e => {
         dispatch(permSetRoleName(e.target.value));
       };
+      const dispatchDeletePermission = () => {
+        const isConfirm = window.confirm(
+          'Are you sure you want to delete the permission for role ' +
+            role +
+            '?'
+        );
+        if (isConfirm) {
+          dispatch(permRemoveRole(tableSchema, role));
+        }
+      };
 
       const _permissionsRowHtml = [];
+      if (role === 'admin' || role === '') {
+        _permissionsRowHtml.push(<td key={-1} />);
+      } else {
+        _permissionsRowHtml.push(
+          <td key={-1}>
+            <i
+              onClick={dispatchDeletePermission}
+              className={styles.permissionDelete + ' fa fa-trash'}
+              aria-hidden="true"
+            />
+          </td>
+        );
+      }
 
       if (isNewPerm) {
         _permissionsRowHtml.push(
-          <td key={-1}>
+          <td key={-2}>
             <input
               className={`form-control ${styles.newRoleInput}`}
               onChange={dispatchRoleNameChange}
@@ -198,7 +222,7 @@ class Permissions extends Component {
           </td>
         );
       } else {
-        _permissionsRowHtml.push(<td key={-1}>{role}</td>);
+        _permissionsRowHtml.push(<td key={-2}>{role}</td>);
       }
 
       queryTypes.forEach((queryType, i) => {
@@ -223,7 +247,9 @@ class Permissions extends Component {
         _permissionsRowHtml.push(
           <td
             key={i}
-            className={className}
+            className={
+              className + (role === '' ? ' ' + styles.newRoleTd : null)
+            }
             onClick={onClick}
             title="Click to edit permissions"
             data-test={`${role}-${queryType}`}
@@ -294,7 +320,8 @@ class Permissions extends Component {
     const getPermissionsTableHead = queryTypes => {
       const _permissionsHead = [];
 
-      _permissionsHead.push(<td key={-1}>Role</td>);
+      _permissionsHead.push(<td key={-1}>Actions</td>);
+      _permissionsHead.push(<td key={-2}>Role</td>);
 
       queryTypes.forEach((queryType, i) => {
         _permissionsHead.push(<td key={i}>{queryType}</td>);

@@ -132,6 +132,77 @@ const toggleColumn = (permissions, column) => {
   return _newColumns;
 };
 
+const permRemoveRole = (tableSchema, roleName) => {
+  return (dispatch, getState) => {
+    const currentSchema = getState().tables.currentSchema;
+    const permissionsState = getState().tables.modify.permissionsState;
+
+    const table = tableSchema.table_name;
+    const role = roleName;
+
+    const currRolePermissions = tableSchema.permissions.find(
+      p => p.role_name === role
+    );
+
+    const permissionsUpQueries = [];
+    const permissionsDownQueries = [];
+    console.log(permissionsState);
+    console.log(currRolePermissions);
+
+    if (currRolePermissions && currRolePermissions.permissions) {
+      Object.keys(currRolePermissions.permissions).forEach(type => {
+        const deleteQuery = {
+          type: 'drop_' + type + '_permission',
+          args: {
+            table: { name: table, schema: currentSchema },
+            role: role,
+          },
+        };
+        const createQuery = {
+          type: 'create_' + type + '_permission',
+          args: {
+            table: { name: table, schema: currentSchema },
+            role: role,
+            permission: currRolePermissions.permissions[type],
+          },
+        };
+        permissionsUpQueries.push(deleteQuery);
+        permissionsDownQueries.push(createQuery);
+      });
+    }
+
+    // Apply migration
+    const migrationName =
+      'remove_permission_' + role + '_' + currentSchema + '_table_' + table;
+
+    const requestMsg = 'Removing permissions...';
+    const successMsg = 'Permission removed';
+    const errorMsg = 'Removing permissions failed';
+
+    const customOnSuccess = () => {
+      dispatch(_permRemoveAccess());
+      // reset new role name
+      dispatch(permSetRoleName(''));
+      // close edit box
+      dispatch(permCloseEdit());
+    };
+    const customOnError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      permissionsUpQueries,
+      permissionsDownQueries,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
 const permChangePermissions = changeType => {
   return (dispatch, getState) => {
     const allSchemas = getState().tables.allSchemas;
@@ -252,6 +323,7 @@ export {
   permToggleEnableLimit,
   permToggleModifyLimit,
   permCustomChecked,
+  permRemoveRole,
   toggleColumn,
   toggleAllColumns,
   queriesWithPermColumns,
