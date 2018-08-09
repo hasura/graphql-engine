@@ -8,7 +8,7 @@ configure an access key.
 Add the HASURA_GRAPHQL_ACCESS_KEY env var
 -----------------------------------------
 
-Head to the config-vars URL on your Heroku dashboard and set the environment variable.
+Head to the config-vars URL on your Heroku dashboard and set the ``HASURA_GRAPHQL_ACCESS_KEY`` environment variable.
 
 .. image:: ../../../../img/graphql/manual/deployment/secure-heroku.png
 

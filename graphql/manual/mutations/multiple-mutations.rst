@@ -31,10 +31,6 @@ Insert an ``author`` object and an ``article`` object written by the author:
         returning {
           id
           title
-          author {
-            id
-            name
-          }
         }
       }
     }

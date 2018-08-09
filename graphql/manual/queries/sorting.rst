@@ -1,7 +1,7 @@
 Sort query results
 ==================
-Results from your query can be sorted by using the ``order_by`` argument. The argument can be used to sort based on
-fields in nested objects too.
+Results from your query can be sorted by using the ``order_by`` argument. The argument can be used to sort nested
+objects too.
 
 The sort order (ascending vs. descending) is set by specifying ``_asc`` or ``_desc``
 after the column name in the ``order_by`` argument e.g. ``name_desc``.
