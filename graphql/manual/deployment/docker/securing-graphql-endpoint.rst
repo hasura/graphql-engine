@@ -15,7 +15,7 @@ Run the docker command with an access-key flag
      hasura/graphql-engine:latest \
      graphql-engine \
      --database-url postgres://username:password@hostname:port/dbname \
-     serve
+     serve \
      --access-key mysecretkey
 
 
