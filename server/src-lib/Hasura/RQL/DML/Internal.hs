@@ -182,7 +182,7 @@ checkOnColExp :: (P1C m)
               => SelPermInfo -> AnnValS -> m AnnValS
 checkOnColExp spi annVal =
   case annVal of
-    AVCol pci@(PGColInfo cn _) opExps -> do
+    AVCol pci@(PGColInfo cn _ _) opExps -> do
       checkSelOnCol spi cn
       return $ AVCol pci opExps
     AVRel relInfo nesAnn _ -> do
