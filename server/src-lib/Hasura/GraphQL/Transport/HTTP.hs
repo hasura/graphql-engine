@@ -30,7 +30,8 @@ runGQ pool isoL userInfo gCtxMap req = do
   (opTy, fields) <- runReaderT (VQ.validateGQ req) gCtx
   when (opTy == G.OperationTypeSubscription) $ throw400 UnexpectedPayload
     "subscriptions are not supported over HTTP, use websockets instead"
-  resp <- runTx $ R.resolveSelSet userInfo gCtx opTy fields
+  let tx = R.resolveSelSet userInfo gCtx opTy fields
+  resp <- liftIO (runExceptT $ runTx tx) >>= liftEither
   return $ encodeGQResp $ GQSuccess resp
   where
     gCtx = getGCtx (userRole userInfo) gCtxMap
