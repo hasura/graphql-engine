@@ -68,7 +68,8 @@ mkMutFldExp :: MutFld -> S.SQLExp
 mkMutFldExp = \case
   MCount -> S.SEUnsafe "count(*)"
   MExp t -> S.SELit t
-  MRet retFlds -> S.SEFnApp "json_agg" [mkRetFldsExp retFlds] Nothing
+  MRet retFlds -> S.toEmptyArrWhenNull $
+                  S.SEFnApp "json_agg" [mkRetFldsExp retFlds] Nothing
 
 mkSelWith :: S.CTE -> MutFlds -> S.SelectWith
 mkSelWith cte mutFlds =
