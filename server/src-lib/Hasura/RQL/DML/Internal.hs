@@ -257,29 +257,29 @@ simplifyError txErr = do
       (,) <$> Q.edStatusCode pged <*> Q.edMessage pged
     extractError = \case
       -- restrict violation
-      ("23501", msg) ->
-        return (PostgresError, "Can not delete or update due to data being referred. " <> msg)
+      ("23001", msg) ->
+        return (ConstraintViolation, "Can not delete or update due to data being referred. " <> msg)
       -- not null violation
       ("23502", msg) ->
-        return (PostgresError, "Not-NULL violation. " <> msg)
+        return (ConstraintViolation, "Not-NULL violation. " <> msg)
       -- foreign key violation
       ("23503", msg) ->
-        return  (PostgresError, "Foreign key violation. " <> msg)
+        return  (ConstraintViolation, "Foreign key violation. " <> msg)
       -- unique violation
       ("23505", msg) ->
-        return  (PostgresError, "Uniqueness violation. " <> msg)
+        return  (ConstraintViolation, "Uniqueness violation. " <> msg)
       -- check violation
       ("23514", msg) ->
         return (PermissionError, "Check constraint violation. " <> msg)
       -- invalid text representation
-      ("22P02", msg) -> return (PostgresError, msg)
+      ("22P02", msg) -> return (DataException, msg)
+      -- invalid parameter value
+      ("22023", msg) -> return (DataException, msg)
       -- no unique constraint on the columns
       ("42P10", _)   ->
-        return (PostgresError, "there is no unique or exclusion constraint on target column(s)")
+        return (ConstraintError, "there is no unique or exclusion constraint on target column(s)")
       -- no constraint
-      ("42704", msg) -> return (PostgresError, msg)
-      -- invalid parameter value
-      ("22023", msg) -> return (PostgresError, msg)
+      ("42704", msg) -> return (ConstraintError, msg)
       _              -> Nothing
 
 -- validate limit and offset int values
