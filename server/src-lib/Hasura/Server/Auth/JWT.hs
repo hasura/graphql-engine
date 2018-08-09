@@ -46,15 +46,10 @@ processJwt
   -> HTTP.RequestHeaders
   -> m UserInfo
 processJwt key headers = do
-
   -- try to parse JWT token from Authorization header
-  let mAuthzHeader = find (\h -> fst h == CI.mk "Authorization") headers
-  (_, authzHeader) <- maybe missingAuthzHeader return mAuthzHeader
-  let tokenParts = BLC.words $ BL.fromStrict authzHeader
-  when (length tokenParts /= 2) malformedAuthzHeader
+  jwt <- parseAuthzHeader
 
   -- verify the JWT
-  let jwt = tokenParts !! 1
   claims <- liftJWTError invalidJWTError $ verifyJwt key jwt
 
   -- filter only x-hasura claims
@@ -74,6 +69,14 @@ processJwt key headers = do
   return $ UserInfo (RoleName role) metadata
 
   where
+    parseAuthzHeader = do
+      let mAuthzHeader = find (\h -> fst h == CI.mk "Authorization") headers
+      (_, authzHeader) <- maybe missingAuthzHeader return mAuthzHeader
+      let tokenParts = BLC.words $ BL.fromStrict authzHeader
+      case tokenParts of
+        ["Bearer", jwt] -> return jwt
+        _               -> malformedAuthzHeader
+
     liftJWTError :: (MonadError e' m) => (e -> e') -> ExceptT e m a -> m a
     liftJWTError ef action = do
       res <- runExceptT action
