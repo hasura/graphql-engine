@@ -309,6 +309,9 @@ mkSQLOpExp
   -> SQLExp -- result
 mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
 
+toEmptyArrWhenNull :: SQLExp -> SQLExp
+toEmptyArrWhenNull e = SEFnApp "coalesce" [e, SELit "[]"] Nothing
+
 getExtrAlias :: Extractor -> Maybe Alias
 getExtrAlias (Extractor _ ma) = ma
 
