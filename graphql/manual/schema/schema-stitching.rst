@@ -42,7 +42,7 @@ anonymous select permission.
 
 The GraphQL query in Hasura Data API for the above table would look like:
 
-.. code-block:: none
+.. code-block:: graphql
 
     query fetch_person {
       person {
@@ -58,7 +58,7 @@ On the other hand, we have a GraphQL server for fetching weather information tha
 
 The GraphQL schema for this weather API looks like:
 
-.. code-block:: none
+.. code-block:: graphql
 
     type CityWeather {
       temp: String
@@ -68,7 +68,7 @@ The GraphQL schema for this weather API looks like:
       applicable_date: String!
     }
 
-.. code-block:: none
+.. code-block:: graphql
 
     type Query {
       cityWeather(city_name: String! applicable_date: String): CityWeather
@@ -76,7 +76,7 @@ The GraphQL schema for this weather API looks like:
 
 The GraphQL query to fetch this weather information would look like:
 
-.. code-block:: none
+.. code-block:: graphql
 
     query {
       cityWeather (city_name: "Bangalore") {
@@ -93,7 +93,7 @@ Explore this API on `Apollo LaunchPad <https://launchpad.graphql.com/nxw8w0z9q7>
 Note the usage of ``city_name`` as an argument for ``cityWeather`` query. Using this we can extend our original
 Postgres's ``person`` schema to include weather information based on the ``city`` column of the person table.
 
-.. code-block:: none
+.. code-block:: graphql
 
     extend type person {
       city_weather: CityWeather,
@@ -108,7 +108,7 @@ The source code for the custom resolver can be found on github - `graphql-schema
 
 Now the merged schema can be queried as:
 
-.. code-block:: none
+.. code-block:: graphql
 
     query {
       person {

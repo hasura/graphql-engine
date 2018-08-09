@@ -7,7 +7,7 @@ nested object’s fields). You can even use multiple filters in the same ``where
 
 For example, fetch data for an author whose name is "Sidney":
 
-.. code-block:: none
+.. code-block:: graphql
    :emphasize-lines: 3
 
     query {
@@ -22,7 +22,7 @@ For example, fetch data for an author whose name is "Sidney":
 You can also use the nested ``articles`` object to filter rows from the ``author`` table. This query fetches a list of
 authors who have articles with rating greater than 4:
 
-.. code-block:: none
+.. code-block:: graphql
    :emphasize-lines: 3
 
     query {

@@ -10,7 +10,7 @@ in your database, a query and insert/update/delete mutations each are added as n
 types, ``query_root`` and ``mutation_root`` respectively. For e.g. the auto-generated query schema for an
 "author" table may look like this:
 
-.. code-block:: none
+.. code-block:: graphql
 
     author (
       where: author_bool_exp

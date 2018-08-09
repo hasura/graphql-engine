@@ -63,7 +63,7 @@ Now we have successfully tracked the tables, let's open API Explorer and make a 
 .. image:: ../../../img/graphql/manual/getting-started/GraphQLAPI.jpg
   :alt: Make a simple fetch call to query actors
 
-.. code-block:: none
+.. code-block:: graphql
 
   # Query                  |            # Response
   query {                  |            {

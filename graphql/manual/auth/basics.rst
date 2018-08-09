@@ -35,7 +35,7 @@ Insert some sample data into the table:
 Try out a query
 ---------------
 
-.. code-block:: none
+.. code-block:: graphql
 
   query {
     author {

@@ -28,7 +28,7 @@ For example, here is the schema for the ``article`` table in this interface:
 
 The following *object type* and *query/mutation* fields are generated for the ``article`` table we just created:
 
-.. code-block:: none
+.. code-block:: graphql
 
   # Object type
   type Article {

@@ -38,7 +38,7 @@ Try out a query
 
 Head to the ``GraphiQL`` tab in the console and try running the following query:
 
-.. code-block:: none
+.. code-block:: graphql
 
     query {
       profile {

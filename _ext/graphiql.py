@@ -16,7 +16,7 @@ class GraphiQLDirective(Directive):
 
    <div class="graphiql {{ if view_only }}view-only{{end}}">
    
-.. code-block:: none
+.. code-block:: graphql
 
    {{ query }}
    
