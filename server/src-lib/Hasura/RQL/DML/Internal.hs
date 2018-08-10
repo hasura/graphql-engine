@@ -224,7 +224,7 @@ dmlTxErrorHandler :: Q.PGTxErr -> QErr
 dmlTxErrorHandler p2Res =
   case err of
     Nothing  -> defaultTxErrorHandler p2Res
-    Just msg -> err400 PostgresError msg
+    Just (code, msg) -> err400 code msg
   where err = simplifyError p2Res
 
 -- | col_name as col_name
@@ -236,7 +236,7 @@ mkColExtrAl :: (IsIden a) => Maybe a -> (PGCol, PGColType) -> S.Extractor
 mkColExtrAl alM (c, pct) =
   if pct == PGGeometry || pct == PGGeography
   then S.mkAliasedExtrFromExp
-    ((S.SEFnApp "ST_AsGeoJSON" [S.mkSIdenExp c] Nothing) `S.SETyAnn` S.jsonType) alM
+    (S.SEFnApp "ST_AsGeoJSON" [S.mkSIdenExp c] Nothing `S.SETyAnn` S.jsonType) alM
   else S.mkAliasedExtr c alM
 
 -- validate headers
@@ -247,7 +247,7 @@ validateHeaders depHeaders = do
     unless (hdr `elem` map T.toLower headers) $
     throw400 NotFound $ hdr <<> " header is expected but not found"
 
-simplifyError :: Q.PGTxErr -> Maybe T.Text
+simplifyError :: Q.PGTxErr -> Maybe (Code, T.Text)
 simplifyError txErr = do
   stmtErr <- Q.getPGStmtErr txErr
   codeMsg <- getPGCodeMsg stmtErr
@@ -257,31 +257,30 @@ simplifyError txErr = do
       (,) <$> Q.edStatusCode pged <*> Q.edMessage pged
     extractError = \case
       -- restrict violation
-      ("23501", msg) ->
-        return $ "Can not delete or update due to data being referred. " <> msg
+      ("23001", msg) ->
+        return (ConstraintViolation, "Can not delete or update due to data being referred. " <> msg)
       -- not null violation
       ("23502", msg) ->
-        return $ "Not-NULL violation. " <> msg
+        return (ConstraintViolation, "Not-NULL violation. " <> msg)
       -- foreign key violation
       ("23503", msg) ->
-        return $ "Foreign key violation. " <> msg
+        return  (ConstraintViolation, "Foreign key violation. " <> msg)
       -- unique violation
       ("23505", msg) ->
-        return $ "Uniqueness violation. " <> msg
+        return  (ConstraintViolation, "Uniqueness violation. " <> msg)
       -- check violation
       ("23514", msg) ->
-        return $ "Check constraint violation. " <> msg
+        return (PermissionError, "Check constraint violation. " <> msg)
       -- invalid text representation
-      ("22P02", msg) -> return msg
+      ("22P02", msg) -> return (DataException, msg)
+      -- invalid parameter value
+      ("22023", msg) -> return (DataException, msg)
       -- no unique constraint on the columns
       ("42P10", _)   ->
-        return "there is no unique or exclusion constraint on target column(s)"
+        return (ConstraintError, "there is no unique or exclusion constraint on target column(s)")
       -- no constraint
-      ("42704", msg) -> return msg
-      -- invalid parameter value
-      ("22023", msg) -> return msg
+      ("42704", msg) -> return (ConstraintError, msg)
       _              -> Nothing
-
 
 -- validate limit and offset int values
 onlyPositiveInt :: MonadError QErr m => Int -> m ()
