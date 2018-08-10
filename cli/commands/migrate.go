@@ -53,7 +53,7 @@ func newMigrate(dir string, db *url.URL, accessKey string, logger *logrus.Logger
 	return t, nil
 }
 
-func executeMigration(cmd string, t *migrate.Migrate, stepOrVersion int64) error {
+func ExecuteMigration(cmd string, t *migrate.Migrate, stepOrVersion int64) error {
 	var err error
 
 	switch cmd {
