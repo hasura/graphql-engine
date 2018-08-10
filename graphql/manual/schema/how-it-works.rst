@@ -60,11 +60,14 @@ queries via GraphQL.
 Metadata
 --------
 
-All the metadata mentioned above is stored by Hasura GraphQL engine in 2 specific Postgres schemas in your database.
-Hasura GraphQL engine also does a lot of work to ensure that your metadata can be kept in sync with your actual
-Postgres schema.
+All the metadata required for the above is stored by Hasura GraphQL engine in specific Postgres schemas in your
+database. See :doc:`Hasura GraphQL engine internals <../engine-internals/index>` for details.
 
-#. You can run DDL queries through Hasura GraphQL engine to check if the Postgres schema change will cause some
+..
+  Hasura GraphQL engine also does a lot of work to ensure that your metadata can be kept in sync with your actual
+  Postgres schema.
+
+  #. You can run DDL queries through Hasura GraphQL engine to check if the Postgres schema change will cause some
    metadata to fail
-#. You can ask Hasura GraphQL engine to validate the current metadata it has against your Postgres schema and spit
+  #. You can ask Hasura GraphQL engine to validate the current metadata it has against your Postgres schema and spit
    out invalid metadata so that you can correct them
