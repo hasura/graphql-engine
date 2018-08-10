@@ -17,7 +17,7 @@ pathtools==0.1.2
 port-for==0.3.1
 Pygments==2.2.0
 pytz==2017.2
-PyYAML==3.12
+PyYAML==3.13
 requests==2.18.4
 requests-file==1.4.2
 six==1.11.0
