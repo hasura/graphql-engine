@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hasura
+    hasuraService: custom
+  name: hasura
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hasura
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: hasura
+    spec:
+      containers:
+      - image: hasura/graphql-engine:v1.0.0-alpha13
+        imagePullPolicy: IfNotPresent
+        name: hasura
+        command: ["graphql-engine"]
+        args: ["--database-url", "$(DATABASE_URL)", "serve", "--enable-console"]
+        env:
+        - name: DATABASE_URL
+          value: postgres://username:password@hostname:port/dbname
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}
