@@ -62,7 +62,7 @@ getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
 
   -- Fetch the column details
   colData <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
-            SELECT column_name, to_json(udt_name)
+            SELECT column_name, to_json(udt_name), is_nullable::boolean
               FROM information_schema.columns
              WHERE table_schema = $1
                AND table_name = $2
@@ -76,7 +76,8 @@ getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
                AND table_name = $2
                            |] (sn, tn) False
   return $ mkTableInfo qt isSystemDefined rawConstraints $
-    map (fmap Q.getAltJ) colData
+    flip map colData $ \(colName, Q.AltJ colTy, isNull)
+                       -> (colName, colTy, isNull)
 
 newtype TrackTable
   = TrackTable
@@ -142,7 +143,7 @@ processTableChanges ti tableDiff = do
     delFldFromCache (fromPGCol droppedCol) tn
 
   -- In the newly added columns check that there is no conflict with relationships
-  forM_ addedCols $ \colInfo@(PGColInfo colName _) ->
+  forM_ addedCols $ \colInfo@(PGColInfo colName _ _) ->
     case M.lookup (fromPGCol colName) $ tiFieldInfoMap ti of
       Just (FIRelationship _) ->
         throw400 AlreadyExists $ "cannot add column " <> colName
@@ -152,7 +153,7 @@ processTableChanges ti tableDiff = do
 
   sc <- askSchemaCache
   -- for rest of the columns
-  forM_ alteredCols $ \(PGColInfo oColName oColTy, nci@(PGColInfo nColName nColTy)) ->
+  forM_ alteredCols $ \(PGColInfo oColName oColTy _, nci@(PGColInfo nColName nColTy _)) ->
     if | oColName /= nColName ->
            throw400 NotSupported $ "column renames are not yet supported : " <>
              tn <<> "." <>> oColName
