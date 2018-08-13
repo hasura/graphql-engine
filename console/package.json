@@ -1,5 +1,5 @@
 {
-  "name": "hasura-console",
+  "name": "graphql-engine-console",
   "description": "Console for Hasura GraphQL Engine",
   "author": "Hasura (https://github.com/hasura/graphql-engine)",
   "license": "AGPLv3",
