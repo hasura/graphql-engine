@@ -28,18 +28,36 @@ const setup = () => {
   });
 };
 
+const testPrefix = 'create-table';
+
+const makeAssertion = (assertion, specFunc) => {
+  it(`${testPrefix} : ${assertion}`, specFunc);
+};
+
 export const runPermissionsTests = () => {
   describe('Permissions', () => {
-    it('Create a table', passPTCreateTable);
-    it('Create a view', passPVCreateView);
-    it('Check permission route', passPTCheckRoute);
-    it('Table No-check permissions work as expected', passPTNoChecks);
-    it('Table Custom-check permissions work as expected', passPTCustomChecks);
-    it('Table Permissions removal works as expected', passPTRemovePerms);
-    it('View permissions work as expected', passPVPermissions);
-    it('View Permissions removal works as expected', passPVRemovePerms);
-    it('Delete off the views', passPVDeleteView);
-    it('Delete off the test table', passPTDeleteTable);
+    makeAssertion('Create a table', passPTCreateTable);
+    makeAssertion('Create a view', passPVCreateView);
+    makeAssertion('Check permission route', passPTCheckRoute);
+    makeAssertion(
+      'Table No-check permissions work as expected',
+      passPTNoChecks
+    );
+    makeAssertion(
+      'Table Custom-check permissions work as expected',
+      passPTCustomChecks
+    );
+    makeAssertion(
+      'Table Permissions removal works as expected',
+      passPTRemovePerms
+    );
+    makeAssertion('View permissions work as expected', passPVPermissions);
+    makeAssertion(
+      'View Permissions removal works as expected',
+      passPVRemovePerms
+    );
+    makeAssertion('Delete off the views', passPVDeleteView);
+    makeAssertion('Delete off the test table', passPTDeleteTable);
   });
 };
 

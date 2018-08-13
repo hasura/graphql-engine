@@ -15,7 +15,7 @@ const setup = () => {
 
 export const run404Test = () => {
   describe('404', () => {
-    it('Open random page', () => {
+    it('404-test : Open random page', () => {
       cy.visit('/someRandomPage');
       cy.get('h1').contains('404');
     });

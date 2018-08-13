@@ -20,7 +20,7 @@ const setup = () => {
 
 export const runMigrationModeTests = () => {
   describe('Migration mode', () => {
-    it('Check the toggle button', checkToggleButton);
+    it('migration-mode : Check the toggle button', checkToggleButton);
   });
 };
 
