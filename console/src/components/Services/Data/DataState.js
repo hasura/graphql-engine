@@ -117,8 +117,6 @@ const defaultState = {
   accessKeyError: false,
   dataHeaders: {
     'Content-Type': 'application/json',
-    'X-Hasura-Role': 'admin',
-    'X-Hasura-User-Id': '1',
   },
 };
 
