@@ -22,7 +22,7 @@
     "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\" ",
     "precommit": "lint-staged",
     "cypress": "cypress open",
-    "test": "find ./cypress/integration/data/* -name 'test.js' | xargs -n1 -P2 node_modules/.bin/cypress run --spec"
+    "test": "sleep 60 && find ./cypress/integration/data/* -name 'test.js' | xargs -n1 -P2 node_modules/.bin/cypress run --spec"
   },
   "lint-staged": {
     "*.js": [
