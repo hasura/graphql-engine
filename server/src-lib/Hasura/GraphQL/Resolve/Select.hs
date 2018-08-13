@@ -42,11 +42,13 @@ fromSelSet fldTy flds =
       _ -> do
         fldInfo <- getFldInfo fldTy fldName
         case fldInfo of
-          Left (PGColInfo pgCol colTy _) -> return (rqlFldName, RS.FCol (pgCol, colTy))
+          Left (PGColInfo pgCol colTy _) -> do
+            let colAlias = S.Alias $ Iden $ getFieldNameTxt rqlFldName
+            return (rqlFldName, RS.FCol (pgCol, colTy, Just colAlias))
           Right (relInfo, tableFilter, tableLimit, _) -> do
             let relTN = riRTable relInfo
             relSelData <- fromField relTN tableFilter tableLimit fld
-            let annRel = RS.AnnRel (riName relInfo) (riType relInfo)
+            let annRel = RS.AnnRel (RelName $ getFieldNameTxt rqlFldName) (riType relInfo)
                          (riMapping relInfo) relSelData
             return (rqlFldName, RS.FRel annRel)
 
