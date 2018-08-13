@@ -179,3 +179,22 @@ LANGUAGE plpgsql AS $$
       END LOOP;
     END;
 $$;
+
+CREATE TABLE hdb_catalog.event_sources
+(
+  id SERIAL PRIMARY KEY,
+  type TEXT NOT NULL,
+  schema_name TEXT,
+  table_name TEXT,
+  query TEXT,
+  webhook TEXT NOT NULL
+);
+
+CREATE TABLE hdb_catalog.event_source_log
+(
+  id BIGSERIAL PRIMARY KEY,
+  payload JSONB NOT NULL,
+  webhook TEXT NOT NULL,
+  processed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW()
+);

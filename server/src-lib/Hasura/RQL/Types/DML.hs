@@ -36,6 +36,10 @@ module Hasura.RQL.Types.DML
 
        , CountQuery(..)
 
+       , SubscribeTableQuery(..)
+       , SubscribeOpSpec(..)
+       , SubscribeColumns(..)
+
        , QueryT(..)
 
        ) where
@@ -322,6 +326,66 @@ data CountQuery
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CountQuery)
+
+data SubscribeTableQuery
+  = SubscribeTableQuery
+  { stqTable   :: !QualifiedTable
+  , stqInsert  :: !(Maybe SubscribeOpSpec)
+  , stqUpdate  :: !(Maybe SubscribeOpSpec)
+  , stqDelete  :: !(Maybe SubscribeOpSpec)
+  , stqColumns :: !(Maybe SubscribeColumns)
+  , stgWebhook :: !T.Text
+  } deriving (Show, Eq, Lift)
+
+data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift)
+
+instance FromJSON SubscribeColumns where
+  parseJSON (String s) = case s of
+                          "*" -> return SubCStar
+                          _   -> fail "only * or [] allowed"
+  parseJSON v@(Array _) = SubCArray <$> parseJSON v
+  parseJSON _ = fail "unexpected columns"
+
+instance ToJSON SubscribeColumns where
+  toJSON SubCStar         = "*"
+  toJSON (SubCArray cols) = toJSON cols
+
+data SubscribeOpSpec
+  = SubscribeOpSpec
+  { sosColumns :: !SubscribeColumns
+  } deriving (Show, Eq, Lift)
+
+instance FromJSON SubscribeTableQuery where
+  parseJSON (Object o) = do
+    table   <- o .: "table"
+    insert  <- o .:? "insert"
+    update  <- o .:? "update"
+    delete  <- o .:? "delete"
+    columns <- o .:? "columns"
+    webhook <- o .: "webhook"
+    case insert <|> update <|> delete of
+      Just _ -> case columns of
+        Just _ -> fail "cannot have columns at top level if operation spec(s) given"
+        Nothing -> return ()
+      Nothing -> case columns of
+        Just _ -> return ()
+        Nothing -> fail "must provide either columns at top level or operation spec(s)"
+    return $ SubscribeTableQuery table insert update delete columns webhook
+  parseJSON _ = fail "expecting an object"
+
+
+instance ToJSON SubscribeTableQuery where
+  toJSON (SubscribeTableQuery table insert update delete columns webhook) =
+    object [ "table" .= table
+           , "insert" .= insert
+           , "update" .= update
+           , "delete" .= delete
+           , "columns" .= columns
+           , "webhook" .= webhook
+           ]
+
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
+-- $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeTableQuery)
 
 data QueryT
   = QTInsert !InsertQuery

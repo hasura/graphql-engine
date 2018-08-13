@@ -98,6 +98,7 @@ library
 
                      -- Templating
                      , mustache
+                     , ginger
 
                      --
                      , data-has
@@ -147,6 +148,7 @@ library
                      , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Utils
+                     , Hasura.RQL.DDL.SubscribeTable
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Explain
                      , Hasura.RQL.DML.Internal
