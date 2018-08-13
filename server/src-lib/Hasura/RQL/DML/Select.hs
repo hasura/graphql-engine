@@ -270,7 +270,7 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
     indexedForM (sqColumns selQ) $ \case
     (ECSimple pgCol) -> do
       colTy <- convExtSimple fieldInfoMap selPermInfo pgCol
-      return (fromPGCol pgCol, FCol (pgCol, colTy, Nothing))
+      return (fromPGCol pgCol, FCol (pgCol, colTy, Just $ S.Alias $ toIden pgCol))
     (ECRel relName mAlias relSelQ) -> do
       annRel <- convExtRel fieldInfoMap relName mAlias relSelQ prepValBuilder
       return (fromRel $ fromMaybe relName mAlias, FRel annRel)
