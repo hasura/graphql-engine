@@ -80,7 +80,7 @@ parseColExp nt n val = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
     Left  pgColInfo          -> RA.AVCol pgColInfo <$> parseOpExps val
-    Right (relInfo, permExp) -> do
+    Right (relInfo, permExp, _, _) -> do
       relBoolExp <- parseBoolExp val
       return $ RA.AVRel relInfo relBoolExp permExp
 

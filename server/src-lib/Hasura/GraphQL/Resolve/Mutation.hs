@@ -46,7 +46,7 @@ convertReturning ty selSet =
     case _fName fld of
       "__typename" -> return $ RR.RExp $ G.unName $ G.unNamedType ty
       _ -> do
-        PGColInfo col colTy <- getPGColInfo ty $ _fName fld
+        PGColInfo col colTy _ <- getPGColInfo ty $ _fName fld
         return $ RR.RCol (col, colTy)
 
 convertMutResp
@@ -65,7 +65,8 @@ convertRowObj
   -> m [(PGCol, S.SQLExp)]
 convertRowObj val =
   flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
-    prepExp <- asPGColVal v >>= prepare
+    prepExpM <- asPGColValM v >>= mapM prepare
+    let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (PGCol $ G.unName k, prepExp)
 
 mkConflictClause

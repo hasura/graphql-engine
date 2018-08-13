@@ -9,7 +9,6 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -27,15 +26,17 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	initCmd := &cobra.Command{
 		Use:   "init",
-		Short: "Initialize directory for Hasura GraphQL Engine",
-		Long:  "Create directories and files required for Hasura GraphQL Engine",
-		Example: `  # Create a directory with installation manifests:
-  hasura init --directory <my-directory>
+		Short: "Initialize directory for Hasura GraphQL Engine migrations",
+		Long:  "Create directories and files required for enabling migrations on Hasura GraphQL Engine",
+		Example: `  # Create a directory to store migrations
+  hasura init
 
-  # Create a directory with an endpoint configured:
-  hasura --directory <my-directory> --endpoint <graphql-engine-endpoint>
+  # Now, edit <my-directory>/config.yaml to add endpoint and access key
 
-  # See https://docs.hasura.io/0.15/graphql/manual/getting-started for more details`,
+  # Create a directory with endpoint and access key configured:
+  hasura init --directory <my-project> --endpoint https://my-graphql-engine.com --access-key secretaccesskey
+
+  # See https://docs.hasura.io/1.0/graphql/manual/migrations/index.html for more details`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return ec.Prepare()
@@ -83,59 +84,23 @@ func (o *initOptions) run() error {
 	}
 
 	var infoMsg string
-	// If endpoint is not provided, download installation manifests
-	if len(o.Endpoint) == 0 {
-		o.EC.Spin("Downloading install manifests... ")
-		defer o.EC.Spinner.Stop()
 
-		src, err := o.EC.InstallManifestsRepo.Download()
-		if err != nil {
-			return errors.Wrap(err, "getting manifests failed")
-		}
-		defer os.RemoveAll(src)
-		o.EC.Spinner.Stop()
-		o.EC.Logger.Info("Manifests downloaded")
-
-		dst := filepath.Join(o.EC.ExecutionDirectory, MANIFESTS_DIR)
-
-		if _, err := os.Stat(dst); err == nil {
-			return errors.Errorf("directory '%s' already exist", dst)
-		}
-
-		o.EC.Spin("Creating manifests in current directory... ")
-		defer o.EC.Spinner.Stop()
-		err = os.MkdirAll(filepath.Dir(dst), os.ModePerm)
-		if err != nil {
-			return errors.Wrap(err, "error creating setup directories")
-		}
-
-		// copy manifests to manifests directory (dst)
-		err = util.CopyDir(src, dst)
-		if err != nil {
-			return errors.Wrap(err, "error copying files")
-		}
-		o.EC.Spinner.Stop()
-		infoMsg = fmt.Sprintf("manifests created at [%s]", dst)
-
-	} else {
-
-		// if endpoint is set, just create the execution directory
-		if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
-			return errors.Errorf("directory '%s' already exist", o.EC.ExecutionDirectory)
-		}
-		err := os.MkdirAll(o.EC.ExecutionDirectory, os.ModePerm)
-		if err != nil {
-			return errors.Wrap(err, "error creating setup directories")
-		}
-		infoMsg = fmt.Sprintf(`directory created. execute the following commands to continue:
+	// create the execution directory
+	if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
+		return errors.Errorf("directory '%s' already exist", o.EC.ExecutionDirectory)
+	}
+	err := os.MkdirAll(o.EC.ExecutionDirectory, os.ModePerm)
+	if err != nil {
+		return errors.Wrap(err, "error creating setup directories")
+	}
+	infoMsg = fmt.Sprintf(`directory created. execute the following commands to continue:
 
   cd %s
-  %s console
-`, o.EC.ExecutionDirectory, o.EC.CMDName)
-	}
+  hasura console
+`, o.EC.ExecutionDirectory)
 
 	// create other required files, like config.yaml, migrations directory
-	err := o.createFiles()
+	err = o.createFiles()
 	if err != nil {
 		return err
 	}

@@ -1,11 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
-
 import PageContainer from './PageContainer/PageContainer';
-
-import { appPrefix } from './push';
 import globals from '../../../Globals';
+
+const appPrefix = '/data';
 
 const DataHeader = ({
   schema,

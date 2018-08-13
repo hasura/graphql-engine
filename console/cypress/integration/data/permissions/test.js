@@ -32,7 +32,7 @@ export const runPermissionsTests = () => {
   describe('Permissions', () => {
     it('Create a table', passPTCreateTable);
     it('Create a view', passPVCreateView);
-    it('Check permissiosn route', passPTCheckRoute);
+    it('Check permission route', passPTCheckRoute);
     it('Table No-check permissions work as expected', passPTNoChecks);
     it('Table Custom-check permissions work as expected', passPTCustomChecks);
     it('Table Permissions removal works as expected', passPTRemovePerms);

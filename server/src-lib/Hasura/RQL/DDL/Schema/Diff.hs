@@ -18,23 +18,24 @@ module Hasura.RQL.DDL.Schema.Diff
   , getSchemaChangeDeps
   ) where
 
+import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.Prelude
 
-import qualified Database.PG.Query    as Q
+import qualified Database.PG.Query   as Q
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Data.HashMap.Strict  as M
-import qualified Data.HashSet         as HS
+import qualified Data.HashMap.Strict as M
+import qualified Data.HashSet        as HS
 
 data PGColMeta
   = PGColMeta
   { pcmColumnName      :: !PGCol
   , pcmOrdinalPosition :: !Int
   , pcmDataType        :: !PGColType
+  , pcmIsNullable      :: !Bool
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''PGColMeta)
@@ -80,7 +81,7 @@ fetchTableMeta = do
         (SELECT
              table_schema,
              table_name,
-             json_agg((SELECT r FROM (SELECT column_name, udt_name AS data_type, ordinal_position) r)) as columns
+             json_agg((SELECT r FROM (SELECT column_name, udt_name AS data_type, ordinal_position, is_nullable::boolean) r)) as columns
          FROM
              information_schema.columns
          GROUP BY
@@ -141,8 +142,8 @@ getTableDiff oldtm newtm =
 
     existingCols = getOverlap pcmOrdinalPosition oldCols newCols
 
-    pcmToPci (PGColMeta colName _ colType)
-      = PGColInfo colName colType
+    pcmToPci (PGColMeta colName _ colType isNullable)
+      = PGColInfo colName colType isNullable
 
     alteredCols =
       flip map (filter (uncurry (/=)) existingCols) $ \(pcmo, pcmn) ->

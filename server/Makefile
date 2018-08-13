@@ -2,7 +2,8 @@ project  := graphql-engine
 registry := hasura
 version  := $(shell ../scripts/get-version.sh)
 
-stack_resolver := lts-11.15
+# TODO: needs to be replaced with something like yq
+stack_resolver := $(shell grep '^resolver:' stack.yaml | awk '{print $$2;}')
 packager_ver := 1.2
 project_dir := $(shell pwd)
 build_dir := $(project_dir)/$(shell stack path --dist-dir)/build
