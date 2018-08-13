@@ -201,6 +201,15 @@ class Permissions extends Component {
           <td key={-1}>
             <i
               onClick={dispatchDeletePermission}
+              className={
+                styles.permissionDelete +
+                ' fa fa-pencil ' +
+                styles.add_mar_small
+              }
+              aria-hidden="true"
+            />
+            <i
+              onClick={dispatchDeletePermission}
               className={styles.permissionDelete + ' fa fa-trash'}
               aria-hidden="true"
             />
@@ -785,7 +794,7 @@ class Permissions extends Component {
       );
 
       const removeAccessButton = getButton(
-        'Remove all access',
+        'Remove',
         'btn-danger',
         dispatchRemoveAccess,
         disableRemoveAccess
@@ -824,6 +833,16 @@ class Permissions extends Component {
 
       if (permsState.role && permsState.query) {
         _editSection = getEditPermissions(tableSchema, queryTypes, permsState);
+      }
+
+      return _editSection;
+    };
+
+    const getEditRoleSection = (tableSchema, permsState) => {
+      let _editSection = '';
+
+      if (permsState.role && permsState.query) {
+        _editSection = getEditPermissions(tableSchema, permsState);
       }
 
       return _editSection;
