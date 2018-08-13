@@ -22,9 +22,9 @@ spec:
         imagePullPolicy: IfNotPresent
         name: hasura
         command: ["graphql-engine"]
-        args: ["--database-url", "$(DATABASE_URL)", "serve", "--enable-console"]
+        args: ["serve", "--enable-console"]
         env:
-        - name: DATABASE_URL
+        - name: HASURA_GRAPHQL_DATABASE_URL
           value: postgres://username:password@hostname:port/dbname
         ports:
         - containerPort: 8080

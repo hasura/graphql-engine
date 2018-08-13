@@ -1,11 +1,11 @@
 # Deploy Hasura GraphQL engine on Kubernetes
 
-### Step 1: Edit deployment.yaml and set the right DATABSE_URL
+### Step 1: Edit deployment.yaml and set the right database url
 
 ```yaml
 ...
         env:
-        - name: DATABASE_URL
+        - name: HASURA_GRAPHQL_DATABASE_URL
           value: postgres://username:password@hostname:port/dbname
 ...
 ```
