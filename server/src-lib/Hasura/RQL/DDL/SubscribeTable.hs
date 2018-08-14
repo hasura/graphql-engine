@@ -10,15 +10,16 @@ module Hasura.RQL.DDL.SubscribeTable where
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import qualified Data.HashMap.Strict as HashMap
-import qualified Data.List           as L
-import qualified Data.Text           as T
-import qualified Data.Text.Encoding  as TE
-import qualified Database.PG.Query   as Q
+import qualified Data.HashMap.Strict   as HashMap
+import qualified Data.List             as L
+import qualified Data.Text             as T
+import qualified Data.Text.Encoding    as TE
+import qualified Database.PG.Query     as Q
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Text.Ginger
+import qualified Text.Mustache         as M
+import qualified Text.Mustache.Compile as M
 
 data Ops = INSERT | UPDATE | DELETE deriving (Show)
 
@@ -29,8 +30,11 @@ data TriggerDefinition
   { tdInsert :: !(Maybe SubscribeOpSpec)
   , tdUpdate :: !(Maybe SubscribeOpSpec)
   , tdDelete :: !(Maybe SubscribeOpSpec)
-   }
+  }
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerDefinition)
+
+triggerTmplt :: M.Template
+triggerTmplt = $(M.embedSingleTemplate "src-rsr/trigger.sql")
 
 getTriggerSql:: Ops -> TriggerName -> SchemaName -> TableName -> Maybe SubscribeOpSpec -> Maybe T.Text
 getTriggerSql op name sn tn spec =
@@ -41,7 +45,7 @@ getTriggerSql op name sn tn spec =
       opCtx = maybe HashMap.empty (createOpCtx op) spec
       context = HashMap.union globalCtx opCtx
   in
-      spec >> (Just $ renderSql context)
+      spec >> (Just $ renderSql triggerTmplt context)
   where
     createOpCtx :: Ops -> SubscribeOpSpec -> HashMap.HashMap T.Text T.Text
     createOpCtx op1 (SubscribeOpSpec columns) = HashMap.fromList [
@@ -57,38 +61,8 @@ getTriggerSql op name sn tn spec =
                                    where
                                      listcols :: [PGCol] -> String
                                      listcols pgcols = L.intercalate ", " $ fmap (T.unpack.getPGColTxt) pgcols
-    renderSql :: HashMap.HashMap T.Text T.Text -> T.Text
-    renderSql context = let triggerTemplate = "CREATE OR REPLACE function hdb_catalog.notify_skor_{{NAME}}_{{OPERATION}}() RETURNS trigger \
-                                  \LANGUAGE plpgsql \
-                                  \AS $$ \
-                                  \DECLARE \
-                                  \payload json; \
-                                  \BEGIN \
-                                  \raise notice 'entered trigger'; \
-                                  \payload := json_build_object( \
-                                  \                     'table', TG_TABLE_NAME, \
-                                  \                     'schema', TG_TABLE_SCHEMA, \
-                                  \                     'op', TG_OP, \
-                                  \                     'data', {{DATA_EXPRESSION}} \
-                                  \                     )::text; \
-                                  \raise notice '%', payload; \
-                                  \INSERT INTO \
-                                  \hdb_catalog.events_log (payload, webhook) \
-                                  \SELECT payload, e.webhook \
-                                  \FROM hdb_catalog.event_triggers e \
-                                  \WHERE e.name='{{NAME}}'; \
-                                  \raise notice 'finished trigger'; \
-                                  \RETURN NULL; \
-                                  \END; \
-                                  \$$; \
-                                  \DROP TRIGGER IF EXISTS notify_skor_{{NAME}}_{{OPERATION}} ON {{SCHEMA_NAME}}.{{TABLE_NAME}}; \
-                                  \CREATE TRIGGER notify_skor_{{NAME}}_{{OPERATION}} AFTER {{OPERATION}} ON {{SCHEMA_NAME}}.{{TABLE_NAME}} FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.notify_skor_{{NAME}}_{{OPERATION}}();"
-
-                            template = either (error . show) id . runIdentity $ parseGinger nullResolver Nothing triggerTemplate
-                        in easyRender context template
-                           where
-                             nullResolver :: IncludeResolver Identity
-                             nullResolver = const $ return Nothing
+    renderSql :: M.Template -> HashMap.HashMap T.Text T.Text -> T.Text
+    renderSql = M.substitute
 
 subscribeTable :: SubscribeTableQuery
                -> Q.TxE QErr RespBody
