@@ -180,17 +180,19 @@ LANGUAGE plpgsql AS $$
     END;
 $$;
 
-CREATE TABLE hdb_catalog.event_sources
+CREATE TABLE hdb_catalog.event_triggers
 (
-  id SERIAL PRIMARY KEY,
+  id SERIAL UNIQUE,
+  name VARCHAR(63) PRIMARY KEY,
   type TEXT NOT NULL,
   schema_name TEXT,
   table_name TEXT,
+  definition JSON,
   query TEXT,
   webhook TEXT NOT NULL
 );
 
-CREATE TABLE hdb_catalog.event_source_log
+CREATE TABLE hdb_catalog.events_log
 (
   id BIGSERIAL PRIMARY KEY,
   payload JSONB NOT NULL,

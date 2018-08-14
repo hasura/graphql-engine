@@ -2,61 +2,53 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE QuasiQuotes         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE TypeFamilies        #-}
 
 module Hasura.RQL.DDL.SubscribeTable where
 
-import qualified Database.PG.Query   as Q
-
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.List           as L
 import qualified Data.Text           as T
 import qualified Data.Text.Encoding  as TE
+import qualified Database.PG.Query   as Q
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Text.Ginger
 
-data Ops = INSERT | UPDATE | DELETE | ALL
+data Ops = INSERT | UPDATE | DELETE deriving (Show)
 
-getTriggerSql:: Ops -> SchemaName -> TableName -> Maybe SubscribeOpSpec -> Maybe T.Text
-getTriggerSql op sn tn spec =
+type TriggerName = T.Text
+
+data TriggerDefinition
+  = TriggerDefinition
+  { tdInsert :: !(Maybe SubscribeOpSpec)
+  , tdUpdate :: !(Maybe SubscribeOpSpec)
+  , tdDelete :: !(Maybe SubscribeOpSpec)
+   }
+$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerDefinition)
+
+getTriggerSql:: Ops -> TriggerName -> SchemaName -> TableName -> Maybe SubscribeOpSpec -> Maybe T.Text
+getTriggerSql op name sn tn spec =
   let globalCtx =  HashMap.fromList [
-                    (T.pack "SCHEMA_NAME", getSchemaTxt sn)
+                    (T.pack "NAME", name)
+                  , (T.pack "SCHEMA_NAME", getSchemaTxt sn)
                   , (T.pack "TABLE_NAME", getTableTxt tn)]
+      opCtx = maybe HashMap.empty (createOpCtx op) spec
+      context = HashMap.union globalCtx opCtx
   in
-  case op of
-  INSERT->
-    let opCtx = maybe HashMap.empty (\(SubscribeOpSpec columns) ->
-                                       HashMap.fromList [
-                                        (T.pack "OPERATION", "INSERT")
-                                      , (T.pack "DATA_EXPRESSION", renderDataExp INSERT columns )]
-                                    ) spec
-        context = HashMap.union globalCtx opCtx
-    in
       spec >> (Just $ renderSql context)
-  UPDATE->
-    let opCtx = maybe HashMap.empty (\(SubscribeOpSpec columns) ->
-                                       HashMap.fromList [
-                                        (T.pack "OPERATION", "UPDATE")
-                                      , (T.pack "DATA_EXPRESSION", renderDataExp UPDATE columns )]
-                                    ) spec
-        context = HashMap.union globalCtx opCtx
-    in
-      spec >> (Just $ renderSql context)
-  DELETE->
-    let opCtx = maybe HashMap.empty (\(SubscribeOpSpec columns) ->
-                                       HashMap.fromList [
-                                        (T.pack "OPERATION", "DELETE")
-                                      , (T.pack "DATA_EXPRESSION", renderDataExp DELETE columns )]
-                                    ) spec
-        context = HashMap.union globalCtx opCtx
-    in
-      spec >> (Just $ renderSql context)
-  ALL -> getTriggerSql INSERT sn tn spec <> getTriggerSql UPDATE sn tn spec <> getTriggerSql DELETE sn tn spec
   where
+    createOpCtx :: Ops -> SubscribeOpSpec -> HashMap.HashMap T.Text T.Text
+    createOpCtx op1 (SubscribeOpSpec columns) = HashMap.fromList [
+                                        (T.pack "OPERATION", T.pack $ show op1)
+                                      , (T.pack "DATA_EXPRESSION", renderDataExp INSERT columns )]
     renderDataExp :: Ops -> SubscribeColumns -> T.Text
-    renderDataExp op' scs = let recVar = case op' of
+    renderDataExp op2 scs = let recVar = case op2 of
                                  DELETE -> "OLD"
                                  _      -> "NEW"
                             in case scs of
@@ -64,9 +56,9 @@ getTriggerSql op sn tn spec =
                                  SubCArray cols -> T.pack $ "row_to_json((select r from (select "++ listcols cols ++ ") as r))"
                                    where
                                      listcols :: [PGCol] -> String
-                                     listcols pgcols = L.intercalate ", " $ fmap (\c -> T.unpack $ getPGColTxt c) pgcols
+                                     listcols pgcols = L.intercalate ", " $ fmap (T.unpack.getPGColTxt) pgcols
     renderSql :: HashMap.HashMap T.Text T.Text -> T.Text
-    renderSql context = let triggerTemplate = "CREATE OR REPLACE function hdb_catalog.notify_skor_{{SCHEMA_NAME}}_{{TABLE_NAME}}_{{OPERATION}}() RETURNS trigger \
+    renderSql context = let triggerTemplate = "CREATE OR REPLACE function hdb_catalog.notify_skor_{{NAME}}_{{OPERATION}}() RETURNS trigger \
                                   \LANGUAGE plpgsql \
                                   \AS $$ \
                                   \DECLARE \
@@ -81,16 +73,16 @@ getTriggerSql op sn tn spec =
                                   \                     )::text; \
                                   \raise notice '%', payload; \
                                   \INSERT INTO \
-                                  \hdb_catalog.event_source_log (payload, webhook) \
+                                  \hdb_catalog.events_log (payload, webhook) \
                                   \SELECT payload, e.webhook \
-                                  \FROM hdb_catalog.event_sources e \
-                                  \WHERE e.schema_name='{{SCHEMA_NAME}}' AND e.table_name='{{TABLE_NAME}}'; \
+                                  \FROM hdb_catalog.event_triggers e \
+                                  \WHERE e.name='{{NAME}}'; \
                                   \raise notice 'finished trigger'; \
                                   \RETURN NULL; \
                                   \END; \
                                   \$$; \
-                                  \DROP TRIGGER IF EXISTS notify_skor_{{SCHEMA_NAME}}_{{TABLE_NAME}}_{{OPERATION}} ON {{SCHEMA_NAME}}.{{TABLE_NAME}}; \
-                                  \CREATE TRIGGER notify_skor_{{SCHEMA_NAME}}_{{TABLE_NAME}}_{{OPERATION}} AFTER {{OPERATION}} ON {{SCHEMA_NAME}}.{{TABLE_NAME}} FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.notify_skor_{{SCHEMA_NAME}}_{{TABLE_NAME}}_{{OPERATION}}();"
+                                  \DROP TRIGGER IF EXISTS notify_skor_{{NAME}}_{{OPERATION}} ON {{SCHEMA_NAME}}.{{TABLE_NAME}}; \
+                                  \CREATE TRIGGER notify_skor_{{NAME}}_{{OPERATION}} AFTER {{OPERATION}} ON {{SCHEMA_NAME}}.{{TABLE_NAME}} FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.notify_skor_{{NAME}}_{{OPERATION}}();"
 
                             template = either (error . show) id . runIdentity $ parseGinger nullResolver Nothing triggerTemplate
                         in easyRender context template
@@ -100,16 +92,15 @@ getTriggerSql op sn tn spec =
 
 subscribeTable :: SubscribeTableQuery
                -> Q.TxE QErr RespBody
-subscribeTable (SubscribeTableQuery (QualifiedTable sn tn) insert update delete columns webhook) = do
-
+subscribeTable (SubscribeTableQuery name (QualifiedTable sn tn) insert update delete webhook) = do
+  let def = TriggerDefinition insert update delete
   Q.unitQE defaultTxErrorHandler [Q.sql|
-                                  INSERT into hdb_catalog.event_sources (type, schema_name, table_name, webhook)
-                                  VALUES ('table', $1, $2, $3)
-                                  |] (sn, tn, webhook) True
-  let triggerSQL = getTriggerSql INSERT sn tn insert
-                   <> getTriggerSql UPDATE sn tn update
-                   <> getTriggerSql DELETE sn tn delete
-                   <> getTriggerSql ALL sn tn (SubscribeOpSpec <$> columns)
+                                  INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook)
+                                  VALUES ($1, 'table', $2, $3, $4, $5)
+                                  |] (name, sn, tn, Q.AltJ $ toJSON def, webhook) True
+  let triggerSQL = getTriggerSql INSERT name sn tn insert
+                   <> getTriggerSql UPDATE name sn tn update
+                   <> getTriggerSql DELETE name sn tn delete
 
   tx triggerSQL
   return successMsg

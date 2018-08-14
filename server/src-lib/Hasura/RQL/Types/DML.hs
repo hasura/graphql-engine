@@ -329,11 +329,11 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CountQuery)
 
 data SubscribeTableQuery
   = SubscribeTableQuery
-  { stqTable   :: !QualifiedTable
+  { stqName    :: !T.Text
+  , stqTable   :: !QualifiedTable
   , stqInsert  :: !(Maybe SubscribeOpSpec)
   , stqUpdate  :: !(Maybe SubscribeOpSpec)
   , stqDelete  :: !(Maybe SubscribeOpSpec)
-  , stqColumns :: !(Maybe SubscribeColumns)
   , stgWebhook :: !T.Text
   } deriving (Show, Eq, Lift)
 
@@ -357,30 +357,26 @@ data SubscribeOpSpec
 
 instance FromJSON SubscribeTableQuery where
   parseJSON (Object o) = do
+    name    <- o .: "name"
     table   <- o .: "table"
     insert  <- o .:? "insert"
     update  <- o .:? "update"
     delete  <- o .:? "delete"
-    columns <- o .:? "columns"
     webhook <- o .: "webhook"
     case insert <|> update <|> delete of
-      Just _ -> case columns of
-        Just _ -> fail "cannot have columns at top level if operation spec(s) given"
-        Nothing -> return ()
-      Nothing -> case columns of
-        Just _ -> return ()
-        Nothing -> fail "must provide either columns at top level or operation spec(s)"
-    return $ SubscribeTableQuery table insert update delete columns webhook
+      Just _  -> return ()
+      Nothing -> fail "must provide operation spec(s)"
+    return $ SubscribeTableQuery name table insert update delete webhook
   parseJSON _ = fail "expecting an object"
 
 
 instance ToJSON SubscribeTableQuery where
-  toJSON (SubscribeTableQuery table insert update delete columns webhook) =
-    object [ "table" .= table
+  toJSON (SubscribeTableQuery name table insert update delete webhook) =
+    object [ "name" .= name
+           , "table" .= table
            , "insert" .= insert
            , "update" .= update
            , "delete" .= delete
-           , "columns" .= columns
            , "webhook" .= webhook
            ]
 
