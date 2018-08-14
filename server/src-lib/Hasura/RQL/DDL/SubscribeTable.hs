@@ -11,7 +11,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import qualified Data.HashMap.Strict   as HashMap
-import qualified Data.List             as L
 import qualified Data.Text             as T
 import qualified Data.Text.Encoding    as TE
 import qualified Database.PG.Query     as Q
@@ -56,11 +55,14 @@ getTriggerSql op name sn tn spec =
                                  DELETE -> "OLD"
                                  _      -> "NEW"
                             in case scs of
-                                 SubCStar -> T.pack $ "row_to_json(" ++ recVar ++ ")"
-                                 SubCArray cols -> T.pack $ "row_to_json((select r from (select "++ listcols cols ++ ") as r))"
+                                 SubCStar -> "row_to_json(" <> recVar <> ")"
+                                 SubCArray cols -> "row_to_json((select r from (select " <> listcols cols recVar <> ") as r))"
                                    where
-                                     listcols :: [PGCol] -> String
-                                     listcols pgcols = L.intercalate ", " $ fmap (T.unpack.getPGColTxt) pgcols
+                                     listcols :: [PGCol] -> T.Text -> T.Text
+                                     listcols pgcols var = T.intercalate ", " $ fmap (mkQualified var.getPGColTxt) pgcols
+                                     mkQualified :: T.Text -> T.Text -> T.Text
+                                     mkQualified v col = v <> "." <> col
+
     renderSql :: M.Template -> HashMap.HashMap T.Text T.Text -> T.Text
     renderSql = M.substitute
 
