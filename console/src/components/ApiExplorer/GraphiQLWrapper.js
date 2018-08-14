@@ -16,9 +16,6 @@ class GraphiQLWrapper extends Component {
       onBoardingEnabled: false,
       queries: null,
     };
-  }
-
-  componentWillMount() {
     const queryFile = this.props.queryParams.query_file;
     if (queryFile) {
       getRemoteQueries(queryFile, queries =>
