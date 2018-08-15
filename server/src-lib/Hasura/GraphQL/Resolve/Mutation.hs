@@ -46,7 +46,7 @@ convertReturning ty selSet =
     case _fName fld of
       "__typename" -> return $ RR.RExp $ G.unName $ G.unNamedType ty
       _ -> do
-        PGColInfo col colTy <- getPGColInfo ty $ _fName fld
+        PGColInfo col colTy _ <- getPGColInfo ty $ _fName fld
         return $ RR.RCol (col, colTy)
 
 convertMutResp

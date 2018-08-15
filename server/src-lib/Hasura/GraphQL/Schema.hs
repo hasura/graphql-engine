@@ -83,7 +83,7 @@ instance Monoid TyAgg where
   mempty = TyAgg Map.empty Map.empty Map.empty
   mappend = (<>)
 
-type SelField = Either PGColInfo (RelInfo, S.BoolExp, Maybe Int)
+type SelField = Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool)
 
 qualTableToName :: QualifiedTable -> G.Name
 qualTableToName = G.Name <$> \case
@@ -95,7 +95,7 @@ isValidTableName = isValidName . qualTableToName
 
 isValidField :: FieldInfo -> Bool
 isValidField = \case
-  FIColumn (PGColInfo col _) -> isColEligible col
+  FIColumn (PGColInfo col _ _) -> isColEligible col
   FIRelationship (RelInfo rn _ _ remTab _) -> isRelEligible rn remTab
   where
     isColEligible = isValidName . G.Name . getPGColTxt
@@ -113,6 +113,14 @@ mkValidConstraints = filter isValid
   where
     isValid (TableConstraint _ n) =
       isValidName $ G.Name $ getConstraintTxt n
+
+isRelNullable :: FieldInfoMap -> RelInfo -> Bool
+isRelNullable fim ri = isNullable
+  where
+    lCols = map fst $ riMapping ri
+    allCols = getCols fim
+    lColInfos = flip filter allCols $ \ci -> pgiName ci `elem` lCols
+    isNullable = any pgiIsNullable lColInfos
 
 mkCompExpName :: PGColType -> G.Name
 mkCompExpName pgColTy =
@@ -175,11 +183,14 @@ mkCompExpInp colTy =
       ]
 
 mkPGColFld :: PGColInfo -> ObjFldInfo
-mkPGColFld (PGColInfo colName colTy) =
+mkPGColFld (PGColInfo colName colTy isNullable) =
   ObjFldInfo Nothing n Map.empty ty
   where
     n  = G.Name $ getPGColTxt colName
-    ty = G.toGT $ mkScalarTy colTy
+    ty = bool notNullTy nullTy isNullable
+    scalarTy = mkScalarTy colTy
+    notNullTy = G.toGT $ G.toNT scalarTy
+    nullTy = G.toGT scalarTy
 
 -- where: table_bool_exp
 -- limit: Int
@@ -211,8 +222,8 @@ array_relationship(
 object_relationship: remote_table
 
 -}
-mkRelFld :: RelInfo -> ObjFldInfo
-mkRelFld (RelInfo rn rTy _ remTab _) = case rTy of
+mkRelFld :: RelInfo -> Bool -> ObjFldInfo
+mkRelFld (RelInfo rn rTy _ remTab _) isNullable = case rTy of
   ArrRel ->
     ObjFldInfo (Just "An array relationship") (G.Name $ getRelTxt rn)
     (fromInpValL $ mkSelArgs remTab)
@@ -220,8 +231,9 @@ mkRelFld (RelInfo rn rTy _ remTab _) = case rTy of
   ObjRel ->
     ObjFldInfo (Just "An object relationship") (G.Name $ getRelTxt rn)
     Map.empty
-    (G.toGT relTabTy)
+    objRelTy
   where
+    objRelTy = bool (G.toGT $ G.toNT relTabTy) (G.toGT relTabTy) isNullable
     relTabTy = mkTableTy remTab
 
 {-
@@ -239,8 +251,8 @@ mkTableObj
 mkTableObj tn allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) $ mapFromL _fiName flds
   where
-    flds = map (either mkPGColFld (mkRelFld . fst')) allowedFlds
-    fst' (a, _, _) = a
+    flds = map (either mkPGColFld mkRelFld') allowedFlds
+    mkRelFld' (relInfo, _, _, isNullable) = mkRelFld relInfo isNullable
     desc = G.Description $
       "columns and relationships of " <>> tn
 
@@ -341,13 +353,13 @@ mkBoolExpInp tn fields =
       ]
 
     mkFldExpInp = \case
-      Left (PGColInfo colName colTy) ->
+      Left (PGColInfo colName colTy _) ->
         mk (G.Name $ getPGColTxt colName) (mkCompExpTy colTy)
-      Right (RelInfo relName _ _ remTab _, _, _) ->
+      Right (RelInfo relName _ _ remTab _, _, _, _) ->
         mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
 
 mkPGColInp :: PGColInfo -> InpValInfo
-mkPGColInp (PGColInfo colName colTy) =
+mkPGColInp (PGColInfo colName colTy _) =
   InpValInfo Nothing (G.Name $ getPGColTxt colName) $
   G.toGT $ mkScalarTy colTy
 
@@ -747,7 +759,7 @@ mkOrdByCtx tn cols =
 mkOrdByEnumsOfCol
   :: PGColInfo
   -> [(G.Name, Text, (PGColInfo, OrdTy, NullsOrder))]
-mkOrdByEnumsOfCol colInfo@(PGColInfo col _) =
+mkOrdByEnumsOfCol colInfo@(PGColInfo col _ _) =
   [ ( colN <> "_asc"
     , "in the ascending order of " <> col <<> ", nulls last"
     , (colInfo, OAsc, NLast)
@@ -831,7 +843,7 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM constraints =
 
     nameFromSelFld = \case
       Left colInfo -> G.Name $ getPGColTxt $ pgiName colInfo
-      Right (relInfo, _, _) -> G.Name $ getRelTxt $ riName relInfo
+      Right (relInfo, _, _, _) -> G.Name $ getRelTxt $ riName relInfo
 
     -- helper
     mkColFldMap ty = mapFromL ((ty,) . nameFromSelFld) . map Left
@@ -947,7 +959,11 @@ getSelFlds tableCache fields role selPermInfo =
       let remTableSelPermM =
             Map.lookup role (tiRolePermInfoMap remTableInfo) >>= _permSel
       return $ flip fmap remTableSelPermM $
-        \rmSelPermM -> Right $ (relInfo, spiFilter rmSelPermM, spiLimit rmSelPermM)
+        \rmSelPermM -> Right ( relInfo
+                             , spiFilter rmSelPermM
+                             , spiLimit rmSelPermM
+                             , isRelNullable fields relInfo
+                             )
   where
     allowedCols = spiCols selPermInfo
     getTabInfo tn =
@@ -1011,7 +1027,7 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints) = do
     allCols = map pgiName colInfos
     selFlds = flip map (toValidFieldInfos fields) $ \case
       FIColumn pgColInfo     -> Left pgColInfo
-      FIRelationship relInfo -> Right (relInfo, noFilter, Nothing)
+      FIRelationship relInfo -> Right (relInfo, noFilter, Nothing, isRelNullable fields relInfo)
     noFilter = S.BELit True
     adminRootFlds =
       getRootFldsRole' tn constraints fields (Just (tn, [])) (Just (noFilter, Nothing, []))

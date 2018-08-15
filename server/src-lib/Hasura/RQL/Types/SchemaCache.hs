@@ -179,8 +179,9 @@ type QTemplateCache = M.HashMap TQueryName QueryTemplateInfo
 
 data PGColInfo
   = PGColInfo
-  { pgiName :: !PGCol
-  , pgiType :: !PGColType
+  { pgiName       :: !PGCol
+  , pgiType       :: !PGColType
+  , pgiIsNullable :: !Bool
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''PGColInfo)
@@ -371,13 +372,13 @@ data TableInfo
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 
 mkTableInfo :: QualifiedTable -> Bool -> [(ConstraintType, ConstraintName)]
-            -> [(PGCol, PGColType)] -> TableInfo
+            -> [(PGCol, PGColType, Bool)] -> TableInfo
 mkTableInfo tn isSystemDefined rawCons cols =
   TableInfo tn isSystemDefined colMap (M.fromList []) constraints
   where
     constraints = flip map rawCons $ uncurry TableConstraint
     colMap     = M.fromList $ map f cols
-    f (cn, ct) = (fromPGCol cn, FIColumn $ PGColInfo cn ct)
+    f (cn, ct, b) = (fromPGCol cn, FIColumn $ PGColInfo cn ct b)
 
 type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
 
