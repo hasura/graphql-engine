@@ -115,7 +115,7 @@ class Main extends React.Component {
               </div>
             </div>
             <div className={styles.header_items}>
-              <ul>
+              <ul className={styles.sidebarItems}>
                 <OverlayTrigger placement="right" overlay={tooltip.apiexplorer}>
                   <li>
                     <Link
@@ -164,7 +164,38 @@ class Main extends React.Component {
                 </OverlayTrigger>
               </ul>
             </div>
-            <div className={styles.clusterInfoWrapper}>{accessKeyHtml}</div>
+            <div className={styles.clusterInfoWrapper}>
+              {accessKeyHtml}
+              <div className={styles.spreadWord}>
+                <button
+                  className={styles.yellow_button + ' dropdown-toggle'}
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  Share the <i className={styles.heart + ' fa fa-heart'} />
+                </button>
+                <ul className={'dropdown-menu ' + styles.dropdown_menu}>
+                  <div className={styles.arrow_up_dropdown} />
+                  <Link className={'dropdown-item '} to="/features/data">
+                    <li>Data</li>
+                  </Link>
+                  <Link className={'dropdown-item '} to="/features/auth">
+                    <li>Auth</li>
+                  </Link>
+                  <Link className={'dropdown-item '} to="/features/filestore">
+                    <li>Filestore</li>
+                  </Link>
+                  <Link
+                    className={'dropdown-item '}
+                    to="/features/microservices"
+                  >
+                    <li>Microservices</li>
+                  </Link>
+                </ul>
+                <i className={styles.question + ' fa fa-question-circle'} />
+              </div>
+            </div>
           </div>
           <div className={styles.main + ' container-fluid'}>{mainContent}</div>
           {this.state.showBannerNotification ? (
