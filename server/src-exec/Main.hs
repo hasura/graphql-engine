@@ -11,6 +11,7 @@ import           System.Environment         (lookupEnv)
 import           System.Exit                (exitFailure)
 
 import qualified Control.Concurrent         as C
+import           Control.Monad.STM          (atomically)
 import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Char8      as BC
 import qualified Data.ByteString.Lazy       as BL
@@ -21,6 +22,7 @@ import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
+import           Hasura.Events.Lib          (initEventQueue, processEventQueue)
 import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
@@ -132,6 +134,9 @@ main =  do
 
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
+
+      eventQueue <- atomically initEventQueue
+      void $ C.forkIO $ processEventQueue pool eventQueue
 
       Warp.runSettings warpSettings app
 
