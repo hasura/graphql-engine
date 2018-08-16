@@ -6,8 +6,7 @@ API Reference - Query/Subscription
 Query/Subscription syntax
 -------------------------
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: none
 
     query|subscription [<op-name>] {
       object [([argument])]{
@@ -37,8 +36,7 @@ Query/Subscription syntax
 
 **E.g. QUERY**:
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
     query {
       author(where: {articles: {rating: {_gte: 4}}} order_by: name_asc) {
@@ -49,8 +47,7 @@ Query/Subscription syntax
 
 **E.g. SUBSCRIPTION**:
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
     subscription {
       author(where: {articles: rating: {_gte: 4}}} order_by: name_asc) {
@@ -71,7 +68,7 @@ Syntax definitions
 Object
 ^^^^^^
 
-.. parsed-literal::
+.. code-block:: none
 
   object-name {
     field1
@@ -84,8 +81,7 @@ Object
 
 E.g.
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
    author {
       id # scalar field
@@ -101,7 +97,6 @@ Argument
 ^^^^^^^^
 
 .. parsed-literal::
-   :class: haskell-pre
 
    WhereExp_ | OrderByExp_ | PaginationExp_
 
@@ -111,7 +106,6 @@ WhereExp
 ********
 
 .. parsed-literal::
-  :class: haskell-pre
 
    where: BoolExp_
 
@@ -121,7 +115,6 @@ BoolExp
 """""""
 
 .. parsed-literal::
-   :class: haskell-pre
 
    AndExp_ | OrExp_ | NotExp_ | ColumnExp_
 
@@ -129,7 +122,6 @@ AndExp
 ######
 
 .. parsed-literal::
-   :class: haskell-pre
 
     {
       _and: [BoolExp_]
@@ -140,7 +132,6 @@ OrExp
 #####
 
 .. parsed-literal::
-   :class: haskell-pre
 
     {
       _or: [BoolExp_]
@@ -150,7 +141,6 @@ NotExp
 ######
 
 .. parsed-literal::
-   :class: haskell-pre
 
     {
       _not: BoolExp_
@@ -160,7 +150,6 @@ ColumnExp
 #########
 
 .. parsed-literal::
-   :class: haskell-pre
 
     {
       field-name : {Operator_: Value }
@@ -207,21 +196,18 @@ OrderByExp
 **********
 
 .. parsed-literal::
-   :class: haskell-pre
 
    order_by: (object-field + OrderByOperator_ | [object-field + OrderByOperator_])
 
 E.g.
 
-.. parsed-literal::
-  :class: haskell-pre
+.. code-block:: graphql
 
    order_by: name_asc
 
 or
 
-.. parsed-literal::
-  :class: haskell-pre
+.. code-block:: graphql
 
    order_by: [name_asc, id_desc]
 
@@ -242,7 +228,6 @@ PaginationExp
 *************
 
 .. parsed-literal::
-   :class: haskell-pre
 
    limit: Integer [offset: Integer]
 

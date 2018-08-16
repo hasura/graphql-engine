@@ -6,8 +6,7 @@ API Reference - Mutation
 Insert/Upsert syntax
 --------------------
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: none
 
     mutation [<mutation-name>] {
       <mutation-field-name> (
@@ -47,8 +46,7 @@ Insert/Upsert syntax
 
 **E.g. INSERT**:
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
     
     mutation insert_article {
       insert_article(
@@ -69,8 +67,7 @@ Insert/Upsert syntax
 
 **E.g. UPSERT**:
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
     
     mutation upsert_author {
       insert_author (
@@ -93,8 +90,7 @@ Insert/Upsert syntax
 Update syntax
 -------------
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: none
 
     mutation [<mutation-name>] {
       <mutation-field-name> (
@@ -158,8 +154,7 @@ Update syntax
 
 **E.g. UPDATE**:
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
     
     mutation update_author{
       update_author(
@@ -173,8 +168,7 @@ Update syntax
 Delete syntax
 -------------
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: none
 
     mutation [<mutation-name>] {
       <mutation-field-name> (
@@ -209,8 +203,7 @@ Delete syntax
 
 **E.g. DELETE**:
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
     
     mutation delete_articles {
       delete_article(
@@ -236,8 +229,7 @@ Syntax definitions
 Input Object
 ^^^^^^^^^^^^
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: none
 
     objects: [
       {
@@ -251,8 +243,7 @@ Input Object
 
 E.g.:
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
     
     objects: [
       {
@@ -265,8 +256,7 @@ E.g.:
 
 Mutation Response
 ^^^^^^^^^^^^^^^^^
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: none
    
     {
       affected_rows
@@ -279,8 +269,7 @@ Mutation Response
 
 E.g.:
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
     {
       affected_rows
@@ -294,8 +283,7 @@ E.g.:
 
 Conflict Clause
 ^^^^^^^^^^^^^^^
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: none
     
     on_conflict: {
       action: [update|ignore],
@@ -304,8 +292,7 @@ Conflict Clause
 
 E.g.:
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
     on_conflict: {
       action: ignore,
@@ -318,7 +305,6 @@ E.g.:
 ^^^^^^^^^^^^^^^^^^
 
 .. parsed-literal::
-   :class: haskell-pre
 
     where: BoolExp_
 
@@ -328,7 +314,6 @@ BoolExp
 *******
 
 .. parsed-literal::
-   :class: haskell-pre
 
     AndExp_ | OrExp_ | NotExp_ | ColumnExp_
 
@@ -336,7 +321,6 @@ AndExp
 ######
 
 .. parsed-literal::
-   :class: haskell-pre
 
     {
       _and: [BoolExp_]
@@ -347,7 +331,6 @@ OrExp
 #####
 
 .. parsed-literal::
-   :class: haskell-pre
 
     {
       _or: [BoolExp_]
@@ -357,7 +340,6 @@ NotExp
 ######
 
 .. parsed-literal::
-   :class: haskell-pre
 
     {
       _not: BoolExp_
@@ -367,7 +349,6 @@ ColumnExp
 #########
 
 .. parsed-literal::
-   :class: haskell-pre
 
     {
       field-name: {Operator_: Value }
@@ -413,8 +394,7 @@ Checking for ``null`` values :
 ``_set`` argument
 ^^^^^^^^^^^^^^^^^
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: none
 
     _set: {
       field-name-1 : value,
@@ -427,8 +407,7 @@ Checking for ``null`` values :
 ``_inc`` argument
 ^^^^^^^^^^^^^^^^^
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: none
 
    _inc: {
      field-name-1 : int-value,
@@ -441,14 +420,15 @@ Checking for ``null`` values :
 ``_append`` argument
 ^^^^^^^^^^^^^^^^^^^^
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: none
 
    _append: {
      field-name-1 : $json-variable-1,
      field-name-2 : $json-variable-1,
      ..
    }
+
+E.g.
 
 .. code-block:: json
 
@@ -462,14 +442,15 @@ Checking for ``null`` values :
 ``_prepend`` argument
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: none
 
    _prepend: {
      field-name-1 : $json-variable-1,
      field-name-2 : $json-variable-1,
      ..
    }
+
+E.g.
 
 .. code-block:: json
 
@@ -483,8 +464,7 @@ Checking for ``null`` values :
 ``_delete_key`` argument
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: none
 
    _delete_key: {
      field-name-1 : "key",
@@ -497,8 +477,7 @@ Checking for ``null`` values :
 ``_delete_elem`` argument
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: none
 
    _delete_elem: {
      field-name-1 : int-index,
@@ -511,8 +490,7 @@ Checking for ``null`` values :
 ``_delete_at_path`` argument
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: none
 
    _delete_at_path: {
      field-name-1 : ["path-array"],

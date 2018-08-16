@@ -18,8 +18,7 @@ GraphQL default scalar with name **Int**.
 
 E.g.
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
    objects: [
      {
@@ -36,8 +35,7 @@ GraphQL custom scalar type with name **float8**.
 
 E.g.
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
    objects: [
      {
@@ -54,8 +52,7 @@ GraphQL custom scalar type with name **numeric**.
 
 E.g.
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
    objects: [
      {
@@ -72,8 +69,7 @@ GraphQL default Scalar with name **Boolean**. The **Boolean** scalar type repres
 
 E.g.
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
    objects: [
      {
@@ -90,8 +86,7 @@ GraphQL custom scalar with name **character**. It is a ``String`` with single ch
 
 E.g.
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
    objects: [
      {
@@ -110,8 +105,7 @@ The String type is most often used by GraphQL to represent free-form human-reada
 
 E.g.
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
    objects: [
      {
@@ -129,8 +123,7 @@ GraphQL custom scalar with name **date**. Date (no time of day). Allowed values 
 
 E.g.
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
    objects: [
      {
@@ -148,8 +141,7 @@ Eg. 17:30:15Z, 17:30:15+05:30, 17:30:15.234890+05:30
 
 E.g.
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
    objects: [
      {
@@ -167,8 +159,7 @@ Eg. 2016-07-20T17:30:15Z, 2016-07-20T17:30:15+05:30, 2016-07-20T17:30:15.234890+
 
 E.g.
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
    objects: [
      {
@@ -185,13 +176,12 @@ GraphQL custom scalar type with name **json**. It is a stringified json value.
 
 E.g.
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
    objects: [
      {
        id: 1,
-       json_col: "{ \"name\": \"raven\" }"
+       json_col: "{ \'name\': \'raven\' }"
      }
    ]
 
@@ -203,8 +193,7 @@ GraphQL custom scalar type with name **jsonb**. Value should be given through a 
 
 E.g.
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
    mutation insert_test($value : jsonb) {
      insert_test(
@@ -214,7 +203,7 @@ E.g.
            jsonb_col: $value
          }
        ]
-     ){
+     ) {
         affected_rows
         returning{
           id
@@ -245,8 +234,7 @@ E.g. For time without time zone type
 
 In ISO 8601 format
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
    objects: [
      {
@@ -257,8 +245,7 @@ In ISO 8601 format
 
 E.g. For macaddr type
 
-.. parsed-literal::
-   :class: haskell-pre
+.. code-block:: graphql
 
    objects: [
      {
