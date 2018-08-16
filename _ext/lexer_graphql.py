@@ -29,7 +29,7 @@ class GraphqlLexer(RegexLexer):
         'root': [
             (r'#.*', Comment.Singline),
             (r'\.\.\.', Operator),
-            (r'"[\u0009\u000A\u000D\u0020-\uFFFF]*?"', String.Double),
+            (r'"([^\\"]|\\")*"', String.Double),
             (r'(-?0|-?[1-9][0-9]*)(\.[0-9]+[eE][+-]?[0-9]+|\.[0-9]+|[eE][+-]?[0-9]+)', Number.Float),
             (r'(-?0|-?[1-9][0-9]*)', Number.Integer),
             (r'\$+[_A-Za-z][_0-9A-Za-z]*', Name.Variable),
