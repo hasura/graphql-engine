@@ -83,7 +83,7 @@ mkConflictClause
 mkConflictClause cols (act, conM) = case (act , conM) of
   (CAIgnore, Nothing) -> return $ RI.CP1DoNothing Nothing
   (CAIgnore, Just cons) -> return $ RI.CP1DoNothing $ Just $ RI.Constraint cons
-  (CAUpdate, Nothing) -> throw400 Unexpected
+  (CAUpdate, Nothing) -> withPathK "on_conflict" $ throw400 Unexpected
     "expecting \"constraint\" when \"action\" is \"update\" "
   (CAUpdate, Just cons) -> return $ RI.CP1Update (RI.Constraint cons) cols
 
@@ -112,7 +112,7 @@ parseConstraint obj = do
 
 parseOnConflict
   :: (MonadError QErr m)
-  => AnnGValue -> m (ConflictAction, Maybe ConstraintName)
+  => AnnGValue -> m ConflictCtx
 parseOnConflict val =
   flip withObject val $ \_ obj -> do
     action <- parseAction obj
