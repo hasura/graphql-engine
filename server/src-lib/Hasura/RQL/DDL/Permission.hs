@@ -50,6 +50,7 @@ module Hasura.RQL.DDL.Permission
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission.Internal
+import           Hasura.RQL.DDL.Permission.Triggers
 import           Hasura.RQL.DML.Internal            (onlyPositiveInt)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -100,35 +101,6 @@ dropView vn =
     dropViewS = Q.fromBuilder $
       BB.string7 "DROP VIEW " <> toSQL vn
 
-buildInsTrig :: QualifiedTable -> Q.Query
-buildInsTrig qt@(QualifiedTable _ tn) =
-  Q.fromBuilder $ mconcat
-  [ BB.string7 "CREATE TRIGGER " <> toSQL tn
-  , BB.string7 " INSTEAD OF INSERT ON " <> toSQL qt
-  , BB.string7 " FOR EACH ROW EXECUTE PROCEDURE "
-  , toSQL qt <> BB.string7 "();"
-  ]
-
-dropInsTrigFn :: QualifiedTable -> Q.Query
-dropInsTrigFn fn =
-  Q.fromBuilder $ BB.string7 "DROP FUNCTION " <> toSQL fn <> "()"
-
-buildInsTrigFn :: QualifiedTable -> QualifiedTable -> S.BoolExp -> Q.Query
-buildInsTrigFn fn tn be =
-  Q.fromBuilder $ mconcat
-  [ BB.string7 "CREATE OR REPLACE FUNCTION " <> toSQL fn
-  , BB.string7 "() RETURNS trigger LANGUAGE plpgsql AS $$ "
-  , BB.string7 "DECLARE r " <> toSQL tn <> "%ROWTYPE; "
-  , BB.string7 "BEGIN "
-  , BB.string7 "IF (" <> toSQL be <> BB.string7 ") "
-  , BB.string7 "THEN INSERT INTO " <> toSQL tn
-  , BB.string7 " VALUES (NEW.*) RETURNING * INTO r; RETURN r; "
-  , BB.string7 "ELSE RAISE check_violation using message = 'insert check constraint failed'; return NULL;"
-  , BB.string7 "END IF; "
-  , BB.string7 "END "
-  , BB.string7 "$$;"
-  ]
-
 buildInsPermInfo
   :: (QErrM m, CacheRM m)
   => TableInfo
@@ -145,17 +117,19 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt) _) = do
     tn = tiName tabInfo
     vn = buildViewName tn rn PTInsert
 
-buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
-buildInsInfra tn (InsPermInfo vn be _ _ _) =
+buildInsInfra :: QualifiedTable -> InsPermInfo -> [PGCol] -> Q.TxE QErr ()
+buildInsInfra tn (InsPermInfo vn be _ _ _) cols =
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
     Q.unitQ (buildView tn vn) () False
     -- Inject defaults on the view
     Q.discardQ (injectDefaults vn tn) () False
     -- Construct a trigger function
-    Q.unitQ (buildInsTrigFn vn tn be) () False
+    Q.unitQ (buildInsTrigFn vn tn be se) () False
     -- Add trigger for check expression
     Q.unitQ (buildInsTrig vn) () False
+  where
+    se = S.buildSEWithExcluded cols
 
 clearInsInfra :: QualifiedTable -> Q.TxE QErr ()
 clearInsInfra vn =
@@ -178,8 +152,10 @@ instance IsPerm InsPerm where
 
   buildPermInfo = buildInsPermInfo
 
-  addPermP2Setup qt _ permInfo =
-    liftTx $ buildInsInfra qt permInfo
+  addPermP2Setup qt _ permInfo = do
+    tabInfo <- askTabInfo qt
+    liftTx $ buildInsInfra qt permInfo $
+      map pgiName $ getCols $ tiFieldInfoMap tabInfo
 
   buildDropPermP1Res dp =
     ipiView <$> dropPermP1 dp

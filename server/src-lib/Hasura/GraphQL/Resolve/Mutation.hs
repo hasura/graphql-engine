@@ -13,7 +13,11 @@ module Hasura.GraphQL.Resolve.Mutation
 import           Data.Has
 import           Hasura.Prelude
 
+import qualified Data.Aeson                        as A
+import qualified Data.ByteString.Builder           as BB
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.String.Conversions           as CS
+import qualified Database.PG.Query                 as Q
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Delete             as RD
@@ -69,13 +73,14 @@ convertRowObj val =
     let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (PGCol $ G.unName k, prepExp)
 
+type ConflictCtx = (ConflictAction, Maybe ConstraintName)
+
 mkConflictClause
   :: (MonadError QErr m)
   => [PGCol]
-  -> ConflictAction
-  -> Maybe ConstraintName
+  -> ConflictCtx
   -> m RI.ConflictClauseP1
-mkConflictClause cols act conM = case (act , conM) of
+mkConflictClause cols (act, conM) = case (act , conM) of
   (CAIgnore, Nothing) -> return $ RI.CP1DoNothing Nothing
   (CAIgnore, Just cons) -> return $ RI.CP1DoNothing $ Just $ RI.Constraint cons
   (CAUpdate, Nothing) -> throw400 Unexpected
@@ -107,34 +112,59 @@ parseConstraint obj = do
 
 parseOnConflict
   :: (MonadError QErr m)
-  => [PGCol] -> AnnGValue -> m RI.ConflictClauseP1
-parseOnConflict cols val =
+  => AnnGValue -> m (ConflictAction, Maybe ConstraintName)
+parseOnConflict val =
   flip withObject val $ \_ obj -> do
     action <- parseAction obj
     constraintM <- parseConstraint obj
-    mkConflictClause cols action constraintM
+    return (action, constraintM)
 
 convertInsert
-  :: (QualifiedTable, QualifiedTable) -- table, view
+  :: RoleName
+  -> (QualifiedTable, QualifiedTable) -- table, view
   -> [PGCol] -- all the columns in this table
   -> Field -- the mutation field
   -> Convert RespTx
-convertInsert (tn, vn) tableCols fld = do
+convertInsert role (tn, vn) tableCols fld = do
   rows    <- withArg arguments "objects" asRowExps
-  onConflictM <- withPathK "on_conflict" $
-                 withArgM arguments "on_conflict" $
-                 parseOnConflict tableCols
+  conflictCtxM <- withPathK "on_conflict" $
+                 withArgM arguments "on_conflict" parseOnConflict
   mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
   args <- get
-  let p1 = RI.InsertQueryP1 tn vn tableCols rows onConflictM mutFlds
-  return $ RI.insertP2 (p1, args)
+  return $
+    bool (nonAdminInsert args rows conflictCtxM mutFlds)
+         (adminInsert args rows conflictCtxM mutFlds)
+         $ isAdmin role
   where
     arguments = _fArguments fld
     asRowExps = withArray (const $ mapM rowExpWithDefaults)
     rowExpWithDefaults val = do
       givenCols <- convertRowObj val
       return $ Map.elems $ Map.union (Map.fromList givenCols) defVals
+
     defVals = Map.fromList $ zip tableCols (repeat $ S.SEUnsafe "DEFAULT")
+
+    adminInsert args rows conflictCtxM mutFlds = do
+      onConflictM <- mapM (mkConflictClause tableCols) conflictCtxM
+      let p1 = RI.InsertQueryP1 tn vn tableCols rows onConflictM mutFlds
+      RI.insertP2 (p1, args)
+
+    nonAdminInsert args rows conflictCtxM mutFlds = do
+      mapM_ (mkConflictClause tableCols) conflictCtxM
+      setConflictCtxTx conflictCtxM
+      let p1 = RI.InsertQueryP1 tn vn tableCols rows Nothing mutFlds
+      RI.insertP2 (p1, args)
+
+    setConflictCtxTx conflictCtxM = do
+      let t = maybe "{}" conflictCtxToJSON conflictCtxM
+          setVal = toSQL $ S.SELit t
+          setVar = BB.string7 "SET LOCAL hasura.conflict_clause = "
+          q = Q.fromBuilder $ setVar <> setVal
+      Q.unitQE defaultTxErrorHandler q () False
+
+    conflictCtxToJSON (act, constrM) =
+      let ctx = InsertTxConflictCtx act constrM
+      in CS.cs $ A.encode $ A.object ["conflict_clause" A..= ctx]
 
 type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
 
