@@ -177,21 +177,28 @@ class Main extends React.Component {
                 </button>
                 <ul className={'dropdown-menu ' + styles.dropdown_menu}>
                   <div className={styles.arrow_up_dropdown} />
-                  <Link className={'dropdown-item '} to="/features/data">
-                    <li>Data</li>
-                  </Link>
-                  <Link className={'dropdown-item '} to="/features/auth">
-                    <li>Auth</li>
-                  </Link>
-                  <Link className={'dropdown-item '} to="/features/filestore">
-                    <li>Filestore</li>
-                  </Link>
-                  <Link
-                    className={'dropdown-item '}
-                    to="/features/microservices"
-                  >
-                    <li>Microservices</li>
-                  </Link>
+                  <li className={'dropdown-item '}>
+                    <div className={styles.gitHubBtn}>
+                      <iframe
+                        title="github"
+                        src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true"
+                        frameBorder="0"
+                        scrolling="0"
+                        width="100px"
+                        height="30px"
+                      />
+                    </div>
+                  </li>
+                  <li className={'dropdown-item '}>
+                    <div className="btn-o">
+                      <a
+                        href="https://twitter.com/intent/tweet?hashtags=demo&amp;text=Hello%20world;url=https%3A%2F%2Fgithub.com%2Fgraphql-engine"
+                        className={styles.twitterShare}
+                      >
+                        <span className="label">Tweet</span>
+                      </a>
+                    </div>
+                  </li>
                 </ul>
                 <i className={styles.question + ' fa fa-question-circle'} />
               </div>

@@ -869,8 +869,9 @@
   background-color: #43495a;
   color: #fff;
   border: 0;
-  width: 80%;
-  left: 10%;
+  width: 50%;
+  left: 40%;
+  padding: 15px;
   .arrow_up_dropdown
   {
     width: 0;
@@ -882,23 +883,28 @@
     top: -10px;
     right: 20px;
   }
-  a
+  li
   {
     width: 100%;
     display: block;
     padding-left: 10px;
-    li
-    {
-      text-transform: uppercase !important;
-    }
+    color: #fff;
+    text-transform: uppercase !important;
   }
-  a:hover
+  li:hover
   {
-    background-color: #444;
     text-decoration: none;
-    li
-    {
-      color: #fff;
-    }
+    color: #ccc;
   }
+}
+.twitterShare {
+  position: relative;
+  height: 20px;
+  box-sizing: border-box;
+  padding: 1px 8px 1px 6px;
+  background-color: #1b95e0;
+  color: #fff;
+  border-radius: 3px;
+  font-weight: 500;
+  cursor: pointer;
 }
