@@ -62,6 +62,8 @@ gqlSpecFiles =
   , "insert_mutation/address_check_constraint_error.yaml"
   , "insert_mutation/address_not_null_constraint_error.yaml"
   , "insert_mutation/author_unique_constraint_error.yaml"
+  , "insert_mutation/author_on_conflict_ignore_user_role.yaml"
+  , "insert_mutation/author_on_conflict_update_user_role.yaml"
   , "nested_select_query_article.yaml"
   , "select_query_article_limit_offset.yaml"
   , "select_query_article_limit_offset_error_01.yaml"
