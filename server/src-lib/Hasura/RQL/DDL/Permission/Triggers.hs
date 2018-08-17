@@ -32,10 +32,10 @@ buildInsTrigFn fn tn be se =
   , BB.string7 "DECLARE conflict_clause jsonb; DECLARE action text; "
   , BB.string7 "DECLARE constraint_name text; "
   , BB.string7 "BEGIN "
-  , BB.string7 "conflict_clause = current_setting('hasura.conflict_clause')::jsonb -> 'conflict_clause'; "
+  , BB.string7 "conflict_clause = current_setting('hasura.conflict_clause')::jsonb; "
   , BB.string7 "IF (" <> toSQL be <> BB.string7 ") THEN "
   , BB.string7 "CASE "
-  , BB.string7 "WHEN conflict_clause IS NULL THEN INSERT INTO " <> toSQL tn
+  , BB.string7 "WHEN conflict_clause = 'null'::jsonb THEN INSERT INTO " <> toSQL tn
   , BB.string7 " VALUES (NEW.*) RETURNING * INTO r; RETURN r; "
   , BB.string7 "ELSE "
   , BB.string7 "action = conflict_clause ->> 'action'; "

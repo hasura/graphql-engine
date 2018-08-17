@@ -13,10 +13,10 @@ module Hasura.GraphQL.Resolve.Mutation
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson                        as A
+import qualified Data.Aeson.Text                   as AT
 import qualified Data.ByteString.Builder           as BB
 import qualified Data.HashMap.Strict               as Map
-import qualified Data.String.Conversions           as CS
+import qualified Data.Text.Lazy                    as LT
 import qualified Database.PG.Query                 as Q
 import qualified Language.GraphQL.Draft.Syntax     as G
 
@@ -156,15 +156,14 @@ convertInsert role (tn, vn) tableCols fld = do
       RI.insertP2 (p1, args)
 
     setConflictCtxTx conflictCtxM = do
-      let t = maybe "{}" conflictCtxToJSON conflictCtxM
+      let t = maybe "null" conflictCtxToJSON conflictCtxM
           setVal = toSQL $ S.SELit t
           setVar = BB.string7 "SET LOCAL hasura.conflict_clause = "
           q = Q.fromBuilder $ setVar <> setVal
       Q.unitQE defaultTxErrorHandler q () False
 
     conflictCtxToJSON (act, constrM) =
-      let ctx = InsertTxConflictCtx act constrM
-      in CS.cs $ A.encode $ A.object ["conflict_clause" A..= ctx]
+      LT.toStrict $ AT.encodeToLazyText $ InsertTxConflictCtx act constrM
 
 type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
 
