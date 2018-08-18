@@ -89,6 +89,7 @@ library
                      , http-client
                      , http-client-tls
                      , connection
+                     , retry
 
                      -- ordered map
                      , insert-ordered-containers
@@ -113,6 +114,9 @@ library
                      , stm-containers
                      , list-t
                      , async
+
+                     -- event trigger related
+                     , wreq
 
                      -- logging related
                      , base64-bytestring >= 1.0
@@ -194,6 +198,7 @@ library
                      , Hasura.SQL.Time
                      , Hasura.Prelude
                      , Hasura.Logging
+                     , Hasura.HTTP
                      , Ops
                      , TH
 
@@ -223,6 +228,8 @@ executable graphql-engine
                      , http-client
                      , http-client-tls
                      , stm
+                     , wreq
+                     , connection
 
   other-modules:     Ops
                      TH
