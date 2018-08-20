@@ -2,7 +2,7 @@ import React from 'react';
 import gql from 'graphql-tag';
 import { Subscription } from 'react-apollo';
 import {
-  Well,
+  Alert,
 } from 'react-bootstrap';
 
 const SUBSCRIPTION_ONLINE_USERS = `
@@ -20,8 +20,8 @@ export const Users = () => (
        if (error) return <p>Error :</p>;
        return (
          <div>
-           <span>Online users: {data.online_users[0].count}</span>
-           <Well><pre>{SUBSCRIPTION_ONLINE_USERS}</pre></Well>
+           <Alert>Online users: {data.online_users[0].count}</Alert>
+           <pre>{SUBSCRIPTION_ONLINE_USERS}</pre>
          </div>
        );
     }}

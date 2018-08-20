@@ -9,10 +9,10 @@ import {
   ButtonGroup,
   FormGroup,
   Radio,
-  Well,
+  Alert,
 } from 'react-bootstrap';
 import { Result } from './Result.react.js';
-
+import { Users } from './Users.react'
 const QUERY_GET_POLL = gql`
   query {
     poll {
@@ -52,9 +52,9 @@ class PollQuestion extends Component {
     return (
       <Mutation mutation={gql`${MUTATION_VOTE}`}>
         {(vote, { data }) => (
-          <div>
-            <div>{this.props.poll.question}</div>
-            <form
+          <div className="textLeft">
+            <Alert>{this.props.poll.question}</Alert>
+            <form className="pollForm textLeft"
               onSubmit={e => {
                   e.preventDefault();
                   vote({
@@ -79,11 +79,12 @@ class PollQuestion extends Component {
                   ))
                 }
               </FormGroup>
-              <Button type="submit">Vote</Button>
+              <Button className="voteBtn" type="submit">Vote</Button>
             </form>
             <div>
-              <Well><pre>{MUTATION_VOTE}</pre></Well>
+              <pre>{MUTATION_VOTE}</pre>
             </div>
+            <Users />
           </div>
         )}
       </Mutation>
@@ -98,15 +99,21 @@ const Poll = ({userId}) => (
        if (loading) return <p>Loading...</p>;
        if (error) return <p>Error :</p>;
        return (
-         <div>
-           {
-             data.poll.map(poll => (
-               <div key={poll.id}>
-                 <PollQuestion poll={poll} userId={userId} />
-                 <Result pollId={poll.id} />
-               </div>
-             ))
-           }
+         <div className="container">
+          <div className="pollWrapper wd100">
+             {
+               data.poll.map(poll => (
+                 <div key={poll.id}>
+                  <div className="col-md-4 pollSlider">
+                    <PollQuestion poll={poll} userId={userId} />
+                  </div>
+                  <div className="col-md-8 pollresult">
+                   <Result pollId={poll.id} />
+                  </div>
+                 </div>
+               ))
+             }
+           </div>
          </div>
        );
     }}

@@ -36,8 +36,8 @@ const renderChart = (data) => {
 
   return (
     <Chart
-      width={'500px'}
-      height={'300px'}
+      width={'700px'}
+      height={'400px'}
       chartType="Bar"
       loader={<div>Loading Chart</div>}
       data={d}
@@ -66,7 +66,7 @@ export const Result = (pollId) => (
            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', maxWidth: 900 }}>
              {renderChart(data)}
            </div>
-           <div><Well><pre>{SUBSCRIBE_RESULT}</pre></Well></div>
+           <div><pre>{SUBSCRIBE_RESULT}</pre></div>
            <div>
              {/*
                data.poll_results.map((result, i) => (

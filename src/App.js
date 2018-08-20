@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
+import logo from './logo-white.svg';
 import './App.css';
 import { ApolloProvider } from 'react-apollo';
 import client from './apollo';
 import Poll from './Poll';
-import { Users } from './Users.react'
 import { getUserId } from './session'
 
 class App extends Component {
@@ -24,12 +23,13 @@ class App extends Component {
     return (
       <ApolloProvider client={client}>
         <div className="App">
-          <header className="App-header">
-            <img src={logo} className="App-logo" alt="logo" />
-            <h1 className="App-title">Welcome to React</h1>
+          <header className="App-header displayFlex">
+            <div className="container displayFlex">
+              <img src={logo} className="App-logo" alt="logo" />
+              <h1 className="App-title">Realtime Poll Dashboard</h1>
+            </div>
           </header>
           <Poll userId={this.state.userId}/>
-          <Users />
         </div>
       </ApolloProvider>
     );
