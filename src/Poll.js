@@ -8,9 +8,6 @@ import {
   Button,
   ButtonGroup,
 } from 'react-bootstrap';
-import {
-  userId,
-} from './session';
 import { Result } from './Result.react.js';
 
 const QUERY_GET_POLL = gql`
@@ -38,7 +35,7 @@ mutation vote($optionId: uuid!, $userId: uuid!) {
 }
 `;
 
-const Poll = () => (
+const Poll = ({userId}) => (
   <ApolloConsumer>
     {client => (
       <Query query={QUERY_GET_POLL}>
@@ -52,24 +49,24 @@ const Poll = () => (
                    <div key={poll.id}>
                      <div><br/>{`${poll.question}`}</div>
                      <ButtonGroup>
-                     {
-                       poll.options.map(option => (
-                         <Button bsStyle="primary"
-                                 onClick={() => {
-                                     client.mutate({
-                                       mutation: MUTATION_VOTE,
-                                       variables: {
-                                         optionId: option.id,
-                                         userId,
-                                       },
-                                     });
-                                 }}
-                                 key={option.id}
-                           >
-                           {`${option.text}`}
-                         </Button>
-                       ))
-                     }
+                       {
+                         poll.options.map(option => (
+                           <Button bsStyle="primary"
+                                   onClick={() => {
+                                       client.mutate({
+                                         mutation: MUTATION_VOTE,
+                                         variables: {
+                                           optionId: option.id,
+                                           userId: userId,
+                                         },
+                                       });
+                                   }}
+                                   key={option.id}
+                             >
+                             {`${option.text}`}
+                           </Button>
+                         ))
+                       }
                      </ButtonGroup>
                      <Result pollId={poll.id} />
                    </div>

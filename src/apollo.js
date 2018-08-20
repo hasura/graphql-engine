@@ -15,7 +15,7 @@ const httpurl = 'https://hasura-realtime-dashboard.herokuapp.com/v1alpha1/graphq
 const wsLink = new WebSocketLink({
   uri: wsurl,
   options: {
-    reconnect: true
+    reconnect: true,
   }
 });
 
