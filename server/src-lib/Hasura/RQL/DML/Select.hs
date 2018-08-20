@@ -632,9 +632,8 @@ wrapFinalSel initSel extCols =
   }
   where
     rowExp = S.mkRowExp $ map mkInnerSelExtr extCols
-    rowToJSONedCol = S.SEFnApp "coalesce"
-      [ S.SEFnApp "json_agg" [rowExp] Nothing
-      , S.SELit "[]"] Nothing
+    rowToJSONedCol = S.toEmptyArrWhenNull $
+                     S.SEFnApp "json_agg" [rowExp] Nothing
 
 getSelectDeps
   :: SelectData

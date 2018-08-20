@@ -36,6 +36,7 @@ data PGColMeta
   { pcmColumnName      :: !PGCol
   , pcmOrdinalPosition :: !Int
   , pcmDataType        :: !PGColType
+  , pcmIsNullable      :: !Bool
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''PGColMeta)
@@ -108,8 +109,8 @@ getTableDiff oldtm newtm =
 
     existingCols = getOverlap pcmOrdinalPosition oldCols newCols
 
-    pcmToPci (PGColMeta colName _ colType)
-      = PGColInfo colName colType
+    pcmToPci (PGColMeta colName _ colType isNullable)
+      = PGColInfo colName colType isNullable
 
     alteredCols =
       flip map (filter (uncurry (/=)) existingCols) $ pcmToPci *** pcmToPci

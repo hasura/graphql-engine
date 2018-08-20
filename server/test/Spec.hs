@@ -3,25 +3,31 @@
 
 module Spec (mkSpecs) where
 
-import           Hasura.Prelude     hiding (get)
-import           Network.Wai        (Application)
+import           Hasura.Prelude         hiding (get)
+import           Network.Wai            (Application)
 import           Test.Hspec
 import           Test.Hspec.Wai
+import           Test.Hspec.Wai.Matcher
 
-import qualified Data.Aeson         as J
-import qualified Data.Aeson.Casing  as J
-import qualified Data.Aeson.TH      as J
-import qualified Data.Text          as T
-import qualified Data.Text.Encoding as T
-import qualified Data.Yaml          as Y
+import qualified Data.Aeson             as J
+import qualified Data.Aeson.Casing      as J
+import qualified Data.Aeson.TH          as J
+import qualified Data.CaseInsensitive   as CI
+import qualified Data.HashMap.Strict    as HM
+import qualified Data.Text              as T
+import qualified Data.Text.Encoding     as T
+import qualified Data.Yaml              as Y
 
+type Headers = HM.HashMap T.Text T.Text
 
 data TestCase
   = TestCase
   { tcDescription :: !T.Text
   , tcQuery       :: !J.Value
   , tcUrl         :: !T.Text
+  , tcHeaders     :: !(Maybe Headers)
   , tcStatus      :: !Int
+  , tcResponse    :: !(Maybe J.Value)
   -- , tcDependsOn   :: !(Maybe TestCase)
   } deriving (Show)
 
@@ -35,6 +41,7 @@ querySpecFiles =
   , "create_author_article_relationship.yaml"
   , "create_author_article_permissions.yaml"
   , "create_address_resident_relationship_error.yaml"
+  , "create_user_permission_address.yaml"
   ]
 
 gqlIntrospection :: FilePath
@@ -53,6 +60,12 @@ gqlSpecFiles =
   , "insert_mutation/article_on_conflict_error_03.yaml"
   , "insert_mutation/person.yaml"
   , "insert_mutation/person_array.yaml"
+  , "insert_mutation/order.yaml"
+  , "insert_mutation/address_check_constraint_error.yaml"
+  , "insert_mutation/address_not_null_constraint_error.yaml"
+  , "insert_mutation/author_unique_constraint_error.yaml"
+  , "insert_mutation/author_on_conflict_ignore_user_role.yaml"
+  , "insert_mutation/author_on_conflict_update_user_role.yaml"
   , "nested_select_query_article.yaml"
   , "select_query_article_limit_offset.yaml"
   , "select_query_article_limit_offset_error_01.yaml"
@@ -67,6 +80,8 @@ gqlSpecFiles =
   , "update_mutation/person_inc.yaml"
   , "update_mutation/person_error_01.yaml"
   , "delete_mutation/article.yaml"
+  , "delete_mutation/article_returning.yaml"
+  , "delete_mutation/author_foreign_key_violation.yaml"
   ]
 
 alterTable :: FilePath
@@ -86,9 +101,17 @@ mkSpec tc = do
   let desc = tcDescription tc
       url = tcUrl tc
       q = tcQuery tc
-      respStatus = (fromIntegral $ tcStatus tc) :: ResponseMatcher
+      mHeaders = tcHeaders tc
+      statusCode = tcStatus tc
+      mRespBody = tcResponse tc
+      headers = maybe [] (map toHeader . HM.toList) mHeaders
+      body = maybe matchAny bodyEquals $ fmap J.encode mRespBody
+      resp = ResponseMatcher statusCode [] body
   it (T.unpack desc) $
-    post (T.encodeUtf8 url) (J.encode q) `shouldRespondWith` respStatus
+    request "POST" (T.encodeUtf8 url) headers (J.encode q) `shouldRespondWith` resp
+  where
+    matchAny = MatchBody (\_ _ -> Nothing)
+    toHeader (k, v) = (CI.mk $ T.encodeUtf8 k, T.encodeUtf8 v)
 
 
 mkSpecs :: IO (SpecWith Application)

@@ -115,7 +115,9 @@ runQuery
   -> RQLQuery -> m (BL.ByteString, SchemaCache)
 runQuery pool isoL userInfo sc query = do
   tx <- liftEither $ buildTxAny userInfo sc query
-  Q.runTx pool (isoL, Nothing) $ setHeadersTx userInfo >> tx
+  res <- liftIO $ runExceptT $ Q.runTx pool (isoL, Nothing) $
+         setHeadersTx userInfo >> tx
+  liftEither res
 
 buildExplainTx
   :: UserInfo
@@ -131,10 +133,9 @@ buildExplainTx userInfo sc q = do
     qEnv = QCtx userInfo sc
 
 runExplainQuery
-  :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool -> Q.TxIsolation
+  :: Q.PGPool -> Q.TxIsolation
   -> UserInfo -> SchemaCache
-  -> SelectQuery -> m BL.ByteString
+  -> SelectQuery -> ExceptT QErr IO BL.ByteString
 runExplainQuery pool isoL userInfo sc query = do
   tx <- liftEither $ buildExplainTx userInfo sc query
   Q.runTx pool (isoL, Nothing) $ setHeadersTx userInfo >> tx

@@ -67,35 +67,39 @@ data Code
   | AlreadyUntracked
   | InvalidParams
   | AlreadyInit
+  | ConstraintViolation
+  | DataException
   -- Graphql error
   | NoTables
   | ValidationFailed
   deriving (Eq)
 
 instance Show Code where
-  show NotNullViolation  = "not-null-violation"
-  show PermissionDenied  = "permission-denied"
-  show NotExists         = "not-exists"
-  show AlreadyExists     = "already-exists"
-  show AlreadyTracked    = "already-tracked"
-  show AlreadyUntracked  = "already-untracked"
-  show PostgresError     = "postgres-error"
-  show NotSupported      = "not-supported"
-  show DependencyError   = "dependency-error"
-  show InvalidHeaders    = "invalid-headers"
-  show InvalidJSON       = "invalid-json"
-  show AccessDenied      = "access-denied"
-  show ParseFailed       = "parse-failed"
-  show ConstraintError   = "constraint-error"
-  show PermissionError   = "permission-error"
-  show NotFound          = "not-found"
-  show Unexpected        = "unexpected"
-  show UnexpectedPayload = "unexpected-payload"
-  show NoUpdate          = "no-update"
-  show InvalidParams     = "invalid-params"
-  show AlreadyInit       = "already-initialised"
-  show NoTables          = "no-tables"
-  show ValidationFailed  = "validation-failed"
+  show NotNullViolation    = "not-null-violation"
+  show DataException       = "data-exception"
+  show ConstraintViolation = "constraint-violation"
+  show PermissionDenied    = "permission-denied"
+  show NotExists           = "not-exists"
+  show AlreadyExists       = "already-exists"
+  show AlreadyTracked      = "already-tracked"
+  show AlreadyUntracked    = "already-untracked"
+  show PostgresError       = "postgres-error"
+  show NotSupported        = "not-supported"
+  show DependencyError     = "dependency-error"
+  show InvalidHeaders      = "invalid-headers"
+  show InvalidJSON         = "invalid-json"
+  show AccessDenied        = "access-denied"
+  show ParseFailed         = "parse-failed"
+  show ConstraintError     = "constraint-error"
+  show PermissionError     = "permission-error"
+  show NotFound            = "not-found"
+  show Unexpected          = "unexpected"
+  show UnexpectedPayload   = "unexpected-payload"
+  show NoUpdate            = "no-update"
+  show InvalidParams       = "invalid-params"
+  show AlreadyInit         = "already-initialised"
+  show NoTables            = "no-tables"
+  show ValidationFailed    = "validation-failed"
 
 data QErr
   = QErr

@@ -136,7 +136,7 @@ CREATE VIEW hdb_views.hdb_table_meta AS (
         (SELECT
              table_schema,
              table_name,
-             json_agg((SELECT r FROM (SELECT column_name, udt_name AS data_type, ordinal_position) r)) as columns
+             json_agg((SELECT r FROM (SELECT column_name, udt_name AS data_type, ordinal_position, is_nullable::boolean) r)) as columns
          FROM
              information_schema.columns
          GROUP BY

@@ -21,6 +21,24 @@ export const columnOperators = [
 
 export const arrayColumnOperators = ['_in', '_nin'];
 
+export const legacyOperatorsMap = {
+  $and: '_and',
+  $or: '_or',
+  $not: '_not',
+  $eq: '_eq',
+  $ne: '_ne',
+  $in: '_in',
+  $nin: '_nin',
+  $gt: '_gt',
+  $lt: '_lt',
+  $gte: '_gte',
+  $lte: '_lte',
+  $like: '_like',
+  $nlike: '_nlike',
+  $similar: '_similar',
+  $nsimilar: '_nsimilar',
+};
+
 export function addToPrefix(prefix, value) {
   let _newPrefix;
   if (prefix !== null && prefix.toString()) {

@@ -65,7 +65,7 @@ getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
 
   -- Fetch the column details
   colData <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
-            SELECT column_name, to_json(udt_name)
+            SELECT column_name, to_json(udt_name), is_nullable::boolean
               FROM information_schema.columns
              WHERE table_schema = $1
                AND table_name = $2
@@ -79,7 +79,8 @@ getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
                AND table_name = $2
                            |] (sn, tn) False
   return $ mkTableInfo qt isSystemDefined rawConstraints $
-    map (fmap Q.getAltJ) colData
+    flip map colData $ \(colName, Q.AltJ colTy, isNull)
+                       -> (colName, colTy, isNull)
 
 newtype TrackTable
   = TrackTable
@@ -149,7 +150,8 @@ processTableChanges sc ti tableDiff = do
         return newQT
       Nothing -> return tn
 
-  forM_ addedCols $ \(PGColInfo colName _) ->
+  -- In the newly added columns check that there is no conflict with relationships
+  forM_ addedCols $ \(PGColInfo colName _ _) ->
     case M.lookup (fromPGCol colName) $ tiFieldInfoMap ti of
       Just (FIRelationship _) ->
         throw400 AlreadyExists $ "cannot add column " <> colName
@@ -158,7 +160,7 @@ processTableChanges sc ti tableDiff = do
       _ -> return ()
 
   -- for rest of the columns
-  forM_ alteredCols $ \(PGColInfo oColName oColTy, PGColInfo nColName nColTy) ->
+  forM_ alteredCols $ \(PGColInfo oColName oColTy _, PGColInfo nColName nColTy _) ->
     if | oColName /= nColName -> renameColumn sc oColName nColName newtn ti
        | oColTy /= nColTy -> do
            let colId   = SOTableObj newtn $ TOCol oColName
@@ -314,11 +316,13 @@ runSqlP2 (RunSQL t cascade) = do
   -- Reload SchemaCache
   reloadSchemaCache
 
+  -- postSc <- askSchemaCache
   -- -- recreate the insert permission infra
   -- forM_ (M.elems $ scTables postSc) $ \ti -> do
   --   let tn = tiName ti
+  --       pgCols = map pgiName $ getCols $ tiFieldInfoMap ti
   --   forM_ (M.elems $ tiRolePermInfoMap ti) $ \rpi ->
-  --     maybe (return ()) (liftTx . buildInsInfra tn) $ _permIns rpi
+  --     maybe (return ()) (\ipi -> liftTx $ buildInsInfra tn ipi pgCols) $ _permIns rpi
 
   return $ encode (res :: RunSQLRes)
 

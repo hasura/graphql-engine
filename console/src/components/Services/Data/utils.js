@@ -118,10 +118,15 @@ const getEdForm = string => {
   );
 };
 
+const escapeRegExp = string => {
+  return string.replace(/([.*+?^${}()|[\]\\])/g, '\\$1');
+};
+
 export {
   ordinalColSort,
   findTableFromRel,
   findAllFromRel,
   getEdForm,
   getIngForm,
+  escapeRegExp,
 };

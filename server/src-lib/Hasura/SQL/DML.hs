@@ -309,6 +309,9 @@ mkSQLOpExp
   -> SQLExp -- result
 mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
 
+toEmptyArrWhenNull :: SQLExp -> SQLExp
+toEmptyArrWhenNull e = SEFnApp "coalesce" [e, SELit "[]"] Nothing
+
 getExtrAlias :: Extractor -> Maybe Alias
 getExtrAlias (Extractor _ ma) = ma
 
@@ -502,6 +505,10 @@ newtype SetExpItem = SetExpItem (PGCol, SQLExp)
 buildSEI :: PGCol -> Int -> SetExpItem
 buildSEI colName argNumber =
   SetExpItem (colName, SEPrep argNumber)
+
+buildSEWithExcluded :: [PGCol] -> SetExp
+buildSEWithExcluded cols = SetExp $ flip map cols $
+  \col -> SetExpItem (col, SEExcluded $ getPGColTxt col)
 
 newtype UsingExp = UsingExp [TableName]
                   deriving (Show, Eq)

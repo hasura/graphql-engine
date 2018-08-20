@@ -6,19 +6,22 @@
 
 <a href="https://discord.gg/3FNQnWj"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
-<a href="http://eepurl.com/dzefQj"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
+<a href="http://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant GraphQL APIs over Postgres**. Hasura helps you build GraphQL apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
+Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant realtime GraphQL APIs over Postgres**. Hasura helps you build GraphQL apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
 
 Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io). 
 
 ------------------
 
 ![Hasura GraphQL Enigne Demo](assets/demo.gif)
+---
+![Hasura GraphQL Engine Readltime Demo](assets/realtime.gif)
 
 -------------------
 
-* **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations.
+* **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations
+* **Realtime**: Convert any GraphQL query to a live query by using subscriptions
 * **Works with existing, live databases**: Point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
 * **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
 * **High-performance & low-footprint**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
@@ -28,7 +31,6 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 Read more at: [https://hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
 
 ## Demos
-
 
 * [Add GraphQL to a self-hosted GitLab instance](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 mins*)
 * [Todo app with Auth0 and GraphQL backend](https://www.youtube.com/watch?v=15ITBYnccgc) (*4:00 mins*)
@@ -90,4 +92,3 @@ Check out our [contributing guide](CONTRIBUTING.md) for more details.
 GraphQL Engine is available under the [GNU Affero General Public License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0), the same license as [MongoDB](https://www.mongodb.com/community/licensing). We have written more about what you can and cannot do under AGPL [here](https://github.com/hasura/graphql-engine/wiki/License-Explained).
 
 **Commercial licenses** that bundle the Hasura GraphQL Engine with support, and SLAs are available on request. Please feel free to contact us at build@hasura.io or on our [website chat](https://hasura.io).
-
