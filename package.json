@@ -15,6 +15,7 @@
     "react-apollo": "^2.1.11",
     "react-bootstrap": "^0.32.1",
     "react-dom": "^16.4.2",
+    "react-google-charts": "^3.0.5",
     "react-scripts": "1.1.4",
     "subscriptions-transport-ws": "^0.9.14"
   },
