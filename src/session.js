@@ -53,6 +53,5 @@ const getUserId = () => {
 };
 
 export {
-  getUserId,
-  userId
+  getUserId
 };
