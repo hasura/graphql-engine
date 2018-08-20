@@ -42,8 +42,8 @@ fromSelSet fldTy flds =
       _ -> do
         fldInfo <- getFldInfo fldTy fldName
         case fldInfo of
-          Left (PGColInfo pgCol colTy) -> return (rqlFldName, RS.FCol (pgCol, colTy))
-          Right (relInfo, tableFilter, tableLimit) -> do
+          Left (PGColInfo pgCol colTy _) -> return (rqlFldName, RS.FCol (pgCol, colTy))
+          Right (relInfo, tableFilter, tableLimit, _) -> do
             let relTN = riRTable relInfo
             relSelData <- fromField relTN tableFilter tableLimit fld
             let annRel = RS.AnnRel (riName relInfo) (riType relInfo)
@@ -93,7 +93,7 @@ parseOrderBy v = do
   -- return $ map convOrdByElem enums
   -- undefined
   where
-    convOrdByElem (PGColInfo col _, ordTy, nullsOrd) =
+    convOrdByElem (PGColInfo col _ _, ordTy, nullsOrd) =
       S.OrderByItem (Left col)
       (Just $ convOrdTy ordTy)
       (Just $ convNullsOrd nullsOrd)
