@@ -24,6 +24,7 @@ import {
   permCustomChecked,
   permRemoveRole,
   permSetBulkSelect,
+  permRemoveMultipleRoles,
 } from './Actions';
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
@@ -202,15 +203,28 @@ class Permissions extends Component {
       if (role === 'admin' || role === '') {
         _permissionsRowHtml.push(<td key={-1} />);
       } else {
+        const bulkSelect = permsState.bulkSelect;
+        const currentInputSelection = bulkSelect.filter(e => e === role)
+          .length ? (
+            <input
+              onChange={dispatchBulkSelect}
+              checked="checked"
+              data-role={role}
+              className={styles.bulkSelect}
+              type="checkbox"
+            />
+          ) : (
+            <input
+              onChange={dispatchBulkSelect}
+              data-role={role}
+              className={styles.bulkSelect}
+              type="checkbox"
+            />
+          );
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
-              <input
-                onChange={dispatchBulkSelect}
-                data-role={role}
-                className={styles.bulkSelect}
-                type="checkbox"
-              />
+              {currentInputSelection}
               <i
                 onClick={dispatchDeletePermission}
                 className={styles.permissionDelete + ' fa fa-trash'}
@@ -820,10 +834,11 @@ class Permissions extends Component {
       if (!permsState.bulkSelect.length) {
         return null;
       }
-      console.log(tableSchema);
-      console.log(queryTypes);
-      const currentPermissions = tableSchema.permissions;
+      // const currentPermissions = tableSchema.permissions;
       const bulkSelect = permsState.bulkSelect;
+      const bulkDeleteClicked = () => {
+        dispatch(permRemoveMultipleRoles(tableSchema));
+      };
       const _bulkSection = (
         <div className={styles.activeEdit}>
           <div className={styles.editPermissionsHeading}>
@@ -835,17 +850,27 @@ class Permissions extends Component {
               Selected Roles
             </span>
             {bulkSelect.map(r => {
-              return <span className={styles.add_pad_right}>{r} </span>;
+              return (
+                <span key={r} className={styles.add_pad_right}>
+                  <b>{r}</b>{' '}
+                </span>
+              );
             })}
           </div>
           <div className={styles.padd_bottom}>
-            <button className={'btn btn-sm btn-default'}>Bulk Delete</button>
+            <button
+              onClick={bulkDeleteClicked}
+              className={'btn btn-sm btn-default'}
+            >
+              Delete
+            </button>
           </div>
         </div>
       );
       return _bulkSection;
     };
 
+    /*
     const getEditRoleSection = (tableSchema, permsState) => {
       let _editSection = '';
 
@@ -855,6 +880,7 @@ class Permissions extends Component {
 
       return _editSection;
     };
+    */
 
     const getHeader = tableSchema => {
       let _header;

@@ -19,6 +19,7 @@ export const PERM_CLOSE_EDIT = 'ModifyTable/PERM_CLOSE_EDIT';
 export const PERM_SET_ROLE_NAME = 'ModifyTable/PERM_SET_ROLE_NAME';
 export const PERM_SELECT_BULK = 'ModifyTable/PERM_SELECT_BULK';
 export const PERM_DESELECT_BULK = 'ModifyTable/PERM_DESELECT_BULK';
+export const PERM_RESET_BULK_SELECT = 'ModifyTable/PERM_RESET_BULK_SELECT';
 
 const queriesWithPermColumns = ['select', 'update'];
 const permChangeTypes = {
@@ -152,7 +153,6 @@ const toggleColumn = (permissions, column) => {
 const permRemoveRole = (tableSchema, roleName) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
-    const permissionsState = getState().tables.modify.permissionsState;
 
     const table = tableSchema.table_name;
     const role = roleName;
@@ -163,8 +163,6 @@ const permRemoveRole = (tableSchema, roleName) => {
 
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
-    console.log(permissionsState);
-    console.log(currRolePermissions);
 
     if (currRolePermissions && currRolePermissions.permissions) {
       Object.keys(currRolePermissions.permissions).forEach(type => {
@@ -204,6 +202,77 @@ const permRemoveRole = (tableSchema, roleName) => {
       dispatch(permCloseEdit());
     };
     const customOnError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      permissionsUpQueries,
+      permissionsDownQueries,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+const permRemoveMultipleRoles = tableSchema => {
+  return (dispatch, getState) => {
+    const currentSchema = getState().tables.currentSchema;
+    const permissionsState = getState().tables.modify.permissionsState;
+
+    const table = tableSchema.table_name;
+    const roles = permissionsState.bulkSelect;
+
+    const permissionsUpQueries = [];
+    const permissionsDownQueries = [];
+    const currentPermissions = tableSchema.permissions;
+
+    roles.map(role => {
+      const currentRolePermission = currentPermissions.filter(el => {
+        return el.role_name === role;
+      });
+      Object.keys(currentRolePermission[0].permissions).forEach(type => {
+        const deleteQuery = {
+          type: 'drop_' + type + '_permission',
+          args: {
+            table: { name: table, schema: currentSchema },
+            role: role,
+          },
+        };
+        const createQuery = {
+          type: 'create_' + type + '_permission',
+          args: {
+            table: { name: table, schema: currentSchema },
+            role: role,
+            permission: currentRolePermission[0].permissions[type],
+          },
+        };
+        permissionsUpQueries.push(deleteQuery);
+        permissionsDownQueries.push(createQuery);
+      });
+    });
+
+    // Apply migration
+    const migrationName = 'remove_roles_' + currentSchema + '_table_' + table;
+
+    const requestMsg = 'Removing roles...';
+    const successMsg = 'Roles removed';
+    const errorMsg = 'Removing roles failed';
+
+    const customOnSuccess = () => {
+      // reset new role name
+      dispatch(permSetRoleName(''));
+      // close edit box
+      dispatch(permCloseEdit());
+      // reset checkbox selections
+      dispatch({ type: PERM_RESET_BULK_SELECT });
+    };
+    const customOnError = () => {};
+    console.log(permissionsUpQueries);
+    console.log(permissionsDownQueries);
 
     makeMigrationCall(
       dispatch,
@@ -349,4 +418,5 @@ export {
   updatePermissionsState,
   deleteFromPermissionsState,
   updateBulkSelect,
+  permRemoveMultipleRoles,
 };

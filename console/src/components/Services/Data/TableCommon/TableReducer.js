@@ -52,6 +52,7 @@ import {
   PERM_SET_ROLE_NAME,
   PERM_SELECT_BULK,
   PERM_DESELECT_BULK,
+  PERM_RESET_BULK_SELECT,
   toggleColumn,
   toggleAllColumns,
   getFilterKey,
@@ -421,6 +422,15 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
             action.data,
             false
           ),
+        },
+      };
+
+    case PERM_RESET_BULK_SELECT:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          bulkSelect: [],
         },
       };
 
