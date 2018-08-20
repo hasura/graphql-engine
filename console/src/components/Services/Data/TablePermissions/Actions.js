@@ -17,6 +17,8 @@ export const PERM_REMOVE_ACCESS = 'ModifyTable/PERM_REMOVE_ACCESS';
 export const PERM_SAVE_PERMISSIONS = 'ModifyTable/PERM_SAVE_PERMISSIONS';
 export const PERM_CLOSE_EDIT = 'ModifyTable/PERM_CLOSE_EDIT';
 export const PERM_SET_ROLE_NAME = 'ModifyTable/PERM_SET_ROLE_NAME';
+export const PERM_SELECT_BULK = 'ModifyTable/PERM_SELECT_BULK';
+export const PERM_DESELECT_BULK = 'ModifyTable/PERM_DESELECT_BULK';
 
 const queriesWithPermColumns = ['select', 'update'];
 const permChangeTypes = {
@@ -52,14 +54,19 @@ const permToggleAllowUpsert = checked => ({
   type: PERM_TOGGLE_ALLOW_UPSERT,
   data: checked,
 });
-const permToggleEnableLimit = checked => ({
-  type: PERM_TOGGLE_ENABLE_LIMIT,
-  data: checked,
-});
 const permToggleModifyLimit = limit => ({
   type: PERM_TOGGLE_MODIFY_LIMIT,
   data: limit,
 });
+const permSetBulkSelect = (isChecked, selectedRole) => {
+  return dispatch => {
+    if (isChecked) {
+      dispatch({ type: PERM_SELECT_BULK, data: selectedRole });
+    } else {
+      dispatch({ type: PERM_DESELECT_BULK, data: selectedRole });
+    }
+  };
+};
 const permCustomChecked = () => ({ type: PERM_CUSTOM_CHECKED });
 
 const getFilterKey = query => {
@@ -98,6 +105,16 @@ const updatePermissionsState = (permissions, key, value) => {
   _permissions[query][key] = value;
 
   return _permissions;
+};
+
+const updateBulkSelect = (permissionsState, selectedRole, isAdd) => {
+  let bulkRes = permissionsState.bulkSelect;
+  if (isAdd) {
+    bulkRes.push(selectedRole);
+  } else {
+    bulkRes = bulkRes.filter(e => e !== selectedRole);
+  }
+  return bulkRes;
 };
 
 const deleteFromPermissionsState = permissions => {
@@ -320,10 +337,10 @@ export {
   permChangePermissions,
   permAllowAll,
   permToggleAllowUpsert,
-  permToggleEnableLimit,
   permToggleModifyLimit,
   permCustomChecked,
   permRemoveRole,
+  permSetBulkSelect,
   toggleColumn,
   toggleAllColumns,
   queriesWithPermColumns,
@@ -331,4 +348,5 @@ export {
   getBasePermissionsState,
   updatePermissionsState,
   deleteFromPermissionsState,
+  updateBulkSelect,
 };

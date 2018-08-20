@@ -192,6 +192,11 @@ hr
     position: absolute;
     right: 10px;
     color: #337ab7;
+    cursor: pointer;
+  }
+
+  .bulkSelect {
+    margin-right: 10px !important;
   }
 
   .clickableCell {
