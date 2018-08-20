@@ -2,10 +2,13 @@ import React from 'react';
 import {
   Subscription,
 } from 'react-apollo';
+import {
+  Well,
+} from 'react-bootstrap';
 import {Chart} from 'react-google-charts';
 import gql from 'graphql-tag';
 
-const SUBSCRIBE_RESULT = gql`
+const SUBSCRIBE_RESULT = `
   subscription getResult($pollId: uuid!) {
     poll_results (
       where: {
@@ -54,7 +57,7 @@ const renderChart = (data) => {
 };
 
 export const Result = (pollId) => (
-  <Subscription subscription={SUBSCRIBE_RESULT} variables={pollId}>
+  <Subscription subscription={gql`${SUBSCRIBE_RESULT}`} variables={pollId}>
     {({ loading, error, data }) => {
        if (loading) return <p>Loading...</p>;
        if (error) return <p>Error :</p>;
@@ -63,12 +66,13 @@ export const Result = (pollId) => (
            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', maxWidth: 900 }}>
              {renderChart(data)}
            </div>
+           <div><Well><pre>{SUBSCRIBE_RESULT}</pre></Well></div>
            <div>
-             {
+             {/*
                data.poll_results.map((result, i) => (
                  <div key={i}>{`${result.option.text}: ${result.votes}`}</div>
                ))
-             }
+             */}
            </div>
          </div>
        );

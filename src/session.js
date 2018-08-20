@@ -38,6 +38,7 @@ const getUserId = () => {
           const user = data.insert_user.returning[0];
           window.localStorage.setItem('uid', user.id);
           window.localStorage.setItem('createdAt', user.created_at);
+          reportUserOnline(user.id);
           resolve(user.id);
         } else {
           reject('no data');
@@ -47,9 +48,37 @@ const getUserId = () => {
         reject(error);
       });
     } else {
+      reportUserOnline(uid);
       resolve(uid);
     }
   });
+};
+
+const MUTATION_USER_ONLIE = gql`
+mutation userOnline($uuid: uuid) {
+  update_user(
+    where: {id: {_eq: $uuid}},
+    _set : {
+      online_ping: true
+    }
+  ) {
+    affected_rows
+    returning {
+      last_seen_at
+    }
+  }
+}
+`;
+
+const reportUserOnline = (userId) => {
+  window.setInterval(() => {
+    client.mutate({
+      mutation: MUTATION_USER_ONLIE,
+      variables: {
+        uuid: userId,
+      },
+    });
+  }, 5000);
 };
 
 export {

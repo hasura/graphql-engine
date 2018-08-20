@@ -4,6 +4,7 @@ import './App.css';
 import { ApolloProvider } from 'react-apollo';
 import client from './apollo';
 import Poll from './Poll';
+import { Users } from './Users.react'
 import { getUserId } from './session'
 
 class App extends Component {
@@ -28,6 +29,7 @@ class App extends Component {
             <h1 className="App-title">Welcome to React</h1>
           </header>
           <Poll userId={this.state.userId}/>
+          <Users />
         </div>
       </ApolloProvider>
     );
