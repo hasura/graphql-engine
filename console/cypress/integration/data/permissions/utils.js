@@ -91,7 +91,7 @@ export const permRemove = (tableName, query) => {
   // click on the query type to edit permission
   cy.get(getElementFromAlias(`role0-${query}`)).click();
   // Remove permission
-  cy.get(getElementFromAlias('Remove-all-access-button')).click();
+  cy.get(getElementFromAlias('Remove-button')).click();
   cy.wait(2500);
   // Check for notif
   // cy.get('.notification-success').click();
