@@ -1059,9 +1059,8 @@ mkGCtxMapTable
   => TableCache
   -> TableInfo
   -> m (Map.HashMap RoleName (TyAgg, RootFlds))
-mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols) = do
-  m <- Map.traverseWithKey
-    (mkGCtxRole tableCache tn fields pkeyCols validConstraints) rolePerms
+mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols _) = do
+  m <- Map.traverseWithKey (mkGCtxRole tableCache tn fields pkeyCols validConstraints) rolePerms
   let adminCtx = mkGCtxRole' tn (Just colInfos)
                  (Just selFlds) (Just colInfos) (Just ())
                  pkeyColInfos validConstraints

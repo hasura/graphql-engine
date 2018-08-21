@@ -333,6 +333,12 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
     qti <- liftP1 qCtx $ createQueryTemplateP1 $
            CreateQueryTemplate qtn qtDef Nothing
     addQTemplateToCache qti
+
+  eventTriggers <- lift $ Q.catchE defaultTxErrorHandler fetchEventTriggers
+  forM_ eventTriggers $ \(sn, tn, etn, Q.AltJ tDefVal) -> do
+    tDef <- decodeValue tDefVal
+    addEventTriggerToCache (QualifiedTable sn tn) etn tDef
+
   where
     permHelper sn tn rn pDef pa = do
       qCtx <- mkAdminQCtx <$> get
@@ -367,6 +373,12 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
       Q.listQ [Q.sql|
                 SELECT template_name, template_defn :: json FROM hdb_catalog.hdb_query_template
                   |] () False
+
+    fetchEventTriggers =
+      Q.listQ [Q.sql|
+               SELECT schema_name, table_name, name, definition::json
+                FROM hdb_catalog.event_triggers
+               |] () False
 
 data RunSQL
   = RunSQL

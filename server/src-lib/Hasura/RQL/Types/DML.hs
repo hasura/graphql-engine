@@ -39,6 +39,8 @@ module Hasura.RQL.Types.DML
        , SubscribeTableQuery(..)
        , SubscribeOpSpec(..)
        , SubscribeColumns(..)
+       , TriggerDefinition(..)
+       , TriggerName
 
        , QueryT(..)
 
@@ -327,6 +329,8 @@ data CountQuery
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CountQuery)
 
+type TriggerName = T.Text
+
 data SubscribeTableQuery
   = SubscribeTableQuery
   { stqName    :: !T.Text
@@ -354,6 +358,14 @@ data SubscribeOpSpec
   = SubscribeOpSpec
   { sosColumns :: !SubscribeColumns
   } deriving (Show, Eq, Lift)
+
+data TriggerDefinition
+  = TriggerDefinition
+  { tdInsert :: !(Maybe SubscribeOpSpec)
+  , tdUpdate :: !(Maybe SubscribeOpSpec)
+  , tdDelete :: !(Maybe SubscribeOpSpec)
+  }
+$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerDefinition)
 
 instance FromJSON SubscribeTableQuery where
   parseJSON (Object o) = do

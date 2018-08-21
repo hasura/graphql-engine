@@ -183,7 +183,7 @@ $$;
 CREATE TABLE hdb_catalog.event_triggers
 (
   id SERIAL UNIQUE,
-  name VARCHAR(63) PRIMARY KEY,
+  name TEXT PRIMARY KEY,
   type TEXT NOT NULL,
   schema_name TEXT,
   table_name TEXT,

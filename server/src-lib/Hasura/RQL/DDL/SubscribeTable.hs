@@ -22,16 +22,6 @@ import qualified Text.Mustache.Compile as M
 
 data Ops = INSERT | UPDATE | DELETE deriving (Show)
 
-type TriggerName = T.Text
-
-data TriggerDefinition
-  = TriggerDefinition
-  { tdInsert :: !(Maybe SubscribeOpSpec)
-  , tdUpdate :: !(Maybe SubscribeOpSpec)
-  , tdDelete :: !(Maybe SubscribeOpSpec)
-  }
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerDefinition)
-
 triggerTmplt :: M.Template
 triggerTmplt = $(M.embedSingleTemplate "src-rsr/trigger.sql")
 

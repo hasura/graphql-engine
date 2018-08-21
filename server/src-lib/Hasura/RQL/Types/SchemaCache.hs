@@ -62,6 +62,7 @@ module Hasura.RQL.Types.SchemaCache
        , delQTemplateFromCache
        , TemplateParamInfo(..)
 
+       , addEventTriggerToCache
        , TableObjId(..)
        , SchemaObjId(..)
        , reportSchemaObj
@@ -323,6 +324,25 @@ makeLenses ''RolePermInfo
 
 type RolePermInfoMap = M.HashMap RoleName RolePermInfo
 
+data OpTriggerInfo
+  = OpTriggerInfo
+  { otiTable :: !QualifiedTable
+  , otiCols  :: !(HS.HashSet PGCol)
+  , otiDeps  :: ![SchemaDependency]
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''OpTriggerInfo)
+
+data EventTriggerInfo
+ = EventTriggerInfo
+   { etiInsert :: !(Maybe OpTriggerInfo)
+   , etiUpdate :: !(Maybe OpTriggerInfo)
+   , etiDelete :: !(Maybe OpTriggerInfo)
+   } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)
+
+type EventTriggerInfoMap = M.HashMap TriggerName EventTriggerInfo
+
 data ConstraintType
   = CTCHECK
   | CTFOREIGNKEY
@@ -367,20 +387,21 @@ isUniqueOrPrimary (TableConstraint ty _) = case ty of
 
 data TableInfo
   = TableInfo
-  { tiName            :: !QualifiedTable
-  , tiSystemDefined   :: !Bool
-  , tiFieldInfoMap    :: !FieldInfoMap
-  , tiRolePermInfoMap :: !RolePermInfoMap
-  , tiConstraints     :: ![TableConstraint]
-  , tiPrimaryKeyCols  :: ![PGCol]
+  { tiName                :: !QualifiedTable
+  , tiSystemDefined       :: !Bool
+  , tiFieldInfoMap        :: !FieldInfoMap
+  , tiRolePermInfoMap     :: !RolePermInfoMap
+  , tiConstraints         :: ![TableConstraint]
+  , tiPrimaryKeyCols      :: ![PGCol]
+  , tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 
 mkTableInfo :: QualifiedTable -> Bool -> [(ConstraintType, ConstraintName)]
             -> [(PGCol, PGColType, Bool)] -> [PGCol] -> TableInfo
-mkTableInfo tn isSystemDefined rawCons cols =
-  TableInfo tn isSystemDefined colMap (M.fromList []) constraints
+mkTableInfo tn isSystemDefined rawCons cols pcols =
+  TableInfo tn isSystemDefined colMap (M.fromList []) constraints pcols (M.fromList [])
   where
     constraints = flip map rawCons $ uncurry TableConstraint
     colMap     = M.fromList $ map f cols
@@ -539,6 +560,36 @@ withPermType PTSelect f = f PASelect
 withPermType PTUpdate f = f PAUpdate
 withPermType PTDelete f = f PADelete
 
+addEventTriggerToCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedTable
+  -> TriggerName
+  -> TriggerDefinition
+  -> m ()
+addEventTriggerToCache qt trn tdef = do
+  modTableInCache modEventTriggerInfo qt
+  where
+    modEventTriggerInfo ti = do
+      let eti = EventTriggerInfo
+                (getOpInfo qt $ tdInsert tdef)
+                (getOpInfo qt $ tdUpdate tdef)
+                (getOpInfo qt $ tdDelete tdef)
+          etim = tiEventTriggerInfoMap ti
+      return $ ti { tiEventTriggerInfoMap = M.insert trn eti etim}
+      where
+        getOpInfo :: QualifiedTable -> Maybe SubscribeOpSpec -> Maybe OpTriggerInfo
+        getOpInfo qt' mos = fromSubscrOpSpec qt' <$> mos
+
+        fromSubscrOpSpec qt os =
+          let cols = getColsFromSub $ sosColumns os
+              schemaDeps = [SchemaDependency (SOTable qt) "event trigger is dependent on table"]
+                ++ map (\col -> SchemaDependency (SOTableObj qt (TOCol col)) "event trigger is dependent on column") (toList cols)
+            in OpTriggerInfo qt cols schemaDeps
+            where
+              getColsFromSub sc = case sc of
+                SubCStar         -> HS.fromList $ map pgiName $ getCols $ tiFieldInfoMap ti
+                SubCArray pgcols -> HS.fromList pgcols
+
 addPermToCache
   :: (QErrM m, CacheRWM m)
   => QualifiedTable
@@ -636,13 +687,13 @@ getDependentObjsOfTableWith f objId ti =
 
 getDependentRelsOfTable :: (T.Text -> Bool) -> SchemaObjId
                         -> TableInfo -> [SchemaObjId]
-getDependentRelsOfTable rsnFn objId (TableInfo tn _ fim _ _ _) =
+getDependentRelsOfTable rsnFn objId (TableInfo tn _ fim _ _ _ _) =
     map (SOTableObj tn . TORel . riName) $
     filter (isDependentOn rsnFn objId) $ getRels fim
 
 getDependentPermsOfTable :: (T.Text -> Bool) -> SchemaObjId
                          -> TableInfo -> [SchemaObjId]
-getDependentPermsOfTable rsnFn objId (TableInfo tn _ _ rpim _ _) =
+getDependentPermsOfTable rsnFn objId (TableInfo tn _ _ rpim _ _ _) =
   concat $ flip M.mapWithKey rpim $
   \rn rpi -> map (SOTableObj tn . TOPerm rn) $ getDependentPerms' rsnFn objId rpi
 
