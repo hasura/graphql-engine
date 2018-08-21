@@ -506,6 +506,10 @@ buildSEI :: PGCol -> Int -> SetExpItem
 buildSEI colName argNumber =
   SetExpItem (colName, SEPrep argNumber)
 
+buildSEWithExcluded :: [PGCol] -> SetExp
+buildSEWithExcluded cols = SetExp $ flip map cols $
+  \col -> SetExpItem (col, SEExcluded $ getPGColTxt col)
+
 newtype UsingExp = UsingExp [TableName]
                   deriving (Show, Eq)
 

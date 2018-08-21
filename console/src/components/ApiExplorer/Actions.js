@@ -398,6 +398,12 @@ const getStateAfterClearingHistory = state => {
   };
 };
 
+const getRemoteQueries = (queryUrl, cb) => {
+  fetch(queryUrl)
+    .then(resp => resp.text().then(cb))
+    .catch(e => console.log('Invalid query URL: ', e));
+};
+
 const apiExplorerReducer = (state = defaultState, action) => {
   switch (action.type) {
     case CHANGE_TAB:
@@ -625,4 +631,5 @@ export {
   createWsClient,
   focusHeaderTextbox,
   unfocusTypingHeader,
+  getRemoteQueries,
 };

@@ -272,7 +272,7 @@ class ApiRequest extends Component {
               onBlur={this.handleBlur}
               data-test={`header-value-${i}`}
               type={
-                header.key === 'X-Hasura-Access-Key' &&
+                header.key.toLowerCase() === 'x-hasura-access-key' &&
                 !this.state.accessKeyVisible
                   ? 'password'
                   : 'text'
@@ -281,7 +281,7 @@ class ApiRequest extends Component {
           </td>
           {header.isNewHeader ? null : (
             <td>
-              {header.key === 'X-Hasura-Access-Key' ? (
+              {header.key.toLowerCase() === 'x-hasura-access-key' ? (
                 <i
                   className={styles.showAccessKey + ' fa fa-eye'}
                   data-header-id={i}
@@ -349,6 +349,7 @@ class ApiRequest extends Component {
             numberOfTables={this.props.numberOfTables}
             dispatch={this.props.dispatch}
             headerFocus={this.props.headerFocus}
+            queryParams={this.props.queryParams}
           />
         );
       default:
@@ -395,6 +396,7 @@ ApiRequest.propTypes = {
   route: PropTypes.object.isRequired,
   numberOfTables: PropTypes.number.isRequired,
   headerFocus: PropTypes.bool.isRequired,
+  queryParams: PropTypes.object.isRequired,
 };
 
 export default ApiRequest;
