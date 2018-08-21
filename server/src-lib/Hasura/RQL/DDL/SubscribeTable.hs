@@ -8,22 +8,37 @@
 module Hasura.RQL.DDL.SubscribeTable where
 
 import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import qualified Data.HashMap.Strict   as HashMap
-import qualified Data.Text             as T
-import qualified Data.Text.Encoding    as TE
-import qualified Database.PG.Query     as Q
+import qualified Data.FileEmbed      as FE
+import qualified Data.HashMap.Strict as HashMap
+import qualified Data.Text           as T
+import qualified Data.Text.Encoding  as TE
+import qualified Database.PG.Query   as Q
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import qualified Text.Mustache         as M
-import qualified Text.Mustache.Compile as M
+import qualified Text.Ginger         as TG
 
 data Ops = INSERT | UPDATE | DELETE deriving (Show)
 
-triggerTmplt :: M.Template
-triggerTmplt = $(M.embedSingleTemplate "src-rsr/trigger.sql")
+type GingerTmplt = TG.Template TG.SourcePos
+
+parseGingerTmplt :: TG.Source -> Either String GingerTmplt
+parseGingerTmplt src = either parseE Right res
+  where
+    res = runIdentity $ TG.parseGinger' parserOptions src
+    parserOptions = TG.mkParserOptions resolver
+    resolver = const $ return Nothing
+    parseE e = Left $ TG.formatParserError (Just "") e
+
+triggerTmplt :: Maybe GingerTmplt
+triggerTmplt = case parseGingerTmplt $(FE.embedStringFile "src-rsr/trigger.sql") of
+  Left e      -> Nothing
+  Right tmplt -> Just tmplt
+
+getDropFuncSql:: Ops -> TriggerName -> T.Text
+getDropFuncSql op trn = "DROP FUNCTION IF EXISTS"
+                        <> " hdb_catalog.notify_skor_" <> trn <> "_" <> T.pack (show op)
+                        <> " CASCADE"
 
 getTriggerSql:: Ops -> TriggerName -> SchemaName -> TableName -> Maybe SubscribeOpSpec -> Maybe T.Text
 getTriggerSql op name sn tn spec =
@@ -34,7 +49,7 @@ getTriggerSql op name sn tn spec =
       opCtx = maybe HashMap.empty (createOpCtx op) spec
       context = HashMap.union globalCtx opCtx
   in
-      spec >> (Just $ renderSql triggerTmplt context)
+      spec >> renderSql context <$> triggerTmplt
   where
     createOpCtx :: Ops -> SubscribeOpSpec -> HashMap.HashMap T.Text T.Text
     createOpCtx op1 (SubscribeOpSpec columns) = HashMap.fromList [
@@ -53,8 +68,8 @@ getTriggerSql op name sn tn spec =
                                      mkQualified :: T.Text -> T.Text -> T.Text
                                      mkQualified v col = v <> "." <> col
 
-    renderSql :: M.Template -> HashMap.HashMap T.Text T.Text -> T.Text
-    renderSql = M.substitute
+    renderSql :: HashMap.HashMap T.Text T.Text -> GingerTmplt -> T.Text
+    renderSql = TG.easyRender
 
 subscribeTable :: SubscribeTableQuery
                -> Q.TxE QErr RespBody
@@ -74,6 +89,18 @@ subscribeTable (SubscribeTableQuery name (QualifiedTable sn tn) insert update de
     tx:: Maybe T.Text -> Q.TxE QErr ()
     tx (Just sql) = Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder sql)
     tx Nothing = throw500 "no trigger sql generated"
+
+delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
+delEventTriggerFromCatalog trn = do
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+           DELETE FROM
+                  hdb_catalog.event_triggers
+           WHERE name =  $1
+                |] (Identity trn) True
+  mapM_ tx [INSERT, UPDATE, DELETE]
+  where
+    tx :: Ops -> Q.TxE QErr ()
+    tx op = Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder $ getDropFuncSql op trn)
 
 subTableP1 :: (P1C m) => SubscribeTableQuery -> m ()
 subTableP1 _ = return ()

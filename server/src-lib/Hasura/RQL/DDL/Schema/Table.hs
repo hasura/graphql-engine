@@ -17,6 +17,7 @@ import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema.Diff
+import           Hasura.RQL.DDL.SubscribeTable
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -140,6 +141,10 @@ purgeDep schemaObjId = case schemaObjId of
   (SOQTemplate qtn)              -> do
     liftTx $ delQTemplateFromCatalog qtn
     delQTemplateFromCache qtn
+
+  (SOTableObj qt (TOTrigger trn)) -> do
+    liftTx $ delEventTriggerFromCatalog trn
+    delEventTriggerFromCache qt trn
 
   _                              -> throw500 $
     "unexpected dependent object : " <> reportSchemaObj schemaObjId

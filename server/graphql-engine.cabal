@@ -99,6 +99,8 @@ library
 
                      -- Templating
                      , mustache
+                     , ginger
+                     , file-embed
 
                      --
                      , data-has
