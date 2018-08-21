@@ -50,7 +50,7 @@ func (o *migrateApplyOptions) run() error {
 		return err
 	}
 
-	err = executeMigration(migrationType, migrateDrv, step)
+	err = ExecuteMigration(migrationType, migrateDrv, step)
 	if err != nil {
 		if err == migrate.ErrNoChange {
 			o.EC.Logger.Info("nothing to apply")
