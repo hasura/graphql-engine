@@ -53,7 +53,7 @@ class PollQuestion extends Component {
       <Mutation mutation={gql`${MUTATION_VOTE}`}>
         {(vote, { data }) => (
           <div className="textLeft">
-            <Alert>{this.props.poll.question}</Alert>
+            <h3>{this.props.poll.question}</h3>
             <form className="pollForm textLeft"
               onSubmit={e => {
                   e.preventDefault();
