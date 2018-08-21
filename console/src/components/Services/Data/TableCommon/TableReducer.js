@@ -53,6 +53,9 @@ import {
   PERM_SELECT_BULK,
   PERM_DESELECT_BULK,
   PERM_RESET_BULK_SELECT,
+  PERM_RESET_BULK_SAME_SELECT,
+  PERM_SAME_APPLY_BULK,
+  PERM_DESELECT_SAME_APPLY_BULK,
   toggleColumn,
   toggleAllColumns,
   getFilterKey,
@@ -60,6 +63,7 @@ import {
   updatePermissionsState,
   deleteFromPermissionsState,
   updateBulkSelect,
+  updateBulkSameSelect,
 } from '../TablePermissions/Actions';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
@@ -424,6 +428,30 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ),
         },
       };
+    case PERM_SAME_APPLY_BULK:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          applySamePermissions: updateBulkSameSelect(
+            modifyState.permissionsState,
+            action.data,
+            true
+          ),
+        },
+      };
+    case PERM_DESELECT_SAME_APPLY_BULK:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          applySamePermissions: updateBulkSameSelect(
+            modifyState.permissionsState,
+            action.data,
+            false
+          ),
+        },
+      };
 
     case PERM_RESET_BULK_SELECT:
       return {
@@ -431,6 +459,15 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         permissionsState: {
           ...modifyState.permissionsState,
           bulkSelect: [],
+        },
+      };
+
+    case PERM_RESET_BULK_SAME_SELECT:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          applySamePermissions: [],
         },
       };
 

@@ -29,6 +29,7 @@ const defaultPermissionsState = {
   newRole: '',
   limitEnabled: true,
   bulkSelect: [],
+  applySamePermissions: [],
 };
 
 const defaultQueryPermissions = {

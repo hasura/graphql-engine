@@ -225,6 +225,22 @@ hr
   }
 }
 
+.applyBulkPermissions {
+  display: inline-block;
+}
+
+.samePermissionRole {
+  display: inline-block;
+  width: auto;
+  height: auto;
+}
+
+.bulkApplyBtn {
+  display: block;
+  margin-top: 10px;
+  clear: both;
+}
+
 .activeEdit {
   .editPermissionsHeading {
     font-weight: bold;

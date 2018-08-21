@@ -25,6 +25,8 @@ import {
   permRemoveRole,
   permSetBulkSelect,
   permRemoveMultipleRoles,
+  permSetSameSelect,
+  applySamePermissionsBulk,
 } from './Actions';
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
@@ -206,21 +208,21 @@ class Permissions extends Component {
         const bulkSelect = permsState.bulkSelect;
         const currentInputSelection = bulkSelect.filter(e => e === role)
           .length ? (
-            <input
-              onChange={dispatchBulkSelect}
-              checked="checked"
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          ) : (
-            <input
-              onChange={dispatchBulkSelect}
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          );
+          <input
+            onChange={dispatchBulkSelect}
+            checked="checked"
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        ) : (
+          <input
+            onChange={dispatchBulkSelect}
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        );
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
@@ -793,12 +795,79 @@ class Permissions extends Component {
       );
 
       const closeButton = getButton('Close', 'btn-warning', dispatchCloseEdit);
+      const currentPermissions = tableSchema.permissions;
+      const applySameSelected = e => {
+        const isChecked = e.target.checked;
+        const selectedRole = e.target.getAttribute('data-role');
+        dispatch(permSetSameSelect(isChecked, selectedRole));
+      };
+      const applySameBulk = () => {
+        if (window.confirm('Are you sure?')) {
+          dispatch(applySamePermissionsBulk(tableSchema));
+        }
+      };
+      const roleList = [];
+      currentPermissions.map(perm => {
+        if (roleList.indexOf(perm.role_name) === -1) {
+          roleList.push(perm.role_name);
+        }
+      });
+      // get list of unique names
+      const roleListHtml = [];
+      roleList.map(role => {
+        if (role !== permsState.role && currQueryPermissions) {
+          roleListHtml.push(
+            <div
+              key={role}
+              className={styles.display_inline + ' ' + styles.add_mar_right}
+            >
+              <input
+                data-role={role}
+                onChange={applySameSelected}
+                className={
+                  'form-control ' +
+                  styles.samePermissionRole +
+                  ' ' +
+                  styles.add_mar_small
+                }
+                type="checkbox"
+              />
+              <label className={styles.display_inline}>{role}</label>
+            </div>
+          );
+        }
+      });
+      let applyBulkPermissions = null;
+      if (roleListHtml.length) {
+        applyBulkPermissions = (
+          <div className={styles.add_mar_top}>
+            <div>Apply same {permsState.query} permissions to</div>
+            <div className={styles.add_mar_top_small}>{roleListHtml}</div>
+            {permsState.applySamePermissions.length ? (
+              <button
+                onClick={applySameBulk}
+                className={'btn btn-default ' + styles.bulkApplyBtn}
+              >
+                Bulk Apply
+              </button>
+            ) : (
+              <button
+                className={'btn btn-default ' + styles.bulkApplyBtn}
+                disabled
+              >
+                Bulk Apply
+              </button>
+            )}
+          </div>
+        );
+      }
 
       return (
         <div className={styles.editPermissionsSection}>
           {saveButton}
           {removeAccessButton}
           {closeButton}
+          {applyBulkPermissions}
         </div>
       );
     };
@@ -837,7 +906,9 @@ class Permissions extends Component {
       // const currentPermissions = tableSchema.permissions;
       const bulkSelect = permsState.bulkSelect;
       const bulkDeleteClicked = () => {
-        dispatch(permRemoveMultipleRoles(tableSchema));
+        if (window.confirm('Are you sure?')) {
+          dispatch(permRemoveMultipleRoles(tableSchema));
+        }
       };
       const _bulkSection = (
         <div className={styles.activeEdit}>
