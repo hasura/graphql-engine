@@ -26,12 +26,10 @@ const SUBSCRIBE_RESULT = `
 
 const renderChart = (data) => {
   const d = [
-    ['Options'],
-    ['Votes'],
+    ['Option', 'No. of votes'],
   ];
   data.poll_results.map((r, i) => {
-    d[0].push(r.option.text);
-    d[1].push(r.votes);
+    d.push([r.option.text, r.votes]);
   })
 
   return (
@@ -42,10 +40,11 @@ const renderChart = (data) => {
       loader={<div>Loading Chart</div>}
       data={d}
       options={{
+        bars: 'vertical',
         chart: {
-          title: 'Poll results',
-          subtitle: 'Realtime poll results',
+          title: 'Realtime results',
         },
+        legend: { position: 'none' },
         animation: {
           duration: 1000,
           easing: 'out',

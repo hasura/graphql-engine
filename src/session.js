@@ -26,8 +26,8 @@ mutation newUser($uuid: uuid) {
 
 const getUserId = () => {
   return new Promise((resolve, reject) => {
-    let uid = window.localStorage.getItem('uid');
-    if (!uid) {
+    // let uid = window.localStorage.getItem('uid');
+    // if (!uid) {
       client.mutate({
         mutation: MUTATION_NEW_USER,
         variables: {
@@ -36,8 +36,8 @@ const getUserId = () => {
       }).then(({data}) => {
         if (data.insert_user.returning.length > 0) {
           const user = data.insert_user.returning[0];
-          window.localStorage.setItem('uid', user.id);
-          window.localStorage.setItem('createdAt', user.created_at);
+          // window.localStorage.setItem('uid', user.id);
+          // window.localStorage.setItem('createdAt', user.created_at);
           reportUserOnline(user.id);
           resolve(user.id);
         } else {
@@ -47,10 +47,10 @@ const getUserId = () => {
         console.error(error);
         reject(error);
       });
-    } else {
-      reportUserOnline(uid);
-      resolve(uid);
-    }
+    // } else {
+    //   reportUserOnline(uid);
+    //   resolve(uid);
+    // }
   });
 };
 

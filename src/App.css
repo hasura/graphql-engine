@@ -14,11 +14,22 @@
   display: flex;
   align-items: center;
 }
+.hasura-logo a:hover {
+    text-decoration: none;
+}
+.hasura-logo img {
+    height: 30px;
+}
 .App-header {
   background-color: #222;
   height: 50px;
   color: white;
   text-align: left;
+}
+.App-footer{
+    height: 50px;
+    text-align: center;
+    width: 100%;
 }
 
 .App-title {
@@ -26,7 +37,6 @@
   display: inline-block;
   margin-top: 0px;
   margin-bottom: 0px;
-  margin-left: 50px;
 }
 
 .App-intro {
