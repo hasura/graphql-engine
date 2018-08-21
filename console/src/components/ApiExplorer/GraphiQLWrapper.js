@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import GraphiQL from 'hasura-console-graphiql';
 import PropTypes from 'prop-types';
 import ErrorBoundary from './ErrorBoundary';
-import { graphQLFetcherFinal } from './Actions';
+import { graphQLFetcherFinal, getRemoteQueries } from './Actions';
 
 import './GraphiQL.css';
 
@@ -14,7 +14,14 @@ class GraphiQLWrapper extends Component {
       error: false,
       noSchema: false,
       onBoardingEnabled: false,
+      queries: null,
     };
+    const queryFile = this.props.queryParams.query_file;
+    if (queryFile) {
+      getRemoteQueries(queryFile, queries =>
+        this.setState({ ...this.state, queries })
+      );
+    }
   }
 
   shouldComponentUpdate(nextProps) {
@@ -40,7 +47,13 @@ class GraphiQLWrapper extends Component {
     );
 
     if (!this.state.error && this.props.numberOfTables !== 0) {
-      content = <GraphiQL fetcher={graphQLFetcher} />;
+      if (this.state.queries) {
+        content = (
+          <GraphiQL fetcher={graphQLFetcher} query={this.state.queries} />
+        );
+      } else {
+        content = <GraphiQL fetcher={graphQLFetcher} />;
+      }
     } else if (this.props.numberOfTables === 0) {
       content = (
         <GraphiQL

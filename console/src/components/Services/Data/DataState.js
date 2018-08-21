@@ -117,7 +117,9 @@ const defaultState = {
   schemaList: ['public'],
   currentSchema: 'public',
   accessKeyError: false,
-  dataHeaders: { 'Content-Type': 'application/json' },
+  dataHeaders: {
+    'Content-Type': 'application/json',
+  },
 };
 
 export default defaultState;

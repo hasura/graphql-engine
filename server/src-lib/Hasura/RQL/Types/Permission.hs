@@ -10,6 +10,7 @@ module Hasura.RQL.Types.Permission
        , UserInfo(..)
        , adminUserInfo
        , adminRole
+       , isAdmin
        , PermType(..)
        , permTypeToCode
        , PermId(..)
@@ -40,6 +41,9 @@ instance DQuote RoleName where
 
 adminRole :: RoleName
 adminRole = RoleName "admin"
+
+isAdmin :: RoleName -> Bool
+isAdmin = (adminRole ==)
 
 newtype UserId = UserId { getUserId :: Word64 }
   deriving (Show, Eq, FromJSON, ToJSON)

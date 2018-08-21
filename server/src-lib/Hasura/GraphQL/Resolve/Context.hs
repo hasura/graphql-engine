@@ -1,7 +1,9 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiWayIf            #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Hasura.GraphQL.Resolve.Context
   ( FieldMap
@@ -10,6 +12,7 @@ module Hasura.GraphQL.Resolve.Context
   , NullsOrder(..)
   , OrdTy(..)
   , RespTx
+  , InsertTxConflictCtx(..)
   , getFldInfo
   , getPGColInfo
   , getArg
@@ -23,6 +26,9 @@ module Hasura.GraphQL.Resolve.Context
   , module Hasura.GraphQL.Utils
   ) where
 
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import           Data.Has
 import           Hasura.Prelude
 
@@ -42,7 +48,7 @@ import           Hasura.SQL.Value
 import qualified Hasura.SQL.DML                as S
 
 type FieldMap
-  = Map.HashMap (G.NamedType, G.Name) (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int))
+  = Map.HashMap (G.NamedType, G.Name) (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool))
 
 data OrdTy
   = OAsc
@@ -62,9 +68,16 @@ type OrdByResolveCtxElem = (PGColInfo, OrdTy, NullsOrder)
 type OrdByResolveCtx
   = Map.HashMap (G.NamedType, G.EnumValue) OrdByResolveCtxElem
 
+data InsertTxConflictCtx
+  = InsertTxConflictCtx
+  { itcAction     :: !ConflictAction
+  , itcConstraint :: !(Maybe ConstraintName)
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''InsertTxConflictCtx)
+
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> G.Name -> m (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int))
+  => G.NamedType -> G.Name -> m (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool))
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $
