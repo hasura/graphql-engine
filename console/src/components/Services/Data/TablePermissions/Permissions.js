@@ -208,21 +208,21 @@ class Permissions extends Component {
         const bulkSelect = permsState.bulkSelect;
         const currentInputSelection = bulkSelect.filter(e => e === role)
           .length ? (
-          <input
-            onChange={dispatchBulkSelect}
-            checked="checked"
-            data-role={role}
-            className={styles.bulkSelect}
-            type="checkbox"
-          />
-        ) : (
-          <input
-            onChange={dispatchBulkSelect}
-            data-role={role}
-            className={styles.bulkSelect}
-            type="checkbox"
-          />
-        );
+            <input
+              onChange={dispatchBulkSelect}
+              checked="checked"
+              data-role={role}
+              className={styles.bulkSelect}
+              type="checkbox"
+            />
+          ) : (
+            <input
+              onChange={dispatchBulkSelect}
+              data-role={role}
+              className={styles.bulkSelect}
+              type="checkbox"
+            />
+          );
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
@@ -848,14 +848,14 @@ class Permissions extends Component {
                 onClick={applySameBulk}
                 className={'btn btn-default ' + styles.bulkApplyBtn}
               >
-                Bulk Apply
+                Apply
               </button>
             ) : (
               <button
                 className={'btn btn-default ' + styles.bulkApplyBtn}
                 disabled
               >
-                Bulk Apply
+                Apply
               </button>
             )}
           </div>
