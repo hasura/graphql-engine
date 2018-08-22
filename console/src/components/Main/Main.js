@@ -162,6 +162,27 @@ class Main extends React.Component {
                     </Link>
                   </li>
                 </OverlayTrigger>
+                <OverlayTrigger placement="right" overlay={tooltip.events}>
+                  <li>
+                    <Link
+                      className={
+                        currentActiveBlock === 'events'
+                          ? styles.navSideBarActive
+                          : ''
+                      }
+                      to={appPrefix + '/events'}
+                    >
+                      <div className={styles.iconCenter}>
+                        <i
+                          title="Events"
+                          className="fa fa-cloud"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <p>Events</p>
+                    </Link>
+                  </li>
+                </OverlayTrigger>
               </ul>
             </div>
             <div className={styles.clusterInfoWrapper}>{accessKeyHtml}</div>

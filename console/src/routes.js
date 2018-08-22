@@ -7,6 +7,8 @@ import { App, Main, PageNotFound } from 'components';
 
 import { dataRouter } from './components/Services/Data';
 
+import { eventRouter } from './components/Services/EventTrigger';
+
 import { loadMigrationStatus } from './components/Main/Actions';
 
 import { composeOnEnterHooks } from 'utils/router';
@@ -39,8 +41,10 @@ const routes = store => {
 
   // loads schema
   const dataRouterUtils = dataRouter(connect, store, composeOnEnterHooks);
+  const eventRouterUtils = eventRouter(connect, store, composeOnEnterHooks);
   const requireSchema = dataRouterUtils.requireSchema;
   const makeDataRouter = dataRouterUtils.makeDataRouter;
+  const makeEventRouter = eventRouterUtils.makeEventRouter;
 
   return (
     <Route path="/" component={App}>
@@ -57,6 +61,7 @@ const routes = store => {
             component={generatedApiExplorer(connect)}
           />
           {makeDataRouter}
+          {makeEventRouter}
         </Route>
       </Route>
       <Route path="404" component={PageNotFound} status="404" />
