@@ -208,21 +208,21 @@ class Permissions extends Component {
         const bulkSelect = permsState.bulkSelect;
         const currentInputSelection = bulkSelect.filter(e => e === role)
           .length ? (
-            <input
-              onChange={dispatchBulkSelect}
-              checked="checked"
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          ) : (
-            <input
-              onChange={dispatchBulkSelect}
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          );
+          <input
+            onChange={dispatchBulkSelect}
+            checked="checked"
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        ) : (
+          <input
+            onChange={dispatchBulkSelect}
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        );
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
@@ -794,7 +794,7 @@ class Permissions extends Component {
         disableRemoveAccess
       );
 
-      const closeButton = getButton('Close', 'btn-warning', dispatchCloseEdit);
+      const closeButton = getButton('Close', 'btn-default', dispatchCloseEdit);
       const currentPermissions = tableSchema.permissions;
       const applySameSelected = e => {
         const isChecked = e.target.checked;
@@ -841,7 +841,8 @@ class Permissions extends Component {
       if (roleListHtml.length) {
         applyBulkPermissions = (
           <div className={styles.add_mar_top}>
-            <div>Apply same {permsState.query} permissions to</div>
+            <hr />
+            <div>Apply same {permsState.query} permissions to other roles</div>
             <div className={styles.add_mar_top_small}>{roleListHtml}</div>
             {permsState.applySamePermissions.length ? (
               <button
