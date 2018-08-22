@@ -82,18 +82,18 @@ class Main extends React.Component {
     let accessKeyHtml = null;
     if (globals.accessKey === '' || globals.accessKey === null) {
       accessKeyHtml = (
-        <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>
-          <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html">
-            <button className={'btn btn-danger ' + styles.add_mar_right}>
+        <div className={styles.secureSection}>
+          <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>
+            <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html">
               <i
                 className={
                   styles.padd_small_right + ' fa fa-exclamation-triangle'
                 }
               />
               Secure your endpoint
-            </button>
-          </a>
-        </OverlayTrigger>
+            </a>
+          </OverlayTrigger>
+        </div>
       );
     }
 
@@ -166,42 +166,44 @@ class Main extends React.Component {
             </div>
             <div className={styles.clusterInfoWrapper}>
               {accessKeyHtml}
-              <div className={styles.spreadWord}>
-                <button
-                  className={styles.yellow_button + ' dropdown-toggle'}
-                  data-toggle="dropdown"
-                  aria-haspopup="true"
-                  aria-expanded="false"
-                >
-                  Share the <i className={styles.heart + ' fa fa-heart'} />
-                </button>
-                <ul className={'dropdown-menu ' + styles.dropdown_menu}>
-                  <div className={styles.arrow_up_dropdown} />
-                  <li className={'dropdown-item '}>
-                    <div className={styles.gitHubBtn}>
-                      <iframe
-                        title="github"
-                        src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true"
-                        frameBorder="0"
-                        scrolling="0"
-                        width="100px"
-                        height="30px"
-                      />
-                    </div>
-                  </li>
-                  <li className={'dropdown-item '}>
-                    <div className="btn-o">
-                      <a
-                        href="https://twitter.com/intent/tweet?hashtags=demo&amp;text=Hello%20world;url=https%3A%2F%2Fgithub.com%2Fgraphql-engine"
-                        className={styles.twitterShare}
-                      >
-                        <span className="label">Tweet</span>
-                      </a>
-                    </div>
-                  </li>
-                </ul>
-                <i className={styles.question + ' fa fa-question-circle'} />
+              <a href="https://docs.hasura.io">
+                <div className={styles.helpSection}>
+                  <i className={styles.question + ' fa fa-question'} />
+                </div>
+              </a>
+              <div
+                className={styles.shareSection + ' dropdown-toggle'}
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <i className={styles.heart + ' fa fa-heart'} />
               </div>
+              <ul className={'dropdown-menu ' + styles.dropdown_menu}>
+                <div className={styles.arrow_up_dropdown} />
+                <li className={'dropdown-item '}>
+                  <div className={styles.gitHubBtn}>
+                    <iframe
+                      title="github"
+                      src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true"
+                      frameBorder="0"
+                      scrolling="0"
+                      width="100px"
+                      height="30px"
+                    />
+                  </div>
+                </li>
+                <li className={'dropdown-item '}>
+                  <div className="btn-o">
+                    <a
+                      href="https://twitter.com/intent/tweet?hashtags=demo&amp;text=Hello%20world;url=https%3A%2F%2Fgithub.com%2Fgraphql-engine"
+                      className={styles.twitterShare}
+                    >
+                      <span className="label">Tweet</span>
+                    </a>
+                  </div>
+                </li>
+              </ul>
             </div>
           </div>
           <div className={styles.main + ' container-fluid'}>{mainContent}</div>

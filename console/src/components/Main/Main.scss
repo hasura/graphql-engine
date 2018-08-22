@@ -122,9 +122,7 @@
 }
 .clusterInfoWrapper {
   width: 30%;
-  text-align: right;
   display: flex;
-  align-items: center;
   justify-content: flex-end;
   position: relative;
   .clusterBtn {
@@ -817,21 +815,44 @@
 }
 
 .question {
-  display: inline-block;
-  font-size: 20px;
+  display: flex;
   color: #fff;
   cursor: pointer;
-  margin-right: 20px;
+  align-items: center;
+  padding: 3px;
 }
 
 .heart {
   display: inline-block;
-  padding-top: 6px;
-  animation: heartbeat 1s infinite;
   i {
     font-size: 20px;
     // color: #fb5f5f;
     color: #fff;
+  }
+}
+
+.helpSection {
+  display: flex;
+  align-items: center;
+  background-color: #414758;
+  padding: 15px;
+}
+
+.shareSection {
+  display: flex;
+  align-items: center;
+  background-color: #fb5151;
+  padding: 15px;
+  color: white;
+  cursor: pointer;
+}
+
+.secureSection {
+  background: grey;
+  padding: 15px;
+  a {
+    color: white;
+    text-decoration: none;
   }
 }
 
@@ -865,12 +886,12 @@
 
 .dropdown_menu
 {
-  top: 48px;
+  top: 58px;
   background-color: #43495a;
   color: #fff;
   border: 0;
   width: 50%;
-  left: 40%;
+  left: 49%;
   padding: 15px;
   .arrow_up_dropdown
   {
@@ -881,7 +902,7 @@
     border-bottom: 10px solid #43495a;
     position: absolute;
     top: -10px;
-    right: 20px;
+    right: 10px;
   }
   li
   {
