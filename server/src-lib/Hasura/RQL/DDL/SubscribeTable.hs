@@ -54,7 +54,7 @@ getTriggerSql op name sn tn spec =
     createOpCtx :: Ops -> SubscribeOpSpec -> HashMap.HashMap T.Text T.Text
     createOpCtx op1 (SubscribeOpSpec columns) = HashMap.fromList [
                                         (T.pack "OPERATION", T.pack $ show op1)
-                                      , (T.pack "DATA_EXPRESSION", renderDataExp INSERT columns )]
+                                      , (T.pack "DATA_EXPRESSION", renderDataExp op1 columns )]
     renderDataExp :: Ops -> SubscribeColumns -> T.Text
     renderDataExp op2 scs = let recVar = case op2 of
                                  DELETE -> "OLD"
