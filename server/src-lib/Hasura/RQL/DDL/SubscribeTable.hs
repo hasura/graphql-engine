@@ -35,12 +35,12 @@ triggerTmplt = case parseGingerTmplt $(FE.embedStringFile "src-rsr/trigger.sql")
   Left e      -> Nothing
   Right tmplt -> Just tmplt
 
-getDropFuncSql:: Ops -> TriggerName -> T.Text
+getDropFuncSql :: Ops -> TriggerName -> T.Text
 getDropFuncSql op trn = "DROP FUNCTION IF EXISTS"
                         <> " hdb_catalog.notify_skor_" <> trn <> "_" <> T.pack (show op)
                         <> " CASCADE"
 
-getTriggerSql:: Ops -> TriggerName -> SchemaName -> TableName -> Maybe SubscribeOpSpec -> Maybe T.Text
+getTriggerSql :: Ops -> TriggerName -> SchemaName -> TableName -> Maybe SubscribeOpSpec -> Maybe T.Text
 getTriggerSql op name sn tn spec =
   let globalCtx =  HashMap.fromList [
                     (T.pack "NAME", name)

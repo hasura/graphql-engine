@@ -192,11 +192,25 @@ CREATE TABLE hdb_catalog.event_triggers
   webhook TEXT NOT NULL
 );
 
-CREATE TABLE hdb_catalog.events_log
+CREATE TABLE hdb_catalog.event_log
 (
   id BIGSERIAL PRIMARY KEY,
+  trigger_name TEXT,
   payload JSONB NOT NULL,
   webhook TEXT NOT NULL,
-  processed BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT NOW()
+  delivered BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW(),
+
+  FOREIGN KEY (trigger_name) REFERENCES hdb_catalog.event_triggers (name)
+);
+
+CREATE TABLE hdb_catalog.event_invocation_logs
+(
+  id BIGSERIAL PRIMARY KEY,
+  event_id INTEGER,
+  status INTEGER,
+  response JSON,
+  created_at TIMESTAMP DEFAULT NOW(),
+
+  FOREIGN KEY (event_id) REFERENCES hdb_catalog.event_log (id)
 );

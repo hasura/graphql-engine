@@ -1,5 +1,7 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE QuasiQuotes      #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE QuasiQuotes         #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Hasura.Events.Lib
   ( initEventQueue
@@ -20,6 +22,12 @@ import           Hasura.HTTP
 import qualified Hasura.Logging                as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import qualified Network.HTTP.Types            as N
+import qualified Network.Wreq                  as W
+
+data TestLog = TestLog String
+instance L.ToEngineLog  TestLog where
+  toEngineLog (TestLog s) = (L.LevelInfo, "test-log", J.toJSON s)
 
 data Event
   = Event
@@ -30,6 +38,13 @@ data Event
   , eProcessed :: Bool
   }
 
+data Invocation
+  = Invocation
+  { iEventId  :: Int64
+  , iStatus   :: Int64
+  , iResponse :: J.Value
+  }
+
 type EventQueue = TQ.TQueue Event
 
 initEventQueue :: STM EventQueue
@@ -37,27 +52,33 @@ initEventQueue = TQ.newTQueue
 
 processEventQueue :: L.LoggerCtx -> HTTPSessionMgr -> Q.PGPool -> EventQueue -> IO ()
 processEventQueue logctx httpSess pool q = do
+  putStrLn "starting events..."
   threads <- mapM async [pollThread , consumeThread]
   void $ waitAny threads
   where
-    pollThread = pollEvents pool q (mkHLogger logctx)
-    consumeThread = consumeEvents q (mkHLogger logctx) (httpSess)
+    pollThread = pollEvents (mkHLogger logctx) pool q
+    consumeThread = consumeEvents (mkHLogger logctx) httpSess pool q
 
 
 pollEvents
-  :: Q.PGPool -> EventQueue -> HLogger -> IO ()
-pollEvents pool q logger = forever $ do
+  :: HLogger -> Q.PGPool -> EventQueue -> IO ()
+pollEvents logger pool q = forever $ do
+  putStrLn "running poller"
   eventsOrError <- runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) fetchEvents
   case eventsOrError of
-    Left err     -> return ()
-    Right events -> atomically $ mapM_ (TQ.writeTQueue q) events
+    Left err     -> putStrLn $ show err
+    Right events -> do
+      putStrLn "fetched events"
+      atomically $ mapM_ (TQ.writeTQueue q) events
   threadDelay (5 * 1000 * 1000)
 
 consumeEvents
-  :: EventQueue -> HLogger -> HTTPSessionMgr -> IO ()
-consumeEvents q logger httpSess = forever $ do
+  :: HLogger -> HTTPSessionMgr -> Q.PGPool -> EventQueue -> IO ()
+consumeEvents logger httpSess pool q  = forever $ do
+  putStrLn "running consumer"
   event <- atomically $ TQ.readTQueue q
-  async $ runReaderT  (processEvent event) (logger, httpSess)
+  putStrLn "got event"
+  async $ runReaderT  (processEvent pool event) (logger, httpSess)
 
 processEvent
   :: ( MonadReader r m
@@ -65,16 +86,48 @@ processEvent
      , Has HTTPSessionMgr r
      , Has HLogger r
      )
-  => Event -> m ()
-processEvent e = do
-  resp <- runExceptT $ runHTTP undefined undefined
+  => Q.PGPool -> Event -> m ()
+processEvent pool e = do
+  liftIO $ putStrLn "processing event"
+  eitherResp <- runExceptT $ runHTTP W.defaults $ mkHTTPPost (T.unpack $ eWebhook e) (Just $ ePayload e)
+  case eitherResp of
+    Left err   -> do
+      liftIO $ putStrLn "error from webhook"
+      runExceptT $
+        case err of
+          HClient excp -> runInvocationQ $ Invocation (eId e) 1000 (J.toJSON $ show excp)
+
+          HParse status detail -> runInvocationQ $ Invocation (eId e) 1001 (J.toJSON detail)
+          HStatus status detail -> runInvocationQ $ Invocation (eId e) (fromIntegral $ N.statusCode status) detail
+
+    Right resp -> runExceptT $ do
+      runInvocationQ $ Invocation (eId e) 200 resp
+      runDeliveredQ e
   return ()
+  where
+    runInvocationQ invo =  Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ insertInvocation invo
+    runDeliveredQ ev =  Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ markDelivered ev
+
 
 fetchEvents :: Q.TxE QErr [Event]
 fetchEvents =
   map (uncurryEvent Event) <$> Q.listQE defaultTxErrorHandler [Q.sql|
-      SELECT id, payload, webhook, created_at, processed
-      FROM hdb_catalog.events_log
-      WHERE processed ='f'
+      SELECT id, payload::json, webhook, created_at, delivered
+      FROM hdb_catalog.event_log
+      WHERE delivered ='f'
       |] () True
-  where uncurryEvent e (id', Q.AltJ payload, webhook, created, processed) = e id' payload webhook created processed
+  where uncurryEvent e (id', Q.AltJ payload, webhook, created, delivered) = e id' payload webhook created delivered
+
+insertInvocation :: Invocation -> Q.TxE QErr ()
+insertInvocation invo =
+   Q.unitQE defaultTxErrorHandler [Q.sql|
+           INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, response) VALUES ($1, $2, $3)
+                |] (iEventId invo, iStatus invo, Q.AltJ $ iResponse invo) True
+
+markDelivered :: Event -> Q.TxE QErr ()
+markDelivered e =
+   Q.unitQE defaultTxErrorHandler [Q.sql|
+           UPDATE hdb_catalog.event_log
+           SET delivered = 't'
+           WHERE id = $1
+                |] (Identity $ eId e) True

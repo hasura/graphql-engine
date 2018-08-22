@@ -10,6 +10,7 @@ module Hasura.HTTP
   ( HTTP(..)
   , HTTPSessionMgr(..)
   , mkHTTP
+  , mkHTTPPost
   , mkHTTPMaybe
   , HTTPErr(..)
   , runHTTP
@@ -223,6 +224,11 @@ mkHTTP method url =
   HTTP method url Nothing Nothing id defaultParser
   defaultRetryFn defaultRetryPolicy
 
+mkHTTPPost :: (J.FromJSON a) => String -> Maybe J.Value -> HTTP a
+mkHTTPPost url payload =
+  HTTP "POST" url payload Nothing id defaultParser
+  defaultRetryFn defaultRetryPolicy
+
 mkHTTPMaybe :: (J.FromJSON a) => String -> String -> HTTP (Maybe a)
 mkHTTPMaybe method url =
   HTTP method url Nothing Nothing id defaultParserMaybe
@@ -270,7 +276,7 @@ mkHTTPResp resp =
 
 runHTTP
   :: ( MonadReader r m
-     , MonadError J.Value m
+     , MonadError HTTPErr m
      , MonadIO m
      , Has HTTPSessionMgr r
      , Has HLogger r
@@ -281,7 +287,7 @@ runHTTP opts http = do
   res <- R.retrying retryPol' retryFn' $ httpWithLogging opts True http
 
   -- process the result
-  either (throwError . J.toJSON) return res
+  either throwError return res
 
   where
     retryPol'  = R.RetryPolicyM $ liftIO . R.getRetryPolicyM (_hRetryPolicy http)
@@ -289,7 +295,7 @@ runHTTP opts http = do
 
 runInsecureHTTP
   :: ( MonadReader r m
-     , MonadError J.Value m
+     , MonadError HTTPErr m
      , MonadIO m
      , Has HTTPSessionMgr r
      , Has HLogger r
@@ -300,7 +306,7 @@ runInsecureHTTP opts http = do
   res <- R.retrying retryPol' retryFn' $ httpWithLogging opts False http
 
   -- process the result
-  either (throwError . J.toJSON) return res
+  either throwError return res
   where
     retryPol'  = R.RetryPolicyM $ liftIO . R.getRetryPolicyM (_hRetryPolicy http)
     retryFn' _ = return . _hRetryFn http

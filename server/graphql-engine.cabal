@@ -117,9 +117,6 @@ library
                      , list-t
                      , async
 
-                     -- event trigger related
-                     , wreq
-
                      -- logging related
                      , base64-bytestring >= 1.0
                      , auto-update
@@ -143,6 +140,7 @@ library
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.DML
+                     , Hasura.RQL.Types.SubscribeTable
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
