@@ -1,0 +1,23 @@
+.App {
+  display: flex;
+  flex: 1;
+}
+
+.message {
+  font-size: 12px;
+  margin: 2px;
+}
+
+.newMessage {
+  font-weight: 5;
+  font-style: italic;
+  color: 'blue' !important;
+}
+
+.banner {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  align-self: flex-start; /* <-- this is the fix */
+  background-color: red;  
+}
