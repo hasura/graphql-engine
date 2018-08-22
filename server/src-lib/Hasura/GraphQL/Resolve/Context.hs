@@ -99,7 +99,7 @@ getArg
   :: (MonadError QErr m)
   => ArgsMap
   -> G.Name
-  -> m AnnGValue
+  -> m AnnInpVal
 getArg args arg =
   onNothing (Map.lookup arg args) $
   throw500 $ "missing argument: " <> showName arg
@@ -118,7 +118,7 @@ withArg
   :: (MonadError QErr m)
   => ArgsMap
   -> G.Name
-  -> (AnnGValue -> m a)
+  -> (AnnInpVal -> m a)
   -> m a
 withArg args arg f = prependArgsInPath $ nameAsPath arg $
   getArg args arg >>= f
@@ -127,7 +127,7 @@ withArgM
   :: (MonadError QErr m)
   => ArgsMap
   -> G.Name
-  -> (AnnGValue -> m a)
+  -> (AnnInpVal -> m a)
   -> m (Maybe a)
 withArgM args arg f = prependArgsInPath $ nameAsPath arg $
   mapM f $ Map.lookup arg args
@@ -139,8 +139,8 @@ type Convert =
 
 prepare
   :: (MonadState PrepArgs m)
-  => (PGColType, PGColValue) -> m S.SQLExp
-prepare (colTy, colVal) = do
+  => (Maybe G.Variable, PGColType, PGColValue) -> m S.SQLExp
+prepare (_, colTy, colVal) = do
   preparedArgs <- get
   put (preparedArgs Seq.|> binEncoder colVal)
   return $ toPrepParam (Seq.length preparedArgs + 1) colTy

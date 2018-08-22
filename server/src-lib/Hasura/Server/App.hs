@@ -53,6 +53,7 @@ import           Hasura.SQL.Types
 import qualified Hasura.Logging                         as L
 import           Hasura.Server.Auth                     (AuthMode, getUserInfo)
 
+import qualified Hasura.GraphQL.QueryPlanCache          as QC
 
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
@@ -75,6 +76,7 @@ data ServerCtx
   , scCacheLock :: MVar ()
   , scAuthMode  :: AuthMode
   , scManager   :: HTTP.Manager
+  , scPlanCache :: QC.QueryPlanCache
   }
 
 data HandlerCtx
@@ -226,7 +228,8 @@ v1Alpha1GQHandler query = do
   cache <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  GH.runGQ pool isoL userInfo (snd cache) query
+  planCache <- scPlanCache . hcServerCtx <$> ask
+  GH.runGQ pool isoL userInfo (snd cache) planCache query
 
 -- v1Alpha1GQSchemaHandler :: Handler BL.ByteString
 -- v1Alpha1GQSchemaHandler = do
@@ -269,11 +272,12 @@ mkWaiApp
   -> L.LoggerCtx
   -> Q.PGPool
   -> HTTP.Manager
+  -> QC.QueryPlanCache
   -> AuthMode
   -> CorsConfig
   -> Bool
   -> IO Wai.Application
-mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole = do
+mkWaiApp isoLevel mRootDir loggerCtx pool httpManager planCache mode corsCfg enableConsole = do
     cacheRef <- do
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
@@ -285,14 +289,15 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
 
     let serverCtx =
           ServerCtx isoLevel pool (L.mkLogger loggerCtx) cacheRef
-          cacheLock mode httpManager
+          cacheLock mode httpManager planCache
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp mRootDir corsCfg serverCtx enableConsole
 
     let runTx tx = runExceptT $ Q.runTx pool (isoLevel, Nothing) tx
 
-    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager cacheRef runTx
+    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager
+                   planCache cacheRef runTx
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return $ WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
 

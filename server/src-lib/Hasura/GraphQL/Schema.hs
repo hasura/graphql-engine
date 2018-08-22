@@ -148,7 +148,7 @@ mkCompExpInp colTy =
   [ map (mk colScalarTy) typedOps
   , map (mk $ G.toLT colScalarTy) listOps
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
-  , [InpValInfo Nothing "_is_null" $ G.TypeNamed $ G.NamedType "Boolean"]
+  , [InpValInfo Nothing "_is_null" $ G.toGT $ G.NamedType "Boolean"]
   ]
   where
     tyDesc = mconcat
@@ -189,7 +189,7 @@ mkPGColFld (PGColInfo colName colTy isNullable) =
     n  = G.Name $ getPGColTxt colName
     ty = bool notNullTy nullTy isNullable
     scalarTy = mkScalarTy colTy
-    notNullTy = G.toGT $ G.toNT scalarTy
+    notNullTy = G.toNT scalarTy
     nullTy = G.toGT scalarTy
 
 -- where: table_bool_exp
@@ -233,7 +233,7 @@ mkRelFld (RelInfo rn rTy _ remTab _) isNullable = case rTy of
     Map.empty
     objRelTy
   where
-    objRelTy = bool (G.toGT $ G.toNT relTabTy) (G.toGT relTabTy) isNullable
+    objRelTy = bool (G.toNT relTabTy) (G.toGT relTabTy) isNullable
     relTabTy = mkTableTy remTab
 
 {-
@@ -298,12 +298,12 @@ mkMutRespObj tn =
       "response of any mutation on the table " <>> tn
     affectedRowsFld =
       ObjFldInfo (Just desc) "affected_rows" Map.empty $
-      G.toGT $ G.toNT $ mkScalarTy PGInteger
+      G.toNT $ mkScalarTy PGInteger
       where
         desc = "number of affected rows by the mutation"
     returningFld =
       ObjFldInfo (Just desc) "returning" Map.empty $
-      G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableNoRelsTy tn
+      G.toNT $ G.toLT $ G.toNT $ mkTableNoRelsTy tn
       where
         desc = "data of the affected rows by the mutation"
 

@@ -6,19 +6,23 @@
 {-# LANGUAGE OverloadedStrings     #-}
 
 module Hasura.GraphQL.Resolve.Select
-  ( convertSelect
+  ( convertSelect2
+  , runPlanM
   ) where
 
 import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.IntMap                       as IntMap
+import qualified Database.PG.Query                 as Q
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Select             as RS
 
 import qualified Hasura.SQL.DML                    as S
 
+import qualified Hasura.GraphQL.Plan               as Plan
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
@@ -29,10 +33,65 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
+data PlanningSt
+  = PlanningSt
+  { _psArgNumber :: !Int
+  , _psVariables :: !Plan.PlanVariables
+  , _psPrepped   :: !Plan.PrepArgMap
+  }
+
+initPlanningSt :: PlanningSt
+initPlanningSt = PlanningSt 1 Map.empty IntMap.empty
+
+type PlanM =
+  StateT PlanningSt (ReaderT (FieldMap, OrdByResolveCtx) (Except QErr))
+
+runPlanM
+  :: (MonadError QErr m)
+  => (FieldMap, OrdByResolveCtx) -> PlanM Q.Query -> m Plan.RootFieldPlan
+runPlanM ctx m = do
+  (q, PlanningSt _ vars prepped) <- either throwError return $
+    runExcept $ runReaderT (runStateT m initPlanningSt) ctx
+  return $ Plan.RFPPostgres $ Plan.PGPlan q vars prepped
+
+getVarArgNum
+  :: (MonadState PlanningSt m)
+  => G.Variable -> m Int
+getVarArgNum var = do
+  PlanningSt curArgNum vars prepped <- get
+  case Map.lookup var vars of
+    Just argNum -> return argNum
+    Nothing     -> do
+      put $ PlanningSt (curArgNum + 1) (Map.insert var curArgNum vars) prepped
+      return curArgNum
+
+addPrepArg
+  :: (MonadState PlanningSt m)
+  => Int -> Q.PrepArg -> m ()
+addPrepArg argNum arg = do
+  PlanningSt curArgNum vars prepped <- get
+  put $ PlanningSt curArgNum vars $ IntMap.insert argNum arg prepped
+
+getNextArgNum
+  :: (MonadState PlanningSt m)
+  => m Int
+getNextArgNum = do
+  PlanningSt curArgNum vars prepped <- get
+  put $ PlanningSt (curArgNum + 1) vars prepped
+  return curArgNum
+
+prepare2
+  :: (MonadState PlanningSt m)
+  => (Maybe G.Variable, PGColType, PGColValue) -> m S.SQLExp
+prepare2 (varM, colTy, colVal) = do
+  argNum <- maybe getNextArgNum getVarArgNum varM
+  addPrepArg argNum $ binEncoder colVal
+  return $ toPrepParam argNum colTy
+
 fromSelSet
   :: G.NamedType
   -> SelSet
-  -> Convert (Map.HashMap FieldName RS.AnnFld)
+  -> PlanM (Map.HashMap FieldName RS.AnnFld)
 fromSelSet fldTy flds =
   fmap Map.fromList $ forM (toList flds) $ \fld -> do
     let fldName = _fName fld
@@ -54,13 +113,13 @@ fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
 fieldAsPath fld = nameAsPath $ _fName fld
 
 fromField
-  :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RS.SelectData
+  :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> PlanM RS.SelectData
 fromField tn permFilter permLimit fld = fieldAsPath fld $ do
-  whereExpM  <- withArgM args "where" $ convertBoolExp tn
+  whereExpM  <- withArgM args "where" $ convertBoolExpG prepare2 tn
   ordByExpM  <- withArgM args "order_by" parseOrderBy
   limitExpM  <- RS.applyPermLimit permLimit
                 <$> withArgM args "limit" parseLimit
-  offsetExpM <- withArgM args "offset" $ asPGColVal >=> prepare
+  offsetExpM <- withArgM args "offset" $ asPGColVal >=> prepare2
   annFlds    <- fromSelSet (_fType fld) $ _fSelSet fld
   return $ RS.SelectData annFlds tn (permFilter, whereExpM) ordByExpM
     [] limitExpM offsetExpM
@@ -85,7 +144,7 @@ parseOrderBy
      , MonadReader r m
      , Has OrdByResolveCtx r
      )
-  => AnnGValue -> m S.OrderByExp
+  => AnnInpVal -> m S.OrderByExp
 parseOrderBy v = do
   enums <- withArray (const $ mapM asEnumVal) v
   fmap S.OrderByExp $ forM enums $ \(nt, ev) ->
@@ -106,9 +165,9 @@ parseOrderBy v = do
       NFirst -> S.NFirst
       NLast  -> S.NLast
 
-parseLimit :: ( MonadError QErr m ) => AnnGValue -> m Int
+parseLimit :: ( MonadError QErr m ) => AnnInpVal -> m Int
 parseLimit v = do
-  (_, pgColVal) <- asPGColVal v
+  (varM, _, pgColVal) <- asPGColVal v
   limit <- maybe noIntErr return $ pgColValueToInt pgColVal
   -- validate int value
   onlyPositiveInt limit
@@ -116,10 +175,18 @@ parseLimit v = do
   where
     noIntErr = throw400 Unexpected "expecting Integer value for \"limit\""
 
-convertSelect
-  :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RespTx
-convertSelect qt permFilter permLimit fld = do
+-- convertSelect
+--   :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> PlanM RespTx
+-- convertSelect qt permFilter permLimit fld = do
+--   selData <- withPathK "selectionSet" $
+--              fromField qt permFilter permLimit fld
+--   prepArgs <- get
+--   return $ RS.selectP2 (selData, prepArgs)
+
+convertSelect2
+  :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field
+  -> PlanM Q.Query
+convertSelect2 qt permFilter permLimit fld = do
   selData <- withPathK "selectionSet" $
              fromField qt permFilter permLimit fld
-  prepArgs <- get
-  return $ RS.selectP2 (selData, prepArgs)
+  return $ Q.fromBuilder $ toSQL $ RS.mkSQLSelect selData

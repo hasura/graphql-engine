@@ -120,6 +120,8 @@ library
 
                      -- regex related
                      , regex-compat
+                     -- caching related
+                     , psqueues
 
   exposed-modules:     Hasura.Server.App
                      , Hasura.Server.Auth
@@ -171,6 +173,8 @@ library
                      , Hasura.GraphQL.Validate.Field
                      , Hasura.GraphQL.Validate.InputValue
                      , Hasura.GraphQL.Resolve
+                     , Hasura.GraphQL.Plan
+                     , Hasura.GraphQL.QueryPlanCache
                      , Hasura.GraphQL.Resolve.LiveQuery
                      , Hasura.GraphQL.Resolve.BoolExp
                      , Hasura.GraphQL.Resolve.Context

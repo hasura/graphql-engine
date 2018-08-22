@@ -35,7 +35,7 @@ import           Hasura.RQL.Types
 
 newtype GraphQLQuery
   = GraphQLQuery { unGraphQLQuery :: [G.ExecutableDefinition] }
-  deriving (Show, Eq, Hashable)
+  deriving (Ord, Show, Eq, Hashable)
 
 instance J.FromJSON GraphQLQuery where
   parseJSON = J.withText "GraphQLQuery" $ \t ->
@@ -49,7 +49,7 @@ instance J.ToJSON GraphQLQuery where
 
 newtype OperationName
   = OperationName { _unOperationName :: G.Name }
-  deriving (Show, Eq, Hashable, J.ToJSON)
+  deriving (Ord, Show, Eq, Hashable, J.ToJSON)
 
 instance J.FromJSON OperationName where
   parseJSON v = OperationName . G.Name <$> J.parseJSON v

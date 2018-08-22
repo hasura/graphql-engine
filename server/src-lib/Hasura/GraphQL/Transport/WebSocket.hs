@@ -29,14 +29,14 @@ import qualified STMContainers.Map                           as STMMap
 import           Control.Concurrent                          (threadDelay)
 import qualified Data.IORef                                  as IORef
 
-import           Hasura.GraphQL.Resolve                      (resolveSelSet)
+import qualified Hasura.GraphQL.QueryPlanCache               as QP
 import           Hasura.GraphQL.Resolve.Context              (RespTx)
 import qualified Hasura.GraphQL.Resolve.LiveQuery            as LQ
-import           Hasura.GraphQL.Schema                       (GCtxMap, getGCtx)
+import           Hasura.GraphQL.Schema                       (GCtxMap)
+import qualified Hasura.GraphQL.Transport.HTTP               as GH
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
-import           Hasura.GraphQL.Validate                     (validateGQ)
 import qualified Hasura.Logging                              as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -117,12 +117,13 @@ instance L.ToEngineLog WSLog where
 
 data WSServerEnv
   = WSServerEnv
-  { _wseLogger   :: !L.Logger
-  , _wseServer   :: !WSServer
-  , _wseRunTx    :: !TxRunner
-  , _wseLiveQMap :: !LiveQueryMap
-  , _wseGCtxMap  :: !(IORef.IORef (SchemaCache, GCtxMap))
-  , _wseHManager :: !H.Manager
+  { _wseLogger    :: !L.Logger
+  , _wseServer    :: !WSServer
+  , _wseRunTx     :: !TxRunner
+  , _wseLiveQMap  :: !LiveQueryMap
+  , _wseGCtxMap   :: !(IORef.IORef (SchemaCache, GCtxMap))
+  , _wseHManager  :: !H.Manager
+  , _wsePlanCache :: !QP.QueryPlanCache
   }
 
 onConn :: L.Logger -> WS.OnConnH WSConnData
@@ -175,28 +176,26 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndSend $ do
 
   -- validate and build tx
   gCtxMap <- fmap snd $ liftIO $ IORef.readIORef gCtxMapRef
-  let gCtx = getGCtx (userRole userInfo) gCtxMap
-  (opTy, fields) <- withExceptT preExecErr $ loggingQErr $
-                    runReaderT (validateGQ q) gCtx
-  let qTx = RQ.setHeadersTx userInfo >>
-            resolveSelSet userInfo gCtx opTy fields
+  (opTy, qTx) <- withExceptT preExecErr $ loggingQErr $
+                 GH.reqToTx userInfo gCtxMap planCache q
+
+  let txWHdrs = RQ.setHeadersTx userInfo >> qTx
 
   case opTy of
-    G.OperationTypeSubscription -> do
+    G.OperationTypeSubscription -> liftIO $ do
       let lq = LQ.LiveQuery userInfo q
-      liftIO $ STM.atomically $ STMMap.insert lq opId opMap
-      liftIO $ LQ.addLiveQuery runTx lqMap lq
-       qTx (wsId, opId) liveQOnChange
-      liftIO $ logger $ WSLog wsId $ ESubscription opId SDStarted
+      STM.atomically $ STMMap.insert lq opId opMap
+      LQ.addLiveQuery runTx lqMap lq txWHdrs (wsId, opId) liveQOnChange
+      logger $ WSLog wsId $ ESubscription opId SDStarted
 
     _ -> withExceptT postExecErr $ loggingQErr $ do
-      resp <- ExceptT $ runTx qTx
+      resp <- ExceptT $ runTx txWHdrs
       sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess resp
       sendMsg wsConn $ SMComplete $ CompletionMsg opId
       liftIO $ logger $ WSLog wsId $ EOperation opId ODCompleted
 
   where
-    (WSServerEnv logger _ runTx lqMap gCtxMapRef _) = serverEnv
+    (WSServerEnv logger _ runTx lqMap gCtxMapRef _ planCache) = serverEnv
     wsId = WS.getWSId wsConn
     (WSConnData userInfoR opMap) = WS.getData wsConn
 
@@ -292,12 +291,15 @@ onClose logger lqMap _ wsConn = do
 
 createWSServerEnv
   :: L.Logger
-  -> H.Manager -> IORef.IORef (SchemaCache, GCtxMap)
+  -> H.Manager
+  -> QP.QueryPlanCache
+  -> IORef.IORef (SchemaCache, GCtxMap)
   -> TxRunner -> IO WSServerEnv
-createWSServerEnv logger httpManager gCtxMapRef runTx = do
+createWSServerEnv logger httpManager planCache gCtxMapRef runTx = do
   (wsServer, lqMap) <-
     STM.atomically $ (,) <$> WS.createWSServer logger <*> LQ.newLiveQueryMap
-  return $ WSServerEnv logger wsServer runTx lqMap gCtxMapRef httpManager
+  return $ WSServerEnv logger wsServer runTx
+    lqMap gCtxMapRef httpManager planCache
 
 createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp
 createWSServerApp authMode serverEnv =

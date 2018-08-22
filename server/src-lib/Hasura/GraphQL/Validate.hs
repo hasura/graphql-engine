@@ -4,6 +4,7 @@
 
 module Hasura.GraphQL.Validate
   ( validateGQ
+  , getAnnVarVals
   , GraphQLRequest
   ) where
 
@@ -73,7 +74,7 @@ getAnnVarVals varDefsL inpVals = do
     -- check that the variable is defined on input types
     when (isObjTy baseTyInfo) $ throwVE $ objTyErrMsg baseTy
 
-    let defM' = bool (defM <|> Just G.VCNull) defM $ G.isNotNull ty
+    let defM' = bool defM (defM <|> Just G.VCNull) $ G.isNullable ty
     annDefM <- withPathK "defaultValue" $
                mapM (validateInputValue constValueParser ty) defM'
     let inpValM = Map.lookup var inpVals
@@ -106,7 +107,7 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
 validateGQ
   :: (MonadError QErr m, MonadReader GCtx m)
   => GraphQLRequest
-  -> m (G.OperationType, SelSet)
+  -> m ([G.VariableDefinition], G.OperationType, SelSet)
 validateGQ (GraphQLRequest opNameM q varValsM) = do
 
   -- get the operation that needs to be evaluated
@@ -121,8 +122,10 @@ validateGQ (GraphQLRequest opNameM q varValsM) = do
     G.OperationTypeSubscription ->
       onNothing (_gSubRoot ctx) $ throwVE "no subscriptions exist"
 
+  let varDefs = G._todVariableDefinitions opDef
+
   -- annotate the variables of this operation
-  annVarVals <- getAnnVarVals (G._todVariableDefinitions opDef) $
+  annVarVals <- getAnnVarVals varDefs $
                 fromMaybe Map.empty varValsM
 
   -- annotate the fragments
@@ -136,6 +139,7 @@ validateGQ (GraphQLRequest opNameM q varValsM) = do
 
   selSet <- flip runReaderT valCtx $ denormSelSet [] opRoot $
             G._todSelectionSet opDef
-  return (G._todType opDef, selSet)
+
+  return (varDefs, G._todType opDef, selSet)
   where
     (selSets, opDefs, fragDefsL) = G.partitionExDefs $ unGraphQLQuery q

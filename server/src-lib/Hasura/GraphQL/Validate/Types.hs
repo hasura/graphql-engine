@@ -35,17 +35,20 @@ module Hasura.GraphQL.Validate.Types
   , fromTyDefQ
   , fromSchemaDocQ
   , TypeMap
+  , AnnInpVal(..)
   , AnnGValue(..)
   , AnnGObject
   , hasNullVal
   , getAnnInpValKind
-  , getAnnInpValTy
+  -- , getAnnInpValTy
   , module Hasura.GraphQL.Utils
   ) where
 
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
+import qualified Data.Aeson.Casing             as J
+import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -124,7 +127,7 @@ mkObjTyInfo descM ty flds =
 typenameFld :: ObjFldInfo
 typenameFld =
   ObjFldInfo (Just desc) "__typename" Map.empty $
-  G.toGT $ G.toNT $ G.NamedType "String"
+  G.toNT $ G.NamedType "String"
   where
     desc = "The name of the current Object type at runtime"
 
@@ -251,7 +254,7 @@ defaultDirectives =
   where
     mkDirective n = DirectiveInfo Nothing n args dirLocs
     args = Map.singleton "if" $ InpValInfo Nothing "if" $
-           G.TypeNamed $ G.NamedType $ G.Name "Boolean"
+           G.toGT $ G.NamedType $ G.Name "Boolean"
     dirLocs = map G.DLExecutable
               [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
 
@@ -268,15 +271,22 @@ data FragDef
 type FragDefMap = Map.HashMap G.Name FragDef
 
 type AnnVarVals =
-  Map.HashMap G.Variable AnnGValue
+  Map.HashMap G.Variable AnnInpVal
 
-type AnnGObject = Map.HashMap G.Name AnnGValue
+data AnnInpVal
+  = AnnInpVal
+  { _aivType     :: !G.GType
+  , _aivVariable :: !(Maybe G.Variable)
+  , _aivValue    :: !AnnGValue
+  } deriving (Show, Eq)
+
+type AnnGObject = Map.HashMap G.Name AnnInpVal
 
 data AnnGValue
   = AGScalar !PGColType !(Maybe PGColValue)
   | AGEnum !G.NamedType !(Maybe G.EnumValue)
   | AGObject !G.NamedType !(Maybe AnnGObject)
-  | AGArray !G.ListType !(Maybe [AnnGValue])
+  | AGArray !G.ListType !(Maybe [AnnInpVal])
   deriving (Show, Eq)
 
 instance J.ToJSON AnnGValue where
@@ -284,6 +294,10 @@ instance J.ToJSON AnnGValue where
   toJSON = const J.Null
     -- J.
     -- J.toJSON [J.toJSON ty, J.toJSON valM]
+
+$(J.deriveToJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
+  ''AnnInpVal
+ )
 
 hasNullVal :: AnnGValue -> Bool
 hasNullVal = \case
@@ -300,9 +314,9 @@ getAnnInpValKind = \case
   AGObject _ _ -> "object"
   AGArray _ _  -> "array"
 
-getAnnInpValTy :: AnnGValue -> G.GType
-getAnnInpValTy = \case
-  AGScalar pct _ -> G.TypeNamed $ G.NamedType $ G.Name $ T.pack $ show pct
-  AGEnum nt _    -> G.TypeNamed nt
-  AGObject nt _  -> G.TypeNamed nt
-  AGArray nt _   -> G.TypeList nt
+-- getAnnInpValTy :: AnnGValue -> G.GType
+-- getAnnInpValTy = \case
+--   AGScalar pct _ -> G.TypeNamed $ G.NamedType $ G.Name $ T.pack $ show pct
+--   AGEnum nt _    -> G.TypeNamed nt
+--   AGObject nt _  -> G.TypeNamed nt
+--   AGArray nt _   -> G.TypeList nt

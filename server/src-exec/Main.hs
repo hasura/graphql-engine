@@ -5,31 +5,33 @@ module Main where
 
 import           Ops
 
-import           Data.Time.Clock            (getCurrentTime)
+import           Data.Time.Clock               (getCurrentTime)
 import           Options.Applicative
-import           System.Environment         (lookupEnv)
-import           System.Exit                (exitFailure)
+import           System.Environment            (lookupEnv)
+import           System.Exit                   (exitFailure)
 
-import qualified Control.Concurrent         as C
-import qualified Data.Aeson                 as A
-import qualified Data.ByteString.Char8      as BC
-import qualified Data.ByteString.Lazy       as BL
-import qualified Data.ByteString.Lazy.Char8 as BLC
-import qualified Data.Text                  as T
-import qualified Data.Yaml                  as Y
-import qualified Network.HTTP.Client        as HTTP
-import qualified Network.HTTP.Client.TLS    as HTTP
-import qualified Network.Wai.Handler.Warp   as Warp
+import qualified Control.Concurrent            as C
+import qualified Data.Aeson                    as A
+import qualified Data.ByteString.Char8         as BC
+import qualified Data.ByteString.Lazy          as BL
+import qualified Data.ByteString.Lazy.Char8    as BLC
+import qualified Data.Text                     as T
+import qualified Data.Yaml                     as Y
+import qualified Network.HTTP.Client           as HTTP
+import qualified Network.HTTP.Client.TLS       as HTTP
+import qualified Network.Wai.Handler.Warp      as Warp
 
-import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
+import           Hasura.GraphQL.QueryPlanCache as QC
+import           Hasura.Logging                (defaultLoggerSettings,
+                                                mkLoggerCtx)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
-import           Hasura.Server.App          (mkWaiApp)
-import           Hasura.Server.Auth         (AuthMode (..))
-import           Hasura.Server.CheckUpdates (checkForUpdates)
+import           Hasura.RQL.DDL.Metadata       (fetchMetadata)
+import           Hasura.Server.App             (mkWaiApp)
+import           Hasura.Server.Auth            (AuthMode (..))
+import           Hasura.Server.CheckUpdates    (checkForUpdates)
 import           Hasura.Server.Init
 
-import qualified Database.PG.Query          as Q
+import qualified Database.PG.Query             as Q
 
 data RavenOptions
   = RavenOptions
@@ -125,8 +127,9 @@ main =  do
       initialise ci
       migrate ci
       pool <- Q.initPGPool ci cp
+      planCache <- QC.initQueryPlanCache
       putStrLn $ "server: running on port " ++ show port
-      app <- mkWaiApp isoL mRootDir loggerCtx pool httpManager am finalCorsCfg enableConsole
+      app <- mkWaiApp isoL mRootDir loggerCtx pool httpManager planCache am finalCorsCfg enableConsole
       let warpSettings = Warp.setPort port Warp.defaultSettings
                          -- Warp.setHost "*" Warp.defaultSettings
 

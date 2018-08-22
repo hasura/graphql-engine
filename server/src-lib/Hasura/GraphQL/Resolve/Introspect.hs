@@ -4,6 +4,7 @@
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections       #-}
 
 module Hasura.GraphQL.Resolve.Introspect
   ( schemaR
@@ -152,21 +153,6 @@ listTypeR (G.ListType ty) fld =
     "ofType"     -> J.toJSON <$> gtypeR ty subFld
     _            -> return J.Null
 
--- 4.5.2.8
-nonNullR
-  :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
-  => G.NonNullType -> Field -> m J.Object
-nonNullR nnt fld =
-  withSubFields (_fSelSet fld) $ \subFld ->
-  case _fName subFld of
-    "__typename" -> retJT "__Type"
-    "kind"       -> retJ TKNON_NULL
-    "ofType"     -> case nnt of
-      G.NonNullTypeNamed nt -> J.toJSON <$> namedTypeR nt subFld
-      G.NonNullTypeList lt  -> J.toJSON <$> listTypeR lt subFld
-    _        -> return J.Null
-
 namedTypeR
   :: ( MonadReader r m, Has TypeMap r
      , MonadError QErr m)
@@ -257,15 +243,37 @@ showDirLoc = \case
   G.DLExecutable edl  -> T.pack $ drop 3 $ show edl
   G.DLTypeSystem tsdl -> T.pack $ drop 4 $ show tsdl
 
+-- 4.5.2.8
+nonNullR
+  :: ( MonadReader r m, Has TypeMap r
+     , MonadError QErr m)
+  => Either G.NamedType G.ListType -> Field -> m J.Object
+nonNullR tyE fld =
+  withSubFields (_fSelSet fld) $ \subFld ->
+  case _fName subFld of
+    "__typename" -> retJT "__Type"
+    "kind"       -> retJ TKNON_NULL
+    "ofType"     -> J.toJSON <$> gtypeR' tyE subFld
+    _            -> return J.Null
+
+gtypeR'
+  :: ( MonadReader r m, Has TypeMap r
+     , MonadError QErr m)
+  => Either G.NamedType G.ListType -> Field -> m J.Object
+gtypeR' ty fld =
+  either (`namedTypeR` fld) (`listTypeR` fld) ty
+
 gtypeR
   :: ( MonadReader r m, Has TypeMap r
      , MonadError QErr m)
   => G.GType -> Field -> m J.Object
-gtypeR ty fld =
-  case ty of
-    G.TypeList lt     -> listTypeR lt fld
-    G.TypeNonNull nnt -> nonNullR nnt fld
-    G.TypeNamed nt    -> namedTypeR nt fld
+gtypeR ty fld = do
+  let tyE = case ty of
+        G.TypeNamed _ nt -> Left nt
+        G.TypeList _ lt  -> Right lt
+  if G.isNullable ty
+    then gtypeR' tyE fld
+    else nonNullR tyE fld
 
 schemaR
   :: ( MonadReader r m, Has TypeMap r
@@ -291,7 +299,7 @@ typeR
   => Field -> m J.Value
 typeR fld = do
   name <- withArg args "name" $ \arg -> do
-    (_, pgColVal) <- asPGColVal arg
+    (varM, _, pgColVal) <- asPGColVal arg
     case pgColVal of
       PGValText t -> return t
       _           -> throw500 "expecting string for name arg of __type"

@@ -18,8 +18,8 @@ module Hasura.GraphQL.Utils
   , isValidName
   ) where
 
-import           Hasura.RQL.Types
 import           Hasura.Prelude
+import           Hasura.RQL.Types
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.List.NonEmpty            as NE
@@ -42,14 +42,10 @@ showNamedTy nt =
 
 getBaseTy :: G.GType -> G.NamedType
 getBaseTy = \case
-  G.TypeNamed n     -> n
-  G.TypeList lt     -> getBaseTyL lt
-  G.TypeNonNull nnt -> getBaseTyNN nnt
+  G.TypeNamed _ n -> n
+  G.TypeList _ lt -> getBaseTyL lt
   where
     getBaseTyL = getBaseTy . G.unListType
-    getBaseTyNN = \case
-      G.NonNullTypeList lt -> getBaseTyL lt
-      G.NonNullTypeNamed n -> n
 
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f l =

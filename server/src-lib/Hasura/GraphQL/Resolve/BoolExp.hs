@@ -7,6 +7,7 @@
 module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
   , convertBoolExp
+  , convertBoolExpG
   , prepare
   ) where
 
@@ -28,9 +29,11 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
+type OpExp = RA.OpExpG (Maybe G.Variable, PGColType, PGColValue)
+
 parseOpExps
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => AnnGValue -> m [RA.OpExp]
+  => AnnInpVal -> m [OpExp]
 parseOpExps annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
     forM (Map.toList obj) $ \(k, v) -> case k of
@@ -63,19 +66,21 @@ parseOpExps annVal = do
           <> showName k
   return $ map RA.OEVal $ catMaybes $ fromMaybe [] opExpsM
   where
-    resolveIsNull v = case v of
+    resolveIsNull v = case _aivValue v of
       AGScalar _ Nothing -> return Nothing
       AGScalar _ (Just (PGValBoolean b)) ->
         return $ Just $ bool RA.ANISNOTNULL RA.ANISNULL b
       AGScalar _ _ -> throw500 "boolean value is expected"
       _ -> tyMismatch "pgvalue" v
 
+type AnnVal = RA.AnnValO (Maybe G.Variable, PGColType, PGColValue)
+
 parseColExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => G.NamedType
   -> G.Name
-  -> AnnGValue
-  -> m RA.AnnVal
+  -> AnnInpVal
+  -> m AnnVal
 parseColExp nt n val = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
@@ -86,22 +91,30 @@ parseColExp nt n val = do
 
 parseBoolExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => AnnGValue
-  -> m (GBoolExp RA.AnnVal)
+  => AnnInpVal
+  -> m (GBoolExp AnnVal)
 parseBoolExp annGVal = do
-  boolExpsM <-
-    flip withObjectM annGVal
-      $ \nt objM -> forM objM $ \obj -> forM (Map.toList obj) $ \(k, v) -> if
-          | k == "_or"  -> BoolOr . fromMaybe [] <$> parseMany parseBoolExp v
-          | k == "_and" -> BoolAnd . fromMaybe [] <$> parseMany parseBoolExp v
-          | k == "_not" -> BoolNot <$> parseBoolExp v
-          | otherwise   -> BoolCol <$> parseColExp nt k v
+  boolExpsM <- flip withObjectM annGVal $ \nt objM ->
+    forM objM $ \obj -> forM (Map.toList obj) $ \(k, v) -> if
+    | k == "_or"  -> BoolOr . fromMaybe [] <$> parseMany parseBoolExp v
+    | k == "_and" -> BoolAnd . fromMaybe [] <$> parseMany parseBoolExp v
+    | k == "_not" -> BoolNot <$> parseBoolExp v
+    | otherwise   -> BoolCol <$> parseColExp nt k v
   return $ BoolAnd $ fromMaybe [] boolExpsM
 
 convertBoolExp
   :: QualifiedTable
-  -> AnnGValue
+  -> AnnInpVal
   -> Convert (GBoolExp RG.AnnSQLBoolExp)
-convertBoolExp tn whereArg = do
+convertBoolExp =
+  convertBoolExpG prepare
+
+convertBoolExpG
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
+  => ((Maybe G.Variable, PGColType, PGColValue) -> m S.SQLExp)
+  -> QualifiedTable
+  -> AnnInpVal
+  -> m (GBoolExp RG.AnnSQLBoolExp)
+convertBoolExpG f tn whereArg = do
   whereExp <- parseBoolExp whereArg
-  RG.convBoolRhs (RG.mkBoolExpBuilder prepare) (S.mkQual tn) whereExp
+  RG.convBoolRhs (RG.mkBoolExpBuilder f) (S.mkQual tn) whereExp

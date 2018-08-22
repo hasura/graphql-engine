@@ -27,7 +27,7 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Value
 
-newtype P a = P { unP :: Maybe (Either AnnGValue a)}
+newtype P a = P { unP :: Maybe (Either (G.Variable, AnnInpVal) a)}
 
 pNull :: (Monad m) => m (P a)
 pNull = return $ P Nothing
@@ -38,7 +38,7 @@ pVal = return . P . Just . Right
 resolveVar
   :: ( MonadError QErr m
      , MonadReader ValidationCtx m)
-  => G.Variable -> m AnnGValue
+  => G.Variable -> m AnnInpVal
 resolveVar var = do
   varVals <- _vcVarVals <$> ask
   -- TODO typecheck
@@ -46,24 +46,24 @@ resolveVar var = do
     throwVE $ "no such variable defined in the operation: "
     <> showName (G.unVariable var)
   where
-    typeCheck expectedTy actualTy = case (expectedTy, actualTy) of
-      -- named types
-      (G.TypeNamed eTy, G.TypeNamed aTy) -> eTy == aTy
-      -- non null type can be expected for a null type
-      (G.TypeNamed eTy, G.TypeNonNull (G.NonNullTypeNamed aTy)) -> eTy == aTy
+    -- typeCheck expectedTy actualTy = case (expectedTy, actualTy) of
+    --   -- named types
+    --   (G.TypeNamed eTy, G.TypeNamed aTy) -> eTy == aTy
+    --   -- non null type can be expected for a null type
+    --   (G.TypeNamed eTy, G.TypeNonNull (G.NonNullTypeNamed aTy)) -> eTy == aTy
 
-      -- list types
-      (G.TypeList eTy, G.TypeList aTy) ->
-        typeCheck (G.unListType eTy) (G.unListType aTy)
-      (G.TypeList eTy, G.TypeNonNull (G.NonNullTypeList aTy)) ->
-        typeCheck (G.unListType eTy) (G.unListType aTy)
+    --   -- list types
+    --   (G.TypeList eTy, G.TypeList aTy) ->
+    --     typeCheck (G.unListType eTy) (G.unListType aTy)
+    --   (G.TypeList eTy, G.TypeNonNull (G.NonNullTypeList aTy)) ->
+    --     typeCheck (G.unListType eTy) (G.unListType aTy)
 
-      -- non null types
-      (G.TypeNonNull (G.NonNullTypeList eTy), G.TypeNonNull (G.NonNullTypeList aTy)) ->
-        typeCheck (G.unListType eTy) (G.unListType aTy)
-      (G.TypeNonNull (G.NonNullTypeNamed eTy), G.TypeNonNull (G.NonNullTypeNamed aTy)) ->
-        eTy == aTy
-      (_, _) -> False
+    --   -- non null types
+    --   (G.TypeNonNull (G.NonNullTypeList eTy), G.TypeNonNull (G.NonNullTypeList aTy)) ->
+    --     typeCheck (G.unListType eTy) (G.unListType aTy)
+    --   (G.TypeNonNull (G.NonNullTypeNamed eTy), G.TypeNonNull (G.NonNullTypeNamed aTy)) ->
+    --     eTy == aTy
+    --   (_, _) -> False
 
 pVar
   :: ( MonadError QErr m
@@ -71,7 +71,7 @@ pVar
   => G.Variable -> m (P a)
 pVar var = do
   annInpVal <- resolveVar var
-  return . P . Just . Left $ annInpVal
+  return . P . Just . Left $ (var, annInpVal)
 
 data InputValueParser a m
   = InputValueParser
@@ -190,8 +190,8 @@ validateNamedTypeVal
   :: ( MonadReader r m, Has TypeMap r
      , MonadError QErr m)
   => InputValueParser a m
-  -> G.NamedType -> a -> m AnnGValue
-validateNamedTypeVal inpValParser nt val = do
+  -> (G.Nullability, G.NamedType) -> a -> m AnnInpVal
+validateNamedTypeVal inpValParser (nullability, nt) val = do
   tyInfo <- getTyInfo nt
   case tyInfo of
     -- this should never happen
@@ -199,13 +199,13 @@ validateNamedTypeVal inpValParser nt val = do
       throw500 $ "unexpected object type info for: "
       <> showNamedTy nt
     TIInpObj ioti ->
-      withParsed (getObject inpValParser) val $ \mObj ->
+      withParsed gType (getObject inpValParser) val $ \mObj ->
       AGObject nt <$> (mapM $ validateObject inpValParser ioti) mObj
     TIEnum eti ->
-      withParsed (getEnum inpValParser) val $ \mEnumVal ->
+      withParsed gType (getEnum inpValParser) val $ \mEnumVal ->
       AGEnum nt <$> (mapM $ validateEnum eti) mEnumVal
     TIScalar (ScalarTyInfo _ pgColTy) ->
-      withParsed (getScalar inpValParser) val $ \mScalar ->
+      withParsed gType (getScalar inpValParser) val $ \mScalar ->
       AGScalar pgColTy <$> (mapM $ validateScalar pgColTy) mScalar
   where
     validateEnum enumTyInfo enumVal  =
@@ -214,56 +214,49 @@ validateNamedTypeVal inpValParser nt val = do
       else throwVE $ "unexpected value " <>
            showName (G.unEnumValue enumVal) <>
            " for enum: " <> showNamedTy nt
+
     validateScalar pgColTy =
       runAesonParser (parsePGValue pgColTy)
+
+    gType = G.TypeNamed nullability nt
 
 validateList
   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
   => InputValueParser a m
-  -> G.ListType
+  -> (G.Nullability, G.ListType)
   -> a
-  -> m AnnGValue
-validateList inpValParser listTy val =
-  withParsed (getList inpValParser) val $ \lM -> do
+  -> m AnnInpVal
+validateList inpValParser (nullability, listTy) val =
+  withParsed ty (getList inpValParser) val $ \lM -> do
     let baseTy = G.unListType listTy
     AGArray listTy <$>
       mapM (indexedMapM (validateInputValue inpValParser baseTy)) lM
-
-validateNonNull
-  :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
-  => InputValueParser a m
-  -> G.NonNullType
-  -> a
-  -> m AnnGValue
-validateNonNull inpValParser nonNullTy val = do
-  parsedVal <- case nonNullTy of
-    G.NonNullTypeNamed nt -> validateNamedTypeVal inpValParser nt val
-    G.NonNullTypeList lt  -> validateList inpValParser lt val
-  when (hasNullVal parsedVal) $
-    throwVE $ "unexpected null value for type: " <> G.showGT (G.TypeNonNull nonNullTy)
-  return parsedVal
+  where
+    ty = G.TypeList nullability listTy
 
 validateInputValue
   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
   => InputValueParser a m
   -> G.GType
   -> a
-  -> m AnnGValue
+  -> m AnnInpVal
 validateInputValue inpValParser ty val =
   case ty of
-    G.TypeNamed nt    -> validateNamedTypeVal inpValParser nt val
-    G.TypeList lt     -> validateList inpValParser lt val
-    G.TypeNonNull nnt -> validateNonNull inpValParser nnt val
+    G.TypeNamed nullability nt ->
+      validateNamedTypeVal inpValParser (nullability, nt) val
+    G.TypeList nullability lt  ->
+      validateList inpValParser (nullability, lt) val
 
 withParsed
   :: (Monad m)
-  => (val -> m (P specificVal))
+  => G.GType
+  -> (val -> m (P specificVal))
   -> val
   -> (Maybe specificVal -> m AnnGValue)
-  -> m AnnGValue
-withParsed valParser val fn = do
+  -> m AnnInpVal
+withParsed ty valParser val fn = do
   parsedVal <- valParser val
   case unP parsedVal of
-    Nothing            -> fn Nothing
-    Just (Right a)     -> fn $ Just a
-    Just (Left annVal) -> return annVal
+    Nothing              -> AnnInpVal ty Nothing <$> fn Nothing
+    Just (Right v)       -> AnnInpVal ty Nothing <$> fn (Just v)
+    Just (Left (var, v)) -> return $ v { _aivVariable = Just var }

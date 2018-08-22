@@ -65,7 +65,7 @@ convertMutResp ty selSet =
 
 convertRowObj
   :: (MonadError QErr m, MonadState PrepArgs m)
-  => AnnGValue
+  => AnnInpVal
   -> m [(PGCol, S.SQLExp)]
 convertRowObj val =
   flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
@@ -112,7 +112,7 @@ parseConstraint obj = do
 
 parseOnConflict
   :: (MonadError QErr m)
-  => AnnGValue -> m ConflictCtx
+  => AnnInpVal -> m ConflictCtx
 parseOnConflict val =
   flip withObject val $ \_ obj -> do
     action <- parseAction obj
@@ -181,22 +181,25 @@ lhsExpOp op annTy (col, e) =
 
 convObjWithOp
   :: (MonadError QErr m)
-  => ApplySQLOp -> AnnGValue -> m [(PGCol, S.SQLExp)]
+  => ApplySQLOp -> AnnInpVal -> m [(PGCol, S.SQLExp)]
 convObjWithOp opFn val =
   flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
-  (_, colVal) <- asPGColVal v
+  (varM, _, colVal) <- asPGColVal v
   let pgCol = PGCol $ G.unName k
       encVal = txtEncoder colVal
       sqlExp = opFn (pgCol, encVal)
   return (pgCol, sqlExp)
 
+third :: (a, b, c) -> c
+third (_, _, c) = c
+
 convDeleteAtPathObj
   :: (MonadError QErr m)
-  => AnnGValue -> m [(PGCol, S.SQLExp)]
+  => AnnInpVal -> m [(PGCol, S.SQLExp)]
 convDeleteAtPathObj val =
   flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
     vals <- flip withArray v $ \_ annVals -> mapM asPGColVal annVals
-    let valExps = map (txtEncoder . snd) vals
+    let valExps = map (txtEncoder . third) vals
         pgCol = PGCol $ G.unName k
         annEncVal = S.SETyAnn (S.SEArray valExps) S.textArrType
         sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp

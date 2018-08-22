@@ -33,7 +33,7 @@ import qualified PostgreSQL.Binary.Decoding as PD
 
 newtype RoleName
   = RoleName {getRoleTxt :: T.Text}
-  deriving ( Show, Eq, Hashable, FromJSONKey, ToJSONKey, FromJSON
+  deriving ( Show, Eq, Ord, Hashable, FromJSONKey, ToJSONKey, FromJSON
            , ToJSON, Q.FromCol, Q.ToPrepArg, Lift)
 
 instance DQuote RoleName where
