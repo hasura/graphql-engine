@@ -7,6 +7,8 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
+import { showErrorNotification } from '../Notification';
 
 import { untrackedTip, untrackedRelTip } from './Tooltips';
 import {
@@ -31,6 +33,9 @@ const appPrefix = globals.urlPrefix + '/data';
 class Schema extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      isExporting: false,
+    };
     // Initialize this table
     const dispatch = this.props.dispatch;
     dispatch(fetchSchemaList());
@@ -235,6 +240,68 @@ class Schema extends Component {
                 </div>
               </div>
             </div>
+          </div>
+          <hr />
+          <div>
+            <button
+              data-test="data-export-metadata"
+              className={styles.yellow_button}
+              onClick={e => {
+                e.preventDefault();
+                this.setState({ isExporting: true });
+                const url = Endpoints.query;
+                const requestBody = {
+                  type: 'export_metadata',
+                  args: null,
+                };
+                const options = {
+                  method: 'POST',
+                  credentials: globalCookiePolicy,
+                  headers: {
+                    'X-Hasura-Access-Key': globals.accessKey,
+                  },
+                  body: JSON.stringify(requestBody),
+                };
+                fetch(url, options)
+                  .then(response => {
+                    response.json().then(data => {
+                      if (response.ok) {
+                        const dataStr =
+                          'data:text/json;charset=utf-8,' +
+                          encodeURIComponent(JSON.stringify(data));
+                        const anchorElem = document.createElement('a');
+                        anchorElem.setAttribute('href', dataStr);
+                        anchorElem.setAttribute('download', 'metadata.json');
+                        anchorElem.click();
+                        anchorElem.remove();
+                        this.setState({ isExporting: false });
+                      } else {
+                        const parsedErrorMsg = data;
+                        dispatch(
+                          showErrorNotification(
+                            'Metadata export failed',
+                            'Something is wrong.',
+                            requestBody,
+                            parsedErrorMsg
+                          )
+                        );
+                        console.error('Error with response', parsedErrorMsg);
+                      }
+                    });
+                  })
+                  .catch(error => {
+                    console.error(error);
+                    dispatch(
+                      showErrorNotification(
+                        'Metadata export failed',
+                        'Cannot connect to server'
+                      )
+                    );
+                  });
+              }}
+            >
+              {this.state.isExporting ? 'Exporting...' : 'Export Metadata'}
+            </button>
           </div>
         </div>
       </div>
