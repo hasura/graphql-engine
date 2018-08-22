@@ -22,7 +22,7 @@ import           Data.List                  (find)
 import           Data.Time.Clock            (getCurrentTime)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils        (userRoleHeader)
+import           Hasura.Server.Utils        (accessKeyHeader, userRoleHeader)
 
 import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Lazy       as BL
@@ -57,16 +57,16 @@ processJwt key headers = do
         claims ^. unregisteredClaims
 
   -- transform the map of text:aeson-value -> text:text
-  metadataWithRole <- decodeJSON $ A.Object claimsMap
+  metadata <- decodeJSON $ A.Object claimsMap
 
   -- throw error if role is not in claims
-  let mRole = Map.lookup userRoleHeader metadataWithRole
+  let mRole = Map.lookup userRoleHeader metadata
   role <- maybe missingRoleClaim return mRole
 
-  -- delete the x-hasura-role key from this map
-  let metadata = Map.delete userRoleHeader metadataWithRole
+  -- delete the x-hasura-access-key from this map
+  let finalMetadata = Map.delete accessKeyHeader metadata
 
-  return $ UserInfo (RoleName role) metadata
+  return $ UserInfo (RoleName role) finalMetadata
 
   where
     parseAuthzHeader = do
