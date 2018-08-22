@@ -6,7 +6,7 @@ query:
   args:
     - type: run_sql
       args:
-        sql: "CREATE TABLE author (id SERIAL PRIMARY KEY, name TEXT)"
+        sql: "CREATE TABLE author (id SERIAL PRIMARY KEY, name TEXT UNIQUE)"
     - type: run_sql
       args:
         sql: |

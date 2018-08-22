@@ -67,6 +67,7 @@ class ApiExplorer extends Component {
         dataHeaders={this.props.dataHeaders}
         numberOfTables={this.props.tables.length}
         headerFocus={this.props.headerFocus}
+        queryParams={this.props.location.query}
       />
     );
 
@@ -86,6 +87,7 @@ ApiExplorer.propTypes = {
   route: PropTypes.object.isRequired,
   tables: PropTypes.array.isRequierd,
   headerFocus: PropTypes.bool.isRequired,
+  location: PropTypes.object.isRequired,
 };
 
 export default ApiExplorer;

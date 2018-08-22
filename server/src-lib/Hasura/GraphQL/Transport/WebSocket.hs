@@ -42,6 +42,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode,
                                                               getUserInfo)
+import qualified Hasura.Server.Query                         as RQ
 
 -- uniquely identifies an operation
 type GOperationId = (WS.WSId, OperationId)
@@ -177,7 +178,8 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndSend $ do
   let gCtx = getGCtx (userRole userInfo) gCtxMap
   (opTy, fields) <- withExceptT preExecErr $ loggingQErr $
                     runReaderT (validateGQ q) gCtx
-  let qTx = resolveSelSet userInfo gCtx opTy fields
+  let qTx = RQ.setHeadersTx userInfo >>
+            resolveSelSet userInfo gCtx opTy fields
 
   case opTy of
     G.OperationTypeSubscription -> do

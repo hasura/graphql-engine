@@ -67,18 +67,22 @@ data Code
   | AlreadyUntracked
   | InvalidParams
   | AlreadyInit
+  | ConstraintViolation
+  | DataException
+  -- Graphql error
+  | NoTables
+  | ValidationFailed
   -- JWT Auth errors
   | JWTRoleClaimMissing
   | JWTInvalidClaims
   | JWTInvalid
   | JWTInvalidKey
-  -- Graphql error
-  | NoTables
-  | ValidationFailed
   deriving (Eq)
 
 instance Show Code where
   show NotNullViolation    = "not-null-violation"
+  show DataException       = "data-exception"
+  show ConstraintViolation = "constraint-violation"
   show PermissionDenied    = "permission-denied"
   show NotExists           = "not-exists"
   show AlreadyExists       = "already-exists"
