@@ -60,7 +60,7 @@ data Code
   | ConstraintError
   | PermissionError
   | NotFound
-  | Unexpected
+  | InternalError
   | UnexpectedPayload
   | NoUpdate
   | AlreadyTracked
@@ -93,7 +93,7 @@ instance Show Code where
   show ConstraintError     = "constraint-error"
   show PermissionError     = "permission-error"
   show NotFound            = "not-found"
-  show Unexpected          = "unexpected"
+  show InternalError       = "internal-error"
   show UnexpectedPayload   = "unexpected-payload"
   show NoUpdate            = "no-update"
   show InvalidParams       = "invalid-params"
@@ -183,7 +183,7 @@ throw401 :: (QErrM m) => T.Text -> m a
 throw401 t = throwError $ err401 AccessDenied t
 
 throw500 :: (QErrM m) => T.Text -> m a
-throw500 t = throwError $ err500 Unexpected t
+throw500 t = throwError $ err500 InternalError t
 
 modifyQErr :: (QErrM m)
            => (QErr -> QErr) -> m a -> m a

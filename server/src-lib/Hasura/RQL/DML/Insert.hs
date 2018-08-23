@@ -123,7 +123,7 @@ buildConflictClause tableInfo (OnConflict mTCol mTCons act) = case (mTCol, mTCon
       let tableConsNames = map tcName $ tiConstraints tableInfo
       withPathK "constraint" $
        unless (c `elem` tableConsNames) $
-       throw400 Unexpected $ "constraint " <> getConstraintTxt c
+       throw400 UnexpectedPayload $ "constraint " <> getConstraintTxt c
                    <<> " for table " <> tiName tableInfo
                    <<> " does not exist"
 

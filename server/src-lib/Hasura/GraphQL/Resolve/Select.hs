@@ -173,7 +173,7 @@ parseLimit v = do
   onlyPositiveInt limit
   return limit
   where
-    noIntErr = throw400 Unexpected "expecting Integer value for \"limit\""
+    noIntErr = throwVE "expecting Integer value for \"limit\""
 
 -- convertSelect
 --   :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> PlanM RespTx

@@ -74,7 +74,7 @@ withObject
 withObject fn v = case _aivValue v of
   AGObject nt (Just obj) -> fn nt obj
   AGObject _ Nothing  ->
-    throw500 $ "unexpected null for ty" <> G.showGT (_aivType v)
+    throw500 $ "unexpected null for ty " <> G.showGT (_aivType v)
   _               -> tyMismatch "object" v
 
 withObjectM

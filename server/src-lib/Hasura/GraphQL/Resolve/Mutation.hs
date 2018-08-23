@@ -83,7 +83,7 @@ mkConflictClause
 mkConflictClause cols (act, conM) = case (act , conM) of
   (CAIgnore, Nothing) -> return $ RI.CP1DoNothing Nothing
   (CAIgnore, Just cons) -> return $ RI.CP1DoNothing $ Just $ RI.Constraint cons
-  (CAUpdate, Nothing) -> withPathK "on_conflict" $ throw400 Unexpected
+  (CAUpdate, Nothing) -> withPathK "on_conflict" $ throwVE
     "expecting \"constraint\" when \"action\" is \"update\" "
   (CAUpdate, Just cons) -> return $ RI.CP1Update (RI.Constraint cons) cols
 
@@ -241,7 +241,7 @@ convertUpdate tn filterExp fld = do
                  ]
       updExp = concat $ catMaybes updExpsM
   -- atleast one of update operators is expected
-  unless (any isJust updExpsM) $ throw400 Unexpected $
+  unless (any isJust updExpsM) $ throwVE $
     "atleast any one of _set, _inc, _append, _prepend, _delete_key, _delete_elem and "
     <> " _delete_at_path operator is expected"
   let p1 = RU.UpdateQueryP1 tn updExp (filterExp, whereExp) mutFlds
