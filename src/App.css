@@ -2,17 +2,30 @@
   text-align: left;
 }
 
-.message {
+.messageOdd {
   font-size: 30px;
-  margin: 10px;
+  padding-left: 5px;
 }
 
-.newMessage {
+.messageEven {
+  font-size: 30px;
+  background-color: #eee;
+  padding-left: 5px;
+}
+
+.newMessageEven {
 
   font-size: 30px;
-  font-weight: 5;
-  font-style: italic;
-  color: 'blue' !important;
+  color: 'black' !important;
+  background-color: #98FB98;
+  padding-left: 5px;
+}
+
+.newMessageOdd {
+  font-size: 30px;
+  color: 'black' !important;
+  background-color: #8FBC8F;
+  padding-left: 5px;
 }
 
 .banner {
@@ -23,6 +36,16 @@
   background-color: green;
   height: 40px;
   font-size: 30px;  
+}
+
+.oldNewSeparator {
+  height: 40px;
+  border-width: 2px;
+  border-color: 'black';
+  font-size: 40px;
+  text-align: center;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 .chatbox {

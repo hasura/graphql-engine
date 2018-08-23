@@ -3,7 +3,7 @@ import { Query, ApolloConsumer } from 'react-apollo';
 import gql from 'graphql-tag';
 import '../App.js';
 import Banner from './Banner';
-import MessageTrigger from './MessageTrigger';
+import MessageList from './MessageList';
 
 const fetchMessages = gql`
   query ($last_received_id: Int, $last_received_ts: timestamptz){
@@ -103,6 +103,7 @@ export default class RenderMessages extends React.Component {
       messages: oldMessages,
       newMessages: []
     })
+    this.scrollToBottom()
   }
 
   // custom refetch to be passed to parent for refetching on event occurance
@@ -166,7 +167,7 @@ export default class RenderMessages extends React.Component {
           {
             ({ data, loading, error, refetch}) => {
               if (loading) {
-                return "Loading";
+                return null;
               }
               if (error) {
                 return "Error: " + error;
@@ -193,6 +194,7 @@ export default class RenderMessages extends React.Component {
           }
         </Query>
         { /* show "unread messages" banner if not at bottom */}
+        {
           (!bottom && newMessages.length > 0) ?
           <Banner
              scrollToNewMessage={this.scrollToNewMessage}
@@ -208,10 +210,11 @@ export default class RenderMessages extends React.Component {
         { /* Show old/new message separation */}
         <div
           id="newMessage"
+          className="oldNewSeparator"
         >
           {
             newMessages.length !== 0 ? 
-            "================New Messages================" :
+            "New messages" :
             null
           }
 
@@ -233,22 +236,5 @@ export default class RenderMessages extends React.Component {
   }
 }
 
-class MessageList extends React.Component {
-  render() {
-    const { isNew } = this.props; 
-    return (
-      <div>
-        {
-          this.props.messages.map((m, i) => {
-            return (
-              <div key={m.id} className={isNew ? "newMessage" : "message"}>
-                { m.username + ": " + m.text }
-              </div> 
-            );
-          })
-        }
-      </div>
-    );
-  }
-};
+
 

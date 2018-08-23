@@ -1,9 +1,9 @@
 import React from 'react';
-import ChatComponent from './ChatComponent';
+import Chat from './Chat';
 import Login from './Login';
 import '../App.css';
 
-export default class Home extends React.Component {
+export default class Main extends React.Component {
 
   constructor() {
     super();
@@ -39,7 +39,7 @@ export default class Home extends React.Component {
               login={this.login}
             />
           ) : (
-            <ChatComponent
+            <Chat
               username={username}
             />  
           )

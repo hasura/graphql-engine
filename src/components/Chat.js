@@ -1,7 +1,7 @@
 import React from 'react';
 import { Subscription } from 'react-apollo';
 import gql from 'graphql-tag';
-import RenderMessagesProxy from './RenderMessagesProxy';
+import ChatWrapper from './ChatWrapper';
 import Textbox from './Textbox';
 
 const subscribeToEvent = gql`
@@ -14,7 +14,7 @@ const subscribeToEvent = gql`
     } }
 `;
 
-class ChatComponent extends React.Component {
+class Chat extends React.Component {
 
   constructor (props) {
     super(props);
@@ -51,7 +51,7 @@ class ChatComponent extends React.Component {
             }
           }
         </Subscription>
-        <RenderMessagesProxy
+        <ChatWrapper
           refetch={refetch}
           setRefetch={this.setRefetch}
           username={username}
@@ -61,4 +61,4 @@ class ChatComponent extends React.Component {
   }
 };
 
-export default ChatComponent;
+export default Chat;
