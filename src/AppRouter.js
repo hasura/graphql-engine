@@ -40,7 +40,6 @@ const AppRouter = (props) => {
         */ }
         
 
-        <hr/>
 
         <Route exact path="/" component={SubscriptionExample}/>
         <Route path="/route-1" component={RouteOne}/>
