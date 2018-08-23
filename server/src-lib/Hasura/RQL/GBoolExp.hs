@@ -227,7 +227,7 @@ parseOpExps
   -> PGColInfo
   -> Value
   -> m [OpExpG a]
-parseOpExps valParser cim (PGColInfo cn colTy) (Object o) =
+parseOpExps valParser cim (PGColInfo cn colTy _) (Object o) =
   forM (M.toList o) $ \(k, v) -> do
   op <- parseOp k
   case (op, v) of
@@ -245,7 +245,7 @@ parseOpExps valParser cim (PGColInfo cn colTy) (Object o) =
         "incompatible column types : " <> cn <<> ", " <>> pgCol
       return $ OECol colOp pgCol
     (Right _, _) -> throw400 UnexpectedPayload "expecting a string for column operator"
-parseOpExps valParser _ (PGColInfo _ colTy) val = do
+parseOpExps valParser _ (PGColInfo _ colTy _) val = do
   annValOp <- parseAnnOpExpG valParser REQ colTy val
   return [OEVal annValOp]
 
@@ -330,9 +330,9 @@ annColExp
 annColExp valueParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (PGColInfo _ PGJSON) ->
+    FIColumn (PGColInfo _ PGJSON _) ->
       throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
-    FIColumn (PGColInfo _ PGJSONB) ->
+    FIColumn (PGColInfo _ PGJSONB _) ->
       throwError (err400 UnexpectedPayload "JSONB column can not be part of where clause")
     FIColumn pgi ->
       AVCol pgi <$> parseOpExps valueParser colInfoMap pgi colVal
@@ -356,7 +356,7 @@ convColRhs
   => BoolExpBuilder m a
   -> S.Qual -> AnnValO a -> m (AnnValG S.BoolExp)
 convColRhs bExpBuilder tableQual annVal = case annVal of
-  AVCol pci@(PGColInfo cn _) opExps -> do
+  AVCol pci@(PGColInfo cn _ _) opExps -> do
     let qualColExp = S.SEQIden $ S.QIden tableQual (toIden cn)
     bExps <- forM opExps $ \case
       OEVal annOpValExp -> bExpBuilder qualColExp annOpValExp
