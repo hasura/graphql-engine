@@ -3,7 +3,7 @@ import React from 'react';
 const LoginComponent = (props) => {
   return (
     <div>    
-      <h2 className="loginHeading"> Welcome to sample chat app made with Hasura GraphQL Engine </h2>
+      <h1 className="loginHeading"> Welcome to the sample chat app made with Hasura GraphQL Engine </h1>
       <div className="login">
         <div>
           <form

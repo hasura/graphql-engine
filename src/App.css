@@ -83,7 +83,7 @@
 }
 
 .loginTextbox {
-  height: 50px;
+  height: 40px;
   flex: 0.7;
   margin-right: 5px;
   font-size: 30px;
@@ -94,6 +94,7 @@
   height: 50px;
   flex: 0.3;
   margin-left: 5px;
+  font-size: 30px;
 }
 
 .loginHeading {
