@@ -44,7 +44,7 @@ and when it can't find it, it throws the above error.
 Solution
 ^^^^^^^^
 
-- Connect to the database and switch to ``hdb_catalog`` schema,
+- Connect to the database and switch to ``hdb_catalog`` schema.
 - In the ``hdb_relationship`` table, find the entry for the above relationship and delete it.
 - Restart GraphQL engine to verify.
 
