@@ -3,31 +3,32 @@
 
 module Main where
 
-import           Data.Time.Clock            (getCurrentTime)
-import           Network.Wai                (Application)
+import           Data.Time.Clock               (getCurrentTime)
+import           Network.Wai                   (Application)
 import           Options.Applicative
-import           System.Environment         (withArgs)
-import           System.Exit                (exitFailure)
+import           System.Environment            (withArgs)
+import           System.Exit                   (exitFailure)
 import           Test.Hspec.Core.Runner
 import           Test.Hspec.Wai
 
-import qualified Data.Aeson                 as J
-import qualified Data.ByteString.Lazy.Char8 as BLC
+import qualified Data.Aeson                    as J
+import qualified Data.ByteString.Lazy.Char8    as BLC
 
-import qualified Database.PG.Query          as Q
-import qualified Hasura.Logging             as L
+import qualified Database.PG.Query             as Q
+import           Hasura.GraphQL.QueryPlanCache as QP
+import qualified Hasura.Logging                as L
 import           Hasura.Prelude
-import           Hasura.Server.App          (mkWaiApp)
-import           Hasura.Server.Auth         (AuthMode (..))
+import           Hasura.Server.App             (mkWaiApp)
+import           Hasura.Server.Auth            (AuthMode (..))
 
 
-import qualified Database.PG.Query          as PGQ
-import qualified Network.HTTP.Client        as HTTP
-import qualified Network.HTTP.Client.TLS    as HTTP
+import qualified Database.PG.Query             as PGQ
+import qualified Network.HTTP.Client           as HTTP
+import qualified Network.HTTP.Client.TLS       as HTTP
 
 import           Hasura.Server.Init
-import           Ops                        (initCatalogSafe)
-import           Spec                       (mkSpecs)
+import           Ops                           (initCatalogSafe)
+import           Spec                          (mkSpecs)
 
 data ConnectionParams = ConnectionParams RawConnInfo Q.ConnParams
 
@@ -45,8 +46,9 @@ ravenApp :: L.LoggerCtx -> PGQ.PGPool -> IO Application
 ravenApp loggerCtx pool = do
   let corsCfg = CorsConfigG "*" False -- cors is enabled
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
+  planCache <- QP.initQueryPlanCache
   -- spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
-  mkWaiApp Q.Serializable Nothing loggerCtx pool httpManager AMNoAuth corsCfg True -- no access key and no webhook
+  mkWaiApp Q.Serializable Nothing loggerCtx pool httpManager planCache AMNoAuth corsCfg True -- no access key and no webhook
 
 main :: IO ()
 main = do
