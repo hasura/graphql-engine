@@ -10,6 +10,7 @@ const insertMessage = gql`
     ) {
       returning {
         id
+        timestamp
       }
     }
   }
@@ -24,11 +25,8 @@ export default class Textbox extends React.Component {
     }
   }
 
-  componentDidUpdate() {
-    
-  }
-
   render() {
+    // Mutation component. Add message to the state of <RenderMessages> after mutation.
     return (
       <Mutation
         mutation={insertMessage}
@@ -38,7 +36,18 @@ export default class Textbox extends React.Component {
             text: this.state.text
           }
         }}
-        id="inputTextBox"
+        update={(cache, { data: { insert_message }}) => {
+          this.props.mutationCallback([
+            {
+              id: insert_message.returning[0].id,
+              timestamp: insert_message.returning[0].timestamp,
+              username: this.props.username,
+              text: this.state.text  
+            }
+          ]);
+          this.setState({ text: "" })
+          document.getElementById("textbox").scrollIntoView({ behavior: 'instant'})
+        }}
       >
         {
           (insert_message, { data, loading, error, called}) => {
@@ -46,9 +55,7 @@ export default class Textbox extends React.Component {
               return "";
             }
             const sendMessage = () => {
-              insert_message();
-              this.setState({ text: "" })
-              document.getElementById("textbox").scrollIntoView({ behavior: 'instant'})
+              insert_message(); 
             }
             return (
               <form onSubmit={sendMessage}>

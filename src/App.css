@@ -1,4 +1,4 @@
-.App {
+.app {
   text-align: left;
 }
 
@@ -50,13 +50,12 @@
 
 .chatbox {
   margin: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .textboxWrapper {
   position: -webkit-sticky !important;
   position: sticky;
-  bottom: 0;
   align-self: flex-end;
   display: flex;
   flex-direction: row;
@@ -76,3 +75,27 @@
   margin-left: 5px;
 }
 
+.login {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  margin: 40px;
+}
+
+.loginTextbox {
+  height: 50px;
+  flex: 0.7;
+  margin-right: 5px;
+  font-size: 30px;
+  padding: 5px;
+}
+
+.loginButton {
+  height: 50px;
+  flex: 0.3;
+  margin-left: 5px;
+}
+
+.loginHeading {
+  text-align: center;
+}

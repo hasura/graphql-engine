@@ -24,6 +24,7 @@ class Chat extends React.Component {
     };
   }
 
+  // set refetch function (coming from child <Query> component) using callback
   setRefetch = (refetch) => {
     this.setState({
       ...this.state,
@@ -31,6 +32,12 @@ class Chat extends React.Component {
     })
   }
 
+
+  /*
+    Subscription is used only for event notification
+    No data is bound to the subscription component
+    As soon as an event occurs, the refetch() of the child component is called
+  */
   render () {
     const { refetch, username } = this.state;
     return (

@@ -8,11 +8,12 @@ export default class Main extends React.Component {
   constructor() {
     super();
     this.state = {
-      isLoggedIn: true,
-      username:"rishi"
+      isLoggedIn: false,
+      username:""
     };
   } 
 
+  // set username
   setUsername = (username) => {
     this.setState({
       ...this.state,
@@ -20,17 +21,24 @@ export default class Main extends React.Component {
     }) 
   }
 
+  // check usernme and  perform login
   login = () => {
-    this.setState({
-      ...this.state,
-      isLoggedIn: true
-    });
+    const { username } = this.state;
+    if (username.match(/^[a-z0-9_-]{3,15}$/g)) {
+      this.setState({
+        ...this.state,
+        isLoggedIn: true
+      });
+    } else {
+      alert("Invalid username. Spaces and special characters not allowed. Please try again");
+    }
   }
 
   render() {
     const { username, isLoggedIn } = this.state;
+    // Login if not logged in and head to chat
     return (
-      <div className="App">
+      <div className="app">
         {
           !isLoggedIn ? (
             <Login

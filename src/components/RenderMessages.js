@@ -44,6 +44,7 @@ export default class RenderMessages extends React.Component {
     if (this.props.refetch) {
       this.scrollToBottom();
     }
+    this.props.setMutationCallback(this.addOldMessages);
   }
 
   componentDidMount() {
@@ -84,7 +85,10 @@ export default class RenderMessages extends React.Component {
   addNewMessages = (messages) => {
     const newMessages = [...this.state.newMessages];
     messages.forEach((m) => {
-      newMessages.push(m);
+      // do not add new messages from self
+      if (m.username !== this.props.username) {
+        newMessages.push(m);
+      }
     });
     this.setState({
       ...this.state,

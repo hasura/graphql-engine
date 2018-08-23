@@ -1,8 +1,8 @@
 import React from 'react';
 import RenderMessages from './RenderMessages';
-import { ApolloConsumer } from 'react-apollo';
 import gql from 'graphql-tag';
 import Textbox from './Textbox'
+import "../App.css";
 
 export default class RenderMessagesProxy extends React.Component {
   constructor(props) {
@@ -12,24 +12,26 @@ export default class RenderMessagesProxy extends React.Component {
     }
   }
 
+  // Set mutation callback. For instantly adding messages to state after mutation
+  setMutationCallback = (mutationCallback) => {
+    this.setState({
+      ...this.state,
+      mutationCallback
+    })
+  }
+
   render() {
     return (
       <div>
-        <ApolloConsumer>
-          {
-            (client) => {
-              return (
-                <RenderMessages
-                  client={client}
-                  refetch={this.props.refetch}
-                  setRefetch={this.props.setRefetch}
-                />
-              );
-            }
-          }
-        </ApolloConsumer>
+        <RenderMessages
+          refetch={this.props.refetch}
+          setRefetch={this.props.setRefetch}
+          setMutationCallback={this.setMutationCallback}
+          username={this.props.username}
+        />
         <Textbox
           username={this.props.username}
+          mutationCallback={this.state.mutationCallback}
         />
       </div>
     );
