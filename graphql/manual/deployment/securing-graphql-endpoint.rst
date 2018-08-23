@@ -9,6 +9,7 @@ access to your GraphQL endpoint and the Hasura console:
 
 - :doc:`For Heroku <heroku/securing-graphql-endpoint>`
 - :doc:`For Docker <docker/securing-graphql-endpoint>`
+- :doc:`For Kubernetes <kubernetes/securing-graphql-endpoint>`
 
 .. note::
 

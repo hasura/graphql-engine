@@ -25,6 +25,8 @@ Using an existing database:
   Postgres database.
 - :doc:`Using Docker <../deployment/docker/index>`: Run as a docker container and connect to an existing Postgres
   database.
+- :doc:`Using Kubernetes <../deployment/kubernetes/index>`: Run on Kubernetes and connect to an existing Postgres
+  database.
 
 .. toctree::
    :maxdepth: 2
