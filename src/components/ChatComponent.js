@@ -2,6 +2,7 @@ import React from 'react';
 import { Subscription } from 'react-apollo';
 import gql from 'graphql-tag';
 import RenderMessagesProxy from './RenderMessagesProxy';
+import Textbox from './Textbox';
 
 const subscribeToEvent = gql`
   subscription {
@@ -10,8 +11,7 @@ const subscribeToEvent = gql`
       username
       text
       timestamp
-    }
-  }
+    } }
 `;
 
 class ChatComponent extends React.Component {

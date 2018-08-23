@@ -1,6 +1,8 @@
 import React from 'react';
 import RenderMessages from './RenderMessages';
 import { ApolloConsumer } from 'react-apollo';
+import gql from 'graphql-tag';
+import Textbox from './Textbox'
 
 export default class RenderMessagesProxy extends React.Component {
   constructor(props) {
@@ -12,21 +14,24 @@ export default class RenderMessagesProxy extends React.Component {
 
   render() {
     return (
-      <ApolloConsumer>
-        {
-          (client) => {
-            return (
-              <RenderMessages
-                client={client}
-                refetch={this.props.refetch}
-                setRefetch={this.props.setRefetch}
-              />
-            );
+      <div>
+        <ApolloConsumer>
+          {
+            (client) => {
+              return (
+                <RenderMessages
+                  client={client}
+                  refetch={this.props.refetch}
+                  setRefetch={this.props.setRefetch}
+                />
+              );
+            }
           }
-        }
-      </ApolloConsumer>
+        </ApolloConsumer>
+        <Textbox
+          username={this.props.username}
+        />
+      </div>
     );
   }
 }
-
-

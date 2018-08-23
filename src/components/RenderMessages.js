@@ -79,7 +79,17 @@ export default class RenderMessages extends React.Component {
       bottom: false
     });
     this.scrollToBottom();
+    document.getElementById('lastMessage').addEventListener("scroll", this.handleBottomScroll, true);
   }
+
+  componentDidMount() {
+    window.addEventListener("scroll", this.handleScroll);
+  }
+
+  handleBottomScroll = (e) => {
+    console.log("fired bottom");
+  }
+
 
   componentWillUnmount() {
     window.removeEventListener("scroll", this.handleScroll);
@@ -167,17 +177,16 @@ export default class RenderMessages extends React.Component {
   }
 
   scrollToBottom = () => {
-    console.log('hery');
-    this.lastMessage.scrollIntoView({ behavior: "instant" });
+    document.getElementById('lastMessage').scrollIntoView({ behavior: "instant" });
   }
 
   scrollToNewMessage = () => {
-    this.newMessages.scrollIntoView({ behavior: "instant" });
+    document.getElementById('newMessage').scrollIntoView({ behavior: "instant" });
   }
 
-  handleScroll = () => {
+  handleScroll = (e) => {
     const windowHeight = "innerHeight" in window ? window.innerHeight : document.documentElement.offsetHeight;
-    const body = document.body;
+    const body = document.getElementById("chatbox");
     const html = document.documentElement;
     const docHeight = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight,  html.scrollHeight, html.offsetHeight);
     const windowBottom = windowHeight + window.pageYOffset;
@@ -198,7 +207,6 @@ export default class RenderMessages extends React.Component {
 
   render() {
     const { messages, newMessages, bottom, loading, error } = this.state;
-    console.log(this.state);
     if (loading) {
       return "Loading";
     }
@@ -206,7 +214,7 @@ export default class RenderMessages extends React.Component {
       return "Error: " + error;
     }
     return (
-      <div>
+      <div id="chatbox">
         {
           (!bottom && newMessages.length > 0) ?
           <Banner
@@ -216,9 +224,10 @@ export default class RenderMessages extends React.Component {
         }
         <MessageList
           messages={messages}
+          isNew={false}
         />
         <div
-          ref={(node) => { this.newMessages = node; }}
+          id="newMessage"
         >
           {
             newMessages.length !== 0 ? 
@@ -228,10 +237,15 @@ export default class RenderMessages extends React.Component {
         </div>
         <MessageList
           messages={newMessages}
+          isNew={true}
         />
         <div
           style={{ "height": 0 }}
-          ref={(node) => { this.lastMessage = node; }}
+          id="lastMessage"
+          onScroll={() => {
+            console.log('fired');
+            this.setState({...this.state, bottom: true})
+          }}
         >
         </div>
       </div>
@@ -241,13 +255,14 @@ export default class RenderMessages extends React.Component {
 
 class MessageList extends React.Component {
   render() {
+    const { isNew } = this.props; 
     return (
       <div>
         {
           this.props.messages.map((m, i) => {
             return (
-              <div key={`${m.id} + ${i}`}>
-                { m.text }
+              <div key={m.id} className={isNew ? "newMessage" : "message"}>
+                { m.username + ": " + m.text }
               </div> 
             );
           })

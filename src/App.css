@@ -1,14 +1,15 @@
 .App {
-  display: flex;
-  flex: 1;
+  text-align: left;
 }
 
 .message {
-  font-size: 12px;
-  margin: 2px;
+  font-size: 30px;
+  margin: 10px;
 }
 
 .newMessage {
+
+  font-size: 30px;
   font-weight: 5;
   font-style: italic;
   color: 'blue' !important;
@@ -19,5 +20,36 @@
   position: sticky;
   top: 0;
   align-self: flex-start; /* <-- this is the fix */
-  background-color: red;  
+  background-color: green;
+  height: 40px;
+  font-size: 30px;  
 }
+
+.chatbox {
+  margin: 10px;
+  margin-bottom: 10px;
+}
+
+.textboxWrapper {
+  position: -webkit-sticky !important;
+  position: sticky;
+  bottom: 0;
+  align-self: flex-end;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 10px;
+}
+
+.textbox {
+  height: 40px;
+  font-size: 35px;
+  flex: 0.75;
+  margin-right: 5px;
+}
+.sendButton {
+  height: 40px;
+  flex: 0.25;
+  margin-left: 5px;
+}
+
