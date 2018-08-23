@@ -29,72 +29,35 @@ const fetchMessages = gql`
   }
 `;
 
-const fetchQuery = `
-  query ($last_received_id: Int, $last_received_ts: timestamptz){
-    message (
-      order_by: timestamp_asc
-      where: {
-        _and: {
-          id: {
-            _neq: $last_received_id
-          },
-          timestamp: {
-            _gte: $last_received_ts
-          }
-        }
-        
-      }
-    ) {
-      id
-      text
-      username
-      timestamp
-    }
-  }
-`;
-
 export default class RenderMessages extends React.Component {
   constructor() {
     super();
     this.state = {
       messages: [],
       newMessages: [],
-      loading: true,
       error: null,
     }
   } 
 
-
-  
-
   async componentWillMount() {
-    if (!this.props.refetch) {
-      this.props.setRefetch(this.refetch);
-    } 
-    const messages = await this.fetchChats();
-    this.setState({
-      ...this.state,
-      messages: messages,
-      loading: false,
-      bottom: false
-    });
-    this.scrollToBottom();
-    document.getElementById('lastMessage').addEventListener("scroll", this.handleBottomScroll, true);
+    // scroll to bottom only if the component is ready
+    if (this.props.refetch) {
+      this.scrollToBottom();
+    }
   }
 
   componentDidMount() {
+    // add scroll listener on mount
     window.addEventListener("scroll", this.handleScroll);
-  }
-
-  handleBottomScroll = (e) => {
-    console.log("fired bottom");
   }
 
 
   componentWillUnmount() {
+    // remove scroll listener on unmount
     window.removeEventListener("scroll", this.handleScroll);
   }
 
+  // get appropriate query variables
   getLastReceivedVars = () => {
     const { messages, newMessages } = this.state;
     if (newMessages.length === 0) {
@@ -117,31 +80,7 @@ export default class RenderMessages extends React.Component {
     }
   }
 
-  fetchChats = async () => {
-    const {client} = this.props;
-    const variables = this.getLastReceivedVars();
-    const response = await fetch(
-      "https://sureeee.herokuapp.com/v1alpha1/graphql",
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          query: fetchQuery,
-          variables
-        }),
-      }
-    );
-    const resp = await response.json();
-    if(resp.error) {
-      this.setState({
-        ...this.state,
-        error: resp.error,
-        loading: false
-      });
-      return [];
-    }
-    return resp.data.message;
-  }
-
+  // add new (unread) messages to state  
   addNewMessages = (messages) => {
     const newMessages = [...this.state.newMessages];
     messages.forEach((m) => {
@@ -153,6 +92,7 @@ export default class RenderMessages extends React.Component {
     })
   }
 
+  // add old (read) messages to state 
   addOldMessages = (messages) => {
     const oldMessages = [ ...this.state.messages ];
     messages.forEach((m) => {
@@ -165,25 +105,31 @@ export default class RenderMessages extends React.Component {
     })
   }
 
+  // custom refetch to be passed to parent for refetching on event occurance
   refetch = async() => {
     if (!this.state.loading) {
-      const newMessages = await this.fetchChats('isrefetch');
-      if (this.state.bottom) {
-        this.addOldMessages(newMessages);
-      } else {
-        this.addNewMessages(newMessages);
+      const resp = await this.state.refetch(this.getLastReceivedVars());
+      if (resp.data) {
+        if (this.state.bottom) {
+          this.addOldMessages(resp.data.message);
+        } else {
+          this.addNewMessages(resp.data.message);
+        }
       }
     }
   }
 
+  // scroll to bottom
   scrollToBottom = () => {
     document.getElementById('lastMessage').scrollIntoView({ behavior: "instant" });
   }
 
+  // scroll to the new message
   scrollToNewMessage = () => {
     document.getElementById('newMessage').scrollIntoView({ behavior: "instant" });
   }
 
+  // scroll handler
   handleScroll = (e) => {
     const windowHeight = "innerHeight" in window ? window.innerHeight : document.documentElement.offsetHeight;
     const body = document.getElementById("chatbox");
@@ -206,26 +152,60 @@ export default class RenderMessages extends React.Component {
   } 
 
   render() {
-    const { messages, newMessages, bottom, loading, error } = this.state;
-    if (loading) {
-      return "Loading";
-    }
-    if (error) {
-      return "Error: " + error;
+    const { messages, newMessages, bottom } = this.state;
+    // set refetch in parent component for refetching data whenever an event occurs
+    if (!this.props.refetch && this.state.refetch) {
+      this.props.setRefetch(this.refetch);
     }
     return (
       <div id="chatbox">
-        {
+        <Query
+          query={fetchMessages}
+          variables={this.getLastReceivedVars()}
+        >
+          {
+            ({ data, loading, error, refetch}) => {
+              if (loading) {
+                return "Loading";
+              }
+              if (error) {
+                return "Error: " + error;
+              }
+              // set refetch in local state to make a custom refetch
+              if (!this.state.refetch) {
+                this.setState({
+                  ...this.state,
+                  refetch
+                });
+              }
+              const receivedMessages = data.message;
+              
+              // load all messages to state in the beginning 
+              if (receivedMessages.length !== 0) {
+                if (messages.length === 0) {
+                  this.addOldMessages(receivedMessages);
+                }
+              }
+
+              // return null; real rendering happens below
+              return null;
+            }
+          }
+        </Query>
+        { /* show "unread messages" banner if not at bottom */}
           (!bottom && newMessages.length > 0) ?
           <Banner
              scrollToNewMessage={this.scrollToNewMessage}
              numOfNewMessages={newMessages.length}
            /> : null
         }
+
+        { /* Render old messages */}
         <MessageList
           messages={messages}
           isNew={false}
         />
+        { /* Show old/new message separation */}
         <div
           id="newMessage"
         >
@@ -234,18 +214,18 @@ export default class RenderMessages extends React.Component {
             "================New Messages================" :
             null
           }
+
         </div>
+
+        { /* render new messages */}
         <MessageList
           messages={newMessages}
           isNew={true}
         />
+        { /* Bottom div to scroll to */}
         <div
           style={{ "height": 0 }}
           id="lastMessage"
-          onScroll={() => {
-            console.log('fired');
-            this.setState({...this.state, bottom: true})
-          }}
         >
         </div>
       </div>

@@ -38,6 +38,7 @@ export default class Textbox extends React.Component {
             text: this.state.text
           }
         }}
+        id="inputTextBox"
       >
         {
           (insert_message, { data, loading, error, called}) => {
@@ -47,14 +48,13 @@ export default class Textbox extends React.Component {
             const sendMessage = () => {
               insert_message();
               this.setState({ text: "" })
-              this.textbox.focus();
-              document.getElementById("lastMessage").scrollIntoView({ behavior: 'instant'})
+              document.getElementById("textbox").scrollIntoView({ behavior: 'instant'})
             }
             return (
               <form onSubmit={sendMessage}>
                 <div className="textboxWrapper">
                   <input
-                    ref={(node) => {this.textbox = node;}}
+                    id="textbox"
                     className="textbox"
                     value={this.state.text}
                     onChange={(e) => {
