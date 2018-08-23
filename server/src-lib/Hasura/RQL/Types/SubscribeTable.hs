@@ -8,11 +8,13 @@ module Hasura.RQL.Types.SubscribeTable
   , SubscribeColumns(..)
   , TriggerDefinition(..)
   , TriggerName
+  , RetryConf(..)
   ) where
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Int                   (Int64)
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
@@ -20,16 +22,6 @@ import           Language.Haskell.TH.Syntax (Lift)
 import qualified Data.Text                  as T
 
 type TriggerName = T.Text
-
-data SubscribeTableQuery
-  = SubscribeTableQuery
-  { stqName    :: !T.Text
-  , stqTable   :: !QualifiedTable
-  , stqInsert  :: !(Maybe SubscribeOpSpec)
-  , stqUpdate  :: !(Maybe SubscribeOpSpec)
-  , stqDelete  :: !(Maybe SubscribeOpSpec)
-  , stgWebhook :: !T.Text
-  } deriving (Show, Eq, Lift)
 
 data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift)
 
@@ -51,6 +43,42 @@ data SubscribeOpSpec
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
 
+data RetryConf
+  = RetryConf
+  { rcNumRetries  :: !(Maybe Int64)
+  , rcIntervalSec :: !(Maybe Int64)
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
+
+data SubscribeTableQuery
+  = SubscribeTableQuery
+  { stqName      :: !T.Text
+  , stqTable     :: !QualifiedTable
+  , stqInsert    :: !(Maybe SubscribeOpSpec)
+  , stqUpdate    :: !(Maybe SubscribeOpSpec)
+  , stqDelete    :: !(Maybe SubscribeOpSpec)
+  , stqRetryConf :: !(Maybe RetryConf)
+  , stgWebhook   :: !T.Text
+  } deriving (Show, Eq, Lift)
+
+instance FromJSON SubscribeTableQuery where
+  parseJSON (Object o) = do
+    name      <- o .: "name"
+    table     <- o .: "table"
+    insert    <- o .:? "insert"
+    update    <- o .:? "update"
+    delete    <- o .:? "delete"
+    retryConf <- o .:? "retry_conf"
+    webhook   <- o .: "webhook"
+    case insert <|> update <|> delete of
+      Just _  -> return ()
+      Nothing -> fail "must provide operation spec(s)"
+    return $ SubscribeTableQuery name table insert update delete retryConf webhook
+  parseJSON _ = fail "expecting an object"
+
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeTableQuery)
+
 data TriggerDefinition
   = TriggerDefinition
   { tdInsert :: !(Maybe SubscribeOpSpec)
@@ -59,20 +87,3 @@ data TriggerDefinition
   }
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerDefinition)
-
-instance FromJSON SubscribeTableQuery where
-  parseJSON (Object o) = do
-    name    <- o .: "name"
-    table   <- o .: "table"
-    insert  <- o .:? "insert"
-    update  <- o .:? "update"
-    delete  <- o .:? "delete"
-    webhook <- o .: "webhook"
-    case insert <|> update <|> delete of
-      Just _  -> return ()
-      Nothing -> fail "must provide operation spec(s)"
-    return $ SubscribeTableQuery name table insert update delete webhook
-  parseJSON _ = fail "expecting an object"
-
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeTableQuery)
-

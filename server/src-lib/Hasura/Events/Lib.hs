@@ -6,13 +6,16 @@
 module Hasura.Events.Lib
   ( initEventQueue
   , processEventQueue
+  , unlockAllEvents
   ) where
 
 import           Control.Concurrent            (threadDelay)
 import           Control.Concurrent.Async      (async, waitAny)
 import qualified Control.Concurrent.STM.TQueue as TQ
 import           Control.Monad.STM             (STM, atomically)
+import qualified Control.Retry                 as R
 import qualified Data.Aeson                    as J
+import           Data.Either                   (isLeft)
 import           Data.Has
 import           Data.Int                      (Int64)
 import qualified Data.Text                     as T
@@ -25,18 +28,21 @@ import           Hasura.RQL.Types
 import qualified Network.HTTP.Types            as N
 import qualified Network.Wreq                  as W
 
-data TestLog = TestLog String
-instance L.ToEngineLog  TestLog where
-  toEngineLog (TestLog s) = (L.LevelInfo, "test-log", J.toJSON s)
-
 data Event
   = Event
-  { eId        :: Int64
-  , ePayload   :: J.Value
-  , eWebhook   :: T.Text
-  , eCreatedAt :: UTCTime
-  , eProcessed :: Bool
+  { eId          :: Int64
+  , eTriggerName :: TriggerName
+  , ePayload     :: J.Value
+  , eWebhook     :: T.Text
+  , eDelivered   :: Maybe Bool
+  , eError       :: Maybe Bool
+  , eTries       :: Int64
+  , eCreatedAt   :: UTCTime
+  , eRetryConf   :: (RCNumRetries, RCInterval)
   }
+
+type RCNumRetries = Int64
+type RCInterval = Int64
 
 data Invocation
   = Invocation
@@ -89,45 +95,132 @@ processEvent
   => Q.PGPool -> Event -> m ()
 processEvent pool e = do
   liftIO $ putStrLn "processing event"
-  eitherResp <- runExceptT $ runHTTP W.defaults $ mkHTTPPost (T.unpack $ eWebhook e) (Just $ ePayload e)
-  case eitherResp of
-    Left err   -> do
-      liftIO $ putStrLn "error from webhook"
-      runExceptT $
-        case err of
-          HClient excp -> runInvocationQ $ Invocation (eId e) 1000 (J.toJSON $ show excp)
-
-          HParse status detail -> runInvocationQ $ Invocation (eId e) 1001 (J.toJSON detail)
-          HStatus status detail -> runInvocationQ $ Invocation (eId e) (fromIntegral $ N.statusCode status) detail
-
-    Right resp -> runExceptT $ do
-      runInvocationQ $ Invocation (eId e) 200 resp
-      runDeliveredQ e
+  runExceptT $ runLockQ e
+  let remainingRetries = max 0 $ getNumRetries - getTries
+      policy = R.constantDelay getDelay <> R.limitRetries remainingRetries
+  liftIO $ print remainingRetries
+  res <- R.retrying policy shouldRetry tryWebhook
+  case res of
+    Left err   -> void $ runExceptT $ runErrorQ e
+    Right resp -> return ()
+  runExceptT $ runUnlockQ e
   return ()
   where
-    runInvocationQ invo =  Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ insertInvocation invo
-    runDeliveredQ ev =  Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ markDelivered ev
+    tryWebhook
+      :: ( MonadReader r m
+         , MonadIO m
+         , Has HTTPSessionMgr r
+         , Has HLogger r
+         )
+      => R.RetryStatus -> m (Either HTTPErr J.Value)
+    tryWebhook retrySt = do
+      -- eitherResp <- runExceptT $ runHTTP W.defaults $ mkHTTPPost (T.unpack $ eWebhook undefined) (Just $ ePayload undefined)
+      eitherResp <- runExceptT $ runHTTP W.defaults $ mkHTTPPost (T.unpack $ eWebhook e) (Just $ ePayload e)
+      runExceptT $ case eitherResp of
+        Left err -> do
+          case err of
+            HClient excp -> runFailureQ $ Invocation (eId e) 1000 (J.toJSON $ show excp)
+            HParse status detail -> runFailureQ $ Invocation (eId e) 1001 (J.toJSON detail)
+            HStatus status detail -> runFailureQ $ Invocation (eId e) (fromIntegral $ N.statusCode status) detail
+        Right resp -> runSuccessQ e $ Invocation (eId e) 200 resp
+      return eitherResp
+
+    shouldRetry :: (Monad m ) => R.RetryStatus -> Either HTTPErr a -> m Bool
+    shouldRetry retryStatus eitherResp = return $ isLeft eitherResp
+
+    runFailureQ invo = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ insertInvocation invo
+
+    runSuccessQ e' invo' =  Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+      insertInvocation invo'
+      markDelivered e'
+
+    runErrorQ e'' = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ markError e''
+
+    runLockQ e'' = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ lockEvent e''
+
+    runUnlockQ e'' = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ unlockEvent e''
+
+    getDelay :: Int
+    getDelay = (fromIntegral $ snd (eRetryConf e))* 1000000
+
+    getNumRetries :: Int
+    getNumRetries = (fromIntegral $ fst (eRetryConf e))
+
+    getTries :: Int
+    getTries = fromIntegral $ eTries e
 
 
 fetchEvents :: Q.TxE QErr [Event]
 fetchEvents =
-  map (uncurryEvent Event) <$> Q.listQE defaultTxErrorHandler [Q.sql|
-      SELECT id, payload::json, webhook, created_at, delivered
-      FROM hdb_catalog.event_log
-      WHERE delivered ='f'
+  map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
+      SELECT e.id, e.trigger_name, e.payload::json, e.webhook, e.tries, e.created_at, r.num_retries, r.interval_seconds
+      FROM hdb_catalog.event_log e
+      JOIN hdb_catalog.event_triggers_retry_conf r
+      ON e.trigger_name = r.name
+      WHERE e.delivered ='f' and e.error = 'f' and e.locked = 'f'
       |] () True
-  where uncurryEvent e (id', Q.AltJ payload, webhook, created, delivered) = e id' payload webhook created delivered
+  where uncurryEvent (id', trn, Q.AltJ payload, webhook, tries, created, numRetries, retryInterval) = Event id' trn payload webhook Nothing Nothing tries created (numRetries, retryInterval)
+
+fetchRetryConf :: TriggerName -> Q.TxE QErr (Int64, Int64)
+fetchRetryConf trn = do
+  confs <- Q.listQE defaultTxErrorHandler [Q.sql|
+                                  SELECT num_retries, interval_seconds
+                                  FROM hdb_catalog.event_triggers_retry_conf
+                                  WHERE name = $1
+                                  |] (Identity trn) True
+  getConf confs
+  where
+    getConf []    = throw500 "Could not fetch retry conf"
+    getConf (x:_) = return x
+
 
 insertInvocation :: Invocation -> Q.TxE QErr ()
-insertInvocation invo =
-   Q.unitQE defaultTxErrorHandler [Q.sql|
-           INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, response) VALUES ($1, $2, $3)
-                |] (iEventId invo, iStatus invo, Q.AltJ $ iResponse invo) True
+insertInvocation invo = do
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+          INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, response)
+          VALUES ($1, $2, $3)
+          |] (iEventId invo, iStatus invo, Q.AltJ $ iResponse invo) True
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+          UPDATE hdb_catalog.event_log
+          SET tries = tries + 1
+          WHERE id = $1
+          |] (Identity $ iEventId invo) True
 
 markDelivered :: Event -> Q.TxE QErr ()
 markDelivered e =
-   Q.unitQE defaultTxErrorHandler [Q.sql|
-           UPDATE hdb_catalog.event_log
-           SET delivered = 't'
-           WHERE id = $1
-                |] (Identity $ eId e) True
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+          UPDATE hdb_catalog.event_log
+          SET delivered = 't', error = 'f'
+          WHERE id = $1
+          |] (Identity $ eId e) True
+
+markError :: Event -> Q.TxE QErr ()
+markError e =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+          UPDATE hdb_catalog.event_log
+          SET error = 't'
+          WHERE id = $1
+          |] (Identity $ eId e) True
+
+lockEvent :: Event -> Q.TxE QErr ()
+lockEvent e =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+          UPDATE hdb_catalog.event_log
+          SET locked = 't'
+          WHERE id = $1
+          |] (Identity $ eId e) True
+
+unlockEvent :: Event -> Q.TxE QErr ()
+unlockEvent e =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+          UPDATE hdb_catalog.event_log
+          SET locked = 'f'
+          WHERE id = $1
+          |] (Identity $ eId e) True
+
+unlockAllEvents :: Q.TxE QErr ()
+unlockAllEvents =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+          UPDATE hdb_catalog.event_log
+          SET locked = 'f'
+          |] () False

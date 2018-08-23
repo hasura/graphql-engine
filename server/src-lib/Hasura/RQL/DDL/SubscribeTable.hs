@@ -10,6 +10,7 @@ module Hasura.RQL.DDL.SubscribeTable where
 import           Data.Aeson
 import qualified Data.FileEmbed      as FE
 import qualified Data.HashMap.Strict as HashMap
+import           Data.Int            (Int64)
 import qualified Data.Text           as T
 import qualified Data.Text.Encoding  as TE
 import qualified Database.PG.Query   as Q
@@ -21,6 +22,12 @@ import qualified Text.Ginger         as TG
 data Ops = INSERT | UPDATE | DELETE deriving (Show)
 
 type GingerTmplt = TG.Template TG.SourcePos
+
+defaultNumRetries :: Int64
+defaultNumRetries = 0
+
+defaultRetryInterval :: Int64
+defaultRetryInterval = 10
 
 parseGingerTmplt :: TG.Source -> Either String GingerTmplt
 parseGingerTmplt src = either parseE Right res
@@ -73,7 +80,7 @@ getTriggerSql op name sn tn spec =
 
 subscribeTable :: SubscribeTableQuery
                -> Q.TxE QErr RespBody
-subscribeTable (SubscribeTableQuery name (QualifiedTable sn tn) insert update delete webhook) = do
+subscribeTable (SubscribeTableQuery name (QualifiedTable sn tn) insert update delete retryConf webhook) = do
   let def = TriggerDefinition insert update delete
   Q.unitQE defaultTxErrorHandler [Q.sql|
                                   INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook)
@@ -82,20 +89,31 @@ subscribeTable (SubscribeTableQuery name (QualifiedTable sn tn) insert update de
   let triggerSQL = getTriggerSql INSERT name sn tn insert
                    <> getTriggerSql UPDATE name sn tn update
                    <> getTriggerSql DELETE name sn tn delete
-
   tx triggerSQL
+
+  liftIO $ print retryConf
+
+  let rConf = case retryConf of
+        Just conf -> (fromMaybe defaultNumRetries $ rcNumRetries conf,  fromMaybe defaultRetryInterval $ rcIntervalSec conf)
+        Nothing   -> (defaultNumRetries, defaultRetryInterval)
+
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+                                  INSERT into hdb_catalog.event_triggers_retry_conf (name, num_retries, interval_seconds)
+                                  VALUES ($1, $2, $3)
+                                  |] (name, fst rConf, snd rConf) True
   return successMsg
   where
     tx:: Maybe T.Text -> Q.TxE QErr ()
     tx (Just sql) = Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder sql)
     tx Nothing = throw500 "no trigger sql generated"
 
+
 delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
 delEventTriggerFromCatalog trn = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
            DELETE FROM
                   hdb_catalog.event_triggers
-           WHERE name =  $1
+           WHERE name = $1
                 |] (Identity trn) True
   mapM_ tx [INSERT, UPDATE, DELETE]
   where

@@ -22,7 +22,8 @@ import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
-import           Hasura.Events.Lib          (initEventQueue, processEventQueue)
+import           Hasura.Events.Lib          (initEventQueue, processEventQueue,
+                                             unlockAllEvents)
 import           Hasura.HTTP                (HTTPSessionMgr (..))
 import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
@@ -130,6 +131,7 @@ main =  do
             CorsConfigG finalCorsDomain $ ccDisabled corsCfg
       initialise ci
       migrate ci
+      prepareEvents ci
       pool <- Q.initPGPool ci cp
       putStrLn $ "server: running on port " ++ show port
       app <- mkWaiApp isoL mRootDir loggerCtx pool httpManager am finalCorsCfg enableConsole
@@ -172,6 +174,11 @@ main =  do
       currentTime <- getCurrentTime
       res <- runTx ci $ migrateCatalog currentTime
       either ((>> exitFailure) . printJSON) putStrLn res
+    prepareEvents ci = do
+      putStrLn "event_triggers: preparing data"
+      res <- runTx ci unlockAllEvents
+      either ((>> exitFailure) . printJSON) return res
+
 
     cleanSuccess = putStrLn "successfully cleaned graphql-engine related data"
 

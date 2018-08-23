@@ -192,6 +192,13 @@ CREATE TABLE hdb_catalog.event_triggers
   webhook TEXT NOT NULL
 );
 
+CREATE TABLE hdb_catalog.event_triggers_retry_conf
+(
+  name TEXT PRIMARY KEY,
+  num_retries INTEGER DEFAULT 0,
+  interval_seconds INTEGER DEFAULT 10
+);
+
 CREATE TABLE hdb_catalog.event_log
 (
   id BIGSERIAL PRIMARY KEY,
@@ -199,7 +206,10 @@ CREATE TABLE hdb_catalog.event_log
   payload JSONB NOT NULL,
   webhook TEXT NOT NULL,
   delivered BOOLEAN DEFAULT FALSE,
+  error BOOLEAN DEFAULT FALSE,
+  tries INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
+  locked BOOLEAN DEFAULT FALSE,
 
   FOREIGN KEY (trigger_name) REFERENCES hdb_catalog.event_triggers (name)
 );
