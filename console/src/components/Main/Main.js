@@ -196,7 +196,7 @@ class Main extends React.Component {
                 <li className={'dropdown-item '}>
                   <div className="btn-o">
                     <a
-                      href="https://twitter.com/intent/tweet?hashtags=demo&amp;text=Hello%20world;url=https%3A%2F%2Fgithub.com%2Fgraphql-engine"
+                      href="https://twitter.com/intent/tweet?hashtags=hasura,graphql,postgres&amp;text=Get%20Instant%20Realtime%20GraphQL%20APIs%20on%20PostgreSQL&amp;url=https%3A%2F%2Fgithub.com%2F/hasura%2Fgraphql-engine"
                       className={styles.twitterShare}
                     >
                       <span className="label">Tweet</span>
