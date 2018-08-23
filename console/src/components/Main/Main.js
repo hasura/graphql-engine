@@ -181,7 +181,7 @@ class Main extends React.Component {
               </div>
               <ul className={'dropdown-menu ' + styles.dropdown_menu}>
                 <div className={styles.arrow_up_dropdown} />
-                <li className={'dropdown-item '}>
+                <li className={'dropdown-item ' + styles.borderBottom}>
                   <div className={styles.gitHubBtn}>
                     <iframe
                       title="github"

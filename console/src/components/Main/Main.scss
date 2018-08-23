@@ -830,11 +830,14 @@
     color: #fff;
   }
 }
-
+.borderBottom
+{
+  border-bottom: 1px solid #788095;
+}
 .helpSection {
   display: flex;
   align-items: center;
-  background-color: #414758;
+  background-color: #22283b;
   padding: 15px;
 }
 
@@ -848,7 +851,8 @@
 }
 
 .secureSection {
-  background: grey;
+  background-color: #545a6c;
+
   padding: 15px;
   a {
     color: white;
@@ -908,14 +912,34 @@
   {
     width: 100%;
     display: block;
-    padding-left: 10px;
     color: #fff;
-    text-transform: uppercase !important;
+    text-transform: none;
+    padding: 10px 0;
+    a
+    {
+      padding: 0;
+    }
+    a:hover
+    {
+      text-decoration: none;
+    }
+    .gitHubBtn
+    {
+      height: 20px;
+    }
   }
   li:hover
   {
     text-decoration: none;
     color: #ccc;
+  }
+  li:first-child
+  {
+    padding-top: 0;
+  }
+  li:last-child
+  {
+    padding-bottom: 0;
   }
 }
 .twitterShare {
@@ -923,9 +947,15 @@
   height: 20px;
   box-sizing: border-box;
   padding: 1px 8px 1px 6px;
-  background-color: #1b95e0;
+
   color: #fff;
   border-radius: 3px;
   font-weight: 500;
   cursor: pointer;
+  span
+  {
+    background-color: #1b95e0;
+    padding: 4px;
+    letter-spacing: 0.3px;
+  }
 }
