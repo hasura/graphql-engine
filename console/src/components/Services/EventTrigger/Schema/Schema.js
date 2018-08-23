@@ -6,11 +6,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
-import {
-  loadSchema,
-  loadUntrackedSchema,
-  fetchSchemaList,
-} from '../EventActions';
+import { loadTriggers } from '../EventActions';
 import globals from '../../../../Globals';
 
 const appPrefix = globals.urlPrefix + '/events';
@@ -20,9 +16,7 @@ class Schema extends Component {
     super(props);
     // Initialize this table
     const dispatch = this.props.dispatch;
-    dispatch(fetchSchemaList());
-    dispatch(loadSchema());
-    dispatch(loadUntrackedSchema());
+    dispatch(loadTriggers());
   }
 
   render() {

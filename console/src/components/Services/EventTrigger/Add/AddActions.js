@@ -1,3 +1,6 @@
+import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
+import dataHeaders from '../Common/Headers';
+import requestAction from '../../../../utils/requestAction';
 import defaultState from './AddState';
 import _push from '../push';
 import { loadSchema, makeMigrationCall } from '../EventActions';
@@ -5,29 +8,34 @@ import { showSuccessNotification } from '../Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../EventActions.js';
 
-const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
-const SET_TABLENAME = 'AddTable/SET_TABLENAME';
-const SET_TABLECOMMENT = 'AddTable/SET_TABLECOMMENT';
-const REMOVE_COLUMN = 'AddTable/REMOVE_COLUMN';
-const SET_COLNAME = 'AddTable/SET_COLNAME';
-const SET_COLTYPE = 'AddTable/SET_COLTYPE';
-const SET_COLDEFAULT = 'AddTable/SET_COLDEFAULT';
-const REMOVE_COLDEFAULT = 'AddTable/REMOVE_COLDEFAULT';
-const SET_COLNULLABLE = 'AddTable/SET_COLNULLABLE';
-const SET_COLUNIQUE = 'AddTable/SET_COLUNIQUE';
-const ADD_COL = 'AddTable/ADD_COL';
-const ADD_PK = 'AddTable/ADD_PK';
-const REMOVE_PK = 'AddTable/REMOVE_PK';
-const SET_PK = 'AddTable/SET_PK';
-const MAKING_REQUEST = 'AddTable/MAKING_REQUEST';
-const REQUEST_SUCCESS = 'AddTable/REQUEST_SUCCESS';
-const REQUEST_ERROR = 'AddTable/REQUEST_ERROR';
-const VALIDATION_ERROR = 'AddTable/VALIDATION_ERROR';
-const RESET_VALIDATION_ERROR = 'AddTable/RESET_VALIDATION_ERROR';
+const SET_DEFAULTS = 'AddTrigger/SET_DEFAULTS';
+const SET_TRIGGERNAME = 'AddTrigger/SET_TRIGGERNAME';
+const SET_TABLENAME = 'AddTrigger/SET_TABLENAME';
+const SET_SCHEMANAME = 'AddTrigger/SET_SCHEMANAME';
+const SET_WEBHOOK_URL = 'AddTrigger/SET_WEBHOOK_URL';
+const REMOVE_COLUMN = 'AddTrigger/REMOVE_COLUMN';
+const SET_COLNAME = 'AddTrigger/SET_COLNAME';
+const SET_COLTYPE = 'AddTrigger/SET_COLTYPE';
+const SET_COLDEFAULT = 'AddTrigger/SET_COLDEFAULT';
+const REMOVE_COLDEFAULT = 'AddTrigger/REMOVE_COLDEFAULT';
+const SET_COLNULLABLE = 'AddTrigger/SET_COLNULLABLE';
+const SET_COLUNIQUE = 'AddTrigger/SET_COLUNIQUE';
+const ADD_COL = 'AddTrigger/ADD_COL';
+const ADD_PK = 'AddTrigger/ADD_PK';
+const REMOVE_PK = 'AddTrigger/REMOVE_PK';
+const SET_PK = 'AddTrigger/SET_PK';
+const MAKING_REQUEST = 'AddTrigger/MAKING_REQUEST';
+const REQUEST_SUCCESS = 'AddTrigger/REQUEST_SUCCESS';
+const REQUEST_ERROR = 'AddTrigger/REQUEST_ERROR';
+const VALIDATION_ERROR = 'AddTrigger/VALIDATION_ERROR';
+const RESET_VALIDATION_ERROR = 'AddTrigger/RESET_VALIDATION_ERROR';
+const UPDATE_TABLE_LIST = 'AddTrigger/UPDATE_TABLE_LIST';
 
 const setDefaults = () => ({ type: SET_DEFAULTS });
+const setTriggerName = value => ({ type: SET_TRIGGERNAME, value });
 const setTableName = value => ({ type: SET_TABLENAME, value });
-const setTableComment = value => ({ type: SET_TABLECOMMENT, value });
+const setSchemaName = value => ({ type: SET_SCHEMANAME, value });
+const setWebhookURL = value => ({ type: SET_WEBHOOK_URL, value });
 const removeColumn = i => ({ type: REMOVE_COLUMN, index: i });
 const setColName = (name, index, isNull) => ({
   type: SET_COLNAME,
@@ -229,7 +237,35 @@ const createTableSql = () => {
   };
 };
 
-const addTableReducer = (state = defaultState, action) => {
+const fetchTableListBySchema = schemaName => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify({
+      type: 'select',
+      args: {
+        table: {
+          name: 'hdb_table',
+          schema: 'hdb_catalog',
+        },
+        columns: ['*.*'],
+        where: { table_schema: schemaName },
+      },
+    }),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      dispatch({ type: UPDATE_TABLE_LIST, data: data });
+    },
+    error => {
+      console.error('Failed to load triggers' + JSON.stringify(error));
+    }
+  );
+};
+
+const addTriggerReducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_DEFAULTS:
       return { ...defaultState };
@@ -258,10 +294,14 @@ const addTableReducer = (state = defaultState, action) => {
       return { ...state, internalError: null, lastSuccess: null };
     case VALIDATION_ERROR:
       return { ...state, internalError: action.error, lastSuccess: null };
+    case SET_TRIGGERNAME:
+      return { ...state, triggerName: action.value };
+    case SET_WEBHOOK_URL:
+      return { ...state, webhookURL: action.value };
     case SET_TABLENAME:
       return { ...state, tableName: action.value };
-    case SET_TABLECOMMENT:
-      return { ...state, tableComment: action.value };
+    case SET_SCHEMANAME:
+      return { ...state, schemaName: action.value };
     case REMOVE_COLUMN:
       // Removes the index of the removed column from the array of primaryKeys.
       const primaryKeys = state.primaryKeys.filter(
@@ -361,16 +401,20 @@ const addTableReducer = (state = defaultState, action) => {
           ...state.primaryKeys.slice(action.index + 1),
         ],
       };
+    case UPDATE_TABLE_LIST:
+      return { ...state, tableListBySchema: action.data };
     default:
       return state;
   }
 };
 
-export default addTableReducer;
+export default addTriggerReducer;
 export {
   setDefaults,
+  setTriggerName,
   setTableName,
-  setTableComment,
+  setSchemaName,
+  setWebhookURL,
   removeColumn,
   setColName,
   setColType,
@@ -383,5 +427,6 @@ export {
   removePk,
   setPk,
   createTableSql,
+  fetchTableListBySchema,
 };
 export { resetValidation, validationError };

@@ -1,9 +1,9 @@
-import tableReducer from './EventActions';
-import addTableReducer from './Add/AddActions';
+import eventTriggerReducer from './EventActions';
+import addTriggerReducer from './Add/AddActions';
 
 const eventReducer = {
-  triggers: tableReducer,
-  addTrigger: addTableReducer,
+  triggers: eventTriggerReducer,
+  addTrigger: addTriggerReducer,
 };
 
 export default eventReducer;

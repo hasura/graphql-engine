@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { vSetDefaults, vMakeRequest, vExpandHeading } from './ViewActions'; // eslint-disable-line no-unused-vars
-import { setTable } from '../EventActions';
+import { setTrigger } from '../EventActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
 import { replace } from 'react-router-redux';
@@ -67,31 +67,31 @@ class ViewTable extends Component {
     // Initialize this table
     this.state = {
       dispatch: props.dispatch,
-      tableName: props.tableName,
+      triggerName: props.triggerName,
     };
     // this.state.dispatch = props.dispatch;
-    // this.state.tableName = props.tablename;
+    // this.state.triggerName = props.triggerName;
     const dispatch = this.props.dispatch;
     Promise.all([
-      dispatch(setTable(this.props.tableName)),
-      dispatch(vSetDefaults(this.props.tableName)),
+      dispatch(setTrigger(this.props.triggerName)),
+      dispatch(vSetDefaults(this.props.triggerName)),
       dispatch(vMakeRequest()),
     ]);
   }
 
   componentWillReceiveProps(nextProps) {
     const dispatch = this.props.dispatch;
-    if (nextProps.tableName !== this.props.tableName) {
-      dispatch(setTable(nextProps.tableName));
-      dispatch(vSetDefaults(nextProps.tableName));
+    if (nextProps.triggerName !== this.props.triggerName) {
+      dispatch(setTrigger(nextProps.triggerName));
+      dispatch(vSetDefaults(nextProps.triggerName));
       dispatch(vMakeRequest());
     }
   }
 
   shouldComponentUpdate(nextProps) {
     return (
-      this.props.tableName === null ||
-      nextProps.tableName === this.props.tableName
+      this.props.triggerName === null ||
+      nextProps.triggerName === this.props.triggerName
     );
   }
 
@@ -110,14 +110,13 @@ class ViewTable extends Component {
   componentWillUnmount() {
     // Remove state data beloging to this table
     const dispatch = this.props.dispatch;
-    dispatch(vSetDefaults(this.props.tableName));
+    dispatch(vSetDefaults(this.props.triggerName));
   }
 
   render() {
     const {
-      tableName,
-      tableComment,
-      schemas,
+      triggerName,
+      triggerList,
       query,
       curFilter,
       rows,
@@ -130,12 +129,11 @@ class ViewTable extends Component {
       lastSuccess,
       dispatch,
       expandedRow,
-      currentSchema,
     } = this.props; // eslint-disable-line no-unused-vars
 
     // check if table exists
-    const currentTable = schemas.find(s => s.table_name === tableName);
-    if (!currentTable) {
+    const currentTrigger = triggerList.find(s => s.name === triggerName);
+    if (!currentTrigger) {
       // dispatch a 404 route
       dispatch(replace('/404'));
     }
@@ -145,8 +143,7 @@ class ViewTable extends Component {
     // Are there any expanded columns
     const viewRows = (
       <ViewRows
-        curTableName={tableName}
-        currentSchema={currentSchema}
+        curTriggerName={triggerName}
         curQuery={query}
         curFilter={curFilter}
         curPath={[]}
@@ -158,7 +155,7 @@ class ViewTable extends Component {
         isProgressing={isProgressing}
         lastError={lastError}
         lastSuccess={lastSuccess}
-        schemas={schemas}
+        triggerList={triggerList}
         curDepth={0}
         count={count}
         dispatch={dispatch}
@@ -171,11 +168,9 @@ class ViewTable extends Component {
       <TableHeader
         count={count}
         dispatch={dispatch}
-        triggerName={tableName}
-        tableComment={tableComment}
+        triggerName={triggerName}
         tabName="processed"
         migrationMode={migrationMode}
-        currentSchema={currentSchema}
       />
     );
 
@@ -189,10 +184,8 @@ class ViewTable extends Component {
 }
 
 ViewTable.propTypes = {
-  tableName: PropTypes.string.isRequired,
-  tableComment: PropTypes.object,
-  schemas: PropTypes.array.isRequired,
-  currentSchema: PropTypes.string.isRequired,
+  triggerName: PropTypes.string.isRequired,
+  triggerList: PropTypes.array.isRequired,
   activePath: PropTypes.array.isRequired,
   query: PropTypes.object.isRequired,
   curFilter: PropTypes.object.isRequired,
@@ -209,12 +202,10 @@ ViewTable.propTypes = {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    tableName: ownProps.params.trigger,
-    currentSchema: state.tables.currentSchema,
-    schemas: state.tables.allSchemas,
-    tableComment: state.tables.tableComment,
+    triggerName: ownProps.params.trigger,
+    triggerList: state.triggers.triggerList,
     migrationMode: state.main.migrationMode,
-    ...state.tables.view,
+    ...state.triggers.view,
   };
 };
 

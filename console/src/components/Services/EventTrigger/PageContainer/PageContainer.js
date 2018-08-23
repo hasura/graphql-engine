@@ -5,13 +5,14 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import globals from '../../../../Globals';
 
-import { LISTING_SCHEMA } from '../EventActions';
+import { LISTING_TRIGGER } from '../EventActions';
 
 const appPrefix = '/events';
 
 const PageContainer = ({
   currentTrigger,
   triggerList,
+  listingTrigger,
   migrationMode,
   children,
   dispatch,
@@ -24,15 +25,19 @@ const PageContainer = ({
       <i>No triggers available</i>
     </li>
   );
-  const tables = {};
+  const triggers = {};
+  listingTrigger.map(t => {
+    triggers[t.name] = t;
+  });
   const currentLocation = location.pathname;
-  if (triggerList && triggerList.length) {
-    triggerLinks = Object.keys(tables)
+  if (listingTrigger && listingTrigger.length) {
+    triggerLinks = Object.keys(triggers)
       .sort()
-      .map((tableName, i) => {
+      .map((trigger, i) => {
+        console.log(trigger);
         let activeTableClass = '';
         if (
-          tableName === currentTrigger &&
+          trigger === currentTrigger &&
           currentLocation.indexOf(currentTrigger) !== -1
         ) {
           activeTableClass = styles.activeTable;
@@ -40,37 +45,31 @@ const PageContainer = ({
         return (
           <li className={activeTableClass} key={i}>
             <Link
-              to={
-                appPrefix +
-                '/events/' +
-                '/manage/triggers/' +
-                currentTrigger +
-                '/processed'
-              }
-              data-test={tableName}
+              to={appPrefix + '/manage/triggers/' + trigger + '/processed'}
+              data-test={trigger}
             >
               <i
                 className={styles.tableIcon + ' fa fa-table'}
                 aria-hidden="true"
               />
-              {tableName}
+              {trigger}
             </Link>
           </li>
         );
       });
   }
 
-  function tableSearch(e) {
+  function triggerSearch(e) {
     const searchTerm = e.target.value;
     // form new schema
     const matchedTables = [];
-    triggerList.map(table => {
-      if (table.table_name.indexOf(searchTerm) !== -1) {
-        matchedTables.push(table);
+    triggerList.map(trigger => {
+      if (trigger.name.indexOf(searchTerm) !== -1) {
+        matchedTables.push(trigger);
       }
     });
     // update schema with matchedTables
-    dispatch({ type: LISTING_SCHEMA, updatedSchemas: matchedTables });
+    dispatch({ type: LISTING_TRIGGER, updatedList: matchedTables });
   }
 
   return (
@@ -84,10 +83,10 @@ const PageContainer = ({
           <i className="fa fa-search" aria-hidden="true" />
           <input
             type="text"
-            onChange={tableSearch.bind(this)}
+            onChange={triggerSearch.bind(this)}
             className="form-control"
-            placeholder="search table/view"
-            data-test="search-tables"
+            placeholder="search triggers"
+            data-test="search-triggers"
           />
         </div>
       </div>
@@ -138,6 +137,7 @@ const mapStateToProps = state => {
   return {
     currentTrigger: state.triggers.currentTrigger,
     triggerList: state.triggers.triggerList,
+    listingTrigger: state.triggers.listingTrigger,
     migrationMode: state.main.migrationMode,
   };
 };

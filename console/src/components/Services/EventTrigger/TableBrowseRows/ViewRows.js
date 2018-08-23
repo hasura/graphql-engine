@@ -1,15 +1,7 @@
 import React from 'react';
 import ReactTable from 'react-table';
-import { Link } from 'react-router';
 import 'react-table/react-table.css';
-import {
-  vExpandRel,
-  vCloseRel,
-  V_SET_ACTIVE,
-  deleteItem,
-  vExpandRow,
-  vCollapseRow,
-} from './ViewActions'; // eslint-disable-line no-unused-vars
+import { deleteItem, vExpandRow, vCollapseRow } from './ViewActions'; // eslint-disable-line no-unused-vars
 import FilterQuery from './FilterQuery';
 import {
   setOrderCol,
@@ -20,61 +12,43 @@ import {
   setLimit,
   addOrder,
 } from './FilterActions';
-import { E_SET_EDITITEM } from './EditActions';
-import _push from '../push';
-import { ordinalColSort, findTableFromRel } from '../utils';
+import { ordinalColSort } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
 import './ReactTableFix.css';
 
 const ViewRows = ({
-  curTableName,
-  currentSchema,
+  curTriggerName,
   curQuery,
   curFilter,
   curRows,
   curPath,
-  parentTableName,
   curDepth,
   activePath,
-  schemas,
+  triggerList,
   dispatch,
-  ongoingRequest,
   isProgressing,
-  lastError,
-  lastSuccess,
   isView,
   count,
   expandedRow,
 }) => {
   const styles = require('../TableCommon/Table.scss');
-  const tableSchema = schemas.find(x => x.table_name === curTableName);
-  const parentTableSchema = parentTableName
-    ? schemas.find(t => t.table_name === parentTableName)
-    : null;
+  const triggerSchema = triggerList.find(x => x.name === curTriggerName);
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
 
   // Am I a single row display
-  let isSingleRow = false;
-  if (curQuery.columns.find(c => typeof c === 'object')) {
-    // Do I have any children
-    isSingleRow = true;
-  } else if (curRelName && parentTableSchema) {
-    // Am I an obj_rel for my parent?
-    if (
-      parentTableSchema.relationships.find(
-        r => r.name === curRelName && r.rel_type === 'object'
-      )
-    ) {
-      isSingleRow = true;
-    }
-  }
+  const isSingleRow = false;
 
   // Get the headings
   const tableHeadings = [];
   const gridHeadings = [];
-  const sortedColumns = tableSchema
-    ? tableSchema.columns.sort(ordinalColSort)
-    : [];
+  const eventLogColumns = [
+    'id',
+    'payload',
+    'webhook',
+    'delivered',
+    'created_at',
+  ];
+  const sortedColumns = eventLogColumns.sort(ordinalColSort);
 
   if (!isView) {
     gridHeadings.push({
@@ -84,10 +58,10 @@ const ViewRows = ({
   }
 
   sortedColumns.map((column, i) => {
-    tableHeadings.push(<th key={i}>{column.column_name}</th>);
+    tableHeadings.push(<th key={i}>{column}</th>);
     gridHeadings.push({
-      Header: column.column_name,
-      accessor: column.column_name,
+      Header: column,
+      accessor: column,
     });
   });
 
@@ -100,162 +74,63 @@ const ViewRows = ({
       &lt;&gt;{' '}
     </th>
   );
-  if (tableSchema) {
-    tableSchema.relationships.map((r, i) => {
-      tableHeadings.push(
-        <th key={tableSchema.columns.length + i}>{r.rel_name}</th>
-      );
-      gridHeadings.push({
-        Header: r.rel_name,
-        accessor: r.rel_name,
-      });
-    });
-  }
 
-  const hasPrimaryKeys =
-    tableSchema &&
-    tableSchema.primary_key &&
-    tableSchema.primary_key.columns.length > 0;
+  const hasPrimaryKeys = true;
   let editButton;
   let deleteButton;
 
   const newCurRows = [];
-
-  curRows.forEach((row, rowIndex) => {
-    const newRow = {};
-    const pkClause = {};
-    tableSchema.relationships.forEach((r, k) => {
-      if (curQuery.columns.find(c => c.name === r.rel_name)) {
-        // already expanded
-
-        newRow[r.rel_name] = (
-          <div className={styles.tableCellCenterAligned}>
-            <a
-              href="#"
-              className={styles.expanded}
-              onClick={e => {
-                e.preventDefault();
-                dispatch(vCloseRel(curPath, r.rel_name));
-              }}
-            >
-              Close
-            </a>
-          </div>
-        );
+  if (curRows && curRows[0] && curRows[0].event_logs) {
+    curRows[0].event_logs.forEach((row, rowIndex) => {
+      const newRow = {};
+      const pkClause = {};
+      if (!isView && hasPrimaryKeys) {
+        pkClause.id = row.id;
       } else {
-        // check if it can be expanded
-        const currentFkey = r.rel_def.foreign_key_constraint_on;
-        const currentFkeyValue = row[currentFkey];
-        if (currentFkeyValue === null) {
-          // cannot be expanded as value is null
-          newRow[r.rel_name] = (
-            <div
-              className={styles.tableCellCenterAligned}
-              key={tableSchema.columns.length + 10 + k}
-            >
-              <i>NULL</i>
-            </div>
-          );
-        } else {
-          // can be expanded
-          newRow[r.rel_name] = (
-            <div
-              className={styles.tableCellCenterAligned}
-              key={tableSchema.columns.length + 10 + k}
-            >
-              <a
-                href="#"
-                onClick={e => {
-                  e.preventDefault();
-                  dispatch(vExpandRel(curPath, r.rel_name, pkClause));
-                }}
-              >
-                View
-              </a>
-            </div>
-          );
-        }
+        triggerSchema.map(k => {
+          pkClause[k] = row[k];
+        });
       }
-    });
-    if (!isView && hasPrimaryKeys) {
-      tableSchema.primary_key.columns.map(pk => {
-        pkClause[pk] = row[pk];
-      });
-    } else {
-      tableSchema.columns.map(k => {
-        pkClause[k.column_name] = row[k.column_name];
-      });
-    }
-    if (!isSingleRow && !isView && hasPrimaryKeys) {
-      editButton = (
-        <button
-          className={`${styles.add_mar_right_small} btn btn-xs btn-default`}
-          onClick={() => {
-            dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
-            dispatch(
-              _push(`/schema/${currentSchema}/tables/${curTableName}/edit`)
-            );
-          }}
-          data-test={`row-edit-button-${rowIndex}`}
-        >
-          Edit
-        </button>
+      if (!isSingleRow && !isView && hasPrimaryKeys) {
+        deleteButton = (
+          <button
+            className={`${styles.add_mar_right_small} btn btn-xs btn-default`}
+            onClick={() => {
+              dispatch(deleteItem(pkClause));
+            }}
+            data-test={`row-delete-button-${rowIndex}`}
+          >
+            Delete
+          </button>
+        );
+      }
+      const buttonsDiv = (
+        <div className={styles.tableCellCenterAligned}>
+          {editButton}
+          {deleteButton}
+        </div>
       );
-
-      deleteButton = (
-        <button
-          className={`${styles.add_mar_right_small} btn btn-xs btn-default`}
-          onClick={() => {
-            dispatch(deleteItem(pkClause));
-          }}
-          data-test={`row-delete-button-${rowIndex}`}
-        >
-          Delete
-        </button>
-      );
-    }
-    const buttonsDiv = (
-      <div className={styles.tableCellCenterAligned}>
-        {editButton}
-        {deleteButton}
-      </div>
-    );
-    // Insert Edit, Delete, Clone in a cell
-    newRow.actions = buttonsDiv;
-    // Insert cells corresponding to all rows
-    tableSchema.columns.forEach(col => {
-      if (col.data_type === 'json' || col.data_type === 'jsonb') {
-        if (row[col.column_name] === null) {
-          newRow[col.column_name] = (
-            <div className={styles.tableCellCenterAligned}>
-              <i>NULL</i>
-            </div>
-          );
-        } else {
-          newRow[col.column_name] = (
-            <div className={styles.tableCellCenterAligned}>
-              {JSON.stringify(row[col.column_name])}
-            </div>
-          );
-        }
-      } else {
+      // Insert Edit, Delete, Clone in a cell
+      newRow.actions = buttonsDiv;
+      // Insert cells corresponding to all rows
+      sortedColumns.forEach(col => {
         const getCellContent = () => {
           let conditionalClassname = styles.tableCellCenterAligned;
-          const cellIndex = `${curTableName}-${col}-${rowIndex}`;
+          const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
           if (expandedRow === cellIndex) {
             conditionalClassname = styles.tableCellCenterAlignedExpanded;
           }
-          if (row[col.column_name] === null) {
+          if (row[col] === null) {
             return (
               <div className={conditionalClassname}>
                 <i>NULL</i>
               </div>
             );
           }
-          const content =
-            row[col.column_name] === undefined
-              ? 'NULL'
-              : row[col.column_name].toString();
+          let content = row[col] === undefined ? 'NULL' : row[col].toString();
+          if (col === 'payload') {
+            content = JSON.stringify(row[col]);
+          }
           const expandOrCollapseBtn =
             expandedRow === cellIndex ? (
               <i
@@ -282,74 +157,10 @@ const ViewRows = ({
           }
           return <div className={conditionalClassname}>{content}</div>;
         };
-        newRow[col.column_name] = getCellContent();
-      }
+        newRow[col] = getCellContent();
+      });
+      newCurRows.push(newRow);
     });
-    newCurRows.push(newRow);
-  });
-  // If query object has expanded columns
-  let childComponent = null;
-  const childQueries = [];
-  curQuery.columns.map(c => {
-    if (typeof c === 'object') {
-      childQueries.push(c);
-    }
-  });
-
-  const childTabs = childQueries.map((q, i) => {
-    const isActive = q.name === activePath[curDepth + 1] ? 'active' : null;
-    return (
-      <li key={i} className={isActive} role="presentation">
-        <a
-          href="#"
-          onClick={e => {
-            e.preventDefault();
-            dispatch({ type: V_SET_ACTIVE, path: curPath, relname: q.name });
-          }}
-        >
-          {[...activePath.slice(0, 1), ...curPath, q.name].join('.')}
-        </a>
-      </li>
-    );
-  });
-
-  const childViewRows = childQueries.map((cq, i) => {
-    // Render child only if data is available
-    if (curRows[0][cq.name]) {
-      const rel = tableSchema.relationships.find(r => r.rel_name === cq.name);
-      let childRows = curRows[0][cq.name];
-      if (rel.rel_type === 'object') {
-        childRows = [childRows];
-      }
-      // Find the name of this childTable using the rel
-      return (
-        <ViewRows
-          key={i}
-          curTableName={findTableFromRel(schemas, tableSchema, rel).table_name}
-          curQuery={cq}
-          curFilter={curFilter}
-          curPath={[...curPath, rel.rel_name]}
-          curRows={childRows}
-          parentTableName={curTableName}
-          activePath={activePath}
-          ongoingRequest={ongoingRequest}
-          lastError={lastError}
-          lastSuccess={lastSuccess}
-          schemas={schemas}
-          curDepth={curDepth + 1}
-          dispatch={dispatch}
-        />
-      );
-    }
-    return null;
-  });
-  if (childQueries.length > 0) {
-    childComponent = (
-      <div>
-        <ul className="nav nav-tabs">{childTabs}</ul>
-        {childViewRows}
-      </div>
-    );
   }
 
   // Is this ViewRows visible
@@ -381,34 +192,14 @@ const ViewRows = ({
         <FilterQuery
           curQuery={curQuery}
           whereAnd={wheres}
-          tableSchema={tableSchema}
+          triggerSchema={triggerSchema}
           orderBy={orderBy}
           limit={limit}
           dispatch={dispatch}
           count={count}
-          tableName={curTableName}
+          triggerName={curTriggerName}
           offset={offset}
         />
-      );
-    }
-  }
-
-  // check if no primary key
-
-  const primaryKeyMsg = [];
-  if (!hasPrimaryKeys) {
-    if (!isView) {
-      primaryKeyMsg.push(
-        <div key="primaryKeyMsg" className="row">
-          <div className="col-xs-12">
-            <div className="alert alert-warning" role="alert">
-              There is no unique identifier (primary Key) for a row. You need
-              at-least one primary key to allow editing, Please use{' '}
-              <Link to="/data/sql">Raw SQL</Link> to make one or more column as
-              primary key.
-            </div>
-          </div>
-        </div>
       );
     }
   }
@@ -432,7 +223,7 @@ const ViewRows = ({
     } else {
       dispatch(setOrderType('asc', 0));
     }
-    dispatch(runQuery(tableSchema));
+    dispatch(runQuery(triggerSchema));
     // Add a new empty filter
     dispatch(addOrder());
   };
@@ -440,14 +231,14 @@ const ViewRows = ({
   const changePage = page => {
     if (curFilter.offset !== page * curFilter.limit) {
       dispatch(setOffset(page * curFilter.limit));
-      dispatch(runQuery(tableSchema));
+      dispatch(runQuery(triggerSchema));
     }
   };
 
   const changePageSize = size => {
     if (curFilter.size !== size) {
       dispatch(setLimit(size));
-      dispatch(runQuery(tableSchema));
+      dispatch(runQuery(triggerSchema));
     }
   };
 
@@ -504,13 +295,11 @@ const ViewRows = ({
     <div className={isVisible ? '' : 'hide '}>
       {filterQuery}
       <hr />
-      {primaryKeyMsg}
       <div className="row">
         <div className="col-xs-12">
           <div className={styles.tableContainer}>{renderTableBody()}</div>
           <br />
           <br />
-          {childComponent}
         </div>
       </div>
     </div>

@@ -23,10 +23,8 @@ import {
 } from './FilterActions.js';
 import { setDefaultQuery, runQuery } from './FilterActions';
 
-const renderCols = (colName, tableSchema, onChange, usage, key) => {
-  const columns = tableSchema
-    ? tableSchema.columns.map(c => c.column_name)
-    : [];
+const renderCols = (colName, triggerSchema, onChange, usage, key) => {
+  const columns = ['id', 'payload', 'webhook', 'delivered', 'created_at'];
   return (
     <select
       className="form-control"
@@ -70,7 +68,7 @@ const renderOps = (opName, onChange, key) => (
   </select>
 );
 
-const renderWheres = (whereAnd, tableSchema, dispatch) => {
+const renderWheres = (whereAnd, triggerSchema, dispatch) => {
   const styles = require('./FilterQuery.scss');
   return whereAnd.map((clause, i) => {
     const colName = Object.keys(clause)[0];
@@ -96,7 +94,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
     return (
       <div key={i} className={`${styles.inputRow} row`}>
         <div className="col-xs-4">
-          {renderCols(colName, tableSchema, dSetFilterCol, 'filter', i)}
+          {renderCols(colName, triggerSchema, dSetFilterCol, 'filter', i)}
         </div>
         <div className="col-xs-3">{renderOps(opName, dSetFilterOp, i)}</div>
         <div className="col-xs-4">
@@ -119,7 +117,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
   });
 };
 
-const renderSorts = (orderBy, tableSchema, dispatch) => {
+const renderSorts = (orderBy, triggerSchema, dispatch) => {
   const styles = require('./FilterQuery.scss');
   return orderBy.map((c, i) => {
     const dSetOrderCol = e => {
@@ -143,7 +141,7 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
     return (
       <div key={i} className={`${styles.inputRow} row`}>
         <div className="col-xs-6">
-          {renderCols(c.column, tableSchema, dSetOrderCol, 'sort', i)}
+          {renderCols(c.column, triggerSchema, dSetOrderCol, 'sort', i)}
         </div>
         <div className="col-xs-5">
           <select
@@ -171,14 +169,14 @@ class FilterQuery extends Component {
   }
 
   render() {
-    const { dispatch, whereAnd, tableSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
+    const { dispatch, whereAnd, triggerSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
     const styles = require('./FilterQuery.scss');
     return (
       <div className={styles.filterOptions}>
         <form
           onSubmit={e => {
             e.preventDefault();
-            dispatch(runQuery(tableSchema));
+            dispatch(runQuery(triggerSchema));
           }}
         >
           <div className="">
@@ -188,7 +186,7 @@ class FilterQuery extends Component {
               }`}
             >
               <span className={styles.subheading_text}>Filter</span>
-              {renderWheres(whereAnd, tableSchema, dispatch)}
+              {renderWheres(whereAnd, triggerSchema, dispatch)}
             </div>
             <div
               className={`${styles.queryBox} col-xs-6 ${
@@ -196,7 +194,7 @@ class FilterQuery extends Component {
               }`}
             >
               <b className={styles.subheading_text}>Sort</b>
-              {renderSorts(orderBy, tableSchema, dispatch)}
+              {renderSorts(orderBy, triggerSchema, dispatch)}
             </div>
           </div>
           <div className={`${styles.padd_right} ${styles.clear_fix}`}>
@@ -217,12 +215,12 @@ class FilterQuery extends Component {
 
 FilterQuery.propTypes = {
   curQuery: PropTypes.object.isRequired,
-  tableSchema: PropTypes.object.isRequired,
+  triggerSchema: PropTypes.object.isRequired,
   whereAnd: PropTypes.array.isRequired,
   orderBy: PropTypes.array.isRequired,
   limit: PropTypes.number.isRequired,
   count: PropTypes.number,
-  tableName: PropTypes.string,
+  triggerName: PropTypes.string,
   offset: PropTypes.number.isRequired,
   dispatch: PropTypes.func.isRequired,
 };

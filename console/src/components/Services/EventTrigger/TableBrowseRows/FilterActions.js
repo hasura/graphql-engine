@@ -1,28 +1,27 @@
 // import Endpoints, {globalCookiePolicy} from '../../Endpoints';
 import { defaultCurFilter } from '../EventState';
 import { vMakeRequest } from './ViewActions';
-import { Integers, Reals } from '../Types';
 
-const LOADING = 'ViewTable/FilterQuery/LOADING';
+const LOADING = 'ViewTrigger/FilterQuery/LOADING';
 
-const SET_DEFQUERY = 'ViewTable/FilterQuery/SET_DEFQUERY';
-const SET_FILTERCOL = 'ViewTable/FilterQuery/SET_FILTERCOL';
-const SET_FILTEROP = 'ViewTable/FilterQuery/SET_FILTEROP';
-const SET_FILTERVAL = 'ViewTable/FilterQuery/SET_FILTERVAL';
-const ADD_FILTER = 'ViewTable/FilterQuery/ADD_FILTER';
-const REMOVE_FILTER = 'ViewTable/FilterQuery/REMOVE_FILTER';
+const SET_DEFQUERY = 'ViewTrigger/FilterQuery/SET_DEFQUERY';
+const SET_FILTERCOL = 'ViewTrigger/FilterQuery/SET_FILTERCOL';
+const SET_FILTEROP = 'ViewTrigger/FilterQuery/SET_FILTEROP';
+const SET_FILTERVAL = 'ViewTrigger/FilterQuery/SET_FILTERVAL';
+const ADD_FILTER = 'ViewTrigger/FilterQuery/ADD_FILTER';
+const REMOVE_FILTER = 'ViewTrigger/FilterQuery/REMOVE_FILTER';
 
-const SET_ORDERCOL = 'ViewTable/FilterQuery/SET_ORDERCOL';
-const SET_ORDERTYPE = 'ViewTable/FilterQuery/SET_ORDERTYPE';
-const ADD_ORDER = 'ViewTable/FilterQuery/ADD_ORDER';
-const REMOVE_ORDER = 'ViewTable/FilterQuery/REMOVE_ORDER';
-const SET_LIMIT = 'ViewTable/FilterQuery/SET_LIMIT';
-const SET_OFFSET = 'ViewTable/FilterQuery/SET_OFFSET';
-const SET_NEXTPAGE = 'ViewTable/FilterQuery/SET_NEXTPAGE';
-const SET_PREVPAGE = 'ViewTable/FilterQuery/SET_PREVPAGE';
-// const MAKING_REQUEST = 'ViewTable/FilterQuery/MAKING_REQUEST';
-// const REQUEST_SUCCESS = 'ViewTable/FilterQuery/REQUEST_SUCCESS';
-// const REQUEST_ERROR = 'ViewTable/FilterQuery/REQUEST_ERROR';
+const SET_ORDERCOL = 'ViewTrigger/FilterQuery/SET_ORDERCOL';
+const SET_ORDERTYPE = 'ViewTrigger/FilterQuery/SET_ORDERTYPE';
+const ADD_ORDER = 'ViewTrigger/FilterQuery/ADD_ORDER';
+const REMOVE_ORDER = 'ViewTrigger/FilterQuery/REMOVE_ORDER';
+const SET_LIMIT = 'ViewTrigger/FilterQuery/SET_LIMIT';
+const SET_OFFSET = 'ViewTrigger/FilterQuery/SET_OFFSET';
+const SET_NEXTPAGE = 'ViewTrigger/FilterQuery/SET_NEXTPAGE';
+const SET_PREVPAGE = 'ViewTrigger/FilterQuery/SET_PREVPAGE';
+// const MAKING_REQUEST = 'ViewTrigger/FilterQuery/MAKING_REQUEST';
+// const REQUEST_SUCCESS = 'ViewTrigger/FilterQuery/REQUEST_SUCCESS';
+// const REQUEST_ERROR = 'ViewTrigger/FilterQuery/REQUEST_ERROR';
 
 const setLoading = () => ({ type: LOADING, data: true });
 const unsetLoading = () => ({ type: LOADING, data: false });
@@ -43,10 +42,10 @@ const setOffset = offset => ({ type: SET_OFFSET, offset });
 const setNextPage = () => ({ type: SET_NEXTPAGE });
 const setPrevPage = () => ({ type: SET_PREVPAGE });
 
-const runQuery = tableSchema => {
+const runQuery = triggerSchema => {
   return (dispatch, getState) => {
-    const state = getState().tables.view.curFilter;
-    let finalWhereClauses = state.where.$and.filter(w => {
+    const state = getState().triggers.view.curFilter;
+    const finalWhereClauses = state.where.$and.filter(w => {
       const colName = Object.keys(w)[0].trim();
       if (colName === '') {
         return false;
@@ -56,25 +55,6 @@ const runQuery = tableSchema => {
         return false;
       }
       return true;
-    });
-    finalWhereClauses = finalWhereClauses.map(w => {
-      const colName = Object.keys(w)[0];
-      const opName = Object.keys(w[colName])[0];
-      const val = w[colName][opName];
-      const colType = tableSchema.columns.find(c => c.column_name === colName)
-        .data_type;
-      if (Integers.indexOf(colType) > 0) {
-        w[colName][opName] = parseInt(val, 10);
-        return w;
-      }
-      if (Reals.indexOf(colType) > 0) {
-        w[colName][opName] = parseFloat(val);
-        return w;
-      }
-      if (colType === 'boolean') {
-        w[colName][opName] = val === 'true' ? true : false;
-      }
-      return w;
     });
     const newQuery = {
       where: { $and: finalWhereClauses },
@@ -88,7 +68,7 @@ const runQuery = tableSchema => {
     if (newQuery.order_by.length === 0) {
       delete newQuery.order_by;
     }
-    dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
+    dispatch({ type: 'ViewTrigger/V_SET_QUERY_OPTS', queryStuff: newQuery });
     dispatch(vMakeRequest());
   };
 };

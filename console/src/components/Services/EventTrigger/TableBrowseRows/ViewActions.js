@@ -10,16 +10,16 @@ import {
 import dataHeaders from '../Common/Headers';
 
 /* ****************** View actions *************/
-const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
-const V_REQUEST_SUCCESS = 'ViewTable/V_REQUEST_SUCCESS';
-const V_REQUEST_ERROR = 'ViewTable/V_REQUEST_ERROR';
-const V_EXPAND_REL = 'ViewTable/V_EXPAND_REL';
-const V_CLOSE_REL = 'ViewTable/V_CLOSE_REL';
-const V_SET_ACTIVE = 'ViewTable/V_SET_ACTIVE';
-const V_SET_QUERY_OPTS = 'ViewTable/V_SET_QUERY_OPTS';
-const V_REQUEST_PROGRESS = 'ViewTable/V_REQUEST_PROGRESS';
-const V_EXPAND_ROW = 'ViewTable/V_EXPAND_ROW';
-const V_COLLAPSE_ROW = 'ViewTable/V_COLLAPSE_ROW';
+const V_SET_DEFAULTS = 'ViewTrigger/V_SET_DEFAULTS';
+const V_REQUEST_SUCCESS = 'ViewTrigger/V_REQUEST_SUCCESS';
+const V_REQUEST_ERROR = 'ViewTrigger/V_REQUEST_ERROR';
+const V_EXPAND_REL = 'ViewTrigger/V_EXPAND_REL';
+const V_CLOSE_REL = 'ViewTrigger/V_CLOSE_REL';
+const V_SET_ACTIVE = 'ViewTrigger/V_SET_ACTIVE';
+const V_SET_QUERY_OPTS = 'ViewTrigger/V_SET_QUERY_OPTS';
+const V_REQUEST_PROGRESS = 'ViewTrigger/V_REQUEST_PROGRESS';
+const V_EXPAND_ROW = 'ViewTrigger/V_EXPAND_ROW';
+const V_COLLAPSE_ROW = 'ViewTrigger/V_COLLAPSE_ROW';
 // const V_ADD_WHERE;
 // const V_REMOVE_WHERE;
 // const V_SET_LIMIT;
@@ -44,9 +44,48 @@ const vMakeRequest = () => {
   return (dispatch, getState) => {
     const state = getState();
     const url = Endpoints.query;
-    const originalTable = getState().tables.currentTable;
+    const originalTrigger = getState().triggers.currentTrigger;
     dispatch({ type: V_REQUEST_PROGRESS, data: true });
-    console.log(state);
+    const currentQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
+    // count query
+    const countQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
+    countQuery.columns = ['id'];
+
+    // where clause for relationship
+    const currentWhereClause = state.triggers.view.query.where;
+    if (currentWhereClause && currentWhereClause.$and) {
+      // make filter for event_logs
+      const finalAndClause = currentQuery.where.$and;
+      currentQuery.columns[1].where = { $and: finalAndClause };
+      currentQuery.where = { name: state.triggers.currentTrigger };
+      countQuery.where.$and.push({
+        trigger_name: state.triggers.currentTrigger,
+      });
+    } else {
+      // reset where for event_logs
+      console.log(currentQuery);
+      if (currentQuery.columns[1]) {
+        currentQuery.columns[1].where = {};
+      }
+      currentQuery.where = { name: state.triggers.currentTrigger };
+      countQuery.where = { trigger_name: state.triggers.currentTrigger };
+    }
+
+    // order_by for relationship
+    const currentOrderBy = state.triggers.view.query.order_by;
+    if (currentOrderBy) {
+      currentQuery.columns[1].order_by = currentOrderBy;
+      // reset order_by
+      delete currentQuery.order_by;
+    } else {
+      // reset order by for event_logs
+      if (currentQuery.columns[1]) {
+        delete currentQuery.columns[1].order_by;
+      }
+      delete currentQuery.order_by;
+    }
+
+    console.log(currentQuery);
 
     const requestBody = {
       type: 'bulk',
@@ -54,20 +93,20 @@ const vMakeRequest = () => {
         {
           type: 'select',
           args: {
-            ...state.triggers.view.query,
+            ...currentQuery,
             table: {
-              name: state.triggers.currentTable,
-              schema: getState().triggers.currentSchema,
+              name: 'event_triggers',
+              schema: 'hdb_catalog',
             },
           },
         },
         {
           type: 'count',
           args: {
-            ...state.tables.view.query,
+            ...countQuery,
             table: {
-              name: state.tables.currentTable,
-              schema: getState().tables.currentSchema,
+              name: 'event_log',
+              schema: 'hdb_catalog',
             },
           },
         },
@@ -81,8 +120,8 @@ const vMakeRequest = () => {
     };
     return dispatch(requestAction(url, options)).then(
       data => {
-        const currentTable = getState().tables.currentTable;
-        if (originalTable === currentTable) {
+        const currentTrigger = getState().triggers.currentTrigger;
+        if (originalTrigger === currentTrigger) {
           Promise.all([
             dispatch({
               type: V_REQUEST_SUCCESS,
@@ -112,8 +151,8 @@ const deleteItem = pkClause => {
       type: 'delete',
       args: {
         table: {
-          name: state.tables.currentTable,
-          schema: getState().tables.currentSchema,
+          name: state.triggers.currentTrigger,
+          schema: 'hdb_catalog',
         },
         where: pkClause,
       },
@@ -352,30 +391,37 @@ const addQueryOptsActivePath = (query, queryStuff, activePath) => {
   return newQuery;
 };
 /* ****************** reducer ******************/
-const viewReducer = (tableName, schemas, viewState, action) => {
-  if (action.type.indexOf('ViewTable/FilterQuery/') === 0) {
+const viewReducer = (triggerName, triggerList, viewState, action) => {
+  if (action.type.indexOf('ViewTrigger/FilterQuery/') === 0) {
     return {
       ...viewState,
       curFilter: filterReducer(viewState.curFilter, action),
     };
   }
-  const tableSchema = schemas.find(x => x.table_name === tableName);
+  const tableSchema = triggerList.find(x => x.name === triggerName);
   switch (action.type) {
     case V_SET_DEFAULTS:
       // check if table exists and then process.
-      const currentTable = schemas.find(t => t.table_name === tableName);
+      /*
+      const currentTrigger = triggerList.find(t => t.name === triggerName);
       let currentColumns = [];
-      if (currentTable) {
-        currentColumns = currentTable.columns.map(c => c.column_name);
+      if (currentTrigger) {
+        currentColumns = currentTrigger.map(c => c.column_name);
       }
+      */
       return {
         ...defaultViewState,
         query: {
-          // columns: schemas.find(t => t.table_name === tableName).columns.map(c => c.column_name),
-          columns: currentColumns,
+          columns: [
+            '*',
+            {
+              name: 'event_logs',
+              columns: ['*', { name: 'event_invocation_logs', columns: ['*'] }],
+            },
+          ],
           limit: 10,
         },
-        activePath: [tableName],
+        activePath: [triggerName],
         rows: [],
         count: null,
       };
@@ -397,7 +443,7 @@ const viewReducer = (tableName, schemas, viewState, action) => {
           action.pk,
           action.path,
           action.relname,
-          schemas
+          triggerList
         ),
         activePath: [...viewState.activePath, action.relname],
       };
@@ -407,14 +453,14 @@ const viewReducer = (tableName, schemas, viewState, action) => {
         tableSchema,
         action.path,
         action.relname,
-        schemas
+        triggerList
       );
       return {
         ...viewState,
         query: _query,
         activePath: updateActivePathOnClose(
           viewState.activePath,
-          tableName,
+          triggerName,
           action.path,
           action.relname,
           _query

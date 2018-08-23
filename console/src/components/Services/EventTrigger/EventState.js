@@ -7,7 +7,13 @@ const defaultCurFilter = {
 
 const defaultViewState = {
   query: {
-    columns: [],
+    columns: [
+      '*',
+      {
+        name: 'event_logs',
+        columns: ['*', { name: 'event_invocation_logs', columns: ['*'] }],
+      },
+    ],
     limit: 10,
     offset: 0,
   },
@@ -22,13 +28,10 @@ const defaultViewState = {
 };
 
 const defaultState = {
-  currentTable: null,
+  currentTrigger: null,
   view: { ...defaultViewState },
-  allSchemas: [],
-  listingSchemas: [],
-  untrackedSchemas: [],
-  information_schema: [],
   triggerList: [],
+  listingTrigger: [],
   schemaList: ['public'],
   currentSchema: 'public',
   accessKeyError: false,
