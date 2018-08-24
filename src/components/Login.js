@@ -5,7 +5,7 @@ const LoginComponent = (props) => {
     <div className="loginWrapper">
       <h2 className="loginHeading"> Welcome to sample chat app made with Hasura GraphQL Engine </h2>
       <div className="login">
-        <div>
+        <form>
           <input
             type="text"
             id="username"
@@ -16,11 +16,12 @@ const LoginComponent = (props) => {
           />
           <button
             className="loginButton"
+            type="submit"
             onClick={props.login}
           >
             Enter
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );

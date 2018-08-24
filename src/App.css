@@ -24,14 +24,12 @@ body
 .newMessageEven {
 
   font-size: 30px;
-  color: 'black' !important;
   background-color: #98FB98;
   padding-left: 5px;
 }
 
 .newMessageOdd {
   font-size: 30px;
-  color: 'black' !important;
   background-color: #8FBC8F;
   padding-left: 5px;
 }
@@ -39,11 +37,17 @@ body
 {
   padding-bottom: 15px;
 }
+
+.messageWrapperNew
+{
+  padding-bottom: 15px;
+}
+
 .banner {
   position: -webkit-sticky;
   position: sticky;
   top: 0;
-  align-self: flex-start; /* <-- this is the fix */
+  align-self: flex-start;
   background-color: green;
   height: 40px;
   font-size: 30px;
@@ -52,7 +56,7 @@ body
 
 .oldNewSeparator {
   height: 40px;
-  border-width: 2px;
+  border-width: 5px;
   border-color: 'black';
   font-size: 40px;
   text-align: center;
@@ -66,15 +70,6 @@ body
 }
 
 .textboxWrapper {
-  /*
-  position: -webkit-sticky !important;
-  position: sticky;
-  align-self: flex-end;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  margin: 10px;
-  */
   text-align: center;
   position: fixed;
   bottom: 0;

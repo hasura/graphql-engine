@@ -9,7 +9,7 @@ export default class MessageList extends React.Component {
       return isNew ? `newMessage${evenOrOdd}` : `message${evenOrOdd}`;
     }
     return (
-      <div className="messageWrapper">
+      <div className={isNew ? "messageWrapperNew" : "messageWrapper"}>
         {
           this.props.messages.map((m, i) => {
             return (
