@@ -1,6 +1,5 @@
 import React from 'react';
 import RenderMessages from './RenderMessages';
-import gql from 'graphql-tag';
 import Textbox from './Textbox'
 import "../App.css";
 

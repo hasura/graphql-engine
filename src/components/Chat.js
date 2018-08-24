@@ -2,7 +2,6 @@ import React from 'react';
 import { Subscription } from 'react-apollo';
 import gql from 'graphql-tag';
 import ChatWrapper from './ChatWrapper';
-import Textbox from './Textbox';
 
 const subscribeToEvent = gql`
   subscription {

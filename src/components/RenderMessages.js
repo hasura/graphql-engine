@@ -1,5 +1,5 @@
 import React from 'react';
-import { Query, ApolloConsumer } from 'react-apollo';
+import { Query } from 'react-apollo';
 import gql from 'graphql-tag';
 import '../App.js';
 import Banner from './Banner';
@@ -18,7 +18,7 @@ const fetchMessages = gql`
             _gte: $last_received_ts
           }
         }
-        
+
       }
     ) {
       id
@@ -37,7 +37,7 @@ export default class RenderMessages extends React.Component {
       newMessages: [],
       error: null,
     }
-  } 
+  }
 
   async componentWillMount() {
     // scroll to bottom only if the component is ready
@@ -81,7 +81,7 @@ export default class RenderMessages extends React.Component {
     }
   }
 
-  // add new (unread) messages to state  
+  // add new (unread) messages to state
   addNewMessages = (messages) => {
     const newMessages = [...this.state.newMessages];
     messages.forEach((m) => {
@@ -96,7 +96,7 @@ export default class RenderMessages extends React.Component {
     })
   }
 
-  // add old (read) messages to state 
+  // add old (read) messages to state
   addOldMessages = (messages) => {
     const oldMessages = [ ...this.state.messages ];
     messages.forEach((m) => {
@@ -154,7 +154,7 @@ export default class RenderMessages extends React.Component {
         });
       }
     }
-  } 
+  }
 
   render() {
     const { messages, newMessages, bottom } = this.state;
@@ -184,8 +184,8 @@ export default class RenderMessages extends React.Component {
                 });
               }
               const receivedMessages = data.message;
-              
-              // load all messages to state in the beginning 
+
+              // load all messages to state in the beginning
               if (receivedMessages.length !== 0) {
                 if (messages.length === 0) {
                   this.addOldMessages(receivedMessages);
@@ -217,7 +217,7 @@ export default class RenderMessages extends React.Component {
           className="oldNewSeparator"
         >
           {
-            newMessages.length !== 0 ? 
+            newMessages.length !== 0 ?
             "New messages" :
             null
           }
