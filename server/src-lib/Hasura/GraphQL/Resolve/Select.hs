@@ -82,9 +82,11 @@ getNextArgNum = do
 
 prepare2
   :: (MonadState PlanningSt m)
-  => (Maybe G.Variable, PGColType, PGColValue) -> m S.SQLExp
-prepare2 (varM, colTy, colVal) = do
-  argNum <- maybe getNextArgNum getVarArgNum varM
+  => AnnPGVal -> m S.SQLExp
+prepare2 (varM, isNullable, colTy, colVal) = do
+  argNum <- case (varM, isNullable) of
+    (Just var, False) -> getVarArgNum var
+    _                 -> getNextArgNum
   addPrepArg argNum $ binEncoder colVal
   return $ toPrepParam argNum colTy
 
@@ -167,7 +169,7 @@ parseOrderBy v = do
 
 parseLimit :: ( MonadError QErr m ) => AnnInpVal -> m Int
 parseLimit v = do
-  (varM, _, pgColVal) <- asPGColVal v
+  (_, _, _, pgColVal) <- asPGColVal v
   limit <- maybe noIntErr return $ pgColValueToInt pgColVal
   -- validate int value
   onlyPositiveInt limit

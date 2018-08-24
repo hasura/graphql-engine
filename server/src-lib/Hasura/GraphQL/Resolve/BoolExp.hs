@@ -29,7 +29,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-type OpExp = RA.OpExpG (Maybe G.Variable, PGColType, PGColValue)
+type OpExp = RA.OpExpG AnnPGVal
 
 parseOpExps
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
@@ -73,7 +73,7 @@ parseOpExps annVal = do
       AGScalar _ _ -> throw500 "boolean value is expected"
       _ -> tyMismatch "pgvalue" v
 
-type AnnVal = RA.AnnValO (Maybe G.Variable, PGColType, PGColValue)
+type AnnVal = RA.AnnValO AnnPGVal
 
 parseColExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
@@ -111,7 +111,7 @@ convertBoolExp =
 
 convertBoolExpG
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => ((Maybe G.Variable, PGColType, PGColValue) -> m S.SQLExp)
+  => (AnnPGVal -> m S.SQLExp)
   -> QualifiedTable
   -> AnnInpVal
   -> m (GBoolExp RG.AnnSQLBoolExp)

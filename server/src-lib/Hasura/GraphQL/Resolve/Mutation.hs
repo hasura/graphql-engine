@@ -184,14 +184,14 @@ convObjWithOp
   => ApplySQLOp -> AnnInpVal -> m [(PGCol, S.SQLExp)]
 convObjWithOp opFn val =
   flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
-  (varM, _, colVal) <- asPGColVal v
+  (_, _, _, colVal) <- asPGColVal v
   let pgCol = PGCol $ G.unName k
       encVal = txtEncoder colVal
       sqlExp = opFn (pgCol, encVal)
   return (pgCol, sqlExp)
 
-third :: (a, b, c) -> c
-third (_, _, c) = c
+fourth :: (a, b, c, d) -> d
+fourth (_, _, _, d) = d
 
 convDeleteAtPathObj
   :: (MonadError QErr m)
@@ -199,7 +199,7 @@ convDeleteAtPathObj
 convDeleteAtPathObj val =
   flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
     vals <- flip withArray v $ \_ annVals -> mapM asPGColVal annVals
-    let valExps = map (txtEncoder . third) vals
+    let valExps = map (txtEncoder . fourth) vals
         pgCol = PGCol $ G.unName k
         annEncVal = S.SETyAnn (S.SEArray valExps) S.textArrType
         sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp

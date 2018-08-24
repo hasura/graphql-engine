@@ -32,12 +32,13 @@ import           Data.Aeson.TH
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Sequence                 as Seq
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.ByteString.Lazy              as BL
+import qualified Data.HashMap.Strict               as Map
+import qualified Data.Sequence                     as Seq
+import qualified Database.PG.Query                 as Q
+import qualified Language.GraphQL.Draft.Syntax     as G
 
+import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
@@ -45,7 +46,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Hasura.SQL.DML                as S
+import qualified Hasura.SQL.DML                    as S
 
 type FieldMap
   = Map.HashMap (G.NamedType, G.Name) (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool))
@@ -139,8 +140,8 @@ type Convert =
 
 prepare
   :: (MonadState PrepArgs m)
-  => (Maybe G.Variable, PGColType, PGColValue) -> m S.SQLExp
-prepare (_, colTy, colVal) = do
+  => AnnPGVal -> m S.SQLExp
+prepare (_, _, colTy, colVal) = do
   preparedArgs <- get
   put (preparedArgs Seq.|> binEncoder colVal)
   return $ toPrepParam (Seq.length preparedArgs + 1) colTy
