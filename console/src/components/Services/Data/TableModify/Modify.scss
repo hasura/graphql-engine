@@ -41,7 +41,7 @@
 
 .newRoleInput {
   margin-left: 20px;
-  width: 80%;
+  width: calc(100% - 40px);
   height: 30px;
 }
 
@@ -173,7 +173,18 @@ hr
   td:first-child, th:first-child {
     border-right: 4px double #ddd;
     font-weight: bold;
-    width: 20%;
+    width: 10%;
+  }
+  td:nth-child(2) {
+    overflow: auto;
+    max-width: 250px;
+    width: 250px;
+  }
+  .newRoleTd {
+    padding-top: 13px;
+  }
+  .permissionDelete {
+    cursor: pointer;
   }
 
   .editPermissionLink {
@@ -181,6 +192,11 @@ hr
     position: absolute;
     right: 10px;
     color: #337ab7;
+    cursor: pointer;
+  }
+
+  .bulkSelect {
+    margin-right: 10px !important;
   }
 
   .clickableCell {
@@ -209,17 +225,34 @@ hr
   }
 }
 
+.applyBulkPermissions {
+  display: inline-block;
+}
+
+.samePermissionRole {
+  display: inline-block;
+  width: auto;
+  height: auto;
+}
+
+.bulkApplyBtn {
+  display: block;
+  margin-top: 10px;
+  clear: both;
+}
 
 .activeEdit {
   .editPermissionsHeading {
     font-weight: bold;
     font-size: 16px;
     margin-bottom: 5px;
+    word-wrap: break-word;
   }
 
   .editPermissionsSection {
     margin: 5px;
     padding: 10px;
+    word-wrap: break-word;
 
     .columnListElement {
       float: left;

@@ -43,7 +43,6 @@ import {
   PERM_TOGGLE_COLUMN,
   PERM_TOGGLE_ALL_COLUMNS,
   PERM_ALLOW_ALL,
-  PERM_TOGGLE_ENABLE_LIMIT,
   PERM_TOGGLE_MODIFY_LIMIT,
   PERM_TOGGLE_ALLOW_UPSERT,
   PERM_CUSTOM_CHECKED,
@@ -51,12 +50,20 @@ import {
   PERM_SAVE_PERMISSIONS,
   PERM_CLOSE_EDIT,
   PERM_SET_ROLE_NAME,
+  PERM_SELECT_BULK,
+  PERM_DESELECT_BULK,
+  PERM_RESET_BULK_SELECT,
+  PERM_RESET_BULK_SAME_SELECT,
+  PERM_SAME_APPLY_BULK,
+  PERM_DESELECT_SAME_APPLY_BULK,
   toggleColumn,
   toggleAllColumns,
   getFilterKey,
   getBasePermissionsState,
   updatePermissionsState,
   deleteFromPermissionsState,
+  updateBulkSelect,
+  updateBulkSameSelect,
 } from '../TablePermissions/Actions';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
@@ -306,15 +313,6 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         },
       };
 
-    case PERM_TOGGLE_ENABLE_LIMIT:
-      return {
-        ...modifyState,
-        permissionsState: {
-          ...modifyState.permissionsState,
-          limitEnabled: action.data,
-        },
-      };
-
     case PERM_TOGGLE_MODIFY_LIMIT:
       return {
         ...modifyState,
@@ -404,6 +402,73 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
     case PERM_SAVE_PERMISSIONS:
       return {
         ...modifyState,
+      };
+
+    case PERM_SELECT_BULK:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          bulkSelect: updateBulkSelect(
+            modifyState.permissionsState,
+            action.data,
+            true
+          ),
+        },
+      };
+    case PERM_DESELECT_BULK:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          bulkSelect: updateBulkSelect(
+            modifyState.permissionsState,
+            action.data,
+            false
+          ),
+        },
+      };
+    case PERM_SAME_APPLY_BULK:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          applySamePermissions: updateBulkSameSelect(
+            modifyState.permissionsState,
+            action.data,
+            true
+          ),
+        },
+      };
+    case PERM_DESELECT_SAME_APPLY_BULK:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          applySamePermissions: updateBulkSameSelect(
+            modifyState.permissionsState,
+            action.data,
+            false
+          ),
+        },
+      };
+
+    case PERM_RESET_BULK_SELECT:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          bulkSelect: [],
+        },
+      };
+
+    case PERM_RESET_BULK_SAME_SELECT:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          applySamePermissions: [],
+        },
       };
 
     case TOGGLE_ACTIVE_COLUMN:
