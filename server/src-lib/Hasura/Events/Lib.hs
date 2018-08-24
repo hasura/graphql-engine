@@ -161,18 +161,6 @@ fetchEvents =
       |] () True
   where uncurryEvent (id', trn, Q.AltJ payload, webhook, tries, created, numRetries, retryInterval) = Event id' trn payload webhook Nothing Nothing tries created (numRetries, retryInterval)
 
-fetchRetryConf :: TriggerName -> Q.TxE QErr (Int64, Int64)
-fetchRetryConf trn = do
-  confs <- Q.listQE defaultTxErrorHandler [Q.sql|
-                                  SELECT num_retries, interval_seconds
-                                  FROM hdb_catalog.event_triggers_retry_conf
-                                  WHERE name = $1
-                                  |] (Identity trn) True
-  getConf confs
-  where
-    getConf []    = throw500 "Could not fetch retry conf"
-    getConf (x:_) = return x
-
 
 insertInvocation :: Invocation -> Q.TxE QErr ()
 insertInvocation invo = do

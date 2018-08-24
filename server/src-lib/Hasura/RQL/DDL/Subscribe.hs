@@ -78,9 +78,9 @@ getTriggerSql op name sn tn spec =
     renderSql :: HashMap.HashMap T.Text T.Text -> GingerTmplt -> T.Text
     renderSql = TG.easyRender
 
-subscribeTable :: SubscribeTableQuery
-               -> Q.TxE QErr RespBody
-subscribeTable (SubscribeTableQuery name (QualifiedTable sn tn) insert update delete retryConf webhook) = do
+addEventTriggerToCatalog :: SubscribeTableQuery
+               -> Q.TxE QErr ()
+addEventTriggerToCatalog (SubscribeTableQuery name (QualifiedTable sn tn) insert update delete retryConf webhook) = do
   let def = TriggerDefinition insert update delete
   Q.unitQE defaultTxErrorHandler [Q.sql|
                                   INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook)
@@ -101,17 +101,10 @@ subscribeTable (SubscribeTableQuery name (QualifiedTable sn tn) insert update de
                                   INSERT into hdb_catalog.event_triggers_retry_conf (name, num_retries, interval_seconds)
                                   VALUES ($1, $2, $3)
                                   |] (name, fst rConf, snd rConf) True
-  return successMsg
   where
     tx:: Maybe T.Text -> Q.TxE QErr ()
     tx (Just sql) = Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder sql)
     tx Nothing = throw500 "no trigger sql generated"
-
-unsubscribeTable :: UnsubscribeTableQuery
-               -> Q.TxE QErr RespBody
-unsubscribeTable (UnsubscribeTableQuery name) = do
-  delEventTriggerFromCatalog name
-  return successMsg
 
 delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
 delEventTriggerFromCatalog trn = do
@@ -125,26 +118,48 @@ delEventTriggerFromCatalog trn = do
     tx :: Ops -> Q.TxE QErr ()
     tx op = Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder $ getDropFuncSql op trn)
 
+fetchEventTrigger :: TriggerName -> Q.TxE QErr EventTrigger
+fetchEventTrigger trn = do
+  triggers <- Q.listQE defaultTxErrorHandler [Q.sql|
+                                  SELECT name, type, schema_name, table_name, definition::json
+                                  FROM hdb_catalog.event_triggers
+                                  WHERE name = $1
+                                  |] (Identity trn) True
+  getTrigger triggers
+  where
+    getTrigger []    = throw404 "Could not fetch event trigger"
+    getTrigger (x:_) = return $ EventTrigger name typ (QualifiedTable sn tn) def
+      where (name, typ, sn, tn, Q.AltJ def) = x
+
 subTableP1 :: (P1C m) => SubscribeTableQuery -> m ()
 subTableP1 _ = return ()
 
 subTableP2 :: (P2C m) => SubscribeTableQuery -> m RespBody
-subTableP2 q = liftTx $ subscribeTable q
+subTableP2 q@(SubscribeTableQuery name qt insert update delete retryConf webhook) = do
+  liftTx $ addEventTriggerToCatalog q
+  let def = TriggerDefinition insert update delete
+  -- fail $ "adding trigger to cache"
+  addEventTriggerToCache qt name def
+  return successMsg
 
 instance HDBQuery SubscribeTableQuery where
   type Phase1Res SubscribeTableQuery = ()
   phaseOne = subTableP1
   phaseTwo q _ = subTableP2 q
-  schemaCachePolicy = SCPNoChange
+  schemaCachePolicy = SCPReload
 
 unsubTableP1 :: (P1C m) => UnsubscribeTableQuery -> m ()
 unsubTableP1 _ = return ()
 
 unsubTableP2 :: (P2C m) => UnsubscribeTableQuery -> m RespBody
-unsubTableP2 q = liftTx $ unsubscribeTable q
+unsubTableP2 (UnsubscribeTableQuery name) = do
+  et <- liftTx $ fetchEventTrigger name
+  delEventTriggerFromCache (etTable et) name
+  liftTx $ delEventTriggerFromCatalog name
+  return successMsg
 
 instance HDBQuery UnsubscribeTableQuery where
   type Phase1Res UnsubscribeTableQuery = ()
   phaseOne = unsubTableP1
   phaseTwo q _ = unsubTableP2 q
-  schemaCachePolicy = SCPNoChange
+  schemaCachePolicy = SCPReload

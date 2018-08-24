@@ -8,6 +8,7 @@ module Hasura.RQL.Types.Subscribe
   , SubscribeColumns(..)
   , TriggerDefinition(..)
   , TriggerName
+  , EventTrigger(..)
   , RetryConf(..)
   , UnsubscribeTableQuery(..)
   ) where
@@ -95,3 +96,13 @@ data UnsubscribeTableQuery
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''UnsubscribeTableQuery)
+
+data EventTrigger
+  = EventTrigger
+  { etName       :: TriggerName
+  , etType       :: T.Text
+  , etTable      :: QualifiedTable
+  , etDefinition :: TriggerDefinition
+  }
+
+$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventTrigger)
