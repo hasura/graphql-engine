@@ -37,15 +37,15 @@ export default class Textbox extends React.Component {
           }
         }}
         update={(cache, { data: { insert_message }}) => {
-          this.props.mutationCallback([
+          this.props.mutationCallback(
             {
               id: insert_message.returning[0].id,
               timestamp: insert_message.returning[0].timestamp,
               username: this.props.username,
               text: this.state.text
             }
-          ]);
-          this.setState({ text: "" })
+          );
+          this.setState({ text: "" });
           document.getElementById("textbox").scrollIntoView({ behavior: 'instant'})
         }}
       >

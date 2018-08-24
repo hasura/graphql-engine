@@ -41,7 +41,7 @@ export default class RenderMessages extends React.Component {
 
   async componentWillMount() {
     // set mutation callback to update messages in state after mutation
-    this.props.setMutationCallback(this.addOldMessages);
+    this.props.setMutationCallback(this.mutationCallback);
   }
 
 
@@ -102,13 +102,21 @@ export default class RenderMessages extends React.Component {
 
   // add old (read) messages to state
   addOldMessages = (messages) => {
-    const oldMessages = [ ...this.state.messages ];
-    messages.forEach((m) => {
-      oldMessages.push(m);
-    });
+    const oldMessages = [ ...this.state.messages, ...messages];
     this.setState({
       ...this.state,
       messages: oldMessages,
+      newMessages: []
+    })
+  }
+
+  // add message to state when text is entered
+  mutationCallback = (message) => {
+    const messages = [ ...this.state.oldMessages, ...this.state.newMessages ];
+    messages.push(message);
+    this.setState({
+      ...this.state,
+      messages,
       newMessages: []
     })
   }
