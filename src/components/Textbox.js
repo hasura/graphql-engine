@@ -45,7 +45,6 @@ export default class Textbox extends React.Component {
               text: this.state.text
             }
           );
-          this.setState({ text: "" });
           document.getElementById("textbox").scrollIntoView({ behavior: 'instant'})
         }}
       >
@@ -56,6 +55,7 @@ export default class Textbox extends React.Component {
             }
             const sendMessage = () => {
               insert_message();
+              this.setState({text: ""})
             }
             return (
               <form onSubmit={sendMessage}>
