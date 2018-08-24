@@ -47,7 +47,7 @@ const TableHeader = ({ triggerName, tabName, count, currentSchema }) => {
                 to={'/events/manage/triggers/' + triggerName + '/processed'}
                 data-test="table-browse-rows"
               >
-                Processed {showCount}
+                Processed {tabName === 'processed' ? showCount : null}
               </Link>
             </li>
             <li
@@ -58,7 +58,7 @@ const TableHeader = ({ triggerName, tabName, count, currentSchema }) => {
                 to={'/events/manage/triggers/' + triggerName + '/pending'}
                 data-test="table-insert-rows"
               >
-                Pending
+                Pending {tabName === 'pending' ? showCount : null}
               </Link>
             </li>
             <li

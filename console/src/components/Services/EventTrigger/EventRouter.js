@@ -7,17 +7,25 @@ import {
   schemaConnector,
   schemaContainerConnector,
   addTriggerConnector,
-  viewTableConnector,
+  processedEventsConnector,
+  pendingEventsConnector,
   eventHeaderConnector,
+  settingsConnector,
 } from '.';
 
-import { loadTriggers } from '../EventTrigger/EventActions';
+import {
+  loadTriggers,
+  loadProcessedEvents,
+  loadPendingEvents,
+} from '../EventTrigger/EventActions';
 
 const makeEventRouter = (
   connect,
   store,
   composeOnEnterHooks,
   requireSchema,
+  requireProcessedEvents,
+  requirePendingEvents,
   migrationRedirects
 ) => {
   return (
@@ -32,15 +40,17 @@ const makeEventRouter = (
         <Route path="triggers" component={schemaConnector(connect)} />
         <Route
           path="triggers/:trigger/processed"
-          component={viewTableConnector(connect)}
+          component={processedEventsConnector(connect)}
+          onEnter={composeOnEnterHooks([requireProcessedEvents])}
         />
         <Route
           path="triggers/:trigger/pending"
-          component={viewTableConnector(connect)}
+          component={pendingEventsConnector(connect)}
+          onEnter={composeOnEnterHooks([requirePendingEvents])}
         />
         <Route
           path="triggers/:trigger/settings"
-          component={viewTableConnector(connect)}
+          component={settingsConnector(connect)}
         />
       </Route>
       <Route
@@ -77,6 +87,44 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
       }
     );
   };
+  const requireProcessedEvents = (nextState, replaceState, cb) => {
+    const {
+      triggers: { processedEvents },
+    } = store.getState();
+    if (processedEvents.length) {
+      cb();
+      return;
+    }
+    Promise.all([store.dispatch(loadProcessedEvents())]).then(
+      () => {
+        cb();
+      },
+      () => {
+        // alert('Could not load schema.');
+        replaceState(globals.urlPrefix);
+        cb();
+      }
+    );
+  };
+  const requirePendingEvents = (nextState, replaceState, cb) => {
+    const {
+      triggers: { pendingEvents },
+    } = store.getState();
+    if (pendingEvents.length) {
+      cb();
+      return;
+    }
+    Promise.all([store.dispatch(loadPendingEvents())]).then(
+      () => {
+        cb();
+      },
+      () => {
+        // alert('Could not load schema.');
+        replaceState(globals.urlPrefix);
+        cb();
+      }
+    );
+  };
   const migrationRedirects = (nextState, replaceState, cb) => {
     const state = store.getState();
     if (!state.main.migrationMode) {
@@ -98,6 +146,8 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
       store,
       composeOnEnterHooks,
       requireSchema,
+      requireProcessedEvents,
+      requirePendingEvents,
       migrationRedirects,
       consoleModeRedirects
     ),

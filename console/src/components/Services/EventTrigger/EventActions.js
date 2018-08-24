@@ -1,15 +1,19 @@
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './EventState';
-import viewReducer from './TableBrowseRows/ViewActions';
+import processedEventsReducer from './ProcessedEvents/ViewActions';
+import pendingEventsReducer from './PendingEvents/ViewActions';
 import { showErrorNotification, showSuccessNotification } from './Notification';
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
+import { push } from 'react-router-redux';
 
 const SET_TRIGGER = 'Event/SET_TRIGGER';
 const LOAD_TRIGGER_LIST = 'Event/LOAD_TRIGGER_LIST';
+const LOAD_PROCESSED_EVENTS = 'Event/LOAD_PROCESSED_EVENTS';
+const LOAD_PENDING_EVENTS = 'Event/LOAD_PENDING_EVENTS';
 const ACCESS_KEY_ERROR = 'Event/ACCESS_KEY_ERROR';
 const UPDATE_DATA_HEADERS = 'Event/UPDATE_DATA_HEADERS';
 const LISTING_TRIGGER = 'Event/LISTING_TRIGGER';
@@ -35,8 +39,12 @@ const loadTriggers = () => (dispatch, getState) => {
         columns: [
           '*',
           {
-            name: 'event_logs',
-            columns: ['*', { name: 'event_invocation_logs', columns: ['*'] }],
+            name: 'events', // order is dependent
+            columns: ['*', { name: 'logs', columns: ['*'] }],
+          },
+          {
+            name: 'retry_conf',
+            columns: ['*'],
           },
         ],
       },
@@ -45,6 +53,76 @@ const loadTriggers = () => (dispatch, getState) => {
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: LOAD_TRIGGER_LIST, triggerList: data });
+    },
+    error => {
+      console.error('Failed to load triggers' + JSON.stringify(error));
+    }
+  );
+};
+
+const loadProcessedEvents = () => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify({
+      type: 'select',
+      args: {
+        table: {
+          name: 'event_triggers',
+          schema: 'hdb_catalog',
+        },
+        columns: [
+          '*',
+          {
+            name: 'events',
+            columns: ['*', { name: 'logs', columns: ['*'] }],
+            where: {
+              $or: [{ delivered: { $eq: true } }, { error: { $eq: true } }],
+            },
+          },
+        ],
+      },
+    }),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      dispatch({ type: LOAD_PROCESSED_EVENTS, data: data });
+    },
+    error => {
+      console.error('Failed to load triggers' + JSON.stringify(error));
+    }
+  );
+};
+
+const loadPendingEvents = () => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify({
+      type: 'select',
+      args: {
+        table: {
+          name: 'event_triggers',
+          schema: 'hdb_catalog',
+        },
+        columns: [
+          '*',
+          {
+            name: 'events',
+            columns: ['*', { name: 'logs', columns: ['*'] }],
+            where: { delivered: false, error: false },
+          },
+        ],
+      },
+    }),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      dispatch({ type: LOAD_PENDING_EVENTS, data: data });
     },
     error => {
       console.error('Failed to load triggers' + JSON.stringify(error));
@@ -157,13 +235,75 @@ const makeMigrationCall = (
   );
 };
 
+const deleteTrigger = triggerName => {
+  return (dispatch, getState) => {
+    dispatch(showSuccessNotification('Deleting Trigger...'));
+
+    // apply migrations
+    const migrationName = 'delete_trigger_' + triggerName.trim();
+    const payload = {
+      type: 'unsubscribe_table',
+      args: {
+        name: triggerName,
+      },
+    };
+    const upQueryArgs = [];
+    upQueryArgs.push(payload);
+    const upQuery = {
+      type: 'bulk',
+      args: upQueryArgs,
+    };
+    const downQuery = {
+      type: 'bulk',
+      args: [],
+    };
+    const requestMsg = 'Deleting trigger...';
+    const successMsg = 'Trigger deleted';
+    const errorMsg = 'Delete trigger failed';
+
+    const customOnSuccess = () => {
+      // dispatch({ type: REQUEST_SUCCESS });
+      dispatch(loadTriggers()).then(() => dispatch(push('/events/manage')));
+      return;
+    };
+    const customOnError = () => {
+      dispatch({ type: REQUEST_ERROR, data: errorMsg });
+      return;
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      upQuery.args,
+      downQuery.args,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
 /* ******************************************************* */
 const eventReducer = (state = defaultState, action) => {
   // eslint-disable-line no-unused-vars
-  if (action.type.indexOf('ViewTrigger/') === 0) {
+  if (action.type.indexOf('ProcessedEvents/') === 0) {
     return {
       ...state,
-      view: viewReducer(
+      view: processedEventsReducer(
+        state.currentTrigger,
+        state.triggerList,
+        state.view,
+        action
+      ),
+    };
+  }
+  if (action.type.indexOf('PendingEvents/') === 0) {
+    return {
+      ...state,
+      view: pendingEventsReducer(
         state.currentTrigger,
         state.triggerList,
         state.view,
@@ -183,6 +323,16 @@ const eventReducer = (state = defaultState, action) => {
         ...state,
         listingTrigger: action.updatedList,
       };
+    case LOAD_PROCESSED_EVENTS:
+      return {
+        ...state,
+        processedEvents: action.data,
+      };
+    case LOAD_PENDING_EVENTS:
+      return {
+        ...state,
+        pendingEvents: action.data,
+      };
     case SET_TRIGGER:
       return { ...state, currentTrigger: action.triggerName };
     case ACCESS_KEY_ERROR:
@@ -198,6 +348,9 @@ export default eventReducer;
 export {
   setTrigger,
   loadTriggers,
+  deleteTrigger,
+  loadProcessedEvents,
+  loadPendingEvents,
   handleMigrationErrors,
   makeMigrationCall,
   ACCESS_KEY_ERROR,

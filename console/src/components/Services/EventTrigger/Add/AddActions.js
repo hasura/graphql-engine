@@ -3,73 +3,34 @@ import dataHeaders from '../Common/Headers';
 import requestAction from '../../../../utils/requestAction';
 import defaultState from './AddState';
 import _push from '../push';
-import { loadSchema, makeMigrationCall } from '../EventActions';
+import { loadTriggers, makeMigrationCall } from '../EventActions';
 import { showSuccessNotification } from '../Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
-import { setTable } from '../EventActions.js';
 
 const SET_DEFAULTS = 'AddTrigger/SET_DEFAULTS';
 const SET_TRIGGERNAME = 'AddTrigger/SET_TRIGGERNAME';
 const SET_TABLENAME = 'AddTrigger/SET_TABLENAME';
 const SET_SCHEMANAME = 'AddTrigger/SET_SCHEMANAME';
 const SET_WEBHOOK_URL = 'AddTrigger/SET_WEBHOOK_URL';
-const REMOVE_COLUMN = 'AddTrigger/REMOVE_COLUMN';
-const SET_COLNAME = 'AddTrigger/SET_COLNAME';
-const SET_COLTYPE = 'AddTrigger/SET_COLTYPE';
-const SET_COLDEFAULT = 'AddTrigger/SET_COLDEFAULT';
-const REMOVE_COLDEFAULT = 'AddTrigger/REMOVE_COLDEFAULT';
-const SET_COLNULLABLE = 'AddTrigger/SET_COLNULLABLE';
-const SET_COLUNIQUE = 'AddTrigger/SET_COLUNIQUE';
-const ADD_COL = 'AddTrigger/ADD_COL';
-const ADD_PK = 'AddTrigger/ADD_PK';
-const REMOVE_PK = 'AddTrigger/REMOVE_PK';
-const SET_PK = 'AddTrigger/SET_PK';
+const SET_RETRY_NUM = 'AddTrigger/SET_RETRY_NUM';
+const SET_RETRY_INTERVAL = 'AddTrigger/SET_RETRY_INTERVAL';
 const MAKING_REQUEST = 'AddTrigger/MAKING_REQUEST';
 const REQUEST_SUCCESS = 'AddTrigger/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'AddTrigger/REQUEST_ERROR';
 const VALIDATION_ERROR = 'AddTrigger/VALIDATION_ERROR';
 const RESET_VALIDATION_ERROR = 'AddTrigger/RESET_VALIDATION_ERROR';
 const UPDATE_TABLE_LIST = 'AddTrigger/UPDATE_TABLE_LIST';
+const TOGGLE_COLUMNS = 'AddTrigger/TOGGLE_COLUMNS';
+const TOGGLE_QUERY_TYPE_SELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_SELECTED';
+const TOGGLE_QUERY_TYPE_DESELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_DESELECTED';
 
 const setDefaults = () => ({ type: SET_DEFAULTS });
 const setTriggerName = value => ({ type: SET_TRIGGERNAME, value });
 const setTableName = value => ({ type: SET_TABLENAME, value });
 const setSchemaName = value => ({ type: SET_SCHEMANAME, value });
 const setWebhookURL = value => ({ type: SET_WEBHOOK_URL, value });
-const removeColumn = i => ({ type: REMOVE_COLUMN, index: i });
-const setColName = (name, index, isNull) => ({
-  type: SET_COLNAME,
-  name,
-  index,
-  isNull,
-});
-const setColDefault = (colDefault, index, isNull) => ({
-  type: SET_COLDEFAULT,
-  colDefault,
-  index,
-  isNull,
-});
-const setColType = (coltype, index, isNull) => ({
-  type: SET_COLTYPE,
-  coltype,
-  index,
-  isNull,
-});
-const removeColDefault = index => ({ type: REMOVE_COLDEFAULT, index });
-const setColNullable = (isNull, index) => ({
-  type: SET_COLNULLABLE,
-  isNull,
-  index,
-});
-const setColUnique = (isUnique, index) => ({
-  type: SET_COLUNIQUE,
-  isUnique,
-  index,
-});
-const addCol = () => ({ type: ADD_COL });
-const addPk = () => ({ type: ADD_PK });
-const removePk = index => ({ type: REMOVE_PK, index });
-const setPk = (pk, index) => ({ type: SET_PK, pk, index });
+const setRetryNum = value => ({ type: SET_RETRY_NUM, value });
+const setRetryInterval = value => ({ type: SET_RETRY_INTERVAL, value });
 // General error during validation.
 // const validationError = (error) => ({type: VALIDATION_ERROR, error: error});
 const validationError = error => {
@@ -78,141 +39,58 @@ const validationError = error => {
 };
 const resetValidation = () => ({ type: RESET_VALIDATION_ERROR });
 
-const createTableSql = () => {
+const createTrigger = () => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
-    dispatch(showSuccessNotification('Creating Table...'));
-    const state = getState().addTable.table;
-    const currentSchema = getState().tables.currentSchema;
+    dispatch(showSuccessNotification('Creating Trigger...'));
+    const currentState = getState().addTrigger;
+    const currentSchema = currentState.schemaName;
+    const triggerName = currentState.triggerName;
+    const tableName = currentState.tableName;
+    const webhook = currentState.webhookURL;
 
-    // validations
-    if (state.tableName.trim() === '') {
-      alert('Table name cannot be empty');
-    }
-    let tableColumns = '';
-    const currentCols = state.columns.filter(c => c.name !== '');
-    const pKeys = state.primaryKeys
-      .filter(p => p !== '')
-      .map(p => state.columns[p].name);
-    let isUUIDDefault = false;
-    for (let i = 0; i < currentCols.length; i++) {
-      tableColumns +=
-        '"' + currentCols[i].name + '"' + ' ' + currentCols[i].type + ' ';
-      // check if column is nullable
-      if (!currentCols[i].nullable) {
-        tableColumns += 'NOT NULL';
-      }
-      if (currentCols[i].unique) {
-        tableColumns += ' UNIQUE';
-      }
-      // check if column has a default value
-      if (
-        currentCols[i].default !== undefined &&
-        currentCols[i].default.value !== ''
-      ) {
-        if (currentCols[i].type === 'text') {
-          // if a column type is text and if it has a default value, add a single quote by default
-          tableColumns += " DEFAULT '" + currentCols[i].default.value + "'";
-        } else {
-          if (currentCols[i].type === 'uuid') {
-            isUUIDDefault = true;
-          }
-          tableColumns += ' DEFAULT ' + currentCols[i].default.value;
-        }
-      }
-      tableColumns += i === currentCols.length - 1 ? '' : ', ';
-    }
-    // add primary key
-    if (pKeys.length > 0) {
-      tableColumns += ', PRIMARY KEY (';
-      // tableColumns += '"' + pKeys.map((col) => (col)) + '"';
-      // tableColumns += pKeys.join(', ');
-      pKeys.map(col => {
-        tableColumns += '"' + col + '"' + ',';
-      });
-      tableColumns = tableColumns.slice(0, -1);
-      tableColumns += ') ';
-    }
-    // const sqlCreateTable = 'CREATE TABLE ' + '\'' + state.tableName.trim() + '\'' + '(' + tableColumns + ')';
-    const sqlCreateExtension = 'CREATE EXTENSION IF NOT EXISTS pgcrypto;';
-    let sqlCreateTable =
-      'CREATE TABLE ' +
-      currentSchema +
-      '.' +
-      '"' +
-      state.tableName.trim() +
-      '"' +
-      '(' +
-      tableColumns +
-      ');';
-    // add comment if applicable
-    if (state.tableComment && state.tableComment !== '') {
-      sqlCreateTable +=
-        ' COMMENT ON TABLE ' +
-        currentSchema +
-        '.' +
-        '"' +
-        state.tableName.trim() +
-        '"' +
-        ' IS ' +
-        "'" +
-        state.tableComment +
-        "'";
-    }
     // apply migrations
-    const migrationName =
-      'create_table_' + currentSchema + '_' + state.tableName.trim();
-    const upQueryArgs = [];
-    if (isUUIDDefault) {
-      upQueryArgs.push({
-        type: 'run_sql',
-        args: { sql: sqlCreateExtension },
-      });
-    }
-    upQueryArgs.push({
-      type: 'run_sql',
-      args: { sql: sqlCreateTable },
-    });
-    upQueryArgs.push({
-      type: 'add_existing_table_or_view',
+    const migrationName = 'create_trigger_' + triggerName.trim();
+    const payload = {
+      type: 'subscribe_table',
       args: {
-        name: state.tableName.trim(),
-        schema: currentSchema,
+        name: triggerName,
+        table: { name: tableName, schema: currentSchema },
+        webhook: webhook,
       },
-    });
+    };
+    // operation definition
+    if (currentState.selectedOperations.insert) {
+      payload.args.insert = { columns: currentState.operations.insert };
+    }
+    if (currentState.selectedOperations.update) {
+      payload.args.update = { columns: currentState.operations.update };
+    }
+    if (currentState.selectedOperations.delete) {
+      payload.args.delete = { columns: ['*'] };
+    }
+    // retry logic
+    if (currentState.retryConf) {
+      payload.args.retry_conf = currentState.retryConf;
+    }
+    const upQueryArgs = [];
+    upQueryArgs.push(payload);
     const upQuery = {
       type: 'bulk',
       args: upQueryArgs,
     };
-    const sqlDropTable =
-      'DROP TABLE ' + currentSchema + '.' + '"' + state.tableName.trim() + '"';
     const downQuery = {
       type: 'bulk',
-      args: [
-        {
-          type: 'run_sql',
-          args: { sql: sqlDropTable },
-        },
-      ],
+      args: upQueryArgs,
     };
-    const requestMsg = 'Creating table...';
-    const successMsg = 'Table Created';
-    const errorMsg = 'Create table failed';
+    const requestMsg = 'Creating trigger...';
+    const successMsg = 'Trigger Created';
+    const errorMsg = 'Create trigger failed';
 
     const customOnSuccess = () => {
-      dispatch({ type: REQUEST_SUCCESS });
-      dispatch({ type: SET_DEFAULTS });
-      dispatch(setTable(state.tableName.trim()));
-      dispatch(loadSchema()).then(() =>
-        dispatch(
-          _push(
-            '/schema/' +
-              currentSchema +
-              '/tables/' +
-              state.tableName.trim() +
-              '/modify'
-          )
-        )
+      // dispatch({ type: REQUEST_SUCCESS });
+      dispatch(loadTriggers()).then(() =>
+        dispatch(_push('/manage/triggers/' + triggerName.trim() + '/processed'))
       );
       return;
     };
@@ -265,6 +143,32 @@ const fetchTableListBySchema = schemaName => (dispatch, getState) => {
   );
 };
 
+const operationToggleColumn = (column, operation) => {
+  return (dispatch, getState) => {
+    const currentOperations = getState().addTrigger.operations;
+    const currentCols = currentOperations[operation];
+    // check if column is in currentCols. if not, push
+    const isExists = currentCols.includes(column);
+    let finalCols = currentCols;
+    if (isExists) {
+      finalCols = currentCols.filter(col => col !== column);
+    } else {
+      finalCols.push(column);
+    }
+    dispatch({ type: TOGGLE_COLUMNS, cols: finalCols, op: operation });
+  };
+};
+
+const setOperationSelection = (type, isChecked) => {
+  return dispatch => {
+    if (isChecked) {
+      dispatch({ type: TOGGLE_QUERY_TYPE_SELECTED, data: type });
+    } else {
+      dispatch({ type: TOGGLE_QUERY_TYPE_DESELECTED, data: type });
+    }
+  };
+};
+
 const addTriggerReducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_DEFAULTS:
@@ -298,111 +202,40 @@ const addTriggerReducer = (state = defaultState, action) => {
       return { ...state, triggerName: action.value };
     case SET_WEBHOOK_URL:
       return { ...state, webhookURL: action.value };
+    case SET_RETRY_NUM:
+      return {
+        ...state,
+        retryConf: {
+          ...state.retryConf,
+          num_retries: parseInt(action.value, 10),
+        },
+      };
+    case SET_RETRY_INTERVAL:
+      return {
+        ...state,
+        retryConf: {
+          ...state.retryConf,
+          interval_sec: parseInt(action.value, 10),
+        },
+      };
     case SET_TABLENAME:
       return { ...state, tableName: action.value };
     case SET_SCHEMANAME:
       return { ...state, schemaName: action.value };
-    case REMOVE_COLUMN:
-      // Removes the index of the removed column from the array of primaryKeys.
-      const primaryKeys = state.primaryKeys.filter(
-        primaryKeyIndex => primaryKeyIndex !== action.index
-      );
-      return {
-        ...state,
-        columns: [
-          ...state.columns.slice(0, action.index),
-          ...state.columns.slice(action.index + 1),
-        ],
-        primaryKeys: primaryKeys,
-      };
-    case SET_COLNAME:
-      const i = action.index;
-      return {
-        ...state,
-        columns: [
-          ...state.columns.slice(0, i),
-          { ...state.columns[i], name: action.name, nullable: action.isNull },
-          ...state.columns.slice(i + 1),
-        ],
-      };
-    case SET_COLTYPE:
-      const ij = action.index;
-      return {
-        ...state,
-        columns: [
-          ...state.columns.slice(0, ij),
-          {
-            ...state.columns[ij],
-            type: action.coltype,
-            nullable: action.isNull,
-          },
-          ...state.columns.slice(ij + 1),
-        ],
-      };
-    case SET_COLDEFAULT:
-      const ik = action.index;
-      let defaultObj = {};
-      defaultObj = { __type: 'value', value: action.colDefault };
-      return {
-        ...state,
-        columns: [
-          ...state.columns.slice(0, ik),
-          {
-            ...state.columns[ik],
-            default: defaultObj,
-            nullable: action.isNull,
-          },
-          ...state.columns.slice(ik + 1),
-        ],
-      };
-    case REMOVE_COLDEFAULT:
-      const ind = action.index;
-      const dumyState = { ...state };
-      delete dumyState.columns[ind].default;
-      return dumyState;
-    case SET_COLNULLABLE:
-      const k = action.index;
-      return {
-        ...state,
-        columns: [
-          ...state.columns.slice(0, k),
-          { ...state.columns[k], nullable: action.isNull },
-          ...state.columns.slice(k + 1),
-        ],
-      };
-    case SET_COLUNIQUE:
-      const colInd = action.index;
-      return {
-        ...state,
-        columns: [
-          ...state.columns.slice(0, colInd),
-          { ...state.columns[colInd], unique: action.isUnique },
-          ...state.columns.slice(colInd + 1),
-        ],
-      };
-    case ADD_COL:
-      return { ...state, columns: [...state.columns, { name: '', type: '' }] };
-    case ADD_PK:
-      return { ...state, primaryKeys: [...state.primaryKeys, ''] };
-    case REMOVE_PK:
-      return {
-        ...state,
-        primaryKeys: [
-          ...state.primaryKeys.slice(0, action.index),
-          ...state.primaryKeys.slice(action.index + 1),
-        ],
-      };
-    case SET_PK:
-      return {
-        ...state,
-        primaryKeys: [
-          ...state.primaryKeys.slice(0, action.index),
-          action.pk,
-          ...state.primaryKeys.slice(action.index + 1),
-        ],
-      };
     case UPDATE_TABLE_LIST:
       return { ...state, tableListBySchema: action.data };
+    case TOGGLE_COLUMNS:
+      const operations = state.operations;
+      operations[action.op] = action.cols;
+      return { ...state, operations: { ...operations } };
+    case TOGGLE_QUERY_TYPE_SELECTED:
+      const selectedOperations = state.selectedOperations;
+      selectedOperations[action.data] = true;
+      return { ...state, selectedOperations: { ...selectedOperations } };
+    case TOGGLE_QUERY_TYPE_DESELECTED:
+      const deselectedOperations = state.selectedOperations;
+      deselectedOperations[action.data] = false;
+      return { ...state, selectedOperations: { ...deselectedOperations } };
     default:
       return state;
   }
@@ -415,18 +248,11 @@ export {
   setTableName,
   setSchemaName,
   setWebhookURL,
-  removeColumn,
-  setColName,
-  setColType,
-  setColNullable,
-  setColUnique,
-  setColDefault,
-  removeColDefault,
-  addCol,
-  addPk,
-  removePk,
-  setPk,
-  createTableSql,
+  setRetryNum,
+  setRetryInterval,
+  createTrigger,
   fetchTableListBySchema,
+  operationToggleColumn,
+  setOperationSelection,
 };
 export { resetValidation, validationError };

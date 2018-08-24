@@ -1,27 +1,23 @@
-// import Endpoints, {globalCookiePolicy} from '../../Endpoints';
 import { defaultCurFilter } from '../EventState';
 import { vMakeRequest } from './ViewActions';
 
-const LOADING = 'ViewTrigger/FilterQuery/LOADING';
+const LOADING = 'PendingEvents/FilterQuery/LOADING';
 
-const SET_DEFQUERY = 'ViewTrigger/FilterQuery/SET_DEFQUERY';
-const SET_FILTERCOL = 'ViewTrigger/FilterQuery/SET_FILTERCOL';
-const SET_FILTEROP = 'ViewTrigger/FilterQuery/SET_FILTEROP';
-const SET_FILTERVAL = 'ViewTrigger/FilterQuery/SET_FILTERVAL';
-const ADD_FILTER = 'ViewTrigger/FilterQuery/ADD_FILTER';
-const REMOVE_FILTER = 'ViewTrigger/FilterQuery/REMOVE_FILTER';
+const SET_DEFQUERY = 'PendingEvents/FilterQuery/SET_DEFQUERY';
+const SET_FILTERCOL = 'PendingEvents/FilterQuery/SET_FILTERCOL';
+const SET_FILTEROP = 'PendingEvents/FilterQuery/SET_FILTEROP';
+const SET_FILTERVAL = 'PendingEvents/FilterQuery/SET_FILTERVAL';
+const ADD_FILTER = 'PendingEvents/FilterQuery/ADD_FILTER';
+const REMOVE_FILTER = 'PendingEvents/FilterQuery/REMOVE_FILTER';
 
-const SET_ORDERCOL = 'ViewTrigger/FilterQuery/SET_ORDERCOL';
-const SET_ORDERTYPE = 'ViewTrigger/FilterQuery/SET_ORDERTYPE';
-const ADD_ORDER = 'ViewTrigger/FilterQuery/ADD_ORDER';
-const REMOVE_ORDER = 'ViewTrigger/FilterQuery/REMOVE_ORDER';
-const SET_LIMIT = 'ViewTrigger/FilterQuery/SET_LIMIT';
-const SET_OFFSET = 'ViewTrigger/FilterQuery/SET_OFFSET';
-const SET_NEXTPAGE = 'ViewTrigger/FilterQuery/SET_NEXTPAGE';
-const SET_PREVPAGE = 'ViewTrigger/FilterQuery/SET_PREVPAGE';
-// const MAKING_REQUEST = 'ViewTrigger/FilterQuery/MAKING_REQUEST';
-// const REQUEST_SUCCESS = 'ViewTrigger/FilterQuery/REQUEST_SUCCESS';
-// const REQUEST_ERROR = 'ViewTrigger/FilterQuery/REQUEST_ERROR';
+const SET_ORDERCOL = 'PendingEvents/FilterQuery/SET_ORDERCOL';
+const SET_ORDERTYPE = 'PendingEvents/FilterQuery/SET_ORDERTYPE';
+const ADD_ORDER = 'PendingEvents/FilterQuery/ADD_ORDER';
+const REMOVE_ORDER = 'PendingEvents/FilterQuery/REMOVE_ORDER';
+const SET_LIMIT = 'PendingEvents/FilterQuery/SET_LIMIT';
+const SET_OFFSET = 'PendingEvents/FilterQuery/SET_OFFSET';
+const SET_NEXTPAGE = 'PendingEvents/FilterQuery/SET_NEXTPAGE';
+const SET_PREVPAGE = 'PendingEvents/FilterQuery/SET_PREVPAGE';
 
 const setLoading = () => ({ type: LOADING, data: true });
 const unsetLoading = () => ({ type: LOADING, data: false });
@@ -68,12 +64,12 @@ const runQuery = triggerSchema => {
     if (newQuery.order_by.length === 0) {
       delete newQuery.order_by;
     }
-    dispatch({ type: 'ViewTrigger/V_SET_QUERY_OPTS', queryStuff: newQuery });
+    dispatch({ type: 'PendingEvents/V_SET_QUERY_OPTS', queryStuff: newQuery });
     dispatch(vMakeRequest());
   };
 };
 
-const filterReducer = (state = defaultCurFilter, action) => {
+const pendingFilterReducer = (state = defaultCurFilter, action) => {
   const i = action.index;
   const newFilter = {};
   switch (action.type) {
@@ -228,7 +224,7 @@ const filterReducer = (state = defaultCurFilter, action) => {
   }
 };
 
-export default filterReducer;
+export default pendingFilterReducer;
 export {
   setFilterCol,
   setFilterOp,

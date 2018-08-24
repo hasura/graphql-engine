@@ -179,3 +179,45 @@ a.expanded {
   width: 300px;
   display: inline-block;
 }
+
+.settingsSection {
+  .settingsRow {
+    min-width: 200px;
+  }
+}
+
+.advancedOperations {
+  hr {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  margin-bottom: 10px;
+}
+
+.retryLabel {
+  display: block;
+  margin-bottom: 10px !important;
+}
+
+.retrySection {
+  width: 300px;
+  margin-right: 20px;
+}
+
+.invocationsSection {
+  margin-top: 20px;
+  li {
+    display: block;
+    padding: 5px 10px;
+    margin-right: -10px;
+    margin-left: -10px;
+    line-height: 23px;
+    border-bottom: 1px solid #e1e4e8;
+  }
+  .invocationSuccess {
+    color: #28a745
+  }
+  .invocationFailure {
+    color: red;
+  }
+}

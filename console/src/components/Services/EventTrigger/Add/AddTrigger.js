@@ -7,8 +7,12 @@ import {
   setTableName,
   setSchemaName,
   setWebhookURL,
+  setRetryNum,
+  setRetryInterval,
+  operationToggleColumn,
+  setOperationSelection,
 } from './AddActions';
-import { setDefaults, createTableSql } from './AddActions';
+import { setDefaults, createTrigger } from './AddActions';
 import { resetValidation, fetchTableListBySchema } from './AddActions';
 
 class AddTrigger extends Component {
@@ -24,13 +28,15 @@ class AddTrigger extends Component {
   submitValidation() {
     this.props.dispatch(resetValidation());
     // table name validation
+    /*
     if (this.tableNameCheck()) {
       // column validation.
       if (this.columnValidation()) {
         // The primary key validation ensure.
-        this.props.dispatch(createTableSql());
       }
     }
+    */
+    this.props.dispatch(createTrigger());
   }
   render() {
     const {
@@ -38,6 +44,7 @@ class AddTrigger extends Component {
       tableListBySchema,
       schemaName,
       schemaList,
+      operations,
       dispatch,
       ongoingRequest,
       lastError,
@@ -59,30 +66,42 @@ class AddTrigger extends Component {
       dispatch(setSchemaName(e.target.value));
       dispatch(fetchTableListBySchema(e.target.value));
     };
+
     const updateTableSelection = e => {
       dispatch(setTableName(e.target.value));
     };
 
-    const getColumnList = operation => {
+    const handleOperationSelection = e => {
+      dispatch(setOperationSelection(e.target.value, e.target.checked));
+    };
+
+    const getColumnList = type => {
       const dispatchToggleColumn = e => {
         const column = e.target.value;
-        // dispatch(permToggleColumn(column));
+        dispatch(operationToggleColumn(column, type));
       };
       const tableSchema = tableListBySchema.find(
         t => t.table_name === tableName
       );
-      console.log(tableSchema);
 
       if (tableSchema) {
         return tableSchema.columns.map((colObj, i) => {
           const column = colObj.column_name;
-          /*
-          const checked = permsState[query]
-            ? permsState[query].columns.indexOf(column) !== -1
+          let checked = operations[type]
+            ? operations[type].includes(column)
             : false;
-          */
-          const checked = false;
+          checked = type === 'delete' ? true : checked;
 
+          const isDisabled = type === 'delete' ? true : false;
+          const inputHtml = (
+            <input
+              type="checkbox"
+              checked={checked}
+              value={column}
+              onChange={dispatchToggleColumn}
+              disabled={isDisabled}
+            />
+          );
           return (
             <div
               key={i}
@@ -90,12 +109,7 @@ class AddTrigger extends Component {
             >
               <div className="checkbox">
                 <label>
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    value={column}
-                    onChange={dispatchToggleColumn}
-                  />
+                  {inputHtml}
                   {column}
                 </label>
               </div>
@@ -174,26 +188,91 @@ class AddTrigger extends Component {
             </select>
             <hr />
             {tableName ? (
-              <div>
+              <div className={styles.advancedOperations}>
                 <h4 className={styles.subheading_text}>
                   Advanced - Operation/Columns &nbsp; &nbsp;
                 </h4>
                 <div>
                   <div>
+                    <input
+                      onChange={handleOperationSelection}
+                      className={
+                        styles.display_inline + ' ' + styles.add_mar_right
+                      }
+                      type="checkbox"
+                      value="insert"
+                    />
                     <label>Insert</label>
                   </div>
                   {getColumnList('insert')}
                 </div>
+                <hr />
                 <div>
                   <div>
+                    <input
+                      onChange={handleOperationSelection}
+                      className={
+                        styles.display_inline + ' ' + styles.add_mar_right
+                      }
+                      type="checkbox"
+                      value="update"
+                    />
                     <label>Update</label>
                   </div>
                   {getColumnList('update')}
                 </div>
-                <label>Delete</label>
                 <hr />
+                <div>
+                  <div>
+                    <input
+                      onChange={handleOperationSelection}
+                      className={
+                        styles.display_inline + ' ' + styles.add_mar_right
+                      }
+                      type="checkbox"
+                      value="delete"
+                    />
+                    <label>Delete</label>
+                  </div>
+                  {getColumnList('delete')}
+                </div>
               </div>
             ) : null}
+            <div className={styles.add_mar_bottom}>
+              <h4 className={styles.subheading_text}>Retry Logic</h4>
+              <div
+                className={styles.display_inline + ' ' + styles.retrySection}
+              >
+                <label
+                  className={styles.add_mar_right + ' ' + styles.retryLabel}
+                >
+                  Number of retries
+                </label>
+                <input
+                  onChange={e => {
+                    dispatch(setRetryNum(e.target.value));
+                  }}
+                  className={styles.display_inline + ' form-control'}
+                  type="text"
+                />
+              </div>
+              <div
+                className={styles.display_inline + ' ' + styles.retrySection}
+              >
+                <label
+                  className={styles.add_mar_right + ' ' + styles.retryLabel}
+                >
+                  Interval Seconds
+                </label>
+                <input
+                  onChange={e => {
+                    dispatch(setRetryInterval(e.target.value));
+                  }}
+                  className={styles.display_inline + ' form-control'}
+                  type="text"
+                />
+              </div>
+            </div>
             <h4 className={styles.subheading_text}>
               Webhook URL &nbsp; &nbsp;
             </h4>
@@ -228,6 +307,7 @@ AddTrigger.propTypes = {
   schemaName: PropTypes.string,
   schemaList: PropTypes.array,
   tableListBySchema: PropTypes.array,
+  operations: PropTypes.object,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   internalError: PropTypes.string,

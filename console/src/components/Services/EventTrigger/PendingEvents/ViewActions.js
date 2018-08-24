@@ -1,7 +1,7 @@
 import { defaultViewState } from '../EventState';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from 'utils/requestAction';
-import filterReducer from './FilterActions';
+import pendingFilterReducer from './FilterActions';
 import { findTableFromRel } from '../utils';
 import {
   showSuccessNotification,
@@ -10,22 +10,16 @@ import {
 import dataHeaders from '../Common/Headers';
 
 /* ****************** View actions *************/
-const V_SET_DEFAULTS = 'ViewTrigger/V_SET_DEFAULTS';
-const V_REQUEST_SUCCESS = 'ViewTrigger/V_REQUEST_SUCCESS';
-const V_REQUEST_ERROR = 'ViewTrigger/V_REQUEST_ERROR';
-const V_EXPAND_REL = 'ViewTrigger/V_EXPAND_REL';
-const V_CLOSE_REL = 'ViewTrigger/V_CLOSE_REL';
-const V_SET_ACTIVE = 'ViewTrigger/V_SET_ACTIVE';
-const V_SET_QUERY_OPTS = 'ViewTrigger/V_SET_QUERY_OPTS';
-const V_REQUEST_PROGRESS = 'ViewTrigger/V_REQUEST_PROGRESS';
-const V_EXPAND_ROW = 'ViewTrigger/V_EXPAND_ROW';
-const V_COLLAPSE_ROW = 'ViewTrigger/V_COLLAPSE_ROW';
-// const V_ADD_WHERE;
-// const V_REMOVE_WHERE;
-// const V_SET_LIMIT;
-// const V_SET_OFFSET;
-// const V_ADD_SORT;
-// const V_REMOVE_SORT;
+const V_SET_DEFAULTS = 'PendingEvents/V_SET_DEFAULTS';
+const V_REQUEST_SUCCESS = 'PendingEvents/V_REQUEST_SUCCESS';
+const V_REQUEST_ERROR = 'PendingEvents/V_REQUEST_ERROR';
+const V_EXPAND_REL = 'PendingEvents/V_EXPAND_REL';
+const V_CLOSE_REL = 'PendingEvents/V_CLOSE_REL';
+const V_SET_ACTIVE = 'PendingEvents/V_SET_ACTIVE';
+const V_SET_QUERY_OPTS = 'PendingEvents/V_SET_QUERY_OPTS';
+const V_REQUEST_PROGRESS = 'PendingEvents/V_REQUEST_PROGRESS';
+const V_EXPAND_ROW = 'PendingEvents/V_EXPAND_ROW';
+const V_COLLAPSE_ROW = 'PendingEvents/V_COLLAPSE_ROW';
 
 /* ****************** action creators *************/
 
@@ -51,24 +45,26 @@ const vMakeRequest = () => {
     const countQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
     countQuery.columns = ['id'];
 
+    // delivered = false and error = false
     // where clause for relationship
     const currentWhereClause = state.triggers.view.query.where;
     if (currentWhereClause && currentWhereClause.$and) {
-      // make filter for event_logs
+      // make filter for events
       const finalAndClause = currentQuery.where.$and;
+      finalAndClause.push({ delivered: false });
+      finalAndClause.push({ error: false });
       currentQuery.columns[1].where = { $and: finalAndClause };
       currentQuery.where = { name: state.triggers.currentTrigger };
       countQuery.where.$and.push({
         trigger_name: state.triggers.currentTrigger,
       });
     } else {
-      // reset where for event_logs
-      console.log(currentQuery);
+      // reset where for events
       if (currentQuery.columns[1]) {
-        currentQuery.columns[1].where = {};
+        currentQuery.columns[1].where = { delivered: false, error: false };
       }
       currentQuery.where = { name: state.triggers.currentTrigger };
-      countQuery.where = { trigger_name: state.triggers.currentTrigger };
+      countQuery.where = { trigger_name: state.triggers.currentTrigger, delivered: false, error: false };
     }
 
     // order_by for relationship
@@ -78,14 +74,25 @@ const vMakeRequest = () => {
       // reset order_by
       delete currentQuery.order_by;
     } else {
-      // reset order by for event_logs
+      // reset order by for events
       if (currentQuery.columns[1]) {
         delete currentQuery.columns[1].order_by;
+        currentQuery.columns[1].order_by = ['-id'];
       }
       delete currentQuery.order_by;
     }
 
-    console.log(currentQuery);
+    // limit and offset for relationship
+    const currentLimit = state.triggers.view.query.limit;
+    const currentOffset = state.triggers.view.query.offset;
+    currentQuery.columns[1].limit = currentLimit;
+    currentQuery.columns[1].offset = currentOffset;
+
+    // reset limit and offset for parent
+    delete currentQuery.limit;
+    delete currentQuery.offset;
+    delete countQuery.limit;
+    delete countQuery.offset;
 
     const requestBody = {
       type: 'bulk',
@@ -391,32 +398,25 @@ const addQueryOptsActivePath = (query, queryStuff, activePath) => {
   return newQuery;
 };
 /* ****************** reducer ******************/
-const viewReducer = (triggerName, triggerList, viewState, action) => {
-  if (action.type.indexOf('ViewTrigger/FilterQuery/') === 0) {
+const pendingEventsReducer = (triggerName, triggerList, viewState, action) => {
+  if (action.type.indexOf('PendingEvents/FilterQuery/') === 0) {
     return {
       ...viewState,
-      curFilter: filterReducer(viewState.curFilter, action),
+      curFilter: pendingFilterReducer(viewState.curFilter, action),
     };
   }
   const tableSchema = triggerList.find(x => x.name === triggerName);
   switch (action.type) {
     case V_SET_DEFAULTS:
-      // check if table exists and then process.
-      /*
-      const currentTrigger = triggerList.find(t => t.name === triggerName);
-      let currentColumns = [];
-      if (currentTrigger) {
-        currentColumns = currentTrigger.map(c => c.column_name);
-      }
-      */
       return {
         ...defaultViewState,
         query: {
           columns: [
             '*',
             {
-              name: 'event_logs',
-              columns: ['*', { name: 'event_invocation_logs', columns: ['*'] }],
+              name: 'events',
+              columns: ['*', { name: 'logs', columns: ['*'] }],
+              where: { delivered: false, error: false }
             },
           ],
           limit: 10,
@@ -495,7 +495,7 @@ const viewReducer = (triggerName, triggerList, viewState, action) => {
   }
 };
 
-export default viewReducer;
+export default pendingEventsReducer;
 export {
   vSetDefaults,
   vMakeRequest,

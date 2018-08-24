@@ -24,7 +24,7 @@ import {
 import { setDefaultQuery, runQuery } from './FilterActions';
 
 const renderCols = (colName, triggerSchema, onChange, usage, key) => {
-  const columns = ['id', 'payload', 'webhook', 'delivered', 'created_at'];
+  const columns = ['id', 'delivered', 'created_at'];
   return (
     <select
       className="form-control"

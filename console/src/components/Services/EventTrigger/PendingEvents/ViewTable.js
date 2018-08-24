@@ -169,7 +169,7 @@ class ViewTable extends Component {
         count={count}
         dispatch={dispatch}
         triggerName={triggerName}
-        tabName="processed"
+        tabName="pending"
         migrationMode={migrationMode}
       />
     );
@@ -203,12 +203,12 @@ ViewTable.propTypes = {
 const mapStateToProps = (state, ownProps) => {
   return {
     triggerName: ownProps.params.trigger,
-    triggerList: state.triggers.triggerList,
+    triggerList: state.triggers.pendingEvents,
     migrationMode: state.main.migrationMode,
     ...state.triggers.view,
   };
 };
 
-const viewTableConnector = connect => connect(mapStateToProps)(ViewTable);
+const pendingEventsConnector = connect => connect(mapStateToProps)(ViewTable);
 
-export default viewTableConnector;
+export default pendingEventsConnector;

@@ -10,8 +10,8 @@ const defaultViewState = {
     columns: [
       '*',
       {
-        name: 'event_logs',
-        columns: ['*', { name: 'event_invocation_logs', columns: ['*'] }],
+        name: 'events',
+        columns: ['*', { name: 'logs', columns: ['*'] }],
       },
     ],
     limit: 10,
@@ -32,6 +32,8 @@ const defaultState = {
   view: { ...defaultViewState },
   triggerList: [],
   listingTrigger: [],
+  processedEvents: [],
+  pendingEvents: [],
   schemaList: ['public'],
   currentSchema: 'public',
   accessKeyError: false,

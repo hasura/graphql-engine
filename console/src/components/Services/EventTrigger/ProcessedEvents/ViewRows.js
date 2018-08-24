@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactTable from 'react-table';
+import AceEditor from 'react-ace';
+import 'brace/mode/json';
 import 'react-table/react-table.css';
 import { deleteItem, vExpandRow, vCollapseRow } from './ViewActions'; // eslint-disable-line no-unused-vars
 import FilterQuery from './FilterQuery';
@@ -41,21 +43,18 @@ const ViewRows = ({
   // Get the headings
   const tableHeadings = [];
   const gridHeadings = [];
-  const eventLogColumns = [
-    'id',
-    'payload',
-    'webhook',
-    'delivered',
-    'created_at',
-  ];
+  const eventLogColumns = ['id', 'delivered', 'created_at'];
   const sortedColumns = eventLogColumns.sort(ordinalColSort);
 
+  // actions column
+  /*
   if (!isView) {
     gridHeadings.push({
       Header: '',
       accessor: 'actions',
     });
   }
+  */
 
   sortedColumns.map((column, i) => {
     tableHeadings.push(<th key={i}>{column}</th>);
@@ -65,6 +64,7 @@ const ViewRows = ({
     });
   });
 
+  /*
   tableHeadings.push(
     <th
       key="relIndicator"
@@ -74,14 +74,17 @@ const ViewRows = ({
       &lt;&gt;{' '}
     </th>
   );
+  */
 
   const hasPrimaryKeys = true;
+  /*
   let editButton;
+  */
   let deleteButton;
 
   const newCurRows = [];
-  if (curRows && curRows[0] && curRows[0].event_logs) {
-    curRows[0].event_logs.forEach((row, rowIndex) => {
+  if (curRows && curRows[0] && curRows[0].events) {
+    curRows[0].events.forEach((row, rowIndex) => {
       const newRow = {};
       const pkClause = {};
       if (!isView && hasPrimaryKeys) {
@@ -104,14 +107,16 @@ const ViewRows = ({
           </button>
         );
       }
+      /*
       const buttonsDiv = (
         <div className={styles.tableCellCenterAligned}>
           {editButton}
           {deleteButton}
         </div>
       );
+      */
       // Insert Edit, Delete, Clone in a cell
-      newRow.actions = buttonsDiv;
+      // newRow.actions = buttonsDiv;
       // Insert cells corresponding to all rows
       sortedColumns.forEach(col => {
         const getCellContent = () => {
@@ -254,6 +259,14 @@ const ViewRows = ({
       return <div> No rows found. </div>;
     }
     let shouldSortColumn = true;
+    const invocationColumns = ['status', 'id', 'created_at'];
+    const invocationGridHeadings = [];
+    invocationColumns.map(column => {
+      invocationGridHeadings.push({
+        Header: column,
+        accessor: column,
+      });
+    });
     return (
       <ReactTable
         className="-highlight"
@@ -287,6 +300,109 @@ const ViewRows = ({
         onPageChange={changePage}
         onPageSizeChange={changePageSize}
         page={Math.floor(curFilter.offset / curFilter.limit)}
+        SubComponent={row => {
+          const currentIndex = row.index;
+          const currentRow = curRows[0].events[currentIndex];
+          const invocationRowsData = [];
+          currentRow.logs.map((r, rowIndex) => {
+            const newRow = {};
+            const status =
+              r.status === 200 ? (
+                <i className={styles.invocationSuccess + ' fa fa-check'} />
+              ) : (
+                <i className={styles.invocationFailure + ' fa fa-times'} />
+              );
+
+            // Insert cells corresponding to all rows
+            invocationColumns.forEach(col => {
+              const getCellContent = () => {
+                let conditionalClassname = styles.tableCellCenterAligned;
+                const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
+                if (expandedRow === cellIndex) {
+                  conditionalClassname = styles.tableCellCenterAlignedExpanded;
+                }
+                if (r[col] === null) {
+                  return (
+                    <div className={conditionalClassname}>
+                      <i>NULL</i>
+                    </div>
+                  );
+                }
+                if (col === 'status') {
+                  return status;
+                }
+                const content =
+                  r[col] === undefined ? 'NULL' : r[col].toString();
+                return <div className={conditionalClassname}>{content}</div>;
+              };
+              newRow[col] = getCellContent();
+            });
+            invocationRowsData.push(newRow);
+          });
+          return (
+            <div style={{ padding: '20px' }}>
+              <em>Recent Invocations</em>
+              <div
+                className={styles.invocationsSection + ' invocationsSection'}
+              >
+                <ReactTable
+                  data={invocationRowsData}
+                  columns={invocationGridHeadings}
+                  defaultPageSize={currentRow.logs.length}
+                  showPagination={false}
+                  SubComponent={logRow => {
+                    const finalIndex = logRow.index;
+                    const currentPayload = JSON.stringify(
+                      currentRow.payload,
+                      null,
+                      4
+                    );
+                    const finalRow = currentRow.logs[finalIndex];
+                    const finalResponse = JSON.stringify(
+                      finalRow.response,
+                      null,
+                      4
+                    );
+                    return (
+                      <div style={{ padding: '20px' }}>
+                        <div>
+                          <div className={styles.subheading_text}>Request</div>
+                          <AceEditor
+                            mode="json"
+                            theme="github"
+                            name="payload"
+                            value={currentPayload}
+                            minLines={4}
+                            maxLines={100}
+                            width="100%"
+                            showPrintMargin={false}
+                            showGutter={false}
+                          />
+                        </div>
+                        <div className={styles.add_mar_top}>
+                          <div className={styles.subheading_text}>Response</div>
+                          <AceEditor
+                            mode="json"
+                            theme="github"
+                            name="response"
+                            value={finalResponse}
+                            minLines={4}
+                            maxLines={100}
+                            width="100%"
+                            showPrintMargin={false}
+                            showGutter={false}
+                          />
+                        </div>
+                      </div>
+                    );
+                  }}
+                />
+              </div>
+              <br />
+              <br />
+            </div>
+          );
+        }}
       />
     );
   };

@@ -34,7 +34,6 @@ const PageContainer = ({
     triggerLinks = Object.keys(triggers)
       .sort()
       .map((trigger, i) => {
-        console.log(trigger);
         let activeTableClass = '';
         if (
           trigger === currentTrigger &&
