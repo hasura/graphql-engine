@@ -1,30 +1,27 @@
 import React from 'react';
-
+import '../App.css';
 const LoginComponent = (props) => {
   return (
-    <div>    
-      <h1 className="loginHeading"> Welcome to the sample chat app made with Hasura GraphQL Engine </h1>
+    <div className="loginWrapper">
+      <h2 className="loginHeading"> Welcome to sample chat app made with Hasura GraphQL Engine </h2>
       <div className="login">
-        <div>
-          <form
-            submit={props.login}
+        <form>
+          <input
+            type="text"
+            id="username"
+            className="loginTextbox"
+            placeholder="Username"
+            value={props.username}
+            onChange={(e) => props.setUsername(e.target.value)}
+          />
+          <button
+            className="loginButton"
+            type="submit"
+            onClick={props.login}
           >
-            <input
-              type="text"
-              id="username"
-              className="loginTextbox"
-              placeholder="Username"
-              value={props.username}
-              onChange={(e) => props.setUsername(e.target.value)}
-            />
-            <button
-              className="loginButton"
-              onClick={props.login}
-            >
-              Enter
-            </button> 
-          </form>
-        </div>
+            Enter
+          </button>
+        </form>
       </div>
     </div>
   );
