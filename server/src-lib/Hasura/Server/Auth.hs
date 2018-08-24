@@ -16,30 +16,26 @@ module Hasura.Server.Auth
   , processJwt
   ) where
 
-import           Control.Exception        (try)
+import           Control.Exception      (try)
 import           Control.Lens
 import           Data.Aeson
-import           Data.CaseInsensitive     (CI (..), original)
+import           Data.CaseInsensitive   (CI (..), original)
 
-import qualified Data.ByteString          as B
-import qualified Data.ByteString.Lazy     as BL
-import qualified Data.HashMap.Strict      as M
-import qualified Data.Text                as T
-import qualified Data.Text.Encoding       as TE
-import qualified Data.Text.Encoding.Error as TE
-import qualified Network.HTTP.Client      as H
-import qualified Network.HTTP.Types       as N
-import qualified Network.Wreq             as Wreq
+import qualified Data.ByteString.Lazy   as BL
+import qualified Data.HashMap.Strict    as M
+import qualified Data.Text              as T
+import qualified Network.HTTP.Client    as H
+import qualified Network.HTTP.Types     as N
+import qualified Network.Wreq           as Wreq
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT
 import           Hasura.Server.Logging
+import           Hasura.Server.Utils
 
-import qualified Hasura.Logging           as L
+import qualified Hasura.Logging         as L
 
-bsToTxt :: B.ByteString -> T.Text
-bsToTxt = TE.decodeUtf8With TE.lenientDecode
 
 type AccessKey = T.Text
 type Webhook = T.Text
@@ -53,8 +49,6 @@ data AuthMode
 
 type WebHookLogger = WebHookLog -> IO ()
 
-userRoleHeader :: T.Text
-userRoleHeader = "x-hasura-role"
 
 mkUserInfoFromResp
   :: (MonadIO m, MonadError QErr m)
@@ -128,8 +122,6 @@ userInfoFromWebhook logger manager urlT reqHeaders = do
                   , "Cache-Control", "Connection", "DNT"
                   ]
 
-accessKeyHeader :: T.Text
-accessKeyHeader = "x-hasura-access-key"
 
 getUserInfo
   :: (MonadIO m, MonadError QErr m)
@@ -145,13 +137,13 @@ getUserInfo logger manager rawHeaders = \case
   AMAccessKey accKey ->
     case getHeader accessKeyHeader of
       Just givenAccKey -> userInfoWhenAccessKey accKey givenAccKey
-      Nothing -> throw401 "x-hasura-access-key required, but not found"
+      Nothing -> throw401 $ accessKeyHeader <> " required, but not found"
 
   AMAccessKeyAndHook accKey hook ->
     whenAccessKeyAbsent accKey (userInfoFromWebhook logger manager hook rawHeaders)
 
   AMAccessKeyAndJWT accKey jwtSecret ->
-    whenAccessKeyAbsent accKey (processJwt (jcKey jwtSecret) rawHeaders)
+    whenAccessKeyAbsent accKey (processJwt jwtSecret rawHeaders)
 
   where
     -- when access key is absent, run the action to retrieve UserInfo, otherwise
@@ -168,10 +160,10 @@ getUserInfo logger manager rawHeaders = \case
     getHeader h = M.lookup h headers
 
     userInfoFromHeaders =
-      case M.lookup "x-hasura-role" headers of
+      case M.lookup userRoleHeader headers of
         Just v  -> UserInfo (RoleName v) headers
         Nothing -> UserInfo adminRole M.empty
 
     userInfoWhenAccessKey key reqKey = do
-      when (reqKey /= key) $ throw401 "invalid x-hasura-access-key"
+      when (reqKey /= key) $ throw401 $ "invalid " <> accessKeyHeader
       return userInfoFromHeaders
