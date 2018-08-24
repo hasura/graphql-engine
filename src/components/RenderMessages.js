@@ -118,10 +118,14 @@ export default class RenderMessages extends React.Component {
     if (!this.state.loading) {
       const resp = await this.state.refetch(this.getLastReceivedVars());
       if (resp.data) {
-        if (this.state.bottom) {
+        if (!this.isViewScrollable()) {
           this.addOldMessages(resp.data.message);
         } else {
-          this.addNewMessages(resp.data.message);
+          if (this.state.bottom) {
+            this.addOldMessages(resp.data.message);
+          } else {
+            this.addNewMessages(resp.data.message);
+          }
         }
       }
     }
@@ -159,7 +163,25 @@ export default class RenderMessages extends React.Component {
     }
   }
 
+  // check if the view is scrollable
+  isViewScrollable = () => {
+    const isInViewport = (elem) => {
+      const bounding = elem.getBoundingClientRect();
+      return (
+        bounding.top >= 0 &&
+        bounding.left >= 0 &&
+        bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        bounding.right <= (window.innerWidth || document.documentElement.clientWidth)
+      );
+    };
+    if (document.getElementById('lastMessage')) {
+      return !isInViewport(document.getElementById('lastMessage'));
+    }
+    return false;
+  }
+
   render() {
+    console.log(this.isViewScrollable());
     const { messages, newMessages, bottom } = this.state;
     // set refetch in parent component for refetching data whenever an event occurs
     if (!this.props.refetch && this.state.refetch) {
@@ -202,7 +224,7 @@ export default class RenderMessages extends React.Component {
         </Query>
         { /* show "unread messages" banner if not at bottom */}
         {
-          (!bottom && newMessages.length > 0) ?
+          (!bottom && newMessages.length > 0 && this.isViewScrollable()) ?
           <Banner
              scrollToNewMessage={this.scrollToNewMessage}
              numOfNewMessages={newMessages.length}
