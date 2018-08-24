@@ -11,6 +11,7 @@ const LoginComponent = (props) => {
             id="username"
             className="loginTextbox"
             placeholder="Username"
+            autoFocus={true}
             value={props.username}
             onChange={(e) => props.setUsername(e.target.value)}
           />

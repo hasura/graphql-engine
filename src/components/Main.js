@@ -31,6 +31,10 @@ export default class Main extends React.Component {
       });
     } else {
       alert("Invalid username. Spaces and special characters not allowed. Please try again");
+      this.setState({
+        text: "",
+        isLoggedIn: false
+      });
     }
   }
 
