@@ -140,7 +140,7 @@ library
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.DML
-                     , Hasura.RQL.Types.SubscribeTable
+                     , Hasura.RQL.Types.Subscribe
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
@@ -151,7 +151,7 @@ library
                      , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Utils
-                     , Hasura.RQL.DDL.SubscribeTable
+                     , Hasura.RQL.DDL.Subscribe
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Explain
                      , Hasura.RQL.DML.Internal

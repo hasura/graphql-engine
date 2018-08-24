@@ -2,13 +2,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Hasura.RQL.Types.SubscribeTable
+module Hasura.RQL.Types.Subscribe
   ( SubscribeTableQuery(..)
   , SubscribeOpSpec(..)
   , SubscribeColumns(..)
   , TriggerDefinition(..)
   , TriggerName
   , RetryConf(..)
+  , UnsubscribeTableQuery(..)
   ) where
 
 import           Data.Aeson
@@ -87,3 +88,10 @@ data TriggerDefinition
   }
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerDefinition)
+
+data UnsubscribeTableQuery
+  = UnsubscribeTableQuery
+  { utqName :: !T.Text
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''UnsubscribeTableQuery)

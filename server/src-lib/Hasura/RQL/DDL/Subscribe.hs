@@ -5,7 +5,7 @@
 {-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE TypeFamilies        #-}
 
-module Hasura.RQL.DDL.SubscribeTable where
+module Hasura.RQL.DDL.Subscribe where
 
 import           Data.Aeson
 import qualified Data.FileEmbed      as FE
@@ -107,6 +107,11 @@ subscribeTable (SubscribeTableQuery name (QualifiedTable sn tn) insert update de
     tx (Just sql) = Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder sql)
     tx Nothing = throw500 "no trigger sql generated"
 
+unsubscribeTable :: UnsubscribeTableQuery
+               -> Q.TxE QErr RespBody
+unsubscribeTable (UnsubscribeTableQuery name) = do
+  delEventTriggerFromCatalog name
+  return successMsg
 
 delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
 delEventTriggerFromCatalog trn = do
@@ -130,4 +135,16 @@ instance HDBQuery SubscribeTableQuery where
   type Phase1Res SubscribeTableQuery = ()
   phaseOne = subTableP1
   phaseTwo q _ = subTableP2 q
+  schemaCachePolicy = SCPNoChange
+
+unsubTableP1 :: (P1C m) => UnsubscribeTableQuery -> m ()
+unsubTableP1 _ = return ()
+
+unsubTableP2 :: (P2C m) => UnsubscribeTableQuery -> m RespBody
+unsubTableP2 q = liftTx $ unsubscribeTable q
+
+instance HDBQuery UnsubscribeTableQuery where
+  type Phase1Res UnsubscribeTableQuery = ()
+  phaseOne = unsubTableP1
+  phaseTwo q _ = unsubTableP2 q
   schemaCachePolicy = SCPNoChange

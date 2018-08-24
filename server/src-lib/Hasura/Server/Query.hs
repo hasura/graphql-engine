@@ -8,14 +8,14 @@ module Hasura.Server.Query where
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Language.Haskell.TH.Syntax   (Lift)
 
-import qualified Data.ByteString.Builder       as BB
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
-import qualified Data.Vector                   as V
+import qualified Data.ByteString.Builder      as BB
+import qualified Data.ByteString.Lazy         as BL
+import qualified Data.HashMap.Strict          as Map
+import qualified Data.Sequence                as Seq
+import qualified Data.Text                    as T
+import qualified Data.Vector                  as V
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata
@@ -23,15 +23,15 @@ import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DDL.SubscribeTable()
+import           Hasura.RQL.DDL.Subscribe
 import           Hasura.RQL.DML.Explain
 import           Hasura.RQL.DML.QueryTemplate
-import           Hasura.RQL.DML.Returning      (encodeJSONVector)
+import           Hasura.RQL.DML.Returning     (encodeJSONVector)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query             as Q
+import qualified Database.PG.Query            as Q
 
 -- data QueryWithTxId
 --   = QueryWithTxId
@@ -76,6 +76,7 @@ data RQLQuery
   | RQBulk ![RQLQuery]
 
   | RQSubscribeTable !SubscribeTableQuery
+  | RQUnsubscribeTable !UnsubscribeTableQuery
 
   | RQCreateQueryTemplate !CreateQueryTemplate
   | RQDropQueryTemplate !DropQueryTemplate
@@ -172,6 +173,7 @@ queryNeedsReload qi = case qi of
   RQCount q                    -> queryModifiesSchema q
 
   RQSubscribeTable q           -> queryModifiesSchema q
+  RQUnsubscribeTable q         -> queryModifiesSchema q
 
   RQCreateQueryTemplate q      -> queryModifiesSchema q
   RQDropQueryTemplate q        -> queryModifiesSchema q
@@ -220,6 +222,7 @@ buildTxAny userInfo sc rq = case rq of
   RQCount q  -> buildTx userInfo sc q
 
   RQSubscribeTable q -> buildTx userInfo sc q
+  RQUnsubscribeTable q -> buildTx userInfo sc q
 
   RQCreateQueryTemplate q     -> buildTx userInfo sc q
   RQDropQueryTemplate q       -> buildTx userInfo sc q

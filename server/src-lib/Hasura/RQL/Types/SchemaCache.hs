@@ -82,26 +82,26 @@ module Hasura.RQL.Types.SchemaCache
        , isDependentOn
        ) where
 
-import qualified Database.PG.Query               as Q
+import qualified Database.PG.Query           as Q
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
-import           Hasura.RQL.Types.SubscribeTable
-import qualified Hasura.SQL.DML                  as S
+import           Hasura.RQL.Types.Subscribe
+import qualified Hasura.SQL.DML              as S
 import           Hasura.SQL.Types
 
 import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           GHC.Generics                    (Generic)
+import           GHC.Generics                (Generic)
 
-import qualified Data.HashMap.Strict             as M
-import qualified Data.HashSet                    as HS
-import qualified Data.Text                       as T
-import qualified PostgreSQL.Binary.Decoding      as PD
+import qualified Data.HashMap.Strict         as M
+import qualified Data.HashSet                as HS
+import qualified Data.Text                   as T
+import qualified PostgreSQL.Binary.Decoding  as PD
 
 data TableObjId
   = TOCol !PGCol
@@ -581,7 +581,7 @@ addEventTriggerToCache
   -> TriggerName
   -> TriggerDefinition
   -> m ()
-addEventTriggerToCache qt trn tdef = do
+addEventTriggerToCache qt trn tdef =
   modTableInCache modEventTriggerInfo qt
   where
     modEventTriggerInfo ti = do
@@ -590,6 +590,7 @@ addEventTriggerToCache qt trn tdef = do
                 (getOpInfo $ tdUpdate tdef)
                 (getOpInfo $ tdDelete tdef)
           etim = tiEventTriggerInfoMap ti
+      -- fail $ show (toJSON eti)
       return $ ti { tiEventTriggerInfoMap = M.insert trn eti etim}
       where
         getOpInfo :: Maybe SubscribeOpSpec -> Maybe OpTriggerInfo
@@ -597,8 +598,8 @@ addEventTriggerToCache qt trn tdef = do
         fromSubscrOpSpec :: SubscribeOpSpec -> OpTriggerInfo
         fromSubscrOpSpec os =
           let cols = getColsFromSub $ sosColumns os
-              schemaDeps = [SchemaDependency (SOTable qt) "event trigger is dependent on table"]
-                ++ map (\col -> SchemaDependency (SOTableObj qt (TOCol col)) "event trigger is dependent on column") (toList cols)
+              schemaDeps = SchemaDependency (SOTable qt) "event trigger is dependent on table"
+                : map (\col -> SchemaDependency (SOTableObj qt (TOCol col)) "event trigger is dependent on column") (toList cols)
             in OpTriggerInfo qt trn cols schemaDeps
             where
               getColsFromSub sc = case sc of

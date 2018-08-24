@@ -17,7 +17,7 @@ import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema.Diff
-import           Hasura.RQL.DDL.SubscribeTable
+import           Hasura.RQL.DDL.Subscribe
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -340,9 +340,9 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
     addQTemplateToCache qti
 
   eventTriggers <- lift $ Q.catchE defaultTxErrorHandler fetchEventTriggers
-  forM_ eventTriggers $ \(sn, tn, etn, Q.AltJ tDefVal) -> do
+  forM_ eventTriggers $ \(sn, tn, trn, Q.AltJ tDefVal) -> do
     tDef <- decodeValue tDefVal
-    addEventTriggerToCache (QualifiedTable sn tn) etn tDef
+    addEventTriggerToCache (QualifiedTable sn tn) trn tDef
 
   where
     permHelper sn tn rn pDef pa = do

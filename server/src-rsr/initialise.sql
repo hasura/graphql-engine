@@ -196,7 +196,9 @@ CREATE TABLE hdb_catalog.event_triggers_retry_conf
 (
   name TEXT PRIMARY KEY,
   num_retries INTEGER DEFAULT 0,
-  interval_seconds INTEGER DEFAULT 10
+  interval_seconds INTEGER DEFAULT 10,
+
+  FOREIGN KEY (name) REFERENCES hdb_catalog.event_triggers (name) ON DELETE CASCADE
 );
 
 CREATE TABLE hdb_catalog.event_log
@@ -209,9 +211,7 @@ CREATE TABLE hdb_catalog.event_log
   error BOOLEAN DEFAULT FALSE,
   tries INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
-  locked BOOLEAN DEFAULT FALSE,
-
-  FOREIGN KEY (trigger_name) REFERENCES hdb_catalog.event_triggers (name)
+  locked BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE hdb_catalog.event_invocation_logs
