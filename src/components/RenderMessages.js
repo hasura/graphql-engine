@@ -40,18 +40,22 @@ export default class RenderMessages extends React.Component {
   }
 
   async componentWillMount() {
-    // scroll to bottom only if the component is ready
-    if (this.props.refetch) {
-      this.scrollToBottom();
-    }
+    // set mutation callback to update messages in state after mutation
     this.props.setMutationCallback(this.addOldMessages);
   }
+
 
   componentDidMount() {
     // add scroll listener on mount
     window.addEventListener("scroll", this.handleScroll);
   }
 
+
+  componentDidUpdate() {
+    if (this.state.newMessages.length === 0) {
+      this.scrollToBottom();
+    } 
+  }
 
   componentWillUnmount() {
     // remove scroll listener on unmount
@@ -107,7 +111,6 @@ export default class RenderMessages extends React.Component {
       messages: oldMessages,
       newMessages: []
     })
-    this.scrollToBottom()
   }
 
   // custom refetch to be passed to parent for refetching on event occurance

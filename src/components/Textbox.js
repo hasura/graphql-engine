@@ -64,6 +64,7 @@ export default class Textbox extends React.Component {
                     id="textbox"
                     className="textbox loginTextbox"
                     value={this.state.text}
+                    autoFocus={true}
                     onChange={(e) => {
                       this.setState({ text: e.target.value })
                     }}

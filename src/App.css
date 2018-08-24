@@ -40,7 +40,7 @@ body
 
 .messageWrapperNew
 {
-  padding-bottom: 15px;
+  padding-bottom: 75px;
 }
 
 .banner {
@@ -49,19 +49,17 @@ body
   top: 0;
   align-self: flex-start;
   background-color: green;
-  height: 40px;
   font-size: 30px;
   cursor: pointer;
+  padding: 10px 0;
+  text-align: center;
+  font-family: 'raleway';
 }
 
 .oldNewSeparator {
-  height: 40px;
-  border-width: 5px;
-  border-color: 'black';
   font-size: 40px;
   text-align: center;
-  margin-top: 5px;
-  margin-bottom: 5px;
+  margin-bottom: 15px;
 }
 
 .chatbox {
@@ -74,7 +72,7 @@ body
   position: fixed;
   bottom: 0;
   width: 98%;
-  background-color: #fff;
+  background-color: #eee;
   padding: 1%;
   border-top: 1px solid #ececec;
 }
