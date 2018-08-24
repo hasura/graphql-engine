@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 
-const TableHeader = ({ triggerName, tabName, count, currentSchema }) => {
+const TableHeader = ({ triggerName, tabName, count }) => {
   const styles = require('./Table.scss');
   let capitalised = tabName;
   capitalised = capitalised[0].toUpperCase() + capitalised.slice(1);
@@ -29,7 +29,7 @@ const TableHeader = ({ triggerName, tabName, count, currentSchema }) => {
           <i className="fa fa-angle-right" aria-hidden="true" />{' '}
           <Link to={'/events/manage'}>Manage</Link>{' '}
           <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link to={'/events/manage/triggers' + currentSchema}>Triggers</Link>{' '}
+          <Link to={'/events/manage/triggers'}>Triggers</Link>{' '}
           <i className="fa fa-angle-right" aria-hidden="true" />{' '}
           <Link to={'/events/manage/triggers/' + triggerName + '/processed'}>
             {triggerName}
