@@ -1,7 +1,7 @@
 import React from 'react';
 import { Mutation } from 'react-apollo';
 import gql from 'graphql-tag';
-import "../App.css";
+import '../App.css';
 
 const insertMessage = gql`
   mutation insert_message ($message: message_insert_input! ){
@@ -42,7 +42,7 @@ export default class Textbox extends React.Component {
               id: insert_message.returning[0].id,
               timestamp: insert_message.returning[0].timestamp,
               username: this.props.username,
-              text: this.state.text  
+              text: this.state.text
             }
           ]);
           this.setState({ text: "" })
@@ -55,21 +55,21 @@ export default class Textbox extends React.Component {
               return "";
             }
             const sendMessage = () => {
-              insert_message(); 
+              insert_message();
             }
             return (
               <form onSubmit={sendMessage}>
                 <div className="textboxWrapper">
                   <input
                     id="textbox"
-                    className="textbox"
+                    className="textbox loginTextbox"
                     value={this.state.text}
                     onChange={(e) => {
                       this.setState({ text: e.target.value })
                     }}
                   />
                   <button
-                    className="sendButton"
+                    className="sendButton loginButton"
                     onClick={sendMessage}
                   > Send </button>
                 </div>
@@ -77,7 +77,7 @@ export default class Textbox extends React.Component {
             )
           }
         }
-        
+
       </Mutation>
     )
   }

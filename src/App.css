@@ -1,3 +1,11 @@
+@import url('https://fonts.googleapis.com/css?family=Raleway:400,600');
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400');
+body
+{
+  font-family: 'Open Sans';
+  font-size: 16px;
+  margin: 0;
+}
 .app {
   text-align: left;
 }
@@ -27,7 +35,10 @@
   background-color: #8FBC8F;
   padding-left: 5px;
 }
-
+.messageWrapper
+{
+  padding-bottom: 15px;
+}
 .banner {
   position: -webkit-sticky;
   position: sticky;
@@ -35,7 +46,8 @@
   align-self: flex-start; /* <-- this is the fix */
   background-color: green;
   height: 40px;
-  font-size: 30px;  
+  font-size: 30px;
+  cursor: pointer;
 }
 
 .oldNewSeparator {
@@ -54,6 +66,7 @@
 }
 
 .textboxWrapper {
+  /*
   position: -webkit-sticky !important;
   position: sticky;
   align-self: flex-end;
@@ -61,41 +74,73 @@
   flex-direction: row;
   justify-content: space-between;
   margin: 10px;
+  */
+  text-align: center;
+  position: fixed;
+  bottom: 0;
+  width: 98%;
+  background-color: #fff;
+  padding: 1%;
+  border-top: 1px solid #ececec;
 }
 
 .textbox {
-  height: 40px;
-  font-size: 35px;
-  flex: 0.75;
-  margin-right: 5px;
+
 }
 .sendButton {
-  height: 40px;
-  flex: 0.25;
-  margin-left: 5px;
+  width: 20%;
 }
 
 .login {
-  display: flex;
-  justify-content: center;
-  flex-direction: row;
-  margin: 40px;
+  text-align: center;
 }
 
 .loginTextbox {
-  height: 50px;
-  flex: 0.7;
-  margin-right: 5px;
-  font-size: 30px;
-  padding: 5px;
+  font-size: 16px;
+  height: 43px;
+  width: 70%;
+  margin-right: 3%;
+  font-weight: 300;
+  border: 1px solid #ececec;
+  border-radius: 5px;
+  padding: 0;
+  padding-left: 10px;
+  display: inline-block;
 }
-
+.loginTextbox:focus
+{
+  outline: none;
+  border-color: #016d95;
+}
 .loginButton {
-  height: 50px;
-  flex: 0.3;
-  margin-left: 5px;
+  height: 45px;
+  width: 20%;
+  display: inline-block;
+  border-radius: 5px;
+  background-color: #e3e3e3;
+  cursor: pointer;
+  font-size: 16px;
 }
-
+.loginButton:hover
+{
+  background-color: #f6f6f6;
+}
 .loginHeading {
   text-align: center;
+  font-family: 'Raleway';
+  margin-top: 0;
+  padding-bottom: 20px;
+}
+.loginWrapper
+{
+  width: 450px;
+  padding: 30px;
+  margin: 0 auto;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid #ececec;
+  border-radius: 5px;
+  background-color: #f6f6f6;
 }

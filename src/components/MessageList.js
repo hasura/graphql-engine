@@ -1,6 +1,6 @@
 import React from 'react';
 import '../App.js';
-
+import '../App.css';
 export default class MessageList extends React.Component {
   render() {
     const { isNew } = this.props;
@@ -9,13 +9,13 @@ export default class MessageList extends React.Component {
       return isNew ? `newMessage${evenOrOdd}` : `message${evenOrOdd}`;
     }
     return (
-      <div>
+      <div className="messageWrapper">
         {
           this.props.messages.map((m, i) => {
             return (
               <div key={m.id} className={getStyleById(i)}>
                 { m.username + ": " + m.text }
-              </div> 
+              </div>
             );
           })
         }

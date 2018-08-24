@@ -1,8 +1,8 @@
 import React from 'react';
-
+import '../App.css';
 const LoginComponent = (props) => {
   return (
-    <div>    
+    <div className="loginWrapper">
       <h2 className="loginHeading"> Welcome to sample chat app made with Hasura GraphQL Engine </h2>
       <div className="login">
         <div>
@@ -19,7 +19,7 @@ const LoginComponent = (props) => {
             onClick={props.login}
           >
             Enter
-          </button> 
+          </button>
         </div>
       </div>
     </div>
