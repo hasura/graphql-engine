@@ -31,7 +31,7 @@ initErrExit e = print e >> exitFailure
 
 -- clear the hdb_views schema
 initStateTx :: Q.Tx ()
-initStateTx = Q.unitQ clearHdbViews () False
+initStateTx = clearHdbViews
 
 data RawConnInfo =
   RawConnInfo

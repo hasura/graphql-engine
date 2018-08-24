@@ -134,6 +134,8 @@ reportSchemaObj (SOTableObj tn (TOCons cn)) =
 reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
   "permission " <> qualTableToTxt tn <> "." <> getRoleTxt rn
   <> "." <> permTypeToCode pt
+reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
+  "event-trigger " <> qualTableToTxt tn <> "." <> trn
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
@@ -611,7 +613,7 @@ delEventTriggerFromCache
   => QualifiedTable
   -> TriggerName
   -> m ()
-delEventTriggerFromCache qt trn = do
+delEventTriggerFromCache qt trn =
   modTableInCache modEventTriggerInfo qt
   where
     modEventTriggerInfo ti = do

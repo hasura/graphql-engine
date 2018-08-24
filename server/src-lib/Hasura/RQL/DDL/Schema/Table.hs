@@ -204,6 +204,10 @@ processSchemaChanges schemaDiff = do
                DELETE FROM "hdb_catalog"."hdb_permission"
                WHERE table_schema = $1 AND table_name = $2
                 |] (sn, tn) False
+      Q.unitQ [Q.sql|
+               DELETE FROM "hdb_catalog"."event_triggers"
+               WHERE schema_name = $1 AND table_name = $2
+                |] (sn, tn) False
       delTableFromCatalog qtn
     delTableFromCache qtn
   -- Get schema cache
@@ -405,8 +409,7 @@ runSqlP2 :: (P2C m) => RunSQL -> m RespBody
 runSqlP2 (RunSQL t cascade) = do
 
   -- Drop hdb_views so no interference is caused to the sql query
-  liftTx $ Q.catchE defaultTxErrorHandler $
-    Q.unitQ clearHdbViews () False
+  liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
 
   -- Get the metadata before the sql query, everything, need to filter this
   oldMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
