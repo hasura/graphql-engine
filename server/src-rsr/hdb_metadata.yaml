@@ -209,18 +209,19 @@ args:
     using:
       foreign_key_constraint_on: name
 
-- type: create_array_relationship
+- type: create_object_relationship
   args:
     name: retry_conf
     table:
       schema: hdb_catalog
       name: event_triggers
     using:
-      foreign_key_constraint_on:
-        table:
+      manual_configuration:
+        remote_table:
           schema: hdb_catalog
           name: event_triggers_retry_conf
-        column: name
+        column_mapping:
+          name : name
 
 - type: create_object_relationship
   args:
