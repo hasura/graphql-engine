@@ -7,6 +7,7 @@
 
 module Hasura.GraphQL.Resolve.Select
   ( convertSelect
+  , convertSelectByPKey
   ) where
 
 import           Data.Has
@@ -63,9 +64,17 @@ fromField tn permFilter permLimit fld = fieldAsPath fld $ do
   offsetExpM <- withArgM args "offset" $ asPGColVal >=> prepare
   annFlds    <- fromSelSet (_fType fld) $ _fSelSet fld
   return $ RS.SelectData annFlds tn (permFilter, whereExpM) ordByExpM
-    [] limitExpM offsetExpM
+    [] limitExpM offsetExpM False
   where
     args = _fArguments fld
+
+fromFieldByPKey
+  :: QualifiedTable -> S.BoolExp -> Field -> Convert RS.SelectData
+fromFieldByPKey tn permFilter fld = fieldAsPath fld $ do
+  boolExp <- argsMapToBoolExp tn $ _fArguments fld
+  annFlds <- fromSelSet (_fType fld) $ _fSelSet fld
+  return $ RS.SelectData annFlds tn (permFilter, Just boolExp)
+    Nothing [] Nothing Nothing True
 
 getEnumInfo
   :: ( MonadError QErr m
@@ -121,5 +130,13 @@ convertSelect
 convertSelect qt permFilter permLimit fld = do
   selData <- withPathK "selectionSet" $
              fromField qt permFilter permLimit fld
+  prepArgs <- get
+  return $ RS.selectP2 (selData, prepArgs)
+
+convertSelectByPKey
+  :: QualifiedTable -> S.BoolExp -> Field -> Convert RespTx
+convertSelectByPKey qt permFilter fld = do
+  selData <- withPathK "selectionSet" $
+             fromFieldByPKey qt permFilter fld
   prepArgs <- get
   return $ RS.selectP2 (selData, prepArgs)

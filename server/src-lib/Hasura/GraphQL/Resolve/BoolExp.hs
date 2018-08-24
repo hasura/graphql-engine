@@ -6,6 +6,7 @@
 
 module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
+  , argsMapToBoolExp
   , convertBoolExp
   , prepare
   ) where
@@ -22,6 +23,7 @@ import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
+import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 
@@ -70,16 +72,24 @@ parseOpExps annVal = do
       AGScalar _ _ -> throw500 "boolean value is expected"
       _ -> tyMismatch "pgvalue" v
 
+parseAsPGColVal
+  :: (MonadError QErr m)
+  => AnnGValue -> m [RA.OpExp]
+parseAsPGColVal annVal = do
+  annValOpExp <- RA.AEQ <$> asPGColVal annVal
+  return $ [RA.OEVal annValOpExp]
+
 parseColExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => G.NamedType
   -> G.Name
   -> AnnGValue
+  -> (AnnGValue -> m [RA.OpExp])
   -> m RA.AnnVal
-parseColExp nt n val = do
+parseColExp nt n val expParser = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
-    Left  pgColInfo          -> RA.AVCol pgColInfo <$> parseOpExps val
+    Left  pgColInfo          -> RA.AVCol pgColInfo <$> expParser val
     Right (relInfo, permExp, _, _) -> do
       relBoolExp <- parseBoolExp val
       return $ RA.AVRel relInfo relBoolExp permExp
@@ -95,7 +105,7 @@ parseBoolExp annGVal = do
           | k == "_or"  -> BoolOr . fromMaybe [] <$> parseMany parseBoolExp v
           | k == "_and" -> BoolAnd . fromMaybe [] <$> parseMany parseBoolExp v
           | k == "_not" -> BoolNot <$> parseBoolExp v
-          | otherwise   -> BoolCol <$> parseColExp nt k v
+          | otherwise   -> BoolCol <$> parseColExp nt k v parseOpExps
   return $ BoolAnd $ fromMaybe [] boolExpsM
 
 convertBoolExp
@@ -105,3 +115,17 @@ convertBoolExp
 convertBoolExp tn whereArg = do
   whereExp <- parseBoolExp whereArg
   RG.convBoolRhs (RG.mkBoolExpBuilder prepare) (S.mkQual tn) whereExp
+
+argsMapToBoolExp
+  :: QualifiedTable
+  -> ArgsMap
+  -> Convert (GBoolExp RG.AnnSQLBoolExp)
+argsMapToBoolExp tn argsMap = do
+  colExps <- forM args $ \(name, val) -> do
+    (ty, _) <- asPGColVal val
+    let namedTy = mkScalarTy ty
+    BoolCol <$> parseColExp namedTy name val parseAsPGColVal
+  let whereExp = BoolAnd colExps
+  RG.convBoolRhs (RG.mkBoolExpBuilder prepare) (S.mkQual tn) whereExp
+  where
+    args = Map.toList argsMap

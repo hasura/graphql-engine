@@ -47,6 +47,8 @@ data OpCtx
   = OCInsert QualifiedTable QualifiedTable [PGCol] [T.Text]
   -- tn, filter exp, limit, req hdrs
   | OCSelect QualifiedTable S.BoolExp (Maybe Int) [T.Text]
+  -- tn, filter exp, reqt hdrs
+  | OCSelectPkey QualifiedTable S.BoolExp [T.Text]
   -- tn, filter exp, req hdrs
   | OCUpdate QualifiedTable S.BoolExp [T.Text]
   -- tn, filter exp, req hdrs
@@ -119,8 +121,11 @@ isRelNullable fim ri = isNullable
   where
     lCols = map fst $ riMapping ri
     allCols = getCols fim
-    lColInfos = flip filter allCols $ \ci -> pgiName ci `elem` lCols
+    lColInfos = getColInfos lCols allCols
     isNullable = any pgiIsNullable lColInfos
+
+mkColName :: PGCol -> G.Name
+mkColName (PGCol n) = G.Name n
 
 mkCompExpName :: PGColType -> G.Name
 mkCompExpName pgColTy =
@@ -141,6 +146,9 @@ mkBoolExpTy =
 mkTableTy :: QualifiedTable -> G.NamedType
 mkTableTy =
   G.NamedType . qualTableToName
+
+mkTableByPKeyTy :: QualifiedTable -> G.NamedType
+mkTableByPKeyTy tn = G.NamedType $ qualTableToName tn <> "_by_pkey"
 
 mkCompExpInp :: PGColType -> InpObjTyInfo
 mkCompExpInp colTy =
@@ -275,6 +283,27 @@ mkSelFld tn =
     fldName = qualTableToName tn
     args    = fromInpValL $ mkSelArgs tn
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
+{-
+table_by_pkey(
+  col1: value1!,
+  .     .
+  .     .
+  coln: valuen!
+): table!
+-}
+mkSelFldPKey
+  :: QualifiedTable -> [PGColInfo]
+  -> ObjFldInfo
+mkSelFldPKey tn cols =
+  ObjFldInfo (Just desc) fldName args ty
+  where
+    desc = G.Description $ "fetch data from the table: " <> tn
+           <<> " with primary key columns as input fields"
+    fldName = qualTableToName tn <> "_by_pkey"
+    args = fromInpValL $ map colInpVal cols
+    ty = G.toGT $ G.toNT $ mkTableTy tn
+    colInpVal (PGColInfo n typ _) =
+      InpValInfo Nothing (mkColName n) $ G.toGT $ G.toNT $ mkScalarTy typ
 
 -- table_mutation_response
 mkMutRespTy :: QualifiedTable -> G.NamedType
@@ -813,10 +842,12 @@ mkGCtxRole'
   -> Maybe [PGColInfo]
   -- delete cols
   -> Maybe ()
+  -- primary key columns
+  -> [PGColInfo]
   -- constraints
   -> [TableConstraint]
   -> TyAgg
-mkGCtxRole' tn insColsM selFldsM updColsM delPermM constraints =
+mkGCtxRole' tn insColsM selFldsM updColsM delPermM pkeyCols constraints =
   TyAgg (mkTyInfoMap allTypes) fieldMap ordByEnums
 
   where
@@ -838,7 +869,7 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM constraints =
 
     fieldMap = Map.unions $ catMaybes
                [ insInpObjFldsM, updSetInpObjFldsM, boolExpInpObjFldsM
-               , noRelsObjFldsM, selObjFldsM
+               , noRelsObjFldsM, selObjFldsM, Just selByPKeyObjFlds
                ]
 
     nameFromSelFld = \case
@@ -895,6 +926,9 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM constraints =
     selObjM = mkTableObj tn <$> selFldsM
     -- the fields used in table object
     selObjFldsM = mkFldMap (mkTableTy tn) <$> selFldsM
+    -- the field used in table_by_pkey object
+    selByPKeyObjFlds = Map.fromList $ flip map pkeyCols $
+      \pgi@(PGColInfo col ty _) -> ((mkScalarTy ty, mkColName col), Left pgi)
 
     ordByEnumsCtxM = mkOrdByCtx tn . lefts <$> selFldsM
 
@@ -904,6 +938,7 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM constraints =
 
 getRootFldsRole'
   :: QualifiedTable
+  -> [PGCol]
   -> [TableConstraint]
   -> FieldInfoMap
   -> Maybe (QualifiedTable, [T.Text]) -- insert view
@@ -911,25 +946,30 @@ getRootFldsRole'
   -> Maybe ([PGCol], S.BoolExp, [T.Text]) -- update filter
   -> Maybe (S.BoolExp, [T.Text]) -- delete filter
   -> RootFlds
-getRootFldsRole' tn constraints fields insM selM updM delM =
+getRootFldsRole' tn primCols constraints fields insM selM updM delM =
   RootFlds mFlds
   where
-    getUpdColInfos cols = flip filter (getCols fields) $ \c ->
-                      pgiName c `elem` cols
     mFlds = mapFromL (either _fiName _fiName . snd) $ catMaybes
             [ getInsDet <$> insM, getSelDet <$> selM
-            , getUpdDet <$> updM, getDelDet <$> delM]
+            , getUpdDet <$> updM, getDelDet <$> delM
+            , getPKeySelDet selM $ getColInfos primCols colInfos
+            ]
     colInfos = fst $ validPartitionFieldInfoMap fields
     getInsDet (vn, hdrs) =
       (OCInsert tn vn (map pgiName colInfos) hdrs, Right $ mkInsMutFld tn constraints)
     getUpdDet (updCols, updFltr, hdrs) =
       ( OCUpdate tn updFltr hdrs
-      , Right $ mkUpdMutFld tn $ getUpdColInfos updCols
+      , Right $ mkUpdMutFld tn $ getColInfos updCols colInfos
       )
     getDelDet (delFltr, hdrs) =
       (OCDelete tn delFltr hdrs, Right $ mkDelMutFld tn)
     getSelDet (selFltr, pLimit, hdrs) =
       (OCSelect tn selFltr pLimit hdrs, Left $ mkSelFld tn)
+
+    getPKeySelDet Nothing _ = Nothing
+    getPKeySelDet _ [] = Nothing
+    getPKeySelDet (Just (selFltr, _, hdrs)) pCols = Just
+      (OCSelectPkey tn selFltr hdrs, Left $ mkSelFldPKey tn pCols)
 
 -- getRootFlds
 --   :: TableCache
@@ -975,31 +1015,34 @@ mkGCtxRole
   => TableCache
   -> QualifiedTable
   -> FieldInfoMap
+  -> [PGCol]
   -> [TableConstraint]
   -> RoleName
   -> RolePermInfo
   -> m (TyAgg, RootFlds)
-mkGCtxRole tableCache tn fields constraints role permInfo = do
+mkGCtxRole tableCache tn fields pCols constraints role permInfo = do
   selFldsM <- mapM (getSelFlds tableCache fields role) $ _permSel permInfo
   let insColsM = const colInfos <$> _permIns permInfo
       updColsM = filterColInfos . upiCols <$> _permUpd permInfo
       tyAgg = mkGCtxRole' tn insColsM selFldsM updColsM
-              (void $ _permDel permInfo) constraints
-      rootFlds = getRootFldsRole tn constraints fields permInfo
+              (void $ _permDel permInfo) pColInfos constraints
+      rootFlds = getRootFldsRole tn pCols constraints fields permInfo
   return (tyAgg, rootFlds)
   where
     colInfos = fst $ validPartitionFieldInfoMap fields
+    pColInfos = getColInfos pCols colInfos
     filterColInfos allowedSet =
       filter ((`Set.member` allowedSet) . pgiName) colInfos
 
 getRootFldsRole
   :: QualifiedTable
+  -> [PGCol]
   -> [TableConstraint]
   -> FieldInfoMap
   -> RolePermInfo
   -> RootFlds
-getRootFldsRole tn constraints fields (RolePermInfo insM selM updM delM) =
-  getRootFldsRole' tn constraints fields
+getRootFldsRole tn pCols constraints fields (RolePermInfo insM selM updM delM) =
+  getRootFldsRole' tn pCols constraints fields
   (mkIns <$> insM) (mkSel <$> selM)
   (mkUpd <$> updM) (mkDel <$> delM)
   where
@@ -1016,21 +1059,25 @@ mkGCtxMapTable
   => TableCache
   -> TableInfo
   -> m (Map.HashMap RoleName (TyAgg, RootFlds))
-mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints) = do
-  m <- Map.traverseWithKey (mkGCtxRole tableCache tn fields validConstraints) rolePerms
+mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols) = do
+  m <- Map.traverseWithKey
+    (mkGCtxRole tableCache tn fields pkeyCols validConstraints) rolePerms
   let adminCtx = mkGCtxRole' tn (Just colInfos)
-                 (Just selFlds) (Just colInfos) (Just ()) validConstraints
+                 (Just selFlds) (Just colInfos) (Just ())
+                 pkeyColInfos validConstraints
   return $ Map.insert adminRole (adminCtx, adminRootFlds) m
   where
     validConstraints = mkValidConstraints constraints
     colInfos = fst $ validPartitionFieldInfoMap fields
     allCols = map pgiName colInfos
+    pkeyColInfos = getColInfos pkeyCols colInfos
     selFlds = flip map (toValidFieldInfos fields) $ \case
       FIColumn pgColInfo     -> Left pgColInfo
       FIRelationship relInfo -> Right (relInfo, noFilter, Nothing, isRelNullable fields relInfo)
     noFilter = S.BELit True
     adminRootFlds =
-      getRootFldsRole' tn constraints fields (Just (tn, [])) (Just (noFilter, Nothing, []))
+      getRootFldsRole' tn pkeyCols constraints fields
+      (Just (tn, [])) (Just (noFilter, Nothing, []))
       (Just (allCols, noFilter, [])) (Just (noFilter, []))
 
 mkScalarTyInfo :: PGColType -> ScalarTyInfo

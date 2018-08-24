@@ -35,6 +35,7 @@ module Hasura.RQL.Types.SchemaCache
 
        , PGColInfo(..)
        , isPGColInfo
+       , getColInfos
        , RelInfo(..)
        , addFldToCache
        , delFldFromCache
@@ -191,6 +192,10 @@ onlyIntCols = filter (isIntegerType . pgiType)
 
 onlyJSONBCols :: [PGColInfo] -> [PGColInfo]
 onlyJSONBCols = filter (isJSONBType . pgiType)
+
+getColInfos :: [PGCol] -> [PGColInfo] -> [PGColInfo]
+getColInfos cols allColInfos = flip filter allColInfos $ \ci ->
+  pgiName ci `elem` cols
 
 data RelInfo
   = RelInfo
@@ -367,12 +372,13 @@ data TableInfo
   , tiFieldInfoMap    :: !FieldInfoMap
   , tiRolePermInfoMap :: !RolePermInfoMap
   , tiConstraints     :: ![TableConstraint]
+  , tiPrimaryKeyCols  :: ![PGCol]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 
 mkTableInfo :: QualifiedTable -> Bool -> [(ConstraintType, ConstraintName)]
-            -> [(PGCol, PGColType, Bool)] -> TableInfo
+            -> [(PGCol, PGColType, Bool)] -> [PGCol] -> TableInfo
 mkTableInfo tn isSystemDefined rawCons cols =
   TableInfo tn isSystemDefined colMap (M.fromList []) constraints
   where
@@ -630,13 +636,13 @@ getDependentObjsOfTableWith f objId ti =
 
 getDependentRelsOfTable :: (T.Text -> Bool) -> SchemaObjId
                         -> TableInfo -> [SchemaObjId]
-getDependentRelsOfTable rsnFn objId (TableInfo tn _ fim _ _) =
+getDependentRelsOfTable rsnFn objId (TableInfo tn _ fim _ _ _) =
     map (SOTableObj tn . TORel . riName) $
     filter (isDependentOn rsnFn objId) $ getRels fim
 
 getDependentPermsOfTable :: (T.Text -> Bool) -> SchemaObjId
                          -> TableInfo -> [SchemaObjId]
-getDependentPermsOfTable rsnFn objId (TableInfo tn _ _ rpim _) =
+getDependentPermsOfTable rsnFn objId (TableInfo tn _ _ rpim _ _) =
   concat $ flip M.mapWithKey rpim $
   \rn rpi -> map (SOTableObj tn . TOPerm rn) $ getDependentPerms' rsnFn objId rpi
 
