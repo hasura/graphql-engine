@@ -158,6 +158,7 @@ fetchEvents =
       JOIN hdb_catalog.event_triggers_retry_conf r
       ON e.trigger_name = r.name
       WHERE e.delivered ='f' and e.error = 'f' and e.locked = 'f'
+      LIMIT 100
       |] () True
   where uncurryEvent (id', trn, Q.AltJ payload, webhook, tries, created, numRetries, retryInterval) = Event id' trn payload webhook Nothing Nothing tries created (numRetries, retryInterval)
 
