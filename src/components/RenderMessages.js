@@ -112,13 +112,13 @@ export default class RenderMessages extends React.Component {
 
   // add message to state when text is entered
   mutationCallback = (message) => {
-    const messages = [ ...this.state.oldMessages, ...this.state.newMessages ];
+    const messages = [ ...this.state.messages, ...this.state.newMessages ];
     messages.push(message);
     this.setState({
       ...this.state,
       messages,
       newMessages: []
-    })
+    });
   }
 
   // custom refetch to be passed to parent for refetching on event occurance
@@ -189,7 +189,6 @@ export default class RenderMessages extends React.Component {
   }
 
   render() {
-    console.log(this.isViewScrollable());
     const { messages, newMessages, bottom } = this.state;
     // set refetch in parent component for refetching data whenever an event occurs
     if (!this.props.refetch && this.state.refetch) {

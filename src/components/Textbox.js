@@ -11,6 +11,8 @@ const insertMessage = gql`
       returning {
         id
         timestamp
+        text
+        username
       }
     }
   }
@@ -41,11 +43,10 @@ export default class Textbox extends React.Component {
             {
               id: insert_message.returning[0].id,
               timestamp: insert_message.returning[0].timestamp,
-              username: this.props.username,
-              text: this.state.text
+              username: insert_message.returning[0].username,
+              text: insert_message.returning[0].text,
             }
-          );
-          document.getElementById("textbox").scrollIntoView({ behavior: 'instant'})
+          ); 
         }}
       >
         {
@@ -55,7 +56,9 @@ export default class Textbox extends React.Component {
             }
             const sendMessage = () => {
               insert_message();
-              this.setState({text: ""})
+              this.setState({
+                text: ""
+              });
             }
             return (
               <form onSubmit={sendMessage}>
