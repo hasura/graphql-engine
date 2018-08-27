@@ -180,6 +180,9 @@ procBoolExp tn fieldInfoMap tq be = do
   let deps = getBoolExpDeps tn abe
   return (sqlbe, deps)
 
+isReqUserId :: T.Text -> Bool
+isReqUserId = (== "req_user_id") . T.toLower
+
 getDependentHeaders :: BoolExp -> [T.Text]
 getDependentHeaders boolExp = case boolExp of
   BoolAnd exps         -> concatMap getDependentHeaders exps
@@ -192,8 +195,11 @@ getDependentHeaders boolExp = case boolExp of
       _          -> parseOnlyString val
 
     parseOnlyString val = case val of
-      (String t) -> [T.toLower t | isXHasuraTxt t]
-      _          -> []
+      (String t)
+        | isXHasuraTxt t -> [T.toLower t]
+        | isReqUserId t -> ["x-hasura-user-id"]
+        | otherwise -> []
+      _ -> []
     parseObject o = flip concatMap (M.toList o) $ \(k, v) ->
                              if isRQLOp k
                              then parseOnlyString v
@@ -203,12 +209,16 @@ getDependentHeaders boolExp = case boolExp of
 valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
 valueParser columnType val = case (val, columnType) of
   -- When it is a special variable
-  (String t, ty) ->
-    if isXHasuraTxt t
-    then return $ S.SEUnsafe $
+  (String t, ty)
+    | isXHasuraTxt t -> return $ S.SEUnsafe $
       "current_setting('hasura." <> dropAndSnakeCase t
        <> "')::" <> T.pack (show ty)
-    else txtRHSBuilder ty val
+
+    | isReqUserId t -> return $ S.SEUnsafe $
+      "current_setting('hasura.user_id')::" <> T.pack (show ty)
+
+    | otherwise -> txtRHSBuilder ty val
+
   -- Typical value as Aeson's value
   _ -> txtRHSBuilder columnType val
 
