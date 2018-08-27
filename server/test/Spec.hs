@@ -50,6 +50,7 @@ gqlSpecFiles =
   [ "introspection.yaml"
   , "insert_mutation/author.yaml"
   , "simple_select_query_author.yaml"
+  , "select_query_author_by_pkey.yaml"
   , "insert_mutation/article.yaml"
   , "insert_mutation/article_on_conflict.yaml"
   , "insert_mutation/article_on_conflict_ignore.yaml"
