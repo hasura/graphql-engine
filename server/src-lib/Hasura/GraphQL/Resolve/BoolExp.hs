@@ -6,7 +6,7 @@
 
 module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
-  , argsMapToBoolExp
+  , pgColValToBoolExp
   , convertBoolExp
   , prepare
   ) where
@@ -23,7 +23,6 @@ import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 
@@ -72,12 +71,12 @@ parseOpExps annVal = do
       AGScalar _ _ -> throw500 "boolean value is expected"
       _ -> tyMismatch "pgvalue" v
 
-parseAsPGColVal
+parseAsEqOp
   :: (MonadError QErr m)
   => AnnGValue -> m [RA.OpExp]
-parseAsPGColVal annVal = do
+parseAsEqOp annVal = do
   annValOpExp <- RA.AEQ <$> asPGColVal annVal
-  return $ [RA.OEVal annValOpExp]
+  return [RA.OEVal annValOpExp]
 
 parseColExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
@@ -116,16 +115,18 @@ convertBoolExp tn whereArg = do
   whereExp <- parseBoolExp whereArg
   RG.convBoolRhs (RG.mkBoolExpBuilder prepare) (S.mkQual tn) whereExp
 
-argsMapToBoolExp
+type PGColValMap = Map.HashMap G.Name AnnGValue
+
+pgColValToBoolExp
   :: QualifiedTable
-  -> ArgsMap
+  -> PGColValMap
   -> Convert (GBoolExp RG.AnnSQLBoolExp)
-argsMapToBoolExp tn argsMap = do
-  colExps <- forM args $ \(name, val) -> do
+pgColValToBoolExp tn colValMap = do
+  colExps <- forM colVals $ \(name, val) -> do
     (ty, _) <- asPGColVal val
     let namedTy = mkScalarTy ty
-    BoolCol <$> parseColExp namedTy name val parseAsPGColVal
+    BoolCol <$> parseColExp namedTy name val parseAsEqOp
   let whereExp = BoolAnd colExps
   RG.convBoolRhs (RG.mkBoolExpBuilder prepare) (S.mkQual tn) whereExp
   where
-    args = Map.toList argsMap
+    colVals = Map.toList colValMap

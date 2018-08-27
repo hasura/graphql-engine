@@ -147,8 +147,8 @@ mkTableTy :: QualifiedTable -> G.NamedType
 mkTableTy =
   G.NamedType . qualTableToName
 
-mkTableByPKeyTy :: QualifiedTable -> G.NamedType
-mkTableByPKeyTy tn = G.NamedType $ qualTableToName tn <> "_by_pkey"
+mkTableByPKeyTy :: QualifiedTable -> G.Name
+mkTableByPKeyTy tn = qualTableToName tn <> "_by_pk"
 
 mkCompExpInp :: PGColType -> InpObjTyInfo
 mkCompExpInp colTy =
@@ -284,12 +284,12 @@ mkSelFld tn =
     args    = fromInpValL $ mkSelArgs tn
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
 {-
-table_by_pkey(
+table_by_pk(
   col1: value1!,
   .     .
   .     .
   coln: valuen!
-): table!
+): table
 -}
 mkSelFldPKey
   :: QualifiedTable -> [PGColInfo]
@@ -298,10 +298,10 @@ mkSelFldPKey tn cols =
   ObjFldInfo (Just desc) fldName args ty
   where
     desc = G.Description $ "fetch data from the table: " <> tn
-           <<> " with primary key columns as input fields"
-    fldName = qualTableToName tn <> "_by_pkey"
+           <<> " using primary key columns"
+    fldName = mkTableByPKeyTy tn
     args = fromInpValL $ map colInpVal cols
-    ty = G.toGT $ G.toNT $ mkTableTy tn
+    ty = G.toGT $ mkTableTy tn
     colInpVal (PGColInfo n typ _) =
       InpValInfo Nothing (mkColName n) $ G.toGT $ G.toNT $ mkScalarTy typ
 

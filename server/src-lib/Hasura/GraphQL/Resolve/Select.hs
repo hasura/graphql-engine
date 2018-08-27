@@ -71,7 +71,7 @@ fromField tn permFilter permLimit fld = fieldAsPath fld $ do
 fromFieldByPKey
   :: QualifiedTable -> S.BoolExp -> Field -> Convert RS.SelectData
 fromFieldByPKey tn permFilter fld = fieldAsPath fld $ do
-  boolExp <- argsMapToBoolExp tn $ _fArguments fld
+  boolExp <- pgColValToBoolExp tn $ _fArguments fld
   annFlds <- fromSelSet (_fType fld) $ _fSelSet fld
   return $ RS.SelectData annFlds tn (permFilter, Just boolExp)
     Nothing [] Nothing Nothing True
