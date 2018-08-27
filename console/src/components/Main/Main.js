@@ -183,7 +183,9 @@ class Main extends React.Component {
                 <div className={styles.dropdown_menu_container}>
                   <div className={styles.arrow_up_dropdown} />
                   <div className={styles.graphqlHeartText}>
-                    Love GraphQL Engine? Spread the word{' '}
+                    Love GraphQL Engine? Shout it from the rooftops!
+                    <br />
+                    Or just spread the word{' '}
                     <span role="img" aria-label="smile">
                       😊
                     </span>

@@ -889,9 +889,10 @@
 }
 .graphqlHeartText
 {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 300;
-  text-transform: capitalize;
+  text-transform: none;
+  text-align: center;
 }
 .dropdown_menu
 {
@@ -902,7 +903,7 @@
   border: 0;
   .dropdown_menu_container
   {
-    width: 255px;
+    width: 330px;
     float: right;
     background-color: #43495a;
     padding: 15px;
@@ -924,6 +925,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-top: 10px;
   }
   li
   {
