@@ -22,6 +22,7 @@ import {
   removeOrder,
 } from './FilterActions.js';
 import { setDefaultQuery, runQuery } from './FilterActions';
+import { vMakeRequest } from './ViewActions';
 
 const renderCols = (colName, triggerSchema, onChange, usage, key) => {
   const columns = ['id', 'delivered', 'created_at'];
@@ -163,9 +164,33 @@ const renderSorts = (orderBy, triggerSchema, dispatch) => {
 };
 
 class FilterQuery extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { isWatching: false, intervalId: null };
+    this.refreshData = this.refreshData.bind(this);
+  }
   componentDidMount() {
     const dispatch = this.props.dispatch;
     dispatch(setDefaultQuery(this.props.curQuery));
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.state.intervalId);
+  }
+
+  watchChanges() {
+    // set state on watch
+    this.setState({ isWatching: !this.state.isWatching });
+    if (this.state.isWatching) {
+      clearInterval(this.state.intervalId);
+    } else {
+      const intervalId = setInterval(this.refreshData, 2000);
+      this.setState({ intervalId: intervalId });
+    }
+  }
+
+  refreshData() {
+    this.props.dispatch(vMakeRequest());
   }
 
   render() {
@@ -205,7 +230,19 @@ class FilterQuery extends Component {
             >
               Run query
             </button>
-            {/* <div className={styles.count + ' alert alert-info'}><i>Total <b>{tableName}</b> rows in the database for current query: {count} </i></div> */}
+            <button
+              onClick={this.watchChanges.bind(this)}
+              className={styles.add_mar_left + ' btn btn-default'}
+              data-test="run-query"
+            >
+              {this.state.isWatching ? (
+                <span>
+                  Watching <i className={'fa fa-spinner fa-spin'} />
+                </span>
+              ) : (
+                'Watch'
+              )}
+            </button>
           </div>
         </form>
       </div>

@@ -181,8 +181,9 @@ a.expanded {
 }
 
 .settingsSection {
-  .settingsRow {
-    min-width: 200px;
+  table {
+    width: 60%;
+    margin-top: 20px;
   }
 }
 

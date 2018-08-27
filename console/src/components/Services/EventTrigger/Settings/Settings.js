@@ -28,6 +28,8 @@ class Settings extends Component {
       }
     }
 
+    console.log(triggerSchema);
+
     const handleDeleteTrigger = () => {
       dispatch(deleteTrigger(triggerName));
     };
@@ -42,62 +44,49 @@ class Settings extends Component {
           migrationMode={migrationMode}
         />
         <br />
-        <div className={'container-fluid'}>
+        <div>
           <div className={styles.settingsSection}>
-            <div className={styles.add_mar_bottom}>
-              <div className={styles.display_inline + ' ' + styles.settingsRow}>
-                URL
-              </div>
-              <div className={styles.display_inline}>
-                {triggerSchema.webhook}
-              </div>
-            </div>
-            <div className={styles.add_mar_bottom}>
-              <div className={styles.display_inline + ' ' + styles.settingsRow}>
-                Table Name
-              </div>
-              <div className={styles.display_inline}>
-                {triggerSchema.table_name}
-              </div>
-            </div>
-            <div className={styles.add_mar_bottom}>
-              <div className={styles.display_inline + ' ' + styles.settingsRow}>
-                Schema
-              </div>
-              <div className={styles.display_inline}>
-                {triggerSchema.schema_name}
-              </div>
-            </div>
-            <div className={styles.add_mar_bottom}>
-              <div className={styles.display_inline + ' ' + styles.settingsRow}>
-                Event Type
-              </div>
-              <div className={styles.display_inline}>{triggerSchema.type}</div>
-            </div>
-            <div className={styles.add_mar_bottom}>
-              <div className={styles.display_inline + ' ' + styles.settingsRow}>
-                Retry Number
-              </div>
-              <div className={styles.display_inline + ' ' + styles.settingsRow}>
-                {retryConf.num_retries}
-              </div>
-            </div>
-            <div className={styles.add_mar_bottom}>
-              <div className={styles.display_inline + ' ' + styles.settingsRow}>
-                Retry Interval
-              </div>
-              <div className={styles.display_inline}>
-                {retryConf.interval_seconds}
-              </div>
-            </div>
-            <div className={styles.add_mar_bottom}>
-              <button
-                onClick={handleDeleteTrigger}
-                className={'btn btn-sm btn-danger'}
-              >
-                Delete Trigger
-              </button>
-            </div>
+            <table className="table table-striped table-bordered">
+              <thead />
+              <tbody>
+                <tr>
+                  <td>Webhook URL</td>
+                  <td>{triggerSchema.webhook}</td>
+                </tr>
+                <tr>
+                  <td>Table</td>
+                  <td>{triggerSchema.table_name}</td>
+                </tr>
+                <tr>
+                  <td>Schema</td>
+                  <td>{triggerSchema.schema_name}</td>
+                </tr>
+                <tr>
+                  <td>Event Type</td>
+                  <td>{triggerSchema.type}</td>
+                </tr>
+                <tr>
+                  <td>Retry Number</td>
+                  <td>{retryConf.num_retries}</td>
+                </tr>
+                <tr>
+                  <td>Retry Interval</td>
+                  <td>{retryConf.interval_seconds}</td>
+                </tr>
+                <tr>
+                  <td>Operation / Columns</td>
+                  <td>{JSON.stringify(triggerSchema.definition, null, 4)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className={styles.add_mar_bottom}>
+            <button
+              onClick={handleDeleteTrigger}
+              className={'btn btn-sm btn-danger'}
+            >
+              Delete Trigger
+            </button>
           </div>
         </div>
         <br />

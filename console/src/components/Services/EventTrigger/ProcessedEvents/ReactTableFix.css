@@ -61,3 +61,16 @@
 .ReactTable .rt-thead [role='columnheader'] {
   outline: 0;
 }
+
+.invocationsSection .ReactTable .rt-table .rt-thead .rt-tr .rt-th:nth-child(2) {
+  width: 100px;
+  max-width: 100px;
+}
+.invocationsSection .ReactTable .rt-table .rt-td:nth-child(2) {
+  width: 100px;
+  max-width: 100px;
+}
+
+.invocationsSection .ReactTable {
+  width: 60%;
+}
