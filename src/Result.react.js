@@ -26,30 +26,24 @@ const SUBSCRIBE_RESULT = `
 
 const renderChart = (data) => {
   const d = [
-    ['Option', 'No. of votes'],
+    ['Option', 'No. of votes', {role:'annotation'}, {role:'style'}],
   ];
   data.poll_results.map((r, i) => {
-    d.push([r.option.text, r.votes]);
+    d.push([r.option.text, r.votes, r.votes, 'color: #4285f4']);
   })
 
   return (
     <Chart
       width={'700px'}
       height={'400px'}
-      chartType="Bar"
+      chartType="BarChart"
       loader={<div>Loading Chart</div>}
       data={d}
       options={{
-        bars: 'vertical',
         chart: {
           title: 'Realtime results',
         },
         legend: { position: 'none' },
-        animation: {
-          duration: 1000,
-          easing: 'out',
-          startup: true,
-        },
       }}
     />
   )
