@@ -895,13 +895,19 @@
 }
 .dropdown_menu
 {
-  top: 58px;
-  background-color: #43495a;
-  color: #fff;
+  top: 53px;
+  right: 10px;
+  background-color: transparent;
+  box-shadow: none;
   border: 0;
-  width: 67%;
-  left: 31%;
-  padding: 15px;
+  .dropdown_menu_container
+  {
+    width: 255px;
+    float: right;
+    background-color: #43495a;
+    padding: 15px;
+    border-radius: 5px;
+  }
   .arrow_up_dropdown
   {
     width: 0;
@@ -910,7 +916,7 @@
     border-right: 10px solid transparent;
     border-bottom: 10px solid #43495a;
     position: absolute;
-    top: -10px;
+    top: -5px;
     right: 10px;
   }
   .displayFlex
