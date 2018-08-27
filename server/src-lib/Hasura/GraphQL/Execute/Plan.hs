@@ -3,7 +3,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Hasura.GraphQL.Plan
+module Hasura.GraphQL.Execute.Plan
   ( RootFieldPlan(..)
   , PGPlan(..)
   , PlanVariables

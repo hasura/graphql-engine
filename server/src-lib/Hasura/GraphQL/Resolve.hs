@@ -24,7 +24,7 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Hasura.GraphQL.Plan                    as Plan
+import qualified Hasura.GraphQL.Execute.Plan            as Plan
 import qualified Hasura.GraphQL.Resolve.Mutation        as RM
 import qualified Hasura.GraphQL.Resolve.Select          as RS
 

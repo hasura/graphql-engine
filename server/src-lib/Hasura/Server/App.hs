@@ -53,7 +53,7 @@ import           Hasura.SQL.Types
 import qualified Hasura.Logging                         as L
 import           Hasura.Server.Auth                     (AuthMode, getUserInfo)
 
-import qualified Hasura.GraphQL.QueryPlanCache          as QC
+import qualified Hasura.GraphQL.Execute                 as E
 
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
@@ -69,14 +69,14 @@ mkConsoleHTML =
 
 data ServerCtx
   = ServerCtx
-  { scIsolation :: Q.TxIsolation
-  , scPGPool    :: Q.PGPool
-  , scLogger    :: L.Logger
-  , scCacheRef  :: IORef (SchemaCache, GS.GCtxMap)
-  , scCacheLock :: MVar ()
-  , scAuthMode  :: AuthMode
-  , scManager   :: HTTP.Manager
-  , scPlanCache :: QC.QueryPlanCache
+  { scIsolation  :: Q.TxIsolation
+  , scPGPool     :: Q.PGPool
+  , scLogger     :: L.Logger
+  , scCacheRef   :: IORef (SchemaCache, GS.GCtxMap)
+  , scCacheLock  :: MVar ()
+  , scAuthMode   :: AuthMode
+  , scManager    :: HTTP.Manager
+  , scQueryCache :: E.QueryCache
   }
 
 data HandlerCtx
@@ -221,14 +221,14 @@ v1QueryHandler query = do
       liftIO $ writeIORef scRef (newSc, newGCtxMap)
       return resp
 
-v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler BL.ByteString
+v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler BL.ByteString
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   scRef <- scCacheRef . hcServerCtx <$> ask
   cache <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  planCache <- scPlanCache . hcServerCtx <$> ask
+  planCache <- scQueryCache . hcServerCtx <$> ask
   GH.runGQ pool isoL userInfo (snd cache) planCache query
 
 -- v1Alpha1GQSchemaHandler :: Handler BL.ByteString
@@ -272,7 +272,7 @@ mkWaiApp
   -> L.LoggerCtx
   -> Q.PGPool
   -> HTTP.Manager
-  -> QC.QueryPlanCache
+  -> E.QueryCache
   -> AuthMode
   -> CorsConfig
   -> Bool

@@ -173,8 +173,12 @@ library
                      , Hasura.GraphQL.Validate.Field
                      , Hasura.GraphQL.Validate.InputValue
                      , Hasura.GraphQL.Resolve
-                     , Hasura.GraphQL.Plan
-                     , Hasura.GraphQL.QueryPlanCache
+                     , Hasura.GraphQL.LRUCache
+
+                     , Hasura.GraphQL.Execute
+                     , Hasura.GraphQL.Execute.Plan
+                     , Hasura.GraphQL.Execute.QueryCache
+
                      , Hasura.GraphQL.Resolve.LiveQuery
                      , Hasura.GraphQL.Resolve.BoolExp
                      , Hasura.GraphQL.Resolve.Context

@@ -29,11 +29,10 @@ import qualified STMContainers.Map                           as STMMap
 import           Control.Concurrent                          (threadDelay)
 import qualified Data.IORef                                  as IORef
 
-import qualified Hasura.GraphQL.QueryPlanCache               as QP
+import qualified Hasura.GraphQL.Execute                      as E
 import           Hasura.GraphQL.Resolve.Context              (RespTx)
 import qualified Hasura.GraphQL.Resolve.LiveQuery            as LQ
 import           Hasura.GraphQL.Schema                       (GCtxMap)
-import qualified Hasura.GraphQL.Transport.HTTP               as GH
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
@@ -123,7 +122,7 @@ data WSServerEnv
   , _wseLiveQMap  :: !LiveQueryMap
   , _wseGCtxMap   :: !(IORef.IORef (SchemaCache, GCtxMap))
   , _wseHManager  :: !H.Manager
-  , _wsePlanCache :: !QP.QueryPlanCache
+  , _wsePlanCache :: !E.QueryCache
   }
 
 onConn :: L.Logger -> WS.OnConnH WSConnData
@@ -176,14 +175,14 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndSend $ do
 
   -- validate and build tx
   gCtxMap <- fmap snd $ liftIO $ IORef.readIORef gCtxMapRef
-  (opTy, qTx) <- withExceptT preExecErr $ loggingQErr $
-                 GH.reqToTx userInfo gCtxMap planCache q
+  (opTy, parsedQ, qTx) <- withExceptT preExecErr $ loggingQErr $
+                          E.reqToTx userInfo gCtxMap planCache q
 
   let txWHdrs = RQ.setHeadersTx userInfo >> qTx
 
   case opTy of
     G.OperationTypeSubscription -> liftIO $ do
-      let lq = LQ.LiveQuery userInfo q
+      let lq = LQ.LiveQuery userInfo parsedQ
       STM.atomically $ STMMap.insert lq opId opMap
       LQ.addLiveQuery runTx lqMap lq txWHdrs (wsId, opId) liveQOnChange
       logger $ WSLog wsId $ ESubscription opId SDStarted
@@ -292,7 +291,7 @@ onClose logger lqMap _ wsConn = do
 createWSServerEnv
   :: L.Logger
   -> H.Manager
-  -> QP.QueryPlanCache
+  -> E.QueryCache
   -> IORef.IORef (SchemaCache, GCtxMap)
   -> TxRunner -> IO WSServerEnv
 createWSServerEnv logger httpManager planCache gCtxMapRef runTx = do

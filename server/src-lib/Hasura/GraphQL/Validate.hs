@@ -5,7 +5,6 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
   , getAnnVarVals
-  , GraphQLRequest
   ) where
 
 import           Data.Has
@@ -106,9 +105,9 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
 -- {-# SCC validateGQ #-}
 validateGQ
   :: (MonadError QErr m, MonadReader GCtx m)
-  => GraphQLRequest
+  => GQLReqParsed
   -> m ([G.VariableDefinition], G.OperationType, SelSet)
-validateGQ (GraphQLRequest opNameM q varValsM) = do
+validateGQ (GQLReq opNameM q varValsM) = do
 
   -- get the operation that needs to be evaluated
   opDef <- getTypedOp opNameM selSets opDefs
@@ -142,4 +141,4 @@ validateGQ (GraphQLRequest opNameM q varValsM) = do
 
   return (varDefs, G._todType opDef, selSet)
   where
-    (selSets, opDefs, fragDefsL) = G.partitionExDefs $ unGraphQLQuery q
+    (selSets, opDefs, fragDefsL) = G.partitionExDefs $ unGQLExecDoc q

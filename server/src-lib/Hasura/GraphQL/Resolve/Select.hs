@@ -22,7 +22,7 @@ import qualified Hasura.RQL.DML.Select             as RS
 
 import qualified Hasura.SQL.DML                    as S
 
-import qualified Hasura.GraphQL.Plan               as Plan
+import qualified Hasura.GraphQL.Execute.Plan       as Plan
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
