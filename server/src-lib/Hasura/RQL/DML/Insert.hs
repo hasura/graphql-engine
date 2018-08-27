@@ -52,14 +52,11 @@ mkSQLInsert (InsertQueryP1 _ vn cols vals c mutFlds) =
       Just (CP1DoNothing Nothing)   -> Just $ S.DoNothing Nothing
       Just (CP1DoNothing (Just ct)) -> Just $ S.DoNothing $ Just $ toSQLCT ct
       Just (CP1Update ct pgCols)    -> Just $ S.Update (toSQLCT ct)
-        (S.SetExp $ toSQLSetExps pgCols)
+        (S.buildSEWithExcluded pgCols)
 
     toSQLCT ct = case ct of
       Column pgCols -> S.SQLColumn pgCols
       Constraint cn -> S.SQLConstraint cn
-
-    toSQLSetExps = map $ \col
-      -> S.SetExpItem (col, S.SEExcluded $ getPGColTxt col)
 
 mkDefValMap :: FieldInfoMap -> HM.HashMap PGCol S.SQLExp
 mkDefValMap cim =

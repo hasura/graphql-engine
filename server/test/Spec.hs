@@ -42,6 +42,7 @@ querySpecFiles =
   , "create_author_article_permissions.yaml"
   , "create_address_resident_relationship_error.yaml"
   , "create_user_permission_address.yaml"
+  , "create_author_permission_role_admin_error.yaml"
   ]
 
 gqlSpecFiles :: [FilePath]
@@ -62,6 +63,8 @@ gqlSpecFiles =
   , "insert_mutation/address_check_constraint_error.yaml"
   , "insert_mutation/address_not_null_constraint_error.yaml"
   , "insert_mutation/author_unique_constraint_error.yaml"
+  , "insert_mutation/author_on_conflict_ignore_user_role.yaml"
+  , "insert_mutation/author_on_conflict_update_user_role.yaml"
   , "nested_select_query_article.yaml"
   , "select_query_article_limit_offset.yaml"
   , "select_query_article_limit_offset_error_01.yaml"

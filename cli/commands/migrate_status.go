@@ -25,7 +25,8 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			printStatus(status)
+			buf := PrintStatus(status)
+			fmt.Println(buf.String())
 			return nil
 		},
 	}
@@ -49,7 +50,7 @@ func (o *migrateStatusOptions) run() (*migrate.Status, error) {
 	return status, nil
 }
 
-func printStatus(status *migrate.Status) {
+func PrintStatus(status *migrate.Status) *bytes.Buffer {
 	out := new(tabwriter.Writer)
 	buf := &bytes.Buffer{}
 	out.Init(buf, 0, 8, 2, ' ', 0)
@@ -63,7 +64,7 @@ func printStatus(status *migrate.Status) {
 		)
 	}
 	out.Flush()
-	fmt.Println(buf.String())
+	return buf
 }
 
 func convertBool(ok bool) string {
