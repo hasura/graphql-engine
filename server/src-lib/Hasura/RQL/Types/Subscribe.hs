@@ -6,10 +6,11 @@ module Hasura.RQL.Types.Subscribe
   ( SubscribeTableQuery(..)
   , SubscribeOpSpec(..)
   , SubscribeColumns(..)
-  , TriggerDefinition(..)
   , TriggerName
+  , TriggerDefinition(..)
   , EventTrigger(..)
   , RetryConf(..)
+  , toRetryConf
   , UnsubscribeTableQuery(..)
   ) where
 
@@ -52,6 +53,9 @@ data RetryConf
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
+
+toRetryConf :: Int64 -> Int64 -> RetryConf
+toRetryConf nr rint= RetryConf (Just nr) (Just rint)
 
 data SubscribeTableQuery
   = SubscribeTableQuery

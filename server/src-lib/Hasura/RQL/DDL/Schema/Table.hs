@@ -344,9 +344,9 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
     addQTemplateToCache qti
 
   eventTriggers <- lift $ Q.catchE defaultTxErrorHandler fetchEventTriggers
-  forM_ eventTriggers $ \(sn, tn, trn, Q.AltJ tDefVal) -> do
+  forM_ eventTriggers $ \(sn, tn, trn, Q.AltJ tDefVal, webhook, nr, rint) -> do
     tDef <- decodeValue tDefVal
-    addEventTriggerToCache (QualifiedTable sn tn) trn tDef
+    addEventTriggerToCache (QualifiedTable sn tn) trn tDef (toRetryConf nr rint) webhook
 
   where
     permHelper sn tn rn pDef pa = do
@@ -385,8 +385,10 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
 
     fetchEventTriggers =
       Q.listQ [Q.sql|
-               SELECT schema_name, table_name, name, definition::json
-                FROM hdb_catalog.event_triggers
+               SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, r.num_retries, r.interval_seconds
+                FROM hdb_catalog.event_triggers e
+                JOIN hdb_catalog.event_triggers_retry_conf r
+                ON e.name = r.name
                |] () False
 
 data RunSQL
@@ -442,6 +444,15 @@ runSqlP2 (RunSQL t cascade) = do
         pgCols = map pgiName $ getCols $ tiFieldInfoMap ti
     forM_ (M.elems $ tiRolePermInfoMap ti) $ \rpi ->
       maybe (return ()) (\ipi -> liftTx $ buildInsInfra tn ipi pgCols) $ _permIns rpi
+
+  --recreate triggers
+  forM_ (M.elems $ scTables postSc) $ \ti -> do
+    let tn = tiName ti
+    forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
+      let insert = otiCols <$> etiInsert eti
+          update = otiCols <$> etiUpdate eti
+          delete = otiCols <$> etiDelete eti
+      liftTx $ mkTriggerQ trn tn insert update delete
 
   return $ encode (res :: RunSQLRes)
 
