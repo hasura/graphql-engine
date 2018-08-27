@@ -58,7 +58,8 @@ assertPermNotDefined
   -> TableInfo
   -> m ()
 assertPermNotDefined roleName pa tableInfo =
-  when (permissionIsDefined rpi pa) $ throw400 AlreadyExists $ mconcat
+  when (permissionIsDefined rpi pa || roleName == adminRole)
+  $ throw400 AlreadyExists $ mconcat
   [ "'" <> T.pack (show $ permAccToType pa) <> "'"
   , " permission on " <>> tiName tableInfo
   , " for role " <>> roleName
@@ -70,7 +71,7 @@ assertPermNotDefined roleName pa tableInfo =
 permissionIsDefined
   :: Maybe RolePermInfo -> PermAccessor a -> Bool
 permissionIsDefined rpi pa =
-  isJust $ join $ rpi ^? _Just.(permAccToLens pa)
+  isJust $ join $ rpi ^? _Just.permAccToLens pa
 
 assertPermDefined
   :: (MonadError QErr m)
@@ -191,9 +192,7 @@ getDependentHeaders boolExp = case boolExp of
       _          -> parseOnlyString val
 
     parseOnlyString val = case val of
-      (String t) -> if isXHasuraTxt t
-                    then [T.toLower t]
-                    else []
+      (String t) -> [T.toLower t | isXHasuraTxt t]
       _          -> []
     parseObject o = flip concatMap (M.toList o) $ \(k, v) ->
                              if isRQLOp k
