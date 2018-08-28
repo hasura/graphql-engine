@@ -61,7 +61,7 @@ class ImportMetadata extends Component {
             const parsedErrorMsg = data;
             this.props.dispatch(
               showErrorNotification(
-                'Metadata export failed',
+                'Metadata import failed',
                 'Something is wrong.',
                 requestBody,
                 parsedErrorMsg
@@ -76,7 +76,7 @@ class ImportMetadata extends Component {
         console.error(error);
         this.props.dispatch(
           showErrorNotification(
-            'Metadata export failed',
+            'Metadata import failed',
             'Cannot connect to server'
           )
         );
