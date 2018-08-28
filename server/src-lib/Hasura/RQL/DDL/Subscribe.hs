@@ -10,6 +10,7 @@ module Hasura.RQL.DDL.Subscribe where
 import           Data.Aeson
 import qualified Data.FileEmbed      as FE
 import qualified Data.HashMap.Strict as HashMap
+import qualified Data.HashSet        as HS
 import           Data.Int            (Int64)
 import qualified Data.Text           as T
 import qualified Data.Text.Encoding  as TE
@@ -138,17 +139,28 @@ fetchEventTrigger trn = do
     getTrigger (x:_) = return $ EventTrigger name typ (QualifiedTable sn tn) def
       where (name, typ, sn, tn, Q.AltJ def) = x
 
-subTableP1 :: (P1C m) => SubscribeTableQuery -> m EventTriggerInfo
+subTableP1 :: (P1C m) => SubscribeTableQuery -> m ()
 subTableP1 (SubscribeTableQuery name qt insert update delete retryConf webhook) = do
   ti <- askTabInfo qt
-  let oti = getOpInfo name ti insert
-      otu = getOpInfo name ti update
-      otd = getOpInfo name ti delete
-      rconf = fromMaybe (RetryConf (Just defaultNumRetries) (Just defaultRetryInterval)) retryConf
-  return $ EventTriggerInfo name oti otu otd rconf webhook
+  assertCols ti insert
+  assertCols ti update
+  assertCols ti delete
+  return ()
+  where
+    assertCols ti Nothing = return ()
+    assertCols ti (Just sos) = do
+      let cols = sosColumns sos
+      case cols of
+        SubCStar         -> return ()
+        SubCArray pgcols -> forM_ pgcols columnExists
+                            where
+                              listcols =  map pgiName $ getCols $ tiFieldInfoMap ti
+                              columnExists col = if col `elem` listcols
+                                                 then return ()
+                                                 else throw400  NotExists $ "column '" <> getPGColTxt col <> "' does not exist"
 
-subTableP2 :: (P2C m) => SubscribeTableQuery -> EventTriggerInfo -> m RespBody
-subTableP2 q@(SubscribeTableQuery name qt insert update delete retryConf webhook) _ = do
+subTableP2 :: (P2C m) => SubscribeTableQuery -> m RespBody
+subTableP2 q@(SubscribeTableQuery name qt insert update delete retryConf webhook) = do
   liftTx $ addEventTriggerToCatalog q
   let def = TriggerDefinition insert update delete
       rconf = fromMaybe (RetryConf (Just defaultNumRetries) (Just defaultRetryInterval)) retryConf
@@ -156,9 +168,9 @@ subTableP2 q@(SubscribeTableQuery name qt insert update delete retryConf webhook
   return successMsg
 
 instance HDBQuery SubscribeTableQuery where
-  type Phase1Res SubscribeTableQuery = EventTriggerInfo
+  type Phase1Res SubscribeTableQuery = ()
   phaseOne = subTableP1
-  phaseTwo q et = subTableP2 q et
+  phaseTwo q _ = subTableP2 q
   schemaCachePolicy = SCPReload
 
 unsubTableP1 :: (P1C m) => UnsubscribeTableQuery -> m ()
