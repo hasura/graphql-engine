@@ -25,6 +25,7 @@ hosted on GitHub pages and the Postgres+GraphQL Engine is running on Postgres.
 - Clone this repo:
   ```bash
   git clone https://github.com/shahidhk/hasura-realtime-poll
+  cd hasura-realtime-poll
   ```
 - [Install Hasura CLI](https://docs.hasura.io/1.0/graphql/manual/hasura-cli/install-hasura-cli.html)
 - Goto `hasura/` and edit `config.yaml`:
