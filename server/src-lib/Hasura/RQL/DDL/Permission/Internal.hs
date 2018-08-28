@@ -1,6 +1,8 @@
 {-# LANGUAGE DeriveLift             #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE LambdaCase             #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE OverloadedStrings      #-}
 {-# LANGUAGE QuasiQuotes            #-}
 {-# LANGUAGE RankNTypes             #-}
@@ -207,21 +209,19 @@ getDependentHeaders boolExp = case boolExp of
 
 
 valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
-valueParser columnType val = case (val, columnType) of
+valueParser columnType = \case
   -- When it is a special variable
-  (String t, ty)
-    | isXHasuraTxt t -> return $ S.SEUnsafe $
-      "current_setting('hasura." <> dropAndSnakeCase t
-       <> "')::" <> T.pack (show ty)
-
-    | isReqUserId t -> return $ S.SEUnsafe $
-      "current_setting('hasura." <> dropAndSnakeCase userIdHeader
-       <> "')::" <> T.pack (show ty)
-
-    | otherwise -> txtRHSBuilder ty val
+  val@(String t)
+    | isXHasuraTxt t -> asCurrentSetting t
+    | isReqUserId t -> asCurrentSetting userIdHeader
+    | otherwise -> txtRHSBuilder columnType val
 
   -- Typical value as Aeson's value
-  _ -> txtRHSBuilder columnType val
+  val -> txtRHSBuilder columnType val
+  where
+    asCurrentSetting hdr = return $ S.SEUnsafe $
+      "current_setting('hasura." <> dropAndSnakeCase hdr
+       <> "')::" <> T.pack (show columnType)
 
 -- Convert where clause into SQL BoolExp
 convFilterExp :: (MonadError QErr m)
