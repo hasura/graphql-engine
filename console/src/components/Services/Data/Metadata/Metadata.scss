@@ -1,0 +1,22 @@
+@import "../../../Common/Common.scss";
+
+.metadata_wrapper {
+  h4 {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .margin_bottom_header {
+    margin-bottom: 10px;
+  }
+  .intro_note {
+    .intro_note_heading {
+      margin-bottom: 10px;
+    }
+  }
+  .content_width {
+    width: 60%;
+  }
+}
+
+.export_metadata_wrapper {
+}

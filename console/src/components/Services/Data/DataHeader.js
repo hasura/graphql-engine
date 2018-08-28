@@ -73,6 +73,18 @@ const DataHeader = ({
                   SQL
                 </Link>
               </li>
+              <li
+                role="presentation"
+                className={
+                  currentLocation.indexOf('metadata') !== -1
+                    ? styles.active
+                    : ''
+                }
+              >
+                <Link to={appPrefix + '/metadata'} data-test="metadata-link">
+                  Manage GraphQL Engine Metadata
+                </Link>
+              </li>
               {migrationSection}
             </ul>
           </div>

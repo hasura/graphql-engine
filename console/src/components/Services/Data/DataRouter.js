@@ -20,6 +20,7 @@ import {
   permissionsConnector,
   dataHeaderConnector,
   migrationsConnector,
+  metadataConnector,
 } from '.';
 
 import {
@@ -105,6 +106,7 @@ const makeDataRouter = (
         component={addExistingTableViewConnector(connect)}
       />
       <Route path="sql" component={rawSQLConnector(connect)} />
+      <Route path="metadata" component={metadataConnector(connect)} />
       <Route
         path="migrations"
         onEnter={composeOnEnterHooks([consoleModeRedirects])}
