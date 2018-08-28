@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE MultiWayIf            #-}
@@ -10,7 +11,7 @@ module Hasura.HTTP
   ( HTTP(..)
   , HTTPSessionMgr(..)
   , mkHTTP
-  , mkHTTPPost
+  , mkAnyHTTPPost
   , mkHTTPMaybe
   , HTTPErr(..)
   , runHTTP
@@ -33,6 +34,7 @@ import qualified Data.Aeson.Casing        as J
 import qualified Data.Aeson.TH            as J
 import qualified Data.ByteString.Lazy     as B
 import qualified Data.CaseInsensitive     as CI
+import qualified Data.TByteString         as TBS
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as TE
 import qualified Data.Text.Encoding.Error as TE
@@ -67,7 +69,7 @@ data HTTPSessionMgr
 data HTTPErr
   = HClient !H.HttpException
   | HParse !N.Status !String
-  | HStatus !N.Status !J.Value
+  | HStatus !N.Status TBS.TByteString
   deriving (Show)
 
 instance J.ToJSON HTTPErr where
@@ -75,55 +77,17 @@ instance J.ToJSON HTTPErr where
     (HClient e) -> ("client", J.toJSON $ show e)
     (HParse st e) ->
       ( "parse"
-      , J.toJSON [ J.toJSON $ N.statusCode st
-        , J.toJSON $ show e
-        ]
+      , J.toJSON (N.statusCode st,  show e)
       )
     (HStatus st resp) ->
-      ("status", J.toJSON [ J.toJSON $ N.statusCode st, resp])
+      ("status", J.toJSON (N.statusCode st, resp))
     where
       toObj :: (T.Text, J.Value) -> J.Value
       toObj (k, v) = J.object [ "type" J..= k
                               , "detail" J..= v]
 
-instance J.FromJSON HTTPErr where
-  parseJSON (J.Object o) = do
-    typ <- o J..: "type"
-    det <- o J..: "detail"
-    case typ of
-      J.String "parse" -> do
-        sc  <- J.parseJSON $ head det
-        str <- J.parseJSON $ head $ tail det
-        return $ HParse (N.mkStatus sc "") str
-
-      J.String "status" -> do
-        sc  <- J.parseJSON $ head det
-        str <- J.parseJSON $ head $ tail det
-        return $ HStatus (N.mkStatus sc "") str
-
-      J.String "client" ->
-        return $ HStatus N.status500 "some H.HttpException occured!"
-
-      _ -> fail "Invalid HTTPErr type"
-
-  parseJSON _ = fail "Invalid HTTPErr type"
-    -- case typ of
-    --   J.String "parse" -> do
-    --     parsedDet <- J.parseJSON det
-    --     case parsedDet of
-    --       Just [a, b] -> HParse (N.mkStatus a "") b
-    --       _           -> fail "Could not decode as HParse"
-    -- this beautiful thing doesn't work because client and (parse, status) have different structures
-    -- let parsedDet = J.decode det
-    -- case (typ, parsedDet) of
-    --   ("parse" , Just [a, b]) -> HParse <$> J.parseJSON a <*> J.parseJSON b
-    --   ("status", Just [a, b]) -> HStatus <$> J.parseJSON a <*> J.parseJSON b
-    --   ("client", Just str)    -> HClient <$> J.parseJSON str
-    --   _                       -> fail "could not decode as HTTPErr"
-
-
 -- encapsulates a http operation
-instance ToEngineLog  HTTPErr where
+instance ToEngineLog HTTPErr where
   toEngineLog err = (LevelError, "event-trigger", J.toJSON err )
 
 data HTTP a
@@ -183,7 +147,7 @@ defaultParser :: (J.FromJSON a) => W.Response B.ByteString -> Either HTTPErr a
 defaultParser resp = if
   | respCode == N.status200 -> respJson resp
   | otherwise -> do
-      val <- respJson resp
+      let val = TBS.fromLBS $ resp ^. W.responseBody
       throwError $ HStatus respCode val
   where
     respCode = resp ^. W.responseStatus
@@ -195,7 +159,7 @@ defaultParserMaybe resp = if
   | respCode == N.status200 -> Just <$> respJson resp
   | respCode == N.status404 -> return Nothing
   | otherwise -> do
-      val <- respJson resp
+      let val = TBS.fromLBS $ resp ^. W.responseBody
       throwError $ HStatus respCode val
   where
     respCode = resp ^. W.responseStatus
@@ -205,7 +169,7 @@ default2xxParser :: (J.FromJSON a) => W.Response B.ByteString -> Either HTTPErr 
 default2xxParser resp = if
   | respCode >= N.status200 && respCode < N.status300 -> respJson resp
   | otherwise -> do
-      val <- respJson resp
+      let val = TBS.fromLBS $ resp ^. W.responseBody
       throwError $ HStatus respCode val
   where
     respCode = resp ^. W.responseStatus
@@ -214,7 +178,16 @@ noBody2xxParser :: W.Response B.ByteString -> Either HTTPErr ()
 noBody2xxParser resp = if
   | respCode >= N.status200 && respCode < N.status300 -> return ()
   | otherwise -> do
-      val <- respJson resp
+      let val = TBS.fromLBS $ resp ^. W.responseBody
+      throwError $ HStatus respCode val
+  where
+    respCode = resp ^. W.responseStatus
+
+anyBodyParser :: W.Response B.ByteString -> Either HTTPErr B.ByteString
+anyBodyParser resp = if
+  | respCode >= N.status200 && respCode < N.status300 -> return $ resp ^. W.responseBody
+  | otherwise -> do
+      let val = TBS.fromLBS $ resp ^. W.responseBody
       throwError $ HStatus respCode val
   where
     respCode = resp ^. W.responseStatus
@@ -224,9 +197,9 @@ mkHTTP method url =
   HTTP method url Nothing Nothing id defaultParser
   defaultRetryFn defaultRetryPolicy
 
-mkHTTPPost :: (J.FromJSON a) => String -> Maybe J.Value -> HTTP a
-mkHTTPPost url payload =
-  HTTP "POST" url payload Nothing id defaultParser
+mkAnyHTTPPost :: String -> Maybe J.Value -> HTTP B.ByteString
+mkAnyHTTPPost url payload =
+  HTTP "POST" url payload Nothing id anyBodyParser
   defaultRetryFn defaultRetryPolicy
 
 mkHTTPMaybe :: (J.FromJSON a) => String -> String -> HTTP (Maybe a)

@@ -15,10 +15,16 @@ import qualified Control.Concurrent.STM.TQueue as TQ
 import           Control.Monad.STM             (STM, atomically)
 import qualified Control.Retry                 as R
 import qualified Data.Aeson                    as J
+import qualified Data.ByteString.Lazy          as B
 import           Data.Either                   (isLeft)
 import           Data.Has
 import           Data.Int                      (Int64)
+import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
+import qualified Data.Text.Encoding            as TE
+import qualified Data.Text.Encoding.Error      as TE
+import qualified Data.Text.Lazy                as TL
+import qualified Data.Text.Lazy.Encoding       as TLE
 import           Data.Time.Clock               (UTCTime)
 import qualified Database.PG.Query             as Q
 import           Hasura.HTTP
@@ -50,7 +56,7 @@ data Invocation
   = Invocation
   { iEventId  :: UUID
   , iStatus   :: Int64
-  , iResponse :: J.Value
+  , iResponse :: TBS.TByteString
   }
 
 type EventQueue = TQ.TQueue Event
@@ -116,17 +122,17 @@ processEvent pool e = do
          , Has HTTPSessionMgr r
          , Has HLogger r
          )
-      => R.RetryStatus -> m (Either HTTPErr J.Value)
+      => R.RetryStatus -> m (Either HTTPErr B.ByteString)
     tryWebhook retrySt = do
       -- eitherResp <- runExceptT $ runHTTP W.defaults $ mkHTTPPost (T.unpack $ eWebhook undefined) (Just $ ePayload undefined)
-      eitherResp <- runExceptT $ runHTTP W.defaults $ mkHTTPPost (T.unpack $ eWebhook e) (Just $ ePayload e)
+      eitherResp <- runExceptT $ runHTTP W.defaults $ mkAnyHTTPPost (T.unpack $ eWebhook e) (Just $ ePayload e)
       finally <- runExceptT $ case eitherResp of
         Left err -> do
           case err of
-            HClient excp -> runFailureQ $ Invocation (eId e) 1000 (J.toJSON $ show excp)
-            HParse status detail -> runFailureQ $ Invocation (eId e) 1001 (J.toJSON detail)
+            HClient excp -> runFailureQ $ Invocation (eId e) 1000 (TBS.fromLBS $ J.encode $ show excp)
+            HParse status detail -> runFailureQ $ Invocation (eId e) 1001 (TBS.fromLBS $ J.encode detail)
             HStatus status detail -> runFailureQ $ Invocation (eId e) (fromIntegral $ N.statusCode status) detail
-        Right resp -> runSuccessQ e $ Invocation (eId e) 200 resp
+        Right resp -> runSuccessQ e $ Invocation (eId e) 200 (TBS.fromLBS resp)
       case finally of
         Left err -> liftIO $ print err
         Right _  -> return ()
@@ -156,6 +162,7 @@ processEvent pool e = do
     getTries :: Int
     getTries = fromIntegral $ eTries e
 
+    decodeLBS = TLE.decodeUtf8With TE.lenientDecode
 
 fetchEvents :: Q.TxE QErr [Event]
 fetchEvents =
@@ -175,7 +182,7 @@ insertInvocation invo = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
           INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, response)
           VALUES ($1, $2, $3)
-          |] (iEventId invo, iStatus invo, Q.AltJ $ iResponse invo) True
+          |] (iEventId invo, iStatus invo, Q.AltJ $ J.toJSON $ iResponse invo) True
   Q.unitQE defaultTxErrorHandler [Q.sql|
           UPDATE hdb_catalog.event_log
           SET tries = tries + 1
