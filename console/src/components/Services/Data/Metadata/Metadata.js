@@ -28,39 +28,29 @@ class Metadata extends Component {
             What is GraphQL engine metadata?
           </h4>
           <div className={metaDataStyles.content_width}>
-            Hasura GraphQL engine uses a set of internal tables to manage the
-            state of the database and the GraphQL schema. It uses the data in
-            these tables to generate the GraphQL API which then can be accessed
-            from different clients. Checkout{' '}
+            Information about your tables, relationships, and permissions that
+            is used to power the GraphQL API.
             <a
               href="https://docs.hasura.io/1.0/graphql/manual/engine-internals/index.html"
               target="_blank"
               rel="noopener noreferrer"
             >
-              docs
-            </a>{' '}
-            for more info.
+              Read more
+            </a>
+            .
+          </div>
+          <br />
+          <div className={metaDataStyles.content_width}>
+            You can export/import metadata as JSON.
           </div>
         </div>
-        <hr />
-        <h4 className={metaDataStyles.margin_bottom_header}>Export metadata</h4>
         <div className={metaDataStyles.display_inline}>
-          <p className={metaDataStyles.content_width}>
-            Download GraphQL engine's metadata as a json file. This file will
-            come in handy in future while migrating your GraphQL server to a
-            different environment or troubleshooting GraphQL engine in case of
-            any unexpected errors.
-          </p>
           <ExportMetadata {...this.props} />
         </div>
-        <hr />
-        <h4 className={metaDataStyles.margin_bottom_header}>Import metadata</h4>
-        <div>
-          <p className={metaDataStyles.content_width}>
-            Update GraphQL engine's metadata using a valid metadata file.
-          </p>
+        <div className={metaDataStyles.display_inline}>
           <ImportMetadata {...this.props} />
         </div>
+        <hr />
       </div>
     );
   }

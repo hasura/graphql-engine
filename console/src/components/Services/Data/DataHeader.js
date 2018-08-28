@@ -82,7 +82,7 @@ const DataHeader = ({
                 }
               >
                 <Link to={appPrefix + '/metadata'} data-test="metadata-link">
-                  Manage GraphQL Engine Metadata
+                  Metadata
                 </Link>
               </li>
               {migrationSection}

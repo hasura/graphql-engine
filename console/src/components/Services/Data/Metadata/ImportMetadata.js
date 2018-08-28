@@ -16,7 +16,7 @@ class ImportMetadata extends Component {
   }
   mockFileInput(c) {
     const element = document.createElement('div');
-    element.innerHTML = '<input type="file">';
+    element.innerHTML = '<input style="display:none" type="file">';
     document.body.appendChild(element);
     const fileInput = element.firstChild;
 
@@ -29,10 +29,18 @@ class ImportMetadata extends Component {
   importMetadata(fileContent) {
     this.setState({ isImporting: true });
     const url = Endpoints.query;
-    const requestBody = {
-      type: 'replace_metadata',
-      args: JSON.parse(fileContent),
-    };
+    let requestBody = {};
+    try {
+      const jsonContent = JSON.parse(fileContent);
+      requestBody = {
+        type: 'replace_metadata',
+        args: jsonContent,
+      };
+    } catch (e) {
+      alert('Error parsing JSON' + e.toString());
+      this.setState({ isImporting: false });
+      return;
+    }
     const options = {
       method: 'POST',
       credentials: globalCookiePolicy,
@@ -88,24 +96,23 @@ class ImportMetadata extends Component {
             const currThis = this;
             const processInputFile = (nodeElem, fileInput) => {
               const file = fileInput.files[0];
-
-              if (file.name.match(/\.(txt|json)$/)) {
+              if (file.name.match(/\.(json)$/)) {
                 const reader = new FileReader();
-
+                // Will execute this function once the reader has successfully read the file
                 reader.onload = () => {
                   nodeElem.remove();
                   currThis.importMetadata(reader.result);
                 };
                 reader.readAsText(file);
               } else {
-                alert('File not supported, .txt or .json files only');
+                alert('Please upload a .json file only.');
                 nodeElem.remove();
               }
             };
             this.mockFileInput(processInputFile);
           }}
         >
-          {this.state.isImporting ? 'Importing...' : 'Import Metadata'}
+          {this.state.isImporting ? 'Importing...' : 'Import metadata'}
         </button>
       </div>
     );

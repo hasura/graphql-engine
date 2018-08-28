@@ -20,7 +20,7 @@ class ExportMetadata extends Component {
       <div className={metaDataStyles.display_inline}>
         <button
           data-test="data-export-metadata"
-          className={styles.default_button}
+          className={styles.default_button + ' ' + metaDataStyles.margin_right}
           onClick={e => {
             e.preventDefault();
             this.setState({ isExporting: true });
@@ -82,7 +82,7 @@ class ExportMetadata extends Component {
               });
           }}
         >
-          {this.state.isExporting ? 'Exporting...' : 'Export Metadata'}
+          {this.state.isExporting ? 'Exporting...' : 'Export metadata'}
         </button>
       </div>
     );
