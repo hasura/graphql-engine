@@ -105,7 +105,7 @@ instance Show Code where
   show AlreadyInit         = "already-initialised"
   show NoTables            = "no-tables"
   show ValidationFailed    = "validation-failed"
-  show JWTRoleClaimMissing = "jwt-role-claim-missing"
+  show JWTRoleClaimMissing = "jwt-missing-role-claims"
   show JWTInvalidClaims    = "jwt-invalid-claims"
   show JWTInvalid          = "invalid-jwt"
   show JWTInvalidKey       = "invalid-jwt-key"

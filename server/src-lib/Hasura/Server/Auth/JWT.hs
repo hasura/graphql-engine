@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Hasura.Server.Auth.JWT
   ( processJwt
@@ -27,6 +28,9 @@ import           Hasura.Server.Utils        (accessKeyHeader, bsToTxt,
                                              userRoleHeader)
 
 import qualified Data.Aeson                 as A
+import qualified Data.Aeson.Casing          as A
+import qualified Data.Aeson.TH              as A
+
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.CaseInsensitive       as CI
@@ -40,6 +44,25 @@ import qualified Network.HTTP.Types         as HTTP
 
 type RawJWT = BL.ByteString
 
+data HasuraClaims
+  = HasuraClaims
+  { _cmAllowedRoles :: ![RoleName]
+  , _cmDefaultRole  :: !RoleName
+  } deriving (Show, Eq)
+$(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''HasuraClaims)
+
+-- | HGE's own representation of various JWKs
+data JWTConfig
+  = JWTConfig
+  { jcType :: !T.Text
+  , jcKey  :: !JWK
+  } deriving (Show, Eq)
+
+allowedRolesClaim :: T.Text
+allowedRolesClaim = "x-hasura-allowed-roles"
+
+defaultRoleClaim :: T.Text
+defaultRoleClaim = "x-hasura-default-role"
 
 -- | Process the request headers to verify the JWT and extract UserInfo from it
 processJwt
@@ -59,14 +82,21 @@ processJwt conf headers = do
   let claimsMap = Map.filterWithKey (\k _ -> T.isPrefixOf "x-hasura-" k) $
         claims ^. unregisteredClaims
 
-  -- try to parse x-hasura-allowed-roles
-  allowedRoles <- parseAllowedRoles claimsMap
-  -- deduce the role and metadata from given conf, headers and jwt claims
-  (role, metadata) <- parseRoleAndMetadata conf headers allowedRoles claimsMap
+  HasuraClaims allowedRoles defaultRole <- parseHasuraClaims claimsMap
+  let role = getCurrentRole defaultRole
 
-  -- delete the x-hasura-access-key from this map
-  let finalMetadata = Map.delete accessKeyHeader metadata
-  return $ UserInfo role finalMetadata
+  when (role `notElem` allowedRoles) currRoleNotAllowed
+  let finalClaims =
+        Map.delete defaultRoleClaim . Map.delete allowedRolesClaim $ claimsMap
+
+  -- transform the map of text:aeson-value -> text:text
+  metadata <- decodeJSON $ A.Object finalClaims
+
+  -- delete the x-hasura-access-key from this map, and insert x-hasura-role
+  let hasuraMd = Map.insert userRoleHeader (getRoleTxt role) $
+        Map.delete accessKeyHeader metadata
+
+  return $ UserInfo role hasuraMd
 
   where
     parseAuthzHeader = do
@@ -76,6 +106,16 @@ processJwt conf headers = do
       case tokenParts of
         ["Bearer", jwt] -> return jwt
         _               -> malformedAuthzHeader
+
+    -- see if there is a x-hasura-role header, or else pick the default role
+    getCurrentRole defaultRole =
+      let userRoleHeaderB = TE.encodeUtf8 userRoleHeader
+          mUserRole = snd <$> find (\h -> fst h == CI.mk userRoleHeaderB) headers
+      in maybe defaultRole (RoleName . bsToTxt) mUserRole
+
+    decodeJSON val = case A.fromJSON val of
+      A.Error e   -> throw400 JWTInvalidClaims ("x-hasura-* claims: " <> T.pack e)
+      A.Success a -> return a
 
     liftJWTError :: (MonadError e' m) => (e -> e') -> ExceptT e m a -> m a
     liftJWTError ef action = do
@@ -89,75 +129,41 @@ processJwt conf headers = do
       throw400 InvalidHeaders "Malformed Authorization header"
     missingAuthzHeader =
       throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
-
--- parse x-hasura-allowed-roles from JWT claims
-parseAllowedRoles
-  :: (MonadError QErr m)
-  => A.Object -> m (Maybe [RoleName])
-parseAllowedRoles claimsMap = do
-  let allowedRoles = Map.lookup "x-hasura-allowed-roles" claimsMap
-  mapM parseRes $ A.fromJSON <$> allowedRoles
-  where
-    parseRes r =
-      case r of
-        A.Success val -> return val
-        A.Error _ -> throw400 JWTInvalidClaims "invalid x-hasura-allowed-roles; should be a list of roles"
-
-
--- | Meat of the logic of JWT authz. Determine if x-hasura-allowed-roles is
--- | there, then parse that and assert if user's current role is in that list. User's
--- | current role comes from request header x-hasura-role if found or defaults to
--- | one mentioned in JWTConfig.
--- | If x-hasura-allowed-roles is not present, then the JWT claim should contain
--- | x-hasura-role
--- | Finally, return the deduced role and the claim converted to metadata
-parseRoleAndMetadata
-  :: (MonadError QErr m)
-  => JWTConfig
-  -> HTTP.RequestHeaders
-  -> Maybe [RoleName] -- allowed roles
-  -> A.Object         -- the JWT claims
-  -> m (RoleName, Map.HashMap T.Text T.Text)
-parseRoleAndMetadata conf headers mAllowedRoles claimsMap =
-  case mAllowedRoles of
-    Just allowedRoles -> do
-      -- if allowed roles present, check if current role is part of that.
-      -- current role: check if role is present in header, else pick default
-      -- role from jwt config
-      when (getCurrentRole `notElem` allowedRoles) currRoleNotAllowed
-      let finalClaims = Map.delete "x-hasura-allowed-roles" claimsMap
-      -- transform the map of text:aeson-value -> text:text
-      metadata <- decodeJSON $ A.Object finalClaims
-      let md = Map.insert "x-hasura-role" (getRoleTxt getCurrentRole) metadata
-      return (getCurrentRole, md)
-
-    -- no allowed roles present, convert the claims and try to assert user role
-    -- is present
-    Nothing -> do
-      -- transform the map of text:aeson-value -> text:text
-      metadata <- decodeJSON $ A.Object claimsMap
-      let mRole = Map.lookup userRoleHeader metadata
-      -- throw error if role is not in claims
-      role <- maybe missingRoleClaim return mRole
-      return (RoleName role, metadata)
-
-  where
-    -- see if there is a x-hasura-role header, or else pick the default role
-    -- from conf
-    getCurrentRole =
-      let userRoleHeaderB = TE.encodeUtf8 userRoleHeader
-          mUserRole = snd <$> find (\h -> fst h == CI.mk userRoleHeaderB) headers
-      in maybe (jcDefaultRole conf) (RoleName . bsToTxt) mUserRole
-
-    decodeJSON val = case A.fromJSON val of
-      A.Error e   -> throw400 JWTInvalidClaims ("x-hasura-* claims: " <> T.pack e)
-      A.Success a -> return a
-
     currRoleNotAllowed =
       throw400 AccessDenied "Your current role is not in allowed roles"
-    missingRoleClaim =
-      let msg = "JWT claim does not contain " <> userRoleHeader <> " or x-hasura-allowed-roles"
+
+
+-- parse x-hasura-allowed-roles, x-hasura-default-role from JWT claims
+parseHasuraClaims
+  :: (MonadError QErr m)
+  => A.Object -> m HasuraClaims
+parseHasuraClaims claimsMap = do
+  let mAllowedRolesV = Map.lookup allowedRolesClaim claimsMap
+  allowedRolesV <- maybe missingAllowedRolesClaim return mAllowedRolesV
+  allowedRoles <- parseJwtClaim (A.fromJSON allowedRolesV) errMsg
+
+  let mDefaultRoleV = Map.lookup defaultRoleClaim claimsMap
+  defaultRoleV <- maybe missingDefaultRoleClaim return mDefaultRoleV
+  defaultRole <- parseJwtClaim (A.fromJSON defaultRoleV) errMsg
+
+  return $ HasuraClaims allowedRoles defaultRole
+
+  where
+    missingAllowedRolesClaim =
+      let msg = "JWT claim does not contain " <> allowedRolesClaim
       in throw400 JWTRoleClaimMissing msg
+
+    missingDefaultRoleClaim =
+      let msg = "JWT claim does not contain " <> defaultRoleClaim
+      in throw400 JWTRoleClaimMissing msg
+
+    errMsg _ = "invalid " <> allowedRolesClaim <> "; should be a list of roles"
+
+    parseJwtClaim :: (MonadError QErr m) => A.Result a -> (String -> Text) -> m a
+    parseJwtClaim res errFn =
+      case res of
+        A.Success val -> return val
+        A.Error e     -> throw400 JWTInvalidClaims $ errFn e
 
 
 -- | Verify the JWT against given JWK
@@ -177,43 +183,34 @@ verifyJwt key rawJWT = do
     config = defaultJWTValidationSettings audCheck
 
 
--- | HGE's own representation of various JWKs
-data JWTConfig
-  = JWTConfig
-  { jcType        :: !T.Text
-  , jcKey         :: !JWK
-  , jcDefaultRole :: !RoleName
-  } deriving (Show, Eq)
-
 -- | Parse from a json string like:
--- | `{"type": "RS256", "key": "<PEM-encoded-public-key-or-X509-cert>", "default_role": "user"}`
+-- | `{"type": "RS256", "key": "<PEM-encoded-public-key-or-X509-cert>"}`
 -- | to JWTConfig
 instance A.FromJSON JWTConfig where
 
   parseJSON = A.withObject "JWTConfig" $ \o -> do
     keyType <- o A..: "type"
     rawKey  <- o A..: "key"
-    defaultRole <- o A..: "default_role"
     case keyType of
-      "HS256" -> parseHmacKey rawKey 256 keyType defaultRole
-      "HS384" -> parseHmacKey rawKey 384 keyType defaultRole
-      "HS512" -> parseHmacKey rawKey 512 keyType defaultRole
-      "RS256" -> parseRsaKey rawKey keyType defaultRole
-      "RS384" -> parseRsaKey rawKey keyType defaultRole
-      "RS512" -> parseRsaKey rawKey keyType defaultRole
+      "HS256" -> parseHmacKey rawKey 256 keyType
+      "HS384" -> parseHmacKey rawKey 384 keyType
+      "HS512" -> parseHmacKey rawKey 512 keyType
+      "RS256" -> parseRsaKey rawKey keyType
+      "RS384" -> parseRsaKey rawKey keyType
+      "RS512" -> parseRsaKey rawKey keyType
       -- TODO: support ES256, ES384, ES512, PS256, PS384
       _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
     where
-      parseHmacKey key size ktype role = do
+      parseHmacKey key size ktype = do
         let secret = BL.fromStrict $ TE.encodeUtf8 key
         when (BL.length secret < size `div` 8) $
           invalidJwk "Key size too small"
-        return $ JWTConfig ktype (fromOctets secret) role
+        return $ JWTConfig ktype (fromOctets secret)
 
-      parseRsaKey key ktype role = do
+      parseRsaKey key ktype = do
         let res = fromRawPem (BL.fromStrict $ TE.encodeUtf8 key)
             err e = "Could not decode PEM: " <> T.unpack e
-        either (invalidJwk . err) (\k -> return $ JWTConfig ktype k role) res
+        either (invalidJwk . err) (return . JWTConfig ktype) res
 
       invalidJwk msg = fail ("Invalid JWK: " <> msg)
 
