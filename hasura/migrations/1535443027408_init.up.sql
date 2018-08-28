@@ -52,7 +52,7 @@ CREATE TABLE public."user" (
 CREATE VIEW public.online_users AS
  SELECT count(*) AS count
    FROM public."user"
-  WHERE ("user".last_seen_at > (now() - '00:05:00'::interval));
+  WHERE ("user".last_seen_at > (now() - '00:00:15'::interval));
 
 
 --

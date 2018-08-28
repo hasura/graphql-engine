@@ -44,6 +44,11 @@ const renderChart = (data) => {
           title: 'Realtime results',
         },
         legend: { position: 'none' },
+        animation:{
+          duration: 1000,
+          easing: 'out',
+          startup: true,
+        },
       }}
     />
   )

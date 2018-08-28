@@ -9,8 +9,10 @@ import { getMainDefinition } from 'apollo-utilities';
 
 import { InMemoryCache } from 'apollo-cache-inmemory';
 
-const wsurl = 'wss://hasura-realtime-dashboard.herokuapp.com/v1alpha1/graphql';
-const httpurl = 'https://hasura-realtime-dashboard.herokuapp.com/v1alpha1/graphql';
+export const HASURA_GRAPHQL_ENGINE_HOSTNAME = 'hasura-realtime-dashboard.herokuapp.com';
+
+const wsurl = `wss://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1alpha1/graphql`;
+const httpurl = `https://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1alpha1/graphql`;
 
 const wsLink = new WebSocketLink({
   uri: wsurl,

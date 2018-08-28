@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import logo from './img/logo-white.svg';
 import './App.css';
 import { ApolloProvider } from 'react-apollo';
-import client from './apollo';
+import client, {HASURA_GRAPHQL_ENGINE_HOSTNAME} from './apollo';
 import Poll from './Poll';
 import { getUserId } from './session';
 import hasura_logo from './img/hasura_logo_200.png';
@@ -20,6 +20,7 @@ class App extends Component {
   }
 
   render() {
+    const consoleURL = `https://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/console/data/schema/public`;
     if (this.state.loading) return <p>Loading...</p>;
     return (
       <ApolloProvider client={client}>
@@ -40,7 +41,7 @@ class App extends Component {
                 Powered by <img src={hasura_logo} />
               </a>
               &nbsp; | &nbsp;
-              <a href="https://hasura-realtime-dashboard.herokuapp.com/console/data/schema/public" target="_blank">
+              <a href={consoleURL} target="_blank">
                 Database
               </a>
               &nbsp; | &nbsp;
