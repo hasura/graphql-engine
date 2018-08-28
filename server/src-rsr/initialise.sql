@@ -201,9 +201,12 @@ CREATE TABLE hdb_catalog.event_triggers_retry_conf
   FOREIGN KEY (name) REFERENCES hdb_catalog.event_triggers (name) ON DELETE CASCADE
 );
 
+-- required for generating uuid
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE hdb_catalog.event_log
 (
-  id BIGSERIAL PRIMARY KEY,
+  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
   trigger_name TEXT,
   payload JSONB NOT NULL,
   webhook TEXT NOT NULL,
@@ -216,8 +219,8 @@ CREATE TABLE hdb_catalog.event_log
 
 CREATE TABLE hdb_catalog.event_invocation_logs
 (
-  id BIGSERIAL PRIMARY KEY,
-  event_id INTEGER,
+  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
+  event_id TEXT,
   status INTEGER,
   response JSON,
   created_at TIMESTAMP DEFAULT NOW(),

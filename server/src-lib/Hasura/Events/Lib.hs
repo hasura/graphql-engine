@@ -30,7 +30,7 @@ import qualified Network.Wreq                  as W
 
 data Event
   = Event
-  { eId          :: Int64
+  { eId          :: UUID
   , eTriggerName :: TriggerName
   , ePayload     :: J.Value
   , eWebhook     :: T.Text
@@ -41,12 +41,14 @@ data Event
   , eRetryConf   :: (RCNumRetries, RCInterval)
   }
 
+type UUID = T.Text
+
 type RCNumRetries = Int64
 type RCInterval = Int64
 
 data Invocation
   = Invocation
-  { iEventId  :: Int64
+  { iEventId  :: UUID
   , iStatus   :: Int64
   , iResponse :: J.Value
   }
@@ -101,7 +103,9 @@ processEvent pool e = do
   liftIO $ print remainingRetries
   res <- R.retrying policy shouldRetry tryWebhook
   case res of
-    Left err   -> void $ runExceptT $ runErrorQ e
+    Left err   -> do
+      liftIO $ print err
+      void $ runExceptT $ runErrorQ e
     Right resp -> return ()
   runExceptT $ runUnlockQ e
   return ()
@@ -116,13 +120,16 @@ processEvent pool e = do
     tryWebhook retrySt = do
       -- eitherResp <- runExceptT $ runHTTP W.defaults $ mkHTTPPost (T.unpack $ eWebhook undefined) (Just $ ePayload undefined)
       eitherResp <- runExceptT $ runHTTP W.defaults $ mkHTTPPost (T.unpack $ eWebhook e) (Just $ ePayload e)
-      runExceptT $ case eitherResp of
+      finally <- runExceptT $ case eitherResp of
         Left err -> do
           case err of
             HClient excp -> runFailureQ $ Invocation (eId e) 1000 (J.toJSON $ show excp)
             HParse status detail -> runFailureQ $ Invocation (eId e) 1001 (J.toJSON detail)
             HStatus status detail -> runFailureQ $ Invocation (eId e) (fromIntegral $ N.statusCode status) detail
         Right resp -> runSuccessQ e $ Invocation (eId e) 200 resp
+      case finally of
+        Left err -> liftIO $ print err
+        Right _  -> return ()
       return eitherResp
 
     shouldRetry :: (Monad m ) => R.RetryStatus -> Either HTTPErr a -> m Bool
