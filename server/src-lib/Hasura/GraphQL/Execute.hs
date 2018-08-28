@@ -13,6 +13,7 @@ module Hasura.GraphQL.Execute
   , EP.RootFieldPlan
   ) where
 
+import           Data.Word                              (Word64)
 import           Hasura.Prelude
 
 import qualified Data.ByteString.Lazy                   as BL
@@ -31,16 +32,18 @@ import qualified Hasura.GraphQL.Validate                as VQ
 reqToTx
   :: (MonadIO m, MonadError QErr m)
   => UserInfo
+  -> Word64 -- schema version
   -> GCtxMap
   -> EC.QueryCache
   -> GQLReqUnparsed
   -> m (G.OperationType, GQLReqParsed, Q.TxE QErr BL.ByteString)
-reqToTx userInfo gCtxMap queryCache unParsedReq = do
+reqToTx userInfo schemaVer gCtxMap queryCache unParsedReq = do
   astM <- liftIO $ EC.getAST (_grQuery unParsedReq) queryCache
   req <- maybe (toParsed unParsedReq)
          (\ast -> return $ unParsedReq { _grQuery = ast}) astM
 
-  queryPlanM <- liftIO $ EC.getPlan (userRole userInfo) req queryCache
+  queryPlanM <- liftIO $ EC.getPlan schemaVer (userRole userInfo)
+                req queryCache
   case queryPlanM of
     Just queryPlan -> do
       (isSubs, tx) <- flip runReaderT gCtx $
@@ -57,7 +60,8 @@ reqToTx userInfo gCtxMap queryCache unParsedReq = do
           queryPlan <- EP.QueryPlan isSubs varDefs <$>
                        R.resolveQuerySelSet userInfo gCtx fields
           when (EP.isReusable queryPlan) $
-            liftIO $ EC.addPlan (userRole userInfo) req queryPlan queryCache
+            liftIO $ EC.addPlan schemaVer (userRole userInfo) req
+            queryPlan queryCache
           return $ EP.mkCurPlanTx queryPlan
   where
     gCtx = getGCtx (userRole userInfo) gCtxMap

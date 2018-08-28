@@ -28,6 +28,7 @@ import qualified STMContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
 import qualified Data.IORef                                  as IORef
+import           Data.Word                                   (Word64)
 
 import qualified Hasura.GraphQL.Execute                      as E
 import           Hasura.GraphQL.Resolve.Context              (RespTx)
@@ -120,7 +121,7 @@ data WSServerEnv
   , _wseServer    :: !WSServer
   , _wseRunTx     :: !TxRunner
   , _wseLiveQMap  :: !LiveQueryMap
-  , _wseGCtxMap   :: !(IORef.IORef (SchemaCache, GCtxMap))
+  , _wseGCtxMap   :: !(IORef.IORef (Word64, SchemaCache, GCtxMap))
   , _wseHManager  :: !H.Manager
   , _wsePlanCache :: !E.QueryCache
   }
@@ -174,9 +175,9 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndSend $ do
       throwError $ SMConnErr err
 
   -- validate and build tx
-  gCtxMap <- fmap snd $ liftIO $ IORef.readIORef gCtxMapRef
+  (schemaVer, _, gCtxMap) <- liftIO $ IORef.readIORef gCtxMapRef
   (opTy, parsedQ, qTx) <- withExceptT preExecErr $ loggingQErr $
-                          E.reqToTx userInfo gCtxMap planCache q
+                          E.reqToTx userInfo schemaVer gCtxMap planCache q
 
   let txWHdrs = RQ.setHeadersTx userInfo >> qTx
 
@@ -292,7 +293,7 @@ createWSServerEnv
   :: L.Logger
   -> H.Manager
   -> E.QueryCache
-  -> IORef.IORef (SchemaCache, GCtxMap)
+  -> IORef.IORef (Word64, SchemaCache, GCtxMap)
   -> TxRunner -> IO WSServerEnv
 createWSServerEnv logger httpManager planCache gCtxMapRef runTx = do
   (wsServer, lqMap) <-

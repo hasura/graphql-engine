@@ -5,6 +5,7 @@
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TupleSections         #-}
 
 module Hasura.Server.App where
 
@@ -17,6 +18,7 @@ import qualified Data.HashMap.Strict                    as M
 import qualified Data.Text                              as T
 import           Data.Time.Clock                        (UTCTime,
                                                          getCurrentTime)
+import           Data.Word                              (Word64)
 import           Network.Wai                            (requestHeaders,
                                                          strictRequestBody)
 import qualified Text.Mustache                          as M
@@ -72,7 +74,7 @@ data ServerCtx
   { scIsolation  :: Q.TxIsolation
   , scPGPool     :: Q.PGPool
   , scLogger     :: L.Logger
-  , scCacheRef   :: IORef (SchemaCache, GS.GCtxMap)
+  , scCacheRef   :: IORef (Word64, SchemaCache, GS.GCtxMap)
   , scCacheLock  :: MVar ()
   , scAuthMode   :: AuthMode
   , scManager    :: HTTP.Manager
@@ -111,8 +113,8 @@ buildQCtx ::  Handler QCtx
 buildQCtx = do
   scRef    <- scCacheRef . hcServerCtx <$> ask
   userInfo <- asks hcUser
-  cache <- liftIO $ readIORef scRef
-  return $ QCtx userInfo $ fst cache
+  (_, schemaCache, _) <- liftIO $ readIORef scRef
+  return $ QCtx userInfo schemaCache
 
 logResult
   :: (MonadIO m)
@@ -201,35 +203,39 @@ withLock lk action = do
 v1QueryHandler :: RQLQuery -> Handler BL.ByteString
 v1QueryHandler query = do
   lk <- scCacheLock . hcServerCtx <$> ask
-  bool (fst <$> dbAction) (withLock lk dbActionReload) $
+  bool (s3 <$> dbAction) (withLock lk dbActionReload) $
     queryNeedsReload query
   where
+    s3 (_, b, _) = b
     -- Hit postgres
     dbAction = do
       userInfo <- asks hcUser
       scRef <- scCacheRef . hcServerCtx <$> ask
-      schemaCache <- liftIO $ readIORef scRef
+      (curVersion, schemaCache, _) <- liftIO $ readIORef scRef
       pool <- scPGPool . hcServerCtx <$> ask
       isoL <- scIsolation . hcServerCtx <$> ask
-      runQuery pool isoL userInfo (fst schemaCache) query
+      (resp, newSc) <- runQuery pool isoL userInfo schemaCache query
+      return (curVersion, resp, newSc)
 
     -- Also update the schema cache
     dbActionReload = do
-      (resp, newSc) <- dbAction
+      (curVersion, resp, newSc) <- dbAction
       newGCtxMap <- GS.mkGCtxMap $ scTables newSc
       scRef <- scCacheRef . hcServerCtx <$> ask
-      liftIO $ writeIORef scRef (newSc, newGCtxMap)
+      liftIO $ writeIORef scRef (curVersion + 1, newSc, newGCtxMap)
+      queryCache <- scQueryCache . hcServerCtx <$> ask
+      liftIO $ E.clearQueryCache queryCache
       return resp
 
 v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler BL.ByteString
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   scRef <- scCacheRef . hcServerCtx <$> ask
-  cache <- liftIO $ readIORef scRef
+  (schemaVer, _, gqlCache) <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
   planCache <- scQueryCache . hcServerCtx <$> ask
-  GH.runGQ pool isoL userInfo (snd cache) planCache query
+  GH.runGQ pool isoL userInfo schemaVer gqlCache planCache query
 
 -- v1Alpha1GQSchemaHandler :: Handler BL.ByteString
 -- v1Alpha1GQSchemaHandler = do
@@ -282,7 +288,7 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager planCache mode corsCfg ena
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
         sc <- buildSchemaCache
-        (,) sc <$> GS.mkGCtxMap (scTables sc)
+        (0,,) sc <$> GS.mkGCtxMap (scTables sc)
       either initErrExit return pgResp >>= newIORef
 
     cacheLock <- newMVar ()
@@ -298,6 +304,7 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager planCache mode corsCfg ena
 
     wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager
                    planCache cacheRef runTx
+
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return $ WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
 

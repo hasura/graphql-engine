@@ -13,6 +13,8 @@ module Hasura.GraphQL.Execute.QueryCache
   , clearQueryCache
   ) where
 
+import           Data.Word                              (Word64)
+
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -22,7 +24,7 @@ import           Hasura.RQL.Types
 
 type PlanCache =
   LRU.LRUCache
-  (RoleName, Maybe GH.OperationName, GH.GQLExecDoc)
+  (Word64, RoleName, Maybe GH.OperationName, GH.GQLExecDoc)
   EP.QueryPlan
 
 initPlanCache :: IO PlanCache
@@ -56,16 +58,18 @@ addAST q ast queryCache =
     QueryCache (astCache, _) = queryCache
 
 getPlan
-  :: RoleName -> GH.GQLReqParsed -> QueryCache -> IO (Maybe EP.QueryPlan)
-getPlan rn (GH.GQLReq opNameM q _) queryCache =
-  LRU.lookup planCache (rn, opNameM, q)
+  :: Word64 -> RoleName -> GH.GQLReqParsed
+  -> QueryCache -> IO (Maybe EP.QueryPlan)
+getPlan schemaVer rn (GH.GQLReq opNameM q _) queryCache =
+  LRU.lookup planCache (schemaVer, rn, opNameM, q)
   where
     QueryCache (_, planCache) = queryCache
 
 addPlan
-  :: RoleName -> GH.GQLReqParsed -> EP.QueryPlan -> QueryCache -> IO ()
-addPlan rn (GH.GQLReq opNameM q _) queryPlan queryCache =
-  LRU.insert planCache (rn, opNameM, q) queryPlan
+  :: Word64 -> RoleName -> GH.GQLReqParsed
+  -> EP.QueryPlan -> QueryCache -> IO ()
+addPlan schemaVer rn (GH.GQLReq opNameM q _) queryPlan queryCache =
+  LRU.insert planCache (schemaVer, rn, opNameM, q) queryPlan
   where
     QueryCache (_, planCache) = queryCache
 
