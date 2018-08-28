@@ -25,8 +25,7 @@ class Metadata extends Component {
         <div className={metaDataStyles.intro_note}>
           <div className={metaDataStyles.content_width}>
             Hasura metadata stores information about your tables, relationships,
-            and permissions that are used to generate the GraphQL schema and
-            API.
+            and permissions that is used to generate the GraphQL schema and API.
             <a
               href="https://docs.hasura.io/1.0/graphql/manual/engine-internals/index.html"
               target="_blank"
