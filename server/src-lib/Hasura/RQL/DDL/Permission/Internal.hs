@@ -197,7 +197,7 @@ getDependentHeaders boolExp = case boolExp of
     parseOnlyString val = case val of
       (String t)
         | isXHasuraTxt t -> [T.toLower t]
-        | isReqUserId t -> ["x-hasura-user-id"]
+        | isReqUserId t -> [userIdHeader]
         | otherwise -> []
       _ -> []
     parseObject o = flip concatMap (M.toList o) $ \(k, v) ->
@@ -215,7 +215,8 @@ valueParser columnType val = case (val, columnType) of
        <> "')::" <> T.pack (show ty)
 
     | isReqUserId t -> return $ S.SEUnsafe $
-      "current_setting('hasura.user_id')::" <> T.pack (show ty)
+      "current_setting('hasura." <> dropAndSnakeCase userIdHeader
+       <> "')::" <> T.pack (show ty)
 
     | otherwise -> txtRHSBuilder ty val
 
