@@ -10,7 +10,6 @@ module Hasura.GraphQL.Resolve.Mutation
   , convertDelete
   ) where
 
-import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.Aeson.Text                   as AT
@@ -23,6 +22,7 @@ import qualified Language.GraphQL.Draft.Syntax     as G
 import qualified Hasura.RQL.DML.Delete             as RD
 import qualified Hasura.RQL.DML.Insert             as RI
 import qualified Hasura.RQL.DML.Returning          as RR
+import qualified Hasura.RQL.DML.Select             as RS
 import qualified Hasura.RQL.DML.Update             as RU
 
 import qualified Hasura.SQL.DML                    as S
@@ -30,6 +30,7 @@ import qualified Hasura.SQL.DML                    as S
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
+import           Hasura.GraphQL.Resolve.Select     (fromSelSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
@@ -43,25 +44,20 @@ withSelSet selSet f =
     return (G.unName $ G.unAlias $ _fAlias fld, res)
 
 convertReturning
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> SelSet -> m RR.RetFlds
-convertReturning ty selSet =
-  withSelSet selSet $ \fld ->
-    case _fName fld of
-      "__typename" -> return $ RR.RExp $ G.unName $ G.unNamedType ty
-      _ -> do
-        PGColInfo col colTy _ <- getPGColInfo ty $ _fName fld
-        return $ RR.RCol (col, colTy)
+  :: QualifiedTable -> G.NamedType -> SelSet -> Convert RS.SelectData
+convertReturning qt ty selSet = do
+  annFlds <- fromSelSet ty selSet
+  return $ RS.SelectData annFlds qt
+    (S.BELit True, Nothing) Nothing [] Nothing Nothing False
 
 convertMutResp
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> SelSet -> m RR.MutFlds
-convertMutResp ty selSet =
+  :: QualifiedTable -> G.NamedType -> SelSet -> Convert RR.MutFlds
+convertMutResp qt ty selSet =
   withSelSet selSet $ \fld ->
     case _fName fld of
       "__typename"    -> return $ RR.MExp $ G.unName $ G.unNamedType ty
       "affected_rows" -> return RR.MCount
-      _ -> fmap RR.MRet $ convertReturning (_fType fld) $ _fSelSet fld
+      _ -> fmap RR.MRet $ convertReturning qt (_fType fld) $ _fSelSet fld
 
 convertRowObj
   :: (MonadError QErr m, MonadState PrepArgs m)
@@ -129,7 +125,7 @@ convertInsert role (tn, vn) tableCols fld = do
   rows    <- withArg arguments "objects" asRowExps
   conflictCtxM <- withPathK "on_conflict" $
                  withArgM arguments "on_conflict" parseOnConflict
-  mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
+  mutFlds <- convertMutResp tn (_fType fld) $ _fSelSet fld
   args <- get
   return $
     bool (nonAdminInsert args rows conflictCtxM mutFlds)
@@ -231,7 +227,7 @@ convertUpdate tn filterExp fld = do
   -- delete at path in jsonb value
   deleteAtPathExpM <- withArgM args "_delete_at_path" convDeleteAtPathObj
 
-  mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
+  mutFlds  <- convertMutResp tn (_fType fld) $ _fSelSet fld
   prepArgs <- get
   let updExpsM = [ setExpM, incExpM, appendExpM, prependExpM
                  , deleteKeyExpM, deleteElemExpM, deleteAtPathExpM
@@ -253,7 +249,7 @@ convertDelete
   -> Convert RespTx
 convertDelete tn filterExp fld = do
   whereExp <- withArg (_fArguments fld) "where" $ convertBoolExp tn
-  mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
+  mutFlds  <- convertMutResp tn (_fType fld) $ _fSelSet fld
   args <- get
   let p1 = RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds
   return $ RD.deleteP2 (p1, args)

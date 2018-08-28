@@ -49,6 +49,9 @@ class IsIden a where
 instance IsIden Iden where
   toIden = id
 
+instance IsIden T.Text where
+  toIden = Iden
+
 class DQuote a where
   dquoteTxt :: a -> T.Text
 
@@ -163,6 +166,10 @@ qualTableToTxt (QualifiedTable (SchemaName "public") tn) =
   getTableTxt tn
 qualTableToTxt (QualifiedTable sn tn) =
   getSchemaTxt sn <> "." <> getTableTxt tn
+
+qualTableToSnakeCase :: QualifiedTable -> T.Text
+qualTableToSnakeCase (QualifiedTable sn tn) =
+  getSchemaTxt sn <> "_" <> getTableTxt tn
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
