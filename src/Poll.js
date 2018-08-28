@@ -55,15 +55,15 @@ class PollQuestion extends Component {
           <div className="textLeft">
             <h3>{this.props.poll.question}</h3>
             <form className="pollForm textLeft"
-              onSubmit={e => {
-                  e.preventDefault();
-                  vote({
-                    variables: {
-                      optionId: this.state.optionId,
-                      userId: this.state.userId
-                    }
-                  });
-              }}
+                  onSubmit={e => {
+                      e.preventDefault();
+                      vote({
+                        variables: {
+                          optionId: this.state.optionId,
+                          userId: this.state.userId
+                        }
+                      });
+                  }}
             >
               <FormGroup>
                 {
@@ -79,7 +79,7 @@ class PollQuestion extends Component {
                   ))
                 }
               </FormGroup>
-              <Button className="voteBtn" type="submit">Vote</Button>
+              <Button className="voteBtn" bsStyle="primary" type="submit">Vote</Button>
             </form>
             <div>
               <pre>{MUTATION_VOTE}</pre>

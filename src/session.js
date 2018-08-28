@@ -78,7 +78,7 @@ const reportUserOnline = (userId) => {
         uuid: userId,
       },
     });
-  }, 5000);
+  }, 10000);
 };
 
 export {

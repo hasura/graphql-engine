@@ -39,6 +39,14 @@ class App extends Component {
               <a href="https://hasura.io" target="_blank">
                 Powered by <img src={hasura_logo} />
               </a>
+              &nbsp; | &nbsp;
+              <a href="https://hasura-realtime-dashboard.herokuapp.com/console/data/schema/public" target="_blank">
+                Database
+              </a>
+              &nbsp; | &nbsp;
+              <a href="https://github.com/shahidhk/hasura-realtime-poll" target="_blank">
+                Source
+              </a>
             </div>
           </footer>
 
