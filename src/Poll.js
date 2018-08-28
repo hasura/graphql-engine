@@ -52,7 +52,7 @@ class PollQuestion extends Component {
     this.setState({...this.state, voteBtnText: '👍 Done', voteBtnStyle: 'success'});
     window.setTimeout(() => {
       this.setState({...this.state, voteBtnText: '🗳️ Vote', voteBtnStyle: 'primary'});
-    }, 5000)
+    }, 3000)
   }
 
   onMutationError = (e) => {
