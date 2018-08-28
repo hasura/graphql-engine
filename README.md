@@ -17,7 +17,9 @@ hosted on GitHub pages and the Postgres+GraphQL Engine is running on Postgres.
   
 # Running the app yourself
 
-- Deploy Postgres and GraphQL Engine on Heroku: [![Deploy to
+- Deploy Postgres and GraphQL Engine on Heroku:
+  
+  [![Deploy to
   heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 - Get the Heroku app URL (say `random-string-123.herokuapp.com`)
 - Clone this repo:
