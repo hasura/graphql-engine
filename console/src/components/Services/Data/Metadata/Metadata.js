@@ -18,23 +18,21 @@ class Metadata extends Component {
         <Helmet title="Manage GraphQL Engine Metadata | Hasura" />
         <div className={styles.subHeader}>
           <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-            Manage GraphQL Engine Metadata
+            Hasura Metadata
           </h2>
           <div className="clearfix" />
         </div>
-        <hr />
         <div className={metaDataStyles.intro_note}>
-          <h4 className={metaDataStyles.intro_note_heading}>
-            What is GraphQL engine metadata?
-          </h4>
           <div className={metaDataStyles.content_width}>
-            Information about your tables, relationships, and permissions that
-            is used to power the GraphQL API.
+            Hasura metadata stores information about your tables, relationships,
+            and permissions that are used to generate the GraphQL schema and
+            API.
             <a
               href="https://docs.hasura.io/1.0/graphql/manual/engine-internals/index.html"
               target="_blank"
               rel="noopener noreferrer"
             >
+              {' '}
               Read more
             </a>
             .
@@ -50,7 +48,6 @@ class Metadata extends Component {
         <div className={metaDataStyles.display_inline}>
           <ImportMetadata {...this.props} />
         </div>
-        <hr />
       </div>
     );
   }
