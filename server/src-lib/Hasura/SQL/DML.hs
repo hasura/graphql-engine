@@ -15,7 +15,7 @@ import qualified Data.Text.Extended         as T
 
 infixr 6 <->
 (<->) :: BB.Builder -> BB.Builder -> BB.Builder
-(<->) l r = l <> (BB.char7 ' ') <> r
+(<->) l r = l <> BB.char7 ' ' <> r
 {-# INLINE (<->) #-}
 
 paren :: BB.Builder -> BB.Builder
@@ -156,21 +156,30 @@ instance ToSQL WhereFrag where
 instance ToSQL Select where
   toSQL sel =
     BB.string7 "SELECT"
-    <-> (toSQL $ selDistinct sel)
+    <-> toSQL (selDistinct sel)
     <-> (", " <+> selExtr sel)
-    <-> (toSQL $ selFrom sel)
-    <-> (toSQL $ selWhere sel)
-    <-> (toSQL $ selGroupBy sel)
-    <-> (toSQL $ selHaving sel)
-    <-> (toSQL $ selOrderBy sel)
-    <-> (toSQL $ selLimit sel)
-    <-> (toSQL $ selOffset sel)
+    <-> toSQL (selFrom sel)
+    <-> toSQL (selWhere sel)
+    <-> toSQL (selGroupBy sel)
+    <-> toSQL (selHaving sel)
+    <-> toSQL (selOrderBy sel)
+    <-> toSQL (selLimit sel)
+    <-> toSQL (selOffset sel)
 
 mkSIdenExp :: (IsIden a) => a -> SQLExp
 mkSIdenExp = SEIden . toIden
 
 mkQIdenExp :: (IsIden a, IsIden b) => a -> b -> SQLExp
 mkQIdenExp q t = SEQIden $ mkQIden q t
+
+selectAsSingleObj :: Select -> Select
+selectAsSingleObj s = mkSelect{selExtr = [extr]}
+  where
+    annSelect = SETyAnn (SESelect s) jsonType
+    withOp = mkSQLOpExp (SQLOp "->") annSelect (SEUnsafe "0")
+    nullE = SETyAnn (SELit "null") jsonType
+    handleNull = SEFnApp "coalesce" [withOp, nullE] Nothing
+    extr = Extractor handleNull Nothing
 
 data Qual
   = QualIden !Iden
@@ -269,7 +278,7 @@ instance ToSQL SQLExp where
     TE.encodeUtf8Builder t
   toSQL (SESelect se) =
     paren $ toSQL se
-  toSQL (SEStar) =
+  toSQL SEStar =
     BB.char7 '*'
   toSQL (SEIden iden) =
     toSQL iden
@@ -315,10 +324,10 @@ toEmptyArrWhenNull e = SEFnApp "coalesce" [e, SELit "[]"] Nothing
 getExtrAlias :: Extractor -> Maybe Alias
 getExtrAlias (Extractor _ ma) = ma
 
-mkAliasedExtr :: (IsIden a, IsIden b) => a -> (Maybe b) -> Extractor
+mkAliasedExtr :: (IsIden a, IsIden b) => a -> Maybe b -> Extractor
 mkAliasedExtr t = mkAliasedExtrFromExp (mkSIdenExp t)
 
-mkAliasedExtrFromExp :: (IsIden a) => SQLExp -> (Maybe a) -> Extractor
+mkAliasedExtrFromExp :: (IsIden a) => SQLExp -> Maybe a -> Extractor
 mkAliasedExtrFromExp sqlExp ma = Extractor sqlExp (aliasF <$> ma)
   where
     aliasF = Alias . toIden
@@ -372,10 +381,10 @@ data JoinExpr
 
 instance ToSQL JoinExpr where
   toSQL je =
-    (toSQL $ tjeLeft je)
-    <-> (toSQL $ tjeType je)
-    <-> (toSQL $ tjeRight je)
-    <-> (toSQL $ tjeJC je)
+    toSQL (tjeLeft je)
+    <-> toSQL (tjeType je)
+    <-> toSQL (tjeRight je)
+    <-> toSQL (tjeJC je)
 
 data JoinType = Inner
               | LeftOuter
@@ -395,7 +404,7 @@ data JoinCond = JoinOn !BoolExp
 
 instance ToSQL JoinCond where
   toSQL (JoinOn be) =
-    BB.string7 "ON" <-> (paren $ toSQL be)
+    BB.string7 "ON" <-> paren (toSQL be)
   toSQL (JoinUsing cols) =
     BB.string7 "USING" <-> paren (","  <+> cols)
 
@@ -420,17 +429,17 @@ instance ToSQL BoolExp where
   toSQL (BELit True)  = TE.encodeUtf8Builder $ T.squote "true"
   toSQL (BELit False) = TE.encodeUtf8Builder $ T.squote "false"
   toSQL (BEBin bo bel ber) =
-    (paren $ toSQL bel) <-> (toSQL bo) <-> (paren $ toSQL ber)
+    paren (toSQL bel) <-> toSQL bo <-> paren (toSQL ber)
   toSQL (BENot be) =
-    BB.string7 "NOT" <-> (paren $ toSQL be)
+    BB.string7 "NOT" <-> paren (toSQL be)
   toSQL (BECompare co vl vr) =
-    (paren $ toSQL vl) <-> (toSQL co) <-> (paren $ toSQL vr)
+    paren (toSQL vl) <-> toSQL co <-> paren (toSQL vr)
   toSQL (BENull v) =
-    (paren $ toSQL v) <-> BB.string7 "IS NULL"
+    paren (toSQL v) <-> BB.string7 "IS NULL"
   toSQL (BENotNull v) =
-    (paren $ toSQL v) <-> BB.string7 "IS NOT NULL"
+    paren (toSQL v) <-> BB.string7 "IS NOT NULL"
   toSQL (BEExists sel) =
-    BB.string7 "EXISTS " <-> (paren $ toSQL sel)
+    BB.string7 "EXISTS " <-> paren (toSQL sel)
 
 data BinOp = AndOp
            | OrOp
@@ -531,18 +540,18 @@ instance ToSQL RetExp where
 
 instance ToSQL SQLDelete where
   toSQL sd = BB.string7 "DELETE FROM"
-             <-> (toSQL $ delTable sd)
-             <-> (toSQL $ delUsing sd)
-             <-> (toSQL $ delWhere sd)
-             <-> (toSQL $ delRet sd)
+             <-> toSQL (delTable sd)
+             <-> toSQL (delUsing sd)
+             <-> toSQL (delWhere sd)
+             <-> toSQL (delRet sd)
 
 instance ToSQL SQLUpdate where
   toSQL a = BB.string7 "UPDATE"
-            <-> (toSQL $ upTable a)
-            <-> (toSQL $ upSet a)
-            <-> (toSQL $ upFrom a)
-            <-> (toSQL $ upWhere a)
-            <-> (toSQL $ upRet a)
+            <-> toSQL (upTable a)
+            <-> toSQL (upSet a)
+            <-> toSQL (upFrom a)
+            <-> toSQL (upWhere a)
+            <-> toSQL (upRet a)
 
 instance ToSQL SetExp where
   toSQL (SetExp cvs) =
@@ -593,13 +602,13 @@ instance ToSQL SQLInsert where
           BB.string7 "(" <-> (", " <+> tupVals) <-> BB.string7 ")"
         insConflict = maybe (BB.string7 "") toSQL
     in "INSERT INTO"
-       <-> (toSQL $ siTable si)
+       <-> toSQL (siTable si)
        <-> BB.string7 "("
        <-> (", " <+> siCols si)
        <-> BB.string7 ") VALUES"
        <-> (", " <+> insTuples)
-       <-> (insConflict $ siConflict si)
-       <-> (toSQL $ siRet si)
+       <-> insConflict (siConflict si)
+       <-> toSQL (siRet si)
 
 data CTE
   = CTESelect !Select

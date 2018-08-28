@@ -6,6 +6,7 @@
 
 module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
+  , pgColValToBoolExp
   , convertBoolExp
   , prepare
   ) where
@@ -70,16 +71,24 @@ parseOpExps annVal = do
       AGScalar _ _ -> throw500 "boolean value is expected"
       _ -> tyMismatch "pgvalue" v
 
+parseAsEqOp
+  :: (MonadError QErr m)
+  => AnnGValue -> m [RA.OpExp]
+parseAsEqOp annVal = do
+  annValOpExp <- RA.AEQ <$> asPGColVal annVal
+  return [RA.OEVal annValOpExp]
+
 parseColExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => G.NamedType
   -> G.Name
   -> AnnGValue
+  -> (AnnGValue -> m [RA.OpExp])
   -> m RA.AnnVal
-parseColExp nt n val = do
+parseColExp nt n val expParser = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
-    Left  pgColInfo          -> RA.AVCol pgColInfo <$> parseOpExps val
+    Left  pgColInfo          -> RA.AVCol pgColInfo <$> expParser val
     Right (relInfo, permExp, _, _) -> do
       relBoolExp <- parseBoolExp val
       return $ RA.AVRel relInfo relBoolExp permExp
@@ -95,7 +104,7 @@ parseBoolExp annGVal = do
           | k == "_or"  -> BoolOr . fromMaybe [] <$> parseMany parseBoolExp v
           | k == "_and" -> BoolAnd . fromMaybe [] <$> parseMany parseBoolExp v
           | k == "_not" -> BoolNot <$> parseBoolExp v
-          | otherwise   -> BoolCol <$> parseColExp nt k v
+          | otherwise   -> BoolCol <$> parseColExp nt k v parseOpExps
   return $ BoolAnd $ fromMaybe [] boolExpsM
 
 convertBoolExp
@@ -105,3 +114,19 @@ convertBoolExp
 convertBoolExp tn whereArg = do
   whereExp <- parseBoolExp whereArg
   RG.convBoolRhs (RG.mkBoolExpBuilder prepare) (S.mkQual tn) whereExp
+
+type PGColValMap = Map.HashMap G.Name AnnGValue
+
+pgColValToBoolExp
+  :: QualifiedTable
+  -> PGColValMap
+  -> Convert (GBoolExp RG.AnnSQLBoolExp)
+pgColValToBoolExp tn colValMap = do
+  colExps <- forM colVals $ \(name, val) -> do
+    (ty, _) <- asPGColVal val
+    let namedTy = mkScalarTy ty
+    BoolCol <$> parseColExp namedTy name val parseAsEqOp
+  let whereExp = BoolAnd colExps
+  RG.convBoolRhs (RG.mkBoolExpBuilder prepare) (S.mkQual tn) whereExp
+  where
+    colVals = Map.toList colValMap
