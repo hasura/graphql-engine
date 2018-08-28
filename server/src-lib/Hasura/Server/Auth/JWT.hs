@@ -1,7 +1,6 @@
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Hasura.Server.Auth.JWT
   ( processJwt
@@ -41,10 +40,6 @@ import qualified Network.HTTP.Types         as HTTP
 
 type RawJWT = BL.ByteString
 
-newtype AllowedRoles
-  = AllowedRoles { getAllowedRoles :: [RoleName] }
-  deriving (Show, Eq, A.FromJSON)
-
 
 -- | Process the request headers to verify the JWT and extract UserInfo from it
 processJwt
@@ -64,7 +59,9 @@ processJwt conf headers = do
   let claimsMap = Map.filterWithKey (\k _ -> T.isPrefixOf "x-hasura-" k) $
         claims ^. unregisteredClaims
 
+  -- try to parse x-hasura-allowed-roles
   allowedRoles <- parseAllowedRoles claimsMap
+  -- deduce the role and metadata from given conf, headers and jwt claims
   (role, metadata) <- parseRoleAndMetadata conf headers allowedRoles claimsMap
 
   -- delete the x-hasura-access-key from this map
@@ -99,9 +96,7 @@ parseAllowedRoles
   => A.Object -> m (Maybe [RoleName])
 parseAllowedRoles claimsMap = do
   let allowedRoles = Map.lookup "x-hasura-allowed-roles" claimsMap
-  case A.fromJSON <$> allowedRoles of
-    Nothing -> return Nothing
-    Just ar -> parseRes ar
+  mapM parseRes $ A.fromJSON <$> allowedRoles
   where
     parseRes r =
       case r of
@@ -152,7 +147,7 @@ parseRoleAndMetadata conf headers mAllowedRoles claimsMap =
     getCurrentRole =
       let userRoleHeaderB = TE.encodeUtf8 userRoleHeader
           mUserRole = snd <$> find (\h -> fst h == CI.mk userRoleHeaderB) headers
-      in RoleName $ maybe (jcDefaultRole conf) bsToTxt mUserRole
+      in maybe (jcDefaultRole conf) (RoleName . bsToTxt) mUserRole
 
     decodeJSON val = case A.fromJSON val of
       A.Error e   -> throw400 JWTInvalidClaims ("x-hasura-* claims: " <> T.pack e)
@@ -187,7 +182,7 @@ data JWTConfig
   = JWTConfig
   { jcType        :: !T.Text
   , jcKey         :: !JWK
-  , jcDefaultRole :: !T.Text
+  , jcDefaultRole :: !RoleName
   } deriving (Show, Eq)
 
 -- | Parse from a json string like:
@@ -207,7 +202,7 @@ instance A.FromJSON JWTConfig where
       "RS384" -> parseRsaKey rawKey keyType defaultRole
       "RS512" -> parseRsaKey rawKey keyType defaultRole
       -- TODO: support ES256, ES384, ES512, PS256, PS384
-      _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " not supported")
+      _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
     where
       parseHmacKey key size ktype role = do
         let secret = BL.fromStrict $ TE.encodeUtf8 key
