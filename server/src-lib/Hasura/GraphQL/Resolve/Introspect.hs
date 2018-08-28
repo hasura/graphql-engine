@@ -278,9 +278,9 @@ schemaR fld =
     "__typename"   -> retJT "__Schema"
     "types"        -> fmap J.toJSON $ mapM (namedTypeR' subFld) $
                       sortBy (comparing getNamedTy) $ Map.elems tyMap
-    "queryType"    -> J.toJSON <$> namedTypeR (G.NamedType "query_root") subFld
-    "mutationType" -> typeR' "mutation_root" subFld
-    "subscriptionType" -> typeR' "subscription_root" subFld
+    "queryType"    -> J.toJSON <$> namedTypeR (G.NamedType "Query") subFld
+    "mutationType" -> typeR' "Mutation" subFld
+    "subscriptionType" -> typeR' "Subscription" subFld
     "directives"   -> J.toJSON <$> mapM (directiveR subFld)
                       (sortBy (comparing _diName) defaultDirectives)
     _              -> return J.Null

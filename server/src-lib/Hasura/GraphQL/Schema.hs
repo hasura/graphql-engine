@@ -1099,7 +1099,7 @@ mkGCtxMap tableCache = do
 
 mkGCtx :: TyAgg -> RootFlds -> GCtx
 mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) =
-  let queryRoot = mkObjTyInfo (Just "query root") (G.NamedType "query_root") $
+  let queryRoot = mkObjTyInfo (Just "query root") (G.NamedType "Query") $
                   mapFromL _fiName (schemaFld:typeFld:qFlds)
       colTys    = Set.toList $ Set.fromList $ map pgiType $
                   lefts $ Map.elems fldInfos
@@ -1117,13 +1117,13 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) =
   where
 
     mkMutRoot =
-      mkObjTyInfo (Just "mutation root") (G.NamedType "mutation_root") .
+      mkObjTyInfo (Just "mutation root") (G.NamedType "Mutation") .
       mapFromL _fiName
 
     mutRootM = bool (Just $ mkMutRoot mFlds) Nothing $ null mFlds
 
     mkSubRoot =
-      mkObjTyInfo (Just "subscription root") (G.NamedType "subscription_root") .
+      mkObjTyInfo (Just "subscription root") (G.NamedType "Subscription") .
       mapFromL _fiName
 
     subRootM = bool (Just $ mkSubRoot qFlds) Nothing $ null qFlds

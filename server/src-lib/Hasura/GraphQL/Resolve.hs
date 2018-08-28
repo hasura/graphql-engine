@@ -78,9 +78,9 @@ resolveFld userInfo gCtx opTy fld =
   where
     mkRootTypeName :: G.OperationType -> Text
     mkRootTypeName = \case
-      G.OperationTypeQuery        -> "query_root"
-      G.OperationTypeMutation     -> "mutation_root"
-      G.OperationTypeSubscription -> "subscription_root"
+      G.OperationTypeQuery        -> "Query"
+      G.OperationTypeMutation     -> "Mutation"
+      G.OperationTypeSubscription -> "Subscription"
 
 resolveSelSet
   :: UserInfo -> GCtx
