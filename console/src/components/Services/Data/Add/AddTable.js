@@ -407,42 +407,14 @@ class AddTable extends Component {
         </div>
       );
     });
-    let alert = null;
     let createBtnText = 'Create';
     if (ongoingRequest) {
-      alert = (
-        <div className="hidden col-xs-8">
-          <div className="alert alert-warning" role="alert">
-            Creating...
-          </div>
-        </div>
-      );
       createBtnText = 'Creating...';
     } else if (lastError) {
-      alert = (
-        <div className="hidden col-xs-8">
-          <div className="alert alert-danger" role="alert">
-            Error: {JSON.stringify(lastError)}
-          </div>
-        </div>
-      );
       createBtnText = 'Creating Failed. Try again';
     } else if (internalError) {
-      alert = (
-        <div className="hidden col-xs-8">
-          <div className="alert alert-danger" role="alert">
-            Validation Error: {internalError}
-          </div>
-        </div>
-      );
+      createBtnText = 'Creating Failed. Try again';
     } else if (lastSuccess) {
-      alert = (
-        <div className="hidden col-xs-8">
-          <div className="alert alert-success" role="alert">
-            Created! Redirecting...
-          </div>
-        </div>
-      );
       createBtnText = 'Created! Redirecting...';
     }
 
@@ -459,7 +431,6 @@ class AddTable extends Component {
         </div>
         <br />
         <div className={`container-fluid ${styles.padd_left_remove}`}>
-          {alert}
           <div
             className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
           >
