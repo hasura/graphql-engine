@@ -43,6 +43,9 @@ querySpecFiles =
   , "create_address_resident_relationship_error.yaml"
   , "create_user_permission_address.yaml"
   , "create_author_permission_role_admin_error.yaml"
+  , "create_user_permission_test_table.yaml"
+  , "all_json_queries.yaml"
+  , "upsert_role_user_error.yaml"
   ]
 
 gqlSpecFiles :: [FilePath]

@@ -3,7 +3,6 @@
 {-# LANGUAGE MultiWayIf            #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
 
 module Hasura.GraphQL.Resolve.Context
   ( FieldMap
@@ -26,9 +25,6 @@ module Hasura.GraphQL.Resolve.Context
   , module Hasura.GraphQL.Utils
   ) where
 
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
 import           Data.Has
 import           Hasura.Prelude
 
@@ -67,13 +63,6 @@ type OrdByResolveCtxElem = (PGColInfo, OrdTy, NullsOrder)
 
 type OrdByResolveCtx
   = Map.HashMap (G.NamedType, G.EnumValue) OrdByResolveCtxElem
-
-data InsertTxConflictCtx
-  = InsertTxConflictCtx
-  { itcAction     :: !ConflictAction
-  , itcConstraint :: !(Maybe ConstraintName)
-  } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''InsertTxConflictCtx)
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
