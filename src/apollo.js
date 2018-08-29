@@ -9,7 +9,7 @@ import { getMainDefinition } from 'apollo-utilities';
 
 import { InMemoryCache } from 'apollo-cache-inmemory';
 
-export const HASURA_GRAPHQL_ENGINE_HOSTNAME = 'hasura-realtime-dashboard.herokuapp.com';
+export const HASURA_GRAPHQL_ENGINE_HOSTNAME = 'hasura-realtime-poll.herokuapp.com';
 
 const wsurl = `wss://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1alpha1/graphql`;
 const httpurl = `https://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1alpha1/graphql`;
