@@ -11,7 +11,10 @@ const defaultViewState = {
       '*',
       {
         name: 'events',
-        columns: ['*', { name: 'logs', columns: ['*'] }],
+        columns: [
+          '*',
+          { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
+        ],
       },
     ],
     limit: 10,

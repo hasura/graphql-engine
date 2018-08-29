@@ -28,8 +28,6 @@ class Settings extends Component {
       }
     }
 
-    console.log(triggerSchema);
-
     const handleDeleteTrigger = () => {
       dispatch(deleteTrigger(triggerName));
     };
@@ -66,12 +64,15 @@ class Settings extends Component {
                   <td>{triggerSchema.type}</td>
                 </tr>
                 <tr>
-                  <td>Retry Number</td>
+                  <td>Number of Retries</td>
                   <td>{retryConf.num_retries}</td>
                 </tr>
                 <tr>
                   <td>Retry Interval</td>
-                  <td>{retryConf.interval_seconds}</td>
+                  <td>
+                    {retryConf.interval_seconds}{' '}
+                    {retryConf.interval_seconds > 1 ? 'seconds' : 'second'}
+                  </td>
                 </tr>
                 <tr>
                   <td>Operation / Columns</td>

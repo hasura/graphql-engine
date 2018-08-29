@@ -18,13 +18,11 @@ const MAKING_REQUEST = 'AddTrigger/MAKING_REQUEST';
 const REQUEST_SUCCESS = 'AddTrigger/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'AddTrigger/REQUEST_ERROR';
 const VALIDATION_ERROR = 'AddTrigger/VALIDATION_ERROR';
-const RESET_VALIDATION_ERROR = 'AddTrigger/RESET_VALIDATION_ERROR';
 const UPDATE_TABLE_LIST = 'AddTrigger/UPDATE_TABLE_LIST';
 const TOGGLE_COLUMNS = 'AddTrigger/TOGGLE_COLUMNS';
 const TOGGLE_QUERY_TYPE_SELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_SELECTED';
 const TOGGLE_QUERY_TYPE_DESELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_DESELECTED';
 
-const setDefaults = () => ({ type: SET_DEFAULTS });
 const setTriggerName = value => ({ type: SET_TRIGGERNAME, value });
 const setTableName = value => ({ type: SET_TABLENAME, value });
 const setSchemaName = value => ({ type: SET_SCHEMANAME, value });
@@ -37,7 +35,6 @@ const validationError = error => {
   alert(error);
   return { type: VALIDATION_ERROR, error };
 };
-const resetValidation = () => ({ type: RESET_VALIDATION_ERROR });
 
 const createTrigger = () => {
   return (dispatch, getState) => {
@@ -159,6 +156,14 @@ const operationToggleColumn = (column, operation) => {
   };
 };
 
+const operationToggleAllColumns = columns => {
+  return dispatch => {
+    dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'insert' });
+    dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'update' });
+    dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'delete' });
+  };
+};
+
 const setOperationSelection = (type, isChecked) => {
   return dispatch => {
     if (isChecked) {
@@ -194,8 +199,6 @@ const addTriggerReducer = (state = defaultState, action) => {
         lastError: action.data,
         lastSuccess: null,
       };
-    case RESET_VALIDATION_ERROR:
-      return { ...state, internalError: null, lastSuccess: null };
     case VALIDATION_ERROR:
       return { ...state, internalError: action.error, lastSuccess: null };
     case SET_TRIGGERNAME:
@@ -243,7 +246,6 @@ const addTriggerReducer = (state = defaultState, action) => {
 
 export default addTriggerReducer;
 export {
-  setDefaults,
   setTriggerName,
   setTableName,
   setSchemaName,
@@ -253,6 +255,7 @@ export {
   createTrigger,
   fetchTableListBySchema,
   operationToggleColumn,
+  operationToggleAllColumns,
   setOperationSelection,
 };
-export { resetValidation, validationError };
+export { validationError };

@@ -76,5 +76,12 @@
 }
 
 .invocationsSection .ReactTable {
-  width: 60%;
+  width: 70%;
+}
+.invocationsSection .ReactTable .rt-thead.-header {
+  display: none;
+}
+
+#requestResponseTab ul li a {
+  color: black;
 }

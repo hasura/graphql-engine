@@ -91,7 +91,7 @@ const vMakeRequest = () => {
       // reset order by for events
       if (currentQuery.columns[1]) {
         delete currentQuery.columns[1].order_by;
-        currentQuery.columns[1].order_by = ['-id'];
+        currentQuery.columns[1].order_by = ['-created_at'];
       }
       delete currentQuery.order_by;
     }
@@ -442,7 +442,10 @@ const processedEventsReducer = (
             '*',
             {
               name: 'events',
-              columns: ['*', { name: 'logs', columns: ['*'] }],
+              columns: [
+                '*',
+                { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
+              ],
               where: {
                 $or: [{ delivered: { $eq: true } }, { error: { $eq: true } }],
               },

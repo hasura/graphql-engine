@@ -10,33 +10,77 @@ import {
   setRetryNum,
   setRetryInterval,
   operationToggleColumn,
+  operationToggleAllColumns,
   setOperationSelection,
 } from './AddActions';
-import { setDefaults, createTrigger } from './AddActions';
-import { resetValidation, fetchTableListBySchema } from './AddActions';
+import { showErrorNotification } from '../Notification';
+import { createTrigger } from './AddActions';
+import { fetchTableListBySchema } from './AddActions';
 
 class AddTrigger extends Component {
   constructor(props) {
     super(props);
-    this.props.dispatch(setDefaults());
     this.props.dispatch(fetchTableListBySchema('public'));
+    this.state = { advancedExpanded: false };
   }
 
-  componentWillUnmount() {
-    this.props.dispatch(setDefaults());
-  }
   submitValidation() {
-    this.props.dispatch(resetValidation());
-    // table name validation
-    /*
-    if (this.tableNameCheck()) {
-      // column validation.
-      if (this.columnValidation()) {
-        // The primary key validation ensure.
+    // validations
+    let isValid = true;
+    let errorMsg = '';
+    let customMsg = '';
+    if (this.props.triggerName === '') {
+      isValid = false;
+      errorMsg = 'Trigger name cannot be empty';
+      customMsg = 'Trigger name cannot be empty. Please add a name';
+    } else if (!this.props.tableName) {
+      isValid = false;
+      errorMsg = 'Table cannot be empty';
+      customMsg = 'Please select a table name';
+    } else if (this.props.webhookURL === '') {
+      isValid = false;
+      errorMsg = 'Webhook URL cannot be empty';
+      customMsg = 'Webhook URL cannot be empty. Please add a valid URL';
+    } else if (this.props.retryConf) {
+      if (isNaN(parseInt(this.props.retryConf.num_retries, 10))) {
+        isValid = false;
+        errorMsg = 'Number of retries is not valid';
+        customMsg = 'Numer of retries cannot be empty and can only be numbers';
+      }
+      if (isNaN(parseInt(this.props.retryConf.interval_sec, 10))) {
+        isValid = false;
+        errorMsg = 'Retry interval is not valid';
+        customMsg = 'Retry interval cannot be empty and can only be numbers';
+      }
+    } else if (this.props.selectedOperations.insert) {
+      // check if columns are selected.
+      if (this.props.operations.insert.length === 0) {
+        isValid = false;
+        errorMsg = 'No columns selected for insert operation';
+        customMsg =
+          'Please select a minimum of one column for insert operation';
+      }
+    } else if (this.props.selectedOperations.update) {
+      // check if columns are selected.
+      if (this.props.operations.update.length === 0) {
+        isValid = false;
+        errorMsg = 'No columns selected for update operation';
+        customMsg =
+          'Please select a minimum of one column for update operation';
       }
     }
-    */
-    this.props.dispatch(createTrigger());
+    if (isValid) {
+      this.props.dispatch(createTrigger());
+    } else {
+      this.props.dispatch(
+        showErrorNotification('Error creating trigger!', errorMsg, '', {
+          custom: customMsg,
+        })
+      );
+    }
+  }
+  toggleAdvanced() {
+    this.setState({ advancedExpanded: !this.state.advancedExpanded });
   }
   render() {
     const {
@@ -44,6 +88,7 @@ class AddTrigger extends Component {
       tableListBySchema,
       schemaName,
       schemaList,
+      selectedOperations,
       operations,
       dispatch,
       ongoingRequest,
@@ -69,6 +114,18 @@ class AddTrigger extends Component {
 
     const updateTableSelection = e => {
       dispatch(setTableName(e.target.value));
+      const tableSchema = tableListBySchema.find(
+        t => t.table_name === e.target.value
+      );
+
+      const columns = [];
+      if (tableSchema) {
+        tableSchema.columns.map(colObj => {
+          const column = colObj.column_name;
+          columns.push(column);
+        });
+      }
+      dispatch(operationToggleAllColumns(columns));
     };
 
     const handleOperationSelection = e => {
@@ -187,104 +244,199 @@ class AddTrigger extends Component {
               })}
             </select>
             <hr />
-            {tableName ? (
-              <div className={styles.advancedOperations}>
-                <h4 className={styles.subheading_text}>
-                  Advanced - Operation/Columns &nbsp; &nbsp;
-                </h4>
-                <div>
+            <div
+              className={styles.add_mar_bottom + ' ' + styles.selectOperations}
+            >
+              <h4 className={styles.subheading_text}>Select operations</h4>
+              <div className={styles.display_inline}>
+                <label>
+                  <input
+                    onChange={handleOperationSelection}
+                    className={
+                      styles.display_inline + ' ' + styles.add_mar_right
+                    }
+                    type="checkbox"
+                    value="insert"
+                    checked={selectedOperations.insert}
+                  />
+                  Insert
+                </label>
+              </div>
+              <div
+                className={styles.display_inline + ' ' + styles.add_mar_left}
+              >
+                <label>
+                  <input
+                    onChange={handleOperationSelection}
+                    className={
+                      styles.display_inline + ' ' + styles.add_mar_right
+                    }
+                    type="checkbox"
+                    value="update"
+                    checked={selectedOperations.update}
+                  />
+                  Update
+                </label>
+              </div>
+              <div
+                className={styles.display_inline + ' ' + styles.add_mar_left}
+              >
+                <label>
+                  <input
+                    onChange={handleOperationSelection}
+                    className={
+                      styles.display_inline + ' ' + styles.add_mar_right
+                    }
+                    type="checkbox"
+                    value="delete"
+                    checked={selectedOperations.delete}
+                  />
+                  Delete
+                </label>
+              </div>
+            </div>
+            <hr />
+            <div className={styles.add_mar_bottom}>
+              <h4 className={styles.subheading_text}>
+                Webhook URL &nbsp; &nbsp;
+              </h4>
+              <input
+                type="text"
+                data-test="webhook"
+                placeholder="webhook url"
+                className={`${styles.tableNameInput} form-control`}
+                onChange={e => {
+                  dispatch(setWebhookURL(e.target.value));
+                }}
+              />
+            </div>
+            <hr />
+            <button
+              onClick={this.toggleAdvanced.bind(this)}
+              className={'btn btn-default ' + styles.advancedToggleBtn}
+            >
+              Advanced Settings
+              {this.state.advancedExpanded ? (
+                <i className={'fa fa-arrow-up'} />
+              ) : (
+                <i className={'fa fa-arrow-down'} />
+              )}
+            </button>
+            {this.state.advancedExpanded ? (
+              <div
+                className={
+                  styles.advancedOperations +
+                  ' ' +
+                  styles.add_mar_bottom +
+                  ' ' +
+                  styles.add_mar_top
+                }
+              >
+                {tableName ? (
                   <div>
-                    <input
-                      onChange={handleOperationSelection}
-                      className={
-                        styles.display_inline + ' ' + styles.add_mar_right
-                      }
-                      type="checkbox"
-                      value="insert"
-                    />
-                    <label>Insert</label>
+                    <h4 className={styles.subheading_text}>
+                      Advanced - Operation/Columns &nbsp; &nbsp;
+                    </h4>
+                    <div>
+                      <div>
+                        <label>
+                          <input
+                            onChange={handleOperationSelection}
+                            className={
+                              styles.display_inline + ' ' + styles.add_mar_right
+                            }
+                            type="checkbox"
+                            value="insert"
+                            checked={selectedOperations.insert}
+                          />
+                          Insert
+                        </label>
+                      </div>
+                      {getColumnList('insert')}
+                    </div>
+                    <hr />
+                    <div>
+                      <div>
+                        <label>
+                          <input
+                            onChange={handleOperationSelection}
+                            className={
+                              styles.display_inline + ' ' + styles.add_mar_right
+                            }
+                            type="checkbox"
+                            value="update"
+                            checked={selectedOperations.update}
+                          />
+                          Update
+                        </label>
+                      </div>
+                      {getColumnList('update')}
+                    </div>
+                    <hr />
+                    <div>
+                      <div>
+                        <label>
+                          <input
+                            onChange={handleOperationSelection}
+                            className={
+                              styles.display_inline + ' ' + styles.add_mar_right
+                            }
+                            type="checkbox"
+                            value="delete"
+                            checked={selectedOperations.delete}
+                          />
+                          Delete
+                        </label>
+                      </div>
+                      {getColumnList('delete')}
+                    </div>
                   </div>
-                  {getColumnList('insert')}
-                </div>
-                <hr />
-                <div>
-                  <div>
+                ) : null}
+                <div
+                  className={styles.add_mar_bottom + ' ' + styles.add_mar_top}
+                >
+                  <h4 className={styles.subheading_text}>Retry Logic</h4>
+                  <div
+                    className={
+                      styles.display_inline + ' ' + styles.retrySection
+                    }
+                  >
+                    <label
+                      className={styles.add_mar_right + ' ' + styles.retryLabel}
+                    >
+                      Number of retries
+                    </label>
                     <input
-                      onChange={handleOperationSelection}
-                      className={
-                        styles.display_inline + ' ' + styles.add_mar_right
-                      }
-                      type="checkbox"
-                      value="update"
+                      onChange={e => {
+                        dispatch(setRetryNum(e.target.value));
+                      }}
+                      className={styles.display_inline + ' form-control'}
+                      type="text"
+                      placeholder="no of retries"
                     />
-                    <label>Update</label>
                   </div>
-                  {getColumnList('update')}
-                </div>
-                <hr />
-                <div>
-                  <div>
+                  <div
+                    className={
+                      styles.display_inline + ' ' + styles.retrySection
+                    }
+                  >
+                    <label
+                      className={styles.add_mar_right + ' ' + styles.retryLabel}
+                    >
+                      Interval Seconds
+                    </label>
                     <input
-                      onChange={handleOperationSelection}
-                      className={
-                        styles.display_inline + ' ' + styles.add_mar_right
-                      }
-                      type="checkbox"
-                      value="delete"
+                      onChange={e => {
+                        dispatch(setRetryInterval(e.target.value));
+                      }}
+                      className={styles.display_inline + ' form-control'}
+                      type="text"
+                      placeholder="interval time in seconds"
                     />
-                    <label>Delete</label>
                   </div>
-                  {getColumnList('delete')}
                 </div>
               </div>
             ) : null}
-            <div className={styles.add_mar_bottom}>
-              <h4 className={styles.subheading_text}>Retry Logic</h4>
-              <div
-                className={styles.display_inline + ' ' + styles.retrySection}
-              >
-                <label
-                  className={styles.add_mar_right + ' ' + styles.retryLabel}
-                >
-                  Number of retries
-                </label>
-                <input
-                  onChange={e => {
-                    dispatch(setRetryNum(e.target.value));
-                  }}
-                  className={styles.display_inline + ' form-control'}
-                  type="text"
-                />
-              </div>
-              <div
-                className={styles.display_inline + ' ' + styles.retrySection}
-              >
-                <label
-                  className={styles.add_mar_right + ' ' + styles.retryLabel}
-                >
-                  Interval Seconds
-                </label>
-                <input
-                  onChange={e => {
-                    dispatch(setRetryInterval(e.target.value));
-                  }}
-                  className={styles.display_inline + ' form-control'}
-                  type="text"
-                />
-              </div>
-            </div>
-            <h4 className={styles.subheading_text}>
-              Webhook URL &nbsp; &nbsp;
-            </h4>
-            <input
-              type="text"
-              data-test="webhook"
-              placeholder="webhook url"
-              className={`${styles.tableNameInput} form-control`}
-              onChange={e => {
-                dispatch(setWebhookURL(e.target.value));
-              }}
-            />
             <hr />
             <button
               type="submit"
@@ -307,6 +459,7 @@ AddTrigger.propTypes = {
   schemaName: PropTypes.string,
   schemaList: PropTypes.array,
   tableListBySchema: PropTypes.array,
+  selectedOperations: PropTypes.object,
   operations: PropTypes.object,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,

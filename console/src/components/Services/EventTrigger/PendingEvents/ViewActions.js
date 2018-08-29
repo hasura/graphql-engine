@@ -64,7 +64,11 @@ const vMakeRequest = () => {
         currentQuery.columns[1].where = { delivered: false, error: false };
       }
       currentQuery.where = { name: state.triggers.currentTrigger };
-      countQuery.where = { trigger_name: state.triggers.currentTrigger, delivered: false, error: false };
+      countQuery.where = {
+        trigger_name: state.triggers.currentTrigger,
+        delivered: false,
+        error: false,
+      };
     }
 
     // order_by for relationship
@@ -77,7 +81,7 @@ const vMakeRequest = () => {
       // reset order by for events
       if (currentQuery.columns[1]) {
         delete currentQuery.columns[1].order_by;
-        currentQuery.columns[1].order_by = ['-id'];
+        currentQuery.columns[1].order_by = ['-created_at'];
       }
       delete currentQuery.order_by;
     }
@@ -415,8 +419,11 @@ const pendingEventsReducer = (triggerName, triggerList, viewState, action) => {
             '*',
             {
               name: 'events',
-              columns: ['*', { name: 'logs', columns: ['*'] }],
-              where: { delivered: false, error: false }
+              columns: [
+                '*',
+                { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
+              ],
+              where: { delivered: false, error: false },
             },
           ],
           limit: 10,

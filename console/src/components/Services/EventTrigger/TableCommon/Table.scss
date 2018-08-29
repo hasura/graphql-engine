@@ -193,6 +193,9 @@ a.expanded {
     margin-bottom: 10px;
   }
   margin-bottom: 10px;
+  label {
+    cursor: pointer;
+  }
 }
 
 .retryLabel {
@@ -220,5 +223,19 @@ a.expanded {
   }
   .invocationFailure {
     color: red;
+  }
+}
+
+.selectOperations {
+  label {
+    cursor: pointer;
+  }
+}
+
+.advancedToggleBtn {
+  width: 300px;
+  background: #f2f2f2 !important;
+  i {
+    padding-left: 5px;
   }
 }

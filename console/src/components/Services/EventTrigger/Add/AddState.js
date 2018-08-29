@@ -5,6 +5,7 @@ const defaultState = {
   tableListBySchema: [],
   operations: { insert: [], update: [], delete: [] },
   selectedOperations: { insert: false, update: false, delete: false },
+  webhookURL: '',
   retryConf: null,
   ongoingRequest: false,
   lastError: null,
