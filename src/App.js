@@ -6,6 +6,8 @@ import client, {HASURA_GRAPHQL_ENGINE_HOSTNAME} from './apollo';
 import Poll from './Poll';
 import { getUserId } from './session';
 import hasura_logo from './img/hasura_logo_200.png';
+import { Users } from './Users.react'
+import { GraphQL } from './GraphQL.jsx';
 
 class App extends Component {
   constructor (props) {
@@ -30,10 +32,15 @@ class App extends Component {
             <div className="container displayFlex">
               <img src={logo} className="App-logo" alt="logo" />
               <h1 className="App-title">Realtime Poll</h1>
+              &nbsp; | &nbsp;
+              <Users />
             </div>
           </header>
 
+
           <Poll userId={this.state.userId}/>
+
+          <GraphQL />
 
           <footer className="App-footer displayFlex">
             <div className="container hasura-logo">
@@ -48,6 +55,7 @@ class App extends Component {
               <a href="https://github.com/shahidhk/hasura-realtime-poll" target="_blank">
                 Source
               </a>
+              <div className="footer-small-text"><span>(The database resets every 30 minutes)</span></div>
             </div>
           </footer>
 

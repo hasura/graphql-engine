@@ -30,6 +30,8 @@
     height: 50px;
     text-align: center;
     width: 100%;
+    margin-bottom: 30px;
+    margin-top: 30px;
 }
 
 .App-title {
@@ -44,7 +46,7 @@
 }
 .pollWrapper
 {
-  padding-top: 30px;
+  padding-top: 10px;
 }
 .pollForm
 {
@@ -76,4 +78,31 @@ pre
 @keyframes App-logo-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+.footer-small-text {
+    padding-top: 10px;
+    font-size: 0.8em;
+}
+
+.online-users {
+    padding-top: 30px;
+}
+.online-users .alert {
+    margin-bottom: 0px;
+}
+
+.poll-result-chart-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 900px;
+    width: 100%;
+    min-height: 400px;
+}
+
+@media(max-width: 767px) {
+    .displayFlex {
+        display: block;
+    }
 }

@@ -7,22 +7,7 @@ import {
 } from 'react-bootstrap';
 import {Chart} from 'react-google-charts';
 import gql from 'graphql-tag';
-
-const SUBSCRIBE_RESULT = `
-  subscription getResult($pollId: uuid!) {
-    poll_results (
-      where: {
-        poll_id: {_eq: $pollId}
-      }
-    ) {
-      option {
-        id
-        text
-      }
-      votes
-    }
-  }
-`;
+import { SUBSCRIPTION_RESULT } from './GraphQL.jsx'
 
 const renderChart = (data) => {
   const d = [
@@ -33,13 +18,12 @@ const renderChart = (data) => {
   })
 
   return (
-    <Chart
-      width={'700px'}
-      height={'400px'}
+    <Chart className="poll-result-chart-container"
       chartType="BarChart"
       loader={<div>Loading Chart</div>}
       data={d}
       options={{
+        height: '100%',
         chart: {
           title: 'Realtime results',
         },
@@ -55,22 +39,14 @@ const renderChart = (data) => {
 };
 
 export const Result = (pollId) => (
-  <Subscription subscription={gql`${SUBSCRIBE_RESULT}`} variables={pollId}>
+  <Subscription subscription={gql`${SUBSCRIPTION_RESULT}`} variables={pollId}>
     {({ loading, error, data }) => {
        if (loading) return <p>Loading...</p>;
        if (error) return <p>Error :</p>;
        return (
          <div>
-           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', maxWidth: 900 }}>
-             {renderChart(data)}
-           </div>
-           <div><pre>{SUBSCRIBE_RESULT}</pre></div>
            <div>
-             {/*
-               data.poll_results.map((result, i) => (
-                 <div key={i}>{`${result.option.text}: ${result.votes}`}</div>
-               ))
-             */}
+             {renderChart(data)}
            </div>
          </div>
        );
