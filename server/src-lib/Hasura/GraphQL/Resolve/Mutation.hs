@@ -13,11 +13,7 @@ module Hasura.GraphQL.Resolve.Mutation
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Text                   as AT
-import qualified Data.ByteString.Builder           as BB
 import qualified Data.HashMap.Strict               as Map
-import qualified Data.Text.Lazy                    as LT
-import qualified Database.PG.Query                 as Q
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Delete             as RD
@@ -73,12 +69,10 @@ convertRowObj val =
     let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (PGCol $ G.unName k, prepExp)
 
-type ConflictCtx = (ConflictAction, Maybe ConstraintName)
-
 mkConflictClause
   :: (MonadError QErr m)
   => [PGCol]
-  -> ConflictCtx
+  -> RI.ConflictCtx
   -> m RI.ConflictClauseP1
 mkConflictClause cols (act, conM) = case (act , conM) of
   (CAIgnore, Nothing) -> return $ RI.CP1DoNothing Nothing
@@ -112,7 +106,7 @@ parseConstraint obj = do
 
 parseOnConflict
   :: (MonadError QErr m)
-  => AnnGValue -> m ConflictCtx
+  => AnnGValue -> m RI.ConflictCtx
 parseOnConflict val =
   flip withObject val $ \_ obj -> do
     action <- parseAction obj
@@ -129,12 +123,13 @@ convertInsert role (tn, vn) tableCols fld = do
   rows    <- withArg arguments "objects" asRowExps
   conflictCtxM <- withPathK "on_conflict" $
                  withArgM arguments "on_conflict" parseOnConflict
+  onConflictM <- mapM (mkConflictClause tableCols) conflictCtxM
   mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
   args <- get
+  let p1Query = RI.InsertQueryP1 tn vn tableCols rows onConflictM mutFlds
+      p1 = (p1Query, args)
   return $
-    bool (nonAdminInsert args rows conflictCtxM mutFlds)
-         (adminInsert args rows conflictCtxM mutFlds)
-         $ isAdmin role
+      bool (RI.nonAdminInsert p1) (RI.insertP2 p1) $ isAdmin role
   where
     arguments = _fArguments fld
     asRowExps = withArray (const $ mapM rowExpWithDefaults)
@@ -143,27 +138,6 @@ convertInsert role (tn, vn) tableCols fld = do
       return $ Map.elems $ Map.union (Map.fromList givenCols) defVals
 
     defVals = Map.fromList $ zip tableCols (repeat $ S.SEUnsafe "DEFAULT")
-
-    adminInsert args rows conflictCtxM mutFlds = do
-      onConflictM <- mapM (mkConflictClause tableCols) conflictCtxM
-      let p1 = RI.InsertQueryP1 tn vn tableCols rows onConflictM mutFlds
-      RI.insertP2 (p1, args)
-
-    nonAdminInsert args rows conflictCtxM mutFlds = do
-      mapM_ (mkConflictClause tableCols) conflictCtxM
-      setConflictCtxTx conflictCtxM
-      let p1 = RI.InsertQueryP1 tn vn tableCols rows Nothing mutFlds
-      RI.insertP2 (p1, args)
-
-    setConflictCtxTx conflictCtxM = do
-      let t = maybe "null" conflictCtxToJSON conflictCtxM
-          setVal = toSQL $ S.SELit t
-          setVar = BB.string7 "SET LOCAL hasura.conflict_clause = "
-          q = Q.fromBuilder $ setVar <> setVal
-      Q.unitQE defaultTxErrorHandler q () False
-
-    conflictCtxToJSON (act, constrM) =
-      LT.toStrict $ AT.encodeToLazyText $ InsertTxConflictCtx act constrM
 
 type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
 
