@@ -29,6 +29,8 @@ module Hasura.RQL.Types.DML
        , ConflictAction(..)
        , ConstraintOn(..)
 
+       , InsertTxConflictCtx(..)
+
        , UpdVals
        , UpdateQuery(..)
 
@@ -269,6 +271,13 @@ data InsertQuery
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsertQuery)
+
+data InsertTxConflictCtx
+  = InsertTxConflictCtx
+  { itcAction     :: !ConflictAction
+  , itcConstraint :: !(Maybe ConstraintName)
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''InsertTxConflictCtx)
 
 type UpdVals = M.HashMap PGCol Value
 

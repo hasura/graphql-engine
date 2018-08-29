@@ -36,6 +36,9 @@ userRoleHeader = "x-hasura-role"
 accessKeyHeader :: T.Text
 accessKeyHeader = "x-hasura-access-key"
 
+userIdHeader :: T.Text
+userIdHeader = "x-hasura-user-id"
+
 -- Parsing postgres database url
 -- from: https://github.com/futurice/postgresql-simple-url/
 parseDatabaseUrl :: String -> Maybe String -> Maybe Q.ConnInfo

@@ -8,8 +8,11 @@ module Hasura.RQL.DML.Insert where
 import           Data.Aeson.Types
 import           Instances.TH.Lift        ()
 
+import qualified Data.Aeson.Text          as AT
+import qualified Data.ByteString.Builder  as BB
 import qualified Data.HashMap.Strict      as HM
 import qualified Data.Sequence            as DS
+import qualified Data.Text.Lazy           as LT
 
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
@@ -172,6 +175,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
       unless (ipiAllowUpsert insPerm) $ throw400 PermissionDenied $
         "upsert is not allowed for role" <>> roleName
       buildConflictClause tableInfo c
+
   return $ InsertQueryP1 tableName insView insCols insTuples
            conflictClause mutFlds
 
@@ -198,11 +202,50 @@ insertP2 (u, p) =
   where
     insertSQL = toSQL $ mkSQLInsert u
 
+type ConflictCtx = (ConflictAction, Maybe ConstraintName)
+
+nonAdminInsert :: (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+nonAdminInsert (insQueryP1, args) = do
+  conflictCtxM <- mapM extractConflictCtx conflictClauseP1
+  setConflictCtx conflictCtxM
+  insertP2 (withoutConflictClause, args)
+  where
+    withoutConflictClause = insQueryP1{iqp1Conflict=Nothing}
+    conflictClauseP1 = iqp1Conflict insQueryP1
+
+extractConflictCtx :: (MonadError QErr m) => ConflictClauseP1 -> m ConflictCtx
+extractConflictCtx cp =
+  case cp of
+    (CP1DoNothing mConflictTar) -> do
+      mConstraintName <- mapM extractConstraintName mConflictTar
+      return (CAIgnore, mConstraintName)
+    (CP1Update conflictTar _) -> do
+      constraintName <- extractConstraintName conflictTar
+      return (CAUpdate, Just constraintName)
+  where
+    extractConstraintName (Constraint cn) = return cn
+    extractConstraintName _ = throw400 NotSupported
+      "\"constraint_on\" not supported for non admin insert. use \"constraint\" instead"
+
+setConflictCtx :: Maybe ConflictCtx -> Q.TxE QErr ()
+setConflictCtx conflictCtxM = do
+  let t = maybe "null" conflictCtxToJSON conflictCtxM
+      setVal = toSQL $ S.SELit t
+      setVar = BB.string7 "SET LOCAL hasura.conflict_clause = "
+      q = Q.fromBuilder $ setVar <> setVal
+  Q.unitQE defaultTxErrorHandler q () False
+  where
+    conflictCtxToJSON (act, constrM) =
+      LT.toStrict $ AT.encodeToLazyText $ InsertTxConflictCtx act constrM
+
 instance HDBQuery InsertQuery where
 
   type Phase1Res InsertQuery = (InsertQueryP1, DS.Seq Q.PrepArg)
   phaseOne = convInsQ
 
-  phaseTwo _ = liftTx . insertP2
+  phaseTwo _ p1Res = do
+    role <- userRole <$> ask
+    liftTx $
+      bool (nonAdminInsert p1Res) (insertP2 p1Res) $ isAdmin role
 
   schemaCachePolicy = SCPNoChange
