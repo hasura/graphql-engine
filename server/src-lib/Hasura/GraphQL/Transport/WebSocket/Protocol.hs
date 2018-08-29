@@ -25,6 +25,7 @@ import qualified Data.HashMap.Strict                    as Map
 
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
+import           Hasura.RQL.Types
 
 newtype OperationId
   = OperationId { unOperationId :: Text }
@@ -72,7 +73,7 @@ data DataMsg
   = DataMsg
   { _dmId      :: !OperationId
   , _dmPayload :: !GQResp
-  } deriving (Show, Eq)
+  }
 
 data ErrorMsg
   = ErrorMsg
@@ -95,7 +96,6 @@ data ServerMsg
   | SMData !DataMsg
   | SMErr !ErrorMsg
   | SMComplete !CompletionMsg
-  deriving (Show, Eq)
 
 data ServerMsgType
   = SMT_GQL_CONNECTION_ACK
@@ -120,7 +120,7 @@ instance J.ToJSON ServerMsgType where
 
 encodeServerMsg :: ServerMsg -> BL.ByteString
 encodeServerMsg msg =
-  mkJSONObj $ case msg of
+  encJToLBS $ encJFromAL $ case msg of
 
   SMConnAck ->
     [encTy SMT_GQL_CONNECTION_ACK]
@@ -130,25 +130,25 @@ encodeServerMsg msg =
 
   SMConnErr connErr ->
     [ encTy SMT_GQL_CONNECTION_ERROR
-    , ("payload", J.encode connErr)
+    , ("payload", encJFromJ connErr)
     ]
 
   SMData (DataMsg opId payload) ->
     [ encTy SMT_GQL_DATA
-    , ("id", J.encode opId)
+    , ("id", encJFromJ opId)
     , ("payload", encodeGQResp payload)
     ]
 
   SMErr (ErrorMsg opId payload) ->
     [ encTy SMT_GQL_ERROR
-    , ("id", J.encode opId)
-    , ("payload", J.encode payload)
+    , ("id", encJFromJ opId)
+    , ("payload", encJFromJ payload)
     ]
 
   SMComplete compMsg ->
     [ encTy SMT_GQL_COMPLETE
-    , ("id", J.encode $ unCompletionMsg compMsg)
+    , ("id", encJFromJ $ unCompletionMsg compMsg)
     ]
 
   where
-    encTy ty = ("type", J.encode ty)
+    encTy ty = ("type", encJFromJ ty)

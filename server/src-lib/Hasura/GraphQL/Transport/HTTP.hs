@@ -9,7 +9,6 @@ module Hasura.GraphQL.Transport.HTTP
 import           Data.Word                              (Word64)
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy                   as BL
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
@@ -28,14 +27,14 @@ runGQ
   -> GCtxMap
   -> E.QueryCache
   -> GQLReqUnparsed
-  -> m BL.ByteString
+  -> m EncJSON
 runGQ pool isoL userInfo schemaVer gCtxMap planCache req = do
   (opTy, _, tx) <- E.reqToTx userInfo schemaVer gCtxMap planCache req
   when (opTy == G.OperationTypeSubscription) $
     throw400 UnexpectedPayload
     "subscriptions are not supported over HTTP, use websockets instead"
   resp <- liftIO (runExceptT $ runTx tx) >>= liftEither
-  return $ encodeGQResp $ GQSuccess resp
+  return $ encodeGQResp $ GQSuccess $ encJToLBS resp
   where
     runTx tx =
       Q.runTx pool (isoL, Nothing) $

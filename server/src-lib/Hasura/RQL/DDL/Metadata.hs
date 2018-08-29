@@ -180,7 +180,7 @@ applyQP1 (ReplaceMetadata tables templates) = do
     getDups l =
       l L.\\ HS.toList (HS.fromList l)
 
-applyQP2 :: (UserInfoM m, P2C m) => ReplaceMetadata -> m RespBody
+applyQP2 :: (UserInfoM m, P2C m) => ReplaceMetadata -> m EncJSON
 applyQP2 (ReplaceMetadata tables templates) = do
 
   defaultSchemaCache <- liftTx $ clearMetadata >> DT.buildSchemaCache
@@ -336,7 +336,7 @@ instance HDBQuery ExportMetadata where
   type Phase1Res ExportMetadata = ()
   phaseOne _ = adminOnly
 
-  phaseTwo _ _ = encode <$> liftTx fetchMetadata
+  phaseTwo _ _ = encJFromJ <$> liftTx fetchMetadata
 
   schemaCachePolicy = SCPNoChange
 
@@ -354,8 +354,7 @@ instance HDBQuery DumpInternalState where
   type Phase1Res DumpInternalState = ()
   phaseOne _ = adminOnly
 
-  phaseTwo _ _ = do
-    sc <- askSchemaCache
-    return $ encode sc
+  phaseTwo _ _ =
+    encJFromJ <$> askSchemaCache
 
   schemaCachePolicy = SCPNoChange

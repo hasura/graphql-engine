@@ -168,9 +168,9 @@ convUpdateQuery f uq = do
 convUpdQ :: UpdateQuery -> P1 (UpdateQueryP1, DS.Seq Q.PrepArg)
 convUpdQ updQ = flip runStateT DS.empty $ convUpdateQuery binRHSBuilder updQ
 
-updateP2 :: (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+updateP2 :: (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 updateP2 (u, p) =
-  runIdentity . Q.getRow
+  encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder updateSQL) (toList p) True
   where
     updateSQL = toSQL $ mkSQLUpdate u

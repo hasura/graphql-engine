@@ -32,7 +32,6 @@ import           Data.Aeson.TH
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy              as BL
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.Sequence                     as Seq
 import qualified Database.PG.Query                 as Q
@@ -61,7 +60,7 @@ data NullsOrder
   | NLast
   deriving (Show, Eq)
 
-type RespTx = Q.TxE QErr BL.ByteString
+type RespTx = Q.TxE QErr EncJSON
 
 -- context needed for sql generation
 type OrdByResolveCtxElem = (PGColInfo, OrdTy, NullsOrder)

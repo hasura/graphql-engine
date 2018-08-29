@@ -86,9 +86,9 @@ convDeleteQuery prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
 convDelQ :: DeleteQuery -> P1 (DeleteQueryP1, DS.Seq Q.PrepArg)
 convDelQ delQ = flip runStateT DS.empty $ convDeleteQuery binRHSBuilder delQ
 
-deleteP2 :: (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+deleteP2 :: (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 deleteP2 (u, p) =
-  runIdentity . Q.getRow
+  encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder deleteSQL) (toList p) True
   where
     deleteSQL = toSQL $ mkSQLDelete u

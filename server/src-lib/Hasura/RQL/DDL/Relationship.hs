@@ -214,7 +214,7 @@ objRelP2 qt rd@(RelDef rn ru comment) = do
   objRelP2Setup qt rd
   liftTx $ persistRel qt rn ObjRel (toJSON ru) comment
 
-createObjRelP2 :: (P2C m) => CreateObjRel -> m RespBody
+createObjRelP2 :: (P2C m) => CreateObjRel -> m EncJSON
 createObjRelP2 (WithTable qt rd) = do
   objRelP2 qt rd
   return successMsg
@@ -310,7 +310,7 @@ arrRelP2 qt rd@(RelDef rn u comment) = do
   arrRelP2Setup qt rd
   liftTx $ persistRel qt rn ArrRel (toJSON u) comment
 
-createArrRelP2 :: (P2C m) => CreateArrRel -> m RespBody
+createArrRelP2 :: (P2C m) => CreateArrRel -> m EncJSON
 createArrRelP2 (WithTable qt rd) = do
   arrRelP2 qt rd
   return successMsg
@@ -351,7 +351,7 @@ purgeRelDep (SOTableObj tn (TOPerm rn pt)) =
 purgeRelDep d = throw500 $ "unexpected dependency of relationship : "
                 <> reportSchemaObj d
 
-dropRelP2 :: (P2C m) => DropRel -> [SchemaObjId] -> m RespBody
+dropRelP2 :: (P2C m) => DropRel -> [SchemaObjId] -> m EncJSON
 dropRelP2 (DropRel qt rn _) depObjs = do
   mapM_ purgeRelDep depObjs
   delFldFromCache (fromRel rn) qt
@@ -394,7 +394,7 @@ setRelCommentP1 (SetRelComment qt rn _) = do
   tabInfo <- askTabInfo qt
   void $ askRelType (tiFieldInfoMap tabInfo) rn ""
 
-setRelCommentP2 :: (P2C m) => SetRelComment -> m RespBody
+setRelCommentP2 :: (P2C m) => SetRelComment -> m EncJSON
 setRelCommentP2 arc = do
   liftTx $ setRelComment arc
   return successMsg

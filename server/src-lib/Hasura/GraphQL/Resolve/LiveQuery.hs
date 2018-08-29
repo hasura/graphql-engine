@@ -11,7 +11,6 @@ module Hasura.GraphQL.Resolve.LiveQuery
 
 import qualified Control.Concurrent.Async               as A
 import qualified Control.Concurrent.STM                 as STM
-import qualified Data.ByteString.Lazy                   as BL
 import qualified ListT
 import qualified STMContainers.Map                      as STMMap
 
@@ -52,7 +51,7 @@ type LiveQueryMap k = STMMap.Map LiveQuery (LQHandler k, ThreadTM)
 newLiveQueryMap :: STM.STM (LiveQueryMap k)
 newLiveQueryMap = STMMap.new
 
-type TxRunner = RespTx -> IO (Either QErr BL.ByteString)
+type TxRunner = RespTx -> IO (Either QErr EncJSON)
 
 removeLiveQuery
   :: (Eq k, Hashable k)
@@ -145,8 +144,8 @@ pollQuery runTx (LQHandler respTx respTV curOpsTV newOpsTV) = do
   res <- runTx respTx
 
   let resp = case res of
-        Left e   -> GQExecError [encodeGQErr False e]
-        Right bs -> GQSuccess bs
+        Left e     -> GQExecError [encodeGQErr False e]
+        Right encJ -> GQSuccess $ encJToLBS encJ
 
   -- extract the current and new operations
   (curOps, newOps) <- STM.atomically $ do

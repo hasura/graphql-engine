@@ -11,11 +11,9 @@ import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax   (Lift)
 
 import qualified Data.ByteString.Builder      as BB
-import qualified Data.ByteString.Lazy         as BL
 import qualified Data.HashMap.Strict          as Map
 import qualified Data.Sequence                as Seq
 import qualified Data.Text                    as T
-import qualified Data.Vector                  as V
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata
@@ -25,26 +23,11 @@ import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.Explain
 import           Hasura.RQL.DML.QueryTemplate
-import           Hasura.RQL.DML.Returning     (encodeJSONVector)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query            as Q
-
--- data QueryWithTxId
---   = QueryWithTxId
---   { qtTxId  :: !(Maybe TxId)
---   , qtQuery :: !RQLQuery
---   } deriving (Show, Eq)
-
--- instance FromJSON QueryWithTxId where
---   parseJSON v@(Object o) =
---     QueryWithTxId
---     <$> o .:! "transaction_id"
---     <*> parseJSON v
---   parseJSON _ =
---     fail "expecting on object for query"
 
 data RQLQuery
   = RQAddExistingTableOrView !TrackTable
@@ -100,7 +83,7 @@ buildTx
   => UserInfo
   -> SchemaCache
   -> q
-  -> Either QErr (Q.TxE QErr (BL.ByteString, SchemaCache))
+  -> Either QErr (Q.TxE QErr (EncJSON, SchemaCache))
 buildTx userInfo sc q = do
   p1Res <- withPathK "args" $ runP1 qEnv $ phaseOne q
   return $ flip runReaderT (qcUserInfo qEnv) $
@@ -112,7 +95,7 @@ runQuery
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation
   -> UserInfo -> SchemaCache
-  -> RQLQuery -> m (BL.ByteString, SchemaCache)
+  -> RQLQuery -> m (EncJSON, SchemaCache)
 runQuery pool isoL userInfo sc query = do
   tx <- liftEither $ buildTxAny userInfo sc query
   res <- liftIO $ runExceptT $ Q.runTx pool (isoL, Nothing) $
@@ -123,7 +106,7 @@ buildExplainTx
   :: UserInfo
   -> SchemaCache
   -> SelectQuery
-  -> Either QErr (Q.TxE QErr BL.ByteString)
+  -> Either QErr (Q.TxE QErr EncJSON)
 buildExplainTx userInfo sc q = do
   p1Res <- withPathK "query" $ runP1 qEnv $ phaseOneExplain q
   res <- return $ flip runReaderT (qcUserInfo qEnv) $
@@ -135,7 +118,7 @@ buildExplainTx userInfo sc q = do
 runExplainQuery
   :: Q.PGPool -> Q.TxIsolation
   -> UserInfo -> SchemaCache
-  -> SelectQuery -> ExceptT QErr IO BL.ByteString
+  -> SelectQuery -> ExceptT QErr IO EncJSON
 runExplainQuery pool isoL userInfo sc query = do
   tx <- liftEither $ buildExplainTx userInfo sc query
   Q.runTx pool (isoL, Nothing) $ setHeadersTx userInfo >> tx
@@ -186,7 +169,7 @@ queryNeedsReload qi = case qi of
 buildTxAny :: UserInfo
            -> SchemaCache
            -> RQLQuery
-           -> Either QErr (Q.TxE QErr (BL.ByteString, SchemaCache))
+           -> Either QErr (Q.TxE QErr (EncJSON, SchemaCache))
 buildTxAny userInfo sc rq = case rq of
   RQAddExistingTableOrView q    -> buildTx userInfo sc q
   RQTrackTable q                -> buildTx userInfo sc q
@@ -235,8 +218,7 @@ buildTxAny userInfo sc rq = case rq of
     in
       return $ withPathK "args" $ do
         (respList, finalSc) <- indexedFoldM f (Seq.empty, sc) qs
-        let bsVector = V.fromList $ toList respList
-        return ( BB.toLazyByteString $ encodeJSONVector BB.lazyByteString bsVector
+        return ( encJFromL $ toList respList
                , finalSc
                )
 

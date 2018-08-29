@@ -355,7 +355,7 @@ setPermCommentP1 (SetPermComment qt rn pt _) = do
       PTUpdate -> assertPermDefined rn PAUpdate tabInfo
       PTDelete -> assertPermDefined rn PADelete tabInfo
 
-setPermCommentP2 :: (P2C m) => SetPermComment -> m RespBody
+setPermCommentP2 :: (P2C m) => SetPermComment -> m EncJSON
 setPermCommentP2 apc = do
   liftTx $ setPermCommentTx apc
   return successMsg

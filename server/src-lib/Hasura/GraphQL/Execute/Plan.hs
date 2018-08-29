@@ -17,7 +17,6 @@ module Hasura.GraphQL.Execute.Plan
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
 import qualified Data.IntMap                            as IntMap
@@ -33,7 +32,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Value
 
 data RootFieldPlan
-  = RFPRaw !BL.ByteString
+  = RFPRaw !EncJSON
   | RFPPostgres !PGPlan
 
 type PlanVariables = Map.HashMap G.Variable Int
@@ -45,21 +44,6 @@ data PGPlan
   , _ppVariables :: !PlanVariables
   , _ppPrepared  :: !PrepArgMap
   }
-
-withPlan
-  :: PGPlan -> AnnVarVals -> Q.TxE QErr BL.ByteString
-withPlan (PGPlan q reqVars prepMap) annVars = do
-  prepMap' <- foldM getVar prepMap (Map.toList reqVars)
-  let args = IntMap.elems prepMap'
-  runIdentity . Q.getRow <$> Q.rawQE dmlTxErrorHandler q args True
-  where
-    getVar accum (var, prepNo) = do
-      let varName = G.unName $ G.unVariable var
-      annVal <- onNothing (Map.lookup var annVars) $
-        throw500 $ "missing variable in annVars : " <> varName
-      (_, _, _, colVal) <- asPGColVal annVal
-      let prepVal = binEncoder colVal
-      return $ IntMap.insert prepNo prepVal accum
 
 data QueryPlan
   = QueryPlan
@@ -83,14 +67,31 @@ isReusable (QueryPlan _ vars fldPlans) =
       RFPRaw _           -> True
       RFPPostgres pgPlan -> allUsed $ Map.keys $ _ppVariables pgPlan
 
+withPlan
+  :: PGPlan -> AnnVarVals -> Q.TxE QErr EncJSON
+withPlan (PGPlan q reqVars prepMap) annVars = do
+  prepMap' <- foldM getVar prepMap (Map.toList reqVars)
+  let args = IntMap.elems prepMap'
+  encJFromBS . runIdentity . Q.getRow <$>
+    Q.rawQE dmlTxErrorHandler q args True
+  where
+    getVar accum (var, prepNo) = do
+      let varName = G.unName $ G.unVariable var
+      annVal <- onNothing (Map.lookup var annVars) $
+        throw500 $ "missing variable in annVars : " <> varName
+      (_, _, _, colVal) <- asPGColVal annVal
+      let prepVal = binEncoder colVal
+      return $ IntMap.insert prepNo prepVal accum
+
+-- use the existing plan and new variables to create a pg query
 mkNewQueryTx
   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
   => Maybe GH.VariableValues
   -> QueryPlan
-  -> m (Bool, Q.TxE QErr BL.ByteString)
+  -> m (Bool, Q.TxE QErr EncJSON)
 mkNewQueryTx varValsM (QueryPlan isSubs varDefs fldPlans) = do
   annVars <- GV.getAnnVarVals varDefs varVals
-  let tx = fmap GH.mkJSONObj $ forM fldPlans $ \(alias, fldPlan) -> do
+  let tx = fmap encJFromAL $ forM fldPlans $ \(alias, fldPlan) -> do
         fldResp <- case fldPlan of
           RFPRaw resp        -> return resp
           RFPPostgres pgPlan -> withPlan pgPlan annVars
@@ -99,11 +100,12 @@ mkNewQueryTx varValsM (QueryPlan isSubs varDefs fldPlans) = do
   where
     varVals = fromMaybe Map.empty varValsM
 
+-- turn the current plan into a transaction
 mkCurPlanTx
   :: QueryPlan
-  -> Q.TxE QErr BL.ByteString
+  -> Q.TxE QErr EncJSON
 mkCurPlanTx (QueryPlan _ _ fldPlans) =
-  fmap GH.mkJSONObj $ forM fldPlans $ \(alias, fldPlan) -> do
+  fmap encJFromAL $ forM fldPlans $ \(alias, fldPlan) -> do
     fldResp <- case fldPlan of
       RFPRaw resp        -> return resp
       RFPPostgres pgPlan -> planTx pgPlan
@@ -111,4 +113,5 @@ mkCurPlanTx (QueryPlan _ _ fldPlans) =
   where
     planTx (PGPlan q _ prepMap) = do
       let args = IntMap.elems prepMap
-      runIdentity . Q.getRow <$> Q.rawQE dmlTxErrorHandler q args True
+      encJFromBS . runIdentity . Q.getRow
+        <$> Q.rawQE dmlTxErrorHandler q args True

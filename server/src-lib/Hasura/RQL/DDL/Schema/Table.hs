@@ -97,7 +97,7 @@ trackExistingTableOrViewP2Setup tn isSystemDefined = do
   addTableToCache ti
 
 trackExistingTableOrViewP2
-  :: (P2C m) => QualifiedTable -> Bool -> m RespBody
+  :: (P2C m) => QualifiedTable -> Bool -> m EncJSON
 trackExistingTableOrViewP2 vn isSystemDefined = do
   trackExistingTableOrViewP2Setup vn isSystemDefined
   liftTx $ Q.catchE defaultTxErrorHandler $
@@ -219,7 +219,7 @@ unTrackExistingTableOrViewP1 ut@(UntrackTable vn _) = do
       "view/table already untracked : " <>> vn
 
 unTrackExistingTableOrViewP2 :: (P2C m)
-                             => UntrackTable -> TableInfo -> m RespBody
+                             => UntrackTable -> TableInfo -> m EncJSON
 unTrackExistingTableOrViewP2 (UntrackTable vn cascade) tableInfo = do
   sc <- askSchemaCache
 
@@ -371,7 +371,7 @@ data RunSQLRes
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RunSQLRes)
 
-runSqlP2 :: (P2C m) => RunSQL -> m RespBody
+runSqlP2 :: (P2C m) => RunSQL -> m EncJSON
 runSqlP2 (RunSQL t cascade) = do
 
   -- Drop hdb_views so no interference is caused to the sql query
@@ -410,7 +410,7 @@ runSqlP2 (RunSQL t cascade) = do
     forM_ (M.elems $ tiRolePermInfoMap ti) $ \rpi ->
       maybe (return ()) (\ipi -> liftTx $ buildInsInfra tn ipi pgCols) $ _permIns rpi
 
-  return $ encode (res :: RunSQLRes)
+  return $ encJFromJ (res :: RunSQLRes)
 
   where
     rawSqlErrHandler :: Q.PGTxErr -> QErr

@@ -25,6 +25,7 @@ import           Hasura.GraphQL.Execute     as GE
 import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
+import           Hasura.RQL.Types           (encJToLBS)
 import           Hasura.Server.App          (mkWaiApp)
 import           Hasura.Server.Auth         (AuthMode (..))
 import           Hasura.Server.CheckUpdates (checkForUpdates)
@@ -146,7 +147,7 @@ main =  do
     ROExecute -> do
       queryBs <- BL.getContents
       res <- runTx ci $ execQuery queryBs
-      either ((>> exitFailure) . printJSON) BLC.putStrLn res
+      either ((>> exitFailure) . printJSON) (BLC.putStrLn . encJToLBS) res
   where
     runTx ci tx = do
       pool <- getMinimalPool ci

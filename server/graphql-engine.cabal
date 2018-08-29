@@ -122,6 +122,7 @@ library
                      , regex-compat
                      -- caching related
                      , psqueues
+                     , binary
 
   exposed-modules:     Hasura.Server.App
                      , Hasura.Server.Auth

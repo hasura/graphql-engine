@@ -157,7 +157,7 @@ migrateCatalog migrationTime = do
                        "upgraded_on" = $2
                     |] (curCatalogVer, migrationTime) False
 
-execQuery :: BL.ByteString -> Q.TxE QErr BL.ByteString
+execQuery :: BL.ByteString -> Q.TxE QErr EncJSON
 execQuery queryBs = do
   query <- case A.decode queryBs of
     Just jVal -> decodeValue jVal

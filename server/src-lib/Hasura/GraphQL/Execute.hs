@@ -16,7 +16,6 @@ module Hasura.GraphQL.Execute
 import           Data.Word                              (Word64)
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy                   as BL
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
@@ -36,7 +35,7 @@ reqToTx
   -> GCtxMap
   -> EC.QueryCache
   -> GQLReqUnparsed
-  -> m (G.OperationType, GQLReqParsed, Q.TxE QErr BL.ByteString)
+  -> m (G.OperationType, GQLReqParsed, Q.TxE QErr EncJSON)
 reqToTx userInfo schemaVer gCtxMap queryCache unParsedReq = do
   astM <- liftIO $ EC.getAST (_grQuery unParsedReq) queryCache
   req <- maybe (toParsed unParsedReq)

@@ -1,14 +1,15 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE FlexibleInstances   #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies        #-}
 
 module Hasura.RQL.DML.Count where
 
 import           Data.Aeson
 import           Instances.TH.Lift       ()
 
-import qualified Data.ByteString.Builder as BB
+import qualified Data.Binary.Builder     as BB
 import qualified Data.Sequence           as DS
 
 import           Hasura.Prelude
@@ -103,14 +104,14 @@ countP1 prepValBuilder (CountQuery qt mDistCols mWhere) = do
     relInDistColsErr =
       "Relationships can't be used in \"distinct\"."
 
-countP2 :: (P2C m) => (CountQueryP1, DS.Seq Q.PrepArg) -> m RespBody
+countP2 :: (P2C m) => (CountQueryP1, DS.Seq Q.PrepArg) -> m EncJSON
 countP2 (u, p) = do
   qRes <- liftTx $ Q.rawQE dmlTxErrorHandler (Q.fromBuilder countSQL) (toList p) True
-  return $ BB.toLazyByteString $ encodeCount qRes
+  return $ encJFromB $ encodeCount qRes
   where
     countSQL = toSQL $ mkSQLCount u
-    encodeCount (Q.SingleRow (Identity c)) =
-      BB.byteString "{\"count\":" <> BB.intDec c <> BB.char7 '}'
+    encodeCount (Q.SingleRow (Identity (c::Int))) =
+      "{\"count\":" <> BB.putStringUtf8 (show c) <> "}"
 
 instance HDBQuery CountQuery where
 

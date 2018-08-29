@@ -47,7 +47,7 @@ import qualified Hasura.Server.Query                         as RQ
 -- uniquely identifies an operation
 type GOperationId = (WS.WSId, OperationId)
 
-type TxRunner = RespTx -> IO (Either QErr BL.ByteString)
+type TxRunner = RespTx -> IO (Either QErr EncJSON)
 
 type OperationMap
   = STMMap.Map OperationId LQ.LiveQuery
@@ -190,7 +190,7 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndSend $ do
 
     _ -> withExceptT postExecErr $ loggingQErr $ do
       resp <- ExceptT $ runTx txWHdrs
-      sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess resp
+      sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess $ encJToLBS resp
       sendMsg wsConn $ SMComplete $ CompletionMsg opId
       liftIO $ logger $ WSLog wsId $ EOperation opId ODCompleted
 

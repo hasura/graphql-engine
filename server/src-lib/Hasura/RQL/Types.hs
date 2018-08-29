@@ -1,9 +1,11 @@
-{-# LANGUAGE ConstraintKinds       #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 module Hasura.RQL.Types
        ( HasSchemaCache(..)
@@ -16,9 +18,21 @@ module Hasura.RQL.Types
        , P1C
        , MonadTx(..)
        , UserInfoM(..)
-       , RespBody
        , P2C
-       -- , P2Res
+
+       , EncJSON(..)
+
+       , encJToLBS
+
+       , encJFromB
+       , encJFromJ
+       , encJFromC
+       , encJFromT
+       , encJFromBS
+       , encJFromLBS
+       , encJFromL
+       , encJFromAL
+
        , liftP1
        , runP1
        , successMsg
@@ -45,21 +59,24 @@ module Hasura.RQL.Types
        , module R
        ) where
 
+import           Hasura.Prelude
 import           Hasura.RQL.Types.Common      as R
 import           Hasura.RQL.Types.DML         as R
 import           Hasura.RQL.Types.Error       as R
 import           Hasura.RQL.Types.Permission  as R
 import           Hasura.RQL.Types.SchemaCache as R
 import           Hasura.SQL.Types
-import           Hasura.Prelude
 
 import qualified Database.PG.Query            as Q
 
 import           Data.Aeson
 
+import qualified Data.Binary.Builder          as BB
+import qualified Data.ByteString              as B
 import qualified Data.ByteString.Lazy         as BL
 import qualified Data.HashMap.Strict          as M
 import qualified Data.Text                    as T
+import qualified Data.Text.Encoding           as TE
 
 class ProvidesFieldInfoMap r where
   getFieldInfoMap :: QualifiedTable -> r -> Maybe FieldInfoMap
@@ -88,7 +105,7 @@ class HDBQuery q where
   phaseOne :: q -> P1 (Phase1Res q)
 
   -- Hit Postgres
-  phaseTwo :: q -> Phase1Res q -> P2 BL.ByteString
+  phaseTwo :: q -> Phase1Res q -> P2 EncJSON
 
   schemaCachePolicy :: SchemaCachePolicy q
 
@@ -104,7 +121,58 @@ schemaCachePolicyToBool SCPNoChange = False
 getSchemaCachePolicy :: (HDBQuery a) => a -> SchemaCachePolicy a
 getSchemaCachePolicy _ = schemaCachePolicy
 
-type RespBody = BL.ByteString
+-- encoded json
+newtype EncJSON
+  = EncJSON { unEncJSON :: BB.Builder }
+  deriving (Semigroup, Monoid, IsString)
+
+encJToLBS :: EncJSON -> BL.ByteString
+encJToLBS = BB.toLazyByteString . unEncJSON
+
+encJFromB :: BB.Builder -> EncJSON
+encJFromB = EncJSON
+{-# INLINE encJFromB #-}
+
+encJFromBS :: B.ByteString -> EncJSON
+encJFromBS = EncJSON . BB.fromByteString
+{-# INLINE encJFromBS #-}
+
+encJFromLBS :: BL.ByteString -> EncJSON
+encJFromLBS = EncJSON . BB.fromLazyByteString
+{-# INLINE encJFromLBS #-}
+
+encJFromJ :: ToJSON a => a -> EncJSON
+encJFromJ = encJFromLBS . encode
+{-# INLINE encJFromJ #-}
+
+encJFromC :: Char -> EncJSON
+encJFromC = EncJSON . BB.putCharUtf8
+{-# INLINE encJFromC #-}
+
+encJFromT :: Text -> EncJSON
+encJFromT = encJFromBS . TE.encodeUtf8
+{-# INLINE encJFromT #-}
+
+encJFromL :: [EncJSON] -> EncJSON
+encJFromL = \case
+  []   -> "[]"
+  x:xs -> encJFromC '['
+          <> x
+          <> foldr go (encJFromC ']') xs
+    where go v b  = encJFromC ',' <> v <> b
+
+-- from association list
+encJFromAL :: [(Text, EncJSON)] -> EncJSON
+encJFromAL = \case
+  []   -> "{}"
+  x:xs -> encJFromC '{'
+          <> builder' x
+          <> foldr go (encJFromC '}') xs
+  where
+    go v b  = encJFromC ',' <> builder' v <> b
+    -- builds "key":value from (key,value)
+    builder' (t, v) =
+      encJFromC '"' <> encJFromT t <> encJFromT "\":" <> v
 
 queryModifiesSchema :: (HDBQuery q) => q -> Bool
 queryModifiesSchema =
@@ -277,7 +345,7 @@ defaultTxErrorHandler txe =
   let e = err500 PostgresError "postgres query error"
   in e {qeInternal = Just $ toJSON txe}
 
-successMsg :: BL.ByteString
+successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
 
 type HeaderObj = M.HashMap T.Text T.Text

@@ -693,10 +693,10 @@ convSelectQuery prepArgBuilder (DMLQuery qt selQ) = do
   validateHeaders $ spiRequiredHeaders selPermInfo
   convSelectQ (tiFieldInfoMap tabInfo) selPermInfo extSelQ prepArgBuilder
 
--- selectP2 :: (P2C m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m RespBody
-selectP2 :: (SelectData, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+-- selectP2 :: (P2C m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m EncJSON
+selectP2 :: (SelectData, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 (sel, p) =
-  runIdentity . Q.getRow
+  encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkSQLSelect sel

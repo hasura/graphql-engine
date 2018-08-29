@@ -191,9 +191,9 @@ convInsQ insQ =
   flip runStateT DS.empty $ convInsertQuery
   (withPathK "objects" . decodeInsObjs) binRHSBuilder insQ
 
-insertP2 :: (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+insertP2 :: (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 insertP2 (u, p) =
-  runIdentity . Q.getRow
+  encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder insertSQL) (toList p) True
   where
     insertSQL = toSQL $ mkSQLInsert u

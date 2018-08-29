@@ -135,7 +135,7 @@ mkSpockAction
   :: (MonadIO m)
   => (Bool -> QErr -> Value)
   -> ServerCtx
-  -> Handler BL.ByteString
+  -> Handler EncJSON
   -> ActionT m ()
 mkSpockAction qErrEncoder serverCtx handler = do
   req <- request
@@ -153,9 +153,11 @@ mkSpockAction qErrEncoder serverCtx handler = do
   result <- liftIO $ runReaderT (runExceptT handler) handlerState
   t2 <- liftIO getCurrentTime -- for measuring response time purposes
 
+  let resLBS = encJToLBS <$> result
+
   -- log result
-  logResult req reqBody serverCtx result $ Just (t1, t2)
-  either (qErrToResp $ userRole userInfo == adminRole) resToResp result
+  logResult req reqBody serverCtx resLBS $ Just (t1, t2)
+  either (qErrToResp $ userRole userInfo == adminRole) resToResp resLBS
 
   where
     logger = scLogger serverCtx
@@ -200,7 +202,7 @@ withLock lk action = do
 --     headers = M.toList $ rqleHeaders expQuery
 --     userInfo = UserInfo role headers
 
-v1QueryHandler :: RQLQuery -> Handler BL.ByteString
+v1QueryHandler :: RQLQuery -> Handler EncJSON
 v1QueryHandler query = do
   lk <- scCacheLock . hcServerCtx <$> ask
   bool (s3 <$> dbAction) (withLock lk dbActionReload) $
@@ -227,7 +229,7 @@ v1QueryHandler query = do
       liftIO $ E.clearQueryCache queryCache
       return resp
 
-v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler BL.ByteString
+v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler EncJSON
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   scRef <- scCacheRef . hcServerCtx <$> ask
@@ -264,7 +266,7 @@ queryParsers =
       q <- decodeValue val
       return $ f q
 
-legacyQueryHandler :: TableName -> T.Text -> Handler BL.ByteString
+legacyQueryHandler :: TableName -> T.Text -> Handler EncJSON
 legacyQueryHandler tn queryType =
   case M.lookup queryType queryParsers of
     Just queryParser -> getQueryParser queryParser qt >>= v1QueryHandler

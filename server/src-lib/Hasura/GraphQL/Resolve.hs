@@ -11,7 +11,6 @@ module Hasura.GraphQL.Resolve
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
-import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as Map
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
@@ -19,7 +18,6 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.Introspect
 import           Hasura.GraphQL.Schema
-import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -29,7 +27,7 @@ import qualified Hasura.GraphQL.Resolve.Mutation        as RM
 import qualified Hasura.GraphQL.Resolve.Select          as RS
 
 -- {-# SCC buildTx #-}
-buildTx :: UserInfo -> GCtx -> Field -> Q.TxE QErr BL.ByteString
+buildTx :: UserInfo -> GCtx -> Field -> Q.TxE QErr EncJSON
 buildTx userInfo gCtx fld = do
   opCxt <- getOpCtx $ _fName fld
   join $ fmap fst $ runConvert (fldMap, orderByCtx) $ case opCxt of
@@ -82,9 +80,9 @@ resolveQueryFld
   -> m Plan.RootFieldPlan
 resolveQueryFld userInfo gCtx fld =
   case _fName fld of
-    "__type"     -> Plan.RFPRaw . J.encode <$> runReaderT (typeR fld) gCtx
-    "__schema"   -> Plan.RFPRaw . J.encode <$> runReaderT (schemaR fld) gCtx
-    "__typename" -> return $ Plan.RFPRaw $ J.encode queryRoot
+    "__type"     -> Plan.RFPRaw . encJFromJ <$> runReaderT (typeR fld) gCtx
+    "__schema"   -> Plan.RFPRaw . encJFromJ <$> runReaderT (schemaR fld) gCtx
+    "__typename" -> return $ Plan.RFPRaw $ encJFromJ queryRoot
     _ -> do
       opCxt <- getOpCtx $ _fName fld
       RS.runPlanM (fldMap, orderByCtx) $ case opCxt of
@@ -114,12 +112,12 @@ resolveFld
   :: UserInfo -> GCtx
   -> G.OperationType
   -> Field
-  -> Q.TxE QErr BL.ByteString
+  -> Q.TxE QErr EncJSON
 resolveFld userInfo gCtx opTy fld =
   case _fName fld of
-    "__type"     -> J.encode <$> runReaderT (typeR fld) gCtx
-    "__schema"   -> J.encode <$> runReaderT (schemaR fld) gCtx
-    "__typename" -> return $ J.encode $ mkRootTypeName opTy
+    "__type"     -> encJFromLBS . J.encode <$> runReaderT (typeR fld) gCtx
+    "__schema"   -> encJFromLBS . J.encode <$> runReaderT (schemaR fld) gCtx
+    "__typename" -> return $ encJFromLBS . J.encode $ mkRootTypeName opTy
     _            -> buildTx userInfo gCtx fld
   where
     mkRootTypeName :: G.OperationType -> Text
@@ -132,8 +130,8 @@ resolveSelSet
   :: UserInfo -> GCtx
   -> G.OperationType
   -> SelSet
-  -> Q.TxE QErr BL.ByteString
+  -> Q.TxE QErr EncJSON
 resolveSelSet userInfo gCtx opTy fields =
-  fmap mkJSONObj $ forM (toList fields) $ \fld -> do
+  fmap encJFromAL $ forM (toList fields) $ \fld -> do
     fldResp <- resolveFld userInfo gCtx opTy fld
     return (G.unName $ G.unAlias $ _fAlias fld, fldResp)

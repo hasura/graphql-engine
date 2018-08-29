@@ -149,7 +149,7 @@ addQTemplateToCatalog (CreateQueryTemplate qtName qtDef mComment) =
 
 createQueryTemplateP2
   :: (P2C m)
-  => CreateQueryTemplate -> QueryTemplateInfo -> m RespBody
+  => CreateQueryTemplate -> QueryTemplateInfo -> m EncJSON
 createQueryTemplateP2 cqt qti = do
   addQTemplateToCache qti
   liftTx $ addQTemplateToCatalog cqt
@@ -207,7 +207,7 @@ setQueryTemplateCommentP1 (SetQueryTemplateComment qtn _) = do
   adminOnly
   void $ askQTemplateInfo qtn
 
-setQueryTemplateCommentP2 :: (P2C m) => SetQueryTemplateComment -> m RespBody
+setQueryTemplateCommentP2 :: (P2C m) => SetQueryTemplateComment -> m EncJSON
 setQueryTemplateCommentP2 apc = do
   liftTx $ setQueryTemplateCommentTx apc
   return successMsg
