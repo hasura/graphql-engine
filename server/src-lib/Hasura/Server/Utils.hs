@@ -40,6 +40,9 @@ userRoleHeader = "x-hasura-role"
 accessKeyHeader :: T.Text
 accessKeyHeader = "x-hasura-access-key"
 
+userIdHeader :: T.Text
+userIdHeader = "x-hasura-user-id"
+
 bsToTxt :: B.ByteString -> T.Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
 

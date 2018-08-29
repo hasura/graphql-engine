@@ -244,7 +244,8 @@ setHeadersTx :: UserInfo -> Q.TxE QErr ()
 setHeadersTx userInfo =
   forM_ hdrs $ \h -> Q.unitQE defaultTxErrorHandler (mkQ h) () False
   where
-    hdrs = Map.toList $ userHeaders userInfo
+    hdrs = Map.toList $ Map.delete accessKeyHeader
+      $ userHeaders userInfo
     mkQ (h, v) = Q.fromBuilder $ BB.string7 $
       T.unpack $
       "SET LOCAL hasura." <> dropAndSnakeCase h <> " =  " <> pgFmtLit v
