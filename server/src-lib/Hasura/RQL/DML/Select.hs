@@ -68,7 +68,7 @@ data AnnRel = AnnRel
 data SelectData = SelectData
       -- Nested annotated columns
     { sdFlds         :: !(HM.HashMap FieldName AnnFld)
-    , sdTable        :: !QualifiedTable     -- Postgres table name
+    , sdFrom         :: !(Either QualifiedTable S.FromItem)     -- From
     , sdWhere        :: !(S.BoolExp, Maybe (GBoolExp AnnSQLBoolExp))
     , sdOrderBy      :: !(Maybe S.OrderByExp)
     , sdAddCols      :: ![PGCol]             -- additional order by columns
@@ -76,9 +76,6 @@ data SelectData = SelectData
     , sdOffset       :: !(Maybe S.SQLExp)
     , asSingleObject :: !Bool
     } deriving (Show, Eq)
-
-tableToAliasFrom :: QualifiedTable -> S.FromExp
-tableToAliasFrom = S.FromExp . pure . S.FIIden . Iden . qualTableToSnakeCase
 
 convSelCol :: (P1C m)
            => FieldInfoMap
@@ -315,7 +312,7 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
   -- convert offset expression
       offsetExp = S.intToSQLExp <$> mQueryOffset
 
-  return $ SelectData newAnnFlds (spiTable selPermInfo)
+  return $ SelectData newAnnFlds (Left $ spiTable selPermInfo)
     (spiFilter selPermInfo, wClause) sqlOrderBy [] limitExp offsetExp False
 
   where
@@ -491,9 +488,8 @@ mkCompColAlias relName rCol =
 selDataToSQL :: [S.Extractor] -- ^ Parent's RCol
              -> S.BoolExp     -- ^ Join Condition if any
              -> SelectData    -- ^ Select data
-             -> Bool          -- ^ as aliased
              -> S.Select      -- ^ SQL Select (needs wrapping)
-selDataToSQL parRCols joinCond (SelectData annFlds tn (fltr, mWc) ob _ lt offst _) asAliased =
+selDataToSQL parRCols joinCond (SelectData annFlds frm (fltr, mWc) ob _ lt offst _) =
   let
     (sCols, relCols) = partAnnFlds $ HM.elems annFlds
     -- relCols        = HM.elems relColsMap
@@ -504,14 +500,13 @@ selDataToSQL parRCols joinCond (SelectData annFlds tn (fltr, mWc) ob _ lt offst 
                        <> childrenLCols
 
     finalWC = S.BEBin S.AndOp fltr $ maybe (S.BELit True) cBoolExp mWc
-    frmExp = if asAliased then tableToAliasFrom tn else S.mkSimpleFromExp tn
 
     -- Add order by if
     -- limit or offset is used or when no relationships are requested
     -- orderByExp = bool Nothing ob $ or [isJust lt, isJust offst, null relCols]
     baseSel = S.mkSelect
               { S.selExtr    = thisTableExtrs
-              , S.selFrom    = Just frmExp
+              , S.selFrom    = Just $ either S.mkSimpleFromExp (S.FromExp . pure) frm
               , S.selWhere   = Just $ injectJoinCond joinCond finalWC
               }
     joinedSel = foldr annRelColToSQL baseSel relCols
@@ -562,7 +557,7 @@ annRelColToSQL ar leftSel =
     -- An alias for this
     compColAlias = mkCompColAlias relName compCol
     -- the comparison column should also be selected
-    rightSel = selDataToSQL [S.mkAliasedExtr compCol $ Just compColAlias] joinCond selData False
+    rightSel = selDataToSQL [S.mkAliasedExtr compCol $ Just compColAlias] joinCond selData
 
     allFlds  = map mkInnerSelExtr (HM.toList $ sdFlds selData)
                -- <> map mkInnerSelExtr (HM.keys $ sdRels selData)
@@ -644,20 +639,22 @@ wrapFinalSel initSel extCols =
 getSelectDeps
   :: SelectData
   -> [SchemaDependency]
-getSelectDeps (SelectData flds tn (_, annWc) _ _ _ _ _) =
-  mkParentDep tn
-  : fromMaybe [] whereDeps
-  <> colDeps
-  <> relDeps
-  <> nestedDeps
-  where
-    (sCols, rCols) = partAnnFlds $ HM.elems flds
-    colDeps     = map (mkColDep "untyped" tn . fst) sCols
-    relDeps     = map (mkRelDep . arName) rCols
-    nestedDeps  = concatMap (getSelectDeps . arSelData) rCols
-    whereDeps   = getBoolExpDeps tn <$> annWc
-    mkRelDep rn =
-      SchemaDependency (SOTableObj tn (TORel rn)) "untyped"
+getSelectDeps (SelectData flds frm (_, annWc) _ _ _ _ _) =
+  case frm of
+    Right _ -> []
+    Left tn -> let (sCols, rCols) = partAnnFlds $ HM.elems flds
+                   colDeps     = map (mkColDep "untyped" tn . fst) sCols
+                   relDeps     = map (mkRelDep . arName) rCols
+                   nestedDeps  = concatMap (getSelectDeps . arSelData) rCols
+                   whereDeps   = getBoolExpDeps tn <$> annWc
+                   mkRelDep rn =
+                     SchemaDependency (SOTableObj tn (TORel rn)) "untyped"
+               in
+                 mkParentDep tn
+                 : fromMaybe [] whereDeps
+                 <> colDeps
+                 <> relDeps
+                 <> nestedDeps
 
 -- data SelectQueryP1
 --   = SelectQueryP1
@@ -669,13 +666,13 @@ getSelectDeps (SelectData flds tn (_, annWc) _ _ _ _ _) =
 -- mkSQLSelect (SelectQueryP1 extCols selData) =
 --   wrapFinalSel (selDataToSQL [] (S.BELit True) selData) extCols
 
-mkSQLSelect :: SelectData -> Bool -> S.Select
-mkSQLSelect selData asAlias =
+mkSQLSelect :: SelectData -> S.Select
+mkSQLSelect selData =
   bool finalSelect singleObjSel $ asSingleObject selData
   where
     singleObjSel = S.selectAsSingleObj finalSelect
     finalSelect =
-      wrapFinalSel (selDataToSQL [] (S.BELit True) selData asAlias) $
+      wrapFinalSel (selDataToSQL [] (S.BELit True) selData) $
       HM.toList $ sdFlds selData
 
 -- convSelectQuery
@@ -709,7 +706,7 @@ selectP2 (sel, p) =
   runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
-    selectSQL = toSQL $ mkSQLSelect sel False
+    selectSQL = toSQL $ mkSQLSelect sel
 
 instance HDBQuery SelectQuery where
 

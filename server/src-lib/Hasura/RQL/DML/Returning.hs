@@ -32,7 +32,7 @@ pgColsFromMutFld = \case
   MRet selData -> fst $ partAnnFlds $ Map.elems $ sdFlds selData
 
 pgColsToSelData :: QualifiedTable -> [(PGCol, PGColType)] -> SelectData
-pgColsToSelData qt cols = SelectData flds qt (S.BELit True, Nothing)
+pgColsToSelData qt cols = SelectData flds (Left qt) (S.BELit True, Nothing)
                           Nothing [] Nothing Nothing False
   where
     flds = Map.fromList $ flip map cols $ \(c, ty) ->
@@ -48,29 +48,29 @@ mkDefaultMutFlds qt = \case
   where
     mutFlds = Map.singleton "affected_rows" MCount
 
-mkMutFldExp :: QualifiedTable -> MutFld -> S.SQLExp
-mkMutFldExp qt = \case
+mkMutFldExp :: MutationType -> QualifiedTable -> MutFld -> S.SQLExp
+mkMutFldExp mutTy qt = \case
   MCount -> S.SESelect $
     S.mkSelect
     { S.selExtr = [S.Extractor (S.SEUnsafe "count(*)") Nothing]
-    , S.selFrom = Just $ tableToAliasFrom qt
+    , S.selFrom = Just $ S.FromExp $ pure $
+                  S.FIIden $ qualTableToAliasIden mutTy qt
     }
   MExp t -> S.SELit t
-  MRet selData -> S.SESelect $ mkSQLSelect selData True
+  MRet selData -> S.SESelect $ mkSQLSelect selData
 
-mkSelWith :: QualifiedTable -> S.CTE -> MutFlds -> S.SelectWith
-mkSelWith qt cte mutFlds =
+mkSelWith :: MutationType -> QualifiedTable -> S.CTE -> MutFlds -> S.SelectWith
+mkSelWith mutTy qt cte mutFlds =
   S.SelectWith [(alias, cte)] sel
   where
-    alias = S.Alias $ toIden tableNameAlias
-    tableNameAlias = qualTableToSnakeCase qt
+    alias = S.Alias $ qualTableToAliasIden mutTy qt
     sel = S.mkSelect { S.selExtr = [S.Extractor extrExp Nothing] }
 
     extrExp = S.SEFnApp "json_build_object" jsonBuildObjArgs Nothing
 
     jsonBuildObjArgs =
       flip concatMap (Map.toList mutFlds) $
-      \(k, mutFld) -> [S.SELit k, mkMutFldExp qt mutFld]
+      \(k, mutFld) -> [S.SELit k, mkMutFldExp mutTy qt mutFld]
 
 encodeJSONVector :: (a -> BB.Builder) -> V.Vector a -> BB.Builder
 encodeJSONVector builder xs

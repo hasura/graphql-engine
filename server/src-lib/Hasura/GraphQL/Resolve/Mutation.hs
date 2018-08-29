@@ -44,20 +44,21 @@ withSelSet selSet f =
     return (G.unName $ G.unAlias $ _fAlias fld, res)
 
 convertReturning
-  :: QualifiedTable -> G.NamedType -> SelSet -> Convert RS.SelectData
-convertReturning qt ty selSet = do
+  :: MutationType -> QualifiedTable -> G.NamedType -> SelSet -> Convert RS.SelectData
+convertReturning mutTy qt ty selSet = do
   annFlds <- fromSelSet ty selSet
-  return $ RS.SelectData annFlds qt
+  let frm = Right $ S.FIIden $ qualTableToAliasIden mutTy qt
+  return $ RS.SelectData annFlds frm
     (S.BELit True, Nothing) Nothing [] Nothing Nothing False
 
 convertMutResp
-  :: QualifiedTable -> G.NamedType -> SelSet -> Convert RR.MutFlds
-convertMutResp qt ty selSet =
+  :: MutationType -> QualifiedTable -> G.NamedType -> SelSet -> Convert RR.MutFlds
+convertMutResp mutTy qt ty selSet =
   withSelSet selSet $ \fld ->
     case _fName fld of
       "__typename"    -> return $ RR.MExp $ G.unName $ G.unNamedType ty
       "affected_rows" -> return RR.MCount
-      _ -> fmap RR.MRet $ convertReturning qt (_fType fld) $ _fSelSet fld
+      _ -> fmap RR.MRet $ convertReturning mutTy qt (_fType fld) $ _fSelSet fld
 
 convertRowObj
   :: (MonadError QErr m, MonadState PrepArgs m)
@@ -125,7 +126,7 @@ convertInsert role (tn, vn) tableCols fld = do
   rows    <- withArg arguments "objects" asRowExps
   conflictCtxM <- withPathK "on_conflict" $
                  withArgM arguments "on_conflict" parseOnConflict
-  mutFlds <- convertMutResp tn (_fType fld) $ _fSelSet fld
+  mutFlds <- convertMutResp MTInsert tn (_fType fld) $ _fSelSet fld
   args <- get
   return $
     bool (nonAdminInsert args rows conflictCtxM mutFlds)
@@ -227,7 +228,7 @@ convertUpdate tn filterExp fld = do
   -- delete at path in jsonb value
   deleteAtPathExpM <- withArgM args "_delete_at_path" convDeleteAtPathObj
 
-  mutFlds  <- convertMutResp tn (_fType fld) $ _fSelSet fld
+  mutFlds  <- convertMutResp MTUpdate tn (_fType fld) $ _fSelSet fld
   prepArgs <- get
   let updExpsM = [ setExpM, incExpM, appendExpM, prependExpM
                  , deleteKeyExpM, deleteElemExpM, deleteAtPathExpM
@@ -249,7 +250,7 @@ convertDelete
   -> Convert RespTx
 convertDelete tn filterExp fld = do
   whereExp <- withArg (_fArguments fld) "where" $ convertBoolExp tn
-  mutFlds  <- convertMutResp tn (_fType fld) $ _fSelSet fld
+  mutFlds  <- convertMutResp MTDelete tn (_fType fld) $ _fSelSet fld
   args <- get
   let p1 = RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds
   return $ RD.deleteP2 (p1, args)

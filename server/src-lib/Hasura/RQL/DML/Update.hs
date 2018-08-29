@@ -33,7 +33,7 @@ data UpdateQueryP1
 mkSQLUpdate
   :: UpdateQueryP1 -> S.SelectWith
 mkSQLUpdate (UpdateQueryP1 tn setExps (permFltr, wc) mutFlds) =
-  mkSelWith tn (S.CTEUpdate update) mutFlds
+  mkSelWith MTUpdate tn (S.CTEUpdate update) mutFlds
   where
     update = S.SQLUpdate tn setExp Nothing tableFltr $ Just S.returningStar
     setExp    = S.SetExp $ map S.SetExpItem setExps

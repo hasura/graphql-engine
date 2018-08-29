@@ -45,7 +45,7 @@ phaseTwoExplain sel = do
   plans <- decodeBS planResp
   return $ encode $ ExplainResp selectSQLT plans
   where
-    selectSQL = toSQL $ mkSQLSelect sel False
+    selectSQL = toSQL $ mkSQLSelect sel
     explainSQL = BB.string7 "EXPLAIN (FORMAT JSON) "
     withExplain = explainSQL <> selectSQL
 
