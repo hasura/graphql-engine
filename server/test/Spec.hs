@@ -45,6 +45,7 @@ querySpecFiles =
   , "create_author_permission_role_admin_error.yaml"
   , "create_user_permission_test_table.yaml"
   , "all_json_queries.yaml"
+  , "upsert_role_user.yaml"
   , "upsert_role_user_error.yaml"
   ]
 
