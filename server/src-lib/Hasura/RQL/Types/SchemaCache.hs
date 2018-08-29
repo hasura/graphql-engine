@@ -743,7 +743,7 @@ getDependentPerms' rsnFn objId (RolePermInfo mipi mspi mupi mdpi) =
 
 getDependentTriggersOfTable :: (T.Text -> Bool) -> SchemaObjId
                          -> TableInfo -> [SchemaObjId]
-getDependentTriggersOfTable rsnFn objId (TableInfo tn _ _ _ _ et) =
+getDependentTriggersOfTable rsnFn objId (TableInfo tn _ _ _ _ _ et) =
   map (SOTableObj tn . TOTrigger . otiTriggerName ) $ filter (isDependentOn rsnFn objId) $ getTriggers et
 
 getOpInfo :: TriggerName -> TableInfo -> Maybe SubscribeOpSpec -> Maybe OpTriggerInfo

@@ -102,18 +102,16 @@ processEvent
      )
   => Q.PGPool -> Event -> m ()
 processEvent pool e = do
-  liftIO $ putStrLn "processing event"
-  runExceptT $ runLockQ e
+  liftIO $ runExceptT $ runLockQ e
   let remainingRetries = max 0 $ getNumRetries - getTries
       policy = R.constantDelay getDelay <> R.limitRetries remainingRetries
-  liftIO $ print remainingRetries
   res <- R.retrying policy shouldRetry tryWebhook
   case res of
     Left err   -> do
       liftIO $ print err
-      void $ runExceptT $ runErrorQ e
+      void $ liftIO $ runExceptT $ runErrorQ e
     Right resp -> return ()
-  runExceptT $ runUnlockQ e
+  liftIO $ runExceptT $ runUnlockQ e
   return ()
   where
     tryWebhook
@@ -126,7 +124,7 @@ processEvent pool e = do
     tryWebhook retrySt = do
       -- eitherResp <- runExceptT $ runHTTP W.defaults $ mkHTTPPost (T.unpack $ eWebhook undefined) (Just $ ePayload undefined)
       eitherResp <- runExceptT $ runHTTP W.defaults $ mkAnyHTTPPost (T.unpack $ eWebhook e) (Just $ ePayload e)
-      finally <- runExceptT $ case eitherResp of
+      finally <- liftIO $ runExceptT $ case eitherResp of
         Left err -> do
           case err of
             HClient excp -> runFailureQ $ Invocation (eId e) 1000 (TBS.fromLBS $ J.encode $ show excp)
@@ -139,7 +137,7 @@ processEvent pool e = do
       return eitherResp
 
     shouldRetry :: (Monad m ) => R.RetryStatus -> Either HTTPErr a -> m Bool
-    shouldRetry retryStatus eitherResp = return $ isLeft eitherResp
+    shouldRetry _ eitherResp = return $ isLeft eitherResp
 
     runFailureQ invo = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ insertInvocation invo
 
@@ -154,15 +152,13 @@ processEvent pool e = do
     runUnlockQ e'' = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ unlockEvent e''
 
     getDelay :: Int
-    getDelay = (fromIntegral $ snd (eRetryConf e))* 1000000
+    getDelay = fromIntegral (snd (eRetryConf e)) * 1000000
 
     getNumRetries :: Int
-    getNumRetries = (fromIntegral $ fst (eRetryConf e))
+    getNumRetries = fromIntegral (fst (eRetryConf e))
 
     getTries :: Int
     getTries = fromIntegral $ eTries e
-
-    decodeLBS = TLE.decodeUtf8With TE.lenientDecode
 
 fetchEvents :: Q.TxE QErr [Event]
 fetchEvents =
