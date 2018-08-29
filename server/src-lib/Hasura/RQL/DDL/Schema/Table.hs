@@ -452,7 +452,7 @@ runSqlP2 (RunSQL t cascade) = do
       let insert = otiCols <$> etiInsert eti
           update = otiCols <$> etiUpdate eti
           delete = otiCols <$> etiDelete eti
-      liftTx $ mkTriggerQ trn tn insert update delete
+      liftTx $ mkTriggerQ trn tn (TriggerOpsDef insert update delete)
 
   return $ encode (res :: RunSQLRes)
 

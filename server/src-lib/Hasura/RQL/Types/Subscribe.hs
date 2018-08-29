@@ -7,8 +7,9 @@ module Hasura.RQL.Types.Subscribe
   , SubscribeOpSpec(..)
   , SubscribeColumns(..)
   , TriggerName
-  , TriggerDefinition(..)
+  , TriggerOpsDef(..)
   , EventTrigger(..)
+  , EventTriggerDef(..)
   , RetryConf(..)
   , toRetryConf
   , UnsubscribeTableQuery(..)
@@ -48,14 +49,14 @@ $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
 
 data RetryConf
   = RetryConf
-  { rcNumRetries  :: !(Maybe Int64)
-  , rcIntervalSec :: !(Maybe Int64)
+  { rcNumRetries  :: !Int64
+  , rcIntervalSec :: !Int64
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
 
 toRetryConf :: Int64 -> Int64 -> RetryConf
-toRetryConf nr rint= RetryConf (Just nr) (Just rint)
+toRetryConf nr rint= RetryConf nr rint
 
 data SubscribeTableQuery
   = SubscribeTableQuery
@@ -85,14 +86,14 @@ instance FromJSON SubscribeTableQuery where
 
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeTableQuery)
 
-data TriggerDefinition
-  = TriggerDefinition
+data TriggerOpsDef
+  = TriggerOpsDef
   { tdInsert :: !(Maybe SubscribeOpSpec)
   , tdUpdate :: !(Maybe SubscribeOpSpec)
   , tdDelete :: !(Maybe SubscribeOpSpec)
-  }
+  } deriving (Show, Eq, Lift)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerDefinition)
+$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
 data UnsubscribeTableQuery
   = UnsubscribeTableQuery
@@ -103,10 +104,21 @@ $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''UnsubscribeTableQ
 
 data EventTrigger
   = EventTrigger
-  { etName       :: TriggerName
-  , etType       :: T.Text
-  , etTable      :: QualifiedTable
-  , etDefinition :: TriggerDefinition
+  { etTable      :: !QualifiedTable
+  , etName       :: !TriggerName
+  , etDefinition :: !TriggerOpsDef
+  , etWebhook    :: !T.Text
+  , etRetryConf  :: !RetryConf
   }
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventTrigger)
+
+data EventTriggerDef
+  = EventTriggerDef
+  { etdName       :: !TriggerName
+  , etdDefinition :: !TriggerOpsDef
+  , etdWebhook    :: !T.Text
+  , etdRetryConf  :: !RetryConf
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerDef)

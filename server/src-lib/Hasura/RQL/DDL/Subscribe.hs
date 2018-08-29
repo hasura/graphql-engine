@@ -82,11 +82,9 @@ getTriggerSql op name sn tn spec =
 mkTriggerQ
   :: TriggerName
   -> QualifiedTable
-  -> Maybe SubscribeOpSpec
-  -> Maybe SubscribeOpSpec
-  -> Maybe SubscribeOpSpec
+  -> TriggerOpsDef
   -> Q.TxE QErr ()
-mkTriggerQ name (QualifiedTable sn tn) insert update delete = do
+mkTriggerQ name (QualifiedTable sn tn) (TriggerOpsDef insert update delete) = do
   let msql = getTriggerSql INSERT name sn tn insert
              <> getTriggerSql UPDATE name sn tn update
              <> getTriggerSql DELETE name sn tn delete
@@ -94,25 +92,22 @@ mkTriggerQ name (QualifiedTable sn tn) insert update delete = do
     Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder sql)
     Nothing -> throw500 "no trigger sql generated"
 
-addEventTriggerToCatalog :: SubscribeTableQuery
+addEventTriggerToCatalog :: QualifiedTable -> EventTriggerDef
                -> Q.TxE QErr ()
-addEventTriggerToCatalog (SubscribeTableQuery name (QualifiedTable sn tn) insert update delete retryConf webhook) = do
-  let def = TriggerDefinition insert update delete
+addEventTriggerToCatalog (QualifiedTable sn tn) (EventTriggerDef name def webhook rconf) = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
                                   INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook)
                                   VALUES ($1, 'table', $2, $3, $4, $5)
                                   |] (name, sn, tn, Q.AltJ $ toJSON def, webhook) True
 
-  mkTriggerQ name (QualifiedTable sn tn) insert update delete
+  mkTriggerQ name (QualifiedTable sn tn) def
 
-  let rConf = case retryConf of
-        Just conf -> (fromMaybe defaultNumRetries $ rcNumRetries conf,  fromMaybe defaultRetryInterval $ rcIntervalSec conf)
-        Nothing   -> (defaultNumRetries, defaultRetryInterval)
+  let rconfTup = (rcNumRetries rconf, rcIntervalSec rconf)
 
   Q.unitQE defaultTxErrorHandler [Q.sql|
                                   INSERT into hdb_catalog.event_triggers_retry_conf (name, num_retries, interval_seconds)
                                   VALUES ($1, $2, $3)
-                                  |] (name, fst rConf, snd rConf) True
+                                  |] (name, fst rconfTup, snd rconfTup) True
 
 delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
 delEventTriggerFromCatalog trn = do
@@ -129,23 +124,26 @@ delEventTriggerFromCatalog trn = do
 fetchEventTrigger :: TriggerName -> Q.TxE QErr EventTrigger
 fetchEventTrigger trn = do
   triggers <- Q.listQE defaultTxErrorHandler [Q.sql|
-                                  SELECT name, type, schema_name, table_name, definition::json
-                                  FROM hdb_catalog.event_triggers
-                                  WHERE name = $1
+                                              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, r.num_retries, r.interval_seconds
+                                              FROM hdb_catalog.event_triggers e
+                                              JOIN hdb_catalog.event_triggers_retry_conf r
+                                              ON e.name = r.name
+                                              WHERE e.name = $1
                                   |] (Identity trn) True
   getTrigger triggers
   where
     getTrigger []    = throw404 "Could not fetch event trigger"
-    getTrigger (x:_) = return $ EventTrigger name typ (QualifiedTable sn tn) def
-      where (name, typ, sn, tn, Q.AltJ def) = x
+    getTrigger (x:_) = return $ EventTrigger (QualifiedTable sn tn) trn tDef webhook (toRetryConf nr rint)
+      where (sn, tn, trn, Q.AltJ tDef, webhook, nr, rint) = x
 
-subTableP1 :: (P1C m) => SubscribeTableQuery -> m ()
+subTableP1 :: (P1C m) => SubscribeTableQuery -> m (QualifiedTable, EventTriggerDef)
 subTableP1 (SubscribeTableQuery name qt insert update delete retryConf webhook) = do
   ti <- askTabInfo qt
   assertCols ti insert
   assertCols ti update
   assertCols ti delete
-  return ()
+  let rconf = fromMaybe (RetryConf defaultNumRetries defaultRetryInterval) retryConf
+  return (qt, EventTriggerDef name (TriggerOpsDef insert update delete) webhook rconf)
   where
     assertCols ti Nothing = return ()
     assertCols ti (Just sos) = do
@@ -159,18 +157,20 @@ subTableP1 (SubscribeTableQuery name qt insert update delete retryConf webhook) 
                                                  then return ()
                                                  else throw400  NotExists $ "column '" <> getPGColTxt col <> "' does not exist"
 
-subTableP2 :: (P2C m) => SubscribeTableQuery -> m RespBody
-subTableP2 q@(SubscribeTableQuery name qt insert update delete retryConf webhook) = do
-  liftTx $ addEventTriggerToCatalog q
-  let def = TriggerDefinition insert update delete
-      rconf = fromMaybe (RetryConf (Just defaultNumRetries) (Just defaultRetryInterval)) retryConf
+subTableP2 :: (P2C m) => QualifiedTable -> EventTriggerDef -> m ()
+subTableP2 qt q@(EventTriggerDef name def webhook rconf) = do
+  liftTx $ addEventTriggerToCatalog qt q
   addEventTriggerToCache qt name def rconf webhook
+
+subTableP2shim :: (P2C m) => (QualifiedTable, EventTriggerDef) -> m RespBody
+subTableP2shim (qt, etdef) = do
+  subTableP2 qt etdef
   return successMsg
 
 instance HDBQuery SubscribeTableQuery where
-  type Phase1Res SubscribeTableQuery = ()
+  type Phase1Res SubscribeTableQuery = (QualifiedTable, EventTriggerDef)
   phaseOne = subTableP1
-  phaseTwo q _ = subTableP2 q
+  phaseTwo _ q = subTableP2shim q
   schemaCachePolicy = SCPReload
 
 unsubTableP1 :: (P1C m) => UnsubscribeTableQuery -> m ()

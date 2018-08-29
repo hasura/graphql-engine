@@ -587,7 +587,7 @@ addEventTriggerToCache
   :: (QErrM m, CacheRWM m)
   => QualifiedTable
   -> TriggerName
-  -> TriggerDefinition
+  -> TriggerOpsDef
   -> RetryConf
   -> T.Text
   -> m ()
