@@ -1,5 +1,5 @@
-Authorization webhook
-=====================
+Authorization using webhooks
+============================
 
 You can configure a webhook (see :doc:`GraphQL server options <../deployment/graphql-engine-flags/reference>`) to
 authenticate all incoming requests to Hasura GraphQL engine server.

@@ -1,5 +1,5 @@
-JWT Authorization
-=================
+Authorization using JWT
+=======================
 
 You can configure JWT authorization mode (see :doc:`GraphQL server options
 <../deployment/graphql-engine-flags/reference>`) to authorize all incoming
