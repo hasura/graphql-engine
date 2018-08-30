@@ -12,6 +12,7 @@ import {
   Alert,
 } from 'react-bootstrap';
 import { Result } from './Result.react.js';
+import { Users } from './Users.react'
 import {
   QUERY_GET_POLL,
   MUTATION_VOTE,
@@ -21,7 +22,7 @@ import {
 class PollQuestion extends Component {
   constructor (props) {
     super(props);
-    this.state = {optionId: '', userId: props.userId, voteBtnText: 'Vote', voteBtnStyle: 'primary'};
+    this.state = {optionId: '', userId: props.userId, voteBtnText: '🗳 Vote', voteBtnStyle: 'primary'};
   }
 
   handleOptionChange = (e) => {
@@ -100,10 +101,13 @@ const Poll = ({userId}) => (
          <div className="container">
            {
              data.poll.map(poll => (
-               <div className="pollWrapper wd100">
-                 <div key={poll.id} className="displayFlex">
+               <div key={poll.id} className="pollWrapper wd100">
+                 <div className="displayFlex">
                    <div className="col-md-4 pollSlider">
                      <PollQuestion poll={poll} userId={userId} />
+                     <div className="online-users">
+                       <Users />
+                     </div>
                    </div>
                    <div className="col-md-8 pollresult">
                      <Result pollId={poll.id} />

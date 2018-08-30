@@ -29,15 +29,10 @@ const SUBSCRIPTION_RESULT = `
 subscription getResult($pollId: uuid!) {
   poll_results (
     order_by: option_id_desc,
-    where: {
-      poll_id: {_eq: $pollId}
-    }
+    where: { poll_id: {_eq: $pollId} }
   ) {
     option_id
-    option {
-      id
-      text
-    }
+    option { id text }
     votes
   }
 }`;
@@ -53,9 +48,7 @@ const MUTATION_MARK_USER_ONLINE = `
 mutation userOnline($uuid: uuid) {
   update_user(
     where: {id: {_eq: $uuid}},
-    _set : {
-      online_ping: true
-    }
+    _set : { online_ping: true }
   ) {
     affected_rows
     returning {
@@ -67,9 +60,7 @@ mutation userOnline($uuid: uuid) {
 const MUTATION_NEW_USER = `
 mutation newUser($uuid: uuid) {
   insert_user (
-    objects:[{
-      id: $uuid
-    }]
+    objects:[{ id: $uuid }]
   ) {
     returning {
       id
@@ -80,9 +71,10 @@ mutation newUser($uuid: uuid) {
 
 const GraphQL = () => (
   <div className="container">
+    <div className="col-md-12">
     <Panel>
       <Panel.Heading>
-        <Panel.Title componentClass="h3">GraphQL Queries/Mutations/Subscriptions in play</Panel.Title>
+        <Panel.Title componentClass="h3">GraphQL Queries/Mutations/Subscriptions in this page</Panel.Title>
       </Panel.Heading>
       <Panel.Body>
         <div className="row">
@@ -110,6 +102,7 @@ const GraphQL = () => (
         </div>
       </Panel.Body>
     </Panel>
+  </div>
   </div>
 )
 

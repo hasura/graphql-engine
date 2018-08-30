@@ -6,7 +6,6 @@ import client, {HASURA_GRAPHQL_ENGINE_HOSTNAME} from './apollo';
 import Poll from './Poll';
 import { getUserId } from './session';
 import hasura_logo from './img/hasura_logo_200.png';
-import { Users } from './Users.react'
 import { GraphQL } from './GraphQL.jsx';
 
 class App extends Component {
@@ -32,8 +31,6 @@ class App extends Component {
             <div className="container displayFlex">
               <img src={logo} className="App-logo" alt="logo" />
               <h1 className="App-title">Realtime Poll</h1>
-              &nbsp; | &nbsp;
-              <Users />
             </div>
           </header>
 

@@ -12,9 +12,9 @@ export const Users = () => (
        if (loading) return <span>Loading...</span>;
        if (error) return <span>Error :</span>;
        return (
-         <span>
-           Online users: {data.online_users[0].count}
-         </span>
+         <Alert bsStyle="info">
+           👥 Online users: {data.online_users[0].count}
+         </Alert>
        );
     }}
   </Subscription>
