@@ -46,7 +46,7 @@ data InsertQueryP1
 
 mkSQLInsert :: InsertQueryP1 -> S.SelectWith
 mkSQLInsert (InsertQueryP1 tn vn cols vals c mutFlds) =
-  mkSelWith MTInsert tn (S.CTEInsert insert) mutFlds
+  mkSelWith tn (S.CTEInsert insert) mutFlds
   where
     insert =
       S.SQLInsert vn cols vals (toSQLConflict c) $ Just S.returningStar

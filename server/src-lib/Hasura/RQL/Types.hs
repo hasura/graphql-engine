@@ -284,7 +284,7 @@ successMsg = "{\"message\":\"success\"}"
 
 type HeaderObj = M.HashMap T.Text T.Text
 
-qualTableToAliasIden :: MutationType -> QualifiedTable -> Iden
-qualTableToAliasIden op (QualifiedTable sn tn) =
-  Iden $ mutTyToTxt op <> "_"
-  <> getSchemaTxt sn <> "_" <> getTableTxt tn
+qualTableToAliasIden :: QualifiedTable -> Iden
+qualTableToAliasIden (QualifiedTable sn tn) =
+  Iden $ getSchemaTxt sn <> "_" <> getTableTxt tn
+  <> "__mutation_result_alias"

@@ -30,7 +30,7 @@ data DeleteQueryP1
 mkSQLDelete
   :: DeleteQueryP1 -> S.SelectWith
 mkSQLDelete (DeleteQueryP1 tn (fltr, wc) mutFlds) =
-  mkSelWith MTDelete tn (S.CTEDelete delete) mutFlds
+  mkSelWith tn (S.CTEDelete delete) mutFlds
   where
     delete = S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
     tableFltr = Just $ S.WhereFrag $ S.BEBin S.AndOp fltr $ cBoolExp wc

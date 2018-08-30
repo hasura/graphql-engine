@@ -39,9 +39,6 @@ module Hasura.RQL.Types.DML
        , CountQuery(..)
 
        , QueryT(..)
-
-       , MutationType(..)
-       , mutTyToTxt
        ) where
 
 import qualified Hasura.SQL.DML             as S
@@ -348,14 +345,3 @@ $(deriveJSON
                  , sumEncoding = TaggedObject "type" "args"
                  }
   ''QueryT)
-
-data MutationType
-  = MTInsert
-  | MTUpdate
-  | MTDelete
-  deriving (Show, Eq)
-
-mutTyToTxt :: MutationType -> T.Text
-mutTyToTxt MTInsert = "insert"
-mutTyToTxt MTUpdate = "update"
-mutTyToTxt MTDelete = "delete"
