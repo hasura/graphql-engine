@@ -7,6 +7,7 @@ module Hasura.RQL.DML.Returning where
 
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -16,34 +17,10 @@ import qualified Data.Text               as T
 import qualified Data.Vector             as V
 import qualified Hasura.SQL.DML          as S
 
-data RetFld
-  = RExp !T.Text
-  | RCol (PGCol, PGColType)
-  deriving (Show, Eq)
-
-pgColsFromRetFld :: RetFld -> Maybe (PGCol, PGColType)
-pgColsFromRetFld = \case
-  RExp _ -> Nothing
-  RCol c -> Just c
-
-type RetFlds = Map.HashMap T.Text RetFld
-
-mkRetFlds :: [(PGCol, PGColType)] -> RetFlds
-mkRetFlds flds =
-  Map.fromList $ flip map flds $
-  \(c, ty) -> (getPGColTxt c, RCol (c, ty))
-
-mkRetFldsExp :: RetFlds -> S.SQLExp
-mkRetFldsExp retFlds =
-  S.mkRowExp $ flip map (Map.toList retFlds) $ \(k, retFld) ->
-  case retFld of
-    RExp t       -> S.mkAliasedExtrFromExp (S.SELit t) $ Just $ PGCol k
-    RCol colInfo -> mkColExtrAl (Just $ PGCol k) colInfo
-
 data MutFld
   = MCount
   | MExp !T.Text
-  | MRet !RetFlds
+  | MRet !SelectData
   deriving (Show, Eq)
 
 type MutFlds = Map.HashMap T.Text MutFld
@@ -52,39 +29,48 @@ pgColsFromMutFld :: MutFld -> [(PGCol, PGColType)]
 pgColsFromMutFld = \case
   MCount -> []
   MExp _ -> []
-  MRet retFlds -> mapMaybe pgColsFromRetFld $ Map.elems retFlds
+  MRet selData -> fst $ partAnnFlds $ Map.elems $ sdFlds selData
+
+pgColsToSelData :: QualifiedTable -> [(PGCol, PGColType)] -> SelectData
+pgColsToSelData qt cols = SelectData flds qt Nothing (S.BELit True, Nothing)
+                          Nothing [] Nothing Nothing False
+  where
+    flds = Map.fromList $ flip map cols $ \(c, ty) ->
+      (fromPGCol c, FCol (c, ty))
 
 pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColType)]
 pgColsFromMutFlds = concatMap pgColsFromMutFld . Map.elems
 
-mkDefaultMutFlds :: Maybe [(PGCol, PGColType)] -> MutFlds
-mkDefaultMutFlds = \case
+mkDefaultMutFlds :: QualifiedTable -> Maybe [(PGCol, PGColType)] -> MutFlds
+mkDefaultMutFlds qt = \case
   Nothing   -> mutFlds
-  Just cols -> Map.insert "returning" (MRet $ mkRetFlds cols) mutFlds
+  Just cols -> Map.insert "returning" (MRet $ pgColsToSelData qt cols) mutFlds
   where
     mutFlds = Map.singleton "affected_rows" MCount
 
-mkMutFldExp :: MutFld -> S.SQLExp
-mkMutFldExp = \case
-  MCount -> S.SEUnsafe "count(*)"
+mkMutFldExp :: QualifiedTable -> MutFld -> S.SQLExp
+mkMutFldExp qt = \case
+  MCount -> S.SESelect $
+    S.mkSelect
+    { S.selExtr = [S.Extractor (S.SEUnsafe "count(*)") Nothing]
+    , S.selFrom = Just $ S.FromExp $ pure $
+                  S.FIIden $ qualTableToAliasIden qt
+    }
   MExp t -> S.SELit t
-  MRet retFlds -> S.toEmptyArrWhenNull $
-                  S.SEFnApp "json_agg" [mkRetFldsExp retFlds] Nothing
+  MRet selData -> S.SESelect $ mkSQLSelect selData
 
-mkSelWith :: S.CTE -> MutFlds -> S.SelectWith
-mkSelWith cte mutFlds =
+mkSelWith :: QualifiedTable -> S.CTE -> MutFlds -> S.SelectWith
+mkSelWith qt cte mutFlds =
   S.SelectWith [(alias, cte)] sel
   where
-    alias = S.Alias $ toIden tableNameAlias
-    tableNameAlias = TableName "r"
-    sel = S.mkSelect { S.selExtr = [S.Extractor extrExp Nothing]
-                     , S.selFrom = Just $ S.mkIdenFromExp tableNameAlias}
+    alias = S.Alias $ qualTableToAliasIden qt
+    sel = S.mkSelect { S.selExtr = [S.Extractor extrExp Nothing] }
 
     extrExp = S.SEFnApp "json_build_object" jsonBuildObjArgs Nothing
 
     jsonBuildObjArgs =
       flip concatMap (Map.toList mutFlds) $
-      \(k, mutFld) -> [S.SELit k, mkMutFldExp mutFld]
+      \(k, mutFld) -> [S.SELit k, mkMutFldExp qt mutFld]
 
 encodeJSONVector :: (a -> BB.Builder) -> V.Vector a -> BB.Builder
 encodeJSONVector builder xs

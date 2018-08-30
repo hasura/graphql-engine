@@ -39,7 +39,6 @@ module Hasura.RQL.Types.DML
        , CountQuery(..)
 
        , QueryT(..)
-
        ) where
 
 import qualified Hasura.SQL.DML             as S
@@ -134,11 +133,11 @@ instance FromJSON OrderByExp where
 
 orderByParser :: AttoT.Parser T.Text OrderByItem
 orderByParser =
-  OrderByItem <$> otP <*> colP <*> (return Nothing)
+  OrderByItem <$> otP <*> colP <*> return Nothing
   where
     otP  = ("+" *> return (Just S.OTAsc))
            <|> ("-" *> return (Just S.OTDesc))
-           <|> (return Nothing)
+           <|> return Nothing
     colP = orderByColFromTxt <$> Atto.takeText
 
 data SelectG a b c
@@ -173,7 +172,7 @@ wcToText (StarDot wc) = "*." <> wcToText wc
 
 parseWildcard :: AT.Parser Wildcard
 parseWildcard =
-  fromList <$> ((starParser `AT.sepBy1` (AT.char '.')) <* AT.endOfInput)
+  fromList <$> ((starParser `AT.sepBy1` AT.char '.') <* AT.endOfInput)
   where
     starParser = AT.char '*' *> pure Star
     fromList   = foldr1 (\_ x -> StarDot x)

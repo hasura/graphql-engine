@@ -51,6 +51,7 @@ data OpCtx
   | OCSelectPkey QualifiedTable S.BoolExp [T.Text]
   -- tn, filter exp, req hdrs
   | OCUpdate QualifiedTable S.BoolExp [T.Text]
+
   -- tn, filter exp, req hdrs
   | OCDelete QualifiedTable S.BoolExp [T.Text]
   deriving (Show, Eq)
@@ -313,7 +314,7 @@ mkMutRespTy tn =
 {-
 type table_mutation_response {
   affected_rows: Int!
-  returning: [table_no_rels!]!
+  returning: [table!]!
 }
 -}
 mkMutRespObj
@@ -332,25 +333,9 @@ mkMutRespObj tn =
         desc = "number of affected rows by the mutation"
     returningFld =
       ObjFldInfo (Just desc) "returning" Map.empty $
-      G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableNoRelsTy tn
+      G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
       where
         desc = "data of the affected rows by the mutation"
-
--- table_no_rels
-mkTableNoRelsTy :: QualifiedTable -> G.NamedType
-mkTableNoRelsTy tn =
-  G.NamedType $ qualTableToName tn <> "_no_rels"
-
-mkTableNoRelsObj
-  :: QualifiedTable
-  -> [SelField]
-  -> ObjTyInfo
-mkTableNoRelsObj tn fields =
-  mkObjTyInfo (Just desc) (mkTableNoRelsTy tn) $ mapFromL _fiName pgCols
-  where
-    pgCols = map mkPGColFld $ lefts fields
-    desc = G.Description $
-      "only postgres columns (no relationships) from " <>> tn
 
 mkBoolExpInp
   :: QualifiedTable
@@ -810,9 +795,9 @@ mkOrdByEnumsOfCol colInfo@(PGColInfo col _ _) =
     colN = pgColToFld col
     pgColToFld = G.Name . getPGColTxt
 
-data RootFlds
+newtype RootFlds
   = RootFlds
-  { _taMutation :: !(Map.HashMap G.Name (OpCtx, Either ObjFldInfo ObjFldInfo))
+  { _taMutation :: Map.HashMap G.Name (OpCtx, Either ObjFldInfo ObjFldInfo)
   } deriving (Show, Eq)
 
 instance Semigroup RootFlds where
@@ -861,7 +846,6 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM pkeyCols constraints =
       , TIInpObj <$> updSetInpObjM
       , TIInpObj <$> updIncInpObjM
       , TIInpObj <$> boolExpInpObjM
-      , TIObj <$> noRelsObjM
       , TIObj <$> mutRespObjM
       , TIObj <$> selObjM
       , TIEnum <$> ordByTyInfoM
@@ -869,7 +853,7 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM pkeyCols constraints =
 
     fieldMap = Map.unions $ catMaybes
                [ insInpObjFldsM, updSetInpObjFldsM, boolExpInpObjFldsM
-               , noRelsObjFldsM, selObjFldsM, Just selByPKeyObjFlds
+               , selObjFldsM, Just selByPKeyObjFlds
                ]
 
     nameFromSelFld = \case
@@ -909,18 +893,11 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM pkeyCols constraints =
     -- the fields used in bool exp
     boolExpInpObjFldsM = mkFldMap (mkBoolExpTy tn) <$> selFldsM
 
-    -- no rels obj
-    noRelsObjM =
+    -- mut resp obj
+    mutRespObjM =
       if isJust insColsM || isJust updColsM || isJust delPermM
-      then Just $ mkTableNoRelsObj tn $ fromMaybe [] selFldsM
+      then Just $ mkMutRespObj tn
       else Nothing
-    -- the fields used in returning object
-    noRelsObjFldsM = const (
-      mkColFldMap (mkTableNoRelsTy tn) $ lefts $ fromMaybe [] selFldsM
-      ) <$> noRelsObjM
-
-    -- mut resp obj (only when noRelsObjM is needed)
-    mutRespObjM = const (mkMutRespObj tn) <$> noRelsObjM
 
     -- table obj
     selObjM = mkTableObj tn <$> selFldsM

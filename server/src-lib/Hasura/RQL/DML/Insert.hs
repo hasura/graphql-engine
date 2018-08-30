@@ -45,8 +45,8 @@ data InsertQueryP1
   } deriving (Show, Eq)
 
 mkSQLInsert :: InsertQueryP1 -> S.SelectWith
-mkSQLInsert (InsertQueryP1 _ vn cols vals c mutFlds) =
-  mkSelWith (S.CTEInsert insert) mutFlds
+mkSQLInsert (InsertQueryP1 tn vn cols vals c mutFlds) =
+  mkSelWith tn (S.CTEInsert insert) mutFlds
   where
     insert =
       S.SQLInsert vn cols vals (toSQLConflict c) $ Just S.returningStar
@@ -161,7 +161,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
     withPathK "returning" $
       zip retCols <$> checkRetCols fieldInfoMap selPerm retCols
 
-  let mutFlds = mkDefaultMutFlds mAnnRetCols
+  let mutFlds = mkDefaultMutFlds tableName mAnnRetCols
 
   let defInsVals = mkDefValMap fieldInfoMap
       insCols    = HM.keys defInsVals

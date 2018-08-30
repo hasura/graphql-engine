@@ -68,7 +68,8 @@ data AnnRel = AnnRel
 data SelectData = SelectData
       -- Nested annotated columns
     { sdFlds         :: !(HM.HashMap FieldName AnnFld)
-    , sdTable        :: !QualifiedTable     -- Postgres table name
+    , sdTable        :: !QualifiedTable -- from postgres table
+    , sdFromExp      :: !(Maybe S.FromExp) -- optional from expression
     , sdWhere        :: !(S.BoolExp, Maybe (GBoolExp AnnSQLBoolExp))
     , sdOrderBy      :: !(Maybe S.OrderByExp)
     , sdAddCols      :: ![PGCol]             -- additional order by columns
@@ -312,7 +313,7 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
   -- convert offset expression
       offsetExp = S.intToSQLExp <$> mQueryOffset
 
-  return $ SelectData newAnnFlds (spiTable selPermInfo)
+  return $ SelectData newAnnFlds (spiTable selPermInfo) Nothing
     (spiFilter selPermInfo, wClause) sqlOrderBy [] limitExp offsetExp False
 
   where
@@ -489,7 +490,7 @@ selDataToSQL :: [S.Extractor] -- ^ Parent's RCol
              -> S.BoolExp     -- ^ Join Condition if any
              -> SelectData    -- ^ Select data
              -> S.Select      -- ^ SQL Select (needs wrapping)
-selDataToSQL parRCols joinCond (SelectData annFlds tn (fltr, mWc) ob _ lt offst _) =
+selDataToSQL parRCols joinCond (SelectData annFlds tn mFrmExp (fltr, mWc) ob _ lt offst _) =
   let
     (sCols, relCols) = partAnnFlds $ HM.elems annFlds
     -- relCols        = HM.elems relColsMap
@@ -501,12 +502,14 @@ selDataToSQL parRCols joinCond (SelectData annFlds tn (fltr, mWc) ob _ lt offst 
 
     finalWC = S.BEBin S.AndOp fltr $ maybe (S.BELit True) cBoolExp mWc
 
+    frm = fromMaybe (S.mkSimpleFromExp tn) mFrmExp
+
     -- Add order by if
     -- limit or offset is used or when no relationships are requested
     -- orderByExp = bool Nothing ob $ or [isJust lt, isJust offst, null relCols]
     baseSel = S.mkSelect
               { S.selExtr    = thisTableExtrs
-              , S.selFrom    = Just $ S.mkSimpleFromExp tn
+              , S.selFrom    = Just frm
               , S.selWhere   = Just $ injectJoinCond joinCond finalWC
               }
     joinedSel = foldr annRelColToSQL baseSel relCols
@@ -639,7 +642,7 @@ wrapFinalSel initSel extCols =
 getSelectDeps
   :: SelectData
   -> [SchemaDependency]
-getSelectDeps (SelectData flds tn (_, annWc) _ _ _ _ _) =
+getSelectDeps (SelectData flds tn _ (_, annWc) _ _ _ _ _) =
   mkParentDep tn
   : fromMaybe [] whereDeps
   <> colDeps
@@ -653,6 +656,7 @@ getSelectDeps (SelectData flds tn (_, annWc) _ _ _ _ _) =
     whereDeps   = getBoolExpDeps tn <$> annWc
     mkRelDep rn =
       SchemaDependency (SOTableObj tn (TORel rn)) "untyped"
+
 
 -- data SelectQueryP1
 --   = SelectQueryP1
