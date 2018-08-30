@@ -9,8 +9,8 @@
 module Hasura.Server.Auth
   ( getUserInfo
   , AuthMode(..)
-  , AccessKey
-  , Webhook
+  , AccessKey (..)
+  , Webhook (..)
   , RawJWT
   , JWTConfig (..)
   , processJwt
@@ -37,8 +37,13 @@ import           Hasura.Server.Utils
 import qualified Hasura.Logging         as L
 
 
-type AccessKey = T.Text
-type Webhook = T.Text
+newtype AccessKey
+  = AccessKey { getAccessKey :: T.Text }
+  deriving (Show, Eq)
+
+newtype Webhook
+  = Webhook {getWebhook :: T.Text}
+  deriving (Show, Eq)
 
 data AuthMode
   = AMNoAuth
@@ -94,16 +99,17 @@ userInfoFromWebhook
   :: (MonadIO m, MonadError QErr m)
   => WebHookLogger
   -> H.Manager
-  -> T.Text
+  -> Webhook
   -> [N.Header]
   -> m UserInfo
-userInfoFromWebhook logger manager urlT reqHeaders = do
+userInfoFromWebhook logger manager hook reqHeaders = do
   let options =
         Wreq.defaults
         & Wreq.headers .~ filteredHeaders
         & Wreq.checkResponse ?~ (\_ _ -> return ())
         & Wreq.manager .~ Right manager
 
+      urlT = getWebhook hook
   res <- liftIO $ try $ Wreq.getWith options $ T.unpack urlT
   resp <- either logAndThrow return res
   let status = resp ^. Wreq.responseStatus
@@ -112,6 +118,7 @@ userInfoFromWebhook logger manager urlT reqHeaders = do
   mkUserInfoFromResp logger urlT status respBody
   where
     logAndThrow err = do
+      let urlT = getWebhook hook
       liftIO $ logger $ WebHookLog L.LevelError Nothing urlT (Just err) Nothing
       throw500 "Internal Server Error"
 
@@ -165,5 +172,5 @@ getUserInfo logger manager rawHeaders = \case
         Nothing -> UserInfo adminRole M.empty
 
     userInfoWhenAccessKey key reqKey = do
-      when (reqKey /= key) $ throw401 $ "invalid " <> accessKeyHeader
+      when (reqKey /= getAccessKey key) $ throw401 $ "invalid " <> accessKeyHeader
       return userInfoFromHeaders

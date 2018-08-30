@@ -157,17 +157,19 @@ parseServerPort =
 
 parseAccessKey :: Parser (Maybe AccessKey)
 parseAccessKey =
-  optional $ strOption ( long "access-key" <>
-                         metavar "SECRET ACCESS KEY" <>
-                         help "Secret access key, required to access this instance"
-                       )
+  optional $ AccessKey <$>
+    strOption ( long "access-key" <>
+                metavar "SECRET ACCESS KEY" <>
+                help "Secret access key, required to access this instance"
+              )
 
 parseWebHook :: Parser (Maybe Webhook)
 parseWebHook =
-  optional $ strOption ( long "auth-hook" <>
-                         metavar "AUTHENTICATION WEB HOOK" <>
-                         help "The authentication webhook, required to authenticate requests"
-                       )
+  optional $ Webhook <$>
+    strOption ( long "auth-hook" <>
+                metavar "AUTHENTICATION WEB HOOK" <>
+                help "The authentication webhook, required to authenticate requests"
+              )
 
 
 parseJwtSecret :: Parser (Maybe Text)

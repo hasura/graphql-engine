@@ -26,7 +26,8 @@ import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.Server.App          (mkWaiApp)
-import           Hasura.Server.Auth         (AccessKey, AuthMode (..), Webhook)
+import           Hasura.Server.Auth         (AccessKey (..), AuthMode (..),
+                                             Webhook (..))
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
 
@@ -96,7 +97,7 @@ printJSON = BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a) => a -> IO ()
 printYaml = BC.putStrLn . Y.encode
 
-mkAuthMode :: Maybe AccessKey -> Maybe T.Text -> Maybe T.Text -> Either String AuthMode
+mkAuthMode :: Maybe AccessKey -> Maybe Webhook -> Maybe T.Text -> Either String AuthMode
 mkAuthMode mAccessKey mWebHook mJwtSecret =
   case (mAccessKey, mWebHook, mJwtSecret) of
     (Nothing,  Nothing,   Nothing)     -> return AMNoAuth
@@ -129,11 +130,11 @@ main =  do
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case ravenMode of
     ROServe (ServeOptions port cp isoL mRootDir mAccessKey corsCfg mWebHook mJwtSecret enableConsole) -> do
-      mFinalAccessKey <- considerEnv "HASURA_GRAPHQL_ACCESS_KEY" mAccessKey
-      mFinalWebHook   <- considerEnv "HASURA_GRAPHQL_AUTH_HOOK" mWebHook
+      mFinalAccessKey <- considerEnv "HASURA_GRAPHQL_ACCESS_KEY" $ getAccessKey <$> mAccessKey
+      mFinalWebHook   <- considerEnv "HASURA_GRAPHQL_AUTH_HOOK" $ getWebhook <$> mWebHook
       mFinalJwtSecret <- considerEnv "HASURA_GRAPHQL_JWT_SECRET" mJwtSecret
       am <- either ((>> exitFailure) . putStrLn) return $
-        mkAuthMode mFinalAccessKey mFinalWebHook mFinalJwtSecret
+        mkAuthMode (AccessKey <$> mFinalAccessKey) (Webhook <$> mFinalWebHook) mFinalJwtSecret
       finalCorsDomain <- fromMaybe "*" <$> considerEnv "HASURA_GRAPHQL_CORS_DOMAIN" (ccDomain corsCfg)
       let finalCorsCfg =
             CorsConfigG finalCorsDomain $ ccDisabled corsCfg
