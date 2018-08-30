@@ -1,3 +1,4 @@
+import { ApolloConsumer } from 'react-apollo';
 import React from 'react';
 import Chat from './Chat';
 import Login from './Login';
@@ -9,7 +10,8 @@ export default class Main extends React.Component {
     super();
     this.state = {
       isLoggedIn: false,
-      username:""
+      username:"",
+      userId: null
     };
   } 
 
@@ -22,24 +24,16 @@ export default class Main extends React.Component {
   }
 
   // check usernme and  perform login
-  login = () => {
-    const { username } = this.state;
-    if (username.match(/^[a-z0-9_-]{3,15}$/g)) {
-      this.setState({
-        ...this.state,
-        isLoggedIn: true
-      });
-    } else {
-      alert("Invalid username. Spaces and special characters not allowed. Please try again");
-      this.setState({
-        text: "",
-        isLoggedIn: false
-      });
-    }
+  login = (id) => {
+    this.setState({
+      ...this.state,
+      isLoggedIn: true,
+      userId: id
+    })
   }
 
   render() {
-    const { username, isLoggedIn } = this.state;
+    const { username, isLoggedIn, userId } = this.state;
     // Login if not logged in and head to chat
     return (
       <div className="app">
@@ -47,13 +41,25 @@ export default class Main extends React.Component {
           !isLoggedIn ? (
             <Login
               username={username}
+              userId={userId}
               setUsername={this.setUsername}
               login={this.login}
             />
           ) : (
-            <Chat
-              username={username}
-            />  
+            <ApolloConsumer>
+              {
+                (client) => {
+                  return (
+                    <Chat
+                      userId={userId}
+                      username={username}
+                      client={client}
+                    />
+                  );
+                }
+              }
+                
+            </ApolloConsumer>
           )
         }
       </div>

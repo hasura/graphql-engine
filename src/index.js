@@ -10,7 +10,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import { split } from 'apollo-link';
 import { getMainDefinition } from 'apollo-utilities';
 
-const GRAPHQL_ENDPOINT = "https://hasura-realtime-chat.herokuapp.com/v1alpha1/graphql";
+const GRAPHQL_ENDPOINT = "https://hasura-realtime-group-chat.herokuapp.com/v1alpha1/graphql";
 
 // Make WebSocketLink with appropriate url
 const mkWsLink = (uri) => {

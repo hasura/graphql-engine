@@ -1,6 +1,7 @@
 import React from 'react';
 import { Mutation } from 'react-apollo';
 import gql from 'graphql-tag';
+import TypingIndicator from './TypingIndicator';
 import '../App.css';
 
 const insertMessage = gql`
@@ -18,12 +19,43 @@ const insertMessage = gql`
   }
 `;
 
+const emitTypingEvent = gql`
+  mutation ($userId: Int!){
+    insert_user_typing(objects: [
+      {
+        user_id: $userId,
+        last_typed: "now()"
+      }
+    ],
+      on_conflict: {
+        constraint: user_typing_pkey,
+        action: update
+      }
+    ) {
+      returning {
+        user_id
+      }
+    }
+  }
+`;
+
 export default class Textbox extends React.Component {
 
   constructor(props) {
     super()
     this.state = {
       text: ""
+    }
+  }
+
+  emitTypingEvent = async (mutate) => {
+    if (this.props.userId) {
+      await mutate({
+        mutation: emitTypingEvent,
+        variables: {
+          userId: this.props.userId
+        }
+      });
     }
   }
 
@@ -46,11 +78,11 @@ export default class Textbox extends React.Component {
               username: insert_message.returning[0].username,
               text: insert_message.returning[0].text,
             }
-          ); 
+          );
         }}
       >
         {
-          (insert_message, { data, loading, error, called}) => {
+          (insert_message, { data, loading, error, client}) => {
             if (loading) {
               return "";
             }
@@ -63,17 +95,20 @@ export default class Textbox extends React.Component {
             return (
               <form onSubmit={sendMessage}>
                 <div className="textboxWrapper">
+                  <TypingIndicator userId={this.props.userId} />
                   <input
                     id="textbox"
-                    className="textbox loginTextbox"
+                    className="textbox typoTextbox"
                     value={this.state.text}
                     autoFocus={true}
+                    onFocus={() => this.emitTypingEvent(client.mutate)}
                     onChange={(e) => {
                       this.setState({ text: e.target.value })
                     }}
+                    autoComplete="off"
                   />
                   <button
-                    className="sendButton loginButton"
+                    className="sendButton typoButton"
                     onClick={sendMessage}
                   > Send </button>
                 </div>

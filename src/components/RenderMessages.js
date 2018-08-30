@@ -242,6 +242,7 @@ export default class RenderMessages extends React.Component {
         <MessageList
           messages={messages}
           isNew={false}
+          username={this.props.username}
         />
         { /* Show old/new message separation */}
         <div
@@ -260,13 +261,9 @@ export default class RenderMessages extends React.Component {
         <MessageList
           messages={newMessages}
           isNew={true}
+          username={this.props.username}
         />
         { /* Bottom div to scroll to */}
-        <div
-          style={{ "height": 0 }}
-          id="lastMessage"
-        >
-        </div>
       </div>
     );
   }

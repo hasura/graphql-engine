@@ -1,6 +1,7 @@
 import React from 'react';
 import RenderMessages from './RenderMessages';
 import Textbox from './Textbox'
+import OnlineUsers from './OnlineUsersWrapper';
 import "../App.css";
 
 export default class RenderMessagesProxy extends React.Component {
@@ -21,17 +22,28 @@ export default class RenderMessagesProxy extends React.Component {
 
   render() {
     return (
-      <div>
-        <RenderMessages
-          refetch={this.props.refetch}
-          setRefetch={this.props.setRefetch}
-          setMutationCallback={this.setMutationCallback}
-          username={this.props.username}
-        />
-        <Textbox
-          username={this.props.username}
-          mutationCallback={this.state.mutationCallback}
-        />
+      <div className="chatWrapper">
+        <div className="wd25">
+          <OnlineUsers
+            userId={this.props.userId}
+            username={this.props.username}
+          /> 
+        </div>
+        <div className="wd75">
+          <RenderMessages
+            refetch={this.props.refetch}
+            setRefetch={this.props.setRefetch}
+            setMutationCallback={this.setMutationCallback}
+            username={this.props.username}
+            userId={this.props.userId}
+
+          />
+          <Textbox
+            username={this.props.username}
+            mutationCallback={this.state.mutationCallback}
+            userId={this.props.userId}
+          />
+        </div>
       </div>
     );
   }
