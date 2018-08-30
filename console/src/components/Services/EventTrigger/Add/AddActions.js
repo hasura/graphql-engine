@@ -64,7 +64,7 @@ const createTrigger = () => {
       payload.args.update = { columns: currentState.operations.update };
     }
     if (currentState.selectedOperations.delete) {
-      payload.args.delete = { columns: ['*'] };
+      payload.args.delete = { columns: currentState.operations.delete };
     }
     // retry logic
     if (currentState.retryConf) {

@@ -144,12 +144,11 @@ class AddTrigger extends Component {
       if (tableSchema) {
         return tableSchema.columns.map((colObj, i) => {
           const column = colObj.column_name;
-          let checked = operations[type]
+          const checked = operations[type]
             ? operations[type].includes(column)
             : false;
-          checked = type === 'delete' ? true : checked;
 
-          const isDisabled = type === 'delete' ? true : false;
+          const isDisabled = false;
           const inputHtml = (
             <input
               type="checkbox"
