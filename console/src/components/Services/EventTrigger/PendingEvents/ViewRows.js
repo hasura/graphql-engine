@@ -329,70 +329,74 @@ const ViewRows = ({
               <div
                 className={styles.invocationsSection + ' invocationsSection'}
               >
-                <ReactTable
-                  data={invocationRowsData}
-                  columns={invocationGridHeadings}
-                  defaultPageSize={currentRow.logs.length}
-                  showPagination={false}
-                  SubComponent={logRow => {
-                    const finalIndex = logRow.index;
-                    const currentPayload = JSON.stringify(
-                      currentRow.payload,
-                      null,
-                      4
-                    );
-                    const finalRow = currentRow.logs[finalIndex];
-                    const finalResponse = JSON.parse(
-                      JSON.stringify(finalRow.response, null, 4)
-                    );
-                    return (
-                      <div style={{ padding: '20px' }}>
-                        <Tabs
-                          animation={false}
-                          defaultActiveKey={1}
-                          id="requestResponseTab"
-                        >
-                          <Tab eventKey={1} title="Request">
-                            <div className={styles.add_mar_top}>
-                              <div className={styles.subheading_text}>
-                                Request
+                {invocationRowsData.length ? (
+                  <ReactTable
+                    data={invocationRowsData}
+                    columns={invocationGridHeadings}
+                    defaultPageSize={currentRow.logs.length}
+                    showPagination={false}
+                    SubComponent={logRow => {
+                      const finalIndex = logRow.index;
+                      const currentPayload = JSON.stringify(
+                        currentRow.payload,
+                        null,
+                        4
+                      );
+                      const finalRow = currentRow.logs[finalIndex];
+                      const finalResponse = JSON.parse(
+                        JSON.stringify(finalRow.response, null, 4)
+                      );
+                      return (
+                        <div style={{ padding: '20px' }}>
+                          <Tabs
+                            animation={false}
+                            defaultActiveKey={1}
+                            id="requestResponseTab"
+                          >
+                            <Tab eventKey={1} title="Request">
+                              <div className={styles.add_mar_top}>
+                                <div className={styles.subheading_text}>
+                                  Request
+                                </div>
+                                <AceEditor
+                                  mode="json"
+                                  theme="github"
+                                  name="payload"
+                                  value={currentPayload}
+                                  minLines={4}
+                                  maxLines={100}
+                                  width="100%"
+                                  showPrintMargin={false}
+                                  showGutter={false}
+                                />
                               </div>
-                              <AceEditor
-                                mode="json"
-                                theme="github"
-                                name="payload"
-                                value={currentPayload}
-                                minLines={4}
-                                maxLines={100}
-                                width="100%"
-                                showPrintMargin={false}
-                                showGutter={false}
-                              />
-                            </div>
-                          </Tab>
-                          <Tab eventKey={2} title="Response">
-                            <div className={styles.add_mar_top}>
-                              <div className={styles.subheading_text}>
-                                Response
+                            </Tab>
+                            <Tab eventKey={2} title="Response">
+                              <div className={styles.add_mar_top}>
+                                <div className={styles.subheading_text}>
+                                  Response
+                                </div>
+                                <AceEditor
+                                  mode="json"
+                                  theme="github"
+                                  name="response"
+                                  value={finalResponse}
+                                  minLines={4}
+                                  maxLines={100}
+                                  width="100%"
+                                  showPrintMargin={false}
+                                  showGutter={false}
+                                />
                               </div>
-                              <AceEditor
-                                mode="json"
-                                theme="github"
-                                name="response"
-                                value={finalResponse}
-                                minLines={4}
-                                maxLines={100}
-                                width="100%"
-                                showPrintMargin={false}
-                                showGutter={false}
-                              />
-                            </div>
-                          </Tab>
-                        </Tabs>
-                      </div>
-                    );
-                  }}
-                />
+                            </Tab>
+                          </Tabs>
+                        </div>
+                      );
+                    }}
+                  />
+                ) : (
+                  <div className={styles.add_mar_top}>No data available</div>
+                )}
               </div>
               <br />
               <br />
@@ -409,7 +413,9 @@ const ViewRows = ({
       <hr />
       <div className="row">
         <div className="col-xs-12">
-          <div className={styles.tableContainer}>{renderTableBody()}</div>
+          <div className={styles.tableContainer + ' eventsTableBody'}>
+            {renderTableBody()}
+          </div>
           <br />
           <br />
         </div>

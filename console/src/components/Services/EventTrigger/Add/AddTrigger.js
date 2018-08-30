@@ -246,7 +246,7 @@ class AddTrigger extends Component {
             <div
               className={styles.add_mar_bottom + ' ' + styles.selectOperations}
             >
-              <h4 className={styles.subheading_text}>Select operations</h4>
+              <h4 className={styles.subheading_text}>Operations</h4>
               <div className={styles.display_inline}>
                 <label>
                   <input

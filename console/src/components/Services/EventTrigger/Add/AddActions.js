@@ -3,7 +3,12 @@ import dataHeaders from '../Common/Headers';
 import requestAction from '../../../../utils/requestAction';
 import defaultState from './AddState';
 import _push from '../push';
-import { loadTriggers, makeMigrationCall } from '../EventActions';
+import {
+  loadTriggers,
+  makeMigrationCall,
+  setTrigger,
+  loadProcessedEvents,
+} from '../EventActions';
 import { showSuccessNotification } from '../Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 
@@ -86,9 +91,15 @@ const createTrigger = () => {
 
     const customOnSuccess = () => {
       // dispatch({ type: REQUEST_SUCCESS });
-      dispatch(loadTriggers()).then(() =>
-        dispatch(_push('/manage/triggers/' + triggerName.trim() + '/processed'))
-      );
+
+      dispatch(setTrigger(triggerName.trim()));
+      dispatch(loadTriggers()).then(() => {
+        dispatch(loadProcessedEvents()).then(() => {
+          dispatch(
+            _push('/manage/triggers/' + triggerName.trim() + '/processed')
+          );
+        });
+      });
       return;
     };
     const customOnError = err => {
