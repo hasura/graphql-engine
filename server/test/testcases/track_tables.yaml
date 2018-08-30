@@ -28,4 +28,8 @@ query:
       args:
         schema: public
         name: orders
+    - type: track_table
+      args:
+        schema: public
+        name: test_table
 

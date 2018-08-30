@@ -1,0 +1,12 @@
+description: Create a insert permission on test_table for user role
+url: /v1/query
+status: 200
+query:
+  type: create_insert_permission
+  args:
+    table: test_table
+    role: user
+    permission:
+      check:
+        id: X-Hasura-User-Id
+      allow_upsert: true

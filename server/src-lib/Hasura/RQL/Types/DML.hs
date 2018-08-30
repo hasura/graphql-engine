@@ -29,6 +29,8 @@ module Hasura.RQL.Types.DML
        , ConflictAction(..)
        , ConstraintOn(..)
 
+       , InsertTxConflictCtx(..)
+
        , UpdVals
        , UpdateQuery(..)
 
@@ -37,7 +39,6 @@ module Hasura.RQL.Types.DML
        , CountQuery(..)
 
        , QueryT(..)
-
        ) where
 
 import qualified Hasura.SQL.DML             as S
@@ -132,11 +133,11 @@ instance FromJSON OrderByExp where
 
 orderByParser :: AttoT.Parser T.Text OrderByItem
 orderByParser =
-  OrderByItem <$> otP <*> colP <*> (return Nothing)
+  OrderByItem <$> otP <*> colP <*> return Nothing
   where
     otP  = ("+" *> return (Just S.OTAsc))
            <|> ("-" *> return (Just S.OTDesc))
-           <|> (return Nothing)
+           <|> return Nothing
     colP = orderByColFromTxt <$> Atto.takeText
 
 data SelectG a b c
@@ -171,7 +172,7 @@ wcToText (StarDot wc) = "*." <> wcToText wc
 
 parseWildcard :: AT.Parser Wildcard
 parseWildcard =
-  fromList <$> ((starParser `AT.sepBy1` (AT.char '.')) <* AT.endOfInput)
+  fromList <$> ((starParser `AT.sepBy1` AT.char '.') <* AT.endOfInput)
   where
     starParser = AT.char '*' *> pure Star
     fromList   = foldr1 (\_ x -> StarDot x)
@@ -267,6 +268,13 @@ data InsertQuery
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsertQuery)
+
+data InsertTxConflictCtx
+  = InsertTxConflictCtx
+  { itcAction     :: !ConflictAction
+  , itcConstraint :: !(Maybe ConstraintName)
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''InsertTxConflictCtx)
 
 type UpdVals = M.HashMap PGCol Value
 
