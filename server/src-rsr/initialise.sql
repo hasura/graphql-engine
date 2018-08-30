@@ -207,9 +207,10 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE TABLE hdb_catalog.event_log
 (
   id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
+  schema_name TEXT,
+  table_name TEXT,
   trigger_name TEXT,
   payload JSONB NOT NULL,
-  webhook TEXT NOT NULL,
   delivered BOOLEAN DEFAULT FALSE,
   error BOOLEAN DEFAULT FALSE,
   tries INTEGER DEFAULT 0,

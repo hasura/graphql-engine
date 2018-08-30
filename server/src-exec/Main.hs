@@ -134,7 +134,7 @@ main =  do
       prepareEvents ci
       pool <- Q.initPGPool ci cp
       putStrLn $ "server: running on port " ++ show port
-      app <- mkWaiApp isoL mRootDir loggerCtx pool httpManager am finalCorsCfg enableConsole
+      (app, cacheRef) <- mkWaiApp isoL mRootDir loggerCtx pool httpManager am finalCorsCfg enableConsole
       let warpSettings = Warp.setPort port Warp.defaultSettings
                          -- Warp.setHost "*" Warp.defaultSettings
 
@@ -145,7 +145,7 @@ main =  do
       httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
       httpInsecureSession <- WrqS.newSessionControl Nothing (TLS.mkManagerSettings tlsInsecure Nothing)
 
-      void $ C.forkIO $ processEventQueue loggerCtx (HTTPSessionMgr httpSession httpInsecureSession) pool eventQueue
+      void $ C.forkIO $ processEventQueue loggerCtx (HTTPSessionMgr httpSession httpInsecureSession) pool cacheRef eventQueue
 
       Warp.runSettings warpSettings app
 
