@@ -28,3 +28,4 @@ See:
    Permissions examples <common-roles-auth-examples>
    webhook
    webhook-examples
+   jwt

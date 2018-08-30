@@ -41,6 +41,10 @@ For ``serve`` subcommand these are the flags available
        --disable-cors       Disable CORS handling
        --auth-hook          The authentication webhook, required to authenticate
                             incoming request
+       --jwt-secret         The JSON containing type and the JWK used for
+                            verifying. e.g: `{"type": "HS256", "key":
+                           "<your-hmac-shared-secret>"}`,`{"type": "RS256",
+                           "key": "<your-PEM-RSA-public-key>"}
    -s, --stripes            Number of stripes
    -c, --connections        Number of connections that need to be opened to Postgres
        --timeout            Each connection's idle time before it is closed
