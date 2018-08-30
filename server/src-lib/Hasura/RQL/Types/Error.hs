@@ -72,6 +72,11 @@ data Code
   -- Graphql error
   | NoTables
   | ValidationFailed
+  -- JWT Auth errors
+  | JWTRoleClaimMissing
+  | JWTInvalidClaims
+  | JWTInvalid
+  | JWTInvalidKey
   deriving (Eq)
 
 instance Show Code where
@@ -100,6 +105,10 @@ instance Show Code where
   show AlreadyInit         = "already-initialised"
   show NoTables            = "no-tables"
   show ValidationFailed    = "validation-failed"
+  show JWTRoleClaimMissing = "jwt-missing-role-claims"
+  show JWTInvalidClaims    = "jwt-invalid-claims"
+  show JWTInvalid          = "invalid-jwt"
+  show JWTInvalidKey       = "invalid-jwt-key"
 
 data QErr
   = QErr

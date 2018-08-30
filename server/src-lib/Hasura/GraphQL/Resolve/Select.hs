@@ -8,6 +8,7 @@
 module Hasura.GraphQL.Resolve.Select
   ( convertSelect
   , convertSelectByPKey
+  , fromSelSet
   ) where
 
 import           Data.Has
@@ -63,7 +64,7 @@ fromField tn permFilter permLimit fld = fieldAsPath fld $ do
                 <$> withArgM args "limit" parseLimit
   offsetExpM <- withArgM args "offset" $ asPGColVal >=> prepare
   annFlds    <- fromSelSet (_fType fld) $ _fSelSet fld
-  return $ RS.SelectData annFlds tn (permFilter, whereExpM) ordByExpM
+  return $ RS.SelectData annFlds tn Nothing (permFilter, whereExpM) ordByExpM
     [] limitExpM offsetExpM False
   where
     args = _fArguments fld
@@ -73,7 +74,7 @@ fromFieldByPKey
 fromFieldByPKey tn permFilter fld = fieldAsPath fld $ do
   boolExp <- pgColValToBoolExp tn $ _fArguments fld
   annFlds <- fromSelSet (_fType fld) $ _fSelSet fld
-  return $ RS.SelectData annFlds tn (permFilter, Just boolExp)
+  return $ RS.SelectData annFlds tn Nothing (permFilter, Just boolExp)
     Nothing [] Nothing Nothing True
 
 getEnumInfo
