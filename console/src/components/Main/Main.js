@@ -82,18 +82,18 @@ class Main extends React.Component {
     let accessKeyHtml = null;
     if (globals.accessKey === '' || globals.accessKey === null) {
       accessKeyHtml = (
-        <div className={styles.secureSection}>
-          <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>
-            <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html">
+        <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>
+          <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html">
+            <button className={'btn btn-danger ' + styles.add_mar_right}>
               <i
                 className={
                   styles.padd_small_right + ' fa fa-exclamation-triangle'
                 }
               />
               Secure your endpoint
-            </a>
-          </OverlayTrigger>
-        </div>
+            </button>
+          </a>
+        </OverlayTrigger>
       );
     }
 
@@ -115,7 +115,7 @@ class Main extends React.Component {
               </div>
             </div>
             <div className={styles.header_items}>
-              <ul className={styles.sidebarItems}>
+              <ul>
                 <OverlayTrigger placement="right" overlay={tooltip.apiexplorer}>
                   <li>
                     <Link
@@ -164,61 +164,7 @@ class Main extends React.Component {
                 </OverlayTrigger>
               </ul>
             </div>
-            <div className={styles.clusterInfoWrapper}>
-              {accessKeyHtml}
-              <a href="https://docs.hasura.io">
-                <div className={styles.helpSection}>
-                  <i className={styles.question + ' fa fa-question'} />
-                </div>
-              </a>
-              <div
-                className={styles.shareSection + ' dropdown-toggle'}
-                data-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="false"
-              >
-                <i className={styles.heart + ' fa fa-heart'} />
-              </div>
-              <ul className={'dropdown-menu ' + styles.dropdown_menu}>
-                <div className={styles.dropdown_menu_container}>
-                  <div className={styles.arrow_up_dropdown} />
-                  <div className={styles.graphqlHeartText}>
-                    Love GraphQL Engine? Shout it from the rooftops!
-                    <br />
-                    Or just spread the word{' '}
-                    <span role="img" aria-label="smile">
-                      😊
-                    </span>
-                  </div>
-                  <div className={styles.displayFlex}>
-                    <li className={'dropdown-item'}>
-                      <div className={styles.gitHubBtn}>
-                        <iframe
-                          title="github"
-                          src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true"
-                          frameBorder="0"
-                          scrolling="0"
-                          width="100px"
-                          height="30px"
-                        />
-                      </div>
-                    </li>
-                    <li className={'dropdown-item '}>
-                      <div className="btn-o">
-                        <a
-                          href="https://twitter.com/intent/tweet?hashtags=hasura,graphql,postgres&amp;text=Get%20Instant%20Realtime%20GraphQL%20APIs%20on%20PostgreSQL&amp;url=https%3A%2F%2Fgithub.com%2F/hasura%2Fgraphql-engine"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles.twitterShare}
-                        >
-                          <button className="label">Tweet</button>
-                        </a>
-                      </div>
-                    </li>
-                  </div>
-                </div>
-              </ul>
-            </div>
+            <div className={styles.clusterInfoWrapper}>{accessKeyHtml}</div>
           </div>
           <div className={styles.main + ' container-fluid'}>{mainContent}</div>
           {this.state.showBannerNotification ? (
