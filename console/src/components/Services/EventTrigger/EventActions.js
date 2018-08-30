@@ -39,13 +39,6 @@ const loadTriggers = () => (dispatch, getState) => {
         columns: [
           '*',
           {
-            name: 'events', // order is dependent
-            columns: [
-              '*',
-              { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
-            ],
-          },
-          {
             name: 'retry_conf',
             columns: ['*'],
           },
@@ -88,6 +81,7 @@ const loadProcessedEvents = () => (dispatch, getState) => {
               $or: [{ delivered: { $eq: true } }, { error: { $eq: true } }],
             },
             order_by: ['-created_at'],
+            limit: 10,
           },
         ],
       },
@@ -126,6 +120,7 @@ const loadPendingEvents = () => (dispatch, getState) => {
             ],
             where: { delivered: false, error: false },
             order_by: ['-created_at'],
+            limit: 10,
           },
         ],
       },
