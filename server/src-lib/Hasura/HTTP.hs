@@ -70,6 +70,7 @@ data HTTPErr
   = HClient !H.HttpException
   | HParse !N.Status !String
   | HStatus !N.Status TBS.TByteString
+  | HOther !String
   deriving (Show)
 
 instance J.ToJSON HTTPErr where
