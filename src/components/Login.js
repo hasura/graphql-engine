@@ -57,7 +57,8 @@ const LoginComponent = (props) => {
                     <button
                       className="loginButton"
                       type="submit"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
                         if (props.username.match(/^[a-z0-9_-]{3,15}$/g)) {
                           insert_user();
                         } else {
