@@ -48,6 +48,14 @@ export default class Textbox extends React.Component {
     }
   }
 
+  handleTyping = (text, mutate) => {
+    const textLength = text.length;
+    if ((textLength !== 0 && textLength % 5 === 0) || textLength === 1) {
+      this.emitTypingEvent(mutate);
+    }
+    this.setState({ text });
+  }
+
   emitTypingEvent = async (mutate) => {
     if (this.props.userId) {
       await mutate({
@@ -101,9 +109,8 @@ export default class Textbox extends React.Component {
                     className="textbox typoTextbox"
                     value={this.state.text}
                     autoFocus={true}
-                    onFocus={() => this.emitTypingEvent(client.mutate)}
                     onChange={(e) => {
-                      this.setState({ text: e.target.value })
+                      this.handleTyping(e.target.value, client.mutate);
                     }}
                     autoComplete="off"
                   />

@@ -34,7 +34,7 @@ class TypingIndicator extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      time: moment().subtract(2, 'seconds').format(),
+      time: moment().subtract(0.5, 'seconds').format(),
     }
   }
   componentDidMount() {
