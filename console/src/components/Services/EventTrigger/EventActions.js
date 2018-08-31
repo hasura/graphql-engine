@@ -245,6 +245,11 @@ const deleteTrigger = triggerName => {
   return (dispatch, getState) => {
     dispatch(showSuccessNotification('Deleting Trigger...'));
 
+    const triggerList = getState().triggers.triggerList;
+    const currentTriggerInfo = triggerList.filter(
+      t => t.name === triggerName
+    )[0];
+    console.log(currentTriggerInfo);
     // apply migrations
     const migrationName = 'delete_trigger_' + triggerName.trim();
     const payload = {
@@ -253,15 +258,28 @@ const deleteTrigger = triggerName => {
         name: triggerName,
       },
     };
+    const downPayload = {
+      type: 'subscribe_table',
+      args: {
+        name: triggerName,
+        table: {
+          name: currentTriggerInfo.table_name,
+          schema: currentTriggerInfo.schema_name,
+        },
+        webhook: currentTriggerInfo.webhook,
+      },
+    };
     const upQueryArgs = [];
     upQueryArgs.push(payload);
+    const downQueryArgs = [];
+    downQueryArgs.push(downPayload);
     const upQuery = {
       type: 'bulk',
       args: upQueryArgs,
     };
     const downQuery = {
       type: 'bulk',
-      args: [],
+      args: downQueryArgs,
     };
     const requestMsg = 'Deleting trigger...';
     const successMsg = 'Trigger deleted';

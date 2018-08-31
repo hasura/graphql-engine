@@ -34,6 +34,7 @@ const setSchemaName = value => ({ type: SET_SCHEMANAME, value });
 const setWebhookURL = value => ({ type: SET_WEBHOOK_URL, value });
 const setRetryNum = value => ({ type: SET_RETRY_NUM, value });
 const setRetryInterval = value => ({ type: SET_RETRY_INTERVAL, value });
+const setDefaults = () => ({ type: SET_DEFAULTS });
 // General error during validation.
 // const validationError = (error) => ({type: VALIDATION_ERROR, error: error});
 const validationError = error => {
@@ -61,6 +62,12 @@ const createTrigger = () => {
         webhook: webhook,
       },
     };
+    const downPayload = {
+      type: 'unsubscribe_table',
+      args: {
+        name: triggerName,
+      },
+    };
     // operation definition
     if (currentState.selectedOperations.insert) {
       payload.args.insert = { columns: currentState.operations.insert };
@@ -77,13 +84,15 @@ const createTrigger = () => {
     }
     const upQueryArgs = [];
     upQueryArgs.push(payload);
+    const downQueryArgs = [];
+    downQueryArgs.push(downPayload);
     const upQuery = {
       type: 'bulk',
       args: upQueryArgs,
     };
     const downQuery = {
       type: 'bulk',
-      args: upQueryArgs,
+      args: downQueryArgs,
     };
     const requestMsg = 'Creating trigger...';
     const successMsg = 'Trigger Created';
@@ -268,5 +277,6 @@ export {
   operationToggleColumn,
   operationToggleAllColumns,
   setOperationSelection,
+  setDefaults,
 };
 export { validationError };

@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 import PageContainer from './PageContainer/PageContainer';
-import globals from '../../../Globals';
 
 const appPrefix = '/events';
 
@@ -15,19 +14,6 @@ const EventHeader = ({
 }) => {
   const styles = require('../Data/TableCommon/Table.scss');
   const currentLocation = location.pathname;
-  let migrationSection = null;
-  if (globals.consoleMode === 'cli') {
-    migrationSection = (
-      <li
-        role="presentation"
-        className={
-          currentLocation.indexOf('migrations') !== -1 ? styles.active : ''
-        }
-      >
-        <Link to={appPrefix + '/migrations'}>Migrations</Link>
-      </li>
-    );
-  }
   return (
     <div>
       <Helmet title={'Events | Hasura'} />
@@ -63,7 +49,6 @@ const EventHeader = ({
                   dispatch={dispatch}
                 />
               </li>
-              {migrationSection}
             </ul>
           </div>
         </div>
