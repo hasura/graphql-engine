@@ -52,6 +52,10 @@ convDeleteQuery
 convDeleteQuery prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
   tableInfo <- askTabInfo tableName
 
+  -- If table is view then check if it deletable
+  mutableView tableName viIsDeletable
+    (tiViewInfo tableInfo) "deletable"
+
   -- Check if the role has delete permissions
   delPerm <- askDelPermInfo tableInfo
 

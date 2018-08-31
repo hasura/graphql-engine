@@ -831,8 +831,9 @@ mkGCtxRole'
   -> [PGColInfo]
   -- constraints
   -> [TableConstraint]
+  -> Maybe ViewInfo
   -> TyAgg
-mkGCtxRole' tn insColsM selFldsM updColsM delPermM pkeyCols constraints =
+mkGCtxRole' tn insColsM selFldsM updColsM delPermM pkeyCols constraints viM =
   TyAgg (mkTyInfoMap allTypes) fieldMap ordByEnums
 
   where
@@ -841,15 +842,22 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM pkeyCols constraints =
     onConflictTypes = mkOnConflictTypes tn constraints
     jsonOpTys = fromMaybe [] updJSONOpInpObjTysM
 
-    allTypes = onConflictTypes <> jsonOpTys <> catMaybes
-      [ TIInpObj <$> insInpObjM
-      , TIInpObj <$> updSetInpObjM
-      , TIInpObj <$> updIncInpObjM
-      , TIInpObj <$> boolExpInpObjM
-      , TIObj <$> mutRespObjM
+    allTypes = onConflictTypes <> jsonOpTys
+               <> queryTypes <> mutationTypes
+
+    queryTypes = catMaybes
+      [ TIInpObj <$> boolExpInpObjM
       , TIObj <$> selObjM
       , TIEnum <$> ordByTyInfoM
       ]
+
+    mutationTypes = catMaybes
+      [ TIInpObj <$> mutHelper viIsInsertable insInpObjM
+      , TIInpObj <$> mutHelper viIsUpdatable updSetInpObjM
+      , TIInpObj <$> mutHelper viIsUpdatable updIncInpObjM
+      , TIObj <$> mutRespObjM
+      ]
+    mutHelper f objM = bool Nothing objM $ isMutable f viM
 
     fieldMap = Map.unions $ catMaybes
                [ insInpObjFldsM, updSetInpObjFldsM, boolExpInpObjFldsM
@@ -895,9 +903,12 @@ mkGCtxRole' tn insColsM selFldsM updColsM delPermM pkeyCols constraints =
 
     -- mut resp obj
     mutRespObjM =
-      if isJust insColsM || isJust updColsM || isJust delPermM
+      if isMut
       then Just $ mkMutRespObj tn
       else Nothing
+
+    isMut = (isJust insColsM || isJust updColsM || isJust delPermM)
+            && any (`isMutable` viM) [viIsInsertable, viIsUpdatable, viIsDeletable]
 
     -- table obj
     selObjM = mkTableObj tn <$> selFldsM
@@ -922,15 +933,20 @@ getRootFldsRole'
   -> Maybe (S.BoolExp, Maybe Int, [T.Text]) -- select filter
   -> Maybe ([PGCol], S.BoolExp, [T.Text]) -- update filter
   -> Maybe (S.BoolExp, [T.Text]) -- delete filter
+  -> Maybe ViewInfo
   -> RootFlds
-getRootFldsRole' tn primCols constraints fields insM selM updM delM =
+getRootFldsRole' tn primCols constraints fields insM selM updM delM viM =
   RootFlds mFlds
   where
     mFlds = mapFromL (either _fiName _fiName . snd) $ catMaybes
-            [ getInsDet <$> insM, getSelDet <$> selM
-            , getUpdDet <$> updM, getDelDet <$> delM
+            [ mutHelper viIsInsertable getInsDet insM
+            , mutHelper viIsUpdatable getUpdDet updM
+            , mutHelper viIsDeletable getDelDet delM
+            , getSelDet <$> selM
             , getPKeySelDet selM $ getColInfos primCols colInfos
             ]
+    mutHelper f getDet mutM =
+      bool Nothing (getDet <$> mutM) $ isMutable f viM
     colInfos = fst $ validPartitionFieldInfoMap fields
     getInsDet (vn, hdrs) =
       (OCInsert tn vn (map pgiName colInfos) hdrs, Right $ mkInsMutFld tn constraints)
@@ -994,16 +1010,17 @@ mkGCtxRole
   -> FieldInfoMap
   -> [PGCol]
   -> [TableConstraint]
+  -> Maybe ViewInfo
   -> RoleName
   -> RolePermInfo
   -> m (TyAgg, RootFlds)
-mkGCtxRole tableCache tn fields pCols constraints role permInfo = do
+mkGCtxRole tableCache tn fields pCols constraints viM role permInfo = do
   selFldsM <- mapM (getSelFlds tableCache fields role) $ _permSel permInfo
   let insColsM = const colInfos <$> _permIns permInfo
       updColsM = filterColInfos . upiCols <$> _permUpd permInfo
       tyAgg = mkGCtxRole' tn insColsM selFldsM updColsM
-              (void $ _permDel permInfo) pColInfos constraints
-      rootFlds = getRootFldsRole tn pCols constraints fields permInfo
+              (void $ _permDel permInfo) pColInfos constraints viM
+      rootFlds = getRootFldsRole tn pCols constraints fields viM permInfo
   return (tyAgg, rootFlds)
   where
     colInfos = fst $ validPartitionFieldInfoMap fields
@@ -1016,12 +1033,14 @@ getRootFldsRole
   -> [PGCol]
   -> [TableConstraint]
   -> FieldInfoMap
+  -> Maybe ViewInfo
   -> RolePermInfo
   -> RootFlds
-getRootFldsRole tn pCols constraints fields (RolePermInfo insM selM updM delM) =
+getRootFldsRole tn pCols constraints fields viM (RolePermInfo insM selM updM delM) =
   getRootFldsRole' tn pCols constraints fields
   (mkIns <$> insM) (mkSel <$> selM)
   (mkUpd <$> updM) (mkDel <$> delM)
+  viM
   where
     mkIns i = (ipiView i, ipiRequiredHeaders i)
     mkSel s = (spiFilter s, spiLimit s, spiRequiredHeaders s)
@@ -1036,12 +1055,12 @@ mkGCtxMapTable
   => TableCache
   -> TableInfo
   -> m (Map.HashMap RoleName (TyAgg, RootFlds))
-mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols) = do
+mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols viewInfo) = do
   m <- Map.traverseWithKey
-    (mkGCtxRole tableCache tn fields pkeyCols validConstraints) rolePerms
+    (mkGCtxRole tableCache tn fields pkeyCols validConstraints viewInfo) rolePerms
   let adminCtx = mkGCtxRole' tn (Just colInfos)
                  (Just selFlds) (Just colInfos) (Just ())
-                 pkeyColInfos validConstraints
+                 pkeyColInfos validConstraints viewInfo
   return $ Map.insert adminRole (adminCtx, adminRootFlds) m
   where
     validConstraints = mkValidConstraints constraints
@@ -1056,6 +1075,7 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols)
       getRootFldsRole' tn pkeyCols constraints fields
       (Just (tn, [])) (Just (noFilter, Nothing, []))
       (Just (allCols, noFilter, [])) (Just (noFilter, []))
+      viewInfo
 
 mkScalarTyInfo :: PGColType -> ScalarTyInfo
 mkScalarTyInfo = ScalarTyInfo Nothing
