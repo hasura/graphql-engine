@@ -7,6 +7,12 @@ upstream. The Hasura GraphQL engine supports subscriptions for all kind of queri
 
 You can turn any query into a subscription by simply replacing ``query`` with ``subscription`` as the operation type.
 
+.. admonition:: Caveat
+
+  The `GraphQL spec <http://facebook.github.io/graphql/June2018/#sec-Single-root-field>`_ allows for only one root
+  field in a subscription. So though Hasura GraphQL engine supports multiple root fields in subscriptions, most clients
+  will not allow it.
+
 Example:
 
 .. graphiql::
