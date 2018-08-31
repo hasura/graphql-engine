@@ -52,6 +52,7 @@ querySpecFiles =
 gqlSpecFiles :: [FilePath]
 gqlSpecFiles =
   [ "introspection.yaml"
+  , "introspection_user_role.yaml"
   , "insert_mutation/author.yaml"
   , "simple_select_query_author.yaml"
   , "select_query_author_by_pkey.yaml"
