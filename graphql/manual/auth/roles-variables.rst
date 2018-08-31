@@ -42,7 +42,7 @@ For example: If a user makes a request, the session token maps to a ``user-id``.
 a permission to represent that inserts into a table are only allowed if the ``user_id`` column has a value equal to that
 of ``user-id``, the session variable.
 
-When you are constructing permission rules however, there might be several variables that represent the business logic
+When you are constructing permission rules, however, there might be several variables that represent the business logic
 of having access to data. For example, if you have a SaaS application, you might restrict access based on a ``client_id``
 variable. If you want to provide different levels of access on different devices you might restrict access based on a
 ``device_type`` variable.
