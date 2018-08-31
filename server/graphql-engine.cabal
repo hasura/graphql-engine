@@ -51,6 +51,7 @@ library
                      , wai-extra
                      , containers
                      , monad-control
+                     , monad-time
                      , wai-logger
                      , fast-logger
                      , wai
@@ -67,6 +68,12 @@ library
 
                      -- hashing for logging
                      , cryptonite
+                     -- for jwt verification
+                     , jose
+                     , pem
+                     , x509
+                     , asn1-encoding
+                     , asn1-types
 
                      -- Server related
                      , warp
@@ -126,6 +133,7 @@ library
 
   exposed-modules:     Hasura.Server.App
                      , Hasura.Server.Auth
+                     , Hasura.Server.Auth.JWT
                      , Hasura.Server.Init
                      , Hasura.Server.Middleware
                      , Hasura.Server.Logging

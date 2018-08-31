@@ -17,6 +17,7 @@ import qualified Data.ByteString.Char8      as BC
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Text                  as T
+import qualified Data.Text.Encoding         as TE
 import qualified Data.Yaml                  as Y
 import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
@@ -29,7 +30,8 @@ import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.Server.App          (mkWaiApp)
-import           Hasura.Server.Auth         (AuthMode (..))
+import           Hasura.Server.Auth         (AccessKey (..), AuthMode (..),
+                                             Webhook (..))
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
 
@@ -52,7 +54,8 @@ data ServeOptions
   , soRootDir       :: !(Maybe String)
   , soAccessKey     :: !(Maybe AccessKey)
   , soCorsConfig    :: !CorsConfigFlags
-  , soWebHook       :: !(Maybe T.Text)
+  , soWebHook       :: !(Maybe Webhook)
+  , soJwtSecret     :: !(Maybe Text)
   , soEnableConsole :: !Bool
   } deriving (Show, Eq)
 
@@ -84,6 +87,7 @@ parseRavenMode = subparser
                 <*> parseAccessKey
                 <*> parseCorsConfig
                 <*> parseWebHook
+                <*> parseJwtSecret
                 <*> parseEnableConsole
 
 parseArgs :: IO RavenOptions
@@ -100,15 +104,27 @@ printJSON = BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a) => a -> IO ()
 printYaml = BC.putStrLn . Y.encode
 
-mkAuthMode :: Maybe AccessKey -> Maybe T.Text -> Either String AuthMode
-mkAuthMode mAccessKey mWebHook =
-  case (mAccessKey, mWebHook) of
-    (Nothing, Nothing)    -> return AMNoAuth
-    (Just key, Nothing)   -> return $ AMAccessKey key
-    (Nothing, Just _)     -> throwError $
+mkAuthMode :: Maybe AccessKey -> Maybe Webhook -> Maybe T.Text -> Either String AuthMode
+mkAuthMode mAccessKey mWebHook mJwtSecret =
+  case (mAccessKey, mWebHook, mJwtSecret) of
+    (Nothing,  Nothing,   Nothing)     -> return AMNoAuth
+    (Just key, Nothing,   Nothing)     -> return $ AMAccessKey key
+    (Just key, Just hook, Nothing)     -> return $ AMAccessKeyAndHook key hook
+    (Just key, Nothing,   Just jwtConf) -> do
+      -- the JWT Conf as JSON string; try to parse it
+      config <- A.eitherDecodeStrict $ TE.encodeUtf8 jwtConf
+      return $ AMAccessKeyAndJWT key config
+
+    (Nothing, Just _, Nothing)     -> throwError $
       "Fatal Error : --auth-hook (HASURA_GRAPHQL_AUTH_HOOK)"
       ++ " requires --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
-    (Just key, Just hook) -> return $ AMAccessKeyAndHook key hook
+    (Nothing, Nothing, Just _)     -> throwError $
+      "Fatal Error : --jwt-secret (HASURA_GRAPHQL_JWT_SECRET)"
+      ++ " requires --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
+    (Nothing, Just _, Just _)     -> throwError
+      "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
+    (Just _, Just _, Just _)     -> throwError
+      "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
 
 main :: IO ()
 main =  do
@@ -120,12 +136,12 @@ main =  do
   loggerCtx <- mkLoggerCtx defaultLoggerSettings
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case ravenMode of
-    ROServe (ServeOptions port cp isoL mRootDir mAccessKey corsCfg mWebHook enableConsole) -> do
-
-      mFinalAccessKey <- considerEnv "HASURA_GRAPHQL_ACCESS_KEY" mAccessKey
-      mFinalWebHook <- considerEnv "HASURA_GRAPHQL_AUTH_HOOK" mWebHook
+    ROServe (ServeOptions port cp isoL mRootDir mAccessKey corsCfg mWebHook mJwtSecret enableConsole) -> do
+      mFinalAccessKey <- considerEnv "HASURA_GRAPHQL_ACCESS_KEY" $ getAccessKey <$> mAccessKey
+      mFinalWebHook   <- considerEnv "HASURA_GRAPHQL_AUTH_HOOK" $ getWebhook <$> mWebHook
+      mFinalJwtSecret <- considerEnv "HASURA_GRAPHQL_JWT_SECRET" mJwtSecret
       am <- either ((>> exitFailure) . putStrLn) return $
-        mkAuthMode mFinalAccessKey mFinalWebHook
+        mkAuthMode (AccessKey <$> mFinalAccessKey) (Webhook <$> mFinalWebHook) mFinalJwtSecret
       finalCorsDomain <- fromMaybe "*" <$> considerEnv "HASURA_GRAPHQL_CORS_DOMAIN" (ccDomain corsCfg)
       let finalCorsCfg =
             CorsConfigG finalCorsDomain $ ccDisabled corsCfg

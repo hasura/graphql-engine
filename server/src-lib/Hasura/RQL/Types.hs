@@ -42,6 +42,8 @@ module Hasura.RQL.Types
 
        , HeaderObj
 
+       , qualTableToAliasIden
+
        , module R
        ) where
 
@@ -282,3 +284,8 @@ successMsg :: BL.ByteString
 successMsg = "{\"message\":\"success\"}"
 
 type HeaderObj = M.HashMap T.Text T.Text
+
+qualTableToAliasIden :: QualifiedTable -> Iden
+qualTableToAliasIden (QualifiedTable sn tn) =
+  Iden $ getSchemaTxt sn <> "_" <> getTableTxt tn
+  <> "__mutation_result_alias"

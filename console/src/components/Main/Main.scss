@@ -64,7 +64,7 @@
   font-size: 20px;
 }
 .header_items {
-  width: 50%;
+  width: 60%;
 }
 .header_logo_wrapper
 {
@@ -121,10 +121,8 @@
   z-index: 1;
 }
 .clusterInfoWrapper {
-  width: 30%;
-  display: flex;
-  justify-content: flex-end;
-  position: relative;
+  width: 20%;
+  text-align: right;
   .clusterBtn {
     background-color: transparent;
     color: #DEDEDE;
@@ -394,7 +392,7 @@
     border-top-color: #aaa;
     opacity: 0.8;
   }
-  .sidebarItems {
+  ul {
     list-style-type: none;
     padding: 0;
     display: inline-block;
@@ -800,175 +798,4 @@
   height: 69px;
   overflow: hidden;
   bottom: 20px;
-}
-
-.spreadWord {
-  display: flex;
-  align-items: center;
-  .yellow_button {
-    border-radius: 20px;
-    margin-right: 20px;
-    i {
-      padding-top: 0px;
-    }
-  }
-}
-
-.question {
-  display: flex;
-  color: #fff;
-  cursor: pointer;
-  align-items: center;
-  padding: 3px;
-}
-
-.heart {
-  display: inline-block;
-  i {
-    font-size: 20px;
-    // color: #fb5f5f;
-    color: #fff;
-  }
-}
-.borderBottom
-{
-  border-bottom: 1px solid #788095;
-}
-.helpSection {
-  display: flex;
-  align-items: center;
-  background-color: #22283b;
-  padding: 15px;
-}
-
-.shareSection {
-  display: flex;
-  align-items: center;
-  background-color: #fb5151;
-  padding: 15px;
-  color: white;
-  cursor: pointer;
-}
-
-.secureSection {
-  background-color: #545a6c;
-
-  padding: 15px;
-  a {
-    color: white;
-    text-decoration: none;
-  }
-}
-
-@keyframes heartbeat
-{
-  0%
-  {
-    transform: scale( .75 );
-  }
-  20%
-  {
-    transform: scale( 1 );
-  }
-  40%
-  {
-    transform: scale( .75 );
-  }
-  60%
-  {
-    transform: scale( 1 );
-  }
-  80%
-  {
-    transform: scale( .75 );
-  }
-  100%
-  {
-    transform: scale( .75 );
-  }
-}
-.graphqlHeartText
-{
-  font-size: 14px;
-  font-weight: 300;
-  text-transform: none;
-  text-align: center;
-}
-.dropdown_menu
-{
-  top: 53px;
-  right: 10px;
-  background-color: transparent;
-  box-shadow: none;
-  border: 0;
-  .dropdown_menu_container
-  {
-    width: 330px;
-    float: right;
-    background-color: #43495a;
-    padding: 15px;
-    border-radius: 5px;
-  }
-  .arrow_up_dropdown
-  {
-    width: 0;
-    height: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-bottom: 10px solid #43495a;
-    position: absolute;
-    top: -5px;
-    right: 10px;
-  }
-  .displayFlex
-  {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 10px;
-  }
-  li
-  {
-    display: block;
-    color: #fff;
-    text-transform: none;
-    padding: 10px 0;
-    display: inline-block;
-    padding-bottom: 0;
-    a
-    {
-      padding: 0;
-    }
-    a:hover
-    {
-      text-decoration: none;
-    }
-    .gitHubBtn
-    {
-      height: 20px;
-    }
-  }
-  li:hover
-  {
-    text-decoration: none;
-    color: #ccc;
-  }
-}
-.twitterShare {
-  position: relative;
-  height: 20px;
-  box-sizing: border-box;
-  padding: 1px 8px 1px 6px;
-  margin-left: 10px;
-  color: #fff;
-  border-radius: 3px;
-  font-weight: 500;
-  cursor: pointer;
-  button
-  {
-    background-color: #1b95e0;
-    padding: 5px;
-    letter-spacing: 0.4px;
-    border: 0;
-  }
 }

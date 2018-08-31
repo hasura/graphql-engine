@@ -24,7 +24,7 @@ func testMigrateApply(t *testing.T, endpoint *url.URL, migrationsDir string, up 
 			MigrationDir: migrationsDir,
 			Config: &cli.HasuraGraphQLConfig{
 				Endpoint:       endpoint.String(),
-				AccessKey:      "",
+				AccessKey:      os.Getenv("HASURA_GRAPHQL_TEST_ACCESS_KEY"),
 				ParsedEndpoint: endpoint,
 			},
 		},
