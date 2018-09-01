@@ -13,6 +13,7 @@ module Hasura.GraphQL.Resolve.Mutation
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashSet                      as Set
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Delete             as RD
@@ -70,15 +71,14 @@ convertRowObj val =
 
 mkConflictClause
   :: (MonadError QErr m)
-  => [PGCol]
-  -> RI.ConflictCtx
+  => RI.ConflictCtx
   -> m RI.ConflictClauseP1
-mkConflictClause cols (act, conM) = case (act , conM) of
-  (CAIgnore, Nothing) -> return $ RI.CP1DoNothing Nothing
-  (CAIgnore, Just cons) -> return $ RI.CP1DoNothing $ Just $ RI.Constraint cons
+mkConflictClause (act, conM, inpCols) = case (act , conM) of
+  (CAIgnore, Nothing) -> return $ RI.CP1DoNothing inpCols Nothing
+  (CAIgnore, Just cons) -> return $ RI.CP1DoNothing inpCols $ Just $ RI.Constraint cons
   (CAUpdate, Nothing) -> withPathK "on_conflict" $ throw400 Unexpected
     "expecting \"constraint\" when \"action\" is \"update\" "
-  (CAUpdate, Just cons) -> return $ RI.CP1Update (RI.Constraint cons) cols
+  (CAUpdate, Just cons) -> return $ RI.CP1Update (RI.Constraint cons) inpCols
 
 parseAction
   :: (MonadError QErr m)
@@ -105,12 +105,12 @@ parseConstraint obj = do
 
 parseOnConflict
   :: (MonadError QErr m)
-  => AnnGValue -> m RI.ConflictCtx
-parseOnConflict val =
+  => [PGCol] -> AnnGValue -> m RI.ConflictCtx
+parseOnConflict inpCols val =
   flip withObject val $ \_ obj -> do
     action <- parseAction obj
     constraintM <- parseConstraint obj
-    return (action, constraintM)
+    return (action, constraintM, inpCols)
 
 convertInsert
   :: RoleName
@@ -119,13 +119,15 @@ convertInsert
   -> Field -- the mutation field
   -> Convert RespTx
 convertInsert role (tn, vn) tableCols fld = do
-  rows    <- withArg arguments "objects" asRowExps
+  insTuples    <- withArg arguments "objects" asRowExps
+  let inpCols = Set.toList $ Set.fromList $ concatMap fst insTuples
   conflictCtxM <- withPathK "on_conflict" $
-                 withArgM arguments "on_conflict" parseOnConflict
-  onConflictM <- mapM (mkConflictClause tableCols) conflictCtxM
+                 withArgM arguments "on_conflict" $ parseOnConflict inpCols
+  onConflictM <- mapM mkConflictClause conflictCtxM
   mutFlds <- convertMutResp tn (_fType fld) $ _fSelSet fld
   args <- get
-  let p1Query = RI.InsertQueryP1 tn vn tableCols rows onConflictM mutFlds
+  let rows = map snd insTuples
+      p1Query = RI.InsertQueryP1 tn vn tableCols rows onConflictM mutFlds
       p1 = (p1Query, args)
   return $
       bool (RI.nonAdminInsert p1) (RI.insertP2 p1) $ isAdmin role
@@ -134,7 +136,9 @@ convertInsert role (tn, vn) tableCols fld = do
     asRowExps = withArray (const $ mapM rowExpWithDefaults)
     rowExpWithDefaults val = do
       givenCols <- convertRowObj val
-      return $ Map.elems $ Map.union (Map.fromList givenCols) defVals
+      let inpCols = map fst givenCols
+          sqlExps = Map.elems $ Map.union (Map.fromList givenCols) defVals
+      return (inpCols, sqlExps)
 
     defVals = Map.fromList $ zip tableCols (repeat $ S.SEUnsafe "DEFAULT")
 
