@@ -2,11 +2,11 @@
 
 This repository contains boilerplate functions for a set of sample use-cases for the following serverless or cloud function platforms:
 
-⋅⋅* AWS Lambda
+* AWS Lambda
 
-#. Google Cloud Functions
+* Google Cloud Functions
 
-#. Microsoft Azure Functions
+*a Microsoft Azure Functions
 
 The following sample use-cases document a variety of asynchronous business logic operations that can be triggered by the Hasura GraphQL Engine when there's a database insert,update or delete:
 
