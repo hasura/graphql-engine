@@ -2,7 +2,7 @@
 
 This repository contains boilerplate functions for a set of sample use-cases for the following serverless or cloud function platforms:
 
-#. AWS Lambda
+⋅⋅* AWS Lambda
 
 #. Google Cloud Functions
 
