@@ -112,7 +112,7 @@ Column Definitions
 
   Whenever a query is made with the above role for the above table GraphQL Engine
   will first validate the requested columns with the columns which the user has access to using the ``columns`` key.
-  Once the query is validated the appropriate results are retruned after applying the filter defined in the ``filter``
+  Once the query is validated the appropriate results are returned after applying the filter defined in the ``filter``
   key.
 
   For example:
