@@ -5,15 +5,7 @@ Sample cloud functions that can be triggered on changes in the database using Gr
 
 | Use-case       | Node.js | Python | Java | Go | C# 
 |----------------|---------|--------|------|----|---
-| A simple "hello world" example to echo the database changes | - [x] | - [ ]  | - [ ]  | - [ ]  | - [ ] 
-
-| Task           | Time required | Assigned to   | Current Status | Finished | 
-|----------------|---------------|---------------|----------------|-----------|
-| Calendar Cache | > 5 hours  | @georgehrke | in progress | - [x] ok?
-| Object Cache   | > 5 hours  | @georgehrke | in progress | [x] item1<br/>[ ] item2
-| Object Cache   | > 5 hours  | @georgehrke | in progress | <ul><li>- [x] item1</li><li>- [ ] item2</li></ul>
-| Object Cache   | > 5 hours  | @georgehrke | in progress | <ul><li>[x] item1</li><li>[ ] item2</li></ul>
-
+| A simple serverless function to echo the database change events | - [x] | - [x]  | - [ ]  | - [ ]  | - [ ] 
 
 
 ## Pre-requisites
