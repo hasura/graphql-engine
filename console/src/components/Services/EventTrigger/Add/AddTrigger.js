@@ -331,6 +331,7 @@ class AddTrigger extends Component {
               <hr />
               <button
                 onClick={this.toggleAdvanced.bind(this)}
+                type="button"
                 className={'btn btn-default ' + styles.advancedToggleBtn}
               >
                 Advanced Settings
