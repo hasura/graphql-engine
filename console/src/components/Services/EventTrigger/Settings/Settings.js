@@ -19,15 +19,6 @@ class Settings extends Component {
     )[0];
     triggerSchema = triggerSchema ? triggerSchema : {};
 
-    let retryConf = {};
-    if (triggerSchema.retry_conf) {
-      if (triggerSchema.retry_conf[0]) {
-        retryConf = triggerSchema.retry_conf[0];
-      } else {
-        retryConf = triggerSchema.retry_conf;
-      }
-    }
-
     const handleDeleteTrigger = () => {
       dispatch(deleteTrigger(triggerName));
     };
@@ -65,13 +56,13 @@ class Settings extends Component {
                 </tr>
                 <tr>
                   <td>Number of Retries</td>
-                  <td>{retryConf.num_retries}</td>
+                  <td>{triggerSchema.num_retries}</td>
                 </tr>
                 <tr>
                   <td>Retry Interval</td>
                   <td>
-                    {retryConf.interval_seconds}{' '}
-                    {retryConf.interval_seconds > 1 ? 'seconds' : 'second'}
+                    {triggerSchema.interval_seconds}{' '}
+                    {triggerSchema.interval_seconds > 1 ? 'seconds' : 'second'}
                   </td>
                 </tr>
                 <tr>

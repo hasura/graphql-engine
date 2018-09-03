@@ -36,13 +36,7 @@ const loadTriggers = () => (dispatch, getState) => {
           name: 'event_triggers',
           schema: 'hdb_catalog',
         },
-        columns: [
-          '*',
-          {
-            name: 'retry_conf',
-            columns: ['*'],
-          },
-        ],
+        columns: ['*'],
       },
     }),
   };
