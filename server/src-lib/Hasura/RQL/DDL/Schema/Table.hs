@@ -346,7 +346,7 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
   eventTriggers <- lift $ Q.catchE defaultTxErrorHandler fetchEventTriggers
   forM_ eventTriggers $ \(sn, tn, trn, Q.AltJ tDefVal, webhook, nr, rint) -> do
     tDef <- decodeValue tDefVal
-    addEventTriggerToCache (QualifiedTable sn tn) trn tDef (toRetryConf nr rint) webhook
+    addEventTriggerToCache (QualifiedTable sn tn) trn tDef (RetryConf nr rint) webhook
 
   where
     permHelper sn tn rn pDef pa = do
@@ -385,10 +385,8 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
 
     fetchEventTriggers =
       Q.listQ [Q.sql|
-               SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, r.num_retries, r.interval_seconds
+               SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.interval_seconds
                 FROM hdb_catalog.event_triggers e
-                JOIN hdb_catalog.event_triggers_retry_conf r
-                ON e.name = r.name
                |] () False
 
 data RunSQL

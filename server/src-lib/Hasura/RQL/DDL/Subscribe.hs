@@ -105,18 +105,12 @@ addEventTriggerToCatalog :: QualifiedTable -> EventTriggerDef
                -> Q.TxE QErr ()
 addEventTriggerToCatalog (QualifiedTable sn tn) (EventTriggerDef name def webhook rconf) = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
-                                  INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook)
-                                  VALUES ($1, 'table', $2, $3, $4, $5)
-                                  |] (name, sn, tn, Q.AltJ $ toJSON def, webhook) True
+                                  INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook, num_retries, interval_seconds)
+                                  VALUES ($1, 'table', $2, $3, $4, $5, $6, $7)
+                                  |] (name, sn, tn, Q.AltJ $ toJSON def, webhook, rcNumRetries rconf, rcIntervalSec rconf) True
 
   mkTriggerQ name (QualifiedTable sn tn) def
 
-  let rconfTup = (rcNumRetries rconf, rcIntervalSec rconf)
-
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-                                  INSERT into hdb_catalog.event_triggers_retry_conf (name, num_retries, interval_seconds)
-                                  VALUES ($1, $2, $3)
-                                  |] (name, fst rconfTup, snd rconfTup) True
 
 delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
 delEventTriggerFromCatalog trn = do
@@ -133,16 +127,14 @@ delEventTriggerFromCatalog trn = do
 fetchEventTrigger :: TriggerName -> Q.TxE QErr EventTrigger
 fetchEventTrigger trn = do
   triggers <- Q.listQE defaultTxErrorHandler [Q.sql|
-                                              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, r.num_retries, r.interval_seconds
+                                              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.interval_seconds
                                               FROM hdb_catalog.event_triggers e
-                                              JOIN hdb_catalog.event_triggers_retry_conf r
-                                              ON e.name = r.name
                                               WHERE e.name = $1
                                   |] (Identity trn) True
   getTrigger triggers
   where
     getTrigger []    = throw404 "Could not fetch event trigger"
-    getTrigger (x:_) = return $ EventTrigger (QualifiedTable sn tn) trn tDef webhook (toRetryConf nr rint)
+    getTrigger (x:_) = return $ EventTrigger (QualifiedTable sn tn) trn tDef webhook (RetryConf nr rint)
       where (sn, tn, trn, Q.AltJ tDef, webhook, nr, rint) = x
 
 subTableP1 :: (P1C m) => SubscribeTableQuery -> m (QualifiedTable, EventTriggerDef)

@@ -188,40 +188,12 @@ args:
 - type: add_existing_table_or_view
   args:
     schema: hdb_catalog
-    name: event_triggers_retry_conf
-
-- type: add_existing_table_or_view
-  args:
-    schema: hdb_catalog
     name: event_log
 
 - type: add_existing_table_or_view
   args:
     schema: hdb_catalog
     name: event_invocation_logs
-
-- type: create_object_relationship
-  args:
-    name: trigger
-    table:
-      schema: hdb_catalog
-      name: event_triggers_retry_conf
-    using:
-      foreign_key_constraint_on: name
-
-- type: create_object_relationship
-  args:
-    name: retry_conf
-    table:
-      schema: hdb_catalog
-      name: event_triggers
-    using:
-      manual_configuration:
-        remote_table:
-          schema: hdb_catalog
-          name: event_triggers_retry_conf
-        column_mapping:
-          name : name
 
 - type: create_object_relationship
   args:

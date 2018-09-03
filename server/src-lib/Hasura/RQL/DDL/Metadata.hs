@@ -325,7 +325,7 @@ fetchMetadata = do
 
     trigRowToDef (sn, tn, trn, Q.AltJ tDefVal, webhook, nr, rint) = do
       tDef <- decodeValue tDefVal
-      return (QualifiedTable sn tn, DTS.EventTriggerDef trn tDef webhook (toRetryConf nr rint))
+      return (QualifiedTable sn tn, DTS.EventTriggerDef trn tDef webhook (RetryConf nr rint))
 
     fetchTables =
       Q.listQ [Q.sql|
@@ -355,12 +355,9 @@ fetchMetadata = do
                   |] () False
     fetchEventTriggers =
      Q.listQ [Q.sql|
-              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, r.num_retries, r.interval_seconds
+              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.interval_seconds
                FROM hdb_catalog.event_triggers e
-               JOIN hdb_catalog.event_triggers_retry_conf r
-               ON e.name = r.name
               |] () False
-
 
 
 instance HDBQuery ExportMetadata where

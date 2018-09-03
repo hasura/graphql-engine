@@ -45,13 +45,9 @@ data Event
   -- , eError       :: Bool
   , eTries       :: Int64
   -- , eCreatedAt   :: UTCTime
-  , eRetryConf   :: (RCNumRetries, RCInterval)
   }
 
 type UUID = T.Text
-
-type RCNumRetries = Int64
-type RCInterval = Int64
 
 data Invocation
   = Invocation
@@ -105,9 +101,8 @@ processEvent
   => Q.PGPool -> Event -> m ()
 processEvent pool e = do
   liftIO $ runExceptT $ runLockQ e
-  let remainingRetries = max 0 $ getNumRetries - getTries
-      policy = R.constantDelay getDelay <> R.limitRetries remainingRetries
-  res <- R.retrying policy shouldRetry tryWebhook
+  retryPolicy <- getRetryPolicy
+  res <- R.retrying retryPolicy shouldRetry tryWebhook
   case res of
     Left err   -> do
       liftIO $ print err
@@ -116,6 +111,28 @@ processEvent pool e = do
   liftIO $ runExceptT $ runUnlockQ e
   return ()
   where
+    getRetryPolicy
+      :: ( MonadReader r m
+         , MonadIO m
+         , Has HTTPSessionMgr r
+         , Has HLogger r
+         , Has CacheRef r
+         )
+      => m (R.RetryPolicyM m)
+    getRetryPolicy = do
+      cacheRef::CacheRef <- asks getter
+      (cache, _) <- liftIO $ readIORef cacheRef
+      let table = eTable e
+          tableInfo = M.lookup table $ scTables cache
+          eti = M.lookup (eTriggerName e) =<< (tiEventTriggerInfoMap <$> tableInfo)
+          retryConfM = etiRetryConf <$> eti
+          retryConf = fromMaybe (RetryConf 0 10) retryConfM
+
+      let remainingRetries = max 0 $ fromIntegral (rcNumRetries retryConf) - getTries
+          delay = fromIntegral (rcIntervalSec retryConf) * 1000000
+          policy = R.constantDelay delay <> R.limitRetries remainingRetries
+      return policy
+
     tryWebhook
       :: ( MonadReader r m
          , MonadIO m
@@ -166,26 +183,18 @@ processEvent pool e = do
 
     runUnlockQ e'' = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ unlockEvent e''
 
-    getDelay :: Int
-    getDelay = fromIntegral (snd (eRetryConf e)) * 1000000
-
-    getNumRetries :: Int
-    getNumRetries = fromIntegral (fst (eRetryConf e))
-
     getTries :: Int
     getTries = fromIntegral $ eTries e
 
 fetchEvents :: Q.TxE QErr [Event]
 fetchEvents =
   map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
-      SELECT e.id, e.schema_name, e.table_name, e.trigger_name, e.payload::json, e.tries, r.num_retries, r.interval_seconds
-      FROM hdb_catalog.event_log e
-      JOIN hdb_catalog.event_triggers_retry_conf r
-      ON e.trigger_name = r.name
-      WHERE e.delivered ='f' and e.error = 'f' and e.locked = 'f'
-      LIMIT 100
+      UPDATE hdb_catalog.event_log
+      SET locked = 't'
+      WHERE id IN ( select id from hdb_catalog.event_log where delivered ='f' and error = 'f' and locked = 'f' LIMIT 100 )
+      RETURNING  id, schema_name, table_name, trigger_name, payload::json, tries
       |] () True
-  where uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries, numRetries, retryInterval) = Event id' (QualifiedTable sn tn) trn payload tries (numRetries, retryInterval)
+  where uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries) = Event id' (QualifiedTable sn tn) trn payload tries
 
 
 insertInvocation :: Invocation -> Q.TxE QErr ()

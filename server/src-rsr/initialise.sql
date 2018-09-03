@@ -189,16 +189,9 @@ CREATE TABLE hdb_catalog.event_triggers
   table_name TEXT,
   definition JSON,
   query TEXT,
-  webhook TEXT NOT NULL
-);
-
-CREATE TABLE hdb_catalog.event_triggers_retry_conf
-(
-  name TEXT PRIMARY KEY,
-  num_retries INTEGER DEFAULT 0,
-  interval_seconds INTEGER DEFAULT 10,
-
-  FOREIGN KEY (name) REFERENCES hdb_catalog.event_triggers (name) ON DELETE CASCADE
+  webhook TEXT NOT NULL,
+  num_retries INTEGER NOT NULL DEFAULT 0,
+  interval_seconds INTEGER NOT NULL DEFAULT 10
 );
 
 -- required for generating uuid
