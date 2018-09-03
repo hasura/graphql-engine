@@ -41,14 +41,13 @@ withSelSet selSet f =
     return (G.unName $ G.unAlias $ _fAlias fld, res)
 
 convertReturning
-  :: QualifiedTable -> G.NamedType -> SelSet -> Convert RS.SelectData
+  :: QualifiedTable -> G.NamedType -> SelSet -> Convert RS.AnnSel
 convertReturning qt ty selSet = do
   annFlds <- fromSelSet ty selSet
-  return $ RS.SelectData annFlds qt frmExpM
-    (S.BELit True, Nothing) Nothing [] Nothing Nothing False
+  return $ RS.AnnSel annFlds qt (Just frmItem)
+    (S.BELit True) Nothing RS.noTableArgs
   where
-    frmExpM = Just $ S.FromExp $ pure $
-              S.FIIden $ qualTableToAliasIden qt
+    frmItem = S.FIIden $ RR.qualTableToAliasIden qt
 
 convertMutResp
   :: QualifiedTable -> G.NamedType -> SelSet -> Convert RR.MutFlds
