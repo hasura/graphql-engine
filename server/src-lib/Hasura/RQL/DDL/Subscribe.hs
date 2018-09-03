@@ -21,6 +21,8 @@ import qualified Text.Ginger         as TG
 
 data Ops = INSERT | UPDATE | DELETE deriving (Show)
 
+data OpVar = OLD | NEW deriving (Show)
+
 type GingerTmplt = TG.Template TG.SourcePos
 
 defaultNumRetries :: Int64
@@ -61,17 +63,25 @@ getTriggerSql op name sn tn spec =
     createOpCtx :: Ops -> SubscribeOpSpec -> HashMap.HashMap T.Text T.Text
     createOpCtx op1 (SubscribeOpSpec columns) = HashMap.fromList [
                                         (T.pack "OPERATION", T.pack $ show op1)
-                                      , (T.pack "DATA_EXPRESSION", renderDataExp op1 columns )]
-    renderDataExp :: Ops -> SubscribeColumns -> T.Text
-    renderDataExp op2 scs = let recVar = case op2 of
-                                 DELETE -> "OLD"
-                                 _      -> "NEW"
-                            in case scs of
-                                 SubCStar -> "row_to_json(" <> recVar <> ")"
-                                 SubCArray cols -> "row_to_json((select r from (select " <> listcols cols recVar <> ") as r))"
+                                      , (T.pack "OLD_DATA_EXPRESSION", renderOldDataExp op1 columns )
+                                      , (T.pack "NEW_DATA_EXPRESSION", renderNewDataExp op1 columns )]
+    renderOldDataExp :: Ops -> SubscribeColumns -> T.Text
+    renderOldDataExp op2 scs = case op2 of
+                                 INSERT -> "NULL"
+                                 UPDATE -> getRowExpression OLD scs
+                                 DELETE -> getRowExpression OLD scs
+    renderNewDataExp :: Ops -> SubscribeColumns -> T.Text
+    renderNewDataExp op2 scs = case op2 of
+                                 INSERT -> getRowExpression NEW scs
+                                 UPDATE -> getRowExpression NEW scs
+                                 DELETE -> "NULL"
+    getRowExpression :: OpVar -> SubscribeColumns -> T.Text
+    getRowExpression opVar scs = case scs of
+                                    SubCStar -> "row_to_json(" <> T.pack (show opVar) <> ")"
+                                    SubCArray cols -> "row_to_json((select r from (select " <> listcols cols opVar <> ") as r))"
                                    where
-                                     listcols :: [PGCol] -> T.Text -> T.Text
-                                     listcols pgcols var = T.intercalate ", " $ fmap (mkQualified var.getPGColTxt) pgcols
+                                     listcols :: [PGCol] -> OpVar -> T.Text
+                                     listcols pgcols var = T.intercalate ", " $ fmap (mkQualified (T.pack $ show var).getPGColTxt) pgcols
                                      mkQualified :: T.Text -> T.Text -> T.Text
                                      mkQualified v col = v <> "." <> col
 
