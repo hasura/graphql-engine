@@ -347,6 +347,8 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
   forM_ eventTriggers $ \(sn, tn, trn, Q.AltJ tDefVal, webhook, nr, rint) -> do
     tDef <- decodeValue tDefVal
     addEventTriggerToCache (QualifiedTable sn tn) trn tDef (RetryConf nr rint) webhook
+    liftTx $ mkTriggerQ trn (QualifiedTable sn tn) tDef
+
 
   where
     permHelper sn tn rn pDef pa = do
