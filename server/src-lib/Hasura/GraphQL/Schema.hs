@@ -319,10 +319,11 @@ type table_mutation_response {
 -}
 mkMutRespObj
   :: QualifiedTable
+  -> Bool -- is sel perm defined
   -> ObjTyInfo
-mkMutRespObj tn =
+mkMutRespObj tn sel =
   mkObjTyInfo (Just objDesc) (mkMutRespTy tn) $ mapFromL _fiName
-  [affectedRowsFld, returningFld]
+  $ affectedRowsFld : bool [] [returningFld] sel
   where
     objDesc = G.Description $
       "response of any mutation on the table " <>> tn
@@ -923,7 +924,7 @@ mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints allCols 
     -- mut resp obj
     mutRespObjM =
       if isJust insColsM || isJust updColsM || isJust delPermM
-      then Just $ mkMutRespObj tn
+      then Just $ mkMutRespObj tn $ isJust selFldsM
       else Nothing
 
     -- table obj
