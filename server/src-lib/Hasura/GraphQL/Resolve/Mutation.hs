@@ -82,15 +82,18 @@ mkConflictClause (act, conM, inpCols) = case (act , conM) of
 
 parseAction
   :: (MonadError QErr m)
-  => AnnGObject -> m ConflictAction
-parseAction obj = do
-  val <- onNothing (Map.lookup "action" obj) $ throw500
-    "\"action\" field is expected but not found"
-  (enumTy, enumVal) <- asEnumVal val
-  withPathK "action" $ case G.unName $ G.unEnumValue enumVal of
-    "ignore" -> return CAIgnore
-    "update" -> return CAUpdate
-    _ -> throw500 $ "only \"ignore\" and \"updated\" allowed for enum type " <> showNamedTy enumTy
+  => AnnGObject -> m (Maybe ConflictAction)
+parseAction obj =
+  mapM parseVal $ Map.lookup "action" obj
+  where
+    parseVal val = do
+      (enumTy, enumVal) <- asEnumVal val
+      withPathK "action" $ case G.unName $ G.unEnumValue enumVal of
+        "ignore" -> return CAIgnore
+        "update" -> return CAUpdate
+        _ -> throw500 $
+          "only \"ignore\" and \"updated\" allowed for enum type "
+          <> showNamedTy enumTy
 
 parseConstraint
   :: (MonadError QErr m)
@@ -103,14 +106,38 @@ parseConstraint obj = do
       (_, enumVal) <- asEnumVal v
       return $ G.unName $ G.unEnumValue enumVal
 
+parseUpdCols
+  :: (MonadError QErr m)
+  => AnnGObject -> m (Maybe [PGCol])
+parseUpdCols obj =
+  mapM parseVal $ Map.lookup "update_columns" obj
+  where
+    parseVal val = flip withArray val $ \_ enumVals ->
+      forM enumVals $ \eVal -> do
+        (_, v) <- asEnumVal eVal
+        return $ PGCol $ G.unName $ G.unEnumValue v
+
 parseOnConflict
   :: (MonadError QErr m)
   => [PGCol] -> AnnGValue -> m RI.ConflictCtx
 parseOnConflict inpCols val =
   flip withObject val $ \_ obj -> do
-    action <- parseAction obj
+    actionM <- parseAction obj
     constraintM <- parseConstraint obj
-    return (action, constraintM, inpCols)
+    updColsM <- parseUpdCols obj
+    (action, updCols) <- mkActionAndUpdCols actionM updColsM
+    return (action, constraintM, updCols)
+  where
+    mkActionAndUpdCols actM uColsM =
+      case (actM, uColsM) of
+        (Just CAIgnore, _) -> return (CAIgnore, inpCols)
+        (Just CAUpdate, Nothing) -> return (CAUpdate, inpCols)
+        (_, Just updCols) -> do
+          when (null updCols) $ throw400 Unexpected
+            "\"update_columns\" should not be empty"
+          return (CAUpdate, updCols)
+        (Nothing, Nothing) -> throw400 Unexpected
+          "either of \"action\" or \"update_columns\" is expected"
 
 convertInsert
   :: RoleName
@@ -121,8 +148,7 @@ convertInsert
 convertInsert role (tn, vn) tableCols fld = do
   insTuples    <- withArg arguments "objects" asRowExps
   let inpCols = Set.toList $ Set.fromList $ concatMap fst insTuples
-  conflictCtxM <- withPathK "on_conflict" $
-                 withArgM arguments "on_conflict" $ parseOnConflict inpCols
+  conflictCtxM <- withArgM arguments "on_conflict" $ parseOnConflict inpCols
   onConflictM <- mapM mkConflictClause conflictCtxM
   mutFlds <- convertMutResp tn (_fType fld) $ _fSelSet fld
   args <- get

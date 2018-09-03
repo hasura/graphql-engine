@@ -1,4 +1,4 @@
-description: Upserts article data via GraphQL mutation (Error 03)
+description: Upserts article data via GraphQL mutation (Error 05)
 url: /v1alpha1/graphql
 status: 400
 query:
@@ -16,8 +16,8 @@ query:
           }
           ],
         on_conflict: {
-          action: update,
-          constraint: random_constraint
+          constraint: article_pkey,
+          update_columns: []
         }
       ) {
         returning {
