@@ -16,7 +16,7 @@ directly!
 Your app will likely only send an authorization token or cookie provided by your app's authentication
 system to Hasura. In this case, Hasura will make a request to a webhook set up by you with the request headers your
 app has sent (authorization tokens, cookies etc). The webhook should then return the variables required as context for
-the access control rules. Alternatively your app can send JWT tokens to Hasura which can be then decoded by Hasura to
+the access control rules. Alternatively, your app can send JWT tokens to Hasura which can be then decoded by Hasura to
 get the variables required for the access control rules.
 See :doc:`webhook` or :doc:`jwt` for more details.
 
