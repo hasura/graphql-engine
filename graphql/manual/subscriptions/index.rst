@@ -13,7 +13,7 @@ You can turn any query into a subscription by simply replacing ``query`` with ``
   field in a subscription. So though Hasura GraphQL engine supports multiple root fields in subscriptions, most clients
   will not allow it.
 
-Example:
+**Example:** To keep upto date with the last 2 published articles
 
 .. graphiql::
   :view_only:
