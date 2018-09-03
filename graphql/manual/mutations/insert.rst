@@ -3,7 +3,7 @@ Insert mutation
 
 Insert single object
 --------------------
-Insert a new ``article`` object and return the inserted article object in the response:
+**Example:** Insert a new ``article`` object and return the inserted article object in the response
 
 .. graphiql::
   :view_only:
@@ -85,7 +85,7 @@ with variables:
 
 Insert multiple objects of the same type in the same mutation
 -------------------------------------------------------------
-Insert 2 new ``article`` objects and return both the article objects in the response:
+**Example:** Insert 2 new ``article`` objects and return both the article objects in the response
 
 .. graphiql::
   :view_only:
@@ -137,7 +137,7 @@ Set field to its default value during insert
 
 To set a field to its ``default`` value, just omit it from the input object.
 
-Example: if default value of id is set to auto-incrementing integer, no need to pass id in input object
+**Example:** if default value of ``id`` is set to auto-incrementing integer, no need to pass ``id`` field in input object
 
 .. graphiql::
   :view_only:
