@@ -1,7 +1,8 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module Hasura.RQL.DML.Insert where
 
@@ -11,6 +12,7 @@ import           Instances.TH.Lift        ()
 import qualified Data.Aeson.Text          as AT
 import qualified Data.ByteString.Builder  as BB
 import qualified Data.HashMap.Strict      as HM
+import qualified Data.HashSet             as HS
 import qualified Data.Sequence            as DS
 import qualified Data.Text.Lazy           as LT
 
@@ -54,8 +56,8 @@ mkSQLInsert (InsertQueryP1 tn vn cols vals c mutFlds) =
       Nothing -> Nothing
       Just (CP1DoNothing Nothing)   -> Just $ S.DoNothing Nothing
       Just (CP1DoNothing (Just ct)) -> Just $ S.DoNothing $ Just $ toSQLCT ct
-      Just (CP1Update ct pgCols)    -> Just $ S.Update (toSQLCT ct)
-        (S.buildSEWithExcluded pgCols)
+      Just (CP1Update ct inpCols)    -> Just $ S.Update (toSQLCT ct)
+        (S.buildSEWithExcluded inpCols)
 
     toSQLCT ct = case ct of
       Column pgCols -> S.SQLColumn pgCols
@@ -80,42 +82,45 @@ convObj
   -> HM.HashMap PGCol S.SQLExp
   -> FieldInfoMap
   -> InsObj
-  -> m [S.SQLExp]
+  -> m ([PGCol], [S.SQLExp])
 convObj prepFn defInsVals fieldInfoMap insObj = do
   inpInsVals <- flip HM.traverseWithKey insObj $ \c val -> do
     let relWhenPGErr = "relationships can't be inserted"
     colType <- askPGType fieldInfoMap c relWhenPGErr
     -- Encode aeson's value into prepared value
     withPathK (getPGColTxt c) $ prepFn colType val
+  let sqlExps = HM.elems $ HM.union inpInsVals defInsVals
+      inpCols = HM.keys inpInsVals
 
-  return $ HM.elems $ HM.union inpInsVals defInsVals
+  return (inpCols, sqlExps)
 
 buildConflictClause
   :: (P1C m)
   => TableInfo
+  -> [PGCol]
   -> OnConflict
   -> m ConflictClauseP1
-buildConflictClause tableInfo (OnConflict mTCol mTCons act) = case (mTCol, mTCons, act) of
-  (Nothing, Nothing, CAIgnore)    -> return $ CP1DoNothing Nothing
-  (Just col, Nothing, CAIgnore)   -> do
-    validateCols col
-    return $ CP1DoNothing $ Just $ Column $ getPGCols col
-  (Nothing, Just cons, CAIgnore)  -> do
-    validateConstraint cons
-    return $ CP1DoNothing $ Just $ Constraint cons
-  (Nothing, Nothing, CAUpdate)    -> throw400 UnexpectedPayload
-    "Expecting 'constraint' or 'constraint_on' when the 'action' is 'update'"
-  (Just col, Nothing, CAUpdate)   -> do
-    validateCols col
-    return $ CP1Update (Column $ getPGCols col) columns
-  (Nothing, Just cons, CAUpdate)  -> do
-    validateConstraint cons
-    return $ CP1Update (Constraint cons) columns
-  (Just _, Just _, _)             -> throw400 UnexpectedPayload
-    "'constraint' and 'constraint_on' cannot be set at a time"
+buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
+  case (mTCol, mTCons, act) of
+    (Nothing, Nothing, CAIgnore)    -> return $ CP1DoNothing Nothing
+    (Just col, Nothing, CAIgnore)   -> do
+      validateCols col
+      return $ CP1DoNothing $ Just $ Column $ getPGCols col
+    (Nothing, Just cons, CAIgnore)  -> do
+      validateConstraint cons
+      return $ CP1DoNothing $ Just $ Constraint cons
+    (Nothing, Nothing, CAUpdate)    -> throw400 UnexpectedPayload
+      "Expecting 'constraint' or 'constraint_on' when the 'action' is 'update'"
+    (Just col, Nothing, CAUpdate)   -> do
+      validateCols col
+      return $ CP1Update (Column $ getPGCols col) inpCols
+    (Nothing, Just cons, CAUpdate)  -> do
+      validateConstraint cons
+      return $ CP1Update (Constraint cons) inpCols
+    (Just _, Just _, _)             -> throw400 UnexpectedPayload
+      "'constraint' and 'constraint_on' cannot be set at a time"
   where
     fieldInfoMap = tiFieldInfoMap tableInfo
-    columns = map pgiName $ getCols fieldInfoMap
 
     validateCols c = do
       let targetcols = getPGCols c
@@ -169,14 +174,16 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
 
   insTuples <- withPathK "objects" $ indexedForM insObjs $ \obj ->
     convObj prepFn defInsVals fieldInfoMap obj
+  let sqlExps = map snd insTuples
+      inpCols = HS.toList $ HS.fromList $ concatMap fst insTuples
 
   conflictClause <- withPathK "on_conflict" $ forM oC $ \c -> do
       roleName <- askCurRole
       unless (ipiAllowUpsert insPerm) $ throw400 PermissionDenied $
         "upsert is not allowed for role" <>> roleName
-      buildConflictClause tableInfo c
+      buildConflictClause tableInfo inpCols c
 
-  return $ InsertQueryP1 tableName insView insCols insTuples
+  return $ InsertQueryP1 tableName insView insCols sqlExps
            conflictClause mutFlds
 
   where
@@ -202,7 +209,10 @@ insertP2 (u, p) =
   where
     insertSQL = toSQL $ mkSQLInsert u
 
-type ConflictCtx = (ConflictAction, Maybe ConstraintName)
+data ConflictCtx
+  = CCUpdate !ConstraintName ![PGCol]
+  | CCDoNothing !(Maybe ConstraintName)
+  deriving (Show, Eq)
 
 nonAdminInsert :: (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 nonAdminInsert (insQueryP1, args) = do
@@ -218,10 +228,10 @@ extractConflictCtx cp =
   case cp of
     (CP1DoNothing mConflictTar) -> do
       mConstraintName <- mapM extractConstraintName mConflictTar
-      return (CAIgnore, mConstraintName)
-    (CP1Update conflictTar _) -> do
+      return $ CCDoNothing mConstraintName
+    (CP1Update conflictTar inpCols) -> do
       constraintName <- extractConstraintName conflictTar
-      return (CAUpdate, Just constraintName)
+      return $ CCUpdate constraintName inpCols
   where
     extractConstraintName (Constraint cn) = return cn
     extractConstraintName _ = throw400 NotSupported
@@ -235,8 +245,13 @@ setConflictCtx conflictCtxM = do
       q = Q.fromBuilder $ setVar <> setVal
   Q.unitQE defaultTxErrorHandler q () False
   where
-    conflictCtxToJSON (act, constrM) =
-      LT.toStrict $ AT.encodeToLazyText $ InsertTxConflictCtx act constrM
+    encToText = LT.toStrict . AT.encodeToLazyText
+
+    conflictCtxToJSON (CCDoNothing constrM) =
+        encToText $ InsertTxConflictCtx CAIgnore constrM Nothing
+    conflictCtxToJSON (CCUpdate constr updCols) =
+        encToText $ InsertTxConflictCtx CAUpdate (Just constr) $
+        Just $ sqlBuilderToTxt $ toSQL $ S.buildSEWithExcluded updCols
 
 instance HDBQuery InsertQuery where
 

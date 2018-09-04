@@ -13,6 +13,7 @@ module Hasura.GraphQL.Resolve.Mutation
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashSet                      as Set
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Delete             as RD
@@ -68,49 +69,64 @@ convertRowObj val =
     let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (PGCol $ G.unName k, prepExp)
 
-mkConflictClause
-  :: (MonadError QErr m)
-  => [PGCol]
-  -> RI.ConflictCtx
-  -> m RI.ConflictClauseP1
-mkConflictClause cols (act, conM) = case (act , conM) of
-  (CAIgnore, Nothing) -> return $ RI.CP1DoNothing Nothing
-  (CAIgnore, Just cons) -> return $ RI.CP1DoNothing $ Just $ RI.Constraint cons
-  (CAUpdate, Nothing) -> withPathK "on_conflict" $ throw400 Unexpected
-    "expecting \"constraint\" when \"action\" is \"update\" "
-  (CAUpdate, Just cons) -> return $ RI.CP1Update (RI.Constraint cons) cols
+mkConflictClause :: RI.ConflictCtx -> RI.ConflictClauseP1
+mkConflictClause (RI.CCDoNothing constrM) =
+  RI.CP1DoNothing $ fmap RI.Constraint constrM
+mkConflictClause (RI.CCUpdate constr updCols) =
+  RI.CP1Update (RI.Constraint constr) updCols
 
 parseAction
   :: (MonadError QErr m)
-  => AnnGObject -> m ConflictAction
-parseAction obj = do
-  val <- onNothing (Map.lookup "action" obj) $ throw500
-    "\"action\" field is expected but not found"
-  (enumTy, enumVal) <- asEnumVal val
-  withPathK "action" $ case G.unName $ G.unEnumValue enumVal of
-    "ignore" -> return CAIgnore
-    "update" -> return CAUpdate
-    _ -> throw500 $ "only \"ignore\" and \"updated\" allowed for enum type " <> showNamedTy enumTy
+  => AnnGObject -> m (Maybe ConflictAction)
+parseAction obj =
+  mapM parseVal $ Map.lookup "action" obj
+  where
+    parseVal val = do
+      (enumTy, enumVal) <- asEnumVal val
+      withPathK "action" $ case G.unName $ G.unEnumValue enumVal of
+        "ignore" -> return CAIgnore
+        "update" -> return CAUpdate
+        _ -> throw500 $
+          "only \"ignore\" and \"updated\" allowed for enum type "
+          <> showNamedTy enumTy
 
 parseConstraint
   :: (MonadError QErr m)
-  => AnnGObject -> m (Maybe ConstraintName)
+  => AnnGObject -> m ConstraintName
 parseConstraint obj = do
-  t <- mapM parseVal $ Map.lookup "constraint" obj
-  return $ fmap ConstraintName t
+  v <- onNothing (Map.lookup "constraint" obj) $ throw500
+    "\"constraint\" is expected, but not found"
+  parseVal v
   where
     parseVal v = do
       (_, enumVal) <- asEnumVal v
-      return $ G.unName $ G.unEnumValue enumVal
+      return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
+
+parseUpdCols
+  :: (MonadError QErr m)
+  => AnnGObject -> m (Maybe [PGCol])
+parseUpdCols obj =
+  mapM parseVal $ Map.lookup "update_columns" obj
+  where
+    parseVal val = flip withArray val $ \_ enumVals ->
+      forM enumVals $ \eVal -> do
+        (_, v) <- asEnumVal eVal
+        return $ PGCol $ G.unName $ G.unEnumValue v
 
 parseOnConflict
   :: (MonadError QErr m)
-  => AnnGValue -> m RI.ConflictCtx
-parseOnConflict val =
+  => [PGCol] -> AnnGValue -> m RI.ConflictCtx
+parseOnConflict inpCols val =
   flip withObject val $ \_ obj -> do
-    action <- parseAction obj
-    constraintM <- parseConstraint obj
-    return (action, constraintM)
+    actionM <- parseAction obj
+    constraint <- parseConstraint obj
+    updColsM <- parseUpdCols obj
+    -- consider "action" if "update_columns" is not mentioned
+    return $ case (updColsM, actionM) of
+      (Just [], _)             -> RI.CCDoNothing $ Just constraint
+      (Just cols, _)           -> RI.CCUpdate constraint cols
+      (Nothing, Just CAIgnore) -> RI.CCDoNothing $ Just constraint
+      (Nothing, _)             -> RI.CCUpdate constraint inpCols
 
 convertInsert
   :: RoleName
@@ -119,13 +135,14 @@ convertInsert
   -> Field -- the mutation field
   -> Convert RespTx
 convertInsert role (tn, vn) tableCols fld = do
-  rows    <- withArg arguments "objects" asRowExps
-  conflictCtxM <- withPathK "on_conflict" $
-                 withArgM arguments "on_conflict" parseOnConflict
-  onConflictM <- mapM (mkConflictClause tableCols) conflictCtxM
+  insTuples    <- withArg arguments "objects" asRowExps
+  let inpCols = Set.toList $ Set.fromList $ concatMap fst insTuples
+  conflictCtxM <- withArgM arguments "on_conflict" $ parseOnConflict inpCols
+  let onConflictM = fmap mkConflictClause conflictCtxM
   mutFlds <- convertMutResp tn (_fType fld) $ _fSelSet fld
   args <- get
-  let p1Query = RI.InsertQueryP1 tn vn tableCols rows onConflictM mutFlds
+  let rows = map snd insTuples
+      p1Query = RI.InsertQueryP1 tn vn tableCols rows onConflictM mutFlds
       p1 = (p1Query, args)
   return $
       bool (RI.nonAdminInsert p1) (RI.insertP2 p1) $ isAdmin role
@@ -134,7 +151,9 @@ convertInsert role (tn, vn) tableCols fld = do
     asRowExps = withArray (const $ mapM rowExpWithDefaults)
     rowExpWithDefaults val = do
       givenCols <- convertRowObj val
-      return $ Map.elems $ Map.union (Map.fromList givenCols) defVals
+      let inpCols = map fst givenCols
+          sqlExps = Map.elems $ Map.union (Map.fromList givenCols) defVals
+      return (inpCols, sqlExps)
 
     defVals = Map.fromList $ zip tableCols (repeat $ S.SEUnsafe "DEFAULT")
 
@@ -211,7 +230,7 @@ convertUpdate tn filterExp fld = do
                  ]
       updExp = concat $ catMaybes updExpsM
   -- atleast one of update operators is expected
-  unless (any isJust updExpsM) $ throw400 Unexpected $
+  unless (any isJust updExpsM) $ throwVE $
     "atleast any one of _set, _inc, _append, _prepend, _delete_key, _delete_elem and "
     <> " _delete_at_path operator is expected"
   let p1 = RU.UpdateQueryP1 tn updExp (filterExp, whereExp) mutFlds

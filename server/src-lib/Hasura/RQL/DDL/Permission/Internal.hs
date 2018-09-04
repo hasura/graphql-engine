@@ -272,7 +272,7 @@ class (ToJSON a) => IsPerm a where
     -> m (PermInfo a)
 
   addPermP2Setup
-    :: (CacheRWM m, MonadTx m, QErrM m) => QualifiedTable -> PermDef a -> PermInfo a -> m ()
+    :: (MonadTx m, QErrM m) => QualifiedTable -> PermDef a -> PermInfo a -> m ()
 
   buildDropPermP1Res
     :: (QErrM m, CacheRM m, UserInfoM m)

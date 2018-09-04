@@ -271,8 +271,9 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsertQuery)
 
 data InsertTxConflictCtx
   = InsertTxConflictCtx
-  { itcAction     :: !ConflictAction
-  , itcConstraint :: !(Maybe ConstraintName)
+  { itcAction        :: !ConflictAction
+  , itcConstraint    :: !(Maybe ConstraintName)
+  , itcSetExpression :: !(Maybe T.Text)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''InsertTxConflictCtx)
 

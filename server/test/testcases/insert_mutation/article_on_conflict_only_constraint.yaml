@@ -1,6 +1,6 @@
-description: Upserts article data via GraphQL mutation (Error 03)
+description: Upserts article data via GraphQL mutation with only constraint
 url: /v1alpha1/graphql
-status: 400
+status: 200
 query:
   query: |
     mutation insert_article {
@@ -16,8 +16,7 @@ query:
           }
           ],
         on_conflict: {
-          action: update,
-          constraint: random_constraint
+          constraint: article_pkey
         }
       ) {
         returning {

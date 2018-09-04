@@ -441,9 +441,8 @@ runSqlP2 (RunSQL t cascade) = do
   -- recreate the insert permission infra
   forM_ (M.elems $ scTables postSc) $ \ti -> do
     let tn = tiName ti
-        pgCols = map pgiName $ getCols $ tiFieldInfoMap ti
     forM_ (M.elems $ tiRolePermInfoMap ti) $ \rpi ->
-      maybe (return ()) (\ipi -> liftTx $ buildInsInfra tn ipi pgCols) $ _permIns rpi
+      maybe (return ()) (liftTx . buildInsInfra tn) $ _permIns rpi
 
   --recreate triggers
   forM_ (M.elems $ scTables postSc) $ \ti -> do
