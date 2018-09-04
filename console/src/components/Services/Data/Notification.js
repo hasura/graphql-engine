@@ -8,6 +8,8 @@ const styles = require('./TableCommon/Table.scss');
 const showErrorNotification = (title, message, reqBody, error) => {
   let modMessage;
   let refreshBtn;
+  console.log(message);
+  console.log(error);
   if (
     error &&
     error.message &&
@@ -40,6 +42,7 @@ const showErrorNotification = (title, message, reqBody, error) => {
     modMessage = error.custom;
   } else if (error && 'code' in error && 'error' in error && 'path' in error) {
     // Data API error
+    console.log('here');
     modMessage = error.error;
   } else {
     modMessage = error ? error : message;
@@ -61,6 +64,8 @@ const showErrorNotification = (title, message, reqBody, error) => {
   } else if (error && 'internal' in error) {
     finalJson = error.internal;
   }
+  console.log(finalJson);
+  console.log(reqBody);
   return dispatch => {
     const expandClicked = finalMsg => {
       // trigger a modal with a bigger view
@@ -72,44 +77,44 @@ const showErrorNotification = (title, message, reqBody, error) => {
         level: 'error',
         title,
         message: modMessage,
-        action: reqBody
+        action: finalJson
           ? {
-            label: 'Details',
-            callback: () => {
-              dispatch(
-                showNotification({
-                  level: 'error',
-                  title,
-                  message: modMessage,
-                  dismissible: 'button',
-                  children: [
-                    <div className={styles.aceBlock}>
-                      <i
-                        onClick={e => {
-                          e.preventDefault();
-                          expandClicked(finalJson);
-                        }}
-                        className={styles.aceBlockExpand + ' fa fa-expand'}
-                      />
-                      <AceEditor
-                        readOnly
-                        showPrintMargin={false}
-                        mode="json"
-                        showGutter={false}
-                        theme="github"
-                        name="notification-response"
-                        value={JSON.stringify(finalJson, null, 4)}
-                        minLines={1}
-                        maxLines={15}
-                        width="100%"
-                      />
-                      {refreshBtn}
-                    </div>,
-                  ],
-                })
-              );
-            },
-          }
+              label: 'Details',
+              callback: () => {
+                dispatch(
+                  showNotification({
+                    level: 'error',
+                    title,
+                    message: modMessage,
+                    dismissible: 'button',
+                    children: [
+                      <div className={styles.aceBlock}>
+                        <i
+                          onClick={e => {
+                            e.preventDefault();
+                            expandClicked(finalJson);
+                          }}
+                          className={styles.aceBlockExpand + ' fa fa-expand'}
+                        />
+                        <AceEditor
+                          readOnly
+                          showPrintMargin={false}
+                          mode="json"
+                          showGutter={false}
+                          theme="github"
+                          name="notification-response"
+                          value={JSON.stringify(finalJson, null, 4)}
+                          minLines={1}
+                          maxLines={15}
+                          width="100%"
+                        />
+                        {refreshBtn}
+                      </div>,
+                    ],
+                  })
+                );
+              },
+            }
           : null,
       })
     );
