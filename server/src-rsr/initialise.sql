@@ -180,35 +180,36 @@ LANGUAGE plpgsql AS $$
     END;
 $$;
 
+-- required for generating uuid
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE hdb_catalog.event_triggers
 (
-  id SERIAL UNIQUE,
-  name TEXT PRIMARY KEY,
+  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT UNIQUE,
   type TEXT NOT NULL,
-  schema_name TEXT,
-  table_name TEXT,
+  schema_name TEXT NOT NULL,
+  table_name TEXT NOT NULL,
   definition JSON,
   query TEXT,
   webhook TEXT NOT NULL,
-  num_retries INTEGER NOT NULL DEFAULT 0,
-  interval_seconds INTEGER NOT NULL DEFAULT 10
+  num_retries INTEGER DEFAULT 0,
+  interval_seconds INTEGER DEFAULT 10
 );
-
--- required for generating uuid
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE hdb_catalog.event_log
 (
   id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
-  schema_name TEXT,
-  table_name TEXT,
-  trigger_name TEXT,
+  schema_name TEXT NOT NULL,
+  table_name TEXT NOT NULL,
+  trigger_id TEXT NOT NULL,
+  trigger_name TEXT NOT NULL,
   payload JSONB NOT NULL,
-  delivered BOOLEAN DEFAULT FALSE,
-  error BOOLEAN DEFAULT FALSE,
-  tries INTEGER DEFAULT 0,
+  delivered BOOLEAN NOT NULL DEFAULT FALSE,
+  error BOOLEAN NOT NULL DEFAULT FALSE,
+  tries INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
-  locked BOOLEAN DEFAULT FALSE
+  locked BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE hdb_catalog.event_invocation_logs

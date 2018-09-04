@@ -7,6 +7,7 @@ module Hasura.RQL.Types.Subscribe
   , SubscribeOpSpec(..)
   , SubscribeColumns(..)
   , TriggerName
+  , TriggerId
   , TriggerOpsDef(..)
   , EventTrigger(..)
   , EventTriggerDef(..)
@@ -25,6 +26,7 @@ import           Language.Haskell.TH.Syntax (Lift)
 import qualified Data.Text                  as T
 
 type TriggerName = T.Text
+type TriggerId = T.Text
 
 data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift)
 

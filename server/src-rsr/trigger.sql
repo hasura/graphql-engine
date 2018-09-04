@@ -6,7 +6,6 @@ CREATE OR REPLACE function hdb_views.notify_skor_{{NAME}}_{{OPERATION}}() RETURN
    data json;
    id text;
    BEGIN
-     raise notice 'pushing to event log';
      id := gen_random_uuid();
      data := json_build_object(
        'old', {{OLD_DATA_EXPRESSION}},
@@ -16,14 +15,15 @@ CREATE OR REPLACE function hdb_views.notify_skor_{{NAME}}_{{OPERATION}}() RETURN
                         'table', TG_TABLE_NAME,
                         'schema', TG_TABLE_SCHEMA,
                         'trigger_name', '{{NAME}}',
+                        'trigger_id', '{{ID}}',
                         'op', TG_OP,
                         'id', id,
                         'data', data
                         )::text;
      INSERT INTO
-     hdb_catalog.event_log (id, schema_name, table_name, trigger_name, payload)
+     hdb_catalog.event_log (id, schema_name, table_name, trigger_name, trigger_id, payload)
      VALUES
-     (id, TG_TABLE_SCHEMA, TG_TABLE_NAME, '{{NAME}}', payload);
+     (id, TG_TABLE_SCHEMA, TG_TABLE_NAME, '{{NAME}}', '{{ID}}', payload);
      RETURN NULL;
    END;
    $$;

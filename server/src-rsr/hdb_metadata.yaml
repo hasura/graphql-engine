@@ -207,7 +207,7 @@ args:
           schema: hdb_catalog
           name: event_triggers
         column_mapping:
-          trigger_name : name
+          trigger_id : id
 
 - type: create_array_relationship
   args:
@@ -221,7 +221,7 @@ args:
           schema: hdb_catalog
           name: event_log
         column_mapping:
-          name : trigger_name
+          id : trigger_id
 
 - type: create_object_relationship
   args:
