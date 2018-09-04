@@ -55,9 +55,9 @@ The following is a representative tree of the folder structure:
     |   |── python
     |   |   ...
     |
-    ├── microsoft-azure-functions
+    ├── azure-functions
     |   |── README.md 
-    |   |── java
+    |   |── nodejs
     |   |   |── simple-echo
     |   |   |── mutation-trigger
     |   |── python
