@@ -31,6 +31,7 @@ import qualified Data.ByteString.Lazy          as B
 import qualified Data.HashMap.Strict           as M
 import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
+import qualified Data.Time.Clock               as Time
 import qualified Database.PG.Query             as Q
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Hasura.Logging                as L
@@ -56,7 +57,7 @@ data Event
   -- , eDelivered   :: Bool
   -- , eError       :: Bool
   , eTries       :: Int64
-  -- , eCreatedAt   :: UTCTime
+  , eCreatedAt   :: Time.UTCTime
   }
 
 type UUID = T.Text
@@ -70,10 +71,10 @@ data Invocation
 
 data EventEngineCtx
   = EventEngineCtx
-  { eeCtxEventQueue         :: TQ.TQueue Event
-  , eeCtxEventThreads       :: TVar Int
-  , eeCtxMaxEventThreads    :: Int
-  , eeCtxPollingIntervalSec :: Int
+  { _eeCtxEventQueue         :: TQ.TQueue Event
+  , _eeCtxEventThreads       :: TVar Int
+  , _eeCtxMaxEventThreads    :: Int
+  , _eeCtxPollingIntervalSec :: Int
   }
 
 defaultMaxEventThreads :: Int
@@ -188,6 +189,8 @@ tryWebhook pool e _ = do
     Nothing -> return $ Left $ HOther "table or event-trigger not found"
     Just et -> do
       let webhook = etiWebhook et
+          mCreatedAt = Just $ eCreatedAt e
+          mEventId = Just $ eId e
       eeCtx <- asks getter
 
       -- wait for counter and then increment beforing making http
@@ -197,7 +200,7 @@ tryWebhook pool e _ = do
         if countThreads >= maxT
           then retry
           else modifyTVar' c (+1)
-      eitherResp <- runExceptT $ runHTTP W.defaults $ mkAnyHTTPPost (T.unpack webhook) (Just $ ePayload e)
+      eitherResp <- runExceptT $ runHTTP W.defaults (mkAnyHTTPPost (T.unpack webhook) (Just $ ePayload e)) (Just (ExtraLog mCreatedAt mEventId))
 
       --decrement counter once http is done
       liftIO $ atomically $ do
@@ -228,9 +231,9 @@ fetchEvents =
       UPDATE hdb_catalog.event_log
       SET locked = 't'
       WHERE id IN ( select id from hdb_catalog.event_log where delivered ='f' and error = 'f' and locked = 'f' LIMIT 100 )
-      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries
+      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
       |] () True
-  where uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries) = Event id' (QualifiedTable sn tn) trn payload tries
+  where uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries, created) = Event id' (QualifiedTable sn tn) trn payload tries created
 
 insertInvocation :: Invocation -> Q.TxE QErr ()
 insertInvocation invo = do
