@@ -83,31 +83,9 @@ Let's add a **select** permission for the **user** role on the ``author`` table:
 Now, let's make the same query as above but include the 2 dynamic authorization variables via request headers.
 ``X-Hasura-Role`` and ``X-Hasura-User-Id`` which will automatically get used according to the permission rule we set up.
 
-.. image:: ../../../img/graphql/manual/auth/queries-with-perms.png
+.. image:: ../../../img/graphql/manual/auth/query-with-perms.png
 
 You can notice above, how the same query now only includes the right slice of data.
-
-.. graphiql::
-  :view_only:
-  :query:
-    # Query with X-Hasura-User-Id: 3
-    query {
-      author {
-        id
-        name
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 3,
-            "name": "Sidney"
-          }
-        ]
-      }
-    }
 
 .. _restrict_columns:
 
