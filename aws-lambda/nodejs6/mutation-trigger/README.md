@@ -1,19 +1,22 @@
 # Setup tables
-1. Create the following tables:
 
-```sql
+1. Create the table using the console:
 
-CREATE TABLE notes (
-  id SERIAL PRIMARY KEY,
-  note TEXT
-);
+```
+Table name: notes
 
-CREATE TABLE note_revision (
-  id SERIAL PRIMARY KEY,
-  note_id INT REFERENCES notes (id),
-  note TEXT,
-  updated_at TIMESTAMP DEFAULT now()
-);
+Columns:
+id: Integer auto-increment
+note: Text
+
+Table name: note_revision
+
+Columns:
+id: Integer auto-increment
+note: Text
+note_id: Integer (foreign key to notes.id)
+update_at: Timestamp, default `now()`
+
 ```
 
 # Setup AWS Lambda

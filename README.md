@@ -26,9 +26,7 @@ If not you can visit the [docs](https://docs.hasura.io/1.0/graphql/manual/gettin
 
 ## Deploying the boilerplate examples
 
-Follow the cloud function provider docs for setting these up.
-
-TODO: add links for the 4 providers
+Follow the cloud function provider docs for setting these up. Provider specific README also contains CLI instructions.
 
 ## Documented examples
 
