@@ -94,7 +94,7 @@ parseConstraint
   :: (MonadError QErr m)
   => AnnGObject -> m ConstraintName
 parseConstraint obj = do
-  v <- onNothing (Map.lookup "constraint" obj) $ throwVE
+  v <- onNothing (Map.lookup "constraint" obj) $ throw500
     "\"constraint\" is expected, but not found"
   parseVal v
   where
@@ -126,8 +126,7 @@ parseOnConflict inpCols val =
       (Just [], _)             -> RI.CCDoNothing $ Just constraint
       (Just cols, _)           -> RI.CCUpdate constraint cols
       (Nothing, Just CAIgnore) -> RI.CCDoNothing $ Just constraint
-      (Nothing, Just CAUpdate) -> RI.CCUpdate constraint inpCols
-      (Nothing, Nothing)       -> RI.CCDoNothing $ Just constraint
+      (Nothing, _)             -> RI.CCUpdate constraint inpCols
 
 convertInsert
   :: RoleName
