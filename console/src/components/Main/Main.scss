@@ -948,7 +948,7 @@
   {
     display: block;
     font-weight: 300;
-    text-transform: capitalize;
+    text-transform: none;
     font-size: 14px;
     color: #fff;
     padding: 5px 0;
@@ -971,8 +971,12 @@
     a:hover
     {
       text-decoration: none;
+      opacity: 0.7;
     }
   }
+}
+.help_dropdown_menu_heart_consented {
+  right: 0px;
 }
 .dropdown_menu
 {
@@ -1016,6 +1020,7 @@
     display: flex;
     // align-items: center;
     justify-content: center;
+    margin-top: 10px;
   }
   li
   {

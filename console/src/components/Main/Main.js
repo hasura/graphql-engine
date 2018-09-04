@@ -205,13 +205,24 @@ class Main extends React.Component {
                   <i className={styles.question + ' fa fa-question'} />
                 </div>
                 <ul
-                  className={'dropdown-menu ' + styles.help_dropdown_menu}
+                  className={
+                    'dropdown-menu ' +
+                    styles.help_dropdown_menu +
+                    ' ' +
+                    (this.state.loveConsentState.isDismissed
+                      ? styles.help_dropdown_menu_heart_consented
+                      : '')
+                  }
                   aria-labelledby="help"
                 >
                   <div className={styles.help_dropdown_menu_container}>
                     <li className={'dropdown-item'}>
-                      <a href="#" target="_blank">
-                        <span> Report bugs & suggest</span>
+                      <a
+                        href="https://github.com/hasura/graphql-engine/issues"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <span> Report bugs & suggest improvements</span>
                         <img
                           className={'img-responsive'}
                           src={github}
@@ -220,7 +231,11 @@ class Main extends React.Component {
                       </a>
                     </li>
                     <li className={'dropdown-item'}>
-                      <a href="#" target="_blank">
+                      <a
+                        href="https://discordapp.com/invite/vBPpJkS"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <span> Ask for help & discuss ideas</span>
                         <img
                           className={'img-responsive'}
@@ -243,29 +258,29 @@ class Main extends React.Component {
               </div>
               {!this.state.loveConsentState.isDismissed
                 ? [
-                    <div
-                      className={styles.shareSection + ' dropdown-toggle'}
-                      data-toggle="dropdown"
-                      aria-expanded="false"
-                    >
-                      <img
-                        className={'img-responsive'}
-                        src={pixHeart}
-                        alt={'pix Heart'}
-                      />
-                      {/* <i className={styles.heart + ' fa fa-heart'} /> */}
-                    </div>,
-                    <ul className={'dropdown-menu ' + styles.dropdown_menu}>
-                      <div className={styles.dropdown_menu_container}>
-                        <div className={styles.closeDropDown}>
-                          <img
-                            className={'img-responsive'}
-                            src={closeIcon}
-                            alt={'closeIcon'}
-                            onClick={this.closeLoveIcon.bind(this)}
-                          />
-                        </div>
-                        {/*
+                  <div
+                    className={styles.shareSection + ' dropdown-toggle'}
+                    data-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    <img
+                      className={'img-responsive'}
+                      src={pixHeart}
+                      alt={'pix Heart'}
+                    />
+                    {/* <i className={styles.heart + ' fa fa-heart'} /> */}
+                  </div>,
+                  <ul className={'dropdown-menu ' + styles.dropdown_menu}>
+                    <div className={styles.dropdown_menu_container}>
+                      <div className={styles.closeDropDown}>
+                        <img
+                          className={'img-responsive'}
+                          src={closeIcon}
+                          alt={'closeIcon'}
+                          onClick={this.closeLoveIcon.bind(this)}
+                        />
+                      </div>
+                      {/*
                       <div className={styles.arrow_up_dropdown} />
                       <div className={styles.graphqlHeartText}>
                         Love GraphQL Engine? Shout it from the rooftops!
@@ -276,29 +291,29 @@ class Main extends React.Component {
                         </span>
                       </div>
                       */}
-                        <div className={styles.displayFlex}>
-                          <li className={styles.pixelText1}>
+                      <div className={styles.displayFlex}>
+                        <li className={styles.pixelText1}>
                             Roses are red, Violets are blue; Hasura/GraphQL
                             star/tweet cos v love u {'<'}3
-                          </li>
-                          <li className={'dropdown-item'}>
-                            <a
-                              href="https://github.com/hasura/graphql-engine"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <div className={styles.socialIcon}>
-                                <img
-                                  className="img img-responsive"
-                                  src={githubicon}
-                                  alt={'Github'}
-                                />
-                              </div>
-                              <div className={styles.pixelText}>
+                        </li>
+                        <li className={'dropdown-item'}>
+                          <a
+                            href="https://github.com/hasura/graphql-engine"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <div className={styles.socialIcon}>
+                              <img
+                                className="img img-responsive"
+                                src={githubicon}
+                                alt={'Github'}
+                              />
+                            </div>
+                            <div className={styles.pixelText}>
                                 Star us on Github
-                              </div>
-                            </a>
-                            {/*
+                            </div>
+                          </a>
+                          {/*
                           <div className={styles.gitHubBtn}>
                             <iframe
                               title="github"
@@ -310,29 +325,29 @@ class Main extends React.Component {
                             />
                           </div>
                           */}
-                          </li>
-                          <li className={'dropdown-item '}>
-                            <a
-                              href="https://twitter.com/intent/tweet?hashtags=hasura,graphql,postgres&amp;text=Get%20Instant%20Realtime%20GraphQL%20APIs%20on%20PostgreSQL&amp;url=https%3A%2F%2Fgithub.com%2F/hasura%2Fgraphql-engine"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <div className={styles.socialIcon}>
-                                <img
-                                  className="img img-responsive"
-                                  src={twittericon}
-                                  alt={'Twitter'}
-                                />
-                              </div>
-                              <div className={styles.pixelText}>
+                        </li>
+                        <li className={'dropdown-item '}>
+                          <a
+                            href="https://twitter.com/intent/tweet?hashtags=hasura,graphql,postgres&amp;text=Get%20Instant%20Realtime%20GraphQL%20APIs%20on%20PostgreSQL&amp;url=https%3A%2F%2Fgithub.com%2F/hasura%2Fgraphql-engine"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <div className={styles.socialIcon}>
+                              <img
+                                className="img img-responsive"
+                                src={twittericon}
+                                alt={'Twitter'}
+                              />
+                            </div>
+                            <div className={styles.pixelText}>
                                 Tweet at us
-                              </div>
-                            </a>
-                          </li>
-                        </div>
+                            </div>
+                          </a>
+                        </li>
                       </div>
-                    </ul>,
-                  ]
+                    </div>
+                  </ul>,
+                ]
                 : null}
             </div>
           </div>

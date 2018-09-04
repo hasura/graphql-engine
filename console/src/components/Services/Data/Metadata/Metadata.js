@@ -14,7 +14,7 @@ class Metadata extends Component {
       <div
         className={`${styles.main_wrapper} ${styles.padd_left} ${
           styles.padd_top
-        } ${metaDataStyles.metadata_wrapper}`}
+        } ${metaDataStyles.metadata_wrapper} container-fluid`}
       >
         <Helmet title="Manage GraphQL Engine Metadata | Hasura" />
         <div className={styles.subHeader}>
