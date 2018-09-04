@@ -29,7 +29,7 @@ You can use this as a boilerplate to write custom resolvers with Hasura GraphQL 
 npm install
 ```
 
-2. Set appropriate environment variables for the GraphQL Engien URL, the access key to GraphQL Engine and the Postgres connection string.
+2. Set appropriate environment variables for the GraphQL Engine URL, the access key to GraphQL Engine and the Postgres connection string.
 
 
 ```bash
