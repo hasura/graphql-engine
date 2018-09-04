@@ -14,7 +14,7 @@ import           Data.Foldable          as M (toList)
 import           Data.Hashable          as M (Hashable)
 import           Data.List              as M (find, foldl', group, sortBy)
 import           Data.Maybe             as M (catMaybes, fromMaybe, isJust,
-                                              listToMaybe, mapMaybe,
+                                              isNothing, listToMaybe, mapMaybe,
                                               maybeToList)
 import           Data.Ord               as M (comparing)
 import           Data.Semigroup         as M (Semigroup (..))
