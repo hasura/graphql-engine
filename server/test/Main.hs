@@ -65,7 +65,7 @@ main = do
   liftIO $ initialise pool
   -- generate the test specs
   specs <- mkSpecs
-  loggerCtx <- L.mkLoggerCtx L.defaultLoggerSettings
+  loggerCtx <- L.mkLoggerCtx $ L.defaultLoggerSettings True
   -- run the tests
   withArgs [] $ hspecWith defaultConfig $ with (ravenApp loggerCtx pool) specs
 
