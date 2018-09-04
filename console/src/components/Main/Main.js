@@ -170,6 +170,11 @@ class Main extends React.Component {
             </div>
             <div className={styles.clusterInfoWrapper}>
               {accessKeyHtml}
+              <div className={styles.helpSection + ' ' + styles.settingsIcon}>
+                <Link to="/data/metadata">
+                  <i className={styles.question + ' fa fa-cog'} />
+                </Link>
+              </div>
               <a href="https://docs.hasura.io">
                 <div className={styles.helpSection}>
                   <i className={styles.question + ' fa fa-question'} />
