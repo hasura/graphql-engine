@@ -344,10 +344,10 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
     addQTemplateToCache qti
 
   eventTriggers <- lift $ Q.catchE defaultTxErrorHandler fetchEventTriggers
-  forM_ eventTriggers $ \(sn, tn, trn, Q.AltJ tDefVal, webhook, nr, rint) -> do
+  forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ tDefVal, webhook, nr, rint) -> do
     tDef <- decodeValue tDefVal
-    addEventTriggerToCache (QualifiedTable sn tn) trn tDef (RetryConf nr rint) webhook
-    liftTx $ mkTriggerQ trn (QualifiedTable sn tn) tDef
+    addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook
+    liftTx $ mkTriggerQ trid trn (QualifiedTable sn tn) tDef
 
 
   where
@@ -387,8 +387,8 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
 
     fetchEventTriggers =
       Q.listQ [Q.sql|
-               SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.interval_seconds
-                FROM hdb_catalog.event_triggers e
+               SELECT e.schema_name, e.table_name, e.id, e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval
+                 FROM hdb_catalog.event_triggers e
                |] () False
 
 data RunSQL
@@ -441,9 +441,8 @@ runSqlP2 (RunSQL t cascade) = do
   -- recreate the insert permission infra
   forM_ (M.elems $ scTables postSc) $ \ti -> do
     let tn = tiName ti
-        pgCols = map pgiName $ getCols $ tiFieldInfoMap ti
     forM_ (M.elems $ tiRolePermInfoMap ti) $ \rpi ->
-      maybe (return ()) (\ipi -> liftTx $ buildInsInfra tn ipi pgCols) $ _permIns rpi
+      maybe (return ()) (liftTx . buildInsInfra tn) $ _permIns rpi
 
   --recreate triggers
   forM_ (M.elems $ scTables postSc) $ \ti -> do
@@ -452,7 +451,8 @@ runSqlP2 (RunSQL t cascade) = do
       let insert = otiCols <$> etiInsert eti
           update = otiCols <$> etiUpdate eti
           delete = otiCols <$> etiDelete eti
-      liftTx $ mkTriggerQ trn tn (TriggerOpsDef insert update delete)
+          trid = etiId eti
+      liftTx $ mkTriggerQ trid trn tn (TriggerOpsDef insert update delete)
 
   return $ encode (res :: RunSQLRes)
 

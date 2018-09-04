@@ -348,7 +348,8 @@ instance CachedSchemaObj OpTriggerInfo where
 
 data EventTriggerInfo
  = EventTriggerInfo
-   { etiName      :: !TriggerName
+   { etiId        :: !TriggerId
+   , etiName      :: !TriggerName
    , etiInsert    :: !(Maybe OpTriggerInfo)
    , etiUpdate    :: !(Maybe OpTriggerInfo)
    , etiDelete    :: !(Maybe OpTriggerInfo)
@@ -586,16 +587,18 @@ withPermType PTDelete f = f PADelete
 addEventTriggerToCache
   :: (QErrM m, CacheRWM m)
   => QualifiedTable
+  -> TriggerId
   -> TriggerName
   -> TriggerOpsDef
   -> RetryConf
   -> T.Text
   -> m ()
-addEventTriggerToCache qt trn tdef rconf webhook =
+addEventTriggerToCache qt trid trn tdef rconf webhook =
   modTableInCache modEventTriggerInfo qt
   where
     modEventTriggerInfo ti = do
       let eti = EventTriggerInfo
+                trid
                 trn
                 (getOpInfo trn ti $ tdInsert tdef)
                 (getOpInfo trn ti $ tdUpdate tdef)

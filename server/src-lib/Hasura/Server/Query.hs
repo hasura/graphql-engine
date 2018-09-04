@@ -23,7 +23,6 @@ import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DDL.Subscribe
 import           Hasura.RQL.DML.Explain
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.DML.Returning     (encodeJSONVector)
@@ -75,8 +74,8 @@ data RQLQuery
   | RQCount !CountQuery
   | RQBulk ![RQLQuery]
 
-  | RQSubscribeTable !SubscribeTableQuery
-  | RQUnsubscribeTable !UnsubscribeTableQuery
+  | RQCreateEventTrigger !CreateEventTriggerQuery
+  | RQDeleteEventTrigger !DeleteEventTriggerQuery
 
   | RQCreateQueryTemplate !CreateQueryTemplate
   | RQDropQueryTemplate !DropQueryTemplate
@@ -172,8 +171,8 @@ queryNeedsReload qi = case qi of
   RQDelete q                   -> queryModifiesSchema q
   RQCount q                    -> queryModifiesSchema q
 
-  RQSubscribeTable q           -> queryModifiesSchema q
-  RQUnsubscribeTable q         -> queryModifiesSchema q
+  RQCreateEventTrigger q       -> queryModifiesSchema q
+  RQDeleteEventTrigger q       -> queryModifiesSchema q
 
   RQCreateQueryTemplate q      -> queryModifiesSchema q
   RQDropQueryTemplate q        -> queryModifiesSchema q
@@ -221,8 +220,8 @@ buildTxAny userInfo sc rq = case rq of
   RQDelete q -> buildTx userInfo sc q
   RQCount q  -> buildTx userInfo sc q
 
-  RQSubscribeTable q -> buildTx userInfo sc q
-  RQUnsubscribeTable q -> buildTx userInfo sc q
+  RQCreateEventTrigger q -> buildTx userInfo sc q
+  RQDeleteEventTrigger q -> buildTx userInfo sc q
 
   RQCreateQueryTemplate q     -> buildTx userInfo sc q
   RQDropQueryTemplate q       -> buildTx userInfo sc q

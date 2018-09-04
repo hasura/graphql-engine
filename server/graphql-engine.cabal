@@ -193,6 +193,7 @@ library
                      , Hasura.GraphQL.Resolve.Select
 
                      , Hasura.Events.Lib
+                     , Hasura.Events.HTTP
 
                      , Data.Text.Extended
                      , Data.Sequence.NonEmpty
@@ -206,7 +207,6 @@ library
                      , Hasura.SQL.Time
                      , Hasura.Prelude
                      , Hasura.Logging
-                     , Hasura.HTTP
                      , Ops
                      , TH
 

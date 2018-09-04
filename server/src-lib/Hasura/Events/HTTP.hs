@@ -7,7 +7,7 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
-module Hasura.HTTP
+module Hasura.Events.HTTP
   ( HTTP(..)
   , HTTPSessionMgr(..)
   , mkHTTP
@@ -26,40 +26,51 @@ module Hasura.HTTP
   , isNetworkErrorHC
   , HLogger
   , mkHLogger
+  , ExtraContext(..)
   ) where
 
-import qualified Control.Retry            as R
-import qualified Data.Aeson               as J
-import qualified Data.Aeson.Casing        as J
-import qualified Data.Aeson.TH            as J
-import qualified Data.ByteString.Lazy     as B
-import qualified Data.CaseInsensitive     as CI
-import qualified Data.TByteString         as TBS
-import qualified Data.Text                as T
-import qualified Data.Text.Encoding       as TE
-import qualified Data.Text.Encoding.Error as TE
-import qualified Data.Text.Lazy           as TL
-import qualified Data.Text.Lazy.Encoding  as TLE
-import qualified Network.HTTP.Client      as H
-import qualified Network.HTTP.Types       as N
-import qualified Network.Wreq             as W
-import qualified Network.Wreq.Session     as WS
-import qualified System.Log.FastLogger    as FL
+import qualified Control.Retry              as R
+import qualified Data.Aeson                 as J
+import qualified Data.Aeson.Casing          as J
+import qualified Data.Aeson.TH              as J
+import qualified Data.ByteString.Lazy       as B
+import qualified Data.CaseInsensitive       as CI
+import qualified Data.TByteString           as TBS
+import qualified Data.Text                  as T
+import qualified Data.Text.Encoding         as TE
+import qualified Data.Text.Encoding.Error   as TE
+import qualified Data.Text.Lazy             as TL
+import qualified Data.Text.Lazy.Encoding    as TLE
+import qualified Data.Time.Clock            as Time
+import qualified Network.HTTP.Client        as H
+import qualified Network.HTTP.Types         as N
+import qualified Network.Wreq               as W
+import qualified Network.Wreq.Session       as WS
+import qualified System.Log.FastLogger      as FL
 
-import           Control.Exception        (try)
+import           Control.Exception          (try)
 import           Control.Lens
-import           Control.Monad.Except     (MonadError, throwError)
-import           Control.Monad.IO.Class   (MonadIO, liftIO)
-import           Control.Monad.Reader     (MonadReader, ask)
+import           Control.Monad.Except       (MonadError, throwError)
+import           Control.Monad.IO.Class     (MonadIO, liftIO)
+import           Control.Monad.Reader       (MonadReader, ask)
 import           Data.Has
 import           Hasura.Logging
 -- import           Data.Monoid
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Subscribe
 
 -- import           Context                  (HTTPSessionMgr (..))
 -- import           Log
 
 type HLogger = (LogLevel, EngineLogType, J.Value) -> IO ()
+
+data ExtraContext
+  = ExtraContext
+  { elEventCreatedAt :: Time.UTCTime
+  , elEventId        :: TriggerId
+  } deriving (Show, Eq)
+
+$(J.deriveJSON (J.aesonDrop 2 J.snakeCase){J.omitNothingFields=True} ''ExtraContext)
 
 data HTTPSessionMgr
   = HTTPSessionMgr
@@ -219,7 +230,7 @@ data HTTPReq
   , _hrqDelay   :: !(Maybe Int)
   } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True} ''HTTPReq)
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPReq)
 
 instance ToEngineLog  HTTPReq where
   toEngineLog req = (LevelInfo, "event-trigger", J.toJSON req )
@@ -234,7 +245,19 @@ data HTTPResp
    , _hrsBody    :: !TL.Text
    } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True} ''HTTPResp)
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPResp)
+
+
+data HTTPRespExtra
+  = HTTPRespExtra
+  { _hreResponse :: HTTPResp
+  , _hreContext  :: Maybe ExtraContext
+  }
+
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPRespExtra)
+
+instance ToEngineLog HTTPRespExtra where
+  toEngineLog resp = (LevelInfo, "event-trigger", J.toJSON resp )
 
 mkHTTPResp :: W.Response B.ByteString -> HTTPResp
 mkHTTPResp resp =
@@ -256,10 +279,10 @@ runHTTP
      , Has HTTPSessionMgr r
      , Has HLogger r
      )
-  => W.Options -> HTTP a -> m a
-runHTTP opts http = do
+  => W.Options -> HTTP a -> Maybe ExtraContext -> m a
+runHTTP opts http exLog = do
   -- try the http request
-  res <- R.retrying retryPol' retryFn' $ httpWithLogging opts True http
+  res <- R.retrying retryPol' retryFn' $ httpWithLogging opts True http exLog
 
   -- process the result
   either throwError return res
@@ -275,10 +298,10 @@ runInsecureHTTP
      , Has HTTPSessionMgr r
      , Has HLogger r
      )
-  => W.Options -> HTTP a -> m a
-runInsecureHTTP opts http = do
+  => W.Options -> HTTP a -> Maybe ExtraContext -> m a
+runInsecureHTTP opts http exLog = do
   -- try the http request
-  res <- R.retrying retryPol' retryFn' $ httpWithLogging opts False http
+  res <- R.retrying retryPol' retryFn' $ httpWithLogging opts False http exLog
 
   -- process the result
   either throwError return res
@@ -289,9 +312,9 @@ runInsecureHTTP opts http = do
 
 httpWithLogging
   :: (MonadReader r m, MonadIO m, Has HTTPSessionMgr r, Has HLogger r)
-  => W.Options -> Bool -> HTTP a -> R.RetryStatus -> m (Either HTTPErr a)
+  => W.Options -> Bool -> HTTP a -> Maybe ExtraContext -> R.RetryStatus -> m (Either HTTPErr a)
 -- the actual http action
-httpWithLogging opts isSecure (HTTP method url mPayload mFormParams optsMod bodyParser _ _) retryStatus = do
+httpWithLogging opts isSecure (HTTP method url mPayload mFormParams optsMod bodyParser _ _) exLog retryStatus = do
   (logF:: HLogger) <- asks getter
   -- log the request
   liftIO $ logF $ toEngineLog $ HTTPReq method url mPayload
@@ -310,7 +333,7 @@ httpWithLogging opts isSecure (HTTP method url mPayload mFormParams optsMod body
     Left e     -> liftIO $ logF $ toEngineLog $ HClient e
     Right resp ->
       --liftIO $ print "=======================>"
-      liftIO $ logF $ toEngineLog $ mkHTTPResp resp
+      liftIO $ logF $ toEngineLog $ HTTPRespExtra (mkHTTPResp resp) exLog
       --liftIO $ print "<======================="
 
   -- return the processed response

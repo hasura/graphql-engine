@@ -355,7 +355,7 @@ fetchMetadata = do
                   |] () False
     fetchEventTriggers =
      Q.listQ [Q.sql|
-              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.interval_seconds
+              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval
                FROM hdb_catalog.event_triggers e
               |] () False
 

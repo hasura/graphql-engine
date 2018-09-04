@@ -5,13 +5,13 @@ module Main where
 
 import           Ops
 
+import           Control.Monad.STM          (atomically)
 import           Data.Time.Clock            (getCurrentTime)
 import           Options.Applicative
 import           System.Environment         (lookupEnv)
 import           System.Exit                (exitFailure)
 
 import qualified Control.Concurrent         as C
-import           Control.Monad.STM          (atomically)
 import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Char8      as BC
 import qualified Data.ByteString.Lazy       as BL
@@ -23,9 +23,8 @@ import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
+import           Hasura.Events.HTTP         (HTTPSessionMgr (..))
 import           Hasura.Events.Lib
-
-import           Hasura.HTTP                (HTTPSessionMgr (..))
 import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
@@ -133,7 +132,8 @@ main =  do
   ci <- either ((>> exitFailure) . putStrLn . connInfoErrModifier)
     return $ mkConnInfo mEnvDbUrl rci
   printConnInfo ci
-  loggerCtx <- mkLoggerCtx defaultLoggerSettings
+  loggerCtx <- mkLoggerCtx $ defaultLoggerSettings True
+  hloggerCtx <- mkLoggerCtx $ defaultLoggerSettings False
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case ravenMode of
     ROServe (ServeOptions port cp isoL mRootDir mAccessKey corsCfg mWebHook mJwtSecret enableConsole) -> do
@@ -157,15 +157,14 @@ main =  do
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
 
-      maxEvThrdsM <- lookupEnv "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-      evPollSecM  <- lookupEnv "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-      let maxEvThrds = maybe defMaxEventThreads read maxEvThrdsM
-          evPollSec =  maybe defPollingIntervalSec read evPollSecM
+      maxEvThrds <- getMaxEventThreads
+      evPollSec  <- getEventsPollingSec
+
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evPollSec
       httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
       httpInsecureSession <- WrqS.newSessionControl Nothing (TLS.mkManagerSettings tlsInsecure Nothing)
 
-      void $ C.forkIO $ processEventQueue loggerCtx (HTTPSessionMgr httpSession httpInsecureSession) pool cacheRef eventEngineCtx
+      void $ C.forkIO $ processEventQueue hloggerCtx (HTTPSessionMgr httpSession httpInsecureSession) pool cacheRef eventEngineCtx
 
       Warp.runSettings warpSettings app
 
@@ -198,7 +197,20 @@ main =  do
       putStrLn "event_triggers: preparing data"
       res <- runTx ci unlockAllEvents
       either ((>> exitFailure) . printJSON) return res
-
+    getMaxEventThreads = do
+      mEnv <- lookupEnv "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+      let mRes = case mEnv of
+            Nothing  -> Just defaultMaxEventThreads
+            Just val -> readMaybe val::Maybe Int
+          eRes = maybe (Left "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE is not an integer") Right mRes
+      either ((>> exitFailure) . putStrLn) return eRes
+    getEventsPollingSec = do
+      mEnv <- lookupEnv "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+      let mRes = case mEnv of
+            Nothing  -> Just defaultPollingIntervalSec
+            Just val -> readMaybe val::Maybe Int
+          eRes = maybe (Left "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL is not an integer") Right mRes
+      either ((>> exitFailure) . putStrLn) return eRes
 
     cleanSuccess = putStrLn "successfully cleaned graphql-engine related data"
 

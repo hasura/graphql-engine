@@ -7,34 +7,37 @@ module Hasura.Events.Lib
   ( initEventEngineCtx
   , processEventQueue
   , unlockAllEvents
-  , defMaxEventThreads
-  , defPollingIntervalSec
+  , defaultMaxEventThreads
+  , defaultPollingIntervalSec
   ) where
 
 import           Control.Concurrent            (threadDelay)
 import           Control.Concurrent.Async      (async, waitAny)
-import qualified Control.Concurrent.STM.TQueue as TQ
 import           Control.Concurrent.STM.TVar
 import           Control.Monad.STM             (STM, atomically, retry)
-import qualified Control.Retry                 as R
-import qualified Data.Aeson                    as J
-import qualified Data.ByteString.Lazy          as B
 import           Data.Either                   (isLeft)
 import           Data.Has
-import qualified Data.HashMap.Strict           as M
 import           Data.Int                      (Int64)
 import           Data.IORef                    (IORef, readIORef)
-import qualified Data.TByteString              as TBS
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
-import qualified Hasura.GraphQL.Schema         as GS
-import           Hasura.HTTP
-import qualified Hasura.Logging                as L
+import           Hasura.Events.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+
+import qualified Control.Concurrent.STM.TQueue as TQ
+import qualified Control.Retry                 as R
+import qualified Data.Aeson                    as J
+import qualified Data.ByteString.Lazy          as B
+import qualified Data.HashMap.Strict           as M
+import qualified Data.TByteString              as TBS
+import qualified Data.Text                     as T
+import qualified Data.Time.Clock               as Time
+import qualified Database.PG.Query             as Q
+import qualified Hasura.GraphQL.Schema         as GS
+import qualified Hasura.Logging                as L
 import qualified Network.HTTP.Types            as N
 import qualified Network.Wreq                  as W
+
 
 type CacheRef = IORef (SchemaCache, GS.GCtxMap)
 
@@ -54,7 +57,7 @@ data Event
   -- , eDelivered   :: Bool
   -- , eError       :: Bool
   , eTries       :: Int64
-  -- , eCreatedAt   :: UTCTime
+  , eCreatedAt   :: Time.UTCTime
   }
 
 type UUID = T.Text
@@ -68,17 +71,17 @@ data Invocation
 
 data EventEngineCtx
   = EventEngineCtx
-  { eeCtxEventQueue         :: TQ.TQueue Event
-  , eeCtxEventThreads       :: TVar Int
-  , eeCtxMaxEventThreads    :: Int
-  , eeCtxPollingIntervalSec :: Int
+  { _eeCtxEventQueue         :: TQ.TQueue Event
+  , _eeCtxEventThreads       :: TVar Int
+  , _eeCtxMaxEventThreads    :: Int
+  , _eeCtxPollingIntervalSec :: Int
   }
 
-defMaxEventThreads :: Int
-defMaxEventThreads = 100
+defaultMaxEventThreads :: Int
+defaultMaxEventThreads = 100
 
-defPollingIntervalSec :: Int
-defPollingIntervalSec = 5
+defaultPollingIntervalSec :: Int
+defaultPollingIntervalSec = 1
 
 initEventEngineCtx :: Int -> Int -> STM EventEngineCtx
 initEventEngineCtx maxT pollI = do
@@ -88,7 +91,7 @@ initEventEngineCtx maxT pollI = do
 
 processEventQueue :: L.LoggerCtx -> HTTPSessionMgr -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
 processEventQueue logctx httpSess pool cacheRef eectx = do
-  putStrLn "starting events..."
+  putStrLn "event_trigger: starting workers"
   threads <- mapM async [pollThread , consumeThread]
   void $ waitAny threads
   where
@@ -178,7 +181,7 @@ tryWebhook
      )
   => Q.PGPool -> Event -> R.RetryStatus -> m (Either HTTPErr B.ByteString)
 tryWebhook pool e _ = do
-  (logger:: HLogger) <- asks getter
+  logger:: HLogger <- asks getter
   cacheRef::CacheRef <- asks getter
   (cache, _) <- liftIO $ readIORef cacheRef
   let eti = getEventTriggerInfoFromEvent cache e
@@ -186,7 +189,9 @@ tryWebhook pool e _ = do
     Nothing -> return $ Left $ HOther "table or event-trigger not found"
     Just et -> do
       let webhook = etiWebhook et
-      eeCtx::EventEngineCtx <- asks getter
+          createdAt = eCreatedAt e
+          eventId =  eId e
+      eeCtx <- asks getter
 
       -- wait for counter and then increment beforing making http
       liftIO $ atomically $ do
@@ -195,7 +200,7 @@ tryWebhook pool e _ = do
         if countThreads >= maxT
           then retry
           else modifyTVar' c (+1)
-      eitherResp <- runExceptT $ runHTTP W.defaults $ mkAnyHTTPPost (T.unpack webhook) (Just $ ePayload e)
+      eitherResp <- runExceptT $ runHTTP W.defaults (mkAnyHTTPPost (T.unpack webhook) (Just $ ePayload e)) (Just (ExtraContext createdAt eventId))
 
       --decrement counter once http is done
       liftIO $ atomically $ do
@@ -226,9 +231,9 @@ fetchEvents =
       UPDATE hdb_catalog.event_log
       SET locked = 't'
       WHERE id IN ( select id from hdb_catalog.event_log where delivered ='f' and error = 'f' and locked = 'f' LIMIT 100 )
-      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries
+      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
       |] () True
-  where uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries) = Event id' (QualifiedTable sn tn) trn payload tries
+  where uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries, created) = Event id' (QualifiedTable sn tn) trn payload tries created
 
 insertInvocation :: Invocation -> Q.TxE QErr ()
 insertInvocation invo = do

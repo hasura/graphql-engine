@@ -8,15 +8,16 @@
 module Hasura.RQL.DDL.Subscribe where
 
 import           Data.Aeson
-import qualified Data.FileEmbed      as FE
-import qualified Data.HashMap.Strict as HashMap
 import           Data.Int            (Int64)
-import qualified Data.Text           as T
-import qualified Data.Text.Encoding  as TE
-import qualified Database.PG.Query   as Q
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+
+import qualified Data.FileEmbed      as FE
+import qualified Data.HashMap.Strict as HashMap
+import qualified Data.Text           as T
+import qualified Data.Text.Encoding  as TE
+import qualified Database.PG.Query   as Q
 import qualified Text.Ginger         as TG
 
 data Ops = INSERT | UPDATE | DELETE deriving (Show)
@@ -41,7 +42,7 @@ parseGingerTmplt src = either parseE Right res
 
 triggerTmplt :: Maybe GingerTmplt
 triggerTmplt = case parseGingerTmplt $(FE.embedStringFile "src-rsr/trigger.sql") of
-  Left e      -> Nothing
+  Left _      -> Nothing
   Right tmplt -> Just tmplt
 
 getDropFuncSql :: Ops -> TriggerName -> T.Text
@@ -49,10 +50,11 @@ getDropFuncSql op trn = "DROP FUNCTION IF EXISTS"
                         <> " hdb_views.notify_skor_" <> trn <> "_" <> T.pack (show op) <> "()"
                         <> " CASCADE"
 
-getTriggerSql :: Ops -> TriggerName -> SchemaName -> TableName -> Maybe SubscribeOpSpec -> Maybe T.Text
-getTriggerSql op name sn tn spec =
+getTriggerSql :: Ops -> TriggerId -> TriggerName -> SchemaName -> TableName -> Maybe SubscribeOpSpec -> Maybe T.Text
+getTriggerSql op trid trn sn tn spec =
   let globalCtx =  HashMap.fromList [
-                    (T.pack "NAME", name)
+                    (T.pack "ID", trid)
+                  , (T.pack "NAME", trn)
                   , (T.pack "SCHEMA_NAME", getSchemaTxt sn)
                   , (T.pack "TABLE_NAME", getTableTxt tn)]
       opCtx = maybe HashMap.empty (createOpCtx op) spec
@@ -89,27 +91,34 @@ getTriggerSql op name sn tn spec =
     renderSql = TG.easyRender
 
 mkTriggerQ
-  :: TriggerName
+  :: TriggerId
+  -> TriggerName
   -> QualifiedTable
   -> TriggerOpsDef
   -> Q.TxE QErr ()
-mkTriggerQ name (QualifiedTable sn tn) (TriggerOpsDef insert update delete) = do
-  let msql = getTriggerSql INSERT name sn tn insert
-             <> getTriggerSql UPDATE name sn tn update
-             <> getTriggerSql DELETE name sn tn delete
+mkTriggerQ trid trn (QualifiedTable sn tn) (TriggerOpsDef insert update delete) = do
+  let msql = getTriggerSql INSERT trid trn sn tn insert
+             <> getTriggerSql UPDATE trid trn sn tn update
+             <> getTriggerSql DELETE trid trn sn tn delete
   case msql of
     Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder sql)
     Nothing -> throw500 "no trigger sql generated"
 
 addEventTriggerToCatalog :: QualifiedTable -> EventTriggerDef
-               -> Q.TxE QErr ()
+               -> Q.TxE QErr TriggerId
 addEventTriggerToCatalog (QualifiedTable sn tn) (EventTriggerDef name def webhook rconf) = do
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-                                  INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook, num_retries, interval_seconds)
+  ids <- map runIdentity <$> Q.listQE defaultTxErrorHandler [Q.sql|
+                                  INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook, num_retries, retry_interval)
                                   VALUES ($1, 'table', $2, $3, $4, $5, $6, $7)
+                                  RETURNING id
                                   |] (name, sn, tn, Q.AltJ $ toJSON def, webhook, rcNumRetries rconf, rcIntervalSec rconf) True
 
-  mkTriggerQ name (QualifiedTable sn tn) def
+  trid <- getTrid ids
+  mkTriggerQ trid name (QualifiedTable sn tn) def
+  return trid
+  where
+    getTrid []    = throw500 "could not create event-trigger"
+    getTrid (x:_) = return x
 
 
 delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
@@ -127,18 +136,18 @@ delEventTriggerFromCatalog trn = do
 fetchEventTrigger :: TriggerName -> Q.TxE QErr EventTrigger
 fetchEventTrigger trn = do
   triggers <- Q.listQE defaultTxErrorHandler [Q.sql|
-                                              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.interval_seconds
+                                              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval
                                               FROM hdb_catalog.event_triggers e
                                               WHERE e.name = $1
                                   |] (Identity trn) True
   getTrigger triggers
   where
     getTrigger []    = throw404 "Could not fetch event trigger"
-    getTrigger (x:_) = return $ EventTrigger (QualifiedTable sn tn) trn tDef webhook (RetryConf nr rint)
-      where (sn, tn, trn, Q.AltJ tDef, webhook, nr, rint) = x
+    getTrigger (x:_) = return $ EventTrigger (QualifiedTable sn tn) trn' tDef webhook (RetryConf nr rint)
+      where (sn, tn, trn', Q.AltJ tDef, webhook, nr, rint) = x
 
-subTableP1 :: (P1C m) => SubscribeTableQuery -> m (QualifiedTable, EventTriggerDef)
-subTableP1 (SubscribeTableQuery name qt insert update delete retryConf webhook) = do
+subTableP1 :: (P1C m) => CreateEventTriggerQuery -> m (QualifiedTable, EventTriggerDef)
+subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webhook) = do
   ti <- askTabInfo qt
   assertCols ti insert
   assertCols ti update
@@ -160,32 +169,32 @@ subTableP1 (SubscribeTableQuery name qt insert update delete retryConf webhook) 
 
 subTableP2 :: (P2C m) => QualifiedTable -> EventTriggerDef -> m ()
 subTableP2 qt q@(EventTriggerDef name def webhook rconf) = do
-  liftTx $ addEventTriggerToCatalog qt q
-  addEventTriggerToCache qt name def rconf webhook
+  trid <- liftTx $ addEventTriggerToCatalog qt q
+  addEventTriggerToCache qt trid name def rconf webhook
 
 subTableP2shim :: (P2C m) => (QualifiedTable, EventTriggerDef) -> m RespBody
 subTableP2shim (qt, etdef) = do
   subTableP2 qt etdef
   return successMsg
 
-instance HDBQuery SubscribeTableQuery where
-  type Phase1Res SubscribeTableQuery = (QualifiedTable, EventTriggerDef)
+instance HDBQuery CreateEventTriggerQuery where
+  type Phase1Res CreateEventTriggerQuery = (QualifiedTable, EventTriggerDef)
   phaseOne = subTableP1
   phaseTwo _ q = subTableP2shim q
   schemaCachePolicy = SCPReload
 
-unsubTableP1 :: (P1C m) => UnsubscribeTableQuery -> m ()
+unsubTableP1 :: (P1C m) => DeleteEventTriggerQuery -> m ()
 unsubTableP1 _ = return ()
 
-unsubTableP2 :: (P2C m) => UnsubscribeTableQuery -> m RespBody
-unsubTableP2 (UnsubscribeTableQuery name) = do
+unsubTableP2 :: (P2C m) => DeleteEventTriggerQuery -> m RespBody
+unsubTableP2 (DeleteEventTriggerQuery name) = do
   et <- liftTx $ fetchEventTrigger name
   delEventTriggerFromCache (etTable et) name
   liftTx $ delEventTriggerFromCatalog name
   return successMsg
 
-instance HDBQuery UnsubscribeTableQuery where
-  type Phase1Res UnsubscribeTableQuery = ()
+instance HDBQuery DeleteEventTriggerQuery where
+  type Phase1Res DeleteEventTriggerQuery = ()
   phaseOne = unsubTableP1
   phaseTwo q _ = unsubTableP2 q
   schemaCachePolicy = SCPReload
