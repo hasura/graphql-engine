@@ -213,14 +213,22 @@ class Main extends React.Component {
                       cos v love u {'<'}3
                     </li>
                     <li className={'dropdown-item'}>
-                      <div className={styles.socialIcon}>
-                        <img
-                          className="img img-responsive"
-                          src={githubicon}
-                          alt={'Github'}
-                        />
-                      </div>
-                      <div className={styles.pixelText}>Star us on Github</div>
+                      <a
+                        href="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <div className={styles.socialIcon}>
+                          <img
+                            className="img img-responsive"
+                            src={githubicon}
+                            alt={'Github'}
+                          />
+                        </div>
+                        <div className={styles.pixelText}>
+                          Star us on Github
+                        </div>
+                      </a>
                       {/*
                       <div className={styles.gitHubBtn}>
                         <iframe
@@ -235,14 +243,20 @@ class Main extends React.Component {
                       */}
                     </li>
                     <li className={'dropdown-item '}>
-                      <div className={styles.socialIcon}>
-                        <img
-                          className="img img-responsive"
-                          src={twittericon}
-                          alt={'Twitter'}
-                        />
-                      </div>
-                      <div className={styles.pixelText}>Tweet at us</div>
+                      <a
+                        href="https://twitter.com/intent/tweet?hashtags=hasura,graphql,postgres&amp;text=Get%20Instant%20Realtime%20GraphQL%20APIs%20on%20PostgreSQL&amp;url=https%3A%2F%2Fgithub.com%2F/hasura%2Fgraphql-engine"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <div className={styles.socialIcon}>
+                          <img
+                            className="img img-responsive"
+                            src={twittericon}
+                            alt={'Twitter'}
+                          />
+                        </div>
+                        <div className={styles.pixelText}>Tweet at us</div>
+                      </a>
                       {/*
                       <div className="btn-o">
                         <a
