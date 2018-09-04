@@ -38,6 +38,13 @@ import qualified Network.Wreq                  as W
 
 type CacheRef = IORef (SchemaCache, GS.GCtxMap)
 
+newtype EventInternalErr
+  = EventInternalErr QErr
+  deriving (Show, Eq)
+
+instance L.ToEngineLog EventInternalErr where
+  toEngineLog (EventInternalErr qerr) = (L.LevelError, "event-trigger", J.toJSON qerr )
+
 data Event
   = Event
   { eId          :: UUID
@@ -94,7 +101,7 @@ pollEvents logger pool eectx  = forever $ do
   let EventEngineCtx q _ _ pollI = eectx
   eventsOrError <- runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) fetchEvents
   case eventsOrError of
-    Left err     -> putStrLn $ show err
+    Left err     -> logger $ L.toEngineLog $ EventInternalErr err
     Right events -> atomically $ mapM_ (TQ.writeTQueue q) events
   threadDelay (pollI * 1000 * 1000)
 
@@ -104,7 +111,6 @@ consumeEvents logger httpSess pool cacheRef eectx  = forever $ do
   event <- atomically $ do
     let EventEngineCtx q _ _ _ = eectx
     TQ.readTQueue q
-  putStrLn "got event"
   async $ runReaderT  (processEvent pool event) (logger, httpSess, cacheRef, eectx)
 
 processEvent
@@ -117,14 +123,21 @@ processEvent
      )
   => Q.PGPool -> Event -> m ()
 processEvent pool e = do
+  (logger:: HLogger) <- asks getter
   retryPolicy <- getRetryPolicy e
   res <- R.retrying retryPolicy shouldRetry $ tryWebhook pool e
   case res of
     Left err   -> do
-      liftIO $ print err
-      void $ liftIO $ runExceptT $ runErrorQ pool e
+      liftIO $ logger $ L.toEngineLog err
+      errorRes <- liftIO $ runExceptT $ runErrorQ pool e
+      case errorRes of
+        Left err' -> liftIO $ logger $ L.toEngineLog $ EventInternalErr err'
+        Right _   -> return ()
     Right _ -> return ()
-  liftIO $ runExceptT $ runUnlockQ pool e
+  unlockRes <- liftIO $ runExceptT $ runUnlockQ pool e
+  case unlockRes of
+    Left err -> liftIO $ logger $ L.toEngineLog $ EventInternalErr err
+    Right _  -> return ()
   return ()
   where
     shouldRetry :: (Monad m ) => R.RetryStatus -> Either HTTPErr a -> m Bool
