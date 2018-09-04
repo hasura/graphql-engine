@@ -35,7 +35,7 @@ npm install
 ```bash
 export HASURA_GRAPHQL_ENGINE_URL='https://hge.herokuapp.com'
 export X_HASURA_ACCESS_KEY='<access_key>'
-export PG_CONNECTION_STRING='<postgres-connection-string>'
+export PG_CONNECTION_STRING='<postgres-connection-string>' #Only required for the direct SQL resolver
 ```
 
 3. Run the server
