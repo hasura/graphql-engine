@@ -132,7 +132,8 @@ main =  do
   ci <- either ((>> exitFailure) . putStrLn . connInfoErrModifier)
     return $ mkConnInfo mEnvDbUrl rci
   printConnInfo ci
-  loggerCtx <- mkLoggerCtx defaultLoggerSettings
+  loggerCtx <- mkLoggerCtx $ defaultLoggerSettings True
+  hloggerCtx <- mkLoggerCtx $ defaultLoggerSettings False
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case ravenMode of
     ROServe (ServeOptions port cp isoL mRootDir mAccessKey corsCfg mWebHook mJwtSecret enableConsole) -> do
@@ -163,7 +164,7 @@ main =  do
       httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
       httpInsecureSession <- WrqS.newSessionControl Nothing (TLS.mkManagerSettings tlsInsecure Nothing)
 
-      void $ C.forkIO $ processEventQueue loggerCtx (HTTPSessionMgr httpSession httpInsecureSession) pool cacheRef eventEngineCtx
+      void $ C.forkIO $ processEventQueue hloggerCtx (HTTPSessionMgr httpSession httpInsecureSession) pool cacheRef eventEngineCtx
 
       Warp.runSettings warpSettings app
 
