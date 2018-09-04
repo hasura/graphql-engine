@@ -109,6 +109,16 @@ You can notice above, how the same query now only includes the right slice of da
       }
     }
 
+Limit number of rows returned in a single request
+-------------------------------------------------
+
+We can set a hard limit on the maximum number of rows that will be returned in a single request for a table for a
+particular role.
+
+Head to the ``Permissions`` tab of the table and edit the ``Select`` permissions for the role:
+
+.. image:: ../../../img/graphql/manual/auth/limit-results.png
+
 Next, learn more about how permissions work
 -------------------------------------------
 
