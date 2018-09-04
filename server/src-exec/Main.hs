@@ -5,13 +5,13 @@ module Main where
 
 import           Ops
 
+import           Control.Monad.STM          (atomically)
 import           Data.Time.Clock            (getCurrentTime)
 import           Options.Applicative
 import           System.Environment         (lookupEnv)
 import           System.Exit                (exitFailure)
 
 import qualified Control.Concurrent         as C
-import           Control.Monad.STM          (atomically)
 import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Char8      as BC
 import qualified Data.ByteString.Lazy       as BL
@@ -23,9 +23,8 @@ import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
+import           Hasura.Events.HTTP         (HTTPSessionMgr (..))
 import           Hasura.Events.Lib
-
-import           Hasura.HTTP                (HTTPSessionMgr (..))
 import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)

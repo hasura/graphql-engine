@@ -13,28 +13,30 @@ module Hasura.Events.Lib
 
 import           Control.Concurrent            (threadDelay)
 import           Control.Concurrent.Async      (async, waitAny)
-import qualified Control.Concurrent.STM.TQueue as TQ
 import           Control.Concurrent.STM.TVar
 import           Control.Monad.STM             (STM, atomically, retry)
+import           Data.Either                   (isLeft)
+import           Data.Has
+import           Data.Int                      (Int64)
+import           Data.IORef                    (IORef, readIORef)
+import           Hasura.Events.HTTP
+import           Hasura.Prelude
+import           Hasura.RQL.Types
+import           Hasura.SQL.Types
+
+import qualified Control.Concurrent.STM.TQueue as TQ
 import qualified Control.Retry                 as R
 import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as B
-import           Data.Either                   (isLeft)
-import           Data.Has
 import qualified Data.HashMap.Strict           as M
-import           Data.Int                      (Int64)
-import           Data.IORef                    (IORef, readIORef)
 import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Hasura.GraphQL.Schema         as GS
-import           Hasura.HTTP
 import qualified Hasura.Logging                as L
-import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import qualified Network.HTTP.Types            as N
 import qualified Network.Wreq                  as W
+
 
 type CacheRef = IORef (SchemaCache, GS.GCtxMap)
 
@@ -88,7 +90,7 @@ initEventEngineCtx maxT pollI = do
 
 processEventQueue :: L.LoggerCtx -> HTTPSessionMgr -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
 processEventQueue logctx httpSess pool cacheRef eectx = do
-  putStrLn "starting events..."
+  putStrLn "event_trigger: starting workers"
   threads <- mapM async [pollThread , consumeThread]
   void $ waitAny threads
   where

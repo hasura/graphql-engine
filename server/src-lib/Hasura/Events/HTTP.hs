@@ -7,7 +7,7 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
-module Hasura.HTTP
+module Hasura.Events.HTTP
   ( HTTP(..)
   , HTTPSessionMgr(..)
   , mkHTTP

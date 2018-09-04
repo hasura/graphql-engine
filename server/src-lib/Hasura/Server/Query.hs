@@ -23,7 +23,6 @@ import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DDL.Subscribe
 import           Hasura.RQL.DML.Explain
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.DML.Returning     (encodeJSONVector)

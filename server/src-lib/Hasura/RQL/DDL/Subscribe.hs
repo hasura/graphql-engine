@@ -8,15 +8,16 @@
 module Hasura.RQL.DDL.Subscribe where
 
 import           Data.Aeson
-import qualified Data.FileEmbed      as FE
-import qualified Data.HashMap.Strict as HashMap
 import           Data.Int            (Int64)
-import qualified Data.Text           as T
-import qualified Data.Text.Encoding  as TE
-import qualified Database.PG.Query   as Q
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+
+import qualified Data.FileEmbed      as FE
+import qualified Data.HashMap.Strict as HashMap
+import qualified Data.Text           as T
+import qualified Data.Text.Encoding  as TE
+import qualified Database.PG.Query   as Q
 import qualified Text.Ginger         as TG
 
 data Ops = INSERT | UPDATE | DELETE deriving (Show)
