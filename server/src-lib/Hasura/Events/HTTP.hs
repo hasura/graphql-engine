@@ -26,7 +26,7 @@ module Hasura.Events.HTTP
   , isNetworkErrorHC
   , HLogger
   , mkHLogger
-  , ExtraLog(..)
+  , ExtraContext(..)
   ) where
 
 import qualified Control.Retry              as R
@@ -64,13 +64,13 @@ import           Hasura.RQL.Types.Subscribe
 
 type HLogger = (LogLevel, EngineLogType, J.Value) -> IO ()
 
-data ExtraLog
-  = ExtraLog
-  { elEventCreatedAt :: Maybe Time.UTCTime
-  , elEventId        :: Maybe TriggerId
+data ExtraContext
+  = ExtraContext
+  { elEventCreatedAt :: Time.UTCTime
+  , elEventId        :: TriggerId
   } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 2 J.snakeCase){J.omitNothingFields=True} ''ExtraLog)
+$(J.deriveJSON (J.aesonDrop 2 J.snakeCase){J.omitNothingFields=True} ''ExtraContext)
 
 data HTTPSessionMgr
   = HTTPSessionMgr
@@ -251,7 +251,7 @@ $(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPResp)
 data HTTPRespExtra
   = HTTPRespExtra
   { _hreResponse :: HTTPResp
-  , _hreContext  :: Maybe ExtraLog
+  , _hreContext  :: Maybe ExtraContext
   }
 
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPRespExtra)
@@ -279,7 +279,7 @@ runHTTP
      , Has HTTPSessionMgr r
      , Has HLogger r
      )
-  => W.Options -> HTTP a -> Maybe ExtraLog -> m a
+  => W.Options -> HTTP a -> Maybe ExtraContext -> m a
 runHTTP opts http exLog = do
   -- try the http request
   res <- R.retrying retryPol' retryFn' $ httpWithLogging opts True http exLog
@@ -298,7 +298,7 @@ runInsecureHTTP
      , Has HTTPSessionMgr r
      , Has HLogger r
      )
-  => W.Options -> HTTP a -> Maybe ExtraLog -> m a
+  => W.Options -> HTTP a -> Maybe ExtraContext -> m a
 runInsecureHTTP opts http exLog = do
   -- try the http request
   res <- R.retrying retryPol' retryFn' $ httpWithLogging opts False http exLog
@@ -312,7 +312,7 @@ runInsecureHTTP opts http exLog = do
 
 httpWithLogging
   :: (MonadReader r m, MonadIO m, Has HTTPSessionMgr r, Has HLogger r)
-  => W.Options -> Bool -> HTTP a -> Maybe ExtraLog -> R.RetryStatus -> m (Either HTTPErr a)
+  => W.Options -> Bool -> HTTP a -> Maybe ExtraContext -> R.RetryStatus -> m (Either HTTPErr a)
 -- the actual http action
 httpWithLogging opts isSecure (HTTP method url mPayload mFormParams optsMod bodyParser _ _) exLog retryStatus = do
   (logF:: HLogger) <- asks getter

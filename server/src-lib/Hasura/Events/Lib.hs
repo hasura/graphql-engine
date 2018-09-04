@@ -189,8 +189,8 @@ tryWebhook pool e _ = do
     Nothing -> return $ Left $ HOther "table or event-trigger not found"
     Just et -> do
       let webhook = etiWebhook et
-          mCreatedAt = Just $ eCreatedAt e
-          mEventId = Just $ eId e
+          createdAt = eCreatedAt e
+          eventId =  eId e
       eeCtx <- asks getter
 
       -- wait for counter and then increment beforing making http
@@ -200,7 +200,7 @@ tryWebhook pool e _ = do
         if countThreads >= maxT
           then retry
           else modifyTVar' c (+1)
-      eitherResp <- runExceptT $ runHTTP W.defaults (mkAnyHTTPPost (T.unpack webhook) (Just $ ePayload e)) (Just (ExtraLog mCreatedAt mEventId))
+      eitherResp <- runExceptT $ runHTTP W.defaults (mkAnyHTTPPost (T.unpack webhook) (Just $ ePayload e)) (Just (ExtraContext createdAt eventId))
 
       --decrement counter once http is done
       liftIO $ atomically $ do
