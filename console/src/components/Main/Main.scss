@@ -929,6 +929,51 @@
   line-height: 1.8;
   letter-spacing: 1px;
 }
+.help_dropdown_menu
+{
+  top: 43px;
+  right: 53px;
+  background-color: transparent;
+  box-shadow: none;
+  border: 0;
+  .help_dropdown_menu_container
+  {
+    width: 300px;
+    float: right;
+    background-color: #43495a;
+    padding: 15px;
+    position: relative;
+  }
+  li
+  {
+    display: block;
+    font-weight: 300;
+    text-transform: capitalize;
+    font-size: 14px;
+    color: #fff;
+    padding: 5px 0;
+    .displayBlock
+    {
+      display: inline-block !important;
+    }
+    a
+    {
+      color: #fff;
+      display: flex;
+      align-items: center;
+      img
+      {
+        width: 20px;
+        display: inline-block;
+        margin-left: 10px;
+      }
+    }
+    a:hover
+    {
+      text-decoration: none;
+    }
+  }
+}
 .dropdown_menu
 {
   top: 43px;
