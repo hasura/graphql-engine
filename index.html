@@ -37,7 +37,7 @@
       <div class="row h-100 justify-content-center align-items-center">
         <div class="col-12">
           <div class="input-group mb-3">
-            <input type="text" class="form-control" placeholder="Type somthing and click Send to trigger a notification" style="text-align: center;" id="text-input">
+            <input type="text" class="form-control" placeholder="Type something and click Send" style="text-align: center;" id="text-input">
           </div>
           <button class="btn btn-light" type="button" id="title-submit" onclick="submitText()">🔔 Send</button>
           <div class="error"><span id="error-text"></span></div>
@@ -50,17 +50,23 @@
         <div class="col-12">
           <div id="waiting-ui">
             <div class="loader"></div>
-            <div class="waiting-text"><h4>Watiting for notification</h4></div>
+            <div class="waiting-text"><h5>Watiting for notification</h5></div>
           </div>
           <div class="try-again">
             <button class="btn btn-light" type="button" id="try-again" onclick="tryAgain()">🔔 Try again</button>
           </div>
           <div><img id="arch" src="arch.png" /></div>
           <div class="notifications" style="display: none;">
-            <h4><u>Past notifications</u></h4>
-            <ul class="list-group" id="notifications-list">
-              <!-- <li class="list-group-item list-group-item-light">Cras justo odio</li> -->
-            </ul>
+            <div class="container">
+              <div class="row justify-content-center align-items-center">
+                <div class="col-4">
+                  <h5>Past notifications</h5>
+                  <ul class="list-group" id="notifications-list">
+                    <!-- <li class="list-group-item list-group-item-light">Cras justo odio</li> -->
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
