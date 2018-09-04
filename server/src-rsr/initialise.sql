@@ -194,7 +194,8 @@ CREATE TABLE hdb_catalog.event_triggers
   query TEXT,
   webhook TEXT NOT NULL,
   num_retries INTEGER DEFAULT 0,
-  interval_seconds INTEGER DEFAULT 10
+  retry_interval INTEGER DEFAULT 10,
+  comment TEXT
 );
 
 CREATE TABLE hdb_catalog.event_log

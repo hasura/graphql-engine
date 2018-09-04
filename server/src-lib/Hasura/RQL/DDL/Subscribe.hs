@@ -108,7 +108,7 @@ addEventTriggerToCatalog :: QualifiedTable -> EventTriggerDef
                -> Q.TxE QErr TriggerId
 addEventTriggerToCatalog (QualifiedTable sn tn) (EventTriggerDef name def webhook rconf) = do
   ids <- map runIdentity <$> Q.listQE defaultTxErrorHandler [Q.sql|
-                                  INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook, num_retries, interval_seconds)
+                                  INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook, num_retries, retry_interval)
                                   VALUES ($1, 'table', $2, $3, $4, $5, $6, $7)
                                   RETURNING id
                                   |] (name, sn, tn, Q.AltJ $ toJSON def, webhook, rcNumRetries rconf, rcIntervalSec rconf) True
