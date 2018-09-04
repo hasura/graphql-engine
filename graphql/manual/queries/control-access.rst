@@ -1,7 +1,10 @@
 Control access to certain data
 ==============================
 
-If you want to control access to sensitive fields in a table, use views to expose only the safe fields.
+If you want to control access to sensitive fields in a table, you can either use views to expose only the safe fields
+or :ref:`restrict access via permissions <restrict_columns>`.
+
+The following section describes setting up a view for this purpose.
 
 For example, to mask access to the ``article`` table and only expose the ``id``, ``title`` and ``rating`` columns
 from this table:

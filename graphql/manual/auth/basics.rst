@@ -109,6 +109,19 @@ You can notice above, how the same query now only includes the right slice of da
       }
     }
 
+.. _restrict_columns:
+
+Restrict access to certain columns
+----------------------------------
+
+We can restrict the columns of a table that a particular role has access to.
+
+Head to the ``Permissions`` tab of the table and edit the ``Select`` permissions for the role:
+
+.. image:: ../../../img/graphql/manual/auth/restrict-columns.png
+
+.. _limit_rows:
+
 Limit number of rows returned in a single request
 -------------------------------------------------
 
