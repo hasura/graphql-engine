@@ -914,7 +914,7 @@
   font-family: arcadeClassic;
   font-size: 10px;
   text-transform: uppercase;
-  padding: 10px 0;
+  padding-top: 10px;
   text-align: center;
   letter-spacing: 1px;
 }
@@ -922,7 +922,7 @@
 .pixelText1
 {
   font-family: arcadeClassic;
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
   padding: 10px 0;
   text-align: left;
@@ -938,13 +938,14 @@
   border: 0;
   .dropdown_menu_container
   {
-    width: 400px;
+    width: 430px;
     float: right;
     background-color: #0038d5;
     padding: 25px;
     position: relative;
     .closeDropDown
     {
+      cursor: pointer;
       position: absolute;
       top: 10px;
       left: 10px;
@@ -968,7 +969,7 @@
   .displayFlex
   {
     display: flex;
-    align-items: center;
+    // align-items: center;
     justify-content: center;
   }
   li
@@ -990,8 +991,8 @@
     }
     .socialIcon
     {
-      width: 100px;
-      height: 100px;
+      width: 110px;
+      height: 110px;
       border: 2px solid #fff;
       padding: 20px;
       display: flex;

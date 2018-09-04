@@ -10,12 +10,19 @@ import { loadServerVersion, checkServerUpdates } from './Actions';
 
 const semver = require('semver');
 
+import {
+  getLoveConsentState,
+  setLoveConsentState,
+} from '../Common/localStorageManager';
+
 class Main extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       showBannerNotification: false,
     };
+
+    this.state.loveConsentState = getLoveConsentState();
   }
   componentDidMount() {
     const { dispatch } = this.props;
@@ -40,6 +47,16 @@ class Main extends React.Component {
           console.error(e);
         }
       });
+    });
+  }
+  closeLoveIcon() {
+    const s = {
+      isDismissed: true,
+    };
+    setLoveConsentState(s);
+    this.setState({
+      ...this.state,
+      loveConsentState: { ...getLoveConsentState() },
     });
   }
   closeUpdateBanner() {
@@ -171,7 +188,7 @@ class Main extends React.Component {
             <div className={styles.clusterInfoWrapper}>
               {accessKeyHtml}
               <div className={styles.helpSection + ' ' + styles.settingsIcon}>
-                <Link to="/data/metadata">
+                <Link to="/metadata">
                   <i className={styles.question + ' fa fa-cog'} />
                 </Link>
               </div>
@@ -180,104 +197,111 @@ class Main extends React.Component {
                   <i className={styles.question + ' fa fa-question'} />
                 </div>
               </a>
-              <div
-                className={styles.shareSection + ' dropdown-toggle'}
-                data-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <img
-                  className={'img-responsive'}
-                  src={pixHeart}
-                  alt={'pix Heart'}
-                />
-                {/* <i className={styles.heart + ' fa fa-heart'} /> */}
-              </div>
-              <ul className={'dropdown-menu ' + styles.dropdown_menu}>
-                <div className={styles.dropdown_menu_container}>
-                  <div className={styles.closeDropDown}>
+              {!this.state.loveConsentState.isDismissed
+                ? [
+                  <div
+                    className={styles.shareSection + ' dropdown-toggle'}
+                    data-toggle="dropdown"
+                    aria-expanded="false"
+                  >
                     <img
                       className={'img-responsive'}
-                      src={closeIcon}
-                      alt={'closeIcon'}
+                      src={pixHeart}
+                      alt={'pix Heart'}
                     />
-                  </div>
-                  {/*
-                  <div className={styles.arrow_up_dropdown} />
-                  <div className={styles.graphqlHeartText}>
-                    Love GraphQL Engine? Shout it from the rooftops!
-                    <br />
-                    Or just spread the word{' '}
-                    <span role="img" aria-label="smile">
-                      😊
-                    </span>
-                  </div>
-                  */}
-                  <div className={styles.displayFlex}>
-                    <li className={styles.pixelText1}>
-                      Roses are red, Violets are blue; Hasura/GraphQL star/tweet
-                      cos v love u {'<'}3
-                    </li>
-                    <li className={'dropdown-item'}>
-                      <a
-                        href="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <div className={styles.socialIcon}>
-                          <img
-                            className="img img-responsive"
-                            src={githubicon}
-                            alt={'Github'}
-                          />
-                        </div>
-                        <div className={styles.pixelText}>
-                          Star us on Github
-                        </div>
-                      </a>
-                      {/*
-                      <div className={styles.gitHubBtn}>
-                        <iframe
-                          title="github"
-                          src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true"
-                          frameBorder="0"
-                          scrolling="0"
-                          width="100px"
-                          height="30px"
+                    {/* <i className={styles.heart + ' fa fa-heart'} /> */}
+                  </div>,
+                  <ul className={'dropdown-menu ' + styles.dropdown_menu}>
+                    <div className={styles.dropdown_menu_container}>
+                      <div className={styles.closeDropDown}>
+                        <img
+                          className={'img-responsive'}
+                          src={closeIcon}
+                          alt={'closeIcon'}
+                          onClick={this.closeLoveIcon.bind(this)}
                         />
                       </div>
-                      */}
-                    </li>
-                    <li className={'dropdown-item '}>
-                      <a
-                        href="https://twitter.com/intent/tweet?hashtags=hasura,graphql,postgres&amp;text=Get%20Instant%20Realtime%20GraphQL%20APIs%20on%20PostgreSQL&amp;url=https%3A%2F%2Fgithub.com%2F/hasura%2Fgraphql-engine"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <div className={styles.socialIcon}>
-                          <img
-                            className="img img-responsive"
-                            src={twittericon}
-                            alt={'Twitter'}
-                          />
-                        </div>
-                        <div className={styles.pixelText}>Tweet at us</div>
-                      </a>
                       {/*
-                      <div className="btn-o">
-                        <a
-                          href="https://twitter.com/intent/tweet?hashtags=hasura,graphql,postgres&amp;text=Get%20Instant%20Realtime%20GraphQL%20APIs%20on%20PostgreSQL&amp;url=https%3A%2F%2Fgithub.com%2F/hasura%2Fgraphql-engine"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles.twitterShare}
-                        >
-                          <button className="label">Tweet</button>
-                        </a>
+                      <div className={styles.arrow_up_dropdown} />
+                      <div className={styles.graphqlHeartText}>
+                        Love GraphQL Engine? Shout it from the rooftops!
+                        <br />
+                        Or just spread the word{' '}
+                        <span role="img" aria-label="smile">
+                          😊
+                        </span>
                       </div>
                       */}
-                    </li>
-                  </div>
-                </div>
-              </ul>
+                      <div className={styles.displayFlex}>
+                        <li className={styles.pixelText1}>
+                            Roses are red, Violets are blue; Hasura/GraphQL
+                            star/tweet cos v love u {'<'}3
+                        </li>
+                        <li className={'dropdown-item'}>
+                          <a
+                            href="https://github.com/hasura/graphql-engine"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <div className={styles.socialIcon}>
+                              <img
+                                className="img img-responsive"
+                                src={githubicon}
+                                alt={'Github'}
+                              />
+                            </div>
+                            <div className={styles.pixelText}>
+                                Star us on Github
+                            </div>
+                          </a>
+                          {/*
+                          <div className={styles.gitHubBtn}>
+                            <iframe
+                              title="github"
+                              src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true"
+                              frameBorder="0"
+                              scrolling="0"
+                              width="100px"
+                              height="30px"
+                            />
+                          </div>
+                          */}
+                        </li>
+                        <li className={'dropdown-item '}>
+                          <a
+                            href="https://twitter.com/intent/tweet?hashtags=hasura,graphql,postgres&amp;text=Get%20Instant%20Realtime%20GraphQL%20APIs%20on%20PostgreSQL&amp;url=https%3A%2F%2Fgithub.com%2F/hasura%2Fgraphql-engine"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <div className={styles.socialIcon}>
+                              <img
+                                className="img img-responsive"
+                                src={twittericon}
+                                alt={'Twitter'}
+                              />
+                            </div>
+                            <div className={styles.pixelText}>
+                                Tweet at us
+                            </div>
+                          </a>
+                          {/*
+                          <div className="btn-o">
+                            <a
+                              href="https://twitter.com/intent/tweet?hashtags=hasura,graphql,postgres&amp;text=Get%20Instant%20Realtime%20GraphQL%20APIs%20on%20PostgreSQL&amp;url=https%3A%2F%2Fgithub.com%2F/hasura%2Fgraphql-engine"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.twitterShare}
+                            >
+                              <button className="label">Tweet</button>
+                            </a>
+                          </div>
+                          */}
+                        </li>
+                      </div>
+                    </div>
+                  </ul>,
+                ]
+                : null}
             </div>
           </div>
           <div className={styles.main + ' container-fluid'}>{mainContent}</div>

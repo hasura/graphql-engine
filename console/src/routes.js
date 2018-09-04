@@ -15,6 +15,8 @@ import generatedApiExplorer from './components/ApiExplorer/ApiExplorerGenerator'
 
 import generatedLoginConnector from './components/Login/Login';
 
+import { metadataConnector } from './components/Services/Data';
+
 import globals from './Globals';
 
 const routes = store => {
@@ -56,6 +58,7 @@ const routes = store => {
             path="api-explorer"
             component={generatedApiExplorer(connect)}
           />
+          <Route path="metadata" component={metadataConnector(connect)} />
           {makeDataRouter}
         </Route>
       </Route>
