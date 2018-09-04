@@ -7,8 +7,8 @@ module Hasura.Events.Lib
   ( initEventEngineCtx
   , processEventQueue
   , unlockAllEvents
-  , defMaxEventThreads
-  , defPollingIntervalSec
+  , defaultMaxEventThreads
+  , defaultPollingIntervalSec
   ) where
 
 import           Control.Concurrent            (threadDelay)
@@ -76,11 +76,11 @@ data EventEngineCtx
   , eeCtxPollingIntervalSec :: Int
   }
 
-defMaxEventThreads :: Int
-defMaxEventThreads = 100
+defaultMaxEventThreads :: Int
+defaultMaxEventThreads = 100
 
-defPollingIntervalSec :: Int
-defPollingIntervalSec = 5
+defaultPollingIntervalSec :: Int
+defaultPollingIntervalSec = 1
 
 initEventEngineCtx :: Int -> Int -> STM EventEngineCtx
 initEventEngineCtx maxT pollI = do
