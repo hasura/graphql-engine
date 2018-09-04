@@ -5,28 +5,28 @@ import { getRemoteSchema } from './utils';
 import typeDefs from './customTypeDefs';
 import resolvers from './customResolvers';
 
-
-const HASURA_GRAPHQL_API_URL = process.env.HASURA_GRAPHQL_ENGINE_URL + '/v1alpha1/graphql';
+const HASURA_GRAPHQL_ENGINE_URL = process.env.HASURA_GRAPHQL_ENGINE_URL || `https://bazookaand.herokuapp.com`;
+const HASURA_GRAPHQL_API_URL = HASURA_GRAPHQL_ENGINE_URL + '/v1alpha1/graphql';
 const ACCESS_KEY = process.env.X_HASURA_ACCESS_KEY;
 
-const runServer = async () => { 
+const runServer = async () => {
 
   // make Hasura schema
   const executableHasuraSchema = await getRemoteSchema(
     HASURA_GRAPHQL_API_URL,
-    { 'x-hasura-access-key': ACCESS_KEY }
+    ACCESS_KEY && { 'x-hasura-access-key': ACCESS_KEY }
   );
-  
+
   // make executable schema out of custom resolvers and typedefs
-  const executableNewSchema = makeExecutableSchema({
+  const executableCustomSchema = makeExecutableSchema({
     typeDefs,
     resolvers,
   });
 
-  // merge custom resolvers with Hasura schema 
+  // merge custom resolvers with Hasura schema
   const finalSchema = mergeSchemas({
     schemas: [
-      executableNewSchema,
+      executableCustomSchema,
       executableHasuraSchema,
     ]
   });
@@ -37,7 +37,9 @@ const runServer = async () => {
   });
 
   // run the server
-  server.listen().then(({url}) => {
+  server.listen({
+    port: process.env.PORT || 4000
+  }).then(({url}) => {
     console.log('Server running. Open ' + url + ' to run queries.');
   });
 }

@@ -44,6 +44,36 @@ export PG_CONNECTION_STRING='<postgres-connection-string>'
 npm start
 ```
 
+## Deployment
+
+You can deploy this sample boilerplate with:
+
+1. Heroku
+2. Now
+3. Docker
+
+### Deploy with Heroku
+
+Press the button below to deploy with heroku:
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/custom-resolvers-boilerplate)
+
+### Deploy using [Now](https://zeit.co/now)
+
+Run these commands to instantly deploy this boilerplate using Now.
+
+```bash
+git clone https://github.com/hasura/custom-resolvers-boilerplate
+cd custom-resolvers-boilerplate
+now -e \
+  HASURA_GRAPHQL_ENGINE_URL='https://hge.herokuapp.com' -e \
+  X_HASURA_ACCESS_KEY='<access_key>'
+```
+
+### Deploy the docker image
+
+This project comes with a `Dockerfile`. You can deploy it wherever you wish.
+
 ## Writing custom resolvers
 
 We will use Apollo's `graphql-tools` library to make a working GraphQL Schema out of our custom resolvers. Finally, we will merge these resolvers with the existing Hasura schema so that it can eb queried under the same endpoint.
@@ -116,3 +146,40 @@ const resolvers = {
 };
 ```
 
+### Making a new schemna out of these custom resolvers
+
+Use `makeExecutableSchema()` function from the `graphql-tools` library to make a schema out of the type definitions and resolvers above.
+
+```js
+import { makeExecutableSchema } from 'graphql-tools';
+
+const executableCustomSchema = makeExecutableSchema({
+  typeDefs,
+  resolvers,
+});
+```
+
+### Merging with existing Hasura schema and serving it
+
+Merge these custom resolvers with the Hasura GraphQL Engine by using the `mergeSchemas()` function from the `graphql-tools` library.
+
+```js
+import { mergeSchemas } from 'graphql-tools';
+
+const newSchema = mergeSchemas({
+  schemas: [
+    executableCustomSchema,
+    executableHasuraSchema
+  ]
+});
+
+const server = new ApolloServer({
+  schema: newSchema
+});
+
+server.listen().then(({ url }) => {
+  console.log(`Server running at ${url}`);
+});
+```
+
+Check [this file](https://github.com/hasura/custom-resolvers-boilerplate/blob/master/src/index.js) to see how it is done.

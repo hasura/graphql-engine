@@ -35,7 +35,7 @@ const makeHttpAndWsLink = (uri, headers) => {
 
   // Create a WebSocket link:
   const wsLink = new WebSocketLink(new SubscriptionClient(
-    uri, 
+    uri,
     {
       reconnect: true,
       connectionParams: {

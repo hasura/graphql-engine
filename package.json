@@ -5,19 +5,15 @@
     "url": "https://github.com/praveenweb/graphql-custom-resolver-example"
   },
   "scripts": {
-    "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 nodemon -r esm src/index.js"
+    "start": "node -r esm src/index.js"
   },
   "dependencies": {
-    "apollo-fetch": "^0.7.0",
-    "apollo-link-context": "^1.0.8",
     "apollo-link-http": "^1.5.4",
     "apollo-link-ws": "^1.0.8",
     "apollo-server": "^2.0.6",
     "apollo-server-express": "^1.3.6",
     "apollo-utilities": "^1.0.20",
-    "body-parser": "^1.18.3",
     "esm": "^3.0.61",
-    "express": "^4.15.4",
     "graphql": "^0.13.2",
     "graphql-tools-with-subscriptions": "^1.0.0",
     "knex": "^0.15.2",
@@ -25,8 +21,5 @@
     "pg": "^7.4.3",
     "subscriptions-transport-ws": "^0.9.14",
     "ws": "^6.0.0"
-  },
-  "devDependencies": {
-    "nodemon": "^1.17.5"
   }
 }
