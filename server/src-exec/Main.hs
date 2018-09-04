@@ -198,12 +198,16 @@ main =  do
       either ((>> exitFailure) . printJSON) return res
     getMaxEventThreads = do
       mEnv <- lookupEnv "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-      let mRes = readMaybe =<< mEnv::Maybe Int
+      let mRes = case mEnv of
+            Nothing  -> Just defaultMaxEventThreads
+            Just val -> readMaybe val::Maybe Int
           eRes = maybe (Left "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE is not an integer") Right mRes
       either ((>> exitFailure) . putStrLn) return eRes
     getEventsPollingSec = do
       mEnv <- lookupEnv "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-      let mRes = readMaybe =<< mEnv::Maybe Int
+      let mRes = case mEnv of
+            Nothing  -> Just defaultPollingIntervalSec
+            Just val -> readMaybe val::Maybe Int
           eRes = maybe (Left "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL is not an integer") Right mRes
       either ((>> exitFailure) . putStrLn) return eRes
 
