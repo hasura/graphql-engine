@@ -22,13 +22,15 @@ update_at: Timestamp, default `now()`
 # Setup AWS Lambda
 Create a lambda function in AWS. This will be our webhook.
 
-1. Create a function.
-2. Select Node.js 6 as the runtime.
-3. Select "start from scratch".
-4. Add API gateway as a trigger.
-5. Add an API to API gateway.
-6. Add the code in `index.js` and save. The handler function of your lambda will be the `index.handler`.
-7. Add the following enviroment variables in your lambda config:
+1. In this folder, run `npm install`
+2. Then create a zip: `zip -r hge-mutation-trigger.zip .`
+3. Create a Lambda function.
+4. Select Node.js 6 as the runtime.
+5. Select "start from scratch".
+6. Add API gateway as a trigger.
+7. Add an API to API gateway.
+8. Upload the zip from previous step. The handler function of your lambda will be `index.handler`.
+9. Add the following enviroment variables in your lambda config:
    1. `ACCESS_KEY`: this is the access key you configured when you setup HGE.
    2. `HGE_ENDPOINT`: the URL on which you HGE instance is running.
 
