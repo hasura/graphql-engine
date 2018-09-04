@@ -126,22 +126,23 @@ processEvent pool e = do
   (logger:: HLogger) <- asks getter
   retryPolicy <- getRetryPolicy e
   res <- R.retrying retryPolicy shouldRetry $ tryWebhook pool e
-  case res of
-    Left err   -> do
-      liftIO $ logger $ L.toEngineLog err
-      errorRes <- liftIO $ runExceptT $ runErrorQ pool e
-      case errorRes of
-        Left err' -> liftIO $ logger $ L.toEngineLog $ EventInternalErr err'
-        Right _   -> return ()
-    Right _ -> return ()
+  liftIO $ either (errorFn logger) (void.return) res
   unlockRes <- liftIO $ runExceptT $ runUnlockQ pool e
-  case unlockRes of
-    Left err -> liftIO $ logger $ L.toEngineLog $ EventInternalErr err
-    Right _  -> return ()
-  return ()
+  liftIO $ either (logQErr logger) (void.return ) unlockRes
   where
     shouldRetry :: (Monad m ) => R.RetryStatus -> Either HTTPErr a -> m Bool
     shouldRetry _ eitherResp = return $ isLeft eitherResp
+
+    errorFn :: HLogger -> HTTPErr -> IO ()
+    errorFn logger err = do
+      logger $ L.toEngineLog err
+      errorRes <- runExceptT $ runErrorQ pool e
+      case errorRes of
+        Left err' -> logQErr logger err'
+        Right _   -> return ()
+
+    logQErr :: HLogger -> QErr -> IO ()
+    logQErr logger err = logger $ L.toEngineLog $ EventInternalErr err
 
 getRetryPolicy
  :: ( MonadReader r m
@@ -155,9 +156,7 @@ getRetryPolicy
 getRetryPolicy e = do
   cacheRef::CacheRef <- asks getter
   (cache, _) <- liftIO $ readIORef cacheRef
-  let table = eTable e
-      tableInfo = M.lookup table $ scTables cache
-      eti = M.lookup (eTriggerName e) =<< (tiEventTriggerInfoMap <$> tableInfo)
+  let eti = getEventTriggerInfoFromEvent cache e
       retryConfM = etiRetryConf <$> eti
       retryConf = fromMaybe (RetryConf 0 10) retryConfM
 
@@ -179,41 +178,47 @@ tryWebhook
      )
   => Q.PGPool -> Event -> R.RetryStatus -> m (Either HTTPErr B.ByteString)
 tryWebhook pool e _ = do
+  (logger:: HLogger) <- asks getter
   cacheRef::CacheRef <- asks getter
   (cache, _) <- liftIO $ readIORef cacheRef
-  let table = eTable e
-      tableInfo = M.lookup table $ scTables cache
-  case tableInfo of
-    Nothing -> return $ Left $ HOther "table not found"
-    Just ti -> do
-      let eti = M.lookup (eTriggerName e) $ tiEventTriggerInfoMap ti
-      case eti of
-        Nothing -> return $ Left $ HOther "event trigger not found"
-        Just et -> do
-          let webhook = etiWebhook et
-          eeCtx::EventEngineCtx <- asks getter
-          liftIO $ atomically $ do
-            let EventEngineCtx _ c maxT _ = eeCtx
-            countThreads <- readTVar c
-            if countThreads >= maxT
-              then retry
-              else modifyTVar' c (+1)
-          eitherResp <- runExceptT $ runHTTP W.defaults $ mkAnyHTTPPost (T.unpack webhook) (Just $ ePayload e)
-          liftIO $ atomically $ do
-            let EventEngineCtx _ c _ _ = eeCtx
-            modifyTVar' c (\v -> v - 1)
-          finally <- liftIO $ runExceptT $ case eitherResp of
-            Left err ->
-              case err of
-                HClient excp -> runFailureQ pool $ Invocation (eId e) 1000 (TBS.fromLBS $ J.encode $ show excp)
-                HParse _ detail -> runFailureQ pool $ Invocation (eId e) 1001 (TBS.fromLBS $ J.encode detail)
-                HStatus status detail -> runFailureQ pool $ Invocation (eId e) (fromIntegral $ N.statusCode status) detail
-                HOther detail -> runFailureQ pool $ Invocation (eId e) 500 (TBS.fromLBS $ J.encode detail)
-            Right resp -> runSuccessQ pool e $ Invocation (eId e) 200 (TBS.fromLBS resp)
-          case finally of
-            Left err -> liftIO $ print err
-            Right _  -> return ()
-          return eitherResp
+  let eti = getEventTriggerInfoFromEvent cache e
+  case eti of
+    Nothing -> return $ Left $ HOther "table or event-trigger not found"
+    Just et -> do
+      let webhook = etiWebhook et
+      eeCtx::EventEngineCtx <- asks getter
+
+      -- wait for counter and then increment beforing making http
+      liftIO $ atomically $ do
+        let EventEngineCtx _ c maxT _ = eeCtx
+        countThreads <- readTVar c
+        if countThreads >= maxT
+          then retry
+          else modifyTVar' c (+1)
+      eitherResp <- runExceptT $ runHTTP W.defaults $ mkAnyHTTPPost (T.unpack webhook) (Just $ ePayload e)
+
+      --decrement counter once http is done
+      liftIO $ atomically $ do
+        let EventEngineCtx _ c _ _ = eeCtx
+        modifyTVar' c (\v -> v - 1)
+
+      finally <- liftIO $ runExceptT $ case eitherResp of
+        Left err ->
+          case err of
+            HClient excp -> runFailureQ pool $ Invocation (eId e) 1000 (TBS.fromLBS $ J.encode $ show excp)
+            HParse _ detail -> runFailureQ pool $ Invocation (eId e) 1001 (TBS.fromLBS $ J.encode detail)
+            HStatus status detail -> runFailureQ pool $ Invocation (eId e) (fromIntegral $ N.statusCode status) detail
+            HOther detail -> runFailureQ pool $ Invocation (eId e) 500 (TBS.fromLBS $ J.encode detail)
+        Right resp -> runSuccessQ pool e $ Invocation (eId e) 200 (TBS.fromLBS resp)
+      case finally of
+        Left err -> liftIO $ logger $ L.toEngineLog $ EventInternalErr err
+        Right _  -> return ()
+      return eitherResp
+
+getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
+getEventTriggerInfoFromEvent sc e = let table = eTable e
+                                        tableInfo = M.lookup table $ scTables sc
+                                    in M.lookup (eTriggerName e) =<< (tiEventTriggerInfoMap <$> tableInfo)
 
 fetchEvents :: Q.TxE QErr [Event]
 fetchEvents =

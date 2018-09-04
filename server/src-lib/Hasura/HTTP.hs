@@ -82,6 +82,7 @@ instance J.ToJSON HTTPErr where
       )
     (HStatus st resp) ->
       ("status", J.toJSON (N.statusCode st, resp))
+    (HOther e) -> ("internal", J.toJSON $ show e)
     where
       toObj :: (T.Text, J.Value) -> J.Value
       toObj (k, v) = J.object [ "type" J..= k
