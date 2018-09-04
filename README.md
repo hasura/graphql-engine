@@ -34,7 +34,7 @@ TODO: add links for the 4 providers
 
 * A simple example to echo the trigger payload.
 
-* Make a GraphQL mutation on some data update, from the serverless function (*write related data back into the database*).
+* Make a GraphQL mutation on some data update/insert, from the serverless function (*write related data back into the database*).
 
 * Asynchronously send a FCM/APNS push notification.
 
