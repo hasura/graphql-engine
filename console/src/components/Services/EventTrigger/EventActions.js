@@ -3,6 +3,7 @@ import requestAction from '../../../utils/requestAction';
 import defaultState from './EventState';
 import processedEventsReducer from './ProcessedEvents/ViewActions';
 import pendingEventsReducer from './PendingEvents/ViewActions';
+import runningEventsReducer from './RunningEvents/ViewActions';
 import { showErrorNotification, showSuccessNotification } from './Notification';
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
@@ -14,6 +15,7 @@ const SET_TRIGGER = 'Event/SET_TRIGGER';
 const LOAD_TRIGGER_LIST = 'Event/LOAD_TRIGGER_LIST';
 const LOAD_PROCESSED_EVENTS = 'Event/LOAD_PROCESSED_EVENTS';
 const LOAD_PENDING_EVENTS = 'Event/LOAD_PENDING_EVENTS';
+const LOAD_RUNNING_EVENTS = 'Event/LOAD_RUNNING_EVENTS';
 const ACCESS_KEY_ERROR = 'Event/ACCESS_KEY_ERROR';
 const UPDATE_DATA_HEADERS = 'Event/UPDATE_DATA_HEADERS';
 const LISTING_TRIGGER = 'Event/LISTING_TRIGGER';
@@ -112,7 +114,7 @@ const loadPendingEvents = () => (dispatch, getState) => {
               '*',
               { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
             ],
-            where: { delivered: false, error: false },
+            where: { delivered: false, error: false, tries: 0 },
             order_by: ['-created_at'],
             limit: 10,
           },
@@ -123,6 +125,45 @@ const loadPendingEvents = () => (dispatch, getState) => {
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: LOAD_PENDING_EVENTS, data: data });
+    },
+    error => {
+      console.error('Failed to load triggers' + JSON.stringify(error));
+    }
+  );
+};
+
+const loadRunningEvents = () => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify({
+      type: 'select',
+      args: {
+        table: {
+          name: 'event_triggers',
+          schema: 'hdb_catalog',
+        },
+        columns: [
+          '*',
+          {
+            name: 'events',
+            columns: [
+              '*',
+              { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
+            ],
+            where: { delivered: false, error: false, tries: { $gte: 0 } },
+            order_by: ['-created_at'],
+            limit: 10,
+          },
+        ],
+      },
+    }),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      dispatch({ type: LOAD_RUNNING_EVENTS, data: data });
     },
     error => {
       console.error('Failed to load triggers' + JSON.stringify(error));
@@ -247,13 +288,13 @@ const deleteTrigger = triggerName => {
     // apply migrations
     const migrationName = 'delete_trigger_' + triggerName.trim();
     const payload = {
-      type: 'unsubscribe_table',
+      type: 'delete_event_trigger',
       args: {
         name: triggerName,
       },
     };
     const downPayload = {
-      type: 'subscribe_table',
+      type: 'create_event_trigger',
       args: {
         name: triggerName,
         table: {
@@ -329,6 +370,17 @@ const eventReducer = (state = defaultState, action) => {
       ),
     };
   }
+  if (action.type.indexOf('RunningEvents/') === 0) {
+    return {
+      ...state,
+      view: runningEventsReducer(
+        state.currentTrigger,
+        state.triggerList,
+        state.view,
+        action
+      ),
+    };
+  }
   switch (action.type) {
     case LOAD_TRIGGER_LIST:
       return {
@@ -351,6 +403,11 @@ const eventReducer = (state = defaultState, action) => {
         ...state,
         pendingEvents: action.data,
       };
+    case LOAD_RUNNING_EVENTS:
+      return {
+        ...state,
+        runningEvents: action.data,
+      };
     case SET_TRIGGER:
       return { ...state, currentTrigger: action.triggerName };
     case ACCESS_KEY_ERROR:
@@ -369,6 +426,7 @@ export {
   deleteTrigger,
   loadProcessedEvents,
   loadPendingEvents,
+  loadRunningEvents,
   handleMigrationErrors,
   makeMigrationCall,
   ACCESS_KEY_ERROR,

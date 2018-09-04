@@ -6,16 +6,16 @@ import { findTableFromRel } from '../utils';
 import dataHeaders from '../Common/Headers';
 
 /* ****************** View actions *************/
-const V_SET_DEFAULTS = 'PendingEvents/V_SET_DEFAULTS';
-const V_REQUEST_SUCCESS = 'PendingEvents/V_REQUEST_SUCCESS';
-const V_REQUEST_ERROR = 'PendingEvents/V_REQUEST_ERROR';
-const V_EXPAND_REL = 'PendingEvents/V_EXPAND_REL';
-const V_CLOSE_REL = 'PendingEvents/V_CLOSE_REL';
-const V_SET_ACTIVE = 'PendingEvents/V_SET_ACTIVE';
-const V_SET_QUERY_OPTS = 'PendingEvents/V_SET_QUERY_OPTS';
-const V_REQUEST_PROGRESS = 'PendingEvents/V_REQUEST_PROGRESS';
-const V_EXPAND_ROW = 'PendingEvents/V_EXPAND_ROW';
-const V_COLLAPSE_ROW = 'PendingEvents/V_COLLAPSE_ROW';
+const V_SET_DEFAULTS = 'RunningEvents/V_SET_DEFAULTS';
+const V_REQUEST_SUCCESS = 'RunningEvents/V_REQUEST_SUCCESS';
+const V_REQUEST_ERROR = 'RunningEvents/V_REQUEST_ERROR';
+const V_EXPAND_REL = 'RunningEvents/V_EXPAND_REL';
+const V_CLOSE_REL = 'RunningEvents/V_CLOSE_REL';
+const V_SET_ACTIVE = 'RunningEvents/V_SET_ACTIVE';
+const V_SET_QUERY_OPTS = 'RunningEvents/V_SET_QUERY_OPTS';
+const V_REQUEST_PROGRESS = 'RunningEvents/V_REQUEST_PROGRESS';
+const V_EXPAND_ROW = 'RunningEvents/V_EXPAND_ROW';
+const V_COLLAPSE_ROW = 'RunningEvents/V_COLLAPSE_ROW';
 
 /* ****************** action creators *************/
 
@@ -49,7 +49,6 @@ const vMakeRequest = () => {
       const finalAndClause = currentQuery.where.$and;
       finalAndClause.push({ delivered: false });
       finalAndClause.push({ error: false });
-      finalAndClause.push({ tries: 0 });
       currentQuery.columns[1].where = { $and: finalAndClause };
       currentQuery.where = { name: state.triggers.currentTrigger };
       countQuery.where.$and.push({
@@ -61,7 +60,7 @@ const vMakeRequest = () => {
         currentQuery.columns[1].where = {
           delivered: false,
           error: false,
-          tries: 0,
+          tries: { $gte: 0 },
         };
       }
       currentQuery.where = { name: state.triggers.currentTrigger };
@@ -69,7 +68,7 @@ const vMakeRequest = () => {
         trigger_name: state.triggers.currentTrigger,
         delivered: false,
         error: false,
-        tries: 0,
+        tries: { $gte: 0 },
       };
     }
 
@@ -361,8 +360,8 @@ const addQueryOptsActivePath = (query, queryStuff, activePath) => {
   return newQuery;
 };
 /* ****************** reducer ******************/
-const pendingEventsReducer = (triggerName, triggerList, viewState, action) => {
-  if (action.type.indexOf('PendingEvents/FilterQuery/') === 0) {
+const RunningEventsReducer = (triggerName, triggerList, viewState, action) => {
+  if (action.type.indexOf('RunningEvents/FilterQuery/') === 0) {
     return {
       ...viewState,
       curFilter: pendingFilterReducer(viewState.curFilter, action),
@@ -461,7 +460,7 @@ const pendingEventsReducer = (triggerName, triggerList, viewState, action) => {
   }
 };
 
-export default pendingEventsReducer;
+export default RunningEventsReducer;
 export {
   vSetDefaults,
   vMakeRequest,

@@ -463,7 +463,7 @@ class AddTrigger extends Component {
                           styles.add_mar_right + ' ' + styles.retryLabel
                         }
                       >
-                        Interval Seconds
+                        Retry Interval in seconds
                       </label>
                       <input
                         onChange={e => {

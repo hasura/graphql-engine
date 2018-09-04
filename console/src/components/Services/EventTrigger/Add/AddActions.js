@@ -55,7 +55,7 @@ const createTrigger = () => {
     // apply migrations
     const migrationName = 'create_trigger_' + triggerName.trim();
     const payload = {
-      type: 'subscribe_table',
+      type: 'create_event_trigger',
       args: {
         name: triggerName,
         table: { name: tableName, schema: currentSchema },
@@ -63,7 +63,7 @@ const createTrigger = () => {
       },
     };
     const downPayload = {
-      type: 'unsubscribe_table',
+      type: 'delete_event_trigger',
       args: {
         name: triggerName,
       },

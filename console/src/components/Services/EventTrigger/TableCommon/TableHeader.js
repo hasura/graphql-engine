@@ -63,6 +63,17 @@ const TableHeader = ({ triggerName, tabName, count }) => {
             </li>
             <li
               role="presentation"
+              className={tabName === 'running' ? styles.active : ''}
+            >
+              <Link
+                to={'/events/manage/triggers/' + triggerName + '/running'}
+                data-test="trigger-running-events"
+              >
+                Running {tabName === 'running' ? showCount : null}
+              </Link>
+            </li>
+            <li
+              role="presentation"
               className={tabName === 'settings' ? styles.active : ''}
               data-test="trigger-settings"
             >

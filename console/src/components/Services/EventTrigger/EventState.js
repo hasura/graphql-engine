@@ -37,6 +37,7 @@ const defaultState = {
   listingTrigger: [],
   processedEvents: [],
   pendingEvents: [],
+  runningEvents: [],
   schemaList: ['public'],
   currentSchema: 'public',
   accessKeyError: false,

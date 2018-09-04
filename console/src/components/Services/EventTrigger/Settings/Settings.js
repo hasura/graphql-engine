@@ -61,8 +61,8 @@ class Settings extends Component {
                 <tr>
                   <td>Retry Interval</td>
                   <td>
-                    {triggerSchema.interval_seconds}{' '}
-                    {triggerSchema.interval_seconds > 1 ? 'seconds' : 'second'}
+                    {triggerSchema.retry_interval}{' '}
+                    {triggerSchema.retry_interval > 1 ? 'seconds' : 'second'}
                   </td>
                 </tr>
                 <tr>
