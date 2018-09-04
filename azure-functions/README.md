@@ -1,32 +1,30 @@
-# Boilerplates for Azure Cloud Functions and Hasura GraphQL Engine's Event Triggers
-Sample cloud functions that can be triggered on changes in the database using GraphQL Engine's Event Triggers
+# Azure Cloud Function Node.js with Hasura GraphQL Mutation
 
 ## Pre-requisites
+1. You already have a Azure account with billing enabled.
+2. Install [azure-cli](https://github.com/Azure/azure-cli)
+3. Install [azure-functions-core-tools](https://github.com/Azure/azure-functions-core-tools)
 
-1. Azure  account with billing enabled
-2. `azure` CLI
-3. Hasura GraphQL Engine
+## Setup Cloud Function
+```bash
+az group create --name 'my-functions-group' --location southindia
 
-## 1. Create an Azure Project
+az storage account create --name 'myfunctionsstorage' --location southindia --resource-group 'my-functions-group' --sku Standard_LRS
 
-## 2. Create a cloud SQL Postgres instance
+az functionapp create --name 'myfunctionsapp' --storage-account 'myfunctionsstorage' --resource-group 'my-functions-group' --consumption-plan-location southindia
 
-?
+func azure login
+func azure subscriptions set 'Free Trial'
+func azure functionapp publish 'myfunctionsapp'
+```
 
-## 3. Create a Kubernetes cluster
+## Running locally
+func host start
 
-Needed?
+## Check Logs
+func azure functionapp logstream 'myfunctionsapp'
 
-## 4. Configure and deploy GraphQL Engine
+## Notes
+- Add a X-Function-Key header if Authorization level is enabled
+- Set Environment variables `X_HASURA_ACCESS_KEY` and `X_HASURA_GRAPHQL_ENGINE`
 
-AKS?
-
-Note down this IP as `HGE_IP`.
-
-the READMEs in the folder for each use-case for setting up the following:
-
-#. Schema design:  sample tables, relationships, etc. to be created using the Hasura GraphQL Engine's console.
-#. Cloud function: use the sample, working boilerplate example to setup a Lambda function.
-#. Trigger configuration: configure triggers for changes that will invoke a cloud function using the Hasura GraphQL Engine's console.
-
-Once the trigger is created, goto `Data -> profile -> Insert row` and add new data in your table(s) to test the configured event trigger out. Check out individual READMEs for more details.

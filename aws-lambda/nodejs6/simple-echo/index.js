@@ -12,15 +12,16 @@ exports.handler = (event, context, callback) => {
         statusCode: 200,
         body: ''
     };
+    console.log(request);
 
     if (request.table === "notes" && request.op === "INSERT") {
-        response.body = `New note ${request.data.id} inserted, with data: ${request.data.note}`;
+        response.body = `New note ${request.data.new.id} inserted, with data: ${request.data.new.note}`;
     }
     else if (request.table === "notes" && request.op === "UPDATE") {
-        response.body = `Note ${request.data.id} updated, with data: ${request.data.note}`;
+        response.body = `Note ${request.data.new.id} updated, with data: ${request.data.new.note}`;
     }
     else if (request.table === "notes" && request.op === "DELETE") {
-        response.body = `Note ${request.data.id} deleted, with data: ${request.data.note}`;
+        response.body = `Note ${request.data.old.id} deleted, with data: ${request.data.old.note}`;
     }
 
     callback(null, response);
