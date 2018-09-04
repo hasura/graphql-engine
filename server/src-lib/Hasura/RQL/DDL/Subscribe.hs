@@ -136,7 +136,7 @@ delEventTriggerFromCatalog trn = do
 fetchEventTrigger :: TriggerName -> Q.TxE QErr EventTrigger
 fetchEventTrigger trn = do
   triggers <- Q.listQE defaultTxErrorHandler [Q.sql|
-                                              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.interval_seconds
+                                              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval
                                               FROM hdb_catalog.event_triggers e
                                               WHERE e.name = $1
                                   |] (Identity trn) True
@@ -146,8 +146,8 @@ fetchEventTrigger trn = do
     getTrigger (x:_) = return $ EventTrigger (QualifiedTable sn tn) trn' tDef webhook (RetryConf nr rint)
       where (sn, tn, trn', Q.AltJ tDef, webhook, nr, rint) = x
 
-subTableP1 :: (P1C m) => SubscribeTableQuery -> m (QualifiedTable, EventTriggerDef)
-subTableP1 (SubscribeTableQuery name qt insert update delete retryConf webhook) = do
+subTableP1 :: (P1C m) => CreateEventTriggerQuery -> m (QualifiedTable, EventTriggerDef)
+subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webhook) = do
   ti <- askTabInfo qt
   assertCols ti insert
   assertCols ti update
@@ -177,24 +177,24 @@ subTableP2shim (qt, etdef) = do
   subTableP2 qt etdef
   return successMsg
 
-instance HDBQuery SubscribeTableQuery where
-  type Phase1Res SubscribeTableQuery = (QualifiedTable, EventTriggerDef)
+instance HDBQuery CreateEventTriggerQuery where
+  type Phase1Res CreateEventTriggerQuery = (QualifiedTable, EventTriggerDef)
   phaseOne = subTableP1
   phaseTwo _ q = subTableP2shim q
   schemaCachePolicy = SCPReload
 
-unsubTableP1 :: (P1C m) => UnsubscribeTableQuery -> m ()
+unsubTableP1 :: (P1C m) => DeleteEventTriggerQuery -> m ()
 unsubTableP1 _ = return ()
 
-unsubTableP2 :: (P2C m) => UnsubscribeTableQuery -> m RespBody
-unsubTableP2 (UnsubscribeTableQuery name) = do
+unsubTableP2 :: (P2C m) => DeleteEventTriggerQuery -> m RespBody
+unsubTableP2 (DeleteEventTriggerQuery name) = do
   et <- liftTx $ fetchEventTrigger name
   delEventTriggerFromCache (etTable et) name
   liftTx $ delEventTriggerFromCatalog name
   return successMsg
 
-instance HDBQuery UnsubscribeTableQuery where
-  type Phase1Res UnsubscribeTableQuery = ()
+instance HDBQuery DeleteEventTriggerQuery where
+  type Phase1Res DeleteEventTriggerQuery = ()
   phaseOne = unsubTableP1
   phaseTwo q _ = unsubTableP2 q
   schemaCachePolicy = SCPReload

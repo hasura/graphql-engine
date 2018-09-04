@@ -3,7 +3,7 @@
 {-# LANGUAGE TemplateHaskell   #-}
 
 module Hasura.RQL.Types.Subscribe
-  ( SubscribeTableQuery(..)
+  ( CreateEventTriggerQuery(..)
   , SubscribeOpSpec(..)
   , SubscribeColumns(..)
   , TriggerName
@@ -12,7 +12,7 @@ module Hasura.RQL.Types.Subscribe
   , EventTrigger(..)
   , EventTriggerDef(..)
   , RetryConf(..)
-  , UnsubscribeTableQuery(..)
+  , DeleteEventTriggerQuery(..)
   ) where
 
 import           Data.Aeson
@@ -56,8 +56,8 @@ data RetryConf
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
 
-data SubscribeTableQuery
-  = SubscribeTableQuery
+data CreateEventTriggerQuery
+  = CreateEventTriggerQuery
   { stqName      :: !T.Text
   , stqTable     :: !QualifiedTable
   , stqInsert    :: !(Maybe SubscribeOpSpec)
@@ -67,7 +67,7 @@ data SubscribeTableQuery
   , stgWebhook   :: !T.Text
   } deriving (Show, Eq, Lift)
 
-instance FromJSON SubscribeTableQuery where
+instance FromJSON CreateEventTriggerQuery where
   parseJSON (Object o) = do
     name      <- o .: "name"
     table     <- o .: "table"
@@ -79,10 +79,10 @@ instance FromJSON SubscribeTableQuery where
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
-    return $ SubscribeTableQuery name table insert update delete retryConf webhook
+    return $ CreateEventTriggerQuery name table insert update delete retryConf webhook
   parseJSON _ = fail "expecting an object"
 
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeTableQuery)
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)
 
 data TriggerOpsDef
   = TriggerOpsDef
@@ -93,12 +93,12 @@ data TriggerOpsDef
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
-data UnsubscribeTableQuery
-  = UnsubscribeTableQuery
+data DeleteEventTriggerQuery
+  = DeleteEventTriggerQuery
   { utqName :: !T.Text
   } deriving (Show, Eq, Lift)
 
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''UnsubscribeTableQuery)
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
 
 data EventTrigger
   = EventTrigger
