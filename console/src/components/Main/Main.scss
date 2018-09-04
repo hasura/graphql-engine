@@ -1,4 +1,5 @@
 @import "~bootstrap-sass/assets/stylesheets/bootstrap/variables";
+@import url('https://fonts.googleapis.com/css?family=Press+Start+2P');
 @import "../Common/Common.scss";
 
 .container {
@@ -844,10 +845,14 @@
 .shareSection {
   display: flex;
   align-items: center;
-  background-color: #fb5151;
+  background-color: #0038d5;
   padding: 15px;
   color: white;
   cursor: pointer;
+  img
+  {
+    width: 23px;
+  }
 }
 
 .secureSection {
@@ -894,20 +899,47 @@
   text-transform: none;
   text-align: center;
 }
+.pixelText
+{
+  font-family: 'Press Start 2P';
+  font-size: 5px;
+  text-transform: uppercase;
+  padding: 10px 0;
+  text-align: center;
+}
+.pixelText1
+{
+  font-family: 'Press Start 2P';
+  font-size: 8px;
+  text-transform: uppercase;
+  padding: 10px 0;
+  text-align: left;
+  line-height: 2;
+}
 .dropdown_menu
 {
-  top: 53px;
-  right: 10px;
+  top: 43px;
+  right: 0px;
   background-color: transparent;
   box-shadow: none;
   border: 0;
   .dropdown_menu_container
   {
-    width: 330px;
+    width: 400px;
     float: right;
-    background-color: #43495a;
-    padding: 15px;
-    border-radius: 5px;
+    background-color: #0038d5;
+    padding: 25px;
+    position: relative;
+    .closeDropDown
+    {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      img
+      {
+        width: 10px;
+      }
+    }
   }
   .arrow_up_dropdown
   {
@@ -925,33 +957,30 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 10px;
   }
   li
   {
     display: block;
     color: #fff;
     text-transform: none;
-    padding: 10px 0;
+    padding: 0px 15px;
     display: inline-block;
     padding-bottom: 0;
-    a
+    font-weight: 300;
+    .socialIcon
     {
-      padding: 0;
-    }
-    a:hover
-    {
-      text-decoration: none;
+      width: 90px;
+      height: 90px;
+      border: 2px solid #fff;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .gitHubBtn
     {
       height: 20px;
     }
-  }
-  li:hover
-  {
-    text-decoration: none;
-    color: #ccc;
   }
 }
 .twitterShare {
