@@ -178,7 +178,7 @@ tryWebhook
      )
   => Q.PGPool -> Event -> R.RetryStatus -> m (Either HTTPErr B.ByteString)
 tryWebhook pool e _ = do
-  (logger:: HLogger) <- asks getter
+  logger:: HLogger <- asks getter
   cacheRef::CacheRef <- asks getter
   (cache, _) <- liftIO $ readIORef cacheRef
   let eti = getEventTriggerInfoFromEvent cache e
@@ -186,7 +186,7 @@ tryWebhook pool e _ = do
     Nothing -> return $ Left $ HOther "table or event-trigger not found"
     Just et -> do
       let webhook = etiWebhook et
-      eeCtx::EventEngineCtx <- asks getter
+      eeCtx <- asks getter
 
       -- wait for counter and then increment beforing making http
       liftIO $ atomically $ do
