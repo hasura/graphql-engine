@@ -4,6 +4,7 @@ import Helmet from 'react-helmet';
 
 import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
+import ReloadMetadata from './ReloadMetadata';
 
 class Metadata extends Component {
   render() {
@@ -21,8 +22,6 @@ class Metadata extends Component {
             Hasura Metadata
           </h2>
           <div className="clearfix" />
-        </div>
-        <div className={metaDataStyles.intro_note}>
           <div className={metaDataStyles.content_width}>
             Hasura metadata stores information about your tables, relationships,
             and permissions that is used to generate the GraphQL schema and API.{' '}
@@ -35,9 +34,11 @@ class Metadata extends Component {
             </a>
             .
           </div>
-          <br />
+        </div>
+        <div className={metaDataStyles.intro_note}>
+          <h4>Import/Export</h4>
           <div className={metaDataStyles.content_width}>
-            You can export/import metadata as JSON.
+            Get Hasura metadata as JSON.
           </div>
         </div>
         <div className={metaDataStyles.display_inline}>
@@ -45,6 +46,16 @@ class Metadata extends Component {
         </div>
         <div className={metaDataStyles.display_inline}>
           <ImportMetadata {...this.props} />
+        </div>
+        <div className={metaDataStyles.intro_note}>
+          <h4>Reload metadata</h4>
+          <div className={metaDataStyles.content_width}>
+            Refresh Hasura metadata, typically required if you have changed the
+            underlying postgres.
+          </div>
+        </div>
+        <div>
+          <ReloadMetadata {...this.props} />
         </div>
       </div>
     );
