@@ -1,7 +1,10 @@
 @import "~bootstrap-sass/assets/stylesheets/bootstrap/variables";
 @import url('https://fonts.googleapis.com/css?family=Press+Start+2P');
 @import "../Common/Common.scss";
-
+@font-face {
+    font-family: arcadeClassic;
+    src: url(../../../static/fonts/ARCADECLASSIC.ttf);
+}
 .container {
   position: relative;
 }
@@ -908,20 +911,23 @@
 }
 .pixelText
 {
-  font-family: 'Press Start 2P';
-  font-size: 5px;
+  font-family: arcadeClassic;
+  font-size: 10px;
   text-transform: uppercase;
   padding: 10px 0;
   text-align: center;
+  letter-spacing: 1px;
 }
+
 .pixelText1
 {
-  font-family: 'Press Start 2P';
-  font-size: 8px;
+  font-family: arcadeClassic;
+  font-size: 10px;
   text-transform: uppercase;
   padding: 10px 0;
   text-align: left;
-  line-height: 2;
+  line-height: 1.8;
+  letter-spacing: 1px;
 }
 .dropdown_menu
 {
@@ -974,12 +980,20 @@
     display: inline-block;
     padding-bottom: 0;
     font-weight: 300;
+    a
+    {
+      color: #fff;
+    }
+    a:hover
+    {
+      color: #fff;
+    }
     .socialIcon
     {
-      width: 90px;
-      height: 90px;
+      width: 100px;
+      height: 100px;
       border: 2px solid #fff;
-      padding: 15px;
+      padding: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
