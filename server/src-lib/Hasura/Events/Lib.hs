@@ -117,14 +117,13 @@ processEvent
      )
   => Q.PGPool -> Event -> m ()
 processEvent pool e = do
-  liftIO $ runExceptT $ runLockQ pool e
   retryPolicy <- getRetryPolicy e
   res <- R.retrying retryPolicy shouldRetry $ tryWebhook pool e
   case res of
     Left err   -> do
       liftIO $ print err
       void $ liftIO $ runExceptT $ runErrorQ pool e
-    Right resp -> return ()
+    Right _ -> return ()
   liftIO $ runExceptT $ runUnlockQ pool e
   return ()
   where
