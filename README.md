@@ -67,14 +67,14 @@ git clone https://github.com/hasura/custom-resolvers-boilerplate
 cd custom-resolvers-boilerplate
 now -e \
   HASURA_GRAPHQL_ENGINE_URL='https://hge.herokuapp.com' -e \
-  X_HASURA_ACCESS_KEY='<access_key>'
+  X_HASURA_ACCESS_KEY='<access_key>' --npm
 ```
 
 ### Deploy the docker image
 
 This project comes with a `Dockerfile`. You can deploy it wherever you wish.
 
-## Writing custom resolvers
+## Implementation Details
 
 We will use Apollo's `graphql-tools` library to make a working GraphQL Schema out of our custom resolvers. Finally, we will merge these resolvers with the existing Hasura schema so that it can eb queried under the same endpoint.
 
