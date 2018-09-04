@@ -5,7 +5,6 @@ if (!("Notification" in window)) {
 
 const messaging = firebase.messaging();
 messaging.usePublicVapidKey('BOfaiApSMLjFZVYX_s4gRqb3LbrKcwtbv4qmIYtdZtE6UskL3rxCqBa5hCLhVXjFYsTmA6M8eW-aFZpTQa4B80E');
-
 const screens = ['#loading-screen', '#permission-screen', '#input-screen', '#waiting-screen'];
 
 function showScreen(name) {
@@ -35,22 +34,26 @@ function requestPermission() {
 }
 
 function getToken() {
-  // Get Instance ID token. Initially this makes a network call, once retrieved
-  // subsequent calls to getToken will return from cache.
-  messaging.getToken().then(function(currentToken) {
-    if (currentToken) {
-      saveToken(currentToken);
-      showScreen('#input-screen');
-      $('#text-input').focus();
-    } else {
-      // Show permission request.
-      console.log('No Instance ID token available. Request permission to generate one.');
-      // Show permission UI.
-      showScreen('#permission-screen');
-    }
-  }).catch(function(err) {
-    console.error('An error occurred while retrieving token. ', err);
-  });
+  navigator.serviceWorker.register('firebase-messaging-sw.js')
+    .then((registration) => {
+      messaging.useServiceWorker(registration);
+      // Get Instance ID token. Initially this makes a network call, once retrieved
+      // subsequent calls to getToken will return from cache.
+      messaging.getToken().then(function(currentToken) {
+        if (currentToken) {
+          saveToken(currentToken);
+          showScreen('#input-screen');
+          $('#text-input').focus();
+        } else {
+          // Show permission request.
+          console.log('No Instance ID token available. Request permission to generate one.');
+          // Show permission UI.
+          showScreen('#permission-screen');
+        }
+      }).catch(function(err) {
+        console.error('An error occurred while retrieving token. ', err);
+      });
+    });
 }
 
 // Callback fired if Instance ID token is updated.
