@@ -73,13 +73,13 @@ defMaxEventThreads = 100
 defPollingIntervalSec :: Int
 defPollingIntervalSec = 5
 
-initEventEngineCtx :: Int -> Int -> STM (TVar EventEngineCtx)
+initEventEngineCtx :: Int -> Int -> STM EventEngineCtx
 initEventEngineCtx maxT pollI = do
   q <- TQ.newTQueue
   c <- newTVar 0
-  newTVar (EventEngineCtx q c maxT pollI)
+  return $ EventEngineCtx q c maxT pollI
 
-processEventQueue :: L.LoggerCtx -> HTTPSessionMgr -> Q.PGPool -> CacheRef -> TVar EventEngineCtx -> IO ()
+processEventQueue :: L.LoggerCtx -> HTTPSessionMgr -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
 processEventQueue logctx httpSess pool cacheRef eectx = do
   putStrLn "starting events..."
   threads <- mapM async [pollThread , consumeThread]
@@ -89,9 +89,9 @@ processEventQueue logctx httpSess pool cacheRef eectx = do
     consumeThread = consumeEvents (mkHLogger logctx) httpSess pool cacheRef eectx
 
 pollEvents
-  :: HLogger -> Q.PGPool -> TVar EventEngineCtx -> IO ()
+  :: HLogger -> Q.PGPool -> EventEngineCtx -> IO ()
 pollEvents logger pool eectx  = forever $ do
-  EventEngineCtx q _ _ pollI <- readTVarIO eectx
+  let EventEngineCtx q _ _ pollI = eectx
   eventsOrError <- runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) fetchEvents
   case eventsOrError of
     Left err     -> putStrLn $ show err
@@ -99,10 +99,10 @@ pollEvents logger pool eectx  = forever $ do
   threadDelay (pollI * 1000 * 1000)
 
 consumeEvents
-  :: HLogger -> HTTPSessionMgr -> Q.PGPool -> CacheRef -> TVar EventEngineCtx -> IO ()
+  :: HLogger -> HTTPSessionMgr -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
 consumeEvents logger httpSess pool cacheRef eectx  = forever $ do
   event <- atomically $ do
-    EventEngineCtx q _ _ _ <- readTVar eectx
+    let EventEngineCtx q _ _ _ = eectx
     TQ.readTQueue q
   putStrLn "got event"
   async $ runReaderT  (processEvent pool event) (logger, httpSess, cacheRef, eectx)
@@ -113,7 +113,7 @@ processEvent
      , Has HTTPSessionMgr r
      , Has HLogger r
      , Has CacheRef r
-     , Has (TVar EventEngineCtx) r
+     , Has EventEngineCtx r
      )
   => Q.PGPool -> Event -> m ()
 processEvent pool e = do
@@ -134,7 +134,7 @@ processEvent pool e = do
          , Has HTTPSessionMgr r
          , Has HLogger r
          , Has CacheRef r
-         , Has (TVar EventEngineCtx) r
+         , Has EventEngineCtx r
          )
       => m (R.RetryPolicyM m)
     getRetryPolicy = do
@@ -157,7 +157,7 @@ processEvent pool e = do
          , Has HTTPSessionMgr r
          , Has HLogger r
          , Has CacheRef r
-         , Has (TVar EventEngineCtx) r
+         , Has EventEngineCtx r
          )
       => R.RetryStatus -> m (Either HTTPErr B.ByteString)
     tryWebhook _ = do
@@ -173,16 +173,16 @@ processEvent pool e = do
             Nothing -> return $ Left $ HOther "event trigger not found"
             Just et -> do
               let webhook = etiWebhook et
-              eeCtx::(TVar EventEngineCtx) <- asks getter
+              eeCtx::EventEngineCtx <- asks getter
               liftIO $ atomically $ do
-                EventEngineCtx _ c maxT _ <- readTVar eeCtx
+                let EventEngineCtx _ c maxT _ = eeCtx
                 countThreads <- readTVar c
                 if countThreads >= maxT
                   then retry
                   else modifyTVar' c (+1)
               eitherResp <- runExceptT $ runHTTP W.defaults $ mkAnyHTTPPost (T.unpack webhook) (Just $ ePayload e)
               liftIO $ atomically $ do
-                EventEngineCtx _ c _ _<- readTVar eeCtx
+                let EventEngineCtx _ c _ _ = eeCtx
                 modifyTVar' c (\v -> v - 1)
               finally <- liftIO $ runExceptT $ case eitherResp of
                 Left err ->
