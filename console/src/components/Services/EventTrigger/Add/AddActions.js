@@ -197,7 +197,21 @@ const setOperationSelection = (type, isChecked) => {
 const addTriggerReducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_DEFAULTS:
-      return { ...defaultState };
+      return {
+        ...defaultState,
+        operations: {
+          ...defaultState.operations,
+          insert: [],
+          update: [],
+          delete: [],
+        },
+        selectedOperations: {
+          ...defaultState.selectedOperations,
+          insert: false,
+          update: false,
+          delete: false,
+        },
+      };
     case MAKING_REQUEST:
       return {
         ...state,

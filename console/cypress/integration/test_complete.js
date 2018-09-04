@@ -10,6 +10,8 @@ import { runViewsTest } from './data/views/test';
 import { runRawSQLTests } from './data/raw-sql/test';
 import { run404Test } from './data/404/test';
 
+import { runCreateTriggerTests } from './events/create-trigger/test';
+
 import { runApiExplorerTests } from './api-explorer/graphql/test';
 
 const setup = () => {
@@ -27,6 +29,8 @@ const setup = () => {
 describe('Setup route', setup);
 
 runMigrationModeTests();
+
+runCreateTriggerTests();
 
 runCreateTableTests();
 

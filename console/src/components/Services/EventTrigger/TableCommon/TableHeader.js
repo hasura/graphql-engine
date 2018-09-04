@@ -45,7 +45,7 @@ const TableHeader = ({ triggerName, tabName, count }) => {
             >
               <Link
                 to={'/events/manage/triggers/' + triggerName + '/processed'}
-                data-test="table-browse-rows"
+                data-test="trigger-processed-events"
               >
                 Processed {tabName === 'processed' ? showCount : null}
               </Link>
@@ -56,7 +56,7 @@ const TableHeader = ({ triggerName, tabName, count }) => {
             >
               <Link
                 to={'/events/manage/triggers/' + triggerName + '/pending'}
-                data-test="table-insert-rows"
+                data-test="trigger-pending-events"
               >
                 Pending {tabName === 'pending' ? showCount : null}
               </Link>
@@ -64,6 +64,7 @@ const TableHeader = ({ triggerName, tabName, count }) => {
             <li
               role="presentation"
               className={tabName === 'settings' ? styles.active : ''}
+              data-test="trigger-settings"
             >
               <Link to={'/events/manage/triggers/' + triggerName + '/settings'}>
                 Settings

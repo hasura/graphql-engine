@@ -76,6 +76,7 @@ class Settings extends Component {
             <button
               onClick={handleDeleteTrigger}
               className={'btn btn-sm btn-danger'}
+              data-test="delete-trigger"
             >
               Delete Trigger
             </button>

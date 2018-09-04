@@ -39,7 +39,7 @@ class Schema extends Component {
             </h2>
             {migrationMode ? (
               <button
-                data-test="data-create-table"
+                data-test="data-create-trigger"
                 className={styles.yellow_button}
                 onClick={e => {
                   e.preventDefault();

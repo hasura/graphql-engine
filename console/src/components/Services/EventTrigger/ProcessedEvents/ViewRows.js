@@ -343,9 +343,14 @@ const ViewRows = ({
                         4
                       );
                       const finalRow = currentRow.logs[finalIndex];
-                      const finalResponse = JSON.parse(
-                        JSON.stringify(finalRow.response, null, 4)
-                      );
+                      // check if response is type JSON
+                      let finalResponse = finalRow.response;
+                      try {
+                        finalResponse = JSON.parse(finalRow.response);
+                        finalResponse = JSON.stringify(finalResponse, null, 4);
+                      } catch (e) {
+                        console.error(e);
+                      }
                       return (
                         <div style={{ padding: '20px' }}>
                           <Tabs
@@ -380,7 +385,7 @@ const ViewRows = ({
                                   mode="json"
                                   theme="github"
                                   name="response"
-                                  value={JSON.stringify(finalResponse, null, 4)}
+                                  value={finalResponse}
                                   minLines={4}
                                   maxLines={100}
                                   width="100%"

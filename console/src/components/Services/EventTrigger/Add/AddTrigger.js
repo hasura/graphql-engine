@@ -28,6 +28,10 @@ class AddTrigger extends Component {
     // set defaults
     this.props.dispatch(setDefaults());
   }
+  componentWillUnmount() {
+    // set defaults
+    this.props.dispatch(setDefaults());
+  }
 
   submitValidation(e) {
     // validations
@@ -206,7 +210,7 @@ class AddTrigger extends Component {
               </h4>
               <input
                 type="text"
-                data-test="tableName"
+                data-test="trigger-name"
                 placeholder="trigger_name"
                 required
                 pattern="^\w+$"
@@ -221,6 +225,7 @@ class AddTrigger extends Component {
               </h4>
               <select
                 onChange={updateTableList}
+                data-test="select-schema"
                 className={styles.selectTrigger + ' form-control'}
               >
                 {schemaList.map(s => {
@@ -244,6 +249,7 @@ class AddTrigger extends Component {
               </select>
               <select
                 onChange={updateTableSelection}
+                data-test="select-table"
                 required
                 className={
                   styles.selectTrigger + ' form-control ' + styles.add_mar_left
@@ -269,6 +275,7 @@ class AddTrigger extends Component {
                   <label>
                     <input
                       onChange={handleOperationSelection}
+                      data-test="insert-operation"
                       className={
                         styles.display_inline + ' ' + styles.add_mar_right
                       }
@@ -285,6 +292,7 @@ class AddTrigger extends Component {
                   <label>
                     <input
                       onChange={handleOperationSelection}
+                      data-test="update-operation"
                       className={
                         styles.display_inline + ' ' + styles.add_mar_right
                       }
@@ -301,6 +309,7 @@ class AddTrigger extends Component {
                   <label>
                     <input
                       onChange={handleOperationSelection}
+                      data-test="delete-operation"
                       className={
                         styles.display_inline + ' ' + styles.add_mar_right
                       }
@@ -331,6 +340,7 @@ class AddTrigger extends Component {
               <hr />
               <button
                 onClick={this.toggleAdvanced.bind(this)}
+                data-test="advanced-settings"
                 type="button"
                 className={'btn btn-default ' + styles.advancedToggleBtn}
               >
@@ -437,6 +447,7 @@ class AddTrigger extends Component {
                         onChange={e => {
                           dispatch(setRetryNum(e.target.value));
                         }}
+                        data-test="no-of-retries"
                         className={styles.display_inline + ' form-control'}
                         type="text"
                         placeholder="no of retries"
@@ -458,6 +469,7 @@ class AddTrigger extends Component {
                         onChange={e => {
                           dispatch(setRetryInterval(e.target.value));
                         }}
+                        data-test="interval-seconds"
                         className={styles.display_inline + ' form-control'}
                         type="text"
                         placeholder="interval time in seconds"
@@ -470,7 +482,7 @@ class AddTrigger extends Component {
               <button
                 type="submit"
                 className={`btn ${styles.yellow_button}`}
-                data-test="table-create"
+                data-test="trigger-create"
               >
                 {createBtnText}
               </button>
