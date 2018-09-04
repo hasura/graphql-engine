@@ -156,10 +156,9 @@ main =  do
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
 
-      maxEvThrdsM <- lookupEnv "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-      evPollSecM  <- lookupEnv "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-      let maxEvThrds = maybe defMaxEventThreads read maxEvThrdsM
-          evPollSec =  maybe defPollingIntervalSec read evPollSecM
+      maxEvThrds <- getMaxEventThreads
+      evPollSec  <- getEventsPollingSec
+
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evPollSec
       httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
       httpInsecureSession <- WrqS.newSessionControl Nothing (TLS.mkManagerSettings tlsInsecure Nothing)
@@ -197,7 +196,16 @@ main =  do
       putStrLn "event_triggers: preparing data"
       res <- runTx ci unlockAllEvents
       either ((>> exitFailure) . printJSON) return res
-
+    getMaxEventThreads = do
+      mEnv <- lookupEnv "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+      let mRes = readMaybe =<< mEnv::Maybe Int
+          eRes = maybe (Left "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE is not an integer") Right mRes
+      either ((>> exitFailure) . putStrLn) return eRes
+    getEventsPollingSec = do
+      mEnv <- lookupEnv "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+      let mRes = readMaybe =<< mEnv::Maybe Int
+          eRes = maybe (Left "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL is not an integer") Right mRes
+      either ((>> exitFailure) . putStrLn) return eRes
 
     cleanSuccess = putStrLn "successfully cleaned graphql-engine related data"
 
