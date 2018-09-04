@@ -60,7 +60,7 @@ const vMakeRequest = () => {
         currentQuery.columns[1].where = {
           delivered: false,
           error: false,
-          tries: { $gte: 0 },
+          tries: { $gt: 0 },
         };
       }
       currentQuery.where = { name: state.triggers.currentTrigger };
@@ -68,7 +68,7 @@ const vMakeRequest = () => {
         trigger_name: state.triggers.currentTrigger,
         delivered: false,
         error: false,
-        tries: { $gte: 0 },
+        tries: { $gt: 0 },
       };
     }
 

@@ -153,7 +153,7 @@ const loadRunningEvents = () => (dispatch, getState) => {
               '*',
               { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
             ],
-            where: { delivered: false, error: false, tries: { $gte: 0 } },
+            where: { delivered: false, error: false, tries: { $gt: 0 } },
             order_by: ['-created_at'],
             limit: 10,
           },
