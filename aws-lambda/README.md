@@ -2,6 +2,8 @@
 
 Sample cloud functions that can be triggered on changes in the database using GraphQL Engine's Event Triggers.
 
+These are organized in language-specific folders.
+
 **Checklist**
 
 | Folder name | Use-case       | Node.js | Python | Java | Go | C#
