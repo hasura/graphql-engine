@@ -4,15 +4,18 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Hasura.Events.Lib
-  ( initEventQueue
+  ( initEventEngineCtx
   , processEventQueue
   , unlockAllEvents
+  , defMaxEventThreads
+  , defPollingIntervalSec
   ) where
 
 import           Control.Concurrent            (threadDelay)
 import           Control.Concurrent.Async      (async, waitAny)
 import qualified Control.Concurrent.STM.TQueue as TQ
-import           Control.Monad.STM             (STM, atomically)
+import           Control.Concurrent.STM.TVar
+import           Control.Monad.STM             (STM, atomically, retry)
 import qualified Control.Retry                 as R
 import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as B
@@ -35,6 +38,13 @@ import qualified Network.Wreq                  as W
 
 type CacheRef = IORef (SchemaCache, GS.GCtxMap)
 
+newtype EventInternalErr
+  = EventInternalErr QErr
+  deriving (Show, Eq)
+
+instance L.ToEngineLog EventInternalErr where
+  toEngineLog (EventInternalErr qerr) = (L.LevelError, "event-trigger", J.toJSON qerr )
+
 data Event
   = Event
   { eId          :: UUID
@@ -56,40 +66,52 @@ data Invocation
   , iResponse :: TBS.TByteString
   }
 
-type EventQueue = TQ.TQueue Event
+data EventEngineCtx
+  = EventEngineCtx
+  { eeCtxEventQueue         :: TQ.TQueue Event
+  , eeCtxEventThreads       :: TVar Int
+  , eeCtxMaxEventThreads    :: Int
+  , eeCtxPollingIntervalSec :: Int
+  }
 
-initEventQueue :: STM EventQueue
-initEventQueue = TQ.newTQueue
+defMaxEventThreads :: Int
+defMaxEventThreads = 100
 
-processEventQueue :: L.LoggerCtx -> HTTPSessionMgr -> Q.PGPool -> CacheRef -> EventQueue -> IO ()
-processEventQueue logctx httpSess pool cacheRef q = do
+defPollingIntervalSec :: Int
+defPollingIntervalSec = 5
+
+initEventEngineCtx :: Int -> Int -> STM EventEngineCtx
+initEventEngineCtx maxT pollI = do
+  q <- TQ.newTQueue
+  c <- newTVar 0
+  return $ EventEngineCtx q c maxT pollI
+
+processEventQueue :: L.LoggerCtx -> HTTPSessionMgr -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
+processEventQueue logctx httpSess pool cacheRef eectx = do
   putStrLn "starting events..."
   threads <- mapM async [pollThread , consumeThread]
   void $ waitAny threads
   where
-    pollThread = pollEvents (mkHLogger logctx) pool q
-    consumeThread = consumeEvents (mkHLogger logctx) httpSess pool cacheRef q
-
+    pollThread = pollEvents (mkHLogger logctx) pool eectx
+    consumeThread = consumeEvents (mkHLogger logctx) httpSess pool cacheRef eectx
 
 pollEvents
-  :: HLogger -> Q.PGPool -> EventQueue -> IO ()
-pollEvents logger pool q = forever $ do
-  putStrLn "running poller"
+  :: HLogger -> Q.PGPool -> EventEngineCtx -> IO ()
+pollEvents logger pool eectx  = forever $ do
+  let EventEngineCtx q _ _ pollI = eectx
   eventsOrError <- runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) fetchEvents
   case eventsOrError of
-    Left err     -> putStrLn $ show err
-    Right events -> do
-      putStrLn "fetched events"
-      atomically $ mapM_ (TQ.writeTQueue q) events
-  threadDelay (5 * 1000 * 1000)
+    Left err     -> logger $ L.toEngineLog $ EventInternalErr err
+    Right events -> atomically $ mapM_ (TQ.writeTQueue q) events
+  threadDelay (pollI * 1000 * 1000)
 
 consumeEvents
-  :: HLogger -> HTTPSessionMgr -> Q.PGPool -> CacheRef -> EventQueue -> IO ()
-consumeEvents logger httpSess pool cacheRef q  = forever $ do
-  putStrLn "running consumer"
-  event <- atomically $ TQ.readTQueue q
-  putStrLn "got event"
-  async $ runReaderT  (processEvent pool event) (logger, httpSess, cacheRef)
+  :: HLogger -> HTTPSessionMgr -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
+consumeEvents logger httpSess pool cacheRef eectx  = forever $ do
+  event <- atomically $ do
+    let EventEngineCtx q _ _ _ = eectx
+    TQ.readTQueue q
+  async $ runReaderT  (processEvent pool event) (logger, httpSess, cacheRef, eectx)
 
 processEvent
   :: ( MonadReader r m
@@ -97,94 +119,106 @@ processEvent
      , Has HTTPSessionMgr r
      , Has HLogger r
      , Has CacheRef r
+     , Has EventEngineCtx r
      )
   => Q.PGPool -> Event -> m ()
 processEvent pool e = do
-  liftIO $ runExceptT $ runLockQ e
-  retryPolicy <- getRetryPolicy
-  res <- R.retrying retryPolicy shouldRetry tryWebhook
-  case res of
-    Left err   -> do
-      liftIO $ print err
-      void $ liftIO $ runExceptT $ runErrorQ e
-    Right resp -> return ()
-  liftIO $ runExceptT $ runUnlockQ e
-  return ()
+  (logger:: HLogger) <- asks getter
+  retryPolicy <- getRetryPolicy e
+  res <- R.retrying retryPolicy shouldRetry $ tryWebhook pool e
+  liftIO $ either (errorFn logger) (void.return) res
+  unlockRes <- liftIO $ runExceptT $ runUnlockQ pool e
+  liftIO $ either (logQErr logger) (void.return ) unlockRes
   where
-    getRetryPolicy
-      :: ( MonadReader r m
-         , MonadIO m
-         , Has HTTPSessionMgr r
-         , Has HLogger r
-         , Has CacheRef r
-         )
-      => m (R.RetryPolicyM m)
-    getRetryPolicy = do
-      cacheRef::CacheRef <- asks getter
-      (cache, _) <- liftIO $ readIORef cacheRef
-      let table = eTable e
-          tableInfo = M.lookup table $ scTables cache
-          eti = M.lookup (eTriggerName e) =<< (tiEventTriggerInfoMap <$> tableInfo)
-          retryConfM = etiRetryConf <$> eti
-          retryConf = fromMaybe (RetryConf 0 10) retryConfM
-
-      let remainingRetries = max 0 $ fromIntegral (rcNumRetries retryConf) - getTries
-          delay = fromIntegral (rcIntervalSec retryConf) * 1000000
-          policy = R.constantDelay delay <> R.limitRetries remainingRetries
-      return policy
-
-    tryWebhook
-      :: ( MonadReader r m
-         , MonadIO m
-         , Has HTTPSessionMgr r
-         , Has HLogger r
-         , Has CacheRef r
-         )
-      => R.RetryStatus -> m (Either HTTPErr B.ByteString)
-    tryWebhook _ = do
-      cacheRef::CacheRef <- asks getter
-      (cache, _) <- liftIO $ readIORef cacheRef
-      let table = eTable e
-          tableInfo = M.lookup table $ scTables cache
-      case tableInfo of
-        Nothing -> return $ Left $ HOther "table not found"
-        Just ti -> do
-          let eti = M.lookup (eTriggerName e) $ tiEventTriggerInfoMap ti
-          case eti of
-            Nothing -> return $ Left $ HOther "event trigger not found"
-            Just et -> do
-              let webhook = etiWebhook et
-              eitherResp <- runExceptT $ runHTTP W.defaults $ mkAnyHTTPPost (T.unpack webhook) (Just $ ePayload e)
-              finally <- liftIO $ runExceptT $ case eitherResp of
-                Left err ->
-                  case err of
-                    HClient excp -> runFailureQ $ Invocation (eId e) 1000 (TBS.fromLBS $ J.encode $ show excp)
-                    HParse _ detail -> runFailureQ $ Invocation (eId e) 1001 (TBS.fromLBS $ J.encode detail)
-                    HStatus status detail -> runFailureQ $ Invocation (eId e) (fromIntegral $ N.statusCode status) detail
-                    HOther detail -> runFailureQ $ Invocation (eId e) 500 (TBS.fromLBS $ J.encode detail)
-                Right resp -> runSuccessQ e $ Invocation (eId e) 200 (TBS.fromLBS resp)
-              case finally of
-                Left err -> liftIO $ print err
-                Right _  -> return ()
-              return eitherResp
-
     shouldRetry :: (Monad m ) => R.RetryStatus -> Either HTTPErr a -> m Bool
     shouldRetry _ eitherResp = return $ isLeft eitherResp
 
-    runFailureQ invo = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ insertInvocation invo
+    errorFn :: HLogger -> HTTPErr -> IO ()
+    errorFn logger err = do
+      logger $ L.toEngineLog err
+      errorRes <- runExceptT $ runErrorQ pool e
+      case errorRes of
+        Left err' -> logQErr logger err'
+        Right _   -> return ()
 
-    runSuccessQ e' invo' =  Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
-      insertInvocation invo'
-      markDelivered e'
+    logQErr :: HLogger -> QErr -> IO ()
+    logQErr logger err = logger $ L.toEngineLog $ EventInternalErr err
 
-    runErrorQ e'' = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ markError e''
+getRetryPolicy
+ :: ( MonadReader r m
+    , MonadIO m
+    , Has HTTPSessionMgr r
+    , Has HLogger r
+    , Has CacheRef r
+    , Has EventEngineCtx r
+    )
+ => Event -> m (R.RetryPolicyM m)
+getRetryPolicy e = do
+  cacheRef::CacheRef <- asks getter
+  (cache, _) <- liftIO $ readIORef cacheRef
+  let eti = getEventTriggerInfoFromEvent cache e
+      retryConfM = etiRetryConf <$> eti
+      retryConf = fromMaybe (RetryConf 0 10) retryConfM
 
-    runLockQ e'' = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ lockEvent e''
-
-    runUnlockQ e'' = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ unlockEvent e''
-
+  let remainingRetries = max 0 $ fromIntegral (rcNumRetries retryConf) - getTries
+      delay = fromIntegral (rcIntervalSec retryConf) * 1000000
+      policy = R.constantDelay delay <> R.limitRetries remainingRetries
+  return policy
+  where
     getTries :: Int
     getTries = fromIntegral $ eTries e
+
+tryWebhook
+  :: ( MonadReader r m
+     , MonadIO m
+     , Has HTTPSessionMgr r
+     , Has HLogger r
+     , Has CacheRef r
+     , Has EventEngineCtx r
+     )
+  => Q.PGPool -> Event -> R.RetryStatus -> m (Either HTTPErr B.ByteString)
+tryWebhook pool e _ = do
+  (logger:: HLogger) <- asks getter
+  cacheRef::CacheRef <- asks getter
+  (cache, _) <- liftIO $ readIORef cacheRef
+  let eti = getEventTriggerInfoFromEvent cache e
+  case eti of
+    Nothing -> return $ Left $ HOther "table or event-trigger not found"
+    Just et -> do
+      let webhook = etiWebhook et
+      eeCtx::EventEngineCtx <- asks getter
+
+      -- wait for counter and then increment beforing making http
+      liftIO $ atomically $ do
+        let EventEngineCtx _ c maxT _ = eeCtx
+        countThreads <- readTVar c
+        if countThreads >= maxT
+          then retry
+          else modifyTVar' c (+1)
+      eitherResp <- runExceptT $ runHTTP W.defaults $ mkAnyHTTPPost (T.unpack webhook) (Just $ ePayload e)
+
+      --decrement counter once http is done
+      liftIO $ atomically $ do
+        let EventEngineCtx _ c _ _ = eeCtx
+        modifyTVar' c (\v -> v - 1)
+
+      finally <- liftIO $ runExceptT $ case eitherResp of
+        Left err ->
+          case err of
+            HClient excp -> runFailureQ pool $ Invocation (eId e) 1000 (TBS.fromLBS $ J.encode $ show excp)
+            HParse _ detail -> runFailureQ pool $ Invocation (eId e) 1001 (TBS.fromLBS $ J.encode detail)
+            HStatus status detail -> runFailureQ pool $ Invocation (eId e) (fromIntegral $ N.statusCode status) detail
+            HOther detail -> runFailureQ pool $ Invocation (eId e) 500 (TBS.fromLBS $ J.encode detail)
+        Right resp -> runSuccessQ pool e $ Invocation (eId e) 200 (TBS.fromLBS resp)
+      case finally of
+        Left err -> liftIO $ logger $ L.toEngineLog $ EventInternalErr err
+        Right _  -> return ()
+      return eitherResp
+
+getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
+getEventTriggerInfoFromEvent sc e = let table = eTable e
+                                        tableInfo = M.lookup table $ scTables sc
+                                    in M.lookup (eTriggerName e) =<< (tiEventTriggerInfoMap <$> tableInfo)
 
 fetchEvents :: Q.TxE QErr [Event]
 fetchEvents =
@@ -192,10 +226,9 @@ fetchEvents =
       UPDATE hdb_catalog.event_log
       SET locked = 't'
       WHERE id IN ( select id from hdb_catalog.event_log where delivered ='f' and error = 'f' and locked = 'f' LIMIT 100 )
-      RETURNING  id, schema_name, table_name, trigger_name, payload::json, tries
+      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries
       |] () True
   where uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries) = Event id' (QualifiedTable sn tn) trn payload tries
-
 
 insertInvocation :: Invocation -> Q.TxE QErr ()
 insertInvocation invo = do
@@ -247,3 +280,20 @@ unlockAllEvents =
           UPDATE hdb_catalog.event_log
           SET locked = 'f'
           |] () False
+
+runFailureQ :: Q.PGPool -> Invocation -> ExceptT QErr IO ()
+runFailureQ pool invo = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ insertInvocation invo
+
+runSuccessQ :: Q.PGPool -> Event -> Invocation -> ExceptT QErr IO ()
+runSuccessQ pool e invo =  Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+  insertInvocation invo
+  markDelivered e
+
+runErrorQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
+runErrorQ pool  e = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ markError e
+
+runLockQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
+runLockQ pool e = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ lockEvent e
+
+runUnlockQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
+runUnlockQ pool e = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ unlockEvent e

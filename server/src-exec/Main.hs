@@ -23,8 +23,8 @@ import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
-import           Hasura.Events.Lib          (initEventQueue, processEventQueue,
-                                             unlockAllEvents)
+import           Hasura.Events.Lib
+
 import           Hasura.HTTP                (HTTPSessionMgr (..))
 import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
@@ -157,11 +157,15 @@ main =  do
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
 
-      eventQueue <- atomically initEventQueue
+      maxEvThrdsM <- lookupEnv "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+      evPollSecM  <- lookupEnv "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+      let maxEvThrds = maybe defMaxEventThreads read maxEvThrdsM
+          evPollSec =  maybe defPollingIntervalSec read evPollSecM
+      eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evPollSec
       httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
       httpInsecureSession <- WrqS.newSessionControl Nothing (TLS.mkManagerSettings tlsInsecure Nothing)
 
-      void $ C.forkIO $ processEventQueue loggerCtx (HTTPSessionMgr httpSession httpInsecureSession) pool cacheRef eventQueue
+      void $ C.forkIO $ processEventQueue loggerCtx (HTTPSessionMgr httpSession httpInsecureSession) pool cacheRef eventEngineCtx
 
       Warp.runSettings warpSettings app
 
