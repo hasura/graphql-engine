@@ -1,6 +1,6 @@
-description: Upserts article data via GraphQL mutation (Error 04)
+description: Upserts article data via GraphQL mutation with empty update columns
 url: /v1alpha1/graphql
-status: 400
+status: 200
 query:
   query: |
     mutation insert_article {
@@ -16,7 +16,8 @@ query:
           }
           ],
         on_conflict: {
-          constraint: article_pkey
+          constraint: article_pkey,
+          update_columns: []
         }
       ) {
         returning {

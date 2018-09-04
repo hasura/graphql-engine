@@ -675,7 +675,7 @@ mkInsInp tn cols =
 
 input table_on_conflict {
   action: conflict_action
-  constraint: table_constraint
+  constraint: table_constraint!
   update_columns: [table_column!]
 }
 
@@ -689,11 +689,13 @@ mkOnConflictInp tn =
     desc = G.Description $
       "on conflict condition type for table " <>> tn
 
-    actionInpVal = InpValInfo Nothing (G.Name "action") $
+    actionDesc = "action when conflict occurs (deprecated)"
+
+    actionInpVal = InpValInfo (Just actionDesc) (G.Name "action") $
       G.toGT $ G.NamedType "conflict_action"
 
     constraintInpVal = InpValInfo Nothing (G.Name "constraint") $
-      G.toGT $ mkConstraintInpTy tn
+      G.toGT $ G.toNT $ mkConstraintInpTy tn
 
     updateColumnsInpVal = InpValInfo Nothing (G.Name "update_columns") $
       G.toGT $ G.toLT $ G.toNT $ mkColumnInpTy tn

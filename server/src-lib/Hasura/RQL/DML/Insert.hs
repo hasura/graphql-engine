@@ -32,7 +32,7 @@ data ConflictTarget
   deriving (Show, Eq)
 
 data ConflictClauseP1
-  = CP1DoNothing ![PGCol] !(Maybe ConflictTarget)
+  = CP1DoNothing !(Maybe ConflictTarget)
   | CP1Update !ConflictTarget ![PGCol]
   deriving (Show, Eq)
 
@@ -54,8 +54,8 @@ mkSQLInsert (InsertQueryP1 tn vn cols vals c mutFlds) =
       S.SQLInsert vn cols vals (toSQLConflict c) $ Just S.returningStar
     toSQLConflict conflict = case conflict of
       Nothing -> Nothing
-      Just (CP1DoNothing _ Nothing)   -> Just $ S.DoNothing Nothing
-      Just (CP1DoNothing _ (Just ct)) -> Just $ S.DoNothing $ Just $ toSQLCT ct
+      Just (CP1DoNothing Nothing)   -> Just $ S.DoNothing Nothing
+      Just (CP1DoNothing (Just ct)) -> Just $ S.DoNothing $ Just $ toSQLCT ct
       Just (CP1Update ct inpCols)    -> Just $ S.Update (toSQLCT ct)
         (S.buildSEWithExcluded inpCols)
 
@@ -102,13 +102,13 @@ buildConflictClause
   -> m ConflictClauseP1
 buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
   case (mTCol, mTCons, act) of
-    (Nothing, Nothing, CAIgnore)    -> return $ CP1DoNothing inpCols Nothing
+    (Nothing, Nothing, CAIgnore)    -> return $ CP1DoNothing Nothing
     (Just col, Nothing, CAIgnore)   -> do
       validateCols col
-      return $ CP1DoNothing inpCols $ Just $ Column $ getPGCols col
+      return $ CP1DoNothing $ Just $ Column $ getPGCols col
     (Nothing, Just cons, CAIgnore)  -> do
       validateConstraint cons
-      return $ CP1DoNothing inpCols $ Just $ Constraint cons
+      return $ CP1DoNothing $ Just $ Constraint cons
     (Nothing, Nothing, CAUpdate)    -> throw400 UnexpectedPayload
       "Expecting 'constraint' or 'constraint_on' when the 'action' is 'update'"
     (Just col, Nothing, CAUpdate)   -> do
@@ -209,7 +209,10 @@ insertP2 (u, p) =
   where
     insertSQL = toSQL $ mkSQLInsert u
 
-type ConflictCtx = (ConflictAction, Maybe ConstraintName, [PGCol])
+data ConflictCtx
+  = CCUpdate !ConstraintName ![PGCol]
+  | CCDoNothing !(Maybe ConstraintName)
+  deriving (Show, Eq)
 
 nonAdminInsert :: (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 nonAdminInsert (insQueryP1, args) = do
@@ -223,12 +226,12 @@ nonAdminInsert (insQueryP1, args) = do
 extractConflictCtx :: (MonadError QErr m) => ConflictClauseP1 -> m ConflictCtx
 extractConflictCtx cp =
   case cp of
-    (CP1DoNothing inpCols mConflictTar) -> do
+    (CP1DoNothing mConflictTar) -> do
       mConstraintName <- mapM extractConstraintName mConflictTar
-      return (CAIgnore, mConstraintName, inpCols)
+      return $ CCDoNothing mConstraintName
     (CP1Update conflictTar inpCols) -> do
       constraintName <- extractConstraintName conflictTar
-      return (CAUpdate, Just constraintName, inpCols)
+      return $ CCUpdate constraintName inpCols
   where
     extractConstraintName (Constraint cn) = return cn
     extractConstraintName _ = throw400 NotSupported
@@ -242,10 +245,13 @@ setConflictCtx conflictCtxM = do
       q = Q.fromBuilder $ setVar <> setVal
   Q.unitQE defaultTxErrorHandler q () False
   where
-    conflictCtxToJSON (act, constrM, inpCols) =
-      LT.toStrict $ AT.encodeToLazyText $
-        InsertTxConflictCtx act constrM $ sqlBuilderToTxt $
-        toSQL $ S.buildSEWithExcluded inpCols
+    encToText = LT.toStrict . AT.encodeToLazyText
+
+    conflictCtxToJSON (CCDoNothing constrM) =
+        encToText $ InsertTxConflictCtx CAIgnore constrM Nothing
+    conflictCtxToJSON (CCUpdate constr updCols) =
+        encToText $ InsertTxConflictCtx CAUpdate (Just constr) $
+        Just $ sqlBuilderToTxt $ toSQL $ S.buildSEWithExcluded updCols
 
 instance HDBQuery InsertQuery where
 

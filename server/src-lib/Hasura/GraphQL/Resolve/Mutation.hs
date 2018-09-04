@@ -69,16 +69,11 @@ convertRowObj val =
     let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (PGCol $ G.unName k, prepExp)
 
-mkConflictClause
-  :: (MonadError QErr m)
-  => RI.ConflictCtx
-  -> m RI.ConflictClauseP1
-mkConflictClause (act, conM, inpCols) = case (act , conM) of
-  (CAIgnore, Nothing) -> return $ RI.CP1DoNothing inpCols Nothing
-  (CAIgnore, Just cons) -> return $ RI.CP1DoNothing inpCols $ Just $ RI.Constraint cons
-  (CAUpdate, Nothing) -> withPathK "on_conflict" $ throw400 Unexpected
-    "expecting \"constraint\" when \"action\" is \"update\" "
-  (CAUpdate, Just cons) -> return $ RI.CP1Update (RI.Constraint cons) inpCols
+mkConflictClause :: RI.ConflictCtx -> RI.ConflictClauseP1
+mkConflictClause (RI.CCDoNothing constrM) =
+  RI.CP1DoNothing $ fmap RI.Constraint constrM
+mkConflictClause (RI.CCUpdate constr updCols) =
+  RI.CP1Update (RI.Constraint constr) updCols
 
 parseAction
   :: (MonadError QErr m)
@@ -97,14 +92,15 @@ parseAction obj =
 
 parseConstraint
   :: (MonadError QErr m)
-  => AnnGObject -> m (Maybe ConstraintName)
+  => AnnGObject -> m ConstraintName
 parseConstraint obj = do
-  t <- mapM parseVal $ Map.lookup "constraint" obj
-  return $ fmap ConstraintName t
+  v <- onNothing (Map.lookup "constraint" obj) $ throwVE
+    "\"constraint\" is expected, but not found"
+  parseVal v
   where
     parseVal v = do
       (_, enumVal) <- asEnumVal v
-      return $ G.unName $ G.unEnumValue enumVal
+      return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
 
 parseUpdCols
   :: (MonadError QErr m)
@@ -123,21 +119,15 @@ parseOnConflict
 parseOnConflict inpCols val =
   flip withObject val $ \_ obj -> do
     actionM <- parseAction obj
-    constraintM <- parseConstraint obj
+    constraint <- parseConstraint obj
     updColsM <- parseUpdCols obj
-    (action, updCols) <- mkActionAndUpdCols actionM updColsM
-    return (action, constraintM, updCols)
-  where
-    mkActionAndUpdCols actM uColsM =
-      case (actM, uColsM) of
-        (Just CAIgnore, _) -> return (CAIgnore, inpCols)
-        (Just CAUpdate, Nothing) -> return (CAUpdate, inpCols)
-        (_, Just updCols) -> do
-          when (null updCols) $ throw400 Unexpected
-            "\"update_columns\" should not be empty"
-          return (CAUpdate, updCols)
-        (Nothing, Nothing) -> throw400 Unexpected
-          "either of \"action\" or \"update_columns\" is expected"
+    -- consider "action" if "update_columns" is not mentioned
+    return $ case (updColsM, actionM) of
+      (Just [], _)             -> RI.CCDoNothing $ Just constraint
+      (Just cols, _)           -> RI.CCUpdate constraint cols
+      (Nothing, Just CAIgnore) -> RI.CCDoNothing $ Just constraint
+      (Nothing, Just CAUpdate) -> RI.CCUpdate constraint inpCols
+      (Nothing, Nothing)       -> RI.CCDoNothing $ Just constraint
 
 convertInsert
   :: RoleName
@@ -149,7 +139,7 @@ convertInsert role (tn, vn) tableCols fld = do
   insTuples    <- withArg arguments "objects" asRowExps
   let inpCols = Set.toList $ Set.fromList $ concatMap fst insTuples
   conflictCtxM <- withArgM arguments "on_conflict" $ parseOnConflict inpCols
-  onConflictM <- mapM mkConflictClause conflictCtxM
+  let onConflictM = fmap mkConflictClause conflictCtxM
   mutFlds <- convertMutResp tn (_fType fld) $ _fSelSet fld
   args <- get
   let rows = map snd insTuples
@@ -241,7 +231,7 @@ convertUpdate tn filterExp fld = do
                  ]
       updExp = concat $ catMaybes updExpsM
   -- atleast one of update operators is expected
-  unless (any isJust updExpsM) $ throw400 Unexpected $
+  unless (any isJust updExpsM) $ throwVE $
     "atleast any one of _set, _inc, _append, _prepend, _delete_key, _delete_elem and "
     <> " _delete_at_path operator is expected"
   let p1 = RU.UpdateQueryP1 tn updExp (filterExp, whereExp) mutFlds

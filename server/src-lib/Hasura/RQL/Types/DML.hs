@@ -273,7 +273,7 @@ data InsertTxConflictCtx
   = InsertTxConflictCtx
   { itcAction        :: !ConflictAction
   , itcConstraint    :: !(Maybe ConstraintName)
-  , itcSetExpression :: !T.Text
+  , itcSetExpression :: !(Maybe T.Text)
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''InsertTxConflictCtx)
 
