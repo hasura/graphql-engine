@@ -10,19 +10,16 @@ module Hasura.GraphQL.Resolve.Mutation
   , convertDelete
   ) where
 
-import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Text                   as AT
-import qualified Data.ByteString.Builder           as BB
 import qualified Data.HashMap.Strict               as Map
-import qualified Data.Text.Lazy                    as LT
-import qualified Database.PG.Query                 as Q
+import qualified Data.HashSet                      as Set
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Delete             as RD
 import qualified Hasura.RQL.DML.Insert             as RI
 import qualified Hasura.RQL.DML.Returning          as RR
+import qualified Hasura.RQL.DML.Select             as RS
 import qualified Hasura.RQL.DML.Update             as RU
 
 import qualified Hasura.SQL.DML                    as S
@@ -30,6 +27,7 @@ import qualified Hasura.SQL.DML                    as S
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
+import           Hasura.GraphQL.Resolve.Select     (fromSelSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
@@ -43,25 +41,23 @@ withSelSet selSet f =
     return (G.unName $ G.unAlias $ _fAlias fld, res)
 
 convertReturning
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> SelSet -> m RR.RetFlds
-convertReturning ty selSet =
-  withSelSet selSet $ \fld ->
-    case _fName fld of
-      "__typename" -> return $ RR.RExp $ G.unName $ G.unNamedType ty
-      _ -> do
-        PGColInfo col colTy _ <- getPGColInfo ty $ _fName fld
-        return $ RR.RCol (col, colTy)
+  :: QualifiedTable -> G.NamedType -> SelSet -> Convert RS.SelectData
+convertReturning qt ty selSet = do
+  annFlds <- fromSelSet ty selSet
+  return $ RS.SelectData annFlds qt frmExpM
+    (S.BELit True, Nothing) Nothing [] Nothing Nothing False
+  where
+    frmExpM = Just $ S.FromExp $ pure $
+              S.FIIden $ qualTableToAliasIden qt
 
 convertMutResp
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> SelSet -> m RR.MutFlds
-convertMutResp ty selSet =
+  :: QualifiedTable -> G.NamedType -> SelSet -> Convert RR.MutFlds
+convertMutResp qt ty selSet =
   withSelSet selSet $ \fld ->
     case _fName fld of
       "__typename"    -> return $ RR.MExp $ G.unName $ G.unNamedType ty
       "affected_rows" -> return RR.MCount
-      _ -> fmap RR.MRet $ convertReturning (_fType fld) $ _fSelSet fld
+      _ -> fmap RR.MRet $ convertReturning qt (_fType fld) $ _fSelSet fld
 
 convertRowObj
   :: (MonadError QErr m, MonadState PrepArgs m)
@@ -73,51 +69,64 @@ convertRowObj val =
     let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (PGCol $ G.unName k, prepExp)
 
-type ConflictCtx = (ConflictAction, Maybe ConstraintName)
-
-mkConflictClause
-  :: (MonadError QErr m)
-  => [PGCol]
-  -> ConflictCtx
-  -> m RI.ConflictClauseP1
-mkConflictClause cols (act, conM) = case (act , conM) of
-  (CAIgnore, Nothing) -> return $ RI.CP1DoNothing Nothing
-  (CAIgnore, Just cons) -> return $ RI.CP1DoNothing $ Just $ RI.Constraint cons
-  (CAUpdate, Nothing) -> withPathK "on_conflict" $ throw400 Unexpected
-    "expecting \"constraint\" when \"action\" is \"update\" "
-  (CAUpdate, Just cons) -> return $ RI.CP1Update (RI.Constraint cons) cols
+mkConflictClause :: RI.ConflictCtx -> RI.ConflictClauseP1
+mkConflictClause (RI.CCDoNothing constrM) =
+  RI.CP1DoNothing $ fmap RI.Constraint constrM
+mkConflictClause (RI.CCUpdate constr updCols) =
+  RI.CP1Update (RI.Constraint constr) updCols
 
 parseAction
   :: (MonadError QErr m)
-  => AnnGObject -> m ConflictAction
-parseAction obj = do
-  val <- onNothing (Map.lookup "action" obj) $ throw500
-    "\"action\" field is expected but not found"
-  (enumTy, enumVal) <- asEnumVal val
-  withPathK "action" $ case G.unName $ G.unEnumValue enumVal of
-    "ignore" -> return CAIgnore
-    "update" -> return CAUpdate
-    _ -> throw500 $ "only \"ignore\" and \"updated\" allowed for enum type " <> showNamedTy enumTy
+  => AnnGObject -> m (Maybe ConflictAction)
+parseAction obj =
+  mapM parseVal $ Map.lookup "action" obj
+  where
+    parseVal val = do
+      (enumTy, enumVal) <- asEnumVal val
+      withPathK "action" $ case G.unName $ G.unEnumValue enumVal of
+        "ignore" -> return CAIgnore
+        "update" -> return CAUpdate
+        _ -> throw500 $
+          "only \"ignore\" and \"updated\" allowed for enum type "
+          <> showNamedTy enumTy
 
 parseConstraint
   :: (MonadError QErr m)
-  => AnnGObject -> m (Maybe ConstraintName)
+  => AnnGObject -> m ConstraintName
 parseConstraint obj = do
-  t <- mapM parseVal $ Map.lookup "constraint" obj
-  return $ fmap ConstraintName t
+  v <- onNothing (Map.lookup "constraint" obj) $ throw500
+    "\"constraint\" is expected, but not found"
+  parseVal v
   where
     parseVal v = do
       (_, enumVal) <- asEnumVal v
-      return $ G.unName $ G.unEnumValue enumVal
+      return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
+
+parseUpdCols
+  :: (MonadError QErr m)
+  => AnnGObject -> m (Maybe [PGCol])
+parseUpdCols obj =
+  mapM parseVal $ Map.lookup "update_columns" obj
+  where
+    parseVal val = flip withArray val $ \_ enumVals ->
+      forM enumVals $ \eVal -> do
+        (_, v) <- asEnumVal eVal
+        return $ PGCol $ G.unName $ G.unEnumValue v
 
 parseOnConflict
   :: (MonadError QErr m)
-  => AnnGValue -> m ConflictCtx
-parseOnConflict val =
+  => [PGCol] -> AnnGValue -> m RI.ConflictCtx
+parseOnConflict inpCols val =
   flip withObject val $ \_ obj -> do
-    action <- parseAction obj
-    constraintM <- parseConstraint obj
-    return (action, constraintM)
+    actionM <- parseAction obj
+    constraint <- parseConstraint obj
+    updColsM <- parseUpdCols obj
+    -- consider "action" if "update_columns" is not mentioned
+    return $ case (updColsM, actionM) of
+      (Just [], _)             -> RI.CCDoNothing $ Just constraint
+      (Just cols, _)           -> RI.CCUpdate constraint cols
+      (Nothing, Just CAIgnore) -> RI.CCDoNothing $ Just constraint
+      (Nothing, _)             -> RI.CCUpdate constraint inpCols
 
 convertInsert
   :: RoleName
@@ -126,44 +135,27 @@ convertInsert
   -> Field -- the mutation field
   -> Convert RespTx
 convertInsert role (tn, vn) tableCols fld = do
-  rows    <- withArg arguments "objects" asRowExps
-  conflictCtxM <- withPathK "on_conflict" $
-                 withArgM arguments "on_conflict" parseOnConflict
-  mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
+  insTuples    <- withArg arguments "objects" asRowExps
+  let inpCols = Set.toList $ Set.fromList $ concatMap fst insTuples
+  conflictCtxM <- withArgM arguments "on_conflict" $ parseOnConflict inpCols
+  let onConflictM = fmap mkConflictClause conflictCtxM
+  mutFlds <- convertMutResp tn (_fType fld) $ _fSelSet fld
   args <- get
+  let rows = map snd insTuples
+      p1Query = RI.InsertQueryP1 tn vn tableCols rows onConflictM mutFlds
+      p1 = (p1Query, args)
   return $
-    bool (nonAdminInsert args rows conflictCtxM mutFlds)
-         (adminInsert args rows conflictCtxM mutFlds)
-         $ isAdmin role
+      bool (RI.nonAdminInsert p1) (RI.insertP2 p1) $ isAdmin role
   where
     arguments = _fArguments fld
     asRowExps = withArray (const $ mapM rowExpWithDefaults)
     rowExpWithDefaults val = do
       givenCols <- convertRowObj val
-      return $ Map.elems $ Map.union (Map.fromList givenCols) defVals
+      let inpCols = map fst givenCols
+          sqlExps = Map.elems $ Map.union (Map.fromList givenCols) defVals
+      return (inpCols, sqlExps)
 
     defVals = Map.fromList $ zip tableCols (repeat $ S.SEUnsafe "DEFAULT")
-
-    adminInsert args rows conflictCtxM mutFlds = do
-      onConflictM <- mapM (mkConflictClause tableCols) conflictCtxM
-      let p1 = RI.InsertQueryP1 tn vn tableCols rows onConflictM mutFlds
-      RI.insertP2 (p1, args)
-
-    nonAdminInsert args rows conflictCtxM mutFlds = do
-      mapM_ (mkConflictClause tableCols) conflictCtxM
-      setConflictCtxTx conflictCtxM
-      let p1 = RI.InsertQueryP1 tn vn tableCols rows Nothing mutFlds
-      RI.insertP2 (p1, args)
-
-    setConflictCtxTx conflictCtxM = do
-      let t = maybe "null" conflictCtxToJSON conflictCtxM
-          setVal = toSQL $ S.SELit t
-          setVar = BB.string7 "SET LOCAL hasura.conflict_clause = "
-          q = Q.fromBuilder $ setVar <> setVal
-      Q.unitQE defaultTxErrorHandler q () False
-
-    conflictCtxToJSON (act, constrM) =
-      LT.toStrict $ AT.encodeToLazyText $ InsertTxConflictCtx act constrM
 
 type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
 
@@ -231,14 +223,14 @@ convertUpdate tn filterExp fld = do
   -- delete at path in jsonb value
   deleteAtPathExpM <- withArgM args "_delete_at_path" convDeleteAtPathObj
 
-  mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
+  mutFlds  <- convertMutResp tn (_fType fld) $ _fSelSet fld
   prepArgs <- get
   let updExpsM = [ setExpM, incExpM, appendExpM, prependExpM
                  , deleteKeyExpM, deleteElemExpM, deleteAtPathExpM
                  ]
       updExp = concat $ catMaybes updExpsM
   -- atleast one of update operators is expected
-  unless (any isJust updExpsM) $ throw400 Unexpected $
+  unless (any isJust updExpsM) $ throwVE $
     "atleast any one of _set, _inc, _append, _prepend, _delete_key, _delete_elem and "
     <> " _delete_at_path operator is expected"
   let p1 = RU.UpdateQueryP1 tn updExp (filterExp, whereExp) mutFlds
@@ -253,7 +245,7 @@ convertDelete
   -> Convert RespTx
 convertDelete tn filterExp fld = do
   whereExp <- withArg (_fArguments fld) "where" $ convertBoolExp tn
-  mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
+  mutFlds  <- convertMutResp tn (_fType fld) $ _fSelSet fld
   args <- get
   let p1 = RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds
   return $ RD.deleteP2 (p1, args)

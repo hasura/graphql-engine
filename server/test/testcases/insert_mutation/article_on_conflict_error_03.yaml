@@ -1,4 +1,4 @@
-description: Upserts article data via GraphQL mutation (Error)
+description: Upserts article data via GraphQL mutation (Error 03)
 url: /v1alpha1/graphql
 status: 400
 query:

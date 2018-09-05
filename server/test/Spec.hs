@@ -43,17 +43,27 @@ querySpecFiles =
   , "create_address_resident_relationship_error.yaml"
   , "create_user_permission_address.yaml"
   , "create_author_permission_role_admin_error.yaml"
+  , "create_user_permission_test_table.yaml"
+  , "all_json_queries.yaml"
+  , "upsert_role_user.yaml"
+  , "upsert_role_user_error.yaml"
   ]
 
 gqlSpecFiles :: [FilePath]
 gqlSpecFiles =
   [ "introspection.yaml"
+  , "introspection_user_role.yaml"
   , "insert_mutation/author.yaml"
   , "simple_select_query_author.yaml"
+  , "select_query_author_by_pkey.yaml"
   , "insert_mutation/article.yaml"
   , "insert_mutation/article_on_conflict.yaml"
+  , "insert_mutation/article_on_conflict_user_role.yaml"
+  , "insert_mutation/article_on_conflict_update_columns.yaml"
   , "insert_mutation/article_on_conflict_ignore.yaml"
   , "insert_mutation/article_on_conflict_ignore_constraint.yaml"
+  , "insert_mutation/article_on_conflict_empty_update_columns.yaml"
+  , "insert_mutation/article_on_conflict_only_constraint.yaml"
   , "insert_mutation/article_on_conflict_error_01.yaml"
   , "insert_mutation/article_on_conflict_error_02.yaml"
   , "insert_mutation/article_on_conflict_error_03.yaml"

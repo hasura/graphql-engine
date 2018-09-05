@@ -32,6 +32,7 @@ var testMetadata = map[string][]byte{
 tables:
 - array_relationships: []
   delete_permissions: []
+  event_triggers: []
   insert_permissions: []
   object_relationships: []
   select_permissions: []

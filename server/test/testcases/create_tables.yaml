@@ -58,3 +58,11 @@ query:
             placed TIMESTAMPTZ NOT NULL,
             shipped TIMESTAMPTZ
           )
+    - type: run_sql
+      args:
+        sql: |
+          CREATE TABLE test_table (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            age INTEGER NOT NULL
+          )

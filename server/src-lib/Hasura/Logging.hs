@@ -105,9 +105,9 @@ data LoggerSettings
   , _lsLevel           :: !LogLevel
   } deriving (Show, Eq)
 
-defaultLoggerSettings :: LoggerSettings
-defaultLoggerSettings =
-  LoggerSettings True Nothing LevelInfo
+defaultLoggerSettings :: Bool -> LoggerSettings
+defaultLoggerSettings isCached =
+  LoggerSettings isCached Nothing LevelInfo
 
 getFormattedTime :: Maybe Time.TimeZone -> IO FormattedTime
 getFormattedTime tzM = do
@@ -117,7 +117,7 @@ getFormattedTime tzM = do
   return $ FormattedTime $ T.pack $ formatTime zt
   where
     formatTime = Format.formatTime Format.defaultTimeLocale format
-    format = "%FT%T%z"
+    format = "%FT%H:%M:%S%3Q%z"
     -- format = Format.iso8601DateFormat (Just "%H:%M:%S")
 
 mkLoggerCtx :: LoggerSettings -> IO LoggerCtx

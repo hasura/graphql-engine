@@ -42,16 +42,19 @@ module Hasura.RQL.Types
 
        , HeaderObj
 
+       , qualTableToAliasIden
+
        , module R
        ) where
 
+import           Hasura.Prelude
 import           Hasura.RQL.Types.Common      as R
 import           Hasura.RQL.Types.DML         as R
 import           Hasura.RQL.Types.Error       as R
 import           Hasura.RQL.Types.Permission  as R
 import           Hasura.RQL.Types.SchemaCache as R
+import           Hasura.RQL.Types.Subscribe   as R
 import           Hasura.SQL.Types
-import           Hasura.Prelude
 
 import qualified Database.PG.Query            as Q
 
@@ -281,3 +284,8 @@ successMsg :: BL.ByteString
 successMsg = "{\"message\":\"success\"}"
 
 type HeaderObj = M.HashMap T.Text T.Text
+
+qualTableToAliasIden :: QualifiedTable -> Iden
+qualTableToAliasIden (QualifiedTable sn tn) =
+  Iden $ getSchemaTxt sn <> "_" <> getTableTxt tn
+  <> "__mutation_result_alias"

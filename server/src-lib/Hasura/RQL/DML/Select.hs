@@ -67,13 +67,15 @@ data AnnRel = AnnRel
 
 data SelectData = SelectData
       -- Nested annotated columns
-    { sdFlds    :: !(HM.HashMap FieldName AnnFld)
-    , sdTable   :: !QualifiedTable     -- Postgres table name
-    , sdWhere   :: !(S.BoolExp, Maybe (GBoolExp AnnSQLBoolExp))
-    , sdOrderBy :: !(Maybe S.OrderByExp)
-    , sdAddCols :: ![PGCol]             -- additional order by columns
-    , sdLimit   :: !(Maybe S.SQLExp)
-    , sdOffset  :: !(Maybe S.SQLExp)
+    { sdFlds         :: !(HM.HashMap FieldName AnnFld)
+    , sdTable        :: !QualifiedTable -- from postgres table
+    , sdFromExp      :: !(Maybe S.FromExp) -- optional from expression
+    , sdWhere        :: !(S.BoolExp, Maybe (GBoolExp AnnSQLBoolExp))
+    , sdOrderBy      :: !(Maybe S.OrderByExp)
+    , sdAddCols      :: ![PGCol]             -- additional order by columns
+    , sdLimit        :: !(Maybe S.SQLExp)
+    , sdOffset       :: !(Maybe S.SQLExp)
+    , asSingleObject :: !Bool
     } deriving (Show, Eq)
 
 convSelCol :: (P1C m)
@@ -177,18 +179,18 @@ processOrderByElem annFlds [colTxt] =
   case HM.lookup (FieldName colTxt) annFlds of
     Just (FCol (_, ty)) -> if ty == PGGeography || ty == PGGeometry
       then throw400 UnexpectedPayload $ mconcat
-           [ (PGCol colTxt) <<> " has type 'geometry'"
+           [ PGCol colTxt <<> " has type 'geometry'"
            , " and cannot be used in order_by"
            ]
       else return annFlds
     Just (FRel _) -> throw400 UnexpectedPayload $ mconcat
-        [ (PGCol colTxt) <<> " is a"
+        [ PGCol colTxt <<> " is a"
         , " relationship and should be expanded"
         ]
     Just (FExp t) -> throw500 $
         " found __typename in order_by?: " <> t
     Nothing -> throw400 UnexpectedPayload $ mconcat
-        [ (PGCol colTxt) <<> " should be"
+        [ PGCol colTxt <<> " should be"
         , " included in 'columns'"
         ]
 processOrderByElem annFlds (colTxt:xs) =
@@ -199,24 +201,24 @@ processOrderByElem annFlds (colTxt:xs) =
             relFlds    = sdFlds relSelData
         newRelFlds <- processOrderByElem relFlds xs
         let newRelSelData = relSelData
-              { sdAddCols = (PGCol $ T.intercalate "__" xs):(sdAddCols relSelData)
+              { sdAddCols = (PGCol $ T.intercalate "__" xs):sdAddCols relSelData
               , sdFlds    = newRelFlds
               }
             newAnnRel = annRel { arSelData = newRelSelData }
         return $ HM.insert (FieldName colTxt) (FRel newAnnRel) annFlds
       ArrRel ->
         throw400 UnexpectedPayload $ mconcat
-        [ (RelName colTxt) <<> " is an array relationship"
+        [ RelName colTxt <<> " is an array relationship"
         ," and can't be used in 'order_by'"
         ]
     Just (FCol _) -> throw400 UnexpectedPayload $ mconcat
-        [ (PGCol colTxt) <<> " is a Postgres column"
+        [ PGCol colTxt <<> " is a Postgres column"
         , " and cannot be chained further"
         ]
     Just (FExp t) -> throw500 $
         " found __typename in order_by?: " <> t
     Nothing -> throw400 UnexpectedPayload $ mconcat
-        [ (PGCol colTxt) <<> " should be"
+        [ PGCol colTxt <<> " should be"
         , " included in 'columns'"
         ]
 
@@ -311,8 +313,8 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
   -- convert offset expression
       offsetExp = S.intToSQLExp <$> mQueryOffset
 
-  return $ SelectData newAnnFlds (spiTable selPermInfo)
-    (spiFilter selPermInfo, wClause) sqlOrderBy [] limitExp offsetExp
+  return $ SelectData newAnnFlds (spiTable selPermInfo) Nothing
+    (spiFilter selPermInfo, wClause) sqlOrderBy [] limitExp offsetExp False
 
   where
     mQueryOffset = sqOffset selQ
@@ -453,7 +455,7 @@ mkObjRelExtr compCol relName flds =
 -- | Generates
 --
 --   IF (first(r.__r_col) IS NULL) THEN '[]' ELSE json_agg(..)
-mkArrRelExtr :: (Maybe S.OrderByExp) -> PGCol -> RelName -> [S.Extractor] -> S.Extractor
+mkArrRelExtr :: Maybe S.OrderByExp -> PGCol -> RelName -> [S.Extractor] -> S.Extractor
 mkArrRelExtr mOb compCol relName flds =
   let refCol  = S.SEFnApp "hdb_catalog.first"
                 [ S.mkQIdenExp (TableName "r") compCol ] Nothing
@@ -488,7 +490,7 @@ selDataToSQL :: [S.Extractor] -- ^ Parent's RCol
              -> S.BoolExp     -- ^ Join Condition if any
              -> SelectData    -- ^ Select data
              -> S.Select      -- ^ SQL Select (needs wrapping)
-selDataToSQL parRCols joinCond (SelectData annFlds tn (fltr, mWc) ob _ lt offst) =
+selDataToSQL parRCols joinCond (SelectData annFlds tn mFrmExp (fltr, mWc) ob _ lt offst _) =
   let
     (sCols, relCols) = partAnnFlds $ HM.elems annFlds
     -- relCols        = HM.elems relColsMap
@@ -500,15 +502,17 @@ selDataToSQL parRCols joinCond (SelectData annFlds tn (fltr, mWc) ob _ lt offst)
 
     finalWC = S.BEBin S.AndOp fltr $ maybe (S.BELit True) cBoolExp mWc
 
+    frm = fromMaybe (S.mkSimpleFromExp tn) mFrmExp
+
     -- Add order by if
     -- limit or offset is used or when no relationships are requested
     -- orderByExp = bool Nothing ob $ or [isJust lt, isJust offst, null relCols]
     baseSel = S.mkSelect
               { S.selExtr    = thisTableExtrs
-              , S.selFrom    = Just $ S.mkSimpleFromExp tn
+              , S.selFrom    = Just frm
               , S.selWhere   = Just $ injectJoinCond joinCond finalWC
               }
-    joinedSel = foldr ($) baseSel $ map annRelColToSQL relCols
+    joinedSel = foldr annRelColToSQL baseSel relCols
   in
     joinedSel { S.selOrderBy = ob
               , S.selLimit   = S.LimitExp  <$> lt
@@ -589,8 +593,8 @@ annRelColToSQL ar leftSel =
 
 
       -- Group by exp to aggregate relationship as json_array
-      grpByExp  = S.GroupByExp $ map (S.mkQIdenExp (TableName "l") . mkLJCol relName) $
-                  map fst $ arMapping ar
+      grpByExp  = S.GroupByExp $ map ((S.mkQIdenExp (TableName "l") . mkLJCol relName) . fst)
+                  (arMapping ar)
     in
       S.mkSelect { S.selExtr    = relExtr:qLSelCols
                  , S.selFrom    = Just fromExp
@@ -600,7 +604,7 @@ annRelColToSQL ar leftSel =
     qualifyOrderByItem (S.OrderByItem e t n) =
       let qe = case e of
             Left c  -> Right $ S.mkQIden (TableName "r") c
-            Right c -> Right $ c
+            Right c -> Right c
       in S.OrderByItem qe t n
     qualifyOrderBy (S.OrderByExp items) =
       S.OrderByExp $ map qualifyOrderByItem items
@@ -638,7 +642,7 @@ wrapFinalSel initSel extCols =
 getSelectDeps
   :: SelectData
   -> [SchemaDependency]
-getSelectDeps (SelectData flds tn (_, annWc) _ _ _ _) =
+getSelectDeps (SelectData flds tn _ (_, annWc) _ _ _ _ _) =
   mkParentDep tn
   : fromMaybe [] whereDeps
   <> colDeps
@@ -653,6 +657,7 @@ getSelectDeps (SelectData flds tn (_, annWc) _ _ _ _) =
     mkRelDep rn =
       SchemaDependency (SOTableObj tn (TORel rn)) "untyped"
 
+
 -- data SelectQueryP1
 --   = SelectQueryP1
 --   { sqp1Cols :: ![ExtCol]
@@ -665,8 +670,12 @@ getSelectDeps (SelectData flds tn (_, annWc) _ _ _ _) =
 
 mkSQLSelect :: SelectData -> S.Select
 mkSQLSelect selData =
-  wrapFinalSel (selDataToSQL [] (S.BELit True) selData) $
-  HM.toList $ sdFlds selData
+  bool finalSelect singleObjSel $ asSingleObject selData
+  where
+    singleObjSel = S.selectAsSingleObj finalSelect
+    finalSelect =
+      wrapFinalSel (selDataToSQL [] (S.BELit True) selData) $
+      HM.toList $ sdFlds selData
 
 -- convSelectQuery
 --   :: (P1C m)

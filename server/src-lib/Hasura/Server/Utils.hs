@@ -9,11 +9,15 @@ import           Network.URI
 import           System.Exit
 import           System.Process
 
+import qualified Data.ByteString              as B
 import qualified Data.Text                    as T
+import qualified Data.Text.Encoding           as TE
+import qualified Data.Text.Encoding.Error     as TE
 import qualified Data.Text.IO                 as TI
 import qualified Language.Haskell.TH.Syntax   as TH
 
 import           Hasura.Prelude
+
 
 dropAndSnakeCase :: T.Text -> T.Text
 dropAndSnakeCase = T.drop 9 . toSnakeCase . T.toLower
@@ -35,6 +39,12 @@ userRoleHeader = "x-hasura-role"
 
 accessKeyHeader :: T.Text
 accessKeyHeader = "x-hasura-access-key"
+
+userIdHeader :: T.Text
+userIdHeader = "x-hasura-user-id"
+
+bsToTxt :: B.ByteString -> T.Text
+bsToTxt = TE.decodeUtf8With TE.lenientDecode
 
 -- Parsing postgres database url
 -- from: https://github.com/futurice/postgresql-simple-url/
