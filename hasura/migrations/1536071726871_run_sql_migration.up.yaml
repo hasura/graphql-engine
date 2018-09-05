@@ -1,0 +1,4 @@
+- args:
+    cascade: false
+    sql: CREATE SEQUENCE vehicle_loc start 1;
+  type: run_sql
