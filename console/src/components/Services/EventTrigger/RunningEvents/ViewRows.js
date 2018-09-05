@@ -315,7 +315,7 @@ const ViewRows = ({
                       const finalIndex = logRow.index;
                       const finalRow = currentRow.logs[finalIndex];
                       const currentPayload = JSON.stringify(
-                        finalRow.payload,
+                        finalRow.request,
                         null,
                         4
                       );
