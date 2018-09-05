@@ -1,5 +1,5 @@
-Executing SQL functions/stored procedures
-=========================================
+Execute SQL functions/stored procedures
+=======================================
 
 Let's say you want to run custom SQL functions or stored procedures on some input and get back the output via GraphQL.
 Hasura GraphQL engine allows you to run your SQL functions or stored procedures using mutations.

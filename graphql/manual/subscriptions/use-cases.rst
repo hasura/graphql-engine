@@ -155,7 +155,7 @@ Subscribe to latest value of some derived data
 ----------------------------------------------
 
 In case you are interested in the latest value of some derived data, you can :doc:`create a view to query the derived
-data <../queries/aggregations>` and then use subscriptions to fetch the derived value and get it's latest value
+data <../queries/aggregations>` and then use subscriptions to fetch the derived value and get its latest value
 whenever it updates.
 
 Example: A poll dashboard
@@ -190,7 +190,7 @@ Let's say we have the following database schema:
     timestamp TIMESTAMP
   )
 
-First, setup a view ``poll_results`` to give the result of the poll:
+First, create a view ``poll_results`` to give the result of the poll:
 
 .. code-block:: sql
 
@@ -215,7 +215,7 @@ First, setup a view ``poll_results`` to give the result of the poll:
 This view will have the fields: ``poll_id``, ``option_id`` and ``votes``. i.e. it gives the number of votes
 received by each option for a poll.
 
-Next, setup :doc:`relationships <../schema/relationships>` ``poll`` and ``option`` between the ``poll_results`` view
+Next, :doc:`setup relationships <../schema/relationships>` ``poll`` and ``option`` between the ``poll_results`` view
 and the ``poll`` and ``option`` tables using the ``poll_id`` and ``option_id`` fields respectively.
 
 Now we can use the following subscription to display the latest poll result:
@@ -243,14 +243,14 @@ Now we can use the following subscription to display the latest poll result:
             "poll_id": 1,
             "votes": 1,
             "option": {
-              "text": "Alexander Zverev"
+              "text": "Pizza"
             }
           },
           {
             "poll_id": 1,
             "votes": 1,
             "option": {
-              "text": "Novak Djokovic"
+              "text": "Option2"
             }
           },
           {

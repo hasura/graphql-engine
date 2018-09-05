@@ -8,7 +8,10 @@ You may want to customise your GraphQL schema to:
 
 These use-cases can be supported using database views.
 
-Please see the following pages for the above use-cases:
+You can create views `using SQL <https://www.postgresql.org/docs/9.6/static/sql-createview.html>`_ which you can
+run using the console at the ``Data -> SQL`` section.
+
+Please see the following pages for details about the above use-cases:
 
 - :doc:`../queries/control-access`
 

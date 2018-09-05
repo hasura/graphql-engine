@@ -38,5 +38,5 @@ based on a typical author/article schema for reference.
   Using multiple arguments <multiple-arguments>
   multiple-queries
   aggregations
-  sql-functions
   control-access
+  sql-functions

@@ -1,13 +1,13 @@
-Event payload
-=============
+Event trigger payload
+=====================
 
-This document describes the event payload and delivery mechanism.
+The following is the payload and delivery mechanism of an event to the webhook when an event trigger is invoked.
 
 HTTP request method
 -------------------
 Delivered over ``HTTP POST`` with the following headers:
 
-.. code-block:: text
+.. code-block:: http
 
    Content-Type: application/json
 
@@ -68,15 +68,36 @@ JSON payload
 
 **In case of**:
 
-1. INSERT - the ``event.data.old`` will be ``null``. ``event.data.new`` will contain the insert row.
-2. UPDATE - the ``event.data.old`` will be values before the update. ``event.data.new`` will contain the values after the update.
-3. DELETE - the ``event.data.old`` will contain the row that is deleted. ``event.data.new`` will be ``null``.
+- INSERT
 
-**E.g. QUERY**:
+  - ``event.data.old`` will be ``null``
+  - ``event.data.new`` will contain the insert row
+
+- UPDATE
+
+  - ``event.data.old`` will be values before the update
+  - ``event.data.new`` will contain the values after the update
+
+- DELETE
+
+  - ``event.data.old`` will contain the row that is deleted
+  - ``event.data.new`` will be ``null``
+
+**For example**:
 
 .. code-block:: json
 
     {
+      "id": "85558393-c75d-4d2f-9c15-e80591b83894",
+      "created_at": "2018-09-05T07:14:21.601701Z",
+      "trigger": {
+          "name": "test_trigger",
+          "id": "37b7f91a-b3a5-4b85-be59-e5920d72f6aa"
+      },
+      "table": {
+          "schema": "public",
+          "name": "users"
+      },
       "event": {
           "op": "INSERT",
           "data": {
@@ -86,16 +107,6 @@ JSON payload
                 "name": "john doe"
             }
           }
-      },
-      "created_at": "2018-09-05T07:14:21.601701Z",
-      "id": "85558393-c75d-4d2f-9c15-e80591b83894",
-      "trigger": {
-          "name": "test_trigger",
-          "id": "37b7f91a-b3a5-4b85-be59-e5920d72f6aa"
-      },
-      "table": {
-          "schema": "public",
-          "name": "users"
       }
     }
 
@@ -130,4 +141,7 @@ OpName
 Webhook response structure
 --------------------------
 
-A ``2xx`` response status code is deemed to be a succesful invocation, and otherwise this is an unsucessful invocation which may be retried as per the retry configuration. It is recommended that you return a JSON object in your responses.
+A ``2xx`` response status code is deemed to be a successful invocation of the webhook. Any other response status will be
+deemed as an unsucessful invocation which may cause retries as per the retry configuration.
+
+It is also recommended that you return a JSON object in your webhook response.
