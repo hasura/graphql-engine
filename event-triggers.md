@@ -33,11 +33,13 @@ The fastest way to try event triggers out is via Heroku.
 
 For Docker-based deployment and advanced configuration options, see [deployment guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
 
-### Demo & Resources
+### Quickstart demo
 
-**Watch**: [Create an event-trigger and webhook in 60 seconds](https://some-youtube-demo.com) (*10:00 mins*)
+[Create an event-trigger and webhook in 60 seconds](https://some-youtube-demo.com) (*10:00 mins*)
 
-**Resources**: Use one of our serverless boilerplates to deploy a webhook that can capture database events - https://github.com/hasura/cloud-functions-boilerplates. Serverless/cloud-function platforms covered by bopilerplates:
+### Serverless boilerplates
+
+Use one of our serverless boilerplates to deploy a webhook that can capture database events - https://github.com/hasura/cloud-functions-boilerplates. Serverless/cloud-function platforms covered by bopilerplates:
 
 * [AWS Lambda](https://aws.amazon.com/lambda/)
 * [Google Cloud Functions](https://cloud.google.com/functions/)
@@ -76,4 +78,8 @@ Transform and load data into external data-stores. Check out this demo and tutor
 * [Try it out](https://shahidh.in/hasura-web-push-notifs/)
 * [Tutorial](https://github.com/shahidhk/hasura-web-push-notifs)
 
+## Building reactive UX for your async backend with realtime GraphQL
 
+Propagate event driven and asynchronous information to UI clients easily with GraphQL subscriptions & live-queries.
+
+![Reactive apps architecture](assets/reactive-apps-arch.png)
