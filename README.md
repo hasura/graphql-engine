@@ -6,13 +6,9 @@ This is a simple example of using a custom resolver with Hasura's GraphQL API.
 
 Hasura GraphQL Engine provides instant GraphQL APIs over the tables and views of any Postgres database. It also comes with a fine grained access control layer that helps you restrict the data that can be consumed.
 
-However, sometimes you might want to have custom logic that is entirely unrelated to the database. In such cases, you can do one of the two things:
-1. Use Postgres events to trigger serverless functions and run your asynchronous logic.
-2. Write custom resolvers and merge them with the Hasura schema.
+However, sometimes you might have to write custom resolvers to capture business logic that is unrelated to the database or needs to execute a custom transaction or write to the database.
 
-In this example, we illustrate how to write custom resolvers and merge them with the Hasura GraphQL Engine.
-
-We combine Hasura GraphQL Engine's GraphQL API running at `https://bazookaand.herokuapp.com/v1alpha1/graphql` with the following:
+In this example, we illustrate how to write custom resolvers and merge them with the Hasura GraphQL Engine. We combine Hasura GraphQL Engine's GraphQL API running at `https://bazookaand.herokuapp.com/v1alpha1/graphql` with the following custom resolvers:
 
 1. A `hello` query
 2. A `count` query (that returns a counter from another data source )
@@ -20,6 +16,9 @@ We combine Hasura GraphQL Engine's GraphQL API running at `https://bazookaand.he
 4. A `user_average_age` query that makes directly makes an SQL query to Postgres using knex.
 
 You can use this as a boilerplate to write custom resolvers with Hasura GraphQL Engine.
+
+![./assets/custom-resolvers-diagram.png](Custom resolvers with Hasura GraphQL engine)
+
 
 ## Usage
 
