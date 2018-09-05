@@ -5,20 +5,43 @@ import AceEditor from 'react-ace';
 import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import TableHeader from '../TableCommon/TableHeader';
-import { loadEventLogs } from '../EventActions';
-import { vMakeRequest, vSetDefaults } from './LogActions';
+import { loadEventLogs, setTrigger } from '../EventActions';
+import {
+  vMakeRequest,
+  vSetDefaults,
+  loadNewerEvents,
+  loadOlderEvents,
+} from './LogActions';
 
 class StreamingLogs extends Component {
   constructor(props) {
     super(props);
     this.state = { isWatching: false, intervalId: null };
     this.refreshData = this.refreshData.bind(this);
+    this.props.dispatch(setTrigger(this.props.triggerName));
   }
   componentDidMount() {
+    this.props.dispatch(setTrigger(this.props.triggerName));
     this.props.dispatch(loadEventLogs(this.props.triggerName));
   }
   componentWillUnmount() {
     this.props.dispatch(vSetDefaults());
+  }
+  handleNewerEvents() {
+    // get the first element
+    const firstElement = this.props.log.rows[0];
+    const latestTimestamp = firstElement.created_at;
+    this.props.dispatch(
+      loadNewerEvents(latestTimestamp, this.props.triggerName)
+    );
+  }
+  handleOlderEvents() {
+    // get the last element
+    const lastElement = this.props.log.rows[this.props.log.rows.length - 1];
+    const oldestTimestamp = lastElement.created_at;
+    this.props.dispatch(
+      loadOlderEvents(oldestTimestamp, this.props.triggerName)
+    );
   }
   watchChanges() {
     // set state on watch
@@ -52,7 +75,7 @@ class StreamingLogs extends Component {
       });
     });
     const invocationRowsData = [];
-    log.rows.map((r, rowIndex) => {
+    log.rows.map(r => {
       const newRow = {};
       const status =
         r.status === 200 ? (
@@ -120,6 +143,15 @@ class StreamingLogs extends Component {
         </div>
         {invocationRowsData.length ? (
           <div className={styles.streamingLogs + ' streamingLogs'}>
+            <div className={styles.loadNewer}>
+              <button
+                onClick={this.handleNewerEvents.bind(this)}
+                className={'btn btn-default'}
+              >
+                {' '}
+                Load newer events
+              </button>
+            </div>
             <ReactTable
               data={invocationRowsData}
               columns={invocationGridHeadings}
@@ -185,6 +217,14 @@ class StreamingLogs extends Component {
                 );
               }}
             />
+            <div className={styles.loadOlder}>
+              <button
+                onClick={this.handleOlderEvents.bind(this)}
+                className={'btn btn-default'}
+              >
+                Load older events
+              </button>
+            </div>
           </div>
         ) : (
           <div className={styles.add_mar_top}>No data available</div>

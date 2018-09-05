@@ -195,7 +195,7 @@ const loadEventLogs = triggerName => (dispatch, getState) => {
         ],
         where: { event: { trigger_name: triggerName } },
         order_by: ['-created_at'],
-        limit: 10,
+        limit: 2,
       },
     }),
   };
