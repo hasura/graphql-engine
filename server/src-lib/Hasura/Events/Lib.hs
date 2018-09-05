@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE QuasiQuotes         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 
 module Hasura.Events.Lib
   ( initEventEngineCtx
@@ -15,6 +16,9 @@ import           Control.Concurrent            (threadDelay)
 import           Control.Concurrent.Async      (async, waitAny)
 import           Control.Concurrent.STM.TVar
 import           Control.Monad.STM             (STM, atomically, retry)
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import           Data.Either                   (isLeft)
 import           Data.Has
 import           Data.Int                      (Int64)
@@ -40,6 +44,7 @@ import qualified Network.Wreq                  as W
 
 
 type CacheRef = IORef (SchemaCache, GS.GCtxMap)
+type UUID = T.Text
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -48,19 +53,38 @@ newtype EventInternalErr
 instance L.ToEngineLog EventInternalErr where
   toEngineLog (EventInternalErr qerr) = (L.LevelError, "event-trigger", J.toJSON qerr )
 
+data TriggerMeta
+  = TriggerMeta
+  { tmId   :: TriggerId
+  , tmName :: TriggerName
+  } deriving (Show, Eq)
+
+$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerMeta)
+
 data Event
   = Event
-  { eId          :: UUID
-  , eTable       :: QualifiedTable
-  , eTriggerName :: TriggerName
-  , ePayload     :: J.Value
+  { eId        :: UUID
+  , eTable     :: QualifiedTable
+  , eTrigger   :: TriggerMeta
+  , eEvent     :: J.Value
   -- , eDelivered   :: Bool
   -- , eError       :: Bool
-  , eTries       :: Int64
-  , eCreatedAt   :: Time.UTCTime
-  }
+  , eTries     :: Int64
+  , eCreatedAt :: Time.UTCTime
+  } deriving (Show, Eq)
 
-type UUID = T.Text
+instance ToJSON Event where
+  toJSON (Event eid (QualifiedTable sn tn) trigger event _ created)=
+    object [ "id" .= eid
+           , "table"  .= object [ "schema" .= sn
+                                , "name"  .= tn
+                                ]
+           , "trigger" .= trigger
+           , "event" .= event
+           , "created_at" .= created
+           ]
+
+$(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
 
 data Invocation
   = Invocation
@@ -200,7 +224,7 @@ tryWebhook pool e _ = do
         if countThreads >= maxT
           then retry
           else modifyTVar' c (+1)
-      eitherResp <- runExceptT $ runHTTP W.defaults (mkAnyHTTPPost (T.unpack webhook) (Just $ ePayload e)) (Just (ExtraContext createdAt eventId))
+      eitherResp <- runExceptT $ runHTTP W.defaults (mkAnyHTTPPost (T.unpack webhook) (Just $ toJSON e)) (Just (ExtraContext createdAt eventId))
 
       --decrement counter once http is done
       liftIO $ atomically $ do
@@ -223,7 +247,7 @@ tryWebhook pool e _ = do
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = let table = eTable e
                                         tableInfo = M.lookup table $ scTables sc
-                                    in M.lookup (eTriggerName e) =<< (tiEventTriggerInfoMap <$> tableInfo)
+                                    in M.lookup ( tmName $ eTrigger e) =<< (tiEventTriggerInfoMap <$> tableInfo)
 
 fetchEvents :: Q.TxE QErr [Event]
 fetchEvents =
@@ -231,9 +255,9 @@ fetchEvents =
       UPDATE hdb_catalog.event_log
       SET locked = 't'
       WHERE id IN ( select id from hdb_catalog.event_log where delivered ='f' and error = 'f' and locked = 'f' LIMIT 100 )
-      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
+      RETURNING id, schema_name, table_name, trigger_id, trigger_name, payload::json, tries, created_at
       |] () True
-  where uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries, created) = Event id' (QualifiedTable sn tn) trn payload tries created
+  where uncurryEvent (id', sn, tn, trid, trn, Q.AltJ payload, tries, created) = Event id' (QualifiedTable sn tn) (TriggerMeta trid trn) payload tries created
 
 insertInvocation :: Invocation -> Q.TxE QErr ()
 insertInvocation invo = do

@@ -12,12 +12,7 @@ CREATE OR REPLACE function hdb_views.notify_hasura_{{NAME}}_{{OPERATION}}() RETU
        'new', {{NEW_DATA_EXPRESSION}}
      );
      payload := json_build_object(
-                        'table', TG_TABLE_NAME,
-                        'schema', TG_TABLE_SCHEMA,
-                        'trigger_name', '{{NAME}}',
-                        'trigger_id', '{{ID}}',
                         'op', TG_OP,
-                        'id', id,
                         'data', data
                         )::text;
      INSERT INTO
