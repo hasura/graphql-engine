@@ -32,7 +32,7 @@ view. So, in our example, we do the following:
 
 3) Query the view
 -----------------
-You can now query the newly created view like you would a regular table. For e.g. the following query will access
+You can now query the newly created view like you would a regular table. For example, the following query will access
 only the *safe* fields:
 
 .. graphiql::

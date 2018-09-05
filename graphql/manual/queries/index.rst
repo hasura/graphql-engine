@@ -7,7 +7,7 @@ schema.
 
 All tracked tables of the database can be queried and modified over the GraphQL endpoint. If you have a tracked table
 in your database, a query and insert/update/delete mutations each are added as nested fields under the root level
-types, ``query_root`` and ``mutation_root`` respectively. For e.g. the auto-generated query schema for an
+types, ``query_root`` and ``mutation_root`` respectively. For example, the auto-generated query schema for an
 "author" table may look like this:
 
 .. code-block:: graphql
