@@ -39,7 +39,7 @@
             <input type="text" class="form-control" placeholder="Author" id="book-author">
           </div>
           <button class="btn btn-success" type="button" id="save-button" onclick="saveBook()">✅ Save</button>
-          <button class="btn btn-light" type="button" id="search-page-button" onclick="showScreen('#search-screen')">🔍 Search</button>
+          <button class="btn btn-light" type="button" id="search-page-button" onclick="showScreen('#search-screen')">🔍 Search library</button>
           <div class="error"><span id="error-text"></span></div>
         </div>
       </div>
@@ -52,11 +52,22 @@
           <hr/>
           <div class="input-group mb-3" id="search-box">
           </div>
+          <div class="algolia_search_attribution">
+            <span>
+              search by
+            </span>
+            <span>
+              <img class="algolia_image" src="algolia-logo.svg" alt="Algolia Search Logo">
+            </span>
+          </div>
           <div class="error"><span id="error-text"></span></div>
           <main class="search-results">
             <div id="hits"></div>
             <div id="pagination"></div>
           </main>
+          <a href="https://github.com/shahidhk/hasura-serverless-etl#architecture" target="_blank">
+            <img src="arch.png" style="height: 300px;" />
+          </a>
         </div>
       </div>
     </div>
@@ -76,7 +87,7 @@
           <a href="https://github.com/shahidhk/hasura-serverless-etl" target="_blank">
             Source
           </a>
-          <div class="footer-small-text"><span>(The database resets every 30 minutes)</span></div>
+          <!-- <div class="footer-small-text"><span>(The database resets every 30 minutes)</span></div> -->
         </div>
       </div>
     </footer>

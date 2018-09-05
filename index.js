@@ -72,6 +72,7 @@ $( document ).ready(function() {
   $('#hge-console-link').attr('href', HGE_URL.replace('v1alpha1/graphql', 'console'));
 
   showScreen('#input-screen');
+  $('#book-title').focus();
 });
 
 var search = instantsearch({
@@ -81,9 +82,6 @@ var search = instantsearch({
   apiKey: '8effee2588d61678501731405a86394d', // search only API key, no ADMIN key
   indexName: 'demo_serverless_etl_app',
   routing: true,
-  searchParameters: {
-    hitsPerPage: 10
-  }
 });
 
 search.addWidget(
