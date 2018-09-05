@@ -223,7 +223,7 @@ Now we can use the following subscription to display the latest poll result:
 .. graphiql::
   :view_only:
   :query:
-    # pollId = 1
+    # $pollId = 1
     subscription getResult($pollId: Int!) {
       poll_results (
         where: { poll_id: {_eq: $pollId} }
@@ -271,7 +271,7 @@ Now we can use the following subscription to display the latest poll result:
             "poll_id": 1,
             "votes": 1,
             "option": {
-              "text": "Juan Martín del Potro"
+              "text": "Juan Martin del Potro"
             }
           }
         ]
