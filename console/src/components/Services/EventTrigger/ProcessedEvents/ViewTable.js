@@ -79,12 +79,23 @@ class ViewTable extends Component {
     ]);
   }
 
+  componentDidMount() {
+    const dispatch = this.props.dispatch;
+    Promise.all([
+      dispatch(setTrigger(this.props.triggerName)),
+      dispatch(vSetDefaults(this.props.triggerName)),
+      dispatch(vMakeRequest()),
+    ]);
+  }
+
   componentWillReceiveProps(nextProps) {
     const dispatch = this.props.dispatch;
     if (nextProps.triggerName !== this.props.triggerName) {
-      dispatch(setTrigger(nextProps.triggerName));
-      dispatch(vSetDefaults(nextProps.triggerName));
-      dispatch(vMakeRequest());
+      Promise.all([
+        dispatch(setTrigger(nextProps.triggerName)),
+        dispatch(vSetDefaults(nextProps.triggerName)),
+        dispatch(vMakeRequest()),
+      ]);
     }
   }
 
@@ -135,6 +146,8 @@ class ViewTable extends Component {
     const currentTrigger = triggerList.find(s => s.name === triggerName);
     if (!currentTrigger) {
       // dispatch a 404 route
+      console.log(triggerName);
+      console.log(triggerList);
       dispatch(replace('/404'));
     }
     // Is this a view

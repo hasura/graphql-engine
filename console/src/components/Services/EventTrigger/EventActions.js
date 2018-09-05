@@ -4,6 +4,7 @@ import defaultState from './EventState';
 import processedEventsReducer from './ProcessedEvents/ViewActions';
 import pendingEventsReducer from './PendingEvents/ViewActions';
 import runningEventsReducer from './RunningEvents/ViewActions';
+import streamingLogsReducer from './StreamingLogs/LogActions';
 import { showErrorNotification, showSuccessNotification } from './Notification';
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
@@ -53,7 +54,7 @@ const loadTriggers = () => (dispatch, getState) => {
   );
 };
 
-const loadProcessedEvents = triggerName => (dispatch, getState) => {
+const loadProcessedEvents = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const options = {
     credentials: globalCookiePolicy,
@@ -81,7 +82,6 @@ const loadProcessedEvents = triggerName => (dispatch, getState) => {
             limit: 10,
           },
         ],
-        where: { name: triggerName },
       },
     }),
   };
@@ -95,7 +95,7 @@ const loadProcessedEvents = triggerName => (dispatch, getState) => {
   );
 };
 
-const loadPendingEvents = triggerName => (dispatch, getState) => {
+const loadPendingEvents = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const options = {
     credentials: globalCookiePolicy,
@@ -121,7 +121,6 @@ const loadPendingEvents = triggerName => (dispatch, getState) => {
             limit: 10,
           },
         ],
-        where: { name: triggerName },
       },
     }),
   };
@@ -135,7 +134,7 @@ const loadPendingEvents = triggerName => (dispatch, getState) => {
   );
 };
 
-const loadRunningEvents = triggerName => (dispatch, getState) => {
+const loadRunningEvents = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const options = {
     credentials: globalCookiePolicy,
@@ -161,7 +160,6 @@ const loadRunningEvents = triggerName => (dispatch, getState) => {
             limit: 10,
           },
         ],
-        where: { name: triggerName },
       },
     }),
   };
@@ -185,22 +183,19 @@ const loadEventLogs = triggerName => (dispatch, getState) => {
       type: 'select',
       args: {
         table: {
-          name: 'event_triggers',
+          name: 'event_invocation_logs',
           schema: 'hdb_catalog',
         },
         columns: [
           '*',
           {
-            name: 'events',
-            columns: [
-              '*',
-              { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
-            ],
-            order_by: ['-created_at'],
-            limit: 10,
+            name: 'event',
+            columns: ['*'],
           },
         ],
-        where: { name: triggerName },
+        where: { event: { trigger_name: triggerName } },
+        order_by: ['-created_at'],
+        limit: 20,
       },
     }),
   };
@@ -424,6 +419,17 @@ const eventReducer = (state = defaultState, action) => {
       ),
     };
   }
+  if (action.type.indexOf('StreamingLogs/') === 0) {
+    return {
+      ...state,
+      log: streamingLogsReducer(
+        state.currentTrigger,
+        state.triggerList,
+        state.log,
+        action
+      ),
+    };
+  }
   switch (action.type) {
     case LOAD_TRIGGER_LIST:
       return {
@@ -454,7 +460,7 @@ const eventReducer = (state = defaultState, action) => {
     case LOAD_EVENT_LOGS:
       return {
         ...state,
-        eventLogs: action.data,
+        log: { ...state.log, rows: action.data, count: action.data.length },
       };
     case SET_TRIGGER:
       return { ...state, currentTrigger: action.triggerName };

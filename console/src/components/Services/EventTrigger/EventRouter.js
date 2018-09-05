@@ -108,9 +108,7 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
       cb();
       return;
     }
-    Promise.all([
-      store.dispatch(loadProcessedEvents(nextState.params.trigger)),
-    ]).then(
+    Promise.all([store.dispatch(loadProcessedEvents())]).then(
       () => {
         cb();
       },
@@ -129,9 +127,7 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
       cb();
       return;
     }
-    Promise.all([
-      store.dispatch(loadPendingEvents(nextState.params.trigger)),
-    ]).then(
+    Promise.all([store.dispatch(loadPendingEvents())]).then(
       () => {
         cb();
       },
@@ -150,9 +146,7 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
       cb();
       return;
     }
-    Promise.all([
-      store.dispatch(loadRunningEvents(nextState.params.trigger)),
-    ]).then(
+    Promise.all([store.dispatch(loadRunningEvents())]).then(
       () => {
         cb();
       },

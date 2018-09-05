@@ -30,9 +30,33 @@ const defaultViewState = {
   lastSuccess: {},
 };
 
+const defaultLogState = {
+  query: {
+    columns: [
+      '*',
+      {
+        name: 'event',
+        columns: ['*'],
+      },
+    ],
+    limit: 20,
+    offset: 0,
+    order_by: ['-created_at'],
+  },
+  rows: [],
+  expandedRow: '',
+  count: 0,
+  curFilter: defaultCurFilter,
+  activePath: [],
+  ongoingRequest: false,
+  lastError: {},
+  lastSuccess: {},
+};
+
 const defaultState = {
   currentTrigger: null,
   view: { ...defaultViewState },
+  log: { ...defaultLogState },
   triggerList: [],
   listingTrigger: [],
   processedEvents: [],
@@ -48,4 +72,4 @@ const defaultState = {
 };
 
 export default defaultState;
-export { defaultViewState, defaultCurFilter };
+export { defaultViewState, defaultLogState, defaultCurFilter };
