@@ -37,7 +37,12 @@ For Docker-based deployment and advanced configuration options, see [deployment 
 
 **Watch**: [Create an event-trigger and webhook in 60 seconds](https://some-youtube-demo.com) (*10:00 mins*)
 
-**Resources**: Use one of our serverless boilerplates (AWS Lambda, Google Cloud Functions, Azure Functions, Zeit Serverless Docker, etc.) to deploy a webhook that can capture database events - https://github.com/hasura/cloud-functions-boilerplates
+**Resources**: Use one of our serverless boilerplates to deploy a webhook that can capture database events - https://github.com/hasura/cloud-functions-boilerplates. Cloud function platform providers covered by bopilerplates:
+
+* AWS Lambda
+* Google Cloud Functions
+* Azure Functions
+* Zeit Serverless Docker
 
 ## Architecture
 
