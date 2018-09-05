@@ -7,6 +7,7 @@ import * as tooltip from './Tooltips';
 import 'react-toggle/style.css';
 import Spinner from '../Common/Spinner/Spinner';
 import { loadServerVersion, checkServerUpdates } from './Actions';
+import './NotificationOverrides.css';
 
 const semver = require('semver');
 
