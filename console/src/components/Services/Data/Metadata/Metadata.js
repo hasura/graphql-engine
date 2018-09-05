@@ -6,7 +6,39 @@ import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
 
+const semver = require('semver');
+
 class Metadata extends Component {
+  constructor() {
+    super();
+    this.state = {
+      showMetadata: false,
+    };
+  }
+  componentDidMount() {
+    if (this.props.serverVersion) {
+      this.checkSemVer(this.props.serverVersion);
+    }
+  }
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.serverVersion !== this.props.serverVersion) {
+      this.checkSemVer(nextProps.serverVersion);
+    }
+  }
+  checkSemVer(version) {
+    let showMetadata = false;
+    try {
+      showMetadata = semver.gt(version, '1.0.0-alpha16');
+      if (showMetadata) {
+        this.setState({ ...this.state, showMetadata: true });
+      } else {
+        this.setState({ ...this.state, showMetadata: false });
+      }
+    } catch (e) {
+      this.setState({ ...this.state, showMetadata: false });
+      console.error(e);
+    }
+  }
   render() {
     const styles = require('../TableCommon/Table.scss');
     const metaDataStyles = require('./Metadata.scss');
@@ -47,16 +79,21 @@ class Metadata extends Component {
         <div className={metaDataStyles.display_inline}>
           <ImportMetadata {...this.props} />
         </div>
-        <div className={metaDataStyles.intro_note}>
-          <h4>Reload metadata</h4>
-          <div className={metaDataStyles.content_width}>
-            Refresh Hasura metadata, typically required if you have changed the
-            underlying postgres.
-          </div>
-        </div>
-        <div>
-          <ReloadMetadata {...this.props} />
-        </div>
+
+        {this.state.showMetadata
+          ? [
+              <div key="meta_data_1" className={metaDataStyles.intro_note}>
+                <h4>Reload metadata</h4>
+                <div className={metaDataStyles.content_width}>
+                  Refresh Hasura metadata, typically required if you have
+                  changed the underlying postgres.
+                </div>
+              </div>,
+              <div key="meta_data_2">
+                <ReloadMetadata {...this.props} />
+              </div>,
+            ]
+          : null}
       </div>
     );
   }
@@ -66,5 +103,11 @@ Metadata.propTypes = {
   dispatch: PropTypes.func.isRequired,
 };
 
-const metadataConnector = connect => connect()(Metadata);
+const mapStateToProps = state => {
+  return {
+    ...state.main,
+  };
+};
+
+const metadataConnector = connect => connect(mapStateToProps)(Metadata);
 export default metadataConnector;
