@@ -17,7 +17,7 @@ In this example, we illustrate how to write custom resolvers and merge them with
 
 You can use this as a boilerplate to write custom resolvers with Hasura GraphQL Engine.
 
-![https://raw.githubusercontent.com/hasura/custom-resolvers-boilerplate/master/assets/custom-resolvers-diagram.png](Custom resolvers with Hasura GraphQL engine)
+![Custom resolvers with Hasura GraphQL engine](./assets/custom-resolvers-diagram.png)
 
 
 ## Usage
