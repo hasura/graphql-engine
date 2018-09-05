@@ -8,6 +8,8 @@ Trigger webhooks on database events using Hasura GraphQL Engine's **event trigge
 
 * **Atomic & Reliable**: Using native Postgres triggers, every relevant action on the database is captured as an event. Even if Hasura is down or being updated, events will be captured and delivered as soon as possible with an atleast-one guarantee. You can even configure delivery policies like `max_retries` and `retry_interval`.
 
+* **Scalable**: The event-triggers system is horizontally scalable - if you need to handle more events, just throw more resources at it!
+
 * **Works with existing, live databases**: Point it to an existing Postgres database to instantly listen to changes in your data and invoke webhooks.
 
 * **Ready for observability & monitoring**: Generated events are automatically instrumented with an event-id and structured logs emitted by Hasura make it easy for you to use your favourite tools to run an event-driven backend in production.
