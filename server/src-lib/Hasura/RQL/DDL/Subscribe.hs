@@ -47,7 +47,7 @@ triggerTmplt = case parseGingerTmplt $(FE.embedStringFile "src-rsr/trigger.sql")
 
 getDropFuncSql :: Ops -> TriggerName -> T.Text
 getDropFuncSql op trn = "DROP FUNCTION IF EXISTS"
-                        <> " hdb_views.notify_skor_" <> trn <> "_" <> T.pack (show op) <> "()"
+                        <> " hdb_views.notify_hasura_" <> trn <> "_" <> T.pack (show op) <> "()"
                         <> " CASCADE"
 
 getTriggerSql :: Ops -> TriggerId -> TriggerName -> SchemaName -> TableName -> Maybe SubscribeOpSpec -> Maybe T.Text

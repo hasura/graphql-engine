@@ -1,4 +1,4 @@
-CREATE OR REPLACE function hdb_views.notify_skor_{{NAME}}_{{OPERATION}}() RETURNS trigger
+CREATE OR REPLACE function hdb_views.notify_hasura_{{NAME}}_{{OPERATION}}() RETURNS trigger
    LANGUAGE plpgsql
    AS $$
    DECLARE
@@ -27,5 +27,5 @@ CREATE OR REPLACE function hdb_views.notify_skor_{{NAME}}_{{OPERATION}}() RETURN
      RETURN NULL;
    END;
    $$;
-   DROP TRIGGER IF EXISTS notify_skor_{{NAME}}_{{OPERATION}} ON {{SCHEMA_NAME}}.{{TABLE_NAME}};
-   CREATE TRIGGER notify_skor_{{NAME}}_{{OPERATION}} AFTER {{OPERATION}} ON {{SCHEMA_NAME}}.{{TABLE_NAME}} FOR EACH ROW EXECUTE PROCEDURE hdb_views.notify_skor_{{NAME}}_{{OPERATION}}();
+   DROP TRIGGER IF EXISTS notify_hasura_{{NAME}}_{{OPERATION}} ON {{SCHEMA_NAME}}.{{TABLE_NAME}};
+   CREATE TRIGGER notify_hasura_{{NAME}}_{{OPERATION}} AFTER {{OPERATION}} ON {{SCHEMA_NAME}}.{{TABLE_NAME}} FOR EACH ROW EXECUTE PROCEDURE hdb_views.notify_hasura_{{NAME}}_{{OPERATION}}();
