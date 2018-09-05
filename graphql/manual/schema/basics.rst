@@ -9,9 +9,20 @@ GraphQL schema it generates.
 
 Let's say we want to create two simple tables for an article/author schema:
 
-- ``author`` with columns ``id``, ``name``
+.. code-block:: sql
 
-- ``article`` with columns ``id``, ``title``, ``content``, ``rating``, ``author_id``
+  author (
+    id INT PRIMARY KEY,
+    name TEXT
+  )
+
+  article (
+    id INT PRIMARY KEY,
+    title TEXT,
+    content TEXT,
+    rating INT,
+    author_id INT
+  )
 
 Create tables
 -------------
@@ -39,7 +50,7 @@ The following *object type* and *query/mutation* fields are generated for the ``
     author_id: Int
   }
 
-  # Query
+  # Query field
   article (
     where: article_bool_exp
     limit: Int
@@ -47,20 +58,20 @@ The following *object type* and *query/mutation* fields are generated for the ``
     order_by: [article_order_by!]
   ): [article!]!
 
-  # insert/upsert mutation
+  # insert/upsert mutation field
   insert_article (
     objects: [article_insert_input!]!
     on_conflict: article_on_conflict
   ): article_mutation_response
 
-  # update mutation
+  # update mutation field
   update_article (
     where: article_bool_exp!
     _inc: article_inc_input
     _set: article_set_input
   ): article_mutation_response
 
-  # delete mutation
+  # delete mutation field
   delete_article (
     where: article_bool_exp!
   ): article_mutation_response
