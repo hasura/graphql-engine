@@ -313,12 +313,12 @@ const ViewRows = ({
                     showPagination={false}
                     SubComponent={logRow => {
                       const finalIndex = logRow.index;
+                      const finalRow = currentRow.logs[finalIndex];
                       const currentPayload = JSON.stringify(
-                        currentRow.payload,
+                        finalRow.payload,
                         null,
                         4
                       );
-                      const finalRow = currentRow.logs[finalIndex];
                       const finalResponse = JSON.parse(
                         JSON.stringify(finalRow.response, null, 4)
                       );
