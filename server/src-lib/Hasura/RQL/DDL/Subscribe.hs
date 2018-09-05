@@ -155,17 +155,12 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
   let rconf = fromMaybe (RetryConf defaultNumRetries defaultRetryInterval) retryConf
   return (qt, EventTriggerDef name (TriggerOpsDef insert update delete) webhook rconf)
   where
-    assertCols ti Nothing = return ()
+    assertCols _ Nothing = return ()
     assertCols ti (Just sos) = do
       let cols = sosColumns sos
       case cols of
         SubCStar         -> return ()
-        SubCArray pgcols -> forM_ pgcols columnExists
-                            where
-                              listcols =  map pgiName $ getCols $ tiFieldInfoMap ti
-                              columnExists col = if col `elem` listcols
-                                                 then return ()
-                                                 else throw400  NotExists $ "column '" <> getPGColTxt col <> "' does not exist"
+        SubCArray pgcols -> forM_ pgcols (assertPGCol (tiFieldInfoMap ti) "")
 
 subTableP2 :: (P2C m) => QualifiedTable -> EventTriggerDef -> m ()
 subTableP2 qt q@(EventTriggerDef name def webhook rconf) = do
@@ -180,7 +175,7 @@ subTableP2shim (qt, etdef) = do
 instance HDBQuery CreateEventTriggerQuery where
   type Phase1Res CreateEventTriggerQuery = (QualifiedTable, EventTriggerDef)
   phaseOne = subTableP1
-  phaseTwo _ q = subTableP2shim q
+  phaseTwo _ = subTableP2shim
   schemaCachePolicy = SCPReload
 
 unsubTableP1 :: (P1C m) => DeleteEventTriggerQuery -> m ()
