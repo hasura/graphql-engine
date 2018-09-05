@@ -142,7 +142,7 @@ fetchEventTrigger trn = do
                                   |] (Identity trn) True
   getTrigger triggers
   where
-    getTrigger []    = throw404 "Could not fetch event trigger"
+    getTrigger []    = throw400 NotExists ("could not find event trigger '" <> trn <> "'")
     getTrigger (x:_) = return $ EventTrigger (QualifiedTable sn tn) trn' tDef webhook (RetryConf nr rint)
       where (sn, tn, trn', Q.AltJ tDef, webhook, nr, rint) = x
 
