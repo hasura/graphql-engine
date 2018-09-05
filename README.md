@@ -42,7 +42,7 @@ device_token  Text
 - Note down the Sender ID from top of this page (`SENDER_ID`);
 - Also note down the Server Key (`SERVER_KEY`).
 
-### Step 3: Deploy Google Cloud Function and setup trigger
+### Step 3: Deploy Google Cloud Function
 
 We'll configure HGE to send an event to a webhook trigger whenever an insert
 happens on the `message` table. The data inserted to this table contains the
@@ -58,8 +58,45 @@ We'll deploy this webhook as a Google Cloud Function.
          --runtime nodejs8 --trigger-http \
          --set-env-vars="FCM_SERVER_KEY=<SERVER_KEY>"
   ```
-- Copy URL from the output
+- Copy URL from the output (`TRIGGER_URL`)
+  ```yaml
+  httpsTrigger:
+    url: https://us-central1-hasura-test.cloudfunctions.net/push-notification
+  ```
 
+### Step 4: Setup event trigger
+
+Goto HGE console and then to the "Events" tab. Here we can add triggers which
+will be execute on insert/update/delete actions on tables configured.
+
+Add a new trigger with details as follows:
+
+```
+Trigger name:  message_event
+Schema/Table:  public/message
+Operations:    Insert
+Webhook URL:   <TRIGGER_URL>
+
+```
+
+Use the `TRIGGER_URL` from the cloudfunction deployment.
+
+### Step 5: Add configuration variables
+
+- Edit `index.html`, add `PROJECT_ID` and `SENDER_ID`.  
+- Edit `index.js`, add `FCM_PUBLIC_KEY` and Hasura GraphQL Engine url (`HGE_URL`)
+
+### Step 6: Run the server
+
+Run any HTTP server locally and visit the URL on browser.
+
+```bash
+http-server
+```
+
+> **Note**: If you're deploying to any server other than localhost, service
+workers will only work if the scheme is HTTPS.
 
 ## Architecture
+
 ![architecture diagram](arch.png)

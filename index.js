@@ -1,6 +1,6 @@
 // Let's check if the browser supports notifications
 if (!("Notification" in window)) {
-  alert("This browser does not support desktop notification");
+  alert("This browser does not support notifications");
 }
 
 const messaging = firebase.messaging();
@@ -87,6 +87,7 @@ function submitText() {
     return;
   }
   $('#title-submit').html('Sending...');
+  // Replace with HGE_URL
   const r = new Request('https://hasura-serverless-push.herokuapp.com/v1alpha1/graphql');
   const o = {
     method: 'POST',
@@ -124,13 +125,13 @@ $( document ).ready(function() {
   navigator.serviceWorker.register('firebase-messaging-sw.js')
     .then((registration) => {
       messaging.useServiceWorker(registration);
+      // Replace with FCM_PUBLIC_KEY
       messaging.usePublicVapidKey('BOfaiApSMLjFZVYX_s4gRqb3LbrKcwtbv4qmIYtdZtE6UskL3rxCqBa5hCLhVXjFYsTmA6M8eW-aFZpTQa4B80E');
       // Callback fired if Instance ID token is updated.
       messaging.onTokenRefresh(function() {
         messaging.getToken().then(function(refreshedToken) {
           console.log('Token refreshed.');
           saveToken(refreshedToken);
-          // ...
         }).catch(function(err) {
           console.error('Unable to retrieve refreshed token ', err);
         });
@@ -139,6 +140,7 @@ $( document ).ready(function() {
     }).catch(function(err) {
       console.error('An error occurred while registering service worker. ', err);
     });
+
   $('#text-input').on('keyup', function (e) {
     if (e.keyCode == 13) {
       submitText();
