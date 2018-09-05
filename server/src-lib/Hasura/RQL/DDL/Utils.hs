@@ -26,13 +26,10 @@ clearHdbViewsFunc =
   \ _sql text; \
   \ BEGIN \
   \ SELECT INTO _sql \
-  \        string_agg(format('DROP FUNCTION %s(%s) CASCADE;' \
-  \                        , p.oid::regproc \
-  \                        , pg_get_function_identity_arguments(p.oid)) \
+  \        string_agg('DROP FUNCTION hdb_views.' || quote_ident(r.routine_name) || '() CASCADE;' \
   \                 , E'\n') \
-  \ FROM   pg_proc      p \
-  \ JOIN   pg_namespace ns ON ns.oid = p.pronamespace \
-  \ WHERE  ns.nspname = 'hdb_views'; \
+  \ FROM   information_schema.routines r \
+  \ WHERE  r.specific_schema = 'hdb_views'; \
   \ IF _sql IS NOT NULL THEN \
   \    EXECUTE _sql; \
   \ END IF; \
