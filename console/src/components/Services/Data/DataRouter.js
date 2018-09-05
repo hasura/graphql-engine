@@ -194,12 +194,16 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
         },
         error => {
           console.error(JSON.stringify(error));
-          Promise.all([
-            store.dispatch({ type: ACCESS_KEY_ERROR, data: true }),
-          ]).then(() => {
-            replaceState('/login');
-            cb();
-          });
+          if (error.code === 'access-denied') {
+            Promise.all([
+              store.dispatch({ type: ACCESS_KEY_ERROR, data: true }),
+            ]).then(() => {
+              replaceState('/login');
+              cb();
+            });
+          } else {
+            alert(JSON.stringify(error));
+          }
         }
       );
     }
