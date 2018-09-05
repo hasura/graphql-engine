@@ -5,7 +5,7 @@
 Hasura GraphQL Engine documentation
 ===================================
 
-The Hasura GraphQL engine lets you setup a GraphQL server over a Postgres database in minutes.
+The Hasura GraphQL engine lets you setup a GraphQL server and event triggers over a Postgres database in minutes.
 
 
 .. toctree::
