@@ -24,6 +24,8 @@ timestamp     Timestamp   default: now()
 title         Text
 body          Text        nullable
 device_token  Text
+
+Primary key: id
 ```
 
 ### Step 2: Setup FCM
