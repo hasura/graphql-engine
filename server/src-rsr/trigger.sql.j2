@@ -3,17 +3,17 @@ CREATE OR REPLACE function hdb_views.notify_hasura_{{NAME}}_{{OPERATION}}() RETU
    AS $$
    DECLARE
    payload json;
-   data json;
+   _data json;
    id text;
    BEGIN
      id := gen_random_uuid();
-     data := json_build_object(
+     _data := json_build_object(
        'old', {{OLD_DATA_EXPRESSION}},
        'new', {{NEW_DATA_EXPRESSION}}
      );
      payload := json_build_object(
                         'op', TG_OP,
-                        'data', data
+                        'data', _data
                         )::text;
      INSERT INTO
      hdb_catalog.event_log (id, schema_name, table_name, trigger_name, trigger_id, payload)

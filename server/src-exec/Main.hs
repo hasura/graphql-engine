@@ -23,7 +23,6 @@ import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
-import           Hasura.Events.HTTP         (HTTPSessionMgr (..))
 import           Hasura.Events.Lib
 import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
@@ -35,7 +34,6 @@ import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
 
 import qualified Database.PG.Query          as Q
-import qualified Network.Connection         as NC
 import qualified Network.HTTP.Client.TLS    as TLS
 import qualified Network.Wreq.Session       as WrqS
 
@@ -157,14 +155,13 @@ main =  do
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
 
-      maxEvThrds <- getMaxEventThreads
-      evPollSec  <- getEventsPollingSec
+      maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+      evPollSec  <- getFromEnv defaultPollingIntervalSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
 
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evPollSec
       httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
-      httpInsecureSession <- WrqS.newSessionControl Nothing (TLS.mkManagerSettings tlsInsecure Nothing)
 
-      void $ C.forkIO $ processEventQueue hloggerCtx (HTTPSessionMgr httpSession httpInsecureSession) pool cacheRef eventEngineCtx
+      void $ C.forkIO $ processEventQueue hloggerCtx httpSession pool cacheRef eventEngineCtx
 
       Warp.runSettings warpSettings app
 
@@ -197,19 +194,13 @@ main =  do
       putStrLn "event_triggers: preparing data"
       res <- runTx ci unlockAllEvents
       either ((>> exitFailure) . printJSON) return res
-    getMaxEventThreads = do
-      mEnv <- lookupEnv "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+    getFromEnv :: (Read a) => a -> String -> IO a
+    getFromEnv defaults env = do
+      mEnv <- lookupEnv env
       let mRes = case mEnv of
-            Nothing  -> Just defaultMaxEventThreads
-            Just val -> readMaybe val::Maybe Int
+            Nothing  -> Just defaults
+            Just val -> readMaybe val
           eRes = maybe (Left "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE is not an integer") Right mRes
-      either ((>> exitFailure) . putStrLn) return eRes
-    getEventsPollingSec = do
-      mEnv <- lookupEnv "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-      let mRes = case mEnv of
-            Nothing  -> Just defaultPollingIntervalSec
-            Just val -> readMaybe val::Maybe Int
-          eRes = maybe (Left "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL is not an integer") Right mRes
       either ((>> exitFailure) . putStrLn) return eRes
 
     cleanSuccess = putStrLn "successfully cleaned graphql-engine related data"
@@ -225,4 +216,3 @@ main =  do
     -- if flags given are Nothing consider it's value from Env
     considerEnv _ (Just t) = return $ Just t
     considerEnv e Nothing  = fmap T.pack <$> lookupEnv e
-    tlsInsecure = NC.TLSSettingsSimple True False False

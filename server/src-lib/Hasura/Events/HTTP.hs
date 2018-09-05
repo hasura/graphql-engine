@@ -9,13 +9,11 @@
 
 module Hasura.Events.HTTP
   ( HTTP(..)
-  , HTTPSessionMgr(..)
   , mkHTTP
   , mkAnyHTTPPost
   , mkHTTPMaybe
   , HTTPErr(..)
   , runHTTP
-  , runInsecureHTTP
   , default2xxParser
   , noBody2xxParser
   , defaultRetryPolicy
@@ -52,7 +50,7 @@ import           Control.Exception          (try)
 import           Control.Lens
 import           Control.Monad.Except       (MonadError, throwError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
-import           Control.Monad.Reader       (MonadReader, ask)
+import           Control.Monad.Reader       (MonadReader)
 import           Data.Has
 import           Hasura.Logging
 -- import           Data.Monoid
@@ -72,11 +70,6 @@ data ExtraContext
 
 $(J.deriveJSON (J.aesonDrop 2 J.snakeCase){J.omitNothingFields=True} ''ExtraContext)
 
-data HTTPSessionMgr
-  = HTTPSessionMgr
-  { _hsmSession         :: !WS.Session
-  , _hsmInsecureSession :: !WS.Session
-  }
 data HTTPErr
   = HClient !H.HttpException
   | HParse !N.Status !String
@@ -276,13 +269,13 @@ runHTTP
   :: ( MonadReader r m
      , MonadError HTTPErr m
      , MonadIO m
-     , Has HTTPSessionMgr r
+     , Has WS.Session r
      , Has HLogger r
      )
   => W.Options -> HTTP a -> Maybe ExtraContext -> m a
 runHTTP opts http exLog = do
   -- try the http request
-  res <- R.retrying retryPol' retryFn' $ httpWithLogging opts True http exLog
+  res <- R.retrying retryPol' retryFn' $ httpWithLogging opts http exLog
 
   -- process the result
   either throwError return res
@@ -290,45 +283,24 @@ runHTTP opts http exLog = do
   where
     retryPol'  = R.RetryPolicyM $ liftIO . R.getRetryPolicyM (_hRetryPolicy http)
     retryFn' _ = return . _hRetryFn http
-
-runInsecureHTTP
-  :: ( MonadReader r m
-     , MonadError HTTPErr m
-     , MonadIO m
-     , Has HTTPSessionMgr r
-     , Has HLogger r
-     )
-  => W.Options -> HTTP a -> Maybe ExtraContext -> m a
-runInsecureHTTP opts http exLog = do
-  -- try the http request
-  res <- R.retrying retryPol' retryFn' $ httpWithLogging opts False http exLog
-
-  -- process the result
-  either throwError return res
-  where
-    retryPol'  = R.RetryPolicyM $ liftIO . R.getRetryPolicyM (_hRetryPolicy http)
-    retryFn' _ = return . _hRetryFn http
-
 
 httpWithLogging
-  :: (MonadReader r m, MonadIO m, Has HTTPSessionMgr r, Has HLogger r)
-  => W.Options -> Bool -> HTTP a -> Maybe ExtraContext -> R.RetryStatus -> m (Either HTTPErr a)
+  :: ( MonadReader r m
+     , MonadIO m
+     , Has WS.Session r
+     , Has HLogger r
+     )
+  => W.Options -> HTTP a -> Maybe ExtraContext -> R.RetryStatus -> m (Either HTTPErr a)
 -- the actual http action
-httpWithLogging opts isSecure (HTTP method url mPayload mFormParams optsMod bodyParser _ _) exLog retryStatus = do
+httpWithLogging opts (HTTP method url mPayload mFormParams optsMod bodyParser _ _) exLog retryStatus = do
   (logF:: HLogger) <- asks getter
   -- log the request
   liftIO $ logF $ toEngineLog $ HTTPReq method url mPayload
     (R.rsIterNumber retryStatus) (R.rsPreviousDelay retryStatus)
 
-  (HTTPSessionMgr secSess insecSess) <- getter <$> ask
+  session <- asks getter
 
-  -- try the request
-  res <- case isSecure of
-    -- make requests with the secure http session (meaning verifies ssl certs ca)
-    True  -> finallyRunHTTPPlz secSess
-    -- m
-
-  -- log the response
+  res <- finallyRunHTTPPlz session
   case res of
     Left e     -> liftIO $ logF $ toEngineLog $ HClient e
     Right resp ->
@@ -343,7 +315,7 @@ httpWithLogging opts isSecure (HTTP method url mPayload mFormParams optsMod body
     -- set wreq options to ignore status code exceptions
     ignoreStatusCodeExceptions _ _ = return ()
     finalOpts = optsMod opts
-                & W.checkResponse .~ Just ignoreStatusCodeExceptions
+                & W.checkResponse ?~ ignoreStatusCodeExceptions
 
     -- the actual function which makes the relevant Wreq calls
     finallyRunHTTPPlz sessMgr =
