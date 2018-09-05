@@ -41,13 +41,6 @@ ALTER TABLE ONLY public.message
 
 
 --
--- Name: message notify_skor_message_event_insert; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER notify_skor_message_event_insert AFTER INSERT ON public.message FOR EACH ROW EXECUTE PROCEDURE hdb_views.notify_skor_message_event_insert();
-
-
---
 -- PostgreSQL database dump complete
 --
 
