@@ -75,8 +75,9 @@ $( document ).ready(function() {
 });
 
 var search = instantsearch({
-  // Replace with your own values
+  // Replace with your own APP_ID
   appId: 'WCBB1VVLRC',
+  // Replace with SEARCH KEY
   apiKey: '8effee2588d61678501731405a86394d', // search only API key, no ADMIN key
   indexName: 'demo_serverless_etl_app',
   routing: true,
