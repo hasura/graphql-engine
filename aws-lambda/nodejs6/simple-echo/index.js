@@ -14,14 +14,14 @@ exports.handler = (event, context, callback) => {
     };
     console.log(request);
 
-    if (request.table === "notes" && request.op === "INSERT") {
-        response.body = `New note ${request.data.new.id} inserted, with data: ${request.data.new.note}`;
+    if (request.table.name === "notes" && request.event.op === "INSERT") {
+        response.body = `New note ${request.event.data.new.id} inserted, with data: ${request.event.data.new.note}`;
     }
-    else if (request.table === "notes" && request.op === "UPDATE") {
-        response.body = `Note ${request.data.new.id} updated, with data: ${request.data.new.note}`;
+    else if (request.table.name === "notes" && request.event.op === "UPDATE") {
+        response.body = `Note ${request.event.data.new.id} updated, with data: ${request.event.data.new.note}`;
     }
-    else if (request.table === "notes" && request.op === "DELETE") {
-        response.body = `Note ${request.data.old.id} deleted, with data: ${request.data.old.note}`;
+    else if (request.table.name === "notes" && request.event.op === "DELETE") {
+        response.body = `Note ${request.event.data.old.id} deleted, with data: ${request.event.data.old.note}`;
     }
 
     callback(null, response);

@@ -32,8 +32,8 @@ def lambda_handler(event, context):
             "statusCode": 400,
             "body": json.dumps({'message': 'Unable to parse request body'})
         }
-    data = body['data']
-    qv = {'noteId': data['id'], 'data': '{} processed with python'.format(data['note'])}
+    data = body['event']['data']
+    qv = {'noteId': data['old']['id'], 'data': data['old']['note']}
     jsonBody = {'query': query, 'variables': qv}
 
     resp = requests.post(HGE_URL, data=json.dumps(jsonBody), headers=HEADERS)
@@ -43,4 +43,3 @@ def lambda_handler(event, context):
         "statusCode": 200,
         "body": json.dumps({'message': 'success'})
     }
-

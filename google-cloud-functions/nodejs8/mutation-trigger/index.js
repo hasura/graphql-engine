@@ -23,10 +23,10 @@ exports.trigger = async (req, res) => {
   const GMAPS_API_KEY = process.env.GMAPS_API_KEY;
   const HASURA_GRAPHQL_ENGINE_URL = process.env.HASURA_GRAPHQL_ENGINE_URL;
 
-  const { op, data, table, schema } = req.body;
+  const { event: {op, data}, table } = req.body;
 
-  if (op === 'INSERT' && table === 'profile' && schema === 'public') {
-    const { id, address } = data;
+  if (op === 'INSERT' && table.name === 'profile' && table.schema === 'public') {
+    const { id, address } = data.new;
     const gmaps = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${GMAPS_API_KEY}`);
     const gmapsResponse = await gmaps.json();
     if (gmapsResponse.results && gmapsResponse.results.length === 0) {

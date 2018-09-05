@@ -19,7 +19,7 @@ module.exports = function (context, req) {
     context.log('JavaScript HTTP trigger function processed a request.');
     try {
         context.log('Inside');
-        const { op, data, table, schema } = req.body;
+        const { event: {op, data}, table } = req.body;
         context.log(data);
         context.log(data.new.id);
         const qv = {noteId: data.old.id, data: data.old.note};
