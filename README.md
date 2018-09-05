@@ -76,7 +76,7 @@ This project comes with a `Dockerfile`. You can deploy it wherever you wish.
 
 ## Implementation Details
 
-We will use Apollo's `graphql-tools` library to make a working GraphQL Schema out of our custom resolvers. Finally, we will merge these resolvers with the existing Hasura schema so that it can eb queried under the same endpoint.
+We will use Apollo's `graphql-tools` library to make a working GraphQL Schema out of our custom resolvers. Finally, we will merge these resolvers with the existing Hasura schema so that it can be queried under the same endpoint.
 
 ### Writing type definitions
 
@@ -91,7 +91,7 @@ type Query {
   # field count will return an Int
   count: Int,
 
-  #field user_average_age will return a Float
+  # field user_average_age will return a Float
   user_average_age: Float
 }
 
@@ -106,10 +106,10 @@ type Mutation {
 
 ### Writing resolvers
 
-Every resolver is a function that is executed with the following arguements in the order below:
+Every resolver is a function that is executed with the following arguments in the order below:
 
 1. `root`: The root of the current field
-2. `args`: The arguements provided in the query
+2. `args`: The arguments provided in the query
 3. `context`: The server context, which also consists of headers
 4. `info`: The AST document related to the query made
 
@@ -146,7 +146,7 @@ const resolvers = {
 };
 ```
 
-### Making a new schemna out of these custom resolvers
+### Making a new schema out of these custom resolvers
 
 Use `makeExecutableSchema()` function from the `graphql-tools` library to make a schema out of the type definitions and resolvers above.
 
