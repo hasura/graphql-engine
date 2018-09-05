@@ -87,6 +87,7 @@ data RQLQuery
   | RQReplaceMetadata !ReplaceMetadata
   | RQExportMetadata !ExportMetadata
   | RQClearMetadata !ClearMetadata
+  | RQReloadMetadata !ReloadMetadata
 
   | RQDumpInternalState !DumpInternalState
 
@@ -184,6 +185,7 @@ queryNeedsReload qi = case qi of
   RQReplaceMetadata q          -> queryModifiesSchema q
   RQExportMetadata q           -> queryModifiesSchema q
   RQClearMetadata q            -> queryModifiesSchema q
+  RQReloadMetadata q           -> queryModifiesSchema q
 
   RQDumpInternalState q        -> queryModifiesSchema q
 
@@ -231,6 +233,7 @@ buildTxAny userInfo sc rq = case rq of
   RQReplaceMetadata q -> buildTx userInfo sc q
   RQClearMetadata q -> buildTx userInfo sc q
   RQExportMetadata q -> buildTx userInfo sc q
+  RQReloadMetadata q -> buildTx userInfo sc q
 
   RQDumpInternalState q -> buildTx userInfo sc q
 

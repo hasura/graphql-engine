@@ -26,6 +26,8 @@ module Hasura.RQL.DDL.Metadata
 
   , ClearMetadata(..)
   , clearMetadata
+
+  , ReloadMetadata(..)
   ) where
 
 import           Control.Lens
@@ -368,6 +370,29 @@ instance HDBQuery ExportMetadata where
   phaseTwo _ _ = encode <$> liftTx fetchMetadata
 
   schemaCachePolicy = SCPNoChange
+
+data ReloadMetadata
+  = ReloadMetadata
+  deriving (Show, Eq, Lift)
+
+instance FromJSON ReloadMetadata where
+  parseJSON _ = return ReloadMetadata
+
+$(deriveToJSON defaultOptions ''ReloadMetadata)
+
+instance HDBQuery ReloadMetadata where
+
+  type Phase1Res ReloadMetadata = ()
+  phaseOne _ = adminOnly
+
+  phaseTwo _ _ = do
+    sc <- liftTx $ do
+      Q.unitQE defaultTxErrorHandler clearHdbViews () False
+      DT.buildSchemaCache
+    writeSchemaCache sc
+    return successMsg
+
+  schemaCachePolicy = SCPReload
 
 data DumpInternalState
   = DumpInternalState
