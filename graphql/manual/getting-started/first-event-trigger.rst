@@ -33,5 +33,25 @@ In the Hasura console, navigate to ``Events -> Create trigger`` and:
 This sets up our webhook ``https://httpbin.org/post`` to receive database changes on insert, update and delete.
 
 
-Insert some data
-----------------
+Watch the trigger in action
+---------------------------
+
+1. Insert some sample data into the ``profile`` table.
+2. Now navigate to the ``Events`` tab -> click on the ``echo`` trigger on the left sidebar.
+
+.. image:: ../../../img/graphql/manual/getting-started/trigger-details.png
+
+3. Click on the details of the event, to see the response from the webhook.
+
+.. image:: ../../../img/graphql/manual/getting-started/trigger-events.png
+
+
+Next steps
+----------
+
+See:
+^^^^
+
+- :doc:`Make your first graphql query <./first-graphql-query>`
+- :doc:`Read more about Event Triggers <../event-triggers/index>`
+
