@@ -80,7 +80,7 @@ class StreamingLogs extends Component {
           }
           if (col === 'created_at') {
             const formattedDate = new Date(r.created_at).toUTCString();
-            return formattedDate;
+            return <div className={conditionalClassname}>{formattedDate}</div>;
           }
           const content = r[col] === undefined ? 'NULL' : r[col].toString();
           return <div className={conditionalClassname}>{content}</div>;
@@ -103,15 +103,18 @@ class StreamingLogs extends Component {
         <div>
           <button
             onClick={this.watchChanges.bind(this)}
-            className={' btn btn-default'}
+            className={styles.watchBtn + ' btn btn-default'}
             data-test="run-query"
           >
             {this.state.isWatching ? (
               <span>
-                Streaming... <i className={'fa fa-spinner fa-spin'} />
+                <i className={'fa fa-pause'} /> Streaming...{' '}
+                <i className={'fa fa-spinner fa-spin'} />
               </span>
             ) : (
-              'Stream Logs'
+              <span>
+                Stream Logs <i className={'fa fa-play'} />
+              </span>
             )}
           </button>
         </div>

@@ -306,12 +306,12 @@ const ViewRows = ({
                     showPagination={false}
                     SubComponent={logRow => {
                       const finalIndex = logRow.index;
+                      const finalRow = currentRow.logs[finalIndex];
                       const currentPayload = JSON.stringify(
-                        currentRow.payload,
+                        finalRow.request,
                         null,
                         4
                       );
-                      const finalRow = currentRow.logs[finalIndex];
                       // check if response is type JSON
                       let finalResponse = finalRow.response;
                       try {
