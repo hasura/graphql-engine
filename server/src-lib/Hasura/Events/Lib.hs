@@ -30,7 +30,6 @@ import           Hasura.SQL.Types
 
 import qualified Control.Concurrent.STM.TQueue as TQ
 import qualified Control.Retry                 as R
-import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as B
 import qualified Data.HashMap.Strict           as M
 import qualified Data.TByteString              as TBS
@@ -51,7 +50,7 @@ newtype EventInternalErr
   deriving (Show, Eq)
 
 instance L.ToEngineLog EventInternalErr where
-  toEngineLog (EventInternalErr qerr) = (L.LevelError, "event-trigger", J.toJSON qerr )
+  toEngineLog (EventInternalErr qerr) = (L.LevelError, "event-trigger", toJSON qerr )
 
 data TriggerMeta
   = TriggerMeta
@@ -66,7 +65,7 @@ data Event
   { eId        :: UUID
   , eTable     :: QualifiedTable
   , eTrigger   :: TriggerMeta
-  , eEvent     :: J.Value
+  , eEvent     :: Value
   -- , eDelivered   :: Bool
   -- , eError       :: Bool
   , eTries     :: Int64
@@ -90,6 +89,7 @@ data Invocation
   = Invocation
   { iEventId  :: UUID
   , iStatus   :: Int64
+  , iRequest  :: Value
   , iResponse :: TBS.TByteString
   }
 
@@ -234,11 +234,11 @@ tryWebhook pool e _ = do
       finally <- liftIO $ runExceptT $ case eitherResp of
         Left err ->
           case err of
-            HClient excp -> runFailureQ pool $ Invocation (eId e) 1000 (TBS.fromLBS $ J.encode $ show excp)
-            HParse _ detail -> runFailureQ pool $ Invocation (eId e) 1001 (TBS.fromLBS $ J.encode detail)
-            HStatus status detail -> runFailureQ pool $ Invocation (eId e) (fromIntegral $ N.statusCode status) detail
-            HOther detail -> runFailureQ pool $ Invocation (eId e) 500 (TBS.fromLBS $ J.encode detail)
-        Right resp -> runSuccessQ pool e $ Invocation (eId e) 200 (TBS.fromLBS resp)
+            HClient excp -> runFailureQ pool $ Invocation (eId e) 1000 (toJSON e) (TBS.fromLBS $ encode $ show excp)
+            HParse _ detail -> runFailureQ pool $ Invocation (eId e) 1001 (toJSON e) (TBS.fromLBS $ encode detail)
+            HStatus status detail -> runFailureQ pool $ Invocation (eId e) (fromIntegral $ N.statusCode status) (toJSON e) detail
+            HOther detail -> runFailureQ pool $ Invocation (eId e) 500 (toJSON e) (TBS.fromLBS $ encode detail)
+        Right resp -> runSuccessQ pool e $ Invocation (eId e) 200 (toJSON e) (TBS.fromLBS resp)
       case finally of
         Left err -> liftIO $ logger $ L.toEngineLog $ EventInternalErr err
         Right _  -> return ()
@@ -262,9 +262,9 @@ fetchEvents =
 insertInvocation :: Invocation -> Q.TxE QErr ()
 insertInvocation invo = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
-          INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, response)
-          VALUES ($1, $2, $3)
-          |] (iEventId invo, iStatus invo, Q.AltJ $ J.toJSON $ iResponse invo) True
+          INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, request, response)
+          VALUES ($1, $2, $3, $4)
+          |] (iEventId invo, iStatus invo, Q.AltJ $ toJSON $ iRequest invo, Q.AltJ $ toJSON $ iResponse invo) True
   Q.unitQE defaultTxErrorHandler [Q.sql|
           UPDATE hdb_catalog.event_log
           SET tries = tries + 1
@@ -287,13 +287,13 @@ markError e =
           WHERE id = $1
           |] (Identity $ eId e) True
 
-lockEvent :: Event -> Q.TxE QErr ()
-lockEvent e =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-          UPDATE hdb_catalog.event_log
-          SET locked = 't'
-          WHERE id = $1
-          |] (Identity $ eId e) True
+-- lockEvent :: Event -> Q.TxE QErr ()
+-- lockEvent e =
+--   Q.unitQE defaultTxErrorHandler [Q.sql|
+--           UPDATE hdb_catalog.event_log
+--           SET locked = 't'
+--           WHERE id = $1
+--           |] (Identity $ eId e) True
 
 unlockEvent :: Event -> Q.TxE QErr ()
 unlockEvent e =
@@ -321,8 +321,8 @@ runSuccessQ pool e invo =  Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ d
 runErrorQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
 runErrorQ pool  e = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ markError e
 
-runLockQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
-runLockQ pool e = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ lockEvent e
+-- runLockQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
+-- runLockQ pool e = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ lockEvent e
 
 runUnlockQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
 runUnlockQ pool e = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ unlockEvent e
