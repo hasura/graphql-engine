@@ -23,7 +23,6 @@ import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
-import           Hasura.Events.HTTP         (HTTPSessionMgr (..))
 import           Hasura.Events.Lib
 import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
@@ -35,7 +34,6 @@ import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
 
 import qualified Database.PG.Query          as Q
-import qualified Network.Connection         as NC
 import qualified Network.HTTP.Client.TLS    as TLS
 import qualified Network.Wreq.Session       as WrqS
 
@@ -162,9 +160,8 @@ main =  do
 
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evPollSec
       httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
-      httpInsecureSession <- WrqS.newSessionControl Nothing (TLS.mkManagerSettings tlsInsecure Nothing)
 
-      void $ C.forkIO $ processEventQueue hloggerCtx (HTTPSessionMgr httpSession httpInsecureSession) pool cacheRef eventEngineCtx
+      void $ C.forkIO $ processEventQueue hloggerCtx httpSession pool cacheRef eventEngineCtx
 
       Warp.runSettings warpSettings app
 
@@ -219,4 +216,3 @@ main =  do
     -- if flags given are Nothing consider it's value from Env
     considerEnv _ (Just t) = return $ Just t
     considerEnv e Nothing  = fmap T.pack <$> lookupEnv e
-    tlsInsecure = NC.TLSSettingsSimple True False False

@@ -40,6 +40,7 @@ import qualified Hasura.GraphQL.Schema         as GS
 import qualified Hasura.Logging                as L
 import qualified Network.HTTP.Types            as N
 import qualified Network.Wreq                  as W
+import qualified Network.Wreq.Session          as WS
 
 
 type CacheRef = IORef (SchemaCache, GS.GCtxMap)
@@ -113,7 +114,7 @@ initEventEngineCtx maxT pollI = do
   c <- newTVar 0
   return $ EventEngineCtx q c maxT pollI
 
-processEventQueue :: L.LoggerCtx -> HTTPSessionMgr -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
+processEventQueue :: L.LoggerCtx -> WS.Session -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
 processEventQueue logctx httpSess pool cacheRef eectx = do
   putStrLn "event_trigger: starting workers"
   threads <- mapM async [pollThread , consumeThread]
@@ -133,7 +134,7 @@ pollEvents logger pool eectx  = forever $ do
   threadDelay (pollI * 1000 * 1000)
 
 consumeEvents
-  :: HLogger -> HTTPSessionMgr -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
+  :: HLogger -> WS.Session -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
 consumeEvents logger httpSess pool cacheRef eectx  = forever $ do
   event <- atomically $ do
     let EventEngineCtx q _ _ _ = eectx
@@ -143,7 +144,7 @@ consumeEvents logger httpSess pool cacheRef eectx  = forever $ do
 processEvent
   :: ( MonadReader r m
      , MonadIO m
-     , Has HTTPSessionMgr r
+     , Has WS.Session r
      , Has HLogger r
      , Has CacheRef r
      , Has EventEngineCtx r
@@ -174,7 +175,7 @@ processEvent pool e = do
 getRetryPolicy
  :: ( MonadReader r m
     , MonadIO m
-    , Has HTTPSessionMgr r
+    , Has WS.Session r
     , Has HLogger r
     , Has CacheRef r
     , Has EventEngineCtx r
@@ -198,7 +199,7 @@ getRetryPolicy e = do
 tryWebhook
   :: ( MonadReader r m
      , MonadIO m
-     , Has HTTPSessionMgr r
+     , Has WS.Session r
      , Has HLogger r
      , Has CacheRef r
      , Has EventEngineCtx r
