@@ -22,6 +22,7 @@ import           Data.Int                   (Int64)
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
+import           Text.Regex                 (matchRegex, mkRegex)
 
 import qualified Data.Text                  as T
 
@@ -58,13 +59,13 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
 
 data CreateEventTriggerQuery
   = CreateEventTriggerQuery
-  { stqName      :: !T.Text
-  , stqTable     :: !QualifiedTable
-  , stqInsert    :: !(Maybe SubscribeOpSpec)
-  , stqUpdate    :: !(Maybe SubscribeOpSpec)
-  , stqDelete    :: !(Maybe SubscribeOpSpec)
-  , stqRetryConf :: !(Maybe RetryConf)
-  , stgWebhook   :: !T.Text
+  { cetqName      :: !T.Text
+  , cetqTable     :: !QualifiedTable
+  , cetqInsert    :: !(Maybe SubscribeOpSpec)
+  , cetqUpdate    :: !(Maybe SubscribeOpSpec)
+  , cetqDelete    :: !(Maybe SubscribeOpSpec)
+  , cetqRetryConf :: !(Maybe RetryConf)
+  , cetqWebhook   :: !T.Text
   } deriving (Show, Eq, Lift)
 
 instance FromJSON CreateEventTriggerQuery where
@@ -76,13 +77,18 @@ instance FromJSON CreateEventTriggerQuery where
     delete    <- o .:? "delete"
     retryConf <- o .:? "retry_conf"
     webhook   <- o .: "webhook"
+    let regex = mkRegex "^\\w+$"
+        mName = matchRegex regex (T.unpack name)
+    case mName of
+      Just _  -> return ()
+      Nothing -> fail "only alphanumeric and underscore allowed for name"
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
     return $ CreateEventTriggerQuery name table insert update delete retryConf webhook
   parseJSON _ = fail "expecting an object"
 
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)
+$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)
 
 data TriggerOpsDef
   = TriggerOpsDef
@@ -95,10 +101,10 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
 data DeleteEventTriggerQuery
   = DeleteEventTriggerQuery
-  { utqName :: !T.Text
+  { detqName :: !T.Text
   } deriving (Show, Eq, Lift)
 
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
 
 data EventTrigger
   = EventTrigger
