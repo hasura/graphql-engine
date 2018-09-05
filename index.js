@@ -5,6 +5,8 @@ if (!("Notification" in window)) {
 
 const messaging = firebase.messaging();
 const screens = ['#loading-screen', '#permission-screen', '#input-screen', '#waiting-screen'];
+// Replace with HGE_URL
+const HGE_URL = 'https://hasura-serverless-push.herokuapp.com/v1alpha1/graphql';
 
 function showScreen(name) {
   for (screen of screens) {
@@ -87,8 +89,7 @@ function submitText() {
     return;
   }
   $('#title-submit').html('Sending...');
-  // Replace with HGE_URL
-  const r = new Request('https://hasura-serverless-push.herokuapp.com/v1alpha1/graphql');
+  const r = new Request(HGE_URL);
   const o = {
     method: 'POST',
     body: JSON.stringify({
@@ -146,4 +147,6 @@ $( document ).ready(function() {
       submitText();
     }
   });
+
+  $('#hge-console-link').attr('href', HGE_URL.replace('v1alpha1/graphql', 'console'));
 });
