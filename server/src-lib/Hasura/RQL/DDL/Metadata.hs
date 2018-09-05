@@ -387,7 +387,7 @@ instance HDBQuery ReloadMetadata where
 
   phaseTwo _ _ = do
     sc <- liftTx $ do
-      Q.unitQE defaultTxErrorHandler clearHdbViews () False
+      Q.catchE defaultTxErrorHandler clearHdbViews
       DT.buildSchemaCache
     writeSchemaCache sc
     return successMsg
