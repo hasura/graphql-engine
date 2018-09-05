@@ -28,20 +28,26 @@ const setup = () => {
   });
 };
 
+const testPrefix = 'create-trigger';
+
+const makeAssertion = (assertion, specFunc) => {
+  it(`${testPrefix} : ${assertion}`, specFunc);
+};
+
 export const runCreateTriggerTests = () => {
   describe('Create Trigger', () => {
-    it('Create table to use in triggers', passPTCreateTable);
-    it('Visit events manage page', visitEventsManagePage);
-    it(
+    makeAssertion('Create table to use in triggers', passPTCreateTable);
+    makeAssertion('Visit events manage page', visitEventsManagePage);
+    makeAssertion(
       'Create trigger button opens the correct route',
       checkCreateTriggerRoute
     );
-    it('Fails to create trigger without data', failCTWithoutData);
-    it('Successfuly creates trigger', passCT);
-    it('Fails to create duplicate trigger', failCTDuplicateTrigger);
-    it('Insert a row and invoke trigger', insertTableRow);
-    it('Delete off the test trigger', deleteCTTestTrigger);
-    it('Delete off the test table', deleteCTTestTable);
+    makeAssertion('Fails to create trigger without data', failCTWithoutData);
+    makeAssertion('Successfuly creates trigger', passCT);
+    makeAssertion('Fails to create duplicate trigger', failCTDuplicateTrigger);
+    makeAssertion('Insert a row and invoke trigger', insertTableRow);
+    makeAssertion('Delete off the test trigger', deleteCTTestTrigger);
+    makeAssertion('Delete off the test table', deleteCTTestTable);
   });
 };
 
