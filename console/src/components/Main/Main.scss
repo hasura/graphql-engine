@@ -838,15 +838,34 @@
 {
   border-bottom: 1px solid #788095;
 }
+.supportSection {
+  cursor: pointer;
+  .helpSection {
+    &:hover {
+      opacity: 0.7;
+      font-weight: 600;
+    }
+  }
+}
 .helpSection {
   display: flex;
   align-items: center;
-  background-color: #22283b;
+  // background-color: #22283b;
   padding: 15px;
+  position: relative;
+  .selected {
+    bottom: 0;
+    background: #FFC627;
+    position: absolute;
+    z-index: 999999999;
+    height: 4px;
+    width: 100%;
+    left: 0px;
+  }
 }
 
 .settingsIcon {
-  background: #5668a4;
+  // background: #5668a4;
   a {
     text-decoration: none;
   }
@@ -859,6 +878,9 @@
   padding: 15px;
   color: white;
   cursor: pointer;
+  &:hover {
+    opacity: 0.7;
+  }
   img
   {
     width: 23px;
@@ -866,7 +888,7 @@
 }
 
 .secureSection {
-  background-color: #545a6c;
+  // background-color: #545a6c;
 
   padding: 15px;
   a {
@@ -922,7 +944,8 @@
 .pixelText1
 {
   font-family: arcadeClassic;
-  font-size: 11px;
+  font-size: 14px;
+  padding-left: 0px !important;
   text-transform: uppercase;
   padding: 10px 0;
   text-align: left;
@@ -1041,8 +1064,8 @@
     }
     .socialIcon
     {
-      width: 110px;
-      height: 110px;
+      width: 90px;
+      height: 90px;
       border: 2px solid #fff;
       padding: 20px;
       display: flex;
