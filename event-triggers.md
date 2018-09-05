@@ -88,4 +88,4 @@ Propagate event driven and asynchronous information to UI clients easily with Gr
 
 ![Reactive apps architecture](assets/reactive-apps-arch.png)
 
-**Watch:**[Building a reactive app with an async backend](https://youtu.be/kTSOxRrtCeI) (*04:15 mins*)
+**Watch**: [Building a reactive app with an async backend](https://youtu.be/kTSOxRrtCeI) (*04:15 mins*)
