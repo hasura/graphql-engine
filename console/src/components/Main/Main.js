@@ -85,8 +85,6 @@ class Main extends React.Component {
     const mail = require('./mail.svg');
     const pixHeart = require('./pix-heart.svg');
     const closeIcon = require('./cancel-icon.svg');
-    const githubicon = require('./githubicon.png');
-    const twittericon = require('./twittericon.png');
     const currentLocation = location.pathname;
     const currentActiveBlock = currentLocation.split('/')[1];
 
@@ -295,8 +293,12 @@ class Main extends React.Component {
                       */}
                         <div className={styles.displayFlex}>
                           <li className={styles.pixelText1}>
-                            Roses are red, Violets are blue; Hasura/GraphQL
-                            star/tweet cos v love u {'<'}3
+                            Roses are red, Violets are blue; Starring us on
+                            Github Makes our{' '}
+                            <span role="img" aria-label="hasura_love">
+                              ❤️{' '}
+                            </span>{' '}
+                            go wooooo!
                           </li>
                           <li className={'dropdown-item'}>
                             <a
@@ -307,7 +309,9 @@ class Main extends React.Component {
                               <div className={styles.socialIcon}>
                                 <img
                                   className="img img-responsive"
-                                  src={githubicon}
+                                  src={
+                                    'https://storage.googleapis.com/hasura-graphql-engine/console/assets/githubicon.png'
+                                  }
                                   alt={'Github'}
                                 />
                               </div>
@@ -337,7 +341,9 @@ class Main extends React.Component {
                               <div className={styles.socialIcon}>
                                 <img
                                   className="img img-responsive"
-                                  src={twittericon}
+                                  src={
+                                    'https://storage.googleapis.com/hasura-graphql-engine/console/assets/twittericon.png'
+                                  }
                                   alt={'Twitter'}
                                 />
                               </div>

@@ -3,7 +3,7 @@
 @import "../Common/Common.scss";
 @font-face {
     font-family: arcadeClassic;
-    src: url(../../../static/fonts/ARCADECLASSIC.ttf);
+    src: url(https://storage.googleapis.com/hasura-graphql-engine/console/assets/ARCADECLASSIC.ttf);
 }
 .container {
   position: relative;
@@ -987,7 +987,7 @@
   border: 0;
   .dropdown_menu_container
   {
-    width: 430px;
+    width: 460px;
     float: right;
     background-color: #0038d5;
     padding: 25px;
