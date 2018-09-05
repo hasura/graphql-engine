@@ -17,6 +17,7 @@ The Hasura GraphQL engine lets you setup a GraphQL server over a Postgres databa
   queries/index
   mutations/index
   subscriptions/index
+  event-triggers/index
   auth/index
   migrations/index
   Deploying <deployment/index>
