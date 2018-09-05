@@ -95,7 +95,7 @@ const streamingLogsReducer = (triggerName, triggerList, logState, action) => {
               columns: ['*'],
             },
           ],
-          limit: 20,
+          limit: 10,
           where: { event: { trigger_name: triggerName } },
         },
         activePath: [triggerName],
