@@ -17,7 +17,6 @@ import           Data.Has
 
 import qualified Data.Aeson                      as J
 import qualified Data.HashMap.Strict             as Map
-import qualified Data.Text                       as T
 import qualified Data.Vector                     as V
 import qualified Language.GraphQL.Draft.Syntax   as G
 
@@ -169,22 +168,26 @@ validateObject
   -> InpObjTyInfo -> [(G.Name, a)] -> m AnnGObject
 validateObject valParser tyInfo flds = do
 
-  when (dupFlds /= []) $
+  fldMap <- fmap (Map.map snd) $ onLeft (mkMapWith fst flds) $ \dups ->
     throwVE $ "when parsing a value of type: " <> showNamedTy (_iotiName tyInfo)
     <> ", the following fields are duplicated: "
-    <> T.intercalate ", " (map showName dupFlds)
+    <> showNames dups
 
-  -- TODO: need to check for required arguments
+  annFldsM <- forM (Map.toList $ _iotiFields tyInfo) $
+    \(fldName, inpValInfo) -> do
+      let fldValM = Map.lookup fldName fldMap
+          ty = _iviType inpValInfo
+          isNotNull = G.isNotNull ty
+      when (isNothing fldValM && isNotNull) $ throwVE $
+        "field " <> G.unName fldName <> " of type " <> G.showGT ty
+        <> " is required, but not found"
+      forM fldValM $ \fldVal ->
+        withPathK (G.unName fldName) $ do
+          fldTy <- getInpFieldInfo tyInfo fldName
+          convFldVal <- validateInputValue valParser fldTy fldVal
+          return (fldName, convFldVal)
 
-  fmap Map.fromList $ forM flds $ \(fldName, fldVal) ->
-    withPathK (G.unName fldName) $ do
-      fldTy <- getInpFieldInfo tyInfo fldName
-      convFldVal <- validateInputValue valParser fldTy fldVal
-      return (fldName, convFldVal)
-
-  where
-    dupFlds = mapMaybe listToMaybe $ filter ((>) 1 . length) $
-              group $ map fst flds
+  return $ Map.fromList $ catMaybes annFldsM
 
 validateNamedTypeVal
   :: ( MonadReader r m, Has TypeMap r
@@ -199,14 +202,14 @@ validateNamedTypeVal inpValParser nt val = do
       throw500 $ "unexpected object type info for: "
       <> showNamedTy nt
     TIInpObj ioti ->
-      withParsed (getObject inpValParser) val $ \mObj ->
-      AGObject nt <$> (mapM $ validateObject inpValParser ioti) mObj
+      withParsed (getObject inpValParser) val $
+      fmap (AGObject nt) . mapM (validateObject inpValParser ioti)
     TIEnum eti ->
-      withParsed (getEnum inpValParser) val $ \mEnumVal ->
-      AGEnum nt <$> (mapM $ validateEnum eti) mEnumVal
+      withParsed (getEnum inpValParser) val $
+      fmap (AGEnum nt) . mapM (validateEnum eti)
     TIScalar (ScalarTyInfo _ pgColTy) ->
-      withParsed (getScalar inpValParser) val $ \mScalar ->
-      AGScalar pgColTy <$> (mapM $ validateScalar pgColTy) mScalar
+      withParsed (getScalar inpValParser) val $
+      fmap (AGScalar pgColTy) . mapM (validateScalar pgColTy)
   where
     validateEnum enumTyInfo enumVal  =
       if Map.member enumVal (_etiValues enumTyInfo)

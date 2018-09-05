@@ -117,19 +117,17 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt) _) = do
     tn = tiName tabInfo
     vn = buildViewName tn rn PTInsert
 
-buildInsInfra :: QualifiedTable -> InsPermInfo -> [PGCol] -> Q.TxE QErr ()
-buildInsInfra tn (InsPermInfo vn be _ _ _) cols =
+buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
+buildInsInfra tn (InsPermInfo vn be _ _ _) =
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
     Q.unitQ (buildView tn vn) () False
     -- Inject defaults on the view
     Q.discardQ (injectDefaults vn tn) () False
     -- Construct a trigger function
-    Q.unitQ (buildInsTrigFn vn tn be se) () False
+    Q.unitQ (buildInsTrigFn vn tn be) () False
     -- Add trigger for check expression
     Q.unitQ (buildInsTrig vn) () False
-  where
-    se = S.buildSEWithExcluded cols
 
 clearInsInfra :: QualifiedTable -> Q.TxE QErr ()
 clearInsInfra vn =
@@ -152,10 +150,7 @@ instance IsPerm InsPerm where
 
   buildPermInfo = buildInsPermInfo
 
-  addPermP2Setup qt _ permInfo = do
-    tabInfo <- askTabInfo qt
-    liftTx $ buildInsInfra qt permInfo $
-      map pgiName $ getCols $ tiFieldInfoMap tabInfo
+  addPermP2Setup qt _ = liftTx . buildInsInfra qt
 
   buildDropPermP1Res dp =
     ipiView <$> dropPermP1 dp

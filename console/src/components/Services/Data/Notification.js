@@ -72,7 +72,7 @@ const showErrorNotification = (title, message, reqBody, error) => {
         level: 'error',
         title,
         message: modMessage,
-        action: reqBody
+        action: finalJson
           ? {
             label: 'Details',
             callback: () => {

@@ -10,6 +10,7 @@ import qualified Database.PG.Query          as Q
 import qualified Database.PG.Query.PTI      as PTI
 
 import           Hasura.Prelude
+import           Hasura.Server.Utils        (bsToTxt)
 
 import           Data.Aeson
 import           Data.Aeson.Encoding        (text)
@@ -17,10 +18,14 @@ import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.ByteString.Builder    as BB
+import qualified Data.ByteString.Lazy       as BL
 import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Extended         as T
 import qualified Database.PostgreSQL.LibPQ  as PQ
 import qualified PostgreSQL.Binary.Decoding as PD
+
+sqlBuilderToTxt :: BB.Builder -> T.Text
+sqlBuilderToTxt = bsToTxt . BL.toStrict . BB.toLazyByteString
 
 class ToSQL a where
   toSQL :: a -> BB.Builder
