@@ -466,9 +466,13 @@ input {
 {
   margin-bottom: 20px;
 }
+.add_mar_bottom_mid
+{
+  margin-bottom: 10px;
+}
 .add_mar_right
 {
-  margin-right: 20px;
+  margin-right: 20px !important;
 }
 .add_mar_right_small
 {
@@ -480,7 +484,7 @@ input {
 }
 .add_mar_small
 {
-  margin-right: 10px;
+  margin-right: 10px !important;
 }
 .code_space
 {

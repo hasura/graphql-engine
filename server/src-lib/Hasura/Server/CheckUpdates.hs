@@ -25,7 +25,7 @@ import           Hasura.Server.Version (currentVersion)
 
 newtype UpdateInfo
   = UpdateInfo
-  { uiLatest :: T.Text
+  { _uiLatest :: T.Text
   } deriving (Show, Eq)
 
 $(A.deriveJSON (A.aesonDrop 2 A.snakeCase) ''UpdateInfo)

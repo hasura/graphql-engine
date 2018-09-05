@@ -26,6 +26,8 @@ export dataRouter from './DataRouter';
 
 export dataReducer from './DataReducer';
 
+export metadataConnector from './Metadata/Metadata.js';
+
 /*
 export Logs from './Logs/Logs';
 export BrowseTemplates from './QueryTemplates/BrowseTemplates';

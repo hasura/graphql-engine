@@ -1,11 +1,5 @@
 package version
 
-import (
-	"fmt"
-
-	"github.com/Masterminds/semver"
-)
-
 const (
 	untaggedBuild   = "for untagged builds, server and cli versions should match"
 	taggedBuild     = "cli version (major.minor) should be equal or ahead of server version, please update cli"
@@ -43,11 +37,7 @@ func (v *Version) CheckCLIServerCompatibility() (compatible bool, reason string)
 	if v.Server != "" && v.ServerSemver != nil {
 		// cli is also tagged build
 		if v.CLI != "" && v.CLISemver != nil {
-			c, err := semver.NewConstraint(fmt.Sprintf(">=%s", v.ServerSemver.String()))
-			if err != nil {
-				return false, "parsing server as constraint failed"
-			}
-			if c.Check(v.CLISemver) {
+			if (v.CLISemver.Major() >= v.ServerSemver.Major()) && (v.CLISemver.Minor() >= v.ServerSemver.Minor()) {
 				return true, taggedBuild
 			}
 			return false, taggedBuild

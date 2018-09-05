@@ -19,6 +19,8 @@ extra-deps:
   commit: e61bc37794b4d9e281bad44b2d7c8d35f2dbc770
 - git: https://github.com/hasura/graphql-parser-hs.git
   commit: eae59812ec537b3756c3ddb5f59a7cc59508869b
+- git: https://github.com/tdammers/ginger.git
+  commit: 435c2774963050da04ce9a3369755beac87fbb16
 - Spock-core-0.13.0.0
 - reroute-0.5.0.0
 

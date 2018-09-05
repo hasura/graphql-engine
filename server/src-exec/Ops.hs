@@ -29,7 +29,7 @@ import qualified Data.ByteString.Lazy        as BL
 import qualified Data.Text                   as T
 
 curCatalogVer :: T.Text
-curCatalogVer = "1"
+curCatalogVer = "2"
 
 initCatalogSafe :: UTCTime -> Q.TxE QErr String
 initCatalogSafe initTime =  do
@@ -83,19 +83,13 @@ initCatalogStrict createSchema initTime =  do
 
   -- Execute the query
   void $ snd <$> tx
-  setAsSystemDefined >> addVersion initTime
+  setAllAsSystemDefined >> addVersion initTime
   return "initialise: successfully initialised"
   where
     addVersion modTime = Q.catchE defaultTxErrorHandler $
       Q.unitQ [Q.sql|
                 INSERT INTO "hdb_catalog"."hdb_version" VALUES ($1, $2)
                 |] (curCatalogVer, modTime) False
-
-    setAsSystemDefined = Q.catchE defaultTxErrorHandler $ do
-      Q.unitQ "UPDATE hdb_catalog.hdb_table SET is_system_defined = 'true'" () False
-      Q.unitQ "UPDATE hdb_catalog.hdb_relationship SET is_system_defined = 'true'" () False
-      Q.unitQ "UPDATE hdb_catalog.hdb_permission SET is_system_defined = 'true'" () False
-      Q.unitQ "UPDATE hdb_catalog.hdb_query_template SET is_system_defined = 'true'" () False
 
     isExtInstalled :: T.Text -> Q.Tx Bool
     isExtInstalled sn =
@@ -107,6 +101,29 @@ initCatalogStrict createSchema initTime =  do
            )
                     |] (Identity sn) False
 
+
+setAllAsSystemDefined :: Q.TxE QErr ()
+setAllAsSystemDefined = Q.catchE defaultTxErrorHandler $ do
+  Q.unitQ "UPDATE hdb_catalog.hdb_table SET is_system_defined = 'true'" () False
+  Q.unitQ "UPDATE hdb_catalog.hdb_relationship SET is_system_defined = 'true'" () False
+  Q.unitQ "UPDATE hdb_catalog.hdb_permission SET is_system_defined = 'true'" () False
+  Q.unitQ "UPDATE hdb_catalog.hdb_query_template SET is_system_defined = 'true'" () False
+
+setAsSystemDefined :: Q.TxE QErr ()
+setAsSystemDefined = Q.catchE defaultTxErrorHandler $
+  Q.multiQ [Q.sql|
+            UPDATE hdb_catalog.hdb_table
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog';
+
+            UPDATE hdb_catalog.hdb_permission
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog';
+
+            UPDATE hdb_catalog.hdb_relationship
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog';
+            |]
 
 cleanCatalog :: Q.TxE QErr ()
 cleanCatalog = Q.catchE defaultTxErrorHandler $ do
@@ -132,6 +149,18 @@ migrateFrom08 = Q.catchE defaultTxErrorHandler $ do
                  json_build_object('type', 'select', 'args', template_defn->'select');
                 |] () False
 
+migrateFrom1 :: Q.TxE QErr ()
+migrateFrom1 = do
+  -- migrate database
+  Q.Discard () <- Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_1.sql")
+  -- migrate metadata
+  tx <- liftEither $ buildTxAny adminUserInfo
+                     emptySchemaCache migrateMetadataFrom1
+  void tx
+  -- set as system defined
+  setAsSystemDefined
+
 migrateCatalog :: UTCTime -> Q.TxE QErr String
 migrateCatalog migrationTime = do
   preVer <- getCatalogVersion
@@ -139,17 +168,24 @@ migrateCatalog migrationTime = do
        return "migrate: already at the latest version"
      | preVer == "0.8" -> do
          migrateFrom08
-         -- update the catalog version
-         updateVersion
-         -- clean hdb_views
-         Q.unitQE defaultTxErrorHandler "DROP SCHEMA IF EXISTS hdb_views CASCADE" () False
-         Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_views" () False
-         -- try building the schema cache
-         void buildSchemaCache
-         return "migrate: successfully migrated"
+         migrateFrom1
+         afterMigrate
+     | preVer == "1" -> do
+         migrateFrom1
+         afterMigrate
      | otherwise -> throw400 NotSupported $
                     "migrate: unsupported version : " <> preVer
   where
+    afterMigrate = do
+       -- update the catalog version
+       updateVersion
+       -- clean hdb_views
+       Q.unitQE defaultTxErrorHandler "DROP SCHEMA IF EXISTS hdb_views CASCADE" () False
+       Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_views" () False
+       -- try building the schema cache
+       void buildSchemaCache
+       return $ "migrate: successfully migrated to " ++ show curCatalogVer
+
     updateVersion =
       Q.unitQE defaultTxErrorHandler [Q.sql|
                 UPDATE "hdb_catalog"."hdb_version"

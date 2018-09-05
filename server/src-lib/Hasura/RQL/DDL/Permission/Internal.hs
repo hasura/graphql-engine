@@ -1,6 +1,8 @@
 {-# LANGUAGE DeriveLift             #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE LambdaCase             #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE OverloadedStrings      #-}
 {-# LANGUAGE QuasiQuotes            #-}
 {-# LANGUAGE RankNTypes             #-}
@@ -58,7 +60,8 @@ assertPermNotDefined
   -> TableInfo
   -> m ()
 assertPermNotDefined roleName pa tableInfo =
-  when (permissionIsDefined rpi pa) $ throw400 AlreadyExists $ mconcat
+  when (permissionIsDefined rpi pa || roleName == adminRole)
+  $ throw400 AlreadyExists $ mconcat
   [ "'" <> T.pack (show $ permAccToType pa) <> "'"
   , " permission on " <>> tiName tableInfo
   , " for role " <>> roleName
@@ -70,7 +73,7 @@ assertPermNotDefined roleName pa tableInfo =
 permissionIsDefined
   :: Maybe RolePermInfo -> PermAccessor a -> Bool
 permissionIsDefined rpi pa =
-  isJust $ join $ rpi ^? _Just.(permAccToLens pa)
+  isJust $ join $ rpi ^? _Just.permAccToLens pa
 
 assertPermDefined
   :: (MonadError QErr m)
@@ -179,6 +182,9 @@ procBoolExp tn fieldInfoMap tq be = do
   let deps = getBoolExpDeps tn abe
   return (sqlbe, deps)
 
+isReqUserId :: T.Text -> Bool
+isReqUserId = (== "req_user_id") . T.toLower
+
 getDependentHeaders :: BoolExp -> [T.Text]
 getDependentHeaders boolExp = case boolExp of
   BoolAnd exps         -> concatMap getDependentHeaders exps
@@ -191,10 +197,11 @@ getDependentHeaders boolExp = case boolExp of
       _          -> parseOnlyString val
 
     parseOnlyString val = case val of
-      (String t) -> if isXHasuraTxt t
-                    then [T.toLower t]
-                    else []
-      _          -> []
+      (String t)
+        | isXHasuraTxt t -> [T.toLower t]
+        | isReqUserId t -> [userIdHeader]
+        | otherwise -> []
+      _ -> []
     parseObject o = flip concatMap (M.toList o) $ \(k, v) ->
                              if isRQLOp k
                              then parseOnlyString v
@@ -202,16 +209,19 @@ getDependentHeaders boolExp = case boolExp of
 
 
 valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
-valueParser columnType val = case (val, columnType) of
+valueParser columnType = \case
   -- When it is a special variable
-  (String t, ty) ->
-    if isXHasuraTxt t
-    then return $ S.SEUnsafe $
-      "current_setting('hasura." <> dropAndSnakeCase t
-       <> "')::" <> T.pack (show ty)
-    else txtRHSBuilder ty val
+  val@(String t)
+    | isXHasuraTxt t -> asCurrentSetting t
+    | isReqUserId t -> asCurrentSetting userIdHeader
+    | otherwise -> txtRHSBuilder columnType val
+
   -- Typical value as Aeson's value
-  _ -> txtRHSBuilder columnType val
+  val -> txtRHSBuilder columnType val
+  where
+    asCurrentSetting hdr = return $ S.SEUnsafe $
+      "current_setting('hasura." <> dropAndSnakeCase hdr
+       <> "')::" <> T.pack (show columnType)
 
 -- Convert where clause into SQL BoolExp
 convFilterExp :: (MonadError QErr m)
@@ -262,7 +272,7 @@ class (ToJSON a) => IsPerm a where
     -> m (PermInfo a)
 
   addPermP2Setup
-    :: (CacheRWM m, MonadTx m) => QualifiedTable -> PermDef a -> PermInfo a -> m ()
+    :: (MonadTx m, QErrM m) => QualifiedTable -> PermDef a -> PermInfo a -> m ()
 
   buildDropPermP1Res
     :: (QErrM m, CacheRM m, UserInfoM m)

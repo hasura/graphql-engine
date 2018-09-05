@@ -1,7 +1,8 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiWayIf            #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Hasura.GraphQL.Resolve.Context
   ( FieldMap
@@ -10,6 +11,7 @@ module Hasura.GraphQL.Resolve.Context
   , NullsOrder(..)
   , OrdTy(..)
   , RespTx
+  , InsertTxConflictCtx(..)
   , getFldInfo
   , getPGColInfo
   , getArg
