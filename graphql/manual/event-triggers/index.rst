@@ -7,6 +7,9 @@ events happening on relevant tables and then call configured webhooks.
 .. image:: ./database-event-triggers.png
 
 
+Learn how to :doc:`get started with event triggers now <../getting-started/first-event-trigger>`!
+
+
 .. toctree::
    :maxdepth: 2
    :titlesonly:
