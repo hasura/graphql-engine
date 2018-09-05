@@ -19,6 +19,7 @@ const LOAD_RUNNING_EVENTS = 'Event/LOAD_RUNNING_EVENTS';
 const ACCESS_KEY_ERROR = 'Event/ACCESS_KEY_ERROR';
 const UPDATE_DATA_HEADERS = 'Event/UPDATE_DATA_HEADERS';
 const LISTING_TRIGGER = 'Event/LISTING_TRIGGER';
+const LOAD_EVENT_LOGS = 'Event/LOAD_EVENT_LOGS';
 
 const MAKE_REQUEST = 'Event/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'Event/REQUEST_SUCCESS';
@@ -52,7 +53,7 @@ const loadTriggers = () => (dispatch, getState) => {
   );
 };
 
-const loadProcessedEvents = () => (dispatch, getState) => {
+const loadProcessedEvents = triggerName => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const options = {
     credentials: globalCookiePolicy,
@@ -80,6 +81,7 @@ const loadProcessedEvents = () => (dispatch, getState) => {
             limit: 10,
           },
         ],
+        where: { name: triggerName },
       },
     }),
   };
@@ -93,7 +95,7 @@ const loadProcessedEvents = () => (dispatch, getState) => {
   );
 };
 
-const loadPendingEvents = () => (dispatch, getState) => {
+const loadPendingEvents = triggerName => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const options = {
     credentials: globalCookiePolicy,
@@ -119,6 +121,7 @@ const loadPendingEvents = () => (dispatch, getState) => {
             limit: 10,
           },
         ],
+        where: { name: triggerName },
       },
     }),
   };
@@ -132,7 +135,7 @@ const loadPendingEvents = () => (dispatch, getState) => {
   );
 };
 
-const loadRunningEvents = () => (dispatch, getState) => {
+const loadRunningEvents = triggerName => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const options = {
     credentials: globalCookiePolicy,
@@ -158,12 +161,52 @@ const loadRunningEvents = () => (dispatch, getState) => {
             limit: 10,
           },
         ],
+        where: { name: triggerName },
       },
     }),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: LOAD_RUNNING_EVENTS, data: data });
+    },
+    error => {
+      console.error('Failed to load triggers' + JSON.stringify(error));
+    }
+  );
+};
+
+const loadEventLogs = triggerName => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify({
+      type: 'select',
+      args: {
+        table: {
+          name: 'event_triggers',
+          schema: 'hdb_catalog',
+        },
+        columns: [
+          '*',
+          {
+            name: 'events',
+            columns: [
+              '*',
+              { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
+            ],
+            order_by: ['-created_at'],
+            limit: 10,
+          },
+        ],
+        where: { name: triggerName },
+      },
+    }),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      dispatch({ type: LOAD_EVENT_LOGS, data: data });
     },
     error => {
       console.error('Failed to load triggers' + JSON.stringify(error));
@@ -408,6 +451,11 @@ const eventReducer = (state = defaultState, action) => {
         ...state,
         runningEvents: action.data,
       };
+    case LOAD_EVENT_LOGS:
+      return {
+        ...state,
+        eventLogs: action.data,
+      };
     case SET_TRIGGER:
       return { ...state, currentTrigger: action.triggerName };
     case ACCESS_KEY_ERROR:
@@ -427,6 +475,7 @@ export {
   loadProcessedEvents,
   loadPendingEvents,
   loadRunningEvents,
+  loadEventLogs,
   handleMigrationErrors,
   makeMigrationCall,
   ACCESS_KEY_ERROR,

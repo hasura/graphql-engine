@@ -116,30 +116,6 @@ const ViewRows = ({
           if (col === 'created_at') {
             content = new Date(row[col]).toUTCString();
           }
-          const expandOrCollapseBtn =
-            expandedRow === cellIndex ? (
-              <i
-                className={`${styles.cellCollapse} fa fa-minus`}
-                onClick={() => dispatch(vCollapseRow())}
-              >
-                {' '}
-              </i>
-            ) : (
-              <i
-                className={`${styles.cellExpand} fa fa-expand`}
-                onClick={() => dispatch(vExpandRow(cellIndex))}
-              >
-                {' '}
-              </i>
-            );
-          if (content.length > 20) {
-            return (
-              <div className={conditionalClassname}>
-                {expandOrCollapseBtn}
-                {content}
-              </div>
-            );
-          }
           return <div className={conditionalClassname}>{content}</div>;
         };
         newRow[col] = getCellContent();
@@ -228,14 +204,7 @@ const ViewRows = ({
   };
 
   const renderTableBody = () => {
-    if (isProgressing) {
-      return (
-        <div>
-          {' '}
-          <Spinner />{' '}
-        </div>
-      );
-    } else if (count === 0) {
+    if (count === 0) {
       return <div> No rows found. </div>;
     }
     let shouldSortColumn = true;
@@ -419,6 +388,12 @@ const ViewRows = ({
       <div className="row">
         <div className="col-xs-12">
           <div className={styles.tableContainer + ' eventsTableBody'}>
+            {isProgressing ? (
+              <div>
+                {' '}
+                <Spinner />{' '}
+              </div>
+            ) : null}
             {renderTableBody()}
           </div>
           <br />

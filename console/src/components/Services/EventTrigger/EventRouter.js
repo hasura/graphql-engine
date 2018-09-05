@@ -12,6 +12,7 @@ import {
   runningEventsConnector,
   eventHeaderConnector,
   settingsConnector,
+  streamingLogsConnector,
 } from '.';
 
 import {
@@ -60,6 +61,10 @@ const makeEventRouter = (
           path="triggers/:trigger/settings"
           component={settingsConnector(connect)}
         />
+        <Route
+          path="triggers/:trigger/logs"
+          component={streamingLogsConnector(connect)}
+        />
       </Route>
       <Route
         path="manage/triggers/add"
@@ -103,7 +108,9 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
       cb();
       return;
     }
-    Promise.all([store.dispatch(loadProcessedEvents())]).then(
+    Promise.all([
+      store.dispatch(loadProcessedEvents(nextState.params.trigger)),
+    ]).then(
       () => {
         cb();
       },
@@ -122,7 +129,9 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
       cb();
       return;
     }
-    Promise.all([store.dispatch(loadPendingEvents())]).then(
+    Promise.all([
+      store.dispatch(loadPendingEvents(nextState.params.trigger)),
+    ]).then(
       () => {
         cb();
       },
@@ -141,7 +150,9 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
       cb();
       return;
     }
-    Promise.all([store.dispatch(loadRunningEvents())]).then(
+    Promise.all([
+      store.dispatch(loadRunningEvents(nextState.params.trigger)),
+    ]).then(
       () => {
         cb();
       },

@@ -116,30 +116,6 @@ const ViewRows = ({
           if (col === 'created_at') {
             content = new Date(row[col]).toUTCString();
           }
-          const expandOrCollapseBtn =
-            expandedRow === cellIndex ? (
-              <i
-                className={`${styles.cellCollapse} fa fa-minus`}
-                onClick={() => dispatch(vCollapseRow())}
-              >
-                {' '}
-              </i>
-            ) : (
-              <i
-                className={`${styles.cellExpand} fa fa-expand`}
-                onClick={() => dispatch(vExpandRow(cellIndex))}
-              >
-                {' '}
-              </i>
-            );
-          if (content.length > 20) {
-            return (
-              <div className={conditionalClassname}>
-                {expandOrCollapseBtn}
-                {content}
-              </div>
-            );
-          }
           return <div className={conditionalClassname}>{content}</div>;
         };
         newRow[col] = getCellContent();
