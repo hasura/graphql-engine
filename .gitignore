@@ -5,6 +5,10 @@ sample.json
 # sphinx build folder
 _build
 
+# for folks using pipenv
+Pipfile
+Pipfile.lock
+
 # Compiled source #
 ###################
 .DS_Store
