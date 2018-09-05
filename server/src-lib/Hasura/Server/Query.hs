@@ -74,6 +74,9 @@ data RQLQuery
   | RQCount !CountQuery
   | RQBulk ![RQLQuery]
 
+  | RQCreateEventTrigger !CreateEventTriggerQuery
+  | RQDeleteEventTrigger !DeleteEventTriggerQuery
+
   | RQCreateQueryTemplate !CreateQueryTemplate
   | RQDropQueryTemplate !DropQueryTemplate
   | RQExecuteQueryTemplate !ExecQueryTemplate
@@ -168,6 +171,9 @@ queryNeedsReload qi = case qi of
   RQDelete q                   -> queryModifiesSchema q
   RQCount q                    -> queryModifiesSchema q
 
+  RQCreateEventTrigger q       -> queryModifiesSchema q
+  RQDeleteEventTrigger q       -> queryModifiesSchema q
+
   RQCreateQueryTemplate q      -> queryModifiesSchema q
   RQDropQueryTemplate q        -> queryModifiesSchema q
   RQExecuteQueryTemplate q     -> queryModifiesSchema q
@@ -213,6 +219,9 @@ buildTxAny userInfo sc rq = case rq of
   RQUpdate q -> buildTx userInfo sc q
   RQDelete q -> buildTx userInfo sc q
   RQCount q  -> buildTx userInfo sc q
+
+  RQCreateEventTrigger q -> buildTx userInfo sc q
+  RQDeleteEventTrigger q -> buildTx userInfo sc q
 
   RQCreateQueryTemplate q     -> buildTx userInfo sc q
   RQDropQueryTemplate q       -> buildTx userInfo sc q

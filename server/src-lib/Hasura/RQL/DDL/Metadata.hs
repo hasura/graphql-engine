@@ -49,6 +49,8 @@ import qualified Hasura.RQL.DDL.Permission    as DP
 import qualified Hasura.RQL.DDL.QueryTemplate as DQ
 import qualified Hasura.RQL.DDL.Relationship  as DR
 import qualified Hasura.RQL.DDL.Schema.Table  as DT
+import qualified Hasura.RQL.DDL.Subscribe     as DS
+import qualified Hasura.RQL.Types.Subscribe   as DTS
 
 data TableMeta
   = TableMeta
@@ -59,11 +61,12 @@ data TableMeta
   , _tmSelectPermissions   :: ![DP.SelPermDef]
   , _tmUpdatePermissions   :: ![DP.UpdPermDef]
   , _tmDeletePermissions   :: ![DP.DelPermDef]
+  , _tmEventTriggers       :: ![DTS.EventTriggerDef]
   } deriving (Show, Eq, Lift)
 
 mkTableMeta :: QualifiedTable -> TableMeta
 mkTableMeta qt =
-  TableMeta qt [] [] [] [] [] []
+  TableMeta qt [] [] [] [] [] [] []
 
 makeLenses ''TableMeta
 
@@ -81,6 +84,7 @@ instance FromJSON TableMeta where
      <*> o .:? spKey .!= []
      <*> o .:? upKey .!= []
      <*> o .:? dpKey .!= []
+     <*> o .:? etKey .!= []
 
     where
       tableKey = "table"
@@ -90,13 +94,14 @@ instance FromJSON TableMeta where
       spKey = "select_permissions"
       upKey = "update_permissions"
       dpKey = "delete_permissions"
+      etKey = "event_triggers"
 
       unexpectedKeys =
         HS.fromList (M.keys o) `HS.difference` expectedKeySet
 
       expectedKeySet =
         HS.fromList [ tableKey, orKey, arKey, ipKey
-                    , spKey, upKey, dpKey
+                    , spKey, upKey, dpKey, etKey
                     ]
 
   parseJSON _ =
@@ -118,7 +123,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
-  Q.unitQ clearHdbViews () False
+  clearHdbViews
 
 instance HDBQuery ClearMetadata where
 
@@ -158,12 +163,14 @@ applyQP1 (ReplaceMetadata tables templates) = do
           selPerms = map DP.pdRole $ table ^. tmSelectPermissions
           updPerms = map DP.pdRole $ table ^. tmUpdatePermissions
           delPerms = map DP.pdRole $ table ^. tmDeletePermissions
+          eventTriggers = map DTS.etdName $ table ^. tmEventTriggers
 
       checkMultipleDecls "relationships" allRels
       checkMultipleDecls "insert permissions" insPerms
       checkMultipleDecls "select permissions" selPerms
       checkMultipleDecls "update permissions" updPerms
       checkMultipleDecls "delete permissions" delPerms
+      checkMultipleDecls "event triggers" eventTriggers
 
   withPathK "queryTemplates" $
     checkMultipleDecls "query templates" $ map DQ.cqtName templates
@@ -213,6 +220,11 @@ applyQP2 (ReplaceMetadata tables templates) = do
         table ^. tmUpdatePermissions
       withPathK "delete_permissions" $ processPerms tabInfo $
         table ^. tmDeletePermissions
+
+    indexedForM_ tables $ \table -> do
+      withPathK "event_triggers" $
+        indexedForM_ (table ^. tmEventTriggers) $ \et ->
+        DS.subTableP2 (table ^. tmTable) et
 
   -- query templates
   withPathK "queryTemplates" $
@@ -276,6 +288,10 @@ fetchMetadata = do
     qtDef <- decodeValue qtDefVal
     return $ DQ.CreateQueryTemplate qtn qtDef mComment
 
+  -- Fetch all event triggers
+  eventTriggers <- Q.catchE defaultTxErrorHandler fetchEventTriggers
+  triggerMetaDefs <- mkTriggerMetaDefs eventTriggers
+
   let (_, postRelMap) = flip runState tableMetaMap $ do
         modMetaMap tmObjectRelationships objRelDefs
         modMetaMap tmArrayRelationships arrRelDefs
@@ -283,6 +299,7 @@ fetchMetadata = do
         modMetaMap tmSelectPermissions selPermDefs
         modMetaMap tmUpdatePermissions updPermDefs
         modMetaMap tmDeletePermissions delPermDefs
+        modMetaMap tmEventTriggers triggerMetaDefs
 
   return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs
 
@@ -303,6 +320,12 @@ fetchMetadata = do
     relRowToDef (sn, tn, rn, _, Q.AltJ rDef, mComment) = do
       using <- decodeValue rDef
       return (QualifiedTable sn tn, DR.RelDef rn using mComment)
+
+    mkTriggerMetaDefs = mapM trigRowToDef
+
+    trigRowToDef (sn, tn, trn, Q.AltJ tDefVal, webhook, nr, rint) = do
+      tDef <- decodeValue tDefVal
+      return (QualifiedTable sn tn, DTS.EventTriggerDef trn tDef webhook (RetryConf nr rint))
 
     fetchTables =
       Q.listQ [Q.sql|
@@ -330,6 +353,12 @@ fetchMetadata = do
                   FROM hdb_catalog.hdb_query_template
                  WHERE is_system_defined = 'false'
                   |] () False
+    fetchEventTriggers =
+     Q.listQ [Q.sql|
+              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval
+               FROM hdb_catalog.event_triggers e
+              |] () False
+
 
 instance HDBQuery ExportMetadata where
 
