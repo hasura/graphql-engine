@@ -874,7 +874,7 @@
 .shareSection {
   display: flex;
   align-items: center;
-  background-color: #0038d5;
+  background-color: white;
   padding: 15px;
   color: white;
   cursor: pointer;
@@ -939,6 +939,10 @@
   padding-top: 10px;
   text-align: center;
   letter-spacing: 1px;
+
+  padding-top: 0;
+  color: #606060;
+  font-size: 15px;
 }
 
 .pixelText1
@@ -1010,17 +1014,25 @@
   border: 0;
   .dropdown_menu_container
   {
-    width: 460px;
+    width: 490px;
     float: right;
-    background-color: #0038d5;
+
+    // background-color: #0038d5;
+    background-color: #FFF;
+    border: #43495a 2px dashed;
+    border-top: 0;
+    border-right: 0;
+    color: #f24444;
+
     padding: 25px;
     position: relative;
     .closeDropDown
     {
+      color: #43495a;
       cursor: pointer;
       position: absolute;
       top: 10px;
-      left: 10px;
+      left: 20px;
       img
       {
         width: 10px;
@@ -1048,7 +1060,7 @@
   li
   {
     display: block;
-    color: #fff;
+    color: #f24444;
     text-transform: none;
     padding: 0px 15px;
     display: inline-block;
