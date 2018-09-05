@@ -8,8 +8,6 @@ const styles = require('./TableCommon/Table.scss');
 const showErrorNotification = (title, message, reqBody, error) => {
   let modMessage;
   let refreshBtn;
-  console.log(message);
-  console.log(error);
   if (
     error &&
     error.message &&
@@ -42,7 +40,6 @@ const showErrorNotification = (title, message, reqBody, error) => {
     modMessage = error.custom;
   } else if (error && 'code' in error && 'error' in error && 'path' in error) {
     // Data API error
-    console.log('here');
     modMessage = error.error;
   } else {
     modMessage = error ? error : message;
@@ -64,8 +61,6 @@ const showErrorNotification = (title, message, reqBody, error) => {
   } else if (error && 'internal' in error) {
     finalJson = error.internal;
   }
-  console.log(finalJson);
-  console.log(reqBody);
   return dispatch => {
     const expandClicked = finalMsg => {
       // trigger a modal with a bigger view
