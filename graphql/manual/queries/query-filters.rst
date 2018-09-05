@@ -1,7 +1,7 @@
 Filter query results / search queries
 =====================================
 
-You can use the ``where`` argument in your queries to filter the results based on a fields’s values (including in a
+You can use the ``where`` argument in your queries to filter the results based on a field’s values (including in a
 nested object’s fields). You can even use multiple filters in the same ``where`` clause using the ``_and`` or the
 ``_or`` operators.
 
