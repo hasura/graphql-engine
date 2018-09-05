@@ -36,6 +36,7 @@ CREATE TABLE hdb_catalog.event_invocation_logs
   id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
   event_id TEXT,
   status INTEGER,
+  request JSON,
   response JSON,
   created_at TIMESTAMP DEFAULT NOW(),
 
