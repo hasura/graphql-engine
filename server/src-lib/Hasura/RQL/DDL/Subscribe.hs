@@ -41,7 +41,7 @@ parseGingerTmplt src = either parseE Right res
     parseE e = Left $ TG.formatParserError (Just "") e
 
 triggerTmplt :: Maybe GingerTmplt
-triggerTmplt = case parseGingerTmplt $(FE.embedStringFile "src-rsr/trigger.sql") of
+triggerTmplt = case parseGingerTmplt $(FE.embedStringFile "src-rsr/trigger.sql.j2") of
   Left _      -> Nothing
   Right tmplt -> Just tmplt
 
