@@ -105,6 +105,10 @@ isValidField = \case
     isRelEligible rn rt = isValidName (G.Name $ getRelTxt rn)
                           && isValidTableName rt
 
+upsertable :: [TableConstraint] -> Bool -> Bool -> Bool
+upsertable constraints isUpsertAllowed view =
+  not (null constraints) && isUpsertAllowed && not view
+
 toValidFieldInfos :: FieldInfoMap -> [FieldInfo]
 toValidFieldInfos = filter isValidField . Map.elems
 
@@ -708,8 +712,8 @@ insert_table(
 -}
 
 mkInsMutFld
-  :: QualifiedTable -> [TableConstraint] -> Bool -> ObjFldInfo
-mkInsMutFld tn constraints isUpsertAllowed =
+  :: QualifiedTable -> Bool -> ObjFldInfo
+mkInsMutFld tn isUpsertable =
   ObjFldInfo (Just desc) fldName (fromInpValL inputVals) $
   G.toGT $ mkMutRespTy tn
   where
@@ -724,9 +728,7 @@ mkInsMutFld tn constraints isUpsertAllowed =
       InpValInfo (Just objsArgDesc) "objects" $ G.toGT $
       G.toNT $ G.toLT $ G.toNT $ mkInsInpTy tn
 
-    uniqueOrPrimaryCons = filter isUniqueOrPrimary constraints
-    onConflictInpVal = bool (Just onConflictArg) Nothing
-                       (null uniqueOrPrimaryCons || not isUpsertAllowed)
+    onConflictInpVal = bool Nothing (Just onConflictArg) isUpsertable
 
     onConflictDesc = "on conflict condition"
     onConflictArg =
@@ -833,8 +835,8 @@ instance Monoid RootFlds where
 
 mkOnConflictTypes
   :: QualifiedTable -> [TableConstraint] -> [PGCol] -> Bool -> [TypeInfo]
-mkOnConflictTypes tn c cols isUpsertAllowed =
-  bool tyInfos [] (null constraints || not isUpsertAllowed)
+mkOnConflictTypes tn c cols =
+  bool [] tyInfos
   where
     tyInfos = [ TIEnum mkConflictActionTy
               , TIEnum $ mkConstriantTy tn constraints
@@ -867,8 +869,9 @@ mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints viM allC
   where
 
     ordByEnums = fromMaybe Map.empty ordByResCtxM
-    onConflictTypes = mkOnConflictTypes tn constraints allCols $
-      or $ fmap snd insPermM
+    upsertAllowed = or $ fmap snd insPermM
+    isUpsertable = upsertable constraints upsertAllowed $ isJust viM
+    onConflictTypes = mkOnConflictTypes tn constraints allCols isUpsertable
     jsonOpTys = fromMaybe [] updJSONOpInpObjTysM
 
     allTypes = onConflictTypes <> jsonOpTys
@@ -979,9 +982,11 @@ getRootFldsRole' tn primCols constraints fields insM selM updM delM viM =
       bool Nothing (getDet <$> mutM) $ isMutable f viM
     colInfos = fst $ validPartitionFieldInfoMap fields
     getInsDet (vn, hdrs, isUpsertAllowed) =
-      ( OCInsert tn vn (map pgiName colInfos) hdrs
-      , Right $ mkInsMutFld tn constraints isUpsertAllowed
-      )
+      let isUpsertable = upsertable constraints isUpsertAllowed
+                         $ isJust viM
+      in ( OCInsert tn vn (map pgiName colInfos) hdrs
+         , Right $ mkInsMutFld tn isUpsertable
+         )
     getUpdDet (updCols, updFltr, hdrs) =
       ( OCUpdate tn updFltr hdrs
       , Right $ mkUpdMutFld tn $ getColInfos updCols colInfos
@@ -1105,7 +1110,7 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols 
       FIRelationship relInfo -> Right (relInfo, noFilter, Nothing, isRelNullable fields relInfo)
     noFilter = S.BELit True
     adminRootFlds =
-      getRootFldsRole' tn pkeyCols constraints fields
+      getRootFldsRole' tn pkeyCols validConstraints fields
       (Just (tn, [], True)) (Just (noFilter, Nothing, []))
       (Just (allCols, noFilter, [])) (Just (noFilter, []))
       viewInfo
