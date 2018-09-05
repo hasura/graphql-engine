@@ -5,14 +5,14 @@ connected using relationships.
 
 Relationships can be of two types:
 
-- 1:1 or ``object relationships``. For example, one article will have only one author
-- 1:many or ``array relationships``. For example, one author can write many articles
+- one-to-one or ``object relationships``. For example, one article will have only one author
+- one-to-many or ``array relationships``. For example, one author can write many articles
 
-Each relationship has a name which is used to refer to the nested objects in queries. For example, ``"articles"`` of
-an ``author`` and ``"author"`` of an ``article``
+Each relationship has a name which is used to refer to the nested objects in queries. For example, "``articles``" of
+an ``author`` and "``author``" of an ``article``
 
 Typically relationships are defined using foreign-key constraints. But in some cases, it might not be possible to
-use foreign-key constraints to create the relation. For e.g. while trying to create a relationship involving a view
+use foreign-key constraints to create the relation. For example, while trying to create a relationship involving a view
 as foreign-keys can't be created on views.
 
 Here are examples to create relationships using the two methods:
