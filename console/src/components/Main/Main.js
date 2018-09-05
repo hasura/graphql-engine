@@ -16,6 +16,7 @@ class Main extends React.Component {
     super(props);
     this.state = {
       showBannerNotification: false,
+      showEvents: false
     };
   }
   componentDidMount() {
@@ -23,7 +24,12 @@ class Main extends React.Component {
     dispatch(loadServerVersion()).then(() => {
       dispatch(checkServerUpdates()).then(() => {
         let isUpdateAvailable = false;
+        let showEvents = false;
         try {
+          showEvents = semver.gt(this.props.serverVersion, '1.0.0-alpha15');
+          if (showEvents) {
+            this.setState({ showEvents: true });
+          }
           isUpdateAvailable = semver.gt(
             this.props.latestServerVersion,
             this.props.serverVersion
@@ -163,27 +169,29 @@ class Main extends React.Component {
                     </Link>
                   </li>
                 </OverlayTrigger>
-                <OverlayTrigger placement="right" overlay={tooltip.events}>
-                  <li>
-                    <Link
-                      className={
-                        currentActiveBlock === 'events'
-                          ? styles.navSideBarActive
-                          : ''
-                      }
-                      to={appPrefix + '/events'}
-                    >
-                      <div className={styles.iconCenter}>
-                        <i
-                          title="Events"
-                          className="fa fa-cloud"
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <p>Events</p>
-                    </Link>
-                  </li>
-                </OverlayTrigger>
+                {this.state.showEvents ?
+                  (
+                    <OverlayTrigger placement="right" overlay={tooltip.events}>
+                      <li>
+                        <Link
+                          className={
+                            currentActiveBlock === 'events'
+                              ? styles.navSideBarActive
+                              : ''
+                          }
+                          to={appPrefix + '/events'}
+                        >
+                          <div className={styles.iconCenter}>
+                            <i
+                              title="Events"
+                              className="fa fa-cloud"
+                              aria-hidden="true"
+                            />
+                          </div>
+                          <p>Events</p>
+                        </Link>
+                      </li>
+                    </OverlayTrigger>) : null }
               </ul>
             </div>
             <div className={styles.clusterInfoWrapper}>{accessKeyHtml}</div>
