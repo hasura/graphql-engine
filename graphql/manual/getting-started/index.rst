@@ -37,3 +37,4 @@ Using an existing database:
    Docker quickstart <docker-simple>
    Using an existing database <using-existing-database>
    first-graphql-query
+   first-event-trigger
