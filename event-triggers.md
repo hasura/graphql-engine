@@ -39,7 +39,7 @@ For Docker-based deployment and advanced configuration options, see [deployment 
 
 ### Quickstart demo
 
-[Create an event-trigger and webhook in 60 seconds](https://some-youtube-demo.com) (*10:00 mins*)
+[Create an event-trigger and webhook in 60 seconds](https://youtu.be/EaTUVWnDCvA) (*30 seconds*)
 
 ### Serverless boilerplates
 
