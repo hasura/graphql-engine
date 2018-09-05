@@ -1,7 +1,10 @@
-Making your first event trigger
-===============================
+Setting up your first event trigger
+===================================
 
-Let's create a sample event trigger on table, with https://httpbin.org as our simple webhook.
+You can use Hasura to setup event triggers which call a defined webhook whenever a specific database event
+occurs.
+
+Let's create a sample event trigger with https://httpbin.org as our simple webhook.
 
 Create table
 ------------
@@ -30,7 +33,8 @@ In the Hasura console, navigate to ``Events -> Create trigger`` and:
 
 .. image:: ../../../img/graphql/manual/getting-started/create-event-trigger.png
 
-This sets up our webhook ``https://httpbin.org/post`` to receive database changes on insert, update and delete.
+This sets up our webhook ``https://httpbin.org/post`` to receive database changes on insert, update and delete on
+``profile`` table.
 
 
 Watch the trigger in action
@@ -49,9 +53,5 @@ Watch the trigger in action
 Next steps
 ----------
 
-See:
-^^^^
-
-- :doc:`Make your first graphql query <./first-graphql-query>`
-- :doc:`Read more about Event Triggers <../event-triggers/index>`
+- Read more about :doc:`Event Triggers <../event-triggers/index>`
 

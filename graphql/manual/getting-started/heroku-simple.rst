@@ -34,10 +34,14 @@ You should see the Hasura console.
 
 .. image:: ../../../img/graphql/manual/getting-started/heroku-app-deployed.png
 
-Next: Make your first GraphQL query!
-------------------------------------
+Next: Try Hasura out!
+---------------------
 
-Next, make your :doc:`first graphql query <first-graphql-query>`.
+Make your :doc:`first graphql query <first-graphql-query>`
+
+OR
+
+Set up your :doc:`first event trigger <first-event-trigger>`
 
 Advanced:
 ---------

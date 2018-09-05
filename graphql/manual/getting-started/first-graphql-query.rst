@@ -51,13 +51,13 @@ You'll see that you get all the inserted data!
 
 .. image:: ../../../img/graphql/manual/getting-started/profile-query.png
 
-Try out other GraphQL queries
------------------------------
+Next steps
+----------
 
-See:
-^^^^
+Read more about:
 
 - :doc:`Building your schema<../schema/index>`
 - :doc:`Queries<../queries/index>`
 - :doc:`Mutations<../mutations/index>`
+
 
