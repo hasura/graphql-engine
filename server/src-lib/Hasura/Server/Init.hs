@@ -181,8 +181,8 @@ parseJwtSecret =
 
 jwtSecretHelp :: String
 jwtSecretHelp = "The JSON containing type and the JWK used for verifying. e.g: "
-              <> "`{\"type\": \"HS256\", \"key\": \"<your-hmac-shared-secret>\"}`,"
-              <> "`{\"type\": \"RS256\", \"key\": \"<your-PEM-RSA-public-key>\"}`"
+              <> "`{\"type\": \"HS256\", \"key\": \"<your-hmac-shared-secret>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`,"
+              <> "`{\"type\": \"RS256\", \"key\": \"<your-PEM-RSA-public-key>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`"
 
 
 parseCorsConfig :: Parser CorsConfigFlags
