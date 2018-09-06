@@ -31,6 +31,9 @@ const appPrefix = globals.urlPrefix + '/data';
 class Schema extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      isExporting: false,
+    };
     // Initialize this table
     const dispatch = this.props.dispatch;
     dispatch(fetchSchemaList());
