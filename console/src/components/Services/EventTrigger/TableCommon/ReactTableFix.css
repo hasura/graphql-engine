@@ -94,7 +94,7 @@
   display: none;
 }
 .streamingLogs .ReactTable {
-  max-height: 350px;
+  // max-height: 350px;
 }
 .streamingLogs .ReactTable .rt-thead.-header {
   // display: none;
