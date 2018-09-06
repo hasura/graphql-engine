@@ -2,6 +2,8 @@
 
 Trigger webhooks on database events using Hasura GraphQL Engine's **event triggers**.
 
+![Event triggers demo](assets/event-triggers.gif)
+
 ## Highlights
 
 * **Build reactive & async apps/features**: Trigger asynchronous serverless or cloud functions to reduce infrastructure costs and simplify DevOps for developers.
