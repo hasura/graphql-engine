@@ -93,6 +93,9 @@
 .invocationsSection .ReactTable .rt-thead.-header {
   display: none;
 }
+.streamingLogs .ReactTable {
+  max-height: 350px;
+}
 .streamingLogs .ReactTable .rt-thead.-header {
   // display: none;
 }
@@ -132,6 +135,11 @@
   flex: 24 0 auto !important;
   min-width: 75px;
   max-width: 75px;
+}
+
+.streamingLogs .ReactTable .rt-thead .rt-th:last-child,
+.ReactTable .rt-thead .rt-td:last-child {
+  display: none;
 }
 
 #requestResponseTab ul li a {

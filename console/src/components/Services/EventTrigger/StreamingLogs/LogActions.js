@@ -10,10 +10,24 @@ const V_REQUEST_NEWER_SUCCESS = 'StreamingLogs/V_REQUEST_NEWER_SUCCESS';
 const V_REQUEST_OLDER_SUCCESS = 'StreamingLogs/V_REQUEST_OLDER_SUCCESS';
 const V_REQUEST_ERROR = 'StreamingLogs/V_REQUEST_ERROR';
 const V_REQUEST_PROGRESS = 'StreamingLogs/V_REQUEST_PROGRESS';
+const V_IS_LOADING_OLDER = 'StreamingLogs/V_IS_LOADING_OLDER';
+const V_IS_LOADING_NEWER = 'StreamingLogs/V_IS_LOADING_NEWER';
+const V_OLD_AVAILABLE = 'StreamingLogs/V_OLD_AVAILABLE';
+const V_NEW_AVAILABLE = 'StreamingLogs/V_NEW_AVAILABLE';
 
 /* ****************** action creators *************/
 
 const vSetDefaults = () => ({ type: V_SET_DEFAULTS });
+const toggleLoadingOlder = status => ({
+  type: V_IS_LOADING_OLDER,
+  data: status,
+});
+const toggleLoadingNewer = status => ({
+  type: V_IS_LOADING_NEWER,
+  data: status,
+});
+const toggleOldAvailable = status => ({ type: V_OLD_AVAILABLE, data: status });
+const toggleNewAvailable = status => ({ type: V_NEW_AVAILABLE, data: status });
 
 const vMakeRequest = triggerName => {
   return (dispatch, getState) => {
@@ -136,6 +150,17 @@ const loadNewerEvents = (latestTimestamp, triggerName) => {
       data => {
         const currentTrigger = getState().triggers.currentTrigger;
         if (triggerName === currentTrigger) {
+          if (data && data[0] && data[0].length === 0) {
+            dispatch({
+              type: V_NEW_AVAILABLE,
+              data: false,
+            });
+          } else {
+            dispatch({
+              type: V_NEW_AVAILABLE,
+              data: true,
+            });
+          }
           Promise.all([
             dispatch({
               type: V_REQUEST_NEWER_SUCCESS,
@@ -143,7 +168,16 @@ const loadNewerEvents = (latestTimestamp, triggerName) => {
               count: data[1].count,
             }),
             dispatch({ type: V_REQUEST_PROGRESS, data: false }),
-          ]);
+            dispatch({ type: V_IS_LOADING_NEWER, data: false }),
+          ]).then(() => {
+            const trGroup = document.getElementsByClassName('rt-tr-group');
+            const finalTrGroup = trGroup[0];
+            finalTrGroup.scrollIntoView({
+              behavior: 'smooth',
+              block: 'end',
+              inline: 'nearest',
+            });
+          });
         }
       },
       error => {
@@ -206,6 +240,17 @@ const loadOlderEvents = (oldestTimestamp, triggerName) => {
       data => {
         const currentTrigger = getState().triggers.currentTrigger;
         if (triggerName === currentTrigger) {
+          if (data && data[0] && data[0].length === 0) {
+            dispatch({
+              type: V_OLD_AVAILABLE,
+              data: false,
+            });
+          } else {
+            dispatch({
+              type: V_OLD_AVAILABLE,
+              data: true,
+            });
+          }
           Promise.all([
             dispatch({
               type: V_REQUEST_OLDER_SUCCESS,
@@ -213,7 +258,16 @@ const loadOlderEvents = (oldestTimestamp, triggerName) => {
               count: data[1].count,
             }),
             dispatch({ type: V_REQUEST_PROGRESS, data: false }),
-          ]);
+            dispatch({ type: V_IS_LOADING_OLDER, data: false }),
+          ]).then(() => {
+            const trGroup = document.getElementsByClassName('rt-tr-group');
+            const finalTrGroup = trGroup[trGroup.length - 1];
+            finalTrGroup.scrollIntoView({
+              behavior: 'smooth',
+              block: 'end',
+              inline: 'nearest',
+            });
+          });
         }
       },
       error => {
@@ -237,7 +291,7 @@ const streamingLogsReducer = (triggerName, triggerList, logState, action) => {
               columns: ['*'],
             },
           ],
-          limit: 2,
+          limit: 10,
           where: { event: { trigger_name: triggerName } },
         },
         activePath: [triggerName],
@@ -245,7 +299,12 @@ const streamingLogsReducer = (triggerName, triggerList, logState, action) => {
         count: null,
       };
     case V_REQUEST_SUCCESS:
-      return { ...logState, rows: action.data, count: action.count };
+      const currentRows = logState.rows;
+      const newResult = action.data;
+      const combinedRows = currentRows.length
+        ? newResult.concat(currentRows)
+        : newResult;
+      return { ...logState, rows: combinedRows, count: action.count };
     case V_REQUEST_NEWER_SUCCESS:
       const existingRows = logState.rows;
       const newRows = action.data;
@@ -254,14 +313,31 @@ const streamingLogsReducer = (triggerName, triggerList, logState, action) => {
     case V_REQUEST_OLDER_SUCCESS:
       const _existingRows = logState.rows;
       const oldRows = action.data;
-      const _finalRows = oldRows.concat(_existingRows);
+      const _finalRows = _existingRows.concat(oldRows);
       return { ...logState, rows: _finalRows, count: _finalRows.count };
     case V_REQUEST_PROGRESS:
       return { ...logState, isProgressing: action.data };
+    case V_IS_LOADING_NEWER:
+      return { ...logState, isLoadingNewer: action.data };
+    case V_IS_LOADING_OLDER:
+      return { ...logState, isLoadingOlder: action.data };
+    case V_OLD_AVAILABLE:
+      return { ...logState, isOldAvailable: action.data };
+    case V_NEW_AVAILABLE:
+      return { ...logState, isNewAvailable: action.data };
     default:
       return logState;
   }
 };
 
 export default streamingLogsReducer;
-export { vSetDefaults, vMakeRequest, loadNewerEvents, loadOlderEvents };
+export {
+  vSetDefaults,
+  vMakeRequest,
+  loadNewerEvents,
+  loadOlderEvents,
+  toggleLoadingNewer,
+  toggleLoadingOlder,
+  toggleOldAvailable,
+  toggleNewAvailable,
+};

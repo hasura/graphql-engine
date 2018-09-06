@@ -265,10 +265,35 @@ a.expanded {
 }
 
 .loadOlder {
-  text-align: center;
-  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FFF3D5;
+  padding: 5px;
+  min-height: 41px;
+}
+.newBtn {
+  font-size: 12px;
+  margin-right: 10px;
 }
 .loadNewer {
-  text-align: center;
-  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FFF3D5;
+  padding: 5px;
+  min-height: 41px;
+  position: relative;
+}
+.filterAll {
+  position: absolute;
+  left: 10px;
+  input {
+    display: inline-block;
+    width: auto;
+    margin-left: 10px;
+  }
+}
+.oldBtn {
+  font-size: 12px;
 }

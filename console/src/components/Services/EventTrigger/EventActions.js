@@ -195,7 +195,7 @@ const loadEventLogs = triggerName => (dispatch, getState) => {
         ],
         where: { event: { trigger_name: triggerName } },
         order_by: ['-created_at'],
-        limit: 2,
+        limit: 10,
       },
     }),
   };
@@ -322,7 +322,6 @@ const deleteTrigger = triggerName => {
     const currentTriggerInfo = triggerList.filter(
       t => t.name === triggerName
     )[0];
-    console.log(currentTriggerInfo);
     // apply migrations
     const migrationName = 'delete_trigger_' + triggerName.trim();
     const payload = {

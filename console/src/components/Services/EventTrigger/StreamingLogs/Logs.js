@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import ReactTable from 'react-table';
 import AceEditor from 'react-ace';
+import matchSorter from 'match-sorter';
 import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import TableHeader from '../TableCommon/TableHeader';
@@ -11,13 +12,23 @@ import {
   vSetDefaults,
   loadNewerEvents,
   loadOlderEvents,
+  toggleLoadingOlder,
+  toggleLoadingNewer,
+  toggleOldAvailable,
+  toggleNewAvailable,
 } from './LogActions';
 
 class StreamingLogs extends Component {
   constructor(props) {
     super(props);
-    this.state = { isWatching: false, intervalId: null };
+    this.state = {
+      isWatching: false,
+      intervalId: null,
+      filtered: [],
+      filterAll: '',
+    };
     this.refreshData = this.refreshData.bind(this);
+    this.filterAll = this.filterAll.bind(this);
     this.props.dispatch(setTrigger(this.props.triggerName));
   }
   componentDidMount() {
@@ -31,6 +42,7 @@ class StreamingLogs extends Component {
     // get the first element
     const firstElement = this.props.log.rows[0];
     const latestTimestamp = firstElement.created_at;
+    this.props.dispatch(toggleLoadingNewer(true));
     this.props.dispatch(
       loadNewerEvents(latestTimestamp, this.props.triggerName)
     );
@@ -39,6 +51,7 @@ class StreamingLogs extends Component {
     // get the last element
     const lastElement = this.props.log.rows[this.props.log.rows.length - 1];
     const oldestTimestamp = lastElement.created_at;
+    this.props.dispatch(toggleLoadingOlder(true));
     this.props.dispatch(
       loadOlderEvents(oldestTimestamp, this.props.triggerName)
     );
@@ -54,7 +67,25 @@ class StreamingLogs extends Component {
     }
   }
   refreshData() {
+    this.props.dispatch(toggleOldAvailable(true));
+    this.props.dispatch(toggleNewAvailable(true));
     this.props.dispatch(vMakeRequest(this.props.triggerName));
+  }
+  filterAll(e) {
+    const { value } = e.target;
+    const filterAll = value;
+    const filtered = [{ id: 'all', value: filterAll }];
+    // NOTE: this completely clears any COLUMN filters
+    this.setState({ filterAll, filtered }, () => {
+      const trGroup = document.getElementsByClassName('rt-tr-group');
+      const finalTrGroup = trGroup[0];
+      finalTrGroup.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+        inline: 'nearest',
+        offsetTop: 0,
+      });
+    });
   }
 
   render() {
@@ -73,6 +104,35 @@ class StreamingLogs extends Component {
         Header: column,
         accessor: column,
       });
+    });
+    invocationGridHeadings.push({
+      // NOTE - this is a "filter all" DUMMY column
+      // you can't HIDE it because then it wont FILTER
+      // but it has a size of ZERO with no RESIZE and the
+      // FILTER component is NULL (it adds a little to the front)
+      // You culd possibly move it to the end
+      Header: 'All',
+      id: 'all',
+      width: 0,
+      resizable: false,
+      sortable: false,
+      Filter: () => {},
+      getProps: () => {
+        return {
+          // style: { padding: "0px"}
+        };
+      },
+      filterMethod: (filter, rows) => {
+        // using match-sorter
+        // it will take the content entered into the "filter"
+        // and search for it in EITHER the invocation_id or event_id
+        const result = matchSorter(rows, filter.value, {
+          keys: ['invocation_id.props.children', 'event_id.props.children'],
+          threshold: matchSorter.rankings.WORD_STARTS_WITH,
+        });
+        return result;
+      },
+      filterAll: true,
     });
     const invocationRowsData = [];
     log.rows.map(r => {
@@ -123,7 +183,7 @@ class StreamingLogs extends Component {
           migrationMode={migrationMode}
         />
         <br />
-        <div>
+        <div className={'hide'}>
           <button
             onClick={this.watchChanges.bind(this)}
             className={styles.watchBtn + ' btn btn-default'}
@@ -144,19 +204,40 @@ class StreamingLogs extends Component {
         {invocationRowsData.length ? (
           <div className={styles.streamingLogs + ' streamingLogs'}>
             <div className={styles.loadNewer}>
+              <div className={styles.filterAll}>
+                <span>Search:</span>
+                <input
+                  className={'form-control'}
+                  value={this.state.filterAll}
+                  onChange={this.filterAll.bind(this)}
+                />
+              </div>
               <button
                 onClick={this.handleNewerEvents.bind(this)}
-                className={'btn btn-default'}
+                className={styles.newBtn + ' btn btn-default'}
               >
-                {' '}
-                Load newer events
+                {log.isLoadingNewer ? (
+                  <span>
+                    Loading... <i className={'fa fa-spinner fa-spin'} />
+                  </span>
+                ) : (
+                  <span>Load newer logs</span>
+                )}
               </button>
+              {!log.isNewAvailable ? (
+                <span> No new logs available at this time </span>
+              ) : null}
             </div>
             <ReactTable
               data={invocationRowsData}
               columns={invocationGridHeadings}
               showPagination={false}
-              pageSize={invocationRowsData.length}
+              filtered={this.state.filtered}
+              pageSize={
+                this.state.filterAll !== ''
+                  ? this.state.filtered.length
+                  : invocationRowsData.length
+              }
               SubComponent={logRow => {
                 const finalIndex = logRow.index;
                 const finalRow = log.rows[finalIndex];
@@ -218,12 +299,22 @@ class StreamingLogs extends Component {
               }}
             />
             <div className={styles.loadOlder}>
-              <button
-                onClick={this.handleOlderEvents.bind(this)}
-                className={'btn btn-default'}
-              >
-                Load older events
-              </button>
+              {log.isOldAvailable ? (
+                <button
+                  onClick={this.handleOlderEvents.bind(this)}
+                  className={styles.oldBtn + ' btn btn-default'}
+                >
+                  {log.isLoadingOlder ? (
+                    <span>
+                      Loading... <i className={'fa fa-spinner fa-spin'} />
+                    </span>
+                  ) : (
+                    <span>Load older logs</span>
+                  )}
+                </button>
+              ) : (
+                <div> No more logs available </div>
+              )}
             </div>
           </div>
         ) : (
