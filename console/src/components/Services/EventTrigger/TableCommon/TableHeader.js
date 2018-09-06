@@ -47,7 +47,7 @@ const TableHeader = ({ triggerName, tabName, count }) => {
                 to={'/events/manage/triggers/' + triggerName + '/processed'}
                 data-test="trigger-processed-events"
               >
-                Processed {tabName === 'processed' ? showCount : null}
+                Processed Events {tabName === 'processed' ? showCount : null}
               </Link>
             </li>
             <li
@@ -58,12 +58,12 @@ const TableHeader = ({ triggerName, tabName, count }) => {
                 to={'/events/manage/triggers/' + triggerName + '/pending'}
                 data-test="trigger-pending-events"
               >
-                Pending {tabName === 'pending' ? showCount : null}
+                Pending Events {tabName === 'pending' ? showCount : null}
               </Link>
             </li>
             <li
               role="presentation"
-              className={tabName === 'running' ? styles.active : ''}
+              className={tabName === 'running' ? styles.active : 'hide'}
             >
               <Link
                 to={'/events/manage/triggers/' + triggerName + '/running'}
@@ -78,7 +78,7 @@ const TableHeader = ({ triggerName, tabName, count }) => {
               data-test="trigger-logs"
             >
               <Link to={'/events/manage/triggers/' + triggerName + '/logs'}>
-                Logs
+                Invocation Logs
               </Link>
             </li>
             <li

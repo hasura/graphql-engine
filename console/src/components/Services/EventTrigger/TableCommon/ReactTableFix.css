@@ -93,6 +93,13 @@
 .invocationsSection .ReactTable .rt-thead.-header {
   display: none;
 }
+
+.processedEventsTable .invocationsSuccess {
+  color: #28a745;
+}
+.processedEventsTable .invocationsFailure {
+  color: red;
+}
 .streamingLogs .ReactTable {
   // max-height: 350px;
 }

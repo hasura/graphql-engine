@@ -89,13 +89,22 @@ class StreamingLogs extends Component {
   }
 
   render() {
-    const { triggerName, migrationMode, log, count, dispatch } = this.props;
+    const {
+      triggerName,
+      migrationMode,
+      log,
+      count,
+      allSchemas,
+      dispatch,
+    } = this.props;
 
     const styles = require('../TableCommon/Table.scss');
     const invocationColumns = [
       'status',
       'invocation_id',
       'event_id',
+      'operation',
+      'primary_key',
       'created_at',
     ];
     const invocationGridHeadings = [];
@@ -127,7 +136,11 @@ class StreamingLogs extends Component {
         // it will take the content entered into the "filter"
         // and search for it in EITHER the invocation_id or event_id
         const result = matchSorter(rows, filter.value, {
-          keys: ['invocation_id.props.children', 'event_id.props.children'],
+          keys: [
+            'invocation_id.props.children',
+            'event_id.props.children',
+            'operation.props.children',
+          ],
           threshold: matchSorter.rankings.WORD_STARTS_WITH,
         });
         return result;
@@ -164,6 +177,32 @@ class StreamingLogs extends Component {
           if (col === 'created_at') {
             const formattedDate = new Date(r.created_at).toUTCString();
             return <div className={conditionalClassname}>{formattedDate}</div>;
+          }
+          if (col === 'operation') {
+            return (
+              <div className={conditionalClassname}>
+                {r.request.event.op.toLowerCase()}
+              </div>
+            );
+          }
+          if (col === 'primary_key') {
+            const tableName = r.request.table.name;
+            const tableData = allSchemas.filter(
+              row => row.table_name === tableName
+            );
+            const primaryKey = tableData[0].primary_key.columns[0]; // handle all primary keys
+            const oldPrimaryKeyData = r.request.event.data.old
+              ? r.request.event.data.old[primaryKey]
+              : '';
+            const newPrimaryKeyData = r.request.event.data.new
+              ? r.request.event.data.new[primaryKey]
+              : '';
+            return (
+              <div className={conditionalClassname}>
+                {/* (old) - {oldPrimaryKeyData} | (new) pk - {newPrimaryKeyData} */}
+                {newPrimaryKeyData}
+              </div>
+            );
           }
           const content = r[col] === undefined ? 'NULL' : r[col].toString();
           return <div className={conditionalClassname}>{content}</div>;
@@ -242,7 +281,7 @@ class StreamingLogs extends Component {
                 const finalIndex = logRow.index;
                 const finalRow = log.rows[finalIndex];
                 const currentPayload = JSON.stringify(
-                  finalRow.event.payload,
+                  finalRow.request,
                   null,
                   4
                 );
@@ -330,6 +369,7 @@ class StreamingLogs extends Component {
 StreamingLogs.propTypes = {
   log: PropTypes.object,
   migrationMode: PropTypes.bool.isRequired,
+  allSchemas: PropTypes.array.isRequired,
   dispatch: PropTypes.func.isRequired,
 };
 
@@ -339,6 +379,7 @@ const mapStateToProps = (state, ownProps) => {
     triggerName: ownProps.params.trigger,
     migrationMode: state.main.migrationMode,
     currentSchema: state.tables.currentSchema,
+    allSchemas: state.tables.allSchemas,
   };
 };
 
