@@ -16,7 +16,7 @@ class Main extends React.Component {
     super(props);
     this.state = {
       showBannerNotification: false,
-      showEvents: false
+      showEvents: false,
     };
   }
   componentDidMount() {
@@ -45,6 +45,7 @@ class Main extends React.Component {
           }
         } catch (e) {
           console.error(e);
+          this.setState({ showEvents: true });
         }
       });
     });
@@ -169,29 +170,29 @@ class Main extends React.Component {
                     </Link>
                   </li>
                 </OverlayTrigger>
-                {this.state.showEvents ?
-                  (
-                    <OverlayTrigger placement="right" overlay={tooltip.events}>
-                      <li>
-                        <Link
-                          className={
-                            currentActiveBlock === 'events'
-                              ? styles.navSideBarActive
-                              : ''
-                          }
-                          to={appPrefix + '/events'}
-                        >
-                          <div className={styles.iconCenter}>
-                            <i
-                              title="Events"
-                              className="fa fa-cloud"
-                              aria-hidden="true"
-                            />
-                          </div>
-                          <p>Events</p>
-                        </Link>
-                      </li>
-                    </OverlayTrigger>) : null }
+                {this.state.showEvents ? (
+                  <OverlayTrigger placement="right" overlay={tooltip.events}>
+                    <li>
+                      <Link
+                        className={
+                          currentActiveBlock === 'events'
+                            ? styles.navSideBarActive
+                            : ''
+                        }
+                        to={appPrefix + '/events'}
+                      >
+                        <div className={styles.iconCenter}>
+                          <i
+                            title="Events"
+                            className="fa fa-cloud"
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <p>Events</p>
+                      </Link>
+                    </li>
+                  </OverlayTrigger>
+                ) : null}
               </ul>
             </div>
             <div className={styles.clusterInfoWrapper}>{accessKeyHtml}</div>
