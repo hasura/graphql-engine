@@ -66,6 +66,7 @@ module Hasura.RQL.Types.SchemaCache
        , delEventTriggerFromCache
        , getOpInfo
        , EventTriggerInfo(..)
+       , EventTriggerInfoMap
        , OpTriggerInfo(..)
 
        , TableObjId(..)

@@ -13,6 +13,7 @@ module Hasura.RQL.Types.Subscribe
   , EventTriggerDef(..)
   , RetryConf(..)
   , DeleteEventTriggerQuery(..)
+  , UpdateEventTriggerQuery(..)
   ) where
 
 import           Data.Aeson
@@ -105,6 +106,19 @@ data DeleteEventTriggerQuery
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
+
+data UpdateEventTriggerQuery
+  = UpdateEventTriggerQuery
+  { uetqName      :: !T.Text
+  , uetqTable     :: !QualifiedTable
+  , uetqInsert    :: !(Maybe SubscribeOpSpec)
+  , uetqUpdate    :: !(Maybe SubscribeOpSpec)
+  , uetqDelete    :: !(Maybe SubscribeOpSpec)
+  , uetqRetryConf :: !(Maybe RetryConf)
+  , uetqWebhook   :: !(Maybe T.Text)
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''UpdateEventTriggerQuery)
 
 data EventTrigger
   = EventTrigger

@@ -34,6 +34,7 @@ module Hasura.RQL.Types
        , askFieldInfo
        , askPGColInfo
        , askCurRole
+       , askEventTriggerInfo
 
        , askQTemplateInfo
 
@@ -143,6 +144,14 @@ askTabInfo tabName = do
   liftMaybe (err400 NotExists errMsg) $ M.lookup tabName $ scTables rawSchemaCache
   where
     errMsg = "table " <> tabName <<> " does not exist"
+
+askEventTriggerInfo
+  :: (QErrM m, CacheRM m)
+  => EventTriggerInfoMap -> TriggerName -> m EventTriggerInfo
+askEventTriggerInfo etim trn = liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
+  where
+    errMsg = "event trigger " <> trn <<> " does not exist"
+
 
 askQTemplateInfo
   :: (P1C m)

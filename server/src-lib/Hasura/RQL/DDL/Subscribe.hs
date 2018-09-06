@@ -106,7 +106,7 @@ mkTriggerQ trid trn (QualifiedTable sn tn) (TriggerOpsDef insert update delete) 
 
 addEventTriggerToCatalog :: QualifiedTable -> EventTriggerDef
                -> Q.TxE QErr TriggerId
-addEventTriggerToCatalog (QualifiedTable sn tn) (EventTriggerDef name def webhook rconf) = do
+addEventTriggerToCatalog qt@(QualifiedTable sn tn) (EventTriggerDef name def webhook rconf) = do
   ids <- map runIdentity <$> Q.listQE defaultTxErrorHandler [Q.sql|
                                   INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook, num_retries, retry_interval)
                                   VALUES ($1, 'table', $2, $3, $4, $5, $6, $7)
@@ -114,7 +114,7 @@ addEventTriggerToCatalog (QualifiedTable sn tn) (EventTriggerDef name def webhoo
                                   |] (name, sn, tn, Q.AltJ $ toJSON def, webhook, rcNumRetries rconf, rcIntervalSec rconf) True
 
   trid <- getTrid ids
-  mkTriggerQ trid name (QualifiedTable sn tn) def
+  mkTriggerQ trid name qt def
   return trid
   where
     getTrid []    = throw500 "could not create event-trigger"
@@ -132,6 +132,28 @@ delEventTriggerFromCatalog trn = do
   where
     tx :: Ops -> Q.TxE QErr ()
     tx op = Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder $ getDropFuncSql op trn)
+
+updateEventTriggerToCatalog
+  :: QualifiedTable
+  -> EventTriggerDef
+  -> Q.TxE QErr TriggerId
+updateEventTriggerToCatalog qt (EventTriggerDef name def webhook rconf) = do
+  ids <- map runIdentity <$> Q.listQE defaultTxErrorHandler [Q.sql|
+                                  UPDATE hdb_catalog.event_triggers
+                                  SET definition = $1,
+                                   webhook = $2,
+                                   num_retries = $3,
+                                   retry_interval = $4
+                                  WHERE name = $5
+                                  RETURNING id
+                                  |] (Q.AltJ $ toJSON def, webhook, rcNumRetries rconf, rcIntervalSec rconf, name) True
+  trid <- getTrid ids
+  mkTriggerQ trid name qt def
+  return trid
+  where
+    getTrid []    = throw500 "could not update event-trigger"
+    getTrid (x:_) = return x
+
 
 fetchEventTrigger :: TriggerName -> Q.TxE QErr EventTrigger
 fetchEventTrigger trn = do
@@ -192,4 +214,48 @@ instance HDBQuery DeleteEventTriggerQuery where
   type Phase1Res DeleteEventTriggerQuery = ()
   phaseOne = unsubTableP1
   phaseTwo q _ = unsubTableP2 q
+  schemaCachePolicy = SCPReload
+
+upsubTableP2shim :: (P2C m) => (QualifiedTable, EventTriggerDef) -> m RespBody
+upsubTableP2shim (qt, etdef) = do
+  upsubTableP2 qt etdef
+  return successMsg
+
+upsubTableP1 :: (P1C m) => UpdateEventTriggerQuery -> m (QualifiedTable, EventTriggerDef)
+upsubTableP1 (UpdateEventTriggerQuery name qt minsert mupdate mdelete mretryConf mwebhook) = do
+  ti <- askTabInfo qt
+  eti <- askEventTriggerInfo (tiEventTriggerInfoMap ti) name
+
+  assertCols ti minsert
+  assertCols ti mupdate
+  assertCols ti mdelete
+
+  let oinsert  = otiCols <$> etiInsert eti
+      oupdate  = otiCols <$> etiUpdate eti
+      odelete  = otiCols <$> etiDelete eti
+      (insert, update, delete) = case minsert <|> mupdate <|> mdelete of
+        Just _  -> (minsert, mupdate, mdelete)
+        Nothing -> (oinsert, oupdate, odelete)
+      rconf   = fromMaybe (etiRetryConf eti ) mretryConf
+      webhook = fromMaybe (etiWebhook eti) mwebhook
+  return (qt, EventTriggerDef name (TriggerOpsDef insert update delete) webhook rconf)
+  where
+    assertCols _ Nothing = return ()
+    assertCols ti (Just sos) = do
+      let cols = sosColumns sos
+      case cols of
+        SubCStar         -> return ()
+        SubCArray pgcols -> forM_ pgcols (assertPGCol (tiFieldInfoMap ti) "")
+
+upsubTableP2 :: (P2C m) => QualifiedTable -> EventTriggerDef -> m ()
+upsubTableP2 qt q@(EventTriggerDef name def webhook rconf) = do
+  delEventTriggerFromCache qt name
+  trid <- liftTx $ updateEventTriggerToCatalog qt q
+  addEventTriggerToCache qt trid name def rconf webhook
+
+
+instance HDBQuery UpdateEventTriggerQuery where
+  type Phase1Res UpdateEventTriggerQuery = (QualifiedTable, EventTriggerDef)
+  phaseOne = upsubTableP1
+  phaseTwo _ = upsubTableP2shim
   schemaCachePolicy = SCPReload
