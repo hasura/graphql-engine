@@ -7,8 +7,8 @@ These are organized in language-specific folders.
 **NOTE**
 Some of the language/platforms are work in progress. We welcome contributions for the WIP langauages. See issues and the following checklist:
 
-| Folder name | Use-case       | Node.js(6) | Python | Java | Go | C#	
-|-------------|---------|--------|------|----|---|---	
+| Folder name | Use-case| Node.js(6) | Python | Java | Go | C#	
+|-------------|---------|:--------:|:------:|:----:|:---:|:---:	
 | simple-echo | echo the trigger payload  | ✅ | ✅ | ❌ | ❌ | ❌ 	
 | mutation-trigger | insert related data on an insert event using graphql mutation | ✅ | ✅ | ❌ | ❌ | ❌ 	
 | fcm-apns-push-notification | send push notification on database event | ❌ | ❌ | ❌ | ❌ | ❌	
