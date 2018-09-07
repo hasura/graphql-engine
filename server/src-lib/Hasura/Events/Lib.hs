@@ -22,6 +22,7 @@ import           Data.Aeson.TH
 import           Data.Has
 import           Data.Int                      (Int64)
 import           Data.IORef                    (IORef, readIORef)
+import           Data.Time.Clock
 import           Hasura.Events.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -199,7 +200,7 @@ processEvent pool e = do
           tries = eTries e
       if tries >= rcNumRetries retryConf -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
         then liftIO $ runExceptT $ runErrorAndUnlockQ pool e
-        else liftIO $ runExceptT $ runUnlockQ pool e
+        else liftIO $ runExceptT $ runRetryAfterAndUnlockQ pool e retryConf
 
 tryWebhook
   :: ( MonadReader r m
@@ -214,11 +215,11 @@ tryWebhook pool e = do
   logger:: HLogger <- asks getter
   cacheRef::CacheRef <- asks getter
   (cache, _) <- liftIO $ readIORef cacheRef
-  let eti = getEventTriggerInfoFromEvent cache e
-  case eti of
+  let meti = getEventTriggerInfoFromEvent cache e
+  case meti of
     Nothing -> return $ Left $ HOther "table or event-trigger not found"
-    Just et -> do
-      let webhook = etiWebhook et
+    Just eti -> do
+      let webhook = etiWebhook eti
           createdAt = eCreatedAt e
           eventId =  eId e
       eeCtx <- asks getter
@@ -264,7 +265,7 @@ fetchEvents =
                     FROM hdb_catalog.event_log l
                     JOIN hdb_catalog.event_triggers e
                     ON (l.trigger_id = e.id)
-                    WHERE l.delivered ='f' and l.error = 'f' and l.locked = 'f'
+                    WHERE l.delivered ='f' and l.error = 'f' and l.locked = 'f' and (l.next_retry_at is NULL or l.next_retry_at <= now())
                     LIMIT 100 )
       RETURNING id, schema_name, table_name, trigger_id, trigger_name, payload::json, tries, created_at
       |] () True
@@ -313,6 +314,14 @@ unlockAllEvents =
           SET locked = 'f'
           |] () False
 
+setNextRetry :: EventId -> UTCTime -> Q.TxE QErr ()
+setNextRetry eid time =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+          UPDATE hdb_catalog.event_log
+          SET next_retry_at = $1
+          WHERE id = $2
+          |] (time, eid) True
+
 runFailureQ :: Q.PGPool -> Invocation -> ExceptT QErr IO ()
 runFailureQ pool invo = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ insertInvocation invo
 
@@ -324,6 +333,15 @@ runSuccessQ pool e invo =  Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ d
 runErrorAndUnlockQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
 runErrorAndUnlockQ pool  e = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
   markError e
+  unlockEvent e
+
+runRetryAfterAndUnlockQ :: Q.PGPool -> Event -> RetryConf -> ExceptT QErr IO ()
+runRetryAfterAndUnlockQ pool e rconf = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+  let eid = eId e
+  currentTime <- liftIO getCurrentTime
+  let diff = fromIntegral $ rcIntervalSec rconf
+      retryTime = addUTCTime diff currentTime
+  setNextRetry eid retryTime
   unlockEvent e
 
 runUnlockQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
