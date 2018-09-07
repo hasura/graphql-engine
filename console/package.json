@@ -67,6 +67,7 @@
     "less": "^3.7.1",
     "lru-memoize": "^1.0.0",
     "map-props": "^1.0.0",
+    "match-sorter": "^2.3.0",
     "multireducer": "^1.0.2",
     "piping": "^0.3.0",
     "prettier": "^1.13.0",
