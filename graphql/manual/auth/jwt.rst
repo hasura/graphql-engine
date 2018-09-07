@@ -31,7 +31,7 @@ permissions system.
 TL;DR
 -----
 1. The JWT must contain: ``x-hasura-default-role``, ``x-hasura-allowed-roles``
-   in the claims.
+   in a custom namespace in the claims.
 2. Other optional ``x-hasura-*`` fields (required as per your defined
    permissions)
 3. You can send ``x-hasura-role`` as header in the request to indicate a
@@ -41,12 +41,11 @@ TL;DR
 
 The Spec
 --------
-When your auth server generates the JWT, the claims in the JWT **must contain**
+When your auth server generates the JWT, the custom claims in the JWT **must contain**
 the following:
 
 1. A ``x-hasura-default-role`` field : indicating the default role of that user
 2. A ``x-hasura-allowed-roles`` field : a list of allowed roles for the user
-
 
 The claims in the JWT, can have other ``x-hasura-*`` fields where their values
 can only be strings. You can use these ``x-hasura-*`` fields in your
@@ -64,17 +63,25 @@ Example JWT claim:
     "name": "John Doe",
     "admin": true,
     "iat": 1516239022,
-    "x-hasura-allowed-roles": ["editor","user", "mod"],
-    "x-hasura-default-role": "user",
-    "x-hasura-user-id": "1234567890",
-    "x-hasura-org-id": "123",
-    "x-hasura-custom": "custom-value"
+    "https://hasura.io/jwt/claims": {
+      "x-hasura-allowed-roles": ["editor","user", "mod"],
+      "x-hasura-default-role": "user",
+      "x-hasura-user-id": "1234567890",
+      "x-hasura-org-id": "123",
+      "x-hasura-custom": "custom-value"
+    }
   }
 
 This contains standard (``sub``, ``iat`` etc.) and custom (``name``, ``admin``
-etc.) JWT claims, as well as Hasura specific claims. Note that,
-``x-hasura-default-role`` and ``x-hasura-allowed-roles`` are mandatory, rest of
-them are optional.
+etc.) JWT claims, as well as Hasura specific claims inside a custom namespace
+(or key) i.e ``https://hasura.io/jwt/claims``.
+
+The ``https://hasura.io/jwt/claims`` is the custom namespace where all Hasura
+specific claims have to be present. This value can be configured in the JWT
+config while starting the server.
+
+**Note**: ``x-hasura-default-role`` and ``x-hasura-allowed-roles`` are
+mandatory, while rest of them are optional.
 
 .. note::
 
@@ -106,10 +113,14 @@ The JSON is:
 
    {
      "type": "<standard-JWT-algorithms>",
-     "key": "<the-key>"
+     "key": "<the-key>",
+     "claims_namespace": "<optional-key-name-in-claims>"
    }
 
-``type``: Valid values are : ``HS256``, ``HS384``, ``HS512``, ``RS256``,
+
+``type``
+^^^^^^^^
+Valid values are : ``HS256``, ``HS384``, ``HS512``, ``RS256``,
 ``RS384``, ``RS512``. (see https://jwt.io).
 
 ``HS*`` is for HMAC-SHA based algorithms. ``RS*`` is for RSA based signing. For
@@ -117,11 +128,19 @@ example, if your auth server is using HMAC-SHA256 for signing the JWTs, then
 use ``HS256``. If it is using RSA with 512-bit keys, then use ``RS512``. EC
 public keys are not yet supported.
 
-``key``:
+``key``
+^^^^^^^
 
 - Incase of symmetric key, the key as it is. (HMAC based keys).
 - Incase of asymmetric keys, only the public key, in a PEM encoded string or as
   a X509 certificate.
+
+``claims_namespace``
+^^^^^^^^^^^^^^^^^^^^
+This is an optional field. You can specify the key name
+inside which the Hasura specific claims will be present. E.g - ``https://mydomain.com/claims``.
+
+**Default value** is: ``https://hasura.io/jwt/claims``.
 
 Examples
 ^^^^^^^^
