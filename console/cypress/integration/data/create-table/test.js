@@ -29,19 +29,44 @@ const setup = () => {
   });
 };
 
+const testPrefix = 'create-table';
+
+const makeAssertion = (assertion, specFunc) => {
+  it(`${testPrefix} : ${assertion}`, specFunc);
+};
+
 export const runCreateTableTests = () => {
   describe('Create Table', () => {
-    it('Create table button opens the correct route', checkCreateTableRoute);
-    it('Fails to create table without columns', failCTWithoutColumns);
-    it('Fails to create table without primary key', failCTWithoutPK);
-    it('Fails to create with duplicate columns', failCTDuplicateColumns);
-    it('Fails to create with duplicate primary key', failCTDuplicatePrimaryKey);
-    it('Fails to create with wrong default value', failCTWrongDefaultValue);
-    it('Successfuly creates table', passCT);
-    it('Fails to add existing table', failAddExistingTable);
-    it('Passes add existing table', passAddExistingTable);
-    it('Fails to create duplicate table', failCTDuplicateTable);
-    it('Delete off the test table', deleteCTTestTable);
+    makeAssertion(
+      'Create table button opens the correct route',
+      checkCreateTableRoute
+    );
+    makeAssertion(
+      'Fails to create table without columns',
+      failCTWithoutColumns
+    );
+    makeAssertion('Fails to create table without primary key', failCTWithoutPK);
+    makeAssertion(
+      'Fails to create with duplicate columns',
+      failCTDuplicateColumns
+    );
+    makeAssertion(
+      'Fails to create with duplicate primary key',
+      failCTDuplicatePrimaryKey
+    );
+    makeAssertion(
+      'Fails to create with wrong default value',
+      failCTWrongDefaultValue
+    );
+    makeAssertion('Successfuly creates table', passCT);
+    makeAssertion('Fails to add existing table', failAddExistingTable);
+    makeAssertion('Passes add existing table', passAddExistingTable);
+    makeAssertion('Fails to create duplicate table', failCTDuplicateTable);
+    makeAssertion('Delete off the test table', deleteCTTestTable);
+    makeAssertion(
+      'Create table button opens the correct route',
+      checkCreateTableRoute
+    );
   });
 };
 

@@ -24,14 +24,20 @@ const setup = () => {
   });
 };
 
+const testPrefix = 'raw-sql';
+
+const makeAssertion = (assertion, specFunc) => {
+  it(`${testPrefix} : ${assertion}`, specFunc);
+};
+
 export const runRawSQLTests = () => {
   describe('Raw SQL', () => {
-    it('Open Raw SQL page', openRawSQL);
-    it('Pass create table', passCreateTable);
-    it('Pass insert values', passInsertValues);
-    it('Pass alter table', passAlterTable);
-    it('Pass create view', passCreateView);
-    it('Delete test table', delTestTables);
+    makeAssertion('Open Raw SQL page', openRawSQL);
+    makeAssertion('Pass create table', passCreateTable);
+    makeAssertion('Pass insert values', passInsertValues);
+    makeAssertion('Pass alter table', passAlterTable);
+    makeAssertion('Pass create view', passCreateView);
+    makeAssertion('Delete test table', delTestTables);
   });
 };
 

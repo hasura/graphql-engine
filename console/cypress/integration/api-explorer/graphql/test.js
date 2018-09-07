@@ -27,16 +27,22 @@ const setup = () => {
   });
 };
 
+const testPrefix = 'api-explorer';
+
+const makeAssertion = (assertion, specFunc) => {
+  it(`${testPrefix} : ${assertion}`, specFunc);
+};
+
 export const runApiExplorerTests = () => {
   describe('API Explorer', () => {
-    it('Create test table', createTestTable);
-    it('Insert row into test table', insertValue);
-    it('Open API Explorer', openAPIExplorer);
+    makeAssertion('Create test table', createTestTable);
+    makeAssertion('Insert row into test table', insertValue);
+    makeAssertion('Open API Explorer', openAPIExplorer);
     // it('Check Run Query button', checkExecuteQueryButton);
-    it('Check query result', checkQuery);
-    it('Check mutation result', checkMutation);
-    it('Check subscription result', checkSub);
-    it('Delete test table', delTestTable);
+    makeAssertion('Check query result', checkQuery);
+    makeAssertion('Check mutation result', checkMutation);
+    makeAssertion('Check subscription result', checkSub);
+    makeAssertion('Delete test table', delTestTable);
   });
 };
 

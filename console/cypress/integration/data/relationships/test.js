@@ -28,22 +28,31 @@ const setup = () => {
   });
 };
 
+const testPrefix = 'relationships';
+
+const makeAssertion = (assertion, specFunc) => {
+  it(`${testPrefix} : ${assertion}`, specFunc);
+};
+
 export const runRelationshipsTests = () => {
   describe('Relationships', () => {
-    it('Creating testing tables', passRTCreateTables);
-    it('Moving to the table', passRTMoveToTable);
-    it('Adding Manual Relationship Object', passRTAddManualObjRel);
-    it('Adding Manual Relationship Array', passRTAddManualArrayRel);
-    it('Adding a Foreign Key', passRTAddForeignKey);
-    it(
+    makeAssertion('Creating testing tables', passRTCreateTables);
+    makeAssertion('Moving to the table', passRTMoveToTable);
+    makeAssertion('Adding Manual Relationship Object', passRTAddManualObjRel);
+    makeAssertion('Adding Manual Relationship Array', passRTAddManualArrayRel);
+    makeAssertion('Adding a Foreign Key', passRTAddForeignKey);
+    makeAssertion(
       'Check Add manual relationships button',
       checkAddManualRelationshipsButton
     );
-    it('Deleting the relationships', passRTDeleteRelationships);
-    it('Adding Suggested Relationships Error', failRTAddSuggestedRel);
-    it('Adding Suggested Relationships', passRTAddSuggestedRel);
-    it('Deleting the relationships', passRTDeleteRelationships);
-    it('Deleting testing tables', passRTDeleteTables);
+    makeAssertion('Deleting the relationships', passRTDeleteRelationships);
+    makeAssertion(
+      'Adding Suggested Relationships Error',
+      failRTAddSuggestedRel
+    );
+    makeAssertion('Adding Suggested Relationships', passRTAddSuggestedRel);
+    makeAssertion('Deleting the relationships', passRTDeleteRelationships);
+    makeAssertion('Deleting testing tables', passRTDeleteTables);
   });
 };
 

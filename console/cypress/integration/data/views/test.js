@@ -30,20 +30,26 @@ const setup = () => {
   });
 };
 
+const testPrefix = 'views';
+
+const makeAssertion = (assertion, specFunc) => {
+  it(`${testPrefix} : ${assertion}`, specFunc);
+};
+
 export const runViewsTest = () => {
   describe('Views', () => {
-    it('Create Tables', passVCreateTables);
-    it('Add data to table', passVAddData);
-    it('Create View', passVCreateViews);
-    it('Adding it to the table', passTrackTable);
-    it('Check the view route', passViewRoute);
-    it('Ascending order View Table', passVAscendingSort);
-    it('Filter the View table', passVFilterQueryEq);
-    it('Modify the View', passModifyView);
-    it('Adding Object Relationship to View', passVAddManualObjRel);
-    it('Deleting Relationship', passVDeleteRelationships);
-    it('Deleting View', passVDeleteView);
-    it('Deleting Tables', passVDeleteTables);
+    makeAssertion('Create Tables', passVCreateTables);
+    makeAssertion('Add data to table', passVAddData);
+    makeAssertion('Create View', passVCreateViews);
+    makeAssertion('Adding it to the table', passTrackTable);
+    makeAssertion('Check the view route', passViewRoute);
+    makeAssertion('Ascending order View Table', passVAscendingSort);
+    makeAssertion('Filter the View table', passVFilterQueryEq);
+    makeAssertion('Modify the View', passModifyView);
+    makeAssertion('Adding Object Relationship to View', passVAddManualObjRel);
+    makeAssertion('Deleting Relationship', passVDeleteRelationships);
+    makeAssertion('Deleting View', passVDeleteView);
+    makeAssertion('Deleting Tables', passVDeleteTables);
   });
 };
 

@@ -35,26 +35,43 @@ const setup = () => {
   });
 };
 
+const testPrefix = 'insert-browse';
+
+const makeAssertion = (assertion, specFunc) => {
+  it(`${testPrefix} : ${assertion}`, specFunc);
+};
+
 export const runInsertBrowseTests = () => {
   describe('Table: Browse and Insert', () => {
-    it('Create a table with fields of all data types', passBICreateTable);
-    it('Search for tables', passSearchTables);
-    it('Check Insert Route', checkInsertRoute);
-    it('Fails when entered wrong data type', failBIWrongDataType);
-    it('Insert 20 rows', passBIInsert20Rows);
-    it('Fail for adding null for not null keys', failBINullKeys);
-    it('Fail for adding same data for Unique keys', failBIUniqueKeys);
-    it('Check browser rows route', checkBrowseRoute);
-    it('20 Inserted rows reflect in browse rows', passBI20RowsExist);
-    it('Check pagination in Browse Rows table', checkPagination);
-    it('Ascending sort works as expected', () => passBISort('asc'));
-    it('Descending sort works as expected', () => passBISort('desc'));
-    it('Filter query works as expected with $eq', passBIFilterQueryEq);
-    it('Check edit button', passEditButton);
-    it('Check for clone clear', passCloneButton);
-    it('Delete the row', passDeleteRow);
-    it('Check view relationship', checkViewRelationship);
-    it('Delete test table', deleteBITestTable);
+    makeAssertion(
+      'Create a table with fields of all data types',
+      passBICreateTable
+    );
+    makeAssertion('Search for tables', passSearchTables);
+    makeAssertion('Check Insert Route', checkInsertRoute);
+    makeAssertion('Fails when entered wrong data type', failBIWrongDataType);
+    makeAssertion('Insert 20 rows', passBIInsert20Rows);
+    makeAssertion('Fail for adding null for not null keys', failBINullKeys);
+    makeAssertion(
+      'Fail for adding same data for Unique keys',
+      failBIUniqueKeys
+    );
+    makeAssertion('Check browser rows route', checkBrowseRoute);
+    makeAssertion('20 Inserted rows reflect in browse rows', passBI20RowsExist);
+    makeAssertion('Check pagination in Browse Rows table', checkPagination);
+    makeAssertion('Ascending sort works as expected', () => passBISort('asc'));
+    makeAssertion('Descending sort works as expected', () =>
+      passBISort('desc')
+    );
+    makeAssertion(
+      'Filter query works as expected with $eq',
+      passBIFilterQueryEq
+    );
+    makeAssertion('Check edit button', passEditButton);
+    makeAssertion('Check for clone clear', passCloneButton);
+    makeAssertion('Delete the row', passDeleteRow);
+    makeAssertion('Check view relationship', checkViewRelationship);
+    makeAssertion('Delete test table', deleteBITestTable);
   });
 };
 

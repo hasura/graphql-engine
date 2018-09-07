@@ -31,21 +31,39 @@ const setup = () => {
   });
 };
 
+const testPrefix = 'modify-table';
+
+const makeAssertion = (assertion, specFunc) => {
+  it(`${testPrefix} : ${assertion}`, specFunc);
+};
+
 export const runModifyTableTests = () => {
   describe('Modify Table', () => {
-    it('Creating a table', passMTCreateTable);
-    it('Moving to the table', passMTMoveToTable);
-    it('Modify table button opens the correct route', passMTCheckRoute);
-    it('Fails to add column without column name', failMTWithoutColName);
-    it('Fails without type selected', failMTWithoutColType);
-    it('Add a column', passMTAddColumn);
-    it('Fail modify with wrong default value', failMCWithWrongDefaultValue);
-    it('Pass modify with wrong default value', passMCWithRightDefaultValue);
-    it('Pass create foreign-key', passCreateForeignKey);
-    it('Pass remove foreign-key', passRemoveForeignKey);
-    it('Delete the column', passMTDeleteCol);
-    it('Delete Table Cancel', passMTDeleteTableCancel);
-    it('Delete table', passMTDeleteTable);
+    makeAssertion('Creating a table', passMTCreateTable);
+    makeAssertion('Moving to the table', passMTMoveToTable);
+    makeAssertion(
+      'Modify table button opens the correct route',
+      passMTCheckRoute
+    );
+    makeAssertion(
+      'Fails to add column without column name',
+      failMTWithoutColName
+    );
+    makeAssertion('Fails without type selected', failMTWithoutColType);
+    makeAssertion('Add a column', passMTAddColumn);
+    makeAssertion(
+      'Fail modify with wrong default value',
+      failMCWithWrongDefaultValue
+    );
+    makeAssertion(
+      'Pass modify with wrong default value',
+      passMCWithRightDefaultValue
+    );
+    makeAssertion('Pass create foreign-key', passCreateForeignKey);
+    makeAssertion('Pass remove foreign-key', passRemoveForeignKey);
+    makeAssertion('Delete the column', passMTDeleteCol);
+    makeAssertion('Delete Table Cancel', passMTDeleteTableCancel);
+    makeAssertion('Delete table', passMTDeleteTable);
   });
 };
 
