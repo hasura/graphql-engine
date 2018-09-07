@@ -1,4 +1,7 @@
-# Azure Cloud Function Node.js with Hasura GraphQL Mutation
+# Boilerplates for Azure Cloud Function serverless functions and Hasura GraphQL Engine's Event Triggers
+
+**NOTE**
+Some of the language/platforms are work in progress. We welcome contributions for the WIP langauages. See issues.
 
 ## Pre-requisites
 1. Running instance of Hasura GraphQL

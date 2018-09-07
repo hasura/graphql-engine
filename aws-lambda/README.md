@@ -4,14 +4,9 @@ Sample cloud functions that can be triggered on changes in the database using Gr
 
 These are organized in language-specific folders.
 
-**Checklist**
+**NOTE**
+Some of the language/platforms are work in progress. We welcome contributions for the WIP langauages. See issues.
 
-| Folder name | Use-case       | Node.js | Python | Java | Go | C#
-|-------------|---------|--------|------|----|---|---
-| simple-echo | echo the trigger payload  | - [x] | - [x]  | - [ ]  | - [ ]  | - [ ]
-| mutation-trigger | insert related data on an insert event using graphql mutation | - [x] | - [x]  | - [ ]  | - [ ]  | - [ ]
-| fcm-apns-push-notification | send push notification on database event | - [ ] | - [ ]  | - [ ]  | - [ ]  | - [ ]
-| etl-example | transform the trigger payload and update an algolia index | - [ ] | - [ ]  | - [ ]  | - [ ]  | - [ ]
 
 ## Pre-requisites
 
