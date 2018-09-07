@@ -10,6 +10,7 @@ module Hasura.Events.Lib
   , unlockAllEvents
   , defaultMaxEventThreads
   , defaultPollingIntervalSec
+  , Event(..)
   ) where
 
 import           Control.Concurrent            (threadDelay)
@@ -44,7 +45,6 @@ import qualified Network.Wreq.Session          as WS
 
 
 type CacheRef = IORef (SchemaCache, GS.GCtxMap)
-type UUID = T.Text
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -63,7 +63,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerMeta)
 
 data Event
   = Event
-  { eId        :: UUID
+  { eId        :: EventId
   , eTable     :: QualifiedTable
   , eTrigger   :: TriggerMeta
   , eEvent     :: Value
@@ -88,7 +88,7 @@ $(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
 
 data Invocation
   = Invocation
-  { iEventId  :: UUID
+  { iEventId  :: EventId
   , iStatus   :: Int64
   , iRequest  :: Value
   , iResponse :: TBS.TByteString

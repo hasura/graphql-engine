@@ -8,11 +8,13 @@ module Hasura.RQL.Types.Subscribe
   , SubscribeColumns(..)
   , TriggerName
   , TriggerId
+  , EventId
   , TriggerOpsDef(..)
   , EventTrigger(..)
   , EventTriggerDef(..)
   , RetryConf(..)
   , DeleteEventTriggerQuery(..)
+  , DeliverEventQuery(..)
   ) where
 
 import           Data.Aeson
@@ -27,7 +29,8 @@ import           Text.Regex                 (matchRegex, mkRegex)
 import qualified Data.Text                  as T
 
 type TriggerName = T.Text
-type TriggerId = T.Text
+type TriggerId   = T.Text
+type EventId     = T.Text
 
 data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift)
 
@@ -126,3 +129,10 @@ data EventTriggerDef
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerDef)
+
+data DeliverEventQuery
+  = DeliverEventQuery
+  { deqEventId :: !EventId
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeliverEventQuery)

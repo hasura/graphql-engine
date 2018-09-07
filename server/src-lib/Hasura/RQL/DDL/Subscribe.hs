@@ -146,6 +146,36 @@ fetchEventTrigger trn = do
     getTrigger (x:_) = return $ EventTrigger (QualifiedTable sn tn) trn' tDef webhook (RetryConf nr rint)
       where (sn, tn, trn', Q.AltJ tDef, webhook, nr, rint) = x
 
+fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
+fetchEvent eid = do
+  events <- Q.listQE defaultTxErrorHandler [Q.sql|
+      SELECT l.id, l.locked
+      FROM hdb_catalog.event_log l
+      JOIN hdb_catalog.event_triggers e
+      ON l.trigger_id = e.id
+      WHERE l.id = $1
+      |] (Identity eid) True
+  event <- getEvent events
+  assertEventUnlocked event
+  return event
+  where
+    getEvent []    = throw400 NotExists "event not found"
+    getEvent (x:_) = return x
+
+    assertEventUnlocked (_, locked) = when locked $
+      throw400 Busy "event is already being processed"
+
+markForDelivery :: EventId -> Q.TxE QErr ()
+markForDelivery eid =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+          UPDATE hdb_catalog.event_log
+          SET
+          delivered = 'f',
+          error = 'f',
+          tries = 0
+          WHERE id = $1
+          |] (Identity eid) True
+
 subTableP1 :: (P1C m) => CreateEventTriggerQuery -> m (QualifiedTable, EventTriggerDef)
 subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webhook) = do
   ti <- askTabInfo qt
@@ -192,4 +222,16 @@ instance HDBQuery DeleteEventTriggerQuery where
   type Phase1Res DeleteEventTriggerQuery = ()
   phaseOne = unsubTableP1
   phaseTwo q _ = unsubTableP2 q
+  schemaCachePolicy = SCPReload
+
+deliverEvent :: (P2C m) => DeliverEventQuery -> m RespBody
+deliverEvent (DeliverEventQuery eventId) = do
+  _ <- liftTx $ fetchEvent eventId
+  liftTx $ markForDelivery eventId
+  return successMsg
+
+instance HDBQuery DeliverEventQuery where
+  type Phase1Res DeliverEventQuery = ()
+  phaseOne _ = return ()
+  phaseTwo q _ = deliverEvent q
   schemaCachePolicy = SCPReload
