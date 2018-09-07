@@ -5,8 +5,14 @@ import AceEditor from 'react-ace';
 import matchSorter from 'match-sorter';
 import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
+import RedeliverEvent from '../TableCommon/RedeliverEvent';
 import TableHeader from '../TableCommon/TableHeader';
-import { loadEventLogs, setTrigger } from '../EventActions';
+import {
+  loadEventLogs,
+  setTrigger,
+  MODAL_OPEN,
+  setRedeliverEvent,
+} from '../EventActions';
 import {
   vMakeRequest,
   vSetDefaults,
@@ -87,6 +93,11 @@ class StreamingLogs extends Component {
       });
     });
   }
+  toggleModal(currentEvent) {
+    // set current event to redeliver
+    this.props.dispatch(setRedeliverEvent(currentEvent));
+    this.props.dispatch({ type: MODAL_OPEN, data: true });
+  }
 
   render() {
     const {
@@ -100,6 +111,7 @@ class StreamingLogs extends Component {
 
     const styles = require('../TableCommon/Table.scss');
     const invocationColumns = [
+      'redeliver',
       'status',
       'invocation_id',
       'event_id',
@@ -190,17 +202,32 @@ class StreamingLogs extends Component {
             const tableData = allSchemas.filter(
               row => row.table_name === tableName
             );
-            const primaryKey = tableData[0].primary_key.columns[0]; // handle all primary keys
-            const oldPrimaryKeyData = r.request.event.data.old
-              ? r.request.event.data.old[primaryKey]
-              : '';
-            const newPrimaryKeyData = r.request.event.data.new
-              ? r.request.event.data.new[primaryKey]
-              : '';
+            const primaryKey = tableData[0].primary_key.columns; // handle all primary keys
+            const pkHtml = [];
+            primaryKey.map(pk => {
+              const newPrimaryKeyData = r.request.event.data.new
+                ? r.request.event.data.new[pk]
+                : '';
+              pkHtml.push(
+                <div>
+                  {pk} : {newPrimaryKeyData}
+                </div>
+              );
+            });
             return (
               <div className={conditionalClassname}>
                 {/* (old) - {oldPrimaryKeyData} | (new) pk - {newPrimaryKeyData} */}
-                {newPrimaryKeyData}
+                {pkHtml}
+              </div>
+            );
+          }
+          if (col === 'redeliver') {
+            return (
+              <div className={conditionalClassname}>
+                <i
+                  onClick={this.toggleModal.bind(this, r.event_id)}
+                  className={styles.retryEvent + ' fa fa-repeat'}
+                />
               </div>
             );
           }
@@ -361,6 +388,9 @@ class StreamingLogs extends Component {
         )}
         <br />
         <br />
+        <div className={styles.redeliverModal}>
+          <RedeliverEvent log={log} />
+        </div>
       </div>
     );
   }
