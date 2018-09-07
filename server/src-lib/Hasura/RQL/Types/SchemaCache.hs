@@ -65,6 +65,12 @@ module Hasura.RQL.Types.SchemaCache
        , delQTemplateFromCache
        , TemplateParamInfo(..)
 
+       , addEventTriggerToCache
+       , delEventTriggerFromCache
+       , getOpInfo
+       , EventTriggerInfo(..)
+       , OpTriggerInfo(..)
+
        , TableObjId(..)
        , SchemaObjId(..)
        , reportSchemaObj
@@ -78,6 +84,7 @@ module Hasura.RQL.Types.SchemaCache
        , getDependentObjsOfQTemplateCache
        , getDependentPermsOfTable
        , getDependentRelsOfTable
+       , getDependentTriggersOfTable
        , isDependentOn
        ) where
 
@@ -87,6 +94,7 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.Subscribe
 import qualified Hasura.SQL.DML              as S
 import           Hasura.SQL.Types
 
@@ -106,6 +114,7 @@ data TableObjId
   | TORel !RelName
   | TOCons !ConstraintName
   | TOPerm !RoleName !PermType
+  | TOTrigger !TriggerName
   deriving (Show, Eq, Generic)
 
 instance Hashable TableObjId
@@ -131,6 +140,8 @@ reportSchemaObj (SOTableObj tn (TOCons cn)) =
 reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
   "permission " <> qualTableToTxt tn <> "." <> getRoleTxt rn
   <> "." <> permTypeToCode pt
+reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
+  "event-trigger " <> qualTableToTxt tn <> "." <> trn
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
@@ -326,6 +337,39 @@ makeLenses ''RolePermInfo
 
 type RolePermInfoMap = M.HashMap RoleName RolePermInfo
 
+data OpTriggerInfo
+  = OpTriggerInfo
+  { otiTable       :: !QualifiedTable
+  , otiTriggerName :: !TriggerName
+  , otiCols        :: !SubscribeOpSpec
+  , otiDeps        :: ![SchemaDependency]
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''OpTriggerInfo)
+
+instance CachedSchemaObj OpTriggerInfo where
+  dependsOn = otiDeps
+
+data EventTriggerInfo
+ = EventTriggerInfo
+   { etiId        :: !TriggerId
+   , etiName      :: !TriggerName
+   , etiInsert    :: !(Maybe OpTriggerInfo)
+   , etiUpdate    :: !(Maybe OpTriggerInfo)
+   , etiDelete    :: !(Maybe OpTriggerInfo)
+   , etiRetryConf :: !RetryConf
+   , etiWebhook   :: !T.Text
+   } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)
+
+type EventTriggerInfoMap = M.HashMap TriggerName EventTriggerInfo
+
+getTriggers :: EventTriggerInfoMap -> [OpTriggerInfo]
+getTriggers etim = toOpTriggerInfo $ M.elems etim
+  where
+    toOpTriggerInfo etis = catMaybes $ foldl (\acc eti -> acc ++ [etiInsert eti, etiUpdate eti, etiDelete eti]) [] etis
+
+
 data ConstraintType
   = CTCHECK
   | CTFOREIGNKEY
@@ -390,13 +434,14 @@ mutableView qt f mVI operation =
 
 data TableInfo
   = TableInfo
-  { tiName            :: !QualifiedTable
-  , tiSystemDefined   :: !Bool
-  , tiFieldInfoMap    :: !FieldInfoMap
-  , tiRolePermInfoMap :: !RolePermInfoMap
-  , tiConstraints     :: ![TableConstraint]
-  , tiPrimaryKeyCols  :: ![PGCol]
+  { tiName                :: !QualifiedTable
+  , tiSystemDefined       :: !Bool
+  , tiFieldInfoMap        :: !FieldInfoMap
+  , tiRolePermInfoMap     :: !RolePermInfoMap
+  , tiConstraints         :: ![TableConstraint]
+  , tiPrimaryKeyCols      :: ![PGCol]
   , tiViewInfo        :: !(Maybe ViewInfo)
+  , tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
@@ -404,8 +449,8 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 mkTableInfo :: QualifiedTable -> Bool -> [(ConstraintType, ConstraintName)]
             -> [(PGCol, PGColType, Bool)] -> [PGCol]
             -> Maybe ViewInfo -> TableInfo
-mkTableInfo tn isSystemDefined rawCons cols =
-  TableInfo tn isSystemDefined colMap (M.fromList []) constraints
+mkTableInfo tn isSystemDefined rawCons cols pcols mVI =
+  TableInfo tn isSystemDefined colMap (M.fromList []) constraints pcols mVI (M.fromList [])
   where
     constraints = flip map rawCons $ uncurry TableConstraint
     colMap     = M.fromList $ map f cols
@@ -565,6 +610,43 @@ withPermType PTSelect f = f PASelect
 withPermType PTUpdate f = f PAUpdate
 withPermType PTDelete f = f PADelete
 
+addEventTriggerToCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedTable
+  -> TriggerId
+  -> TriggerName
+  -> TriggerOpsDef
+  -> RetryConf
+  -> T.Text
+  -> m ()
+addEventTriggerToCache qt trid trn tdef rconf webhook =
+  modTableInCache modEventTriggerInfo qt
+  where
+    modEventTriggerInfo ti = do
+      let eti = EventTriggerInfo
+                trid
+                trn
+                (getOpInfo trn ti $ tdInsert tdef)
+                (getOpInfo trn ti $ tdUpdate tdef)
+                (getOpInfo trn ti $ tdDelete tdef)
+                rconf
+                webhook
+          etim = tiEventTriggerInfoMap ti
+      -- fail $ show (toJSON eti)
+      return $ ti { tiEventTriggerInfoMap = M.insert trn eti etim}
+
+delEventTriggerFromCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedTable
+  -> TriggerName
+  -> m ()
+delEventTriggerFromCache qt trn =
+  modTableInCache modEventTriggerInfo qt
+  where
+    modEventTriggerInfo ti = do
+      let etim = tiEventTriggerInfoMap ti
+      return $ ti { tiEventTriggerInfoMap = M.delete trn etim }
+
 addPermToCache
   :: (QErrM m, CacheRWM m)
   => QualifiedTable
@@ -648,27 +730,30 @@ getDependentObjsOfQTemplateCache objId qtc =
 
 getDependentObjsOfTable :: SchemaObjId -> TableInfo -> [SchemaObjId]
 getDependentObjsOfTable objId ti =
-  rels ++ perms
+  rels ++ perms ++ triggers
   where
     rels  = getDependentRelsOfTable (const True) objId ti
     perms = getDependentPermsOfTable (const True) objId ti
+    triggers = getDependentTriggersOfTable (const True) objId ti
+
 
 getDependentObjsOfTableWith :: (T.Text -> Bool) -> SchemaObjId -> TableInfo -> [SchemaObjId]
 getDependentObjsOfTableWith f objId ti =
-  rels ++ perms
+  rels ++ perms ++ triggers
   where
     rels  = getDependentRelsOfTable f objId ti
     perms = getDependentPermsOfTable f objId ti
+    triggers = getDependentTriggersOfTable f objId ti
 
 getDependentRelsOfTable :: (T.Text -> Bool) -> SchemaObjId
                         -> TableInfo -> [SchemaObjId]
-getDependentRelsOfTable rsnFn objId (TableInfo tn _ fim _ _ _ _) =
+getDependentRelsOfTable rsnFn objId (TableInfo tn _ fim _ _ _ _ _) =
     map (SOTableObj tn . TORel . riName) $
     filter (isDependentOn rsnFn objId) $ getRels fim
 
 getDependentPermsOfTable :: (T.Text -> Bool) -> SchemaObjId
                          -> TableInfo -> [SchemaObjId]
-getDependentPermsOfTable rsnFn objId (TableInfo tn _ _ rpim _ _ _) =
+getDependentPermsOfTable rsnFn objId (TableInfo tn _ _ rpim _ _ _ _) =
   concat $ flip M.mapWithKey rpim $
   \rn rpi -> map (SOTableObj tn . TOPerm rn) $ getDependentPerms' rsnFn objId rpi
 
@@ -684,3 +769,23 @@ getDependentPerms' rsnFn objId (RolePermInfo mipi mspi mupi mdpi) =
     toPermRow :: forall a. (CachedSchemaObj a) => PermType -> a -> Maybe PermType
     toPermRow pt =
       bool Nothing (Just pt) . isDependentOn rsnFn objId
+
+getDependentTriggersOfTable :: (T.Text -> Bool) -> SchemaObjId
+                         -> TableInfo -> [SchemaObjId]
+getDependentTriggersOfTable rsnFn objId (TableInfo tn _ _ _ _ _ _ et) =
+  map (SOTableObj tn . TOTrigger . otiTriggerName ) $ filter (isDependentOn rsnFn objId) $ getTriggers et
+
+getOpInfo :: TriggerName -> TableInfo -> Maybe SubscribeOpSpec -> Maybe OpTriggerInfo
+getOpInfo trn ti mos= fromSubscrOpSpec <$> mos
+  where
+    fromSubscrOpSpec :: SubscribeOpSpec -> OpTriggerInfo
+    fromSubscrOpSpec os =
+      let qt = tiName ti
+          cols = getColsFromSub $ sosColumns os
+          schemaDeps = SchemaDependency (SOTable qt) "event trigger is dependent on table"
+            : map (\col -> SchemaDependency (SOTableObj qt (TOCol col)) "event trigger is dependent on column") (toList cols)
+        in OpTriggerInfo qt trn os schemaDeps
+        where
+          getColsFromSub sc = case sc of
+            SubCStar         -> HS.fromList $ map pgiName $ getCols $ tiFieldInfoMap ti
+            SubCArray pgcols -> HS.fromList pgcols

@@ -20,6 +20,7 @@ import {
   permissionsConnector,
   dataHeaderConnector,
   migrationsConnector,
+  // metadataConnector,
 } from '.';
 
 import {
@@ -105,6 +106,9 @@ const makeDataRouter = (
         component={addExistingTableViewConnector(connect)}
       />
       <Route path="sql" component={rawSQLConnector(connect)} />
+      {/*
+      <Route path="metadata" component={metadataConnector(connect)} />
+      */}
       <Route
         path="migrations"
         onEnter={composeOnEnterHooks([consoleModeRedirects])}
@@ -194,12 +198,16 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
         },
         error => {
           console.error(JSON.stringify(error));
-          Promise.all([
-            store.dispatch({ type: ACCESS_KEY_ERROR, data: true }),
-          ]).then(() => {
-            replaceState('/login');
-            cb();
-          });
+          if (error.code === 'access-denied') {
+            Promise.all([
+              store.dispatch({ type: ACCESS_KEY_ERROR, data: true }),
+            ]).then(() => {
+              replaceState('/login');
+              cb();
+            });
+          } else {
+            alert(JSON.stringify(error));
+          }
         }
       );
     }

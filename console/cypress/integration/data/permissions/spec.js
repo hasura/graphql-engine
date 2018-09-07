@@ -13,7 +13,7 @@ import { testPermissions, permRemove, createView, trackView } from './utils';
 const testName = 'perm';
 
 export const passPTCreateTable = () => {
-  // Click on create tabel
+  // Click on create table
   cy.get(getElementFromAlias('data-create-table')).click();
   // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);

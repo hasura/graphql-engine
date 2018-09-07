@@ -273,7 +273,7 @@ mkWaiApp
   -> AuthMode
   -> CorsConfig
   -> Bool
-  -> IO Wai.Application
+  -> IO (Wai.Application, IORef (SchemaCache, GS.GCtxMap))
 mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole = do
     cacheRef <- do
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
@@ -295,7 +295,7 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
 
     wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager cacheRef runTx
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
-    return $ WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
+    return (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp, cacheRef)
 
 httpApp :: Maybe String -> CorsConfig -> ServerCtx -> Bool -> SpockT IO ()
 httpApp mRootDir corsCfg serverCtx enableConsole = do

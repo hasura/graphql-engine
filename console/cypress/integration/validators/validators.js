@@ -216,3 +216,24 @@ export const validateMigrationMode = mode => {
     expect(response.body.migration_mode == mode.toString()).to.be.true; // eslint-disable-line
   });
 };
+
+// ****************** Trigger Validator *********************
+
+export const validateCTrigger = (triggerName, result) => {
+  const reqBody = {
+    type: 'select',
+    args: {
+      table: { name: 'event_triggers', schema: 'hdb_catalog' },
+      columns: ['table_name'],
+      where: { name: triggerName },
+    },
+  };
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === 'success') {
+      expect(response.status === 200).to.be.true;
+    } else {
+      expect(response.status === 200).to.be.false;
+    }
+  });
+};

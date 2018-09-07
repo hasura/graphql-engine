@@ -5,6 +5,7 @@ module Main where
 
 import           Ops
 
+import           Control.Monad.STM          (atomically)
 import           Data.Time.Clock            (getCurrentTime)
 import           Options.Applicative
 import           System.Environment         (lookupEnv)
@@ -22,6 +23,7 @@ import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
+import           Hasura.Events.Lib
 import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
@@ -32,6 +34,8 @@ import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
 
 import qualified Database.PG.Query          as Q
+import qualified Network.HTTP.Client.TLS    as TLS
+import qualified Network.Wreq.Session       as WrqS
 
 data RavenOptions
   = RavenOptions
@@ -126,7 +130,8 @@ main =  do
   ci <- either ((>> exitFailure) . putStrLn . connInfoErrModifier)
     return $ mkConnInfo mEnvDbUrl rci
   printConnInfo ci
-  loggerCtx <- mkLoggerCtx defaultLoggerSettings
+  loggerCtx <- mkLoggerCtx $ defaultLoggerSettings True
+  hloggerCtx <- mkLoggerCtx $ defaultLoggerSettings False
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case ravenMode of
     ROServe (ServeOptions port cp isoL mRootDir mAccessKey corsCfg mWebHook mJwtSecret enableConsole) -> do
@@ -140,14 +145,23 @@ main =  do
             CorsConfigG finalCorsDomain $ ccDisabled corsCfg
       initialise ci
       migrate ci
+      prepareEvents ci
       pool <- Q.initPGPool ci cp
       putStrLn $ "server: running on port " ++ show port
-      app <- mkWaiApp isoL mRootDir loggerCtx pool httpManager am finalCorsCfg enableConsole
+      (app, cacheRef) <- mkWaiApp isoL mRootDir loggerCtx pool httpManager am finalCorsCfg enableConsole
       let warpSettings = Warp.setPort port Warp.defaultSettings
                          -- Warp.setHost "*" Warp.defaultSettings
 
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
+
+      maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+      evPollSec  <- getFromEnv defaultPollingIntervalSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+
+      eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evPollSec
+      httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
+
+      void $ C.forkIO $ processEventQueue hloggerCtx httpSession pool cacheRef eventEngineCtx
 
       Warp.runSettings warpSettings app
 
@@ -176,6 +190,18 @@ main =  do
       currentTime <- getCurrentTime
       res <- runTx ci $ migrateCatalog currentTime
       either ((>> exitFailure) . printJSON) putStrLn res
+    prepareEvents ci = do
+      putStrLn "event_triggers: preparing data"
+      res <- runTx ci unlockAllEvents
+      either ((>> exitFailure) . printJSON) return res
+    getFromEnv :: (Read a) => a -> String -> IO a
+    getFromEnv defaults env = do
+      mEnv <- lookupEnv env
+      let mRes = case mEnv of
+            Nothing  -> Just defaults
+            Just val -> readMaybe val
+          eRes = maybe (Left "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE is not an integer") Right mRes
+      either ((>> exitFailure) . putStrLn) return eRes
 
     cleanSuccess = putStrLn "successfully cleaned graphql-engine related data"
 

@@ -54,8 +54,9 @@ $(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''HasuraClaims)
 -- | HGE's own representation of various JWKs
 data JWTConfig
   = JWTConfig
-  { jcType :: !T.Text
-  , jcKey  :: !JWK
+  { jcType    :: !T.Text
+  , jcKey     :: !JWK
+  , jcClaimNs :: !(Maybe T.Text)
   } deriving (Show, Eq)
 
 allowedRolesClaim :: T.Text
@@ -63,6 +64,9 @@ allowedRolesClaim = "x-hasura-allowed-roles"
 
 defaultRoleClaim :: T.Text
 defaultRoleClaim = "x-hasura-default-role"
+
+defaultClaimNs :: T.Text
+defaultClaimNs = "https://hasura.io/jwt/claims"
 
 -- | Process the request headers to verify the JWT and extract UserInfo from it
 processJwt
@@ -78,9 +82,16 @@ processJwt conf headers = do
   -- verify the JWT
   claims <- liftJWTError invalidJWTError $ verifyJwt (jcKey conf) jwt
 
+  let claimsNs = fromMaybe defaultClaimNs $ jcClaimNs conf
+
+  -- see if the hasura claims key exist in the claims map
+  let mHasuraClaims = Map.lookup claimsNs $ claims ^. unregisteredClaims
+  hasuraClaimsV <- maybe claimsNotFound return mHasuraClaims
+  -- the value of hasura claims key has to be an object
+  hasuraClaims <- validateIsObject hasuraClaimsV
+
   -- filter only x-hasura claims
-  let claimsMap = Map.filterWithKey (\k _ -> T.isPrefixOf "x-hasura-" k) $
-        claims ^. unregisteredClaims
+  let claimsMap = Map.filterWithKey (\k _ -> T.isPrefixOf "x-hasura-" k) hasuraClaims
 
   HasuraClaims allowedRoles defaultRole <- parseHasuraClaims claimsMap
   let role = getCurrentRole defaultRole
@@ -107,6 +118,11 @@ processJwt conf headers = do
         ["Bearer", jwt] -> return jwt
         _               -> malformedAuthzHeader
 
+    validateIsObject jVal =
+      case jVal of
+        A.Object x -> return x
+        _          -> throw400 JWTInvalidClaims "hasura claims should be an object"
+
     -- see if there is a x-hasura-role header, or else pick the default role
     getCurrentRole defaultRole =
       let userRoleHeaderB = TE.encodeUtf8 userRoleHeader
@@ -131,6 +147,9 @@ processJwt conf headers = do
       throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
     currRoleNotAllowed =
       throw400 AccessDenied "Your current role is not in allowed roles"
+    claimsNotFound = do
+      let claimsNs = fromMaybe defaultClaimNs $ jcClaimNs conf
+      throw400 JWTInvalidClaims $ "claims key: '" <> claimsNs <> "' not found"
 
 
 -- parse x-hasura-allowed-roles, x-hasura-default-role from JWT claims
@@ -191,26 +210,27 @@ instance A.FromJSON JWTConfig where
   parseJSON = A.withObject "JWTConfig" $ \o -> do
     keyType <- o A..: "type"
     rawKey  <- o A..: "key"
+    claimNs <- o A..:? "claims_namespace"
     case keyType of
-      "HS256" -> parseHmacKey rawKey 256 keyType
-      "HS384" -> parseHmacKey rawKey 384 keyType
-      "HS512" -> parseHmacKey rawKey 512 keyType
-      "RS256" -> parseRsaKey rawKey keyType
-      "RS384" -> parseRsaKey rawKey keyType
-      "RS512" -> parseRsaKey rawKey keyType
+      "HS256" -> parseHmacKey rawKey 256 keyType claimNs
+      "HS384" -> parseHmacKey rawKey 384 keyType claimNs
+      "HS512" -> parseHmacKey rawKey 512 keyType claimNs
+      "RS256" -> parseRsaKey rawKey keyType claimNs
+      "RS384" -> parseRsaKey rawKey keyType claimNs
+      "RS512" -> parseRsaKey rawKey keyType claimNs
       -- TODO: support ES256, ES384, ES512, PS256, PS384
       _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
     where
-      parseHmacKey key size ktype = do
+      parseHmacKey key size ktype cns = do
         let secret = BL.fromStrict $ TE.encodeUtf8 key
         when (BL.length secret < size `div` 8) $
           invalidJwk "Key size too small"
-        return $ JWTConfig ktype (fromOctets secret)
+        return $ JWTConfig ktype (fromOctets secret) cns
 
-      parseRsaKey key ktype = do
+      parseRsaKey key ktype cns = do
         let res = fromRawPem (BL.fromStrict $ TE.encodeUtf8 key)
             err e = "Could not decode PEM: " <> T.unpack e
-        either (invalidJwk . err) (return . JWTConfig ktype) res
+        either (invalidJwk . err) (\r -> return $ JWTConfig ktype r cns) res
 
       invalidJwk msg = fail ("Invalid JWK: " <> msg)
 
