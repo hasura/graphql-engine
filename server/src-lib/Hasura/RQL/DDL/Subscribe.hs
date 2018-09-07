@@ -26,10 +26,10 @@ data OpVar = OLD | NEW deriving (Show)
 
 type GingerTmplt = TG.Template TG.SourcePos
 
-defaultNumRetries :: Int64
+defaultNumRetries :: Int
 defaultNumRetries = 0
 
-defaultRetryInterval :: Int64
+defaultRetryInterval :: Int
 defaultRetryInterval = 10
 
 parseGingerTmplt :: TG.Source -> Either String GingerTmplt
@@ -111,7 +111,7 @@ addEventTriggerToCatalog (QualifiedTable sn tn) (EventTriggerDef name def webhoo
                                   INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook, num_retries, retry_interval)
                                   VALUES ($1, 'table', $2, $3, $4, $5, $6, $7)
                                   RETURNING id
-                                  |] (name, sn, tn, Q.AltJ $ toJSON def, webhook, rcNumRetries rconf, rcIntervalSec rconf) True
+                                  |] (name, sn, tn, Q.AltJ $ toJSON def, webhook, toInt64 $ rcNumRetries rconf, toInt64 $ rcIntervalSec rconf) True
 
   trid <- getTrid ids
   mkTriggerQ trid name (QualifiedTable sn tn) def
@@ -119,6 +119,8 @@ addEventTriggerToCatalog (QualifiedTable sn tn) (EventTriggerDef name def webhoo
   where
     getTrid []    = throw500 "could not create event-trigger"
     getTrid (x:_) = return x
+    toInt64 :: (Integral a) => a -> Int64
+    toInt64 = fromIntegral
 
 
 delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
@@ -146,8 +148,39 @@ fetchEventTrigger trn = do
     getTrigger (x:_) = return $ EventTrigger (QualifiedTable sn tn) trn' tDef webhook (RetryConf nr rint)
       where (sn, tn, trn', Q.AltJ tDef, webhook, nr, rint) = x
 
+fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
+fetchEvent eid = do
+  events <- Q.listQE defaultTxErrorHandler [Q.sql|
+      SELECT l.id, l.locked
+      FROM hdb_catalog.event_log l
+      JOIN hdb_catalog.event_triggers e
+      ON l.trigger_id = e.id
+      WHERE l.id = $1
+      |] (Identity eid) True
+  event <- getEvent events
+  assertEventUnlocked event
+  return event
+  where
+    getEvent []    = throw400 NotExists "event not found"
+    getEvent (x:_) = return x
+
+    assertEventUnlocked (_, locked) = when locked $
+      throw400 Busy "event is already being processed"
+
+markForDelivery :: EventId -> Q.TxE QErr ()
+markForDelivery eid =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+          UPDATE hdb_catalog.event_log
+          SET
+          delivered = 'f',
+          error = 'f',
+          tries = 0
+          WHERE id = $1
+          |] (Identity eid) True
+
 subTableP1 :: (P1C m) => CreateEventTriggerQuery -> m (QualifiedTable, EventTriggerDef)
 subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webhook) = do
+  adminOnly
   ti <- askTabInfo qt
   assertCols ti insert
   assertCols ti update
@@ -179,7 +212,7 @@ instance HDBQuery CreateEventTriggerQuery where
   schemaCachePolicy = SCPReload
 
 unsubTableP1 :: (P1C m) => DeleteEventTriggerQuery -> m ()
-unsubTableP1 _ = return ()
+unsubTableP1 _ = adminOnly
 
 unsubTableP2 :: (P2C m) => DeleteEventTriggerQuery -> m RespBody
 unsubTableP2 (DeleteEventTriggerQuery name) = do
@@ -192,4 +225,16 @@ instance HDBQuery DeleteEventTriggerQuery where
   type Phase1Res DeleteEventTriggerQuery = ()
   phaseOne = unsubTableP1
   phaseTwo q _ = unsubTableP2 q
+  schemaCachePolicy = SCPReload
+
+deliverEvent :: (P2C m) => DeliverEventQuery -> m RespBody
+deliverEvent (DeliverEventQuery eventId) = do
+  _ <- liftTx $ fetchEvent eventId
+  liftTx $ markForDelivery eventId
+  return successMsg
+
+instance HDBQuery DeliverEventQuery where
+  type Phase1Res DeliverEventQuery = ()
+  phaseOne _ = adminOnly
+  phaseTwo q _ = deliverEvent q
   schemaCachePolicy = SCPReload
