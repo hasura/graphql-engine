@@ -207,6 +207,7 @@ jobs:
         POSTGRES_USER: gql_test
         POSTGRES_DB: gql_test
     working_directory: ~/graphql-engine
+    parallelism: 4
     steps:
     - checkout
     - attach_workspace:
