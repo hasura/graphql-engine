@@ -40,7 +40,7 @@ hosted on GitHub pages and the Postgres+GraphQL Engine is running on Postgres.
   ```js
   export const HASURA_GRAPHQL_URL = 'realtime-backend2.herokuapp.com/v1alpha1/graphql';
   ```
-- Run the app (go the root of repo):
+- Run the app (go to the root of the repo):
   ```bash
   npm start
   ```
