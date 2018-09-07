@@ -9,5 +9,6 @@
   "viewportWidth": 1280,
   "viewportHeight": 720,
   "chromeWebSecurity": false,
-  "video": false
+  "video": false,
+  "projectId": "5yiuic"
 }
