@@ -69,7 +69,7 @@ data Event
   , eEvent     :: Value
   -- , eDelivered   :: Bool
   -- , eError       :: Bool
-  , eTries     :: Int64
+  , eTries     :: Int
   , eCreatedAt :: Time.UTCTime
   } deriving (Show, Eq)
 
