@@ -110,7 +110,6 @@ $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTrigge
 data UpdateEventTriggerQuery
   = UpdateEventTriggerQuery
   { uetqName      :: !T.Text
-  , uetqTable     :: !QualifiedTable
   , uetqInsert    :: !(Maybe SubscribeOpSpec)
   , uetqUpdate    :: !(Maybe SubscribeOpSpec)
   , uetqDelete    :: !(Maybe SubscribeOpSpec)
