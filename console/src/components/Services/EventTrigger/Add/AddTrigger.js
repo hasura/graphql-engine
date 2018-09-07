@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
+import * as tooltip from './Tooltips';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import {
   setTriggerName,
@@ -207,6 +209,12 @@ class AddTrigger extends Component {
             >
               <h4 className={styles.subheading_text}>
                 Trigger Name &nbsp; &nbsp;
+                <OverlayTrigger
+                  placement="right"
+                  overlay={tooltip.triggerNameDescription}
+                >
+                  <i className="fa fa-question-circle" aria-hidden="true" />
+                </OverlayTrigger>{' '}
               </h4>
               <input
                 type="text"
@@ -222,6 +230,12 @@ class AddTrigger extends Component {
               <hr />
               <h4 className={styles.subheading_text}>
                 Schema/Table &nbsp; &nbsp;
+                <OverlayTrigger
+                  placement="right"
+                  overlay={tooltip.postgresDescription}
+                >
+                  <i className="fa fa-question-circle" aria-hidden="true" />
+                </OverlayTrigger>{' '}
               </h4>
               <select
                 onChange={updateTableList}
@@ -272,7 +286,15 @@ class AddTrigger extends Component {
                   styles.add_mar_bottom + ' ' + styles.selectOperations
                 }
               >
-                <h4 className={styles.subheading_text}>Operations</h4>
+                <h4 className={styles.subheading_text}>
+                  Operations &nbsp; &nbsp;
+                  <OverlayTrigger
+                    placement="right"
+                    overlay={tooltip.operationsDescription}
+                  >
+                    <i className="fa fa-question-circle" aria-hidden="true" />
+                  </OverlayTrigger>{' '}
+                </h4>
                 <div className={styles.display_inline}>
                   <label>
                     <input
@@ -443,7 +465,7 @@ class AddTrigger extends Component {
                           styles.add_mar_right + ' ' + styles.retryLabel
                         }
                       >
-                        Number of retries
+                        Number of retries (default: 0)
                       </label>
                       <input
                         onChange={e => {
@@ -465,7 +487,7 @@ class AddTrigger extends Component {
                           styles.add_mar_right + ' ' + styles.retryLabel
                         }
                       >
-                        Retry Interval in seconds
+                        Retry Interval in seconds (default: 10)
                       </label>
                       <input
                         onChange={e => {

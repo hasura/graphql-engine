@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import AceEditor from 'react-ace';
 import TableHeader from '../TableCommon/TableHeader';
 import { deleteTrigger } from '../EventActions';
 
@@ -67,7 +68,19 @@ class Settings extends Component {
                 </tr>
                 <tr>
                   <td>Operation / Columns</td>
-                  <td>{JSON.stringify(triggerSchema.definition, null, 4)}</td>
+                  <td>
+                    <AceEditor
+                      mode="json"
+                      theme="github"
+                      name="payload"
+                      value={JSON.stringify(triggerSchema.definition, null, 4)}
+                      minLines={4}
+                      maxLines={100}
+                      width="100%"
+                      showPrintMargin={false}
+                      showGutter={false}
+                    />
+                  </td>
                 </tr>
               </tbody>
             </table>
