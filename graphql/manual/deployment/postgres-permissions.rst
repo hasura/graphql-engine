@@ -25,6 +25,9 @@ Here's a sample SQL block that you can run on your database to create the right 
     -- create a separate user for hasura
     CREATE USER hasurauser WITH PASSWORD 'hasurauser';
 
+    -- create pgcrypto extension, required for UUID
+    CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
     -- create the schemas required by the hasura system
     -- NOTE: If you are starting from scratch: drop the below schemas first, if they exist.
     CREATE SCHEMA IF NOT EXISTS hdb_catalog;
