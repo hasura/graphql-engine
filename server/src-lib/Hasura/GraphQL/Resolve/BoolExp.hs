@@ -35,27 +35,35 @@ parseOpExps
 parseOpExps annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
     forM (Map.toList obj) $ \(k, v) -> case k of
-      "_eq"       -> fmap RA.AEQ <$> asPGColValM v
-      "_ne"       -> fmap RA.ANE <$> asPGColValM v
-      "_neq"      -> fmap RA.ANE <$> asPGColValM v
-      "_is_null"  -> resolveIsNull v
+      "_eq"           -> fmap RA.AEQ <$> asPGColValM v
+      "_ne"           -> fmap RA.ANE <$> asPGColValM v
+      "_neq"          -> fmap RA.ANE <$> asPGColValM v
+      "_is_null"      -> resolveIsNull v
 
-      "_in"       -> fmap (RA.AIN . catMaybes) <$> parseMany asPGColValM v
-      "_nin"      -> fmap (RA.ANIN . catMaybes) <$> parseMany asPGColValM v
+      "_in"           -> fmap (RA.AIN . catMaybes) <$> parseMany asPGColValM v
+      "_nin"          -> fmap (RA.ANIN . catMaybes) <$> parseMany asPGColValM v
 
-      "_gt"       -> fmap RA.AGT <$> asPGColValM v
-      "_lt"       -> fmap RA.ALT <$> asPGColValM v
-      "_gte"      -> fmap RA.AGTE <$> asPGColValM v
-      "_lte"      -> fmap RA.ALTE <$> asPGColValM v
+      "_gt"           -> fmap RA.AGT <$> asPGColValM v
+      "_lt"           -> fmap RA.ALT <$> asPGColValM v
+      "_gte"          -> fmap RA.AGTE <$> asPGColValM v
+      "_lte"          -> fmap RA.ALTE <$> asPGColValM v
 
-      "_like"     -> fmap RA.ALIKE <$> asPGColValM v
-      "_nlike"    -> fmap RA.ANLIKE <$> asPGColValM v
+      "_like"         -> fmap RA.ALIKE <$> asPGColValM v
+      "_nlike"        -> fmap RA.ANLIKE <$> asPGColValM v
 
-      "_ilike"    -> fmap RA.AILIKE <$> asPGColValM v
-      "_nilike"   -> fmap RA.ANILIKE <$> asPGColValM v
+      "_ilike"        -> fmap RA.AILIKE <$> asPGColValM v
+      "_nilike"       -> fmap RA.ANILIKE <$> asPGColValM v
 
-      "_similar"  -> fmap RA.ASIMILAR <$> asPGColValM v
-      "_nsimilar" -> fmap RA.ANSIMILAR <$> asPGColValM v
+      "_similar"      -> fmap RA.ASIMILAR <$> asPGColValM v
+      "_nsimilar"     -> fmap RA.ANSIMILAR <$> asPGColValM v
+
+      -- jsonb related operators
+      "_contains"     -> fmap RA.AContains <$> asPGColValM v
+      "_contained_in" -> fmap RA.AContainedIn <$> asPGColValM v
+      "_has_key"      -> fmap RA.AHasKey <$> asPGColValM v
+      "_has_keys_any" -> fmap RA.AHasKeysAny <$> parseMany asPGColText v
+      "_has_keys_all" -> fmap RA.AHasKeysAll <$> parseMany asPGColText v
+
       _ ->
         throw500
           $  "unexpected operator found in opexp of "
