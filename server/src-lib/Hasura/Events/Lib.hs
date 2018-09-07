@@ -255,7 +255,12 @@ fetchEvents =
   map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.event_log
       SET locked = 't'
-      WHERE id IN ( select id from hdb_catalog.event_log where delivered ='f' and error = 'f' and locked = 'f' LIMIT 100 )
+      WHERE id IN ( SELECT l.id
+                    FROM hdb_catalog.event_log l
+                    JOIN hdb_catalog.event_triggers e
+                    ON (l.trigger_id = e.id)
+                    WHERE l.delivered ='f' and l.error = 'f' and l.locked = 'f'
+                    LIMIT 100 )
       RETURNING id, schema_name, table_name, trigger_id, trigger_name, payload::json, tries, created_at
       |] () True
   where uncurryEvent (id', sn, tn, trid, trn, Q.AltJ payload, tries, created) = Event id' (QualifiedTable sn tn) (TriggerMeta trid trn) payload tries created
