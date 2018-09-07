@@ -54,8 +54,8 @@ $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
 
 data RetryConf
   = RetryConf
-  { rcNumRetries  :: !Int64
-  , rcIntervalSec :: !Int64
+  { rcNumRetries  :: !Int
+  , rcIntervalSec :: !Int
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)

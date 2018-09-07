@@ -26,10 +26,10 @@ data OpVar = OLD | NEW deriving (Show)
 
 type GingerTmplt = TG.Template TG.SourcePos
 
-defaultNumRetries :: Int64
+defaultNumRetries :: Int
 defaultNumRetries = 0
 
-defaultRetryInterval :: Int64
+defaultRetryInterval :: Int
 defaultRetryInterval = 10
 
 parseGingerTmplt :: TG.Source -> Either String GingerTmplt
@@ -111,7 +111,7 @@ addEventTriggerToCatalog (QualifiedTable sn tn) (EventTriggerDef name def webhoo
                                   INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook, num_retries, retry_interval)
                                   VALUES ($1, 'table', $2, $3, $4, $5, $6, $7)
                                   RETURNING id
-                                  |] (name, sn, tn, Q.AltJ $ toJSON def, webhook, rcNumRetries rconf, rcIntervalSec rconf) True
+                                  |] (name, sn, tn, Q.AltJ $ toJSON def, webhook, toInt64 $ rcNumRetries rconf, toInt64 $ rcIntervalSec rconf) True
 
   trid <- getTrid ids
   mkTriggerQ trid name (QualifiedTable sn tn) def
@@ -119,6 +119,8 @@ addEventTriggerToCatalog (QualifiedTable sn tn) (EventTriggerDef name def webhoo
   where
     getTrid []    = throw500 "could not create event-trigger"
     getTrid (x:_) = return x
+    toInt64 :: (Integral a) => a -> Int64
+    toInt64 = fromIntegral
 
 
 delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
