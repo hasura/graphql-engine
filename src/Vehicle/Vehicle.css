@@ -21,6 +21,11 @@
   font-size: 14px;
 }
 
+.list_of_vehicles .vehicle_info {
+  font-size: 12px;
+  font-style: italic;
+}
+
 .Vehicle-footer {
   height: 50px;
   text-align: center;

@@ -130,6 +130,9 @@ class Vehicle extends Component { constructor() {
                           <div>
                             <b>Vehicle ID</b>: { this.state.vehicleId }
                           </div>
+                          <div className="vehicle_info">
+                            (This vehicle is generating live location events and sending them to the database.)
+                          </div>
                         </div>
                       );
                     }}
