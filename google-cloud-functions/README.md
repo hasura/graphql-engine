@@ -2,7 +2,15 @@
 Sample cloud functions that can be triggered on changes in the database using GraphQL Engine's Event Triggers
 
 **NOTE**
-Some of the language/platforms are work in progress. We welcome contributions for the WIP langauages. See issues.
+Some of the language/platforms are work in progress. We welcome contributions for the WIP langauages. See issues and the following checklist:
+
+| Folder name | Use-case| Node.js(8) | Node.js(6) | Python
+|-------------|---------|:--------:|:------:|:----:
+| simple-echo | echo the trigger payload  | ✅ | ❌ | ❌ 	
+| mutation-trigger | insert related data on an insert event using graphql mutation | ✅ | ❌ | ❌ 	 	
+| fcm-apns-push-notification | send push notification on database event | ❌ | ❌ | ❌ 
+| etl-example | transform the trigger payload and update an algolia index | ❌ | ❌ | ❌ 
+
 
 ## Pre-requisites
 
