@@ -79,7 +79,7 @@ Insert/Upsert syntax
         ],
         on_conflict: {
           constraint: author_name_key,
-          action: update
+          update_columns: [name, id]
         }
       ) {
         affected_rows
@@ -286,8 +286,9 @@ Conflict Clause
 .. code-block:: none
     
     on_conflict: {
-      action: [update|ignore],
-      [constraint: <unique_constraint_name>]
+      constraint: <unique_constraint_name>!
+      [update_columns: [table_column!]]
+      [action: [update|ignore]]
     }
 
 E.g.:
@@ -295,8 +296,8 @@ E.g.:
 .. code-block:: graphql
 
     on_conflict: {
-      action: ignore,
       constraint: author_name_key
+      update_columns: [name]
     }
 
 .. _whereArgExp:
