@@ -50,7 +50,7 @@ Consider the following simplified schema for the above:
 Whenever an update happens to the ``notes`` table, we want to insert a row into the ``note_revision`` table.
 
 For this we :doc:`setup an event trigger <create-trigger>` on ``UPDATE`` to the ``notes`` table which calls an
-AWS Lamda function. The AWS Lambda function itself uses a GraphQL mutation to insert a new row into the
+AWS Lambda function. The AWS Lambda function itself uses a GraphQL mutation to insert a new row into the
 ``note_revision`` table. As the :doc:`event trigger payload <payload>` in case of updates gives us both the old and
 the new data, we can store the old note data in our revision table.
 

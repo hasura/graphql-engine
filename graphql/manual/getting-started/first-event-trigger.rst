@@ -49,5 +49,7 @@ Watch the trigger in action
 Next steps
 ----------
 
-- Read more about :doc:`Event Triggers <../event-triggers/index>`
+Read more about:
+
+- :doc:`Event triggers <../event-triggers/index>`
 

@@ -7,7 +7,7 @@ HTTP request method
 -------------------
 Delivered over ``HTTP POST`` with the following headers:
 
-.. code-block:: http
+.. code-block:: none
 
    Content-Type: application/json
 

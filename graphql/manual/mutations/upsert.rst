@@ -13,7 +13,7 @@ update columns using the ``update_columns`` argument.
 
 
 Without "update_columns" argument
--------------------------------
+---------------------------------
 When you don't excplicitly specify ``update_columns``, the columns that are given in objects are updated (it doesn't matter if they
 are different, you should see the same end result).
 
@@ -147,7 +147,7 @@ specified in ``update_columns``:
 
 
 With empty "update_columns"
--------------------------
+---------------------------
 If ``update_columns`` is an empty array then GraphQL Engine ignore changes on conflict. Insert a new object into the author
 table or, if the unique constraint, ``author_name_key``, is violated, ignore the request
 
