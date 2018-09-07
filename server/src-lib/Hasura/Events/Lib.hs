@@ -10,7 +10,6 @@ module Hasura.Events.Lib
   , unlockAllEvents
   , defaultMaxEventThreads
   , defaultPollingIntervalSec
-  , Event(..)
   ) where
 
 import           Control.Concurrent            (threadDelay)
@@ -20,7 +19,6 @@ import           Control.Monad.STM             (STM, atomically, retry)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Either                   (isLeft)
 import           Data.Has
 import           Data.Int                      (Int64)
 import           Data.IORef                    (IORef, readIORef)
@@ -30,7 +28,6 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Control.Concurrent.STM.TQueue as TQ
-import qualified Control.Retry                 as R
 import qualified Data.ByteString.Lazy          as B
 import qualified Data.HashMap.Strict           as M
 import qualified Data.TByteString              as TBS
@@ -152,49 +149,57 @@ processEvent
   => Q.PGPool -> Event -> m ()
 processEvent pool e = do
   (logger:: HLogger) <- asks getter
-  retryPolicy <- getRetryPolicy e
-  res <- R.retrying retryPolicy shouldRetry $ tryWebhook pool e
-  liftIO $ either (errorFn logger) (void.return) res
-  unlockRes <- liftIO $ runExceptT $ runUnlockQ pool e
-  liftIO $ either (logQErr logger) (void.return ) unlockRes
+  res <- tryWebhook pool e
+  finally <- either errorFn successFn res
+  liftIO $ either (logQErr logger) (void.return) finally
   where
-    shouldRetry :: (Monad m ) => R.RetryStatus -> Either HTTPErr a -> m Bool
-    shouldRetry _ eitherResp = return $ isLeft eitherResp
+    errorFn
+      :: ( MonadReader r m
+         , MonadIO m
+         , Has WS.Session r
+         , Has HLogger r
+         , Has CacheRef r
+         , Has EventEngineCtx r
+         )
+      => HTTPErr -> m (Either QErr ())
+    errorFn err = do
+      (logger:: HLogger) <- asks getter
+      liftIO $ logger $ L.toEngineLog err
+      checkError
 
-    errorFn :: HLogger -> HTTPErr -> IO ()
-    errorFn logger err = do
-      logger $ L.toEngineLog err
-      errorRes <- runExceptT $ runErrorQ pool e
-      case errorRes of
-        Left err' -> logQErr logger err'
-        Right _   -> return ()
+    successFn
+      :: ( MonadReader r m
+         , MonadIO m
+         , Has WS.Session r
+         , Has HLogger r
+         , Has CacheRef r
+         , Has EventEngineCtx r
+         )
+      => B.ByteString -> m (Either QErr ())
+    successFn _ = liftIO $ runExceptT $ runUnlockQ pool e
 
     logQErr :: HLogger -> QErr -> IO ()
     logQErr logger err = logger $ L.toEngineLog $ EventInternalErr err
 
-getRetryPolicy
- :: ( MonadReader r m
-    , MonadIO m
-    , Has WS.Session r
-    , Has HLogger r
-    , Has CacheRef r
-    , Has EventEngineCtx r
-    )
- => Event -> m (R.RetryPolicyM m)
-getRetryPolicy e = do
-  cacheRef::CacheRef <- asks getter
-  (cache, _) <- liftIO $ readIORef cacheRef
-  let eti = getEventTriggerInfoFromEvent cache e
-      retryConfM = etiRetryConf <$> eti
-      retryConf = fromMaybe (RetryConf 0 10) retryConfM
-
-  let remainingRetries = max 0 $ fromIntegral (rcNumRetries retryConf) - getTries
-      delay = fromIntegral (rcIntervalSec retryConf) * 1000000
-      policy = R.constantDelay delay <> R.limitRetries remainingRetries
-  return policy
-  where
-    getTries :: Int
-    getTries = fromIntegral $ eTries e
+    checkError
+      :: ( MonadReader r m
+         , MonadIO m
+         , Has WS.Session r
+         , Has HLogger r
+         , Has CacheRef r
+         , Has EventEngineCtx r
+         )
+      => m (Either QErr ())
+    checkError = do
+      cacheRef::CacheRef <- asks getter
+      (cache, _) <- liftIO $ readIORef cacheRef
+      let eti = getEventTriggerInfoFromEvent cache e
+          retryConfM = etiRetryConf <$> eti
+          retryConf = fromMaybe (RetryConf 0 10) retryConfM
+          tries = eTries e
+      if tries >= rcNumRetries retryConf -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
+        then liftIO $ runExceptT $ runErrorAndUnlockQ pool e
+        else liftIO $ runExceptT $ runUnlockQ pool e
 
 tryWebhook
   :: ( MonadReader r m
@@ -204,8 +209,8 @@ tryWebhook
      , Has CacheRef r
      , Has EventEngineCtx r
      )
-  => Q.PGPool -> Event -> R.RetryStatus -> m (Either HTTPErr B.ByteString)
-tryWebhook pool e _ = do
+  => Q.PGPool -> Event -> m (Either HTTPErr B.ByteString)
+tryWebhook pool e = do
   logger:: HLogger <- asks getter
   cacheRef::CacheRef <- asks getter
   (cache, _) <- liftIO $ readIORef cacheRef
@@ -293,14 +298,6 @@ markError e =
           WHERE id = $1
           |] (Identity $ eId e) True
 
--- lockEvent :: Event -> Q.TxE QErr ()
--- lockEvent e =
---   Q.unitQE defaultTxErrorHandler [Q.sql|
---           UPDATE hdb_catalog.event_log
---           SET locked = 't'
---           WHERE id = $1
---           |] (Identity $ eId e) True
-
 unlockEvent :: Event -> Q.TxE QErr ()
 unlockEvent e =
   Q.unitQE defaultTxErrorHandler [Q.sql|
@@ -324,11 +321,10 @@ runSuccessQ pool e invo =  Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ d
   insertInvocation invo
   markDelivered e
 
-runErrorQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
-runErrorQ pool  e = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ markError e
-
--- runLockQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
--- runLockQ pool e = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ lockEvent e
+runErrorAndUnlockQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
+runErrorAndUnlockQ pool  e = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+  markError e
+  unlockEvent e
 
 runUnlockQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
 runUnlockQ pool e = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ unlockEvent e
