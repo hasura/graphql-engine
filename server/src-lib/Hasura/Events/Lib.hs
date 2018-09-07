@@ -10,6 +10,7 @@ module Hasura.Events.Lib
   , unlockAllEvents
   , defaultMaxEventThreads
   , defaultPollingIntervalSec
+  , Event(..)
   ) where
 
 import           Control.Concurrent            (threadDelay)

@@ -56,6 +56,7 @@ class Main extends React.Component {
           }
         } catch (e) {
           console.error(e);
+          this.setState({ showEvents: true });
         }
       });
     });

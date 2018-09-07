@@ -180,6 +180,7 @@ markForDelivery eid =
 
 subTableP1 :: (P1C m) => CreateEventTriggerQuery -> m (QualifiedTable, EventTriggerDef)
 subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webhook) = do
+  adminOnly
   ti <- askTabInfo qt
   assertCols ti insert
   assertCols ti update
@@ -211,7 +212,7 @@ instance HDBQuery CreateEventTriggerQuery where
   schemaCachePolicy = SCPReload
 
 unsubTableP1 :: (P1C m) => DeleteEventTriggerQuery -> m ()
-unsubTableP1 _ = return ()
+unsubTableP1 _ = adminOnly
 
 unsubTableP2 :: (P2C m) => DeleteEventTriggerQuery -> m RespBody
 unsubTableP2 (DeleteEventTriggerQuery name) = do
@@ -234,6 +235,6 @@ deliverEvent (DeliverEventQuery eventId) = do
 
 instance HDBQuery DeliverEventQuery where
   type Phase1Res DeliverEventQuery = ()
-  phaseOne _ = return ()
+  phaseOne _ = adminOnly
   phaseTwo q _ = deliverEvent q
   schemaCachePolicy = SCPReload
