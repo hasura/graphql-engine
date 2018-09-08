@@ -32,11 +32,13 @@ pgColsFromMutFld = \case
   MRet selData -> fst $ partAnnFlds $ Map.elems $ sdFlds selData
 
 pgColsToSelData :: QualifiedTable -> [(PGCol, PGColType)] -> SelectData
-pgColsToSelData qt cols = SelectData flds qt Nothing (S.BELit True, Nothing)
+pgColsToSelData qt cols = SelectData flds qt frmExpM (S.BELit True, Nothing)
                           Nothing [] Nothing Nothing False
   where
     flds = Map.fromList $ flip map cols $ \(c, ty) ->
       (fromPGCol c, FCol (c, ty))
+    frmExpM = Just $ S.FromExp $ pure $
+              S.FIIden $ qualTableToAliasIden qt
 
 pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColType)]
 pgColsFromMutFlds = concatMap pgColsFromMutFld . Map.elems
