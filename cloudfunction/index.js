@@ -2,7 +2,7 @@ const algoliasearch = require('algoliasearch');
 
 exports.function = async (req, res) => {
   // webhook payload
-  const { op, data, schema, table, id, trigger_name } = req.body;
+  const { event: { op, data }, table: { schema, name } } = req.body;
 
   // env vars
   const ALGOLIA_APP_ID = process.env.ALGOLIA_APP_ID;
@@ -12,7 +12,7 @@ exports.function = async (req, res) => {
   var index = client.initIndex('demo_serverless_etl_app');
 
 
-  if (op === 'INSERT' && table === 'book') {
+  if (op === 'INSERT' && name === 'book') {
     index.addObjects([data.new], function(err, content) {
       if (err) {
         console.error(err);
