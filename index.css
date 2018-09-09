@@ -101,8 +101,8 @@ div .error {
 }
 
 .search-results {
-    max-height: 300px;
-    min-height: 300px;
+    max-height: 250px;
+    min-height: 250px;
     overflow: auto;
 }
 

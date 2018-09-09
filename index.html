@@ -61,13 +61,18 @@
             </span>
           </div>
           <div class="error"><span id="error-text"></span></div>
-          <main class="search-results">
-            <div id="hits"></div>
+          <main class="search-results" >
+            <div class="col-12">
+              <ul class="list-group" id="hits">
+              </ul>
+            </div>
             <div id="pagination"></div>
           </main>
-          <a href="https://github.com/shahidhk/hasura-serverless-etl#architecture" target="_blank">
-            <img src="arch.png" style="height: 300px;" />
-          </a>
+          <div class="pt-2">
+            <a href="https://github.com/shahidhk/hasura-serverless-etl#architecture" target="_blank">
+              <img class="col-6 img-fluid" src="arch.png" />
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -103,7 +108,7 @@
 
     <script type="text/html" id="hit-template">
       <div class="hit">
-        <p class="hit-name">{{{_highlightResult.title.value}}} by {{{_highlightResult.author.value}}}</p>
+        <li class="list-group-item list-group-item-light">{{{_highlightResult.title.value}}} by {{{_highlightResult.author.value}}}</li>
       </div>
     </script>
 
