@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import GraphiQL from 'hasura-console-graphiql';
+import GraphiQL from 'graphiql';
 import PropTypes from 'prop-types';
 import ErrorBoundary from './ErrorBoundary';
 import { graphQLFetcherFinal, getRemoteQueries } from './Actions';
