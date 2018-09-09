@@ -2,12 +2,12 @@ const fetch = require('node-fetch');
 
 exports.function = async (req, res) => {
   // webhook payload
-  const { op, data, schema, table, id, trigger_name } = req.body;
+  const { event: { op, data }, table: { schema, name } } = req.body;
 
   // env vars
   const FCM_SERVER_KEY = process.env.FCM_SERVER_KEY;
 
-  if (op === 'INSERT' && table === 'message') {
+  if (op === 'INSERT' && name === 'message') {
     // get the message title and body
     const { device_token, title, body }= data.new;
 

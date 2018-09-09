@@ -19,6 +19,8 @@ SET default_tablespace = '';
 
 SET default_with_oids = false;
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
+
 --
 -- Name: message; Type: TABLE; Schema: public; Owner: -
 --
