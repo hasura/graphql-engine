@@ -179,7 +179,8 @@ Set field to null during insert
 If a field is ``nullable`` in the database, to set its value to ``null``, either pass its value as ``null`` or
 just omit it from the input object.
 
-**Example:** if ``age`` is a nullable field, don't pass ``age`` field in input object to set it to ``null``
+**Example:** if ``age`` is a nullable field, either don't pass ``age`` field in input object or pass it as ``null``
+to set it to ``null``
 
 .. graphiql::
   :view_only:
