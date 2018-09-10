@@ -157,6 +157,7 @@ mkCompExpInp colTy =
   [ map (mk colScalarTy) typedOps
   , map (mk $ G.toLT colScalarTy) listOps
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
+  , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
   , [InpValInfo Nothing "_is_null" $ G.TypeNamed $ G.NamedType "Boolean"]
   ]
   where
@@ -189,6 +190,35 @@ mkCompExpInp colTy =
     stringOps =
       [ "_like", "_nlike", "_ilike", "_nilike"
       , "_similar", "_nsimilar"
+      ]
+
+    isJsonbTy = case colTy of
+      PGJSONB -> True
+      _       -> False
+
+    jsonbOpToInpVal (op, ty, desc) = InpValInfo (Just desc) op ty
+
+    jsonbOps =
+      [ ( "_contains"
+        , G.toGT $ mkScalarTy PGJSONB
+        , "does the column contain the given json value at the top level"
+        )
+      , ( "_contained_in"
+        , G.toGT $ mkScalarTy PGJSONB
+        , "is the column contained in the given json value"
+        )
+      , ( "_has_key"
+        , G.toGT $ mkScalarTy PGText
+        , "does the string exist as a top-level key in the column"
+        )
+      , ( "_has_keys_any"
+        , G.toGT $ G.toLT $ G.toNT $ mkScalarTy PGText
+        , "do any of these strings exist as top-level keys in the column"
+        )
+      , ( "_has_keys_all"
+        , G.toGT $ G.toLT $ G.toNT $ mkScalarTy PGText
+        , "do all of these strings exist as top-level keys in the column"
+        )
       ]
 
 mkPGColFld :: PGColInfo -> ObjFldInfo

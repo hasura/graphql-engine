@@ -82,17 +82,17 @@ class Metadata extends Component {
 
         {this.state.showMetadata
           ? [
-              <div key="meta_data_1" className={metaDataStyles.intro_note}>
-                <h4>Reload metadata</h4>
-                <div className={metaDataStyles.content_width}>
+            <div key="meta_data_1" className={metaDataStyles.intro_note}>
+              <h4>Reload metadata</h4>
+              <div className={metaDataStyles.content_width}>
                   Refresh Hasura metadata, typically required if you have
                   changed the underlying postgres.
-                </div>
-              </div>,
-              <div key="meta_data_2">
-                <ReloadMetadata {...this.props} />
-              </div>,
-            ]
+              </div>
+            </div>,
+            <div key="meta_data_2">
+              <ReloadMetadata {...this.props} />
+            </div>,
+          ]
           : null}
       </div>
     );

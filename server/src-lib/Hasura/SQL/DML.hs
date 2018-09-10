@@ -449,37 +449,49 @@ instance ToSQL BinOp where
   toSQL AndOp = BB.string7 "AND"
   toSQL OrOp  = BB.string7 "OR"
 
-data CompareOp = SEQ
-               | SGT
-               | SLT
-               | SIN
-               | SNE
-               | SLIKE
-               | SNLIKE
-               | SILIKE
-               | SNILIKE
-               | SSIMILAR
-               | SNSIMILAR
-               | SGTE
-               | SLTE
-               | SNIN
-               deriving (Eq)
+data CompareOp
+  = SEQ
+  | SGT
+  | SLT
+  | SIN
+  | SNE
+  | SLIKE
+  | SNLIKE
+  | SILIKE
+  | SNILIKE
+  | SSIMILAR
+  | SNSIMILAR
+  | SGTE
+  | SLTE
+  | SNIN
+  | SContains
+  | SContainedIn
+  | SHasKey
+  | SHasKeysAny
+  | SHasKeysAll
+  deriving (Eq)
 
 instance Show CompareOp where
-  show SEQ       = "="
-  show SGT       = ">"
-  show SLT       = "<"
-  show SIN       = "IN"
-  show SNE       = "<>"
-  show SGTE      = ">="
-  show SLTE      = "<="
-  show SNIN      = "NOT IN"
-  show SLIKE     = "LIKE"
-  show SNLIKE    = "NOT LIKE"
-  show SILIKE    = "ILIKE"
-  show SNILIKE   = "NOT ILIKE"
-  show SSIMILAR  = "SIMILAR TO"
-  show SNSIMILAR = "NOT SIMILAR TO"
+  show = \case
+    SEQ          -> "="
+    SGT          -> ">"
+    SLT          -> "<"
+    SIN          -> "IN"
+    SNE          -> "<>"
+    SGTE         -> ">="
+    SLTE         -> "<="
+    SNIN         -> "NOT IN"
+    SLIKE        -> "LIKE"
+    SNLIKE       -> "NOT LIKE"
+    SILIKE       -> "ILIKE"
+    SNILIKE      -> "NOT ILIKE"
+    SSIMILAR     -> "SIMILAR TO"
+    SNSIMILAR    -> "NOT SIMILAR TO"
+    SContains    -> "@>"
+    SContainedIn -> "<@"
+    SHasKey      -> "?"
+    SHasKeysAny  -> "?|"
+    SHasKeysAll  -> "?&"
 
 instance ToSQL CompareOp where
   toSQL = BB.string7 . show
@@ -635,4 +647,3 @@ instance ToSQL SelectWith where
     "WITH " <> (", " <+> map f ctes) <-> toSQL sel
     where
       f (Alias al, q) = toSQL al <-> "AS" <-> paren (toSQL q)
-

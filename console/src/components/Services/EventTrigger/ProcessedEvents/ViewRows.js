@@ -45,7 +45,7 @@ const ViewRows = ({
   // Get the headings
   const tableHeadings = [];
   const gridHeadings = [];
-  const eventLogColumns = ['id', 'delivered', 'created_at'];
+  const eventLogColumns = ['event_id', 'delivered', 'created_at'];
   const sortedColumns = eventLogColumns.sort(ordinalColSort);
 
   sortedColumns.map((column, i) => {
@@ -115,6 +115,24 @@ const ViewRows = ({
           let content = row[col] === undefined ? 'NULL' : row[col].toString();
           if (col === 'created_at') {
             content = new Date(row[col]).toUTCString();
+          }
+          if (col === 'event_id') {
+            content = row.id.toString();
+          }
+          if (col === 'delivered') {
+            content = row[col] ? (
+              <i
+                className={
+                  styles.invocationSuccess + ' fa fa-check invocationsSuccess'
+                }
+              />
+            ) : (
+              <i
+                className={
+                  styles.invocationFailure + ' fa fa-times invocationsFailure'
+                }
+              />
+            );
           }
           return <div className={conditionalClassname}>{content}</div>;
         };
@@ -218,7 +236,7 @@ const ViewRows = ({
     });
     return (
       <ReactTable
-        className="-highlight"
+        className="-highlight processedEventsTable"
         data={newCurRows}
         columns={gridHeadings}
         resizable

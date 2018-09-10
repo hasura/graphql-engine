@@ -202,11 +202,14 @@ jobs:
   test_and_build_console:
     docker:
     - image: hasura/graphql-engine-console-builder:v0.3
+      environment:
+        CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
         POSTGRES_DB: gql_test
     working_directory: ~/graphql-engine
+    parallelism: 4
     steps:
     - checkout
     - attach_workspace:

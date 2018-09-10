@@ -1,6 +1,6 @@
 # Event triggers on Postgres
 
-Trigger webhooks on database events using Hasura GraphQL Engine's **event triggers**.
+Trigger webhooks on database events using Hasura GraphQL Engine's event triggers.
 
 ![Event triggers demo](assets/event-triggers.gif)
 
@@ -14,7 +14,7 @@ Trigger webhooks on database events using Hasura GraphQL Engine's **event trigge
 
 * **Works with existing, live databases**: Point it to an existing Postgres database to instantly listen to changes in your data and invoke webhooks.
 
-* **Ready for observability & monitoring**: Generated events are automatically instrumented with an event-id and structured logs emitted by Hasura make it easy for you to use your favourite tools to run an event-driven backend in production.
+* **Ready for observability & monitoring]**: Generated events are automatically instrumented with an event-id and structured logs emitted by Hasura make it easy for you to use your favourite tools to run an event-driven backend in production ([watch](https://youtu.be/WOPA52r3bzU) an overview using [Honeycomb](honeycomb.io)).
 
 
 ## Quickstart: 
@@ -33,24 +33,26 @@ The fastest way to try event triggers out is via Heroku.
 
 3. Configure your first event trigger and webhook
 
-   Create a table, configure the db update you want to use as a trigger and instantly invoke a webhook by adding a new row in your table. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+   Create a table, configure the db update you want to use as a trigger and instantly invoke a webhook by adding a new row in your table. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-event-trigger.html).
 
 ### Other deployment methods
 
 For Docker-based deployment and advanced configuration options, see [deployment guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
 
-### Quickstart demo
+### Demo (*30 seconds*)
 
-[Create an event-trigger and webhook in 60 seconds](https://youtu.be/EaTUVWnDCvA) (*30 seconds*)
+[![Create an event-trigger and webhook in 60 seconds](https://img.youtube.com/vi/EaTUVWnDCvA/0.jpg)](https://www.youtube.com/watch?v=EaTUVWnDCvA)
+
+[Create an event-trigger and webhook in 60 seconds](https://youtu.be/EaTUVWnDCvA)
 
 ### Serverless boilerplates
 
-Use one of our serverless boilerplates to deploy a webhook that can capture database events - https://github.com/hasura/cloud-functions-boilerplates. Serverless/cloud-function platforms covered by bopilerplates:
+Use one of our serverless boilerplates to deploy a webhook that can capture database events - https://github.com/hasura/cloud-functions-boilerplates. Serverless/cloud-function platforms covered by boilerplates:
 
-* [AWS Lambda](https://aws.amazon.com/lambda/)
-* [Google Cloud Functions](https://cloud.google.com/functions/)
-* [Azure Functions](https://azure.microsoft.com/en-in/services/functions/)
-* [Zeit Serverless Docker](https://zeit.co/)
+* [AWS Lambda](https://github.com/hasura/cloud-functions-boilerplates/tree/master/aws-lambda)
+* [Google Cloud Functions](https://github.com/hasura/cloud-functions-boilerplates/tree/master/google-cloud-functions)
+* [Azure Functions](https://github.com/hasura/cloud-functions-boilerplates/tree/master/azure-functions)
+* [Zeit Serverless Docker](https://github.com/hasura/cloud-functions-boilerplates/tree/master/zeit-serverless)
 
 ## Architecture
 
@@ -86,7 +88,7 @@ Transform and load data into external data-stores. Check out this demo and tutor
 * [Try it out](https://shahidh.in/hasura-serverless-etl)
 * [Tutorial](https://github.com/shahidhk/hasura-serverless-etl)
 
-## Building reactive UX for your async backend with realtime GraphQL
+### Building reactive UX for your async backend with realtime GraphQL
 
 Propagate event driven and asynchronous information to UI clients easily with GraphQL subscriptions & live-queries.
 

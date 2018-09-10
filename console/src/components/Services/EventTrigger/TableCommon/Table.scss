@@ -263,3 +263,47 @@ a.expanded {
     font-size: 12px;
   }
 }
+
+.loadOlder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FFF3D5;
+  padding: 5px;
+  min-height: 41px;
+}
+.newBtn {
+  font-size: 12px;
+  margin-right: 10px;
+}
+.loadNewer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FFF3D5;
+  padding: 5px;
+  min-height: 41px;
+  position: relative;
+}
+.filterAll {
+  position: absolute;
+  left: 10px;
+  input {
+    display: inline-block;
+    width: auto;
+    margin-left: 10px;
+  }
+}
+.oldBtn {
+  font-size: 12px;
+}
+.retryEvent {
+  cursor: pointer;
+}
+.redeliverModal {
+  width: 60%;
+}
+.redeliverEventSection {
+  clear: both;
+  margin: 0;
+}

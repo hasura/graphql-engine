@@ -8,18 +8,19 @@ module Hasura.RQL.Types.Subscribe
   , SubscribeColumns(..)
   , TriggerName
   , TriggerId
+  , EventId
   , TriggerOpsDef(..)
   , EventTrigger(..)
   , EventTriggerDef(..)
   , RetryConf(..)
   , DeleteEventTriggerQuery(..)
   , UpdateEventTriggerQuery(..)
+  , DeliverEventQuery(..)
   ) where
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Int                   (Int64)
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
@@ -28,7 +29,8 @@ import           Text.Regex                 (matchRegex, mkRegex)
 import qualified Data.Text                  as T
 
 type TriggerName = T.Text
-type TriggerId = T.Text
+type TriggerId   = T.Text
+type EventId     = T.Text
 
 data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift)
 
@@ -52,8 +54,8 @@ $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
 
 data RetryConf
   = RetryConf
-  { rcNumRetries  :: !Int64
-  , rcIntervalSec :: !Int64
+  { rcNumRetries  :: !Int
+  , rcIntervalSec :: !Int
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
@@ -139,3 +141,10 @@ data EventTriggerDef
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerDef)
+
+data DeliverEventQuery
+  = DeliverEventQuery
+  { deqEventId :: !EventId
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeliverEventQuery)

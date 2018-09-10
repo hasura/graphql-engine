@@ -72,6 +72,7 @@ data Code
   -- Graphql error
   | NoTables
   | ValidationFailed
+  | Busy
   -- JWT Auth errors
   | JWTRoleClaimMissing
   | JWTInvalidClaims
@@ -105,6 +106,7 @@ instance Show Code where
   show AlreadyInit         = "already-initialised"
   show NoTables            = "no-tables"
   show ValidationFailed    = "validation-failed"
+  show Busy                = "busy"
   show JWTRoleClaimMissing = "jwt-missing-role-claims"
   show JWTInvalidClaims    = "jwt-invalid-claims"
   show JWTInvalid          = "invalid-jwt"
