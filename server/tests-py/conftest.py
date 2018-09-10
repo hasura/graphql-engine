@@ -1,5 +1,5 @@
 import pytest
-from context import HGECtx
+from context import HGECtx, HGECtxError
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -13,7 +13,10 @@ def pytest_addoption(parser):
 def hge_ctx(request):
     hge_url = request.config.getoption('--hge-url')
     pg_url = request.config.getoption('--pg-url')
-    hge_ctx = HGECtx(hge_url=hge_url, pg_url=pg_url)
+    try:
+        hge_ctx = HGECtx(hge_url=hge_url, pg_url=pg_url)
+    except HGECtxError as e:
+        pytest.exit(str(e))
     yield hge_ctx  # provide the fixture value
     print("teardown hge_ctx")
     hge_ctx.teardown()

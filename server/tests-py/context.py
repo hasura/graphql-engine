@@ -13,6 +13,9 @@ from http import HTTPStatus
 from sqlalchemy import create_engine
 from sqlalchemy.schema import MetaData
 
+class HGECtxError(Exception):
+    pass
+
 class WebhookHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(HTTPStatus.OK)
@@ -41,13 +44,18 @@ class HGECtx:
         self.web_server = threading.Thread(target=self.httpd.serve_forever)
         self.web_server.start()
 
-        self.http = requests.Session()
-        self.hge_url = hge_url
-
         self.pg_url = pg_url
         self.engine = create_engine(self.pg_url)
         self.meta = MetaData()
-        st_code, resp = self.v1q_f('queries/clear_db.yaml')
+
+        self.http = requests.Session()
+        self.hge_url = hge_url
+
+        try:
+            st_code, resp = self.v1q_f('queries/clear_db.yaml')
+        except requests.exceptions.RequestException as e:
+            self.teardown()
+            raise HGECtxError(repr(e))
         assert st_code == 200, resp
 
     def get_event(self, timeout):
@@ -68,6 +76,7 @@ class HGECtx:
             return self.v1q(yaml.load(f))
 
     def teardown(self):
+        self.http.close()
         self.engine.dispose()
         self.httpd.shutdown()
         self.web_server.join()
