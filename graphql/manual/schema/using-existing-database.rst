@@ -27,7 +27,7 @@ To track all tables and views present in the database:
 2) Track foreign-keys
 ---------------------
 
-Tracking a foreign-key means creating a :doc:`relationship <relationships>` between the tables involved in the foreign
+Tracking a foreign-key means creating a :doc:`relationship <relationships/index>` between the tables involved in the foreign
 key.
 
 To track a foreign-key between two tables in the database:

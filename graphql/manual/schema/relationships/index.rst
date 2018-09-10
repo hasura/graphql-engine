@@ -1,6 +1,6 @@
 Relationships between tables/views
 ==================================
-To make :doc:`nested object queries <../queries/nested-object-queries>`, the tables/views in your database need to be
+To make :doc:`nested object queries <../../queries/nested-object-queries>`, the tables/views in your database need to be
 connected using relationships.
 
 Relationships can be of two types:

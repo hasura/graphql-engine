@@ -31,7 +31,7 @@ A view that averages the rating of articles for each author can be created using
 ---------------------
 Relationships are generally defined using foreign-key constraints. However, you cannot define foreign-key constraints
 on/to views. So, in these cases, we can define a relationship without using a foreign-key as described
-:doc:`here <../schema/relationships>`.
+:doc:`here <../schema/relationships/index>`.
 
 Create an object relationship, ``avg_rating``, by mapping ``author::id -> author_average_rating::id``.
 

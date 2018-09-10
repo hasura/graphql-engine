@@ -1,7 +1,7 @@
 Nested object queries
 =====================
 
-You can use the object (1:1) or array (1:many) :doc:`relationships <../schema/relationships>` defined in your schema
+You can use the object (1:1) or array (1:many) :doc:`relationships <../schema/relationships/index>` defined in your schema
 to make a nested query i.e. fetch data for a type along with data from a nested or related type.
 
 Query using an array relationship
