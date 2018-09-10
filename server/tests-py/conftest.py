@@ -9,7 +9,7 @@ def pytest_addoption(parser):
         "--pg-url", metavar="PG_URL", help="url for connecting to Postgres directly", required=True
     )
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def hge_ctx(request):
     hge_url = request.config.getoption('--hge-url')
     pg_url = request.config.getoption('--pg-url')
