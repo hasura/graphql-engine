@@ -142,7 +142,7 @@ To set a field to its ``default`` value, just omit it from the input object.
 .. graphiql::
   :view_only:
   :query:
-    mutation insert_article {
+    mutation insert_article_with_def_id {
       insert_article(
         objects: [
           {
@@ -167,6 +167,83 @@ To set a field to its ``default`` value, just omit it from the input object.
             {
               "id": 21,
               "title": "Article 1"
+            }
+          ]
+        }
+      }
+    }
+
+Set field to null during insert
+-------------------------------
+
+If a field is ``nullable`` in the database, to set its value to ``null``, either pass its value as ``null`` or
+just omit it from the input object.
+
+**Example:** if ``age`` is a nullable field, don't pass ``age`` field in input object to set it to ``null``
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insert_author_with_null_age {
+      insert_author(
+        objects: [
+          {
+            name: "Jeff",
+          }
+        ]
+      ) {
+        returning {
+          id
+          name
+          age
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "returning": [
+            {
+                "id": 11,
+                "name": "Jeff",
+                "age": null
+            }
+          ]
+        }
+      }
+    }
+
+OR
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insert_author_with_null_age {
+      insert_author(
+        objects: [
+          {
+            name: "Jeff",
+            age: null
+          }
+        ]
+      ) {
+        returning {
+          id
+          name
+          age
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "returning": [
+            {
+                "id": 11,
+                "name": "Jeff",
+                "age": null
             }
           ]
         }
