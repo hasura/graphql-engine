@@ -52,6 +52,8 @@ Install
          **Note:** Please run the installer as ``Administrator`` to avoid PATH update errors. If you're still getting
          a "command not found" error after installing Hasura CLI, please restart ``git bash``.
 
+Alternatively, you can directly download the appropriate binary from: https://github.com/hasura/graphql-engine/releases
+
 (Optional) Add shell completion
 -------------------------------
 
