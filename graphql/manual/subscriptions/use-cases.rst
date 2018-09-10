@@ -72,9 +72,8 @@ Now we can use the following subscription to fetch the latest location of a vehi
     }
 
 
-
-
-
+Check this `sample app <https://hasura.github.io/realtime-location-app/>`_ for a working demo
+(`source code <https://github.com/hasura/realtime-location-app>`_).
 
 .. _subscribe_table:
 
@@ -148,6 +147,9 @@ Now we can use the following subscription to display the latest messages in a ch
         ]
       }
     }
+
+Check this `sample app <https://chat-example-trial-roar.herokuapp.com/>`_ for a working demo
+(`source code <https://github.com/wawhal/graphql-subscriptions-chat-app>`_).
 
 .. _subscribe_derived:
 
@@ -250,30 +252,33 @@ Now we can use the following subscription to display the latest poll result:
             "poll_id": 1,
             "votes": 1,
             "option": {
-              "text": "Option2"
+              "text": "Salad"
             }
           },
           {
             "poll_id": 1,
             "votes": 2,
             "option": {
-              "text": "Roger Federer"
+              "text": "Sandwich"
             }
           },
           {
             "poll_id": 1,
             "votes": 3,
             "option": {
-              "text": "Rafael Nadal"
+              "text": "Burger"
             }
           },
           {
             "poll_id": 1,
             "votes": 1,
             "option": {
-              "text": "Juan Martin del Potro"
+              "text": "Lasagna"
             }
           }
         ]
       }
     }
+
+Check this `sample app <https://shahidh.in/hasura-realtime-poll/>`_ for a working demo
+(`source code <https://github.com/shahidhk/hasura-realtime-poll>`_).
