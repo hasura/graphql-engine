@@ -315,13 +315,21 @@ unlockAllEvents =
           SET locked = 'f'
           |] () False
 
-setNextRetry :: EventId -> UTCTime -> Q.TxE QErr ()
-setNextRetry eid time =
+setNextRetry :: Event -> UTCTime -> Q.TxE QErr ()
+setNextRetry e time =
   Q.unitQE defaultTxErrorHandler [Q.sql|
           UPDATE hdb_catalog.event_log
           SET next_retry_at = $1
           WHERE id = $2
-          |] (time, eid) True
+          |] (time, eId e) True
+
+clearNextRetry :: Event -> Q.TxE QErr ()
+clearNextRetry e =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+          UPDATE hdb_catalog.event_log
+          SET next_retry_at = NULL
+          WHERE id = $1
+          |] (Identity $ eId e) True
 
 runFailureQ :: Q.PGPool -> Invocation -> ExceptT QErr IO ()
 runFailureQ pool invo = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ insertInvocation invo
@@ -329,20 +337,21 @@ runFailureQ pool invo = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ inse
 runSuccessQ :: Q.PGPool -> Event -> Invocation -> ExceptT QErr IO ()
 runSuccessQ pool e invo =  Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
   insertInvocation invo
+  clearNextRetry e
   markDelivered e
 
 runErrorAndUnlockQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
 runErrorAndUnlockQ pool  e = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
   markError e
+  clearNextRetry e
   unlockEvent e
 
 runRetryAfterAndUnlockQ :: Q.PGPool -> Event -> RetryConf -> ExceptT QErr IO ()
 runRetryAfterAndUnlockQ pool e rconf = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
-  let eid = eId e
   currentTime <- liftIO getCurrentTime
   let diff = fromIntegral $ rcIntervalSec rconf
       retryTime = addUTCTime diff currentTime
-  setNextRetry eid retryTime
+  setNextRetry e retryTime
   unlockEvent e
 
 runUnlockQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
