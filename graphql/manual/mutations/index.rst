@@ -34,6 +34,7 @@ Let's use this reference author/article schema to look at different types of mut
   Update <update>
   Delete <delete>
   multiple-mutations
+  sql-functions
 
 
 

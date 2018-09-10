@@ -39,4 +39,3 @@ based on a typical author/article schema for reference.
   multiple-queries
   aggregations
   control-access
-  sql-functions
