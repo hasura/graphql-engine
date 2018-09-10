@@ -21,7 +21,8 @@ See:
   Relationships <relationships/index>
   Customise with views <views>
   Customise with schema stitching <schema-stitching>
-  enums
+  Adding custom resolvers <custom-resolvers>
+  Enum type fields <enums>
   Using an existing database <using-existing-database>
   Export GraphQL schema <export-graphql-schema>
   How schema generation works <how-it-works>
