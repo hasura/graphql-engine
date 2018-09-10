@@ -7,7 +7,7 @@ In a relational database such as Postgres, an enum type field in a table can be 
 to another table which contains the reference list of allowed values. This ensures a value can be set into the field
 only if it exists in the reference table.
 
-For example, let's say we have a table ``magazine`` with fields ``(id, title, issue_month, issue_year)``
+**For example**: let's say we have a table ``magazine`` with fields ``(id, title, issue_month, issue_year)``
 and we would like to restrict the values of the ``issue_month`` field to just the months of the year, ie: January,
 February and so on.
 
