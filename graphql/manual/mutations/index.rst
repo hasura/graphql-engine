@@ -11,14 +11,18 @@ author/article schema:
     on_conflict: article_on_conflict
   ): article_mutation_response
 
+  # response of any mutation on the table "article"
+  type article_mutation_response {
+    # number of affected rows by the mutation
+    affected_rows: Int!
+    #data of the affected rows by the mutation
+    returning: [author!]!
+  }
+
 As you can see from the schema, you can:
 
 #. Pass multiple objects to the mutation.
-#. Return objects, from the affected rows, in the response.
-
-.. note::
-
-    As of now you cannot return a nested object in the mutation response *(we are working on this feature)*.
+#. Return objects (with nested objects), from the affected rows, in the response.
 
 Let's use this reference author/article schema to look at different types of mutations.
 
