@@ -250,6 +250,7 @@ instance HDBQuery DeleteEventTriggerQuery where
 
 upsubTableP1 :: (P1C m) => UpdateEventTriggerQuery -> m (QualifiedTable, EventTriggerDef)
 upsubTableP1 (UpdateEventTriggerQuery name minsert mupdate mdelete mretryConf mwebhook) = do
+  adminOnly
   ti  <- askTabInfoFromTrigger name
   eti <- askEventTriggerInfo (tiEventTriggerInfoMap ti) name
 
