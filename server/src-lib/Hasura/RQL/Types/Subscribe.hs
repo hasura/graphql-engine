@@ -80,7 +80,7 @@ instance FromJSON CreateEventTriggerQuery where
     delete    <- o .:? "delete"
     retryConf <- o .:? "retry_conf"
     webhook   <- o .:  "webhook"
-    mreplace   <- o .:? "replace"
+    replace   <- o .:? "replace" .!= False
     let regex = mkRegex "^\\w+$"
         mName = matchRegex regex (T.unpack name)
     case mName of
@@ -89,9 +89,6 @@ instance FromJSON CreateEventTriggerQuery where
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
-    replace <- case mreplace of
-          Just True -> return True
-          _         -> return False
     return $ CreateEventTriggerQuery name table insert update delete retryConf webhook replace
   parseJSON _ = fail "expecting an object"
 

@@ -205,7 +205,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
   -- can only replace for same table
   when replace $ do
     ti' <- askTabInfoFromTrigger name
-    when (ti' /= ti) $ throw400 NotSupported "cannot replace table or schema for trigger"
+    when (tiName ti' /= tiName ti) $ throw400 NotSupported "cannot replace table or schema for trigger"
 
   assertCols ti insert
   assertCols ti update
