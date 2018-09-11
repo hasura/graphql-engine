@@ -1,0 +1,10 @@
+- args:
+    sql: CREATE TABLE public."article"("id" serial NOT NULL, "title" text NOT NULL,
+      "content" text NOT NULL, "rating" integer NOT NULL, "author_id" integer NOT
+      NULL, "is_published" boolean NOT NULL DEFAULT true, "published_on" date NOT
+      NULL DEFAULT CURRENT_DATE, PRIMARY KEY ("id") )
+  type: run_sql
+- args:
+    name: article
+    schema: public
+  type: add_existing_table_or_view
