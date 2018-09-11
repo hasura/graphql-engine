@@ -15,12 +15,13 @@ module Hasura.RQL.Types.Subscribe
   , RetryConf(..)
   , DeleteEventTriggerQuery(..)
   , DeliverEventQuery(..)
+  , HeaderConf(..)
+  , HeaderType (..)
   ) where
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Int                   (Int64)
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
@@ -60,6 +61,18 @@ data RetryConf
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
 
+data HeaderType = FromEnv | FromValue deriving (Show, Eq, Lift)
+$(deriveJSON defaultOptions ''HeaderType)
+
+data HeaderConf
+  = HeaderConf
+  { hcType  :: !HeaderType
+  , hcName  :: !T.Text
+  , hcValue :: !T.Text
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''HeaderConf)
+
 data CreateEventTriggerQuery
   = CreateEventTriggerQuery
   { cetqName      :: !T.Text
@@ -69,6 +82,7 @@ data CreateEventTriggerQuery
   , cetqDelete    :: !(Maybe SubscribeOpSpec)
   , cetqRetryConf :: !(Maybe RetryConf)
   , cetqWebhook   :: !T.Text
+  , cetqHeaders   :: !(Maybe [HeaderConf])
   } deriving (Show, Eq, Lift)
 
 instance FromJSON CreateEventTriggerQuery where
@@ -80,6 +94,7 @@ instance FromJSON CreateEventTriggerQuery where
     delete    <- o .:? "delete"
     retryConf <- o .:? "retry_conf"
     webhook   <- o .: "webhook"
+    headers   <- o .:? "headers"
     let regex = mkRegex "^\\w+$"
         mName = matchRegex regex (T.unpack name)
     case mName of
@@ -88,7 +103,7 @@ instance FromJSON CreateEventTriggerQuery where
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
-    return $ CreateEventTriggerQuery name table insert update delete retryConf webhook
+    return $ CreateEventTriggerQuery name table insert update delete retryConf webhook headers
   parseJSON _ = fail "expecting an object"
 
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)
@@ -126,6 +141,7 @@ data EventTriggerDef
   , etdDefinition :: !TriggerOpsDef
   , etdWebhook    :: !T.Text
   , etdRetryConf  :: !RetryConf
+  , etdHeaders    :: !(Maybe [HeaderConf])
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerDef)

@@ -106,12 +106,12 @@ mkTriggerQ trid trn (QualifiedTable sn tn) (TriggerOpsDef insert update delete) 
 
 addEventTriggerToCatalog :: QualifiedTable -> EventTriggerDef
                -> Q.TxE QErr TriggerId
-addEventTriggerToCatalog (QualifiedTable sn tn) (EventTriggerDef name def webhook rconf) = do
+addEventTriggerToCatalog (QualifiedTable sn tn) (EventTriggerDef name def webhook rconf mheaders) = do
   ids <- map runIdentity <$> Q.listQE defaultTxErrorHandler [Q.sql|
-                                  INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook, num_retries, retry_interval)
-                                  VALUES ($1, 'table', $2, $3, $4, $5, $6, $7)
+                                  INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook, num_retries, retry_interval, headers)
+                                  VALUES ($1, 'table', $2, $3, $4, $5, $6, $7, $8)
                                   RETURNING id
-                                  |] (name, sn, tn, Q.AltJ $ toJSON def, webhook, toInt64 $ rcNumRetries rconf, toInt64 $ rcIntervalSec rconf) True
+                                  |] (name, sn, tn, Q.AltJ $ toJSON def, webhook, toInt64 $ rcNumRetries rconf, toInt64 $ rcIntervalSec rconf, Q.AltJ $ toJSON mheaders) True
 
   trid <- getTrid ids
   mkTriggerQ trid name (QualifiedTable sn tn) def
@@ -179,14 +179,14 @@ markForDelivery eid =
           |] (Identity eid) True
 
 subTableP1 :: (P1C m) => CreateEventTriggerQuery -> m (QualifiedTable, EventTriggerDef)
-subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webhook) = do
+subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webhook mheaders) = do
   adminOnly
   ti <- askTabInfo qt
   assertCols ti insert
   assertCols ti update
   assertCols ti delete
   let rconf = fromMaybe (RetryConf defaultNumRetries defaultRetryInterval) retryConf
-  return (qt, EventTriggerDef name (TriggerOpsDef insert update delete) webhook rconf)
+  return (qt, EventTriggerDef name (TriggerOpsDef insert update delete) webhook rconf mheaders)
   where
     assertCols _ Nothing = return ()
     assertCols ti (Just sos) = do
@@ -196,9 +196,9 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
         SubCArray pgcols -> forM_ pgcols (assertPGCol (tiFieldInfoMap ti) "")
 
 subTableP2 :: (P2C m) => QualifiedTable -> EventTriggerDef -> m ()
-subTableP2 qt q@(EventTriggerDef name def webhook rconf) = do
+subTableP2 qt q@(EventTriggerDef name def webhook rconf mheaders) = do
   trid <- liftTx $ addEventTriggerToCatalog qt q
-  addEventTriggerToCache qt trid name def rconf webhook
+  addEventTriggerToCache qt trid name def rconf webhook mheaders
 
 subTableP2shim :: (P2C m) => (QualifiedTable, EventTriggerDef) -> m RespBody
 subTableP2shim (qt, etdef) = do

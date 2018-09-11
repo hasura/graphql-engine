@@ -28,13 +28,18 @@ import           Hasura.Events.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           System.Environment            (lookupEnv)
 
 import qualified Control.Concurrent.STM.TQueue as TQ
+import qualified Control.Lens                  as CL
 import qualified Control.Retry                 as R
+import qualified Data.ByteString               as BS
 import qualified Data.ByteString.Lazy          as B
+import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as M
 import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
+import qualified Data.Text.Encoding            as T
 import qualified Data.Time.Clock               as Time
 import qualified Database.PG.Query             as Q
 import qualified Hasura.GraphQL.Schema         as GS
@@ -214,10 +219,12 @@ tryWebhook pool e _ = do
     Nothing -> return $ Left $ HOther "table or event-trigger not found"
     Just et -> do
       let webhook = etiWebhook et
+          headerConfs = fromMaybe [] $ etiHeaders et
           createdAt = eCreatedAt e
           eventId =  eId e
       eeCtx <- asks getter
-
+      mheaders <- liftIO $ mapM getHeader headerConfs
+      let headers = catMaybes mheaders
       -- wait for counter and then increment beforing making http
       liftIO $ atomically $ do
         let EventEngineCtx _ c maxT _ = eeCtx
@@ -225,7 +232,7 @@ tryWebhook pool e _ = do
         if countThreads >= maxT
           then retry
           else modifyTVar' c (+1)
-      eitherResp <- runExceptT $ runHTTP W.defaults (mkAnyHTTPPost (T.unpack webhook) (Just $ toJSON e)) (Just (ExtraContext createdAt eventId))
+      eitherResp <- runExceptT $ runHTTP (addHeaders headers W.defaults) (mkAnyHTTPPost (T.unpack webhook) (Just $ toJSON e)) (Just (ExtraContext createdAt eventId))
 
       --decrement counter once http is done
       liftIO $ atomically $ do
@@ -244,6 +251,30 @@ tryWebhook pool e _ = do
         Left err -> liftIO $ logger $ L.toEngineLog $ EventInternalErr err
         Right _  -> return ()
       return eitherResp
+  where
+    addHeaders :: [(N.HeaderName, BS.ByteString)] -> W.Options -> W.Options
+    addHeaders headers opts = foldl (\acc h -> acc CL.& W.header (fst h) CL..~ [snd h] ) opts headers
+
+    getHeader :: HeaderConf -> IO (Maybe (N.HeaderName, BS.ByteString))
+    getHeader header = do
+      name <- getHeaderName header
+      value <- getHeaderValue header
+      return $ (,) <$> pure name <*> value
+
+    getHeaderName :: HeaderConf -> IO N.HeaderName
+    getHeaderName header = return $ CI.mk $ T.encodeUtf8 $ hcName header
+
+    getHeaderValue :: HeaderConf -> IO (Maybe BS.ByteString)
+    getHeaderValue header = case hcType header of
+      FromEnv   -> do
+        value <- getFromEnv $ hcValue header
+        return $ T.encodeUtf8 <$> value
+      FromValue -> return $ Just $ T.encodeUtf8 $ hcValue header
+
+    getFromEnv :: T.Text -> IO (Maybe T.Text)
+    getFromEnv var = do
+      mEnv <- lookupEnv (T.unpack var)
+      return $ T.pack <$> mEnv
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = let table = eTable e
