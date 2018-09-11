@@ -139,10 +139,11 @@ updateEventTriggerToCatalog
 updateEventTriggerToCatalog qt (EventTriggerDef name def webhook rconf) = do
   ids <- map runIdentity <$> Q.listQE defaultTxErrorHandler [Q.sql|
                                   UPDATE hdb_catalog.event_triggers
-                                  SET definition = $1,
-                                   webhook = $2,
-                                   num_retries = $3,
-                                   retry_interval = $4
+                                  SET
+                                  definition = $1,
+                                  webhook = $2,
+                                  num_retries = $3,
+                                  retry_interval = $4
                                   WHERE name = $5
                                   RETURNING id
                                   |] (Q.AltJ $ toJSON def, webhook, toInt64 $ rcNumRetries rconf, toInt64 $ rcIntervalSec rconf, name) True
@@ -197,15 +198,21 @@ markForDelivery eid =
           WHERE id = $1
           |] (Identity eid) True
 
-subTableP1 :: (P1C m) => CreateEventTriggerQuery -> m (QualifiedTable, EventTriggerDef)
-subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webhook) = do
+subTableP1 :: (P1C m) => CreateEventTriggerQuery -> m (QualifiedTable, Bool, EventTriggerDef)
+subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webhook replace) = do
   adminOnly
   ti <- askTabInfo qt
+  -- can only replace for same table
+  when replace $ do
+    ti' <- askTabInfoFromTrigger name
+    when (ti' /= ti) $ throw400 NotSupported "cannot replace table or schema for trigger"
+
   assertCols ti insert
   assertCols ti update
   assertCols ti delete
+
   let rconf = fromMaybe (RetryConf defaultNumRetries defaultRetryInterval) retryConf
-  return (qt, EventTriggerDef name (TriggerOpsDef insert update delete) webhook rconf)
+  return (qt, replace, EventTriggerDef name (TriggerOpsDef insert update delete) webhook rconf)
   where
     assertCols _ Nothing = return ()
     assertCols ti (Just sos) = do
@@ -214,18 +221,23 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
         SubCStar         -> return ()
         SubCArray pgcols -> forM_ pgcols (assertPGCol (tiFieldInfoMap ti) "")
 
-subTableP2 :: (P2C m) => QualifiedTable -> EventTriggerDef -> m ()
-subTableP2 qt q@(EventTriggerDef name def webhook rconf) = do
-  trid <- liftTx $ addEventTriggerToCatalog qt q
+subTableP2 :: (P2C m) => QualifiedTable -> Bool -> EventTriggerDef -> m ()
+subTableP2 qt replace q@(EventTriggerDef name def webhook rconf) = do
+  trid <- if replace
+    then do
+    delEventTriggerFromCache qt name
+    liftTx $ updateEventTriggerToCatalog qt q
+    else
+    liftTx $ addEventTriggerToCatalog qt q
   addEventTriggerToCache qt trid name def rconf webhook
 
-subTableP2shim :: (P2C m) => (QualifiedTable, EventTriggerDef) -> m RespBody
-subTableP2shim (qt, etdef) = do
-  subTableP2 qt etdef
+subTableP2shim :: (P2C m) => (QualifiedTable, Bool, EventTriggerDef) -> m RespBody
+subTableP2shim (qt, replace, etdef) = do
+  subTableP2 qt replace etdef
   return successMsg
 
 instance HDBQuery CreateEventTriggerQuery where
-  type Phase1Res CreateEventTriggerQuery = (QualifiedTable, EventTriggerDef)
+  type Phase1Res CreateEventTriggerQuery = (QualifiedTable, Bool, EventTriggerDef)
   phaseOne = subTableP1
   phaseTwo _ = subTableP2shim
   schemaCachePolicy = SCPReload
@@ -246,50 +258,6 @@ instance HDBQuery DeleteEventTriggerQuery where
   type Phase1Res DeleteEventTriggerQuery = QualifiedTable
   phaseOne = unsubTableP1
   phaseTwo q qt = unsubTableP2 qt q
-  schemaCachePolicy = SCPReload
-
-upsubTableP1 :: (P1C m) => UpdateEventTriggerQuery -> m (QualifiedTable, EventTriggerDef)
-upsubTableP1 (UpdateEventTriggerQuery name minsert mupdate mdelete mretryConf mwebhook) = do
-  adminOnly
-  ti  <- askTabInfoFromTrigger name
-  eti <- askEventTriggerInfo (tiEventTriggerInfoMap ti) name
-
-  assertCols ti minsert
-  assertCols ti mupdate
-  assertCols ti mdelete
-
-  let oinsert  = otiCols <$> etiInsert eti
-      oupdate  = otiCols <$> etiUpdate eti
-      odelete  = otiCols <$> etiDelete eti
-      (insert, update, delete) = case minsert <|> mupdate <|> mdelete of
-        Just _  -> (minsert, mupdate, mdelete)
-        Nothing -> (oinsert, oupdate, odelete)
-      rconf   = fromMaybe (etiRetryConf eti ) mretryConf
-      webhook = fromMaybe (etiWebhook eti) mwebhook
-  return (tiName ti, EventTriggerDef name (TriggerOpsDef insert update delete) webhook rconf)
-  where
-    assertCols _ Nothing = return ()
-    assertCols ti (Just sos) = do
-      let cols = sosColumns sos
-      case cols of
-        SubCStar         -> return ()
-        SubCArray pgcols -> forM_ pgcols (assertPGCol (tiFieldInfoMap ti) "")
-
-upsubTableP2shim :: (P2C m) => (QualifiedTable, EventTriggerDef) -> m RespBody
-upsubTableP2shim (qt, etdef) = do
-  upsubTableP2 qt etdef
-  return successMsg
-
-upsubTableP2 :: (P2C m) => QualifiedTable -> EventTriggerDef -> m ()
-upsubTableP2 qt q@(EventTriggerDef name def webhook rconf) = do
-  delEventTriggerFromCache qt name
-  trid <- liftTx $ updateEventTriggerToCatalog qt q
-  addEventTriggerToCache qt trid name def rconf webhook
-
-instance HDBQuery UpdateEventTriggerQuery where
-  type Phase1Res UpdateEventTriggerQuery = (QualifiedTable, EventTriggerDef)
-  phaseOne = upsubTableP1
-  phaseTwo _ = upsubTableP2shim
   schemaCachePolicy = SCPReload
 
 deliverEvent :: (P2C m) => DeliverEventQuery -> m RespBody

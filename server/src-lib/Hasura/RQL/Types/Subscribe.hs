@@ -14,7 +14,6 @@ module Hasura.RQL.Types.Subscribe
   , EventTriggerDef(..)
   , RetryConf(..)
   , DeleteEventTriggerQuery(..)
-  , UpdateEventTriggerQuery(..)
   , DeliverEventQuery(..)
   ) where
 
@@ -69,6 +68,7 @@ data CreateEventTriggerQuery
   , cetqDelete    :: !(Maybe SubscribeOpSpec)
   , cetqRetryConf :: !(Maybe RetryConf)
   , cetqWebhook   :: !T.Text
+  , cetqReplace   :: !Bool
   } deriving (Show, Eq, Lift)
 
 instance FromJSON CreateEventTriggerQuery where
@@ -79,7 +79,8 @@ instance FromJSON CreateEventTriggerQuery where
     update    <- o .:? "update"
     delete    <- o .:? "delete"
     retryConf <- o .:? "retry_conf"
-    webhook   <- o .: "webhook"
+    webhook   <- o .:  "webhook"
+    mreplace   <- o .:? "replace"
     let regex = mkRegex "^\\w+$"
         mName = matchRegex regex (T.unpack name)
     case mName of
@@ -88,7 +89,10 @@ instance FromJSON CreateEventTriggerQuery where
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
-    return $ CreateEventTriggerQuery name table insert update delete retryConf webhook
+    replace <- case mreplace of
+          Just True -> return True
+          _         -> return False
+    return $ CreateEventTriggerQuery name table insert update delete retryConf webhook replace
   parseJSON _ = fail "expecting an object"
 
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)
@@ -108,18 +112,6 @@ data DeleteEventTriggerQuery
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
-
-data UpdateEventTriggerQuery
-  = UpdateEventTriggerQuery
-  { uetqName      :: !T.Text
-  , uetqInsert    :: !(Maybe SubscribeOpSpec)
-  , uetqUpdate    :: !(Maybe SubscribeOpSpec)
-  , uetqDelete    :: !(Maybe SubscribeOpSpec)
-  , uetqRetryConf :: !(Maybe RetryConf)
-  , uetqWebhook   :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift)
-
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''UpdateEventTriggerQuery)
 
 data EventTrigger
   = EventTrigger
