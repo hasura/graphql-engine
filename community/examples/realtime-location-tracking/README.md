@@ -23,8 +23,8 @@ hosted on GitHub pages and the Postgres+GraphQL Engine is running on Postgres.
 - Get the Heroku app URL (say `realtime-backend2.herokuapp.com`)
 - Clone this repo:
   ```bash
-  git clone https://github.com/hasura/realtime-location-app.git
-  cd realtime-location-app
+  git clone https://github.com/hasura/graphql-engine
+  cd graphql-engine/community/examples/realtime-location-tracking
   ```
 - [Install Hasura CLI](https://docs.hasura.io/1.0/graphql/manual/hasura-cli/install-hasura-cli.html)
 - Goto `hasura/` and edit `config.yaml`:
