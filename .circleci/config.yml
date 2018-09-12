@@ -82,13 +82,14 @@ refs:
           mkdir -p /build/_server_test_output/$PG_VERSION
     - run:
         name: pytest the server
-        working_directory: ./server
+        working_directory: ./server/tests-py
         environment:
           DATABASE_URL: postgres://gql_test:@localhost:5432/gql_test
           HGE_URL: http://localhost:8080
         command: |
-          make ci-pytest
-          stack hpc report graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
+          pip3 install -r requirements.txt
+          pytest -vv --hge-url="$HGE_URL" --pg-url="$DATABASE_URL"
+          stack --system-ghc hpc report graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
     - store_artifacts:
         path: /build/_server_test_output
         destination: server_test

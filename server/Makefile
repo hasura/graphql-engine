@@ -39,10 +39,6 @@ ci-binary:
 ci-test:
 	$(build_output)/graphql-engine-test --database-url=$(DATABASE_URL)
 
-ci-pytest:
-	pip3 install -r tests-py/requirements.txt
-	pytest -vv --hge-url="$(HGE_URL)" --pg-url="$(DATABASE_URL)"
-
 # assumes this is built in circleci
 ci-image:
 	docker create -v /root/ --name dummy alpine:3.4 /bin/true
