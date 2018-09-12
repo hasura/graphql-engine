@@ -65,9 +65,11 @@ data AnnRel = AnnRel
     , arSelData :: !SelectData -- Current table. Almost ~ to SQL Select
     } deriving (Show, Eq)
 
+type AnnSelFlds = HM.HashMap FieldName AnnFld
+
 data SelectData = SelectData
       -- Nested annotated columns
-    { sdFlds         :: !(HM.HashMap FieldName AnnFld)
+    { sdFlds         :: !AnnSelFlds
     , sdTable        :: !QualifiedTable -- from postgres table
     , sdFromExp      :: !(Maybe S.FromExp) -- optional from expression
     , sdWhere        :: !(S.BoolExp, Maybe (GBoolExp AnnSQLBoolExp))

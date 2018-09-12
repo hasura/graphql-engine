@@ -23,6 +23,7 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+import qualified Hasura.GraphQL.Resolve.Insert          as RI
 import qualified Hasura.GraphQL.Resolve.Mutation        as RM
 import qualified Hasura.GraphQL.Resolve.Select          as RS
 
@@ -38,8 +39,8 @@ buildTx userInfo gCtx fld = do
     OCSelectPkey tn permFilter hdrs ->
       validateHdrs hdrs >> RS.convertSelectByPKey tn permFilter fld
       -- RS.convertSelect tn permFilter fld
-    OCInsert tn vn cols hdrs    ->
-      validateHdrs hdrs >> RM.convertInsert roleName (tn, vn) cols fld
+    OCInsert insCtx pCols hdrs    ->
+      validateHdrs hdrs >> RI.convertInsert roleName insCtx pCols fld
       -- RM.convertInsert (tn, vn) cols fld
     OCUpdate tn permFilter hdrs ->
       validateHdrs hdrs >> RM.convertUpdate tn permFilter fld

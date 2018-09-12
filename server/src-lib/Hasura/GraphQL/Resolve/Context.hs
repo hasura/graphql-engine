@@ -3,9 +3,11 @@
 {-# LANGUAGE MultiWayIf            #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Hasura.GraphQL.Resolve.Context
-  ( FieldMap
+  ( InsResp(..)
+  , FieldMap
   , OrdByResolveCtx
   , OrdByResolveCtxElem
   , NullsOrder(..)
@@ -28,6 +30,9 @@ module Hasura.GraphQL.Resolve.Context
 import           Data.Has
 import           Hasura.Prelude
 
+import qualified Data.Aeson                    as J
+import qualified Data.Aeson.Casing             as J
+import qualified Data.Aeson.TH                 as J
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.Sequence                 as Seq
@@ -42,6 +47,13 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 import qualified Hasura.SQL.DML                as S
+
+data InsResp
+  = InsResp
+  { _irAffectedRows :: !Int
+  , _irResponse     :: !(Maybe J.Object)
+  } deriving (Show, Eq)
+$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
 
 type FieldMap
   = Map.HashMap (G.NamedType, G.Name) (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool))

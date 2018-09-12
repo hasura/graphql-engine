@@ -6,14 +6,14 @@
 
 module Hasura.GraphQL.Resolve.Mutation
   ( convertUpdate
-  , convertInsert
   , convertDelete
+  , convertMutResp
+  , parseOnConflict
   ) where
 
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
-import qualified Data.HashSet                      as Set
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Delete             as RD
@@ -115,47 +115,18 @@ parseUpdCols obj =
 
 parseOnConflict
   :: (MonadError QErr m)
-  => [PGCol] -> AnnGValue -> m RI.ConflictCtx
+  => [PGCol] -> AnnGValue -> m RI.ConflictClauseP1
 parseOnConflict inpCols val =
   flip withObject val $ \_ obj -> do
     actionM <- parseAction obj
     constraint <- parseConstraint obj
     updColsM <- parseUpdCols obj
     -- consider "action" if "update_columns" is not mentioned
-    return $ case (updColsM, actionM) of
+    return $ mkConflictClause $ case (updColsM, actionM) of
       (Just [], _)             -> RI.CCDoNothing $ Just constraint
       (Just cols, _)           -> RI.CCUpdate constraint cols
       (Nothing, Just CAIgnore) -> RI.CCDoNothing $ Just constraint
       (Nothing, _)             -> RI.CCUpdate constraint inpCols
-
-convertInsert
-  :: RoleName
-  -> (QualifiedTable, QualifiedTable) -- table, view
-  -> [PGCol] -- all the columns in this table
-  -> Field -- the mutation field
-  -> Convert RespTx
-convertInsert role (tn, vn) tableCols fld = do
-  insTuples    <- withArg arguments "objects" asRowExps
-  let inpCols = Set.toList $ Set.fromList $ concatMap fst insTuples
-  conflictCtxM <- withArgM arguments "on_conflict" $ parseOnConflict inpCols
-  let onConflictM = fmap mkConflictClause conflictCtxM
-  mutFlds <- convertMutResp tn (_fType fld) $ _fSelSet fld
-  args <- get
-  let rows = map snd insTuples
-      p1Query = RI.InsertQueryP1 tn vn tableCols rows onConflictM mutFlds
-      p1 = (p1Query, args)
-  return $
-      bool (RI.nonAdminInsert p1) (RI.insertP2 p1) $ isAdmin role
-  where
-    arguments = _fArguments fld
-    asRowExps = withArray (const $ mapM rowExpWithDefaults)
-    rowExpWithDefaults val = do
-      givenCols <- convertRowObj val
-      let inpCols = map fst givenCols
-          sqlExps = Map.elems $ Map.union (Map.fromList givenCols) defVals
-      return (inpCols, sqlExps)
-
-    defVals = Map.fromList $ zip tableCols (repeat $ S.SEUnsafe "DEFAULT")
 
 type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
 
