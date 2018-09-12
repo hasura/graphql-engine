@@ -60,3 +60,6 @@ To track all the foreign-keys of all tables in the database:
   For example, for the foreign-key ``article::author_id -> author::id``, the relationship names will be
   ``authorByAuthorId`` for ``article`` table and ``articlesByAuthorId`` for ``author`` table.
 
+  You can change the relationship names by heading to the ``Relationships`` tab of the concerned table/view and
+  dropping and recreating the relationship with a name of your choice.
+
