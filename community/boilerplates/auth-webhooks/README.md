@@ -1,6 +1,6 @@
-# Code samples for auth webhook
+# Boilerplates for auth webhooks
 
-This directory is a compilation of code samples that can be used to implement custom auth webhooks for the Hasura GraphQL engine.
+This directory is a compilation of code samples (boilerplates) that can be used to implement custom auth webhooks for the Hasura GraphQL engine. 
 
 ## Contributing
 
