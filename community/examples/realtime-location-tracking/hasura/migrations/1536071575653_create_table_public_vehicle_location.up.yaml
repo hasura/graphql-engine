@@ -1,0 +1,9 @@
+- args:
+    sql: CREATE TABLE public."vehicle_location"("id" integer NOT NULL, "vehicle_id"
+      text NOT NULL, "location" text NOT NULL, "timestamp" timestamptz NOT NULL DEFAULT
+      now(), PRIMARY KEY ("id") );
+  type: run_sql
+- args:
+    name: vehicle_location
+    schema: public
+  type: add_existing_table_or_view
