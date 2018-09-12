@@ -1,3 +1,0 @@
-- args:
-    sql: ALTER TABLE public."apic_test_table_mod_0" ADD COLUMN "nbOuu" integer NULL
-  type: run_sql

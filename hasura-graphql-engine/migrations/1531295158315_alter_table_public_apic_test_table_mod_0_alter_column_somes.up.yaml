@@ -1,3 +1,0 @@
-- args:
-    sql: ALTER TABLE public."apic_test_table_mod_0" ALTER COLUMN "somes" TYPE text;
-  type: run_sql

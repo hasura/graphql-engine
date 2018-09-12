@@ -1,8 +1,0 @@
-- args:
-    permission:
-      filter:
-        user_id:
-          _eq: X-HASURA-USER-ID
-    role: user
-    table: todo
-  type: create_delete_permission
