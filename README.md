@@ -1,4 +1,4 @@
-# Boilerplates for serverless cloud functions
+# Event trigger boilerplates for serverless cloud functions
 
 This repository contains boilerplate functions for various use-cases, for different serverless or cloud function platforms. These functions implement sample use-cases of the different types of asynchronous business logic operations that can be triggered by the Hasura GraphQL Engine on database insert, update or delete.
 
@@ -40,7 +40,7 @@ Follow the cloud function provider docs for setting these up. Provider specific 
 
 Note: Some of the examples have a corresponding `great-first-issue` issue in the repository. Please checkout the checklist in the README in the cloud provider folders for such issues.
 
-## Repo Structure
+## Directory Structure
 
 Boilerplates have been organised into top-level folders for each cloud function platform. Inside each such folder, there's a folder for each language, followed by each use-case. The README for each cloud function provider has a list of available boilerplates.
 
