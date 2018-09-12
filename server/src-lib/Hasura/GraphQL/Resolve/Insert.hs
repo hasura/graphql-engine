@@ -356,17 +356,19 @@ convertInsert role insCtx@(InsCtx (tn, _) tableColInfos _ _) pCols fld = do
   where
     arguments = _fArguments fld
     onConflictM = Map.lookup "on_conflict" arguments
-    pColsWithType = mergeListsWith pCols tableColInfos
-                    (\c ti -> c == pgiName ti)
-                    (\c ti -> (c, pgiType ti))
+    -- consider all table columns if no primary key columns present
+    pCols' = bool pCols (map pgiName tableColInfos) $ null pCols
+    reqRetCols = mergeListsWith pCols' tableColInfos
+                 (\c ti -> c == pgiName ti)
+                 (\c ti -> (c, pgiType ti))
 
     buildInsertTx annObjs mutFlds = do
       insResps <- forM annObjs $ \obj -> do
-        (affRows, pColValsM) <- processInsObj role obj insCtx pColsWithType onConflictM
-        let retCols = flip fmap pColValsM $ \pColVals ->
-              mergeListsWith tableColInfos pColVals
-              (\pgci (c, _) -> pgiName pgci == c)
-              (\pgci (_, v) -> (pgci, v))
+        (affRows, retColValsM) <- processInsObj role obj insCtx reqRetCols onConflictM
+        let retCols = flip fmap retColValsM $ \retColsVals ->
+              mergeListsWith tableColInfos retColsVals
+              (\ci (c, _) -> pgiName ci == c)
+              (\ci (_, v) -> (ci, v))
         return (affRows, retCols)
       let affRows = sum $ map fst insResps
           pkeyColVals = map snd insResps
