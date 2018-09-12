@@ -57,10 +57,11 @@ Examples of ``database-url``:
       serve --enable-console
 
 
-Check if everything is running well:
+Execute ``docker-run.sh`` & check if everything is running well:
 
 .. code-block:: bash
 
+   $ ./docker-run.sh
    $ docker ps
 
    CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
