@@ -6,10 +6,10 @@ Some of the language/platforms are work in progress. We welcome contributions fo
 
 | Folder name | Use-case| Node.js(8) | Node.js(6) | Python
 |-------------|---------|:--------:|:------:|:----:
-| simple-echo | echo the trigger payload  | ✅ | ❌ | ❌ 	
-| mutation-trigger | insert related data on an insert event using graphql mutation | ✅ | ❌ | ❌ 	 	
-| fcm-apns-push-notification | send push notification on database event | ❌ | ❌ | ❌ 
-| etl-example | transform the trigger payload and update an algolia index | ❌ | ❌ | ❌ 
+| echo | echo the trigger payload  | ✅ | ❌ | ❌ 	
+| mutation | insert related data on an insert event using graphql mutation | ✅ | ❌ | ❌ 	 	
+| push-notification | send push notification on database event | ❌ | ❌ | ❌ 
+| etl | transform the trigger payload and update an algolia index | ❌ | ❌ | ❌ 
 
 
 ## Pre-requisites

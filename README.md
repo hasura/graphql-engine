@@ -50,16 +50,16 @@ The following is a representative tree of the folder structure:
     ├── aws-lambda
     |   |── README.md
     |   |── nodejs
-    |   |   |── simple-echo
-    |   |   |── mutation-trigger
+    |   |   |── echo
+    |   |   |── mutation
     |   |── python
     |   |   ...
     |
     ├── azure-functions
     |   |── README.md 
     |   |── nodejs
-    |   |   |── simple-echo
-    |   |   |── mutation-trigger
+    |   |   |── echo
+    |   |   |── mutation
     |   |── python
     |   |   ...
 
