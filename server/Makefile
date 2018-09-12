@@ -40,7 +40,7 @@ ci-test:
 	$(build_output)/graphql-engine-test --database-url=$(DATABASE_URL)
 
 ci-pytest:
-  pytest -vv --hge-url="$(HGE_URL)" --pg-url="$(DATABASE_URL)"
+	pytest -vv --hge-url="$(HGE_URL)" --pg-url="$(DATABASE_URL)"
 
 # assumes this is built in circleci
 ci-image:
