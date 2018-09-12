@@ -152,11 +152,8 @@ main =  do
       let warpSettings = Warp.setPort port Warp.defaultSettings
                          -- Warp.setHost "*" Warp.defaultSettings
 
-      -- start a background thread to check for updates if not on a CI env
-      isCI <- lookupEnv "CI"
-      case isCI of
-        Just "true" -> putStrLn "not checking for updates on CI env"
-        _ -> void $ C.forkIO $ checkForUpdates loggerCtx httpManager
+      -- start a background thread to check for updates
+      void $ C.forkIO $ checkForUpdates loggerCtx httpManager
 
       maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
       evPollSec  <- getFromEnv defaultPollingIntervalSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
