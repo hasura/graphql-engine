@@ -1,4 +1,4 @@
-# graphql-subscriptions-chat-example
+# Realtime Chat using GraphQL Subscriptions
 
 This is the source code for a fully working group chat app that uses subscriptions in Hasura GraphQL Engine. It is built using React and Apollo.
 
