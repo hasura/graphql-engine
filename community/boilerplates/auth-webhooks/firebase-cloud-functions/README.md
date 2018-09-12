@@ -1,9 +1,5 @@
 # Sample Firebase Cloud Function Auth Webhook for Hasura GraphQL engine
 
-## What is this?
-
-We'll deploy Auth triggered Functions that send a welcome email when a new user signs up and a goodbye email when user accounts are deleted.
-
 Further reading: [Firebase SDK for Cloud Functions](https://firebase.google.com/docs/functions/)
 
 
