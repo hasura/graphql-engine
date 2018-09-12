@@ -1,6 +1,6 @@
 # Event triggers on Postgres
 
-Trigger webhooks on database events using Hasura GraphQL Engine's **event triggers**.
+Trigger webhooks on database events using Hasura GraphQL Engine's event triggers.
 
 ![Event triggers demo](assets/event-triggers.gif)
 
@@ -33,15 +33,17 @@ The fastest way to try event triggers out is via Heroku.
 
 3. Configure your first event trigger and webhook
 
-   Create a table, configure the db update you want to use as a trigger and instantly invoke a webhook by adding a new row in your table. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+   Create a table, configure the db update you want to use as a trigger and instantly invoke a webhook by adding a new row in your table. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-event-trigger.html).
 
 ### Other deployment methods
 
 For Docker-based deployment and advanced configuration options, see [deployment guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
 
-### Quickstart demo
+### Demo (*30 seconds*)
 
-[Create an event-trigger and webhook in 60 seconds](https://youtu.be/EaTUVWnDCvA) (*30 seconds*)
+[![Create an event-trigger and webhook in 60 seconds](https://img.youtube.com/vi/EaTUVWnDCvA/0.jpg)](https://www.youtube.com/watch?v=EaTUVWnDCvA)
+
+[Create an event-trigger and webhook in 60 seconds](https://youtu.be/EaTUVWnDCvA)
 
 ### Serverless boilerplates
 
