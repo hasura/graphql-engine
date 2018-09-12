@@ -23,7 +23,7 @@ class WebhookHandler(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         contentLen = self.headers.get('Content-Length')
-        reqBody = self.rfile.read(int(contentLen))
+        reqBody = self.rfile.read(int(contentLen)).decode("utf-8")
         reqJson = json.loads(reqBody)
         self.log_message(json.dumps(reqJson))
         self.send_response(HTTPStatus.NO_CONTENT)

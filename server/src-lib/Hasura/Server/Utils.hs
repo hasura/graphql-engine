@@ -77,11 +77,11 @@ uriAuthParameters uriAuth = port . host . auth
                  (':' : p) -> \info -> info { Q.connPort = read p }
                  _         -> id
         host = case uriRegName uriAuth of
-                 h  -> \info -> info { Q.connHost = h }
+                 h  -> \info -> info { Q.connHost = unEscapeString h }
         auth = case splitOn ":" (uriUserInfo uriAuth) of
                  [""]   -> id
-                 [u]    -> \info -> info { Q.connUser = dropLast u }
-                 [u, p] -> \info -> info { Q.connUser = u, Q.connPassword = dropLast p }
+                 [u]    -> \info -> info { Q.connUser = unEscapeString $ dropLast u }
+                 [u, p] -> \info -> info { Q.connUser = unEscapeString u, Q.connPassword = unEscapeString $ dropLast p }
                  _      -> id
 
 -- Running shell script during compile time
