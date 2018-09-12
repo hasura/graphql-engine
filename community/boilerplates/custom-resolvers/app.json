@@ -8,5 +8,5 @@
     "postgres",
     "hasura"
   ],
-  "repository": "https://github.com/hasura/custom-resolvers-boilerplate"
+  "repository": "https://github.com/hasura/graphql-engine/community/boilerplates/custom-resolvers"
 }

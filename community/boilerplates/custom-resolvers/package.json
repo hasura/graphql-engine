@@ -2,7 +2,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/praveenweb/graphql-custom-resolver-example"
+    "url": "https://github.com/hasura/graphql-engine/community/boilerplates/custom-resolvers"
   },
   "scripts": {
     "start": "node -r esm src/index.js"

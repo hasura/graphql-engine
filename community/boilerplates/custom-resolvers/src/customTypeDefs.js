@@ -1,4 +1,4 @@
-// custom type definitions 
+// custom type definitions
 const typeDefs = `
   type Query {
     hello: String,
