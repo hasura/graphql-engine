@@ -1,9 +1,9 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TypeSynonymInstances  #-}
+{-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE LambdaCase           #-}
+{-# LANGUAGE MultiWayIf           #-}
+{-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module Hasura.RQL.GBoolExp where
 
@@ -39,6 +39,12 @@ data AnnValOpExpG a
 
   | ASIMILAR !a -- similar, regex
   | ANSIMILAR !a-- not similar, regex
+
+  | AContains !a
+  | AContainedIn !a
+  | AHasKey !a
+  | AHasKeysAny [Text]
+  | AHasKeysAll [Text]
 
   | ANISNULL -- IS NULL
   | ANISNOTNULL -- IS NOT NULL
@@ -434,23 +440,31 @@ mkBoolExpBuilder
   => (a -> m S.SQLExp)
   -> BoolExpBuilder m a
 mkBoolExpBuilder rhsBldr lhs = \case
-  AEQ val       -> mkSimpleBoolExpBuilder equalsBoolExpBuilder val
-  ANE val       -> mkSimpleBoolExpBuilder notEqualsBoolExpBuilder val
-  AIN  vals     -> mkInOrNotBoolExpBuilder True vals
-  ANIN vals     -> mkInOrNotBoolExpBuilder False vals
-  AGT val       -> mkSimpleBoolExpBuilder (S.BECompare S.SGT) val
-  ALT val       -> mkSimpleBoolExpBuilder (S.BECompare S.SLT) val
-  AGTE val      -> mkSimpleBoolExpBuilder (S.BECompare S.SGTE) val
-  ALTE val      -> mkSimpleBoolExpBuilder (S.BECompare S.SLTE) val
-  ALIKE val     -> mkSimpleBoolExpBuilder (S.BECompare S.SLIKE) val
-  ANLIKE val    -> mkSimpleBoolExpBuilder (S.BECompare S.SNLIKE) val
-  AILIKE val    -> mkSimpleBoolExpBuilder (S.BECompare S.SILIKE) val
-  ANILIKE val   -> mkSimpleBoolExpBuilder (S.BECompare S.SNILIKE) val
-  ASIMILAR val  -> mkSimpleBoolExpBuilder (S.BECompare S.SSIMILAR) val
-  ANSIMILAR val -> mkSimpleBoolExpBuilder (S.BECompare S.SNSIMILAR) val
-  ANISNULL      -> return $ S.BENull lhs
-  ANISNOTNULL   -> return $ S.BENotNull lhs
+  AEQ val          -> mkSimpleBoolExpBuilder equalsBoolExpBuilder val
+  ANE val          -> mkSimpleBoolExpBuilder notEqualsBoolExpBuilder val
+  AIN  vals        -> mkInOrNotBoolExpBuilder True vals
+  ANIN vals        -> mkInOrNotBoolExpBuilder False vals
+  AGT val          -> mkSimpleBoolExpBuilder (S.BECompare S.SGT) val
+  ALT val          -> mkSimpleBoolExpBuilder (S.BECompare S.SLT) val
+  AGTE val         -> mkSimpleBoolExpBuilder (S.BECompare S.SGTE) val
+  ALTE val         -> mkSimpleBoolExpBuilder (S.BECompare S.SLTE) val
+  ALIKE val        -> mkSimpleBoolExpBuilder (S.BECompare S.SLIKE) val
+  ANLIKE val       -> mkSimpleBoolExpBuilder (S.BECompare S.SNLIKE) val
+  AILIKE val       -> mkSimpleBoolExpBuilder (S.BECompare S.SILIKE) val
+  ANILIKE val      -> mkSimpleBoolExpBuilder (S.BECompare S.SNILIKE) val
+  ASIMILAR val     -> mkSimpleBoolExpBuilder (S.BECompare S.SSIMILAR) val
+  ANSIMILAR val    -> mkSimpleBoolExpBuilder (S.BECompare S.SNSIMILAR) val
+  AContains val    -> mkSimpleBoolExpBuilder (S.BECompare S.SContains) val
+  AContainedIn val -> mkSimpleBoolExpBuilder (S.BECompare S.SContainedIn) val
+  AHasKey val      -> mkSimpleBoolExpBuilder (S.BECompare S.SHasKey) val
+  AHasKeysAny keys -> return $ S.BECompare S.SHasKeysAny lhs $ toTextArray keys
+  AHasKeysAll keys -> return $ S.BECompare S.SHasKeysAll lhs $ toTextArray keys
+  ANISNULL         -> return $ S.BENull lhs
+  ANISNOTNULL      -> return $ S.BENotNull lhs
   where
+    toTextArray arr =
+      S.SETyAnn (S.SEArray $ map (txtEncoder . PGValText) arr) S.textArrType
+
     mkSimpleBoolExpBuilder beF pgColVal =
       beF lhs <$> rhsBldr pgColVal
 

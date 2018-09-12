@@ -47,4 +47,7 @@ export URL_PREFIX=/
 
 # test console
 npm run dev &
+# wait for console to build
+sleep 60
+# run console tests
 npm run test

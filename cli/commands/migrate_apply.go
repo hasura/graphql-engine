@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"os"
 	"strconv"
 
 	"github.com/hasura/graphql-engine/cli"
@@ -55,6 +56,13 @@ func (o *migrateApplyOptions) run() error {
 		if err == migrate.ErrNoChange {
 			o.EC.Logger.Info("nothing to apply")
 			return nil
+		}
+		if e, ok := err.(*os.PathError); ok {
+			// If Op is first, then log No migrations to apply
+			if e.Op == "first" {
+				o.EC.Logger.Info("No migrations to apply")
+				return nil
+			}
 		}
 		return errors.Wrap(err, "apply failed")
 	}
