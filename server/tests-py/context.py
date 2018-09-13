@@ -37,7 +37,7 @@ class WebhookServer(http.server.HTTPServer):
 
 class HGECtx:
     def __init__(self, hge_url, pg_url):
-        server_address = ('0.0.0.0', 5000)
+        server_address = ('0.0.0.0', 5592)
 
         self.resp_queue = queue.Queue(maxsize=1)
         self.httpd = WebhookServer(self.resp_queue, server_address)
