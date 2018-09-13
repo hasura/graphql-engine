@@ -10,3 +10,7 @@ Feel free to open pull requests to add more content here.
 - [Boilerplates](boilerplates)
 - [Examples](examples)
 - [Tools](tools)
+
+## License
+
+All contents of this directory are under [MIT License](../LICENSE-community).
