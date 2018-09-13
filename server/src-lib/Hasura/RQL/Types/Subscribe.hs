@@ -16,7 +16,8 @@ module Hasura.RQL.Types.Subscribe
   , DeleteEventTriggerQuery(..)
   , DeliverEventQuery(..)
   , HeaderConf(..)
-  , HeaderType (..)
+  , HeaderValue(..)
+  , HeaderName
   ) where
 
 import           Data.Aeson
@@ -32,6 +33,7 @@ import qualified Data.Text                  as T
 type TriggerName = T.Text
 type TriggerId   = T.Text
 type EventId     = T.Text
+type HeaderName  = T.Text
 
 data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift)
 
@@ -61,17 +63,27 @@ data RetryConf
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
 
-data HeaderType = FromEnv | FromValue deriving (Show, Eq, Lift)
-$(deriveJSON defaultOptions ''HeaderType)
+data HeaderConf = HeaderConf HeaderName HeaderValue
+   deriving (Show, Eq, Lift)
 
-data HeaderConf
-  = HeaderConf
-  { hcType  :: !HeaderType
-  , hcName  :: !T.Text
-  , hcValue :: !T.Text
-  } deriving (Show, Eq, Lift)
+data HeaderValue = HVValue T.Text | HVEnv T.Text
+   deriving (Show, Eq, Lift)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''HeaderConf)
+instance FromJSON HeaderConf where
+  parseJSON (Object o) = do
+    name <- o .: "name"
+    value <- o .:? "value"
+    valueFromEnv <- o .:? "value_from_env"
+    case (value, valueFromEnv ) of
+      (Nothing, Nothing)  -> fail "expecting value or value_from_env keys"
+      (Just val, Nothing) -> return $ HeaderConf name (HVValue val)
+      (Nothing, Just val) -> return $ HeaderConf name (HVEnv val)
+      (Just _, Just _)    -> fail "expecting only one of value or value_from_env keys"
+  parseJSON _ = fail "expecting object for headers"
+
+instance ToJSON HeaderConf where
+  toJSON (HeaderConf name (HVValue val)) = object ["name" .= name, "value" .= val]
+  toJSON (HeaderConf name (HVEnv val)) = object ["name" .= name, "value_from_env" .= val]
 
 data CreateEventTriggerQuery
   = CreateEventTriggerQuery
