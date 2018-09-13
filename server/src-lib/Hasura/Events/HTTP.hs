@@ -130,9 +130,7 @@ isNetworkErrorHC = \case
 
 -- retries on the typical network errors
 defaultRetryFn :: Either HTTPErr a -> Bool
-defaultRetryFn = \case
-  Left e  -> isNetworkError e
-  Right _ -> False
+defaultRetryFn _ = False
 
 -- full jitter backoff
 defaultRetryPolicy :: (MonadIO m) => R.RetryPolicyM m
