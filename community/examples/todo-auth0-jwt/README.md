@@ -1,10 +1,13 @@
-# Todo app with Auth0 JWT for Hasura GraphQL Engine (on Heroku Postgres)
+# Integrating Todo app with Auth0 and JWT authorization with Hasura GraphQL Engine
 
-## Create an application in Auth0 and setup rules
+In this example, we use Hasura GraphQL engine's JWT authorization mode. We use
+Auth0 as our authentication and JWT token provider.
 
-1. Create an application
+## Create an application in Auth0
 
-2. In the settings of the application add `http://localhost:3000/callback` as
+1. Create an application in Auth0 dashboard
+
+2. In the settings of the application, add `http://localhost:3000/callback` as
    "Allowed Callback URLs" and "Allowed Web Origins"
 
 ## Add rules for custom JWT claims
@@ -29,7 +32,7 @@ function (user, context, callback) {
 Download your JWT signing X509 certificate by visiting URL:
 `https://<YOUR-AUTH0-DOMAIN>/pem`
 
-Convert the file into one-line:
+Convert the file into one-line, this will be required later:
 
 ```shell
 $ cat filename.pem | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g'
@@ -48,7 +51,7 @@ HASURA_GRAPHQL_ACCESS_KEY : yoursecretaccesskey
 HASURA_GRAPHQL_JWT_SECRET: <the-certificate-in-one-line>
 ```
 
-For example:
+For example, (copy the certificate from above step):
 
 ```
 HASURA_GRAPHQL_JWT_SECRET : {"type":"RS256", "key": "-----BEGIN CERTIFICATE-----\nMIIDDTCCAfWgAwIBAgIJPhNlZ11IDrxbMA0GCSqGSIb3DQEBCQxIjAgNV\nBAMTGXRlc3QtaGdlLWp3dC5ldS5hdXRoMC5jb20wHhcNMTgwNzMwMTM1MjM1WhcN\nMzIwNDA3MTM1MjM1WjAkMSIwIAYDVQQDExl0ZXN0LWhnZS1qd3QuZXUuYXV0aDAu\nY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA13CivdSkNzRnOnR5iReDb+AgbL7BWjRiw3tRwjxRp5PYzvAGuj94y+R6LRh3QybYtsMFbSg5J7fNq6\nLd6yMpRMrUu8CBOnYY45D6b/2jlf+Vp8vEQuKvPMOOw8Ev6x7X3blcuXCELSwyL3\nAGHq9OpP2RV6V6CIE863IzzuYH5HDLzU35oMZqozgJVRJM0+6besH6TnSTNiA7xi\nBAqFaiQRNQRVi1CAUa0bLkN1XRp4AFy7d63VldO9sM+8QnCNHySdDr1XevVuq6DK\nLQyGexFFy4niALgHV0Q7QA+xP1c2G6rJomZmn4jl1avnlBpU87E58JMrRHOCj+5m\nXj22AQABo0IwQDAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBT6FvNkuUgu\YQ/i4lo5aOgwazAOBgNVHQ8BAf8EBAMCAoQwDQYJKoZIhvcNAQELBQADggEB\nADCLj+/L22pEKyqaIUlhHUJh7DAiDSLafy0fw56UCntzPhqiZVVRlhxeAKidkCLVIEbRLuxUoXiQSezPqMp//9xHegMp0f2VauVCFbg7EpUanYwvqFqjy9LWgH+SBz\n4uroLSYZ5g1EPsHtlArLRChA90caTX4e7Z7Xlu8vG2kHRJB5nC7ycdbMUvEWBMeI\ntn/pcb4mZ3/vlgj4UTEnCURe2UPmSJpxmPwXqBctvwdKHRMgFXhZxojWCi0z4ftf\nf8t8UJSIcbEblnkYe7wzRYy8tOXoMMHqGSisCdkWp/866029rJsKbwd8rVIyKNC5\nfrGYawv+0cxO6/Sir0meA=\n-----END CERTIFICATE-----"}
@@ -77,4 +80,10 @@ access_key: <your-access-key>
 
 `$ npm install && npm start`
 
-  > THe app runs on port 3000 by default. You can change the port number, but you will also have to reconfigure the callback
+  > The app runs on port 3000 by default. You can change the port number, but you will also have to reconfigure the callback
+
+
+## Code
+- All the Auth0 related code is in `todo-app/src/Auth`
+- In `todo-app/src/routes.js`, we get the `id_token` from localstorage, and send
+  as `Authorization` header to HGE.
