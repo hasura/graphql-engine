@@ -167,7 +167,7 @@ written more about what you can and cannot do under AGPL
 SLAs are available on request. Please feel free to contact us at build@hasura.io
 or on our [website chat](https://hasura.io). 
 
-All **other content and code** (except those in [`server`](server), [`cli`](cli) and
-[`console`](console) directories) are licensed under [MIT](LICENSE-community).
+All **other content** (except those in [`server`](server), [`cli`](cli) and
+[`console`](console) directories) are under [MIT License](LICENSE-community).
 This includes everything in the [`docs`](docs) and [`community`](community)
 directories.
