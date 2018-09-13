@@ -3,6 +3,7 @@ LICENSE
 scripts/*
 assets/*
 docs/*
+community/*
 .circleci/*
 .ciignore
 .gitignore

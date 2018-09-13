@@ -24,6 +24,19 @@ consisting of 3 components. Each have their own contributing guides:
 All of the three components have a single version, denoted by either the git
 tag, or a combination of branch name and git commit SHA.
 
+### Docs
+
+Contributing guide for docs can be found at [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
+
+### Community content
+
+There is no specific contributing guide for community content. Anything that can
+help GraphQL Engine community/users can go into the section. We have identified
+[boilerplates](community/boilerplates), [examples](community/examples) and
+[tools](community/tools) as primary candidates. Feel free to submit a pull
+request if you have something to add (not necessarily belonging to the
+before-mentioned sections).
+
 ## Issues
 
 ### Reporting an Issue

@@ -1,0 +1,78 @@
+- type: replace_metadata
+  args:
+    query_templates: []
+    tables:
+    - array_relationships: []
+      delete_permissions: []
+      insert_permissions: []
+      object_relationships:
+      - comment: null
+        name: poll
+        using:
+          foreign_key_constraint_on: poll_id
+      select_permissions: []
+      table: option
+      update_permissions: []
+    - array_relationships: []
+      delete_permissions: []
+      insert_permissions: []
+      object_relationships:
+      - comment: null
+        name: poll
+        using:
+          manual_configuration:
+            column_mapping:
+              poll_id: id
+            remote_table: poll
+      - comment: null
+        name: option
+        using:
+          manual_configuration:
+            column_mapping:
+              option_id: id
+            remote_table: option
+      select_permissions: []
+      table: poll_results
+      update_permissions: []
+    - array_relationships: []
+      delete_permissions: []
+      insert_permissions: []
+      object_relationships:
+      - comment: null
+        name: created_by_user
+        using:
+          foreign_key_constraint_on: created_by_user_id
+      - comment: null
+        name: option
+        using:
+          foreign_key_constraint_on: option_id
+      select_permissions: []
+      table: vote
+      update_permissions: []
+    - array_relationships: []
+      delete_permissions: []
+      insert_permissions: []
+      object_relationships: []
+      select_permissions: []
+      table: user
+      update_permissions: []
+    - array_relationships: []
+      delete_permissions: []
+      insert_permissions: []
+      object_relationships: []
+      select_permissions: []
+      table: online_users
+      update_permissions: []
+    - array_relationships:
+      - comment: null
+        name: options
+        using:
+          foreign_key_constraint_on:
+            column: poll_id
+            table: option
+      delete_permissions: []
+      insert_permissions: []
+      object_relationships: []
+      select_permissions: []
+      table: poll
+      update_permissions: []

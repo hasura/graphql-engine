@@ -10,4 +10,4 @@ Checkout the [contributing](CONTRIBUTING.md) guide for more details.
 
 ## License
 
-The source code in this directory are under [MIT License](LICENSE).
+The source code in this directory are under [MIT License](LICENSE-community).
