@@ -1,0 +1,3 @@
+#endpoint: http://localhost:8080
+endpoint: https://hasura-todo-auth0-jwt.herokuapp.com
+access_key: xxxxxxxxx
