@@ -28,7 +28,6 @@ import           Hasura.Events.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           System.Environment            (lookupEnv)
 
 import qualified Control.Concurrent.STM.TQueue as TQ
 import qualified Control.Lens                  as CL
@@ -219,12 +218,11 @@ tryWebhook pool e _ = do
     Nothing -> return $ Left $ HOther "table or event-trigger not found"
     Just et -> do
       let webhook = etiWebhook et
-          headerConfs = fromMaybe [] $ etiHeaders et
           createdAt = eCreatedAt e
           eventId =  eId e
+          mheaders = etiHeaders et
+          headers = mapMaybe encodeHeader mheaders
       eeCtx <- asks getter
-      mheaders <- liftIO $ mapM getHeader headerConfs
-      let headers = catMaybes mheaders
       -- wait for counter and then increment beforing making http
       liftIO $ atomically $ do
         let EventEngineCtx _ c maxT _ = eeCtx
@@ -255,26 +253,11 @@ tryWebhook pool e _ = do
     addHeaders :: [(N.HeaderName, BS.ByteString)] -> W.Options -> W.Options
     addHeaders headers opts = foldl (\acc h -> acc CL.& W.header (fst h) CL..~ [snd h] ) opts headers
 
-    getHeader :: HeaderConf -> IO (Maybe (N.HeaderName, BS.ByteString))
-    getHeader header = do
-      name <- getHeaderName header
-      value <- getHeaderValue header
-      return $ (,) <$> pure name <*> value
-
-    getHeaderName :: HeaderConf -> IO N.HeaderName
-    getHeaderName header = return $ CI.mk $ T.encodeUtf8 $ hcName header
-
-    getHeaderValue :: HeaderConf -> IO (Maybe BS.ByteString)
-    getHeaderValue header = case hcType header of
-      FromEnv   -> do
-        value <- getFromEnv $ hcValue header
-        return $ T.encodeUtf8 <$> value
-      FromValue -> return $ Just $ T.encodeUtf8 $ hcValue header
-
-    getFromEnv :: T.Text -> IO (Maybe T.Text)
-    getFromEnv var = do
-      mEnv <- lookupEnv (T.unpack var)
-      return $ T.pack <$> mEnv
+    encodeHeader :: (HeaderName, Maybe T.Text)-> Maybe (N.HeaderName, BS.ByteString)
+    encodeHeader header =
+      let name = CI.mk $ T.encodeUtf8 $ fst header
+          value = T.encodeUtf8 <$> snd header
+      in  (,) <$> pure name <*> value
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = let table = eTable e

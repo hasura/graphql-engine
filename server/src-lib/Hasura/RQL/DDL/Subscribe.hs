@@ -12,6 +12,7 @@ import           Data.Int            (Int64)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           System.Environment  (lookupEnv)
 
 import qualified Data.FileEmbed      as FE
 import qualified Data.HashMap.Strict as HashMap
@@ -198,7 +199,9 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
 subTableP2 :: (P2C m) => QualifiedTable -> EventTriggerDef -> m ()
 subTableP2 qt q@(EventTriggerDef name def webhook rconf mheaders) = do
   trid <- liftTx $ addEventTriggerToCatalog qt q
-  addEventTriggerToCache qt trid name def rconf webhook mheaders
+  let headerConfs = fromMaybe [] mheaders
+  headers <- liftIO $ getHeadersFromConf headerConfs
+  addEventTriggerToCache qt trid name def rconf webhook headers
 
 subTableP2shim :: (P2C m) => (QualifiedTable, EventTriggerDef) -> m RespBody
 subTableP2shim (qt, etdef) = do
@@ -238,3 +241,13 @@ instance HDBQuery DeliverEventQuery where
   phaseOne _ = adminOnly
   phaseTwo q _ = deliverEvent q
   schemaCachePolicy = SCPReload
+
+getHeadersFromConf :: [HeaderConf] -> IO [(HeaderName, Maybe T.Text)]
+getHeadersFromConf = mapM getHeader
+  where
+    getHeader :: HeaderConf -> IO (HeaderName, Maybe T.Text)
+    getHeader hconf = case hconf of
+      (HeaderConf name (HVValue val)) -> return (name, Just val)
+      (HeaderConf name (HVEnv val))   -> do
+        mEnv <- lookupEnv (T.unpack val)
+        return (name, T.pack <$> mEnv)
