@@ -1,11 +1,12 @@
-Set values using SQL functions/stored procedures
-================================================
+Setting values using SQL functions/stored procedures
+====================================================
 
 Let's say you want to set the value of some fields as the output of some custom SQL functions or stored procedures.
 
 This can be achieved by:
 
-#. Modifying the table to allow the columns we want to be set by the SQL functions as nullable.
+#. Modifying the table to allow the columns we want to be set by the SQL functions as nullable (to allow the initial
+   insert before the SQL function is run).
 #. Creating an insert/update trigger on the table that calls your SQL function and sets the output values in the output
    columns.
 #. Making your mutation requests without setting the SQL function output columns.
@@ -18,7 +19,7 @@ to set the value of the ``output`` column as the uppercased value of the string 
 
 Modify the table ``sql_function_table`` and make its ``output`` column nullable.
 
-Head to ``Data -> sql_function_table -> Modify``
+Open the console and head to ``Data -> sql_function_table -> Modify``
 
 .. image:: ../../../img/graphql/manual/schema/modify-sql-fn-table.png
 
@@ -78,3 +79,8 @@ value (output="YABBA DABBA DOO!") will be set automatically.
         }
       }
     }
+
+.. note::
+
+  This approach enforces the value set in the field to always be the result of the defined SQL function unlike
+  :doc:`setting a default value <default-values>` instead.
