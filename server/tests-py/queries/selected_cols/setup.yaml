@@ -24,7 +24,7 @@ args:
       columns: ["c1"]
     delete:
       columns: ["c1", "c2"]
-    webhook: http://172.17.0.1:5000
+    webhook: http://127.0.0.1:5000
     retry_conf:
       num_retries: 10
       interval_sec: 100
