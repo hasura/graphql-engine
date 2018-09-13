@@ -1,0 +1,14 @@
+{
+    "functions": [ "HTTPTrigger" ],
+    "id": "3adb8c2ca78f4171bab74dfc9c600a2a",
+    "functionTimeout": "00:00:30",
+    "extensions": {
+        "http": {
+            "routePrefix": ""
+        }
+    },
+    "logging": {
+        "consoleLevel": "verbose"
+    },
+    "version": "2.0"
+}
