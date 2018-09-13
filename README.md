@@ -78,7 +78,9 @@ The fastest way to try Hasura out is via Heroku.
 
 ### Other deployment methods
 
-For Docker-based deployment and advanced configuration options, see [deployment guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
+For Docker-based deployment and advanced configuration options, see [deployment
+guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) or
+[install manifests](install-manifests).
 
 ## Architecture
 
@@ -165,7 +167,7 @@ written more about what you can and cannot do under AGPL
 SLAs are available on request. Please feel free to contact us at build@hasura.io
 or on our [website chat](https://hasura.io). 
 
-All **other contents** (except those in [`server`](server), [`cli`](cli) and
+All **other content** (except those in [`server`](server), [`cli`](cli) and
 [`console`](console) directories) are under [MIT License](LICENSE-community).
 This includes everything in the [`docs`](docs) and [`community`](community)
 directories.
