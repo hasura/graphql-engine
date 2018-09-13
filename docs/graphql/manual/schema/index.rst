@@ -23,6 +23,8 @@ See:
   Customise with schema stitching <schema-stitching>
   Adding custom resolvers <custom-resolvers>
   Enum type fields <enums>
+  Default field values <default-values>
+  Set values using SQL functions/stored procedures <sql-functions>
   Using an existing database <using-existing-database>
   Export GraphQL schema <export-graphql-schema>
   How schema generation works <how-it-works>
