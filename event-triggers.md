@@ -78,8 +78,8 @@ Trigger push notifications and emails based on database events. Try the demo and
 Convert complex, long-running business logic to be event-driven, asynchronous and resilient to failure. Try this demo and tutorial below to see how an image processing job is run asynchronously to convert an image to a black-and-white version:
 
 * [Watch demo](https://some-youtube-demo.com) (*10:00 mins*)
-* [Try it out](https://shahidh.in/hasura-web-push-notifs/)
-* [Tutorial](https://github.com/shahidhk/hasura-web-push-notifs)
+* [Try it out](https://some-link/)
+* [Tutorial](https://some-other-link)
 
 -->
 
