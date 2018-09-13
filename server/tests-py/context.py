@@ -7,8 +7,11 @@ import json
 import yaml
 import queue
 import requests
+import socket
+import websocket
 
 from http import HTTPStatus
+from urllib.parse import urlparse
 
 from sqlalchemy import create_engine
 from sqlalchemy.schema import MetaData
@@ -40,6 +43,7 @@ class HGECtx:
         server_address = ('0.0.0.0', 5000)
 
         self.resp_queue = queue.Queue(maxsize=1)
+        self.ws_queue = queue.Queue(maxsize=1)
         self.httpd = WebhookServer(self.resp_queue, server_address)
         self.web_server = threading.Thread(target=self.httpd.serve_forever)
         self.web_server.start()
@@ -51,6 +55,13 @@ class HGECtx:
         self.http = requests.Session()
         self.hge_url = hge_url
 
+        self.ws_url = urlparse(hge_url)
+        self.ws_url = self.ws_url._replace(scheme='ws')
+        self.ws_url = self.ws_url._replace(path='/v1alpha1/graphql')
+        self.ws = websocket.WebSocketApp(self.ws_url.geturl(), on_message=self._on_message)
+        self.wst = threading.Thread(target=self.ws.run_forever)
+        self.wst.daemon = True
+        self.wst.start()
         try:
             st_code, resp = self.v1q_f('queries/clear_db.yaml')
         except requests.exceptions.RequestException as e:
@@ -58,8 +69,16 @@ class HGECtx:
             raise HGECtxError(repr(e))
         assert st_code == 200, resp
 
+    def _on_message(self, message):
+        my_json = json.loads(message)
+        if my_json['type'] != 'ka':
+            self.ws_queue.put(message)
+
     def get_event(self, timeout):
         return self.resp_queue.get(timeout=timeout)
+
+    def get_ws_event(self, timeout):
+        return json.loads(self.ws_queue.get(timeout=timeout))
 
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)
@@ -80,3 +99,4 @@ class HGECtx:
         self.engine.dispose()
         self.httpd.shutdown()
         self.web_server.join()
+        self.wst.shutdown()

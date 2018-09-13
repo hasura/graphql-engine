@@ -3,3 +3,4 @@ sqlalchemy
 pytest
 requests
 pyyaml
+websocket-client
