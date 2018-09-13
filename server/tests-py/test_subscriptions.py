@@ -18,17 +18,6 @@ class TestSubscriptionBasic(object):
     '''
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
     '''
-    def test_init_without_payload(self, hge_ctx):
-        obj = {
-            'type': 'connection_init'
-        }
-        hge_ctx.ws.send(json.dumps(obj))
-        ev = hge_ctx.get_ws_event(3)
-        assert ev['type'] == 'connection_ack', ev
-
-    '''
-        Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
-    '''
     def test_init(self, hge_ctx):
         obj = {
             'type': 'connection_init',
@@ -72,6 +61,12 @@ class TestSubscriptionBasic(object):
         ev = hge_ctx.get_ws_event(3)
         assert ev['type'] == 'data' and ev['id'] == '1', ev
 
+    '''
+        Refer https://github.com/apollographql/subscriptions-transport-ws/blob/01e0b2b65df07c52f5831cce5c858966ba095993/src/server.ts#L306
+    '''
+    def test_start_duplicate(self, hge_ctx):
+        self.test_start(hge_ctx)
+
     def test_stop_without_id(self, hge_ctx):
         obj = {
             'type': 'stop'
@@ -89,11 +84,35 @@ class TestSubscriptionBasic(object):
             'id': '1'
         }
         hge_ctx.ws.send(json.dumps(obj))
-        '''
-            Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_complete
-        '''
+
+    def test_start_after_stop(self, hge_ctx):
+        self.test_start(hge_ctx)
+
+    '''
+        Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_complete
+    '''
+    def test_complete(self, hge_ctx):
+        query = """
+        query {
+          hge_tests_test_t1(order_by: c1_desc, limit: 1) {
+            c1,
+            c2
+          }
+        }
+        """
+        obj = {
+            'id': '2',
+            'payload': {
+                'query': query
+            },
+            'type': 'start'
+        }
+        hge_ctx.ws.send(json.dumps(obj))
         ev = hge_ctx.get_ws_event(3)
-        assert ev['type'] == 'complete', ev
+        assert ev['type'] == 'data' and ev['id'] == '2', ev
+        # Check for complete type
+        ev = hge_ctx.get_ws_event(3)
+        assert ev['type'] == 'complete' and ev['id'] == '2', ev
 
     '''
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_terminate
@@ -105,9 +124,3 @@ class TestSubscriptionBasic(object):
         hge_ctx.ws.send(json.dumps(obj))
         with pytest.raises(queue.Empty):
             ev = hge_ctx.get_ws_event(3)
-
-    '''
-        Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_error
-    '''
-    def test_error(self, hge_ctx):
-        assert 0 == 0

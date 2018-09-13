@@ -99,4 +99,4 @@ class HGECtx:
         self.engine.dispose()
         self.httpd.shutdown()
         self.web_server.join()
-        self.wst.shutdown()
+        self.wst.join()
