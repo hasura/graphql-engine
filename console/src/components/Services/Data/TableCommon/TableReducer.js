@@ -118,7 +118,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         relAdd: {
           ...modifyState.relAdd,
-          isManualExpanded: true,
+          isManualExpanded: !modifyState.relAdd.isManualExpanded,
         },
       };
     case REL_NAME_CHANGED:
@@ -164,8 +164,6 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         relAdd: {
           ...modifyState.relAdd,
           isObjRel: action.isObjRel,
-          rTable: null,
-          rcol: '',
         },
       };
     case REL_SET_RTABLE:
