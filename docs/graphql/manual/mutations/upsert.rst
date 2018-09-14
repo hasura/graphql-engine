@@ -255,3 +255,52 @@ ignore the request:
     }
 
 In this case, the insert mutation is ignored because there is a conflict.
+
+Upsert in nested mutations
+--------------------------
+You can specify ``on_conflict`` clause while inserting nested objects
+
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation upsert_author_article {
+      insert_author(
+        objects: [
+          { name: "John",
+            id: 10,
+            articles: {
+              data: [
+                {
+                  id: 1,
+                  title: "Article 1 title",
+                  content: "Article 1 content"
+                }
+              ],
+              on_conflict: {
+                constraint: article_pkey,
+                update_columns: [title, content]
+              }
+            }
+          }
+        ]
+      ) {
+        affected_rows
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "affected_rows": 2
+        }
+      }
+    }
+
+
+.. warning::
+   Inserting nested objects fails when
+
+   1. Any of upsert in object relationships does not affect any rows (``update_columns: []`` or ``action: ignore``)
+
+   2. Array relationships are queued for insert and parent insert does not affect any rows (``update_columns: []`` or ``action: ignore``)
