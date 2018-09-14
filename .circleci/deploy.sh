@@ -104,6 +104,5 @@ if [[ ! -z "$CIRCLE_TAG" ]]; then
     deploy_server_latest
     draft_github_release
     configure_git
-    send_pr_to_repo graphql-engine-install-manifests
     send_pr_to_repo graphql-engine-heroku
 fi

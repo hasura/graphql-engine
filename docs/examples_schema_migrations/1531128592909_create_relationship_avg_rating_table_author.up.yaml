@@ -1,0 +1,9 @@
+- args:
+    name: avg_rating
+    table: author
+    using:
+      manual_configuration:
+        column_mapping:
+          id: id
+        remote_table: author_average_rating
+  type: create_object_relationship

@@ -1,0 +1,4 @@
+- args:
+    sql: ALTER TABLE public."vehicle_location" ADD FOREIGN KEY ("vehicle_id") REFERENCES
+      public."vehicle" ("id")
+  type: run_sql

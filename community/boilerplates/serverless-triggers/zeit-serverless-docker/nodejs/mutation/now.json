@@ -1,0 +1,9 @@
+{
+  "public": true,
+  "type": "docker",
+  "features": {
+    "cloud": "v2"
+  },
+  "alias": "hge-events-zeit-node-mutation",
+  "name": "hge-events-zeit-node-mutation"
+}
