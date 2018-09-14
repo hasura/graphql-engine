@@ -37,7 +37,7 @@
     "grapql-engine",
     "json"
   ],
-  "license": "Apache-2.0",
+  "license": "MIT",
   "main": "src/command.js",
   "oclif": {
     "bin": "json2graphql"
