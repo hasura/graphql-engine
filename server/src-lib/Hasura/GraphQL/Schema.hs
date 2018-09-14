@@ -1072,7 +1072,7 @@ mkGCtxRole' tn insCtxM selFldsM updColsM delPermM pkeyCols constraints allCols =
     -- column fields used in insert input object
     insInpObjFldsM = mkColFldMap (mkInsInpTy tn) <$> insColsM
     -- relationship input objects
-    relInsInpObjs = mkRelInsInps tn upsertAllowed
+    relInsInpObjs = maybe [] (const $ mkRelInsInps tn upsertAllowed) insCtxM
     -- update set input type
     updSetInpObjM = mkUpdSetInp tn <$> updColsM
     -- update increment input type
