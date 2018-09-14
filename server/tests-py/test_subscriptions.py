@@ -64,6 +64,7 @@ class TestSubscriptionBasic(object):
     '''
         Refer https://github.com/apollographql/subscriptions-transport-ws/blob/01e0b2b65df07c52f5831cce5c858966ba095993/src/server.ts#L306
     '''
+    @pytest.mark.skip(reason="refer https://github.com/hasura/graphql-engine/pull/387#issuecomment-421343098")
     def test_start_duplicate(self, hge_ctx):
         self.test_start(hge_ctx)
 
