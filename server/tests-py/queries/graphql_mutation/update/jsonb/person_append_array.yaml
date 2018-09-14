@@ -1,0 +1,40 @@
+description: Updated person data using _append operator
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    update_person:
+      returning:
+      - details:
+        - address:
+            country: Denmark
+            city: Copenhagen
+        - address:
+            country: United Kingdom
+            city: Canterbury
+        - address:
+            country: Australia
+            city: Sydney
+        id: 2
+      affected_rows: 1
+query:
+  variables:
+    value:
+      address:
+        country: Australia
+        city: Sydney
+  query: |
+    mutation update_person($value: jsonb) {
+      update_person(
+        where: {id: {_eq: 2}},
+        _append: {
+          details: $value
+        }
+      ){
+        affected_rows
+        returning{
+          id
+          details
+        }
+      }
+    }

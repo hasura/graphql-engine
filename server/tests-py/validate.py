@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import yaml
+
 def check_keys(keys, obj):
     for k in keys:
         assert k in obj, obj
@@ -74,3 +76,31 @@ def check_delete(hge_ctx, trig_name, table, where_exp, exp_ev_data):
 
     assert ev['op'] == "DELETE", ev_payload
     assert ev['data'] == exp_ev_data, ev_payload
+
+def check_query(hge_ctx, conf):
+    headers={}
+    if 'headers' in conf:
+        headers = conf['headers']
+    code, resp = hge_ctx.anyq( conf['url'], conf['query'], headers)
+    assert code == conf['status'], resp
+    if 'response' in conf:
+        print ('response\n', yaml.dump(resp))
+        print ('expected\n', yaml.dump(conf['response']))
+        assert json_ordered(resp) == json_ordered(conf['response'])
+
+def check_query_f(hge_ctx, f):
+    with open(f) as c:
+        conf = yaml.load(c)
+        if isinstance(conf, list):
+            for sconf in conf:
+                check_query( hge_ctx, sconf)
+        else:
+           check_query( hge_ctx, conf )
+
+def json_ordered(obj):
+    if isinstance(obj, dict):
+        return sorted((k, json_ordered(v)) for k, v in obj.items())
+    if isinstance(obj, list):
+        return list(json_ordered(x) for x in obj)
+    else:
+        return obj

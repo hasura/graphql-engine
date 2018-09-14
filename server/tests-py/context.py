@@ -87,6 +87,14 @@ class HGECtx:
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)
 
+    def anyq(self, u,  q, h):
+        resp = self.http.post(
+            self.hge_url + u,
+            json=q,
+            headers=h
+        )
+        return resp.status_code, resp.json()
+
     def v1q(self, q):
         resp = self.http.post(
             self.hge_url + "/v1/query",
