@@ -237,4 +237,4 @@ instance HDBQuery DeliverEventQuery where
   type Phase1Res DeliverEventQuery = ()
   phaseOne _ = adminOnly
   phaseTwo q _ = deliverEvent q
-  schemaCachePolicy = SCPReload
+  schemaCachePolicy = SCPNoChange
