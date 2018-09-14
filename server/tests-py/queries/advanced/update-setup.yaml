@@ -1,0 +1,33 @@
+type: bulk
+args:
+- type: create_event_trigger
+  args:
+    name: t1_all
+    table:
+      schema: hge_tests
+      name: test_t1
+    insert:
+      columns: "*"
+    update:
+      columns: "*"
+    delete:
+      columns: "*"
+    webhook: mywebhook.com
+    replace: true
+- type: create_event_trigger
+  args:
+    name: t1_cols
+    table:
+      schema: hge_tests
+      name: test_t1
+    insert:
+      columns: ["c2"]
+    update:
+      columns: ["c1"]
+    delete:
+      columns: "*"
+    webhook: http://127.0.0.1:5592
+    retry_conf:
+      num_retries: 5
+      interval_sec: 5
+    replace: true
