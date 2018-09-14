@@ -29,7 +29,7 @@ import qualified Data.ByteString.Lazy        as BL
 import qualified Data.Text                   as T
 
 curCatalogVer :: T.Text
-curCatalogVer = "2"
+curCatalogVer = "2.1"
 
 initCatalogSafe :: UTCTime -> Q.TxE QErr String
 initCatalogSafe initTime =  do
@@ -161,6 +161,11 @@ migrateFrom1 = do
   -- set as system defined
   setAsSystemDefined
 
+migrateFrom2 :: Q.TxE QErr ()
+migrateFrom2 = Q.catchE defaultTxErrorHandler $ do
+  Q.unitQ "ALTER TABLE hdb_catalog.event_triggers ADD COLUMN headers JSON" () False
+  Q.unitQ "ALTER TABLE hdb_catalog.event_log ADD COLUMN next_retry_at TIMESTAMP" () False
+
 migrateCatalog :: UTCTime -> Q.TxE QErr String
 migrateCatalog migrationTime = do
   preVer <- getCatalogVersion
@@ -169,9 +174,14 @@ migrateCatalog migrationTime = do
      | preVer == "0.8" -> do
          migrateFrom08
          migrateFrom1
+         migrateFrom2
          afterMigrate
      | preVer == "1" -> do
          migrateFrom1
+         migrateFrom2
+         afterMigrate
+     | preVer == "2" -> do
+         migrateFrom2
          afterMigrate
      | otherwise -> throw400 NotSupported $
                     "migrate: unsupported version : " <> preVer
