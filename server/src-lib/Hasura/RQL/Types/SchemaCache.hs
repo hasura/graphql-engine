@@ -355,7 +355,7 @@ data EventTriggerInfo
    , etiDelete    :: !(Maybe OpTriggerInfo)
    , etiRetryConf :: !RetryConf
    , etiWebhook   :: !T.Text
-   , etiHeaders   :: ![(T.Text, Maybe T.Text)]
+   , etiHeaders   :: ![(HeaderName, Maybe T.Text)]
    } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)
