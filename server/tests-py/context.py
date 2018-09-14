@@ -9,6 +9,7 @@ import queue
 import requests
 import socket
 import websocket
+import subprocess
 
 from http import HTTPStatus
 from urllib.parse import urlparse
@@ -62,6 +63,9 @@ class HGECtx:
         self.wst = threading.Thread(target=self.ws.run_forever)
         self.wst.daemon = True
         self.wst.start()
+
+        result = subprocess.run(['../../scripts/get-version.sh'], shell=True, stdout=subprocess.PIPE, check=True)
+        self.version = result.stdout.decode('utf-8').strip()
         try:
             st_code, resp = self.v1q_f('queries/clear_db.yaml')
         except requests.exceptions.RequestException as e:
