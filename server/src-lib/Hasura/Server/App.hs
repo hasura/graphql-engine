@@ -9,6 +9,7 @@
 
 module Hasura.Server.App where
 
+import           Control.Arrow                          ((***))
 import           Control.Concurrent.MVar
 import           Data.IORef
 
@@ -43,7 +44,8 @@ import           Hasura.RQL.DDL.Schema.Table
 --import           Hasura.RQL.DML.Explain
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
-import           Hasura.Server.Auth                     (AuthMode, getUserInfo)
+import           Hasura.Server.Auth                     (AuthMode (..),
+                                                         getUserInfo)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware               (corsMiddleware,
@@ -58,12 +60,18 @@ import           Hasura.SQL.Types
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
 
-mkConsoleHTML :: IO T.Text
-mkConsoleHTML =
+isAccessKeySet :: AuthMode -> T.Text
+isAccessKeySet AMNoAuth = "false"
+isAccessKeySet _        = "true"
+
+mkConsoleHTML :: AuthMode -> IO T.Text
+mkConsoleHTML authMode =
   bool (initErrExit errMsg) (return res) (null errs)
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
-                   object ["version" .= consoleVersion]
+                   object [ "version" .= consoleVersion
+                          , "isAccessKeySet" .= isAccessKeySet authMode
+                          ]
     errMsg = "Fatal Error : console template rendering failed"
              ++ show errs
 
@@ -307,7 +315,7 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
 
     -- API Console and Root Dir
     if enableConsole then do
-      consoleHTML <- lift mkConsoleHTML
+      consoleHTML <- lift $ mkConsoleHTML $ scAuthMode serverCtx
       serveApiConsole consoleHTML
     else maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
 
@@ -361,7 +369,7 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
     tmpltArgsFromQueryParams = do
       qparams <- params
       return $ M.fromList $ flip map qparams $
-        \(a, b) -> (TemplateParam a, String b)
+        TemplateParam *** String
 
     mkQTemplateAction tmpltName tmpltArgs =
       v1QueryHandler $ RQExecuteQueryTemplate $
