@@ -34,6 +34,7 @@ ci-binary:
 	mkdir -p $(build_output)
 	cp $(build_dir)/$(project)/$(project) $(build_output)
 	cp "$(build_dir)/$(project)-test/$(project)-test" $(build_output)
+	cp $(project_dir)/$(project).tix $(build_output)
 	echo "$(version)" > $(build_output)/version.txt
 
 ci-test:

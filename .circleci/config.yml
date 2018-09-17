@@ -92,8 +92,7 @@ refs:
         command: |
           pip3 install -r requirements.txt
           pytest -vv --hge-url="$HGE_URL" --pg-url="$DATABASE_URL"
-          # commented for the timesake
-          # stack --system-ghc hpc report graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
+          stack --system-ghc hpc report /build/_server_output/graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
     - store_artifacts:
         path: /build/_server_test_output
         destination: server_test
