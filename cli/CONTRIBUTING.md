@@ -45,9 +45,16 @@ already be in your `PATH`. The config is located at `.realize/realize.yaml`.
 
 ## Tests
 
-When you're adding a new feature, it is encouraged to add integration tests (unit tests also if possible) for the functions/api. You should run all the test and make sure everything passes before submitting the PR.
+When you're adding a new feature, it is encouraged to add integration tests
+(unit tests also if possible) for the functions/api. You should run all the test
+and make sure everything passes before submitting the PR. 
 
-The tests expect a GraphQL Engine server instance to be running. You can point the tests to any GraphQL Engine server but please note that **the database should be empty**. The easiest way to do this is to run an Postgres and GraphQL Engine using [Docker Compose](https://github.com/hasura/graphql-engine-install-manifests). Once the server is running, you can run the tests by executing the make command:
+The tests expect a GraphQL Engine server instance to be running. You can point
+the tests to any GraphQL Engine server but please note that **the database
+should be empty**. The easiest way to do this is to run an Postgres and GraphQL
+Engine using [Docker
+Compose](https://github.com/hasura/graphql-engine/tree/master/install-manifests).
+Once the server is running, you can run the tests by executing the make command:  
 
 ```bash
 HASURA_GRAPHQL_TEST_ENDPOINT=http://localhost:8080 VERSION=dev make test

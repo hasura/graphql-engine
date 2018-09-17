@@ -12,12 +12,12 @@ and connect it to your Postgres database.
 Step 1: Get the docker run bash script
 --------------------------------------
 
-The `hasura/graphql-engine-install-manifests <https://github.com/hasura/graphql-engine-install-manifests>`_ repo
+The `hasura/graphql-engine/install-manifests <https://github.com/hasura/graphql-engine/tree/master/install-manifests>`_ repo
 contains all installation manifests required to deploy Hasura anywhere. Get the docker run bash script from there:
 
 .. code-block:: bash
 
-   $ wget https://raw.githubusercontent.com/hasura/graphql-engine-install-manifests/master/docker-run/docker-run.sh
+   $ wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-run/docker-run.sh
 
 Step 2: Run the hasura docker container
 ---------------------------------------
@@ -57,10 +57,11 @@ Examples of ``database-url``:
       serve --enable-console
 
 
-Check if everything is running well:
+Execute ``docker-run.sh`` & check if everything is running well:
 
 .. code-block:: bash
 
+   $ ./docker-run.sh
    $ docker ps
 
    CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...

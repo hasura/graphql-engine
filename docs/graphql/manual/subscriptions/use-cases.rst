@@ -73,7 +73,7 @@ Now we can use the following subscription to fetch the latest location of a vehi
 
 
 Check this `sample app <https://hasura.github.io/realtime-location-app/>`__ for a working demo
-(`source code <https://github.com/hasura/realtime-location-app>`__).
+(`source code <https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-location-tracking>`__).
 
 .. _subscribe_table:
 
@@ -149,7 +149,7 @@ Now we can use the following subscription to display the latest messages in a ch
     }
 
 Check this `sample app <https://chat-example-trial-roar.herokuapp.com/>`__ for a working demo
-(`source code <https://github.com/wawhal/graphql-subscriptions-chat-app>`__).
+(`source code <https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-chat>`__).
 
 .. _subscribe_derived:
 
@@ -281,4 +281,4 @@ Now we can use the following subscription to display the latest poll result:
     }
 
 Check this `sample app <https://shahidh.in/hasura-realtime-poll/>`__ for a working demo
-(`source code <https://github.com/shahidhk/hasura-realtime-poll>`__).
+(`source code <https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-poll>`__).

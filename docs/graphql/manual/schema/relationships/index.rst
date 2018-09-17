@@ -11,6 +11,9 @@ Relationships can be of two types:
 Each relationship has a name which is used to refer to the nested objects in queries. For example, "``articles``" of
 an ``author`` and "``author``" of an ``article``
 
+Creating relationships
+----------------------
+
 Typically relationships are defined using foreign-key constraints. But in some cases, it might not be possible to
 use foreign-key constraints to create the relation. For example, while trying to create a relationship involving a view
 as foreign-keys can't be created on views.
@@ -237,3 +240,11 @@ Here are examples to create relationships using the two methods:
             ]
           }
         }
+
+Renaming relationships
+----------------------
+
+To rename a relationship, head to ``Data -> [table-name] -> Relationships`` in the console, drop the existing
+relationship and recreate it with the new name.
+
+**Note:** You might not be allowed to drop a relationship if it has been referenced elsewhere (e.g. in a permissions rule)
