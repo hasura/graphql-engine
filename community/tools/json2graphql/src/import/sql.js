@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const {CLIError} = require('@oclif/errors');
+const {cli} = require('cli-ux');
 
 const runSql = async (sqlArray, url, headers) => {
   let sqlString = '';

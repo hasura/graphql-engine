@@ -34,7 +34,7 @@ class JSON2GraphQL extends Command {
       cli.action.stop('Done!');
       await importData(dbJson, safeUrl, headers, overwrite);
     }
-      
+
   }
 
   getDbJson(db) {
@@ -69,7 +69,7 @@ JSON2GraphQL.description = `JSON Data Import: Import JSON data to Hasura GraphQL
 # Import data from a JSON file to Hasura GraphQL Engine without access key
 json2graphql https://hge.herokuapp.com --db=./path/to/db.js
 
-# Make a query with CLI auto complete (this will show a gql prompt)
+# Import data from a JSON file to Hasura GraphQL Engine with access key
 json2graphql https://hge.herokuapp.com --access-key='<access-key>' --db=./path/to/db.js
 
 `;

@@ -13,7 +13,7 @@ const db = {
     {id: 1, user_id: 1},
   ],
   leagues: [
-    {dd: 1, name: 'Switzerland', yearly: true, description: 'Waypoint are all placed in Switzerland by local instructors and top pilots.', created: '2018-05-01', seasonStart: '10-01', seasonEnd: '09-31'},
+    {id: 1, name: 'Switzerland', yearly: true, description: 'Waypoint are all placed in Switzerland by local instructors and top pilots.', created: '2018-05-01', seasonStart: '10-01', seasonEnd: '09-31'},
     {id: 2, name: 'Austria', yearly: true, description: 'Waypoint are all placed in Austria by local instructors and top pilots.', created: '2018-05-02', seasonStart: '10-01', seasonEnd: '09-31'},
     {id: 3, name: 'Vol Liber Grischun Clubmeisterschaft', yearly: false, created: '2018-05-02', seasonStart: '2018-10-01', seasonEnd: '2048-10-01'},
   ],

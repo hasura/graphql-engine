@@ -4,5 +4,6 @@
 /dist
 /tmp
 /yarn.lock
-./test-db.js
+/test-db.js
+test-db
 node_modules
