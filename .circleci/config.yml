@@ -68,6 +68,9 @@ refs:
     working_directory: ~/graphql-engine
     steps:
     - checkout
+    - restore_cache:
+        keys:
+        - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
     - attach_workspace:
         at: /build
     - *wait_for_postgres
