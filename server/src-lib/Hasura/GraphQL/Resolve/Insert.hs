@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
 
 module Hasura.GraphQL.Resolve.Insert
@@ -6,13 +7,15 @@ module Hasura.GraphQL.Resolve.Insert
 where
 
 import           Data.Foldable                     (foldrM)
+import           Data.Has
+import           Data.List                         (intersect)
 import           Hasura.Prelude
 
 import qualified Data.Aeson                        as J
-import qualified Data.Text as T
 import qualified Data.ByteString.Builder           as BB
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.Sequence                     as Seq
+import qualified Data.Text                         as T
 import qualified Data.Vector                       as V
 import qualified Language.GraphQL.Draft.Syntax     as G
 
@@ -27,9 +30,8 @@ import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
-import           Hasura.GraphQL.Resolve.Mutation
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Schema
+import           Hasura.GraphQL.Resolve.Mutation
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
@@ -137,148 +139,147 @@ fetchColsAndRels annObj = foldrM go ([], [], []) $ Map.toList annObj
             relObj
         _ -> throw500 "unexpected Array or Enum for input cols"
 
-parentColValidation
-  :: MonadError QErr m
-  => QualifiedTable -- ^ parent table
-  -> RelName -- ^ object relation name
-  -> [PGCol] -- ^ parent insert columns
-  -> [(PGCol, PGCol)] -- ^ child object relation column mapping
-  -> m ()
-parentColValidation tn rn parentCols colMapping =
-  unless (null conflictingCols) $ throwVE $
-    "inserting columns: " <> T.pack (show $ map getPGColTxt conflictingCols)
-    <> " into table " <> tn <<> " not allowed due to inserting "
-    <> "object relationship " <>> rn
-  where
-    conflictingCols =
-      flip filter parentCols $ \col -> col `elem` map fst colMapping
-
-arrayRelObjValidation
-  :: MonadError QErr m
-  => RelName -- ^ array relation name
-  -> AnnGObject -- ^ array relation inserting object
-  -> [(PGCol, PGCol)] -- ^ relation column mapping
-  -> m ()
-arrayRelObjValidation rn insObj colMapping = do
-  (insCols, _, _) <- fetchColsAndRels insObj
-  let cols = map _1 insCols
-      conflictingCols =
-        flip filter cols $ \col -> col `elem` map snd colMapping
-  unless (null conflictingCols) $ throwVE $
-    "inserting columns " <> T.pack (show $ map getPGColTxt conflictingCols)
-    <> " into relationship " <> rn <<> " not allowed"
-
 insertObjRel
-  :: QualifiedTable -- ^ parent table
-  -> [PGCol] -- ^ parent insert columns
-  -> RoleName
-  -> RelName
-  -> RelationInfoMap
+  :: RoleName
+  -> InsCtxMap
+  -> InsCtx
+  -> RelInfo
   -> ObjRelData
   -> Q.TxE QErr (Int, [(PGCol, PGColValue)])
-insertObjRel parentTab parentCols role relName relInfoMap relData = do
-  relIns <- onNothing (Map.lookup relName relInfoMap) $ throw500 $
-     "relations " <> relName <<> " not found"
-  case relIns of
-    RINotInsertable reason -> throw400 NotSupported $
-      "cannot insert with relation " <> relName <<> " due to " <> reason
-    RIInsertable (insCtx, relInfo) -> do
-      let mapCols = riMapping relInfo
-          tn = riRTable relInfo
-      -- validate parent inserting columns
-      parentColValidation parentTab relName parentCols mapCols
-
-      let rCols = map snd mapCols
-          cs = icColumns insCtx
-          insCols = map (\(PGColInfo cn ty _) -> (cn, ty)) $
-            getColInfos rCols cs
-      res <- processInsObj role insObj insCtx insCols onConflictM
-      let aRows = fst res
-          respColsM = snd res
-      respCols <- maybe (cannotInsObjRelErr tn) return respColsM
-      let c = mergeListsWith mapCols respCols
-            (\(_, rCol) (col, _) -> rCol == col)
-            (\(lCol, _) (_, colVal) -> (lCol, colVal))
-      return (aRows, c)
+insertObjRel role insCtxMap insCtx relInfo relData = do
+  let mapCols = riMapping relInfo
+      tn = riRTable relInfo
+      rCols = map snd mapCols
+      cs = icColumns insCtx
+      insCols = map (\(PGColInfo cn ty _) -> (cn, ty)) $
+        getColInfos rCols cs
+  res <- processInsObj role insCtxMap tn insObj insCtx [] insCols onConflictM
+  let aRows = fst res
+      respColsM = snd res
+  respCols <- maybe (cannotInsObjRelErr tn) return respColsM
+  let c = mergeListsWith mapCols respCols
+        (\(_, rCol) (col, _) -> rCol == col)
+        (\(lCol, _) (_, colVal) -> (lCol, colVal))
+  return (aRows, c)
   where
+    relName = riName relInfo
     RelData insObj onConflictM = relData
     cannotInsObjRelErr tn = throwVE $
       "cannot insert object relation "
       <> relName <<> " since inserting into remote table "
       <> tn <<> " returns nothing"
 
+processObjRel
+  :: (MonadError QErr m)
+  => InsCtxMap
+  -> [(RelName, ObjRelData)]
+  -> RelationInfoMap
+  -> m [(ObjRelData, InsCtx, RelInfo)]
+processObjRel insCtxMap objRels relInfoMap =
+  forM objRels $ \(relName, rd) -> do
+  relInfo <- onNothing (Map.lookup relName relInfoMap) $ throw500 $
+    "object relationship with name " <> relName <<> " not found"
+  let remoteTable = riRTable relInfo
+  insCtx <- getInsCtx insCtxMap remoteTable
+  return (rd, insCtx, relInfo)
+
 -- | process array relation and return dependent columns,
 -- | relation data, insert context of remote table and relation info
 processArrRel
   :: (MonadError QErr m)
-  => [(RelName, ArrRelData)]
+  => InsCtxMap
+  -> [(RelName, ArrRelData)]
   -> RelationInfoMap
   -> m [([PGCol], ArrRelData, InsCtx, RelInfo)]
-processArrRel arrRels relInfoMap =
+processArrRel insCtxMap arrRels relInfoMap =
   forM arrRels $ \(relName, rd) -> do
-    relIns <- onNothing (Map.lookup relName relInfoMap) $ throw500 $
+    relInfo <- onNothing (Map.lookup relName relInfoMap) $ throw500 $
       "relation with name " <> relName <<> " not found"
-    case relIns of
-      RINotInsertable reason -> throw400 NotSupported $
-        "cannot insert array relation " <> relName <<> " due to " <> reason
-      RIInsertable (insCtx, ri) -> do
-        let depCols = map fst $ riMapping ri
-        return (depCols, rd, insCtx, ri)
+    let depCols = map fst $ riMapping relInfo
+        remoteTable = riRTable relInfo
+    insCtx <- getInsCtx insCtxMap remoteTable
+    return (depCols, rd, insCtx, relInfo)
 
 insertArrRel
   :: RoleName
+  -> InsCtxMap
   -> InsCtx
   -> RelInfo
   -> [PGColWithValue]
-  -> RelData [AnnGObject]
+  -> ArrRelData
   -> Q.TxE QErr Int
-insertArrRel role insCtx relInfo resCols relData = do
-  let iObjCols = mergeListsWith resCols colMapping
+insertArrRel role insCtxMap insCtx relInfo resCols relData = do
+  let addCols = mergeListsWith resCols colMapping
              (\(col, _) (lCol, _) -> col == lCol)
              (\(_, colVal) (_, rCol) -> (rCol, colVal))
-      rTableInfos = icColumns insCtx
-      iObj = Map.fromList $ mergeListsWith iObjCols rTableInfos
-             (\(c, _) ci -> c == pgiName ci)
-             (\(c, v) ci -> ( G.Name $ getPGColTxt c
-                            , pgColValToAnnGVal (pgiType ci) v
-                            )
-             )
-  res <- forM insObjs $ \annGObj -> do
-    -- validate array rel inserting columns
-    arrayRelObjValidation relName annGObj colMapping
-    let withParentObj = annGObj `Map.union` iObj
-    processInsObj role withParentObj insCtx [] onConflictM
+  res <- forM insObjs $ \annGObj ->
+    processInsObj role insCtxMap tn annGObj insCtx addCols [] onConflictM
   return $ sum $ map fst res
   where
     colMapping = riMapping relInfo
-    relName = riName relInfo
+    tn = riRTable relInfo
     RelData insObjs onConflictM = relData
+
+validateInsert
+  :: (MonadError QErr m)
+  => [PGCol] -- ^ inserting columns
+  -> [RelInfo] -- ^ object relation inserts
+  -> [PGCol] -- ^ additional fields from parent
+  -> m ()
+validateInsert insCols objRels addCols = do
+  -- validate insertCols
+  unless (null insConflictCols) $ throwVE $
+    "cannot insert " <> pgColsToText insConflictCols
+    <> " columns as their values are already being determined by parent insert"
+
+  forM_ objRels $ \relInfo -> do
+    let lCols = map fst $ riMapping relInfo
+        relName = riName relInfo
+        lColConflicts = lCols `intersect` (addCols <> insCols)
+    unless (null lColConflicts) $ throwVE $
+      "cannot insert object relation ship " <> relName
+      <<> " as " <> pgColsToText lColConflicts
+      <> " column values are already determined"
+  where
+    insConflictCols = insCols `intersect` addCols
+    pgColsToText cols = T.intercalate ", " $ map getPGColTxt cols
+
+mkPGColWithTypeAndVal :: [PGColInfo] -> [PGColWithValue] -> [(PGCol, PGColType, PGColValue)]
+mkPGColWithTypeAndVal pgColInfos pgColWithVal =
+    mergeListsWith pgColInfos pgColWithVal
+    (\ci (c, _) -> pgiName ci == c)
+    (\ci (c, v) -> (c, pgiType ci, v))
 
 -- | insert a object with object and array relationships
 processInsObj
   :: RoleName
+  -> InsCtxMap
+  -> QualifiedTable
   -> AnnGObject -- ^ object to be inserted
   -> InsCtx -- ^ required insert context
+  -> [PGColWithValue] -- ^ additional fields
   -> [PGColWithType] -- ^ expected returning columns
   -> Maybe AnnGValue -- ^ on conflict context
   -> Q.TxE QErr (Int, Maybe [PGColWithValue])
-processInsObj role annObj ctx retCols onConflictM = do
+processInsObj role insCtxMap tn annObj ctx addCols retCols onConflictM = do
   (cols, objRels, arrRels) <- fetchColsAndRels annObj
 
-  objInsRes <- forM objRels $ \(relName, relData) ->
-    insertObjRel tn (map _1 cols) role relName relInfoMap relData
+  processedObjRels <- processObjRel insCtxMap objRels relInfoMap
+
+  validateInsert (map _1 cols) (map _3 processedObjRels) $ map fst addCols
+
+  objInsRes <- forM processedObjRels $ \(relData, insCtx, relInfo) ->
+    insertObjRel role insCtxMap insCtx relInfo relData
 
   -- prepare final insert columns
   let objInsAffRows = sum $ map fst objInsRes
-      addInsCols = concatMap snd objInsRes
-      addColInfos = getColInfos (map fst addInsCols) tableColInfos
-      objInsCols = mergeListsWith addInsCols addColInfos
-                   (\(col, _) colInfo -> col == pgiName colInfo)
-                   (\(col, colVal) colInfo -> (col, pgiType colInfo, colVal))
-      finalInsCols =  map pgColToAnnGVal (cols <> objInsCols)
+      objRelDeterminedCols = concatMap snd objInsRes
+      objRelInsCols = mkPGColWithTypeAndVal tableColInfos objRelDeterminedCols
+      addInsCols = mkPGColWithTypeAndVal tableColInfos addCols
+      finalInsCols =  map pgColToAnnGVal (cols <> objRelInsCols <> addInsCols)
 
   -- fetch array rel deps Cols
-  processedArrRels <- processArrRel arrRels relInfoMap
+  processedArrRels <- processArrRel insCtxMap arrRels relInfoMap
 
   -- prepare final returning columns
   let arrDepCols = concatMap (\(a, _, _, _) -> a) processedArrRels
@@ -293,7 +294,7 @@ processInsObj role annObj ctx retCols onConflictM = do
 
   arrInsRes <- forM processedArrRels $ \(_, rd, insCtx, relInfo) -> do
     resCols <- maybe cannotInsArrRelErr return resColsM
-    insertArrRel role insCtx relInfo resCols rd
+    insertArrRel role insCtxMap insCtx relInfo resCols rd
 
   let retColsWithValM = flip fmap resColsM $ \resCols ->
         mergeListsWith retCols resCols
@@ -303,7 +304,7 @@ processInsObj role annObj ctx retCols onConflictM = do
   return (insAffRows + objInsAffRows + arrInsAffRows, retColsWithValM)
 
   where
-    InsCtx (tn, vn) tableColInfos _ relInfoMap = ctx
+    InsCtx vn tableColInfos relInfoMap = ctx
     cannotInsArrRelErr = throwVE $
       "cannot proceed to insert array relations since insert to "
       <> tn <<> " returns nothing"
@@ -342,18 +343,32 @@ buildReturningResp tn pkeyColSeq annFlds = do
   let bsVector = V.fromList $ toList respList
   return $ BB.toLazyByteString $ RR.encodeJSONVector BB.lazyByteString bsVector
 
-convertInsert
+getInsCtxMap
+  :: (Has InsCtxMap r, MonadReader r m)
+  => m InsCtxMap
+getInsCtxMap = asks getter
+
+getInsCtx
+  :: MonadError QErr m
+  => InsCtxMap -> QualifiedTable -> m InsCtx
+getInsCtx ctxMap tn =
+  onNothing (Map.lookup tn ctxMap) $ throw500 $ "table " <> tn <<> " not found"
+
+convertInsert'
   :: RoleName
-  -> InsCtx -- the insert context
-  -> [PGCol] -- primary key columns
-  -> Field -- the mutation field
+  -> QualifiedTable
+  -> InsCtxMap
+  -> InsCtx
+  -> [PGCol]
+  -> Field
   -> Convert RespTx
-convertInsert role insCtx@(InsCtx (tn, _) tableColInfos _ _) pCols fld = do
+convertInsert' role tn insCtxMap insCtx pCols fld = do
   annVals <- withArg arguments "objects" asArray
   annObjs <- forM annVals asObject
   mutFlds <- convertMutResp tn (_fType fld) $ _fSelSet fld
   return $ buildInsertTx annObjs mutFlds
   where
+    InsCtx _ tableColInfos _ = insCtx
     arguments = _fArguments fld
     onConflictM = Map.lookup "on_conflict" arguments
     -- consider all table columns if no primary key columns present
@@ -364,7 +379,8 @@ convertInsert role insCtx@(InsCtx (tn, _) tableColInfos _ _) pCols fld = do
 
     buildInsertTx annObjs mutFlds = do
       insResps <- forM annObjs $ \obj -> do
-        (affRows, retColValsM) <- processInsObj role obj insCtx reqRetCols onConflictM
+        (affRows, retColValsM) <-
+          processInsObj role insCtxMap tn obj insCtx [] reqRetCols onConflictM
         let retCols = flip fmap retColValsM $ \retColsVals ->
               mergeListsWith tableColInfos retColsVals
               (\ci (c, _) -> pgiName ci == c)
@@ -386,6 +402,18 @@ convertInsert role insCtx@(InsCtx (tn, _) tableColInfos _ _) pCols fld = do
         return (t, jsonVal)
       return $ J.encode $ Map.fromList respTups
 
+
+convertInsert
+  :: RoleName
+  -> QualifiedTable -- table
+  -> [PGCol] -- primary key columns
+  -> Field -- the mutation field
+  -> Convert RespTx
+convertInsert role tn pCols fld = do
+  insCtxMap <- getInsCtxMap
+  insCtx <- getInsCtx insCtxMap tn
+  convertInsert' role tn insCtxMap insCtx pCols fld
+
 -- helper functions
 mergeListsWith
   :: [a] -> [b] -> (a -> b -> Bool) -> (a -> b -> c) -> [c]
@@ -397,3 +425,6 @@ mergeListsWith (x:xs) l b f = case find (b x) l of
 
 _1 :: (a, b, c) -> a
 _1 (x, _, _) = x
+
+_3 :: (a, b, c) -> c
+_3 (_, _, z) = z

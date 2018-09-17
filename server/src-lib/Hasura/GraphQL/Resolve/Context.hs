@@ -12,6 +12,9 @@ module Hasura.GraphQL.Resolve.Context
   , OrdByResolveCtxElem
   , NullsOrder(..)
   , OrdTy(..)
+  , RelationInfoMap
+  , InsCtx(..)
+  , InsCtxMap
   , RespTx
   , InsertTxConflictCtx(..)
   , getFldInfo
@@ -76,6 +79,18 @@ type OrdByResolveCtxElem = (PGColInfo, OrdTy, NullsOrder)
 type OrdByResolveCtx
   = Map.HashMap (G.NamedType, G.EnumValue) OrdByResolveCtxElem
 
+-- insert context
+type RelationInfoMap = Map.HashMap RelName RelInfo
+
+data InsCtx
+  = InsCtx
+  { icView      :: !QualifiedTable
+  , icColumns   :: ![PGColInfo]
+  , icRelations :: !RelationInfoMap
+  } deriving (Show, Eq)
+
+type InsCtxMap = Map.HashMap QualifiedTable InsCtx
+
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => G.NamedType -> G.Name -> m (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool))
@@ -136,7 +151,7 @@ withArgM args arg f = prependArgsInPath $ nameAsPath arg $
 type PrepArgs = Seq.Seq Q.PrepArg
 
 type Convert =
-  StateT PrepArgs (ReaderT (FieldMap, OrdByResolveCtx) (Except QErr))
+  StateT PrepArgs (ReaderT (FieldMap, OrdByResolveCtx, InsCtxMap) (Except QErr))
 
 prepare
   :: (MonadState PrepArgs m)
@@ -148,7 +163,7 @@ prepare (colTy, colVal) = do
 
 runConvert
   :: (MonadError QErr m)
-  => (FieldMap, OrdByResolveCtx) -> Convert a -> m (a, PrepArgs)
+  => (FieldMap, OrdByResolveCtx, InsCtxMap) -> Convert a -> m (a, PrepArgs)
 runConvert ctx m =
   either throwError return $
   runExcept $ runReaderT (runStateT m Seq.empty) ctx
