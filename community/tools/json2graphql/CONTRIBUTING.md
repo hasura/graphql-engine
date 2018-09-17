@@ -15,7 +15,7 @@ Please open an issue related to your work. Add the label `c/json2graphql`.
 
 ## Testing
 
-No pull request will be merged if it does not pass the tests.
+Please make sure you run the tests before making pull requests. All the pull requests will be run through tests before merging.
 
 To run the tests locally, you will need an instance of [Hasura GraphQL Engine](https://github.com/hasura/graphql-engine) running. To run the tests, run the command:
 
