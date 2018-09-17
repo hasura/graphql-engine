@@ -33,11 +33,16 @@ if (!window.__env.accessKey) {
 }
 
 if (globals.consoleMode === 'hasuradb') {
-  const windowUrl = window.location.protocol + '//' + window.location.host;
-  globals.dataApiUrl = windowUrl;
+  if (globals.nodeEnv !== 'development') {
+    const windowUrl = window.location.protocol + '//' + window.location.host;
+    globals.dataApiUrl = windowUrl;
+  }
+  /*
+   * Require the exact usecase
   if (globals.nodeEnv === 'development') {
     globals.dataApiUrl = globals.devDataApiUrl;
   }
+  */
 }
 
 export default globals;
