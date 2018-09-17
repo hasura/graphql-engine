@@ -72,9 +72,20 @@ class TestGraphqlInsertPermission(object):
 
     def test_user_role_on_conflict_ignore(self, hge_ctx):
        check_query_f(hge_ctx, self.dir + "/author_on_conflict_ignore_user_role.yaml")
-    
+
     def test_role_has_no_permissions_err(self, hge_ctx):
        check_query_f(hge_ctx, self.dir + "/address_permission_error.yaml")
+
+    def test_author_user_role_insert_check_perm_success(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/author_user_role_insert_check_perm_success.yaml")
+
+    def test_user_role_insert_check_is_registered_fail(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/author_user_role_insert_check_is_registered_fail.yaml")
+    
+    def test_user_role_insert_check_user_id_fail(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/author_user_role_insert_check_user_id_fail.yaml")
+
+
 
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):  
@@ -157,6 +168,25 @@ class TestGraphqlUpdateJsonB:
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
 
+class TestGraphqlUpdatePermissions:
+
+    def test_user_can_update_unpublished_article(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/user_can_update_unpublished_article.yaml")
+
+    def test_user_cannot_modify_published_version_article(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/user_cannot_update_published_article_version.yaml")
+
+    def test_user_cannot_update_another_users_article(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/user_cannot_update_another_users_article.yaml")
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):  
+        self.dir = "queries/graphql_mutation/update/permissions"
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
 
 
 class TestGraphqlDelete:
