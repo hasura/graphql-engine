@@ -63,6 +63,40 @@ refs:
         command: |
           DATABASE_URL="postgres://gql_test:@localhost:5432/gql_test" make ci-test
 
+  # ref pytest server job
+  pytest_server: &pytest_server
+    working_directory: ~/graphql-engine
+    steps:
+    - checkout
+    - restore_cache:
+        keys:
+        - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
+    - attach_workspace:
+        at: /build
+    - *wait_for_postgres
+    - run:
+        command: /build/_server_output/graphql-engine serve
+        background: true
+        environment:
+          HASURA_GRAPHQL_DATABASE_URL: postgres://gql_test:@localhost:5432/gql_test
+    - run:
+        name: create test output dir
+        command: |
+          mkdir -p /build/_server_test_output/$PG_VERSION
+    - run:
+        name: pytest the server
+        working_directory: ./server/tests-py
+        environment:
+          DATABASE_URL: postgres://gql_test:@localhost:5432/gql_test
+          HGE_URL: http://localhost:8080
+        command: |
+          pip3 install -r requirements.txt
+          pytest -vv --hge-url="$HGE_URL" --pg-url="$DATABASE_URL"
+          ## commented for the timesake
+          # stack --system-ghc hpc report /build/_server_output/graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
+    - store_artifacts:
+        path: /build/_server_test_output
+        destination: server_test
 
 version: 2
 jobs:
@@ -152,6 +186,34 @@ jobs:
     <<: *test_server
     docker:
     - image: hasura/graphql-engine-cli-builder:v0.3
+    - image: circleci/postgres:9.5-alpine
+      <<: *test_pg_env
+
+  # pytest the server with postgres versions >= 9.5
+  pytest_server_pg_10.4:
+    <<: *pytest_server
+    environment:
+      PG_VERSION: "10_4"
+    docker:
+    - image: hasura/graphql-engine-server-builder:v0.3.2
+    - image: circleci/postgres:10.4-alpine
+      <<: *test_pg_env
+
+  pytest_server_pg_9.6:
+    <<: *pytest_server
+    environment:
+      PG_VERSION: "9_6"
+    docker:
+    - image: hasura/graphql-engine-server-builder:v0.3.2
+    - image: circleci/postgres:9.6-alpine
+      <<: *test_pg_env
+
+  pytest_server_pg_9.5:
+    <<: *pytest_server
+    environment:
+      PG_VERSION: "9_5"
+    docker:
+    - image: hasura/graphql-engine-server-builder:v0.3.2
     - image: circleci/postgres:9.5-alpine
       <<: *test_pg_env
 
@@ -280,12 +342,27 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - build_server
+    - pytest_server_pg_10.4:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - pytest_server_pg_9.6:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - pytest_server_pg_9.5:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
     - all_server_tests_pass:
         <<: *filter_only_vtags
         requires:
         - test_server_pg_10.4
         - test_server_pg_9.6
         - test_server_pg_9.5
+        - pytest_server_pg_10.4
+        - pytest_server_pg_9.6
+        - pytest_server_pg_9.5
     - test_and_build_cli:
         <<: *filter_only_vtags
         requires:

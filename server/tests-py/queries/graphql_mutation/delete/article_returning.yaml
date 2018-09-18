@@ -1,0 +1,23 @@
+description: Delete mutation on article with returning
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    delete_article:
+      affected_rows: 1
+      returning:
+      - id: 5
+        content: Sample article content 5
+query:
+  query: |
+    mutation delete_article {
+      delete_article (
+        where: {id: {_eq: 5}}
+      ) {
+          affected_rows
+          returning{
+            id
+            content
+          }
+      }
+    }

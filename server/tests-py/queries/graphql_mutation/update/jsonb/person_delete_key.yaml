@@ -1,0 +1,29 @@
+description: Updated person data using _delete_key operator
+url: /v1alpha1/graphql
+response:
+  data:
+    update_person:
+      returning:
+      - details:
+          name:
+            first: Robert
+            last: Wilson
+        id: 3
+      affected_rows: 1
+status: 200
+query:
+  query: |
+    mutation update_person($value: jsonb) {
+      update_person(
+        where: {id: {_eq: 3}},
+        _delete_key: {
+          details: "address"
+        }
+      ){
+        affected_rows
+        returning{
+          id
+          details
+        }
+      }
+    }

@@ -2,6 +2,8 @@
 LICENSE
 scripts/*
 assets/*
-.circleci/*
+docs/*
+community/*
+install-manifests/*
 .ciignore
 .gitignore

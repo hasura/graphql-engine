@@ -270,7 +270,7 @@ instance HDBQuery DeliverEventQuery where
   type Phase1Res DeliverEventQuery = ()
   phaseOne _ = adminOnly
   phaseTwo q _ = deliverEvent q
-  schemaCachePolicy = SCPReload
+  schemaCachePolicy = SCPNoChange
 
 toInt64 :: (Integral a) => a -> Int64
 toInt64 = fromIntegral
