@@ -1,0 +1,35 @@
+description: Update mutation on author
+url: /v1alpha1/graphql
+response:
+  data:
+    update_article:
+      affected_rows: 0
+      returning: []
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+status: 200
+query:
+  query: |
+    mutation update_article {
+      update_article(
+        where: {id: {_eq: 1}},
+        _set: {
+           content: "Article content version 1.0.2"
+           version: "1.0.2"
+        }
+      ) {
+        affected_rows
+        returning{
+          id
+          version
+          title
+          content
+          author {
+            id
+            name
+          }
+          is_published
+        }
+      }
+    }
