@@ -216,19 +216,3 @@ class TestGraphqlDelete:
         assert st_code == 200, resp
 
 
-class TestGraphqlIntrospection:
-
-    def test_introspection(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/introspection.yaml")
-
-    def test_introspection_user(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/introspection_user_role.yaml")
-
-    @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):  
-        self.dir = "queries/graphql_introspection"
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp
