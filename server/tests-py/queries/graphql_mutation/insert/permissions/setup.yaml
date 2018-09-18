@@ -8,6 +8,7 @@ args:
       create table author(
           id serial primary key, 
           name text unique, 
+          bio text,
           is_registered boolean not null default false
       );
 - type: track_table
@@ -127,3 +128,14 @@ args:
         - is_registered: false
       allow_upsert: true
 
+#Author insert permission for student
+#A Student should specify their Bio
+- type: create_insert_permission
+  args:
+    table: author
+    role: student
+    permission:
+      check:
+        bio:
+          _is_null: false
+      allow_upsert: true
