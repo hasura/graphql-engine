@@ -112,6 +112,28 @@ class TestGraphqlInsertConstraints(object):
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
 
+class TestGraphqlNestedInserts(object):
+
+    def test_author_with_articles(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/author_with_articles.yaml")
+
+    def test_author_with_articles_author_id_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/author_with_articles_author_id_fail.yaml")
+
+    def test_articles_with_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/articles_with_author.yaml")
+
+    def test_articles_with_author_author_id_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/articles_with_author_author_id_fail.yaml")
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/graphql_mutation/insert/nested"
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
 
 
 class TestGraphqlUpdateBasic:
