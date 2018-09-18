@@ -12,9 +12,10 @@ const globals = {
   apiHost: window.__env.apiHost,
   apiPort: window.__env.apiPort,
   dataApiUrl: checkExtraSlashes(window.__env.dataApiUrl),
-  nodeEnv: window.__env.nodeEnv,
   devDataApiUrl: window.__env.devDataApiUrl,
+  nodeEnv: window.__env.nodeEnv,
   accessKey: window.__env.accessKey,
+  isAccessKeySet: window.__env.isAccessKeySet,
   consoleMode: window.__env.consoleMode,
   urlPrefix: checkExtraSlashes(window.__env.urlPrefix),
 };
@@ -30,6 +31,10 @@ if (!window.__env.consoleMode) {
 
 if (!window.__env.accessKey) {
   globals.accessKey = null;
+}
+
+if (!window.__env.isAccessKeySet) {
+  globals.isAccessKeySet = false;
 }
 
 if (globals.consoleMode === 'hasuradb') {

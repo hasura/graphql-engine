@@ -118,8 +118,9 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
           name: 'hdb_table',
           schema: 'hdb_catalog',
         },
-        columns: ['*'],
+        columns: ['table_schema'],
         where: { table_schema: currentSchema },
+        limit: 1,
       },
     }),
   };
