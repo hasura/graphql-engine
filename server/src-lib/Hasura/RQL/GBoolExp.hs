@@ -372,7 +372,7 @@ convColRhs bExpBuilder tableQual annVal = case annVal of
     -- And them all
     return $ AVCol pci $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
-  AVRel ri@(RelInfo _ _ colMapping relTN _) nesAnn fltr -> do
+  AVRel ri@(RelInfo _ _ colMapping relTN _ _) nesAnn fltr -> do
     -- Convert the where clause on the relationship
     annRelBoolExp <- convBoolRhs bExpBuilder (S.mkQual relTN) nesAnn
     let backCompExp  = foldr (S.BEBin S.AndOp) (S.BELit True) $
@@ -393,7 +393,7 @@ cColExp
   -> S.BoolExp
 cColExp annVal = case annVal of
   AVCol _ be -> be
-  AVRel (RelInfo _ _ _ relTN _) nesAnn backCompExp -> do
+  AVRel (RelInfo _ _ _ relTN _ _) nesAnn backCompExp -> do
     -- Convert the where clause on the relationship
     let annRelBoolExp = cBoolExp nesAnn
         innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
