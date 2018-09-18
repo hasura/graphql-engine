@@ -3,14 +3,29 @@
 import pytest
 import queue
 import yaml
+import time
 from validate import check_event
 
-def insert(hge_ctx, table, row):
+def select_last_event_fromdb(hge_ctx):
+    q = {
+        "type": "select",
+        "args": {
+            "table": {"schema": "hdb_catalog", "name": "event_log"},
+            "columns": ["*"],
+            "order_by": ["-created_at"],
+            "limit": 1
+        }
+    }
+    st_code, resp = hge_ctx.v1q(q)
+    return st_code, resp
+
+def insert(hge_ctx, table, row, returning = []):
     q = {
         "type": "insert",
         "args": {
             "table": table,
-            "objects": [row]
+            "objects": [row],
+            "returning": returning
         }
     }
     st_code, resp = hge_ctx.v1q(q)
@@ -93,6 +108,32 @@ class TestCreateEvtQuery(object):
         })
         assert st_code == 400, resp
         assert resp['code'] == "dependency-error", resp
+
+class TestRetryConf(object):
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        print ("In setup method")
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/retry_conf/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/retry_conf/teardown.yaml')
+        assert st_code == 200, resp
+
+    def test_basic(self, hge_ctx):
+        table = {"schema" : "hge_tests", "name": "test_t1"}
+
+        init_row = {"c1" : 1, "c2" : "hello"}
+        exp_ev_data = {
+            "old": None,
+            "new": init_row
+        }
+        headers = {}
+        st_code, resp = insert(hge_ctx, table, init_row)
+        assert st_code == 200, resp
+        time.sleep(15)
+        tries = hge_ctx.get_error_queue_size()
+        assert tries == 5, tries
 
 class TestUpdateEvtQuery(object):
 

@@ -32,13 +32,20 @@ class WebhookHandler(http.server.BaseHTTPRequestHandler):
         reqHeaders = self.headers
         reqPath = self.path
         self.log_message(json.dumps(reqJson))
-        self.send_response(HTTPStatus.NO_CONTENT)
-        self.end_headers()
-        self.server.resp_queue.put({"path": reqPath, "body": reqJson, "headers": reqHeaders})
+        if reqPath == "/fail":
+            self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
+            self.end_headers()
+            self.server.error_queue.put({"path": reqPath, "body": reqJson, "headers": reqHeaders})
+        else:
+            self.send_response(HTTPStatus.NO_CONTENT)
+            self.end_headers()
+            self.server.resp_queue.put({"path": reqPath, "body": reqJson, "headers": reqHeaders})
+
 
 class WebhookServer(http.server.HTTPServer):
-    def __init__(self, resp_queue, server_address):
+    def __init__(self, resp_queue, error_queue, server_address):
         self.resp_queue = resp_queue
+        self.error_queue = error_queue
         super().__init__(server_address, WebhookHandler)
 
 class HGECtx:
@@ -46,8 +53,9 @@ class HGECtx:
         server_address = ('0.0.0.0', 5592)
 
         self.resp_queue = queue.Queue(maxsize=1)
+        self.error_queue = queue.Queue()
         self.ws_queue = queue.Queue(maxsize=1)
-        self.httpd = WebhookServer(self.resp_queue, server_address)
+        self.httpd = WebhookServer(self.resp_queue, self.error_queue, server_address)
         self.web_server = threading.Thread(target=self.httpd.serve_forever)
         self.web_server.start()
 
@@ -82,6 +90,13 @@ class HGECtx:
 
     def get_event(self, timeout):
         return self.resp_queue.get(timeout=timeout)
+
+    def get_error_queue_size(self):
+        sz = 0
+        while not self.error_queue.empty():
+            self.error_queue.get()
+            sz = sz + 1
+        return sz
 
     def get_ws_event(self, timeout):
         return json.loads(self.ws_queue.get(timeout=timeout))
