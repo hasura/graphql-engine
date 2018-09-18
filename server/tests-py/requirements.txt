@@ -1,0 +1,6 @@
+psycopg2-binary
+sqlalchemy
+pytest
+requests
+pyyaml
+websocket-client

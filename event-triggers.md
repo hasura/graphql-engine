@@ -47,12 +47,15 @@ For Docker-based deployment and advanced configuration options, see [deployment 
 
 ### Serverless boilerplates
 
-Use one of our serverless boilerplates to deploy a webhook that can capture database events - https://github.com/hasura/cloud-functions-boilerplates. Serverless/cloud-function platforms covered by boilerplates:
+Use one of the [serverless trigger
+boilerplates](community/boilerplates/serverless-triggers) to deploy a webhook
+that can capture database events.  
+Serverless/cloud-function platforms covered by boilerplates: 
 
-* [AWS Lambda](https://github.com/hasura/cloud-functions-boilerplates/tree/master/aws-lambda)
-* [Google Cloud Functions](https://github.com/hasura/cloud-functions-boilerplates/tree/master/google-cloud-functions)
-* [Azure Functions](https://github.com/hasura/cloud-functions-boilerplates/tree/master/azure-functions)
-* [Zeit Serverless Docker](https://github.com/hasura/cloud-functions-boilerplates/tree/master/zeit-serverless)
+* [AWS Lambda](community/boilerplates/serverless-triggers/aws-lambda)
+* [Google Cloud Functions](community/boilerplates/serverless-triggers/google-cloud-functions)
+* [Azure Functions](community/boilerplates/serverless-triggers/azure-functions)
+* [Zeit Serverless Docker](community/boilerplates/serverless-triggers/zeit-serverless-docker)
 
 ## Architecture
 
@@ -66,7 +69,7 @@ Trigger push notifications and emails based on database events. Try the demo and
 
 * [Watch demo](https://www.youtube.com/watch?v=nuSHkzE2-zo)
 * [Try it out](https://shahidh.in/hasura-web-push-notifs/)
-* [Tutorial](https://github.com/shahidhk/hasura-web-push-notifs)
+* [Tutorial](community/examples/serverless-push)
 
 
 <!--
@@ -75,8 +78,8 @@ Trigger push notifications and emails based on database events. Try the demo and
 Convert complex, long-running business logic to be event-driven, asynchronous and resilient to failure. Try this demo and tutorial below to see how an image processing job is run asynchronously to convert an image to a black-and-white version:
 
 * [Watch demo](https://some-youtube-demo.com) (*10:00 mins*)
-* [Try it out](https://shahidh.in/hasura-web-push-notifs/)
-* [Tutorial](https://github.com/shahidhk/hasura-web-push-notifs)
+* [Try it out](https://some-link/)
+* [Tutorial](https://some-other-link)
 
 -->
 
@@ -86,7 +89,7 @@ Transform and load data into external data-stores. Check out this demo and tutor
 
 * [Watch demo](https://youtu.be/kWVEBWdEVAA)
 * [Try it out](https://shahidh.in/hasura-serverless-etl)
-* [Tutorial](https://github.com/shahidhk/hasura-serverless-etl)
+* [Tutorial](community/examples/serverless-etl)
 
 ### Building reactive UX for your async backend with realtime GraphQL
 

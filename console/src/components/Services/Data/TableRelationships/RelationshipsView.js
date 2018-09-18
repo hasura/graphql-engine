@@ -42,13 +42,17 @@ const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
   const getGrayText = value => <i>{value}</i>;
   return isObjRel ? (
     <span>
-      &nbsp;{getGrayText(lcol)}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{rTable} :: {rcol}
+      &nbsp;
+      {getGrayText(lcol)}
+      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
+      {rTable} :: {rcol}
     </span>
   ) : (
     <span>
-      &nbsp;{rTable.name} :: {rcol}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{getGrayText(
-        lcol
-      )}
+      &nbsp;
+      {rTable.name} :: {rcol}
+      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
+      {getGrayText(lcol)}
     </span>
   );
 };
@@ -120,7 +124,7 @@ const AddRelationship = ({
   return (
     <div>
       <div>
-        <div className={styles.subheading_text}> Add New Relationship </div>
+        <div className={styles.subheading_text}> Add new relationship </div>
         <div className="form-group">
           <div className={`${styles.relBlockInline} ${styles.relBlockLeft}`}>
             Relationship Type
@@ -209,7 +213,7 @@ const AddRelationship = ({
           onClick={onAddRelClicked}
           data-test="view-add-relationship"
         >
-          Add Relationship
+          Add
         </button>
       </div>
     </div>

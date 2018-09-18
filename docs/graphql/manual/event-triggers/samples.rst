@@ -10,7 +10,7 @@ Here's a `notification demo app <https://shahidh.in/hasura-web-push-notifs/>`_ s
 notifications using Hasura event triggers and FCM.
 
 * Video: https://www.youtube.com/watch?v=nuSHkzE2-zo&feature=youtu.be
-* Source code: https://github.com/shahidhk/hasura-web-push-notifs
+* Source code: https://github.com/hasura/graphql-engine/tree/master/community/examples/serverless-push
 
 Data Transformations (ETL)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -18,4 +18,4 @@ Here's a `serverless ETL demo app <https://shahidh.in/hasura-serverless-etl/>`_ 
 Algolia search.
 
 * Video: https://youtu.be/kWVEBWdEVAA
-* Source code: https://github.com/shahidhk/hasura-serverless-etl
+* Source code: https://github.com/hasura/graphql-engine/tree/master/community/examples/serverless-etl
