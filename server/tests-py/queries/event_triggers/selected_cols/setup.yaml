@@ -14,7 +14,7 @@ args:
     name: test_t1
 - type: create_event_trigger
   args:
-    name: t1_all
+    name: t1_cols
     table:
       schema: hge_tests
       name: test_t1

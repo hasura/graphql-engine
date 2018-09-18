@@ -29,10 +29,12 @@ class WebhookHandler(http.server.BaseHTTPRequestHandler):
         contentLen = self.headers.get('Content-Length')
         reqBody = self.rfile.read(int(contentLen)).decode("utf-8")
         reqJson = json.loads(reqBody)
+        reqHeaders = self.headers
+        reqPath = self.path
         self.log_message(json.dumps(reqJson))
         self.send_response(HTTPStatus.NO_CONTENT)
         self.end_headers()
-        self.server.resp_queue.put(reqJson)
+        self.server.resp_queue.put({"path": reqPath, "body": reqJson, "headers": reqHeaders})
 
 class WebhookServer(http.server.HTTPServer):
     def __init__(self, resp_queue, server_address):
