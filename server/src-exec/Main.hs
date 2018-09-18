@@ -6,6 +6,8 @@ module Main where
 import           Ops
 
 import           Control.Monad.STM          (atomically)
+import           Data.IORef                 (newIORef)
+import           Data.Maybe                 (fromJust)
 import           Data.Time.Clock            (getCurrentTime)
 import           Options.Applicative
 import           System.Environment         (lookupEnv)
@@ -28,8 +30,7 @@ import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.Server.App          (mkWaiApp)
-import           Hasura.Server.Auth         (AccessKey (..), AuthMode (..),
-                                             Webhook (..))
+import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
 
@@ -101,17 +102,13 @@ printJSON = BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a) => a -> IO ()
 printYaml = BC.putStrLn . Y.encode
 
-mkAuthMode :: Maybe AccessKey -> Maybe Webhook -> Maybe T.Text -> Either String AuthMode
+mkAuthMode :: (MonadIO m) => Maybe AccessKey -> Maybe Webhook -> Maybe T.Text -> ExceptT String m AuthMode
 mkAuthMode mAccessKey mWebHook mJwtSecret =
   case (mAccessKey, mWebHook, mJwtSecret) of
-    (Nothing,  Nothing,   Nothing)     -> return AMNoAuth
-    (Just key, Nothing,   Nothing)     -> return $ AMAccessKey key
-    (Just key, Just hook, Nothing)     -> return $ AMAccessKeyAndHook key hook
-    (Just key, Nothing,   Just jwtConf) -> do
-      -- the JWT Conf as JSON string; try to parse it
-      config <- A.eitherDecodeStrict $ TE.encodeUtf8 jwtConf
-      return $ AMAccessKeyAndJWT key config
-
+    (Nothing,  Nothing,   Nothing)      -> return AMNoAuth
+    (Just key, Nothing,   Nothing)      -> return $ AMAccessKey key
+    (Just key, Just hook, Nothing)      -> return $ AMAccessKeyAndHook key hook
+    (Just key, Nothing,   Just jwtConf) -> mkJwtMode key jwtConf
     (Nothing, Just _, Nothing)     -> throwError $
       "Fatal Error : --auth-hook (HASURA_GRAPHQL_AUTH_HOOK)"
       ++ " requires --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
@@ -122,6 +119,25 @@ mkAuthMode mAccessKey mWebHook mJwtSecret =
       "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
     (Just _, Just _, Just _)     -> throwError
       "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
+
+-- is this correct ?
+mkJwtMode :: (MonadIO m) => AccessKey -> T.Text -> ExceptT String m AuthMode
+mkJwtMode key jwtConf = do
+  -- the JWT Conf as JSON string; try to parse it
+  conf <- either throwError return $ A.eitherDecodeStrict $ TE.encodeUtf8 jwtConf
+  jwkRef <- case (jcKey conf, jcGoogleJwkUrl conf, jcAuth0JwkUrl conf) of
+    (Nothing, Nothing, Nothing) -> throwError "Fatal Error: In JWT conf: key, google_jwk_url, auth0_jwk_url all cannot be empty"
+    (Just _, Just _, Just _) -> throwError "Fatal Error: In JWT conf: key, google_jwk_url, auth0_jwk_url all cannot be present at same time"
+    (_, Just _, Just _) -> throwError "Fatal Error: google_jwk_url and auth0_jwk_url cannot be present at the same time"
+    (Just jwk, _, _) -> liftIO $ newIORef (JWKSet [jwk])
+    (Nothing, _, _) -> liftIO $ createJwkRef (jcGoogleJwkUrl conf) (jcAuth0JwkUrl conf)
+
+  let jwtCtx = JWTCtx jwkRef (jcClaimNs conf) (jcAudience conf)
+  return $ AMAccessKeyAndJWT key jwtCtx
+  where
+    createJwkRef mGoogUrl mAuth0Url =
+      maybe (createAuth0JwkRef $ fromJust mAuth0Url) createGoogleJwkRef mGoogUrl
+
 
 main :: IO ()
 main =  do
@@ -135,14 +151,15 @@ main =  do
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case ravenMode of
     ROServe (ServeOptions port cp isoL mRootDir mAccessKey corsCfg mWebHook mJwtSecret enableConsole) -> do
+      -- get all auth mode related config
       mFinalAccessKey <- considerEnv "HASURA_GRAPHQL_ACCESS_KEY" $ getAccessKey <$> mAccessKey
       mFinalWebHook   <- considerEnv "HASURA_GRAPHQL_AUTH_HOOK" $ getWebhook <$> mWebHook
       mFinalJwtSecret <- considerEnv "HASURA_GRAPHQL_JWT_SECRET" mJwtSecret
-      am <- either ((>> exitFailure) . putStrLn) return $
-        mkAuthMode (AccessKey <$> mFinalAccessKey) (Webhook <$> mFinalWebHook) mFinalJwtSecret
+      -- prepare auth mode
+      authModeRes <- runExceptT $ mkAuthMode (AccessKey <$> mFinalAccessKey) (Webhook <$> mFinalWebHook) mFinalJwtSecret
+      am <- either ((>> exitFailure) . putStrLn) return authModeRes
       finalCorsDomain <- fromMaybe "*" <$> considerEnv "HASURA_GRAPHQL_CORS_DOMAIN" (ccDomain corsCfg)
-      let finalCorsCfg =
-            CorsConfigG finalCorsDomain $ ccDisabled corsCfg
+      let finalCorsCfg = CorsConfigG finalCorsDomain $ ccDisabled corsCfg
       initialise ci
       migrate ci
       prepareEvents ci

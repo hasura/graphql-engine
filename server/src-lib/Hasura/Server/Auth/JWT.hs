@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TemplateHaskell       #-}
@@ -7,11 +8,14 @@ module Hasura.Server.Auth.JWT
   ( processJwt
   , RawJWT
   , JWTConfig (..)
+  , JWTCtx (..)
+  , JWKSet (..)
+  , createGoogleJwkRef
+  , createAuth0JwkRef
   ) where
 
 import           Control.Lens
 import           Control.Monad              (when)
-
 import           Crypto.JOSE.Types          (Base64Integer (..))
 import           Crypto.JWT
 import           Crypto.PubKey.RSA          (PublicKey (..))
@@ -20,8 +24,11 @@ import           Data.ASN1.Encoding         (decodeASN1')
 import           Data.ASN1.Types            (ASN1 (End, IntVal, Start),
                                              ASN1ConstructionType (Sequence),
                                              fromASN1)
+import           Data.Int                   (Int64)
+import           Data.IORef                 (IORef, newIORef, readIORef)
 import           Data.List                  (find)
 import           Data.Time.Clock            (getCurrentTime)
+
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils        (accessKeyHeader, bsToTxt,
@@ -30,7 +37,6 @@ import           Hasura.Server.Utils        (accessKeyHeader, bsToTxt,
 import qualified Data.Aeson                 as A
 import qualified Data.Aeson.Casing          as A
 import qualified Data.Aeson.TH              as A
-
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.CaseInsensitive       as CI
@@ -40,9 +46,10 @@ import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import qualified Data.X509                  as X509
 import qualified Network.HTTP.Types         as HTTP
+import qualified Network.URI                as N
 
 
-type RawJWT = BL.ByteString
+newtype RawJWT = RawJWT BL.ByteString
 
 data HasuraClaims
   = HasuraClaims
@@ -54,9 +61,24 @@ $(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''HasuraClaims)
 -- | HGE's own representation of various JWKs
 data JWTConfig
   = JWTConfig
-  { jcType    :: !T.Text
-  , jcKey     :: !JWK
-  , jcClaimNs :: !(Maybe T.Text)
+  { jcType         :: !T.Text
+  , jcKey          :: !(Maybe JWK)
+  , jcClaimNs      :: !(Maybe T.Text)
+  , jcAudience     :: !(Maybe T.Text)
+  , jcGoogleJwkUrl :: !(Maybe N.URI)
+  , jcAuth0JwkUrl  :: !(Maybe N.URI)
+  -- , jcIssuer   :: !(Maybe T.Text)
+  } deriving (Show, Eq)
+
+
+instance Show (IORef JWKSet) where
+  show _ = "<IORef JWKRef>"
+
+data JWTCtx
+  = JWTCtx
+  { jcxKey      :: IORef JWKSet -- should it have strictness anno?
+  , jcxClaimNs  :: !(Maybe T.Text)
+  , jcxAudience :: !(Maybe T.Text)
   } deriving (Show, Eq)
 
 allowedRolesClaim :: T.Text
@@ -68,21 +90,35 @@ defaultRoleClaim = "x-hasura-default-role"
 defaultClaimNs :: T.Text
 defaultClaimNs = "https://hasura.io/jwt/claims"
 
+
+-- | Create a Google's JWK Ref
+createGoogleJwkRef :: (MonadIO m) => N.URI -> m (IORef JWKSet)
+createGoogleJwkRef url = do
+  -- fetch jwks from the url
+  let jwkset = JWKSet []
+  liftIO $ newIORef jwkset
+
+createAuth0JwkRef :: (MonadIO m) => N.URI -> m (IORef JWKSet)
+createAuth0JwkRef url = do
+  -- fetch jwks from the url
+  let jwkset = JWKSet []
+  liftIO $ newIORef jwkset
+
 -- | Process the request headers to verify the JWT and extract UserInfo from it
 processJwt
   :: ( MonadIO m
      , MonadError QErr m)
-  => JWTConfig
+  => JWTCtx
   -> HTTP.RequestHeaders
   -> m UserInfo
-processJwt conf headers = do
+processJwt jwtCtx headers = do
   -- try to parse JWT token from Authorization header
   jwt <- parseAuthzHeader
 
   -- verify the JWT
-  claims <- liftJWTError invalidJWTError $ verifyJwt (jcKey conf) jwt
+  claims <- liftJWTError invalidJWTError $ verifyJwt jwtCtx $ RawJWT jwt
 
-  let claimsNs = fromMaybe defaultClaimNs $ jcClaimNs conf
+  let claimsNs = fromMaybe defaultClaimNs $ jcxClaimNs jwtCtx
 
   -- see if the hasura claims key exist in the claims map
   let mHasuraClaims = Map.lookup claimsNs $ claims ^. unregisteredClaims
@@ -150,7 +186,7 @@ processJwt conf headers = do
     currRoleNotAllowed =
       throw400 AccessDenied "Your current role is not in allowed roles"
     claimsNotFound = do
-      let claimsNs = fromMaybe defaultClaimNs $ jcClaimNs conf
+      let claimsNs = fromMaybe defaultClaimNs $ jcxClaimNs jwtCtx
       throw400 JWTInvalidClaims $ "claims key: '" <> claimsNs <> "' not found"
 
 
@@ -192,15 +228,16 @@ verifyJwt
   :: ( MonadError JWTError m
      , MonadIO m
      )
-  => JWK
+  => JWTCtx
   -> RawJWT
   -> m ClaimsSet
-verifyJwt key rawJWT = do
-  jwt <- decodeCompact rawJWT -- decode JWT
+verifyJwt ctx (RawJWT rawJWT) = do
+  key <- liftIO $ readIORef $ jcxKey ctx
+  jwt <- decodeCompact rawJWT
   t   <- liftIO getCurrentTime
   verifyClaimsAt config key t jwt
   where
-    audCheck = const True -- we ignore the audience check?
+    audCheck aud = maybe True (== (T.pack . show) aud) $ jcxAudience ctx
     config = defaultJWTValidationSettings audCheck
 
 
@@ -210,31 +247,47 @@ verifyJwt key rawJWT = do
 instance A.FromJSON JWTConfig where
 
   parseJSON = A.withObject "JWTConfig" $ \o -> do
-    keyType <- o A..: "type"
-    rawKey  <- o A..: "key"
-    claimNs <- o A..:? "claims_namespace"
-    case keyType of
-      "HS256" -> parseHmacKey rawKey 256 keyType claimNs
-      "HS384" -> parseHmacKey rawKey 384 keyType claimNs
-      "HS512" -> parseHmacKey rawKey 512 keyType claimNs
-      "RS256" -> parseRsaKey rawKey keyType claimNs
-      "RS384" -> parseRsaKey rawKey keyType claimNs
-      "RS512" -> parseRsaKey rawKey keyType claimNs
-      -- TODO: support ES256, ES384, ES512, PS256, PS384
-      _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
+    keyType     <- o A..: "type"
+    mRawKey     <- o A..:? "key"
+    claimNs     <- o A..:? "claims_namespace"
+    aud         <- o A..:? "audience"
+    googJwkUrl  <- o A..:? "google_jwk_url"
+    auth0JwtUrl <- o A..:? "auth0_jwk_url"
+
+    case mRawKey of
+      Nothing -> return $ JWTConfig keyType Nothing claimNs aud googJwkUrl auth0JwtUrl
+      Just rawKey -> do
+        key <- case keyType of
+          "HS256" -> runEither $ parseHmacKey rawKey 256
+          "HS384" -> runEither $ parseHmacKey rawKey 384
+          "HS512" -> runEither $ parseHmacKey rawKey 512
+          "RS256" -> runEither $ parseRsaKey rawKey
+          "RS384" -> runEither $ parseRsaKey rawKey
+          "RS512" -> runEither $ parseRsaKey rawKey
+          -- TODO: support ES256, ES384, ES512, PS256, PS384
+          _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
+
+        return $ JWTConfig keyType (Just key) claimNs aud googJwkUrl auth0JwtUrl
     where
-      parseHmacKey key size ktype cns = do
-        let secret = BL.fromStrict $ TE.encodeUtf8 key
-        when (BL.length secret < size `div` 8) $
-          invalidJwk "Key size too small"
-        return $ JWTConfig ktype (fromOctets secret) cns
-
-      parseRsaKey key ktype cns = do
-        let res = fromRawPem (BL.fromStrict $ TE.encodeUtf8 key)
-            err e = "Could not decode PEM: " <> T.unpack e
-        either (invalidJwk . err) (\r -> return $ JWTConfig ktype r cns) res
-
+      runEither = either (invalidJwk . T.unpack) return
       invalidJwk msg = fail ("Invalid JWK: " <> msg)
+
+
+-- | Helper functions to decode Text to JWK
+
+parseHmacKey :: T.Text -> Int64 -> Either T.Text JWK
+parseHmacKey key size = do
+  let secret = BL.fromStrict $ TE.encodeUtf8 key
+      err s = "Key size too small; should be atleast " <> show (s `div` 8) <> " characters"
+  if BL.length secret < size `div` 8
+    then Left . T.pack $ err size
+    else pure $ fromOctets secret
+
+parseRsaKey :: T.Text -> Either T.Text JWK
+parseRsaKey key = do
+  let res = fromRawPem (BL.fromStrict $ TE.encodeUtf8 key)
+      err e = "Could not decode PEM: " <> e
+  either (Left . err) pure res
 
 
 -- | Helper functions to decode PEM bytestring to RSA public key

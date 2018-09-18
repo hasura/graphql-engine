@@ -13,7 +13,11 @@ module Hasura.Server.Auth
   , Webhook (..)
   , RawJWT
   , JWTConfig (..)
+  , JWTCtx (..)
+  , JWKSet (..)
   , processJwt
+  , createGoogleJwkRef
+  , createAuth0JwkRef
   ) where
 
 import           Control.Exception      (try)
@@ -42,14 +46,14 @@ newtype AccessKey
   deriving (Show, Eq)
 
 newtype Webhook
-  = Webhook {getWebhook :: T.Text}
+  = Webhook { getWebhook :: T.Text }
   deriving (Show, Eq)
 
 data AuthMode
   = AMNoAuth
   | AMAccessKey !AccessKey
   | AMAccessKeyAndHook !AccessKey !Webhook
-  | AMAccessKeyAndJWT !AccessKey !JWTConfig
+  | AMAccessKeyAndJWT !AccessKey !JWTCtx
   deriving (Show, Eq)
 
 type WebHookLogger = WebHookLog -> IO ()
