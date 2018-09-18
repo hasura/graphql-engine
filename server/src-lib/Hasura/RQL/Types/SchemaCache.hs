@@ -210,11 +210,12 @@ getColInfos cols allColInfos = flip filter allColInfos $ \ci ->
 
 data RelInfo
   = RelInfo
-  { riName    :: !RelName
-  , riType    :: !RelType
-  , riMapping :: ![(PGCol, PGCol)]
-  , riRTable  :: !QualifiedTable
-  , riDeps    :: ![SchemaDependency]
+  { riName     :: !RelName
+  , riType     :: !RelType
+  , riMapping  :: ![(PGCol, PGCol)]
+  , riRTable   :: !QualifiedTable
+  , riDeps     :: ![SchemaDependency]
+  , riIsManual :: !Bool
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
