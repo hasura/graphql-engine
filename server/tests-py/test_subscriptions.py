@@ -28,6 +28,16 @@ class TestSubscriptionBasic(object):
         assert ev['type'] == 'connection_ack', ev
 
     '''
+        Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
+    '''
+    def test_init_no_payload(self, hge_ctx):
+        obj = {
+            'type': 'connection_init'
+        }
+        hge_ctx.ws.send(json.dumps(obj))
+        ev = hge_ctx.get_ws_event(3)
+        assert ev['type'] == 'connection_ack', ev
+    '''
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_error
     '''
     def test_connection_error(self, hge_ctx):
