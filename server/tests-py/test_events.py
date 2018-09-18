@@ -22,10 +22,10 @@ class TestCreateEvtQuery(object):
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
         print ("In setup method")
-        st_code, resp = hge_ctx.v1q_f('queries/advanced/create-setup.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/ddl/create-setup.yaml')
         assert st_code == 200, resp
         yield
-        st_code, resp = hge_ctx.v1q_f('queries/advanced/create-teardown.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/ddl/create-teardown.yaml')
         assert st_code == 200, resp
 
     def test_insert_trigger(self, hge_ctx):
@@ -108,12 +108,12 @@ class TestUpdateEvtQuery(object):
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
         print ("In setup method")
-        st_code, resp = hge_ctx.v1q_f('queries/advanced/create-setup.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/ddl/create-setup.yaml')
         assert st_code == 200, resp
-        st_code, resp = hge_ctx.v1q_f('queries/advanced/update-setup.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/ddl/update-setup.yaml')
         assert st_code == 200, '{}'.format(resp)
         yield
-        st_code, resp = hge_ctx.v1q_f('queries/advanced/create-teardown.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/ddl/create-teardown.yaml')
         assert st_code == 200, resp
 
     def test_update_trigger(self, hge_ctx):
@@ -194,12 +194,12 @@ class TestDeleteEvtQuery(object):
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
         print ("In setup method")
-        st_code, resp = hge_ctx.v1q_f('queries/advanced/create-setup.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/ddl/create-setup.yaml')
         assert st_code == 200, resp
-        st_code, resp = hge_ctx.v1q_f('queries/advanced/delete-setup.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/ddl/delete-setup.yaml')
         assert st_code == 200, '{}'.format(resp)
         yield
-        st_code, resp = hge_ctx.v1q_f('queries/advanced/delete-teardown.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/ddl/delete-teardown.yaml')
         assert st_code == 200, resp
 
     def test_update_trigger(self, hge_ctx):
@@ -225,10 +225,10 @@ class TestEvtBasic(object):
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
         print ("In setup method")
-        st_code, resp = hge_ctx.v1q_f('queries/basic/setup.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/basic/setup.yaml')
         assert st_code == 200, resp
         yield
-        st_code, resp = hge_ctx.v1q_f('queries/basic/teardown.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/basic/teardown.yaml')
         assert st_code == 200, resp
 
 
@@ -277,10 +277,10 @@ class TestEvtSelCols:
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
         print ("In setup method")
-        st_code, resp = hge_ctx.v1q_f('queries/selected_cols/setup.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/selected_cols/setup.yaml')
         assert st_code == 200, resp
         yield
-        st_code, resp = hge_ctx.v1q_f('queries/selected_cols/teardown.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/selected_cols/teardown.yaml')
         assert st_code == 200, resp
 
     def test_selected_cols(self, hge_ctx):
@@ -342,10 +342,10 @@ class TestEvtEmptyCols:
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
         print ("In setup method")
-        st_code, resp = hge_ctx.v1q_f('queries/empty_cols/setup.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/empty_cols/setup.yaml')
         assert st_code == 200, resp
         yield
-        st_code, resp = hge_ctx.v1q_f('queries/empty_cols/teardown.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/empty_cols/teardown.yaml')
         assert st_code == 200, resp
 
 
@@ -380,10 +380,10 @@ class TestEvtInsertOnly:
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
         print ("In setup method")
-        st_code, resp = hge_ctx.v1q_f('queries/insert_only/setup.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/insert_only/setup.yaml')
         assert st_code == 200, resp
         yield
-        st_code, resp = hge_ctx.v1q_f('queries/insert_only/teardown.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/insert_only/teardown.yaml')
         assert st_code == 200, resp
 
 
