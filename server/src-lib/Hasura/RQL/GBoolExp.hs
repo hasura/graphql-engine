@@ -1,9 +1,10 @@
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE LambdaCase           #-}
-{-# LANGUAGE MultiWayIf           #-}
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiWayIf            #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
 
 module Hasura.RQL.GBoolExp where
 
@@ -111,6 +112,8 @@ data RQLOp
   | RSIMILAR  -- similar, regex
   | RNSIMILAR -- not similar, regex
 
+  | RISNULL -- is null
+
   deriving (Eq)
 
 instance Show RQLOp where
@@ -133,6 +136,8 @@ instance Show RQLOp where
 
   show RSIMILAR  = "$similar"
   show RNSIMILAR = "$nsimilar"
+
+  show RISNULL   = "$is_null"
 
 instance DQuote RQLOp where
   dquoteTxt op = T.pack $ show op
@@ -174,6 +179,9 @@ parseOp opStr = case opStr of
   "_similar"  -> return $ Left RSIMILAR
   "$nsimilar" -> return $ Left RNSIMILAR
   "_nsimilar" -> return $ Left RNSIMILAR
+
+  "$is_null"  -> return $ Left RISNULL
+  "_is_null"  -> return $ Left RISNULL
 
   "$ceq"      -> return $ Right CEQ
   "_ceq"      -> return $ Right CEQ
@@ -219,6 +227,8 @@ parseAnnOpExpG parser op ty val = case op of
   RNILIKE   -> ANILIKE <$> parseOne -- NOT ILIKE, case insensitive
   RSIMILAR  -> ASIMILAR <$> parseOne -- similar, regex
   RNSIMILAR -> ANSIMILAR <$> parseOne -- not similar, regex
+  RISNULL   -> bool ANISNOTNULL ANISNULL -- is null
+               <$> decodeValue val
   where
     parseOne = parser ty val
       -- runAesonParser (parsePGValue ty) val
@@ -290,6 +300,7 @@ getOpTypeChecker RILIKE    = textOnlyOp
 getOpTypeChecker RNILIKE   = textOnlyOp
 getOpTypeChecker RSIMILAR  = textOnlyOp
 getOpTypeChecker RNSIMILAR = textOnlyOp
+getOpTypeChecker RISNULL   = validOnAllTypes
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null

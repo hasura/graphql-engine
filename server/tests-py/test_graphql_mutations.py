@@ -85,6 +85,12 @@ class TestGraphqlInsertPermission(object):
     def test_user_role_insert_check_user_id_fail(self, hge_ctx):
        check_query_f(hge_ctx, self.dir + "/author_user_role_insert_check_user_id_fail.yaml")
 
+    def test_student_role_insert_check_bio_success(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/author_student_role_insert_check_bio_success.yaml")
+
+    def test_student_role_insert_check_bio_fail(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/author_student_role_insert_check_bio_fail.yaml")
+
 
 
     @pytest.fixture(autouse=True)
