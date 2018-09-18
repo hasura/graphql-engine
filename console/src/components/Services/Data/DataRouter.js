@@ -169,8 +169,11 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
         store.dispatch(changeRequestHeader(1, 'value', finalAccessKey, true)),
       ]);
     }
-    // redirect to login page if error in access key
-    if (store.getState().tables.accessKeyError) {
+    // redirect to login page if error in access key or if server says isAccessKeySet
+    if (
+      store.getState().tables.accessKeyError ||
+      globals.isAccessKeySet === 'true'
+    ) {
       replaceState(globals.urlPrefix + '/login');
       cb();
     } else {
@@ -198,7 +201,10 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
         },
         error => {
           console.error(JSON.stringify(error));
-          if (error.code === 'access-denied') {
+          if (
+            error.code === 'access-denied' ||
+            error.code === 'permission-denied'
+          ) {
             Promise.all([
               store.dispatch({ type: ACCESS_KEY_ERROR, data: true }),
             ]).then(() => {
