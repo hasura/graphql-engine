@@ -1,20 +1,31 @@
+<!--- Thank you for submitting this PR! :) -->
 <!--- Provide a general summary of your changes in the Title above -->
 
 ### Description
 <!--- Describe your changes in detail -->
-What component does this PR affect?
-<!--- Write here -->
-Requires changes from other components?
+<!--- Please put an `x` in the boxes below -->
 
-(Yes/No)
+What component does this PR affect? 
 
-What are the changes required from other components?
-<!--- Write here -->
+- [ ] Server
+- [ ] Console
+- [ ] CLI
+- [ ] Docs
+- [ ] Community
+
+Requires changes from other components? If yes, please mark the components:
+
+- [ ] Server
+- [ ] Console
+- [ ] CLI
+- [ ] Docs
+- [ ] Community
 
 ### Related Issue
-<!--- This project only accepts pull requests related to open issues -->
-<!--- If suggesting a new feature or change, please discuss it in an issue first -->
-<!--- If fixing a bug, there should be an issue describing it with steps to reproduce -->
+<!--- Please make sure you have an issue associated with this Pull Request -->
+<!--- If you are suggesting a new feature or change, please discuss it in an issue first -->
+<!--- If you are fixing a bug, there should be an issue describing it with steps to reproduce -->
+<!--- Please don't forget to add `(close/fix #<issue-no>)` to the pull request title -->
 <!--- Please link to the issue here: -->
 
 ### Motivation and Context
@@ -34,8 +45,6 @@ What are the changes required from other components?
 ### Checklist:
 <!--- Go over all the following points, and put an `x` in all the boxes that apply. -->
 <!--- If you're unsure about any of these, don't hesitate to ask. We're here to help! -->
-- [ ] I have read the **CONTRIBUTING** document.
-- [ ] I have signed the **CLA**.
-- [ ] My code follows the code style of this project.
+- [ ] I have read the **CONTRIBUTING** document and my code conforms to the guidelines.
 - [ ] My change requires a change to the documentation. 
 - [ ] I have updated the documentation accordingly.
