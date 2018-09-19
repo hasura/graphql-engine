@@ -1,7 +1,7 @@
 const {query} = require('graphqurl');
-const {CLIError} = require('@oclif/errors');
 const moment = require('moment');
 const {cli} = require('cli-ux');
+const throwError = require('./error');
 
 const getInsertOrder = tables => {
   let order = [];
@@ -73,11 +73,13 @@ const insertData = async (insertOrder, sampleData, tables, url, headers) => {
       variables,
       headers,
     });
-    cli.action.stop('Done!');
+    if (response.data !== null && response.data !== 'undefined') {
+      cli.action.stop('Done!');
+    } else {
+      throw new Error(response);
+    }
   } catch (e) {
-    cli.action.stop('Error');
-    console.log(JSON.stringify(e, null, 2));
-    process.exit(1);
+    throwError(JSON.stringify(e, null, 2));
   }
 };
 
