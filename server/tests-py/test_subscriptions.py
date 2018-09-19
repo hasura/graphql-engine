@@ -3,40 +3,42 @@
 import pytest
 import json
 import queue
+import yaml
+
+'''
+    Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
+'''
+def test_init_without_payload(hge_ctx):
+    obj = {
+        'type': 'connection_init'
+    }
+    hge_ctx.ws.send(json.dumps(obj))
+    ev = hge_ctx.get_ws_event(3)
+    assert ev['type'] == 'connection_ack', ev
+
+'''
+    Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
+'''
+def test_init(hge_ctx):
+    obj = {
+        'type': 'connection_init',
+        'payload': {},
+    }
+    hge_ctx.ws.send(json.dumps(obj))
+    ev = hge_ctx.get_ws_event(3)
+    assert ev['type'] == 'connection_ack', ev
 
 class TestSubscriptionBasic(object):
 
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
-        print ("In setup method")
-        st_code, resp = hge_ctx.v1q_f('queries/basic/setup.yaml')
+        self.dir = 'queries/subscriptions/basic'
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
         yield
-        st_code, resp = hge_ctx.v1q_f('queries/basic/teardown.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
 
-    '''
-        Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
-    '''
-    def test_init(self, hge_ctx):
-        obj = {
-            'type': 'connection_init',
-            'payload': {},
-        }
-        hge_ctx.ws.send(json.dumps(obj))
-        ev = hge_ctx.get_ws_event(3)
-        assert ev['type'] == 'connection_ack', ev
-
-    '''
-        Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
-    '''
-    def test_init_no_payload(self, hge_ctx):
-        obj = {
-            'type': 'connection_init'
-        }
-        hge_ctx.ws.send(json.dumps(obj))
-        ev = hge_ctx.get_ws_event(3)
-        assert ev['type'] == 'connection_ack', ev
     '''
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_error
     '''
@@ -98,6 +100,7 @@ class TestSubscriptionBasic(object):
 
     def test_start_after_stop(self, hge_ctx):
         self.test_start(hge_ctx)
+        self.test_stop(hge_ctx)
 
     '''
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_complete
@@ -125,13 +128,87 @@ class TestSubscriptionBasic(object):
         ev = hge_ctx.get_ws_event(3)
         assert ev['type'] == 'complete' and ev['id'] == '2', ev
 
-    '''
-        Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_terminate
-    '''
-    def test_connection_terminate(self, hge_ctx):
+
+class TestSubscriptionLiveQueries(object):
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = 'queries/subscriptions/live_queries'
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
+
+    def test_live_queries(self, hge_ctx):
+        '''
+            Create connection using connection_init
+        '''
         obj = {
-            'type': 'connection_terminate'
+            'type': 'connection_init'
         }
         hge_ctx.ws.send(json.dumps(obj))
-        with pytest.raises(queue.Empty):
+        ev = hge_ctx.get_ws_event(3)
+        assert ev['type'] == 'connection_ack', ev
+
+        with open(self.dir + "/steps.yaml") as c:
+            conf = yaml.load(c)
+
+        query = """
+        subscription {
+          hge_tests_test_t2(order_by: c1_desc, limit: 1) {
+            c1,
+            c2
+          }
+        }
+        """
+        obj = {
+            'id': 'live',
+            'payload': {
+                'query': query
+            },
+            'type': 'start'
+        }
+        hge_ctx.ws.send(json.dumps(obj))
+        ev = hge_ctx.get_ws_event(3)
+        assert ev['type'] == 'data' and ev['id'] == obj['id'], ev
+        assert ev['payload']['data'] == {'hge_tests_test_t2': []} , ev['payload']['data']
+
+        assert isinstance(conf, list) == True, 'Not an list'
+        for index, step in enumerate(conf):
+            obj = {
+                'id': '{}'.format(index+1),
+                'payload': {
+                    'query': step['query']
+                },
+                'type': 'start'
+            }
+            if 'variables' in step and step['variables']:
+                obj['payload']['variables'] = json.loads(step['variables'])
+
+            expected_resp = json.loads(step['response'])
+
+            hge_ctx.ws.send(json.dumps(obj))
             ev = hge_ctx.get_ws_event(3)
+            assert ev['type'] == 'data' and ev['id'] == obj['id'], ev
+            assert ev['payload']['data'] == expected_resp, ev['payload']['data']
+
+            ev = hge_ctx.get_ws_event(3)
+            assert ev['type'] == 'complete' and ev['id'] == obj['id'], ev
+
+            ev = hge_ctx.get_ws_event(3)
+            assert ev['type'] == 'data' and ev['id'] == 'live', ev
+            assert ev['payload']['data'] == {
+                'hge_tests_test_t2': expected_resp[step['name']]['returning'] if 'returning' in expected_resp[step['name']] else []
+            }, ev['payload']['data']
+
+'''
+    Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_terminate
+'''
+def test_connection_terminate(hge_ctx):
+    obj = {
+        'type': 'connection_terminate'
+    }
+    hge_ctx.ws.send(json.dumps(obj))
+    with pytest.raises(queue.Empty):
+        ev = hge_ctx.get_ws_event(3)
