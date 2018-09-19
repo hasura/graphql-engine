@@ -21,6 +21,8 @@ import { metadataConnector } from './components/Services/Data';
 
 import globals from './Globals';
 
+import validateLogin from './components/validateLogin';
+
 const routes = store => {
   // load hasuractl migration status
   const requireMigrationStatus = (nextState, replaceState, cb) => {
@@ -49,7 +51,7 @@ const routes = store => {
   const makeEventRouter = eventRouterUtils.makeEventRouter;
 
   return (
-    <Route path="/" component={App}>
+    <Route path="/" component={App} onEnter={validateLogin(store)}>
       <Route path="login" component={generatedLoginConnector(connect)} />
       <Route
         path=""

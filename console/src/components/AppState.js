@@ -8,11 +8,10 @@ const saveAppState = state => {
   window.localStorage.setItem(stateKey, JSON.stringify(state));
 };
 
-const loadAccessKeyState = () =>
-  window.localStorage.getItem('CONSOLE_ACCESS_KEY');
+const loadAccessKeyState = () => window.localStorage.getItem(stateKey);
 
 const saveAccessKeyState = state => {
-  window.localStorage.setItem('CONSOLE_ACCESS_KEY', state);
+  window.localStorage.setItem(stateKey, state);
 };
 
 const clearState = () => window.localStorage.removeItem(stateKey);
