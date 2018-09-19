@@ -31,10 +31,14 @@ const routes = store => {
         () => {
           cb();
         },
-        () => {
-          alert(
-            'Not able to reach the graphql server. Check if hasura console server is running or if graphql server is running and try again'
-          );
+        r => {
+          if (r.code === 'data_api_error') {
+            alert('Hasura CLI: ' + r.message);
+          } else {
+            alert(
+              'Not able to reach the graphql server. Check if hasura console server is running or if graphql server is running and try again'
+            );
+          }
         }
       );
     } else {

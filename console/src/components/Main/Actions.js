@@ -129,6 +129,8 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
   }
   return dispatch(requestAction(url, options)).then(
     () => {
+      dispatch({ type: LOGIN_IN_PROGRESS, data: false });
+      dispatch({ type: LOGIN_ERROR, data: false });
       dispatch(push(globals.urlPrefix));
     },
     error => {
