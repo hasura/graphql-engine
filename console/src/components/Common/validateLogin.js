@@ -1,4 +1,4 @@
-import { loadAccessKeyState, clearState } from '../AppState';
+import { loadAccessKeyState, clearAccessKeyState } from '../AppState';
 import globals from '../../Globals';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
 import requestAction from '../../utils/requestAction';
@@ -70,7 +70,7 @@ const validateLogin = ({ dispatch }) => {
         })
         .catch(() => {
           // Clear state from the localStorage if there exists one
-          clearState();
+          clearAccessKeyState();
           if (nextState.location.pathname !== '/login') {
             replaceState(globals.urlPrefix + '/login');
           }
