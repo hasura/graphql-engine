@@ -1,0 +1,20 @@
+description: Inserts author without bio as a student (Error)
+url: /v1alpha1/graphql
+status: 400
+headers:
+  X-Hasura-Role: student
+query:
+  query: |
+    mutation insert_author {
+      insert_author (
+        objects: [
+          {
+            id: 5
+            name: "Student 1"
+            is_registered: false
+          }
+          ]
+      ) {
+        affected_rows
+        }
+      }

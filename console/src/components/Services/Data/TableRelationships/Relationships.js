@@ -48,11 +48,17 @@ const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
   const finalRTable = rTable.name ? rTable.name : rTable;
   return isObjRel ? (
     <span>
-      &nbsp;{lcol}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{rTable} :: {rcol}
+      &nbsp;
+      {lcol}
+      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
+      {rTable} :: {rcol}
     </span>
   ) : (
     <span>
-      &nbsp;{finalRTable} :: {rcol}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{lcol}
+      &nbsp;
+      {finalRTable} :: {rcol}
+      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
+      {lcol}
     </span>
   );
 };
@@ -348,7 +354,8 @@ const AddRelationship = ({
       <div className={`${styles.remove_margin_bottom} form-group`}>
         <label>
           {' '}
-          You have no new relationships that can be added. Add a foreign key{' '}
+          You have no new relationships that can be added. Add a foreign key to
+          get suggestions{' '}
         </label>
       </div>
     );
@@ -402,7 +409,9 @@ const AddRelationship = ({
               {[
                 'Suggested object relationships',
                 'Suggested Array relationships',
-              ].map((s, i) => <th key={i}>{s}</th>)}
+              ].map((s, i) => (
+                <th key={i}>{s}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -485,9 +494,15 @@ const AddManualRelationship = ({
   const onAddRelClicked = () => {
     dispatch(addRelViewMigrate(tableName));
   };
+  const onCloseClicked = () => {
+    dispatch(relManualAddClicked());
+  };
   return (
     <div>
-      <div className={styles.subheading_text}> Add a Manual Relationship </div>
+      <div className={styles.subheading_text}>
+        {' '}
+        Add a relationship manually{' '}
+      </div>
       <div className="form-group">
         <div className={`${styles.relBlockInline} ${styles.relBlockLeft}`}>
           Relationship Type
@@ -576,6 +591,13 @@ const AddManualRelationship = ({
         data-test="table-add-manual-relationship"
       >
         Add
+      </button>
+      <button
+        className={styles.add_mar_left + ' btn btn-default btn-sm'}
+        onClick={onCloseClicked}
+        data-test="table-close-manual-relationship"
+      >
+        Close
       </button>
     </div>
   );
@@ -751,7 +773,7 @@ class Relationships extends Component {
                 }}
                 data-test="add-manual-relationship"
               >
-                + Add a manual relationship
+                + Add a relationship manually
               </button>
             )}
             <hr />

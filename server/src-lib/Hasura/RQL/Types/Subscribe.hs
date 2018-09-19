@@ -95,6 +95,7 @@ data CreateEventTriggerQuery
   , cetqRetryConf :: !(Maybe RetryConf)
   , cetqWebhook   :: !T.Text
   , cetqHeaders   :: !(Maybe [HeaderConf])
+  , cetqReplace   :: !Bool
   } deriving (Show, Eq, Lift)
 
 instance FromJSON CreateEventTriggerQuery where
@@ -107,6 +108,7 @@ instance FromJSON CreateEventTriggerQuery where
     retryConf <- o .:? "retry_conf"
     webhook   <- o .: "webhook"
     headers   <- o .:? "headers"
+    replace   <- o .:? "replace" .!= False
     let regex = mkRegex "^\\w+$"
         mName = matchRegex regex (T.unpack name)
     case mName of
@@ -115,7 +117,7 @@ instance FromJSON CreateEventTriggerQuery where
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
-    return $ CreateEventTriggerQuery name table insert update delete retryConf webhook headers
+    return $ CreateEventTriggerQuery name table insert update delete retryConf webhook headers replace
   parseJSON _ = fail "expecting an object"
 
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)

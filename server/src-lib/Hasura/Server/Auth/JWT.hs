@@ -90,8 +90,10 @@ processJwt conf headers = do
   -- the value of hasura claims key has to be an object
   hasuraClaims <- validateIsObject hasuraClaimsV
 
-  -- filter only x-hasura claims
-  let claimsMap = Map.filterWithKey (\k _ -> T.isPrefixOf "x-hasura-" k) hasuraClaims
+  -- filter only x-hasura claims and convert to lower-case
+  let claimsMap = Map.filterWithKey (\k _ -> T.isPrefixOf "x-hasura-" k)
+                $ Map.fromList $ map (\(k, v) -> (T.toLower k, v))
+                $ Map.toList hasuraClaims
 
   HasuraClaims allowedRoles defaultRole <- parseHasuraClaims claimsMap
   let role = getCurrentRole defaultRole

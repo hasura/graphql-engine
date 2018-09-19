@@ -99,7 +99,7 @@ isValidTableName = isValidName . qualTableToName
 isValidField :: FieldInfo -> Bool
 isValidField = \case
   FIColumn (PGColInfo col _ _) -> isColEligible col
-  FIRelationship (RelInfo rn _ _ remTab _) -> isRelEligible rn remTab
+  FIRelationship (RelInfo rn _ _ remTab _ _) -> isRelEligible rn remTab
   where
     isColEligible = isValidName . G.Name . getPGColTxt
     isRelEligible rn rt = isValidName (G.Name $ getRelTxt rn)
@@ -262,7 +262,7 @@ object_relationship: remote_table
 
 -}
 mkRelFld :: RelInfo -> Bool -> ObjFldInfo
-mkRelFld (RelInfo rn rTy _ remTab _) isNullable = case rTy of
+mkRelFld (RelInfo rn rTy _ remTab _ isManual) isNullable = case rTy of
   ArrRel ->
     ObjFldInfo (Just "An array relationship") (G.Name $ getRelTxt rn)
     (fromInpValL $ mkSelArgs remTab)
@@ -272,7 +272,8 @@ mkRelFld (RelInfo rn rTy _ remTab _) isNullable = case rTy of
     Map.empty
     objRelTy
   where
-    objRelTy = bool (G.toGT $ G.toNT relTabTy) (G.toGT relTabTy) isNullable
+    objRelTy = bool (G.toGT $ G.toNT relTabTy) (G.toGT relTabTy) isObjRelNullable
+    isObjRelNullable = isManual || isNullable
     relTabTy = mkTableTy remTab
 
 {-
@@ -400,7 +401,7 @@ mkBoolExpInp tn fields =
     mkFldExpInp = \case
       Left (PGColInfo colName colTy _) ->
         mk (G.Name $ getPGColTxt colName) (mkCompExpTy colTy)
-      Right (RelInfo relName _ _ remTab _, _, _, _) ->
+      Right (RelInfo relName _ _ remTab _ _, _, _, _) ->
         mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
 
 mkPGColInp :: PGColInfo -> InpValInfo

@@ -1,0 +1,25 @@
+- type: replace_metadata
+  args:
+    query_templates: []
+    tables:
+    - array_relationships: []
+      delete_permissions: []
+      event_triggers:
+      - definition:
+          insert:
+            columns:
+            - title
+            - body
+            - device_token
+            - id
+            - timestamp
+        name: message_event
+        retry_conf:
+          interval_sec: 10
+          num_retries: 0
+        webhook: https://us-central1-hasura-test.cloudfunctions.net/push-notification
+      insert_permissions: []
+      object_relationships: []
+      select_permissions: []
+      table: message
+      update_permissions: []

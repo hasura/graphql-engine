@@ -127,7 +127,10 @@ class Main extends React.Component {
       mainContent = children && React.cloneElement(children);
     }
     let accessKeyHtml = null;
-    if (globals.accessKey === '' || globals.accessKey === null) {
+    if (
+      !globals.isAccessKeySet &&
+      (globals.accessKey === '' || globals.accessKey === null)
+    ) {
       accessKeyHtml = (
         <div className={styles.secureSection}>
           <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>

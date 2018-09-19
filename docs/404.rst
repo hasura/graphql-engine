@@ -1,0 +1,6 @@
+.. title:: 404 - Page Not Found
+
+404 - Page Not Found
+---------------------
+
+**Hey! It seems the page you are looking for doesn't exist or has been moved.**

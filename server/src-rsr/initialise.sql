@@ -180,8 +180,6 @@ LANGUAGE plpgsql AS $$
     END;
 $$;
 
--- required for generating uuid
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE hdb_catalog.event_triggers
 (

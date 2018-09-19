@@ -2,7 +2,7 @@ import React from 'react';
 // import {push} fropm 'react-router-redux';
 import { Route, IndexRedirect } from 'react-router';
 import globals from '../../../Globals';
-import { loadAccessKeyState } from '../../AppState';
+// import { loadAccessKeyState } from '../../AppState';
 
 import {
   schemaConnector,
@@ -28,12 +28,12 @@ import {
   loadUntrackedSchema,
   fetchSchemaList,
   UPDATE_CURRENT_SCHEMA,
-  UPDATE_DATA_HEADERS,
-  ACCESS_KEY_ERROR,
+  // UPDATE_DATA_HEADERS,
+  // ACCESS_KEY_ERROR,
 } from './DataActions';
 
-import { changeRequestHeader } from '../../ApiExplorer/Actions';
-import { validateLogin } from '../../Main/Actions';
+// import { changeRequestHeader } from '../../ApiExplorer/Actions';
+// import { validateLogin } from '../../Main/Actions';
 
 const makeDataRouter = (
   connect,
@@ -140,89 +140,36 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
     ) {
       currentSchema = 'public';
     }
-    // assume cli provides access key
-    let finalAccessKey = globals.accessKey;
-    const localStorageAccessKey = loadAccessKeyState('CONSOLE_ACCESS_KEY');
-    // check if accessKey is in localstorage
-    if (localStorageAccessKey !== null) {
-      // localstorage has the access key
-      globals.accessKey = localStorageAccessKey;
-      finalAccessKey = localStorageAccessKey;
-    }
-    // if access key is available, update the headers
-    if (
-      finalAccessKey !== '' &&
-      finalAccessKey !== undefined &&
-      finalAccessKey !== null
-    ) {
-      Promise.all([
-        store.dispatch({
-          type: UPDATE_DATA_HEADERS,
-          data: {
-            'Content-Type': 'application/json',
-            'X-Hasura-Access-Key': finalAccessKey,
-          },
-        }),
-        store.dispatch(
-          changeRequestHeader(1, 'key', 'X-Hasura-Access-Key', true)
-        ),
-        store.dispatch(changeRequestHeader(1, 'value', finalAccessKey, true)),
-      ]);
-    }
-    // redirect to login page if error in access key
-    if (store.getState().tables.accessKeyError) {
-      replaceState(globals.urlPrefix + '/login');
-      cb();
-    } else {
-      // validate login
-      store.dispatch(validateLogin(true)).then(
-        () => {
-          Promise.all([
-            store.dispatch({
-              type: UPDATE_CURRENT_SCHEMA,
-              currentSchema: currentSchema,
-            }),
-            store.dispatch(fetchSchemaList()),
-            store.dispatch(loadSchema()),
-            store.dispatch(loadUntrackedSchema()),
-          ]).then(
-            () => {
-              cb();
-            },
-            () => {
-              // alert('Could not load schema.');
-              replaceState(globals.urlPrefix);
-              cb();
-            }
-          );
-        },
-        error => {
-          console.error(JSON.stringify(error));
-          if (error.code === 'access-denied') {
-            Promise.all([
-              store.dispatch({ type: ACCESS_KEY_ERROR, data: true }),
-            ]).then(() => {
-              replaceState('/login');
-              cb();
-            });
-          } else {
-            alert(JSON.stringify(error));
-          }
-        }
-      );
-    }
+    Promise.all([
+      store.dispatch({
+        type: UPDATE_CURRENT_SCHEMA,
+        currentSchema: currentSchema,
+      }),
+      store.dispatch(fetchSchemaList()),
+      store.dispatch(loadSchema()),
+      store.dispatch(loadUntrackedSchema()),
+    ]).then(
+      () => {
+        cb();
+      },
+      () => {
+        // alert('Could not load schema.');
+        replaceState('/');
+        cb();
+      }
+    );
   };
   const migrationRedirects = (nextState, replaceState, cb) => {
     const state = store.getState();
     if (!state.main.migrationMode) {
-      replaceState(globals.urlPrefix + '/data/schema');
+      replaceState('/data/schema');
       cb();
     }
     cb();
   };
   const consoleModeRedirects = (nextState, replaceState, cb) => {
     if (globals.consoleMode === 'hasuradb') {
-      replaceState(globals.urlPrefix + '/data/schema');
+      replaceState('/data/schema');
       cb();
     }
     cb();
