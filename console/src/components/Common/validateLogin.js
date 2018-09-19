@@ -38,7 +38,7 @@ const checkValidity = accessKey => {
 const validateLogin = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
     // Validate isAccessKeySet env is set by hasuradb or accessKey env is set by cli
-    if (globals.isAccessKeySet === 'true' || globals.accessKey) {
+    if (globals.isAccessKeySet || globals.accessKey) {
       let accessKey = '';
       // Check the console mode and retrieve accessKey accordingly.
       if (globals.consoleMode === 'hasuradb') {

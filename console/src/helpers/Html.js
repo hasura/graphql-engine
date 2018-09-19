@@ -45,7 +45,7 @@ export default class Html extends Component {
                 dataApiUrl: '${process.env.DATA_API_URL}',
                 devDataApiUrl: '${process.env.DEV_DATA_API_URL}',
                 accessKey: '${process.env.ACCESS_KEY}',
-                isAccessKeySet: '${process.env.IS_ACCESS_KEY_SET}',
+                isAccessKeySet: ${process.env.IS_ACCESS_KEY_SET},
                 consoleMode: '${process.env.CONSOLE_MODE}',
                 nodeEnv: '${process.env.NODE_ENV}',
                 urlPrefix: '${process.env.URL_PREFIX}'
