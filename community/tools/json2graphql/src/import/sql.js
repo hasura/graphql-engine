@@ -1,6 +1,5 @@
 const fetch = require('node-fetch');
-const {CLIError} = require('@oclif/errors');
-const {cli} = require('cli-ux');
+const throwError = require('./error');
 
 const runSql = async (sqlArray, url, headers) => {
   let sqlString = '';
@@ -23,9 +22,7 @@ const runSql = async (sqlArray, url, headers) => {
   );
   if (resp.status !== 200) {
     const error = await resp.json();
-    cli.action.stop('Error');
-    console.log(JSON.stringify(error, null, 2));
-    process.exit(1);
+    throwError(JSON.stringify(error, null, 2));
   }
 };
 
@@ -53,7 +50,7 @@ const generateConstraintsSql = metadata => {
   metadata.forEach(table => {
     table.columns.forEach(column => {
       if (column.isForeign) {
-        const fkSql = `add foreign key ("${column.name}") references public."${column.name.substring(0, column.name.length - 3)}s" ("id");`;
+        const fkSql = `add foreign key ("${column.name}") references public."${column.name.substring(0, column.name.length - 3)}" ("id");`;
         sqlArray.push(`alter table public."${table.name}" ${fkSql}`);
       }
     });

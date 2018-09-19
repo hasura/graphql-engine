@@ -85,6 +85,12 @@ class TestGraphqlInsertPermission(object):
     def test_user_role_insert_check_user_id_fail(self, hge_ctx):
        check_query_f(hge_ctx, self.dir + "/author_user_role_insert_check_user_id_fail.yaml")
 
+    def test_student_role_insert_check_bio_success(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/author_student_role_insert_check_bio_success.yaml")
+
+    def test_student_role_insert_check_bio_fail(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/author_student_role_insert_check_bio_fail.yaml")
+
 
 
     @pytest.fixture(autouse=True)
@@ -210,19 +216,3 @@ class TestGraphqlDelete:
         assert st_code == 200, resp
 
 
-class TestGraphqlIntrospection:
-
-    def test_introspection(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/introspection.yaml")
-
-    def test_introspection_user(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/introspection_user_role.yaml")
-
-    @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):  
-        self.dir = "queries/graphql_introspection"
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp

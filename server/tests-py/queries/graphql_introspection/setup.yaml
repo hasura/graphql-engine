@@ -22,8 +22,8 @@ args:
         id SERIAL PRIMARY KEY,
         title TEXT,
         content TEXT,
-        author_id INTEGER REFERENCES author(id),
-        is_published BOOLEAN,
+        author_id INTEGER NOT NULL REFERENCES author(id),
+        is_published BOOLEAN NOT NULL default FALSE,
         published_on TIMESTAMP
       )
 - type: track_table
@@ -34,10 +34,23 @@ args:
 #Object relationship
 - type: create_object_relationship
   args:
+    name: author_obj_rel_fk
     table: article
-    name: author
     using:
       foreign_key_constraint_on: author_id
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    name: author_obj_rel_manual
+    table: article
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: author
+        column_mapping:
+          author_id: id
 
 #Array relationship
 - type: create_array_relationship
@@ -55,7 +68,10 @@ args:
     table: article
     role: user
     permission:
-      columns: '*'
+      columns:
+      - id
+      - title
+      - content
       filter:
         $or:
           - author_id: X-HASURA-USER-ID
@@ -76,7 +92,8 @@ args:
     table: author
     role: user
     permission:
-      columns: '*'
+      columns:
+      - name
       filter:
         id: X-HASURA-USER-ID
 

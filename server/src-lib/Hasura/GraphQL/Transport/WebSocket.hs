@@ -257,8 +257,8 @@ onStop serverEnv wsConn (StopMsg opId) = do
 
 onConnInit
   :: (MonadIO m)
-  => L.Logger -> H.Manager -> WSConn -> AuthMode -> ConnParams -> m ()
-onConnInit logger manager wsConn authMode connParams = do
+  => L.Logger -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
+onConnInit logger manager wsConn authMode connParamsM = do
   res <- runExceptT $ getUserInfo logger manager headers authMode
   case res of
     Left e  ->
@@ -272,7 +272,7 @@ onConnInit logger manager wsConn authMode connParams = do
       sendMsg wsConn SMConnKeepAlive
   where
     headers = [ (CI.mk $ TE.encodeUtf8 h, TE.encodeUtf8 v)
-              | (h, v) <- maybe [] Map.toList $ _cpHeaders connParams
+              | (h, v) <- maybe [] Map.toList $ connParamsM >>= _cpHeaders
               ]
 
 onClose

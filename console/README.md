@@ -8,13 +8,22 @@ We use [dotenv](https://github.com/motdotla/dotenv) for setting environment vari
 PORT=3000
 NODE_ENV=development
 DATA_API_URL=http://localhost:9000
+DEV_DATA_API_URL=http://localhost:9000
 API_HOST=http://localhost
 API_PORT=9693
 ACCESS_KEY=abcd
+IS_ACCESS_KEY_SET=false
 CONSOLE_MODE=cli
-DEV_DATA_API_URL=http://localhost:9000
 URL_PREFIX=/
 ```
 
 **Note**
-The .env file should not be in version control.
+
+- The .env file should not be in version control.
+- CONSOLE_MODE can be either 'cli' or 'hasuradb'.
+- API_HOST and API_PORT are for contacting hasura cli console server.
+- ACCESS_KEY will be set by hasura cli.
+- IS_ACCESS_KEY_SET will be set by graphql-engine server.
+- DEV_DATA_API_URL is used to simulate cli console, where server can be hosted anywhere.
+- URL_PREFIX can be changed to host console on a different base URL path.
+-
