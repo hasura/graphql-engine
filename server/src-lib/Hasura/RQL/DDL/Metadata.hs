@@ -223,10 +223,10 @@ applyQP2 (ReplaceMetadata tables templates) = do
       withPathK "delete_permissions" $ processPerms tabInfo $
         table ^. tmDeletePermissions
 
-    indexedForM_ tables $ \table -> do
+    indexedForM_ tables $ \table ->
       withPathK "event_triggers" $
         indexedForM_ (table ^. tmEventTriggers) $ \et ->
-        DS.subTableP2 (table ^. tmTable) et
+        DS.subTableP2 (table ^. tmTable) False et
 
   -- query templates
   withPathK "queryTemplates" $
@@ -408,8 +408,7 @@ instance HDBQuery DumpInternalState where
   type Phase1Res DumpInternalState = ()
   phaseOne _ = adminOnly
 
-  phaseTwo _ _ = do
-    sc <- askSchemaCache
-    return $ encode sc
+  phaseTwo _ _ =
+    encode <$> askSchemaCache
 
   schemaCachePolicy = SCPNoChange
