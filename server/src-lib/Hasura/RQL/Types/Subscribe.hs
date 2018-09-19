@@ -20,7 +20,6 @@ module Hasura.RQL.Types.Subscribe
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Int                   (Int64)
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
@@ -69,6 +68,7 @@ data CreateEventTriggerQuery
   , cetqDelete    :: !(Maybe SubscribeOpSpec)
   , cetqRetryConf :: !(Maybe RetryConf)
   , cetqWebhook   :: !T.Text
+  , cetqReplace   :: !Bool
   } deriving (Show, Eq, Lift)
 
 instance FromJSON CreateEventTriggerQuery where
@@ -79,7 +79,8 @@ instance FromJSON CreateEventTriggerQuery where
     update    <- o .:? "update"
     delete    <- o .:? "delete"
     retryConf <- o .:? "retry_conf"
-    webhook   <- o .: "webhook"
+    webhook   <- o .:  "webhook"
+    replace   <- o .:? "replace" .!= False
     let regex = mkRegex "^\\w+$"
         mName = matchRegex regex (T.unpack name)
     case mName of
@@ -88,7 +89,7 @@ instance FromJSON CreateEventTriggerQuery where
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
-    return $ CreateEventTriggerQuery name table insert update delete retryConf webhook
+    return $ CreateEventTriggerQuery name table insert update delete retryConf webhook replace
   parseJSON _ = fail "expecting an object"
 
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)
