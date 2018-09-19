@@ -89,6 +89,7 @@ refs:
         environment:
           DATABASE_URL: postgres://gql_test:@localhost:5432/gql_test
           HGE_URL: http://localhost:8080
+          EVENT_WEBHOOK_HEADER: MyEnvValue
         command: |
           pip3 install -r requirements.txt
           pytest -vv --hge-url="$HGE_URL" --pg-url="$DATABASE_URL"
