@@ -1,0 +1,19 @@
+url: /v1/query
+status: 200
+response:
+  affected_rows: 2
+  returning:
+  - id: 1 
+    name: Author 1
+  - id: 2 
+    name: Author 2
+query:
+  type: insert
+  args:
+    table: author
+    objects:
+    - name: Author 1
+    - name: Author 2
+    returning:
+    - name
+    - id

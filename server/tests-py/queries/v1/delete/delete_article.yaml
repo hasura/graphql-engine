@@ -1,0 +1,19 @@
+url: /v1/query
+status: 200
+response:
+  returning:
+  - author_id: 1
+    content: Sample article content 2
+    id: 2
+  affected_rows: 1
+query:
+  type: delete
+  args:
+    table: article
+    where:
+      id: 2
+    returning:
+    - id
+    - content
+    - author_id
+     
