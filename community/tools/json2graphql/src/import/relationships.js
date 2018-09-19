@@ -66,7 +66,6 @@ const createRelationships = async (tables, url, headers) => {
     }
   );
   if (resp.status !== 200) {
-    cli.action.stop('Error');
     const error = await resp.json();
     throwError(JSON.stringify(error, null, 2));
   }

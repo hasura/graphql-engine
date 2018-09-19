@@ -21,6 +21,7 @@ const runSql = async (sqlArray, url, headers) => {
     }
   );
   if (resp.status !== 200) {
+    const error = await resp.json();
     throwError(JSON.stringify(error, null, 2));
   }
 };

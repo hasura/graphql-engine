@@ -28,7 +28,6 @@ class JSON2GraphQL extends Command {
     const urlVerification = await this.verifyUrl(safeUrl, headers);
     if (urlVerification.error) {
       throw new CLIError(urlVerification.message);
-      process.exit;
     } else {
       cli.action.stop('Done!');
       await importData(dbJson, safeUrl, headers, overwrite);
