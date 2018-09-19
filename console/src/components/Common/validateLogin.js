@@ -1,10 +1,10 @@
-import { loadAccessKeyState, clearState } from './AppState';
-import globals from '../Globals';
-import Endpoints, { globalCookiePolicy } from '../Endpoints';
-import requestAction from '../utils/requestAction';
+import { loadAccessKeyState, clearState } from '../AppState';
+import globals from '../../Globals';
+import Endpoints, { globalCookiePolicy } from '../../Endpoints';
+import requestAction from '../../utils/requestAction';
 
-import { UPDATE_DATA_HEADERS } from './Services/Data/DataActions';
-import { changeRequestHeader } from './ApiExplorer/Actions';
+import { UPDATE_DATA_HEADERS } from '../Services/Data/DataActions';
+import { changeRequestHeader } from '../ApiExplorer/Actions';
 
 const checkValidity = accessKey => {
   return dispatch => {

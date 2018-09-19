@@ -21,7 +21,7 @@ import { metadataConnector } from './components/Services/Data';
 
 import globals from './Globals';
 
-import validateLogin from './components/validateLogin';
+import validateLogin from './components/Common/validateLogin';
 
 const routes = store => {
   // load hasuractl migration status
