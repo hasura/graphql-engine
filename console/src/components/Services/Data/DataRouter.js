@@ -154,7 +154,7 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
       },
       () => {
         // alert('Could not load schema.');
-        replaceState(globals.urlPrefix);
+        replaceState('/');
         cb();
       }
     );
@@ -162,14 +162,14 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
   const migrationRedirects = (nextState, replaceState, cb) => {
     const state = store.getState();
     if (!state.main.migrationMode) {
-      replaceState(globals.urlPrefix + '/data/schema');
+      replaceState('/data/schema');
       cb();
     }
     cb();
   };
   const consoleModeRedirects = (nextState, replaceState, cb) => {
     if (globals.consoleMode === 'hasuradb') {
-      replaceState(globals.urlPrefix + '/data/schema');
+      replaceState('/data/schema');
       cb();
     }
     cb();

@@ -1,7 +1,8 @@
 import { loadAccessKeyState, clearAccessKeyState } from '../AppState';
 import globals from '../../Globals';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
-import requestAction from '../../utils/requestAction';
+
+import requestAction from '../../utils/requestActionPlain';
 
 import { UPDATE_DATA_HEADERS } from '../Services/Data/DataActions';
 import { changeRequestHeader } from '../ApiExplorer/Actions';
@@ -64,7 +65,7 @@ const validateLogin = ({ dispatch }) => {
         })
         .then(() => {
           if (nextState.location.pathname === '/login') {
-            replaceState(globals.urlPrefix + '/');
+            replaceState('/');
           }
           cb();
         })
@@ -72,7 +73,7 @@ const validateLogin = ({ dispatch }) => {
           // Clear state from the localStorage if there exists one
           clearAccessKeyState();
           if (nextState.location.pathname !== '/login') {
-            replaceState(globals.urlPrefix + '/login');
+            replaceState('/login');
           }
           cb();
         });

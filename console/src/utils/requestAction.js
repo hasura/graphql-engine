@@ -59,8 +59,7 @@ const requestAction = (
                 });
               }
               if (
-                msg.code &&
-                msg.code === 'access-denied' &&
+                (msg.code && msg.code === 'access-denied') ||
                 msg.code === 'permission-denied'
               ) {
                 dispatch({
