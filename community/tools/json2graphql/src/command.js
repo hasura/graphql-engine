@@ -27,14 +27,11 @@ class JSON2GraphQL extends Command {
     const headers = key ? {'x-hasura-access-key': key} : {};
     const urlVerification = await this.verifyUrl(safeUrl, headers);
     if (urlVerification.error) {
-      cli.action.stop('Error')
-      console.log('Message: ', urlVerification.message);
-      process.exit
+      throw new CLIError(urlVerification.message);
     } else {
       cli.action.stop('Done!');
       await importData(dbJson, safeUrl, headers, overwrite);
     }
-
   }
 
   getDbJson(db) {
@@ -53,12 +50,12 @@ class JSON2GraphQL extends Command {
         `${url}/v1/version`,
         {
           method: 'GET',
-          headers
+          headers,
         }
       );
-      return resp.status === 200 ? {error: false} : { error: true, message: 'invalid access key'};
+      return resp.status === 200 ? {error: false} : {error: true, message: 'invalid access key'};
     } catch (e) {
-      return  { error: true, message: 'invalid URL'}
+      return  {error: true, message: 'invalid URL'};
     }
   }
 }

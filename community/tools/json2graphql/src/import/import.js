@@ -1,7 +1,6 @@
 const generate = require('./generateTables');
 const {generateSql, runSql} = require('./sql');
 const {cli} = require('cli-ux');
-const {CLIError} = require('@oclif/errors');
 const {trackTables} = require('./track');
 const {getInsertOrder, insertData} = require('./insert');
 const {createRelationships} = require('./relationships');
@@ -11,6 +10,7 @@ const importData = async (db, url, headers, overwrite) => {
   cli.action.start('Processing JSON data');
   const tables = generate(db);
   const sql = generateSql(tables);
+  sql.forEach(s => console.log(s + '\n'));
   cli.action.stop('Done!');
   cli.action.start('Checking database');
   createTables(tables, url, headers, overwrite, runSql, sql).then(() => {
@@ -26,7 +26,7 @@ const importData = async (db, url, headers, overwrite) => {
         insertData(insertOrder, db, tables, url, headers);
       });
     });
-  })
+  });
 };
 
 module.exports = importData;
