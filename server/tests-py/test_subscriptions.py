@@ -97,6 +97,8 @@ class TestSubscriptionBasic(object):
             'id': '1'
         }
         hge_ctx.ws.send(json.dumps(obj))
+        with pytest.raises(queue.Empty):
+            ev = hge_ctx.get_ws_event(3)
 
     def test_start_after_stop(self, hge_ctx):
         self.test_start(hge_ctx)
@@ -201,6 +203,15 @@ class TestSubscriptionLiveQueries(object):
             assert ev['payload']['data'] == {
                 'hge_tests_test_t2': expected_resp[step['name']]['returning'] if 'returning' in expected_resp[step['name']] else []
             }, ev['payload']['data']
+
+        # stop live operation
+        obj = {
+            'id': 'live',
+            'type': 'stop'
+        }
+        hge_ctx.ws.send(json.dumps(obj))
+        with pytest.raises(queue.Empty):
+            ev = hge_ctx.get_ws_event(3)
 
 '''
     Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_terminate
