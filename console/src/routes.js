@@ -21,6 +21,8 @@ import { metadataConnector } from './components/Services/Data';
 
 import globals from './Globals';
 
+import validateLogin from './components/Common/validateLogin';
+
 const routes = store => {
   // load hasuractl migration status
   const requireMigrationStatus = (nextState, replaceState, cb) => {
@@ -29,10 +31,14 @@ const routes = store => {
         () => {
           cb();
         },
-        () => {
-          alert(
-            'Not able to reach the graphql server. Check if hasura console server is running or if graphql server is running and try again'
-          );
+        r => {
+          if (r.code === 'data_api_error') {
+            alert('Hasura CLI: ' + r.message);
+          } else {
+            alert(
+              'Not able to reach the graphql server. Check if hasura console server is running or if graphql server is running and try again'
+            );
+          }
         }
       );
     } else {
@@ -49,7 +55,7 @@ const routes = store => {
   const makeEventRouter = eventRouterUtils.makeEventRouter;
 
   return (
-    <Route path="/" component={App}>
+    <Route path="/" component={App} onEnter={validateLogin(store)}>
       <Route path="login" component={generatedLoginConnector(connect)} />
       <Route
         path=""
