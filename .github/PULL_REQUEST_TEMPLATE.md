@@ -4,9 +4,9 @@
 <!--- Describe your changes in detail -->
 What component does this PR affect?
 <!--- Write here -->
-Required changes from other components
-<!--- Write here -->
-What are the changes required from other components
+Requires changes from other components?
+(Yes/No)
+What are the changes required from other components?
 <!--- Write here -->
 
 ### Related Issue
