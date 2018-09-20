@@ -49,9 +49,10 @@ buildInsTrigFn fn tn be =
   , BB.string7 " VALUES (NEW.*) ON CONFLICT DO NOTHING RETURNING * INTO r; RETURN r; "
   , BB.string7 "WHEN action = 'ignore'::text AND constraint_name is NOT NULL THEN "
   , BB.string7 "EXECUTE 'INSERT INTO " <> toSQL tn
-  , BB.string7 " VALUES ($1.*) ON CONFLICT ON CONSTRAINT ' || constraint_name || ' DO NOTHING RETURNING *' INTO r USING NEW; RETURN r; "
+  , BB.string7 " VALUES ($1.*) ON CONFLICT ON CONSTRAINT ' || quote_ident(constraint_name) || ' DO NOTHING RETURNING *'"
+  , BB.string7 " INTO r USING NEW; RETURN r; "
   , BB.string7 "ELSE EXECUTE 'INSERT INTO " <> toSQL tn
-  , BB.string7 " VALUES ($1.*) ON CONFLICT ON CONSTRAINT ' || constraint_name || ' DO UPDATE ' || set_expression || "
+  , BB.string7 " VALUES ($1.*) ON CONFLICT ON CONSTRAINT ' || quote_ident(constraint_name) || ' DO UPDATE ' || set_expression || "
   , BB.string7 "' RETURNING *' INTO r USING NEW; RETURN r; "
   , BB.string7 "END CASE; "
   , BB.string7 "ELSE RAISE internal_error using message = 'action is not found'; RETURN NULL; "

@@ -63,6 +63,19 @@ args:
     schema: public
     name: address
 
+#Create Company table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "Company" (
+      "id" SERIAL PRIMARY KEY,
+      "name" TEXT
+      )
+- type: track_table
+  args:
+    schema: public
+    name: Company
+
 #Object relationship
 - type: create_object_relationship
   args:
@@ -139,3 +152,25 @@ args:
         bio:
           _is_null: false
       allow_upsert: true
+
+#Company insert permission for user
+- type: create_insert_permission
+  args:
+    table: Company
+    role: user
+    permission:
+      check:
+        id: X-HASURA-COMPANY-ID
+      allow_upsert: true
+
+#Company select permission for user
+- type: create_select_permission
+  args:
+    table: Company
+    role: user
+    permission:
+      columns:
+      - id
+      - name
+      filter:
+        id: X-HASURA-COMPANY-ID
