@@ -2,7 +2,7 @@ import pytest
 import yaml
 from validate import check_query_f
 
-class TestGraphQLQueryBasic(object):
+class TestGraphQLQueryBasic:
 
     def test_select_query_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/select_query_author.yaml')
@@ -28,7 +28,7 @@ class TestGraphQLQueryBasic(object):
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
 
-class TestGraphQLQueryLimits(object):
+class TestGraphQLQueryLimits:
 
     def test_limit_1(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/select_query_article_limit_1.yaml')
@@ -51,7 +51,7 @@ class TestGraphQLQueryLimits(object):
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
 
-class TestGraphQLQueryOffsets(object):
+class TestGraphQLQueryOffsets:
 
     def test_limit_1(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/select_query_article_offset_1_limit_2.yaml')
@@ -68,6 +68,38 @@ class TestGraphQLQueryOffsets(object):
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
         self.dir = 'queries/graphql_query/offset'
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
+
+class TestGraphQLQueryBoolExpJsonB:
+
+    def test_jsonb_contains_article_latest(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_article_author_jsonb_contains_latest.yaml')
+
+    def test_jsonb_contains_article_beststeller(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_author_article_jsonb_contains_bestseller.yaml')
+
+    def test_jsonb_contained_in_latest(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_article_author_jsonb_contained_in_latest.yaml')
+
+    def test_jsonb_contained_in_bestseller_latest(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_article_author_jsonb_contained_in_bestseller_latest.yaml')
+
+    def test_jsonb_has_key_sim_type(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_product_jsonb_has_key_sim_type.yaml')
+
+    def test_jsonb_has_keys_any_os_operating_system(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_product_jsonb_has_keys_any_os_operating_system.yaml')
+
+    def test_jsonb_has_keys_all_touchscreen_ram(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_product_jsonb_has_keys_all_ram_touchscreen.yaml')
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = 'queries/graphql_query/boolexp/jsonb'
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
         yield
