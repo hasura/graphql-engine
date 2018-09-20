@@ -168,15 +168,6 @@ Generic operators (all column types except json, jsonb) :
 - ``_gte``
 - ``_lte``
 
-Operators for comparing columns (all column types except json, jsonb):
-
-- ``_ceq``
-- ``_cneq``
-- ``_cgt``
-- ``_clt``
-- ``_cgte``
-- ``_cnlte``
-
 JSONB operators:
 
 .. list-table::
