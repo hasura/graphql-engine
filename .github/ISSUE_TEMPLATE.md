@@ -2,6 +2,8 @@
 <!--- Provide a general summary of the issue in the Title above -->
 <!--- Please make sure that you have searched for the issue and it doesn't exist -->
 
+<!-- Feel free to remove headings that does not apply to your case -->
+
 ### Expected Behavior
 <!--- If you're describing a bug, tell us what should happen -->
 <!--- If you're suggesting a change/improvement, tell us how it should work -->
@@ -26,10 +28,10 @@
 <!--- How has this issue affected you? What were you trying to accomplish? -->
 <!--- Providing context helps us come up with a solution that is most useful in the real world -->
 
-### Your Environment
+### Environment
 <!--- Include as many relevant details about the environment you experienced the bug in -->
-* Platform Version used: (aplha-0.0.18)
-* Browser name and version: (chrome 69.0.3497.100) [if applicable]
+* GraphQL Engine Version: (v1.0.0-aplha20)
+* Browser name and version: (Chrome 69.0.3497.100) [if applicable]
 * Docker version: (18.03.1-ce-mac65) [if applicable]
-* Operating System and version: (MacOS 10.13.6)
-* Link to your project: (github.com/username/graphql-engine)
+* Operating System and version: (MacOS 10.13.6) [if applicable]
+* Link to your project: (github.com/username/myproject) [if applicable]
