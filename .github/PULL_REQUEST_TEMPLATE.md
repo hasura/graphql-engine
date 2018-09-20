@@ -1,8 +1,9 @@
 <!--- Thank you for submitting this PR! :) -->
-<!--- Provide a general summary of your changes in the Title above -->
+<!--- Provide a general summary of your changes in the Title above, end with (close #<issue-no>) or (fix #<issue-no>) -->
 
 ### Description
 <!--- Describe your changes in detail -->
+
 <!--- Please put an `x` in the boxes below -->
 
 What component does this PR affect? 
@@ -11,7 +12,7 @@ What component does this PR affect?
 - [ ] Console
 - [ ] CLI
 - [ ] Docs
-- [ ] Community
+- [ ] Community Content
 
 Requires changes from other components? If yes, please mark the components:
 
@@ -19,22 +20,22 @@ Requires changes from other components? If yes, please mark the components:
 - [ ] Console
 - [ ] CLI
 - [ ] Docs
-- [ ] Community
+- [ ] Community Content
 
 ### Related Issue
 <!--- Please make sure you have an issue associated with this Pull Request -->
 <!--- If you are suggesting a new feature or change, please discuss it in an issue first -->
 <!--- If you are fixing a bug, there should be an issue describing it with steps to reproduce -->
 <!--- Please don't forget to add `(close/fix #<issue-no>)` to the pull request title -->
+
 <!--- Please link to the issue here: -->
 
 ### Motivation and Context
 <!--- Why is this change required? What problem does it solve? -->
 
-### How Has This Been Tested?
+### Tests
 <!--- Please describe in detail how you tested your changes. -->
-<!--- Include details of your testing environment, and the tests you ran to -->
-<!--- see how your change affects other areas of the code, etc. -->
+<!--- Each component has it's own testing framework, check it out and add your tests to the mix -->
 
 ### Types of changes
 <!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply: -->
@@ -45,6 +46,6 @@ Requires changes from other components? If yes, please mark the components:
 ### Checklist:
 <!--- Go over all the following points, and put an `x` in all the boxes that apply. -->
 <!--- If you're unsure about any of these, don't hesitate to ask. We're here to help! -->
-- [ ] I have read the **CONTRIBUTING** document and my code conforms to the guidelines.
-- [ ] My change requires a change to the documentation. 
+- [ ] I have read the **[contributing guide](https://github.com/hasura/graphql-engine/blob/master/CONTRIBUTING.md)** and my code conforms to the guidelines.
+- [ ] This change requires a change in the documentation. 
 - [ ] I have updated the documentation accordingly.
