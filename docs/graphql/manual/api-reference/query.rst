@@ -160,7 +160,7 @@ Operator
 Generic operators (all column types except json, jsonb) :
 
 - ``_eq``
-- ``_ne``
+- ``_neq``
 - ``_in``
 - ``_nin``
 - ``_gt``
@@ -177,6 +177,26 @@ Operators for comparing columns (all column types except json, jsonb):
 - ``_cgte``
 - ``_cnlte``
 
+JSONB operators:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_contains``
+     - ``@>``
+   * - ``_contained_in``
+     - ``<@``
+   * - ``_has_key``
+     - ``?``
+   * - ``_has_keys_any``
+     - ``?|``
+   * - ``_has_keys_all``
+     - ``?&``
+
+(For more details on what these operators do, refer `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`_.)
+
 Text related operators :
 
 - ``_like``
@@ -189,6 +209,7 @@ Text related operators :
 Checking for ``null`` values :
 
 - ``_is_null`` (takes true/false as values)
+
 
 .. _OrderByExp:
 
