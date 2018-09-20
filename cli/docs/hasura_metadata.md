@@ -1,10 +1,10 @@
 ## hasura metadata
 
-Manage Hausra GraphQL Engine metdata saved in the database
+Manage Hasura GraphQL Engine metdata saved in the database
 
 ### Synopsis
 
-Manage Hausra GraphQL Engine metdata saved in the database
+Manage Hasura GraphQL Engine metdata saved in the database
 
 ### Options
 
