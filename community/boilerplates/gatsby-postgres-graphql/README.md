@@ -55,4 +55,4 @@ Boilerplate to get started with Gatsby, Hasura GraphQL engine as CMS and postgre
 
 # Contributing
 
-Want to contribute to this repo? Issues marked `good-first-issue` or `help-wanted` are a good place to begin.
+Checkout the [contributing guide](../../../CONTRIBUTING.md#community-content) for more details.
