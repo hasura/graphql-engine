@@ -1,0 +1,16 @@
+{
+  "name": "gatsby-source-hasura",
+  "description": "Gatsby simple source hasura graphql cms",
+  "license": "MIT",
+  "scripts": {
+    "develop": "gatsby develop",
+    "build": "gatsby build",
+    "serve": "gatsby serve"
+  },
+  "dependencies": {
+    "@wyze/gatsby-source-graphql": "^1.2.0",
+    "gatsby": "^1.9.277",
+    "gatsby-link": "^1.6.46",
+    "gatsby-source-filesystem": "^1.5.39"
+  }
+}
