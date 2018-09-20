@@ -54,7 +54,7 @@ class HGECtx:
 
         self.resp_queue = queue.Queue(maxsize=1)
         self.error_queue = queue.Queue()
-        self.ws_queue = queue.Queue(maxsize=1)
+        self.ws_queue = queue.Queue(maxsize=-1)
         self.httpd = WebhookServer(self.resp_queue, self.error_queue, server_address)
         self.web_server = threading.Thread(target=self.httpd.serve_forever)
         self.web_server.start()
