@@ -11,11 +11,11 @@ Boilerplate to get started with Gatsby, Hasura GraphQL engine as CMS and postgre
 - Get the Heroku app URL (say `hasura-graphql-2.herokuapp.com`)
 - Clone this repo:
   ```bash
-  git clone https://github.com/hasura/gatsby-source-hasura.git
-  cd gatsby-source-hasura
+  git clone https://github.com/hasura/graphql-engine
+  cd graphql-engine/community/boilerplates/gatsby-source-hasura
   ```
 - [Install Hasura CLI](https://docs.hasura.io/1.0/graphql/manual/hasura-cli/install-hasura-cli.html)
-- Goto `hasura/` and edit `config.yaml`:
+- Edit `config.yaml`:
   ```yaml
   endpoint: https://hasura-graphql-2.herokuapp.com
   ```
@@ -38,6 +38,11 @@ Boilerplate to get started with Gatsby, Hasura GraphQL engine as CMS and postgre
   Verify if the row is inserted successfully
 
   ![Insert data into author table](./assets/browse_rows.jpg)
+
+- Install npm modules:
+  ```bash
+  npm install
+  ```
 
 - Run the app (go to the root of the repo):
   ```bash
