@@ -106,6 +106,7 @@ Metadata.propTypes = {
 const mapStateToProps = state => {
   return {
     ...state.main,
+    dataHeaders: state.tables.dataHeaders,
   };
 };
 
