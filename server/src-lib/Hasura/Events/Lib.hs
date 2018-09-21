@@ -130,6 +130,9 @@ defaultMaxEventThreads = 100
 defaultPollingIntervalSec :: Int
 defaultPollingIntervalSec = 1
 
+retryAfterHeader :: CI.CI T.Text
+retryAfterHeader = "Retry-After"
+
 initEventEngineCtx :: Int -> Int -> STM EventEngineCtx
 initEventEngineCtx maxT pollI = do
   q <- TQ.newTQueue
@@ -190,7 +193,7 @@ processEvent pool e = do
     errorFn err = do
       (logger:: HLogger) <- asks getter
       liftIO $ logger $ L.toEngineLog err
-      checkError
+      checkError err
 
     successFn
       :: ( MonadReader r m
@@ -214,17 +217,44 @@ processEvent pool e = do
          , Has CacheRef r
          , Has EventEngineCtx r
          )
-      => m (Either QErr ())
-    checkError = do
+      => HTTPErr -> m (Either QErr ())
+    checkError err = do
+      let mretryHeader = getRetryAfterHeaderFromError err
       cacheRef::CacheRef <- asks getter
       (cache, _) <- liftIO $ readIORef cacheRef
       let eti = getEventTriggerInfoFromEvent cache e
           retryConfM = etiRetryConf <$> eti
           retryConf = fromMaybe (RetryConf 0 10) retryConfM
           tries = eTries e
-      if tries >= rcNumRetries retryConf -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
+          retryHeaderSeconds = parseRetryHeader mretryHeader
+          triesExhausted = tries >= rcNumRetries retryConf
+          noRetryHeader = isNothing retryHeaderSeconds
+      if triesExhausted && noRetryHeader -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
         then liftIO $ runExceptT $ runErrorAndUnlockQ pool e
-        else liftIO $ runExceptT $ runRetryAfterAndUnlockQ pool e retryConf
+        else do
+        let delay = chooseDelay triesExhausted (rcIntervalSec retryConf) retryHeaderSeconds
+        liftIO $ runExceptT $ runRetryAfterAndUnlockQ pool e delay
+
+    getRetryAfterHeaderFromError (HStatus resp) = getRetryAfterHeaderFromResp resp
+    getRetryAfterHeaderFromError _ = Nothing
+
+    getRetryAfterHeaderFromResp resp = let mHeader = find (\(HeaderConf name _) -> CI.mk name == retryAfterHeader) (hrsHeaders resp)
+                                                  in case mHeader of
+                                                       Just (HeaderConf _ (HVValue value)) -> Just value
+                                                       _ -> Nothing
+
+    parseRetryHeader Nothing = Nothing
+    parseRetryHeader (Just hValue) = let seconds = readMaybe $ T.unpack hValue in
+                                       case seconds of
+                                         Nothing -> Nothing
+                                         Just sec -> if sec > 0 then Just sec else Nothing
+
+
+    -- we need to choose delay between the retry conf and the retry-after header
+    chooseDelay _ retryConfSec Nothing = retryConfSec
+    chooseDelay triesExhausted retryConfSec (Just retryHeaderSec) = if triesExhausted
+                                                                    then retryHeaderSec
+                                                                    else min retryHeaderSec retryConfSec
 
 tryWebhook
   :: ( MonadReader r m
@@ -401,10 +431,10 @@ runErrorAndUnlockQ pool  e = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $
   clearNextRetry e
   unlockEvent e
 
-runRetryAfterAndUnlockQ :: Q.PGPool -> Event -> RetryConf -> ExceptT QErr IO ()
-runRetryAfterAndUnlockQ pool e rconf = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+runRetryAfterAndUnlockQ :: Q.PGPool -> Event -> Int -> ExceptT QErr IO ()
+runRetryAfterAndUnlockQ pool e delay = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
   currentTime <- liftIO getCurrentTime
-  let diff = fromIntegral $ rcIntervalSec rconf
+  let diff = fromIntegral delay
       retryTime = addUTCTime diff currentTime
   setNextRetry e retryTime
   unlockEvent e
