@@ -182,6 +182,8 @@ migrateFrom2 :: Q.TxE QErr ()
 migrateFrom2 = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "ALTER TABLE hdb_catalog.event_triggers ADD COLUMN headers JSON" () False
   Q.unitQ "ALTER TABLE hdb_catalog.event_log ADD COLUMN next_retry_at TIMESTAMP" () False
+  Q.unitQ "CREATE INDEX ON hdb_catalog.event_log (trigger_id)" () False
+  Q.unitQ "CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id)" () False
 
 migrateCatalog :: UTCTime -> Q.TxE QErr String
 migrateCatalog migrationTime = do

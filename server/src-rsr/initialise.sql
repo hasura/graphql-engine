@@ -213,6 +213,8 @@ CREATE TABLE hdb_catalog.event_log
   next_retry_at TIMESTAMP
 );
 
+CREATE INDEX ON hdb_catalog.event_log (trigger_id);
+
 CREATE TABLE hdb_catalog.event_invocation_logs
 (
   id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -224,3 +226,5 @@ CREATE TABLE hdb_catalog.event_invocation_logs
 
   FOREIGN KEY (event_id) REFERENCES hdb_catalog.event_log (id)
 );
+
+CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id);
