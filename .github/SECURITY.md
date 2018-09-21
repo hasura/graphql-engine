@@ -2,7 +2,7 @@
 
 We’re extremely grateful for security researchers and users that report vulnerabilities to the Hasura GraphQL Community. All reports are thoroughly investigated by a set of community volunteers.
 
-To make a report, please email us at build@hasura.io with the security details and the details expected for [all bug reports](https://github.com/hasura/graphql-engine/.github/ISSUE_TEMPLATE.md).
+To make a report, please email us at build@hasura.io with the security details.
 
 ### When Should I Report a Vulnerability?
 
