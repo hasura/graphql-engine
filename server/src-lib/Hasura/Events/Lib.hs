@@ -32,12 +32,13 @@ import           Hasura.SQL.Types
 import qualified Control.Concurrent.STM.TQueue as TQ
 import qualified Control.Lens                  as CL
 import qualified Data.ByteString               as BS
-import qualified Data.ByteString.Lazy          as B
 import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as M
 import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
+import qualified Data.Text.Encoding            as TE
+import qualified Data.Text.Encoding.Error      as TE
 import qualified Data.Time.Clock               as Time
 import qualified Database.PG.Query             as Q
 import qualified Hasura.GraphQL.Schema         as GS
@@ -46,6 +47,8 @@ import qualified Network.HTTP.Types            as N
 import qualified Network.Wreq                  as W
 import qualified Network.Wreq.Session          as WS
 
+invocationVersion :: T.Text
+invocationVersion = "2"
 
 type CacheRef = IORef (SchemaCache, GS.GCtxMap)
 
@@ -89,12 +92,28 @@ instance ToJSON Event where
 
 $(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
 
+data InvocationRequest
+  = InvocationRequest
+  { _irqPayload :: Value
+  , _irqHeaders :: Maybe [HeaderConf]
+  , _irqVersion :: T.Text
+  }
+$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''InvocationRequest)
+
+data InvocationResponse
+  = InvocationResponse
+  { _irsPayload :: TBS.TByteString
+  , _irsHeaders :: Maybe [HeaderConf]
+  , _irsVersion :: T.Text
+  }
+$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''InvocationResponse)
+
 data Invocation
   = Invocation
   { iEventId  :: EventId
-  , iStatus   :: Int64
-  , iRequest  :: Value
-  , iResponse :: TBS.TByteString
+  , iStatus   :: Int
+  , iRequest  :: InvocationRequest
+  , iResponse :: InvocationResponse
   }
 
 data EventEngineCtx
@@ -181,7 +200,7 @@ processEvent pool e = do
          , Has CacheRef r
          , Has EventEngineCtx r
          )
-      => B.ByteString -> m (Either QErr ())
+      => HTTPResp -> m (Either QErr ())
     successFn _ = liftIO $ runExceptT $ runUnlockQ pool e
 
     logQErr :: HLogger -> QErr -> IO ()
@@ -215,7 +234,7 @@ tryWebhook
      , Has CacheRef r
      , Has EventEngineCtx r
      )
-  => Q.PGPool -> Event -> m (Either HTTPErr B.ByteString)
+  => Q.PGPool -> Event -> m (Either HTTPErr HTTPResp)
 tryWebhook pool e = do
   logger:: HLogger <- asks getter
   cacheRef::CacheRef <- asks getter
@@ -237,7 +256,8 @@ tryWebhook pool e = do
         if countThreads >= maxT
           then retry
           else modifyTVar' c (+1)
-      eitherResp <- runExceptT $ runHTTP (addHeaders headers W.defaults) (mkAnyHTTPPost (T.unpack webhook) (Just $ toJSON e)) (Just (ExtraContext createdAt eventId))
+      let options = addHeaders headers W.defaults
+      eitherResp <- runExceptT $ runHTTP options (mkAnyHTTPPost (T.unpack webhook) (Just $ toJSON e)) (Just (ExtraContext createdAt eventId))
 
       --decrement counter once http is done
       liftIO $ atomically $ do
@@ -247,16 +267,22 @@ tryWebhook pool e = do
       finally <- liftIO $ runExceptT $ case eitherResp of
         Left err ->
           case err of
-            HClient excp -> runFailureQ pool $ Invocation (eId e) 1000 (toJSON e) (TBS.fromLBS $ encode $ show excp)
-            HParse _ detail -> runFailureQ pool $ Invocation (eId e) 1001 (toJSON e) (TBS.fromLBS $ encode detail)
-            HStatus status detail -> runFailureQ pool $ Invocation (eId e) (fromIntegral $ N.statusCode status) (toJSON e) detail
-            HOther detail -> runFailureQ pool $ Invocation (eId e) 500 (toJSON e) (TBS.fromLBS $ encode detail)
-        Right resp -> runSuccessQ pool e $ Invocation (eId e) 200 (toJSON e) (TBS.fromLBS resp)
+            HClient excp -> runFailureQ pool $ mkInvo e 1000 (map decodeHeader $ options CL.^. W.headers) (TBS.fromLBS $ encode $ show excp) []
+            HParse _ detail -> runFailureQ pool $ mkInvo e 1001 (map decodeHeader $ options CL.^. W.headers) (TBS.fromLBS $ encode detail) []
+            HStatus errResp -> runFailureQ pool $ mkInvo e (hrsStatus errResp) (map decodeHeader $ options CL.^. W.headers) (hrsBody errResp) (hrsHeaders errResp)
+            HOther detail -> runFailureQ pool $ mkInvo e 500 (map decodeHeader $ options CL.^. W.headers) (TBS.fromLBS $ encode detail) []
+        Right resp -> runSuccessQ pool e $ mkInvo e (hrsStatus resp) (map decodeHeader $ options CL.^. W.headers) (hrsBody resp) (hrsHeaders resp)
       case finally of
         Left err -> liftIO $ logger $ L.toEngineLog $ EventInternalErr err
         Right _  -> return ()
       return eitherResp
   where
+    mkInvo :: Event -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf] -> Invocation
+    mkInvo e' status reqHeaders respBody respHeaders = Invocation
+                                                      (eId e')
+                                                      status
+                                                      (mkInvoReq (toJSON e) reqHeaders)
+                                                      (mkInvoResp respBody respHeaders)
     addHeaders :: [(N.HeaderName, BS.ByteString)] -> W.Options -> W.Options
     addHeaders headers opts = foldl (\acc h -> acc CL.& W.header (fst h) CL..~ [snd h] ) opts headers
 
@@ -265,6 +291,21 @@ tryWebhook pool e = do
       let name = CI.mk $ T.encodeUtf8 $ fst header
           value = T.encodeUtf8 $ snd header
       in  (name, value)
+
+    decodeBS = TE.decodeUtf8With TE.lenientDecode
+    decodeHeader (hdrName, hdrVal)
+      = HeaderConf (decodeBS $ CI.original hdrName) (HVValue (decodeBS hdrVal))
+
+    mkInvoReq :: Value -> [HeaderConf] -> InvocationRequest
+    mkInvoReq payload headers = InvocationRequest payload (mkMaybe headers) invocationVersion
+
+    mkInvoResp :: TBS.TByteString -> [HeaderConf] -> InvocationResponse
+    mkInvoResp payload headers = InvocationResponse payload (mkMaybe headers) invocationVersion
+
+    mkMaybe :: [a] -> Maybe [a]
+    mkMaybe [] = Nothing
+    mkMaybe x  = Just x
+
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = let table = eTable e
@@ -291,7 +332,7 @@ insertInvocation invo = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
           INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, request, response)
           VALUES ($1, $2, $3, $4)
-          |] (iEventId invo, iStatus invo, Q.AltJ $ toJSON $ iRequest invo, Q.AltJ $ toJSON $ iResponse invo) True
+          |] (iEventId invo, toInt64 $ iStatus invo, Q.AltJ $ toJSON $ iRequest invo, Q.AltJ $ toJSON $ iResponse invo) True
   Q.unitQE defaultTxErrorHandler [Q.sql|
           UPDATE hdb_catalog.event_log
           SET tries = tries + 1
@@ -370,3 +411,6 @@ runRetryAfterAndUnlockQ pool e rconf = Q.runTx pool (Q.RepeatableRead, Just Q.Re
 
 runUnlockQ :: Q.PGPool -> Event -> ExceptT QErr IO ()
 runUnlockQ pool e = Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ unlockEvent e
+
+toInt64 :: (Integral a) => a -> Int64
+toInt64 = fromIntegral
