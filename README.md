@@ -155,6 +155,8 @@ We are committed to fostering an open and welcoming environment in the community
 
 Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
+If you believe that you've uncovered a security issue, please report it to us at build@hasura.io. You can read more about how to report [here](.github/SECURITY.md).
+
 ## License
 
 The core GraphQL Engine is available under the [GNU Affero General Public
