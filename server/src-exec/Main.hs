@@ -7,7 +7,6 @@ import           Ops
 
 import           Control.Monad.STM          (atomically)
 import           Data.IORef                 (newIORef)
-import           Data.Maybe                 (fromJust)
 import           Data.Time.Clock            (getCurrentTime)
 import           Options.Applicative
 import           System.Environment         (lookupEnv)
@@ -18,15 +17,16 @@ import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Char8      as BC
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
+import qualified Data.String.Conversions    as CS
 import qualified Data.Text                  as T
-import qualified Data.Text.Encoding         as TE
 import qualified Data.Yaml                  as Y
 import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
 import           Hasura.Events.Lib
-import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
+import           Hasura.Logging             (LoggerCtx, defaultLoggerSettings,
+                                             mkLogger, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.Server.App          (mkWaiApp)
@@ -51,9 +51,9 @@ data ServeOptions
   , soTxIso         :: !Q.TxIsolation
   , soRootDir       :: !(Maybe String)
   , soAccessKey     :: !(Maybe AccessKey)
-  , soCorsConfig    :: !CorsConfigFlags
   , soWebHook       :: !(Maybe Webhook)
   , soJwtSecret     :: !(Maybe Text)
+  , soCorsConfig    :: !CorsConfigFlags
   , soEnableConsole :: !Bool
   } deriving (Show, Eq)
 
@@ -83,9 +83,9 @@ parseRavenMode = subparser
                 <*> parseTxIsolation
                 <*> parseRootDir
                 <*> parseAccessKey
-                <*> parseCorsConfig
                 <*> parseWebHook
                 <*> parseJwtSecret
+                <*> parseCorsConfig
                 <*> parseEnableConsole
 
 parseArgs :: IO RavenOptions
@@ -102,42 +102,60 @@ printJSON = BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a) => a -> IO ()
 printYaml = BC.putStrLn . Y.encode
 
-mkAuthMode :: (MonadIO m) => Maybe AccessKey -> Maybe Webhook -> Maybe T.Text -> ExceptT String m AuthMode
-mkAuthMode mAccessKey mWebHook mJwtSecret =
+mkAuthMode
+  :: ( MonadIO m
+     , MonadError T.Text m
+     )
+  => Maybe AccessKey
+  -> Maybe Webhook
+  -> Maybe T.Text
+  -> HTTP.Manager
+  -> LoggerCtx
+  -> m AuthMode
+mkAuthMode mAccessKey mWebHook mJwtSecret httpManager lCtx =
   case (mAccessKey, mWebHook, mJwtSecret) of
     (Nothing,  Nothing,   Nothing)      -> return AMNoAuth
     (Just key, Nothing,   Nothing)      -> return $ AMAccessKey key
     (Just key, Just hook, Nothing)      -> return $ AMAccessKeyAndHook key hook
-    (Just key, Nothing,   Just jwtConf) -> mkJwtMode key jwtConf
+    (Just key, Nothing,   Just jwtConf) -> mkJwtMode key jwtConf httpManager lCtx
     (Nothing, Just _, Nothing)     -> throwError $
       "Fatal Error : --auth-hook (HASURA_GRAPHQL_AUTH_HOOK)"
-      ++ " requires --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
+      <> " requires --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
     (Nothing, Nothing, Just _)     -> throwError $
       "Fatal Error : --jwt-secret (HASURA_GRAPHQL_JWT_SECRET)"
-      ++ " requires --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
+      <> " requires --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
     (Nothing, Just _, Just _)     -> throwError
       "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
     (Just _, Just _, Just _)     -> throwError
       "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
 
 -- is this correct ?
-mkJwtMode :: (MonadIO m) => AccessKey -> T.Text -> ExceptT String m AuthMode
-mkJwtMode key jwtConf = do
+mkJwtMode
+  :: ( MonadIO m
+     , MonadError T.Text m
+     )
+  => AccessKey
+  -> T.Text
+  -> HTTP.Manager
+  -> LoggerCtx
+  -> m AuthMode
+mkJwtMode key jwtConf httpManager loggerCtx = do
   -- the JWT Conf as JSON string; try to parse it
-  conf <- either throwError return $ A.eitherDecodeStrict $ TE.encodeUtf8 jwtConf
-  jwkRef <- case (jcKey conf, jcGoogleJwkUrl conf, jcAuth0JwkUrl conf) of
-    (Nothing, Nothing, Nothing) -> throwError "Fatal Error: In JWT conf: key, google_jwk_url, auth0_jwk_url all cannot be empty"
-    (Just _, Just _, Just _) -> throwError "Fatal Error: In JWT conf: key, google_jwk_url, auth0_jwk_url all cannot be present at same time"
-    (_, Just _, Just _) -> throwError "Fatal Error: google_jwk_url and auth0_jwk_url cannot be present at the same time"
-    (Just jwk, _, _) -> liftIO $ newIORef (JWKSet [jwk])
-    (Nothing, _, _) -> liftIO $ createJwkRef (jcGoogleJwkUrl conf) (jcAuth0JwkUrl conf)
+  conf   <- either (throwError . T.pack) return $ A.eitherDecodeStrict $ CS.cs jwtConf
+  jwkRef <- case (jcKey conf, jcJwkUrl conf) of
+    (Nothing, Nothing) ->
+      throwError "Fatal Error: JWT conf: key and jwk_url both cannot be empty"
+    (Just _, Just _) ->
+      throwError "Fatal Error: JWT conf: key, jwk_url both cannot be present"
+
+    (Just jwk, _) -> liftIO $ newIORef (JWKSet [jwk])
+    (Nothing, Just url) -> do
+      ref <- liftIO $ newIORef $ JWKSet []
+      updateJwkRef (mkLogger loggerCtx) httpManager url ref
+      return ref
 
   let jwtCtx = JWTCtx jwkRef (jcClaimNs conf) (jcAudience conf)
   return $ AMAccessKeyAndJWT key jwtCtx
-  where
-    createJwkRef mGoogUrl mAuth0Url =
-      maybe (createAuth0JwkRef $ fromJust mAuth0Url) createGoogleJwkRef mGoogUrl
-
 
 main :: IO ()
 main =  do
@@ -146,18 +164,24 @@ main =  do
   ci <- either ((>> exitFailure) . putStrLn . connInfoErrModifier)
     return $ mkConnInfo mEnvDbUrl rci
   printConnInfo ci
-  loggerCtx <- mkLoggerCtx $ defaultLoggerSettings True
-  hloggerCtx <- mkLoggerCtx $ defaultLoggerSettings False
+  loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
+  hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case ravenMode of
-    ROServe (ServeOptions port cp isoL mRootDir mAccessKey corsCfg mWebHook mJwtSecret enableConsole) -> do
+    ROServe (ServeOptions port cp isoL mRootDir mAccessKey mWebHook mJwtSecret
+             corsCfg enableConsole) -> do
+
       -- get all auth mode related config
       mFinalAccessKey <- considerEnv "HASURA_GRAPHQL_ACCESS_KEY" $ getAccessKey <$> mAccessKey
       mFinalWebHook   <- considerEnv "HASURA_GRAPHQL_AUTH_HOOK" $ getWebhook <$> mWebHook
       mFinalJwtSecret <- considerEnv "HASURA_GRAPHQL_JWT_SECRET" mJwtSecret
       -- prepare auth mode
-      authModeRes <- runExceptT $ mkAuthMode (AccessKey <$> mFinalAccessKey) (Webhook <$> mFinalWebHook) mFinalJwtSecret
-      am <- either ((>> exitFailure) . putStrLn) return authModeRes
+      authModeRes <- runExceptT $ mkAuthMode (AccessKey <$> mFinalAccessKey)
+                                             (Webhook <$> mFinalWebHook)
+                                             mFinalJwtSecret
+                                             httpManager
+                                             loggerCtx
+      am <- either ((>> exitFailure) . putStrLn . T.unpack) return authModeRes
       finalCorsDomain <- fromMaybe "*" <$> considerEnv "HASURA_GRAPHQL_CORS_DOMAIN" (ccDomain corsCfg)
       let finalCorsCfg = CorsConfigG finalCorsDomain $ ccDisabled corsCfg
       initialise ci

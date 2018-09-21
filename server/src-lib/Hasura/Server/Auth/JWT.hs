@@ -2,6 +2,9 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE Rank2Types            #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
 module Hasura.Server.Auth.JWT
@@ -10,10 +13,10 @@ module Hasura.Server.Auth.JWT
   , JWTConfig (..)
   , JWTCtx (..)
   , JWKSet (..)
-  , createGoogleJwkRef
-  , createAuth0JwkRef
+  , updateJwkRef
   ) where
 
+import           Control.Exception          (try)
 import           Control.Lens
 import           Control.Monad              (when)
 import           Crypto.JOSE.Types          (Base64Integer (..))
@@ -25,15 +28,21 @@ import           Data.ASN1.Types            (ASN1 (End, IntVal, Start),
                                              ASN1ConstructionType (Sequence),
                                              fromASN1)
 import           Data.Int                   (Int64)
-import           Data.IORef                 (IORef, newIORef, readIORef)
-import           Data.List                  (find)
-import           Data.Time.Clock            (getCurrentTime)
+import           Data.IORef                 (IORef, modifyIORef, readIORef)
 
+import           Data.List                  (find)
+import           Data.Time.Clock            (diffUTCTime, getCurrentTime)
+import           Data.Time.Format           (defaultTimeLocale, parseTimeM)
+
+import           Hasura.Logging             (LogLevel (..), Logger)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Logging      (JwkRefreshHttpError (..),
+                                             JwkRefreshLog (..))
 import           Hasura.Server.Utils        (accessKeyHeader, bsToTxt,
                                              userRoleHeader)
 
+import qualified Control.Concurrent         as C
 import qualified Data.Aeson                 as A
 import qualified Data.Aeson.Casing          as A
 import qualified Data.Aeson.TH              as A
@@ -42,37 +51,27 @@ import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.CaseInsensitive       as CI
 import qualified Data.HashMap.Strict        as Map
 import qualified Data.PEM                   as PEM
+import qualified Data.String.Conversions    as CS
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import qualified Data.X509                  as X509
+import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Types         as HTTP
 import qualified Network.URI                as N
+import qualified Network.Wreq               as Wreq
 
 
 newtype RawJWT = RawJWT BL.ByteString
 
-data HasuraClaims
-  = HasuraClaims
-  { _cmAllowedRoles :: ![RoleName]
-  , _cmDefaultRole  :: !RoleName
-  } deriving (Show, Eq)
-$(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''HasuraClaims)
-
--- | HGE's own representation of various JWKs
 data JWTConfig
   = JWTConfig
-  { jcType         :: !T.Text
-  , jcKey          :: !(Maybe JWK)
-  , jcClaimNs      :: !(Maybe T.Text)
-  , jcAudience     :: !(Maybe T.Text)
-  , jcGoogleJwkUrl :: !(Maybe N.URI)
-  , jcAuth0JwkUrl  :: !(Maybe N.URI)
+  { jcType     :: !T.Text
+  , jcKey      :: !(Maybe JWK)
+  , jcJwkUrl   :: !(Maybe N.URI)
+  , jcClaimNs  :: !(Maybe T.Text)
+  , jcAudience :: !(Maybe T.Text)
   -- , jcIssuer   :: !(Maybe T.Text)
   } deriving (Show, Eq)
-
-
-instance Show (IORef JWKSet) where
-  show _ = "<IORef JWKRef>"
 
 data JWTCtx
   = JWTCtx
@@ -80,6 +79,16 @@ data JWTCtx
   , jcxClaimNs  :: !(Maybe T.Text)
   , jcxAudience :: !(Maybe T.Text)
   } deriving (Show, Eq)
+
+instance Show (IORef JWKSet) where
+  show _ = "<IORef JWKRef>"
+
+data HasuraClaims
+  = HasuraClaims
+  { _cmAllowedRoles :: ![RoleName]
+  , _cmDefaultRole  :: !RoleName
+  } deriving (Show, Eq)
+$(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''HasuraClaims)
 
 allowedRolesClaim :: T.Text
 allowedRolesClaim = "x-hasura-allowed-roles"
@@ -91,18 +100,69 @@ defaultClaimNs :: T.Text
 defaultClaimNs = "https://hasura.io/jwt/claims"
 
 
--- | Create a Google's JWK Ref
-createGoogleJwkRef :: (MonadIO m) => N.URI -> m (IORef JWKSet)
-createGoogleJwkRef url = do
-  -- fetch jwks from the url
-  let jwkset = JWKSet []
-  liftIO $ newIORef jwkset
+mkJwkRefreshLog :: T.Text -> Maybe JwkRefreshHttpError -> JwkRefreshLog
+mkJwkRefreshLog = JwkRefreshLog (LevelOther "critical")
 
-createAuth0JwkRef :: (MonadIO m) => N.URI -> m (IORef JWKSet)
-createAuth0JwkRef url = do
-  -- fetch jwks from the url
-  let jwkset = JWKSet []
-  liftIO $ newIORef jwkset
+-- | Given a JWK url, fetch JWK from it and create an IORef; also create
+-- | a background thread, if the JWK expires, to refresh it
+updateJwkRef
+  :: ( MonadIO m
+     , MonadError T.Text m)
+  => Logger
+  -> HTTP.Manager
+  -> N.URI
+  -> IORef JWKSet
+  -> m ()
+updateJwkRef logger manager url jwkRef = do
+  let options = Wreq.defaults
+              & Wreq.checkResponse ?~ (\_ _ -> return ())
+              & Wreq.manager .~ Right manager
+
+  res  <- liftIO $ try $ Wreq.getWith options $ show url
+  resp <- either logAndThrow return res
+  let status = resp ^. Wreq.responseStatus
+      respBody = resp ^. Wreq.responseBody
+
+  when (status ^. Wreq.statusCode /= 200) $ do
+    let urlT = T.pack $ show url
+        respBodyT = Just $ CS.cs respBody
+        errMsg = "non-200 response on fetching JWK from: " <> urlT
+        httpErr = Just (JwkRefreshHttpError (Just status) urlT Nothing respBodyT)
+    throwRetry errMsg httpErr
+
+  jwkset <- either (\e -> throwRetry (T.pack e) Nothing) return . A.eitherDecode $ respBody
+  liftIO $ modifyIORef jwkRef (const jwkset)
+  let mExpiresT = resp ^? Wreq.responseHeader "Expires"
+  case mExpiresT of
+    Nothing -> return ()
+    Just expiresT -> do
+      let expiresE = parseTimeM True defaultTimeLocale timeFmt $ CS.cs expiresT
+      expires  <- either (`throwRetry` Nothing) return expiresE
+      currTime <- liftIO getCurrentTime
+      let expiryTtl = diffUTCTime expires currTime
+      void $ liftIO $ C.forkIO (waitAndRefreshToken $ realToFrac expiryTtl)
+
+  where
+    logAndThrow :: (MonadIO m, MonadError T.Text m) => HTTP.HttpException -> m a
+    logAndThrow err = do
+      let httpErr = JwkRefreshHttpError Nothing (T.pack $ show url) (Just err) Nothing
+          errMsg = "Critical: error fetching JWK: " <> T.pack (show err)
+      throwRetry errMsg (Just httpErr)
+
+    timeFmt = "%a, %d %b %Y %T GMT"
+
+    waitAndRefreshToken :: Double -> IO ()
+    waitAndRefreshToken seconds = do
+      let delay = (floor seconds - 10) * 1000 * 1000
+      C.threadDelay delay
+      res <- runExceptT $ updateJwkRef logger manager url jwkRef
+      either (putStrLn . T.unpack) return res
+
+    throwRetry :: (MonadIO m, MonadError T.Text m) => T.Text -> Maybe JwkRefreshHttpError -> m a
+    throwRetry err httpErr = do
+      void $ liftIO $ C.forkIO (waitAndRefreshToken 30)
+      liftIO $ logger $ mkJwkRefreshLog err httpErr
+      throwError err
 
 -- | Process the request headers to verify the JWT and extract UserInfo from it
 processJwt
@@ -247,15 +307,14 @@ verifyJwt ctx (RawJWT rawJWT) = do
 instance A.FromJSON JWTConfig where
 
   parseJSON = A.withObject "JWTConfig" $ \o -> do
-    keyType     <- o A..: "type"
-    mRawKey     <- o A..:? "key"
-    claimNs     <- o A..:? "claims_namespace"
-    aud         <- o A..:? "audience"
-    googJwkUrl  <- o A..:? "google_jwk_url"
-    auth0JwtUrl <- o A..:? "auth0_jwk_url"
+    keyType <- o A..: "type"
+    mRawKey <- o A..:? "key"
+    claimNs <- o A..:? "claims_namespace"
+    aud     <- o A..:? "audience"
+    jwkUrl  <- o A..:? "jwk_url"
 
     case mRawKey of
-      Nothing -> return $ JWTConfig keyType Nothing claimNs aud googJwkUrl auth0JwtUrl
+      Nothing -> return $ JWTConfig keyType Nothing jwkUrl claimNs aud
       Just rawKey -> do
         key <- case keyType of
           "HS256" -> runEither $ parseHmacKey rawKey 256
@@ -267,7 +326,7 @@ instance A.FromJSON JWTConfig where
           -- TODO: support ES256, ES384, ES512, PS256, PS384
           _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
 
-        return $ JWTConfig keyType (Just key) claimNs aud googJwkUrl auth0JwtUrl
+        return $ JWTConfig keyType (Just key) jwkUrl claimNs aud
     where
       runEither = either (invalidJwk . T.unpack) return
       invalidJwk msg = fail ("Invalid JWK: " <> msg)

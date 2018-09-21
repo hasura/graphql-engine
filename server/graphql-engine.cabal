@@ -238,6 +238,7 @@ executable graphql-engine
                      , stm
                      , wreq
                      , connection
+                     , string-conversions
 
   other-modules:     Ops
                      TH

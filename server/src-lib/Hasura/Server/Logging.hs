@@ -8,6 +8,9 @@ module Hasura.Server.Logging
   ( mkAccessLog
   , getRequestHeader
   , WebHookLog(..)
+  , WebHookLogger
+  , JwkRefreshLog (..)
+  , JwkRefreshHttpError (..)
   ) where
 
 import           Control.Arrow          (first)
@@ -39,6 +42,40 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
 
+data JwkRefreshLog
+  = JwkRefreshLog
+  { jrlLogLevel  :: !L.LogLevel
+  , jrlError     :: !T.Text
+  , jrlHttpError :: !(Maybe JwkRefreshHttpError)
+  } deriving (Show)
+
+data JwkRefreshHttpError
+  = JwkRefreshHttpError
+  { jrheStatus        :: !(Maybe N.Status)
+  , jrheUrl           :: !T.Text
+  , jrheHttpException :: !(Maybe H.HttpException)
+  , jrheResponse      :: !(Maybe T.Text)
+  } deriving (Show)
+
+instance ToJSON JwkRefreshHttpError where
+  toJSON jhe =
+    object [ "status_code" .= (N.statusCode <$> jrheStatus jhe)
+           , "url" .= jrheUrl jhe
+           , "response" .= jrheResponse jhe
+           , "http_exception" .= (toJSON <$> jrheHttpException jhe)
+           ]
+
+instance ToJSON JwkRefreshLog where
+  toJSON jrl =
+    object [ "error" .= jrlError jrl
+           , "http_error" .= (toJSON <$> jrlHttpError jrl)
+           ]
+
+instance L.ToEngineLog JwkRefreshLog where
+  toEngineLog jwkRefreshLog =
+    (jrlLogLevel jwkRefreshLog, "jwk-refresh-log", toJSON jwkRefreshLog)
+
+
 data WebHookLog
   = WebHookLog
   { whlLogLevel   :: !L.LogLevel
@@ -68,6 +105,8 @@ instance ToJSON WebHookLog where
                       , "http_error" .= whlError whl
                       , "response" .= whlResponse whl
                       ]
+
+type WebHookLogger = WebHookLog -> IO ()
 
 data AccessLog
   = AccessLog

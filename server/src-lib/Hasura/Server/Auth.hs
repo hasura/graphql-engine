@@ -16,8 +16,7 @@ module Hasura.Server.Auth
   , JWTCtx (..)
   , JWKSet (..)
   , processJwt
-  , createGoogleJwkRef
-  , createAuth0JwkRef
+  , updateJwkRef
   ) where
 
 import           Control.Exception      (try)
@@ -55,8 +54,6 @@ data AuthMode
   | AMAccessKeyAndHook !AccessKey !Webhook
   | AMAccessKeyAndJWT !AccessKey !JWTCtx
   deriving (Show, Eq)
-
-type WebHookLogger = WebHookLog -> IO ()
 
 
 mkUserInfoFromResp
