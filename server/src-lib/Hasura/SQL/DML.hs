@@ -122,6 +122,16 @@ mkSelFromExp isLateral sel tn =
   where
     alias = Alias $ toIden tn
 
+mkFuncFromExp :: QualifiedFunction -> [SQLExp] -> FromExp
+mkFuncFromExp qf args = FromExp [fnFrmItem]
+  where
+    fnFrmItem = FIFunc qf args $ Just $ mkFuncAlias qf
+
+mkFuncAlias :: QualifiedFunction -> Alias
+mkFuncAlias (QualifiedFunction sn fn) =
+  Alias $ Iden $ getSchemaTxt sn <> "_" <> getFunctionTxt fn
+  <> "_result"
+
 mkRowExp :: [Extractor] -> SQLExp
 mkRowExp extrs = let
   innerSel = mkSelect { selExtr = extrs }
@@ -269,6 +279,9 @@ newtype Alias
 instance ToSQL Alias where
   toSQL (Alias iden) = "AS" <-> toSQL iden
 
+instance IsIden Alias where
+  toIden (Alias iden) = iden
+
 instance ToSQL SQLExp where
   toSQL (SEPrep argNumber) =
     BB.char7 '$' <> BB.intDec argNumber
@@ -351,6 +364,7 @@ instance ToSQL DistinctExpr where
 data FromItem
   = FISimple !QualifiedTable !(Maybe Alias)
   | FIIden !Iden
+  | FIFunc !QualifiedFunction ![SQLExp] !(Maybe Alias)
   | FISelect !Lateral !Select !Alias
   | FIJoin !JoinExpr
   deriving (Show, Eq)
@@ -360,6 +374,8 @@ instance ToSQL FromItem where
     toSQL qt <-> toSQL mal
   toSQL (FIIden iden) =
     toSQL iden
+  toSQL (FIFunc qf args mal) =
+    toSQL qf <> paren (", " <+> args) <-> toSQL mal
   toSQL (FISelect mla sel al) =
     toSQL mla <-> paren (toSQL sel) <-> toSQL al
   toSQL (FIJoin je) =

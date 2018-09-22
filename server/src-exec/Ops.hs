@@ -28,7 +28,7 @@ import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "2"
+curCatalogVer = "3"
 
 initCatalogSafe :: UTCTime -> Q.TxE QErr String
 initCatalogSafe initTime =  do
@@ -178,21 +178,24 @@ migrateFrom1 = do
   -- set as system defined
   setAsSystemDefined
 
+migrateFrom2 :: Q.TxE QErr ()
+migrateFrom2 =
+  -- migrate database
+  Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_2.sql")
+
 migrateCatalog :: UTCTime -> Q.TxE QErr String
 migrateCatalog migrationTime = do
   preVer <- getCatalogVersion
   if | preVer == curCatalogVer ->
        return "migrate: already at the latest version"
-     | preVer == "0.8" -> do
-         migrateFrom08
-         migrateFrom1
-         afterMigrate
-     | preVer == "1" -> do
-         migrateFrom1
-         afterMigrate
+     | preVer == "0.8" -> migrateFrom08 >> migrate1To3
+     | preVer == "1" -> migrate1To3
+     | preVer == "2" -> migrateFrom2 >> afterMigrate
      | otherwise -> throw400 NotSupported $
                     "migrate: unsupported version : " <> preVer
   where
+    migrate1To3 = migrateFrom1 >> migrateFrom2 >> afterMigrate
     afterMigrate = do
        -- update the catalog version
        updateVersion

@@ -9,6 +9,7 @@ module Hasura.GraphQL.Resolve.Select
   ( convertSelect
   , convertSelectByPKey
   , fromSelSet
+  , convertFuncQuery
   ) where
 
 import           Data.Has
@@ -58,7 +59,7 @@ fieldAsPath fld = nameAsPath $ _fName fld
 fromField
   :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RS.SelectData
 fromField tn permFilter permLimit fld = fieldAsPath fld $ do
-  whereExpM  <- withArgM args "where" $ convertBoolExp tn
+  whereExpM  <- withArgM args "where" $ convertBoolExp (S.mkQual tn)
   ordByExpM  <- withArgM args "order_by" parseOrderBy
   limitExpM  <- RS.applyPermLimit permLimit
                 <$> withArgM args "limit" parseLimit
@@ -76,6 +77,29 @@ fromFieldByPKey tn permFilter fld = fieldAsPath fld $ do
   annFlds <- fromSelSet (_fType fld) $ _fSelSet fld
   return $ RS.SelectData annFlds tn Nothing (permFilter, Just boolExp)
     Nothing [] Nothing Nothing True
+
+fromFuncQueryField
+  :: QualifiedTable -> QualifiedFunction -> Maybe Int -> Field -> Convert RS.SelectData
+fromFuncQueryField qt qf permLimit fld = fieldAsPath fld $ do
+  funcArgsM <- withArgM args "args" parseFunctionArgs
+  let funcArgs = fromMaybe [] funcArgsM
+      funFrmExp = S.mkFuncFromExp qf funcArgs
+      qual = S.QualIden $ toIden $ S.mkFuncAlias qf
+  whereExpM  <- withArgM args "where" $ convertBoolExp qual
+  ordByExpM  <- withArgM args "order_by" parseOrderBy
+  limitExpM  <- RS.applyPermLimit permLimit
+                <$> withArgM args "limit" parseLimit
+  offsetExpM <- withArgM args "offset" $ asPGColVal >=> prepare
+  annFlds    <- fromSelSet (_fType fld) $ _fSelSet fld
+  return $ RS.SelectData annFlds qt (Just funFrmExp) (S.BELit True, whereExpM)
+    ordByExpM [] limitExpM offsetExpM False
+  where
+    args = _fArguments fld
+
+parseFunctionArgs :: AnnGValue -> Convert [S.SQLExp]
+parseFunctionArgs val =
+  flip withObject val $ \_ obj ->
+    forM (Map.elems obj) $ prepare <=< asPGColVal
 
 getEnumInfo
   :: ( MonadError QErr m
@@ -139,5 +163,13 @@ convertSelectByPKey
 convertSelectByPKey qt permFilter fld = do
   selData <- withPathK "selectionSet" $
              fromFieldByPKey qt permFilter fld
+  prepArgs <- get
+  return $ RS.selectP2 (selData, prepArgs)
+
+convertFuncQuery
+  :: QualifiedTable -> QualifiedFunction -> Maybe Int -> Field -> Convert RespTx
+convertFuncQuery qt qf permLimit fld = do
+  selData <- withPathK "selectionSet" $
+             fromFuncQueryField qt qf permLimit fld
   prepArgs <- get
   return $ RS.selectP2 (selData, prepArgs)

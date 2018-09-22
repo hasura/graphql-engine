@@ -116,12 +116,12 @@ parseBoolExp annGVal = do
   return $ BoolAnd $ fromMaybe [] boolExpsM
 
 convertBoolExp
-  :: QualifiedTable
+  :: S.Qual
   -> AnnGValue
   -> Convert (GBoolExp RG.AnnSQLBoolExp)
-convertBoolExp tn whereArg = do
+convertBoolExp q whereArg = do
   whereExp <- parseBoolExp whereArg
-  RG.convBoolRhs (RG.mkBoolExpBuilder prepare) (S.mkQual tn) whereExp
+  RG.convBoolRhs (RG.mkBoolExpBuilder prepare) q whereExp
 
 type PGColValMap = Map.HashMap G.Name AnnGValue
 

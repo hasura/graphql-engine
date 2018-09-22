@@ -37,16 +37,18 @@ buildTx userInfo gCtx fld = do
 
     OCSelectPkey tn permFilter hdrs ->
       validateHdrs hdrs >> RS.convertSelectByPKey tn permFilter fld
-      -- RS.convertSelect tn permFilter fld
+
+    OCFuncQuery tn fn permLimit ->
+      RS.convertFuncQuery tn fn permLimit fld
+
     OCInsert tn vn cols hdrs    ->
       validateHdrs hdrs >> RM.convertInsert roleName (tn, vn) cols fld
-      -- RM.convertInsert (tn, vn) cols fld
+
     OCUpdate tn permFilter hdrs ->
       validateHdrs hdrs >> RM.convertUpdate tn permFilter fld
-      -- RM.convertUpdate tn permFilter fld
+
     OCDelete tn permFilter hdrs ->
       validateHdrs hdrs >> RM.convertDelete tn permFilter fld
-      -- RM.convertDelete tn permFilter fld
   where
     roleName = userRole userInfo
     opCtxMap = _gOpCtxMap gCtx

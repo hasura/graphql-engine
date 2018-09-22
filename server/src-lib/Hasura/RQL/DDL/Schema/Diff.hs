@@ -16,6 +16,10 @@ module Hasura.RQL.DDL.Schema.Diff
   , SchemaDiff(..)
   , getSchemaDiff
   , getSchemaChangeDeps
+
+  , FunctionMeta(..)
+  , fetchFunctionMeta
+  , getDroppedFuncs
   ) where
 
 import           Hasura.Prelude
@@ -203,3 +207,30 @@ getSchemaChangeDeps schemaDiff = do
 
     isDirectDep (SOTableObj tn _) = tn `HS.member` (HS.fromList droppedTables)
     isDirectDep _                 = False
+
+data FunctionMeta
+  = FunctionMeta
+  { fmOid      :: !Int
+  , fmFunction :: !QualifiedFunction
+  } deriving (Show, Eq)
+
+fetchFunctionMeta :: Q.Tx [FunctionMeta]
+fetchFunctionMeta = do
+  res <- Q.listQ [Q.sql|
+    SELECT
+        r.routine_schema,
+        r.routine_name,
+        p.oid
+    FROM information_schema.routines r
+         JOIN pg_catalog.pg_proc p ON (p.proname = r.routine_name)
+    WHERE
+        r.routine_schema NOT LIKE 'pg_%'
+        AND r.routine_schema <> 'information_schema'
+        AND r.routine_schema <> 'hdb_catalog'
+                  |] () False
+  forM res $ \(sn, fn, foid) ->
+    return $ FunctionMeta foid $ QualifiedFunction sn fn
+
+getDroppedFuncs :: [FunctionMeta] -> [FunctionMeta] -> [QualifiedFunction]
+getDroppedFuncs oldMeta newMeta =
+  map fmFunction $ getDifference fmOid oldMeta newMeta

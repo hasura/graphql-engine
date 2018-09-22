@@ -1,36 +1,38 @@
-{-# LANGUAGE DeriveLift        #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE DeriveLift            #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Hasura.Server.Query where
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax   (Lift)
+import           Language.Haskell.TH.Syntax     (Lift)
 
-import qualified Data.ByteString.Builder      as BB
-import qualified Data.ByteString.Lazy         as BL
-import qualified Data.HashMap.Strict          as Map
-import qualified Data.Sequence                as Seq
-import qualified Data.Text                    as T
-import qualified Data.Vector                  as V
+import qualified Data.ByteString.Builder        as BB
+import qualified Data.ByteString.Lazy           as BL
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.Sequence                  as Seq
+import qualified Data.Text                      as T
+import qualified Data.Vector                    as V
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.Explain
 import           Hasura.RQL.DML.QueryTemplate
-import           Hasura.RQL.DML.Returning     (encodeJSONVector)
+import           Hasura.RQL.DML.Returning       (encodeJSONVector)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query            as Q
+import qualified Database.PG.Query              as Q
 
 -- data QueryWithTxId
 --   = QueryWithTxId
@@ -50,6 +52,9 @@ data RQLQuery
   = RQAddExistingTableOrView !TrackTable
   | RQTrackTable !TrackTable
   | RQUntrackTable !UntrackTable
+
+  | RQTrackFunction !TrackFunction
+  | RQUntrackFunction !UnTrackFunction
 
   | RQCreateObjectRelationship !CreateObjRel
   | RQCreateArrayRelationship !CreateArrRel
@@ -151,6 +156,9 @@ queryNeedsReload qi = case qi of
   RQTrackTable q               -> queryModifiesSchema q
   RQUntrackTable q             -> queryModifiesSchema q
 
+  RQTrackFunction q            -> queryModifiesSchema q
+  RQUntrackFunction q          -> queryModifiesSchema q
+
   RQCreateObjectRelationship q -> queryModifiesSchema q
   RQCreateArrayRelationship  q -> queryModifiesSchema q
   RQDropRelationship  q        -> queryModifiesSchema q
@@ -201,6 +209,9 @@ buildTxAny userInfo sc rq = case rq of
   RQAddExistingTableOrView q    -> buildTx userInfo sc q
   RQTrackTable q                -> buildTx userInfo sc q
   RQUntrackTable q              -> buildTx userInfo sc q
+
+  RQTrackFunction q   -> buildTx userInfo sc q
+  RQUntrackFunction q -> buildTx userInfo sc q
 
   RQCreateObjectRelationship q -> buildTx userInfo sc q
   RQCreateArrayRelationship  q -> buildTx userInfo sc q

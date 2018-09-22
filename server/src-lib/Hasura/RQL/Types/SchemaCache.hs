@@ -1,11 +1,12 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs             #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes        #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE TemplateHaskell            #-}
 
 module Hasura.RQL.Types.SchemaCache
        ( TableCache
@@ -21,6 +22,7 @@ module Hasura.RQL.Types.SchemaCache
        , addTableToCache
        , modTableInCache
        , delTableFromCache
+       , getTableInfoFromCache
 
        , CacheRM(..)
        , CacheRWM(..)
@@ -79,10 +81,22 @@ module Hasura.RQL.Types.SchemaCache
        , getDependentObjsWith
        , getDependentObjsOfTable
        , getDependentObjsOfQTemplateCache
+       , getDependentObjsOfFunctionCache
        , getDependentPermsOfTable
        , getDependentRelsOfTable
        , getDependentTriggersOfTable
        , isDependentOn
+
+       , FunctionType(..)
+       , FunctionArg(..)
+       , FunctionArgName(..)
+       , FunctionName(..)
+       , FunctionInfo(..)
+       , FunctionCache
+       , getFuncsOfTable
+       , addFunctionToCache
+       , askFunctionInfo
+       , delFunctionFromCache
        ) where
 
 import qualified Database.PG.Query           as Q
@@ -120,12 +134,14 @@ data SchemaObjId
   = SOTable !QualifiedTable
   | SOQTemplate !TQueryName
   | SOTableObj !QualifiedTable !TableObjId
+  | SOFunction !QualifiedFunction
    deriving (Eq, Generic)
 
 instance Hashable SchemaObjId
 
 reportSchemaObj :: SchemaObjId -> T.Text
 reportSchemaObj (SOTable tn) = "table " <> qualTableToTxt tn
+reportSchemaObj (SOFunction fn) = "function " <> qualFunctionToTxt fn
 reportSchemaObj (SOQTemplate qtn) =
   "query-template " <> getTQueryName qtn
 reportSchemaObj (SOTableObj tn (TOCol cn)) =
@@ -432,15 +448,72 @@ mkTableInfo tn isSystemDefined rawCons cols pcols =
     colMap     = M.fromList $ map f cols
     f (cn, ct, b) = (fromPGCol cn, FIColumn $ PGColInfo cn ct b)
 
+data FunctionType
+  = FTVOLATILE
+  | FTIMMUTABLE
+  | FTSTABLE
+  deriving (Eq)
+
+$(deriveToJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionType)
+
+funcTypToTxt :: FunctionType -> T.Text
+funcTypToTxt FTVOLATILE  = "VOLATILE"
+funcTypToTxt FTIMMUTABLE = "IMMUTABLE"
+funcTypToTxt FTSTABLE    = "STABLE"
+
+instance Show FunctionType where
+  show = T.unpack . funcTypToTxt
+
+instance Q.FromCol FunctionType where
+  fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
+    "VOLATILE"  -> Just FTVOLATILE
+    "IMMUTABLE" -> Just FTIMMUTABLE
+    "STABLE"    -> Just FTSTABLE
+    _           -> Nothing
+
+newtype FunctionArgName =
+  FunctionArgName { getFuncArgNameTxt :: T.Text}
+  deriving (Show, Eq, ToJSON)
+
+data FunctionArg
+  = FunctionArg
+  { faName :: !(Maybe FunctionArgName)
+  , faType :: !PGColType
+  } deriving(Show, Eq)
+
+$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
+
+data FunctionInfo
+  = FunctionInfo
+  { fiName          :: !QualifiedFunction
+  , fiSystemDefined :: !Bool
+  , fiType          :: !FunctionType
+  , fiInputArgs     :: ![FunctionArg]
+  , fiReturnType    :: !QualifiedTable
+  , fiDeps          :: ![SchemaDependency]
+  } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
+
+instance CachedSchemaObj FunctionInfo where
+  dependsOn = fiDeps
+
 type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
+type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
 
 data SchemaCache
   = SchemaCache
   { scTables     :: !TableCache
+  , scFunctions  :: !FunctionCache
   , scQTemplates :: !QTemplateCache
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
+
+getFuncsOfTable :: QualifiedTable -> FunctionCache -> [FunctionInfo]
+getFuncsOfTable qt fc = flip filter allFuncs $ \f -> qt == fiReturnType f
+  where
+    allFuncs = M.elems fc
 
 class (Monad m) => CacheRM m where
 
@@ -486,7 +559,7 @@ delQTemplateFromCache qtn = do
 --   askSchemaCache = get
 
 emptySchemaCache :: SchemaCache
-emptySchemaCache = SchemaCache (M.fromList []) (M.fromList [])
+emptySchemaCache = SchemaCache mempty mempty mempty
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do
@@ -506,14 +579,14 @@ delTableFromCache :: (QErrM m, CacheRWM m)
                   => QualifiedTable -> m ()
 delTableFromCache tn = do
   sc <- askSchemaCache
-  void $ getTableInfoFromCache tn sc
+  void $ getTableInfoFromCache tn
   modTableCache $ M.delete tn $ scTables sc
 
-getTableInfoFromCache :: (QErrM m)
+getTableInfoFromCache :: (QErrM m, CacheRM m)
                       => QualifiedTable
-                      -> SchemaCache
                       -> m TableInfo
-getTableInfoFromCache tn sc =
+getTableInfoFromCache tn = do
+  sc <- askSchemaCache
   case M.lookup tn (scTables sc) of
     Nothing -> throw500 $ "table not found in cache : " <>> tn
     Just ti -> return ti
@@ -533,7 +606,7 @@ modTableInCache :: (QErrM m, CacheRWM m)
                 -> m ()
 modTableInCache f tn = do
   sc <- askSchemaCache
-  ti <- getTableInfoFromCache tn sc
+  ti <- getTableInfoFromCache tn
   newTi <- f ti
   modTableCache $ M.insert tn newTi $ scTables sc
 
@@ -622,6 +695,42 @@ delEventTriggerFromCache qt trn =
       let etim = tiEventTriggerInfoMap ti
       return $ ti { tiEventTriggerInfoMap = M.delete trn etim }
 
+addFunctionToCache
+  :: (QErrM m, CacheRWM m)
+  => FunctionInfo -> m ()
+addFunctionToCache fi = do
+  sc <- askSchemaCache
+  let functionCache = scFunctions sc
+  case M.lookup fn functionCache of
+    Just _ -> throw500 $ "function already exists in cache " <>> fn
+    Nothing -> do
+      let newFunctionCache = M.insert fn fi functionCache
+      writeSchemaCache $ sc {scFunctions = newFunctionCache}
+  where
+    fn = fiName fi
+
+askFunctionInfo
+  :: (CacheRM m, QErrM m)
+  => QualifiedFunction ->  m FunctionInfo
+askFunctionInfo qf = do
+  sc <- askSchemaCache
+  maybe throwNoFn return $ M.lookup qf $ scFunctions sc
+  where
+    throwNoFn = throw400 NotExists $
+      "function not found in cache " <>> qf
+
+delFunctionFromCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedFunction -> m ()
+delFunctionFromCache qf = do
+  sc <- askSchemaCache
+  let functionCache = scFunctions sc
+  case M.lookup qf functionCache of
+    Nothing -> throw500 $ "function does not exist in cache " <>> qf
+    Just _ -> do
+      let newFunctionCache = M.delete qf functionCache
+      writeSchemaCache $ sc {scFunctions = newFunctionCache}
+
 addPermToCache
   :: (QErrM m, CacheRWM m)
   => QualifiedTable
@@ -693,6 +802,7 @@ getDependentObjsRWith f visited sc objId =
   where
     thisLevelDeps = concatMap (getDependentObjsOfTableWith f objId) (scTables sc)
                     <> getDependentObjsOfQTemplateCache objId (scQTemplates sc)
+                    <> getDependentObjsOfFunctionCache objId (scFunctions sc)
     go lObjId vis =
       if HS.member lObjId vis
       then vis
@@ -702,6 +812,11 @@ getDependentObjsOfQTemplateCache :: SchemaObjId -> QTemplateCache -> [SchemaObjI
 getDependentObjsOfQTemplateCache objId qtc =
   map (SOQTemplate . qtiName) $ filter (isDependentOn (const True) objId) $
   M.elems qtc
+
+getDependentObjsOfFunctionCache :: SchemaObjId -> FunctionCache -> [SchemaObjId]
+getDependentObjsOfFunctionCache objId fc =
+  map (SOFunction . fiName) $ filter (isDependentOn (const True) objId) $
+  M.elems fc
 
 getDependentObjsOfTable :: SchemaObjId -> TableInfo -> [SchemaObjId]
 getDependentObjsOfTable objId ti =

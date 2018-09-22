@@ -17,6 +17,7 @@ import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema.Diff
+import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Subscribe
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
@@ -51,15 +52,8 @@ saveTableToCatalog (QualifiedTable sn tn) =
 -- Build the TableInfo with all its columns
 getTableInfo :: QualifiedTable -> Bool -> Q.TxE QErr TableInfo
 getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
-  tableExists <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
-            SELECT true from information_schema.tables
-             WHERE table_schema = $1
-               AND table_name = $2;
-                           |] (sn, tn) False
-
-  -- if no columns are found, there exists no such view/table
-  unless (tableExists == [Identity True]) $
-    throw400 NotExists $ "no such table/view exists in postgres : " <>> qt
+  -- check if table exists in postgres
+  assertTableExists qt $ "no such table/view exists in postgres : " <>> qt
 
   -- Fetch the column details
   colData <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
@@ -141,6 +135,10 @@ purgeDep schemaObjId = case schemaObjId of
   (SOQTemplate qtn)              -> do
     liftTx $ delQTemplateFromCatalog qtn
     delQTemplateFromCache qtn
+
+  (SOFunction qf) -> do
+    liftTx $ delFunctionFromCatalog qf
+    delFunctionFromCache qf
 
   (SOTableObj qt (TOTrigger trn)) -> do
     liftTx $ delEventTriggerFromCatalog trn
@@ -259,7 +257,9 @@ unTrackExistingTableOrViewP2 (UntrackTable vn cascade) tableInfo = do
       relDepIds = concatMap mkObjIdFromRel relDeps
       queryTDepIds = getDependentObjsOfQTemplateCache (SOTable vn)
                      (scQTemplates sc)
-      allDepIds = relDepIds <> queryTDepIds
+      functionDepIds = getDependentObjsOfFunctionCache (SOTable vn)
+                       (scFunctions sc)
+      allDepIds = relDepIds <> queryTDepIds <> functionDepIds
 
   -- Report bach with an error if cascade is not set
   when (allDepIds /= [] && not (or cascade)) $ reportDepsExt allDepIds []
@@ -349,6 +349,10 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
     addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook
     liftTx $ mkTriggerQ trid trn (QualifiedTable sn tn) tDef
 
+  functions <- lift $ Q.catchE defaultTxErrorHandler fetchFunctions
+  forM_ functions $ \(sn, fn) ->
+    modifyErr (\e -> "function " <> fn <<> "; " <> e) $
+    trackFunctionP2Setup (QualifiedFunction sn fn)
 
   where
     permHelper sn tn rn pDef pa = do
@@ -390,6 +394,11 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
                SELECT e.schema_name, e.table_name, e.id, e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval
                  FROM hdb_catalog.event_triggers e
                |] () False
+    fetchFunctions =
+      Q.listQ [Q.sql|
+               SELECT function_schema, function_name
+                 FROM hdb_catalog.hdb_function
+                    |] () False
 
 data RunSQL
   = RunSQL
@@ -415,16 +424,22 @@ runSqlP2 (RunSQL t cascade) = do
 
   -- Get the metadata before the sql query, everything, need to filter this
   oldMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
+  olfFuncMetaU <-
+    liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
 
   -- Run the SQL
   res <- liftTx $ Q.multiQE rawSqlErrHandler $ Q.fromBuilder $ TE.encodeUtf8Builder t
 
   -- Get the metadata after the sql query
   newMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
+  newFuncMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
   sc <- askSchemaCache
   let existingTables = M.keys $ scTables sc
       oldMeta = flip filter oldMetaU $ \tm -> tmTable tm `elem` existingTables
       schemaDiff = getSchemaDiff oldMeta newMeta
+      existingFuncs = M.keys $ scFunctions sc
+      oldFuncMeta = flip filter olfFuncMetaU $ \fm -> fmFunction fm `elem` existingFuncs
+      droppedFuncs = getDroppedFuncs oldFuncMeta newFuncMeta
 
   indirectDeps <- getSchemaChangeDeps schemaDiff
 
@@ -433,6 +448,11 @@ runSqlP2 (RunSQL t cascade) = do
 
   -- Purge all the indirect dependents from state
   mapM_ purgeDep indirectDeps
+
+  -- Purge all dropped functions
+  forM_ droppedFuncs $ \qf -> do
+    liftTx $ delFunctionFromCatalog qf
+    delFunctionFromCache qf
 
   -- update the schema cache with the changes
   processSchemaChanges schemaDiff

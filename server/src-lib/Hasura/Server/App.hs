@@ -223,7 +223,7 @@ v1QueryHandler query = do
     -- Also update the schema cache
     dbActionReload = do
       (resp, newSc) <- dbAction
-      newGCtxMap <- GS.mkGCtxMap $ scTables newSc
+      newGCtxMap <- GS.mkGCtxMap (scTables newSc) (scFunctions newSc)
       scRef <- scCacheRef . hcServerCtx <$> ask
       liftIO $ writeIORef scRef (newSc, newGCtxMap)
       return resp
@@ -287,7 +287,7 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
         sc <- buildSchemaCache
-        (,) sc <$> GS.mkGCtxMap (scTables sc)
+        (,) sc <$> GS.mkGCtxMap (scTables sc) (scFunctions sc)
       either initErrExit return pgResp >>= newIORef
 
     cacheLock <- newMVar ()

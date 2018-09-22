@@ -47,11 +47,12 @@ data OpCtx
   = OCInsert QualifiedTable QualifiedTable [PGCol] [T.Text]
   -- tn, filter exp, limit, req hdrs
   | OCSelect QualifiedTable S.BoolExp (Maybe Int) [T.Text]
-  -- tn, filter exp, reqt hdrs
+  -- tn, filter exp, req hdrs
   | OCSelectPkey QualifiedTable S.BoolExp [T.Text]
+  -- tn, fn, limit, req hdrs
+  | OCFuncQuery QualifiedTable QualifiedFunction (Maybe Int)
   -- tn, filter exp, req hdrs
   | OCUpdate QualifiedTable S.BoolExp [T.Text]
-
   -- tn, filter exp, req hdrs
   | OCDelete QualifiedTable S.BoolExp [T.Text]
   deriving (Show, Eq)
@@ -92,6 +93,11 @@ qualTableToName :: QualifiedTable -> G.Name
 qualTableToName = G.Name <$> \case
   QualifiedTable (SchemaName "public") tn -> getTableTxt tn
   QualifiedTable sn tn -> getSchemaTxt sn <> "_" <> getTableTxt tn
+
+qualFunctionToName :: QualifiedFunction -> G.Name
+qualFunctionToName = G.Name <$> \case
+  QualifiedFunction (SchemaName "public") fn -> getFunctionTxt fn
+  QualifiedFunction sn fn -> getSchemaTxt sn <> "_" <> getFunctionTxt fn
 
 isValidTableName :: QualifiedTable -> Bool
 isValidTableName = isValidName . qualTableToName
@@ -143,6 +149,14 @@ mkBoolExpName tn =
 mkBoolExpTy :: QualifiedTable -> G.NamedType
 mkBoolExpTy =
   G.NamedType . mkBoolExpName
+
+mkFuncArgsName :: QualifiedFunction -> G.Name
+mkFuncArgsName fn =
+  qualFunctionToName fn <> "_args"
+
+mkFuncArgsTy :: QualifiedFunction -> G.NamedType
+mkFuncArgsTy =
+  G.NamedType . mkFuncArgsName
 
 mkTableTy :: QualifiedTable -> G.NamedType
 mkTableTy =
@@ -337,6 +351,38 @@ mkSelFldPKey tn cols =
     colInpVal (PGColInfo n typ _) =
       InpValInfo Nothing (mkColName n) $ G.toGT $ G.toNT $ mkScalarTy typ
 
+{-
+
+function(
+  args: function_args
+  where: table_bool_exp
+  limit: Int
+  offset: Int
+): [table!]!
+
+-}
+
+mkFuncQueryFld
+  :: FunctionInfo -> ObjFldInfo
+mkFuncQueryFld funInfo =
+  ObjFldInfo (Just desc) fldName args ty
+  where
+    funcName = fiName funInfo
+    retTable = fiReturnType funInfo
+    funcArgs = fiInputArgs funInfo
+
+    desc = G.Description $ "execute function " <> funcName
+           <<> " which returns " <>> retTable
+    fldName = qualFunctionToName funcName
+    args = fromInpValL $ funcInpArgs <> mkSelArgs retTable
+    funcInpArgs = bool [funcInpArg] [] $ null funcArgs
+
+    funcArgDesc = G.Description $ "input parameters for function " <>> funcName
+    funcInpArg = InpValInfo (Just funcArgDesc) "args" $ G.toGT $ G.toNT $
+                 mkFuncArgsTy funcName
+
+    ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy retTable
+
 -- table_mutation_response
 mkMutRespTy :: QualifiedTable -> G.NamedType
 mkMutRespTy tn =
@@ -369,6 +415,7 @@ mkMutRespObj tn sel =
       where
         desc = "data of the affected rows by the mutation"
 
+-- table_bool_exp
 mkBoolExpInp
   :: QualifiedTable
   -- the fields that are allowed
@@ -408,6 +455,37 @@ mkPGColInp :: PGColInfo -> InpValInfo
 mkPGColInp (PGColInfo colName colTy _) =
   InpValInfo Nothing (G.Name $ getPGColTxt colName) $
   G.toGT $ mkScalarTy colTy
+
+{-
+input function_args {
+  arg1: arg-type1!
+  .     .
+  .     .
+  argn: arg-typen!
+}
+-}
+mkFuncArgsInp :: FunctionInfo -> Maybe InpObjTyInfo
+mkFuncArgsInp funcInfo =
+  bool inpObj Nothing $ null funcArgs
+  where
+    funcName = fiName funcInfo
+    funcArgs = fiInputArgs funcInfo
+
+    inpObj = Just $ InpObjTyInfo Nothing (mkFuncArgsTy funcName)
+             $ fromInpValL argInps
+
+    argInps = fst $ foldr mkArgInps ([], 1::Int) funcArgs
+
+    mkArgInps (FunctionArg nameM ty) (inpVals, argNo) =
+      case nameM of
+        Just argName ->
+          let inpVal = InpValInfo Nothing (G.Name $ getFuncArgNameTxt argName) $
+                       G.toGT $ G.toNT $ mkScalarTy ty
+          in (inpVals <> [inpVal], argNo)
+        Nothing ->
+          let inpVal = InpValInfo Nothing (G.Name $ "arg_" <> T.pack (show argNo)) $
+                       G.toGT $ G.toNT $ mkScalarTy ty
+          in (inpVals <> [inpVal], argNo + 1)
 
 -- table_set_input
 mkUpdSetTy :: QualifiedTable -> G.NamedType
@@ -890,8 +968,10 @@ mkGCtxRole'
   -> [TableConstraint]
   -- all columns
   -> [PGCol]
+  -- all functions
+  -> [FunctionInfo]
   -> TyAgg
-mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints allCols =
+mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints allCols funcs =
   TyAgg (mkTyInfoMap allTypes) fieldMap ordByEnums
 
   where
@@ -901,7 +981,9 @@ mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints allCols 
       or $ fmap snd insPermM
     jsonOpTys = fromMaybe [] updJSONOpInpObjTysM
 
-    allTypes = onConflictTypes <> jsonOpTys <> catMaybes
+    funcInpArgTys = bool [] (map TIInpObj funcArgInpObjs) $ isJust selFldsM
+
+    allTypes = onConflictTypes <> jsonOpTys <> funcInpArgTys <> catMaybes
       [ TIInpObj <$> insInpObjM
       , TIInpObj <$> updSetInpObjM
       , TIInpObj <$> updIncInpObjM
@@ -949,6 +1031,9 @@ mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints allCols 
         then Just $ mkBoolExpInp tn []
         else Nothing
 
+    -- funcargs input type
+    funcArgInpObjs = mapMaybe mkFuncArgsInp funcs
+
     -- helper
     mkFldMap ty = mapFromL ((ty,) . nameFromSelFld)
     -- the fields used in bool exp
@@ -979,19 +1064,22 @@ getRootFldsRole'
   -> [PGCol]
   -> [TableConstraint]
   -> FieldInfoMap
+  -> [FunctionInfo]
   -> Maybe (QualifiedTable, [T.Text], Bool) -- insert perm
   -> Maybe (S.BoolExp, Maybe Int, [T.Text]) -- select filter
   -> Maybe ([PGCol], S.BoolExp, [T.Text]) -- update filter
   -> Maybe (S.BoolExp, [T.Text]) -- delete filter
   -> RootFlds
-getRootFldsRole' tn primCols constraints fields insM selM updM delM =
+getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM =
   RootFlds mFlds
   where
-    mFlds = mapFromL (either _fiName _fiName . snd) $ catMaybes
+    mFlds = mapFromL (either _fiName _fiName . snd) $ funcQueries <>
+            catMaybes
             [ getInsDet <$> insM, getSelDet <$> selM
             , getUpdDet <$> updM, getDelDet <$> delM
             , getPKeySelDet selM $ getColInfos primCols colInfos
             ]
+    funcQueries = maybe [] getFuncQueryFlds selM
     colInfos = fst $ validPartitionFieldInfoMap fields
     getInsDet (vn, hdrs, isUpsertAllowed) =
       ( OCInsert tn vn (map pgiName colInfos) hdrs
@@ -1010,6 +1098,11 @@ getRootFldsRole' tn primCols constraints fields insM selM updM delM =
     getPKeySelDet _ [] = Nothing
     getPKeySelDet (Just (selFltr, _, hdrs)) pCols = Just
       (OCSelectPkey tn selFltr hdrs, Left $ mkSelFldPKey tn pCols)
+
+    getFuncQueryFlds (_, pLimit, _) =
+      flip map funcs $ \fi ->
+      (OCFuncQuery tn (fiName fi) pLimit, Left $ mkFuncQueryFld fi)
+
 
 -- getRootFlds
 --   :: TableCache
@@ -1057,16 +1150,17 @@ mkGCtxRole
   -> FieldInfoMap
   -> [PGCol]
   -> [TableConstraint]
+  -> [FunctionInfo]
   -> RoleName
   -> RolePermInfo
   -> m (TyAgg, RootFlds)
-mkGCtxRole tableCache tn fields pCols constraints role permInfo = do
+mkGCtxRole tableCache tn fields pCols constraints funcs role permInfo = do
   selFldsM <- mapM (getSelFlds tableCache fields role) $ _permSel permInfo
   let insColsM = ((colInfos,) . ipiAllowUpsert) <$> _permIns permInfo
       updColsM = filterColInfos . upiCols <$> _permUpd permInfo
       tyAgg = mkGCtxRole' tn insColsM selFldsM updColsM
-              (void $ _permDel permInfo) pColInfos constraints allCols
-      rootFlds = getRootFldsRole tn pCols constraints fields permInfo
+              (void $ _permDel permInfo) pColInfos constraints allCols funcs
+      rootFlds = getRootFldsRole tn pCols constraints fields funcs permInfo
   return (tyAgg, rootFlds)
   where
     colInfos = fst $ validPartitionFieldInfoMap fields
@@ -1080,10 +1174,11 @@ getRootFldsRole
   -> [PGCol]
   -> [TableConstraint]
   -> FieldInfoMap
+  -> [FunctionInfo]
   -> RolePermInfo
   -> RootFlds
-getRootFldsRole tn pCols constraints fields (RolePermInfo insM selM updM delM) =
-  getRootFldsRole' tn pCols constraints fields
+getRootFldsRole tn pCols constraints fields funcs (RolePermInfo insM selM updM delM) =
+  getRootFldsRole' tn pCols constraints fields funcs
   (mkIns <$> insM) (mkSel <$> selM)
   (mkUpd <$> updM) (mkDel <$> delM)
   where
@@ -1098,25 +1193,27 @@ getRootFldsRole tn pCols constraints fields (RolePermInfo insM selM updM delM) =
 mkGCtxMapTable
   :: (MonadError QErr m)
   => TableCache
+  -> FunctionCache
   -> TableInfo
   -> m (Map.HashMap RoleName (TyAgg, RootFlds))
-mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols _) = do
-  m <- Map.traverseWithKey (mkGCtxRole tableCache tn fields pkeyCols validConstraints) rolePerms
+mkGCtxMapTable tableCache funcCache (TableInfo tn _ fields rolePerms constraints pkeyCols _) = do
+  m <- Map.traverseWithKey (mkGCtxRole tableCache tn fields pkeyCols validConstraints tabFuncs) rolePerms
   let adminCtx = mkGCtxRole' tn (Just (colInfos, True))
                  (Just selFlds) (Just colInfos) (Just ())
-                 pkeyColInfos validConstraints allCols
+                 pkeyColInfos validConstraints allCols tabFuncs
   return $ Map.insert adminRole (adminCtx, adminRootFlds) m
   where
     validConstraints = mkValidConstraints constraints
     colInfos = fst $ validPartitionFieldInfoMap fields
     allCols = map pgiName colInfos
     pkeyColInfos = getColInfos pkeyCols colInfos
+    tabFuncs = getFuncsOfTable tn funcCache
     selFlds = flip map (toValidFieldInfos fields) $ \case
       FIColumn pgColInfo     -> Left pgColInfo
       FIRelationship relInfo -> Right (relInfo, noFilter, Nothing, isRelNullable fields relInfo)
     noFilter = S.BELit True
     adminRootFlds =
-      getRootFldsRole' tn pkeyCols constraints fields
+      getRootFldsRole' tn pkeyCols constraints fields tabFuncs
       (Just (tn, [], True)) (Just (noFilter, Nothing, []))
       (Just (allCols, noFilter, [])) (Just (noFilter, []))
 
@@ -1127,9 +1224,9 @@ type GCtxMap = Map.HashMap RoleName GCtx
 
 mkGCtxMap
   :: (MonadError QErr m)
-  => TableCache -> m (Map.HashMap RoleName GCtx)
-mkGCtxMap tableCache = do
-  typesMapL <- mapM (mkGCtxMapTable tableCache) $
+  => TableCache -> FunctionCache -> m (Map.HashMap RoleName GCtx)
+mkGCtxMap tableCache functionCache = do
+  typesMapL <- mapM (mkGCtxMapTable tableCache functionCache) $
                filter tableFltr $ Map.elems tableCache
   let typesMap = foldr (Map.unionWith mappend) Map.empty typesMapL
   return $ Map.map (uncurry mkGCtx) typesMap

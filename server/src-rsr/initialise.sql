@@ -222,3 +222,12 @@ CREATE TABLE hdb_catalog.event_invocation_logs
 
   FOREIGN KEY (event_id) REFERENCES hdb_catalog.event_log (id)
 );
+
+CREATE TABLE hdb_catalog.hdb_function
+(
+    function_schema TEXT,
+    function_name TEXT,
+    is_system_defined boolean default false,
+
+    PRIMARY KEY (function_schema, function_name)
+);

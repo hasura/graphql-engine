@@ -115,6 +115,19 @@ instance IsIden ConstraintName where
 instance ToSQL ConstraintName where
   toSQL = toSQL . toIden
 
+newtype FunctionName
+  = FunctionName { getFunctionTxt :: T.Text }
+  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
+
+instance IsIden FunctionName where
+  toIden (FunctionName t) = Iden t
+
+instance DQuote FunctionName where
+  dquoteTxt (FunctionName t) = t
+
+instance ToSQL FunctionName where
+  toSQL = toSQL . toIden
+
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
   deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
@@ -168,6 +181,47 @@ qualTableToTxt (QualifiedTable (SchemaName "public") tn) =
   getTableTxt tn
 qualTableToTxt (QualifiedTable sn tn) =
   getSchemaTxt sn <> "." <> getTableTxt tn
+
+data QualifiedFunction
+  = QualifiedFunction
+  { qpSchema   :: !SchemaName
+  , qpFunction :: !FunctionName
+  } deriving (Show, Eq, Generic, Lift)
+
+instance FromJSON QualifiedFunction where
+  parseJSON v@(String _) =
+    QualifiedFunction publicSchema <$> parseJSON v
+  parseJSON (Object o) =
+    QualifiedFunction <$>
+    o .:? "schema" .!= publicSchema <*>
+    o .: "name"
+  parseJSON _ =
+    fail "expecting a string/object for function"
+
+instance ToJSON QualifiedFunction where
+  toJSON (QualifiedFunction (SchemaName "public") fn) = toJSON fn
+  toJSON (QualifiedFunction sn fn) =
+    object [ "schema" .= sn
+           , "name" .= fn
+           ]
+
+instance ToJSONKey QualifiedFunction where
+  toJSONKey = ToJSONKeyText qualFunctionToTxt (text . qualFunctionToTxt)
+
+instance DQuote QualifiedFunction where
+  dquoteTxt = qualFunctionToTxt
+
+instance Hashable QualifiedFunction
+
+instance ToSQL QualifiedFunction where
+  toSQL (QualifiedFunction sn fn) =
+    toSQL sn <> BB.string7 "." <> toSQL fn
+
+qualFunctionToTxt :: QualifiedFunction -> T.Text
+qualFunctionToTxt (QualifiedFunction (SchemaName "public") fn) =
+  getFunctionTxt fn
+qualFunctionToTxt (QualifiedFunction sn fn) =
+  getSchemaTxt sn <> "." <> getFunctionTxt fn
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
