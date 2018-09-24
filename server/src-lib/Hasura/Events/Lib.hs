@@ -50,6 +50,8 @@ import qualified Network.Wreq.Session          as WS
 invocationVersion :: T.Text
 invocationVersion = "2"
 
+type LogEnvHeaders = Bool
+
 type CacheRef = IORef (SchemaCache, GS.GCtxMap)
 
 newtype EventInternalErr
@@ -139,14 +141,14 @@ initEventEngineCtx maxT pollI = do
   c <- newTVar 0
   return $ EventEngineCtx q c maxT pollI
 
-processEventQueue :: L.LoggerCtx -> WS.Session -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
-processEventQueue logctx httpSess pool cacheRef eectx = do
+processEventQueue :: L.LoggerCtx -> LogEnvHeaders -> WS.Session -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
+processEventQueue logctx logenv httpSess pool cacheRef eectx = do
   putStrLn "event_trigger: starting workers"
   threads <- mapM async [pollThread , consumeThread]
   void $ waitAny threads
   where
     pollThread = pollEvents (mkHLogger logctx) pool eectx
-    consumeThread = consumeEvents (mkHLogger logctx) httpSess pool cacheRef eectx
+    consumeThread = consumeEvents (mkHLogger logctx) logenv httpSess pool cacheRef eectx
 
 pollEvents
   :: HLogger -> Q.PGPool -> EventEngineCtx -> IO ()
@@ -159,12 +161,12 @@ pollEvents logger pool eectx  = forever $ do
   threadDelay (pollI * 1000 * 1000)
 
 consumeEvents
-  :: HLogger -> WS.Session -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
-consumeEvents logger httpSess pool cacheRef eectx  = forever $ do
+  :: HLogger -> LogEnvHeaders -> WS.Session -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
+consumeEvents logger logenv httpSess pool cacheRef eectx  = forever $ do
   event <- atomically $ do
     let EventEngineCtx q _ _ _ = eectx
     TQ.readTQueue q
-  async $ runReaderT  (processEvent pool event) (logger, httpSess, cacheRef, eectx)
+  async $ runReaderT  (processEvent logenv pool event) (logger, httpSess, cacheRef, eectx)
 
 processEvent
   :: ( MonadReader r m
@@ -174,10 +176,10 @@ processEvent
      , Has CacheRef r
      , Has EventEngineCtx r
      )
-  => Q.PGPool -> Event -> m ()
-processEvent pool e = do
+  => LogEnvHeaders -> Q.PGPool -> Event -> m ()
+processEvent logenv pool e = do
   (logger:: HLogger) <- asks getter
-  res <- tryWebhook pool e
+  res <- tryWebhook logenv pool e
   finally <- either errorFn successFn res
   liftIO $ either (logQErr logger) (void.return) finally
   where
@@ -264,8 +266,8 @@ tryWebhook
      , Has CacheRef r
      , Has EventEngineCtx r
      )
-  => Q.PGPool -> Event -> m (Either HTTPErr HTTPResp)
-tryWebhook pool e = do
+  => LogEnvHeaders -> Q.PGPool -> Event -> m (Either HTTPErr HTTPResp)
+tryWebhook logenv pool e = do
   logger:: HLogger <- asks getter
   cacheRef::CacheRef <- asks getter
   (cache, _) <- liftIO $ readIORef cacheRef
@@ -276,8 +278,8 @@ tryWebhook pool e = do
       let webhook = etiWebhook eti
           createdAt = eCreatedAt e
           eventId =  eId e
-          headersRaw = etiHeaders eti
-          headers = map encodeHeader headersRaw
+          headerInfos = etiHeaders eti
+          headers = map encodeHeader headerInfos
       eeCtx <- asks getter
       -- wait for counter and then increment beforing making http
       liftIO $ atomically $ do
@@ -287,7 +289,7 @@ tryWebhook pool e = do
           then retry
           else modifyTVar' c (+1)
       let options = addHeaders headers W.defaults
-          decodedHeaders = map decodeHeader $ options CL.^. W.headers
+          decodedHeaders = map (decodeHeader headerInfos) $ options CL.^. W.headers
       eitherResp <- runExceptT $ runHTTP options (mkAnyHTTPPost (T.unpack webhook) (Just $ toJSON e)) (Just (ExtraContext createdAt eventId))
 
       --decrement counter once http is done
@@ -326,17 +328,25 @@ tryWebhook pool e = do
     addHeaders :: [(N.HeaderName, BS.ByteString)] -> W.Options -> W.Options
     addHeaders headers opts = foldl (\acc h -> acc CL.& W.header (fst h) CL..~ [snd h] ) opts headers
 
-    encodeHeader :: (HeaderName, T.Text)-> (N.HeaderName, BS.ByteString)
-    encodeHeader header =
-      let name = CI.mk $ T.encodeUtf8 $ fst header
-          value = T.encodeUtf8 $ snd header
+    encodeHeader :: EventHeaderInfo -> (N.HeaderName, BS.ByteString)
+    encodeHeader headerInfo =
+      let name = CI.mk $ T.encodeUtf8 $ ehiName headerInfo
+          value = T.encodeUtf8 $ ehiCachedValue headerInfo
       in  (name, value)
 
-    decodeHeader :: (N.HeaderName, BS.ByteString) -> HeaderConf
-    decodeHeader (hdrName, hdrVal)
-      = HeaderConf (decodeBS $ CI.original hdrName) (HVValue (decodeBS hdrVal))
-      where
-        decodeBS = TE.decodeUtf8With TE.lenientDecode
+    decodeHeader :: [EventHeaderInfo] -> (N.HeaderName, BS.ByteString) -> HeaderConf
+    decodeHeader headerInfos (hdrName, hdrVal) = let name = decodeBS $ CI.original hdrName
+                                                     mehi = find (\hi -> ehiName hi == name) headerInfos
+                                                 in case mehi of
+                                                      Nothing -> HeaderConf name (HVValue (decodeBS hdrVal))
+                                                      Just ehi -> case ehiValue ehi of
+                                                        HVValue _ -> HeaderConf name (ehiValue ehi)
+                                                        HVEnv _ -> if logenv
+                                                                        then HeaderConf name (HVValue (ehiCachedValue ehi))
+                                                                        else HeaderConf name (ehiValue ehi)
+
+                                                 where
+                                                   decodeBS = TE.decodeUtf8With TE.lenientDecode
 
     mkInvoReq :: Value -> [HeaderConf] -> InvocationRequest
     mkInvoReq payload headers = InvocationRequest payload (mkMaybe headers) invocationVersion
