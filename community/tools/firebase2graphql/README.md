@@ -15,7 +15,7 @@ This is A CLI tool to get instant GraphQL API over your Firebase JSON data dump.
 
 2. Go to `Firebase console > Database > Realtime Database` and click on `Export JSON` from the options on the upper right corner
 
-   ![firebase-export]('./assets/firebase-export.png') 
+   ![firebase-export](https://raw.githubusercontent.com/wawhal/graphql-engine/firbase2graphql/community/tools/firebase2graphql/assets/firebase-export.png) 
 
 3. The exported JSON will be something like this:
 
