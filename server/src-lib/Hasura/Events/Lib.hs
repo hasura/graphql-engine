@@ -94,28 +94,28 @@ instance ToJSON Event where
 
 $(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
 
-data InvocationRequest
-  = InvocationRequest
+data WebhookRequest
+  = WebhookRequest
   { _irqPayload :: Value
   , _irqHeaders :: Maybe [HeaderConf]
   , _irqVersion :: T.Text
   }
-$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''InvocationRequest)
+$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''WebhookRequest)
 
-data InvocationResponse
-  = InvocationResponse
+data WebhookResponse
+  = WebhookResponse
   { _irsPayload :: TBS.TByteString
   , _irsHeaders :: Maybe [HeaderConf]
   , _irsVersion :: T.Text
   }
-$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''InvocationResponse)
+$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''WebhookResponse)
 
 data Invocation
   = Invocation
   { iEventId  :: EventId
   , iStatus   :: Int
-  , iRequest  :: InvocationRequest
-  , iResponse :: InvocationResponse
+  , iRequest  :: WebhookRequest
+  , iResponse :: WebhookResponse
   }
 
 data EventEngineCtx
@@ -240,17 +240,18 @@ processEvent logenv pool e = do
     getRetryAfterHeaderFromError (HStatus resp) = getRetryAfterHeaderFromResp resp
     getRetryAfterHeaderFromError _ = Nothing
 
-    getRetryAfterHeaderFromResp resp = let mHeader = find (\(HeaderConf name _) -> CI.mk name == retryAfterHeader) (hrsHeaders resp)
-                                                  in case mHeader of
-                                                       Just (HeaderConf _ (HVValue value)) -> Just value
-                                                       _ -> Nothing
+    getRetryAfterHeaderFromResp resp
+      = let mHeader = find (\(HeaderConf name _) -> CI.mk name == retryAfterHeader) (hrsHeaders resp)
+        in case mHeader of
+             Just (HeaderConf _ (HVValue value)) -> Just value
+             _                                   -> Nothing
 
     parseRetryHeader Nothing = Nothing
-    parseRetryHeader (Just hValue) = let seconds = readMaybe $ T.unpack hValue in
-                                       case seconds of
-                                         Nothing -> Nothing
-                                         Just sec -> if sec > 0 then Just sec else Nothing
-
+    parseRetryHeader (Just hValue)
+      = let seconds = readMaybe $ T.unpack hValue
+        in case seconds of
+             Nothing  -> Nothing
+             Just sec -> if sec > 0 then Just sec else Nothing
 
     -- we need to choose delay between the retry conf and the retry-after header
     chooseDelay _ retryConfSec Nothing = retryConfSec
@@ -320,11 +321,12 @@ tryWebhook logenv pool e = do
       return eitherResp
   where
     mkInvo :: Event -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf] -> Invocation
-    mkInvo e' status reqHeaders respBody respHeaders = Invocation
-                                                      (eId e')
-                                                      status
-                                                      (mkInvoReq (toJSON e) reqHeaders)
-                                                      (mkInvoResp respBody respHeaders)
+    mkInvo e' status reqHeaders respBody respHeaders
+      = Invocation
+        (eId e')
+        status
+        (mkWebhookReq (toJSON e) reqHeaders)
+        (mkWebhookResp respBody respHeaders)
     addHeaders :: [(N.HeaderName, BS.ByteString)] -> W.Options -> W.Options
     addHeaders headers opts = foldl (\acc h -> acc CL.& W.header (fst h) CL..~ [snd h] ) opts headers
 
@@ -335,24 +337,24 @@ tryWebhook logenv pool e = do
       in  (name, value)
 
     decodeHeader :: [EventHeaderInfo] -> (N.HeaderName, BS.ByteString) -> HeaderConf
-    decodeHeader headerInfos (hdrName, hdrVal) = let name = decodeBS $ CI.original hdrName
-                                                     mehi = find (\hi -> ehiName hi == name) headerInfos
-                                                 in case mehi of
-                                                      Nothing -> HeaderConf name (HVValue (decodeBS hdrVal))
-                                                      Just ehi -> case ehiValue ehi of
-                                                        HVValue _ -> HeaderConf name (ehiValue ehi)
-                                                        HVEnv _ -> if logenv
-                                                                        then HeaderConf name (HVValue (ehiCachedValue ehi))
-                                                                        else HeaderConf name (ehiValue ehi)
+    decodeHeader headerInfos (hdrName, hdrVal)
+      = let name = decodeBS $ CI.original hdrName
+            mehi = find (\hi -> ehiName hi == name) headerInfos
+        in case mehi of
+             Nothing -> HeaderConf name (HVValue (decodeBS hdrVal))
+             Just ehi -> case ehiValue ehi of
+               HVValue _ -> HeaderConf name (ehiValue ehi)
+               HVEnv _ -> if logenv
+                        then HeaderConf name (HVValue (ehiCachedValue ehi))
+                        else HeaderConf name (ehiValue ehi)
+       where
+         decodeBS = TE.decodeUtf8With TE.lenientDecode
 
-                                                 where
-                                                   decodeBS = TE.decodeUtf8With TE.lenientDecode
+    mkWebhookReq :: Value -> [HeaderConf] -> WebhookRequest
+    mkWebhookReq payload headers = WebhookRequest payload (mkMaybe headers) invocationVersion
 
-    mkInvoReq :: Value -> [HeaderConf] -> InvocationRequest
-    mkInvoReq payload headers = InvocationRequest payload (mkMaybe headers) invocationVersion
-
-    mkInvoResp :: TBS.TByteString -> [HeaderConf] -> InvocationResponse
-    mkInvoResp payload headers = InvocationResponse payload (mkMaybe headers) invocationVersion
+    mkWebhookResp :: TBS.TByteString -> [HeaderConf] -> WebhookResponse
+    mkWebhookResp payload headers = WebhookResponse payload (mkMaybe headers) invocationVersion
 
     mkMaybe :: [a] -> Maybe [a]
     mkMaybe [] = Nothing
