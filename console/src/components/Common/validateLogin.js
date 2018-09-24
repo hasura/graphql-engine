@@ -7,6 +7,8 @@ import requestAction from '../../utils/requestActionPlain';
 import { UPDATE_DATA_HEADERS } from '../Services/Data/DataActions';
 import { changeRequestHeader } from '../ApiExplorer/Actions';
 
+import { SERVER_CONSOLE_MODE } from '../../constants';
+
 const checkValidity = accessKey => {
   return dispatch => {
     const url = Endpoints.getSchema;
@@ -38,11 +40,11 @@ const checkValidity = accessKey => {
 
 const validateLogin = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
-    // Validate isAccessKeySet env is set by hasuradb or accessKey env is set by cli
+    // Validate isAccessKeySet env is set by server or accessKey env is set by cli
     if (globals.isAccessKeySet || globals.accessKey) {
       let accessKey = '';
       // Check the console mode and retrieve accessKey accordingly.
-      if (globals.consoleMode === 'hasuradb') {
+      if (globals.consoleMode === SERVER_CONSOLE_MODE) {
         accessKey = loadAccessKeyState('CONSOLE_ACCESS_KEY');
       } else {
         accessKey = globals.accessKey;

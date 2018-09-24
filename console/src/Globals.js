@@ -1,3 +1,5 @@
+import { SERVER_CONSOLE_MODE } from './constants';
+
 const checkExtraSlashes = url => {
   if (!url) {
     return url;
@@ -26,7 +28,7 @@ if (!window.__env.urlPrefix) {
 }
 
 if (!window.__env.consoleMode) {
-  globals.consoleMode = 'hasuradb';
+  globals.consoleMode = SERVER_CONSOLE_MODE;
 }
 
 if (!window.__env.accessKey) {
@@ -37,7 +39,7 @@ if (!window.__env.isAccessKeySet) {
   globals.isAccessKeySet = false;
 }
 
-if (globals.consoleMode === 'hasuradb') {
+if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   if (globals.nodeEnv !== 'development') {
     const windowUrl = window.location.protocol + '//' + window.location.host;
     globals.dataApiUrl = windowUrl;

@@ -12,6 +12,8 @@ import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 import { push } from 'react-router-redux';
 
+import { SERVER_CONSOLE_MODE } from '../../../constants';
+
 const SET_TRIGGER = 'Event/SET_TRIGGER';
 const LOAD_TRIGGER_LIST = 'Event/LOAD_TRIGGER_LIST';
 const LOAD_PROCESSED_EVENTS = 'Event/LOAD_PROCESSED_EVENTS';
@@ -287,7 +289,7 @@ const setRedeliverEvent = eventId => dispatch => {
 
 const handleMigrationErrors = (title, errorMsg) => dispatch => {
   const requestMsg = title;
-  if (globals.consoleMode === 'hasuradb') {
+  if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     // handle errors for run_sql based workflow
     dispatch(showErrorNotification(title, errorMsg.code, requestMsg, errorMsg));
   } else if (errorMsg.code === 'migration_failed') {
@@ -349,7 +351,7 @@ const makeMigrationCall = (
   const migrateUrl = returnMigrateUrl(currMigrationMode);
 
   let finalReqBody;
-  if (globals.consoleMode === 'hasuradb') {
+  if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     finalReqBody = upQuery;
   } else if (globals.consoleMode === 'cli') {
     finalReqBody = migrationBody;
@@ -364,7 +366,7 @@ const makeMigrationCall = (
 
   const onSuccess = () => {
     if (globals.consoleMode === 'cli') {
-      dispatch(loadMigrationStatus()); // don't call for hasuradb mode
+      dispatch(loadMigrationStatus()); // don't call for server mode
     }
     dispatch(loadTriggers());
     customOnSuccess();
