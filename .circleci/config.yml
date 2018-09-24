@@ -79,6 +79,7 @@ refs:
         background: true
         environment:
           HASURA_GRAPHQL_DATABASE_URL: postgres://gql_test:@localhost:5432/gql_test
+          EVENT_WEBHOOK_HEADER: MyEnvValue
     - run:
         name: create test output dir
         command: |
