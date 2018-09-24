@@ -28,8 +28,8 @@ Hasura console needs to be configured with Hasura GraphQL URL to work and hence 
 
 ### Development with Hasura GraphQL Engine
 
-We use [dotenv](https://github.com/motdotla/dotenv) for setting environment variables for development. Create a `.env' file in the root directory (wherever package.json is) and set the following values. Replace accordingly for testing.
-Configure .env file with appropriate values for the required environment variables
+[Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. Create a `.env' file in the root directory (wherever package.json is). Sample`.env` file will look like below
+
 Sample environment variables:
 
 ```bash
