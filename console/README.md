@@ -1,3 +1,4 @@
+<!-- prettier-ignore -->
 # Hasura Console
 
 An admin dashboard to manage database and try out GraphQL APIs. Hasura console is served in production by
