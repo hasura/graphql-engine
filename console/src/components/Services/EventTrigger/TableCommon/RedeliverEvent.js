@@ -21,7 +21,7 @@ class RedeliverEvent extends Component {
   }
   componentDidMount() {
     if (this.props.log.isModalOpen) {
-      this.attachFetching(this.props.log.event_id);
+      this.attachFetching(this.props.log.redeliverEventId);
     }
   }
   componentWillReceiveProps(nextProps) {
@@ -221,10 +221,10 @@ class RedeliverEvent extends Component {
                       value={
                         log.eventInvocations[0]
                           ? JSON.stringify(
-                            log.eventInvocations[0].request,
-                            null,
-                            4
-                          )
+                              log.eventInvocations[0].request,
+                              null,
+                              4
+                            )
                           : ''
                       }
                       minLines={8}
