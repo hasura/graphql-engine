@@ -1,4 +1,5 @@
-<!-- prettier-ignore -->
+<!-- prettier-ignore-start -->
+
 # Hasura Console
 
 An admin dashboard to manage database and try out GraphQL APIs. Hasura console is served in production by
@@ -12,21 +13,16 @@ An admin dashboard to manage database and try out GraphQL APIs. Hasura console i
 ## Table of Contents
 
 - [Contributing to Hasura console](#contributing-to-hasura-console)
+	-	[Prerequisites](#prerequisites)
+	-	[Setup](#setup)
+	-	[Development with Hasura GraphQL Engine](#development-with-hasura-graphql-engine)
+		-	Run Development Server:
+	-	[Development with Hasura CLI](#development-with-hasura-cli)
+		-	Run Development Server:
+	- [Testing Console](#testing)
+-	[How it works](#how-it-works)
+-	[Release Process](#release-process)
 
-      	-	[Prerequisites](#prerequisites)
-
-      	-	[Setup](#setup)
-
-      	-	[Development with Hasura GraphQL Engine](#development-with-hasura-graphql-engine)
-      		-	Run Development Server:
-
-      	-	[Development with Hasura CLI](#development-with-hasura-cli)
-      		-	Run Development Server:
-
-      	- [Testing Console](#testing)
-
-- [How it works](#how-it-works)
-- [Release Process](#release-process)
 
 ## Contributing to Hasura console
 
@@ -139,3 +135,5 @@ Hasura console is a react application bundled with webpack and the entire state 
 ### Release Process
 
 All the development work need to happen in your own fork of the graphql-engine. Once the desired feature/bug is fixed. Raise a PR to the hasura/graphql-engine. Once the PR is raised, CI configured for PR’s will run the test suite and once everything goes well it will generate a preview heroku app with the desired feature/bug fixed. The source code and the preview app will be reviewed by maintainers. If it passes the test suite/code review, then it will be merged to master and released.
+
+<!-- prettier-ignore-end -->
