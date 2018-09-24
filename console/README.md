@@ -11,7 +11,20 @@ An admin dashboard to manage database and try out GraphQL APIs. Hasura console i
 
 ## Table of Contents
 
-- [Contributing to Hasura console](#contributing-to-hasura-console) - [Prerequisites](#prerequisites) - [Setup](#setup) - [Development with Hasura GraphQL Engine](#development-with-hasura-graphql-engine) - Run Development Server: - [Development with Hasura CLI](#development-with-hasura-cli) - Run Development Server: - [Testing Console](#testing)
+- [Contributing to Hasura console](#contributing-to-hasura-console)
+
+      	-	[Prerequisites](#prerequisites)
+
+      	-	[Setup](#setup)
+
+      	-	[Development with Hasura GraphQL Engine](#development-with-hasura-graphql-engine)
+      		-	Run Development Server:
+
+      	-	[Development with Hasura CLI](#development-with-hasura-cli)
+      		-	Run Development Server:
+
+      	- [Testing Console](#testing)
+
 - [How it works](#how-it-works)
 - [Release Process](#release-process)
 
