@@ -182,7 +182,7 @@ instance CacheRM P1 where
 instance UserInfoM P2 where
   askUserInfo = ask
 
-type P2C m = (QErrM m, CacheRWM m, MonadTx m)
+type P2C m = (QErrM m, CacheRWM m, MonadTx m, MonadIO m)
 
 class (Monad m) => MonadTx m where
   liftTx :: Q.TxE QErr a -> m a
