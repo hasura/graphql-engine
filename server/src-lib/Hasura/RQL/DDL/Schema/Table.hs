@@ -346,9 +346,9 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
   eventTriggers <- lift $ Q.catchE defaultTxErrorHandler fetchEventTriggers
   forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ tDefVal, webhook, nr, rint, Q.AltJ mheaders) -> do
     let headerConfs = fromMaybe [] mheaders
-    headers <- getHeadersFromConf headerConfs
+    headerInfos <- getHeaderInfosFromConf headerConfs
     tDef <- decodeValue tDefVal
-    addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook headers
+    addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook headerInfos
     liftTx $ mkTriggerQ trid trn (QualifiedTable sn tn) tDef
 
 

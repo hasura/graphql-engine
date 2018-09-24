@@ -18,6 +18,7 @@ module Hasura.RQL.Types.Subscribe
   , HeaderConf(..)
   , HeaderValue(..)
   , HeaderName
+  , EventHeaderInfo(..)
   ) where
 
 import           Data.Aeson
@@ -69,6 +70,10 @@ data HeaderConf = HeaderConf HeaderName HeaderValue
 data HeaderValue = HVValue T.Text | HVEnv T.Text
    deriving (Show, Eq, Lift)
 
+instance ToJSON HeaderValue where
+  toJSON (HVValue val) = String val
+  toJSON (HVEnv val)   = String val
+
 instance FromJSON HeaderConf where
   parseJSON (Object o) = do
     name <- o .: "name"
@@ -84,6 +89,15 @@ instance FromJSON HeaderConf where
 instance ToJSON HeaderConf where
   toJSON (HeaderConf name (HVValue val)) = object ["name" .= name, "value" .= val]
   toJSON (HeaderConf name (HVEnv val)) = object ["name" .= name, "value_from_env" .= val]
+
+data EventHeaderInfo
+  = EventHeaderInfo
+  { ehiName        :: !HeaderName
+  , ehiValue       :: !HeaderValue
+  , ehiCachedValue :: !T.Text
+  } deriving (Show, Eq, Lift)
+
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventHeaderInfo)
 
 data CreateEventTriggerQuery
   = CreateEventTriggerQuery
