@@ -17,7 +17,7 @@ Hasura GraphQL Engine command line tool
 
 * [hasura console](hasura_console.md)	 - Open console to manage database and try out APIs
 * [hasura init](hasura_init.md)	 - Initialize directory for Hasura GraphQL Engine migrations
-* [hasura metadata](hasura_metadata.md)	 - Manage Hausra GraphQL Engine metdata saved in the database
+* [hasura metadata](hasura_metadata.md)	 - Manage Hasura GraphQL Engine metdata saved in the database
 * [hasura migrate](hasura_migrate.md)	 - Manage migrations on the database
 * [hasura version](hasura_version.md)	 - Print the CLI version
 

@@ -34,6 +34,8 @@ module Hasura.RQL.Types
        , askFieldInfo
        , askPGColInfo
        , askCurRole
+       , askEventTriggerInfo
+       , askTabInfoFromTrigger
 
        , askQTemplateInfo
 
@@ -144,6 +146,23 @@ askTabInfo tabName = do
   where
     errMsg = "table " <> tabName <<> " does not exist"
 
+askTabInfoFromTrigger
+  :: (QErrM m, CacheRM m)
+  => TriggerName -> m TableInfo
+askTabInfoFromTrigger trn = do
+  sc <- askSchemaCache
+  let tabInfos = M.elems $ scTables sc
+  liftMaybe (err400 NotExists errMsg) $ find (isJust.M.lookup trn.tiEventTriggerInfoMap) tabInfos
+  where
+    errMsg = "event trigger " <> trn <<> " does not exist"
+
+askEventTriggerInfo
+  :: (QErrM m, CacheRM m)
+  => EventTriggerInfoMap -> TriggerName -> m EventTriggerInfo
+askEventTriggerInfo etim trn = liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
+  where
+    errMsg = "event trigger " <> trn <<> " does not exist"
+
 askQTemplateInfo
   :: (P1C m)
   => TQueryName
@@ -163,7 +182,7 @@ instance CacheRM P1 where
 instance UserInfoM P2 where
   askUserInfo = ask
 
-type P2C m = (QErrM m, CacheRWM m, MonadTx m)
+type P2C m = (QErrM m, CacheRWM m, MonadTx m, MonadIO m)
 
 class (Monad m) => MonadTx m where
   liftTx :: Q.TxE QErr a -> m a

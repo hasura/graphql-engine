@@ -11,3 +11,9 @@ args:
     table:
       schema: public
       name: post
+
+#Drop table and function from postgres
+- type: run_sql
+  args:
+    sql: |
+      drop table post cascade;

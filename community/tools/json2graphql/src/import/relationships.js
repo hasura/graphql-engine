@@ -1,12 +1,13 @@
 const fetch = require('node-fetch');
+const throwError = require('./error');
 
 const getObjRelationshipName = dep => {
-  const relName = `${dep.substring(0, dep.length - 1)}By${dep[0].toUpperCase()}`;
-  return dep.length === 0 ? relName + 'Id' : relName + dep.substring(1, dep.length) + 'Id';
+  const relName = `${dep}By${dep[0].toUpperCase()}`;
+  return dep.length === 1 ? relName + 'Id' : relName + dep.substring(1, dep.length) + 'Id';
 };
 
 const getArrayRelationshipName = (table, parent) => {
-  const relName = `${table}By${parent[0].toUpperCase()}`;
+  const relName = `${table}sBy${parent[0].toUpperCase()}`;
   return parent.length === 1 ? `${relName}Id` : `${relName}${parent.substring(1, parent.length)}Id`;
 };
 
@@ -22,7 +23,7 @@ const generateRelationships = tables => {
             table: table.name,
             name: `${getObjRelationshipName(dep)}`,
             using: {
-              foreign_key_constraint_on: `${dep.substring(0, dep.length - 1)}_id`,
+              foreign_key_constraint_on: `${dep}_id`,
             },
           },
         });
@@ -34,7 +35,7 @@ const generateRelationships = tables => {
             using: {
               foreign_key_constraint_on: {
                 table: table.name,
-                column: `${dep.substring(0, dep.length - 1)}_id`,
+                column: `${dep}_id`,
               },
             },
           },
@@ -66,8 +67,7 @@ const createRelationships = async (tables, url, headers) => {
   );
   if (resp.status !== 200) {
     const error = await resp.json();
-    console.log(JSON.stringify(error, null, 2));
-    process.exit(1);
+    throwError(JSON.stringify(error, null, 2));
   }
 };
 

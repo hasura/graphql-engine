@@ -15,12 +15,14 @@ module Hasura.RQL.Types.Subscribe
   , RetryConf(..)
   , DeleteEventTriggerQuery(..)
   , DeliverEventQuery(..)
+  , HeaderConf(..)
+  , HeaderValue(..)
+  , HeaderName
   ) where
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Int                   (Int64)
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
@@ -31,6 +33,7 @@ import qualified Data.Text                  as T
 type TriggerName = T.Text
 type TriggerId   = T.Text
 type EventId     = T.Text
+type HeaderName  = T.Text
 
 data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift)
 
@@ -60,6 +63,28 @@ data RetryConf
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
 
+data HeaderConf = HeaderConf HeaderName HeaderValue
+   deriving (Show, Eq, Lift)
+
+data HeaderValue = HVValue T.Text | HVEnv T.Text
+   deriving (Show, Eq, Lift)
+
+instance FromJSON HeaderConf where
+  parseJSON (Object o) = do
+    name <- o .: "name"
+    value <- o .:? "value"
+    valueFromEnv <- o .:? "value_from_env"
+    case (value, valueFromEnv ) of
+      (Nothing, Nothing)  -> fail "expecting value or value_from_env keys"
+      (Just val, Nothing) -> return $ HeaderConf name (HVValue val)
+      (Nothing, Just val) -> return $ HeaderConf name (HVEnv val)
+      (Just _, Just _)    -> fail "expecting only one of value or value_from_env keys"
+  parseJSON _ = fail "expecting object for headers"
+
+instance ToJSON HeaderConf where
+  toJSON (HeaderConf name (HVValue val)) = object ["name" .= name, "value" .= val]
+  toJSON (HeaderConf name (HVEnv val)) = object ["name" .= name, "value_from_env" .= val]
+
 data CreateEventTriggerQuery
   = CreateEventTriggerQuery
   { cetqName      :: !T.Text
@@ -69,6 +94,8 @@ data CreateEventTriggerQuery
   , cetqDelete    :: !(Maybe SubscribeOpSpec)
   , cetqRetryConf :: !(Maybe RetryConf)
   , cetqWebhook   :: !T.Text
+  , cetqHeaders   :: !(Maybe [HeaderConf])
+  , cetqReplace   :: !Bool
   } deriving (Show, Eq, Lift)
 
 instance FromJSON CreateEventTriggerQuery where
@@ -80,6 +107,8 @@ instance FromJSON CreateEventTriggerQuery where
     delete    <- o .:? "delete"
     retryConf <- o .:? "retry_conf"
     webhook   <- o .: "webhook"
+    headers   <- o .:? "headers"
+    replace   <- o .:? "replace" .!= False
     let regex = mkRegex "^\\w+$"
         mName = matchRegex regex (T.unpack name)
     case mName of
@@ -88,7 +117,7 @@ instance FromJSON CreateEventTriggerQuery where
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
-    return $ CreateEventTriggerQuery name table insert update delete retryConf webhook
+    return $ CreateEventTriggerQuery name table insert update delete retryConf webhook headers replace
   parseJSON _ = fail "expecting an object"
 
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)
@@ -126,6 +155,7 @@ data EventTriggerDef
   , etdDefinition :: !TriggerOpsDef
   , etdWebhook    :: !T.Text
   , etdRetryConf  :: !RetryConf
+  , etdHeaders    :: !(Maybe [HeaderConf])
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerDef)

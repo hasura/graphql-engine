@@ -3,11 +3,11 @@ const {query} = require('graphqurl');
 const complexQuery = `
 query {
   favoriteRoutes {
-    routeByRoutesId {
-      leagueByLeaguesId {
-        flightsByLeaguesId {
-          flightCommentsByFlightsId {
-            userByUsersId {
+    routesByRoutesId {
+      leaguesByLeaguesId {
+        flightssByLeaguesId {
+          flightCommentssByFlightsId {
+            usersByUsersId {
               email
             }
           }
@@ -24,7 +24,7 @@ const verifyDataImport = () => {
     endpoint: `${process.env.TEST_HGE_URL}/v1alpha1/graphql`,
     headers: {'x-hasura-access-key': process.env.TEST_X_HASURA_ACCESS_KEY},
   }).then(response => {
-    if (response.data.favoriteRoutes[0].routeByRoutesId.leagueByLeaguesId.flightsByLeaguesId[0].flightCommentsByFlightsId[0].userByUsersId.email === 'osxcode@gmail.com') {
+    if (response.data.favoriteRoutes[0].routesByRoutesId.leaguesByLeaguesId.flightssByLeaguesId[0].flightCommentssByFlightsId[0].usersByUsersId.email === 'osxcode@gmail.com') {
       console.log('✔︎ Test passed');
       process.exit();
     } else {

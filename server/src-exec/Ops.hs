@@ -28,7 +28,7 @@ import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "3"
+curCatalogVer = "4"
 
 runRQLQuery :: RQLQuery -> Q.TxE QErr ()
 runRQLQuery =
@@ -82,7 +82,9 @@ initCatalogStrict createSchema initTime =  do
   pgcryptoExtExists <- Q.catchE defaultTxErrorHandler $ isExtAvailable "pgcrypto"
   if pgcryptoExtExists
     -- only if we created the schema, create the extension
-    then when createSchema $ Q.unitQE needsPgCryptoExt "CREATE EXTENSION IF NOT EXISTS pgcrypto" () False
+    then when createSchema $
+         Q.unitQE needsPgCryptoExt
+           "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public" () False
     else throw500 "FATAL: Could not find extension pgcrytpo. This extension is required."
 
   Q.catchE defaultTxErrorHandler $ do
@@ -178,28 +180,37 @@ migrateFrom1 = do
   -- set as system defined
   setAsSystemDefined
 
-migrateFrom2 :: Q.TxE QErr ()
-migrateFrom2 = do
+migrateFrom3 :: Q.TxE QErr ()
+migrateFrom3 = do
   -- migrate database
   Q.Discard () <- Q.multiQE defaultTxErrorHandler
-    $(Q.sqlFromFile "src-rsr/migrate_from_2.sql")
+    $(Q.sqlFromFile "src-rsr/migrate_from_3.sql")
   -- migrate metadata
-  runRQLQuery migrateMetadataFrom2
+  runRQLQuery migrateMetadataFrom3
   -- set as system defined
   setAsSystemDefined
+
+migrateFrom2 :: Q.TxE QErr ()
+migrateFrom2 = Q.catchE defaultTxErrorHandler $ do
+  Q.unitQ "ALTER TABLE hdb_catalog.event_triggers ADD COLUMN headers JSON" () False
+  Q.unitQ "ALTER TABLE hdb_catalog.event_log ADD COLUMN next_retry_at TIMESTAMP" () False
+  Q.unitQ "CREATE INDEX ON hdb_catalog.event_log (trigger_id)" () False
+  Q.unitQ "CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id)" () False
 
 migrateCatalog :: UTCTime -> Q.TxE QErr String
 migrateCatalog migrationTime = do
   preVer <- getCatalogVersion
   if | preVer == curCatalogVer ->
        return "migrate: already at the latest version"
-     | preVer == "0.8" -> migrateFrom08 >> migrate1To3
-     | preVer == "1" -> migrate1To3
-     | preVer == "2" -> migrateFrom2 >> afterMigrate
+     | preVer == "0.8" -> migrateFrom08 >> migrate1To4
+     | preVer == "1" -> migrate1To4
+     | preVer == "2" -> migrate2To4
+     | preVer == "3" -> migrateFrom3 >> afterMigrate
      | otherwise -> throw400 NotSupported $
                     "migrate: unsupported version : " <> preVer
   where
-    migrate1To3 = migrateFrom1 >> migrateFrom2 >> afterMigrate
+    migrate1To4 = migrateFrom1 >> migrateFrom2 >> migrateFrom3 >> afterMigrate
+    migrate2To4 = migrateFrom2 >> migrateFrom3 >> afterMigrate
     afterMigrate = do
        -- update the catalog version
        updateVersion
