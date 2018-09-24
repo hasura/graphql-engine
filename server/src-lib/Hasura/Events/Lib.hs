@@ -287,6 +287,7 @@ tryWebhook pool e = do
           then retry
           else modifyTVar' c (+1)
       let options = addHeaders headers W.defaults
+          decodedHeaders = map decodeHeader $ options CL.^. W.headers
       eitherResp <- runExceptT $ runHTTP options (mkAnyHTTPPost (T.unpack webhook) (Just $ toJSON e)) (Just (ExtraContext createdAt eventId))
 
       --decrement counter once http is done
@@ -297,11 +298,20 @@ tryWebhook pool e = do
       finally <- liftIO $ runExceptT $ case eitherResp of
         Left err ->
           case err of
-            HClient excp -> runFailureQ pool $ mkInvo e 1000 (map decodeHeader $ options CL.^. W.headers) (TBS.fromLBS $ encode $ show excp) []
-            HParse _ detail -> runFailureQ pool $ mkInvo e 1001 (map decodeHeader $ options CL.^. W.headers) (TBS.fromLBS $ encode detail) []
-            HStatus errResp -> runFailureQ pool $ mkInvo e (hrsStatus errResp) (map decodeHeader $ options CL.^. W.headers) (hrsBody errResp) (hrsHeaders errResp)
-            HOther detail -> runFailureQ pool $ mkInvo e 500 (map decodeHeader $ options CL.^. W.headers) (TBS.fromLBS $ encode detail) []
-        Right resp -> runSuccessQ pool e $ mkInvo e (hrsStatus resp) (map decodeHeader $ options CL.^. W.headers) (hrsBody resp) (hrsHeaders resp)
+            HClient excp -> let respPayload = TBS.fromLBS $ encode $ show excp
+                            in runFailureQ pool $ mkInvo e 1000 decodedHeaders respPayload []
+            HParse _ detail -> let respPayload = TBS.fromLBS $ encode detail
+                               in runFailureQ pool $ mkInvo e 1001 decodedHeaders respPayload []
+            HStatus errResp -> let respPayload = hrsBody errResp
+                                   respHeaders = hrsHeaders errResp
+                                   respStatus = hrsStatus errResp
+                               in runFailureQ pool $ mkInvo e respStatus decodedHeaders respPayload respHeaders
+            HOther detail -> let respPayload = (TBS.fromLBS $ encode detail)
+                             in runFailureQ pool $ mkInvo e 500 decodedHeaders respPayload []
+        Right resp -> let respPayload = hrsBody resp
+                          respHeaders = hrsHeaders resp
+                          respStatus = hrsStatus resp
+                      in runSuccessQ pool e $ mkInvo e respStatus decodedHeaders respPayload respHeaders
       case finally of
         Left err -> liftIO $ logger $ L.toEngineLog $ EventInternalErr err
         Right _  -> return ()
@@ -322,9 +332,11 @@ tryWebhook pool e = do
           value = T.encodeUtf8 $ snd header
       in  (name, value)
 
-    decodeBS = TE.decodeUtf8With TE.lenientDecode
+    decodeHeader :: (N.HeaderName, BS.ByteString) -> HeaderConf
     decodeHeader (hdrName, hdrVal)
       = HeaderConf (decodeBS $ CI.original hdrName) (HVValue (decodeBS hdrVal))
+      where
+        decodeBS = TE.decodeUtf8With TE.lenientDecode
 
     mkInvoReq :: Value -> [HeaderConf] -> InvocationRequest
     mkInvoReq payload headers = InvocationRequest payload (mkMaybe headers) invocationVersion
