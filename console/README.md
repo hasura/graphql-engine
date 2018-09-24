@@ -43,11 +43,13 @@ Note that **CONSOLE_MODE** is set to **server**. In this mode **migration mode**
 
 Configure the following environment variables appropriately
 
+```bash
 PORT: Configure the port where Hasura console will run locally.
 DATA_API_URL: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com.
 ACCESS_KEY: Set access key if Hasura GraphQL engine is configured to run with ACCESS_KEY.
-CONSOLE_MODE: hasuradb
+CONSOLE_MODE: server
 URL_PREFIX: ‘/’ (forward slash)
+```
 
 #### Run Development Server:
 
@@ -88,6 +90,7 @@ URL_PREFIX=/`
 
 Configure the following environment variables appropriately
 
+```bash
 PORT: Configure the port where Hasura console will run locally.
 DATA_API_URL: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com. This value will be used to test when Hasura migration mode is disabled.
 API_HOST: Hasura CLI host.
@@ -95,6 +98,7 @@ API_PORT: Hasura CLI port.
 ACCESS_KEY: Set access key if Hasura GraphQL engine is configured to run with ACCESS_KEY.
 CONSOLE_MODE: cli
 URL_PREFIX: ‘/’ (forward slash)
+```
 
 #### Run Development Server:
 
