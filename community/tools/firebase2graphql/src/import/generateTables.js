@@ -77,14 +77,15 @@ const hasPrimaryKey = dataObj => {
 
 const generate = (db, isFirebase) => {
   const metaData = [];
-  console.log(db);
   Object.keys(db).forEach(rootField => {
+    if (db[rootField].length === 0) {
+      return;
+    }
     const tableMetadata = {};
     if (!isFirebase && !hasPrimaryKey(db[rootField], rootField)) {
       throwError(`Message: a unique column with name "id" and type integer must present in table "${rootField}"`);
     }
     tableMetadata.name = rootField;
-    console.log(rootField);
     tableMetadata.columns = getColumnData(db[rootField], db, isFirebase);
     tableMetadata.dependencies = [];
     tableMetadata.columns.forEach(column => {

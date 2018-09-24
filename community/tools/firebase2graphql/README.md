@@ -1,11 +1,9 @@
-# JSON database to GraphQL
+# Firebae to GraphQL
 
-[Hasura GraphQL Engine](https://hasura.io) gives instant GraphQL APIs over Postgres.
-
-This is A CLI tool to import a schema and data to Postgres using JSON data. You can then leverage all the features of Hasura GraphQL Engine to query the Postgres data over GraphQL.
+This is A CLI tool to get instant GraphQL API over your Firebase JSON data dump.
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
-[![Version](https://img.shields.io/npm/v/json2graphql.svg)](https://npmjs.org/package/json2graphql)
+[![Version](https://img.shields.io/npm/v/firebase2graphql.svg)](https://npmjs.org/package/firebase2graphql)
 
 ## Quick start
 
@@ -15,52 +13,89 @@ This is A CLI tool to import a schema and data to Postgres using JSON data. You 
 
   Note the URL. It will be of the form: `https://<app-name>.herokuapp.com`
 
-2. Create a db.js file. Your data file should export an object where the keys are the entity types. The values should be lists of entities, i.e. arrays of value objects with at least an id key. For instance:
+2. Export your firebase realtime database as JSON. It will look something like:
 
-    ```js
-    module.exports = {
-        user: [
-            { id: 123, name: "John Doe" },
-            { id: 456, name: "Jane Doe" }
-        ],
-        city: [
-            { id: 987, name: "Stockholm", country: "Sweden" },
-            { id: 995, name: "Sydney", country: "Australia" }
-        ]
+    ```json
+    {
+      "posts" : {
+        "-LMbLFOAW2q6GO1bD-5g" : {
+          "author" : "Rishichandra Wawhal",
+          "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+          "body" : "My first post content\nAnd body\nANd structure",
+          "starCount" : 0,
+          "title" : "My first post",
+          "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+        },
+        "-LMbLIv6VKHYul7p_PZ-" : {
+          "author" : "Rishichandra Wawhal",
+          "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+          "body" : "AKsdjak\naklsdjaskldjklas\nasdklfjaklsdfjklsda\nasdklfjasklf",
+          "starCount" : 0,
+          "title" : "Whatta proaaa",
+          "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+        }
+      },
+      "user-posts" : {
+        "4UPmbcaqZKT2NdAAqBahXj4tHYN2" : {
+          "-LMbLFOAW2q6GO1bD-5g" : {
+            "author" : "Rishichandra Wawhal",
+            "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+            "body" : "My first post content\nAnd body\nANd structure",
+            "starCount" : 0,
+            "title" : "My first post",
+            "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+          },
+          "-LMbLIv6VKHYul7p_PZ-" : {
+            "author" : "Rishichandra Wawhal",
+            "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+            "body" : "AKsdjak\naklsdjaskldjklas\nasdklfjaklsdfjklsda\nasdklfjasklf",
+            "starCount" : 0,
+            "title" : "Whatta proaaa",
+            "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+          }
+        }
+      },
+      "users" : {
+        "4UPmbcaqZKT2NdAAqBahXj4tHYN2" : {
+          "email" : "rishichandrawawhal@gmail.com",
+          "profile_picture" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+          "username" : "Rishichandra Wawhal"
+        }
+      }
     }
+ 
     ```
 
 3. Use the CLI to import the data:
 
     ```
-    $ npm install -g json2graphql
-    $ json2graphql https://<app-name>.herokuapp.com --db=./path/to/db.js 
+    $ npm install -g firebase2graphql
+    $ firebase2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json
     ```
 
-4. That's it. You can go your HGE URL `https://<app-name>.herokuapp.com` and start querying this data over GraphQL:
+4. That's it. You can go your GraphQL Engine URL `https://<app-name>.herokuapp.com` and start querying this data over GraphQL:
 
     ```graphql
     query {
-      user {
-        id
-        name
-      }
-      city {
-        id
-        name
-        country
+      posts (
+        order_by: title_asc,
+        limit: 10
+      ) {
+        __id
+        title
+        body
+        author
       }
     }
     ```
 
-Check [this section](#foreign-keys-and-relationships) for knowing about foreign keys and relationships.
 
 ## Installation
 
 ### CLI
 
 ```bash
-npm install -g json2graphql
+npm install -g firebase2graphql
 ```
 
 ## Usage
@@ -70,19 +105,19 @@ npm install -g json2graphql
 #### Without access key
 
 ```
-$ json2graphql https://hge.herokuapp.com -d ./path/to/db.js
+$ firebase2graphql https://hge.herokuapp.com -d ./path/to/db.json
 ```
 
 #### With access key
 
 ```
-$ json2graphql https://hge.herokuapp.com -k <access-key> -d ./path/to/db.js
+$ firebase2graphql https://hge.herokuapp.com -k <access-key> -d ./path/to/db.json
 ```
 
 ### Command
 
 ```bash
-$ gq URL [flags]
+$ firebase2graphql URL [flags]
 ```
 
 #### Args
@@ -95,103 +130,6 @@ $ gq URL [flags]
 - `-o --overwrite`: Overwrite tables if they already exist in database
 - `-v --version`: show CLI version
 - `-h, --help`: show CLI help
-
-## More features
-
-### Foreign keys and relationships
-
-You can also define foreign keys and relationships in your JSON sample data. The CLI infers foreign keys and relationships from column names and table names.
-
-For example, in the following data set, the `posts` table has a field called `users_id` which is a foreign key to the `id`  column of table `users`. Also, the `comments` table has a field called `posts_id` which is a foreign key to the `id`  column of table `posts`.
-
-```js
-module.exports = {
-    post: [
-        { id: 1, title: "Lorem Ipsum", views: 254, user_id: 123 },
-        { id: 2, title: "Sic Dolor amet", views: 65, user_id: 456 },
-    ],
-    user: [
-        { id: 123, name: "John Doe" },
-        { id: 456, name: "Jane Doe" }
-    ],
-    comment: [
-        { id: 987, post_id: 1, body: "Consectetur adipiscing elit" },
-        { id: 995, post_id: 1, body: "Nam molestie pellentesque dui" }
-    ]
-};
-```
-
-Import the database:
-
-```
-$ json2graphql https://<app-name>.herokuapp.com --db=./path/to/db.js
-```
-
-Now you can make complicated queries like:
-
-```graphql
-query {
-  post {
-    id
-    title
-    views
-    userByUserId {
-      id
-      name
-    }
-    commentsByPostId {
-      id
-      body
-    }
-  }
-}
-```
-
-The response would be:
-
-```json
-{
-  "data": {
-    "post": [
-      {
-        "userByUserId": {
-          "name": "John Doe",
-          "id": 123
-        },
-        "views": 254,
-        "id": 1,
-        "title": "Lorem Ipsum",
-        "commentsByPostId": [
-          {
-            "body": "Consectetur adipiscing elit",
-            "id": 987
-          },
-          {
-            "body": "Nam molestie pellentesque dui",
-            "id": 995
-          }
-        ]
-      },
-      {
-        "userByUserId": {
-          "name": "Jane Doe",
-          "id": 456
-        },
-        "views": 65,
-        "id": 2,
-        "title": "Sic Dolor amet",
-        "commentsByPostId": []
-      }
-    ]
-  }
-}
-```
-
-### Overwrite
-
-If your Postgres already contains tables that you are trying to import using `json2graphql`, the command will fail.
-
-If you want to overwrite the the existing tables in the database with the new tables from your sample JSON database, you must provide a flag `-o` or `--overwrite`
 
 ---
 Maintained with ♡ by <a href="https://hasura.io">Hasura</a>

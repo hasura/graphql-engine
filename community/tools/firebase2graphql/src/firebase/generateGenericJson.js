@@ -39,7 +39,7 @@ const handleJSONDoc = (db) => {
         })
       ];
     } else {
-      const newTableName = tableName + '_' +objectRelMetadata.name;
+      const newTableName = objectRelMetadata.tableName + '_' +objectRelMetadata.name;
       const newItem = {
         ...objectRelMetadata.data
       };
@@ -231,4 +231,6 @@ Notes:
 
 1. If there is just one entry, it is impossible to tell if it is an array or object
 2. Primary key of the object relationship unknown
+3. If there are no siblings, a legit key is considered a primary key
+4. 
 */

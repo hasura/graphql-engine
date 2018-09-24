@@ -30,7 +30,6 @@ const getInsertOrder = tables => {
       setOrder(table);
     }
   });
-  console.log(order);
   return order;
 };
 
@@ -80,6 +79,7 @@ const insertData = async (insertOrder, sampleData, tables, url, headers, isFireb
     });
     if (response.data !== null && response.data !== 'undefined') {
       cli.action.stop('Done!');
+      console.log(`Explore your new GraphQL API at ${url}/console`);
     } else {
       throw new Error(response);
     }
