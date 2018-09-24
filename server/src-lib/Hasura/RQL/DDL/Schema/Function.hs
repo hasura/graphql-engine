@@ -35,23 +35,23 @@ instance Q.FromCol PGTypType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
     "BASE"      -> Just PTBASE
     "COMPOSITE" -> Just PTCOMPOSITE
-    "DOMAIN" -> Just PTDOMAIN
-    "ENUM" -> Just PTENUM
-    "RANGE" -> Just PTRANGE
-    "PSUEDO" -> Just PTPSUEDO
-    _ -> Nothing
+    "DOMAIN"    -> Just PTDOMAIN
+    "ENUM"      -> Just PTENUM
+    "RANGE"     -> Just PTRANGE
+    "PSUEDO"    -> Just PTPSUEDO
+    _           -> Nothing
 
 assertTableExists :: QualifiedTable -> T.Text -> Q.TxE QErr ()
 assertTableExists (QualifiedTable sn tn) err = do
-  tableExists <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
-            SELECT true from information_schema.tables
-             WHERE table_schema = $1
-               AND table_name = $2;
-                           |] (sn, tn) False
+  tableExists <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+    [Q.sql|
+       SELECT exists(SELECT 1 from information_schema.tables
+                      WHERE table_schema = $1
+                      AND table_name = $2
+                    )
+          |] (sn, tn) False
 
-  -- if no columns are found, there exists no such view/table
-  unless (tableExists == [Identity True]) $
-    throw400 NotExists err
+  unless tableExists $ throw400 NotExists err
 
 fetchTypNameFromOid :: Int64 -> Q.TxE QErr PGColType
 fetchTypNameFromOid tyId =
@@ -74,6 +74,7 @@ mkFunctionArgs tys argNames =
 
 mkFunctionInfo
   :: QualifiedFunction
+  -> Bool
   -> FunctionType
   -> T.Text
   -> T.Text
@@ -82,18 +83,20 @@ mkFunctionInfo
   -> [Int64]
   -> [T.Text]
   -> Q.TxE QErr FunctionInfo
-mkFunctionInfo qf funTy retSn retN retTyTyp retSet inpArgTypIds inpArgNames = do
+mkFunctionInfo qf hasVariadic funTy retSn retN retTyTyp retSet inpArgTypIds inpArgNames = do
+  -- throw error if function has variadic arguments
+  when hasVariadic $ throw400 NotSupported "function with \"VARIADIC\" parameters are not supported"
   -- throw error if return type is not composite type
-  when (retTyTyp /= PTCOMPOSITE) $ throw400 NotSupported "function does not return a COMPOSITE type"
+  when (retTyTyp /= PTCOMPOSITE) $ throw400 NotSupported "function does not return a \"COMPOSITE\" type"
   -- throw error if function do not returns SETOF
   unless retSet $ throw400 NotSupported "function does not return a SETOF"
   -- throw error if function type is VOLATILE
-  when (funTy == FTVOLATILE) $ throw400 NotSupported "function of type VOLATILE is not supported now"
+  when (funTy == FTVOLATILE) $ throw400 NotSupported "function of type \"VOLATILE\" is not supported now"
 
   let retTable = QualifiedTable (SchemaName retSn) (TableName retN)
 
-  -- throw error if return type is not a table
-  assertTableExists retTable $ "return type table " <> retTable <<> " not found in postgres"
+  -- throw error if return type is not a valid table
+  assertTableExists retTable $ "return type " <> retTable <<> " is not a valid table"
 
   inpArgTyps <- mapM fetchTypNameFromOid inpArgTypIds
   let funcArgs = mkFunctionArgs inpArgTyps inpArgNames
@@ -103,55 +106,25 @@ mkFunctionInfo qf funTy retSn retN retTyTyp retSet inpArgTypIds inpArgNames = do
 -- Build function info
 getFunctionInfo :: QualifiedFunction -> Q.TxE QErr FunctionInfo
 getFunctionInfo qf@(QualifiedFunction sn fn) = do
-  functionExists <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
-            SELECT true from information_schema.routines
-             WHERE routine_schema = $1
-               AND routine_name = $2
-                             |] (sn, fn) False
-
-  -- if no columns are found, there exists no such function
-  unless (functionExists == [Identity True]) $
-    throw400 NotExists $ "no such function exists in postgres : " <>> qf
-
   -- fetch function details
-  dets <- Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
-              SELECT
-              (
-                CASE
-                  WHEN p.provolatile = 'i'::char THEN 'IMMUTABLE'::text
-                  WHEN p.provolatile = 's'::char THEN 'STABLE'::text
-                  WHEN p.provolatile = 'v'::char THEN 'VOLATILE'::text
-                  else NULL::text
-                END
-              ) as function_type,
-              r.type_udt_schema as return_type_schema,
-              r.type_udt_name as return_type_name,
-              (
-                CASE
-                  WHEN t.typtype = 'b'::char THEN 'BASE'::text
-                  WHEN t.typtype = 'c'::char THEN 'COMPOSITE'::text
-                  WHEN t.typtype = 'd':: char THEN 'DOMAIN'::text
-                  WHEN t.typtype = 'e'::char THEN 'ENUM'::text
-                  WHEN t.typtype = 'r'::char THEN 'RANGE'::text
-                  WHEN t.typtype = 'p'::char THEN 'PSUEDO'::text
-                  else NULL::text
-                END
-              ) as return_type_type,
-              p.proretset as returns_set,
-	      to_json(coalesce(p.proallargtypes, p.proargtypes)::int[]) as input_arg_types,
-	      to_json(coalesce(p.proargnames, array[]::text[])) as input_arg_names
-
-              FROM information_schema.routines r
-                   JOIN pg_catalog.pg_proc p on (p.proname = r.routine_name)
-                   JOIN pg_catalog.pg_type t on (t.oid = p.prorettype)
-              WHERE r.routine_schema = $1
-                AND r.routine_name = $2
+  dets <- Q.listQE defaultTxErrorHandler [Q.sql|
+              SELECT has_variadic, function_type, return_type_schema,
+                     return_type_name, return_type_type, returns_set,
+                     input_arg_types, input_arg_names
+              FROM hdb_catalog.hdb_function_agg
+             WHERE function_schema = $1 AND function_name = $2
           |] (sn, fn) False
 
   processDets dets
   where
-    processDets (fnTy, retTySn, retTyN, retTyTyp, retSet, Q.AltJ argTys, Q.AltJ argNs) =
-      mkFunctionInfo qf fnTy retTySn retTyN retTyTyp retSet argTys argNs
+    processDets [] =
+      throw400 NotExists $ "no such function exists in postgres : " <>> qf
+    processDets [( hasVar, fnTy, retTySn, retTyN, retTyTyp
+                 , retSet, Q.AltJ argTys, Q.AltJ argNs
+                 )] =
+      mkFunctionInfo qf hasVar fnTy retTySn retTyN retTyTyp retSet argTys argNs
+    processDets _ = throw400 NotSupported $
+      "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
 
 saveFunctionToCatalog :: QualifiedFunction -> Q.TxE QErr ()
 saveFunctionToCatalog (QualifiedFunction sn fn) =
@@ -181,7 +154,7 @@ trackFunctionP1 (TrackFunction qf) = do
 
 trackFunctionP2Setup :: (P2C m) => QualifiedFunction -> m ()
 trackFunctionP2Setup qf = do
-  fi <- liftTx $ getFunctionInfo qf
+  fi <- withPathK "name" $ liftTx $ getFunctionInfo qf
   void $ getTableInfoFromCache $ fiReturnType fi
   addFunctionToCache fi
 

@@ -30,6 +30,10 @@ import qualified Database.PG.Query.Connection as Q
 curCatalogVer :: T.Text
 curCatalogVer = "3"
 
+runRQLQuery :: RQLQuery -> Q.TxE QErr ()
+runRQLQuery =
+    void . join . liftEither . buildTxAny adminUserInfo emptySchemaCache
+
 initCatalogSafe :: UTCTime -> Q.TxE QErr String
 initCatalogSafe initTime =  do
   hdbCatalogExists <- Q.catchE defaultTxErrorHandler $
@@ -85,11 +89,9 @@ initCatalogStrict createSchema initTime =  do
     Q.Discard () <- Q.multiQ $(Q.sqlFromFile "src-rsr/initialise.sql")
     return ()
 
-  -- Build the metadata query
-  tx <- liftEither $ buildTxAny adminUserInfo emptySchemaCache metadataQuery
+  -- run the metadata query
+  runRQLQuery metadataQuery
 
-  -- Execute the query
-  void $ snd <$> tx
   setAllAsSystemDefined >> addVersion initTime
   return "initialise: successfully initialised"
 
@@ -172,17 +174,19 @@ migrateFrom1 = do
   Q.Discard () <- Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_1.sql")
   -- migrate metadata
-  tx <- liftEither $ buildTxAny adminUserInfo
-                     emptySchemaCache migrateMetadataFrom1
-  void tx
+  runRQLQuery migrateMetadataFrom1
   -- set as system defined
   setAsSystemDefined
 
 migrateFrom2 :: Q.TxE QErr ()
-migrateFrom2 =
+migrateFrom2 = do
   -- migrate database
-  Q.multiQE defaultTxErrorHandler
+  Q.Discard () <- Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_2.sql")
+  -- migrate metadata
+  runRQLQuery migrateMetadataFrom2
+  -- set as system defined
+  setAsSystemDefined
 
 migrateCatalog :: UTCTime -> Q.TxE QErr String
 migrateCatalog migrationTime = do

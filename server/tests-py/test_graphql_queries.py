@@ -46,3 +46,15 @@ class TestGraphQLQueryLimits(object):
         st_code, resp = hge_ctx.v1q_f('queries/graphql_query/limits/teardown.yaml')
         assert st_code == 200, resp
 
+class TestGraphQLQueryFunctions(object):
+
+    def test_search_posts(self, hge_ctx):
+        check_query_f(hge_ctx, "queries/graphql_query/functions/query_search_posts.yaml")
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f('queries/graphql_query/functions/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f('queries/graphql_query/functions/teardown.yaml')
+        assert st_code == 200, resp

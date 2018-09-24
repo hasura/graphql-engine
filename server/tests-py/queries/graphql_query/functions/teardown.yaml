@@ -1,0 +1,13 @@
+type: bulk
+args:
+#Drop function first
+- type: untrack_function
+  args:
+    name: search_posts
+    schema: public
+
+- type: untrack_table
+  args:
+    table:
+      schema: public
+      name: post

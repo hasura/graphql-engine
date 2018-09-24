@@ -3,10 +3,7 @@
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module TH
-  ( metadataQuery
-  , migrateMetadataFrom1
-  ) where
+module TH where
 
 import           Language.Haskell.TH.Syntax (Q, TExp, unTypeQ)
 
@@ -19,4 +16,7 @@ metadataQuery = $(unTypeQ (Y.decodeFile "src-rsr/hdb_metadata.yaml" :: Q (TExp R
 
 migrateMetadataFrom1 :: RQLQuery
 migrateMetadataFrom1 = $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_1.yaml" :: Q (TExp RQLQuery)))
+
+migrateMetadataFrom2 :: RQLQuery
+migrateMetadataFrom2 = $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_2.yaml" :: Q (TExp RQLQuery)))
 

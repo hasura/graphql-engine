@@ -1,0 +1,18 @@
+description: Custom GraphQL query using search_posts function
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    search_posts:
+    - title: post by hasura
+      content: content for post
+query:
+  query: |
+    query {
+      search_posts(
+        args: {search: "hasura"}
+      ) {
+        title
+        content
+      }
+    }

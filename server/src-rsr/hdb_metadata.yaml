@@ -244,3 +244,13 @@ args:
           schema: hdb_catalog
           name: event_invocation_logs
         column: event_id
+
+- type: track_table
+  args:
+    name: hdb_function_agg
+    schema: hdb_catalog
+
+- type: track_table
+  args:
+    name: hdb_function
+    schema: hdb_catalog

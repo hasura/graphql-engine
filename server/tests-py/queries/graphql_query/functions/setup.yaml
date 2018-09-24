@@ -1,0 +1,44 @@
+type: bulk
+args:
+
+#Article table
+- type: run_sql
+  args:
+    sql: |
+      create table post (
+        id serial PRIMARY KEY,
+        title TEXT,
+        content TEXT
+      )
+- type: track_table
+  args:
+    schema: public
+    name: post
+
+#Search post function
+- type: run_sql
+  args:
+    sql: |
+      create function search_posts(search text)
+      returns setof post as $$
+          select *
+          from post
+          where
+          title ilike ('%' || search || '%') or
+          content ilike ('%' || search || '%')
+      $$ language sql stable;
+- type: track_function
+  args:
+    name: search_posts
+    schema: public
+
+#Insert values
+- type: run_sql
+  args:
+    sql: |
+      insert into post (title, content)
+      values
+      ('post by hasura', 'content for post'),
+      ('post by another', 'content for another post')
+
+

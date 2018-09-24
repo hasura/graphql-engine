@@ -218,15 +218,13 @@ fetchFunctionMeta :: Q.Tx [FunctionMeta]
 fetchFunctionMeta = do
   res <- Q.listQ [Q.sql|
     SELECT
-        r.routine_schema,
-        r.routine_name,
+        f.function_schema,
+        f.function_name,
         p.oid
-    FROM information_schema.routines r
-         JOIN pg_catalog.pg_proc p ON (p.proname = r.routine_name)
+    FROM hdb_catalog.hdb_function_agg f
+         JOIN pg_catalog.pg_proc p ON (p.proname = f.function_name)
     WHERE
-        r.routine_schema NOT LIKE 'pg_%'
-        AND r.routine_schema <> 'information_schema'
-        AND r.routine_schema <> 'hdb_catalog'
+        f.function_schema <> 'hdb_catalog'
                   |] () False
   forM res $ \(sn, fn, foid) ->
     return $ FunctionMeta foid $ QualifiedFunction sn fn
