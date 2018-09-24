@@ -8,6 +8,12 @@ An admin dashboard to manage database and try out GraphQL APIs. Hasura console i
 2. Hasura CLI:
    Typically runs with migration mode **enabled**. All the changes to schema/hasura metadata will be tracked and spit out on the filesystem as migration yaml files and a metadata yaml file. This allows for easy version controlling of the schema/hasura metadata.
 
+## Table of Contents
+
+- [Contributing to Hasura console](#contributing-to-hasura-console) - [Prerequisites](#prerequisites) - [Setup](#setup) - [Development with Hasura GraphQL Engine](#development-with-hasura-graphql-engine) - Run Development Server: - [Development with Hasura CLI](#development-with-hasura-cli) - Run Development Server: - [Testing Console](#testing)
+- [How it works](#how-it-works)
+- [Release Process](#release-process)
+
 ## Contributing to Hasura console
 
 Hasura console needs to be configured with Hasura GraphQL URL to work and hence there are two ways to start contributing
@@ -41,7 +47,7 @@ CONSOLE_MODE=server
 URL_PREFIX=/`
 ```
 
-Note that **CONSOLE_MODE** is set to **server**. In this mode **migration mode** will be disabled and the corresponding functionality on the console will be hidden. If you are looking to add/tweak functionality related to migration. <Link to Development With Hasura CLI section>
+Note that **CONSOLE_MODE** is set to **server**. In this mode **migration mode** will be disabled and the corresponding functionality on the console will be hidden. If you are looking to add/tweak functionality related to migration, check out [Development with Hasura CLI](#development-with-hasura-cli)<Link to Development With Hasura CLI section>
 
 Environment variables accepted in `server` mode:
 
