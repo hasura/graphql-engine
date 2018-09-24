@@ -1,12 +1,12 @@
-## Hasura Console
+# Hasura Console
 
 An admin dashboard to manage database and try out GraphQL APIs. Hasura console is served in production by
 
-### Hasura GraphQL Engine
+## Hasura GraphQL Engine
 
 Typically runs in **No Migration Mode** which means that actions on the console are not spitting out migration “yaml” files automatically. Most users will be using the Hasura console in this mode.
 
-### Hasura CLI
+## Hasura CLI
 
 Typically runs with migration mode **enabled**. All the changes to schema/hasura metadata will be tracked and spit out on the filesystem as migration yaml files and a metadata yaml file. This allows for easy version controlling of the schema/hasura metadata.
 
