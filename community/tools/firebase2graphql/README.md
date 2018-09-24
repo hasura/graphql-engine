@@ -13,7 +13,11 @@ This is A CLI tool to get instant GraphQL API over your Firebase JSON data dump.
 
   Note the URL. It will be of the form: `https://<app-name>.herokuapp.com`
 
-2. Export your firebase realtime database as JSON. It will look something like:
+2. Go to `Firebase console > Database > Realtime Database` and click on `Export JSON` from the options on the upper right corner
+
+   ![firebase-export]('./assets/firebase-export.png') 
+
+3. The exported JSON will be something like this:
 
     ```json
     {
@@ -66,14 +70,14 @@ This is A CLI tool to get instant GraphQL API over your Firebase JSON data dump.
  
     ```
 
-3. Use the CLI to import the data:
+4. Use the CLI to import the data:
 
     ```
     $ npm install -g firebase2graphql
     $ firebase2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json
     ```
 
-4. That's it. You can go your GraphQL Engine URL `https://<app-name>.herokuapp.com` and start querying this data over GraphQL:
+5. That's it. You can go your GraphQL Engine URL `https://<app-name>.herokuapp.com` and start querying this data over GraphQL:
 
     ```graphql
     query {
