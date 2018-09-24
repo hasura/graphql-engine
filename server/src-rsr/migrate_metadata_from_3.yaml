@@ -1,0 +1,10 @@
+type: bulk
+args:
+- type: track_table
+  args:
+    schema: hdb_catalog
+    name: hdb_function_agg
+- type: track_table
+  args:
+    schema: hdb_catalog
+    name: hdb_function
