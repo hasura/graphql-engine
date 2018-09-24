@@ -11,7 +11,7 @@ const getArrayRelationshipName = (table, parent) => {
   return parent.length === 1 ? `${relName}Id` : `${relName}${parent.substring(1, parent.length)}Id`;
 };
 
-const getArrayRelType = (table, child) => {
+const getArrayRelType = (table, child) => { 
   const columnMapping = {};
   let numOfMappings = 0;
   table.columns.forEach(col => {
@@ -30,7 +30,7 @@ const getArrayRelType = (table, child) => {
   } else {
     return {
       manual_configuration: {
-        remote_table: child,
+        remote_table: child.name,
         column_mapping: columnMapping
       }
     }

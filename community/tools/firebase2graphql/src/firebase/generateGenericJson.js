@@ -21,11 +21,8 @@ const handleJSONDoc = (db) => {
       const parentTableName = arrayRelMetadata.tableName;
       const pkeys = arrayRelMetadata.pkeys;
       if (!tablesMap[newTableName]) {
-        console.log('Creating table, ', newTableName);
         tablesMap[newTableName] = [];
       }
-      console.log(`Pushing to ${newTableName}`);
-      console.log(JSON.stringify(arrayRelMetadata, null, 2));
       tablesMap[newTableName] = [
         ...tablesMap[newTableName],
         ...arrayRelMetadata.data.map((item) => {
@@ -34,6 +31,9 @@ const handleJSONDoc = (db) => {
           };
           for (var pkey in pkeys) {
             newItem[`${parentTableName}_${pkey}`] = pkeys[pkey];
+          }
+          if (newItem['__id'] === undefined) {
+            newItem[getLastId(newItem)] = uuid();
           }
           return newItem;
         })
@@ -60,7 +60,6 @@ const handleJSONDoc = (db) => {
   }
 
   for (var tableName in db) {
-    console.log('Creating table ', tableName);
     tablesMap[tableName] = handleTable(
       db[tableName],
       tableName,
@@ -102,10 +101,8 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
         if (value === null || value.constructor.name !== 'Object') {
           row[key] = value;
         } else if (value.constructor.name === 'Object') {
-          const pkeyMap = getPrimaryKeys(row);
+          const pkeyMap = getPrimaryKeys(row); 
           if (isList(value)) {
-            console.log('Array relationship detected');
-            console.log(key);
             tableDetectedCallback(
               null,
               {
@@ -116,8 +113,6 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
               }
             );
           } else if (isObjectList(value)) {
-            console.log('Object relationship detected');
-            console.log(key);
             tableDetectedCallback(
               null,
               {
@@ -151,20 +146,7 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
   }
   return rowArray;
 }
-
-const getType = (obj) => {
-  console.log(Object.keys(obj));
-  if (isObjectList(obj)) {
-    console.log('Object list');
-  } else if (isList(obj)) {
-    console.log('List');
-  }
-  else {
-    console.log('Object');
-  }
-}
-
-const getPrimaryKeys = (obj) => {
+ const getPrimaryKeys = (obj) => {
   const pkeyMap = {}; 
   for (var key in obj) {
     if(key.indexOf('__id') === 0) {

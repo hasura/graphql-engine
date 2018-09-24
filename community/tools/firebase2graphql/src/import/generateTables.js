@@ -24,32 +24,21 @@ const getDataType = (data, column) => {
 };
 
 const isForeign = (name, db, isFirebase) => {
-  const l = name.length;
-  if (l > 3) {
-    if (isFirebase) {
-      const idPos = name.indexOf('___id');
-      if (idPos === -1 || idPos === 0) {
-        return false;
-      } else {
-        if (Object.keys(db).find((tableName) => tableName === name.substring(0, idPos))) {
-          return true;
-        }
-      }
-      
-    } else {
-      if (name.substring(l - 3, l) === '_id' &&
-        Object.keys(db).find(tableName => {
-            return tableName === name.substring(0, l - 3);
-        })) {
-        return true;
-      }
+  const idPos = name.indexOf('___id');
+  if (idPos <= 0) {
+    return false;
+  } else {
+    if (Object.keys(db).find((tableName) => tableName === name.substring(0, idPos))) {
+      return true;
     }
-    
   }
   return false;
 };
 
 const getColumnData = (dataArray, db, isFirebase) => {
+  if (dataArray.length === 0) {
+    return [];
+  }
   const refRow = {
     numOfCols: 0,
     index: 0,
@@ -88,12 +77,14 @@ const hasPrimaryKey = dataObj => {
 
 const generate = (db, isFirebase) => {
   const metaData = [];
+  console.log(db);
   Object.keys(db).forEach(rootField => {
     const tableMetadata = {};
     if (!isFirebase && !hasPrimaryKey(db[rootField], rootField)) {
       throwError(`Message: a unique column with name "id" and type integer must present in table "${rootField}"`);
     }
     tableMetadata.name = rootField;
+    console.log(rootField);
     tableMetadata.columns = getColumnData(db[rootField], db, isFirebase);
     tableMetadata.dependencies = [];
     tableMetadata.columns.forEach(column => {
