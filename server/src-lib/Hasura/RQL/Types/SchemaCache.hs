@@ -357,7 +357,7 @@ data EventTriggerInfo
    , etiDelete    :: !(Maybe OpTriggerInfo)
    , etiRetryConf :: !RetryConf
    , etiWebhook   :: !T.Text
-   , etiHeaders   :: ![(HeaderName, Maybe T.Text)]
+   , etiHeaders   :: ![(HeaderName, T.Text)]
    } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)
@@ -595,7 +595,7 @@ addEventTriggerToCache
   -> TriggerOpsDef
   -> RetryConf
   -> T.Text
-  -> [(HeaderName, Maybe T.Text)]
+  -> [(HeaderName, T.Text)]
   -> m ()
 addEventTriggerToCache qt trid trn tdef rconf webhook headers =
   modTableInCache modEventTriggerInfo qt

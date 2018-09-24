@@ -232,7 +232,7 @@ subTableP2 qt replace q@(EventTriggerDef name def webhook rconf mheaders) = do
     else
     liftTx $ addEventTriggerToCatalog qt q
   let headerConfs = fromMaybe [] mheaders
-  headers <- liftIO $ getHeadersFromConf headerConfs
+  headers <- getHeadersFromConf headerConfs
   addEventTriggerToCache qt trid name def rconf webhook headers
 
 subTableP2shim :: (P2C m) => (QualifiedTable, Bool, EventTriggerDef) -> m RespBody
@@ -276,15 +276,17 @@ instance HDBQuery DeliverEventQuery where
   phaseTwo q _ = deliverEvent q
   schemaCachePolicy = SCPNoChange
 
-getHeadersFromConf :: [HeaderConf] -> IO [(HeaderName, Maybe T.Text)]
+getHeadersFromConf :: (P2C m) => [HeaderConf] -> m [(HeaderName, T.Text)]
 getHeadersFromConf = mapM getHeader
   where
-    getHeader :: HeaderConf -> IO (HeaderName, Maybe T.Text)
+    getHeader :: (P2C m) => HeaderConf -> m (HeaderName, T.Text)
     getHeader hconf = case hconf of
-      (HeaderConf name (HVValue val)) -> return (name, Just val)
+      (HeaderConf name (HVValue val)) -> return (name, val)
       (HeaderConf name (HVEnv val))   -> do
-        mEnv <- lookupEnv (T.unpack val)
-        return (name, T.pack <$> mEnv)
+        mEnv <- liftIO $ lookupEnv (T.unpack val)
+        case mEnv of
+          Nothing -> throw400 NotFound $ "environment variable '" <> val <> "' not set"
+          Just val' -> return (name, T.pack val')
 
 toInt64 :: (Integral a) => a -> Int64
 toInt64 = fromIntegral

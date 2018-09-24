@@ -227,8 +227,8 @@ tryWebhook pool e = do
       let webhook = etiWebhook eti
           createdAt = eCreatedAt e
           eventId =  eId e
-          mheaders = etiHeaders eti
-          headers = mapMaybe encodeHeader mheaders
+          headersRaw = etiHeaders eti
+          headers = map encodeHeader headersRaw
       eeCtx <- asks getter
       -- wait for counter and then increment beforing making http
       liftIO $ atomically $ do
@@ -260,11 +260,11 @@ tryWebhook pool e = do
     addHeaders :: [(N.HeaderName, BS.ByteString)] -> W.Options -> W.Options
     addHeaders headers opts = foldl (\acc h -> acc CL.& W.header (fst h) CL..~ [snd h] ) opts headers
 
-    encodeHeader :: (HeaderName, Maybe T.Text)-> Maybe (N.HeaderName, BS.ByteString)
+    encodeHeader :: (HeaderName, T.Text)-> (N.HeaderName, BS.ByteString)
     encodeHeader header =
       let name = CI.mk $ T.encodeUtf8 $ fst header
-          value = T.encodeUtf8 <$> snd header
-      in  (,) <$> pure name <*> value
+          value = T.encodeUtf8 $ snd header
+      in  (name, value)
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = let table = eTable e
