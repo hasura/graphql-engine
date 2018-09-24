@@ -39,6 +39,11 @@ class RedeliverEvent extends Component {
       this.removePolling(this.state.intervalId);
     }
   }
+  componentWillUnmount() {
+    if (this.props.log.isModalOpen) {
+      this.removePolling(this.state.intervalId);
+    }
+  }
   onModalClose = () => {
     this.props.dispatch({ type: MODAL_OPEN, data: false });
   };
@@ -216,10 +221,10 @@ class RedeliverEvent extends Component {
                       value={
                         log.eventInvocations[0]
                           ? JSON.stringify(
-                            log.eventInvocations[0].request,
-                            null,
-                            4
-                          )
+                              log.eventInvocations[0].request,
+                              null,
+                              4
+                            )
                           : ''
                       }
                       minLines={8}
