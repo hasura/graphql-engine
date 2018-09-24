@@ -21,40 +21,40 @@ class RedeliverEvent extends Component {
   }
   componentDidMount() {
     if (this.props.log.isModalOpen) {
-      this.attachPolling(this.props.log.event_id);
+      this.attachFetching(this.props.log.event_id);
     }
   }
   componentWillReceiveProps(nextProps) {
     if (this.props.log.isModalOpen !== nextProps.log.isModalOpen) {
       if (nextProps.log.isModalOpen === true) {
-        this.attachPolling(nextProps.log.redeliverEventId);
+        this.attachFetching(nextProps.log.redeliverEventId);
       } else {
-        this.removePolling(this.state.intervalId);
+        this.removeFetching(this.state.intervalId);
       }
     } else if (
       this.state.intervalId !== null &&
       this.props.log.eventInvocations.length ===
         nextProps.log.eventInvocations.length
     ) {
-      this.removePolling(this.state.intervalId);
+      this.removeFetching(this.state.intervalId);
     }
   }
   componentWillUnmount() {
     if (this.props.log.isModalOpen) {
-      this.removePolling(this.state.intervalId);
+      this.removeFetching(this.state.intervalId);
     }
   }
   onModalClose = () => {
     this.props.dispatch({ type: MODAL_OPEN, data: false });
   };
-  attachPolling(eventId) {
+  attachFetching(eventId) {
     const intervalId = setInterval(
       () => this.props.dispatch(loadEventInvocations(eventId)),
       5000
     );
     this.setState({ ...this.state, intervalId: intervalId });
   }
-  removePolling(intervalId) {
+  removeFetching(intervalId) {
     clearInterval(intervalId);
     this.setState({ ...this.state, intervalId: null });
   }
@@ -221,10 +221,10 @@ class RedeliverEvent extends Component {
                       value={
                         log.eventInvocations[0]
                           ? JSON.stringify(
-                              log.eventInvocations[0].request,
-                              null,
-                              4
-                            )
+                            log.eventInvocations[0].request,
+                            null,
+                            4
+                          )
                           : ''
                       }
                       minLines={8}
