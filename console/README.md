@@ -43,15 +43,13 @@ URL_PREFIX=/`
 
 Note that **CONSOLE_MODE** is set to **server**. In this mode **migration mode** will be disabled and the corresponding functionality on the console will be hidden. If you are looking to add/tweak functionality related to migration. <Link to Development With Hasura CLI section>
 
-Configure the following environment variables appropriately
+Environment variables accepted in `server` mode:
 
-```bash
-PORT: Configure the port where Hasura console will run locally.
-DATA_API_URL: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com.
-ACCESS_KEY: Set access key if Hasura GraphQL engine is configured to run with ACCESS_KEY.
-CONSOLE_MODE: server
-URL_PREFIX: ‘/’ (forward slash)
-```
+1. **PORT**: Configure the port where Hasura console will run locally.
+2. **DATA_API_URL**: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com.
+3. **ACCESS_KEY**: Set access key if Hasura GraphQL engine is configured to run with ACCESS_KEY.
+4. **CONSOLE_MODE**: server
+5. **URL_PREFIX**: ‘/’ (forward slash)
 
 #### Run Development Server:
 
@@ -90,17 +88,15 @@ CONSOLE_MODE=cli
 URL_PREFIX=/`
 ```
 
-Configure the following environment variables appropriately
+Environment variables accepted in `cli` mode:
 
-```bash
-PORT: Configure the port where Hasura console will run locally.
-DATA_API_URL: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com. This value will be used to test when Hasura migration mode is disabled.
-API_HOST: Hasura CLI host.
-API_PORT: Hasura CLI port.
-ACCESS_KEY: Set access key if Hasura GraphQL engine is configured to run with ACCESS_KEY.
-CONSOLE_MODE: cli
-URL_PREFIX: ‘/’ (forward slash)
-```
+1. **PORT**: Configure the port where Hasura console will run locally.
+2. **DATA_API_URL**: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com. This value will be used to test when Hasura migration mode is disabled.
+3. **API_HOST**: Hasura CLI host.
+4. **API_PORT**: Hasura CLI port.
+5. **ACCESS_KEY**: Set access key if Hasura GraphQL engine is configured to run with ACCESS_KEY.
+6. **CONSOLE_MODE**: cli
+7. **URL_PREFIX**: ‘/’ (forward slash)
 
 #### Run Development Server:
 
