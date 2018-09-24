@@ -32,11 +32,11 @@ import           Hasura.SQL.Types
 import qualified Control.Concurrent.STM.TQueue as TQ
 import qualified Control.Lens                  as CL
 import qualified Data.ByteString               as BS
+import qualified Data.ByteString.Lazy          as B
 import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as M
 import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
-import qualified Data.Text.Encoding            as T
 import qualified Data.Text.Encoding            as TE
 import qualified Data.Text.Encoding.Error      as TE
 import qualified Data.Time.Clock               as Time
@@ -257,7 +257,6 @@ processEvent logenv pool e = do
     chooseDelay triesExhausted retryConfSec (Just retryHeaderSec) = if triesExhausted
                                                                     then retryHeaderSec
                                                                     else min retryHeaderSec retryConfSec
-
 tryWebhook
   :: ( MonadReader r m
      , MonadIO m
@@ -330,8 +329,8 @@ tryWebhook logenv pool e = do
 
     encodeHeader :: EventHeaderInfo -> (N.HeaderName, BS.ByteString)
     encodeHeader headerInfo =
-      let name = CI.mk $ T.encodeUtf8 $ ehiName headerInfo
-          value = T.encodeUtf8 $ ehiCachedValue headerInfo
+      let name = CI.mk $ TE.encodeUtf8 $ ehiName headerInfo
+          value = TE.encodeUtf8 $ ehiCachedValue headerInfo
       in  (name, value)
 
     decodeHeader :: [EventHeaderInfo] -> (N.HeaderName, BS.ByteString) -> HeaderConf
@@ -357,7 +356,6 @@ tryWebhook logenv pool e = do
     mkMaybe :: [a] -> Maybe [a]
     mkMaybe [] = Nothing
     mkMaybe x  = Just x
-
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = let table = eTable e

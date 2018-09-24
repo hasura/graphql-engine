@@ -7,3 +7,4 @@ community/*
 install-manifests/*
 .ciignore
 .gitignore
+.github/*

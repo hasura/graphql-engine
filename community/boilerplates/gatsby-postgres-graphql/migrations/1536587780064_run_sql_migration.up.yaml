@@ -1,0 +1,7 @@
+- args:
+    cascade: false
+    sql: |-
+      INSERT INTO author (name) values ('J.R.R Tolkien');
+      INSERT INTO author (name) values ('J.K Rowling');
+      INSERT INTO author (name) values ('Stephen King');
+  type: run_sql

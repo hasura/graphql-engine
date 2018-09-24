@@ -78,7 +78,9 @@ initCatalogStrict createSchema initTime =  do
   pgcryptoExtExists <- Q.catchE defaultTxErrorHandler $ isExtAvailable "pgcrypto"
   if pgcryptoExtExists
     -- only if we created the schema, create the extension
-    then when createSchema $ Q.unitQE needsPgCryptoExt "CREATE EXTENSION IF NOT EXISTS pgcrypto" () False
+    then when createSchema $
+         Q.unitQE needsPgCryptoExt
+           "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public" () False
     else throw500 "FATAL: Could not find extension pgcrytpo. This extension is required."
 
   Q.catchE defaultTxErrorHandler $ do

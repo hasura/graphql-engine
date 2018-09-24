@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import globals from '../../../../Globals';
 
 import {
   showSuccessNotification,
@@ -33,7 +33,7 @@ class ExportMetadata extends Component {
               method: 'POST',
               credentials: globalCookiePolicy,
               headers: {
-                'X-Hasura-Access-Key': globals.accessKey,
+                ...this.props.dataHeaders,
               },
               body: JSON.stringify(requestBody),
             };
@@ -88,5 +88,10 @@ class ExportMetadata extends Component {
     );
   }
 }
+
+ExportMetadata.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+  dataHeaders: PropTypes.object.isRequired,
+};
 
 export default ExportMetadata;
