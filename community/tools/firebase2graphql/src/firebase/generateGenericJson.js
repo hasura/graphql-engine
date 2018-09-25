@@ -1,15 +1,5 @@
 const uuid = require('uuid/v4');
 
-/*
-ALGO
-
-1. If the object is a list, flatten it
-2. If the object is not a list, iterate over the fields
-   1. If the value is of type object, make another table a parent
-   2. If the value is of type array, make another table for a multi relationship
-   3. If the value is neither, add the key as column to the parent flat object
-*/
-
 const throwError = require('../error');
 
 const handleJSONDoc = (db) => {
@@ -70,10 +60,7 @@ const handleJSONDoc = (db) => {
   return tablesMap;
 }
 
-const handleTable = (obj, tableName, tableDetectedCallback) => {
-  if (!isObjectList(obj))   {
-    throwError('Message: invalid JSON provided for node ' + tableName);
-  }
+const handleTable = (obj, tableName, tableDetectedCallback) => { 
   const rowArray = [];
   const flatten = (object, row) => { 
     if (isObjectList(object)) {
@@ -140,6 +127,20 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
       return row;
     }
   }
+  if (!isObjectList(obj)) {
+    if (isRandomList(obj)) {
+      for (var key in obj) {
+        rowArray.push({
+          '__key': key,
+          '__value': obj[key],
+          '__id': uuid()
+        });
+      }
+      return rowArray;
+    } else {
+      throwError('Message: invalid JSON provided for node ' + tableName);
+    }
+  }
   for (var key in obj) {
     const flatRow = flatten(obj[key], { __id: key });
     if (flatRow && Object.keys(flatRow).length > 0) { rowArray.push(flatRow); }  
@@ -174,6 +175,18 @@ const getIdNumber = (obj, index = 0) => {
   } else {
     return getIdNumber(obj, nextIndex);
   }
+}
+
+const isRandomList = (obj) => {
+  if (!obj) {
+    return false;
+  }
+  for (var key in obj) {
+    if (obj[key] !== null && typeof obj[key] === 'object') {
+      return false;
+    }
+  }
+  return true;
 }
 
 const isList = (obj) => {
@@ -226,11 +239,3 @@ const isObjectList = (obj) => {
 
 module.exports = handleJSONDoc;
 
-/*
-Notes:
-
-1. If there is just one entry, it is impossible to tell if it is an array or object
-2. Primary key of the object relationship unknown
-3. If there are no siblings, a legit key is considered a primary key
-4. 
-*/
