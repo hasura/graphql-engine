@@ -18,7 +18,7 @@ import {
 } from './Actions';
 import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../Notification';
-import { setTable } from '../DataActions';
+import { setTable, fetchTableListBySchema, UPDATE_REMOTE_SCHEMA_MANUAL_REL, RESET_MANUAL_REL_TABLE_LIST } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :
@@ -467,13 +467,19 @@ const AddRelationship = ({
 const AddManualRelationship = ({
   tableName,
   allSchemas,
+  schemaList,
   manualColumns,
+  manualRelInfo,
   dispatch,
 }) => {
   const styles = require('../TableModify/Modify.scss');
   const tableSchema = allSchemas.find(t => t.table_name === tableName);
   const onTableChange = e => {
     dispatch(relTableChange(e.target.value));
+  };
+  const onSchemaChange = e => {
+    dispatch({ type: UPDATE_REMOTE_SCHEMA_MANUAL_REL, data: e.target.value });
+    dispatch(fetchTableListBySchema(e.target.value));
   };
   const onRelNameChange = e => {
     dispatch(relNameChanged(e.target.value));
@@ -543,7 +549,7 @@ const AddManualRelationship = ({
           Configuration
         </div>
         <select
-          className={`${styles.relBlockInline} form-control`}
+          className={`${styles.relBlockInline} form-control ${styles.manual_rel_select}`}
           onChange={onRelLColChange}
           data-test="current-col"
         >
@@ -557,12 +563,27 @@ const AddManualRelationship = ({
         <span> :: </span>
         <div className={styles.relBlockInline}>
           <select
-            className="form-control"
+            className={'form-control'}
+            onChange={onSchemaChange}
+            data-test="remote-table"
+          >
+            <option key="default_table">Remote Schema</option>
+            {schemaList.map((s, i) => (
+              <option key={i} value={s.schema_name}>
+                {s.schema_name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <span> . </span>
+        <div className={styles.relBlockInline}>
+          <select
+            className={'form-control'}
             onChange={onTableChange}
             data-test="remote-table"
           >
             <option key="default_table">Remote Table</option>
-            {allSchemas.map((s, i) => (
+            {manualRelInfo.tables.map((s, i) => (
               <option key={i} value={s.table_name}>
                 {s.table_name}
               </option>
@@ -572,7 +593,7 @@ const AddManualRelationship = ({
         <span> -> </span>
         <div className={styles.relBlockInline}>
           <select
-            className="form-control"
+            className={'form-control'}
             onChange={onRelRColChange}
             data-test="remote-table-col"
           >
@@ -609,7 +630,9 @@ class Relationships extends Component {
 
     this.props.dispatch(setTable(this.props.tableName));
   }
-
+  componentWillUnmount() {
+    this.props.dispatch({ type: RESET_MANUAL_REL_TABLE_LIST });
+  }
   render() {
     const {
       tableName,
@@ -622,6 +645,7 @@ class Relationships extends Component {
       relAdd,
       migrationMode,
       currentSchema,
+      schemaList,
     } = this.props;
     const styles = require('../TableModify/Modify.scss');
     const tableStyles = require('../TableCommon/TableStyles.scss');
@@ -750,7 +774,7 @@ class Relationships extends Component {
           </div>
         </div>
         <div className={`${styles.padd_left_remove} container-fluid`}>
-          <div className={`${styles.padd_left_remove} col-xs-8`}>
+          <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
             {relAdd.isManualExpanded ? (
               <div className={styles.activeEdit}>
                 <AddManualRelationship
@@ -761,7 +785,9 @@ class Relationships extends Component {
                   lcol={relAdd.lcol}
                   rcol={relAdd.rcol}
                   allSchemas={allSchemas}
+                  schemaList={schemaList}
                   manualColumns={relAdd.manualColumns}
+                  manualRelInfo={relAdd.manualRelInfo}
                 />
               </div>
             ) : (
@@ -805,6 +831,7 @@ const mapStateToProps = (state, ownProps) => ({
   allSchemas: state.tables.allSchemas,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
+  schemaList: state.tables.schemaList,
   ...state.tables.modify,
 });
 
