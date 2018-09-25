@@ -6,7 +6,7 @@ ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
 
 LATEST_TAG=$(git describe --tags --abbrev=0)
 PREVIOUS_TAG=$(git describe --tags $(git rev-list --tags --max-count=2) --abbrev=0 | sed -n 2p)
-CHANGELOG_TEXT=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty=format:'- %s' --reverse)
+CHANGELOG_TEXT=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty=format:'- %s' --reverse -- server cli console)
 RELEASE_BODY=$(eval "cat <<EOF
 $(<$ROOT/.circleci/release_notes.template.md)
 EOF
