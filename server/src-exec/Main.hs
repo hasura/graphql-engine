@@ -117,7 +117,9 @@ mkAuthMode mAccessKey mWebHook mJwtSecret httpManager lCtx =
     (Nothing,  Nothing,   Nothing)      -> return AMNoAuth
     (Just key, Nothing,   Nothing)      -> return $ AMAccessKey key
     (Just key, Just hook, Nothing)      -> return $ AMAccessKeyAndHook key hook
-    (Just key, Nothing,   Just jwtConf) -> mkJwtMode key jwtConf httpManager lCtx
+    (Just key, Nothing,   Just jwtConf) ->
+      AMAccessKeyAndJWT key <$> mkJwtCtx jwtConf httpManager lCtx
+
     (Nothing, Just _, Nothing)     -> throwError $
       "Fatal Error : --auth-hook (HASURA_GRAPHQL_AUTH_HOOK)"
       <> " requires --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
@@ -129,33 +131,27 @@ mkAuthMode mAccessKey mWebHook mJwtSecret httpManager lCtx =
     (Just _, Just _, Just _)     -> throwError
       "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
 
--- is this correct ?
-mkJwtMode
+mkJwtCtx
   :: ( MonadIO m
      , MonadError T.Text m
      )
-  => AccessKey
-  -> T.Text
+  => T.Text
   -> HTTP.Manager
   -> LoggerCtx
-  -> m AuthMode
-mkJwtMode key jwtConf httpManager loggerCtx = do
+  -> m JWTCtx
+mkJwtCtx jwtConf httpManager loggerCtx = do
   -- the JWT Conf as JSON string; try to parse it
-  conf   <- either (throwError . T.pack) return $ A.eitherDecodeStrict $ CS.cs jwtConf
-  jwkRef <- case (jcKey conf, jcJwkUrl conf) of
-    (Nothing, Nothing) ->
-      throwError "Fatal Error: JWT conf: key and jwk_url both cannot be empty"
-    (Just _, Just _) ->
-      throwError "Fatal Error: JWT conf: key, jwk_url both cannot be present"
-
-    (Just jwk, _) -> liftIO $ newIORef (JWKSet [jwk])
-    (Nothing, Just url) -> do
+  conf   <- either decodeErr return $ A.eitherDecodeStrict $ CS.cs jwtConf
+  jwkRef <- case jcKeyOrUrl conf of
+    Left jwk -> liftIO $ newIORef (JWKSet [jwk])
+    Right url -> do
       ref <- liftIO $ newIORef $ JWKSet []
       updateJwkRef (mkLogger loggerCtx) httpManager url ref
       return ref
+  return $ JWTCtx jwkRef (jcClaimNs conf) (jcAudience conf)
+  where
+    decodeErr e = throwError . T.pack $ "Fatal Error: JWT conf: " <> e
 
-  let jwtCtx = JWTCtx jwkRef (jcClaimNs conf) (jcAudience conf)
-  return $ AMAccessKeyAndJWT key jwtCtx
 
 main :: IO ()
 main =  do
