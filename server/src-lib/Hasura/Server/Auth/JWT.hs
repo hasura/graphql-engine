@@ -140,7 +140,7 @@ updateJwkRef logger manager url jwkRef = do
       let delay = (floor seconds - 10) * 1000 * 1000
       C.threadDelay delay
       res <- runExceptT $ updateJwkRef logger manager url jwkRef
-      either (putStrLn . T.unpack) return res
+      either (\e -> logger $ mkJwkRefreshLog e Nothing) return res
 
     throwRetry :: (MonadIO m, MonadError T.Text m) => T.Text -> Maybe JwkRefreshHttpError -> m a
     throwRetry err httpErr = do
