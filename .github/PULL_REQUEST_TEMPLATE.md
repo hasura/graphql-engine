@@ -11,6 +11,7 @@ What component does this PR affect?
 - [ ] Server
 - [ ] Console
 - [ ] CLI
+- [ ] Build System
 - [ ] Docs
 - [ ] Community Content
 
@@ -19,6 +20,7 @@ Requires changes from other components? If yes, please mark the components:
 - [ ] Server
 - [ ] Console
 - [ ] CLI
+- [ ] Build System
 - [ ] Docs
 - [ ] Community Content
 
