@@ -18,7 +18,10 @@ const globals = {
   nodeEnv: window.__env.nodeEnv,
   accessKey: window.__env.accessKey,
   isAccessKeySet: window.__env.isAccessKeySet,
-  consoleMode: window.__env.consoleMode,
+  consoleMode:
+    window.__env.consoleMode === 'hasuradb'
+      ? 'server'
+      : window.__env.consoleMode,
   urlPrefix: checkExtraSlashes(window.__env.urlPrefix),
 };
 

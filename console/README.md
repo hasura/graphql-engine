@@ -79,19 +79,7 @@ Environment variables accepted in `server` mode:
 
 Configure .env file with appropriate values for the required environment variables
 
-Sample environment variables (With Migration mode enabled):
-
-```bash
-PORT=3000
-NODE_ENV=development
-API_HOST=http://localhost
-API_PORT=9693
-ACCESS_KEY=xyz
-CONSOLE_MODE=cli
-URL_PREFIX=/`
-```
-
-Sample environment variables (With Migration mode disabled):
+Sample environment variables:
 
 ```bash
 PORT=3000
@@ -103,11 +91,10 @@ ACCESS_KEY=xyz
 CONSOLE_MODE=cli
 URL_PREFIX=/`
 ```
-
 Environment variables accepted in `cli` mode:
 
 1. **PORT**: Configure the port where Hasura console will run locally.
-2. **DATA_API_URL**: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com. This value will be used to test when Hasura migration mode is disabled.
+2. **DATA_API_URL**: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com.
 3. **API_HOST**: Hasura CLI host.
 4. **API_PORT**: Hasura CLI port.
 5. **ACCESS_KEY**: Set access key if Hasura GraphQL engine is configured to run with ACCESS_KEY.
@@ -115,6 +102,12 @@ Environment variables accepted in `cli` mode:
 7. **URL_PREFIX**: ‘/’ (forward slash)
 
 #### Run Development Server:
+
+This setup requires hasura cli to be running in a different window. Start hasura cli with the same Hasura GraphQL engine url as configured for `DATA_API_URL`.
+
+```bash
+> hasura console
+```
 
 ```bash
 > npm run dev
