@@ -1,9 +1,9 @@
 const {Command, flags} = require('@oclif/command');
 const fetch = require('node-fetch');
-const {CLIError} = require('@oclif/errors');
-const {cli} = require('cli-ux');
+const throwError = require('./error');
+const { spinnerStart, spinnerStop } = require('./log');
 const resolve = require('path').resolve;
-const importFirebase = require('./firebase/import');
+const importData = require('./import/import');
 
 class Firebase2GraphQL extends Command {
   async run() {
@@ -27,11 +27,10 @@ class Firebase2GraphQL extends Command {
     const headers = key ? {'x-hasura-access-key': key} : {};
     const urlVerification = await this.verifyUrl(safeUrl, headers);
     if (urlVerification.error) {
-      throw new CLIError(urlVerification.message);
-      process.exit;
+      throwError(`Message: ${urlVerification.message}`);
     } else {
-      cli.action.stop('Done!');
-      await importFirebase(dbJson, safeUrl, headers, overwrite);
+      spinnerStop('Done!');
+      await importData(dbJson, safeUrl, headers, overwrite);
     }
   }
 
@@ -46,7 +45,7 @@ class Firebase2GraphQL extends Command {
 
   async verifyUrl(url, headers) {
     try {
-      cli.action.start('Verifying URL');
+      spinnerStart('Verifying URL');
       const resp = await fetch(
         `${url}/v1/version`,
         {
@@ -56,6 +55,7 @@ class Firebase2GraphQL extends Command {
       );
       return resp.status === 200 ? {error: false} : {error: true, message: 'invalid access key'};
     } catch (e) {
+      console.log(e);
       return  {error: true, message: 'invalid URL'};
     }
   }

@@ -26,19 +26,16 @@ const runSql = async (sqlArray, url, headers) => {
   }
 };
 
-const generateCreateTableSql = (metadata, isFirebase) => {
+const generateCreateTableSql = (metadata) => {
   const sqlArray = [];
   metadata.forEach(table => {
     sqlArray.push(`drop table if exists public."${table.name}" cascade;`);
     let columnSql = '(';
     const pkeyArr = [];
     table.columns.forEach((column, i) => {
-      if (isFirebase && column.name.indexOf('__id') === 0) {
+      if (column.name.indexOf('__id') === 0) {
         pkeyArr.push(column.name);
         columnSql += `"${column.name}" ${column.type} not null,`; 
-      } else if (column.name === 'id' && !isFirebase) {
-        pkeyArr.push(column.name);
-        columnSql += `"${column.name}" ${column.type} not null,`;
       } else {
         columnSql += `"${column.name}" ${column.type},`;
       }
@@ -75,7 +72,7 @@ const foreignKeySql = (table) => {
   return sqlArray;
 };
 
-const generateConstraintsSql = (metadata, isFirebase) => {
+const generateConstraintsSql = (metadata) => {
   let sqlArray = [];
   metadata.forEach(table => {
     sqlArray = [
@@ -86,9 +83,9 @@ const generateConstraintsSql = (metadata, isFirebase) => {
   return sqlArray;
 };
 
-const generateSql = (metadata, isFirebase) => {
-  const createTableSql = generateCreateTableSql(metadata, isFirebase);
-  const constraintsSql = generateConstraintsSql(metadata, isFirebase);
+const generateSql = (metadata) => {
+  const createTableSql = generateCreateTableSql(metadata);
+  const constraintsSql = generateConstraintsSql(metadata);
   let sqlArray = [...createTableSql, ...constraintsSql];
   return sqlArray;
 };

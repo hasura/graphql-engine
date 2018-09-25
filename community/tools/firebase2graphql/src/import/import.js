@@ -1,30 +1,40 @@
+const { spinnerStart, spinnerStop, log, successMessage } = require('../log');
+
 const generate = require('./generateTables');
 const { refineJson } = require('./utils');
 const {generateSql, runSql} = require('./sql');
-const {cli} = require('cli-ux');
+const colors = require('colors/safe');
 const {trackTables} = require('./track');
 const {getInsertOrder, insertData} = require('./insert');
 const {createRelationships} = require('./relationships');
 const {createTables} = require('./check');
+const makeSuggestions = require('./suggest');
+const generateGenericJson = require('../firebase/generateGenericJson');
 
-const importData = async (jsonDb, url, headers, overwrite, isFirebase) => {
-  cli.action.start('Processing JSON data');
-  const db = refineJson(jsonDb);
-  const tables = generate(db, isFirebase);
-  const sql = generateSql(tables, isFirebase);
-  cli.action.stop('Done!');
-  cli.action.start('Checking database');
+
+const importData = async (jsonDb, url, headers, overwrite) => {
+  spinnerStart('Processing Firebase JSON');
+  const db = refineJson(generateGenericJson(jsonDb));
+  const tables = generate(db);
+  const sql = generateSql(tables);
+  spinnerStop('Done!');
+  spinnerStart('Checking database');
   createTables(tables, url, headers, overwrite, runSql, sql).then(() => {
-    cli.action.stop('Done!');
-    cli.action.start('Tracking tables');
+    spinnerStop('Done!');
+    spinnerStart('Tracking tables');
     trackTables(tables, url, headers).then(() => {
-      cli.action.stop('Done!');
-      cli.action.start('Creating relationships');
+      spinnerStop('Done!');
+      spinnerStart('Creating relationships');
       createRelationships(tables, url, headers).then(() => {
-        cli.action.stop('Done!');
-        cli.action.start('Inserting data');
+        spinnerStop('Done!');
+        spinnerStart('Inserting data');
         const insertOrder = getInsertOrder(tables);
-        insertData(insertOrder, db, tables, url, headers, isFirebase);
+        insertData(insertOrder, db, tables, url, headers).then(() => {
+          spinnerStop('Done!');
+          log('');
+          log(`Success! Try out the GraphQL API at ${url}/console`, 'green');
+          makeSuggestions(db, url);
+        });
       });
     });
   });

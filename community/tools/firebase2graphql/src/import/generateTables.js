@@ -23,7 +23,7 @@ const getDataType = (data, column) => {
   throwError(`Message: invalid data type given for column ${column}: ${typeof data}`);
 };
 
-const isForeign = (name, db, isFirebase) => {
+const isForeign = (name, db) => {
   const idPos = name.indexOf('___id');
   if (idPos <= 0) {
     return false;
@@ -35,7 +35,7 @@ const isForeign = (name, db, isFirebase) => {
   return false;
 };
 
-const getColumnData = (dataArray, db, isFirebase) => {
+const getColumnData = (dataArray, db) => {
   if (dataArray.length === 0) {
     return [];
   }
@@ -59,39 +59,26 @@ const getColumnData = (dataArray, db, isFirebase) => {
     columnMetadata.name = column;
     const sampleData = refColumns[column];
     columnMetadata.type = getDataType(sampleData, column, db);
-    columnMetadata.isForeign = isForeign(column, db, isFirebase);
+    columnMetadata.isForeign = isForeign(column, db);
     columnData.push(columnMetadata);
   });
   return columnData;
 };
 
-const hasPrimaryKey = dataObj => {
-  let has = true;
-  dataObj.forEach(obj => {
-    if (!Object.keys(obj).find(name => name === 'id')) {
-      has = false;
-    }
-  });
-  return has;
-};
-
-const generate = (db, isFirebase) => {
+const generate = (db) => {
   const metaData = [];
   Object.keys(db).forEach(rootField => {
     if (db[rootField].length === 0) {
       return;
     }
     const tableMetadata = {};
-    if (!isFirebase && !hasPrimaryKey(db[rootField], rootField)) {
-      throwError(`Message: a unique column with name "id" and type integer must present in table "${rootField}"`);
-    }
     tableMetadata.name = rootField;
-    tableMetadata.columns = getColumnData(db[rootField], db, isFirebase);
+    tableMetadata.columns = getColumnData(db[rootField], db);
     tableMetadata.dependencies = [];
     tableMetadata.columns.forEach(column => {
       if (column.isForeign) {
         tableMetadata.dependencies.push(
-          column.name.substring(0, isFirebase ? column.name.indexOf('___id') : column.name.length - 3)
+          column.name.substring(0, column.name.indexOf('___id'))
         );
       }
     });

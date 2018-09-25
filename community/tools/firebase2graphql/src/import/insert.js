@@ -54,17 +54,13 @@ const transformData = (data, tables) => {
   return newData;
 };
 
-const insertData = async (insertOrder, sampleData, tables, url, headers, isFirebase) => {
+const insertData = async (insertOrder, sampleData, tables, url, headers) => {
   const transformedData = transformData(sampleData, tables);
   let mutationString = '';
   let objectString = '';
   const variables = {};
   insertOrder.forEach(tableName => {
-    let pkey = 'id';
-    if (isFirebase) {
-      pkey = tables.find((table) => table.name === tableName).columns.find((col) => col.name.indexOf('__id') === 0).name;
-    }
-    mutationString += `insert_${tableName} ( objects: $objects_${tableName} ) { returning { ${pkey} } } \n`;
+    mutationString += `insert_${tableName} ( objects: $objects_${tableName} ) { affected_rows } \n`;
     objectString += `$objects_${tableName}: [${tableName}_insert_input!]!,\n`;
     variables[`objects_${tableName}`] = transformedData[tableName];
   });
@@ -77,10 +73,7 @@ const insertData = async (insertOrder, sampleData, tables, url, headers, isFireb
       variables,
       headers,
     });
-    if (response.data !== null && response.data !== 'undefined') {
-      cli.action.stop('Done!');
-      console.log(`Explore your new GraphQL API at ${url}/console`);
-    } else {
+    if (response.data === null || response.data === undefined) {
       throw new Error(response);
     }
   } catch (e) {

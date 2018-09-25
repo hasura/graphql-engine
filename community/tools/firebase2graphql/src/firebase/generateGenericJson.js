@@ -72,7 +72,7 @@ const handleJSONDoc = (db) => {
 
 const handleTable = (obj, tableName, tableDetectedCallback) => {
   if (!isObjectList(obj))   {
-    throwError('message: invalid JSON provided for node ' + tableName);
+    throwError('Message: invalid JSON provided for node ' + tableName);
   }
   const rowArray = [];
   const flatten = (object, row) => { 

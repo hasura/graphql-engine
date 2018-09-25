@@ -16,10 +16,6 @@ const refineJson = (db) => {
   return newDb;
 };
 
-const throwJsonError = () => {
-  throwError('Message: this does not seem to be a valid JSON. If you are using a Firebase Data dump, please use the flag --firebase');
-}
-
 module.exports = {
   refineJson
 };

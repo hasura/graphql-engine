@@ -93,6 +93,7 @@ This is A CLI tool to get instant GraphQL API over your Firebase JSON data dump.
     }
     ```
 
+Check out [next steps](#next-steps) that you might want to go through for normalizing your database.
 
 ## Installation
 
@@ -134,6 +135,13 @@ $ firebase2graphql URL [flags]
 - `-o --overwrite`: Overwrite tables if they already exist in database
 - `-v --version`: show CLI version
 - `-h, --help`: show CLI help
+
+## Notes
+
+1. All top level nodes are converted to tables
+2. All nesting is flattened till the last nested child.
+3. If the last nested child has further nesting, it is converted to a one-to-many or a many-to-one relationship based on the type of child object
+4. You will most likely end up with duplicate tables. You might want to normalize your data based on the suggestions.
 
 ---
 Maintained with ♡ by <a href="https://hasura.io">Hasura</a>
