@@ -61,8 +61,8 @@ getTabInfo tc t =
 type OpCtxMap = Map.HashMap G.Name OpCtx
 
 data OpCtx
-  -- table, primary key cols, req hdrs
-  = OCInsert QualifiedTable [PGCol] [T.Text]
+  -- table, req hdrs
+  = OCInsert QualifiedTable [T.Text]
   -- tn, filter exp, limit, req hdrs
   | OCSelect QualifiedTable S.BoolExp (Maybe Int) [T.Text]
   -- tn, filter exp, reqt hdrs
@@ -1083,7 +1083,7 @@ getRootFldsRole' tn primCols constraints fields insM selM updM delM =
     colInfos = fst $ validPartitionFieldInfoMap fields
     getInsDet (hdrs, upsertPerm) =
       let upsertAllowed = isUpsertAllowed constraints upsertPerm
-      in ( OCInsert tn primCols hdrs
+      in ( OCInsert tn hdrs
          , Right $ mkInsMutFld tn upsertAllowed
          )
     getUpdDet (updCols, updFltr, hdrs) =

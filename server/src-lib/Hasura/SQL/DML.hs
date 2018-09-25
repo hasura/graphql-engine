@@ -269,6 +269,9 @@ newtype Alias
 instance ToSQL Alias where
   toSQL (Alias iden) = "AS" <-> toSQL iden
 
+instance IsIden Alias where
+  toIden (Alias i) = i
+
 instance ToSQL SQLExp where
   toSQL (SEPrep argNumber) =
     BB.char7 '$' <> BB.intDec argNumber
@@ -541,8 +544,11 @@ instance ToSQL UsingExp where
 newtype RetExp = RetExp [Extractor]
                   deriving (Show, Eq)
 
+selectStar :: Extractor
+selectStar = Extractor SEStar Nothing
+
 returningStar :: RetExp
-returningStar = RetExp [Extractor SEStar Nothing]
+returningStar = RetExp [selectStar]
 
 instance ToSQL RetExp where
   toSQL (RetExp [])
