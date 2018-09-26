@@ -74,6 +74,108 @@ class TestGraphQLQueryOffsets:
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
 
+
+class TestGraphQLQueryBoolExpBasic:
+
+    def test_author_article_where_not_equal(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_author_article_where_neq.yaml')
+
+    def test_author_article_where_greater_than(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_author_article_where_gt.yaml')
+
+    def test_author_article_where_greater_than_or_equal(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_author_article_where_gte.yaml')
+
+    def test_author_article_where_less_than(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_author_article_where_lt.yaml')
+
+    def test_author_article_where_less_than_or_equal(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_author_article_where_lte.yaml')
+
+    def test_author_article_where_in(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_author_article_where_in.yaml')
+
+    def test_author_article_where_nin(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_author_article_where_nin.yaml')
+
+    def test_order_delivered_at_is_null(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_query_order_delivered_at_is_null.yaml')
+
+    def test_order_delivered_at_is_not_null(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_query_order_delivered_at_is_not_null.yaml')
+
+    def test_author_article_where_not_less_than(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_author_article_where_not_lt.yaml')
+
+    def test_article_author_is_published_and_registered(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_article_author_is_published_and_registered.yaml')
+
+    def test_article_author_not_published_nor_registered(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_article_author_not_published_or_not_registered.yaml')
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = 'queries/graphql_query/boolexp/basic'
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
+
+
+class TestGraphqlQueryPermissions:
+
+    def test_user_select_unpublished_articles(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/user_select_query_unpublished_articles.yaml')
+
+    def test_user_only_other_users_published_articles(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/user_can_query_other_users_published_articles.yaml')
+
+    def test_anonymous_only_published_articles(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/anonymous_can_only_get_published_articles.yaml')
+
+    def test_user_cannot_access_remarks_col(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/user_cannot_access_remarks_col.yaml')
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = 'queries/graphql_query/permissions'
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
+
+
+class TestGraphQLQueryBoolExpSearch:
+
+    def test_city_where_like(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_city_where_like.yaml')
+
+    def test_city_where_not_like(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_city_where_nlike.yaml')
+
+    def test_city_where_ilike(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_city_where_ilike.yaml')
+
+    def test_city_where_not_ilike(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_city_where_nilike.yaml')
+
+    def test_city_where_similar(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_city_where_similar.yaml')
+
+    def test_city_where_not_similar(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_city_where_not_similar.yaml')
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = 'queries/graphql_query/boolexp/search'
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
+
 class TestGraphQLQueryBoolExpJsonB:
 
     def test_jsonb_contains_article_latest(self, hge_ctx):

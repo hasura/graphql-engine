@@ -32,6 +32,19 @@ args:
     name: article
 
 
+#Article table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE city (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        country TEXT NOT NULL
+      )
+- type: track_table
+  args:
+    schema: public
+    name: city
 
 #Object relationship
 - type: create_object_relationship
@@ -59,7 +72,9 @@ args:
       insert into author (name)
       values
       ('Author 1'),
-      ('Author 2') 
+      ('Author 2'),
+      ('Author 3') 
+
 
 - type: run_sql
   args:
@@ -82,6 +97,25 @@ args:
         'Article 3',
         'Sample article content 3',
         2,
+        false
+      ),
+      (
+        'Article 4',
+        'Sample article content 4',
+        3,
         true
       )
+
+- type: insert
+  args:
+    table: city
+    objects:
+    - name: Durham
+      country: USA 
+    - name:  New York
+      country: USA
+    - name: Framlingham
+      country: UK
+    - name: New Orleans 
+      country: USA
 

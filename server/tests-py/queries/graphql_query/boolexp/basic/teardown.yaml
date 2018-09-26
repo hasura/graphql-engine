@@ -18,3 +18,12 @@ args:
     sql: |
       drop table author
 
+- type: run_sql
+  args:
+    sql: |
+      drop table city
+
+- type: run_sql
+  args:
+    sql: |
+      drop table orders
