@@ -18,7 +18,12 @@ import {
 } from './Actions';
 import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../Notification';
-import { setTable, fetchTableListBySchema, UPDATE_REMOTE_SCHEMA_MANUAL_REL, RESET_MANUAL_REL_TABLE_LIST } from '../DataActions';
+import {
+  setTable,
+  fetchTableListBySchema,
+  UPDATE_REMOTE_SCHEMA_MANUAL_REL,
+  RESET_MANUAL_REL_TABLE_LIST,
+} from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :
@@ -549,7 +554,9 @@ const AddManualRelationship = ({
           Configuration
         </div>
         <select
-          className={`${styles.relBlockInline} form-control ${styles.manual_rel_select}`}
+          className={`${styles.relBlockInline} form-control ${
+            styles.manual_rel_select
+          }`}
           onChange={onRelLColChange}
           data-test="current-col"
         >
@@ -565,7 +572,7 @@ const AddManualRelationship = ({
           <select
             className={'form-control'}
             onChange={onSchemaChange}
-            data-test="remote-table"
+            data-test="remote-schema"
             value={manualRelInfo.remoteSchema}
           >
             <option key="default_table">Remote Schema</option>
@@ -798,7 +805,10 @@ class Relationships extends Component {
                 onClick={() => {
                   dispatch(relManualAddClicked());
                   /* Initializing manual relationship config with current schema and tables */
-                  dispatch({ type: UPDATE_REMOTE_SCHEMA_MANUAL_REL, data: currentSchema });
+                  dispatch({
+                    type: UPDATE_REMOTE_SCHEMA_MANUAL_REL,
+                    data: currentSchema,
+                  });
                   dispatch(fetchTableListBySchema(currentSchema));
                 }}
                 data-test="add-manual-relationship"
