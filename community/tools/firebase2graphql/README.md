@@ -133,44 +133,120 @@ $ firebase2graphql URL [flags]
 
 ## Things to know about implementation
 
+### Duplicates
+
 1. All top level nodes are converted to tables
 2. You will most likely end up with duplicate tables. You might want to normalize your data based on the suggestions.
 
    Consider this Firebase database for instance:
 
    ```json
-   {
-     "articles": {
-       "articleuid1": {
+    {
+      "articles": {
+        "articleuid1": {
           "title": "Title1",
           "body": "Body1",
           "author": {
             "name": "Author1",
             "age": 24
           }
-       },
-      "articleuid2": {
+        },
+        "articleuid2": {
           "title": "Title2",
-          "body": "Body3",
+           "body": "Body3",
           "author": {
             "name": "Author2",
             "age": 30
           }
-       }
-     },
-     {
-     "authors": {
-       "authoruid1": {
-         "name": "Author1",
-         "age": 24
-       },
-       "authoruid2": {
-         "name": "Author2",
-         "age": 30
-       }
-     }
-   }   
+        }
+      },
+      "authors": {
+        "authoruid1": {
+          "name": "Author1",
+          "age": 24
+        },
+        "authoruid2": {
+          "name": "Author2",
+          "age": 30
+        }
+      }
+    }  
    ```
+
+   For this JSON file, the Query root of the GraphQL schema would be:
+
+   ```graphql
+    type query_root {
+      articles(
+        limit: Int
+        offset: Int
+        order_by: [articles_order_by!]
+        where: articles_bool_exp
+      ): [articles!]!
+
+      articles_author(
+        limit: Int
+        offset: Int
+        order_by: [articles_author_order_by!]
+        where: articles_author_bool_exp
+      ): [articles_author!]!
+
+      articles_author_by_pk(_id: uuid!): articles_author
+
+      articles_by_pk(_id: String!): articles
+
+      authors(
+        limit: Int
+        offset: Int
+        order_by: [authors_order_by!]
+        where: authors_bool_exp
+      ): [authors!]!
+      
+      authors_by_pk(_id: String!): authors
+    }
+   ```
+
+   where,
+
+   ```graphql
+    type articles {
+      _id: uuid! 
+      body: String
+      title: String
+      articles_author: articles_author
+      articles_author__id: uuid
+    }
+
+    type articles_author {
+      _id: uuid!
+      age: bigint
+      articles(
+        limit: Int
+        offset: Int
+        order_by: [articles_order_by!]
+        where: articles_bool_exp
+      ): [articles!]!
+      name: String
+    }
+
+    type authors {
+      _id: uuid!
+      age: bigint
+      name: String
+    }
+   ```
+
+   As you see, the nodes `articles_author` and `authors` are almost the same, except the relationship with the `articles` table. This is an example of duplicate data.
+
+   In such cases, you might want to delete one of the tables and make the required relationships with custom names from the console.
+
+   If the CLI detects any such duplicate tables, it will warn you about them after the import is complete.
+
+   > The suggestions are mere guesses made by looking at the data in your JSON. Therefore, they might not be correct at times. 
+
+### Overwrite
+
+If your database already contains tables with the same name as the root fields of your JSON database, the command will face. If you want to overwrite the database anyway, you should provide an additional flag "--overwrite".
 
 ---
 Maintained with ♡ by <a href="https://hasura.io">Hasura</a>
