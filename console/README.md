@@ -40,10 +40,10 @@ This guide is for setting-up the console for development on your own machine, an
 - Clone your forked repo: `git clone https://github.com/<your-username>/graphql-engine`
 
 ```bash
-> git clone https://github.com/<your-user-name>/graphql-engine
-> cd graphql-engine
-> cd console
-> npm install
+git clone https://github.com/<your-user-name>/graphql-engine
+cd graphql-engine
+cd console
+npm install
 ```
 
 Hasura console can be developed in two modes (`server` or `cli` mode). The easiest way is by using a Hasura GraphQL engine instance running on Heroku. You can install by following the steps given in [this](https://docs.hasura.io/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine is documented [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
@@ -79,10 +79,8 @@ Environment variables accepted in `server` mode:
 #### Run Development Server:
 
 ```bash
-> npm run dev
+ npm run dev
 ```
-
-![Start GraphQL Console Development Server](../assets/console-readme-assets/start-dev-server.jpg)
 
 ### Development with Hasura CLI
 
@@ -115,15 +113,17 @@ Environment variables accepted in `cli` mode:
 
 This setup requires hasura cli to be running in a different window. Start hasura cli with the same Hasura GraphQL engine url as configured for `DATA_API_URL`.
 
-```bash
-> hasura console
-```
+##### Start Hasura CLI server
 
 ```bash
-> npm run dev
+hasura console
 ```
 
-![Start GraphQL Console Development Server](../assets/console-readme-assets/start-dev-server.jpg)
+##### Start development server
+
+```bash
+npm run dev
+```
 
 ### Testing
 
@@ -143,6 +143,11 @@ Hasura console is a react application bundled with webpack and the state is mana
 
 ### Release Process
 
-All the development work need to happen in your own fork of the graphql-engine. Once the desired feature/bug is fixed. Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md). Raise a pull request to the hasura/graphql-engine. Once the PR is raised, CI configured for PR’s will run the test suite and once everything goes well it will generate a preview heroku app with the desired feature/bug fixed. The source code and the preview app will be reviewed by maintainers. If it passes the test suite/code review, then it will be merged to master and released.
+- All the development work need to happen in your own fork of the graphql-engine.
+- Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md).
+- Once the desired feature/bug is added/fixed, raise a pull request to the hasura/graphql-engine.
+- CI configured for PR will run the test suite.
+- Once everything goes well it will generate a preview heroku app.
+- The source code and the preview app will be reviewed by maintainers and merged.
 
 <!-- prettier-ignore-end -->
