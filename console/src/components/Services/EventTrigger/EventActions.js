@@ -278,10 +278,14 @@ const redeliverEvent = eventId => (dispatch, getState) => {
 const setTrigger = triggerName => ({ type: SET_TRIGGER, triggerName });
 
 const setRedeliverEvent = eventId => dispatch => {
-  return dispatch(loadEventInvocations(eventId)).then(() => {
-    dispatch(redeliverEvent(eventId)).then(() => {
-      dispatch({ type: SET_REDELIVER_EVENT, eventId });
-    });
+  /*
+    Redeliver event and mark the redeliverEventId to the redelivered event so that it can be tracked.
+  */
+  return dispatch(redeliverEvent(eventId)).then(() => {
+    return Promise.all([
+      dispatch({ type: SET_REDELIVER_EVENT, eventId }),
+      dispatch(loadEventInvocations(eventId)),
+    ]);
   });
 };
 

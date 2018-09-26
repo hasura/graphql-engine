@@ -325,9 +325,9 @@ fetchMetadata = do
 
     mkTriggerMetaDefs = mapM trigRowToDef
 
-    trigRowToDef (sn, tn, trn, Q.AltJ tDefVal, webhook, nr, rint) = do
+    trigRowToDef (sn, tn, trn, Q.AltJ tDefVal, webhook, nr, rint, Q.AltJ mheaders) = do
       tDef <- decodeValue tDefVal
-      return (QualifiedTable sn tn, DTS.EventTriggerDef trn tDef webhook (RetryConf nr rint))
+      return (QualifiedTable sn tn, DTS.EventTriggerDef trn tDef webhook (RetryConf nr rint) mheaders)
 
     fetchTables =
       Q.listQ [Q.sql|
@@ -357,7 +357,7 @@ fetchMetadata = do
                   |] () False
     fetchEventTriggers =
      Q.listQ [Q.sql|
-              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval
+              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
                FROM hdb_catalog.event_triggers e
               |] () False
 

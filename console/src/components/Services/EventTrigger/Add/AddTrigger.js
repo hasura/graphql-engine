@@ -349,6 +349,12 @@ class AddTrigger extends Component {
               <div className={styles.add_mar_bottom}>
                 <h4 className={styles.subheading_text}>
                   Webhook URL &nbsp; &nbsp;
+                  <OverlayTrigger
+                    placement="right"
+                    overlay={tooltip.webhookUrlDescription}
+                  >
+                    <i className="fa fa-question-circle" aria-hidden="true" />
+                  </OverlayTrigger>{' '}
                 </h4>
                 <input
                   type="url"
@@ -389,6 +395,15 @@ class AddTrigger extends Component {
                     <div>
                       <h4 className={styles.subheading_text}>
                         Advanced - Operation/Columns &nbsp; &nbsp;
+                        <OverlayTrigger
+                          placement="right"
+                          overlay={tooltip.advancedOperationDescription}
+                        >
+                          <i
+                            className="fa fa-question-circle"
+                            aria-hidden="true"
+                          />
+                        </OverlayTrigger>{' '}
                       </h4>
                       <div>
                         <div>
