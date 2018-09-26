@@ -104,7 +104,7 @@ $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''Request)
 
 data WebhookResponse
   = WebhookResponse
-  { _wrsPayload :: TBS.TByteString
+  { _wrsBody    :: TBS.TByteString
   , _wrsHeaders :: Maybe [HeaderConf]
   , _wrsStatus  :: Int
   }
@@ -116,8 +116,8 @@ $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''InitError)
 data Response = ResponseType1 WebhookResponse | ResponseType2 InitError
 
 instance ToJSON Response where
-  toJSON (ResponseType1 resp) = object ["type" .= String "webhook_response", "data" .= toJSON resp]
-  toJSON (ResponseType2 err)  = object ["type" .= String "init_error", "data" .= toJSON err]
+  toJSON (ResponseType1 resp) = object ["type" .= String "webhook_response", "data" .= toJSON resp, "version" .= invocationVersion]
+  toJSON (ResponseType2 err)  = object ["type" .= String "init_error", "data" .= toJSON err, "version" .= invocationVersion]
 
 data Invocation
   = Invocation
@@ -125,7 +125,6 @@ data Invocation
   , iStatus   :: Int
   , iRequest  :: Request
   , iResponse :: Response
-  , _iVersion :: Version
   }
 
 data EventEngineCtx
@@ -339,7 +338,6 @@ tryWebhook logenv pool e = do
           status
           (mkWebhookReq (toJSON e) reqHeaders)
           resp
-          invocationVersion
     addHeaders :: [(N.HeaderName, BS.ByteString)] -> W.Options -> W.Options
     addHeaders headers opts = foldl (\acc h -> acc CL.& W.header (fst h) CL..~ [snd h] ) opts headers
 
