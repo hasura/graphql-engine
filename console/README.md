@@ -26,25 +26,33 @@ An admin dashboard to manage database and try out GraphQL APIs. Hasura console i
 
 ## Contributing to Hasura console
 
-Hasura console needs to be configured with Hasura GraphQL URL to work and hence there are two ways to start contributing
+This guide is for setting-up the console for development on your own machine, and how to contribute.
 
 ### Prerequisites
 
+- Node.js (v8.9+)
 - [Hasura GraphQL Engine](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html)
-- [Hasura CLI](https://docs.hasura.io/1.0/graphql/manual/hasura-cli/install-hasura-cli.html)
+- [Hasura CLI](https://docs.hasura.io/1.0/graphql/manual/hasura-cli/install-hasura-cli.html) (for working with migrations)
 
-### Setup
+### Setup and Install Dependencies
+
+- Fork the repo on GitHub.
+- Clone your forked repo: `git clone https://github.com/<your-username>/graphql-engine`
 
 ```bash
-> git clone https://github.com/hasura/graphql-engine
+> git clone https://github.com/<your-user-name>/graphql-engine
 > cd graphql-engine
 > cd console
 > npm install
 ```
 
+Hasura console can be developed in two modes (`server` or `cli` mode). The easiest way is by using a Hasura GraphQL engine instance running on Heroku. You can install by following the steps given in [this](https://docs.hasura.io/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine is documented [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
+
 ### Development with Hasura GraphQL Engine
 
-[Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. Create a `.env` file in the root directory (wherever package.json is). Sample `.env` file will look like below
+Hasura GraphQL engine should be running to develop console in this mode. If you have set it up on heroku, your url will look like `<app-name>.herokuapp.com`.
+
+[Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. Create a `.env` file in the root directory for console (wherever package.json is). Sample `.env` file will look like below
 
 Sample environment variables:
 
@@ -57,15 +65,16 @@ CONSOLE_MODE=server
 URL_PREFIX=/`
 ```
 
-Note that **CONSOLE_MODE** is set to **server**. In this mode **migration mode** will be disabled and the corresponding functionality on the console will be hidden. If you are looking to add/tweak functionality related to migration, check out [Development with Hasura CLI](#development-with-hasura-cli)<Link to Development With Hasura CLI section>
+Note that **CONSOLE_MODE** is set to **server**. In this mode **migration mode** will be disabled and the corresponding functionality on the console will be hidden. If you are looking to add/tweak functionality related to migration, check out [Development with Hasura CLI](#development-with-hasura-cli).
 
 Environment variables accepted in `server` mode:
 
-1. **PORT**: Configure the port where Hasura console will run locally.
-2. **DATA_API_URL**: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com.
-3. **ACCESS_KEY**: Set access key if Hasura GraphQL engine is configured to run with ACCESS_KEY.
-4. **CONSOLE_MODE**: server
-5. **URL_PREFIX**: ‘/’ (forward slash)
+1. `PORT`: Configure the port where Hasura console will run locally.
+2. `NODE_ENV`: `development`
+3. `DATA_API_URL`: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com.
+4. `ACCESS_KEY`: Set access key if Hasura GraphQL engine is configured to run with ACCESS_KEY.
+5. `CONSOLE_MODE`: `server`
+6. `URL_PREFIX`: ‘/’ (forward slash)
 
 #### Run Development Server:
 
@@ -77,7 +86,7 @@ Environment variables accepted in `server` mode:
 
 ### Development with Hasura CLI
 
-Configure .env file with appropriate values for the required environment variables
+Configure .env file with appropriate values for the required environment variables.
 
 Sample environment variables:
 
@@ -93,13 +102,14 @@ URL_PREFIX=/`
 ```
 Environment variables accepted in `cli` mode:
 
-1. **PORT**: Configure the port where Hasura console will run locally.
-2. **DATA_API_URL**: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com.
-3. **API_HOST**: Hasura CLI host.
-4. **API_PORT**: Hasura CLI port.
-5. **ACCESS_KEY**: Set access key if Hasura GraphQL engine is configured to run with ACCESS_KEY.
-6. **CONSOLE_MODE**: cli
-7. **URL_PREFIX**: ‘/’ (forward slash)
+1. `PORT`: Configure the port where Hasura console will run locally.
+2. `NODE_ENV`: `development`
+3. `DATA_API_URL`: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com
+4. `API_HOST`: Hasura CLI host. Hasura CLI runs on `http://localhost` by default.
+5. `API_PORT`: Hasura CLI port. Hasura CLI exposes the API at `9693` by default
+6. `ACCESS_KEY`: Set access key if Hasura GraphQL engine is configured to run with ACCESS_KEY
+7. `CONSOLE_MODE`: `cli`
+8. `URL_PREFIX`: ‘/’ (forward slash)
 
 #### Run Development Server:
 
@@ -121,12 +131,18 @@ Visit [http://localhost:3000](http://localhost:3000) to confirm the setup.
 
 ![Testing Development Server](../assets/console-readme-assets/test-dev-setup.jpg)
 
+#### Run Tests
+
+- Run tests: `npm run cypress`
+- Write your tests in the `cypress` directory, integration.
+
+
 ## How it works
 
-Hasura console is a react application bundled with webpack and the entire state is managed using redux.
+Hasura console is a react application bundled with webpack and the state is managed using redux.
 
 ### Release Process
 
-All the development work need to happen in your own fork of the graphql-engine. Once the desired feature/bug is fixed. Raise a PR to the hasura/graphql-engine. Once the PR is raised, CI configured for PR’s will run the test suite and once everything goes well it will generate a preview heroku app with the desired feature/bug fixed. The source code and the preview app will be reviewed by maintainers. If it passes the test suite/code review, then it will be merged to master and released.
+All the development work need to happen in your own fork of the graphql-engine. Once the desired feature/bug is fixed. Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md). Raise a pull request to the hasura/graphql-engine. Once the PR is raised, CI configured for PR’s will run the test suite and once everything goes well it will generate a preview heroku app with the desired feature/bug fixed. The source code and the preview app will be reviewed by maintainers. If it passes the test suite/code review, then it will be merged to master and released.
 
 <!-- prettier-ignore-end -->
