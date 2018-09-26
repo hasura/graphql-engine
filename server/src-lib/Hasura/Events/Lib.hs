@@ -331,7 +331,7 @@ tryWebhook logenv pool e = do
   where
     mkInvo :: Event -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf] -> Invocation
     mkInvo e' status reqHeaders respBody respHeaders
-      = let resp = if isError status then mkErr respBody else mkResp status respBody respHeaders
+      = let resp = if isInitError status then mkErr respBody else mkResp status respBody respHeaders
         in
           Invocation
           (eId e')
@@ -379,8 +379,8 @@ tryWebhook logenv pool e = do
     mkMaybe [] = Nothing
     mkMaybe x  = Just x
 
-    isError :: Int -> Bool
-    isError status = not (status >= 200 && status <= 300)
+    isInitError :: Int -> Bool
+    isInitError status = status >= 1000
 
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
