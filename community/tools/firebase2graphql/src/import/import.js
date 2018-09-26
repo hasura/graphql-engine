@@ -7,7 +7,7 @@ const {trackTables} = require('./track');
 const {getInsertOrder, insertData} = require('./insert');
 const {createRelationships} = require('./relationships');
 const {createTables} = require('./check');
-const makeSuggestions = require('./suggest');
+const suggestDuplicates = require('./suggest');
 const generateGenericJson = require('../firebase/generateGenericJson');
 
 const importData = async (jsonDb, url, headers, overwrite) => {
@@ -31,7 +31,7 @@ const importData = async (jsonDb, url, headers, overwrite) => {
             log('');
             log(`Success! Try out the GraphQL API at ${url}/console`, 'green');
           }
-          makeSuggestions(db, url);
+          suggestDuplicates(db, url);
         });
       });
     });
