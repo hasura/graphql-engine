@@ -172,15 +172,6 @@ mkSIdenExp = SEIden . toIden
 mkQIdenExp :: (IsIden a, IsIden b) => a -> b -> SQLExp
 mkQIdenExp q t = SEQIden $ mkQIden q t
 
-selectAsSingleObj :: Select -> Select
-selectAsSingleObj s = mkSelect{selExtr = [extr]}
-  where
-    annSelect = SETyAnn (SESelect s) jsonType
-    withOp = mkSQLOpExp (SQLOp "->") annSelect (SEUnsafe "0")
-    nullE = SETyAnn (SELit "null") jsonType
-    handleNull = SEFnApp "coalesce" [withOp, nullE] Nothing
-    extr = Extractor handleNull Nothing
-
 data Qual
   = QualIden !Iden
   | QualTable !QualifiedTable
@@ -321,8 +312,8 @@ mkSQLOpExp
   -> SQLExp -- result
 mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
 
-toEmptyArrWhenNull :: SQLExp -> SQLExp
-toEmptyArrWhenNull e = SEFnApp "coalesce" [e, SELit "[]"] Nothing
+handleIfNull :: SQLExp -> SQLExp -> SQLExp
+handleIfNull l e = SEFnApp "coalesce" [e, l] Nothing
 
 getExtrAlias :: Extractor -> Maybe Alias
 getExtrAlias (Extractor _ ma) = ma

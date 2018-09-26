@@ -630,16 +630,19 @@ annRelColToSQL ar leftSel =
 --       in S.mkAliasedExtrFromExp (S.mkQIdenExp (TableName "r") rName) $
 --          Just rName
 
-wrapFinalSel :: S.Select -> [(FieldName, AnnFld)] -> S.Select
-wrapFinalSel initSel extCols =
+wrapFinalSel :: Bool -> S.Select -> [(FieldName, AnnFld)] -> S.Select
+wrapFinalSel asSingleObj initSel extCols =
   S.mkSelect
   { S.selExtr = [S.Extractor rowToJSONedCol Nothing]
   , S.selFrom = Just $ S.FromExp [S.mkSelFromExp False initSel (TableName "r")]
   }
   where
     rowExp = S.mkRowExp $ map mkInnerSelExtr extCols
-    rowToJSONedCol = S.toEmptyArrWhenNull $
-                     S.SEFnApp "json_agg" [rowExp] Nothing
+    rowToJSONedCol = bool multiObjs singleObj asSingleObj
+    multiObjs = S.handleIfNull (S.SELit "[]") $
+                S.SEFnApp "json_agg" [rowExp] Nothing
+    singleObj = S.handleIfNull (S.SELit "null") $
+                S.SEFnApp "row_to_json" [rowExp] Nothing
 
 getSelectDeps
   :: SelectData
@@ -672,12 +675,10 @@ getSelectDeps (SelectData flds tn _ (_, annWc) _ _ _ _ _) =
 
 mkSQLSelect :: SelectData -> S.Select
 mkSQLSelect selData =
-  bool finalSelect singleObjSel $ asSingleObject selData
+  wrapFinalSel isSingleObj sqlSel $ HM.toList $ sdFlds selData
   where
-    singleObjSel = S.selectAsSingleObj finalSelect
-    finalSelect =
-      wrapFinalSel (selDataToSQL [] (S.BELit True) selData) $
-      HM.toList $ sdFlds selData
+    isSingleObj = asSingleObject selData
+    sqlSel = selDataToSQL [] (S.BELit True) selData
 
 -- convSelectQuery
 --   :: (P1C m)
