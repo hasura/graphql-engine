@@ -19,7 +19,7 @@
   "bugs": {
     "url": "https://github.com/hasura/graphql-engine/issues"
   },
-  "homepage": "https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/auth-webhooks/passport-js-auth-webhook#readme",
+  "homepage": "https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/auth-webhooks/passport-js#readme",
   "dependencies": {
     "bcrypt": "^3.0.0",
     "body-parser": "^1.18.3",
