@@ -95,8 +95,9 @@ class StreamingLogs extends Component {
   }
   toggleModal(currentEvent) {
     // set current event to redeliver
-    this.props.dispatch(setRedeliverEvent(currentEvent));
-    this.props.dispatch({ type: MODAL_OPEN, data: true });
+    this.props.dispatch(setRedeliverEvent(currentEvent)).then(() => {
+      this.props.dispatch({ type: MODAL_OPEN, data: true });
+    });
   }
 
   render() {
