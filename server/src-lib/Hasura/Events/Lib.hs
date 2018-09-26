@@ -344,22 +344,23 @@ tryWebhook logenv pool e = do
     addHeaders headers opts = foldl (\acc h -> acc CL.& W.header (fst h) CL..~ [snd h] ) opts headers
 
     encodeHeader :: EventHeaderInfo -> (N.HeaderName, BS.ByteString)
-    encodeHeader headerInfo =
-      let name = CI.mk $ T.encodeUtf8 $ ehiName headerInfo
-          value = T.encodeUtf8 $ ehiCachedValue headerInfo
-      in  (name, value)
+    encodeHeader (EventHeaderInfo hconf cache) =
+      let (HeaderConf name _) = hconf
+          ciname = CI.mk $ T.encodeUtf8 name
+          value = T.encodeUtf8 cache
+      in  (ciname, value)
 
     decodeHeader :: [EventHeaderInfo] -> (N.HeaderName, BS.ByteString) -> HeaderConf
     decodeHeader headerInfos (hdrName, hdrVal)
       = let name = decodeBS $ CI.original hdrName
-            mehi = find (\hi -> ehiName hi == name) headerInfos
+            getName ehi = let (HeaderConf name' _) = ehiHeaderConf ehi
+                          in name'
+            mehi = find (\hi -> getName hi == name) headerInfos
         in case mehi of
              Nothing -> HeaderConf name (HVValue (decodeBS hdrVal))
-             Just ehi -> case ehiValue ehi of
-               HVValue _ -> HeaderConf name (ehiValue ehi)
-               HVEnv _ -> if logenv
-                        then HeaderConf name (HVValue (ehiCachedValue ehi))
-                        else HeaderConf name (ehiValue ehi)
+             Just ehi -> if logenv
+                         then HeaderConf name (HVValue (ehiCachedValue ehi))
+                         else ehiHeaderConf ehi
        where
          decodeBS = TE.decodeUtf8With TE.lenientDecode
 

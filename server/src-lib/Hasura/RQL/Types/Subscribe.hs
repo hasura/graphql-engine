@@ -70,10 +70,6 @@ data HeaderConf = HeaderConf HeaderName HeaderValue
 data HeaderValue = HVValue T.Text | HVEnv T.Text
    deriving (Show, Eq, Lift)
 
-instance ToJSON HeaderValue where
-  toJSON (HVValue val) = String val
-  toJSON (HVEnv val)   = String val
-
 instance FromJSON HeaderConf where
   parseJSON (Object o) = do
     name <- o .: "name"
@@ -92,8 +88,7 @@ instance ToJSON HeaderConf where
 
 data EventHeaderInfo
   = EventHeaderInfo
-  { ehiName        :: !HeaderName
-  , ehiValue       :: !HeaderValue
+  { ehiHeaderConf  :: !HeaderConf
   , ehiCachedValue :: !T.Text
   } deriving (Show, Eq, Lift)
 

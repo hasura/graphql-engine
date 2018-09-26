@@ -281,12 +281,12 @@ getHeaderInfosFromConf = mapM getHeader
   where
     getHeader :: (P2C m) => HeaderConf -> m EventHeaderInfo
     getHeader hconf = case hconf of
-      (HeaderConf name (HVValue val)) -> return $ EventHeaderInfo name (HVValue val) val
-      (HeaderConf name (HVEnv val))   -> do
+      (HeaderConf _ (HVValue val)) -> return $ EventHeaderInfo hconf val
+      (HeaderConf _ (HVEnv val))   -> do
         mEnv <- liftIO $ lookupEnv (T.unpack val)
         case mEnv of
           Nothing -> throw400 NotFound $ "environment variable '" <> val <> "' not set"
-          Just envval -> return $ EventHeaderInfo name (HVEnv val) (T.pack envval)
+          Just envval -> return $ EventHeaderInfo hconf (T.pack envval)
 
 toInt64 :: (Integral a) => a -> Int64
 toInt64 = fromIntegral
