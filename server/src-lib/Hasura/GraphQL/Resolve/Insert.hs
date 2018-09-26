@@ -522,7 +522,8 @@ insertMultipleObjects role insCtxMap tn ctx insObjs
       return $ J.encode $ Map.fromList respTups
 
 prefixErrPath :: (MonadError QErr m) => Field -> m a -> m a
-prefixErrPath fld = withPathK "selectionSet" . fieldAsPath fld
+prefixErrPath fld =
+  withPathK "selectionSet" . fieldAsPath fld . withPathK "args"
 
 convertInsert
   :: RoleName

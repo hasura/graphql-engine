@@ -38,3 +38,20 @@ query:
         }
       }
    }
+
+response:
+  data:
+    insert_author:
+      affected_rows: 3
+      returning:
+      - id: 1
+        name: Author 1
+        articles:
+        - id: 1
+          title: "Article 1 by Author 1"
+          content: "Content for Article 1 by Author 1"
+          is_published: false
+        - id: 2
+          title: "Article 2 by Author 1"
+          content: "Content for Article 2 by Author 1"
+          is_published: false
