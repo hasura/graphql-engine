@@ -25,12 +25,12 @@ const importData = async (jsonDb, url, headers, overwrite) => {
       spinnerStart('Creating relationships');
       createRelationships(tables, url, headers).then(() => {
         spinnerStop('Done!');
-        spinnerStart('Inserting data');
         const insertOrder = getInsertOrder(tables);
-        insertData(insertOrder, db, tables, url, headers).then(() => {
-          spinnerStop('Done!');
-          log('');
-          log(`Success! Try out the GraphQL API at ${url}/console`, 'green');
+        insertData(insertOrder, db, tables, url, headers, success => {
+          if (success) {
+            log('');
+            log(`Success! Try out the GraphQL API at ${url}/console`, 'green');
+          }
           makeSuggestions(db, url);
         });
       });

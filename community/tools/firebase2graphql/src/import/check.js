@@ -47,6 +47,7 @@ const createTables = async (tables, url, headers, overwrite, runSql, sql) => {
         }
       }
     } catch (e) {
+      console.log(e);
       throwError(e);
     }
   }

@@ -1,7 +1,8 @@
 const {query} = require('graphqurl');
+const fetch = require('node-fetch');
 const moment = require('moment');
-const {cli} = require('cli-ux');
 const throwError = require('../error');
+const {log, spinnerStart, spinnerStop} = require('../log');
 
 const getInsertOrder = tables => {
   let order = [];
@@ -54,31 +55,95 @@ const transformData = (data, tables) => {
   return newData;
 };
 
-const insertData = async (insertOrder, sampleData, tables, url, headers) => {
-  const transformedData = transformData(sampleData, tables);
-  let mutationString = '';
-  let objectString = '';
-  const variables = {};
-  insertOrder.forEach(tableName => {
-    mutationString += `insert_${tableName} ( objects: $objects_${tableName} ) { affected_rows } \n`;
-    objectString += `$objects_${tableName}: [${tableName}_insert_input!]!,\n`;
-    variables[`objects_${tableName}`] = transformedData[tableName];
-  });
-  const mutation = `mutation ( ${objectString} ) { ${mutationString} }`;
-  cli.action.start('Inserting data');
-  try {
-    const response = await query({
-      query: mutation,
-      endpoint: `${url}/v1alpha1/graphql`,
-      variables,
-      headers,
-    });
-    if (response.data === null || response.data === undefined) {
-      throw new Error(response);
+const deleteDataTill = async (tableName, insertOrder, url, headers) => {
+  spinnerStart('Restoring database to a safe state');
+  const truncate = async tn => {
+    const resp = await fetch(
+      url,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          type: 'run_sql',
+          args: {
+            sql: `truncate table public."${tn}" cascade;`,
+            cascade: true,
+          },
+        }),
+      }
+    );
+    if (tn === tableName) {
+      spinnerStop('Done');
+      return resp;
     }
-  } catch (e) {
-    throwError(JSON.stringify(e, null, 2));
+  };
+  if (insertOrder.length === 0) {
+    return;
   }
+  return truncate(insertOrder[0]);
+};
+
+const insertData = async (insertOrder, sampleData, tables, url, headers, callback) => {
+  const transformedData = transformData(sampleData, tables);
+  let numOfTables = insertOrder.length;
+  const insertToTable = j => {
+    if (j >= numOfTables) {
+      callback(true);
+      return true;
+    }
+    const tableName = insertOrder[j];
+    const numOfRows = transformedData[tableName].length;
+    let insertedRows = 0;
+    const insertHundredRows = i => {
+      let mutationString = '';
+      let objectString = '';
+      const variables = {};
+      const numOfelementsToInsert = Math.min(numOfRows - insertedRows, 100);
+      mutationString += `insert_${tableName} ( objects: $objects ) { affected_rows } \n`;
+      objectString += `$objects: [${tableName}_insert_input!]!,\n`;
+      variables.objects = [...transformedData[tableName].slice(i, numOfelementsToInsert + i)];
+      const mutation = `mutation ( ${objectString} ) { ${mutationString} }`;
+      spinnerStart(`Inserting ${i} to ${i + numOfelementsToInsert} rows of ${numOfRows} in table ${tableName}`);
+      return query(
+        {
+          query: mutation,
+          endpoint: `${url}/v1alpha1/graphql`,
+          variables,
+          headers,
+        }
+      ).then(response => {
+        if (response.data) {
+          spinnerStop('Done!');
+          insertedRows += numOfelementsToInsert;
+          if (insertedRows >= numOfRows) {
+            return insertToTable(j + 1);
+          }
+          return insertHundredRows(i + 100);
+        }
+        deleteDataTill(tableName, insertOrder, url, headers).then(() => {
+          throwError(
+            JSON.stringify(response, null, 2),
+            () => {
+              log('Message: Schema has been imported. But the data could not be imported due to the following error.', 'yellow');
+              callback(false);
+            }
+          );
+        });
+      }).catch(e => {
+        deleteDataTill(tableName, insertOrder, url, headers).then(() => {
+          throwError(
+            JSON.stringify(e, null, 2),
+            () => {
+              log('Message: Schema has been imported. But the data could not be imported due to the following error.', 'yellow');
+              callback(false);
+            }
+          );
+        });
+      });
+    };
+    insertHundredRows(0);
+  };
+  return insertToTable(0);
 };
 
 module.exports = {

@@ -69,8 +69,7 @@ const suggest = (db, url) => {
   }
   if (dupes.length > 0) {
     log('');
-    log('Warning', 'yellow');
-    log('=======', 'yellow');
+    log('Warning:', 'yellow');
     log('While importing your data, the following duplicate tables might have been created:', 'yellow');
     dupes.forEach(dupe => log(dupe));
     log(`Manage your tables at ${url}/console/data/schema/public`, 'yellow');

@@ -4,9 +4,9 @@ const throwError = require('../error');
 
 const getPrimaryKeys = obj => {
   const pkeyMap = {};
-  for (var key in obj) {
-    if (key.indexOf('_id') === 0) {
-      pkeyMap[key] = obj[key];
+  for (var pkey in obj) {
+    if (pkey.indexOf('_id') === 0) {
+      pkeyMap[pkey] = obj[pkey];
     }
   }
   return pkeyMap;
@@ -34,8 +34,8 @@ const isRandomList = obj => {
   if (!obj) {
     return false;
   }
-  for (var key in obj) {
-    if (obj[key] !== null && typeof obj[key] === 'object') {
+  for (var objKey in obj) {
+    if (obj[objKey] !== null && typeof obj[objKey] === 'object') {
       return false;
     }
   }
@@ -46,11 +46,11 @@ const isList = obj => {
   if (Object.keys(obj).length === 0) {
     return false;
   }
-  for (var key in obj) {
-    if (obj[key] === null) {
+  for (var objKey in obj) {
+    if (obj[objKey] === null) {
       return false;
     }
-    if (obj[key].constructor.name !== 'Boolean' || !obj[key]) {
+    if (obj[objKey].constructor.name !== 'Boolean' || !obj[objKey]) {
       return false;
     }
   }
@@ -93,28 +93,28 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
   const flatten = (object, row) => {
     if (isObjectList(object)) {
       const dummyRow = {...row};
-      for (var key in object) {
-        row[getIdNumber(dummyRow)] = key;
-        const value = object[key];
+      for (var objListKey in object) {
+        row[getIdNumber(dummyRow)] = objListKey;
+        const value = object[objListKey];
         const newRow = {...flatten(value, row)};
         if (newRow && Object.keys(newRow).length > 0) {
           rowArray.push(newRow);
         }
       }
     } else if (isList(object)) {
-      for (var key in object) {
+      for (var listKey in object) {
         const dummyRow = {...row};
         dummyRow[getIdNumber(dummyRow)] = uuid();
-        dummyRow.value = key;
+        dummyRow.value = listKey;
         if (Object.keys(dummyRow).length > 0) {
           rowArray.push(dummyRow);
         }
       }
     } else {
-      for (var key in object) {
-        const value = object[key];
+      for (var objectKey in object) {
+        const value = object[objectKey];
         if (value === null || value.constructor.name !== 'Object') {
-          row[key] = value;
+          row[objectKey] = value;
         } else if (value.constructor.name === 'Object') {
           const pkeyMap = getPrimaryKeys(row);
           if (isList(value)) {
@@ -122,7 +122,7 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
               null,
               {
                 tableName,
-                name: key,
+                name: objectKey,
                 pkeys: pkeyMap,
                 data: Object.keys(value).map(item => ({__value: item})),
               }
@@ -132,18 +132,18 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
               null,
               {
                 tableName,
-                name: key,
+                name: objectKey,
                 pkeys: pkeyMap,
-                data: handleTable(value, `${tableName}_${key}`, tableDetectedCallback),
+                data: handleTable(value, `${tableName}_${objectKey}`, tableDetectedCallback),
               }
             );
           } else if (Object.keys(value).length !== 0) {
             const newUUID = uuid();
-            row[`${tableName}_${key}__id`] = newUUID;
+            row[`${tableName}_${objectKey}__id`] = newUUID;
             tableDetectedCallback(
               {
                 tableName,
-                name: key,
+                name: objectKey,
                 data: flatten(value, {_id: newUUID}),
               }
             );
@@ -155,10 +155,10 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
   };
   if (!isObjectList(obj)) {
     if (isRandomList(obj)) {
-      for (var key in obj) {
+      for (var objKey in obj) {
         rowArray.push({
-          __key: key,
-          __value: obj[key],
+          __key: objKey,
+          __value: obj[objKey],
           _id: uuid(),
         });
       }
@@ -166,8 +166,8 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
     }
     throwError('Message: invalid JSON provided for node ' + tableName);
   }
-  for (var key in obj) {
-    const flatRow = flatten(obj[key], {_id: key});
+  for (var id in obj) {
+    const flatRow = flatten(obj[id], {_id: id});
     if (flatRow && Object.keys(flatRow).length > 0) {
       rowArray.push(flatRow);
     }
@@ -208,7 +208,7 @@ const handleJSONDoc = db => {
       if (!tablesMap[newTableName]) {
         tablesMap[newTableName] = [];
       }
-      if (!tablesMap[newTableName].find(row => {
+      if (!tablesMap[newTableName].find(row => { // eslint-disable-line array-callback-return
         for (var column in row) {
           if (row[column] !== newItem[column]) {
             return false;

@@ -55,9 +55,9 @@ class Firebase2GraphQL extends Command {
           body: JSON.stringify({
             type: 'run_sql',
             args: {
-              sql: 'select * from hdb_catalog.hdb_version;'
-            }
-          })
+              sql: 'select * from hdb_catalog.hdb_version;',
+            },
+          }),
         }
       );
       return resp.status === 200 ? {error: false} : {error: true, message: 'invalid access key'};
