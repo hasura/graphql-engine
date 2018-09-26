@@ -47,7 +47,9 @@ import qualified Network.HTTP.Types            as N
 import qualified Network.Wreq                  as W
 import qualified Network.Wreq.Session          as WS
 
-invocationVersion :: T.Text
+type Version = T.Text
+
+invocationVersion :: Version
 invocationVersion = "2"
 
 type LogEnvHeaders = Bool
@@ -75,8 +77,6 @@ data Event
   , eTable     :: QualifiedTable
   , eTrigger   :: TriggerMeta
   , eEvent     :: Value
-  -- , eDelivered   :: Bool
-  -- , eError       :: Bool
   , eTries     :: Int
   , eCreatedAt :: Time.UTCTime
   } deriving (Show, Eq)
@@ -94,28 +94,38 @@ instance ToJSON Event where
 
 $(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
 
-data WebhookRequest
-  = WebhookRequest
-  { _irqPayload :: Value
-  , _irqHeaders :: Maybe [HeaderConf]
-  , _irqVersion :: T.Text
+data Request
+  = Request
+  { _rqPayload :: Value
+  , _rqHeaders :: Maybe [HeaderConf]
+  , _rqVersion :: T.Text
   }
-$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''WebhookRequest)
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''Request)
 
 data WebhookResponse
   = WebhookResponse
-  { _irsPayload :: TBS.TByteString
-  , _irsHeaders :: Maybe [HeaderConf]
-  , _irsVersion :: T.Text
+  { _wrsPayload :: TBS.TByteString
+  , _wrsHeaders :: Maybe [HeaderConf]
+  , _wrsStatus  :: Int
   }
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''WebhookResponse)
+
+data InitError =  InitError { _ieMessage :: TBS.TByteString}
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''InitError)
+
+data Response = ResponseType1 WebhookResponse | ResponseType2 InitError
+
+instance ToJSON Response where
+  toJSON (ResponseType1 resp) = object ["type" .= String "webhook_response", "data" .= toJSON resp]
+  toJSON (ResponseType2 err)  = object ["type" .= String "init_error", "data" .= toJSON err]
 
 data Invocation
   = Invocation
   { iEventId  :: EventId
   , iStatus   :: Int
-  , iRequest  :: WebhookRequest
-  , iResponse :: WebhookResponse
+  , iRequest  :: Request
+  , iResponse :: Response
+  , _iVersion :: Version
   }
 
 data EventEngineCtx
@@ -322,11 +332,14 @@ tryWebhook logenv pool e = do
   where
     mkInvo :: Event -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf] -> Invocation
     mkInvo e' status reqHeaders respBody respHeaders
-      = Invocation
-        (eId e')
-        status
-        (mkWebhookReq (toJSON e) reqHeaders)
-        (mkWebhookResp respBody respHeaders)
+      = let resp = if isError status then mkErr respBody else mkResp status respBody respHeaders
+        in
+          Invocation
+          (eId e')
+          status
+          (mkWebhookReq (toJSON e) reqHeaders)
+          resp
+          invocationVersion
     addHeaders :: [(N.HeaderName, BS.ByteString)] -> W.Options -> W.Options
     addHeaders headers opts = foldl (\acc h -> acc CL.& W.header (fst h) CL..~ [snd h] ) opts headers
 
@@ -350,15 +363,25 @@ tryWebhook logenv pool e = do
        where
          decodeBS = TE.decodeUtf8With TE.lenientDecode
 
-    mkWebhookReq :: Value -> [HeaderConf] -> WebhookRequest
-    mkWebhookReq payload headers = WebhookRequest payload (mkMaybe headers) invocationVersion
+    mkWebhookReq :: Value -> [HeaderConf] -> Request
+    mkWebhookReq payload headers = Request payload (mkMaybe headers) invocationVersion
 
-    mkWebhookResp :: TBS.TByteString -> [HeaderConf] -> WebhookResponse
-    mkWebhookResp payload headers = WebhookResponse payload (mkMaybe headers) invocationVersion
+    mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response
+    mkResp status payload headers =
+      let wr = WebhookResponse payload (mkMaybe headers) status
+      in ResponseType1 wr
+
+    mkErr :: TBS.TByteString -> Response
+    mkErr message =
+      let ir = InitError message
+      in ResponseType2 ir
 
     mkMaybe :: [a] -> Maybe [a]
     mkMaybe [] = Nothing
     mkMaybe x  = Just x
+
+    isError :: Int -> Bool
+    isError status = not (status >= 200 && status <= 300)
 
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
