@@ -310,16 +310,16 @@ tryWebhook logenv pool e = do
       finally <- liftIO $ runExceptT $ case eitherResp of
         Left err ->
           case err of
-            HClient excp -> let respPayload = TBS.fromLBS $ encode $ show excp
-                            in runFailureQ pool $ mkInvo e 1000 decodedHeaders respPayload []
-            HParse _ detail -> let respPayload = TBS.fromLBS $ encode detail
-                               in runFailureQ pool $ mkInvo e 1001 decodedHeaders respPayload []
+            HClient excp -> let errMsg = TBS.fromLBS $ encode $ show excp
+                            in runFailureQ pool $ mkInvo e 1000 decodedHeaders errMsg []
+            HParse _ detail -> let errMsg = TBS.fromLBS $ encode detail
+                               in runFailureQ pool $ mkInvo e 1001 decodedHeaders errMsg []
             HStatus errResp -> let respPayload = hrsBody errResp
                                    respHeaders = hrsHeaders errResp
                                    respStatus = hrsStatus errResp
                                in runFailureQ pool $ mkInvo e respStatus decodedHeaders respPayload respHeaders
-            HOther detail -> let respPayload = (TBS.fromLBS $ encode detail)
-                             in runFailureQ pool $ mkInvo e 500 decodedHeaders respPayload []
+            HOther detail -> let errMsg = (TBS.fromLBS $ encode detail)
+                             in runFailureQ pool $ mkInvo e 500 decodedHeaders errMsg []
         Right resp -> let respPayload = hrsBody resp
                           respHeaders = hrsHeaders resp
                           respStatus = hrsStatus resp
