@@ -9,22 +9,14 @@ import {
   relSelectionChanged,
   relNameChanged,
   resetRelationshipForm,
-  relTableChange,
-  REL_SET_LCOL,
-  REL_SET_RCOL,
   relManualAddClicked,
-  relTypeChange,
-  addRelViewMigrate,
 } from './Actions';
 import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../Notification';
-import {
-  setTable,
-  fetchTableListBySchema,
-  UPDATE_REMOTE_SCHEMA_MANUAL_REL,
-  RESET_MANUAL_REL_TABLE_LIST,
-} from '../DataActions';
+import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
+
+import AddManualRelationship from './AddManualRelationship';
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :
 {
@@ -469,6 +461,7 @@ const AddRelationship = ({
   );
 };
 
+/*
 const AddManualRelationship = ({
   tableName,
   allSchemas,
@@ -631,15 +624,12 @@ const AddManualRelationship = ({
     </div>
   );
 };
+*/
 
 class Relationships extends Component {
   componentDidMount() {
     this.props.dispatch({ type: RESET });
-
     this.props.dispatch(setTable(this.props.tableName));
-  }
-  componentWillUnmount() {
-    this.props.dispatch({ type: RESET_MANUAL_REL_TABLE_LIST });
   }
   render() {
     const {
@@ -796,6 +786,10 @@ class Relationships extends Component {
                   schemaList={schemaList}
                   manualColumns={relAdd.manualColumns}
                   manualRelInfo={relAdd.manualRelInfo}
+                  titleInfo={'Add a relationship manually'}
+                  currentSchema={currentSchema}
+                  showClose
+                  dataTestVal={'table-add-manual-relationship'}
                 />
               </div>
             ) : (
@@ -804,12 +798,11 @@ class Relationships extends Component {
                 className="btn btn-sm btn-default"
                 onClick={() => {
                   dispatch(relManualAddClicked());
-                  /* Initializing manual relationship config with current schema and tables */
+                  // Sourcing the current schema into manual relationship
                   dispatch({
                     type: UPDATE_REMOTE_SCHEMA_MANUAL_REL,
-                    data: currentSchema,
+                    data: this.props.currentSchema,
                   });
-                  dispatch(fetchTableListBySchema(currentSchema));
                 }}
                 data-test="add-manual-relationship"
               >

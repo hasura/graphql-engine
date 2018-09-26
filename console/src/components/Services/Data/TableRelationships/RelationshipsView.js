@@ -2,18 +2,11 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import ViewHeader from '../TableBrowseRows/ViewHeader';
 import { RESET } from '../TableModify/ModifyActions';
-import {
-  deleteRelMigrate,
-  addNewRelClicked,
-  relTableChange,
-  relNameChanged,
-  REL_SET_LCOL,
-  REL_SET_RCOL,
-  relTypeChange,
-  addRelViewMigrate,
-} from './Actions';
+import { deleteRelMigrate, addNewRelClicked } from './Actions';
 import { findAllFromRel } from '../utils';
-import { setTable } from '../DataActions';
+import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
+
+import AddRelationship from './AddManualRelationship';
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :
 {
@@ -90,6 +83,7 @@ const relationshipView = (
   );
 };
 
+/*
 const AddRelationship = ({
   tableName,
   allSchemas,
@@ -219,12 +213,17 @@ const AddRelationship = ({
     </div>
   );
 };
+*/
 
 class RelationshipsView extends Component {
   componentDidMount() {
     this.props.dispatch({ type: RESET });
-
     this.props.dispatch(setTable(this.props.tableName));
+    // Sourcing the current schema into manual relationship
+    this.props.dispatch({
+      type: UPDATE_REMOTE_SCHEMA_MANUAL_REL,
+      data: this.props.currentSchema,
+    });
   }
 
   render() {
@@ -239,6 +238,7 @@ class RelationshipsView extends Component {
       relAdd,
       currentSchema,
       migrationMode,
+      schemaList,
     } = this.props;
     const styles = require('../TableModify/Modify.scss');
     const tableStyles = require('../TableCommon/TableStyles.scss');
@@ -338,7 +338,7 @@ class RelationshipsView extends Component {
         />
         <br />
         <div className={`${styles.padd_left_remove} container-fluid`}>
-          <div className={`${styles.padd_left_remove} col-xs-8`}>
+          <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
             <h4 className={styles.subheading_text}>Relationships</h4>
             {addedRelationshipsView}
             <br />
@@ -352,7 +352,13 @@ class RelationshipsView extends Component {
                   lcol={relAdd.lcol}
                   rcol={relAdd.rcol}
                   allSchemas={allSchemas}
+                  schemaList={schemaList}
+                  manualRelInfo={relAdd.manualRelInfo}
                   manualColumns={relAdd.manualColumns}
+                  titleInfo={'Add new relationship'}
+                  currentSchema={currentSchema}
+                  showClose={false}
+                  dataTestVal={'view-add-relationship'}
                 />
               </div>
             ) : (
@@ -394,6 +400,7 @@ const mapStateToProps = (state, ownProps) => ({
   allSchemas: state.tables.allSchemas,
   currentSchema: state.tables.currentSchema,
   migrationMode: state.main.migrationMode,
+  schemaList: state.tables.schemaList,
   ...state.tables.modify,
 });
 
