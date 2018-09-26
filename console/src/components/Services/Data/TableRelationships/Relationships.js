@@ -566,6 +566,7 @@ const AddManualRelationship = ({
             className={'form-control'}
             onChange={onSchemaChange}
             data-test="remote-table"
+            value={manualRelInfo.remoteSchema}
           >
             <option key="default_table">Remote Schema</option>
             {schemaList.map((s, i) => (
@@ -796,6 +797,9 @@ class Relationships extends Component {
                 className="btn btn-sm btn-default"
                 onClick={() => {
                   dispatch(relManualAddClicked());
+                  /* Initializing manual relationship config with current schema and tables */
+                  dispatch({ type: UPDATE_REMOTE_SCHEMA_MANUAL_REL, data: currentSchema });
+                  dispatch(fetchTableListBySchema(currentSchema));
                 }}
                 data-test="add-manual-relationship"
               >
