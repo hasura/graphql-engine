@@ -11,18 +11,18 @@ What component does this PR affect?
 - [ ] Server
 - [ ] Console
 - [ ] CLI
-- [ ] Build System
 - [ ] Docs
 - [ ] Community Content
+- [ ] Build System
 
 Requires changes from other components? If yes, please mark the components:
 
 - [ ] Server
 - [ ] Console
 - [ ] CLI
-- [ ] Build System
 - [ ] Docs
 - [ ] Community Content
+- [ ] Build System
 
 ### Related Issue
 <!-- Please make sure you have an issue associated with this Pull Request -->
@@ -36,15 +36,13 @@ Requires changes from other components? If yes, please mark the components:
 <!-- How is this issue solved/fixed? What is the design? -->
 <!-- It's better if we elaborate -->
 
-### Tests
-<!-- Please describe in detail how you tested your changes. -->
-<!-- Each component has it's own testing framework, check it out and add your tests to the mix -->
-
 ### Type
 <!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply: -->
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to change)
+- [ ] Docs update
+- [ ] Community content
 
 ### Checklist:
 <!-- Go over all the following points, and put an `x` in all the boxes that apply. -->
@@ -52,3 +50,4 @@ Requires changes from other components? If yes, please mark the components:
 - [ ] I have read the **[contributing guide](https://github.com/hasura/graphql-engine/blob/master/CONTRIBUTING.md)** and my code conforms to the guidelines.
 - [ ] This change requires a change in the documentation. 
 - [ ] I have updated the documentation accordingly.
+- [ ] I have added required tests.
