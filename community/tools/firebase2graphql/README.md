@@ -90,7 +90,7 @@ This is A CLI tool to get instant GraphQL API over your Firebase Realtime Databa
     }
     ```
 
-Check out [next steps](#next-steps) that you might want to go through for normalizing your database.
+Check out [the things you must know](#things-to-know-about-implementation) for some caveats about this tool.
 
 ## Installation
 
@@ -247,6 +247,10 @@ $ firebase2graphql URL [flags]
 ### Overwrite
 
 If your database already contains tables with the same name as the root fields of your JSON database, the command will face. If you want to overwrite the database anyway, you should provide an additional flag "--overwrite".
+
+## Feedback
+
+This project is still in alpha and we are actively looking for feedback about how the tool can be improved. If you facing an issue, feel free to [open one here](https://github.com/hasura/graphql-engine/issues/new). Any positive or negative feedback would be appreciated. 
 
 ---
 Maintained with ♡ by <a href="https://hasura.io">Hasura</a>
