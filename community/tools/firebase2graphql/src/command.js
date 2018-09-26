@@ -1,7 +1,8 @@
 const {Command, flags} = require('@oclif/command');
 const fetch = require('node-fetch');
+const {CLIError} = require('@oclif/errors');
 const throwError = require('./error');
-const { spinnerStart, spinnerStop } = require('./log');
+const {spinnerStart, spinnerStop} = require('./log');
 const resolve = require('path').resolve;
 const importData = require('./import/import');
 
@@ -13,14 +14,14 @@ class Firebase2GraphQL extends Command {
       throw new CLIError('endpoint is required: \'firebase2graphql <url>\'');
     }
 
-    const {db, overwrite, firebase} = flags;
+    const {db, overwrite} = flags;
     const key = flags['access-key'];
 
     if (!url) {
       throw new CLIError('endpoint is required: \'firebase2graphql <url> -d ./db.js\'');
     }
     const safeUrl = this.getSafeUrl(url);
-    if (!db ) {
+    if (!db) {
       throw new CLIError('path to firebase JSON database is required: \'firebase2graphql <url> -d ./db.js\'');
     }
     const dbJson = this.getDbJson(db);
@@ -47,15 +48,20 @@ class Firebase2GraphQL extends Command {
     try {
       spinnerStart('Verifying URL');
       const resp = await fetch(
-        `${url}/v1/version`,
+        `${url}/v1/query`,
         {
-          method: 'GET',
+          method: 'POST',
           headers,
+          body: JSON.stringify({
+            type: 'run_sql',
+            args: {
+              sql: 'select * from hdb_catalog.hdb_version;'
+            }
+          })
         }
       );
       return resp.status === 200 ? {error: false} : {error: true, message: 'invalid access key'};
     } catch (e) {
-      console.log(e);
       return  {error: true, message: 'invalid URL'};
     }
   }
@@ -94,7 +100,7 @@ Firebase2GraphQL.flags = {
   overwrite: flags.boolean({
     char: 'o',
     description: 'Overwrite tables if they exist',
-  })
+  }),
 };
 
 Firebase2GraphQL.args = [

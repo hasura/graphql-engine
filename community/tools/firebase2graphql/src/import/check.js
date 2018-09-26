@@ -30,21 +30,24 @@ const createTables = async (tables, url, headers, overwrite, runSql, sql) => {
         }
       );
       const dbTables = await resp.json();
-      let found = false;
-      tables.forEach(table => {
-        if (dbTables.find(dbTable => dbTable.table_name === table.name)) {
-          found = true;
-          throwError('Message: Your JSON database contains tables that already exist in Postgres. Please use the flag "--overwrite" to overwrite them.');
+      if (resp.status === 401) {
+        throw (dbTables);
+      } else {
+        let found = false;
+        tables.forEach(table => {
+          if (dbTables.find(dbTable => dbTable.table_name === table.name)) {
+            found = true;
+            throwError('Message: Your JSON database contains tables that already exist in Postgres. Please use the flag "--overwrite" to overwrite them.');
+          }
+        });
+        if (!found) {
+          cli.action.stop('Done!');
+          cli.action.start('Creating tables');
+          await runSql(sql, url, headers);
         }
-      });
-      if (!found) {
-        cli.action.stop('Done!');
-        cli.action.start('Creating tables');
-        await runSql(sql, url, headers);
       }
     } catch (e) {
-      console.log('Unexpected: ', e);
-      process.exit(1);
+      throwError(e);
     }
   }
 };

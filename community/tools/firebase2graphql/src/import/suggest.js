@@ -1,30 +1,34 @@
-const {log} = require('../log')
+const {log} = require('../log');
 const colors = require('colors/safe');
 
-const suggest = (db, url) => {
-  const maybeDuplicates = (getDuplicates(db));
-  const newDuplicates = {
-    ...maybeDuplicates
-  }
-  
-  let count = 1;
-  const dupes = [];
-  for (var tableName in newDuplicates) {
-    maybeDuplicates[tableName].forEach((dup) => {
-      dupes.push(`${count++}. ${colors.yellow(tableName)} could be same as ${colors.yellow(dup)}`);
-    })
-  }
-  if (dupes.length > 0) {
-    log('');
-    log('Warning', 'yellow');
-    log('=======', 'yellow');
-    log('While importing your data, the following duplicate tables might have been created:', 'yellow');
-    dupes.forEach((dupe) => log(dupe));
-    log(`Manage your tables at ${url}/console/data/schema/public`, 'yellow');
-  }
+const isSubset = (array1, array2) => {
+  return array2.every(item => array1.includes(item));
 };
 
-const getDuplicates = (db) => {
+const getTableColumns = obj => {
+  const columns = {};
+  for (var key in obj) {
+    if (key.indexOf('_id') === -1) {
+      columns[key] = [];
+    }
+  }
+  return columns;
+};
+
+const getColumnsMap = db => {
+  const columnMap = {};
+  for (var tableName in db) {
+    columnMap[tableName] = getTableColumns(db[tableName][0]);
+    db[tableName].forEach(row => {
+      for (var key in columnMap[tableName]) {
+        columnMap[tableName][key].push(row[key]);
+      }
+    });
+  }
+  return columnMap;
+};
+
+const getDuplicates = db => {
   const tableColumnMap = getColumnsMap(db);
   const maybeDuplicates = {};
   for (var t1 in tableColumnMap) {
@@ -48,33 +52,29 @@ const getDuplicates = (db) => {
     }
   }
   return maybeDuplicates;
-}
-
-const isSubset = (array1, array2) => {
-  return array2.every((item) => array1.includes(item));
 };
 
-const getColumnsMap = (db) => {
-  const columnMap = {};
-  for (var tableName in db) {
-    columnMap[tableName] = getTableColumns(db[tableName][0]);
-    db[tableName].forEach((row) => {
-      for (var key in columnMap[tableName]) {
-        columnMap[tableName][key].push(row[key]);
-      }
-    })
-  }
-  return columnMap;
-};
+const suggest = (db, url) => {
+  const maybeDuplicates = (getDuplicates(db));
+  const newDuplicates = {
+    ...maybeDuplicates,
+  };
 
-const getTableColumns = (obj) => {
-  const columns = {};
-  for (var key in obj) {
-    if (key.indexOf('__id') === -1 ) {
-      columns[key] = [];
-    }
+  let count = 1;
+  const dupes = [];
+  for (var tableName in newDuplicates) {
+    maybeDuplicates[tableName].forEach(dup => {
+      dupes.push(`${count++}. ${colors.yellow(tableName)} could be same as ${colors.yellow(dup)}`);
+    });
   }
-  return columns;
+  if (dupes.length > 0) {
+    log('');
+    log('Warning', 'yellow');
+    log('=======', 'yellow');
+    log('While importing your data, the following duplicate tables might have been created:', 'yellow');
+    dupes.forEach(dupe => log(dupe));
+    log(`Manage your tables at ${url}/console/data/schema/public`, 'yellow');
+  }
 };
 
 module.exports = suggest;

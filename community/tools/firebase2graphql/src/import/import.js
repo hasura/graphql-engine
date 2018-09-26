@@ -1,16 +1,14 @@
-const { spinnerStart, spinnerStop, log, successMessage } = require('../log');
+const {spinnerStart, spinnerStop, log} = require('../log');
 
 const generate = require('./generateTables');
-const { refineJson } = require('./utils');
+const {refineJson} = require('./utils');
 const {generateSql, runSql} = require('./sql');
-const colors = require('colors/safe');
 const {trackTables} = require('./track');
 const {getInsertOrder, insertData} = require('./insert');
 const {createRelationships} = require('./relationships');
 const {createTables} = require('./check');
 const makeSuggestions = require('./suggest');
 const generateGenericJson = require('../firebase/generateGenericJson');
-
 
 const importData = async (jsonDb, url, headers, overwrite) => {
   spinnerStart('Processing Firebase JSON');

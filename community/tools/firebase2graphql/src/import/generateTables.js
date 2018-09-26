@@ -24,14 +24,14 @@ const getDataType = (data, column) => {
 };
 
 const isForeign = (name, db) => {
-  const idPos = name.indexOf('___id');
+  const idPos = name.indexOf('__id');
   if (idPos <= 0) {
     return false;
-  } else {
-    if (Object.keys(db).find((tableName) => tableName === name.substring(0, idPos))) {
-      return true;
-    }
   }
+  if (Object.keys(db).find(tableName => tableName === name.substring(0, idPos))) {
+    return true;
+  }
+
   return false;
 };
 
@@ -65,7 +65,7 @@ const getColumnData = (dataArray, db) => {
   return columnData;
 };
 
-const generate = (db) => {
+const generate = db => {
   const metaData = [];
   Object.keys(db).forEach(rootField => {
     if (db[rootField].length === 0) {
@@ -78,7 +78,7 @@ const generate = (db) => {
     tableMetadata.columns.forEach(column => {
       if (column.isForeign) {
         tableMetadata.dependencies.push(
-          column.name.substring(0, column.name.indexOf('___id'))
+          column.name.substring(0, column.name.indexOf('__id'))
         );
       }
     });

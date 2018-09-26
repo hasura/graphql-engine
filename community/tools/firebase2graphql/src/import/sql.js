@@ -26,26 +26,26 @@ const runSql = async (sqlArray, url, headers) => {
   }
 };
 
-const generateCreateTableSql = (metadata) => {
+const generateCreateTableSql = metadata => {
   const sqlArray = [];
   metadata.forEach(table => {
     sqlArray.push(`drop table if exists public."${table.name}" cascade;`);
     let columnSql = '(';
     const pkeyArr = [];
     table.columns.forEach((column, i) => {
-      if (column.name.indexOf('__id') === 0) {
+      if (column.name.indexOf('_id') === 0) {
         pkeyArr.push(column.name);
-        columnSql += `"${column.name}" ${column.type} not null,`; 
+        columnSql += `"${column.name}" ${column.type} not null,`;
       } else {
         columnSql += `"${column.name}" ${column.type},`;
       }
 
       if (table.columns.length === i + 1) {
-        columnSql += `primary key (`
+        columnSql += 'primary key (';
         pkeyArr.forEach((key, j) => {
           columnSql += `"${key}"`;
-          columnSql += j === pkeyArr.length - 1 ? ')' : ', ' ;
-        })
+          columnSql += j === pkeyArr.length - 1 ? ')' : ', ';
+        });
       }
     });
     const createTableSql = `create table public."${table.name}" ${columnSql});`;
@@ -54,15 +54,15 @@ const generateCreateTableSql = (metadata) => {
   return sqlArray;
 };
 
-const foreignKeySql = (table) => {
+const foreignKeySql = table => {
   const sqlArray = [];
   table.dependencies.forEach((dep, i) => {
     let colNames = '';
     let fks = '';
-    table.columns.forEach((col) => {
-      if (col.name.indexOf(`${dep}___id`) === 0) {
+    table.columns.forEach(col => {
+      if (col.name.indexOf(`${dep}__id`) === 0) {
         colNames += `"${col.name}", `;
-        fks += `"${col.name.substring(col.name.indexOf('__id'), col.name.length)}", `;
+        fks += `"${col.name.substring(col.name.indexOf('_id'), col.name.length)}", `;
       }
     });
     fks = fks.substring(0, fks.length - 2);
@@ -72,18 +72,18 @@ const foreignKeySql = (table) => {
   return sqlArray;
 };
 
-const generateConstraintsSql = (metadata) => {
+const generateConstraintsSql = metadata => {
   let sqlArray = [];
   metadata.forEach(table => {
     sqlArray = [
       ...sqlArray,
-      ...foreignKeySql(table)
-    ]
+      ...foreignKeySql(table),
+    ];
   });
   return sqlArray;
 };
 
-const generateSql = (metadata) => {
+const generateSql = metadata => {
   const createTableSql = generateCreateTableSql(metadata);
   const constraintsSql = generateConstraintsSql(metadata);
   let sqlArray = [...createTableSql, ...constraintsSql];

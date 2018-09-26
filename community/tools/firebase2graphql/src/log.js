@@ -3,19 +3,19 @@ const {cli} = require('cli-ux');
 
 const log  = (message, color) => {
   if (color) {
-    console.log(colors[color](message));  
+    console.log(colors[color](message));
   } else {
-    console.log(message);  
+    console.log(message);
   }
 };
 
-const spinnerStart = (message) => {
+const spinnerStart = message => {
   cli.action.start(message);
-}
+};
 
-const spinnerStop = (message) => {
-  cli.action.stop(colors.green('Done!'))
-}
+const spinnerStop = () => {
+  cli.action.stop(colors.green('Done!'));
+};
 
 module.exports = {
   log,
