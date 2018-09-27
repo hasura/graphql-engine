@@ -2,13 +2,15 @@
 
 # Hasura Console
 
-An admin dashboard to manage database and try out GraphQL APIs. Hasura console is served in production by
+The Hasura console is an admin dashboard to manage the connected database and to try out GraphQL APIs. It is a React application bundled with webpack and the state is managed using Redux.
+
+Served by
 
 1. Hasura GraphQL Engine:
-   Typically runs in **No Migration Mode** which means that actions on the console are not spitting out migration “yaml” files automatically. Most users will be using the Hasura console in this mode.
+   The console is served by GraphQL Engine at `/console` endpoint (when `--enable-console` flag is used). Typically runs in **No Migration Mode** which means that actions on the console are not spitting out migration “yaml” files automatically. Most users will be using the Hasura console in this mode.
 
 2. Hasura CLI:
-   Typically runs with migration mode **enabled**. All the changes to schema/hasura metadata will be tracked and spit out on the filesystem as migration yaml files and a metadata yaml file. This allows for easy version controlling of the schema/hasura metadata.
+   Served by the Hasura CLI using `hasura console` command, typically runs with migration mode **enabled**. All the changes to schema/hasura metadata will be tracked and spit out on the filesystem as migration yaml files and a metadata yaml file. This allows for easy version controlling of the schema/hasura metadata.
 
 ## Table of Contents
 
@@ -46,11 +48,11 @@ cd console
 npm install
 ```
 
-Hasura console can be developed in two modes (`server` or `cli` mode). The easiest way is by using a Hasura GraphQL engine instance running on Heroku. You can install by following the steps given in [this](https://docs.hasura.io/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine is documented [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
+Hasura console can be developed in two modes (`server` or `cli` mode). Both modes requires a running instance of GraphQL Enigne. The easiest way to get Hasura GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://docs.hasura.io/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine is documented [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
 
-### Development with Hasura GraphQL Engine
+### Development with Hasura GraphQL Engine (`server` mode)
 
-Hasura GraphQL engine should be running to develop console in this mode. If you have set it up on heroku, your url will look like `<app-name>.herokuapp.com`.
+Hasura GraphQL engine should be running to develop console in this mode. If you have set it up on heroku, your url will look like `<app-name>.herokuapp.com`, if it's on you local machine, it's probably `http://localhost:8080`.
 
 [Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. Create a `.env` file in the root directory for console (wherever package.json is). Sample `.env` file will look like below
 
@@ -62,10 +64,10 @@ NODE_ENV=development
 DATA_API_URL=http://localhost:8080
 ACCESS_KEY=xyz
 CONSOLE_MODE=server
-URL_PREFIX=/`
+URL_PREFIX=/
 ```
 
-Note that **CONSOLE_MODE** is set to **server**. In this mode **migration mode** will be disabled and the corresponding functionality on the console will be hidden. If you are looking to add/tweak functionality related to migration, check out [Development with Hasura CLI](#development-with-hasura-cli).
+Note that `CONSOLE_MODE` is set to `server`. In this mode, **migrations** will be disabled and the corresponding functionality on the console will be hidden. If you are looking to add/tweak functionality related to migrations, check out [Development with Hasura CLI](#development-with-hasura-cli).
 
 Environment variables accepted in `server` mode:
 
@@ -82,7 +84,7 @@ Environment variables accepted in `server` mode:
  npm run dev
 ```
 
-### Development with Hasura CLI
+### Development with Hasura CLI (`cli` mode)
 
 Configure .env file with appropriate values for the required environment variables.
 
@@ -96,7 +98,7 @@ API_HOST=http://localhost
 API_PORT=9693
 ACCESS_KEY=xyz
 CONSOLE_MODE=cli
-URL_PREFIX=/`
+URL_PREFIX=/
 ```
 Environment variables accepted in `cli` mode:
 
@@ -125,29 +127,31 @@ hasura console
 npm run dev
 ```
 
-### Testing
+### Check the running console
 
 Visit [http://localhost:3000](http://localhost:3000) to confirm the setup.
 
 ![Testing Development Server](../assets/console-readme-assets/test-dev-setup.jpg)
+
+### Make changes to code
+
+Make changes to the code and the console will reload automatically to reflect the new changes. Keep iterating.
+When adding a new feature, it is recommended to add corresponding tests too.
+
+Tests are written using [Cypress](https://www.cypress.io/).
 
 #### Run Tests
 
 - Run tests: `npm run cypress`
 - Write your tests in the `cypress` directory, integration.
 
+### Submitting a pull request
 
-## How it works
-
-Hasura console is a react application bundled with webpack and the state is managed using redux.
-
-### Release Process
-
-- All the development work need to happen in your own fork of the graphql-engine.
-- Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md).
-- Once the desired feature/bug is added/fixed, raise a pull request to the hasura/graphql-engine.
+- All the development work happens in your own fork of the graphql-engine.
+- Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md#commit-messages).
+- Once the changes are done, create a pull request.
 - CI configured for PR will run the test suite.
-- Once everything goes well it will generate a preview heroku app.
-- The source code and the preview app will be reviewed by maintainers and merged.
+- Once everything goes well, it will generate a preview heroku app.
+- The source code and the preview app will be reviewed by maintainers.
 
 <!-- prettier-ignore-end -->
