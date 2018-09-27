@@ -61,10 +61,6 @@ type initOptions struct {
 }
 
 func (o *initOptions) run() error {
-	if o.EC.ExecutionDirectory == "" {
-		o.EC.ExecutionDirectory = o.InitDir
-	}
-
 	var dir string
 	// prompt for init directory if it's not set already
 	if o.InitDir == "" {
