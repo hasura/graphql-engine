@@ -117,7 +117,14 @@ instance FromJSON CreateEventTriggerQuery where
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
+    mapM_ checkEmptyCols [insert, update, delete]
     return $ CreateEventTriggerQuery name table insert update delete retryConf webhook headers replace
+    where
+      checkEmptyCols spec
+        = case spec of
+        Nothing -> return ()
+        Just (SubscribeOpSpec (SubCArray cols)) -> when (null cols) (fail "found empty column specification")
+        Just (SubscribeOpSpec SubCStar) -> return ()
   parseJSON _ = fail "expecting an object"
 
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)
