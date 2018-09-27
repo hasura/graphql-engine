@@ -22,13 +22,13 @@ EOF
 
 for svg in *.svg; do
     if [[ "$svg" = *"white"* ]]; then
-        BLACK='style="background-color: black;"'
+        BG='style="background-color: black;"'
     else
-        BLACK=""
+        BG='style="background-color: white;"'
     fi
     README_CONTENT=$(cat <<EOF
 $README_CONTENT
-| $svg | <img src="$svg" width="150px" $BLACK /> |
+| $svg | <img src="$svg" width="150px" $BG /> |
 EOF
 )
 done
