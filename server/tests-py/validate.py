@@ -25,7 +25,7 @@ def validate_event_payload(ev_payload, trig_name, table):
 def validate_event_headers(ev_headers, headers):
     for key, value in headers.items():
         v = ev_headers.get(key)
-        assert v == value
+        assert v == value, (key, v)
 
 def validate_event_webhook(ev_webhook_path, webhook_path):
     assert ev_webhook_path == webhook_path

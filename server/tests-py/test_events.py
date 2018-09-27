@@ -135,6 +135,30 @@ class TestRetryConf(object):
         tries = hge_ctx.get_error_queue_size()
         assert tries == 5, tries
 
+class TestEvtHeaders(object):
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        print ("In setup method")
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/headers/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/headers/teardown.yaml')
+        assert st_code == 200, resp
+
+    def test_basic(self, hge_ctx):
+        table = {"schema" : "hge_tests", "name": "test_t1"}
+
+        init_row = {"c1" : 1, "c2" : "hello"}
+        exp_ev_data = {
+            "old": None,
+            "new": init_row
+        }
+        headers = {"X-Header-From-Value": "MyValue", "X-Header-From-Env": "MyEnvValue"}
+        st_code, resp = insert(hge_ctx, table, init_row)
+        assert st_code == 200, resp
+        check_event(hge_ctx, "t1_all", table, "INSERT", exp_ev_data, headers, "/")
+
 class TestUpdateEvtQuery(object):
 
     @pytest.fixture(autouse=True)
