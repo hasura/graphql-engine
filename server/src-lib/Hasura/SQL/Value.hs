@@ -44,7 +44,7 @@ data PGColValue
   | PGNull !PGColType
   | PGValJSON !Q.JSON
   | PGValJSONB !Q.JSONB
-  | PGValGeo !Geometry
+  | PGValGeo !GeometryWithCRS
   | PGValUnknown !T.Text
   deriving (Show, Eq)
 
