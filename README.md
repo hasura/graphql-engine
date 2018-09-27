@@ -160,8 +160,8 @@ Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
 Hasura brand assets (logos, the Hasura mascot, powered by badges etc.) can be
 found in the [assets/brand](assets/brand) folder. Feel free to use them in your
-application/website etc. We'd be thrilled if you use the "Powered by Hasura"
-badge with your applications built using GraphQL Engine.
+application/website etc. We'd be thrilled if you add the "Powered by Hasura"
+badge to your applications built using Hasura. ❤️
 
 <div style="display: flex;">
   <img src="assets/brand/powered_by_hasura_black.svg" width="150px"/>
