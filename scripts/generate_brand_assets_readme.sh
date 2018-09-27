@@ -17,6 +17,8 @@ README_CONTENT=$(cat <<EOF
 
 All assets are available on a Google Cloud Storage Bucket CDN at \`https://graphql-engine-cdn.hasura.io/img/<name>\`.
 
+*Note: some logos maybe invisible depending on the page background color.*
+
 | name | asset |
 | ---- | ----- |
 EOF
