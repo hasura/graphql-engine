@@ -82,7 +82,7 @@ data AccessLog
   , alHasuraMetadata :: !(Maybe Value)
   , alQueryHash      :: !(Maybe T.Text)
   , alResponseSize   :: !(Maybe Int64)
-  , alResponseTime   :: !(Maybe T.Text)
+  , alResponseTime   :: !(Maybe Double)
   } deriving (Show, Eq)
 
 instance L.ToEngineLog AccessLog where
@@ -171,7 +171,7 @@ mkAccessLog req r mTimeT =
   , alHasuraRole  = bsToTxt <$> getHasuraRole req
   , alHasuraMetadata = getHasuraMetadata req
   , alResponseSize = size
-  , alResponseTime = T.pack . show <$> diffTime
+  , alResponseTime = realToFrac <$> diffTime
   , alQueryHash = queryHash
   }
   where
