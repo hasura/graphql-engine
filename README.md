@@ -163,8 +163,10 @@ found in the [assets/brand](assets/brand) folder. Feel free to use them in your
 application/website etc. We'd be thrilled if you use the "Powered by Hasura"
 badge with your applications built using GraphQL Engine.
 
-<img src="assets/brand/powered_by_hasura_black.svg" width="150px"/>
-<img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
+<div style="display: flex;">
+  <img src="assets/brand/powered_by_hasura_black.svg" width="150px"/>
+  <img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
+</div>
 
 ```html
 <!-- For light backgrounds -->
