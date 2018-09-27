@@ -12,6 +12,8 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 
+import { SERVER_CONSOLE_MODE } from '../../../constants';
+
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_SCHEMA = 'Data/LOAD_SCHEMA';
 const LOAD_UNTRACKED_SCHEMA = 'Data/LOAD_UNTRACKED_SCHEMA';
@@ -202,7 +204,7 @@ const setTable = tableName => ({ type: SET_TABLE, tableName });
 
 const handleMigrationErrors = (title, errorMsg) => dispatch => {
   const requestMsg = title;
-  if (globals.consoleMode === 'hasuradb') {
+  if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     // handle errors for run_sql based workflow
     dispatch(showErrorNotification(title, errorMsg.code, requestMsg, errorMsg));
   } else if (errorMsg.code === 'migration_failed') {
@@ -264,7 +266,7 @@ const makeMigrationCall = (
   const migrateUrl = returnMigrateUrl(currMigrationMode);
 
   let finalReqBody;
-  if (globals.consoleMode === 'hasuradb') {
+  if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     finalReqBody = upQuery;
   } else if (globals.consoleMode === 'cli') {
     finalReqBody = migrationBody;
@@ -279,7 +281,7 @@ const makeMigrationCall = (
 
   const onSuccess = () => {
     if (globals.consoleMode === 'cli') {
-      dispatch(loadMigrationStatus()); // don't call for hasuradb mode
+      dispatch(loadMigrationStatus()); // don't call for server mode
     }
     dispatch(loadSchema());
     customOnSuccess();

@@ -54,6 +54,7 @@ Read more at: [https://hasura.io](https://hasura.io) and the [docs](https://docs
     - [Videos](#videos)
 - [Support & Troubleshooting](#support--troubleshooting)
 - [Contributing](#contributing)
+- [Brand assets](#brand-assets)
 - [License](#license)
 
 <!-- markdown-toc end -->
@@ -154,6 +155,30 @@ We are committed to fostering an open and welcoming environment in the community
 ## Contributing
 
 Check out our [contributing guide](CONTRIBUTING.md) for more details.
+
+## Brand assets
+
+Hasura brand assets (logos, the Hasura mascot, powered by badges etc.) can be
+found in the [assets/brand](assets/brand) folder. Feel free to use them in your
+application/website etc. We'd be thrilled if you add the "Powered by Hasura"
+badge to your applications built using Hasura. ❤️
+
+<div style="display: flex;">
+  <img src="assets/brand/powered_by_hasura_black.svg" width="150px"/>
+  <img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
+</div>
+
+```html
+<!-- For light backgrounds -->
+<a href="https://hasura.io">
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black.svg" />
+</a>
+
+<!-- For dark backgrounds -->
+<a href="https://hasura.io">
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white.svg" />
+</a>
+```
 
 ## License
 

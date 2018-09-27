@@ -19,7 +19,7 @@ consisting of 3 components. Each have their own contributing guides:
 
 1. [Server (Haskell)](server/CONTRIBUTING.md)
 2. [CLI (Go)](cli/CONTRIBUTING.md)
-3. [Console (JavaScript)](console/CONTRIBUTING.md)
+3. [Console (JavaScript)](console/README.md#contributing-to-hasura-console)
 
 All of the three components have a single version, denoted by either the git
 tag, or a combination of branch name and git commit SHA.
