@@ -63,10 +63,13 @@ getTriggerSql op trid trn sn tn spec =
       spec >> renderSql context <$> triggerTmplt
   where
     createOpCtx :: Ops -> SubscribeOpSpec -> HashMap.HashMap T.Text T.Text
-    createOpCtx op1 (SubscribeOpSpec columns) = HashMap.fromList [
+    createOpCtx op1 (SubscribeOpSpec columns payload) = HashMap.fromList [
                                         (T.pack "OPERATION", T.pack $ show op1)
                                       , (T.pack "OLD_DATA_EXPRESSION", renderOldDataExp op1 columns )
-                                      , (T.pack "NEW_DATA_EXPRESSION", renderNewDataExp op1 columns )]
+                                      , (T.pack "NEW_DATA_EXPRESSION", renderNewDataExp op1 columns )
+                                      , (T.pack "OLD_PAYLOAD_EXPRESSION", renderOldDataExp op1 payload )
+                                      , (T.pack "NEW_PAYLOAD_EXPRESSION", renderNewDataExp op1 payload )]
+
     renderOldDataExp :: Ops -> SubscribeColumns -> T.Text
     renderOldDataExp op2 scs = case op2 of
                                  INSERT -> "NULL"
@@ -166,7 +169,7 @@ fetchEventTrigger trn = do
   getTrigger triggers
   where
     getTrigger []    = throw400 NotExists ("could not find event trigger '" <> trn <> "'")
-    getTrigger (x:_) = return $ EventTrigger (QualifiedTable sn tn) trn' tDef webhook (RetryConf nr rint)
+    getTrigger (x:_) = return $ EventTrigger (QualifiedTable sn tn) trn' (fromMaybeTriggerOpsDef tDef) webhook (RetryConf nr rint)
       where (sn, tn, trn', Q.AltJ tDef, webhook, nr, rint) = x
 
 fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)

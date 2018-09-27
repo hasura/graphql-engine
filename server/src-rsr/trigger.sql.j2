@@ -6,19 +6,14 @@ CREATE OR REPLACE function hdb_views.notify_hasura_{{NAME}}_{{OPERATION}}() RETU
    _old json;
    _new json;
    _data json;
-   old_row json;
-   new_row json;
    payload json;
    BEGIN
      id := gen_random_uuid();
      _old := {{OLD_DATA_EXPRESSION}};
      _new := {{NEW_DATA_EXPRESSION}};
-     old_row := CASE WHEN _old IS NULL THEN NULL ELSE row_to_json(OLD) END;
-
-     new_row := CASE WHEN _new IS NULL THEN NULL ELSE row_to_json(NEW) END;
      _data := json_build_object(
-       'old', old_row,
-       'new', new_row
+       'old', {{OLD_PAYLOAD_EXPRESSION}},
+       'new', {{NEW_PAYLOAD_EXPRESSION}}
      );
      payload := json_build_object(
                         'op', TG_OP,

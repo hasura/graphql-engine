@@ -19,6 +19,7 @@ module Hasura.RQL.Types.Subscribe
   , HeaderConf(..)
   , HeaderValue(..)
   , HeaderName
+  , fromMaybeTriggerOpsDef
   ) where
 
 import           Data.Aeson
@@ -54,9 +55,18 @@ instance ToJSON SubscribeColumns where
 data SubscribeOpSpec
   = SubscribeOpSpec
   { sosColumns :: !SubscribeColumns
+  , sosPayload :: !SubscribeColumns
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
+
+data SubscribeOpSpecMaybe
+  = SubscribeOpSpecMaybe
+  { sosoColumns :: !SubscribeColumns
+  , sosoPayload :: !(Maybe SubscribeColumns)
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''SubscribeOpSpecMaybe)
 
 data RetryConf
   = RetryConf
@@ -125,9 +135,9 @@ instance FromJSON CreateEventTriggerQuery where
     where
       checkEmptyCols spec
         = case spec of
-        Nothing -> return ()
-        Just (SubscribeOpSpec (SubCArray cols)) -> when (null cols) (fail "found empty column specification")
-        Just (SubscribeOpSpec SubCStar) -> return ()
+        Just (SubscribeOpSpec (SubCArray cols) _) -> when (null cols) (fail "found empty column specification")
+        Just (SubscribeOpSpec _ (SubCArray cols) ) -> when (null cols) (fail "found empty payload specification")
+        _ -> return ()
   parseJSON _ = fail "expecting an object"
 
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)
@@ -140,6 +150,25 @@ data TriggerOpsDef
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
+
+data TriggerOpsDefMaybe
+  = TriggerOpsDefMaybe
+  { tdmInsert :: !(Maybe SubscribeOpSpecMaybe)
+  , tdmUpdate :: !(Maybe SubscribeOpSpecMaybe)
+  , tdmDelete :: !(Maybe SubscribeOpSpecMaybe)
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''TriggerOpsDefMaybe)
+
+fromMaybeTriggerOpsDef :: TriggerOpsDefMaybe -> TriggerOpsDef
+fromMaybeTriggerOpsDef (TriggerOpsDefMaybe ins upd del)
+  = TriggerOpsDef
+    (fromMaybeSubscribeOpSpec <$> ins)
+    (fromMaybeSubscribeOpSpec <$> upd)
+    (fromMaybeSubscribeOpSpec <$> del)
+  where
+    fromMaybeSubscribeOpSpec :: SubscribeOpSpecMaybe -> SubscribeOpSpec
+    fromMaybeSubscribeOpSpec (SubscribeOpSpecMaybe cols payload) = SubscribeOpSpec cols (fromMaybe SubCStar payload)
 
 data DeleteEventTriggerQuery
   = DeleteEventTriggerQuery
