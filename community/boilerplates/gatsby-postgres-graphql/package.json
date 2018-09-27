@@ -8,9 +8,11 @@
     "serve": "gatsby serve"
   },
   "dependencies": {
-    "@wyze/gatsby-source-graphql": "^1.2.0",
-    "gatsby": "^1.9.277",
-    "gatsby-link": "^1.6.46",
-    "gatsby-source-filesystem": "^1.5.39"
+    "apollo-link-http": "^1.5.5",
+    "gatsby": "^2.0.9",
+    "gatsby-link": "^2.0.2",
+    "gatsby-source-graphql": "^2.0.2",
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2"
   }
 }

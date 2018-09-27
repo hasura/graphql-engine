@@ -4,7 +4,7 @@ import AuthorList from "../components/AuthorList"
 const Index = ({ data }) => (
   <div>
     <h1>My Authors </h1>
-    <AuthorList authors={data.hasuraGraphQl.author} />
+    <AuthorList authors={data.hasura.author} />
   </div>
 )
 
@@ -12,7 +12,7 @@ export default Index;
 
 export const query = graphql`
   query AuthorQuery {
-    hasuraGraphQl {
+    hasura {
       author {
         id
         name
