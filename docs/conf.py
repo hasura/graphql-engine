@@ -235,7 +235,7 @@ html_theme_path = ["_theme"]
 # the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
 #
-html_favicon = "img/layout/favicon.ico"
+html_favicon = "img/layout/favicon.png"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
