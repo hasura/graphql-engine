@@ -43,13 +43,13 @@ Boilerplate to get started with Gatsby, Hasura GraphQL engine as CMS and postgre
 {
   plugins: [
     {
-      resolve: 'gatsby-source-graphql',
+      resolve: 'gatsby-source-graphql', // <- Configure plugin
       options: {
         typeName: 'HASURA',
-        fieldName: 'hasura', // fieldName using schema will be stitched
+        fieldName: 'hasura', // <- fieldName using which schema will be stitched
         createLink: () =>
           createHttpLink({
-            uri: `${ process.env.HASURA_GRAPHQL_URL }`,
+            uri: `${ process.env.HASURA_GRAPHQL_URL }`, // <- Configure connection GraphQL url
             headers: {},
             fetch,
           }),
@@ -71,8 +71,8 @@ const Index = ({ data }) => (
 )
 export const query = graphql`
   query AuthorQuery {
-    hasura {        # <- as configured in the gatsby-config
-      author {
+    hasura {        # <- fieldName as configured in the gatsby-config
+      author {      # Normal GraphQL query
         id
         name
       }
