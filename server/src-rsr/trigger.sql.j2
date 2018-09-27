@@ -2,23 +2,34 @@ CREATE OR REPLACE function hdb_views.notify_hasura_{{NAME}}_{{OPERATION}}() RETU
    LANGUAGE plpgsql
    AS $$
    DECLARE
-   payload json;
-   _data json;
    id text;
+   _old json;
+   _new json;
+   _data json;
+   old_row json;
+   new_row json;
+   payload json;
    BEGIN
      id := gen_random_uuid();
+     _old := {{OLD_DATA_EXPRESSION}};
+     _new := {{NEW_DATA_EXPRESSION}};
+     old_row := CASE WHEN _old IS NULL THEN NULL ELSE row_to_json(OLD) END;
+
+     new_row := CASE WHEN _new IS NULL THEN NULL ELSE row_to_json(NEW) END;
      _data := json_build_object(
-       'old', {{OLD_DATA_EXPRESSION}},
-       'new', {{NEW_DATA_EXPRESSION}}
+       'old', old_row,
+       'new', new_row
      );
      payload := json_build_object(
                         'op', TG_OP,
                         'data', _data
                         )::text;
-     INSERT INTO
-     hdb_catalog.event_log (id, schema_name, table_name, trigger_name, trigger_id, payload)
-     VALUES
-     (id, TG_TABLE_SCHEMA, TG_TABLE_NAME, '{{NAME}}', '{{ID}}', payload);
+     IF _old IS NULL OR _new IS NULL OR _old::jsonb <> _new::jsonb THEN
+       INSERT INTO
+       hdb_catalog.event_log (id, schema_name, table_name, trigger_name, trigger_id, payload)
+       VALUES
+       (id, TG_TABLE_SCHEMA, TG_TABLE_NAME, '{{NAME}}', '{{ID}}', payload);
+     END IF;
      RETURN NULL;
    END;
    $$;
