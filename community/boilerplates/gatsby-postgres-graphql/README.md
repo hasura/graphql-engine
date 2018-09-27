@@ -2,7 +2,9 @@
 
 Boilerplate to get started with Gatsby, Hasura GraphQL engine as CMS and postgres as database using the awesome plugin [gatsby-source-graphql](https://github.com/gatsbyjs/gatsby/tree/master/packages/gatsby-source-graphql).
 
-# Running the app yourself
+![Gatsby Postgres GraphQL](./assets/gatsby-postgres-graphql.png)
+
+# Tutorial
 
 - Deploy Postgres and GraphQL Engine on Heroku:
   
@@ -34,6 +36,50 @@ Boilerplate to get started with Gatsby, Hasura GraphQL engine as CMS and postgre
   ```bash
   npm install
   ```
+
+- Configure gatsby to use `gatsby-source-graphql` plugin and a connection GraphQL url to stitch the schema.
+
+```js
+{
+  plugins: [
+    {
+      resolve: 'gatsby-source-graphql',
+      options: {
+        typeName: 'HASURA',
+        fieldName: 'hasura', // fieldName using schema will be stitched
+        createLink: () =>
+          createHttpLink({
+            uri: `${ process.env.HASURA_GRAPHQL_URL }`,
+            headers: {},
+            fetch,
+          }),
+        refetchInterval: 10, // Refresh every 60 seconds for new data
+      },
+    },
+  ]
+}
+```
+
+- Make a GraphQL query from your component
+
+```js
+const Index = ({ data }) => (
+  <div>
+    <h1>My Authors </h1>
+    <AuthorList authors={data.hasura.author} />
+  </div>
+)
+export const query = graphql`
+  query AuthorQuery {
+    hasura {        # <- as configured in the gatsby-config
+      author {
+        id
+        name
+      }
+    }
+  }
+`
+```
 
 - Run the app:
   ```bash
