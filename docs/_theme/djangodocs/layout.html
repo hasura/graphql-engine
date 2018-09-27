@@ -66,13 +66,32 @@
                     <input type="text" class="search_element" placeholder="Search docs..." />
                   </div>
                   <div class="header_links inline-block">
-                    <div class="buttons">
-                      <div class="inline-block">
-                        <!-- a target="_blank" href="https://dashboard.{{ BASE_DOMAIN }}/login" -->
-                          <button class="indiv_btns black supportBtn"> Support </button>
-                        <!--/ a -->
+                    <div class="social_icons_wrapper">
+                      <div class="social_icons">
+                        <iframe src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true" frameBorder="0" scrolling="0" width="95px" height="25px"></iframe>
                       </div>
+                      <div class="social_icons">
+                        <a href="https://twitter.com/hasurahq/" target="_blank">
+                          <img class="responsive" src="{{ pathto('_images/layout/Twitter.svg', 1) }}" />
+                        </a>
+                      </div>
+                      <div class="social_icons tooltip">
+                        <a href="https://discord.gg/vBPpJkS" target="_blank">
+                          <img class="responsive" src="{{ pathto('_images/layout/Discord.svg', 1) }}" />
+                        </a>
+                        <span class="tooltiptext">Get instant support on our discord server</span>
+                      </div>
+
                     </div>
+                    <!-- no need support button
+                    <div class="buttons">
+                      <div class="inline-block"> -->
+                        <!-- a target="_blank" href="https://dashboard.{{ BASE_DOMAIN }}/login" -->
+                          <!-- no need support button <button class="indiv_btns black supportBtn"> Support </button> -->
+                        <!--/ a -->
+                        <!-- no need support button
+                      </div>
+                    </div> -->
                   </div>
                 </div>
                 <div id="{{ pagename|replace('/', '-') }}">
