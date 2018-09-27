@@ -1,5 +1,6 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Main where
 
@@ -143,15 +144,19 @@ mkJwtCtx jwtConf httpManager loggerCtx = do
   -- the JWT Conf as JSON string; try to parse it
   conf   <- either decodeErr return $ A.eitherDecodeStrict $ CS.cs jwtConf
   jwkRef <- case jcKeyOrUrl conf of
-    Left jwk -> liftIO $ newIORef (JWKSet [jwk])
+    Left jwk  -> liftIO $ newIORef (JWKSet [jwk])
     Right url -> do
       ref <- liftIO $ newIORef $ JWKSet []
-      updateJwkRef (mkLogger loggerCtx) httpManager url ref
-      return ref
+      let logger = mkLogger loggerCtx
+      mTime <- updateJwkRef logger httpManager url ref
+      case mTime of
+        Nothing -> return ref
+        Just t -> do
+          jwkRefreshCtrl logger httpManager url ref t
+          return ref
   return $ JWTCtx jwkRef (jcClaimNs conf) (jcAudience conf)
   where
     decodeErr e = throwError . T.pack $ "Fatal Error: JWT conf: " <> e
-
 
 main :: IO ()
 main =  do

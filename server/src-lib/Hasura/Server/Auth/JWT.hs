@@ -2,9 +2,6 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE Rank2Types            #-}
-{-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
 module Hasura.Server.Auth.JWT
@@ -14,6 +11,7 @@ module Hasura.Server.Auth.JWT
   , JWTCtx (..)
   , JWKSet (..)
   , updateJwkRef
+  , jwkRefreshCtrl
   ) where
 
 import           Control.Exception               (try)
@@ -23,10 +21,11 @@ import           Crypto.JWT
 import           Data.IORef                      (IORef, modifyIORef, readIORef)
 
 import           Data.List                       (find)
-import           Data.Time.Clock                 (diffUTCTime, getCurrentTime)
+import           Data.Time.Clock                 (NominalDiffTime, diffUTCTime,
+                                                  getCurrentTime)
 import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
 
-import           Hasura.Logging                  (Logger)
+import           Hasura.Logging                  (Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
@@ -87,9 +86,28 @@ defaultRoleClaim = "x-hasura-default-role"
 defaultClaimNs :: T.Text
 defaultClaimNs = "https://hasura.io/jwt/claims"
 
+-- | create a background thread to refresh the JWK
+jwkRefreshCtrl
+  :: (MonadIO m)
+  => Logger
+  -> HTTP.Manager
+  -> N.URI
+  -> IORef JWKSet
+  -> NominalDiffTime
+  -> m ()
+jwkRefreshCtrl lggr mngr url ref time =
+  void $ liftIO $ C.forkIO $ do
+    C.threadDelay $ delay time
+    forever $ do
+      res <- runExceptT $ updateJwkRef lggr mngr url ref
+      mTime <- either (const $ return Nothing) return res
+      C.threadDelay $ maybe (60 * aSecond) delay mTime
+  where
+    delay t = (floor (realToFrac t :: Double) - 10) * aSecond
+    aSecond = 1000 * 1000
 
--- | Given a JWK url, fetch JWK from it and create an IORef; also create
--- | a background thread, if the JWK expires, to refresh it
+
+-- | Given a JWK url, fetch JWK from it and update the IORef
 updateJwkRef
   :: ( MonadIO m
      , MonadError T.Text m)
@@ -97,14 +115,14 @@ updateJwkRef
   -> HTTP.Manager
   -> N.URI
   -> IORef JWKSet
-  -> m ()
-updateJwkRef logger manager url jwkRef = do
+  -> m (Maybe NominalDiffTime)
+updateJwkRef (Logger logger) manager url jwkRef = do
   let options = Wreq.defaults
               & Wreq.checkResponse ?~ (\_ _ -> return ())
               & Wreq.manager .~ Right manager
 
   res  <- liftIO $ try $ Wreq.getWith options $ show url
-  resp <- either logAndThrow return res
+  resp <- either logAndThrowHttp return res
   let status = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody
 
@@ -113,40 +131,32 @@ updateJwkRef logger manager url jwkRef = do
         respBodyT = Just $ CS.cs respBody
         errMsg = "non-200 response on fetching JWK from: " <> urlT
         httpErr = Just (JwkRefreshHttpError (Just status) urlT Nothing respBodyT)
-    throwRetry errMsg httpErr
+    logAndThrow errMsg httpErr
 
-  jwkset <- either (\e -> throwRetry (T.pack e) Nothing) return . A.eitherDecode $ respBody
+  jwkset <- either (\e -> logAndThrow (T.pack e) Nothing) return . A.eitherDecode $ respBody
   liftIO $ modifyIORef jwkRef (const jwkset)
 
   let mExpiresT = resp ^? Wreq.responseHeader "Expires"
-  forM_ mExpiresT $ \expiresT -> do
+  forM mExpiresT $ \expiresT -> do
     let expiresE = parseTimeM True defaultTimeLocale timeFmt $ CS.cs expiresT
-    expires  <- either (`throwRetry` Nothing) return expiresE
+    expires  <- either (`logAndThrow` Nothing) return expiresE
     currTime <- liftIO getCurrentTime
-    let expiryTtl = diffUTCTime expires currTime
-    void $ liftIO $ C.forkIO (waitAndRefreshToken $ realToFrac expiryTtl)
+    return $ diffUTCTime expires currTime
 
   where
-    logAndThrow :: (MonadIO m, MonadError T.Text m) => HTTP.HttpException -> m a
-    logAndThrow err = do
+    logAndThrow :: (MonadIO m, MonadError T.Text m) => T.Text -> Maybe JwkRefreshHttpError -> m a
+    logAndThrow err httpErr = do
+      liftIO $ logger $ mkJwkRefreshLog err httpErr
+      throwError err
+
+    logAndThrowHttp :: (MonadIO m, MonadError T.Text m) => HTTP.HttpException -> m a
+    logAndThrowHttp err = do
       let httpErr = JwkRefreshHttpError Nothing (T.pack $ show url) (Just err) Nothing
           errMsg = "error fetching JWK: " <> T.pack (show err)
-      throwRetry errMsg (Just httpErr)
+      logAndThrow errMsg (Just httpErr)
 
     timeFmt = "%a, %d %b %Y %T GMT"
 
-    waitAndRefreshToken :: Double -> IO ()
-    waitAndRefreshToken seconds = do
-      let delay = (floor seconds - 10) * 1000 * 1000
-      C.threadDelay delay
-      res <- runExceptT $ updateJwkRef logger manager url jwkRef
-      either (\e -> logger $ mkJwkRefreshLog e Nothing) return res
-
-    throwRetry :: (MonadIO m, MonadError T.Text m) => T.Text -> Maybe JwkRefreshHttpError -> m a
-    throwRetry err httpErr = do
-      void $ liftIO $ C.forkIO (waitAndRefreshToken 30)
-      liftIO $ logger $ mkJwkRefreshLog err httpErr
-      throwError err
 
 -- | Process the request headers to verify the JWT and extract UserInfo from it
 processJwt

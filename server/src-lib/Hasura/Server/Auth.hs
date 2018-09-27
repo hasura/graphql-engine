@@ -11,12 +11,14 @@ module Hasura.Server.Auth
   , AuthMode(..)
   , AccessKey (..)
   , Webhook (..)
+  -- JWT related
   , RawJWT
   , JWTConfig (..)
   , JWTCtx (..)
   , JWKSet (..)
   , processJwt
   , updateJwkRef
+  , jwkRefreshCtrl
   ) where
 
 import           Control.Exception      (try)
