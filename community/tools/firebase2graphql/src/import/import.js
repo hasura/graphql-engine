@@ -7,12 +7,12 @@ const {trackTables} = require('./track');
 const {getInsertOrder, insertData} = require('./insert');
 const {createRelationships} = require('./relationships');
 const {createTables} = require('./check');
-const suggestDuplicates = require('./suggest');
+const normalize = require('./normalize');
 const generateGenericJson = require('../firebase/generateGenericJson');
 
-const importData = async (jsonDb, url, headers, overwrite) => {
+const importData = async (jsonDb, url, headers, overwrite, level = 1) => {
   spinnerStart('Processing Firebase JSON');
-  const db = refineJson(generateGenericJson(jsonDb));
+  const db = level === 1 ? refineJson(generateGenericJson(jsonDb)) : jsonDb;
   const tables = generate(db);
   const sql = generateSql(tables);
   spinnerStop('Done!');
@@ -31,7 +31,9 @@ const importData = async (jsonDb, url, headers, overwrite) => {
             log('');
             log(`Success! Try out the GraphQL API at ${url}/console`, 'green');
           }
-          suggestDuplicates(db, url);
+          if (level <= 2) {
+            normalize(tables, db, url, headers, level, importData);
+          }
         });
       });
     });

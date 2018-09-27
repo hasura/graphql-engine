@@ -12,22 +12,22 @@ const getPrimaryKeys = obj => {
   return pkeyMap;
 };
 
-const getLastId = (obj, index = 0) => {
-  const id = index === 0 ? '_id' : `_id_${index}`;
+const getLastId = (obj, index = 0, selfGenerated='') => {
+  const id = index === 0 ? `_id${selfGenerated}` : `_id${selfGenerated}_${index}`;
   const nextIndex = index === 0 ? 2 : index + 1;
   if (!obj[`_id_${nextIndex}`]) {
     return id;
   }
-  getLastId(obj, nextIndex);
+  getLastId(obj, nextIndex, selfGenerated);
 };
 
-const getIdNumber = (obj, index = 0) => {
-  const id = index === 0 ? '_id' : `_id_${index}`;
+const getIdNumber = (obj, index = 0, selfGenerated = '') => {
+  const id = index === 0 ? `_id${selfGenerated}` : `_id${selfGenerated}_${index}`;
   const nextIndex = index === 0 ? 2 : index + 1;
   if (obj[id] === undefined) {
     return id;
   }
-  return getIdNumber(obj, nextIndex);
+  return getIdNumber(obj, nextIndex, selfGenerated);
 };
 
 const isRandomList = obj => {
@@ -104,7 +104,7 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
     } else if (isList(object)) {
       for (var listKey in object) {
         const dummyRow = {...row};
-        dummyRow[getIdNumber(dummyRow)] = uuid();
+        dummyRow[getIdNumber(dummyRow, null, 'self')] = uuid();
         dummyRow.value = listKey;
         if (Object.keys(dummyRow).length > 0) {
           rowArray.push(dummyRow);
@@ -139,12 +139,15 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
             );
           } else if (Object.keys(value).length !== 0) {
             const newUUID = uuid();
-            row[`${tableName}_${objectKey}__id`] = newUUID;
+            
             tableDetectedCallback(
               {
                 tableName,
                 name: objectKey,
-                data: flatten(value, {_id: newUUID}),
+                data: flatten(value, {_idself: newUUID}),
+                callback: (id) => {
+                  row[`${tableName}_${objectKey}__idself`] = id ? id : newUUID;
+                }
               }
             );
           }
@@ -195,7 +198,7 @@ const handleJSONDoc = db => {
             newItem[`${parentTableName}_${pkey}`] = pkeys[pkey];
           }
           if (newItem._id === undefined) {
-            newItem[getLastId(newItem)] = uuid();
+            newItem[getLastId(newItem, 0, 'self')] = uuid();
           }
           return newItem;
         }),
@@ -210,13 +213,17 @@ const handleJSONDoc = db => {
       }
       if (!tablesMap[newTableName].find(row => { // eslint-disable-line array-callback-return
         for (var column in row) {
-          if (row[column] !== newItem[column]) {
-            return false;
+          if (column.indexOf('_id') !== 0) {
+            if (row[column] !== newItem[column]) {
+              return false;
+            }
           }
-          return true;
         }
+        objectRelMetadata.callback(row['_idself']);
+        return true;
       })) {
         tablesMap[newTableName].push(newItem);
+        if (objectRelMetadata.callback) { objectRelMetadata.callback(); }
       }
     }
   };

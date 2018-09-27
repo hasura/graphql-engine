@@ -74,7 +74,7 @@ This is A CLI tool to get instant GraphQL API over your Firebase Realtime Databa
     $ npx firebase2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json
     ```
 
-5. That's it. You can go your GraphQL Engine URL `https://<app-name>.herokuapp.com` and start querying this data over GraphQL:
+5. That's it. You can go to your GraphQL Engine URL `https://<app-name>.herokuapp.com` and start querying this data over GraphQL:
 
     ```graphql
     query {
@@ -90,7 +90,7 @@ This is A CLI tool to get instant GraphQL API over your Firebase Realtime Databa
     }
     ```
 
-Check out [the things you must know](#things-to-know-about-implementation) for some caveats about this tool.
+Check out [next steps](#next-steps) for some caveats about this tool.
 
 ## Installation
 
@@ -131,12 +131,27 @@ $ firebase2graphql URL [flags]
 - `-v --version`: show CLI version
 - `-h, --help`: show CLI help
 
+## Next steps
+
+Once you have imported your data, it is recommended that you make it production ready.
+
+1. Denormalize the data by removing duplicates. Check [this section](#duplicates) for an example
+2. Explore the GraphQL Engine Console to play with things such as
+   
+   a. Relationships
+   b. Permissions
+   c. Using SQL
+   d. Set up async business logic using event triggers
+   e. Create new tables
+
+3. Set appropriate permissions. GraphQL Engine comes with fine grained control layer that can be integrated with any standard Auth provider.
+
 ## Things to know about implementation
 
 ### Duplicates
 
 1. All top level nodes are converted to tables
-2. You will most likely end up with duplicate tables. You might want to normalize your data based on the suggestions.
+2. You will most likely end up with duplicate tables. You might want to normalize your data based on these suggestions.
 
    Consider this Firebase database for instance:
 
@@ -238,7 +253,9 @@ $ firebase2graphql URL [flags]
 
    As you see, the nodes `articles_author` and `authors` are almost the same, except the relationship with the `articles` table. This is an example of duplicate data.
 
-   In such cases, you might want to delete one of the tables and make the required relationships with custom names from the console.
+   In such cases, you might want to delete one of the tables and make the required relationships with custom names from the console. For the above example, these steps would be:
+
+   a. Del 
 
    If the CLI detects any such duplicate tables, it will warn you about them after the import is complete.
 
