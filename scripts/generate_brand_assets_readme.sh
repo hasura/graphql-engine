@@ -15,7 +15,9 @@ cd "$ROOT/assets/brand"
 README_CONTENT=$(cat <<EOF
 # Hasura Brand Assets
 
-| Name | Asset |
+All assets are available on a Google Cloud Storage Bucket CDN at \`https://graphql-engine-cdn.hasura.io/img/<name>\`.
+
+| name | asset |
 | ---- | ----- |
 EOF
 )
@@ -28,7 +30,7 @@ for svg in *.svg; do
     fi
     README_CONTENT=$(cat <<EOF
 $README_CONTENT
-| $svg | <img src="$svg" width="150px" $BG /> |
+| \`$svg\` | <img src="$svg" width="150px" $BG /> |
 EOF
 )
 done

@@ -1,15 +1,17 @@
 # Hasura Brand Assets
 
-| Name | Asset |
+All assets are available on a Google Cloud Storage Bucket CDN at `https://graphql-engine-cdn.hasura.io/img/<name>`.
+
+| name | asset |
 | ---- | ----- |
-| hasrua_mascot.svg | <img src="hasrua_mascot.svg" width="150px" style="background-color: white;" /> |
-| hasura_icon_black.svg | <img src="hasura_icon_black.svg" width="150px" style="background-color: white;" /> |
-| hasura_icon_white.svg | <img src="hasura_icon_white.svg" width="150px" style="background-color: black;" /> |
-| hasura_logo_horizontal_black.svg | <img src="hasura_logo_horizontal_black.svg" width="150px" style="background-color: white;" /> |
-| hasura_logo_horizontal_white.svg | <img src="hasura_logo_horizontal_white.svg" width="150px" style="background-color: black;" /> |
-| hasura_logo_vertical_black.svg | <img src="hasura_logo_vertical_black.svg" width="150px" style="background-color: white;" /> |
-| hasura_logo_vertical_white.svg | <img src="hasura_logo_vertical_white.svg" width="150px" style="background-color: black;" /> |
-| hasura_mascot_logo_horizontal.svg | <img src="hasura_mascot_logo_horizontal.svg" width="150px" style="background-color: white;" /> |
-| hasura_mascot_logo_vertical.svg | <img src="hasura_mascot_logo_vertical.svg" width="150px" style="background-color: white;" /> |
-| powered_by_hasura_black.svg | <img src="powered_by_hasura_black.svg" width="150px" style="background-color: white;" /> |
-| powered_by_hasura_white.svg | <img src="powered_by_hasura_white.svg" width="150px" style="background-color: black;" /> |
+| `hasrua_mascot.svg` | <img src="hasrua_mascot.svg" width="150px" style="background-color: white;" /> |
+| `hasura_icon_black.svg` | <img src="hasura_icon_black.svg" width="150px" style="background-color: white;" /> |
+| `hasura_icon_white.svg` | <img src="hasura_icon_white.svg" width="150px" style="background-color: black;" /> |
+| `hasura_logo_horizontal_black.svg` | <img src="hasura_logo_horizontal_black.svg" width="150px" style="background-color: white;" /> |
+| `hasura_logo_horizontal_white.svg` | <img src="hasura_logo_horizontal_white.svg" width="150px" style="background-color: black;" /> |
+| `hasura_logo_vertical_black.svg` | <img src="hasura_logo_vertical_black.svg" width="150px" style="background-color: white;" /> |
+| `hasura_logo_vertical_white.svg` | <img src="hasura_logo_vertical_white.svg" width="150px" style="background-color: black;" /> |
+| `hasura_mascot_logo_horizontal.svg` | <img src="hasura_mascot_logo_horizontal.svg" width="150px" style="background-color: white;" /> |
+| `hasura_mascot_logo_vertical.svg` | <img src="hasura_mascot_logo_vertical.svg" width="150px" style="background-color: white;" /> |
+| `powered_by_hasura_black.svg` | <img src="powered_by_hasura_black.svg" width="150px" style="background-color: white;" /> |
+| `powered_by_hasura_white.svg` | <img src="powered_by_hasura_white.svg" width="150px" style="background-color: black;" /> |
