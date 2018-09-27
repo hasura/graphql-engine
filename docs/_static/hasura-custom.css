@@ -1184,6 +1184,7 @@ ol, ul {
 
 .mobile-logo-docs {
   margin-left:10px;
+  padding-top: 10px;
   text-decoration: none;
   color: #333 !important;
 }
