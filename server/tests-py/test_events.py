@@ -98,17 +98,6 @@ class TestCreateEvtQuery(object):
         assert st_code == 200, resp
         check_event(hge_ctx, "t1_all", table, "DELETE", exp_ev_data, headers, "/")
 
-    def test_basic_dep(self,hge_ctx):
-
-        st_code, resp = hge_ctx.v1q({
-            "type": "run_sql",
-            "args": {
-                "sql": "alter table hge_tests.test_t1 drop column c1"
-            }
-        })
-        assert st_code == 400, resp
-        assert resp['code'] == "dependency-error", resp
-
 class TestRetryConf(object):
 
     @pytest.fixture(autouse=True)
@@ -331,9 +320,7 @@ class TestEvtSelCols:
                 "sql": "alter table hge_tests.test_t1 drop column c2"
             }
         })
-        # should be 200 since only update columns are dependent
-        assert st_code == 400, resp
-        assert resp['code'] == "dependency-error", resp
+        assert st_code == 200, resp
 
 class TestEvtInsertOnly:
 

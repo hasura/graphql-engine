@@ -8,6 +8,7 @@ module Hasura.RQL.Types.Subscribe
   , SubscribeColumns(..)
   , TriggerName
   , TriggerId
+  , Ops(..)
   , EventId
   , TriggerOpsDef(..)
   , EventTrigger(..)
@@ -34,6 +35,8 @@ type TriggerName = T.Text
 type TriggerId   = T.Text
 type EventId     = T.Text
 type HeaderName  = T.Text
+
+data Ops = INSERT | UPDATE | DELETE deriving (Show)
 
 data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift)
 

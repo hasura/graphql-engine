@@ -766,5 +766,5 @@ getOpInfo trn ti mos= fromSubscrOpSpec <$> mos
         in OpTriggerInfo qt trn os schemaDeps
         where
           getColsFromSub sc = case sc of
-            SubCStar         -> HS.fromList $ map pgiName $ getCols $ tiFieldInfoMap ti
+            SubCStar         -> HS.fromList []
             SubCArray pgcols -> HS.fromList pgcols

@@ -21,7 +21,6 @@ import qualified Data.Text.Encoding  as TE
 import qualified Database.PG.Query   as Q
 import qualified Text.Ginger         as TG
 
-data Ops = INSERT | UPDATE | DELETE deriving (Show)
 
 data OpVar = OLD | NEW deriving (Show)
 
