@@ -8,6 +8,7 @@ module Hasura.Server.Logging
   ( mkAccessLog
   , getRequestHeader
   , WebHookLog(..)
+  , WebHookLogger
   ) where
 
 import           Control.Arrow          (first)
@@ -39,6 +40,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
 
+
 data WebHookLog
   = WebHookLog
   { whlLogLevel   :: !L.LogLevel
@@ -68,6 +70,8 @@ instance ToJSON WebHookLog where
                       , "http_error" .= whlError whl
                       , "response" .= whlResponse whl
                       ]
+
+type WebHookLogger = WebHookLog -> IO ()
 
 data AccessLog
   = AccessLog
