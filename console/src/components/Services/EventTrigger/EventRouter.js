@@ -22,6 +22,8 @@ import {
   loadRunningEvents,
 } from '../EventTrigger/EventActions';
 
+import { SERVER_CONSOLE_MODE } from '../../../constants';
+
 const makeEventRouter = (
   connect,
   store,
@@ -166,7 +168,7 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
     cb();
   };
   const consoleModeRedirects = (nextState, replaceState, cb) => {
-    if (globals.consoleMode === 'hasuradb') {
+    if (globals.consoleMode === SERVER_CONSOLE_MODE) {
       replaceState(globals.urlPrefix + '/events/manage');
       cb();
     }
