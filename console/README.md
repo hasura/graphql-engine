@@ -12,20 +12,6 @@ Served by
 2. Hasura CLI:
    Served by the Hasura CLI using `hasura console` command, typically runs with migration mode **enabled**. All the changes to schema/hasura metadata will be tracked and spit out on the filesystem as migration yaml files and a metadata yaml file. This allows for easy version controlling of the schema/hasura metadata.
 
-## Table of Contents
-
-- [Contributing to Hasura console](#contributing-to-hasura-console)
-	-	[Prerequisites](#prerequisites)
-	-	[Setup](#setup)
-	-	[Development with Hasura GraphQL Engine](#development-with-hasura-graphql-engine)
-		-	Run Development Server:
-	-	[Development with Hasura CLI](#development-with-hasura-cli)
-		-	Run Development Server:
-	- [Testing Console](#testing)
--	[How it works](#how-it-works)
--	[Release Process](#release-process)
-
-
 ## Contributing to Hasura console
 
 This guide is for setting-up the console for development on your own machine, and how to contribute.
@@ -127,7 +113,7 @@ hasura console
 npm run dev
 ```
 
-### Check the running console
+### Checkout the console
 
 Visit [http://localhost:3000](http://localhost:3000) to confirm the setup.
 
@@ -140,7 +126,7 @@ When adding a new feature, it is recommended to add corresponding tests too.
 
 Tests are written using [Cypress](https://www.cypress.io/).
 
-#### Run Tests
+### Run Tests
 
 - Run tests: `npm run cypress`
 - Write your tests in the `cypress` directory, integration.
