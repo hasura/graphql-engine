@@ -1,7 +1,7 @@
 {
   "name": "firebase2graphql",
   "description": "A CLI tool to get GraphQL over Firebase data dump",
-  "version": "0.0.1-alpha4",
+  "version": "0.0.1-alpha5",
   "author": "Hasura",
   "bin": {
     "firebase2graphql": "./bin/run",
