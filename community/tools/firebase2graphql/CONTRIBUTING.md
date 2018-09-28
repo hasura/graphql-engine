@@ -25,4 +25,6 @@ $ TEST_HGE_URL=https://hge.herokuapp.com npm test
 
 ### Test data sets
 
-This project needs a lot of testing. Firebase RTD being a NoSQL database, there are very less data sets available on the web. Any links to complicated datasets will be considered as valid contributions.
+This project needs a lot of testing. Firebase RTD being a NoSQL database, there are very less data sets available on the web. Any complicated datasets or links to datasets will be considered as valid contributions.
+
+Please add them in the `test/data-sets` directory if you are making a PR.

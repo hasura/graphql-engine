@@ -11,7 +11,7 @@ This is A CLI tool to get instant GraphQL API over your Firebase Realtime Databa
 
    [![Deploy to heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
-  Note the URL. It will be of the form: `https://<app-name>.herokuapp.com`
+   Note the URL. It will be of the form: `https://<app-name>.herokuapp.com`
 
 2. Go to `Firebase console > Database > Realtime Database` and click on `Export JSON` from the options on the upper right corner
 
@@ -72,7 +72,7 @@ This is A CLI tool to get instant GraphQL API over your Firebase Realtime Databa
 4. Use the CLI to import the data:
 
     ```
-    $ npx firebase2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json -n
+    $ npx firebase2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json
     ```
 
 5. That's it. You can now go to your GraphQL Engine URL `https://<app-name>.herokuapp.com` and make awesome GraphQL Queries like:
@@ -91,7 +91,7 @@ This is A CLI tool to get instant GraphQL API over your Firebase Realtime Databa
     }
     ```
 
-Check out [next steps](#next-steps) for some caveats about this tool.
+Check out [next steps](#next-steps).
 
 ## Installation
 
@@ -129,7 +129,7 @@ $ firebase2graphql URL [flags]
 
 - `-d --db`: path to the JS file that exports your sample JSON database
 - `-n --normalize`: normalize the schema while importing
-- `-o --overwrite`: overwrite tables if they already exist in database
+- `-o --overwrite`: (experimental) overwrite tables if they already exist in database
 - `-v --version`: show CLI version
 - `-h, --help`: show CLI help
 
