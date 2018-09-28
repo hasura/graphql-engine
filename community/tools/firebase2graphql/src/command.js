@@ -13,8 +13,7 @@ class Firebase2GraphQL extends Command {
     if (!url) {
       throw new CLIError('endpoint is required: \'firebase2graphql <url>\'');
     }
-
-    const {db, overwrite} = flags;
+    const {db, overwrite, normalize} = flags;
     const key = flags['access-key'];
 
     if (!url) {
@@ -31,7 +30,7 @@ class Firebase2GraphQL extends Command {
       throwError(`Message: ${urlVerification.message}`);
     } else {
       spinnerStop('Done!');
-      await importData(dbJson, safeUrl, headers, overwrite);
+      await importData(dbJson, safeUrl, headers, overwrite, 1, normalize);
     }
   }
 
@@ -70,11 +69,12 @@ class Firebase2GraphQL extends Command {
 Firebase2GraphQL.description = `firebase2graphql: Import JSON data to Hasura GraphQL Engine
 # Examples:
 
-# Import data from a Firebase JSON database to Hasura GraphQL Engine without access key
+# Import data from a Firebase JSON database to Hasura GraphQL Engine and normalize it
+json2graphql https://hge.herokuapp.com --db=./path/to/db.json --normalize
+
+# Import data from a Firebase JSON database to Hasura GraphQL Engine without normalizing it
 json2graphql https://hge.herokuapp.com --db=./path/to/db.json
 
-# Import data from a Firebase JSON database to Hasura GraphQL Engine without access key
-json2graphql https://hge.herokuapp.com --access-key='<access-key>' --db=./path/to/db.json
 `;
 
 Firebase2GraphQL.usage = 'URL [-k KEY]';
@@ -95,6 +95,11 @@ Firebase2GraphQL.flags = {
   db: flags.string({
     char: 'd',
     description: 'Path to the .js files that exports a JSON database',
+  }),
+
+  normalize: flags.boolean({
+    char: 'n',
+    description: 'Normalize the data as it is imported to GraphQL Engine',
   }),
 
   overwrite: flags.boolean({

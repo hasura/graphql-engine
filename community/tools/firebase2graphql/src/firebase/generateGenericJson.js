@@ -12,7 +12,7 @@ const getPrimaryKeys = obj => {
   return pkeyMap;
 };
 
-const getLastId = (obj, index = 0, selfGenerated='') => {
+const getLastId = (obj, index = 0, selfGenerated = '') => {
   const id = index === 0 ? `_id${selfGenerated}` : `_id${selfGenerated}_${index}`;
   const nextIndex = index === 0 ? 2 : index + 1;
   if (!obj[`_id_${nextIndex}`]) {
@@ -139,15 +139,15 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
             );
           } else if (Object.keys(value).length !== 0) {
             const newUUID = uuid();
-            
+
             tableDetectedCallback(
               {
                 tableName,
                 name: objectKey,
                 data: flatten(value, {_idself: newUUID}),
-                callback: (id) => {
+                callback: id => {
                   row[`${tableName}_${objectKey}__idself`] = id ? id : newUUID;
-                }
+                },
               }
             );
           }
@@ -219,11 +219,13 @@ const handleJSONDoc = db => {
             }
           }
         }
-        objectRelMetadata.callback(row['_idself']);
+        objectRelMetadata.callback(row._idself);
         return true;
       })) {
         tablesMap[newTableName].push(newItem);
-        if (objectRelMetadata.callback) { objectRelMetadata.callback(); }
+        if (objectRelMetadata.callback) {
+          objectRelMetadata.callback();
+        }
       }
     }
   };

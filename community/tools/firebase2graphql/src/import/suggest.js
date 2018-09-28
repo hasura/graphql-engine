@@ -72,7 +72,7 @@ const suggest = (db, url) => {
     log('Warning:', 'yellow');
     log('While importing your data, the following duplicate tables might have been created:', 'yellow');
     dupes.forEach(dupe => log(dupe));
-    log(`Manage your tables at ${url}/console/data/schema/public`, 'yellow');
+    log(`You can either re-run the command with the flag "--normalize", or normalize your database yourself at ${url}/console/data/schema/public`, 'yellow');
   }
 };
 

@@ -71,7 +71,7 @@ This is A CLI tool to get instant GraphQL API over your Firebase Realtime Databa
 4. Use the CLI to import the data:
 
     ```
-    $ npx firebase2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json
+    $ npx firebase2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json -n
     ```
 
 5. That's it. You can go to your GraphQL Engine URL `https://<app-name>.herokuapp.com` and start querying this data over GraphQL:

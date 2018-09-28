@@ -1,5 +1,4 @@
 const {spinnerStart, spinnerStop, log} = require('../log');
-
 const generate = require('./generateTables');
 const {refineJson} = require('./utils');
 const {generateSql, runSql} = require('./sql');
@@ -9,8 +8,9 @@ const {createRelationships} = require('./relationships');
 const {createTables} = require('./check');
 const normalize = require('./normalize');
 const generateGenericJson = require('../firebase/generateGenericJson');
+const makeSuggestions = require('./suggest');
 
-const importData = async (jsonDb, url, headers, overwrite, level = 1) => {
+const importData = async (jsonDb, url, headers, overwrite, level = 1, shouldNormalize) => {
   spinnerStart('Processing Firebase JSON');
   const db = level === 1 ? refineJson(generateGenericJson(jsonDb)) : jsonDb;
   const tables = generate(db);
@@ -27,12 +27,15 @@ const importData = async (jsonDb, url, headers, overwrite, level = 1) => {
         spinnerStop('Done!');
         const insertOrder = getInsertOrder(tables);
         insertData(insertOrder, db, tables, url, headers, success => {
-          if (success) {
+          if (level <= 10 && shouldNormalize) {
+            normalize(tables, db, url, headers, level, importData);
+          } else if (success) {
             log('');
             log(`Success! Try out the GraphQL API at ${url}/console`, 'green');
-          }
-          if (level <= 10) {
-            normalize(tables, db, url, headers, level, importData);
+
+            if (!shouldNormalize) {
+              makeSuggestions();
+            }
           }
         });
       });
