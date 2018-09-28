@@ -39,6 +39,10 @@ class WebhookServer(http.server.HTTPServer):
         self.resp_queue = resp_queue
         super().__init__(server_address, WebhookHandler)
 
+    def server_bind(self):
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind(self.server_address)
+
 class HGECtx:
     def __init__(self, hge_url, pg_url):
         server_address = ('0.0.0.0', 5592)
@@ -110,5 +114,7 @@ class HGECtx:
         self.http.close()
         self.engine.dispose()
         self.httpd.shutdown()
+        self.httpd.server_close()
+        self.ws.close()
         self.web_server.join()
         self.wst.join()

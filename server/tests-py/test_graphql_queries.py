@@ -53,13 +53,13 @@ class TestGraphQLQueryLimits:
 
 class TestGraphQLQueryOffsets:
 
-    def test_limit_1(self, hge_ctx):
+    def test_offset_1_limit_2(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/select_query_article_offset_1_limit_2.yaml')
 
-    def test_limit_2(self, hge_ctx):
+    def test_offset_2_limit_1(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/select_query_article_offset_2_limit_1.yaml')
 
-    def test_err_str_offset(self, hge_ctx):
+    def test_int_as_string_offset(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/select_query_article_string_offset.yaml')
 
     def test_err_neg_offset_error(self, hge_ctx):

@@ -30,23 +30,6 @@ args:
   args:
     schema: public
     name: article
-
-
-#Order table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE orders (
-        id SERIAL PRIMARY KEY,
-        placed TIMESTAMPTZ NOT NULL,
-        shipped TIMESTAMPTZ
-      )
-- type: track_table
-  args:
-    schema: public
-    name: orders
-
-
 #Object relationship
 - type: create_object_relationship
   args:
@@ -55,18 +38,33 @@ args:
     using:
       foreign_key_constraint_on: author_id
 
-#Array relationship
-- type: create_array_relationship
-  args:
-    table: author
-    name: articles
-    using:
-      foreign_key_constraint_on:
-        table: article
-        column: author_id
-
-#Set timezone
+#Insert values
 - type: run_sql
   args:
     sql: |
-      SET TIME ZONE 'UTC';
+      insert into author (name)
+      values
+      ('Author 1'),
+      ('Author 2') 
+
+- type: run_sql
+  args:
+    sql: |
+      insert into article (title,content,author_id)
+      values
+      (
+        'Article 1',
+        'Sample article content 1',
+        1
+      ),
+      (
+        'Article 2',
+        'Sample article content 2',
+        1
+      ),
+      (
+        'Article 3',
+        'Sample article content 3',
+        2
+      )
+

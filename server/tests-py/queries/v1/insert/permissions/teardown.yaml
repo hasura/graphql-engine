@@ -3,11 +3,21 @@ args:
 #Drop relationship first
 - type: drop_relationship
   args:
-    relationship: articles
-    table:
-      schema: public
+    table: 
       name: author
-    
+      schema: public
+    relationship: articles
+
+- type: run_sql
+  args:
+    sql: |
+      drop table address
+
+- type: run_sql
+  args:
+    sql: |
+      drop table resident
+
 - type: run_sql
   args:
     sql: |
@@ -17,9 +27,3 @@ args:
   args:
     sql: |
       drop table author
-
-
-- type: run_sql
-  args:
-    sql: |
-      drop table orders
