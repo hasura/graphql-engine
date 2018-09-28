@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const throwError = require('../error');
+const { log, spinnerStart, spinnerStop } = require('../log');
 
 const shouldIgnoreTable = (table) => {
   return (table.columns.find((c) => c.name === '__value'));
@@ -73,7 +74,6 @@ const categorizeDupeCandidates = async (dupes, url, headers) => {
     }
   );
   const respObj = await response.json();
-  console.log(JSON.stringify(respObj, null, 2));
   if (response.status !== 200) {
     throwError('Message: Could not normalize your data');
   }
@@ -106,12 +106,12 @@ const patchDupeDependentTables = (table, dupe, tables, data) => {
   const patchedData = {};
   tables.forEach((otherTable) => {
     if (otherTable.name !== table && otherTable.name !== dupe) {
-      if (otherTable.columns.find((column) => column.name === `${dupe}_idself`)) {
+      if (otherTable.columns.find((column) => column.name === `${dupe}__idself`)) {
         const newData = data[otherTable.name].map((row) => {
           const newRow = {
             ...row,
           };
-          newRow[`${table}_id`] = row[`${dupe}_idself`];
+          newRow[`${table}_id`] = row[`${dupe}__idself`];
           delete newRow[`${dupe}_idself`];
           return newRow;
         });
@@ -139,7 +139,19 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
     const tableData = [];
     let table1, table2;
     const columnList = dupes[index].columnList;
-    if (!newData[dupes[index].table1][0]['_idself'] && newData[dupes[index].table1][0]['_id']) {
+    if (!newData[dupes[index].table1][0]['_idself'] &&
+      !newData[dupes[index].table2][0]['_idself'] &&
+      newData[dupes[index].table1][0]['_id'] &&
+      newData[dupes[index].table1][0]['_id']
+    ) {
+      if (dupes[index].table1.length > dupes[index].table2.length) {
+        table2 = dupes[index].table1;
+        table1 = dupes[index].table2;  
+      } else {
+        table1 = dupes[index].table1;
+        table2 = dupes[index].table2;  
+      }
+    } else if (!newData[dupes[index].table1][0]['_idself'] && newData[dupes[index].table1][0]['_id']) {
       table1 = dupes[index].table1;
       table2 = dupes[index].table2;
     } else if (!newData[dupes[index].table2][0]['_idself'] && newData[dupes[index].table2][0]['_id']) {
@@ -149,8 +161,6 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
       handle(dupes, index + 1);
       return;
     }
-    console.log(table1);
-    console.log(table2);
     const table = tables.find((t) => t.name === table1);
     const dupe = tables.find((t) => t.name === table2);
     newData[table.name].forEach((tableRow) => {
@@ -176,7 +186,7 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
     delete newData[dupe.name];
     newData = {
       ...newData,
-      ...patchDupeDependentTables(table.name, dupe.name, tables, data)
+      ...patchDupeDependentTables(table.name, dupe.name, tables, newData)
     }
     handle(
       dupes.filter((d) => d.table1 !== table1 && d.table2 !== table1 && d.table1 !== table2 && d.table2 !== table2),
@@ -187,12 +197,50 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
   return newData;
 };
 
+const dropTables = async (tableList, url, headers) => {
+  if (tableList.length === 0) {
+    return true;
+  }
+  let sql = '';
+  tableList.forEach((t) => sql += `drop table if exists public."${t}" cascade;`);
+  const resp = await fetch(
+    `${url}/v1/query`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        type: 'run_sql',
+        args: {
+          sql,
+          cascade: true
+        }
+      })
+    }
+  );
+  if (resp.status !== 200) {
+    log('Message: Could not delete unnecessary tables. Your database might have some unnecessary tables.', 'yellow');
+  }
+  const respObj = await resp.json();
+  return true;
+} 
+
 const normalize = async (tables, data, url, headers, level, importData) => {
   const dupeCandidates = getDupeCandidates(tables);
   const maybeDupes = await categorizeDupeCandidates(dupeCandidates, url, headers);
-  const newData = handleConfirmedDupes(maybeDupes.confirmed, tables, data);
-  if (maybeDupes.unconfirmed.length === 0) {
-    await importData(newData, url, headers, true, 4);
+  let newData;
+  if (level === 10) {
+    newData = handleConfirmedDupes(
+      [...maybeDupes.confirmed, ...maybeDupes.unconfirmed],
+      tables,
+      data
+    );
+  } else {
+    newData = handleConfirmedDupes(maybeDupes.confirmed, tables, data);
+  }
+  const tablesToDrop = tables.filter((t) => newData[t.name] === undefined).map((tbl) => tbl.name);
+  const dropResp = await dropTables(tablesToDrop, url, headers);
+  if (maybeDupes.unconfirmed.length === 0 && maybeDupes.confirmed.length === 0 && dropResp) {
+    await importData(newData, url, headers, true, 11);
   } else {
     await importData(newData, url, headers, true, level + 1);
   }

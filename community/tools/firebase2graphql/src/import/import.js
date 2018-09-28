@@ -31,7 +31,7 @@ const importData = async (jsonDb, url, headers, overwrite, level = 1) => {
             log('');
             log(`Success! Try out the GraphQL API at ${url}/console`, 'green');
           }
-          if (level <= 2) {
+          if (level <= 10) {
             normalize(tables, db, url, headers, level, importData);
           }
         });
