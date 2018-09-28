@@ -15,6 +15,8 @@ This is a CLI tool to convert your Firebase Realtime Database into a Realtime Gr
 
    Note the URL. It will be of the form: `https://<app-name>.herokuapp.com`
 
+   > Check [this page](https://docs.hasura.io/1.0/graphql/manual/deployment/index.html) for other deployment options
+
 2. Go to `Firebase console > Database > Realtime Database` and click on `Export JSON` from the options on the upper right corner
 
    ![firebase-export](assets/firebase-export.png)
