@@ -5,6 +5,8 @@ This is A CLI tool to get instant GraphQL API over your Firebase Realtime Databa
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/firebase2graphql.svg)](https://npmjs.org/package/firebase2graphql)
 
+![GIF](assets/f2g.gif)
+
 ## Quick start
 
 1. Quickly get the GraphQL Engine running by clicking this button:
@@ -15,7 +17,7 @@ This is A CLI tool to get instant GraphQL API over your Firebase Realtime Databa
 
 2. Go to `Firebase console > Database > Realtime Database` and click on `Export JSON` from the options on the upper right corner
 
-   ![firebase-export](https://raw.githubusercontent.com/wawhal/graphql-engine/firbase2graphql/community/tools/firebase2graphql/assets/firebase-export.png) 
+   ![firebase-export](assets/firebase-export.png)
 
    The exported JSON will be something like this:
 
