@@ -4,11 +4,8 @@ status: 200
 response:
   data:
     insert_author:
-      affected_rows: 1
-      returning:
-      - id: 5
-        is_registered: false
-        name: Author 5
+      affected_rows: 0
+      returning: []
 headers:
   X-Hasura-Role: user
   X-Hasura-User-Id: '5'
