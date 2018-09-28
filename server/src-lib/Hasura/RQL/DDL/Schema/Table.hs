@@ -347,7 +347,8 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
   forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ tDefVal, webhook, nr, rint, Q.AltJ mheaders) -> do
     let headerConfs = fromMaybe [] mheaders
     headers <- getHeadersFromConf headerConfs
-    tDef <- decodeValue tDefVal
+    tDefMaybe <- decodeValue tDefVal
+    let tDef = fromMaybeTriggerOpsDef tDefMaybe
     addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook headers
     liftTx $ mkTriggerQ trid trn (QualifiedTable sn tn) tDef
 

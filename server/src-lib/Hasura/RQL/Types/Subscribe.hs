@@ -68,6 +68,9 @@ data SubscribeOpSpecMaybe
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''SubscribeOpSpecMaybe)
 
+fromMaybeSubscribeOpSpec :: SubscribeOpSpecMaybe -> SubscribeOpSpec
+fromMaybeSubscribeOpSpec (SubscribeOpSpecMaybe cols payload) = SubscribeOpSpec cols (fromMaybe SubCStar payload)
+
 data RetryConf
   = RetryConf
   { rcNumRetries  :: !Int
@@ -130,8 +133,11 @@ instance FromJSON CreateEventTriggerQuery where
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
-    mapM_ checkEmptyCols [insert, update, delete]
-    return $ CreateEventTriggerQuery name table insert update delete retryConf webhook headers replace
+    let insert' = fromMaybeSubscribeOpSpec <$> insert
+        update' = fromMaybeSubscribeOpSpec <$> update
+        delete' = fromMaybeSubscribeOpSpec <$> delete
+    mapM_ checkEmptyCols [insert', update', delete']
+    return $ CreateEventTriggerQuery name table insert' update' delete' retryConf webhook headers replace
     where
       checkEmptyCols spec
         = case spec of
@@ -166,9 +172,6 @@ fromMaybeTriggerOpsDef (TriggerOpsDefMaybe ins upd del)
     (fromMaybeSubscribeOpSpec <$> ins)
     (fromMaybeSubscribeOpSpec <$> upd)
     (fromMaybeSubscribeOpSpec <$> del)
-  where
-    fromMaybeSubscribeOpSpec :: SubscribeOpSpecMaybe -> SubscribeOpSpec
-    fromMaybeSubscribeOpSpec (SubscribeOpSpecMaybe cols payload) = SubscribeOpSpec cols (fromMaybe SubCStar payload)
 
 data DeleteEventTriggerQuery
   = DeleteEventTriggerQuery
