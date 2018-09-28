@@ -1,6 +1,7 @@
 # Firebase to GraphQL
 
-This is a CLI tool to convert your Firebase Realtime Database into a Realtime GraphQL API over Postgres.
+A CLI tool to help you try realtime GraphQL on your firebase data. It takes data exported from firebase and imports it into Postgres via Hasura GraphQL engine.
+
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/firebase2graphql.svg)](https://npmjs.org/package/firebase2graphql)
@@ -113,7 +114,7 @@ npm install -g firebase2graphql
 firebase2graphql https://hge.herokuapp.com -d ./path/to/db.json
 ```
 
-**### With access key**
+**With access key**
 
 ```
 firebase2graphql https://hge.herokuapp.com -k <access-key> -d ./path/to/db.json
@@ -141,7 +142,7 @@ firebase2graphql URL [flags]
 
 Once you have imported your data, it is recommended that you make it production ready.
 
-1. Denormalize the data by [removing duplicates](#duplicates).
+1. Normalize the data by [removing duplicates](#duplicates).
 2. Explore the GraphQL Engine Console to play with things such as
    
    - [Relationships](https://docs.hasura.io/1.0/graphql/manual/schema/relationships/index.html)
@@ -216,7 +217,7 @@ If your database already contains tables with the same name as the root fields o
 
 ## Feedback
 
-This project is still in alpha and we are actively looking for feedback about how the tool can be improved. If you facing an issue, feel free to [open one here](https://github.com/hasura/graphql-engine/issues/new). Any positive or negative feedback would be appreciated.
+This project is still in alpha and we are actively looking for feedback about how the tool can be improved. If you are facing an issue, feel free to [open one here](https://github.com/hasura/graphql-engine/issues/new). Any positive or negative feedback would be appreciated.
 
 ---
 Maintained with ♡ by <a href="https://hasura.io">Hasura</a>
