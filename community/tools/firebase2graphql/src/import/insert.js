@@ -124,7 +124,7 @@ const insertData = async (insertOrder, sampleData, tables, url, headers, callbac
           throwError(
             JSON.stringify(response, null, 2),
             () => {
-              log('Message: Schema has been imported. But the data could not be imported due to the following error.', 'yellow');
+              log('Message: Schema has been imported. But the data could not be inserted due to the following error.', 'yellow');
               callback(false);
             }
           );
@@ -144,7 +144,7 @@ const insertData = async (insertOrder, sampleData, tables, url, headers, callbac
     insertHundredRows(0);
   };
   return insertToTable(0);
-};
+  };
 
 module.exports = {
   getInsertOrder,

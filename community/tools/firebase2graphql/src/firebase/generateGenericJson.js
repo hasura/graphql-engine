@@ -90,7 +90,7 @@ const isObjectList = obj => {
 
 const handleTable = (obj, tableName, tableDetectedCallback) => {
   const rowArray = [];
-  const flatten = (object, row) => {
+  const flatten = (object, row, parent) => {
     if (isObjectList(object)) {
       const dummyRow = {...row};
       for (var objListKey in object) {
@@ -116,22 +116,22 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
         if (value === null || value.constructor.name !== 'Object') {
           row[objectKey] = value;
         } else if (value.constructor.name === 'Object') {
-          const pkeyMap = getPrimaryKeys(row);
+          const pkeyMap = getPrimaryKeys(row); 
           if (isList(value)) {
             tableDetectedCallback(
               null,
               {
-                tableName,
+                tableName: parent || tableName,
                 name: objectKey,
                 pkeys: pkeyMap,
                 data: Object.keys(value).map(item => ({__value: item})),
               }
             );
-          } else if (isObjectList(value)) {
+          } else if (isObjectList(value)) { 
             tableDetectedCallback(
               null,
               {
-                tableName,
+                tableName: parent || tableName,
                 name: objectKey,
                 pkeys: pkeyMap,
                 data: handleTable(value, `${tableName}_${objectKey}`, tableDetectedCallback),
@@ -139,15 +139,12 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
             );
           } else if (Object.keys(value).length !== 0) {
             const newUUID = uuid();
-
+            row[`${tableName}_${objectKey}__idself`] = newUUID;
             tableDetectedCallback(
               {
                 tableName,
                 name: objectKey,
-                data: flatten(value, {_idself: newUUID}),
-                callback: id => {
-                  row[`${tableName}_${objectKey}__idself`] = id ? id : newUUID;
-                },
+                data: flatten(value, {_idself: newUUID}, `${tableName}_${objectKey}`),
               }
             );
           }
@@ -197,7 +194,7 @@ const handleJSONDoc = db => {
           for (var pkey in pkeys) {
             newItem[`${parentTableName}_${pkey}`] = pkeys[pkey];
           }
-          if (newItem._id === undefined) {
+          if (newItem._idself === undefined) {
             newItem[getLastId(newItem, 0, 'self')] = uuid();
           }
           return newItem;
@@ -211,22 +208,24 @@ const handleJSONDoc = db => {
       if (!tablesMap[newTableName]) {
         tablesMap[newTableName] = [];
       }
-      if (!tablesMap[newTableName].find(row => { // eslint-disable-line array-callback-return
-        for (var column in row) {
-          if (column.indexOf('_id') !== 0) {
-            if (row[column] !== newItem[column]) {
-              return false;
-            }
-          }
-        }
-        objectRelMetadata.callback(row._idself);
-        return true;
-      })) {
-        tablesMap[newTableName].push(newItem);
-        if (objectRelMetadata.callback) {
-          objectRelMetadata.callback();
-        }
-      }
+      // let existingRow = null;
+      // if (!tablesMap[newTableName].find(row => { // eslint-disable-line array-callback-return
+      //   for (var column in row) {
+      //     if (column.indexOf('_id') !== 0) {
+      //       if (row[column] !== newItem[column]) {
+      //         return false;
+      //       }
+      //     }
+      //   }
+      //   objectRelMetadata.callback(row._idself);
+      //   return true;
+      // })) {
+        // tablesMap[newTableName].push(newItem);
+        // if (objectRelMetadata.callback) {
+        //   objectRelMetadata.callback();
+        // }
+      // }
+      tablesMap[newTableName].push(newItem);
     }
   };
 
