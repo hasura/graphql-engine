@@ -144,7 +144,7 @@ const insertData = async (insertOrder, sampleData, tables, url, headers, callbac
     insertHundredRows(0);
   };
   return insertToTable(0);
-  };
+};
 
 module.exports = {
   getInsertOrder,

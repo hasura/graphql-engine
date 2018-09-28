@@ -116,7 +116,7 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
         if (value === null || value.constructor.name !== 'Object') {
           row[objectKey] = value;
         } else if (value.constructor.name === 'Object') {
-          const pkeyMap = getPrimaryKeys(row); 
+          const pkeyMap = getPrimaryKeys(row);
           if (isList(value)) {
             tableDetectedCallback(
               null,
@@ -127,7 +127,7 @@ const handleTable = (obj, tableName, tableDetectedCallback) => {
                 data: Object.keys(value).map(item => ({__value: item})),
               }
             );
-          } else if (isObjectList(value)) { 
+          } else if (isObjectList(value)) {
             tableDetectedCallback(
               null,
               {
@@ -220,10 +220,10 @@ const handleJSONDoc = db => {
       //   objectRelMetadata.callback(row._idself);
       //   return true;
       // })) {
-        // tablesMap[newTableName].push(newItem);
-        // if (objectRelMetadata.callback) {
-        //   objectRelMetadata.callback();
-        // }
+      // tablesMap[newTableName].push(newItem);
+      // if (objectRelMetadata.callback) {
+      //   objectRelMetadata.callback();
+      // }
       // }
       tablesMap[newTableName].push(newItem);
     }
