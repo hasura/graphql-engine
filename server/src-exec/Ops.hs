@@ -16,6 +16,7 @@ import           TH
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
+import           Hasura.RQL.DDL.Utils         (clearHdbViews)
 import           Hasura.RQL.Types
 import           Hasura.Server.Query
 import           Hasura.SQL.Types
@@ -28,7 +29,7 @@ import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "2"
+curCatalogVer = "3"
 
 initCatalogSafe :: UTCTime -> Q.TxE QErr String
 initCatalogSafe initTime =  do
@@ -157,8 +158,8 @@ getCatalogVersion = do
                     |] () False
   return $ runIdentity $ Q.getRow res
 
-migrateFrom08 :: Q.TxE QErr ()
-migrateFrom08 = Q.catchE defaultTxErrorHandler $ do
+from08To1 :: Q.TxE QErr ()
+from08To1 = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "ALTER TABLE hdb_catalog.hdb_relationship ADD COLUMN comment TEXT NULL" () False
   Q.unitQ "ALTER TABLE hdb_catalog.hdb_permission ADD COLUMN comment TEXT NULL" () False
   Q.unitQ "ALTER TABLE hdb_catalog.hdb_query_template ADD COLUMN comment TEXT NULL" () False
@@ -168,8 +169,8 @@ migrateFrom08 = Q.catchE defaultTxErrorHandler $ do
                  json_build_object('type', 'select', 'args', template_defn->'select');
                 |] () False
 
-migrateFrom1 :: Q.TxE QErr ()
-migrateFrom1 = do
+from1To2 :: Q.TxE QErr ()
+from1To2 = do
   -- migrate database
   Q.Discard () <- Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_1.sql")
@@ -180,27 +181,41 @@ migrateFrom1 = do
   -- set as system defined
   setAsSystemDefined
 
+from2To3 :: Q.TxE QErr ()
+from2To3 = Q.catchE defaultTxErrorHandler $ do
+  Q.unitQ "ALTER TABLE hdb_catalog.event_triggers ADD COLUMN headers JSON" () False
+  Q.unitQ "ALTER TABLE hdb_catalog.event_log ADD COLUMN next_retry_at TIMESTAMP" () False
+  Q.unitQ "CREATE INDEX ON hdb_catalog.event_log (trigger_id)" () False
+  Q.unitQ "CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id)" () False
+
 migrateCatalog :: UTCTime -> Q.TxE QErr String
 migrateCatalog migrationTime = do
   preVer <- getCatalogVersion
   if | preVer == curCatalogVer ->
-       return "migrate: already at the latest version"
-     | preVer == "0.8" -> do
-         migrateFrom08
-         migrateFrom1
-         afterMigrate
-     | preVer == "1" -> do
-         migrateFrom1
-         afterMigrate
+         return "migrate: already at the latest version"
+     | preVer == "0.8" -> from08ToCurrent
+     | preVer == "1"   -> from1ToCurrent
+     | preVer == "2"   -> from2ToCurrent
      | otherwise -> throw400 NotSupported $
                     "migrate: unsupported version : " <> preVer
   where
-    afterMigrate = do
+    from2ToCurrent = do
+      from2To3
+      postMigrate
+
+    from1ToCurrent = do
+      from1To2
+      from2ToCurrent
+
+    from08ToCurrent = do
+      from08To1
+      from1ToCurrent
+
+    postMigrate = do
        -- update the catalog version
        updateVersion
        -- clean hdb_views
-       Q.unitQE defaultTxErrorHandler "DROP SCHEMA IF EXISTS hdb_views CASCADE" () False
-       Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_views" () False
+       Q.catchE defaultTxErrorHandler clearHdbViews
        -- try building the schema cache
        void buildSchemaCache
        return $ "migrate: successfully migrated to " ++ show curCatalogVer
