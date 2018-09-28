@@ -29,8 +29,6 @@ class AddManualRelationship extends Component {
     this.onCloseClicked = this.onCloseClicked.bind(this);
   }
   componentDidMount() {
-    console.log('AddManualRelationship');
-    console.log('Component mounted');
     /* Initializing manual relationship config with current schema and tables */
     this.props.dispatch({
       type: UPDATE_REMOTE_SCHEMA_MANUAL_REL,

@@ -13,7 +13,7 @@ import {
 } from './Actions';
 import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../Notification';
-import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
+import { setTable } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 
 import AddManualRelationship from './AddManualRelationship';
@@ -461,171 +461,6 @@ const AddRelationship = ({
   );
 };
 
-/*
-const AddManualRelationship = ({
-  tableName,
-  allSchemas,
-  schemaList,
-  manualColumns,
-  manualRelInfo,
-  dispatch,
-}) => {
-  const styles = require('../TableModify/Modify.scss');
-  const tableSchema = allSchemas.find(t => t.table_name === tableName);
-  const onTableChange = e => {
-    dispatch(relTableChange(e.target.value));
-  };
-  const onSchemaChange = e => {
-    dispatch({ type: UPDATE_REMOTE_SCHEMA_MANUAL_REL, data: e.target.value });
-    dispatch(fetchTableListBySchema(e.target.value));
-  };
-  const onRelNameChange = e => {
-    dispatch(relNameChanged(e.target.value));
-  };
-  const onRelLColChange = e => {
-    dispatch({ type: REL_SET_LCOL, lcol: e.target.value });
-  };
-  const onRelRColChange = e => {
-    dispatch({ type: REL_SET_RCOL, rcol: e.target.value });
-  };
-  const onRelTypeChange = e => {
-    if (e.target.value === 'object_rel') {
-      dispatch(relTypeChange('true'));
-    } else {
-      dispatch(relTypeChange('false'));
-    }
-  };
-  const onAddRelClicked = () => {
-    dispatch(addRelViewMigrate(tableName));
-  };
-  const onCloseClicked = () => {
-    dispatch(relManualAddClicked());
-  };
-  return (
-    <div>
-      <div className={styles.subheading_text}>
-        {' '}
-        Add a relationship manually{' '}
-      </div>
-      <div className="form-group">
-        <div className={`${styles.relBlockInline} ${styles.relBlockLeft}`}>
-          Relationship Type
-        </div>
-        <div className={`${styles.relBlockInline} ${styles.relBlockRight}`}>
-          <select
-            className="form-control"
-            onChange={onRelTypeChange}
-            data-test="rel-type"
-          >
-            <option key="select_type" value="select_type">
-              Select relationship type
-            </option>
-            <option key="object" value="object_rel">
-              Object Relationship
-            </option>
-            <option key="array" value="array_rel">
-              Array Relationship
-            </option>
-          </select>
-        </div>
-      </div>
-      <div className="form-group">
-        <div className={`${styles.relBlockInline} ${styles.relBlockLeft}`}>
-          Relationship Name
-        </div>
-        <div className={`${styles.relBlockInline} ${styles.relBlockRight}`}>
-          <input
-            onChange={onRelNameChange}
-            className="form-control"
-            placeholder="Enter relationship name"
-            data-test="rel-name"
-          />
-        </div>
-      </div>
-      <div className="form-group">
-        <div className={`${styles.relBlockInline} ${styles.relBlockLeft}`}>
-          Configuration
-        </div>
-        <select
-          className={`${styles.relBlockInline} form-control ${
-            styles.manual_rel_select
-          }`}
-          onChange={onRelLColChange}
-          data-test="current-col"
-        >
-          <option key="default_column">Current Column</option>
-          {tableSchema.columns.map((c, i) => (
-            <option key={c + i} value={c.column_name}>
-              {c.column_name}
-            </option>
-          ))}
-        </select>
-        <span> :: </span>
-        <div className={styles.relBlockInline}>
-          <select
-            className={'form-control'}
-            onChange={onSchemaChange}
-            data-test="remote-schema"
-            value={manualRelInfo.remoteSchema}
-          >
-            <option key="default_table">Remote Schema</option>
-            {schemaList.map((s, i) => (
-              <option key={i} value={s.schema_name}>
-                {s.schema_name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <span> . </span>
-        <div className={styles.relBlockInline}>
-          <select
-            className={'form-control'}
-            onChange={onTableChange}
-            data-test="remote-table"
-          >
-            <option key="default_table">Remote Table</option>
-            {manualRelInfo.tables.map((s, i) => (
-              <option key={i} value={s.table_name}>
-                {s.table_name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <span> -> </span>
-        <div className={styles.relBlockInline}>
-          <select
-            className={'form-control'}
-            onChange={onRelRColChange}
-            data-test="remote-table-col"
-          >
-            <option key="default_table_column">Remote Table Column:</option>
-            {manualColumns.map((c, i) => (
-              <option key={c + i} value={c.column_name}>
-                {c.column_name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-      <button
-        className={styles.yellow_button}
-        onClick={onAddRelClicked}
-        data-test="table-add-manual-relationship"
-      >
-        Add
-      </button>
-      <button
-        className={styles.add_mar_left + ' btn btn-default btn-sm'}
-        onClick={onCloseClicked}
-        data-test="table-close-manual-relationship"
-      >
-        Close
-      </button>
-    </div>
-  );
-};
-*/
-
 class Relationships extends Component {
   componentDidMount() {
     this.props.dispatch({ type: RESET });
@@ -798,11 +633,6 @@ class Relationships extends Component {
                 className="btn btn-sm btn-default"
                 onClick={() => {
                   dispatch(relManualAddClicked());
-                  // Sourcing the current schema into manual relationship
-                  dispatch({
-                    type: UPDATE_REMOTE_SCHEMA_MANUAL_REL,
-                    data: this.props.currentSchema,
-                  });
                 }}
                 data-test="add-manual-relationship"
               >

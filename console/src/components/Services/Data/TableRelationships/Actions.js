@@ -162,8 +162,13 @@ const relTableChange = tableName => (dispatch, getState) => {
   const tableSchema = getState().tables.modify.relAdd.manualRelInfo.tables.find(
     t => t.table_name === tableName
   );
-  const tableColumns = tableSchema.columns;
-  dispatch({ type: REL_SET_MANUAL_COLUMNS, data: tableColumns });
+  if (tableSchema) {
+    const tableColumns = tableSchema.columns;
+    dispatch({ type: REL_SET_MANUAL_COLUMNS, data: tableColumns });
+  } else {
+    console.error(`cannot find table: ${tableName}`);
+    dispatch({ type: REL_SET_MANUAL_COLUMNS, data: [] });
+  }
 };
 
 const addRelViewMigrate = tableName => (dispatch, getState) => {
