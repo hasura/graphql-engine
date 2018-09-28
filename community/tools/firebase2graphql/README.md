@@ -183,6 +183,51 @@ Once you have imported your data, it is recommended that you make it production 
 
 3. Set appropriate permissions. GraphQL Engine comes with [fine grained control layer](https://docs.hasura.io/1.0/graphql/manual/auth/index.html) that can be integrated with any standard Auth provider.
 
+## Usage Comparison - Firebase SDK vs GraphQL
+
+A typical query to do a single read from the database using [Firebase SDK](https://firebase.google.com/docs/reference/), (javascript) would look something like:
+
+```javascript
+firebase.database().ref('/users/' + userId).once('value').then(function(snapshot) {
+  var username = (snapshot.val() && snapshot.val().username) || 'Anonymous';
+  // ...
+});
+```
+
+Equivalent GraphQL Query would look like:
+
+```graphql
+query {
+  users(where: {uid: {_eq: userId}}) {
+    uid,
+    username
+  }
+}
+```
+
+Similarly a write into database using Firebase SDK, would look something like:
+
+```javascript
+firebase.database().ref('users/' + userId).set({
+    username: name,
+    email: email,
+    profile_picture : imageUrl
+  });
+```
+
+And the equivalent GraphQL Mutation would look like:
+
+```graphql
+mutation {
+  insert_users(objects:[{
+      uid: userId
+      username: name,
+      email: email,
+      profile_picture: imageUrl
+    }])
+}
+```
+
 ## Things to know about implementation
 
 ### Duplicates
