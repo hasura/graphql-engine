@@ -1,6 +1,6 @@
 # Firebase to GraphQL
 
-This is A CLI tool to get instant GraphQL API over your Firebase Realtime Database dump.
+This is a CLI tool to convert your Firebase Realtime Database into a Realtime GraphQL API over Postgres.
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/firebase2graphql.svg)](https://npmjs.org/package/firebase2graphql)
@@ -74,7 +74,7 @@ This is A CLI tool to get instant GraphQL API over your Firebase Realtime Databa
 4. Use the CLI to import the data:
 
     ```
-    $ npx firebase2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json
+    npx firebase2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json
     ```
 
 5. That's it. You can now go to your GraphQL Engine URL `https://<app-name>.herokuapp.com` and make awesome GraphQL Queries like:
@@ -108,19 +108,19 @@ npm install -g firebase2graphql
 **Without access key**
 
 ```
-$ firebase2graphql https://hge.herokuapp.com -d ./path/to/db.json
+firebase2graphql https://hge.herokuapp.com -d ./path/to/db.json
 ```
 
 **### With access key**
 
 ```
-$ firebase2graphql https://hge.herokuapp.com -k <access-key> -d ./path/to/db.json
+firebase2graphql https://hge.herokuapp.com -k <access-key> -d ./path/to/db.json
 ```
 
 ## Command
 
 ```bash
-$ firebase2graphql URL [flags]
+firebase2graphql URL [flags]
 ```
 
 ### Args
@@ -210,7 +210,7 @@ In such cases, you have three choices:
 
 ### Overwrite
 
-If your database already contains tables with the same name as the root fields of your JSON database, the command will face. If you want to overwrite the database anyway, you should provide an additional flag "--overwrite".
+If your database already contains tables with the same name as the root fields of your JSON database, the command will fail. If you want to overwrite the database anyway, you should provide an additional flag "--overwrite".
 
 ## Feedback
 

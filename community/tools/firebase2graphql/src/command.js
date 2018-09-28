@@ -69,12 +69,14 @@ class Firebase2GraphQL extends Command {
 Firebase2GraphQL.description = `firebase2graphql: Import JSON data to Hasura GraphQL Engine
 # Examples:
 
-# Import data from a Firebase JSON database to Hasura GraphQL Engine and normalize it
-json2graphql https://hge.herokuapp.com --db=./path/to/db.json --normalize
-
-# Import data from a Firebase JSON database to Hasura GraphQL Engine without normalizing it
+# Import data from a Firebase JSON database to Hasura GraphQL Engine without access key
 json2graphql https://hge.herokuapp.com --db=./path/to/db.json
 
+# Import data from a Firebase JSON database to Hasura GraphQL Engine with access key
+json2graphql https://hge.herokuapp.com --db=./path/to/db.json -k <access-key>
+
+# Import data from a Firebase JSON database to Hasura GraphQL Engine while normalizing it
+json2graphql https://hge.herokuapp.com --db=./path/to/db.json -n
 `;
 
 Firebase2GraphQL.usage = 'URL [-k KEY]';
