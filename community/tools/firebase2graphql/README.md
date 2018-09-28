@@ -21,72 +21,49 @@ This is A CLI tool to get instant GraphQL API over your Firebase Realtime Databa
 
     ```json
     {
-      "Articles": {
-        "A1": {
-          "Title": "Title1",
-          "Body": "Body1",
-          "Author": {
-            "Name": "AName1",
-            "Age": 11
-          },
-          "Comments": {
-            "C1": {
-              "Body": "Comment1",
-              "Author": {
-                "Name": "AName2"
-              }
-            },
-            "C2": {
-              "Body": "Comment2",
-              "Author": {
-                "Name": "AName1"
-              }
-            }
-          }
+      "posts" : {
+        "-LMbLFOAW2q6GO1bD-5g" : {
+          "author" : "Rishichandra Wawhal",
+          "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+          "body" : "My first post content\nAnd body\nANd structure",
+          "starCount" : 0,
+          "title" : "My first post",
+          "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
         },
-        "A2": {
-          "Title": "Title2",
-          "Body": "Body2",
-          "Author": {
-            "Name": "AName2",
-            "Age": 11
+        "-LMbLIv6VKHYul7p_PZ-" : {
+          "author" : "Rishichandra Wawhal",
+          "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+          "body" : "AKsdjak\naklsdjaskldjklas\nasdklfjaklsdfjklsda\nasdklfjasklf",
+          "starCount" : 0,
+          "title" : "Whatta proaaa",
+          "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+        }
+      },
+      "user-posts" : {
+        "4UPmbcaqZKT2NdAAqBahXj4tHYN2" : {
+          "-LMbLFOAW2q6GO1bD-5g" : {
+            "author" : "Rishichandra Wawhal",
+            "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+            "body" : "My first post content\nAnd body\nANd structure",
+            "starCount" : 0,
+            "title" : "My first post",
+            "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
           },
-          "Comments": {
-            "C3": {
-              "Body": "Comment1",
-              "Author": {
-                "Name": "AName1"
-              }
-            },
-            "C4": {
-              "Body": "Comment2",
-              "Author": {
-                "Name": "AName2"
-              }
-            }
+          "-LMbLIv6VKHYul7p_PZ-" : {
+            "author" : "Rishichandra Wawhal",
+            "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+            "body" : "AKsdjak\naklsdjaskldjklas\nasdklfjaklsdfjklsda\nasdklfjasklf",
+            "starCount" : 0,
+            "title" : "Whatta proaaa",
+            "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
           }
         }
       },
-      "Authors": {
-        "AT1": {
-          "Name": "AName1",
-          "Age": 24,
-          "Sex": "F",
-          "Articles": {
-            "A1": {
-              "Title": "Title1",
-            }
-          }
-        },
-        "AT2": {
-          "Name": "AName2",
-          "Age": 25,
-          "Sex": "M",
-          "Articles": {
-            "A1": {
-              "Title": "Title2"
-            }
-          }
+      "users" : {
+        "4UPmbcaqZKT2NdAAqBahXj4tHYN2" : {
+          "email" : "rishichandrawawhal@gmail.com",
+          "profile_picture" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+          "username" : "Rishichandra Wawhal"
         }
       }
     }
@@ -102,26 +79,14 @@ This is A CLI tool to get instant GraphQL API over your Firebase Realtime Databa
 
     ```graphql
     query {
-      Authors (
-        order_by:Name_asc
-      ){
-        Name
-        Age
-        Articles (
-          where: { IsUnpublished: { _eq: false }}
-        ){
-          Title
-          Body
-          Comments (
-            order_by:Date_asc
-          ){
-            Body
-            Date
-            Authors {
-              Name
-            }
-          }
-        }
+      posts {
+        title
+        body
+        author
+      }
+      users {
+        email
+        username
       }
     }
     ```
@@ -193,7 +158,7 @@ In such cases, you have three choices:
 
 1. Use the API as such if you prefer the exact API.
 2. Go to the UI Console and delete the duplicates and normalize the database as you feel fit.
-3. (Recommended) Use the `--normalize` flag. In this case, the CLI will detect duplicates and make appropriate relationships between root nodes. (This feature is experimental and needs more test cases to get stable. Contributions are welcome) 
+3. (Experimental) Use the `--normalize` flag. In this case, the CLI will detect duplicates and make appropriate relationships between root nodes. (This feature is experimental and needs more test cases to get stable. Contributions are welcome) 
  
 
 ### Overwrite
