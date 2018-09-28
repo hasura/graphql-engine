@@ -21,51 +21,75 @@ This is A CLI tool to get instant GraphQL API over your Firebase Realtime Databa
 
     ```json
     {
-      "posts" : {
-        "-LMbLFOAW2q6GO1bD-5g" : {
-          "author" : "Rishichandra Wawhal",
-          "starCount" : 0,
-          "title" : "My first post",
-          "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
-        },
-        "-LMbLIv6VKHYul7p_PZ-" : {
-          "author" : "Rishichandra Wawhal",
-          "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
-          "body" : "AKsdjak\naklsdjaskldjklas\nasdklfjaklsdfjklsda\nasdklfjasklf",
-          "starCount" : 0,
-          "title" : "Whatta proaaa",
-          "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
-        }
-      },
-      "user-posts" : {
-        "4UPmbcaqZKT2NdAAqBahXj4tHYN2" : {
-          "-LMbLFOAW2q6GO1bD-5g" : {
-            "author" : "Rishichandra Wawhal",
-            "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
-            "body" : "My first post content\nAnd body\nANd structure",
-            "starCount" : 0,
-            "title" : "My first post",
-            "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+      "Articles": {
+        "A1": {
+          "Title": "Title1",
+          "Body": "Body1",
+          "Author": {
+            "Name": "AName1",
+            "Age": 11
           },
-          "-LMbLIv6VKHYul7p_PZ-" : {
-            "author" : "Rishichandra Wawhal",
-            "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
-            "body" : "AKsdjak\naklsdjaskldjklas\nasdklfjaklsdfjklsda\nasdklfjasklf",
-            "starCount" : 0,
-            "title" : "Whatta proaaa",
-            "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+          "Comments": {
+            "C1": {
+              "Body": "Comment1",
+              "Author": {
+                "Name": "AName2"
+              }
+            },
+            "C2": {
+              "Body": "Comment2",
+              "Author": {
+                "Name": "AName1"
+              }
+            }
+          }
+        },
+        "A2": {
+          "Title": "Title2",
+          "Body": "Body2",
+          "Author": {
+            "Name": "AName2",
+            "Age": 11
+          },
+          "Comments": {
+            "C3": {
+              "Body": "Comment1",
+              "Author": {
+                "Name": "AName1"
+              }
+            },
+            "C4": {
+              "Body": "Comment2",
+              "Author": {
+                "Name": "AName2"
+              }
+            }
           }
         }
       },
-      "users" : {
-        "4UPmbcaqZKT2NdAAqBahXj4tHYN2" : {
-          "email" : "rishichandrawawhal@gmail.com",
-          "profile_picture" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
-          "username" : "Rishichandra Wawhal"
+      "Authors": {
+        "AT1": {
+          "Name": "AName1",
+          "Age": 24,
+          "Sex": "F",
+          "Articles": {
+            "A1": {
+              "Title": "Title1",
+            }
+          }
+        },
+        "AT2": {
+          "Name": "AName2",
+          "Age": 25,
+          "Sex": "M",
+          "Articles": {
+            "A1": {
+              "Title": "Title2"
+            }
+          }
         }
       }
     }
- 
     ```
 
 4. Use the CLI to import the data:
@@ -74,18 +98,30 @@ This is A CLI tool to get instant GraphQL API over your Firebase Realtime Databa
     $ npx firebase2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json -n
     ```
 
-5. That's it. You can go to your GraphQL Engine URL `https://<app-name>.herokuapp.com` and start querying this data over GraphQL:
+5. That's it. You can now go to your GraphQL Engine URL `https://<app-name>.herokuapp.com` and make awesome GraphQL Queries like:
 
     ```graphql
     query {
-      posts (
-        order_by: title_asc,
-        limit: 10
-      ) {
-        _id
-        title
-        body
-        author
+      Authors (
+        order_by:Name_asc
+      ){
+        Name
+        Age
+        Articles (
+          where: { IsUnpublished: { _eq: false }}
+        ){
+          Title
+          Body
+          Comments (
+            order_by:Date_asc
+          ){
+            Body
+            Date
+            Authors {
+              Name
+            }
+          }
+        }
       }
     }
     ```
@@ -127,7 +163,8 @@ $ firebase2graphql URL [flags]
 ### Options
 
 - `-d --db`: path to the JS file that exports your sample JSON database
-- `-o --overwrite`: Overwrite tables if they already exist in database
+- `-n --normalize`: normalize the schema while importing
+- `-o --overwrite`: overwrite tables if they already exist in database
 - `-v --version`: show CLI version
 - `-h, --help`: show CLI help
 
@@ -135,131 +172,29 @@ $ firebase2graphql URL [flags]
 
 Once you have imported your data, it is recommended that you make it production ready.
 
-1. Denormalize the data by removing duplicates. Check [this section](#duplicates) for an example
+1. Denormalize the data by [removing duplicates](#duplicates).
 2. Explore the GraphQL Engine Console to play with things such as
    
-   a. Relationships
-   b. Permissions
+   a. [Relationships](https://docs.hasura.io/1.0/graphql/manual/schema/relationships/index.html)
+   b. [Permissions](https://docs.hasura.io/1.0/graphql/manual/auth/index.html)
    c. Using SQL
-   d. Set up async business logic using event triggers
-   e. Create new tables
+   d. [Set up async business logic using event triggers](https://docs.hasura.io/1.0/graphql/manual/event-triggers/index.html)
+   e. [Create new tables](https://docs.hasura.io/1.0/graphql/manual/schema/basics.html)
 
-3. Set appropriate permissions. GraphQL Engine comes with fine grained control layer that can be integrated with any standard Auth provider.
+3. Set appropriate permissions. GraphQL Engine comes with [fine grained control layer](https://docs.hasura.io/1.0/graphql/manual/auth/index.html) that can be integrated with any standard Auth provider.
 
 ## Things to know about implementation
 
 ### Duplicates
 
-1. All top level nodes are converted to tables
-2. You will most likely end up with duplicate tables. You might want to normalize your data based on these suggestions.
+By default, the CLI gives you the exact API that you originally had in Firebase (of course, over GraphQL). But in that case, some duplicate tables might be created and you might not be able to leverage the complete power of GraphQL and Postgres.
 
-   Consider this Firebase database for instance:
+In such cases, you have three choices:
 
-   ```json
-    {
-      "articles": {
-        "articleuid1": {
-          "title": "Title1",
-          "body": "Body1",
-          "author": {
-            "name": "Author1",
-            "age": 24
-          }
-        },
-        "articleuid2": {
-          "title": "Title2",
-           "body": "Body3",
-          "author": {
-            "name": "Author2",
-            "age": 30
-          }
-        }
-      },
-      "authors": {
-        "authoruid1": {
-          "name": "Author1",
-          "age": 24
-        },
-        "authoruid2": {
-          "name": "Author2",
-          "age": 30
-        }
-      }
-    }  
-   ```
-
-   For this JSON file, the Query root of the GraphQL schema would be:
-
-   ```graphql
-    type query_root {
-      articles(
-        limit: Int
-        offset: Int
-        order_by: [articles_order_by!]
-        where: articles_bool_exp
-      ): [articles!]!
-
-      articles_author(
-        limit: Int
-        offset: Int
-        order_by: [articles_author_order_by!]
-        where: articles_author_bool_exp
-      ): [articles_author!]!
-
-      articles_author_by_pk(_id: uuid!): articles_author
-
-      articles_by_pk(_id: String!): articles
-
-      authors(
-        limit: Int
-        offset: Int
-        order_by: [authors_order_by!]
-        where: authors_bool_exp
-      ): [authors!]!
-      
-      authors_by_pk(_id: String!): authors
-    }
-   ```
-
-   where,
-
-   ```graphql
-    type articles {
-      _id: uuid! 
-      body: String
-      title: String
-      articles_author: articles_author
-      articles_author__id: uuid
-    }
-
-    type articles_author {
-      _id: uuid!
-      age: bigint
-      articles(
-        limit: Int
-        offset: Int
-        order_by: [articles_order_by!]
-        where: articles_bool_exp
-      ): [articles!]!
-      name: String
-    }
-
-    type authors {
-      _id: uuid!
-      age: bigint
-      name: String
-    }
-   ```
-
-   As you see, the nodes `articles_author` and `authors` are almost the same, except the relationship with the `articles` table. This is an example of duplicate data.
-
-   In such cases, you might want to delete one of the tables and make the required relationships with custom names from the console. For the above example, these steps would be:
-
-   a. Del 
-
-   If the CLI detects any such duplicate tables, it will warn you about them after the import is complete.
-
-   > The suggestions are mere guesses made by looking at the data in your JSON. Therefore, they might not be correct at times. 
+1. Use the API as such if you prefer the exact API.
+2. Go to the UI Console and delete the duplicates and normalize the database as you feel fit.
+3. (Recommended) Use the `--normalize` flag. In this case, the CLI will detect duplicates and make appropriate relationships between root nodes. (This feature is experimental and needs more test cases to get stable. Contributions are welcome) 
+ 
 
 ### Overwrite
 
@@ -267,7 +202,7 @@ If your database already contains tables with the same name as the root fields o
 
 ## Feedback
 
-This project is still in alpha and we are actively looking for feedback about how the tool can be improved. If you facing an issue, feel free to [open one here](https://github.com/hasura/graphql-engine/issues/new). Any positive or negative feedback would be appreciated. 
+This project is still in alpha and we are actively looking for feedback about how the tool can be improved. If you facing an issue, feel free to [open one here](https://github.com/hasura/graphql-engine/issues/new). Any positive or negative feedback would be appreciated.
 
 ---
 Maintained with ♡ by <a href="https://hasura.io">Hasura</a>

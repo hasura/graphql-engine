@@ -22,3 +22,7 @@ To run the tests locally, you will need an instance of [Hasura GraphQL Engine](h
 ```
 $ TEST_HGE_URL=https://hge.herokuapp.com npm test
 ```
+
+### Test data sets
+
+This project needs a lot of testing. Firebase RTD being a NoSQL database, there are very less data sets available on the web. Any links to complicated datasets will be considered as valid contributions.

@@ -104,7 +104,7 @@ const categorizeDupeCandidates = async (dupes, url, headers) => {
   return newDupes;
 };
 
-const patchDupeDependentTables = (table, dupe, tables, data) => {
+const patchDupeDependentTables = (table, dupe, tables, data, pkeyMap) => {
   const patchedData = {};
   tables.forEach(otherTable => {
     if (otherTable.name !== table && otherTable.name !== dupe) {
@@ -113,8 +113,8 @@ const patchDupeDependentTables = (table, dupe, tables, data) => {
           const newRow = {
             ...row,
           };
-          newRow[`${table}_id`] = row[`${dupe}__idself`];
-          delete newRow[`${dupe}_idself`];
+          newRow[`${table}__id`] = pkeyMap[row[`${dupe}__idself`]];
+          delete newRow[`${dupe}__idself`];
           return newRow;
         });
         patchedData[otherTable.name] = newData;
@@ -165,6 +165,7 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
     }
     const table = tables.find(t => t.name === table1);
     const dupe = tables.find(t => t.name === table2);
+    const pkeyMap = {};
     newData[table.name].forEach(tableRow => {
       const dLength = data[dupe.name].length;
       for (let j = 0; j < dLength; j++) {
@@ -172,7 +173,12 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
         if (columnList.every(colName => dupeRow[colName] === tableRow[colName])) {
           const item = {};
           for (var key in dupeRow) {
-            if (key.indexOf('_idself') !== 0) {
+            if (key.indexOf('_idself') === 0) {
+              if (!pkeyMap[dupeRow]) {
+                pkeyMap.dupeRow = {};
+              }
+              pkeyMap[dupeRow._idself] = tableRow._id;
+            } else {
               item[key.replace(dupe.name + '_', table.name + '_')] = dupeRow[key];
             }
           }
@@ -188,7 +194,7 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
     delete newData[dupe.name];
     newData = {
       ...newData,
-      ...patchDupeDependentTables(table.name, dupe.name, tables, newData),
+      ...patchDupeDependentTables(table.name, dupe.name, tables, newData, pkeyMap),
     };
     handle(
       dupes.filter(d => d.table1 !== table1 && d.table2 !== table1 && d.table1 !== table2 && d.table2 !== table2),
