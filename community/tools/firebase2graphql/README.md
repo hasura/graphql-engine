@@ -142,11 +142,11 @@ Once you have imported your data, it is recommended that you make it production 
 1. Denormalize the data by [removing duplicates](#duplicates).
 2. Explore the GraphQL Engine Console to play with things such as
    
-   a. [Relationships](https://docs.hasura.io/1.0/graphql/manual/schema/relationships/index.html)
-   b. [Permissions](https://docs.hasura.io/1.0/graphql/manual/auth/index.html)
-   c. Using SQL
-   d. [Set up async business logic using event triggers](https://docs.hasura.io/1.0/graphql/manual/event-triggers/index.html)
-   e. [Create new tables](https://docs.hasura.io/1.0/graphql/manual/schema/basics.html)
+   - [Relationships](https://docs.hasura.io/1.0/graphql/manual/schema/relationships/index.html)
+   - [Permissions](https://docs.hasura.io/1.0/graphql/manual/auth/index.html)
+   - Using SQL
+   - [Set up async business logic using event triggers](https://docs.hasura.io/1.0/graphql/manual/event-triggers/index.html)
+   - [Create new tables](https://docs.hasura.io/1.0/graphql/manual/schema/basics.html)
 
 3. Set appropriate permissions. GraphQL Engine comes with [fine grained control layer](https://docs.hasura.io/1.0/graphql/manual/auth/index.html) that can be integrated with any standard Auth provider.
 
