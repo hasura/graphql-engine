@@ -126,7 +126,7 @@ data WSServerEnv
   }
 
 onConn :: L.Logger -> WS.OnConnH WSConnData
-onConn logger wsId requestHead = do
+onConn (L.Logger logger) wsId requestHead = do
   res <- runExceptT checkPath
   either reject accept res
   where
@@ -196,7 +196,7 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndSend $ do
       liftIO $ logger $ WSLog wsId $ EOperation opId ODCompleted
 
   where
-    (WSServerEnv logger _ runTx lqMap gCtxMapRef _) = serverEnv
+    (WSServerEnv (L.Logger logger) _ runTx lqMap gCtxMapRef _) = serverEnv
     wsId = WS.getWSId wsConn
     (WSConnData userInfoR opMap) = WS.getData wsConn
 
@@ -237,7 +237,7 @@ onMessage authMode serverEnv wsConn msgRaw =
       CMStop stopMsg    -> onStop serverEnv wsConn stopMsg
       CMConnTerm        -> WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
   where
-    logger = _wseLogger serverEnv
+    logger = L.unLogger $ _wseLogger serverEnv
 
 onStop :: WSServerEnv -> WSConn -> StopMsg -> IO ()
 onStop serverEnv wsConn (StopMsg opId) = do
@@ -250,7 +250,7 @@ onStop serverEnv wsConn (StopMsg opId) = do
     Nothing    -> return ()
   STM.atomically $ STMMap.delete opId opMap
   where
-    logger = _wseLogger serverEnv
+    logger = L.unLogger $ _wseLogger serverEnv
     lqMap  = _wseLiveQMap serverEnv
     wsId   = WS.getWSId wsConn
     opMap  = _wscOpMap $ WS.getData wsConn
@@ -258,7 +258,7 @@ onStop serverEnv wsConn (StopMsg opId) = do
 onConnInit
   :: (MonadIO m)
   => L.Logger -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
-onConnInit logger manager wsConn authMode connParamsM = do
+onConnInit (L.Logger logger) manager wsConn authMode connParamsM = do
   res <- runExceptT $ getUserInfo logger manager headers authMode
   case res of
     Left e  ->
@@ -281,7 +281,7 @@ onClose
   -> WS.ConnectionException
   -> WSConn
   -> IO ()
-onClose logger lqMap _ wsConn = do
+onClose (L.Logger logger) lqMap _ wsConn = do
   logger $ WSLog wsId EClosed
   operations <- STM.atomically $ ListT.toList $ STMMap.stream opMap
   void $ A.forConcurrently operations $ \(opId, liveQ) ->

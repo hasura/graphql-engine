@@ -100,6 +100,12 @@ class TestGraphqlInsertPermission(object):
     def test_student_role_insert_check_bio_fail(self, hge_ctx):
        check_query_f(hge_ctx, self.dir + "/author_student_role_insert_check_bio_fail.yaml")
 
+    def test_company_user_role_insert(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/company_user_role.yaml")
+
+    def test_company_user_role_insert_on_conflict(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/company_user_role_on_conflict.yaml")
+
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
         self.dir = "queries/graphql_mutation/insert/permissions"

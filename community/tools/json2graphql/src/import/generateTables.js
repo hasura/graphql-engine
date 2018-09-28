@@ -1,5 +1,4 @@
-const {CLIError} = require('@oclif/errors');
-const {cli} = require('cli-ux');
+const throwError = require('./error');
 
 const getDataType = (data, column) => {
   if (typeof data === 'number') {
@@ -17,9 +16,7 @@ const getDataType = (data, column) => {
   if (data.constructor.name === 'Object') {
     return 'json';
   }
-  cli.action.stop('Error');
-  console.log(`Message: invalid data type given for column ${column}: ${typeof data}`);
-  process.exit(1);
+  throwError(`message: invalid data type given for column ${column}: ${typeof data}`);
 };
 
 const isForeign = (name, db) => {
@@ -27,7 +24,7 @@ const isForeign = (name, db) => {
   if (l > 3) {
     if (name.substring(l - 3, l) === '_id' &&
         Object.keys(db).find(tableName => {
-          return tableName === name.substring(0, l - 3) + 's';
+          return tableName === name.substring(0, l - 3);
         })) {
       return true;
     }
@@ -51,9 +48,7 @@ const getColumnData = (dataArray, db) => {
   Object.keys(refColumns).forEach(column => {
     const columnMetadata = {};
     if (!column) {
-      cli.action.stop('Error');
-      console.log("Message: column names can't be empty strings");
-      process.exit(1);
+      throwError("message: column names can't be empty strings");
     }
     columnMetadata.name = column;
     const sampleData = refColumns[column];
@@ -66,7 +61,7 @@ const getColumnData = (dataArray, db) => {
 
 const hasPrimaryKey = dataObj => {
   let has = true;
-  dataObj.forEach((obj) => {
+  dataObj.forEach(obj => {
     if (!Object.keys(obj).find(name => name === 'id')) {
       has = false;
     }
@@ -79,16 +74,14 @@ const generate = db => {
   Object.keys(db).forEach(rootField => {
     const tableMetadata = {};
     if (!hasPrimaryKey(db[rootField], rootField)) {
-      cli.action.stop('Error');
-      console.log(`Message: A unique column with name "id" and type integer must present in table "${rootField}"`);
-      process.exit(1);
+      throwError(`message: a unique column with name "id" and type integer must present in table "${rootField}"`);
     }
     tableMetadata.name = rootField;
     tableMetadata.columns = getColumnData(db[rootField], db);
     tableMetadata.dependencies = [];
     tableMetadata.columns.forEach(column => {
       if (column.isForeign) {
-        tableMetadata.dependencies.push(column.name.substring(0, column.name.length - 3) + 's');
+        tableMetadata.dependencies.push(column.name.substring(0, column.name.length - 3));
       }
     });
     metaData.push(tableMetadata);

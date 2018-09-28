@@ -19,11 +19,11 @@ This is A CLI tool to import a schema and data to Postgres using JSON data. You 
 
     ```js
     module.exports = {
-        users: [
+        user: [
             { id: 123, name: "John Doe" },
             { id: 456, name: "Jane Doe" }
         ],
-        cities: [
+        city: [
             { id: 987, name: "Stockholm", country: "Sweden" },
             { id: 995, name: "Sydney", country: "Australia" }
         ]
@@ -41,11 +41,11 @@ This is A CLI tool to import a schema and data to Postgres using JSON data. You 
 
     ```graphql
     query {
-      users {
+      user {
         id
         name
       }
-      cities {
+      city {
         id
         name
         country
@@ -102,19 +102,19 @@ $ gq URL [flags]
 
 You can also define foreign keys and relationships in your JSON sample data. The CLI infers foreign keys and relationships from column names and table names.
 
-For example, in the following data set, the `posts` table has a field called `user_id` which is a foreign key to the `id`  column of table `users`. Also, the `comments` table has a field called `post_id` which is a foreign key to the `id`  column of table `posts`.
+For example, in the following data set, the `posts` table has a field called `users_id` which is a foreign key to the `id`  column of table `users`. Also, the `comments` table has a field called `posts_id` which is a foreign key to the `id`  column of table `posts`.
 
 ```js
 module.exports = {
-    posts: [
+    post: [
         { id: 1, title: "Lorem Ipsum", views: 254, user_id: 123 },
         { id: 2, title: "Sic Dolor amet", views: 65, user_id: 456 },
     ],
-    users: [
+    user: [
         { id: 123, name: "John Doe" },
         { id: 456, name: "Jane Doe" }
     ],
-    comments: [
+    comment: [
         { id: 987, post_id: 1, body: "Consectetur adipiscing elit" },
         { id: 995, post_id: 1, body: "Nam molestie pellentesque dui" }
     ]
@@ -131,18 +131,58 @@ Now you can make complicated queries like:
 
 ```graphql
 query {
-  users {
+  post {
     id
-    name
-    postsByUsersId {
+    title
+    views
+    userByUserId {
       id
-      title
-      views
-      commentsByPostsId {
-        id
-        body
-      }
+      name
     }
+    commentsByPostId {
+      id
+      body
+    }
+  }
+}
+```
+
+The response would be:
+
+```json
+{
+  "data": {
+    "post": [
+      {
+        "userByUserId": {
+          "name": "John Doe",
+          "id": 123
+        },
+        "views": 254,
+        "id": 1,
+        "title": "Lorem Ipsum",
+        "commentsByPostId": [
+          {
+            "body": "Consectetur adipiscing elit",
+            "id": 987
+          },
+          {
+            "body": "Nam molestie pellentesque dui",
+            "id": 995
+          }
+        ]
+      },
+      {
+        "userByUserId": {
+          "name": "Jane Doe",
+          "id": 456
+        },
+        "views": 65,
+        "id": 2,
+        "title": "Sic Dolor amet",
+        "commentsByPostId": []
+      }
+    ]
   }
 }
 ```

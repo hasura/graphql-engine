@@ -66,6 +66,7 @@ module Hasura.RQL.Types.SchemaCache
        , delEventTriggerFromCache
        , getOpInfo
        , EventTriggerInfo(..)
+       , EventTriggerInfoMap
        , OpTriggerInfo(..)
 
        , TableObjId(..)
@@ -356,6 +357,7 @@ data EventTriggerInfo
    , etiDelete    :: !(Maybe OpTriggerInfo)
    , etiRetryConf :: !RetryConf
    , etiWebhook   :: !T.Text
+   , etiHeaders   :: ![(HeaderName, T.Text)]
    } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)
@@ -593,8 +595,9 @@ addEventTriggerToCache
   -> TriggerOpsDef
   -> RetryConf
   -> T.Text
+  -> [(HeaderName, T.Text)]
   -> m ()
-addEventTriggerToCache qt trid trn tdef rconf webhook =
+addEventTriggerToCache qt trid trn tdef rconf webhook headers =
   modTableInCache modEventTriggerInfo qt
   where
     modEventTriggerInfo ti = do
@@ -606,6 +609,7 @@ addEventTriggerToCache qt trid trn tdef rconf webhook =
                 (getOpInfo trn ti $ tdDelete tdef)
                 rconf
                 webhook
+                headers
           etim = tiEventTriggerInfoMap ti
       -- fail $ show (toJSON eti)
       return $ ti { tiEventTriggerInfoMap = M.insert trn eti etim}

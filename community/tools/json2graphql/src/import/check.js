@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
-const {CLIError} = require('@oclif/errors');
 const {cli} = require('cli-ux');
+const throwError = require('./error');
 
 const createTables = async (tables, url, headers, overwrite, runSql, sql) => {
   if (overwrite) {
@@ -26,17 +26,15 @@ const createTables = async (tables, url, headers, overwrite, runSql, sql) => {
                 table_schema: 'public',
               },
             },
-          })
+          }),
         }
       );
       const dbTables = await resp.json();
       let found = false;
-      tables.forEach((table) => {
-        if(dbTables.find((dbTable) => dbTable.table_name === table.name)) {
+      tables.forEach(table => {
+        if (dbTables.find(dbTable => dbTable.table_name === table.name)) {
           found = true;
-          cli.action.stop('Error');
-          console.log('Message: Your JSON database contains tables that already exist in Postgres. Please use the flag "--overwrite" to overwrite them.');
-          process.exit(1);
+          throwError('Message: Your JSON database contains tables that already exist in Postgres. Please use the flag "--overwrite" to overwrite them.');
         }
       });
       if (!found) {

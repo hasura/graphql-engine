@@ -30,10 +30,11 @@ Head to your Heroku dashboard and delete the Postgres addon:
 
 .. image:: ../../../../img/graphql/manual/deployment/remove-heroku-postgres-addon.png
 
-Step 2: Configure the DATABASE_URL environment variable
--------------------------------------------------------
+Step 2: Configure the environment variables
+-------------------------------------------
 
-Now configure the ``DATABASE_URL`` with your existing Heroku Postgres database URL.
+Now configure the ``DATABASE_URL`` with your existing Heroku Postgres database URL and a ``HASURA_GRAPHQL_ACCESS_KEY``
+if you want to secure your endpoint.
 
 .. image:: ../../../../img/graphql/manual/deployment/heroku-database-url-access.png
 
