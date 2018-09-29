@@ -22,9 +22,6 @@ import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Extended         as T
 import qualified Database.PostgreSQL.LibPQ  as PQ
 
-sqlBuilderToTxt :: BB.Builder -> T.Text
-sqlBuilderToTxt = bsToTxt . BL.toStrict . BB.toLazyByteString
-
 class ToSQL a where
   toSQL :: a -> BB.Builder
 
@@ -33,6 +30,9 @@ instance ToSQL BB.Builder where
 
 -- instance ToSQL T.Text where
 --   toSQL x = TE.encodeUtf8Builder x
+
+toSQLTxt :: (ToSQL a) => a -> T.Text
+toSQLTxt = bsToTxt . BL.toStrict . BB.toLazyByteString . toSQL
 
 infixr 6 <+>
 (<+>) :: (ToSQL a) => T.Text -> [a] -> BB.Builder

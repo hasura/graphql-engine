@@ -53,7 +53,7 @@ Boilerplate to get started with Gatsby, Hasura GraphQL engine as CMS and postgre
             headers: {},
             fetch,
           }),
-        refetchInterval: 10, // Refresh every 60 seconds for new data
+        refetchInterval: 10, // Refresh every 10 seconds for new data
       },
     },
   ]
