@@ -261,10 +261,8 @@ onConnInit
 onConnInit (L.Logger logger) manager wsConn authMode connParamsM = do
   res <- runExceptT $ getUserInfo logger manager headers authMode
   case res of
-    Left e  -> do
+    Left e  ->
       sendMsg wsConn $ SMConnErr $ ConnErrMsg $ qeError e
-      liftIO $ WS.closeConn wsConn $
-        BL.fromStrict $ TE.encodeUtf8 $ qeError e
     Right userInfo -> do
       liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $ Just userInfo
       sendMsg wsConn SMConnAck
