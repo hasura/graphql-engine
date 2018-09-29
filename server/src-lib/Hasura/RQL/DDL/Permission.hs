@@ -118,14 +118,15 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt) _) = do
     vn = buildViewName tn rn PTInsert
 
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
-buildInsInfra tn (InsPermInfo vn be _ _ _) =
+buildInsInfra tn (InsPermInfo vn be _ _ _) = do
+  trigFnQ <- buildInsTrigFn vn tn be
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
     Q.unitQ (buildView tn vn) () False
     -- Inject defaults on the view
     Q.discardQ (injectDefaults vn tn) () False
     -- Construct a trigger function
-    Q.unitQ (buildInsTrigFn vn tn be) () False
+    Q.unitQ trigFnQ () False
     -- Add trigger for check expression
     Q.unitQ (buildInsTrig vn) () False
 
