@@ -39,15 +39,30 @@ class InsertItem extends Component {
     this.setState({ currentColumn: colName });
   };
 
-  onTextChange = (e, colName) => {
+  onTextChange = (e, colName, { insertRadioNode, nullNode }) => {
     const textValue = e.target.value;
     const tempState = {
       ...this.state,
     };
     tempState.editorColumnMap = { ...this.state.editorColumnMap };
     tempState.editorColumnMap[colName] = textValue;
-    // this.setState({ ...this.state, editorColumnMap: {...this.state.editorColumnMap, [colName]: textValue}});
+    if (!nullNode.disabled) {
+      insertRadioNode.checked = !!textValue.length;
+      nullNode.checked = !textValue.length;
+    }
     this.setState({ ...tempState });
+  };
+
+  onTextFocus = (e, { nullNode }) => {
+    if (nullNode.disabled) return;
+    const textValue = e.target.value;
+    if (
+      textValue === undefined ||
+      textValue === null ||
+      textValue.length === 0
+    ) {
+      nullNode.checked = true;
+    }
   };
 
   onModalClose = () => {
@@ -299,7 +314,10 @@ class InsertItem extends Component {
                 onClick={clicker}
                 ref={inputRef}
                 onChange={e => {
-                  this.onTextChange(e, colName);
+                  this.onTextChange(e, colName, refs[colName]);
+                }}
+                onFocus={e => {
+                  this.onTextFocus(e, refs[colName]);
                 }}
                 value={currentValue}
                 data-test={`typed-input-${i}`}
@@ -322,7 +340,10 @@ class InsertItem extends Component {
                 onClick={clicker}
                 ref={inputRef}
                 onChange={e => {
-                  this.onTextChange(e, colName);
+                  this.onTextChange(e, colName, refs[colName]);
+                }}
+                onFocus={e => {
+                  this.onTextFocus(e, refs[colName]);
                 }}
                 value={defaultValue}
                 data-test={`typed-input-${i}`}
@@ -376,6 +397,9 @@ class InsertItem extends Component {
             <input
               disabled={isAutoIncrement}
               type="radio"
+              ref={node => {
+                refs[colName].insertRadioNode = node;
+              }}
               name={colName + '-value'}
               value="option1"
               defaultChecked={!isDefault & !isNullable}
