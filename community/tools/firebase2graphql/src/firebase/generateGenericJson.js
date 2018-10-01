@@ -123,7 +123,7 @@ const handleFirebaseJson = db => {
           for (var pkey in pkeys) {
             newItem[`${parentTableName}_${pkey}`] = pkeys[pkey];
           }
-          if (newItem._idself === undefined) {
+          if (newItem._idself === undefined && newItem._id === undefined) {
             newItem[getLastPrimaryKey(newItem, 0, 'self')] = uuid();
           }
           return newItem;

@@ -17,9 +17,14 @@ const spinnerStop = () => {
   cli.action.stop(colors.green('Done!'));
 };
 
+const spinnerStopColorless = (message) => {
+  cli.action.stop(message);
+};
+
 module.exports = {
   log,
   spinnerStop,
   spinnerStart,
+  spinnerStopColorless
 };
 
