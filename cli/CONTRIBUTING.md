@@ -1,7 +1,6 @@
 # Contributing
 
 Thanks for you interest in Hasura GraphQL Engine CLI.
-Sign the CLA (Contributor License Agreement) [here](https://cla-assistant.io/hasura/graphql-engine)
 
 ## Pre-requisites
 
