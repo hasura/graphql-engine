@@ -1,21 +1,19 @@
-const {json, send} = require('micro');
+const { json, send } = require('micro');
 
 module.exports = async (req, res) => {
-    let js;
-    try {
-        js = await json(req);
-    } catch (err) {
-        send(res, 400, {'error': err.message});
-    }
-    let message = 'Not able to process request';
+  let payload;
+  try {
+    payload = await json(req);
+  } catch (error) {
+    send(res, 400, { error });
+    return;
+  }
 
-    if (js.event.op == 'INSERT' && js.table.name == 'notes') {
-        message = `New note ${js.event.data.new.id} inserted, with data: ${js.event.data.new.note}`;
-    } else if (js.event.op == 'UPDATE' && js.table.name == 'notes') {
-        message = `note ${js.event.data.new.id} updated, with data: ${js.event.data.new.note}`;
-    } else if (js.event.op == 'DELETE' && js.table.name == 'notes') {
-        message = `New note ${js.event.data.old.id} deleted, with data: ${js.event.data.old.note}`;
-    }
+  const { id, event: {op, data}, table, trigger } = payload;
 
-    send(res, 200, {'message': message});
+  send(res, 200, {
+    message: `received '${id}' for '${op}' operation on '${table.name}' table in '${table.schema}' schema from '${trigger.name}' trigger`,
+    oldData: data.old,
+    newData: data.new,
+  });
 };

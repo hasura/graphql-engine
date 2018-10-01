@@ -1,14 +1,26 @@
-# Setup our tables
+# NodeJS Echo
 
-Create table using the console:
+This is an example which echoes the event back, written in NodeJS.
+
+### Create a sample table
+
+Visit the GraphQL Engine URL to open console.
+
+Goto `Data` tab.
+
+Create the following table:
 
 ```
 Table name: notes
 
 Columns:
-id: Integer auto-increment
-note: Text
+
+id     Integer auto-increment
+note   Text
 ```
+
+### Deploy the function
+
 
 # Setup echo serverless function
 1. cd echo
