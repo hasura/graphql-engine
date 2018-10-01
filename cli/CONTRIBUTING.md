@@ -1,6 +1,7 @@
 # Contributing
 
 Thanks for you interest in Hasura GraphQL Engine CLI.
+Sign the CLA (Contributor License Agreement) [here](https://cla-assistant.io/hasura/graphql-engine)
 
 ## Pre-requisites
 
@@ -48,7 +49,6 @@ already be in your `PATH`. The config is located at `.realize/realize.yaml`.
 When you're adding a new feature, it is encouraged to add integration tests
 (unit tests also if possible) for the functions/api. You should run all the test
 and make sure everything passes before submitting the PR. 
-
 The tests expect a GraphQL Engine server instance to be running. You can point
 the tests to any GraphQL Engine server but please note that **the database
 should be empty**. The easiest way to do this is to run an Postgres and GraphQL
