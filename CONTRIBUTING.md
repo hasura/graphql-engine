@@ -24,6 +24,9 @@ consisting of 3 components. Each have their own contributing guides:
 All of the three components have a single version, denoted by either the git
 tag, or a combination of branch name and git commit SHA.
 
+For any contribution in the form of a Pull Request to any of the components, a CLA (Contributor License Agreement)
+needs to be signed at https://cla-assistant.io/hasura/graphql-engine before (or after) the pull request has been submitted. 
+
 ### Docs
 
 Contributing guide for docs can be found at [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
