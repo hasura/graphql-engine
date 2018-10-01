@@ -6,7 +6,7 @@ Some of the language/platforms are work in progress. We welcome contributions fo
 
 | Folder name | Use-case| Node.js(8) | Node.js(6) | Python
 |-------------|---------|:--------:|:------:|:----:
-| echo | echo the trigger payload  | ✅ | ✅ | ❌
+| echo | echo the trigger payload  | ✅ | ✅ | ✅
 | mutation | insert related data on an insert event using graphql mutation | ✅ | ✅ | ❌
 | push-notification | send push notification on database event | ❌ | ❌ | ❌ 
 | etl | transform the trigger payload and update an algolia index | ❌ | ❌ | ❌ 
