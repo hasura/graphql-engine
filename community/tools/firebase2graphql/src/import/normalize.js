@@ -124,6 +124,28 @@ const patchDupeDependentTables = (table, dupe, tables, data, pkeyMap) => {
   return patchedData;
 };
 
+const makePkeyMap = (table, dupe, columnList, data) => {
+  const map = {};
+  data[dupe].forEach((dupeRow) => {
+    data[table].forEach((tableRow) => {
+      let isSameRow = true;
+      columnList.forEach((column) => {
+        if (dupeRow[column] !== tableRow[column]) {
+          isSameRow = false;
+        }
+      })
+      if (isSameRow) {
+        map[dupeRow['_idself']] = tableRow._id;
+      }
+    })
+  })
+  return map;
+};
+
+const getTablePriority = (dupe, data) => {
+
+}
+
 const handleConfirmedDupes = (confirmedDupes, tables, data) => {
   /*
   1. Go through the dupes
@@ -134,6 +156,7 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
   let newData = {
     ...data,
   };
+  let filteredTables = [ ...tables ];
   const handle = (dupes, index) => {
     if (dupes.length === 0 || index > dupes.length - 1) {
       return;
@@ -144,7 +167,7 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
     if (!newData[dupes[index].table1][0]._idself &&
       !newData[dupes[index].table2][0]._idself &&
       newData[dupes[index].table1][0]._id &&
-      newData[dupes[index].table1][0]._id
+      newData[dupes[index].table2][0]._id
     ) {
       if (dupes[index].table1.length > dupes[index].table2.length) {
         table2 = dupes[index].table1;
@@ -163,9 +186,8 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
       handle(dupes, index + 1);
       return;
     }
-    const table = tables.find(t => t.name === table1);
-    const dupe = tables.find(t => t.name === table2);
-    const pkeyMap = {};
+    const table = filteredTables.find(t => t.name === table1);
+    const dupe = filteredTables.find(t => t.name === table2);
     newData[table.name].forEach(tableRow => {
       const dLength = data[dupe.name].length;
       for (let j = 0; j < dLength; j++) {
@@ -174,10 +196,6 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
           const item = {};
           for (var key in dupeRow) {
             if (key.indexOf('_idself') === 0) {
-              if (!pkeyMap[dupeRow]) {
-                pkeyMap.dupeRow = {};
-              }
-              pkeyMap[dupeRow._idself] = tableRow._id;
             } else {
               item[key.replace(dupe.name + '_', table.name + '_')] = dupeRow[key];
             }
@@ -191,13 +209,32 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
       }
     });
     newData[table.name] = tableData;
-    delete newData[dupe.name];
+    filteredTables = filteredTables.filter((ft) => ft.name !== dupe.name);
     newData = {
       ...newData,
-      ...patchDupeDependentTables(table.name, dupe.name, tables, newData, pkeyMap),
+      ...patchDupeDependentTables(table.name, dupe.name, filteredTables, newData, makePkeyMap(table1, table2, columnList, newData)),
     };
+    delete newData[dupe.name];
+    const filteredDupes = [];
+    for (var i = dupes.length - 1; i >= 0; i--) {
+      const d = dupes[i];
+      if ((d.table1 !== table1 && d.table2 !== table2) && (d.table2 !== table1 && d.table1 !== table2)) {
+        if (d.table1 === table2) {
+          filteredDupes.push({
+            table1,
+            table2: d.table2
+          });
+        }
+        if (d.table2 === table2) {
+          filteredDupes.push({
+            table1,
+            table2: d.table1
+          });
+        }
+      }
+    }
     handle(
-      dupes.filter(d => d.table1 !== table1 && d.table2 !== table1 && d.table1 !== table2 && d.table2 !== table2),
+      filteredDupes,
       0
     );
   };
