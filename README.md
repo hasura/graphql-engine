@@ -33,7 +33,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 * **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
 * **High-performance & low-footprint**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
 * **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
-* **Postgres** ❤️: supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
+* **Postgres** ❤️: Supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
 
 Read more at: [https://hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
 
