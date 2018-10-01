@@ -47,7 +47,6 @@ language](http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
 - Commit the changes. Follow common guidelines for commit messages at [main
 contributing guide](../CONTRIBUTING.md#common-guidelines).
 - Push the changes to your fork and submit a pull request.
-- Any pull request requires the signing of the CLA (Contributor License Agreement) before or after it is submitted, which can be found [here](https://cla-assistant.io/hasura/graphql-engine)
 
 **Note:** The search is powered by [Algolia](https://www.algolia.com/) and is updated on every deployment. Your local 
   changes will not reflect in search results.        
