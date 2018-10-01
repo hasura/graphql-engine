@@ -136,6 +136,7 @@ Tests are written using [Cypress](https://www.cypress.io/).
 - All the development work happens in your own fork of the graphql-engine.
 - Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md#commit-messages).
 - Once the changes are done, create a pull request.
+- Sign the CLA (Contributor License Agreement) at https://cla-assistant.io/hasura/graphql-engine
 - CI configured for PR will run the test suite.
 - Once everything goes well, it will generate a preview heroku app.
 - The source code and the preview app will be reviewed by maintainers.
