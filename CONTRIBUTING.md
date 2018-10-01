@@ -24,7 +24,7 @@ consisting of 3 components. Each have their own contributing guides:
 All of the three components have a single version, denoted by either the git
 tag, or a combination of branch name and git commit SHA.
 
-For any contribution in the form of a Pull Request to any of the components, a CLA (Contributor License Agreement) needs to be signed [here](https://cla-assistant.io/hasura/graphql-engine) before (or after) the pull request has been submitted.
+For all contributions, a CLA (Contributor License Agreement) needs to be signed [here](https://cla-assistant.io/hasura/graphql-engine) before (or after) the pull request has been submitted. A bot will prompt the same as a pull request comment.
 
 
 ### Docs
@@ -66,8 +66,6 @@ before-mentioned sections).
   For example: `resolve answers to everything (fix #42)` or `resolve answers to everything, fix #42`
 
 - Rebase master with your branch before submitting pull request.
-
-- Any pull request requires the signing of the CLA (Contributor License Agreement) before or after it is 	  submitted, which can be found [here](https://cla-assistant.io/hasura/graphql-engine)
 
 ## Commit messages
 
