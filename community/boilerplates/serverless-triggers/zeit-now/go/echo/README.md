@@ -1,6 +1,6 @@
-# NodeJS Echo Example on Zeit
+# Go Echo on Zeit
 
-This is an example which echoes the event back, written in NodeJS.
+This is an example which echoes the event back, written in Golang.
 
 ### Create a table
 
@@ -89,12 +89,11 @@ Trigger payload (request):
 Webhook response:
 ```json
 {
-    "message": "received 'b30cc7e6-9f3b-48ee-9a10-16cce333df40' for 'INSERT' operation on 'note' table in 'public' schema from 'note_trigger' trigger",
+    "message": "got 'b30cc7e6-9f3b-48ee-9a10-16cce333df40' for 'INSERT' operation on 'note' table in 'public' schema from 'note_trigger' trigger",
     "oldData": null,
     "newData": {
         "text": "new-entry",
-        "id": 3
+        "id": 1
     }
 }
 ```
-

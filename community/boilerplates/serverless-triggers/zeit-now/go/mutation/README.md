@@ -1,7 +1,7 @@
-# NodeJS Mutation Example on Zeit
+# Golang Mutation Example on Zeit
 
 This example trigger updates (executes a mutation) when an event occurs on
-another table.
+another table, written in Golang.
 
 ### Create tables
 
@@ -41,7 +41,7 @@ now -e HGE_ENDPOINT=https://my-app.herokuapp.com/v1alpha1/graphql
 `HGE_ENDPOINT` is the Hasura GraphQL Engine endpoint.
 
 Once the deployment is done, you'll get an endpoint like
-`https://zeit-echo-hhasdewasd.now.sh`. Not this down as `NOW_URL`. 
+`https://zeit-mutation-hhasdewasd.now.sh`. Not this down as `NOW_URL`. 
 
 > **Note**: Now.sh deployments are immutable, i.e. each time you deploy the
 > code, a new URL will be provisioned. You can [alias the
@@ -102,18 +102,14 @@ Trigger payload (request):
 Webhook response:
 ```json
 {
-    "result": {
-        "data": {
-            "insert_note_revision": {
-                "returning": [
-                    {
-                        "__typename": "note_revision",
-                        "id": 1
-                    }
-                ],
-                "affected_rows": 1,
-                "__typename": "note_revision_mutation_response"
-            }
+    "data": {
+        "insert_note_revision": {
+            "affected_rows": 1,
+            "returning": [
+                {
+                    "id": 2
+                }
+            ]
         }
     }
 }

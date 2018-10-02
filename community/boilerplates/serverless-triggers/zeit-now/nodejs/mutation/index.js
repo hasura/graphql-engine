@@ -31,7 +31,7 @@ module.exports = async (req, res) => {
       endpoint: HGE_ENDPOINT,
       variables: {
         object: {
-          note_id: data.old.id, note: data.old.note
+          note_id: data.old.id, note: data.new.note
         }
       },
     });
