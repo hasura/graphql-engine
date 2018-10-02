@@ -159,8 +159,36 @@ const makePkeyMap = (table, dupe, columnList, data) => {
   return map;
 };
 
-const getTablePriority = (dupe, data) => {
-
+const getTablePriority = (table, dupe, topLevelTables) => {
+  let isDupeTopLevel = false;
+  let isTableTopLevel = false;
+  for (var i = topLevelTables.length - 1; i >= 0; i--) {
+    let row = topLevelTables[i];
+    if (row.__tableName === dupe) { isDupeTopLevel = true; }
+    if (row.__tableName === table) { isTableTopLevel = true; }
+  }
+  if (isDupeTopLevel && !isTableTopLevel) {
+    return {
+      table1: dupe,
+      table2: table
+    }
+  }
+  if (!isDupeTopLevel && isTableTopLevel) {
+    return {
+      table1: table,
+      table2: dupe
+    }
+  }
+  if (!isDupeTopLevel && !isTableTopLevel) {
+    return {
+      table1: table,
+      table2: dupe
+    }
+  }
+  return {
+    table1: null,
+    table2: null
+  };
 }
 
 const handleConfirmedDupes = (confirmedDupes, tables, data) => {
@@ -179,30 +207,12 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
       return;
     }
     const tableData = [];
-    let table1, table2;
+    const {table1, table2} = getTablePriority(dupes[index].table1, dupes[index].table2, data.__rootTables);
     const columnList = dupes[index].columnList;
-    if (!newData[dupes[index].table1][0]._idself &&
-      !newData[dupes[index].table2][0]._idself &&
-      newData[dupes[index].table1][0]._id &&
-      newData[dupes[index].table2][0]._id
-    ) {
-      if (dupes[index].table1.length > dupes[index].table2.length) {
-        table2 = dupes[index].table1;
-        table1 = dupes[index].table2;
-      } else {
-        table1 = dupes[index].table1;
-        table2 = dupes[index].table2;
-      }
-    } else if (!newData[dupes[index].table1][0]._idself && newData[dupes[index].table1][0]._id) {
-      table1 = dupes[index].table1;
-      table2 = dupes[index].table2;
-    } else if (!newData[dupes[index].table2][0]._idself && newData[dupes[index].table2][0]._id) {
-      table2 = dupes[index].table1;
-      table1 = dupes[index].table2;
-    } else {
+    if (!table1) {
       handle(dupes, index + 1);
       return;
-    }
+    } 
     const table = filteredTables.find(t => t.name === table1);
     const dupe = filteredTables.find(t => t.name === table2);
     newData[table.name].forEach(r => {
@@ -312,6 +322,7 @@ const normalize = async (tables, data, url, headers, level, importData) => {
       tables,
       data
     );
+    delete newData['__rootTables'];
   } else {
     newData = handleConfirmedDupes(maybeDupes.confirmed, tables, data);
   }

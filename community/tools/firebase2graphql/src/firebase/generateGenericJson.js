@@ -145,8 +145,12 @@ const handleFirebaseJson = db => {
       tablesMap[newTableName].push(newItem);
     }
   };
-
+  const topLevelTables = [];
   for (var tableName in db) {
+    topLevelTables.push({
+      _id: uuid(),
+      __tableName: tableName.replace(/[^a-zA-Z0-9]/g, '_')
+    });
     tablesMap[tableName] = handleTableCandidate(
       db[tableName],
       tableName,
@@ -154,7 +158,7 @@ const handleFirebaseJson = db => {
       true
     );
   }
-
+  tablesMap['__rootTables'] = topLevelTables;
   return tablesMap;
 };
 
