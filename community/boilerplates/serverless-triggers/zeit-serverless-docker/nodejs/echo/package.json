@@ -1,8 +1,0 @@
-{
-  "name": "hge-events-zeit-node-echo",
-  "dependencies": {
-    "micro": "9.3.3"
-  },
-  "license": "MIT",
-  "main": "./index.js"
-}

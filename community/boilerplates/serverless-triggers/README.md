@@ -10,7 +10,7 @@ Examples in this repository support the following cloud function platforms:
 
 * Microsoft Azure Functions
 
-* Zeit serverless docker
+* Zeit Now
 
 Note: *If you want to add support for other platforms, please submit a PR or create an issue and tag it with `help-wanted`*
 
