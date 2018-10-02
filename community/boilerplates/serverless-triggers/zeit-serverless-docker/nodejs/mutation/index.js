@@ -1,43 +1,42 @@
 const {json, send} = require('micro');
 const { query } = require('graphqurl');
 
-const accessKey = process.env.ACCESS_KEY;
-const hgeEndpoint = process.env.HGE_ENDPOINT + '/v1alpha1/graphql';
+const HGE_ENDPOINT = process.env.HGE_ENDPOINT;
 
-const q = `
-  mutation updateNoteRevision ($noteId: Int!, $data: String!) {
-    insert_note_revisions (objects: [
-      {
-        note_id: $noteId,
-        updated_note: $data
-      }
-    ]) {
+const MUTATION_UPDATE_NOTE_REVISION = `
+  mutation updateNoteRevision ($object: note_revision_insert_input!) {
+    insert_note_revision (objects: [$object]) {
       affected_rows
+      returning {
+        id
+      }
     }
   }
 `;
 
 module.exports = async (req, res) => {
-    let js;
-    try {
-        js = await json(req);
-    } catch (err) {
-        send(res, 400, {'error': err.message});
-    }
-    query(
-        {
-            query: q,
-            endpoint: hgeEndpoint,
-            variables: {noteId: js.event.data.old.id, data: js.event.data.old.note},
-            headers: {
-                'x-hasura-access-key': accessKey,
-                'Content-Type': 'application/json'
-            }
+  let payload;
+  try {
+    payload = await json(req);
+  } catch (error) {
+    send(res, 400, { error });
+    return;
+  }
+
+  const { id, event: {op, data}, table, trigger } = payload;
+
+  try {
+    const result = await query({
+      query: MUTATION_UPDATE_NOTE_REVISION,
+      endpoint: HGE_ENDPOINT,
+      variables: {
+        object: {
+          note_id: data.old.id, note: data.old.note
         }
-    ).then((response) => {
-        console.log(response);
-        send(res, 200, {'message': response});
-    }).catch((error) => {
-        send(res, 400, {'message': error});
+      },
     });
+    send(res, 200, { result });
+  } catch (error) {
+    send(res, 500, { error });
+  }
 };

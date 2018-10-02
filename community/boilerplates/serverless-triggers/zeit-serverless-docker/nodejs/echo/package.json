@@ -1,5 +1,5 @@
 {
-  "name": "hge-events-zeit-node-echo",
+  "name": "zeit-echo",
   "dependencies": {
     "micro": "9.3.3"
   },
