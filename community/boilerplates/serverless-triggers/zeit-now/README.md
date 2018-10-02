@@ -27,8 +27,8 @@ Checkout [docs](https://docs.hasura.io/1.0/graphql/manual/deployment/index.html)
 
 Checkout any of the example triggers given below for further steps:
 
-- [NodeJS 8 Echo](nodejs/echo)
-- [NodeJS 8 Mutattion](nodejs/mutation) 
+- [NodeJS Echo](nodejs/echo)
+- [NodeJS Mutation](nodejs/mutation)
 - [Go Echo](go/echo)
 - [Go Mutation](go/mutation)
 <!--
