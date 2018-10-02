@@ -20,8 +20,8 @@ class TestV1SelectBasic:
         check_query_f(hge_ctx, self.dir + '/nested_select_where_query_author_article.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):  
-        self.dir = "queries/v1/select/basic"    
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/v1/select/basic"
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
         yield
@@ -267,7 +267,6 @@ class TestV1InsertPermissions(object):
         assert st_code == 200, resp
 
 
-
 class TestV1Delete:
  
     def test_delete_author(self, hge_ctx):
@@ -290,6 +289,72 @@ class TestMetadata:
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):  
         self.dir = "queries/v1/metadata"    
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
+
+
+class TestRunSQL:
+
+    def test_select_query(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/sql_select_query.yaml')
+
+    def test_set_timezone(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/sql_set_timezone.yaml')
+
+    def test_sql_timezone__error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/sql_set_timezone_error.yaml')
+
+    def test_sql_query_as_user_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/sql_query_as_user_error.yaml')
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/v1/run_sql"
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
+
+
+class TestRelationships:
+
+    def test_object_relationship_foreign_key(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/object_relationship_foreign_key.yaml')
+
+    def test_create_object_relationship_as_not_admin_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/create_object_relationship_as_not_admin_error.yaml')
+
+    def test_object_relationship_col_not_foreign_key_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/object_relationship_col_not_foreign_key_error.yaml')
+
+    def test_object_relationship_foreign_key_non_public_schema(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/object_relationship_non_public_schema_foreign_key.yaml')
+
+    def test_object_relationship_manual(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/object_relationship_manual.yaml')
+
+    def test_array_relationship_foreign_key(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/array_relationship_foreign_key.yaml')
+
+    def test_create_array_relationship_as_not_admin_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/create_array_relationship_as_not_admin_error.yaml')
+
+    def test_array_relationship_col_not_foreign_key_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/array_relationship_col_not_foreign_key_error.yaml')
+
+    def test_array_relationship_foreign_key_non_public_schema(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/array_relationship_non_public_schema_foreign_key.yaml')
+
+    def test_array_relationship_manual(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/array_relationship_manual.yaml')
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/v1/relationships"
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
         yield
