@@ -19,7 +19,7 @@ lng: Numeric, Nullable
 Deploy the function:
 
 ```bash
-gcloud beta functions deploy nodejs-echo \
+gcloud beta functions deploy python-echo \
        --runtime python37 \
        --trigger-http
 ```
@@ -27,7 +27,7 @@ gcloud beta functions deploy nodejs-echo \
 Get the trigger URL:
 ```yaml
 httpsTrigger:
-  url: https://us-central1-hasura-test.cloudfunctions.net/nodejs-echo
+  url: https://us-central1-hasura-test.cloudfunctions.net/python-echo
 ```
 
 Open Hasura console, goto `Events -> Add Trigger` and create a new trigger:

@@ -1,12 +1,14 @@
 import sys
 import json
+from flask import jsonify
+
 
 def function(request):
-    request_json = request.json
-    op = request_json.get('event/op')
-    data = request_json.get('event/data')
-    name = request_json.get('table/name')
-    schema = request_json.get('table/schema')
-    response = json.dumps({'message': 'received event', 'data': {op, data, name, schema}})
+    request_json = request.get_json
+    op = request_json['event']['op']
+    data = request_json['event']['data']
+    name = request_json['table']['name']
+    schema = request_json['table']['schema']
+    response = {'message': 'received event', 'data': {op, data, name, schema}}
     print(response)
-    return response
+    return jsonify(response)
