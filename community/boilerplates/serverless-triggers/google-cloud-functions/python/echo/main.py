@@ -11,4 +11,4 @@ def function(request):
     schema = request_json['table']['schema']
     response = {'message': 'received event', 'data': {op, data, name, schema}}
     print(response)
-    return jsonify(response)
+    return jsonify(message='received event', data={'op': op, 'data': data, 'name': name, 'schema': schema})
