@@ -8,7 +8,7 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="http://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, realtime GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events for asynchronous business logic.
+Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, real-time GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events for asynchronous business logic.
 
 Hasura helps you build GraphQL apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
 
@@ -47,10 +47,10 @@ Read more at: [https://hasura.io](https://hasura.io) and the [docs](https://docs
 - [Architecture](#architecture)
 - [Client-side tooling](#client-side-tooling)
 - [Add business logic](#add-business-logic)
-    - [Custom resolvers](#custom-resolvers)
+    - [Custom Resolvers](#custom-resolvers)
     - [Trigger webhooks on database events](#trigger-webhooks-on-database-events)
 - [Demos](#demos)
-    - [Realtime applications](#realtime-applications)
+    - [Real-time applications](#realtime-applications)
     - [Videos](#videos)
 - [Support & Troubleshooting](#support--troubleshooting)
 - [Contributing](#contributing)
@@ -114,7 +114,7 @@ processing - [read more](event-triggers.md).
 Checkout all the example applications in the
 [community/examples](community/examples) directory.
 
-### Realtime applications
+### Real-time applications
 
 - Group Chat application built with React, includes a typing indicator, online users & new
   message notifications.
@@ -128,7 +128,7 @@ Checkout all the example applications in the
   - [Tutorial](community/examples/realtime-location-tracking)
   - [Browse APIs](https://realtime-backend.herokuapp.com/)
 
-- A realtime dashboard for data aggregations on continuously changing data.
+- A real-time dashboard for data aggregations on continuously changing data.
   - [Try it out](https://shahidh.in/hasura-realtime-poll/)
   - [Tutorial](community/examples/realtime-poll)
   - [Browse APIs](https://hasura-realtime-poll.herokuapp.com/)
