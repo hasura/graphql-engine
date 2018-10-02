@@ -1,4 +1,6 @@
-# Setup tables
+### Go Echo Example for AWS Lambda
+
+### Setup tables
 1. Create table:
 
 ```
@@ -7,7 +9,7 @@ notes:
   note: text
 ```
 
-# Setup AWS Lambda
+### Setup AWS Lambda
 Create a lambda function in AWS. This will be our webhook.
 
 1. Create a function.
@@ -17,7 +19,7 @@ Create a lambda function in AWS. This will be our webhook.
 5. Define the API endpoint on the API gateway.
 6. Add the code in `echo.go`.
 
-# Add the trigger in Hasura GraphQL
+### Add the trigger in Hasura GraphQL
 1. In events tab, add a trigger
 2. Select all insert, update, delete operations for the trigger.
 3. Paste the API endpoint of your AWS lambda as the webhook.
