@@ -360,3 +360,24 @@ class TestRelationships:
         yield
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
+
+
+class TestTrackTables:
+
+    def test_track_untrack_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/track_untrack_table.yaml')
+
+    def test_track_untrack_table_non_public_schema(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/track_untrack_table_non_public_schema.yaml')
+
+    def test_track_untrack_table_as_not_admin_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/track_untrack_table_as_not_admin_error.yaml')
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/v1/track_table"
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
