@@ -108,13 +108,30 @@ const patchDupeDependentTables = (table, dupe, tables, data, pkeyMap) => {
   const patchedData = {};
   tables.forEach(otherTable => {
     if (otherTable.name !== table && otherTable.name !== dupe) {
-      if (otherTable.columns.find(column => column.name === `${dupe}__idself`)) {
+      if (otherTable.columns.find(column => {
+        return column.name.indexOf(`${dupe}__id`) === 0 ||
+          column.name.indexOf(`${table}__idself`) === 0
+      })) {
         const newData = data[otherTable.name].map(row => {
           const newRow = {
             ...row,
           };
-          newRow[`${table}__id`] = pkeyMap[row[`${dupe}__idself`]];
-          delete newRow[`${dupe}__idself`];
+
+          for (var c in row) {
+            if (c.indexOf(`${table}__idself`) === 0) {
+              delete newRow[c];
+              continue;
+            }
+            if (c.indexOf(`${dupe}__idself`) === 0) {
+              newRow[`${table}__id`] = pkeyMap[row[c]];
+              delete newRow[c];
+              continue;
+            }
+            if (c.indexOf(`${dupe}__id`) === 0) {
+              delete newRow[c];
+              continue;
+            }
+          }
           return newRow;
         });
         patchedData[otherTable.name] = newData;
@@ -188,15 +205,22 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
     }
     const table = filteredTables.find(t => t.name === table1);
     const dupe = filteredTables.find(t => t.name === table2);
-    newData[table.name].forEach(tableRow => {
+    newData[table.name].forEach(r => {
+      const tableRow = {};
+      for (c in r) {
+        if (c.indexOf('_idself') !== 0) {
+          tableRow[c] = r[c];
+        }
+      }
       const dLength = data[dupe.name].length;
+      let found = false;
       for (let j = 0; j < dLength; j++) {
         const dupeRow = newData[dupe.name][j];
         if (columnList.every(colName => dupeRow[colName] === tableRow[colName])) {
+          found = true;
           const item = {};
           for (var key in dupeRow) {
-            if (key.indexOf('_idself') === 0) {
-            } else {
+            if (key.indexOf('_idself') !== 0) {
               item[key.replace(dupe.name + '_', table.name + '_')] = dupeRow[key];
             }
           }
@@ -206,6 +230,9 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
           });
           break;
         }
+      }
+      if (!found) {
+        tableData.push(tableRow);
       }
     });
     newData[table.name] = tableData;

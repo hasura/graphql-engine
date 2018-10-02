@@ -9,7 +9,7 @@ const {
 } = require('./utils');
 const throwError = require('../error');
 
-const handleTableCandidate = (obj, tableName, tableDetectedCallback) => {
+const handleTableCandidate = (obj, tableName, tableDetectedCallback, isRootLevel) => {
   const rowArray = [];
   const flattenObject = (object, row, parent) => {
     if (isObjectList(object)) {
@@ -54,7 +54,7 @@ const handleTableCandidate = (obj, tableName, tableDetectedCallback) => {
                 tableName: parent || tableName,
                 name: objectKey,
                 pkeys: pkeyMap,
-                data: handleTableCandidate(value, `${tableName}_${objectKey}`, tableDetectedCallback),
+                data: handleTableCandidate(value, `${parent || tableName}_${objectKey}`, tableDetectedCallback, false),
               }
             );
           } else if (Object.keys(value).length !== 0) {
@@ -96,7 +96,12 @@ const handleTableCandidate = (obj, tableName, tableDetectedCallback) => {
     throwError('Message: invalid JSON provided for node ' + tableName);
   }
   for (var id in obj) {
-    const flatRow = flattenObject(obj[id], {_id: id});
+    const randomUUID = uuid();
+    const initialRow = { _id: id };
+    if (!isRootLevel) {
+      initialRow['_idself'] = randomUUID;
+    }
+    const flatRow = flattenObject(obj[id], initialRow);
     if (flatRow && Object.keys(flatRow).length > 0) {
       rowArray.push(flatRow);
     }
@@ -123,7 +128,7 @@ const handleFirebaseJson = db => {
           for (var pkey in pkeys) {
             newItem[`${parentTableName}_${pkey}`] = pkeys[pkey];
           }
-          if (newItem._idself === undefined && newItem._id === undefined) {
+          if (newItem._idself === undefined) {
             newItem[getLastPrimaryKey(newItem, 0, 'self')] = uuid();
           }
           return newItem;
@@ -145,7 +150,8 @@ const handleFirebaseJson = db => {
     tablesMap[tableName] = handleTableCandidate(
       db[tableName],
       tableName,
-      generateNewTable
+      generateNewTable,
+      true
     );
   }
 
