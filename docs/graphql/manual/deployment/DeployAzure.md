@@ -16,51 +16,24 @@ az group create --name myResourceGroup --location "West Europe"
 * You generally create your resource group and the resources in a region near you.
 *When the command finishes, a JSON output shows you the resource group properties.
 
-4. Create an azure app service plan by using `az appservice plan create` command.
+4. Create an azure container instance by using `az container create` command.
 ```
-az appservice plan create --name myAppServicePlan --resource-group myResourceGroup --sku S1 --is-linux
-```
-
-When the App Service plan has been created, the Azure CLI shows information similar to the following example:
-
-```
-{ 
-  "adminSiteName": null,
-  "appServicePlanName": "myAppServicePlan",
-  "geoRegion": "West Europe",
-  "hostingEnvironmentProfile": null,
-  "id": "/subscriptions/0000-0000/resourceGroups/myResourceGroup/providers/Microsoft.Web/serverfarms/myAppServicePlan",
-  "kind": "linux",
-  "location": "West Europe",
-  "maximumNumberOfWorkers": 1,
-  "name": "myAppServicePlan",
-  < JSON data removed for brevity. >
-  "targetWorkerSizeId": 0,
-  "type": "Microsoft.Web/serverfarms",
-  "workerTierName": null
-}
+az container create --resource-group myResourceGroup --name mycontainer --image hasura/graphql-engine --dns-name-label graphql-engine --ports 80
 ```
 
-5. Create a web app in the myAppServicePlan App Service plan with the `az webapp create` command. Don't forget to replace `<app name>` with a globally unique app name.
-```
-az webapp create --resource-group myResourceGroup --plan myAppServicePlan --name <app name> --deployment-container-image-name hasura/graphql-engine
-```
-In the preceding command, `--deployment-container-image-name` points to the public Docker Hub image `fossasia/susi_server`.
+when the command finishes execution, it will rethrn the logs in JSON
 
-6. When the web app has been created, the Azure CLI shows output similar to the following example:
+5. Wait for few seconds, when the Container Instance has been created, you can check the status on ` az container show` command
 
 ```
-{
-  "availabilityState": "Normal",
-  "clientAffinityEnabled": true,
-  "clientCertEnabled": false,
-  "cloningInfo": null,
-  "containerSize": 0,
-  "dailyMemoryTimeQuota": 0,
-  "defaultHostName": "<app name>.azurewebsites.net",
-  "deploymentLocalGitUrl": "https://<username>@<app name>.scm.azurewebsites.net/<app name>.git",
-  "enabled": true,
-  < JSON data removed for brevity. >
-}
+az container show --resource-group myResourceGroup --name mycontainer --query "{FQDN:ipAddress.fqdn,ProvisioningState:provisioningState}" --out table
 ```
-7. Browse the app with `http://<app_name>.azurewebsites.net`
+
+It will show the following output 
+``` 
+FQDN                               ProvisioningState
+---------------------------------  -------------------
+graphql-engine.eastus.azurecontainer.io  Succeeded
+```
+
+6. When the container is succeed navigate to its FQDN in your browser.
