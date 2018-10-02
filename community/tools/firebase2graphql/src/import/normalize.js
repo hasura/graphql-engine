@@ -110,7 +110,7 @@ const patchDupeDependentTables = (table, dupe, tables, data, pkeyMap) => {
     if (otherTable.name !== table && otherTable.name !== dupe) {
       if (otherTable.columns.find(column => {
         return column.name.indexOf(`${dupe}__id`) === 0 ||
-          column.name.indexOf(`${table}__idself`) === 0
+          column.name.indexOf(`${table}__idself`) === 0;
       })) {
         const newData = data[otherTable.name].map(row => {
           const newRow = {
@@ -143,19 +143,19 @@ const patchDupeDependentTables = (table, dupe, tables, data, pkeyMap) => {
 
 const makePkeyMap = (table, dupe, columnList, data) => {
   const map = {};
-  data[dupe].forEach((dupeRow) => {
-    data[table].forEach((tableRow) => {
+  data[dupe].forEach(dupeRow => {
+    data[table].forEach(tableRow => {
       let isSameRow = true;
-      columnList.forEach((column) => {
+      columnList.forEach(column => {
         if (dupeRow[column] !== tableRow[column]) {
           isSameRow = false;
         }
-      })
+      });
       if (isSameRow) {
-        map[dupeRow['_idself']] = tableRow._id;
+        map[dupeRow._idself] = tableRow._id;
       }
-    })
-  })
+    });
+  });
   return map;
 };
 
@@ -164,32 +164,36 @@ const getTablePriority = (table, dupe, topLevelTables) => {
   let isTableTopLevel = false;
   for (var i = topLevelTables.length - 1; i >= 0; i--) {
     let row = topLevelTables[i];
-    if (row.__tableName === dupe) { isDupeTopLevel = true; }
-    if (row.__tableName === table) { isTableTopLevel = true; }
+    if (row.__tableName === dupe) {
+      isDupeTopLevel = true;
+    }
+    if (row.__tableName === table) {
+      isTableTopLevel = true;
+    }
   }
   if (isDupeTopLevel && !isTableTopLevel) {
     return {
       table1: dupe,
-      table2: table
-    }
+      table2: table,
+    };
   }
   if (!isDupeTopLevel && isTableTopLevel) {
     return {
       table1: table,
-      table2: dupe
-    }
+      table2: dupe,
+    };
   }
   if (!isDupeTopLevel && !isTableTopLevel) {
     return {
       table1: table,
-      table2: dupe
-    }
+      table2: dupe,
+    };
   }
   return {
     table1: null,
-    table2: null
+    table2: null,
   };
-}
+};
 
 const handleConfirmedDupes = (confirmedDupes, tables, data) => {
   /*
@@ -201,7 +205,7 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
   let newData = {
     ...data,
   };
-  let filteredTables = [ ...tables ];
+  let filteredTables = [...tables];
   const handle = (dupes, index) => {
     if (dupes.length === 0 || index > dupes.length - 1) {
       return;
@@ -212,12 +216,12 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
     if (!table1) {
       handle(dupes, index + 1);
       return;
-    } 
+    }
     const table = filteredTables.find(t => t.name === table1);
     const dupe = filteredTables.find(t => t.name === table2);
     newData[table.name].forEach(r => {
       const tableRow = {};
-      for (c in r) {
+      for (var c in r) {
         if (c.indexOf('_idself') !== 0) {
           tableRow[c] = r[c];
         }
@@ -246,7 +250,7 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
       }
     });
     newData[table.name] = tableData;
-    filteredTables = filteredTables.filter((ft) => ft.name !== dupe.name);
+    filteredTables = filteredTables.filter(ft => ft.name !== dupe.name);
     newData = {
       ...newData,
       ...patchDupeDependentTables(table.name, dupe.name, filteredTables, newData, makePkeyMap(table1, table2, columnList, newData)),
@@ -259,13 +263,13 @@ const handleConfirmedDupes = (confirmedDupes, tables, data) => {
         if (d.table1 === table2) {
           filteredDupes.push({
             table1,
-            table2: d.table2
+            table2: d.table2,
           });
         }
         if (d.table2 === table2) {
           filteredDupes.push({
             table1,
-            table2: d.table1
+            table2: d.table1,
           });
         }
       }
@@ -322,7 +326,7 @@ const normalize = async (tables, data, url, headers, level, importData) => {
       tables,
       data
     );
-    delete newData['__rootTables'];
+    delete newData.__rootTables;
   } else {
     newData = handleConfirmedDupes(maybeDupes.confirmed, tables, data);
   }

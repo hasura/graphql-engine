@@ -90,5 +90,5 @@ module.exports = {
   getPrimaryKeyName,
   isRandomList,
   isList,
-  isObjectList
-}
+  isObjectList,
+};

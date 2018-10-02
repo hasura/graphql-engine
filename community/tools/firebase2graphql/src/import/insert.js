@@ -76,9 +76,8 @@ const deleteDataTill = async (tableName, insertOrder, url, headers) => {
     );
     if (insertOrder[order] === tableName) {
       spinnerStop('Done');
-      return;
     } else {
-      await truncate(order + 1)
+      await truncate(order + 1, Boolean(resp));
     }
   };
   if (insertOrder.length === 0) {

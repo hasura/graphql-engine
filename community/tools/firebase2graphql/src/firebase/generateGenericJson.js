@@ -5,7 +5,7 @@ const {
   getPrimaryKeyName,
   isRandomList,
   isList,
-  isObjectList
+  isObjectList,
 } = require('./utils');
 const throwError = require('../error');
 
@@ -97,9 +97,9 @@ const handleTableCandidate = (obj, tableName, tableDetectedCallback, isRootLevel
   }
   for (var id in obj) {
     const randomUUID = uuid();
-    const initialRow = { _id: id };
+    const initialRow = {_id: id};
     if (!isRootLevel) {
-      initialRow['_idself'] = randomUUID;
+      initialRow._idself = randomUUID;
     }
     const flatRow = flattenObject(obj[id], initialRow);
     if (flatRow && Object.keys(flatRow).length > 0) {
@@ -149,7 +149,7 @@ const handleFirebaseJson = db => {
   for (var tableName in db) {
     topLevelTables.push({
       _id: uuid(),
-      __tableName: tableName.replace(/[^a-zA-Z0-9]/g, '_')
+      __tableName: tableName.replace(/[^a-zA-Z0-9]/g, '_'),
     });
     tablesMap[tableName] = handleTableCandidate(
       db[tableName],
@@ -158,7 +158,7 @@ const handleFirebaseJson = db => {
       true
     );
   }
-  tablesMap['__rootTables'] = topLevelTables;
+  tablesMap.__rootTables = topLevelTables;
   return tablesMap;
 };
 
