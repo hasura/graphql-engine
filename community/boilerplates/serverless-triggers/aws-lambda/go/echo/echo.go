@@ -13,9 +13,14 @@ type TableStruct struct {
 	Name string `json:"name"`
 }
 
+type EventData struct {
+	Old map[string]interface{} `json:"old"`
+	New map[string]interface{} `json"new"`
+}
+
 type EventStruct struct {
-	Operation string `json:"op"`
-	Data      map[string]map[string]string
+	Operation string    `json:"op"`
+	Data      EventData `json:"data"`
 }
 
 type HasuraEvent struct {
@@ -51,17 +56,17 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		}, nil
 	}
 
-	var message = "Not able to process request"
+	var message = "cannot process request"
 	var data = body.Event.Data
 
 	if body.Table.Name == "notes" {
 		switch body.Event.Operation {
 		case "INSERT":
-			message = fmt.Sprintf("New note %v inserted, with data: %v", data["new"]["id"], data["new"]["note"])
+			message = fmt.Sprintf("New note %v inserted, with data: %v", data.New["id"], data.New["note"])
 		case "UPDATE":
-			message = fmt.Sprintf("New note %v updated, with data: %v", data["new"]["id"], data["new"]["note"])
+			message = fmt.Sprintf("New note %v updated, with data: %v", data.New["id"], data.New["note"])
 		case "DELETE":
-			message = fmt.Sprintf("New note %v delete, with data: %v", data["old"]["id"], data["old"]["note"])
+			message = fmt.Sprintf("New note %v delete, with data: %v", data.Old["id"], data.Old["note"])
 		}
 	}
 
