@@ -1,7 +1,4 @@
-import sys
-import json
 from flask import jsonify
-
 
 def function(request):
     request_json = request.get_json()
