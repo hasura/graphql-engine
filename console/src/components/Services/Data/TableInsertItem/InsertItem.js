@@ -3,16 +3,12 @@ import React, { Component } from 'react';
 import TableHeader from '../TableCommon/TableHeader';
 import { insertItem, I_RESET } from './InsertActions';
 import { ordinalColSort } from '../utils';
-import { modalOpen, modalClose } from './InsertActions';
 import { setTable } from '../DataActions';
-
-// import RichTextEditor from 'react-rte';
 
 class InsertItem extends Component {
   constructor() {
     super();
-    // this.state = {insertedRows: 0, editorState: RichTextEditor.createEmptyValue(), editorColumnMap: {}, currentColumn: null};
-    this.state = { insertedRows: 0, editorColumnMap: {}, currentColumn: null };
+    this.state = { insertedRows: 0 };
   }
 
   componentDidMount() {
@@ -22,67 +18,6 @@ class InsertItem extends Component {
   componentWillUnmount() {
     this.props.dispatch({ type: I_RESET });
   }
-
-  onSwitchClick = (e, colName, clone) => {
-    this.props.dispatch(modalOpen());
-    // get value of current column
-    let currentValue = this.state.editorColumnMap[colName];
-    // if value exists, set editorState to that value, else empty it
-    if (currentValue !== undefined) {
-      // this.setState({editorState: RichTextEditor.createValueFromString(currentValue, 'html')});
-    } else if (clone !== undefined && clone !== null && colName in clone) {
-      currentValue = clone[colName];
-      // this.setState({editorState: RichTextEditor.createValueFromString(clone[colName], 'html')});
-    } else {
-      // this.setState({editorState: RichTextEditor.createEmptyValue()});
-    }
-    this.setState({ currentColumn: colName });
-  };
-
-  onTextChange = (e, colName, { insertRadioNode, nullNode }) => {
-    const textValue = e.target.value;
-    const tempState = {
-      ...this.state,
-    };
-    tempState.editorColumnMap = { ...this.state.editorColumnMap };
-    tempState.editorColumnMap[colName] = textValue;
-    if (!nullNode.disabled) {
-      insertRadioNode.checked = !!textValue.length;
-      nullNode.checked = !textValue.length;
-    }
-    this.setState({ ...tempState });
-  };
-
-  onTextFocus = (e, { nullNode }) => {
-    if (nullNode.disabled) return;
-    const textValue = e.target.value;
-    if (
-      textValue === undefined ||
-      textValue === null ||
-      textValue.length === 0
-    ) {
-      nullNode.checked = true;
-    }
-  };
-
-  onModalClose = () => {
-    this.props.dispatch(modalClose());
-  };
-
-  textEditorChange = editorState => {
-    // maintain column level state
-    const htmlValue = editorState.toString('html');
-    // const currentColumn = this.state.currentColumn;
-    const mapObject = this.state.editorColumnMap;
-    const currentColumn = this.state.currentColumn;
-    mapObject[currentColumn] = htmlValue;
-    this.setState({ editorState });
-    this.setState({ ...this.state.editorColumnMap, mapObject });
-  };
-
-  rteClicked = () => {
-    this.refs.editor.focus();
-  };
 
   nextInsert() {
     // when use state object remember to do it inside a class method.
@@ -132,229 +67,106 @@ class InsertItem extends Component {
       ) {
         isAutoIncrement = true;
       }
-      // Text type
-      // auto-increment format    nextval('tablename_columnname_seq'::regclass)
-      let typedInput = (
-        <input
-          placeholder="text"
-          type="text"
-          className={'form-control ' + styles.insertBox}
-          onClick={clicker}
-          ref={inputRef}
-          defaultValue={clone && colName in clone ? clone[colName] : ''}
-          data-test={`typed-input-${i}`}
-        />
-      );
+
+      const standardInputProps = {
+        className: `form-control ${styles.insertBox}`,
+        'data-test': `typed-input-${i}`,
+        defaultValue: clone && colName in clone ? clone[colName] : '',
+        onClick: clicker,
+        onChange: e => {
+          const textValue = e.target.value;
+          if (isNullable && !isAutoIncrement) {
+            refs[colName].insertRadioNode.checked = !!textValue.length;
+            refs[colName].nullNode.checked = !textValue.length;
+          }
+        },
+        onFocus: e => {
+          const textValue = e.target.value;
+          if (!isNullable || (isAutoIncrement && textValue.length === 0)) {
+            return;
+          }
+
+          if (
+            textValue === undefined ||
+            textValue === null ||
+            textValue.length === 0
+          ) {
+            refs[colName].nullNode.checked = true;
+          }
+        },
+        placeholder: 'text',
+        ref: inputRef,
+        type: 'text',
+      };
+
+      const getPlaceholder = type => {
+        switch (type) {
+          case 'integer':
+            return 'integer';
+          case 'bigint':
+            return 'BIG integer';
+          case 'numeric':
+            return 'float';
+          case 'timestamp with time zone':
+            return new Date().toISOString();
+          case 'date':
+            return new Date().toISOString().slice(0, 10);
+          case 'timetz':
+            const time = new Date().toISOString().slice(11, 19);
+            return `${time}Z or ${time}+05:30`;
+          case 'uuid':
+            return 'UUID';
+          case 'json':
+            return '{"name": "foo"} or [12, "asdf"]';
+          case 'jsonb':
+            return '{"name": "foo"} or [12, "asdf"]';
+          default:
+            return 'text';
+        }
+      };
 
       const colType = col.data_type;
-      // Integer
-      if (colType === 'integer') {
-        // check if autoincrement
-        if (isAutoIncrement) {
-          typedInput = (
-            <input
-              readOnly
-              placeholder="integer"
-              type="text"
-              className={'form-control ' + styles.insertBox}
-              onClick={clicker}
-              ref={inputRef}
-              defaultValue={clone && colName in clone ? clone[colName] : ''}
-              data-test={`typed-input-${i}`}
-            />
-          );
-        } else {
-          typedInput = (
-            <input
-              placeholder="integer"
-              type="text"
-              className={'form-control ' + styles.insertBox}
-              onClick={clicker}
-              ref={inputRef}
-              defaultValue={clone && colName in clone ? clone[colName] : ''}
-              data-test={`typed-input-${i}`}
-            />
-          );
-        }
-      } else if (colType === 'bigint') {
+      let typedInput = (
+        <input {...standardInputProps} placeholder={getPlaceholder(colType)} />
+      );
+
+      if (isAutoIncrement) {
         typedInput = (
           <input
-            placeholder="BIG integer"
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={clone && colName in clone ? clone[colName] : ''}
-            data-test={`typed-input-${i}`}
+            {...standardInputProps}
+            readOnly
+            placeholder={getPlaceholder(colType)}
           />
         );
-      } else if (colType === 'numeric') {
-        // Numeric
-        typedInput = (
-          <input
-            placeholder="float"
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={clone && colName in clone ? clone[colName] : ''}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === 'timestamp with time zone') {
-        // Timestamp
-        typedInput = (
-          <input
-            placeholder={new Date().toISOString()}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={clone && colName in clone ? clone[colName] : ''}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === 'date') {
-        // Date
-        typedInput = (
-          <input
-            placeholder={new Date().toISOString().slice(0, 10)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={clone && colName in clone ? clone[colName] : ''}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === 'timetz') {
-        // Time
-        const time = new Date().toISOString().slice(11, 19);
-        typedInput = (
-          <input
-            placeholder={`${time}Z or ${time}+05:30`}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={clone && colName in clone ? clone[colName] : ''}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === 'uuid') {
-        // UUID
-        typedInput = (
-          <input
-            placeholder={'UUID'}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={clone && colName in clone ? clone[colName] : ''}
-            data-test={`typed-input-${i}`}
-          />
-        );
-      } else if (colType === 'json' || colType === 'jsonb') {
+      }
+
+      if (colType === 'json' || colType === 'jsonb') {
         // JSON/JSONB
         typedInput = (
           <input
-            placeholder={'{"name": "foo"} or [12, "asdf"]'}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
+            {...standardInputProps}
+            placeholder={getPlaceholder(colType)}
             defaultValue={
               clone && colName in clone ? JSON.stringify(clone[colName]) : ''
             }
-            data-test={`typed-input-${i}`}
           />
         );
-      } else if (colType === 'boolean') {
+      }
+
+      if (colType === 'boolean') {
         // Boolean
         typedInput = (
           <select
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={clone && colName in clone ? clone[colName] : ''}
+            {...standardInputProps}
             onClick={e => {
               e.target.parentNode.parentNode.click();
               e.target.focus();
             }}
-            data-test={`typed-input-${i}`}
           >
             <option value="true">True</option>
             <option value="false">False</option>
           </select>
         );
-      } else {
-        // everything else is text.
-        // find value to be shown. rich text editor vs clone
-        let defaultValue = '';
-        let currentValue = '';
-        if (this.state.editorColumnMap[colName] !== undefined) {
-          defaultValue = this.state.editorColumnMap[colName];
-          currentValue = this.state.editorColumnMap[colName];
-        } else if (clone && colName in clone) {
-          defaultValue = clone[colName];
-        }
-        if (currentValue !== '') {
-          /*
-          typedInput = (<span><input placeholder={'text'} type="text" className={'form-control ' + styles.insertBox} onClick={clicker} ref={inputRef} onChange={e => { this.onTextChange(e, colName); }} value={currentValue} />
-            <span onClick={e => { this.onSwitchClick(e, colName, clone); }}>Switch to Rich Text Editor</span>
-            </span>
-          );
-          */
-          typedInput = (
-            <span>
-              <input
-                placeholder={'text'}
-                type="text"
-                className={'form-control ' + styles.insertBox}
-                onClick={clicker}
-                ref={inputRef}
-                onChange={e => {
-                  this.onTextChange(e, colName, refs[colName]);
-                }}
-                onFocus={e => {
-                  this.onTextFocus(e, refs[colName]);
-                }}
-                value={currentValue}
-                data-test={`typed-input-${i}`}
-              />
-            </span>
-          );
-        } else {
-          /*
-          typedInput = (<span><input placeholder={'text'} type="text" className={'form-control ' + styles.insertBox} onClick={clicker} ref={inputRef} onChange={e => { this.onTextChange(e, colName); }} value={defaultValue} />
-            <span onClick={e => { this.onSwitchClick(e, colName, clone); }}>Switch to Rich Text Editor</span>
-            </span>
-          );
-          */
-          typedInput = (
-            <span>
-              <input
-                placeholder={'text'}
-                type="text"
-                className={'form-control ' + styles.insertBox}
-                onClick={clicker}
-                ref={inputRef}
-                onChange={e => {
-                  this.onTextChange(e, colName, refs[colName]);
-                }}
-                onFocus={e => {
-                  this.onTextFocus(e, refs[colName]);
-                }}
-                value={defaultValue}
-                data-test={`typed-input-${i}`}
-              />
-            </span>
-          );
-        }
-
-        // typedInput = (<span><input placeholder={'text'} type="text" className={'form-control ' + styles.insertBox} onClick={clicker} ref={inputRef} defaultValue={(clone && colName in clone) ? JSON.stringify(clone[colName]) : ''} />);
-
-        // typedInput = (<RichTextEditor placeholder="Enter some text" value={this.state.editorState} ref="editor" onClick={this.rteClicked} onChange={this.textEditorChange} toolbarConfig={toolbarConfig} />);
       }
 
       let showDefaultOption = (
