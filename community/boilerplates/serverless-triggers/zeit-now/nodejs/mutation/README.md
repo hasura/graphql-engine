@@ -1,5 +1,7 @@
 # NodeJS Mutation Example on Zeit
 
+If you haven't already, follow the first part of instructions [here](../../).
+
 This example trigger updates (executes a mutation) when an event occurs on
 another table, written in NodeJS.
 

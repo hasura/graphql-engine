@@ -1,5 +1,7 @@
 # Go Echo on Zeit
 
+If you haven't already, follow the first part of instructions [here](../../).
+
 This is an example which echoes the event back, written in Golang.
 
 ### Create a table

@@ -29,7 +29,9 @@ Checkout any of the example triggers given below for further steps:
 
 - [NodeJS 8 Echo](nodejs/echo)
 - [NodeJS 8 Mutattion](nodejs/mutation) 
-- [Python 3 Echo](python/echo)
-- [Python 3 Mutation](python/mutation)
 - [Go Echo](go/echo)
 - [Go Mutation](go/mutation)
+<!--
+- [Python 3 Echo](python/echo)
+- [Python 3 Mutation](python/mutation)
+-->
