@@ -4,19 +4,22 @@ const colors = require('colors/safe');
 
 const complexQuery = `
 query {
-  f2g_test_Album (
-    order_by:_id_asc
-  ){
+  f2gt_Album (order_by:_id_asc){
     _id
-    f2g_test_Album_artist {
-      Name
-      ArtistId
+    f2gt_Track (order_by: _id_asc) {
+      _id
+      Name 
     }
-    f2g_test_Track (
-      order_by: Name_asc
-    ) {
+    f2gt_Artist {
       Name
-      Composer
+      f2gt_Album (order_by: _id_desc){
+        _id
+        Title
+        f2gt_Track (order_by: Name_asc){
+          Name
+          Composer
+        }
+      }
     }
   }
 }
@@ -29,12 +32,15 @@ const verifyDataImport = () => {
     headers: {'x-hasura-access-key': process.env.TEST_X_HASURA_ACCESS_KEY},
   }).then(response => {
     if (
-      response.data.f2g_test_Album[0].f2g_test_Album_artist.ArtistId === 1 &&
-      response.data.f2g_test_Album[0].f2g_test_Track[0].Name === 'Breaking The Rules'
+      response.data.f2gt_Album[0]._id === '1' &&
+      response.data.f2gt_Album[0].f2gt_Track[1]._id === '10' &&
+      response.data.f2gt_Album[0].f2gt_Artist.Name === 'AC/DC' &&
+      response.data.f2gt_Album[0].f2gt_Artist.f2gt_Album[0].Title === 'Let There Be Rock' &&
+      response.data.f2gt_Album[0].f2gt_Artist.f2gt_Album[0].f2gt_Track[0].Name === 'Bad Boy Boogie'
     ) {
       let sqlString = '';
-      ['Album', 'Album_artist', 'Track'].forEach(t => {
-        sqlString += `drop table public."f2g_test_${t}" cascade;`;
+      ['Album', 'Artist', 'Tracks'].forEach(t => {
+        sqlString += `drop table public."f2gt_${t}" cascade;`;
       });
       fetch(
         `${process.env.TEST_HGE_URL}/v1/query`,
@@ -57,12 +63,12 @@ const verifyDataImport = () => {
       });
     } else {
       console.log(colors.red('✖ data-sets/chinook.json: Test failed. Unexpected response.'));
-      console.log(response.data);
       process.exit();
     }
   }).catch(e => {
     console.log(colors.red('✖ data-sets/chinook.json: Test failed. Unexpected response.'));
     console.log(JSON.stringify(e, null, 2));
+
     process.exit();
   });
 };

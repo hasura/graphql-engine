@@ -1,5 +1,5 @@
 {
-    "Album": {
+    "f2gt_Album": {
         "1": {
             "tracks": {
                 "1": {
@@ -64638,7 +64638,7 @@
             }
         }
     },
-    "Track": {
+    "f2gt_Track": {
         "1": {
             "Composer": "Angus Young, Malcolm Young, Brian Johnson",
             "album": {
@@ -93470,7 +93470,7 @@
             }
         }
     },
-    "Artist": {
+    "f2gt_Artist": {
         "1": {
             "albums": {
                 "1": {
