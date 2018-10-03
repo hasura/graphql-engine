@@ -19,10 +19,13 @@ consisting of 3 components. Each have their own contributing guides:
 
 1. [Server (Haskell)](server/CONTRIBUTING.md)
 2. [CLI (Go)](cli/CONTRIBUTING.md)
-3. [Console (JavaScript)](console/CONTRIBUTING.md)
+3. [Console (JavaScript)](console/README.md#contributing-to-hasura-console)
 
 All of the three components have a single version, denoted by either the git
 tag, or a combination of branch name and git commit SHA.
+
+For all contributions, a CLA (Contributor License Agreement) needs to be signed [here](https://cla-assistant.io/hasura/graphql-engine) before (or after) the pull request has been submitted. A bot will prompt the same as a pull request comment.
+
 
 ### Docs
 

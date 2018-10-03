@@ -105,7 +105,7 @@ class Main extends React.Component {
     } = this.props;
     const styles = require('./Main.scss');
     const appPrefix = '';
-    const logo = require('./logo.svg');
+    const logo = require('./white-logo.svg');
     const github = require('./Github.svg');
     const discord = require('./Discord.svg');
     const mail = require('./mail.svg');
@@ -159,7 +159,6 @@ class Main extends React.Component {
                   </Link>
                 </div>
                 <Link to="/">
-                  <div className={styles.header_project_name}>HASURA</div>
                   <div className={styles.project_version}>{serverVersion}</div>
                 </Link>
               </div>

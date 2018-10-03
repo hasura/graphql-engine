@@ -20,8 +20,12 @@ class Settings extends Component {
     )[0];
     triggerSchema = triggerSchema ? triggerSchema : {};
 
-    const handleDeleteTrigger = () => {
-      dispatch(deleteTrigger(triggerName));
+    const handleDeleteTrigger = e => {
+      e.preventDefault();
+      const isOk = confirm('Are you sure?');
+      if (isOk) {
+        dispatch(deleteTrigger(triggerName));
+      }
     };
 
     return (

@@ -265,8 +265,8 @@ setConflictCtx conflictCtxM = do
         encToText $ InsertTxConflictCtx CAIgnore constrM Nothing
     conflictCtxToJSON (CCUpdate constr updCols filtr) =
         encToText $ InsertTxConflictCtx CAUpdate (Just constr) $
-        Just $ sqlBuilderToTxt $ toSQL (S.buildSEWithExcluded updCols)
-                                 S.<-> toSQL (S.WhereFrag filtr)
+        Just $ toSQLTxt (S.buildSEWithExcluded updCols)
+               <> " " <> toSQLTxt (S.WhereFrag filtr)
 
 instance HDBQuery InsertQuery where
 

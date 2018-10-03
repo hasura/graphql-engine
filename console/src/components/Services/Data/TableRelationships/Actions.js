@@ -2,6 +2,7 @@ import {
   makeMigrationCall,
   loadUntrackedRelations,
   loadSchema,
+  RESET_MANUAL_REL_TABLE_LIST,
 } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../Notification';
@@ -158,16 +159,23 @@ const relTableChange = tableName => (dispatch, getState) => {
   // set table name state
   dispatch({ type: REL_SET_RTABLE, rTable: tableName });
   // fetch columns of the selected table
-  const tableSchema = getState().tables.allSchemas.find(
+  const tableSchema = getState().tables.modify.relAdd.manualRelInfo.tables.find(
     t => t.table_name === tableName
   );
-  const tableColumns = tableSchema.columns;
-  dispatch({ type: REL_SET_MANUAL_COLUMNS, data: tableColumns });
+  if (tableSchema) {
+    const tableColumns = tableSchema.columns;
+    dispatch({ type: REL_SET_MANUAL_COLUMNS, data: tableColumns });
+  } else {
+    console.error(`cannot find table: ${tableName}`);
+    dispatch({ type: REL_SET_MANUAL_COLUMNS, data: [] });
+  }
 };
 
 const addRelViewMigrate = tableName => (dispatch, getState) => {
   const state = getState().tables.modify.relAdd;
   const currentSchema = getState().tables.currentSchema;
+  const remoteSchema = getState().tables.modify.relAdd.manualRelInfo
+    .remoteSchema;
   const isObjRel = state.isObjRel;
   const name = state.name;
   const lcol = state.lcol;
@@ -185,7 +193,7 @@ const addRelViewMigrate = tableName => (dispatch, getState) => {
         table: { name: tableName, schema: currentSchema },
         using: {
           manual_configuration: {
-            remote_table: { name: state.rTable, schema: currentSchema },
+            remote_table: { name: state.rTable, schema: remoteSchema },
             column_mapping: columnMapping,
           },
         },
@@ -209,7 +217,11 @@ const addRelViewMigrate = tableName => (dispatch, getState) => {
   const successMsg = 'Relationship created';
   const errorMsg = 'Creating relationship failed';
 
-  const customOnSuccess = () => {};
+  const customOnSuccess = () => {
+    /* Adds reset manual relationship state and closes the rel block */
+    dispatch({ type: RESET_MANUAL_REL_TABLE_LIST });
+    dispatch(relManualAddClicked());
+  };
   const customOnError = () => {};
 
   // perform validations and make call
