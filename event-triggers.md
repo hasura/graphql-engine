@@ -91,9 +91,9 @@ Transform and load data into external data-stores. Check out this demo and tutor
 * [Try it out](https://shahidh.in/hasura-serverless-etl)
 * [Tutorial](community/examples/serverless-etl)
 
-### Building reactive UX for your async backend with realtime GraphQL
+### Building reactive UX for your async backend with real-time GraphQL
 
-Propagate event driven and asynchronous information to UI clients easily with GraphQL subscriptions & live-queries.
+Propagate event-driven and asynchronous information to UI clients easily with GraphQL subscriptions & live-queries.
 
 ![Reactive apps architecture](assets/reactive-apps-arch.png)
 
