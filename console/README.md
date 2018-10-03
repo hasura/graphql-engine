@@ -34,11 +34,11 @@ cd console
 npm install
 ```
 
-Hasura console can be developed in two modes (`server` or `cli` mode). Both modes requires a running instance of GraphQL Enigne. The easiest way to get Hasura GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://docs.hasura.io/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine is documented [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
+Hasura console can be developed in two modes (`server` or `cli` mode). Both modes require a running instance of GraphQL Enigne. The easiest way to get Hasura GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://docs.hasura.io/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine is documented [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
 
 ### Development with Hasura GraphQL Engine (`server` mode)
 
-Hasura GraphQL engine should be running to develop console in this mode. If you have set it up on heroku, your url will look like `<app-name>.herokuapp.com`, if it's on you local machine, it's probably `http://localhost:8080`.
+Hasura GraphQL engine should be running to develop console in this mode. If you have set it up on heroku, your url will look like `<app-name>.herokuapp.com`, if it's on your local machine, it's probably `http://localhost:8080`.
 
 [Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. Create a `.env` file in the root directory for console (wherever package.json is). Sample `.env` file will look like below
 
@@ -119,7 +119,7 @@ Visit [http://localhost:3000](http://localhost:3000) to confirm the setup.
 
 ![Testing Development Server](../assets/console-readme-assets/test-dev-setup.jpg)
 
-### Make changes to code
+### Make changes to the code
 
 Make changes to the code and the console will reload automatically to reflect the new changes. Keep iterating.
 When adding a new feature, it is recommended to add corresponding tests too.
