@@ -326,7 +326,6 @@ const normalize = async (tables, data, url, headers, level, importData) => {
       tables,
       data
     );
-    delete newData.__rootTables;
   } else {
     newData = handleConfirmedDupes(maybeDupes.confirmed, tables, data);
   }
