@@ -267,6 +267,63 @@ class TestV1InsertPermissions(object):
         assert st_code == 200, resp
 
 
+class TestV1UpdateBasic:
+
+    def test_set_author_name(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/author_set_name.yaml")
+
+    def test_set_person_details(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/person_set_details.yaml")
+
+    def test_person_id_inc(self,  hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/person_inc.yaml")
+
+    def test_product_mul_price(self,  hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/product_mul_price.yaml")
+
+    def test_product_set_default_price(self,  hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/product_set_default_price.yaml")
+
+    def test_no_operator_err(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/person_error_no_operator.yaml")
+
+    def test_no_where_clause_err(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/person_error_no_where_clause.yaml")
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/v1/update/basic"
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
+
+
+class TestV1UpdatePermissions:
+
+    def test_user_can_update_unpublished_article(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/user_can_update_unpublished_article.yaml")
+
+    def test_user_cannot_update_published_version_col(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/user_cannot_update_published_article_version.yaml")
+
+    def test_user_cannot_update_another_users_article(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/user_cannot_update_another_users_article.yaml")
+
+    def test_user_cannot_update_id_col(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/user_cannot_update_id_col_article.yaml")
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/v1/update/permissions"
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
+
+
 class TestV1Delete:
  
     def test_delete_author(self, hge_ctx):
@@ -285,6 +342,15 @@ class TestMetadata:
 
     def test_reload_metadata(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/reload_metadata.yaml')
+
+    def test_export_metadata(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/export_metadata.yaml')
+
+    def test_clear_metadata(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/clear_metadata.yaml')
+
+    def test_dump_internal_state(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/dump_internal_state.yaml')
 
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):  
