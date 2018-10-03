@@ -28,6 +28,7 @@ import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Select     (fromSelSet)
+import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
@@ -72,8 +73,8 @@ convertRowObj val =
 mkConflictClause :: RI.ConflictCtx -> RI.ConflictClauseP1
 mkConflictClause (RI.CCDoNothing constrM) =
   RI.CP1DoNothing $ fmap RI.Constraint constrM
-mkConflictClause (RI.CCUpdate constr updCols) =
-  RI.CP1Update (RI.Constraint constr) updCols
+mkConflictClause (RI.CCUpdate constr updCols fltr) =
+  RI.CP1Update (RI.Constraint constr) updCols fltr
 
 parseAction
   :: (MonadError QErr m)
@@ -115,29 +116,43 @@ parseUpdCols obj =
 
 parseOnConflict
   :: (MonadError QErr m)
-  => [PGCol] -> AnnGValue -> m RI.ConflictCtx
-parseOnConflict inpCols val =
+  => Maybe UpdPermForIns -> [PGCol] -> AnnGValue -> m RI.ConflictCtx
+parseOnConflict updFltrM inpCols val =
   flip withObject val $ \_ obj -> do
     actionM <- parseAction obj
     constraint <- parseConstraint obj
     updColsM <- parseUpdCols obj
+
+    let ignoreCtx = return $ RI.CCDoNothing $ Just constraint
+        updateCtx = do
+          (updColsPerm, updFltr) <- onNothing updFltrM $ throwVE
+            "cannot update columns since update permission is not defined"
+          updCols <- maybe (returnInpCols updColsPerm) return updColsM
+          return $ RI.CCUpdate constraint updCols updFltr
+
     -- consider "action" if "update_columns" is not mentioned
-    return $ case (updColsM, actionM) of
-      (Just [], _)             -> RI.CCDoNothing $ Just constraint
-      (Just cols, _)           -> RI.CCUpdate constraint cols
-      (Nothing, Just CAIgnore) -> RI.CCDoNothing $ Just constraint
-      (Nothing, _)             -> RI.CCUpdate constraint inpCols
+    case (updColsM, actionM) of
+      (Just [], _)             -> ignoreCtx
+      (Just _, _)              -> updateCtx
+      (Nothing, Just CAIgnore) -> ignoreCtx
+      (Nothing, _)             -> updateCtx
+  where
+    returnInpCols updColsPerm =
+      RI.validateInpCols inpCols updColsPerm >> return inpCols
+
+
 
 convertInsert
   :: RoleName
   -> (QualifiedTable, QualifiedTable) -- table, view
   -> [PGCol] -- all the columns in this table
+  -> Maybe UpdPermForIns -- update permission
   -> Field -- the mutation field
   -> Convert RespTx
-convertInsert role (tn, vn) tableCols fld = do
-  insTuples    <- withArg arguments "objects" asRowExps
+convertInsert role (tn, vn) tableCols updPermM fld = do
+  insTuples <- withArg arguments "objects" asRowExps
   let inpCols = Set.toList $ Set.fromList $ concatMap fst insTuples
-  conflictCtxM <- withArgM arguments "on_conflict" $ parseOnConflict inpCols
+  conflictCtxM <- withArgM arguments "on_conflict" $ parseOnConflict updPermM inpCols
   let onConflictM = fmap mkConflictClause conflictCtxM
   mutFlds <- convertMutResp tn (_fType fld) $ _fSelSet fld
   args <- get

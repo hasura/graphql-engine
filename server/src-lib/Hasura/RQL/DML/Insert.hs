@@ -33,7 +33,7 @@ data ConflictTarget
 
 data ConflictClauseP1
   = CP1DoNothing !(Maybe ConflictTarget)
-  | CP1Update !ConflictTarget ![PGCol]
+  | CP1Update !ConflictTarget ![PGCol] !S.BoolExp
   deriving (Show, Eq)
 
 data InsertQueryP1
@@ -56,8 +56,8 @@ mkSQLInsert (InsertQueryP1 tn vn cols vals c mutFlds) =
       Nothing -> Nothing
       Just (CP1DoNothing Nothing)   -> Just $ S.DoNothing Nothing
       Just (CP1DoNothing (Just ct)) -> Just $ S.DoNothing $ Just $ toSQLCT ct
-      Just (CP1Update ct inpCols)    -> Just $ S.Update (toSQLCT ct)
-        (S.buildSEWithExcluded inpCols)
+      Just (CP1Update ct inpCols filtr)    -> Just $ S.Update (toSQLCT ct)
+        (S.buildSEWithExcluded inpCols) $ Just $ S.WhereFrag filtr
 
     toSQLCT ct = case ct of
       Column pgCols -> S.SQLColumn pgCols
@@ -89,10 +89,14 @@ convObj prepFn defInsVals fieldInfoMap insObj = do
     colType <- askPGType fieldInfoMap c relWhenPGErr
     -- Encode aeson's value into prepared value
     withPathK (getPGColTxt c) $ prepFn colType val
-  let sqlExps = HM.elems $ HM.union inpInsVals defInsVals
-      inpCols = HM.keys inpInsVals
-
+  let inpCols = HM.keys inpInsVals
+      sqlExps = HM.elems $ HM.union inpInsVals defInsVals
   return (inpCols, sqlExps)
+
+validateInpCols :: (MonadError QErr m) => [PGCol] -> [PGCol] -> m ()
+validateInpCols inpCols updColsPerm = forM_ inpCols $ \inpCol ->
+  unless (inpCol `elem` updColsPerm) $ throw400 ValidationFailed $
+    "column " <> inpCol <<> " is not updatable"
 
 buildConflictClause
   :: (P1C m)
@@ -113,10 +117,12 @@ buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
       "Expecting 'constraint' or 'constraint_on' when the 'action' is 'update'"
     (Just col, Nothing, CAUpdate)   -> do
       validateCols col
-      return $ CP1Update (Column $ getPGCols col) inpCols
+      updFiltr <- getUpdFilter
+      return $ CP1Update (Column $ getPGCols col) inpCols updFiltr
     (Nothing, Just cons, CAUpdate)  -> do
       validateConstraint cons
-      return $ CP1Update (Constraint cons) inpCols
+      updFiltr <- getUpdFilter
+      return $ CP1Update (Constraint cons) inpCols updFiltr
     (Just _, Just _, _)             -> throw400 UnexpectedPayload
       "'constraint' and 'constraint_on' cannot be set at a time"
   where
@@ -134,6 +140,13 @@ buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
        throw400 Unexpected $ "constraint " <> getConstraintTxt c
                    <<> " for table " <> tiName tableInfo
                    <<> " does not exist"
+
+    getUpdFilter = do
+      upi <- askUpdPermInfo tableInfo
+      let updFiltr = upiFilter upi
+          updCols = HS.toList $ upiCols upi
+      validateInpCols inpCols updCols
+      return updFiltr
 
 
 convInsertQuery
@@ -174,6 +187,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
 
   insTuples <- withPathK "objects" $ indexedForM insObjs $ \obj ->
     convObj prepFn defInsVals fieldInfoMap obj
+
   let sqlExps = map snd insTuples
       inpCols = HS.toList $ HS.fromList $ concatMap fst insTuples
 
@@ -210,7 +224,7 @@ insertP2 (u, p) =
     insertSQL = toSQL $ mkSQLInsert u
 
 data ConflictCtx
-  = CCUpdate !ConstraintName ![PGCol]
+  = CCUpdate !ConstraintName ![PGCol] !S.BoolExp
   | CCDoNothing !(Maybe ConstraintName)
   deriving (Show, Eq)
 
@@ -229,9 +243,9 @@ extractConflictCtx cp =
     (CP1DoNothing mConflictTar) -> do
       mConstraintName <- mapM extractConstraintName mConflictTar
       return $ CCDoNothing mConstraintName
-    (CP1Update conflictTar inpCols) -> do
+    (CP1Update conflictTar inpCols filtr) -> do
       constraintName <- extractConstraintName conflictTar
-      return $ CCUpdate constraintName inpCols
+      return $ CCUpdate constraintName inpCols filtr
   where
     extractConstraintName (Constraint cn) = return cn
     extractConstraintName _ = throw400 NotSupported
@@ -249,9 +263,10 @@ setConflictCtx conflictCtxM = do
 
     conflictCtxToJSON (CCDoNothing constrM) =
         encToText $ InsertTxConflictCtx CAIgnore constrM Nothing
-    conflictCtxToJSON (CCUpdate constr updCols) =
+    conflictCtxToJSON (CCUpdate constr updCols filtr) =
         encToText $ InsertTxConflictCtx CAUpdate (Just constr) $
-        Just $ sqlBuilderToTxt $ toSQL $ S.buildSEWithExcluded updCols
+        Just $ sqlBuilderToTxt $ toSQL (S.buildSEWithExcluded updCols)
+                                 S.<-> toSQL (S.WhereFrag filtr)
 
 instance HDBQuery InsertQuery where
 

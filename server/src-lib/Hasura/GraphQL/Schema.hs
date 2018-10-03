@@ -9,7 +9,8 @@
 {-# LANGUAGE TupleSections         #-}
 
 module Hasura.GraphQL.Schema
-  ( mkGCtxMap
+  ( UpdPermForIns
+  , mkGCtxMap
   , GCtxMap
   , getGCtx
   , GCtx(..)
@@ -24,6 +25,7 @@ import           Data.Has
 
 import qualified Data.HashMap.Strict            as Map
 import qualified Data.HashSet                   as Set
+import qualified Data.List                      as L
 
 import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
@@ -41,10 +43,11 @@ defaultTypes :: [TypeInfo]
 defaultTypes = $(fromSchemaDocQ defaultSchema)
 
 type OpCtxMap = Map.HashMap G.Name OpCtx
+type UpdPermForIns = ([PGCol], S.BoolExp)
 
 data OpCtx
-  -- tn, vn, cols, req hdrs
-  = OCInsert QualifiedTable QualifiedTable [PGCol] [T.Text]
+  -- tn, vn, cols, update filter req hdrs
+  = OCInsert QualifiedTable QualifiedTable [PGCol] (Maybe UpdPermForIns) [T.Text]
   -- tn, filter exp, limit, req hdrs
   | OCSelect QualifiedTable S.BoolExp (Maybe Int) [T.Text]
   -- tn, filter exp, reqt hdrs
@@ -788,9 +791,10 @@ mkColumnTy tn cols = enumTyInfo
     mkColumnEnumVal (PGCol col) =
       EnumValInfo (Just "column name") (G.EnumValue $ G.Name col) False
 
-mkConflictActionTy :: EnumTyInfo
-mkConflictActionTy = EnumTyInfo (Just desc) ty $ mapFromL _eviVal
-                     [enumValIgnore, enumValUpdate]
+mkConflictActionTy :: Bool -> EnumTyInfo
+mkConflictActionTy updAllowed =
+  EnumTyInfo (Just desc) ty $ mapFromL _eviVal $
+  [enumValIgnore] <> bool [] [enumValUpdate] updAllowed
   where
     desc = G.Description "conflict action"
     ty = G.NamedType "conflict_action"
@@ -864,15 +868,16 @@ instance Monoid RootFlds where
 
 mkOnConflictTypes
   :: QualifiedTable -> [TableConstraint] -> [PGCol] -> Bool -> [TypeInfo]
-mkOnConflictTypes tn c cols isUpsertAllowed =
+mkOnConflictTypes tn c updCols isUpsertAllowed =
   bool tyInfos [] (null constraints || not isUpsertAllowed)
   where
-    tyInfos = [ TIEnum mkConflictActionTy
+    tyInfos = [ TIEnum $ mkConflictActionTy isUpdAllowed
               , TIEnum $ mkConstriantTy tn constraints
-              , TIEnum $ mkColumnTy tn cols
+              , TIEnum $ mkColumnTy tn updCols
               , TIInpObj $ mkOnConflictInp tn
               ]
     constraints = filter isUniqueOrPrimary c
+    isUpdAllowed = not $ null updCols
 
 mkGCtxRole'
   :: QualifiedTable
@@ -888,16 +893,15 @@ mkGCtxRole'
   -> [PGColInfo]
   -- constraints
   -> [TableConstraint]
-  -- all columns
-  -> [PGCol]
   -> TyAgg
-mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints allCols =
+mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints =
   TyAgg (mkTyInfoMap allTypes) fieldMap ordByEnums
 
   where
 
     ordByEnums = fromMaybe Map.empty ordByResCtxM
-    onConflictTypes = mkOnConflictTypes tn constraints allCols $
+    updCols = maybe [] (map pgiName) updColsM
+    onConflictTypes = mkOnConflictTypes tn constraints updCols $
       or $ fmap snd insPermM
     jsonOpTys = fromMaybe [] updJSONOpInpObjTysM
 
@@ -993,10 +997,14 @@ getRootFldsRole' tn primCols constraints fields insM selM updM delM =
             , getPKeySelDet selM $ getColInfos primCols colInfos
             ]
     colInfos = fst $ validPartitionFieldInfoMap fields
+    getUpdPermForIns (c, b, _) = (c, b)
+    getUpdPermHdrs (_, _, h) = h
     getInsDet (vn, hdrs, isUpsertAllowed) =
-      ( OCInsert tn vn (map pgiName colInfos) hdrs
-      , Right $ mkInsMutFld tn constraints isUpsertAllowed
-      )
+      let updPermForInsM = getUpdPermForIns <$> updM
+          totalHdrs = hdrs `L.union` maybe [] getUpdPermHdrs updM
+      in ( OCInsert tn vn (map pgiName colInfos) updPermForInsM totalHdrs
+         , Right $ mkInsMutFld tn constraints isUpsertAllowed
+         )
     getUpdDet (updCols, updFltr, hdrs) =
       ( OCUpdate tn updFltr hdrs
       , Right $ mkUpdMutFld tn $ getColInfos updCols colInfos
@@ -1065,12 +1073,11 @@ mkGCtxRole tableCache tn fields pCols constraints role permInfo = do
   let insColsM = ((colInfos,) . ipiAllowUpsert) <$> _permIns permInfo
       updColsM = filterColInfos . upiCols <$> _permUpd permInfo
       tyAgg = mkGCtxRole' tn insColsM selFldsM updColsM
-              (void $ _permDel permInfo) pColInfos constraints allCols
+              (void $ _permDel permInfo) pColInfos constraints
       rootFlds = getRootFldsRole tn pCols constraints fields permInfo
   return (tyAgg, rootFlds)
   where
     colInfos = fst $ validPartitionFieldInfoMap fields
-    allCols = map pgiName colInfos
     pColInfos = getColInfos pCols colInfos
     filterColInfos allowedSet =
       filter ((`Set.member` allowedSet) . pgiName) colInfos
@@ -1104,7 +1111,7 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols 
   m <- Map.traverseWithKey (mkGCtxRole tableCache tn fields pkeyCols validConstraints) rolePerms
   let adminCtx = mkGCtxRole' tn (Just (colInfos, True))
                  (Just selFlds) (Just colInfos) (Just ())
-                 pkeyColInfos validConstraints allCols
+                 pkeyColInfos validConstraints
   return $ Map.insert adminRole (adminCtx, adminRootFlds) m
   where
     validConstraints = mkValidConstraints constraints

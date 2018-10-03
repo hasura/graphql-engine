@@ -1,4 +1,4 @@
-description: Upserts author with id 1 as a user (Error)
+description: Upserts author with id 5 as a user 
 url: /v1alpha1/graphql
 status: 200
 response:

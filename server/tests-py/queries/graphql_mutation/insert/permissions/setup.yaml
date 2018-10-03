@@ -16,6 +16,15 @@ args:
     schema: public
     name: author
 
+#Insert Author 1
+- type: insert
+  args:
+    table: author
+    objects:
+    - id: 1
+      name: Author 1
+      is_registered: true
+
 #Article table
 - type: run_sql
   args:
@@ -32,6 +41,16 @@ args:
   args:
     schema: public
     name: article
+
+#Insert Article 1
+- type: insert
+  args:
+    table: article
+    objects:
+    - id: 1
+      title: Article 1
+      content: Sample content
+      author_id: 1
 
 #Create resident table
 - type: run_sql
@@ -114,6 +133,17 @@ args:
     permission:
       check:
         author_id: X-Hasura-User-Id
+      allow_upsert: true
+
+#Article udpate permission for user
+- type: create_update_permission
+  args:
+    table: article
+    role: user
+    permission:
+      filter:
+        author_id: X-Hasura-User-Id
+      columns: '*'
 
 #Author select permission for user
 - type: create_select_permission
@@ -162,6 +192,16 @@ args:
       check:
         id: X-HASURA-COMPANY-ID
       allow_upsert: true
+
+#Company update permission for user
+- type: create_update_permission
+  args:
+    table: Company
+    role: user
+    permission:
+      filter:
+        id: X-HASURA-COMPANY-ID
+      columns: '*'
 
 #Company select permission for user
 - type: create_select_permission
