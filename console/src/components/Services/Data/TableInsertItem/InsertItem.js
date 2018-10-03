@@ -74,24 +74,33 @@ class InsertItem extends Component {
         defaultValue: clone && colName in clone ? clone[colName] : '',
         onClick: clicker,
         onChange: e => {
+          if (isAutoIncrement) return;
+          if (!isNullable && !isDefault) return;
+
           const textValue = e.target.value;
-          if (isNullable && !isAutoIncrement) {
-            refs[colName].insertRadioNode.checked = !!textValue.length;
-            refs[colName].nullNode.checked = !textValue.length;
-          }
+          const radioToSelectWhenEmpty = isDefault
+            ? refs[colName].defaultNode
+            : refs[colName].nullNode;
+
+          refs[colName].insertRadioNode.checked = !!textValue.length;
+          radioToSelectWhenEmpty.checked = !textValue.length;
         },
         onFocus: e => {
-          const textValue = e.target.value;
-          if (!isNullable || (isAutoIncrement && textValue.length === 0)) {
-            return;
-          }
+          if (isAutoIncrement) return;
+          if (!isNullable && !isDefault) return;
 
+          const textValue = e.target.value;
           if (
             textValue === undefined ||
             textValue === null ||
             textValue.length === 0
           ) {
-            refs[colName].nullNode.checked = true;
+            const radioToSelectWhenEmpty = isDefault
+              ? refs[colName].defaultNode
+              : refs[colName].nullNode;
+
+            refs[colName].insertRadioNode.checked = false;
+            radioToSelectWhenEmpty.checked = true;
           }
         },
         placeholder: 'text',
