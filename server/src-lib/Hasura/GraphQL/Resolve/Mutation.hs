@@ -61,13 +61,15 @@ convertMutResp qt ty selSet =
 
 convertRowObj
   :: (MonadError QErr m, MonadState PrepArgs m)
-  => AnnGValue
+  => InsSetCols -> AnnGValue
   -> m [(PGCol, S.SQLExp)]
-convertRowObj val =
-  flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
+convertRowObj setVals val =
+  flip withObject val $ \_ obj -> do
+  inpVals <- forM (Map.toList obj) $ \(k, v) -> do
     prepExpM <- asPGColValM v >>= mapM prepare
     let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (PGCol $ G.unName k, prepExp)
+  return $ Map.toList setVals <> inpVals
 
 mkConflictClause :: RI.ConflictCtx -> RI.ConflictClauseP1
 mkConflictClause (RI.CCDoNothing constrM) =
@@ -131,10 +133,11 @@ parseOnConflict inpCols val =
 convertInsert
   :: RoleName
   -> (QualifiedTable, QualifiedTable) -- table, view
+  -> InsSetCols -- perm set columns
   -> [PGCol] -- all the columns in this table
   -> Field -- the mutation field
   -> Convert RespTx
-convertInsert role (tn, vn) tableCols fld = do
+convertInsert role (tn, vn) setCols tableCols fld = do
   insTuples    <- withArg arguments "objects" asRowExps
   let inpCols = Set.toList $ Set.fromList $ concatMap fst insTuples
   conflictCtxM <- withArgM arguments "on_conflict" $ parseOnConflict inpCols
@@ -150,7 +153,7 @@ convertInsert role (tn, vn) tableCols fld = do
     arguments = _fArguments fld
     asRowExps = withArray (const $ mapM rowExpWithDefaults)
     rowExpWithDefaults val = do
-      givenCols <- convertRowObj val
+      givenCols <- convertRowObj setCols val
       let inpCols = map fst givenCols
           sqlExps = Map.elems $ Map.union (Map.fromList givenCols) defVals
       return (inpCols, sqlExps)
@@ -202,7 +205,7 @@ convertUpdate
   -> Convert RespTx
 convertUpdate tn filterExp fld = do
   -- a set expression is same as a row object
-  setExpM   <- withArgM args "_set" convertRowObj
+  setExpM   <- withArgM args "_set" $ convertRowObj Map.empty
   -- where bool expression to filter column
   whereExp <- withArg args "where" $ convertBoolExp tn
   -- increment operator on integer columns

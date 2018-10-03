@@ -25,6 +25,9 @@ import           Hasura.Prelude
 dropAndSnakeCase :: T.Text -> T.Text
 dropAndSnakeCase = T.drop 9 . toSnakeCase . T.toLower
 
+hdrVar :: Text -> Text
+hdrVar h = "hasura." <> dropAndSnakeCase h
+
 toSnakeCase :: T.Text -> T.Text
 toSnakeCase = T.pack . map change . T.unpack
   where

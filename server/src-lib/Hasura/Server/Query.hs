@@ -263,4 +263,4 @@ setHeadersTx userInfo =
       $ userHeaders userInfo
     mkQ (h, v) = Q.fromBuilder $ BB.string7 $
       T.unpack $
-      "SET LOCAL hasura." <> dropAndSnakeCase h <> " =  " <> pgFmtLit v
+      "SET LOCAL " <> hdrVar h <> " =  " <> pgFmtLit v

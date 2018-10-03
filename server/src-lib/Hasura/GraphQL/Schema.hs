@@ -43,8 +43,8 @@ defaultTypes = $(fromSchemaDocQ defaultSchema)
 type OpCtxMap = Map.HashMap G.Name OpCtx
 
 data OpCtx
-  -- tn, vn, cols, req hdrs
-  = OCInsert QualifiedTable QualifiedTable [PGCol] [T.Text]
+  -- tn, vn, cols, setCols, req hdrs
+  = OCInsert QualifiedTable QualifiedTable [PGCol] InsSetCols [T.Text]
   -- tn, filter exp, limit, req hdrs
   | OCSelect QualifiedTable S.BoolExp (Maybe Int) [T.Text]
   -- tn, filter exp, reqt hdrs
@@ -979,7 +979,7 @@ getRootFldsRole'
   -> [PGCol]
   -> [TableConstraint]
   -> FieldInfoMap
-  -> Maybe (QualifiedTable, [T.Text], Bool) -- insert perm
+  -> Maybe (QualifiedTable, InsSetCols, [T.Text], Bool) -- insert perm
   -> Maybe (S.BoolExp, Maybe Int, [T.Text]) -- select filter
   -> Maybe ([PGCol], S.BoolExp, [T.Text]) -- update filter
   -> Maybe (S.BoolExp, [T.Text]) -- delete filter
@@ -993,8 +993,8 @@ getRootFldsRole' tn primCols constraints fields insM selM updM delM =
             , getPKeySelDet selM $ getColInfos primCols colInfos
             ]
     colInfos = fst $ validPartitionFieldInfoMap fields
-    getInsDet (vn, hdrs, isUpsertAllowed) =
-      ( OCInsert tn vn (map pgiName colInfos) hdrs
+    getInsDet (vn, setCols, hdrs, isUpsertAllowed) =
+      ( OCInsert tn vn (map pgiName colInfos) setCols hdrs
       , Right $ mkInsMutFld tn constraints isUpsertAllowed
       )
     getUpdDet (updCols, updFltr, hdrs) =
@@ -1062,7 +1062,7 @@ mkGCtxRole
   -> m (TyAgg, RootFlds)
 mkGCtxRole tableCache tn fields pCols constraints role permInfo = do
   selFldsM <- mapM (getSelFlds tableCache fields role) $ _permSel permInfo
-  let insColsM = ((colInfos,) . ipiAllowUpsert) <$> _permIns permInfo
+  let insColsM = ((insColsInfos,) . ipiAllowUpsert) <$> insPermM
       updColsM = filterColInfos . upiCols <$> _permUpd permInfo
       tyAgg = mkGCtxRole' tn insColsM selFldsM updColsM
               (void $ _permDel permInfo) pColInfos constraints allCols
@@ -1070,6 +1070,9 @@ mkGCtxRole tableCache tn fields pCols constraints role permInfo = do
   return (tyAgg, rootFlds)
   where
     colInfos = fst $ validPartitionFieldInfoMap fields
+    insPermM = _permIns permInfo
+    insColsInfos = flip filter colInfos $ \ci ->
+      pgiName ci `notElem` maybe [] (Map.keys . ipiSet) insPermM
     allCols = map pgiName colInfos
     pColInfos = getColInfos pCols colInfos
     filterColInfos allowedSet =
@@ -1087,7 +1090,7 @@ getRootFldsRole tn pCols constraints fields (RolePermInfo insM selM updM delM) =
   (mkIns <$> insM) (mkSel <$> selM)
   (mkUpd <$> updM) (mkDel <$> delM)
   where
-    mkIns i = (ipiView i, ipiRequiredHeaders i, ipiAllowUpsert i)
+    mkIns i = (ipiView i, ipiSet i, ipiRequiredHeaders i, ipiAllowUpsert i)
     mkSel s = (spiFilter s, spiLimit s, spiRequiredHeaders s)
     mkUpd u = ( Set.toList $ upiCols u
               , upiFilter u
@@ -1117,7 +1120,7 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols 
     noFilter = S.BELit True
     adminRootFlds =
       getRootFldsRole' tn pkeyCols constraints fields
-      (Just (tn, [], True)) (Just (noFilter, Nothing, []))
+      (Just (tn, Map.empty, [], True)) (Just (noFilter, Nothing, []))
       (Just (allCols, noFilter, [])) (Just (noFilter, []))
 
 mkScalarTyInfo :: PGColType -> ScalarTyInfo

@@ -97,6 +97,8 @@ class TestGraphqlInsertPermission(object):
     def test_company_user_role_insert_on_conflict(self, hge_ctx):
        check_query_f(hge_ctx, self.dir + "/company_user_role_on_conflict.yaml")
 
+    def test_resident_user_role_insert(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/resident_user.yaml")
 
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):  

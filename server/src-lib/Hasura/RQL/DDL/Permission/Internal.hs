@@ -207,6 +207,12 @@ getDependentHeaders boolExp = case boolExp of
                              then parseOnlyString v
                              else []
 
+mkHdrSQLVal :: T.Text -> PGColType -> S.SQLExp
+mkHdrSQLVal h ty = S.SETyAnn withFn annTy
+  where
+    hdrVariable = S.SELit $ hdrVar h
+    withFn = S.SEFnApp "current_setting" [hdrVariable] Nothing
+    annTy = S.AnnType $ T.pack $ show ty
 
 valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
 valueParser columnType = \case
@@ -219,9 +225,7 @@ valueParser columnType = \case
   -- Typical value as Aeson's value
   val -> txtRHSBuilder columnType val
   where
-    asCurrentSetting hdr = return $ S.SEUnsafe $
-      "current_setting('hasura." <> dropAndSnakeCase hdr
-       <> "')::" <> T.pack (show columnType)
+    asCurrentSetting hdr = return $ mkHdrSQLVal hdr columnType
 
 -- Convert where clause into SQL BoolExp
 convFilterExp :: (MonadError QErr m)
