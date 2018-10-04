@@ -11,6 +11,9 @@ class TestV1Select:
     def test_select_col_not_present(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/select_article_col_not_present_err.yaml')
 
+    def test_select_query_user(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_user.yaml')
+
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):  
         self.dir = "queries/v1/select/basic"    

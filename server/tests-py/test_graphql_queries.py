@@ -19,6 +19,9 @@ class TestGraphQLQueryBasic(object):
     def test_nested_select_query_where(self, hge_ctx):
         check_query_f(hge_ctx, "queries/graphql_query/basic/nested_select_where_query_author_article.yaml")
 
+    def test_select_query_user(self, hge_ctx):
+        check_query_f(hge_ctx, "queries/graphql_query/basic/select_query_user.yaml")
+
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):  
         st_code, resp = hge_ctx.v1q_f('queries/graphql_query/basic/setup.yaml')

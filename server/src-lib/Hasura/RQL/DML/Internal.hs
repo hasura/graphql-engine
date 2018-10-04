@@ -233,9 +233,9 @@ mkColExtr (c, pct) =
   mkColExtrAl (Just c) (c, pct)
 
 mkColExtrAl :: (IsIden a) => Maybe a -> (PGCol, PGColType) -> S.Extractor
-mkColExtrAl alM (c, pct) =
-  if pct == PGGeometry || pct == PGGeography
-  then S.mkAliasedExtrFromExp
+mkColExtrAl alM (c, pct)
+  | pct == PGGeometry || pct == PGGeography =
+    S.mkAliasedExtrFromExp
     ( S.SEFnApp "ST_AsGeoJSON"
       [ S.mkSIdenExp c
       , S.SEUnsafe "15" -- max decimal digits
@@ -243,7 +243,10 @@ mkColExtrAl alM (c, pct) =
       ] Nothing
       `S.SETyAnn` S.jsonType
     ) alM
-  else S.mkAliasedExtr c alM
+  | pct == PGBigInt || pct == PGBigSerial =
+    S.mkAliasedExtrFromExp
+    (S.mkSIdenExp c `S.SETyAnn` S.textType) alM
+  | otherwise = S.mkAliasedExtr c alM
 
 -- validate headers
 validateHeaders :: (P1C m) => [T.Text] -> m ()
