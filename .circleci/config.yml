@@ -331,18 +331,6 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - check_build_worthiness
-    - test_server_pg_10.4:
-        <<: *filter_only_vtags
-        requires:
-        - build_server
-    - test_server_pg_9.6:
-        <<: *filter_only_vtags
-        requires:
-        - build_server
-    - test_server_pg_9.5:
-        <<: *filter_only_vtags
-        requires:
-        - build_server
     - pytest_server_pg_10.4:
         <<: *filter_only_vtags
         requires:
@@ -358,9 +346,6 @@ workflows:
     - all_server_tests_pass:
         <<: *filter_only_vtags
         requires:
-        - test_server_pg_10.4
-        - test_server_pg_9.6
-        - test_server_pg_9.5
         - pytest_server_pg_10.4
         - pytest_server_pg_9.6
         - pytest_server_pg_9.5
