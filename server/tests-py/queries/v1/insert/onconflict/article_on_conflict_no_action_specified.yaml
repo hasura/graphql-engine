@@ -1,0 +1,22 @@
+description: Upserts article data via GraphQL mutation with only constraint (Error)
+url: /v1/query
+response: 
+  path: '$.on_conflict'
+  error: "the key 'action' was not present"
+  code: parse-failed
+status: 400
+query:
+  type: insert
+  args:
+    table: article
+    objects:
+    - content: Updated Article 1 content
+      id: 1
+    - content: Updated Article 2 content
+      id: 2
+    on_conflict:
+      constraint_on:
+      - id
+    returning:
+    - name
+    - id
