@@ -32,7 +32,7 @@ Query/Subscription syntax
    * - argument
      - false
      - Argument_
-     - one or more of filter criteria, instructions for sort order or pagination
+     - One or more of filter criteria, instructions for sort order or pagination
 
 **E.g. QUERY**:
 
@@ -186,7 +186,7 @@ JSONB operators:
    * - ``_has_keys_all``
      - ``?&``
 
-(For more details on what these operators do, refer `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`_.)
+(For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`_.)
 
 Text related operators :
 
@@ -242,4 +242,3 @@ PaginationExp
 .. parsed-literal::
 
    limit: Integer [offset: Integer]
-

@@ -88,7 +88,7 @@ The GraphQL query to fetch this weather information would look like:
       }
     }
 
-Explore this API on `Apollo LaunchPad <https://launchpad.graphql.com/nxw8w0z9q7>`_
+Explore this API on `Apollo LaunchPad <https://launchpad.graphql.com/nxw8w0z9q7>`_.
 
 Note the usage of ``city_name`` as an argument for ``cityWeather`` query. Using this we can extend our original
 Postgres's ``person`` schema to include weather information based on the ``city`` column of the person table.
