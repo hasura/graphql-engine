@@ -88,7 +88,7 @@ mandatory, while rest of them are optional.
    All ``x-hasura-*`` values should be ``String``, they will be converted to the
    right type automatically.
 
-The default role can be overriden by ``x-hasura-role`` header, while making a
+The default role can be overridden by ``x-hasura-role`` header, while making a
 request.
 
 .. code-block:: http
@@ -132,9 +132,9 @@ public keys are not yet supported.
 
 ``key``
 ^^^^^^^
-- Incase of symmetric key (i.e HMAC based key), the key as it is. (e.g -
+- In case of symmetric key (i.e HMAC based key), the key as it is. (e.g -
   "abcdef...").
-- Incase of asymmetric keys (RSA etc.), only the public key, in a PEM encoded
+- In case of asymmetric keys (RSA etc.), only the public key, in a PEM encoded
   string or as a X509 certificate.
 
 This is an optional field. You can also provide a URL to fetch JWKs from using
@@ -175,7 +175,7 @@ Examples
 
 HMAC-SHA based
 +++++++++++++++
-Your auth server is using HMAC-SHA alogrithms to sign JWTs, and is using a
+Your auth server is using HMAC-SHA algorithms to sign JWTs, and is using a
 256-bit key. Then the JWT config will look like:
 
 .. code-block:: json

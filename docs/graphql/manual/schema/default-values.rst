@@ -47,5 +47,5 @@ value will be set automatically by Postgres.
 
 .. note::
 
-  The default value is ignored when a value is explicity set to the field. To enforce the value set in a field is the
+  The default value is ignored when a value is explicitly set to the field. To enforce the value set in a field is the
   result of the defined SQL function, see: :doc:`sql-functions`.
