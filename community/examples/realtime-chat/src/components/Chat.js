@@ -3,7 +3,7 @@ import { Subscription } from 'react-apollo';
 import gql from 'graphql-tag';
 import ChatWrapper from './ChatWrapper';
 
-const subscribeToEvent = gql`
+const subscribeToNewMessages = gql`
   subscription {
     message ( order_by: id_desc limit: 1) {
       id
@@ -14,21 +14,18 @@ const subscribeToEvent = gql`
 `;
 
 const emitOnlineEvent = gql`
-  mutation ($userId: Int!){
-    insert_user_online(objects: [
-      {
-        user_id: $userId,
+  mutation ($userId:Int!){
+    update_user (
+      _set: {
         last_seen: "now()"
       }
-    ],
-      on_conflict: {
-        constraint: user_online_pkey,
-        action: update
+      where: {
+        id: {
+          _eq: $userId
+        }
       }
     ) {
-      returning {
-        user_id
-      }
+      affected_rows
     }
   }
 `;
@@ -63,7 +60,7 @@ class Chat extends React.Component {
           }
         });
       },
-      1000 
+      3000 
     );
   }
 
@@ -77,7 +74,7 @@ class Chat extends React.Component {
     return (
       <div>
         <Subscription
-          subscription={subscribeToEvent}
+          subscription={subscribeToNewMessages}
         >
           {
             ({data, error, loading}) => {

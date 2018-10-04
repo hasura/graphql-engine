@@ -1,4 +1,4 @@
-description: Upserts author with id 1 as a user (Error)
+description: Upserts author with id 1 as a user
 url: /v1alpha1/graphql
 status: 200
 response:
@@ -6,26 +6,26 @@ response:
     insert_author:
       affected_rows: 1
       returning:
-      - id: 5
+      - id: 1
+        name: Author 1
         is_registered: false
-        name: Author 5
 headers:
   X-Hasura-Role: user
-  X-Hasura-User-Id: '5'
+  X-Hasura-User-Id: '1'
 query:
   query: |
     mutation insert_author {
       insert_author (
         objects: [
           {
-            id: 5
-            name: "Author 5"
+            id: 1
+            name: "Author 1"
             is_registered: false
           }
           ],
         on_conflict: {
           constraint: author_pkey,
-          action: ignore
+          action: update
         }
       ) {
         affected_rows
