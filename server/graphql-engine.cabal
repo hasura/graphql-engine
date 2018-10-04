@@ -30,6 +30,7 @@ library
   build-depends:       base
                      , pg-client
                      , text
+                     , text-builder >= 0.6
                      , bytestring
                      , postgresql-libpq
                      , mtl

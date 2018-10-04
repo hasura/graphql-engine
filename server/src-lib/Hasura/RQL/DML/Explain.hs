@@ -8,8 +8,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Data.ByteString.Builder as BB
-
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select
@@ -17,9 +15,9 @@ import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Data.String.Conversions as CS
 import qualified Data.Text               as T
 import qualified Database.PG.Query       as Q
+import qualified Text.Builder            as TB
 
 data RQLExplain =
   RQLExplain
@@ -46,7 +44,7 @@ phaseTwoExplain sel = do
   return $ encode $ ExplainResp selectSQLT plans
   where
     selectSQL = toSQL $ mkSQLSelect False sel
-    explainSQL = BB.string7 "EXPLAIN (FORMAT JSON) "
+    explainSQL = "EXPLAIN (FORMAT JSON) "
     withExplain = explainSQL <> selectSQL
 
     decodeBS bs = case eitherDecode bs of
@@ -54,4 +52,4 @@ phaseTwoExplain sel = do
         "Plan query response is invalid json; " <> T.pack e
       Right a -> return a
 
-    selectSQLT = CS.cs $ BB.toLazyByteString selectSQL
+    selectSQLT = TB.run selectSQL

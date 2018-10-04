@@ -14,7 +14,6 @@ import qualified Data.ByteString.Builder      as BB
 import qualified Data.ByteString.Lazy         as BL
 import qualified Data.HashMap.Strict          as Map
 import qualified Data.Sequence                as Seq
-import qualified Data.Text                    as T
 import qualified Data.Vector                  as V
 
 import           Hasura.Prelude
@@ -261,6 +260,5 @@ setHeadersTx userInfo =
   where
     hdrs = Map.toList $ Map.delete accessKeyHeader
       $ userHeaders userInfo
-    mkQ (h, v) = Q.fromBuilder $ BB.string7 $
-      T.unpack $
+    mkQ (h, v) = Q.fromText $
       "SET LOCAL hasura." <> dropAndSnakeCase h <> " =  " <> pgFmtLit v
