@@ -2,15 +2,14 @@ import React from 'react';
 import { Subscription } from 'react-apollo';
 import moment from 'moment';
 import gql from 'graphql-tag';
-import UserList from './OnlineUsersList';
 
 const fetchOnlineUsersSubscription = gql`
-  subscription{
+  subscription {
     user_online (
-      limit: 1,
-      order_by: last_seen_desc
-    ){
-      last_seen
+      order_by: username_asc
+    ) {
+      id
+      username
     }
   }
 `;
@@ -25,16 +24,9 @@ class OnlineUsers extends React.Component {
     }
   }
 
-  setRefetch = (refetch) => {
-    this.setState({
-      ...this.state,
-      refetch
-    });
-  }
-
   render() {
     return (
-      <div>
+      <div className="onlineUsers">
         <Subscription
           subscription={fetchOnlineUsersSubscription}
         >
@@ -44,18 +36,21 @@ class OnlineUsers extends React.Component {
                 return null;
               }
               if (error) { return "Error loading online users"; }
-              if (this.state.refetch) {
-                this.state.refetch();
-              }
-              return null;
+              return (
+                <div>
+                 <p className="userListHeading"> Online Users ({!data.user_online ? 0 : data.user_online.length})</p>
+                  <ul className="userList">
+                    { 
+                      data.user_online.map((u) => {
+                        return <li key={u.id}>{u.username}</li>
+                      })
+                    }
+                  </ul>
+                </div>
+              );
             }
           }
         </Subscription>
-        <UserList
-          userId={this.props.userId}
-          refetch={this.state.refetch}
-          setRefetch={this.setRefetch}
-        />
       </div>
     );
   }
