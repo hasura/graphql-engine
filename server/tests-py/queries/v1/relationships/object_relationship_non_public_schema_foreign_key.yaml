@@ -1,0 +1,62 @@
+  #Create object relationship
+- description: Create object relationship using foreign key
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: create_object_relationship
+    args:
+      name: resident
+      table: 
+        name: address
+        schema: hge_tests
+      using:
+        foreign_key_constraint_on: resident_id
+  
+- description: Nested select on address
+  url: /v1/query
+  status: 200
+  response:
+  - door_no: 12-21
+    city: Hyderabad 
+    resident:
+      name: John
+      age: 23
+  - door_no: 11-19
+    city: Bangalore
+    resident:
+      name: John
+      age: 23
+  - door_no: 13-21
+    city: Chennai
+    resident:
+      name: Tom
+      age: 31
+  query:
+    type: select
+    args:
+      table:
+        name: address
+        schema: hge_tests
+      columns:
+        - door_no
+        - city
+        - name: resident
+          columns:
+          - name
+          - age 
+
+  #Drop object relationship
+- description: Drop object relationship
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: drop_relationship
+    args:
+      table: 
+        name: address
+        schema: hge_tests
+      relationship: resident

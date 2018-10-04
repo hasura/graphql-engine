@@ -31,6 +31,8 @@ args:
     schema: public
     name: article
 
+
+
 #Object relationship
 - type: create_object_relationship
   args:

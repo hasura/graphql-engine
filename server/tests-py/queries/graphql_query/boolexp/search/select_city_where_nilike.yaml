@@ -1,0 +1,20 @@
+description: Select cities ending with ham
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    city:
+    - name: Durham
+      country: USA 
+    - name: Framlingham
+      country: UK
+query:
+  query: |
+    query {
+      city (
+      where: {name: {_nilike: "new %" }}
+      ) {
+        name
+        country
+      }
+    }
