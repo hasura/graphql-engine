@@ -12,8 +12,15 @@ CHANGELOG_TEXT=""
 REVIEWERS="shahidhk,coco98,arvi3411301"
 
 changelog() {
-  CHANGELOG=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty=format:"- $1: %s" --reverse -- $ROOT/$1)
-  echo -e "${CHANGELOG}\n"
+  CHANGELOG=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty="tformat:- $1: %s" --reverse -- $ROOT/$1)
+  if [ -n "$CHANGELOG" ]
+  then
+      if [ -n "$CHANGELOG_TEXT" ]
+      then
+          echo ""
+      fi
+      echo "${CHANGELOG}"
+  fi
 }
 
 ## deploy functions
