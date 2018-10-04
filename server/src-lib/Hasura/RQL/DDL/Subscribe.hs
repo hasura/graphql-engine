@@ -43,11 +43,12 @@ getDropFuncSql op trn = "DROP FUNCTION IF EXISTS"
 
 getTriggerSql :: Ops -> TriggerId -> TriggerName -> SchemaName -> TableName -> Maybe SubscribeOpSpec -> Maybe T.Text
 getTriggerSql op trid trn sn tn spec =
-  let globalCtx =  HashMap.fromList [
-                    (T.pack "ID", trid)
-                  , (T.pack "NAME", trn)
-                  , (T.pack "SCHEMA_NAME", getSchemaTxt sn)
-                  , (T.pack "TABLE_NAME", getTableTxt tn)]
+  let globalCtx =  HashMap.fromList
+                   [ (T.pack "ID", trid)
+                   , (T.pack "NAME", trn)
+                   , (T.pack "SCHEMA_NAME", pgFmtIden $ getSchemaTxt sn)
+                   , (T.pack "TABLE_NAME", pgFmtIden $ getTableTxt tn)
+                   ]
       opCtx = maybe HashMap.empty (createOpCtx op) spec
       context = HashMap.union globalCtx opCtx
   in
