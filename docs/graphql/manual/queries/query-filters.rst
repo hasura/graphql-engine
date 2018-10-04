@@ -73,7 +73,7 @@ Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
 
 Example: String or Text
 ^^^^^^^^^^^^^^^^^^^^^^^
-Fetch a list of authors with ``name`` *(a text field)* as "Sidney"
+Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
 
 .. graphiql::
   :view_only:
