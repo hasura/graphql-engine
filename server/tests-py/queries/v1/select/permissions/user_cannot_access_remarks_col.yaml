@@ -1,0 +1,39 @@
+- description: User cannot access remarks column
+  url: /v1/query
+  status: 400
+  response:
+    error: 'role "user" does not have permission to select column "remarks_internal"'
+    path: '$.args.columns[2]' 
+    code: permission-denied
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  query:
+    type: select
+    args:
+      table: author
+      columns:
+        - id
+        - name
+        - remarks_internal
+- description: Admin can access remarks column
+  url: /v1/query
+  status: 200
+  response:
+    - name: Author 1
+      id: 1
+      remarks_internal: remark 1
+    - name: Author 2
+      id: 2
+      remarks_internal: remark 2
+    - name: Author 3
+      id: 3
+      remarks_internal: remark 3
+  query:
+    type: select
+    args:
+      table: author
+      columns:
+        - id
+        - name
+        - remarks_internal

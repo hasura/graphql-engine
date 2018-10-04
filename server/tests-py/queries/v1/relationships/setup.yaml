@@ -1,0 +1,162 @@
+type: bulk
+args:
+
+#Author table
+- type: run_sql
+  args:
+    sql: |
+      create table author(
+          id serial primary key, 
+          name text unique,
+          remarks text
+      );
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#View author_view
+- type: run_sql
+  args:
+    sql: |
+      CREATE VIEW author_view AS
+          SELECT id, UPPER(name) as name FROM author;
+- type: track_table
+  args:
+    schema: public
+    name: author_view
+
+#Article table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE article (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER REFERENCES author(id),
+        is_published BOOLEAN,
+        published_on TIMESTAMP
+      )
+- type: track_table
+  args:
+    schema: public
+    name: article
+
+#View article_view
+- type: run_sql
+  args:
+    sql: |
+      CREATE VIEW article_view AS
+          SELECT id, title, content, author_id FROM article;
+- type: track_table
+  args:
+    schema: public
+    name: article_view
+
+#Create resident table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE hge_tests.resident (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        age INTEGER NOT NULL
+      )
+- type: track_table
+  args:
+    schema: hge_tests
+    name: resident
+
+#Create view resident_view
+- type: run_sql
+  args:
+    sql: |
+      CREATE VIEW hge_tests.resident_view AS 
+        SELECT id, name FROM hge_tests.resident
+- type: track_table
+  args:
+    schema: hge_tests
+    name: resident_view
+
+#Create address table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE hge_tests.address (
+        id SERIAL PRIMARY KEY,
+        door_no TEXT NOT NULL,
+        street TEXT NOT NULL,
+        city TEXT NOT NULL,
+        resident_id INTEGER REFERENCES hge_tests.resident(id)
+      )
+- type: track_table
+  args:
+    schema: hge_tests
+    name: address
+
+#Create view address_view
+- type: run_sql
+  args:
+    sql: |
+      CREATE VIEW hge_tests.address_view AS 
+        SELECT id, door_no, city, resident_id FROM hge_tests.address
+- type: track_table
+  args:
+    schema: hge_tests
+    name: address_view
+
+#Insert Author table data
+- type: insert
+  args:
+    table: author
+    objects:
+      - name: Author 1
+      - name: Author 2
+
+#Insert Article table data
+- type: insert
+  args:
+    table: article
+    objects:
+    - content: Sample article content 1
+      title: Article 1
+      author_id: 1
+    - content: Sample article content 2
+      title: Article 2
+      author_id: 1
+    - content: Sample article content 3
+      title: Article 3
+      author_id: 2
+    
+#Insert resident table data
+- type: insert
+  args:
+    table: 
+      name: resident
+      schema: hge_tests
+    objects:
+      - name: John
+        age: 23
+      - name: Tom
+        age: 31
+
+#Insert address table data
+- type: insert
+  args:
+    table: 
+      name: address
+      schema: hge_tests
+    objects:
+      - door_no: 12-21
+        street: Madhapur 
+        city: Hyderabad 
+        resident_id: 1
+      - door_no: 11-19
+        street: Koramangala
+        city: Bangalore
+        resident_id: 1
+      - door_no: 13-21
+        street: Teynampet
+        city: Chennai
+        resident_id: 2
