@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveLift                 #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE MultiWayIf                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
 module Hasura.SQL.DML where
@@ -422,11 +423,21 @@ data BoolExp = BELit !Bool
 
 -- removes extraneous 'AND true's
 simplifyBoolExp :: BoolExp -> BoolExp
-simplifyBoolExp = \case
-  BEBin AndOp (BELit True) e -> simplifyBoolExp e
-  BEBin AndOp e (BELit True) -> simplifyBoolExp e
-  BEBin AndOp el er          ->
-    simplifyBoolExp $ BEBin AndOp (simplifyBoolExp el) (simplifyBoolExp er)
+simplifyBoolExp be = case be of
+  BEBin AndOp e1 e2 ->
+    let e1s = simplifyBoolExp e1
+        e2s = simplifyBoolExp e2
+    in if
+      | e1s == BELit True -> e2s
+      | e2s == BELit True -> e1s
+      | otherwise -> BEBin AndOp e1s e2s
+  BEBin OrOp e1 e2 ->
+    let e1s = simplifyBoolExp e1
+        e2s = simplifyBoolExp e2
+    in if
+      | e1s == BELit False -> e2s
+      | e2s == BELit False -> e1s
+      | otherwise -> BEBin OrOp e1s e2s
   e                          -> e
 
 mkExists :: QualifiedTable -> BoolExp -> BoolExp
