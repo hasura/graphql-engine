@@ -1,0 +1,18 @@
+description: Simple GraphQL object query on author
+url: /v1/query
+status: 200
+response:
+  - id: 2
+    received_at: '2018-09-21T09:40:44+00:00'
+    delivered_at: '2018-09-21T09:50:44+00:00'
+query:
+  type: select
+  args:
+    table: orders
+    where:
+      delivered_at:
+        $is_null: false
+    columns:
+    - id
+    - received_at
+    - delivered_at

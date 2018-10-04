@@ -48,6 +48,7 @@ const fetchSchemaList = () => (dispatch, getState) => {
           schema: 'information_schema',
         },
         columns: ['schema_name'],
+        order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
         where: {
           schema_name: {
             $nin: [
@@ -85,8 +86,16 @@ const loadSchema = () => (dispatch, getState) => {
           name: 'hdb_table',
           schema: 'hdb_catalog',
         },
-        columns: ['*.*'],
+        columns: [
+          '*.*',
+          {
+            name: 'columns',
+            columns: ['*.*'],
+            order_by: [{ column: 'column_name', type: 'asc', nulls: 'last' }],
+          },
+        ],
         where: { table_schema: currentSchema },
+        order_by: [{ column: 'table_name', type: 'asc', nulls: 'last' }],
       },
     }),
   };
@@ -319,8 +328,16 @@ const fetchTableListBySchema = schemaName => (dispatch, getState) => {
           name: 'hdb_table',
           schema: 'hdb_catalog',
         },
-        columns: ['*.*'],
+        columns: [
+          '*.*',
+          {
+            name: 'columns',
+            columns: ['*.*'],
+            order_by: [{ column: 'column_name', type: 'asc', nulls: 'last' }],
+          },
+        ],
         where: { table_schema: schemaName },
+        order_by: [{ column: 'table_name', type: 'asc', nulls: 'last' }],
       },
     }),
   };
