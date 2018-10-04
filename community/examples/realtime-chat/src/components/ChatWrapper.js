@@ -1,7 +1,7 @@
 import React from 'react';
 import RenderMessages from './RenderMessages';
 import Textbox from './Textbox'
-import OnlineUsers from './OnlineUsersWrapper';
+import OnlineUsers from './OnlineUsers';
 import "../App.css";
 
 export default class RenderMessagesProxy extends React.Component {

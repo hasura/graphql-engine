@@ -61,4 +61,4 @@ Advanced:
 
 This was a quickstart guide to get the Hasura GraphQL engine up and running
 quickly. For more detailed instructions on deploying using Docker, check out
-:doc:`../deployment/docker/index` 
+:doc:`../deployment/docker/index`.
