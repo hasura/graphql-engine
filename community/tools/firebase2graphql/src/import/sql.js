@@ -90,7 +90,31 @@ const generateSql = metadata => {
   return sqlArray;
 };
 
+const dropUtilityTables = async (url, headers) => {
+  const tablesToDrop = ['__rootTables'];
+  let sql = '';
+  tablesToDrop.forEach(table => {
+    sql += `drop table if exists "${table}" cascade;`;
+  });
+  const resp = await fetch(
+    `${url}/v1/query`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        type: 'run_sql',
+        args: {
+          sql,
+          cascade: true,
+        },
+      }),
+    }
+  );
+  return Boolean(resp);
+};
+
 module.exports = {
   generateSql,
   runSql,
+  dropUtilityTables,
 };
