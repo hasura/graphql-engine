@@ -1,4 +1,4 @@
-JSON API Query types
+Schema Metadata API Query types
 ====================
 
 .. toctree::
@@ -7,7 +7,6 @@ JSON API Query types
    Run SQL <query/sql.rst>
    Relationships <query/relationship.rst>
    Permissions <query/permission.rst>
-   Selecting/modifying data <query/data.rst>
 
 ------------------------------------------------------------------------------
 

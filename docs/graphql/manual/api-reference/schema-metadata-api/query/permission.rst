@@ -1,4 +1,4 @@
-JSON API Reference: Permissions
+Schema Metadata API Reference: Permissions
 ===============================
 
 The permission layer is designed to restrict the operations that can be

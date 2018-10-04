@@ -21,10 +21,10 @@ You can refer the following to know about all PostgreSQL types supported by the 
 
 - :doc:`Supported PostgreSQL types <postgresql-types>`
 
-JSON APIs
+Schema Metadata APIs
 ---------
 
-Hasura exposes a JSON API for querying/updating data, executing SQL on the
+Hasura exposes a Schema Metadata API for querying/updating data, executing SQL on the
 underlying Postgres and for managing the metadata like permissions and
 relationships. Primarily intended to be used as an ``admin`` API to manage Hasura.
 
@@ -32,16 +32,16 @@ relationships. Primarily intended to be used as an ``admin`` API to manage Hasur
 
    The JSON data APIs might not be in full-feature parity with
    GraphQL APIs, since features are first introduced with GraphQL and then
-   ported to JSON API.
+   ported to Schema Metadata API.
    
 The endpoint is ``/v1/query`` and all requests must be ``POST``.
 
-Here is the complete JSON API Reference:
+Here is the complete Schema Metadata API Reference:
 
-- :doc:`Endpoints <json-api/endpoints>`
-- :doc:`Query types <json-api/queries>`
-- :doc:`Response structure <json-api/response>`
-- :doc:`Error Codes <json-api/error-codes>`
+- :doc:`Endpoints <schema-metadata-api/endpoints>`
+- :doc:`Query types <schema-metadata-api/queries>`
+- :doc:`Response structure <schema-metadata-api/response>`
+- :doc:`Error Codes <schema-metadata-api/error-codes>`
 
 .. toctree::
   :maxdepth: 1
@@ -50,4 +50,4 @@ Here is the complete JSON API Reference:
   Query/Subscription <query>
   Mutation <mutation>
   Supported PostgreSQL types <postgresql-types>
-  JSON APIs <json-api/index>
+  Schema/Metadata APIs <schema-metadata-api/index>

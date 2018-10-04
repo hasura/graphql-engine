@@ -1,4 +1,4 @@
-JSON API Reference: Relationships
+Schema Metadata API Reference: Relationships
 =================================
 
 Relationships are used to capture the connectedness of data amongst tables. In a

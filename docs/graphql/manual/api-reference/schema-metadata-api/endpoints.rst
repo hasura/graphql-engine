@@ -1,4 +1,4 @@
-JSON API endpoints
+Schema Metadata API endpoints
 ==================
 
 
@@ -106,26 +106,6 @@ The various values that ``type`` and ``args`` can take are listed in the followi
    * - ``"bulk"``
      - :ref:`Query <query_def>` array
      - Execute multiple operations in a single query
-
-   * - ``"insert"``
-     - :ref:`insert <data_insert>`
-     - Insert data into tables
-
-   * - ``"select"``
-     - :ref:`select <data_select>`
-     - Retrieve data from tables
-
-   * - ``"update"``
-     - :ref:`update <data_update>`
-     - Update data
-
-   * - ``"delete"``
-     - :ref:`delete <data_delete>`
-     - Delete data
-
-   * - ``"count"``
-     - :ref:`count <data_count>`
-     - Count the number of rows in a table
 
 Response
 ^^^^^^^^

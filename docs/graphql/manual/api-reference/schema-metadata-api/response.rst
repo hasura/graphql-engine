@@ -1,4 +1,4 @@
-JSON API Response structure
+Schema Metadata API Response structure
 ===========================
 
 .. list-table::

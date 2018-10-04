@@ -1,4 +1,4 @@
-JSON API Reference: Execute SQL 
+Schema Metadata API Reference: Execute SQL 
 ===============================
 
 run_sql
@@ -71,7 +71,7 @@ the column is used in some permission), you would see an error.
 We can however, cascade these changes.
 
 .. code-block:: http
-   :emphasize-lines: 10
+   :emphasize-lines: 9
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
@@ -219,7 +219,6 @@ A query to create a table:
 
    HTTP/1.1 200 OK
    Content-Type: application/json
-
 
    {
      "result_type": "CommandOk",

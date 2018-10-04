@@ -1,4 +1,4 @@
-JSON API Error Codes
+Schema Metadata API Error Codes
 ====================
 
 .. csv-table::
