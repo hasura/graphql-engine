@@ -8,7 +8,7 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="http://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, real-time GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events for asynchronous business logic.
+Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, realtime GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events for asynchronous business logic.
 
 Hasura helps you build GraphQL apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
 
@@ -128,7 +128,7 @@ Check out all the example applications in the
   - [Tutorial](community/examples/realtime-location-tracking)
   - [Browse APIs](https://realtime-backend.herokuapp.com/)
 
-- A real-time dashboard for data aggregations on continuously changing data.
+- A realtime dashboard for data aggregations on continuously changing data.
   - [Try it out](https://shahidh.in/hasura-realtime-poll/)
   - [Tutorial](community/examples/realtime-poll)
   - [Browse APIs](https://hasura-realtime-poll.herokuapp.com/)
