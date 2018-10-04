@@ -1,16 +1,18 @@
-### Go Echo Example for AWS Lambda
+# Go Echo Example for AWS Lambda
 
 ### Setup tables
 1. Create table:
 
 ```
 notes:
-  id: int
-  note: text
+  id: Integer (auto-increment)
+  note: Text
+  
+  Primary key: id
 ```
 
 ### Setup AWS Lambda
-Create a lambda function in AWS. This will be our webhook.
+Create a Lambda function in AWS. This will be our webhook.
 
 1. Create a function.
 2. Select "start from scratch".
