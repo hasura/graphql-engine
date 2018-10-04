@@ -72,7 +72,7 @@ Now we have successfully tracked the tables, let's open API Explorer and make a 
       first_name           |                  {
       last_name            |                    "id": 1,
     }                      |                    "first_name": "Penelope",
-  }                        |                    "last_name": "Guiness"
+  }                        |                    "last_name": "Guinness"
                            |                  },
                            |                  // ...
                            |                ]

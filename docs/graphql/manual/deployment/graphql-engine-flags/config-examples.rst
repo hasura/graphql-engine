@@ -75,7 +75,7 @@ as an environment variable:
    # OR in a single line
    HASURA_GRAPHQL_ACCESS_KEY=xxxxx hasura console
 
-You can also set the access key using a flag to the commad:
+You can also set the access key using a flag to the command:
 
 .. code-block:: bash
 
