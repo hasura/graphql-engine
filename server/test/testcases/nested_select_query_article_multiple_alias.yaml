@@ -1,0 +1,26 @@
+description: Select author and their articles with multiple aliases
+url: /v1alpha1/graphql
+status: 200
+query:
+  query: |
+    query {
+      author (where: {name: {_eq: "Author 1"}}) {
+        id
+        name_one: name
+        name_two: name
+        articles_id: articles (
+        where: {is_published: {_eq: true}}
+        limit: 10,
+        offset: 1
+        ) {
+          id
+        }
+        articles_title: articles (
+        where: {is_published: {_eq: true}}
+        limit: 10,
+        offset: 1
+        ) {
+          title
+        }
+      }
+    }

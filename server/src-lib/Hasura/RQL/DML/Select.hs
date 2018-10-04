@@ -154,13 +154,13 @@ resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
     equals _ _                         = False
 
 data AnnFld
-  = FCol (PGCol, PGColType)
+  = FCol (PGCol, PGColType, Maybe S.Alias)
   | FRel AnnRel
   | FExp T.Text
   deriving (Show, Eq)
 
 partAnnFlds
-  :: [AnnFld] -> ([(PGCol, PGColType)], [AnnRel])
+  :: [AnnFld] -> ([(PGCol, PGColType, Maybe S.Alias)], [AnnRel])
 partAnnFlds flds =
   partitionEithers $ catMaybes $ flip map flds $ \case
   FCol c -> Just $ Left c
@@ -177,7 +177,7 @@ processOrderByElem _ [] =
   withPathK "column" $ throw400 UnexpectedPayload "can't be empty"
 processOrderByElem annFlds [colTxt] =
   case HM.lookup (FieldName colTxt) annFlds of
-    Just (FCol (_, ty)) -> if ty == PGGeography || ty == PGGeometry
+    Just (FCol (_, ty, _)) -> if ty == PGGeography || ty == PGGeometry
       then throw400 UnexpectedPayload $ mconcat
            [ PGCol colTxt <<> " has type 'geometry'"
            , " and cannot be used in order_by"
@@ -272,7 +272,7 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
     indexedForM (sqColumns selQ) $ \case
     (ECSimple pgCol) -> do
       colTy <- convExtSimple fieldInfoMap selPermInfo pgCol
-      return (fromPGCol pgCol, FCol (pgCol, colTy))
+      return (fromPGCol pgCol, FCol (pgCol, colTy, Just $ S.Alias $ toIden pgCol))
     (ECRel relName mAlias relSelQ) -> do
       annRel <- convExtRel fieldInfoMap relName mAlias relSelQ prepValBuilder
       return (fromRel $ fromMaybe relName mAlias, FRel annRel)
@@ -433,9 +433,10 @@ mkInnerSelExtr (alias, annFld) =
   Just alias
   where
     colExp = case annFld of
-      FCol (pgCol, _) -> S.mkQIdenExp (TableName "r")  pgCol
-      FRel annRel     -> S.mkQIdenExp (TableName "r") $ arName annRel
-      FExp t          -> S.SELit t
+      FCol (pgCol, _, alM) -> S.mkQIdenExp (TableName "r") $
+                              maybe (toIden pgCol) S.getAlias alM
+      FRel annRel          -> S.mkQIdenExp (TableName "r") $ arName annRel
+      FExp t               -> S.SELit t
 
 mkLJCol :: RelName -> PGCol -> PGCol
 mkLJCol (RelName rTxt) (PGCol cTxt) =
@@ -650,12 +651,13 @@ getSelectDeps (SelectData flds tn _ (_, annWc) _ _ _ _ _) =
   <> nestedDeps
   where
     (sCols, rCols) = partAnnFlds $ HM.elems flds
-    colDeps     = map (mkColDep "untyped" tn . fst) sCols
+    colDeps     = map (mkColDep "untyped" tn . fst') sCols
     relDeps     = map (mkRelDep . arName) rCols
     nestedDeps  = concatMap (getSelectDeps . arSelData) rCols
     whereDeps   = getBoolExpDeps tn <$> annWc
     mkRelDep rn =
       SchemaDependency (SOTableObj tn (TORel rn)) "untyped"
+    fst' (a, _, _) = a
 
 
 -- data SelectQueryP1
