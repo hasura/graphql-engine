@@ -163,8 +163,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
     selPerm <- modifyErr (<> selNecessaryMsg) $
                askSelPermInfo tableInfo
 
-    withPathK "returning" $
-      zip retCols <$> checkRetCols fieldInfoMap selPerm retCols
+    withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
   let mutFlds = mkDefaultMutFlds tableName mAnnRetCols
 
@@ -251,7 +250,7 @@ setConflictCtx conflictCtxM = do
         encToText $ InsertTxConflictCtx CAIgnore constrM Nothing
     conflictCtxToJSON (CCUpdate constr updCols) =
         encToText $ InsertTxConflictCtx CAUpdate (Just constr) $
-        Just $ sqlBuilderToTxt $ toSQL $ S.buildSEWithExcluded updCols
+        Just $ toSQLTxt $ S.buildSEWithExcluded updCols
 
 instance HDBQuery InsertQuery where
 

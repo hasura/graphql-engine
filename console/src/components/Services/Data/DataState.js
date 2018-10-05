@@ -79,6 +79,10 @@ const defaultModifyState = {
     rcol: '',
     manualColumns: [],
     isManualExpanded: false,
+    manualRelInfo: {
+      remoteSchema: '',
+      tables: [],
+    },
   },
   permissionsState: { ...defaultPermissionsState },
   ongoingRequest: false,
@@ -108,6 +112,7 @@ const defaultState = {
     lastSuccess: null,
   },
   allSchemas: [],
+
   listingSchemas: [],
   untrackedSchemas: [],
   information_schema: [],

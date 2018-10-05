@@ -1,0 +1,52 @@
+description: Nested select on article
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    article:
+    - content: Sample article content 1
+      is_published: false
+      author:
+        name: Author 1
+        is_registered: true
+        id: 1
+      id: 1
+      title: Article 1
+    - content: Sample article content 3
+      is_published: false
+      author:
+        name: Author 2
+        is_registered: true
+        id: 2
+      id: 3
+      title: Article 3
+    - content: Sample article content 4
+      is_published: true
+      author:
+        name: Author 3
+        is_registered: false
+        id: 3
+      id: 4
+      title: Article 4
+query:
+  query: |
+    query {
+      article (
+        where : {_or: 
+          [
+          {is_published: {_eq: false}}
+          {author: {is_registered: {_eq:  false}}}
+          ]
+        }
+      ) {
+        id
+        title
+        content
+        is_published
+        author {
+          id
+          name
+          is_registered
+        }
+      }
+    }

@@ -60,7 +60,7 @@ Column Definitions
 """"""""""""""""""
 
 - **table_schema**:
-  Captures information about the schema under which a relationship is created
+  Captures information about the schema under which a relationship is created.
 - **table_name**:
   Captures name of the table/view under which a relationship is created.
 - **rel_name**:
@@ -100,7 +100,7 @@ Column Definitions
 """"""""""""""""""
 
 - **table_schema**:
-  Captures information about the schema under which a permission is created
+  Captures information about the schema under which a permission is created.
 - **table_name**:
   Captures name of the table/view under which a permission is created.
 - **role_name**:
@@ -110,7 +110,7 @@ Column Definitions
 - **perm_def**:
   Captures information about how the permission is defined.
 
-  Whenever a query is made with the above role for the above table GraphQL Engine
+  Whenever a query is made with the above role for the above table GraphQL engine
   will first validate the requested columns with the columns which the user has access to using the ``columns`` key.
   Once the query is validated the appropriate results are returned after applying the filter defined in the ``filter``
   key.

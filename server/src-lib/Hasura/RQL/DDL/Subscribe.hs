@@ -11,6 +11,7 @@ import           Data.Aeson
 import           Data.Int            (Int64)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 import           System.Environment  (lookupEnv)
 
@@ -19,26 +20,15 @@ import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Text           as T
 import qualified Data.Text.Encoding  as TE
 import qualified Database.PG.Query   as Q
-import qualified Text.Ginger         as TG
 
 
 data OpVar = OLD | NEW deriving (Show)
-
-type GingerTmplt = TG.Template TG.SourcePos
 
 defaultNumRetries :: Int
 defaultNumRetries = 0
 
 defaultRetryInterval :: Int
 defaultRetryInterval = 10
-
-parseGingerTmplt :: TG.Source -> Either String GingerTmplt
-parseGingerTmplt src = either parseE Right res
-  where
-    res = runIdentity $ TG.parseGinger' parserOptions src
-    parserOptions = TG.mkParserOptions resolver
-    resolver = const $ return Nothing
-    parseE e = Left $ TG.formatParserError (Just "") e
 
 triggerTmplt :: Maybe GingerTmplt
 triggerTmplt = case parseGingerTmplt $(FE.embedStringFile "src-rsr/trigger.sql.j2") of
@@ -91,7 +81,7 @@ getTriggerSql op trid trn sn tn spec =
                                      mkQualified v col = v <> "." <> col
 
     renderSql :: HashMap.HashMap T.Text T.Text -> GingerTmplt -> T.Text
-    renderSql = TG.easyRender
+    renderSql = renderGingerTmplt
 
 mkTriggerQ
   :: TriggerId

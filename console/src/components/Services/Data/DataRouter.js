@@ -3,6 +3,7 @@ import React from 'react';
 import { Route, IndexRedirect } from 'react-router';
 import globals from '../../../Globals';
 // import { loadAccessKeyState } from '../../AppState';
+import { SERVER_CONSOLE_MODE } from '../../../constants';
 
 import {
   schemaConnector,
@@ -168,7 +169,7 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
     cb();
   };
   const consoleModeRedirects = (nextState, replaceState, cb) => {
-    if (globals.consoleMode === 'hasuradb') {
+    if (globals.consoleMode === SERVER_CONSOLE_MODE) {
       replaceState('/data/schema');
       cb();
     }
