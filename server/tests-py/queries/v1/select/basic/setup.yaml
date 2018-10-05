@@ -83,3 +83,24 @@ args:
         true
       )
 
+#User table with bigserial and bigint columns
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "user" (
+        id BIGSERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        number BIGINT
+      );
+- type: track_table
+  args:
+    schema: public
+    name: user
+- type: insert
+  args:
+    table: user
+    objects:
+    - name: User 1
+      number: '123456789'
+    - name: User 2
+      number: '123456780'
