@@ -34,9 +34,9 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m (Map.HashMap Text a)
+withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m [(Text, a)]
 withSelSet selSet f =
-  fmap (Map.fromList . toList) $ forM selSet $ \fld -> do
+  forM (toList selSet) $ \fld -> do
     res <- f fld
     return (G.unName $ G.unAlias $ _fAlias fld, res)
 

@@ -12,7 +12,6 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Data.ByteString.Builder as BB
-import qualified Data.HashMap.Strict     as Map
 import qualified Data.Text               as T
 import qualified Data.Vector             as V
 import qualified Hasura.SQL.DML          as S
@@ -23,7 +22,7 @@ data MutFld
   | MRet !AnnSel
   deriving (Show, Eq)
 
-type MutFlds = Map.HashMap T.Text MutFld
+type MutFlds = [(T.Text, MutFld)]
 
 pgColsFromMutFld :: MutFld -> [(PGCol, PGColType)]
 pgColsFromMutFld = \case
@@ -43,14 +42,14 @@ pgColsToSelData qt cols =
     frmItem = S.FIIden $ qualTableToAliasIden qt
 
 pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColType)]
-pgColsFromMutFlds = concatMap pgColsFromMutFld . Map.elems
+pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 
 mkDefaultMutFlds :: QualifiedTable -> Maybe [PGColInfo] -> MutFlds
 mkDefaultMutFlds qt = \case
   Nothing   -> mutFlds
-  Just cols -> Map.insert "returning" (MRet $ pgColsToSelData qt cols) mutFlds
+  Just cols -> ("returning", (MRet $ pgColsToSelData qt cols)):mutFlds
   where
-    mutFlds = Map.singleton "affected_rows" MCount
+    mutFlds = [("affected_rows", MCount)]
 
 qualTableToAliasIden :: QualifiedTable -> Iden
 qualTableToAliasIden (QualifiedTable sn tn) =
@@ -78,7 +77,7 @@ mkSelWith qt cte mutFlds =
     extrExp = S.SEFnApp "json_build_object" jsonBuildObjArgs Nothing
 
     jsonBuildObjArgs =
-      flip concatMap (Map.toList mutFlds) $
+      flip concatMap mutFlds $
       \(k, mutFld) -> [S.SELit k, mkMutFldExp qt mutFld]
 
 encodeJSONVector :: (a -> BB.Builder) -> V.Vector a -> BB.Builder
