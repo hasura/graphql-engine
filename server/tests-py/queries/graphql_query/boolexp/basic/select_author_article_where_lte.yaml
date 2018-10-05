@@ -21,6 +21,7 @@ query:
     query {
       author (
       where: {id: {_lte: 2}}
+      order_by: id_desc
       ) {
         id
         name
@@ -28,7 +29,7 @@ query:
           where: {id: {_gt: 1}}
         ) {
           id
-          title 
+          title
           content
         }
       }
