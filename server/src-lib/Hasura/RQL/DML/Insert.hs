@@ -163,8 +163,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
     selPerm <- modifyErr (<> selNecessaryMsg) $
                askSelPermInfo tableInfo
 
-    withPathK "returning" $
-      zip retCols <$> checkRetCols fieldInfoMap selPerm retCols
+    withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
   let mutFlds = mkDefaultMutFlds tableName mAnnRetCols
 

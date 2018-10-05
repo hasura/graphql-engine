@@ -1,0 +1,37 @@
+description: Select products having key 'SIM type' in spec
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    product:
+    - id: 1
+      category: Laptop
+      name: laptop1
+      spec:
+        Disk: 128GB
+        Weight: 1.2Kg
+        Processor: processor1
+        Operating System: os1
+        RAM: 8GB
+    - id: 2
+      category: Laptop
+      name: laptop2
+      spec:
+        Disk: 128GB
+        Weight: 1.2Kg
+        Processor: processor2
+        OS: os2
+        RAM: 16GB
+        Touchscreen: true
+query:
+  query: |
+    query {
+      product (
+      where: {spec: {_has_keys_any: ["OS","Operating System"] }}
+      ) {
+        id
+        category
+        name
+        spec
+      }
+    }

@@ -129,4 +129,4 @@ Fetch a list of articles and the name of each article’s author:
 .. note::
     
     The name of the nested object is the same as the name of the object or array relationship configured in the
-    console
+    console.

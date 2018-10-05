@@ -31,6 +31,22 @@ args:
     schema: public
     name: article
 
+
+#Order table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE orders (
+        id SERIAL PRIMARY KEY,
+        placed TIMESTAMPTZ NOT NULL,
+        shipped TIMESTAMPTZ
+      )
+- type: track_table
+  args:
+    schema: public
+    name: orders
+
+
 #Object relationship
 - type: create_object_relationship
   args:
@@ -49,3 +65,8 @@ args:
         table: article
         column: author_id
 
+#Set timezone
+- type: run_sql
+  args:
+    sql: |
+      SET TIME ZONE 'UTC';
