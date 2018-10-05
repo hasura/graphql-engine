@@ -147,6 +147,12 @@ class TestGraphqlNestedInserts(object):
     def test_articles_with_author_author_id_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + "/articles_with_author_author_id_fail.yaml")
 
+    def test_author_upsert_articles_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/author_upsert_articles_fail.yaml")
+
+    def test_articles_author_upsert_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/articles_author_upsert_fail.yaml")
+
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
         self.dir = "queries/graphql_mutation/insert/nested"

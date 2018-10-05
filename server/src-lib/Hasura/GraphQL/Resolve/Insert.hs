@@ -261,7 +261,7 @@ insertArrRel role insCtxMap insCtx relInfo resCols relData =
                (\(_, colVal) (_, rCol) -> (rCol, colVal))
 
     resBS <- insertMultipleObjects role insCtxMap tn insCtx
-      insObjs addCols mutFlds onConflictM "data"
+      insObjs addCols mutFlds onConflictM True
     resObj <- decodeFromBS resBS
     onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
       throw500 "affected_rows not returned in array rel insert"
@@ -444,7 +444,7 @@ buildReturningResp
 buildReturningResp tn withExps annFlds = do
   respList <- forM withExps $ \withExp ->
     execWithExp tn withExp annFlds
-  let bsVector = V.fromList $ toList respList
+  let bsVector = V.fromList respList
   return $ BB.toLazyByteString $ RR.encodeJSONVector BB.lazyByteString bsVector
 
 -- | insert multiple Objects in postgres
@@ -457,10 +457,10 @@ insertMultipleObjects
   -> [PGColWithValue] -- ^ additional fields
   -> RR.MutFlds -- ^ returning fields
   -> Maybe AnnGValue -- ^ On Conflict Clause
-  -> T.Text -- ^ error path
+  -> Bool -- ^ is an Array relation
   -> Q.TxE QErr RespBody
 insertMultipleObjects role insCtxMap tn ctx insObjs
-                   addCols mutFlds onConflictValM errP
+                   addCols mutFlds onConflictValM isArrRel
                    = do
 
   -- fetch insertable columns, object and array relationships
@@ -482,6 +482,7 @@ insertMultipleObjects role insCtxMap tn ctx insObjs
     InsCtx vn tableColInfos _ = ctx
     tableCols = map pgiName tableColInfos
 
+    errP = bool "objects" "data" isArrRel
     withErrPath = withPathK errP
 
     -- insert all column rows at one go
@@ -509,10 +510,14 @@ insertMultipleObjects role insCtxMap tn ctx insObjs
           withExps = map snd insResps
       respTups <- forM mutFlds $ \(t, mutFld) -> do
         jsonVal <- case mutFld of
-          RR.MCount -> return $ J.toJSON affRows
+          RR.MCount -> do
+            -- when it is a array relation perform insert
+            -- and return calculated affected rows
+            when isArrRel $ void $ buildReturningResp tn withExps []
+            return $ J.toJSON affRows
           RR.MExp txt -> return $ J.toJSON txt
-          RR.MRet selData -> do
-            let annFlds = RS._asFields selData
+          RR.MRet annSel -> do
+            let annFlds = RS._asFields annSel
             bs <- buildReturningResp tn withExps annFlds
             decodeFromBS bs
         return (t, jsonVal)
@@ -534,7 +539,7 @@ convertInsert role tn fld = prefixErrPath fld $ do
   annObjs <- forM annVals asObject
   mutFlds <- convertMutResp tn (_fType fld) $ _fSelSet fld
   return $ prefixErrPath fld $ insertMultipleObjects role insCtxMap tn
-    insCtx annObjs [] mutFlds onConflictM "objects"
+    insCtx annObjs [] mutFlds onConflictM False
   where
     arguments = _fArguments fld
     onConflictM = Map.lookup "on_conflict" arguments

@@ -1,24 +1,21 @@
-description: Insert author and it's articles via nested mutation
+description: Upsert author (do nothing) and it's articles (Error)
 url: /v1alpha1/graphql
-status: 200
+status: 400
 query:
   query: |
    mutation nested_author_insert {
       insert_author(
         objects: [
           {
-            id: 1,
             name: "Author 1", 
             articles: {
               data: [
                 {
-                  id: 1,
                   title: "Article 1 by Author 1", 
                   content: "Content for Article 1 by Author 1", 
                   is_published: false
                 },
                 {
-                  id: 2,
                   title: "Article 2 by Author 1", 
                   content: "Content for Article 2 by Author 1", 
                   is_published: false
@@ -26,7 +23,11 @@ query:
               ]
             }
           }
-        ]
+        ],
+        on_conflict: {
+          constraint: author_pkey,
+          update_columns: []
+        }
       ) {
         affected_rows
         returning {
@@ -41,20 +42,3 @@ query:
         }
       }
    }
-
-response:
-  data:
-    insert_author:
-      affected_rows: 3
-      returning:
-      - id: 1
-        name: Author 1
-        articles:
-        - id: 1
-          title: "Article 1 by Author 1"
-          content: "Content for Article 1 by Author 1"
-          is_published: false
-        - id: 2
-          title: "Article 2 by Author 1"
-          content: "Content for Article 2 by Author 1"
-          is_published: false
