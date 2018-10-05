@@ -316,4 +316,4 @@ If your database already contains tables with the same name as the root fields o
 This project is still in alpha and we are actively looking for feedback about how the tool can be improved. If you are facing an issue, feel free to [open one here](https://github.com/hasura/graphql-engine/issues/new). Any positive or negative feedback would be appreciated.
 
 ---
-Maintained with ♡ by <a href="https://hasura.io">Hasura</a>
+Maintained with :heart: by <a href="https://hasura.io">Hasura</a>
