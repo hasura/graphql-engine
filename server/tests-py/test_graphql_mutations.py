@@ -66,7 +66,9 @@ class TestGraphqlInsertPermission(object):
     def test_user_role_on_conflict_update(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + "/article_on_conflict_user_role.yaml")
 
-    @pytest.mark.xfail(reason="Refer https://github.com/hasura/graphql-engine/issues/563")
+    def test_user_role_on_conflict_constraint_on_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/article_on_conflict_constraint_on_user_role_error.yaml")
+
     def test_user_role_on_conflict_ignore(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + "/author_on_conflict_ignore_user_role.yaml")
 

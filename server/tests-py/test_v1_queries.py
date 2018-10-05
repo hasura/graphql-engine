@@ -238,7 +238,6 @@ class TestV1InsertPermissions(object):
     def test_user_role_on_conflict_update(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + "/article_on_conflict_user_role.yaml")
 
-    @pytest.mark.xfail(reason="Refer https://github.com/hasura/graphql-engine/issues/563")
     def test_user_role_on_conflict_ignore(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + "/author_on_conflict_ignore_user_role.yaml")
     
@@ -445,6 +444,24 @@ class TestTrackTables:
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
         self.dir = "queries/v1/track_table"
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
+
+
+class TestCreatePermission:
+
+    def test_create_permission_admin_role_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/create_article_permission_role_admin_error.yaml')
+
+    def test_create_permission_user_role_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/create_article_permission_role_user.yaml')
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/v1/permissions"
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
         yield
