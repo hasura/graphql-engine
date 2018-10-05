@@ -35,6 +35,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+import qualified Hasura.RQL.DML.Select          as RS
 import qualified Hasura.SQL.DML                 as S
 
 defaultTypes :: [TypeInfo]
@@ -826,26 +827,29 @@ mkOrdByCtx tn cols =
 
 mkOrdByEnumsOfCol
   :: PGColInfo
-  -> [(G.Name, Text, (PGColInfo, OrdTy, NullsOrder))]
+  -> [(G.Name, Text, RS.AnnOrderByItem)]
 mkOrdByEnumsOfCol colInfo@(PGColInfo col _ _) =
   [ ( colN <> "_asc"
     , "in the ascending order of " <> col <<> ", nulls last"
-    , (colInfo, OAsc, NLast)
+    , mkOrderByItem (annPGObCol, S.OTAsc, S.NLast)
     )
   , ( colN <> "_desc"
     , "in the descending order of " <> col <<> ", nulls last"
-    , (colInfo, ODesc, NLast)
+    , mkOrderByItem (annPGObCol, S.OTDesc, S.NLast)
     )
   , ( colN <> "_asc_nulls_first"
     , "in the ascending order of " <> col <<> ", nulls first"
-    , (colInfo, OAsc, NFirst)
+    , mkOrderByItem (annPGObCol, S.OTAsc, S.NFirst)
     )
   , ( colN <> "_desc_nulls_first"
     , "in the descending order of " <> col <<> ", nulls first"
-    ,(colInfo, ODesc, NFirst)
+    , mkOrderByItem (annPGObCol, S.OTDesc, S.NFirst)
     )
   ]
   where
+    mkOrderByItem (annObCol, ordTy, nullsOrd) =
+      OrderByItemG (Just ordTy) annObCol (Just nullsOrd)
+    annPGObCol = RS.AOCPG colInfo
     colN = pgColToFld col
     pgColToFld = G.Name . getPGColTxt
 

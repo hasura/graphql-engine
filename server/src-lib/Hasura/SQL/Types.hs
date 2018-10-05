@@ -41,8 +41,9 @@ infixr 6 <+>
   toSQL x <> mconcat [ TE.encodeUtf8Builder kat <> toSQL x' | x' <- xs ]
 {-# INLINE (<+>) #-}
 
-newtype Iden = Iden { getIdenTxt :: T.Text }
-             deriving (Show, Eq, FromJSON, ToJSON)
+newtype Iden
+  = Iden { getIdenTxt :: T.Text }
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Semigroup)
 
 instance ToSQL Iden where
   toSQL (Iden t) =
