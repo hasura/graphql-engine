@@ -144,7 +144,8 @@ mkSelExtr pfx parAls flds =
       S.Extractor sqlExp $ Just $ S.toAlias fldName
     jsonRow = S.SEFnApp "row_to_json" [S.mkRowExp $ map toFldExtr flds] Nothing
     toFldExtr (fldAls, fld) = withAls fldAls $ case fld of
-      FCol col    -> S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
+      FCol col    -> toJSONableExp (pgiType col) $
+                     S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
       FExp e      -> S.SELit e
       FRel annRel ->
         let qual = case arType annRel of

@@ -227,15 +227,6 @@ dmlTxErrorHandler p2Res =
     Just (code, msg) -> err400 code msg
   where err = simplifyError p2Res
 
--- | col_name as col_name
-mkColExtr :: (PGCol, PGColType) -> S.Extractor
-mkColExtr (c, pct) =
-  mkColExtrAl (Just c) (c, pct)
-
-mkColExtrAl :: (IsIden a) => Maybe a -> (PGCol, PGColType) -> S.Extractor
-mkColExtrAl alM (c, colTy) =
-  S.mkAliasedExtrFromExp (toJSONableExp colTy $ S.mkSIdenExp c) alM
-
 toJSONableExp :: PGColType -> S.SQLExp -> S.SQLExp
 toJSONableExp colTy expn
   | colTy == PGGeometry || colTy == PGGeography =
