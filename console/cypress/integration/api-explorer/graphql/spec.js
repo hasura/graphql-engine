@@ -71,6 +71,7 @@ export const checkQuery = () => {
   cy.get('textarea')
     .first()
     .type('{enter}{uparrow}query{{}users{{}id}}', { force: true });
+  cy.wait(1000);
   cy.get('.execute-button').click();
   cy.get('.cm-property').contains('id');
   cy.get('.cm-number').contains('1');
