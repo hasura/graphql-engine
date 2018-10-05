@@ -8,6 +8,7 @@ module Hasura.Server.Logging
   ( mkAccessLog
   , getRequestHeader
   , WebHookLog(..)
+  , WebHookLogger
   ) where
 
 import           Control.Arrow          (first)
@@ -39,6 +40,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
 
+
 data WebHookLog
   = WebHookLog
   { whlLogLevel   :: !L.LogLevel
@@ -69,6 +71,8 @@ instance ToJSON WebHookLog where
                       , "response" .= whlResponse whl
                       ]
 
+type WebHookLogger = WebHookLog -> IO ()
+
 data AccessLog
   = AccessLog
   { alStatus         :: !N.Status
@@ -82,7 +86,7 @@ data AccessLog
   , alHasuraMetadata :: !(Maybe Value)
   , alQueryHash      :: !(Maybe T.Text)
   , alResponseSize   :: !(Maybe Int64)
-  , alResponseTime   :: !(Maybe T.Text)
+  , alResponseTime   :: !(Maybe Double)
   } deriving (Show, Eq)
 
 instance L.ToEngineLog AccessLog where
@@ -171,7 +175,7 @@ mkAccessLog req r mTimeT =
   , alHasuraRole  = bsToTxt <$> getHasuraRole req
   , alHasuraMetadata = getHasuraMetadata req
   , alResponseSize = size
-  , alResponseTime = T.pack . show <$> diffTime
+  , alResponseTime = realToFrac <$> diffTime
   , alQueryHash = queryHash
   }
   where

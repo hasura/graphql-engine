@@ -1,6 +1,8 @@
-{-# LANGUAGE DeriveLift        #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveLift                 #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE MultiWayIf                 #-}
+{-# LANGUAGE OverloadedStrings          #-}
 
 module Hasura.SQL.DML where
 
@@ -62,14 +64,14 @@ newtype OrderByExp
 
 data OrderByItem
   = OrderByItem
-    { oColumn :: !(Either PGCol QIden)
+    { oColumn :: !SQLExp
     , oType   :: !(Maybe OrderType)
     , oNulls  :: !(Maybe NullsOrder)
     } deriving (Show, Eq)
 
 instance ToSQL OrderByItem where
-  toSQL (OrderByItem col ot no) =
-    either toSQL toSQL col <-> toSQL ot <-> toSQL no
+  toSQL (OrderByItem e ot no) =
+    toSQL e <-> toSQL ot <-> toSQL no
 
 data OrderType = OTAsc
                | OTDesc
@@ -255,13 +257,16 @@ data SQLExp
 
 newtype Alias
   = Alias { getAlias :: Iden }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Hashable)
+
+instance IsIden Alias where
+  toIden (Alias iden) = iden
 
 instance ToSQL Alias where
   toSQL (Alias iden) = "AS" <-> toSQL iden
 
-instance IsIden Alias where
-  toIden (Alias i) = i
+toAlias :: (IsIden a) => a -> Alias
+toAlias = Alias . toIden
 
 instance ToSQL SQLExp where
   toSQL (SEPrep argNumber) =
@@ -298,9 +303,8 @@ instance ToSQL SQLExp where
                          <> (", " <+> exps) <> BB.char7 ']'
 
 intToSQLExp :: Int -> SQLExp
-intToSQLExp i = SETyAnn e intType
-  where
-    e = SELit $ T.pack $ show i
+intToSQLExp =
+  SEUnsafe . T.pack . show
 
 data Extractor = Extractor !SQLExp !(Maybe Alias)
                deriving (Show, Eq)
@@ -348,6 +352,12 @@ data FromItem
   | FISelect !Lateral !Select !Alias
   | FIJoin !JoinExpr
   deriving (Show, Eq)
+
+mkSelFromItem :: Select -> Alias -> FromItem
+mkSelFromItem = FISelect (Lateral False)
+
+mkLateralFromItem :: Select -> Alias -> FromItem
+mkLateralFromItem = FISelect (Lateral True)
 
 instance ToSQL FromItem where
   toSQL (FISimple qt mal) =
@@ -410,6 +420,25 @@ data BoolExp = BELit !Bool
              | BENotNull !SQLExp
              | BEExists !Select
              deriving (Show, Eq)
+
+-- removes extraneous 'AND true's
+simplifyBoolExp :: BoolExp -> BoolExp
+simplifyBoolExp be = case be of
+  BEBin AndOp e1 e2 ->
+    let e1s = simplifyBoolExp e1
+        e2s = simplifyBoolExp e2
+    in if
+      | e1s == BELit True -> e2s
+      | e2s == BELit True -> e1s
+      | otherwise -> BEBin AndOp e1s e2s
+  BEBin OrOp e1 e2 ->
+    let e1s = simplifyBoolExp e1
+        e2s = simplifyBoolExp e2
+    in if
+      | e1s == BELit False -> e2s
+      | e2s == BELit False -> e1s
+      | otherwise -> BEBin OrOp e1s e2s
+  e                          -> e
 
 mkExists :: QualifiedTable -> BoolExp -> BoolExp
 mkExists qt whereFrag =

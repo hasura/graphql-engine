@@ -39,6 +39,7 @@ import           Hasura.RQL.DML.Internal        (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+import qualified Hasura.RQL.DML.Select          as RS
 import qualified Hasura.SQL.DML                 as S
 
 defaultTypes :: [TypeInfo]
@@ -117,7 +118,7 @@ isValidTableName = isValidName . qualTableToName
 isValidField :: FieldInfo -> Bool
 isValidField = \case
   FIColumn (PGColInfo col _ _) -> isColEligible col
-  FIRelationship (RelInfo rn _ _ remTab _) -> isRelEligible rn remTab
+  FIRelationship (RelInfo rn _ _ remTab _ _) -> isRelEligible rn remTab
   where
     isColEligible = isValidName . G.Name . getPGColTxt
     isRelEligible rn rt = isValidName (G.Name $ getRelTxt rn)
@@ -286,7 +287,7 @@ object_relationship: remote_table
 
 -}
 mkRelFld :: RelInfo -> Bool -> ObjFldInfo
-mkRelFld (RelInfo rn rTy _ remTab _) isNullable = case rTy of
+mkRelFld (RelInfo rn rTy _ remTab _ isManual) isNullable = case rTy of
   ArrRel ->
     ObjFldInfo (Just "An array relationship") (G.Name $ getRelTxt rn)
     (fromInpValL $ mkSelArgs remTab)
@@ -296,7 +297,8 @@ mkRelFld (RelInfo rn rTy _ remTab _) isNullable = case rTy of
     Map.empty
     objRelTy
   where
-    objRelTy = bool (G.toGT $ G.toNT relTabTy) (G.toGT relTabTy) isNullable
+    objRelTy = bool (G.toGT $ G.toNT relTabTy) (G.toGT relTabTy) isObjRelNullable
+    isObjRelNullable = isManual || isNullable
     relTabTy = mkTableTy remTab
 
 {-
@@ -424,7 +426,7 @@ mkBoolExpInp tn fields =
     mkFldExpInp = \case
       Left (PGColInfo colName colTy _) ->
         mk (G.Name $ getPGColTxt colName) (mkCompExpTy colTy)
-      Right (RelInfo relName _ _ remTab _, _, _, _) ->
+      Right (RelInfo relName _ _ remTab _ _, _, _, _) ->
         mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
 
 mkPGColInp :: PGColInfo -> InpValInfo
@@ -911,26 +913,29 @@ mkOrdByCtx tn cols =
 
 mkOrdByEnumsOfCol
   :: PGColInfo
-  -> [(G.Name, Text, (PGColInfo, OrdTy, NullsOrder))]
+  -> [(G.Name, Text, RS.AnnOrderByItem)]
 mkOrdByEnumsOfCol colInfo@(PGColInfo col _ _) =
   [ ( colN <> "_asc"
     , "in the ascending order of " <> col <<> ", nulls last"
-    , (colInfo, OAsc, NLast)
+    , mkOrderByItem (annPGObCol, S.OTAsc, S.NLast)
     )
   , ( colN <> "_desc"
     , "in the descending order of " <> col <<> ", nulls last"
-    , (colInfo, ODesc, NLast)
+    , mkOrderByItem (annPGObCol, S.OTDesc, S.NLast)
     )
   , ( colN <> "_asc_nulls_first"
     , "in the ascending order of " <> col <<> ", nulls first"
-    , (colInfo, OAsc, NFirst)
+    , mkOrderByItem (annPGObCol, S.OTAsc, S.NFirst)
     )
   , ( colN <> "_desc_nulls_first"
     , "in the descending order of " <> col <<> ", nulls first"
-    ,(colInfo, ODesc, NFirst)
+    , mkOrderByItem (annPGObCol, S.OTDesc, S.NFirst)
     )
   ]
   where
+    mkOrderByItem (annObCol, ordTy, nullsOrd) =
+      OrderByItemG (Just ordTy) annObCol (Just nullsOrd)
+    annPGObCol = RS.AOCPG colInfo
     colN = pgColToFld col
     pgColToFld = G.Name . getPGColTxt
 

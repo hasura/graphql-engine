@@ -8,6 +8,7 @@ args:
       create table author(
           id serial primary key, 
           name text unique, 
+          bio text,
           is_registered boolean not null default false
       );
 - type: track_table
@@ -61,6 +62,19 @@ args:
   args:
     schema: public
     name: address
+
+#Create Company table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "Company" (
+      "id" SERIAL PRIMARY KEY,
+      "name" TEXT
+      )
+- type: track_table
+  args:
+    schema: public
+    name: Company
 
 #Object relationship
 - type: create_object_relationship
@@ -127,3 +141,56 @@ args:
         - is_registered: false
       allow_upsert: true
 
+#Author insert permission for student
+#A Student should specify their Bio
+- type: create_insert_permission
+  args:
+    table: author
+    role: student
+    permission:
+      check:
+        bio:
+          _is_null: false
+      allow_upsert: true
+
+#Insert Author table data
+- type: insert
+  args:
+    table: author
+    objects:
+      - name: Author 1
+      - name: Author 2
+
+#Insert aticle table data
+- type: insert
+  args:
+    table: article
+    objects:
+    - content: Sample article content
+      title: Article 1
+    - content: Sample article content
+      title: Article 2
+    - content: Sample article content
+      title: Article 3
+    
+#Company insert permission for user
+- type: create_insert_permission
+  args:
+    table: Company
+    role: user
+    permission:
+      check:
+        id: X-HASURA-COMPANY-ID
+      allow_upsert: true
+
+#Company select permission for user
+- type: create_select_permission
+  args:
+    table: Company
+    role: user
+    permission:
+      columns:
+      - id
+      - name
+      filter:
+        id: X-HASURA-COMPANY-ID

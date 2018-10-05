@@ -129,7 +129,7 @@ logResult
 logResult req reqBody sc res qTime =
   liftIO $ logger $ mkAccessLog req (reqBody, res) qTime
   where
-    logger = scLogger sc
+    logger = L.unLogger $ scLogger sc
 
 logError
   :: MonadIO m
@@ -163,7 +163,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
   either (qErrToResp $ userRole userInfo == adminRole) resToResp result
 
   where
-    logger = scLogger serverCtx
+    logger = L.unLogger $ scLogger serverCtx
     -- encode error response
     qErrToResp includeInternal qErr = do
       setStatus $ qeStatus qErr

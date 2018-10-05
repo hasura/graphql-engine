@@ -51,8 +51,8 @@ type ObjRelData = RelData AnnGObject
 type ArrRelData = RelData [AnnGObject]
 
 type PGColWithValue = (PGCol, PGColValue)
-type PGColWithType = (PGCol, PGColType)
 
+type AnnSelFlds = [(FieldName, RS.AnnFld)]
 type WithExp = (S.CTE, Seq.Seq Q.PrepArg)
 
 mkConflictClause :: RI.ConflictCtx -> RI.ConflictClauseP1
@@ -223,14 +223,15 @@ insertObjRel
   -> InsCtx
   -> RelInfo
   -> ObjRelData
-  -> Q.TxE QErr (Int, [(PGCol, PGColValue)])
+  -> Q.TxE QErr (Int, [PGColWithValue])
 insertObjRel role insCtxMap insCtx relInfo relData =
   withPathK relNameTxt $ do
     (aRows, withExp) <- insertObj role insCtxMap tn insObj
                         insCtx [] onConflictM "data"
     when (aRows == 0) $ throwVE $ "cannot proceed to insert object relation "
       <> relName <<> " since insert to table " <> tn <<> " affects zero rows"
-    retColsWithVals <- insertAndRetCols tn withExp retCols
+    retColsWithVals <- insertAndRetCols tn withExp $
+                       getColInfos rCols allCols
     let c = mergeListsWith mapCols retColsWithVals
           (\(_, rCol) (col, _) -> rCol == col)
           (\(lCol, _) (_, colVal) -> (lCol, colVal))
@@ -243,8 +244,6 @@ insertObjRel role insCtxMap insCtx relInfo relData =
     tn = riRTable relInfo
     rCols = map snd mapCols
     allCols = icColumns insCtx
-    retCols = map (\(PGColInfo cn ty _) -> (cn, ty)) $
-      getColInfos rCols allCols
 
 -- | insert an array relationship and return affected rows
 insertArrRel
@@ -271,7 +270,7 @@ insertArrRel role insCtxMap insCtx relInfo resCols relData =
     tn = riRTable relInfo
     relNameTxt = getRelTxt $ riName relInfo
     RelData insObjs onConflictM = relData
-    mutFlds = Map.singleton "affected_rows" RR.MCount
+    mutFlds = [("affected_rows", RR.MCount)]
 
 -- | validate an insert object based on insert columns,
 -- | insert object relations and additional columns from parent
@@ -336,9 +335,7 @@ insertObj role insCtxMap tn annObj ctx addCols onConflictValM errP = do
 
   -- prepare final returning columns
   let arrDepCols = concatMap (\(a, _, _, _) -> a) processedArrRels
-      arrDepColsWithType = mergeListsWith arrDepCols tableColInfos
-                           (\c ci -> c == pgiName ci)
-                           (\c ci -> (c, pgiType ci))
+      arrDepColsWithInfo = getColInfos arrDepCols tableColInfos
 
   onConflictM <- forM onConflictValM $ parseOnConflict (map fst finalInsCols)
 
@@ -352,10 +349,10 @@ insertObj role insCtxMap tn annObj ctx addCols onConflictValM errP = do
 
   let insertWithArrRels = cannotInsArrRelErr thisInsAffRows >>
                           withArrRels preArrRelInsAffRows insQ
-                            arrDepColsWithType processedArrRels
+                            arrDepColsWithInfo processedArrRels
       insertWithoutArrRels = withNoArrRels preArrRelInsAffRows insQ
 
-  bool insertWithArrRels insertWithoutArrRels $ null arrDepColsWithType
+  bool insertWithArrRels insertWithoutArrRels $ null arrDepColsWithInfo
 
   where
     InsCtx vn tableColInfos relInfoMap = ctx
@@ -408,41 +405,41 @@ mkSelQ tn allColInfos pgColsWithVal = do
 execWithExp
   :: QualifiedTable
   -> WithExp
-  -> RS.AnnSelFlds
+  -> AnnSelFlds
   -> Q.TxE QErr RespBody
 execWithExp tn (withExp, args) annFlds = do
-  let selData = RS.SelectData annFlds tn frmExpM
-        (S.BELit True, Nothing) Nothing [] Nothing Nothing True
-      sqlSel = RS.mkSQLSelect selData
+  let annSel = RS.AnnSel annFlds tn frmItemM
+        (S.BELit True) Nothing RS.noTableArgs
+      sqlSel = RS.mkSQLSelect True annSel
       selWith = S.SelectWith [(alias, withExp)] sqlSel
       sqlBuilder = toSQL selWith
   runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList args) True
   where
     alias = S.Alias $ Iden $ snakeCaseTable tn <> "__rel_insert_result"
-    frmExpM = Just $ S.FromExp [S.FIIden $ toIden alias]
+    frmItemM = Just $ S.FIIden $ toIden alias
 
 insertAndRetCols
   :: QualifiedTable
   -> WithExp
-  -> [PGColWithType]
+  -> [PGColInfo]
   -> Q.TxE QErr [PGColWithValue]
 insertAndRetCols tn withExp retCols = do
   resBS <- execWithExp tn withExp annSelFlds
   resObj <- decodeFromBS resBS
-  forM retCols $ \(col, colty) -> do
+  forM retCols $ \(PGColInfo col colty _) -> do
     val <- onNothing (Map.lookup (getPGColTxt col) resObj) $
       throw500 $ "column " <> col <<> "not returned by postgres"
     pgColVal <- RB.pgValParser colty val
     return (col, pgColVal)
   where
-    annSelFlds = Map.fromList $ flip map retCols $ \(c, ty) ->
-      (fromPGCol c, RS.FCol (c, ty))
+    annSelFlds = flip map retCols $ \pgci ->
+      (fromPGCol $ pgiName pgci, RS.FCol pgci)
 
 buildReturningResp
   :: QualifiedTable
   -> [WithExp]
-  -> RS.AnnSelFlds
+  -> AnnSelFlds
   -> Q.TxE QErr RespBody
 buildReturningResp tn withExps annFlds = do
   respList <- forM withExps $ \withExp ->
@@ -510,12 +507,12 @@ insertMultipleObjects role insCtxMap tn ctx insObjs
 
       let affRows = sum $ map fst insResps
           withExps = map snd insResps
-      respTups <- forM (Map.toList mutFlds) $ \(t, mutFld) -> do
+      respTups <- forM mutFlds $ \(t, mutFld) -> do
         jsonVal <- case mutFld of
           RR.MCount -> return $ J.toJSON affRows
           RR.MExp txt -> return $ J.toJSON txt
           RR.MRet selData -> do
-            let annFlds = RS.sdFlds selData
+            let annFlds = RS._asFields selData
             bs <- buildReturningResp tn withExps annFlds
             decodeFromBS bs
         return (t, jsonVal)

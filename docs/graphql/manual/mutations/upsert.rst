@@ -7,14 +7,14 @@ update columns using the ``update_columns`` argument.
 
 .. note::
     
-    You can fetch the name of unqiue or primary key constraints by quering the ``information_schema.table_constraints`` table.
+    You can fetch the name of unique or primary key constraints by querying the ``information_schema.table_constraints`` table.
     GraphQL Engine will automatically generate constraint names as enum values for ``constraint`` (try autocompleting in GraphiQL).
     Typically, the constraint is automatically named as ``<table-name>_<column-name>_key``. 
 
 
 Without "update_columns" argument
 ---------------------------------
-When you don't excplicitly specify ``update_columns``, the columns that are given in objects are updated (it doesn't matter if they
+When you don't explicitly specify ``update_columns``, the columns that are given in objects are updated (it doesn't matter if they
 are different, you should see the same end result).
 
 Insert into ``author`` table using unique constraint ``author_name_key``. All columns specified in objects get updated:
@@ -58,7 +58,7 @@ Insert into ``author`` table using unique constraint ``author_name_key``. All co
       }
     }
 
-**Note:** You'll need to ensure that all objects have the same set of columns. If not, the union of column sets accross all objects
+**Note:** You'll need to ensure that all objects have the same set of columns. If not, the union of column sets across all objects
 is the set of columns that is updated. For example, if your query as follows:
 
 .. graphiql::

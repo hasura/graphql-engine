@@ -32,7 +32,7 @@ Query/Subscription syntax
    * - argument
      - false
      - Argument_
-     - one or more of filter criteria, instructions for sort order or pagination
+     - One or more of filter criteria, instructions for sort order or pagination
 
 **E.g. QUERY**:
 
@@ -160,7 +160,7 @@ Operator
 Generic operators (all column types except json, jsonb) :
 
 - ``_eq``
-- ``_ne``
+- ``_neq``
 - ``_in``
 - ``_nin``
 - ``_gt``
@@ -168,14 +168,25 @@ Generic operators (all column types except json, jsonb) :
 - ``_gte``
 - ``_lte``
 
-Operators for comparing columns (all column types except json, jsonb):
+JSONB operators:
 
-- ``_ceq``
-- ``_cneq``
-- ``_cgt``
-- ``_clt``
-- ``_cgte``
-- ``_cnlte``
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_contains``
+     - ``@>``
+   * - ``_contained_in``
+     - ``<@``
+   * - ``_has_key``
+     - ``?``
+   * - ``_has_keys_any``
+     - ``?|``
+   * - ``_has_keys_all``
+     - ``?&``
+
+(For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`_.)
 
 Text related operators :
 
@@ -189,6 +200,7 @@ Text related operators :
 Checking for ``null`` values :
 
 - ``_is_null`` (takes true/false as values)
+
 
 .. _OrderByExp:
 
@@ -230,4 +242,3 @@ PaginationExp
 .. parsed-literal::
 
    limit: Integer [offset: Integer]
-

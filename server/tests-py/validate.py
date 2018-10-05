@@ -17,65 +17,28 @@ def check_ev_payload_shape(ev_payload):
     trigger_keys = ["id", "name"]
     check_keys(trigger_keys, ev_payload['trigger'])
 
-def get_event_of_query(hge_ctx, q):
-    st_code, resp = hge_ctx.v1q(q)
-    assert st_code == 200, resp
-    return hge_ctx.get_event(3)
-
 def validate_event_payload(ev_payload, trig_name, table):
     check_ev_payload_shape(ev_payload)
     assert ev_payload['table'] == table, ev_payload
     assert ev_payload['trigger']['name'] == trig_name, ev_payload
 
-    return ev_payload['event']
+def validate_event_headers(ev_headers, headers):
+    for key, value in headers.items():
+        v = ev_headers.get(key)
+        assert v == value, (key, v)
 
-def check_insert(hge_ctx, trig_name, table, row, exp_ev_data):
-    query = {
-        "type": "insert",
-        "args": {
-            "table": table,
-            "objects": [row]
-        }
-    }
+def validate_event_webhook(ev_webhook_path, webhook_path):
+    assert ev_webhook_path == webhook_path
 
-    ev_payload = get_event_of_query(hge_ctx,query)
-    ev = validate_event_payload(ev_payload, trig_name, table)
+def check_event(hge_ctx, trig_name, table, operation, exp_ev_data, headers, webhook_path):
 
-    # insert specific assertions
-    assert ev['op'] == "INSERT", ev_payload
-    assert ev['data'] == exp_ev_data, ev_payload
-
-def check_update(hge_ctx, trig_name, table, old_row, where, set_exp, exp_ev_data):
-    query = {
-        "type": "update",
-        "args": {
-            "table": table,
-            "where": where,
-            "$set": set_exp
-        }
-    }
-
-    ev_payload = get_event_of_query(hge_ctx,query)
-    ev = validate_event_payload(ev_payload, trig_name, table)
-
-    # update specific assertions
-    assert ev['op'] == "UPDATE", ev_payload
-    assert ev['data'] == exp_ev_data, ev_payload
-
-def check_delete(hge_ctx, trig_name, table, where_exp, exp_ev_data):
-    query = {
-        "type": "delete",
-        "args": {
-            "table": table,
-            "where": where_exp
-        }
-    }
-
-    ev_payload = get_event_of_query(hge_ctx,query)
-    ev = validate_event_payload(ev_payload, trig_name, table)
-
-    assert ev['op'] == "DELETE", ev_payload
-    assert ev['data'] == exp_ev_data, ev_payload
+    ev_full = hge_ctx.get_event(3)
+    validate_event_webhook(ev_full['path'], webhook_path)
+    validate_event_headers(ev_full['headers'], headers)
+    validate_event_payload(ev_full['body'], trig_name, table)
+    ev = ev_full['body']['event']
+    assert ev['op'] == operation, ev
+    assert ev['data'] == exp_ev_data, ev
 
 def check_query(hge_ctx, conf):
     headers={}
