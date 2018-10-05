@@ -26,49 +26,112 @@ A CLI tool to help you try realtime GraphQL on your firebase data. It takes data
 
     ```json
     {
-      "posts" : {
-        "-LMbLFOAW2q6GO1bD-5g" : {
-          "author" : "Rishichandra Wawhal",
-          "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
-          "body" : "My first post content\nAnd body\nANd structure",
-          "starCount" : 0,
-          "title" : "My first post",
-          "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
-        },
-        "-LMbLIv6VKHYul7p_PZ-" : {
-          "author" : "Rishichandra Wawhal",
-          "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
-          "body" : "AKsdjak\naklsdjaskldjklas\nasdklfjaklsdfjklsda\nasdklfjasklf",
-          "starCount" : 0,
-          "title" : "Whatta proaaa",
-          "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
-        }
-      },
-      "user-posts" : {
-        "4UPmbcaqZKT2NdAAqBahXj4tHYN2" : {
-          "-LMbLFOAW2q6GO1bD-5g" : {
-            "author" : "Rishichandra Wawhal",
-            "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
-            "body" : "My first post content\nAnd body\nANd structure",
-            "starCount" : 0,
-            "title" : "My first post",
-            "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+      "Articles": {
+        "A1": {
+          "Title": "Title1",
+          "Body": "Body1",
+          "IsUnpublished": false,
+          "Author": {
+            "Name": "AName1",
+            "Age": 11
           },
-          "-LMbLIv6VKHYul7p_PZ-" : {
-            "author" : "Rishichandra Wawhal",
-            "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
-            "body" : "AKsdjak\naklsdjaskldjklas\nasdklfjaklsdfjklsda\nasdklfjasklf",
-            "starCount" : 0,
-            "title" : "Whatta proaaa",
-            "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+          "Comments": {
+            "C1": {
+              "Body": "Comment1",
+              "Author": {
+                "Name": "AName2",
+                "Sex": "M"
+              },
+              "Date": "22-09-2018"
+            },
+            "C2": {
+              "Body": "Comment2",
+              "Author": {
+                "Name": "AName1",
+                "Sex": "F"
+              },
+              "Date": "21-09-2018"
+            }
+          }
+        },
+        "A2": {
+          "Title": "Title2",
+          "Body": "Body2",
+          "IsUnpublished": true,
+          "Author": {
+            "Name": "AName2",
+            "Age": 22
+          },
+          "Comments": {
+            "C3": {
+              "Body": "Comment1",
+              "Author": {
+                "Name": "AName1",
+                "Sex": "F"
+              },
+              "Date": "23-09-2018"
+            },
+            "C4": {
+              "Body": "Comment2",
+              "Author": {
+                "Name": "AName2",
+                "Sex": "M"
+              },
+              "Date": "24-09-2018"
+            }
           }
         }
       },
-      "users" : {
-        "4UPmbcaqZKT2NdAAqBahXj4tHYN2" : {
-          "email" : "rishichandrawawhal@gmail.com",
-          "profile_picture" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
-          "username" : "Rishichandra Wawhal"
+      "Authors": {
+        "AT1": {
+          "Name": "AName1",
+          "Age": 11,
+          "Sex": "F",
+          "Articles": {
+            "A1": {
+              "Title": "Title1"
+            }
+          }
+        },
+        "AT2": {
+          "Name": "AName2",
+          "Age": 22,
+          "Sex": "M",
+          "Articles": {
+            "A2": {
+              "Title": "Title2"
+            }
+          }
+        }
+      },
+      "Comments": {
+        "C1": {
+          "Body": "Comment1",
+          "Author": {
+            "Name": "AName2"
+          },
+          "Date": "22-09-2018"
+        },
+        "C2": {
+          "Body": "Comment2",
+          "Author": {
+            "Name": "AName1"
+          },
+          "Date": "21-09-2018"
+        },
+        "C3": {
+          "Body": "Comment1",
+          "Author": {
+            "Name": "AName1"
+          },
+          "Date": "23-09-2018"
+        },
+        "C4": {
+          "Body": "Comment2",
+          "Author": {
+            "Name": "AName2"
+          },
+          "Date": "24-09-2018"
         }
       }
     }
@@ -77,21 +140,35 @@ A CLI tool to help you try realtime GraphQL on your firebase data. It takes data
 4. Use the CLI to import the data:
 
     ```
-    npx firebase2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json
+    npx firebase2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json --normalize
     ```
 
 5. That's it. You can now go to your GraphQL Engine URL `https://<app-name>.herokuapp.com` and make awesome GraphQL Queries like:
 
     ```graphql
     query {
-      posts {
-        title
-        body
-        author
-      }
-      users {
-        email
-        username
+      Authors (order_by: Name_asc){
+        Name
+        Age
+        Sex
+        Articles (
+          order_by: Title_asc
+          where: {
+            IsUnpublished: {
+              _eq: false
+            }
+          }
+        ){
+          Title
+          Body
+          Comments (order_by: Date_desc){
+            Body
+            Authors {
+              Name
+            }
+            Date
+          }
+        }
       }
     }
     ```
@@ -200,15 +277,34 @@ mutation {
 
 ## Things to know about implementation
 
+### Working
+
+We flatten the JSON database into tables and create children tables when data nesting is detected.
+
+In this way, you get almost the exact API over GraphQL that you had on Firebase.
+
+If you use the flag `--normalize`, the CLI finds out if the children tables are duplicates of the original tables and tries to normalize the data by removing duplicates and creating respective relationships.
+
+### Normalization
+
+The CLI provides a flag called `--normalize` if you want to normalize your denormalized database.
+
+A lot of guess-work is done by the CLI while normalizing the database. Here are some thing you need to know:
+
+1. Root level tables are never deleted. So if there are some relationships that you wish to create manually, you can do so.
+2. Children tables are deleted if they are detected to be duplicates of some other root or child table.
+3. In case of some children tables, when the data lacks a unique identifier, an extra unique field is added. In most cases, this field gets deleted while mergine a duplicate table with the original table.
+
+
 ### Duplicates
 
-By default, the CLI gives you the exact API that you originally had in Firebase (of course, over GraphQL). But in that case, some duplicate tables might be created and you might not be able to leverage the complete power of GraphQL and Postgres.
+By default, the CLI gives you almost the exact API that you originally had in Firebase (of course, over GraphQL). But in that case, some duplicate tables might be created and you might not be able to leverage the complete power of GraphQL and Postgres.
 
 In such cases, you have three choices:
 
 1. Use the API as such if you prefer the exact API.
 2. Go to the UI Console and delete the duplicates and normalize the database as you feel fit.
-3. (Experimental) Use the `--normalize` flag. In this case, the CLI will detect duplicates and make appropriate relationships between root nodes. (This feature is experimental and needs more test cases to get stable. Contributions are welcome) 
+3. Use the `--normalize` flag and rerun the migration. In this case, the CLI will detect duplicates and make appropriate relationships between root nodes. (This feature is experimental and needs more test cases to attain stability. Contributions are welcome) 
  
 
 ### Overwrite

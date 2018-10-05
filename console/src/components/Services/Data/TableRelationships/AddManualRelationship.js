@@ -9,6 +9,7 @@ import {
   relManualAddClicked,
   relTypeChange,
   addRelViewMigrate,
+  REL_SET_MANUAL_COLUMNS,
 } from './Actions';
 import {
   fetchTableListBySchema,
@@ -46,6 +47,10 @@ class AddManualRelationship extends Component {
     this.props.dispatch({
       type: UPDATE_REMOTE_SCHEMA_MANUAL_REL,
       data: e.target.value,
+    });
+    this.props.dispatch({
+      type: REL_SET_MANUAL_COLUMNS,
+      data: [],
     });
     this.props.dispatch(fetchTableListBySchema(e.target.value));
   }

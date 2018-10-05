@@ -100,7 +100,9 @@ const RawSQL = ({
     ));
     const rows = result.map((row, i) => (
       <tr key={i}>
-        {row.map((columnValue, j) => <td key={j}>{columnValue}</td>)}
+        {row.map((columnValue, j) => (
+          <td key={j}>{columnValue}</td>
+        ))}
       </tr>
     ));
     return !resultType || resultType === 'command' ? null : (
@@ -162,6 +164,11 @@ const RawSQL = ({
                   Add Existing Table View
                 </Link>{' '}
                 functionality.
+              </li>
+              <li>
+                Please note that if the migrations are enabled,
+                <code>down</code>
+                migrations will not be generated for SQL statements.
               </li>
             </ul>
           </div>

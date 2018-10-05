@@ -1,4 +1,5 @@
 import pytest
+import time
 from context import HGECtx, HGECtxError
 
 def pytest_addoption(parser):
@@ -21,3 +22,4 @@ def hge_ctx(request):
     yield hge_ctx  # provide the fixture value
     print("teardown hge_ctx")
     hge_ctx.teardown()
+    time.sleep(2)

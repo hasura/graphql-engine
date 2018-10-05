@@ -4,20 +4,15 @@ const colors = require('colors/safe');
 
 const complexQuery = `
 query {
-  f2g_test_Album (
-    order_by:_id_asc
-  ){
-    _id
-    f2g_test_Album_artist {
-      Name
-      ArtistId
-    }
-    f2g_test_Album_tracks (
-      order_by: Name_asc
-    ) {
-      Name
-      Composer
-    }
+  f2g_test_posts (order_by: title_asc) {
+    title
+  }
+  f2g_test_users (order_by: username_asc) {
+    username
+  }
+  f2g_test_user_posts (order_by:title_asc){
+    author
+    title
   }
 }
 `;
@@ -29,12 +24,13 @@ const verifyDataImport = () => {
     headers: {'x-hasura-access-key': process.env.TEST_X_HASURA_ACCESS_KEY},
   }).then(response => {
     if (
-      response.data.f2g_test_Album[0].f2g_test_Album_artist.ArtistId === 1 &&
-      response.data.f2g_test_Album[0].f2g_test_Album_tracks[0].Name === 'Breaking The Rules'
+      response.data.f2g_test_posts[0].title === 'My first post' &&
+      response.data.f2g_test_users[0].username === 'Eena' &&
+      response.data.f2g_test_user_posts[1].title === 'Whatta proaaa'
     ) {
       let sqlString = '';
-      ['Album', 'Album_artist', 'Album_tracks'].forEach(t => {
-        sqlString += `drop table public."f2g_test_${t}" cascade;`;
+      ['f2g_test_users', 'f2g_test_posts', 'f2g_test_user_posts'].forEach(t => {
+        sqlString += `drop table public."${t}" cascade;`;
       });
       fetch(
         `${process.env.TEST_HGE_URL}/v1/query`,
@@ -50,13 +46,13 @@ const verifyDataImport = () => {
           }),
         }
       ).then(() => {
-        console.log(colors.green('✔︎ Test passed'));
+        console.log(colors.green('✔︎ data-sets/blog.json: Test passed'));
         process.exit();
       }).catch(() => {
         process.exit();
       });
     } else {
-      console.log(colors.red('✖ Test failed. Unexpected response.'));
+      console.log(colors.red('✖ data-sets/blog.json: Test failed. Unexpected response.'));
       console.log(response.data);
       process.exit();
     }
