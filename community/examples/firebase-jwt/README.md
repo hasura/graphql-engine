@@ -25,53 +25,10 @@ This example assumes that you already have Firebase Auth setup for your app.
 
 ## Add the cloud function
 
-1. Create a cloud function via the Firebase CLI (https://firebase.google.com/docs/functions/)
-2. Add the following code to your cloud function:
+Deploy the cloud function inside `functions/` folder:
 
-```javascript
-const functions = require('firebase-functions');
-
-const admin = require('firebase-admin');
-admin.initializeApp(functions.config().firebase);
-
-// On sign up.
-exports.processSignUp = functions.auth.user().onCreate(event => {
-  const user = event.data; // The Firebase user.
-  // Check if user meets role criteria:
-  // have custom logic to decide what roles should the user get
-  let customClaims;
-  if (user.email &&
-      user.email.indexOf('@admin.example.com') != -1 &&
-      user.emailVerified) {
-    customClaims = {
-      'https://hasura.io/jwt/claims': {
-        'x-hasura-default-role': 'admin',
-        'x-hasura-allowed-roles': ['user', 'admin']
-      }
-    };
-  }
-  else {
-    customClaims = {
-      'https://hasura.io/jwt/claims': {
-        'x-hasura-default-role': 'user',
-        'x-hasura-allowed-roles': ['user']
-      }
-    };
-  }
-  // Set custom user claims on this newly created user.
-  return admin.auth().setCustomUserClaims(user.uid, customClaims)
-    .then(() => {
-      // Update real-time database to notify client to force refresh.
-      const metadataRef = admin.database().ref("metadata/" + user.uid);
-      // Set the refresh time to the current UTC timestamp.
-      // This will be captured on the client to force a token refresh.
-      return metadataRef.set({refreshTime: new Date().getTime()});
-    })
-    .catch(error => {
-      console.log(error);
-    });
-});
-
+```shell
+$ firebase deploy --only functions
 ```
 
 Customize the code to add your logic of assigning roles in the custom claims.
@@ -80,38 +37,7 @@ This cloud function is using the `onCreate` trigger. So whenever a user is creat
 
 ## Client-side code
 
-Your client-side code should be something like:
-
-```javascript
-const provider = new firebase.auth.GoogleAuthProvider();
-firebase.auth().signInWithPopup(provider)
-.catch(error => {
-  console.log(error);
-});
-
-let callback = null;
-let metadataRef = null;
-firebase.auth().onAuthStateChanged(user => {
-  // Remove previous listener.
-  if (callback) {
-    metadataRef.off('value', callback);
-  }
-  // On user login add new listener.
-  if (user) {
-    // Check if refresh is required.
-    metadataRef = firebase.database().ref('metadata/' + user.uid + '/refreshTime');
-    callback = (snapshot) => {
-      // Force refresh to pick up the latest custom claims changes.
-      // Note this is always triggered on first call. Further optimization could be
-      // added to avoid the initial trigger when the token is issued and already contains
-      // the latest claims.
-      user.getIdToken(true);
-    };
-    // Subscribe new listener to changes on that node.
-    metadataRef.on('value', callback);
-  }
-});
-```
+The client-side code is in `app/` folder.
 
 # Configure Hasura to start in JWT mode
 
