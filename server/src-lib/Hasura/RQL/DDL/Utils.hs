@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Hasura.RQL.DDL.Utils where
+module Hasura.RQL.DDL.Utils
+  ( clearHdbViews
+  ) where
 
 import qualified Data.ByteString.Builder as BB
 import qualified Database.PG.Query       as Q

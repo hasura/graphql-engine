@@ -7,9 +7,11 @@ import (
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
+	v := viper.New()
 	opts := &migrateCreateOptions{
 		EC: ec,
 	}
@@ -20,6 +22,10 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Long:         "Create sql and yaml files required for a migration",
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			ec.Viper = v
+			return ec.Validate()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.name = args[0]
 			return opts.run()

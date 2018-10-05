@@ -1,0 +1,6 @@
+- description: Clear metadata
+  url: /v1/query
+  status: 200
+  query:
+    type: dump_internal_state
+    args: {}

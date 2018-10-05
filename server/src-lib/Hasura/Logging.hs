@@ -13,7 +13,7 @@ module Hasura.Logging
   , debugT
   , debugBS
   , debugLBS
-  , Logger
+  , Logger (..)
   , LogLevel(..)
   , mkLogger
   , LoggerCtx(..)
@@ -135,10 +135,10 @@ cleanLoggerCtx :: LoggerCtx -> IO ()
 cleanLoggerCtx =
   FL.rmLoggerSet . _lcLoggerSet
 
-type Logger = forall a. (ToEngineLog a) => a -> IO ()
+newtype Logger = Logger { unLogger :: forall a. (ToEngineLog a) => a -> IO () }
 
 mkLogger :: LoggerCtx -> Logger
-mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter) l = do
+mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter) = Logger $ \l -> do
   localTime <- timeGetter
   let (logLevel, logTy, logDet) = toEngineLog l
   when (logLevel >= serverLogLevel) $

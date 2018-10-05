@@ -8,6 +8,7 @@ import           Control.Monad.Except   as M
 import           Control.Monad.Identity as M
 import           Control.Monad.Reader   as M
 import           Control.Monad.State    as M
+import           Control.Monad.Fail     as M (MonadFail)
 import           Data.Bool              as M (bool)
 import           Data.Either            as M (lefts, partitionEithers, rights)
 import           Data.Foldable          as M (toList)

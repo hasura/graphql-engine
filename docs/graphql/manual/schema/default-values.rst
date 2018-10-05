@@ -34,7 +34,7 @@ Open the console and head to ``Data -> article -> Modify``:
 
     CREATE SEQUENCE roll_number_seq;
 
-  Now set the default value of the ``roll_number`` field as ``nextval('roll_number_seq')``
+  Now set the default value of the ``roll_number`` field as ``nextval('roll_number_seq')``.
 
 
 2) Run an insert mutation
@@ -47,5 +47,5 @@ value will be set automatically by Postgres.
 
 .. note::
 
-  The default value is ignored when a value is explicity set to the field. To enforce the value set in a field is the
-  result of the defined SQL function, see: :doc:`sql-functions`
+  The default value is ignored when a value is explicitly set to the field. To enforce the value set in a field is the
+  result of the defined SQL function, see: :doc:`sql-functions`.
