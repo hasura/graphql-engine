@@ -126,6 +126,9 @@ When adding a new feature, it is recommended to add corresponding tests too.
 
 Tests are written using [Cypress](https://www.cypress.io/).
 
+You can use the [Redux DevTools Extension](http://extension.remotedev.io/) to inspect and debug the Redux store.
+It should automatically connect to the Redux store when started in development mode.
+
 ### Run Tests
 
 - Run tests: `npm run cypress`
