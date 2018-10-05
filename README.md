@@ -111,7 +111,7 @@ processing - [read more](event-triggers.md).
 
 ## Demos
 
-Checkout all the example applications in the
+Check out all the example applications in the
 [community/examples](community/examples) directory.
 
 ### Realtime applications

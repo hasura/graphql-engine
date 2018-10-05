@@ -8,7 +8,7 @@ You can run Hasura's GraphQL Engine in three modes:
 
 - When ``--access-key`` and ``--auth-hook`` are not set
 
-- It is useful when you're developing . It is not recomended to use in production but however you can have proxy gateway that will set (``X-Hasura-Access-Key``) header and other required ``X-Hasura-*`` headers.
+- It is useful when you're developing . It is not recommended to use in production but however you can have proxy gateway that will set (``X-Hasura-Access-Key``) header and other required ``X-Hasura-*`` headers.
 
 Run server in this mode using following docker command.
 
