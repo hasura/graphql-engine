@@ -12,6 +12,7 @@ Choose from the following guides to deploy the Hasura GraphQL engine and connect
 
 - :doc:`Deploy using Heroku <heroku/index>`
 - :doc:`Deploy using Docker <docker/index>`
+- :doc:`Deploy using Docker on DigitalOcean <digitalocean/index>`
 - :doc:`Deploy using Kubernetes <kubernetes/index>`
 
 By default, Hasura GraphQL engine runs in a very permissive mode for easier development. Check out the below pages
@@ -29,6 +30,7 @@ to configure Hasura GraphQL engine for your production environment:
 
    Using Heroku <heroku/index>
    Using Docker <docker/index>
+   Using Docker on DigitalOcean<digitalocean/index>
    Using Kubernetes <kubernetes/index>
    securing-graphql-endpoint
    postgres-permissions
