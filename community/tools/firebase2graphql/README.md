@@ -14,7 +14,7 @@ A CLI tool to help you try realtime GraphQL on your firebase data. It takes data
 - [Installation](#installation)
 - [Usage](#usage)
 - [Command](#command)
-- [Usage Comparison](#usage-comparison---firebase-sdk-vs-graphql)
+- [Usage comparison](#usage-comparison---firebase-sdk-vs-graphql)
 - [Authentication](#authentication)
 - [Next steps](#next-steps)
 - [More information](#more-information)
@@ -232,7 +232,7 @@ firebase2graphql URL [flags]
 - `-v --version`: show CLI version
 - `-h, --help`: show CLI help
 
-## Usage Comparison - Firebase SDK vs GraphQL
+## Usage comparison - Firebase SDK vs GraphQL
 
 A typical query to do a single read from the database using [Firebase SDK](https://firebase.google.com/docs/reference/), (javascript) would look something like:
 
