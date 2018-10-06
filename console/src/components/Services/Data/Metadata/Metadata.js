@@ -26,18 +26,23 @@ class Metadata extends Component {
     }
   }
   checkSemVer(version) {
-    let showMetadata = false;
     try {
-      showMetadata = semver.gt(version, '1.0.0-alpha16');
-      if (showMetadata) {
-        this.setState({ ...this.state, showMetadata: true });
+      // If version is invalid semver or current version is greater than 1.0.0-alpha16, display Reload Metadata button
+      if (semver.valid(version) === null || semver.gt(version, '1.0.0-alpha16')) {
+        this.updateMetadataState(true);
       } else {
-        this.setState({ ...this.state, showMetadata: false });
+        this.updateMetadataState(false);
       }
     } catch (e) {
-      this.setState({ ...this.state, showMetadata: false });
+      this.updateMetadataState(false);
       console.error(e);
     }
+  }
+  updateMetadataState(displayReloadMetadata) {
+    this.setState({
+      ...this.state,
+      showMetadata: displayReloadMetadata,
+    });
   }
   render() {
     const styles = require('../TableCommon/Table.scss');
@@ -82,17 +87,17 @@ class Metadata extends Component {
 
         {this.state.showMetadata
           ? [
-              <div key="meta_data_1" className={metaDataStyles.intro_note}>
-                <h4>Reload metadata</h4>
-                <div className={metaDataStyles.content_width}>
+            <div key="meta_data_1" className={metaDataStyles.intro_note}>
+              <h4>Reload metadata</h4>
+              <div className={metaDataStyles.content_width}>
                   Refresh Hasura metadata, typically required if you have
                   changed the underlying postgres.
-                </div>
-              </div>,
-              <div key="meta_data_2">
-                <ReloadMetadata {...this.props} />
-              </div>,
-            ]
+              </div>
+            </div>,
+            <div key="meta_data_2">
+              <ReloadMetadata {...this.props} />
+            </div>,
+          ]
           : null}
       </div>
     );
