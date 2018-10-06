@@ -8,6 +8,24 @@ A CLI tool to help you try realtime GraphQL on your firebase data. It takes data
 
 ![GIF](https://graphql-engine-cdn.hasura.io/assets/firebase2graphql/demo.gif)
 
+## Contents
+
+- [Getting started](#quick-start)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Command](#command)
+- [Next steps](#next-steps)
+- [Usage Comparison](#usage-comparison-firebase-sdk-vs-graphql)
+- [More information](#more-information)
+   - [Working](#working)
+   - [Normalization](#normalization)
+      - [Automatic](#automatic)
+      - [Manual](#manual)
+   - [Duplicates](#duplicates)
+   - [Overwrite](#overwrite)
+- [Feedback](#feedback)
+
+
 ## Quick start
 
 1. Quickly get the GraphQL Engine running by clicking this button:
@@ -177,8 +195,6 @@ Check out [next steps](#next-steps).
 
 ## Installation
 
-### CLI
-
 ```bash
 npm install -g firebase2graphql
 ```
@@ -219,9 +235,9 @@ firebase2graphql URL [flags]
 
 Once you have imported your data, it is recommended that you make it production ready.
 
-1. Normalize the data by [removing duplicates](#duplicates).
+1. [Normalize the data](#normalize)
 2. Explore the GraphQL Engine Console to play with things such as
-   
+
    - [Relationships](https://docs.hasura.io/1.0/graphql/manual/schema/relationships/index.html)
    - [Permissions](https://docs.hasura.io/1.0/graphql/manual/auth/index.html)
    - Using SQL
@@ -275,7 +291,7 @@ mutation {
 }
 ```
 
-## Things to know about implementation
+## More information
 
 ### Working
 
@@ -287,6 +303,8 @@ If you use the flag `--normalize`, the CLI finds out if the children tables are 
 
 ### Normalization
 
+#### Automatic
+
 The CLI provides a flag called `--normalize` if you want to normalize your denormalized database.
 
 A lot of guess-work is done by the CLI while normalizing the database. Here are some thing you need to know:
@@ -295,6 +313,143 @@ A lot of guess-work is done by the CLI while normalizing the database. Here are 
 2. Children tables are deleted if they are detected to be duplicates of some other root or child table.
 3. In case of some children tables, when the data lacks a unique identifier, an extra unique field is added. In most cases, this field gets deleted while mergine a duplicate table with the original table.
 
+#### Manual
+
+In some cases, due to inconsistent field names or due to insufficient data, the CLI might not be able to normalize your database; but it makes sure that you do not lose any data.
+
+In such cases, you can normalize the data yourself. Lets look at an example.
+
+Consider this firebase database. This is the database of the official Firebase example app:
+
+```json
+{
+  "posts" : {
+    "-LMbLFOAW2q6GO1bD-5g" : {
+      "author" : "Eena",
+      "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+      "body" : "My first post content\nAnd body\nANd structure",
+      "starCount" : 0,
+      "title" : "My first post",
+      "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+    },
+    "-LMbLIv6VKHYul7p_PZ-" : {
+      "author" : "Eena",
+      "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+      "body" : "AKsdjak\naklsdjaskldjklas\nasdklfjaklsdfjklsda\nasdklfjasklf",
+      "starCount" : 0,
+      "title" : "Whatta proaaa",
+      "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+    }
+  },
+  "user-posts" : {
+    "4UPmbcaqZKT2NdAAqBahXj4tHYN2" : {
+      "-LMbLFOAW2q6GO1bD-5g" : {
+        "author" : "Eena",
+        "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+        "body" : "My first post content\nAnd body\nANd structure",
+        "starCount" : 0,
+        "title" : "My first post",
+        "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+      },
+      "-LMbLIv6VKHYul7p_PZ-" : {
+        "author" : "Eena",
+        "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+        "body" : "AKsdjak\naklsdjaskldjklas\nasdklfjaklsdfjklsda\nasdklfjasklf",
+        "starCount" : 0,
+        "title" : "Whatta proaaa",
+        "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+      }
+    }
+  },
+  "users" : {
+    "4UPmbcaqZKT2NdAAqBahXj4tHYN2" : {
+      "email" : "rishichandrawawhal@gmail.com",
+      "profile_picture" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+      "username" : "Eena"
+    }
+  }
+}
+```
+
+In case of this JSON, the CLI will generate the following tables:
+
+```sql
+users (
+  _id text not null primary key,
+  email text,
+  profile_picture text,
+  username text
+)
+
+posts (
+  _id text not null primary key,
+  title text,
+  body text,
+  starCount int,
+  author text,
+  authorPic text,
+  uid text
+)
+
+user_posts (
+  _id text not null,
+  _id_2 text not null,
+  title text,
+  body text,
+  starCount int,
+  author text,
+  authorPic text,
+  uid text
+)
+```
+
+As we can see, this is not the most efficient of schemas.
+
+- `posts(uid)` can be a foreign key referencing `users(_id)`. `posts(author)` and `posts(authorPic)` can be deleted if `users` and `posts` are related via a foreign key.
+- `user_posts` table is obsolete if `posts` and `users` tables are deleted.
+
+To normalize it, here are the steps you must follow:
+
+1. Create the following foreign key constraints:
+
+    ```sql
+    ALTER TABLE "posts" ADD CONSTRAINT "posts_users__uid" FOREIGN KEY ("uid") REFERENCES "users"("_id");
+
+    ALTER TABLE "posts" DROP COLUMN "author", DROP COLUMN "authorPic";
+
+    DROP TABLE "user_posts";
+    ```
+
+   To create them, go to the Hasura Console and run the SQL in the `Data > SQL` section.
+
+2. Create the relationships. In the console, go the desired table and add the relationship suggested based on the Foreign key. For example for the `posts` table in the above schema, the relationship would be suggested like:
+
+    ![suggested](assets/suggested-rel.png)
+
+   Click on `Add` for each relationship. You can name it whatever you like. Lets call them `posts` and `users` in this case.
+
+    ![added](assets/added-rel.png)
+
+
+   Similarly, add the suggested relationships for other tables as well.
+
+
+3. Once you have created relationships, you can start making fancy GraphQL queries like:
+
+    ```graphql
+    query {
+      users (order_by: username_asc){
+        username
+        profile_picture
+        email
+        posts (where: { starCount: { _gte: 100}}){
+          title
+          body
+          starCount
+        }
+      }
+    }
+    ```
 
 ### Duplicates
 
@@ -304,8 +459,8 @@ In such cases, you have three choices:
 
 1. Use the API as such if you prefer the exact API.
 2. Go to the UI Console and delete the duplicates and normalize the database as you feel fit.
-3. Use the `--normalize` flag and rerun the migration. In this case, the CLI will detect duplicates and make appropriate relationships between root nodes. (This feature is experimental and needs more test cases to attain stability. Contributions are welcome) 
- 
+3. Use the `--normalize` flag and rerun the migration. In this case, the CLI will detect duplicates and make appropriate relationships between root nodes. (This feature is experimental and needs more test cases to attain stability. Contributions are welcome)
+
 
 ### Overwrite
 
