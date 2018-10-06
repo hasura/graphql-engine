@@ -15,7 +15,7 @@ A CLI tool to help you try realtime GraphQL on your firebase data. It takes data
 - [Usage](#usage)
 - [Command](#command)
 - [Next steps](#next-steps)
-- [Usage Comparison](#usage-comparison-firebase-sdk-vs-graphql)
+- [Usage Comparison](#usage-comparison---firebase-sdk-vs-graphql)
 - [More information](#more-information)
    - [Working](#working)
    - [Normalization](#normalization)
@@ -235,7 +235,7 @@ firebase2graphql URL [flags]
 
 Once you have imported your data, it is recommended that you make it production ready.
 
-1. [Normalize the data](#normalize)
+1. [Normalize the data](#normalization)
 2. Explore the GraphQL Engine Console to play with things such as
 
    - [Relationships](https://docs.hasura.io/1.0/graphql/manual/schema/relationships/index.html)
@@ -422,11 +422,11 @@ To normalize it, here are the steps you must follow:
 
    To create them, go to the Hasura Console and run the SQL in the `Data > SQL` section.
 
-2. Create the relationships. In the console, go the desired table and add the relationship suggested based on the Foreign key. For example for the `posts` table in the above schema, the relationship would be suggested like:
+2. Create the relationships. In the console, go the desired table and add the relationship suggested based on the Foreign key. For example for the `posts` table in the above schema, the suggested relationship would be suggested like:
 
     ![suggested](assets/suggested-rel.png)
 
-   Click on `Add` for each relationship. You can name it whatever you like. Lets call them `posts` and `users` in this case.
+   Click on `Add`. You can name it whatever you like. Lets call it `author` in this case.
 
     ![added](assets/added-rel.png)
 
@@ -464,7 +464,7 @@ In such cases, you have three choices:
 
 ### Overwrite
 
-If your database already contains tables with the same name as the root fields of your JSON database, the command will fail. If you want to overwrite the database anyway, you should provide an additional flag "--overwrite".
+If your database already contains tables with the same name as the root fields of your JSON database, the command will fail. If you want to overwrite the database anyway, you should provide an additional flag `--overwrite`.
 
 ## Feedback
 
