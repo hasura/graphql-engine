@@ -14,8 +14,9 @@ A CLI tool to help you try realtime GraphQL on your firebase data. It takes data
 - [Installation](#installation)
 - [Usage](#usage)
 - [Command](#command)
-- [Next steps](#next-steps)
 - [Usage Comparison](#usage-comparison---firebase-sdk-vs-graphql)
+- [Authentication](#authentication)
+- [Next steps](#next-steps)
 - [More information](#more-information)
    - [Working](#working)
    - [Normalization](#normalization)
@@ -231,21 +232,6 @@ firebase2graphql URL [flags]
 - `-v --version`: show CLI version
 - `-h, --help`: show CLI help
 
-## Next steps
-
-Once you have imported your data, it is recommended that you make it production ready.
-
-1. [Normalize the data](#normalization)
-2. Explore the GraphQL Engine Console to play with things such as
-
-   - [Relationships](https://docs.hasura.io/1.0/graphql/manual/schema/relationships/index.html)
-   - [Permissions](https://docs.hasura.io/1.0/graphql/manual/auth/index.html)
-   - Using SQL
-   - [Set up async business logic using event triggers](https://docs.hasura.io/1.0/graphql/manual/event-triggers/index.html)
-   - [Create new tables](https://docs.hasura.io/1.0/graphql/manual/schema/basics.html)
-
-3. Set appropriate permissions. GraphQL Engine comes with [fine grained control layer](https://docs.hasura.io/1.0/graphql/manual/auth/index.html) that can be integrated with any standard Auth provider.
-
 ## Usage Comparison - Firebase SDK vs GraphQL
 
 A typical query to do a single read from the database using [Firebase SDK](https://firebase.google.com/docs/reference/), (javascript) would look something like:
@@ -290,6 +276,25 @@ mutation {
     }])
 }
 ```
+
+## Authentication
+
+Hasura can be integrated with most standard Authentication mechanisms including Firebase and Auth0. [Check out the authentication docs here](https://docs.hasura.io/1.0/graphql/manual/auth/index.html).
+
+## Next steps
+
+Once you have imported your data, it is recommended that you make it production ready.
+
+1. [Normalize the data](#normalization)
+2. Explore the GraphQL Engine Console to play with things such as
+
+   - [Relationships](https://docs.hasura.io/1.0/graphql/manual/schema/relationships/index.html)
+   - [Permissions](https://docs.hasura.io/1.0/graphql/manual/auth/index.html)
+   - Using SQL
+   - [Set up async business logic using event triggers](https://docs.hasura.io/1.0/graphql/manual/event-triggers/index.html)
+   - [Create new tables](https://docs.hasura.io/1.0/graphql/manual/schema/basics.html)
+
+3. Set appropriate permissions. GraphQL Engine comes with [fine grained control layer](https://docs.hasura.io/1.0/graphql/manual/auth/index.html) that can be integrated with any standard Auth provider.
 
 ## More information
 
