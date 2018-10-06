@@ -170,6 +170,10 @@ qualTableToTxt (QualifiedTable (SchemaName "public") tn) =
 qualTableToTxt (QualifiedTable sn tn) =
   getSchemaTxt sn <> "." <> getTableTxt tn
 
+snakeCaseTable :: QualifiedTable -> T.Text
+snakeCaseTable (QualifiedTable sn tn) =
+  getSchemaTxt sn <> "_" <> getTableTxt tn
+
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
   deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift)

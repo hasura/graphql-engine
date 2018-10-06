@@ -9,6 +9,7 @@ module Hasura.GraphQL.Resolve.Select
   ( convertSelect
   , convertSelectByPKey
   , fromSelSet
+  , fieldAsPath
   ) where
 
 import           Data.Has
