@@ -155,7 +155,7 @@ isRelNullable :: FieldInfoMap -> RelInfo -> Bool
 isRelNullable fim ri = isNullable
   where
     lCols = map fst $ riMapping ri
-    allCols = getCols fim
+    allCols = getValidCols fim
     lColInfos = getColInfos lCols allCols
     isNullable = any pgiIsNullable lColInfos
 
@@ -1241,8 +1241,8 @@ mkInsCtx role tableCache fields insPermInfo = do
   let relInfoMap = Map.fromList $ catMaybes relTupsM
   return $ InsCtx iView cols relInfoMap
   where
-    cols = getCols fields
-    rels = getRels fields
+    cols = getValidCols fields
+    rels = getValidRels fields
     iView = ipiView insPermInfo
 
 mkAdminInsCtx :: QualifiedTable -> FieldInfoMap -> InsCtx
@@ -1250,8 +1250,8 @@ mkAdminInsCtx tn fields =
   InsCtx tn cols relInfoMap
   where
     relInfoMap = mapFromL riName rels
-    cols = getCols fields
-    rels = getRels fields
+    cols = getValidCols fields
+    rels = getValidRels fields
 
 mkGCtxRole
   :: (MonadError QErr m)
@@ -1275,7 +1275,7 @@ mkGCtxRole tableCache tn fields pCols constraints role permInfo = do
       insCtxMap = maybe Map.empty (Map.singleton tn) $ fmap fst tabInsCtxM
   return (tyAgg, rootFlds, insCtxMap)
   where
-    colInfos = getCols fields
+    colInfos = getValidCols fields
     allCols = map pgiName colInfos
     pColInfos = getColInfos pCols colInfos
     filterColInfos allowedSet =
