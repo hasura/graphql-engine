@@ -16,7 +16,7 @@ You can make the following types of requests using the GraphQL API:
 
 Supported PostgreSQL types
 --------------------------
-You can refer the following to know about all PostgreSQL types supported by the Hasura GraphQL engine:
+You can refer to the following to know about all PostgreSQL types supported by the Hasura GraphQL engine:
 
 - :doc:`Supported PostgreSQL types <postgresql-types>`
 
