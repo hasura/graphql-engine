@@ -1,9 +1,9 @@
 Multiple mutations in a request
 ===============================
 If multiple mutations are part of the same request, they are executed **sequentially**. If any of the mutations fail,
-all the executed mutations will be rolled back (i.e. all the mutations are run as a **transaction**).
+all the executed mutations will be rolled back. i.e. all the mutations are run as a **transaction**.
 
-Example: Insert objects of different types into the same mutation
+Example: Insert objects of different types in the same mutation
 ---------------------------------------------------------------
 Insert an ``author`` object and an ``article`` object written by the author:
 
