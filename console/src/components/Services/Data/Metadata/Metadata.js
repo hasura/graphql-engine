@@ -94,9 +94,11 @@ class Metadata extends Component {
               <ReloadMetadata {...this.props} />
             </div>,
             <div key="meta_data_3" className={metaDataStyles.intro_note}>
-              <h4> Reset Metadata</h4>
+              <h4>Reset Metadata</h4>
               <div className={metaDataStyles.content_width}>
-                  Reset Hasura metadata
+                  Permanently clear GraphQL Engine's metadata and configure it
+                  from scratch (tracking relevant tables and relationships).
+                  This process is not reversible.
               </div>
             </div>,
             <div key="meta_data_4">
