@@ -316,8 +316,8 @@ mkSQLOpExp
   -> SQLExp -- result
 mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
 
-toEmptyArrWhenNull :: SQLExp -> SQLExp
-toEmptyArrWhenNull e = SEFnApp "coalesce" [e, SELit "[]"] Nothing
+handleIfNull :: SQLExp -> SQLExp -> SQLExp
+handleIfNull l e = SEFnApp "coalesce" [e, l] Nothing
 
 getExtrAlias :: Extractor -> Maybe Alias
 getExtrAlias (Extractor _ ma) = ma
@@ -564,8 +564,11 @@ instance ToSQL UsingExp where
 newtype RetExp = RetExp [Extractor]
                   deriving (Show, Eq)
 
+selectStar :: Extractor
+selectStar = Extractor SEStar Nothing
+
 returningStar :: RetExp
-returningStar = RetExp [Extractor SEStar Nothing]
+returningStar = RetExp [selectStar]
 
 instance ToSQL RetExp where
   toSQL (RetExp [])
