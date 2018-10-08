@@ -48,17 +48,15 @@ getTriggerSql
   :: Ops
   -> TriggerId
   -> TriggerName
-  -> SchemaName
-  -> TableName
+  -> QualifiedTable
   -> [PGColInfo]
   -> Maybe SubscribeOpSpec
   -> Maybe T.Text
-getTriggerSql op trid trn sn tn allCols spec =
+getTriggerSql op trid trn qt allCols spec =
   let globalCtx =  HashMap.fromList
                    [ (T.pack "ID", trid)
                    , (T.pack "NAME", trn)
-                   , (T.pack "SCHEMA_NAME", pgFmtIden $ getSchemaTxt sn)
-                   , (T.pack "TABLE_NAME", pgFmtIden $ getTableTxt tn)
+                   , (T.pack "QUALIFIED_TABLE", toSQLTxt qt)
                    ]
       opCtx = maybe HashMap.empty (createOpCtx op) spec
       context = HashMap.union globalCtx opCtx
@@ -104,10 +102,10 @@ mkTriggerQ
   -> [PGColInfo]
   -> TriggerOpsDef
   -> Q.TxE QErr ()
-mkTriggerQ trid trn (QualifiedTable sn tn) allCols (TriggerOpsDef insert update delete) = do
-  let msql = getTriggerSql INSERT trid trn sn tn allCols insert
-             <> getTriggerSql UPDATE trid trn sn tn allCols update
-             <> getTriggerSql DELETE trid trn sn tn allCols delete
+mkTriggerQ trid trn qt allCols (TriggerOpsDef insert update delete) = do
+  let msql = getTriggerSql INSERT trid trn qt allCols insert
+             <> getTriggerSql UPDATE trid trn qt allCols update
+             <> getTriggerSql DELETE trid trn qt allCols delete
   case msql of
     Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder sql)
     Nothing -> throw500 "no trigger sql generated"
