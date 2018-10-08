@@ -6,7 +6,7 @@ A CLI tool to help you try realtime GraphQL on your firebase data. It takes data
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/firebase2graphql.svg)](https://npmjs.org/package/firebase2graphql)
 
-![GIF](assets/f2g_demo.gif)
+![GIF](https://graphql-engine-cdn.hasura.io/assets/firebase2graphql/demo.gif)
 
 ## Contents
 
