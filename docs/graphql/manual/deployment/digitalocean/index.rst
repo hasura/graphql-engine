@@ -23,22 +23,22 @@ contains all installation manifests required to deploy Hasura on DigitalOcean.
 
 .. admonition:: Setup file download
 
-  .. rst-class:: download_links
+  .. rst-class:: api_tabs
   .. tabs::
 
-    .. tab:: For without HTTPS
+    .. tab:: HTTP
 
         Get the docker deployment file for HTTP installation from there:
 
-          .. code-block:: bash
+        .. code-block:: bash
 
               $ wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-compose/docker-compose.yaml
 
-    .. tab:: For with HTTPS
+    .. tab:: HTTPS
 
         Get the docker deployment and Caddy file from there for https installation:
 
-          .. code-block:: bash
+        .. code-block:: bash
 
               $ wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-compose-https/docker-compose.yaml
               $ wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-compose-https/Caddyfile
@@ -60,10 +60,10 @@ Edit value of ``HASURA_GRAPHQL_ACCESS_KEY`` in ``docker-compose.yaml`` and set a
    ...
 
 
-Step 4: Set external Postgres server (optional)
+Step 4: Set existing Postgres server (optional)
 -----------------------------------------------
 
-Edit value of ``HASURA_GRAPHQL_DATABASE_URL`` in ``docker-compose.yaml`` and set external ``Postgres``server:
+Edit value of ``HASURA_GRAPHQL_DATABASE_URL`` in ``docker-compose.yaml`` and set an existing ``Postgres`` server:
 
 .. code-block:: bash
    :emphasize-lines: 4
@@ -71,27 +71,28 @@ Edit value of ``HASURA_GRAPHQL_DATABASE_URL`` in ``docker-compose.yaml`` and set
    ...
     environment:
       HASURA_GRAPHQL_ACCESS_KEY: mysecretaccesskey
-      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:@postgres:5432/postgres
+      HASURA_GRAPHQL_DATABASE_URL: postgres://user:password@hostname:port/dbname
     command:
    ...
 
 
-Step 5: Point domain to the public ip of the droplet. (optional)
+Step 5: Set domain name for HTTPS (optional)
 ----------------------------------------------------------------
 
-Now replace ``<your-domain.com>`` in ``Caddyfile`` with your domain name
+Now replace ``<your-domain.com>`` in ``Caddyfile`` with your domain nane.
 
-Example ``example.org``
+Example ``example.org``.
 
+Now point domain to the public ip of the droplet in your domain DNS setting.
 
 Step 6: Start GraphQL Engine
 ----------------------------
 
-Run ``docker-compose up -d`` & check if everything is running well:
+Run ``docker-compose up -d`` & then run ``docker ps`` to check if everything is running well:
+
+it should look like this.
 
 .. code-block:: bash
-
-   $ docker ps
 
    CONTAINER ID        IMAGE                                  COMMAND                  CREATED             STATUS              PORTS                                                NAMES
   33b3f3cfa4ad        abiosoft/caddy                         "/bin/parent caddy -…"   2 hours ago         Up 2 hours          0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp, 2015/tcp   root_caddy_1
@@ -104,3 +105,10 @@ Step 7: Open the hasura console
 Head to ``https://your-domain.com/`` to open the Hasura console if you installed on https.
 
 Head to ``http://your-droplet-ip:8080/`` to open the Hasura console if you installed on http.
+
+Advanced:
+---------
+
+- :doc:`Securing your GraphQL endpoint <securing-graphql-endpoint>`
+- :doc:`Updating GraphQL engine <updating>`
+- :doc:`Setting up migrations <../../migrations/index>`
