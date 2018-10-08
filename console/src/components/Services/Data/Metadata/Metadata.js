@@ -5,6 +5,7 @@ import Helmet from 'react-helmet';
 import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
+import ClearAccessKey from './ClearAccessKey';
 
 const semver = require('semver');
 
@@ -28,7 +29,10 @@ class Metadata extends Component {
   checkSemVer(version) {
     try {
       // If version is invalid semver or current version is greater than 1.0.0-alpha16, display Reload Metadata button
-      if (semver.valid(version) === null || semver.gt(version, '1.0.0-alpha16')) {
+      if (
+        semver.valid(version) === null ||
+        semver.gt(version, '1.0.0-alpha16')
+      ) {
         this.updateMetadataState(true);
       } else {
         this.updateMetadataState(false);
@@ -96,6 +100,21 @@ class Metadata extends Component {
             </div>,
             <div key="meta_data_2">
               <ReloadMetadata {...this.props} />
+            </div>,
+            <div
+              key="access_key_reset_1"
+              className={metaDataStyles.intro_note}
+            >
+              <h4>Clear access key (logout)</h4>
+              <div className={metaDataStyles.content_width}>
+                  The console caches the access key (HASURA_GRAPHQL_ACCESS_KEY)
+                  in the browser. You can clear this cache to force a prompt for
+                  the access key when the console is accessed next using this
+                  browser.
+              </div>
+            </div>,
+            <div key="access_key_reset_2">
+              <ClearAccessKey {...this.props} />
             </div>,
           ]
           : null}
