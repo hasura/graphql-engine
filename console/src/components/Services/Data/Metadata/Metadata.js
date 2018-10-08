@@ -5,6 +5,7 @@ import Helmet from 'react-helmet';
 import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
+import ResetMetadata from './ResetMetadata';
 
 const semver = require('semver');
 
@@ -82,17 +83,26 @@ class Metadata extends Component {
 
         {this.state.showMetadata
           ? [
-              <div key="meta_data_1" className={metaDataStyles.intro_note}>
-                <h4>Reload metadata</h4>
-                <div className={metaDataStyles.content_width}>
+            <div key="meta_data_1" className={metaDataStyles.intro_note}>
+              <h4>Reload metadata</h4>
+              <div className={metaDataStyles.content_width}>
                   Refresh Hasura metadata, typically required if you have
                   changed the underlying postgres.
-                </div>
-              </div>,
-              <div key="meta_data_2">
-                <ReloadMetadata {...this.props} />
-              </div>,
-            ]
+              </div>
+            </div>,
+            <div key="meta_data_2">
+              <ReloadMetadata {...this.props} />
+            </div>,
+            <div key="meta_data_3" className={metaDataStyles.intro_note}>
+              <h4> Reset Metadata</h4>
+              <div className={metaDataStyles.content_width}>
+                  Reset Hasura metadata
+              </div>
+            </div>,
+            <div key="meta_data_4">
+              <ResetMetadata {...this.props} />
+            </div>,
+          ]
           : null}
       </div>
     );
