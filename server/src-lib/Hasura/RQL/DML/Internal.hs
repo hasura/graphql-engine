@@ -227,23 +227,18 @@ dmlTxErrorHandler p2Res =
     Just (code, msg) -> err400 code msg
   where err = simplifyError p2Res
 
--- | col_name as col_name
-mkColExtr :: (PGCol, PGColType) -> S.Extractor
-mkColExtr (c, pct) =
-  mkColExtrAl (Just c) (c, pct)
-
-mkColExtrAl :: (IsIden a) => Maybe a -> (PGCol, PGColType) -> S.Extractor
-mkColExtrAl alM (c, pct) =
-  if pct == PGGeometry || pct == PGGeography
-  then S.mkAliasedExtrFromExp
-    ( S.SEFnApp "ST_AsGeoJSON"
-      [ S.mkSIdenExp c
+toJSONableExp :: PGColType -> S.SQLExp -> S.SQLExp
+toJSONableExp colTy expn
+  | colTy == PGGeometry || colTy == PGGeography =
+      S.SEFnApp "ST_AsGeoJSON"
+      [ expn
       , S.SEUnsafe "15" -- max decimal digits
       , S.SEUnsafe "4"  -- to print out crs
       ] Nothing
       `S.SETyAnn` S.jsonType
-    ) alM
-  else S.mkAliasedExtr c alM
+  | colTy == PGBigInt || colTy == PGBigSerial =
+      expn `S.SETyAnn` S.textType
+  | otherwise = expn
 
 -- validate headers
 validateHeaders :: (P1C m) => [T.Text] -> m ()

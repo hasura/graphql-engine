@@ -1,0 +1,16 @@
+description: Get all the orders which are not delivered at (delivered_at is NULL)
+url: /v1/query
+status: 200
+response:
+  - id: 1
+    received_at: '2018-09-21T09:39:44+00:00'
+query:
+  type: select
+  args:
+    table: orders
+    where:
+      delivered_at:
+        $is_null: true
+    columns:
+    - id
+    - received_at
