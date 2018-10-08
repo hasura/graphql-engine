@@ -38,4 +38,4 @@ To run the tests for the modules individually (say for create table),
 }
 ```
 
-- Run the command `npm run cypress` and click on `create-tabel > test.js`
+- Run the command `npm run cypress` and click on `create-table > test.js`

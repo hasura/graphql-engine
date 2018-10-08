@@ -6,7 +6,7 @@ Objects can be updated based on filters on their own fields or those in their ne
 .. note::
 
    ``where`` argument is compulsory to filter rows.
-   Atleast any one of ``_set``, ``_inc``,  ``_append``, ``_prepend``, ``_delete_key``, ``_delete_elem`` and
+   At least any one of ``_set``, ``_inc``,  ``_append``, ``_prepend``, ``_delete_key``, ``_delete_elem`` and
    ``_delete_at_path`` is expected.
 
 Update based on a filter on an object's fields

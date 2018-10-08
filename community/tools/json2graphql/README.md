@@ -194,4 +194,4 @@ If your Postgres already contains tables that you are trying to import using `js
 If you want to overwrite the the existing tables in the database with the new tables from your sample JSON database, you must provide a flag `-o` or `--overwrite`
 
 ---
-Maintained with ♡ by <a href="https://hasura.io">Hasura</a>
+Maintained with :heart: by <a href="https://hasura.io">Hasura</a>

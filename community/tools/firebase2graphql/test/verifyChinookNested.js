@@ -56,17 +56,17 @@ const verifyDataImport = () => {
           }),
         }
       ).then(() => {
-        console.log(colors.green('✔︎ data-sets/chinook.json: Test passed'));
+        console.log(colors.green('✔︎ data-sets/chinook_nested.json: Test passed'));
         process.exit();
       }).catch(() => {
         process.exit();
       });
     } else {
-      console.log(colors.red('✖ data-sets/chinook.json: Test failed. Unexpected response.'));
+      console.log(colors.red('✖ data-sets/chinook_nested.json: Test failed. Unexpected response.'));
       process.exit();
     }
   }).catch(e => {
-    console.log(colors.red('✖ data-sets/chinook.json: Test failed. Unexpected response.'));
+    console.log(colors.red('✖ data-sets/chinook_nested.json: Test failed. Unexpected response.'));
     console.log(JSON.stringify(e, null, 2));
 
     process.exit();

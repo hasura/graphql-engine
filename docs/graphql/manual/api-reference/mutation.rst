@@ -235,6 +235,14 @@ Input Object
       {
         field1: value,
         field2: value,
+        <object-rel-name>: {
+          data: <Input-Object>!,
+          on_conflict: <Conflict-Clause>
+        },
+        <array-rel-name>: {
+          data: [<Input-Object>!]!,
+          on_conflict: <Conflict-Clause>
+        }
         ..
       },
       ..
@@ -249,6 +257,12 @@ E.g.:
       {
         title: "Software is eating the world",
         content: "This week, Hewlett-Packard...",
+        author: {
+          data: {
+            id: 1,
+            name: "Sydney"
+          }
+        }
       }
     ]
 

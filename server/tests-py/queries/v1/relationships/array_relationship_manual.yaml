@@ -1,0 +1,29 @@
+
+#Array relationship
+- description: Create array relationship using manual method
+  url: /v1/query
+  status: 200  
+  response:
+    message: success
+  query:
+    type: create_array_relationship
+    args:
+      table: author_view
+      name: articles
+      using:
+        manual_configuration:
+          remote_table: article
+          column_mapping:
+            id: author_id
+
+#Drop relationship
+- description: Drop object relationship
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: drop_relationship
+    args:
+      table: author_view
+      relationship: articles

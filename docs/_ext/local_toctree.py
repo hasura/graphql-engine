@@ -4,7 +4,7 @@ from sphinx import addnodes
 """
 ``local_toctree``: A callable yielding the global TOC tree that contains
 list of all the content below the specified page. ``local_toctree`` need
-pagename specifing as like as ``{{ local_toctree(pagename) }}`` and
+pagename specifying as like as ``{{ local_toctree(pagename) }}`` and
 optional keyword arguments are available:
 
 * maxdepth (defaults to the max depth selected in the toctree directive):

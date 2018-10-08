@@ -1,0 +1,21 @@
+description: Simple GraphQL query to fetch items from user table
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    user:
+    - id: '1'
+      name: User 1
+      number: '123456789'
+    - id: '2'
+      name: User 2 
+      number: '123456780'
+query:
+  query: |
+    query {
+      user {
+        id
+        name
+        number
+      }
+    }
