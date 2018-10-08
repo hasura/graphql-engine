@@ -1,10 +1,10 @@
 module.exports = {
-  scores: {
+  f2g_test_scores: {
     Rishi: 24,
     Rikin: 26,
     Tanmai: 27,
   },
-  author: {
+  f2g_test_author: {
     someone: {
       one: {
         name: 'Rishi',
@@ -83,7 +83,7 @@ module.exports = {
       },
     },
   },
-  articles: {
+  f2g_test_articles: {
     first: {
       title: 'Rishis article',
       body: "Rishi's article's body",
