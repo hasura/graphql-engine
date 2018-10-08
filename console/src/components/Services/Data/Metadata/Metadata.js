@@ -7,7 +7,7 @@ import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
 import ClearAccessKey from './ClearAccessKey';
 
-const semver = require('semver');
+import semverCheck from '../../../../helpers/semver';
 
 class Metadata extends Component {
   constructor() {
@@ -29,7 +29,7 @@ class Metadata extends Component {
   checkSemVer(version) {
     let showMetadata = false;
     try {
-      showMetadata = semver.gt(version, '1.0.0-alpha16');
+      showMetadata = semverCheck('metadataReload', version);
       if (showMetadata) {
         this.setState({ ...this.state, showMetadata: true });
       } else {
@@ -83,9 +83,9 @@ class Metadata extends Component {
 
         {this.state.showMetadata
           ? [
-              <div key="meta_data_1" className={metaDataStyles.intro_note}>
-                <h4>Reload metadata</h4>
-                <div className={metaDataStyles.content_width}>
+            <div key="meta_data_1" className={metaDataStyles.intro_note}>
+              <h4>Reload metadata</h4>
+              <div className={metaDataStyles.content_width}>
                   Refresh Hasura metadata, typically required if you have
                   changed the underlying postgres.
                 </div>
