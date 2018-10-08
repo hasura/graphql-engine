@@ -139,6 +139,62 @@ Fetch a list of authors sorted by their names with a list of their articles that
       }
     }
 
+Sorting a nested object query using columns in relationship
+-----------------------------------------------------------
+Fetch a list of articles that is sorted by their author's id (descending).
+Only columns in object relationships are allowed:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article(
+        order_by: rel_author_id_desc
+      ) {
+        id
+        rating
+        published_on
+        author {
+          id
+          name
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 3,
+            "title": "Article 3",
+            "content": "Sample article content 3",
+            "author": {
+              "id": 2,
+              "name": "Author 2"
+            }
+          },
+          {
+            "id": 1,
+            "title": "Article 1",
+            "content": "Sample article content 1",
+            "author": {
+              "id": 1,
+              "name": "Author 1"
+            }
+          },
+          {
+            "id": 2,
+            "title": "Article 2",
+            "content": "Sample article content 2",
+            "author": {
+              "id": 1,
+              "name": "Author 1"
+            }
+          }
+        ]
+      }
+    }
+
 Sorting by multiple fields
 --------------------------
 Fetch a list of articles that is sorted by their rating (descending) and then on their published date (ascending with
