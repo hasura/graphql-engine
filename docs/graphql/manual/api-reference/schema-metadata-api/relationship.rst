@@ -1,36 +1,39 @@
-Schema Metadata API Reference: Relationships
-=================================
+Schema/Metadata API Reference: Relationships
+============================================
 
-Relationships are used to capture the connectedness of data amongst tables. In a
-relational database, when modelling data we add foreign key constraints to
-establish connections between various tables. 
-
-Let's consider a simple scenario where there are two tables ``article`` and
-``author``. The ``article`` table (child) has a column ``author_id`` which
-points to the ``id`` column of ``author`` table (parent). When we fetch a row
-from the article table, we may need the author information along with article
-columns. Similarly, when we fetch a row from the author table, we may need the
-articles written by the author along with the author columns. 
-
+Relationships are used to capture the connectedness of data amongst tables.
 In general, when retrieving data from tables, it is very helpful if we can also
 fetch the related data alongside the columns. This is where relationships come
 in. They can be considered as pseudo columns for a table to access the related
-data. In the above example, the relationships that we can define are 
+data.
 
-1. ``author`` in ``article`` table
-2. ``articles`` in ``author`` table
+For a simple ``article/author`` schema, the following relationships exist:
 
-As you may have noticed, there are two kinds of relationships,
-object/many-to-one relationships (author) and array/one-to-many relationships
-(articles). From now on, we'll only use ``object`` and ``array`` relationships
-as terminology. 
+- ``author`` of an ``article``
+- ``articles`` of an ``author``
 
-.. _obj_rel_example:
+As you may have noticed, there are two kinds of relationships:
 
-Let's define these relationships:
+- one-to-one or ``object relationships`` (e.g. ``author``).
+- one-to-many or ``array relationships`` (e.g. ``articles``).
+
+.. _create_object_relationship:
+
+create_object_relationship
+--------------------------
+
+``create_object_relationship`` is used to create an object relationship on a
+table. There cannot be an existing column or relationship with the same name. 
+
+There are 2 ways in which you can create an object relationship.
+
+1. Using foreign key constraint on a column
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Create an ``object relationship`` ``author`` on ``article`` *table*,  *using* the
+*foreign_key_constraint_on* the ``author_id`` column:
 
 .. code-block:: http
-   :emphasize-lines: 11
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json
@@ -47,55 +50,6 @@ Let's define these relationships:
        }
    }
 
-This reads as follows:
-
-Create an *object relationship* ``author`` on ``article`` *table*,  *using* the
-*foreign_key_constraint_on* the ``author_id`` column. 
-
-.. _arr_rel_example:
-
-.. code-block:: http
-   :emphasize-lines: 11-14
-
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
-
-   {
-       "type": "create_array_relationship",
-       "args": {
-           "table": "author",
-           "name": "articles",
-           "using": {
-               "foreign_key_constraint_on" : {
-                   "table" : "article",
-                   "column" : "author_id"
-               }
-           }
-       }
-   }
-
-Create an *array relationship* ``articles`` on ``author`` *table*,  *using* the
-*foreign_key_constraint_on* the ``author_id`` column of the ``article`` table. 
-
-The syntax is slightly different for creating an object and an array
-relationship. But, note that in both the cases, we are doing the same thing,
-i.e, specifying the column on which the foreign key constraint is defined. 
-
-.. _create_object_relationship:
-
-create_object_relationship
---------------------------
-
-``create_object_relationship`` is used to create an object relationship on a
-table. There cannot be an existing column or relationship with the same name. 
-
-There are 2 ways in which you can create an object relationship.
-
-1. Using foreign key constraint on a column
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-You can look at :ref:`this <obj_rel_example>` example.
 
 .. _manual_obj_relationship:
 
@@ -137,15 +91,17 @@ follows:
 
 .. note::
 
-   It is easy to shoot yourself in the foot when using ``manual_configuration``.
+   It is easy to make mistakes while using ``manual_configuration``.
    One simple check is to ensure that foreign key constraint semantics are valid
    on the columns being used in ``column_mapping``. In the previous example, if
    it was allowed, a foreign key constraint could have been defined on
-   ``article`` table's ``id`` column to ``article_count`` view's ``article_id``
-   column. 
+   ``article`` table's ``id`` column to ``article_detail`` view's ``article_id``
+   column.
 
-Syntax
-^^^^^^
+.. _create_object_relationship_syntax:
+
+Args syntax
+^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -230,7 +186,29 @@ There are 2 ways in which you can create an array relationship.
 1. Using foreign key constraint on a column
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can look at :ref:`this <arr_rel_example>` example.
+Create an ``array relationship`` ``articles`` on ``author`` *table*,  *using* the
+*foreign_key_constraint_on* the ``author_id`` column of the ``article`` table:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type": "create_array_relationship",
+       "args": {
+           "table": "author",
+           "name": "articles",
+           "using": {
+               "foreign_key_constraint_on" : {
+                   "table" : "article",
+                   "column" : "author_id"
+               }
+           }
+       }
+   }
+
 
 2. Manual configuration
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -239,10 +217,48 @@ This is an advanced feature which is mostly used to define relationships on or
 to views. We cannot rely on foreign key constraints as they are not valid to or
 from views. So, when using manual configuration, we have to specify the remote
 table and how each of the columns in this table are mapped to the columns of the
-remote table. 
+remote table.
 
-Syntax
-^^^^^^
+Let's say we have a view called ``article_detail`` which has four columns
+``author_id``, ``article_id``, ``view_count`` and ``average_rating``. We can now define an
+array relationship called ``article_details`` on the ``author`` table as
+follows:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type": "create_array_relationship",
+       "args": {
+           "table": "author",
+           "name": "article_details",
+           "using": {
+               "manual_configuration" : {
+                   "remote_table" : "article_detail",
+                   "column_mapping" : {
+                       "id" : "author_id"
+                   }
+               }
+           }
+       }
+   }
+
+.. note::
+
+   It is easy to make mistakes while using ``manual_configuration``.
+   One simple check is to ensure that foreign key constraint semantics are valid
+   on the columns being used in ``column_mapping``. In the previous example, if
+   it was allowed, a foreign key constraint could have been defined on
+   ``author`` table's ``id`` column to ``article_detail`` view's ``author_id``
+   column.
+
+.. _create_array_relationship_syntax:
+
+Args syntax
+^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -354,9 +370,10 @@ An example:
        }
    }
 
+.. _drop_relationship_syntax:
 
-Syntax
-^^^^^^
+Args syntax
+^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -408,8 +425,10 @@ An example:
        }
    }
 
-Syntax
-^^^^^^
+.. _set_relationship_comment_syntax:
+
+Args syntax
+^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1

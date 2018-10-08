@@ -1,17 +1,6 @@
-Schema Metadata API Query types
-====================
+Schema/Metadata API reference: Syntax definitions
+=================================================
 
-.. toctree::
-   :maxdepth: 1
-
-   Run SQL <query/sql.rst>
-   Relationships <query/relationship.rst>
-   Permissions <query/permission.rst>
-
-------------------------------------------------------------------------------
-
-Syntax definitions
-------------------
 
 .. _TableName:
 

@@ -1,26 +1,31 @@
-Schema Metadata API Reference: Execute SQL 
-===============================
+Schema/Metadata API Reference: Run SQL
+======================================
+
+.. _run_sql:
 
 run_sql
 -------
 
+.. admonition:: Admin-only
+
+  This is an admin-only query, i.e. the query can only be executed by a
+  request having ``X-Hasura-Role: admin``. This can be set by passing
+  ``X-Hasura-Access-Key`` or by setting the right role in Webhook/JWT
+  authorization mode.
+
+  This is deliberate as it is hard to enforce any sort of permissions on arbitrary SQL. If
+  you find yourselves in the need of using ``run_sql`` to run custom DML queries,
+  consider creating a view. You can now define permissions on that particular view
+  for various roles.
+
 Use cases
 ^^^^^^^^^
 
-1. To execute DDL operations that are not supported by the console (like indexes).
+1. To execute DDL operations that are not supported by the console (e.g. managing indexes).
 2. Run custom DML queries from backend microservices instead of installing libraries to speak to Postgres.
 
-
-.. note::
-
-   This is an admin-only endpoint, i.e. the API can only be executed by a
-   request having ``X-Hasura-Role: admin``. This can be set by passing
-   ``X-Hasura-Access-Key`` or by setting the right role in Webhook/JWT
-   authorization mode.
-
-``run_sql`` is used to run arbitrary SQL statements. Multiple SQL statements can
-be separated by a ``;``, however, only the result of the last sql statement will
-be returned.
+``run_sql`` can be used to run arbitrary SQL statements. Multiple SQL statements can be separated by a
+"``;``", however, only the result of the last sql statement will be returned.
 
 An example:
 
@@ -37,8 +42,8 @@ An example:
        }
    }
 
-While ``run_sql`` lets you run any SQL, it tries to ensure that the data
-microservice's state (relationships, permissions etc.) is consistent. i.e, you
+While ``run_sql`` lets you run any SQL, it tries to ensure that the Hasura GraphQL engine's
+state (relationships, permissions etc.) is consistent. i.e, you
 cannot drop a column on which any metadata is dependent on (say a permission or
 a relationship). The effects, however, can be cascaded.
 
@@ -94,8 +99,9 @@ We can however, cascade these changes.
        "result_type": "CommandOk"
    }
 
-With the above query, the dependent permission is also dropped. In general, the
-SQL operations that will affect Hasura metadata are 
+With the above query, the dependent permission is also dropped.
+
+In general, the SQL operations that will affect Hasura metadata are:
 
 1. Dropping columns
 2. Dropping tables
@@ -104,19 +110,15 @@ SQL operations that will affect Hasura metadata are
 In case of 1 and 2, the dependent objects (if any) can be dropped using
 ``cascade``. However, when altering type, if any objects are affected, the
 change cannot be cascaded. So, those dependent objects have to be manually
-dropped before the sql statement.
-
-``run_sql`` can only be executed by a user with the ``admin`` role. This is
-deliberate as it is hard to enforce any sort of permissions on arbitrary sql. If
-you find yourselves in the need of using ``run_sql`` to run custom DML queries,
-consider creating a view. You can now define permissions on that particular view
-for various roles. 
+dropped before executing the SQL statement.
 
 .. note::
    Currently, renames of tables and columns are not supported in the SQL statement.
 
-Syntax
-^^^^^^
+.. _run_sql_syntax:
+
+Args syntax
+^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -211,7 +213,7 @@ A query to create a table:
    {
      "type":"run_sql",
      "args": {
-       "sql": "create table item ( id serial,  name text,  category text,  primary key (id))"}
+       "sql": "create table item ( id serial,  name text,  category text,  primary key (id))"
      }
    }
 
@@ -222,5 +224,5 @@ A query to create a table:
 
    {
      "result_type": "CommandOk",
-     "result":null
+     "result": null
    }

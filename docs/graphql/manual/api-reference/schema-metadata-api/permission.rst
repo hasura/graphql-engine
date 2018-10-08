@@ -1,12 +1,12 @@
-Schema Metadata API Reference: Permissions
-===============================
+Schema/Metadata API Reference: Permissions
+==========================================
 
 The permission layer is designed to restrict the operations that can be
 performed by various users. Permissions can be defined on various operations
-(insert/select/update/delete) at a role level granularity. By default, the admin
+(insert/select/update/delete) at a role level granularity. By default, the ``admin``
 role has unrestricted access to all operations. 
 
-.. note::
+.. admonition:: Variables in rules
 
    All ``X-Hasura-*`` header values can be used in the permission rules. These
    values can come with the request and can be validated using webhook or can be
@@ -85,8 +85,10 @@ In the above definition, the row is allowed to be inserted if the ``author_id``
 is the same as the request's user id and ``is_reviewed`` is ``false`` when the
 ``category`` is "editorial". 
 
-Syntax
-^^^^^^
+.. _create_insert_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -136,8 +138,10 @@ drop_insert_permission
 
 Drop an existing insert permission for a role on a table.
 
-Syntax
-^^^^^^
+.. _drop_insert_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -195,8 +199,10 @@ This reads as follows:
 2. Allow rows where ``is_published`` is ``true`` or the ``author_id`` matches
    the value of request header ``X-HASURA-USER-ID``.
 
-Syntax
-^^^^^^
+.. _create_select_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -250,8 +256,10 @@ drop_select_permission
 
 Drop an existing select permission for a role on a table.
 
-Syntax
-^^^^^^
+.. _drop_select_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -313,8 +321,10 @@ This reads as follows:
    ownership of a row in the ``article`` table. Columns such as this should
    never be allowed to be updated. 
 
-Syntax
-^^^^^^
+.. _create_update_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -368,8 +378,10 @@ drop_update_permission
 
 Drop an existing update permission for a role on a table.
 
-Syntax
-^^^^^^
+.. _drop_update_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -420,8 +432,10 @@ This reads as follows:
 "``delete`` for ``user`` role on ``article`` table is allowed on rows where
 ``author_id`` is same as the request header ``X-HASURA-USER-ID`` value."
 
-Syntax
-^^^^^^
+.. _create_delete_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -471,8 +485,10 @@ drop_delete_permission
 
 Drop an existing delete permission for a role on a table.
 
-Syntax
-^^^^^^
+.. _drop_delete_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -493,7 +509,7 @@ Syntax
 .. _set_permission_comment:
 
 set_permission_comment
-------------------------
+----------------------
 
 ``set_permission_comment`` is used to set/update the comment on a permission.
 Setting the comment to ``null`` removes it. 
@@ -517,8 +533,10 @@ An example:
        }
    }
 
-Syntax
-^^^^^^
+.. _set_permission_comment_syntax:
+
+Args syntax
+^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
