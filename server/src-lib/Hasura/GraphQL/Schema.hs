@@ -942,7 +942,7 @@ mkOrdbyEnumsOfRel preFix f (relInfo, fltr, ordByFlds) =
 
     relNameT = getRelTxt $ riName relInfo
     remTab = riRTable relInfo
-    curPreFix = preFix <> G.Name relNameT <> "_rel_"
+    curPreFix = preFix <> "rel_" <> G.Name relNameT <> "_"
     OrdByFlds cols rels = ordByFlds
 
     annPGObColFn = f . RS.AOCRel relInfo fltr . RS.AOCPG

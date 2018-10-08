@@ -210,3 +210,22 @@ class TestGraphQLQueryBoolExpJsonB:
         yield
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
+
+class TestGraphQLQueryOrderBy:
+    def test_articles_order_by_without_id(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/articles_order_by_without_id.yaml')
+
+    def test_articles_order_by_rel_author_id(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/articles_order_by_rel_author_id.yaml')
+
+    def test_articles_order_by_rel_author_rel_contact_phone(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/articles_order_by_rel_author_rel_contact_phone.yaml')
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = 'queries/graphql_query/order_by'
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
