@@ -1,0 +1,23 @@
+type: bulk
+args:
+
+#Author table
+- type: run_sql
+  args:
+    sql: |
+      create table author(
+          id serial primary key, 
+          name text unique
+      );
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Insert Author table data
+- type: insert
+  args:
+    table: author
+    objects:
+      - name: Author 1
+      - name: Author 2

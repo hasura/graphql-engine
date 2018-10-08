@@ -2,7 +2,7 @@ Troubleshooting Hasura GraphQL Engine Errors
 ============================================
 
 Hasura GraphQL engine may not work as expected and will throw unexpected errors if the tables/views tracked by
-the GraphQL engine are altered using ``psql`` or any other postgresql client.
+the GraphQL engine are altered using ``psql`` or any other PostgreSQL client.
 
 Hasura GraphQL engine creates and maintains an **internal state** based on the database it is configured to use.
 This internal state will comprise of information about the tables/views, relationships and access control rules
@@ -21,7 +21,7 @@ database.
 For example, you will encounter the above error if you have:
 
 - Created/tracked a table called ``author`` from console.
-- Opened ``psql`` or ``adminer`` or any other postgresql client and deleted ``author`` table.
+- Opened ``psql`` or ``adminer`` or any other PostgreSQL client and deleted ``author`` table.
 - Restarted GraphQL engine.
 
 In this example, the GraphQL engine expects the table ``author`` to be available in the database to

@@ -189,6 +189,7 @@ library
                      , Hasura.GraphQL.Resolve.Context
                      , Hasura.GraphQL.Resolve.InputValue
                      , Hasura.GraphQL.Resolve.Introspect
+                     , Hasura.GraphQL.Resolve.Insert
                      , Hasura.GraphQL.Resolve.Mutation
                      , Hasura.GraphQL.Resolve.Select
 
@@ -209,6 +210,10 @@ library
                      , Hasura.Logging
                      , Ops
                      , TH
+
+  other-modules:       Hasura.Server.Auth.JWT.Internal
+                     , Hasura.Server.Auth.JWT.Logging
+
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
@@ -238,6 +243,7 @@ executable graphql-engine
                      , stm
                      , wreq
                      , connection
+                     , string-conversions
 
   other-modules:     Ops
                      TH

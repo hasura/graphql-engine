@@ -29,7 +29,6 @@ To run the tests for the modules individually (say for create table),
 
 - Go to the `cypress.json` and set the `env > TEST_MODE` variable to `ui`.
 
-
 ```
 {
     "env": {
@@ -38,4 +37,4 @@ To run the tests for the modules individually (say for create table),
 }
 ```
 
-- Run the command `npm run cypress` and click on `create-tabel > test.js`
+- Run the command `npm run cypress` and click on `create-table > test.js`

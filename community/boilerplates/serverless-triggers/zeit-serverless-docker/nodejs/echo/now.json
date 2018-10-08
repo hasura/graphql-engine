@@ -1,9 +1,0 @@
-{
-  "public": true,
-  "type": "docker",
-  "features": {
-    "cloud": "v2"
-  },
-  "alias": "hge-events-zeit-node-echo",
-  "name": "hge-events-zeit-node-echo"
-}

@@ -12,8 +12,10 @@ module Hasura.GraphQL.Resolve.InputValue
   , asPGColVal
   , asEnumVal
   , withObject
+  , asObject
   , withObjectM
   , withArray
+  , asArray
   , withArrayM
   , parseMany
   , asPGColText
@@ -80,6 +82,11 @@ withObject fn v = case v of
     <> G.showGT (G.TypeNamed nt)
   _               -> tyMismatch "object" v
 
+asObject
+  :: (MonadError QErr m)
+  => AnnGValue -> m AnnGObject
+asObject = withObject (\_ o -> return o)
+
 withObjectM
   :: (MonadError QErr m)
   => (G.NamedType -> Maybe AnnGObject -> m a) -> AnnGValue -> m a
@@ -102,6 +109,11 @@ withArray fn v = case v of
   AGArray lt Nothing  -> throw500 $ "unexpected null for ty"
                          <> G.showGT (G.TypeList lt)
   _                   -> tyMismatch "array" v
+
+asArray
+  :: (MonadError QErr m)
+  => AnnGValue -> m [AnnGValue]
+asArray = withArray (\_ vals -> return vals)
 
 parseMany
   :: (MonadError QErr m)

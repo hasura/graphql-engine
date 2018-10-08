@@ -10,4 +10,5 @@ npm-debug.log
 *.swp
 coverage
 .idea/*
+test
 **/.tern-port
