@@ -132,6 +132,60 @@ Insert multiple objects of the same type in the same mutation
       }
     }
 
+Insert nested object and get nested object in response
+------------------------------------------------------
+**Example:** Insert a new ``article`` object with its ``author`` and return the inserted article object with its author in the response
+
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insert_article {
+      insert_article(
+        objects: [
+          {
+            id: 21,
+            title: "Article 1",
+            content: "Sample article content",
+            author: {
+              data: {
+                id: 3,
+                name: "Sidney"
+              }
+            }
+          }
+        ]
+      ) {
+        returning {
+          id
+          title
+          author {
+            id
+            name
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_article": {
+          "affected_rows": 2,
+          "returning": [
+            {
+              "id": 21,
+              "title": "Article 1",
+              "author": {
+                "id": 3,
+                "name": "Sidney"
+              }
+            }
+          ]
+        }
+      }
+    }
+
+
 Insert object and get nested object in response
 -----------------------------------------------
 **Example:** Insert a new ``article`` object and return the inserted article object with its author in the response

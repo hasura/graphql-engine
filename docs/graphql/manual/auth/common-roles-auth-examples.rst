@@ -20,8 +20,8 @@ Anonymous (not logged in) users
 Logged-in users
 ---------------
 
-- Create a role called ``user``
-- Access control rules in this case are usually dependent on a ``user_id`` or a ``owner_id`` column in your data model
+- Create a role called ``user``.
+- Access control rules in this case are usually dependent on a ``user_id`` or a ``owner_id`` column in your data model.
 - Setup a permission for insert/select/update/delete that uses said column. Eg: ``author_id: {_eq: "X-Hasura-User-Id"}`` for an article table.
 - Note that the ``X-Hasura-User-Id`` is a :doc:`dynamic session variable<./roles-variables>` that comes in from your :doc:`auth webhook's<./webhook>` response, or as a request as a header if you're testing.
 
@@ -34,9 +34,9 @@ Managers of an organisation in a multi-tenant app
 
 Suppose you have a multi-tenant application where managers of a particular organisation can see all of the data that belongs to the organisation. In this case, your data models will probably have an ``org_id`` column that denotes the organisation either in the same table or via a related table.
 
-- Create a role called ``manager``
+- Create a role called ``manager``.
 - Create a permission for select, which has the condition: ``org_id: {_eq: "X-Hasura-Org-Id"}``.
-- ``X-Hasura-Org-Id`` is a :doc:`dynamic variable<./roles-variables>` that is returned by your :doc:`auth webhook <./webhook>` for an incoming GraphQL request
+- ``X-Hasura-Org-Id`` is a :doc:`dynamic variable<./roles-variables>` that is returned by your :doc:`auth webhook <./webhook>` for an incoming GraphQL request.
 
 .. image:: ../../../img/graphql/manual/auth/org-manager-graphiql.png
    :class: no-shadow
@@ -48,12 +48,12 @@ Let's say the "ownership" or "visibility" information for a data model (table) i
 
 - Create a relationship called collaborators from the article table.
 
-  - Array relationship (article has array of collaborators): ``article :: id → collaborator :: article_id``
+  - Array relationship (article has array of collaborators): ``article :: id → collaborator :: article_id``.
 
-- Create a role called ``collaborator``
-- Create a select permission on the ``article`` table, which has the condition: ``collaborators: {collaborator_id: {_eq: "X-Hasura-User_id"}}``
+- Create a role called ``collaborator``.
+- Create a select permission on the ``article`` table, which has the condition: ``collaborators: {collaborator_id: {_eq: "X-Hasura-User_id"}}``.
 
-  - This reads as: Allow the role collaborator to select if ``article.collaborators`` has a ``collaborator_id`` equal to that of ``X-Hasura-User-Id``
+  - This reads as: Allow the role collaborator to select if ``article.collaborators`` has a ``collaborator_id`` equal to that of ``X-Hasura-User-Id``.
 
 .. image:: ../../../img/graphql/manual/auth/collaborator-relationship.png
    :class: no-shadow
@@ -68,13 +68,13 @@ Case 1: Logged-in users and anonymous users can access the same GraphQL fields
 
 In simple use-cases logged-in users and anonymous users might be able to fetch different rows (let's say because of a ``is_public`` flag) but have access to the same fields.
 
-- ``anonymous`` role has a ``{is_public: {_eq: true}}`` select condition
+- ``anonymous`` role has a ``{is_public: {_eq: true}}`` select condition.
 
   - This reads: Allow anyone to access rows that are marked public.
 
-- ``user`` role has a ``_or: [{is_public: {_eq: true}}, {owner_id: {_eq: "X-Hasura-User-Id"}}]``
+- ``user`` role has a ``_or: [{is_public: {_eq: true}}, {owner_id: {_eq: "X-Hasura-User-Id"}}]``.
 
-  - This reads: Allow users to access any rows that are public, or that are owned by them
+  - This reads: Allow users to access any rows that are public, or that are owned by them.
 
 Case 2: Logged-in users and anonymous users have access to different fields
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -87,4 +87,4 @@ In this case, anonymous users might have access only to a subset of fields while
 
 - ``user`` role has a ``{owner_id: {_eq: "X-Hasura-User-Id"}}`` and all the columns are marked as selected.
 
-  - This reads: Allow users to that are owned by them
+  - This reads: Allow users to that are owned by them.

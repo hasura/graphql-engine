@@ -2,7 +2,8 @@ const {query} = require('graphqurl');
 const fetch = require('node-fetch');
 const moment = require('moment');
 const throwError = require('../error');
-const {log, spinnerStart, spinnerStop} = require('../log');
+const {log, spinnerStart, spinnerStop, spinnerStopColorless} = require('../log');
+const colors = require('colors/safe');
 
 const getInsertOrder = tables => {
   let order = [];
@@ -56,8 +57,9 @@ const transformData = (data, tables) => {
 };
 
 const deleteDataTill = async (tableName, insertOrder, url, headers) => {
+  spinnerStopColorless(colors.red('Error'));
   spinnerStart('Restoring database to a safe state');
-  const truncate = async tn => {
+  const truncate = async order => {
     const resp = await fetch(
       url,
       {
@@ -66,21 +68,22 @@ const deleteDataTill = async (tableName, insertOrder, url, headers) => {
         body: JSON.stringify({
           type: 'run_sql',
           args: {
-            sql: `truncate table public."${tn}" cascade;`,
+            sql: `truncate table public."${insertOrder[order]}" cascade;`,
             cascade: true,
           },
         }),
       }
     );
-    if (tn === tableName) {
+    if (insertOrder[order] === tableName) {
       spinnerStop('Done');
-      return resp;
+    } else {
+      await truncate(order + 1, Boolean(resp));
     }
   };
   if (insertOrder.length === 0) {
     return;
   }
-  return truncate(insertOrder[0]);
+  return truncate(0);
 };
 
 const insertData = async (insertOrder, sampleData, tables, url, headers, callback) => {

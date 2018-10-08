@@ -17,8 +17,8 @@ The boilerplate includes sample custom resolvers for:
 
 - A ``hello`` query which returns a fixed string.
 - A ``count`` query that returns a counter from some other data source.
-- A ``increment_counter`` mutation that increments the value of the above counter
-- A ``user_average_age`` query that directly makes an SQL query to Postgres using Knex and returns the result
+- A ``increment_counter`` mutation that increments the value of the above counter.
+- A ``user_average_age`` query that directly makes an SQL query to Postgres using Knex and returns the result.
 
 The steps to achieve this are:
 
@@ -28,4 +28,3 @@ The steps to achieve this are:
 - Merge this schema with the existing Hasura GraphQL schema and serve the resulting GraphQL API.
 
 The above steps are implemented using `Apollo's graphql-tools library <https://github.com/apollographql/graphql-tools>`__.
-

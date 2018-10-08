@@ -208,21 +208,21 @@ class Permissions extends Component {
         const bulkSelect = permsState.bulkSelect;
         const currentInputSelection = bulkSelect.filter(e => e === role)
           .length ? (
-            <input
-              onChange={dispatchBulkSelect}
-              checked="checked"
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          ) : (
-            <input
-              onChange={dispatchBulkSelect}
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          );
+          <input
+            onChange={dispatchBulkSelect}
+            checked="checked"
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        ) : (
+          <input
+            onChange={dispatchBulkSelect}
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        );
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
@@ -420,6 +420,13 @@ class Permissions extends Component {
           ? permsState.insert.allow_upsert
           : false;
 
+        // Upsert Tooltip
+        const upsertToolTip = (
+          <Tooltip id="tooltip-upsert">
+            Upsert updates a row if it already exists, otherwise inserts it
+          </Tooltip>
+        );
+
         // TODO: Fix the controlled component
         _upsertSection = (
           <div>
@@ -433,7 +440,10 @@ class Permissions extends Component {
                   onClick={e => dispatchToggleAllowUpsert(e.target.checked)}
                 />
                 <span className={styles.mar_left}>
-                  Allow role '{permsState.role}' to make upsert queries
+                  Allow role '{permsState.role}' to make upsert queries &nbsp;
+                  <OverlayTrigger placement="right" overlay={upsertToolTip}>
+                    <i className="fa fa-question-circle" aria-hidden="true" />
+                  </OverlayTrigger>
                 </span>
               </label>
             </div>

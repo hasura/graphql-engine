@@ -93,7 +93,7 @@ Transform and load data into external data-stores. Check out this demo and tutor
 
 ### Building reactive UX for your async backend with realtime GraphQL
 
-Propagate event driven and asynchronous information to UI clients easily with GraphQL subscriptions & live-queries.
+Propagate event-driven and asynchronous information to UI clients easily with GraphQL subscriptions & live-queries.
 
 ![Reactive apps architecture](assets/reactive-apps-arch.png)
 
