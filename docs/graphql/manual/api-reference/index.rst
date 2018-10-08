@@ -22,17 +22,11 @@ You can refer the following to know about all PostgreSQL types supported by the 
 - :doc:`Supported PostgreSQL types <postgresql-types>`
 
 Schema Metadata APIs
----------
+--------------------
 
-Hasura exposes a Schema Metadata API for querying/updating data, executing SQL on the
+Hasura exposes a Schema Metadata API for executing SQL on the
 underlying Postgres and for managing the metadata like permissions and
 relationships. Primarily intended to be used as an ``admin`` API to manage Hasura.
-
-.. note::
-
-   The JSON data APIs might not be in full-feature parity with
-   GraphQL APIs, since features are first introduced with GraphQL and then
-   ported to Schema Metadata API.
    
 The endpoint is ``/v1/query`` and all requests must be ``POST``.
 
