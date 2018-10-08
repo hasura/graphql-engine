@@ -6,6 +6,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+const longHelpMetadataExportCmd = `
+Export Hasura metadata and save it in migrations/metadata.yaml file.
+The output is a yaml file which captures all the metadata required 
+by GraphQL Engine. This includes info about tables that are tracked,
+permission rules, relationships and event triggers that are defined 
+on those tables.
+`
+
 func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	opts := &metadataExportOptions{
@@ -26,6 +34,7 @@ func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return opts.run()
 		},
+		Long: longHelpMetadataExportCmd,
 	}
 
 	f := metadataExportCmd.Flags()
