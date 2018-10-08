@@ -44,8 +44,6 @@ module Hasura.RQL.Types
 
        , HeaderObj
 
-       , qualTableToAliasIden
-
        , module R
        ) where
 
@@ -216,17 +214,27 @@ askFieldInfoMap tabName = do
   where
     errMsg = "table " <> tabName <<> " does not exist"
 
-askPGType :: (MonadError QErr m)
-          => FieldInfoMap
-          -> PGCol
-          -> T.Text
-          -> m PGColType
-askPGType m c msg = do
+askPGType
+  :: (MonadError QErr m)
+  => FieldInfoMap
+  -> PGCol
+  -> T.Text
+  -> m PGColType
+askPGType m c msg =
+  pgiType <$> askPGColInfo m c msg
+
+askPGColInfo
+  :: (MonadError QErr m)
+  => FieldInfoMap
+  -> PGCol
+  -> T.Text
+  -> m PGColInfo
+askPGColInfo m c msg = do
   colInfo <- modifyErr ("column " <>) $
              askFieldInfo m (fromPGCol c)
   case colInfo of
     (FIColumn pgColInfo) ->
-      return $ pgiType pgColInfo
+      return pgColInfo
     _                      ->
       throwError $ err400 UnexpectedPayload $ mconcat
       [ "expecting a postgres column; but, "
@@ -272,18 +280,6 @@ askFieldInfo m f =
     [ f <<> " does not exist"
     ]
 
-askPGColInfo :: (MonadError QErr m)
-             => M.HashMap PGCol PGColInfo
-             -> PGCol
-             -> m PGColInfo
-askPGColInfo m c =
-  case M.lookup c m of
-  Just colInfo -> return colInfo
-  Nothing ->
-    throw400 NotExists $ mconcat
-    [ c <<> " does not exist"
-    ]
-
 askCurRole :: (UserInfoM m) => m RoleName
 askCurRole = userRole <$> askUserInfo
 
@@ -303,8 +299,3 @@ successMsg :: BL.ByteString
 successMsg = "{\"message\":\"success\"}"
 
 type HeaderObj = M.HashMap T.Text T.Text
-
-qualTableToAliasIden :: QualifiedTable -> Iden
-qualTableToAliasIden (QualifiedTable sn tn) =
-  Iden $ getSchemaTxt sn <> "_" <> getTableTxt tn
-  <> "__mutation_result_alias"

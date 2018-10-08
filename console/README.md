@@ -34,7 +34,7 @@ cd console
 npm install
 ```
 
-Hasura console can be developed in two modes (`server` or `cli` mode). Both modes require a running instance of GraphQL Enigne. The easiest way to get Hasura GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://docs.hasura.io/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine is documented [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
+Hasura console can be developed in two modes (`server` or `cli` mode). Both modes require a running instance of GraphQL Engine. The easiest way to get Hasura GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://docs.hasura.io/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine is documented [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
 
 ### Development with Hasura GraphQL Engine (`server` mode)
 
@@ -125,6 +125,9 @@ Make changes to the code and the console will reload automatically to reflect th
 When adding a new feature, it is recommended to add corresponding tests too.
 
 Tests are written using [Cypress](https://www.cypress.io/).
+
+You can use the [Redux DevTools Extension](http://extension.remotedev.io/) to inspect and debug the Redux store.
+It should automatically connect to the Redux store when started in development mode.
 
 ### Run Tests
 
