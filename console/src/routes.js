@@ -33,7 +33,9 @@ const routes = store => {
         },
         r => {
           if (r.code === 'data_api_error') {
-            alert('Hasura CLI: ' + r.message);
+            if (globals.accessKey) {
+              alert('Hasura CLI: ' + r.message);
+            } 
           } else {
             alert(
               'Not able to reach the graphql server. Check if hasura console server is running or if graphql server is running and try again'
