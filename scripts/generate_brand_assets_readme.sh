@@ -32,7 +32,7 @@ for svg in *.svg; do
     fi
     README_CONTENT=$(cat <<EOF
 $README_CONTENT
-| \`$svg\` | <img src="$svg" width="150px" $BG /> |
+| \`$svg\` | <kbd><img src="$svg" width="150px" $BG /></kbd> |
 EOF
 )
 done
