@@ -1,13 +1,13 @@
 API Reference - Supported PostgreSQL Types
 ==========================================
 
-List of PostgreSQL types supported by the Hasura GraphQL engine with their equivalent GraphQL engine types:
+.. _types_table:
 
-.. _table:
+List of PostgreSQL types supported by the Hasura GraphQL engine with their equivalent Hasura types:
 
 .. csv-table::
    :file: pgtypes.csv
-   :widths: 10, 10, 25, 10
+   :widths: 13, 11, 25, 6
    :header-rows: 1
 
 .. _Int:
@@ -181,7 +181,7 @@ E.g.
    objects: [
      {
        id: 1,
-       json_col: "{ \'name\': \'raven\' }"
+       json_col: "{ \"name\": \"raven\" }"
      }
    ]
 
@@ -226,8 +226,8 @@ variable:
 
 Implicitly Supported types
 --------------------------
-All ``Implicit`` types in above table_ are implicitly supported by GraphQL Engine. You have to provide the value in
-**String**.
+All ``Implicit`` types in the :ref:`above table <types_table>` are implicitly supported by GraphQL Engine. You have to
+provide the value in **String**.
 
 
 E.g. For time without time zone type
