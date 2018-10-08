@@ -4,21 +4,14 @@ const colors = require('colors/safe');
 
 const complexQuery = `
 query {
-  f2gt_Album (order_by:_id_asc){
+  f2g_test_Authors (order_by: Name_asc) {
     _id
-    f2gt_Track (order_by: _id_asc) {
-      _id
-      Name 
-    }
-    f2gt_Artist {
-      Name
-      f2gt_Album (order_by: _id_desc){
-        _id
-        Title
-        f2gt_Track (order_by: Name_asc){
-          Name
-          Composer
-        }
+    Name
+    f2g_Articles (order_by: Title_asc, where: { IsUnpublished: { _eq: true}}) {
+      Title
+      f2g_test_Comments (order_by: Date_asc) {
+        Body
+        Date
       }
     }
   }
@@ -32,15 +25,13 @@ const verifyDataImport = () => {
     headers: {'x-hasura-access-key': process.env.TEST_X_HASURA_ACCESS_KEY},
   }).then(response => {
     if (
-      response.data.f2gt_Album[0]._id === '1' &&
-      response.data.f2gt_Album[0].f2gt_Track[1]._id === '10' &&
-      response.data.f2gt_Album[0].f2gt_Artist.Name === 'AC/DC' &&
-      response.data.f2gt_Album[0].f2gt_Artist.f2gt_Album[0].Title === 'Let There Be Rock' &&
-      response.data.f2gt_Album[0].f2gt_Artist.f2gt_Album[0].f2gt_Track[0].Name === 'Bad Boy Boogie'
+      response.data &&
+      response.data.f2g_test_Authors[0].f2g_Articles.length === 0 &&
+      response.data.f2g_test_Authors[1].f2g_Articles[0].f2g_test_Comments[0].Body === 'Comment1'
     ) {
       let sqlString = '';
-      ['Album', 'Artist', 'Tracks'].forEach(t => {
-        sqlString += `drop table public."f2gt_${t}" cascade;`;
+      ['Articles', 'Authors', 'Comments'].forEach(t => {
+        sqlString += `drop table public."f2g_test_${t}" cascade;`;
       });
       fetch(
         `${process.env.TEST_HGE_URL}/v1/query`,
@@ -56,17 +47,17 @@ const verifyDataImport = () => {
           }),
         }
       ).then(() => {
-        console.log(colors.green('✔︎ data-sets/chinook_nested.json: Test passed'));
+        console.log(colors.green('✔︎ data-sets/readme-example-1.json: Test passed'));
         process.exit();
       }).catch(() => {
         process.exit();
       });
     } else {
-      console.log(colors.red('✖ data-sets/chinook_nested.json: Test failed. Unexpected response.'));
+      console.log(colors.red('✖ data-sets/readme-example-1.json: Test failed. Unexpected response.'));
       process.exit();
     }
   }).catch(e => {
-    console.log(colors.red('✖ data-sets/chinook_nested.json: Test failed. Unexpected response.'));
+    console.log(colors.red('✖ data-sets/readme-example-1.json: Test failed. Unexpected response.'));
     console.log(JSON.stringify(e, null, 2));
 
     process.exit();
