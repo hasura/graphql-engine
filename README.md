@@ -164,8 +164,12 @@ application/website etc. We'd be thrilled if you add the "Powered by Hasura"
 badge to your applications built using Hasura. ❤️
 
 <div style="display: flex;">
-  <img src="assets/brand/powered_by_hasura_black.svg" width="150px"/>
-  <img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
+  <kbd>
+    <img src="assets/brand/powered_by_hasura_black.svg" width="150px" style="background-color: white;"/>
+  </kbd>
+  <kbd>
+    <img src="assets/brand/powered_by_hasura_white.svg" width="150px" style="background-color: black;"/>
+  </kbd>
 </div>
 
 ```html

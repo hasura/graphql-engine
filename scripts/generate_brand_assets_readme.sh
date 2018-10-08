@@ -17,7 +17,7 @@ README_CONTENT=$(cat <<EOF
 
 All assets are available on a Google Cloud Storage Bucket CDN at \`https://graphql-engine-cdn.hasura.io/img/<name>\`.
 
-*Note: some logos maybe invisible depending on the page background color.*
+*Note: some logos may be invisible depending on the page background color.*
 
 | name | asset |
 | ---- | ----- |
@@ -32,7 +32,7 @@ for svg in *.svg; do
     fi
     README_CONTENT=$(cat <<EOF
 $README_CONTENT
-| \`$svg\` | <img src="$svg" width="150px" $BG /> |
+| \`$svg\` | <kbd><img src="$svg" width="150px" $BG /></kbd> |
 EOF
 )
 done
