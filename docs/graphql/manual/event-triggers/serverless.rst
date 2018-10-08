@@ -9,16 +9,16 @@ for their handlers.
 
 Why use serverless functions?
 -----------------------------
-1. Cost effectiveness
-2. No infra management
-3. Async business logic
+1. Cost effectiveness.
+2. No infra management.
+3. Async business logic.
 
 Examples
 --------
 
 You can find a bunch of examples for various serverless cloud providers in this repo:
 
-https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/serverless-triggers
+https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/serverless-triggers.
 
 For example: update related data on a database event
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

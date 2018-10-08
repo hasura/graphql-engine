@@ -36,16 +36,16 @@ data ExplainResp =
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 2 camelCase) ''ExplainResp)
 
-phaseOneExplain :: SelectQuery -> P1 SelectData
+phaseOneExplain :: SelectQuery -> P1 AnnSel
 phaseOneExplain = convSelectQuery txtRHSBuilder
 
-phaseTwoExplain :: (P2C m) => SelectData -> m RespBody
+phaseTwoExplain :: (P2C m) => AnnSel -> m RespBody
 phaseTwoExplain sel = do
   planResp <- liftTx $ runIdentity . Q.getRow <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder withExplain) [] True
   plans <- decodeBS planResp
   return $ encode $ ExplainResp selectSQLT plans
   where
-    selectSQL = toSQL $ mkSQLSelect sel
+    selectSQL = toSQL $ mkSQLSelect False sel
     explainSQL = BB.string7 "EXPLAIN (FORMAT JSON) "
     withExplain = explainSQL <> selectSQL
 

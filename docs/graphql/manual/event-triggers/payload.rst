@@ -142,6 +142,6 @@ Webhook response structure
 --------------------------
 
 A ``2xx`` response status code is deemed to be a successful invocation of the webhook. Any other response status will be
-deemed as an unsucessful invocation which may cause retries as per the retry configuration.
+deemed as an unsuccessful invocation which may cause retries as per the retry configuration.
 
 It is also recommended that you return a JSON object in your webhook response.

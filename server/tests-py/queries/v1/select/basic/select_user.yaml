@@ -1,0 +1,17 @@
+url: /v1/query
+status: 200
+response:
+- id: '1'
+  name: User 1
+  number: '123456789'
+- id: '2'
+  name: User 2
+  number: '123456780'
+query:
+  type: select
+  args:
+    table: user
+    columns:
+    - id
+    - name
+    - number

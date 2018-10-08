@@ -1,7 +1,7 @@
 const {spinnerStart, spinnerStop, log} = require('../log');
 const generate = require('./generateTables');
 const {refineJson} = require('./utils');
-const {generateSql, runSql} = require('./sql');
+const {generateSql, runSql, dropUtilityTables} = require('./sql');
 const {trackTables} = require('./track');
 const {getInsertOrder, insertData} = require('./insert');
 const {createRelationships} = require('./relationships');
@@ -26,13 +26,17 @@ const importData = async (jsonDb, url, headers, overwrite, level = 1, shouldNorm
       createRelationships(tables, url, headers).then(() => {
         spinnerStop('Done!');
         const insertOrder = getInsertOrder(tables);
-        insertData(insertOrder, db, tables, url, headers, success => {
+        insertData(insertOrder, db, tables, url, headers, async success => {
           if (level <= 10 && shouldNormalize) {
             normalize(tables, db, url, headers, level, importData);
           } else if (success) {
+            spinnerStart('Dropping utility tables');
+            const resp = await dropUtilityTables(url, headers);
+            if (resp) {
+              spinnerStop('Done!');
+            }
             log('');
             log(`Success! Try out the GraphQL API at ${url}/console`, 'green');
-
             if (!shouldNormalize) {
               makeSuggestions();
             }
