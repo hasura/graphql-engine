@@ -14,16 +14,11 @@ module Hasura.GraphQL.Schema
   , getGCtx
   , GCtx(..)
   , OpCtx(..)
-  , OrdByResolveCtx
-  , OrdByResolveCtxElem
-  , NullsOrder(..)
-  , OrdTy(..)
   , InsCtx(..)
   , InsCtxMap
   , RelationInfoMap
   ) where
 
-import           Control.Arrow                  (first)
 import           Data.Has
 
 import qualified Data.HashMap.Strict            as Map
@@ -40,7 +35,6 @@ import           Hasura.RQL.DML.Internal        (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Hasura.RQL.DML.Select          as RS
 import qualified Hasura.SQL.DML                 as S
 
 defaultTypes :: [TypeInfo]
@@ -77,14 +71,14 @@ data OpCtx
 
 data GCtx
   = GCtx
-  { _gTypes      :: !TypeMap
-  , _gFields     :: !FieldMap
-  , _gOrdByEnums :: !OrdByResolveCtx
-  , _gQueryRoot  :: !ObjTyInfo
-  , _gMutRoot    :: !(Maybe ObjTyInfo)
-  , _gSubRoot    :: !(Maybe ObjTyInfo)
-  , _gOpCtxMap   :: !OpCtxMap
-  , _gInsCtxMap  :: !InsCtxMap
+  { _gTypes     :: !TypeMap
+  , _gFields    :: !FieldMap
+  , _gOrdByCtx  :: !OrdByCtx
+  , _gQueryRoot :: !ObjTyInfo
+  , _gMutRoot   :: !(Maybe ObjTyInfo)
+  , _gSubRoot   :: !(Maybe ObjTyInfo)
+  , _gOpCtxMap  :: !OpCtxMap
+  , _gInsCtxMap :: !InsCtxMap
   } deriving (Show, Eq)
 
 instance Has TypeMap GCtx where
@@ -93,9 +87,9 @@ instance Has TypeMap GCtx where
 
 data TyAgg
   = TyAgg
-  { _taTypes      :: !TypeMap
-  , _taFields     :: !FieldMap
-  , _taOrdByEnums :: !OrdByResolveCtx
+  { _taTypes  :: !TypeMap
+  , _taFields :: !FieldMap
+  , _taOrdBy  :: !OrdByCtx
   } deriving (Show, Eq)
 
 instance Semigroup TyAgg where
@@ -167,6 +161,9 @@ isUpsertAllowed constraints upsertPerm =
 
 mkColName :: PGCol -> G.Name
 mkColName (PGCol n) = G.Name n
+
+mkRelName :: RelName -> G.Name
+mkRelName (RelName r) = G.Name r
 
 mkCompExpName :: PGColType -> G.Name
 mkCompExpName pgColTy =
@@ -440,7 +437,7 @@ mkBoolExpInp tn fields =
 
     mkFldExpInp = \case
       Left (PGColInfo colName colTy _) ->
-        mk (G.Name $ getPGColTxt colName) (mkCompExpTy colTy)
+        mk (mkColName colName) (mkCompExpTy colTy)
       Right (RelInfo relName _ _ remTab _ _, _, _, _) ->
         mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
 
@@ -901,85 +898,79 @@ mkConflictActionTy = EnumTyInfo (Just desc) ty $ mapFromL _eviVal
     enumValUpdate = EnumValInfo (Just "update the row with the given values")
                     (G.EnumValue "update") False
 
+ordByTy :: G.NamedType
+ordByTy = G.NamedType "order_by"
+
+ordByEnumTy :: EnumTyInfo
+ordByEnumTy =
+  EnumTyInfo (Just desc) ordByTy $ mapFromL _eviVal $
+  map mkEnumVal enumVals
+  where
+    desc = G.Description "column ordering options"
+    mkEnumVal (n, d) =
+      EnumValInfo (Just d) (G.EnumValue n) False
+    enumVals =
+      [ ("_asc"
+        , "in the ascending order, nulls last"
+        ),
+        ( "_desc"
+        , "in the descending order, nulls last"
+        ),
+        ( "_asc_nulls_first"
+        , "in the ascending order, nulls first"
+        ),
+        ( "_desc_nulls_first"
+        , "in the ascending order, nulls first"
+        )
+      ]
+
 mkOrdByTy :: QualifiedTable -> G.NamedType
 mkOrdByTy tn =
   G.NamedType $ qualTableToName tn <> "_order_by"
 
-mkOrdByCtx
-  :: QualifiedTable -> ([PGColInfo], [OrdByRel]) ->(EnumTyInfo, OrdByResolveCtx)
-mkOrdByCtx tn (cols, rels) =
-  (enumTyInfo, resolveCtx)
+{-
+input table_order_by {
+  col1: order_by
+  col2: order_by
+  .     .
+  .     .
+  coln: order_by
+  obj-rel: <remote-table>_order_by
+}
+-}
+
+mkOrdByInpObj
+  :: QualifiedTable -> [SelField] -> (InpObjTyInfo, OrdByCtx)
+mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
   where
-    enumTyInfo = EnumTyInfo (Just desc) enumTy $
-                 mapFromL _eviVal $ map toEnumValInfo $
-                 enumValsInt <> enumValRels
-    enumTy = mkOrdByTy tn
+    inpObjTy =
+      InpObjTyInfo (Just desc) namedTy $ fromInpValL $
+      map mkColOrdBy pgCols <> map mkObjRelOrdBy objRels
+
+    namedTy = mkOrdByTy tn
     desc = G.Description $
       "ordering options when selecting data from " <>> tn
 
-    toEnumValInfo (v, enumValDesc, _) =
-      EnumValInfo (Just $ G.Description enumValDesc) (G.EnumValue v) False
+    pgCols = lefts selFlds
+    objRels = flip filter (rights selFlds) $ \(ri, _, _, _) ->
+      riType ri == ObjRel
 
-    resolveCtx = Map.fromList $ map toResolveCtxPair $
-                 enumValsInt <> enumValRels
+    mkColOrdBy ci = InpValInfo Nothing (mkColName $ pgiName ci) $
+                    G.toGT ordByTy
+    mkObjRelOrdBy (ri, _, _, _) =
+      InpValInfo Nothing (mkRelName $ riName ri) $
+      G.toGT $ mkOrdByTy $ riRTable ri
 
-    toResolveCtxPair (v, _, ctx) = ((enumTy, G.EnumValue v), ctx)
-
-    enumValsInt = concatMap (mkOrdByEnumsOfCol tn "" RS.AOCPG) cols
-
-    enumValRels = concatMap (mkOrdbyEnumsOfRel "" id) rels
-
-mkOrdbyEnumsOfRel
-  :: G.Name
-  -> (RS.AnnObCol -> RS.AnnObCol)
-  -> OrdByRel
-  -> [(G.Name, Text, RS.AnnOrderByItem)]
-mkOrdbyEnumsOfRel preFix f (relInfo, fltr, ordByFlds) =
-  colEnums <> relEnums
-  where
-    colEnums = concatMap (mkOrdByEnumsOfCol remTab curPreFix annPGObColFn) cols
-    relEnums = concatMap (mkOrdbyEnumsOfRel curPreFix annRelObFn) rels
-
-    relNameT = getRelTxt $ riName relInfo
-    remTab = riRTable relInfo
-    curPreFix = preFix <> "rel_" <> G.Name relNameT <> "_"
-    OrdByFlds cols rels = ordByFlds
-
-    annPGObColFn = f . RS.AOCRel relInfo fltr . RS.AOCPG
-    annRelObFn = f . RS.AOCRel relInfo fltr
-
-
-
-mkOrdByEnumsOfCol
-  :: QualifiedTable
-  -> G.Name
-  -> (PGColInfo -> RS.AnnObCol)
-  -> PGColInfo
-  -> [(G.Name, Text, RS.AnnOrderByItem)]
-mkOrdByEnumsOfCol tn preFix f colInfo@(PGColInfo col _ _) =
-  [ ( colN <> "_asc"
-    , "in the ascending order of column " <> col <<> " of table " <> tn <<>  ", nulls last"
-    , mkOrderByItem (annPGObCol, S.OTAsc, S.NLast)
-    )
-  , ( colN <> "_desc"
-    , "in the descending order of column " <> col <<> " of table " <> tn <<>  ", nulls last"
-    , mkOrderByItem (annPGObCol, S.OTDesc, S.NLast)
-    )
-  , ( colN <> "_asc_nulls_first"
-    , "in the ascending order of column " <> col <<> " of table " <> tn <<> ", nulls first"
-    , mkOrderByItem (annPGObCol, S.OTAsc, S.NFirst)
-    )
-  , ( colN <> "_desc_nulls_first"
-    , "in the descending order of column " <> col <<> " of table " <> tn <<> ", nulls first"
-    , mkOrderByItem (annPGObCol, S.OTDesc, S.NFirst)
-    )
-  ]
-  where
-    mkOrderByItem (annObCol, ordTy, nullsOrd) =
-      OrderByItemG (Just ordTy) annObCol (Just nullsOrd)
-    annPGObCol = f colInfo
-    colN = preFix <> pgColToFld col
-    pgColToFld = G.Name . getPGColTxt
+    ordByCtx = Map.singleton namedTy $ Map.fromList $
+               colOrdBys <> relOrdBys
+    colOrdBys = flip map pgCols $ \ci ->
+                                    ( mkColName $ pgiName ci
+                                    , OBIPGCol ci
+                                    )
+    relOrdBys = flip map objRels $ \(ri, fltr, _, _) ->
+                                     ( mkRelName $ riName ri
+                                     , OBIRel ri fltr
+                                     )
 
 newtype RootFlds
   = RootFlds
@@ -1023,13 +1014,12 @@ mkGCtxRole'
   -> [PGCol]
   -> TyAgg
 mkGCtxRole' tn insPermM selM updColsM delPermM pkeyCols constraints allCols =
-  TyAgg (mkTyInfoMap allTypes) fieldMap ordByEnums
+  TyAgg (mkTyInfoMap allTypes) fieldMap ordByCtx
 
   where
-
+    ordByCtx = fromMaybe Map.empty ordByCtxM
     upsertPerm = or $ fmap snd insPermM
     upsertAllowed = isUpsertAllowed constraints upsertPerm
-    ordByEnums = fromMaybe Map.empty ordByResCtxM
     onConflictTypes = mkOnConflictTypes tn constraints allCols upsertAllowed
     jsonOpTys = fromMaybe [] updJSONOpInpObjTysM
     relInsInpObjTys = map TIInpObj relInsInpObjs
@@ -1039,9 +1029,9 @@ mkGCtxRole' tn insPermM selM updColsM delPermM pkeyCols constraints allCols =
       , TIInpObj <$> updSetInpObjM
       , TIInpObj <$> updIncInpObjM
       , TIInpObj <$> boolExpInpObjM
+      , TIInpObj <$> ordByInpObjM
       , TIObj <$> mutRespObjM
       , TIObj <$> selObjM
-      , TIEnum <$> ordByTyInfoM
       ]
 
     fieldMap = Map.unions $ catMaybes
@@ -1104,11 +1094,11 @@ mkGCtxRole' tn insPermM selM updColsM delPermM pkeyCols constraints allCols =
     selByPKeyObjFlds = Map.fromList $ flip map pkeyCols $
       \pgi@(PGColInfo col ty _) -> ((mkScalarTy ty, mkColName col), Left pgi)
 
-    ordByEnumsCtxM = mkOrdByCtx tn <$> fmap (first lefts) selM
+    ordByInpCtxM = mkOrdByInpObj tn <$> selFldsM
+    (ordByInpObjM, ordByCtxM) = case ordByInpCtxM of
+      Just (a, b) -> (Just a, Just b)
+      Nothing     -> (Nothing, Nothing)
 
-    (ordByTyInfoM, ordByResCtxM) = case ordByEnumsCtxM of
-      (Just (a, b)) -> (Just a, Just b)
-      Nothing       -> (Nothing, Nothing)
 
 getRootFldsRole'
   :: QualifiedTable
@@ -1358,10 +1348,12 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
                   lefts $ Map.elems fldInfos
       scalarTys = map (TIScalar . mkScalarTyInfo) colTys
       compTys   = map (TIInpObj . mkCompExpInp) colTys
+      ordByEnumTyM = bool (Just ordByEnumTy) Nothing $ null qFlds
       allTys    = Map.union tyInfos $ mkTyInfoMap $
                   catMaybes [ Just $ TIObj queryRoot
                             , TIObj <$> mutRootM
                             , TIObj <$> subRootM
+                            , TIEnum <$> ordByEnumTyM
                             ] <>
                   scalarTys <> compTys <> defaultTypes
   -- for now subscription root is query root

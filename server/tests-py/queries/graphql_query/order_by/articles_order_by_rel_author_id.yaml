@@ -26,7 +26,7 @@ query:
   query: |
     query {
       article(
-      order_by: rel_author_id_desc
+      order_by: {author: {id: _desc}}
       ){
         id
         title

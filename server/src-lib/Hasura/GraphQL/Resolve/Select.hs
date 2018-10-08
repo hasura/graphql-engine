@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE MultiWayIf            #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
@@ -74,28 +75,63 @@ fromField tn permFilter permLimitM fld = fieldAsPath fld $ do
   where
     args = _fArguments fld
 
-getEnumInfo
+getOrdByItemMap
   :: ( MonadError QErr m
      , MonadReader r m
-     , Has OrdByResolveCtx r
+     , Has OrdByCtx r
      )
-  => G.NamedType -> G.EnumValue -> m OrdByResolveCtxElem
-getEnumInfo nt v = do
-  -- fldMap <- _gcFieldMap <$> ask
+  => G.NamedType -> m OrdByItemMap
+getOrdByItemMap nt = do
   ordByCtx <- asks getter
-  onNothing (Map.lookup (nt,v) ordByCtx) $
-    throw500 $ "could not lookup " <> showName (G.unEnumValue v) <> " in " <>
-    showNamedTy nt
+  onNothing (Map.lookup nt ordByCtx) $
+    throw500 $ "could not lookup " <> showNamedTy nt
 
 parseOrderBy
-  :: (MonadError QErr m
+  :: ( MonadError QErr m
      , MonadReader r m
-     , Has OrdByResolveCtx r
+     , Has OrdByCtx r
      )
   => AnnGValue -> m [RS.AnnOrderByItem]
-parseOrderBy v = do
-  enums <- withArray (const $ mapM asEnumVal) v
-  mapM (uncurry getEnumInfo) enums
+parseOrderBy = fmap concat . withArray f
+  where
+    f _ = mapM (withObject (getAnnObItems id))
+
+getAnnObItems
+  :: ( MonadError QErr m
+     , MonadReader r m
+     , Has OrdByCtx r
+     )
+  => (RS.AnnObCol -> RS.AnnObCol)
+  -> G.NamedType
+  -> AnnGObject
+  -> m [RS.AnnOrderByItem]
+getAnnObItems f nt obj = do
+  ordByItemMap <- getOrdByItemMap nt
+  fmap concat $ forM (Map.toList obj) $ \(k, v) -> do
+    ordByItem <- onNothing (Map.lookup k ordByItemMap) $ throw500 $
+      "cannot lookup " <> showName k <> " order by item in "
+      <> showNamedTy nt <> " map"
+    case ordByItem of
+      OBIPGCol ci -> do
+        let aobCol = f $ RS.AOCPG ci
+        (_, enumVal) <- asEnumVal v
+        (ordTy, nullsOrd) <- parseOrderByEnum enumVal
+        return [OrderByItemG (Just ordTy) aobCol (Just nullsOrd)]
+      OBIRel ri fltr -> do
+        let annObColFn = f . RS.AOCRel ri fltr
+        withObject (getAnnObItems annObColFn) v
+
+parseOrderByEnum
+  :: (MonadError QErr m)
+  => G.EnumValue
+  -> m (S.OrderType, S.NullsOrder)
+parseOrderByEnum = \case
+  G.EnumValue "_asc"              -> return (S.OTAsc, S.NLast)
+  G.EnumValue "_desc"             -> return (S.OTDesc, S.NLast)
+  G.EnumValue "_asc_nulls_first"  -> return (S.OTAsc, S.NFirst)
+  G.EnumValue "_desc_nulls_first" -> return (S.OTDesc, S.NFirst)
+  G.EnumValue v                   -> throw500 $
+    "enum value " <> showName v <> " not found in type order_by"
 
 parseLimit :: ( MonadError QErr m ) => AnnGValue -> m Int
 parseLimit v = do

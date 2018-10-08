@@ -14,7 +14,7 @@ query:
   query: |
     query {
       article(
-      order_by: id_desc
+      order_by: {id: _desc}
       ){
         title
         content
