@@ -1,0 +1,12 @@
+description: Updated person data without any operator
+url: /v1/query
+status: 400
+query:
+  type: update
+  args:
+    table: person
+    where:
+      id: 2
+    returning:
+    - id
+    - details

@@ -6,14 +6,21 @@ ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
 
 LATEST_TAG=$(git describe --tags --abbrev=0)
 PREVIOUS_TAG=$(git describe --tags $(git rev-list --tags --max-count=2) --abbrev=0 | sed -n 2p)
-CHANGELOG=""
+CHANGELOG_TEXT=""
 
 # reviewers for pull requests opened to update installation manifests
 REVIEWERS="shahidhk,coco98,arvi3411301"
 
 changelog() {
-  CHANGELOG=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty=format:"- $1: %s" --reverse -- $1)
-  echo $CHANGELOG
+  CHANGELOG=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty="tformat:- $1: %s" --reverse -- $ROOT/$1)
+  if [ -n "$CHANGELOG" ]
+  then
+      if [ -n "$CHANGELOG_TEXT" ]
+      then
+          echo ""
+      fi
+      echo "${CHANGELOG}"
+  fi
 }
 
 ## deploy functions
@@ -103,13 +110,13 @@ deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
     deploy_server_latest
-    CHANGELOG_TEXT+=$(changelog server)
+    CHANGELOG_TEXT=$(changelog server)
     CHANGELOG_TEXT+=$(changelog cli)
     CHANGELOG_TEXT+=$(changelog console)
     RELEASE_BODY=$(eval "cat <<EOF
-    $(<$ROOT/.circleci/release_notes.template.md)
-    EOF
-    ")
+$(<$ROOT/.circleci/release_notes.template.md)
+EOF
+")
     draft_github_release
     configure_git
     send_pr_to_repo graphql-engine-heroku

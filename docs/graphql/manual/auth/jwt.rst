@@ -33,7 +33,7 @@ TL;DR
 1. The JWT must contain: ``x-hasura-default-role``, ``x-hasura-allowed-roles``
    in a custom namespace in the claims.
 2. Other optional ``x-hasura-*`` fields (required as per your defined
-   permissions)
+   permissions).
 3. You can send ``x-hasura-role`` as header in the request to indicate a
    different role.
 4. Send the JWT via ``Authorization: Bearer <JWT>`` header.
@@ -88,7 +88,7 @@ mandatory, while rest of them are optional.
    All ``x-hasura-*`` values should be ``String``, they will be converted to the
    right type automatically.
 
-The default role can be overriden by ``x-hasura-role`` header, while making a
+The default role can be overridden by ``x-hasura-role`` header, while making a
 request.
 
 .. code-block:: http
@@ -132,9 +132,9 @@ public keys are not yet supported.
 
 ``key``
 ^^^^^^^
-- Incase of symmetric key (i.e HMAC based key), the key as it is. (e.g -
-  "abcdef...")
-- Incase of asymmetric keys (RSA etc.), only the public key, in a PEM encoded
+- In case of symmetric key (i.e HMAC based key), the key as it is. (e.g -
+  "abcdef...").
+- In case of asymmetric keys (RSA etc.), only the public key, in a PEM encoded
   string or as a X509 certificate.
 
 This is an optional field. You can also provide a URL to fetch JWKs from using
@@ -161,7 +161,7 @@ JWKs are not refreshed.
 - Auth0 publishes their JWK url at: ``https://<YOUR_AUTH0_DOMAIN>.auth0.com``.
   But Auth0 has a bug. See known issues: :ref:`auth0-issues`.
 - Firebase publishes their JWK url at:
-  ``https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com``
+  ``https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com``.
 
 ``claims_namespace``
 ^^^^^^^^^^^^^^^^^^^^
@@ -175,7 +175,7 @@ Examples
 
 HMAC-SHA based
 +++++++++++++++
-Your auth server is using HMAC-SHA alogrithms to sign JWTs, and is using a
+Your auth server is using HMAC-SHA algorithms to sign JWTs, and is using a
 256-bit key. Then the JWT config will look like:
 
 .. code-block:: json
@@ -260,7 +260,7 @@ https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceacc
 But that is a non-standard format. Firebase also publishes the same certificates
 as proper JWK format under:
 
-https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com
+https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com .
 
 If you are using Firebase and Hasura, use this config:
 

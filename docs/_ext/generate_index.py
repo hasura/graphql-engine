@@ -4,7 +4,7 @@ from sphinx import addnodes
 """
 ``generate_index``: A callable yielding the global TOC tree that contains
 list of all the content below the specified page. ``generate_index`` need
-pagename specifing as like as ``{{ generate_index(pagename) }}`` and
+pagename specifying as like as ``{{ generate_index(pagename) }}`` and
 optional keyword arguments are available:
 
 * maxdepth (defaults to the max depth selected in the toctree directive):
