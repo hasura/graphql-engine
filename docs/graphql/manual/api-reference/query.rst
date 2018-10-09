@@ -39,7 +39,7 @@ Query/Subscription syntax
 .. code-block:: graphql
 
     query {
-      author(where: {articles: {rating: {_gte: 4}}} order_by: name_asc) {
+      author(where: {articles: {rating: {_gte: 4}}} order_by: {name: _asc}) {
         id
         name
       }
@@ -50,7 +50,7 @@ Query/Subscription syntax
 .. code-block:: graphql
 
     subscription {
-      author(where: {articles: rating: {_gte: 4}}} order_by: name_asc) {
+      author(where: {articles: rating: {_gte: 4}}} order_by: {name: _asc}) {
         id
         name
       }
@@ -209,30 +209,71 @@ OrderByExp
 
 .. parsed-literal::
 
-   order_by: (object-field + OrderByOperator_ | [object-field + OrderByOperator_])
+   order_by: (TableOrderBy_ | [ TableOrderBy_ ])
 
 E.g.
 
-.. code-block:: graphql
+.. parsed-literal::
 
-   order_by: name_asc
+   order_by: {id: _desc}
 
 or
 
+.. parsed-literal::
+
+   order_by: [{id: _desc}, {author: {id: _asc}}]
+
+
+.. _TableOrderBy:
+
+TableOrderBy
+***********
+
+For columns:
+
+.. parsed-literal::
+
+   {column: OrderByEnum_}
+
+For object relations:
+
+.. parsed-literal::
+   {relation-name: TableOrderBy_}
+
+E.g.
+
+Order by type for "article" table:
+
 .. code-block:: graphql
 
-   order_by: [name_asc, id_desc]
+   input article_order_by {
+     id: order_by
+     title: order_by
+     content: order_by
+     author_id: order_by
+     #order by using "author" object relationship columns
+     author: author_order_by
+   }
 
+.. _OrderByEnum:
 
-.. _OrderByOperator:
+OrderByEnum
+***********
 
-OrderByOperator
-"""""""""""""""
+.. code-block:: graphql
 
-- ``_asc``
-- ``_desc``
-- ``_asc_nulls_first``
-- ``_desc_nulls_first``
+   #the order_by enum type
+   enum order_by {
+     #in the ascending order
+     _asc
+     #in the descending order
+     _desc
+     #in the ascending order, nulls first
+     _asc_nulls_first
+     #in the descending order, nulls first
+     _desc_nulls_first
+   }
+
 
 .. _PaginationExp:
 
