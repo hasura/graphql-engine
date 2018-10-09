@@ -1,3 +1,5 @@
+import { SERVER_CONSOLE_MODE } from './constants';
+
 const checkExtraSlashes = url => {
   if (!url) {
     return url;
@@ -12,10 +14,14 @@ const globals = {
   apiHost: window.__env.apiHost,
   apiPort: window.__env.apiPort,
   dataApiUrl: checkExtraSlashes(window.__env.dataApiUrl),
-  nodeEnv: window.__env.nodeEnv,
   devDataApiUrl: window.__env.devDataApiUrl,
+  nodeEnv: window.__env.nodeEnv,
   accessKey: window.__env.accessKey,
-  consoleMode: window.__env.consoleMode,
+  isAccessKeySet: window.__env.isAccessKeySet,
+  consoleMode:
+    window.__env.consoleMode === 'hasuradb'
+      ? 'server'
+      : window.__env.consoleMode,
   urlPrefix: checkExtraSlashes(window.__env.urlPrefix),
 };
 
@@ -25,19 +31,28 @@ if (!window.__env.urlPrefix) {
 }
 
 if (!window.__env.consoleMode) {
-  globals.consoleMode = 'hasuradb';
+  globals.consoleMode = SERVER_CONSOLE_MODE;
 }
 
 if (!window.__env.accessKey) {
   globals.accessKey = null;
 }
 
-if (globals.consoleMode === 'hasuradb') {
-  const windowUrl = window.location.protocol + '//' + window.location.host;
-  globals.dataApiUrl = windowUrl;
+if (!window.__env.isAccessKeySet) {
+  globals.isAccessKeySet = false;
+}
+
+if (globals.consoleMode === SERVER_CONSOLE_MODE) {
+  if (globals.nodeEnv !== 'development') {
+    const windowUrl = window.location.protocol + '//' + window.location.host;
+    globals.dataApiUrl = windowUrl;
+  }
+  /*
+   * Require the exact usecase
   if (globals.nodeEnv === 'development') {
     globals.dataApiUrl = globals.devDataApiUrl;
   }
+  */
 }
 
 export default globals;

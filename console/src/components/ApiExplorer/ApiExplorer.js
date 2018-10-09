@@ -58,8 +58,8 @@ class ApiExplorer extends Component {
       <ApiRequestWrapper
         credentials={this.props.credentials}
         explorerData={this.props.explorerData}
-        details={this.props.displayedApi.details}
-        request={this.props.displayedApi.request}
+        details={displayedApi.details}
+        request={displayedApi.request}
         requestStyles={requestStyles}
         dispatch={this.props.dispatch}
         wdStyles={wdClass}
@@ -85,7 +85,7 @@ ApiExplorer.propTypes = {
   displayedApi: PropTypes.object.isRequired,
   dispatch: PropTypes.func.isRequired,
   route: PropTypes.object.isRequired,
-  tables: PropTypes.array.isRequierd,
+  tables: PropTypes.array.isRequired,
   headerFocus: PropTypes.bool.isRequired,
   location: PropTypes.object.isRequired,
 };

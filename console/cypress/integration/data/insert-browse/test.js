@@ -42,7 +42,6 @@ export const runInsertBrowseTests = () => {
     it('Check Insert Route', checkInsertRoute);
     it('Fails when entered wrong data type', failBIWrongDataType);
     it('Insert 20 rows', passBIInsert20Rows);
-    it('Fail for adding null for not null keys', failBINullKeys);
     it('Fail for adding same data for Unique keys', failBIUniqueKeys);
     it('Check browser rows route', checkBrowseRoute);
     it('20 Inserted rows reflect in browse rows', passBI20RowsExist);

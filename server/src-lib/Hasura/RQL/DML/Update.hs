@@ -144,8 +144,7 @@ convUpdateQuery f uq = do
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
-    withPathK "returning" $ zip retCols <$>
-    checkRetCols fieldInfoMap selPerm retCols
+    withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
   let setExpItems = setItems ++ incItems ++ mulItems ++ defItems
       updTable = upiTable updPerm

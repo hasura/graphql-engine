@@ -70,8 +70,7 @@ convDeleteQuery prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
-    withPathK "returning" $
-    zip retCols <$> checkRetCols fieldInfoMap selPerm retCols
+    withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $

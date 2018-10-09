@@ -1,0 +1,21 @@
+url: /v1/query
+status: 200
+response:
+  affected_rows: 1
+  returning:
+  - id: 1 
+    name: Author 1 updated
+query:
+  type: insert
+  args:
+    table: author
+    objects:
+    - name: Author 1 updated
+      id : 1
+    on_conflict:
+      constraint_on:
+      - id
+      action: update
+    returning:
+    - name
+    - id

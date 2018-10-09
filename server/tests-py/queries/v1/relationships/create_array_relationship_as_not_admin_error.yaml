@@ -1,0 +1,19 @@
+description: Create array relationship using foreign key
+url: /v1/query
+status: 400  
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+response:
+  path: $.args
+  error: 'restricted access : admin only'
+  code: access-denied
+query:
+  type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id

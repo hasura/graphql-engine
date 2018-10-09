@@ -420,6 +420,13 @@ class Permissions extends Component {
           ? permsState.insert.allow_upsert
           : false;
 
+        // Upsert Tooltip
+        const upsertToolTip = (
+          <Tooltip id="tooltip-upsert">
+            Upsert updates a row if it already exists, otherwise inserts it
+          </Tooltip>
+        );
+
         // TODO: Fix the controlled component
         _upsertSection = (
           <div>
@@ -433,7 +440,10 @@ class Permissions extends Component {
                   onClick={e => dispatchToggleAllowUpsert(e.target.checked)}
                 />
                 <span className={styles.mar_left}>
-                  Allow role '{permsState.role}' to make upsert queries
+                  Allow role '{permsState.role}' to make upsert queries &nbsp;
+                  <OverlayTrigger placement="right" overlay={upsertToolTip}>
+                    <i className="fa fa-question-circle" aria-hidden="true" />
+                  </OverlayTrigger>
                 </span>
               </label>
             </div>

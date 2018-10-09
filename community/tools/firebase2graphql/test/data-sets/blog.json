@@ -1,0 +1,47 @@
+{
+  "f2g-test-posts" : {
+    "-LMbLFOAW2q6GO1bD-5g" : {
+      "author" : "Eena",
+      "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+      "body" : "My first post content\nAnd body\nANd structure",
+      "starCount" : 0,
+      "title" : "My first post",
+      "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+    },
+    "-LMbLIv6VKHYul7p_PZ-" : {
+      "author" : "Eena",
+      "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+      "body" : "AKsdjak\naklsdjaskldjklas\nasdklfjaklsdfjklsda\nasdklfjasklf",
+      "starCount" : 0,
+      "title" : "Whatta proaaa",
+      "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+    }
+  },
+  "f2g-test-user-posts" : {
+    "4UPmbcaqZKT2NdAAqBahXj4tHYN2" : {
+      "-LMbLFOAW2q6GO1bD-5g" : {
+        "author" : "Eena",
+        "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+        "body" : "My first post content\nAnd body\nANd structure",
+        "starCount" : 0,
+        "title" : "My first post",
+        "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+      },
+      "-LMbLIv6VKHYul7p_PZ-" : {
+        "author" : "Eena",
+        "authorPic" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+        "body" : "AKsdjak\naklsdjaskldjklas\nasdklfjaklsdfjklsda\nasdklfjasklf",
+        "starCount" : 0,
+        "title" : "Whatta proaaa",
+        "uid" : "4UPmbcaqZKT2NdAAqBahXj4tHYN2"
+      }
+    }
+  },
+  "f2g-test-users" : {
+    "4UPmbcaqZKT2NdAAqBahXj4tHYN2" : {
+      "email" : "rishichandrawawhal@gmail.com",
+      "profile_picture" : "https://lh4.googleusercontent.com/-vPOIBOxCUpo/AAAAAAAAAAI/AAAAAAAAAFo/SKk9hpOB7v4/photo.jpg",
+      "username" : "Eena"
+    }
+  }
+}

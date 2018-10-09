@@ -19,10 +19,26 @@ consisting of 3 components. Each have their own contributing guides:
 
 1. [Server (Haskell)](server/CONTRIBUTING.md)
 2. [CLI (Go)](cli/CONTRIBUTING.md)
-3. [Console (JavaScript)](console/CONTRIBUTING.md)
+3. [Console (JavaScript)](console/README.md#contributing-to-hasura-console)
 
 All of the three components have a single version, denoted by either the git
-tag, or a combination of branch name and git commit SHA.
+tag or a combination of branch name and git commit SHA.
+
+For all contributions, a CLA (Contributor License Agreement) needs to be signed [here](https://cla-assistant.io/hasura/graphql-engine) before (or after) the pull request has been submitted. A bot will prompt the same as a pull request comment.
+
+
+### Docs
+
+Contributing guide for docs can be found at [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
+
+### Community content
+
+There is no specific contributing guide for community content. Anything that can
+help GraphQL Engine community/users can go into the section. We have identified
+[boilerplates](community/boilerplates), [examples](community/examples) and
+[tools](community/tools) as primary candidates. Feel free to submit a pull
+request if you have something to add (not necessarily belonging to the
+before-mentioned sections).
 
 ## Issues
 
@@ -49,11 +65,11 @@ tag, or a combination of branch name and git commit SHA.
   #<issue-no>` in the commit message, at the end.
   For example: `resolve answers to everything (fix #42)` or `resolve answers to everything, fix #42`
 
-- Rebase master with your branch before submitting pull request.
+- Rebase master with your branch before submitting a pull request.
 
 ## Commit messages
 
- - The first line should be a summary of the changes - not execeeding 50
+ - The first line should be a summary of the changes - not exceeding 50
    characters. Followed by an optional body which has more details about the
    changes. (https://github.com/erlang/otp/wiki/writing-good-commit-messages)
 

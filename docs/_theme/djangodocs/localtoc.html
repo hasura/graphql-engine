@@ -1,0 +1,23 @@
+{%- if display_toc %}
+  <div class="header_main_logo inline-block mobile-hide">
+    <a href="https://{{ BASE_DOMAIN }}/" target="_blank">
+      <div class="img_wrapper inline-block">
+        <img class="responsive logo_img" src="{{ pathto('_images/layout/logo-lite.svg', 1) }}" />
+      </div>
+    </a>
+    <a class="docs_label" href="{{ pathto('', 1) }}">
+      <div class="inline-block hero"> docs </div>
+    </a>
+    <a class="version_txt">
+      <select value="{{ version }}" onchange="location = this.value;" class="selected">
+        {%- if version == '1.0' %}
+          <option class="option_val" value="https://docs.{{ BASE_DOMAIN }}/1.0" selected="selected">v1.0</option>
+        {%- else -%}
+          <option class="option_val" value="https://docs.{{ BASE_DOMAIN }}/1.0">v1.0</option>
+        {% endif %}
+      </select>
+    </a>
+  </div>
+
+  {{ toc_full }}
+{%- endif %}

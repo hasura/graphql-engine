@@ -12,6 +12,8 @@ import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 import { push } from 'react-router-redux';
 
+import { SERVER_CONSOLE_MODE } from '../../../constants';
+
 const SET_TRIGGER = 'Event/SET_TRIGGER';
 const LOAD_TRIGGER_LIST = 'Event/LOAD_TRIGGER_LIST';
 const LOAD_PROCESSED_EVENTS = 'Event/LOAD_PROCESSED_EVENTS';
@@ -21,6 +23,11 @@ const ACCESS_KEY_ERROR = 'Event/ACCESS_KEY_ERROR';
 const UPDATE_DATA_HEADERS = 'Event/UPDATE_DATA_HEADERS';
 const LISTING_TRIGGER = 'Event/LISTING_TRIGGER';
 const LOAD_EVENT_LOGS = 'Event/LOAD_EVENT_LOGS';
+const MODAL_OPEN = 'Event/MODAL_OPEN';
+const SET_REDELIVER_EVENT = 'Event/SET_REDELIVER_EVENT';
+const LOAD_EVENT_INVOCATIONS = 'Event/LOAD_EVENT_INVOCATIONS';
+const REDELIVER_EVENT_SUCCESS = 'Event/REDELIVER_EVENT_SUCCESS';
+const REDELIVER_EVENT_FAILURE = 'Event/REDELIVER_EVENT_FAILURE';
 
 const MAKE_REQUEST = 'Event/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'Event/REQUEST_SUCCESS';
@@ -209,13 +216,84 @@ const loadEventLogs = triggerName => (dispatch, getState) => {
   );
 };
 
+const loadEventInvocations = eventId => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify({
+      type: 'select',
+      args: {
+        table: {
+          name: 'event_invocation_logs',
+          schema: 'hdb_catalog',
+        },
+        columns: [
+          '*',
+          {
+            name: 'event',
+            columns: ['*'],
+          },
+        ],
+        where: { event_id: eventId },
+        order_by: ['-created_at'],
+      },
+    }),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      dispatch({ type: LOAD_EVENT_INVOCATIONS, data: data });
+    },
+    error => {
+      console.error('Failed to load triggers' + JSON.stringify(error));
+    }
+  );
+};
+
+const redeliverEvent = eventId => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify({
+      type: 'deliver_event',
+      args: {
+        event_id: eventId,
+      },
+    }),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      dispatch({ type: REDELIVER_EVENT_SUCCESS, data: data });
+    },
+    error => {
+      console.error('Failed to load triggers' + JSON.stringify(error));
+      dispatch({ type: REDELIVER_EVENT_FAILURE, data: error });
+    }
+  );
+};
+
 const setTrigger = triggerName => ({ type: SET_TRIGGER, triggerName });
+
+const setRedeliverEvent = eventId => dispatch => {
+  /*
+    Redeliver event and mark the redeliverEventId to the redelivered event so that it can be tracked.
+  */
+  return dispatch(redeliverEvent(eventId)).then(() => {
+    return Promise.all([
+      dispatch({ type: SET_REDELIVER_EVENT, eventId }),
+      dispatch(loadEventInvocations(eventId)),
+    ]);
+  });
+};
 
 /* **********Shared functions between table actions********* */
 
 const handleMigrationErrors = (title, errorMsg) => dispatch => {
   const requestMsg = title;
-  if (globals.consoleMode === 'hasuradb') {
+  if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     // handle errors for run_sql based workflow
     dispatch(showErrorNotification(title, errorMsg.code, requestMsg, errorMsg));
   } else if (errorMsg.code === 'migration_failed') {
@@ -277,7 +355,7 @@ const makeMigrationCall = (
   const migrateUrl = returnMigrateUrl(currMigrationMode);
 
   let finalReqBody;
-  if (globals.consoleMode === 'hasuradb') {
+  if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     finalReqBody = upQuery;
   } else if (globals.consoleMode === 'cli') {
     finalReqBody = migrationBody;
@@ -292,7 +370,7 @@ const makeMigrationCall = (
 
   const onSuccess = () => {
     if (globals.consoleMode === 'cli') {
-      dispatch(loadMigrationStatus()); // don't call for hasuradb mode
+      dispatch(loadMigrationStatus()); // don't call for server mode
     }
     dispatch(loadTriggers());
     customOnSuccess();
@@ -322,7 +400,6 @@ const deleteTrigger = triggerName => {
     const currentTriggerInfo = triggerList.filter(
       t => t.name === triggerName
     )[0];
-    console.log(currentTriggerInfo);
     // apply migrations
     const migrationName = 'delete_trigger_' + triggerName.trim();
     const payload = {
@@ -468,6 +545,31 @@ const eventReducer = (state = defaultState, action) => {
       return { ...state, accessKeyError: action.data };
     case UPDATE_DATA_HEADERS:
       return { ...state, dataHeaders: action.data };
+    case MODAL_OPEN:
+      return {
+        ...state,
+        log: { ...state.log, isModalOpen: action.data },
+      };
+    case SET_REDELIVER_EVENT:
+      return {
+        ...state,
+        log: { ...state.log, redeliverEventId: action.eventId },
+      };
+    case LOAD_EVENT_INVOCATIONS:
+      return {
+        ...state,
+        log: { ...state.log, eventInvocations: action.data },
+      };
+    case REDELIVER_EVENT_SUCCESS:
+      return {
+        ...state,
+        log: { ...state.log, redeliverInvocationId: action.data },
+      };
+    case REDELIVER_EVENT_FAILURE:
+      return {
+        ...state,
+        log: { ...state.log, redeliverEventFailure: action.data },
+      };
     default:
       return state;
   }
@@ -484,7 +586,12 @@ export {
   loadEventLogs,
   handleMigrationErrors,
   makeMigrationCall,
+  setRedeliverEvent,
+  loadEventInvocations,
+  redeliverEvent,
   ACCESS_KEY_ERROR,
   UPDATE_DATA_HEADERS,
   LISTING_TRIGGER,
+  MODAL_OPEN,
+  SET_REDELIVER_EVENT,
 };

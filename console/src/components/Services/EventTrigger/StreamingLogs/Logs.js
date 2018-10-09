@@ -2,23 +2,65 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import ReactTable from 'react-table';
 import AceEditor from 'react-ace';
+import matchSorter from 'match-sorter';
 import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
+import RedeliverEvent from '../TableCommon/RedeliverEvent';
 import TableHeader from '../TableCommon/TableHeader';
-import { loadEventLogs } from '../EventActions';
-import { vMakeRequest, vSetDefaults } from './LogActions';
+import {
+  loadEventLogs,
+  setTrigger,
+  MODAL_OPEN,
+  setRedeliverEvent,
+} from '../EventActions';
+import {
+  vMakeRequest,
+  vSetDefaults,
+  loadNewerEvents,
+  loadOlderEvents,
+  toggleLoadingOlder,
+  toggleLoadingNewer,
+  toggleOldAvailable,
+  toggleNewAvailable,
+} from './LogActions';
 
 class StreamingLogs extends Component {
   constructor(props) {
     super(props);
-    this.state = { isWatching: false, intervalId: null };
+    this.state = {
+      isWatching: false,
+      intervalId: null,
+      filtered: [],
+      filterAll: '',
+    };
     this.refreshData = this.refreshData.bind(this);
+    this.filterAll = this.filterAll.bind(this);
+    this.props.dispatch(setTrigger(this.props.triggerName));
   }
   componentDidMount() {
+    this.props.dispatch(setTrigger(this.props.triggerName));
     this.props.dispatch(loadEventLogs(this.props.triggerName));
   }
   componentWillUnmount() {
     this.props.dispatch(vSetDefaults());
+  }
+  handleNewerEvents() {
+    // get the first element
+    const firstElement = this.props.log.rows[0];
+    const latestTimestamp = firstElement.created_at;
+    this.props.dispatch(toggleLoadingNewer(true));
+    this.props.dispatch(
+      loadNewerEvents(latestTimestamp, this.props.triggerName)
+    );
+  }
+  handleOlderEvents() {
+    // get the last element
+    const lastElement = this.props.log.rows[this.props.log.rows.length - 1];
+    const oldestTimestamp = lastElement.created_at;
+    this.props.dispatch(toggleLoadingOlder(true));
+    this.props.dispatch(
+      loadOlderEvents(oldestTimestamp, this.props.triggerName)
+    );
   }
   watchChanges() {
     // set state on watch
@@ -31,17 +73,51 @@ class StreamingLogs extends Component {
     }
   }
   refreshData() {
+    this.props.dispatch(toggleOldAvailable(true));
+    this.props.dispatch(toggleNewAvailable(true));
     this.props.dispatch(vMakeRequest(this.props.triggerName));
+  }
+  filterAll(e) {
+    const { value } = e.target;
+    const filterAll = value;
+    const filtered = [{ id: 'all', value: filterAll }];
+    // NOTE: this completely clears any COLUMN filters
+    this.setState({ filterAll, filtered }, () => {
+      const trGroup = document.getElementsByClassName('rt-tr-group');
+      const finalTrGroup = trGroup[0];
+      finalTrGroup.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+        inline: 'nearest',
+        offsetTop: 0,
+      });
+    });
+  }
+  toggleModal(currentEvent) {
+    // set current event to redeliver
+    this.props.dispatch(setRedeliverEvent(currentEvent)).then(() => {
+      this.props.dispatch({ type: MODAL_OPEN, data: true });
+    });
   }
 
   render() {
-    const { triggerName, migrationMode, log, count, dispatch } = this.props;
+    const {
+      triggerName,
+      migrationMode,
+      log,
+      count,
+      allSchemas,
+      dispatch,
+    } = this.props;
 
     const styles = require('../TableCommon/Table.scss');
     const invocationColumns = [
+      'redeliver',
       'status',
       'invocation_id',
       'event_id',
+      'operation',
+      'primary_key',
       'created_at',
     ];
     const invocationGridHeadings = [];
@@ -51,8 +127,41 @@ class StreamingLogs extends Component {
         accessor: column,
       });
     });
+    invocationGridHeadings.push({
+      // NOTE - this is a "filter all" DUMMY column
+      // you can't HIDE it because then it wont FILTER
+      // but it has a size of ZERO with no RESIZE and the
+      // FILTER component is NULL (it adds a little to the front)
+      // You culd possibly move it to the end
+      Header: 'All',
+      id: 'all',
+      width: 0,
+      resizable: false,
+      sortable: false,
+      Filter: () => {},
+      getProps: () => {
+        return {
+          // style: { padding: "0px"}
+        };
+      },
+      filterMethod: (filter, rows) => {
+        // using match-sorter
+        // it will take the content entered into the "filter"
+        // and search for it in EITHER the invocation_id or event_id
+        const result = matchSorter(rows, filter.value, {
+          keys: [
+            'invocation_id.props.children',
+            'event_id.props.children',
+            'operation.props.children',
+          ],
+          threshold: matchSorter.rankings.WORD_STARTS_WITH,
+        });
+        return result;
+      },
+      filterAll: true,
+    });
     const invocationRowsData = [];
-    log.rows.map((r, rowIndex) => {
+    log.rows.map(r => {
       const newRow = {};
       const status =
         r.status === 200 ? (
@@ -82,6 +191,47 @@ class StreamingLogs extends Component {
             const formattedDate = new Date(r.created_at).toUTCString();
             return <div className={conditionalClassname}>{formattedDate}</div>;
           }
+          if (col === 'operation') {
+            return (
+              <div className={conditionalClassname}>
+                {r.request.event.op.toLowerCase()}
+              </div>
+            );
+          }
+          if (col === 'primary_key') {
+            const tableName = r.request.table.name;
+            const tableData = allSchemas.filter(
+              row => row.table_name === tableName
+            );
+            const primaryKey = tableData[0].primary_key.columns; // handle all primary keys
+            const pkHtml = [];
+            primaryKey.map(pk => {
+              const newPrimaryKeyData = r.request.event.data.new
+                ? r.request.event.data.new[pk]
+                : '';
+              pkHtml.push(
+                <div>
+                  {pk} : {newPrimaryKeyData}
+                </div>
+              );
+            });
+            return (
+              <div className={conditionalClassname}>
+                {/* (old) - {oldPrimaryKeyData} | (new) pk - {newPrimaryKeyData} */}
+                {pkHtml}
+              </div>
+            );
+          }
+          if (col === 'redeliver') {
+            return (
+              <div className={conditionalClassname}>
+                <i
+                  onClick={this.toggleModal.bind(this, r.event_id)}
+                  className={styles.retryEvent + ' fa fa-repeat'}
+                />
+              </div>
+            );
+          }
           const content = r[col] === undefined ? 'NULL' : r[col].toString();
           return <div className={conditionalClassname}>{content}</div>;
         };
@@ -100,7 +250,7 @@ class StreamingLogs extends Component {
           migrationMode={migrationMode}
         />
         <br />
-        <div>
+        <div className={'hide'}>
           <button
             onClick={this.watchChanges.bind(this)}
             className={styles.watchBtn + ' btn btn-default'}
@@ -120,16 +270,46 @@ class StreamingLogs extends Component {
         </div>
         {invocationRowsData.length ? (
           <div className={styles.streamingLogs + ' streamingLogs'}>
+            <div className={styles.loadNewer}>
+              <div className={styles.filterAll}>
+                <span>Search:</span>
+                <input
+                  className={'form-control'}
+                  value={this.state.filterAll}
+                  onChange={this.filterAll.bind(this)}
+                />
+              </div>
+              <button
+                onClick={this.handleNewerEvents.bind(this)}
+                className={styles.newBtn + ' btn btn-default'}
+              >
+                {log.isLoadingNewer ? (
+                  <span>
+                    Loading... <i className={'fa fa-spinner fa-spin'} />
+                  </span>
+                ) : (
+                  <span>Load newer logs</span>
+                )}
+              </button>
+              {!log.isNewAvailable ? (
+                <span> No new logs available at this time </span>
+              ) : null}
+            </div>
             <ReactTable
               data={invocationRowsData}
               columns={invocationGridHeadings}
               showPagination={false}
-              pageSize={invocationRowsData.length}
+              filtered={this.state.filtered}
+              pageSize={
+                this.state.filterAll !== ''
+                  ? this.state.filtered.length
+                  : invocationRowsData.length
+              }
               SubComponent={logRow => {
                 const finalIndex = logRow.index;
                 const finalRow = log.rows[finalIndex];
                 const currentPayload = JSON.stringify(
-                  finalRow.event.payload,
+                  finalRow.request,
                   null,
                   4
                 );
@@ -185,12 +365,33 @@ class StreamingLogs extends Component {
                 );
               }}
             />
+            <div className={styles.loadOlder}>
+              {log.isOldAvailable ? (
+                <button
+                  onClick={this.handleOlderEvents.bind(this)}
+                  className={styles.oldBtn + ' btn btn-default'}
+                >
+                  {log.isLoadingOlder ? (
+                    <span>
+                      Loading... <i className={'fa fa-spinner fa-spin'} />
+                    </span>
+                  ) : (
+                    <span>Load older logs</span>
+                  )}
+                </button>
+              ) : (
+                <div> No more logs available </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className={styles.add_mar_top}>No data available</div>
         )}
         <br />
         <br />
+        <div className={styles.redeliverModal}>
+          <RedeliverEvent log={log} />
+        </div>
       </div>
     );
   }
@@ -199,6 +400,7 @@ class StreamingLogs extends Component {
 StreamingLogs.propTypes = {
   log: PropTypes.object,
   migrationMode: PropTypes.bool.isRequired,
+  allSchemas: PropTypes.array.isRequired,
   dispatch: PropTypes.func.isRequired,
 };
 
@@ -208,6 +410,7 @@ const mapStateToProps = (state, ownProps) => {
     triggerName: ownProps.params.trigger,
     migrationMode: state.main.migrationMode,
     currentSchema: state.tables.currentSchema,
+    allSchemas: state.tables.allSchemas,
   };
 };
 

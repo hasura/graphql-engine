@@ -24,9 +24,6 @@ import qualified Data.Text.Extended         as T
 import qualified Database.PostgreSQL.LibPQ  as PQ
 import qualified PostgreSQL.Binary.Decoding as PD
 
-sqlBuilderToTxt :: BB.Builder -> T.Text
-sqlBuilderToTxt = bsToTxt . BL.toStrict . BB.toLazyByteString
-
 class ToSQL a where
   toSQL :: a -> BB.Builder
 
@@ -36,6 +33,9 @@ instance ToSQL BB.Builder where
 -- instance ToSQL T.Text where
 --   toSQL x = TE.encodeUtf8Builder x
 
+toSQLTxt :: (ToSQL a) => a -> T.Text
+toSQLTxt = bsToTxt . BL.toStrict . BB.toLazyByteString . toSQL
+
 infixr 6 <+>
 (<+>) :: (ToSQL a) => T.Text -> [a] -> BB.Builder
 (<+>) _ [] = mempty
@@ -43,8 +43,9 @@ infixr 6 <+>
   toSQL x <> mconcat [ TE.encodeUtf8Builder kat <> toSQL x' | x' <- xs ]
 {-# INLINE (<+>) #-}
 
-newtype Iden = Iden { getIdenTxt :: T.Text }
-             deriving (Show, Eq, FromJSON, ToJSON)
+newtype Iden
+  = Iden { getIdenTxt :: T.Text }
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Semigroup)
 
 instance ToSQL Iden where
   toSQL (Iden t) =
@@ -198,6 +199,10 @@ qualTableToTxt (QualifiedTable (SchemaName "public") tn) =
   getTableTxt tn
 qualTableToTxt (QualifiedTable sn tn) =
   getSchemaTxt sn <> "." <> getTableTxt tn
+
+snakeCaseTable :: QualifiedTable -> T.Text
+snakeCaseTable (QualifiedTable sn tn) =
+  getSchemaTxt sn <> "_" <> getTableTxt tn
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }

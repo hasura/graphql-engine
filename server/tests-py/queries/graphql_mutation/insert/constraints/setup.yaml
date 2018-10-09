@@ -1,0 +1,46 @@
+type: bulk
+args:
+
+#Author table
+- type: run_sql
+  args:
+    sql: |
+      create table author(
+          id serial primary key, 
+          name text unique
+      );
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Create resident table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE resident (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        age INTEGER NOT NULL
+      )
+- type: track_table
+  args:
+    schema: public
+    name: resident
+
+#Create address table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE address (
+        id SERIAL PRIMARY KEY,
+        door_no TEXT NOT NULL,
+        street TEXT NOT NULL,
+        city TEXT NOT NULL,
+        resident_id INTEGER REFERENCES resident(id)
+      )
+- type: track_table
+  args:
+    schema: public
+    name: address
+

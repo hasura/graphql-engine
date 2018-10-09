@@ -146,8 +146,6 @@ class ViewTable extends Component {
     const currentTrigger = triggerList.find(s => s.name === triggerName);
     if (!currentTrigger) {
       // dispatch a 404 route
-      console.log(triggerName);
-      console.log(triggerList);
       dispatch(replace('/404'));
     }
     // Is this a view

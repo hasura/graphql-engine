@@ -35,27 +35,31 @@ class Main extends React.Component {
     dispatch(loadServerVersion()).then(() => {
       dispatch(checkServerUpdates()).then(() => {
         let isUpdateAvailable = false;
-        let showEvents = false;
         try {
-          showEvents = semver.gt(this.props.serverVersion, '1.0.0-alpha15');
-          if (showEvents) {
+          if (
+            semver.valid(this.props.serverVersion) === null ||
+            semver.gt(this.props.serverVersion, '1.0.0-alpha15')
+          ) {
             this.setState({ showEvents: true });
-          }
-          isUpdateAvailable = semver.gt(
-            this.props.latestServerVersion,
-            this.props.serverVersion
-          );
-          const isClosedBefore = window.localStorage.getItem(
-            this.props.latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
-          );
-          if (isClosedBefore === 'true') {
-            isUpdateAvailable = false;
-            this.setState({ showBannerNotification: false });
           } else {
-            this.setState({ showBannerNotification: isUpdateAvailable });
+            this.setState({ showEvents: false });
+            isUpdateAvailable = semver.gt(
+              this.props.latestServerVersion,
+              this.props.serverVersion
+            );
+            const isClosedBefore = window.localStorage.getItem(
+              this.props.latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
+            );
+            if (isClosedBefore === 'true') {
+              isUpdateAvailable = false;
+              this.setState({ showBannerNotification: false });
+            } else {
+              this.setState({ showBannerNotification: isUpdateAvailable });
+            }
           }
         } catch (e) {
           console.error(e);
+          this.setState({ showEvents: true });
         }
       });
     });
@@ -104,7 +108,7 @@ class Main extends React.Component {
     } = this.props;
     const styles = require('./Main.scss');
     const appPrefix = '';
-    const logo = require('./logo.svg');
+    const logo = require('./white-logo.svg');
     const github = require('./Github.svg');
     const discord = require('./Discord.svg');
     const mail = require('./mail.svg');
@@ -126,7 +130,10 @@ class Main extends React.Component {
       mainContent = children && React.cloneElement(children);
     }
     let accessKeyHtml = null;
-    if (globals.accessKey === '' || globals.accessKey === null) {
+    if (
+      !globals.isAccessKeySet &&
+      (globals.accessKey === '' || globals.accessKey === null)
+    ) {
       accessKeyHtml = (
         <div className={styles.secureSection}>
           <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>
@@ -155,7 +162,6 @@ class Main extends React.Component {
                   </Link>
                 </div>
                 <Link to="/">
-                  <div className={styles.header_project_name}>HASURA</div>
                   <div className={styles.project_version}>{serverVersion}</div>
                 </Link>
               </div>
@@ -424,40 +430,44 @@ class Main extends React.Component {
           </div>
           <div className={styles.main + ' container-fluid'}>{mainContent}</div>
           {this.state.showBannerNotification ? (
-            <div className={styles.updateBannerWrapper}>
-              <div className={styles.updateBanner}>
-                <span> Hey there! A new server version </span>
-                <span className={styles.versionUpdateText}>
-                  {' '}
-                  {latestServerVersion}
-                </span>
-                <span> is available </span>
-                <span className={styles.middot}> &middot; </span>
-                <a
-                  href={
-                    'https://github.com/hasura/graphql-engine/releases/tag/' +
-                    latestServerVersion
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span>View Changelog</span>
-                </a>
-                <span className={styles.middot}> &middot; </span>
-                <a
-                  className={styles.updateLink}
-                  href="https://docs.hasura.io/1.0/graphql/manual/deployment/updating.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span>Update Now</span>
-                </a>
-                <span
-                  className={styles.updateBannerClose}
-                  onClick={this.closeUpdateBanner.bind(this)}
-                >
-                  <i className={'fa fa-times'} />
-                </span>
+            <div>
+              <div className={styles.phantom} />{' '}
+              {/* phantom div to prevent overlapping of banner with content. */}
+              <div className={styles.updateBannerWrapper}>
+                <div className={styles.updateBanner}>
+                  <span> Hey there! A new server version </span>
+                  <span className={styles.versionUpdateText}>
+                    {' '}
+                    {latestServerVersion}
+                  </span>
+                  <span> is available </span>
+                  <span className={styles.middot}> &middot; </span>
+                  <a
+                    href={
+                      'https://github.com/hasura/graphql-engine/releases/tag/' +
+                      latestServerVersion
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span>View Changelog</span>
+                  </a>
+                  <span className={styles.middot}> &middot; </span>
+                  <a
+                    className={styles.updateLink}
+                    href="https://docs.hasura.io/1.0/graphql/manual/deployment/updating.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span>Update Now</span>
+                  </a>
+                  <span
+                    className={styles.updateBannerClose}
+                    onClick={this.closeUpdateBanner.bind(this)}
+                  >
+                    <i className={'fa fa-times'} />
+                  </span>
+                </div>
               </div>
             </div>
           ) : null}
