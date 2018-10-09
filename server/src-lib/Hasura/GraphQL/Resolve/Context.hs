@@ -88,6 +88,7 @@ data InsCtx
   = InsCtx
   { icView      :: !QualifiedTable
   , icColumns   :: ![PGColInfo]
+  , icSet       :: !InsSetCols
   , icRelations :: !RelationInfoMap
   } deriving (Show, Eq)
 

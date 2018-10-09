@@ -773,11 +773,13 @@ mkInsInp
   :: QualifiedTable -> InsCtx -> InpObjTyInfo
 mkInsInp tn insCtx =
   InpObjTyInfo (Just desc) (mkInsInpTy tn) $ fromInpValL $
-  map mkPGColInp cols <> relInps
+  map mkPGColInp insCols <> relInps
   where
     desc = G.Description $
       "input type for inserting data into table " <>> tn
     cols = icColumns insCtx
+    setCols = Map.keys $ icSet insCtx
+    insCols = flip filter cols $ \ci -> pgiName ci `notElem` setCols
     relInfoMap = icRelations insCtx
 
     relInps = flip map (Map.toList relInfoMap) $
@@ -1155,15 +1157,16 @@ mkInsCtx role tableCache fields insPermInfo = do
       Just _  -> return $ Just (relName, relInfo)
 
   let relInfoMap = Map.fromList $ catMaybes relTupsM
-  return $ InsCtx iView cols relInfoMap
+  return $ InsCtx iView cols setCols relInfoMap
   where
     cols = getCols fields
     rels = getRels fields
     iView = ipiView insPermInfo
+    setCols = ipiSet insPermInfo
 
 mkAdminInsCtx :: QualifiedTable -> FieldInfoMap -> InsCtx
 mkAdminInsCtx tn fields =
-  InsCtx tn cols relInfoMap
+  InsCtx tn cols Map.empty relInfoMap
   where
     relInfoMap = mapFromL riName rels
     cols = getCols fields
@@ -1181,7 +1184,6 @@ mkGCtxRole
   -> m (TyAgg, RootFlds, InsCtxMap)
 mkGCtxRole tableCache tn fields pCols constraints role permInfo = do
   selFldsM <- mapM (getSelFlds tableCache fields role) $ _permSel permInfo
-  let insColsM = ((insColsInfos,) . ipiAllowUpsert) <$> insPermM
   tabInsCtxM <- forM (_permIns permInfo) $ \ipi -> do
     tic <- mkInsCtx role tableCache fields ipi
     return (tic, ipiAllowUpsert ipi)
@@ -1193,9 +1195,6 @@ mkGCtxRole tableCache tn fields pCols constraints role permInfo = do
   return (tyAgg, rootFlds, insCtxMap)
   where
     colInfos = fst $ validPartitionFieldInfoMap fields
-    insPermM = _permIns permInfo
-    insColsInfos = flip filter colInfos $ \ci ->
-      pgiName ci `notElem` maybe [] (Map.keys . ipiSet) insPermM
     allCols = map pgiName colInfos
     pColInfos = getColInfos pCols colInfos
     filterColInfos allowedSet =
