@@ -1,0 +1,22 @@
+description: Updated product price using _mul operator
+url: /v1/query
+status: 200
+response:
+  affected_rows: 1
+  returning:
+  - product_id:  1
+    name: Product 1
+    price: 10
+query:
+  type: update
+  args:
+    table: products
+    $mul:
+      price: 2
+    where:
+      product_id:
+        $eq: 1
+    returning:
+    - product_id
+    - name
+    - price

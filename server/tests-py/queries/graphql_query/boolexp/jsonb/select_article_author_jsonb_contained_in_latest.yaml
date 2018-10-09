@@ -1,0 +1,33 @@
+description: Nested select on article
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    article:
+    - content: Sample article content 3
+      author:
+        name: Author 2
+        id: 2
+      id: 3
+      title: Article 3
+      tags:
+      - latest
+query:
+  variables:
+    tags:
+    - latest
+  query: |
+    query ($tags: jsonb) {
+      article (
+      where: {tags: {_contained_in: $tags }}
+      ) {
+        id
+        title
+        content
+        tags
+        author {
+          id
+          name
+        }
+      }
+    }

@@ -29,6 +29,7 @@ module Hasura.GraphQL.Validate.Types
   , getObjTyM
   , mkScalarTy
   , pgColTyToScalar
+  , pgColValToAnnGVal
   , getNamedTy
   , mkTyInfoMap
   , fromTyDef
@@ -284,6 +285,9 @@ instance J.ToJSON AnnGValue where
   toJSON = const J.Null
     -- J.
     -- J.toJSON [J.toJSON ty, J.toJSON valM]
+
+pgColValToAnnGVal :: PGColType -> PGColValue -> AnnGValue
+pgColValToAnnGVal colTy colVal = AGScalar colTy $ Just colVal
 
 hasNullVal :: AnnGValue -> Bool
 hasNullVal = \case

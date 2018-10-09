@@ -20,21 +20,18 @@ const insertMessage = gql`
 `;
 
 const emitTypingEvent = gql`
-  mutation ($userId: Int!){
-    insert_user_typing(objects: [
-      {
-        user_id: $userId,
+  mutation ($userId: Int) {
+    update_user (
+      _set: {
         last_typed: "now()"
       }
-    ],
-      on_conflict: {
-        constraint: user_typing_pkey,
-        action: update
+      where: {
+        id: {
+          _eq: $userId
+        }
       }
     ) {
-      returning {
-        user_id
-      }
+      affected_rows
     }
   }
 `;

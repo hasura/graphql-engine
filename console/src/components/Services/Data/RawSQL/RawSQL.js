@@ -84,6 +84,36 @@ const RawSQL = ({
     );
   }
 
+  const submitSQL = () => {
+    // check migration mode global
+    if (migrationMode) {
+      const checkboxElem = document.getElementById('migration-checkbox');
+      const isMigration = checkboxElem ? checkboxElem.checked : false;
+      if (!isMigration && globals.consoleMode === 'cli') {
+        // if migration is not checked, check if the sql text has any of 'create', 'alter', 'drop'
+        const formattedSql = sql.toLowerCase();
+        if (
+          formattedSql.indexOf('create') !== -1 ||
+          formattedSql.indexOf('alter') !== -1 ||
+          formattedSql.indexOf('drop') !== -1
+        ) {
+          // const confirmation = window.confirm('Your SQL Statement has a schema modifying command. Are you sure its not a migration?');
+          dispatch(modalOpen());
+          const confirmation = false;
+          if (confirmation) {
+            dispatch(executeSQL(isMigration));
+          }
+        } else {
+          dispatch(executeSQL(isMigration));
+        }
+      } else {
+        dispatch(executeSQL(isMigration));
+      }
+    } else {
+      dispatch(executeSQL(false));
+    }
+  };
+
   const onModalClose = () => {
     dispatch(modalClose());
   };
@@ -100,7 +130,9 @@ const RawSQL = ({
     ));
     const rows = result.map((row, i) => (
       <tr key={i}>
-        {row.map((columnValue, j) => <td key={j}>{columnValue}</td>)}
+        {row.map((columnValue, j) => (
+          <td key={j}>{columnValue}</td>
+        ))}
       </tr>
     ));
     return !resultType || resultType === 'command' ? null : (
@@ -163,6 +195,11 @@ const RawSQL = ({
                 </Link>{' '}
                 functionality.
               </li>
+              <li>
+                Please note that if the migrations are enabled,
+                <code>down</code>
+                migrations will not be generated for SQL statements.
+              </li>
             </ul>
           </div>
           <hr />
@@ -177,6 +214,15 @@ const RawSQL = ({
             maxLines={100}
             width="100%"
             showPrintMargin={false}
+            commands={[
+              {
+                name: 'submit',
+                bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
+                exec: () => {
+                  submitSQL();
+                },
+              },
+            ]}
             onChange={val => {
               dispatch({ type: SET_SQL, data: val });
               const formattedSql = val.toLowerCase();
@@ -275,37 +321,7 @@ const RawSQL = ({
           <button
             type="submit"
             className={styles.yellow_button}
-            onClick={() => {
-              // check migration mode global
-              if (migrationMode) {
-                const checkboxElem = document.getElementById(
-                  'migration-checkbox'
-                );
-                const isMigration = checkboxElem ? checkboxElem.checked : false;
-                if (!isMigration && globals.consoleMode === 'cli') {
-                  // if migration is not checked, check if the sql text has any of 'create', 'alter', 'drop'
-                  const formattedSql = sql.toLowerCase();
-                  if (
-                    formattedSql.indexOf('create') !== -1 ||
-                    formattedSql.indexOf('alter') !== -1 ||
-                    formattedSql.indexOf('drop') !== -1
-                  ) {
-                    // const confirmation = window.confirm('Your SQL Statement has a schema modifying command. Are you sure its not a migration?');
-                    dispatch(modalOpen());
-                    const confirmation = false;
-                    if (confirmation) {
-                      dispatch(executeSQL(isMigration));
-                    }
-                  } else {
-                    dispatch(executeSQL(isMigration));
-                  }
-                } else {
-                  dispatch(executeSQL(isMigration));
-                }
-              } else {
-                dispatch(executeSQL(false));
-              }
-            }}
+            onClick={submitSQL}
             data-test="run-sql"
           >
             Run!

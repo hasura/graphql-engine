@@ -12,6 +12,6 @@ query:
     }
 response:
   errors:
-  - path: $
+  - path: $.selectionSet.insert_address.args.objects
     error: Check constraint violation. insert check constraint failed
     code: permission-error
