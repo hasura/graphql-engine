@@ -156,6 +156,8 @@ We are committed to fostering an open and welcoming environment in the community
 
 Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
+If you want to report a security issue, please [read this](.github/SECURITY.md).
+
 ## Brand assets
 
 Hasura brand assets (logos, the Hasura mascot, powered by badges etc.) can be
