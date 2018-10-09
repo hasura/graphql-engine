@@ -39,7 +39,11 @@ const semverCheck = (component, serverVersion) => {
         // check for prerelease tags
         const componentPrerelease = getPreRelease(componentsSemver[component]);
         const serverPrerelease = getPreRelease(serverVersion);
-        // If component does't have a prerelease tag and server has a prerelease
+        // If both component and server doesn't have a prerelease, return true
+        if (componentPrerelease.length === 0 && serverPrerelease.length === 0) {
+          return false;
+        }
+        // If component does't have a prerelease tag and server has a p rerelease
         // tag, return false
         if (componentPrerelease.length === 0 && serverPrerelease.length !== 0) {
           return false;
