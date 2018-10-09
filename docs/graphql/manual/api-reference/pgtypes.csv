@@ -1,4 +1,4 @@
-Name,Aliases,Description,GraphQL Engine Type
+Name,Aliases,Description,Hasura Type
 bigint,int8,signed eight-byte integer,String_
 bigserial,serial8,autoincrementing eight-byte integer,String_
 bit [ (n) ],,fixed-length bit string,Implicit_
