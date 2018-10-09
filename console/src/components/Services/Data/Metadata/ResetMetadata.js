@@ -25,9 +25,9 @@ class ResetMetadata extends Component {
           onClick={e => {
             e.preventDefault();
             const a = prompt(
-              'Are you absolutely sure?\n This action cannot be undone. This will permanently reset GraphQL Engine\'s configuration and you will need to start from scratch. Please type "Reset" (in caps, without quotes) to confirm. '
+              'Are you absolutely sure?\nThis action cannot be undone. This will permanently reset GraphQL Engine\'s configuration and you will need to start from scratch. Please type "RESET" (in caps, without quotes) to confirm.\n '
             );
-            if (a.trim() !== 'Reset') {
+            if (a.trim() !== 'RESET') {
               console.error('Did not reset metadata: User confirmation error');
               this.props.dispatch(
                 showErrorNotification(
