@@ -14,6 +14,7 @@ A CLI tool to help you try realtime GraphQL on your firebase data. It takes data
 - [Installation](#installation)
 - [Usage](#usage)
 - [Command](#command)
+- [Realtime](#realtime)
 - [Usage comparison](#usage-comparison---firebase-sdk-vs-graphql)
 - [Authentication](#authentication)
 - [Next steps](#next-steps)
@@ -231,6 +232,34 @@ firebase2graphql URL [flags]
 - `-o --overwrite`: (experimental) overwrite tables if they already exist in database
 - `-v --version`: show CLI version
 - `-h, --help`: show CLI help
+
+## Realtime
+
+With Hasura, you can query the data in Postgres realtime in the form of GraphQL subscriptions. In this way, using this tool, you get exactly the same Firebase API over GraphQL while retaining the live queries feature.
+
+Consider this query:
+
+```graphql
+query {
+  user {
+    id
+    name
+    email
+  }
+}
+```
+
+You can convert it into a subscription by simply replacing `query` with `subscription`.
+
+```
+subscription {
+  user {
+    id
+    name
+    email
+  }
+}
+```
 
 ## Usage comparison - Firebase SDK vs GraphQL
 
