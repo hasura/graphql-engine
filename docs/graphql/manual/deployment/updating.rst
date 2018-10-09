@@ -11,5 +11,6 @@ The current latest version is:
 
 Please follow the appropriate guide to update the GraphQL engine version you're running:
 
-- :doc:`Updating on Heroku <./heroku/updating>`
-- :doc:`Updating on Docker <./docker/updating>`
+- :doc:`Updating on Heroku <heroku/updating>`
+- :doc:`Updating on Docker <docker/updating>`
+- :doc:`Updating on Kubernetes <kubernetes/updating>`
