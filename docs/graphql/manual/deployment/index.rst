@@ -14,6 +14,8 @@ Choose from the following guides to deploy the Hasura GraphQL engine and connect
 - :doc:`Deploy using Docker <docker/index>`
 - :doc:`Deploy using Kubernetes <kubernetes/index>`
 
+Also see :doc:`../guides/deployment/index` for more specific examples.
+
 By default, Hasura GraphQL engine runs in a very permissive mode for easier development. Check out the below pages
 to configure Hasura GraphQL engine for your production environment:
 
