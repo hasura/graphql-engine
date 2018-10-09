@@ -1,7 +1,7 @@
-Run Hasura GraphQL Engine using Docker on DigitalOcean
+Run Hasura GraphQL Engine on DigitalOcean using Docker
 ======================================================
 
-This guide helps you set up the Hasura GraphQL engine (w/ or w/o HTTPS) using Docker on DigitalOcean.
+This guide helps you set up the Hasura GraphQL engine (w/ or w/o HTTPS) on DigitalOcean using Docker.
 
 Step 1: Create and prepare a droplet
 ------------------------------------
@@ -11,8 +11,8 @@ Step 1: Create and prepare a droplet
 - Choose ``Docker`` from the ``One-click apps`` list
 - Choose your droplet size
 - Choose nearest datacenter region from your location
-- Select your ssh key add if you haven't added
-- Choose a hostname and then click on create button.
+- Select your SSH key (add if you haven't added)
+- Choose a hostname and then click on ``create`` button.
 - Now SSH into the droplet.
 
 Step 2: Get required setup files
@@ -36,7 +36,7 @@ contains all installation manifests required to deploy Hasura on DigitalOcean.
 
     .. tab:: HTTPS
 
-        Get the docker deployment and Caddy file from there for https installation:
+        Get the docker deployment and Caddy file from there for HTTPS installation:
 
         .. code-block:: bash
 
@@ -44,8 +44,8 @@ contains all installation manifests required to deploy Hasura on DigitalOcean.
               $ wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-compose-https/Caddyfile
 
 
-Step 3: Set access key to ssecure your GraphQL Engine
------------------------------------------------------
+Step 3: Set access key to secure your GraphQL Engine
+----------------------------------------------------
 
 Edit value of ``HASURA_GRAPHQL_ACCESS_KEY`` in ``docker-compose.yaml`` and set a secure access key:
 
@@ -77,20 +77,20 @@ Edit value of ``HASURA_GRAPHQL_DATABASE_URL`` in ``docker-compose.yaml`` and set
 
 
 Step 5: Set domain name for HTTPS (optional)
-----------------------------------------------------------------
+--------------------------------------------
 
-Now replace ``<your-domain.com>`` in ``Caddyfile`` with your domain nane.
+Now replace ``<your-domain.com>`` in ``Caddyfile`` with your domain name.
 
-Example ``example.org``.
+Example: ``example.org``.
 
-Now point domain to the public ip of the droplet in your domain DNS setting.
+Now point domain to the public IP of the droplet in your domain DNS setting.
 
 Step 6: Start GraphQL Engine
 ----------------------------
 
-Run ``docker-compose up -d`` & then run ``docker ps`` to check if everything is running well:
+Run ``docker-compose up -d`` & then run ``docker ps`` to check if everything is running well.
 
-it should look like this.
+It should look like this:
 
 .. code-block:: bash
 
@@ -99,16 +99,9 @@ it should look like this.
   e2d60e13ab4e        hasura/graphql-engine:v1.0.0-alpha23   "graphql-engine serv…"   2 hours ago         Up 2 hours                                                               root_graphql-engine_1
   2c8393a72865        postgres                               "docker-entrypoint.s…"   2 hours ago         Up 2 hours          5432/tcp                                             root_postgres_1
 
-Step 7: Open the hasura console
+Step 7: Open the Hasura console
 -------------------------------
 
-Head to ``https://your-domain.com/`` to open the Hasura console if you installed on https.
+Head to ``https://your-domain.com/`` to open the Hasura console if you installed on HTTPS.
 
-Head to ``http://your-droplet-ip:8080/`` to open the Hasura console if you installed on http.
-
-Advanced:
----------
-
-- :doc:`Securing your GraphQL endpoint <securing-graphql-endpoint>`
-- :doc:`Updating GraphQL engine <updating>`
-- :doc:`Setting up migrations <../../migrations/index>`
+Head to ``http://your-droplet-ip:8080/`` to open the Hasura console if you installed on HTTP.
