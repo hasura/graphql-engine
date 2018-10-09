@@ -145,7 +145,6 @@ class StreamingLogs extends Component {
       'created_at',
     ];
     const invocationGridHeadings = [];
-    console.log(this.state.showRedeliver);
     invocationColumns.map(column => {
       if (!(column === 'redeliver' && !this.state.showRedeliver)) {
         invocationGridHeadings.push({
