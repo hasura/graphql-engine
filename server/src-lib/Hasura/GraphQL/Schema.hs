@@ -102,14 +102,6 @@ instance Monoid TyAgg where
 
 type SelField = Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool)
 
-data OrdByFlds
-  = OrdByFlds
-  { _obfCols :: ![PGColInfo]
-  , _obfRels :: ![OrdByRel]
-  } deriving (Show, Eq)
-
-type OrdByRel = (RelInfo, S.BoolExp, OrdByFlds)
-
 qualTableToName :: QualifiedTable -> G.Name
 qualTableToName = G.Name <$> \case
   QualifiedTable (SchemaName "public") tn -> getTableTxt tn
@@ -1001,7 +993,7 @@ mkGCtxRole'
   -- insert perm
   -> Maybe (InsCtx, Bool)
   -- select permission
-  -> Maybe ([SelField], [OrdByRel])
+  -> Maybe [SelField]
   -- update cols
   -> Maybe [PGColInfo]
   -- delete cols
@@ -1013,7 +1005,7 @@ mkGCtxRole'
   -- all columns
   -> [PGCol]
   -> TyAgg
-mkGCtxRole' tn insPermM selM updColsM delPermM pkeyCols constraints allCols =
+mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints allCols =
   TyAgg (mkTyInfoMap allTypes) fieldMap ordByCtx
 
   where
@@ -1064,7 +1056,6 @@ mkGCtxRole' tn insPermM selM updColsM delPermM pkeyCols constraints allCols =
     -- fields used in set input object
     updSetInpObjFldsM = mkColFldMap (mkUpdSetTy tn) <$> updColsM
 
-    selFldsM = fst <$> selM
     -- boolexp input type
     boolExpInpObjM = case selFldsM of
       Just selFlds  -> Just $ mkBoolExpInp tn selFlds
@@ -1154,15 +1145,14 @@ getSelPerm tabInfo role =
 
 getSelFlds
   :: (MonadError QErr m)
-  => QualifiedTable
-  -> TableCache
+  => TableCache
   -- all the fields of a table
   -> FieldInfoMap
   -- role and its permission
   -> RoleName -> SelPermInfo
-  -> m ([SelField], [OrdByRel])
-getSelFlds tn tableCache fields role selPermInfo = do
-  selFlds <- fmap catMaybes $ forM (toValidFieldInfos fields) $ \case
+  -> m [SelField]
+getSelFlds tableCache fields role selPermInfo =
+  fmap catMaybes $ forM (toValidFieldInfos fields) $ \case
     FIColumn pgColInfo ->
       return $ fmap Left $ bool Nothing (Just pgColInfo) $
       Set.member (pgiName pgColInfo) allowedCols
@@ -1175,45 +1165,8 @@ getSelFlds tn tableCache fields role selPermInfo = do
                              , spiLimit rmSelPermM
                              , isRelNullable fields relInfo
                              )
-  ordByRels <- getOrdByRels [tn] tableCache rels role
-  return (selFlds, ordByRels)
   where
     allowedCols = spiCols selPermInfo
-    rels = getValidRels fields
-
-getOrdByRels
-  :: (MonadError QErr m)
-  => [QualifiedTable]
-  -> TableCache
-  -> [RelInfo]
-  -> RoleName -> m [OrdByRel]
-getOrdByRels trackedTabs tableCache rels role =
-  fmap catMaybes $ forM objRels $ \relInfo ->
-    bool (mkOrdByRel relInfo) (return Nothing) $
-      riRTable relInfo `elem` trackedTabs
-  where
-    objRels = flip filter rels $ \r -> riType r == ObjRel
-
-    mkOrdByRel relInfo = do
-      let remTab = riRTable relInfo
-      remTableInfo <- getTabInfo tableCache remTab
-      let remTableSelPermM = getSelPerm remTableInfo role
-          remFields = tiFieldInfoMap remTableInfo
-          remoteRels = getValidRels remFields
-          remoteCols = getValidCols remFields
-
-      remOrdByRels <- getOrdByRels (remTab:trackedTabs) tableCache remoteRels role
-
-      let asAdmin' = asAdmin relInfo remoteCols remOrdByRels
-          asNonAdmin' = asNonAdmin relInfo remoteCols remOrdByRels remTableSelPermM
-      bool asNonAdmin' asAdmin' $ isAdmin role
-
-    asAdmin ri rmCols ordByRels =
-      return $ Just (ri, noFilter, OrdByFlds rmCols ordByRels)
-
-    asNonAdmin ri rmCols ordByRels selPermM =
-      forM selPermM $ \selPerm ->
-        return (ri, spiFilter selPerm, OrdByFlds rmCols ordByRels)
 
 mkInsCtx
   :: MonadError QErr m
@@ -1254,12 +1207,12 @@ mkGCtxRole
   -> RolePermInfo
   -> m (TyAgg, RootFlds, InsCtxMap)
 mkGCtxRole tableCache tn fields pCols constraints role permInfo = do
-  selM <- mapM (getSelFlds tn tableCache fields role) $ _permSel permInfo
+  selFldsM <- mapM (getSelFlds tableCache fields role) $ _permSel permInfo
   tabInsCtxM <- forM (_permIns permInfo) $ \ipi -> do
     tic <- mkInsCtx role tableCache fields ipi
     return (tic, ipiAllowUpsert ipi)
   let updColsM = filterColInfos . upiCols <$> _permUpd permInfo
-      tyAgg = mkGCtxRole' tn tabInsCtxM selM updColsM
+      tyAgg = mkGCtxRole' tn tabInsCtxM selFldsM updColsM
               (void $ _permDel permInfo) pColInfos constraints allCols
       rootFlds = getRootFldsRole tn pCols constraints fields permInfo
       insCtxMap = maybe Map.empty (Map.singleton tn) $ fmap fst tabInsCtxM
@@ -1298,10 +1251,9 @@ mkGCtxMapTable
   -> m (Map.HashMap RoleName (TyAgg, RootFlds, InsCtxMap))
 mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols _) = do
   m <- Map.traverseWithKey (mkGCtxRole tableCache tn fields pkeyCols validConstraints) rolePerms
-  adminOrdByRels <- getOrdByRels [tn] tableCache allRels adminRole
   let adminInsCtx = mkAdminInsCtx tn fields
       adminCtx = mkGCtxRole' tn (Just (adminInsCtx, True))
-                 (Just (selFlds, adminOrdByRels)) (Just colInfos) (Just ())
+                 (Just selFlds) (Just colInfos) (Just ())
                  pkeyColInfos validConstraints allCols
       adminInsCtxMap = Map.singleton tn adminInsCtx
   return $ Map.insert adminRole (adminCtx, adminRootFlds, adminInsCtxMap) m
@@ -1309,7 +1261,6 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols 
     validConstraints = mkValidConstraints constraints
     colInfos = getValidCols fields
     allCols = map pgiName colInfos
-    allRels = getValidRels fields
     pkeyColInfos = getColInfos pkeyCols colInfos
     selFlds = flip map (toValidFieldInfos fields) $ \case
       FIColumn pgColInfo     -> Left pgColInfo
