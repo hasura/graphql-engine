@@ -8,7 +8,7 @@ import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
 import ClearAccessKey from './ClearAccessKey';
 
-const semver = require('semver');
+import semverCheck from '../../../../helpers/semver';
 
 class Metadata extends Component {
   constructor() {
@@ -28,18 +28,23 @@ class Metadata extends Component {
     }
   }
   checkSemVer(version) {
-    let showMetadata = false;
     try {
-      showMetadata = semver.gt(version, '1.0.0-alpha16');
+      const showMetadata = semverCheck('metadataReload', version);
       if (showMetadata) {
-        this.setState({ ...this.state, showMetadata: true });
+        this.updateMetadataState(true);
       } else {
-        this.setState({ ...this.state, showMetadata: false });
+        this.updateMetadataState(false);
       }
     } catch (e) {
-      this.setState({ ...this.state, showMetadata: false });
+      this.updateMetadataState(false);
       console.error(e);
     }
+  }
+  updateMetadataState(displayReloadMetadata) {
+    this.setState({
+      ...this.state,
+      showMetadata: displayReloadMetadata,
+    });
   }
   render() {
     const styles = require('../TableCommon/Table.scss');

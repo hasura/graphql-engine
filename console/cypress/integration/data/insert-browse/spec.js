@@ -325,25 +325,25 @@ export const deleteBITestTable = () => {
   validateCT(getTableName(0, testName), 'failure');
 };
 
-export const failBINullKeys = () => {
-  const textIndex = dataTypes.indexOf('text');
+// export const failBINullKeys = () => {
+//   const textIndex = dataTypes.indexOf('text');
 
-  cy.get(getElementFromAlias(`typed-input-${textIndex}`))
-    .clear()
-    .type('filter-text');
+//   cy.get(getElementFromAlias(`typed-input-${textIndex}`))
+//     .clear()
+//     .type('null-key-test');
 
-  cy.get("input[placeholder='float']")
-    .first()
-    .type('{selectall}{del}');
+//   cy.get("input[placeholder='float']")
+//     .first()
+//     .type('{selectall}{del}');
 
-  // Click the Insert Again button.
-  cy.get(getElementFromAlias('insert-save-button')).click();
+//   // Click the Insert Again button.
+//   cy.get(getElementFromAlias('insert-save-button')).click();
 
-  // cy.get('.notification-error').click();
-  // Wait for insert notifications to disappear
-  cy.wait(7000);
-  validateInsert(getTableName(0, testName), 20);
-};
+//   // cy.get('.notification-error').click();
+//   // Wait for insert notifications to disappear
+//   cy.wait(7000);
+//   validateInsert(getTableName(0, testName), 20);
+// };
 
 export const failBIUniqueKeys = () => {
   // Type a string in the text type fields of some rows  (to be tested in Browse rows)
