@@ -107,7 +107,7 @@ getAnnObItems
   -> m [RS.AnnOrderByItem]
 getAnnObItems f nt obj = do
   ordByItemMap <- getOrdByItemMap nt
-  fmap concat $ forM (Map.toList obj) $ \(k, v) -> do
+  fmap concat $ forM obj $ \(k, v) -> do
     ordByItem <- onNothing (Map.lookup k ordByItemMap) $ throw500 $
       "cannot lookup " <> showName k <> " order by item in "
       <> showNamedTy nt <> " map"

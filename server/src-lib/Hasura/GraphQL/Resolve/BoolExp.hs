@@ -34,7 +34,7 @@ parseOpExps
   => AnnGValue -> m [RA.OpExp]
 parseOpExps annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
-    forM (Map.toList obj) $ \(k, v) -> case k of
+    forM obj $ \(k, v) -> case k of
       "_eq"           -> fmap RA.AEQ <$> asPGColValM v
       "_ne"           -> fmap RA.ANE <$> asPGColValM v
       "_neq"          -> fmap RA.ANE <$> asPGColValM v
@@ -108,7 +108,7 @@ parseBoolExp
 parseBoolExp annGVal = do
   boolExpsM <-
     flip withObjectM annGVal
-      $ \nt objM -> forM objM $ \obj -> forM (Map.toList obj) $ \(k, v) -> if
+      $ \nt objM -> forM objM $ \obj -> forM obj $ \(k, v) -> if
           | k == "_or"  -> BoolOr . fromMaybe [] <$> parseMany parseBoolExp v
           | k == "_and" -> BoolAnd . fromMaybe [] <$> parseMany parseBoolExp v
           | k == "_not" -> BoolNot <$> parseBoolExp v

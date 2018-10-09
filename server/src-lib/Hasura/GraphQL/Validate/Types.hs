@@ -38,6 +38,7 @@ module Hasura.GraphQL.Validate.Types
   , TypeMap
   , AnnGValue(..)
   , AnnGObject
+  , lookupAnnGObj
   , hasNullVal
   , getAnnInpValKind
   , getAnnInpValTy
@@ -271,7 +272,10 @@ type FragDefMap = Map.HashMap G.Name FragDef
 type AnnVarVals =
   Map.HashMap G.Variable AnnGValue
 
-type AnnGObject = Map.HashMap G.Name AnnGValue
+type AnnGObject = [(G.Name, AnnGValue)]
+
+lookupAnnGObj :: G.Name -> AnnGObject -> Maybe AnnGValue
+lookupAnnGObj n o = snd <$> find ((== n) . fst) o
 
 data AnnGValue
   = AGScalar !PGColType !(Maybe PGColValue)
