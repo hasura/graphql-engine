@@ -57,7 +57,6 @@ library
                      , wai
                      , postgresql-binary
                      , process
-                     , Unique
 
                      -- Encoder related
                      , uuid

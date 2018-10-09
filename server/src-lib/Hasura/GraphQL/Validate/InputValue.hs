@@ -15,10 +15,10 @@ import           Data.Scientific                 (fromFloatDigits)
 import           Hasura.Prelude
 
 import           Data.Has
-import           Data.List.Unique                (repeated)
 
 import qualified Data.Aeson                      as J
 import qualified Data.HashMap.Strict             as Map
+import qualified Data.HashMap.Strict.InsOrd      as OMap
 import qualified Data.Vector                     as V
 import qualified Language.GraphQL.Draft.Syntax   as G
 
@@ -26,6 +26,7 @@ import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils             (duplicates)
 import           Hasura.SQL.Value
 
 newtype P a = P { unP :: Maybe (Either AnnGValue a)}
@@ -171,10 +172,10 @@ validateObject
 validateObject valParser tyInfo flds = do
 
   -- check duplicates
-  unless (null duplicates) $
+  unless (null dups) $
     throwVE $ "when parsing a value of type: " <> showNamedTy (_iotiName tyInfo)
     <> ", the following fields are duplicated: "
-    <> showNames duplicates
+    <> showNames dups
 
   -- check fields with not null types
   forM_ (Map.toList $ _iotiFields tyInfo) $
@@ -186,7 +187,7 @@ validateObject valParser tyInfo flds = do
         "field " <> G.unName fldName <> " of type " <> G.showGT ty
         <> " is required, but not found"
 
-  forM flds $ \(fldName, fldVal) ->
+  fmap OMap.fromList $ forM flds $ \(fldName, fldVal) ->
     withPathK (G.unName fldName) $ do
       fldTy <- getInpFieldInfo tyInfo fldName
       convFldVal <- validateInputValue valParser fldTy fldVal
@@ -194,7 +195,7 @@ validateObject valParser tyInfo flds = do
 
   where
     inpFldNames = map fst flds
-    duplicates = repeated inpFldNames
+    dups = duplicates inpFldNames
 
 validateNamedTypeVal
   :: ( MonadReader r m, Has TypeMap r

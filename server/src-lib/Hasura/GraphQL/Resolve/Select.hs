@@ -17,6 +17,7 @@ import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Select             as RS
@@ -107,7 +108,7 @@ getAnnObItems
   -> m [RS.AnnOrderByItem]
 getAnnObItems f nt obj = do
   ordByItemMap <- getOrdByItemMap nt
-  fmap concat $ forM obj $ \(k, v) -> do
+  fmap concat $ forM (OMap.toList obj) $ \(k, v) -> do
     ordByItem <- onNothing (Map.lookup k ordByItemMap) $ throw500 $
       "cannot lookup " <> showName k <> " order by item in "
       <> showNamedTy nt <> " map"

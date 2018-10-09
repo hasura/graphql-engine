@@ -6,6 +6,7 @@ module Hasura.Server.Utils where
 import qualified Database.PG.Query.Connection as Q
 
 import           Data.Aeson
+import           Data.List                    (group, sort)
 import           Data.List.Split
 import           Network.URI
 import           System.Exit
@@ -112,3 +113,9 @@ parseGingerTmplt src = either parseE Right res
 
 renderGingerTmplt :: (ToJSON a) => a -> GingerTmplt -> T.Text
 renderGingerTmplt v = TG.easyRender (toJSON v)
+
+-- find duplicates
+duplicates :: Ord a => [a] -> [a]
+duplicates = mapMaybe greaterThanOne . group . sort
+  where
+    greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1

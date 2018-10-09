@@ -38,7 +38,6 @@ module Hasura.GraphQL.Validate.Types
   , TypeMap
   , AnnGValue(..)
   , AnnGObject
-  , lookupAnnGObj
   , hasNullVal
   , getAnnInpValKind
   , getAnnInpValTy
@@ -49,6 +48,7 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.GraphQL.Draft.TH     as G
@@ -272,10 +272,7 @@ type FragDefMap = Map.HashMap G.Name FragDef
 type AnnVarVals =
   Map.HashMap G.Variable AnnGValue
 
-type AnnGObject = [(G.Name, AnnGValue)]
-
-lookupAnnGObj :: G.Name -> AnnGObject -> Maybe AnnGValue
-lookupAnnGObj n o = snd <$> find ((== n) . fst) o
+type AnnGObject = OMap.InsOrdHashMap G.Name AnnGValue
 
 data AnnGValue
   = AGScalar !PGColType !(Maybe PGColValue)

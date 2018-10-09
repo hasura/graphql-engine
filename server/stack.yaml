@@ -23,7 +23,6 @@ extra-deps:
   commit: 435c2774963050da04ce9a3369755beac87fbb16
 - Spock-core-0.13.0.0
 - reroute-0.5.0.0
-- Unique-0.4.7.5
 
 # Override default flag values for local packages and extra-deps
 flags: {}
