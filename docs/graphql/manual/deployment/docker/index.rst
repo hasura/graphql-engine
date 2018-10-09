@@ -99,10 +99,7 @@ Head to http://localhost:8080/console to open the Hasura console.
 Step 4: Track existing tables and relationships
 -----------------------------------------------
 
-On the console page, you'll see your existing tables/view as "Untracked tables/views" in the console. Click the
-``Add all`` button to enable GraphQL APIs over them.
-
-.. image:: ../../../../img/graphql/manual/getting-started/TrackTable.jpg
+Follow :doc:`../../schema/using-existing-database` to enable GraphQL over the database.
 
 Advanced:
 ---------

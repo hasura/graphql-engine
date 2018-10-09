@@ -64,10 +64,7 @@ Head to: http://localhost and the console should load!
 Step 5: Track existing tables and relationships
 -----------------------------------------------
 
-On the console page, you'll see your existing tables/views as "Untracked tables/views" in the console. Click the
-``Add all`` button to enable GraphQL APIs over them.
-
-.. image:: ../../../../img/graphql/manual/getting-started/TrackTable.jpg
+Follow :doc:`../../schema/using-existing-database` to enable GraphQL over the database.
 
 Advanced:
 ---------
