@@ -7,7 +7,7 @@ import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
 import ClearAccessKey from './ClearAccessKey';
 
-const semver = require('semver');
+import semverCheck from '../../../../helpers/semver';
 
 class Metadata extends Component {
   constructor() {
@@ -28,11 +28,8 @@ class Metadata extends Component {
   }
   checkSemVer(version) {
     try {
-      // If version is invalid semver or current version is greater than 1.0.0-alpha16, display Reload Metadata button
-      if (
-        semver.valid(version) === null ||
-        semver.gt(version, '1.0.0-alpha16')
-      ) {
+      const showMetadata = semverCheck('metadataReload', version);
+      if (showMetadata) {
         this.updateMetadataState(true);
       } else {
         this.updateMetadataState(false);
