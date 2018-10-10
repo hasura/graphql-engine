@@ -8,6 +8,7 @@ import 'react-toggle/style.css';
 import Spinner from '../Common/Spinner/Spinner';
 import { loadServerVersion, checkServerUpdates } from './Actions';
 import './NotificationOverrides.css';
+import semverCheck from '../../helpers/semver';
 
 const semver = require('semver');
 
@@ -36,26 +37,22 @@ class Main extends React.Component {
       dispatch(checkServerUpdates()).then(() => {
         let isUpdateAvailable = false;
         try {
-          if (
-            semver.valid(this.props.serverVersion) === null ||
-            semver.gt(this.props.serverVersion, '1.0.0-alpha15')
-          ) {
+          const showEvents = semverCheck('eventsTab', this.props.serverVersion);
+          if (showEvents) {
             this.setState({ showEvents: true });
+          }
+          isUpdateAvailable = semver.gt(
+            this.props.latestServerVersion,
+            this.props.serverVersion
+          );
+          const isClosedBefore = window.localStorage.getItem(
+            this.props.latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
+          );
+          if (isClosedBefore === 'true') {
+            isUpdateAvailable = false;
+            this.setState({ showBannerNotification: false });
           } else {
-            this.setState({ showEvents: false });
-            isUpdateAvailable = semver.gt(
-              this.props.latestServerVersion,
-              this.props.serverVersion
-            );
-            const isClosedBefore = window.localStorage.getItem(
-              this.props.latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
-            );
-            if (isClosedBefore === 'true') {
-              isUpdateAvailable = false;
-              this.setState({ showBannerNotification: false });
-            } else {
-              this.setState({ showBannerNotification: isUpdateAvailable });
-            }
+            this.setState({ showBannerNotification: isUpdateAvailable });
           }
         } catch (e) {
           console.error(e);
