@@ -156,7 +156,7 @@ We are committed to fostering an open and welcoming environment in the community
 
 Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
-If you want to report a security issue, please [read this](.github/SECURITY.md).
+If you want to report a security issue, please [read this](SECURITY.md).
 
 ## Brand assets
 
