@@ -31,6 +31,9 @@ const appPrefix = globals.urlPrefix + '/data';
 class Schema extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      isExporting: false,
+    };
     // Initialize this table
     const dispatch = this.props.dispatch;
     dispatch(fetchSchemaList());
@@ -101,7 +104,12 @@ class Schema extends Component {
           }
         })
       )
-      .filter(item => item !== undefined);
+      .filter(item => item !== undefined)
+      .sort((a, b) => {
+        return a.table_name === b.table_name
+          ? 0
+          : +(a.table_name > b.table_name) || -1;
+      });
 
     const untrackedHtml = [];
     for (let i = 0; i < untrackedTables.length; i++) {

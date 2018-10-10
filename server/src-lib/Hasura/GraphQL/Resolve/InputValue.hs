@@ -11,11 +11,14 @@ module Hasura.GraphQL.Resolve.InputValue
   , asPGColVal
   , asEnumVal
   , withObject
+  , asObject
   , withObjectM
   , withArray
+  , asArray
   , withArrayM
   , parseMany
   , AnnPGVal
+  , asPGColText
   ) where
 
 import           Hasura.Prelude
@@ -83,6 +86,11 @@ withObject fn v = case _aivValue v of
     throw500 $ "unexpected null for ty " <> G.showGT (_aivType v)
   _               -> tyMismatch "object" v
 
+asObject
+  :: (MonadError QErr m)
+  => AnnInpVal -> m AnnGObject
+asObject = withObject (\_ o -> return o)
+
 withObjectM
   :: (MonadError QErr m)
   => (G.NamedType -> Maybe AnnGObject -> m a) -> AnnInpVal -> m a
@@ -106,9 +114,23 @@ withArray fn v = case _aivValue v of
                          <> G.showGT (_aivType v)
   _                   -> tyMismatch "array" v
 
+asArray
+  :: (MonadError QErr m)
+  => AnnInpVal -> m [AnnInpVal]
+asArray = withArray (\_ vals -> return vals)
+
 parseMany
   :: (MonadError QErr m)
   => (AnnInpVal -> m a) -> AnnInpVal -> m (Maybe [a])
 parseMany fn v = case _aivValue v of
   AGArray _ arrM -> mapM (mapM fn) arrM
   _              -> tyMismatch "array" v
+
+asPGColText
+  :: (MonadError QErr m)
+  => AnnInpVal -> m Text
+asPGColText val = do
+  (_, _, _, pgColVal) <- asPGColVal val
+  case pgColVal of
+    PGValText t -> return t
+    _           -> throw500 "expecting text for asPGColText"

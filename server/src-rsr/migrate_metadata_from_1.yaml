@@ -1,0 +1,66 @@
+type: bulk
+args:
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: event_triggers
+
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: event_log
+
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: event_invocation_logs
+
+- type: create_object_relationship
+  args:
+    name: trigger
+    table:
+      schema: hdb_catalog
+      name: event_log
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: event_triggers
+        column_mapping:
+          trigger_id : id
+
+- type: create_array_relationship
+  args:
+    name: events
+    table:
+      schema: hdb_catalog
+      name: event_triggers
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: event_log
+        column_mapping:
+          id : trigger_id
+
+- type: create_object_relationship
+  args:
+    name: event
+    table:
+      schema: hdb_catalog
+      name: event_invocation_logs
+    using:
+      foreign_key_constraint_on: event_id
+
+- type: create_array_relationship
+  args:
+    name: logs
+    table:
+      schema: hdb_catalog
+      name: event_log
+    using:
+      foreign_key_constraint_on:
+        table:
+          schema: hdb_catalog
+          name: event_invocation_logs
+        column: event_id

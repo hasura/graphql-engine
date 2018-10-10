@@ -57,6 +57,10 @@ data RQLQuery
   | RQCount !CountQuery
   | RQBulk ![RQLQuery]
 
+  | RQCreateEventTrigger !CreateEventTriggerQuery
+  | RQDeleteEventTrigger !DeleteEventTriggerQuery
+  | RQDeliverEvent       !DeliverEventQuery
+
   | RQCreateQueryTemplate !CreateQueryTemplate
   | RQDropQueryTemplate !DropQueryTemplate
   | RQExecuteQueryTemplate !ExecQueryTemplate
@@ -67,6 +71,7 @@ data RQLQuery
   | RQReplaceMetadata !ReplaceMetadata
   | RQExportMetadata !ExportMetadata
   | RQClearMetadata !ClearMetadata
+  | RQReloadMetadata !ReloadMetadata
 
   | RQDumpInternalState !DumpInternalState
 
@@ -151,6 +156,10 @@ queryNeedsReload qi = case qi of
   RQDelete q                   -> queryModifiesSchema q
   RQCount q                    -> queryModifiesSchema q
 
+  RQCreateEventTrigger q       -> queryModifiesSchema q
+  RQDeleteEventTrigger q       -> queryModifiesSchema q
+  RQDeliverEvent q             -> queryModifiesSchema q
+
   RQCreateQueryTemplate q      -> queryModifiesSchema q
   RQDropQueryTemplate q        -> queryModifiesSchema q
   RQExecuteQueryTemplate q     -> queryModifiesSchema q
@@ -161,6 +170,7 @@ queryNeedsReload qi = case qi of
   RQReplaceMetadata q          -> queryModifiesSchema q
   RQExportMetadata q           -> queryModifiesSchema q
   RQClearMetadata q            -> queryModifiesSchema q
+  RQReloadMetadata q           -> queryModifiesSchema q
 
   RQDumpInternalState q        -> queryModifiesSchema q
 
@@ -197,6 +207,10 @@ buildTxAny userInfo sc rq = case rq of
   RQDelete q -> buildTx userInfo sc q
   RQCount q  -> buildTx userInfo sc q
 
+  RQCreateEventTrigger q -> buildTx userInfo sc q
+  RQDeleteEventTrigger q -> buildTx userInfo sc q
+  RQDeliverEvent q -> buildTx userInfo sc q
+
   RQCreateQueryTemplate q     -> buildTx userInfo sc q
   RQDropQueryTemplate q       -> buildTx userInfo sc q
   RQExecuteQueryTemplate q    -> buildTx userInfo sc q
@@ -205,6 +219,7 @@ buildTxAny userInfo sc rq = case rq of
   RQReplaceMetadata q -> buildTx userInfo sc q
   RQClearMetadata q -> buildTx userInfo sc q
   RQExportMetadata q -> buildTx userInfo sc q
+  RQReloadMetadata q -> buildTx userInfo sc q
 
   RQDumpInternalState q -> buildTx userInfo sc q
 
@@ -226,7 +241,8 @@ setHeadersTx :: UserInfo -> Q.TxE QErr ()
 setHeadersTx userInfo =
   forM_ hdrs $ \h -> Q.unitQE defaultTxErrorHandler (mkQ h) () False
   where
-    hdrs = Map.toList $ userHeaders userInfo
+    hdrs = Map.toList $ Map.delete accessKeyHeader
+      $ userHeaders userInfo
     mkQ (h, v) = Q.fromBuilder $ BB.string7 $
       T.unpack $
       "SET LOCAL hasura." <> dropAndSnakeCase h <> " =  " <> pgFmtLit v

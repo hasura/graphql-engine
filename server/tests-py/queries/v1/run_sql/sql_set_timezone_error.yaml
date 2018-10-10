@@ -1,0 +1,7 @@
+url: /v1/query
+status: 400
+query:
+  type: run_sql
+  args:
+    sql: |
+      SET TIME ZONE 'ABC'

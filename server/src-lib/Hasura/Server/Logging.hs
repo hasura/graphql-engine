@@ -8,36 +8,38 @@ module Hasura.Server.Logging
   ( mkAccessLog
   , getRequestHeader
   , WebHookLog(..)
+  , WebHookLogger
   ) where
 
-import           Crypto.Hash              (Digest, SHA1, hash)
+import           Control.Arrow          (first)
+import           Crypto.Hash            (Digest, SHA1, hash)
 import           Data.Aeson
-import           Data.Bits                (shift, (.&.))
-import           Data.ByteString.Char8    (ByteString)
-import qualified Data.ByteString.Lazy     as BL
-import           Data.Int                 (Int64)
-import           Data.List                (find)
-import qualified Data.TByteString         as TBS
-import qualified Data.Text                as T
-import qualified Data.Text.Encoding       as TE
-import qualified Data.Text.Encoding.Error as TE
+import           Data.Bits              (shift, (.&.))
+import           Data.ByteString.Char8  (ByteString)
+import qualified Data.ByteString.Lazy   as BL
+import           Data.Int               (Int64)
+import           Data.List              (find)
+import qualified Data.TByteString       as TBS
+import qualified Data.Text              as T
+import qualified Data.Text.Encoding     as TE
 import           Data.Time.Clock
-import           Data.Word                (Word32)
-import           Network.Socket           (SockAddr (..))
-import           Network.Wai              (Request (..))
-import           System.ByteOrder         (ByteOrder (..), byteOrder)
-import           Text.Printf              (printf)
+import           Data.Word              (Word32)
+import           Network.Socket         (SockAddr (..))
+import           Network.Wai            (Request (..))
+import           System.ByteOrder       (ByteOrder (..), byteOrder)
+import           Text.Printf            (printf)
 
-import qualified Data.ByteString.Char8    as BS
-import qualified Data.CaseInsensitive     as CI
-import qualified Data.HashMap.Strict      as M
-import qualified Network.HTTP.Client      as H
-import qualified Network.HTTP.Types       as N
+import qualified Data.ByteString.Char8  as BS
+import qualified Data.CaseInsensitive   as CI
+import qualified Data.HashMap.Strict    as M
+import qualified Network.HTTP.Client    as H
+import qualified Network.HTTP.Types     as N
 
-import qualified Hasura.Logging           as L
+import qualified Hasura.Logging         as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
+
 
 data WebHookLog
   = WebHookLog
@@ -69,6 +71,8 @@ instance ToJSON WebHookLog where
                       , "response" .= whlResponse whl
                       ]
 
+type WebHookLogger = WebHookLog -> IO ()
+
 data AccessLog
   = AccessLog
   { alStatus         :: !N.Status
@@ -82,7 +86,7 @@ data AccessLog
   , alHasuraMetadata :: !(Maybe Value)
   , alQueryHash      :: !(Maybe T.Text)
   , alResponseSize   :: !(Maybe Int64)
-  , alResponseTime   :: !(Maybe T.Text)
+  , alResponseTime   :: !(Maybe Double)
   } deriving (Show, Eq)
 
 instance L.ToEngineLog AccessLog where
@@ -162,16 +166,16 @@ mkAccessLog
 mkAccessLog req r mTimeT =
   AccessLog
   { alStatus      = status
-  , alMethod      = decodeBS $ requestMethod req
-  , alSource      = decodeBS $ getSourceFromFallback req
-  , alPath        = decodeBS $ rawPathInfo req
+  , alMethod      = bsToTxt $ requestMethod req
+  , alSource      = bsToTxt $ getSourceFromFallback req
+  , alPath        = bsToTxt $ rawPathInfo req
   , alHttpVersion = httpVersion req
   , alDetail      = mDetail
-  , alRequestId   = decodeBS <$> getRequestId req
-  , alHasuraRole  = decodeBS <$> getHasuraRole req
+  , alRequestId   = bsToTxt <$> getRequestId req
+  , alHasuraRole  = bsToTxt <$> getHasuraRole req
   , alHasuraMetadata = getHasuraMetadata req
   , alResponseSize = size
-  , alResponseTime = T.pack . show <$> diffTime
+  , alResponseTime = realToFrac <$> diffTime
   , alQueryHash = queryHash
   }
   where
@@ -179,9 +183,6 @@ mkAccessLog req r mTimeT =
     diffTime = case mTimeT of
       Nothing       -> Nothing
       Just (t1, t2) -> Just $ diffUTCTime t2 t1
-
-decodeBS :: BS.ByteString -> T.Text
-decodeBS = TE.decodeUtf8With TE.lenientDecode
 
 getSourceFromSocket :: Request -> ByteString
 getSourceFromSocket = BS.pack . showSockAddr . remoteHost
@@ -215,7 +216,7 @@ newtype HasuraMetadata
   = HasuraMetadata { unHM :: M.HashMap T.Text T.Text } deriving (Show)
 
 instance ToJSON HasuraMetadata where
-  toJSON h = toJSON $ M.fromList $ map (\(k,v) -> (format k, v)) hdrs
+  toJSON h = toJSON $ M.fromList $ map (first format) hdrs
     where
       hdrs = M.toList $ unHM h
       format = T.map underscorify . T.drop 2
@@ -231,7 +232,7 @@ getHasuraMetadata req = case md of
     filterFixedHeaders (h,_) = h /= userRoleHeader && h /= accessKeyHeader
     rawMd = filter (\h -> "x-hasura-" `T.isInfixOf` fst h) hdrs
     hdrs = map hdrToTxt $ requestHeaders req
-    hdrToTxt (k, v) = (T.toLower $ decodeBS $ CI.original k, decodeBS v)
+    hdrToTxt (k, v) = (T.toLower $ bsToTxt $ CI.original k, bsToTxt v)
 
 -- |  A type for IP address in numeric string representation.
 type NumericAddress = String

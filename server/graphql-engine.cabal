@@ -51,6 +51,7 @@ library
                      , wai-extra
                      , containers
                      , monad-control
+                     , monad-time
                      , wai-logger
                      , fast-logger
                      , wai
@@ -67,6 +68,12 @@ library
 
                      -- hashing for logging
                      , cryptonite
+                     -- for jwt verification
+                     , jose
+                     , pem
+                     , x509
+                     , asn1-encoding
+                     , asn1-types
 
                      -- Server related
                      , warp
@@ -89,6 +96,7 @@ library
                      , http-client
                      , http-client-tls
                      , connection
+                     , retry
 
                      -- ordered map
                      , insert-ordered-containers
@@ -98,6 +106,8 @@ library
 
                      -- Templating
                      , mustache
+                     , ginger
+                     , file-embed
 
                      --
                      , data-has
@@ -126,6 +136,7 @@ library
 
   exposed-modules:     Hasura.Server.App
                      , Hasura.Server.Auth
+                     , Hasura.Server.Auth.JWT
                      , Hasura.Server.Init
                      , Hasura.Server.Middleware
                      , Hasura.Server.Logging
@@ -140,6 +151,7 @@ library
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.DML
+                     , Hasura.RQL.Types.Subscribe
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
@@ -150,6 +162,7 @@ library
                      , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Utils
+                     , Hasura.RQL.DDL.Subscribe
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Explain
                      , Hasura.RQL.DML.Internal
@@ -185,8 +198,12 @@ library
                      , Hasura.GraphQL.Resolve.Context
                      , Hasura.GraphQL.Resolve.InputValue
                      , Hasura.GraphQL.Resolve.Introspect
+                     , Hasura.GraphQL.Resolve.Insert
                      , Hasura.GraphQL.Resolve.Mutation
                      , Hasura.GraphQL.Resolve.Select
+
+                     , Hasura.Events.Lib
+                     , Hasura.Events.HTTP
 
                      , Data.Text.Extended
                      , Data.Sequence.NonEmpty
@@ -202,6 +219,10 @@ library
                      , Hasura.Logging
                      , Ops
                      , TH
+
+  other-modules:       Hasura.Server.Auth.JWT.Internal
+                     , Hasura.Server.Auth.JWT.Logging
+
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
@@ -228,6 +249,10 @@ executable graphql-engine
                      , pg-client
                      , http-client
                      , http-client-tls
+                     , stm
+                     , wreq
+                     , connection
+                     , string-conversions
 
   other-modules:     Ops
                      TH

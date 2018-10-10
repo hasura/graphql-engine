@@ -23,7 +23,7 @@
     "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\" ",
     "precommit": "lint-staged",
     "cypress": "cypress open",
-    "test": "cypress run --spec 'cypress/integration/test_complete.js' --config baseUrl=$CYPRESS_BASE_URL"
+    "test": "cypress run --spec 'cypress/integration/**/**/test.js' --key $CYPRESS_KEY --parallel --record"
   },
   "lint-staged": {
     "*.js": [
@@ -67,6 +67,7 @@
     "less": "^3.7.1",
     "lru-memoize": "^1.0.0",
     "map-props": "^1.0.0",
+    "match-sorter": "^2.3.0",
     "multireducer": "^1.0.2",
     "piping": "^0.3.0",
     "prettier": "^1.13.0",
@@ -116,7 +117,7 @@
     "clean-webpack-plugin": "^0.1.17",
     "concurrently": "^3.5.0",
     "css-loader": "^0.28.11",
-    "cypress": "3.0.2",
+    "cypress": "^3.1.0",
     "dotenv": "^5.0.1",
     "eslint": "^4.19.1",
     "eslint-config-airbnb": "16.1.0",

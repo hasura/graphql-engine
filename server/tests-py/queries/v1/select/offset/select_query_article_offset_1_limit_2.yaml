@@ -1,0 +1,31 @@
+description: Nested select on article with offset 1 and limit 2
+url: /v1/query
+status: 200
+response:
+  - id: 2
+    title: Article 2
+    content: Sample article content 2
+    author:
+      name: Author 1
+      id: 1
+  - id: 1
+    title: Article 1
+    content: Sample article content 1
+    author:
+      name: Author 1
+      id: 1
+query:
+  type: select
+  args:
+    table: article
+    offset: 1
+    columns:
+    - id 
+    - title
+    - content
+    - name: author
+      columns:
+      - id
+      - name
+    order_by: -id
+    limit: 2

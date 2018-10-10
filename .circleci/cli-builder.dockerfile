@@ -10,7 +10,7 @@ RUN	go get github.com/golang/dep/cmd/dep \
 
 # install UPX and netcat
 RUN apt-get update && apt-get install -y \
-    xz-utils netcat libpq5 \
+    xz-utils netcat libpq5 postgresql-client \
     && curl -Lo /tmp/upx-${upx_version}.tar.xz https://github.com/upx/upx/releases/download/v${upx_version}/upx-${upx_version}-amd64_linux.tar.xz \
     && xz -d -c /tmp/upx-${upx_version}.tar.xz \
        | tar -xOf - upx-${upx_version}-amd64_linux/upx > /bin/upx \

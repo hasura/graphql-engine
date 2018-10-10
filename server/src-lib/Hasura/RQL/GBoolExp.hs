@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE MultiWayIf            #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
@@ -39,6 +40,12 @@ data AnnValOpExpG a
 
   | ASIMILAR !a -- similar, regex
   | ANSIMILAR !a-- not similar, regex
+
+  | AContains !a
+  | AContainedIn !a
+  | AHasKey !a
+  | AHasKeysAny [Text]
+  | AHasKeysAll [Text]
 
   | ANISNULL -- IS NULL
   | ANISNOTNULL -- IS NOT NULL
@@ -105,6 +112,8 @@ data RQLOp
   | RSIMILAR  -- similar, regex
   | RNSIMILAR -- not similar, regex
 
+  | RISNULL -- is null
+
   deriving (Eq)
 
 instance Show RQLOp where
@@ -127,6 +136,8 @@ instance Show RQLOp where
 
   show RSIMILAR  = "$similar"
   show RNSIMILAR = "$nsimilar"
+
+  show RISNULL   = "$is_null"
 
 instance DQuote RQLOp where
   dquoteTxt op = T.pack $ show op
@@ -168,6 +179,9 @@ parseOp opStr = case opStr of
   "_similar"  -> return $ Left RSIMILAR
   "$nsimilar" -> return $ Left RNSIMILAR
   "_nsimilar" -> return $ Left RNSIMILAR
+
+  "$is_null"  -> return $ Left RISNULL
+  "_is_null"  -> return $ Left RISNULL
 
   "$ceq"      -> return $ Right CEQ
   "_ceq"      -> return $ Right CEQ
@@ -213,6 +227,8 @@ parseAnnOpExpG parser op ty val = case op of
   RNILIKE   -> ANILIKE <$> parseOne -- NOT ILIKE, case insensitive
   RSIMILAR  -> ASIMILAR <$> parseOne -- similar, regex
   RNSIMILAR -> ANSIMILAR <$> parseOne -- not similar, regex
+  RISNULL   -> bool ANISNOTNULL ANISNULL -- is null
+               <$> decodeValue val
   where
     parseOne = parser ty val
       -- runAesonParser (parsePGValue ty) val
@@ -284,6 +300,7 @@ getOpTypeChecker RILIKE    = textOnlyOp
 getOpTypeChecker RNILIKE   = textOnlyOp
 getOpTypeChecker RSIMILAR  = textOnlyOp
 getOpTypeChecker RNSIMILAR = textOnlyOp
+getOpTypeChecker RISNULL   = validOnAllTypes
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
@@ -366,7 +383,7 @@ convColRhs bExpBuilder tableQual annVal = case annVal of
     -- And them all
     return $ AVCol pci $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
-  AVRel ri@(RelInfo _ _ colMapping relTN _) nesAnn fltr -> do
+  AVRel ri@(RelInfo _ _ colMapping relTN _ _) nesAnn fltr -> do
     -- Convert the where clause on the relationship
     annRelBoolExp <- convBoolRhs bExpBuilder (S.mkQual relTN) nesAnn
     let backCompExp  = foldr (S.BEBin S.AndOp) (S.BELit True) $
@@ -387,7 +404,7 @@ cColExp
   -> S.BoolExp
 cColExp annVal = case annVal of
   AVCol _ be -> be
-  AVRel (RelInfo _ _ _ relTN _) nesAnn backCompExp -> do
+  AVRel (RelInfo _ _ _ relTN _ _) nesAnn backCompExp -> do
     -- Convert the where clause on the relationship
     let annRelBoolExp = cBoolExp nesAnn
         innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
@@ -434,23 +451,31 @@ mkBoolExpBuilder
   => (a -> m S.SQLExp)
   -> BoolExpBuilder m a
 mkBoolExpBuilder rhsBldr lhs = \case
-  AEQ val       -> mkSimpleBoolExpBuilder equalsBoolExpBuilder val
-  ANE val       -> mkSimpleBoolExpBuilder notEqualsBoolExpBuilder val
-  AIN  vals     -> mkInOrNotBoolExpBuilder True vals
-  ANIN vals     -> mkInOrNotBoolExpBuilder False vals
-  AGT val       -> mkSimpleBoolExpBuilder (S.BECompare S.SGT) val
-  ALT val       -> mkSimpleBoolExpBuilder (S.BECompare S.SLT) val
-  AGTE val      -> mkSimpleBoolExpBuilder (S.BECompare S.SGTE) val
-  ALTE val      -> mkSimpleBoolExpBuilder (S.BECompare S.SLTE) val
-  ALIKE val     -> mkSimpleBoolExpBuilder (S.BECompare S.SLIKE) val
-  ANLIKE val    -> mkSimpleBoolExpBuilder (S.BECompare S.SNLIKE) val
-  AILIKE val    -> mkSimpleBoolExpBuilder (S.BECompare S.SILIKE) val
-  ANILIKE val   -> mkSimpleBoolExpBuilder (S.BECompare S.SNILIKE) val
-  ASIMILAR val  -> mkSimpleBoolExpBuilder (S.BECompare S.SSIMILAR) val
-  ANSIMILAR val -> mkSimpleBoolExpBuilder (S.BECompare S.SNSIMILAR) val
-  ANISNULL      -> return $ S.BENull lhs
-  ANISNOTNULL   -> return $ S.BENotNull lhs
+  AEQ val          -> mkSimpleBoolExpBuilder equalsBoolExpBuilder val
+  ANE val          -> mkSimpleBoolExpBuilder notEqualsBoolExpBuilder val
+  AIN  vals        -> mkInOrNotBoolExpBuilder True vals
+  ANIN vals        -> mkInOrNotBoolExpBuilder False vals
+  AGT val          -> mkSimpleBoolExpBuilder (S.BECompare S.SGT) val
+  ALT val          -> mkSimpleBoolExpBuilder (S.BECompare S.SLT) val
+  AGTE val         -> mkSimpleBoolExpBuilder (S.BECompare S.SGTE) val
+  ALTE val         -> mkSimpleBoolExpBuilder (S.BECompare S.SLTE) val
+  ALIKE val        -> mkSimpleBoolExpBuilder (S.BECompare S.SLIKE) val
+  ANLIKE val       -> mkSimpleBoolExpBuilder (S.BECompare S.SNLIKE) val
+  AILIKE val       -> mkSimpleBoolExpBuilder (S.BECompare S.SILIKE) val
+  ANILIKE val      -> mkSimpleBoolExpBuilder (S.BECompare S.SNILIKE) val
+  ASIMILAR val     -> mkSimpleBoolExpBuilder (S.BECompare S.SSIMILAR) val
+  ANSIMILAR val    -> mkSimpleBoolExpBuilder (S.BECompare S.SNSIMILAR) val
+  AContains val    -> mkSimpleBoolExpBuilder (S.BECompare S.SContains) val
+  AContainedIn val -> mkSimpleBoolExpBuilder (S.BECompare S.SContainedIn) val
+  AHasKey val      -> mkSimpleBoolExpBuilder (S.BECompare S.SHasKey) val
+  AHasKeysAny keys -> return $ S.BECompare S.SHasKeysAny lhs $ toTextArray keys
+  AHasKeysAll keys -> return $ S.BECompare S.SHasKeysAll lhs $ toTextArray keys
+  ANISNULL         -> return $ S.BENull lhs
+  ANISNOTNULL      -> return $ S.BENotNull lhs
   where
+    toTextArray arr =
+      S.SETyAnn (S.SEArray $ map (txtEncoder . PGValText) arr) S.textArrType
+
     mkSimpleBoolExpBuilder beF pgColVal =
       beF lhs <$> rhsBldr pgColVal
 

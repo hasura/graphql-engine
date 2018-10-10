@@ -8,13 +8,14 @@ import           Control.Monad.Except   as M
 import           Control.Monad.Identity as M
 import           Control.Monad.Reader   as M
 import           Control.Monad.State    as M
+import           Control.Monad.Fail     as M (MonadFail)
 import           Data.Bool              as M (bool)
 import           Data.Either            as M (lefts, partitionEithers, rights)
 import           Data.Foldable          as M (toList)
 import           Data.Hashable          as M (Hashable)
 import           Data.List              as M (find, foldl', group, sortBy)
 import           Data.Maybe             as M (catMaybes, fromMaybe, isJust,
-                                              listToMaybe, mapMaybe,
+                                              isNothing, listToMaybe, mapMaybe,
                                               maybeToList)
 import           Data.Ord               as M (comparing)
 import           Data.Semigroup         as M (Semigroup (..))

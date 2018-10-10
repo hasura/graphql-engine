@@ -23,6 +23,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Execute.Plan            as Plan
+import qualified Hasura.GraphQL.Resolve.Insert          as RI
 import qualified Hasura.GraphQL.Resolve.Mutation        as RM
 import qualified Hasura.GraphQL.Resolve.Select          as RS
 
@@ -30,13 +31,15 @@ import qualified Hasura.GraphQL.Resolve.Select          as RS
 buildTx :: UserInfo -> GCtx -> Field -> Q.TxE QErr EncJSON
 buildTx userInfo gCtx fld = do
   opCxt <- getOpCtx $ _fName fld
-  join $ fmap fst $ runConvert (fldMap, orderByCtx) $ case opCxt of
+  join $ fmap fst $ runConvert (fldMap, orderByCtx, insCtxMap) $ case opCxt of
 
     -- OCSelect tn permFilter permLimit hdrs ->
     --   validateHdrs hdrs >> RS.convertSelect tn permFilter permLimit fld
+    -- OCSelectPkey tn permFilter hdrs ->
+    --   validateHdrs hdrs >> RS.convertSelectByPKey tn permFilter fld
       -- RS.convertSelect tn permFilter fld
-    OCInsert tn vn cols hdrs    ->
-      validateHdrs hdrs >> RM.convertInsert roleName (tn, vn) cols fld
+    OCInsert tn hdrs    ->
+      validateHdrs hdrs >> RI.convertInsert roleName tn fld
       -- RM.convertInsert (tn, vn) cols fld
     OCUpdate tn permFilter hdrs ->
       validateHdrs hdrs >> RM.convertUpdate tn permFilter fld
@@ -45,11 +48,13 @@ buildTx userInfo gCtx fld = do
       validateHdrs hdrs >> RM.convertDelete tn permFilter fld
       -- RM.convertDelete tn permFilter fld
     OCSelect {} -> throw500 "unexpected OCSelect for a mutation root field"
+    OCSelectPkey {} -> throw500 "unexpected OCSelectPkey for a mutation root field"
   where
     roleName = userRole userInfo
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByEnums gCtx
+    insCtxMap = _gInsCtxMap gCtx
 
     getOpCtx f =
       onNothing (Map.lookup f opCtxMap) $ throw500 $
@@ -88,6 +93,8 @@ resolveQueryFld userInfo gCtx fld =
       RS.runPlanM (fldMap, orderByCtx) $ case opCxt of
         OCSelect tn permFilter permLimit hdrs ->
           validateHdrs hdrs >> RS.convertSelect2 tn permFilter permLimit fld
+        OCSelectPkey tn permFilter hdrs ->
+          validateHdrs hdrs >> RS.convertSelectByPKey tn permFilter fld
         _ -> throw500 "expecting OCSelect for a query root field"
   where
     opCtxMap = _gOpCtxMap gCtx

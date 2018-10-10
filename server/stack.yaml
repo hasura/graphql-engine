@@ -16,9 +16,11 @@ packages:
 extra-deps:
 # use https URLs so that build systems can clone these repos
 - git: https://github.com/hasura/pg-client-hs.git
-  commit: eb826e4ca831053bc9768a0b1ab0d5e52f257fb3
+  commit: 7978e04f24790f18f06a67fe6065f470abc1c764
 - git: https://github.com/hasura/graphql-parser-hs.git
   commit: 076d3894cd3977aea8119c9131ccc44b0b19f63e
+- git: https://github.com/tdammers/ginger.git
+  commit: 435c2774963050da04ce9a3369755beac87fbb16
 - Spock-core-0.13.0.0
 - reroute-0.5.0.0
 

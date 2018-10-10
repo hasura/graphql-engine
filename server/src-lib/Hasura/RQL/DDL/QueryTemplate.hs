@@ -90,7 +90,7 @@ mkSelQ (DMLQuery tn (SelectG c w o lim offset)) = do
 
 data QueryTP1
   = QTP1Insert R.InsertQueryP1
-  | QTP1Select R.SelectData
+  | QTP1Select R.AnnSel
   | QTP1Update R.UpdateQueryP1
   | QTP1Delete R.DeleteQueryP1
   | QTP1Count R.CountQueryP1

@@ -9,17 +9,14 @@ import {
   relSelectionChanged,
   relNameChanged,
   resetRelationshipForm,
-  relTableChange,
-  REL_SET_LCOL,
-  REL_SET_RCOL,
   relManualAddClicked,
-  relTypeChange,
-  addRelViewMigrate,
 } from './Actions';
 import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../Notification';
 import { setTable } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
+
+import AddManualRelationship from './AddManualRelationship';
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :
 {
@@ -48,11 +45,17 @@ const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
   const finalRTable = rTable.name ? rTable.name : rTable;
   return isObjRel ? (
     <span>
-      &nbsp;{lcol}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{rTable} :: {rcol}
+      &nbsp;
+      {lcol}
+      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
+      {rTable} :: {rcol}
     </span>
   ) : (
     <span>
-      &nbsp;{finalRTable} :: {rcol}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{lcol}
+      &nbsp;
+      {finalRTable} :: {rcol}
+      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
+      {lcol}
     </span>
   );
 };
@@ -348,7 +351,8 @@ const AddRelationship = ({
       <div className={`${styles.remove_margin_bottom} form-group`}>
         <label>
           {' '}
-          You have no new relationships that can be added. Add a foreign key{' '}
+          You have no new relationships that can be added. Add a foreign key to
+          get suggestions{' '}
         </label>
       </div>
     );
@@ -402,7 +406,9 @@ const AddRelationship = ({
               {[
                 'Suggested object relationships',
                 'Suggested Array relationships',
-              ].map((s, i) => <th key={i}>{s}</th>)}
+              ].map((s, i) => (
+                <th key={i}>{s}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -455,139 +461,11 @@ const AddRelationship = ({
   );
 };
 
-const AddManualRelationship = ({
-  tableName,
-  allSchemas,
-  manualColumns,
-  dispatch,
-}) => {
-  const styles = require('../TableModify/Modify.scss');
-  const tableSchema = allSchemas.find(t => t.table_name === tableName);
-  const onTableChange = e => {
-    dispatch(relTableChange(e.target.value));
-  };
-  const onRelNameChange = e => {
-    dispatch(relNameChanged(e.target.value));
-  };
-  const onRelLColChange = e => {
-    dispatch({ type: REL_SET_LCOL, lcol: e.target.value });
-  };
-  const onRelRColChange = e => {
-    dispatch({ type: REL_SET_RCOL, rcol: e.target.value });
-  };
-  const onRelTypeChange = e => {
-    if (e.target.value === 'object_rel') {
-      dispatch(relTypeChange('true'));
-    } else {
-      dispatch(relTypeChange('false'));
-    }
-  };
-  const onAddRelClicked = () => {
-    dispatch(addRelViewMigrate(tableName));
-  };
-  return (
-    <div>
-      <div className={styles.subheading_text}> Add a Manual Relationship </div>
-      <div className="form-group">
-        <div className={`${styles.relBlockInline} ${styles.relBlockLeft}`}>
-          Relationship Type
-        </div>
-        <div className={`${styles.relBlockInline} ${styles.relBlockRight}`}>
-          <select
-            className="form-control"
-            onChange={onRelTypeChange}
-            data-test="rel-type"
-          >
-            <option key="select_type" value="select_type">
-              Select relationship type
-            </option>
-            <option key="object" value="object_rel">
-              Object Relationship
-            </option>
-            <option key="array" value="array_rel">
-              Array Relationship
-            </option>
-          </select>
-        </div>
-      </div>
-      <div className="form-group">
-        <div className={`${styles.relBlockInline} ${styles.relBlockLeft}`}>
-          Relationship Name
-        </div>
-        <div className={`${styles.relBlockInline} ${styles.relBlockRight}`}>
-          <input
-            onChange={onRelNameChange}
-            className="form-control"
-            placeholder="Enter relationship name"
-            data-test="rel-name"
-          />
-        </div>
-      </div>
-      <div className="form-group">
-        <div className={`${styles.relBlockInline} ${styles.relBlockLeft}`}>
-          Configuration
-        </div>
-        <select
-          className={`${styles.relBlockInline} form-control`}
-          onChange={onRelLColChange}
-          data-test="current-col"
-        >
-          <option key="default_column">Current Column</option>
-          {tableSchema.columns.map((c, i) => (
-            <option key={c + i} value={c.column_name}>
-              {c.column_name}
-            </option>
-          ))}
-        </select>
-        <span> :: </span>
-        <div className={styles.relBlockInline}>
-          <select
-            className="form-control"
-            onChange={onTableChange}
-            data-test="remote-table"
-          >
-            <option key="default_table">Remote Table</option>
-            {allSchemas.map((s, i) => (
-              <option key={i} value={s.table_name}>
-                {s.table_name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <span> -> </span>
-        <div className={styles.relBlockInline}>
-          <select
-            className="form-control"
-            onChange={onRelRColChange}
-            data-test="remote-table-col"
-          >
-            <option key="default_table_column">Remote Table Column:</option>
-            {manualColumns.map((c, i) => (
-              <option key={c + i} value={c.column_name}>
-                {c.column_name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-      <button
-        className={styles.yellow_button}
-        onClick={onAddRelClicked}
-        data-test="table-add-manual-relationship"
-      >
-        Add
-      </button>
-    </div>
-  );
-};
-
 class Relationships extends Component {
   componentDidMount() {
     this.props.dispatch({ type: RESET });
-
     this.props.dispatch(setTable(this.props.tableName));
   }
-
   render() {
     const {
       tableName,
@@ -600,6 +478,7 @@ class Relationships extends Component {
       relAdd,
       migrationMode,
       currentSchema,
+      schemaList,
     } = this.props;
     const styles = require('../TableModify/Modify.scss');
     const tableStyles = require('../TableCommon/TableStyles.scss');
@@ -728,7 +607,7 @@ class Relationships extends Component {
           </div>
         </div>
         <div className={`${styles.padd_left_remove} container-fluid`}>
-          <div className={`${styles.padd_left_remove} col-xs-8`}>
+          <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
             {relAdd.isManualExpanded ? (
               <div className={styles.activeEdit}>
                 <AddManualRelationship
@@ -739,7 +618,13 @@ class Relationships extends Component {
                   lcol={relAdd.lcol}
                   rcol={relAdd.rcol}
                   allSchemas={allSchemas}
+                  schemaList={schemaList}
                   manualColumns={relAdd.manualColumns}
+                  manualRelInfo={relAdd.manualRelInfo}
+                  titleInfo={'Add a relationship manually'}
+                  currentSchema={currentSchema}
+                  showClose
+                  dataTestVal={'table-add-manual-relationship'}
                 />
               </div>
             ) : (
@@ -751,7 +636,7 @@ class Relationships extends Component {
                 }}
                 data-test="add-manual-relationship"
               >
-                + Add a manual relationship
+                + Add a relationship manually
               </button>
             )}
             <hr />
@@ -783,6 +668,7 @@ const mapStateToProps = (state, ownProps) => ({
   allSchemas: state.tables.allSchemas,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
+  schemaList: state.tables.schemaList,
   ...state.tables.modify,
 });
 

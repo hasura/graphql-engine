@@ -48,7 +48,8 @@ ravenApp loggerCtx pool = do
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   planCache <- GE.initQueryCache
   -- spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
-  mkWaiApp Q.Serializable Nothing loggerCtx pool httpManager planCache AMNoAuth corsCfg True -- no access key and no webhook
+  (app, _)  <- mkWaiApp Q.Serializable Nothing loggerCtx pool httpManager planCache AMNoAuth corsCfg True -- no access key and no webhook
+  return app
 
 main :: IO ()
 main = do
@@ -65,7 +66,7 @@ main = do
   liftIO $ initialise pool
   -- generate the test specs
   specs <- mkSpecs
-  loggerCtx <- L.mkLoggerCtx L.defaultLoggerSettings
+  loggerCtx <- L.mkLoggerCtx $ L.defaultLoggerSettings True
   -- run the tests
   withArgs [] $ hspecWith defaultConfig $ with (ravenApp loggerCtx pool) specs
 

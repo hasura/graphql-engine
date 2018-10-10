@@ -1,7 +1,10 @@
+{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveLift                 #-}
+{-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -10,7 +13,8 @@ module Hasura.RQL.Types.DML
        ( DMLQuery(..)
 
        , OrderByExp(..)
-       , OrderByItem(..)
+       , OrderByItemG(..)
+       , OrderByItem
        , OrderByCol(..)
 
        , SelectG(..)
@@ -29,6 +33,8 @@ module Hasura.RQL.Types.DML
        , ConflictAction(..)
        , ConstraintOn(..)
 
+       , InsertTxConflictCtx(..)
+
        , UpdVals
        , UpdateQuery(..)
 
@@ -37,7 +43,6 @@ module Hasura.RQL.Types.DML
        , CountQuery(..)
 
        , QueryT(..)
-
        ) where
 
 import qualified Hasura.SQL.DML             as S
@@ -74,32 +79,57 @@ $(deriveJSON defaultOptions{constructorTagModifier = snakeCase . drop 2} ''S.Ord
 
 $(deriveJSON defaultOptions{constructorTagModifier = snakeCase . drop 1} ''S.NullsOrder)
 
-newtype OrderByCol
-  = OrderByCol { getOrderByColPath :: [T.Text] }
+data OrderByCol
+  = OCPG !FieldName
+  | OCRel !FieldName !OrderByCol
   deriving (Show, Eq, Lift)
 
-instance ToJSON OrderByCol where
-  toJSON (OrderByCol paths) =
-    String $ T.intercalate "." paths
+-- newtype OrderByCol
+--   = OrderByCol { getOrderByColPath :: [T.Text] }
+--   deriving (Show, Eq, Lift)
 
-orderByColFromTxt :: T.Text -> OrderByCol
+orderByColToTxt :: OrderByCol -> Text
+orderByColToTxt = \case
+  OCPG pgCol -> getFieldNameTxt pgCol
+  OCRel rel obCol -> getFieldNameTxt rel <> "." <> orderByColToTxt obCol
+
+instance ToJSON OrderByCol where
+  toJSON = toJSON . orderByColToTxt
+
+orderByColFromToks
+  :: (MonadFail m)
+  => [T.Text] -> m OrderByCol
+orderByColFromToks toks = do
+  when (any T.null toks) $ fail "col/rel cannot be empty"
+  case toks of
+    []   -> fail "failed to parse an OrderByCol: found empty cols"
+    x:xs -> return $ go (FieldName x) xs
+  where
+    go fld = \case
+      []   -> OCPG fld
+      x:xs -> OCRel fld $ go (FieldName x) xs
+
+orderByColFromTxt
+  :: (MonadFail m)
+  => T.Text -> m OrderByCol
 orderByColFromTxt =
-  OrderByCol . T.split (=='.')
+  orderByColFromToks . T.split (=='.')
 
 instance FromJSON OrderByCol where
-  parseJSON (String t) =
-    return $ orderByColFromTxt t
-  parseJSON v =
-    OrderByCol <$> parseJSON v
+  parseJSON = \case
+    (String t) -> orderByColFromToks $ T.split (=='.') t
+    v          -> parseJSON v >>= orderByColFromToks
 
-data OrderByItem
-  = OrderByItem
+data OrderByItemG a
+  = OrderByItemG
   { obiType   :: !(Maybe S.OrderType)
-  , obiColumn :: !OrderByCol
+  , obiColumn :: !a
   , obiNulls  :: !(Maybe S.NullsOrder)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Functor, Foldable, Traversable)
 
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''OrderByItem)
+type OrderByItem = OrderByItemG OrderByCol
+
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''OrderByItemG)
 
 -- Can either be string / object
 instance FromJSON OrderByItem where
@@ -110,7 +140,7 @@ instance FromJSON OrderByItem where
       fail "string format for 'order_by' entry : {+/-}column Eg : +posted"
 
   parseJSON (Object o) =
-    OrderByItem
+    OrderByItemG
     <$> o .:? "type"
     <*> o .:  "column"
     <*> o .:? "nulls"
@@ -132,12 +162,12 @@ instance FromJSON OrderByExp where
 
 orderByParser :: AttoT.Parser T.Text OrderByItem
 orderByParser =
-  OrderByItem <$> otP <*> colP <*> (return Nothing)
+  OrderByItemG <$> otP <*> colP <*> return Nothing
   where
     otP  = ("+" *> return (Just S.OTAsc))
            <|> ("-" *> return (Just S.OTDesc))
-           <|> (return Nothing)
-    colP = orderByColFromTxt <$> Atto.takeText
+           <|> return Nothing
+    colP = Atto.takeText >>= orderByColFromTxt
 
 data SelectG a b c
   = SelectG
@@ -171,7 +201,7 @@ wcToText (StarDot wc) = "*." <> wcToText wc
 
 parseWildcard :: AT.Parser Wildcard
 parseWildcard =
-  fromList <$> ((starParser `AT.sepBy1` (AT.char '.')) <* AT.endOfInput)
+  fromList <$> ((starParser `AT.sepBy1` AT.char '.') <* AT.endOfInput)
   where
     starParser = AT.char '*' *> pure Star
     fromList   = foldr1 (\_ x -> StarDot x)
@@ -267,6 +297,14 @@ data InsertQuery
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsertQuery)
+
+data InsertTxConflictCtx
+  = InsertTxConflictCtx
+  { itcAction        :: !ConflictAction
+  , itcConstraint    :: !(Maybe ConstraintName)
+  , itcSetExpression :: !(Maybe T.Text)
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''InsertTxConflictCtx)
 
 type UpdVals = M.HashMap PGCol Value
 

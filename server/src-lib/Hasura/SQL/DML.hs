@@ -1,6 +1,8 @@
-{-# LANGUAGE DeriveLift        #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveLift                 #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE MultiWayIf                 #-}
+{-# LANGUAGE OverloadedStrings          #-}
 
 module Hasura.SQL.DML where
 
@@ -15,7 +17,7 @@ import qualified Data.Text.Extended         as T
 
 infixr 6 <->
 (<->) :: BB.Builder -> BB.Builder -> BB.Builder
-(<->) l r = l <> (BB.char7 ' ') <> r
+(<->) l r = l <> BB.char7 ' ' <> r
 {-# INLINE (<->) #-}
 
 paren :: BB.Builder -> BB.Builder
@@ -62,14 +64,14 @@ newtype OrderByExp
 
 data OrderByItem
   = OrderByItem
-    { oColumn :: !(Either PGCol QIden)
+    { oColumn :: !SQLExp
     , oType   :: !(Maybe OrderType)
     , oNulls  :: !(Maybe NullsOrder)
     } deriving (Show, Eq)
 
 instance ToSQL OrderByItem where
-  toSQL (OrderByItem col ot no) =
-    either toSQL toSQL col <-> toSQL ot <-> toSQL no
+  toSQL (OrderByItem e ot no) =
+    toSQL e <-> toSQL ot <-> toSQL no
 
 data OrderType = OTAsc
                | OTDesc
@@ -156,15 +158,15 @@ instance ToSQL WhereFrag where
 instance ToSQL Select where
   toSQL sel =
     BB.string7 "SELECT"
-    <-> (toSQL $ selDistinct sel)
+    <-> toSQL (selDistinct sel)
     <-> (", " <+> selExtr sel)
-    <-> (toSQL $ selFrom sel)
-    <-> (toSQL $ selWhere sel)
-    <-> (toSQL $ selGroupBy sel)
-    <-> (toSQL $ selHaving sel)
-    <-> (toSQL $ selOrderBy sel)
-    <-> (toSQL $ selLimit sel)
-    <-> (toSQL $ selOffset sel)
+    <-> toSQL (selFrom sel)
+    <-> toSQL (selWhere sel)
+    <-> toSQL (selGroupBy sel)
+    <-> toSQL (selHaving sel)
+    <-> toSQL (selOrderBy sel)
+    <-> toSQL (selLimit sel)
+    <-> toSQL (selOffset sel)
 
 mkSIdenExp :: (IsIden a) => a -> SQLExp
 mkSIdenExp = SEIden . toIden
@@ -255,10 +257,16 @@ data SQLExp
 
 newtype Alias
   = Alias { getAlias :: Iden }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Hashable)
+
+instance IsIden Alias where
+  toIden (Alias iden) = iden
 
 instance ToSQL Alias where
   toSQL (Alias iden) = "AS" <-> toSQL iden
+
+toAlias :: (IsIden a) => a -> Alias
+toAlias = Alias . toIden
 
 instance ToSQL SQLExp where
   toSQL (SEPrep argNumber) =
@@ -269,7 +277,7 @@ instance ToSQL SQLExp where
     TE.encodeUtf8Builder t
   toSQL (SESelect se) =
     paren $ toSQL se
-  toSQL (SEStar) =
+  toSQL SEStar =
     BB.char7 '*'
   toSQL (SEIden iden) =
     toSQL iden
@@ -295,9 +303,8 @@ instance ToSQL SQLExp where
                          <> (", " <+> exps) <> BB.char7 ']'
 
 intToSQLExp :: Int -> SQLExp
-intToSQLExp i = SETyAnn e intType
-  where
-    e = SELit $ T.pack $ show i
+intToSQLExp =
+  SEUnsafe . T.pack . show
 
 data Extractor = Extractor !SQLExp !(Maybe Alias)
                deriving (Show, Eq)
@@ -309,16 +316,16 @@ mkSQLOpExp
   -> SQLExp -- result
 mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
 
-toEmptyArrWhenNull :: SQLExp -> SQLExp
-toEmptyArrWhenNull e = SEFnApp "coalesce" [e, SELit "[]"] Nothing
+handleIfNull :: SQLExp -> SQLExp -> SQLExp
+handleIfNull l e = SEFnApp "coalesce" [e, l] Nothing
 
 getExtrAlias :: Extractor -> Maybe Alias
 getExtrAlias (Extractor _ ma) = ma
 
-mkAliasedExtr :: (IsIden a, IsIden b) => a -> (Maybe b) -> Extractor
+mkAliasedExtr :: (IsIden a, IsIden b) => a -> Maybe b -> Extractor
 mkAliasedExtr t = mkAliasedExtrFromExp (mkSIdenExp t)
 
-mkAliasedExtrFromExp :: (IsIden a) => SQLExp -> (Maybe a) -> Extractor
+mkAliasedExtrFromExp :: (IsIden a) => SQLExp -> Maybe a -> Extractor
 mkAliasedExtrFromExp sqlExp ma = Extractor sqlExp (aliasF <$> ma)
   where
     aliasF = Alias . toIden
@@ -346,6 +353,12 @@ data FromItem
   | FIJoin !JoinExpr
   deriving (Show, Eq)
 
+mkSelFromItem :: Select -> Alias -> FromItem
+mkSelFromItem = FISelect (Lateral False)
+
+mkLateralFromItem :: Select -> Alias -> FromItem
+mkLateralFromItem = FISelect (Lateral True)
+
 instance ToSQL FromItem where
   toSQL (FISimple qt mal) =
     toSQL qt <-> toSQL mal
@@ -372,10 +385,10 @@ data JoinExpr
 
 instance ToSQL JoinExpr where
   toSQL je =
-    (toSQL $ tjeLeft je)
-    <-> (toSQL $ tjeType je)
-    <-> (toSQL $ tjeRight je)
-    <-> (toSQL $ tjeJC je)
+    toSQL (tjeLeft je)
+    <-> toSQL (tjeType je)
+    <-> toSQL (tjeRight je)
+    <-> toSQL (tjeJC je)
 
 data JoinType = Inner
               | LeftOuter
@@ -395,7 +408,7 @@ data JoinCond = JoinOn !BoolExp
 
 instance ToSQL JoinCond where
   toSQL (JoinOn be) =
-    BB.string7 "ON" <-> (paren $ toSQL be)
+    BB.string7 "ON" <-> paren (toSQL be)
   toSQL (JoinUsing cols) =
     BB.string7 "USING" <-> paren (","  <+> cols)
 
@@ -407,6 +420,25 @@ data BoolExp = BELit !Bool
              | BENotNull !SQLExp
              | BEExists !Select
              deriving (Show, Eq)
+
+-- removes extraneous 'AND true's
+simplifyBoolExp :: BoolExp -> BoolExp
+simplifyBoolExp be = case be of
+  BEBin AndOp e1 e2 ->
+    let e1s = simplifyBoolExp e1
+        e2s = simplifyBoolExp e2
+    in if
+      | e1s == BELit True -> e2s
+      | e2s == BELit True -> e1s
+      | otherwise -> BEBin AndOp e1s e2s
+  BEBin OrOp e1 e2 ->
+    let e1s = simplifyBoolExp e1
+        e2s = simplifyBoolExp e2
+    in if
+      | e1s == BELit False -> e2s
+      | e2s == BELit False -> e1s
+      | otherwise -> BEBin OrOp e1s e2s
+  e                          -> e
 
 mkExists :: QualifiedTable -> BoolExp -> BoolExp
 mkExists qt whereFrag =
@@ -420,17 +452,17 @@ instance ToSQL BoolExp where
   toSQL (BELit True)  = TE.encodeUtf8Builder $ T.squote "true"
   toSQL (BELit False) = TE.encodeUtf8Builder $ T.squote "false"
   toSQL (BEBin bo bel ber) =
-    (paren $ toSQL bel) <-> (toSQL bo) <-> (paren $ toSQL ber)
+    paren (toSQL bel) <-> toSQL bo <-> paren (toSQL ber)
   toSQL (BENot be) =
-    BB.string7 "NOT" <-> (paren $ toSQL be)
+    BB.string7 "NOT" <-> paren (toSQL be)
   toSQL (BECompare co vl vr) =
-    (paren $ toSQL vl) <-> (toSQL co) <-> (paren $ toSQL vr)
+    paren (toSQL vl) <-> toSQL co <-> paren (toSQL vr)
   toSQL (BENull v) =
-    (paren $ toSQL v) <-> BB.string7 "IS NULL"
+    paren (toSQL v) <-> BB.string7 "IS NULL"
   toSQL (BENotNull v) =
-    (paren $ toSQL v) <-> BB.string7 "IS NOT NULL"
+    paren (toSQL v) <-> BB.string7 "IS NOT NULL"
   toSQL (BEExists sel) =
-    BB.string7 "EXISTS " <-> (paren $ toSQL sel)
+    BB.string7 "EXISTS " <-> paren (toSQL sel)
 
 data BinOp = AndOp
            | OrOp
@@ -440,37 +472,49 @@ instance ToSQL BinOp where
   toSQL AndOp = BB.string7 "AND"
   toSQL OrOp  = BB.string7 "OR"
 
-data CompareOp = SEQ
-               | SGT
-               | SLT
-               | SIN
-               | SNE
-               | SLIKE
-               | SNLIKE
-               | SILIKE
-               | SNILIKE
-               | SSIMILAR
-               | SNSIMILAR
-               | SGTE
-               | SLTE
-               | SNIN
-               deriving (Eq)
+data CompareOp
+  = SEQ
+  | SGT
+  | SLT
+  | SIN
+  | SNE
+  | SLIKE
+  | SNLIKE
+  | SILIKE
+  | SNILIKE
+  | SSIMILAR
+  | SNSIMILAR
+  | SGTE
+  | SLTE
+  | SNIN
+  | SContains
+  | SContainedIn
+  | SHasKey
+  | SHasKeysAny
+  | SHasKeysAll
+  deriving (Eq)
 
 instance Show CompareOp where
-  show SEQ       = "="
-  show SGT       = ">"
-  show SLT       = "<"
-  show SIN       = "IN"
-  show SNE       = "<>"
-  show SGTE      = ">="
-  show SLTE      = "<="
-  show SNIN      = "NOT IN"
-  show SLIKE     = "LIKE"
-  show SNLIKE    = "NOT LIKE"
-  show SILIKE    = "ILIKE"
-  show SNILIKE   = "NOT ILIKE"
-  show SSIMILAR  = "SIMILAR TO"
-  show SNSIMILAR = "NOT SIMILAR TO"
+  show = \case
+    SEQ          -> "="
+    SGT          -> ">"
+    SLT          -> "<"
+    SIN          -> "IN"
+    SNE          -> "<>"
+    SGTE         -> ">="
+    SLTE         -> "<="
+    SNIN         -> "NOT IN"
+    SLIKE        -> "LIKE"
+    SNLIKE       -> "NOT LIKE"
+    SILIKE       -> "ILIKE"
+    SNILIKE      -> "NOT ILIKE"
+    SSIMILAR     -> "SIMILAR TO"
+    SNSIMILAR    -> "NOT SIMILAR TO"
+    SContains    -> "@>"
+    SContainedIn -> "<@"
+    SHasKey      -> "?"
+    SHasKeysAny  -> "?|"
+    SHasKeysAll  -> "?&"
 
 instance ToSQL CompareOp where
   toSQL = BB.string7 . show
@@ -520,8 +564,11 @@ instance ToSQL UsingExp where
 newtype RetExp = RetExp [Extractor]
                   deriving (Show, Eq)
 
+selectStar :: Extractor
+selectStar = Extractor SEStar Nothing
+
 returningStar :: RetExp
-returningStar = RetExp [Extractor SEStar Nothing]
+returningStar = RetExp [selectStar]
 
 instance ToSQL RetExp where
   toSQL (RetExp [])
@@ -531,18 +578,18 @@ instance ToSQL RetExp where
 
 instance ToSQL SQLDelete where
   toSQL sd = BB.string7 "DELETE FROM"
-             <-> (toSQL $ delTable sd)
-             <-> (toSQL $ delUsing sd)
-             <-> (toSQL $ delWhere sd)
-             <-> (toSQL $ delRet sd)
+             <-> toSQL (delTable sd)
+             <-> toSQL (delUsing sd)
+             <-> toSQL (delWhere sd)
+             <-> toSQL (delRet sd)
 
 instance ToSQL SQLUpdate where
   toSQL a = BB.string7 "UPDATE"
-            <-> (toSQL $ upTable a)
-            <-> (toSQL $ upSet a)
-            <-> (toSQL $ upFrom a)
-            <-> (toSQL $ upWhere a)
-            <-> (toSQL $ upRet a)
+            <-> toSQL (upTable a)
+            <-> toSQL (upSet a)
+            <-> toSQL (upFrom a)
+            <-> toSQL (upWhere a)
+            <-> toSQL (upRet a)
 
 instance ToSQL SetExp where
   toSQL (SetExp cvs) =
@@ -593,13 +640,13 @@ instance ToSQL SQLInsert where
           BB.string7 "(" <-> (", " <+> tupVals) <-> BB.string7 ")"
         insConflict = maybe (BB.string7 "") toSQL
     in "INSERT INTO"
-       <-> (toSQL $ siTable si)
+       <-> toSQL (siTable si)
        <-> BB.string7 "("
        <-> (", " <+> siCols si)
        <-> BB.string7 ") VALUES"
        <-> (", " <+> insTuples)
-       <-> (insConflict $ siConflict si)
-       <-> (toSQL $ siRet si)
+       <-> insConflict (siConflict si)
+       <-> toSQL (siRet si)
 
 data CTE
   = CTESelect !Select
@@ -626,4 +673,3 @@ instance ToSQL SelectWith where
     "WITH " <> (", " <+> map f ctes) <-> toSQL sel
     where
       f (Alias al, q) = toSQL al <-> "AS" <-> paren (toSQL q)
-

@@ -33,7 +33,7 @@ data UpdateQueryP1
 mkSQLUpdate
   :: UpdateQueryP1 -> S.SelectWith
 mkSQLUpdate (UpdateQueryP1 tn setExps (permFltr, wc) mutFlds) =
-  mkSelWith (S.CTEUpdate update) mutFlds
+  mkSelWith tn (S.CTEUpdate update) mutFlds
   where
     update = S.SQLUpdate tn setExp Nothing tableFltr $ Just S.returningStar
     setExp    = S.SetExp $ map S.SetExpItem setExps
@@ -45,7 +45,7 @@ getUpdateDeps
 getUpdateDeps (UpdateQueryP1 tn setExps (_, wc) mutFlds) =
   mkParentDep tn : colDeps <> whereDeps <> retDeps
   where
-    colDeps   = map (mkColDep "on_type" tn) $ fst $ unzip setExps
+    colDeps   = map (mkColDep "on_type" tn . fst) setExps
     whereDeps = getBoolExpDeps tn wc
     retDeps   = map (mkColDep "untyped" tn . fst) $
                 pgColsFromMutFlds mutFlds
@@ -140,8 +140,7 @@ convUpdateQuery f uq = do
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
-    withPathK "returning" $ fmap (zip retCols) $
-    checkRetCols fieldInfoMap selPerm retCols
+    withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
   let setExpItems = setItems ++ incItems ++ mulItems ++ defItems
       updTable = upiTable updPerm
@@ -157,7 +156,7 @@ convUpdateQuery f uq = do
     tableName
     setExpItems
     (upiFilter updPerm, annSQLBoolExp)
-    (mkDefaultMutFlds mAnnRetCols)
+    (mkDefaultMutFlds tableName mAnnRetCols)
   where
     mRetCols = uqReturning uq
     selNecessaryMsg =

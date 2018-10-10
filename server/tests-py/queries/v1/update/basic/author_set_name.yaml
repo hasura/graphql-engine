@@ -1,0 +1,19 @@
+description: Update mutation on author
+url: /v1/query
+response:
+  affected_rows: 1
+  returning:
+  - id: 1
+    name: Jane
+status: 200
+query:
+  type: update
+  args:
+    table: author
+    $set:
+      name: Jane
+    where:
+      id: 1
+    returning:
+    - id
+    - name

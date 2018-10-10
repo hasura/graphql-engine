@@ -55,7 +55,7 @@ type OperationMap
 data WSConnData
   = WSConnData
   -- the role and headers are set only on connection_init message
-  { _wscUser  :: !(IORef.IORef (Maybe UserInfo))
+  { _wscUser  :: !(IORef.IORef (Maybe (Either Text UserInfo)))
   -- we only care about subscriptions,
   -- the other operations (query/mutations)
   -- are not tracked here
@@ -127,7 +127,7 @@ data WSServerEnv
   }
 
 onConn :: L.Logger -> WS.OnConnH WSConnData
-onConn logger wsId requestHead = do
+onConn (L.Logger logger) wsId requestHead = do
   res <- runExceptT checkPath
   either reject accept res
   where
@@ -165,7 +165,9 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndSend $ do
 
   userInfoM <- liftIO $ IORef.readIORef userInfoR
   userInfo <- case userInfoM of
-    Just userInfo -> return userInfo
+    Just (Right userInfo) -> return userInfo
+    Just (Left initErr) -> throwError $ SMConnErr $ ConnErrMsg $
+      "cannot start as connection_init failed with : " <> initErr
     Nothing       -> do
       let err = "start received before the connection is initialised"
       liftIO $ logger $ WSLog wsId $
@@ -195,7 +197,7 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndSend $ do
       liftIO $ logger $ WSLog wsId $ EOperation opId ODCompleted
 
   where
-    (WSServerEnv logger _ runTx lqMap gCtxMapRef _ planCache) = serverEnv
+    (WSServerEnv (L.Logger logger) _ runTx lqMap gCtxMapRef _ planCache) = serverEnv
     wsId = WS.getWSId wsConn
     (WSConnData userInfoR opMap) = WS.getData wsConn
 
@@ -236,7 +238,7 @@ onMessage authMode serverEnv wsConn msgRaw =
       CMStop stopMsg    -> onStop serverEnv wsConn stopMsg
       CMConnTerm        -> WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
   where
-    logger = _wseLogger serverEnv
+    logger = L.unLogger $ _wseLogger serverEnv
 
 onStop :: WSServerEnv -> WSConn -> StopMsg -> IO ()
 onStop serverEnv wsConn (StopMsg opId) = do
@@ -249,29 +251,31 @@ onStop serverEnv wsConn (StopMsg opId) = do
     Nothing    -> return ()
   STM.atomically $ STMMap.delete opId opMap
   where
-    logger = _wseLogger serverEnv
+    logger = L.unLogger $ _wseLogger serverEnv
     lqMap  = _wseLiveQMap serverEnv
     wsId   = WS.getWSId wsConn
     opMap  = _wscOpMap $ WS.getData wsConn
 
 onConnInit
   :: (MonadIO m)
-  => L.Logger -> H.Manager -> WSConn -> AuthMode -> ConnParams -> m ()
-onConnInit logger manager wsConn authMode connParams = do
+  => L.Logger -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
+onConnInit (L.Logger logger) manager wsConn authMode connParamsM = do
   res <- runExceptT $ getUserInfo logger manager headers authMode
   case res of
-    Left e  ->
-      liftIO $ WS.closeConn wsConn $
-      BL.fromStrict $ TE.encodeUtf8 $ qeError e
+    Left e  -> do
+      liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
+        Just $ Left $ qeError e
+      sendMsg wsConn $ SMConnErr $ ConnErrMsg $ qeError e
     Right userInfo -> do
-      liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $ Just userInfo
+      liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
+        Just $ Right userInfo
       sendMsg wsConn SMConnAck
       -- TODO: send it periodically? Why doesn't apollo's protocol use
       -- ping/pong frames of websocket spec?
       sendMsg wsConn SMConnKeepAlive
   where
     headers = [ (CI.mk $ TE.encodeUtf8 h, TE.encodeUtf8 v)
-              | (h, v) <- maybe [] Map.toList $ _cpHeaders connParams
+              | (h, v) <- maybe [] Map.toList $ connParamsM >>= _cpHeaders
               ]
 
 onClose
@@ -280,7 +284,7 @@ onClose
   -> WS.ConnectionException
   -> WSConn
   -> IO ()
-onClose logger lqMap _ wsConn = do
+onClose (L.Logger logger) lqMap _ wsConn = do
   logger $ WSLog wsId EClosed
   operations <- STM.atomically $ ListT.toList $ STMMap.stream opMap
   void $ A.forConcurrently operations $ \(opId, liveQ) ->

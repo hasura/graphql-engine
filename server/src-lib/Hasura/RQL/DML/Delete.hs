@@ -30,7 +30,7 @@ data DeleteQueryP1
 mkSQLDelete
   :: DeleteQueryP1 -> S.SelectWith
 mkSQLDelete (DeleteQueryP1 tn (fltr, wc) mutFlds) =
-  mkSelWith (S.CTEDelete delete) mutFlds
+  mkSelWith tn (S.CTEDelete delete) mutFlds
   where
     delete = S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
     tableFltr = Just $ S.WhereFrag $ S.BEBin S.AndOp fltr $ cBoolExp wc
@@ -66,8 +66,7 @@ convDeleteQuery prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
-    withPathK "returning" $
-    zip retCols <$> checkRetCols fieldInfoMap selPerm retCols
+    withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
@@ -75,7 +74,7 @@ convDeleteQuery prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
 
   return $ DeleteQueryP1 tableName
     (dpiFilter delPerm, annSQLBoolExp)
-    (mkDefaultMutFlds mAnnRetCols)
+    (mkDefaultMutFlds tableName mAnnRetCols)
 
   where
     selNecessaryMsg =

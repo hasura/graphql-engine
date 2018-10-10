@@ -45,7 +45,7 @@ data StopMsg
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''StopMsg)
 
 data ClientMsg
-  = CMConnInit !ConnParams
+  = CMConnInit !(Maybe ConnParams)
   | CMStart !StartMsg
   | CMStop !StopMsg
   | CMConnTerm
@@ -61,7 +61,7 @@ instance J.FromJSON ClientMsg where
   parseJSON = J.withObject "ClientMessage" $ \obj -> do
     t <- obj J..: "type"
     case t of
-      "connection_init" -> CMConnInit <$> obj J..: "payload"
+      "connection_init" -> CMConnInit <$> obj J..:? "payload"
       "start" -> CMStart <$> J.parseJSON (J.Object obj)
       "stop" -> CMStop <$> J.parseJSON (J.Object obj)
       "connection_terminate" -> return CMConnTerm

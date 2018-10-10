@@ -17,6 +17,7 @@ import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema.Diff
+import           Hasura.RQL.DDL.Subscribe
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -68,6 +69,15 @@ getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
                AND table_name = $2
                            |] (sn, tn) False
 
+  -- Fetch primary key columns
+  rawPrimaryCols <- Q.listQE defaultTxErrorHandler [Q.sql|
+           SELECT columns
+             FROM hdb_catalog.hdb_primary_key
+            WHERE table_schema = $1
+              AND table_name = $2
+                           |] (sn, tn) False
+  pkeyCols <- mkPKeyCols rawPrimaryCols
+
   -- Fetch the constraint details
   rawConstraints <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
            SELECT constraint_type, constraint_name
@@ -75,9 +85,13 @@ getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
              WHERE table_schema = $1
                AND table_name = $2
                            |] (sn, tn) False
-  return $ mkTableInfo qt isSystemDefined rawConstraints $
-    flip map colData $ \(colName, Q.AltJ colTy, isNull)
-                       -> (colName, colTy, isNull)
+  let colDetails = flip map colData $ \(colName, Q.AltJ colTy, isNull)
+                   -> (colName, colTy, isNull)
+  return $ mkTableInfo qt isSystemDefined rawConstraints colDetails pkeyCols
+  where
+    mkPKeyCols [] = return []
+    mkPKeyCols [Identity (Q.AltJ pkeyCols)] = return pkeyCols
+    mkPKeyCols _ = throw500 "found multiple rows for a table in hdb_primary_key"
 
 newtype TrackTable
   = TrackTable
@@ -127,6 +141,10 @@ purgeDep schemaObjId = case schemaObjId of
   (SOQTemplate qtn)              -> do
     liftTx $ delQTemplateFromCatalog qtn
     delQTemplateFromCache qtn
+
+  (SOTableObj qt (TOTrigger trn)) -> do
+    liftTx $ delEventTriggerFromCatalog trn
+    delEventTriggerFromCache qt trn
 
   _                              -> throw500 $
     "unexpected dependent object : " <> reportSchemaObj schemaObjId
@@ -185,6 +203,10 @@ processSchemaChanges schemaDiff = do
       Q.unitQ [Q.sql|
                DELETE FROM "hdb_catalog"."hdb_permission"
                WHERE table_schema = $1 AND table_name = $2
+                |] (sn, tn) False
+      Q.unitQ [Q.sql|
+               DELETE FROM "hdb_catalog"."event_triggers"
+               WHERE schema_name = $1 AND table_name = $2
                 |] (sn, tn) False
       delTableFromCatalog qtn
     delTableFromCache qtn
@@ -320,6 +342,18 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
     qti <- liftP1 qCtx $ createQueryTemplateP1 $
            CreateQueryTemplate qtn qtDef Nothing
     addQTemplateToCache qti
+
+  eventTriggers <- lift $ Q.catchE defaultTxErrorHandler fetchEventTriggers
+  forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ tDefVal, webhook, nr, rint, Q.AltJ mheaders) -> do
+    let headerConfs = fromMaybe [] mheaders
+        qt = QualifiedTable sn tn
+    allCols <- (getCols . tiFieldInfoMap) <$> askTabInfo qt
+    headers <- getHeadersFromConf headerConfs
+    tDef <- decodeValue tDefVal
+    addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook headers
+    liftTx $ mkTriggerQ trid trn qt allCols tDef
+
+
   where
     permHelper sn tn rn pDef pa = do
       qCtx <- mkAdminQCtx <$> get
@@ -355,6 +389,12 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
                 SELECT template_name, template_defn :: json FROM hdb_catalog.hdb_query_template
                   |] () False
 
+    fetchEventTriggers =
+      Q.listQ [Q.sql|
+               SELECT e.schema_name, e.table_name, e.id, e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
+                 FROM hdb_catalog.event_triggers e
+               |] () False
+
 data RunSQL
   = RunSQL
   { rSql     :: T.Text
@@ -375,8 +415,7 @@ runSqlP2 :: (P2C m) => RunSQL -> m EncJSON
 runSqlP2 (RunSQL t cascade) = do
 
   -- Drop hdb_views so no interference is caused to the sql query
-  liftTx $ Q.catchE defaultTxErrorHandler $
-    Q.unitQ clearHdbViews () False
+  liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
 
   -- Get the metadata before the sql query, everything, need to filter this
   oldMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
@@ -406,9 +445,19 @@ runSqlP2 (RunSQL t cascade) = do
   -- recreate the insert permission infra
   forM_ (M.elems $ scTables postSc) $ \ti -> do
     let tn = tiName ti
-        pgCols = map pgiName $ getCols $ tiFieldInfoMap ti
     forM_ (M.elems $ tiRolePermInfoMap ti) $ \rpi ->
-      maybe (return ()) (\ipi -> liftTx $ buildInsInfra tn ipi pgCols) $ _permIns rpi
+      maybe (return ()) (liftTx . buildInsInfra tn) $ _permIns rpi
+
+  --recreate triggers
+  forM_ (M.elems $ scTables postSc) $ \ti -> do
+    let tn = tiName ti
+        cols = getCols $ tiFieldInfoMap ti
+    forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
+      let insert = otiCols <$> etiInsert eti
+          update = otiCols <$> etiUpdate eti
+          delete = otiCols <$> etiDelete eti
+          trid = etiId eti
+      liftTx $ mkTriggerQ trid trn tn cols (TriggerOpsDef insert update delete)
 
   return $ encJFromJ (res :: RunSQLRes)
 

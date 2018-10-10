@@ -12,7 +12,9 @@ import qualified Data.Text            as T
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Utils
+import           Hasura.Server.Auth
 import           Hasura.Server.Utils
+
 
 data InitError
   = InitError !String
@@ -24,14 +26,13 @@ instance Q.FromPGConnErr InitError where
 instance Q.FromPGTxErr InitError where
   fromPGTxErr = InitError . show
 
-type AccessKey = T.Text
 
 initErrExit :: (Show e) => e -> IO a
 initErrExit e = print e >> exitFailure
 
 -- clear the hdb_views schema
 initStateTx :: Q.Tx ()
-initStateTx = Q.unitQ clearHdbViews () False
+initStateTx = clearHdbViews
 
 data RawConnInfo =
   RawConnInfo
@@ -43,6 +44,16 @@ data RawConnInfo =
   , connDatabase :: !(Maybe String)
   , connOptions  :: !(Maybe String)
   } deriving (Eq, Read, Show)
+
+data CorsConfigG a
+  = CorsConfigG
+  { ccDomain   :: !a
+  , ccDisabled :: !Bool
+  } deriving (Show, Eq)
+
+type CorsConfigFlags = CorsConfigG (Maybe T.Text)
+type CorsConfig = CorsConfigG T.Text
+
 
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
@@ -145,19 +156,34 @@ parseServerPort =
            help "Port on which graphql-engine should be served")
 
 parseAccessKey :: Parser (Maybe AccessKey)
-parseAccessKey = optional $ strOption ( long "access-key" <>
-                             metavar "SECRET ACCESS KEY" <>
-                             help "Secret access key, required to access this instance"
-                           )
+parseAccessKey =
+  optional $ AccessKey <$>
+    strOption ( long "access-key" <>
+                metavar "SECRET ACCESS KEY" <>
+                help "Secret access key, required to access this instance"
+              )
 
-data CorsConfigG a
-  = CorsConfigG
-  { ccDomain   :: !a
-  , ccDisabled :: !Bool
-  } deriving (Show, Eq)
+parseWebHook :: Parser (Maybe Webhook)
+parseWebHook =
+  optional $ Webhook <$>
+    strOption ( long "auth-hook" <>
+                metavar "AUTHENTICATION WEB HOOK" <>
+                help "The authentication webhook, required to authenticate requests"
+              )
 
-type CorsConfigFlags = CorsConfigG (Maybe T.Text)
-type CorsConfig = CorsConfigG T.Text
+
+parseJwtSecret :: Parser (Maybe Text)
+parseJwtSecret =
+  optional $ strOption ( long "jwt-secret" <>
+                         metavar "JWK" <>
+                         help jwtSecretHelp
+                       )
+
+jwtSecretHelp :: String
+jwtSecretHelp = "The JSON containing type and the JWK used for verifying. e.g: "
+              <> "`{\"type\": \"HS256\", \"key\": \"<your-hmac-shared-secret>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`,"
+              <> "`{\"type\": \"RS256\", \"key\": \"<your-PEM-RSA-public-key>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`"
+
 
 parseCorsConfig :: Parser CorsConfigFlags
 parseCorsConfig =
@@ -169,12 +195,6 @@ parseCorsConfig =
   <*> switch ( long "disable-cors" <>
                help "Disable CORS handling"
              )
-
-parseWebHook :: Parser (Maybe T.Text)
-parseWebHook = optional $ strOption ( long "auth-hook" <>
-                            metavar "AUTHENTICATION WEB HOOK" <>
-                            help "The authentication webhook, required to authenticate requests"
-                          )
 
 parseEnableConsole :: Parser Bool
 parseEnableConsole = switch ( long "enable-console" <>
