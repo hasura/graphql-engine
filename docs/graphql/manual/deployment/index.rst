@@ -23,6 +23,10 @@ to configure Hasura GraphQL engine for your production environment:
 - :doc:`postgres-permissions`
 - :doc:`GraphQL engine server configuration <graphql-engine-flags/index>`
 
+For access to Hasura GraphQL engine server logs, check the below page for details:
+
+- :doc:`Server logs <logging>`
+
 
 .. toctree::
    :maxdepth: 1
@@ -35,4 +39,5 @@ to configure Hasura GraphQL engine for your production environment:
    securing-graphql-endpoint
    postgres-permissions
    GraphQL engine server configuration <graphql-engine-flags/index>
+   GraphQL engine server logs <logging>
    Updating GraphQL engine <updating>

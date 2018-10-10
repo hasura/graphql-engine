@@ -1,5 +1,5 @@
-Setting up schema using an existing database
-============================================
+Setting up GraphQL schema using an existing database
+====================================================
 
 When you have an existing database with a schema already present, you don't need to create tables or views or run
 DDL queries through the Hasura console.
@@ -27,7 +27,8 @@ To track all tables and views present in the database:
 2) Track foreign-keys
 ---------------------
 
-Tracking a foreign-key means creating a :doc:`relationship <relationships/index>` between the tables involved in the foreign-key.
+Tracking a foreign-key means creating a :doc:`relationship <relationships/index>` between the tables involved in the
+foreign-key.
 
 To track a foreign-key between two tables in the database:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -59,6 +60,6 @@ To track all the foreign-keys of all tables in the database:
   For example, for the foreign-key ``article::author_id -> author::id``, the relationship names will be
   ``authorByAuthorId`` for ``article`` table and ``articlesByAuthorId`` for ``author`` table.
 
-  You can change the relationship names by heading to the ``Relationships`` tab of the concerned table/view and
+  You can change the relationship names by heading to the ``Relationships`` tab of the concerned table and
   dropping and recreating the relationship with a name of your choice.
 
