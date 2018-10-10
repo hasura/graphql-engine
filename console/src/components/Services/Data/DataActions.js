@@ -109,7 +109,10 @@ const loadSchema = () => (dispatch, getState) => {
   );
 };
 
-const fetchViewInfoFromInformationSchema = viewName => (dispatch, getState) => {
+const fetchViewInfoFromInformationSchema = (schemaName, viewName) => (
+  dispatch,
+  getState
+) => {
   const url = Endpoints.getSchema;
   const options = {
     credentials: globalCookiePolicy,
@@ -131,6 +134,7 @@ const fetchViewInfoFromInformationSchema = viewName => (dispatch, getState) => {
         ],
         where: {
           table_name: viewName,
+          table_schema: schemaName,
         },
       },
     }),
