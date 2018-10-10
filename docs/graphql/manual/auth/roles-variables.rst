@@ -116,6 +116,6 @@ session token (authorization token, JWT, cookie etc.) that your app normally use
 Read more about :doc:`configuring webhook authentication for Hasura<webhook>`.
 
 There are 4 different types of operations for which you can define permissions on a table: Select, Insert,
-Update, and Delete.
+Update and Delete.
 
 
