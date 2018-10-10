@@ -19,15 +19,15 @@ Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgre
   Open Hasura console: visit https://my-app.herokuapp.com on a browser  
   Navigate to `Data` section in the top nav bar and create a table as follows:
 
-  ![Create author table](./assets/add_table.jpg)
+  ![Create author table](../gatsby-postgres-graphql/assets/add_table.jpg)
 
 - Insert sample data into `author` table:
 
-  ![Insert data into author table](./assets/insert_data.jpg)
+  ![Insert data into author table](../gatsby-postgres-graphql/assets/insert_data.jpg)
 
   Verify if the row is inserted successfully
 
-  ![Insert data into author table](./assets/browse_rows.jpg)
+  ![Insert data into author table](../gatsby-postgres-graphql/assets/browse_rows.jpg)
 
 - Clone this repo:
   ```bash
@@ -96,7 +96,7 @@ Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgre
 - Test the app
   Visit [http://localhost:8000](http://localhost:8000) to view the app
 
-  ![Demo app](./assets/test_app.jpg)
+  ![Demo app](../gatsby-postgres-graphql/assets/test_app.jpg)
 
 # How it works
 
