@@ -987,8 +987,8 @@ mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints viM allC
   where
 
     ordByEnums = fromMaybe Map.empty ordByResCtxM
-    upsertAllowed = or $ fmap snd insPermM
-    isUpsertable = upsertable constraints upsertAllowed $ isJust viM
+    upsertPerm = or $ fmap snd insPermM
+    isUpsertable = upsertable constraints upsertPerm $ isJust viM
     onConflictTypes = mkOnConflictTypes tn constraints allCols isUpsertable
     jsonOpTys = fromMaybe [] updJSONOpInpObjTysM
     relInsInpObjTys = maybe [] (map TIInpObj) $
@@ -1030,7 +1030,7 @@ mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints viM allC
     -- column fields used in insert input object
     insInpObjFldsM = mkColFldMap (mkInsInpTy tn) <$> insColsM
     -- relationship input objects
-    relInsInpObjsM = const (mkRelInsInps tn upsertAllowed) <$> insCtxM
+    relInsInpObjsM = const (mkRelInsInps tn isUpsertable) <$> insCtxM
     -- update set input type
     updSetInpObjM = mkUpdSetInp tn <$> updColsM
     -- update increment input type
@@ -1103,9 +1103,8 @@ getRootFldsRole' tn primCols constraints fields insM selM updM delM viM =
     mutHelper f getDet mutM =
       bool Nothing (getDet <$> mutM) $ isMutable f viM
     colInfos = fst $ validPartitionFieldInfoMap fields
-    getInsDet (hdrs, isUpsertAllowed) =
-      let isUpsertable = upsertable constraints isUpsertAllowed
-                         $ isJust viM
+    getInsDet (hdrs, upsertPerm) =
+      let isUpsertable = upsertable constraints upsertPerm $ isJust viM
       in ( OCInsert tn hdrs
          , Right $ mkInsMutFld tn isUpsertable
          )
