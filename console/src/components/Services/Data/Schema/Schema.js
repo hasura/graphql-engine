@@ -73,7 +73,7 @@ class Schema extends Component {
 
     const handleSchemaChange = e => {
       const updatedSchema = e.target.value;
-      dispatch(push('/data/schema/' + updatedSchema));
+      dispatch(push(`${appPrefix}/schema/${updatedSchema}`));
       Promise.all([
         dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
         dispatch(loadSchema()),
