@@ -1,0 +1,64 @@
+#!/usr/bin/env python
+"""
+Webhook for GraphQL engine
+For successful authentication
+1) Add header X-Hasura-Auth-From: webhook to the list of  headers
+2) Base64 encode the required headers (including X-Hasura-Auth-From)
+3) Pass it as the bearer token with the Authorization header
+"""
+import base64
+import json
+import ssl
+import http.server
+import traceback
+
+class S(http.server.BaseHTTPRequestHandler):
+
+    def do_GET(self):
+        if 'Authorization' in self.headers:
+            auth = self.headers['Authorization']
+            h = dict()
+            if auth.startswith("Bearer "):
+                try:
+                    h = json.loads(base64.b64decode(auth[7:]).decode("utf-8"))
+                    if h.get('X-Hasura-Auth-Mode') == 'webhook':
+                        print (h)
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(json.dumps(h).encode('utf-8'))
+                    else:
+                        print ('forbidden')
+                        self.send_response(401)
+                        self.end_headers()
+                        self.wfile.write('{}')
+                except  Exception as e:
+                    print ('forbidden')
+                    self.send_response(401)
+                    self.end_headers()
+                    print("type error: " + str(e))
+                    print(traceback.format_exc())
+        else:
+            self.send_response(401)
+            self.end_headers()
+            print ('forbidden')
+
+def run(server_class=http.server.HTTPServer, handler_class=S, port=9090):
+    server_address = ('', port)
+    httpd = server_class(server_address, handler_class)
+    httpd.socket = ssl.wrap_socket (
+        httpd.socket,
+        certfile='webhook.pem',
+        keyfile='webhook-key.pem',
+        server_side=True,
+        ssl_version=ssl.PROTOCOL_SSLv23)
+    print('Starting httpd...')
+    httpd.serve_forever()
+
+if __name__ == "__main__":
+    from sys import argv
+
+    if len(argv) == 2:
+        run(port=int(argv[1]))
+    else:
+        run()

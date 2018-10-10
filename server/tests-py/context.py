@@ -10,6 +10,7 @@ import requests
 import socket
 import websocket
 import subprocess
+import base64
 
 from http import HTTPStatus
 from urllib.parse import urlparse
@@ -53,7 +54,7 @@ class WebhookServer(http.server.HTTPServer):
         self.socket.bind(self.server_address)
 
 class HGECtx:
-    def __init__(self, hge_url, pg_url):
+    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure):
         server_address = ('0.0.0.0', 5592)
 
         self.resp_queue = queue.Queue(maxsize=1)
@@ -69,6 +70,9 @@ class HGECtx:
 
         self.http = requests.Session()
         self.hge_url = hge_url
+        self.hge_key = hge_key
+        self.hge_webhook = hge_webhook
+        self.webhook_insecure = webhook_insecure
 
         self.ws_url = urlparse(hge_url)
         self.ws_url = self.ws_url._replace(scheme='ws')
@@ -108,6 +112,7 @@ class HGECtx:
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)
 
+
     def anyq(self, u,  q, h):
         resp = self.http.post(
             self.hge_url + u,
@@ -117,9 +122,15 @@ class HGECtx:
         return resp.status_code, resp.json()
 
     def v1q(self, q):
+        h = dict()
+        if self.hge_key is not None and self.hge_webhook is None:
+            h['X-Hasura-Access-Key'] = self.hge_key
+        elif self.hge_key is not None and self.hge_webhook is not None and 'X-Hasura-Role' not in h:
+            h['X-Hasura-Access-Key'] = self.hge_key
         resp = self.http.post(
             self.hge_url + "/v1/query",
-            json=q
+            json=q,
+            headers=h
         )
         return resp.status_code, resp.json()
 

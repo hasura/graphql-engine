@@ -90,33 +90,13 @@ refs:
         at: /build
     - *wait_for_postgres
     - run:
-        name: run the server in background
-        working_directory: ./server
-        environment:
-          HASURA_GRAPHQL_DATABASE_URL: postgres://gql_test:@localhost:5432/gql_test
-          EVENT_WEBHOOK_HEADER: MyEnvValue
-        background: true
+        name: Run Python tests
         command: |
-          /build/_server_output/graphql-engine serve
+          .circleci/test-server.sh
     - run:
-        name: create test output dir
-        command: |
-          mkdir -p /build/_server_test_output/$PG_VERSION
-    - *wait_for_hge
-    - run:
-        name: pytest the server
-        working_directory: ./server/tests-py
-        environment:
-          DATABASE_URL: postgres://gql_test:@localhost:5432/gql_test
-          HGE_URL: http://localhost:8080
-        command: |
-          pip3 install -r requirements.txt
-          pytest -vv --hge-url="$HGE_URL" --pg-url="$DATABASE_URL"
-    - run:
-        name: stop the server and generate coverage report
+        name: Generate coverage report
         working_directory: ./server
         command: |
-          kill -2 $(ps -e | grep graphql-engine | awk '{print $1}')
           stack --system-ghc hpc report graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
     - store_artifacts:
         path: /build/_server_test_output
