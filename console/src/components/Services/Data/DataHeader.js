@@ -52,7 +52,7 @@ const DataHeader = ({
                       className={styles.schemaBorder}
                       to={appPrefix + '/schema'}
                     >
-                      Schema
+                      Schema - {currentSchema}
                     </Link>
                   </div>
                 </div>
