@@ -109,6 +109,35 @@ const loadSchema = () => (dispatch, getState) => {
   );
 };
 
+const fetchViewInfoFromInformationSchema = viewName => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify({
+      type: 'select',
+      args: {
+        table: {
+          name: 'views',
+          schema: 'information_schema',
+        },
+        columns: [
+          'is_updatable',
+          'is_insertable_into',
+          'is_trigger_updatable',
+          'is_trigger_deletable',
+          'is_trigger_insertable_into',
+        ],
+        where: {
+          table_name: viewName,
+        },
+      },
+    }),
+  };
+  return dispatch(requestAction(url, options));
+};
+
 const loadUntrackedSchema = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const currentSchema = getState().tables.currentSchema;
@@ -485,4 +514,5 @@ export {
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
   fetchTableListBySchema,
   RESET_MANUAL_REL_TABLE_LIST,
+  fetchViewInfoFromInformationSchema,
 };

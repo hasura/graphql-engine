@@ -31,15 +31,29 @@ import {
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from '../TableBrowseRows/ViewHeader';
-import { setTable } from '../DataActions';
+import {
+  setTable,
+  fetchViewInfoFromInformationSchema
+} from '../DataActions';
 import { getIngForm, escapeRegExp } from '../utils';
 import { legacyOperatorsMap } from './PermissionBuilder/utils';
 
 class Permissions extends Component {
+  constructor() {
+    super();
+    this.state = {};
+    this.state.viewInfo = {};
+  }
   componentDidMount() {
     this.props.dispatch({ type: RESET });
 
     this.props.dispatch(setTable(this.props.tableName));
+    this.props.dispatch(fetchViewInfoFromInformationSchema(this.props.tableName))
+      .then((r) => {
+        if (r.length > 0) {
+          this.setState({ ...this.state, viewInfo: r[0] });
+        }
+      });
   }
 
   render() {
@@ -62,7 +76,18 @@ class Permissions extends Component {
     if (tableType === 'table') {
       qTypes = ['insert', 'select', 'update', 'delete'];
     } else if (tableType === 'view') {
-      qTypes = ['select'];
+      qTypes = [];
+      // Add insert/update permission if it is insertable/updatable as returned by pg
+      if (this.state.viewInfo && 'is_insertable_into' in this.state.viewInfo && this.state.viewInfo.is_insertable_into === 'YES') {
+        qTypes.push('insert');
+      }
+
+      qTypes.push('select');
+
+      if (this.state.viewInfo && 'is_updatable' in this.state.viewInfo && this.state.viewInfo.is_updatable === 'YES') {
+        qTypes.push('update');
+        qTypes.push('delete');
+      }
     }
 
     const tSchema = allSchemas.find(t => t.table_name === tableName);
