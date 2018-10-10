@@ -50,7 +50,7 @@ Step 4: Open the hasura console
 The above creates a LoadBalancer type service with port 80. So you should be able to access the console at the
 external IP.
 
-For example, using docker-for-desktop on mac:
+For example, using Docker-for-desktop on Mac:
 
 .. code-block:: bash
 
@@ -64,12 +64,13 @@ Head to: http://localhost and the console should load!
 Step 5: Track existing tables and relationships
 -----------------------------------------------
 
-Follow :doc:`../../schema/using-existing-database` to enable GraphQL over the database.
+See :doc:`../../schema/using-existing-database` to enable GraphQL over the database.
 
 Advanced:
 ---------
 
 - :doc:`Securing your GraphQL endpoint <securing-graphql-endpoint>`
+- :doc:`GraphQL engine server logs <logging>`
 - :doc:`Updating GraphQL engine <updating>`
 - :doc:`Setting up migrations <../../migrations/index>`
 
@@ -78,4 +79,5 @@ Advanced:
    :hidden:
 
    Securing your GraphQL endpoint <securing-graphql-endpoint>
+   GraphQL engine server logs <logging>
    Updating GraphQL engine <updating>
