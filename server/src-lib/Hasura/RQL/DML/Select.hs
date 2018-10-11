@@ -22,6 +22,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
+import           Hasura.SQL.Rewrite         (prefixNumToAliases)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query          as Q
@@ -134,15 +135,50 @@ mkBaseTableAls :: Iden -> Iden
 mkBaseTableAls pfx =
   pfx <> Iden ".base"
 
-mkSelExtr
+-- posttgres ignores anything beyond 63 chars for an iden
+-- in this case, we'll need to use json_build_object function
+-- json_build_object is slower than row_to_json hence it is only
+-- used when needed
+buildJsonObject
   :: Iden -> FieldName
   -> [(FieldName, AnnFld)] -> (S.Alias, S.SQLExp)
-mkSelExtr pfx parAls flds =
+buildJsonObject pfx parAls flds =
+  if any ( (> 63) . T.length . getFieldNameTxt . fst ) flds
+  then withJsonBuildObj pfx parAls flds
+  else withRowToJSON pfx parAls flds
+
+-- uses row_to_json to build a json object
+withRowToJSON
+  :: Iden -> FieldName
+  -> [(FieldName, AnnFld)] -> (S.Alias, S.SQLExp)
+withRowToJSON pfx parAls flds =
   (S.toAlias parAls, jsonRow)
   where
     withAls fldName sqlExp =
       S.Extractor sqlExp $ Just $ S.toAlias fldName
     jsonRow = S.SEFnApp "row_to_json" [S.mkRowExp $ map toFldExtr flds] Nothing
+    toFldExtr (fldAls, fld) = withAls fldAls $ case fld of
+      FCol col    -> toJSONableExp (pgiType col) $
+                     S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
+      FExp e      -> S.SELit e
+      FRel annRel ->
+        let qual = case arType annRel of
+              ObjRel -> mkObjRelTableAls pfx $ arName annRel
+              ArrRel -> mkArrRelTableAls pfx parAls fldAls
+        in S.mkQIdenExp qual fldAls
+
+-- uses json_build_object to build a json object
+withJsonBuildObj
+  :: Iden -> FieldName
+  -> [(FieldName, AnnFld)] -> (S.Alias, S.SQLExp)
+withJsonBuildObj pfx parAls flds =
+  (S.toAlias parAls, jsonRow)
+  where
+    withAls fldName sqlExp =
+      [S.SELit $ getFieldNameTxt fldName, sqlExp]
+
+    jsonRow = S.SEFnApp "json_build_object" (concatMap toFldExtr flds) Nothing
+
     toFldExtr (fldAls, fld) = withAls fldAls $ case fld of
       FCol col    -> toJSONableExp (pgiType col) $
                      S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
@@ -220,7 +256,7 @@ mkBaseNode pfx fldAls (AnnSel flds tn fromItemM fltr permLimitM tableArgs) =
     fromItem = fromMaybe (S.FISimple tn Nothing) fromItemM
 
     -- the selection extractor
-    selExtr  = mkSelExtr pfx fldAls flds
+    selExtr  = buildJsonObject pfx fldAls flds
 
     -- all the relationships
     (allObjs, allArrs) =
@@ -611,6 +647,7 @@ getSelectDeps (AnnSel flds tn _ _ _ tableArgs) =
 
 mkSQLSelect :: Bool -> AnnSel -> S.Select
 mkSQLSelect isSingleObject annSel =
+  prefixNumToAliases $
   if isSingleObject
   then asSingleRow rootAls rootSelAsSubQuery
   else withJsonAgg Nothing rootAls rootSelAsSubQuery
