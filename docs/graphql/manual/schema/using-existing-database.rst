@@ -1,10 +1,10 @@
-Setting up schema using an existing database
-============================================
+Setting up GraphQL schema using an existing database
+====================================================
 
 When you have an existing database with a schema already present, you don't need to create tables or views or run
 DDL queries through the Hasura console.
 
-All you need to do is indicate to Hasura GraphQL engine, which tables and views you want to expose over GraphQL and
+All you need to do is indicate to Hasura GraphQL engine which tables and views you want to expose over GraphQL and
 how they are connected to each other so that you can query them as a "graph".
 
 1) Track tables/views
@@ -27,8 +27,8 @@ To track all tables and views present in the database:
 2) Track foreign-keys
 ---------------------
 
-Tracking a foreign-key means creating a :doc:`relationship <relationships/index>` between the tables involved in the foreign
-key.
+Tracking a foreign-key means creating a :doc:`relationship <relationships/index>` between the tables involved in the
+foreign-key.
 
 To track a foreign-key between two tables in the database:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -36,7 +36,7 @@ To track a foreign-key between two tables in the database:
 #. Head to the ``Data -> Schema`` section of the console.
 #. Click on a table involved in the foreign-key and head to the ``Relationships`` tab.
 #. You should see a suggested relationship based on the foreign-key. Click ``Add``, give a name to your relationship
-   (this will be the name of the :doc:`nested object <../queries/nested-object-queries>` in the GraphQL query) and
+   (this will be the name of the :doc:`nested object <../queries/nested-object-queries>` in the GraphQL query), and
    hit ``Save`` to create the relationship.
 #. Repeat with the other table involved in the foreign-key.
 
@@ -60,6 +60,6 @@ To track all the foreign-keys of all tables in the database:
   For example, for the foreign-key ``article::author_id -> author::id``, the relationship names will be
   ``authorByAuthorId`` for ``article`` table and ``articlesByAuthorId`` for ``author`` table.
 
-  You can change the relationship names by heading to the ``Relationships`` tab of the concerned table/view and
+  You can change the relationship names by heading to the ``Relationships`` tab of the concerned table and
   dropping and recreating the relationship with a name of your choice.
 
