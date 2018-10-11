@@ -26,4 +26,3 @@ The Hasura GraphQL engine lets you setup a GraphQL server and event triggers ove
   GraphQL engine internals <engine-internals/index>
   Troubleshooting <troubleshooting/index>
   guides/index
-  resources/index
