@@ -346,10 +346,12 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
   eventTriggers <- lift $ Q.catchE defaultTxErrorHandler fetchEventTriggers
   forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ tDefVal, webhook, nr, rint, Q.AltJ mheaders) -> do
     let headerConfs = fromMaybe [] mheaders
+        qt = QualifiedTable sn tn
+    allCols <- (getCols . tiFieldInfoMap) <$> askTabInfo qt
     headers <- getHeadersFromConf headerConfs
     tDef <- decodeValue tDefVal
     addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook headers
-    liftTx $ mkTriggerQ trid trn (QualifiedTable sn tn) tDef
+    liftTx $ mkTriggerQ trid trn qt allCols tDef
 
 
   where
@@ -449,12 +451,13 @@ runSqlP2 (RunSQL t cascade) = do
   --recreate triggers
   forM_ (M.elems $ scTables postSc) $ \ti -> do
     let tn = tiName ti
+        cols = getCols $ tiFieldInfoMap ti
     forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
       let insert = otiCols <$> etiInsert eti
           update = otiCols <$> etiUpdate eti
           delete = otiCols <$> etiDelete eti
           trid = etiId eti
-      liftTx $ mkTriggerQ trid trn tn (TriggerOpsDef insert update delete)
+      liftTx $ mkTriggerQ trid trn tn cols (TriggerOpsDef insert update delete)
 
   return $ encode (res :: RunSQLRes)
 

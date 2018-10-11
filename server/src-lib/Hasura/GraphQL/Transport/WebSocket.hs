@@ -55,7 +55,7 @@ type OperationMap
 data WSConnData
   = WSConnData
   -- the role and headers are set only on connection_init message
-  { _wscUser  :: !(IORef.IORef (Maybe UserInfo))
+  { _wscUser  :: !(IORef.IORef (Maybe (Either Text UserInfo)))
   -- we only care about subscriptions,
   -- the other operations (query/mutations)
   -- are not tracked here
@@ -164,7 +164,9 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndSend $ do
 
   userInfoM <- liftIO $ IORef.readIORef userInfoR
   userInfo <- case userInfoM of
-    Just userInfo -> return userInfo
+    Just (Right userInfo) -> return userInfo
+    Just (Left initErr) -> throwError $ SMConnErr $ ConnErrMsg $
+      "cannot start as connection_init failed with : " <> initErr
     Nothing       -> do
       let err = "start received before the connection is initialised"
       liftIO $ logger $ WSLog wsId $
@@ -261,10 +263,13 @@ onConnInit
 onConnInit (L.Logger logger) manager wsConn authMode connParamsM = do
   res <- runExceptT $ getUserInfo logger manager headers authMode
   case res of
-    Left e  ->
+    Left e  -> do
+      liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
+        Just $ Left $ qeError e
       sendMsg wsConn $ SMConnErr $ ConnErrMsg $ qeError e
     Right userInfo -> do
-      liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $ Just userInfo
+      liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
+        Just $ Right userInfo
       sendMsg wsConn SMConnAck
       -- TODO: send it periodically? Why doesn't apollo's protocol use
       -- ping/pong frames of websocket spec?

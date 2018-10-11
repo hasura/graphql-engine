@@ -1,13 +1,13 @@
 API Reference - Supported PostgreSQL Types
 ==========================================
 
-List of PostgreSQL types supported by the Hasura GraphQL engine with their equivalent GraphQL engine types:
+.. _types_table:
 
-.. _table:
+List of PostgreSQL types supported by the Hasura GraphQL engine with their equivalent Hasura types:
 
 .. csv-table::
    :file: pgtypes.csv
-   :widths: 10, 10, 25, 10
+   :widths: 13, 11, 25, 6
    :header-rows: 1
 
 .. _Int:
@@ -119,7 +119,7 @@ E.g.
 
 Date
 ----
-GraphQL custom scalar with name **date**. Date (no time of day). Allowed values are yyyy-mm-dd
+GraphQL custom scalar with name **date**. Date (no time of day). Allowed values are yyyy-mm-dd.
 
 E.g.
 
@@ -136,8 +136,8 @@ E.g.
 
 Time with time zone
 -------------------
-Graphql custom scalar type with name **timetz**. Time of day only, with time zone. Allowed values should be of ISO8601 format.
-Eg. 17:30:15Z, 17:30:15+05:30, 17:30:15.234890+05:30
+GraphQL custom scalar type with name **timetz**. Time of day only, with time zone. Allowed values should be of ISO8601 format
+(e.g. 17:30:15Z, 17:30:15+05:30, 17:30:15.234890+05:30).
 
 E.g.
 
@@ -154,8 +154,8 @@ E.g.
 
 Timestamp with time zone
 ------------------------
-Graphql custom scalar type with name **timestamptz**. Both date and time, with time zone. Allowed values should be of ISO8601 format.
-Eg. 2016-07-20T17:30:15Z, 2016-07-20T17:30:15+05:30, 2016-07-20T17:30:15.234890+05:30
+GraphQL custom scalar type with name **timestamptz**. Both date and time, with time zone. Allowed values should be of ISO8601 format
+(e.g. 2016-07-20T17:30:15Z, 2016-07-20T17:30:15+05:30, 2016-07-20T17:30:15.234890+05:30).
 
 E.g.
 
@@ -181,7 +181,7 @@ E.g.
    objects: [
      {
        id: 1,
-       json_col: "{ \'name\': \'raven\' }"
+       json_col: "{ \"name\": \"raven\" }"
      }
    ]
 
@@ -212,7 +212,7 @@ E.g.
      }
    }
 
-variable:-
+variable:
 
 .. code-block:: json
 
@@ -226,8 +226,8 @@ variable:-
 
 Implicitly Supported types
 --------------------------
-All ``Implicit`` types in above table_ are implicitly supported by GraphQL Engine. You have to provide the value in
-**String**.
+All ``Implicit`` types in the :ref:`above table <types_table>` are implicitly supported by GraphQL Engine. You have to
+provide the value in **String**.
 
 
 E.g. For time without time zone type
