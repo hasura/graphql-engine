@@ -230,7 +230,7 @@ Delete the key ``key3`` in the ``extra_info`` of an article:
 
 Update using **_delete_elem** operator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Update any ``jsonb`` column by deleting a array element with given index value. Input value should be a ``Int``.
+Update any ``jsonb`` column by deleting an array element with given index value. Input value should be a ``Int``.
 
 Delete the element at ``2`` in ``jsonb`` array ``["a", "b", "c"]`` of column ``extra_info`` of an article:
 
