@@ -124,7 +124,7 @@ in the ``migrations/`` directory in your project.
 
 .. note::
 
-   Migrations are only created when using the Console though CLI.
+   Migrations are only created when using the Console through CLI.
 
 Step 6: Apply the migrations to another instance of the GraphQL engine
 ----------------------------------------------------------------------
