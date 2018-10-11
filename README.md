@@ -35,7 +35,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 * **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
 * **Postgres** ❤️: Supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
 
-Read more at: [https://hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
+Read more at [https://hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
 
 ## Table of contents
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
@@ -188,11 +188,11 @@ license as [MongoDB](https://www.mongodb.com/community/licensing). We have
 written more about what you can and cannot do under AGPL
 [here](https://github.com/hasura/graphql-engine/wiki/License-Explained). 
 
-**Commercial licenses** that bundle the Hasura GraphQL Engine with support, and
+**Commercial licenses** that bundle the Hasura GraphQL Engine with support and
 SLAs are available on request. Please feel free to contact us at build@hasura.io
 or on our [website chat](https://hasura.io). 
 
-All **other content** (except those in [`server`](server), [`cli`](cli) and
-[`console`](console) directories) are under [MIT License](LICENSE-community).
+All **other contents** (except those in [`server`](server), [`cli`](cli) and
+[`console`](console) directories) are available under the [MIT License](LICENSE-community).
 This includes everything in the [`docs`](docs) and [`community`](community)
 directories.
