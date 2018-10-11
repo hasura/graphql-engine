@@ -93,6 +93,7 @@ Advanced:
 
 - :doc:`Securing your GraphQL endpoint <securing-graphql-endpoint>`
 - :doc:`using-existing-heroku-database`
+- :doc:`GraphQL engine server logs <logging>`
 - :doc:`Updating GraphQL engine <updating>`
 - :doc:`Setting up migrations <../../migrations/index>`
 
@@ -102,4 +103,5 @@ Advanced:
 
    Securing your GraphQL endpoint <securing-graphql-endpoint>
    using-existing-heroku-database
+   GraphQL engine server logs <logging>
    Updating GraphQL engine <updating>
