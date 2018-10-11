@@ -7,9 +7,9 @@ Deployment guides
 - :doc:`Deploy on Digital Ocean using Docker <deployment/digital-ocean>`
 
 .. note::
-  The above are guides to deploy Hasura GraphQL engine on some specific frameworks.
+   The above are guides to deploy Hasura GraphQL engine on some specific platforms.
 
-  For more generic guides, see :doc:`../deployment/index`
+   For more generic guides, see :doc:`../deployment/index`
 
 Sample apps
 -----------
