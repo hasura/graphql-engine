@@ -103,7 +103,7 @@ Using jsonb operators
 Update using **_append** operator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Update any ``jsonb`` column by appending it with given value. Since it is a json value, it should
-provided through a variable.
+be provided through a variable.
 
 Append the ``extra_info`` of an article:
 
