@@ -649,13 +649,14 @@ mkSQLSelect :: Bool -> AnnSel -> S.Select
 mkSQLSelect isSingleObject annSel =
   prefixNumToAliases $
   if isSingleObject
-  then asSingleRow rootAls rootSelAsSubQuery
-  else withJsonAgg Nothing rootAls rootSelAsSubQuery
+  then asSingleRow rootFldAls rootSelAsSubQuery
+  else withJsonAgg Nothing rootFldAls rootSelAsSubQuery
   where
-    rootSelAsSubQuery = S.mkSelFromItem rootSel rootAls
-    rootAls  = S.Alias $ Iden "root"
+    rootSelAsSubQuery = S.mkSelFromItem rootSel $ S.Alias $ Iden "root_alias"
     rootSel  = baseNodeToSel (S.BELit True) rootNode
-    rootNode = mkBaseNode (Iden "root") (FieldName "root") annSel
+    rootFldName = FieldName "root"
+    rootFldAls  = S.Alias $ toIden rootFldName
+    rootNode = mkBaseNode (Iden "root") rootFldName annSel
 
 asSingleRow :: S.Alias -> S.FromItem -> S.Select
 asSingleRow col fromItem =

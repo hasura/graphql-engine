@@ -143,7 +143,8 @@ uSqlExp = restoringIdens . \case
   S.SEStar                      -> return S.SEStar
   -- this is for row expressions
   -- todo: check if this is always okay
-  S.SEIden iden                 -> S.SEIden <$> getIden iden
+  S.SEIden iden                 -> return $ S.SEIden iden
+  S.SERowIden iden              -> S.SERowIden <$> getIden iden
   S.SEQIden (S.QIden qual iden) -> do
     newQual <- uQual qual
     return $ S.SEQIden $ S.QIden newQual iden

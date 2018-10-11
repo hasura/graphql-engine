@@ -132,7 +132,7 @@ mkRowExp extrs = let
 
   -- SELECT r FROM (SELECT col1, col2, .. ) AS r
   outerSel = mkSelect
-             { selExtr = [mkExtr innerSelName]
+             { selExtr = [Extractor (SERowIden $ toIden innerSelName) Nothing]
              , selFrom = Just $ FromExp
                          [mkSelFromExp False innerSel innerSelName]
              }
@@ -245,6 +245,8 @@ data SQLExp
   | SESelect !Select
   | SEStar
   | SEIden !Iden
+  -- iden and row identifier are distinguished for easier rewrite rules
+  | SERowIden !Iden
   | SEQIden !QIden
   | SEFnApp !T.Text ![SQLExp] !(Maybe OrderByExp)
   | SEOpApp !SQLOp ![SQLExp]
@@ -280,6 +282,8 @@ instance ToSQL SQLExp where
   toSQL SEStar =
     BB.char7 '*'
   toSQL (SEIden iden) =
+    toSQL iden
+  toSQL (SERowIden iden) =
     toSQL iden
   toSQL (SEQIden qIden) =
     toSQL qIden
