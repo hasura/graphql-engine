@@ -281,6 +281,9 @@ class TestGraphqlDeletePermissions:
     def test_author_cannot_delete_other_users_articles(self, hge_ctx):
        check_query_f(hge_ctx, self.dir + "/author_cannot_delete_other_users_articles.yaml")
 
+    def test_resident_delete_without_select_perm_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/resident_delete_without_select_perm_fail.yaml")
+
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
         self.dir = "queries/graphql_mutation/delete/permissions"

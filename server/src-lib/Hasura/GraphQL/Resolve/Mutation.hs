@@ -12,7 +12,7 @@ module Hasura.GraphQL.Resolve.Mutation
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Delete             as RD
@@ -61,7 +61,7 @@ convertRowObj
   => AnnGValue
   -> m [(PGCol, S.SQLExp)]
 convertRowObj val =
-  flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
+  flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
     prepExpM <- asPGColValM v >>= mapM prepare
     let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (PGCol $ G.unName k, prepExp)
@@ -84,7 +84,7 @@ convObjWithOp
   :: (MonadError QErr m)
   => ApplySQLOp -> AnnGValue -> m [(PGCol, S.SQLExp)]
 convObjWithOp opFn val =
-  flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
+  flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
   (_, colVal) <- asPGColVal v
   let pgCol = PGCol $ G.unName k
       encVal = txtEncoder colVal
@@ -95,7 +95,7 @@ convDeleteAtPathObj
   :: (MonadError QErr m)
   => AnnGValue -> m [(PGCol, S.SQLExp)]
 convDeleteAtPathObj val =
-  flip withObject val $ \_ obj -> forM (Map.toList obj) $ \(k, v) -> do
+  flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
     vals <- flip withArray v $ \_ annVals -> mapM asPGColVal annVals
     let valExps = map (txtEncoder . snd) vals
         pgCol = PGCol $ G.unName k
