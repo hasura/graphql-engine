@@ -3,16 +3,16 @@ Exporting the Hasura GraphQL schema
 
 If you need to share or export the GraphQL schema, you can use community tooling such as
 `graphqurl <https://github.com/hasura/graphqurl>`_, `apollo <https://github.com/apollographql/apollo-cli>`_,
-`get-graphql-schema <https://github.com/prismagraphql/get-graphql-schema>`_ etc.
+`get-graphql-schema <https://github.com/prismagraphql/get-graphql-schema>`_, etc.
 
 For example, using ``graphqurl``, you can get the schema as follows:
 
 Run ``npm install -g graphqurl`` to install ``graphqurl``. Then you can run the following commands to download the
-GraphQL schema.
+GraphQL schema:
 
 .. code-block:: bash
 
-  # If the GraphQL engine is running at at https://my-graphql-engine.com/v1alpha1/graphql,
+  # If the GraphQL engine is running at https://my-graphql-engine.com/v1alpha1/graphql,
   # without an access key
   gq https://my-graphql-engine.com/v1alpha1/graphql --introspect > schema.graphql
 
@@ -20,7 +20,7 @@ GraphQL schema.
   gq https://my-graphql-engine.com/v1alpha1/graphql -H 'X-Hasura-Access-Key: secretaccesskey' --introspect > schema.graphql
 
 By default, it downloads the schema in ``.graphql`` format. If you want it in JSON format, you can use an additional
-flag ``--format json``.
+flag ``--format json``:
 
 .. code-block:: bash
 
