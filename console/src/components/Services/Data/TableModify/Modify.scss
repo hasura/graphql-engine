@@ -270,5 +270,30 @@ hr
     .editActionButton {
       margin-right: 20px;
     }
+    .form_permission_insert_set_wrapper {
+      margin-left: 5px;
+      .permission_insert_set_wrapper {
+        .configure_insert_set_checkbox {
+          position: relative;
+          display: block;
+          margin-top: 10px;
+          margin-bottom: 10px;
+          label {
+            cursor: pointer;
+            min-height: 20px;
+            font-weight: normal;
+          }
+        }
+        .input_element_wrapper {
+          width: 20%;
+          select {
+            width: 100%;
+          }
+          input {
+            width: 100%;
+          }
+        }
+      }
+    }
   }
 }

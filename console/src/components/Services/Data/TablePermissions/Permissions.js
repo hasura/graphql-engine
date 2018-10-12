@@ -208,21 +208,21 @@ class Permissions extends Component {
         const bulkSelect = permsState.bulkSelect;
         const currentInputSelection = bulkSelect.filter(e => e === role)
           .length ? (
-            <input
-              onChange={dispatchBulkSelect}
-              checked="checked"
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          ) : (
-            <input
-              onChange={dispatchBulkSelect}
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          );
+          <input
+            onChange={dispatchBulkSelect}
+            checked="checked"
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        ) : (
+          <input
+            onChange={dispatchBulkSelect}
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        );
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
@@ -452,6 +452,90 @@ class Permissions extends Component {
       }
 
       return _upsertSection;
+    };
+
+    const getInsertSetPermission = permsState => {
+      console.log(permsState);
+      const insertSetTooltip = (
+        <Tooltip id="tooltip-upsert">
+          Preset values for columns for this role. Set static values or use
+          session variables. Read more
+        </Tooltip>
+      );
+      return (
+        <div className={styles.editPermissionsSection}>
+          <form className={styles.form_permission_insert_set_wrapper}>
+            <div className={styles.permission_insert_set_wrapper}>
+              <div className={styles.configure_insert_set_checkbox}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={false}
+                    value="toggle_upsert"
+                  />
+                  <span className={styles.mar_left}>
+                    Configure column presets &nbsp;
+                    <OverlayTrigger
+                      placement="right"
+                      overlay={insertSetTooltip}
+                    >
+                      <i className="fa fa-question-circle" aria-hidden="true" />
+                    </OverlayTrigger>
+                  </span>
+                </label>
+              </div>
+              <div
+                className={
+                  styles.display_inline +
+                  ' ' +
+                  styles.add_mar_right +
+                  ' ' +
+                  styles.input_element_wrapper
+                }
+              >
+                <select>
+                  <option value="" disabled selected>
+                    Column Name
+                  </option>
+                  <option value="id">id</option>
+                  <option value="name">name</option>
+                </select>
+              </div>
+              <div
+                className={
+                  styles.display_inline +
+                  ' ' +
+                  styles.add_mar_right +
+                  ' ' +
+                  styles.input_element_wrapper
+                }
+              >
+                <select>
+                  <option value="" disabled selected>
+                    Select Preset Type
+                  </option>
+                  <option value="id">static</option>
+                  <option value="name">from session variable</option>
+                </select>
+              </div>
+              <div
+                className={
+                  styles.display_inline +
+                  ' ' +
+                  styles.add_mar_right +
+                  ' ' +
+                  styles.input_element_wrapper
+                }
+              >
+                <input
+                  className={`form-control ${styles.newRoleInput}`}
+                  placeholder="column_value"
+                />
+              </div>
+            </div>
+          </form>
+        </div>
+      );
     };
 
     const getColumnList = (tableSchema, permsState) => {
@@ -895,6 +979,7 @@ class Permissions extends Component {
           {getColumnSection(tableSchema, permsState)}
           {getLimitSection(permsState)}
           {getUpsertSection(permsState)}
+          {getInsertSetPermission(permsState)}
           {getButtonsSection(tableSchema, permsState)}
         </div>
       </div>
