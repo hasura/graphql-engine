@@ -8,30 +8,30 @@ to another table which contains the reference list of allowed values. This ensur
 only if it exists in the reference table.
 
 **For example**: let's say we have a table ``magazine`` with fields ``(id, title, issue_month, issue_year)``
-and we would like to restrict the values of the ``issue_month`` field to just the months of the year, ie: January,
-February and so on.
+and we would like to restrict the values of the ``issue_month`` field to just the months of the year (i.e. January,
+February, and so on).
 
 1) Create a reference table for the enum
 ----------------------------------------
 
 Open the Hasura console and head to the ``Data -> Create table`` interface.
 
-Create a table ``months_of_the_year`` with just one column ``month`` which is the primary key:
+Create a table ``months_of_the_year`` with just one column ``month``, which is the primary key:
 
 .. image:: ../../../img/graphql/manual/schema/enum-create-ref-table.png
 
 2) Add the allowed enum values to the reference table
 -----------------------------------------------------
 
-Head to the ``GraphiQL`` tab of the console and run an insert mutation to insert the allowed enum values.
+Head to the ``GraphiQL`` tab of the console and run an insert mutation to insert the allowed enum values:
 
 .. image:: ../../../img/graphql/manual/schema/enum-insert-ref-values.png
 
 3) Set a foreign-key to the reference table
 -------------------------------------------
 
-Head to ``Data -> magazine -> Modify`` tab of the console and set a foreign-key to the ``months_of_the_year`` table
-using the fields: ``issue_month -> months_of_the_year :: month``.
+Head to the ``Data -> magazine -> Modify`` tab of the console and set a foreign-key to the ``months_of_the_year`` table
+using the fields: ``issue_month -> months_of_the_year :: month``:
 
 .. image:: ../../../img/graphql/manual/schema/enum-set-foreign-key.png
 

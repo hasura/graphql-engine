@@ -158,6 +158,25 @@ mkJwtCtx jwtConf httpManager loggerCtx = do
   where
     decodeErr e = throwError . T.pack $ "Fatal Error: JWT conf: " <> e
 
+getEnableConsoleEnv :: IO Bool
+getEnableConsoleEnv = do
+  mVal <- fmap T.pack <$> lookupEnv enableConsoleEnvVar
+  maybe (return False) (parseAsBool . T.toLower) mVal
+  where
+    enableConsoleEnvVar = "HASURA_GRAPHQL_ENABLE_CONSOLE"
+    truthVals = ["true", "t", "yes", "y"]
+    falseVals = ["false", "f", "no", "n"]
+
+    parseAsBool t
+      | t `elem` truthVals = return True
+      | t `elem` falseVals = return False
+      | otherwise = putStrLn errMsg >> exitFailure
+
+    errMsg = "Fatal Error: " ++ enableConsoleEnvVar
+             ++ " is not valid boolean text. " ++ "True values are "
+             ++ show truthVals ++ " and  False values are " ++ show falseVals
+             ++ ". All values are case insensitive"
+
 main :: IO ()
 main =  do
   (RavenOptions rci ravenMode) <- parseArgs
@@ -185,12 +204,17 @@ main =  do
       am <- either ((>> exitFailure) . putStrLn . T.unpack) return authModeRes
       finalCorsDomain <- fromMaybe "*" <$> considerEnv "HASURA_GRAPHQL_CORS_DOMAIN" (ccDomain corsCfg)
       let finalCorsCfg = CorsConfigG finalCorsDomain $ ccDisabled corsCfg
+      -- enable console config
+      finalEnableConsole <- bool getEnableConsoleEnv (return True) enableConsole
+      -- init catalog if necessary
       initialise ci
+      -- migrate catalog if necessary
       migrate ci
       prepareEvents ci
       pool <- Q.initPGPool ci cp
       putStrLn $ "server: running on port " ++ show port
-      (app, cacheRef) <- mkWaiApp isoL mRootDir loggerCtx pool httpManager am finalCorsCfg enableConsole
+      (app, cacheRef) <- mkWaiApp isoL mRootDir loggerCtx pool httpManager
+                         am finalCorsCfg finalEnableConsole
       let warpSettings = Warp.setPort port Warp.defaultSettings
                          -- Warp.setHost "*" Warp.defaultSettings
 
