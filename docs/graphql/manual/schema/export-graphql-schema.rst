@@ -12,7 +12,7 @@ GraphQL schema:
 
 .. code-block:: bash
 
-  # If the GraphQL engine is running at at https://my-graphql-engine.com/v1alpha1/graphql,
+  # If the GraphQL engine is running at https://my-graphql-engine.com/v1alpha1/graphql,
   # without an access key
   gq https://my-graphql-engine.com/v1alpha1/graphql --introspect > schema.graphql
 
