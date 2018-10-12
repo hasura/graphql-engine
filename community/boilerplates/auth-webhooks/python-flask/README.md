@@ -14,7 +14,7 @@ cd graphql-engine/community/boilerplates/auth-webhooks/python-flask
 
 Run the webhook using any of the tree methods below:
 
-#### Run locally
+### Run locally
 
 ```bash
 pip install -r requirements.txt
@@ -24,7 +24,7 @@ flask run
 
 Webhook will be available at `http://localhost:5000/auth-webhook`
 
-#### Using Docker
+### Using Docker
 
 ```bash
 docker build -t hasura-auth-webhook .
@@ -33,7 +33,7 @@ docker run -p 5000:5000 hasura-auth-webhook
 
 Webhook will be available at `http://localhost:5000/auth-webhook`
 
-#### Deploy using Now
+### Deploy using Now
 
 Install and configure [`now`](https://zeit.co/now):
 
