@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE DeriveLift                 #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
 module Hasura.SQL.Types where
@@ -21,6 +22,7 @@ import qualified Data.ByteString.Lazy       as BL
 import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Extended         as T
 import qualified Database.PostgreSQL.LibPQ  as PQ
+import qualified PostgreSQL.Binary.Decoding as PD
 
 class ToSQL a where
   toSQL :: a -> BB.Builder
@@ -105,6 +107,34 @@ instance DQuote TableName where
 
 instance ToSQL TableName where
   toSQL = toSQL . toIden
+
+data TableType
+  = TTBaseTable
+  | TTView
+  | TTForeignTable
+  | TTLocalTemporary
+  deriving (Eq)
+
+tableTyToTxt :: TableType -> T.Text
+tableTyToTxt TTBaseTable      = "BASE TABLE"
+tableTyToTxt TTView           = "VIEW"
+tableTyToTxt TTForeignTable   = "FOREIGN TABLE"
+tableTyToTxt TTLocalTemporary = "LOCAL TEMPORARY"
+
+instance Show TableType where
+  show = T.unpack . tableTyToTxt
+
+instance Q.FromCol TableType where
+  fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
+    "BASE TABLE"      -> Just TTBaseTable
+    "VIEW"            -> Just TTView
+    "FOREIGN TABLE"   -> Just TTForeignTable
+    "LOCAL TEMPORARY" -> Just TTLocalTemporary
+    _                 -> Nothing
+
+isView :: TableType -> Bool
+isView TTView = True
+isView _      = False
 
 newtype ConstraintName
   = ConstraintName { getConstraintTxt :: T.Text }
