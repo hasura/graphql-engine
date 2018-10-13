@@ -191,7 +191,7 @@ The response would be:
 
 If your Postgres already contains tables that you are trying to import using `json2graphql`, the command will fail.
 
-If you want to overwrite the the existing tables in the database with the new tables from your sample JSON database, you must provide a flag `-o` or `--overwrite`
+If you want to overwrite the existing tables in the database with the new tables from your sample JSON database, you must provide a flag `-o` or `--overwrite`
 
 ---
 Maintained with :heart: by <a href="https://hasura.io">Hasura</a>
