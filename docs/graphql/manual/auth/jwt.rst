@@ -151,7 +151,7 @@ encoded public key) as string as well - under the ``key`` field.
 
 **Rotating JWKs**:
 
-Some provider rotates their JWKs (like Firebase). If the provider sends an
+Some providers rotate their JWKs (like Firebase). If the provider sends an
 ``Expires`` header with the response of JWK, then graphql-engine will refresh
 the JWKs automatically. If the provider does not send ``Expires`` header, the
 JWKs are not refreshed.
