@@ -3,8 +3,8 @@
 **NOTE**
 Some of the language/platforms are work in progress. We welcome contributions for the WIP langauages. See issues and the following checklist:
 
-| Folder name | Use-case| Javascript | Java | C# | F#
-|-------------|---------|:--------:|:------:|:----:|:---:
+| Folder name | Use-case| Javascript | Java | C# | F# | TypeScript | Python | PHP | Batch (.cmd, .bat) | Bash | PowerShell
+|-------------|---------|:--------:|:------:|:----:|:---:|:-------:|:------:|:---:|:------------------:|:----:|:----------:
 | echo | echo the trigger payload  | ✅ | ❌ | ❌ | ❌ 
 | mutation | insert related data on an insert event using graphql mutation | ✅ | ❌ | ❌ | ❌ 
 | push-notification | send push notification on database event | ❌ | ❌ | ❌ | ❌ 
