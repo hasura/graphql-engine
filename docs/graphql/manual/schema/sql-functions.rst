@@ -5,21 +5,21 @@ Let's say you want to set the value of some fields as the output of some custom 
 
 This can be achieved by:
 
-#. Modifying the table to allow the columns we want to be set by the SQL functions as nullable (to allow the initial
+#. Modifying the table to allow the columns we want to be set by the SQL functions to be nullable (to allow the initial
    insert before the SQL function is run).
 #. Creating an insert/update trigger on the table that calls your SQL function and sets the output values in the output
    columns.
 #. Making your mutation requests without setting the SQL function output columns.
 
 **For example**, say we have a table ``sql_function_table`` with columns ``input`` and ``output`` and we would like
-to set the value of the ``output`` column as the uppercased value of the string received in ``input`` field.
+to set the value of the ``output`` column as the uppercased value of the string received in the ``input`` field.
 
 1) Modify the table
 -------------------
 
 Modify the table ``sql_function_table`` and make its ``output`` column nullable.
 
-Open the console and head to ``Data -> sql_function_table -> Modify``
+Open the console and head to ``Data -> sql_function_table -> Modify``:
 
 .. image:: ../../../img/graphql/manual/schema/modify-sql-fn-table.png
 
@@ -27,7 +27,7 @@ Open the console and head to ``Data -> sql_function_table -> Modify``
 -------------------
 
 The below SQL defines a ``trigger`` which will simply uppercase the value passed in the ``input`` field and set it to
-the ``output`` field whenever an insert or update is made to the ``sql_function_table``.
+the ``output`` field whenever an insert or update is made to the ``sql_function_table``:
 
 .. code-block:: plpgsql
 
@@ -82,5 +82,5 @@ value (output="YABBA DABBA DOO!") will be set automatically.
 
 .. note::
 
-  This approach enforces the value set in the field to always be the result of the defined SQL function unlike
-  :doc:`setting a default value <default-values>` instead.
+  This approach enforces the value set in the field to always be the result of the defined SQL function, unlike
+  :doc:`setting a default value <default-values>`.

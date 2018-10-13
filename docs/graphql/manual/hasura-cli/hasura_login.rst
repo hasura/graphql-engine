@@ -9,7 +9,7 @@ Synopsis
 ~~~~~~~~
 
 
-Browser based login to access your clusters and other information from hasura.io dashboard.
+Browser-based login to access your clusters and other information from hasura.io dashboard.
 
 ::
 

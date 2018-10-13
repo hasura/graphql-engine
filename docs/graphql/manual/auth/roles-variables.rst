@@ -7,7 +7,7 @@ use-cases conveniently.
 Roles
 -----
 Every table/view can have permission rules that are grouped together by multiple roles.
-By default, there is an ``admin`` role that can perform any operation or any table.
+By default, there is an ``admin`` role that can perform any operation on any table.
 
 You can create your own roles that make it easy for you to group permissions together.
 
@@ -39,7 +39,7 @@ When you create a permission, or an access control rule, the permission rule its
 that are derived from the request itself. Let's refer to these as *session variables*.
 
 For example: If a user makes a request, the session token maps to a ``user-id``. This ``user-id`` can be used in
-a permission to represent that inserts into a table are only allowed if the ``user_id`` column has a value equal to that
+a permission to show that inserts into a table are only allowed if the ``user_id`` column has a value equal to that
 of ``user-id``, the session variable.
 
 When you are constructing permission rules, however, there might be several variables that represent the business logic
@@ -88,7 +88,7 @@ Examples:
 Indicating roles and session-variables in a GraphQL request
 -----------------------------------------------------------
 
-Now that we have these roles and permission rules that use session-variables set up, how do we actually use them
+Now that we have these roles and permission rules that use session variables set up, how do we actually use them
 when we make GraphQL requests from an app or from a different service?
 
 Option 1: Development & Testing
@@ -115,7 +115,7 @@ session token (authorization token, JWT, cookie etc.) that your app normally use
 
 Read more about :doc:`configuring webhook authentication for Hasura<webhook>`.
 
-There are 4 different types of operations for which you can define permissions on a table, ie: Select, Insert,
+There are 4 different types of operations for which you can define permissions on a table: Select, Insert,
 Update and Delete.
 
 

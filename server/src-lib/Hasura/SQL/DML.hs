@@ -132,7 +132,7 @@ mkRowExp extrs = let
 
   -- SELECT r FROM (SELECT col1, col2, .. ) AS r
   outerSel = mkSelect
-             { selExtr = [mkExtr innerSelName]
+             { selExtr = [Extractor (SERowIden $ toIden innerSelName) Nothing]
              , selFrom = Just $ FromExp
                          [mkSelFromExp False innerSel innerSelName]
              }
@@ -245,6 +245,8 @@ data SQLExp
   | SESelect !Select
   | SEStar
   | SEIden !Iden
+  -- iden and row identifier are distinguished for easier rewrite rules
+  | SERowIden !Iden
   | SEQIden !QIden
   | SEFnApp !T.Text ![SQLExp] !(Maybe OrderByExp)
   | SEOpApp !SQLOp ![SQLExp]
@@ -280,6 +282,8 @@ instance ToSQL SQLExp where
   toSQL SEStar =
     BB.char7 '*'
   toSQL (SEIden iden) =
+    toSQL iden
+  toSQL (SERowIden iden) =
     toSQL iden
   toSQL (SEQIden qIden) =
     toSQL qIden
@@ -337,9 +341,10 @@ instance ToSQL Extractor where
   toSQL (Extractor ce mal) =
     toSQL ce <-> toSQL mal
 
-data DistinctExpr = DistinctSimple
-                  | DistinctOn ![SQLExp]
-                  deriving (Show, Eq)
+data DistinctExpr
+  = DistinctSimple
+  | DistinctOn ![SQLExp]
+  deriving (Show, Eq)
 
 instance ToSQL DistinctExpr where
   toSQL DistinctSimple    = BB.string7 "DISTINCT"
@@ -377,11 +382,12 @@ instance ToSQL Lateral where
   toSQL (Lateral False) = mempty
 
 data JoinExpr
-  = JoinExpr { tjeLeft  :: !FromItem
-             , tjeType  :: !JoinType
-             , tjeRight :: !FromItem
-             , tjeJC    :: !JoinCond
-             } deriving (Show, Eq)
+  = JoinExpr
+  { tjeLeft  :: !FromItem
+  , tjeType  :: !JoinType
+  , tjeRight :: !FromItem
+  , tjeJC    :: !JoinCond
+  } deriving (Show, Eq)
 
 instance ToSQL JoinExpr where
   toSQL je =
@@ -390,11 +396,12 @@ instance ToSQL JoinExpr where
     <-> toSQL (tjeRight je)
     <-> toSQL (tjeJC je)
 
-data JoinType = Inner
-              | LeftOuter
-              | RightOuter
-              | FullOuter
-              deriving (Eq, Show)
+data JoinType
+  = Inner
+  | LeftOuter
+  | RightOuter
+  | FullOuter
+  deriving (Eq, Show)
 
 instance ToSQL JoinType where
   toSQL Inner      = BB.string7 "INNER JOIN"
@@ -402,9 +409,10 @@ instance ToSQL JoinType where
   toSQL RightOuter = BB.string7 "RIGHT OUTER JOIN"
   toSQL FullOuter  = BB.string7 "FULL OUTER JOIN"
 
-data JoinCond = JoinOn !BoolExp
-              | JoinUsing ![PGCol]
-              deriving (Show, Eq)
+data JoinCond
+  = JoinOn !BoolExp
+  | JoinUsing ![PGCol]
+  deriving (Show, Eq)
 
 instance ToSQL JoinCond where
   toSQL (JoinOn be) =
@@ -412,14 +420,15 @@ instance ToSQL JoinCond where
   toSQL (JoinUsing cols) =
     BB.string7 "USING" <-> paren (","  <+> cols)
 
-data BoolExp = BELit !Bool
-             | BEBin !BinOp !BoolExp !BoolExp
-             | BENot !BoolExp
-             | BECompare !CompareOp !SQLExp !SQLExp
-             | BENull !SQLExp
-             | BENotNull !SQLExp
-             | BEExists !Select
-             deriving (Show, Eq)
+data BoolExp
+  = BELit !Bool
+  | BEBin !BinOp !BoolExp !BoolExp
+  | BENot !BoolExp
+  | BECompare !CompareOp !SQLExp !SQLExp
+  | BENull !SQLExp
+  | BENotNull !SQLExp
+  | BEExists !Select
+  deriving (Show, Eq)
 
 -- removes extraneous 'AND true's
 simplifyBoolExp :: BoolExp -> BoolExp

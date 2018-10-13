@@ -34,7 +34,7 @@ const executeSQL = isMigration => (dispatch, getState) => {
   const currMigrationMode = getState().main.migrationMode;
 
   const migrateUrl = returnMigrateUrl(currMigrationMode);
-  const currentSchema = getState().tables.currentSchema;
+  let currentSchema = 'public';
   const isCascadeChecked = getState().rawSQL.isCascadeChecked;
 
   let url = Endpoints.rawSQL;
@@ -46,11 +46,18 @@ const executeSQL = isMigration => (dispatch, getState) => {
   ];
   // check if track view enabled
   if (getState().rawSQL.isTableTrackChecked) {
-    const regExp = /create (view|table) (\S+)/i;
+    const regExp = /create (view|table) ((\S+)\.(\S+)|(\S+))/i;
     const matches = sql.match(regExp);
-    let trackViewName = matches ? matches[2] : '';
-    if (trackViewName.indexOf('.') !== -1) {
-      trackViewName = matches[2].split('.')[1];
+    // If group 5 is undefined, use group 3 and 4 for schema and table respectively
+    // If group 5 is present, use group 5 for table name using public schema.
+    let trackViewName = '';
+    if (matches && matches.length === 6) {
+      if (matches[5]) {
+        trackViewName = matches[5];
+      } else {
+        currentSchema = matches[3].replace(/['"]+/g, '');
+        trackViewName = matches[4];
+      }
     }
     trackViewName = trackViewName.replace(/['"]+/g, ''); // replace quotes
     const trackQuery = {

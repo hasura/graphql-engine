@@ -1,7 +1,8 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiWayIf            #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Hasura.GraphQL.Validate.InputValue
   ( validateInputValue
@@ -12,11 +13,13 @@ module Hasura.GraphQL.Validate.InputValue
 
 import           Data.Scientific                 (fromFloatDigits)
 import           Hasura.Prelude
+import           Hasura.Server.Utils             (duplicates)
 
 import           Data.Has
 
 import qualified Data.Aeson                      as J
 import qualified Data.HashMap.Strict             as Map
+import qualified Data.HashMap.Strict.InsOrd      as OMap
 import qualified Data.Vector                     as V
 import qualified Language.GraphQL.Draft.Syntax   as G
 
@@ -168,26 +171,31 @@ validateObject
   -> InpObjTyInfo -> [(G.Name, a)] -> m AnnGObject
 validateObject valParser tyInfo flds = do
 
-  fldMap <- fmap (Map.map snd) $ onLeft (mkMapWith fst flds) $ \dups ->
+  -- check duplicates
+  unless (null dups) $
     throwVE $ "when parsing a value of type: " <> showNamedTy (_iotiName tyInfo)
     <> ", the following fields are duplicated: "
     <> showNames dups
 
-  annFldsM <- forM (Map.toList $ _iotiFields tyInfo) $
+  -- check fields with not null types
+  forM_ (Map.toList $ _iotiFields tyInfo) $
     \(fldName, inpValInfo) -> do
-      let fldValM = Map.lookup fldName fldMap
-          ty = _iviType inpValInfo
+      let ty = _iviType inpValInfo
           isNotNull = G.isNotNull ty
-      when (isNothing fldValM && isNotNull) $ throwVE $
+          fldPresent = fldName `elem` inpFldNames
+      when (not fldPresent && isNotNull) $ throwVE $
         "field " <> G.unName fldName <> " of type " <> G.showGT ty
         <> " is required, but not found"
-      forM fldValM $ \fldVal ->
-        withPathK (G.unName fldName) $ do
-          fldTy <- getInpFieldInfo tyInfo fldName
-          convFldVal <- validateInputValue valParser fldTy fldVal
-          return (fldName, convFldVal)
 
-  return $ Map.fromList $ catMaybes annFldsM
+  fmap OMap.fromList $ forM flds $ \(fldName, fldVal) ->
+    withPathK (G.unName fldName) $ do
+      fldTy <- getInpFieldInfo tyInfo fldName
+      convFldVal <- validateInputValue valParser fldTy fldVal
+      return (fldName, convFldVal)
+
+  where
+    inpFldNames = map fst flds
+    dups = duplicates inpFldNames
 
 validateNamedTypeVal
   :: ( MonadReader r m, Has TypeMap r

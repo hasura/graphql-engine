@@ -155,6 +155,10 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
   -- Get the current table information
   tableInfo <- askTabInfo tableName
 
+  -- If table is view then check if it is insertable
+  mutableView tableName viIsInsertable
+    (tiViewInfo tableInfo) "insertable"
+
   -- Check if the role has insert permissions
   insPerm   <- askInsPermInfo tableInfo
 

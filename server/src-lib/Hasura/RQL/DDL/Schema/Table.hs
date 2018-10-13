@@ -48,6 +48,35 @@ saveTableToCatalog (QualifiedTable sn tn) =
             INSERT INTO "hdb_catalog"."hdb_table" VALUES ($1, $2)
                 |] (sn, tn) False
 
+getViewInfo :: QualifiedTable -> Q.TxE QErr (Maybe ViewInfo)
+getViewInfo (QualifiedTable sn tn) = do
+  tableTy <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+             [Q.sql|
+              SELECT table_type FROM information_schema.tables
+              WHERE table_schema = $1
+                AND table_name = $2
+                   |] (sn, tn) False
+
+  bool (return Nothing) buildViewInfo $ isView tableTy
+  where
+    buildViewInfo = do
+      (is_upd, is_ins, is_trig_upd, is_trig_del, is_trig_ins)
+        <- Q.getRow <$> Q.withQE defaultTxErrorHandler
+             [Q.sql|
+              SELECT is_updatable :: boolean,
+                     is_insertable_into::boolean,
+                     is_trigger_updatable::boolean,
+                     is_trigger_deletable::boolean,
+                     is_trigger_insertable_into::boolean
+               FROM information_schema.views
+              WHERE table_schema = $1
+                AND table_name = $2
+                    |] (sn, tn) False
+      return $ Just $ ViewInfo
+               (is_upd || is_trig_upd)
+               (is_upd || is_trig_del)
+               (is_ins || is_trig_ins)
+
 -- Build the TableInfo with all its columns
 getTableInfo :: QualifiedTable -> Bool -> Q.TxE QErr TableInfo
 getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
@@ -60,6 +89,9 @@ getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
   -- if no columns are found, there exists no such view/table
   unless (tableExists == [Identity True]) $
     throw400 NotExists $ "no such table/view exists in postgres : " <>> qt
+
+  -- Fetch View information
+  viewInfo <- getViewInfo qt
 
   -- Fetch the column details
   colData <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
@@ -87,7 +119,7 @@ getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
                            |] (sn, tn) False
   let colDetails = flip map colData $ \(colName, Q.AltJ colTy, isNull)
                    -> (colName, colTy, isNull)
-  return $ mkTableInfo qt isSystemDefined rawConstraints colDetails pkeyCols
+  return $ mkTableInfo qt isSystemDefined rawConstraints colDetails pkeyCols viewInfo
   where
     mkPKeyCols [] = return []
     mkPKeyCols [Identity (Q.AltJ pkeyCols)] = return pkeyCols
@@ -346,10 +378,12 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
   eventTriggers <- lift $ Q.catchE defaultTxErrorHandler fetchEventTriggers
   forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ tDefVal, webhook, nr, rint, Q.AltJ mheaders) -> do
     let headerConfs = fromMaybe [] mheaders
+        qt = QualifiedTable sn tn
+    allCols <- (getCols . tiFieldInfoMap) <$> askTabInfo qt
     headers <- getHeadersFromConf headerConfs
     tDef <- decodeValue tDefVal
     addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook headers
-    liftTx $ mkTriggerQ trid trn (QualifiedTable sn tn) tDef
+    liftTx $ mkTriggerQ trid trn qt allCols tDef
 
 
   where
@@ -449,12 +483,13 @@ runSqlP2 (RunSQL t cascade) = do
   --recreate triggers
   forM_ (M.elems $ scTables postSc) $ \ti -> do
     let tn = tiName ti
+        cols = getCols $ tiFieldInfoMap ti
     forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
       let insert = otiCols <$> etiInsert eti
           update = otiCols <$> etiUpdate eti
           delete = otiCols <$> etiDelete eti
           trid = etiId eti
-      liftTx $ mkTriggerQ trid trn tn (TriggerOpsDef insert update delete)
+      liftTx $ mkTriggerQ trid trn tn cols (TriggerOpsDef insert update delete)
 
   return $ encode (res :: RunSQLRes)
 
