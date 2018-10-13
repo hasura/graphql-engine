@@ -63,6 +63,7 @@ func (h *HasuraDB) ResetMetadata() error {
 	return nil
 }
 
+// ReloadMetadata - Reload Hasura GraphQL Engine metadata on the database
 func (h *HasuraDB) ReloadMetadata() error {
 	query := HasuraInterfaceQuery{
 		Type: "reload_metadata",
