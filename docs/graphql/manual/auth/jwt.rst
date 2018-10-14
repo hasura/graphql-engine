@@ -74,7 +74,7 @@ Example JWT claim:
 
 This contains standard (``sub``, ``iat`` etc.) and custom (``name``, ``admin``
 etc.) JWT claims, as well as Hasura specific claims inside a custom namespace
-(or key) i.e ``https://hasura.io/jwt/claims``.
+(or key) i.e. ``https://hasura.io/jwt/claims``.
 
 The ``https://hasura.io/jwt/claims`` is the custom namespace where all Hasura
 specific claims have to be present. This value can be configured in the JWT
@@ -132,7 +132,7 @@ public keys are not yet supported.
 
 ``key``
 ^^^^^^^
-- In case of symmetric key (i.e HMAC based key), the key as it is. (e.g -
+- In case of symmetric key (i.e. HMAC based key), the key as it is. (e.g. -
   "abcdef...").
 - In case of asymmetric keys (RSA etc.), only the public key, in a PEM encoded
   string or as a X509 certificate.
@@ -166,7 +166,7 @@ JWKs are not refreshed.
 ``claims_namespace``
 ^^^^^^^^^^^^^^^^^^^^
 This is an optional field. You can specify the key name
-inside which the Hasura specific claims will be present. E.g - ``https://mydomain.com/claims``.
+inside which the Hasura specific claims will be present. E.g. - ``https://mydomain.com/claims``.
 
 **Default value** is: ``https://hasura.io/jwt/claims``.
 
