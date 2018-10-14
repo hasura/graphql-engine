@@ -3,12 +3,12 @@
 **NOTE**
 Some of the language/platforms are work in progress. We welcome contributions for the WIP langauages. See issues and the following checklist:
 
-| Folder name | Use-case| Javascript | Java | C# | F#
+| Folder name | Use-case| Javascript | Java | C# | F# | TypeScript | Python | PHP | Batch (.cmd, .bat) | Bash | PowerShell
 |-------------|---------|:--------:|:------:|:----:|:---:
-| echo | echo the trigger payload  | ✅ | ❌ | ❌ | ❌ 
-| mutation | insert related data on an insert event using graphql mutation | ✅ | ❌ | ❌ | ❌ 
-| push-notification | send push notification on database event | ❌ | ❌ | ❌ | ❌ 
-| etl | transform the trigger payload and update an algolia index | ❌ | ❌ | ❌ | ❌
+| echo | echo the trigger payload  | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ 
+| mutation | insert related data on an insert event using graphql mutation | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ 
+| push-notification | send push notification on database event | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ 
+| etl | transform the trigger payload and update an algolia index | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ 
 
 ## Pre-requisites
 1. Running instance of Hasura GraphQL
