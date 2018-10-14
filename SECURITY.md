@@ -19,7 +19,7 @@ To report a security issue, please email us at [build@hasura.io](mailto:build@ha
 
 ## Security Vulnerability Response
 
-Each report is acknowledged and analyzed by project's maintianers and the security team within 3 working days. 
+Each report is acknowledged and analyzed by project's maintainers and the security team within 3 working days. 
 
 The reporter will be kept updated at every stage of the issue's analysis and resolution (triage -> fix -> release).
 
