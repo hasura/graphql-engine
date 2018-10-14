@@ -9,10 +9,10 @@ Anonymous (not logged in) users
 -------------------------------
 
 - Create a role called ``anonymous`` (this value is up to you, you could even name the role ``public``).
-- Generally, you wouldn't add insert, update or delete permissions.
-- For the select permission condition setup a valid condition depending on your data model. For example, ``is_published: {_eq: true}``.
-- If you don't have a condition, then just set the permission to ``Without any checks`` represented by a ``{}``.
-- Choose the right set of columns that will get exposed in the GraphQL schema as fields. Take care of not exposing sensitive information.
+- Generally, you wouldn't add insert, update, or delete permissions.
+- For the select permission condition, create a valid condition depending on your data model. For example, ``is_published: {_eq: true}``.
+- If you don't have a condition, then just set the permission to ``Without any checks``, represented by a ``{}``.
+- Choose the right set of columns that will get exposed in the GraphQL schema as fields. Ensure that sensitive information will not be exposed.
 
 .. image:: ../../../img/graphql/manual/auth/anonymous-role-examples.png
    :class: no-shadow
@@ -22,7 +22,7 @@ Logged-in users
 
 - Create a role called ``user``.
 - Access control rules in this case are usually dependent on a ``user_id`` or a ``owner_id`` column in your data model.
-- Setup a permission for insert/select/update/delete that uses said column. Eg: ``author_id: {_eq: "X-Hasura-User-Id"}`` for an article table.
+- Set up a permission for insert/select/update/delete that uses said column. E.g.: ``author_id: {_eq: "X-Hasura-User-Id"}`` for an article table.
 - Note that the ``X-Hasura-User-Id`` is a :doc:`dynamic session variable<./roles-variables>` that comes in from your :doc:`auth webhook's<./webhook>` response, or as a request as a header if you're testing.
 
 .. image:: ../../../img/graphql/manual/auth/user-select-graphiql.png
@@ -46,7 +46,7 @@ Collaborators of an article
 
 Let's say the "ownership" or "visibility" information for a data model (table) is not present as a column in the table, but in a different related table. In this case, let's say there is an ``article`` table and a ``collaborator`` table that has ``article_id, collaborator_id`` columns.
 
-- Create a relationship called collaborators from the article table.
+- Create a relationship called ``collaborators`` from the article table.
 
   - Array relationship (article has array of collaborators): ``article :: id → collaborator :: article_id``.
 
@@ -58,15 +58,15 @@ Let's say the "ownership" or "visibility" information for a data model (table) i
 .. image:: ../../../img/graphql/manual/auth/collaborator-relationship.png
    :class: no-shadow
 
-Role based schemas
+Role-based schemas
 ------------------
 
-For every role that you create, Hasura automatically publishes a different GraphQL schema that represents the right queries, fields and mutations that are available to that role.
+For every role that you create, Hasura automatically publishes a different GraphQL schema that represents the right queries, fields, and mutations that are available to that role.
 
 Case 1: Logged-in users and anonymous users can access the same GraphQL fields
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In simple use-cases logged-in users and anonymous users might be able to fetch different rows (let's say because of a ``is_public`` flag) but have access to the same fields.
+In simple use-cases, logged-in users and anonymous users might be able to fetch different rows (let's say because of a ``is_public`` flag), but have access to the same fields.
 
 - ``anonymous`` role has a ``{is_public: {_eq: true}}`` select condition.
 
