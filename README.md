@@ -158,7 +158,7 @@ If you want to report a security issue, please [read this](SECURITY.md).
 
 Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
-## Brand assets
+## #Brand assets
 
 Hasura brand assets (logos, the Hasura mascot, powered by badges etc.) can be
 found in the [assets/brand](assets/brand) folder. Feel free to use them in your
