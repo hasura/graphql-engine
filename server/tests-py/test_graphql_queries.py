@@ -7,6 +7,9 @@ class TestGraphQLQueryBasic:
     def test_select_query_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/select_query_author.yaml')
 
+    def test_select_query_author_quoted_col(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/select_query_author_col_quoted.yaml')
+
     def test_select_query_author_pk(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/select_query_author_by_pkey.yaml')
 

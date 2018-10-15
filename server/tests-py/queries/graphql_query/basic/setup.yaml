@@ -7,7 +7,8 @@ args:
     sql: |
       create table author(
           id serial primary key, 
-          name text unique
+          name text unique,
+          "createdAt" timestamptz
       );
 - type: track_table
   args:
@@ -56,10 +57,10 @@ args:
 - type: run_sql
   args:
     sql: |
-      insert into author (name)
+      insert into author (name, "createdAt")
       values
-      ('Author 1'),
-      ('Author 2') 
+      ('Author 1', '2017-09-21T09:39:44Z'),
+      ('Author 2', '2017-09-21T09:50:44Z')
 
 - type: run_sql
   args:
@@ -106,3 +107,9 @@ args:
       number: '123456789'
     - name: User 2
       number: '123456780'
+
+#Set timezone
+- type: run_sql
+  args:
+    sql: |
+      SET TIME ZONE 'UTC';
