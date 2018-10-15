@@ -26,7 +26,7 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
-const executeSQL = isMigration => (dispatch, getState) => {
+const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   dispatch({ type: MAKING_REQUEST });
   dispatch(showSuccessNotification('Executing the Query...'));
 
@@ -78,7 +78,7 @@ const executeSQL = isMigration => (dispatch, getState) => {
   // check if its a migration and send to hasuractl migrate
   if (isMigration) {
     url = migrateUrl;
-    const migrationName = 'run_sql_migration';
+    // const migrationName = 'run_sql_migration';
     requestBody = {
       name: migrationName,
       up: schemaChangesUp,
