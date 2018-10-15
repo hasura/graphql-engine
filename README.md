@@ -59,11 +59,11 @@ Read more at [https://hasura.io](https://hasura.io) and the [docs](https://docs.
 
 <!-- markdown-toc end -->
 
-## Quickstart: 
+### Quickstart: 
 
 ### One-click deployment on Heroku
 
-The fastest way to try Hasura out is via Heroku.
+<h1>The fastest way to try Hasura out is via Heroku.</h1>
 
 1. Click on the following button to deploy GraphQL Engine on Heroku with the free Postgres add-on:
 
@@ -158,7 +158,7 @@ If you want to report a security issue, please [read this](SECURITY.md).
 
 Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
-## Brand assets
+## #Brand assets
 
 Hasura brand assets (logos, the Hasura mascot, powered by badges etc.) can be
 found in the [assets/brand](assets/brand) folder. Feel free to use them in your
