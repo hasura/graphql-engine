@@ -69,16 +69,16 @@ aforementioned sections).
 
 ## Commit messages
 
- - The first line should be a summary of the changes, not exceeding 50
-   characters, followed by an optional body which has more details about the
-   changes. Refer [to this link](https://github.com/erlang/otp/wiki/writing-good-commit-messages)
-   for more information on writing good commit messages.
+- The first line should be a summary of the changes, not exceeding 50
+  characters, followed by an optional body which has more details about the
+  changes. Refer [to this link](https://github.com/erlang/otp/wiki/writing-good-commit-messages)
+  for more information on writing good commit messages.
 
- - Use the imperative present tense: "add/fix/change", not "added/fixed/changed" nor "adds/fixes/changes".
+- Use the imperative present tense: "add/fix/change", not "added/fixed/changed" nor "adds/fixes/changes".
 
- - Don't capitalize the first letter of the summary line.
+- Don't capitalize the first letter of the summary line.
 
- - Don't add a period/dot (.) at the end of the summary line.
+- Don't add a period/dot (.) at the end of the summary line.
 
 
 (Credits: Some sections are adapted from https://github.com/PostgREST/postgrest/blob/master/.github/CONTRIBUTING.md)
