@@ -59,7 +59,7 @@ Read more at [https://hasura.io](https://hasura.io) and the [docs](https://docs.
 
 <!-- markdown-toc end -->
 
-## Quickstart: 
+### Quickstart: 
 
 ### One-click deployment on Heroku
 
