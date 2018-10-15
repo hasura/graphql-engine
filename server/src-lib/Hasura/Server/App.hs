@@ -231,11 +231,13 @@ v1QueryHandler query = do
 v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler BL.ByteString
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
+  reqBody <- asks hcReqBody
+  manager <- scManager . hcServerCtx <$> ask
   scRef <- scCacheRef . hcServerCtx <$> ask
   cache <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  GH.runGQ pool isoL userInfo (snd cache) query
+  GH.runGQ pool isoL userInfo (snd cache) manager query reqBody
 
 -- v1Alpha1GQSchemaHandler :: Handler BL.ByteString
 -- v1Alpha1GQSchemaHandler = do

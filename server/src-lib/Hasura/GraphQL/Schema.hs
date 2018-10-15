@@ -21,6 +21,8 @@ module Hasura.GraphQL.Schema
   , InsCtx(..)
   , InsCtxMap
   , RelationInfoMap
+  -- Schema stitching related
+  , CombinedSchema (..)
   ) where
 
 import           Data.Has
@@ -1331,3 +1333,11 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
 getGCtx :: RoleName -> Map.HashMap RoleName GCtx -> GCtx
 getGCtx rn =
   fromMaybe (mkGCtx mempty mempty mempty) . Map.lookup rn
+
+
+-- | Schema stitching related
+data CombinedSchema
+  = CombinedSchema
+  { _csHasuraSchema :: !GCtxMap
+  , _csRemoteSchema :: ![G.SchemaDocument]
+  } deriving (Show, Eq)

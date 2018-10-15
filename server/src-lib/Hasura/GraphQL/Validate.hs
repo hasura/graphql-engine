@@ -4,6 +4,7 @@
 
 module Hasura.GraphQL.Validate
   ( validateGQ
+  , getTypedOp
   , GraphQLRequest
   ) where
 
