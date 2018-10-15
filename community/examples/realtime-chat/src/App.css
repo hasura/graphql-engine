@@ -84,7 +84,7 @@ body
 .textboxWrapper {
   text-align: center;
   position: fixed;
-  bottom: 0;
+  bottom: 87px;
   width: 75%;
   background-color: #fff;
   padding: 1%;
@@ -262,4 +262,47 @@ body
   text-align: left;
   padding-bottom: 10px;
   padding-left: 1%;
+}
+
+.displayFlex
+{
+  display: flex;
+  align-items: center;
+}
+
+.hasura-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hasura-logo a {
+  padding: 0 10px;
+}
+.hasura-logo a:hover {
+  text-decoration: none;
+}
+.hasura-logo img {
+  height: 30px;
+  cursor: pointer;
+}
+.App-header {
+  background-color: #222;
+  height: 50px;
+  color: white;
+  text-align: left;
+}
+.App-footer{
+  position: fixed;
+  bottom: 0;
+  height: 50px;
+  text-align: center;
+  width: 100%;
+  padding-bottom: 15px;
+  padding-top: 20px;
+  background-color: #fff;
+  border-top: 1px solid #ccc;
+}
+
+.footer-small-text{
+  font-size: 12px;
 }
