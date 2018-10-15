@@ -26,7 +26,7 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
-const executeSQL = isMigration => (dispatch, getState) => {
+const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   dispatch({ type: MAKING_REQUEST });
   dispatch(showSuccessNotification('Executing the Query...'));
 
@@ -46,7 +46,7 @@ const executeSQL = isMigration => (dispatch, getState) => {
   ];
   // check if track view enabled
   if (getState().rawSQL.isTableTrackChecked) {
-    const regExp = /create (view|table) ((\S+)\.(\S+)|(\S+))/i;
+    const regExp = /create (view|table) ((\"?\w+\"?)\.(\"?\w+\"?)|(\w+))/i; // eslint-disable-line
     const matches = sql.match(regExp);
     // If group 5 is undefined, use group 3 and 4 for schema and table respectively
     // If group 5 is present, use group 5 for table name using public schema.
@@ -78,7 +78,6 @@ const executeSQL = isMigration => (dispatch, getState) => {
   // check if its a migration and send to hasuractl migrate
   if (isMigration) {
     url = migrateUrl;
-    const migrationName = 'run_sql_migration';
     requestBody = {
       name: migrationName,
       up: schemaChangesUp,
