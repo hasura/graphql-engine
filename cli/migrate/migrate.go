@@ -311,6 +311,11 @@ func (m *Migrate) ResetMetadata() error {
 	return m.databaseDrv.ResetMetadata()
 }
 
+// ReloadMetadata - Reload metadata on the database
+func (m *Migrate) ReloadMetadata() error {
+	return m.databaseDrv.ReloadMetadata()
+}
+
 func (m *Migrate) ApplyMetadata(data interface{}) error {
 	return m.databaseDrv.ApplyMetadata(data)
 }
