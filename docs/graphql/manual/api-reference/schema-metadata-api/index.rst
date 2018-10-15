@@ -117,11 +117,20 @@ The various types of queries are listed in the following table:
      - :ref:`Query <query_syntax>` array
      - Execute multiple operations in a single query
 
+   * - :ref:`create_event_trigger`
+     - :ref:`create_event_trigger_args <create_event_trigger_syntax>`
+     - Create or replace event trigger
+
+   * - :ref:`delete_event_trigger`
+     - :ref:`delete_event_trigger_args <delete_event_trigger_syntax>`
+     - Delete existing event trigger
+
 **See**
 
 - :doc:`Run SQL <run-sql>`
 - :doc:`Relationships <relationship>`
 - :doc:`Permissions <permission>`
+- :doc:`Event Triggers <event-triggers>`
 
 Response structure
 ------------------
@@ -181,5 +190,6 @@ Error codes
   Run SQL <run-sql>
   Relationships <relationship>
   Permissions <permission>
+  Event Triggers <event-triggers>
   Syntax definitions <syntax-defs>
 
