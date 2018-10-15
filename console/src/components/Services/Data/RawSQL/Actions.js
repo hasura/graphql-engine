@@ -46,7 +46,7 @@ const executeSQL = isMigration => (dispatch, getState) => {
   ];
   // check if track view enabled
   if (getState().rawSQL.isTableTrackChecked) {
-    const regExp = /create (view|table) ((\S+)\.(\S+)|(\S+))/i;
+    const regExp = /create (view|table) ((\"?\w+\"?)\.(\"?\w+\"?)|(\w+))/i; // eslint-disable-line
     const matches = sql.match(regExp);
     // If group 5 is undefined, use group 3 and 4 for schema and table respectively
     // If group 5 is present, use group 5 for table name using public schema.
