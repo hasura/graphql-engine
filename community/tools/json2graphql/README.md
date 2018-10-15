@@ -37,7 +37,7 @@ This is A CLI tool to import a schema and data to Postgres using JSON data. You 
     $ json2graphql https://<app-name>.herokuapp.com --db=./path/to/db.js 
     ```
 
-4. That's it. You can go your HGE URL `https://<app-name>.herokuapp.com` and start querying this data over GraphQL:
+4. That's it. You can go to your HGE URL `https://<app-name>.herokuapp.com` and start querying this data over GraphQL:
 
     ```graphql
     query {
