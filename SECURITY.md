@@ -8,7 +8,7 @@ To report a security issue, please email us at [build@hasura.io](mailto:build@ha
 
 - You think you have discovered a potential security vulnerability in the Hasura GraphQL Engine or related components.
 - You are unsure how a vulnerability affects the Hasura GraphQL Engine.
-- You think you discovered a vulnerability in another project that Hasura GraphQL Engine depends on (e.g. heroku, docker, etc)
+- You think you discovered a vulnerability in another project that Hasura GraphQL Engine depends on (e.g. Heroku, Docker, etc)
 - You want to report any other security risk that could potentially harm Hasrua GraphQL Engine users.
 
 ### When Should I NOT Report a Vulnerability?
@@ -19,7 +19,7 @@ To report a security issue, please email us at [build@hasura.io](mailto:build@ha
 
 ## Security Vulnerability Response
 
-Each report is acknowledged and analyzed by project's maintainers and the security team within 3 working days. 
+Each report is acknowledged and analyzed by the project's maintainers and the security team within 3 working days. 
 
 The reporter will be kept updated at every stage of the issue's analysis and resolution (triage -> fix -> release).
 
