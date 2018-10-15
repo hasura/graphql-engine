@@ -52,6 +52,10 @@ convDeleteQuery
 convDeleteQuery prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
   tableInfo <- askTabInfo tableName
 
+  -- If table is view then check if it deletable
+  mutableView tableName viIsDeletable
+    (tiViewInfo tableInfo) "deletable"
+
   -- Check if the role has delete permissions
   delPerm <- askDelPermInfo tableInfo
 
@@ -66,8 +70,7 @@ convDeleteQuery prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
-    withPathK "returning" $
-    zip retCols <$> checkRetCols fieldInfoMap selPerm retCols
+    withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $

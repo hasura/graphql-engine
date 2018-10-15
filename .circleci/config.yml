@@ -11,6 +11,18 @@ refs:
           sleep 1
         done
         echo Failed waiting for Postgres && exit 1
+  wait_for_hge: &wait_for_hge
+    run:
+      name: waiting for graphql-engine to be ready
+      command: |
+        for i in `seq 1 60`;
+        do
+          nc -z localhost 8080 && echo Success && exit 0
+          echo -n .
+          sleep 1
+        done
+        echo Failed waiting for graphql-engine && exit 1
+
   filter_only_vtags: &filter_only_vtags
     filters:
       tags:
@@ -70,20 +82,27 @@ refs:
     - checkout
     - restore_cache:
         keys:
+        - server-app-cache-{{ .Branch }}-{{ .Revision }}
+    - restore_cache:
+        keys:
         - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
     - attach_workspace:
         at: /build
     - *wait_for_postgres
     - run:
-        command: /build/_server_output/graphql-engine serve
-        background: true
+        name: run the server in background
+        working_directory: ./server
         environment:
           HASURA_GRAPHQL_DATABASE_URL: postgres://gql_test:@localhost:5432/gql_test
           EVENT_WEBHOOK_HEADER: MyEnvValue
+        background: true
+        command: |
+          /build/_server_output/graphql-engine serve
     - run:
         name: create test output dir
         command: |
           mkdir -p /build/_server_test_output/$PG_VERSION
+    - *wait_for_hge
     - run:
         name: pytest the server
         working_directory: ./server/tests-py
@@ -93,8 +112,12 @@ refs:
         command: |
           pip3 install -r requirements.txt
           pytest -vv --hge-url="$HGE_URL" --pg-url="$DATABASE_URL"
-          ## commented for the timesake
-          # stack --system-ghc hpc report /build/_server_output/graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
+    - run:
+        name: stop the server and generate coverage report
+        working_directory: ./server
+        command: |
+          kill -2 $(ps -e | grep graphql-engine | awk '{print $1}')
+          stack --system-ghc hpc report graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
     - store_artifacts:
         path: /build/_server_test_output
         destination: server_test
@@ -136,8 +159,8 @@ jobs:
             echo "Branch starts with dev or release, or tagged commit starts with v. Optimized build"
             make ci-binary
           else
-            echo "Non-release branch, non-optimized build"
-            BUILD_FLAGS="--fast" make ci-binary
+            echo "Non-release branch, non-optimized build with coverage"
+            BUILD_FLAGS="--fast --coverage" make ci-binary
           fi
           make ci-image
           make ci-save-image
@@ -166,29 +189,7 @@ jobs:
     steps:
     - run:
         name: All server tests passed
-        command: echo 'all tests passed!'
-
-  # test the server with postgres versions >= 9.5
-  test_server_pg_10.4:
-    <<: *test_server
-    docker:
-    - image: hasura/graphql-engine-cli-builder:v0.3
-    - image: circleci/postgres:10.4-alpine
-      <<: *test_pg_env
-
-  test_server_pg_9.6:
-    <<: *test_server
-    docker:
-    - image: hasura/graphql-engine-cli-builder:v0.3
-    - image: circleci/postgres:9.6-alpine
-      <<: *test_pg_env
-
-  test_server_pg_9.5:
-    <<: *test_server
-    docker:
-    - image: hasura/graphql-engine-cli-builder:v0.3
-    - image: circleci/postgres:9.5-alpine
-      <<: *test_pg_env
+        command: echo 'all server tests passed!'
 
   # pytest the server with postgres versions >= 9.5
   pytest_server_pg_10.4:
@@ -331,18 +332,6 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - check_build_worthiness
-    - test_server_pg_10.4:
-        <<: *filter_only_vtags
-        requires:
-        - build_server
-    - test_server_pg_9.6:
-        <<: *filter_only_vtags
-        requires:
-        - build_server
-    - test_server_pg_9.5:
-        <<: *filter_only_vtags
-        requires:
-        - build_server
     - pytest_server_pg_10.4:
         <<: *filter_only_vtags
         requires:
@@ -358,9 +347,6 @@ workflows:
     - all_server_tests_pass:
         <<: *filter_only_vtags
         requires:
-        - test_server_pg_10.4
-        - test_server_pg_9.6
-        - test_server_pg_9.5
         - pytest_server_pg_10.4
         - pytest_server_pg_9.6
         - pytest_server_pg_9.5

@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections     #-}
 {-# LANGUAGE TypeFamilies      #-}
 
 module Hasura.RQL.DML.Select where
@@ -21,6 +22,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
+import           Hasura.SQL.Rewrite         (prefixNumToAliases)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query          as Q
@@ -58,25 +60,339 @@ instance FromJSON ExtCol where
     , "object (relationship)"
     ]
 
-data AnnRel = AnnRel
-    { arName    :: !RelName    -- Relationship name
-    , arType    :: !RelType    -- Relationship type (ObjRel, ArrRel)
-    , arMapping :: ![(PGCol, PGCol)]      -- Column of the left table to join with
-    , arSelData :: !SelectData -- Current table. Almost ~ to SQL Select
-    } deriving (Show, Eq)
+data AnnRel
+  = AnnRel
+  { arName    :: !RelName    -- Relationship name
+  , arType    :: !RelType    -- Relationship type (ObjRel, ArrRel)
+  , arMapping :: ![(PGCol, PGCol)]      -- Column of the left table to join with
+  , arAnnSel  :: !AnnSel -- Current table. Almost ~ to SQL Select
+  } deriving (Show, Eq)
 
-data SelectData = SelectData
-      -- Nested annotated columns
-    { sdFlds         :: !(HM.HashMap FieldName AnnFld)
-    , sdTable        :: !QualifiedTable -- from postgres table
-    , sdFromExp      :: !(Maybe S.FromExp) -- optional from expression
-    , sdWhere        :: !(S.BoolExp, Maybe (GBoolExp AnnSQLBoolExp))
-    , sdOrderBy      :: !(Maybe S.OrderByExp)
-    , sdAddCols      :: ![PGCol]             -- additional order by columns
-    , sdLimit        :: !(Maybe S.SQLExp)
-    , sdOffset       :: !(Maybe S.SQLExp)
-    , asSingleObject :: !Bool
-    } deriving (Show, Eq)
+data AnnFld
+  = FCol !PGColInfo
+  | FExp !T.Text
+  | FRel !AnnRel
+  deriving (Show, Eq)
+
+data TableArgs
+  = TableArgs
+  { _taWhere   :: !(Maybe (GBoolExp AnnSQLBoolExp))
+  , _taOrderBy :: !(Maybe [AnnOrderByItem])
+  , _taLimit   :: !(Maybe Int)
+  , _taOffset  :: !(Maybe S.SQLExp)
+  } deriving (Show, Eq)
+
+noTableArgs :: TableArgs
+noTableArgs = TableArgs Nothing Nothing Nothing Nothing
+
+data AnnSel
+  = AnnSel
+  { _asFields :: ![(FieldName, AnnFld)]
+  -- this is currently only used for computing
+  -- dependencies of query templates
+  , _asTable  :: !QualifiedTable
+  , _asFrom   :: !(Maybe S.FromItem)
+  , _asFilter :: !S.BoolExp
+  , _asLimit  :: !(Maybe Int)
+
+  , _asArgs   :: !TableArgs
+
+  } deriving (Show, Eq)
+
+data BaseNode
+  = BaseNode
+  { _bnPrefix  :: !Iden
+  , _bnFrom    :: !S.FromItem
+  , _bnWhere   :: !S.BoolExp
+  , _bnOrderBy :: !(Maybe S.OrderByExp)
+  , _bnLimit   :: !(Maybe Int)
+  , _bnOffset  :: !(Maybe S.SQLExp)
+
+  , _bnExtrs   :: !(HM.HashMap S.Alias S.SQLExp)
+  , _bnObjRels :: !(HM.HashMap RelName RelNode)
+  , _bnArrRels :: !(HM.HashMap S.Alias RelNode)
+
+  } deriving (Show, Eq)
+
+-- array relationships are not grouped, so have to be prefixed by
+-- parent's alias
+mkUniqArrRelAls :: FieldName -> FieldName -> Iden
+mkUniqArrRelAls parAls relAls =
+  Iden $
+  getFieldNameTxt parAls <> "." <> getFieldNameTxt relAls
+
+mkArrRelTableAls :: Iden -> FieldName -> FieldName -> Iden
+mkArrRelTableAls pfx parAls relAls =
+  pfx <> Iden ".ar." <> uniqArrRelAls
+  where
+    uniqArrRelAls = mkUniqArrRelAls parAls relAls
+
+mkObjRelTableAls :: Iden -> RelName -> Iden
+mkObjRelTableAls pfx relName =
+  pfx <> Iden ".or." <> toIden relName
+
+mkBaseTableAls :: Iden -> Iden
+mkBaseTableAls pfx =
+  pfx <> Iden ".base"
+
+-- posttgres ignores anything beyond 63 chars for an iden
+-- in this case, we'll need to use json_build_object function
+-- json_build_object is slower than row_to_json hence it is only
+-- used when needed
+buildJsonObject
+  :: Iden -> FieldName
+  -> [(FieldName, AnnFld)] -> (S.Alias, S.SQLExp)
+buildJsonObject pfx parAls flds =
+  if any ( (> 63) . T.length . getFieldNameTxt . fst ) flds
+  then withJsonBuildObj pfx parAls flds
+  else withRowToJSON pfx parAls flds
+
+-- uses row_to_json to build a json object
+withRowToJSON
+  :: Iden -> FieldName
+  -> [(FieldName, AnnFld)] -> (S.Alias, S.SQLExp)
+withRowToJSON pfx parAls flds =
+  (S.toAlias parAls, jsonRow)
+  where
+    withAls fldName sqlExp =
+      S.Extractor sqlExp $ Just $ S.toAlias fldName
+    jsonRow = S.SEFnApp "row_to_json" [S.mkRowExp $ map toFldExtr flds] Nothing
+    toFldExtr (fldAls, fld) = withAls fldAls $ case fld of
+      FCol col    -> toJSONableExp (pgiType col) $
+                     S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
+      FExp e      -> S.SELit e
+      FRel annRel ->
+        let qual = case arType annRel of
+              ObjRel -> mkObjRelTableAls pfx $ arName annRel
+              ArrRel -> mkArrRelTableAls pfx parAls fldAls
+        in S.mkQIdenExp qual fldAls
+
+-- uses json_build_object to build a json object
+withJsonBuildObj
+  :: Iden -> FieldName
+  -> [(FieldName, AnnFld)] -> (S.Alias, S.SQLExp)
+withJsonBuildObj pfx parAls flds =
+  (S.toAlias parAls, jsonRow)
+  where
+    withAls fldName sqlExp =
+      [S.SELit $ getFieldNameTxt fldName, sqlExp]
+
+    jsonRow = S.SEFnApp "json_build_object" (concatMap toFldExtr flds) Nothing
+
+    toFldExtr (fldAls, fld) = withAls fldAls $ case fld of
+      FCol col    -> toJSONableExp (pgiType col) $
+                     S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
+      FExp e      -> S.SELit e
+      FRel annRel ->
+        let qual = case arType annRel of
+              ObjRel -> mkObjRelTableAls pfx $ arName annRel
+              ArrRel -> mkArrRelTableAls pfx parAls fldAls
+        in S.mkQIdenExp qual fldAls
+
+processAnnOrderByItem
+  :: Iden
+  -> AnnOrderByItem
+       -- the extractors which will select the needed columns
+  -> ( (S.Alias, S.SQLExp)
+       -- the sql order by item that is attached to the final select
+     , S.OrderByItem
+       -- optionally we may have to add an obj rel node
+     , Maybe (RelName, RelNode)
+     )
+processAnnOrderByItem pfx (OrderByItemG obTyM annObCol obNullsM) =
+  ( (obColAls, obColExp)
+  , sqlOrdByItem
+  , relNodeM
+  )
+  where
+    ((obColAls, obColExp), relNodeM) = processAnnOrderByCol pfx annObCol
+
+    sqlOrdByItem =
+      S.OrderByItem (S.SEIden $ toIden obColAls) obTyM obNullsM
+
+processAnnOrderByCol
+  :: Iden
+  -> AnnObCol
+       -- the extractors which will select the needed columns
+  -> ( (S.Alias, S.SQLExp)
+       -- optionally we may have to add an obj rel node
+     , Maybe (RelName, RelNode)
+     )
+processAnnOrderByCol pfx = \case
+  AOCPG colInfo ->
+    let
+      qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden $ pgiName colInfo)
+      obColAls = pfx <> Iden ".pg." <> toIden (pgiName colInfo)
+    in ( (S.Alias obColAls, qualCol)
+       , Nothing
+       )
+  -- "pfx.or.relname"."pfx.ob.or.relname.rest" AS "pfx.ob.or.relname.rest"
+  AOCRel (RelInfo rn _ colMapping relTab _ _) relFltr rest ->
+    let relPfx  = mkObjRelTableAls pfx rn
+        ((nesAls, nesCol), nesNodeM) = processAnnOrderByCol relPfx rest
+        qualCol = S.mkQIdenExp relPfx nesAls
+        relBaseNode =
+          BaseNode relPfx (S.FISimple relTab Nothing) relFltr
+          Nothing Nothing Nothing
+          (HM.singleton nesAls nesCol)
+          (maybe HM.empty (uncurry HM.singleton) nesNodeM)
+          HM.empty
+        relNode = RelNode rn (fromRel rn) colMapping relBaseNode
+    in ( (nesAls, qualCol)
+       , Just (rn, relNode)
+       )
+
+mkBaseNode :: Iden -> FieldName -> AnnSel -> BaseNode
+mkBaseNode pfx fldAls (AnnSel flds tn fromItemM fltr permLimitM tableArgs) =
+  BaseNode pfx fromItem finalWhere ordByExpM finalLimit offsetM
+  allExtrs allObjsWithOb allArrs
+  where
+
+    TableArgs whereM orderByM limitM offsetM = tableArgs
+
+    finalWhere = maybe fltr (S.BEBin S.AndOp fltr . cBoolExp) whereM
+    finalLimit = applyPermLimit permLimitM limitM
+
+    fromItem = fromMaybe (S.FISimple tn Nothing) fromItemM
+
+    -- the selection extractor
+    selExtr  = buildJsonObject pfx fldAls flds
+
+    -- all the relationships
+    (allObjs, allArrs) =
+      foldl' addRel (HM.empty, HM.empty) $
+      mapMaybe (\(als, f) -> (als,) <$> getAnnRel f) flds
+
+    _1 (a, _, _) = a
+    _2 (_, b, _) = b
+    _3 (_, _, c) = c
+
+    procOrdByM = unzip3 . map (processAnnOrderByItem pfx) <$> orderByM
+    ordByExpM  = S.OrderByExp . _2 <$> procOrdByM
+
+    -- the columns needed for orderby
+    obExtrs  = maybe [] _1 procOrdByM
+    allExtrs = HM.fromList $ selExtr:obExtrs
+    allObjsWithOb =
+      foldl' (\objs (rn, relNode) -> HM.insertWith mergeRelNodes rn relNode objs)
+      allObjs $ catMaybes $ maybe [] _3 procOrdByM
+
+    mkRelPfx rTy rn relAls = case rTy of
+      ObjRel -> mkObjRelTableAls pfx rn
+      ArrRel -> mkArrRelTableAls pfx fldAls relAls
+
+    -- process a relationship
+    addRel (objs, arrs) (relAls, annRel) =
+      let relName    = arName annRel
+          relNodePfx = mkRelPfx (arType annRel) relName relAls
+          relNode    = mkRelNode relNodePfx (relAls, annRel)
+      in case arType annRel of
+        -- in case of object relationships, we merge
+        ObjRel ->
+          (HM.insertWith mergeRelNodes relName relNode objs, arrs)
+        ArrRel ->
+          let arrRelTableAls = S.Alias $ mkUniqArrRelAls fldAls relAls
+          in (objs, HM.insert arrRelTableAls relNode arrs)
+
+    getAnnRel = \case
+      FCol _  -> Nothing
+      FExp _  -> Nothing
+      FRel ar -> Just ar
+
+mergeBaseNodes :: BaseNode -> BaseNode -> BaseNode
+mergeBaseNodes lNodeDet rNodeDet =
+  BaseNode pfx f whr ordBy limit offset
+  (HM.union lExtrs rExtrs)
+  (HM.unionWith mergeRelNodes lObjs rObjs)
+  (HM.union lArrs rArrs)
+  where
+    (BaseNode pfx f whr ordBy limit offset lExtrs lObjs lArrs) = lNodeDet
+    (BaseNode _   _ _   _     _     _      rExtrs rObjs rArrs) = rNodeDet
+
+-- should only be used to merge obj rel nodes
+mergeRelNodes :: RelNode -> RelNode -> RelNode
+mergeRelNodes lNode rNode =
+  RelNode rn rAls rMapn $ mergeBaseNodes lNodeDet rNodeDet
+  where
+    (RelNode rn rAls rMapn lNodeDet) = lNode
+    (RelNode _  _    _     rNodeDet) = rNode
+
+data RelNode
+  = RelNode
+  { _rnRelName    :: !RelName
+  , _rnRelAlias   :: !FieldName
+  , _rnRelMapping :: ![(PGCol, PGCol)]
+  , _rnNodeDet    :: !BaseNode
+  } deriving (Show, Eq)
+
+mkRelNode :: Iden -> (FieldName, AnnRel) -> RelNode
+mkRelNode pfx (relAls, AnnRel rn _ rMapn rAnnSel) =
+  RelNode rn relAls rMapn $ mkBaseNode pfx relAls rAnnSel
+
+withJsonAgg :: Maybe S.OrderByExp -> S.Alias -> S.FromItem -> S.Select
+withJsonAgg orderByM col fromItem =
+  S.mkSelect
+  { S.selExtr = [S.Extractor extr $ Just col]
+  , S.selFrom = Just $ S.FromExp [fromItem]
+  }
+  where
+    extr    = S.SEFnApp "coalesce" [jsonAgg, S.SELit "[]"] Nothing
+    jsonAgg = S.SEFnApp "json_agg" [S.SEIden $ toIden col] orderByM
+
+baseNodeToSel :: S.BoolExp -> BaseNode -> S.Select
+baseNodeToSel joinCond (BaseNode pfx fromItem whr ordByM limitM offsetM extrs objRels arrRels) =
+  S.mkSelect
+  { S.selExtr    = [S.Extractor e $ Just a | (a, e) <- HM.toList extrs]
+  , S.selFrom    = Just $ S.FromExp [joinedFrom]
+  , S.selOrderBy = ordByM
+  , S.selLimit   = S.LimitExp . S.intToSQLExp <$> limitM
+  , S.selOffset  = S.OffsetExp <$> offsetM
+  }
+  where
+    -- this is the table which is aliased as "pfx.base"
+    baseSel = S.mkSelect
+      { S.selExtr  = [S.Extractor S.SEStar Nothing]
+      , S.selFrom  = Just $ S.FromExp [fromItem]
+      , S.selWhere = Just $ injectJoinCond joinCond whr
+      }
+    baseSelAls = S.Alias $ mkBaseTableAls pfx
+    baseFromItem = S.FISelect (S.Lateral False) baseSel baseSelAls
+
+    -- function to create a joined from item from two from items
+    leftOuterJoin current new =
+      S.FIJoin $ S.JoinExpr current S.LeftOuter new $
+      S.JoinOn $ S.BELit True
+
+    -- this is the from eexp for the final select
+    joinedFrom :: S.FromItem
+    joinedFrom = foldl' leftOuterJoin baseFromItem $
+                 map objRelToFromItem (HM.elems objRels) <>
+                 map arrRelToFromItem (HM.elems arrRels)
+
+    relNodeToSelect :: RelNode -> (S.Select, S.Alias)
+    relNodeToSelect (RelNode _ _ relMapn relBaseNode) =
+      ( baseNodeToSel (mkJoinCond baseSelAls relMapn) relBaseNode
+      , S.Alias $ _bnPrefix relBaseNode
+      )
+
+    objRelToFromItem :: RelNode -> S.FromItem
+    objRelToFromItem =
+      uncurry S.mkLateralFromItem . relNodeToSelect
+
+    arrRelToFromItem :: RelNode -> S.FromItem
+    arrRelToFromItem relNode =
+      let (sel, als)  = relNodeToSelect relNode
+          aggOrderByM = _bnOrderBy $ _rnNodeDet relNode
+          jsonAggSel  = withJsonAgg aggOrderByM
+                        (S.Alias $ toIden $ _rnRelAlias relNode)
+                        (S.mkSelFromItem sel als)
+      in S.mkLateralFromItem jsonAggSel als
+
+mkJoinCond :: S.Alias -> [(PGCol, PGCol)] -> S.BoolExp
+mkJoinCond baseTableAls colMapn =
+  foldl' (S.BEBin S.AndOp) (S.BELit True) $ flip map colMapn $
+  \(lCol, rCol) ->
+    S.BECompare S.SEQ (S.mkQIdenExp baseTableAls lCol) (S.mkSIdenExp rCol)
 
 convSelCol :: (P1C m)
            => FieldInfoMap
@@ -119,12 +435,10 @@ convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _) wildcard =
       relTabInfo <- fetchRelTabInfo relTab
       mRelSelPerm <- askPermInfo' PASelect relTabInfo
 
-      case mRelSelPerm of
-        Nothing -> return Nothing
-        Just rspi -> do
-          rExtCols <- convWildcard (tiFieldInfoMap relTabInfo) rspi wc
-          return $ Just $ ECRel relName Nothing $
-            SelectG rExtCols Nothing Nothing Nothing Nothing
+      forM mRelSelPerm $ \rspi -> do
+        rExtCols <- convWildcard (tiFieldInfoMap relTabInfo) rspi wc
+        return $ ECRel relName Nothing $
+          SelectG rExtCols Nothing Nothing Nothing Nothing
 
     relExtCols wc = mapM (mkRelCol wc) relColInfos
 
@@ -153,105 +467,67 @@ resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
     equals (ECRel x _ _) (ECRel y _ _) = x == y
     equals _ _                         = False
 
-data AnnFld
-  = FCol (PGCol, PGColType)
-  | FRel AnnRel
-  | FExp T.Text
+data AnnObCol
+  = AOCPG !PGColInfo
+  | AOCRel !RelInfo !S.BoolExp !AnnObCol
   deriving (Show, Eq)
+
+type AnnOrderByItem = OrderByItemG AnnObCol
 
 partAnnFlds
   :: [AnnFld] -> ([(PGCol, PGColType)], [AnnRel])
 partAnnFlds flds =
   partitionEithers $ catMaybes $ flip map flds $ \case
-  FCol c -> Just $ Left c
+  FCol c -> Just $ Left (pgiName c, pgiType c)
   FRel r -> Just $ Right r
   FExp _ -> Nothing
 
-
-processOrderByElem
+convOrderByElem
   :: (P1C m)
-  => HM.HashMap FieldName AnnFld
-  -> [T.Text]
-  -> m (HM.HashMap FieldName AnnFld)
-processOrderByElem _ [] =
-  withPathK "column" $ throw400 UnexpectedPayload "can't be empty"
-processOrderByElem annFlds [colTxt] =
-  case HM.lookup (FieldName colTxt) annFlds of
-    Just (FCol (_, ty)) -> if ty == PGGeography || ty == PGGeometry
-      then throw400 UnexpectedPayload $ mconcat
-           [ PGCol colTxt <<> " has type 'geometry'"
+  => (FieldInfoMap, SelPermInfo)
+  -> OrderByCol
+  -> m AnnObCol
+convOrderByElem (flds, spi) = \case
+  OCPG fldName -> do
+    fldInfo <- askFieldInfo flds fldName
+    case fldInfo of
+      FIColumn colInfo -> do
+        checkSelOnCol spi (pgiName colInfo)
+        let ty = pgiType colInfo
+        if ty == PGGeography || ty == PGGeometry
+          then throw400 UnexpectedPayload $ mconcat
+           [ fldName <<> " has type 'geometry'"
            , " and cannot be used in order_by"
            ]
-      else return annFlds
-    Just (FRel _) -> throw400 UnexpectedPayload $ mconcat
-        [ PGCol colTxt <<> " is a"
+          else return $ AOCPG colInfo
+      FIRelationship _ -> throw400 UnexpectedPayload $ mconcat
+        [ fldName <<> " is a"
         , " relationship and should be expanded"
         ]
-    Just (FExp t) -> throw500 $
-        " found __typename in order_by?: " <> t
-    Nothing -> throw400 UnexpectedPayload $ mconcat
-        [ PGCol colTxt <<> " should be"
-        , " included in 'columns'"
-        ]
-processOrderByElem annFlds (colTxt:xs) =
-  case HM.lookup (FieldName colTxt) annFlds of
-    Just (FRel annRel) -> case arType annRel of
-      ObjRel -> do
-        let relSelData = arSelData annRel
-            relFlds    = sdFlds relSelData
-        newRelFlds <- processOrderByElem relFlds xs
-        let newRelSelData = relSelData
-              { sdAddCols = (PGCol $ T.intercalate "__" xs):sdAddCols relSelData
-              , sdFlds    = newRelFlds
-              }
-            newAnnRel = annRel { arSelData = newRelSelData }
-        return $ HM.insert (FieldName colTxt) (FRel newAnnRel) annFlds
-      ArrRel ->
-        throw400 UnexpectedPayload $ mconcat
-        [ RelName colTxt <<> " is an array relationship"
-        ," and can't be used in 'order_by'"
-        ]
-    Just (FCol _) -> throw400 UnexpectedPayload $ mconcat
-        [ PGCol colTxt <<> " is a Postgres column"
+  OCRel fldName rest -> do
+    fldInfo <- askFieldInfo flds fldName
+    case fldInfo of
+      FIColumn _ -> throw400 UnexpectedPayload $ mconcat
+        [ fldName <<> " is a Postgres column"
         , " and cannot be chained further"
         ]
-    Just (FExp t) -> throw500 $
-        " found __typename in order_by?: " <> t
-    Nothing -> throw400 UnexpectedPayload $ mconcat
-        [ PGCol colTxt <<> " should be"
-        , " included in 'columns'"
-        ]
-
-convOrderByItem :: OrderByItem -> S.OrderByItem
-convOrderByItem (OrderByItem ot (OrderByCol path) nulls) =
-  S.OrderByItem obiExp ot nulls
-  where
-    obiExp = Left $ PGCol $ T.intercalate "__" path
-
-convOrderByExp
-  :: (P1C m)
-  => OrderByExp
-  -> m S.OrderByExp
-convOrderByExp (OrderByExp obItems) = do
-  when (null obItems) $ throw400 UnexpectedPayload
-    "order_by array should not be empty"
-  return $
-    S.OrderByExp $ map convOrderByItem obItems
-
-partitionExtCols :: [ExtCol]
-                 -> ([PGCol], [(RelName, Maybe RelName, SelectQExt)])
-partitionExtCols = foldr f ([], [])
- where
-   f (ECSimple pgCol)     ~(l, r)        = (pgCol:l, r)
-   f (ECRel relName mAlias selQ) ~(l, r) = (l, (relName, mAlias, selQ):r)
+      FIRelationship relInfo -> do
+        when (riType relInfo == ArrRel) $
+          throw400 UnexpectedPayload $ mconcat
+          [ fldName <<> " is an array relationship"
+          ," and can't be used in 'order_by'"
+          ]
+        (relFim, relSpi) <- fetchRelDet (riName relInfo) (riRTable relInfo)
+        AOCRel relInfo (spiFilter relSpi) <$>
+          convOrderByElem (relFim, relSpi) rest
 
 -- If query limit > permission limit then consider permission limit Else consider query limit
 applyPermLimit
   :: Maybe Int -- Permission limit
   -> Maybe Int -- Query limit
-  -> Maybe S.SQLExp -- Return SQL exp
+  -> Maybe Int -- Return SQL exp
 applyPermLimit mPermLimit mQueryLimit =
-  S.intToSQLExp <$> maybe mQueryLimit compareWithPermLimit mPermLimit
+  maybe mQueryLimit compareWithPermLimit mPermLimit
   where
     compareWithPermLimit pLimit =
       maybe (Just pLimit) (compareLimits pLimit) mQueryLimit
@@ -264,29 +540,18 @@ convSelectQ
   -> SelPermInfo   -- Additional select permission info
   -> SelectQExt     -- Given Select Query
   -> (PGColType -> Value -> m S.SQLExp)
-  -> m SelectData
+  -> m AnnSel
 convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
-  -- let (extPGCols, extRels) = partitionExtCols $ sqColumns selQ
 
-  annFlds <- fmap HM.fromList $ withPathK "columns" $
+  annFlds <- withPathK "columns" $
     indexedForM (sqColumns selQ) $ \case
     (ECSimple pgCol) -> do
-      colTy <- convExtSimple fieldInfoMap selPermInfo pgCol
-      return (fromPGCol pgCol, FCol (pgCol, colTy))
+      colInfo <- convExtSimple fieldInfoMap selPermInfo pgCol
+      return (fromPGCol pgCol, FCol colInfo)
     (ECRel relName mAlias relSelQ) -> do
       annRel <- convExtRel fieldInfoMap relName mAlias relSelQ prepValBuilder
       return (fromRel $ fromMaybe relName mAlias, FRel annRel)
 
-  -- pgColTypes <- withPathK "columns" $
-  --   indexedForM extPGCols $ \extCol ->
-  --   convExtSimple fieldInfoMap selPermInfo extCol
-
-  -- let pgColMap = HM.fromList $ zip extPGCols pgColTypes
-
-  -- annRels <- withPathK "columns" $
-  --   indexedForM extRels $ \(relName, mAlias, extCol) -> do
-
-  -- let annRelMap = HM.fromList annRels
   let spiT = spiTable selPermInfo
 
   -- Convert where clause
@@ -294,27 +559,17 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
     withPathK "where" $
     convBoolExp' fieldInfoMap spiT selPermInfo be prepValBuilder
 
-  newAnnFldsM <- forM (sqOrderBy selQ) $ \(OrderByExp obItems) ->
-    withPathK "order_by" $
-    indexedFoldM processOrderByElem annFlds $
-    map (getOrderByColPath . obiColumn) obItems
-
-  let newAnnFlds = fromMaybe annFlds newAnnFldsM
-
-  -- Convert order by
-  sqlOrderBy <- mapM convOrderByExp $ sqOrderBy selQ
+  annOrdByM <- forM (sqOrderBy selQ) $ \(OrderByExp obItems) ->
+    withPathK "order_by" $ indexedForM obItems $ mapM $
+    convOrderByElem (fieldInfoMap, selPermInfo)
 
   -- validate limit and offset values
   withPathK "limit" $ mapM_ onlyPositiveInt mQueryLimit
   withPathK "offset" $ mapM_ onlyPositiveInt mQueryOffset
 
-  -- convert limit expression
-  let limitExp = applyPermLimit mPermLimit mQueryLimit
-  -- convert offset expression
-      offsetExp = S.intToSQLExp <$> mQueryOffset
-
-  return $ SelectData newAnnFlds (spiTable selPermInfo) Nothing
-    (spiFilter selPermInfo, wClause) sqlOrderBy [] limitExp offsetExp False
+  return $ AnnSel annFlds (spiTable selPermInfo) Nothing
+    (spiFilter selPermInfo) mPermLimit $
+    TableArgs wClause annOrdByM mQueryLimit (S.intToSQLExp <$> mQueryOffset)
 
   where
     mQueryOffset = sqOffset selQ
@@ -326,10 +581,10 @@ convExtSimple
   => FieldInfoMap
   -> SelPermInfo
   -> PGCol
-  -> m PGColType
+  -> m PGColInfo
 convExtSimple fieldInfoMap selPermInfo pgCol = do
   checkSelOnCol selPermInfo pgCol
-  askPGType fieldInfoMap pgCol relWhenPGErr
+  askPGColInfo fieldInfoMap pgCol relWhenPGErr
   where
     relWhenPGErr = "relationships have to be expanded"
 
@@ -347,354 +602,80 @@ convExtRel fieldInfoMap relName mAlias selQ prepValBuilder = do
     askRelType fieldInfoMap relName pgWhenRelErr
   let (RelInfo _ relTy colMapping relTab _ _) = relInfo
   (relCIM, relSPI) <- fetchRelDet relName relTab
-  selectData <- case relTy of
-    ObjRel ->
-      if misused
-        then throw400 UnexpectedPayload $ mconcat
-             [ "when selecting an 'obj_relationship' "
-             , "'where', 'order_by', 'limit' and 'offset' "
-             , " can't be used"
-             ]
-        else convSelectQ relCIM relSPI selQ prepValBuilder
-    ArrRel -> convSelectQ relCIM relSPI selQ prepValBuilder
-  return $ AnnRel (fromMaybe relName mAlias) relTy colMapping selectData
+  when (relTy == ObjRel && misused) $
+    throw400 UnexpectedPayload objRelMisuseMsg
+  annSel <- convSelectQ relCIM relSPI selQ prepValBuilder
+  return $ AnnRel (fromMaybe relName mAlias) relTy colMapping annSel
   where
     pgWhenRelErr = "only relationships can be expanded"
-    misused      = or [ isJust (sqWhere selQ)
-                      , isJust (sqLimit selQ)
-                      , isJust (sqOffset selQ)
-                      , isJust (sqOrderBy selQ)
-                      ]
-
--- SQL Generation helper functions
-----------------------------------
-
--- | Lateral joins are different. For example
--- A typical join looks like :
--- FromExp1 JOIN FromExp2 ON (condition)
---
--- A lateral join is as follows :
--- FromExp1 LATERAL JOIN FromExp2' ON (true)
--- where condition exists inside FromExp2'
-
-joinSel :: S.Select  -- ^ left Select expression
-        -> S.Select  -- ^ right Select expression
-        -> S.FromExp -- ^ From expression
-joinSel leftSel rightSel =
-  S.FromExp [S.FIJoin $ S.JoinExpr lhsFI S.LeftOuter rhsFI joinCond]
-  where
-    lhsFI = S.mkSelFromExp False leftSel $ TableName "l"
-    rhsFI = S.mkSelFromExp True rightSel $ TableName "r"
-    joinCond = S.JoinOn $ S.BELit True
-
--- | Injects lateral join condition into given Select expression
+    misused      =
+      or [ isJust (sqWhere selQ)
+         , isJust (sqLimit selQ)
+         , isJust (sqOffset selQ)
+         , isJust (sqOrderBy selQ)
+         ]
+    objRelMisuseMsg =
+      mconcat [ "when selecting an 'obj_relationship' "
+              , "'where', 'order_by', 'limit' and 'offset' "
+              , " can't be used"
+              ]
 
 injectJoinCond :: S.BoolExp       -- ^ Join condition
                -> S.BoolExp -- ^ Where condition
                -> S.WhereFrag     -- ^ New where frag
 injectJoinCond joinCond whereCond =
-  S.WhereFrag $ S.BEBin S.AndOp joinCond whereCond
-
-mkJoinCond :: AnnRel -> S.BoolExp
-mkJoinCond annRel =
-  foldr (S.BEBin S.AndOp) (S.BELit True) $ flip map colMapping $
-  \(lCol, rCol) -> S.BECompare S.SEQ (mkLJColFn lCol) (S.mkSIdenExp rCol)
-  where
-    colMapping = arMapping annRel
-    mkLJColFn  = S.mkQIdenExp (TableName "l") . mkLJCol (arName annRel)
-
--- | Generates SQL Exp of form
---
---   fn_name((SELECT r FROM (SELECT ext1, ext2 ..) as r))
---           |              |--------------------------|
---           |              |      inner select        |
---           |-----------------------------------------|
---           |              outer select               |
---
---   This is needed because
---
---     row_to_json(col1, col2)
---
---   would result in
---
---     { "f1" : v1, "f2" : v2 }
---
---   But,
---
---     row_to_json((SELECT r FROM (SELECT col1, col2) as r))
---
---   would result in
---
---     { "col1" : v1, "col2" : v2 }
-
-mkInnerSelExtr :: (FieldName, AnnFld) -> S.Extractor
-mkInnerSelExtr (alias, annFld) =
-  S.mkAliasedExtrFromExp colExp $
-  Just alias
-  where
-    colExp = case annFld of
-      FCol (pgCol, _) -> S.mkQIdenExp (TableName "r")  pgCol
-      FRel annRel     -> S.mkQIdenExp (TableName "r") $ arName annRel
-      FExp t          -> S.SELit t
-
-mkLJCol :: RelName -> PGCol -> PGCol
-mkLJCol (RelName rTxt) (PGCol cTxt) =
-  PGCol ("__l_" <> rTxt <> "_" <> cTxt)
-
--- | Generates
---
---   IF (r.__r_col IS NULL) THEN 'null' ELSE row_to_json(..)
-mkObjRelExtr :: PGCol -> RelName -> [S.Extractor] -> S.Extractor
-mkObjRelExtr compCol relName flds =
-  let idCol   = S.mkQIdenExp (TableName "r") compCol
-      rowExp  = S.mkRowExp flds
-      objAgg  = S.SEFnApp "row_to_json" [rowExp] Nothing
-      condExp = S.SECond (S.BENull idCol) (S.SELit "null") objAgg
-  in S.mkAliasedExtrFromExp condExp $ Just relName
-
--- | Generates
---
---   IF (first(r.__r_col) IS NULL) THEN '[]' ELSE json_agg(..)
-mkArrRelExtr :: Maybe S.OrderByExp -> PGCol -> RelName -> [S.Extractor] -> S.Extractor
-mkArrRelExtr mOb compCol relName flds =
-  let refCol  = S.SEFnApp "hdb_catalog.first"
-                [ S.mkQIdenExp (TableName "r") compCol ] Nothing
-      rowExp  = S.mkRowExp flds
-      arrAgg  = S.SEFnApp "json_agg" [rowExp] mOb
-      condExp = S.SECond (S.BENull refCol) (S.SELit "[]") arrAgg
-  in S.mkAliasedExtrFromExp condExp $ Just relName
-
--- | Make order by extr
-mkOrderByColExtr :: RelName -> PGCol -> S.Extractor
-mkOrderByColExtr (RelName rTxt) t@(PGCol cTxt) =
-  S.mkAliasedExtrFromExp orderByCol $ Just alias
-  where
-    orderByCol = S.mkQIdenExp (TableName "r") t
-    alias = PGCol ( rTxt <> "__" <> cTxt)
-
--- |
-mkLColExtrs :: AnnRel -> [S.Extractor]
-mkLColExtrs ar =
-  map (\lCol -> S.mkAliasedExtr lCol $ Just $ mkLJCol relName lCol) lCols
-  where
-    lCols   = map fst $ arMapping ar
-    relName = arName ar
-
--- |
-mkCompColAlias :: RelName -> PGCol -> PGCol
-mkCompColAlias relName rCol =
-    PGCol ("__r_" <> getRelTxt relName <> "_" <> getPGColTxt rCol)
-    -- TODO : exception prone, mapping should be nonempty list
-
-selDataToSQL :: [S.Extractor] -- ^ Parent's RCol
-             -> S.BoolExp     -- ^ Join Condition if any
-             -> SelectData    -- ^ Select data
-             -> S.Select      -- ^ SQL Select (needs wrapping)
-selDataToSQL parRCols joinCond (SelectData annFlds tn mFrmExp (fltr, mWc) ob _ lt offst _) =
-  let
-    (sCols, relCols) = partAnnFlds $ HM.elems annFlds
-    -- relCols        = HM.elems relColsMap
-    childrenLCols  = concatMap mkLColExtrs relCols
-    thisTableExtrs = parRCols
-                       <> map mkColExtr sCols
-                       -- <> (map mkOrderByColExtr obeCols)
-                       <> childrenLCols
-
-    finalWC = S.BEBin S.AndOp fltr $ maybe (S.BELit True) cBoolExp mWc
-
-    frm = fromMaybe (S.mkSimpleFromExp tn) mFrmExp
-
-    -- Add order by if
-    -- limit or offset is used or when no relationships are requested
-    -- orderByExp = bool Nothing ob $ or [isJust lt, isJust offst, null relCols]
-    baseSel = S.mkSelect
-              { S.selExtr    = thisTableExtrs
-              , S.selFrom    = Just frm
-              , S.selWhere   = Just $ injectJoinCond joinCond finalWC
-              }
-    joinedSel = foldr annRelColToSQL baseSel relCols
-  in
-    joinedSel { S.selOrderBy = ob
-              , S.selLimit   = S.LimitExp  <$> lt
-              , S.selOffset  = S.OffsetExp <$> offst
-              }
-
--- | Brings the left select columns into the scope of outer select
---   If group by, then use first, else just qualify with l
-exposeLSelExtrs :: Bool          -- is group by on outer select?
-                -> [S.Extractor] -- left select's extractors
-                -> [S.Extractor] -- extrs that can be used in outer select
-exposeLSelExtrs isGrpBy lExtrs =
-  -- TODO : This looks error prone. We'll definitely have
-  -- alised columns as extractors, but type system doesn't
-  -- guarantee it. Fix this.
-  map exposeLCol $ mapMaybe S.getExtrAlias lExtrs
-  where
-    toQual = S.QualIden . toIden
-    exposeLCol al@(S.Alias lCol) =
-      let qLCol  = S.SEQIden $ S.QIden (toQual (TableName "l")) lCol
-          faLCol = S.SEFnApp "hdb_catalog.first" [qLCol] Nothing
-      in S.Extractor (bool qLCol faLCol isGrpBy) $ Just al
-
--- | Generates
---
---    SELECT
---      cols_of_left_sel,
---      relationship_extr
---    FROM
---      left_sel as l
---      {JOIN TYPE} generated_right_sel_from_sel_data as r
---        ON {JOIN COND}
---        {GROUP BY}?
-annRelColToSQL :: AnnRel
-               -> S.Select
-               -> S.Select
-annRelColToSQL ar leftSel =
-  let
-    selData  = arSelData ar
-    relName  = arName ar
-    joinCond = mkJoinCond ar
-    -- The column used to determine whether there the object is null
-    -- or array is empty
-    compCol  = snd $ head $ arMapping ar
-    -- An alias for this
-    compColAlias = mkCompColAlias relName compCol
-    -- the comparison column should also be selected
-    rightSel = selDataToSQL [S.mkAliasedExtr compCol $ Just compColAlias] joinCond selData
-
-    allFlds  = map mkInnerSelExtr (HM.toList $ sdFlds selData)
-               -- <> map mkInnerSelExtr (HM.keys $ sdRels selData)
-    -- Lateral joins left and right select
-    fromExp   = joinSel leftSel rightSel
-  in case arType ar of
-  ObjRel ->
-    let
-      -- Current relationship's extractor, using row_to_json
-      relExtr   = mkObjRelExtr compColAlias relName allFlds
-
-      -- Qualified left select's columns
-      qLSelCols = exposeLSelExtrs False $ S.selExtr leftSel
-
-      -- Relationship's order columns
-      relOrderByCols = map (mkOrderByColExtr relName) $ sdAddCols selData
-
-    in
-      S.mkSelect { S.selExtr = qLSelCols ++ relExtr:relOrderByCols
-                 , S.selFrom = Just fromExp
-                 }
-  ArrRel ->
-    let
-      -- Current relationship's extractor, using json_agg
-      -- Also add order by in the aggregation as postgres doesn't guarantee it
-      relExtr   = mkArrRelExtr (qualifyOrderBy <$> sdOrderBy selData) compColAlias relName allFlds
-
-      -- Firstified left select's columns
-      qLSelCols = exposeLSelExtrs True $ S.selExtr leftSel
-
-
-      -- Group by exp to aggregate relationship as json_array
-      grpByExp  = S.GroupByExp $ map ((S.mkQIdenExp (TableName "l") . mkLJCol relName) . fst)
-                  (arMapping ar)
-    in
-      S.mkSelect { S.selExtr    = relExtr:qLSelCols
-                 , S.selFrom    = Just fromExp
-                 , S.selGroupBy = Just grpByExp
-                 }
-  where
-    qualifyOrderByItem (S.OrderByItem e t n) =
-      let qe = case e of
-            Left c  -> Right $ S.mkQIden (TableName "r") c
-            Right c -> Right c
-      in S.OrderByItem qe t n
-    qualifyOrderBy (S.OrderByExp items) =
-      S.OrderByExp $ map qualifyOrderByItem items
-
--- wrapFinalSel :: S.Select -> [ExtCol] -> S.Select
--- wrapFinalSel initSel extCols =
---   S.mkSelect
---   { S.selExtr = [S.Extractor rowToJSONedCol Nothing]
---   , S.selFrom = Just $ S.FromExp [S.mkSelFromExp False initSel (TableName "r")]
---   }
---   where
---     rowExp = S.mkRowExp $ map toExtr extCols
---     rowToJSONedCol = S.SEFnApp "coalesce"
---       [ S.SEFnApp "json_agg" [rowExp] Nothing
---       , S.SELit "[]"] Nothing
---     toExtr (ECSimple pgCol)  =
---       S.mkAliasedExtrFromExp (S.mkQIdenExp (TableName "r") pgCol) $
---       Just pgCol
---     toExtr (ECRel relName mAlias _) =
---       let rName = fromMaybe relName mAlias
---       in S.mkAliasedExtrFromExp (S.mkQIdenExp (TableName "r") rName) $
---          Just rName
-
-wrapFinalSel :: S.Select -> [(FieldName, AnnFld)] -> S.Select
-wrapFinalSel initSel extCols =
-  S.mkSelect
-  { S.selExtr = [S.Extractor rowToJSONedCol Nothing]
-  , S.selFrom = Just $ S.FromExp [S.mkSelFromExp False initSel (TableName "r")]
-  }
-  where
-    rowExp = S.mkRowExp $ map mkInnerSelExtr extCols
-    rowToJSONedCol = S.toEmptyArrWhenNull $
-                     S.SEFnApp "json_agg" [rowExp] Nothing
+  S.WhereFrag $ S.simplifyBoolExp $ S.BEBin S.AndOp joinCond whereCond
 
 getSelectDeps
-  :: SelectData
+  :: AnnSel
   -> [SchemaDependency]
-getSelectDeps (SelectData flds tn _ (_, annWc) _ _ _ _ _) =
+getSelectDeps (AnnSel flds tn _ _ _ tableArgs) =
   mkParentDep tn
   : fromMaybe [] whereDeps
   <> colDeps
   <> relDeps
   <> nestedDeps
   where
-    (sCols, rCols) = partAnnFlds $ HM.elems flds
+    annWc = _taWhere tableArgs
+    (sCols, rCols) = partAnnFlds $ map snd flds
     colDeps     = map (mkColDep "untyped" tn . fst) sCols
     relDeps     = map (mkRelDep . arName) rCols
-    nestedDeps  = concatMap (getSelectDeps . arSelData) rCols
+    nestedDeps  = concatMap (getSelectDeps . arAnnSel) rCols
     whereDeps   = getBoolExpDeps tn <$> annWc
     mkRelDep rn =
       SchemaDependency (SOTableObj tn (TORel rn)) "untyped"
 
-
--- data SelectQueryP1
---   = SelectQueryP1
---   { sqp1Cols :: ![ExtCol]
---   , sqp1Data :: !SelectData
---   } deriving (Show, Eq)
-
--- mkSQLSelect :: SelectQueryP1 -> S.Select
--- mkSQLSelect (SelectQueryP1 extCols selData) =
---   wrapFinalSel (selDataToSQL [] (S.BELit True) selData) extCols
-
-mkSQLSelect :: SelectData -> S.Select
-mkSQLSelect selData =
-  bool finalSelect singleObjSel $ asSingleObject selData
+mkSQLSelect :: Bool -> AnnSel -> S.Select
+mkSQLSelect isSingleObject annSel =
+  prefixNumToAliases $
+  if isSingleObject
+  then asSingleRow rootFldAls rootSelAsSubQuery
+  else withJsonAgg Nothing rootFldAls rootSelAsSubQuery
   where
-    singleObjSel = S.selectAsSingleObj finalSelect
-    finalSelect =
-      wrapFinalSel (selDataToSQL [] (S.BELit True) selData) $
-      HM.toList $ sdFlds selData
+    rootSelAsSubQuery = S.mkSelFromItem rootSel $ S.Alias $ Iden "root_alias"
+    rootSel  = baseNodeToSel (S.BELit True) rootNode
+    rootFldName = FieldName "root"
+    rootFldAls  = S.Alias $ toIden rootFldName
+    rootNode = mkBaseNode (Iden "root") rootFldName annSel
 
--- convSelectQuery
---   :: (P1C m)
---   => (PGColType -> Value -> m S.SQLExp)
---   -> SelectQuery
---   -> m SelectQueryP1
--- convSelectQuery prepArgBuilder (DMLQuery qt selQ) = do
---   tabInfo     <- withPathK "table" $ askTabInfo qt
---   selPermInfo <- askSelPermInfo tabInfo
---   extSelQ <- resolveStar (tiFieldInfoMap tabInfo) selPermInfo selQ
---   let extCols = sqColumns extSelQ
---   selData <- convSelectQ (tiFieldInfoMap tabInfo) selPermInfo extSelQ prepArgBuilder
---   return $ SelectQueryP1 extCols selData
+asSingleRow :: S.Alias -> S.FromItem -> S.Select
+asSingleRow col fromItem =
+  S.mkSelect
+  { S.selExtr  = [S.Extractor extr $ Just col]
+  , S.selFrom  = Just $ S.FromExp [fromItem]
+  }
+  where
+    extr    = S.SEFnApp "coalesce" [jsonAgg, S.SELit "null"] Nothing
+    jsonAgg = S.SEOpApp (S.SQLOp "->")
+              [ S.SEFnApp "json_agg" [S.SEIden $ toIden col] Nothing
+              , S.SEUnsafe "0"
+              ]
 
 convSelectQuery
   :: (P1C m)
   => (PGColType -> Value -> m S.SQLExp)
   -> SelectQuery
-  -> m SelectData
+  -> m AnnSel
 convSelectQuery prepArgBuilder (DMLQuery qt selQ) = do
   tabInfo     <- withPathK "table" $ askTabInfo qt
   selPermInfo <- askSelPermInfo tabInfo
@@ -703,19 +684,19 @@ convSelectQuery prepArgBuilder (DMLQuery qt selQ) = do
   convSelectQ (tiFieldInfoMap tabInfo) selPermInfo extSelQ prepArgBuilder
 
 -- selectP2 :: (P2C m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m RespBody
-selectP2 :: (SelectData, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
-selectP2 (sel, p) =
+selectP2 :: Bool -> (AnnSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+selectP2 asSingleObject (sel, p) =
   runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
-    selectSQL = toSQL $ mkSQLSelect sel
+    selectSQL = toSQL $ mkSQLSelect asSingleObject sel
 
 instance HDBQuery SelectQuery where
 
   -- type Phase1Res SelectQuery = (SelectQueryP1, DS.Seq Q.PrepArg)
-  type Phase1Res SelectQuery = (SelectData, DS.Seq Q.PrepArg)
+  type Phase1Res SelectQuery = (AnnSel, DS.Seq Q.PrepArg)
   phaseOne q = flip runStateT DS.empty $ convSelectQuery binRHSBuilder q
 
-  phaseTwo _ = liftTx . selectP2
+  phaseTwo _ = liftTx . selectP2 False
 
   schemaCachePolicy = SCPNoChange

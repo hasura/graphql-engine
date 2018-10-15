@@ -31,15 +31,41 @@ import {
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from '../TableBrowseRows/ViewHeader';
-import { setTable } from '../DataActions';
+import { setTable, fetchViewInfoFromInformationSchema } from '../DataActions';
 import { getIngForm, escapeRegExp } from '../utils';
 import { legacyOperatorsMap } from './PermissionBuilder/utils';
 
 class Permissions extends Component {
+  constructor() {
+    super();
+    this.state = {};
+    this.state.viewInfo = {};
+  }
   componentDidMount() {
     this.props.dispatch({ type: RESET });
 
+    const currentSchema = this.props.allSchemas.find(
+      t => t.table_name === this.props.tableName
+    );
+
+    if (!currentSchema) {
+      alert('Invalid schema');
+      return;
+    }
+
     this.props.dispatch(setTable(this.props.tableName));
+    this.props
+      .dispatch(
+        fetchViewInfoFromInformationSchema(
+          currentSchema.table_schema,
+          this.props.tableName
+        )
+      )
+      .then(r => {
+        if (r.length > 0) {
+          this.setState({ ...this.state, viewInfo: r[0] });
+        }
+      });
   }
 
   render() {
@@ -62,7 +88,26 @@ class Permissions extends Component {
     if (tableType === 'table') {
       qTypes = ['insert', 'select', 'update', 'delete'];
     } else if (tableType === 'view') {
-      qTypes = ['select'];
+      qTypes = [];
+      // Add insert/update permission if it is insertable/updatable as returned by pg
+      if (
+        this.state.viewInfo &&
+        'is_insertable_into' in this.state.viewInfo &&
+        this.state.viewInfo.is_insertable_into === 'YES'
+      ) {
+        qTypes.push('insert');
+      }
+
+      qTypes.push('select');
+
+      if (
+        this.state.viewInfo &&
+        'is_updatable' in this.state.viewInfo &&
+        this.state.viewInfo.is_updatable === 'YES'
+      ) {
+        qTypes.push('update');
+        qTypes.push('delete');
+      }
     }
 
     const tSchema = allSchemas.find(t => t.table_name === tableName);
@@ -379,6 +424,21 @@ class Permissions extends Component {
       </div>
     );
 
+    const getViewPermissionNote = () => {
+      let showNote = false;
+      if (!(this.state.viewInfo && 'is_insertable_into' in this.state.viewInfo && this.state.viewInfo.is_insertable_into === 'YES') && !(this.state.viewInfo && 'is_updatable' in this.state.viewInfo && this.state.viewInfo.is_updatable === 'YES')) {
+        showNote = true;
+      }
+
+      return showNote ? (
+        <div className={styles.permissionsLegend}>
+          <i className="fa fa-question-circle" aria-hidden="true" />
+            &nbsp;
+          You cannot insert/update into this view
+        </div>
+      ) : '';
+    };
+
     const getPermissionsTable = (tableSchema, queryTypes, permsState) => {
       const permissionsSymbols = {
         // <i className="fa fa-star" aria-hidden="true"/>
@@ -394,6 +454,7 @@ class Permissions extends Component {
       return (
         <div>
           {getPermissionsLegend(permissionsSymbols)}
+          {getViewPermissionNote()}
           <table className={`table table-bordered ${styles.permissionsTable}`}>
             {getPermissionsTableHead(queryTypes)}
             {getPermissionsTableBody(
@@ -420,6 +481,13 @@ class Permissions extends Component {
           ? permsState.insert.allow_upsert
           : false;
 
+        // Upsert Tooltip
+        const upsertToolTip = (
+          <Tooltip id="tooltip-upsert">
+            Upsert updates a row if it already exists, otherwise inserts it
+          </Tooltip>
+        );
+
         // TODO: Fix the controlled component
         _upsertSection = (
           <div>
@@ -433,7 +501,10 @@ class Permissions extends Component {
                   onClick={e => dispatchToggleAllowUpsert(e.target.checked)}
                 />
                 <span className={styles.mar_left}>
-                  Allow role '{permsState.role}' to make upsert queries
+                  Allow role '{permsState.role}' to make upsert queries &nbsp;
+                  <OverlayTrigger placement="right" overlay={upsertToolTip}>
+                    <i className="fa fa-question-circle" aria-hidden="true" />
+                  </OverlayTrigger>
                 </span>
               </label>
             </div>

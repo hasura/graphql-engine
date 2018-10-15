@@ -113,6 +113,10 @@ convUpdateQuery f uq = do
   let tableName = uqTable uq
   tableInfo <- withPathK "table" $ askTabInfo tableName
 
+  -- If it is view then check if it is updatable
+  mutableView tableName viIsUpdatable
+    (tiViewInfo tableInfo) "updatable"
+
   -- Check if the role has update permissions
   updPerm <- askUpdPermInfo tableInfo
 
@@ -140,8 +144,7 @@ convUpdateQuery f uq = do
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
-    withPathK "returning" $ zip retCols <$>
-    checkRetCols fieldInfoMap selPerm retCols
+    withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
   let setExpItems = setItems ++ incItems ++ mulItems ++ defItems
       updTable = upiTable updPerm

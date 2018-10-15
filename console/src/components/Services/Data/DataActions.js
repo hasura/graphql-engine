@@ -12,6 +12,8 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 
+import { SERVER_CONSOLE_MODE } from '../../../constants';
+
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_SCHEMA = 'Data/LOAD_SCHEMA';
 const LOAD_UNTRACKED_SCHEMA = 'Data/LOAD_UNTRACKED_SCHEMA';
@@ -23,6 +25,9 @@ const FETCH_SCHEMA_LIST = 'Data/FETCH_SCHEMA_LIST';
 const UPDATE_CURRENT_SCHEMA = 'Data/UPDATE_CURRENT_SCHEMA';
 const ACCESS_KEY_ERROR = 'Data/ACCESS_KEY_ERROR';
 const UPDATE_DATA_HEADERS = 'Data/UPDATE_DATA_HEADERS';
+const UPDATE_MANUAL_REL_TABLE_LIST = 'Data/UPDATE_MANUAL_REL_TABLE_LIST';
+const RESET_MANUAL_REL_TABLE_LIST = 'Data/RESET_MANUAL_REL_TABLE_LIST';
+const UPDATE_REMOTE_SCHEMA_MANUAL_REL = 'Data/UPDATE_SCHEMA_MANUAL_REL';
 
 const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
@@ -43,6 +48,7 @@ const fetchSchemaList = () => (dispatch, getState) => {
           schema: 'information_schema',
         },
         columns: ['schema_name'],
+        order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
         where: {
           schema_name: {
             $nin: [
@@ -80,8 +86,16 @@ const loadSchema = () => (dispatch, getState) => {
           name: 'hdb_table',
           schema: 'hdb_catalog',
         },
-        columns: ['*.*'],
+        columns: [
+          '*.*',
+          {
+            name: 'columns',
+            columns: ['*.*'],
+            order_by: [{ column: 'column_name', type: 'asc', nulls: 'last' }],
+          },
+        ],
         where: { table_schema: currentSchema },
+        order_by: [{ column: 'table_name', type: 'asc', nulls: 'last' }],
       },
     }),
   };
@@ -93,6 +107,39 @@ const loadSchema = () => (dispatch, getState) => {
       console.error('Failed to load schema ' + JSON.stringify(error));
     }
   );
+};
+
+const fetchViewInfoFromInformationSchema = (schemaName, viewName) => (
+  dispatch,
+  getState
+) => {
+  const url = Endpoints.getSchema;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify({
+      type: 'select',
+      args: {
+        table: {
+          name: 'views',
+          schema: 'information_schema',
+        },
+        columns: [
+          'is_updatable',
+          'is_insertable_into',
+          'is_trigger_updatable',
+          'is_trigger_deletable',
+          'is_trigger_insertable_into',
+        ],
+        where: {
+          table_name: viewName,
+          table_schema: schemaName,
+        },
+      },
+    }),
+  };
+  return dispatch(requestAction(url, options));
 };
 
 const loadUntrackedSchema = () => (dispatch, getState) => {
@@ -202,7 +249,7 @@ const setTable = tableName => ({ type: SET_TABLE, tableName });
 
 const handleMigrationErrors = (title, errorMsg) => dispatch => {
   const requestMsg = title;
-  if (globals.consoleMode === 'hasuradb') {
+  if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     // handle errors for run_sql based workflow
     dispatch(showErrorNotification(title, errorMsg.code, requestMsg, errorMsg));
   } else if (errorMsg.code === 'migration_failed') {
@@ -264,7 +311,7 @@ const makeMigrationCall = (
   const migrateUrl = returnMigrateUrl(currMigrationMode);
 
   let finalReqBody;
-  if (globals.consoleMode === 'hasuradb') {
+  if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     finalReqBody = upQuery;
   } else if (globals.consoleMode === 'cli') {
     finalReqBody = migrationBody;
@@ -279,7 +326,7 @@ const makeMigrationCall = (
 
   const onSuccess = () => {
     if (globals.consoleMode === 'cli') {
-      dispatch(loadMigrationStatus()); // don't call for hasuradb mode
+      dispatch(loadMigrationStatus()); // don't call for server mode
     }
     dispatch(loadSchema());
     customOnSuccess();
@@ -298,6 +345,42 @@ const makeMigrationCall = (
   dispatch(requestAction(url, options, REQUEST_SUCCESS, REQUEST_ERROR)).then(
     onSuccess,
     onError
+  );
+};
+
+const fetchTableListBySchema = schemaName => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify({
+      type: 'select',
+      args: {
+        table: {
+          name: 'hdb_table',
+          schema: 'hdb_catalog',
+        },
+        columns: [
+          '*.*',
+          {
+            name: 'columns',
+            columns: ['*.*'],
+            order_by: [{ column: 'column_name', type: 'asc', nulls: 'last' }],
+          },
+        ],
+        where: { table_schema: schemaName },
+        order_by: [{ column: 'table_name', type: 'asc', nulls: 'last' }],
+      },
+    }),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      dispatch({ type: UPDATE_MANUAL_REL_TABLE_LIST, data: data });
+    },
+    error => {
+      console.error('Failed to load table list' + JSON.stringify(error));
+    }
   );
 };
 
@@ -372,6 +455,45 @@ const dataReducer = (state = defaultState, action) => {
       return { ...state, accessKeyError: action.data };
     case UPDATE_DATA_HEADERS:
       return { ...state, dataHeaders: action.data };
+    case UPDATE_REMOTE_SCHEMA_MANUAL_REL:
+      return {
+        ...state,
+        modify: {
+          ...state.modify,
+          relAdd: {
+            ...state.modify.relAdd,
+            manualRelInfo: {
+              ...state.modify.relAdd.manualRelInfo,
+              remoteSchema: action.data,
+            },
+          },
+        },
+      };
+    case UPDATE_MANUAL_REL_TABLE_LIST:
+      return {
+        ...state,
+        modify: {
+          ...state.modify,
+          relAdd: {
+            ...state.modify.relAdd,
+            manualRelInfo: {
+              ...state.modify.relAdd.manualRelInfo,
+              tables: action.data,
+            },
+          },
+        },
+      };
+    case RESET_MANUAL_REL_TABLE_LIST:
+      return {
+        ...state,
+        modify: {
+          ...state.modify,
+          relAdd: {
+            ...state.modify.relAdd,
+            manualRelInfo: { ...defaultState.modify.relAdd.manualRelInfo },
+          },
+        },
+      };
     default:
       return state;
   }
@@ -393,4 +515,8 @@ export {
   fetchSchemaList,
   ACCESS_KEY_ERROR,
   UPDATE_DATA_HEADERS,
+  UPDATE_REMOTE_SCHEMA_MANUAL_REL,
+  fetchTableListBySchema,
+  RESET_MANUAL_REL_TABLE_LIST,
+  fetchViewInfoFromInformationSchema,
 };

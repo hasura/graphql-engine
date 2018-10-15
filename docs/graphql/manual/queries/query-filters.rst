@@ -20,7 +20,7 @@ For example, fetch data for an author whose name is "Sidney":
     }
 
 You can also use the nested ``articles`` object to filter rows from the ``author`` table. This query fetches a list of
-authors who have articles with rating greater than 4:
+authors who have articles with a rating greater than 4:
 
 .. code-block:: graphql
    :emphasize-lines: 3
@@ -73,7 +73,7 @@ Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
 
 Example: String or Text
 ^^^^^^^^^^^^^^^^^^^^^^^
-Fetch a list of authors with ``name`` *(a text field)* as "Sidney"
+Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
 
 .. graphiql::
   :view_only:

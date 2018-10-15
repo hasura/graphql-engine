@@ -1,0 +1,16 @@
+description: Select cities ending with ham
+url: /v1/query
+status: 200
+response:
+  - name: Framlingham
+    country: UK
+query:
+  type: select
+  args:
+    table: city
+    where:
+      name:
+       $similar: '_*gham'
+    columns:
+    - name
+    - country
