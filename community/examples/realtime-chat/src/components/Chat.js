@@ -3,7 +3,6 @@ import { Subscription } from 'react-apollo';
 import gql from 'graphql-tag';
 import ChatWrapper from './ChatWrapper';
 import '../App.css';
-const hasura_logo = require('../hasura_logo_200.png');
 
 const subscribeToNewMessages = gql`
   subscription {
@@ -62,7 +61,7 @@ class Chat extends React.Component {
           }
         });
       },
-      3000 
+      3000
     );
   }
 
