@@ -84,7 +84,7 @@ Now, let's make the same query as above but also include 2 dynamic authorization
 
 .. image:: ../../../img/graphql/manual/auth/query-with-perms.png
 
-You can notice above how the same query now only includes the right slice of data.
+In the above image, you can notice the same query now only includes the right slice of data.
 
 .. _restrict_columns:
 
