@@ -9,7 +9,7 @@
 
   [![glitch-deploy-button](https://raw.githubusercontent.com/hasura/sample-auth-webhook/master/assets/deploy-glitch.png)](https://glitch.com/edit/#!/thundering-brick)
 
-* STEP 3: Start GraphQL engine with the the auth-hook as the webhook URL and access key of your choice
+* STEP 3: Start GraphQL engine with the auth-hook as the webhook URL and access key of your choice
 
   Deploy GraphQL engine to Heroku if you do not have it deployed anywhere.
 
