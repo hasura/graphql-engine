@@ -3,14 +3,20 @@ CREATE OR REPLACE function hdb_views.notify_hasura_{{NAME}}_{{OPERATION}}() RETU
    AS $$
    DECLARE
    id text;
-   _old json;
-   _new json;
+   _old record;
+   _new record;
    _data json;
    payload json;
    BEGIN
      id := gen_random_uuid();
-     _old := {{OLD_DATA_EXPRESSION}};
-     _new := {{NEW_DATA_EXPRESSION}};
+     IF TG_OP = 'UPDATE' THEN
+       _old := {{OLD_ROW}};
+       _new := {{NEW_ROW}};
+     ELSE
+     /* initialize _old and _new with dummy values */
+       _old := row((select 1));
+       _new := row((select 1));
+     END IF;
      _data := json_build_object(
        'old', {{OLD_PAYLOAD_EXPRESSION}},
        'new', {{NEW_PAYLOAD_EXPRESSION}}
@@ -19,7 +25,7 @@ CREATE OR REPLACE function hdb_views.notify_hasura_{{NAME}}_{{OPERATION}}() RETU
                         'op', TG_OP,
                         'data', _data
                         )::text;
-     IF _old IS NULL OR _new IS NULL OR _old::jsonb <> _new::jsonb THEN
+     IF (TG_OP <> 'UPDATE') OR (_old <> _new) THEN
        INSERT INTO
        hdb_catalog.event_log (id, schema_name, table_name, trigger_name, trigger_id, payload)
        VALUES

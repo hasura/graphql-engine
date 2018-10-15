@@ -65,8 +65,8 @@ getTriggerSql op trid trn qt allCols spec =
     createOpCtx op1 (SubscribeOpSpec columns payload) =
       HashMap.fromList
       [ (T.pack "OPERATION", T.pack $ show op1)
-      , (T.pack "OLD_DATA_EXPRESSION", toSQLTxt $ renderOldDataExp op1 columns )
-      , (T.pack "NEW_DATA_EXPRESSION", toSQLTxt $ renderNewDataExp op1 columns )
+      , (T.pack "OLD_ROW", toSQLTxt $ renderRow OLD columns )
+      , (T.pack "NEW_ROW", toSQLTxt $ renderRow NEW columns )
       , (T.pack "OLD_PAYLOAD_EXPRESSION", toSQLTxt $ renderOldDataExp op1 payload )
       , (T.pack "NEW_PAYLOAD_EXPRESSION", toSQLTxt $ renderNewDataExp op1 payload )
       ]
@@ -88,12 +88,20 @@ getTriggerSql op trid trn qt allCols spec =
           getColInfos cols allCols
 
     applyRowToJson e = S.SEFnApp "row_to_json" [e] Nothing
+    applyRow e = S.SEFnApp "row" [e] Nothing
     toExtr = flip S.Extractor Nothing
     mkQId opVar colInfo = toJSONableExp (pgiType colInfo) $
       S.SEQIden $ S.QIden (opToQual opVar) $ toIden $ pgiName colInfo
 
     opToQual = S.QualVar . opToTxt
     opToTxt = T.pack . show
+
+    renderRow opVar scs =
+      case scs of
+        SubCStar -> applyRow $ S.SEUnsafe $ opToTxt opVar
+        SubCArray cols -> applyRow $
+          S.mkRowExp $ map (toExtr . mkQId opVar) $
+          getColInfos cols allCols
 
 mkTriggerQ
   :: TriggerId
