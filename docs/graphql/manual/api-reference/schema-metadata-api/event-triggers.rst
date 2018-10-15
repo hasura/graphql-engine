@@ -61,7 +61,7 @@ Args syntax
      - Description
    * - name
      - true
-     - :ref:`TriggerName <TriggerName>`
+     - TriggerName_
      - Name of the event trigger
    * - table
      - true
@@ -73,19 +73,19 @@ Args syntax
      - Full url of webhook
    * - insert
      - false
-     - :ref:`OperationSpec <OperationSpec>`
+     - OperationSpec_
      - Specification for insert operation
    * - update
      - false
-     - :ref:`OperationSpec <OperationSpec>`
+     - OperationSpec_
      - Specification for update operation
    * - delete
      - false
-     - :ref:`OperationSpec <OperationSpec>`
+     - OperationSpec_
      - Specification for delete operation
    * - headers
      - false
-     - [ :ref:`HeaderFromValue <HeaderFromValue>` | :ref:`HeaderFromEnv <HeaderFromEnv>` ]
+     - [ HeaderFromValue_ | HeaderFromEnv_ ]
      - List of headers to be sent with the webhook
    * - replace
      - false
@@ -126,7 +126,7 @@ Args syntax
      - Description
    * - name
      - true
-     - :ref:`TriggerName <TriggerName>`
+     - TriggerName_
      - Name of the event trigger
  
 .. _TriggerName:
@@ -152,11 +152,11 @@ Args syntax
      - Description
    * - columns
      - true
-     - :ref:`EventTriggerColumns <EventTriggerColumns>`
+     - EventTriggerColumns_
      - List of columns or "*" to listen changes on
    * - payload
      - false
-     - :ref:`EventTriggerColumns <EventTriggerColumns>`
+     - EventTriggerColumns_
      - List of columns or "*" to send as part of webhook payload
 
 .. _HeaderFromValue:
@@ -209,6 +209,6 @@ Args syntax
 .. parsed-literal::
    :class: haskell-pre
 
-   "*" | [PGColumn_]
+   "*" | [:ref:`PGColumn`]
 
 
