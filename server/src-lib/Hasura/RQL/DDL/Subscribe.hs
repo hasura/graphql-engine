@@ -176,7 +176,12 @@ fetchEventTrigger trn = do
   getTrigger triggers
   where
     getTrigger []    = throw400 NotExists ("could not find event trigger '" <> trn <> "'")
-    getTrigger (x:_) = return $ EventTrigger (QualifiedTable sn tn) trn' (fromMaybeTriggerOpsDef tDef) webhook (RetryConf nr rint)
+    getTrigger (x:_) = return $ EventTrigger
+                       (QualifiedTable sn tn)
+                       trn'
+                       (fromMaybeTriggerOpsDef tDef)
+                       webhook
+                       (RetryConf nr rint)
       where (sn, tn, trn', Q.AltJ tDef, webhook, nr, rint) = x
 
 fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
@@ -234,7 +239,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
 
 subTableP2 :: (P2C m) => QualifiedTable -> Bool -> EventTriggerDef -> m ()
 subTableP2 qt replace q@(EventTriggerDef name def webhook rconf mheaders) = do
-  allCols <- (getCols . tiFieldInfoMap) <$> askTabInfo qt
+  allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
   trid <- if replace
     then do
     delEventTriggerFromCache qt name
