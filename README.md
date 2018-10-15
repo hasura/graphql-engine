@@ -141,7 +141,7 @@ Check out all the example applications in the
 * [Dashboard for 10million rides with geo-location (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 mins*)
 
 
-## Support & Troubleshooting
+<h1>## Support & Troubleshooting</h1>
 
 The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
 
