@@ -1,16 +1,17 @@
-# Hasura GraphQL Engine
-
-[![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://docs.hasura.io)
-[![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
-
-
+<p align="center">
+<h1><strong>Hasura GraphQL Engine</strong></h1>
+</p>
+<p align="center">
+    <a href="https://docs.hasura.io"><img src="https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat"></a>
+    <a href="https://circleci.com/gh/hasura/graphql-engine"><img src="https://circleci.com/gh/hasura/graphql-engine.svg?style=shield"></a>
 <a href="https://discord.gg/3FNQnWj"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
+</p>
 
 Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, realtime GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events for asynchronous business logic.
 
-Hasura helps you build GraphQL apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
+Hasura helps you to build GraphQL apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
 
 Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io). 
 
