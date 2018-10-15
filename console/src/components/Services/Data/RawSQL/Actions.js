@@ -78,7 +78,6 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   // check if its a migration and send to hasuractl migrate
   if (isMigration) {
     url = migrateUrl;
-    // const migrationName = 'run_sql_migration';
     requestBody = {
       name: migrationName,
       up: schemaChangesUp,

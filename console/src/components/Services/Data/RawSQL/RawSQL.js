@@ -33,7 +33,8 @@ const migrationTip = (
 );
 const migrationNameTip = (
   <Tooltip id="tooltip-migration">
-    Use this to change the name of the generated migration files
+    Use this to change the name of the generated migration files. Defaults to
+    'run_sql_migration'
   </Tooltip>
 );
 const trackTableTip = (
@@ -323,7 +324,7 @@ const RawSQL = ({
                   aria-hidden="true"
                 />
               </OverlayTrigger>
-              <h4 className={styles.padd_top}>
+              <div className={styles.padd_top}>
                 Migration Name:
                 <OverlayTrigger placement="right" overlay={migrationNameTip}>
                   <i
@@ -331,10 +332,17 @@ const RawSQL = ({
                     aria-hidden="true"
                   />
                 </OverlayTrigger>
-              </h4>
+              </div>
               <input
-                defaultValue={'run_sql_migration'}
-                className={`${styles.add_mar_right_small} form-control`}
+                className={
+                  styles.add_mar_right_small +
+                  ' ' +
+                  styles.tableNameInput +
+                  ' ' +
+                  styles.add_mar_top_small +
+                  ' form-control'
+                }
+                placeholder={'Name of the generated migration file'}
                 id="migration-name"
                 type="text"
               />
