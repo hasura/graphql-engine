@@ -70,7 +70,7 @@ aforementioned sections).
 ## Commit messages
 
  - The first line should be a summary of the changes, not exceeding 50
-   character, followed by an optional body which has more details about the
+   characters, followed by an optional body which has more details about the
    changes. Refer [to this link](https://github.com/erlang/otp/wiki/writing-good-commit-messages)
    for more information on writing good commit messages.
 

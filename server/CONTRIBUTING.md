@@ -1,6 +1,6 @@
 # Contributing
 
-This guide is explains how to set up the graphql-engine server for development on your
+This guide explains how to set up the graphql-engine server for development on your
 own machine and how to contribute.
 
 ## Pre-requisites
