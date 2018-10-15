@@ -7,7 +7,7 @@ We're working with a simple ``author`` table where users have some information s
 Create a author table
 ---------------------
 
-Head to your console and create a ``author`` table with the following columns:
+Head to your console and create an ``author`` table with the following columns:
 
 +----------+--------+
 |      id  | integer|

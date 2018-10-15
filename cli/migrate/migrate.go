@@ -169,7 +169,7 @@ func (m *Migrate) ReScan() error {
 	return nil
 }
 
-// Close closes the the source and the database.
+// Close closes the source and the database.
 func (m *Migrate) Close() (source error) {
 	sourceSrvClose := make(chan error)
 
