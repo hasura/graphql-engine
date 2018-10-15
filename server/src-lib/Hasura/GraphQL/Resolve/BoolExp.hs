@@ -15,6 +15,7 @@ import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.GBoolExp               as RA
@@ -34,7 +35,7 @@ parseOpExps
   => AnnGValue -> m [RA.OpExp]
 parseOpExps annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
-    forM (Map.toList obj) $ \(k, v) -> case k of
+    forM (OMap.toList obj) $ \(k, v) -> case k of
       "_eq"           -> fmap RA.AEQ <$> asPGColValM v
       "_ne"           -> fmap RA.ANE <$> asPGColValM v
       "_neq"          -> fmap RA.ANE <$> asPGColValM v
@@ -108,7 +109,7 @@ parseBoolExp
 parseBoolExp annGVal = do
   boolExpsM <-
     flip withObjectM annGVal
-      $ \nt objM -> forM objM $ \obj -> forM (Map.toList obj) $ \(k, v) -> if
+      $ \nt objM -> forM objM $ \obj -> forM (OMap.toList obj) $ \(k, v) -> if
           | k == "_or"  -> BoolOr . fromMaybe [] <$> parseMany parseBoolExp v
           | k == "_and" -> BoolAnd . fromMaybe [] <$> parseMany parseBoolExp v
           | k == "_not" -> BoolNot <$> parseBoolExp v

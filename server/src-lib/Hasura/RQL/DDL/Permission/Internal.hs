@@ -290,6 +290,19 @@ class (ToJSON a) => IsPerm a where
     :: DropPerm a -> PermAccessor (PermInfo a)
   getPermAcc2 _ = permAccessor
 
+validateViewPerm
+  :: (IsPerm a, QErrM m) => PermDef a -> TableInfo -> m ()
+validateViewPerm permDef tableInfo =
+  case permAcc of
+    PASelect -> return ()
+    PAInsert -> mutableView tn viIsInsertable viewInfo "insertable"
+    PAUpdate -> mutableView tn viIsUpdatable viewInfo "updatable"
+    PADelete -> mutableView tn viIsDeletable viewInfo "deletable"
+  where
+    tn = tiName tableInfo
+    viewInfo = tiViewInfo tableInfo
+    permAcc = getPermAcc1 permDef
+
 addPermP1 :: (QErrM m, CacheRM m, IsPerm a) => TableInfo -> PermDef a -> m (PermInfo a)
 addPermP1 tabInfo pd = do
   assertPermNotDefined (pdRole pd) (getPermAcc1 pd) tabInfo
@@ -311,6 +324,7 @@ instance (IsPerm a) => HDBQuery (CreatePerm a) where
 
   phaseOne (WithTable tn pd) = do
     tabInfo <- createPermP1 tn
+    validateViewPerm pd tabInfo
     addPermP1 tabInfo pd
 
   phaseTwo (WithTable tn pd) permInfo = do

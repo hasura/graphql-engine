@@ -117,3 +117,34 @@ args:
       filter:
         $and:
           - author_id: X-HASURA-USER-ID
+
+#Create resident table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE resident (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        age INTEGER NOT NULL
+      )
+- type: track_table
+  args:
+    schema: public
+    name: resident
+
+- type: insert
+  args:
+    table: resident
+    objects:
+    - name: Griffin
+      age: 25
+    - name: Clarke
+      age: 26
+
+- type: create_delete_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      filter:
+        id: X-Hasura-Resident-Id

@@ -152,6 +152,8 @@ The documentation and community will help you troubleshoot most issues. If you h
 
 We are committed to fostering an open and welcoming environment in the community. Please see the [Code of Conduct](code-of-conduct.md).
 
+If you want to report a security issue, please [read this](SECURITY.md).
+
 ## Contributing
 
 Check out our [contributing guide](CONTRIBUTING.md) for more details.
