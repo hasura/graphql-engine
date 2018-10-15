@@ -22,7 +22,7 @@ Logged-in users
 
 - Create a role called ``user``.
 - Access control rules in this case are usually dependent on a ``user_id`` or a ``owner_id`` column in your data model.
-- Setup a permission for insert/select/update/delete that uses said column. Eg: ``author_id: {_eq: "X-Hasura-User-Id"}`` for an article table.
+- Setup a permission for insert/select/update/delete that uses said column. E.g.: ``author_id: {_eq: "X-Hasura-User-Id"}`` for an article table.
 - Note that the ``X-Hasura-User-Id`` is a :doc:`dynamic session variable<./roles-variables>` that comes in from your :doc:`auth webhook's<./webhook>` response, or as a request as a header if you're testing.
 
 .. image:: ../../../img/graphql/manual/auth/user-select-graphiql.png
