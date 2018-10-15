@@ -76,7 +76,7 @@ body {
 
 #chatbox {
   overflow: auto;
-  height: 100vh;
+  height: calc(100vh - 90px);
   background-color: #f8f9f9;
 }
 
@@ -294,11 +294,10 @@ body {
 .App-footer{
   position: fixed;
   bottom: 0;
-  height: 50px;
   text-align: center;
   width: 100%;
-  padding-bottom: 15px;
-  padding-top: 20px;
+  padding-bottom: 10px;
+  padding-top: 10px;
   background-color: #fff;
   border-top: 1px solid #ccc;
 }
