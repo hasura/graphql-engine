@@ -38,6 +38,8 @@ withSelSet selSet f =
     res <- f fld
     return (G.unName $ G.unAlias $ _fAlias fld, res)
 
+  OCInsert tn vn cols set hdrs 
+  validateHdrs hdrs >> RM.convertInsert roleName (tn, vn) set cols fld
 convertReturning
   :: QualifiedTable -> G.NamedType -> SelSet -> Convert RS.AnnSel
 convertReturning qt ty selSet = do
@@ -58,10 +60,11 @@ convertMutResp qt ty selSet =
 
 convertRowObj
   :: (MonadError QErr m, MonadState PrepArgs m)
-  => AnnGValue
+   => InsSetCols -> AnnGValue
   -> m [(PGCol, S.SQLExp)]
-convertRowObj val =
-  flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
+convertRowObj setVals val =
+  flip withObject val $ \_ obj -> do
+   inpVals <- forM (Map.toList obj) $ \(k, v) -> do
     prepExpM <- asPGColValM v >>= mapM prepare
     let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (PGCol $ G.unName k, prepExp)
