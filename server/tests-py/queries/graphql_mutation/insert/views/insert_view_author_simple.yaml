@@ -1,0 +1,25 @@
+description: Insert into author_simple view
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    insert_author_simple:
+      affected_rows: 1
+      returning:
+      - id: 1
+        name: Clarke
+        is_registered: true
+query:
+  query: |
+    mutation author_simple{
+      insert_author_simple(
+        objects: [{id: 1, name: "Clarke", is_registered: true}]
+      ){
+        affected_rows
+        returning{
+          id
+          name
+          is_registered
+        }
+      }
+    }
