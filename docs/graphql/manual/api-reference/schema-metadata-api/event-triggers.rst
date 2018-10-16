@@ -8,7 +8,7 @@ Event triggers are used to capture database changes and send them to a configure
 create_event_trigger
 --------------------
 
-``create_event_trigger`` is used to create a new event trigger or replace and existing event trigger.
+``create_event_trigger`` is used to create a new event trigger or replace an existing event trigger.
 
 .. code-block:: http
 
