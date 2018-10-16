@@ -20,6 +20,7 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataCmd.AddCommand(
 		newMetadataExportCmd(ec),
 		newMetadataResetCmd(ec),
+		newMetadataReloadCmd(ec),
 		newMetadataApplyCmd(ec),
 	)
 	return metadataCmd
@@ -51,6 +52,11 @@ func executeMetadata(cmd string, t *migrate.Migrate, metadataPath string) error 
 		err := t.ResetMetadata()
 		if err != nil {
 			return errors.Wrap(err, "Cannot reset Metadata")
+		}
+	case "reload":
+		err := t.ReloadMetadata()
+		if err != nil {
+			return errors.Wrap(err, "Cannot reload Metadata")
 		}
 	case "apply":
 		data, err := ioutil.ReadFile(metadataPath)

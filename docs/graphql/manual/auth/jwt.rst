@@ -74,7 +74,7 @@ Example JWT claim:
 
 This contains standard (``sub``, ``iat`` etc.) and custom (``name``, ``admin``
 etc.) JWT claims, as well as Hasura specific claims inside a custom namespace
-(or key) i.e ``https://hasura.io/jwt/claims``.
+(or key) i.e. ``https://hasura.io/jwt/claims``.
 
 The ``https://hasura.io/jwt/claims`` is the custom namespace where all Hasura
 specific claims have to be present. This value can be configured in the JWT
@@ -132,7 +132,7 @@ public keys are not yet supported.
 
 ``key``
 ^^^^^^^
-- In case of symmetric key (i.e HMAC based key), the key as it is. (e.g -
+- In case of symmetric key (i.e. HMAC based key), the key as it is. (e.g. -
   "abcdef...").
 - In case of asymmetric keys (RSA etc.), only the public key, in a PEM encoded
   string or as a X509 certificate.
@@ -151,7 +151,7 @@ encoded public key) as string as well - under the ``key`` field.
 
 **Rotating JWKs**:
 
-Some provider rotates their JWKs (like Firebase). If the provider sends an
+Some providers rotate their JWKs (E.g - Firebase). If the provider sends an
 ``Expires`` header with the response of JWK, then graphql-engine will refresh
 the JWKs automatically. If the provider does not send ``Expires`` header, the
 JWKs are not refreshed.
@@ -166,7 +166,7 @@ JWKs are not refreshed.
 ``claims_namespace``
 ^^^^^^^^^^^^^^^^^^^^
 This is an optional field. You can specify the key name
-inside which the Hasura specific claims will be present. E.g - ``https://mydomain.com/claims``.
+inside which the Hasura specific claims will be present. E.g. - ``https://mydomain.com/claims``.
 
 **Default value** is: ``https://hasura.io/jwt/claims``.
 
@@ -176,7 +176,7 @@ Examples
 HMAC-SHA based
 +++++++++++++++
 Your auth server is using HMAC-SHA algorithms to sign JWTs, and is using a
-256-bit key. Then the JWT config will look like:
+256-bit key. In this case, the JWT config will look like:
 
 .. code-block:: json
 
@@ -185,11 +185,11 @@ Your auth server is using HMAC-SHA algorithms to sign JWTs, and is using a
      "key": "3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"
    }
 
-The ``key`` is the actual shared secret. Which is used by your auth server as well.
+The ``key`` is the actual shared secret, which is used by your auth server as well.
 
 RSA based
 +++++++++
-If your auth server is using RSA to sign JWTs, and is using a 512-bit key. Then,
+If your auth server is using RSA to sign JWTs, and is using a 512-bit key. In this case,
 the JWT config needs to have the only the public key.
 
 **Example 1**: public key in PEM format (not OpenSSH format):
