@@ -22,7 +22,7 @@ import sys
 from os.path import abspath, dirname, join
 sys.setrecursionlimit(2000)
 
-# Monkey patching StandaloneHTMLBuilder to not include unnecessary scripts
+# Monkey patching StandaloneHTMLBuilder as to not include unnecessary scripts
 
 from sphinx.builders.html import StandaloneHTMLBuilder
 # from sphinx.util.osutil import relative_uri
@@ -129,7 +129,7 @@ project = 'Hasura'
 copyright = '2016, Hasura'
 author = 'Hasura Developers'
 
-# The version info for the project you're documenting, acts as replacement for
+# The version info for the project you're documenting, acts as a replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
@@ -158,7 +158,7 @@ language = None
 #
 # today_fmt = '%B %d, %Y'
 
-# List of patterns, relative to source directory, that match files and
+# List of patterns, relative to the source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
 exclude_patterns = ['_build', 'venv', 'Thumbs.db', '.DS_Store']
