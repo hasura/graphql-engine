@@ -12,7 +12,8 @@ Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant,
 
 Hasura helps you build GraphQL apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
 
-Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io). 
+Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io). <br>
+You can also Read more about [GraphQL](https://graphql.org/) and [Postgres](https://www.postgresql.org/).
 
 ------------------
 
