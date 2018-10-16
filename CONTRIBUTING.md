@@ -15,7 +15,7 @@ can quickly merge or address your contributions.
 ## Overview
 
 [hasura/graphql-engine](https://github.com/hasura/graphql-engine) is a mono-repo
-consisting of 3 components. Each have their own contributing guides:
+consisting of 3 components. Each has their own contributing guides:
 
 1. [Server (Haskell)](server/CONTRIBUTING.md)
 2. [CLI (Go)](cli/CONTRIBUTING.md)
@@ -35,7 +35,7 @@ Contributing guide for docs can be found at [docs/CONTRIBUTING.md](docs/CONTRIBU
 
 There is no specific contributing guide for community content. Anything that can
 help GraphQL Engine community/users can go into the section. We have identified
-[boilerplates](community/boilerplates), [examples](community/examples) and
+[boilerplates](community/boilerplates), [examples](community/examples), and
 [tools](community/tools) as primary candidates. Feel free to submit a pull
 request if you have something to add (not necessarily belonging to the
 before-mentioned sections).

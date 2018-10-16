@@ -14,7 +14,7 @@ To report a security issue, please email us at [build@hasura.io](mailto:build@ha
 ### When Should I NOT Report a Vulnerability?
 
 - You need help tuning Hasura GraphQL Engine components for security.
-- You need help applying security related updates.
+- You need help applying security-related updates.
 - Your issue is not security related.
 
 ## Security Vulnerability Response
