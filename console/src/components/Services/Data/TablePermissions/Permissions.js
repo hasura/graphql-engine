@@ -208,21 +208,21 @@ class Permissions extends Component {
         const bulkSelect = permsState.bulkSelect;
         const currentInputSelection = bulkSelect.filter(e => e === role)
           .length ? (
-          <input
-            onChange={dispatchBulkSelect}
-            checked="checked"
-            data-role={role}
-            className={styles.bulkSelect}
-            type="checkbox"
-          />
-        ) : (
-          <input
-            onChange={dispatchBulkSelect}
-            data-role={role}
-            className={styles.bulkSelect}
-            type="checkbox"
-          />
-        );
+            <input
+              onChange={dispatchBulkSelect}
+              checked="checked"
+              data-role={role}
+              className={styles.bulkSelect}
+              type="checkbox"
+            />
+          ) : (
+            <input
+              onChange={dispatchBulkSelect}
+              data-role={role}
+              className={styles.bulkSelect}
+              type="checkbox"
+            />
+          );
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
@@ -493,7 +493,7 @@ class Permissions extends Component {
                   styles.input_element_wrapper
                 }
               >
-                <select>
+                <select className="input-sm form-control">
                   <option value="" disabled selected>
                     Column Name
                   </option>
@@ -510,7 +510,7 @@ class Permissions extends Component {
                   styles.input_element_wrapper
                 }
               >
-                <select>
+                <select className="input-sm form-control">
                   <option value="" disabled selected>
                     Select Preset Type
                   </option>
@@ -528,8 +528,8 @@ class Permissions extends Component {
                 }
               >
                 <input
-                  className={`form-control ${styles.newRoleInput}`}
-                  placeholder="column_value"
+                  className={`input-sm form-control ${styles.newRoleInput}`}
+                  placeholder="olumn_value"
                 />
               </div>
             </div>
