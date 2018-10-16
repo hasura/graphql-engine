@@ -13,6 +13,7 @@
     "node/no-unsupported-features": "off",
     "no-warning-comments": "off",
     "semi": [1, "always"],
-    "camelcase": "off" 
+    "camelcase": "off",
+    "guard-for-in": "off"
   }
 }

@@ -1167,9 +1167,10 @@ mkInsCtx role tableCache fields insPermInfo = do
     let remoteTable = riRTable relInfo
         relName = riName relInfo
     remoteTableInfo <- getTabInfo tableCache remoteTable
-    case getInsPerm remoteTableInfo role of
-      Nothing -> return Nothing
-      Just _  -> return $ Just (relName, relInfo)
+    let insPermM = getInsPerm remoteTableInfo role
+        viewInfoM = tiViewInfo remoteTableInfo
+    return $ bool Nothing (Just (relName, relInfo)) $
+      isInsertable insPermM viewInfoM
 
   let relInfoMap = Map.fromList $ catMaybes relTupsM
   return $ InsCtx iView cols relInfoMap
@@ -1178,11 +1179,23 @@ mkInsCtx role tableCache fields insPermInfo = do
     rels = getRels fields
     iView = ipiView insPermInfo
 
-mkAdminInsCtx :: QualifiedTable -> FieldInfoMap -> InsCtx
-mkAdminInsCtx tn fields =
-  InsCtx tn cols relInfoMap
+    isInsertable Nothing _          = False
+    isInsertable (Just _) viewInfoM = isMutable viIsInsertable viewInfoM
+
+mkAdminInsCtx
+  :: MonadError QErr m
+  => QualifiedTable -> TableCache -> FieldInfoMap -> m InsCtx
+mkAdminInsCtx tn tc fields = do
+  relTupsM <- forM rels $ \relInfo -> do
+    let remoteTable = riRTable relInfo
+        relName = riName relInfo
+    remoteTableInfo <- getTabInfo tc remoteTable
+    let viewInfoM = tiViewInfo remoteTableInfo
+    return $ bool Nothing (Just (relName, relInfo)) $
+      isMutable viIsInsertable viewInfoM
+
+  return $ InsCtx tn cols $ Map.fromList $ catMaybes relTupsM
   where
-    relInfoMap = mapFromL riName rels
     cols = getCols fields
     rels = getRels fields
 
@@ -1245,8 +1258,8 @@ mkGCtxMapTable
 mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols viewInfo _) = do
   m <- Map.traverseWithKey
        (mkGCtxRole tableCache tn fields pkeyCols validConstraints viewInfo) rolePerms
-  let adminInsCtx = mkAdminInsCtx tn fields
-      adminCtx = mkGCtxRole' tn (Just (adminInsCtx, True))
+  adminInsCtx <- mkAdminInsCtx tn tableCache fields
+  let adminCtx = mkGCtxRole' tn (Just (adminInsCtx, True))
                  (Just selFlds) (Just colInfos) (Just ())
                  pkeyColInfos validConstraints viewInfo allCols
       adminInsCtxMap = Map.singleton tn adminInsCtx
