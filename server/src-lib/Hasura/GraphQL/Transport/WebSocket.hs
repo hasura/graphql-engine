@@ -71,8 +71,8 @@ sendMsg wsConn =
 
 data OpDetail
   = ODStarted
+  | ODProtoErr !Text
   | ODQueryErr !QErr
-  | ODConnErr !ConnErrMsg
   | ODCompleted
   | ODStopped
   deriving (Show, Eq)
@@ -149,7 +149,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
-  when (isJust opM) $ withComplete $ sendConnErr $ ConnErrMsg $
+  when (isJust opM) $ withComplete $ sendConnErr $
     "an operation already exists with this id: " <> unOperationId opId
 
   userInfoM <- liftIO $ IORef.readIORef userInfoR
@@ -157,10 +157,10 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     Just (Right userInfo) -> return userInfo
     Just (Left initErr) -> do
       let connErr = "cannot start as connection_init failed with : " <> initErr
-      withComplete $ sendConnErr $ ConnErrMsg connErr
+      withComplete $ sendConnErr connErr
     Nothing       -> do
       let connErr = "start received before the connection is initialised"
-      withComplete $ sendConnErr $ ConnErrMsg connErr
+      withComplete $ sendConnErr connErr
 
   -- validate and build tx
   gCtxMap <- fmap snd $ liftIO $ IORef.readIORef gCtxMapRef
@@ -194,8 +194,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       EOperation opId (_grOperationName q) opDet
 
     sendConnErr connErr = do
-      sendMsg wsConn $ SMConnErr connErr
-      logOpEv $ ODConnErr connErr
+      sendMsg wsConn $ SMErr $ ErrorMsg opId $ J.toJSON connErr
+      logOpEv $ ODProtoErr connErr
 
     sendCompleted = do
       sendMsg wsConn $ SMComplete $ CompletionMsg opId
