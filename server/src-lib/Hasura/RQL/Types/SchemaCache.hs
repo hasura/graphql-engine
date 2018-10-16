@@ -18,7 +18,9 @@ module Hasura.RQL.Types.SchemaCache
        , isMutable
        , mutableView
        , onlyIntCols
+       , onlyNumCols
        , onlyJSONBCols
+       , onlyComparableCols
        , isUniqueOrPrimary
        , mkTableInfo
        , addTableToCache
@@ -205,8 +207,14 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''PGColInfo)
 onlyIntCols :: [PGColInfo] -> [PGColInfo]
 onlyIntCols = filter (isIntegerType . pgiType)
 
+onlyNumCols :: [PGColInfo] -> [PGColInfo]
+onlyNumCols = filter (isNumType . pgiType)
+
 onlyJSONBCols :: [PGColInfo] -> [PGColInfo]
 onlyJSONBCols = filter (isJSONBType . pgiType)
+
+onlyComparableCols :: [PGColInfo] -> [PGColInfo]
+onlyComparableCols = filter (isComparableType . pgiType)
 
 getColInfos :: [PGCol] -> [PGColInfo] -> [PGColInfo]
 getColInfos cols allColInfos = flip filter allColInfos $ \ci ->

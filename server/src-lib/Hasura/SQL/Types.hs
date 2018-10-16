@@ -350,6 +350,21 @@ isIntegerType PGSmallInt = True
 isIntegerType PGBigInt   = True
 isIntegerType _          = False
 
+isNumType :: PGColType -> Bool
+isNumType PGFloat   = True
+isNumType PGDouble  = True
+isNumType PGNumeric = True
+isNumType ty        = isIntegerType ty
+
 isJSONBType :: PGColType -> Bool
 isJSONBType PGJSONB = True
 isJSONBType _       = False
+
+isComparableType :: PGColType -> Bool
+isComparableType PGJSON        = False
+isComparableType PGJSONB       = False
+isComparableType PGGeometry    = False
+isComparableType PGGeography   = False
+isComparableType PGBoolean     = False
+isComparableType (PGUnknown _) = False
+isComparableType _             = True

@@ -8,6 +8,8 @@
 module Hasura.GraphQL.Resolve.Select
   ( convertSelect
   , convertSelectByPKey
+  , convertAggSelect
+  , withSelSet
   , fromSelSet
   , fieldAsPath
   ) where
@@ -16,6 +18,7 @@ import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Select             as RS
@@ -32,11 +35,18 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
+withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m [(Text, a)]
+withSelSet selSet f =
+  forM (toList selSet) $ \fld -> do
+    res <- f fld
+    return (G.unName $ G.unAlias $ _fAlias fld, res)
+
 fromSelSet
-  :: G.NamedType
+  :: Bool
+  -> G.NamedType
   -> SelSet
   -> Convert [(FieldName, RS.AnnFld)]
-fromSelSet fldTy flds =
+fromSelSet isAgg fldTy flds =
   forM (toList flds) $ \fld -> do
     let fldName = _fName fld
     let rqlFldName = FieldName $ G.unName $ G.unAlias $ _fAlias fld
@@ -48,9 +58,14 @@ fromSelSet fldTy flds =
           Left colInfo -> return $ RS.FCol colInfo
           Right (relInfo, tableFilter, tableLimit, _) -> do
             let relTN = riRTable relInfo
-            relSelData <- fromField relTN tableFilter tableLimit fld
+                relTy = riType relInfo
+            annSel <- case relTy of
+              ObjRel -> fromField relTN tableFilter tableLimit fld
+              ArrRel ->
+                if isAgg then fromAggField relTN tableFilter tableLimit fld
+                else fromField relTN tableFilter tableLimit fld
             let annRel = RS.AnnRel (riName relInfo) (riType relInfo)
-                         (riMapping relInfo) relSelData
+                         (riMapping relInfo) annSel
             return $ RS.FRel annRel
 
 fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
@@ -69,8 +84,11 @@ fromField
   :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RS.AnnSel
 fromField tn permFilter permLimitM fld = fieldAsPath fld $ do
   tableArgs <- parseTableArgs tn args
-  annFlds   <- fromSelSet (_fType fld) $ _fSelSet fld
-  return $ RS.AnnSel annFlds tn Nothing permFilter permLimitM tableArgs
+  annFlds   <- fromSelSet False (_fType fld) $ _fSelSet fld
+  let selFlds = RS.ASFSimple annFlds
+      tabFrom = RS.TableFrom tn Nothing
+      tabPerm = RS.TablePerm permFilter permLimitM
+  return $ RS.AnnSel selFlds tabFrom tabPerm tableArgs
   where
     args = _fArguments fld
 
@@ -111,8 +129,11 @@ fromFieldByPKey
   :: QualifiedTable -> S.BoolExp -> Field -> Convert RS.AnnSel
 fromFieldByPKey tn permFilter fld = fieldAsPath fld $ do
   boolExp <- pgColValToBoolExp tn $ _fArguments fld
-  annFlds <- fromSelSet (_fType fld) $ _fSelSet fld
-  return $ RS.AnnSel annFlds tn Nothing permFilter Nothing $
+  annFlds <- fromSelSet False (_fType fld) $ _fSelSet fld
+  let selFlds = RS.ASFSimple annFlds
+      tabFrom = RS.TableFrom tn Nothing
+      tabPerm = RS.TablePerm permFilter Nothing
+  return $ RS.AnnSel selFlds tabFrom tabPerm $
     RS.noTableArgs { RS._taWhere = Just boolExp}
 
 convertSelect
@@ -130,3 +151,54 @@ convertSelectByPKey qt permFilter fld = do
              fromFieldByPKey qt permFilter fld
   prepArgs <- get
   return $ RS.selectP2 True (selData, prepArgs)
+
+-- agg select related
+convertColFlds
+  :: G.NamedType -> SelSet -> Convert RS.ColFlds
+convertColFlds ty selSet =
+  withSelSet selSet $ \fld ->
+    case _fName fld of
+      "__typename" -> return $ RS.PCFExp $ G.unName $ G.unNamedType ty
+      n            -> return $ RS.PCFCol $ PGCol $ G.unName n
+
+convertAggFld
+  :: G.NamedType -> SelSet -> Convert RS.AggFlds
+convertAggFld ty selSet =
+  withSelSet selSet $ \fld -> do
+    let fType = _fType fld
+        fSelSet = _fSelSet fld
+    case _fName fld of
+      "__typename" -> return $ RS.AFExp $ G.unName $ G.unNamedType ty
+      "count"      -> return RS.AFCount
+      "sum"        -> RS.AFSum <$> convertColFlds fType fSelSet
+      "avg"        -> RS.AFAvg <$> convertColFlds fType fSelSet
+      "max"        -> RS.AFMax <$> convertColFlds fType fSelSet
+      _            -> RS.AFMin <$> convertColFlds fType fSelSet
+
+fromAggField
+  :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RS.AnnSel
+fromAggField tn permFilter permLimitM fld = fieldAsPath fld $ do
+  tableArgs <- parseTableArgs tn args
+  aggSelFlds   <- fromAggSel (_fType fld) $ _fSelSet fld
+  let selFlds = RS.ASFWithAgg aggSelFlds
+      tabFrom = RS.TableFrom tn Nothing
+      tabPerm = RS.TablePerm permFilter permLimitM
+  return $ RS.AnnSel selFlds tabFrom tabPerm tableArgs
+  where
+    args = _fArguments fld
+    fromAggSel ty selSet =
+      withSelSet selSet $ \f -> do
+        let fTy = _fType f
+            fSelSet = _fSelSet f
+        case _fName f of
+          "__typename" -> return $ RS.SFExp $ G.unName $ G.unNamedType ty
+          "agg"        -> RS.SFAggFld <$> convertAggFld fTy fSelSet
+          _            -> RS.SFNodes <$> fromSelSet True fTy fSelSet
+
+convertAggSelect
+  :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RespTx
+convertAggSelect qt permFilter permLimit fld = do
+  selData <- withPathK "selectionSet" $
+             fromAggField qt permFilter permLimit fld
+  prepArgs <- get
+  return $ RS.selectP2 False (selData, prepArgs)

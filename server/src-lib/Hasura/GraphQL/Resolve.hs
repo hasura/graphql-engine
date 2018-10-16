@@ -39,6 +39,8 @@ buildTx userInfo gCtx fld = do
     OCSelectPkey tn permFilter hdrs ->
       validateHdrs hdrs >> RS.convertSelectByPKey tn permFilter fld
       -- RS.convertSelect tn permFilter fld
+    OCSelectAgg tn permFilter permLimit hdrs ->
+      validateHdrs hdrs >> RS.convertAggSelect tn permFilter permLimit fld
     OCInsert tn hdrs    ->
       validateHdrs hdrs >> RI.convertInsert roleName tn fld
       -- RM.convertInsert (tn, vn) cols fld
