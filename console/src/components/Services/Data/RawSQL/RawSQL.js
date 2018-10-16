@@ -96,7 +96,7 @@ const RawSQL = ({
       const checkboxElem = document.getElementById('migration-checkbox');
       const isMigration = checkboxElem ? checkboxElem.checked : false;
       const textboxElem = document.getElementById('migration-name');
-      let migrationName = textboxElem.value;
+      let migrationName = textboxElem ? textboxElem.value : '';
       if (migrationName.length === 0) {
         migrationName = 'run_sql_migration';
       }
