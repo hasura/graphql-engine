@@ -78,6 +78,8 @@ before-mentioned sections).
  - Don't capitalize the first letter of the summary line.
 
  - Do not add a period/dot (.) at the end in the summary line.
+ 
+ - Do mention the issue number.
 
 
 (Credits: Some sections are adapted from https://github.com/PostgREST/postgrest/blob/master/.github/CONTRIBUTING.md)
