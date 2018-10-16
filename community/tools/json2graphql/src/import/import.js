@@ -1,4 +1,4 @@
-const generate = require('./generateTables');
+const {generate, sanitizeData} = require('./generateTables');
 const {generateSql, runSql} = require('./sql');
 const {cli} = require('cli-ux');
 const {trackTables} = require('./track');
@@ -6,8 +6,9 @@ const {getInsertOrder, insertData} = require('./insert');
 const {createRelationships} = require('./relationships');
 const {createTables} = require('./check');
 
-const importData = async (db, url, headers, overwrite) => {
+const importData = async (jsonDb, url, headers, overwrite) => {
   cli.action.start('Processing JSON data');
+  const db = sanitizeData(jsonDb);
   const tables = generate(db);
   const sql = generateSql(tables);
   cli.action.stop('Done!');
