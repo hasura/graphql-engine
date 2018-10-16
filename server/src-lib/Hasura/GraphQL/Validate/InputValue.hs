@@ -50,21 +50,9 @@ resolveVar var = do
   where
     typeCheck expectedTy actualTy = case (expectedTy, actualTy) of
       -- named types
-      (G.TypeNamed eTy, G.TypeNamed aTy) -> eTy == aTy
-      -- non null type can be expected for a null type
-      (G.TypeNamed eTy, G.TypeNonNull (G.NonNullTypeNamed aTy)) -> eTy == aTy
-
+      (G.TypeNamed _ eTy, G.TypeNamed _ aTy) -> eTy == aTy
       -- list types
-      (G.TypeList eTy, G.TypeList aTy) ->
-        typeCheck (G.unListType eTy) (G.unListType aTy)
-      (G.TypeList eTy, G.TypeNonNull (G.NonNullTypeList aTy)) ->
-        typeCheck (G.unListType eTy) (G.unListType aTy)
-
-      -- non null types
-      (G.TypeNonNull (G.NonNullTypeList eTy), G.TypeNonNull (G.NonNullTypeList aTy)) ->
-        typeCheck (G.unListType eTy) (G.unListType aTy)
-      (G.TypeNonNull (G.NonNullTypeNamed eTy), G.TypeNonNull (G.NonNullTypeNamed aTy)) ->
-        eTy == aTy
+      (G.TypeList _ eTy, G.TypeList _ aTy) -> typeCheck (G.unListType eTy) (G.unListType aTy)
       (_, _) -> False
 
 pVar
@@ -240,19 +228,19 @@ validateList inpValParser listTy val =
     AGArray listTy <$>
       mapM (indexedMapM (validateInputValue inpValParser baseTy)) lM
 
-validateNonNull
-  :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
-  => InputValueParser a m
-  -> G.NonNullType
-  -> a
-  -> m AnnGValue
-validateNonNull inpValParser nonNullTy val = do
-  parsedVal <- case nonNullTy of
-    G.NonNullTypeNamed nt -> validateNamedTypeVal inpValParser nt val
-    G.NonNullTypeList lt  -> validateList inpValParser lt val
-  when (hasNullVal parsedVal) $
-    throwVE $ "unexpected null value for type: " <> G.showGT (G.TypeNonNull nonNullTy)
-  return parsedVal
+-- validateNonNull
+--   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
+--   => InputValueParser a m
+--   -> G.NonNullType
+--   -> a
+--   -> m AnnGValue
+-- validateNonNull inpValParser nonNullTy val = do
+--   parsedVal <- case nonNullTy of
+--     G.NonNullTypeNamed nt -> validateNamedTypeVal inpValParser nt val
+--     G.NonNullTypeList lt  -> validateList inpValParser lt val
+--   when (hasNullVal parsedVal) $
+--     throwVE $ "unexpected null value for type: " <> G.showGT (G.TypeNonNull nonNullTy)
+--   return parsedVal
 
 validateInputValue
   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
@@ -262,9 +250,9 @@ validateInputValue
   -> m AnnGValue
 validateInputValue inpValParser ty val =
   case ty of
-    G.TypeNamed nt    -> validateNamedTypeVal inpValParser nt val
-    G.TypeList lt     -> validateList inpValParser lt val
-    G.TypeNonNull nnt -> validateNonNull inpValParser nnt val
+    G.TypeNamed _ nt -> validateNamedTypeVal inpValParser nt val
+    G.TypeList _ lt  -> validateList inpValParser lt val
+    --G.TypeNonNull nnt -> validateNonNull inpValParser nnt val
 
 withParsed
   :: (Monad m)

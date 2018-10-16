@@ -253,7 +253,7 @@ defaultDirectives =
   where
     mkDirective n = DirectiveInfo Nothing n args dirLocs
     args = Map.singleton "if" $ InpValInfo Nothing "if" $
-           G.TypeNamed $ G.NamedType $ G.Name "Boolean"
+           G.TypeNamed (G.Nullability True) $ G.NamedType $ G.Name "Boolean"
     dirLocs = map G.DLExecutable
               [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
 
@@ -307,7 +307,7 @@ getAnnInpValKind = \case
 
 getAnnInpValTy :: AnnGValue -> G.GType
 getAnnInpValTy = \case
-  AGScalar pct _ -> G.TypeNamed $ G.NamedType $ G.Name $ T.pack $ show pct
-  AGEnum nt _    -> G.TypeNamed nt
-  AGObject nt _  -> G.TypeNamed nt
-  AGArray nt _   -> G.TypeList nt
+  AGScalar pct _ -> G.TypeNamed (G.Nullability True) $ G.NamedType $ G.Name $ T.pack $ show pct
+  AGEnum nt _    -> G.TypeNamed (G.Nullability True) nt
+  AGObject nt _  -> G.TypeNamed (G.Nullability True) nt
+  AGArray nt _   -> G.TypeList  (G.Nullability True) nt

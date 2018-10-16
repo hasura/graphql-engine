@@ -156,15 +156,16 @@ listTypeR (G.ListType ty) fld =
 nonNullR
   :: ( MonadReader r m, Has TypeMap r
      , MonadError QErr m)
-  => G.NonNullType -> Field -> m J.Object
-nonNullR nnt fld =
+  => G.GType -> Field -> m J.Object
+nonNullR gTyp fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename" -> retJT "__Type"
     "kind"       -> retJ TKNON_NULL
-    "ofType"     -> case nnt of
-      G.NonNullTypeNamed nt -> J.toJSON <$> namedTypeR nt subFld
-      G.NonNullTypeList lt  -> J.toJSON <$> listTypeR lt subFld
+    "ofType"     -> case gTyp of
+      G.TypeNamed (G.Nullability False) nt -> J.toJSON <$> namedTypeR nt subFld
+      G.TypeList (G.Nullability False) lt  -> J.toJSON <$> listTypeR lt subFld
+      _ -> throw500 "nullable type passed to nonNullR"
     _        -> return J.Null
 
 namedTypeR
@@ -263,9 +264,10 @@ gtypeR
   => G.GType -> Field -> m J.Object
 gtypeR ty fld =
   case ty of
-    G.TypeList lt     -> listTypeR lt fld
-    G.TypeNonNull nnt -> nonNullR nnt fld
-    G.TypeNamed nt    -> namedTypeR nt fld
+    G.TypeList  (G.Nullability True) lt  -> listTypeR lt fld
+    G.TypeList  (G.Nullability False) _  -> nonNullR ty fld
+    G.TypeNamed (G.Nullability True) nt  -> namedTypeR nt fld
+    G.TypeNamed (G.Nullability False) _  -> nonNullR ty fld
 
 schemaR
   :: ( MonadReader r m, Has TypeMap r
