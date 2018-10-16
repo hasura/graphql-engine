@@ -35,7 +35,7 @@ Here are examples to create relationships using the two methods:
 
     .. image:: ../../../../img/graphql/manual/schema/add-foreign-key.png
 
-    **2) Create object relationship**
+    **2) Create an object relationship**
 
     Each article has one author. This is an ``object relationship``. The console
     infers this using the foreign-key and recommends the potential relationship in the ``Relationships`` tab
@@ -94,7 +94,7 @@ Here are examples to create relationships using the two methods:
           }
         }
 
-    **3) Create array relationship**
+    **3) Create an array relationship**
 
     An author can write multiple articles. This is an ``array relationship``.
 
