@@ -22,7 +22,6 @@ import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DML.Explain
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.DML.Returning     (encodeJSONVector)
 import           Hasura.RQL.Types
@@ -30,20 +29,6 @@ import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query            as Q
-
--- data QueryWithTxId
---   = QueryWithTxId
---   { qtTxId  :: !(Maybe TxId)
---   , qtQuery :: !RQLQuery
---   } deriving (Show, Eq)
-
--- instance FromJSON QueryWithTxId where
---   parseJSON v@(Object o) =
---     QueryWithTxId
---     <$> o .:! "transaction_id"
---     <*> parseJSON v
---   parseJSON _ =
---     fail "expecting on object for query"
 
 data RQLQuery
   = RQAddExistingTableOrView !TrackTable
@@ -122,27 +107,6 @@ runQuery pool isoL userInfo sc query = do
   res <- liftIO $ runExceptT $ Q.runTx pool (isoL, Nothing) $
          setHeadersTx userInfo >> tx
   liftEither res
-
-buildExplainTx
-  :: UserInfo
-  -> SchemaCache
-  -> SelectQuery
-  -> Either QErr (Q.TxE QErr BL.ByteString)
-buildExplainTx userInfo sc q = do
-  p1Res <- withPathK "query" $ runP1 qEnv $ phaseOneExplain q
-  res <- return $ flip runReaderT (qcUserInfo qEnv) $
-    flip runStateT sc $ withPathK "query" $ phaseTwoExplain p1Res
-  return $ fst <$> res
-  where
-    qEnv = QCtx userInfo sc
-
-runExplainQuery
-  :: Q.PGPool -> Q.TxIsolation
-  -> UserInfo -> SchemaCache
-  -> SelectQuery -> ExceptT QErr IO BL.ByteString
-runExplainQuery pool isoL userInfo sc query = do
-  tx <- liftEither $ buildExplainTx userInfo sc query
-  Q.runTx pool (isoL, Nothing) $ setHeadersTx userInfo >> tx
 
 queryNeedsReload :: RQLQuery -> Bool
 queryNeedsReload qi = case qi of
