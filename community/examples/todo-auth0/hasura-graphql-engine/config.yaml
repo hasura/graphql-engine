@@ -1,1 +1,1 @@
-endpoint: http://localhost:8080
+endpoint: https://hasura-graphql-engine.herokuapp.com
