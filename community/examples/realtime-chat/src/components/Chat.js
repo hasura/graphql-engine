@@ -3,7 +3,6 @@ import { Subscription } from 'react-apollo';
 import gql from 'graphql-tag';
 import ChatWrapper from './ChatWrapper';
 import '../App.css';
-const hasura_logo = require('../hasura_logo_200.png');
 
 const subscribeToNewMessages = gql`
   subscription {
@@ -62,7 +61,7 @@ class Chat extends React.Component {
           }
         });
       },
-      3000 
+      3000
     );
   }
 
@@ -99,10 +98,7 @@ class Chat extends React.Component {
         />
         <footer className="App-footer">
           <div className="hasura-logo">
-            <a href="https://hasura.io" target="_blank">
-              Powered by 
-            </a>
-            <img src={hasura_logo} onClick={() => window.open("https://hasura.io")}/>
+            <img src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black.svg" onClick={() => window.open("https://hasura.io")}/>
             &nbsp; | &nbsp;
             <a href="https://hasura-realtime-group-chat.herokuapp.com/console" target="_blank">
               Database

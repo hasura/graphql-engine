@@ -6,7 +6,7 @@ Hasura GraphQL engine provides instant GraphQL APIs over the tables and views of
 auto-generating the CRUD resolvers. However, sometimes you might have to write custom resolvers to capture business
 logic that is unrelated to the database.
 
-We have setup `this boilerplate project <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/custom-resolvers>`_
+We have set up `this boilerplate project <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/custom-resolvers>`_
 illustrating how to write your own custom GraphQL resolvers and merge them with the Hasura GraphQL engine's resolvers.
 
 Follow the boilerplate's ``README.md`` for detailed instructions.
