@@ -4,7 +4,7 @@ Access control basics
 In this section, we're going to setup a simple access control rule for restricting querying on a table.
 We're working with a simple ``author`` table where users have some information stored about themselves.
 
-Create a author table
+Create an author table
 ---------------------
 
 Head to your console and create an ``author`` table with the following columns:
