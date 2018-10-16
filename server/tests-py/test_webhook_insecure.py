@@ -1,5 +1,4 @@
 import pytest
-import yaml
 from validate import check_query_f
 
 if not pytest.config.getoption("--test-webhook-insecure"):

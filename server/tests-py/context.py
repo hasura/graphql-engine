@@ -10,7 +10,6 @@ import requests
 import socket
 import websocket
 import subprocess
-import base64
 
 from http import HTTPStatus
 from urllib.parse import urlparse

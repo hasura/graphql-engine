@@ -4,3 +4,4 @@ pytest
 requests
 pyyaml
 websocket-client
+pyjwt >= 1.5.3

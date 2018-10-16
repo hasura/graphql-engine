@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
-PYTEST_ROOT="${BASH_SOURCE[0]%/*}/../server/tests-py"
 
-cd $PYTEST_ROOT
+### Functions
 
-pip3 install -r requirements.txt
+stop_services() {
+   kill -INT $PID
+   kill $WH_PID
+}
 
 wait_for_port() {
     local PORT=$1
     echo "waiting for $PORT"
-    for i in `seq 1 60`;
+    for i in $(seq 1 60);
     do
       nc -z localhost $PORT && echo "port $PORT is ready" && return
       echo -n .
@@ -19,6 +21,9 @@ wait_for_port() {
 }
 
 init_ssl() {
+	CUR_DIR="$PWD"
+	mkdir -p "$OUTPUT_FOLDER/ssl"
+	cd "$OUTPUT_FOLDER/ssl"
 	CNF_TEMPLATE='[req]
 req_extensions = v3_req
 distinguished_name = req_distinguished_name
@@ -44,69 +49,109 @@ IP.1 = 127.0.0.1'
 
 	cp ca.pem /etc/ssl/certs/webhook.crt
 	update-ca-certificates
+	cd "$CUR_DIR"
 }
 
-mkdir -p /build/_server_test_output/$PG_VERSION
+if [ -z "${HASURA_GRAPHQL_DATABASE_URL:-}" ] ; then
+	echo "Env var HASURA_GRAPHQL_DATABASE_URL is not set"
+	exit 1
+fi
 
-export HASURA_GRAPHQL_DATABASE_URL="postgres://gql_test:@localhost:5432/gql_test"
+CIRCLECI_FOLDER="${BASH_SOURCE[0]%/*}"
+cd $CIRCLECI_FOLDER
+CIRCLECI_FOLDER="$PWD"
+
+PYTEST_ROOT="$CIRCLECI_FOLDER/../server/tests-py"
+
+OUTPUT_FOLDER=${OUTPUT_FOLDER:-"$CIRCLECI_FOLDER/test-server-output"}
+mkdir -p "$OUTPUT_FOLDER"
+
+cd $PYTEST_ROOT
+
+if ! stack --allow-different-user exec -- which graphql-engine > /dev/null && [ -z "${GRAPHQL_ENGINE:-}" ] ; then
+	echo "Do 'stack build' before tests, or export the location of executable in the GRAPHQL_ENGINE envirnoment variable"
+	exit 1
+fi
+GRAPHQL_ENGINE=${GRAPHQL_ENGINE:-"$(stack --allow-different-user exec -- which graphql-engine)"}
+if ! [ -x "$GRAPHQL_ENGINE" ] ; then
+	echo "$GRAPHQL_ENGINE is not present or is not an executable"
+	exit 1
+fi
+RUN_WEBHOOK_TESTS=true
+
+echo -e "\nINFO: GraphQL Executable : $GRAPHQL_ENGINE"
+echo -e "INFO: Logs Folder        : $OUTPUT_FOLDER\n"
+
+pip3 install -r requirements.txt
+
+mkdir -p "$OUTPUT_FOLDER"
+
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
 export HGE_URL="http://localhost:8080"
 
-##########
-echo "Test HGE without access keys"
+PID=""
+WH_PID=""
+trap stop_services ERR
+trap stop_services INT
 
-/build/_server_output/graphql-engine serve > /build/_server_test_output/$PG_VERSION/server.log & PID=$!
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITHOUT ACCESS KEYS ###########################################>\n"
+
+"$GRAPHQL_ENGINE" serve > "$OUTPUT_FOLDER/server.log" & PID=$!
 
 wait_for_port 8080
 
 pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL"
 
-kill $PID
+kill -INT $PID
 
 
 ########## 
-echo "<------------- Test graphql-engine with access key ---------------------------------->"
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY #####################################>\n"
 
 export HASURA_GRAPHQL_ACCESS_KEY="HGE$RANDOM$RANDOM"
 
-/build/_server_output/graphql-engine serve >> /build/_server_test_output/$PG_VERSION/server.log & PID=$!
+"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" & PID=$!
 
 wait_for_port 8080
 
 pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY"
 
-kill $PID
+kill -INT $PID
 
+if [ $EUID != 0 ] ; then
+	echo -e "SKIPPING webhook based tests, as \nroot permission is required for running webhook tests (inorder to trust certificate authority)."
+	RUN_WEBHOOK_TESTS=false
+fi
 
-########## 
-echo "<------------- Test graphql-engine with access key and webhook ---------------------->"
+if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
-export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
-init_ssl
+	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & WEBHOOK #########################>\n"
 
-/build/_server_output/graphql-engine serve >> /build/_server_test_output/$PG_VERSION/server.log 2>&1 & PID=$!
+	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
+	init_ssl
 
-python3 webhook.py > /build/_server_test_output/$PG_VERSION/server.log 2>&1  & WH_PID=$!
+	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
-wait_for_port 8080
+	python3 webhook.py 9090 "$OUTPUT_FOLDER/ssl/webhook-key.pem" "$OUTPUT_FOLDER/ssl/webhook.pem" > "$OUTPUT_FOLDER/webhook.log" 2>&1  & WH_PID=$!
 
-wait_for_port 9090
+	wait_for_port 8080
 
-pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
+	wait_for_port 9090
 
-rm /etc/ssl/certs/webhook.crt
-update-ca-certificates
+	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
 
-kill $PID
+	rm /etc/ssl/certs/webhook.crt
+	update-ca-certificates
 
-###########
-echo "<------------- Test graphql-engine with access key and an HTTPS inseure webhook ----->"
+	kill -INT $PID
 
-/build/_server_output/graphql-engine serve >> /build/_server_test_output/$PG_VERSION/server.log 2>&1 & PID=$!
+	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & HTTPS INSECURE WEBHOOK ########>\n"
 
-pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
+	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
-kill $PID
+	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
 
-kill $WH_PID
+	kill -INT $PID
 
+	kill $WH_PID
+fi

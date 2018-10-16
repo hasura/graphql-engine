@@ -11,6 +11,7 @@ import json
 import ssl
 import http.server
 import traceback
+import sys
 
 class S(http.server.BaseHTTPRequestHandler):
 
@@ -43,13 +44,13 @@ class S(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             print ('forbidden')
 
-def run(server_class=http.server.HTTPServer, handler_class=S, port=9090):
+def run(keyfile, certfile, server_class=http.server.HTTPServer, handler_class=S, port=9090):
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
     httpd.socket = ssl.wrap_socket (
         httpd.socket,
-        certfile='webhook.pem',
-        keyfile='webhook-key.pem',
+        certfile=certfile,
+        keyfile=keyfile,
         server_side=True,
         ssl_version=ssl.PROTOCOL_SSLv23)
     print('Starting httpd...')
@@ -58,7 +59,7 @@ def run(server_class=http.server.HTTPServer, handler_class=S, port=9090):
 if __name__ == "__main__":
     from sys import argv
 
-    if len(argv) == 2:
-        run(port=int(argv[1]))
-    else:
-        run()
+    if len(sys.argv) != 4:
+        print("Usage: python webhook.py port keyfile certfile")
+        sys.exit(1)
+    run(keyfile=sys.argv[2],certfile=sys.argv[3], port=int(sys.argv[1]))
