@@ -69,7 +69,7 @@ The fastest way to try Hasura out is via Heroku.
 
     [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
-2. Open the Hasura console
+2. Open Hasura console
 
    Visit `https://<app-name>.herokuapp.com` (*replace \<app-name\> with your app name*) to open the admin console.
 
@@ -123,7 +123,7 @@ Check out all the example applications in the
   - [Browse APIs](https://hasura-realtime-group-chat.herokuapp.com/)
 
 - Live location tracking app that shows a running vehicle changing current GPS
-  coordinates moving on a map. 
+  coordinates moving on the map. 
   - [Try it out](https://hasura.github.io/realtime-location-app/)
   - [Tutorial](community/examples/realtime-location-tracking)
   - [Browse APIs](https://realtime-backend.herokuapp.com/)
@@ -162,7 +162,7 @@ Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
 Hasura brand assets (logos, the Hasura mascot, powered by badges etc.) can be
 found in the [assets/brand](assets/brand) folder. Feel free to use them in your
-application/website etc. We'd be thrilled if you add the "Powered by Hasura"
+application/website etc. We would be thrilled if you will add the "Powered by Hasura"
 badge to your applications built using Hasura. ❤️
 
 <div style="display: flex;">
