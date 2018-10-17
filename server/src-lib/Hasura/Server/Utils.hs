@@ -115,3 +115,9 @@ parseGingerTmplt src = either parseE Right res
 
 renderGingerTmplt :: (ToJSON a) => a -> GingerTmplt -> T.Text
 renderGingerTmplt v = TG.easyRender (toJSON v)
+
+-- find duplicates
+duplicates :: Ord a => [a] -> [a]
+duplicates = mapMaybe greaterThanOne . group . sort
+  where
+    greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1

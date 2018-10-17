@@ -31,6 +31,12 @@ const migrationTip = (
     migrations
   </Tooltip>
 );
+const migrationNameTip = (
+  <Tooltip id="tooltip-migration">
+    Use this to change the name of the generated migration files. Defaults to
+    'run_sql_migration'
+  </Tooltip>
+);
 const trackTableTip = (
   <Tooltip id="tooltip-tracktable">
     If you are creating a table/view, you can track them to query them with
@@ -89,6 +95,11 @@ const RawSQL = ({
     if (migrationMode) {
       const checkboxElem = document.getElementById('migration-checkbox');
       const isMigration = checkboxElem ? checkboxElem.checked : false;
+      const textboxElem = document.getElementById('migration-name');
+      let migrationName = textboxElem ? textboxElem.value : '';
+      if (migrationName.length === 0) {
+        migrationName = 'run_sql_migration';
+      }
       if (!isMigration && globals.consoleMode === 'cli') {
         // if migration is not checked, check if the sql text has any of 'create', 'alter', 'drop'
         const formattedSql = sql.toLowerCase();
@@ -101,16 +112,16 @@ const RawSQL = ({
           dispatch(modalOpen());
           const confirmation = false;
           if (confirmation) {
-            dispatch(executeSQL(isMigration));
+            dispatch(executeSQL(isMigration, migrationName));
           }
         } else {
-          dispatch(executeSQL(isMigration));
+          dispatch(executeSQL(isMigration, migrationName));
         }
       } else {
-        dispatch(executeSQL(isMigration));
+        dispatch(executeSQL(isMigration, migrationName));
       }
     } else {
-      dispatch(executeSQL(false));
+      dispatch(executeSQL(false, ''));
     }
   };
 
@@ -313,6 +324,28 @@ const RawSQL = ({
                   aria-hidden="true"
                 />
               </OverlayTrigger>
+              <div className={styles.padd_top}>
+                Migration Name:
+                <OverlayTrigger placement="right" overlay={migrationNameTip}>
+                  <i
+                    className={`${styles.padd_small_left} fa fa-info-circle`}
+                    aria-hidden="true"
+                  />
+                </OverlayTrigger>
+              </div>
+              <input
+                className={
+                  styles.add_mar_right_small +
+                  ' ' +
+                  styles.tableNameInput +
+                  ' ' +
+                  styles.add_mar_top_small +
+                  ' form-control'
+                }
+                placeholder={'Name of the generated migration file'}
+                id="migration-name"
+                type="text"
+              />
               <hr />
             </div>
           ) : (
