@@ -43,7 +43,7 @@ An example:
    }
 
 While ``run_sql`` lets you run any SQL, it tries to ensure that the Hasura GraphQL engine's
-state (relationships, permissions etc.) is consistent. i.e, you
+state (relationships, permissions etc.) is consistent. i.e., you
 cannot drop a column on which any metadata is dependent on (say a permission or
 a relationship). The effects, however, can be cascaded.
 

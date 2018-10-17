@@ -49,7 +49,7 @@ class App extends Component {
                 Database
               </a>
               &nbsp; | &nbsp;
-              <a href="https://github.com/hasura/graphql-engine/community/examples/realtime-poll" target="_blank">
+              <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-poll" target="_blank">
                 Source
               </a>
               <div className="footer-small-text"><span>(The database resets every 30 minutes)</span></div>

@@ -10,7 +10,7 @@ These are the steps you need to follow:
 #. Setup a project directory
 #. Initialize migrations
 #. For further changes, use the Hasura CLI console (``http://localhost:9695``) instead of the console served by the
-   GraphQL engine (Eg: ``http://my-graphql.herokuapp.com``)
+   GraphQL engine (E.g.: ``http://my-graphql.herokuapp.com``)
 
 Step 0: Take a note of your GraphQL engine endpoint
 ---------------------------------------------------
