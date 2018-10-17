@@ -13,6 +13,8 @@ export const events = (
   <Tooltip id="tooltip-events">Manage Event Triggers</Tooltip>
 );
 
+export const voyager = <Tooltip id="tooltip-voyager">View in Voyager</Tooltip>;
+
 export const secureEndpoint = (
   <Tooltip id="tooltip-secure-endpoint">
     This graphql endpoint is public and you should add an access key

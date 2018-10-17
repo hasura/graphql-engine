@@ -3,6 +3,7 @@ const path = require('path');
 const webpack = require('webpack');
 const CleanPlugin = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const hasuraConfig = require('../hasuraconfig');
 
 const relativeAssetsPath = '../static/dist';
@@ -188,5 +189,8 @@ module.exports = {
         NODE_ENV: JSON.stringify('production'),
       },
     }),
+    new CopyWebpackPlugin([
+      { from: './node_modules/graphql-voyager/dist/voyager.worker.js' },
+    ]),
   ],
 };
