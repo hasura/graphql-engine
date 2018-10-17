@@ -4,7 +4,7 @@ Setting default values for fields
 Let's say you want certain fields to have their values set automatically by Postgres if
 not explicitly passed. For example, an auto-incrementing id, a created_at timestamp, etc.
 
-We can achieve this by setting a default value for the field which could either be a fixed value or a simple sql
+We can achieve this by setting a default value for the field which could either be a fixed value or a simple SQL
 function.
 
 **Example:** Say we have a field ``created_at`` in a table ``article``  which we would want to be set to the current
