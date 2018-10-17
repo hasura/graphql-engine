@@ -1,9 +1,8 @@
 Filter query results / search queries
 =====================================
 
-You can use the ``where`` argument in your queries to filter the results based on a field’s values (including in a
-nested object’s fields). You can even use multiple filters in the same ``where`` clause using the ``_and`` or the
-``_or`` operators.
+You can use the :ref:`where <WhereExp>` argument in your queries to filter the results based on a field’s values (including in a
+nested object’s fields). You can even use multiple filters in the same where clause using the :ref:`_and <AndExp>` or the :ref:`_or <OrExp>` operators.
 
 For example, fetch data for an author whose name is "Sidney":
 
@@ -513,8 +512,8 @@ Fetch a list of articles that have a value in the ``published_on`` field:
 
 Using multiple filters in the same query
 ----------------------------------------
-You can group multiple parameters in the same ``where`` argument using the ``_and`` or the ``_or`` operators to filter
-results based on more than one criteria.
+You can group multiple parameters in the same :ref:`where <WhereExp>` argument using the :ref:`_and <AndExp>` or the :ref:`_or <OrExp>` operators to filter
+results based on more than one criteria. And if you need a more advanced conditional, :ref:`_not <NotExp>` is also available for negating any expression.
 
 Example:  _and
 ^^^^^^^^^^^^^^
@@ -616,6 +615,53 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
             "title": "nisl duis ac",
             "rating": 4,
             "published_on": "2016-07-09"
+          }
+        ]
+      }
+    }
+
+Example:  _not
+^^^^^^^^^^^^^
+Fetch a list of articles not rated 5 or with id 2:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      article (
+        where: {
+          _not: {
+            _or: [
+              {rating: {_eq: 5}},
+              {id: {_eq: 2}}
+            ]
+          }
+        }
+      )
+      {
+        id
+        title
+        rating
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 3,
+            "title": "amet justo morbi",
+            "rating": 4
+          },
+          {
+            "id": 6,
+            "title": "sapien ut",
+            "rating": 1,
+          },
+          {
+            "id": 7,
+            "title": "nisl duis ac",
+            "rating": 4
           }
         ]
       }
