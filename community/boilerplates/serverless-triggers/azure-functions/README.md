@@ -9,6 +9,7 @@ Some of the language/platforms are work in progress. We welcome contributions fo
 | mutation | insert related data on an insert event using graphql mutation | ✅ | ❌ | ❌ | ❌ 
 | push-notification | send push notification on database event | ❌ | ❌ | ❌ | ❌ 
 | etl | transform the trigger payload and update an algolia index | ❌ | ❌ | ❌ | ❌
+| Serverless C# | Flexible code authoring | ❌ | ❌ | ✅ | ❌
 
 ## Pre-requisites
 1. Running instance of Hasura GraphQL
