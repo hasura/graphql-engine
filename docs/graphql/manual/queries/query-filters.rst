@@ -33,7 +33,7 @@ authors who have articles with a rating greater than 4:
       }
     }
 
-``_eq`` and ``_gt`` are examples of comparison operators that can be used in the ``where`` argument to filter on
+``_eq`` and ``_gt`` are examples of :ref:`comparison operators <Operator>` that can be used in the ``where`` argument to filter on
 equality. Let’s take a look at different operators that can be used to filter results and the field types these
 operators are compatible with.
 

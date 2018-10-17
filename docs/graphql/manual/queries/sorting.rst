@@ -1,6 +1,6 @@
 Sort query results
 ==================
-Results from your query can be sorted by using the ``order_by`` argument. The argument can be used to sort nested
+Results from your query can be sorted by using the :ref:`order_by <OrderByExp>` argument. The argument can be used to sort nested
 objects too.
 
 The sort order (ascending vs. descending) is set by specifying ``_asc`` or ``_desc``
@@ -9,7 +9,7 @@ after the column name in the ``order_by`` argument e.g. ``name_desc``.
 By default, ``null`` values are returned at the end of the results. ``null`` values can be fetched first by adding
 ``_nulls_first`` after the sorting order e.g. ``name_desc_nulls_first``.
 
-The ``order_by`` argument takes an array of parameters to allow sorting by multiple columns.
+The :ref:`order_by <OrderByExp>` argument takes an array of parameters to allow sorting by multiple columns.
 
 The following are example queries for different sorting use cases:
 

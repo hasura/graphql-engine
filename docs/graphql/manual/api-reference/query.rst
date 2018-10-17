@@ -160,6 +160,8 @@ ColumnExp
       field-name : {Operator_: Value }
     }
 
+.. _Operator:
+
 Operator
 ########
 Generic operators (all column types except json, jsonb) :
