@@ -241,6 +241,14 @@ hr
   clear: both;
 }
 
+.center_radio_label_input {
+  display: flex;
+  align-content: center;
+  input {
+    margin-top: 0px;
+  }
+}
+
 .activeEdit {
   .editPermissionsHeading {
     font-weight: bold;
@@ -248,12 +256,13 @@ hr
     margin-bottom: 5px;
     word-wrap: break-word;
   }
-
+  .editPermissionsSection.removePadding {
+    padding-top: 0px;
+  }
   .editPermissionsSection {
     margin: 5px;
     padding: 10px;
     word-wrap: break-word;
-
     .columnListElement {
       float: left;
       margin-right: 75px;
@@ -282,15 +291,22 @@ hr
             cursor: pointer;
             min-height: 20px;
             font-weight: normal;
+            input:not([disabled]) {
+              cursor: pointer;
+            }
           }
         }
-        .input_element_wrapper {
-          width: 20%;
-          select {
-            width: 100%;
-          }
-          input {
-            width: 100%;
+        .insertSetConfigRow {
+          display: flex;
+          align-items: center;
+          .input_element_wrapper {
+            width: 20%;
+            select {
+              width: 100%;
+            }
+            input {
+              width: 100%;
+            }
           }
         }
       }

@@ -36,6 +36,7 @@ const defaultQueryPermissions = {
   insert: {
     check: {},
     allow_upsert: true,
+    set: {},
   },
   select: {
     columns: [],
