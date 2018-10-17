@@ -6,9 +6,9 @@ worst that can happen is that you'll be politely asked to change something. We
 appreciate any sort of contributions and don't want a wall of rules to get in
 the way of that.
 
-However, for those individuals who want a bit more guidance on the best way to
-contribute to the project, read on. This document will cover what we're looking
-for. By addressing all the points we're looking for, it raises the chances we
+However, for those who want a bit more guidance on the best way to
+contribute to the project, read on. This document will cover what we are looking
+for. By addressing all the points we are looking for, it raises the chances we
 can quickly merge or address your contributions.
 
 
@@ -44,8 +44,8 @@ before-mentioned sections).
 
 ### Reporting an Issue
 
-- Make sure you test against the latest released version. It is possible we
-  already fixed the bug you're experiencing.
+- Make sure you test against the latest released version. It is possible that we
+  would have already fixed the bug you're experiencing.
 
 - Provide steps to reproduce the issue, including Postgres version,
   graphql-engine version and the provider you are running on (Heroku, Docker
@@ -56,10 +56,10 @@ before-mentioned sections).
 
 ## Common guidelines
 
-- Please make sure there is an issue associated with the work that you're doing.
+- Please make sure there is an issue associated with the work that you are doing.
 
-- If you're working on an issue, please comment that you are doing so to prevent
-  duplicate work by others also.
+- If you are working on an issue, please comment about the same to prevent
+  conflicts.
 
 - Squash your commits and refer to the issue using `fix #<issue-no>` or `close
   #<issue-no>` in the commit message, at the end.
