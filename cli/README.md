@@ -6,11 +6,11 @@
 
 ### Download GraphQL Engine CLI bundled with Hasura CLI
 
-- Linux/macOS
+## Linux/macOS
 ```bash
 curl -L https://cli.hasura.io/install.sh | bash
 ``` 
-- Windows: [installer](https://cli.hasura.io/install/windows-amd64)
+## Windows: [installer](https://cli.hasura.io/install/windows-amd64)
 
 
 ### Download using go get
@@ -39,7 +39,7 @@ hasura console
 
 ## Docs
 
-Read complete docs [here](docs/hasura.md).
+Read the complete docs [here](docs/hasura.md).
 
 ## Contributing
 
