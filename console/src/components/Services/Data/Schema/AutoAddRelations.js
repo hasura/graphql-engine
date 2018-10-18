@@ -9,14 +9,13 @@ import {
   autoAddRelName,
 } from '../TableRelationships/Actions';
 import { getRelationshipLine } from '../TableRelationships/Relationships';
-import suggestedRelationshipsRaw from '../TableRelationships/autoRelations';
 
 class AutoAddRelations extends Component {
-  trackAllRelations = () => {
-    this.props.dispatch(autoTrackRelations());
+  trackAllRelations = untrackedData => {
+    this.props.dispatch(autoTrackRelations(untrackedData));
   };
   render() {
-    const { schema, untrackedRelations, dispatch } = this.props;
+    const { untrackedRelations, dispatch } = this.props;
     const styles = require('../PageContainer/PageContainer.scss');
     const handleAutoAddIndivRel = obj => {
       dispatch(autoAddRelName(obj));
@@ -32,64 +31,32 @@ class AutoAddRelations extends Component {
         </div>
       );
     }
-    const untrackedIndivHtml = [];
-    schema.map(table => {
-      const currentTable = table.table_name;
-      const currentTableRel = suggestedRelationshipsRaw(currentTable, schema);
-      currentTableRel.objectRel.map(obj => {
-        untrackedIndivHtml.push(
-          <div
-            className={styles.padd_top_medium}
-            key={'untrackedIndiv' + table.table_name}
+    const untrackData = untrackedRelations.map(obj => {
+      return (
+        <div
+          className={styles.padd_top_medium}
+          key={'untrackedIndiv' + obj.data.tableName}
+        >
+          <button
+            className={`${styles.display_inline} btn btn-xs btn-default`}
+            onClick={e => {
+              e.preventDefault();
+              handleAutoAddIndivRel(obj);
+            }}
           >
-            <button
-              className={`${styles.display_inline} btn btn-xs btn-default`}
-              onClick={e => {
-                e.preventDefault();
-                handleAutoAddIndivRel(obj);
-              }}
-            >
-              Add
-            </button>
-            <div className={styles.display_inline + ' ' + styles.add_pad_left}>
-              <b>{obj.tableName}</b> -{' '}
-              {getRelationshipLine(
-                obj.isObjRel,
-                obj.lcol,
-                obj.rcol,
-                obj.rTable
-              )}
-            </div>
+            Add
+          </button>
+          <div className={styles.display_inline + ' ' + styles.add_pad_left}>
+            <b>{obj.data.tableName}</b> -{' '}
+            {getRelationshipLine(
+              obj.data.isObjRel,
+              obj.data.lcol,
+              obj.data.rcol,
+              obj.data.rTable
+            )}
           </div>
-        );
-      });
-      currentTableRel.arrayRel.map(obj => {
-        untrackedIndivHtml.push(
-          <div
-            className={styles.padd_top_medium}
-            key={'untrackedIndiv' + table.table_name}
-          >
-            <button
-              className={`${styles.display_inline} btn btn-xs btn-default`}
-              onClick={e => {
-                e.preventDefault();
-                handleAutoAddIndivRel(obj);
-              }}
-            >
-              Add
-            </button>
-            <div className={styles.display_inline + ' ' + styles.add_pad_left}>
-              <b>{obj.tableName}</b> -{' '}
-              {getRelationshipLine(
-                obj.isObjRel,
-                obj.lcol,
-                obj.rcol,
-                obj.rTable
-              )}
-            </div>
-          </div>
-        );
-      });
+        </div>
+      );
     });
     return (
       <div>
@@ -109,7 +76,7 @@ class AutoAddRelations extends Component {
           </div>
         )}
         <button
-          onClick={this.trackAllRelations}
+          onClick={this.trackAllRelations.bind(this, untrackedRelations)}
           className={
             styles.display_inline +
             ' btn btn-xs btn-default ' +
@@ -119,7 +86,7 @@ class AutoAddRelations extends Component {
         >
           Track All Relations
         </button>
-        <div className={styles.padd_top_small}>{untrackedIndivHtml}</div>
+        <div className={styles.padd_top_small}>{untrackData}</div>
       </div>
     );
   }

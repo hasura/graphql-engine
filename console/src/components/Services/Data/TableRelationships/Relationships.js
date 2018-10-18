@@ -46,16 +46,16 @@ const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
   return isObjRel ? (
     <span>
       &nbsp;
-      {lcol}
+      {lcol.join(',')}
       &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
-      {rTable} :: {rcol}
+      {rTable} :: {rcol.join(',')}
     </span>
   ) : (
     <span>
       &nbsp;
-      {finalRTable} :: {rcol}
+      {finalRTable} :: {rcol.join(',')}
       &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
-      {lcol}
+      {lcol.join(',')}
     </span>
   );
 };
