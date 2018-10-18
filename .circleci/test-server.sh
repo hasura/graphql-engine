@@ -20,6 +20,15 @@ wait_for_port() {
     echo "Failed waiting for $PORT" && exit 1
 }
 
+init_jwt() {
+	CUR_DIR="$PWD"
+	mkdir -p "$OUTPUT_FOLDER/ssl"
+	cd "$OUTPUT_FOLDER/ssl"
+	openssl genrsa -out jwt_private.key 2048
+	openssl rsa -pubout -in jwt_private.key -out  jwt_public.key
+	cd "$CUR_DIR"
+}
+
 init_ssl() {
 	CUR_DIR="$PWD"
 	mkdir -p "$OUTPUT_FOLDER/ssl"
@@ -96,7 +105,7 @@ trap stop_services INT
 
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITHOUT ACCESS KEYS ###########################################>\n"
 
-"$GRAPHQL_ENGINE" serve > "$OUTPUT_FOLDER/server.log" & PID=$!
+"$GRAPHQL_ENGINE" serve > "$OUTPUT_FOLDER/graphql-engine.log" & PID=$!
 
 wait_for_port 8080
 
@@ -117,6 +126,25 @@ wait_for_port 8080
 pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY"
 
 kill -INT $PID
+sleep 2
+
+##########
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY AND JWT #####################################>\n"
+
+init_jwt
+
+export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key }')"
+
+"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" & PID=$!
+
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key"
+
+kill -INT $PID
+sleep 2
+
+unset HASURA_GRAPHQL_JWT_SECRET
+
+##########
 
 if [ $EUID != 0 ] ; then
 	echo -e "SKIPPING webhook based tests, as \nroot permission is required for running webhook tests (inorder to trust certificate authority)."
@@ -144,14 +172,20 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 	update-ca-certificates
 
 	kill -INT $PID
+	sleep 2
 
 	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & HTTPS INSECURE WEBHOOK ########>\n"
 
 	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
+	wait_for_port 8080
+
 	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
 
 	kill -INT $PID
+	sleep 2
 
 	kill $WH_PID
 fi
+
+mv graphql-engine.tix "$OUTPUT_FOLDER"

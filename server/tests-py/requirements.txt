@@ -5,3 +5,5 @@ requests
 pyyaml
 websocket-client
 pyjwt >= 1.5.3
+jsondiff
+cryptography

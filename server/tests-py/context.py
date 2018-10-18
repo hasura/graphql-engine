@@ -53,7 +53,7 @@ class WebhookServer(http.server.HTTPServer):
         self.socket.bind(self.server_address)
 
 class HGECtx:
-    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure):
+    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, hge_jwt_key_file, webhook_insecure):
         server_address = ('0.0.0.0', 5592)
 
         self.resp_queue = queue.Queue(maxsize=1)
@@ -71,6 +71,11 @@ class HGECtx:
         self.hge_url = hge_url
         self.hge_key = hge_key
         self.hge_webhook = hge_webhook
+        if hge_jwt_key_file is None:
+            self.hge_jwt_key = None
+        else:
+            with open(hge_jwt_key_file) as f:
+                self.hge_jwt_key = f.read()
         self.webhook_insecure = webhook_insecure
 
         self.ws_url = urlparse(hge_url)
@@ -122,9 +127,7 @@ class HGECtx:
 
     def v1q(self, q):
         h = dict()
-        if self.hge_key is not None and self.hge_webhook is None:
-            h['X-Hasura-Access-Key'] = self.hge_key
-        elif self.hge_key is not None and self.hge_webhook is not None and 'X-Hasura-Role' not in h:
+        if self.hge_key is not None:
             h['X-Hasura-Access-Key'] = self.hge_key
         resp = self.http.post(
             self.hge_url + "/v1/query",

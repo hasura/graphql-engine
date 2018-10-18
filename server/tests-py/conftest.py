@@ -10,15 +10,18 @@ def pytest_addoption(parser):
         "--pg-url", metavar="PG_URL", help="url for connecting to Postgres directly", required=True
     )
     parser.addoption(
-        "--hge-key", metavar="PG_URL", help="access key for graphql-engine", required=False
+        "--hge-key", metavar="HGE_KEY", help="access key for graphql-engine", required=False
     )
     parser.addoption(
-        "--hge-webhook", metavar="PG_URL", help="url for graphql-engine's access control webhook", required=False
+        "--hge-webhook", metavar="HGE_WEBHOOK", help="url for graphql-engine's access control webhook", required=False
     )
     parser.addoption(
         "--test-webhook-insecure", action="store_true",
-        help="Run Test cases for insecure https webhook")
-
+        help="Run Test cases for insecure https webhook"
+    )
+    parser.addoption(
+        "--hge-jwt-key-file", metavar="HGE_JWT_KEY_FILE", help="File containting the private key used to encode jwt tokens using RS512 algorithm", required=False
+    )
 
 @pytest.fixture(scope='session')
 def hge_ctx(request):
@@ -27,9 +30,10 @@ def hge_ctx(request):
     pg_url = request.config.getoption('--pg-url')
     hge_key = request.config.getoption('--hge-key')
     hge_webhook = request.config.getoption('--hge-webhook')
-    webhook_insecure = request.config.getoption('--hge-webhook')
+    webhook_insecure = request.config.getoption('--test-webhook-insecure')
+    hge_jwt_key_file = request.config.getoption('--hge-jwt-key-file')
     try:
-        hge_ctx = HGECtx(hge_url=hge_url, pg_url=pg_url, hge_key=hge_key, hge_webhook=hge_webhook, webhook_insecure = webhook_insecure )
+        hge_ctx = HGECtx(hge_url=hge_url, pg_url=pg_url, hge_key=hge_key, hge_webhook=hge_webhook, hge_jwt_key_file=hge_jwt_key_file, webhook_insecure = webhook_insecure )
     except HGECtxError as e:
         pytest.exit(str(e))
     yield hge_ctx  # provide the fixture value
