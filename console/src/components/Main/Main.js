@@ -234,20 +234,6 @@ class Main extends React.Component {
                     </li>
                   </OverlayTrigger>
                 ) : null}
-                <OverlayTrigger placement="right" overlay={tooltip.voyager}>
-                  <li>
-                    <Link target="_blank" to={appPrefix + '/voyager-view'}>
-                      <div className={styles.iconCenter}>
-                        <i
-                          title="Voyager View"
-                          className="fa fa-connectdevelop"
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <p>Voyager</p>
-                    </Link>
-                  </li>
-                </OverlayTrigger>
               </ul>
             </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>

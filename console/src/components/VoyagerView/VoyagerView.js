@@ -4,7 +4,7 @@ import fetch from 'isomorphic-fetch';
 import Endpoints from '../../Endpoints';
 import hasuraconfig from '../../../hasuraconfig';
 import '../../../node_modules/graphql-voyager/dist/voyager.css';
-import './voyager.css';
+import './voyagerView.css';
 
 class VoyagerView extends Component {
   introspectionProvider(query) {
@@ -16,9 +16,11 @@ class VoyagerView extends Component {
   }
 
   render() {
+    const rootType = this.props.params.root;
     return (
       <Voyager
         introspection={this.introspectionProvider}
+        displayOptions={{ rootType: rootType }}
         workerURI={hasuraconfig.webpackPrefix + 'voyager.worker.js'}
       />
     );

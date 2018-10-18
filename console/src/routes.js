@@ -62,7 +62,7 @@ const routes = store => {
 
   return (
     <Route path="/" component={App} onEnter={validateLogin(store)}>
-      <Route path="voyager-view" component={VoyagerView} />
+      <Route path="voyager-view(/:root)" component={VoyagerView} />
       <Route path="login" component={generatedLoginConnector(connect)} />
       <Route
         path=""

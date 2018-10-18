@@ -16,6 +16,27 @@ const DataHeader = ({
   const styles = require('./TableCommon/Table.scss');
   const currentLocation = location.pathname;
   let migrationSection = null;
+  let voyagerSection = null;
+  if (schema.length > 0) {
+    const chunkedURL = currentLocation.split('/').reverse();
+    const currentTable = chunkedURL[0] === 'browse' ? chunkedURL[1] : '';
+    voyagerSection = (
+      <li
+        role="presentation"
+        className={
+          currentLocation.indexOf('voyager-view') !== -1 ? styles.active : ''
+        }
+      >
+        <Link
+          target="_blank"
+          to={'/voyager-view/' + currentTable}
+          data-test="voyager-link"
+        >
+          View in Voyager
+        </Link>
+      </li>
+    );
+  }
   if (globals.consoleMode === 'cli') {
     migrationSection = (
       <li
@@ -73,6 +94,7 @@ const DataHeader = ({
                   SQL
                 </Link>
               </li>
+              {voyagerSection}
               {migrationSection}
             </ul>
           </div>
