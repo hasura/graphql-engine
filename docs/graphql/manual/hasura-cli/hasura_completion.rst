@@ -3,7 +3,7 @@
 Hasura CLI: hasura completion
 -----------------------------
 
-Generate auto completion code
+Generate auto-completion code
 
 Synopsis
 ~~~~~~~~

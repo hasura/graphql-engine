@@ -1,8 +1,8 @@
 Authentication / Access control
 ===============================
 
-Hasura helps you define granular access controls for every field in your GraphQL schema, basically every table or
-view in your Postgres schema. These access control rules can use dynamic variables that come in with every request.
+Hasura helps you define granular access controls for every field in your GraphQL schema (i.e. every table or
+view in your Postgres schema). These access control rules can use dynamic variables that come in with every request.
 
 .. image:: ../../../img/graphql/manual/auth/hasura-perms.png
 
@@ -15,8 +15,8 @@ directly!
 
 Your app will likely only send an authorization token or cookie provided by your app's authentication
 system to Hasura. In this case, Hasura will make a request to a webhook set up by you with the request headers your
-app has sent (authorization tokens, cookies etc). The webhook should then return the variables required as context for
-the access control rules. Alternatively, your app can send JWT tokens to Hasura which can be then decoded by Hasura to
+app has sent (authorization tokens, cookies etc.). The webhook should then return the variables required as context for
+the access control rules. Alternatively, your app can send to Hasura JWT tokens, which can then be decoded by Hasura to
 get the variables required for the access control rules.
 See :doc:`webhook` or :doc:`jwt` for more details.
 

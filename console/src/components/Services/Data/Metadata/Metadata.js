@@ -6,8 +6,9 @@ import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
+import ClearAccessKey from './ClearAccessKey';
 
-const semver = require('semver');
+import semverCheck from '../../../../helpers/semver';
 
 class Metadata extends Component {
   constructor() {
@@ -27,18 +28,23 @@ class Metadata extends Component {
     }
   }
   checkSemVer(version) {
-    let showMetadata = false;
     try {
-      showMetadata = semver.gt(version, '1.0.0-alpha16');
+      const showMetadata = semverCheck('metadataReload', version);
       if (showMetadata) {
-        this.setState({ ...this.state, showMetadata: true });
+        this.updateMetadataState(true);
       } else {
-        this.setState({ ...this.state, showMetadata: false });
+        this.updateMetadataState(false);
       }
     } catch (e) {
-      this.setState({ ...this.state, showMetadata: false });
+      this.updateMetadataState(false);
       console.error(e);
     }
+  }
+  updateMetadataState(displayReloadMetadata) {
+    this.setState({
+      ...this.state,
+      showMetadata: displayReloadMetadata,
+    });
   }
   render() {
     const styles = require('../TableCommon/Table.scss');
@@ -94,13 +100,35 @@ class Metadata extends Component {
               <ReloadMetadata {...this.props} />
             </div>,
             <div key="meta_data_3" className={metaDataStyles.intro_note}>
-              <h4> Reset Metadata</h4>
+              <h4>Reset Metadata</h4>
               <div className={metaDataStyles.content_width}>
-                  Reset Hasura metadata
+                  Permanently clear GraphQL Engine's metadata and configure it
+                  from scratch (tracking relevant tables and relationships).
+                  This process is not reversible.
               </div>
             </div>,
             <div key="meta_data_4">
               <ResetMetadata {...this.props} />
+            </div>,
+          ]
+          : null}
+
+        {window.localStorage.CONSOLE_ACCESS_KEY
+          ? [
+            <div
+              key="access_key_reset_1"
+              className={metaDataStyles.intro_note}
+            >
+              <h4>Clear access key (logout)</h4>
+              <div className={metaDataStyles.content_width}>
+                  The console caches the access key (HASURA_GRAPHQL_ACCESS_KEY)
+                  in the browser. You can clear this cache to force a prompt for
+                  the access key when the console is accessed next using this
+                  browser.
+              </div>
+            </div>,
+            <div key="access_key_reset_2">
+              <ClearAccessKey {...this.props} />
             </div>,
           ]
           : null}

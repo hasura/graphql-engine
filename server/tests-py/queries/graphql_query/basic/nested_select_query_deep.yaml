@@ -1,0 +1,39 @@
+description: Nested select on article
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+   article:
+   - author:
+       articles:
+       - author:
+           articles:
+           - author: {id: 1}
+             id: 1
+           id: 1
+         id: 1
+       id: 1
+     id: 1
+
+query:
+  query: |
+    query {
+      article(where: {id: {_eq: 1}}) {
+        id
+        author {
+          id
+          articles(where: {id: {_eq: 1}}) {
+            id
+            author {
+              id
+              articles(where: {id: {_eq: 1}}) {
+                id
+                author {
+                  id
+                }
+              }
+            }
+          }
+        }
+      }
+    }

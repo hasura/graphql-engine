@@ -2,10 +2,10 @@
 #
 # update readme file in the assets/brand folder
 
-# exit on error
-set -e
+# strict mode
+set -Eeuo pipefail
 
-IFS=$""
+IFS=$'\n\t'
 
 # get the repo root
 ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
@@ -25,16 +25,29 @@ EOF
 )
 
 for svg in *.svg; do
-    if [[ "$svg" = *"white"* ]]; then
-        BG='style="background-color: black;"'
-    else
-        BG='style="background-color: white;"'
-    fi
-    README_CONTENT=$(cat <<EOF
+  if [[ "$svg" == *"white"* ]]; then
+    BG='style="background-color: black;"'
+  elif [[ "$svg" == *"black"* ]]; then
+    BG='style="background-color: white;"'
+  else
+    continue
+  fi
+  README_CONTENT="$(cat <<EOF
 $README_CONTENT
 | \`$svg\` | <img src="$svg" width="150px" $BG /> |
 EOF
-)
+)"
 done
 
-echo $README_CONTENT > "$ROOT/assets/brand/README.md"
+for svg in *.svg; do
+  if [[ "$svg" == *"white"* ]] || [[ "$svg" == *"black"* ]]; then
+    continue
+  fi
+  README_CONTENT="$(cat <<EOF
+$README_CONTENT
+| \`$svg\` | <img src="$svg" width="150px"/> |
+EOF
+)"
+done
+
+echo "$README_CONTENT" > "$ROOT/assets/brand/README.md"

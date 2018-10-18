@@ -206,6 +206,7 @@ library
                      , Hasura.SQL.Value
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time
+                     , Hasura.SQL.Rewrite
                      , Hasura.Prelude
                      , Hasura.Logging
                      , Ops

@@ -7,10 +7,10 @@ to start using migrations to help you track the database and GraphQL schema chan
 These are the steps you need to follow:
 
 #. Install the Hasura CLI
-#. Setup a project dir
-#. Initialise migrations
+#. Setup a project directory
+#. Initialize migrations
 #. For further changes, use the Hasura CLI console (``http://localhost:9695``) instead of the console served by the
-   GraphQL engine (Eg: ``http://my-graphql.herokuapp.com``)
+   GraphQL engine (E.g.: ``http://my-graphql.herokuapp.com``)
 
 Step 0: Take a note of your GraphQL engine endpoint
 ---------------------------------------------------
@@ -70,30 +70,30 @@ Skip this step if you already have a project directory.
 
   hasura init --directory my-project --endpoint http://my-graphql.herokuapp.com
 
-Step 3: Initialise the migrations as per your current state
+Step 3: Initialize the migrations as per your current state
 -----------------------------------------------------------
 
-- Install ``pg_dump`` (or use docker) and run the following command to download the public schema as ``public-schema.sql``:
+- Install ``pg_dump`` (or use Docker) and run the following command to download the public schema as ``public-schema.sql``:
 
   .. code-block:: bash
   
      pg_dump -O -x -h <db-host> -p <db-port> -U <db-user> -d <db-name> --schema public --schema-only > public-schema.sql
 
-- Export the metadata (this creates a file ``metadata.yaml``)
+- Export the metadata (this creates a file ``metadata.yaml``):
 
   .. code-block:: bash
      
      hasura metadata export
 
-- Create a new migration with a name, say ``first``. This will generate some files in ``migrations/`` directory
+- Create a new migration with a name, say ``first``. This will generate some files in ``migrations/`` directory:
 
   .. code-block:: bash
   
      hasura migrate create first
 
 - Move the contents of ``public-schema.sql`` to ``migrations/<version>_first.up.sql``
-- Move the contents of ``metadata.yaml`` to ``migrations/<version>_first.up.yaml`` with the following content:
-  (take care of indentation)
+- Move the contents of ``metadata.yaml`` to ``migrations/<version>_first.up.yaml`` with the following content
+  (take care of indentation):
 
   .. code-block:: yaml
 
@@ -101,7 +101,7 @@ Step 3: Initialise the migrations as per your current state
        args:
          <contents-of-metadata.yaml>
 
-- Remove ``migrations/<version>_first.down.{sql,yaml}`` migration files if you are not adding down migrations for these.
+- Remove ``migrations/<version>_first.down.{sql,yaml}`` migration files if you are not adding down migrations for these
 
 Step 4: Use the console from the CLI
 ------------------------------------
@@ -124,12 +124,12 @@ in the ``migrations/`` directory in your project.
 
 .. note::
 
-   Migrations are only created when using the Console though CLI.
+   Migrations are only created when using the Console through CLI.
 
 Step 6: Apply the migrations to another instance of the GraphQL engine
 ----------------------------------------------------------------------
 
-- Edit ``config.yaml`` and change the endpoint to another instance, say ``https://my-another-grapqhl.herokuapp.com``
+- Edit ``config.yaml`` and change the endpoint to another instance, say ``https://my-another-grapqhl.herokuapp.com``:
 
   .. code-block:: yaml
 
@@ -147,4 +147,4 @@ Step 7: Create migrations without the console & other advanced actions
 
 - Each migration consists of a pair of yaml and sql files with up and down steps.
 - Create migrations manually using :ref:`migrate create <hasura_migrate_create>`.
-- You can apply only certain versions or number of steps. Read more at :ref:`migrate apply <hasura_migrate_apply>`
+- You can apply only certain versions or numbers of steps. Read more at :ref:`migrate apply <hasura_migrate_apply>`

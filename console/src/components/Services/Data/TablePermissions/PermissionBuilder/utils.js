@@ -17,9 +17,12 @@ export const columnOperators = [
   '_nlike',
   '_similar',
   '_nsimilar',
+  '_is_null',
 ];
 
 export const arrayColumnOperators = ['_in', '_nin'];
+
+export const boolColumnOperators = ['_is_null'];
 
 export const legacyOperatorsMap = {
   $and: '_and',
@@ -37,6 +40,7 @@ export const legacyOperatorsMap = {
   $nlike: '_nlike',
   $similar: '_similar',
   $nsimilar: '_nsimilar',
+  $is_null: '_is_null',
 };
 
 export function addToPrefix(prefix, value) {
