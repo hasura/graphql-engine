@@ -56,6 +56,6 @@ Next steps
 
 Read more about:
 
-- `Building your schema <../schema/index.rst>`_
-- `Queries <../queries/index.rst>`_
+- :doc: `Building your schema <../schema/index.rst>`_
+- :doc: `Queries <../queries/index.rst>`_
 
