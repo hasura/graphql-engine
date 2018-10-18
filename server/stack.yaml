@@ -2,7 +2,8 @@
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
 # resolver: lts-10.8
-resolver: lts-12.12
+resolver: lts-12.13
+compiler: ghc-8.4.4
 
 # Local packages, usually specified by relative directory name
 packages:
@@ -22,8 +23,8 @@ extra-deps:
 - ginger-0.8.0.1
 
 # for text-builder
-- text-builder-0.6.3
-- deferred-folds-0.9.7
+- text-builder-0.6.4
+- deferred-folds-0.9.9
 - primitive-0.6.4.0
 
 
