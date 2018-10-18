@@ -10,6 +10,8 @@ import {
 
 import './GraphiQL.css';
 
+import semverCheck from '../../helpers/semver';
+
 class GraphiQLWrapper extends Component {
   constructor(props) {
     super(props);
@@ -19,6 +21,7 @@ class GraphiQLWrapper extends Component {
       noSchema: false,
       onBoardingEnabled: false,
       queries: null,
+      supportAnalyze: false,
     };
     const queryFile = this.props.queryParams
       ? this.props.queryParams.query_file
@@ -30,12 +33,44 @@ class GraphiQLWrapper extends Component {
     }
   }
 
+  componentDidMount() {
+    if (this.props.data.serverVersion) {
+      this.checkSemVer(this.props.data.serverVersion);
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.data.serverVersion !== this.props.data.serverVersion) {
+      this.checkSemVer(nextProps.data.serverVersion);
+    }
+  }
   shouldComponentUpdate(nextProps) {
     return !nextProps.headerFocus;
   }
 
+  checkSemVer(version) {
+    try {
+      const showAnalyze = semverCheck('sqlAnalyze', version);
+      if (showAnalyze) {
+        this.updateAnalyzeState(true);
+      } else {
+        this.updateAnalyzeState(false);
+      }
+    } catch (e) {
+      this.updateAnalyzeState(false);
+      console.error(e);
+    }
+  }
+  updateAnalyzeState(supportAnalyze) {
+    this.setState({
+      ...this.state,
+      supportAnalyze: supportAnalyze,
+    });
+  }
+
   render() {
     const styles = require('../Common/Common.scss');
+    const { supportAnalyze } = this.state;
     const graphQLFetcher = graphQLParams => {
       if (this.state.headerFocus) {
         return null;
@@ -63,7 +98,7 @@ class GraphiQLWrapper extends Component {
           <GraphiQL
             fetcher={graphQLFetcher}
             analyzeFetcher={analyzeFetcherInstance}
-            supportAnalyze
+            supportAnalyze={supportAnalyze}
             query={this.state.queries}
           />
         );
@@ -72,7 +107,7 @@ class GraphiQLWrapper extends Component {
           <GraphiQL
             fetcher={graphQLFetcher}
             analyzeFetcher={analyzeFetcherInstance}
-            supportAnalyze
+            supportAnalyze={supportAnalyze}
           />
         );
       }
@@ -80,7 +115,7 @@ class GraphiQLWrapper extends Component {
       content = (
         <GraphiQL
           fetcher={graphQLFetcher}
-          supportAnalyze
+          supportAnalyze={supportAnalyze}
           analyzeFetcher={analyzeFetcherInstance}
           query={
             '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n'
