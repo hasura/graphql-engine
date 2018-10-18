@@ -226,6 +226,29 @@ const graphQLFetcherFinal = (graphQLParams, url, headers) => {
   }).then(response => response.json());
 };
 
+/* Analyse Fetcher */
+const analyzeFetcher = (url, headers) => {
+  return query => {
+    const editedQuery = {
+      query,
+    };
+    const user = {};
+    user.role = 'admin';
+    user.headers = getHeadersAsJSON(headers);
+    editedQuery.user = user;
+    return fetch(`${url}/explain`, {
+      method: 'post',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(editedQuery),
+      credentials: 'include',
+    });
+  };
+};
+/* End of it */
+
 const changeRequestHeader = (index, key, newValue, isDisabled) => ({
   type: REQUEST_HEADER_CHANGED,
   data: {
@@ -632,4 +655,5 @@ export {
   focusHeaderTextbox,
   unfocusTypingHeader,
   getRemoteQueries,
+  analyzeFetcher,
 };

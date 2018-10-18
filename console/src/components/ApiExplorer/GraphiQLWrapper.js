@@ -2,7 +2,11 @@ import React, { Component } from 'react';
 import GraphiQL from 'hasura-console-graphiql';
 import PropTypes from 'prop-types';
 import ErrorBoundary from './ErrorBoundary';
-import { graphQLFetcherFinal, getRemoteQueries } from './Actions';
+import {
+  analyzeFetcher,
+  graphQLFetcherFinal,
+  getRemoteQueries,
+} from './Actions';
 
 import './GraphiQL.css';
 
@@ -43,6 +47,11 @@ class GraphiQLWrapper extends Component {
       );
     };
 
+    const analyzeFetcherInstance = analyzeFetcher(
+      this.props.data.url,
+      this.props.data.headers
+    );
+
     // let content = "fetching schema";
     let content = (
       <i className={'fa fa-spinner fa-spin ' + styles.graphSpinner} />
@@ -51,15 +60,28 @@ class GraphiQLWrapper extends Component {
     if (!this.state.error && this.props.numberOfTables !== 0) {
       if (this.state.queries) {
         content = (
-          <GraphiQL fetcher={graphQLFetcher} query={this.state.queries} />
+          <GraphiQL
+            fetcher={graphQLFetcher}
+            analyzeFetcher={analyzeFetcherInstance}
+            supportAnalyze
+            query={this.state.queries}
+          />
         );
       } else {
-        content = <GraphiQL fetcher={graphQLFetcher} />;
+        content = (
+          <GraphiQL
+            fetcher={graphQLFetcher}
+            analyzeFetcher={analyzeFetcherInstance}
+            supportAnalyze
+          />
+        );
       }
     } else if (this.props.numberOfTables === 0) {
       content = (
         <GraphiQL
           fetcher={graphQLFetcher}
+          supportAnalyze
+          analyzeFetcher={analyzeFetcherInstance}
           query={
             '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n'
           }
