@@ -32,7 +32,7 @@ mutations.
 Relationships or Connections
 ----------------------------
 
-Between one table/view and another table/view you can tell Hasura GraphQL engine to create a relationship or a
+Between one table/view and another table/view, you can tell Hasura GraphQL engine to create a relationship or a
 connection between
 their 2 nodes in a graph, using a particular column as a link. Often, you have foreign-key constraints that
 indicate a relationship and you can tell Hasura GraphQL engine to use that foreign-key constraint to create a

@@ -8,8 +8,20 @@ TableName
 ^^^^^^^^^
 
 .. parsed-literal::
+   :class: haskell-pre
 
-  String
+   String | QualifiedTable_
+
+QualifiedTable
+^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+           "name": String,
+           "schema": String
+   }
 
 .. _RoleName:
 

@@ -41,6 +41,7 @@ class ApiRequestWrapper extends Component {
           numberOfTables={this.props.numberOfTables}
           headerFocus={this.props.headerFocus}
           queryParams={this.props.queryParams}
+          serverVersion={this.props.serverVersion}
         />
         {this.props.request.bodyType !== 'graphql' ? (
           <ApiResponse
