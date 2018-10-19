@@ -60,7 +60,7 @@ const insertData = async (insertOrder, sampleData, tables, url, headers) => {
   let objectString = '';
   const variables = {};
   insertOrder.forEach(tableName => {
-    mutationString += `insert_${tableName} ( objects: $objects_${tableName} ) { returning { id } } \n`;
+    mutationString += `insert_${tableName} ( objects: $objects_${tableName} ) { affected_rows } \n`;
     objectString += `$objects_${tableName}: [${tableName}_insert_input!]!,\n`;
     variables[`objects_${tableName}`] = transformedData[tableName];
   });
