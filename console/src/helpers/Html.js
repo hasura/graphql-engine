@@ -25,11 +25,6 @@ export default class Html extends Component {
       <html lang="en-us">
         <head>
           <link rel="icon" type="image/png" href="/rstatic/favicon.png" />
-          <link
-            rel="stylesheet"
-            href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.13.1/build/styles/default.min.css"
-          />
-
           {Object.keys(assets.styles).map((style, key) => (
             <link
               href={assets.styles[style]}
@@ -98,8 +93,10 @@ export default class Html extends Component {
 
           <div id="content" className="content" />
           <script src={assets.javascript.main} charSet="UTF-8" />
+          {/*
           <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.13.1/build/highlight.min.js" />
           <script type="text/javascript" src="https://unpkg.com/sql-formatter@latest/dist/sql-formatter.min.js" />
+          */}
         </body>
       </html>
     );
