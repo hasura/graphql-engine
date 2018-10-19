@@ -19,25 +19,28 @@ mutation updateNoteRevision ($noteId: Int!, $data: String!) {
 `;
 
 exports.handler = async (event) => {
-  const qv = { noteId: event.event.data.old.id, data: event.event.data.old.note };
+  try {
+    const qv = { noteId: event.body.event.data.old.id, data: event.body.event.data.old.note };
+    const result = await fetch(hgeEndpoint + '/v1alpha1/graphql', {
+      method: 'POST',
+      body: JSON.stringify({ query: query, variables: qv }),
+      headers: { 'Content-Type': 'application/json', 'x-hasura-access-key': accessKey },
+    });
+    
+    const { errors, data } = await result.json();
 
-  const result = await fetch(hgeEndpoint + '/v1alpha1/graphql', {
-    method: 'POST',
-    body: JSON.stringify({ query: query, variables: qv }),
-    headers: { 'Content-Type': 'application/json', 'x-hasura-access-key': accessKey },
-  });
-
-  const { errors, data } = await result.json();
-
-  if (errors) {
+    if (errors) {
+      throw new Error(errors);
+    } else {
+      return {
+        statusCode: 200,
+        body: "success"
+      };
+    }
+  } catch (e) {
     return {
       statusCode: 400,
       body: "cannot parse hasura event"
-    }
-  } else {
-    return {
-      statusCode: 200,
-      body: "success"
-    }
+    };
   }
 };
