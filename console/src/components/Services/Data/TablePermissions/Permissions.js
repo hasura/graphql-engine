@@ -253,21 +253,21 @@ class Permissions extends Component {
         const bulkSelect = permsState.bulkSelect;
         const currentInputSelection = bulkSelect.filter(e => e === role)
           .length ? (
-            <input
-              onChange={dispatchBulkSelect}
-              checked="checked"
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          ) : (
-            <input
-              onChange={dispatchBulkSelect}
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          );
+          <input
+            onChange={dispatchBulkSelect}
+            checked="checked"
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        ) : (
+          <input
+            onChange={dispatchBulkSelect}
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        );
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
@@ -426,17 +426,30 @@ class Permissions extends Component {
 
     const getViewPermissionNote = () => {
       let showNote = false;
-      if (!(this.state.viewInfo && 'is_insertable_into' in this.state.viewInfo && this.state.viewInfo.is_insertable_into === 'YES') && !(this.state.viewInfo && 'is_updatable' in this.state.viewInfo && this.state.viewInfo.is_updatable === 'YES')) {
+      if (
+        tableType === 'view' &&
+        !(
+          this.state.viewInfo &&
+          'is_insertable_into' in this.state.viewInfo &&
+          this.state.viewInfo.is_insertable_into === 'YES'
+        ) &&
+        !(
+          this.state.viewInfo &&
+          'is_updatable' in this.state.viewInfo &&
+          this.state.viewInfo.is_updatable === 'YES'
+        )
+      ) {
         showNote = true;
       }
 
       return showNote ? (
         <div className={styles.permissionsLegend}>
           <i className="fa fa-question-circle" aria-hidden="true" />
-            &nbsp;
-          You cannot insert/update into this view
+          &nbsp; You cannot insert/update into this view
         </div>
-      ) : '';
+      ) : (
+        ''
+      );
     };
 
     const getPermissionsTable = (tableSchema, queryTypes, permsState) => {
