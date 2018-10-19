@@ -233,15 +233,13 @@ const analyzeFetcher = (url, headers) => {
       query,
     };
     const user = {};
+    const reqHeaders = getHeadersAsJSON(headers);
     user.role = 'admin';
-    user.headers = getHeadersAsJSON(headers);
+    user.headers = reqHeaders;
     editedQuery.user = user;
     return fetch(`${url}/explain`, {
       method: 'post',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: reqHeaders,
       body: JSON.stringify(editedQuery),
       credentials: 'include',
     });
