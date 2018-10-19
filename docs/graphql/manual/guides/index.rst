@@ -4,6 +4,7 @@ Guides / Tutorials / Resources
 Deployment guides
 -----------------
 
+- :doc:`Digital Ocean One-click App <deployment/digital-ocean-one-click>`
 - :doc:`Deploy on Digital Ocean using Docker <deployment/digital-ocean>`
 
 .. note::

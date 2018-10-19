@@ -14,3 +14,4 @@ Guides: Deployment
    :hidden:
 
    On Digital Ocean using Docker <digital-ocean>
+   DigitalOcean One-click App <digital-ocean-one-click>
