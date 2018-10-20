@@ -10,6 +10,8 @@ module Hasura.GraphQL.Resolve.Select
   , convertSelectByPKey
   , fromSelSet
   , fieldAsPath
+  , fromField
+  , fromFieldByPKey
   ) where
 
 import           Data.Has
@@ -33,10 +35,12 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 fromSelSet
-  :: G.NamedType
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByResolveCtx r)
+  => ((PGColType, PGColValue) -> m S.SQLExp)
+  -> G.NamedType
   -> SelSet
-  -> Convert [(FieldName, RS.AnnFld)]
-fromSelSet fldTy flds =
+  -> m [(FieldName, RS.AnnFld)]
+fromSelSet f fldTy flds =
   forM (toList flds) $ \fld -> do
     let fldName = _fName fld
     let rqlFldName = FieldName $ G.unName $ G.unAlias $ _fAlias fld
@@ -48,7 +52,7 @@ fromSelSet fldTy flds =
           Left colInfo -> return $ RS.FCol colInfo
           Right (relInfo, tableFilter, tableLimit, _) -> do
             let relTN = riRTable relInfo
-            relSelData <- fromField relTN tableFilter tableLimit fld
+            relSelData <- fromField f relTN tableFilter tableLimit fld
             let annRel = RS.AnnRel (riName relInfo) (riType relInfo)
                          (riMapping relInfo) relSelData
             return $ RS.FRel annRel
@@ -57,19 +61,24 @@ fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
 fieldAsPath fld = nameAsPath $ _fName fld
 
 parseTableArgs
-  :: QualifiedTable -> ArgsMap -> Convert RS.TableArgs
-parseTableArgs tn args = do
-  whereExpM  <- withArgM args "where" $ convertBoolExp tn
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByResolveCtx r)
+  => ((PGColType, PGColValue) -> m S.SQLExp)
+  -> QualifiedTable -> ArgsMap -> m RS.TableArgs
+parseTableArgs f tn args = do
+  whereExpM  <- withArgM args "where" $ convertBoolExpG f tn
   ordByExpM  <- withArgM args "order_by" parseOrderBy
   limitExpM  <- withArgM args "limit" parseLimit
-  offsetExpM <- withArgM args "offset" $ asPGColVal >=> prepare
+  offsetExpM <- withArgM args "offset" $ asPGColVal >=> f
   return $ RS.TableArgs whereExpM ordByExpM limitExpM offsetExpM
 
 fromField
-  :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RS.AnnSel
-fromField tn permFilter permLimitM fld = fieldAsPath fld $ do
-  tableArgs <- parseTableArgs tn args
-  annFlds   <- fromSelSet (_fType fld) $ _fSelSet fld
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByResolveCtx r)
+  => ((PGColType, PGColValue) -> m S.SQLExp)
+  -> QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> m RS.AnnSel
+fromField f tn permFilter permLimitM fld =
+  fieldAsPath fld $ do
+  tableArgs <- parseTableArgs f tn args
+  annFlds   <- fromSelSet f (_fType fld) $ _fSelSet fld
   return $ RS.AnnSel annFlds tn Nothing permFilter permLimitM tableArgs
   where
     args = _fArguments fld
@@ -108,10 +117,12 @@ parseLimit v = do
     noIntErr = throw400 Unexpected "expecting Integer value for \"limit\""
 
 fromFieldByPKey
-  :: QualifiedTable -> S.BoolExp -> Field -> Convert RS.AnnSel
-fromFieldByPKey tn permFilter fld = fieldAsPath fld $ do
-  boolExp <- pgColValToBoolExp tn $ _fArguments fld
-  annFlds <- fromSelSet (_fType fld) $ _fSelSet fld
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByResolveCtx r)
+  => ((PGColType, PGColValue) -> m S.SQLExp)
+  -> QualifiedTable -> S.BoolExp -> Field -> m RS.AnnSel
+fromFieldByPKey f tn permFilter fld = fieldAsPath fld $ do
+  boolExp <- pgColValToBoolExpG f tn $ _fArguments fld
+  annFlds <- fromSelSet f (_fType fld) $ _fSelSet fld
   return $ RS.AnnSel annFlds tn Nothing permFilter Nothing $
     RS.noTableArgs { RS._taWhere = Just boolExp}
 
@@ -119,7 +130,7 @@ convertSelect
   :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RespTx
 convertSelect qt permFilter permLimit fld = do
   selData <- withPathK "selectionSet" $
-             fromField qt permFilter permLimit fld
+             fromField prepare qt permFilter permLimit fld
   prepArgs <- get
   return $ RS.selectP2 False (selData, prepArgs)
 
@@ -127,6 +138,6 @@ convertSelectByPKey
   :: QualifiedTable -> S.BoolExp -> Field -> Convert RespTx
 convertSelectByPKey qt permFilter fld = do
   selData <- withPathK "selectionSet" $
-             fromFieldByPKey qt permFilter fld
+             fromFieldByPKey prepare qt permFilter fld
   prepArgs <- get
   return $ RS.selectP2 True (selData, prepArgs)
