@@ -14,7 +14,7 @@ import (
 func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataCmd := &cobra.Command{
 		Use:          "metadata",
-		Short:        "Manage Hasura GraphQL Engine metdata saved in the database",
+		Short:        "Manage Hasura GraphQL Engine metadata saved in the database",
 		SilenceUsage: true,
 	}
 	metadataCmd.AddCommand(
