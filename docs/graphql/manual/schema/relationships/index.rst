@@ -17,7 +17,7 @@ an ``author`` and "``author``" of an ``article``.
 Creating relationships
 ----------------------
 
-Typically relationships are defined using foreign-key constraints. But in some cases, it might not be possible to
+Typically, relationships are defined using foreign-key constraints. But in some cases, it might not be possible to
 use foreign-key constraints to create the relation. For example, while trying to create a relationship involving a view
 as foreign-keys can't be created on views.
 
