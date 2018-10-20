@@ -1,0 +1,204 @@
+# Hasura GraphQL Engine
+
+[![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://docs.hasura.io)
+[![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
+
+
+<a href="https://discord.gg/3FNQnWj"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
+<a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
+<a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
+
+Hasura GraphQL Engine est un serveur GraphQL ultra-rapide qui vous fournit ** des API GraphQL instantanées et en temps réel sur Postgres **, avec [** déclencheurs webhook **] (event-triggers.md) sur les événements de base de données pour la logique métier asynchrone.
+
+Hasura vous aide à créer des applications GraphQL soutenues par Postgres ou à passer progressivement à GraphQL pour les applications existantes utilisant Postgres.
+
+Plus d’informations sur [hasura.io] (https://hasura.io) et sur [docs] (https://docs.hasura.io).
+
+
+
+------------------
+
+![Hasura GraphQL Engine Demo](assets/demo.gif)
+
+------------------
+
+![Hasura GraphQL Engine Realtime Demo](assets/realtime.gif)
+
+-------------------
+
+## Caractéristiques
+
+* ** Effectuer des requêtes puissantes **: filtrage intégré, pagination, recherche de modèle, insertion en bloc, mise à jour, suppression de mutations
+* ** Realtime **: Convertissez n'importe quelle requête GraphQL en requête directe à l'aide d'abonnements
+* ** Déclencher des webhooks ou des fonctions sans serveur **: Sur les événements Postgres insert / update / delete ([read more] (event-triggers.md))
+* ** Fonctionne avec les bases de données actives existantes **: pointez-le sur une base de données Postgres existante pour obtenir instantanément une API GraphQL prête à l'emploi
+* ** Contrôle d'accès détaillé **: Contrôle d'accès dynamique s'intégrant à votre système d'authentification (par exemple: auth0, firebase-auth)
+* ** Haute performance et faible encombrement **: Image de docker de ~ 15 Mo; ~ 50 Mo de RAM à 1 000 req / s; multicœur conscient
+* ** Admin UI & Migrations **: Migrations de schéma inspirées de l'interface utilisateur et des Rails
+* ** Postgres ** ❤️: Supporte les types Postgres (PostGIS / géolocalisation, etc.), convertit les vues en * graphes *, déclenche des fonctions ou des procédures stockées avec des mutations.
+
+Pour en savoir plus, consultez [https://hasura.io] (https://hasura.io) et le [docs] (https://docs.hasura.io).
+
+## Table des matières
+<! - markdown-toc start - Ne modifiez pas cette section. Exécutez M-x markdown-toc-refresh-toc ->
+**Table des matières**
+
+
+
+- [Quickstart:] (# quickstart)
+     - [Déploiement en un clic sur Heroku] (# un-clic-déploiement-sur-heroku)
+     - [Autres méthodes de déploiement] (# autres méthodes de déploiement)
+- [Architecture] (# architecture)
+- [Outillage côté client] (# outillage côté client)
+- [Ajouter une logique métier] (# add-business-logic)
+     - [Résolveurs personnalisés] (# résolveurs personnalisés)
+     - [Déclencher des webhooks sur des événements de base de données] (# trigger-webhooks-on-database-events)
+- [Démos] (# démos)
+     - [Applications en temps réel] (# applications en temps réel)
+     - [Vidéos] (# vidéos)
+- [Support et dépannage] (# support - dépannage)
+- [Contribuant] (# contribuant)
+- [Actifs de marque] (# actifs de marque)
+- [Licence] (# licence)
+
+<! - markdown-toc end ->
+## Démarrage rapide:
+
+### Déploiement en un clic sur Heroku
+
+Le moyen le plus rapide d'essayer Hasura est via Heroku.
+
+1. Cliquez sur le bouton suivant pour déployer GraphQL Engine sur Heroku avec le complément gratuit Postgres:
+
+    [! [Déployer sur Heroku] (https://www.herokucdn.com/deploy/button.svg)] (https://heroku.com/deploy?template=https://github.com/hasura/graphql- moteur-heroku)
+
+2. Ouvrez la console Hasura
+
+   Visitez `https: // <nom-app> .herokuapp.com` (* remplacez \ <nom-app \> avec votre nom d'application *) pour ouvrir la console d'administration.
+
+3. Faites votre première requête GraphQL
+
+   Créez une table et lancez instantanément votre première requête. Suivez ce [guide simple] (https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+
+### Autres méthodes de déploiement
+
+Pour les options de déploiement et de configuration avancée basées sur Docker, voir [déploiement
+guides] (https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) ou
+[install manifestes] (install-manifestes).
+
+## Architecture
+
+Hasura GraphQL Engine gère une instance de base de données Postgres et peut accepter les requêtes GraphQL de vos applications clientes. Il peut être configuré pour fonctionner avec votre système d'authentification existant et peut gérer le contrôle d'accès à l'aide de règles au niveau du champ avec des variables dynamiques de votre système d'authentification.
+
+Vous pouvez également placer le moteur derrière un proxy GraphQL central qui gère plusieurs API GraphQL via l'agrafage de schéma.
+
+! [Architecture Hasura GraphQL Engine] (assets / hasura-arch.svg)
+
+## Outillage côté client
+
+Hasura fonctionne avec n’importe quel client GraphQL. Nous vous recommandons d’utiliser [Apollo Client] (https://github.com/apollographql/apollo-client). Voir [awesome-graphql] (https://github.com/chentsulin/awesome-graphql) pour obtenir une liste des clients.
+
+## Ajouter une logique métier
+
+### Résolveurs personnalisés
+
+Ajoutez des résolveurs personnalisés en plus du moteur Hasura GraphQL. Idéal pour déléguer
+aux API HTTP, appelant directement une autre source de données ou entreprise d'écriture
+la logique dans le code - [en savoir plus] (community / boilerplates / custom-resolvers).
+
+### Déclencher des webhooks sur les événements de base de données
+
+Ajoutez une logique métier asynchrone déclenchée en fonction d'événements de base de données.
+Idéal pour les notifications, les pipelines de données de Postgres ou asynchrones
+processing - [read more] (event-triggers.md).
+
+## Démos
+
+Découvrez tous les exemples d'applications dans le
+répertoire [communauté / exemples] (communauté / exemples).
+
+### Applications en temps réel
+
+- Application de discussion de groupe construite avec React, comprend un indicateur de frappe, les utilisateurs en ligne et les nouveaux
+  notifications de message.
+  - [Essayez-le] (https://chat-example-trial-roar.herokuapp.com/)
+  - [Tutoriel] (communauté / exemples / realtime-chat)
+  - [Parcourir les API] (https://hasura-realtime-group-chat.herokuapp.com/)
+
+- Application de localisation en temps réel qui montre un véhicule en marche qui modifie le GPS actuel
+  coordonnées se déplaçant sur une carte.
+  - [Essayez-le] (https://hasura.github.io/realtime-location-app/)
+  - [Tutoriel] (communauté / exemples / realtime-localisation-tracking)
+  - [Parcourir les API] (https://realtime-backend.herokuapp.com/)
+
+- Un tableau de bord en temps réel pour les agrégations de données sur des données en constante évolution.
+  - [Essayez-le] (https://shahidh.in/hasura-realtime-poll/)
+  - [Tutoriel] (communauté / exemples / realtime-poll)
+  - [Parcourir les API] (https://hasura-realtime-poll.herokuapp.com/)
+
+### Vidéos
+
+* [Ajouter GraphQL à une instance GitLab auto-hébergée] (https://www.youtube.com/watch?v=a2AhxKqd82Q) (* 3: 44 min *)
+* [Application Todo avec backend Auth0 et GraphQL] (https://www.youtube.com/watch?v=15ITBYnccgc) (* 4 h 00 *)
+* [GraphQL sur GitLab intégré à l'authentification GitLab] (https://www.youtube.com/watch?v=m1ChRhRLq7o) (* 4 h 05 *)
+* [Tableau de bord pour 10 millions de déplacements avec géolocalisation (PostGIS, échelle de temps)]] (https://www.youtube.com/watch?v=tsY573yyGWA) (* 03:06 mins *)
+
+
+## Assistance et dépannage
+
+La documentation et la communauté vous aideront à résoudre la plupart des problèmes. Si vous avez rencontré un bogue ou avez besoin de nous contacter, vous pouvez nous contacter par l'un des moyens suivants:
+
+* Support et commentaires: [Discord] (https://discord.gg/3FNQnWj)
+* Suivi des problèmes et des bugs: [problèmes GitHub] (https://github.com/hasura/graphql-engine/issues)
+* Suivez les mises à jour du produit: [@HasuraHQ] (https://twitter.com/hasurahq)
+* Parlez-nous sur notre [site web chat] (https://hasura.io)
+
+Nous nous sommes engagés à promouvoir un environnement ouvert et accueillant dans la communauté. Veuillez vous reporter au [Code de conduite] (code-of-conduct.md).
+
+Si vous souhaitez signaler un problème de sécurité, veuillez [lire ceci] (SECURITY.md).
+
+## Contribuant
+
+Consultez notre [guide de contribution] (CONTRIBUTING.md) pour plus de détails.
+
+## actifs de marque
+
+Les atouts de la marque Hasura (logos, mascotte Hasura, alimentés par des badges, etc.) peuvent être
+trouvé dans le dossier [assets / brand] (assets / brand). N'hésitez pas à les utiliser dans votre
+application / site Web, etc. Nous serions ravis si vous ajoutez le "Powered by Hasura"
+badge à vos applications construites avec Hasura. ❤️
+
+<div style = "display: flex;">
+  <img src = "assets / marque / powered_by_hasura_black.svg" width = "150px" />
+  <img src = "assets / marque / powered_by_hasura_white.svg" width = "150px" />
+</ div>
+
+`` `html
+
+<!-- For light backgrounds -->
+<a href="https://hasura.io">
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black.svg" />
+</a>
+
+<!-- For dark backgrounds -->
+<a href="https://hasura.io">
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white.svg" />
+</a>
+```
+
+## Licence
+
+Le moteur GraphQL principal est disponible sous le [GNU Affero General Public
+Licence v3] (https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0), le même
+licence en tant que [MongoDB] (https://www.mongodb.com/community/licensing). On a
+écrit plus sur ce que vous pouvez et ne pouvez pas faire sous AGPL
+[ici] (https://github.com/hasura/graphql-engine/wiki/License-Explained).
+
+** Licences commerciales ** qui combinent le moteur Hasura GraphQL avec le support et
+Les SLA sont disponibles sur demande. N'hésitez pas à nous contacter à l'adresse build@hasura.io
+ou sur notre [site de discussion] (https://hasura.io).
+
+Tous les ** autres contenus ** (à l’exception de ceux de [`server`] (serveur), [` cli`] (cli) et
+Les répertoires [`console`] (console)) sont disponibles sous la [Licence MIT] (communauté LICENSE).
+Ceci inclut tout ce qui se trouve dans les dossiers [`docs`] (docs) et [` community`] (community)
+répertoires.
