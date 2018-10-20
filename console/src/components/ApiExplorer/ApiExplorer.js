@@ -68,6 +68,7 @@ class ApiExplorer extends Component {
         numberOfTables={this.props.tables.length}
         headerFocus={this.props.headerFocus}
         queryParams={this.props.location.query}
+        serverVersion={this.props.serverVersion}
       />
     );
 
