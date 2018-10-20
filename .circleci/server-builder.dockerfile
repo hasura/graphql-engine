@@ -6,7 +6,6 @@ ARG stack_ver="1.7.1"
 
 # Install GNU make, curl, git and docker client. Required to build the server
 RUN apt-get -y update \
-    && apt-get -y upgrade \
     && apt-get install -y curl g++ gcc libc6-dev libpq-dev libffi-dev libgmp-dev make xz-utils zlib1g-dev git gnupg upx netcat python3 python3-pip \
     && curl -Lo /tmp/docker-${docker_ver}.tgz https://download.docker.com/linux/static/stable/x86_64/docker-${docker_ver}.tgz \
     && tar -xz -C /tmp -f /tmp/docker-${docker_ver}.tgz \

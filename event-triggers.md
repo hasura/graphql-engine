@@ -8,7 +8,7 @@ Trigger webhooks on database events using Hasura GraphQL Engine's event triggers
 
 * **Build reactive & async apps/features**: Trigger asynchronous serverless or cloud functions to reduce infrastructure costs and simplify DevOps for developers.
 
-* **Atomic & Reliable**: Using native Postgres triggers, every relevant action on the database is captured as an event. Even if Hasura is down or being updated, events will be captured and delivered as soon as possible with an *atleast-one* guarantee. You can even configure delivery policies like `max_retries` and `retry_interval`.
+* **Atomic & Reliable**: Using native Postgres triggers, every relevant action on the database is captured as an event. Even if Hasura is down or being updated, events will be captured and delivered as soon as possible with an *atleast-once* guarantee. You can even configure delivery policies like `max_retries` and `retry_interval`.
 
 * **Scalable**: The event-triggers system is horizontally scalable - if you need to handle more events, just throw more resources at it!
 
@@ -33,7 +33,7 @@ The fastest way to try event triggers out is via Heroku.
 
 3. Configure your first event trigger and webhook
 
-   Create a table, configure the db update you want to use as a trigger and instantly invoke a webhook by adding a new row in your table. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-event-trigger.html).
+   Create a table, configure the database update you want to use as a trigger and instantly invoke a webhook by adding a new row in your table. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-event-trigger.html).
 
 ### Other deployment methods
 

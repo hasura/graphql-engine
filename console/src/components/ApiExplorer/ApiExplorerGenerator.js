@@ -4,6 +4,7 @@ const generatedApiExplorer = connect => {
   const mapStateToProps = state => {
     return {
       ...state.apiexplorer,
+      serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
       credentials: {},
       dataApiExplorerData: { ...state.dataApiExplorer },
       dataHeaders: state.tables.dataHeaders,
