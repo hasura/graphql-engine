@@ -12,7 +12,7 @@ verified by GraphQL engine to authorize and get metadata about the request
 
 .. image:: ../../../img/graphql/manual/auth/jwt-auth.png
 
-The JWT is decoded, the signature is verified and then it is asserted that the
+The JWT is decoded, the signature is verified, then it is asserted that the
 current role of the user is in the list of allowed roles. If the authorization
 passes, then all of the ``x-hasura-*`` values in the claim is used for the
 permissions system.
