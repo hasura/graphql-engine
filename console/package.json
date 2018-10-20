@@ -60,7 +60,7 @@
     "graphiql": "^0.11.11",
     "graphql": "^0.13.2",
     "graphql-voyager": "^1.0.0-rc.26",
-    "hasura-console-graphiql": "0.0.5",
+    "hasura-console-graphiql": "0.0.6",
     "history": "^3.0.0",
     "hoist-non-react-statics": "^1.0.3",
     "invariant": "^2.2.0",
