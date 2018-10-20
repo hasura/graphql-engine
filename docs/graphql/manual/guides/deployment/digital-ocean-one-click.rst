@@ -2,7 +2,7 @@ Hasura GraphQL Engine DigitalOcean One-click App
 ================================================
 
 Hasura GraphQL Engine is available as a One-click app on DigitalOcean. It is
-packed with a Postgres database and `Caddy <https://caddyserver.com/>`_
+packed with a Postgres database and `Caddy <https://caddyserver.com/>`__
 webserver for easy and automatic HTTPS using Let's Encrypt.
 
 
@@ -27,14 +27,14 @@ The Hasura console will be at:
 .. code-block:: bash
 
    http://your_droplet_ip/console
-  
+
 
 The GraphQL Endpoint will be:
 
 .. code-block:: bash
 
    http://your_droplet_ip/v1alpha1/graphql
-  
+
 
 A Postgres database is also provisioned on the Droplet. Using the console, you
 can create a table on this Postgres instance and make your first GraphQL query.
@@ -47,15 +47,14 @@ can create a table on this Postgres instance and make your first GraphQL query.
 
 Navigate to ``Data -> Create table`` on the console and create a table called ``profile`` with the following columns:
 
-.. table:: ``profile``
-   :widths: auto
+``profile``
 
-   ===============  ========
-     column name      type
-   ===============  ========
-   ``id``             Integer (auto-increment)
-   ``name``           Text
-   ===============  ========
+===============  ========
+ column name      type
+===============  ========
+``id``             Integer (auto-increment)
+``name``           Text
+===============  ========
 
 Choose ``id`` as the Primary key and click the ``Create`` button.
 
@@ -83,7 +82,7 @@ Once the table is created, go to the ``Insert Row`` tab and insert some sample r
 
 Switch to the ``GraphiQL`` tab on top and execute the following GraphQL query:
 
-.. code-block:: bash graphql
+.. code-block:: graphql
 
    query {
      profile {
@@ -101,7 +100,7 @@ Secure the GraphQL endpoint
 By default Hasura is exposed without any access key. Anyone can read and write
 to your database using GraphQL. When deploying to production, you should secure
 the endpoint by adding an access key and then setting up permission rules on
-tables. 
+tables.
 
 To add an access key, follow the steps given below:
 
@@ -110,19 +109,19 @@ To add an access key, follow the steps given below:
    .. code-block:: bash
 
       ssh root@your_droplet_ip
-             
+
 
 2. Goto ``/etc/hasura`` directory:
 
    .. code-block:: bash
 
       cd /etc/hasura
-          
+
 
 3. Edit ``docker-compose.yaml`` and un-comment the line that mentions access key.
-   Also change it to some unique secret: 
+   Also change it to some unique secret:
 
-   .. code-block:: bash 
+   .. code-block:: bash
 
       vim docker-compose.yaml
 
@@ -132,14 +131,14 @@ To add an access key, follow the steps given below:
       ...
 
       # type ESC followed by :wq to save and quit
-          
+
 
 4. Update the container:
 
-   .. code-block:: bash 
+   .. code-block:: bash
 
       docker-compose up -d
-          
+
 
 That's it. Visit the console at ``http://your_droplet_ip/console`` and it should
 prompt for the access key. Further API requests can be made by adding the
@@ -148,14 +147,14 @@ following header:
 .. code-block:: bash
 
    X-Hasura-Access-Key: mysecretaccesskey
-  
+
 
 Adding a domain & Enabling HTTPS
 --------------------------------
 
 If you own a domain, you can enable HTTPS on this Droplet by mapping the domain
 to the Droplet IP. The One-Click Droplet is configured with Caddy which is an
-HTTP/2 web server with automatic HTTPS using Let's Encrypt. 
+HTTP/2 web server with automatic HTTPS using Let's Encrypt.
 
 1. Go to your domain's DNS dashboard and add an A record mapping the domain to the Droplet IP.
 2. Connect to the Droplet via SSH:
@@ -163,14 +162,14 @@ HTTP/2 web server with automatic HTTPS using Let's Encrypt.
    .. code-block:: bash
 
       ssh root@your_droplet_ip
-        
+
 
 3. Goto ``/etc/hasura`` directory:
 
    .. code-block:: bash
 
       cd /etc/hasura
-        
+
 
 4. Edit ``Caddyfile`` and change ``:80`` to your domain:
 
@@ -187,14 +186,14 @@ HTTP/2 web server with automatic HTTPS using Let's Encrypt.
       ...
 
       # type ESC followed by :wq to save and quit
-        
+
 
 5. Restart the container:
 
    .. code-block:: bash
 
       docker-compose restart caddy
-        
+
 
 Visit ``https://your_domain/console`` to visit the Hasura console.
 
@@ -203,21 +202,21 @@ Updating to latest version
 
 When a new version of GraphQL Engine is released, you can upgrade to it by just
 changing the version tag in docker-compose.yaml. You can find the latest
-releases in the GitHub releases page. 
+releases in the GitHub releases page.
 
 1. Connect to the Droplet via SSH:
 
    .. code-block:: bash
 
       ssh root@your_droplet_ip
-        
+
 
 2. Goto ``/etc/hasura`` directory:
 
    .. code-block:: bash
 
       cd /etc/hasura
-        
+
 
 3. Edit ``docker-compose.yaml`` and change the image tag to the latest one:
 
@@ -231,14 +230,14 @@ releases in the GitHub releases page.
       ...
 
       # type ESC followed by :wq to save and quit
-        
+
 
 4. Restart the container:
 
    .. code-block:: bash
 
       docker-compose up -d
-        
+
 
 Using a different database
 --------------------------
@@ -248,7 +247,7 @@ Using a different database
    .. code-block:: bash
 
       ssh root@your_droplet_ip
-        
+
 
 2. Goto ``/etc/hasura`` directory:
 
@@ -260,7 +259,7 @@ Using a different database
 
 4. Edit ``docker-compose.yaml`` and change the database URL:
 
-   .. code-block:: bash 
+   .. code-block:: bash
 
       vim docker-compose.yaml
 
@@ -270,7 +269,7 @@ Using a different database
       ...
 
       # type ESC followed by :wq to save and quit
-          
+
 
 Logs
 ----
@@ -281,14 +280,14 @@ Logs
    .. code-block:: bash
 
       ssh root@your_droplet_ip
-        
+
 
 2. Goto ``/etc/hasura`` directory:
 
    .. code-block:: bash
 
       cd /etc/hasura
-        
+
 3. To checks logs for any contaier, use the follwing command:
 
    .. code-block:: bash
@@ -297,13 +296,3 @@ Logs
 
 Where ``<container_name>`` is one of ``graphql-engine``, ``postgres`` or
 ``caddy``.
-
-Support & Troubleshooting
--------------------------
-
-Feel free to talk to us on `Discord <https://discord.gg/3FNQnWj>`_ about anything
-and everything. You can also contact us using one of the following channels: 
-
-* Support & feedback: `Discord <https://discord.gg/3FNQnWj>`_
-* Issue & bug tracking: `GitHub issues <https://github.com/hasura/graphql-engine/issues>`_
-* Follow product updates: `@HasuraHQ <https://twitter.com/hasurahq>`_

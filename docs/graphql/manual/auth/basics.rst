@@ -5,7 +5,7 @@ In this section, we're going to set up a simple access control rule for restrict
 We're working with a simple ``author`` table where users have some information stored about themselves.
 
 Create an author table
----------------------
+----------------------
 
 Head to your console and create an ``author`` table with the following columns:
 
