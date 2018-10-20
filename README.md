@@ -27,13 +27,13 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 ## Features
 
 * **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations
-* **Realtime**: Convert any GraphQL query to a live query by using subscriptions
+* **Real-time**: Convert any GraphQL query to a live query by using subscriptions
 * **Trigger webhooks or serverless functions**: On Postgres insert/update/delete events ([read more](event-triggers.md))
 * **Works with existing, live databases**: Point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
-* **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
+* **Fine-grained access control**: Dynamic access control that integrates with your auth system (e.g. auth0, firebase-auth)
 * **High-performance & low-footprint**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
 * **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
-* **Postgres** ❤️: Supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
+* **Postgres** ❤️: Supports Postgres types (PostGIS/geolocation, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
 
 Read more at [https://hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
 
