@@ -30,6 +30,7 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.Wai.Middleware.Static          as MS
 
 import qualified Database.PG.Query                      as Q
+import qualified Hasura.GraphQL.Explain                 as GE
 import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
@@ -189,22 +190,6 @@ withLock lk action = do
     acquireLock = liftIO $ takeMVar lk
     releaseLock = liftIO $ putMVar lk ()
 
--- v1ExplainHandler :: RQLExplain -> Handler BL.ByteString
--- v1ExplainHandler expQuery = dbAction
---   where
---     dbAction = do
---       onlyAdmin
---       scRef <- scCacheRef . hcServerCtx <$> ask
---       schemaCache <- liftIO $ readIORef scRef
---       pool <- scPGPool . hcServerCtx <$> ask
---       isoL <- scIsolation . hcServerCtx <$> ask
---       runExplainQuery pool isoL userInfo (fst schemaCache) selectQ
-
---     selectQ = rqleQuery expQuery
---     role = rqleRole expQuery
---     headers = M.toList $ rqleHeaders expQuery
---     userInfo = UserInfo role headers
-
 v1QueryHandler :: RQLQuery -> Handler BL.ByteString
 v1QueryHandler query = do
   lk <- scCacheLock . hcServerCtx <$> ask
@@ -237,12 +222,14 @@ v1Alpha1GQHandler query = do
   isoL <- scIsolation . hcServerCtx <$> ask
   GH.runGQ pool isoL userInfo (snd cache) query
 
--- v1Alpha1GQSchemaHandler :: Handler BL.ByteString
--- v1Alpha1GQSchemaHandler = do
---   scRef <- scCacheRef . hcServerCtx <$> ask
---   schemaCache <- liftIO $ readIORef scRef
---   onlyAdmin
---   GS.generateGSchemaH schemaCache
+gqlExplainHandler :: GE.GQLExplain -> Handler BL.ByteString
+gqlExplainHandler query = do
+  onlyAdmin
+  scRef <- scCacheRef . hcServerCtx <$> ask
+  cache <- liftIO $ readIORef scRef
+  pool <- scPGPool . hcServerCtx <$> ask
+  isoL <- scIsolation . hcServerCtx <$> ask
+  GE.explainGQLQuery pool isoL (snd cache) query
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
@@ -332,9 +319,9 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
       query <- parseBody
       v1QueryHandler query
 
-    -- post "v1/query/explain" $ mkSpockAction encodeQErr serverCtx $ do
-    --   expQuery <- parseBody
-    --   v1ExplainHandler expQuery
+    post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
+      expQuery <- parseBody
+      gqlExplainHandler expQuery
 
     post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr serverCtx $ do
       query <- parseBody
