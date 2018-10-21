@@ -47,16 +47,16 @@ before-mentioned sections).
 - Make sure you test against the latest released version. It is possible we
   already fixed the bug you're experiencing.
 
-- Provide steps to reproduce the issue, including Postgres version,
+- Provide the steps to reproduce the issue, including Postgres version,
   graphql-engine version and the provider you are running on (Heroku, Docker
   etc.).
 
-- Please include logs of the server, if relevant.
+- Please include the logs of the server, if relevant otherwise leave it..
 
 
 ## Common guidelines
 
-- Please make sure there is an issue associated with the work that you're doing.
+- Please make sure that there is an issue associated with the work that you're doing.
 
 - If you're working on an issue, please comment that you are doing so to prevent
   duplicate work by others also.
