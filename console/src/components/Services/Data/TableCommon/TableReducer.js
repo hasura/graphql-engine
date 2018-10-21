@@ -152,9 +152,9 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           tableName: '',
           name: '',
           isObjRel: null,
-          lcol: '',
+          lcol: [],
           rTable: null,
-          rcol: '',
+          rcol: [],
           manualColumns: [],
         },
       };

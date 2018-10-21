@@ -74,9 +74,9 @@ const defaultModifyState = {
     name: '',
     tableName: '',
     isObjRel: null,
-    lcol: '',
+    lcol: [],
     rTable: null,
-    rcol: '',
+    rcol: [],
     manualColumns: [],
     isManualExpanded: false,
     manualRelInfo: {

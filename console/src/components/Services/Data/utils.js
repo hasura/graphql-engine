@@ -67,27 +67,27 @@ const findAllFromRel = (schemas, curTable, rel) => {
       rtable = rtable.name;
     }
     const columnMapping = rel.rel_def.manual_configuration.column_mapping;
-    lcol = Object.keys(columnMapping)[0];
-    rcol = columnMapping[lcol];
+    lcol = Object.keys(columnMapping);
+    rcol = lcol.map(column => columnMapping[column]);
   }
 
   // for table
   if (foreignKeyConstraintOn !== undefined) {
     // for object relationship
     if (rel.rel_type === 'object') {
-      lcol = foreignKeyConstraintOn;
+      lcol = [foreignKeyConstraintOn];
 
       const fkc = findFKConstraint(curTable, lcol);
       if (fkc) {
         rtable = fkc.ref_table;
-        rcol = fkc.column_mapping[lcol];
+        rcol = [fkc.column_mapping[lcol]];
       }
     }
 
     // for array relationship
     if (rel.rel_type === 'array') {
       rtable = foreignKeyConstraintOn.table;
-      rcol = foreignKeyConstraintOn.column;
+      rcol = [foreignKeyConstraintOn.column];
       if (rtable.schema) {
         // if schema exists, its not public schema
         rtable = rtable.name;
@@ -95,10 +95,9 @@ const findAllFromRel = (schemas, curTable, rel) => {
 
       const rtableSchema = schemas.find(x => x.table_name === rtable);
       const rfkc = findFKConstraint(rtableSchema, rcol);
-      lcol = rfkc.column_mapping[rcol];
+      lcol = [rfkc.column_mapping[rcol]];
     }
   }
-
   return { lcol, rtable, rcol };
 };
 
