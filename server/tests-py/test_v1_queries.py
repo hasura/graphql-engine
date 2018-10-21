@@ -1,4 +1,3 @@
-
 import pytest
 import yaml
 from validate import check_query_f
@@ -16,6 +15,7 @@ class TestV1SelectBasic:
 
     def test_select_col_not_present(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/select_article_col_not_present_err.yaml')
+
     def test_nested_select_query_where(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/nested_select_where_query_author_article.yaml')
 
@@ -23,12 +23,16 @@ class TestV1SelectBasic:
         check_query_f(hge_ctx, self.dir + '/select_user.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        self.dir = "queries/v1/select/basic"
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+    def set_dir(self, request, setup):
+        self.dir = setup['dir']
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        folder = "queries/v1/select/basic"
+        st_code, resp = hge_ctx.v1q_f(folder + '/setup.yaml')
         assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        yield {'dir' : folder}
+        st_code, resp = hge_ctx.v1q_f(folder + '/teardown.yaml')
         assert st_code == 200, resp
 
 
@@ -47,12 +51,16 @@ class TestV1SelectLimits:
         check_query_f(hge_ctx, self.dir + '/select_query_article_neg_limit_error.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):  
-        self.dir = 'queries/v1/select/limits'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+    def set_dir(self, request, setup):
+        self.dir = setup['dir']
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        folder = 'queries/v1/select/limits'
+        st_code, resp = hge_ctx.v1q_f(folder + '/setup.yaml')
         assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        yield {'dir' : folder}
+        st_code, resp = hge_ctx.v1q_f(folder + '/teardown.yaml')
         assert st_code == 200, resp
 
 
@@ -71,12 +79,16 @@ class TestV1SelectOffset:
         check_query_f(hge_ctx, self.dir + '/select_query_article_neg_offset_error.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        self.dir = 'queries/v1/select/offset'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+    def set_dir(self, request, setup):
+        self.dir = setup['dir']
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        folder = 'queries/v1/select/offset'
+        st_code, resp = hge_ctx.v1q_f(folder + '/setup.yaml')
         assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        yield {'dir' : folder}
+        st_code, resp = hge_ctx.v1q_f(folder + '/teardown.yaml')
         assert st_code == 200, resp
 
 
@@ -119,12 +131,16 @@ class TestV1SelectBoolExpBasic:
         check_query_f(hge_ctx, self.dir + '/select_article_author_not_published_or_not_registered.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        self.dir = 'queries/v1/select/boolexp/basic'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+    def set_dir(self, request, setup):
+        self.dir = setup['dir']
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        folder = 'queries/v1/select/boolexp/basic'
+        st_code, resp = hge_ctx.v1q_f(folder + '/setup.yaml')
         assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        yield {'dir' : folder}
+        st_code, resp = hge_ctx.v1q_f(folder + '/teardown.yaml')
         assert st_code == 200, resp
 
 
@@ -149,12 +165,16 @@ class TestV1SelectBoolExpSearch:
         check_query_f(hge_ctx, self.dir + '/select_city_where_not_similar.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        self.dir = 'queries/v1/select/boolexp/search'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+    def set_dir(self, request, setup):
+        self.dir = setup['dir']
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        folder = 'queries/v1/select/boolexp/search'
+        st_code, resp = hge_ctx.v1q_f(folder + '/setup.yaml')
         assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        yield {'dir' : folder}
+        st_code, resp = hge_ctx.v1q_f(folder + '/teardown.yaml')
         assert st_code == 200, resp
 
 
@@ -173,12 +193,16 @@ class TestV1SelectPermissions:
         check_query_f(hge_ctx, self.dir + '/user_cannot_access_remarks_col.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        self.dir = 'queries/v1/select/permissions'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+    def set_dir(self, request, setup):
+        self.dir = setup['dir']
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        folder = 'queries/v1/select/permissions'
+        st_code, resp = hge_ctx.v1q_f(folder + '/setup.yaml')
         assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        yield {'dir' : folder}
+        st_code, resp = hge_ctx.v1q_f(folder + '/teardown.yaml')
         assert st_code == 200, resp
 
 
@@ -194,8 +218,8 @@ class TestV1InsertBasic:
         check_query_f(hge_ctx, self.dir + "/order_col_shipped_null.yaml")
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):  
-        self.dir = "queries/v1/insert/basic"    
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/v1/insert/basic"
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
         yield
@@ -204,7 +228,7 @@ class TestV1InsertBasic:
 
 
 class TestV1InsertOnConflict:
-   
+
     def test_author_on_conflict_update(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/upsert_author.yaml')
 
@@ -224,8 +248,8 @@ class TestV1InsertOnConflict:
        check_query_f(hge_ctx, self.dir + "/article_unexpected_on_conflict_constraint_error.yaml")
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):  
-        self.dir = "queries/v1/insert/onconflict"    
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/v1/insert/onconflict"
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
         yield
@@ -240,7 +264,7 @@ class TestV1InsertPermissions(object):
 
     def test_user_role_on_conflict_ignore(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + "/author_on_conflict_ignore_user_role.yaml")
-    
+
     def test_role_has_no_permissions_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + "/address_permission_error.yaml")
 
@@ -327,13 +351,13 @@ class TestV1UpdatePermissions:
 
 
 class TestV1Delete:
- 
+
     def test_delete_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/delete_article.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):  
-        self.dir = "queries/v1/delete"    
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/v1/delete"
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
         yield
@@ -355,8 +379,8 @@ class TestMetadata:
         check_query_f(hge_ctx, self.dir + '/dump_internal_state.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):  
-        self.dir = "queries/v1/metadata"    
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/v1/metadata"
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
         yield

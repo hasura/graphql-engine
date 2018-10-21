@@ -32,13 +32,18 @@ class TestGraphQLQueryBasic:
         check_query_f(hge_ctx, "queries/graphql_query/basic/select_query_user.yaml")
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        self.dir = 'queries/graphql_query/basic'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+    def set_dir(self, request, setup):
+        self.dir = setup['dir']
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        folder = 'queries/graphql_query/basic'
+        st_code, resp = hge_ctx.v1q_f(folder + '/setup.yaml')
         assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        yield {'dir' : folder}
+        st_code, resp = hge_ctx.v1q_f(folder + '/teardown.yaml')
         assert st_code == 200, resp
+
 
 class TestGraphQLQueryLimits:
 
@@ -55,13 +60,18 @@ class TestGraphQLQueryLimits:
         check_query_f(hge_ctx, self.dir + '/select_query_article_neg_limit_error.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        self.dir = 'queries/graphql_query/limits'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+    def set_dir(self, request, setup):
+        self.dir = setup['dir']
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        folder = 'queries/graphql_query/limits'
+        st_code, resp = hge_ctx.v1q_f(folder + '/setup.yaml')
         assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        yield {'dir' : folder}
+        st_code, resp = hge_ctx.v1q_f(folder + '/teardown.yaml')
         assert st_code == 200, resp
+
 
 class TestGraphQLQueryOffsets:
 
@@ -78,12 +88,16 @@ class TestGraphQLQueryOffsets:
         check_query_f(hge_ctx, self.dir + '/select_query_article_neg_offset_error.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        self.dir = 'queries/graphql_query/offset'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+    def set_dir(self, request, setup):
+        self.dir = setup['dir']
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        folder = 'queries/graphql_query/offset'
+        st_code, resp = hge_ctx.v1q_f(folder + '/setup.yaml')
         assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        yield {'dir' : folder}
+        st_code, resp = hge_ctx.v1q_f(folder + '/teardown.yaml')
         assert st_code == 200, resp
 
 
@@ -126,12 +140,16 @@ class TestGraphQLQueryBoolExpBasic:
         check_query_f(hge_ctx, self.dir + '/select_article_author_not_published_or_not_registered.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        self.dir = 'queries/graphql_query/boolexp/basic'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+    def set_dir(self, request, setup):
+        self.dir = setup['dir']
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        folder = 'queries/graphql_query/boolexp/basic'
+        st_code, resp = hge_ctx.v1q_f(folder + '/setup.yaml')
         assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        yield {'dir' : folder}
+        st_code, resp = hge_ctx.v1q_f(folder + '/teardown.yaml')
         assert st_code == 200, resp
 
 
@@ -150,12 +168,16 @@ class TestGraphqlQueryPermissions:
         check_query_f(hge_ctx, self.dir + '/user_cannot_access_remarks_col.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        self.dir = 'queries/graphql_query/permissions'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+    def set_dir(self, request, setup):
+        self.dir = setup['dir']
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        folder = 'queries/graphql_query/permissions'
+        st_code, resp = hge_ctx.v1q_f(folder + '/setup.yaml')
         assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        yield {'dir' : folder}
+        st_code, resp = hge_ctx.v1q_f(folder + '/teardown.yaml')
         assert st_code == 200, resp
 
 
@@ -180,12 +202,16 @@ class TestGraphQLQueryBoolExpSearch:
         check_query_f(hge_ctx, self.dir + '/select_city_where_not_similar.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        self.dir = 'queries/graphql_query/boolexp/search'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+    def set_dir(self, request, setup):
+        self.dir = setup['dir']
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        folder = 'queries/graphql_query/boolexp/search'
+        st_code, resp = hge_ctx.v1q_f(folder + '/setup.yaml')
         assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        yield {'dir' : folder}
+        st_code, resp = hge_ctx.v1q_f(folder + '/teardown.yaml')
         assert st_code == 200, resp
 
 class TestGraphQLQueryBoolExpJsonB:
@@ -212,10 +238,14 @@ class TestGraphQLQueryBoolExpJsonB:
         check_query_f(hge_ctx, self.dir + '/select_product_jsonb_has_keys_all_ram_touchscreen.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        self.dir = 'queries/graphql_query/boolexp/jsonb'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+    def set_dir(self, request, setup):
+        self.dir = setup['dir']
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        folder = 'queries/graphql_query/boolexp/jsonb'
+        st_code, resp = hge_ctx.v1q_f(folder + '/setup.yaml')
         assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        yield {'dir' : folder}
+        st_code, resp = hge_ctx.v1q_f(folder + '/teardown.yaml')
         assert st_code == 200, resp
