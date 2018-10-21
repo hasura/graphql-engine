@@ -14,22 +14,21 @@ import qualified Database.PG.Query       as Q
 import qualified Hasura.SQL.DML          as S
 
 import qualified Data.Aeson              as J
-import qualified Data.ByteString.Builder as BB
 import qualified Data.FileEmbed          as FE
 import qualified Data.Text               as T
 
 buildInsTrig :: QualifiedTable -> Q.Query
 buildInsTrig qt@(QualifiedTable _ tn) =
   Q.fromBuilder $ mconcat
-  [ BB.string7 "CREATE TRIGGER " <> toSQL tn
-  , BB.string7 " INSTEAD OF INSERT ON " <> toSQL qt
-  , BB.string7 " FOR EACH ROW EXECUTE PROCEDURE "
-  , toSQL qt <> BB.string7 "();"
+  [ "CREATE TRIGGER " <> toSQL tn
+  , " INSTEAD OF INSERT ON " <> toSQL qt
+  , " FOR EACH ROW EXECUTE PROCEDURE "
+  , toSQL qt <> "();"
   ]
 
 dropInsTrigFn :: QualifiedTable -> Q.Query
 dropInsTrigFn fn =
-  Q.fromBuilder $ BB.string7 "DROP FUNCTION " <> toSQL fn <> "()"
+  Q.fromBuilder $ "DROP FUNCTION " <> toSQL fn <> "()"
 
 getInsTrigTmplt :: (MonadError QErr m) => m GingerTmplt
 getInsTrigTmplt =
@@ -45,8 +44,7 @@ buildInsTrigFn
   => QualifiedTable -> QualifiedTable -> S.BoolExp -> m Q.Query
 buildInsTrigFn fn tn be = do
   insTmplt <- getInsTrigTmplt
-  return $ Q.fromBuilder $ BB.string7 $ T.unpack $
-    renderGingerTmplt tmpltVals insTmplt
+  return $ Q.fromText $ renderGingerTmplt tmpltVals insTmplt
   where
     tmpltVals = J.object [ "function_name" J..= toSQLTxt fn
                          , "table_name" J..= toSQLTxt tn
