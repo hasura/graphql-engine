@@ -8,6 +8,13 @@ class TestGraphQLInsert(object):
     def test_inserts_author_article(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + "/author_article.yaml")
 
+    def test_inserts_various_postgres_types(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/insert_various_postgres_types.yaml")
+
+    @pytest.mark.xfail(reason="Refer https://github.com/hasura/graphql-engine/issues/348")
+    def test_insert_into_array_col_with_array_input(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/insert_into_array_col_with_array_input.yaml")
+
     def test_insert_using_variable(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + "/person_jsonb_variable.yaml")
 

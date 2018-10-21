@@ -10,9 +10,6 @@ if not pytest.config.getoption("--hge-jwt-key-file"):
 
 class TestJWTBasic:
 
-    def default_conf_and_claims():
-        return (conf, claims)
-
     def test_jwt_invalid_role_in_request_header(self, hge_ctx):
         self.claims['https://hasura.io/jwt/claims'] = {
             "x-hasura-user-id": "1",

@@ -57,7 +57,6 @@ def run(keyfile, certfile, server_class=http.server.HTTPServer, handler_class=S,
     httpd.serve_forever()
 
 if __name__ == "__main__":
-    from sys import argv
 
     if len(sys.argv) != 4:
         print("Usage: python webhook.py port keyfile certfile")
