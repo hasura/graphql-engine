@@ -85,7 +85,7 @@ guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) or
 
 ## Architecture
 
-The Hasura GraphQL Engine fronts a Postgres database instance and can accept GraphQL requests from your client apps. It can be configured to work with your existing auth system and can handle access control using field-level rules with dynamic variables from your auth system.
+The Hasura GraphQL Engine fronts a Postgres database instance and can accept the GraphQL requests from your client apps. It can be configured to work with your existing auth system and can handle access control using field-level rules with dynamic variables from your auth system.
 
 You can also place the engine behind a central GraphQL proxy that fronts multiple GraphQL APIs via schema stitching.
 
