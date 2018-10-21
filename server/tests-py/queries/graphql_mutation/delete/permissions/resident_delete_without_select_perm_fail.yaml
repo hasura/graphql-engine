@@ -1,0 +1,15 @@
+description: Delete a row in resident table where id = 1 (Error)
+url: /v1alpha1/graphql
+status: 400
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+query:
+  query: |
+   mutation{
+     delete_resident(
+       where: {id: {_eq: 1}}
+     ){
+       affected_rows
+     }
+   }

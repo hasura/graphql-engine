@@ -37,7 +37,7 @@ This is A CLI tool to import a schema and data to Postgres using JSON data. You 
     $ json2graphql https://<app-name>.herokuapp.com --db=./path/to/db.js 
     ```
 
-4. That's it. You can go your HGE URL `https://<app-name>.herokuapp.com` and start querying this data over GraphQL:
+4. That's it. You can go to your HGE URL `https://<app-name>.herokuapp.com` and start querying this data over GraphQL:
 
     ```graphql
     query {
@@ -191,7 +191,7 @@ The response would be:
 
 If your Postgres already contains tables that you are trying to import using `json2graphql`, the command will fail.
 
-If you want to overwrite the the existing tables in the database with the new tables from your sample JSON database, you must provide a flag `-o` or `--overwrite`
+If you want to overwrite the existing tables in the database with the new tables from your sample JSON database, you must provide a flag `-o` or `--overwrite`
 
 ---
 Maintained with :heart: by <a href="https://hasura.io">Hasura</a>

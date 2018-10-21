@@ -20,9 +20,7 @@ import           Data.Aeson.Types
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.ByteString.Builder    as BB
 import qualified Data.HashMap.Strict        as M
-import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Extended         as T
 
 import           Hasura.Prelude
@@ -233,17 +231,18 @@ convFilterExp tq be =
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
 injectDefaults qv qt =
-  Q.fromBuilder $ mconcat
-  [ BB.string7 "SELECT hdb_catalog.inject_table_defaults("
-  , TE.encodeUtf8Builder $ pgFmtLit vsn
-  , BB.string7 ", "
-  , TE.encodeUtf8Builder $ pgFmtLit vn
-  , BB.string7 ", "
-  , TE.encodeUtf8Builder $ pgFmtLit tsn
-  , BB.string7 ", "
-  , TE.encodeUtf8Builder $ pgFmtLit tn
-  , BB.string7 ");"
+  Q.fromText $ mconcat
+  [ "SELECT hdb_catalog.inject_table_defaults("
+  , pgFmtLit vsn
+  , ", "
+  , pgFmtLit vn
+  , ", "
+  , pgFmtLit tsn
+  , ", "
+  , pgFmtLit tn
+  , ");"
   ]
+
   where
     QualifiedTable (SchemaName vsn) (TableName vn) = qv
     QualifiedTable (SchemaName tsn) (TableName tn) = qt
@@ -290,6 +289,19 @@ class (ToJSON a) => IsPerm a where
     :: DropPerm a -> PermAccessor (PermInfo a)
   getPermAcc2 _ = permAccessor
 
+validateViewPerm
+  :: (IsPerm a, QErrM m) => PermDef a -> TableInfo -> m ()
+validateViewPerm permDef tableInfo =
+  case permAcc of
+    PASelect -> return ()
+    PAInsert -> mutableView tn viIsInsertable viewInfo "insertable"
+    PAUpdate -> mutableView tn viIsUpdatable viewInfo "updatable"
+    PADelete -> mutableView tn viIsDeletable viewInfo "deletable"
+  where
+    tn = tiName tableInfo
+    viewInfo = tiViewInfo tableInfo
+    permAcc = getPermAcc1 permDef
+
 addPermP1 :: (QErrM m, CacheRM m, IsPerm a) => TableInfo -> PermDef a -> m (PermInfo a)
 addPermP1 tabInfo pd = do
   assertPermNotDefined (pdRole pd) (getPermAcc1 pd) tabInfo
@@ -311,6 +323,7 @@ instance (IsPerm a) => HDBQuery (CreatePerm a) where
 
   phaseOne (WithTable tn pd) = do
     tabInfo <- createPermP1 tn
+    validateViewPerm pd tabInfo
     addPermP1 tabInfo pd
 
   phaseTwo (WithTable tn pd) permInfo = do

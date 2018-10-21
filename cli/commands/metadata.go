@@ -14,12 +14,13 @@ import (
 func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataCmd := &cobra.Command{
 		Use:          "metadata",
-		Short:        "Manage Hasura GraphQL Engine metdata saved in the database",
+		Short:        "Manage Hasura GraphQL Engine metadata saved in the database",
 		SilenceUsage: true,
 	}
 	metadataCmd.AddCommand(
 		newMetadataExportCmd(ec),
 		newMetadataResetCmd(ec),
+		newMetadataReloadCmd(ec),
 		newMetadataApplyCmd(ec),
 	)
 	return metadataCmd
@@ -51,6 +52,11 @@ func executeMetadata(cmd string, t *migrate.Migrate, metadataPath string) error 
 		err := t.ResetMetadata()
 		if err != nil {
 			return errors.Wrap(err, "Cannot reset Metadata")
+		}
+	case "reload":
+		err := t.ReloadMetadata()
+		if err != nil {
+			return errors.Wrap(err, "Cannot reload Metadata")
 		}
 	case "apply":
 		data, err := ioutil.ReadFile(metadataPath)

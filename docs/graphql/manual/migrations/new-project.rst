@@ -9,7 +9,7 @@ These are the steps you need to follow:
 #. Install the Hasura CLI
 #. Setup a project directory
 #. Use the Hasura CLI console (``http://localhost:9695``) instead of the console served by the
-   GraphQL engine (Eg: ``http://my-graphql.herokuapp.com``) to set the schema up
+   GraphQL engine (E.g.: ``http://my-graphql.herokuapp.com``) to set the schema up
 
 
 Step 0: Take a note of your  GraphQL engine endpoint

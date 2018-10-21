@@ -14,6 +14,7 @@ import           Hasura.Prelude
 import qualified Data.Aeson                        as J
 import qualified Data.ByteString.Builder           as BB
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Data.HashSet                      as Set
 import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
@@ -65,7 +66,7 @@ parseAction
   :: (MonadError QErr m)
   => AnnGObject -> m (Maybe ConflictAction)
 parseAction obj = withPathK "action" $
-  mapM parseVal $ Map.lookup "action" obj
+  mapM parseVal $ OMap.lookup "action" obj
   where
     parseVal val = do
       (enumTy, enumVal) <- asEnumVal val
@@ -80,7 +81,7 @@ parseConstraint
   :: (MonadError QErr m)
   => AnnGObject -> m ConstraintName
 parseConstraint obj = withPathK "constraint" $ do
-  v <- onNothing (Map.lookup "constraint" obj) $ throw500
+  v <- onNothing (OMap.lookup "constraint" obj) $ throw500
     "\"constraint\" is expected, but not found"
   parseVal v
   where
@@ -92,7 +93,7 @@ parseUpdCols
   :: (MonadError QErr m)
   => AnnGObject -> m (Maybe [PGCol])
 parseUpdCols obj = withPathK "update_columns" $
-  mapM parseVal $ Map.lookup "update_columns" obj
+  mapM parseVal $ OMap.lookup "update_columns" obj
   where
     parseVal val = flip withArray val $ \_ enumVals ->
       forM enumVals $ \eVal -> do
@@ -119,8 +120,8 @@ parseRelObj
   => AnnGObject
   -> m (Either ObjRelData ArrRelData)
 parseRelObj annObj = do
-  let conflictClauseM = Map.lookup "on_conflict" annObj
-  dataVal <- onNothing (Map.lookup "data" annObj) $ throw500 "\"data\" object not found"
+  let conflictClauseM = OMap.lookup "on_conflict" annObj
+  dataVal <- onNothing (OMap.lookup "data" annObj) $ throw500 "\"data\" object not found"
   case dataVal of
     AGObject _ (Just obj) -> return $ Left $ RelData obj conflictClauseM
     AGArray _ (Just vals) -> do
@@ -165,7 +166,7 @@ fetchColsAndRels
        , [(RelName, ObjRelData)] -- ^ object relations
        , [(RelName, ArrRelData)] -- ^ array relations
        )
-fetchColsAndRels annObj = foldrM go ([], [], []) $ Map.toList annObj
+fetchColsAndRels annObj = foldrM go ([], [], []) $ OMap.toList annObj
   where
     go (gName, annVal) (cols, objRels, arrRels) =
       case annVal of

@@ -22,6 +22,9 @@ class TestGraphQLQueryBasic:
     def test_nested_select_query_article_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/nested_select_query_article_author.yaml')
 
+    def test_nested_select_query_deep(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/nested_select_query_deep.yaml')
+
     def test_nested_select_query_where(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/nested_select_where_query_author_article.yaml')
 
@@ -29,7 +32,7 @@ class TestGraphQLQueryBasic:
         check_query_f(hge_ctx, "queries/graphql_query/basic/select_query_user.yaml")
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):  
+    def transact(self, request, hge_ctx):
         self.dir = 'queries/graphql_query/basic'
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
@@ -52,7 +55,7 @@ class TestGraphQLQueryLimits:
         check_query_f(hge_ctx, self.dir + '/select_query_article_neg_limit_error.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):  
+    def transact(self, request, hge_ctx):
         self.dir = 'queries/graphql_query/limits'
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp

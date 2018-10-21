@@ -171,6 +171,29 @@ class TestGraphqlNestedInserts(object):
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
 
+class TestGraphqlInsertViews(object):
+
+    def test_insert_view_author_simple(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/insert_view_author_simple.yaml")
+
+    def test_insert_view_author_complex_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/insert_view_author_complex_fail.yaml")
+
+    def test_nested_insert_article_author_simple_view(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/nested_insert_article_author_simple_view.yaml")
+
+    def test_nested_insert_article_author_complex_view_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/nested_insert_article_author_complex_view_fail.yaml")
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/graphql_mutation/insert/views"
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
+
 class TestGraphqlUpdateBasic:
 
     def test_set_author_name(self, hge_ctx):
@@ -289,6 +312,9 @@ class TestGraphqlDeletePermissions:
 
     def test_author_cannot_delete_other_users_articles(self, hge_ctx):
        check_query_f(hge_ctx, self.dir + "/author_cannot_delete_other_users_articles.yaml")
+
+    def test_resident_delete_without_select_perm_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/resident_delete_without_select_perm_fail.yaml")
 
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
