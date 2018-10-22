@@ -14,6 +14,7 @@ module Hasura.GraphQL.Resolve.Select
   , fieldAsPath
   , fromField
   , fromFieldByPKey
+  , fromAggField
   ) where
 
 import           Data.Has
