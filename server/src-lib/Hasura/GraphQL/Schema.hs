@@ -22,7 +22,10 @@ module Hasura.GraphQL.Schema
   , InsCtxMap
   , RelationInfoMap
   -- Schema stitching related
-  , CombinedSchema (..)
+  , UniGCtx (..)
+  , RemoteGCtx (..)
+  , RoledGCtx
+  , getUniGCtx
   ) where
 
 import           Data.Has
@@ -75,6 +78,32 @@ data OpCtx
   -- tn, filter exp, req hdrs
   | OCDelete QualifiedTable S.BoolExp [T.Text]
   deriving (Show, Eq)
+
+data UniGCtx
+  = UniGCtx
+  { _ugHasuraCtx :: !GCtx
+  -- TODO: change Text to URI?
+  , _ugRemoteCtx :: !(T.Text, RemoteGCtx)
+  } deriving (Show, Eq)
+
+instance Has TypeMap UniGCtx where
+  getter (UniGCtx hCtx rmCtx) =
+    let hTypes  = _gTypes hCtx
+        rmTypes = _rgTypes $ snd rmCtx
+    in Map.union rmTypes hTypes
+  modifier f ctx = error "not yet implemented" --ctx { _gTypes = f $ _gTypes ctx }
+
+data RemoteGCtx
+  = RemoteGCtx
+  { _rgTypes            :: !TypeMap
+  , _rgQueryRoot        :: !G.NamedType
+  , _rgMutationRoot     :: !(Maybe G.NamedType)
+  , _rgSubscriptionRoot :: !(Maybe G.NamedType)
+  } deriving (Show, Eq)
+
+instance Has TypeMap RemoteGCtx where
+  getter = _rgTypes
+  modifier f ctx = ctx { _rgTypes = f $ _rgTypes ctx }
 
 data GCtx
   = GCtx
@@ -1273,21 +1302,49 @@ mkScalarTyInfo = ScalarTyInfo Nothing
 
 type GCtxMap = Map.HashMap RoleName GCtx
 
+type RoledGCtx = Map.HashMap RoleName UniGCtx
+
 mkGCtxMap
   :: (MonadError QErr m)
-  => TableCache -> m (Map.HashMap RoleName GCtx)
-mkGCtxMap tableCache = do
+  => TableCache -> (Text, RemoteGCtx) -> m RoledGCtx
+mkGCtxMap tableCache (url, remoteCtx) = do
+  -- FIXME: creates an empty hashmap when no tables are tracked
+  -- FIXME: check for type conflicts in hasura and remote schema => throw error
   typesMapL <- mapM (mkGCtxMapTable tableCache) $
                filter tableFltr $ Map.elems tableCache
   let typesMap = foldr (Map.unionWith mappend) Map.empty typesMapL
   return $ flip Map.map typesMap $ \(ty, flds, insCtxMap) ->
-    mkGCtx ty flds insCtxMap
+    UniGCtx (mkGCtx ty flds rr insCtxMap) (url, remoteCtx)
   where
     tableFltr ti = not (tiSystemDefined ti)
                    && isValidTableName (tiName ti)
+    -- make a RootFlds for the remote schema and mappend it with hasura's root fields
+    rr = fromMaybe (RemoteRootFlds [] []) $ RemoteRootFlds <$> (Map.elems <$> remoteQr) <*> (Map.elems <$> remoteMr)
+    remoteQr =
+      let rootObj = Map.lookup (_rgQueryRoot remoteCtx) $ _rgTypes remoteCtx
+      in getObj <$> rootObj
+    remoteMr =
+      let mr = fromMaybe (G.NamedType "Mutation") (_rgMutationRoot remoteCtx)
+          rootObj = Map.lookup mr $ _rgTypes remoteCtx
+      in getObj <$> rootObj
+    remoteSr =
+      let sr = fromMaybe (G.NamedType "Subscription") (_rgMutationRoot remoteCtx)
+          rootObj = Map.lookup sr $ _rgTypes remoteCtx
+      in getObj <$> rootObj
 
-mkGCtx :: TyAgg -> RootFlds -> InsCtxMap -> GCtx
-mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
+    getObj ti = case ti of
+      TIObj o -> _otiFields o
+      _       -> Map.empty
+
+
+data RemoteRootFlds
+  = RemoteRootFlds
+  { _rrfQueryRoot :: ![ObjFldInfo]
+  , _rrfMutRoot   :: ![ObjFldInfo]
+  } deriving (Show, Eq)
+
+mkGCtx :: TyAgg -> RootFlds -> RemoteRootFlds -> InsCtxMap -> GCtx
+mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) (RemoteRootFlds rQroot rMroot) insCtxMap =
   let queryRoot = mkObjTyInfo (Just "query root") (G.NamedType "query_root") $
                   mapFromL _fiName (schemaFld:typeFld:qFlds)
       colTys    = Set.toList $ Set.fromList $ map pgiType $
@@ -1317,7 +1374,8 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
 
     subRootM = bool (Just $ mkSubRoot qFlds) Nothing $ null qFlds
 
-    (qFlds, mFlds) = partitionEithers $ map snd $ Map.elems flds
+    (qFlds', mFlds') = partitionEithers $ map snd $ Map.elems flds
+    (qFlds, mFlds) = (qFlds' ++ rQroot, mFlds' ++ rMroot)
 
     schemaFld = ObjFldInfo Nothing "__schema" Map.empty $ G.toGT $
                 G.toNT $ G.NamedType "__Schema"
@@ -1332,12 +1390,13 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
 
 getGCtx :: RoleName -> Map.HashMap RoleName GCtx -> GCtx
 getGCtx rn =
-  fromMaybe (mkGCtx mempty mempty mempty) . Map.lookup rn
+  fromMaybe (mkGCtx mempty mempty emptyRR mempty) . Map.lookup rn
+  where emptyRR = RemoteRootFlds [] []
 
-
--- | Schema stitching related
-data CombinedSchema
-  = CombinedSchema
-  { _csHasuraSchema :: !GCtxMap
-  , _csRemoteSchema :: ![G.SchemaDocument]
-  } deriving (Show, Eq)
+-- FIXME: is the empty ("", RemoteCtx) correct?
+getUniGCtx :: RoleName -> RoledGCtx -> UniGCtx
+getUniGCtx rn = fromMaybe emptyUniGCtx . Map.lookup rn
+  where
+    emptyUniGCtx = UniGCtx (mkGCtx mempty mempty emptyRR mempty) ("", emptyRemoteCtx)
+    emptyRemoteCtx = RemoteGCtx Map.empty (G.NamedType "Query") Nothing Nothing
+    emptyRR = RemoteRootFlds [] []

@@ -163,7 +163,7 @@ fromScalarTyDef (G.ScalarTypeDefinition descM n _) =
   "String"  -> return PGText
   "Boolean" -> return PGBoolean
   -- TODO: is this correct?
-  "ID"      -> return PGText
+  "ID"      -> return $ PGUnknown "ID" --PGText
   _         -> throwError $ "unexpected type: " <> G.unName n
 
 data TypeInfo
@@ -225,7 +225,7 @@ fromTyDefQ tyDef = case fromTyDef tyDef of
   Right t -> TH.lift t
 
 fromSchemaDocQ :: G.SchemaDocument -> TH.Q TH.Exp
-fromSchemaDocQ (G.SchemaDocument tyDefs) =
+fromSchemaDocQ (G.SchemaDocument tyDefs _ _ _) =
   TH.ListE <$> mapM fromTyDefQ tyDefs
 
 defaultSchema :: G.SchemaDocument

@@ -18,7 +18,8 @@ extra-deps:
   commit: 7978e04f24790f18f06a67fe6065f470abc1c764
 # - git: https://github.com/hasura/graphql-parser-hs.git
 #   commit: eae59812ec537b3756c3ddb5f59a7cc59508869b
-- ../../graphql-parser-hs
+- git: https://github.com/ecthiender/graphql-parser-hs.git
+  commit: 030c2e4da67ec081bbf913689bb0f2cbab913b32
 - ginger-0.8.0.1
 
 # Override default flag values for local packages and extra-deps

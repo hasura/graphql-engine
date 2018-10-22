@@ -14,9 +14,8 @@ import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.Aeson                        as J
-import qualified Data.Text                         as T
-
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import           Hasura.GraphQL.Resolve.Context
@@ -24,7 +23,6 @@ import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
-
 import           Hasura.RQL.Types
 import           Hasura.SQL.Value
 
@@ -264,10 +262,10 @@ gtypeR
   => G.GType -> Field -> m J.Object
 gtypeR ty fld =
   case ty of
-    G.TypeList  (G.Nullability True) lt  -> listTypeR lt fld
-    G.TypeList  (G.Nullability False) _  -> nonNullR ty fld
-    G.TypeNamed (G.Nullability True) nt  -> namedTypeR nt fld
-    G.TypeNamed (G.Nullability False) _  -> nonNullR ty fld
+    G.TypeList  (G.Nullability True) lt -> listTypeR lt fld
+    G.TypeList  (G.Nullability False) _ -> nonNullR ty fld
+    G.TypeNamed (G.Nullability True) nt -> namedTypeR nt fld
+    G.TypeNamed (G.Nullability False) _ -> nonNullR ty fld
 
 schemaR
   :: ( MonadReader r m, Has TypeMap r
@@ -276,15 +274,17 @@ schemaR
 schemaR fld =
   withSubFields (_fSelSet fld) $ \subFld -> do
   (tyMap :: TypeMap) <- asks getter
+  --liftIO $ print $ _fName subFld
+  --liftIO $ print $ Map.keys tyMap
   case _fName subFld of
     "__typename"   -> retJT "__Schema"
     "types"        -> fmap J.toJSON $ mapM (namedTypeR' subFld) $
-                      sortBy (comparing getNamedTy) $ Map.elems tyMap
+                      sortOn getNamedTy $ Map.elems tyMap
     "queryType"    -> J.toJSON <$> namedTypeR (G.NamedType "query_root") subFld
     "mutationType" -> typeR' "mutation_root" subFld
     "subscriptionType" -> typeR' "subscription_root" subFld
     "directives"   -> J.toJSON <$> mapM (directiveR subFld)
-                      (sortBy (comparing _diName) defaultDirectives)
+                      (sortOn _diName defaultDirectives)
     _              -> return J.Null
 
 typeR

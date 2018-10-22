@@ -47,7 +47,7 @@ import qualified Network.Wreq                  as W
 import qualified Network.Wreq.Session          as WS
 
 
-type CacheRef = IORef (SchemaCache, GS.GCtxMap)
+type CacheRef = IORef (SchemaCache, GS.RoledGCtx)
 
 newtype EventInternalErr
   = EventInternalErr QErr

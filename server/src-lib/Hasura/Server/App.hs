@@ -11,33 +11,37 @@ module Hasura.Server.App where
 
 import           Control.Arrow                          ((***))
 import           Control.Concurrent.MVar
-import           Data.IORef
-
+import           Control.Exception                      (try)
+import           Control.Lens                           ((&), (.~), (?~), (^.))
 import           Data.Aeson                             hiding (json)
-import qualified Data.ByteString.Lazy                   as BL
-import qualified Data.HashMap.Strict                    as M
-import qualified Data.Text                              as T
+import           Data.IORef
 import           Data.Time.Clock                        (UTCTime,
                                                          getCurrentTime)
 import           Network.Wai                            (requestHeaders,
                                                          strictRequestBody)
+import           Web.Spock.Core
+
+import qualified Data.ByteString.Lazy                   as BL
+import qualified Data.HashMap.Strict                    as M
+import qualified Data.Text                              as T
+import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.Wai                            as Wai
+import qualified Network.Wai.Handler.WebSockets         as WS
+import qualified Network.Wai.Middleware.Static          as MS
+import qualified Network.WebSockets                     as WS
+import qualified Network.Wreq                           as Wreq
 import qualified Text.Mustache                          as M
 import qualified Text.Mustache.Compile                  as M
 
-import           Web.Spock.Core
-
-import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.Wai.Middleware.Static          as MS
 
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Transport.WebSocket     as WS
+import qualified Hasura.GraphQL.Validate.Types          as VT
 import qualified Hasura.Logging                         as L
-import qualified Network.Wai                            as Wai
-import qualified Network.Wai.Handler.WebSockets         as WS
-import qualified Network.WebSockets                     as WS
 
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
@@ -80,7 +84,7 @@ data ServerCtx
   { scIsolation :: Q.TxIsolation
   , scPGPool    :: Q.PGPool
   , scLogger    :: L.Logger
-  , scCacheRef  :: IORef (SchemaCache, GS.GCtxMap)
+  , scCacheRef  :: IORef (SchemaCache, GS.RoledGCtx)
   , scCacheLock :: MVar ()
   , scAuthMode  :: AuthMode
   , scManager   :: HTTP.Manager
@@ -223,8 +227,13 @@ v1QueryHandler query = do
     -- Also update the schema cache
     dbActionReload = do
       (resp, newSc) <- dbAction
-      newGCtxMap <- GS.mkGCtxMap $ scTables newSc
       scRef <- scCacheRef . hcServerCtx <$> ask
+      httpMgr <- scManager . hcServerCtx <$> ask
+      --schemaCache <- liftIO $ readIORef scRef
+      -- FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
+      let url =  "http://localhost:3000"
+      rmSchema <- liftIO $ fetchRemoteSchema httpMgr url
+      newGCtxMap <- GS.mkGCtxMap (scTables newSc) (url, rmSchema)
       liftIO $ writeIORef scRef (newSc, newGCtxMap)
       return resp
 
@@ -274,6 +283,41 @@ legacyQueryHandler tn queryType =
   where
     qt = QualifiedTable publicSchema tn
 
+
+fetchRemoteSchema :: HTTP.Manager -> Text -> IO GS.RemoteGCtx
+fetchRemoteSchema manager url = do
+  let options = Wreq.defaults
+              & Wreq.headers .~ [("content-type", "application/json")]
+              & Wreq.checkResponse ?~ (\_ _ -> return ())
+              & Wreq.manager .~ Right manager
+
+  -- FIXME: read and cache introspection query at compile time
+  lq   <- BL.readFile "ws/introspection.json"
+  res  <- liftIO $ try $ Wreq.postWith options (T.unpack url) lq
+  resp <- either throwHttpErr return res
+
+  let respData = resp ^. Wreq.responseBody
+      statusCode = resp ^. Wreq.responseStatus . Wreq.statusCode
+  when (statusCode /= 200) $ schemaErr respData
+
+  schemaDoc <- either schemaErr return $ eitherDecode respData
+  --liftIO $ print $ map G.getNamedTyp $ G._sdTypes schemaDoc
+  let etTypeInfos = mapM VT.fromTyDef $ G._sdTypes schemaDoc
+  typeInfos <- either schemaErr return etTypeInfos
+  --liftIO $ print $ map VT.getNamedTy typeInfos
+  let typMap = VT.mkTyInfoMap typeInfos
+      (qRoot, mRoot, sRoot) = getRoots schemaDoc
+  return $ GS.RemoteGCtx typMap qRoot (Just mRoot) sRoot
+  where
+    getRoots sc = (G._sdQueryRoot sc, G._sdMutationRoot sc, G._sdSubscriptionRoot sc)
+    schemaErr err = do
+      putStr "error fetching remote schema: "
+      initErrExit err
+
+    throwHttpErr :: HTTP.HttpException -> IO a
+    throwHttpErr = schemaErr
+
+
 mkWaiApp
   :: Q.TxIsolation
   -> Maybe String
@@ -283,13 +327,16 @@ mkWaiApp
   -> AuthMode
   -> CorsConfig
   -> Bool
-  -> IO (Wai.Application, IORef (SchemaCache, GS.GCtxMap))
+  -> IO (Wai.Application, IORef (SchemaCache, GS.RoledGCtx))
 mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole = do
     cacheRef <- do
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
         sc <- buildSchemaCache
-        (,) sc <$> GS.mkGCtxMap (scTables sc)
+        -- FIXME: fetch this from schema cache
+        let url =  "http://localhost:3000"
+        remoteSchema <- liftIO $ fetchRemoteSchema httpManager url
+        (,) sc <$> GS.mkGCtxMap (scTables sc) (url, remoteSchema)
       either initErrExit return pgResp >>= newIORef
 
     cacheLock <- newMVar ()

@@ -32,7 +32,9 @@ import qualified Data.IORef                                  as IORef
 import           Hasura.GraphQL.Resolve                      (resolveSelSet)
 import           Hasura.GraphQL.Resolve.Context              (RespTx)
 import qualified Hasura.GraphQL.Resolve.LiveQuery            as LQ
-import           Hasura.GraphQL.Schema                       (GCtxMap, getGCtx)
+import           Hasura.GraphQL.Schema                       (RoledGCtx,
+                                                              UniGCtx (..),
+                                                              getUniGCtx)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
@@ -121,7 +123,7 @@ data WSServerEnv
   , _wseServer   :: !WSServer
   , _wseRunTx    :: !TxRunner
   , _wseLiveQMap :: !LiveQueryMap
-  , _wseGCtxMap  :: !(IORef.IORef (SchemaCache, GCtxMap))
+  , _wseGCtxMap  :: !(IORef.IORef (SchemaCache, RoledGCtx))
   , _wseHManager :: !H.Manager
   }
 
@@ -176,10 +178,10 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndSend $ do
       throwError $ SMConnErr err
 
   -- validate and build tx
-  gCtxMap <- fmap snd $ liftIO $ IORef.readIORef gCtxMapRef
-  let gCtx = getGCtx (userRole userInfo) gCtxMap
+  gCtxMap <- fmap snd $ liftIO $ IORef.readIORef sCacheRef
+  let gCtx = getUniGCtx (userRole userInfo) gCtxMap
   (opTy, fields) <- withExceptT preExecErr $ loggingQErr $
-                    runReaderT (validateGQ q) gCtx
+                    runReaderT (validateGQ q) $ _ugHasuraCtx gCtx
   let qTx = RQ.setHeadersTx userInfo >>
             resolveSelSet userInfo gCtx opTy fields
 
@@ -198,7 +200,7 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndSend $ do
       liftIO $ logger $ WSLog wsId $ EOperation opId ODCompleted
 
   where
-    (WSServerEnv (L.Logger logger) _ runTx lqMap gCtxMapRef _) = serverEnv
+    (WSServerEnv (L.Logger logger) _ runTx lqMap sCacheRef _) = serverEnv
     wsId = WS.getWSId wsConn
     (WSConnData userInfoR opMap) = WS.getData wsConn
 
@@ -296,7 +298,7 @@ onClose (L.Logger logger) lqMap _ wsConn = do
 
 createWSServerEnv
   :: L.Logger
-  -> H.Manager -> IORef.IORef (SchemaCache, GCtxMap)
+  -> H.Manager -> IORef.IORef (SchemaCache, RoledGCtx)
   -> TxRunner -> IO WSServerEnv
 createWSServerEnv logger httpManager gCtxMapRef runTx = do
   (wsServer, lqMap) <-

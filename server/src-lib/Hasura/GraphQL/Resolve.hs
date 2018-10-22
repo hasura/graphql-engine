@@ -7,13 +7,19 @@ module Hasura.GraphQL.Resolve
   ( resolveSelSet
   ) where
 
+--import           Control.Exception                      (try)
+--import           Control.Lens
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as Map
+--import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
+--import qualified Network.HTTP.Client                    as HTTP
+--import qualified Network.Wreq                           as Wreq
+
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.Introspect
@@ -67,17 +73,20 @@ buildTx userInfo gCtx fld = do
 
 -- {-# SCC resolveFld #-}
 resolveFld
-  :: UserInfo -> GCtx
+  :: UserInfo -> UniGCtx
   -> G.OperationType
   -> Field
+  -- -> HTTP.Manager
+  -- -> BL.ByteString
   -> Q.TxE QErr BL.ByteString
 resolveFld userInfo gCtx opTy fld =
   case _fName fld of
     "__type"     -> J.encode <$> runReaderT (typeR fld) gCtx
     "__schema"   -> J.encode <$> runReaderT (schemaR fld) gCtx
     "__typename" -> return $ J.encode $ mkRootTypeName opTy
-    _            -> buildTx userInfo gCtx fld
+    _            -> buildTx userInfo hsraCtx fld
   where
+    hsraCtx = _ugHasuraCtx gCtx
     mkRootTypeName :: G.OperationType -> Text
     mkRootTypeName = \case
       G.OperationTypeQuery        -> "query_root"
@@ -85,9 +94,11 @@ resolveFld userInfo gCtx opTy fld =
       G.OperationTypeSubscription -> "subscription_root"
 
 resolveSelSet
-  :: UserInfo -> GCtx
+  :: UserInfo -> UniGCtx --GCtx
   -> G.OperationType
   -> SelSet
+  -- -> HTTP.Manager
+  -- -> BL.ByteString
   -> Q.TxE QErr BL.ByteString
 resolveSelSet userInfo gCtx opTy fields =
   fmap mkJSONObj $ forM (toList fields) $ \fld -> do
