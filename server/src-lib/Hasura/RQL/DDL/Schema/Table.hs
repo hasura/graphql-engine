@@ -453,7 +453,7 @@ runSqlP2 (RunSQL t cascade) = do
   oldMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
 
   -- Run the SQL
-  res <- liftTx $ Q.multiQE rawSqlErrHandler $ Q.fromBuilder $ TE.encodeUtf8Builder t
+  res <- liftTx $ Q.multiQE rawSqlErrHandler $ Q.fromText t
 
   -- Get the metadata after the sql query
   newMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
