@@ -69,6 +69,24 @@ const hasPrimaryKey = dataObj => {
   return has;
 };
 
+const sanitizeData = db => {
+  const newDb = {};
+  for (var tableName in db) {
+    const newTableName = tableName.replace(/[^a-zA-Z0-9]/g, '_').replace(' ', '_');
+    newDb[newTableName] = [];
+    for (var i = db[tableName].length - 1; i >= 0; i--) {
+      const data = db[tableName][i];
+      const newData = {};
+      for (var key in data) {
+        const newKey = key.replace(/[^a-zA-Z0-9]/g, '_').replace(' ', '_');
+        newData[newKey] = data[key];
+      }
+      newDb[tableName].push(newData);
+    }
+  }
+  return newDb;
+};
+
 const generate = db => {
   const metaData = [];
   Object.keys(db).forEach(rootField => {
@@ -89,4 +107,7 @@ const generate = db => {
   return metaData;
 };
 
-module.exports = generate;
+module.exports = {
+  generate,
+  sanitizeData,
+};

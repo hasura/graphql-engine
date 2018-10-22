@@ -34,7 +34,7 @@ import           Hasura.SQL.Value
 convertReturning
   :: QualifiedTable -> G.NamedType -> SelSet -> Convert RS.AnnSel
 convertReturning qt ty selSet = do
-  annFlds <- fromSelSet False ty selSet
+  annFlds <- fromSelSet prepare False ty selSet
   let selFlds = RS.ASFSimple annFlds
       tabFrom = RS.TableFrom qt $ Just frmItem
       tabPerm = RS.TablePerm (S.BELit True) Nothing

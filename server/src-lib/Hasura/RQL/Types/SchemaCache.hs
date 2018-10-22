@@ -451,7 +451,7 @@ data TableInfo
   , tiRolePermInfoMap     :: !RolePermInfoMap
   , tiConstraints         :: ![TableConstraint]
   , tiPrimaryKeyCols      :: ![PGCol]
-  , tiViewInfo        :: !(Maybe ViewInfo)
+  , tiViewInfo            :: !(Maybe ViewInfo)
   , tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Show, Eq)
 

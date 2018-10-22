@@ -12,6 +12,8 @@ module Hasura.GraphQL.Resolve.Select
   , withSelSet
   , fromSelSet
   , fieldAsPath
+  , fromField
+  , fromFieldByPKey
   ) where
 
 import           Data.Has
@@ -42,11 +44,13 @@ withSelSet selSet f =
     return (G.unName $ G.unAlias $ _fAlias fld, res)
 
 fromSelSet
-  :: Bool
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByResolveCtx r)
+  => ((PGColType, PGColValue) -> m S.SQLExp)
+  -> Bool
   -> G.NamedType
   -> SelSet
-  -> Convert [(FieldName, RS.AnnFld)]
-fromSelSet isAgg fldTy flds =
+  -> m [(FieldName, RS.AnnFld)]
+fromSelSet f isAgg fldTy flds =
   forM (toList flds) $ \fld -> do
     let fldName = _fName fld
     let rqlFldName = FieldName $ G.unName $ G.unAlias $ _fAlias fld
@@ -60,10 +64,10 @@ fromSelSet isAgg fldTy flds =
             let relTN = riRTable relInfo
                 relTy = riType relInfo
             annSel <- case relTy of
-              ObjRel -> fromField relTN tableFilter tableLimit fld
+              ObjRel -> fromField f relTN tableFilter tableLimit fld
               ArrRel ->
-                if isAgg then fromAggField relTN tableFilter tableLimit fld
-                else fromField relTN tableFilter tableLimit fld
+                if isAgg then fromAggField f relTN tableFilter tableLimit fld
+                else fromField f relTN tableFilter tableLimit fld
             let annRel = RS.AnnRel (riName relInfo) (riType relInfo)
                          (riMapping relInfo) annSel
             return $ RS.FRel annRel
@@ -72,19 +76,24 @@ fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
 fieldAsPath fld = nameAsPath $ _fName fld
 
 parseTableArgs
-  :: QualifiedTable -> ArgsMap -> Convert RS.TableArgs
-parseTableArgs tn args = do
-  whereExpM  <- withArgM args "where" $ convertBoolExp tn
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByResolveCtx r)
+  => ((PGColType, PGColValue) -> m S.SQLExp)
+  -> QualifiedTable -> ArgsMap -> m RS.TableArgs
+parseTableArgs f tn args = do
+  whereExpM  <- withArgM args "where" $ convertBoolExpG f tn
   ordByExpM  <- withArgM args "order_by" parseOrderBy
   limitExpM  <- withArgM args "limit" parseLimit
-  offsetExpM <- withArgM args "offset" $ asPGColVal >=> prepare
+  offsetExpM <- withArgM args "offset" $ asPGColVal >=> f
   return $ RS.TableArgs whereExpM ordByExpM limitExpM offsetExpM
 
 fromField
-  :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RS.AnnSel
-fromField tn permFilter permLimitM fld = fieldAsPath fld $ do
-  tableArgs <- parseTableArgs tn args
-  annFlds   <- fromSelSet False (_fType fld) $ _fSelSet fld
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByResolveCtx r)
+  => ((PGColType, PGColValue) -> m S.SQLExp)
+  -> QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> m RS.AnnSel
+fromField f tn permFilter permLimitM fld =
+  fieldAsPath fld $ do
+  tableArgs <- parseTableArgs f tn args
+  annFlds   <- fromSelSet f False (_fType fld) $ _fSelSet fld
   let selFlds = RS.ASFSimple annFlds
       tabFrom = RS.TableFrom tn Nothing
       tabPerm = RS.TablePerm permFilter permLimitM
@@ -126,10 +135,12 @@ parseLimit v = do
     noIntErr = throw400 Unexpected "expecting Integer value for \"limit\""
 
 fromFieldByPKey
-  :: QualifiedTable -> S.BoolExp -> Field -> Convert RS.AnnSel
-fromFieldByPKey tn permFilter fld = fieldAsPath fld $ do
-  boolExp <- pgColValToBoolExp tn $ _fArguments fld
-  annFlds <- fromSelSet False (_fType fld) $ _fSelSet fld
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByResolveCtx r)
+  => ((PGColType, PGColValue) -> m S.SQLExp)
+  -> QualifiedTable -> S.BoolExp -> Field -> m RS.AnnSel
+fromFieldByPKey f tn permFilter fld = fieldAsPath fld $ do
+  boolExp <- pgColValToBoolExpG f tn $ _fArguments fld
+  annFlds <- fromSelSet f False (_fType fld) $ _fSelSet fld
   let selFlds = RS.ASFSimple annFlds
       tabFrom = RS.TableFrom tn Nothing
       tabPerm = RS.TablePerm permFilter Nothing
@@ -140,7 +151,7 @@ convertSelect
   :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RespTx
 convertSelect qt permFilter permLimit fld = do
   selData <- withPathK "selectionSet" $
-             fromField qt permFilter permLimit fld
+             fromField prepare qt permFilter permLimit fld
   prepArgs <- get
   return $ RS.selectP2 False (selData, prepArgs)
 
@@ -148,13 +159,13 @@ convertSelectByPKey
   :: QualifiedTable -> S.BoolExp -> Field -> Convert RespTx
 convertSelectByPKey qt permFilter fld = do
   selData <- withPathK "selectionSet" $
-             fromFieldByPKey qt permFilter fld
+             fromFieldByPKey prepare qt permFilter fld
   prepArgs <- get
   return $ RS.selectP2 True (selData, prepArgs)
 
 -- agg select related
 convertColFlds
-  :: G.NamedType -> SelSet -> Convert RS.ColFlds
+  :: Monad m => G.NamedType -> SelSet -> m RS.ColFlds
 convertColFlds ty selSet =
   withSelSet selSet $ \fld ->
     case _fName fld of
@@ -162,7 +173,7 @@ convertColFlds ty selSet =
       n            -> return $ RS.PCFCol $ PGCol $ G.unName n
 
 convertAggFld
-  :: G.NamedType -> SelSet -> Convert RS.AggFlds
+  :: Monad m => G.NamedType -> SelSet -> m RS.AggFlds
 convertAggFld ty selSet =
   withSelSet selSet $ \fld -> do
     let fType = _fType fld
@@ -176,9 +187,11 @@ convertAggFld ty selSet =
       _            -> RS.AFMin <$> convertColFlds fType fSelSet
 
 fromAggField
-  :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RS.AnnSel
-fromAggField tn permFilter permLimitM fld = fieldAsPath fld $ do
-  tableArgs <- parseTableArgs tn args
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByResolveCtx r)
+  => ((PGColType, PGColValue) -> m S.SQLExp)
+  -> QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> m RS.AnnSel
+fromAggField fn tn permFilter permLimitM fld = fieldAsPath fld $ do
+  tableArgs <- parseTableArgs fn tn args
   aggSelFlds   <- fromAggSel (_fType fld) $ _fSelSet fld
   let selFlds = RS.ASFWithAgg aggSelFlds
       tabFrom = RS.TableFrom tn Nothing
@@ -193,12 +206,12 @@ fromAggField tn permFilter permLimitM fld = fieldAsPath fld $ do
         case _fName f of
           "__typename" -> return $ RS.SFExp $ G.unName $ G.unNamedType ty
           "agg"        -> RS.SFAggFld <$> convertAggFld fTy fSelSet
-          _            -> RS.SFNodes <$> fromSelSet True fTy fSelSet
+          _            -> RS.SFNodes <$> fromSelSet fn True fTy fSelSet
 
 convertAggSelect
   :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RespTx
 convertAggSelect qt permFilter permLimit fld = do
   selData <- withPathK "selectionSet" $
-             fromAggField qt permFilter permLimit fld
+             fromAggField prepare qt permFilter permLimit fld
   prepArgs <- get
   return $ RS.selectP2 False (selData, prepArgs)

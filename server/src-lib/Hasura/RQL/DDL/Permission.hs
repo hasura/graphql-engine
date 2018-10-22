@@ -62,7 +62,6 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.ByteString.Builder            as BB
 import qualified Data.HashSet                       as HS
 import qualified Data.Text                          as T
 
@@ -90,8 +89,8 @@ buildViewName (QualifiedTable sn tn) (RoleName rTxt) pt =
 buildView :: QualifiedTable -> QualifiedTable -> Q.Query
 buildView tn vn =
   Q.fromBuilder $ mconcat
-  [ BB.string7 "CREATE VIEW " <> toSQL vn
-  , BB.string7 " AS SELECT * FROM " <> toSQL tn
+  [ "CREATE VIEW " <> toSQL vn
+  , " AS SELECT * FROM " <> toSQL tn
   ]
 
 dropView :: QualifiedTable -> Q.Tx ()
@@ -99,7 +98,7 @@ dropView vn =
   Q.unitQ dropViewS () False
   where
     dropViewS = Q.fromBuilder $
-      BB.string7 "DROP VIEW " <> toSQL vn
+      "DROP VIEW " <> toSQL vn
 
 buildInsPermInfo
   :: (QErrM m, CacheRM m)
