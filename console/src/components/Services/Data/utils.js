@@ -32,7 +32,7 @@ const findTableFromRel = (schemas, curTable, rel) => {
   if (rel.rel_def.foreign_key_constraint_on !== undefined) {
     // for object relationship
     if (rel.rel_type === 'object') {
-      const column = rel.rel_def.foreign_key_constraint_on;
+      const column = [rel.rel_def.foreign_key_constraint_on];
       const fkc = findFKConstraint(curTable, column);
       if (fkc) {
         rtable = fkc.ref_table;
@@ -47,7 +47,6 @@ const findTableFromRel = (schemas, curTable, rel) => {
       }
     }
   }
-
   return schemas.find(x => x.table_name === rtable);
 };
 
