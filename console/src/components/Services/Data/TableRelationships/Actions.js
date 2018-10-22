@@ -108,6 +108,7 @@ const generateRelationshipsQuery = (
           name: rTable,
           schema: currentSchema,
         },
+        column: rcol[0],
       },
     };
   } else {
