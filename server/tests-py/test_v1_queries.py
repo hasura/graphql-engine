@@ -350,6 +350,68 @@ class TestV1UpdatePermissions:
         assert st_code == 200, resp
 
 
+class TestV1CountBasic:
+
+    def test_count_authors(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/count_authors.yaml")
+
+    def test_count_published_articles(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/count_published_articles.yaml")
+
+    def test_count_unpublished_articles(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/count_unpublished_articles.yaml")
+
+    def test_count_distinct_authors_with_published_articles(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/count_distinct_authors_with_published_articles.yaml")
+
+    def test_count_articles_registered_authors(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/count_articles_with_registered_authors.yaml")
+
+    def test_count_articles_non_registered_authors(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/count_articles_with_non_registered_authors.yaml")
+
+    def test_count_distinct_col_not_present_err(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/count_distinct_col_not_present_err.yaml")
+
+    def test_count_distinct_authors_with_unpublished_articles(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/count_distinct_authors_with_unpublished_articles.yaml")
+
+    @pytest.fixture(autouse=True)
+    def set_dir(self, request, setup):
+        self.dir = setup['dir']
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        folder = "queries/v1/count/basic"
+        st_code, resp = hge_ctx.v1q_f(folder + '/setup.yaml')
+        assert st_code == 200, resp
+        yield {'dir' : folder}
+        st_code, resp = hge_ctx.v1q_f(folder + '/teardown.yaml')
+        assert st_code == 200, resp
+
+
+class TestV1CountPermissions:
+
+    def test_count_user_has_no_select_permission_err(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/count_user_has_no_select_perm_error.yaml")
+
+    def test_count_other_users_unpublished_articles(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/count_users_unpublished_articles.yaml")
+
+    @pytest.fixture(autouse=True)
+    def set_dir(self, request, setup):
+        self.dir = setup['dir']
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        folder = "queries/v1/count/permissions"
+        st_code, resp = hge_ctx.v1q_f(folder + '/setup.yaml')
+        assert st_code == 200, resp
+        yield {'dir' : folder}
+        st_code, resp = hge_ctx.v1q_f(folder + '/teardown.yaml')
+        assert st_code == 200, resp
+
+
 class TestV1Delete:
 
     def test_delete_author(self, hge_ctx):
