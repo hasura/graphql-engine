@@ -32,7 +32,7 @@ const DataHeader = ({
           to={'/voyager-view/' + currentTable}
           data-test="voyager-link"
         >
-          View in Voyager
+          Show in Voyager
         </Link>
       </li>
     );
