@@ -390,7 +390,6 @@ class Relationships extends Component {
         </div>
       );
     }
-
     const addedRelationshipsView =
       getObjArrayRelationshipList(tableSchema.relationships).length > 0 ? (
         <div className={tableStyles.tableContainer}>

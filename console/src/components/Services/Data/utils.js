@@ -10,11 +10,10 @@ const ordinalColSort = (a, b) => {
 
 const findFKConstraint = (curTable, column) => {
   const fkConstraints = curTable.foreign_key_constraints;
-
   return fkConstraints.find(
     fk =>
-      Object.keys(fk.column_mapping).length === 1 &&
-      Object.keys(fk.column_mapping)[0] === column
+      Object.keys(fk.column_mapping).length === column.length &&
+      Object.keys(fk.column_mapping).join(',') === column.join(',')
   );
 };
 
