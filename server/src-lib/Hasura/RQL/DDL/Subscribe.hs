@@ -115,7 +115,7 @@ mkTriggerQ trid trn qt allCols (TriggerOpsDef insert update delete) = do
              <> getTriggerSql UPDATE trid trn qt allCols update
              <> getTriggerSql DELETE trid trn qt allCols delete
   case msql of
-    Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder sql)
+    Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromText sql)
     Nothing -> throw500 "no trigger sql generated"
 
 addEventTriggerToCatalog
@@ -147,7 +147,7 @@ delEventTriggerFromCatalog trn = do
   mapM_ tx [INSERT, UPDATE, DELETE]
   where
     tx :: Ops -> Q.TxE QErr ()
-    tx op = Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder $ getDropFuncSql op trn)
+    tx op = Q.multiQE defaultTxErrorHandler (Q.fromText $ getDropFuncSql op trn)
 
 updateEventTriggerToCatalog
   :: QualifiedTable

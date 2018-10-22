@@ -41,7 +41,7 @@ withSelSet selSet f =
 convertReturning
   :: QualifiedTable -> G.NamedType -> SelSet -> Convert RS.AnnSel
 convertReturning qt ty selSet = do
-  annFlds <- fromSelSet ty selSet
+  annFlds <- fromSelSet prepare ty selSet
   return $ RS.AnnSel annFlds qt (Just frmItem)
     (S.BELit True) Nothing RS.noTableArgs
   where

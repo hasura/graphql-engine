@@ -107,7 +107,7 @@ you want to test against a Hasura GraphQL engine instance that is already servin
 Option 2: In production, from apps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you're making GraphQL queries from your apps, you will not (should not) be sending session variables directly from your app
+If you're making GraphQL queries from your apps, you will not (and should not) be sending session variables directly from your app
 because anyone can spoof the role and values of the variables and get access to whatever data they want.
 
 In this case, you should configure a webhook that will return an object containing the role and session variables given the
@@ -115,7 +115,7 @@ session token (authorization token, JWT, cookie etc.) that your app normally use
 
 Read more about :doc:`configuring webhook authentication for Hasura<webhook>`.
 
-There are 4 different types of operations for which you can define permissions on a table: Select, Insert,
-Update and Delete.
+There are four different types of operations for which you can define permissions on a table: Select, Insert,
+Update, and Delete.
 
 
