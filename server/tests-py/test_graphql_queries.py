@@ -57,6 +57,26 @@ class TestGraphQLQueryAgg:
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
 
+class TestGraphQLQueryAggPerm:
+
+    def test_author_agg_articles(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/author_agg_articles.yaml')
+
+    def test_article_agg_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/article_agg_fail.yaml')
+
+    def test_author_articles_agg_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/author_articles_agg_fail.yaml')
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = 'queries/graphql_query/agg_perm'
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
+
 class TestGraphQLQueryLimits:
 
     def test_limit_1(self, hge_ctx):

@@ -161,9 +161,10 @@ instance IsPerm InsPerm where
 -- Select constraint
 data SelPerm
   = SelPerm
-  { spColumns :: !PermColSpec       -- Allowed columns
-  , spFilter  :: !BoolExp   -- Filter expression
-  , spLimit   :: !(Maybe Int) -- Limit value
+  { spColumns           :: !PermColSpec       -- Allowed columns
+  , spFilter            :: !BoolExp   -- Filter expression
+  , spLimit             :: !(Maybe Int) -- Limit value
+  , spAllowAggregations :: !(Maybe Bool) -- Allow aggregation
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
@@ -189,11 +190,12 @@ buildSelPermInfo tabInfo sp = do
 
   withPathK "limit" $ mapM_ onlyPositiveInt mLimit
 
-  return $ SelPermInfo (HS.fromList pgCols) tn be mLimit deps depHeaders
+  return $ SelPermInfo (HS.fromList pgCols) tn be mLimit allowAgg deps depHeaders
 
   where
     tn = tiName tabInfo
     fieldInfoMap = tiFieldInfoMap tabInfo
+    allowAgg = or $ spAllowAggregations sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 
 type SelPermDef = PermDef SelPerm

@@ -295,6 +295,7 @@ data SelPermInfo
   , spiTable           :: !QualifiedTable
   , spiFilter          :: !S.BoolExp
   , spiLimit           :: !(Maybe Int)
+  , spiAllowAgg        :: !Bool
   , spiDeps            :: ![SchemaDependency]
   , spiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)

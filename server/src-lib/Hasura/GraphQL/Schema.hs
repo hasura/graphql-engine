@@ -107,7 +107,7 @@ instance Monoid TyAgg where
   mempty = TyAgg Map.empty Map.empty Map.empty
   mappend = (<>)
 
-type SelField = Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool)
+type SelField = Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int, Bool)
 
 qualTableToName :: QualifiedTable -> G.Name
 qualTableToName = G.Name <$> \case
@@ -300,15 +300,21 @@ array_relationship(
   limit: Int
   offset: Int
 ):  [remote_table!]!
+array_relationship_agg(
+  where: remote_table_bool_exp
+  limit: Int
+  offset: Int
+):  remote_table_agg!
 object_relationship: remote_table
 
 -}
 mkRelFld
-  :: RelInfo
+  :: Bool
+  -> RelInfo
   -> Bool
   -> [ObjFldInfo]
-mkRelFld (RelInfo rn rTy _ remTab _ isManual) isNullable = case rTy of
-  ArrRel -> [arrRelFld, aggArrRelFld]
+mkRelFld allowAgg (RelInfo rn rTy _ remTab _ isManual) isNullable = case rTy of
+  ArrRel -> bool [arrRelFld] [arrRelFld, aggArrRelFld] allowAgg
   ObjRel -> [objRelFld]
   where
     objRelFld = ObjFldInfo (Just "An object relationship")
@@ -323,7 +329,7 @@ mkRelFld (RelInfo rn rTy _ remTab _ isManual) isNullable = case rTy of
     arrRelTy = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy remTab
     aggArrRelFld = ObjFldInfo (Just "An aggregated array relationship")
       (mkAggRelName rn) (fromInpValL $ mkSelArgs remTab) $
-      G.toGT $ mkTableAggTy remTab
+      G.toGT $ G.toNT $ mkTableAggTy remTab
 
 {-
 type table {
@@ -341,7 +347,8 @@ mkTableObj tn allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) $ mapFromL _fiName flds
   where
     flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
-    mkRelFld' (relInfo, _, _, isNullable) = mkRelFld relInfo isNullable
+    mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
+      mkRelFld allowAgg relInfo isNullable
     desc = G.Description $ "columns and relationships of " <>> tn
 
 {-
@@ -542,7 +549,7 @@ mkBoolExpInp tn fields =
     mkFldExpInp = \case
       Left (PGColInfo colName colTy _) ->
         mk (G.Name $ getPGColTxt colName) (mkCompExpTy colTy)
-      Right (RelInfo relName _ _ remTab _ _, _, _, _) ->
+      Right (RelInfo relName _ _ remTab _ _, _, _, _, _) ->
         mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
 
 mkPGColInp :: PGColInfo -> InpValInfo
@@ -1084,7 +1091,7 @@ mkGCtxRole'
   -- insert perm
   -> Maybe (InsCtx, Bool)
   -- select permission
-  -> Maybe [SelField]
+  -> Maybe (Bool, [SelField])
   -- update cols
   -> Maybe [PGColInfo]
   -- delete cols
@@ -1097,7 +1104,7 @@ mkGCtxRole'
   -- all columns
   -> [PGCol]
   -> TyAgg
-mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints viM allCols =
+mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allCols =
   TyAgg (mkTyInfoMap allTypes) fieldMap ordByEnums
 
   where
@@ -1155,6 +1162,7 @@ mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints viM allC
     -- fields used in set input object
     updSetInpObjFldsM = mkColFldMap (mkUpdSetTy tn) <$> updColsM
 
+    selFldsM = snd <$> selPermM
     -- boolexp input type
     boolExpInpObjM = case selFldsM of
       Just selFlds -> Just $ mkBoolExpInp tn selFlds
@@ -1169,12 +1177,16 @@ mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints viM allC
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
     mkFld ty = \case
       Left ci -> [((ty, mkColName $ pgiName ci), Left ci)]
-      Right (ri, a, b, _) ->
-        let relFld = ((ty, G.Name $ getRelTxt $ riName ri), Right (ri, False, a, b))
-            aggRelFld = ((ty, mkAggRelName $ riName ri), Right (ri, True, a, b))
+      Right (ri, allowAgg, perm, lim, _) ->
+        let relFld = ( (ty, G.Name $ getRelTxt $ riName ri)
+                     , Right (ri, False, perm, lim)
+                     )
+            aggRelFld = ( (ty, mkAggRelName $ riName ri)
+                        , Right (ri, True, perm, lim)
+                        )
         in case riType ri of
           ObjRel -> [relFld]
-          ArrRel -> [relFld, aggRelFld]
+          ArrRel -> bool [relFld] [relFld, aggRelFld] allowAgg
 
     -- the fields used in bool exp
     boolExpInpObjFldsM = mkFldMap (mkBoolExpTy tn) <$> selFldsM
@@ -1191,14 +1203,14 @@ mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints viM allC
     -- table obj
     selObjM = mkTableObj tn <$> selFldsM
     -- aggregate objs
-    aggObjs = case selFldsM of
-      Just selFlds ->
+    aggObjs = case selPermM of
+      Just (True, selFlds) ->
         let numCols = (map pgiName . getNumCols) selFlds
             compCols = (map pgiName . getCompCols) selFlds
         in [ mkTableAggObj tn
            , mkTableAggFldsObj tn numCols compCols
            ] <> mkColAggFldsObjs selFlds
-      Nothing -> []
+      _ -> []
     getNumCols = onlyNumCols . lefts
     getCompCols = onlyComparableCols . lefts
     mkColAggFldsObjs flds =
@@ -1229,7 +1241,7 @@ getRootFldsRole'
   -> [TableConstraint]
   -> FieldInfoMap
   -> Maybe ([T.Text], Bool) -- insert perm
-  -> Maybe (S.BoolExp, Maybe Int, [T.Text]) -- select filter
+  -> Maybe (S.BoolExp, Maybe Int, [T.Text], Bool) -- select filter
   -> Maybe ([PGCol], S.BoolExp, [T.Text]) -- update filter
   -> Maybe (S.BoolExp, [T.Text]) -- delete filter
   -> Maybe ViewInfo
@@ -1241,7 +1253,7 @@ getRootFldsRole' tn primCols constraints fields insM selM updM delM viM =
             [ mutHelper viIsInsertable getInsDet insM
             , mutHelper viIsUpdatable getUpdDet updM
             , mutHelper viIsDeletable getDelDet delM
-            , getSelDet <$> selM, getSelAggDet <$> selM
+            , getSelDet <$> selM, getSelAggDet selM
             , getPKeySelDet selM $ getColInfos primCols colInfos
             ]
     mutHelper f getDet mutM =
@@ -1258,14 +1270,16 @@ getRootFldsRole' tn primCols constraints fields insM selM updM delM viM =
       )
     getDelDet (delFltr, hdrs) =
       (OCDelete tn delFltr hdrs, Right $ mkDelMutFld tn)
-    getSelDet (selFltr, pLimit, hdrs) =
+    getSelDet (selFltr, pLimit, hdrs, _) =
       (OCSelect tn selFltr pLimit hdrs, Left $ mkSelFld tn)
-    getSelAggDet (selFltr, pLimit, hdrs) =
+
+    getSelAggDet (Just (selFltr, pLimit, hdrs, True)) = Just
       (OCSelectAgg tn selFltr pLimit hdrs, Left $ mkAggSelFld tn)
+    getSelAggDet _ = Nothing
 
     getPKeySelDet Nothing _ = Nothing
     getPKeySelDet _ [] = Nothing
-    getPKeySelDet (Just (selFltr, _, hdrs)) pCols = Just
+    getPKeySelDet (Just (selFltr, _, hdrs, _)) pCols = Just
       (OCSelectPkey tn selFltr hdrs, Left $ mkSelFldPKey tn pCols)
 
 -- getRootFlds
@@ -1278,16 +1292,16 @@ getRootFldsRole' tn primCols constraints fields insM selM updM delM viM =
 -- gets all the selectable fields (cols and rels) of a
 -- table for a role
 
-getSelFlds
+getSelPerm
   :: (MonadError QErr m)
   => TableCache
   -- all the fields of a table
   -> FieldInfoMap
   -- role and its permission
   -> RoleName -> SelPermInfo
-  -> m [SelField]
-getSelFlds tableCache fields role selPermInfo =
-  fmap catMaybes $ forM (toValidFieldInfos fields) $ \case
+  -> m (Bool, [SelField])
+getSelPerm tableCache fields role selPermInfo = do
+  selFlds <- fmap catMaybes $ forM (toValidFieldInfos fields) $ \case
     FIColumn pgColInfo ->
       return $ fmap Left $ bool Nothing (Just pgColInfo) $
       Set.member (pgiName pgColInfo) allowedCols
@@ -1297,10 +1311,12 @@ getSelFlds tableCache fields role selPermInfo =
             Map.lookup role (tiRolePermInfoMap remTableInfo) >>= _permSel
       return $ flip fmap remTableSelPermM $
         \rmSelPermM -> Right ( relInfo
+                             , spiAllowAgg rmSelPermM
                              , spiFilter rmSelPermM
                              , spiLimit rmSelPermM
                              , isRelNullable fields relInfo
                              )
+  return (spiAllowAgg selPermInfo, selFlds)
   where
     allowedCols = spiCols selPermInfo
 
@@ -1357,12 +1373,12 @@ mkGCtxRole
   -> RolePermInfo
   -> m (TyAgg, RootFlds, InsCtxMap)
 mkGCtxRole tableCache tn fields pCols constraints viM role permInfo = do
-  selFldsM <- mapM (getSelFlds tableCache fields role) $ _permSel permInfo
+  selPermM <- mapM (getSelPerm tableCache fields role) $ _permSel permInfo
   tabInsCtxM <- forM (_permIns permInfo) $ \ipi -> do
     tic <- mkInsCtx role tableCache fields ipi
     return (tic, ipiAllowUpsert ipi)
   let updColsM = filterColInfos . upiCols <$> _permUpd permInfo
-      tyAgg = mkGCtxRole' tn tabInsCtxM selFldsM updColsM
+      tyAgg = mkGCtxRole' tn tabInsCtxM selPermM updColsM
               (void $ _permDel permInfo) pColInfos constraints viM allCols
       rootFlds = getRootFldsRole tn pCols constraints fields viM permInfo
       insCtxMap = maybe Map.empty (Map.singleton tn) $ fmap fst tabInsCtxM
@@ -1389,7 +1405,9 @@ getRootFldsRole tn pCols constraints fields viM (RolePermInfo insM selM updM del
   viM
   where
     mkIns i = (ipiRequiredHeaders i, ipiAllowUpsert i)
-    mkSel s = (spiFilter s, spiLimit s, spiRequiredHeaders s)
+    mkSel s = ( spiFilter s, spiLimit s
+              , spiRequiredHeaders s, spiAllowAgg s
+              )
     mkUpd u = ( Set.toList $ upiCols u
               , upiFilter u
               , upiRequiredHeaders u
@@ -1406,7 +1424,7 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols 
        (mkGCtxRole tableCache tn fields pkeyCols validConstraints viewInfo) rolePerms
   adminInsCtx <- mkAdminInsCtx tn tableCache fields
   let adminCtx = mkGCtxRole' tn (Just (adminInsCtx, True))
-                 (Just selFlds) (Just colInfos) (Just ())
+                 (Just (True, selFlds)) (Just colInfos) (Just ())
                  pkeyColInfos validConstraints viewInfo allCols
       adminInsCtxMap = Map.singleton tn adminInsCtx
   return $ Map.insert adminRole (adminCtx, adminRootFlds, adminInsCtxMap) m
@@ -1417,11 +1435,11 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols 
     pkeyColInfos = getColInfos pkeyCols colInfos
     selFlds = flip map (toValidFieldInfos fields) $ \case
       FIColumn pgColInfo     -> Left pgColInfo
-      FIRelationship relInfo -> Right (relInfo, noFilter, Nothing, isRelNullable fields relInfo)
+      FIRelationship relInfo -> Right (relInfo, True, noFilter, Nothing, isRelNullable fields relInfo)
     noFilter = S.BELit True
     adminRootFlds =
       getRootFldsRole' tn pkeyCols validConstraints fields
-      (Just ([], True)) (Just (noFilter, Nothing, []))
+      (Just ([], True)) (Just (noFilter, Nothing, [], True))
       (Just (allCols, noFilter, [])) (Just (noFilter, []))
       viewInfo
 
