@@ -155,6 +155,9 @@ isRelNullable fim ri = isNullable
 mkColName :: PGCol -> G.Name
 mkColName (PGCol n) = G.Name n
 
+mkAggRelName :: RelName -> G.Name
+mkAggRelName (RelName r) = G.Name $ r <> "_agg"
+
 mkCompExpName :: PGColType -> G.Name
 mkCompExpName pgColTy =
   G.Name $ T.pack (show pgColTy) <> "_comparison_exp"
@@ -182,10 +185,6 @@ mkTableAggTy tn =
 mkTableAggFldsTy :: QualifiedTable -> G.NamedType
 mkTableAggFldsTy tn =
   G.NamedType $ qualTableToName tn <> "_agg_fields"
-
-mkTableAggNodeTy :: QualifiedTable -> G.NamedType
-mkTableAggNodeTy tn =
-  G.NamedType $ qualTableToName tn <> "_agg_node"
 
 mkTableColAggFldsTy :: G.Name -> QualifiedTable -> G.NamedType
 mkTableColAggFldsTy op tn =
@@ -305,22 +304,26 @@ object_relationship: remote_table
 
 -}
 mkRelFld
-  :: (QualifiedTable -> G.GType)
-  -> RelInfo
+  :: RelInfo
   -> Bool
-  -> ObjFldInfo
-mkRelFld arrRelTyFn (RelInfo rn rTy _ remTab _ isManual) isNullable = case rTy of
-  ArrRel ->
-    ObjFldInfo (Just "An array relationship") (G.Name $ getRelTxt rn)
-    (fromInpValL $ mkSelArgs remTab) $ arrRelTyFn remTab
-  ObjRel ->
-    ObjFldInfo (Just "An object relationship") (G.Name $ getRelTxt rn)
-    Map.empty
-    objRelTy
+  -> [ObjFldInfo]
+mkRelFld (RelInfo rn rTy _ remTab _ isManual) isNullable = case rTy of
+  ArrRel -> [arrRelFld, aggArrRelFld]
+  ObjRel -> [objRelFld]
   where
+    objRelFld = ObjFldInfo (Just "An object relationship")
+      (G.Name $ getRelTxt rn) Map.empty objRelTy
     objRelTy = bool (G.toGT $ G.toNT relTabTy) (G.toGT relTabTy) isObjRelNullable
     isObjRelNullable = isManual || isNullable
     relTabTy = mkTableTy remTab
+
+    arrRelFld =
+      ObjFldInfo (Just "An array relationship") (G.Name $ getRelTxt rn)
+      (fromInpValL $ mkSelArgs remTab) arrRelTy
+    arrRelTy = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy remTab
+    aggArrRelFld = ObjFldInfo (Just "An aggregated array relationship")
+      (mkAggRelName rn) (fromInpValL $ mkSelArgs remTab) $
+      G.toGT $ mkTableAggTy remTab
 
 {-
 type table {
@@ -337,16 +340,14 @@ mkTableObj
 mkTableObj tn allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) $ mapFromL _fiName flds
   where
-    flds = map (either mkPGColFld mkRelFld') allowedFlds
-    mkRelFld' (relInfo, _, _, isNullable) = mkRelFld arrRelTyFn relInfo isNullable
-    arrRelTyFn = G.toGT . G.toNT . G.toLT . G.toNT . mkTableTy
-    desc = G.Description $
-      "columns and relationships of " <>> tn
+    flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
+    mkRelFld' (relInfo, _, _, isNullable) = mkRelFld relInfo isNullable
+    desc = G.Description $ "columns and relationships of " <>> tn
 
 {-
 type table_agg {
   agg: table_agg_fields
-  nodes: [table_agg_node!]
+  nodes: [table!]!
 }
 -}
 mkTableAggObj
@@ -361,7 +362,7 @@ mkTableAggObj tn =
     aggFld = ObjFldInfo Nothing "agg" Map.empty $ G.toGT $
              mkTableAggFldsTy tn
     nodesFld = ObjFldInfo Nothing "nodes" Map.empty $ G.toGT $
-               G.toLT $ G.toNT $ mkTableAggNodeTy tn
+               G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
 
 {-
 type table_agg_fields{
@@ -413,28 +414,6 @@ mkTableColAggFldsObj tn op f cols =
 
     mkColObjFld c = ObjFldInfo Nothing (G.Name $ getPGColTxt $ pgiName c)
                     Map.empty $ G.toGT $ f $ pgiType c
-
-{-
-type table_agg_node{
-  col1: colTy1
-  .     .
-  .     .
-  objRel: <remote-table>
-  arrRel: <remote-table>_agg
-}
--}
-mkTableAggNodeObj
-  :: QualifiedTable
-  -> [SelField]
-  -> ObjTyInfo
-mkTableAggNodeObj tn allowedFlds =
-  mkObjTyInfo (Just desc) (mkTableAggNodeTy tn) $ mapFromL _fiName flds
-  where
-    desc = G.Description $
-      "columns, object relationships and array relationships (as aggregate fields) of " <>> tn
-    flds = map (either mkPGColFld mkRelFld') allowedFlds
-    mkRelFld' (relInfo, _, _, isNullable) = mkRelFld arrRelTyFn relInfo isNullable
-    arrRelTyFn = G.toGT . mkTableAggTy
 
 {-
 
@@ -1151,15 +1130,12 @@ mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints viM allC
 
     fieldMap = Map.unions $ catMaybes
                [ insInpObjFldsM, updSetInpObjFldsM, boolExpInpObjFldsM
-               , selObjFldsM, selAggNodeObjFldsM, Just selByPKeyObjFlds
+               , selObjFldsM, Just selByPKeyObjFlds
                ]
 
-    nameFromSelFld = \case
-      Left colInfo -> G.Name $ getPGColTxt $ pgiName colInfo
-      Right (relInfo, _, _, _) -> G.Name $ getRelTxt $ riName relInfo
-
     -- helper
-    mkColFldMap ty = mapFromL ((ty,) . nameFromSelFld) . map Left
+    mkColFldMap ty cols = Map.fromList $ flip map cols $
+      \c -> ((ty, mkColName $ pgiName c), Left c)
 
     insCtxM = fst <$> insPermM
     insColsM = icColumns <$> insCtxM
@@ -1190,7 +1166,16 @@ mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints viM allC
         else Nothing
 
     -- helper
-    mkFldMap ty = mapFromL ((ty,) . nameFromSelFld)
+    mkFldMap ty = Map.fromList . concatMap (mkFld ty)
+    mkFld ty = \case
+      Left ci -> [((ty, mkColName $ pgiName ci), Left ci)]
+      Right (ri, a, b, _) ->
+        let relFld = ((ty, G.Name $ getRelTxt $ riName ri), Right (ri, False, a, b))
+            aggRelFld = ((ty, mkAggRelName $ riName ri), Right (ri, True, a, b))
+        in case riType ri of
+          ObjRel -> [relFld]
+          ArrRel -> [relFld, aggRelFld]
+
     -- the fields used in bool exp
     boolExpInpObjFldsM = mkFldMap (mkBoolExpTy tn) <$> selFldsM
 
@@ -1212,7 +1197,6 @@ mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints viM allC
             compCols = (map pgiName . getCompCols) selFlds
         in [ mkTableAggObj tn
            , mkTableAggFldsObj tn numCols compCols
-           , mkTableAggNodeObj tn selFlds
            ] <> mkColAggFldsObjs selFlds
       Nothing -> []
     getNumCols = onlyNumCols . lefts
@@ -1229,8 +1213,6 @@ mkGCtxRole' tn insPermM selFldsM updColsM delPermM pkeyCols constraints viM allC
       in numFldsObjs <> compFldsObjs
     -- the fields used in table object
     selObjFldsM = mkFldMap (mkTableTy tn) <$> selFldsM
-    -- the fields used in table_agg_node object
-    selAggNodeObjFldsM = mkFldMap (mkTableAggNodeTy tn) <$> selFldsM
     -- the field used in table_by_pkey object
     selByPKeyObjFlds = Map.fromList $ flip map pkeyCols $
       \pgi@(PGColInfo col ty _) -> ((mkScalarTy ty, mkColName col), Left pgi)

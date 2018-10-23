@@ -229,8 +229,10 @@ annNodeToSel opts joinCond als = \case
     let pfx = _bnPrefix bn
         baseSelFrom = S.mkSelFromItem (bnToSel bn) (mkAliasFromBN bn)
         ordBy = _bnOrderBy bn
+        -- to enforce aggregation
+        boolOrExtr = S.Extractor (S.SEUnsafe "bool_or('true')") Nothing
         aggSel = S.mkSelect
-                 { S.selExtr = map (selFldToExtr pfx ordBy) flds
+                 { S.selExtr = boolOrExtr : map (selFldToExtr pfx ordBy) flds
                  , S.selFrom = Just $ S.FromExp [baseSelFrom]
                  }
         aggSelFrom = S.mkSelFromItem aggSel (mkAliasFromBN bn)
@@ -437,11 +439,11 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
            )
       SFAggFld aggFlds ->
         let extrs = concatMap (fetchExtrFromAggFld . snd) aggFlds
-        in ( HM.fromList extrs
+        in ( HM.fromList $ extrs <> obExtrs
            , HM.empty
            , HM.empty
            )
-      SFExp _ -> (HM.empty, HM.empty, HM.empty)
+      SFExp _ -> (HM.fromList obExtrs, HM.empty, HM.empty)
 
     fetchExtrFromAggFld AFCount         = []
     fetchExtrFromAggFld (AFSum sumFlds) = colFldsToExps sumFlds

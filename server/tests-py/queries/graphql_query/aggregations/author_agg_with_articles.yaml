@@ -19,7 +19,7 @@ response:
       nodes:
       - id: 1
         name: Author 1
-        articles:
+        articles_agg:
           agg:
             count: 2
             sum:
@@ -49,7 +49,7 @@ response:
             author_id: 1
       - id: 2
         name: Author 2
-        articles:
+        articles_agg:
           agg:
             count: 1
             sum:
@@ -98,7 +98,7 @@ query:
        nodes{
          id
          name
-         articles{
+         articles_agg{
            agg{
              count
              sum{

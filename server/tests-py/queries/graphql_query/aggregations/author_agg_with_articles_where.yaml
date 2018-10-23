@@ -7,7 +7,7 @@ response:
       nodes:
       - id: 1
         name: Author 1
-        articles:
+        articles_agg:
           agg:
             count: 2
             sum:
@@ -42,7 +42,7 @@ query:
        nodes{
          id
          name
-         articles(where: {id: {_lt: 3}}){
+         articles_agg(where: {id: {_lt: 3}}){
            agg{
              count
              sum{
