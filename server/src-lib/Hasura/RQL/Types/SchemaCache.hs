@@ -792,7 +792,7 @@ getOpInfo trn ti mos= fromSubscrOpSpec <$> mos
                            SchemaDependency (SOTableObj qt (TOCol col))
                           ("event trigger " <> trn <> " is dependent on column " <> getPGColTxt col))
                     (toList cols)
-          payload = getColsFromSub $ sosPayload os
+          payload = maybe HS.empty getColsFromSub (sosPayload os)
           payloadDeps = map (\col ->
                                SchemaDependency (SOTableObj qt (TOCol col))
                                ("event trigger " <> trn <> " is dependent on column " <> getPGColTxt col))

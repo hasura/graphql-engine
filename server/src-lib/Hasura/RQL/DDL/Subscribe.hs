@@ -21,7 +21,6 @@ import qualified Hasura.SQL.DML          as S
 import qualified Data.FileEmbed          as FE
 import qualified Data.HashMap.Strict     as HashMap
 import qualified Data.Text               as T
-import qualified Data.Text.Encoding      as TE
 import qualified Database.PG.Query       as Q
 
 
@@ -67,8 +66,8 @@ getTriggerSql op trid trn qt allCols spec =
       [ (T.pack "OPERATION", T.pack $ show op1)
       , (T.pack "OLD_ROW", toSQLTxt $ renderRow OLD columns )
       , (T.pack "NEW_ROW", toSQLTxt $ renderRow NEW columns )
-      , (T.pack "OLD_PAYLOAD_EXPRESSION", toSQLTxt $ renderOldDataExp op1 payload )
-      , (T.pack "NEW_PAYLOAD_EXPRESSION", toSQLTxt $ renderNewDataExp op1 payload )
+      , (T.pack "OLD_PAYLOAD_EXPRESSION", toSQLTxt $ renderOldDataExp op1 $ fromMaybePayload payload )
+      , (T.pack "NEW_PAYLOAD_EXPRESSION", toSQLTxt $ renderNewDataExp op1 $ fromMaybePayload payload )
       ]
     renderOldDataExp op2 scs =
       case op2 of
@@ -102,6 +101,9 @@ getTriggerSql op trid trn qt allCols spec =
         SubCArray cols -> applyRow $
           S.mkRowExp $ map (toExtr . mkQId opVar) $
           getColInfos cols allCols
+    fromMaybePayload :: Maybe SubscribeColumns -> SubscribeColumns
+    fromMaybePayload (Just sc) = sc
+    fromMaybePayload Nothing   = SubCStar
 
 mkTriggerQ
   :: TriggerId
@@ -116,7 +118,7 @@ mkTriggerQ trid trn qt allCols (TriggerOpsDef insert update delete) = do
              <> getTriggerSql DELETE trid trn qt allCols delete
   case msql of
     Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromText sql)
-    Nothing -> throw500 "no trigger sql generated"
+    Nothing  -> throw500 "no trigger sql generated"
 
 addEventTriggerToCatalog
   :: QualifiedTable
@@ -187,7 +189,7 @@ fetchEventTrigger trn = do
     getTrigger (x:_) = return $ EventTrigger
                        (QualifiedTable sn tn)
                        trn'
-                       (fromMaybeTriggerOpsDef tDef)
+                       tDef
                        webhook
                        (RetryConf nr rint)
       where (sn, tn, trn', Q.AltJ tDef, webhook, nr, rint) = x

@@ -19,7 +19,6 @@ module Hasura.RQL.Types.Subscribe
   , HeaderConf(..)
   , HeaderValue(..)
   , HeaderName
-  , fromMaybeTriggerOpsDef
   ) where
 
 import           Data.Aeson
@@ -55,21 +54,10 @@ instance ToJSON SubscribeColumns where
 data SubscribeOpSpec
   = SubscribeOpSpec
   { sosColumns :: !SubscribeColumns
-  , sosPayload :: !SubscribeColumns
+  , sosPayload :: !(Maybe SubscribeColumns)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
-
-data SubscribeOpSpecMaybe
-  = SubscribeOpSpecMaybe
-  { sosoColumns :: !SubscribeColumns
-  , sosoPayload :: !(Maybe SubscribeColumns)
-  } deriving (Show, Eq, Lift)
-
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''SubscribeOpSpecMaybe)
-
-fromMaybeSubscribeOpSpec :: SubscribeOpSpecMaybe -> SubscribeOpSpec
-fromMaybeSubscribeOpSpec (SubscribeOpSpecMaybe cols payload) = SubscribeOpSpec cols (fromMaybe SubCStar payload)
 
 data RetryConf
   = RetryConf
@@ -133,16 +121,13 @@ instance FromJSON CreateEventTriggerQuery where
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
-    let insert' = fromMaybeSubscribeOpSpec <$> insert
-        update' = fromMaybeSubscribeOpSpec <$> update
-        delete' = fromMaybeSubscribeOpSpec <$> delete
-    mapM_ checkEmptyCols [insert', update', delete']
-    return $ CreateEventTriggerQuery name table insert' update' delete' retryConf webhook headers replace
+    mapM_ checkEmptyCols [insert, update, delete]
+    return $ CreateEventTriggerQuery name table insert update delete retryConf webhook headers replace
     where
       checkEmptyCols spec
         = case spec of
         Just (SubscribeOpSpec (SubCArray cols) _) -> when (null cols) (fail "found empty column specification")
-        Just (SubscribeOpSpec _ (SubCArray cols) ) -> when (null cols) (fail "found empty payload specification")
+        Just (SubscribeOpSpec _ (Just (SubCArray cols)) ) -> when (null cols) (fail "found empty payload specification")
         _ -> return ()
   parseJSON _ = fail "expecting an object"
 
@@ -156,22 +141,6 @@ data TriggerOpsDef
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
-
-data TriggerOpsDefMaybe
-  = TriggerOpsDefMaybe
-  { tdmInsert :: !(Maybe SubscribeOpSpecMaybe)
-  , tdmUpdate :: !(Maybe SubscribeOpSpecMaybe)
-  , tdmDelete :: !(Maybe SubscribeOpSpecMaybe)
-  } deriving (Show, Eq, Lift)
-
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''TriggerOpsDefMaybe)
-
-fromMaybeTriggerOpsDef :: TriggerOpsDefMaybe -> TriggerOpsDef
-fromMaybeTriggerOpsDef (TriggerOpsDefMaybe ins upd del)
-  = TriggerOpsDef
-    (fromMaybeSubscribeOpSpec <$> ins)
-    (fromMaybeSubscribeOpSpec <$> upd)
-    (fromMaybeSubscribeOpSpec <$> del)
 
 data DeleteEventTriggerQuery
   = DeleteEventTriggerQuery

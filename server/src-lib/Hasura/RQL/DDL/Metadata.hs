@@ -326,8 +326,7 @@ fetchMetadata = do
     mkTriggerMetaDefs = mapM trigRowToDef
 
     trigRowToDef (sn, tn, trn, Q.AltJ tDefVal, webhook, nr, rint, Q.AltJ mheaders) = do
-      tDefMaybe <- decodeValue tDefVal
-      let tDef = fromMaybeTriggerOpsDef tDefMaybe
+      tDef <- decodeValue tDefVal
       return (QualifiedTable sn tn, DTS.EventTriggerDef trn tDef webhook (RetryConf nr rint) mheaders)
 
     fetchTables =
