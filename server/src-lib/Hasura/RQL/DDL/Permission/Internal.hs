@@ -216,7 +216,7 @@ valueParser columnType = \case
   -- Typical value as Aeson's value
   val -> txtRHSBuilder columnType val
   where
-    curSess = S.SEUnsafe "current_setting('hasura.session')::json"
+    curSess = S.SEUnsafe "current_setting('hasura.user')::json"
     fromCurSess hdr =
       S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower hdr]
       `S.SETyAnn` (S.AnnType $ T.pack $ show columnType)
