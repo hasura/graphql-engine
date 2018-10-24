@@ -65,7 +65,8 @@ $(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
  )
 
 adminUserInfo :: UserInfo
-adminUserInfo = UserInfo adminRole Map.empty
+adminUserInfo =
+  UserInfo adminRole $ Map.singleton "x-hasura-role" "admin"
 
 data PermType
   = PTInsert

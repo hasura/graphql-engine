@@ -210,16 +210,16 @@ valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
 valueParser columnType = \case
   -- When it is a special variable
   val@(String t)
-    | isXHasuraTxt t -> asCurrentSetting t
-    | isReqUserId t -> asCurrentSetting userIdHeader
-    | otherwise -> txtRHSBuilder columnType val
-
+    | isXHasuraTxt t -> return $ fromCurSess t
+    | isReqUserId t  -> return $ fromCurSess userIdHeader
+    | otherwise      -> txtRHSBuilder columnType val
   -- Typical value as Aeson's value
   val -> txtRHSBuilder columnType val
   where
-    asCurrentSetting hdr = return $ S.SEUnsafe $
-      "current_setting('hasura." <> dropAndSnakeCase hdr
-       <> "')::" <> T.pack (show columnType)
+    curSess = S.SEUnsafe "current_setting('hasura.user')::json"
+    fromCurSess hdr =
+      S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower hdr]
+      `S.SETyAnn` (S.AnnType $ T.pack $ show columnType)
 
 -- Convert where clause into SQL BoolExp
 convFilterExp :: (MonadError QErr m)
