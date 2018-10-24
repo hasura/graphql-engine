@@ -1,0 +1,27 @@
+description: Insert landmark using only one co-ordinate. Error as minimum 2 are required
+url: /v1alpha1/graphql
+status: 400
+response:
+  errors:
+  - code: parse-failed
+    error: A Position needs at least 2 elements
+    path: '$.variableValues[0].location.coordinates'
+query:
+  variables:
+    landmarks:
+    - name: Baz
+      type: house
+      location:
+        coordinates: [43.75049]
+        type: Point
+  query: |
+    mutation insertLandmark($landmarks: [landmark_insert_input!]!) {
+      insert_landmark(objects: $landmarks) {
+        returning{
+          id
+          name
+          location
+          type
+        }
+      }
+    }
