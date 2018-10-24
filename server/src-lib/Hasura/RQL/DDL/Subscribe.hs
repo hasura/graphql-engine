@@ -101,9 +101,8 @@ getTriggerSql op trid trn qt allCols spec =
         SubCArray cols -> applyRow $
           S.mkRowExp $ map (toExtr . mkQId opVar) $
           getColInfos cols allCols
-    fromMaybePayload :: Maybe SubscribeColumns -> SubscribeColumns
-    fromMaybePayload (Just sc) = sc
-    fromMaybePayload Nothing   = SubCStar
+
+    fromMaybePayload = fromMaybe SubCStar
 
 mkTriggerQ
   :: TriggerId
