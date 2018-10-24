@@ -21,7 +21,14 @@ class VoyagerView extends Component {
       <Voyager
         introspection={this.introspectionProvider}
         displayOptions={{ rootType: rootType }}
-        workerURI={hasuraconfig.webpackPrefix + 'voyager.worker.js'}
+        workerURI={
+          'http://' +
+          hasuraconfig.hmrHost +
+          ':' +
+          hasuraconfig.hmrPort +
+          hasuraconfig.webpackPrefix +
+          'voyager.worker.js'
+        }
       />
     );
   }
