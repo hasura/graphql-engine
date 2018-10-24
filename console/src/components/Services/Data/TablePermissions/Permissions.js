@@ -281,21 +281,21 @@ class Permissions extends Component {
         const bulkSelect = permsState.bulkSelect;
         const currentInputSelection = bulkSelect.filter(e => e === role)
           .length ? (
-            <input
-              onChange={dispatchBulkSelect}
-              checked="checked"
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          ) : (
-            <input
-              onChange={dispatchBulkSelect}
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          );
+          <input
+            onChange={dispatchBulkSelect}
+            checked="checked"
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        ) : (
+          <input
+            onChange={dispatchBulkSelect}
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        );
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
@@ -579,7 +579,7 @@ class Permissions extends Component {
 
         // TODO: Fix the controlled component
         _aggregationSection = (
-          <div>
+          <div className={styles.mar_small_neg_left_1}>
             <div className="radio">
               <label>
                 <input
@@ -591,7 +591,7 @@ class Permissions extends Component {
                     dispatchToggleAllowAggregation(e.target.checked)
                   }
                 />
-                <span className={styles.mar_left}>
+                <span className={styles.mar_small_left}>
                   Allow role '{permsState.role}' to make aggregation queries
                   &nbsp;
                   <OverlayTrigger
