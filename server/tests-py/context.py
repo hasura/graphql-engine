@@ -77,6 +77,7 @@ class HGECtx:
             with open(hge_jwt_key_file) as f:
                 self.hge_jwt_key = f.read()
         self.webhook_insecure = webhook_insecure
+        self.may_skip_test_teardown = False
 
         self.ws_url = urlparse(hge_url)
         self.ws_url = self.ws_url._replace(scheme='ws')

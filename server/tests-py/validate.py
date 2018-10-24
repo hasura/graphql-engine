@@ -131,13 +131,16 @@ def check_query(hge_ctx, conf, add_auth=True):
     return code, resp
 
 def check_query_f(hge_ctx, f, add_auth=True):
+    hge_ctx.may_skip_test_teardown = False
     with open(f) as c:
         conf = yaml.load(c)
         if isinstance(conf, list):
             for sconf in conf:
                 check_query( hge_ctx, sconf)
         else:
-           check_query( hge_ctx, conf, add_auth )
+            if conf['status'] != 200:
+                hge_ctx.may_skip_test_teardown = True
+            check_query( hge_ctx, conf, add_auth )
 
 def json_ordered(obj):
     if isinstance(obj, dict):

@@ -1,22 +1,18 @@
 import pytest
 from validate import check_query_f
+from super_classes import DefaultTestSelectQueries
 
 if not pytest.config.getoption("--test-webhook-insecure"):
     pytest.skip("--test-webhook-https-insecure flag is missing, skipping tests", allow_module_level=True)
 
-class TestHTTPSWebhookInsecure:
+class TestHTTPSWebhookInsecure(DefaultTestSelectQueries):
 
     def test_user_select_unpublished_articles_err(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir + '/user_select_query_unpublished_articles_fail.yaml')
+        check_query_f(hge_ctx, self.dir() + '/user_select_query_unpublished_articles_fail.yaml')
 
     def test_user_only_other_users_published_articles_err(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir + '/user_query_other_users_published_articles_fail.yaml')
+        check_query_f(hge_ctx, self.dir() + '/user_query_other_users_published_articles_fail.yaml')
 
-    @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        self.dir = 'webhook/insecure'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp
+    @classmethod
+    def dir(cls):
+        return 'webhook/insecure'
