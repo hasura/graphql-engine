@@ -22,6 +22,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils
 import           Hasura.SQL.Rewrite         (prefixNumToAliases)
 import           Hasura.SQL.Types
 
@@ -262,10 +263,6 @@ mkBaseNode pfx fldAls (AnnSel flds tn fromItemM fltr permLimitM tableArgs) =
     (allObjs, allArrs) =
       foldl' addRel (HM.empty, HM.empty) $
       mapMaybe (\(als, f) -> (als,) <$> getAnnRel f) flds
-
-    _1 (a, _, _) = a
-    _2 (_, b, _) = b
-    _3 (_, _, c) = c
 
     procOrdByM = unzip3 . map (processAnnOrderByItem pfx) <$> orderByM
     ordByExpM  = S.OrderByExp . _2 <$> procOrdByM
