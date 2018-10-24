@@ -66,6 +66,8 @@ data AnnInsObj
   , _aioDefVals   :: !(Map.HashMap PGCol S.SQLExp)
   } deriving (Show, Eq)
 
+type InsItems = ([(PGCol, PGColType, PGColValue)], [ObjRelIns], [ArrRelIns])
+
 mkAnnInsObj
   :: (MonadError QErr m)
   => QualifiedTable
@@ -77,17 +79,18 @@ mkAnnInsObj tn insCtxMap annObj = do
   let defValMap = Map.fromList $ flip zip (repeat $ S.SEUnsafe "DEFAULT") $
                   map pgiName colInfos
   (cols, objRels, arrRels) <-
-    foldrM (traverseInsObj insCtxMap relInfoMap) ([], [], []) $ Map.toList annObj
+    foldrM (traverseInsObj insCtxMap relInfoMap) emptyInsItems $ OMap.toList annObj
   return $ AnnInsObj cols objRels arrRels view colInfos defValMap
-
+  where
+    emptyInsItems = ([], [], [])
 
 traverseInsObj
   :: MonadError QErr m
   => InsCtxMap
   -> RelationInfoMap
   -> (G.Name, AnnGValue)
-  -> ([(PGCol, PGColType, PGColValue)], [ObjRelIns], [ArrRelIns])
-  -> m ([(PGCol, PGColType, PGColValue)], [ObjRelIns], [ArrRelIns])
+  -> InsItems
+  -> m InsItems
 traverseInsObj insCtxMap rim (gName, annVal) (cols, objRels, arrRels) =
   case annVal of
     AGScalar colty mColVal -> do
@@ -98,8 +101,8 @@ traverseInsObj insCtxMap rim (gName, annVal) (cols, objRels, arrRels) =
     _ -> do
       obj <- asObject annVal
       let relName = RelName $ G.unName gName
-          confClaM = Map.lookup "on_conflict" obj
-      dataVal <- onNothing (Map.lookup "data" obj) $
+          confClaM = OMap.lookup "on_conflict" obj
+      dataVal <- onNothing (OMap.lookup "data" obj) $
         throw500 "\"data\" object not found"
       relInfo <- onNothing (Map.lookup relName rim) $
         throw500 $ "relation " <> relName <<> " not found"
@@ -129,7 +132,7 @@ parseAction
   :: (MonadError QErr m)
   => AnnGObject -> m (Maybe ConflictAction)
 parseAction obj = withPathK "action" $
-  mapM parseVal $ Map.lookup "action" obj
+  mapM parseVal $ OMap.lookup "action" obj
   where
     parseVal val = do
       (enumTy, enumVal) <- asEnumVal val
@@ -144,7 +147,7 @@ parseConstraint
   :: (MonadError QErr m)
   => AnnGObject -> m ConstraintName
 parseConstraint obj = withPathK "constraint" $ do
-  v <- onNothing (Map.lookup "constraint" obj) $ throw500
+  v <- onNothing (OMap.lookup "constraint" obj) $ throw500
     "\"constraint\" is expected, but not found"
   parseVal v
   where
@@ -156,7 +159,7 @@ parseUpdCols
   :: (MonadError QErr m)
   => AnnGObject -> m (Maybe [PGCol])
 parseUpdCols obj = withPathK "update_columns" $
-  mapM parseVal $ Map.lookup "update_columns" obj
+  mapM parseVal $ OMap.lookup "update_columns" obj
   where
     parseVal val = flip withArray val $ \_ enumVals ->
       forM enumVals $ \eVal -> do

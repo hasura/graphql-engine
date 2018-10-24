@@ -14,6 +14,9 @@ module Hasura.RQL.Types.SchemaCache
        , TableInfo(..)
        , TableConstraint(..)
        , ConstraintType(..)
+       , ViewInfo(..)
+       , isMutable
+       , mutableView
        , onlyIntCols
        , onlyJSONBCols
        , isUniqueOrPrimary
@@ -412,6 +415,26 @@ isUniqueOrPrimary (TableConstraint ty _) = case ty of
   CTPRIMARYKEY -> True
   CTUNIQUE     -> True
 
+data ViewInfo
+  = ViewInfo
+  { viIsUpdatable  :: !Bool
+  , viIsDeletable  :: !Bool
+  , viIsInsertable :: !Bool
+  } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 2 snakeCase) ''ViewInfo)
+
+isMutable :: (ViewInfo -> Bool) -> Maybe ViewInfo -> Bool
+isMutable _ Nothing = True
+isMutable f (Just vi) = f vi
+
+mutableView :: (MonadError QErr m) => QualifiedTable
+            -> (ViewInfo -> Bool) -> Maybe ViewInfo
+            -> T.Text -> m ()
+mutableView qt f mVI operation =
+  unless (isMutable f mVI) $ throw400 NotSupported $
+  "view " <> qt <<> " is not " <> operation
+
 data TableInfo
   = TableInfo
   { tiName                :: !QualifiedTable
@@ -420,15 +443,17 @@ data TableInfo
   , tiRolePermInfoMap     :: !RolePermInfoMap
   , tiConstraints         :: ![TableConstraint]
   , tiPrimaryKeyCols      :: ![PGCol]
+  , tiViewInfo            :: !(Maybe ViewInfo)
   , tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 
 mkTableInfo :: QualifiedTable -> Bool -> [(ConstraintType, ConstraintName)]
-            -> [(PGCol, PGColType, Bool)] -> [PGCol] -> TableInfo
-mkTableInfo tn isSystemDefined rawCons cols pcols =
-  TableInfo tn isSystemDefined colMap (M.fromList []) constraints pcols (M.fromList [])
+            -> [(PGCol, PGColType, Bool)] -> [PGCol]
+            -> Maybe ViewInfo -> TableInfo
+mkTableInfo tn isSystemDefined rawCons cols pcols mVI =
+  TableInfo tn isSystemDefined colMap (M.fromList []) constraints pcols mVI (M.fromList [])
   where
     constraints = flip map rawCons $ uncurry TableConstraint
     colMap     = M.fromList $ map f cols
@@ -563,6 +588,7 @@ delFldFromCache fn =
         Just _  -> return $
           ti { tiFieldInfoMap = M.delete fn fim }
         Nothing -> throw500 "field does not exist"
+
 data PermAccessor a where
   PAInsert :: PermAccessor InsPermInfo
   PASelect :: PermAccessor SelPermInfo
@@ -726,13 +752,13 @@ getDependentObjsOfTableWith f objId ti =
 
 getDependentRelsOfTable :: (T.Text -> Bool) -> SchemaObjId
                         -> TableInfo -> [SchemaObjId]
-getDependentRelsOfTable rsnFn objId (TableInfo tn _ fim _ _ _ _) =
+getDependentRelsOfTable rsnFn objId (TableInfo tn _ fim _ _ _ _ _) =
     map (SOTableObj tn . TORel . riName) $
     filter (isDependentOn rsnFn objId) $ getRels fim
 
 getDependentPermsOfTable :: (T.Text -> Bool) -> SchemaObjId
                          -> TableInfo -> [SchemaObjId]
-getDependentPermsOfTable rsnFn objId (TableInfo tn _ _ rpim _ _ _) =
+getDependentPermsOfTable rsnFn objId (TableInfo tn _ _ rpim _ _ _ _) =
   concat $ flip M.mapWithKey rpim $
   \rn rpi -> map (SOTableObj tn . TOPerm rn) $ getDependentPerms' rsnFn objId rpi
 
@@ -751,7 +777,7 @@ getDependentPerms' rsnFn objId (RolePermInfo mipi mspi mupi mdpi) =
 
 getDependentTriggersOfTable :: (T.Text -> Bool) -> SchemaObjId
                          -> TableInfo -> [SchemaObjId]
-getDependentTriggersOfTable rsnFn objId (TableInfo tn _ _ _ _ _ et) =
+getDependentTriggersOfTable rsnFn objId (TableInfo tn _ _ _ _ _ _ et) =
   map (SOTableObj tn . TOTrigger . otiTriggerName ) $ filter (isDependentOn rsnFn objId) $ getTriggers et
 
 getOpInfo :: TriggerName -> TableInfo -> Maybe SubscribeOpSpec -> Maybe OpTriggerInfo

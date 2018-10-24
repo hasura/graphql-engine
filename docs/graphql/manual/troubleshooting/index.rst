@@ -5,9 +5,9 @@ Hasura GraphQL engine may not work as expected and will throw unexpected errors 
 the GraphQL engine are altered using ``psql`` or any other PostgreSQL client.
 
 Hasura GraphQL engine creates and maintains an **internal state** based on the database it is configured to use.
-This internal state will comprise of information about the tables/views, relationships and access control rules
+This internal state will comprise information about the tables/views, relationships and access control rules
 defined on them using Hasura GraphQL engine. See :doc:`Hasura GraphQL engine internals <../engine-internals/index>`
-for information on how this internal state is maintained. It is highly recommended to do any modifications to the
+for information on how this internal state is maintained. It is highly recommended doing any modifications to the
 database schema only through Hasura console to avoid corrupting the GraphQL engine's state.
 
 Following are the list of error messages returned by the GraphQL Engine when it encounters an inconsistent state:

@@ -4,6 +4,7 @@ const componentsSemver = {
   eventsTab: '1.0.0-alpha16',
   metadataReload: '1.0.0-alpha17',
   eventRedeliver: '1.0.0-alpha17',
+  sqlAnalyze: '1.0.0-alpha25',
 };
 
 const getPreRelease = version => {

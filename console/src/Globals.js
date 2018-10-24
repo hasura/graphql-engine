@@ -1,5 +1,14 @@
 import { SERVER_CONSOLE_MODE } from './constants';
 
+/* helper tools to format explain json */
+
+/* eslint-disable */
+import sqlFormatter from './helpers/sql-formatter.min';
+import hljs from './helpers/highlight.min';
+/* eslint-enable */
+
+/* */
+
 const checkExtraSlashes = url => {
   if (!url) {
     return url;
@@ -40,6 +49,16 @@ if (!window.__env.accessKey) {
 
 if (!window.__env.isAccessKeySet) {
   globals.isAccessKeySet = false;
+}
+
+if (
+  window &&
+  typeof window === 'object' &&
+  !window.sqlFormatter &&
+  !window.hljs
+) {
+  window.sqlFormatter = sqlFormatter;
+  window.hljs = hljs;
 }
 
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
