@@ -1,0 +1,39 @@
+version: '3.6'
+services:
+  postgres_auth:
+    image: postgres
+    volumes: 
+      - db_data_auth:/var/lib/postgresql/data
+  auth_server:
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - "postgres_auth"
+    environment:
+      ENCRYPTION_KEY: TlAhvbFyklCGJZLduCvAcwDD5EGMVqiH
+      DATABASE_URL: postgres://postgres:@postgres_auth:5432/postgres
+  postgres:
+    image: postgres
+    restart: always
+    volumes:
+    - db_data:/var/lib/postgresql/data
+  graphql-engine:
+    image: hasura/graphql-engine:v1.0.0-alpha25
+    ports:
+    - "8081:8080"
+    depends_on:
+    - "postgres"
+    restart: always
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:@postgres:5432/postgres
+      HASURA_GRAPHQL_JWT_SECRET: "{\"type\":\"HS256\", \"key\": \"TlAhvbFyklCGJZLduCvAcwDD5EGMVqiH\"}"
+      HASURA_GRAPHQL_ACCESS_KEY: mysecretkey
+    command:
+      - graphql-engine
+      - serve
+      - --enable-console
+volumes:
+  db_data:
+  db_data_auth:
