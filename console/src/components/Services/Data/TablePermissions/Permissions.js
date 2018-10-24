@@ -42,20 +42,31 @@ class Permissions extends Component {
     this.state = {};
     this.state.insertSetOperations = {
       isChecked: false,
-      setColumns: []
     };
   }
   componentDidMount() {
     this.props.dispatch({ type: RESET });
     this.props.dispatch(setTable(this.props.tableName));
   }
+  onSetValueChange() {
+    // Get the index of the changed value and if both key and value are set create one more object in set
+  }
+  onSetKeyChange(e) {
+    // Get the index of the changed value and if both key and value are set create one more object in set
+    const selectNode = e.target.parentNode;
+    console.log(selectNode);
+    const keyVal = e.target.value;
+    console.log('Key val');
+    console.log(keyVal);
+  }
+  onSetTypeChange() {}
   toggleInsertChecked() {
     this.setState({
       ...this.state,
       insertSetOperations: {
         ...this.state.insertSetOperations,
-        isChecked: !this.state.insertSetOperations.isChecked
-      }
+        isChecked: !this.state.insertSetOperations.isChecked,
+      },
     });
   }
 
@@ -225,21 +236,21 @@ class Permissions extends Component {
         const bulkSelect = permsState.bulkSelect;
         const currentInputSelection = bulkSelect.filter(e => e === role)
           .length ? (
-            <input
-              onChange={dispatchBulkSelect}
-              checked="checked"
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          ) : (
-            <input
-              onChange={dispatchBulkSelect}
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          );
+          <input
+            onChange={dispatchBulkSelect}
+            checked="checked"
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        ) : (
+          <input
+            onChange={dispatchBulkSelect}
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        );
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
@@ -477,41 +488,24 @@ class Permissions extends Component {
       const query = permsState.query;
 
       if (query === 'insert') {
-        const insertState = permsState.query.insert;
-        const isSetValues = !!(insertState && 'set' in insertState && Object.keys(insertState.set));
+        const insertState = permsState.insert;
+        const { columns } = tableSchema;
+        const isSetValues = !!(
+          insertState &&
+          'set' in insertState &&
+          this.state.insertSetOperations.isChecked
+        );
         const insertSetTooltip = (
           <Tooltip id="tooltip-insert-set-operations">
             Preset values for columns for this role. Set static values or use
             session variables. Read more
           </Tooltip>
         );
-        return (
-          <div className={styles.editPermissionsSection + ' ' + styles.removePadding}>
-            <form className={styles.form_permission_insert_set_wrapper}>
-              <div className={styles.permission_insert_set_wrapper}>
-                <div className={styles.configure_insert_set_checkbox}>
-                  <label>
-                    <div className={styles.center_radio_label_input}>
-                      <input
-                        type="checkbox"
-                        checked={isSetValues}
-                        value="toggle_insert_set_operations"
-                        onChange={this.toggleInsertChecked.bind(this)}
-                        disabled={!permsState.insert}
-                      />
-                      <span className={styles.mar_left}>
-                        Configure column presets &nbsp;
-                        <OverlayTrigger
-                          placement="right"
-                          overlay={insertSetTooltip}
-                        >
-                          <i className="fa fa-question-circle" aria-hidden="true" />
-                        </OverlayTrigger>
-                      </span>
-                    </div>
-                  </label>
-                </div>
-                { isSetValues ? (
+
+        const setOptions =
+          insertState && insertState.set.length > 0
+            ? insertState.set.map((s, i) => {
+                return (
                   <div className={styles.insertSetConfigRow}>
                     <div
                       className={
@@ -522,12 +516,26 @@ class Permissions extends Component {
                         styles.input_element_wrapper
                       }
                     >
-                      <select className="input-sm form-control">
-                        <option value="" disabled selected>
+                      <select
+                        className="input-sm form-control"
+                        value={s.key}
+                        onChange={this.onSetKeyChange.bind(this)}
+                        data-index-id={i}
+                      >
+                        <option value="" disabled>
                           Column Name
                         </option>
-                        <option value="id">id</option>
-                        <option value="name">name</option>
+                        {columns && columns.length > 0
+                          ? columns.map((c, key) => (
+                              <option
+                                value={c.column_name}
+                                data-column-type={c.data_type}
+                                key={key}
+                              >
+                                {c.column_name}
+                              </option>
+                            ))
+                          : null}
                       </select>
                     </div>
                     <div
@@ -539,8 +547,11 @@ class Permissions extends Component {
                         styles.input_element_wrapper
                       }
                     >
-                      <select className="input-sm form-control">
-                        <option value="" disabled selected>
+                      <select
+                        className="input-sm form-control"
+                        onChange={() => null}
+                      >
+                        <option value="" disabled>
                           Select Preset Type
                         </option>
                         <option value="id">static</option>
@@ -561,11 +572,50 @@ class Permissions extends Component {
                         <input
                           className={'input-sm form-control '}
                           placeholder="column_value"
+                          value={s.value}
+                          onChange={() => null}
                         />
                       </InputGroup>
                     </div>
                   </div>
-                ) : null }
+                );
+              })
+            : null;
+
+        return (
+          <div
+            className={
+              styles.editPermissionsSection + ' ' + styles.removePadding
+            }
+          >
+            <form className={styles.form_permission_insert_set_wrapper}>
+              <div className={styles.permission_insert_set_wrapper}>
+                <div className={styles.configure_insert_set_checkbox}>
+                  <label>
+                    <div className={styles.center_radio_label_input}>
+                      <input
+                        type="checkbox"
+                        checked={isSetValues}
+                        value="toggle_insert_set_operations"
+                        onChange={this.toggleInsertChecked.bind(this)}
+                        disabled={!permsState.insert}
+                      />
+                      <span className={styles.mar_left}>
+                        Configure column presets &nbsp;
+                        <OverlayTrigger
+                          placement="right"
+                          overlay={insertSetTooltip}
+                        >
+                          <i
+                            className="fa fa-question-circle"
+                            aria-hidden="true"
+                          />
+                        </OverlayTrigger>
+                      </span>
+                    </div>
+                  </label>
+                </div>
+                {isSetValues ? setOptions : null}
               </div>
             </form>
           </div>

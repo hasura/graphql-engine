@@ -26,6 +26,15 @@ export const PERM_SAME_APPLY_BULK = 'ModifyTable/PERM_SAME_APPLY_BULK';
 export const PERM_DESELECT_SAME_APPLY_BULK =
   'ModifyTable/PERM_DESELECT_SAME_APPLY_BULK';
 
+/* insert set operations */
+export const UPDATE_PERM_SET_KEY_VALUE =
+  'ModifyTable/UPDATE_PERM_SET_KEY_VALUE';
+
+export const CREATE_NEW_INSERT_SET_VAL =
+  'ModifyTable/CREATE_NEW_INSERT_SET_VAL';
+
+/* */
+
 const queriesWithPermColumns = ['select', 'update'];
 const permChangeTypes = {
   save: 'update',

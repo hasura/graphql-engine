@@ -64,6 +64,8 @@ import {
   deleteFromPermissionsState,
   updateBulkSelect,
   updateBulkSameSelect,
+  CREATE_NEW_INSERT_SET_VAL,
+  UPDATE_PERM_SET_KEY_VALUE,
 } from '../TablePermissions/Actions';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
@@ -448,6 +450,47 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
             action.data,
             false
           ),
+        },
+      };
+
+    case CREATE_NEW_INSERT_SET_VAL:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          insert: {
+            ...modifyState.permissionsState.insert,
+            set: [
+              ...modifyState.permissionsState.insert.set.slice(),
+              {
+                key: '',
+                value: '',
+              },
+            ],
+          },
+        },
+      };
+
+    case UPDATE_PERM_SET_KEY_VALUE:
+      const updatedIndex = action.data.index;
+      const setKeyVal = this.state.permissionsState.insert.set[updatedIndex];
+      setKeyVal[action.data.key] = action.data.value;
+
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          insert: {
+            ...modifyState.permissionsState.insert,
+            set: [
+              ...modifyState.permissionsState.insert.set.slice(0, updatedIndex),
+              { ...setKeyVal },
+              ...modifyState.permissionsState.insert.set.slice(
+                updatedIndex + 1,
+                modifyState.permissionsState.insert.set.length
+              ),
+            ],
+          },
         },
       };
 
