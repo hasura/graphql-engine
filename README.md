@@ -8,7 +8,7 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, realtime GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events for asynchronous business logic.
+Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, real-time GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events for asynchronous business logic.
 
 Hasura helps you build GraphQL apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
 
@@ -27,13 +27,13 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 ## Features
 
 * **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations
-* **Realtime**: Convert any GraphQL query to a live query by using subscriptions
+* **Real-time**: Convert any GraphQL query to a live query by using subscriptions
 * **Trigger webhooks or serverless functions**: On Postgres insert/update/delete events ([read more](event-triggers.md))
 * **Works with existing, live databases**: Point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
 * **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
 * **High-performance & low-footprint**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
 * **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
-* **Postgres** ❤️: Supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
+* **Postgres** ❤️: Supports Postgres types (PostGIS/geolocation, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
 
 Read more at [https://hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
 
@@ -97,7 +97,7 @@ Hasura works with any GraphQL client. We recommend using [Apollo Client](https:/
 
 ## Add business logic
 
-### Custom resolvers
+### Custom Resolvers
 
 Add custom resolvers in addition to Hasura GraphQL engine. Ideal for delegating
 to HTTP APIs, making direct calls to another data-source or writing business
@@ -114,7 +114,7 @@ processing - [read more](event-triggers.md).
 Check out all the example applications in the
 [community/examples](community/examples) directory.
 
-### Realtime applications
+### Real-time applications
 
 - Group Chat application built with React, includes a typing indicator, online users & new
   message notifications.
