@@ -65,7 +65,7 @@ Read more at [https://hasura.io](https://hasura.io) and the [docs](https://docs.
 
 The fastest way to try Hasura out is via Heroku.
 
-1. Click on the following button to deploy GraphQL Engine on Heroku with the free Postgres add-on:
+1. Click on the following button to deploy GraphQL Engine on [Heroku](https://heroku.com) with the free Postgres add-on:
 
     [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
