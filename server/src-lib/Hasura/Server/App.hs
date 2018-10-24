@@ -124,18 +124,20 @@ buildQCtx = do
 
 logResult
   :: (MonadIO m)
-  => Wai.Request -> BL.ByteString -> ServerCtx
+  => Maybe UserInfo -> Wai.Request -> BL.ByteString -> ServerCtx
   -> Either QErr BL.ByteString -> Maybe (UTCTime, UTCTime)
   -> m ()
-logResult req reqBody sc res qTime =
-  liftIO $ logger $ mkAccessLog req (reqBody, res) qTime
+logResult userInfoM req reqBody sc res qTime =
+  liftIO $ logger $ mkAccessLog userInfoM req (reqBody, res) qTime
   where
     logger = L.unLogger $ scLogger sc
 
 logError
   :: MonadIO m
-  => Wai.Request -> BL.ByteString -> ServerCtx -> QErr -> m ()
-logError req reqBody sc qErr = logResult req reqBody sc (Left qErr) Nothing
+  => Maybe UserInfo -> Wai.Request
+  -> BL.ByteString -> ServerCtx -> QErr -> m ()
+logError userInfoM req reqBody sc qErr =
+  logResult userInfoM req reqBody sc (Left qErr) Nothing
 
 mkSpockAction
   :: (MonadIO m)
@@ -160,7 +162,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
   t2 <- liftIO getCurrentTime -- for measuring response time purposes
 
   -- log result
-  logResult req reqBody serverCtx result $ Just (t1, t2)
+  logResult (Just userInfo) req reqBody serverCtx result $ Just (t1, t2)
   either (qErrToResp $ userRole userInfo == adminRole) resToResp result
 
   where
@@ -171,7 +173,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
       json $ qErrEncoder includeInternal qErr
 
     logAndThrow req reqBody includeInternal qErr = do
-      logError req reqBody serverCtx qErr
+      logError Nothing req reqBody serverCtx qErr
       qErrToResp includeInternal qErr
 
     resToResp resp = do
@@ -338,7 +340,7 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
       let qErr = err404 NotFound "resource does not exist"
       req <- request
       reqBody <- liftIO $ strictRequestBody req
-      logError req reqBody serverCtx qErr
+      logError Nothing req reqBody serverCtx qErr
       uncurry setHeader jsonHeader
       lazyBytes $ encode qErr
 

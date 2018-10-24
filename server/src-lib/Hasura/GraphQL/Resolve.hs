@@ -60,7 +60,7 @@ buildTx userInfo gCtx fld = do
       "lookup failed: opctx: " <> showName f
 
     validateHdrs hdrs = do
-      let receivedHdrs = userHeaders userInfo
+      let receivedHdrs = userVars userInfo
       forM_ hdrs $ \hdr ->
         unless (Map.member hdr receivedHdrs) $
         throw400 NotFound $ hdr <<> " header is expected but not found"

@@ -225,4 +225,4 @@ setHeadersTx userInfo =
     toStrictText = LT.toStrict . AT.encodeToLazyText
     setSess = Q.fromText $
       "SET LOCAL \"hasura.user\" = " <>
-      pgFmtLit (toStrictText $ userHeaders userInfo)
+      pgFmtLit (toStrictText $ userVars userInfo)
