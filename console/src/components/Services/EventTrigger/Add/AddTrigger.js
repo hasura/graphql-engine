@@ -250,7 +250,6 @@ class AddTrigger extends Component {
             onChange={e => {
               dispatch(setHeaderType(e.target.value, i));
               if (i + 1 === headers.length) {
-                console.log('add another header');
                 dispatch(addHeader());
               }
             }}
