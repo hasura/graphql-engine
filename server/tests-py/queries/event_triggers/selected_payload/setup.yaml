@@ -5,8 +5,7 @@ args:
     sql: |
       create table hge_tests.test_t1(
           c1 int,
-          c2 text,
-          c3 text
+          c2 text
       );
 - type: track_table
   args:
@@ -14,16 +13,19 @@ args:
     name: test_t1
 - type: create_event_trigger
   args:
-    name: t1_empty
+    name: t1_payload
     table:
       schema: hge_tests
       name: test_t1
     insert:
-      columns: []
+      columns: "*"
+      payload: "*"
     update:
-      columns: []
+      columns: "*"
+      payload: ["c1"]
     delete:
-      columns: []
+      columns: "*"
+      payload: ["c2"]
     webhook: http://127.0.0.1:5592
     retry_conf:
       num_retries: 10
