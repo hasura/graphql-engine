@@ -168,15 +168,17 @@ processJwt
   -> Maybe RoleName
   -> m UserInfo
 processJwt jwtCtx headers mUnAuthRole =
-  case mAuthzHeader of
-    Nothing               -> do
+  maybe withoutAuthZHeader withAuthZHeader mAuthZHeader
+  where
+    mAuthZHeader = find (\h -> fst h == CI.mk "Authorization") headers
+
+    withAuthZHeader (_, authzHeader) =
+      processAuthZHeader jwtCtx headers $ BL.fromStrict authzHeader
+
+    withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
       return $ UserInfo unAuthRole
         $ Map.singleton userRoleHeader $ getRoleTxt unAuthRole
-    Just (_, authzHeader) -> processAuthZHeader jwtCtx headers $
-      BL.fromStrict authzHeader
-  where
-    mAuthzHeader = find (\h -> fst h == CI.mk "Authorization") headers
     missingAuthzHeader =
       throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
 
