@@ -8,8 +8,8 @@ Sample JWT Authentication server for generating a JWT to use in the `Authenticat
 
 #### Local Prerequisites
 
-- PostgreSQL
-- Node.js 8.9+
+  - PostgreSQL
+  - Node.js 8.9+
 
 #### Local instructions
 
@@ -38,7 +38,7 @@ ENCRYPTION_KEY=<put your secret key here> npm start
 
 #### Docker Prerequisites
 
-- Docker installed
+  - Docker installed
 
 #### Docker instructions
 
@@ -52,9 +52,9 @@ docker-compose -d
 
 Follow the `usage` instructions below to set up a user and get a token, add this token to the `Authorization` header of the GraphQL requests
 
-The JWT auth server is at http://localhost:8080
+The JWT auth server located [http://localhost:8080](http://localhost:8080)
 
-The GraphQL engine is at http://localhost:8081
+The GraphQL engine console located at [http://localhost:8081](http://localhost:8081)
 
 ### Deploy with Heroku
 
@@ -86,6 +86,7 @@ The GraphQL engine is at http://localhost:8081
 ### Signup/Login
 
 Once deployed or started locally, we can create an user using `/signup` API like below:
+
 ```bash
 curl -H "Content-Type: application/json" \
      -d'{"username": "test123", "password": "test123", "confirmPassword": "test123"}' \
@@ -93,6 +94,7 @@ curl -H "Content-Type: application/json" \
 ```
 
 On success, we get the response:
+
 ```json
 {
   "id": 1,
@@ -100,7 +102,8 @@ On success, we get the response:
 }
 ```
 
-We can also use `/login` API to fetch the user token,
+We can also use `/login` API to fetch the user token:
+
 ```bash
 curl -H "Content-Type: application/json" \
      -d'{"username": "test123", "password": "test123"}' \
@@ -108,11 +111,12 @@ curl -H "Content-Type: application/json" \
 ```
 
 On success, we get the response:
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsIm5hbWUiOiJ0ZXN0MTIzIiwiaWF0IjoxNTQwMjkyMzgyLjQwOSwiaHR0cHM6Ly9oYXN1cmEuaW8vand0L2NsYWltcyI6eyJ4LWhhc3VyYS1hbGxvd2VkLXJvbGVzIjpbImVkaXRvciIsInVzZXIiLCJtb2QiXSwieC1oYXN1cmEtdXNlci1pZCI6MSwieC1oYXN1cmEtZGVmYXVsdC1yb2xlIjoidXNlciJ9fQ.KtAUroqyBroBJL7O9og3Z4JnRkWNfr07cHQfeLarclU"
 }
-
+```
 
 ### Authenticate JWT using GraphQL Engine
 
