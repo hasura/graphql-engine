@@ -427,6 +427,7 @@ class Permissions extends Component {
     const getViewPermissionNote = () => {
       let showNote = false;
       if (
+        tableType === 'view' &&
         !(
           this.state.viewInfo &&
           'is_insertable_into' in this.state.viewInfo &&

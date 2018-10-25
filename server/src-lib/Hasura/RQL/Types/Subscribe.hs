@@ -8,6 +8,7 @@ module Hasura.RQL.Types.Subscribe
   , SubscribeColumns(..)
   , TriggerName
   , TriggerId
+  , Ops(..)
   , EventId
   , TriggerOpsDef(..)
   , EventTrigger(..)
@@ -35,6 +36,8 @@ type TriggerId   = T.Text
 type EventId     = T.Text
 type HeaderName  = T.Text
 
+data Ops = INSERT | UPDATE | DELETE deriving (Show)
+
 data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift)
 
 instance FromJSON SubscribeColumns where
@@ -51,6 +54,7 @@ instance ToJSON SubscribeColumns where
 data SubscribeOpSpec
   = SubscribeOpSpec
   { sosColumns :: !SubscribeColumns
+  , sosPayload :: !(Maybe SubscribeColumns)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
@@ -117,7 +121,14 @@ instance FromJSON CreateEventTriggerQuery where
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
+    mapM_ checkEmptyCols [insert, update, delete]
     return $ CreateEventTriggerQuery name table insert update delete retryConf webhook headers replace
+    where
+      checkEmptyCols spec
+        = case spec of
+        Just (SubscribeOpSpec (SubCArray cols) _) -> when (null cols) (fail "found empty column specification")
+        Just (SubscribeOpSpec _ (Just (SubCArray cols)) ) -> when (null cols) (fail "found empty payload specification")
+        _ -> return ()
   parseJSON _ = fail "expecting an object"
 
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)

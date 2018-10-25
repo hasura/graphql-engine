@@ -20,9 +20,7 @@ import           Data.Aeson.Types
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.ByteString.Builder    as BB
 import qualified Data.HashMap.Strict        as M
-import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Extended         as T
 
 import           Hasura.Prelude
@@ -212,16 +210,16 @@ valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
 valueParser columnType = \case
   -- When it is a special variable
   val@(String t)
-    | isXHasuraTxt t -> asCurrentSetting t
-    | isReqUserId t -> asCurrentSetting userIdHeader
-    | otherwise -> txtRHSBuilder columnType val
-
+    | isXHasuraTxt t -> return $ fromCurSess t
+    | isReqUserId t  -> return $ fromCurSess userIdHeader
+    | otherwise      -> txtRHSBuilder columnType val
   -- Typical value as Aeson's value
   val -> txtRHSBuilder columnType val
   where
-    asCurrentSetting hdr = return $ S.SEUnsafe $
-      "current_setting('hasura." <> dropAndSnakeCase hdr
-       <> "')::" <> T.pack (show columnType)
+    curSess = S.SEUnsafe "current_setting('hasura.user')::json"
+    fromCurSess hdr =
+      S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower hdr]
+      `S.SETyAnn` (S.AnnType $ T.pack $ show columnType)
 
 -- Convert where clause into SQL BoolExp
 convFilterExp :: (MonadError QErr m)
@@ -233,17 +231,18 @@ convFilterExp tq be =
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
 injectDefaults qv qt =
-  Q.fromBuilder $ mconcat
-  [ BB.string7 "SELECT hdb_catalog.inject_table_defaults("
-  , TE.encodeUtf8Builder $ pgFmtLit vsn
-  , BB.string7 ", "
-  , TE.encodeUtf8Builder $ pgFmtLit vn
-  , BB.string7 ", "
-  , TE.encodeUtf8Builder $ pgFmtLit tsn
-  , BB.string7 ", "
-  , TE.encodeUtf8Builder $ pgFmtLit tn
-  , BB.string7 ");"
+  Q.fromText $ mconcat
+  [ "SELECT hdb_catalog.inject_table_defaults("
+  , pgFmtLit vsn
+  , ", "
+  , pgFmtLit vn
+  , ", "
+  , pgFmtLit tsn
+  , ", "
+  , pgFmtLit tn
+  , ");"
   ]
+
   where
     QualifiedTable (SchemaName vsn) (TableName vn) = qv
     QualifiedTable (SchemaName tsn) (TableName tn) = qt
