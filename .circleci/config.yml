@@ -183,7 +183,7 @@ jobs:
       PG_VERSION: "10_4"
     docker:
     - image: hasura/graphql-engine-server-builder:v0.3.2
-    - image: circleci/postgres:10.4-alpine
+    - image: circleci/postgres:10.4-alpine-postgis
       <<: *test_pg_env
 
   pytest_server_pg_9.6:
@@ -192,7 +192,7 @@ jobs:
       PG_VERSION: "9_6"
     docker:
     - image: hasura/graphql-engine-server-builder:v0.3.2
-    - image: circleci/postgres:9.6-alpine
+    - image: circleci/postgres:9.6-alpine-postgis
       <<: *test_pg_env
 
   pytest_server_pg_9.5:
@@ -201,7 +201,7 @@ jobs:
       PG_VERSION: "9_5"
     docker:
     - image: hasura/graphql-engine-server-builder:v0.3.2
-    - image: circleci/postgres:9.5-alpine
+    - image: circleci/postgres:9.5-alpine-postgis
       <<: *test_pg_env
 
   # test and build cli
@@ -253,7 +253,7 @@ jobs:
     - image: hasura/graphql-engine-console-builder:v0.3
       environment:
         CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
-    - image: circleci/postgres:10-alpine
+    - image: circleci/postgres:10-alpine-postgis
       environment:
         POSTGRES_USER: gql_test
         POSTGRES_DB: gql_test

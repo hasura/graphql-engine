@@ -172,7 +172,7 @@ getUserInfo logger manager rawHeaders = \case
     userInfoFromHeaders =
       case M.lookup userRoleHeader headers of
         Just v  -> UserInfo (RoleName v) headers
-        Nothing -> UserInfo adminRole M.empty
+        Nothing -> adminUserInfo
 
     userInfoWhenAccessKey key reqKey = do
       when (reqKey /= getAccessKey key) $ throw401 $ "invalid " <> accessKeyHeader
