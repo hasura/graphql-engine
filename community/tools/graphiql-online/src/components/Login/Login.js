@@ -23,7 +23,7 @@ class LoginComponent extends React.Component {
                 type="text"
                 id="username"
                 className="loginTextbox"
-                placeholder="Enter GraphQL Endpoint"
+                placeholder="Enter GraphQL Endpoint URL"
                 onChange={this.setGraphQLEndpoint.bind(this)}
               />
               <button

@@ -257,6 +257,8 @@
     border-width: 2px;
     border-bottom-style: solid;
     padding-bottom: 10px;
+    width: 100%;
+    float: left;
   }
   .closeHeader {
     cursor: pointer;
@@ -299,7 +301,24 @@
       font-size: 14px;
       text-align: right;
       i {
-        color: #f24444;
+        color: #757575;;
+        font-size: 22px;
+        position: absolute;
+        right: 15px;
+        top: 15px;
+      }
+      i:hover {
+        color: #000;
+      }
+    }
+    .built {
+      text-align: right;
+      font-size: 14px;
+      position: absolute;
+      right: 40px;
+      top: 16px;
+      i {
+        color: #f93c18;
       }
     }
     .changeEndpoint {
@@ -333,7 +352,7 @@
     {
       // padding: 20px 0;
       // padding-top: 20px;
-      padding-top: 5px;
+      padding-top: 20px;
       background-color: #f8fafb;
       .inputGroupWrapper
       {
@@ -729,8 +748,8 @@
   border: 1px solid #ddd;
   display: inline-block;
   vertical-align: middle;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   padding-top: 2px;
   margin-right: 2px;
   text-align: center;
@@ -746,7 +765,7 @@ label
     content: url('./tick.png');
     background: #FFCA27;
     color: #fff;
-    padding-top:0px;
+    padding-top: 4px;
 }
 
 .authPanelSubHeadings {
