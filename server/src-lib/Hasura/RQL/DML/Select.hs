@@ -186,7 +186,7 @@ txtToAlias = S.Alias . Iden
 aggFldToExp :: Iden -> AggFlds -> S.SQLExp
 aggFldToExp pfx aggFlds = jsonRow
   where
-    jsonRow = S.applyJsonBuildObj (concatMap aggToFlds aggFlds) Nothing
+    jsonRow = S.applyJsonBuildObj (concatMap aggToFlds aggFlds)
     withAls fldName sqlExp = [S.SELit fldName, sqlExp]
     aggToFlds (t, fld) = withAls t $ case fld of
       AFCount       -> S.SEUnsafe "count(*)"
@@ -197,16 +197,14 @@ aggFldToExp pfx aggFlds = jsonRow
       AFExp e       -> S.SELit e
 
     colFldsToObj op flds =
-        let extrs = map (colFldsToExtr op) flds
-            json = S.applyRowToJson extrs Nothing
-        in S.SESelect $ S.mkSelect
-           {S.selExtr = [S.Extractor json Nothing]}
+      S.applyJsonBuildObj $ concatMap (colFldsToExtr op) flds
 
     colFldsToExtr op (t, PCFCol col) =
-      S.Extractor (S.SEFnApp op [S.SEIden $ mkBaseTableColAls pfx col] Nothing) $
-      Just $ txtToAlias t
+      [ S.SELit t
+      , S.SEFnApp op [S.SEIden $ mkBaseTableColAls pfx col] Nothing
+      ]
     colFldsToExtr _ (t, PCFExp e) =
-      S.Extractor (S.SELit e) $ Just $ txtToAlias t
+      [ S.SELit t , S.SELit e]
 
 asSingleRow :: S.Alias -> S.FromItem -> S.Select
 asSingleRow col fromItem =
@@ -229,17 +227,13 @@ annNodeToSel opts joinCond als = \case
     let pfx = _bnPrefix bn
         baseSelFrom = S.mkSelFromItem (bnToSel bn) (mkAliasFromBN bn)
         ordBy = _bnOrderBy bn
-        -- to enforce aggregation
-        boolOrExtr = S.Extractor (S.SEUnsafe "bool_or('true')") Nothing
-        aggSel = S.mkSelect
-                 { S.selExtr = boolOrExtr : map (selFldToExtr pfx ordBy) flds
+    in S.mkSelect
+                 { S.selExtr = [ flip S.Extractor Nothing $
+                                 S.applyJsonBuildObj $
+                                 concatMap (selFldToExtr pfx ordBy) flds
+                               ]
                  , S.selFrom = Just $ S.FromExp [baseSelFrom]
                  }
-        aggSelFrom = S.mkSelFromItem aggSel (mkAliasFromBN bn)
-    in S.mkSelect
-       { S.selExtr = [S.Extractor (aggObj $ map fst flds) $ Just als]
-       , S.selFrom = Just $ S.FromExp [aggSelFrom]
-       }
   where
     AnnNodeToSelOpts singleObj isObjRel = opts
     bnToSel = baseNodeToSel joinCond
@@ -251,16 +245,16 @@ annNodeToSel opts joinCond als = \case
                              (asSingleRow als fromItem)
                              singleObj
 
-    selFldToExtr pfx ordBy (t, fld) = case fld of
+    selFldToExtr pfx ordBy (t, fld) = (:) (S.SELit t) $ pure $ case fld of
       SFAggFld aggFlds ->
-        S.Extractor (aggFldToExp pfx aggFlds) $ Just $ txtToAlias t
-      SFNodes _ -> let jsonAgg = S.SEFnApp "json_agg" [S.SEIden $ Iden t] ordBy
-                       extr = S.SEFnApp "coalesce" [jsonAgg, S.SELit "[]"] Nothing
-                   in S.Extractor extr $ Just $ txtToAlias t
-      SFExp e -> S.Extractor (S.SELit e) $ Just $ txtToAlias t
-
-    aggObj l = S.applyRowToJson (map mkAggExtr l) Nothing
-    mkAggExtr t = S.Extractor (S.SEIden $ Iden t) $ Just $ txtToAlias t
+        aggFldToExp pfx aggFlds
+      SFNodes _ ->
+        let jsonAgg = S.SEFnApp "json_agg" [S.SEIden $ Iden t] ordBy
+        in S.SEFnApp "coalesce" [jsonAgg, S.SELit "[]"] Nothing
+      SFExp e ->
+        -- bool_or to force aggregation
+        S.SEFnApp "coalesce"
+        [ S.SELit e , S.SEUnsafe "bool_or('true')::text"] Nothing
 
 getAliasFromAnnNode :: AnnNode -> S.Alias
 getAliasFromAnnNode = \case
@@ -313,7 +307,7 @@ withRowToJSON pfx parAls flds =
   where
     withAls fldName sqlExp =
       S.Extractor sqlExp $ Just $ S.toAlias fldName
-    jsonRow = S.applyRowToJson (map toFldExtr flds) Nothing
+    jsonRow = S.applyRowToJson (map toFldExtr flds)
     toFldExtr (fldAls, fld) = withAls fldAls $ case fld of
       FCol col    -> toJSONableExp (pgiType col) $
                      S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
@@ -334,7 +328,7 @@ withJsonBuildObj pfx parAls flds =
     withAls fldName sqlExp =
       [S.SELit $ getFieldNameTxt fldName, sqlExp]
 
-    jsonRow = S.applyJsonBuildObj (concatMap toFldExtr flds) Nothing
+    jsonRow = S.applyJsonBuildObj (concatMap toFldExtr flds)
 
     toFldExtr (fldAls, fld) = withAls fldAls $ case fld of
       FCol col    -> toJSONableExp (pgiType col) $
