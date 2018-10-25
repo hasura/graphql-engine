@@ -18,8 +18,6 @@ class Settings extends Component {
     let triggerSchema = triggerList.filter(
       elem => elem.name === triggerName
     )[0];
-    console.log('Trigger Schema');
-    console.log(triggerSchema);
     triggerSchema = triggerSchema ? triggerSchema : {};
 
     const handleDeleteTrigger = e => {
