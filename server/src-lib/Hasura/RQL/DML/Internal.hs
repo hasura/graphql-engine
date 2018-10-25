@@ -243,7 +243,7 @@ toJSONableExp colTy expn
 -- validate headers
 validateHeaders :: (P1C m) => [T.Text] -> m ()
 validateHeaders depHeaders = do
-  headers <- M.keys . userHeaders <$> askUserInfo
+  headers <- M.keys . userVars <$> askUserInfo
   forM_ depHeaders $ \hdr ->
     unless (hdr `elem` map T.toLower headers) $
     throw400 NotFound $ hdr <<> " header is expected but not found"
