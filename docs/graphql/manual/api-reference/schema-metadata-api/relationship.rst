@@ -166,11 +166,11 @@ Args syntax
      - Description
    * - remote_table
      - true
-     - :ref:`TableName <TableName>`
+     - :ref:`TableName`
      - The table to which the relationship has to be established
    * - column_mapping
      - true
-     - Object (:ref:`PGColumn <PGColumn>` : :ref:`PGColumn <PGColumn>`)
+     - Object (:ref:`PGColumn` : :ref:`PGColumn`)
      - Mapping of columns from current table to remote table
 
 .. _create_array_relationship:
@@ -269,11 +269,11 @@ Args syntax
      - Description
    * - table
      - true
-     - :ref:`TableName <TableName>`
+     - :ref:`TableName`
      - Name of the table
    * - name
      - true
-     - :ref:`RelationshipName <RelationshipName>`
+     - :ref:`RelationshipName`
      - Name of the new relationship
    * - using
      - true
@@ -317,11 +317,11 @@ Args syntax
      - Description
    * - table
      - true
-     - :ref:`TableName <TableName>`
+     - :ref:`TableName`
      - Name of the table
    * - column
      - true
-     - :ref:`PGColumn <PGColumn>`
+     - :ref:`PGColumn`
      - Name of the column with foreign key constraint
 
 ``ArrRelUsingManualMapping``
@@ -336,11 +336,11 @@ Args syntax
      - Description
    * - remote_table
      - true
-     - :ref:`TableName <TableName>`
+     - :ref:`TableName`
      - The table to which the relationship has to be established
    * - column_mapping
      - true
-     - Object (:ref:`PGColumn <PGColumn>` : :ref:`PGColumn <PGColumn>`)
+     - Object (:ref:`PGColumn` : :ref:`PGColumn`)
      - Mapping of columns from current table to remote table
 
 .. _drop_relationship:
@@ -384,11 +384,11 @@ Args syntax
      - Description
    * - table
      - true
-     - :ref:`TableName <TableName>`
+     - :ref:`TableName`
      - Name of the table
    * - name
      - true
-     - :ref:`RelationshipName <RelationshipName>`
+     - :ref:`RelationshipName`
      - Name of the relationship that needs to be dropped
    * - cascade
      - false
@@ -439,11 +439,11 @@ Args syntax
      - Description
    * - table
      - true
-     - :ref:`TableName <TableName>`
+     - :ref:`TableName`
      - Name of the table
    * - name
      - true
-     - :ref:`RelationshipName <RelationshipName>`
+     - :ref:`RelationshipName`
      - The relationship
    * - comment
      - false
