@@ -166,7 +166,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
   either (qErrToResp $ userRole userInfo == adminRole) resToResp result
 
   where
-    logger = L.unLogger $ scLogger serverCtx
+    logger = scLogger serverCtx
     -- encode error response
     qErrToResp includeInternal qErr = do
       setStatus $ qeStatus qErr

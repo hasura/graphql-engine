@@ -92,7 +92,7 @@ instance L.ToEngineLog AccessLog where
     (L.LevelInfo, "http-log", toJSON accessLog)
 
 instance ToJSON AccessLog where
-  toJSON (AccessLog st met src path hv det reqId hRole qh rs rt) =
+  toJSON (AccessLog st met src path hv det reqId hUser qh rs rt) =
     object [ "status" .= N.statusCode st
            , "method" .= met
            , "ip" .= src
@@ -100,7 +100,7 @@ instance ToJSON AccessLog where
            , "http_version" .= show hv
            , "detail" .= det
            , "request_id" .= reqId
-           , "hasura_user" .= hRole
+           , "user" .= hUser
            , "query_hash" .= qh
            , "response_size" .= rs
            , "query_execution_time" .= rt
