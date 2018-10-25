@@ -297,16 +297,29 @@ hr
           }
         }
         .insertSetConfigRow {
+          margin: 10px 0px;
           display: flex;
           align-items: center;
+          .e_g_text {
+            font-style: italic;
+          }
           .input_element_wrapper {
             width: 20%;
+            i {
+              cursor: pointer;
+            }
             select {
               width: 100%;
             }
             input {
               width: 100%;
             }
+          }
+        }
+        .set_warning {
+          margin-left: 25px;
+          .danger_text {
+            color: red;
           }
         }
       }
