@@ -61,8 +61,18 @@ IP.1 = 127.0.0.1'
 	cd "$CUR_DIR"
 }
 
+combine_hpc_reports() {
+	(stack --allow-different-user exec -- hpc combine graphql-engine.tix graphql-engine-combined.tix --union > graphql-engine-combined.tix2 && mv graphql-engine-combined.tix2 graphql-engine-combined.tix ) || true
+	rm graphql-engine.tix || true
+}
+
 if [ -z "${HASURA_GRAPHQL_DATABASE_URL:-}" ] ; then
 	echo "Env var HASURA_GRAPHQL_DATABASE_URL is not set"
+	exit 1
+fi
+
+if ! stack --allow-different-user exec which hpc ; then
+	echo "hpc not found; Install it with 'stack install hpc'"
 	exit 1
 fi
 
@@ -112,9 +122,10 @@ wait_for_port 8080
 pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL"
 
 kill -INT $PID
+sleep 4
+mv graphql-engine.tix graphql-engine-combined.tix
 
-
-########## 
+##########
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY #####################################>\n"
 
 export HASURA_GRAPHQL_ACCESS_KEY="HGE$RANDOM$RANDOM"
@@ -126,7 +137,8 @@ wait_for_port 8080
 pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY"
 
 kill -INT $PID
-sleep 2
+sleep 4
+combine_hpc_reports
 
 ##########
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY AND JWT #####################################>\n"
@@ -140,7 +152,8 @@ export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jw
 pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key"
 
 kill -INT $PID
-sleep 2
+sleep 4
+combine_hpc_reports
 
 unset HASURA_GRAPHQL_JWT_SECRET
 
@@ -172,7 +185,8 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 	update-ca-certificates
 
 	kill -INT $PID
-	sleep 2
+	sleep 4
+	combine_hpc_reports
 
 	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & HTTPS INSECURE WEBHOOK ########>\n"
 
@@ -183,9 +197,10 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
 
 	kill -INT $PID
-	sleep 2
+	sleep 4
+	combine_hpc_reports
 
 	kill $WH_PID
 fi
 
-mv graphql-engine.tix "$OUTPUT_FOLDER"
+mv graphql-engine-combined.tix "$OUTPUT_FOLDER/graphql-engine.tix"
