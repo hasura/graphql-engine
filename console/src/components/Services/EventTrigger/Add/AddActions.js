@@ -107,9 +107,8 @@ const createTrigger = () => {
     }
 
     // create header payload
-    let headers;
-    let header;
-    for (header in currentState.headers) {
+    const headers = [];
+    currentState.headers.map(header => {
       if (header.key !== '' && header.type !== '') {
         if (header.type === 'static') {
           headers.push({ name: header.key, value: header.value });
@@ -117,14 +116,10 @@ const createTrigger = () => {
           headers.push({ name: header.key, value_from_env: header.value });
         }
       }
-    }
-    if (
-      currentState.headers.length > 1 ||
-      (currentState.headers[0].key !== '' &&
-        currentState.headers[0].type !== '')
-    ) {
-      payload.args.headers = headers;
-    }
+    });
+    console.log(headers);
+    payload.args.headers = headers;
+    console.log(payload);
     const upQueryArgs = [];
     upQueryArgs.push(payload);
     const downQueryArgs = [];
