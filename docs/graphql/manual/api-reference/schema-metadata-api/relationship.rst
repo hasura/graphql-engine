@@ -59,7 +59,7 @@ Create an ``object relationship`` ``author`` on ``article`` *table*,  *using* th
 This is an advanced feature which is mostly used to define relationships on or
 to views. We cannot rely on foreign key constraints as they are not valid to or
 from views. So, when using manual configuration, we have to specify the remote
-table and how each of the columns in this table are mapped to the columns of the
+table and how columns in this table are mapped to the columns of the
 remote table. 
 
 Let's say we have a view called ``article_detail`` which has three columns
@@ -216,7 +216,7 @@ Create an ``array relationship`` ``articles`` on ``author`` *table*,  *using* th
 This is an advanced feature which is mostly used to define relationships on or
 to views. We cannot rely on foreign key constraints as they are not valid to or
 from views. So, when using manual configuration, we have to specify the remote
-table and how each of the columns in this table are mapped to the columns of the
+table and how columns in this table are mapped to the columns of the
 remote table.
 
 Let's say we have a view called ``article_detail`` which has four columns
@@ -350,7 +350,7 @@ drop_relationship
 
 ``drop_relationship`` is used to drop a relationship (both object and array) on
 a table. If there are other objects dependent on this relationship like
-permissions and query templates, the query will fail reporting the dependencies
+permissions and query templates, the query will fail to report the dependencies
 unless ``cascade`` is set to ``true``. If ``cascade`` is set to ``true``, the
 dependent objects are also dropped. 
 
