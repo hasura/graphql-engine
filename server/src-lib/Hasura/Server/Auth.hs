@@ -95,7 +95,7 @@ mkAuthMode mAccessKey mWebHook mJwtSecret mUnAuthRole httpManager lCtx =
   where
     unAuthRoleNotReqForWebHook =
       when (isJust mUnAuthRole) $
-        throwError $ "Fatal Error: --unauthorized-role (HASURA_GRAPHQL_UNAUTHORIZED_ROLE) is not required"
+        throwError $ "Fatal Error: --unauthorized-role (HASURA_GRAPHQL_UNAUTHORIZED_ROLE) is not allowed"
                      <> " when --auth-hook (HASURA_GRAPHQL_AUTH_HOOK) is set"
 
 mkJwtCtx
