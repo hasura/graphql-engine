@@ -60,7 +60,7 @@ data AuthMode
 
 mkUserInfoFromResp
   :: (MonadIO m, MonadError QErr m)
-  => WebHookLogger
+  => L.Logger
   -> T.Text
   -> N.Status
   -> BL.ByteString
@@ -95,12 +95,12 @@ mkUserInfoFromResp logger url statusCode respBody
       logWebHookResp L.LevelError $ Just respBody
 
     logWebHookResp logLevel mResp =
-      liftIO $ logger $ WebHookLog logLevel (Just statusCode)
+      liftIO $ L.unLogger logger $ WebHookLog logLevel (Just statusCode)
         url Nothing $ fmap (bsToTxt . BL.toStrict) mResp
 
 userInfoFromWebhook
   :: (MonadIO m, MonadError QErr m)
-  => WebHookLogger
+  => L.Logger
   -> H.Manager
   -> Webhook
   -> [N.Header]
@@ -122,7 +122,8 @@ userInfoFromWebhook logger manager hook reqHeaders = do
   where
     logAndThrow err = do
       let urlT = getWebhook hook
-      liftIO $ logger $ WebHookLog L.LevelError Nothing urlT (Just err) Nothing
+      liftIO $ L.unLogger logger $
+        WebHookLog L.LevelError Nothing urlT (Just err) Nothing
       throw500 "Internal Server Error"
 
     filteredHeaders = flip filter reqHeaders $ \(n, _) ->
@@ -135,7 +136,7 @@ userInfoFromWebhook logger manager hook reqHeaders = do
 
 getUserInfo
   :: (MonadIO m, MonadError QErr m)
-  => WebHookLogger
+  => L.Logger
   -> H.Manager
   -> [N.Header]
   -> AuthMode
