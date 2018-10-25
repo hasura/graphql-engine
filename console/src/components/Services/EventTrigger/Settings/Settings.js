@@ -18,6 +18,8 @@ class Settings extends Component {
     let triggerSchema = triggerList.filter(
       elem => elem.name === triggerName
     )[0];
+    console.log('Trigger Schema');
+    console.log(triggerSchema);
     triggerSchema = triggerSchema ? triggerSchema : {};
 
     const handleDeleteTrigger = e => {
@@ -70,6 +72,25 @@ class Settings extends Component {
                     {triggerSchema.retry_interval > 1 ? 'seconds' : 'second'}
                   </td>
                 </tr>
+                {'headers' in triggerSchema ? (
+                  <tr>
+                    <td>Headers</td>
+                    <td>
+                      <AceEditor
+                        mode="json"
+                        theme="github"
+                        name="headers"
+                        value={JSON.stringify(triggerSchema.headers, null, 4)}
+                        minLines={4}
+                        maxLines={100}
+                        width="100%"
+                        showPrintMargin={false}
+                        showGutter={false}
+                        readOnly
+                      />
+                    </td>
+                  </tr>
+                ) : null}
                 <tr>
                   <td>Operation / Columns</td>
                   <td>
@@ -83,6 +104,7 @@ class Settings extends Component {
                       width="100%"
                       showPrintMargin={false}
                       showGutter={false}
+                      readOnly
                     />
                   </td>
                 </tr>

@@ -246,7 +246,7 @@ class AddTrigger extends Component {
             value={header.type}
             className={`${styles.select} ${styles.selectWidth} form-control ${
               styles.add_pad_left
-            }`}
+            } ${styles.add_mar_right}`}
             onChange={e => {
               dispatch(setHeaderType(e.target.value, i));
               if (i + 1 === headers.length) {
@@ -261,11 +261,11 @@ class AddTrigger extends Component {
                 -- value type --
               </option>
             ) : null}
-            <option value="static" key="0" title="Static">
-              Static
+            <option value="static" key="0" title="static">
+              static
             </option>
-            <option value="env" key="1" title="Env">
-              From Env Variable
+            <option value="env" key="1" title="env">
+              from env variable
             </option>
           </select>{' '}
           <input
@@ -609,6 +609,10 @@ class AddTrigger extends Component {
                         placeholder="interval time in seconds"
                       />
                     </div>
+                  </div>
+                  <div
+                    className={styles.add_mar_bottom + ' ' + styles.add_mar_top}
+                  >
                     <h4 className={styles.subheading_text}>Headers</h4>
                     {heads}
                   </div>
