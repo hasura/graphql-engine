@@ -3,6 +3,21 @@ import yaml
 from validate import check_query_f
 from super_classes import DefaultTestSelectQueries, DefaultTestQueries
 
+class TestV1General(DefaultTestQueries):
+
+    def test_query_string_input_err(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_string_input_err.yaml')
+
+    def test_query_unknown_type_err(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_unknown_type_err.yaml')
+
+    def test_query_args_as_string_err(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_args_as_string_err.yaml')
+
+    @classmethod
+    def dir(cls):
+        return "queries/v1/basic"
+
 class TestV1SelectBasic(DefaultTestSelectQueries):
 
     def test_select_query_author(self, hge_ctx):
