@@ -39,7 +39,7 @@ $(deriveJSON (aesonDrop 2 camelCase) ''ExplainResp)
 phaseOneExplain :: SelectQuery -> P1 AnnSel
 phaseOneExplain = convSelectQuery txtRHSBuilder
 
-phaseTwoExplain :: (P2C m) => AnnSel -> m RespBody
+phaseTwoExplain :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => AnnSel -> m RespBody
 phaseTwoExplain sel = do
   planResp <- liftTx $ runIdentity . Q.getRow <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder withExplain) [] True
   plans <- decodeBS planResp

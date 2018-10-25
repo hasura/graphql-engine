@@ -45,6 +45,7 @@ module Hasura.GraphQL.Validate.Types
   ) where
 
 import           Hasura.Prelude
+import           Instances.TH.Lift             ()
 
 import qualified Data.Aeson                    as J
 import qualified Data.HashMap.Strict           as Map
@@ -55,6 +56,7 @@ import qualified Language.GraphQL.Draft.TH     as G
 import qualified Language.Haskell.TH.Syntax    as TH
 
 import           Hasura.GraphQL.Utils
+import           Hasura.RQL.Instances          ()
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 

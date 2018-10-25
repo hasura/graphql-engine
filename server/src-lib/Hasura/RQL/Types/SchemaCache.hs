@@ -425,7 +425,7 @@ data ViewInfo
 $(deriveToJSON (aesonDrop 2 snakeCase) ''ViewInfo)
 
 isMutable :: (ViewInfo -> Bool) -> Maybe ViewInfo -> Bool
-isMutable _ Nothing = True
+isMutable _ Nothing   = True
 isMutable f (Just vi) = f vi
 
 mutableView :: (MonadError QErr m) => QualifiedTable
@@ -443,7 +443,7 @@ data TableInfo
   , tiRolePermInfoMap     :: !RolePermInfoMap
   , tiConstraints         :: ![TableConstraint]
   , tiPrimaryKeyCols      :: ![PGCol]
-  , tiViewInfo        :: !(Maybe ViewInfo)
+  , tiViewInfo            :: !(Maybe ViewInfo)
   , tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Show, Eq)
 
@@ -463,8 +463,9 @@ type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
 
 data SchemaCache
   = SchemaCache
-  { scTables     :: !TableCache
-  , scQTemplates :: !QTemplateCache
+  { scTables         :: !TableCache
+  , scQTemplates     :: !QTemplateCache
+  , scRemoteResolver :: !(Maybe (Text, [HeaderConf])) -- url
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
@@ -513,7 +514,7 @@ delQTemplateFromCache qtn = do
 --   askSchemaCache = get
 
 emptySchemaCache :: SchemaCache
-emptySchemaCache = SchemaCache (M.fromList []) (M.fromList [])
+emptySchemaCache = SchemaCache (M.fromList []) (M.fromList []) Nothing
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do

@@ -18,8 +18,8 @@ module Hasura.GraphQL.Utils
   , isValidName
   ) where
 
-import           Hasura.RQL.Types
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Error
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.List.NonEmpty            as NE

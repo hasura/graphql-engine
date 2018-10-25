@@ -148,7 +148,7 @@ addQTemplateToCatalog (CreateQueryTemplate qtName qtDef mComment) =
                 |] (qtName, Q.AltJ qtDef, mComment) False
 
 createQueryTemplateP2
-  :: (P2C m)
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m)
   => CreateQueryTemplate -> QueryTemplateInfo -> m RespBody
 createQueryTemplateP2 cqt qti = do
   addQTemplateToCache qti
@@ -207,7 +207,7 @@ setQueryTemplateCommentP1 (SetQueryTemplateComment qtn _) = do
   adminOnly
   void $ askQTemplateInfo qtn
 
-setQueryTemplateCommentP2 :: (P2C m) => SetQueryTemplateComment -> m RespBody
+setQueryTemplateCommentP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => SetQueryTemplateComment -> m RespBody
 setQueryTemplateCommentP2 apc = do
   liftTx $ setQueryTemplateCommentTx apc
   return successMsg

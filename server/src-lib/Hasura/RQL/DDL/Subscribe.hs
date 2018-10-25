@@ -232,7 +232,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
         SubCStar         -> return ()
         SubCArray pgcols -> forM_ pgcols (assertPGCol (tiFieldInfoMap ti) "")
 
-subTableP2 :: (P2C m) => QualifiedTable -> Bool -> EventTriggerDef -> m ()
+subTableP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> Bool -> EventTriggerDef -> m ()
 subTableP2 qt replace q@(EventTriggerDef name def webhook rconf mheaders) = do
   allCols <- (getCols . tiFieldInfoMap) <$> askTabInfo qt
   trid <- if replace
@@ -245,7 +245,7 @@ subTableP2 qt replace q@(EventTriggerDef name def webhook rconf mheaders) = do
   headers <- getHeadersFromConf headerConfs
   addEventTriggerToCache qt trid name def rconf webhook headers
 
-subTableP2shim :: (P2C m) => (QualifiedTable, Bool, EventTriggerDef) -> m RespBody
+subTableP2shim :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => (QualifiedTable, Bool, EventTriggerDef) -> m RespBody
 subTableP2shim (qt, replace, etdef) = do
   subTableP2 qt replace etdef
   return successMsg
@@ -262,7 +262,7 @@ unsubTableP1 (DeleteEventTriggerQuery name)  = do
   ti <- askTabInfoFromTrigger name
   return $ tiName ti
 
-unsubTableP2 :: (P2C m) => QualifiedTable -> DeleteEventTriggerQuery -> m RespBody
+unsubTableP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> DeleteEventTriggerQuery -> m RespBody
 unsubTableP2 qt (DeleteEventTriggerQuery name) = do
   delEventTriggerFromCache qt name
   liftTx $ delEventTriggerFromCatalog name
@@ -274,7 +274,7 @@ instance HDBQuery DeleteEventTriggerQuery where
   phaseTwo q qt = unsubTableP2 qt q
   schemaCachePolicy = SCPReload
 
-deliverEvent :: (P2C m) => DeliverEventQuery -> m RespBody
+deliverEvent :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DeliverEventQuery -> m RespBody
 deliverEvent (DeliverEventQuery eventId) = do
   _ <- liftTx $ fetchEvent eventId
   liftTx $ markForDelivery eventId
@@ -286,10 +286,10 @@ instance HDBQuery DeliverEventQuery where
   phaseTwo q _ = deliverEvent q
   schemaCachePolicy = SCPNoChange
 
-getHeadersFromConf :: (P2C m) => [HeaderConf] -> m [(HeaderName, T.Text)]
+getHeadersFromConf :: (QErrM m, MonadIO m) => [HeaderConf] -> m [(HeaderName, T.Text)]
 getHeadersFromConf = mapM getHeader
   where
-    getHeader :: (P2C m) => HeaderConf -> m (HeaderName, T.Text)
+    getHeader :: (QErrM m, MonadIO m) => HeaderConf -> m (HeaderName, T.Text)
     getHeader hconf = case hconf of
       (HeaderConf name (HVValue val)) -> return (name, val)
       (HeaderConf name (HVEnv val))   -> do

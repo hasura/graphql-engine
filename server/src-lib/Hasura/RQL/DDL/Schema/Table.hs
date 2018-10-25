@@ -10,6 +10,7 @@
 
 module Hasura.RQL.DDL.Schema.Table where
 
+import           Hasura.GraphQL.RemoteResolver
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission
@@ -137,13 +138,13 @@ trackExistingTableOrViewP1 (TrackTable vn) = do
   when (M.member vn $ scTables rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> vn
 
-trackExistingTableOrViewP2Setup :: (P2C m) => QualifiedTable -> Bool -> m ()
+trackExistingTableOrViewP2Setup :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> Bool -> m ()
 trackExistingTableOrViewP2Setup tn isSystemDefined = do
   ti <- liftTx $ getTableInfo tn isSystemDefined
   addTableToCache ti
 
 trackExistingTableOrViewP2
-  :: (P2C m) => QualifiedTable -> Bool -> m RespBody
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> Bool -> m RespBody
 trackExistingTableOrViewP2 vn isSystemDefined = do
   trackExistingTableOrViewP2Setup vn isSystemDefined
   liftTx $ Q.catchE defaultTxErrorHandler $
@@ -181,7 +182,7 @@ purgeDep schemaObjId = case schemaObjId of
   _                              -> throw500 $
     "unexpected dependent object : " <> reportSchemaObj schemaObjId
 
-processTableChanges :: (P2C m) => TableInfo -> TableDiff -> m ()
+processTableChanges :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => TableInfo -> TableDiff -> m ()
 processTableChanges ti tableDiff = do
 
   when (isJust mNewName) $
@@ -223,7 +224,7 @@ processTableChanges ti tableDiff = do
     tn = tiName ti
     TableDiff mNewName droppedCols addedCols alteredCols _ = tableDiff
 
-processSchemaChanges :: (P2C m) => SchemaDiff -> m ()
+processSchemaChanges :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => SchemaDiff -> m ()
 processSchemaChanges schemaDiff = do
   -- Purge the dropped tables
   forM_ droppedTables $ \qtn@(QualifiedTable sn tn) -> do
@@ -272,8 +273,9 @@ unTrackExistingTableOrViewP1 ut@(UntrackTable vn _) = do
     Nothing -> throw400 AlreadyUntracked $
       "view/table already untracked : " <>> vn
 
-unTrackExistingTableOrViewP2 :: (P2C m)
-                             => UntrackTable -> TableInfo -> m RespBody
+unTrackExistingTableOrViewP2
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m)
+  => UntrackTable -> TableInfo -> m RespBody
 unTrackExistingTableOrViewP2 (UntrackTable vn cascade) tableInfo = do
   sc <- askSchemaCache
 
@@ -385,6 +387,8 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
     addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook headers
     liftTx $ mkTriggerQ trid trn qt allCols tDef
 
+  mRes <- liftTx fetchRemoteResolvers
+  maybe (return ()) (uncurry addCustomResolverToCache) mRes
 
   where
     permHelper sn tn rn pDef pa = do
@@ -443,7 +447,7 @@ data RunSQLRes
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RunSQLRes)
 
-runSqlP2 :: (P2C m) => RunSQL -> m RespBody
+runSqlP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => RunSQL -> m RespBody
 runSqlP2 (RunSQL t cascade) = do
 
   -- Drop hdb_views so no interference is caused to the sql query

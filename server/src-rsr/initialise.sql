@@ -228,3 +228,16 @@ CREATE TABLE hdb_catalog.event_invocation_logs
 );
 
 CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id);
+
+
+CREATE TABLE hdb_catalog.custom_resolver (
+  id BIGSERIAL PRIMARY KEY,
+  url TEXT,
+  url_from_env TEXT,
+  headers json,
+
+  CONSTRAINT either_url_env CHECK (
+    (url IS NULL) != (url_from_env IS NULL)
+  )
+  -- TODO: add unique constraint on url and url_from_env?
+);

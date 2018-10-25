@@ -26,6 +26,8 @@ module Hasura.GraphQL.Schema
   , RemoteGCtx (..)
   , RoledGCtx
   , getUniGCtx
+  , checkConflictingNodes
+  , emptyGCtx
   ) where
 
 import           Data.Has
@@ -83,13 +85,13 @@ data UniGCtx
   = UniGCtx
   { _ugHasuraCtx :: !GCtx
   -- TODO: change Text to URI?
-  , _ugRemoteCtx :: !(T.Text, RemoteGCtx)
+  , _ugRemoteCtx :: !(Maybe (T.Text, RemoteGCtx))
   } deriving (Show, Eq)
 
 instance Has TypeMap UniGCtx where
   getter (UniGCtx hCtx rmCtx) =
     let hTypes  = _gTypes hCtx
-        rmTypes = _rgTypes $ snd rmCtx
+        rmTypes = maybe Map.empty (_rgTypes <$> snd) rmCtx
     in Map.union rmTypes hTypes
   modifier f ctx = error "not yet implemented" --ctx { _gTypes = f $ _gTypes ctx }
 
@@ -1304,37 +1306,51 @@ type GCtxMap = Map.HashMap RoleName GCtx
 
 type RoledGCtx = Map.HashMap RoleName UniGCtx
 
+checkConflictingNodes
+  :: (MonadError QErr m)
+  => RemoteGCtx -> TypeMap -> m ()
+checkConflictingNodes remoteCtx typMap = do
+  let rmTypes = _rgTypes remoteCtx
+  when (any (`elem` typMap) rmTypes) $
+    throw400 NotSupported "remote node names are same as hasura nodes"
+
 mkGCtxMap
   :: (MonadError QErr m)
-  => TableCache -> (Text, RemoteGCtx) -> m RoledGCtx
-mkGCtxMap tableCache (url, remoteCtx) = do
+  => TableCache -> Maybe (Text, RemoteGCtx) -> m RoledGCtx
+mkGCtxMap tableCache mRemoteConf = do
   -- FIXME: creates an empty hashmap when no tables are tracked
   -- FIXME: check for type conflicts in hasura and remote schema => throw error
   typesMapL <- mapM (mkGCtxMapTable tableCache) $
                filter tableFltr $ Map.elems tableCache
   let typesMap = foldr (Map.unionWith mappend) Map.empty typesMapL
-  return $ flip Map.map typesMap $ \(ty, flds, insCtxMap) ->
-    UniGCtx (mkGCtx ty flds rr insCtxMap) (url, remoteCtx)
+  forM typesMap $ \(ty, flds, insCtxMap) -> do
+    checkConflicts (_taTypes ty)
+    return $ UniGCtx (mkGCtx ty flds rr insCtxMap) mRemoteConf
   where
     tableFltr ti = not (tiSystemDefined ti)
                    && isValidTableName (tiName ti)
     -- make a RootFlds for the remote schema and mappend it with hasura's root fields
     rr = fromMaybe (RemoteRootFlds [] []) $ RemoteRootFlds <$> (Map.elems <$> remoteQr) <*> (Map.elems <$> remoteMr)
     remoteQr =
-      let rootObj = Map.lookup (_rgQueryRoot remoteCtx) $ _rgTypes remoteCtx
+      let rootObj = onJust $ \rCtx ->
+            Map.lookup (_rgQueryRoot rCtx) $ _rgTypes rCtx
       in getObj <$> rootObj
-    remoteMr =
+    remoteMr = onJust $ \remoteCtx ->
       let mr = fromMaybe (G.NamedType "Mutation") (_rgMutationRoot remoteCtx)
           rootObj = Map.lookup mr $ _rgTypes remoteCtx
       in getObj <$> rootObj
-    remoteSr =
-      let sr = fromMaybe (G.NamedType "Subscription") (_rgMutationRoot remoteCtx)
-          rootObj = Map.lookup sr $ _rgTypes remoteCtx
-      in getObj <$> rootObj
+
+    onJust action = case mRemoteConf of
+      Just (_, remoteCtx) -> action remoteCtx
+      Nothing             -> Nothing
 
     getObj ti = case ti of
       TIObj o -> _otiFields o
       _       -> Map.empty
+
+    checkConflicts tyMap = case mRemoteConf of
+      Just (_, rmCtx) -> checkConflictingNodes rmCtx tyMap
+      Nothing         -> return ()
 
 
 data RemoteRootFlds
@@ -1388,15 +1404,19 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) (RemoteRootFlds rQroo
           $ G.toGT $ G.toNT $ G.NamedType "String"
           ]
 
+emptyRR :: RemoteRootFlds
+emptyRR = RemoteRootFlds [] []
+
+emptyGCtx :: GCtx
+emptyGCtx = mkGCtx mempty mempty emptyRR mempty
+
 getGCtx :: RoleName -> Map.HashMap RoleName GCtx -> GCtx
 getGCtx rn =
-  fromMaybe (mkGCtx mempty mempty emptyRR mempty) . Map.lookup rn
-  where emptyRR = RemoteRootFlds [] []
+  fromMaybe emptyGCtx . Map.lookup rn
 
 -- FIXME: is the empty ("", RemoteCtx) correct?
 getUniGCtx :: RoleName -> RoledGCtx -> UniGCtx
 getUniGCtx rn = fromMaybe emptyUniGCtx . Map.lookup rn
   where
-    emptyUniGCtx = UniGCtx (mkGCtx mempty mempty emptyRR mempty) ("", emptyRemoteCtx)
-    emptyRemoteCtx = RemoteGCtx Map.empty (G.NamedType "Query") Nothing Nothing
-    emptyRR = RemoteRootFlds [] []
+    emptyUniGCtx = UniGCtx emptyGCtx Nothing
+    --emptyRemoteCtx = RemoteGCtx Map.empty (G.NamedType "Query") Nothing Nothing

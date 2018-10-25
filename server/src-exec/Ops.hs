@@ -14,6 +14,7 @@ module Ops
 import           Data.Time.Clock              (UTCTime)
 import           TH
 
+import           Hasura.GraphQL.Schema        (emptyGCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DDL.Utils         (clearHdbViews)
@@ -27,21 +28,22 @@ import qualified Data.Text                    as T
 
 import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
+import qualified Network.HTTP.Client          as HTTP
 
 curCatalogVer :: T.Text
 curCatalogVer = "3"
 
-initCatalogSafe :: UTCTime -> Q.TxE QErr String
-initCatalogSafe initTime =  do
+initCatalogSafe :: UTCTime -> HTTP.Manager -> Q.TxE QErr String
+initCatalogSafe initTime httpMgr =  do
   hdbCatalogExists <- Q.catchE defaultTxErrorHandler $
                       doesSchemaExist $ SchemaName "hdb_catalog"
-  bool (initCatalogStrict True initTime) onCatalogExists hdbCatalogExists
+  bool (initCatalogStrict True initTime httpMgr) onCatalogExists hdbCatalogExists
   where
     onCatalogExists = do
       versionExists <- Q.catchE defaultTxErrorHandler $
                        doesVersionTblExist
                        (SchemaName "hdb_catalog") (TableName "hdb_version")
-      bool (initCatalogStrict False initTime) (return initialisedMsg) versionExists
+      bool (initCatalogStrict False initTime httpMgr) (return initialisedMsg) versionExists
 
     initialisedMsg = "initialise: the state is already initialised"
 
@@ -62,8 +64,8 @@ initCatalogSafe initTime =  do
            )
                     |] (Identity sn) False
 
-initCatalogStrict :: Bool -> UTCTime -> Q.TxE QErr String
-initCatalogStrict createSchema initTime =  do
+initCatalogStrict :: Bool -> UTCTime -> HTTP.Manager -> Q.TxE QErr String
+initCatalogStrict createSchema initTime httpMgr =  do
   Q.catchE defaultTxErrorHandler $ do
 
     when createSchema $ do
@@ -89,7 +91,7 @@ initCatalogStrict createSchema initTime =  do
     return ()
 
   -- Build the metadata query
-  tx <- liftEither $ buildTxAny adminUserInfo emptySchemaCache metadataQuery
+  tx <- liftEither $ buildTxAny adminUserInfo emptySchemaCache httpMgr emptyGCtx metadataQuery
 
   -- Execute the query
   void $ snd <$> tx
@@ -169,14 +171,14 @@ from08To1 = Q.catchE defaultTxErrorHandler $ do
                  json_build_object('type', 'select', 'args', template_defn->'select');
                 |] () False
 
-from1To2 :: Q.TxE QErr ()
-from1To2 = do
+from1To2 :: HTTP.Manager -> Q.TxE QErr ()
+from1To2 httpMgr = do
   -- migrate database
   Q.Discard () <- Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_1.sql")
   -- migrate metadata
   tx <- liftEither $ buildTxAny adminUserInfo
-                     emptySchemaCache migrateMetadataFrom1
+                     emptySchemaCache httpMgr emptyGCtx migrateMetadataFrom1
   void tx
   -- set as system defined
   setAsSystemDefined
@@ -188,8 +190,8 @@ from2To3 = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "CREATE INDEX ON hdb_catalog.event_log (trigger_id)" () False
   Q.unitQ "CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id)" () False
 
-migrateCatalog :: UTCTime -> Q.TxE QErr String
-migrateCatalog migrationTime = do
+migrateCatalog :: HTTP.Manager -> UTCTime -> Q.TxE QErr String
+migrateCatalog httpMgr migrationTime = do
   preVer <- getCatalogVersion
   if | preVer == curCatalogVer ->
          return "migrate: already at the latest version"
@@ -204,7 +206,7 @@ migrateCatalog migrationTime = do
       postMigrate
 
     from1ToCurrent = do
-      from1To2
+      from1To2 httpMgr
       from2ToCurrent
 
     from08ToCurrent = do
@@ -227,13 +229,14 @@ migrateCatalog migrationTime = do
                        "upgraded_on" = $2
                     |] (curCatalogVer, migrationTime) False
 
-execQuery :: BL.ByteString -> Q.TxE QErr BL.ByteString
-execQuery queryBs = do
+execQuery :: HTTP.Manager -> BL.ByteString -> Q.TxE QErr BL.ByteString
+execQuery httpMgr queryBs = do
   query <- case A.decode queryBs of
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
   schemaCache <- buildSchemaCache
-  tx <- liftEither $ buildTxAny adminUserInfo schemaCache query
+  tx <- liftEither $ buildTxAny adminUserInfo schemaCache
+                                httpMgr emptyGCtx query
   fst <$> tx
 
 

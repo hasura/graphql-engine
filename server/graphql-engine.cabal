@@ -192,6 +192,7 @@ library
                      , Hasura.GraphQL.Resolve.Insert
                      , Hasura.GraphQL.Resolve.Mutation
                      , Hasura.GraphQL.Resolve.Select
+                     , Hasura.GraphQL.RemoteResolver
 
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP
@@ -209,6 +210,7 @@ library
                      , Hasura.SQL.Rewrite
                      , Hasura.Prelude
                      , Hasura.Logging
+                     , Network.URI.Extended
                      , Ops
                      , TH
 

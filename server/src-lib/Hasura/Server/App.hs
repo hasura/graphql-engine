@@ -46,6 +46,7 @@ import qualified Hasura.Logging                         as L
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
 --import           Hasura.RQL.DML.Explain
+import           Hasura.GraphQL.RemoteResolver
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
@@ -220,20 +221,24 @@ v1QueryHandler query = do
       userInfo <- asks hcUser
       scRef <- scCacheRef . hcServerCtx <$> ask
       schemaCache <- liftIO $ readIORef scRef
+      httpMgr <- scManager . hcServerCtx <$> ask
       pool <- scPGPool . hcServerCtx <$> ask
       isoL <- scIsolation . hcServerCtx <$> ask
-      runQuery pool isoL userInfo (fst schemaCache) query
+      runQuery pool isoL userInfo (fst schemaCache) httpMgr (snd schemaCache) query
 
     -- Also update the schema cache
     dbActionReload = do
       (resp, newSc) <- dbAction
       scRef <- scCacheRef . hcServerCtx <$> ask
       httpMgr <- scManager . hcServerCtx <$> ask
-      --schemaCache <- liftIO $ readIORef scRef
       -- FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
-      let url =  "http://localhost:3000"
-      rmSchema <- liftIO $ fetchRemoteSchema httpMgr url
-      newGCtxMap <- GS.mkGCtxMap (scTables newSc) (url, rmSchema)
+      mRemoteCtx <- case scRemoteResolver newSc of
+        Nothing -> return Nothing
+        Just (url, hdrs) -> do
+          rmSchema <- fetchRemoteSchema httpMgr url hdrs
+          return $ Just (url, rmSchema)
+
+      newGCtxMap <- GS.mkGCtxMap (scTables newSc) mRemoteCtx
       liftIO $ writeIORef scRef (newSc, newGCtxMap)
       return resp
 
@@ -284,40 +289,6 @@ legacyQueryHandler tn queryType =
     qt = QualifiedTable publicSchema tn
 
 
-fetchRemoteSchema :: HTTP.Manager -> Text -> IO GS.RemoteGCtx
-fetchRemoteSchema manager url = do
-  let options = Wreq.defaults
-              & Wreq.headers .~ [("content-type", "application/json")]
-              & Wreq.checkResponse ?~ (\_ _ -> return ())
-              & Wreq.manager .~ Right manager
-
-  -- FIXME: read and cache introspection query at compile time
-  lq   <- BL.readFile "ws/introspection.json"
-  res  <- liftIO $ try $ Wreq.postWith options (T.unpack url) lq
-  resp <- either throwHttpErr return res
-
-  let respData = resp ^. Wreq.responseBody
-      statusCode = resp ^. Wreq.responseStatus . Wreq.statusCode
-  when (statusCode /= 200) $ schemaErr respData
-
-  schemaDoc <- either schemaErr return $ eitherDecode respData
-  --liftIO $ print $ map G.getNamedTyp $ G._sdTypes schemaDoc
-  let etTypeInfos = mapM VT.fromTyDef $ G._sdTypes schemaDoc
-  typeInfos <- either schemaErr return etTypeInfos
-  --liftIO $ print $ map VT.getNamedTy typeInfos
-  let typMap = VT.mkTyInfoMap typeInfos
-      (qRoot, mRoot, sRoot) = getRoots schemaDoc
-  return $ GS.RemoteGCtx typMap qRoot (Just mRoot) sRoot
-  where
-    getRoots sc = (G._sdQueryRoot sc, G._sdMutationRoot sc, G._sdSubscriptionRoot sc)
-    schemaErr err = do
-      putStr "error fetching remote schema: "
-      initErrExit err
-
-    throwHttpErr :: HTTP.HttpException -> IO a
-    throwHttpErr = schemaErr
-
-
 mkWaiApp
   :: Q.TxIsolation
   -> Maybe String
@@ -333,10 +304,15 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
         sc <- buildSchemaCache
-        -- FIXME: fetch this from schema cache
-        let url =  "http://localhost:3000"
-        remoteSchema <- liftIO $ fetchRemoteSchema httpManager url
-        (,) sc <$> GS.mkGCtxMap (scTables sc) (url, remoteSchema)
+        -- TODO: better way to do this?
+        let mConf = scRemoteResolver sc
+        mRemoteSc <- case mConf of
+          Just (url, hdrs) -> do
+            remoteSchema <- fetchRemoteSchema httpManager url hdrs
+            return $ Just (url, remoteSchema)
+          Nothing -> return Nothing
+        gctxmap <- (,) sc <$> GS.mkGCtxMap (scTables sc) mRemoteSc
+        (,) sc <$> GS.mkGCtxMap (scTables sc) mRemoteSc
       either initErrExit return pgResp >>= newIORef
 
     cacheLock <- newMVar ()

@@ -8,15 +8,18 @@ module Hasura.Server.Query where
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax   (Lift)
+import           Language.Haskell.TH.Syntax    (Lift)
 
-import qualified Data.ByteString.Builder      as BB
-import qualified Data.ByteString.Lazy         as BL
-import qualified Data.HashMap.Strict          as Map
-import qualified Data.Sequence                as Seq
-import qualified Data.Text                    as T
-import qualified Data.Vector                  as V
+import qualified Data.ByteString.Builder       as BB
+import qualified Data.ByteString.Lazy          as BL
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.Sequence                 as Seq
+import qualified Data.Text                     as T
+import qualified Data.Vector                   as V
+import qualified Network.HTTP.Client           as HTTP
 
+import           Hasura.GraphQL.RemoteResolver
+import           Hasura.GraphQL.Schema
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
@@ -25,12 +28,12 @@ import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.Explain
 import           Hasura.RQL.DML.QueryTemplate
-import           Hasura.RQL.DML.Returning     (encodeJSONVector)
+import           Hasura.RQL.DML.Returning      (encodeJSONVector)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query            as Q
+import qualified Database.PG.Query             as Q
 
 -- data QueryWithTxId
 --   = QueryWithTxId
@@ -74,6 +77,9 @@ data RQLQuery
   | RQCount !CountQuery
   | RQBulk ![RQLQuery]
 
+  -- schema-stitching, custom resolver related
+  | RQAddCustomResolver !AddCustomResolverQuery
+
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
   | RQDeliverEvent       !DeliverEventQuery
@@ -104,22 +110,26 @@ buildTx
   :: (HDBQuery q)
   => UserInfo
   -> SchemaCache
+  -> HTTP.Manager
+  -> GCtx
   -> q
   -> Either QErr (Q.TxE QErr (BL.ByteString, SchemaCache))
-buildTx userInfo sc q = do
+buildTx userInfo sc httpManager gCtx q = do
   p1Res <- withPathK "args" $ runP1 qEnv $ phaseOne q
-  return $ flip runReaderT (qcUserInfo qEnv) $
+  return $ flip runReaderT p2Ctx $
     flip runStateT sc $ withPathK "args" $ phaseTwo q p1Res
   where
+    p2Ctx = P2Ctx userInfo httpManager $ _gTypes gCtx
     qEnv = QCtx userInfo sc
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation
-  -> UserInfo -> SchemaCache
+  -> UserInfo -> SchemaCache -> HTTP.Manager -> RoledGCtx
   -> RQLQuery -> m (BL.ByteString, SchemaCache)
-runQuery pool isoL userInfo sc query = do
-  tx <- liftEither $ buildTxAny userInfo sc query
+runQuery pool isoL userInfo sc hMgr rgCtx query = do
+  let gCtx = _ugHasuraCtx $ getUniGCtx (userRole userInfo) rgCtx
+  tx <- liftEither $ buildTxAny userInfo sc hMgr gCtx query
   res <- liftIO $ runExceptT $ Q.runTx pool (isoL, Nothing) $
          setHeadersTx userInfo >> tx
   liftEither res
@@ -127,22 +137,24 @@ runQuery pool isoL userInfo sc query = do
 buildExplainTx
   :: UserInfo
   -> SchemaCache
+  -> HTTP.Manager
   -> SelectQuery
   -> Either QErr (Q.TxE QErr BL.ByteString)
-buildExplainTx userInfo sc q = do
+buildExplainTx userInfo sc httpManager q = do
   p1Res <- withPathK "query" $ runP1 qEnv $ phaseOneExplain q
-  res <- return $ flip runReaderT (qcUserInfo qEnv) $
+  res <- return $ flip runReaderT p2Ctx $
     flip runStateT sc $ withPathK "query" $ phaseTwoExplain p1Res
   return $ fst <$> res
   where
+    p2Ctx = P2Ctx userInfo httpManager
     qEnv = QCtx userInfo sc
 
 runExplainQuery
   :: Q.PGPool -> Q.TxIsolation
-  -> UserInfo -> SchemaCache
+  -> UserInfo -> SchemaCache -> HTTP.Manager
   -> SelectQuery -> ExceptT QErr IO BL.ByteString
-runExplainQuery pool isoL userInfo sc query = do
-  tx <- liftEither $ buildExplainTx userInfo sc query
+runExplainQuery pool isoL userInfo sc httpManager query = do
+  tx <- liftEither $ buildExplainTx userInfo sc httpManager query
   Q.runTx pool (isoL, Nothing) $ setHeadersTx userInfo >> tx
 
 queryNeedsReload :: RQLQuery -> Bool
@@ -173,6 +185,8 @@ queryNeedsReload qi = case qi of
   RQDelete q                   -> queryModifiesSchema q
   RQCount q                    -> queryModifiesSchema q
 
+  RQAddCustomResolver q        -> queryModifiesSchema q
+
   RQCreateEventTrigger q       -> queryModifiesSchema q
   RQDeleteEventTrigger q       -> queryModifiesSchema q
   RQDeliverEvent q             -> queryModifiesSchema q
@@ -193,58 +207,63 @@ queryNeedsReload qi = case qi of
 
   RQBulk qs                    -> any queryNeedsReload qs
 
-buildTxAny :: UserInfo
-           -> SchemaCache
-           -> RQLQuery
-           -> Either QErr (Q.TxE QErr (BL.ByteString, SchemaCache))
-buildTxAny userInfo sc rq = case rq of
-  RQAddExistingTableOrView q    -> buildTx userInfo sc q
-  RQTrackTable q                -> buildTx userInfo sc q
-  RQUntrackTable q              -> buildTx userInfo sc q
+buildTxAny
+  :: UserInfo
+  -> SchemaCache
+  -> HTTP.Manager
+  -> GCtx
+  -> RQLQuery
+  -> Either QErr (Q.TxE QErr (BL.ByteString, SchemaCache))
+buildTxAny userInfo sc hMgr gCtx rq = case rq of
+  RQAddExistingTableOrView q -> buildTx' q
+  RQTrackTable q             -> buildTx' q
+  RQUntrackTable q           -> buildTx' q
 
-  RQCreateObjectRelationship q -> buildTx userInfo sc q
-  RQCreateArrayRelationship  q -> buildTx userInfo sc q
-  RQDropRelationship  q        -> buildTx userInfo sc q
-  RQSetRelationshipComment  q  -> buildTx userInfo sc q
+  RQCreateObjectRelationship q -> buildTx' q
+  RQCreateArrayRelationship  q -> buildTx' q
+  RQDropRelationship  q        -> buildTx' q
+  RQSetRelationshipComment  q  -> buildTx' q
 
-  RQCreateInsertPermission q -> buildTx userInfo sc q
-  RQCreateSelectPermission q -> buildTx userInfo sc q
-  RQCreateUpdatePermission q -> buildTx userInfo sc q
-  RQCreateDeletePermission q -> buildTx userInfo sc q
+  RQCreateInsertPermission q -> buildTx' q
+  RQCreateSelectPermission q -> buildTx' q
+  RQCreateUpdatePermission q -> buildTx' q
+  RQCreateDeletePermission q -> buildTx' q
 
-  RQDropInsertPermission q -> buildTx userInfo sc q
-  RQDropSelectPermission q -> buildTx userInfo sc q
-  RQDropUpdatePermission q -> buildTx userInfo sc q
-  RQDropDeletePermission q -> buildTx userInfo sc q
-  RQSetPermissionComment q -> buildTx userInfo sc q
+  RQDropInsertPermission q -> buildTx' q
+  RQDropSelectPermission q -> buildTx' q
+  RQDropUpdatePermission q -> buildTx' q
+  RQDropDeletePermission q -> buildTx' q
+  RQSetPermissionComment q -> buildTx' q
 
-  RQInsert q -> buildTx userInfo sc q
-  RQSelect q -> buildTx userInfo sc q
-  RQUpdate q -> buildTx userInfo sc q
-  RQDelete q -> buildTx userInfo sc q
-  RQCount q  -> buildTx userInfo sc q
+  RQInsert q -> buildTx' q
+  RQSelect q -> buildTx' q
+  RQUpdate q -> buildTx' q
+  RQDelete q -> buildTx' q
+  RQCount  q -> buildTx' q
 
-  RQCreateEventTrigger q -> buildTx userInfo sc q
-  RQDeleteEventTrigger q -> buildTx userInfo sc q
-  RQDeliverEvent q -> buildTx userInfo sc q
+  RQAddCustomResolver q  -> buildTx' q
 
-  RQCreateQueryTemplate q     -> buildTx userInfo sc q
-  RQDropQueryTemplate q       -> buildTx userInfo sc q
-  RQExecuteQueryTemplate q    -> buildTx userInfo sc q
-  RQSetQueryTemplateComment q -> buildTx userInfo sc q
+  RQCreateEventTrigger q -> buildTx' q
+  RQDeleteEventTrigger q -> buildTx' q
+  RQDeliverEvent q       -> buildTx' q
 
-  RQReplaceMetadata q -> buildTx userInfo sc q
-  RQClearMetadata q -> buildTx userInfo sc q
-  RQExportMetadata q -> buildTx userInfo sc q
-  RQReloadMetadata q -> buildTx userInfo sc q
+  RQCreateQueryTemplate q     -> buildTx' q
+  RQDropQueryTemplate q       -> buildTx' q
+  RQExecuteQueryTemplate q    -> buildTx' q
+  RQSetQueryTemplateComment q -> buildTx' q
 
-  RQDumpInternalState q -> buildTx userInfo sc q
+  RQReplaceMetadata q -> buildTx' q
+  RQClearMetadata q   -> buildTx' q
+  RQExportMetadata q  -> buildTx' q
+  RQReloadMetadata q  -> buildTx' q
 
-  RQRunSql q -> buildTx userInfo sc q
+  RQDumpInternalState q -> buildTx' q
 
-  RQBulk qs  ->
+  RQRunSql q -> buildTx' q
+
+  RQBulk qs ->
     let f (respList, scf) q = do
-          dbAction <- liftEither $ buildTxAny userInfo scf q
+          dbAction <- liftEither $ buildTxAny userInfo scf hMgr gCtx q
           (resp, newSc) <- dbAction
           return ((Seq.|>) respList resp, newSc)
     in
@@ -254,6 +273,8 @@ buildTxAny userInfo sc rq = case rq of
         return ( BB.toLazyByteString $ encodeJSONVector BB.lazyByteString bsVector
                , finalSc
                )
+
+  where buildTx' q = buildTx userInfo sc hMgr gCtx q
 
 setHeadersTx :: UserInfo -> Q.TxE QErr ()
 setHeadersTx userInfo =

@@ -207,9 +207,9 @@ main =  do
       -- enable console config
       finalEnableConsole <- bool getEnableConsoleEnv (return True) enableConsole
       -- init catalog if necessary
-      initialise ci
+      initialise ci httpManager
       -- migrate catalog if necessary
-      migrate ci
+      migrate ci httpManager
       prepareEvents ci
       pool <- Q.initPGPool ci cp
       putStrLn $ "server: running on port " ++ show port
@@ -239,7 +239,7 @@ main =  do
       either ((>> exitFailure) . printJSON) (const cleanSuccess) res
     ROExecute -> do
       queryBs <- BL.getContents
-      res <- runTx ci $ execQuery queryBs
+      res <- runTx ci $ execQuery httpManager queryBs
       either ((>> exitFailure) . printJSON) BLC.putStrLn res
   where
     runTx ci tx = do
@@ -248,13 +248,13 @@ main =  do
     getMinimalPool ci = do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
       Q.initPGPool ci connParams
-    initialise ci = do
+    initialise ci httpMgr = do
       currentTime <- getCurrentTime
-      res <- runTx ci $ initCatalogSafe currentTime
+      res <- runTx ci $ initCatalogSafe currentTime httpMgr
       either ((>> exitFailure) . printJSON) putStrLn res
-    migrate ci = do
+    migrate ci httpMgr = do
       currentTime <- getCurrentTime
-      res <- runTx ci $ migrateCatalog currentTime
+      res <- runTx ci $ migrateCatalog httpMgr currentTime
       either ((>> exitFailure) . printJSON) putStrLn res
     prepareEvents ci = do
       putStrLn "event_triggers: preparing data"

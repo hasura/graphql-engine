@@ -70,6 +70,9 @@ getTopLevelQueryNodes req = do
   return $ map (\(G.SelectionField f) -> G._fName f) $ G._todSelectionSet opDef
 
 
+runMaybe :: Maybe a -> b -> (a -> b) -> b
+runMaybe mVal defaultVal action = maybe defaultVal action mVal
+
 getTopLevelNodes
   :: (MonadIO m, MonadError QErr m)
   => RoleName -> RoledGCtx
@@ -77,17 +80,19 @@ getTopLevelNodes
 getTopLevelNodes role gCtxRoleMap = do
   let mUgCtx = Map.lookup role gCtxRoleMap
   ugCtx <- maybe (throw500 errMsg) return mUgCtx
-  let rmGCtx    = snd $ _ugRemoteCtx ugCtx
-      qr        = _rgQueryRoot rmGCtx
-      mr        = fromMaybe (G.NamedType "Mutation") $ _rgMutationRoot rmGCtx
-      types     = _rgTypes rmGCtx
-      -- get the query root and mutation root objects
-      rootTypes = flip filter (Map.elems types) $ \case
-        VT.TIObj o -> VT._otiName o == qr || VT._otiName o == mr
-        _          -> False
+  let mRmGCtx   = _ugRemoteCtx ugCtx
+  runMaybe mRmGCtx (return []) $ \remoteCtx -> do
+    let rmGCtx  = snd remoteCtx
+        qr      = _rgQueryRoot rmGCtx
+        mr      = fromMaybe (G.NamedType "Mutation") $ _rgMutationRoot rmGCtx
+        types   = _rgTypes rmGCtx
+        -- get the query root and mutation root objects
+        rootTypes = flip filter (Map.elems types) $ \case
+          VT.TIObj o -> VT._otiName o == qr || VT._otiName o == mr
+          _          -> False
 
-  let rootTypeFlds = map (\(VT.TIObj o) -> VT._otiFields o) rootTypes
-  return $ join $ map Map.keys rootTypeFlds
+    let rootTypeFlds = map (\(VT.TIObj o) -> VT._otiFields o) rootTypes
+    return $ join $ map Map.keys rootTypeFlds
   where
     errMsg = "invalid role " <> T.pack (show role) <> " in RoledGCtx"
 
@@ -146,8 +151,10 @@ runRemoteGQ
 runRemoteGQ manager userInfo gCtxMap q = do
   let role  = userRole userInfo
       ugCtx = getUniGCtx role gCtxMap
-      url   = fst . _ugRemoteCtx $ ugCtx
-  when (url == "") $ throw400 InvalidHeaders $ roleErr role
+      mRmCtx = _ugRemoteCtx ugCtx
+  rmCtx <- liftMaybe (err400 Unexpected noRemote) mRmCtx
+  let url = fst rmCtx
+  when (url == "") $ throw400 Unexpected $ roleErr role
   --liftIO $ putStrLn "running remote graphql query"
   --liftIO $ print q
   let options = Wreq.defaults
@@ -161,4 +168,5 @@ runRemoteGQ manager userInfo gCtxMap q = do
   where
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow err = throw500 $ T.pack . show $ err
+    noRemote = "no remote resolver configured"
     roleErr (RoleName rn) = "no remote schema found for role " <> rn
