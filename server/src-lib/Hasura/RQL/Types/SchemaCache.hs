@@ -434,7 +434,7 @@ data ViewInfo
 $(deriveToJSON (aesonDrop 2 snakeCase) ''ViewInfo)
 
 isMutable :: (ViewInfo -> Bool) -> Maybe ViewInfo -> Bool
-isMutable _ Nothing = True
+isMutable _ Nothing   = True
 isMutable f (Just vi) = f vi
 
 mutableView :: (MonadError QErr m) => QualifiedTable
@@ -795,11 +795,20 @@ getOpInfo trn ti mos= fromSubscrOpSpec <$> mos
     fromSubscrOpSpec :: SubscribeOpSpec -> OpTriggerInfo
     fromSubscrOpSpec os =
       let qt = tiName ti
+          tableDep = SchemaDependency (SOTable qt) ("event trigger " <> trn <> " is dependent on table")
           cols = getColsFromSub $ sosColumns os
-          schemaDeps = SchemaDependency (SOTable qt) "event trigger is dependent on table"
-            : map (\col -> SchemaDependency (SOTableObj qt (TOCol col)) "event trigger is dependent on column") (toList cols)
+          colDeps = map (\col ->
+                           SchemaDependency (SOTableObj qt (TOCol col))
+                          ("event trigger " <> trn <> " is dependent on column " <> getPGColTxt col))
+                    (toList cols)
+          payload = maybe HS.empty getColsFromSub (sosPayload os)
+          payloadDeps = map (\col ->
+                               SchemaDependency (SOTableObj qt (TOCol col))
+                               ("event trigger " <> trn <> " is dependent on column " <> getPGColTxt col))
+                        (toList payload)
+          schemaDeps = tableDep : colDeps ++ payloadDeps
         in OpTriggerInfo qt trn os schemaDeps
         where
           getColsFromSub sc = case sc of
-            SubCStar         -> HS.fromList $ map pgiName $ getCols $ tiFieldInfoMap ti
+            SubCStar         -> HS.fromList []
             SubCArray pgcols -> HS.fromList pgcols

@@ -9,7 +9,7 @@ args:
     insert:
       columns: ["c1"]
     update:
-      columns: ["c2"]
+      columns: ["c1"]
     delete:
       columns: "*"
     webhook: http://127.0.0.1:5592/new
