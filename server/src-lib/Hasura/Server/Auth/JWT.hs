@@ -165,16 +165,20 @@ processJwt
      , MonadError QErr m)
   => JWTCtx
   -> HTTP.RequestHeaders
-  -> RoleName
+  -> Maybe RoleName
   -> m UserInfo
-processJwt jwtCtx headers unAuthRole =
+processJwt jwtCtx headers mUnAuthRole =
   case mAuthzHeader of
-    Nothing               -> return $ UserInfo unAuthRole
-      $ Map.singleton userRoleHeader $ getRoleTxt unAuthRole
+    Nothing               -> do
+      unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
+      return $ UserInfo unAuthRole
+        $ Map.singleton userRoleHeader $ getRoleTxt unAuthRole
     Just (_, authzHeader) -> processAuthZHeader jwtCtx headers $
       BL.fromStrict authzHeader
   where
     mAuthzHeader = find (\h -> fst h == CI.mk "Authorization") headers
+    missingAuthzHeader =
+      throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
 
 processAuthZHeader
   :: ( MonadIO m

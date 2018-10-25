@@ -56,9 +56,9 @@ newtype Webhook
 
 data AuthMode
   = AMNoAuth
-  | AMAccessKey !AccessKey !RoleName
+  | AMAccessKey !AccessKey !(Maybe RoleName)
   | AMAccessKeyAndHook !AccessKey !Webhook
-  | AMAccessKeyAndJWT !AccessKey !JWTCtx !RoleName
+  | AMAccessKeyAndJWT !AccessKey !JWTCtx !(Maybe RoleName)
   deriving (Show, Eq)
 
 mkAuthMode
@@ -75,12 +75,11 @@ mkAuthMode
 mkAuthMode mAccessKey mWebHook mJwtSecret mUnAuthRole httpManager lCtx =
   case (mAccessKey, mWebHook, mJwtSecret) of
     (Nothing,  Nothing,   Nothing)      -> return AMNoAuth
-    (Just key, Nothing,   Nothing)      -> AMAccessKey key <$> getUnAuthRole
+    (Just key, Nothing,   Nothing)      -> return $ AMAccessKey key mUnAuthRole
     (Just key, Just hook, Nothing)      -> return $ AMAccessKeyAndHook key hook
     (Just key, Nothing,   Just jwtConf) -> do
       jwtCtx <- mkJwtCtx jwtConf httpManager lCtx
-      unAuthRole <- getUnAuthRole
-      return $ AMAccessKeyAndJWT key jwtCtx unAuthRole
+      return $ AMAccessKeyAndJWT key jwtCtx mUnAuthRole
 
     (Nothing, Just _, Nothing)     -> throwError $
       "Fatal Error : --auth-hook (HASURA_GRAPHQL_AUTH_HOOK)"
@@ -92,12 +91,6 @@ mkAuthMode mAccessKey mWebHook mJwtSecret mUnAuthRole httpManager lCtx =
       "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
     (Just _, Just _, Just _)     -> throwError
       "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
-  where
-    getUnAuthRole = maybe throwUnAuthRoleReq return mUnAuthRole
-    throwUnAuthRoleReq = throwError $
-      "Fatal Error: --unauthorized-role (HASURA_GRAPHQL_UNAUTHORIZED) is required"
-      <> " when --access-key (HASURA_GRAPHQL_ACCESS_KEY) or"
-      <> " --jwt-secret (HASURA_GRAPHQL_JWT_SECRET) is set"
 
 mkJwtCtx
   :: ( MonadIO m
@@ -245,6 +238,7 @@ getUserInfo logger manager rawHeaders = \case
       when (reqKey /= getAccessKey key) $ throw401 $ "invalid " <> accessKeyHeader
       return userInfoFromHeaders
 
-    userInfoWhenNoAccessKey role =
-      return $ UserInfo role $
+    userInfoWhenNoAccessKey = \case
+      Nothing -> throw401 $ accessKeyHeader <> " required, but not found"
+      Just role -> return $ UserInfo role $
         M.insertWith const userRoleHeader (getRoleTxt role) headers
