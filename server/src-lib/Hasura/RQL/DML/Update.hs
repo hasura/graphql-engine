@@ -113,6 +113,10 @@ convUpdateQuery f uq = do
   let tableName = uqTable uq
   tableInfo <- withPathK "table" $ askTabInfo tableName
 
+  -- If it is view then check if it is updatable
+  mutableView tableName viIsUpdatable
+    (tiViewInfo tableInfo) "updatable"
+
   -- Check if the role has update permissions
   updPerm <- askUpdPermInfo tableInfo
 

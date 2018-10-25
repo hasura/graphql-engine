@@ -1,4 +1,4 @@
-// Package main is the entrypoint for the the command line executable.
+// Package main is the entrypoint for the command line executable.
 package main
 
 import (

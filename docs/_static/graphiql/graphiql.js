@@ -13794,7 +13794,7 @@ function updateWidgetHeight(line) {
 }
 
 // Compute the lines that are visible in a given viewport (defaults
-// the the current scroll position). viewport may contain top,
+// the current scroll position). viewport may contain top,
 // height, and ensure (see op.scrollToPos) properties.
 function visibleLines(display, doc, viewport) {
   var top = viewport && viewport.top != null ? Math.max(0, viewport.top) : display.scroller.scrollTop;
@@ -34887,7 +34887,7 @@ function OverlappingFieldsCanBeMerged(context) {
  *
  * D) When comparing "between" a set of fields and a referenced fragment, first
  * a comparison is made between each field in the original set of fields and
- * each field in the the referenced set of fields.
+ * each field in the referenced set of fields.
  *
  * E) Also, if any fragment is referenced in the referenced selection set,
  * then a comparison is made "between" the original set of fields and the

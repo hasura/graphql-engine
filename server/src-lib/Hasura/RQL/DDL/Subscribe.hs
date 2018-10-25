@@ -21,10 +21,8 @@ import qualified Hasura.SQL.DML          as S
 import qualified Data.FileEmbed          as FE
 import qualified Data.HashMap.Strict     as HashMap
 import qualified Data.Text               as T
-import qualified Data.Text.Encoding      as TE
 import qualified Database.PG.Query       as Q
 
-data Ops = INSERT | UPDATE | DELETE deriving (Show)
 
 data OpVar = OLD | NEW deriving (Show)
 
@@ -63,11 +61,13 @@ getTriggerSql op trid trn qt allCols spec =
   in
       spec >> renderGingerTmplt context <$> triggerTmplt
   where
-    createOpCtx op1 (SubscribeOpSpec columns) =
+    createOpCtx op1 (SubscribeOpSpec columns payload) =
       HashMap.fromList
       [ (T.pack "OPERATION", T.pack $ show op1)
-      , (T.pack "OLD_DATA_EXPRESSION", toSQLTxt $ renderOldDataExp op1 columns )
-      , (T.pack "NEW_DATA_EXPRESSION", toSQLTxt $ renderNewDataExp op1 columns )
+      , (T.pack "OLD_ROW", toSQLTxt $ renderRow OLD columns )
+      , (T.pack "NEW_ROW", toSQLTxt $ renderRow NEW columns )
+      , (T.pack "OLD_PAYLOAD_EXPRESSION", toSQLTxt $ renderOldDataExp op1 $ fromMaybePayload payload )
+      , (T.pack "NEW_PAYLOAD_EXPRESSION", toSQLTxt $ renderNewDataExp op1 $ fromMaybePayload payload )
       ]
     renderOldDataExp op2 scs =
       case op2 of
@@ -87,6 +87,7 @@ getTriggerSql op trid trn qt allCols spec =
           getColInfos cols allCols
 
     applyRowToJson e = S.SEFnApp "row_to_json" [e] Nothing
+    applyRow e = S.SEFnApp "row" [e] Nothing
     toExtr = flip S.Extractor Nothing
     mkQId opVar colInfo = toJSONableExp (pgiType colInfo) $
       S.SEQIden $ S.QIden (opToQual opVar) $ toIden $ pgiName colInfo
@@ -94,6 +95,14 @@ getTriggerSql op trid trn qt allCols spec =
     opToQual = S.QualVar . opToTxt
     opToTxt = T.pack . show
 
+    renderRow opVar scs =
+      case scs of
+        SubCStar -> applyRow $ S.SEUnsafe $ opToTxt opVar
+        SubCArray cols -> applyRow $
+          S.mkRowExp $ map (toExtr . mkQId opVar) $
+          getColInfos cols allCols
+
+    fromMaybePayload = fromMaybe SubCStar
 
 mkTriggerQ
   :: TriggerId
@@ -107,8 +116,8 @@ mkTriggerQ trid trn qt allCols (TriggerOpsDef insert update delete) = do
              <> getTriggerSql UPDATE trid trn qt allCols update
              <> getTriggerSql DELETE trid trn qt allCols delete
   case msql of
-    Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder sql)
-    Nothing -> throw500 "no trigger sql generated"
+    Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromText sql)
+    Nothing  -> throw500 "no trigger sql generated"
 
 addEventTriggerToCatalog
   :: QualifiedTable
@@ -139,7 +148,7 @@ delEventTriggerFromCatalog trn = do
   mapM_ tx [INSERT, UPDATE, DELETE]
   where
     tx :: Ops -> Q.TxE QErr ()
-    tx op = Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder $ getDropFuncSql op trn)
+    tx op = Q.multiQE defaultTxErrorHandler (Q.fromText $ getDropFuncSql op trn)
 
 updateEventTriggerToCatalog
   :: QualifiedTable
@@ -176,7 +185,12 @@ fetchEventTrigger trn = do
   getTrigger triggers
   where
     getTrigger []    = throw400 NotExists ("could not find event trigger '" <> trn <> "'")
-    getTrigger (x:_) = return $ EventTrigger (QualifiedTable sn tn) trn' tDef webhook (RetryConf nr rint)
+    getTrigger (x:_) = return $ EventTrigger
+                       (QualifiedTable sn tn)
+                       trn'
+                       tDef
+                       webhook
+                       (RetryConf nr rint)
       where (sn, tn, trn', Q.AltJ tDef, webhook, nr, rint) = x
 
 fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
@@ -234,7 +248,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
 
 subTableP2 :: (P2C m) => QualifiedTable -> Bool -> EventTriggerDef -> m ()
 subTableP2 qt replace q@(EventTriggerDef name def webhook rconf mheaders) = do
-  allCols <- (getCols . tiFieldInfoMap) <$> askTabInfo qt
+  allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
   trid <- if replace
     then do
     delEventTriggerFromCache qt name

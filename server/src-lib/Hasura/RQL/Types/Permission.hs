@@ -3,6 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TemplateHaskell            #-}
 
 module Hasura.RQL.Types.Permission
        ( RoleName(..)
@@ -22,6 +23,9 @@ import           Hasura.SQL.Types
 import qualified Database.PG.Query          as Q
 
 import           Data.Aeson
+import qualified Data.Aeson                 as J
+import qualified Data.Aeson.Casing          as J
+import qualified Data.Aeson.TH              as J
 import           Data.Hashable
 import           Data.Word
 import           Instances.TH.Lift          ()
@@ -56,8 +60,13 @@ data UserInfo
 
 instance Hashable UserInfo
 
+$(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
+  ''UserInfo
+ )
+
 adminUserInfo :: UserInfo
-adminUserInfo = UserInfo adminRole Map.empty
+adminUserInfo =
+  UserInfo adminRole $ Map.singleton "x-hasura-role" "admin"
 
 data PermType
   = PTInsert

@@ -8,8 +8,20 @@ TableName
 ^^^^^^^^^
 
 .. parsed-literal::
+   :class: haskell-pre
 
-  String
+   String | QualifiedTable_
+
+QualifiedTable
+^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+           "name": String,
+           "schema": String
+   }
 
 .. _RoleName:
 
@@ -97,11 +109,11 @@ PGColumnType
 
       * - ``timestamp with time zone``
         - ``timestamptz``
-        - both date and time, with time zone. Allowed values should be of ISO8601 format. Eg. 2016-07-20T17:30:15Z, 2016-07-20T17:30:15+05:30, 2016-07-20T17:30:15.234890+05:30
+        - both date and time, with time zone. Allowed values should be of ISO8601 format. E.g. 2016-07-20T17:30:15Z, 2016-07-20T17:30:15+05:30, 2016-07-20T17:30:15.234890+05:30
 
       * - ``time with time zone``
         - ``timetz``
-        - time of day only, with time zone. Allowed values should be of ISO8601 format. Eg. 17:30:15Z, 17:30:15+05:30, 17:30:15.234890+05:30
+        - time of day only, with time zone. Allowed values should be of ISO8601 format. E.g. 17:30:15Z, 17:30:15+05:30, 17:30:15.234890+05:30
 
       * - ``date``
         -
