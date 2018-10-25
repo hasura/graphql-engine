@@ -8,8 +8,8 @@ Sample JWT Authentication server for generating a JWT to use in the `Authenticat
 
 #### Local Prerequisites
 
-  - PostgreSQL
-  - Node.js 8.9+
+* PostgreSQL
+* Node.js 8.9+
 
 #### Local instructions
 
@@ -38,7 +38,7 @@ ENCRYPTION_KEY=<put your secret key here> npm start
 
 #### Docker Prerequisites
 
-  - Docker installed
+* Docker installed
 
 #### Docker instructions
 
