@@ -76,7 +76,8 @@ mkAuthMode mAccessKey mWebHook mJwtSecret mUnAuthRole httpManager lCtx =
   case (mAccessKey, mWebHook, mJwtSecret) of
     (Nothing,  Nothing,   Nothing)      -> return AMNoAuth
     (Just key, Nothing,   Nothing)      -> return $ AMAccessKey key mUnAuthRole
-    (Just key, Just hook, Nothing)      -> return $ AMAccessKeyAndHook key hook
+    (Just key, Just hook, Nothing)      -> unAuthRoleNotReqForWebHook >>
+                                           return (AMAccessKeyAndHook key hook)
     (Just key, Nothing,   Just jwtConf) -> do
       jwtCtx <- mkJwtCtx jwtConf httpManager lCtx
       return $ AMAccessKeyAndJWT key jwtCtx mUnAuthRole
@@ -91,6 +92,11 @@ mkAuthMode mAccessKey mWebHook mJwtSecret mUnAuthRole httpManager lCtx =
       "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
     (Just _, Just _, Just _)     -> throwError
       "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
+  where
+    unAuthRoleNotReqForWebHook =
+      when (isJust mUnAuthRole) $
+        throwError $ "Fatal Error: --unauthorized-role (HASURA_GRAPHQL_UNAUTHORIZED_ROLE) is not required"
+                     <> " when --auth-hook (HASURA_GRAPHQL_AUTH_HOOK) is set"
 
 mkJwtCtx
   :: ( MonadIO m
