@@ -190,7 +190,7 @@ parseUnAuthRole =
   optional $ RoleName <$>
     strOption ( long "unauthorized-role" <>
                 metavar "UNAUTHORIZED ROLE" <>
-                help "Unauthorzed role, used when access key is not sent and \"Authorization\" header is absent in JWT mode"
+                help "Unauthorized role, used when access key is not sent or \"Authorization\" header is absent in JWT mode"
               )
 
 parseCorsConfig :: Parser CorsConfigFlags
