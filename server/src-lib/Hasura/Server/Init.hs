@@ -12,6 +12,7 @@ import qualified Data.Text            as T
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Utils
+import           Hasura.RQL.Types     (RoleName (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Utils
 
@@ -184,6 +185,13 @@ jwtSecretHelp = "The JSON containing type and the JWK used for verifying. e.g: "
               <> "`{\"type\": \"HS256\", \"key\": \"<your-hmac-shared-secret>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`,"
               <> "`{\"type\": \"RS256\", \"key\": \"<your-PEM-RSA-public-key>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`"
 
+parseUnAuthRole :: Parser (Maybe RoleName)
+parseUnAuthRole =
+  optional $ RoleName <$>
+    strOption ( long "unauthorized-role" <>
+                metavar "UNAUTHORIZED ROLE" <>
+                help "Unauthorzed role, used when access key is not sent and \"Authorization\" header is absent in JWT mode"
+              )
 
 parseCorsConfig :: Parser CorsConfigFlags
 parseCorsConfig =

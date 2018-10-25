@@ -14,6 +14,7 @@ module Hasura.Server.Auth.JWT
   , jwkRefreshCtrl
   ) where
 
+import           Control.Arrow                   (first)
 import           Control.Exception               (try)
 import           Control.Lens
 import           Control.Monad                   (when)
@@ -164,8 +165,25 @@ processJwt
      , MonadError QErr m)
   => JWTCtx
   -> HTTP.RequestHeaders
+  -> RoleName
   -> m UserInfo
-processJwt jwtCtx headers = do
+processJwt jwtCtx headers unAuthRole =
+  case mAuthzHeader of
+    Nothing               -> return $ UserInfo unAuthRole
+      $ Map.singleton userRoleHeader $ getRoleTxt unAuthRole
+    Just (_, authzHeader) -> processAuthZHeader jwtCtx headers $
+      BL.fromStrict authzHeader
+  where
+    mAuthzHeader = find (\h -> fst h == CI.mk "Authorization") headers
+
+processAuthZHeader
+  :: ( MonadIO m
+     , MonadError QErr m)
+  => JWTCtx
+  -> HTTP.RequestHeaders
+  -> BLC.ByteString
+  -> m UserInfo
+processAuthZHeader jwtCtx headers authzHeader = do
   -- try to parse JWT token from Authorization header
   jwt <- parseAuthzHeader
 
@@ -182,7 +200,7 @@ processJwt jwtCtx headers = do
 
   -- filter only x-hasura claims and convert to lower-case
   let claimsMap = Map.filterWithKey (\k _ -> T.isPrefixOf "x-hasura-" k)
-                $ Map.fromList $ map (\(k, v) -> (T.toLower k, v))
+                $ Map.fromList $ map (first T.toLower)
                 $ Map.toList hasuraClaims
 
   HasuraClaims allowedRoles defaultRole <- parseHasuraClaims claimsMap
@@ -203,9 +221,7 @@ processJwt jwtCtx headers = do
 
   where
     parseAuthzHeader = do
-      let mAuthzHeader = find (\h -> fst h == CI.mk "Authorization") headers
-      (_, authzHeader) <- maybe missingAuthzHeader return mAuthzHeader
-      let tokenParts = BLC.words $ BL.fromStrict authzHeader
+      let tokenParts = BLC.words authzHeader
       case tokenParts of
         ["Bearer", jwt] -> return jwt
         _               -> malformedAuthzHeader
@@ -235,8 +251,6 @@ processJwt jwtCtx headers = do
 
     malformedAuthzHeader =
       throw400 InvalidHeaders "Malformed Authorization header"
-    missingAuthzHeader =
-      throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
     currRoleNotAllowed =
       throw400 AccessDenied "Your current role is not in allowed roles"
     claimsNotFound = do
