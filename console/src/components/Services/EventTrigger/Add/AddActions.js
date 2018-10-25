@@ -117,9 +117,7 @@ const createTrigger = () => {
         }
       }
     });
-    console.log(headers);
     payload.args.headers = headers;
-    console.log(payload);
     const upQueryArgs = [];
     upQueryArgs.push(payload);
     const downQueryArgs = [];
