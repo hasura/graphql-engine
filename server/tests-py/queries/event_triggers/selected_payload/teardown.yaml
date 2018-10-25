@@ -2,7 +2,7 @@ type: bulk
 args:
 - type: delete_event_trigger
   args:
-    name: t1_empty
+    name: t1_payload
 - type: run_sql
   args:
     sql: |
