@@ -1,0 +1,42 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE drone_3d_location
+
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE landmark
+
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE road
+
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE service_locations
+
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE route
+
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE area
+
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE compounds
+
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE geometry_collection

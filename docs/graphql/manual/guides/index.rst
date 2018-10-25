@@ -54,3 +54,4 @@ Articles:
    Sample apps <sample-apps/index>
    Integration/migration tutorials <integrations/index>
    Integrating with monitoring frameworks <monitoring/index>
+   Auditing tables <auditing-tables>
