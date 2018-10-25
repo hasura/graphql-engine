@@ -5,7 +5,7 @@ Every GraphQL engine command is structured as:
 
 .. code-block:: bash
 
-   graphql-engine <server-flags> serve <command-flags>
+   $ graphql-engine <server-flags> serve <command-flags>
 
 Server flags
 ^^^^^^^^^^^^
