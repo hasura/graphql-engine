@@ -228,7 +228,7 @@ annNodeToSel opts joinCond als = \case
         baseSelFrom = S.mkSelFromItem (bnToSel bn) (mkAliasFromBN bn)
         ordBy = _bnOrderBy bn
     in S.mkSelect
-                 { S.selExtr = [ flip S.Extractor Nothing $
+                 { S.selExtr = [ flip S.Extractor (Just als) $
                                  S.applyJsonBuildObj $
                                  concatMap (selFldToExtr pfx ordBy) flds
                                ]
