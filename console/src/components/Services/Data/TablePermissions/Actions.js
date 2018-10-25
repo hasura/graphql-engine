@@ -11,6 +11,8 @@ export const PERM_ALLOW_ALL = 'ModifyTable/PERM_ALLOW_ALL';
 export const PERM_TOGGLE_ENABLE_LIMIT = 'ModifyTable/PERM_TOGGLE_ENABLE_LIMIT';
 export const PERM_TOGGLE_MODIFY_LIMIT = 'ModifyTable/PERM_TOGGLE_MODIFY_LIMIT';
 export const PERM_TOGGLE_ALLOW_UPSERT = 'ModifyTable/PERM_TOGGLE_ALLOW_UPSERT';
+export const PERM_TOGGLE_ALLOW_AGGREGATION =
+  'ModifyTable/PERM_TOGGLE_ALLOW_AGGREGATION';
 export const PERM_CUSTOM_CHECKED = 'ModifyTable/PERM_CUSTOM_CHECKED';
 
 export const PERM_REMOVE_ACCESS = 'ModifyTable/PERM_REMOVE_ACCESS';
@@ -58,6 +60,10 @@ const _permSavePermissions = () => ({ type: PERM_SAVE_PERMISSIONS });
 const _permRemoveAccess = () => ({ type: PERM_REMOVE_ACCESS });
 const permToggleAllowUpsert = checked => ({
   type: PERM_TOGGLE_ALLOW_UPSERT,
+  data: checked,
+});
+const permToggleAllowAggregation = checked => ({
+  type: PERM_TOGGLE_ALLOW_AGGREGATION,
   data: checked,
 });
 const permToggleModifyLimit = limit => ({
@@ -522,6 +528,7 @@ export {
   permChangePermissions,
   permAllowAll,
   permToggleAllowUpsert,
+  permToggleAllowAggregation,
   permToggleModifyLimit,
   permCustomChecked,
   permRemoveRole,

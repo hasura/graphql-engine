@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE MultiWayIf            #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedStrings     #-}
@@ -25,25 +24,21 @@ import qualified Hasura.SQL.DML                    as S
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Resolve.Select     (fromSelSet)
+import           Hasura.GraphQL.Resolve.Select     (fromSelSet, withSelSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m [(Text, a)]
-withSelSet selSet f =
-  forM (toList selSet) $ \fld -> do
-    res <- f fld
-    return (G.unName $ G.unAlias $ _fAlias fld, res)
-
 convertReturning
   :: QualifiedTable -> G.NamedType -> SelSet -> Convert RS.AnnSel
 convertReturning qt ty selSet = do
   annFlds <- fromSelSet prepare ty selSet
-  return $ RS.AnnSel annFlds qt (Just frmItem)
-    (S.BELit True) Nothing RS.noTableArgs
+  let selFlds = RS.ASFSimple annFlds
+      tabFrom = RS.TableFrom qt $ Just frmItem
+      tabPerm = RS.TablePerm (S.BELit True) Nothing
+  return $ RS.AnnSel selFlds tabFrom tabPerm RS.noTableArgs
   where
     frmItem = S.FIIden $ RR.qualTableToAliasIden qt
 
