@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE MultiWayIf            #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
@@ -21,10 +22,11 @@ import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashMap.Strict.InsOrd        as OMap
+import qualified Data.List.NonEmpty                as NE
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Select             as RS
-
 import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.GraphQL.Resolve.BoolExp
@@ -44,7 +46,7 @@ withSelSet selSet f =
     return (G.unName $ G.unAlias $ _fAlias fld, res)
 
 fromSelSet
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByResolveCtx r)
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => ((PGColType, PGColValue) -> m S.SQLExp)
   -> G.NamedType
   -> SelSet
@@ -71,18 +73,19 @@ fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
 fieldAsPath = nameAsPath . _fName
 
 parseTableArgs
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByResolveCtx r)
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => ((PGColType, PGColValue) -> m S.SQLExp)
   -> QualifiedTable -> ArgsMap -> m RS.TableArgs
 parseTableArgs f tn args = do
   whereExpM  <- withArgM args "where" $ convertBoolExpG f tn
-  ordByExpM  <- withArgM args "order_by" parseOrderBy
+  ordByExpML <- withArgM args "order_by" parseOrderBy
+  let ordByExpM = NE.nonEmpty =<< ordByExpML
   limitExpM  <- withArgM args "limit" parseLimit
   offsetExpM <- withArgM args "offset" $ asPGColVal >=> f
   return $ RS.TableArgs whereExpM ordByExpM limitExpM offsetExpM
 
 fromField
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByResolveCtx r)
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => ((PGColType, PGColValue) -> m S.SQLExp)
   -> QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> m RS.AnnSel
 fromField f tn permFilter permLimitM fld =
@@ -96,28 +99,63 @@ fromField f tn permFilter permLimitM fld =
   where
     args = _fArguments fld
 
-getEnumInfo
+getOrdByItemMap
   :: ( MonadError QErr m
      , MonadReader r m
-     , Has OrdByResolveCtx r
+     , Has OrdByCtx r
      )
-  => G.NamedType -> G.EnumValue -> m OrdByResolveCtxElem
-getEnumInfo nt v = do
-  -- fldMap <- _gcFieldMap <$> ask
+  => G.NamedType -> m OrdByItemMap
+getOrdByItemMap nt = do
   ordByCtx <- asks getter
-  onNothing (Map.lookup (nt,v) ordByCtx) $
-    throw500 $ "could not lookup " <> showName (G.unEnumValue v) <> " in " <>
-    showNamedTy nt
+  onNothing (Map.lookup nt ordByCtx) $
+    throw500 $ "could not lookup " <> showNamedTy nt
 
 parseOrderBy
-  :: (MonadError QErr m
+  :: ( MonadError QErr m
      , MonadReader r m
-     , Has OrdByResolveCtx r
+     , Has OrdByCtx r
      )
   => AnnGValue -> m [RS.AnnOrderByItem]
-parseOrderBy v = do
-  enums <- withArray (const $ mapM asEnumVal) v
-  mapM (uncurry getEnumInfo) enums
+parseOrderBy = fmap concat . withArray f
+  where
+    f _ = mapM (withObject (getAnnObItems id))
+
+getAnnObItems
+  :: ( MonadError QErr m
+     , MonadReader r m
+     , Has OrdByCtx r
+     )
+  => (RS.AnnObCol -> RS.AnnObCol)
+  -> G.NamedType
+  -> AnnGObject
+  -> m [RS.AnnOrderByItem]
+getAnnObItems f nt obj = do
+  ordByItemMap <- getOrdByItemMap nt
+  fmap concat $ forM (OMap.toList obj) $ \(k, v) -> do
+    ordByItem <- onNothing (Map.lookup k ordByItemMap) $ throw500 $
+      "cannot lookup " <> showName k <> " order by item in "
+      <> showNamedTy nt <> " map"
+    case ordByItem of
+      OBIPGCol ci -> do
+        let aobCol = f $ RS.AOCPG ci
+        (_, enumVal) <- asEnumVal v
+        (ordTy, nullsOrd) <- parseOrderByEnum enumVal
+        return [OrderByItemG (Just ordTy) aobCol (Just nullsOrd)]
+      OBIRel ri fltr -> do
+        let annObColFn = f . RS.AOCRel ri fltr
+        withObject (getAnnObItems annObColFn) v
+
+parseOrderByEnum
+  :: (MonadError QErr m)
+  => G.EnumValue
+  -> m (S.OrderType, S.NullsOrder)
+parseOrderByEnum = \case
+  G.EnumValue "asc"              -> return (S.OTAsc, S.NLast)
+  G.EnumValue "desc"             -> return (S.OTDesc, S.NLast)
+  G.EnumValue "asc_nulls_first"  -> return (S.OTAsc, S.NFirst)
+  G.EnumValue "desc_nulls_first" -> return (S.OTDesc, S.NFirst)
+  G.EnumValue v                   -> throw500 $
+    "enum value " <> showName v <> " not found in type order_by"
 
 parseLimit :: ( MonadError QErr m ) => AnnGValue -> m Int
 parseLimit v = do
@@ -130,7 +168,7 @@ parseLimit v = do
     noIntErr = throw400 Unexpected "expecting Integer value for \"limit\""
 
 fromFieldByPKey
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByResolveCtx r)
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => ((PGColType, PGColValue) -> m S.SQLExp)
   -> QualifiedTable -> S.BoolExp -> Field -> m RS.AnnSel
 fromFieldByPKey f tn permFilter fld = fieldAsPath fld $ do
@@ -184,7 +222,7 @@ convertAggFld ty selSet =
       G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 fromAggField
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByResolveCtx r)
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => ((PGColType, PGColValue) -> m S.SQLExp)
   -> QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> m RS.AnnSel
 fromAggField fn tn permFilter permLimitM fld = fieldAsPath fld $ do

@@ -35,7 +35,7 @@ import qualified Hasura.Server.Query                    as RQ
 data GQLExplain
   = GQLExplain
   { _gqeQuery :: !GH.GraphQLRequest
-  , _gqeUser  :: !UserInfo
+  , _gqeUser  :: !(Maybe (Map.HashMap Text Text))
   } deriving (Show, Eq)
 
 $(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
@@ -52,11 +52,11 @@ data FieldPlan
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase) ''FieldPlan)
 
 type Explain =
-  (ReaderT (FieldMap, OrdByResolveCtx) (Except QErr))
+  (ReaderT (FieldMap, OrdByCtx) (Except QErr))
 
 runExplain
   :: (MonadError QErr m)
-  => (FieldMap, OrdByResolveCtx) -> Explain a -> m a
+  => (FieldMap, OrdByCtx) -> Explain a -> m a
 runExplain ctx m =
   either throwError return $ runExcept $ runReaderT m ctx
 
@@ -94,7 +94,7 @@ explainField userInfo gCtx fld =
     txtConverter = return . txtEncoder . snd
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
-    orderByCtx = _gOrdByEnums gCtx
+    orderByCtx = _gOrdByCtx gCtx
 
     getOpCtx f =
       onNothing (Map.lookup f opCtxMap) $ throw500 $
@@ -103,7 +103,7 @@ explainField userInfo gCtx fld =
     validateHdrs hdrs = do
       let receivedHdrs = userVars userInfo
       forM_ hdrs $ \hdr ->
-        unless (Map.member hdr receivedHdrs) $
+        unless (isJust $ getVarVal hdr receivedHdrs) $
         throw400 NotFound $ hdr <<> " header is expected but not found"
 
 explainGQLQuery
@@ -113,7 +113,7 @@ explainGQLQuery
   -> GCtxMap
   -> GQLExplain
   -> m BL.ByteString
-explainGQLQuery pool iso gCtxMap (GQLExplain query userInfo)= do
+explainGQLQuery pool iso gCtxMap (GQLExplain query userVarsRaw)= do
   (opTy, selSet) <- runReaderT (GV.validateGQ query) gCtx
   unless (opTy == G.OperationTypeQuery) $
     throw400 InvalidParams "only queries can be explained"
@@ -121,6 +121,9 @@ explainGQLQuery pool iso gCtxMap (GQLExplain query userInfo)= do
   plans <- liftIO (runExceptT $ runTx tx) >>= liftEither
   return $ J.encode plans
   where
+    usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
+    userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
     gCtx = getGCtx (userRole userInfo) gCtxMap
     runTx tx =
-      Q.runTx pool (iso, Nothing) $ RQ.setHeadersTx userInfo >> tx
+      Q.runTx pool (iso, Nothing) $
+      RQ.setHeadersTx (userVars userInfo) >> tx

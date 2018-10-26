@@ -1,4 +1,8 @@
-import { defaultPermissionsState, defaultQueryPermissions } from '../DataState';
+import {
+  defaultPermissionsState,
+  defaultQueryPermissions,
+  defaultInsertSetState,
+} from '../DataState';
 import { getEdForm, getIngForm } from '../utils';
 import { makeMigrationCall } from '../DataActions';
 
@@ -27,6 +31,23 @@ export const PERM_RESET_BULK_SAME_SELECT =
 export const PERM_SAME_APPLY_BULK = 'ModifyTable/PERM_SAME_APPLY_BULK';
 export const PERM_DESELECT_SAME_APPLY_BULK =
   'ModifyTable/PERM_DESELECT_SAME_APPLY_BULK';
+
+export const X_HASURA_CONST = 'x-hasura-';
+
+/* insert set operations */
+export const UPDATE_PERM_SET_KEY_VALUE =
+  'ModifyTable/UPDATE_PERM_SET_KEY_VALUE';
+
+export const CREATE_NEW_INSERT_SET_VAL =
+  'ModifyTable/CREATE_NEW_INSERT_SET_VAL';
+
+export const DELETE_INSERT_SET_VAL = 'ModifyTable/DELETE_INSERT_SET_VAL';
+
+export const TOGGLE_PERM_INSERT_SET_OPERATION_CHECK =
+  'ModifyTable/TOGGLE_PERM_INSERT_SET_OPERATION_CHECK';
+export const SET_TYPE_CONFIG = 'ModifyTable/SET_TYPE_CONFIG';
+
+/* */
 
 const queriesWithPermColumns = ['select', 'update'];
 const permChangeTypes = {
@@ -94,6 +115,13 @@ const getFilterKey = query => {
   return query === 'insert' ? 'check' : 'filter';
 };
 
+const setConfigValueType = value => {
+  return typeof value === 'string' &&
+    value.slice(0, X_HASURA_CONST.length) === X_HASURA_CONST
+    ? 'session'
+    : 'static';
+};
+
 const getBasePermissionsState = (tableSchema, role, query) => {
   const _permissions = JSON.parse(JSON.stringify(defaultPermissionsState));
 
@@ -106,7 +134,41 @@ const getBasePermissionsState = (tableSchema, role, query) => {
   );
   if (rolePermissions) {
     Object.keys(rolePermissions.permissions).forEach(q => {
+      let set = [];
       _permissions[q] = rolePermissions.permissions[q];
+      // If the query is insert, transform set object if exists to an array
+      if (q === 'insert') {
+        // If set is an object
+        if ('set' in _permissions[q]) {
+          if (
+            Object.keys(_permissions[q].set).length > 0 &&
+            !(_permissions[q].set.length > 0)
+          ) {
+            Object.keys(_permissions[q].set).map(s => {
+              set.push({
+                key: s,
+                value: _permissions[q].set[s],
+              });
+            });
+            set.push(defaultInsertSetState);
+            _permissions[q].isSetConfigChecked = true;
+          } else if (
+            'localSet' in _permissions[q] &&
+            _permissions[q].localSet.length > 0
+          ) {
+            set = [..._permissions[q].localSet];
+            _permissions[q].isSetConfigChecked = true;
+          } else {
+            set.push(defaultInsertSetState);
+          }
+          _permissions[q].localSet = [...set];
+        } else {
+          // Just to support version changes
+          // If user goes from current to previous version and back
+          _permissions[q].localSet = [defaultInsertSetState];
+          _permissions[q].set = {};
+        }
+      }
     });
   } else {
     _permissions.newRole = role;
@@ -415,7 +477,9 @@ const permChangePermissions = changeType => {
   return (dispatch, getState) => {
     const allSchemas = getState().tables.allSchemas;
     const currentSchema = getState().tables.currentSchema;
-    const permissionsState = getState().tables.modify.permissionsState;
+    const permissionsState = {
+      ...getState().tables.modify.permissionsState,
+    };
     const limitEnabled = permissionsState.limitEnabled;
 
     const table = permissionsState.table;
@@ -462,6 +526,26 @@ const permChangePermissions = changeType => {
           permission: permissionsState[query],
         },
       };
+
+      if (query === 'insert' && 'localSet' in permissionsState[query]) {
+        // Convert insert set array to Object
+        if (permissionsState[query].isSetConfigChecked) {
+          const newSet = {};
+          permissionsState[query].localSet.forEach(s => {
+            if (s.key) {
+              newSet[s.key] = s.value;
+            }
+          });
+          permissionsState[query].set = { ...newSet };
+        } else {
+          permissionsState[query].set = {};
+        }
+        // delete redundant keys
+        delete permissionsState[query].isSetConfigChecked;
+        delete permissionsState[query].localSet;
+      }
+
+      //
       const deleteQuery = {
         type: 'drop_' + query + '_permission',
         args: {
@@ -545,4 +629,5 @@ export {
   permRemoveMultipleRoles,
   permSetSameSelect,
   applySamePermissionsBulk,
+  setConfigValueType,
 };

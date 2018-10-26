@@ -15,6 +15,7 @@ import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.HashMap.Strict        as HM
 import qualified Data.HashSet               as HS
+import qualified Data.List.NonEmpty         as NE
 import qualified Data.Sequence              as DS
 import qualified Data.Text                  as T
 
@@ -77,7 +78,7 @@ data AnnFld
 data TableArgs
   = TableArgs
   { _taWhere   :: !(Maybe (GBoolExp AnnSQLBoolExp))
-  , _taOrderBy :: !(Maybe [AnnOrderByItem])
+  , _taOrderBy :: !(Maybe (NE.NonEmpty AnnOrderByItem))
   , _taLimit   :: !(Maybe Int)
   , _taOffset  :: !(Maybe S.SQLExp)
   } deriving (Show, Eq)
@@ -120,7 +121,7 @@ fetchAnnFlds (ASFWithAgg aggFlds) =
   concatMap (fromAggFld . snd) aggFlds
   where
     fromAggFld (TAFNodes f) = f
-    fromAggFld _           = []
+    fromAggFld _            = []
 
 data TableFrom
   = TableFrom
@@ -465,7 +466,7 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
     _2 (_, b, _) = b
     _3 (_, _, c) = c
 
-    procOrdByM = unzip3 . map (processAnnOrderByItem pfx) <$> orderByM
+    procOrdByM = unzip3 . map (processAnnOrderByItem pfx) . toList <$> orderByM
     ordByExpM  = S.OrderByExp . _2 <$> procOrdByM
 
     -- the columns needed for orderby
@@ -778,9 +779,11 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
     withPathK "where" $
     convBoolExp' fieldInfoMap spiT selPermInfo be prepValBuilder
 
-  annOrdByM <- forM (sqOrderBy selQ) $ \(OrderByExp obItems) ->
+  annOrdByML <- forM (sqOrderBy selQ) $ \(OrderByExp obItems) ->
     withPathK "order_by" $ indexedForM obItems $ mapM $
     convOrderByElem (fieldInfoMap, selPermInfo)
+
+  let annOrdByM = NE.nonEmpty =<< annOrdByML
 
   -- validate limit and offset values
   withPathK "limit" $ mapM_ onlyPositiveInt mQueryLimit

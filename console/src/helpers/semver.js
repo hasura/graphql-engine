@@ -6,6 +6,8 @@ const componentsSemver = {
   eventRedeliver: '1.0.0-alpha17',
   sqlAnalyze: '1.0.0-alpha25',
   aggregationPerm: '1.0.0-alpha26',
+  analyzeApiChange: '1.0.0-alpha26',
+  insertPrefix: '1.0.0-alpha26',
 };
 
 const getPreRelease = version => {
