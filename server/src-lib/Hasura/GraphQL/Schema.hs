@@ -14,10 +14,6 @@ module Hasura.GraphQL.Schema
   , getGCtx
   , GCtx(..)
   , OpCtx(..)
-  , OrdByResolveCtx
-  , OrdByResolveCtxElem
-  , NullsOrder(..)
-  , OrdTy(..)
   , InsCtx(..)
   , InsCtxMap
   , RelationInfoMap
@@ -39,7 +35,6 @@ import           Hasura.RQL.DML.Internal        (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Hasura.RQL.DML.Select          as RS
 import qualified Hasura.SQL.DML                 as S
 
 defaultTypes :: [TypeInfo]
@@ -78,14 +73,14 @@ data OpCtx
 
 data GCtx
   = GCtx
-  { _gTypes      :: !TypeMap
-  , _gFields     :: !FieldMap
-  , _gOrdByEnums :: !OrdByResolveCtx
-  , _gQueryRoot  :: !ObjTyInfo
-  , _gMutRoot    :: !(Maybe ObjTyInfo)
-  , _gSubRoot    :: !(Maybe ObjTyInfo)
-  , _gOpCtxMap   :: !OpCtxMap
-  , _gInsCtxMap  :: !InsCtxMap
+  { _gTypes     :: !TypeMap
+  , _gFields    :: !FieldMap
+  , _gOrdByCtx  :: !OrdByCtx
+  , _gQueryRoot :: !ObjTyInfo
+  , _gMutRoot   :: !(Maybe ObjTyInfo)
+  , _gSubRoot   :: !(Maybe ObjTyInfo)
+  , _gOpCtxMap  :: !OpCtxMap
+  , _gInsCtxMap :: !InsCtxMap
   } deriving (Show, Eq)
 
 instance Has TypeMap GCtx where
@@ -94,9 +89,9 @@ instance Has TypeMap GCtx where
 
 data TyAgg
   = TyAgg
-  { _taTypes      :: !TypeMap
-  , _taFields     :: !FieldMap
-  , _taOrdByEnums :: !OrdByResolveCtx
+  { _taTypes  :: !TypeMap
+  , _taFields :: !FieldMap
+  , _taOrdBy  :: !OrdByCtx
   } deriving (Show, Eq)
 
 instance Semigroup TyAgg where
@@ -138,6 +133,12 @@ toValidFieldInfos = filter isValidField . Map.elems
 validPartitionFieldInfoMap :: FieldInfoMap -> ([PGColInfo], [RelInfo])
 validPartitionFieldInfoMap = partitionFieldInfos . toValidFieldInfos
 
+getValidCols :: FieldInfoMap -> [PGColInfo]
+getValidCols = fst . validPartitionFieldInfoMap
+
+getValidRels :: FieldInfoMap -> [RelInfo]
+getValidRels = snd . validPartitionFieldInfoMap
+
 mkValidConstraints :: [TableConstraint] -> [TableConstraint]
 mkValidConstraints = filter isValid
   where
@@ -148,12 +149,15 @@ isRelNullable :: FieldInfoMap -> RelInfo -> Bool
 isRelNullable fim ri = isNullable
   where
     lCols = map fst $ riMapping ri
-    allCols = getCols fim
+    allCols = getValidCols fim
     lColInfos = getColInfos lCols allCols
     isNullable = any pgiIsNullable lColInfos
 
 mkColName :: PGCol -> G.Name
 mkColName (PGCol n) = G.Name n
+
+mkRelName :: RelName -> G.Name
+mkRelName (RelName r) = G.Name r
 
 mkAggRelName :: RelName -> G.Name
 mkAggRelName (RelName r) = G.Name $ r <> "_aggregate"
@@ -548,7 +552,7 @@ mkBoolExpInp tn fields =
 
     mkFldExpInp = \case
       Left (PGColInfo colName colTy _) ->
-        mk (G.Name $ getPGColTxt colName) (mkCompExpTy colTy)
+        mk (mkColName colName) (mkCompExpTy colTy)
       Right (RelInfo relName _ _ remTab _ _, _, _, _, _) ->
         mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
 
@@ -1010,58 +1014,79 @@ mkConflictActionTy = EnumTyInfo (Just desc) ty $ mapFromL _eviVal
     enumValUpdate = EnumValInfo (Just "update the row with the given values")
                     (G.EnumValue "update") False
 
+ordByTy :: G.NamedType
+ordByTy = G.NamedType "order_by"
+
+ordByEnumTy :: EnumTyInfo
+ordByEnumTy =
+  EnumTyInfo (Just desc) ordByTy $ mapFromL _eviVal $
+  map mkEnumVal enumVals
+  where
+    desc = G.Description "column ordering options"
+    mkEnumVal (n, d) =
+      EnumValInfo (Just d) (G.EnumValue n) False
+    enumVals =
+      [ ( "asc"
+        , "in the ascending order, nulls last"
+        ),
+        ( "desc"
+        , "in the descending order, nulls last"
+        ),
+        ( "asc_nulls_first"
+        , "in the ascending order, nulls first"
+        ),
+        ( "desc_nulls_first"
+        , "in the ascending order, nulls first"
+        )
+      ]
+
 mkOrdByTy :: QualifiedTable -> G.NamedType
 mkOrdByTy tn =
   G.NamedType $ qualTableToName tn <> "_order_by"
 
-mkOrdByCtx
-  :: QualifiedTable -> [PGColInfo] -> (EnumTyInfo, OrdByResolveCtx)
-mkOrdByCtx tn cols =
-  (enumTyInfo, resolveCtx)
+{-
+input table_order_by {
+  col1: order_by
+  col2: order_by
+  .     .
+  .     .
+  coln: order_by
+  obj-rel: <remote-table>_order_by
+}
+-}
+
+mkOrdByInpObj
+  :: QualifiedTable -> [SelField] -> (InpObjTyInfo, OrdByCtx)
+mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
   where
-    enumTyInfo = EnumTyInfo (Just desc) enumTy $
-                 mapFromL _eviVal $ map toEnumValInfo enumValsInt
-    enumTy = mkOrdByTy tn
+    inpObjTy =
+      InpObjTyInfo (Just desc) namedTy $ fromInpValL $
+      map mkColOrdBy pgCols <> map mkObjRelOrdBy objRels
+
+    namedTy = mkOrdByTy tn
     desc = G.Description $
       "ordering options when selecting data from " <>> tn
 
-    toEnumValInfo (v, enumValDesc, _) =
-      EnumValInfo (Just $ G.Description enumValDesc) (G.EnumValue v) False
+    pgCols = lefts selFlds
+    objRels = flip filter (rights selFlds) $ \(ri, _, _, _, _) ->
+      riType ri == ObjRel
 
-    resolveCtx = Map.fromList $ map toResolveCtxPair enumValsInt
+    mkColOrdBy ci = InpValInfo Nothing (mkColName $ pgiName ci) $
+                    G.toGT ordByTy
+    mkObjRelOrdBy (ri, _, _, _, _) =
+      InpValInfo Nothing (mkRelName $ riName ri) $
+      G.toGT $ mkOrdByTy $ riRTable ri
 
-    toResolveCtxPair (v, _, ctx) = ((enumTy, G.EnumValue v), ctx)
-
-    enumValsInt = concatMap mkOrdByEnumsOfCol cols
-
-
-mkOrdByEnumsOfCol
-  :: PGColInfo
-  -> [(G.Name, Text, RS.AnnOrderByItem)]
-mkOrdByEnumsOfCol colInfo@(PGColInfo col _ _) =
-  [ ( colN <> "_asc"
-    , "in the ascending order of " <> col <<> ", nulls last"
-    , mkOrderByItem (annPGObCol, S.OTAsc, S.NLast)
-    )
-  , ( colN <> "_desc"
-    , "in the descending order of " <> col <<> ", nulls last"
-    , mkOrderByItem (annPGObCol, S.OTDesc, S.NLast)
-    )
-  , ( colN <> "_asc_nulls_first"
-    , "in the ascending order of " <> col <<> ", nulls first"
-    , mkOrderByItem (annPGObCol, S.OTAsc, S.NFirst)
-    )
-  , ( colN <> "_desc_nulls_first"
-    , "in the descending order of " <> col <<> ", nulls first"
-    , mkOrderByItem (annPGObCol, S.OTDesc, S.NFirst)
-    )
-  ]
-  where
-    mkOrderByItem (annObCol, ordTy, nullsOrd) =
-      OrderByItemG (Just ordTy) annObCol (Just nullsOrd)
-    annPGObCol = RS.AOCPG colInfo
-    colN = pgColToFld col
-    pgColToFld = G.Name . getPGColTxt
+    ordByCtx = Map.singleton namedTy $ Map.fromList $
+               colOrdBys <> relOrdBys
+    colOrdBys = flip map pgCols $ \ci ->
+                                    ( mkColName $ pgiName ci
+                                    , OBIPGCol ci
+                                    )
+    relOrdBys = flip map objRels $ \(ri, _, fltr, _, _) ->
+                                     ( mkRelName $ riName ri
+                                     , OBIRel ri fltr
+                                     )
 
 newtype RootFlds
   = RootFlds
@@ -1107,11 +1132,11 @@ mkGCtxRole'
   -> [PGCol]
   -> TyAgg
 mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allCols =
-  TyAgg (mkTyInfoMap allTypes) fieldMap ordByEnums
+  TyAgg (mkTyInfoMap allTypes) fieldMap ordByCtx
 
   where
 
-    ordByEnums = fromMaybe Map.empty ordByResCtxM
+    ordByCtx = fromMaybe Map.empty ordByCtxM
     upsertPerm = or $ fmap snd insPermM
     isUpsertable = upsertable constraints upsertPerm $ isJust viM
     onConflictTypes = mkOnConflictTypes tn constraints allCols isUpsertable
@@ -1124,8 +1149,8 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
 
     queryTypes = catMaybes
       [ TIInpObj <$> boolExpInpObjM
+      , TIInpObj <$> ordByInpObjM
       , TIObj <$> selObjM
-      , TIEnum <$> ordByTyInfoM
       ]
     aggQueryTypes = map TIObj aggObjs
 
@@ -1167,7 +1192,7 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
     selFldsM = snd <$> selPermM
     -- boolexp input type
     boolExpInpObjM = case selFldsM of
-      Just selFlds -> Just $ mkBoolExpInp tn selFlds
+      Just selFlds  -> Just $ mkBoolExpInp tn selFlds
       -- no select permission
       Nothing ->
         -- but update/delete is defined
@@ -1231,11 +1256,11 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
     selByPKeyObjFlds = Map.fromList $ flip map pkeyCols $
       \pgi@(PGColInfo col ty _) -> ((mkScalarTy ty, mkColName col), Left pgi)
 
-    ordByEnumsCtxM = mkOrdByCtx tn . lefts <$> selFldsM
+    ordByInpCtxM = mkOrdByInpObj tn <$> selFldsM
+    (ordByInpObjM, ordByCtxM) = case ordByInpCtxM of
+      Just (a, b) -> (Just a, Just b)
+      Nothing     -> (Nothing, Nothing)
 
-    (ordByTyInfoM, ordByResCtxM) = case ordByEnumsCtxM of
-      (Just (a, b)) -> (Just a, Just b)
-      Nothing       -> (Nothing, Nothing)
 
 getRootFldsRole'
   :: QualifiedTable
@@ -1294,6 +1319,10 @@ getRootFldsRole' tn primCols constraints fields insM selM updM delM viM =
 -- gets all the selectable fields (cols and rels) of a
 -- table for a role
 
+getSelPermission :: TableInfo -> RoleName -> Maybe SelPermInfo
+getSelPermission tabInfo role =
+  Map.lookup role (tiRolePermInfoMap tabInfo) >>= _permSel
+
 getSelPerm
   :: (MonadError QErr m)
   => TableCache
@@ -1309,8 +1338,7 @@ getSelPerm tableCache fields role selPermInfo = do
       Set.member (pgiName pgColInfo) allowedCols
     FIRelationship relInfo -> do
       remTableInfo <- getTabInfo tableCache $ riRTable relInfo
-      let remTableSelPermM =
-            Map.lookup role (tiRolePermInfoMap remTableInfo) >>= _permSel
+      let remTableSelPermM = getSelPermission remTableInfo role
       return $ flip fmap remTableSelPermM $
         \rmSelPermM -> Right ( relInfo
                              , spiAllowAgg rmSelPermM
@@ -1339,8 +1367,8 @@ mkInsCtx role tableCache fields insPermInfo = do
   let relInfoMap = Map.fromList $ catMaybes relTupsM
   return $ InsCtx iView cols setCols relInfoMap
   where
-    cols = getCols fields
-    rels = getRels fields
+    cols = getValidCols fields
+    rels = getValidRels fields
     iView = ipiView insPermInfo
     setCols = ipiSet insPermInfo
 
@@ -1361,8 +1389,8 @@ mkAdminInsCtx tn tc fields = do
 
   return $ InsCtx tn cols Map.empty $ Map.fromList $ catMaybes relTupsM
   where
-    cols = getCols fields
-    rels = getRels fields
+    cols = getValidCols fields
+    rels = getValidRels fields
 
 mkGCtxRole
   :: (MonadError QErr m)
@@ -1387,7 +1415,7 @@ mkGCtxRole tableCache tn fields pCols constraints viM role permInfo = do
       insCtxMap = maybe Map.empty (Map.singleton tn) $ fmap fst tabInsCtxM
   return (tyAgg, rootFlds, insCtxMap)
   where
-    colInfos = fst $ validPartitionFieldInfoMap fields
+    colInfos = getValidCols fields
     allCols = map pgiName colInfos
     pColInfos = getColInfos pCols colInfos
     filterColInfos allowedSet =
@@ -1433,18 +1461,20 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols 
   return $ Map.insert adminRole (adminCtx, adminRootFlds, adminInsCtxMap) m
   where
     validConstraints = mkValidConstraints constraints
-    colInfos = fst $ validPartitionFieldInfoMap fields
+    colInfos = getValidCols fields
     allCols = map pgiName colInfos
     pkeyColInfos = getColInfos pkeyCols colInfos
     selFlds = flip map (toValidFieldInfos fields) $ \case
       FIColumn pgColInfo     -> Left pgColInfo
       FIRelationship relInfo -> Right (relInfo, True, noFilter, Nothing, isRelNullable fields relInfo)
-    noFilter = S.BELit True
     adminRootFlds =
       getRootFldsRole' tn pkeyCols validConstraints fields
       (Just ([], True)) (Just (noFilter, Nothing, [], True))
       (Just (allCols, noFilter, [])) (Just (noFilter, []))
       viewInfo
+
+noFilter :: S.BoolExp
+noFilter = S.BELit True
 
 mkScalarTyInfo :: PGColType -> ScalarTyInfo
 mkScalarTyInfo = ScalarTyInfo Nothing
@@ -1472,10 +1502,12 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
                   lefts $ Map.elems fldInfos
       scalarTys = map (TIScalar . mkScalarTyInfo) colTys
       compTys   = map (TIInpObj . mkCompExpInp) colTys
+      ordByEnumTyM = bool (Just ordByEnumTy) Nothing $ null qFlds
       allTys    = Map.union tyInfos $ mkTyInfoMap $
                   catMaybes [ Just $ TIObj queryRoot
                             , TIObj <$> mutRootM
                             , TIObj <$> subRootM
+                            , TIEnum <$> ordByEnumTyM
                             ] <>
                   scalarTys <> compTys <> defaultTypes
   -- for now subscription root is query root
