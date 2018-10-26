@@ -6,7 +6,7 @@ query {
   poll {
     id
     question
-    options (order_by: id_desc){
+    options (order_by: {id:desc}){
       id
       text
     }
@@ -28,7 +28,7 @@ mutation vote($optionId: uuid!, $userId: uuid!) {
 const SUBSCRIPTION_RESULT = `
 subscription getResult($pollId: uuid!) {
   poll_results (
-    order_by: option_id_desc,
+    order_by: {option_id:desc},
     where: { poll_id: {_eq: $pollId} }
   ) {
     option_id
