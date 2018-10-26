@@ -10,7 +10,6 @@ import           Data.Aeson.Types
 import           Instances.TH.Lift        ()
 
 import qualified Data.Aeson.Text          as AT
-import qualified Data.ByteString.Builder  as BB
 import qualified Data.HashMap.Strict      as HM
 import qualified Data.HashSet             as HS
 import qualified Data.Sequence            as DS
@@ -36,6 +35,10 @@ data ConflictClauseP1
   | CP1Update !ConflictTarget ![PGCol]
   deriving (Show, Eq)
 
+isDoNothing :: ConflictClauseP1 -> Bool
+isDoNothing (CP1DoNothing _) = True
+isDoNothing _                = False
+
 data InsertQueryP1
   = InsertQueryP1
   { iqp1Table    :: !QualifiedTable
@@ -51,14 +54,16 @@ mkSQLInsert (InsertQueryP1 tn vn cols vals c mutFlds) =
   mkSelWith tn (S.CTEInsert insert) mutFlds
   where
     insert =
-      S.SQLInsert vn cols vals (toSQLConflict c) $ Just S.returningStar
-    toSQLConflict conflict = case conflict of
-      Nothing -> Nothing
-      Just (CP1DoNothing Nothing)   -> Just $ S.DoNothing Nothing
-      Just (CP1DoNothing (Just ct)) -> Just $ S.DoNothing $ Just $ toSQLCT ct
-      Just (CP1Update ct inpCols)    -> Just $ S.Update (toSQLCT ct)
-        (S.buildSEWithExcluded inpCols)
+      S.SQLInsert vn cols vals (toSQLConflict <$> c) $ Just S.returningStar
 
+toSQLConflict :: ConflictClauseP1 -> S.SQLConflict
+toSQLConflict conflict = case conflict of
+  (CP1DoNothing Nothing)   -> S.DoNothing Nothing
+  (CP1DoNothing (Just ct)) -> S.DoNothing $ Just $ toSQLCT ct
+  (CP1Update ct inpCols)    -> S.Update (toSQLCT ct)
+    (S.buildSEWithExcluded inpCols)
+
+  where
     toSQLCT ct = case ct of
       Column pgCols -> S.SQLColumn pgCols
       Constraint cn -> S.SQLConstraint cn
@@ -148,6 +153,10 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
 
   -- Get the current table information
   tableInfo <- askTabInfo tableName
+
+  -- If table is view then check if it is insertable
+  mutableView tableName viIsInsertable
+    (tiViewInfo tableInfo) "insertable"
 
   -- Check if the role has insert permissions
   insPerm   <- askInsPermInfo tableInfo
@@ -240,7 +249,7 @@ setConflictCtx :: Maybe ConflictCtx -> Q.TxE QErr ()
 setConflictCtx conflictCtxM = do
   let t = maybe "null" conflictCtxToJSON conflictCtxM
       setVal = toSQL $ S.SELit t
-      setVar = BB.string7 "SET LOCAL hasura.conflict_clause = "
+      setVar = "SET LOCAL hasura.conflict_clause = "
       q = Q.fromBuilder $ setVar <> setVal
   Q.unitQE defaultTxErrorHandler q () False
   where

@@ -21,16 +21,6 @@ import qualified Text.Ginger                  as TG
 
 import           Hasura.Prelude
 
-
-dropAndSnakeCase :: T.Text -> T.Text
-dropAndSnakeCase = T.drop 9 . toSnakeCase . T.toLower
-
-toSnakeCase :: T.Text -> T.Text
-toSnakeCase = T.pack . map change . T.unpack
-  where
-    change '-' = '_'
-    change c   = c
-
 isXHasuraTxt :: T.Text -> Bool
 isXHasuraTxt = T.isInfixOf "x-hasura-" . T.toLower
 
@@ -112,3 +102,9 @@ parseGingerTmplt src = either parseE Right res
 
 renderGingerTmplt :: (ToJSON a) => a -> GingerTmplt -> T.Text
 renderGingerTmplt v = TG.easyRender (toJSON v)
+
+-- find duplicates
+duplicates :: Ord a => [a] -> [a]
+duplicates = mapMaybe greaterThanOne . group . sort
+  where
+    greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1

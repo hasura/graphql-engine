@@ -29,14 +29,17 @@ pgColsFromMutFld = \case
   MCount -> []
   MExp _ -> []
   MRet selData ->
-    flip mapMaybe (_asFields selData) $ \(_, annFld) -> case annFld of
+    flip mapMaybe ( fetchAnnFlds $ _asnFields selData) $ \(_, annFld) -> case annFld of
     FCol (PGColInfo col colTy _) -> Just (col, colTy)
     _                            -> Nothing
 
 pgColsToSelData :: QualifiedTable -> [PGColInfo] -> AnnSel
 pgColsToSelData qt cols =
-  AnnSel flds qt (Just frmItem) (S.BELit True) Nothing noTableArgs
+  AnnSel selFlds tabFrom tabPerm noTableArgs
   where
+    selFlds = ASFSimple flds
+    tabFrom = TableFrom qt $ Just frmItem
+    tabPerm = TablePerm (S.BELit True) Nothing
     flds = flip map cols $ \pgColInfo ->
       (fromPGCol $ pgiName pgColInfo, FCol pgColInfo)
     frmItem = S.FIIden $ qualTableToAliasIden qt

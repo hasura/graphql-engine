@@ -2,7 +2,7 @@ Upsert mutation
 ===============
 
 To convert an **insert** mutation into an **upsert** one, you need to specify the unique or primary key constraint(s) and the
-columns to be updated in the case of a conflict or violation. You can specify a constraint using the ``constriant`` argument and
+columns to be updated in the case of a conflict or violation. You can specify a constraint using the ``constraint`` argument and
 update columns using the ``update_columns`` argument.
 
 .. note::
@@ -102,8 +102,8 @@ is the set of columns that is updated. For example, if your query as follows:
     }
 
 The column ``"is_premium"`` for the ``"Jack"`` row is set to its ``DEFAULT`` value because the union of all columns across objects
-is ``{name, email_sent, is_premium}``. However ou can explicitly control the columns that are updated on conflict using
-``update_columns`` as specified in following section.
+is ``{name, email_sent, is_premium}``. However, you can explicitly control the columns that are updated on conflict using
+``update_columns`` as specified in the following section.
 
 With non empty "update_columns"
 -------------------------------
@@ -255,3 +255,52 @@ ignore the request:
     }
 
 In this case, the insert mutation is ignored because there is a conflict.
+
+Upsert in nested mutations
+--------------------------
+You can specify ``on_conflict`` clause while inserting nested objects
+
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation upsert_author_article {
+      insert_author(
+        objects: [
+          { name: "John",
+            id: 10,
+            articles: {
+              data: [
+                {
+                  id: 1,
+                  title: "Article 1 title",
+                  content: "Article 1 content"
+                }
+              ],
+              on_conflict: {
+                constraint: article_pkey,
+                update_columns: [title, content]
+              }
+            }
+          }
+        ]
+      ) {
+        affected_rows
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "affected_rows": 2
+        }
+      }
+    }
+
+
+.. warning::
+   Inserting nested objects fails when
+
+   1. Any of upsert in object relationships does not affect any rows (``update_columns: []`` or ``action: ignore``)
+
+   2. Array relationships are queued for insert and parent insert does not affect any rows (``update_columns: []`` or ``action: ignore``)

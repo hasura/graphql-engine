@@ -30,6 +30,7 @@ library
   build-depends:       base
                      , pg-client
                      , text
+                     , text-builder >= 0.6
                      , bytestring
                      , postgresql-libpq
                      , mtl
@@ -161,7 +162,6 @@ library
                      , Hasura.RQL.DDL.Utils
                      , Hasura.RQL.DDL.Subscribe
                      , Hasura.RQL.DML.Delete
-                     , Hasura.RQL.DML.Explain
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert
                      , Hasura.RQL.DML.Returning
@@ -184,11 +184,13 @@ library
                      , Hasura.GraphQL.Validate.Field
                      , Hasura.GraphQL.Validate.InputValue
                      , Hasura.GraphQL.Resolve
+                     , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Resolve.LiveQuery
                      , Hasura.GraphQL.Resolve.BoolExp
                      , Hasura.GraphQL.Resolve.Context
                      , Hasura.GraphQL.Resolve.InputValue
                      , Hasura.GraphQL.Resolve.Introspect
+                     , Hasura.GraphQL.Resolve.Insert
                      , Hasura.GraphQL.Resolve.Mutation
                      , Hasura.GraphQL.Resolve.Select
 
@@ -205,6 +207,7 @@ library
                      , Hasura.SQL.Value
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time
+                     , Hasura.SQL.Rewrite
                      , Hasura.Prelude
                      , Hasura.Logging
                      , Ops

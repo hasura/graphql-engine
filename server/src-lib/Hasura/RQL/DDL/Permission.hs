@@ -62,7 +62,6 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.ByteString.Builder            as BB
 import qualified Data.HashSet                       as HS
 import qualified Data.Text                          as T
 
@@ -90,8 +89,8 @@ buildViewName (QualifiedTable sn tn) (RoleName rTxt) pt =
 buildView :: QualifiedTable -> QualifiedTable -> Q.Query
 buildView tn vn =
   Q.fromBuilder $ mconcat
-  [ BB.string7 "CREATE VIEW " <> toSQL vn
-  , BB.string7 " AS SELECT * FROM " <> toSQL tn
+  [ "CREATE VIEW " <> toSQL vn
+  , " AS SELECT * FROM " <> toSQL tn
   ]
 
 dropView :: QualifiedTable -> Q.Tx ()
@@ -99,7 +98,7 @@ dropView vn =
   Q.unitQ dropViewS () False
   where
     dropViewS = Q.fromBuilder $
-      BB.string7 "DROP VIEW " <> toSQL vn
+      "DROP VIEW " <> toSQL vn
 
 buildInsPermInfo
   :: (QErrM m, CacheRM m)
@@ -162,9 +161,10 @@ instance IsPerm InsPerm where
 -- Select constraint
 data SelPerm
   = SelPerm
-  { spColumns :: !PermColSpec       -- Allowed columns
-  , spFilter  :: !BoolExp   -- Filter expression
-  , spLimit   :: !(Maybe Int) -- Limit value
+  { spColumns           :: !PermColSpec       -- Allowed columns
+  , spFilter            :: !BoolExp   -- Filter expression
+  , spLimit             :: !(Maybe Int) -- Limit value
+  , spAllowAggregations :: !(Maybe Bool) -- Allow aggregation
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
@@ -190,11 +190,12 @@ buildSelPermInfo tabInfo sp = do
 
   withPathK "limit" $ mapM_ onlyPositiveInt mLimit
 
-  return $ SelPermInfo (HS.fromList pgCols) tn be mLimit deps depHeaders
+  return $ SelPermInfo (HS.fromList pgCols) tn be mLimit allowAgg deps depHeaders
 
   where
     tn = tiName tabInfo
     fieldInfoMap = tiFieldInfoMap tabInfo
+    allowAgg = or $ spAllowAggregations sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 
 type SelPermDef = PermDef SelPerm
