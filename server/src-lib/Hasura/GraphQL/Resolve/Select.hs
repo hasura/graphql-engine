@@ -23,10 +23,10 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
+import qualified Data.List.NonEmpty                as NE
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Select             as RS
-
 import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.GraphQL.Resolve.BoolExp
@@ -78,7 +78,8 @@ parseTableArgs
   -> QualifiedTable -> ArgsMap -> m RS.TableArgs
 parseTableArgs f tn args = do
   whereExpM  <- withArgM args "where" $ convertBoolExpG f tn
-  ordByExpM  <- withArgM args "order_by" parseOrderBy
+  ordByExpML <- withArgM args "order_by" parseOrderBy
+  let ordByExpM = NE.nonEmpty =<< ordByExpML
   limitExpM  <- withArgM args "limit" parseLimit
   offsetExpM <- withArgM args "offset" $ asPGColVal >=> f
   return $ RS.TableArgs whereExpM ordByExpM limitExpM offsetExpM
