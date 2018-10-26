@@ -98,6 +98,7 @@ $(J.deriveToJSON
 data WSLog
   = WSLog
   { _wslWebsocketId :: !WS.WSId
+  , _wslUser        :: !(Maybe UserVars)
   , _wslEvent       :: !WSEvent
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLog)
@@ -127,14 +128,14 @@ onConn (L.Logger logger) wsId requestHead = do
       threadDelay $ 5 * 1000 * 1000
 
     accept _ = do
-      logger $ WSLog wsId EAccepted
+      logger $ WSLog wsId Nothing EAccepted
       connData <- WSConnData <$> IORef.newIORef Nothing <*> STMMap.newIO
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
       return $ Right (connData, acceptRequest, Just keepAliveAction)
 
     reject qErr = do
-      logger $ WSLog wsId $ ERejected qErr
+      logger $ WSLog wsId Nothing $ ERejected qErr
       return $ Left $ WS.RejectRequest
         (H.statusCode $ qeStatus qErr)
         (H.statusMessage $ qeStatus qErr) []
@@ -185,13 +186,12 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       sendCompleted
 
   where
-    WSServerEnv (L.Logger logger) _ runTx lqMap gCtxMapRef _ = serverEnv
+    WSServerEnv logger _ runTx lqMap gCtxMapRef _ = serverEnv
     wsId = WS.getWSId wsConn
     WSConnData userInfoR opMap = WS.getData wsConn
 
     logOpEv opDet =
-      liftIO $ logger $ WSLog wsId $
-      EOperation opId (_grOperationName q) opDet
+      logWSEvent logger wsConn $ EOperation opId (_grOperationName q) opDet
 
     sendConnErr connErr = do
       sendMsg wsConn $ SMErr $ ErrorMsg opId $ J.toJSON connErr
@@ -235,7 +235,7 @@ onMessage authMode serverEnv wsConn msgRaw =
   case J.eitherDecode msgRaw of
     Left e    -> do
       let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
-      liftIO $ logger $ WSLog (WS.getWSId wsConn) $ EConnErr err
+      logWSEvent logger wsConn $ EConnErr err
       sendMsg wsConn $ SMConnErr err
 
     Right msg -> case msg of
@@ -246,7 +246,7 @@ onMessage authMode serverEnv wsConn msgRaw =
       CMStop stopMsg    -> onStop serverEnv wsConn stopMsg
       CMConnTerm        -> WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
   where
-    logger = L.unLogger $ _wseLogger serverEnv
+    logger = _wseLogger serverEnv
 
 onStop :: WSServerEnv -> WSConn -> StopMsg -> IO ()
 onStop serverEnv wsConn (StopMsg opId) = do
@@ -255,27 +255,40 @@ onStop serverEnv wsConn (StopMsg opId) = do
   case opM of
     Just liveQ -> do
       let opNameM = _grOperationName $ LQ._lqRequest liveQ
-      liftIO $ logger $ WSLog wsId $ EOperation opId opNameM ODStopped
+      logWSEvent logger wsConn $ EOperation opId opNameM ODStopped
       LQ.removeLiveQuery lqMap liveQ (wsId, opId)
     Nothing    -> return ()
   STM.atomically $ STMMap.delete opId opMap
   where
-    logger = L.unLogger $ _wseLogger serverEnv
+    logger = _wseLogger serverEnv
     lqMap  = _wseLiveQMap serverEnv
     wsId   = WS.getWSId wsConn
     opMap  = _wscOpMap $ WS.getData wsConn
 
+logWSEvent
+  :: (MonadIO m)
+  => L.Logger -> WSConn -> WSEvent -> m ()
+logWSEvent (L.Logger logger) wsConn wsEv = do
+  userInfoME <- liftIO $ IORef.readIORef userInfoR
+  let userInfoM = case userInfoME of
+        Just (Right userInfo) -> return $ userVars userInfo
+        _                     -> Nothing
+  liftIO $ logger $ WSLog wsId userInfoM wsEv
+  where
+    WSConnData userInfoR _ = WS.getData wsConn
+    wsId = WS.getWSId wsConn
+
 onConnInit
   :: (MonadIO m)
   => L.Logger -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
-onConnInit (L.Logger logger) manager wsConn authMode connParamsM = do
+onConnInit logger manager wsConn authMode connParamsM = do
   res <- runExceptT $ getUserInfo logger manager headers authMode
   case res of
     Left e  -> do
       liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
         Just $ Left $ qeError e
       let connErr = ConnErrMsg $ qeError e
-      liftIO $ logger $ WSLog (WS.getWSId wsConn) $ EConnErr connErr
+      logWSEvent logger wsConn $ EConnErr connErr
       sendMsg wsConn $ SMConnErr connErr
     Right userInfo -> do
       liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
@@ -295,8 +308,8 @@ onClose
   -> WS.ConnectionException
   -> WSConn
   -> IO ()
-onClose (L.Logger logger) lqMap _ wsConn = do
-  logger $ WSLog wsId EClosed
+onClose logger lqMap _ wsConn = do
+  logWSEvent logger wsConn EClosed
   operations <- STM.atomically $ ListT.toList $ STMMap.stream opMap
   void $ A.forConcurrently operations $ \(opId, liveQ) ->
     LQ.removeLiveQuery lqMap liveQ (wsId, opId)
