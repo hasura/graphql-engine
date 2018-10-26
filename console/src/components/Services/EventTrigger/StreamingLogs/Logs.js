@@ -173,6 +173,14 @@ class StreamingLogs extends Component {
       // Insert cells corresponding to all rows
       invocationColumns.forEach(col => {
         const getCellContent = () => {
+          let requestData;
+          switch (r.request.version) {
+            case '2':
+              requestData = r.request.payload;
+              break;
+            default:
+              requestData = r.request;
+          }
           const conditionalClassname = styles.tableCellCenterAligned;
           if (r[col] === null) {
             return (
@@ -194,20 +202,20 @@ class StreamingLogs extends Component {
           if (col === 'operation') {
             return (
               <div className={conditionalClassname}>
-                {r.request.event.op.toLowerCase()}
+                {requestData.event.op.toLowerCase()}
               </div>
             );
           }
           if (col === 'primary_key') {
-            const tableName = r.request.table.name;
+            const tableName = requestData.table.name;
             const tableData = allSchemas.filter(
               row => row.table_name === tableName
             );
             const primaryKey = tableData[0].primary_key.columns; // handle all primary keys
             const pkHtml = [];
             primaryKey.map(pk => {
-              const newPrimaryKeyData = r.request.event.data.new
-                ? r.request.event.data.new[pk]
+              const newPrimaryKeyData = requestData.event.data.new
+                ? requestData.event.data.new[pk]
                 : '';
               pkHtml.push(
                 <div>
