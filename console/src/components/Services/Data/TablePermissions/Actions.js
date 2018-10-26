@@ -131,30 +131,37 @@ const getBasePermissionsState = (tableSchema, role, query) => {
       let set = [];
       _permissions[q] = rolePermissions.permissions[q];
       // If the query is insert, transform set object if exists to an array
-      if (q === 'insert' && 'set' in _permissions[q]) {
+      if (q === 'insert') {
         // If set is an object
-        if (
-          Object.keys(_permissions[q].set).length > 0 &&
-          !(_permissions[q].set.length > 0)
-        ) {
-          Object.keys(_permissions[q].set).map(s => {
-            set.push({
-              key: s,
-              value: _permissions[q].set[s],
+        if ('set' in _permissions[q]) {
+          if (
+            Object.keys(_permissions[q].set).length > 0 &&
+            !(_permissions[q].set.length > 0)
+          ) {
+            Object.keys(_permissions[q].set).map(s => {
+              set.push({
+                key: s,
+                value: _permissions[q].set[s],
+              });
             });
-          });
-          set.push(defaultInsertSetState);
-          _permissions[q].isSetConfigChecked = true;
-        } else if (
-          'localSet' in _permissions[q] &&
-          _permissions[q].localSet.length > 0
-        ) {
-          set = [..._permissions[q].localSet];
-          _permissions[q].isSetConfigChecked = true;
+            set.push(defaultInsertSetState);
+            _permissions[q].isSetConfigChecked = true;
+          } else if (
+            'localSet' in _permissions[q] &&
+            _permissions[q].localSet.length > 0
+          ) {
+            set = [..._permissions[q].localSet];
+            _permissions[q].isSetConfigChecked = true;
+          } else {
+            set.push(defaultInsertSetState);
+          }
+          _permissions[q].localSet = [...set];
         } else {
-          set.push(defaultInsertSetState);
+          // Just to support version changes
+          // If user goes from current to previous version and back
+          _permissions[q].localSet = [defaultInsertSetState];
+          _permissions[q].set = {};
         }
-        _permissions[q].localSet = [...set];
       }
     });
   } else {
