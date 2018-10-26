@@ -63,7 +63,10 @@ class Permissions extends Component {
   }
   componentDidMount() {
     if (this.props.serverVersion) {
-      this.checkSemVer(this.props.serverVersion);
+      this.checkSemVer(this.props.serverVersion)
+        .then(() =>
+          this.checkPrefixVer(this.props.serverVersion)
+        );
     }
     this.props.dispatch({ type: RESET });
     const currentSchema = this.props.allSchemas.find(
@@ -92,7 +95,10 @@ class Permissions extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.serverVersion !== this.props.serverVersion) {
-      this.checkSemVer(nextProps.serverVersion);
+      this.checkSemVer(nextProps.serverVersion)
+        .then(() =>
+          this.checkPrefixVer(nextProps.serverVersion)
+        );
     }
   }
 
@@ -210,7 +216,9 @@ class Permissions extends Component {
       console.log(e);
       this.setState({ ...this.state, showAggregation: false });
     }
-
+    return Promise.resolve();
+  }
+  checkPrefixVer(version) {
     let showInsertPrefix = false;
     try {
       showInsertPrefix = semverCheck('insertPrefix', version);
@@ -223,6 +231,7 @@ class Permissions extends Component {
       console.log(e);
       this.setState({ ...this.state, showInsertPrefix: false });
     }
+    return Promise.resolve();
   }
   deleteSetKeyVal(e) {
     const deleteIndex = parseInt(e.target.getAttribute('data-index-id'), 10);
