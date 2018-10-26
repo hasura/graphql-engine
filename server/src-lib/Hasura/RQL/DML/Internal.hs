@@ -281,6 +281,8 @@ simplifyError txErr = do
         return (ConstraintError, "there is no unique or exclusion constraint on target column(s)")
       -- no constraint
       ("42704", msg) -> return (ConstraintError, msg)
+      -- invalid input values
+      ("22007", msg) -> return (DataException, msg)
       _              -> Nothing
 
 -- validate limit and offset int values
