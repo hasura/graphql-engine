@@ -409,14 +409,16 @@ execWithExp
   -> AnnSelFlds
   -> Q.TxE QErr RespBody
 execWithExp tn (withExp, args) annFlds = do
-  let annSel = RS.AnnSel annFlds tn frmItemM
-        (S.BELit True) Nothing RS.noTableArgs
+  let annSel = RS.AnnSel selFlds tabFrom tabPerm RS.noTableArgs
       sqlSel = RS.mkSQLSelect True annSel
       selWith = S.SelectWith [(alias, withExp)] sqlSel
       sqlBuilder = toSQL selWith
   runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList args) True
   where
+    selFlds = RS.ASFSimple annFlds
+    tabFrom = RS.TableFrom tn frmItemM
+    tabPerm = RS.TablePerm (S.BELit True) Nothing
     alias = S.Alias $ Iden $ snakeCaseTable tn <> "__rel_insert_result"
     frmItemM = Just $ S.FIIden $ toIden alias
 
@@ -518,7 +520,7 @@ insertMultipleObjects role insCtxMap tn ctx insObjs
             return $ J.toJSON affRows
           RR.MExp txt -> return $ J.toJSON txt
           RR.MRet annSel -> do
-            let annFlds = RS._asFields annSel
+            let annFlds = RS.fetchAnnFlds $ RS._asnFields annSel
             bs <- buildReturningResp tn withExps annFlds
             decodeFromBS bs
         return (t, jsonVal)

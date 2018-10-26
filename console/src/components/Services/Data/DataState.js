@@ -41,6 +41,7 @@ const defaultQueryPermissions = {
     columns: [],
     filter: {},
     limit: null,
+    allow_aggregations: false,
   },
   update: {
     columns: [],
