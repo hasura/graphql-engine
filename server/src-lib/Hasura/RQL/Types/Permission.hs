@@ -8,6 +8,7 @@
 module Hasura.RQL.Types.Permission
        ( RoleName(..)
        , UserId(..)
+       , UserVars
        , UserInfo(..)
        , adminUserInfo
        , adminRole
@@ -52,10 +53,12 @@ isAdmin = (adminRole ==)
 newtype UserId = UserId { getUserId :: Word64 }
   deriving (Show, Eq, FromJSON, ToJSON)
 
+type UserVars = (Map.HashMap T.Text T.Text)
+
 data UserInfo
   = UserInfo
-  { userRole    :: !RoleName
-  , userHeaders :: !(Map.HashMap T.Text T.Text)
+  { userRole :: !RoleName
+  , userVars :: !UserVars
   } deriving (Show, Eq, Generic)
 
 instance Hashable UserInfo
@@ -65,7 +68,8 @@ $(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
  )
 
 adminUserInfo :: UserInfo
-adminUserInfo = UserInfo adminRole Map.empty
+adminUserInfo =
+  UserInfo adminRole $ Map.singleton "x-hasura-role" "admin"
 
 data PermType
   = PTInsert

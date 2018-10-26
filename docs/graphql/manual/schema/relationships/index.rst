@@ -12,7 +12,8 @@ Each relationship has a name which is used to refer to the nested objects in que
 an ``author`` and "``author``" of an ``article``.
 
 .. note::
-   You can also simulate many-to-many relationships by creating what are typically known as ``bridge`` or ``through`` tables. See :ref:`many-to-many-relationships`
+   You can also simulate many-to-many relationships by creating what are typically known as ``bridge``
+   tables. See :ref:`many-to-many-relationships`
 
 Creating relationships
 ----------------------
@@ -248,7 +249,10 @@ Here are examples to create relationships using the two methods:
 
 Many-to-many relationships
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Many-to-many relationships can be simulated by creating tables typically called as ``bridge`` or ``through`` or ``joining`` tables. Let's use a different example from the one above to create such a relationship - say your schema has products and categories. A product can belong to many categories and each category can have many products. Our objective is to fetch a list of products and the possibly many categories each product belongs to.
+Many-to-many relationships can be simulated by creating tables typically called as ``bridge`` or ``junction`` or
+``join`` tables. Let's use a different example from the one above to create such a relationship - say your schema
+has products and categories. A product can belong to many categories and each category can have many products. Our
+objective is to fetch a list of products and the possibly many categories each product belongs to.
 
 **Create bridge or through table**
 
@@ -276,7 +280,8 @@ To capture the association between products and categories, we'll create the fol
     category_id INT
   )
 
-This table sits between the two tables involved in the many-to-many relationship and captures possible permutations of their association. Next, we'll link the data in the ``product`` and ``category`` tables via the bridge table.
+This table sits between the two tables involved in the many-to-many relationship and captures possible permutations
+of their association. Next, we'll link the data in the ``product`` and ``category`` tables via the bridge table.
 
 **Add foreign-key constraints**
 
@@ -289,10 +294,13 @@ Add the following constraints:
 
 Add the following relationships:
 
-- modify the ``product`` table to add an array relationship between ``products_categories`` :: ``product_id`` -> ``id``, named ``prod_categories``.
-- modify the ``products_categories`` table to add an object relationship between ``category_id`` -> ``category`` :: ``id``, named ``category``.
+- modify the ``product`` table to add an array relationship between ``products_categories`` :: ``product_id`` ->
+  ``id``, named ``prod_categories``.
+- modify the ``products_categories`` table to add an object relationship between ``category_id`` -> ``category`` ::
+  ``id``, named ``category``.
 
-We can now fetch a list of products and a list of categories each product belongs to by leveraging the above relationships:
+We can now fetch a list of products and a list of categories each product belongs to by leveraging the above
+relationships:
 
 .. graphiql::
   :view_only:
@@ -343,9 +351,14 @@ We can now fetch a list of products and a list of categories each product belong
       } 
     } 
 
-If you need to fetch a list of categories and a list of products belonging to each category, you just have to create the relationships the other way around i.e. in ``category`` table, an array relationship between ``products_categories`` :: ``product_id`` -> ``id`` and in the ``products_categories`` table, an object relationship between ``product_id`` -> ``product`` :: ``id``.
+If you need to fetch a list of categories and a list of products belonging to each category, you just have to create
+the relationships the other way around. i.e. in ``category`` table, an array relationship named ``cat_products`` between
+``products_categories`` :: ``product_id`` -> ``id`` and in the ``products_categories`` table, an object relationship
+named ``product`` between ``product_id`` -> ``product`` :: ``id``.
 
-The intermediate join table is important as you might add more columns to it over time. For example, the ``products_categories`` table may have a column like ``created_at``. So, the above query then changes to:
+The intermediate fields ``prod_categories`` & ``cat_products`` are important as they can be used to fetch extra
+information about the relationship. For example, you can have a column like ``created_at`` in the ``products_categories``
+table which you can fetch as follows:
 
 .. code-block:: graphql
 
@@ -354,7 +367,7 @@ The intermediate join table is important as you might add more columns to it ove
         id
         prod_name
         prod_categories {
-          created_at,
+          created_at
           category {
             cat_name
           }

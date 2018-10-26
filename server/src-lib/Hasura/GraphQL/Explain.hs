@@ -52,11 +52,11 @@ data FieldPlan
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase) ''FieldPlan)
 
 type Explain =
-  (ReaderT (FieldMap, OrdByResolveCtx) (Except QErr))
+  (ReaderT (FieldMap, OrdByCtx) (Except QErr))
 
 runExplain
   :: (MonadError QErr m)
-  => (FieldMap, OrdByResolveCtx) -> Explain a -> m a
+  => (FieldMap, OrdByCtx) -> Explain a -> m a
 runExplain ctx m =
   either throwError return $ runExcept $ runReaderT m ctx
 
@@ -78,6 +78,10 @@ explainField userInfo gCtx fld =
           validateHdrs hdrs
           RS.mkSQLSelect True <$>
             RS.fromFieldByPKey txtConverter tn permFilter fld
+        OCSelectAgg tn permFilter permLimit hdrs -> do
+          validateHdrs hdrs
+          RS.mkSQLSelect False <$>
+            RS.fromAggField txtConverter tn permFilter permLimit fld
         _ -> throw500 "unexpected mut field info for explain"
 
       let selectSQL = TB.run $ toSQL sel
@@ -90,14 +94,14 @@ explainField userInfo gCtx fld =
     txtConverter = return . txtEncoder . snd
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
-    orderByCtx = _gOrdByEnums gCtx
+    orderByCtx = _gOrdByCtx gCtx
 
     getOpCtx f =
       onNothing (Map.lookup f opCtxMap) $ throw500 $
       "lookup failed: opctx: " <> showName f
 
     validateHdrs hdrs = do
-      let receivedHdrs = userHeaders userInfo
+      let receivedHdrs = userVars userInfo
       forM_ hdrs $ \hdr ->
         unless (Map.member hdr receivedHdrs) $
         throw400 NotFound $ hdr <<> " header is expected but not found"
