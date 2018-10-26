@@ -20,19 +20,56 @@ import { showErrorNotification } from '../Notification';
 import { createTrigger } from './AddActions';
 import { fetchTableListBySchema } from './AddActions';
 
+import semverCheck from '../../../../helpers/semver';
+
 class AddTrigger extends Component {
   constructor(props) {
     super(props);
     this.props.dispatch(fetchTableListBySchema('public'));
-    this.state = { advancedExpanded: false };
+    this.state = {
+      advancedExpanded: false,
+      supportColumnChangeFeature: false,
+    };
   }
   componentDidMount() {
     // set defaults
     this.props.dispatch(setDefaults());
+    if (this.props.serverVersion) {
+      this.checkSemVer(this.props.serverVersion);
+    }
+  }
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.serverVersion !== this.props.serverVersion) {
+      this.checkSemVer(nextProps.serverVersion);
+    }
   }
   componentWillUnmount() {
     // set defaults
     this.props.dispatch(setDefaults());
+  }
+
+  checkSemVer(version) {
+    try {
+      const supportColumnChangeFeature = semverCheck(
+        'supportColumnChangeTrigger',
+        version
+      );
+      if (supportColumnChangeFeature) {
+        this.updateSupportColumnChangeFeature(true);
+      } else {
+        this.updateSupportColumnChangeFeature(false);
+      }
+    } catch (e) {
+      this.updateSupportColumnChangeFeature(false);
+      console.error(e);
+    }
+  }
+
+  updateSupportColumnChangeFeature(val) {
+    this.setState({
+      ...this.state,
+      supportColumnChangeFeature: val,
+    });
   }
 
   submitValidation(e) {
@@ -108,6 +145,9 @@ class AddTrigger extends Component {
       lastSuccess,
       internalError,
     } = this.props;
+
+    const { supportColumnChangeFeature } = this.state;
+
     const styles = require('../TableCommon/Table.scss');
     let createBtnText = 'Create';
     if (ongoingRequest) {
@@ -187,6 +227,94 @@ class AddTrigger extends Component {
       }
       return null;
     };
+
+    const advancedColumnSection = supportColumnChangeFeature ? (
+      <div>
+        <h4 className={styles.subheading_text}>
+          Listen columns for update &nbsp; &nbsp;
+          <OverlayTrigger
+            placement="right"
+            overlay={tooltip.advancedOperationDescription}
+          >
+            <i className="fa fa-question-circle" aria-hidden="true" />
+          </OverlayTrigger>{' '}
+        </h4>
+        {selectedOperations.update ? (
+          <div>{getColumnList('update')}</div>
+        ) : (
+          <div>
+            <div
+              className={styles.display_inline + ' ' + styles.add_mar_right}
+              style={{
+                marginTop: '10px',
+                marginBottom: '10px',
+              }}
+            >
+              Applicable to update operation only.
+            </div>
+          </div>
+        )}
+      </div>
+    ) : (
+      <div>
+        <h4 className={styles.subheading_text}>
+          Advanced - Operation/Columns &nbsp; &nbsp;
+          <OverlayTrigger
+            placement="right"
+            overlay={tooltip.advancedOperationDescription}
+          >
+            <i className="fa fa-question-circle" aria-hidden="true" />
+          </OverlayTrigger>{' '}
+        </h4>
+        <div>
+          <div>
+            <label>
+              <input
+                onChange={handleOperationSelection}
+                className={styles.display_inline + ' ' + styles.add_mar_right}
+                type="checkbox"
+                value="insert"
+                checked={selectedOperations.insert}
+              />
+              Insert
+            </label>
+          </div>
+          {getColumnList('insert')}
+        </div>
+        <hr />
+        <div>
+          <div>
+            <label>
+              <input
+                onChange={handleOperationSelection}
+                className={styles.display_inline + ' ' + styles.add_mar_right}
+                type="checkbox"
+                value="update"
+                checked={selectedOperations.update}
+              />
+              Update
+            </label>
+          </div>
+          {getColumnList('update')}
+        </div>
+        <hr />
+        <div>
+          <div>
+            <label>
+              <input
+                onChange={handleOperationSelection}
+                className={styles.display_inline + ' ' + styles.add_mar_right}
+                type="checkbox"
+                value="delete"
+                checked={selectedOperations.delete}
+              />
+              Delete
+            </label>
+          </div>
+          {getColumnList('delete')}
+        </div>
+      </div>
+    );
 
     return (
       <div
@@ -391,39 +519,7 @@ class AddTrigger extends Component {
                     styles.add_mar_top
                   }
                 >
-                  {tableName ? (
-                    <div>
-                      <h4 className={styles.subheading_text}>
-                        Listen columns for update &nbsp; &nbsp;
-                        <OverlayTrigger
-                          placement="right"
-                          overlay={tooltip.advancedOperationDescription}
-                        >
-                          <i
-                            className="fa fa-question-circle"
-                            aria-hidden="true"
-                          />
-                        </OverlayTrigger>{' '}
-                      </h4>
-                      {selectedOperations.update ? (
-                        <div>{getColumnList('update')}</div>
-                      ) : (
-                        <div>
-                          <div
-                            className={
-                              styles.display_inline + ' ' + styles.add_mar_right
-                            }
-                            style={{
-                              marginTop: '10px',
-                              marginBottom: '10px',
-                            }}
-                          >
-                            Applicable to update operation only.
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : null}
+                  {tableName ? advancedColumnSection : null}
                   <div
                     className={styles.add_mar_bottom + ' ' + styles.add_mar_top}
                   >
@@ -510,6 +606,7 @@ const mapStateToProps = state => {
   return {
     ...state.addTrigger,
     schemaList: state.tables.schemaList,
+    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   };
 };
 
