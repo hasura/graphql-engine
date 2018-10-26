@@ -758,7 +758,7 @@ div.CodeMirror-lint-tooltip > * + * {
   background: rgb(255, 255, 255);
   border-radius: 4px;
   outline: none;
-  overflow: -webkit-paged-y;
+  // overflow: -webkit-paged-y;
 }
 .myOverlayClass {
   position: fixed;
@@ -808,11 +808,11 @@ div.CodeMirror-lint-tooltip > * + * {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  height: 100%;
+  height: calc(100% - 46px);
 }
 .topLevelNodesWrapper {
   border-right: 1px solid #ccc;
-  height: calc(100% - 42px);
+  height: 100%;
 }
 
 .textCenter {
@@ -827,7 +827,9 @@ div.CodeMirror-lint-tooltip > * + * {
   font-size: 16px;
 }
 .analysisWrapper {
-  height: calc(100% - 30px);
+  height: 100%;
+  position: relative;
+  width: 100%;
 }
 .topLevelNodesWrapper ul {
   -webkit-padding-start: 0px;
@@ -861,30 +863,53 @@ div.CodeMirror-lint-tooltip > * + * {
   color: #e2701a;
 }
 .plansWrapper {
+  height: 50%;
+  position: relative;
+  padding: 0px 20px;
 }
 .plansTitle {
-  padding: 10px 20px;
-  padding-bottom: 0;
+  padding: 10px 0px;
   color: #767e93;
   font-weight: 600;
 }
-.overflowAuto {
-  overflow: auto;
+
+.copyGenerated {
+  position: absolute;
+  bottom: 30px;
+  right: 60px;
+  cursor: pointer;
 }
+.copyGenerated img,
+.copyExecution img {
+  width: 20px;
+  opacity: 0.6;
+}
+.copyGenerated img:hover,
+.copyExecution img:hover {
+  opacity: 1;
+}
+.copyGenerated:focus,
+.copyExecution:focus {
+  outline: none;
+}
+
 .codeBlock {
-  padding: 10px 20px;
-  width: 90%;
+  /* position: relative;
+  padding: 10px 20px; */
   background-color: rgb(253, 249, 237);
-  margin: 20px;
+  /* margin: 20px;
+  width: 100%; */
+  width: auto;
   border-radius: 5px;
-  max-height: 150px;
+  max-height: calc(100% - 60px);
   overflow: auto;
-  margin-top: 10px;
+  margin-top: 0px;
+  min-height: calc(100% - 60px);
 }
 
 .codeBlock pre {
   display: block;
-  padding: 0px;
+  padding: 10px 20px;
   margin: 0px;
   font-size: 13px;
   line-height: unset;
@@ -895,6 +920,7 @@ div.CodeMirror-lint-tooltip > * + * {
   border: none;
   border-radius: 0;
   overflow: unset;
+  padding-bottom: 10px;
 }
 
 .codeBlock code {
@@ -904,6 +930,46 @@ div.CodeMirror-lint-tooltip > * + * {
 
 .graphiql-container .analyse-button-wrap {
   position: relative;
+}
+
+.copyTooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.copyTooltip .tooltiptext {
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 4px 0px;
+  font-size: 14px;
+  position: absolute;
+  z-index: 1000000000;
+  right: -21px;
+  bottom: 30px;
+  opacity: 0;
+  -webkit-transition: opacity 0.3s;
+  transition: opacity 0.3s;
+  display: none;
+  width: 57px;
+}
+
+.copyTooltip .tooltiptext::after {
+  content: '';
+  position: absolute;
+  top: 24px;
+  right: 22px;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.copyTooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+  display: block;
 }
 /* BASICS */
 
