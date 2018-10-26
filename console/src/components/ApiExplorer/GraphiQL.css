@@ -874,27 +874,15 @@ div.CodeMirror-lint-tooltip > * + * {
 }
 
 .copyGenerated {
-  /*
   position: fixed;
   bottom: 51%;
   right: 7%;
   cursor: pointer;
-	*/
-  position: absolute;
-  bottom: 10px;
-  right: 15px;
-  cursor: pointer;
 }
 .copyExecution {
-  /*
   position: fixed;
   bottom: 10%;
   right: 7%;
-  cursor: pointer;
-  */
-  position: absolute;
-  bottom: 10px;
-  right: 15px;
   cursor: pointer;
 }
 .copyGenerated img,
