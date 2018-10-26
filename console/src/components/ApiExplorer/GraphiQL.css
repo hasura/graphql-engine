@@ -808,11 +808,11 @@ div.CodeMirror-lint-tooltip > * + * {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  height: 100%;
+  height: calc(100% - 46px);
 }
 .topLevelNodesWrapper {
   border-right: 1px solid #ccc;
-  height: calc(100% - 42px);
+  height: 100%;
 }
 
 .textCenter {
@@ -827,7 +827,7 @@ div.CodeMirror-lint-tooltip > * + * {
   font-size: 16px;
 }
 .analysisWrapper {
-  height: calc(100% - 30px);
+  height: 100%;
   position: relative;
   width: 100%;
 }
@@ -865,10 +865,10 @@ div.CodeMirror-lint-tooltip > * + * {
 .plansWrapper {
   height: 50%;
   position: relative;
+  padding: 0px 20px;
 }
 .plansTitle {
-  padding: 10px 20px;
-  padding-bottom: 0;
+  padding: 10px 0px;
   color: #767e93;
   font-weight: 600;
 }
@@ -894,22 +894,22 @@ div.CodeMirror-lint-tooltip > * + * {
 }
 
 .codeBlock {
-  /* position: relative; */
-  padding: 10px 20px;
-  width: 90%;
+  /* position: relative;
+  padding: 10px 20px; */
   background-color: rgb(253, 249, 237);
-  margin: 20px;
-  margin-top: 20px;
+  /* margin: 20px;
+  width: 100%; */
+  width: auto;
   border-radius: 5px;
-  max-height: calc(100% - 80px);
+  max-height: calc(100% - 60px);
   overflow: auto;
-  margin-top: 10px;
-  min-height: calc(100% - 80px);
+  margin-top: 0px;
+  min-height: calc(100% - 60px);
 }
 
 .codeBlock pre {
   display: block;
-  padding: 0px;
+  padding: 10px 20px;
   margin: 0px;
   font-size: 13px;
   line-height: unset;
@@ -938,27 +938,28 @@ div.CodeMirror-lint-tooltip > * + * {
 }
 
 .copyTooltip .tooltiptext {
-  width: 40px;
   background-color: #555;
   color: #fff;
   text-align: center;
   border-radius: 6px;
-  padding: 8px;
+  padding: 4px 0px;
   font-size: 14px;
   position: absolute;
   z-index: 1000000000;
-  right: -15px;
+  right: -21px;
   bottom: 30px;
   opacity: 0;
   -webkit-transition: opacity 0.3s;
   transition: opacity 0.3s;
+  display: none;
+  width: 57px;
 }
 
 .copyTooltip .tooltiptext::after {
   content: '';
   position: absolute;
-  top: 32px;
-  right: 18px;
+  top: 24px;
+  right: 22px;
   margin-left: -5px;
   border-width: 5px;
   border-style: solid;
@@ -968,6 +969,7 @@ div.CodeMirror-lint-tooltip > * + * {
 .copyTooltip:hover .tooltiptext {
   visibility: visible;
   opacity: 1;
+  display: block;
 }
 /* BASICS */
 
