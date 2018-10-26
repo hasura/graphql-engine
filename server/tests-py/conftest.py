@@ -41,12 +41,12 @@ def hge_ctx(request):
     hge_ctx.teardown()
     time.sleep(2)
 
-"""
-This fixure is used to store the state of test setup in some test classes.
-Used primarily when teardown is skipped in some test cases in the class where the test is not expected to change the database state.
-"""
 @pytest.fixture(scope='class')
 def setup_ctrl(request, hge_ctx):
+    """
+    This fixure is used to store the state of test setup in some test classes.
+    Used primarily when teardown is skipped in some test cases in the class where the test is not expected to change the database state.
+    """
     setup_ctrl = { "setupDone" : False }
     yield setup_ctrl
     hge_ctx.may_skip_test_teardown = False

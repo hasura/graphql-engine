@@ -1,4 +1,3 @@
-import pytest
 import yaml
 from validate import check_query_f, check_query
 from super_classes import DefaultTestSelectQueries

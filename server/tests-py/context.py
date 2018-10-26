@@ -87,7 +87,7 @@ class HGECtx:
         self.wst.daemon = True
         self.wst.start()
 
-        result = subprocess.run(['../../scripts/get-version.sh'], shell=True, stdout=subprocess.PIPE, check=True)
+        result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         self.version = result.stdout.decode('utf-8').strip()
         try:
             st_code, resp = self.v1q_f('queries/clear_db.yaml')

@@ -1,4 +1,3 @@
-import pytest
 import yaml
 from validate import check_query_f
 from super_classes import DefaultTestSelectQueries, DefaultTestQueries
@@ -26,13 +25,19 @@ class TestV1SelectBasic(DefaultTestSelectQueries):
     def test_nested_select_article_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/nested_select_query_article_author.yaml')
 
+    def test_nested_select_article_author_alias_for_relationship(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_query_article_author_rel_alias.yaml')
+
     def test_select_author_where(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_where.yaml')
+
+    def test_select_table_not_present(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_article_table_not_present_err.yaml')
 
     def test_select_col_not_present(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_article_col_not_present_err.yaml')
 
-    def test_nested_select_query_where(self, hge_ctx):
+    def test_select_nested_where_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/nested_select_where_query_author_article.yaml')
 
     def test_select_query_user(self, hge_ctx):

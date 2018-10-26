@@ -11,7 +11,7 @@ stop_services() {
 wait_for_port() {
     local PORT=$1
     echo "waiting for $PORT"
-    for i in $(seq 1 60);
+    for _ in $(seq 1 60);
     do
       nc -z localhost $PORT && echo "port $PORT is ready" && return
       echo -n .

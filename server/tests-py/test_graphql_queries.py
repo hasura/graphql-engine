@@ -1,4 +1,3 @@
-import pytest
 import yaml
 from validate import check_query_f
 from super_classes import DefaultTestSelectQueries
@@ -30,8 +29,17 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
     def test_nested_select_query_where(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/nested_select_where_query_author_article.yaml')
 
+    def test_nested_select_query_where_on_relationship(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_query_article_author_where_on_relationship.yaml')
+
     def test_select_query_user(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/select_query_user.yaml")
+
+    def test_select_query_non_tracked_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/select_query_non_tracked_table_err.yaml")
+
+    def test_select_query_col_not_present_err(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/select_query_author_col_not_present_err.yaml")
 
     @classmethod
     def dir(cls):
@@ -81,6 +89,9 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
     def test_author_article_where_not_equal(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_neq.yaml')
 
+    def test_author_article_operator_ne_not_found_err(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_operator_ne_not_found_err.yaml')
+
     def test_author_article_where_greater_than(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_gt.yaml')
 
@@ -113,6 +124,9 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
 
     def test_article_author_not_published_nor_registered(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_article_author_not_published_or_not_registered.yaml')
+
+    def test_article_author_unexpected_operator_in_where_err(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_unexpected_operator_in_where_err.yaml')
 
     @classmethod
     def dir(cls):

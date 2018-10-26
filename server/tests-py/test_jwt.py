@@ -86,7 +86,7 @@ class TestJWTBasic:
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
-            self.conf = yaml.load(c)
+            self.conf = yaml.safe_load(c)
         self.claims = {
             "sub": "1234567890",
             "name": "John Doe",

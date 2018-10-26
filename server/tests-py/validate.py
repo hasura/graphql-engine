@@ -133,7 +133,7 @@ def check_query(hge_ctx, conf, add_auth=True):
 def check_query_f(hge_ctx, f, add_auth=True):
     hge_ctx.may_skip_test_teardown = False
     with open(f) as c:
-        conf = yaml.load(c)
+        conf = yaml.safe_load(c)
         if isinstance(conf, list):
             for sconf in conf:
                 check_query( hge_ctx, sconf)
