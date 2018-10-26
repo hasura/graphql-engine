@@ -168,7 +168,8 @@ convertColFlds ty selSet =
       n            -> return $ RS.PCFCol $ PGCol $ G.unName n
 
 convertAggFld
-  :: Monad m => G.NamedType -> SelSet -> m RS.AggFlds
+  :: (Monad m, MonadError QErr m)
+  => G.NamedType -> SelSet -> m RS.AggFlds
 convertAggFld ty selSet =
   withSelSet selSet $ \fld -> do
     let fType = _fType fld
@@ -179,7 +180,8 @@ convertAggFld ty selSet =
       "sum"        -> RS.AFSum <$> convertColFlds fType fSelSet
       "avg"        -> RS.AFAvg <$> convertColFlds fType fSelSet
       "max"        -> RS.AFMax <$> convertColFlds fType fSelSet
-      _            -> RS.AFMin <$> convertColFlds fType fSelSet
+      "min"        -> RS.AFMin <$> convertColFlds fType fSelSet
+      G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 fromAggField
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByResolveCtx r)
@@ -201,7 +203,8 @@ fromAggField fn tn permFilter permLimitM fld = fieldAsPath fld $ do
         case _fName f of
           "__typename" -> return $ RS.SFExp $ G.unName $ G.unNamedType ty
           "agg"        -> RS.SFAggFld <$> convertAggFld fTy fSelSet
-          _            -> RS.SFNodes <$> fromSelSet fn fTy fSelSet
+          "nodes"      -> RS.SFNodes <$> fromSelSet fn fTy fSelSet
+          G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 convertAggSelect
   :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RespTx

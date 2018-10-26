@@ -1,7 +1,7 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE MultiWayIf        #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Hasura.GraphQL.Resolve.Mutation
   ( convertUpdate
@@ -45,11 +45,12 @@ convertReturning qt ty selSet = do
 convertMutResp
   :: QualifiedTable -> G.NamedType -> SelSet -> Convert RR.MutFlds
 convertMutResp qt ty selSet =
-  withSelSet selSet $ \fld ->
-    case _fName fld of
-      "__typename"    -> return $ RR.MExp $ G.unName $ G.unNamedType ty
-      "affected_rows" -> return RR.MCount
-      _ -> fmap RR.MRet $ convertReturning qt (_fType fld) $ _fSelSet fld
+  withSelSet selSet $ \fld -> case _fName fld of
+    "__typename"    -> return $ RR.MExp $ G.unName $ G.unNamedType ty
+    "affected_rows" -> return RR.MCount
+    "returning"     -> fmap RR.MRet $
+                       convertReturning qt (_fType fld) $ _fSelSet fld
+    G.Name t        -> throw500 $ "unexpected field in mutation resp : " <> t
 
 convertRowObj
   :: (MonadError QErr m, MonadState PrepArgs m)
