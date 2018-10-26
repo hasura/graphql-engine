@@ -394,7 +394,7 @@ class AddTrigger extends Component {
                   {tableName ? (
                     <div>
                       <h4 className={styles.subheading_text}>
-                        Advanced - Operation/Columns &nbsp; &nbsp;
+                        Listen columns for update &nbsp; &nbsp;
                         <OverlayTrigger
                           placement="right"
                           overlay={tooltip.advancedOperationDescription}
@@ -405,65 +405,23 @@ class AddTrigger extends Component {
                           />
                         </OverlayTrigger>{' '}
                       </h4>
-                      <div>
+                      {selectedOperations.update ? (
+                        <div>{getColumnList('update')}</div>
+                      ) : (
                         <div>
-                          <label>
-                            <input
-                              onChange={handleOperationSelection}
-                              className={
-                                styles.display_inline +
-                                ' ' +
-                                styles.add_mar_right
-                              }
-                              type="checkbox"
-                              value="insert"
-                              checked={selectedOperations.insert}
-                            />
-                            Insert
-                          </label>
+                          <div
+                            className={
+                              styles.display_inline + ' ' + styles.add_mar_right
+                            }
+                            style={{
+                              marginTop: '10px',
+                              marginBottom: '10px',
+                            }}
+                          >
+                            Applicable to update operation only.
+                          </div>
                         </div>
-                        {getColumnList('insert')}
-                      </div>
-                      <hr />
-                      <div>
-                        <div>
-                          <label>
-                            <input
-                              onChange={handleOperationSelection}
-                              className={
-                                styles.display_inline +
-                                ' ' +
-                                styles.add_mar_right
-                              }
-                              type="checkbox"
-                              value="update"
-                              checked={selectedOperations.update}
-                            />
-                            Update
-                          </label>
-                        </div>
-                        {getColumnList('update')}
-                      </div>
-                      <hr />
-                      <div>
-                        <div>
-                          <label>
-                            <input
-                              onChange={handleOperationSelection}
-                              className={
-                                styles.display_inline +
-                                ' ' +
-                                styles.add_mar_right
-                              }
-                              type="checkbox"
-                              value="delete"
-                              checked={selectedOperations.delete}
-                            />
-                            Delete
-                          </label>
-                        </div>
-                        {getColumnList('delete')}
-                      </div>
+                      )}
                     </div>
                   ) : null}
                   <div
