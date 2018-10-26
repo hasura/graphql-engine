@@ -1,0 +1,5 @@
+*
+**/*
+!static/dist/main.js
+!static/dist/vendor.js
+!static/dist/main.css

@@ -78,6 +78,10 @@ explainField userInfo gCtx fld =
           validateHdrs hdrs
           RS.mkSQLSelect True <$>
             RS.fromFieldByPKey txtConverter tn permFilter fld
+        OCSelectAgg tn permFilter permLimit hdrs -> do
+          validateHdrs hdrs
+          RS.mkSQLSelect False <$>
+            RS.fromAggField txtConverter tn permFilter permLimit fld
         _ -> throw500 "unexpected mut field info for explain"
 
       let selectSQL = TB.run $ toSQL sel
@@ -97,7 +101,7 @@ explainField userInfo gCtx fld =
       "lookup failed: opctx: " <> showName f
 
     validateHdrs hdrs = do
-      let receivedHdrs = userHeaders userInfo
+      let receivedHdrs = userVars userInfo
       forM_ hdrs $ \hdr ->
         unless (Map.member hdr receivedHdrs) $
         throw400 NotFound $ hdr <<> " header is expected but not found"

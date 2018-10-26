@@ -46,6 +46,41 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
         return 'queries/graphql_query/basic'
 
 
+class TestGraphQLQueryAgg(DefaultTestSelectQueries):
+
+    def test_article_agg_count_sum_avg_max_min_with_aliases(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/article_agg_count_sum_avg_max_min_with_aliases.yaml')
+
+    def test_article_agg_where(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/article_agg_where.yaml')
+
+    def test_author_agg_with_articles(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/author_agg_with_articles.yaml')
+
+    def test_author_agg_with_articles_where(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/author_agg_with_articles_where.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/aggregations'
+
+
+class TestGraphQLQueryAggPerm(DefaultTestSelectQueries):
+
+    def test_author_agg_articles(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/author_agg_articles.yaml')
+
+    def test_article_agg_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/article_agg_fail.yaml')
+
+    def test_author_articles_agg_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/author_articles_agg_fail.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/agg_perm'
+
+
 class TestGraphQLQueryLimits(DefaultTestSelectQueries):
 
     def test_limit_1(self, hge_ctx):

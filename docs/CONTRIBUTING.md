@@ -1,7 +1,7 @@
 # Contributing
 
-[Sphinx](http://www.sphinx-doc.org/en/master/documentation) files are written in
-the RST markup language. [Here]((http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html)) is a guide to the RST markup language.
+[Sphinx](http://www.sphinx-doc.org/en/master/) files are written in
+the RST markup language. [Here](http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html) is a guide to the RST markup language.
 
 ## Requirements
 

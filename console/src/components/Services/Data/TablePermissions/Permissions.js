@@ -20,6 +20,7 @@ import {
   permSetRoleName,
   permChangePermissions,
   permToggleAllowUpsert,
+  permToggleAllowAggregation,
   permToggleModifyLimit,
   permCustomChecked,
   permRemoveRole,
@@ -34,14 +35,19 @@ import ViewHeader from '../TableBrowseRows/ViewHeader';
 import { setTable, fetchViewInfoFromInformationSchema } from '../DataActions';
 import { getIngForm, escapeRegExp } from '../utils';
 import { legacyOperatorsMap } from './PermissionBuilder/utils';
+import semverCheck from '../../../../helpers/semver';
 
 class Permissions extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {};
     this.state.viewInfo = {};
+    this.state.showAggregation = false;
   }
   componentDidMount() {
+    if (this.props.serverVersion) {
+      this.checkSemVer(this.props.serverVersion);
+    }
     this.props.dispatch({ type: RESET });
 
     const currentSchema = this.props.allSchemas.find(
@@ -68,6 +74,27 @@ class Permissions extends Component {
       });
   }
 
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.serverVersion !== this.props.serverVersion) {
+      this.checkSemVer(nextProps.serverVersion);
+    }
+  }
+
+  checkSemVer(version) {
+    let showAggregation = false;
+    try {
+      showAggregation = semverCheck('aggregationPerm', version);
+      if (showAggregation) {
+        this.setState({ ...this.state, showAggregation: true });
+      } else {
+        this.setState({ ...this.state, showAggregation: false });
+      }
+    } catch (e) {
+      console.log(e);
+      this.setState({ ...this.state, showAggregation: false });
+    }
+  }
+
   render() {
     const {
       dispatch,
@@ -82,6 +109,7 @@ class Permissions extends Component {
       migrationMode,
       currentSchema,
     } = this.props;
+    const { showAggregation } = this.state;
     const styles = require('../TableModify/Modify.scss');
 
     let qTypes;
@@ -528,6 +556,60 @@ class Permissions extends Component {
       return _upsertSection;
     };
 
+    const getAggregationSection = permsState => {
+      let _aggregationSection = '';
+      const query = permsState.query;
+
+      if (query === 'select') {
+        const dispatchToggleAllowAggregation = checked => {
+          dispatch(permToggleAllowAggregation(checked));
+        };
+
+        const aggregationAllowed = permsState.select
+          ? permsState.select.allow_aggregations
+          : false;
+
+        // Aggregation Tooltip
+        const aggregationToolTip = (
+          <Tooltip id="tooltip-aggregation">
+            Allow queries with aggregate functions like sum, count, avg, max,
+            min, etc
+          </Tooltip>
+        );
+
+        // TODO: Fix the controlled component
+        _aggregationSection = (
+          <div className={styles.mar_small_neg_left_1}>
+            <div className="radio">
+              <label>
+                <input
+                  type="checkbox"
+                  disabled={!permsState.select}
+                  checked={aggregationAllowed}
+                  value="toggle_aggregation"
+                  onClick={e =>
+                    dispatchToggleAllowAggregation(e.target.checked)
+                  }
+                />
+                <span className={styles.mar_small_left}>
+                  Allow role '{permsState.role}' to make aggregation queries
+                  &nbsp;
+                  <OverlayTrigger
+                    placement="right"
+                    overlay={aggregationToolTip}
+                  >
+                    <i className="fa fa-question-circle" aria-hidden="true" />
+                  </OverlayTrigger>
+                </span>
+              </label>
+            </div>
+          </div>
+        );
+      }
+
+      return _aggregationSection;
+    };
+
     const getColumnList = (tableSchema, permsState) => {
       const query = permsState.query;
 
@@ -967,6 +1049,7 @@ class Permissions extends Component {
         <div>
           {getRowSection(queryTypes, permsState)}
           {getColumnSection(tableSchema, permsState)}
+          {showAggregation ? getAggregationSection(permsState) : null}
           {getLimitSection(permsState)}
           {getUpsertSection(permsState)}
           {getButtonsSection(tableSchema, permsState)}
@@ -1108,6 +1191,7 @@ const mapStateToProps = (state, ownProps) => ({
   allSchemas: state.tables.allSchemas,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
+  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   ...state.tables.modify,
 });
 

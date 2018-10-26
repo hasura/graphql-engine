@@ -9,6 +9,7 @@
 module Hasura.Server.Auth
   ( getUserInfo
   , AuthMode(..)
+  , mkAuthMode
   , AccessKey (..)
   , Webhook (..)
   -- JWT related
@@ -21,25 +22,28 @@ module Hasura.Server.Auth
   , jwkRefreshCtrl
   ) where
 
-import           Control.Exception      (try)
+import           Control.Exception       (try)
 import           Control.Lens
 import           Data.Aeson
-import           Data.CaseInsensitive   (CI (..), original)
+import           Data.CaseInsensitive    (CI (..), original)
+import           Data.IORef              (newIORef)
 
-import qualified Data.ByteString.Lazy   as BL
-import qualified Data.HashMap.Strict    as M
-import qualified Data.Text              as T
-import qualified Network.HTTP.Client    as H
-import qualified Network.HTTP.Types     as N
-import qualified Network.Wreq           as Wreq
+import qualified Data.ByteString.Lazy    as BL
+import qualified Data.HashMap.Strict     as M
+import qualified Data.String.Conversions as CS
+import qualified Data.Text               as T
+import qualified Network.HTTP.Client     as H
+import qualified Network.HTTP.Types      as N
+import qualified Network.Wreq            as Wreq
 
+import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 
-import qualified Hasura.Logging         as L
+import qualified Hasura.Logging          as L
 
 
 newtype AccessKey
@@ -52,15 +56,77 @@ newtype Webhook
 
 data AuthMode
   = AMNoAuth
-  | AMAccessKey !AccessKey
+  | AMAccessKey !AccessKey !(Maybe RoleName)
   | AMAccessKeyAndHook !AccessKey !Webhook
-  | AMAccessKeyAndJWT !AccessKey !JWTCtx
+  | AMAccessKeyAndJWT !AccessKey !JWTCtx !(Maybe RoleName)
   deriving (Show, Eq)
 
+mkAuthMode
+  :: ( MonadIO m
+     , MonadError T.Text m
+     )
+  => Maybe AccessKey
+  -> Maybe Webhook
+  -> Maybe T.Text
+  -> Maybe RoleName
+  -> H.Manager
+  -> LoggerCtx
+  -> m AuthMode
+mkAuthMode mAccessKey mWebHook mJwtSecret mUnAuthRole httpManager lCtx =
+  case (mAccessKey, mWebHook, mJwtSecret) of
+    (Nothing,  Nothing,   Nothing)      -> return AMNoAuth
+    (Just key, Nothing,   Nothing)      -> return $ AMAccessKey key mUnAuthRole
+    (Just key, Just hook, Nothing)      -> unAuthRoleNotReqForWebHook >>
+                                           return (AMAccessKeyAndHook key hook)
+    (Just key, Nothing,   Just jwtConf) -> do
+      jwtCtx <- mkJwtCtx jwtConf httpManager lCtx
+      return $ AMAccessKeyAndJWT key jwtCtx mUnAuthRole
+
+    (Nothing, Just _, Nothing)     -> throwError $
+      "Fatal Error : --auth-hook (HASURA_GRAPHQL_AUTH_HOOK)"
+      <> " requires --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
+    (Nothing, Nothing, Just _)     -> throwError $
+      "Fatal Error : --jwt-secret (HASURA_GRAPHQL_JWT_SECRET)"
+      <> " requires --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
+    (Nothing, Just _, Just _)     -> throwError
+      "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
+    (Just _, Just _, Just _)     -> throwError
+      "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
+  where
+    unAuthRoleNotReqForWebHook =
+      when (isJust mUnAuthRole) $
+        throwError $ "Fatal Error: --unauthorized-role (HASURA_GRAPHQL_UNAUTHORIZED_ROLE) is not allowed"
+                     <> " when --auth-hook (HASURA_GRAPHQL_AUTH_HOOK) is set"
+
+mkJwtCtx
+  :: ( MonadIO m
+     , MonadError T.Text m
+     )
+  => T.Text
+  -> H.Manager
+  -> LoggerCtx
+  -> m JWTCtx
+mkJwtCtx jwtConf httpManager loggerCtx = do
+  -- the JWT Conf as JSON string; try to parse it
+  conf   <- either decodeErr return $ eitherDecodeStrict $ CS.cs jwtConf
+  jwkRef <- case jcKeyOrUrl conf of
+    Left jwk  -> liftIO $ newIORef (JWKSet [jwk])
+    Right url -> do
+      ref <- liftIO $ newIORef $ JWKSet []
+      let logger = mkLogger loggerCtx
+      mTime <- updateJwkRef logger httpManager url ref
+      case mTime of
+        Nothing -> return ref
+        Just t -> do
+          jwkRefreshCtrl logger httpManager url ref t
+          return ref
+  return $ JWTCtx jwkRef (jcClaimNs conf) (jcAudience conf)
+  where
+    decodeErr e = throwError . T.pack $ "Fatal Error: JWT conf: " <> e
 
 mkUserInfoFromResp
   :: (MonadIO m, MonadError QErr m)
-  => WebHookLogger
+  => L.Logger
   -> T.Text
   -> N.Status
   -> BL.ByteString
@@ -95,12 +161,12 @@ mkUserInfoFromResp logger url statusCode respBody
       logWebHookResp L.LevelError $ Just respBody
 
     logWebHookResp logLevel mResp =
-      liftIO $ logger $ WebHookLog logLevel (Just statusCode)
+      liftIO $ L.unLogger logger $ WebHookLog logLevel (Just statusCode)
         url Nothing $ fmap (bsToTxt . BL.toStrict) mResp
 
 userInfoFromWebhook
   :: (MonadIO m, MonadError QErr m)
-  => WebHookLogger
+  => L.Logger
   -> H.Manager
   -> Webhook
   -> [N.Header]
@@ -122,7 +188,8 @@ userInfoFromWebhook logger manager hook reqHeaders = do
   where
     logAndThrow err = do
       let urlT = getWebhook hook
-      liftIO $ logger $ WebHookLog L.LevelError Nothing urlT (Just err) Nothing
+      liftIO $ L.unLogger logger $
+        WebHookLog L.LevelError Nothing urlT (Just err) Nothing
       throw500 "Internal Server Error"
 
     filteredHeaders = flip filter reqHeaders $ \(n, _) ->
@@ -135,7 +202,7 @@ userInfoFromWebhook logger manager hook reqHeaders = do
 
 getUserInfo
   :: (MonadIO m, MonadError QErr m)
-  => WebHookLogger
+  => L.Logger
   -> H.Manager
   -> [N.Header]
   -> AuthMode
@@ -144,16 +211,16 @@ getUserInfo logger manager rawHeaders = \case
 
   AMNoAuth -> return userInfoFromHeaders
 
-  AMAccessKey accKey ->
+  AMAccessKey accKey unAuthRole ->
     case getHeader accessKeyHeader of
       Just givenAccKey -> userInfoWhenAccessKey accKey givenAccKey
-      Nothing -> throw401 $ accessKeyHeader <> " required, but not found"
+      Nothing          -> userInfoWhenNoAccessKey unAuthRole
 
   AMAccessKeyAndHook accKey hook ->
     whenAccessKeyAbsent accKey (userInfoFromWebhook logger manager hook rawHeaders)
 
-  AMAccessKeyAndJWT accKey jwtSecret ->
-    whenAccessKeyAbsent accKey (processJwt jwtSecret rawHeaders)
+  AMAccessKeyAndJWT accKey jwtSecret unAuthRole ->
+    whenAccessKeyAbsent accKey (processJwt jwtSecret rawHeaders unAuthRole)
 
   where
     -- when access key is absent, run the action to retrieve UserInfo, otherwise
@@ -177,3 +244,8 @@ getUserInfo logger manager rawHeaders = \case
     userInfoWhenAccessKey key reqKey = do
       when (reqKey /= getAccessKey key) $ throw401 $ "invalid " <> accessKeyHeader
       return userInfoFromHeaders
+
+    userInfoWhenNoAccessKey = \case
+      Nothing -> throw401 $ accessKeyHeader <> " required, but not found"
+      Just role -> return $ UserInfo role $
+        M.insertWith const userRoleHeader (getRoleTxt role) headers
