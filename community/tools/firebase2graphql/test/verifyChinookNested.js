@@ -4,18 +4,18 @@ const colors = require('colors/safe');
 
 const complexQuery = `
 query {
-  f2gt_Album (order_by:_id_asc){
+  f2gt_Album (order_by:{_id:asc}){
     _id
-    f2gt_Track (order_by: _id_asc) {
+    f2gt_Track (order_by: {_id:asc}) {
       _id
-      Name 
+      Name
     }
     f2gt_Artist {
       Name
-      f2gt_Album (order_by: _id_desc){
+      f2gt_Album (order_by: {_id:desc}){
         _id
         Title
-        f2gt_Track (order_by: Name_asc){
+        f2gt_Track (order_by: {Name:asc}){
           Name
           Composer
         }

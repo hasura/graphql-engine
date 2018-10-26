@@ -26,7 +26,7 @@ class App extends Component {
     const LOCATION_SUBSCRIPTION = gql`
         subscription getLocation($vehicleId: Int!) {
             vehicle(where: {id: {_eq: $vehicleId}}) {
-                locations(order_by: timestamp_desc, limit: 1) {
+                locations(order_by: {timestamp:desc}, limit: 1) {
                     location
                     timestamp
                 }

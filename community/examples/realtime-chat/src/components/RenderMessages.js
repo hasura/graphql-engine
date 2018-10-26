@@ -8,7 +8,7 @@ import MessageList from './MessageList';
 const fetchMessages = gql`
   query ($last_received_id: Int, $last_received_ts: timestamptz){
     message (
-      order_by: timestamp_asc
+      order_by: {timestamp:asc}
       where: {
         _and: {
           id: {
@@ -54,7 +54,7 @@ export default class RenderMessages extends React.Component {
   componentDidUpdate() {
     if (this.state.newMessages.length === 0) {
       this.scrollToBottom();
-    } 
+    }
   }
 
   componentWillUnmount() {
@@ -268,6 +268,3 @@ export default class RenderMessages extends React.Component {
     );
   }
 }
-
-
-

@@ -6,6 +6,7 @@ module Hasura.Server.Utils where
 import qualified Database.PG.Query.Connection as Q
 
 import           Data.Aeson
+import           Data.List                    (group, sort)
 import           Data.List.Split
 import           Network.URI
 import           System.Exit

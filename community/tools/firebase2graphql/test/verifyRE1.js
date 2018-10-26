@@ -4,12 +4,12 @@ const colors = require('colors/safe');
 
 const complexQuery = `
 query {
-  f2g_test_Authors (order_by: Name_asc) {
+  f2g_test_Authors (order_by: {Name:asc}) {
     _id
     Name
-    f2g_Articles (order_by: Title_asc, where: { IsUnpublished: { _eq: true}}) {
+    f2g_Articles (order_by: {Title:asc}, where: { IsUnpublished: { _eq: true}}) {
       Title
-      f2g_test_Comments (order_by: Date_asc) {
+      f2g_test_Comments (order_by: {Date:asc}) {
         Body
         Date
       }

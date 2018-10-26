@@ -166,7 +166,7 @@ fetchColsAndRels
        , [(RelName, ObjRelData)] -- ^ object relations
        , [(RelName, ArrRelData)] -- ^ array relations
        )
-fetchColsAndRels annObj = foldrM go ([], [], []) $ OMap.toList annObj
+fetchColsAndRels = foldrM go ([], [], []) . OMap.toList
   where
     go (gName, annVal) (cols, objRels, arrRels) =
       case annVal of
