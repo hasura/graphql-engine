@@ -1024,16 +1024,16 @@ ordByEnumTy =
     mkEnumVal (n, d) =
       EnumValInfo (Just d) (G.EnumValue n) False
     enumVals =
-      [ ("_asc"
+      [ ( "asc"
         , "in the ascending order, nulls last"
         ),
-        ( "_desc"
+        ( "desc"
         , "in the descending order, nulls last"
         ),
-        ( "_asc_nulls_first"
+        ( "asc_nulls_first"
         , "in the ascending order, nulls first"
         ),
-        ( "_desc_nulls_first"
+        ( "desc_nulls_first"
         , "in the ascending order, nulls first"
         )
       ]

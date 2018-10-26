@@ -35,7 +35,7 @@ query:
   query: |
     query {
       article(
-      order_by: {author: {contact: {phone: _desc}}}
+      order_by: {author: {contact: {phone: desc}}}
       ){
         id
         title

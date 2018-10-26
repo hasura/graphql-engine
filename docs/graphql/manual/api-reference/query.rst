@@ -39,7 +39,7 @@ Query/Subscription syntax
 .. code-block:: graphql
 
     query {
-      author(where: {articles: {rating: {_gte: 4}}} order_by: {name: _asc}) {
+      author(where: {articles: {rating: {_gte: 4}}} order_by: {name: asc}) {
         id
         name
       }
@@ -50,14 +50,14 @@ Query/Subscription syntax
 .. code-block:: graphql
 
     subscription {
-      author(where: {articles: rating: {_gte: 4}}} order_by: {name: _asc}) {
+      author(where: {articles: rating: {_gte: 4}}} order_by: {name: asc}) {
         id
         name
       }
     }
 
 .. note::
-    
+
     For more examples and details of usage, please see :doc:`this <../queries/index>`.
 
 Syntax definitions
@@ -215,13 +215,13 @@ E.g.
 
 .. parsed-literal::
 
-   order_by: {id: _desc}
+   order_by: {id: desc}
 
 or
 
 .. parsed-literal::
 
-   order_by: [{id: _desc}, {author: {id: _asc}}]
+   order_by: [{id: desc}, {author: {id: asc}}]
 
 
 .. _TableOrderBy:
@@ -265,13 +265,13 @@ OrderByEnum
    #the order_by enum type
    enum order_by {
      #in the ascending order
-     _asc
+     asc
      #in the descending order
-     _desc
+     desc
      #in the ascending order, nulls first
-     _asc_nulls_first
+     asc_nulls_first
      #in the descending order, nulls first
-     _desc_nulls_first
+     desc_nulls_first
    }
 
 

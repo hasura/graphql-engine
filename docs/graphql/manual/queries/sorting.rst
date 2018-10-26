@@ -3,11 +3,11 @@ Sort query results
 Results from your query can be sorted by using the ``order_by`` argument. The argument can be used to sort nested
 objects too.
 
-The sort order (ascending vs. descending) is set by specifying ``_asc`` or ``_desc``
-enum value for the column name in the ``order_by`` input object e.g. ``{name: _desc}``.
+The sort order (ascending vs. descending) is set by specifying ``asc`` or ``desc``
+enum value for the column name in the ``order_by`` input object e.g. ``{name: desc}``.
 
 By default, ``null`` values are returned at the end of the results. ``null`` values can be fetched first by specifying
-``_asc_nulls_first`` (ascending) and ``_desc_nulls_first`` (descending) enum value e.g. ``{name: _desc_nulls_first}``.
+``asc_nulls_first`` (ascending) and ``desc_nulls_first`` (descending) enum value e.g. ``{name: desc_nulls_first}``.
 
 The ``order_by`` argument takes an array of objects to allow sorting by multiple columns.
 
@@ -30,13 +30,13 @@ The ``order_by`` argument takes an array of objects to allow sorting by multiple
    #the order_by enum type
    enum order_by {
      #in the ascending order
-     _asc
+     asc
      #in the descending order
-     _desc
+     desc
      #in the ascending order, nulls first
-     _asc_nulls_first
+     asc_nulls_first
      #in the descending order, nulls first
-     _desc_nulls_first
+     desc_nulls_first
    }
 
 .. Note::
@@ -53,7 +53,7 @@ Fetch list of authors sorted by their names in an ascending order:
   :query:
     query {
       author(
-        order_by: {name: _asc}
+        order_by: {name: asc}
       ) {
         id
         name
@@ -99,10 +99,10 @@ Fetch a list of authors sorted by their names with a list of their articles that
   :view_only:
   :query:
     query {
-      author(order_by: {name: _asc}) {
+      author(order_by: {name: asc}) {
         id
         name
-        articles(order_by: {rating: _desc}) {
+        articles(order_by: {rating: desc}) {
           id
           title
           rating
@@ -180,7 +180,7 @@ Only columns in object relationships are allowed:
   :query:
     query {
       article(
-        order_by: {author: {id: _desc}}
+        order_by: {author: {id: desc}}
       ) {
         id
         rating
@@ -236,7 +236,7 @@ nulls first):
   :query:
     query {
       article(
-        order_by: [{rating: _desc}, {published_on: _asc_nulls_first}]
+        order_by: [{rating: desc}, {published_on: asc_nulls_first}]
       ) {
         id
         rating
