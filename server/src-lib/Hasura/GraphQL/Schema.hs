@@ -156,7 +156,7 @@ mkColName :: PGCol -> G.Name
 mkColName (PGCol n) = G.Name n
 
 mkAggRelName :: RelName -> G.Name
-mkAggRelName (RelName r) = G.Name $ r <> "_agg"
+mkAggRelName (RelName r) = G.Name $ r <> "_aggregate"
 
 mkCompExpName :: PGColType -> G.Name
 mkCompExpName pgColTy =
@@ -180,11 +180,11 @@ mkTableTy =
 
 mkTableAggTy :: QualifiedTable -> G.NamedType
 mkTableAggTy tn =
-  G.NamedType $ qualTableToName tn <> "_agg"
+  G.NamedType $ qualTableToName tn <> "_aggregate"
 
 mkTableAggFldsTy :: QualifiedTable -> G.NamedType
 mkTableAggFldsTy tn =
-  G.NamedType $ qualTableToName tn <> "_agg_fields"
+  G.NamedType $ qualTableToName tn <> "_aggregate_fields"
 
 mkTableColAggFldsTy :: G.Name -> QualifiedTable -> G.NamedType
 mkTableColAggFldsTy op tn =
@@ -300,11 +300,11 @@ array_relationship(
   limit: Int
   offset: Int
 ):  [remote_table!]!
-array_relationship_agg(
+array_relationship_aggregate(
   where: remote_table_bool_exp
   limit: Int
   offset: Int
-):  remote_table_agg!
+):  remote_table_aggregate!
 object_relationship: remote_table
 
 -}
@@ -352,8 +352,8 @@ mkTableObj tn allowedFlds =
     desc = G.Description $ "columns and relationships of " <>> tn
 
 {-
-type table_agg {
-  agg: table_agg_fields
+type table_aggregate {
+  agg: table_aggregate_fields
   nodes: [table!]!
 }
 -}
@@ -366,13 +366,13 @@ mkTableAggObj tn =
     desc = G.Description $
       "aggregated selection of " <>> tn
 
-    aggFld = ObjFldInfo Nothing "agg" Map.empty $ G.toGT $
+    aggFld = ObjFldInfo Nothing "aggregate" Map.empty $ G.toGT $
              mkTableAggFldsTy tn
     nodesFld = ObjFldInfo Nothing "nodes" Map.empty $ G.toGT $
                G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
 
 {-
-type table_agg_fields{
+type table_aggregate_fields{
   count: Int
   sum: table_num_fields
 }
@@ -466,11 +466,11 @@ mkSelFldPKey tn cols =
 
 {-
 
-table_agg(
+table_aggregate(
   where: table_bool_exp
   limit: Int
   offset: Int
-): table_agg!
+): table_aggregate!
 
 -}
 mkAggSelFld
@@ -481,7 +481,7 @@ mkAggSelFld tn =
   where
     desc = G.Description $ "fetch aggregated fields from the table: "
            <>> tn
-    fldName = qualTableToName tn <> "_agg"
+    fldName = qualTableToName tn <> "_aggregate"
     args = fromInpValL $ mkSelArgs tn
     ty = G.toGT $ G.toNT $ mkTableAggTy tn
 

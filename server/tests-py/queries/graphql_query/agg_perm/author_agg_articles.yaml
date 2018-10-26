@@ -4,16 +4,16 @@ status: 200
 headers:
   X-Hasura-Role: user
 response:
-  data: 
-   author_agg: 
-    agg: 
+  data:
+   author_aggregate:
+    aggregate:
      count: 2
-     max: 
+     max:
       id: 2
-    nodes: 
+    nodes:
     - id: 1
       name: "Author 1"
-      articles: 
+      articles:
       - id: 1
         title: "Article 1"
         content: "Sample article content 1"
@@ -22,15 +22,15 @@ response:
         content: "Sample article content 2"
     - id: 2
       name: "Author 2"
-      articles: 
+      articles:
       - id: 3
         title: "Article 3"
         content: "Sample article content 3"
 query:
   query: |
     query {
-      author_agg{
-        agg{
+      author_aggregate{
+        aggregate{
           count
           max{
             id

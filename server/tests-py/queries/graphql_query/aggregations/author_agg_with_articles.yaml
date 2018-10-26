@@ -3,8 +3,8 @@ url: /v1alpha1/graphql
 status: 200
 response:
   data:
-    author_agg:
-      agg:
+    author_aggregate:
+      aggregate:
         count: 2
         sum:
           id: 3
@@ -19,8 +19,8 @@ response:
       nodes:
       - id: 1
         name: Author 1
-        articles_agg:
-          agg:
+        articles_aggregate:
+          aggregate:
             count: 2
             sum:
               id: 3
@@ -49,8 +49,8 @@ response:
             author_id: 1
       - id: 2
         name: Author 2
-        articles_agg:
-          agg:
+        articles_aggregate:
+          aggregate:
             count: 1
             sum:
               id: 3
@@ -77,8 +77,8 @@ response:
 query:
   query: |
    query author_aggregations{
-     author_agg{
-       agg{
+     author_aggregate{
+       aggregate{
          count
          sum{
            id
@@ -98,8 +98,8 @@ query:
        nodes{
          id
          name
-         articles_agg{
-           agg{
+         articles_aggregate{
+           aggregate{
              count
              sum{
                id

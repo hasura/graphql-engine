@@ -3,8 +3,8 @@ url: /v1alpha1/graphql
 status: 200
 response:
   data:
-    article_agg:
-      agg:
+    article_aggregate:
+      aggregate:
         count: 2
         sum:
           id: 5
@@ -96,8 +96,8 @@ response:
 query:
   query: |
    query{
-     article_agg(where: {id: {_gt: 1}}){
-       agg{
+     article_aggregate(where: {id: {_gt: 1}}){
+       aggregate{
          count
          sum{
            id

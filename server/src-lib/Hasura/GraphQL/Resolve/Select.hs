@@ -202,7 +202,7 @@ fromAggField fn tn permFilter permLimitM fld = fieldAsPath fld $ do
             fSelSet = _fSelSet f
         case _fName f of
           "__typename" -> return $ RS.TAFExp $ G.unName $ G.unNamedType ty
-          "agg"        -> RS.TAFAgg <$> convertAggFld fTy fSelSet
+          "aggregate"  -> RS.TAFAgg <$> convertAggFld fTy fSelSet
           "nodes"      -> RS.TAFNodes <$> fromSelSet fn fTy fSelSet
           G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 

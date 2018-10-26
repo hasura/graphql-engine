@@ -3,12 +3,12 @@ url: /v1alpha1/graphql
 status: 200
 response:
   data:
-    author_agg:
+    author_aggregate:
       nodes:
       - id: 1
         name: Author 1
-        articles_agg:
-          agg:
+        articles_aggregate:
+          aggregate:
             count: 2
             sum:
               id: 3
@@ -38,12 +38,12 @@ response:
 query:
   query: |
    query{
-     author_agg(where: {id: {_eq: 1}}){
+     author_aggregate(where: {id: {_eq: 1}}){
        nodes{
          id
          name
-         articles_agg(where: {id: {_lt: 3}}){
-           agg{
+         articles_aggregate(where: {id: {_lt: 3}}){
+           aggregate{
              count
              sum{
                id
