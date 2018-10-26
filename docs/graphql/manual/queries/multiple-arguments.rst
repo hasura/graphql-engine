@@ -14,7 +14,7 @@ For example, fetch a list of authors and only 2 of their published articles that
         name
         articles(
           where: {is_published: {_eq: true}},
-          order_by: published_on_desc,
+          order_by: {published_on: desc},
           limit: 2
         ) {
           id

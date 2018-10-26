@@ -54,7 +54,7 @@ buildTx userInfo gCtx fld = do
     roleName = userRole userInfo
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
-    orderByCtx = _gOrdByEnums gCtx
+    orderByCtx = _gOrdByCtx gCtx
     insCtxMap = _gInsCtxMap gCtx
 
     getOpCtx f =

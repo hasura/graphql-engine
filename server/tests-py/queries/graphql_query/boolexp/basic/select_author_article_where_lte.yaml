@@ -21,7 +21,7 @@ query:
     query {
       author (
       where: {id: {_lte: 2}}
-      order_by: id_desc
+      order_by: {id: desc}
       ) {
         id
         name
