@@ -53,7 +53,6 @@ import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Permission.Triggers
 import           Hasura.RQL.DML.Internal            (onlyPositiveInt)
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                (isXHasuraTxt)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
@@ -133,7 +132,7 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set) _) = withPathK "per
     vn = buildViewName tn rn PTInsert
 
     fetchHdr (String t) = bool Nothing (Just $ T.toLower t)
-                          $ isXHasuraTxt t
+                          $ isUserVar t
     fetchHdr _          = Nothing
 
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
