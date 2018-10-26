@@ -129,7 +129,9 @@ const createTableSql = () => {
     const sqlCreateExtension = 'CREATE EXTENSION IF NOT EXISTS pgcrypto;';
     let sqlCreateTable =
       'CREATE TABLE ' +
+      '"' +
       currentSchema +
+      '"' +
       '.' +
       '"' +
       state.tableName.trim() +
@@ -141,7 +143,9 @@ const createTableSql = () => {
     if (state.tableComment && state.tableComment !== '') {
       sqlCreateTable +=
         ' COMMENT ON TABLE ' +
+        '"' +
         currentSchema +
+        '"' +
         '.' +
         '"' +
         state.tableName.trim() +
@@ -177,7 +181,14 @@ const createTableSql = () => {
       args: upQueryArgs,
     };
     const sqlDropTable =
-      'DROP TABLE ' + currentSchema + '.' + '"' + state.tableName.trim() + '"';
+      'DROP TABLE ' +
+      '"' +
+      currentSchema +
+      '"' +
+      '.' +
+      '"' +
+      state.tableName.trim() +
+      '"';
     const downQuery = {
       type: 'bulk',
       args: [
