@@ -758,7 +758,7 @@ div.CodeMirror-lint-tooltip > * + * {
   background: rgb(255, 255, 255);
   border-radius: 4px;
   outline: none;
-  overflow: -webkit-paged-y;
+  // overflow: -webkit-paged-y;
 }
 .myOverlayClass {
   position: fixed;
@@ -828,6 +828,8 @@ div.CodeMirror-lint-tooltip > * + * {
 }
 .analysisWrapper {
   height: calc(100% - 30px);
+  position: relative;
+  width: 100%;
 }
 .topLevelNodesWrapper ul {
   -webkit-padding-start: 0px;
@@ -861,6 +863,8 @@ div.CodeMirror-lint-tooltip > * + * {
   color: #e2701a;
 }
 .plansWrapper {
+  height: 50%;
+  position: relative;
 }
 .plansTitle {
   padding: 10px 20px;
@@ -868,18 +872,57 @@ div.CodeMirror-lint-tooltip > * + * {
   color: #767e93;
   font-weight: 600;
 }
-.overflowAuto {
-  overflow: auto;
+
+.copyGenerated {
+  /*
+  position: fixed;
+  bottom: 51%;
+  right: 7%;
+  cursor: pointer;
+	*/
+  position: absolute;
+  bottom: 10px;
+  right: 15px;
+  cursor: pointer;
 }
+.copyExecution {
+  /*
+  position: fixed;
+  bottom: 10%;
+  right: 7%;
+  cursor: pointer;
+  */
+  position: absolute;
+  bottom: 10px;
+  right: 15px;
+  cursor: pointer;
+}
+.copyGenerated img,
+.copyExecution img {
+  width: 20px;
+  opacity: 0.6;
+}
+.copyGenerated img:hover,
+.copyExecution img:hover {
+  opacity: 1;
+}
+.copyGenerated:focus,
+.copyExecution:focus {
+  outline: none;
+}
+
 .codeBlock {
+  position: relative;
   padding: 10px 20px;
   width: 90%;
   background-color: rgb(253, 249, 237);
   margin: 20px;
+  margin-top: 20px;
   border-radius: 5px;
-  max-height: 150px;
+  max-height: calc(100% - 80px);
   overflow: auto;
   margin-top: 10px;
+  min-height: calc(100% - 80px);
 }
 
 .codeBlock pre {
@@ -895,6 +938,7 @@ div.CodeMirror-lint-tooltip > * + * {
   border: none;
   border-radius: 0;
   overflow: unset;
+  padding-bottom: 10px;
 }
 
 .codeBlock code {
@@ -904,6 +948,44 @@ div.CodeMirror-lint-tooltip > * + * {
 
 .graphiql-container .analyse-button-wrap {
   position: relative;
+}
+
+.copyTooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.copyTooltip .tooltiptext {
+  width: 40px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 14px;
+  position: absolute;
+  z-index: 1000000000;
+  right: -15px;
+  bottom: 30px;
+  opacity: 0;
+  -webkit-transition: opacity 0.3s;
+  transition: opacity 0.3s;
+}
+
+.copyTooltip .tooltiptext::after {
+  content: '';
+  position: absolute;
+  top: 32px;
+  right: 18px;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.copyTooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
 }
 /* BASICS */
 
