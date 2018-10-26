@@ -177,8 +177,7 @@ processJwt jwtCtx headers mUnAuthRole =
 
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
-      return $ UserInfo unAuthRole
-        $ Map.singleton userRoleHeader $ getRoleTxt unAuthRole
+      return $ mkUserInfo unAuthRole $ mkUserVars []
     missingAuthzHeader =
       throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
 
@@ -220,10 +219,9 @@ processAuthZHeader jwtCtx headers authzHeader = do
   metadata <- decodeJSON $ A.Object finalClaims
 
   -- delete the x-hasura-access-key from this map, and insert x-hasura-role
-  let hasuraMd = Map.insert userRoleHeader (getRoleTxt role) $
-        Map.delete accessKeyHeader metadata
+  let hasuraMd = Map.delete accessKeyHeader metadata
 
-  return $ UserInfo role hasuraMd
+  return $ mkUserInfo role $ mkUserVars $ Map.toList hasuraMd
 
   where
     parseAuthzHeader = do
