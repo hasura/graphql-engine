@@ -32,10 +32,21 @@ const defaultPermissionsState = {
   applySamePermissions: [],
 };
 
+const defaultInsertSetState = {
+  key: '',
+  value: '',
+};
 const defaultQueryPermissions = {
   insert: {
     check: {},
     allow_upsert: true,
+    set: {},
+    localSet: [
+      {
+        ...defaultInsertSetState,
+      },
+    ],
+    isSetConfigChecked: false,
   },
   select: {
     columns: [],
@@ -135,4 +146,5 @@ export {
   defaultModifyState,
   defaultPermissionsState,
   defaultQueryPermissions,
+  defaultInsertSetState,
 };

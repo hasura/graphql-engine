@@ -61,6 +61,7 @@ module Hasura.RQL.Types.SchemaCache
        , DelPermInfo(..)
        , addPermToCache
        , delPermFromCache
+       , InsSetCols
 
        , QueryTemplateInfo(..)
        , addQTemplateToCache
@@ -275,11 +276,17 @@ isPGColInfo _            = False
 instance ToJSON S.BoolExp where
   toJSON = String . T.pack . show
 
+instance ToJSON S.SQLExp where
+  toJSON = String . T.pack . show
+
+type InsSetCols = M.HashMap PGCol S.SQLExp
+
 data InsPermInfo
   = InsPermInfo
   { ipiView            :: !QualifiedTable
   , ipiCheck           :: !S.BoolExp
   , ipiAllowUpsert     :: !Bool
+  , ipiSet             :: !InsSetCols
   , ipiDeps            :: ![SchemaDependency]
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
