@@ -1,0 +1,134 @@
+description: Select aggregations and nodes of author table along with aggregations and nodes of it's articles
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    author_aggregate:
+      aggregate:
+        count: 2
+        sum:
+          id: 3
+        avg:
+          id: 1.5
+        max:
+          id: 2
+          name: Author 2
+        min:
+          id: 1
+          name: Author 1
+      nodes:
+      - id: 1
+        name: Author 1
+        articles_aggregate:
+          aggregate:
+            count: 2
+            sum:
+              id: 3
+              author_id: 2
+            avg:
+              id: 1.5
+              author_id: 1
+            max:
+              id: 2
+              title: Article 2
+              content: Sample article content 2
+              author_id: 1
+            min:
+              id: 1
+              title: Article 1
+              content: Sample article content 1
+              author_id: 1
+          nodes:
+          - id: 1
+            title: Article 1
+            content: Sample article content 1
+            author_id: 1
+          - id: 2
+            title: Article 2
+            content: Sample article content 2
+            author_id: 1
+      - id: 2
+        name: Author 2
+        articles_aggregate:
+          aggregate:
+            count: 1
+            sum:
+              id: 3
+              author_id: 2
+            avg:
+              id: 3
+              author_id: 2
+            max:
+              id: 3
+              title: Article 3
+              content: Sample article content 3
+              author_id: 2
+            min:
+              id: 3
+              title: Article 3
+              content: Sample article content 3
+              author_id: 2
+          nodes:
+          - id: 3
+            title: Article 3
+            content: Sample article content 3
+            author_id: 2
+
+query:
+  query: |
+   query author_aggregations{
+     author_aggregate{
+       aggregate{
+         count
+         sum{
+           id
+         }
+         avg{
+           id
+         }
+         max{
+           id
+           name
+         }
+         min{
+           id
+           name
+         }
+       }
+       nodes{
+         id
+         name
+         articles_aggregate{
+           aggregate{
+             count
+             sum{
+               id
+               author_id
+             }
+             avg{
+               id
+               author_id
+             }
+             max{
+               id
+               title
+               content
+               author_id
+             }
+             min{
+               id
+               title
+               content
+               author_id
+             }
+           }
+           nodes{
+             id
+             title
+             content
+             author_id
+           }
+         }
+       }
+     }
+   }

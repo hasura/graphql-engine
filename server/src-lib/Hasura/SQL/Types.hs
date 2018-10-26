@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE DeriveLift                 #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
 module Hasura.SQL.Types where
@@ -9,36 +10,32 @@ import qualified Database.PG.Query          as Q
 import qualified Database.PG.Query.PTI      as PTI
 
 import           Hasura.Prelude
-import           Hasura.Server.Utils        (bsToTxt)
 
 import           Data.Aeson
 import           Data.Aeson.Encoding        (text)
+import           Data.String                (fromString)
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.ByteString.Builder    as BB
-import qualified Data.ByteString.Lazy       as BL
-import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Extended         as T
 import qualified Database.PostgreSQL.LibPQ  as PQ
+import qualified PostgreSQL.Binary.Decoding as PD
+import qualified Text.Builder               as TB
 
 class ToSQL a where
-  toSQL :: a -> BB.Builder
+  toSQL :: a -> TB.Builder
 
-instance ToSQL BB.Builder where
+instance ToSQL TB.Builder where
   toSQL x = x
 
--- instance ToSQL T.Text where
---   toSQL x = TE.encodeUtf8Builder x
-
 toSQLTxt :: (ToSQL a) => a -> T.Text
-toSQLTxt = bsToTxt . BL.toStrict . BB.toLazyByteString . toSQL
+toSQLTxt = TB.run . toSQL
 
 infixr 6 <+>
-(<+>) :: (ToSQL a) => T.Text -> [a] -> BB.Builder
+(<+>) :: (ToSQL a) => T.Text -> [a] -> TB.Builder
 (<+>) _ [] = mempty
 (<+>) kat (x:xs) =
-  toSQL x <> mconcat [ TE.encodeUtf8Builder kat <> toSQL x' | x' <- xs ]
+  toSQL x <> mconcat [ TB.text kat <> toSQL x' | x' <- xs ]
 {-# INLINE (<+>) #-}
 
 newtype Iden
@@ -47,7 +44,7 @@ newtype Iden
 
 instance ToSQL Iden where
   toSQL (Iden t) =
-    TE.encodeUtf8Builder $ pgFmtIden t
+    TB.text $ pgFmtIden t
 
 class IsIden a where
   toIden :: a -> Iden
@@ -106,6 +103,34 @@ instance DQuote TableName where
 instance ToSQL TableName where
   toSQL = toSQL . toIden
 
+data TableType
+  = TTBaseTable
+  | TTView
+  | TTForeignTable
+  | TTLocalTemporary
+  deriving (Eq)
+
+tableTyToTxt :: TableType -> T.Text
+tableTyToTxt TTBaseTable      = "BASE TABLE"
+tableTyToTxt TTView           = "VIEW"
+tableTyToTxt TTForeignTable   = "FOREIGN TABLE"
+tableTyToTxt TTLocalTemporary = "LOCAL TEMPORARY"
+
+instance Show TableType where
+  show = T.unpack . tableTyToTxt
+
+instance Q.FromCol TableType where
+  fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
+    "BASE TABLE"      -> Just TTBaseTable
+    "VIEW"            -> Just TTView
+    "FOREIGN TABLE"   -> Just TTForeignTable
+    "LOCAL TEMPORARY" -> Just TTLocalTemporary
+    _                 -> Nothing
+
+isView :: TableType -> Bool
+isView TTView = True
+isView _      = False
+
 newtype ConstraintName
   = ConstraintName { getConstraintTxt :: T.Text }
   deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
@@ -162,13 +187,17 @@ instance Hashable QualifiedTable
 
 instance ToSQL QualifiedTable where
   toSQL (QualifiedTable sn tn) =
-    toSQL sn <> BB.string7 "." <> toSQL tn
+    toSQL sn <> "." <> toSQL tn
 
 qualTableToTxt :: QualifiedTable -> T.Text
 qualTableToTxt (QualifiedTable (SchemaName "public") tn) =
   getTableTxt tn
 qualTableToTxt (QualifiedTable sn tn) =
   getSchemaTxt sn <> "." <> getTableTxt tn
+
+snakeCaseTable :: QualifiedTable -> T.Text
+snakeCaseTable (QualifiedTable sn tn) =
+  getSchemaTxt sn <> "_" <> getTableTxt tn
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
@@ -234,7 +263,7 @@ instance ToJSON PGColType where
   toJSON pct = String $ T.pack $ show pct
 
 instance ToSQL PGColType where
-  toSQL pct = BB.string7 $ show pct
+  toSQL pct = fromString $ show pct
 
 instance FromJSON PGColType where
   parseJSON (String "serial")      = return PGSerial
@@ -316,6 +345,21 @@ isIntegerType PGSmallInt = True
 isIntegerType PGBigInt   = True
 isIntegerType _          = False
 
+isNumType :: PGColType -> Bool
+isNumType PGFloat   = True
+isNumType PGDouble  = True
+isNumType PGNumeric = True
+isNumType ty        = isIntegerType ty
+
 isJSONBType :: PGColType -> Bool
 isJSONBType PGJSONB = True
 isJSONBType _       = False
+
+isComparableType :: PGColType -> Bool
+isComparableType PGJSON        = False
+isComparableType PGJSONB       = False
+isComparableType PGGeometry    = False
+isComparableType PGGeography   = False
+isComparableType PGBoolean     = False
+isComparableType (PGUnknown _) = False
+isComparableType _             = True

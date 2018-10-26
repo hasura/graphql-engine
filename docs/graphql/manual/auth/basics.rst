@@ -1,14 +1,13 @@
 Access control basics
 =====================
 
-In this section, we're going to setup a simple access control rule for restricting querying on a table.
-We're working with a simple author table where users have some information stored about themselves in the
-``author`` table.
+In this section, we're going to set up a simple access control rule for restricting querying on a table.
+We're working with a simple ``author`` table where users have some information stored about themselves.
 
-Create a author table
----------------------
+Create an author table
+----------------------
 
-Head to your console and create the ``author`` table the following columns:
+Head to your console and create an ``author`` table with the following columns:
 
 +----------+--------+
 |      id  | integer|
@@ -53,7 +52,7 @@ accepted with admin permissions.
 Add a simple access control rule for a logged in user
 -----------------------------------------------------
 
-Let's say for our app, logged in users are only allowed to fetch their own data.
+Let's say that for our app, logged in users are only allowed to fetch their own data.
 
 Let's add a **select** permission for the **user** role on the ``author`` table:
 
@@ -80,12 +79,12 @@ Let's add a **select** permission for the **user** role on the ``author`` table:
             }
           }
 
-Now, let's make the same query as above but include the 2 dynamic authorization variables via request headers.
-``X-Hasura-Role`` and ``X-Hasura-User-Id`` which will automatically get used according to the permission rule we set up.
+Now, let's make the same query as above but also include two dynamic authorization variables via request headers.
+``X-Hasura-Role`` and ``X-Hasura-User-Id`` will automatically get used according to the permission rule we set up.
 
 .. image:: ../../../img/graphql/manual/auth/query-with-perms.png
 
-You can notice above, how the same query now only includes the right slice of data.
+You can notice above how the same query now only includes the right slice of data.
 
 .. _restrict_columns:
 
@@ -103,8 +102,7 @@ Head to the ``Permissions`` tab of the table and edit the ``Select`` permissions
 Limit number of rows returned in a single request
 -------------------------------------------------
 
-We can set a hard limit on the maximum number of rows that will be returned in a single request for a table for a
-particular role.
+We can set a hard limit on the maximum number of rows that will be returned in a single request for a table for a particular role.
 
 Head to the ``Permissions`` tab of the table and edit the ``Select`` permissions for the role:
 

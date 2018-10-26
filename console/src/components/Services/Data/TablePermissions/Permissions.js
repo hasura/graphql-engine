@@ -20,6 +20,7 @@ import {
   permSetRoleName,
   permChangePermissions,
   permToggleAllowUpsert,
+  permToggleAllowAggregation,
   permToggleModifyLimit,
   permCustomChecked,
   permRemoveRole,
@@ -31,15 +32,67 @@ import {
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from '../TableBrowseRows/ViewHeader';
-import { setTable } from '../DataActions';
+import { setTable, fetchViewInfoFromInformationSchema } from '../DataActions';
 import { getIngForm, escapeRegExp } from '../utils';
 import { legacyOperatorsMap } from './PermissionBuilder/utils';
+import semverCheck from '../../../../helpers/semver';
 
 class Permissions extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {};
+    this.state.viewInfo = {};
+    this.state.showAggregation = false;
+  }
   componentDidMount() {
+    if (this.props.serverVersion) {
+      this.checkSemVer(this.props.serverVersion);
+    }
     this.props.dispatch({ type: RESET });
 
+    const currentSchema = this.props.allSchemas.find(
+      t => t.table_name === this.props.tableName
+    );
+
+    if (!currentSchema) {
+      alert('Invalid schema');
+      return;
+    }
+
     this.props.dispatch(setTable(this.props.tableName));
+    this.props
+      .dispatch(
+        fetchViewInfoFromInformationSchema(
+          currentSchema.table_schema,
+          this.props.tableName
+        )
+      )
+      .then(r => {
+        if (r.length > 0) {
+          this.setState({ ...this.state, viewInfo: r[0] });
+        }
+      });
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.serverVersion !== this.props.serverVersion) {
+      this.checkSemVer(nextProps.serverVersion);
+    }
+  }
+
+  checkSemVer(version) {
+    let showAggregation = false;
+    try {
+      showAggregation = semverCheck('aggregationPerm', version);
+      if (showAggregation) {
+        this.setState({ ...this.state, showAggregation: true });
+      } else {
+        this.setState({ ...this.state, showAggregation: false });
+      }
+    } catch (e) {
+      console.log(e);
+      this.setState({ ...this.state, showAggregation: false });
+    }
   }
 
   render() {
@@ -56,13 +109,33 @@ class Permissions extends Component {
       migrationMode,
       currentSchema,
     } = this.props;
+    const { showAggregation } = this.state;
     const styles = require('../TableModify/Modify.scss');
 
     let qTypes;
     if (tableType === 'table') {
       qTypes = ['insert', 'select', 'update', 'delete'];
     } else if (tableType === 'view') {
-      qTypes = ['select'];
+      qTypes = [];
+      // Add insert/update permission if it is insertable/updatable as returned by pg
+      if (
+        this.state.viewInfo &&
+        'is_insertable_into' in this.state.viewInfo &&
+        this.state.viewInfo.is_insertable_into === 'YES'
+      ) {
+        qTypes.push('insert');
+      }
+
+      qTypes.push('select');
+
+      if (
+        this.state.viewInfo &&
+        'is_updatable' in this.state.viewInfo &&
+        this.state.viewInfo.is_updatable === 'YES'
+      ) {
+        qTypes.push('update');
+        qTypes.push('delete');
+      }
     }
 
     const tSchema = allSchemas.find(t => t.table_name === tableName);
@@ -379,6 +452,34 @@ class Permissions extends Component {
       </div>
     );
 
+    const getViewPermissionNote = () => {
+      let showNote = false;
+      if (
+        tableType === 'view' &&
+        !(
+          this.state.viewInfo &&
+          'is_insertable_into' in this.state.viewInfo &&
+          this.state.viewInfo.is_insertable_into === 'YES'
+        ) &&
+        !(
+          this.state.viewInfo &&
+          'is_updatable' in this.state.viewInfo &&
+          this.state.viewInfo.is_updatable === 'YES'
+        )
+      ) {
+        showNote = true;
+      }
+
+      return showNote ? (
+        <div className={styles.permissionsLegend}>
+          <i className="fa fa-question-circle" aria-hidden="true" />
+          &nbsp; You cannot insert/update into this view
+        </div>
+      ) : (
+        ''
+      );
+    };
+
     const getPermissionsTable = (tableSchema, queryTypes, permsState) => {
       const permissionsSymbols = {
         // <i className="fa fa-star" aria-hidden="true"/>
@@ -394,6 +495,7 @@ class Permissions extends Component {
       return (
         <div>
           {getPermissionsLegend(permissionsSymbols)}
+          {getViewPermissionNote()}
           <table className={`table table-bordered ${styles.permissionsTable}`}>
             {getPermissionsTableHead(queryTypes)}
             {getPermissionsTableBody(
@@ -452,6 +554,60 @@ class Permissions extends Component {
       }
 
       return _upsertSection;
+    };
+
+    const getAggregationSection = permsState => {
+      let _aggregationSection = '';
+      const query = permsState.query;
+
+      if (query === 'select') {
+        const dispatchToggleAllowAggregation = checked => {
+          dispatch(permToggleAllowAggregation(checked));
+        };
+
+        const aggregationAllowed = permsState.select
+          ? permsState.select.allow_aggregations
+          : false;
+
+        // Aggregation Tooltip
+        const aggregationToolTip = (
+          <Tooltip id="tooltip-aggregation">
+            Allow queries with aggregate functions like sum, count, avg, max,
+            min, etc
+          </Tooltip>
+        );
+
+        // TODO: Fix the controlled component
+        _aggregationSection = (
+          <div className={styles.mar_small_neg_left_1}>
+            <div className="radio">
+              <label>
+                <input
+                  type="checkbox"
+                  disabled={!permsState.select}
+                  checked={aggregationAllowed}
+                  value="toggle_aggregation"
+                  onClick={e =>
+                    dispatchToggleAllowAggregation(e.target.checked)
+                  }
+                />
+                <span className={styles.mar_small_left}>
+                  Allow role '{permsState.role}' to make aggregation queries
+                  &nbsp;
+                  <OverlayTrigger
+                    placement="right"
+                    overlay={aggregationToolTip}
+                  >
+                    <i className="fa fa-question-circle" aria-hidden="true" />
+                  </OverlayTrigger>
+                </span>
+              </label>
+            </div>
+          </div>
+        );
+      }
+
+      return _aggregationSection;
     };
 
     const getColumnList = (tableSchema, permsState) => {
@@ -893,6 +1049,7 @@ class Permissions extends Component {
         <div>
           {getRowSection(queryTypes, permsState)}
           {getColumnSection(tableSchema, permsState)}
+          {showAggregation ? getAggregationSection(permsState) : null}
           {getLimitSection(permsState)}
           {getUpsertSection(permsState)}
           {getButtonsSection(tableSchema, permsState)}
@@ -1034,6 +1191,7 @@ const mapStateToProps = (state, ownProps) => ({
   allSchemas: state.tables.allSchemas,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
+  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   ...state.tables.modify,
 });
 
