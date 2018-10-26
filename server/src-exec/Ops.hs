@@ -31,7 +31,7 @@ import qualified Database.PG.Query.Connection as Q
 import qualified Network.HTTP.Client          as HTTP
 
 curCatalogVer :: T.Text
-curCatalogVer = "3"
+curCatalogVer = "4"
 
 initCatalogSafe :: UTCTime -> HTTP.Manager -> Q.TxE QErr String
 initCatalogSafe initTime httpMgr =  do
@@ -190,6 +190,10 @@ from2To3 = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "CREATE INDEX ON hdb_catalog.event_log (trigger_id)" () False
   Q.unitQ "CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id)" () False
 
+from3To4 :: Q.TxE QErr ()
+from3To4 = Q.multiQE defaultTxErrorHandler
+             $(Q.sqlFromFile "src-rsr/migrate_from_3.sql")
+
 migrateCatalog :: HTTP.Manager -> UTCTime -> Q.TxE QErr String
 migrateCatalog httpMgr migrationTime = do
   preVer <- getCatalogVersion
@@ -198,12 +202,17 @@ migrateCatalog httpMgr migrationTime = do
      | preVer == "0.8" -> from08ToCurrent
      | preVer == "1"   -> from1ToCurrent
      | preVer == "2"   -> from2ToCurrent
+     | preVer == "3"   -> from3ToCurrent
      | otherwise -> throw400 NotSupported $
                     "migrate: unsupported version : " <> preVer
   where
+    from3ToCurrent = do
+      from3To4
+      postMigrate
+
     from2ToCurrent = do
       from2To3
-      postMigrate
+      from3ToCurrent
 
     from1ToCurrent = do
       from1To2 httpMgr
