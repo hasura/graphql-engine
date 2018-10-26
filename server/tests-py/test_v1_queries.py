@@ -195,19 +195,20 @@ class TestV1InsertOnConflict(DefaultTestQueries):
         check_query_f(hge_ctx, self.dir() + '/upsert_author.yaml')
 
     def test_on_conflict_no_action_specified(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/article_on_conflict_no_action_specified.yaml")
+        check_query_f(hge_ctx, self.dir() + "/article_on_conflict_no_action_specified.yaml")
 
     def test_on_conflict_ignore(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/article_on_conflict_ignore_constraint.yaml")
+        check_query_f(hge_ctx, self.dir() + "/article_on_conflict_ignore_constraint.yaml")
+        hge_ctx.may_skip_test_teardown = True
 
     def test_err_missing_article_constraint(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/article_on_conflict_error_missing_article_constraint.yaml")
+        check_query_f(hge_ctx, self.dir() + "/article_on_conflict_error_missing_article_constraint.yaml")
 
     def test_err_unexpected_action(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/article_unexpected_on_conflict_action.yaml")
+        check_query_f(hge_ctx, self.dir() + "/article_unexpected_on_conflict_action.yaml")
 
     def test_err_unexpected_constraint(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/article_unexpected_on_conflict_constraint_error.yaml")
+        check_query_f(hge_ctx, self.dir() + "/article_unexpected_on_conflict_constraint_error.yaml")
 
     @classmethod
     def dir(cls):
@@ -221,6 +222,7 @@ class TestV1InsertPermissions(DefaultTestQueries):
 
     def test_user_role_on_conflict_ignore(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_on_conflict_ignore_user_role.yaml")
+        hge_ctx.may_skip_test_teardown = True
 
     def test_role_has_no_permissions_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/address_permission_error.yaml")
@@ -279,13 +281,16 @@ class TestV1UpdatePermissions(DefaultTestQueries):
        check_query_f(hge_ctx, self.dir() + "/user_can_update_unpublished_article.yaml")
 
     def test_user_cannot_update_published_version_col(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/user_cannot_update_published_article_version.yaml")
+        check_query_f(hge_ctx, self.dir() + "/user_cannot_update_published_article_version.yaml")
+        hge_ctx.may_skip_test_teardown = True
 
     def test_user_cannot_update_another_users_article(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/user_cannot_update_another_users_article.yaml")
+        check_query_f(hge_ctx, self.dir() + "/user_cannot_update_another_users_article.yaml")
+        hge_ctx.may_skip_test_teardown = True
 
     def test_user_cannot_update_id_col(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/user_cannot_update_id_col_article.yaml")
+        check_query_f(hge_ctx, self.dir() + "/user_cannot_update_id_col_article.yaml")
+        hge_ctx.may_skip_test_teardown = True
 
     @classmethod
     def dir(cls):
@@ -369,11 +374,13 @@ class TestRunSQL(DefaultTestQueries):
 
     def test_select_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_select_query.yaml')
+        hge_ctx.may_skip_test_teardown = True
 
     def test_set_timezone(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_set_timezone.yaml')
+        hge_ctx.may_skip_test_teardown = True
 
-    def test_sql_timezone__error(self, hge_ctx):
+    def test_sql_timezone_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_set_timezone_error.yaml')
 
     def test_sql_query_as_user_error(self, hge_ctx):
@@ -425,9 +432,11 @@ class TestTrackTables(DefaultTestQueries):
 
     def test_track_untrack_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_untrack_table.yaml')
+        hge_ctx.may_skip_test_teardown = True
 
     def test_track_untrack_table_non_public_schema(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_untrack_table_non_public_schema.yaml')
+        hge_ctx.may_skip_test_teardown = True
 
     def test_track_untrack_table_as_not_admin_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_untrack_table_as_not_admin_error.yaml')
