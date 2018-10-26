@@ -103,15 +103,15 @@ data AggFld
 
 type AggFlds = [(T.Text, AggFld)]
 
-data SelFld
-  = SFAggFld !AggFlds
-  | SFNodes ![(FieldName, AnnFld)]
-  | SFExp !T.Text
+data TableAggFld
+  = TAFAgg !AggFlds
+  | TAFNodes ![(FieldName, AnnFld)]
+  | TAFExp !T.Text
   deriving (Show, Eq)
 
 data AnnSelFields
   = ASFSimple ![(FieldName, AnnFld)]
-  | ASFWithAgg ![(T.Text, SelFld)]
+  | ASFWithAgg ![(T.Text, TableAggFld)]
   deriving (Show, Eq)
 
 fetchAnnFlds :: AnnSelFields -> [(FieldName, AnnFld)]
@@ -119,7 +119,7 @@ fetchAnnFlds (ASFSimple flds) = flds
 fetchAnnFlds (ASFWithAgg aggFlds) =
   concatMap (fromAggFld . snd) aggFlds
   where
-    fromAggFld (SFNodes f) = f
+    fromAggFld (TAFNodes f) = f
     fromAggFld _           = []
 
 data TableFrom
@@ -159,7 +159,7 @@ data BaseNode
 
 data AggBaseNode
   = AggBaseNode
-  { _abnFields :: ![(T.Text, SelFld)]
+  { _abnFields :: ![(T.Text, TableAggFld)]
   , _abnNode   :: !BaseNode
   } deriving (Show, Eq)
 
@@ -228,30 +228,32 @@ annNodeToSel opts joinCond als = \case
         baseSelFrom = S.mkSelFromItem (bnToSel bn) (mkAliasFromBN bn)
         ordBy = _bnOrderBy bn
     in S.mkSelect
-                 { S.selExtr = [ flip S.Extractor (Just als) $
-                                 S.applyJsonBuildObj $
-                                 concatMap (selFldToExtr pfx ordBy) flds
-                               ]
-                 , S.selFrom = Just $ S.FromExp [baseSelFrom]
-                 }
+       { S.selExtr = [ flip S.Extractor (Just als) $
+                       S.applyJsonBuildObj $
+                       concatMap (selFldToExtr pfx ordBy) flds
+                     ]
+       , S.selFrom = Just $ S.FromExp [baseSelFrom]
+       }
   where
     AnnNodeToSelOpts singleObj isObjRel = opts
     bnToSel = baseNodeToSel joinCond
     mkAliasFromBN = S.Alias . _bnPrefix
-    asJsonAggSel n = let ordByM = _bnOrderBy n
-                         fromItem = S.mkSelFromItem (bnToSel n) $
-                           mkAliasFromBN n
-                     in bool (withJsonAgg ordByM als fromItem)
-                             (asSingleRow als fromItem)
-                             singleObj
+    asJsonAggSel n =
+      let ordByM = _bnOrderBy n
+          fromItem = S.mkSelFromItem (bnToSel n) $
+                     mkAliasFromBN n
+      in bool
+         (withJsonAgg ordByM als fromItem)
+         (asSingleRow als fromItem)
+         singleObj
 
     selFldToExtr pfx ordBy (t, fld) = (:) (S.SELit t) $ pure $ case fld of
-      SFAggFld aggFlds ->
+      TAFAgg aggFlds ->
         aggFldToExp pfx aggFlds
-      SFNodes _ ->
+      TAFNodes _ ->
         let jsonAgg = S.SEFnApp "json_agg" [S.SEIden $ Iden t] ordBy
         in S.SEFnApp "coalesce" [jsonAgg, S.SELit "[]"] Nothing
-      SFExp e ->
+      TAFExp e ->
         -- bool_or to force aggregation
         S.SEFnApp "coalesce"
         [ S.SELit e , S.SEUnsafe "bool_or('true')::text"] Nothing
@@ -405,7 +407,7 @@ mkEmptyBaseNode pfx tableFrom =
 mkBaseNode
   :: Iden
   -> FieldName
-  -> SelFld
+  -> TableAggFld
   -> TableFrom
   -> TablePerm
   -> TableArgs
@@ -418,7 +420,7 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
     TablePerm fltr permLimitM = tablePerm
     TableArgs whereM orderByM limitM offsetM = tableArgs
     (allExtrs, allObjsWithOb, allArrs) = case annSelFlds of
-      SFNodes flds ->
+      TAFNodes flds ->
         let selExtr = buildJsonObject pfx fldAls flds
             -- all the relationships
             (allObjs, allArrRels) =
@@ -426,18 +428,18 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
               mapMaybe (\(als, f) -> (als,) <$> getAnnRel f) flds
             allObjRelsWithOb =
               foldl' (\objs (rn, relNode) -> HM.insertWith mergeRelNodes rn relNode objs)
-                                         allObjs $ catMaybes $ maybe [] _3 procOrdByM
+              allObjs $ catMaybes $ maybe [] _3 procOrdByM
         in ( HM.fromList $ selExtr:obExtrs
            , allObjRelsWithOb
            , allArrRels
            )
-      SFAggFld aggFlds ->
+      TAFAgg aggFlds ->
         let extrs = concatMap (fetchExtrFromAggFld . snd) aggFlds
         in ( HM.fromList $ extrs <> obExtrs
            , HM.empty
            , HM.empty
            )
-      SFExp _ -> (HM.fromList obExtrs, HM.empty, HM.empty)
+      TAFExp _ -> (HM.fromList obExtrs, HM.empty, HM.empty)
 
     fetchExtrFromAggFld AFCount         = []
     fetchExtrFromAggFld (AFSum sumFlds) = colFldsToExps sumFlds
@@ -494,7 +496,7 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
 annSelToAnnNode :: Iden -> FieldName -> AnnSel -> AnnNode
 annSelToAnnNode pfx fldAls annSel =
   case selFlds of
-    ASFSimple flds -> ANSimple $ mkBaseNode pfx fldAls (SFNodes flds)
+    ASFSimple flds -> ANSimple $ mkBaseNode pfx fldAls (TAFNodes flds)
       tabFrm tabPerm tabArgs
     ASFWithAgg aggFlds ->
       let allBNs = map mkAggBaseNode aggFlds
