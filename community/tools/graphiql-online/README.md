@@ -1,6 +1,8 @@
 ## GraphiQL Demo
 
-This version of GraphiQL is a fork of the original version with a simple header management UI and a fix for subscription.
+This version of GraphiQL is a fork of the original version with a simple header management UI.
+
+You can access it live here - https://graphiql-online.com
 
 ## Usage of Environment Variables
 
