@@ -55,7 +55,7 @@ mkAdminRolePermInfo ti =
       . map fieldInfoToEither . M.elems $ tiFieldInfoMap ti
 
     tn = tiName ti
-    i = InsPermInfo tn (S.BELit True) True [] []
+    i = InsPermInfo tn (S.BELit True) True M.empty [] []
     s = SelPermInfo (HS.fromList pgCols) tn (S.BELit True) Nothing True [] []
     u = UpdPermInfo (HS.fromList pgCols) tn (S.BELit True) [] []
     d = DelPermInfo tn (S.BELit True) [] []
@@ -281,6 +281,8 @@ simplifyError txErr = do
         return (ConstraintError, "there is no unique or exclusion constraint on target column(s)")
       -- no constraint
       ("42704", msg) -> return (ConstraintError, msg)
+      -- invalid input values
+      ("22007", msg) -> return (DataException, msg)
       _              -> Nothing
 
 -- validate limit and offset int values

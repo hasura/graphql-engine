@@ -205,7 +205,6 @@ getDependentHeaders boolExp = case boolExp of
                              then parseOnlyString v
                              else []
 
-
 valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
 valueParser columnType = \case
   -- When it is a special variable
