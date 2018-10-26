@@ -8,30 +8,65 @@ Sample JWT Authentication server for generating a JWT to use in the `Authenticat
 
 #### Local Prerequisites
 
--   PostgreSQL
--   Node.js 8.9+
+-   PostgreSQL up and accepting connections
+-   Hasura GraphQL engine up and accepting connections
+-   Node.js 8.9+ installed
 
 #### Local instructions
 
+Clone the Hasura Graph QL repository
+
 ```bash
-# Clone the repo
 git clone https://github.com/hasura/graphql-engine
+```
 
-# Change directory
-cd graphql-engine/community/boilerplates/auth-webhooks/jwt-passport-js
+Change directory to the JWT authentication server project root
 
-# Install NPM dependencies
+```bash
+cd graphql-engine/community/boilerplates/jwt-authentication-server
+```
+
+Install NPM dependencies
+
+```bash
 npm install
+```
 
-# Set DATABASE_URL env
+Set DATABASE_URL env
+
+```bash
 export DATABASE_URL=postgres://<username>:<password>@<host>:<port>/<database_name>
+```
 
-# Apply migrations
-# (Note) this step creates a "users" table in the database
-knex migrate:latest
+Apply migrations via the Hasura GraphQL engine console _or_ via the CLI
 
-# Then start your app
-ENCRYPTION_KEY=<put your secret key here> npm start
+##### CLI method
+
+First install the Hasura CLI using the instructions here <https://docs.hasura.io/1.0/graphql/manual/hasura-cli/install-hasura-cli.html>
+
+When the CLI is available set the endpoint of the running graphQL engine and run the migrations.
+
+```bash
+echo "endpoint: http://auth-graphql-engine:8080" > config.yaml
+hasura migrate apply
+```
+
+##### Add user schema manually
+
+Use the instructions <https://docs.hasura.io/1.0/graphql/manual/index.html> add a `users` table with the following fields using the console
+
+| name       | type    | nullable | unique | default | primary |
+| ---------- | ------- | -------- | ------ | ------- | ------- |
+| id         | Integer | no       | yes    |         | yes     |
+| username   | Text    | no       | yes    |         | no      |
+| password   | Text    | no       | no     |         | no      |
+| token      | Text    | no       | no     |         | no      |
+| created_at | Date    | no       | no     | now()   |         |
+
+Then start your app
+
+```bash
+    ENCRYPTION_KEY=<put your secret key here> npm start
 ```
 
 ### Deploy with Docker
@@ -42,7 +77,7 @@ ENCRYPTION_KEY=<put your secret key here> npm start
 
 #### Docker instructions
 
-To understand fully how to use JWT for authentication there is a docker-compose file in the project root that will start a JWT authentication server and the Hasura GraphQL engine.
+To understand fully how to use JWT for authentication there is a docker-compose file in the project root that will start a JWT authentication server, an authentication database, and authentication GraphQL engine and an a GraphQL engine protected by JWT authentication.
 
 From the project root configure and start the docker containers
 
@@ -54,32 +89,9 @@ Follow the `usage` instructions below to set up a user and get a token, add this
 
 The JWT auth server located <http://localhost:8080>
 
-The GraphQL engine console located at <http://localhost:8081>
+The GraphQL engine console for the JWT protected app located at <http://localhost:8081>
 
-### Deploy with Heroku
-
-```bash
- # Create heroku app
- heroku create <app-name>
-
- # Create PostgreSQL addon
- heroku addons:create heroku-postgresql:hobby-dev -a <app-name>
-
- # Add git remote
- git remote add heroku https://git.heroku.com/<app-name>.git
-
- # Push changes to heroku
- # Note: You need to run this command from the toplevel of the working tree (graphql-enginej)
- git subtree push --prefix community/boilerplates/auth-webhooks/passport-js heroku master
-
- heroku config:get GITHUB_USERNAME
-
- heroku config:set ENCRYPTION_KEY=<put your secret key here>
-
- # Apply migrations
-# (Note) this step creates a "users" table in the database
- heroku run knex migrate:latest
-```
+The GraphQL engine console for the authentication database located at <http://localhost:8081>
 
 ## Usage
 
@@ -122,7 +134,7 @@ On success, we get the response:
 
 The GraphQL engine comes with built in JWT authentication.  You will need to start the engine with the same secret/key as the JWT auth server using the environment variable `HASURA_GRAPHQL_JWT_SECRET` (HASURA_GRAPHQL_ACCESS_KEY is also required see the docs)
 
-In your GraphQL engine you will need to add permissions for a user named `user` with read permissions on a table.
+In your GraphQL engine you will need to add permissions for a user named `user` with read permissions on the table and columns.
 
 A sample CURL command using the above token would be:
 

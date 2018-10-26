@@ -11,9 +11,23 @@ services:
       - "8080:8080"
     depends_on:
       - "postgres_auth"
+      - "auth-graphql-engine"
     environment:
       ENCRYPTION_KEY: TlAhvbFyklCGJZLduCvAcwDD5EGMVqiH
       DATABASE_URL: postgres://postgres:@postgres_auth:5432/postgres
+  auth-graphql-engine:
+    image: hasura/graphql-engine:v1.0.0-alpha25
+    ports:
+    - "8082:8080"
+    depends_on:
+    - "postgres_auth"
+    restart: always
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:@postgres_auth:5432/postgres
+    command:
+      - graphql-engine
+      - serve
+      - --enable-console
   postgres:
     image: postgres
     restart: always

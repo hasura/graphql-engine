@@ -1,0 +1,9 @@
+- args:
+    sql: CREATE TABLE public."users"("id" serial NOT NULL UNIQUE, "username" text
+      NOT NULL UNIQUE, "password" text NOT NULL, "token" text NOT NULL, PRIMARY KEY
+      ("id") );
+  type: run_sql
+- args:
+    name: users
+    schema: public
+  type: add_existing_table_or_view
