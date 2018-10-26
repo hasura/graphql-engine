@@ -758,7 +758,6 @@ div.CodeMirror-lint-tooltip > * + * {
   background: rgb(255, 255, 255);
   border-radius: 4px;
   outline: none;
-  // overflow: -webkit-paged-y;
 }
 .myOverlayClass {
   position: fixed;
