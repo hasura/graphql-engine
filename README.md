@@ -79,7 +79,7 @@ The fastest way to try Hasura out is via Heroku.
 
 ### Other deployment methods
 
-For Docker-based deployment and advanced configuration options, see [deployment
+For Docker based deployment and advanced configuration options, see [deployment
 guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) or
 [install manifests](install-manifests).
 
