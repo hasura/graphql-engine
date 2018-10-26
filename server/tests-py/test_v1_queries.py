@@ -1,7 +1,7 @@
-
 import pytest
 import yaml
 from validate import check_query_f
+
 
 class TestV1SelectBasic:
 
@@ -16,6 +16,7 @@ class TestV1SelectBasic:
 
     def test_select_col_not_present(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/select_article_col_not_present_err.yaml')
+
     def test_nested_select_query_where(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/nested_select_where_query_author_article.yaml')
 
@@ -47,7 +48,7 @@ class TestV1SelectLimits:
         check_query_f(hge_ctx, self.dir + '/select_query_article_neg_limit_error.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):  
+    def transact(self, request, hge_ctx):
         self.dir = 'queries/v1/select/limits'
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
@@ -194,8 +195,8 @@ class TestV1InsertBasic:
         check_query_f(hge_ctx, self.dir + "/order_col_shipped_null.yaml")
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):  
-        self.dir = "queries/v1/insert/basic"    
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/v1/insert/basic"
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
         yield
@@ -204,28 +205,28 @@ class TestV1InsertBasic:
 
 
 class TestV1InsertOnConflict:
-   
+
     def test_author_on_conflict_update(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/upsert_author.yaml')
 
     def test_on_conflict_no_action_specified(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/article_on_conflict_no_action_specified.yaml")
+        check_query_f(hge_ctx, self.dir + "/article_on_conflict_no_action_specified.yaml")
 
     def test_on_conflict_ignore(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/article_on_conflict_ignore_constraint.yaml")
+        check_query_f(hge_ctx, self.dir + "/article_on_conflict_ignore_constraint.yaml")
 
     def test_err_missing_article_constraint(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/article_on_conflict_error_missing_article_constraint.yaml")
+        check_query_f(hge_ctx, self.dir + "/article_on_conflict_error_missing_article_constraint.yaml")
 
     def test_err_unexpected_action(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/article_unexpected_on_conflict_action.yaml")
+        check_query_f(hge_ctx, self.dir + "/article_unexpected_on_conflict_action.yaml")
 
     def test_err_unexpected_constraint(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/article_unexpected_on_conflict_constraint_error.yaml")
+        check_query_f(hge_ctx, self.dir + "/article_unexpected_on_conflict_constraint_error.yaml")
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):  
-        self.dir = "queries/v1/insert/onconflict"    
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/v1/insert/onconflict"
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
         yield
@@ -241,7 +242,7 @@ class TestV1InsertPermissions(object):
     @pytest.mark.xfail(reason="Refer https://github.com/hasura/graphql-engine/issues/563")
     def test_user_role_on_conflict_ignore(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + "/author_on_conflict_ignore_user_role.yaml")
-    
+
     def test_role_has_no_permissions_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + "/address_permission_error.yaml")
 
@@ -273,25 +274,25 @@ class TestV1InsertPermissions(object):
 class TestV1UpdateBasic:
 
     def test_set_author_name(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/author_set_name.yaml")
+        check_query_f(hge_ctx, self.dir + "/author_set_name.yaml")
 
     def test_set_person_details(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/person_set_details.yaml")
+        check_query_f(hge_ctx, self.dir + "/person_set_details.yaml")
 
-    def test_person_id_inc(self,  hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/person_inc.yaml")
+    def test_person_id_inc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/person_inc.yaml")
 
-    def test_product_mul_price(self,  hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/product_mul_price.yaml")
+    def test_product_mul_price(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/product_mul_price.yaml")
 
-    def test_product_set_default_price(self,  hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/product_set_default_price.yaml")
+    def test_product_set_default_price(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/product_set_default_price.yaml")
 
     def test_no_operator_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/person_error_no_operator.yaml")
+        check_query_f(hge_ctx, self.dir + "/person_error_no_operator.yaml")
 
     def test_no_where_clause_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/person_error_no_where_clause.yaml")
+        check_query_f(hge_ctx, self.dir + "/person_error_no_where_clause.yaml")
 
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
@@ -306,16 +307,16 @@ class TestV1UpdateBasic:
 class TestV1UpdatePermissions:
 
     def test_user_can_update_unpublished_article(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/user_can_update_unpublished_article.yaml")
+        check_query_f(hge_ctx, self.dir + "/user_can_update_unpublished_article.yaml")
 
     def test_user_cannot_update_published_version_col(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/user_cannot_update_published_article_version.yaml")
+        check_query_f(hge_ctx, self.dir + "/user_cannot_update_published_article_version.yaml")
 
     def test_user_cannot_update_another_users_article(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/user_cannot_update_another_users_article.yaml")
+        check_query_f(hge_ctx, self.dir + "/user_cannot_update_another_users_article.yaml")
 
     def test_user_cannot_update_id_col(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/user_cannot_update_id_col_article.yaml")
+        check_query_f(hge_ctx, self.dir + "/user_cannot_update_id_col_article.yaml")
 
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
@@ -328,18 +329,19 @@ class TestV1UpdatePermissions:
 
 
 class TestV1Delete:
- 
+
     def test_delete_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/delete_article.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):  
-        self.dir = "queries/v1/delete"    
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/v1/delete"
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
         yield
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
+
 
 class TestMetadata:
 
@@ -356,8 +358,8 @@ class TestMetadata:
         check_query_f(hge_ctx, self.dir + '/dump_internal_state.yaml')
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):  
-        self.dir = "queries/v1/metadata"    
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/v1/metadata"
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
         yield

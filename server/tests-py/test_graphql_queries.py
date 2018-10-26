@@ -2,6 +2,7 @@ import pytest
 import yaml
 from validate import check_query_f
 
+
 class TestGraphQLQueryBasic:
 
     def test_select_query_author(self, hge_ctx):
@@ -34,6 +35,7 @@ class TestGraphQLQueryBasic:
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
 
+
 class TestGraphQLQueryAgg:
 
     def test_article_agg_count_sum_avg_max_min_with_aliases(self, hge_ctx):
@@ -57,6 +59,7 @@ class TestGraphQLQueryAgg:
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
 
+
 class TestGraphQLQueryAggPerm:
 
     def test_author_agg_articles(self, hge_ctx):
@@ -76,6 +79,7 @@ class TestGraphQLQueryAggPerm:
         yield
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
+
 
 class TestGraphQLQueryLimits:
 
@@ -99,6 +103,7 @@ class TestGraphQLQueryLimits:
         yield
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
+
 
 class TestGraphQLQueryOffsets:
 
@@ -225,6 +230,7 @@ class TestGraphQLQueryBoolExpSearch:
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
 
+
 class TestGraphQLQueryBoolExpJsonB:
 
     def test_jsonb_contains_article_latest(self, hge_ctx):
@@ -256,6 +262,7 @@ class TestGraphQLQueryBoolExpJsonB:
         yield
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
+
 
 class TestGraphQLQueryOrderBy:
     def test_articles_order_by_without_id(self, hge_ctx):

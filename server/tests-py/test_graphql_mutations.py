@@ -1,7 +1,7 @@
-
 import pytest
 import yaml
 from validate import check_query_f
+
 
 class TestGraphQLInsert(object):
 
@@ -30,25 +30,25 @@ class TestGraphQLInsert(object):
 class TestGraphqlInsertOnConflict(object):
 
     def test_on_conflict_update(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/article_on_conflict_update.yaml")
+        check_query_f(hge_ctx, self.dir + "/article_on_conflict_update.yaml")
 
     def test_on_conflict_no_action_specified(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/article_on_conflict_no_action_specified.yaml")
+        check_query_f(hge_ctx, self.dir + "/article_on_conflict_no_action_specified.yaml")
 
     def test_on_conflict_ignore(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/article_on_conflict_ignore_constraint.yaml")
+        check_query_f(hge_ctx, self.dir + "/article_on_conflict_ignore_constraint.yaml")
 
     def test_on_conflict_update_empty_cols(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/article_on_conflict_empty_update_columns.yaml")
+        check_query_f(hge_ctx, self.dir + "/article_on_conflict_empty_update_columns.yaml")
 
     def test_err_missing_article_constraint(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/article_on_conflict_error_missing_article_constraint.yaml")
+        check_query_f(hge_ctx, self.dir + "/article_on_conflict_error_missing_article_constraint.yaml")
 
     def test_err_unexpected_action(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/article_unexpected_on_conflict_action.yaml")
+        check_query_f(hge_ctx, self.dir + "/article_unexpected_on_conflict_action.yaml")
 
     def test_err_unexpected_constraint(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/article_unexpected_on_conflict_constraint_error.yaml")
+        check_query_f(hge_ctx, self.dir + "/article_unexpected_on_conflict_constraint_error.yaml")
 
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
@@ -58,7 +58,6 @@ class TestGraphqlInsertOnConflict(object):
         yield
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
-
 
 
 class TestGraphqlInsertPermission(object):
@@ -80,31 +79,31 @@ class TestGraphqlInsertPermission(object):
         check_query_f(hge_ctx, self.dir + "/user_article_error_unexpected_on_conflict_action.yaml")
 
     def test_user_err_unexpected_constraint(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/user_article_unexpected_on_conflict_constraint_error.yaml")
+        check_query_f(hge_ctx, self.dir + "/user_article_unexpected_on_conflict_constraint_error.yaml")
 
     def test_role_has_no_permissions_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/address_permission_error.yaml")
+        check_query_f(hge_ctx, self.dir + "/address_permission_error.yaml")
 
     def test_author_user_role_insert_check_perm_success(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/author_user_role_insert_check_perm_success.yaml")
+        check_query_f(hge_ctx, self.dir + "/author_user_role_insert_check_perm_success.yaml")
 
     def test_user_role_insert_check_is_registered_fail(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/author_user_role_insert_check_is_registered_fail.yaml")
+        check_query_f(hge_ctx, self.dir + "/author_user_role_insert_check_is_registered_fail.yaml")
 
     def test_user_role_insert_check_user_id_fail(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/author_user_role_insert_check_user_id_fail.yaml")
+        check_query_f(hge_ctx, self.dir + "/author_user_role_insert_check_user_id_fail.yaml")
 
     def test_student_role_insert_check_bio_success(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/author_student_role_insert_check_bio_success.yaml")
+        check_query_f(hge_ctx, self.dir + "/author_student_role_insert_check_bio_success.yaml")
 
     def test_student_role_insert_check_bio_fail(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/author_student_role_insert_check_bio_fail.yaml")
+        check_query_f(hge_ctx, self.dir + "/author_student_role_insert_check_bio_fail.yaml")
 
     def test_company_user_role_insert(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/company_user_role.yaml")
+        check_query_f(hge_ctx, self.dir + "/company_user_role.yaml")
 
     def test_company_user_role_insert_on_conflict(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/company_user_role_on_conflict.yaml")
+        check_query_f(hge_ctx, self.dir + "/company_user_role_on_conflict.yaml")
 
     def test_resident_user_role_insert(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + "/resident_user.yaml")
@@ -122,7 +121,7 @@ class TestGraphqlInsertPermission(object):
 class TestGraphqlInsertConstraints(object):
 
     def test_address_not_null_constraint_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/address_not_null_constraint_error.yaml")
+        check_query_f(hge_ctx, self.dir + "/address_not_null_constraint_error.yaml")
 
     def test_insert_unique_constraint_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + "/author_unique_constraint_error.yaml")
@@ -140,43 +139,43 @@ class TestGraphqlInsertConstraints(object):
 class TestGraphqlInsertGeoJson():
 
     def test_insert_point_landmark(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/insert_landmark.yaml")
+        check_query_f(hge_ctx, self.dir + "/insert_landmark.yaml")
 
     def test_insert_3d_point_drone_loc(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/insert_drone_3d_location.yaml")
+        check_query_f(hge_ctx, self.dir + "/insert_drone_3d_location.yaml")
 
     def test_insert_landmark_single_position_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/insert_landmark_single_position_err.yaml")
+        check_query_f(hge_ctx, self.dir + "/insert_landmark_single_position_err.yaml")
 
     def test_insert_line_string_road(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/insert_road.yaml")
+        check_query_f(hge_ctx, self.dir + "/insert_road.yaml")
 
     def test_insert_road_single_point_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/insert_road_single_point_err.yaml")
+        check_query_f(hge_ctx, self.dir + "/insert_road_single_point_err.yaml")
 
     def test_insert_multi_point_service_locations(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/insert_service_locations.yaml")
+        check_query_f(hge_ctx, self.dir + "/insert_service_locations.yaml")
 
     def test_insert_multi_line_string_route(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/insert_route.yaml")
+        check_query_f(hge_ctx, self.dir + "/insert_route.yaml")
 
     def test_insert_polygon(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/insert_area.yaml")
+        check_query_f(hge_ctx, self.dir + "/insert_area.yaml")
 
     def test_insert_linear_ring_less_than_4_points_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/insert_area_less_than_4_points_err.yaml")
+        check_query_f(hge_ctx, self.dir + "/insert_area_less_than_4_points_err.yaml")
 
     def test_insert_linear_ring_last_point_not_equal_to_first_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/insert_linear_ring_last_point_not_equal_to_first_err.yaml")
+        check_query_f(hge_ctx, self.dir + "/insert_linear_ring_last_point_not_equal_to_first_err.yaml")
 
     def test_insert_multi_polygon_compounds(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/insert_compounds.yaml")
+        check_query_f(hge_ctx, self.dir + "/insert_compounds.yaml")
 
     def test_insert_geometry_collection(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/insert_geometry_collection.yaml")
-    
+        check_query_f(hge_ctx, self.dir + "/insert_geometry_collection.yaml")
+
     def test_insert_unexpected_geometry_type_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/insert_geometry_unexpected_type_err.yaml")
+        check_query_f(hge_ctx, self.dir + "/insert_geometry_unexpected_type_err.yaml")
 
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
@@ -217,6 +216,7 @@ class TestGraphqlNestedInserts(object):
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
 
+
 class TestGraphqlInsertViews(object):
 
     def test_insert_view_author_simple(self, hge_ctx):
@@ -240,19 +240,20 @@ class TestGraphqlInsertViews(object):
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
 
+
 class TestGraphqlUpdateBasic:
 
     def test_set_author_name(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/author_set_name.yaml")
+        check_query_f(hge_ctx, self.dir + "/author_set_name.yaml")
 
     def test_set_person_details(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/person_set_details.yaml")
+        check_query_f(hge_ctx, self.dir + "/person_set_details.yaml")
 
-    def test_person_id_inc(self,  hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/person_inc.yaml")
+    def test_person_id_inc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + "/person_inc.yaml")
 
     def test_no_operator_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/person_error_no_operator.yaml")
+        check_query_f(hge_ctx, self.dir + "/person_error_no_operator.yaml")
 
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
@@ -267,22 +268,22 @@ class TestGraphqlUpdateBasic:
 class TestGraphqlUpdateJsonB:
 
     def test_jsonb_append_object(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/person_append_object.yaml")
+        check_query_f(hge_ctx, self.dir + "/person_append_object.yaml")
 
     def test_jsonb_append_array(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/person_append_array.yaml")
+        check_query_f(hge_ctx, self.dir + "/person_append_array.yaml")
 
     def test_jsonb_prepend_array(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/person_prepend_array.yaml")
+        check_query_f(hge_ctx, self.dir + "/person_prepend_array.yaml")
 
     def test_jsonb_delete_at_path(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/person_delete_at_path.yaml")
+        check_query_f(hge_ctx, self.dir + "/person_delete_at_path.yaml")
 
     def test_jsonb_delete_array_element(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/person_delete_array_element.yaml")
+        check_query_f(hge_ctx, self.dir + "/person_delete_array_element.yaml")
 
     def test_jsonb_delete_key(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/person_delete_key.yaml")
+        check_query_f(hge_ctx, self.dir + "/person_delete_key.yaml")
 
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
@@ -297,16 +298,16 @@ class TestGraphqlUpdateJsonB:
 class TestGraphqlUpdatePermissions:
 
     def test_user_can_update_unpublished_article(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/user_can_update_unpublished_article.yaml")
+        check_query_f(hge_ctx, self.dir + "/user_can_update_unpublished_article.yaml")
 
     def test_user_cannot_update_published_version_col(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/user_cannot_update_published_article_version.yaml")
+        check_query_f(hge_ctx, self.dir + "/user_cannot_update_published_article_version.yaml")
 
     def test_user_cannot_update_another_users_article(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/user_cannot_update_another_users_article.yaml")
+        check_query_f(hge_ctx, self.dir + "/user_cannot_update_another_users_article.yaml")
 
     def test_user_cannot_update_id_col(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/user_cannot_update_id_col_article.yaml")
+        check_query_f(hge_ctx, self.dir + "/user_cannot_update_id_col_article.yaml")
 
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
@@ -321,10 +322,10 @@ class TestGraphqlUpdatePermissions:
 class TestGraphqlDeleteBasic:
 
     def test_article_delete(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/article.yaml")
+        check_query_f(hge_ctx, self.dir + "/article.yaml")
 
     def test_article_delete_returning(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/article_returning.yaml")
+        check_query_f(hge_ctx, self.dir + "/article_returning.yaml")
 
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
@@ -339,7 +340,7 @@ class TestGraphqlDeleteBasic:
 class TestGraphqlDeleteConstraints:
 
     def test_author_delete_foreign_key_violation(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/author_foreign_key_violation.yaml")
+        check_query_f(hge_ctx, self.dir + "/author_foreign_key_violation.yaml")
 
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
@@ -354,10 +355,10 @@ class TestGraphqlDeleteConstraints:
 class TestGraphqlDeletePermissions:
 
     def test_author_can_delete_his_articles(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/author_can_delete_his_articles.yaml")
+        check_query_f(hge_ctx, self.dir + "/author_can_delete_his_articles.yaml")
 
     def test_author_cannot_delete_other_users_articles(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir + "/author_cannot_delete_other_users_articles.yaml")
+        check_query_f(hge_ctx, self.dir + "/author_cannot_delete_other_users_articles.yaml")
 
     def test_resident_delete_without_select_perm_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + "/resident_delete_without_select_perm_fail.yaml")

@@ -2,6 +2,7 @@ import pytest
 import time
 from context import HGECtx, HGECtxError
 
+
 def pytest_addoption(parser):
     parser.addoption(
         "--hge-url", metavar="HGE_URL", help="url for graphql-engine", required=True
@@ -10,9 +11,10 @@ def pytest_addoption(parser):
         "--pg-url", metavar="PG_URL", help="url for connecting to Postgres directly", required=True
     )
 
+
 @pytest.fixture(scope='session')
 def hge_ctx(request):
-    print ("create hge_ctx")
+    print("create hge_ctx")
     hge_url = request.config.getoption('--hge-url')
     pg_url = request.config.getoption('--pg-url')
     try:
