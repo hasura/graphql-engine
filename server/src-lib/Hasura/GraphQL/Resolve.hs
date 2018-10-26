@@ -39,6 +39,8 @@ buildTx userInfo gCtx fld = do
     OCSelectPkey tn permFilter hdrs ->
       validateHdrs hdrs >> RS.convertSelectByPKey tn permFilter fld
       -- RS.convertSelect tn permFilter fld
+    OCSelectAgg tn permFilter permLimit hdrs ->
+      validateHdrs hdrs >> RS.convertAggSelect tn permFilter permLimit fld
     OCInsert tn hdrs    ->
       validateHdrs hdrs >> RI.convertInsert roleName tn fld
       -- RM.convertInsert (tn, vn) cols fld
@@ -60,7 +62,7 @@ buildTx userInfo gCtx fld = do
       "lookup failed: opctx: " <> showName f
 
     validateHdrs hdrs = do
-      let receivedHdrs = userHeaders userInfo
+      let receivedHdrs = userVars userInfo
       forM_ hdrs $ \hdr ->
         unless (Map.member hdr receivedHdrs) $
         throw400 NotFound $ hdr <<> " header is expected but not found"

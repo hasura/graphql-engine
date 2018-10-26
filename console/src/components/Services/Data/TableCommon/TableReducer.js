@@ -45,6 +45,7 @@ import {
   PERM_ALLOW_ALL,
   PERM_TOGGLE_MODIFY_LIMIT,
   PERM_TOGGLE_ALLOW_UPSERT,
+  PERM_TOGGLE_ALLOW_AGGREGATION,
   PERM_CUSTOM_CHECKED,
   PERM_REMOVE_ACCESS,
   PERM_SAVE_PERMISSIONS,
@@ -306,6 +307,18 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ...updatePermissionsState(
             modifyState.permissionsState,
             'allow_upsert',
+            action.data
+          ),
+        },
+      };
+
+    case PERM_TOGGLE_ALLOW_AGGREGATION:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...updatePermissionsState(
+            modifyState.permissionsState,
+            'allow_aggregations',
             action.data
           ),
         },

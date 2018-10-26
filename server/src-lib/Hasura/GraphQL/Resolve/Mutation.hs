@@ -1,8 +1,7 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE MultiWayIf        #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Hasura.GraphQL.Resolve.Mutation
   ( convertUpdate
@@ -25,36 +24,33 @@ import qualified Hasura.SQL.DML                    as S
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Resolve.Select     (fromSelSet)
+import           Hasura.GraphQL.Resolve.Select     (fromSelSet, withSelSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m [(Text, a)]
-withSelSet selSet f =
-  forM (toList selSet) $ \fld -> do
-    res <- f fld
-    return (G.unName $ G.unAlias $ _fAlias fld, res)
-
 convertReturning
   :: QualifiedTable -> G.NamedType -> SelSet -> Convert RS.AnnSel
 convertReturning qt ty selSet = do
-  annFlds <- fromSelSet ty selSet
-  return $ RS.AnnSel annFlds qt (Just frmItem)
-    (S.BELit True) Nothing RS.noTableArgs
+  annFlds <- fromSelSet prepare ty selSet
+  let selFlds = RS.ASFSimple annFlds
+      tabFrom = RS.TableFrom qt $ Just frmItem
+      tabPerm = RS.TablePerm (S.BELit True) Nothing
+  return $ RS.AnnSel selFlds tabFrom tabPerm RS.noTableArgs
   where
     frmItem = S.FIIden $ RR.qualTableToAliasIden qt
 
 convertMutResp
   :: QualifiedTable -> G.NamedType -> SelSet -> Convert RR.MutFlds
 convertMutResp qt ty selSet =
-  withSelSet selSet $ \fld ->
-    case _fName fld of
-      "__typename"    -> return $ RR.MExp $ G.unName $ G.unNamedType ty
-      "affected_rows" -> return RR.MCount
-      _ -> fmap RR.MRet $ convertReturning qt (_fType fld) $ _fSelSet fld
+  withSelSet selSet $ \fld -> case _fName fld of
+    "__typename"    -> return $ RR.MExp $ G.unName $ G.unNamedType ty
+    "affected_rows" -> return RR.MCount
+    "returning"     -> fmap RR.MRet $
+                       convertReturning qt (_fType fld) $ _fSelSet fld
+    G.Name t        -> throw500 $ "unexpected field in mutation resp : " <> t
 
 convertRowObj
   :: (MonadError QErr m, MonadState PrepArgs m)

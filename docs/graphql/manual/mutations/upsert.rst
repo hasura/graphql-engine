@@ -2,7 +2,7 @@ Upsert mutation
 ===============
 
 To convert an **insert** mutation into an **upsert** one, you need to specify the unique or primary key constraint(s) and the
-columns to be updated in the case of a conflict or violation. You can specify a constraint using the ``constriant`` argument and
+columns to be updated in the case of a conflict or violation. You can specify a constraint using the ``constraint`` argument and
 update columns using the ``update_columns`` argument.
 
 .. note::
@@ -102,8 +102,8 @@ is the set of columns that is updated. For example, if your query as follows:
     }
 
 The column ``"is_premium"`` for the ``"Jack"`` row is set to its ``DEFAULT`` value because the union of all columns across objects
-is ``{name, email_sent, is_premium}``. However ou can explicitly control the columns that are updated on conflict using
-``update_columns`` as specified in following section.
+is ``{name, email_sent, is_premium}``. However, you can explicitly control the columns that are updated on conflict using
+``update_columns`` as specified in the following section.
 
 With non empty "update_columns"
 -------------------------------

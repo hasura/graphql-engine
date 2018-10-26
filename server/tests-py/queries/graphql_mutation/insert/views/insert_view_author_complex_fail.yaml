@@ -1,0 +1,16 @@
+description: Insert into author_complex view (Error)
+url: /v1alpha1/graphql
+status: 400
+query:
+  query: |
+    mutation author_complex{
+      insert_author_complex(
+        objects: [{author_id: 1, author_title: "Article title"}]
+      ){
+        affected_rows
+        returning{
+          author_id
+          author_title
+        }
+      }
+    }

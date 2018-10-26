@@ -2,14 +2,14 @@ Migrations for a new project
 ============================
 
 This guide will help you if you are about to start setting up your schema from scratch. You can use migrations
-to help you track the database and GraphQL schema changes.
+to help track the database and GraphQL schema changes.
 
 These are the steps you need to follow:
 
 #. Install the Hasura CLI
-#. Setup a project dir
+#. Setup a project directory
 #. Use the Hasura CLI console (``http://localhost:9695``) instead of the console served by the
-   GraphQL engine (Eg: ``http://my-graphql.herokuapp.com``) to set the schema up.
+   GraphQL engine (E.g.: ``http://my-graphql.herokuapp.com``) to set the schema up
 
 
 Step 0: Take a note of your  GraphQL engine endpoint
@@ -95,7 +95,7 @@ in the ``migrations/`` directory in your project.
 Step 5: Apply the migrations to another instance of the GraphQL engine
 ----------------------------------------------------------------------
 
-- Edit ``config.yaml`` and change the endpoint to another instance, say ``https://my-another-grapqhl.herokuapp.com``
+- Edit ``config.yaml`` and change the endpoint to another instance, say ``https://my-another-grapqhl.herokuapp.com``:
 
   .. code-block:: yaml
 
@@ -113,4 +113,4 @@ Step 6: Create migrations without the console & other advanced actions
 
 - Each migration consists of a pair of yaml and sql files with up and down steps.
 - Create migrations manually using :ref:`migrate create <hasura_migrate_create>`.
-- You can apply only certain versions or number of steps. Read more at :ref:`migrate apply <hasura_migrate_apply>`
+- You can apply only certain versions or numbers of steps. Read more at :ref:`migrate apply <hasura_migrate_apply>`

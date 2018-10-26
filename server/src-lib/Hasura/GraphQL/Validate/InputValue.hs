@@ -13,6 +13,7 @@ module Hasura.GraphQL.Validate.InputValue
 
 import           Data.Scientific                 (fromFloatDigits)
 import           Hasura.Prelude
+import           Hasura.Server.Utils             (duplicates)
 
 import           Data.Has
 

@@ -282,4 +282,5 @@ PaginationExp
 
 .. parsed-literal::
 
-   limit: Integer [offset: Integer]
+   limit: Integer
+   [offset: Integer]
