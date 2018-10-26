@@ -1,15 +1,15 @@
 # Contributing to Hasura graphql-engine
 
-*First*: if you're unsure or afraid of anything, just ask or submit the issue or
+*First*: if you're unsure or afraid of anything, just ask, or submit the issue or
 pull request anyway. You won't be yelled at for giving your best effort. The
 worst that can happen is that you'll be politely asked to change something. We
-appreciate any sort of contributions, and don't want a wall of rules to get in
+appreciate any contributions, and we don't want a wall of rules to get in
 the way of that.
 
-However, for those individuals who want a bit more guidance on the best way to
+However, for individuals who want a bit more guidance on the best way to
 contribute to the project, read on. This document will cover what we're looking
-for. By addressing all the points we're looking for, it raises the chances we
-can quickly merge or address your contributions.
+for. By addressing all the points we're looking for, the chances that we
+can quickly merge or address your contributions will increase.
 
 
 ## Overview
@@ -24,7 +24,7 @@ consisting of 3 components. Each have their own contributing guides:
 All of the three components have a single version, denoted by either the git
 tag or a combination of branch name and git commit SHA.
 
-For all contributions, a CLA (Contributor License Agreement) needs to be signed [here](https://cla-assistant.io/hasura/graphql-engine) before (or after) the pull request has been submitted. A bot will prompt the same as a pull request comment.
+For all contributions, a CLA (Contributor License Agreement) needs to be signed [here](https://cla-assistant.io/hasura/graphql-engine) before (or after) the pull request has been submitted. A bot will prompt contributers to sign the CLA via a pull request comment, if necessary.
 
 
 ### Docs
@@ -38,7 +38,7 @@ help GraphQL Engine community/users can go into the section. We have identified
 [boilerplates](community/boilerplates), [examples](community/examples) and
 [tools](community/tools) as primary candidates. Feel free to submit a pull
 request if you have something to add (not necessarily belonging to the
-before-mentioned sections).
+aforementioned sections).
 
 ## Issues
 
@@ -48,7 +48,7 @@ before-mentioned sections).
   already fixed the bug you're experiencing.
 
 - Provide steps to reproduce the issue, including Postgres version,
-  graphql-engine version and the provider you are running on (Heroku, Docker
+  graphql-engine version and the provider you are running on (Heroku, Docker,
   etc.).
 
 - Please include logs of the server, if relevant.
@@ -69,15 +69,16 @@ before-mentioned sections).
 
 ## Commit messages
 
- - The first line should be a summary of the changes - not exceeding 50
-   characters. Followed by an optional body which has more details about the
-   changes. (https://github.com/erlang/otp/wiki/writing-good-commit-messages)
+- The first line should be a summary of the changes, not exceeding 50
+  characters, followed by an optional body which has more details about the
+  changes. Refer [to this link](https://github.com/erlang/otp/wiki/writing-good-commit-messages)
+  for more information on writing good commit messages.
 
- - Use the imperative present tense: "add/fix/change", not "added/fixed/changed" nor "adds/fixes/changes".
+- Use the imperative present tense: "add/fix/change", not "added/fixed/changed" nor "adds/fixes/changes".
 
- - Don't capitalize the first letter of the summary line.
+- Don't capitalize the first letter of the summary line.
 
- - Do not add a period/dot (.) at the end in the summary line.
+- Don't add a period/dot (.) at the end of the summary line.
 
 
 (Credits: Some sections are adapted from https://github.com/PostgREST/postgrest/blob/master/.github/CONTRIBUTING.md)

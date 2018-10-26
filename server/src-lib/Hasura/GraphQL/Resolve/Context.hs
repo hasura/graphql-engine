@@ -61,7 +61,7 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
 
 type FieldMap
   = Map.HashMap (G.NamedType, G.Name)
-    (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool))
+    (Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int))
 
 data OrdTy
   = OAsc
@@ -96,7 +96,7 @@ type InsCtxMap = Map.HashMap QualifiedTable InsCtx
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> G.Name -> m (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool))
+  => G.NamedType -> G.Name -> m (Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int))
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $

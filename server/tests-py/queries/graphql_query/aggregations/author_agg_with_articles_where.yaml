@@ -1,0 +1,78 @@
+descriptions: select author with id = 1 and aggregations of it's articles where aritcle's id < 3
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    author_aggregate:
+      nodes:
+      - id: 1
+        name: Author 1
+        articles_aggregate:
+          aggregate:
+            count: 2
+            sum:
+              id: 3
+              author_id: 2
+            avg:
+              id: 1.5
+              author_id: 1
+            max:
+              id: 2
+              title: Article 2
+              content: Sample article content 2
+              author_id: 1
+            min:
+              id: 1
+              title: Article 1
+              content: Sample article content 1
+              author_id: 1
+          nodes:
+          - id: 1
+            title: Article 1
+            content: Sample article content 1
+            author_id: 1
+          - id: 2
+            title: Article 2
+            content: Sample article content 2
+            author_id: 1
+query:
+  query: |
+   query{
+     author_aggregate(where: {id: {_eq: 1}}){
+       nodes{
+         id
+         name
+         articles_aggregate(where: {id: {_lt: 3}}){
+           aggregate{
+             count
+             sum{
+               id
+               author_id
+             }
+             avg{
+               id
+               author_id
+             }
+             max{
+               id
+               title
+               content
+               author_id
+             }
+             min{
+               id
+               title
+               content
+               author_id
+             }
+           }
+           nodes{
+             id
+             title
+             content
+             author_id
+           }
+         }
+       }
+     }
+   }

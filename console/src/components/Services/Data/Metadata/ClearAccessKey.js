@@ -27,14 +27,28 @@ class ClearAccessKey extends Component {
             this.setState({ isClearing: true });
             if (globals.isAccessKeySet || globals.accessKey) {
               clearAccessKeyState();
-              console.log('Clearing access key');
+              this.props.dispatch(
+                showSuccessNotification('Cleared Access Key')
+              );
+              this.setState({ isClearing: false });
               this.props.router.push('/login');
             } else {
-              console.log('No access key set');
-              showErrorNotification('No access key set');
+              this.setState({ isClearing: false });
+              const errorMessage = (
+                <div style={{ padding: '5px' }}>
+                  <div style={{ fontSize: '13px' }}>
+                    No access key set or access key is set but isAccessKeySet is
+                    not set by the server
+                  </div>
+                  <br />
+                  <div style={{ fontSize: '13px' }}>
+                    Please look for <code>CONSOLE_ACCESS_KEY</code> key under
+                    window storage and delete it if it exists
+                  </div>
+                </div>
+              );
+              this.props.dispatch(showErrorNotification(errorMessage));
             }
-            this.props.dispatch(showSuccessNotification('Cleared Access Key'));
-            this.setState({ isClearing: false });
           }}
         >
           {this.state.isClearing ? 'Clearing...' : 'Clear access key (logout)'}

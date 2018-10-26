@@ -21,6 +21,7 @@ import {
   permSetRoleName,
   permChangePermissions,
   permToggleAllowUpsert,
+  permToggleAllowAggregation,
   permToggleModifyLimit,
   permCustomChecked,
   permRemoveRole,
@@ -38,9 +39,10 @@ import {
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from '../TableBrowseRows/ViewHeader';
-import { setTable } from '../DataActions';
+import { setTable, fetchViewInfoFromInformationSchema } from '../DataActions';
 import { getIngForm, escapeRegExp } from '../utils';
 import { legacyOperatorsMap } from './PermissionBuilder/utils';
+import semverCheck from '../../../../helpers/semver';
 
 /* */
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
@@ -54,12 +56,46 @@ class Permissions extends Component {
       isChecked: false,
       columnTypeMap: {},
     };
+    this.state.viewInfo = {};
+    this.state.showAggregation = false;
+    this.state.showInsertPrefix = false;
     this.onSetValueBlur = this.onSetValueBlur.bind(this);
   }
   componentDidMount() {
+    if (this.props.serverVersion) {
+      this.checkSemVer(this.props.serverVersion);
+    }
     this.props.dispatch({ type: RESET });
+    const currentSchema = this.props.allSchemas.find(
+      t => t.table_name === this.props.tableName
+    );
+
+    if (!currentSchema) {
+      alert('Invalid schema');
+      return;
+    }
+
     this.props.dispatch(setTable(this.props.tableName));
+    this.props
+      .dispatch(
+        fetchViewInfoFromInformationSchema(
+          currentSchema.table_schema,
+          this.props.tableName
+        )
+      )
+      .then(r => {
+        if (r.length > 0) {
+          this.setState({ ...this.state, viewInfo: r[0] });
+        }
+      });
   }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.serverVersion !== this.props.serverVersion) {
+      this.checkSemVer(nextProps.serverVersion);
+    }
+  }
+
   onSetValueChange(e) {
     // Get the index of the changed value and if both key and value are set create one more object in set
     const inputNode = e.target;
@@ -161,6 +197,33 @@ class Permissions extends Component {
       });
     }
   }
+  checkSemVer(version) {
+    let showAggregation = false;
+    try {
+      showAggregation = semverCheck('aggregationPerm', version);
+      if (showAggregation) {
+        this.setState({ ...this.state, showAggregation: true });
+      } else {
+        this.setState({ ...this.state, showAggregation: false });
+      }
+    } catch (e) {
+      console.log(e);
+      this.setState({ ...this.state, showAggregation: false });
+    }
+
+    let showInsertPrefix = false;
+    try {
+      showInsertPrefix = semverCheck('insertPrefix', version);
+      if (showInsertPrefix) {
+        this.setState({ ...this.state, showInsertPrefix: true });
+      } else {
+        this.setState({ ...this.state, showInsertPrefix: false });
+      }
+    } catch (e) {
+      console.log(e);
+      this.setState({ ...this.state, showInsertPrefix: false });
+    }
+  }
   deleteSetKeyVal(e) {
     const deleteIndex = parseInt(e.target.getAttribute('data-index-id'), 10);
     if (deleteIndex >= 0) {
@@ -210,13 +273,33 @@ class Permissions extends Component {
       migrationMode,
       currentSchema,
     } = this.props;
+    const { showAggregation, showInsertPrefix } = this.state;
     const styles = require('../TableModify/Modify.scss');
 
     let qTypes;
     if (tableType === 'table') {
       qTypes = ['insert', 'select', 'update', 'delete'];
     } else if (tableType === 'view') {
-      qTypes = ['select'];
+      qTypes = [];
+      // Add insert/update permission if it is insertable/updatable as returned by pg
+      if (
+        this.state.viewInfo &&
+        'is_insertable_into' in this.state.viewInfo &&
+        this.state.viewInfo.is_insertable_into === 'YES'
+      ) {
+        qTypes.push('insert');
+      }
+
+      qTypes.push('select');
+
+      if (
+        this.state.viewInfo &&
+        'is_updatable' in this.state.viewInfo &&
+        this.state.viewInfo.is_updatable === 'YES'
+      ) {
+        qTypes.push('update');
+        qTypes.push('delete');
+      }
     }
 
     const tSchema = allSchemas.find(t => t.table_name === tableName);
@@ -362,21 +445,21 @@ class Permissions extends Component {
         const bulkSelect = permsState.bulkSelect;
         const currentInputSelection = bulkSelect.filter(e => e === role)
           .length ? (
-          <input
-            onChange={dispatchBulkSelect}
-            checked="checked"
-            data-role={role}
-            className={styles.bulkSelect}
-            type="checkbox"
-          />
-        ) : (
-          <input
-            onChange={dispatchBulkSelect}
-            data-role={role}
-            className={styles.bulkSelect}
-            type="checkbox"
-          />
-        );
+            <input
+              onChange={dispatchBulkSelect}
+              checked="checked"
+              data-role={role}
+              className={styles.bulkSelect}
+              type="checkbox"
+            />
+          ) : (
+            <input
+              onChange={dispatchBulkSelect}
+              data-role={role}
+              className={styles.bulkSelect}
+              type="checkbox"
+            />
+          );
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
@@ -533,6 +616,34 @@ class Permissions extends Component {
       </div>
     );
 
+    const getViewPermissionNote = () => {
+      let showNote = false;
+      if (
+        tableType === 'view' &&
+        !(
+          this.state.viewInfo &&
+          'is_insertable_into' in this.state.viewInfo &&
+          this.state.viewInfo.is_insertable_into === 'YES'
+        ) &&
+        !(
+          this.state.viewInfo &&
+          'is_updatable' in this.state.viewInfo &&
+          this.state.viewInfo.is_updatable === 'YES'
+        )
+      ) {
+        showNote = true;
+      }
+
+      return showNote ? (
+        <div className={styles.permissionsLegend}>
+          <i className="fa fa-question-circle" aria-hidden="true" />
+          &nbsp; You cannot insert/update into this view
+        </div>
+      ) : (
+        ''
+      );
+    };
+
     const getPermissionsTable = (tableSchema, queryTypes, permsState) => {
       const permissionsSymbols = {
         // <i className="fa fa-star" aria-hidden="true"/>
@@ -548,6 +659,7 @@ class Permissions extends Component {
       return (
         <div>
           {getPermissionsLegend(permissionsSymbols)}
+          {getViewPermissionNote()}
           <table className={`table table-bordered ${styles.permissionsTable}`}>
             {getPermissionsTableHead(queryTypes)}
             {getPermissionsTableBody(
@@ -646,164 +758,164 @@ class Permissions extends Component {
         const setOptions =
           insertState && insertState.localSet && insertState.localSet.length > 0
             ? insertState.localSet.map((s, i) => {
-                return (
-                  <div className={styles.insertSetConfigRow} key={i}>
-                    <div
-                      className={
-                        styles.display_inline +
+              return (
+                <div className={styles.insertSetConfigRow} key={i}>
+                  <div
+                    className={
+                      styles.display_inline +
                         ' ' +
                         styles.add_mar_right +
                         ' ' +
                         styles.input_element_wrapper
-                      }
+                    }
+                  >
+                    <select
+                      className="input-sm form-control"
+                      value={s.key}
+                      onChange={this.onSetKeyChange.bind(this)}
+                      data-index-id={i}
+                      disabled={disableInput}
                     >
-                      <select
-                        className="input-sm form-control"
-                        value={s.key}
-                        onChange={this.onSetKeyChange.bind(this)}
-                        data-index-id={i}
-                        disabled={disableInput}
-                      >
-                        <option value="" disabled>
+                      <option value="" disabled>
                           Column Name
-                        </option>
-                        {columns && columns.length > 0
-                          ? columns.map((c, key) => (
-                              <option
-                                value={c.column_name}
-                                data-column-type={c.data_type}
-                                key={key}
-                              >
-                                {c.column_name}
-                              </option>
-                            ))
-                          : null}
-                      </select>
-                    </div>
-                    <div
-                      className={
-                        styles.display_inline +
+                      </option>
+                      {columns && columns.length > 0
+                        ? columns.map((c, key) => (
+                          <option
+                            value={c.column_name}
+                            data-column-type={c.data_type}
+                            key={key}
+                          >
+                            {c.column_name}
+                          </option>
+                        ))
+                        : null}
+                    </select>
+                  </div>
+                  <div
+                    className={
+                      styles.display_inline +
                         ' ' +
                         styles.add_mar_right +
                         ' ' +
                         styles.input_element_wrapper
-                      }
+                    }
+                  >
+                    <select
+                      className="input-sm form-control"
+                      onChange={this.onSetTypeChange.bind(this)}
+                      data-index-id={i}
+                      value={setConfigValueType(s.value) || ''}
+                      disabled={disableInput}
                     >
-                      <select
-                        className="input-sm form-control"
-                        onChange={this.onSetTypeChange.bind(this)}
-                        data-index-id={i}
-                        value={setConfigValueType(s.value) || ''}
-                        disabled={disableInput}
-                      >
-                        <option value="" disabled>
+                      <option value="" disabled>
                           Select Preset Type
-                        </option>
-                        <option value="static">static</option>
-                        <option value="session">from session variable</option>
-                      </select>
-                    </div>
-                    <div
-                      className={
-                        styles.display_inline +
+                      </option>
+                      <option value="static">static</option>
+                      <option value="session">from session variable</option>
+                    </select>
+                  </div>
+                  <div
+                    className={
+                      styles.display_inline +
                         ' ' +
                         styles.add_mar_right +
                         ' ' +
                         styles.input_element_wrapper
-                      }
-                    >
-                      {setConfigValueType(s.value) === 'session' ? (
-                        <InputGroup>
-                          <InputGroup.Addon>X-Hasura-</InputGroup.Addon>
-                          <input
-                            className={'input-sm form-control '}
-                            placeholder="column_value"
-                            value={s.value.slice(X_HASURA_CONST.length)}
-                            onChange={this.onSetValueChange.bind(this)}
-                            onBlur={e => this.onSetValueBlur(e, i, null)}
-                            data-index-id={i}
-                            data-prefix-val={X_HASURA_CONST}
-                            disabled={disableInput}
-                          />
-                        </InputGroup>
-                      ) : (
-                        <EnhancedInput
+                    }
+                  >
+                    {setConfigValueType(s.value) === 'session' ? (
+                      <InputGroup>
+                        <InputGroup.Addon>X-Hasura-</InputGroup.Addon>
+                        <input
+                          className={'input-sm form-control '}
                           placeholder="column_value"
-                          type={
-                            i in this.state.insertSetOperations.columnTypeMap
-                              ? this.state.insertSetOperations.columnTypeMap[i]
-                              : ''
-                          }
-                          value={s.value}
+                          value={s.value.slice(X_HASURA_CONST.length)}
                           onChange={this.onSetValueChange.bind(this)}
-                          onBlur={this.onSetValueBlur}
-                          indexId={i}
+                          onBlur={e => this.onSetValueBlur(e, i, null)}
+                          data-index-id={i}
                           data-prefix-val={X_HASURA_CONST}
                           disabled={disableInput}
                         />
-                      )}
-                    </div>
-                    {setConfigValueType(s.value) === 'session' ? (
-                      <div
-                        className={
-                          styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper +
-                          ' ' +
-                          styles.e_g_text
-                        }
-                      >
-                        e.g. X-Hasura-User-Id
-                      </div>
+                      </InputGroup>
                     ) : (
-                      <div
-                        className={
-                          styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper +
-                          ' ' +
-                          styles.e_g_text
+                      <EnhancedInput
+                        placeholder="column_value"
+                        type={
+                          i in this.state.insertSetOperations.columnTypeMap
+                            ? this.state.insertSetOperations.columnTypeMap[i]
+                            : ''
                         }
-                      >
-                        e.g. false, 1, some-text
-                      </div>
-                    )}
-                    {i !== insertState.localSet.length - 1 ? (
-                      <div
-                        className={
-                          styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper
-                        }
-                      >
-                        <i
-                          className="fa-lg fa fa-times"
-                          onClick={
-                            !disableInput ? this.deleteSetKeyVal.bind(this) : ''
-                          }
-                          data-index-id={i}
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        className={
-                          styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper
-                        }
+                        value={s.value}
+                        onChange={this.onSetValueChange.bind(this)}
+                        onBlur={this.onSetValueBlur}
+                        indexId={i}
+                        data-prefix-val={X_HASURA_CONST}
+                        disabled={disableInput}
                       />
                     )}
                   </div>
-                );
-              })
+                  {setConfigValueType(s.value) === 'session' ? (
+                    <div
+                      className={
+                        styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper +
+                          ' ' +
+                          styles.e_g_text
+                      }
+                    >
+                        e.g. X-Hasura-User-Id
+                    </div>
+                  ) : (
+                    <div
+                      className={
+                        styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper +
+                          ' ' +
+                          styles.e_g_text
+                      }
+                    >
+                        e.g. false, 1, some-text
+                    </div>
+                  )}
+                  {i !== insertState.localSet.length - 1 ? (
+                    <div
+                      className={
+                        styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper
+                      }
+                    >
+                      <i
+                        className="fa-lg fa fa-times"
+                        onClick={
+                          !disableInput ? this.deleteSetKeyVal.bind(this) : ''
+                        }
+                        data-index-id={i}
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className={
+                        styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper
+                      }
+                    />
+                  )}
+                </div>
+              );
+            })
             : null;
 
         return (
@@ -847,6 +959,59 @@ class Permissions extends Component {
         );
       }
       return null;
+    };
+    const getAggregationSection = permsState => {
+      let _aggregationSection = '';
+      const query = permsState.query;
+
+      if (query === 'select') {
+        const dispatchToggleAllowAggregation = checked => {
+          dispatch(permToggleAllowAggregation(checked));
+        };
+
+        const aggregationAllowed = permsState.select
+          ? permsState.select.allow_aggregations
+          : false;
+
+        // Aggregation Tooltip
+        const aggregationToolTip = (
+          <Tooltip id="tooltip-aggregation">
+            Allow queries with aggregate functions like sum, count, avg, max,
+            min, etc
+          </Tooltip>
+        );
+
+        // TODO: Fix the controlled component
+        _aggregationSection = (
+          <div className={styles.mar_small_neg_left_1}>
+            <div className="radio">
+              <label>
+                <input
+                  type="checkbox"
+                  disabled={!permsState.select}
+                  checked={aggregationAllowed}
+                  value="toggle_aggregation"
+                  onClick={e =>
+                    dispatchToggleAllowAggregation(e.target.checked)
+                  }
+                />
+                <span className={styles.mar_small_left}>
+                  Allow role '{permsState.role}' to make aggregation queries
+                  &nbsp;
+                  <OverlayTrigger
+                    placement="right"
+                    overlay={aggregationToolTip}
+                  >
+                    <i className="fa fa-question-circle" aria-hidden="true" />
+                  </OverlayTrigger>
+                </span>
+              </label>
+            </div>
+          </div>
+        );
+      }
+
+      return _aggregationSection;
     };
 
     const getColumnList = (tableSchema, permsState) => {
@@ -1288,9 +1453,12 @@ class Permissions extends Component {
         <div>
           {getRowSection(queryTypes, permsState)}
           {getColumnSection(tableSchema, permsState)}
+          {showAggregation ? getAggregationSection(permsState) : null}
           {getLimitSection(permsState)}
           {getUpsertSection(permsState)}
-          {getInsertSetPermission(tableSchema, permsState)}
+          {showInsertPrefix
+            ? getInsertSetPermission(tableSchema, permsState)
+            : null}
           {getButtonsSection(tableSchema, permsState)}
         </div>
       </div>
@@ -1430,6 +1598,7 @@ const mapStateToProps = (state, ownProps) => ({
   allSchemas: state.tables.allSchemas,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
+  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   ...state.tables.modify,
 });
 

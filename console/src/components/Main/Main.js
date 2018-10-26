@@ -8,6 +8,7 @@ import 'react-toggle/style.css';
 import Spinner from '../Common/Spinner/Spinner';
 import { loadServerVersion, checkServerUpdates } from './Actions';
 import './NotificationOverrides.css';
+import semverCheck from '../../helpers/semver';
 
 const semver = require('semver');
 
@@ -35,9 +36,8 @@ class Main extends React.Component {
     dispatch(loadServerVersion()).then(() => {
       dispatch(checkServerUpdates()).then(() => {
         let isUpdateAvailable = false;
-        let showEvents = false;
         try {
-          showEvents = semver.gt(this.props.serverVersion, '1.0.0-alpha15');
+          const showEvents = semverCheck('eventsTab', this.props.serverVersion);
           if (showEvents) {
             this.setState({ showEvents: true });
           }
