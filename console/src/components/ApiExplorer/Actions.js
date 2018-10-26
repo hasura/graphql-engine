@@ -227,15 +227,21 @@ const graphQLFetcherFinal = (graphQLParams, url, headers) => {
 };
 
 /* Analyse Fetcher */
-const analyzeFetcher = (url, headers) => {
+const analyzeFetcher = (url, headers, analyzeApiChange) => {
   return query => {
     const editedQuery = {
       query,
     };
-    const user = {};
+    let user = {};
     const reqHeaders = getHeadersAsJSON(headers);
-    user.role = 'admin';
-    user.headers = reqHeaders;
+    if (!analyzeApiChange) {
+      user.role = 'admin';
+      user.headers = reqHeaders;
+    } else {
+      user = {
+        'x-hasura-role': 'admin',
+      };
+    }
     editedQuery.user = user;
     return fetch(`${url}/explain`, {
       method: 'post',

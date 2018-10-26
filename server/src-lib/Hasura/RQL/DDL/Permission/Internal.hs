@@ -196,7 +196,7 @@ getDependentHeaders boolExp = case boolExp of
 
     parseOnlyString val = case val of
       (String t)
-        | isXHasuraTxt t -> [T.toLower t]
+        | isUserVar t -> [T.toLower t]
         | isReqUserId t -> [userIdHeader]
         | otherwise -> []
       _ -> []
@@ -209,7 +209,7 @@ valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
 valueParser columnType = \case
   -- When it is a special variable
   val@(String t)
-    | isXHasuraTxt t -> return $ fromCurSess t
+    | isUserVar t -> return $ fromCurSess t
     | isReqUserId t  -> return $ fromCurSess userIdHeader
     | otherwise      -> txtRHSBuilder columnType val
   -- Typical value as Aeson's value

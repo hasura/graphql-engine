@@ -169,7 +169,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   (opTy, fields) <- either (withComplete . preExecErr) return $
                     runReaderT (validateGQ q) gCtx
-  let qTx = RQ.setHeadersTx userInfo >>
+  let qTx = RQ.setHeadersTx (userVars userInfo) >>
             resolveSelSet userInfo gCtx opTy fields
 
   case opTy of
