@@ -10,7 +10,6 @@ import           Data.Aeson.Types
 import           Instances.TH.Lift        ()
 
 import qualified Data.Aeson.Text          as AT
-import qualified Data.ByteString.Builder  as BB
 import qualified Data.HashMap.Strict      as HM
 import qualified Data.HashSet             as HS
 import qualified Data.Sequence            as DS
@@ -255,7 +254,7 @@ setConflictCtx :: Maybe ConflictCtx -> Q.TxE QErr ()
 setConflictCtx conflictCtxM = do
   let t = maybe "null" conflictCtxToJSON conflictCtxM
       setVal = toSQL $ S.SELit t
-      setVar = BB.string7 "SET LOCAL hasura.conflict_clause = "
+      setVar = "SET LOCAL hasura.conflict_clause = "
       q = Q.fromBuilder $ setVar <> setVal
   Q.unitQE defaultTxErrorHandler q () False
   where

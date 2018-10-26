@@ -1,0 +1,351 @@
+@import url('https://fonts.googleapis.com/css?family=Raleway:300,400,600');
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:400,600');
+body
+{
+  font-size: 16px;
+  font-family: 'Open Sans'
+}
+.wd100
+{
+  width: 100%;
+  float: left;
+}
+.displayFlex
+{
+  display: flex;
+  align-items: center;
+}
+.boxShadow
+{
+  -webkit-box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.3);
+  box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.3);
+}
+.commonBtn
+{
+  text-align: center;
+  padding: 25px 0;
+  clear: both;
+  button
+  {
+    border-radius: 25px;
+    background-color: #4767a1;
+    padding: 15px 30px;
+    border: 0;
+    color: #fff;
+    font-family: 'Raleway';
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+  }
+  button:hover
+  {
+    background-color: #3b5f93;
+  }
+  button:focus
+  {
+    outline: none;
+  }
+}
+.lightGrayBgColor
+{
+    background-color: #f7f7f7;
+}
+.blueBgColor
+{
+  background-color: #303b4e;
+}
+.pageHeader
+{
+  font-family: 'Raleway';
+  font-weight: 600;
+  font-size: 44px;
+  color: #4D4D4D;
+}
+.pageSubHeader
+{
+  font-family: 'Raleway';
+  font-weight: 600;
+  font-size: 28px;
+  text-align: center;
+  color: #102261;
+}
+.pageDescription
+{
+  text-align: center;
+  color: #565656;
+  padding-bottom: 15px;
+  font-size: 16px;
+  line-height: 1.7;
+  font-family: 'Open Sans';
+  a
+  {
+    color: #f93c18;
+  }
+  a:hover
+  {
+    color: #e0270e;
+    text-decoration: none;
+  }
+}
+.pageDescriptionSmall
+{
+  text-align: center;
+  color: #f93c18;
+  font-size: 14px;
+  font-weight: 600;
+  padding-bottom: 10px;
+  font-family: 'Open Sans';
+  a
+  {
+    color: #f93c18;
+    i
+    {
+      color: #f93c18;
+    }
+  }
+  a:hover
+  {
+    text-decoration: none;
+  }
+}
+.noPadd
+{
+  padding-left: 0;
+  padding-right: 0;
+}
+.commonSectionWrapper
+{
+  padding: 75px 0;
+}
+
+.powerfulGraphQLWrapper
+{
+  display: flex;
+  align-items: center;
+  .pageSubHeader
+  {
+    padding-bottom: 30px;
+  }
+  .pageSubHeader, .pageDescription
+  {
+    text-align: left;
+    padding-right: 50px;
+  }
+  .powerfulGraphQLImg
+  {
+    text-align: right;
+    img
+    {
+      width: 95%;
+      display: inline-block;
+    }
+  }
+}
+.easyStepsWrapper
+{
+  .pageSubHeader
+  {
+    padding-bottom: 30px;
+  }
+  .stepsListWrapper
+  {
+    .stepsList
+    {
+      .stepsIcon
+      {
+        text-align: center;
+        padding-bottom: 20px;
+        img
+        {
+          max-height: 60px;
+          display: inline-block;
+        }
+      }
+      .pageDescription
+      {
+        padding: 0 5px;
+        padding-bottom: 20px;
+      }
+    }
+  }
+  .easyStepsImg
+  {
+    background-color: #3edad7;
+    border-radius: 5px;
+    text-align: center;
+    padding: 30px;
+    width: 90%;
+    margin: 0 0 0 auto;
+    img
+    {
+      width: 65px;
+      display: inline-block;
+    }
+    .pageDescription
+    {
+      padding-top: 20px;
+      color: #fff;
+      font-size: 24px;
+      font-weight: 600;
+      font-family: 'Raleway';
+    }
+  }
+}
+.footerWrapper
+{
+  padding: 20px 0px;
+  .socialWrapper
+  {
+    text-align: center;
+    .socialIcon
+    {
+      display: inline-block;
+      padding: 0px 10px;
+      img
+      {
+        width: 50px;
+        display: inline-block;
+        opacity: 0.7;
+      }
+      img:hover
+      {
+        opacity: 1;
+      }
+    }
+  }
+  .pageDescription
+  {
+    color: #fff;
+    i
+    {
+      color: #f93c18;
+    }
+    a
+    {
+      color: #fff;
+    }
+    a:hover
+    {
+      color: #f93c18;
+    }
+  }
+  .pageDescriptionSmall
+  {
+    padding-top: 20px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 400;
+  }
+}
+@media (max-width: 767px)
+{
+  .pageHeader
+  {
+    font-size: 30px;
+    text-align: center;
+    padding-bottom: 20px;
+  }
+  .pageSubHeader
+  {
+    font-size: 22px !important;
+    text-align: center;
+  }
+  .pageDescription
+  {
+    font-size: 14px;
+    text-align: center;
+  }
+  .pageDescriptionSmall
+  {
+    font-size: 13px;
+    text-align: center;
+  }
+  .commonSectionWrapper
+  {
+    padding: 30px 0;
+  }
+  .displayFlex
+  {
+    display: block;
+  }
+  .powerfulGraphQLWrapper
+  {
+    display: block;
+    .pageSubHeader, .pageDescription
+    {
+      text-align: center;
+      padding-right: 0;
+      padding: 10px 15px;
+    }
+    .powerfulGraphQLImg
+    {
+      text-align: center;
+      padding-top: 20px;
+      img
+      {
+        width: 90%;
+      }
+    }
+  }
+  .easyStepsWrapper
+  {
+    .stepsListWrapper
+    {
+      .stepsList
+      {
+        padding-bottom: 0px;
+        .stepsIcon
+        {
+          padding-bottom: 10px;
+        }
+      }
+    }
+    .easyStepsImg
+    {
+      width: 95%;
+      margin: 0 auto;
+    }
+  }
+  .footerWrapper
+  {
+    .pageDescriptionSmall
+    {
+      padding: 0px 10px;
+      padding-top: 15px;
+    }
+  }
+}
+@media (min-width: 768px) and (max-width: 991px)
+{
+  .commonSectionWrapper
+  {
+    padding: 30px 0;
+  }
+  .pageHeader
+  {
+    font-size: 35px;
+    text-align: center;
+    padding-bottom: 20px;
+  }
+  .easyStepsWrapper
+  {
+    .stepsListWrapper
+    {
+      .stepsList
+      {
+        padding-bottom: 30px;
+        .stepsIcon
+        {
+          padding-bottom: 10px;
+        }
+      }
+    }
+    .easyStepsImg
+    {
+      width: 100%;
+      margin: 0 auto;
+      padding: 15px;
+    }
+  }
+}

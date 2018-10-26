@@ -3,10 +3,12 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TemplateHaskell            #-}
 
 module Hasura.RQL.Types.Permission
        ( RoleName(..)
        , UserId(..)
+       , UserVars
        , UserInfo(..)
        , adminUserInfo
        , adminRole
@@ -22,6 +24,9 @@ import           Hasura.SQL.Types
 import qualified Database.PG.Query          as Q
 
 import           Data.Aeson
+import qualified Data.Aeson                 as J
+import qualified Data.Aeson.Casing          as J
+import qualified Data.Aeson.TH              as J
 import           Data.Hashable
 import           Data.Word
 import           Instances.TH.Lift          ()
@@ -48,16 +53,23 @@ isAdmin = (adminRole ==)
 newtype UserId = UserId { getUserId :: Word64 }
   deriving (Show, Eq, FromJSON, ToJSON)
 
+type UserVars = (Map.HashMap T.Text T.Text)
+
 data UserInfo
   = UserInfo
-  { userRole    :: !RoleName
-  , userHeaders :: !(Map.HashMap T.Text T.Text)
+  { userRole :: !RoleName
+  , userVars :: !UserVars
   } deriving (Show, Eq, Generic)
 
 instance Hashable UserInfo
 
+$(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
+  ''UserInfo
+ )
+
 adminUserInfo :: UserInfo
-adminUserInfo = UserInfo adminRole Map.empty
+adminUserInfo =
+  UserInfo adminRole $ Map.singleton "x-hasura-role" "admin"
 
 data PermType
   = PTInsert

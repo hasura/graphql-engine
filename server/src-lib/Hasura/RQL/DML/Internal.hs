@@ -56,7 +56,7 @@ mkAdminRolePermInfo ti =
 
     tn = tiName ti
     i = InsPermInfo tn (S.BELit True) True M.empty [] []
-    s = SelPermInfo (HS.fromList pgCols) tn (S.BELit True) Nothing [] []
+    s = SelPermInfo (HS.fromList pgCols) tn (S.BELit True) Nothing True [] []
     u = UpdPermInfo (HS.fromList pgCols) tn (S.BELit True) [] []
     d = DelPermInfo tn (S.BELit True) [] []
 
@@ -243,7 +243,7 @@ toJSONableExp colTy expn
 -- validate headers
 validateHeaders :: (P1C m) => [T.Text] -> m ()
 validateHeaders depHeaders = do
-  headers <- M.keys . userHeaders <$> askUserInfo
+  headers <- M.keys . userVars <$> askUserInfo
   forM_ depHeaders $ \hdr ->
     unless (hdr `elem` map T.toLower headers) $
     throw400 NotFound $ hdr <<> " header is expected but not found"

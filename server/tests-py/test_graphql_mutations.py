@@ -136,6 +136,58 @@ class TestGraphqlInsertConstraints(object):
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
 
+
+class TestGraphqlInsertGeoJson():
+
+    def test_insert_point_landmark(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/insert_landmark.yaml")
+
+    def test_insert_3d_point_drone_loc(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/insert_drone_3d_location.yaml")
+
+    def test_insert_landmark_single_position_err(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/insert_landmark_single_position_err.yaml")
+
+    def test_insert_line_string_road(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/insert_road.yaml")
+
+    def test_insert_road_single_point_err(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/insert_road_single_point_err.yaml")
+
+    def test_insert_multi_point_service_locations(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/insert_service_locations.yaml")
+
+    def test_insert_multi_line_string_route(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/insert_route.yaml")
+
+    def test_insert_polygon(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/insert_area.yaml")
+
+    def test_insert_linear_ring_less_than_4_points_err(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/insert_area_less_than_4_points_err.yaml")
+
+    def test_insert_linear_ring_last_point_not_equal_to_first_err(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/insert_linear_ring_last_point_not_equal_to_first_err.yaml")
+
+    def test_insert_multi_polygon_compounds(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/insert_compounds.yaml")
+
+    def test_insert_geometry_collection(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/insert_geometry_collection.yaml")
+    
+    def test_insert_unexpected_geometry_type_err(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir + "/insert_geometry_unexpected_type_err.yaml")
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        self.dir = "queries/graphql_mutation/insert/geojson"
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
+
+
 class TestGraphqlNestedInserts(object):
 
     def test_author_with_articles(self, hge_ctx):

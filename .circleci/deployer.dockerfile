@@ -7,7 +7,6 @@ ARG ghr_version="0.10.0"
 ARG hub_version="2.5.0"
 
 RUN apt-get -y update \
-    && apt-get -y upgrade \
     && apt-get install -y curl make xz-utils git python \
     && curl -Lo /tmp/docker-${docker_ver}.tgz https://download.docker.com/linux/static/stable/x86_64/docker-${docker_ver}.tgz \
     && tar -xz -C /tmp -f /tmp/docker-${docker_ver}.tgz \
