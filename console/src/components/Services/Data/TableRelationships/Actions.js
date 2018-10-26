@@ -73,7 +73,7 @@ const generateRelationshipsQuery = (
       upQuery.args.using = {
         manual_configuration: {
           remote_table: {
-            table: rTable,
+            name: rTable,
             schema: currentSchema,
           },
           column_mapping: columnMaps.reduce(columnReducer, {}),
