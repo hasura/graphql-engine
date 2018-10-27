@@ -8,7 +8,7 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, realtime GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events for asynchronous business logic.
+Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, real-time GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events for asynchronous business logic.
 
 Hasura helps you build GraphQL apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
 
@@ -20,14 +20,14 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 
 ------------------
 
-![Hasura GraphQL Engine Realtime Demo](assets/realtime.gif)
+![Hasura GraphQL Engine Real-time Demo](assets/real-time.gif)
 
 -------------------
 
 ## Features
 
 * **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations
-* **Realtime**: Convert any GraphQL query to a live query by using subscriptions
+* **Real-time**: Convert any GraphQL query to a live query by using subscriptions
 * **Trigger webhooks or serverless functions**: On Postgres insert/update/delete events ([read more](event-triggers.md))
 * **Works with existing, live databases**: Point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
 * **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
@@ -47,10 +47,10 @@ Read more at [https://hasura.io](https://hasura.io) and the [docs](https://docs.
 - [Architecture](#architecture)
 - [Client-side tooling](#client-side-tooling)
 - [Add business logic](#add-business-logic)
-    - [Custom resolvers](#custom-resolvers)
+    - [Custom Resolvers](#custom-resolvers)
     - [Trigger webhooks on database events](#trigger-webhooks-on-database-events)
 - [Demos](#demos)
-    - [Realtime applications](#realtime-applications)
+    - [Real-time applications](#realtime-applications)
     - [Videos](#videos)
 - [Support & Troubleshooting](#support--troubleshooting)
 - [Contributing](#contributing)
@@ -97,7 +97,7 @@ Hasura works with any GraphQL client. We recommend using [Apollo Client](https:/
 
 ## Add business logic
 
-### Custom resolvers
+### Custom Resolvers
 
 Add custom resolvers in addition to Hasura GraphQL engine. Ideal for delegating
 to HTTP APIs, making direct calls to another data-source or writing business
@@ -114,7 +114,7 @@ processing - [read more](event-triggers.md).
 Check out all the example applications in the
 [community/examples](community/examples) directory.
 
-### Realtime applications
+### Real-time applications
 
 - Group Chat application built with React, includes a typing indicator, online users & new
   message notifications.
