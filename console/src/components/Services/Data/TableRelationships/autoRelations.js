@@ -1,3 +1,13 @@
+const getTableName = t => {
+  const typ = typeof t;
+  if (typ === 'string') {
+    return t;
+  } else if (typ === 'object') {
+    return 'name' in t ? t.name : '';
+  }
+  return '';
+};
+
 const suggestedRelationshipsRaw = (tableName, allSchemas) => {
   const objRels = [];
   const arrRels = [];
@@ -60,7 +70,10 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
             )[0];
           }
 
-          if (currRCol === rcol && currTable === constraint.table_name) {
+          if (
+            currRCol === rcol &&
+            getTableName(currTable) === constraint.table_name
+          ) {
             // existing relationship
             isExistingArrayRel = true;
           }
