@@ -5,6 +5,11 @@ import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import {
+  removeHeader,
+  setHeaderKey,
+  setHeaderValue,
+  setHeaderType,
+  addHeader,
   setTriggerName,
   setTableName,
   setSchemaName,
@@ -16,6 +21,7 @@ import {
   setOperationSelection,
   setDefaults,
 } from './AddActions';
+import { listDuplicate } from '../../../../utils/data';
 import { showErrorNotification } from '../Notification';
 import { createTrigger } from './AddActions';
 import { fetchTableListBySchema } from './AddActions';
@@ -80,6 +86,27 @@ class AddTrigger extends Component {
         customMsg =
           'Please select a minimum of one column for update operation';
       }
+    } else if (this.props.headers.length === 1) {
+      if (this.props.headers[0].key !== '') {
+        // let the default value through and ignore it while querying?
+        // Need a better method
+        if (this.props.headers[0].type === '') {
+          isValid = false;
+          errorMsg = 'No type selected for trigger header';
+          customMsg = 'Please select a type for the trigger header';
+        }
+      }
+    } else if (this.props.headers.length > 1) {
+      // repitition check
+      const repeatList = listDuplicate(
+        this.props.headers.map(header => header.key)
+      );
+      if (repeatList.length > 0) {
+        isValid = false;
+        errorMsg = 'Duplicate entries in trigger headers';
+        customMsg = `You have the following column names repeated: [${repeatList}]`;
+      }
+      // Check for empty header keys and key/value validation?
     }
     if (isValid) {
       this.props.dispatch(createTrigger());
@@ -107,6 +134,7 @@ class AddTrigger extends Component {
       lastError,
       lastSuccess,
       internalError,
+      headers,
     } = this.props;
     const styles = require('../TableCommon/Table.scss');
     let createBtnText = 'Create';
@@ -187,6 +215,72 @@ class AddTrigger extends Component {
       }
       return null;
     };
+
+    const heads = headers.map((header, i) => {
+      let removeIcon;
+      if (i + 1 === headers.length) {
+        removeIcon = <i className={`${styles.fontAwosomeClose}`} />;
+      } else {
+        removeIcon = (
+          <i
+            className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+            onClick={() => {
+              dispatch(removeHeader(i));
+            }}
+          />
+        );
+      }
+      return (
+        <div key={i} className={`${styles.display_flex} form-group`}>
+          <input
+            type="text"
+            className={`${styles.input} form-control ${styles.add_mar_right}`}
+            value={header.key}
+            placeholder="key"
+            onChange={e => {
+              dispatch(setHeaderKey(e.target.value, i));
+            }}
+            data-test={`header-${i}`}
+          />
+          <select
+            value={header.type}
+            className={`${styles.select} ${styles.selectWidth} form-control ${
+              styles.add_pad_left
+            } ${styles.add_mar_right}`}
+            onChange={e => {
+              dispatch(setHeaderType(e.target.value, i));
+              if (i + 1 === headers.length) {
+                dispatch(addHeader());
+              }
+            }}
+            data-test={`header-type-${i}`}
+          >
+            {header.type === '' ? (
+              <option disabled value="">
+                -- value type --
+              </option>
+            ) : null}
+            <option value="static" key="0" title="static">
+              static
+            </option>
+            <option value="env" key="1" title="env">
+              from env variable
+            </option>
+          </select>{' '}
+          <input
+            type="text"
+            className={`${styles.input} form-control ${styles.add_mar_right}`}
+            value={header.value}
+            placeholder="value"
+            onChange={e => {
+              dispatch(setHeaderValue(e.target.value, i));
+            }}
+            data-test={`header-value-${i}`}
+          />{' '}
+          {removeIcon}
+        </div>
+      );
+    });
 
     return (
       <div
@@ -514,6 +608,12 @@ class AddTrigger extends Component {
                         placeholder="interval time in seconds"
                       />
                     </div>
+                  </div>
+                  <div
+                    className={styles.add_mar_bottom + ' ' + styles.add_mar_top}
+                  >
+                    <h4 className={styles.subheading_text}>Headers</h4>
+                    {heads}
                   </div>
                 </div>
               ) : null}
