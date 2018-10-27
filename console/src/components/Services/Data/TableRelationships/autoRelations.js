@@ -26,13 +26,29 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
       const constraint = foreignKeyConstraints[j];
       if (constraint.table_name === tableName) {
         /* Object Relationships */
-        const lcol = Object.keys(constraint.column_mapping)[0];
+        const lcol = Object.keys(constraint.column_mapping);
         let isExistingObjRel = false;
         for (let k = 0; k < currentObjRels.length; k++) {
-          // check if this is already an existing relationship
-          if (currentObjRels[k].rel_def.foreign_key_constraint_on === lcol) {
-            // existing relationship
-            isExistingObjRel = true;
+          if (currentObjRels[k].rel_def.foreign_key_constraint_on) {
+            // check if this is already an existing relationship
+            if (
+              currentObjRels[k].rel_def.foreign_key_constraint_on === lcol[0]
+            ) {
+              // existing relationship
+              isExistingObjRel = true;
+            }
+          } else {
+            // check if this is already an existing relationship
+            if (
+              Object.keys(
+                currentObjRels[k].rel_def.manual_configuration.column_mapping
+              )
+                .sort()
+                .join(',') === lcol.sort().join(',')
+            ) {
+              // existing relationship
+              isExistingObjRel = true;
+            }
           }
         }
         if (!isExistingObjRel) {
@@ -41,16 +57,13 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
             isObjRel: true,
             name: null,
             lcol: lcol,
-            rcol:
-              constraint.column_mapping[
-                Object.keys(constraint.column_mapping)[0]
-              ],
+            rcol: lcol.map(column => constraint.column_mapping[column]),
             rTable: constraint.ref_table,
           });
         }
       } else if (constraint.ref_table === tableName) {
         /* Array Relationships */
-        const rcol = Object.keys(constraint.column_mapping)[0];
+        const rcol = Object.keys(constraint.column_mapping);
         const rTable = constraint.table_name;
         let isExistingArrayRel = false;
 
@@ -62,16 +75,16 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
 
           if (relDef.foreign_key_constraint_on) {
             currTable = relDef.foreign_key_constraint_on.table;
-            currRCol = relDef.foreign_key_constraint_on.column;
+            currRCol = [relDef.foreign_key_constraint_on.column];
           } else {
             currTable = relDef.manual_configuration.remote_table;
             currRCol = Object.values(
               relDef.manual_configuration.column_mapping
-            )[0];
+            );
           }
 
           if (
-            currRCol === rcol &&
+            currRCol.sort().join(',') === rcol.sort().join(',') &&
             getTableName(currTable) === constraint.table_name
           ) {
             // existing relationship
@@ -84,10 +97,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
             isObjRel: false,
             name: null,
             rcol: rcol,
-            lcol:
-              constraint.column_mapping[
-                Object.keys(constraint.column_mapping)[0]
-              ],
+            lcol: rcol.map(column => constraint.column_mapping[column]),
             rTable: rTable,
           });
         }
@@ -98,7 +108,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
         constraint.ref_table === tableName &&
         constraint.table_name === tableName
       ) {
-        const rcol = Object.keys(constraint.column_mapping)[0];
+        const rcol = Object.keys(constraint.column_mapping);
         const rTable = constraint.table_name;
         let isExistingArrayRel = false;
 
@@ -120,10 +130,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
             isObjRel: false,
             name: null,
             rcol: rcol,
-            lcol:
-              constraint.column_mapping[
-                Object.keys(constraint.column_mapping)[0]
-              ],
+            lcol: rcol.map(column => constraint.column_mapping[column]),
             rTable: rTable,
           });
         }

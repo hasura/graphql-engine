@@ -900,11 +900,13 @@ mkInsInp
   :: QualifiedTable -> InsCtx -> InpObjTyInfo
 mkInsInp tn insCtx =
   InpObjTyInfo (Just desc) (mkInsInpTy tn) $ fromInpValL $
-  map mkPGColInp cols <> relInps
+  map mkPGColInp insCols <> relInps
   where
     desc = G.Description $
       "input type for inserting data into table " <>> tn
     cols = icColumns insCtx
+    setCols = Map.keys $ icSet insCtx
+    insCols = flip filter cols $ \ci -> pgiName ci `notElem` setCols
     relInfoMap = icRelations insCtx
 
     relInps = flip map (Map.toList relInfoMap) $
@@ -1363,11 +1365,12 @@ mkInsCtx role tableCache fields insPermInfo = do
       isInsertable insPermM viewInfoM
 
   let relInfoMap = Map.fromList $ catMaybes relTupsM
-  return $ InsCtx iView cols relInfoMap
+  return $ InsCtx iView cols setCols relInfoMap
   where
     cols = getValidCols fields
     rels = getValidRels fields
     iView = ipiView insPermInfo
+    setCols = ipiSet insPermInfo
 
     isInsertable Nothing _          = False
     isInsertable (Just _) viewInfoM = isMutable viIsInsertable viewInfoM
@@ -1384,7 +1387,7 @@ mkAdminInsCtx tn tc fields = do
     return $ bool Nothing (Just (relName, relInfo)) $
       isMutable viIsInsertable viewInfoM
 
-  return $ InsCtx tn cols $ Map.fromList $ catMaybes relTupsM
+  return $ InsCtx tn cols Map.empty $ Map.fromList $ catMaybes relTupsM
   where
     cols = getValidCols fields
     rels = getValidRels fields
