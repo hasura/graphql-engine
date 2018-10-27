@@ -21,7 +21,8 @@ export const webhookUrlDescription = (
 
 export const advancedOperationDescription = (
   <Tooltip id="tooltip-advanced-operation-description">
-    Columns to be sent in the payload of webhook
+    For update triggers, webhook will be triggered only when selected columns
+    are modified
   </Tooltip>
 );
 
