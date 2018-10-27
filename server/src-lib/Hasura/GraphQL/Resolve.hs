@@ -62,9 +62,9 @@ buildTx userInfo gCtx fld = do
       "lookup failed: opctx: " <> showName f
 
     validateHdrs hdrs = do
-      let receivedHdrs = userVars userInfo
+      let receivedVars = userVars userInfo
       forM_ hdrs $ \hdr ->
-        unless (Map.member hdr receivedHdrs) $
+        unless (isJust $ getVarVal hdr receivedVars) $
         throw400 NotFound $ hdr <<> " header is expected but not found"
 
 -- {-# SCC resolveFld #-}

@@ -22,9 +22,6 @@ import qualified Text.Ginger                  as TG
 
 import           Hasura.Prelude
 
-isXHasuraTxt :: T.Text -> Bool
-isXHasuraTxt = T.isInfixOf "x-hasura-" . T.toLower
-
 jsonHeader :: (T.Text, T.Text)
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
 

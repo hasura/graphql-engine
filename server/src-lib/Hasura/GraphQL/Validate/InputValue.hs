@@ -27,7 +27,6 @@ import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils             (duplicates)
 import           Hasura.SQL.Value
 
 newtype P a = P { unP :: Maybe (Either AnnGValue a)}
