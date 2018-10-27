@@ -321,6 +321,14 @@ mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
 handleIfNull :: SQLExp -> SQLExp -> SQLExp
 handleIfNull l e = SEFnApp "coalesce" [e, l] Nothing
 
+applyJsonBuildObj :: [SQLExp] -> SQLExp
+applyJsonBuildObj args =
+  SEFnApp "json_build_object" args Nothing
+
+applyRowToJson :: [Extractor] -> SQLExp
+applyRowToJson extrs =
+  SEFnApp "row_to_json" [mkRowExp extrs] Nothing
+
 getExtrAlias :: Extractor -> Maybe Alias
 getExtrAlias (Extractor _ ma) = ma
 

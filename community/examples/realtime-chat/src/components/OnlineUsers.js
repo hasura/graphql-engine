@@ -6,7 +6,7 @@ import gql from 'graphql-tag';
 const fetchOnlineUsersSubscription = gql`
   subscription {
     user_online (
-      order_by: username_asc
+      order_by: {username:asc}
     ) {
       id
       username
@@ -15,7 +15,7 @@ const fetchOnlineUsersSubscription = gql`
 `;
 
 class OnlineUsers extends React.Component {
-  
+
   constructor(props) {
     super(props);
     this.state = {
@@ -40,7 +40,7 @@ class OnlineUsers extends React.Component {
                 <div>
                  <p className="userListHeading"> Online Users ({!data.user_online ? 0 : data.user_online.length})</p>
                   <ul className="userList">
-                    { 
+                    {
                       data.user_online.map((u) => {
                         return <li key={u.id}>{u.username}</li>
                       })

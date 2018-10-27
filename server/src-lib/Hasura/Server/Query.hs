@@ -105,7 +105,7 @@ runQuery
 runQuery pool isoL userInfo sc query = do
   tx <- liftEither $ buildTxAny userInfo sc query
   res <- liftIO $ runExceptT $ Q.runTx pool (isoL, Nothing) $
-         setHeadersTx userInfo >> tx
+         setHeadersTx (userVars userInfo) >> tx
   liftEither res
 
 queryNeedsReload :: RQLQuery -> Bool
@@ -218,11 +218,11 @@ buildTxAny userInfo sc rq = case rq of
                , finalSc
                )
 
-setHeadersTx :: UserInfo -> Q.TxE QErr ()
-setHeadersTx userInfo =
+setHeadersTx :: UserVars -> Q.TxE QErr ()
+setHeadersTx uVars =
   Q.unitQE defaultTxErrorHandler setSess () False
   where
     toStrictText = LT.toStrict . AT.encodeToLazyText
     setSess = Q.fromText $
       "SET LOCAL \"hasura.user\" = " <>
-      pgFmtLit (toStrictText $ userVars userInfo)
+      pgFmtLit (toStrictText uVars)

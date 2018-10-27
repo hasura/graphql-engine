@@ -137,20 +137,21 @@ toSQLExps cols =
     let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (c, prepExp)
 
-mkSQLRow :: [PGCol] -> [(PGCol, S.SQLExp)] -> [S.SQLExp]
-mkSQLRow tableCols withPGCol =
-  Map.elems $ Map.union (Map.fromList withPGCol) defVals
+mkSQLRow :: [PGCol] -> InsSetCols -> [(PGCol, S.SQLExp)] -> [S.SQLExp]
+mkSQLRow tableCols setCols withPGCol =
+  Map.elems $ Map.union setCols insColsWithDefVals
   where
     defVals = Map.fromList $ zip tableCols (repeat $ S.SEUnsafe "DEFAULT")
+    insColsWithDefVals = Map.union (Map.fromList withPGCol) defVals
 
 mkInsertQ :: QualifiedTable
           -> Maybe RI.ConflictClauseP1 -> [(PGCol, AnnGValue)]
-          -> [PGCol] -> RoleName
+          -> [PGCol] -> InsSetCols -> RoleName
           -> Q.TxE QErr WithExp
-mkInsertQ vn onConflictM insCols tableCols role = do
+mkInsertQ vn onConflictM insCols tableCols setCols role = do
   (givenCols, args) <- flip runStateT Seq.Empty $ toSQLExps insCols
   let sqlConflict = RI.toSQLConflict <$> onConflictM
-      sqlExps = mkSQLRow tableCols givenCols
+      sqlExps = mkSQLRow tableCols setCols givenCols
       sqlInsert = S.SQLInsert vn tableCols [sqlExps] sqlConflict $ Just S.returningStar
   if isAdmin role then return (S.CTEInsert sqlInsert, args)
   else do
@@ -166,7 +167,7 @@ fetchColsAndRels
        , [(RelName, ObjRelData)] -- ^ object relations
        , [(RelName, ArrRelData)] -- ^ array relations
        )
-fetchColsAndRels annObj = foldrM go ([], [], []) $ OMap.toList annObj
+fetchColsAndRels = foldrM go ([], [], []) . OMap.toList
   where
     go (gName, annVal) (cols, objRels, arrRels) =
       case annVal of
@@ -346,7 +347,7 @@ insertObj role insCtxMap tn annObj ctx addCols onConflictValM errP = do
       preArrRelInsAffRows = objInsAffRows + thisInsAffRows
 
   -- prepare insert query as with expression
-  insQ <- mkInsertQ vn onConflictM finalInsCols (map pgiName tableColInfos) role
+  insQ <- mkInsertQ vn onConflictM finalInsCols (map pgiName tableColInfos) setCols role
 
   let insertWithArrRels = cannotInsArrRelErr thisInsAffRows >>
                           withArrRels preArrRelInsAffRows insQ
@@ -356,7 +357,7 @@ insertObj role insCtxMap tn annObj ctx addCols onConflictValM errP = do
   bool insertWithArrRels insertWithoutArrRels $ null arrDepColsWithInfo
 
   where
-    InsCtx vn tableColInfos relInfoMap = ctx
+    InsCtx vn tableColInfos setCols relInfoMap = ctx
     withErrPath = withPathK errP
 
     withNoArrRels affRows insQ = return (affRows, insQ)
@@ -409,14 +410,16 @@ execWithExp
   -> AnnSelFlds
   -> Q.TxE QErr RespBody
 execWithExp tn (withExp, args) annFlds = do
-  let annSel = RS.AnnSel annFlds tn frmItemM
-        (S.BELit True) Nothing RS.noTableArgs
+  let annSel = RS.AnnSel selFlds tabFrom tabPerm RS.noTableArgs
       sqlSel = RS.mkSQLSelect True annSel
       selWith = S.SelectWith [(alias, withExp)] sqlSel
       sqlBuilder = toSQL selWith
   runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList args) True
   where
+    selFlds = RS.ASFSimple annFlds
+    tabFrom = RS.TableFrom tn frmItemM
+    tabPerm = RS.TablePerm (S.BELit True) Nothing
     alias = S.Alias $ Iden $ snakeCaseTable tn <> "__rel_insert_result"
     frmItemM = Just $ S.FIIden $ toIden alias
 
@@ -480,7 +483,7 @@ insertMultipleObjects role insCtxMap tn ctx insObjs
   bool withoutRels withRelsInsert anyRelsToInsert
 
   where
-    InsCtx vn tableColInfos _ = ctx
+    InsCtx vn tableColInfos setCols _ = ctx
     tableCols = map pgiName tableColInfos
 
     errP = bool "objects" "data" isArrRel
@@ -496,7 +499,7 @@ insertMultipleObjects role insCtxMap tn ctx insObjs
 
       (sqlRows, prepArgs) <- flip runStateT Seq.Empty $ do
         rowsWithCol <- mapM (toSQLExps . map pgColToAnnGVal) withAddCols
-        return $ map (mkSQLRow tableCols) rowsWithCol
+        return $ map (mkSQLRow tableCols setCols) rowsWithCol
 
       let insQP1 = RI.InsertQueryP1 tn vn tableCols sqlRows onConflictM mutFlds
           p1 = (insQP1, prepArgs)
@@ -518,7 +521,7 @@ insertMultipleObjects role insCtxMap tn ctx insObjs
             return $ J.toJSON affRows
           RR.MExp txt -> return $ J.toJSON txt
           RR.MRet annSel -> do
-            let annFlds = RS._asFields annSel
+            let annFlds = RS.fetchAnnFlds $ RS._asnFields annSel
             bs <- buildReturningResp tn withExps annFlds
             decodeFromBS bs
         return (t, jsonVal)

@@ -8,11 +8,10 @@
 module Hasura.GraphQL.Resolve.Context
   ( InsResp(..)
   , FieldMap
-  , OrdByResolveCtx
-  , OrdByResolveCtxElem
-  , NullsOrder(..)
-  , OrdTy(..)
   , RelationInfoMap
+  , OrdByCtx
+  , OrdByItemMap
+  , OrdByItem(..)
   , InsCtx(..)
   , InsCtxMap
   , RespTx
@@ -49,7 +48,6 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Hasura.RQL.DML.Select         as RS
 import qualified Hasura.SQL.DML                as S
 
 data InsResp
@@ -61,25 +59,29 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
 
 type FieldMap
   = Map.HashMap (G.NamedType, G.Name)
-    (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool))
+    (Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int))
 
-data OrdTy
-  = OAsc
-  | ODesc
-  deriving (Show, Eq)
+-- data OrdTy
+--   = OAsc
+--   | ODesc
+--   deriving (Show, Eq)
 
-data NullsOrder
-  = NFirst
-  | NLast
-  deriving (Show, Eq)
+-- data NullsOrder
+--   = NFirst
+--   | NLast
+--   deriving (Show, Eq)
 
 type RespTx = Q.TxE QErr BL.ByteString
 
--- context needed for sql generation
-type OrdByResolveCtxElem = RS.AnnOrderByItem
+-- order by context
+data OrdByItem
+  = OBIPGCol !PGColInfo
+  | OBIRel !RelInfo !S.BoolExp
+  deriving (Show, Eq)
 
-type OrdByResolveCtx
-  = Map.HashMap (G.NamedType, G.EnumValue) OrdByResolveCtxElem
+type OrdByItemMap = Map.HashMap G.Name OrdByItem
+
+type OrdByCtx = Map.HashMap G.NamedType OrdByItemMap
 
 -- insert context
 type RelationInfoMap = Map.HashMap RelName RelInfo
@@ -88,6 +90,7 @@ data InsCtx
   = InsCtx
   { icView      :: !QualifiedTable
   , icColumns   :: ![PGColInfo]
+  , icSet       :: !InsSetCols
   , icRelations :: !RelationInfoMap
   } deriving (Show, Eq)
 
@@ -95,7 +98,7 @@ type InsCtxMap = Map.HashMap QualifiedTable InsCtx
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> G.Name -> m (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool))
+  => G.NamedType -> G.Name -> m (Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int))
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $
@@ -153,7 +156,7 @@ withArgM args arg f = prependArgsInPath $ nameAsPath arg $
 type PrepArgs = Seq.Seq Q.PrepArg
 
 type Convert =
-  StateT PrepArgs (ReaderT (FieldMap, OrdByResolveCtx, InsCtxMap) (Except QErr))
+  StateT PrepArgs (ReaderT (FieldMap, OrdByCtx, InsCtxMap) (Except QErr))
 
 prepare
   :: (MonadState PrepArgs m)
@@ -165,7 +168,7 @@ prepare (colTy, colVal) = do
 
 runConvert
   :: (MonadError QErr m)
-  => (FieldMap, OrdByResolveCtx, InsCtxMap) -> Convert a -> m (a, PrepArgs)
+  => (FieldMap, OrdByCtx, InsCtxMap) -> Convert a -> m (a, PrepArgs)
 runConvert ctx m =
   either throwError return $
   runExcept $ runReaderT (runStateT m Seq.empty) ctx

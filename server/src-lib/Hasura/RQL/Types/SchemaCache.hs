@@ -18,7 +18,9 @@ module Hasura.RQL.Types.SchemaCache
        , isMutable
        , mutableView
        , onlyIntCols
+       , onlyNumCols
        , onlyJSONBCols
+       , onlyComparableCols
        , isUniqueOrPrimary
        , mkTableInfo
        , addTableToCache
@@ -59,6 +61,7 @@ module Hasura.RQL.Types.SchemaCache
        , DelPermInfo(..)
        , addPermToCache
        , delPermFromCache
+       , InsSetCols
 
        , QueryTemplateInfo(..)
        , addQTemplateToCache
@@ -205,8 +208,14 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''PGColInfo)
 onlyIntCols :: [PGColInfo] -> [PGColInfo]
 onlyIntCols = filter (isIntegerType . pgiType)
 
+onlyNumCols :: [PGColInfo] -> [PGColInfo]
+onlyNumCols = filter (isNumType . pgiType)
+
 onlyJSONBCols :: [PGColInfo] -> [PGColInfo]
 onlyJSONBCols = filter (isJSONBType . pgiType)
+
+onlyComparableCols :: [PGColInfo] -> [PGColInfo]
+onlyComparableCols = filter (isComparableType . pgiType)
 
 getColInfos :: [PGCol] -> [PGColInfo] -> [PGColInfo]
 getColInfos cols allColInfos = flip filter allColInfos $ \ci ->
@@ -267,11 +276,17 @@ isPGColInfo _            = False
 instance ToJSON S.BoolExp where
   toJSON = String . T.pack . show
 
+instance ToJSON S.SQLExp where
+  toJSON = String . T.pack . show
+
+type InsSetCols = M.HashMap PGCol S.SQLExp
+
 data InsPermInfo
   = InsPermInfo
   { ipiView            :: !QualifiedTable
   , ipiCheck           :: !S.BoolExp
   , ipiAllowUpsert     :: !Bool
+  , ipiSet             :: !InsSetCols
   , ipiDeps            :: ![SchemaDependency]
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
@@ -287,6 +302,7 @@ data SelPermInfo
   , spiTable           :: !QualifiedTable
   , spiFilter          :: !S.BoolExp
   , spiLimit           :: !(Maybe Int)
+  , spiAllowAgg        :: !Bool
   , spiDeps            :: ![SchemaDependency]
   , spiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
@@ -360,7 +376,7 @@ data EventTriggerInfo
    , etiDelete    :: !(Maybe OpTriggerInfo)
    , etiRetryConf :: !RetryConf
    , etiWebhook   :: !T.Text
-   , etiHeaders   :: ![(HeaderName, T.Text)]
+   , etiHeaders   :: ![EventHeaderInfo]
    } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)
@@ -621,7 +637,7 @@ addEventTriggerToCache
   -> TriggerOpsDef
   -> RetryConf
   -> T.Text
-  -> [(HeaderName, T.Text)]
+  -> [EventHeaderInfo]
   -> m ()
 addEventTriggerToCache qt trid trn tdef rconf webhook headers =
   modTableInCache modEventTriggerInfo qt
