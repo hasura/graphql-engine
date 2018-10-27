@@ -189,7 +189,8 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
     state.lcol,
     state.rTable,
     state.rcol,
-    state.isObjRel
+    state.isObjRel,
+    currentSchema
   );
   const relChangesUp = [upQuery];
   const relChangesDown = [downQuery];
