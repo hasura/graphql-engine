@@ -167,12 +167,12 @@ A CLI tool to help you try realtime GraphQL on your firebase data. It takes data
 
     ```graphql
     query {
-      Authors (order_by: Name_asc){
+      Authors (order_by: {Name:asc}){
         Name
         Age
         Sex
         Articles (
-          order_by: Title_asc
+          order_by: {Title:asc}
           where: {
             IsUnpublished: {
               _eq: false
@@ -181,7 +181,7 @@ A CLI tool to help you try realtime GraphQL on your firebase data. It takes data
         ){
           Title
           Body
-          Comments (order_by: Date_desc){
+          Comments (order_by: {Date:desc}){
             Body
             Authors {
               Name
@@ -472,7 +472,7 @@ To normalize it, here are the steps you must follow:
 
     ```graphql
     query {
-      users (order_by: username_asc){
+      users (order_by: {username:asc}){
         username
         profile_picture
         email

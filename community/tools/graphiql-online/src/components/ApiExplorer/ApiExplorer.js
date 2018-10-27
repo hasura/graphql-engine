@@ -35,7 +35,10 @@ class ApiExplorer extends Component {
 
     return (
       <div className={'container-fluid ' + styles.padd_remove}>
-        <Helmet title="GraphiQL" />
+        <Helmet
+          title="GraphiQL Online with Headers | Built by Hasura"
+          description="An online version of GraphiQL. Manage headers easily. Test your GraphQL servers."
+        />
         <div className={wrapperClass}>{requestWrapper}</div>
       </div>
     );

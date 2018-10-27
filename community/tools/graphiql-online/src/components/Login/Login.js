@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import Helmet from 'react-helmet';
 import './App.css';
 import { updateGraphQLEndpoint } from '../ApiExplorer/Actions';
 
@@ -15,6 +16,10 @@ class LoginComponent extends React.Component {
     const { dispatch } = this.props;
     return (
       <div className="loginWrapper">
+        <Helmet
+          title="GraphiQL Online with Headers | Built by Hasura"
+          description="An online version of GraphiQL. Manage headers easily. Test your GraphQL servers."
+        />
         <h2 className="loginHeading"> Online GraphiQL </h2>
         <div className="login">
           <div>

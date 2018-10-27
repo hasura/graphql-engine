@@ -53,7 +53,7 @@ class TestSubscriptionBasic(object):
     def test_start(self, hge_ctx):
         query = """
         subscription {
-          hge_tests_test_t1(order_by: c1_desc, limit: 1) {
+        hge_tests_test_t1(order_by: {c1: desc}, limit: 1) {
             c1,
             c2
           }
@@ -110,7 +110,7 @@ class TestSubscriptionBasic(object):
     def test_complete(self, hge_ctx):
         query = """
         query {
-          hge_tests_test_t1(order_by: c1_desc, limit: 1) {
+          hge_tests_test_t1(order_by: {c1: desc}, limit: 1) {
             c1,
             c2
           }
@@ -158,7 +158,7 @@ class TestSubscriptionLiveQueries(object):
 
         query = """
         subscription {
-          hge_tests_test_t2(order_by: c1_desc, limit: 1) {
+          hge_tests_test_t2(order_by: {c1: desc}, limit: 1) {
             c1,
             c2
           }
