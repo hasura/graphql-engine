@@ -15,7 +15,7 @@ Firebase has few ways of implementing custom JWT claims in Firebase Auth:
 
 ## Add custom claims in Firebase
 
-In this example, we are choosing the option 2 from above. But this can be done via any of the above methods. [Firebase docs](https://firebase.google.com/docs/auth/admin/custom-claims) have extensive documentation on how to achive this via different methods.
+In this example, we are choosing the option 2 from above. But this can be done via any of the above methods. [Firebase docs](https://firebase.google.com/docs/auth/admin/custom-claims) have extensive documentation on how to achieve this via different methods.
 
 This example is adapted from [this guide](https://firebase.google.com/docs/auth/admin/custom-claims#defining_roles_via_firebase_functions_on_user_creation).
 

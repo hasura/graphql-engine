@@ -11,6 +11,7 @@ const defaultState = {
   lastError: null,
   internalError: null,
   lastSuccess: null,
+  headers: [{ key: '', type: '', value: '' }],
 };
 
 export default defaultState;
