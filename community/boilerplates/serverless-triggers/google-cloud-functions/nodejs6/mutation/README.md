@@ -67,5 +67,5 @@ Webhook URL: [Trigger URL]
 ```
 
 Once the trigger is created, goto `Data -> profile -> Insert row` and add a new
-profile with name and address, save. Goto `Browse rows` tabs to see lat and lng
+profile with name and address, save. Go to `Browse rows` tabs to see lat and lng
 updated, by the cloud function.
