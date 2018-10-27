@@ -152,7 +152,9 @@ class AddManualRelationship extends Component {
               onChange={this.onSchemaChange}
               data-test="remote-schema"
               value={
-                'remoteSchema' in manualRelInfo && manualRelInfo.remoteSchema
+                manualRelInfo &&
+                'remoteSchema' in manualRelInfo &&
+                manualRelInfo.remoteSchema
                   ? manualRelInfo.remoteSchema
                   : ''
               }
