@@ -8,7 +8,7 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, realtime GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events for asynchronous business logic.
+Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, real-time GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events for asynchronous business logic.
 
 Hasura helps you build GraphQL apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
 
@@ -97,7 +97,7 @@ Hasura works with any GraphQL client. We recommend using [Apollo Client](https:/
 
 ## Add business logic
 
-### Custom resolvers
+### Custom Resolvers
 
 Add custom resolvers in addition to Hasura GraphQL engine. Ideal for delegating
 to HTTP APIs, making direct calls to another data-source or writing business
@@ -128,7 +128,7 @@ Check out all the example applications in the
   - [Tutorial](community/examples/realtime-location-tracking)
   - [Browse APIs](https://realtime-backend.herokuapp.com/)
 
-- A realtime dashboard for data aggregations on continuously changing data.
+- A real-time dashboard for data aggregations on continuously changing data.
   - [Try it out](https://shahidh.in/hasura-realtime-poll/)
   - [Tutorial](community/examples/realtime-poll)
   - [Browse APIs](https://hasura-realtime-poll.herokuapp.com/)
@@ -196,5 +196,5 @@ or on our [website chat](https://hasura.io).
 
 All **other contents** (except those in [`server`](server), [`cli`](cli) and
 [`console`](console) directories) are available under the [MIT License](LICENSE-community).
-This includes everything in the [`docs`](docs) and [`community`](community)
+This includes everything in the [`docs`](docs) and [community`](community)
 directories.
