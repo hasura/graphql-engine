@@ -1,5 +1,11 @@
 type: bulk
 args:
+
+- type: run_sql
+  args:
+    sql: |
+      drop table test_types
+
 #Drop relationship first
 - type: drop_relationship
   args:
@@ -22,3 +28,13 @@ args:
   args:
     sql: |
       drop table "user"
+
+- type: run_sql
+  args:
+    sql: |
+      drop type complex
+
+- type: run_sql
+  args:
+    sql: |
+      drop type inventory_item
