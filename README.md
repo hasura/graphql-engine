@@ -31,7 +31,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 * **Trigger webhooks or serverless functions**: On Postgres insert/update/delete events ([read more](event-triggers.md))
 * **Works with existing, live databases**: Point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
 * **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
-* **High-performance & low-footprint**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
+* **High-performance & low resource footprint**: ~15MB docker image; ~50MB RAM @ 1000 req/s;enhanced multi-core support
 * **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
 * **Postgres** ❤️: Supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
 
@@ -143,7 +143,7 @@ Check out all the example applications in the
 
 ## Support & Troubleshooting
 
-The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
+The documentation and community will help you troubleshoot most issues. If you ever encounter a bug or need to get in touch with us, you can contact us by any of the following channels:
 
 * Support & feedback: [Discord](https://discord.gg/3FNQnWj)
 * Issue & bug tracking: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
