@@ -32,10 +32,21 @@ const defaultPermissionsState = {
   applySamePermissions: [],
 };
 
+const defaultInsertSetState = {
+  key: '',
+  value: '',
+};
 const defaultQueryPermissions = {
   insert: {
     check: {},
     allow_upsert: true,
+    set: {},
+    localSet: [
+      {
+        ...defaultInsertSetState,
+      },
+    ],
+    isSetConfigChecked: false,
   },
   select: {
     columns: [],
@@ -75,9 +86,9 @@ const defaultModifyState = {
     name: '',
     tableName: '',
     isObjRel: null,
-    lcol: '',
+    lcol: [],
     rTable: null,
-    rcol: '',
+    rcol: [],
     manualColumns: [],
     isManualExpanded: false,
     manualRelInfo: {
@@ -135,4 +146,5 @@ export {
   defaultModifyState,
   defaultPermissionsState,
   defaultQueryPermissions,
+  defaultInsertSetState,
 };

@@ -8,6 +8,7 @@ import Tab from 'react-bootstrap/lib/Tab';
 import RedeliverEvent from '../TableCommon/RedeliverEvent';
 import TableHeader from '../TableCommon/TableHeader';
 import semverCheck from '../../../../helpers/semver';
+import parseRowData from './util';
 import {
   loadEventLogs,
   setTrigger,
@@ -187,7 +188,9 @@ class StreamingLogs extends Component {
       filterAll: true,
     });
     const invocationRowsData = [];
-    log.rows.map(r => {
+    const requestData = [];
+    const responseData = [];
+    log.rows.map((r, i) => {
       const newRow = {};
       const status =
         r.status === 200 ? (
@@ -196,6 +199,8 @@ class StreamingLogs extends Component {
           <i className={styles.invocationFailure + ' fa fa-times'} />
         );
 
+      requestData.push(parseRowData(r, 'request'));
+      responseData.push(parseRowData(r, 'response'));
       // Insert cells corresponding to all rows
       invocationColumns.forEach(col => {
         const getCellContent = () => {
@@ -220,20 +225,20 @@ class StreamingLogs extends Component {
           if (col === 'operation') {
             return (
               <div className={conditionalClassname}>
-                {r.request.event.op.toLowerCase()}
+                {requestData[i].data.event.op.toLowerCase()}
               </div>
             );
           }
           if (col === 'primary_key') {
-            const tableName = r.request.table.name;
+            const tableName = requestData[i].data.table.name;
             const tableData = allSchemas.filter(
               row => row.table_name === tableName
             );
             const primaryKey = tableData[0].primary_key.columns; // handle all primary keys
             const pkHtml = [];
             primaryKey.map(pk => {
-              const newPrimaryKeyData = r.request.event.data.new
-                ? r.request.event.data.new[pk]
+              const newPrimaryKeyData = requestData[i].data.event.data.new
+                ? requestData[i].data.event.data.new[pk]
                 : '';
               pkHtml.push(
                 <div>
@@ -333,20 +338,8 @@ class StreamingLogs extends Component {
               }
               SubComponent={logRow => {
                 const finalIndex = logRow.index;
-                const finalRow = log.rows[finalIndex];
-                const currentPayload = JSON.stringify(
-                  finalRow.request,
-                  null,
-                  4
-                );
-                // check if response is type JSON
-                let finalResponse = finalRow.response;
-                try {
-                  finalResponse = JSON.parse(finalRow.response);
-                  finalResponse = JSON.stringify(finalResponse, null, 4);
-                } catch (e) {
-                  console.error(e);
-                }
+                const finalRequest = requestData[finalIndex];
+                const finalResponse = responseData[finalIndex];
                 return (
                   <div style={{ padding: '20px' }}>
                     <Tabs
@@ -355,13 +348,35 @@ class StreamingLogs extends Component {
                       id="requestResponseTab"
                     >
                       <Tab eventKey={1} title="Request">
+                        {finalRequest.headers ? (
+                          <div className={styles.add_mar_top}>
+                            <div className={styles.subheading_text}>
+                              Headers
+                            </div>
+                            <AceEditor
+                              mode="json"
+                              theme="github"
+                              name="headers"
+                              value={JSON.stringify(
+                                finalRequest.headers,
+                                null,
+                                4
+                              )}
+                              minLines={4}
+                              maxLines={20}
+                              width="100%"
+                              showPrintMargin={false}
+                              showGutter={false}
+                            />
+                          </div>
+                        ) : null}
                         <div className={styles.add_mar_top}>
-                          <div className={styles.subheading_text}>Request</div>
+                          <div className={styles.subheading_text}>Payload</div>
                           <AceEditor
                             mode="json"
                             theme="github"
                             name="payload"
-                            value={currentPayload}
+                            value={JSON.stringify(finalRequest.data, null, 4)}
                             minLines={4}
                             maxLines={100}
                             width="100%"
@@ -371,13 +386,35 @@ class StreamingLogs extends Component {
                         </div>
                       </Tab>
                       <Tab eventKey={2} title="Response">
+                        {finalResponse.headers ? (
+                          <div className={styles.add_mar_top}>
+                            <div className={styles.subheading_text}>
+                              Headers
+                            </div>
+                            <AceEditor
+                              mode="json"
+                              theme="github"
+                              name="response"
+                              value={JSON.stringify(
+                                finalResponse.headers,
+                                null,
+                                4
+                              )}
+                              minLines={4}
+                              maxLines={20}
+                              width="100%"
+                              showPrintMargin={false}
+                              showGutter={false}
+                            />
+                          </div>
+                        ) : null}
                         <div className={styles.add_mar_top}>
                           <div className={styles.subheading_text}>Response</div>
                           <AceEditor
                             mode="json"
                             theme="github"
                             name="response"
-                            value={finalResponse}
+                            value={JSON.stringify(finalResponse.data, null, 4)}
                             minLines={4}
                             maxLines={100}
                             width="100%"

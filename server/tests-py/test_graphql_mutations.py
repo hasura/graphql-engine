@@ -114,6 +114,9 @@ class TestGraphqlInsertPermission(DefaultTestQueries):
     def test_company_user_role_insert_on_conflict(self, hge_ctx):
        check_query_f(hge_ctx, self.dir() + "/company_user_role_on_conflict.yaml")
 
+    def test_resident_user_role_insert(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/resident_user.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/permissions"

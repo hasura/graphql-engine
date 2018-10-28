@@ -137,20 +137,21 @@ toSQLExps cols =
     let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (c, prepExp)
 
-mkSQLRow :: [PGCol] -> [(PGCol, S.SQLExp)] -> [S.SQLExp]
-mkSQLRow tableCols withPGCol =
-  Map.elems $ Map.union (Map.fromList withPGCol) defVals
+mkSQLRow :: [PGCol] -> InsSetCols -> [(PGCol, S.SQLExp)] -> [S.SQLExp]
+mkSQLRow tableCols setCols withPGCol =
+  Map.elems $ Map.union setCols insColsWithDefVals
   where
     defVals = Map.fromList $ zip tableCols (repeat $ S.SEUnsafe "DEFAULT")
+    insColsWithDefVals = Map.union (Map.fromList withPGCol) defVals
 
 mkInsertQ :: QualifiedTable
           -> Maybe RI.ConflictClauseP1 -> [(PGCol, AnnGValue)]
-          -> [PGCol] -> RoleName
+          -> [PGCol] -> InsSetCols -> RoleName
           -> Q.TxE QErr WithExp
-mkInsertQ vn onConflictM insCols tableCols role = do
+mkInsertQ vn onConflictM insCols tableCols setCols role = do
   (givenCols, args) <- flip runStateT Seq.Empty $ toSQLExps insCols
   let sqlConflict = RI.toSQLConflict <$> onConflictM
-      sqlExps = mkSQLRow tableCols givenCols
+      sqlExps = mkSQLRow tableCols setCols givenCols
       sqlInsert = S.SQLInsert vn tableCols [sqlExps] sqlConflict $ Just S.returningStar
   if isAdmin role then return (S.CTEInsert sqlInsert, args)
   else do
@@ -346,7 +347,7 @@ insertObj role insCtxMap tn annObj ctx addCols onConflictValM errP = do
       preArrRelInsAffRows = objInsAffRows + thisInsAffRows
 
   -- prepare insert query as with expression
-  insQ <- mkInsertQ vn onConflictM finalInsCols (map pgiName tableColInfos) role
+  insQ <- mkInsertQ vn onConflictM finalInsCols (map pgiName tableColInfos) setCols role
 
   let insertWithArrRels = cannotInsArrRelErr thisInsAffRows >>
                           withArrRels preArrRelInsAffRows insQ
@@ -356,7 +357,7 @@ insertObj role insCtxMap tn annObj ctx addCols onConflictValM errP = do
   bool insertWithArrRels insertWithoutArrRels $ null arrDepColsWithInfo
 
   where
-    InsCtx vn tableColInfos relInfoMap = ctx
+    InsCtx vn tableColInfos setCols relInfoMap = ctx
     withErrPath = withPathK errP
 
     withNoArrRels affRows insQ = return (affRows, insQ)
@@ -482,7 +483,7 @@ insertMultipleObjects role insCtxMap tn ctx insObjs
   bool withoutRels withRelsInsert anyRelsToInsert
 
   where
-    InsCtx vn tableColInfos _ = ctx
+    InsCtx vn tableColInfos setCols _ = ctx
     tableCols = map pgiName tableColInfos
 
     errP = bool "objects" "data" isArrRel
@@ -498,7 +499,7 @@ insertMultipleObjects role insCtxMap tn ctx insObjs
 
       (sqlRows, prepArgs) <- flip runStateT Seq.Empty $ do
         rowsWithCol <- mapM (toSQLExps . map pgColToAnnGVal) withAddCols
-        return $ map (mkSQLRow tableCols) rowsWithCol
+        return $ map (mkSQLRow tableCols setCols) rowsWithCol
 
       let insQP1 = RI.InsertQueryP1 tn vn tableCols sqlRows onConflictM mutFlds
           p1 = (insQP1, prepArgs)

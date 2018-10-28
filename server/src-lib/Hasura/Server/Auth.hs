@@ -29,7 +29,7 @@ import           Data.CaseInsensitive    (CI (..), original)
 import           Data.IORef              (newIORef)
 
 import qualified Data.ByteString.Lazy    as BL
-import qualified Data.HashMap.Strict     as M
+import qualified Data.HashMap.Strict     as Map
 import qualified Data.String.Conversions as CS
 import qualified Data.Text               as T
 import qualified Network.HTTP.Client     as H
@@ -148,14 +148,14 @@ mkUserInfoFromResp logger url statusCode respBody
     throw500 "Invalid response from authorization hook"
   where
     getUserInfoFromHdrs rawHeaders = do
-      let headers = M.fromList [(T.toLower k, v) | (k, v) <- M.toList rawHeaders]
-      case M.lookup userRoleHeader headers of
+      let usrVars = mkUserVars $ Map.toList rawHeaders
+      case roleFromVars usrVars of
         Nothing -> do
           logError
           throw500 "missing x-hasura-role key in webhook response"
-        Just v  -> do
+        Just rn -> do
           logWebHookResp L.LevelInfo Nothing
-          return $ UserInfo (RoleName v) headers
+          return $ mkUserInfo rn usrVars
 
     logError =
       logWebHookResp L.LevelError $ Just respBody
@@ -212,7 +212,7 @@ getUserInfo logger manager rawHeaders = \case
   AMNoAuth -> return userInfoFromHeaders
 
   AMAccessKey accKey unAuthRole ->
-    case getHeader accessKeyHeader of
+    case getVarVal accessKeyHeader usrVars of
       Just givenAccKey -> userInfoWhenAccessKey accKey givenAccKey
       Nothing          -> userInfoWhenNoAccessKey unAuthRole
 
@@ -226,20 +226,18 @@ getUserInfo logger manager rawHeaders = \case
     -- when access key is absent, run the action to retrieve UserInfo, otherwise
     -- accesskey override
     whenAccessKeyAbsent ak action =
-      maybe action (userInfoWhenAccessKey ak) $ getHeader accessKeyHeader
+      maybe action (userInfoWhenAccessKey ak) $ getVarVal accessKeyHeader usrVars
 
-    headers =
-      M.fromList $ filter (T.isPrefixOf "x-hasura-" . fst) $
-      flip map rawHeaders $
-      \(hdrName, hdrVal) ->
-        (T.toLower $ bsToTxt $ original hdrName, bsToTxt hdrVal)
-
-    getHeader h = M.lookup h headers
+    usrVars =
+      mkUserVars
+      [ (T.toLower $ bsToTxt $ original hdrName, bsToTxt hdrVal)
+      | (hdrName, hdrVal) <- rawHeaders
+      ]
 
     userInfoFromHeaders =
-      case M.lookup userRoleHeader headers of
-        Just v  -> UserInfo (RoleName v) headers
-        Nothing -> adminUserInfo
+      case roleFromVars usrVars of
+        Just rn -> mkUserInfo rn usrVars
+        Nothing -> mkUserInfo adminRole usrVars
 
     userInfoWhenAccessKey key reqKey = do
       when (reqKey /= getAccessKey key) $ throw401 $ "invalid " <> accessKeyHeader
@@ -247,5 +245,4 @@ getUserInfo logger manager rawHeaders = \case
 
     userInfoWhenNoAccessKey = \case
       Nothing -> throw401 $ accessKeyHeader <> " required, but not found"
-      Just role -> return $ UserInfo role $
-        M.insertWith const userRoleHeader (getRoleTxt role) headers
+      Just role -> return $ mkUserInfo role usrVars
