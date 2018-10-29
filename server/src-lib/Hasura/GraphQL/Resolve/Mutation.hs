@@ -11,6 +11,7 @@ module Hasura.GraphQL.Resolve.Mutation
 
 import           Hasura.Prelude
 
+import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Language.GraphQL.Draft.Syntax     as G
 
@@ -42,13 +43,15 @@ convertMutResp ty selSet =
 
 convertRowObj
   :: (MonadError QErr m, MonadState PrepArgs m)
-  => AnnGValue
+  => InsSetCols -> AnnGValue
   -> m [(PGCol, S.SQLExp)]
-convertRowObj val =
-  flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
+convertRowObj setVals val =
+  flip withObject val $ \_ obj -> do
+  inpVals <- forM (OMap.toList obj) $ \(k, v) -> do
     prepExpM <- asPGColValM v >>= mapM prepare
     let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (PGCol $ G.unName k, prepExp)
+  return $ Map.toList setVals <> inpVals
 
 type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
 
@@ -95,7 +98,7 @@ convertUpdate
   -> Convert RespTx
 convertUpdate tn filterExp fld = do
   -- a set expression is same as a row object
-  setExpM   <- withArgM args "_set" convertRowObj
+  setExpM   <- withArgM args "_set" $ convertRowObj Map.empty
   -- where bool expression to filter column
   whereExp <- withArg args "where" $ convertBoolExp tn
   -- increment operator on integer columns

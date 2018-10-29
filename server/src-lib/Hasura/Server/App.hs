@@ -104,11 +104,6 @@ parseBody = do
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
 
-filterHeaders :: [(T.Text, T.Text)] -> [(T.Text, T.Text)]
-filterHeaders hdrs = flip filter hdrs $ \(h, _) ->
-  isXHasuraTxt h && (T.toLower h /= userRoleHeader)
-  && (T.toLower h /= accessKeyHeader)
-
 onlyAdmin :: Handler ()
 onlyAdmin = do
   uRole <- asks (userRole . hcUser)

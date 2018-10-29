@@ -87,12 +87,13 @@ mkAnnInsObj
   -> AnnGObject
   -> m AnnInsObj
 mkAnnInsObj tn insCtxMap annObj = do
-  InsCtx view colInfos relInfoMap <- getInsCtx insCtxMap tn
+  InsCtx view colInfos setVals relInfoMap <- getInsCtx insCtxMap tn
   let defValMap = Map.fromList $ flip zip (repeat $ S.SEUnsafe "DEFAULT") $
                   map pgiName colInfos
+      defValWithSet = Map.union setVals defValMap
   (cols, objRels, arrRels) <-
     foldrM (traverseInsObj insCtxMap relInfoMap) emptyInsItems $ OMap.toList annObj
-  return $ AnnInsObj cols objRels arrRels view colInfos defValMap
+  return $ AnnInsObj cols objRels arrRels view colInfos defValWithSet
   where
     emptyInsItems = ([], [], [])
 
@@ -157,7 +158,7 @@ parseOnConflict inpCols val = withPathK "on_conflict" $
         "ignore" -> return CAIgnore
         "update" -> return CAUpdate
         _ -> throw500 $
-          "only \"ignore\" and \"updated\" allowed for enum type "
+          "only \"ignore\" and \"update\" allowed for enum type "
           <> showNamedTy enumTy
 
     parseConstraint o = do

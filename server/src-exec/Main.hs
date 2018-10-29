@@ -170,11 +170,12 @@ main =  do
 
       maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
       evPollSec  <- getFromEnv defaultPollingIntervalSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+      logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
 
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evPollSec
       httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
 
-      void $ C.forkIO $ processEventQueue hloggerCtx httpSession pool cacheRef eventEngineCtx
+      void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpSession pool cacheRef eventEngineCtx
 
       Warp.runSettings warpSettings app
 
@@ -213,7 +214,7 @@ main =  do
       let mRes = case mEnv of
             Nothing  -> Just defaults
             Just val -> readMaybe val
-          eRes = maybe (Left "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE is not an integer") Right mRes
+          eRes = maybe (Left $ "Wrong expected type for environment variable: " <> env) Right mRes
       either ((>> exitFailure) . putStrLn) return eRes
 
     cleanSuccess = putStrLn "successfully cleaned graphql-engine related data"
