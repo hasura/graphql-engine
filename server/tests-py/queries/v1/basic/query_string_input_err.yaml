@@ -1,0 +1,11 @@
+description: Count number of authors
+url: /v1/query
+status: 400
+response:
+  path: $
+  error: When parsing Hasura.Server.Query.RQLQuery expected Object but got String.
+  code: parse-failed
+query: |
+  type: count
+  args:
+    table: author

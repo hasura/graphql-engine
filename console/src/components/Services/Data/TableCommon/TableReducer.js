@@ -157,14 +157,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         relAdd: {
-          isActive: true,
-          tableName: '',
-          name: '',
-          isObjRel: null,
-          lcol: [],
-          rTable: null,
-          rcol: [],
-          manualColumns: [],
+          ...defaultModifyState.relAdd,
         },
       };
     case REL_SET_TYPE:
