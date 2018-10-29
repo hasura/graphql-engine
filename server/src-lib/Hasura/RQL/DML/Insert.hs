@@ -90,9 +90,11 @@ convObj
   -> InsObj
   -> m ([PGCol], [S.SQLExp])
 convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
-  inpInsVals <- flip HM.traverseWithKey reqInsObj $ \c val -> do
+  inpInsVals <- flip HM.traverseWithKey insObj $ \c val -> do
     let relWhenPGErr = "relationships can't be inserted"
     colType <- askPGType fieldInfoMap c relWhenPGErr
+    -- if column has predefined value then throw error
+    when (c `elem` preSetCols) $ throwNotInsErr c
     -- Encode aeson's value into prepared value
     withPathK (getPGColTxt c) $ prepFn colType val
   let insVals = HM.union setInsVals inpInsVals
@@ -101,7 +103,12 @@ convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
 
   return (inpCols, sqlExps)
   where
-    reqInsObj = HM.difference insObj setInsVals
+    preSetCols = HM.keys setInsVals
+
+    throwNotInsErr c = do
+      role <- userRole <$> askUserInfo
+      throw400 NotSupported $ "column " <> c <<> " is not insertable"
+        <> " for role " <>> role
 
 buildConflictClause
   :: (P1C m)

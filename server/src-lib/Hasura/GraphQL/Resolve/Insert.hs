@@ -141,7 +141,7 @@ mkSQLRow :: [PGCol] -> InsSetCols -> [(PGCol, S.SQLExp)] -> [S.SQLExp]
 mkSQLRow tableCols setCols withPGCol =
   Map.elems $ Map.union setCols insColsWithDefVals
   where
-    defVals = Map.fromList $ zip tableCols (repeat $ S.SEUnsafe "DEFAULT")
+    defVals = S.mkColDefValMap tableCols
     insColsWithDefVals = Map.union (Map.fromList withPGCol) defVals
 
 mkInsertQ :: QualifiedTable
