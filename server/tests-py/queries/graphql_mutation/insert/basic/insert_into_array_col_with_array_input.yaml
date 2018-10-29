@@ -1,0 +1,39 @@
+  #Inserting data into test_types table
+- description: Inserts Array into an Array column
+  url: /v1alpha1/graphql
+  response:
+    data:
+      insert_test_types:
+        returning:
+          c34_text_array: ["a","b","c"]
+  status: 200
+  query:
+    variables:
+      textArray: ["a","b","c"]
+    query: |
+      mutation insert_test_types
+      ($textArray: [String])
+      {
+        insert_test_types(
+          objects: [
+            {
+            c34_text_array: $textArray
+            }
+          ]
+        ) {
+          returning {
+            c34_text_array
+          }
+        }
+      }
+- description: Delete the inserted test_types rows
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        delete from test_types;
+        SELECT setval('test_types_c10_bigserial_seq', 1, FALSE);
+        SELECT setval('test_types_c9_serial_seq', 1, FALSE);
+        SELECT setval('test_types_c8_smallserial_seq', 1, FALSE);

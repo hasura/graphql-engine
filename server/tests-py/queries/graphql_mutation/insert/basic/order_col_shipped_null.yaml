@@ -1,20 +1,29 @@
-description: Insert into order table with a null value
-url: /v1alpha1/graphql
-status: 200
-query:
-  query: |
-    mutation insert_orders{
-      insert_orders(
-        objects: [
-          {
-            placed: "2017-08-19 14:22:11.802755+02",
-            shipped: null
+- description: Insert into order table with a null value
+  url: /v1alpha1/graphql
+  status: 200
+  query:
+    query: |
+      mutation insert_orders{
+        insert_orders(
+          objects: [
+            {
+              placed: "2017-08-19 14:22:11.802755+02",
+              shipped: null
+            }
+          ]
+        ) {
+          returning {
+            id
           }
-        ]
-      ) {
-        returning {
-          id
+          affected_rows
         }
-        affected_rows
       }
-    }
+- description: Delete the inserted orders
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        delete from orders;
+        SELECT setval('orders_id_seq', 1, FALSE);

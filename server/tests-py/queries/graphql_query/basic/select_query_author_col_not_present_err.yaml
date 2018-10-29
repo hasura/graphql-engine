@@ -1,0 +1,18 @@
+description: Simple GraphQL object query on author querying a column which does not exist
+url: /v1alpha1/graphql
+status: 400
+response:
+  errors:
+  - path: $.selectionSet.author.selectionSet.notPresentCol
+    error: |-
+      field "notPresentCol" not found in type: 'author'
+    code: validation-failed
+query:
+  query: |
+    query {
+      author {
+        id
+        name
+        notPresentCol
+      }
+    }
