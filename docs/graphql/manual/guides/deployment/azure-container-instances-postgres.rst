@@ -8,15 +8,6 @@ This guide talks about how to deploy Hasura GraphQL Engine on `Azure
 <https://azure.microsoft.com/en-us/services/container-instances/>`_ with `Azure
 Database for PostgreSQL server <https://azure.microsoft.com/en-us/services/postgresql/>`_.
 
-Contents
---------
-
-* Pre-requisites
-* Creating a Resource Group
-* Provisioning a Postgres database on Azure
-* Launching GraphQL Engine using ACI
-* Using an existing Postgres database on Azure
-
 Pre-requisites
 --------------
 
@@ -33,8 +24,8 @@ Once the CLI is installed, login to your Azure account:
 
    az login
 
-Creating a Resource Group
--------------------------
+Create a new Resource Group
+---------------------------
 
 As the name suggestes, Resource Groups are used to group together various
 resources on Azure. We'll create a resource group called ``hasura`` at
@@ -44,8 +35,13 @@ resources on Azure. We'll create a resource group called ``hasura`` at
 
    az group create --name hasura --location westus
 
-Provisioning a PostgreSQL server
---------------------------------
+Provision a PostgreSQL server
+-----------------------------
+
+.. note::
+
+   If you already have a database setup, you can skip these steps and jump
+   directly to :ref:`azure_allow_access`.
 
 Once the resource group is created, we create a Postgres server instance:
 
@@ -70,7 +66,9 @@ Note down the hostname. It will be shown as below in the output:
 
 .. code-block:: bash
 
+     ...
      "fullyQualifiedDomainName": "hasura-postgres.postgres.database.azure.com",
+     ...
 
 ``hasura-postgres.postgres.database.azure.com`` is the hostname here.
 
@@ -88,7 +86,9 @@ Create a new database on the server:
 
    az postgres db create --resource-group hasura \
       --server-name "<server_name>" \
-      --name hasura-db
+      --name hasura
+
+.. _azure_allow_access:
 
 Allow access to Azure Services
 ------------------------------
@@ -111,14 +111,49 @@ Let's launch Hasura using container instances:
    az container create --resource-group hasura \
       --name hasura-graphql-engine \
       --image hasura/graphql-engine \
-      --dns-name-label hasura \
+      --dns-name-label "<dns-label>" \
       --ports 8080 \
       --secure-environment-variables "HASURA_GRAPHQL_DATABASE_URL=<database-url>"
 
-``<database-url>`` should be replaced by 
+``<database-url>`` should be replaced by the following format:
 
-If the ``dns-name-label`` ``hasura`` is not available, choose another unique
-name and execute the command again.
+.. code-block:: bash
+
+   postgres://hasura%40<server_name>:<server_admin_password>@<hostname>:5432/hasura
+
+.. note::
+
+   ``%40`` is used in the username because Azure creates usernames as
+   ``admin-user@server-name`` and since the database url uses ``@`` to separate
+   username-password from hostname, we need to url-escape it in the username.
+   Any other special character should be url-encoded.
+
+If the ``dns-name-label`` is not available, choose another unique name and
+execute the command again.
+
+Open the Hasura Console
+-----------------------
+
+That's it! Once the deployment is complete, navigate to the container instance
+ip or hostname to open Hasura console:
+
+.. code-block:: bash
+
+   az container show --resource-group hasura \
+      --name hasura-graphql-engine \
+      --query "{FQDN:ipAddress.fqdn,ProvisioningState:provisioningState}" \
+      --out table
+
+Output will contain the FQDN in the format
+``<dns-label>.westus.azurecontainer.io``.
+
+Visit the following URL for the Hasura Console:
+
+.. code:: 
+
+   http://<dns-label>.westus.azurecontainer.io:8080/console
+
+Replace ``<dns-label>`` withe the label given earlier.
 
 References
 ----------
