@@ -1,0 +1,39 @@
+- description: Insert the path for a curved road
+  url: /v1alpha1/graphql
+  status: 200
+  response:
+    data:
+      insert_service_locations:
+        returning:
+        - id: 1
+          locations: &locs
+            coordinates:
+            - [43.75049, 11.03207]
+            - [43.80009, 11.03208]
+            - [43.80009, 11.03308]
+            type: MultiPoint
+            crs:
+              type: name
+              properties:
+                name: 'urn:ogc:def:crs:EPSG::4326'
+  query:
+    variables:
+      locations:
+      - locations: *locs
+    query: |
+      mutation insertServLoc($locations: [service_locations_insert_input!]!) {
+        insert_service_locations(objects: $locations) {
+          returning{
+            id
+            locations
+          }
+        }
+      }
+- description: Delete the inserted service locations
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        delete from service_locations

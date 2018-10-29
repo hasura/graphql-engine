@@ -6,7 +6,7 @@ import '../App.css';
 
 const subscribeToNewMessages = gql`
   subscription {
-    message ( order_by: id_desc limit: 1) {
+    message ( order_by: {id:desc} limit: 1) {
       id
       username
       text

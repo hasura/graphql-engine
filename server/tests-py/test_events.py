@@ -98,17 +98,6 @@ class TestCreateEvtQuery(object):
         assert st_code == 200, resp
         check_event(hge_ctx, "t1_all", table, "DELETE", exp_ev_data, headers, "/")
 
-    def test_basic_dep(self,hge_ctx):
-
-        st_code, resp = hge_ctx.v1q({
-            "type": "run_sql",
-            "args": {
-                "sql": "alter table hge_tests.test_t1 drop column c1"
-            }
-        })
-        assert st_code == 400, resp
-        assert resp['code'] == "dependency-error", resp
-
 class TestRetryConf(object):
 
     @pytest.fixture(autouse=True)
@@ -179,7 +168,7 @@ class TestUpdateEvtQuery(object):
         init_row = {"c1" : 1, "c2" : "hello"}
         exp_ev_data = {
             "old": None,
-            "new": {"c1": 1}
+            "new": {"c1": 1, "c2": "hello"}
         }
         headers = {}
         st_code, resp = insert(hge_ctx, table, init_row)
@@ -188,16 +177,25 @@ class TestUpdateEvtQuery(object):
 
         where_exp = {"c1": 1}
         set_exp = {"c2" : "world"}
+        # expected no event hence previous expected data
+        st_code, resp = update(hge_ctx, table, where_exp, set_exp)
+        assert st_code == 200, resp
+        with pytest.raises(queue.Empty):
+            check_event(hge_ctx, "t1_cols", table, "UPDATE", exp_ev_data, headers, "/new")
+
+        where_exp = {"c1": 1}
+        set_exp = {"c1" : 2}
         exp_ev_data = {
-            "old": {"c2" : "hello"},
-            "new": {"c2" : "world"}
+            "old": {"c1" : 1, "c2": "world"},
+            "new": {"c1" : 2, "c2": "world"}
         }
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
         check_event(hge_ctx, "t1_cols", table, "UPDATE", exp_ev_data, headers, "/new")
 
+        where_exp = {"c1": 2}
         exp_ev_data = {
-            "old": {"c1" : 1, "c2" : "world"},
+            "old": {"c1" : 2, "c2" : "world"},
             "new": None
         }
         st_code, resp = delete(hge_ctx, table, where_exp)
@@ -270,7 +268,7 @@ class TestEvtSelCols:
         init_row = {"c1" : 1, "c2" : "hello"}
         exp_ev_data = {
             "old": None,
-            "new": {"c2": "hello"}
+            "new": {"c1": 1, "c2": "hello"}
         }
         headers = {}
         st_code, resp = insert(hge_ctx, table, init_row)
@@ -279,16 +277,25 @@ class TestEvtSelCols:
 
         where_exp = {"c1": 1}
         set_exp = {"c2" : "world"}
+        # expected no event hence previous expected data
+        st_code, resp = update(hge_ctx, table, where_exp, set_exp)
+        assert st_code == 200, resp
+        with pytest.raises(queue.Empty):
+            check_event(hge_ctx, "t1_cols", table, "UPDATE", exp_ev_data, headers, "/")
+
+        where_exp = {"c1": 1}
+        set_exp = {"c1" : 2}
         exp_ev_data = {
-            "old": {"c1" : 1},
-            "new": {"c1" : 1}
+            "old": {"c1" : 1, "c2": "world"},
+            "new": {"c1" : 2, "c2": "world"}
         }
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
         check_event(hge_ctx, "t1_cols", table, "UPDATE", exp_ev_data, headers, "/")
 
+        where_exp = {"c1": 2}
         exp_ev_data = {
-            "old": {"c1" : 1, "c2" : "world"},
+            "old": {"c1" : 2, "c2" : "world"},
             "new": None
         }
         st_code, resp = delete(hge_ctx, table, where_exp)
@@ -313,61 +320,7 @@ class TestEvtSelCols:
                 "sql": "alter table hge_tests.test_t1 drop column c2"
             }
         })
-        assert st_code == 400, resp
-        assert resp['code'] == "dependency-error", resp
-
-        st_code, resp = hge_ctx.v1q({
-            "type": "run_sql",
-            "args": {
-              "sql": "alter table hge_tests.test_t1 drop column c3"
-            }
-        })
         assert st_code == 200, resp
-
-class TestEvtEmptyCols:
-
-    @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        print ("In setup method")
-        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/empty_cols/setup.yaml')
-        assert st_code == 200, resp
-        yield
-        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/empty_cols/teardown.yaml')
-        assert st_code == 200, resp
-
-
-    def test_empty_cols(self, hge_ctx):
-
-        table = {"schema" : "hge_tests", "name": "test_t1"}
-
-        init_row = {"c1" : 1, "c2" : "hello"}
-        exp_ev_data = {
-            "old": None,
-            "new": {}
-        }
-        headers = {}
-        st_code, resp = insert(hge_ctx, table, init_row)
-        assert st_code == 200, resp
-        check_event(hge_ctx, "t1_empty", table, "INSERT", exp_ev_data, headers, "/")
-
-        where_exp = {"c1": 1}
-        set_exp = {"c2" : "world"}
-        exp_ev_data = {
-            "old": {},
-            "new": {}
-        }
-        st_code, resp = update(hge_ctx, table, where_exp, set_exp)
-        assert st_code == 200, resp
-        check_event(hge_ctx, "t1_empty", table, "UPDATE", exp_ev_data, headers, "/")
-
-        exp_ev_data = {
-            "old": {},
-            "new": None
-        }
-        st_code, resp = delete(hge_ctx, table, where_exp)
-        assert st_code == 200, resp
-        check_event(hge_ctx, "t1_empty", table, "DELETE", exp_ev_data, headers, "/")
-
 
 class TestEvtInsertOnly:
 
@@ -415,3 +368,76 @@ class TestEvtInsertOnly:
         with pytest.raises(queue.Empty):
             check_event(hge_ctx, "t1_insert", table, "DELETE", exp_ev_data, headers, "/")
 
+class TestEvtSelPayload:
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        print ("In setup method")
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/selected_payload/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/selected_payload/teardown.yaml')
+        assert st_code == 200, resp
+
+    def test_selected_payload(self, hge_ctx):
+
+        table = {"schema" : "hge_tests", "name": "test_t1"}
+
+        init_row = {"c1" : 1, "c2" : "hello"}
+        exp_ev_data = {
+            "old": None,
+            "new": {"c1": 1, "c2": "hello"}
+        }
+        headers = {}
+        st_code, resp = insert(hge_ctx, table, init_row)
+        assert st_code == 200, resp
+        check_event(hge_ctx, "t1_payload", table, "INSERT", exp_ev_data, headers, "/")
+
+        where_exp = {"c1": 1}
+        set_exp = {"c2" : "world"}
+        exp_ev_data = {
+            "old": {"c1": 1},
+            "new": {"c1": 1}
+        }
+        st_code, resp = update(hge_ctx, table, where_exp, set_exp)
+        assert st_code == 200, resp
+        check_event(hge_ctx, "t1_payload", table, "UPDATE", exp_ev_data, headers, "/")
+
+        where_exp = {"c1": 1}
+        set_exp = {"c1" : 2}
+        exp_ev_data = {
+            "old": {"c1": 1},
+            "new": {"c1": 2}
+        }
+        st_code, resp = update(hge_ctx, table, where_exp, set_exp)
+        assert st_code == 200, resp
+        check_event(hge_ctx, "t1_payload", table, "UPDATE", exp_ev_data, headers, "/")
+
+        where_exp = {"c1": 2}
+        exp_ev_data = {
+            "old": {"c2" : "world"},
+            "new": None
+        }
+        st_code, resp = delete(hge_ctx, table, where_exp)
+        assert st_code == 200, resp
+        check_event(hge_ctx, "t1_payload", table, "DELETE", exp_ev_data, headers, "/")
+
+    def test_selected_payload_dep(self, hge_ctx):
+
+        st_code, resp = hge_ctx.v1q({
+            "type": "run_sql",
+            "args": {
+                "sql": "alter table hge_tests.test_t1 drop column c1"
+            }
+        })
+        assert st_code == 400, resp
+        assert resp['code'] == "dependency-error", resp
+
+        st_code, resp = hge_ctx.v1q({
+            "type": "run_sql",
+            "args": {
+                "sql": "alter table hge_tests.test_t1 drop column c2"
+            }
+        })
+        assert st_code == 400, resp
+        assert resp['code'] == "dependency-error", resp
