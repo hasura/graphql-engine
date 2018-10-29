@@ -185,7 +185,7 @@ Your auth server is using HMAC-SHA algorithms to sign JWTs, and is using a
      "key": "3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"
    }
 
-The ``key`` is the actual shared secret, which is used by your auth server as well.
+The ``key`` is the actual shared secret, which is used by your Hasura graphql-engine server as well.
 
 RSA based
 +++++++++
