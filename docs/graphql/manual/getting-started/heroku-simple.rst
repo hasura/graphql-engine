@@ -5,7 +5,7 @@ This guide will help you get Hasura GraphQL engine and Postgres running on `Hero
 It is the easiest and fastest way of trying Hasura out.
 
 If you'd like to link this to an existing database, please head to this guide instead:
-:doc:`Using an existing database on Heroku <../deployment/heroku/using-existing-heroku-database>`.
+`Using an existing database on Heroku <https://docs.hasura.io/1.0/graphql/manual/deployment/heroku/using-existing-heroku-database.html>`_.
 
 Deploy to Heroku
 ----------------
@@ -37,14 +37,14 @@ You should see the Hasura console.
 Next: Try Hasura out!
 ---------------------
 
-Make your :doc:`first graphql query <first-graphql-query>`
+Make your `first graphql query <https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html>`_.
 
 OR
 
-Set up your :doc:`first event trigger <first-event-trigger>`
+Set up your `first event trigger <https://docs.hasura.io/1.0/graphql/manual/getting-started/first-event-trigger.html>`_.
 
 Advanced:
 ---------
 
 This was a quickstart guide to get the Hasura GraphQL engine up and running quickly. For more detailed instructions
-on deploying using Heroku, check out :doc:`../deployment/heroku/index`.
+on deploying using Heroku, `check out <https://docs.hasura.io/1.0/graphql/manual/deployment/heroku/index.html>`_.
