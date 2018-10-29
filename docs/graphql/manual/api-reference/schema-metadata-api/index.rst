@@ -21,7 +21,7 @@ Request
    POST /v1/query HTTP/1.1
 
    {
-      "query": "<query-type>",
+      "type": "<query-type>",
       "args": <args-object>
    }
 
