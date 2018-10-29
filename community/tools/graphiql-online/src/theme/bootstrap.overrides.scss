@@ -1,0 +1,198 @@
+/**
+ * Override Bootstrap styles that you can't modify via variables here.
+ *
+ */
+input[type="radio"], input[type="checkbox"]
+{
+  margin: 0 5px 0px 0px;
+}
+label
+{
+  margin-bottom: 0 !important;
+}
+.navbar-brand {
+  position: relative;
+  padding-left: 50px;
+}
+
+.graphiql-container .topBar {
+  height: auto !important;
+}
+
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
+  color: #33e0ff;
+  background-color: transparent;
+}
+.control-label
+{
+  padding-top: 0;
+}
+form {
+    margin-bottom: 0em;
+}
+.form-control:focus {
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 0px rgba(102, 175, 233, 0.6);
+}
+
+.form-control {
+  // border-radius: 0;
+  height: auto;
+}
+select.form-control
+{
+  border-radius: 0;
+  -webkit-border-radius: 0px;
+}
+.btn {
+  // border-radius: 0;
+  outline: none;
+}
+.btn:active, .btn.active
+{
+  box-shadow: none !important;
+}
+.btn:focus, .btn.focus, .btn:active:focus, .btn:active.focus, .btn.active:focus, .btn.active.focus
+{
+  outline: none !important;
+}
+.btn:focus
+{
+  outline: none !important;
+}
+.alert {
+	word-wrap: break-word;
+}
+
+.btn-warning {
+  background-color: #FEC53D !important;
+  border-color: #FEC53D !important;
+  color: #000 !important;
+  padding: 5px 10px !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+.btn-warning:hover {
+  color: #000;
+  background-color: #ec971f;
+  border-color: #d58512;
+}
+// Generate Code modal
+.padd_remove
+{
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.generateCodeWrapper
+{
+  width: 65% !important;
+  .modal-content
+  {
+    .modal-header
+    {
+      background-color: #F8FAFB;
+      color: #222 ;
+      padding: 20px;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      border-bottom: 0;
+      border-bottom: 1px solid #ccc;
+      h4
+      {
+        font-size: 16px;
+        font-weight: bold;
+      }
+      button
+      {
+        text-shadow: none;
+        color: #C4C6C6;
+        opacity: 1;
+        span
+        {
+          font-weight: normal;
+        }
+      }
+    }
+    .modal-body
+    {
+      padding: 25px;
+      .generateBodyWrapper
+      {
+        .generateButtonWrapper
+        {
+          width: 100%;
+          float: left;
+          padding-bottom: 20px;
+          .generateSelect
+          {
+            button
+            {
+              width: auto;
+              padding: 10px 35px;
+              padding-left: 10px;
+              background-color: #F9F9F9;
+              color: #606060;
+              font-size: 14px;
+              font-weight: bold;
+              text-align: left;
+              border: 1px solid #ccc;
+              position: relative;
+              .dropCaret
+              {
+                position: absolute;
+                right: 10px;
+                top: 16px;
+              }
+            }
+          }
+          .generateCopyButton
+          {
+            text-align: right;
+            font-weight: bold;
+            button {
+              background-color: #FEC53D;
+              border-radius: 5px;
+              color: #606060;
+              border: 1px solid #FEC53D;
+              padding: 5px 10px;
+              font-size: 12px;
+              line-height: 1.5;
+              &:hover {
+                background-color: #F2B130;
+              }
+            }
+          }
+          .generateCopyButtonDisabled
+          {
+            text-align: right;
+            button
+            {
+              border-radius: 5px;
+              border: 1px solid #606060;
+              height: 39px;
+              padding: 5px 15px;
+              font-size: 15px;
+              background-color: #FFF;
+              text-align: center;
+              color: #606060;
+              font-weight: bold;
+            }
+          }
+          .ace_editor
+          {
+            min-height: 150px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+          }
+          .ace-github
+          {
+            min-height: 150px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+          }
+        }
+      }
+    }
+  }
+}

@@ -27,6 +27,11 @@ const UPDATE_TABLE_LIST = 'AddTrigger/UPDATE_TABLE_LIST';
 const TOGGLE_COLUMNS = 'AddTrigger/TOGGLE_COLUMNS';
 const TOGGLE_QUERY_TYPE_SELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_SELECTED';
 const TOGGLE_QUERY_TYPE_DESELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_DESELECTED';
+const REMOVE_HEADER = 'AddTrigger/REMOVE_HEADER';
+const SET_HEADERKEY = 'AddTrigger/SET_HEADERKEY';
+const SET_HEADERTYPE = 'AddTrigger/SET_HEADERTYPE';
+const SET_HEADERVALUE = 'AddTrigger/SET_HEADERVALUE';
+const ADD_HEADER = 'AddTrigger/ADD_HEADER';
 
 const setTriggerName = value => ({ type: SET_TRIGGERNAME, value });
 const setTableName = value => ({ type: SET_TABLENAME, value });
@@ -35,6 +40,24 @@ const setWebhookURL = value => ({ type: SET_WEBHOOK_URL, value });
 const setRetryNum = value => ({ type: SET_RETRY_NUM, value });
 const setRetryInterval = value => ({ type: SET_RETRY_INTERVAL, value });
 const setDefaults = () => ({ type: SET_DEFAULTS });
+const addHeader = () => ({ type: ADD_HEADER });
+const removeHeader = i => ({ type: REMOVE_HEADER, index: i });
+const setHeaderKey = (key, index) => ({
+  type: SET_HEADERKEY,
+  key,
+  index,
+});
+const setHeaderType = (headerType, index) => ({
+  type: SET_HEADERTYPE,
+  headerType,
+  index,
+});
+const setHeaderValue = (headerValue, index) => ({
+  type: SET_HEADERVALUE,
+  headerValue,
+  index,
+});
+
 // General error during validation.
 // const validationError = (error) => ({type: VALIDATION_ERROR, error: error});
 const validationError = error => {
@@ -82,6 +105,19 @@ const createTrigger = () => {
     if (currentState.retryConf) {
       payload.args.retry_conf = currentState.retryConf;
     }
+
+    // create header payload
+    const headers = [];
+    currentState.headers.map(header => {
+      if (header.key !== '' && header.type !== '') {
+        if (header.type === 'static') {
+          headers.push({ name: header.key, value: header.value });
+        } else if (header.type === 'env') {
+          headers.push({ name: header.key, value_from_env: header.value });
+        }
+      }
+    });
+    payload.args.headers = headers;
     const upQueryArgs = [];
     upQueryArgs.push(payload);
     const downQueryArgs = [];
@@ -196,6 +232,49 @@ const setOperationSelection = (type, isChecked) => {
 
 const addTriggerReducer = (state = defaultState, action) => {
   switch (action.type) {
+    case ADD_HEADER:
+      return {
+        ...state,
+        headers: [...state.headers, { key: '', type: '', value: '' }],
+      };
+    case REMOVE_HEADER:
+      return {
+        ...state,
+        headers: [
+          ...state.headers.slice(0, action.index),
+          ...state.headers.slice(action.index + 1),
+        ],
+      };
+    case SET_HEADERKEY:
+      const i = action.index;
+      return {
+        ...state,
+        headers: [
+          ...state.headers.slice(0, i),
+          { ...state.headers[i], key: action.key },
+          ...state.headers.slice(i + 1),
+        ],
+      };
+    case SET_HEADERTYPE:
+      const ij = action.index;
+      return {
+        ...state,
+        headers: [
+          ...state.headers.slice(0, ij),
+          { ...state.headers[ij], type: action.headerType },
+          ...state.headers.slice(ij + 1),
+        ],
+      };
+    case SET_HEADERVALUE:
+      const ik = action.index;
+      return {
+        ...state,
+        headers: [
+          ...state.headers.slice(0, ik),
+          { ...state.headers[ik], value: action.headerValue },
+          ...state.headers.slice(ik + 1),
+        ],
+      };
     case SET_DEFAULTS:
       return {
         ...defaultState,
@@ -280,6 +359,11 @@ const addTriggerReducer = (state = defaultState, action) => {
 
 export default addTriggerReducer;
 export {
+  addHeader,
+  setHeaderKey,
+  setHeaderValue,
+  setHeaderType,
+  removeHeader,
   setTriggerName,
   setTableName,
   setSchemaName,

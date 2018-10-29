@@ -49,7 +49,7 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
     const regExp = /create (view|table) ((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
     const matches = sql.match(new RegExp(regExp, 'gmi'));
     if (matches) {
-      matches.forEach((element) => {
+      matches.forEach(element => {
         const itemMatch = element.match(new RegExp(regExp, 'i'));
         if (itemMatch && itemMatch.length === 6) {
           const trackQuery = {
@@ -66,8 +66,12 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
             trackQuery.args.schema = itemMatch[3];
           }
           // replace and trim schema and table name
-          trackQuery.args.name = trackQuery.args.name.replace(/['"]+/g, '').trim();
-          trackQuery.args.schema = trackQuery.args.schema.replace(/['"]+/g, '').trim();
+          trackQuery.args.name = trackQuery.args.name
+            .replace(/['"]+/g, '')
+            .trim();
+          trackQuery.args.schema = trackQuery.args.schema
+            .replace(/['"]+/g, '')
+            .trim();
           schemaChangesUp.push(trackQuery);
         }
       });

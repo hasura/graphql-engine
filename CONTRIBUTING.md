@@ -15,7 +15,7 @@ can quickly merge or address your contributions will increase.
 ## Overview
 
 [hasura/graphql-engine](https://github.com/hasura/graphql-engine) is a mono-repo
-consisting of 3 components. Each have their own contributing guides:
+consisting of 3 components. Each has their own contributing guides:
 
 1. [Server (Haskell)](server/CONTRIBUTING.md)
 2. [CLI (Go)](cli/CONTRIBUTING.md)
@@ -24,7 +24,7 @@ consisting of 3 components. Each have their own contributing guides:
 All of the three components have a single version, denoted by either the git
 tag or a combination of branch name and git commit SHA.
 
-For all contributions, a CLA (Contributor License Agreement) needs to be signed [here](https://cla-assistant.io/hasura/graphql-engine) before (or after) the pull request has been submitted. A bot will prompt contributers to sign the CLA via a pull request comment, if necessary.
+For all contributions, a CLA (Contributor License Agreement) needs to be signed [here](https://cla-assistant.io/hasura/graphql-engine) before (or after) the pull request has been submitted. A bot will prompt contributors to sign the CLA via a pull request comment, if necessary.
 
 
 ### Docs
