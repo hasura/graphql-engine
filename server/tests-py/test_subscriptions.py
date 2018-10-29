@@ -11,6 +11,8 @@ import yaml
 
 
 def test_init_without_payload(hge_ctx):
+    if hge_ctx.hge_key is not None:
+        pytest.skip("Payload is needed when access key is set")
     obj = {
         'type': 'connection_init'
     }
@@ -25,9 +27,16 @@ def test_init_without_payload(hge_ctx):
 
 
 def test_init(hge_ctx):
+    payload = {}
+    if hge_ctx.hge_key is not None:
+        payload = {
+            'headers' : {
+                'X-Hasura-Access-Key': hge_ctx.hge_key
+            }
+        }
     obj = {
         'type': 'connection_init',
-        'payload': {},
+        'payload': payload,
     }
     hge_ctx.ws.send(json.dumps(obj))
     ev = hge_ctx.get_ws_event(3)
@@ -157,8 +166,16 @@ class TestSubscriptionLiveQueries(object):
         '''
             Create connection using connection_init
         '''
+        payload = {}
+        if hge_ctx.hge_key is not None:
+            payload = {
+                'headers' : {
+                    'X-Hasura-Access-Key': hge_ctx.hge_key
+                }
+            }
         obj = {
-            'type': 'connection_init'
+            'type': 'connection_init',
+            'payload' : payload
         }
         hge_ctx.ws.send(json.dumps(obj))
         ev = hge_ctx.get_ws_event(3)
