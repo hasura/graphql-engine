@@ -2,8 +2,6 @@
 
 [![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://docs.hasura.io)
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
-
-
 <a href="https://discord.gg/3FNQnWj"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
@@ -154,9 +152,10 @@ We are committed to fostering an open and welcoming environment in the community
 
 If you want to report a security issue, please [read this](SECURITY.md).
 
-## Contributing
+## Contributing 
+We :heart: contributions from everyone! We welcome [bug reports](https://github.com/hasura/graphql-engine/issues/), [bug fixes](https://github.com/hasura/graphql-engine/pulls) and feedback on the library is always appreciated. Look at the [Contributor Guidelines](CONTRIBUTING.md) for more details.
+## [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/hasura/graphql-engine/issues) [![GitHub contributors](https://img.shields.io/github/contributors/hasura/graphql-engine.svg)](https://GitHub.com/hasura/graphql-engine/graphs/contributors/)
 
-Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
 ## Brand assets
 
