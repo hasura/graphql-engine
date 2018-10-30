@@ -39,10 +39,10 @@ class TestGraphQLInsert(DefaultTestQueries):
 class TestGraphqlInsertOnConflict(DefaultTestQueries):
 
     def test_on_conflict_update(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/article_on_conflict_update.yaml")
+        check_query_f(hge_ctx, self.dir() + "/article_on_conflict_update.yaml")
 
     def test_on_conflict_no_action_specified(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/article_on_conflict_no_action_specified.yaml")
+        check_query_f(hge_ctx, self.dir() + "/article_on_conflict_no_action_specified.yaml")
 
     def test_on_conflict_ignore(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_ignore_constraint.yaml")
@@ -53,13 +53,13 @@ class TestGraphqlInsertOnConflict(DefaultTestQueries):
         hge_ctx.may_skip_test_teardown = True
 
     def test_err_missing_article_constraint(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/article_on_conflict_error_missing_article_constraint.yaml")
+        check_query_f(hge_ctx, self.dir() + "/article_on_conflict_error_missing_article_constraint.yaml")
 
     def test_err_unexpected_action(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/article_unexpected_on_conflict_action.yaml")
+        check_query_f(hge_ctx, self.dir() + "/article_unexpected_on_conflict_action.yaml")
 
     def test_err_unexpected_constraint(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/article_unexpected_on_conflict_constraint_error.yaml")
+        check_query_f(hge_ctx, self.dir() + "/article_unexpected_on_conflict_constraint_error.yaml")
 
     @classmethod
     def dir(cls):
@@ -88,31 +88,31 @@ class TestGraphqlInsertPermission(DefaultTestQueries):
         check_query_f(hge_ctx, self.dir() + "/user_article_error_unexpected_on_conflict_action.yaml")
 
     def test_user_err_unexpected_constraint(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/user_article_unexpected_on_conflict_constraint_error.yaml")
+        check_query_f(hge_ctx, self.dir() + "/user_article_unexpected_on_conflict_constraint_error.yaml")
 
     def test_role_has_no_permissions_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/address_permission_error.yaml")
+        check_query_f(hge_ctx, self.dir() + "/address_permission_error.yaml")
 
     def test_author_user_role_insert_check_perm_success(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/author_user_role_insert_check_perm_success.yaml")
+        check_query_f(hge_ctx, self.dir() + "/author_user_role_insert_check_perm_success.yaml")
 
     def test_user_role_insert_check_is_registered_fail(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/author_user_role_insert_check_is_registered_fail.yaml")
+        check_query_f(hge_ctx, self.dir() + "/author_user_role_insert_check_is_registered_fail.yaml")
 
     def test_user_role_insert_check_user_id_fail(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/author_user_role_insert_check_user_id_fail.yaml")
+        check_query_f(hge_ctx, self.dir() + "/author_user_role_insert_check_user_id_fail.yaml")
 
     def test_student_role_insert_check_bio_success(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/author_student_role_insert_check_bio_success.yaml")
+        check_query_f(hge_ctx, self.dir() + "/author_student_role_insert_check_bio_success.yaml")
 
     def test_student_role_insert_check_bio_fail(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/author_student_role_insert_check_bio_fail.yaml")
+        check_query_f(hge_ctx, self.dir() + "/author_student_role_insert_check_bio_fail.yaml")
 
     def test_company_user_role_insert(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/company_user_role.yaml")
+        check_query_f(hge_ctx, self.dir() + "/company_user_role.yaml")
 
     def test_company_user_role_insert_on_conflict(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/company_user_role_on_conflict.yaml")
+        check_query_f(hge_ctx, self.dir() + "/company_user_role_on_conflict.yaml")
 
     def test_resident_user_role_insert(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/resident_user.yaml")
@@ -131,7 +131,7 @@ class TestGraphqlInsertPermission(DefaultTestQueries):
 class TestGraphqlInsertConstraints(DefaultTestQueries):
 
     def test_address_not_null_constraint_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/address_not_null_constraint_error.yaml")
+        check_query_f(hge_ctx, self.dir() + "/address_not_null_constraint_error.yaml")
 
     def test_insert_unique_constraint_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_unique_constraint_error.yaml")
@@ -242,16 +242,16 @@ class TestGraphqlInsertViews(DefaultTestQueries):
 class TestGraphqlUpdateBasic(DefaultTestQueries):
 
     def test_set_author_name(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/author_set_name.yaml")
+        check_query_f(hge_ctx, self.dir() + "/author_set_name.yaml")
 
     def test_set_person_details(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/person_set_details.yaml")
+        check_query_f(hge_ctx, self.dir() + "/person_set_details.yaml")
 
-    def test_person_id_inc(self,  hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/person_inc.yaml")
+    def test_person_id_inc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/person_inc.yaml")
 
     def test_no_operator_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/person_error_no_operator.yaml")
+        check_query_f(hge_ctx, self.dir() + "/person_error_no_operator.yaml")
 
     @classmethod
     def dir(cls):
@@ -261,22 +261,22 @@ class TestGraphqlUpdateBasic(DefaultTestQueries):
 class TestGraphqlUpdateJsonB(DefaultTestQueries):
 
     def test_jsonb_append_object(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/person_append_object.yaml")
+        check_query_f(hge_ctx, self.dir() + "/person_append_object.yaml")
 
     def test_jsonb_append_array(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/person_append_array.yaml")
+        check_query_f(hge_ctx, self.dir() + "/person_append_array.yaml")
 
     def test_jsonb_prepend_array(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/person_prepend_array.yaml")
+        check_query_f(hge_ctx, self.dir() + "/person_prepend_array.yaml")
 
     def test_jsonb_delete_at_path(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/person_delete_at_path.yaml")
+        check_query_f(hge_ctx, self.dir() + "/person_delete_at_path.yaml")
 
     def test_jsonb_delete_array_element(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/person_delete_array_element.yaml")
+        check_query_f(hge_ctx, self.dir() + "/person_delete_array_element.yaml")
 
     def test_jsonb_delete_key(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/person_delete_key.yaml")
+        check_query_f(hge_ctx, self.dir() + "/person_delete_key.yaml")
 
     @classmethod
     def dir(cls):
@@ -308,10 +308,10 @@ class TestGraphqlUpdatePermissions(DefaultTestQueries):
 class TestGraphqlDeleteBasic(DefaultTestQueries):
 
     def test_article_delete(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/article.yaml")
+        check_query_f(hge_ctx, self.dir() + "/article.yaml")
 
     def test_article_delete_returning(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/article_returning.yaml")
+        check_query_f(hge_ctx, self.dir() + "/article_returning.yaml")
 
     @classmethod
     def dir(cls):
@@ -321,7 +321,7 @@ class TestGraphqlDeleteBasic(DefaultTestQueries):
 class TestGraphqlDeleteConstraints(DefaultTestQueries):
 
     def test_author_delete_foreign_key_violation(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/author_foreign_key_violation.yaml")
+        check_query_f(hge_ctx, self.dir() + "/author_foreign_key_violation.yaml")
 
     @classmethod
     def dir(cls):
@@ -331,7 +331,7 @@ class TestGraphqlDeleteConstraints(DefaultTestQueries):
 class TestGraphqlDeletePermissions(DefaultTestQueries):
 
     def test_author_can_delete_his_articles(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/author_can_delete_his_articles.yaml")
+        check_query_f(hge_ctx, self.dir() + "/author_can_delete_his_articles.yaml")
 
     def test_author_cannot_delete_other_users_articles(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_cannot_delete_other_users_articles.yaml")
