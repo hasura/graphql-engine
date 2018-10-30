@@ -2,6 +2,7 @@ import pytest
 import time
 from context import HGECtx, HGECtxError
 
+
 def pytest_addoption(parser):
     parser.addoption(
         "--hge-url", metavar="HGE_URL", help="url for graphql-engine", required=True
@@ -23,9 +24,10 @@ def pytest_addoption(parser):
         "--hge-jwt-key-file", metavar="HGE_JWT_KEY_FILE", help="File containting the private key used to encode jwt tokens using RS512 algorithm", required=False
     )
 
+
 @pytest.fixture(scope='session')
 def hge_ctx(request):
-    print ("create hge_ctx")
+    print("create hge_ctx")
     hge_url = request.config.getoption('--hge-url')
     pg_url = request.config.getoption('--pg-url')
     hge_key = request.config.getoption('--hge-key')
