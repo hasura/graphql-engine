@@ -106,6 +106,7 @@ class Main extends React.Component {
     const styles = require('./Main.scss');
     const appPrefix = '';
     const logo = require('./white-logo.svg');
+    const docs = require('./logo.svg');
     const github = require('./Github.svg');
     const discord = require('./Discord.svg');
     const mail = require('./mail.svg');
@@ -306,6 +307,16 @@ class Main extends React.Component {
                         <span>Reach out ({'support@hasura.io'})</span>
                       </a>
                     </li>
+                      <li className={'dropdown-item'}>
+                        <a href="https://docs.hasura.io/1.0/graphql/manual/index.html">
+                          <img
+                            className={'img-responsive'}
+                            src={docs}
+                            alt={'docs'}
+                            />
+                          <span>Docs</span>
+                        </a>
+                      </li>
                   </div>
                 </ul>
               </div>
