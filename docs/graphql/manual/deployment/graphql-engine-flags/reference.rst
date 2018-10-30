@@ -5,7 +5,7 @@ Every GraphQL engine command is structured as:
 
 .. code-block:: bash
 
-   graphql-engine <server-flags> serve <command-flags>
+   $ graphql-engine <server-flags> serve <command-flags>
 
 Server flags
 ^^^^^^^^^^^^
@@ -45,6 +45,8 @@ For ``serve`` subcommand these are the flags available
                             verifying. e.g: `{"type": "HS256", "key":
                            "<your-hmac-shared-secret>"}`,`{"type": "RS256",
                            "key": "<your-PEM-RSA-public-key>"}
+       --unauthorized-role  Unauthorized role, used when access-key is not sent in access-key
+                            only mode or "Authorization" header is absent in JWT mode
    -s, --stripes            Number of stripes
    -c, --connections        Number of connections that need to be opened to Postgres
        --timeout            Each connection's idle time before it is closed
@@ -60,11 +62,14 @@ Default environment variables
 
 You can use environment variables to configure defaults instead of using flags:
 
+.. note::
+  When the equivalent flags for environment variables are used, the flags will take precedence.
+
 For example:
 
 .. code-block:: bash
 
-   HASURA_GRAPHQL_DATABASE_URL=postgres://user:pass@host:5432/dbname graphql-engine serve
+   $ HASURA_GRAPHQL_DATABASE_URL=postgres://user:pass@host:5432/dbname graphql-engine serve
 
 
 These are the environment variables which are available:
@@ -91,8 +96,6 @@ These are the environment variables which are available:
                                     "key": "<your-PEM-RSA-public-key>"}
                                     Enable JWT mode, the value of which is a JSON
 
+   HASURA_GRAPHQL_UNAUTHORIZED_ROLE Unauthorized role, used when access-key is not sent in access-key
+                                    only mode or "Authorization" header is absent in JWT mode
    HASURA_GRAPHQL_ENABLE_CONSOLE    Enable API console. It is served at '/' and '/console'
-
-
-.. note::
-  When the equivalent flags for environment variables are used, the flags will take precedence.

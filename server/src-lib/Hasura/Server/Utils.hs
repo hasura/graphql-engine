@@ -6,6 +6,7 @@ module Hasura.Server.Utils where
 import qualified Database.PG.Query.Connection as Q
 
 import           Data.Aeson
+import           Data.List                    (group, sort)
 import           Data.List.Split
 import           Network.URI
 import           System.Exit
@@ -20,9 +21,6 @@ import qualified Language.Haskell.TH.Syntax   as TH
 import qualified Text.Ginger                  as TG
 
 import           Hasura.Prelude
-
-isXHasuraTxt :: T.Text -> Bool
-isXHasuraTxt = T.isInfixOf "x-hasura-" . T.toLower
 
 jsonHeader :: (T.Text, T.Text)
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")

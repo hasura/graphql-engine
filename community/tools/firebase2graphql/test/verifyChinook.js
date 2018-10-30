@@ -5,7 +5,7 @@ const colors = require('colors/safe');
 const complexQuery = `
 query {
   f2g_test_Album (
-    order_by:_id_asc
+    order_by:{_id:asc}
   ){
     _id
     f2g_test_Album_artist {
@@ -13,7 +13,7 @@ query {
       ArtistId
     }
     f2g_test_Track (
-      order_by: Name_asc
+      order_by: {Name:asc}
     ) {
       Name
       Composer

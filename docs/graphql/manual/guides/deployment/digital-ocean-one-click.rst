@@ -288,7 +288,7 @@ Logs
 
       cd /etc/hasura
 
-3. To checks logs for any contaier, use the follwing command:
+3. To checks logs for any container, use the following command:
 
    .. code-block:: bash
 

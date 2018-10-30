@@ -100,7 +100,7 @@ parseColExp nt n val expParser = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
     Left  pgColInfo          -> RA.AVCol pgColInfo <$> expParser val
-    Right (relInfo, permExp, _, _) -> do
+    Right (relInfo, _, permExp, _) -> do
       relBoolExp <- parseBoolExp val
       return $ RA.AVRel relInfo relBoolExp permExp
 

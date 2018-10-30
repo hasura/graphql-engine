@@ -1,8 +1,7 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE MultiWayIf        #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Hasura.GraphQL.Resolve.Mutation
   ( convertUpdate
@@ -12,6 +11,7 @@ module Hasura.GraphQL.Resolve.Mutation
 
 import           Hasura.Prelude
 
+import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Language.GraphQL.Draft.Syntax     as G
 
@@ -25,46 +25,45 @@ import qualified Hasura.SQL.DML                    as S
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Resolve.Select     (fromSelSet)
+import           Hasura.GraphQL.Resolve.Select     (fromSelSet, withSelSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m [(Text, a)]
-withSelSet selSet f =
-  forM (toList selSet) $ \fld -> do
-    res <- f fld
-    return (G.unName $ G.unAlias $ _fAlias fld, res)
-
 convertReturning
   :: QualifiedTable -> G.NamedType -> SelSet -> Convert RS.AnnSel
 convertReturning qt ty selSet = do
   annFlds <- fromSelSet prepare ty selSet
-  return $ RS.AnnSel annFlds qt (Just frmItem)
-    (S.BELit True) Nothing RS.noTableArgs
+  let selFlds = RS.ASFSimple annFlds
+      tabFrom = RS.TableFrom qt $ Just frmItem
+      tabPerm = RS.TablePerm (S.BELit True) Nothing
+  return $ RS.AnnSel selFlds tabFrom tabPerm RS.noTableArgs
   where
     frmItem = S.FIIden $ RR.qualTableToAliasIden qt
 
 convertMutResp
   :: QualifiedTable -> G.NamedType -> SelSet -> Convert RR.MutFlds
 convertMutResp qt ty selSet =
-  withSelSet selSet $ \fld ->
-    case _fName fld of
-      "__typename"    -> return $ RR.MExp $ G.unName $ G.unNamedType ty
-      "affected_rows" -> return RR.MCount
-      _ -> fmap RR.MRet $ convertReturning qt (_fType fld) $ _fSelSet fld
+  withSelSet selSet $ \fld -> case _fName fld of
+    "__typename"    -> return $ RR.MExp $ G.unName $ G.unNamedType ty
+    "affected_rows" -> return RR.MCount
+    "returning"     -> fmap RR.MRet $
+                       convertReturning qt (_fType fld) $ _fSelSet fld
+    G.Name t        -> throw500 $ "unexpected field in mutation resp : " <> t
 
 convertRowObj
   :: (MonadError QErr m, MonadState PrepArgs m)
-  => AnnGValue
+  => InsSetCols -> AnnGValue
   -> m [(PGCol, S.SQLExp)]
-convertRowObj val =
-  flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
+convertRowObj setVals val =
+  flip withObject val $ \_ obj -> do
+  inpVals <- forM (OMap.toList obj) $ \(k, v) -> do
     prepExpM <- asPGColValM v >>= mapM prepare
     let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (PGCol $ G.unName k, prepExp)
+  return $ Map.toList setVals <> inpVals
 
 type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
 
@@ -111,7 +110,7 @@ convertUpdate
   -> Convert RespTx
 convertUpdate tn filterExp fld = do
   -- a set expression is same as a row object
-  setExpM   <- withArgM args "_set" convertRowObj
+  setExpM   <- withArgM args "_set" $ convertRowObj Map.empty
   -- where bool expression to filter column
   whereExp <- withArg args "where" $ convertBoolExp tn
   -- increment operator on integer columns
