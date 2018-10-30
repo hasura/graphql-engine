@@ -309,7 +309,7 @@ class Main extends React.Component {
                       </a>
                     </li>
                     <li className={'dropdown-item'}>
-                      <a href="docs.hasura.io ">
+                      <a href="docs.hasura.io">
                         <img
                           className={'img-responsive'}
                           src={docs}
