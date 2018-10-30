@@ -8,6 +8,8 @@ import yaml
 '''
     Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
 '''
+
+
 def test_init_without_payload(hge_ctx):
     if hge_ctx.hge_key is not None:
         pytest.skip("Payload is needed when access key is set")
@@ -18,9 +20,12 @@ def test_init_without_payload(hge_ctx):
     ev = hge_ctx.get_ws_event(3)
     assert ev['type'] == 'connection_ack', ev
 
+
 '''
     Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
 '''
+
+
 def test_init(hge_ctx):
     payload = {}
     if hge_ctx.hge_key is not None:
@@ -37,6 +42,7 @@ def test_init(hge_ctx):
     ev = hge_ctx.get_ws_event(3)
     assert ev['type'] == 'connection_ack', ev
 
+
 class TestSubscriptionBasic(object):
 
     @pytest.fixture(autouse=True)
@@ -51,6 +57,7 @@ class TestSubscriptionBasic(object):
     '''
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_error
     '''
+
     def test_connection_error(self, hge_ctx):
         hge_ctx.ws.send("test")
         ev = hge_ctx.get_ws_event(3)
@@ -59,6 +66,7 @@ class TestSubscriptionBasic(object):
     '''
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_start
     '''
+
     def test_start(self, hge_ctx):
         query = """
         subscription {
@@ -85,6 +93,7 @@ class TestSubscriptionBasic(object):
     '''
         Refer https://github.com/apollographql/subscriptions-transport-ws/blob/01e0b2b65df07c52f5831cce5c858966ba095993/src/server.ts#L306
     '''
+
     @pytest.mark.skip(reason="refer https://github.com/hasura/graphql-engine/pull/387#issuecomment-421343098")
     def test_start_duplicate(self, hge_ctx):
         self.test_start(hge_ctx)
@@ -100,6 +109,7 @@ class TestSubscriptionBasic(object):
     '''
         Refer https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_stop
     '''
+
     def test_stop(self, hge_ctx):
         obj = {
             'type': 'stop',
@@ -116,6 +126,7 @@ class TestSubscriptionBasic(object):
     '''
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_complete
     '''
+
     def test_complete(self, hge_ctx):
         query = """
         query {
@@ -191,12 +202,12 @@ class TestSubscriptionLiveQueries(object):
         hge_ctx.ws.send(json.dumps(obj))
         ev = hge_ctx.get_ws_event(3)
         assert ev['type'] == 'data' and ev['id'] == obj['id'], ev
-        assert ev['payload']['data'] == {'hge_tests_test_t2': []} , ev['payload']['data']
+        assert ev['payload']['data'] == {'hge_tests_test_t2': []}, ev['payload']['data']
 
         assert isinstance(conf, list) == True, 'Not an list'
         for index, step in enumerate(conf):
             obj = {
-                'id': '{}'.format(index+1),
+                'id': '{}'.format(index + 1),
                 'payload': {
                     'query': step['query']
                 },
@@ -218,7 +229,8 @@ class TestSubscriptionLiveQueries(object):
             ev = hge_ctx.get_ws_event(3)
             assert ev['type'] == 'data' and ev['id'] == 'live', ev
             assert ev['payload']['data'] == {
-                'hge_tests_test_t2': expected_resp[step['name']]['returning'] if 'returning' in expected_resp[step['name']] else []
+                'hge_tests_test_t2': expected_resp[step['name']]['returning'] if 'returning' in expected_resp[
+                    step['name']] else []
             }, ev['payload']['data']
 
         # stop live operation
@@ -230,9 +242,12 @@ class TestSubscriptionLiveQueries(object):
         with pytest.raises(queue.Empty):
             ev = hge_ctx.get_ws_event(3)
 
+
 '''
     Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_terminate
 '''
+
+
 def test_connection_terminate(hge_ctx):
     obj = {
         'type': 'connection_terminate'
