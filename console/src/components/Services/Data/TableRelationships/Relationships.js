@@ -17,6 +17,7 @@ import { setTable } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 
 import AddManualRelationship from './AddManualRelationship';
+import suggestedRelationshipsRaw from './autoRelations';
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :
 {
@@ -46,16 +47,16 @@ const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
   return isObjRel ? (
     <span>
       &nbsp;
-      {lcol}
+      {lcol.join(',')}
       &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
-      {rTable} :: {rcol}
+      {rTable} :: {rcol.join(',')}
     </span>
   ) : (
     <span>
       &nbsp;
-      {finalRTable} :: {rcol}
+      {finalRTable} :: {rcol.join(',')}
       &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
-      {lcol}
+      {lcol.join(',')}
     </span>
   );
 };
@@ -95,149 +96,6 @@ const relationshipView = (
       </div>
     </td>
   );
-};
-
-/* Returns all the possible relationships in the format
-{
-objRel: {},
-arrRel: {}
-} */
-const suggestedRelationships = (tableName, allSchemas) => {
-  const suggestedRelationshipArray = [];
-  const objRels = [];
-  const arrRels = [];
-  const currentTableSchema = allSchemas.find(t => t.table_name === tableName);
-  const currentTableRelationships = currentTableSchema.relationships;
-  const currentObjRels = currentTableRelationships.filter(
-    r => r.rel_type === 'object'
-  );
-  const currentArrRels = currentTableRelationships.filter(
-    r => r.rel_type !== 'object'
-  );
-  for (let i = 0; i < allSchemas.length; i++) {
-    const schema = allSchemas[i];
-    const foreignKeyConstraints = schema.foreign_key_constraints;
-    for (let j = 0; j < foreignKeyConstraints.length; j++) {
-      const constraint = foreignKeyConstraints[j];
-      if (constraint.table_name === tableName) {
-        /* Object Relationships */
-        const lcol = Object.keys(constraint.column_mapping)[0];
-        let isExistingObjRel = false;
-        for (let k = 0; k < currentObjRels.length; k++) {
-          // check if this is already an existing relationship
-          if (currentObjRels[k].rel_def.foreign_key_constraint_on === lcol) {
-            // existing relationship
-            isExistingObjRel = true;
-          }
-        }
-        if (!isExistingObjRel) {
-          objRels.push({
-            tableName,
-            isObjRel: true,
-            name: null,
-            lcol,
-            rcol:
-              constraint.column_mapping[
-                Object.keys(constraint.column_mapping)[0]
-              ],
-            rTable: constraint.ref_table,
-          });
-        }
-      } else if (constraint.ref_table === tableName) {
-        /* Array Relationships */
-        const rcol = Object.keys(constraint.column_mapping)[0];
-        const rTable = constraint.table_name;
-        let isExistingArrayRel = false;
-
-        for (let k = 0; k < currentArrRels.length; k++) {
-          // check if this is already an existing relationship
-          const relDef = currentArrRels[k].rel_def;
-          let currTable = null;
-          let currRCol = null;
-
-          if (relDef.foreign_key_constraint_on) {
-            const tempTable = relDef.foreign_key_constraint_on.table;
-            currTable = tempTable.name
-              ? relDef.foreign_key_constraint_on.table.name
-              : tempTable;
-            currRCol = relDef.foreign_key_constraint_on.column;
-          } else {
-            currTable = relDef.manual_configuration.remote_table;
-            currRCol = Object.values(
-              relDef.manual_configuration.column_mapping
-            )[0];
-          }
-
-          if (currRCol === rcol && currTable === constraint.table_name) {
-            // existing relationship
-            isExistingArrayRel = true;
-          }
-        }
-        if (!isExistingArrayRel) {
-          arrRels.push({
-            tableName,
-            isObjRel: false,
-            name: null,
-            rcol,
-            lcol:
-              constraint.column_mapping[
-                Object.keys(constraint.column_mapping)[0]
-              ],
-            rTable,
-          });
-        }
-      }
-
-      /* Self Referencing Array Relationships */
-      if (
-        constraint.ref_table === tableName &&
-        constraint.table_name === tableName
-      ) {
-        const rcol = Object.keys(constraint.column_mapping)[0];
-        const rTable = constraint.table_name;
-        let isExistingArrayRel = false;
-
-        for (let k = 0; k < currentArrRels.length; k++) {
-          // check if this is already an existing relationship
-          if (
-            currentArrRels[k].rel_def.foreign_key_constraint_on.column ===
-              rcol &&
-            currentArrRels[k].rel_def.foreign_key_constraint_on.table ===
-              constraint.table_name
-          ) {
-            // existing relationship
-            isExistingArrayRel = true;
-          }
-        }
-        if (!isExistingArrayRel) {
-          arrRels.push({
-            tableName,
-            isObjRel: false,
-            name: null,
-            rcol,
-            lcol:
-              constraint.column_mapping[
-                Object.keys(constraint.column_mapping)[0]
-              ],
-            rTable,
-          });
-        }
-      }
-    }
-  }
-
-  const length =
-    objRels.length > arrRels.length ? objRels.length : arrRels.length;
-  for (let i = 0; i < length; i++) {
-    const objRel = objRels[i] ? objRels[i] : null;
-    const arrRel = arrRels[i] ? arrRels[i] : null;
-    suggestedRelationshipArray.push({
-      objRel,
-      arrRel,
-    });
-  }
-
-  return suggestedRelationshipArray;
 };
 
 const addRelationshipCellView = (
@@ -283,7 +141,6 @@ const addRelationshipCellView = (
     dispatch(addRelNewFromStateMigrate());
   };
   const styles = require('../TableModify/Modify.scss');
-
   return (
     <td>
       <div>
@@ -341,12 +198,15 @@ const AddRelationship = ({
   tableStyles,
 }) => {
   // eslint-disable-line no-unused-vars
-  const suggestedRelationshipsArray = suggestedRelationships(
+  const suggestedRelationshipsData = suggestedRelationshipsRaw(
     tableName,
     allSchemas
   );
   const styles = require('../TableModify/Modify.scss');
-  if (suggestedRelationshipsArray.length < 1) {
+  if (
+    suggestedRelationshipsData.objectRel.length < 1 &&
+    suggestedRelationshipsData.arrayRel.length < 1
+  ) {
     return (
       <div className={`${styles.remove_margin_bottom} form-group`}>
         <label>
@@ -357,22 +217,43 @@ const AddRelationship = ({
       </div>
     );
   }
+  let selectedRelationship;
   // Finding the object from the suggestedRelationshipsArray which is currently selected
-  let selectedRelationship = suggestedRelationshipsArray.find(rel => {
-    let r = rel.arrRel;
-    if (cachedRelationshipData.isObjRel) {
-      r = rel.objRel;
-    }
-    if (!r) {
-      return false;
-    }
-    return (
-      r.lcol === cachedRelationshipData.lcol &&
-      r.rcol === cachedRelationshipData.rcol &&
-      r.rTable === cachedRelationshipData.rTable &&
-      r.tableName === cachedRelationshipData.tableName
-    );
-  });
+  if (cachedRelationshipData.isObjRel) {
+    selectedRelationship = suggestedRelationshipsData.objectRel.find(rel => {
+      const cLcol =
+        typeof cachedRelationshipData.lcol === 'string'
+          ? [cachedRelationshipData.lcol]
+          : cachedRelationshipData.lcol;
+      const cRcol =
+        typeof cachedRelationshipData.rcol === 'string'
+          ? [cachedRelationshipData.rcol]
+          : cachedRelationshipData.rcol;
+      return (
+        rel.lcol.join(',') === cLcol.join(',') &&
+        rel.rcol.join(',') === cRcol.join(',') &&
+        rel.rTable === cachedRelationshipData.rTable &&
+        rel.tableName === cachedRelationshipData.tableName
+      );
+    });
+  } else {
+    selectedRelationship = suggestedRelationshipsData.arrayRel.find(rel => {
+      const cLcol =
+        typeof cachedRelationshipData.lcol === 'string'
+          ? [cachedRelationshipData.lcol]
+          : cachedRelationshipData.lcol;
+      const cRcol =
+        typeof cachedRelationshipData.rcol === 'string'
+          ? [cachedRelationshipData.rcol]
+          : cachedRelationshipData.rcol;
+      return (
+        rel.lcol.join(',') === cLcol.join(',') &&
+        rel.rcol.join(',') === cRcol.join(',') &&
+        rel.rTable === cachedRelationshipData.rTable &&
+        rel.tableName === cachedRelationshipData.tableName
+      );
+    });
+  }
 
   /* selectedRelationship right now equals :
     {
@@ -380,16 +261,55 @@ const AddRelationship = ({
       arrRel: {SomeValue}
     }
   This strips it down to either objRel or arrRel */
-  if (selectedRelationship) {
-    selectedRelationship = cachedRelationshipData.isObjRel
-      ? selectedRelationship.objRel
-      : selectedRelationship.arrRel;
-  }
 
   const relName = cachedRelationshipData.name
     ? cachedRelationshipData.name
     : '';
-
+  const column1 = [];
+  const column2 = [];
+  suggestedRelationshipsData.objectRel.map((rel, i) => {
+    column1.push(
+      rel.isObjRel ? (
+        addRelationshipCellView(
+          dispatch,
+          rel,
+          selectedRelationship,
+          relName,
+          tableStyles,
+          ['object', i]
+        )
+      ) : (
+        <td />
+      )
+    );
+  });
+  suggestedRelationshipsData.arrayRel.map((rel, i) => {
+    column2.push(
+      rel.isObjRel ? (
+        <td />
+      ) : (
+        addRelationshipCellView(
+          dispatch,
+          rel,
+          selectedRelationship,
+          relName,
+          tableStyles,
+          ['array', i]
+        )
+      )
+    );
+  });
+  const length =
+    column1.length > column2.length ? column1.length : column2.length;
+  const combinedRels = [];
+  for (let i = 0; i < length; i++) {
+    const objRel = column1[i] ? column1[i] : <td />;
+    const arrRel = column2[i] ? column2[i] : <td />;
+    combinedRels.push({
+      objRel,
+      arrRel,
+    });
+  }
   return (
     <div>
       <div>
@@ -412,35 +332,11 @@ const AddRelationship = ({
             </tr>
           </thead>
           <tbody>
-            {suggestedRelationshipsArray.map((rel, i) => {
-              const column1 = rel.objRel ? (
-                addRelationshipCellView(
-                  dispatch,
-                  rel.objRel,
-                  selectedRelationship,
-                  relName,
-                  tableStyles,
-                  ['object', i]
-                )
-              ) : (
-                <td />
-              );
-              const column2 = rel.arrRel ? (
-                addRelationshipCellView(
-                  dispatch,
-                  rel.arrRel,
-                  selectedRelationship,
-                  relName,
-                  tableStyles,
-                  ['array', i]
-                )
-              ) : (
-                <td />
-              );
+            {combinedRels.map((rel, i) => {
               return (
                 <tr key={i}>
-                  {column1}
-                  {column2}
+                  {rel.objRel}
+                  {rel.arrRel}
                 </tr>
               );
             })}
@@ -510,7 +406,6 @@ class Relationships extends Component {
         </div>
       );
     }
-
     const addedRelationshipsView =
       getObjArrayRelationshipList(tableSchema.relationships).length > 0 ? (
         <div className={tableStyles.tableContainer}>
@@ -677,4 +572,4 @@ const relationshipsConnector = connect =>
 
 export default relationshipsConnector;
 
-export { suggestedRelationships, getRelationshipLine };
+export { getRelationshipLine };

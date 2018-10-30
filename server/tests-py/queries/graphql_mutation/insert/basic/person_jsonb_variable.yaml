@@ -1,24 +1,33 @@
-description: Inserts person data via GraphQL mutation
-url: /v1alpha1/graphql
-status: 200
-query:
-  variables:
-    value:
-      name:
-        first: john
-        last: murphy
-  query: |
-    mutation insert_person($value: jsonb) {
-      insert_person(
-        objects: [
-          {
-            details: $value
+- description: Inserts person data via GraphQL mutation
+  url: /v1alpha1/graphql
+  status: 200
+  query:
+    variables:
+      value:
+        name:
+          first: john
+          last: murphy
+    query: |
+      mutation insert_person($value: jsonb) {
+        insert_person(
+          objects: [
+            {
+              details: $value
+            }
+          ]
+        ) {
+          returning {
+            id
+            details
           }
-        ]
-      ) {
-        returning {
-          id
-          details
         }
       }
-    }
+- description: Delete the inserted persons
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        delete from person;
+        SELECT setval('person_id_seq', 1, FALSE);

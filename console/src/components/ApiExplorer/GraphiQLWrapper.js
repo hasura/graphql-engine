@@ -22,6 +22,7 @@ class GraphiQLWrapper extends Component {
       onBoardingEnabled: false,
       queries: null,
       supportAnalyze: false,
+      analyzeApiChange: false,
     };
     const queryFile = this.props.queryParams
       ? this.props.queryParams.query_file
@@ -35,13 +36,17 @@ class GraphiQLWrapper extends Component {
 
   componentDidMount() {
     if (this.props.data.serverVersion) {
-      this.checkSemVer(this.props.data.serverVersion);
+      this.checkSemVer(this.props.data.serverVersion).then(() =>
+        this.checkNewAnalyzeVersion(this.props.data.serverVersion)
+      );
     }
   }
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.data.serverVersion !== this.props.data.serverVersion) {
-      this.checkSemVer(nextProps.data.serverVersion);
+      this.checkSemVer(nextProps.data.serverVersion).then(() =>
+        this.checkNewAnalyzeVersion(nextProps.data.serverVersion)
+      );
     }
   }
   shouldComponentUpdate(nextProps) {
@@ -60,6 +65,21 @@ class GraphiQLWrapper extends Component {
       this.updateAnalyzeState(false);
       console.error(e);
     }
+    return Promise.resolve();
+  }
+  checkNewAnalyzeVersion(version) {
+    try {
+      const analyzeApiChange = semverCheck('analyzeApiChange', version);
+      if (analyzeApiChange) {
+        this.updateAnalyzeApiState(true);
+      } else {
+        this.updateAnalyzeApiState(false);
+      }
+    } catch (e) {
+      this.updateAnalyzeApiState(false);
+      console.error(e);
+    }
+    return Promise.resolve();
   }
   updateAnalyzeState(supportAnalyze) {
     this.setState({
@@ -67,10 +87,16 @@ class GraphiQLWrapper extends Component {
       supportAnalyze: supportAnalyze,
     });
   }
+  updateAnalyzeApiState(analyzeApiChange) {
+    this.setState({
+      ...this.state,
+      analyzeApiChange: analyzeApiChange,
+    });
+  }
 
   render() {
     const styles = require('../Common/Common.scss');
-    const { supportAnalyze } = this.state;
+    const { supportAnalyze, analyzeApiChange } = this.state;
     const graphQLFetcher = graphQLParams => {
       if (this.state.headerFocus) {
         return null;
@@ -84,7 +110,8 @@ class GraphiQLWrapper extends Component {
 
     const analyzeFetcherInstance = analyzeFetcher(
       this.props.data.url,
-      this.props.data.headers
+      this.props.data.headers,
+      analyzeApiChange
     );
 
     // let content = "fetching schema";

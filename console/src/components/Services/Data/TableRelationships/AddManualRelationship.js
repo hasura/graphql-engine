@@ -151,7 +151,13 @@ class AddManualRelationship extends Component {
               className={'form-control'}
               onChange={this.onSchemaChange}
               data-test="remote-schema"
-              value={manualRelInfo.remoteSchema}
+              value={
+                manualRelInfo &&
+                'remoteSchema' in manualRelInfo &&
+                manualRelInfo.remoteSchema
+                  ? manualRelInfo.remoteSchema
+                  : ''
+              }
             >
               <option key="default_table">Remote Schema</option>
               {schemaList.map((s, i) => (
