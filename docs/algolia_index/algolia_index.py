@@ -36,7 +36,7 @@ def output_indexed_data():
 def process_data(json_data):
     processed_data = []
 
-    CONTENT_MAX_LENGTH = 18000
+    CONTENT_MAX_LENGTH = 17500
 
     print('TRIMMED:')
     for json_obj in json_data:
