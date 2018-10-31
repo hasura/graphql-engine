@@ -238,13 +238,13 @@ processEvent logenv pool e = do
           retryConfM = etiRetryConf <$> eti
           retryConf = fromMaybe (RetryConf 0 10) retryConfM
           tries = eTries e
-          retryHeaderSeconds = parseRetryHeader mretryHeader
+          mretryHeaderSeconds = parseRetryHeader mretryHeader
           triesExhausted = tries >= rcNumRetries retryConf
-          noRetryHeader = isNothing retryHeaderSeconds
+          noRetryHeader = isNothing mretryHeaderSeconds
       if triesExhausted && noRetryHeader -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
         then liftIO $ runExceptT $ runErrorAndUnlockQ pool e
         else do
-        let delay = chooseDelay triesExhausted (rcIntervalSec retryConf) retryHeaderSeconds
+        let delay = fromMaybe (rcIntervalSec retryConf) mretryHeaderSeconds -- give precedence to Retry-After header
         liftIO $ runExceptT $ runRetryAfterAndUnlockQ pool e delay
 
     getRetryAfterHeaderFromError (HStatus resp) = getRetryAfterHeaderFromResp resp
@@ -262,12 +262,6 @@ processEvent logenv pool e = do
         in case seconds of
              Nothing  -> Nothing
              Just sec -> if sec > 0 then Just sec else Nothing
-
-    -- we need to choose delay between the retry conf and the retry-after header
-    chooseDelay _ retryConfSec Nothing = retryConfSec
-    chooseDelay triesExhausted retryConfSec (Just retryHeaderSec) = if triesExhausted
-                                                                    then retryHeaderSec
-                                                                    else min retryHeaderSec retryConfSec
 
 tryWebhook
   :: ( MonadReader r m
