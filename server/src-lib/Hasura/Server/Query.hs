@@ -66,6 +66,7 @@ data RQLQuery
 
   -- schema-stitching, custom resolver related
   | RQAddCustomResolver !AddCustomResolverQuery
+  | RQDeleteCustomResolver !DeleteCustomResolverQuery
 
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
@@ -150,6 +151,7 @@ queryNeedsReload qi = case qi of
   RQCount q                    -> queryModifiesSchema q
 
   RQAddCustomResolver q        -> queryModifiesSchema q
+  RQDeleteCustomResolver q     -> queryModifiesSchema q
 
   RQCreateEventTrigger q       -> queryModifiesSchema q
   RQDeleteEventTrigger q       -> queryModifiesSchema q
@@ -205,7 +207,8 @@ buildTxAny userInfo sc hMgr gCtx rq = case rq of
   RQDelete q -> buildTx' q
   RQCount  q -> buildTx' q
 
-  RQAddCustomResolver q  -> buildTx' q
+  RQAddCustomResolver    q -> buildTx' q
+  RQDeleteCustomResolver q -> buildTx' q
 
   RQCreateEventTrigger q -> buildTx' q
   RQDeleteEventTrigger q -> buildTx' q

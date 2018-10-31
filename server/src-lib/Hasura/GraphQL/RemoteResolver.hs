@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
+{-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeFamilies      #-}
 
 module Hasura.GraphQL.RemoteResolver where
@@ -9,12 +10,15 @@ module Hasura.GraphQL.RemoteResolver where
 import           Control.Applicative           (liftA2)
 import           Control.Exception             (try)
 import           Control.Lens                  ((&), (.~), (?~), (^.))
+import           Data.FileEmbed                (embedStringFile)
 import           Data.Foldable                 (foldlM)
 import           Hasura.Prelude
 import           Language.Haskell.TH.Syntax    (Lift)
 import           System.Environment            (lookupEnv)
 
 import qualified Data.Aeson                    as J
+import qualified Data.Aeson.Casing             as J
+import qualified Data.Aeson.TH                 as J
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as Map
@@ -34,10 +38,9 @@ import           Hasura.RQL.Types
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Hasura.GraphQL.Validate.Types as VT
 
--- runScript :: FilePath -> TH.Q TH.Exp
--- runScript fp = do
---   TH.addDependentFile fp
---   fileContent <- TH.runIO $ TI.readFile fp
+
+introspectionQuery :: BL.ByteString
+introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
 
 fetchRemoteSchema
   :: (MonadIO m, MonadError QErr m)
@@ -50,9 +53,7 @@ fetchRemoteSchema manager url headerConf = do
               & Wreq.checkResponse ?~ (\_ _ -> return ())
               & Wreq.manager .~ Right manager
 
-  -- FIXME: read and cache introspection query at compile time
-  iq   <- liftIO $ BL.readFile "ws/introspection.json"
-  res  <- liftIO $ try $ Wreq.postWith options (show url) iq
+  res  <- liftIO $ try $ Wreq.postWith options (show url) introspectionQuery
   resp <- either throwHttpErr return res
 
   let respData = resp ^. Wreq.responseBody
@@ -131,6 +132,18 @@ mergeRemoteSchema ctxMap (_, rmSchema) = do
   return $ Map.fromList res
 
 
+getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Text -> m N.URI
+getUrlFromEnv urlFromEnv = do
+  mEnv <- liftIO . lookupEnv $ T.unpack urlFromEnv
+  env  <- maybe (throw400 Unexpected $ envNotFoundMsg urlFromEnv) return
+          mEnv
+  maybe (throw400 Unexpected $ invalidUri env) return $ N.parseURI env
+  where
+    invalidUri uri = "not a valid URI: " <> T.pack uri
+    envNotFoundMsg e =
+      "cannot find environment variable " <> e <> " for custom resolver"
+
+
 type UrlFromEnv = Text
 
 data AddCustomResolverQuery
@@ -197,17 +210,6 @@ addCustomResolverP2 (AddCustomResolverQuery eUrlVal headers name) = do
   addCustomResolverToCache url $ fromMaybe [] headers
   return successMsg
 
-getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Text -> m N.URI
-getUrlFromEnv urlFromEnv = do
-  mEnv <- liftIO . lookupEnv $ T.unpack urlFromEnv
-  env  <- maybe (throw400 Unexpected $ envNotFoundMsg urlFromEnv) return
-          mEnv
-  maybe (throw400 Unexpected $ invalidUri env) return $ N.parseURI env
-  where
-    invalidUri uri = "not a valid URI: " <> T.pack uri
-    envNotFoundMsg e =
-      "cannot find environment variable " <> e <> " for custom resolver"
-
 
 addCustomResolverToCache :: CacheRWM m => N.URI -> [HeaderConf] -> m ()
 addCustomResolverToCache url hdrs = do
@@ -239,12 +241,73 @@ addCustomResolverToCatalog eUrlV headers name = do
 
   where headers' = fromMaybe [] headers
 
+
+data DeleteCustomResolverQuery
+  = DeleteCustomResolverQuery
+  { _dcrqName    :: !Text
+  } deriving (Show, Eq, Lift)
+
+$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''DeleteCustomResolverQuery)
+
+deleteCustomResolverP1
+  :: (P1C m)
+  => DeleteCustomResolverQuery -> m DeleteCustomResolverQuery
+deleteCustomResolverP1 q = adminOnly >> return q
+
+deleteCustomResolverP2
+  :: ( QErrM m
+     , CacheRWM m
+     , MonadTx m
+     , MonadIO m
+     , HasHttpManager m
+     , HasTypeMap m
+     )
+  => DeleteCustomResolverQuery
+  -> m BL.ByteString
+deleteCustomResolverP2 (DeleteCustomResolverQuery name) = do
+  url <- liftTx $ fetchRemoteResolverUrl name
+  deleteCustomResolverFromCache url
+  liftTx $ deleteCustomResolverFromCatalog name
+  return successMsg
+
+deleteCustomResolverFromCache
+  :: CacheRWM m => Text -> m ()
+deleteCustomResolverFromCache url = do
+  sc <- askSchemaCache
+  let resolvers = scRemoteResolvers sc
+      newResolvers = filter (\(u, _) -> T.pack (show u) /= url) resolvers
+  writeSchemaCache sc { scRemoteResolvers = newResolvers }
+
+deleteCustomResolverFromCatalog :: Text -> Q.TxE QErr ()
+deleteCustomResolverFromCatalog name =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+    DELETE FROM hdb_catalog.custom_resolver
+      WHERE name = $1
+  |] (Identity name) True
+
+
+instance HDBQuery DeleteCustomResolverQuery where
+  type Phase1Res DeleteCustomResolverQuery = DeleteCustomResolverQuery
+  phaseOne   = deleteCustomResolverP1
+  phaseTwo _ = deleteCustomResolverP2
+  schemaCachePolicy = SCPReload
+
+
+fetchRemoteResolverUrl :: Text -> Q.TxE QErr Text
+fetchRemoteResolverUrl name =
+  runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+    [Q.sql|
+     SELECT url from hdb_catalog.custom_resolver
+       WHERE name = $1
+     |] (Identity name) True
+
 fetchRemoteResolvers :: Q.TxE QErr [(Either N.URI Text, [HeaderConf])]
 fetchRemoteResolvers = do
-  res <- Q.listQE defaultTxErrorHandler [Q.sql|
-    SELECT url, url_from_env, headers
-      FROM hdb_catalog.custom_resolver
-  |] () True
+  res <- Q.listQE defaultTxErrorHandler
+    [Q.sql|
+     SELECT url, url_from_env, headers
+       FROM hdb_catalog.custom_resolver
+     |] () True
   mapM fromRow res
   where
     -- FIXME: better way to do this

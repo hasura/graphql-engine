@@ -58,11 +58,14 @@ runGQ pool isoL userInfo gCtxRoleMap manager req rawReq = do
   unless (allEq typeLocs) $
     throw400 UnexpectedPayload "cannot mix nodes from two different graphql servers"
 
-  when (null typeLocs) $ throw500 "cannot find given node in root"
-  -- FIXME: head!!!!
-  case head typeLocs of
-    VT.HasuraType     -> runHasuraGQ pool isoL userInfo gCtxRoleMap req
-    VT.RemoteType url -> runRemoteGQ manager rawReq url
+  if null typeLocs
+    then runHasuraGQ pool isoL userInfo gCtxRoleMap req
+         --throw400 UnexpectedPayload "cannot find given node in root"
+    else
+    -- TODO: do we worry about head?
+    case head typeLocs of
+      VT.HasuraType     -> runHasuraGQ pool isoL userInfo gCtxRoleMap req
+      VT.RemoteType url -> runRemoteGQ manager rawReq url
 
   where
     gCtx = getGCtx (userRole userInfo) gCtxRoleMap
