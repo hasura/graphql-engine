@@ -61,11 +61,17 @@ const permChangeTypes = {
   delete: 'delete',
 };
 
-const permOpenEdit = (tableSchema, role, query) => ({
+const permOpenEdit = (
+  tableSchema,
+  role,
+  query,
+  insertPermColumnRestriction
+) => ({
   type: PERM_OPEN_EDIT,
   tableSchema,
   role,
   query,
+  insertPermColumnRestriction,
 });
 const permSetFilter = filter => ({ type: PERM_SET_FILTER, filter });
 const permSetFilterSameAs = filter => ({
@@ -128,7 +134,12 @@ const setConfigValueType = value => {
     : 'static';
 };
 
-const getBasePermissionsState = (tableSchema, role, query) => {
+const getBasePermissionsState = (
+  tableSchema,
+  role,
+  query,
+  insertPermColumnRestriction
+) => {
   const _permissions = JSON.parse(JSON.stringify(defaultPermissionsState));
 
   _permissions.table = tableSchema.table_name;
@@ -145,6 +156,13 @@ const getBasePermissionsState = (tableSchema, role, query) => {
       // If the query is insert, transform set object if exists to an array
       if (q === 'insert') {
         // If set is an object
+        if (insertPermColumnRestriction) {
+          if (!_permissions[q].columns) {
+            _permissions[q].columns = tableSchema.columns.map(
+              c => c.column_name
+            );
+          }
+        }
         if ('set' in _permissions[q]) {
           if (
             Object.keys(_permissions[q].set).length > 0 &&
