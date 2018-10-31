@@ -306,6 +306,11 @@ class Main extends React.Component {
                         <span>Reach out ({'support@hasura.io'})</span>
                       </a>
                     </li>
+                    <li className={'dropdown-item'}>
+                      <a href="https://docs.hasura.io/">
+                        <span>Checkout our docs</span>
+                      </a>
+                    </li>
                   </div>
                 </ul>
               </div>
