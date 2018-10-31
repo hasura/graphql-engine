@@ -17,6 +17,9 @@ import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
 import qualified Data.Vector                   as V
 import qualified Network.HTTP.Client           as HTTP
+import qualified Data.Aeson.Text              as AT
+import qualified Data.Sequence                as Seq
+import qualified Data.Text.Lazy               as LT
 
 import           Hasura.GraphQL.RemoteResolver
 import           Hasura.GraphQL.Schema
@@ -26,28 +29,12 @@ import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DML.Explain
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.DML.Returning      (encodeJSONVector)
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query             as Q
-
--- data QueryWithTxId
---   = QueryWithTxId
---   { qtTxId  :: !(Maybe TxId)
---   , qtQuery :: !RQLQuery
---   } deriving (Show, Eq)
-
--- instance FromJSON QueryWithTxId where
---   parseJSON v@(Object o) =
---     QueryWithTxId
---     <$> o .:! "transaction_id"
---     <*> parseJSON v
---   parseJSON _ =
---     fail "expecting on object for query"
 
 data RQLQuery
   = RQAddExistingTableOrView !TrackTable
@@ -131,31 +118,8 @@ runQuery pool isoL userInfo sc hMgr gCtxMap query = do
   let gCtx = getGCtx (userRole userInfo) gCtxMap
   tx <- liftEither $ buildTxAny userInfo sc hMgr gCtx query
   res <- liftIO $ runExceptT $ Q.runTx pool (isoL, Nothing) $
-         setHeadersTx userInfo >> tx
+         setHeadersTx (userVars userInfo) >> tx
   liftEither res
-
-buildExplainTx
-  :: UserInfo
-  -> SchemaCache
-  -> HTTP.Manager
-  -> SelectQuery
-  -> Either QErr (Q.TxE QErr BL.ByteString)
-buildExplainTx userInfo sc httpManager q = do
-  p1Res <- withPathK "query" $ runP1 qEnv $ phaseOneExplain q
-  res <- return $ flip runReaderT p2Ctx $
-    flip runStateT sc $ withPathK "query" $ phaseTwoExplain p1Res
-  return $ fst <$> res
-  where
-    p2Ctx = P2Ctx userInfo httpManager
-    qEnv = QCtx userInfo sc
-
-runExplainQuery
-  :: Q.PGPool -> Q.TxIsolation
-  -> UserInfo -> SchemaCache -> HTTP.Manager
-  -> SelectQuery -> ExceptT QErr IO BL.ByteString
-runExplainQuery pool isoL userInfo sc httpManager query = do
-  tx <- liftEither $ buildExplainTx userInfo sc httpManager query
-  Q.runTx pool (isoL, Nothing) $ setHeadersTx userInfo >> tx
 
 queryNeedsReload :: RQLQuery -> Bool
 queryNeedsReload qi = case qi of
@@ -274,14 +238,19 @@ buildTxAny userInfo sc hMgr gCtx rq = case rq of
                , finalSc
                )
 
+<<<<<<< HEAD
   where buildTx' q = buildTx userInfo sc hMgr gCtx q
 
 setHeadersTx :: UserInfo -> Q.TxE QErr ()
 setHeadersTx userInfo =
   forM_ hdrs $ \h -> Q.unitQE defaultTxErrorHandler (mkQ h) () False
+=======
+setHeadersTx :: UserVars -> Q.TxE QErr ()
+setHeadersTx uVars =
+  Q.unitQE defaultTxErrorHandler setSess () False
+>>>>>>> b40807c9ec501c35c98ffe52370b46f8b81597ee
   where
-    hdrs = Map.toList $ Map.delete accessKeyHeader
-      $ userHeaders userInfo
-    mkQ (h, v) = Q.fromBuilder $ BB.string7 $
-      T.unpack $
-      "SET LOCAL hasura." <> dropAndSnakeCase h <> " =  " <> pgFmtLit v
+    toStrictText = LT.toStrict . AT.encodeToLazyText
+    setSess = Q.fromText $
+      "SET LOCAL \"hasura.user\" = " <>
+      pgFmtLit (toStrictText uVars)

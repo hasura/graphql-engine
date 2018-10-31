@@ -102,8 +102,7 @@ runHasuraGQ pool isoL userInfo gCtxMap req = do
     gCtx = getGCtx (userRole userInfo) gCtxMap
     runTx tx =
       Q.runTx pool (isoL, Nothing) $
-      RQ.setHeadersTx userInfo >> tx
-
+      RQ.setHeadersTx (userVars userInfo) >> tx
 
 runRemoteGQ
   :: (MonadIO m, MonadError QErr m)

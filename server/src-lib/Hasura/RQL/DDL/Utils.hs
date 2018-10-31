@@ -4,14 +4,14 @@ module Hasura.RQL.DDL.Utils
   ( clearHdbViews
   ) where
 
-import qualified Data.ByteString.Builder as BB
-import qualified Database.PG.Query       as Q
-import           Hasura.Prelude          ((<>))
+import qualified Data.Text         as T
+import qualified Database.PG.Query as Q
+import           Hasura.Prelude    ((<>))
 
 clearHdbViews :: Q.Tx ()
-clearHdbViews = Q.multiQ (Q.fromBuilder (clearHdbOnlyViews <> clearHdbViewsFunc))
+clearHdbViews = Q.multiQ (Q.fromText (clearHdbOnlyViews <> clearHdbViewsFunc))
 
-clearHdbOnlyViews :: BB.Builder
+clearHdbOnlyViews :: T.Text
 clearHdbOnlyViews =
   "DO $$ DECLARE \
    \ r RECORD; \
@@ -22,7 +22,7 @@ clearHdbOnlyViews =
    \ END $$; "
 
 
-clearHdbViewsFunc :: BB.Builder
+clearHdbViewsFunc :: T.Text
 clearHdbViewsFunc =
   "DO $$ DECLARE \
   \ _sql text; \

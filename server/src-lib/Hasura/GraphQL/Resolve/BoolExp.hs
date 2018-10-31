@@ -6,7 +6,9 @@
 
 module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
+  , pgColValToBoolExpG
   , pgColValToBoolExp
+  , convertBoolExpG
   , convertBoolExp
   , prepare
   ) where
@@ -98,7 +100,7 @@ parseColExp nt n val expParser = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
     Left  pgColInfo          -> RA.AVCol pgColInfo <$> expParser val
-    Right (relInfo, permExp, _, _) -> do
+    Right (relInfo, _, permExp, _) -> do
       relBoolExp <- parseBoolExp val
       return $ RA.AVRel relInfo relBoolExp permExp
 
@@ -116,26 +118,43 @@ parseBoolExp annGVal = do
           | otherwise   -> BoolCol <$> parseColExp nt k v parseOpExps
   return $ BoolAnd $ fromMaybe [] boolExpsM
 
+convertBoolExpG
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
+  => ((PGColType, PGColValue) -> m S.SQLExp)
+  -> QualifiedTable
+  -> AnnGValue
+  -> m (GBoolExp RG.AnnSQLBoolExp)
+convertBoolExpG f tn whereArg = do
+  whereExp <- parseBoolExp whereArg
+  RG.convBoolRhs (RG.mkBoolExpBuilder f) (S.mkQual tn) whereExp
+
 convertBoolExp
   :: QualifiedTable
   -> AnnGValue
   -> Convert (GBoolExp RG.AnnSQLBoolExp)
-convertBoolExp tn whereArg = do
-  whereExp <- parseBoolExp whereArg
-  RG.convBoolRhs (RG.mkBoolExpBuilder prepare) (S.mkQual tn) whereExp
+convertBoolExp = convertBoolExpG prepare
 
 type PGColValMap = Map.HashMap G.Name AnnGValue
 
-pgColValToBoolExp
-  :: QualifiedTable
+pgColValToBoolExpG
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
+  => ((PGColType, PGColValue) -> m S.SQLExp)
+  -> QualifiedTable
   -> PGColValMap
-  -> Convert (GBoolExp RG.AnnSQLBoolExp)
-pgColValToBoolExp tn colValMap = do
+  -> m (GBoolExp RG.AnnSQLBoolExp)
+pgColValToBoolExpG f tn colValMap = do
   colExps <- forM colVals $ \(name, val) -> do
     (ty, _) <- asPGColVal val
     let namedTy = mkScalarTy ty
     BoolCol <$> parseColExp namedTy name val parseAsEqOp
   let whereExp = BoolAnd colExps
-  RG.convBoolRhs (RG.mkBoolExpBuilder prepare) (S.mkQual tn) whereExp
+  RG.convBoolRhs (RG.mkBoolExpBuilder f) (S.mkQual tn) whereExp
   where
     colVals = Map.toList colValMap
+
+pgColValToBoolExp
+  :: QualifiedTable
+  -> PGColValMap
+  -> Convert (GBoolExp RG.AnnSQLBoolExp)
+pgColValToBoolExp =
+  pgColValToBoolExpG prepare

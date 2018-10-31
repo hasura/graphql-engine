@@ -34,7 +34,7 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   const currMigrationMode = getState().main.migrationMode;
 
   const migrateUrl = returnMigrateUrl(currMigrationMode);
-  let currentSchema = 'public';
+  const currentSchema = 'public';
   const isCascadeChecked = getState().rawSQL.isCascadeChecked;
 
   let url = Endpoints.rawSQL;
@@ -46,29 +46,35 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   ];
   // check if track view enabled
   if (getState().rawSQL.isTableTrackChecked) {
-    const regExp = /create (view|table) ((\"?\w+\"?)\.(\"?\w+\"?)|(\w+))/i; // eslint-disable-line
-    const matches = sql.match(regExp);
-    // If group 5 is undefined, use group 3 and 4 for schema and table respectively
-    // If group 5 is present, use group 5 for table name using public schema.
-    let trackViewName = '';
-    if (matches && matches.length === 6) {
-      if (matches[5]) {
-        trackViewName = matches[5];
-      } else {
-        currentSchema = matches[3].replace(/['"]+/g, '');
-        trackViewName = matches[4];
-      }
-    }
-    trackViewName = trackViewName.replace(/['"]+/g, ''); // replace quotes
-    const trackQuery = {
-      type: 'add_existing_table_or_view',
-      args: {
-        name: trackViewName.trim(),
-        schema: currentSchema,
-      },
-    };
-    if (trackViewName !== '') {
-      schemaChangesUp.push(trackQuery);
+    const regExp = /create (view|table) ((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
+    const matches = sql.match(new RegExp(regExp, 'gmi'));
+    if (matches) {
+      matches.forEach(element => {
+        const itemMatch = element.match(new RegExp(regExp, 'i'));
+        if (itemMatch && itemMatch.length === 6) {
+          const trackQuery = {
+            type: 'add_existing_table_or_view',
+            args: {},
+          };
+          // If group 5 is undefined, use group 3 and 4 for schema and table respectively
+          // If group 5 is present, use group 5 for table name using public schema.
+          if (itemMatch[5]) {
+            trackQuery.args.name = itemMatch[5];
+            trackQuery.args.schema = currentSchema;
+          } else {
+            trackQuery.args.name = itemMatch[4];
+            trackQuery.args.schema = itemMatch[3];
+          }
+          // replace and trim schema and table name
+          trackQuery.args.name = trackQuery.args.name
+            .replace(/['"]+/g, '')
+            .trim();
+          trackQuery.args.schema = trackQuery.args.schema
+            .replace(/['"]+/g, '')
+            .trim();
+          schemaChangesUp.push(trackQuery);
+        }
+      });
     }
   }
   let requestBody = {

@@ -10,7 +10,6 @@ import           Data.Aeson.Types
 import           Instances.TH.Lift        ()
 
 import qualified Data.Aeson.Text          as AT
-import qualified Data.ByteString.Builder  as BB
 import qualified Data.HashMap.Strict      as HM
 import qualified Data.HashSet             as HS
 import qualified Data.Sequence            as DS
@@ -86,19 +85,23 @@ convObj
   :: (P1C m)
   => (PGColType -> Value -> m S.SQLExp)
   -> HM.HashMap PGCol S.SQLExp
+  -> HM.HashMap PGCol S.SQLExp
   -> FieldInfoMap
   -> InsObj
   -> m ([PGCol], [S.SQLExp])
-convObj prepFn defInsVals fieldInfoMap insObj = do
-  inpInsVals <- flip HM.traverseWithKey insObj $ \c val -> do
+convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
+  inpInsVals <- flip HM.traverseWithKey reqInsObj $ \c val -> do
     let relWhenPGErr = "relationships can't be inserted"
     colType <- askPGType fieldInfoMap c relWhenPGErr
     -- Encode aeson's value into prepared value
     withPathK (getPGColTxt c) $ prepFn colType val
-  let sqlExps = HM.elems $ HM.union inpInsVals defInsVals
+  let insVals = HM.union setInsVals inpInsVals
+      sqlExps = HM.elems $ HM.union insVals defInsVals
       inpCols = HM.keys inpInsVals
 
   return (inpCols, sqlExps)
+  where
+    reqInsObj = HM.difference insObj setInsVals
 
 buildConflictClause
   :: (P1C m)
@@ -166,6 +169,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
   validateHeaders $ ipiRequiredHeaders insPerm
 
   let fieldInfoMap = tiFieldInfoMap tableInfo
+      setInsVals = ipiSet insPerm
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols -> do
@@ -182,7 +186,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
       insView    = ipiView insPerm
 
   insTuples <- withPathK "objects" $ indexedForM insObjs $ \obj ->
-    convObj prepFn defInsVals fieldInfoMap obj
+    convObj prepFn defInsVals setInsVals fieldInfoMap obj
   let sqlExps = map snd insTuples
       inpCols = HS.toList $ HS.fromList $ concatMap fst insTuples
 
@@ -250,7 +254,7 @@ setConflictCtx :: Maybe ConflictCtx -> Q.TxE QErr ()
 setConflictCtx conflictCtxM = do
   let t = maybe "null" conflictCtxToJSON conflictCtxM
       setVal = toSQL $ S.SELit t
-      setVar = BB.string7 "SET LOCAL hasura.conflict_clause = "
+      setVar = "SET LOCAL hasura.conflict_clause = "
       q = Q.fromBuilder $ setVar <> setVal
   Q.unitQE defaultTxErrorHandler q () False
   where

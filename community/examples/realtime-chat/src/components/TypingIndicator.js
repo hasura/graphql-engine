@@ -12,7 +12,7 @@ const getUserTyping = gql`
         }
       },
       limit: 1
-      order_by: last_typed_desc
+      order_by: {last_typed:desc}
     ){
       last_typed
       username
@@ -49,4 +49,3 @@ class TypingIndicator extends React.Component {
 };
 
 export default TypingIndicator;
-

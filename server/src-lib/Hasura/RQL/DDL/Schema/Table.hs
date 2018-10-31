@@ -381,8 +381,8 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
   forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ tDefVal, webhook, nr, rint, Q.AltJ mheaders) -> do
     let headerConfs = fromMaybe [] mheaders
         qt = QualifiedTable sn tn
-    allCols <- (getCols . tiFieldInfoMap) <$> askTabInfo qt
-    headers <- getHeadersFromConf headerConfs
+    allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
+    headers <- getHeaderInfosFromConf headerConfs
     tDef <- decodeValue tDefVal
     addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook headers
     liftTx $ mkTriggerQ trid trn qt allCols tDef
@@ -462,7 +462,7 @@ runSqlP2 (RunSQL t cascade) = do
   oldMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
 
   -- Run the SQL
-  res <- liftTx $ Q.multiQE rawSqlErrHandler $ Q.fromBuilder $ TE.encodeUtf8Builder t
+  res <- liftTx $ Q.multiQE rawSqlErrHandler $ Q.fromText t
 
   -- Get the metadata after the sql query
   newMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta

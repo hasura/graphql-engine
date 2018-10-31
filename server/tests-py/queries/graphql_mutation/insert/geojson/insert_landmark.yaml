@@ -1,0 +1,52 @@
+- description: Insert landmarks
+  url: /v1alpha1/graphql
+  status: 200
+  response:
+    data:
+      insert_landmark:
+        returning:
+        - id: 1
+          name: Baz
+          type: river
+          location: &loc1
+            coordinates: [43.75049, 11.03207]
+            type: Point
+            crs: &crs
+              type: name
+              properties:
+                name: 'urn:ogc:def:crs:EPSG::4326'
+        - id: 2
+          name: Foo Bar
+          type: park
+          location: &loc2
+            coordinates: [43.76417, 11.25869]
+            type: Point
+            crs: *crs
+  query:
+    variables:
+      landmarks:
+      - name: Baz
+        type: river
+        location: *loc1
+      - name: Foo Bar
+        type: park
+        location: *loc2
+    query: |
+      mutation insertLandmark($landmarks: [landmark_insert_input!]!) {
+        insert_landmark(objects: $landmarks) {
+          returning{
+            id
+            name
+            location
+            type
+          }
+        }
+      }
+- description: Delete the inserted landmarks
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        delete from landmark

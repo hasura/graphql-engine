@@ -14,6 +14,7 @@ module Hasura.Server.Auth.JWT
   , jwkRefreshCtrl
   ) where
 
+import           Control.Arrow                   (first)
 import           Control.Exception               (try)
 import           Control.Lens
 import           Control.Monad                   (when)
@@ -164,8 +165,30 @@ processJwt
      , MonadError QErr m)
   => JWTCtx
   -> HTTP.RequestHeaders
+  -> Maybe RoleName
   -> m UserInfo
-processJwt jwtCtx headers = do
+processJwt jwtCtx headers mUnAuthRole =
+  maybe withoutAuthZHeader withAuthZHeader mAuthZHeader
+  where
+    mAuthZHeader = find (\h -> fst h == CI.mk "Authorization") headers
+
+    withAuthZHeader (_, authzHeader) =
+      processAuthZHeader jwtCtx headers $ BL.fromStrict authzHeader
+
+    withoutAuthZHeader = do
+      unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
+      return $ mkUserInfo unAuthRole $ mkUserVars []
+    missingAuthzHeader =
+      throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
+
+processAuthZHeader
+  :: ( MonadIO m
+     , MonadError QErr m)
+  => JWTCtx
+  -> HTTP.RequestHeaders
+  -> BLC.ByteString
+  -> m UserInfo
+processAuthZHeader jwtCtx headers authzHeader = do
   -- try to parse JWT token from Authorization header
   jwt <- parseAuthzHeader
 
@@ -182,7 +205,7 @@ processJwt jwtCtx headers = do
 
   -- filter only x-hasura claims and convert to lower-case
   let claimsMap = Map.filterWithKey (\k _ -> T.isPrefixOf "x-hasura-" k)
-                $ Map.fromList $ map (\(k, v) -> (T.toLower k, v))
+                $ Map.fromList $ map (first T.toLower)
                 $ Map.toList hasuraClaims
 
   HasuraClaims allowedRoles defaultRole <- parseHasuraClaims claimsMap
@@ -196,16 +219,13 @@ processJwt jwtCtx headers = do
   metadata <- decodeJSON $ A.Object finalClaims
 
   -- delete the x-hasura-access-key from this map, and insert x-hasura-role
-  let hasuraMd = Map.insert userRoleHeader (getRoleTxt role) $
-        Map.delete accessKeyHeader metadata
+  let hasuraMd = Map.delete accessKeyHeader metadata
 
-  return $ UserInfo role hasuraMd
+  return $ mkUserInfo role $ mkUserVars $ Map.toList hasuraMd
 
   where
     parseAuthzHeader = do
-      let mAuthzHeader = find (\h -> fst h == CI.mk "Authorization") headers
-      (_, authzHeader) <- maybe missingAuthzHeader return mAuthzHeader
-      let tokenParts = BLC.words $ BL.fromStrict authzHeader
+      let tokenParts = BLC.words authzHeader
       case tokenParts of
         ["Bearer", jwt] -> return jwt
         _               -> malformedAuthzHeader
@@ -235,8 +255,6 @@ processJwt jwtCtx headers = do
 
     malformedAuthzHeader =
       throw400 InvalidHeaders "Malformed Authorization header"
-    missingAuthzHeader =
-      throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
     currRoleNotAllowed =
       throw400 AccessDenied "Your current role is not in allowed roles"
     claimsNotFound = do

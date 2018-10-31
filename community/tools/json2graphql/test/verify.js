@@ -6,7 +6,8 @@ query {
     routesByRoutesId {
       leaguesByLeaguesId {
         flightssByLeaguesId {
-          flightCommentssByFlightsId {
+          flightCommentssByFlightsId (order_by: {users_id:asc}){
+            users_id
             usersByUsersId {
               email
             }

@@ -58,11 +58,13 @@ import           Hasura.SQL.Types
 import qualified Database.PG.Query                  as Q
 import qualified Hasura.SQL.DML                     as S
 
+import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.List
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.ByteString.Builder            as BB
+import qualified Data.HashMap.Strict                as HM
 import qualified Data.HashSet                       as HS
 import qualified Data.Text                          as T
 
@@ -71,6 +73,7 @@ data InsPerm
   = InsPerm
   { icCheck       :: !BoolExp
   , icAllowUpsert :: !(Maybe Bool)
+  , icSet         :: !(Maybe Object)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
@@ -90,8 +93,8 @@ buildViewName (QualifiedTable sn tn) (RoleName rTxt) pt =
 buildView :: QualifiedTable -> QualifiedTable -> Q.Query
 buildView tn vn =
   Q.fromBuilder $ mconcat
-  [ BB.string7 "CREATE VIEW " <> toSQL vn
-  , BB.string7 " AS SELECT * FROM " <> toSQL tn
+  [ "CREATE VIEW " <> toSQL vn
+  , " AS SELECT * FROM " <> toSQL tn
   ]
 
 dropView :: QualifiedTable -> Q.Tx ()
@@ -99,26 +102,41 @@ dropView vn =
   Q.unitQ dropViewS () False
   where
     dropViewS = Q.fromBuilder $
-      BB.string7 "DROP VIEW " <> toSQL vn
+      "DROP VIEW " <> toSQL vn
 
 buildInsPermInfo
   :: (QErrM m, CacheRM m)
   => TableInfo
   -> PermDef InsPerm
   -> m InsPermInfo
-buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt) _) = do
+buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set) _) = withPathK "permission" $ do
   (be, beDeps) <- withPathK "check" $
     procBoolExp tn fieldInfoMap (S.QualVar "NEW") chk
   let deps = mkParentDep tn : beDeps
-      depHeaders = getDependentHeaders chk
-  return $ InsPermInfo vn be (fromMaybe False upsrt) deps depHeaders
+      fltrHeaders = getDependentHeaders chk
+      setObj = fromMaybe mempty set
+      allowUpsrt = fromMaybe False upsrt
+  setColsSQL <- withPathK "set" $
+    fmap HM.fromList $ forM (HM.toList setObj) $ \(t, val) -> do
+      let pgCol = PGCol t
+      ty <- askPGType fieldInfoMap pgCol $
+        "column " <> pgCol <<> " not found in table " <>> tn
+      sqlExp <- valueParser ty val
+      return (pgCol, sqlExp)
+  let setHdrs = mapMaybe (fetchHdr . snd) (HM.toList setObj)
+      reqHdrs = fltrHeaders `union` setHdrs
+  return $ InsPermInfo vn be allowUpsrt setColsSQL deps reqHdrs
   where
     fieldInfoMap = tiFieldInfoMap tabInfo
     tn = tiName tabInfo
     vn = buildViewName tn rn PTInsert
 
+    fetchHdr (String t) = bool Nothing (Just $ T.toLower t)
+                          $ isUserVar t
+    fetchHdr _          = Nothing
+
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
-buildInsInfra tn (InsPermInfo vn be _ _ _) = do
+buildInsInfra tn (InsPermInfo vn be _ _ _ _) = do
   trigFnQ <- buildInsTrigFn vn tn be
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
@@ -162,9 +180,10 @@ instance IsPerm InsPerm where
 -- Select constraint
 data SelPerm
   = SelPerm
-  { spColumns :: !PermColSpec       -- Allowed columns
-  , spFilter  :: !BoolExp   -- Filter expression
-  , spLimit   :: !(Maybe Int) -- Limit value
+  { spColumns           :: !PermColSpec       -- Allowed columns
+  , spFilter            :: !BoolExp   -- Filter expression
+  , spLimit             :: !(Maybe Int) -- Limit value
+  , spAllowAggregations :: !(Maybe Bool) -- Allow aggregation
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
@@ -190,11 +209,12 @@ buildSelPermInfo tabInfo sp = do
 
   withPathK "limit" $ mapM_ onlyPositiveInt mLimit
 
-  return $ SelPermInfo (HS.fromList pgCols) tn be mLimit deps depHeaders
+  return $ SelPermInfo (HS.fromList pgCols) tn be mLimit allowAgg deps depHeaders
 
   where
     tn = tiName tabInfo
     fieldInfoMap = tiFieldInfoMap tabInfo
+    allowAgg = or $ spAllowAggregations sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 
 type SelPermDef = PermDef SelPerm
