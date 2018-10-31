@@ -1,0 +1,14 @@
+url: /v1/query
+status: 400
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+response:
+  path: $.args
+  error: 'restricted access : admin only'
+  code: access-denied
+query:
+  type: run_sql
+  args:
+    sql: |
+      SELECT * from author

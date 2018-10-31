@@ -59,7 +59,7 @@ getParamValue params (TemplateParamConf paramName paramVal) =
 
 data QueryTProc
   = QTPInsert !(R.InsertQueryP1, DS.Seq Q.PrepArg)
-  | QTPSelect !(R.SelectData, DS.Seq Q.PrepArg)
+  | QTPSelect !(R.AnnSel, DS.Seq Q.PrepArg)
   | QTPUpdate !(R.UpdateQueryP1, DS.Seq Q.PrepArg)
   | QTPDelete !(R.DeleteQueryP1, DS.Seq Q.PrepArg)
   | QTPCount !(R.CountQueryP1, DS.Seq Q.PrepArg)
@@ -131,7 +131,7 @@ execQueryTemplateP1 (ExecQueryTemplate qtn args) = do
 execQueryTP2 :: (P2C m) => QueryTProc -> m RespBody
 execQueryTP2 qtProc = case qtProc of
   QTPInsert qp -> liftTx $ R.insertP2 qp
-  QTPSelect qp -> liftTx $ R.selectP2 qp
+  QTPSelect qp -> liftTx $ R.selectP2 False qp
   QTPUpdate qp -> liftTx $ R.updateP2 qp
   QTPDelete qp -> liftTx $ R.deleteP2 qp
   QTPCount qp  -> R.countP2 qp

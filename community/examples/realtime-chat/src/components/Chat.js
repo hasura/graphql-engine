@@ -2,10 +2,11 @@ import React from 'react';
 import { Subscription } from 'react-apollo';
 import gql from 'graphql-tag';
 import ChatWrapper from './ChatWrapper';
+import '../App.css';
 
-const subscribeToEvent = gql`
+const subscribeToNewMessages = gql`
   subscription {
-    message ( order_by: id_desc limit: 1) {
+    message ( order_by: {id:desc} limit: 1) {
       id
       username
       text
@@ -14,21 +15,18 @@ const subscribeToEvent = gql`
 `;
 
 const emitOnlineEvent = gql`
-  mutation ($userId: Int!){
-    insert_user_online(objects: [
-      {
-        user_id: $userId,
+  mutation ($userId:Int!){
+    update_user (
+      _set: {
         last_seen: "now()"
       }
-    ],
-      on_conflict: {
-        constraint: user_online_pkey,
-        action: update
+      where: {
+        id: {
+          _eq: $userId
+        }
       }
     ) {
-      returning {
-        user_id
-      }
+      affected_rows
     }
   }
 `;
@@ -63,7 +61,7 @@ class Chat extends React.Component {
           }
         });
       },
-      1000 
+      3000
     );
   }
 
@@ -77,7 +75,7 @@ class Chat extends React.Component {
     return (
       <div>
         <Subscription
-          subscription={subscribeToEvent}
+          subscription={subscribeToNewMessages}
         >
           {
             ({data, error, loading}) => {
@@ -98,6 +96,20 @@ class Chat extends React.Component {
           userId={this.props.userId}
           username={username}
         />
+        <footer className="App-footer">
+          <div className="hasura-logo">
+            <img src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black.svg" onClick={() => window.open("https://hasura.io")}/>
+            &nbsp; | &nbsp;
+            <a href="https://hasura-realtime-group-chat.herokuapp.com/console" target="_blank">
+              Database
+            </a>
+            &nbsp; | &nbsp;
+            <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-chat" target="_blank">
+              Source
+            </a>
+          </div>
+          <div className="footer-small-text"><span>(The database resets every 24 hours)</span></div>
+        </footer>
       </div>
     );
   }

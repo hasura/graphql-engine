@@ -63,6 +63,32 @@ func (h *HasuraDB) ResetMetadata() error {
 	return nil
 }
 
+// ReloadMetadata - Reload Hasura GraphQL Engine metadata on the database
+func (h *HasuraDB) ReloadMetadata() error {
+	query := HasuraInterfaceQuery{
+		Type: "reload_metadata",
+		Args: HasuraArgs{},
+	}
+
+	resp, body, err := h.sendQuery(query)
+	if err != nil {
+		h.logger.Debug(err)
+		return err
+	}
+	h.logger.Debug("response: ", string(body))
+
+	var horror HasuraError
+	if resp.StatusCode != http.StatusOK {
+		err = json.Unmarshal(body, &horror)
+		if err != nil {
+			h.logger.Debug(err)
+			return err
+		}
+		return horror.Error(h.config.isCMD)
+	}
+	return nil
+}
+
 func (h *HasuraDB) ApplyMetadata(data interface{}) error {
 	query := HasuraInterfaceBulk{
 		Type: "bulk",

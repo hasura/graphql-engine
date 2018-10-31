@@ -7,6 +7,8 @@ import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import RedeliverEvent from '../TableCommon/RedeliverEvent';
 import TableHeader from '../TableCommon/TableHeader';
+import semverCheck from '../../../../helpers/semver';
+import parseRowData from './util';
 import {
   loadEventLogs,
   setTrigger,
@@ -32,17 +34,40 @@ class StreamingLogs extends Component {
       intervalId: null,
       filtered: [],
       filterAll: '',
+      showRedeliver: false,
     };
     this.refreshData = this.refreshData.bind(this);
     this.filterAll = this.filterAll.bind(this);
     this.props.dispatch(setTrigger(this.props.triggerName));
   }
   componentDidMount() {
+    if (this.props.serverVersion) {
+      this.checkSemVer(this.props.serverVersion);
+    }
     this.props.dispatch(setTrigger(this.props.triggerName));
     this.props.dispatch(loadEventLogs(this.props.triggerName));
   }
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.serverVersion !== this.props.serverVersion) {
+      this.checkSemVer(nextProps.serverVersion);
+    }
+  }
   componentWillUnmount() {
     this.props.dispatch(vSetDefaults());
+  }
+  checkSemVer(version) {
+    let showRedeliver = false;
+    try {
+      showRedeliver = semverCheck('eventRedeliver', version);
+      if (showRedeliver) {
+        this.setState({ ...this.state, showRedeliver: true });
+      } else {
+        this.setState({ ...this.state, showRedeliver: false });
+      }
+    } catch (e) {
+      console.log(e);
+      this.setState({ ...this.state, showRedeliver: false });
+    }
   }
   handleNewerEvents() {
     // get the first element
@@ -95,8 +120,9 @@ class StreamingLogs extends Component {
   }
   toggleModal(currentEvent) {
     // set current event to redeliver
-    this.props.dispatch(setRedeliverEvent(currentEvent));
-    this.props.dispatch({ type: MODAL_OPEN, data: true });
+    this.props.dispatch(setRedeliverEvent(currentEvent)).then(() => {
+      this.props.dispatch({ type: MODAL_OPEN, data: true });
+    });
   }
 
   render() {
@@ -121,10 +147,12 @@ class StreamingLogs extends Component {
     ];
     const invocationGridHeadings = [];
     invocationColumns.map(column => {
-      invocationGridHeadings.push({
-        Header: column,
-        accessor: column,
-      });
+      if (!(column === 'redeliver' && !this.state.showRedeliver)) {
+        invocationGridHeadings.push({
+          Header: column,
+          accessor: column,
+        });
+      }
     });
     invocationGridHeadings.push({
       // NOTE - this is a "filter all" DUMMY column
@@ -160,7 +188,9 @@ class StreamingLogs extends Component {
       filterAll: true,
     });
     const invocationRowsData = [];
-    log.rows.map(r => {
+    const requestData = [];
+    const responseData = [];
+    log.rows.map((r, i) => {
       const newRow = {};
       const status =
         r.status === 200 ? (
@@ -169,6 +199,8 @@ class StreamingLogs extends Component {
           <i className={styles.invocationFailure + ' fa fa-times'} />
         );
 
+      requestData.push(parseRowData(r, 'request'));
+      responseData.push(parseRowData(r, 'response'));
       // Insert cells corresponding to all rows
       invocationColumns.forEach(col => {
         const getCellContent = () => {
@@ -193,20 +225,20 @@ class StreamingLogs extends Component {
           if (col === 'operation') {
             return (
               <div className={conditionalClassname}>
-                {r.request.event.op.toLowerCase()}
+                {requestData[i].data.event.op.toLowerCase()}
               </div>
             );
           }
           if (col === 'primary_key') {
-            const tableName = r.request.table.name;
+            const tableName = requestData[i].data.table.name;
             const tableData = allSchemas.filter(
               row => row.table_name === tableName
             );
             const primaryKey = tableData[0].primary_key.columns; // handle all primary keys
             const pkHtml = [];
             primaryKey.map(pk => {
-              const newPrimaryKeyData = r.request.event.data.new
-                ? r.request.event.data.new[pk]
+              const newPrimaryKeyData = requestData[i].data.event.data.new
+                ? requestData[i].data.event.data.new[pk]
                 : '';
               pkHtml.push(
                 <div>
@@ -221,7 +253,7 @@ class StreamingLogs extends Component {
               </div>
             );
           }
-          if (col === 'redeliver') {
+          if (col === 'redeliver' && this.state.showRedeliver) {
             return (
               <div className={conditionalClassname}>
                 <i
@@ -306,20 +338,8 @@ class StreamingLogs extends Component {
               }
               SubComponent={logRow => {
                 const finalIndex = logRow.index;
-                const finalRow = log.rows[finalIndex];
-                const currentPayload = JSON.stringify(
-                  finalRow.request,
-                  null,
-                  4
-                );
-                // check if response is type JSON
-                let finalResponse = finalRow.response;
-                try {
-                  finalResponse = JSON.parse(finalRow.response);
-                  finalResponse = JSON.stringify(finalResponse, null, 4);
-                } catch (e) {
-                  console.error(e);
-                }
+                const finalRequest = requestData[finalIndex];
+                const finalResponse = responseData[finalIndex];
                 return (
                   <div style={{ padding: '20px' }}>
                     <Tabs
@@ -328,13 +348,35 @@ class StreamingLogs extends Component {
                       id="requestResponseTab"
                     >
                       <Tab eventKey={1} title="Request">
+                        {finalRequest.headers ? (
+                          <div className={styles.add_mar_top}>
+                            <div className={styles.subheading_text}>
+                              Headers
+                            </div>
+                            <AceEditor
+                              mode="json"
+                              theme="github"
+                              name="headers"
+                              value={JSON.stringify(
+                                finalRequest.headers,
+                                null,
+                                4
+                              )}
+                              minLines={4}
+                              maxLines={20}
+                              width="100%"
+                              showPrintMargin={false}
+                              showGutter={false}
+                            />
+                          </div>
+                        ) : null}
                         <div className={styles.add_mar_top}>
-                          <div className={styles.subheading_text}>Request</div>
+                          <div className={styles.subheading_text}>Payload</div>
                           <AceEditor
                             mode="json"
                             theme="github"
                             name="payload"
-                            value={currentPayload}
+                            value={JSON.stringify(finalRequest.data, null, 4)}
                             minLines={4}
                             maxLines={100}
                             width="100%"
@@ -344,13 +386,35 @@ class StreamingLogs extends Component {
                         </div>
                       </Tab>
                       <Tab eventKey={2} title="Response">
+                        {finalResponse.headers ? (
+                          <div className={styles.add_mar_top}>
+                            <div className={styles.subheading_text}>
+                              Headers
+                            </div>
+                            <AceEditor
+                              mode="json"
+                              theme="github"
+                              name="response"
+                              value={JSON.stringify(
+                                finalResponse.headers,
+                                null,
+                                4
+                              )}
+                              minLines={4}
+                              maxLines={20}
+                              width="100%"
+                              showPrintMargin={false}
+                              showGutter={false}
+                            />
+                          </div>
+                        ) : null}
                         <div className={styles.add_mar_top}>
                           <div className={styles.subheading_text}>Response</div>
                           <AceEditor
                             mode="json"
                             theme="github"
                             name="response"
-                            value={finalResponse}
+                            value={JSON.stringify(finalResponse.data, null, 4)}
                             minLines={4}
                             maxLines={100}
                             width="100%"
@@ -406,6 +470,7 @@ StreamingLogs.propTypes = {
 const mapStateToProps = (state, ownProps) => {
   return {
     ...state.triggers,
+    serverVersion: state.main.serverVersion,
     triggerName: ownProps.params.trigger,
     migrationMode: state.main.migrationMode,
     currentSchema: state.tables.currentSchema,

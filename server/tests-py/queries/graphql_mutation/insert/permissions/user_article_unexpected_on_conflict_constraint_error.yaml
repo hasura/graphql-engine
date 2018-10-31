@@ -1,0 +1,33 @@
+description: Upserts article data via GraphQL mutation (Error 03)
+url: /v1alpha1/graphql
+status: 400
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+query:
+  query: |
+    mutation insert_article {
+      insert_article (
+        objects: [
+          {
+            content: "Updated Article 1 content",
+            id: 1,
+            author_id: 1
+          },
+          {
+            content: "Updated Article 2 content",
+            id: 2,
+            author_id: 1
+          }
+          ],
+        on_conflict: {
+          action: update,
+          constraint: random_constraint
+        }
+      ) {
+        returning {
+          title
+          content
+          }
+        }
+      }

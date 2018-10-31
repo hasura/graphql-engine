@@ -19,10 +19,45 @@ class RedeliverEvent extends Component {
     this.state = { isWatching: true, intervalId: null };
     this.refreshData = this.refreshData.bind(this);
   }
+  componentDidMount() {
+    if (this.props.log.isModalOpen) {
+      this.attachFetching(this.props.log.redeliverEventId);
+    }
+  }
+  componentWillReceiveProps(nextProps) {
+    if (this.props.log.isModalOpen !== nextProps.log.isModalOpen) {
+      if (nextProps.log.isModalOpen === true) {
+        this.attachFetching(nextProps.log.redeliverEventId);
+      } else {
+        this.removeFetching(this.state.intervalId);
+      }
+    } else if (
+      this.state.intervalId !== null &&
+      this.props.log.eventInvocations.length ===
+        nextProps.log.eventInvocations.length
+    ) {
+      this.removeFetching(this.state.intervalId);
+    }
+  }
+  componentWillUnmount() {
+    if (this.props.log.isModalOpen) {
+      this.removeFetching(this.state.intervalId);
+    }
+  }
   onModalClose = () => {
     this.props.dispatch({ type: MODAL_OPEN, data: false });
   };
-
+  attachFetching(eventId) {
+    const intervalId = setInterval(
+      () => this.props.dispatch(loadEventInvocations(eventId)),
+      5000
+    );
+    this.setState({ ...this.state, intervalId: intervalId });
+  }
+  removeFetching(intervalId) {
+    clearInterval(intervalId);
+    this.setState({ ...this.state, intervalId: null });
+  }
   refreshData() {
     this.props.dispatch(loadEventInvocations(this.props.log.event_id));
   }
@@ -33,6 +68,10 @@ class RedeliverEvent extends Component {
   render() {
     const styles = require('./Table.scss');
     const { log } = this.props;
+
+    const isLoading = this.state.intervalId ? (
+      <i className="fa fa-spinner fa-spin" />
+    ) : null;
 
     const renderTableBody = () => {
       if (log.eventInvocations.length === 0) {
@@ -105,6 +144,9 @@ class RedeliverEvent extends Component {
               finalResponse = JSON.stringify(finalResponse, null, 4);
             } catch (e) {
               console.error(e);
+              if (typeof finalResponse === 'object') {
+                finalResponse = JSON.stringify(finalResponse, null, 4);
+              }
             }
             return (
               <div style={{ padding: '20px' }}>
@@ -148,6 +190,9 @@ class RedeliverEvent extends Component {
       latestResponse = log.eventInvocations[0]
         ? log.eventInvocations[0].response
         : '';
+      if (typeof latestResponse === 'object') {
+        latestResponse = JSON.stringify(latestResponse, null, 4);
+      }
     }
 
     return (
@@ -197,7 +242,7 @@ class RedeliverEvent extends Component {
                     />
                   </div>
                   <div className={styles.padd_left_remove + ' col-md-5'}>
-                    <div> Latest Invocation Response </div>
+                    <div> Latest Invocation Response {isLoading}</div>
                     {log.redeliverEventFailure === null ? (
                       <AceEditor
                         mode="json"

@@ -1,9 +1,12 @@
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module Hasura.Server.Utils where
 
 import qualified Database.PG.Query.Connection as Q
 
+import           Data.Aeson
+import           Data.List                    (group, sort)
 import           Data.List.Split
 import           Network.URI
 import           System.Exit
@@ -15,21 +18,9 @@ import qualified Data.Text.Encoding           as TE
 import qualified Data.Text.Encoding.Error     as TE
 import qualified Data.Text.IO                 as TI
 import qualified Language.Haskell.TH.Syntax   as TH
+import qualified Text.Ginger                  as TG
 
 import           Hasura.Prelude
-
-
-dropAndSnakeCase :: T.Text -> T.Text
-dropAndSnakeCase = T.drop 9 . toSnakeCase . T.toLower
-
-toSnakeCase :: T.Text -> T.Text
-toSnakeCase = T.pack . map change . T.unpack
-  where
-    change '-' = '_'
-    change c   = c
-
-isXHasuraTxt :: T.Text -> Bool
-isXHasuraTxt = T.isInfixOf "x-hasura-" . T.toLower
 
 jsonHeader :: (T.Text, T.Text)
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
@@ -95,3 +86,23 @@ runScript fp = do
     "Running shell script " ++ fp ++ " failed with exit code : "
     ++ show exitCode ++ " and with error : " ++ stdErr
   TH.lift stdOut
+
+-- Ginger Templating
+type GingerTmplt = TG.Template TG.SourcePos
+
+parseGingerTmplt :: TG.Source -> Either String GingerTmplt
+parseGingerTmplt src = either parseE Right res
+  where
+    res = runIdentity $ TG.parseGinger' parserOptions src
+    parserOptions = TG.mkParserOptions resolver
+    resolver = const $ return Nothing
+    parseE e = Left $ TG.formatParserError (Just "") e
+
+renderGingerTmplt :: (ToJSON a) => a -> GingerTmplt -> T.Text
+renderGingerTmplt v = TG.easyRender (toJSON v)
+
+-- find duplicates
+duplicates :: Ord a => [a] -> [a]
+duplicates = mapMaybe greaterThanOne . group . sort
+  where
+    greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1

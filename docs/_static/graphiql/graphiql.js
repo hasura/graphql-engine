@@ -13794,7 +13794,7 @@ function updateWidgetHeight(line) {
 }
 
 // Compute the lines that are visible in a given viewport (defaults
-// the the current scroll position). viewport may contain top,
+// the current scroll position). viewport may contain top,
 // height, and ensure (see op.scrollToPos) properties.
 function visibleLines(display, doc, viewport) {
   var top = viewport && viewport.top != null ? Math.max(0, viewport.top) : display.scroller.scrollTop;
@@ -15738,7 +15738,7 @@ function makeChangeFromHistory(doc, type, allowSelectionOnly) {
   var hist = doc.history, event, selAfter = doc.sel;
   var source = type == "undo" ? hist.done : hist.undone, dest = type == "undo" ? hist.undone : hist.done;
 
-  // Verify that there is a useable event (so that ctrl-z won't
+  // Verify that there is a usable event (so that ctrl-z won't
   // needlessly clear selection events)
   var i = 0;
   for (; i < source.length; i++) {
@@ -21910,7 +21910,7 @@ var LexRules = exports.LexRules = {
   // Combines the IntValue and FloatValue tokens.
   Number: /^-?(?:0|(?:[1-9][0-9]*))(?:\.[0-9]*)?(?:[eE][+-]?[0-9]+)?/,
 
-  // Note the closing quote is made optional as an IDE experience improvment.
+  // Note the closing quote is made optional as an IDE experience improvement.
   String: /^"(?:[^"\\]|\\(?:"|\/|\\|b|f|n|r|t|u[0-9a-fA-F]{4}))*"?/,
 
   // Comments consume entire lines.
@@ -22303,7 +22303,7 @@ function getToken(stream, state, options) {
     // If this is a forking rule, determine what rule to use based on
     var expected = typeof state.rule === 'function' ? state.step === 0 ? state.rule(token, stream) : null : state.rule[state.step];
 
-    // Seperator between list elements if necessary.
+    // Separator between list elements if necessary.
     if (state.needsSeperator) {
       expected = expected && expected.separator;
     }
@@ -22674,7 +22674,7 @@ var _graphql = require('graphql');
  * Validate a GraphQL Document optionally with custom validation rules.
  */
 function validateWithCustomRules(schema, ast, customRules) {
-  // Because every fragment is considered for determing model subsets that may
+  // Because every fragment is considered for determining model subsets that may
   // be used anywhere in the codebase they're all technically "used" by clients
   // of graphql-data. So we remove this rule from the validators.
   var _require = require('graphql/validation/rules/NoUnusedFragments'),
@@ -23360,7 +23360,7 @@ function collectFields(exeContext, runtimeType, selectionSet, fields, visitedFra
 
 /**
  * Determines if a field should be included based on the @include and @skip
- * directives, where @skip has higher precidence than @include.
+ * directives, where @skip has higher precedence than @include.
  */
 function shouldIncludeNode(exeContext, node) {
   var skip = (0, _values.getDirectiveValues)(_directives.GraphQLSkipDirective, node, exeContext.variableValues);
@@ -23791,7 +23791,7 @@ function getPromise(value) {
 }
 
 /**
- * This method looks up the field on the given type defintion.
+ * This method looks up the field on the given type definition.
  * It has special casing for the two introspection fields, __schema
  * and __typename. __typename is special because it can always be
  * queried as a field, even in situations where no other fields
@@ -25899,7 +25899,7 @@ function readString(source, start, line, col, prev) {
 }
 
 /**
- * Converts four hexidecimal chars to the integer that the
+ * Converts four hexadecimal chars to the integer that the
  * string represents. For example, uniCharCode('0','0','0','f')
  * will return 15, and uniCharCode('0','0','f','f') returns 255.
  *
@@ -34887,7 +34887,7 @@ function OverlappingFieldsCanBeMerged(context) {
  *
  * D) When comparing "between" a set of fields and a referenced fragment, first
  * a comparison is made between each field in the original set of fields and
- * each field in the the referenced set of fields.
+ * each field in the referenced set of fields.
  *
  * E) Also, if any fragment is referenced in the referenced selection set,
  * then a comparison is made "between" the original set of fields and the
@@ -36652,7 +36652,7 @@ ArrayLikeIterator.prototype[$$iterator] = function() {
 }
 
 // A simple state-machine determines the IteratorResult returned, yielding
-// each value in the Array-like object in order of their indicies.
+// each value in the Array-like object in order of their indices.
 ArrayLikeIterator.prototype.next = function() {
   if (this._o === void 0 || this._i >= this._o.length) {
     this._o = void 0
@@ -36961,7 +36961,7 @@ AsyncFromSyncIterator.prototype[$$asyncIterator] = function() {
 }
 
 // A simple state-machine determines the IteratorResult returned, yielding
-// each value in the Array-like object in order of their indicies.
+// each value in the Array-like object in order of their indices.
 AsyncFromSyncIterator.prototype.next = function() {
   var step = this._i.next()
   return Promise.resolve(step.value).then(function(value) {
@@ -37341,7 +37341,7 @@ function Match(self, shift) {
   /**
    * Match#text -> String
    *
-   * Notmalized text of matched string.
+   * Normalized text of matched string.
    **/
   this.text      = text;
   /**
@@ -37381,7 +37381,7 @@ function createMatch(self, shift) {
  * `schemas` is an object, where each key/value describes protocol/rule:
  *
  * - __key__ - link prefix (usually, protocol name with `:` at the end, `skype:`
- *   for example). `linkify-it` makes shure that prefix is not preceeded with
+ *   for example). `linkify-it` makes shure that prefix is not preceded with
  *   alphanumeric char and symbols. Only whitespaces and punctuation allowed.
  * - __value__ - rule to check tail after link prefix
  *   - _String_ - just alias to existing rule
@@ -37611,7 +37611,7 @@ LinkifyIt.prototype.match = function match(text) {
  * - keepOld (Boolean): merge with current list if `true` (`false` by default)
  *
  * Load (or merge) new tlds list. Those are user for fuzzy links (without prefix)
- * to avoid false positives. By default this algorythm used:
+ * to avoid false positives. By default this algorithm used:
  *
  * - hostname with any 2-letter root zones are ok.
  * - biz|com|edu|gov|net|org|pro|web|xxx|aero|asia|coop|info|museum|name|shop|рф
@@ -37677,7 +37677,7 @@ module.exports = LinkifyIt;
 module.exports = function (opts) {
   var re = {};
 
-  // Use direct extract instead of `regenerate` to reduse browserified size
+  // Use direct extract instead of `regenerate` to reduce browserified size
   re.src_Any = require('uc.micro/properties/Any/regex').source;
   re.src_Cc  = require('uc.micro/categories/Cc/regex').source;
   re.src_Z   = require('uc.micro/categories/Z/regex').source;
@@ -38764,7 +38764,7 @@ function MarkdownIt(presetName, options) {
   this.normalizeLinkText = normalizeLinkText;
 
 
-  // Expose utils & helpers for easy acces from plugins
+  // Expose utils & helpers for easy access from plugins
 
   /**
    * MarkdownIt#utils -> utils
@@ -38818,7 +38818,7 @@ MarkdownIt.prototype.set = function (options) {
 /** chainable, internal
  * MarkdownIt.configure(presets)
  *
- * Batch load of all options and compenent settings. This is internal method,
+ * Batch load of all options and component settings. This is internal method,
  * and you probably will not need it. But if you with - see available presets
  * and data structure [here](https://github.com/markdown-it/markdown-it/tree/master/lib/presets)
  *
@@ -39722,7 +39722,7 @@ function Renderer() {
    * var result = md.renderInline(...);
    * ```
    *
-   * Each rule is called as independed static function with fixed signature:
+   * Each rule is called as independent static function with fixed signature:
    *
    * ```javascript
    * function my_token_render(tokens, idx, options, env, renderer) {
@@ -39764,7 +39764,7 @@ Renderer.prototype.renderAttrs = function renderAttrs(token) {
  * - idx (Numbed): token index to render
  * - options (Object): params of parser instance
  *
- * Default token renderer. Can be overriden by custom function
+ * Default token renderer. Can be overridden by custom function
  * in [[Renderer#rules]].
  **/
 Renderer.prototype.renderToken = function renderToken(tokens, idx, options) {
@@ -39923,7 +39923,7 @@ module.exports = Renderer;
  * - enable/disable rules
  * - add/replace rules
  * - allow assign rules to additional named chains (in the same)
- * - cacheing lists of active rules
+ * - caching lists of active rules
  *
  * You will not need use this class directly until write plugins. For simple
  * rules control use [[MarkdownIt.disable]], [[MarkdownIt.enable]] and
@@ -43259,7 +43259,7 @@ module.exports = function newline(state, silent) {
   // '  \n' -> hardbreak
   // Lookup in pending chars is bad practice! Don't copy to other rules!
   // Pending string is stored in concat mode, indexed lookups will cause
-  // convertion to flat mode.
+  // conversion to flat mode.
   if (!silent) {
     if (pmax >= 0 && state.pending.charCodeAt(pmax) === 0x20) {
       if (pmax >= 1 && state.pending.charCodeAt(pmax - 1) === 0x20) {
@@ -43511,7 +43511,7 @@ module.exports.postProcess = function strikethrough(state) {
     }
   }
 
-  // If a marker sequence has an odd number of characters, it's splitted
+  // If a marker sequence has an odd number of characters, it's split
   // like this: `~~~~~` -> `~` + `~~` + `~~`, leaving one marker at the
   // start of the sequence.
   //
@@ -43543,7 +43543,7 @@ module.exports.postProcess = function strikethrough(state) {
 
 
 // Rule to skip pure text
-// '{}$%@~+=:' reserved for extentions
+// '{}$%@~+=:' reserved for extensions
 
 // !, ", #, $, %, &, ', (, ), *, +, ,, -, ., /, :, ;, <, =, >, ?, @, [, \, ], ^, _, `, {, |, }, or ~
 
@@ -44474,7 +44474,7 @@ function defaultClearTimeout () {
 } ())
 function runTimeout(fun) {
     if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
+        //normal environments in sane situations
         return setTimeout(fun, 0);
     }
     // if setTimeout wasn't available but was latter defined
@@ -44483,14 +44483,14 @@ function runTimeout(fun) {
         return setTimeout(fun, 0);
     }
     try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
+        // when when somebody has screwed with setTimeout but no I.E. madness
         return cachedSetTimeout(fun, 0);
     } catch(e){
         try {
             // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
             return cachedSetTimeout.call(null, fun, 0);
         } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopefully our context correct otherwise it will throw a global error
             return cachedSetTimeout.call(this, fun, 0);
         }
     }
@@ -44499,7 +44499,7 @@ function runTimeout(fun) {
 }
 function runClearTimeout(marker) {
     if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
+        //normal environments in sane situations
         return clearTimeout(marker);
     }
     // if clearTimeout wasn't available but was latter defined
@@ -44508,14 +44508,14 @@ function runClearTimeout(marker) {
         return clearTimeout(marker);
     }
     try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
+        // when when somebody has screwed with setTimeout but no I.E. madness
         return cachedClearTimeout(marker);
     } catch (e){
         try {
             // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
             return cachedClearTimeout.call(null, marker);
         } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopefully our context correct otherwise it will throw a global error.
             // Some versions of I.E. have different rules for clearTimeout vs setTimeout
             return cachedClearTimeout.call(this, marker);
         }
@@ -44581,7 +44581,7 @@ process.nextTick = function (fun) {
     }
 };
 
-// v8 likes predictible objects
+// v8 likes predictable objects
 function Item(fun, array) {
     this.fun = fun;
     this.array = array;
@@ -45980,7 +45980,7 @@ exports.debuglog = function(set) {
 
 
 /**
- * Echos the value of a value. Trys to print the value out
+ * Echos the value of a value. Tries to print the value out
  * in the best way possible given the different types.
  *
  * @param {Object} obj The object to print out.

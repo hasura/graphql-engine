@@ -13,6 +13,13 @@
   // display: flex;
 }
 
+.phantom {
+  display: block;
+  padding: 14.5px 10px;
+  height: 17.5px;
+  width: 100%;
+}
+
 .updateBannerWrapper {
     position: fixed;
     right: 0;
@@ -95,7 +102,7 @@
       {
         img
         {
-          width: 30px;
+          width: 100px;
         }
       }
     }
@@ -113,6 +120,7 @@
   font-size: 10px;
   letter-spacing: 1px;
   font-weight: 300;
+  padding-top: 6px;
 }
 .toggleSidebar {
   position: absolute;

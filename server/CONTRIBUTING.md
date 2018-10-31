@@ -1,12 +1,12 @@
 # Contributing
 
-This guide is for setting-up the graphql-engine server for development on your
-own machine, and how to contribute.
+This guide explains how to set up the graphql-engine server for development on your
+own machine and how to contribute.
 
 ## Pre-requisites
 
 - [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install)
-- A postgres server (Recommended: Use docker to run a local postgres instance)
+- A Postgres server (Recommended: Use docker to run a local postgres instance)
 - GNU Make (optional)
 
 ## Development workflow
@@ -26,7 +26,7 @@ own machine, and how to contribute.
 
 ### Work
 - Work on the feature/fix
-- Add testcases if relevant
+- Add test cases if relevant
 
 ### Test
 - Run tests: `stack test --ta --database-url=<database-url>`

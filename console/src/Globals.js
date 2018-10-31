@@ -1,3 +1,14 @@
+import { SERVER_CONSOLE_MODE } from './constants';
+
+/* helper tools to format explain json */
+
+/* eslint-disable */
+import sqlFormatter from './helpers/sql-formatter.min';
+import hljs from './helpers/highlight.min';
+/* eslint-enable */
+
+/* */
+
 const checkExtraSlashes = url => {
   if (!url) {
     return url;
@@ -16,7 +27,10 @@ const globals = {
   nodeEnv: window.__env.nodeEnv,
   accessKey: window.__env.accessKey,
   isAccessKeySet: window.__env.isAccessKeySet,
-  consoleMode: window.__env.consoleMode,
+  consoleMode:
+    window.__env.consoleMode === 'hasuradb'
+      ? 'server'
+      : window.__env.consoleMode,
   urlPrefix: checkExtraSlashes(window.__env.urlPrefix),
 };
 
@@ -26,7 +40,7 @@ if (!window.__env.urlPrefix) {
 }
 
 if (!window.__env.consoleMode) {
-  globals.consoleMode = 'hasuradb';
+  globals.consoleMode = SERVER_CONSOLE_MODE;
 }
 
 if (!window.__env.accessKey) {
@@ -37,7 +51,17 @@ if (!window.__env.isAccessKeySet) {
   globals.isAccessKeySet = false;
 }
 
-if (globals.consoleMode === 'hasuradb') {
+if (
+  window &&
+  typeof window === 'object' &&
+  !window.sqlFormatter &&
+  !window.hljs
+) {
+  window.sqlFormatter = sqlFormatter;
+  window.hljs = hljs;
+}
+
+if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   if (globals.nodeEnv !== 'development') {
     const windowUrl = window.location.protocol + '//' + window.location.host;
     globals.dataApiUrl = windowUrl;

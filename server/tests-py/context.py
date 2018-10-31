@@ -17,8 +17,10 @@ from urllib.parse import urlparse
 from sqlalchemy import create_engine
 from sqlalchemy.schema import MetaData
 
+
 class HGECtxError(Exception):
     pass
+
 
 class WebhookHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -48,8 +50,13 @@ class WebhookServer(http.server.HTTPServer):
         self.error_queue = error_queue
         super().__init__(server_address, WebhookHandler)
 
+    def server_bind(self):
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind(self.server_address)
+
+
 class HGECtx:
-    def __init__(self, hge_url, pg_url):
+    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, hge_jwt_key_file, webhook_insecure):
         server_address = ('0.0.0.0', 5592)
 
         self.resp_queue = queue.Queue(maxsize=1)
@@ -65,6 +72,15 @@ class HGECtx:
 
         self.http = requests.Session()
         self.hge_url = hge_url
+        self.hge_key = hge_key
+        self.hge_webhook = hge_webhook
+        if hge_jwt_key_file is None:
+            self.hge_jwt_key = None
+        else:
+            with open(hge_jwt_key_file) as f:
+                self.hge_jwt_key = f.read()
+        self.webhook_insecure = webhook_insecure
+        self.may_skip_test_teardown = False
 
         self.ws_url = urlparse(hge_url)
         self.ws_url = self.ws_url._replace(scheme='ws')
@@ -74,7 +90,7 @@ class HGECtx:
         self.wst.daemon = True
         self.wst.start()
 
-        result = subprocess.run(['../../scripts/get-version.sh'], shell=True, stdout=subprocess.PIPE, check=True)
+        result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         self.version = result.stdout.decode('utf-8').strip()
         try:
             st_code, resp = self.v1q_f('queries/clear_db.yaml')
@@ -104,7 +120,7 @@ class HGECtx:
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)
 
-    def anyq(self, u,  q, h):
+    def anyq(self, u, q, h):
         resp = self.http.post(
             self.hge_url + u,
             json=q,
@@ -113,9 +129,13 @@ class HGECtx:
         return resp.status_code, resp.json()
 
     def v1q(self, q):
+        h = dict()
+        if self.hge_key is not None:
+            h['X-Hasura-Access-Key'] = self.hge_key
         resp = self.http.post(
             self.hge_url + "/v1/query",
-            json=q
+            json=q,
+            headers=h
         )
         return resp.status_code, resp.json()
 
@@ -127,5 +147,7 @@ class HGECtx:
         self.http.close()
         self.engine.dispose()
         self.httpd.shutdown()
+        self.httpd.server_close()
+        self.ws.close()
         self.web_server.join()
         self.wst.join()

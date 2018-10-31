@@ -32,14 +32,14 @@ Query/Subscription syntax
    * - argument
      - false
      - Argument_
-     - one or more of filter criteria, instructions for sort order or pagination
+     - One or more of filter criteria, instructions for sort order or pagination
 
 **E.g. QUERY**:
 
 .. code-block:: graphql
 
     query {
-      author(where: {articles: {rating: {_gte: 4}}} order_by: name_asc) {
+      author(where: {articles: {rating: {_gte: 4}}} order_by: {name: asc}) {
         id
         name
       }
@@ -50,14 +50,14 @@ Query/Subscription syntax
 .. code-block:: graphql
 
     subscription {
-      author(where: {articles: rating: {_gte: 4}}} order_by: name_asc) {
+      author(where: {articles: rating: {_gte: 4}}} order_by: {name: asc}) {
         id
         name
       }
     }
 
 .. note::
-    
+
     For more examples and details of usage, please see :doc:`this <../queries/index>`.
 
 Syntax definitions
@@ -186,7 +186,7 @@ JSONB operators:
    * - ``_has_keys_all``
      - ``?&``
 
-(For more details on what these operators do, refer `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`_.)
+(For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`_.)
 
 Text related operators :
 
@@ -209,30 +209,71 @@ OrderByExp
 
 .. parsed-literal::
 
-   order_by: (object-field + OrderByOperator_ | [object-field + OrderByOperator_])
+   order_by: (TableOrderBy_ | [ TableOrderBy_ ])
 
 E.g.
 
-.. code-block:: graphql
+.. parsed-literal::
 
-   order_by: name_asc
+   order_by: {id: desc}
 
 or
 
+.. parsed-literal::
+
+   order_by: [{id: desc}, {author: {id: asc}}]
+
+
+.. _TableOrderBy:
+
+TableOrderBy
+***********
+
+For columns:
+
+.. parsed-literal::
+
+   {column: OrderByEnum_}
+
+For object relations:
+
+.. parsed-literal::
+   {relation-name: TableOrderBy_}
+
+E.g.
+
+Order by type for "article" table:
+
 .. code-block:: graphql
 
-   order_by: [name_asc, id_desc]
+   input article_order_by {
+     id: order_by
+     title: order_by
+     content: order_by
+     author_id: order_by
+     #order by using "author" object relationship columns
+     author: author_order_by
+   }
 
+.. _OrderByEnum:
 
-.. _OrderByOperator:
+OrderByEnum
+***********
 
-OrderByOperator
-"""""""""""""""
+.. code-block:: graphql
 
-- ``_asc``
-- ``_desc``
-- ``_asc_nulls_first``
-- ``_desc_nulls_first``
+   #the order_by enum type
+   enum order_by {
+     #in the ascending order
+     asc
+     #in the descending order
+     desc
+     #in the ascending order, nulls first
+     asc_nulls_first
+     #in the descending order, nulls first
+     desc_nulls_first
+   }
+
 
 .. _PaginationExp:
 
@@ -241,5 +282,5 @@ PaginationExp
 
 .. parsed-literal::
 
-   limit: Integer [offset: Integer]
-
+   limit: Integer
+   [offset: Integer]

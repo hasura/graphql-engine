@@ -88,9 +88,9 @@ The GraphQL query to fetch this weather information would look like:
       }
     }
 
-Explore this API on `Apollo LaunchPad <https://launchpad.graphql.com/nxw8w0z9q7>`_
+Explore this API on `Apollo LaunchPad <https://launchpad.graphql.com/nxw8w0z9q7>`_.
 
-Note the usage of ``city_name`` as an argument for ``cityWeather`` query. Using this we can extend our original
+Note the usage of ``city_name`` as an argument for the ``cityWeather`` query. Using this we can extend our original
 Postgres's ``person`` schema to include weather information based on the ``city`` column of the person table.
 
 .. code-block:: graphql
@@ -102,7 +102,7 @@ Postgres's ``person`` schema to include weather information based on the ``city`
 We have extended the type person to have one more field called ``city_weather``. This will resolve to the weather
 schema defined above and the respective resolver will return appropriate data.
 
-The source code for the custom resolver can be found on github - `graphql-schema-stitching-demo
+The source code for the custom resolver can be found on GitHub - `graphql-schema-stitching-demo
 <https://github.com/hasura/graphql-schema-stitching-demo>`_. Note the usage of ``mergeSchemas``, a
 ``graphql-tools`` utility that enables schema stitching.
 

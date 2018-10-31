@@ -10,7 +10,6 @@ import           Data.Aeson.Types
 import           Instances.TH.Lift        ()
 
 import qualified Data.Aeson.Text          as AT
-import qualified Data.ByteString.Builder  as BB
 import qualified Data.HashMap.Strict      as HM
 import qualified Data.HashSet             as HS
 import qualified Data.Sequence            as DS
@@ -36,6 +35,10 @@ data ConflictClauseP1
   | CP1Update !ConflictTarget ![PGCol]
   deriving (Show, Eq)
 
+isDoNothing :: ConflictClauseP1 -> Bool
+isDoNothing (CP1DoNothing _) = True
+isDoNothing _                = False
+
 data InsertQueryP1
   = InsertQueryP1
   { iqp1Table    :: !QualifiedTable
@@ -51,14 +54,16 @@ mkSQLInsert (InsertQueryP1 tn vn cols vals c mutFlds) =
   mkSelWith tn (S.CTEInsert insert) mutFlds
   where
     insert =
-      S.SQLInsert vn cols vals (toSQLConflict c) $ Just S.returningStar
-    toSQLConflict conflict = case conflict of
-      Nothing -> Nothing
-      Just (CP1DoNothing Nothing)   -> Just $ S.DoNothing Nothing
-      Just (CP1DoNothing (Just ct)) -> Just $ S.DoNothing $ Just $ toSQLCT ct
-      Just (CP1Update ct inpCols)    -> Just $ S.Update (toSQLCT ct)
-        (S.buildSEWithExcluded inpCols)
+      S.SQLInsert vn cols vals (toSQLConflict <$> c) $ Just S.returningStar
 
+toSQLConflict :: ConflictClauseP1 -> S.SQLConflict
+toSQLConflict conflict = case conflict of
+  (CP1DoNothing Nothing)   -> S.DoNothing Nothing
+  (CP1DoNothing (Just ct)) -> S.DoNothing $ Just $ toSQLCT ct
+  (CP1Update ct inpCols)    -> S.Update (toSQLCT ct)
+    (S.buildSEWithExcluded inpCols)
+
+  where
     toSQLCT ct = case ct of
       Column pgCols -> S.SQLColumn pgCols
       Constraint cn -> S.SQLConstraint cn
@@ -80,19 +85,23 @@ convObj
   :: (P1C m)
   => (PGColType -> Value -> m S.SQLExp)
   -> HM.HashMap PGCol S.SQLExp
+  -> HM.HashMap PGCol S.SQLExp
   -> FieldInfoMap
   -> InsObj
   -> m ([PGCol], [S.SQLExp])
-convObj prepFn defInsVals fieldInfoMap insObj = do
-  inpInsVals <- flip HM.traverseWithKey insObj $ \c val -> do
+convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
+  inpInsVals <- flip HM.traverseWithKey reqInsObj $ \c val -> do
     let relWhenPGErr = "relationships can't be inserted"
     colType <- askPGType fieldInfoMap c relWhenPGErr
     -- Encode aeson's value into prepared value
     withPathK (getPGColTxt c) $ prepFn colType val
-  let sqlExps = HM.elems $ HM.union inpInsVals defInsVals
+  let insVals = HM.union setInsVals inpInsVals
+      sqlExps = HM.elems $ HM.union insVals defInsVals
       inpCols = HM.keys inpInsVals
 
   return (inpCols, sqlExps)
+  where
+    reqInsObj = HM.difference insObj setInsVals
 
 buildConflictClause
   :: (P1C m)
@@ -149,6 +158,10 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
   -- Get the current table information
   tableInfo <- askTabInfo tableName
 
+  -- If table is view then check if it is insertable
+  mutableView tableName viIsInsertable
+    (tiViewInfo tableInfo) "insertable"
+
   -- Check if the role has insert permissions
   insPerm   <- askInsPermInfo tableInfo
 
@@ -156,6 +169,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
   validateHeaders $ ipiRequiredHeaders insPerm
 
   let fieldInfoMap = tiFieldInfoMap tableInfo
+      setInsVals = ipiSet insPerm
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols -> do
@@ -163,8 +177,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
     selPerm <- modifyErr (<> selNecessaryMsg) $
                askSelPermInfo tableInfo
 
-    withPathK "returning" $
-      zip retCols <$> checkRetCols fieldInfoMap selPerm retCols
+    withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
   let mutFlds = mkDefaultMutFlds tableName mAnnRetCols
 
@@ -173,7 +186,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
       insView    = ipiView insPerm
 
   insTuples <- withPathK "objects" $ indexedForM insObjs $ \obj ->
-    convObj prepFn defInsVals fieldInfoMap obj
+    convObj prepFn defInsVals setInsVals fieldInfoMap obj
   let sqlExps = map snd insTuples
       inpCols = HS.toList $ HS.fromList $ concatMap fst insTuples
 
@@ -241,7 +254,7 @@ setConflictCtx :: Maybe ConflictCtx -> Q.TxE QErr ()
 setConflictCtx conflictCtxM = do
   let t = maybe "null" conflictCtxToJSON conflictCtxM
       setVal = toSQL $ S.SELit t
-      setVar = BB.string7 "SET LOCAL hasura.conflict_clause = "
+      setVar = "SET LOCAL hasura.conflict_clause = "
       q = Q.fromBuilder $ setVar <> setVal
   Q.unitQE defaultTxErrorHandler q () False
   where
@@ -251,7 +264,7 @@ setConflictCtx conflictCtxM = do
         encToText $ InsertTxConflictCtx CAIgnore constrM Nothing
     conflictCtxToJSON (CCUpdate constr updCols) =
         encToText $ InsertTxConflictCtx CAUpdate (Just constr) $
-        Just $ sqlBuilderToTxt $ toSQL $ S.buildSEWithExcluded updCols
+        Just $ toSQLTxt $ S.buildSEWithExcluded updCols
 
 instance HDBQuery InsertQuery where
 

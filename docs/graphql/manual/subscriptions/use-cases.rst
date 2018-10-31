@@ -47,7 +47,7 @@ Now we can use the following subscription to fetch the latest location of a vehi
       vehicle(where: {id: {_eq: $vehicleId}}) {
         id
         vehicle_number
-        locations(order_by: timestamp_desc, limit: 1) {
+        locations(order_by: {timestamp: desc}, limit: 1) {
           location
           timestamp
         }
@@ -111,7 +111,7 @@ Now we can use the following subscription to display the latest messages in a ch
   :view_only:
   :query:
     subscription getMessages {
-      message(order_by: timestamp_desc) {
+      message(order_by: {timestamp: desc}) {
         text
         timestamp
         author {

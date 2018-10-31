@@ -1,11 +1,12 @@
 @import url('https://fonts.googleapis.com/css?family=Raleway:400,600');
 @import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400');
-body
-{
+
+body {
   font-family: 'Open Sans';
   font-size: 16px;
   margin: 0;
 }
+
 .app {
   text-align: left;
 }
@@ -37,7 +38,6 @@ body
 }
 
 .newMessageEven {
-
   font-size: 18px;
   background-color: #98FB98;
   padding-left: 5px;
@@ -49,8 +49,7 @@ body
   padding-left: 5px;
 }
 
-.messageWrapperNew
-{
+.messageWrapperNew {
   padding-bottom: 75px;
 }
 
@@ -77,22 +76,21 @@ body
 
 #chatbox {
   overflow: auto;
-  height: 100vh;
+  height: calc(100vh - 90px);
   background-color: #f8f9f9;
 }
 
 .textboxWrapper {
   text-align: center;
   position: fixed;
-  bottom: 0;
+  bottom: 87px;
   width: 75%;
   background-color: #fff;
   padding: 1%;
 }
 
-.textbox {
+.textbox {}
 
-}
 .sendButton {
   width: 20%;
   background-color:'green';
@@ -115,8 +113,8 @@ body
   display: inline-block;
 
 }
-.typoTextbox
-{
+
+.typoTextbox {
   font-size: 16px;
   height: 43px;
   width: 75%;
@@ -129,13 +127,13 @@ body
   display: inline-block;
   background-color: #f6f6f7;
 }
-.loginTextbox:focus, .typoTextbox:focus
-{
+
+.loginTextbox:focus, .typoTextbox:focus {
   outline: none;
   border-color: #016d95;
 }
-.typoTextbox:focus
-{
+
+.typoTextbox:focus {
   outline: none;
   border-color: #bbbdbd;
 }
@@ -150,8 +148,8 @@ body
   font-size: 16px;
   margin-right: 1%;
 }
-.typoButton
-{
+
+.typoButton {
   height: 45px;
   width: 20%;
   display: inline-block;
@@ -163,26 +161,27 @@ body
   border: 0;
   color: #222;
 }
-.typoButton:hover
-{
+
+.typoButton:hover {
   background-color: #dba203;
 }
-.loginButton:focus, .typoButton:focus
-{
+
+.loginButton:focus, .typoButton:focus {
   outline: none;
 }
-.loginButton:hover
-{
+
+.loginButton:hover {
   background-color: #f6f6f6;
 }
+
 .loginHeading {
   text-align: center;
   font-family: 'Raleway';
   margin-top: 0;
   padding-bottom: 20px;
 }
-.loginWrapper
-{
+
+.loginWrapper {
   width: 450px;
   padding: 30px;
   margin: 0 auto;
@@ -216,22 +215,23 @@ body
   height: 100vh;
   overflow: auto;
 }
-.messageName, .messsageTime
-{
+
+.messageName, .messsageTime {
   width: 49%;
   display: inline-block;
 }
-.messageName
-{
+
+.messageName {
   color: #1d5d01;
 }
-.messsageTime
-{
+
+.messsageTime {
   text-align: right;
   padding-right: 5px;
   font-size: 12px;
   color: #01999b;
 }
+
 .userList {
   margin-top: 0;
   margin-bottom: 0;
@@ -262,4 +262,46 @@ body
   text-align: left;
   padding-bottom: 10px;
   padding-left: 1%;
+}
+
+.displayFlex
+{
+  display: flex;
+  align-items: center;
+}
+
+.hasura-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hasura-logo a {
+  padding: 0 10px;
+}
+.hasura-logo a:hover {
+  text-decoration: none;
+}
+.hasura-logo img {
+  height: 30px;
+  cursor: pointer;
+}
+.App-header {
+  background-color: #222;
+  height: 50px;
+  color: white;
+  text-align: left;
+}
+.App-footer{
+  position: fixed;
+  bottom: 0;
+  text-align: center;
+  width: 100%;
+  padding-bottom: 10px;
+  padding-top: 10px;
+  background-color: #fff;
+  border-top: 1px solid #ccc;
+}
+
+.footer-small-text{
+  font-size: 12px;
 }

@@ -40,7 +40,8 @@ args:
       CREATE TABLE resident (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
-        age INTEGER NOT NULL
+        age INTEGER NOT NULL,
+        is_user BOOLEAN DEFAULT FALSE NOT NULL
       )
 - type: track_table
   args:
@@ -153,6 +154,26 @@ args:
           _is_null: false
       allow_upsert: true
 
+#Insert Author table data
+- type: insert
+  args:
+    table: author
+    objects:
+      - name: Author 1
+      - name: Author 2
+
+#Insert aticle table data
+- type: insert
+  args:
+    table: article
+    objects:
+    - content: Sample article content
+      title: Article 1
+    - content: Sample article content
+      title: Article 2
+    - content: Sample article content
+      title: Article 3
+    
 #Company insert permission for user
 - type: create_insert_permission
   args:
@@ -174,3 +195,30 @@ args:
       - name
       filter:
         id: X-HASURA-COMPANY-ID
+
+#Create insert permission for user on resident
+- type: create_insert_permission
+  args:
+    table: resident
+    role: user
+    permission:
+      check:
+        id: X-Hasura-Resident-Id
+      allow_upsert: true
+      set:
+        name: X-Hasura-Resident-Name
+        is_user: true
+
+#Create select permission for user on resident
+- type: create_select_permission
+  args:
+    table: resident
+    role: user
+    permission:
+      columns:
+      - id
+      - name
+      - age
+      - is_user
+      filter:
+        id: X-Hasura-Resident-Id

@@ -7,7 +7,18 @@
 module Hasura.RQL.Types.Permission
        ( RoleName(..)
        , UserId(..)
-       , UserInfo(..)
+
+       , UserVars
+       , mkUserVars
+       , isUserVar
+       , getVarNames
+       , getVarVal
+       , roleFromVars
+
+       , UserInfo
+       , userRole
+       , userVars
+       , mkUserInfo
        , adminUserInfo
        , adminRole
        , isAdmin
@@ -48,16 +59,54 @@ isAdmin = (adminRole ==)
 newtype UserId = UserId { getUserId :: Word64 }
   deriving (Show, Eq, FromJSON, ToJSON)
 
+newtype UserVars
+  = UserVars { unUserVars :: Map.HashMap T.Text T.Text }
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable)
+
+isUserVar :: T.Text -> Bool
+isUserVar = T.isPrefixOf "x-hasura-" . T.toLower
+
+roleFromVars :: UserVars -> Maybe RoleName
+roleFromVars =
+  fmap RoleName . getVarVal userRoleVar
+
+getVarVal :: Text -> UserVars -> Maybe Text
+getVarVal k =
+  Map.lookup k . unUserVars
+
+getVarNames :: UserVars -> [T.Text]
+getVarNames =
+  Map.keys . unUserVars
+
+mkUserVars :: [(T.Text, T.Text)] -> UserVars
+mkUserVars l =
+  UserVars $ Map.fromList
+  [ (T.toLower k, v)
+  | (k, v) <- l, isUserVar k
+  ]
+
+userRoleVar :: Text
+userRoleVar = "x-hasura-role"
+
 data UserInfo
   = UserInfo
-  { userRole    :: !RoleName
-  , userHeaders :: !(Map.HashMap T.Text T.Text)
+  { userRole :: !RoleName
+  , userVars :: !UserVars
   } deriving (Show, Eq, Generic)
+
+mkUserInfo :: RoleName -> UserVars -> UserInfo
+mkUserInfo rn (UserVars v) =
+  UserInfo rn $ UserVars $ Map.insert userRoleVar (getRoleTxt rn) v
 
 instance Hashable UserInfo
 
+-- $(J.deriveToJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
+--   ''UserInfo
+--  )
+
 adminUserInfo :: UserInfo
-adminUserInfo = UserInfo adminRole Map.empty
+adminUserInfo =
+  mkUserInfo adminRole $ mkUserVars []
 
 data PermType
   = PTInsert

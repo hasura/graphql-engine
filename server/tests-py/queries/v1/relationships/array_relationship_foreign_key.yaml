@@ -1,0 +1,28 @@
+
+#Array relationship
+- description: Create object relationship using foreign key
+  url: /v1/query
+  status: 200  
+  response:
+    message: success
+  query:
+    type: create_array_relationship
+    args:
+      table: author
+      name: articles
+      using:
+        foreign_key_constraint_on:
+          table: article
+          column: author_id
+
+#Drop relationship
+- description: Drop object relationship
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: drop_relationship
+    args:
+      table: author
+      relationship: articles
