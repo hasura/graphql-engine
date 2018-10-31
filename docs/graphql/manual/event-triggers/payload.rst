@@ -142,6 +142,13 @@ Webhook response structure
 --------------------------
 
 A ``2xx`` response status code is deemed to be a successful invocation of the webhook. Any other response status will be
-deemed as an unsuccessful invocation which may cause retries as per the retry configuration.
+deemed as an unsuccessful invocation which will cause retries as per the retry configuration.
 
 It is also recommended that you return a JSON object in your webhook response.
+
+Retry-After header
+^^^^^^^^^^^^^^^^^^
+
+If the webhook response contains a ``Retry-After`` header, then the event will be redelivered once more after the duration (in seconds) found in the header. Note that the header will be respected only if the response status code is ``non-2xx``.
+
+The ``Retry-After`` header can be used for retrying/rate-limiting/debouncing your webhook triggers.
