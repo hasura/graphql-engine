@@ -189,7 +189,16 @@ applyQP1 (ReplaceMetadata tables templates) = do
     getDups l =
       l L.\\ HS.toList (HS.fromList l)
 
-applyQP2 :: (UserInfoM m, QErrM m, CacheRWM m, MonadTx m, MonadIO m) => ReplaceMetadata -> m RespBody
+applyQP2
+  :: ( UserInfoM m
+     , QErrM m
+     , CacheRWM m
+     , MonadTx m
+     , MonadIO m
+     , HasTypeMap m
+     )
+  => ReplaceMetadata
+  -> m RespBody
 applyQP2 (ReplaceMetadata tables templates) = do
 
   defaultSchemaCache <- liftTx $ clearMetadata >> DT.buildSchemaCache

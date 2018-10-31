@@ -247,7 +247,9 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
         SubCStar         -> return ()
         SubCArray pgcols -> forM_ pgcols (assertPGCol (tiFieldInfoMap ti) "")
 
-subTableP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> Bool -> EventTriggerDef -> m ()
+subTableP2
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m)
+  => QualifiedTable -> Bool -> EventTriggerDef -> m ()
 subTableP2 qt replace q@(EventTriggerDef name def webhook rconf mheaders) = do
   allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
   trid <- if replace

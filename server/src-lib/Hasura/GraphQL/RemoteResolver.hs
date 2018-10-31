@@ -265,7 +265,8 @@ deleteCustomResolverP2
   => DeleteCustomResolverQuery
   -> m BL.ByteString
 deleteCustomResolverP2 (DeleteCustomResolverQuery name) = do
-  url <- liftTx $ fetchRemoteResolverUrl name
+  mUrl <- liftTx $ fetchRemoteResolverUrl name
+  url  <- liftMaybe (err400 NotExists "no such custom resolver") mUrl
   deleteCustomResolverFromCache url
   liftTx $ deleteCustomResolverFromCatalog name
   return successMsg
@@ -293,13 +294,16 @@ instance HDBQuery DeleteCustomResolverQuery where
   schemaCachePolicy = SCPReload
 
 
-fetchRemoteResolverUrl :: Text -> Q.TxE QErr Text
+fetchRemoteResolverUrl :: Text -> Q.TxE QErr (Maybe Text)
 fetchRemoteResolverUrl name =
-  runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+  fromRow . map runIdentity <$> Q.withQE defaultTxErrorHandler
     [Q.sql|
      SELECT url from hdb_catalog.custom_resolver
        WHERE name = $1
      |] (Identity name) True
+  where
+    fromRow []    = Nothing
+    fromRow (x:_) = Just x
 
 fetchRemoteResolvers :: Q.TxE QErr [(Either N.URI Text, [HeaderConf])]
 fetchRemoteResolvers = do

@@ -13,10 +13,7 @@ import           Language.Haskell.TH.Syntax    (Lift)
 import qualified Data.Aeson.Text               as AT
 import qualified Data.ByteString.Builder       as BB
 import qualified Data.ByteString.Lazy          as BL
-import qualified Data.HashMap.Strict           as Map
 import qualified Data.Sequence                 as Seq
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
 import qualified Data.Vector                   as V
 import qualified Network.HTTP.Client           as HTTP

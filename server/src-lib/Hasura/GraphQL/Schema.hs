@@ -20,6 +20,7 @@ module Hasura.GraphQL.Schema
   -- Schema stitching related
   , RemoteGCtx (..)
   , checkConflictingNodes
+  , checkConflictingNodesTxt
   , emptyGCtx
   ) where
 
@@ -1546,13 +1547,34 @@ checkConflictingNodes typeMap remoteCtx = do
             join (getObjTyM <$> Map.lookup (G.NamedType "mutation_root") typeMap)
       hRoots = Map.keys <$> liftA2 Map.union hQR hMR
   case (rmRoots, hRoots) of
-    (Just rmR, Just hR) ->
-      when (any (`elem` hR) rmR) $
-        throw400 RemoteSchemaError
-        "conflicting node names between remote graphql servers and hasura nodes"
+    (Just rmR, Just hR) -> do
+      let conflictedNodes = filter (`elem` hR) rmR
+      unless (null conflictedNodes) $
+        throw400 RemoteSchemaError $
+        "nodes: [" <> nodesTxt conflictedNodes
+        <> "] already exists in current graphql schema"
     _ -> return ()
   where
+    nodesTxt nodes = T.intercalate ", " $ map G.unName nodes
     builtin = ["__type", "__schema", "__typename", "Query", "Mutation"]
+
+checkConflictingNodesTxt
+  :: (MonadError QErr m)
+  => TypeMap -> Text -> m ()
+checkConflictingNodesTxt typeMap nodeName = do
+  -- TODO: can types have same names?
+  let hQR = _otiFields <$>
+            join (getObjTyM <$> Map.lookup (G.NamedType "query_root") typeMap)
+      hMR = _otiFields <$>
+            join (getObjTyM <$> Map.lookup (G.NamedType "mutation_root") typeMap)
+      hRoots = map G.unName . Map.keys <$> liftA2 Map.union hQR hMR
+  case hRoots of
+    Just hR ->
+      when (nodeName `elem` hR) $
+        throw400 RemoteSchemaError $
+        "node " <> nodeName <> " already exists in current graphql schema"
+    _ -> return ()
+
 
 mkGCtxMap
   :: (MonadError QErr m)

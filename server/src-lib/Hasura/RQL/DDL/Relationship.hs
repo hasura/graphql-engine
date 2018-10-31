@@ -170,7 +170,9 @@ createObjRelP1 (WithTable qt rd) = do
   tabInfo <- askTabInfo qt
   objRelP1 tabInfo rd
 
-objRelP2Setup :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> RelDef ObjRelUsing -> m ()
+objRelP2Setup
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => QualifiedTable -> RelDef ObjRelUsing -> m ()
 objRelP2Setup qt (RelDef rn ru _) = do
   relInfo <- case ru of
     RUManual (ObjRelManualConfig rm) -> do
@@ -209,7 +211,14 @@ objRelP2Setup qt (RelDef rn ru _) = do
       m@[_] -> Just (consn, refsn, reftn, m)
       _     -> Nothing
 
-objRelP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> ObjRelDef -> m ()
+objRelP2
+  :: ( QErrM m
+     , CacheRWM m
+     , MonadTx m
+     )
+  => QualifiedTable
+  -> ObjRelDef
+  -> m ()
 objRelP2 qt rd@(RelDef rn ru comment) = do
   objRelP2Setup qt rd
   liftTx $ persistRel qt rn ObjRel (toJSON ru) comment
@@ -265,7 +274,9 @@ arrRelP1 tabInfo (RelDef rn ru _) = do
     RUManual (ArrRelManualConfig rm) ->
       validateManualConfig fim rm
 
-arrRelP2Setup :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> ArrRelDef -> m ()
+arrRelP2Setup
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => QualifiedTable -> ArrRelDef -> m ()
 arrRelP2Setup qt (RelDef rn ru _) = do
   relInfo <- case ru of
     RUManual (ArrRelManualConfig rm) -> do
@@ -305,7 +316,9 @@ arrRelP2Setup qt (RelDef rn ru _) = do
       m@[_] -> Just (consn, m)
       _     -> Nothing
 
-arrRelP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> ArrRelDef -> m ()
+arrRelP2
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => QualifiedTable -> ArrRelDef -> m ()
 arrRelP2 qt rd@(RelDef rn u comment) = do
   arrRelP2Setup qt rd
   liftTx $ persistRel qt rn ArrRel (toJSON u) comment

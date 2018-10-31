@@ -24,6 +24,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
+import qualified Hasura.GraphQL.Schema              as GS
 
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -138,18 +139,29 @@ trackExistingTableOrViewP1 (TrackTable vn) = do
   when (M.member vn $ scTables rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> vn
 
-trackExistingTableOrViewP2Setup :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> Bool -> m ()
+trackExistingTableOrViewP2Setup
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => QualifiedTable -> Bool -> m ()
 trackExistingTableOrViewP2Setup tn isSystemDefined = do
   ti <- liftTx $ getTableInfo tn isSystemDefined
   addTableToCache ti
 
 trackExistingTableOrViewP2
-  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> Bool -> m RespBody
+  :: (QErrM m, CacheRWM m, MonadTx m, HasTypeMap m)
+  => QualifiedTable -> Bool -> m RespBody
 trackExistingTableOrViewP2 vn isSystemDefined = do
+  tyMap <- askTypeMap
+  GS.checkConflictingNodesTxt tyMap tn
   trackExistingTableOrViewP2Setup vn isSystemDefined
   liftTx $ Q.catchE defaultTxErrorHandler $
     saveTableToCatalog vn
   return successMsg
+  where
+    getSchemaN = getSchemaTxt . qtSchema
+    getTableN = getTableTxt . qtTable
+    tn = case getSchemaN vn of
+      "public" -> getTableN vn
+      _        -> getSchemaN vn <> "_" <> getTableN vn
 
 instance HDBQuery TrackTable where
 
