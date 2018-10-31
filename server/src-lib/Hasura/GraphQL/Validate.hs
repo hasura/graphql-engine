@@ -6,6 +6,7 @@ module Hasura.GraphQL.Validate
   ( validateGQ
   , getTypedOp
   , GraphQLRequest
+  , getQueryParts
   ) where
 
 import           Data.Has
@@ -106,21 +107,25 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
 -- {-# SCC validateGQ #-}
 validateGQ
   :: (MonadError QErr m, MonadReader GCtx m)
-  => GraphQLRequest
+  -- => GraphQLRequest
+  => G.TypedOperationDefinition
+  -> ObjTyInfo
+  -> [G.FragmentDefinition]
+  -> Maybe VariableValues
   -> m (G.OperationType, SelSet)
-validateGQ (GraphQLRequest opNameM q varValsM) = do
+validateGQ opDef opRoot fragDefsL varValsM = do
 
   -- get the operation that needs to be evaluated
-  opDef <- getTypedOp opNameM selSets opDefs
+  --opDef <- getTypedOp opNameM selSets opDefs
 
   ctx <- ask
-  -- get the operation root
-  opRoot <- case G._todType opDef of
-    G.OperationTypeQuery        -> return $ _gQueryRoot ctx
-    G.OperationTypeMutation     ->
-      onNothing (_gMutRoot ctx) $ throwVE "no mutations exist"
-    G.OperationTypeSubscription ->
-      onNothing (_gSubRoot ctx) $ throwVE "no subscriptions exist"
+  -- -- get the operation root
+  -- opRoot <- case G._todType opDef of
+  --   G.OperationTypeQuery        -> return $ _gQueryRoot ctx
+  --   G.OperationTypeMutation     ->
+  --     onNothing (_gMutRoot ctx) $ throwVE "no mutations exist"
+  --   G.OperationTypeSubscription ->
+  --     onNothing (_gSubRoot ctx) $ throwVE "no subscriptions exist"
 
   -- annotate the variables of this operation
   annVarVals <- getAnnVarVals (G._todVariableDefinitions opDef) $
@@ -138,5 +143,24 @@ validateGQ (GraphQLRequest opNameM q varValsM) = do
   selSet <- flip runReaderT valCtx $ denormSelSet [] opRoot $
             G._todSelectionSet opDef
   return (G._todType opDef, selSet)
+
+
+getQueryParts
+  :: ( MonadError QErr m, MonadReader GCtx m)
+  => GraphQLRequest
+  -> m (G.TypedOperationDefinition, ObjTyInfo, [G.FragmentDefinition], Maybe VariableValues)
+getQueryParts (GraphQLRequest opNameM q varValsM) = do
+  -- get the operation that needs to be evaluated
+  opDef <- getTypedOp opNameM selSets opDefs
+  ctx <- ask
+
+  -- get the operation root
+  opRoot <- case G._todType opDef of
+    G.OperationTypeQuery        -> return $ _gQueryRoot ctx
+    G.OperationTypeMutation     ->
+      onNothing (_gMutRoot ctx) $ throwVE "no mutations exist"
+    G.OperationTypeSubscription ->
+      onNothing (_gSubRoot ctx) $ throwVE "no subscriptions exist"
+  return (opDef, opRoot, fragDefsL, varValsM)
   where
     (selSets, opDefs, fragDefsL) = G.partitionExDefs $ unGraphQLQuery q

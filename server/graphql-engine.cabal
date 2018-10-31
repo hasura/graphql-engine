@@ -162,6 +162,7 @@ library
                      , Hasura.RQL.DDL.Utils
                      , Hasura.RQL.DDL.Subscribe
                      , Hasura.RQL.DDL.Headers
+                     , Hasura.RQL.DDL.CustomResolver
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert

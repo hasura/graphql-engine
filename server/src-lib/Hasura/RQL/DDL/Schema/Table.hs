@@ -12,6 +12,7 @@ module Hasura.RQL.DDL.Schema.Table where
 
 import           Hasura.GraphQL.RemoteResolver
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.CustomResolver
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal

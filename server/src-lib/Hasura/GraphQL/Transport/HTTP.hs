@@ -41,48 +41,44 @@ runGQ
   -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m BL.ByteString
 runGQ pool isoL userInfo gCtxRoleMap manager req rawReq = do
-  -- get all top-level query nodes
-  topLevelNodes <- getTopLevelQueryNodes req
 
-  let qr = VT._otiFields $ _gQueryRoot gCtx
-      mr = VT._otiFields <$> _gMutRoot gCtx
-      nodes = maybe Map.empty (Map.union qr) mr
+  (opDef, opRoot, fragDefsL, varValsM) <- flip runReaderT gCtx $
+                                          VQ.getQueryParts req
 
-  -- gather their TypeLoc
+  let topLevelNodes = getTopLevelNodes opDef
+  -- gather TypeLoc of topLevelNodes
   let typeLocs = catMaybes $ flip map topLevelNodes $ \node ->
-        let mNode = Map.lookup node nodes
+        let mNode = Map.lookup node schemaNodes
         in VT._fiLoc <$> mNode
 
   -- see if they are all the same
-  -- throw error if they are not same
   unless (allEq typeLocs) $
-    throw400 UnexpectedPayload "cannot mix nodes from two different graphql servers"
+    throw400 NotSupported "cannot mix nodes from two different graphql servers"
 
   if null typeLocs
-    then runHasuraGQ pool isoL userInfo gCtxRoleMap req
          --throw400 UnexpectedPayload "cannot find given node in root"
+    then runHasuraGQ pool isoL userInfo gCtxRoleMap
+         opDef opRoot fragDefsL varValsM
     else
     -- TODO: do we worry about head?
     case head typeLocs of
-      VT.HasuraType     -> runHasuraGQ pool isoL userInfo gCtxRoleMap req
+      VT.HasuraType     -> runHasuraGQ pool isoL userInfo gCtxRoleMap
+                           opDef opRoot fragDefsL varValsM
       VT.RemoteType url -> runRemoteGQ manager rawReq url
 
   where
     gCtx = getGCtx (userRole userInfo) gCtxRoleMap
+    getTopLevelNodes opDef =
+      map (\(G.SelectionField f) -> G._fName f) $ G._todSelectionSet opDef
+
+    schemaNodes =
+      let qr = VT._otiFields $ _gQueryRoot gCtx
+          mr = VT._otiFields <$> _gMutRoot gCtx
+      in maybe Map.empty (Map.union qr) mr
+
     allEq xs = case xs of
       []     -> True
       (y:ys) -> all ((==) y) ys
-
-
--- FIXME: better way to retrieve all top-level nodes of the current query
-getTopLevelQueryNodes
-  :: (MonadError QErr m)
-  => GraphQLRequest -> m [G.Name]
-getTopLevelQueryNodes req = do
-  let (GraphQLRequest opNameM q _) = req
-      (selSets, opDefs, _) = G.partitionExDefs $ unGraphQLQuery q
-  opDef <- VQ.getTypedOp opNameM selSets opDefs
-  return $ map (\(G.SelectionField f) -> G._fName f) $ G._todSelectionSet opDef
 
 
 runHasuraGQ
@@ -90,12 +86,13 @@ runHasuraGQ
   => Q.PGPool -> Q.TxIsolation
   -> UserInfo
   -> GCtxMap
-  -- -> HTTP.Manager
-  -> GraphQLRequest
-  -- -> BL.ByteString
+  -> G.TypedOperationDefinition
+  -> VT.ObjTyInfo
+  -> [G.FragmentDefinition]
+  -> Maybe VariableValues
   -> m BL.ByteString
-runHasuraGQ pool isoL userInfo gCtxMap req = do
-  (opTy, fields) <- runReaderT (VQ.validateGQ req) gCtx
+runHasuraGQ pool isoL userInfo gCtxMap opDef opRoot fragDefsL varValsM = do
+  (opTy, fields) <- runReaderT (VQ.validateGQ opDef opRoot fragDefsL varValsM) gCtx
   when (opTy == G.OperationTypeSubscription) $ throw400 UnexpectedPayload
     "subscriptions are not supported over HTTP, use websockets instead"
   let tx = R.resolveSelSet userInfo gCtx opTy fields
@@ -111,7 +108,6 @@ runRemoteGQ
   :: (MonadIO m, MonadError QErr m)
   => HTTP.Manager
   -- -> UserInfo -- do we send x-hasura headers to remote?
-  -- -> GCtxMap
   -> BL.ByteString
   -- ^ the raw request string
   -> N.URI

@@ -18,9 +18,9 @@ import qualified Data.Text.Lazy                as LT
 import qualified Data.Vector                   as V
 import qualified Network.HTTP.Client           as HTTP
 
-import           Hasura.GraphQL.RemoteResolver
 import           Hasura.GraphQL.Schema
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.CustomResolver
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate

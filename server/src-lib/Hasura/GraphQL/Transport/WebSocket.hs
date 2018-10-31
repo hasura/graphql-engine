@@ -35,7 +35,8 @@ import           Hasura.GraphQL.Schema                       (GCtxMap, getGCtx)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
-import           Hasura.GraphQL.Validate                     (validateGQ)
+import           Hasura.GraphQL.Validate                     (getQueryParts,
+                                                              validateGQ)
 import qualified Hasura.Logging                              as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -166,8 +167,14 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   -- validate and build tx
   gCtxMap <- fmap snd $ liftIO $ IORef.readIORef gCtxMapRef
   let gCtx = getGCtx (userRole userInfo) gCtxMap
+
+  res <- runExceptT $ runReaderT (getQueryParts q) gCtx
+  (opDef, opRoot, fragDefsL, varValsM) <- case res of
+    Left (QErr _ _ err _ _) -> withComplete $ sendConnErr err
+    Right vals              -> return vals
+
   (opTy, fields) <- either (withComplete . preExecErr) return $
-                    runReaderT (validateGQ q) gCtx
+                    runReaderT (validateGQ opDef opRoot fragDefsL varValsM) gCtx
   let qTx = RQ.setHeadersTx (userVars userInfo) >>
             resolveSelSet userInfo gCtx opTy fields
 

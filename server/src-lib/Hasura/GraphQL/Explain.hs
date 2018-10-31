@@ -11,11 +11,11 @@ module Hasura.GraphQL.Explain
 import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
+import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as Map
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Text.Builder                           as TB
-import qualified Data.ByteString.Lazy                   as BL
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Schema
@@ -114,7 +114,9 @@ explainGQLQuery
   -> GQLExplain
   -> m BL.ByteString
 explainGQLQuery pool iso gCtxMap (GQLExplain query userVarsRaw)= do
-  (opTy, selSet) <- runReaderT (GV.validateGQ query) gCtx
+  (opDef, opRoot, fragDefsL, varValsM) <-
+    runReaderT (GV.getQueryParts query) gCtx
+  (opTy, selSet) <- runReaderT (GV.validateGQ opDef opRoot fragDefsL varValsM) gCtx
   unless (opTy == G.OperationTypeQuery) $
     throw400 InvalidParams "only queries can be explained"
   let tx = mapM (explainField userInfo gCtx) (toList selSet)
