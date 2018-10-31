@@ -49,7 +49,13 @@ export const SET_TYPE_CONFIG = 'ModifyTable/SET_TYPE_CONFIG';
 
 /* */
 
-const queriesWithPermColumns = ['select', 'update', 'insert'];
+const getQueriesWithPermColumns = insert => {
+  const queries = ['select', 'update'];
+  if (insert) {
+    queries.push('insert');
+  }
+  return queries;
+};
 const permChangeTypes = {
   save: 'update',
   delete: 'delete',
@@ -619,7 +625,7 @@ export {
   permSetBulkSelect,
   toggleColumn,
   toggleAllColumns,
-  queriesWithPermColumns,
+  getQueriesWithPermColumns,
   getFilterKey,
   getBasePermissionsState,
   updatePermissionsState,
