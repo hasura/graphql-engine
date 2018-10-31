@@ -164,7 +164,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       withComplete $ sendConnErr connErr
 
   -- validate and build tx
-  gCtxMap <- fmap snd $ liftIO $ IORef.readIORef sCacheRef
+  gCtxMap <- fmap snd $ liftIO $ IORef.readIORef gCtxMapRef
   let gCtx = getGCtx (userRole userInfo) gCtxMap
   (opTy, fields) <- either (withComplete . preExecErr) return $
                     runReaderT (validateGQ q) gCtx

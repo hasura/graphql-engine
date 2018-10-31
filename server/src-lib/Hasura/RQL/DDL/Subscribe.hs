@@ -10,6 +10,7 @@ module Hasura.RQL.DDL.Subscribe where
 import           Data.Aeson
 import           Data.Int                (Int64)
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
@@ -300,10 +301,6 @@ instance HDBQuery DeliverEventQuery where
   phaseTwo q _ = deliverEvent q
   schemaCachePolicy = SCPNoChange
 
--- getHeadersFromConf :: (QErrM m, MonadIO m) => [HeaderConf] -> m [(HeaderName, T.Text)]
--- getHeadersFromConf = mapM getHeader
---   where
---     getHeader :: (QErrM m, MonadIO m) => HeaderConf -> m (HeaderName, T.Text)
 getHeaderInfosFromConf :: (QErrM m, MonadIO m) => [HeaderConf] -> m [EventHeaderInfo]
 getHeaderInfosFromConf = mapM getHeader
   where

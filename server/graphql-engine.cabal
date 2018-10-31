@@ -161,6 +161,7 @@ library
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Utils
                      , Hasura.RQL.DDL.Subscribe
+                     , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert

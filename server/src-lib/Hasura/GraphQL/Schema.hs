@@ -374,7 +374,6 @@ mkRelFld
 mkRelFld allowAgg (RelInfo rn rTy _ remTab _ isManual) isNullable = case rTy of
   ArrRel -> bool [arrRelFld] [arrRelFld, aggArrRelFld] allowAgg
   ObjRel -> [objRelFld]
->>>>>>> b40807c9ec501c35c98ffe52370b46f8b81597ee
   where
     objRelFld = mkHsraObjFldInfo (Just "An object relationship")
       (G.Name $ getRelTxt rn) Map.empty objRelTy
@@ -386,7 +385,7 @@ mkRelFld allowAgg (RelInfo rn rTy _ remTab _ isManual) isNullable = case rTy of
       mkHsraObjFldInfo (Just "An array relationship") (G.Name $ getRelTxt rn)
       (fromInpValL $ mkSelArgs remTab) arrRelTy
     arrRelTy = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy remTab
-    aggArrRelFld = ObjFldInfo (Just "An aggregated array relationship")
+    aggArrRelFld = mkHsraObjFldInfo (Just "An aggregated array relationship")
       (mkAggRelName rn) (fromInpValL $ mkSelArgs remTab) $
       G.toGT $ G.toNT $ mkTableAggTy remTab
 
@@ -419,15 +418,15 @@ type table_aggregate {
 mkTableAggObj
   :: QualifiedTable -> ObjTyInfo
 mkTableAggObj tn =
-  mkObjTyInfo (Just desc) (mkTableAggTy tn) $ mapFromL _fiName
+  mkHsraObjTyInfo (Just desc) (mkTableAggTy tn) $ mapFromL _fiName
   [aggFld, nodesFld]
   where
     desc = G.Description $
       "aggregated selection of " <>> tn
 
-    aggFld = ObjFldInfo Nothing "aggregate" Map.empty $ G.toGT $
+    aggFld = mkHsraObjFldInfo Nothing "aggregate" Map.empty $ G.toGT $
              mkTableAggFldsTy tn
-    nodesFld = ObjFldInfo Nothing "nodes" Map.empty $ G.toGT $
+    nodesFld = mkHsraObjFldInfo Nothing "nodes" Map.empty $ G.toGT $
                G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
 
 {-
@@ -439,13 +438,13 @@ type table_aggregate_fields{
 mkTableAggFldsObj
   :: QualifiedTable -> [PGCol] -> [PGCol] -> ObjTyInfo
 mkTableAggFldsObj tn numCols compCols =
-  mkObjTyInfo (Just desc) (mkTableAggFldsTy tn) $ mapFromL _fiName $
+  mkHsraObjTyInfo (Just desc) (mkTableAggFldsTy tn) $ mapFromL _fiName $
   countFld : (numFlds <> compFlds)
   where
     desc = G.Description $
       "aggregate fields of " <>> tn
 
-    countFld = ObjFldInfo Nothing "count" Map.empty $ G.toGT $
+    countFld = mkHsraObjFldInfo Nothing "count" Map.empty $ G.toGT $
                mkScalarTy PGInteger
 
     numFlds = bool [sumFld, avgFld] [] $ null numCols
@@ -456,7 +455,7 @@ mkTableAggFldsObj tn numCols compCols =
     maxFld = mkColOpFld "max"
     minFld = mkColOpFld "min"
 
-    mkColOpFld op = ObjFldInfo Nothing op Map.empty $ G.toGT $
+    mkColOpFld op = mkHsraObjFldInfo Nothing op Map.empty $ G.toGT $
                     mkTableColAggFldsTy op tn
 
 {-
@@ -473,12 +472,12 @@ mkTableColAggFldsObj
   -> [PGColInfo]
   -> ObjTyInfo
 mkTableColAggFldsObj tn op f cols =
-  mkObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) $ mapFromL _fiName $
+  mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) $ mapFromL _fiName $
   map mkColObjFld cols
   where
     desc = G.Description $ "aggregate " <> G.unName op <> " on columns"
 
-    mkColObjFld c = ObjFldInfo Nothing (G.Name $ getPGColTxt $ pgiName c)
+    mkColObjFld c = mkHsraObjFldInfo Nothing (G.Name $ getPGColTxt $ pgiName c)
                     Map.empty $ G.toGT $ f $ pgiType c
 
 {-
@@ -536,7 +535,7 @@ mkAggSelFld
   :: QualifiedTable
   -> ObjFldInfo
 mkAggSelFld tn =
-  ObjFldInfo (Just desc) fldName args ty
+  mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc = G.Description $ "fetch aggregated fields from the table: "
            <>> tn
@@ -1074,7 +1073,7 @@ ordByTy = G.NamedType "order_by"
 
 ordByEnumTy :: EnumTyInfo
 ordByEnumTy =
-  EnumTyInfo (Just desc) ordByTy $ mapFromL _eviVal $
+  mkHsraEnumTyInfo (Just desc) ordByTy $ mapFromL _eviVal $
   map mkEnumVal enumVals
   where
     desc = G.Description "column ordering options"

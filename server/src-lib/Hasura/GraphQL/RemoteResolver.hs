@@ -27,9 +27,9 @@ import qualified Network.HTTP.Client           as HTTP
 import qualified Network.URI.Extended          as N
 import qualified Network.Wreq                  as Wreq
 
-import           Hasura.RQL.DDL.Subscribe      (getHeadersFromConf)
+import           Hasura.RQL.DDL.Headers        (HeaderConf (..),
+                                                getHeadersFromConf)
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Subscribe    (HeaderConf (..))
 
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Hasura.GraphQL.Validate.Types as VT

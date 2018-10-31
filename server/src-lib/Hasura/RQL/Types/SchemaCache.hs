@@ -94,6 +94,7 @@ module Hasura.RQL.Types.SchemaCache
 
 import qualified Database.PG.Query           as Q
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error

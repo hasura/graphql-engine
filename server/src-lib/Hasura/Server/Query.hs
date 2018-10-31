@@ -10,16 +10,16 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax    (Lift)
 
+import qualified Data.Aeson.Text               as AT
 import qualified Data.ByteString.Builder       as BB
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.Sequence                 as Seq
+import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
+import qualified Data.Text.Lazy                as LT
 import qualified Data.Vector                   as V
 import qualified Network.HTTP.Client           as HTTP
-import qualified Data.Aeson.Text              as AT
-import qualified Data.Sequence                as Seq
-import qualified Data.Text.Lazy               as LT
 
 import           Hasura.GraphQL.RemoteResolver
 import           Hasura.GraphQL.Schema
@@ -238,17 +238,11 @@ buildTxAny userInfo sc hMgr gCtx rq = case rq of
                , finalSc
                )
 
-<<<<<<< HEAD
   where buildTx' q = buildTx userInfo sc hMgr gCtx q
 
-setHeadersTx :: UserInfo -> Q.TxE QErr ()
-setHeadersTx userInfo =
-  forM_ hdrs $ \h -> Q.unitQE defaultTxErrorHandler (mkQ h) () False
-=======
 setHeadersTx :: UserVars -> Q.TxE QErr ()
 setHeadersTx uVars =
   Q.unitQE defaultTxErrorHandler setSess () False
->>>>>>> b40807c9ec501c35c98ffe52370b46f8b81597ee
   where
     toStrictText = LT.toStrict . AT.encodeToLazyText
     setSess = Q.fromText $

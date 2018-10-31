@@ -26,6 +26,7 @@ import           Data.IORef                    (IORef, readIORef)
 import           Data.Time.Clock
 import           Hasura.Events.HTTP
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
