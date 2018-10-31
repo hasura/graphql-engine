@@ -15,7 +15,7 @@ can quickly merge or address your contributions will increase.
 ## Overview
 
 [hasura/graphql-engine](https://github.com/hasura/graphql-engine) is a mono-repo
-consisting of 3 components. Each have their own contributing guides:
+consisting of 3 components. Each has their own contributing guides:
 
 1. [Server (Haskell)](server/CONTRIBUTING.md)
 2. [CLI (Go)](cli/CONTRIBUTING.md)
