@@ -23,6 +23,7 @@ import           Data.Has
 
 import qualified Data.HashMap.Strict            as Map
 import qualified Data.HashSet                   as Set
+import qualified Data.Sequence                  as Seq
 
 import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
@@ -75,14 +76,15 @@ data OpCtx
 
 data GCtx
   = GCtx
-  { _gTypes     :: !TypeMap
-  , _gFields    :: !FieldMap
-  , _gOrdByCtx  :: !OrdByCtx
-  , _gQueryRoot :: !ObjTyInfo
-  , _gMutRoot   :: !(Maybe ObjTyInfo)
-  , _gSubRoot   :: !(Maybe ObjTyInfo)
-  , _gOpCtxMap  :: !OpCtxMap
-  , _gInsCtxMap :: !InsCtxMap
+  { _gTypes      :: !TypeMap
+  , _gFields     :: !FieldMap
+  , _gOrdByCtx   :: !OrdByCtx
+  , _gFuncArgCtx :: !FuncArgCtx
+  , _gQueryRoot  :: !ObjTyInfo
+  , _gMutRoot    :: !(Maybe ObjTyInfo)
+  , _gSubRoot    :: !(Maybe ObjTyInfo)
+  , _gOpCtxMap   :: !OpCtxMap
+  , _gInsCtxMap  :: !InsCtxMap
   } deriving (Show, Eq)
 
 instance Has TypeMap GCtx where
@@ -91,17 +93,19 @@ instance Has TypeMap GCtx where
 
 data TyAgg
   = TyAgg
-  { _taTypes  :: !TypeMap
-  , _taFields :: !FieldMap
-  , _taOrdBy  :: !OrdByCtx
+  { _taTypes   :: !TypeMap
+  , _taFields  :: !FieldMap
+  , _taOrdBy   :: !OrdByCtx
+  , _taFuncArg :: !FuncArgCtx
   } deriving (Show, Eq)
 
 instance Semigroup TyAgg where
-  (TyAgg t1 f1 o1) <> (TyAgg t2 f2 o2) =
+  (TyAgg t1 f1 o1 fa1) <> (TyAgg t2 f2 o2 fa2) =
     TyAgg (Map.union t1 t2) (Map.union f1 f2) (Map.union o1 o2)
+          (Map.union fa1 fa2)
 
 instance Monoid TyAgg where
-  mempty = TyAgg Map.empty Map.empty Map.empty
+  mempty = TyAgg Map.empty Map.empty Map.empty Map.empty
   mappend = (<>)
 
 type SelField = Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int, Bool)
@@ -617,28 +621,34 @@ input function_args {
   argn: arg-typen!
 }
 -}
-mkFuncArgsInp :: FunctionInfo -> Maybe InpObjTyInfo
+mkFuncArgsInp :: FunctionInfo -> Maybe (InpObjTyInfo, FuncArgCtx)
 mkFuncArgsInp funcInfo =
-  bool inpObj Nothing $ null funcArgs
+  bool (Just (inpObj, funcArgCtx)) Nothing $ null funcArgs
   where
     funcName = fiName funcInfo
     funcArgs = fiInputArgs funcInfo
+    funcArgsTy = mkFuncArgsTy funcName
 
-    inpObj = Just $ InpObjTyInfo Nothing (mkFuncArgsTy funcName)
-             $ fromInpValL argInps
+    inpObj = InpObjTyInfo Nothing funcArgsTy $
+             fromInpValL argInps
 
-    argInps = fst $ foldr mkArgInps ([], 1::Int) funcArgs
+    (argInps, ctxItems) = unzip $ fst $ foldl mkArgInps ([], 1::Int) funcArgs
+    funcArgCtx = Map.singleton funcArgsTy $ Seq.fromList ctxItems
 
-    mkArgInps (FunctionArg nameM ty) (inpVals, argNo) =
+    mkArgInps (items, argNo) (FunctionArg nameM ty) =
       case nameM of
         Just argName ->
-          let inpVal = InpValInfo Nothing (G.Name $ getFuncArgNameTxt argName) $
+          let argGName = G.Name $ getFuncArgNameTxt argName
+              inpVal = InpValInfo Nothing argGName $
                        G.toGT $ G.toNT $ mkScalarTy ty
-          in (inpVals <> [inpVal], argNo)
+              argCtxItem = FuncArgItem argGName True
+          in (items <> pure (inpVal, argCtxItem), argNo)
         Nothing ->
-          let inpVal = InpValInfo Nothing (G.Name $ "arg_" <> T.pack (show argNo)) $
+          let argGName = G.Name $ "arg_" <> T.pack (show argNo)
+              inpVal = InpValInfo Nothing argGName $
                        G.toGT $ G.toNT $ mkScalarTy ty
-          in (inpVals <> [inpVal], argNo + 1)
+              argCtxItem = FuncArgItem argGName False
+          in (items <> pure (inpVal, argCtxItem), argNo + 1)
 
 -- table_set_input
 mkUpdSetTy :: QualifiedTable -> G.NamedType
@@ -1213,7 +1223,7 @@ mkGCtxRole'
   -> [FunctionInfo]
   -> TyAgg
 mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allCols funcs =
-  TyAgg (mkTyInfoMap allTypes) fieldMap ordByCtx
+  TyAgg (mkTyInfoMap allTypes) fieldMap ordByCtx funcArgCtx
 
   where
 
@@ -1285,7 +1295,8 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
         else Nothing
 
     -- funcargs input type
-    funcArgInpObjs = mapMaybe mkFuncArgsInp funcs
+    (funcArgInpObjs, funcArgCtxs) = unzip $ mapMaybe mkFuncArgsInp funcs
+    funcArgCtx = Map.unions funcArgCtxs
 
     -- helper
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
@@ -1594,7 +1605,7 @@ mkGCtxMap tableCache functionCache = do
                    && isValidTableName (tiName ti)
 
 mkGCtx :: TyAgg -> RootFlds -> InsCtxMap -> GCtx
-mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
+mkGCtx (TyAgg tyInfos fldInfos ordByCtx funcArgCtx) (RootFlds flds) insCtxMap =
   let queryRoot = mkObjTyInfo (Just "query root") (G.NamedType "query_root") $
                   mapFromL _fiName (schemaFld:typeFld:qFlds)
       colTys    = Set.toList $ Set.fromList $ map pgiType $
@@ -1610,7 +1621,7 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
                             ] <>
                   scalarTys <> compTys <> defaultTypes
   -- for now subscription root is query root
-  in GCtx allTys fldInfos ordByEnums queryRoot mutRootM (Just queryRoot)
+  in GCtx allTys fldInfos ordByCtx funcArgCtx queryRoot mutRootM (Just queryRoot)
      (Map.map fst flds) insCtxMap
   where
 

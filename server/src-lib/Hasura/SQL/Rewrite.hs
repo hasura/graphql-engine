@@ -155,6 +155,7 @@ uSqlExp = restoringIdens . \case
     <$> return fn
     <*> mapM uSqlExp args
     <*> mapM uOrderBy ordByM
+  S.SEFnArg n v                 -> return $ S.SEFnArg n v
   S.SEOpApp op args             ->
     S.SEOpApp op
     <$> mapM uSqlExp args

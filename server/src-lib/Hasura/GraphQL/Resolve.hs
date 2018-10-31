@@ -31,7 +31,7 @@ import qualified Hasura.GraphQL.Resolve.Select          as RS
 buildTx :: UserInfo -> GCtx -> Field -> Q.TxE QErr BL.ByteString
 buildTx userInfo gCtx fld = do
   opCxt <- getOpCtx $ _fName fld
-  join $ fmap fst $ runConvert (fldMap, orderByCtx, insCtxMap) $ case opCxt of
+  join $ fmap fst $ runConvert (fldMap, orderByCtx, insCtxMap, funcArgCtx) $ case opCxt of
 
     OCSelect tn permFilter permLimit hdrs ->
       validateHdrs hdrs >> RS.convertSelect tn permFilter permLimit fld
@@ -59,6 +59,7 @@ buildTx userInfo gCtx fld = do
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByCtx gCtx
     insCtxMap = _gInsCtxMap gCtx
+    funcArgCtx = _gFuncArgCtx gCtx
 
     getOpCtx f =
       onNothing (Map.lookup f opCtxMap) $ throw500 $

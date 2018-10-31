@@ -4,6 +4,7 @@
 {-# LANGUAGE MultiWayIf            #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TupleSections         #-}
 
 module Hasura.GraphQL.Resolve.Select
@@ -255,7 +256,9 @@ convertAggSelect qt permFilter permLimit fld = do
   return $ RS.selectP2 False (selData, prepArgs)
 
 fromFuncQueryField
-  ::(MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
+  ::( MonadError QErr m, MonadReader r m, Has FieldMap r
+    , Has OrdByCtx r, Has FuncArgCtx r
+    )
   => ((PGColType, PGColValue) -> m S.SQLExp)
   -> QualifiedTable -> QualifiedFunction -> Maybe Int -> Field -> m RS.AnnSel
 fromFuncQueryField fn tn qf permLimit fld = fieldAsPath fld $ do
@@ -273,12 +276,20 @@ fromFuncQueryField fn tn qf permLimit fld = fieldAsPath fld $ do
     args = _fArguments fld
 
 parseFunctionArgs
-  ::(MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
+  ::(MonadError QErr m, MonadReader r m, Has FieldMap r, Has FuncArgCtx r)
   => ((PGColType, PGColValue) -> m S.SQLExp)
   -> AnnGValue -> m [S.SQLExp]
 parseFunctionArgs fn val =
-  flip withObject val $ \_ obj ->
-    forM (OMap.elems obj) $ fn <=< asPGColVal
+  flip withObject val $ \nTy obj -> do
+    funcArgCtx :: FuncArgCtx <- asks getter
+    argSeq <- onNothing (Map.lookup nTy funcArgCtx) $ throw500 $
+              "namedType " <> showNamedTy nTy <> " not found in args context"
+    fmap toList $ forM argSeq $ \(FuncArgItem arg isNamed) -> do
+      argVal <- onNothing (OMap.lookup arg obj) $ throw500 $
+                "argument " <> showName arg <> " required in input type "
+                <> showNamedTy nTy
+      valExp <- fn =<< asPGColVal argVal
+      return $ bool valExp (S.SEFnArg (G.unName arg) valExp) isNamed
 
 convertFuncQuery
   :: QualifiedTable -> QualifiedFunction -> Maybe Int -> Field -> Convert RespTx

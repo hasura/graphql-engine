@@ -123,6 +123,7 @@ import           Data.Aeson.TH
 import           GHC.Generics                (Generic)
 
 import qualified Data.HashMap.Strict         as M
+import qualified Data.Sequence               as Seq
 import qualified Data.HashSet                as HS
 import qualified Data.Text                   as T
 import qualified PostgreSQL.Binary.Decoding  as PD
@@ -531,7 +532,7 @@ data FunctionInfo
   { fiName          :: !QualifiedFunction
   , fiSystemDefined :: !Bool
   , fiType          :: !FunctionType
-  , fiInputArgs     :: ![FunctionArg]
+  , fiInputArgs     :: !(Seq.Seq FunctionArg)
   , fiReturnType    :: !QualifiedTable
   , fiDeps          :: ![SchemaDependency]
   } deriving (Show, Eq)

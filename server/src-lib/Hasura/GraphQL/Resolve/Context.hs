@@ -9,6 +9,8 @@ module Hasura.GraphQL.Resolve.Context
   ( InsResp(..)
   , FieldMap
   , RelationInfoMap
+  , FuncArgItem(..)
+  , FuncArgCtx
   , OrdByCtx
   , OrdByItemMap
   , OrdByItem(..)
@@ -83,6 +85,14 @@ type OrdByItemMap = Map.HashMap G.Name OrdByItem
 
 type OrdByCtx = Map.HashMap G.NamedType OrdByItemMap
 
+data FuncArgItem
+  = FuncArgItem
+  { faiName    :: !G.Name
+  , faiIsNamed :: !Bool
+  } deriving (Show, Eq)
+
+type FuncArgCtx = Map.HashMap G.NamedType (Seq.Seq FuncArgItem)
+
 -- insert context
 type RelationInfoMap = Map.HashMap RelName RelInfo
 
@@ -156,7 +166,7 @@ withArgM args arg f = prependArgsInPath $ nameAsPath arg $
 type PrepArgs = Seq.Seq Q.PrepArg
 
 type Convert =
-  StateT PrepArgs (ReaderT (FieldMap, OrdByCtx, InsCtxMap) (Except QErr))
+  StateT PrepArgs (ReaderT (FieldMap, OrdByCtx, InsCtxMap, FuncArgCtx) (Except QErr))
 
 prepare
   :: (MonadState PrepArgs m)
@@ -168,7 +178,7 @@ prepare (colTy, colVal) = do
 
 runConvert
   :: (MonadError QErr m)
-  => (FieldMap, OrdByCtx, InsCtxMap) -> Convert a -> m (a, PrepArgs)
+  => (FieldMap, OrdByCtx, InsCtxMap, FuncArgCtx) -> Convert a -> m (a, PrepArgs)
 runConvert ctx m =
   either throwError return $
   runExcept $ runReaderT (runStateT m Seq.empty) ctx

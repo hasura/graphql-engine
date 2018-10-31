@@ -52,11 +52,11 @@ data FieldPlan
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase) ''FieldPlan)
 
 type Explain =
-  (ReaderT (FieldMap, OrdByCtx) (Except QErr))
+  (ReaderT (FieldMap, OrdByCtx, FuncArgCtx) (Except QErr))
 
 runExplain
   :: (MonadError QErr m)
-  => (FieldMap, OrdByCtx) -> Explain a -> m a
+  => (FieldMap, OrdByCtx, FuncArgCtx) -> Explain a -> m a
 runExplain ctx m =
   either throwError return $ runExcept $ runReaderT m ctx
 
@@ -69,7 +69,7 @@ explainField userInfo gCtx fld =
     "__typename" -> return $ FieldPlan fName Nothing Nothing
     _            -> do
       opCxt <- getOpCtx fName
-      sel <- runExplain (fldMap, orderByCtx) $ case opCxt of
+      sel <- runExplain (fldMap, orderByCtx, funcArgCtx) $ case opCxt of
         OCSelect tn permFilter permLimit hdrs -> do
           validateHdrs hdrs
           RS.mkSQLSelect False <$>
@@ -98,6 +98,7 @@ explainField userInfo gCtx fld =
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByCtx gCtx
+    funcArgCtx = _gFuncArgCtx gCtx
 
     getOpCtx f =
       onNothing (Map.lookup f opCtxMap) $ throw500 $

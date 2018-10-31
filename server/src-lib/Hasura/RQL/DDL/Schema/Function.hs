@@ -17,6 +17,7 @@ import           Data.Int                   (Int64)
 import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.HashMap.Strict        as M
+import qualified Data.Sequence              as Seq
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified PostgreSQL.Binary.Decoding as PD
@@ -99,7 +100,7 @@ mkFunctionInfo qf hasVariadic funTy retSn retN retTyTyp retSet inpArgTypIds inpA
   assertTableExists retTable $ "return type " <> retTable <<> " is not a valid table"
 
   inpArgTyps <- mapM fetchTypNameFromOid inpArgTypIds
-  let funcArgs = mkFunctionArgs inpArgTyps inpArgNames
+  let funcArgs = Seq.fromList $ mkFunctionArgs inpArgTyps inpArgNames
       dep = SchemaDependency (SOTable retTable) "table"
   return $ FunctionInfo qf False funTy funcArgs retTable [dep]
 
