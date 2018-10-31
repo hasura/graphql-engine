@@ -4,7 +4,7 @@ Add or remove a table/view to Hasura GraphQL Engine's metadata using following A
 
 .. Note::
 
-	Only tables/views added to metadata are available for ``querying/mutating/subscribing`` data over **GraphQL** API.
+   Only tables/views added to metadata are available for ``querying/mutating/subscribing`` data over **GraphQL** API.
 
 .. _track_table:
 
