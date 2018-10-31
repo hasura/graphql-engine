@@ -387,8 +387,13 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
     addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook headers
     liftTx $ mkTriggerQ trid trn qt allCols tDef
 
-  mRes <- liftTx fetchRemoteResolvers
-  maybe (return ()) (uncurry addCustomResolverToCache) mRes
+  res <- liftTx fetchRemoteResolvers
+  forM_ res $ \(eUrlEnv, hdrs) ->
+    case eUrlEnv of
+      Left url -> addCustomResolverToCache url hdrs
+      Right env -> do
+        url <- getUrlFromEnv env
+        addCustomResolverToCache url hdrs
 
   where
     permHelper sn tn rn pDef pa = do

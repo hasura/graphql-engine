@@ -32,9 +32,7 @@ import qualified Data.IORef                                  as IORef
 import           Hasura.GraphQL.Resolve                      (resolveSelSet)
 import           Hasura.GraphQL.Resolve.Context              (RespTx)
 import qualified Hasura.GraphQL.Resolve.LiveQuery            as LQ
-import           Hasura.GraphQL.Schema                       (RoledGCtx,
-                                                              UniGCtx (..),
-                                                              getUniGCtx)
+import           Hasura.GraphQL.Schema                       (GCtxMap, getGCtx)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
@@ -123,7 +121,7 @@ data WSServerEnv
   , _wseServer   :: !WSServer
   , _wseRunTx    :: !TxRunner
   , _wseLiveQMap :: !LiveQueryMap
-  , _wseGCtxMap  :: !(IORef.IORef (SchemaCache, RoledGCtx))
+  , _wseGCtxMap  :: !(IORef.IORef (SchemaCache, GCtxMap))
   , _wseHManager :: !H.Manager
   }
 
@@ -179,9 +177,9 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndSend $ do
 
   -- validate and build tx
   gCtxMap <- fmap snd $ liftIO $ IORef.readIORef sCacheRef
-  let gCtx = getUniGCtx (userRole userInfo) gCtxMap
+  let gCtx = getGCtx (userRole userInfo) gCtxMap
   (opTy, fields) <- withExceptT preExecErr $ loggingQErr $
-                    runReaderT (validateGQ q) $ _ugHasuraCtx gCtx
+                    runReaderT (validateGQ q) $ gCtx
   let qTx = RQ.setHeadersTx userInfo >>
             resolveSelSet userInfo gCtx opTy fields
 
@@ -298,7 +296,7 @@ onClose (L.Logger logger) lqMap _ wsConn = do
 
 createWSServerEnv
   :: L.Logger
-  -> H.Manager -> IORef.IORef (SchemaCache, RoledGCtx)
+  -> H.Manager -> IORef.IORef (SchemaCache, GCtxMap)
   -> TxRunner -> IO WSServerEnv
 createWSServerEnv logger httpManager gCtxMapRef runTx = do
   (wsServer, lqMap) <-

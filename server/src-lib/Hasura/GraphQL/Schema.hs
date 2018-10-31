@@ -22,25 +22,22 @@ module Hasura.GraphQL.Schema
   , InsCtxMap
   , RelationInfoMap
   -- Schema stitching related
-  , UniGCtx (..)
   , RemoteGCtx (..)
-  , RoledGCtx
-  , getUniGCtx
   , checkConflictingNodes
   , emptyGCtx
   ) where
 
+
+import           Control.Applicative            (liftA2)
 import           Data.Has
 
 import qualified Data.HashMap.Strict            as Map
 import qualified Data.HashSet                   as Set
-
 import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
-
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal        (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
@@ -50,7 +47,7 @@ import qualified Hasura.RQL.DML.Select          as RS
 import qualified Hasura.SQL.DML                 as S
 
 defaultTypes :: [TypeInfo]
-defaultTypes = $(fromSchemaDocQ defaultSchema)
+defaultTypes = $(fromSchemaDocQ defaultSchema HasuraType)
 
 getInsPerm :: TableInfo -> RoleName -> Maybe InsPermInfo
 getInsPerm tabInfo role
@@ -81,26 +78,13 @@ data OpCtx
   | OCDelete QualifiedTable S.BoolExp [T.Text]
   deriving (Show, Eq)
 
-data UniGCtx
-  = UniGCtx
-  { _ugHasuraCtx :: !GCtx
-  -- TODO: change Text to URI?
-  , _ugRemoteCtx :: !(Maybe (T.Text, RemoteGCtx))
-  } deriving (Show, Eq)
-
-instance Has TypeMap UniGCtx where
-  getter (UniGCtx hCtx rmCtx) =
-    let hTypes  = _gTypes hCtx
-        rmTypes = maybe Map.empty (_rgTypes <$> snd) rmCtx
-    in Map.union rmTypes hTypes
-  modifier f ctx = error "not yet implemented" --ctx { _gTypes = f $ _gTypes ctx }
 
 data RemoteGCtx
   = RemoteGCtx
   { _rgTypes            :: !TypeMap
-  , _rgQueryRoot        :: !G.NamedType
-  , _rgMutationRoot     :: !(Maybe G.NamedType)
-  , _rgSubscriptionRoot :: !(Maybe G.NamedType)
+  , _rgQueryRoot        :: !ObjTyInfo
+  , _rgMutationRoot     :: !(Maybe ObjTyInfo)
+  , _rgSubscriptionRoot :: !(Maybe ObjTyInfo)
   } deriving (Show, Eq)
 
 instance Has TypeMap RemoteGCtx where
@@ -139,6 +123,42 @@ instance Monoid TyAgg where
   mappend = (<>)
 
 type SelField = Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool)
+
+mkHsraObjFldInfo
+  :: Maybe G.Description
+  -> G.Name
+  -> ParamMap
+  -> G.GType
+  -> ObjFldInfo
+mkHsraObjFldInfo descM name params ty =
+  ObjFldInfo descM name params ty HasuraType
+
+mkHsraObjTyInfo
+  :: Maybe G.Description
+  -> G.NamedType
+  -> ObjFieldMap
+  -> ObjTyInfo
+mkHsraObjTyInfo descM ty flds =
+  mkObjTyInfo descM ty flds HasuraType
+
+mkHsraInpTyInfo
+  :: Maybe G.Description
+  -> G.NamedType
+  -> InpObjFldMap
+  -> InpObjTyInfo
+mkHsraInpTyInfo descM ty flds =
+  InpObjTyInfo descM ty flds HasuraType
+
+mkHsraEnumTyInfo
+  :: Maybe G.Description
+  -> G.NamedType
+  -> Map.HashMap G.EnumValue EnumValInfo
+  -> EnumTyInfo
+mkHsraEnumTyInfo descM ty enumVals =
+  EnumTyInfo descM ty enumVals HasuraType
+
+mkHsraScalarTyInfo :: PGColType -> ScalarTyInfo
+mkHsraScalarTyInfo ty = ScalarTyInfo Nothing ty HasuraType
 
 qualTableToName :: QualifiedTable -> G.Name
 qualTableToName = G.Name <$> \case
@@ -209,15 +229,16 @@ mkTableTy =
 mkTableByPKeyTy :: QualifiedTable -> G.Name
 mkTableByPKeyTy tn = qualTableToName tn <> "_by_pk"
 
+--- | make compare expression input type
 mkCompExpInp :: PGColType -> InpObjTyInfo
 mkCompExpInp colTy =
-  InpObjTyInfo (Just tyDesc) (mkCompExpTy colTy) $ fromInpValL $ concat
+  InpObjTyInfo (Just tyDesc) (mkCompExpTy colTy) (fromInpValL $ concat
   [ map (mk colScalarTy) typedOps
   , map (mk $ G.toLT colScalarTy) listOps
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
   , [InpValInfo Nothing "_is_null" $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
-  ]
+  ]) HasuraType
   where
     tyDesc = mconcat
       [ "expression to compare columns of type "
@@ -281,7 +302,7 @@ mkCompExpInp colTy =
 
 mkPGColFld :: PGColInfo -> ObjFldInfo
 mkPGColFld (PGColInfo colName colTy isNullable) =
-  ObjFldInfo Nothing n Map.empty ty
+  mkHsraObjFldInfo Nothing n Map.empty ty
   where
     n  = G.Name $ getPGColTxt colName
     ty = bool notNullTy nullTy isNullable
@@ -322,11 +343,11 @@ object_relationship: remote_table
 mkRelFld :: RelInfo -> Bool -> ObjFldInfo
 mkRelFld (RelInfo rn rTy _ remTab _ isManual) isNullable = case rTy of
   ArrRel ->
-    ObjFldInfo (Just "An array relationship") (G.Name $ getRelTxt rn)
+    mkHsraObjFldInfo (Just "An array relationship") (G.Name $ getRelTxt rn)
     (fromInpValL $ mkSelArgs remTab)
     (G.toGT $ G.toNT $ G.toLT $ G.toNT relTabTy)
   ObjRel ->
-    ObjFldInfo (Just "An object relationship") (G.Name $ getRelTxt rn)
+    mkHsraObjFldInfo (Just "An object relationship") (G.Name $ getRelTxt rn)
     Map.empty
     objRelTy
   where
@@ -347,7 +368,7 @@ mkTableObj
   -> [SelField]
   -> ObjTyInfo
 mkTableObj tn allowedFlds =
-  mkObjTyInfo (Just desc) (mkTableTy tn) $ mapFromL _fiName flds
+  mkObjTyInfo (Just desc) (mkTableTy tn) (mapFromL _fiName flds) HasuraType
   where
     flds = map (either mkPGColFld mkRelFld') allowedFlds
     mkRelFld' (relInfo, _, _, isNullable) = mkRelFld relInfo isNullable
@@ -367,7 +388,7 @@ mkSelFld
   :: QualifiedTable
   -> ObjFldInfo
 mkSelFld tn =
-  ObjFldInfo (Just desc) fldName args ty
+  mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc    = G.Description $ "fetch data from the table: " <>> tn
     fldName = qualTableToName tn
@@ -385,7 +406,7 @@ mkSelFldPKey
   :: QualifiedTable -> [PGColInfo]
   -> ObjFldInfo
 mkSelFldPKey tn cols =
-  ObjFldInfo (Just desc) fldName args ty
+  mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc = G.Description $ "fetch data from the table: " <> tn
            <<> " using primary key columns"
@@ -411,19 +432,19 @@ mkMutRespObj
   -> Bool -- is sel perm defined
   -> ObjTyInfo
 mkMutRespObj tn sel =
-  mkObjTyInfo (Just objDesc) (mkMutRespTy tn) $ mapFromL _fiName
-  $ affectedRowsFld : bool [] [returningFld] sel
+  mkHsraObjTyInfo (Just objDesc) (mkMutRespTy tn) $ mapFromL _fiName
+    $ affectedRowsFld : bool [] [returningFld] sel
   where
     objDesc = G.Description $
       "response of any mutation on the table " <>> tn
     affectedRowsFld =
-      ObjFldInfo (Just desc) "affected_rows" Map.empty $
-      G.toGT $ G.toNT $ mkScalarTy PGInteger
+      mkHsraObjFldInfo (Just desc) "affected_rows" Map.empty $
+        G.toGT $ G.toNT $ mkScalarTy PGInteger
       where
         desc = "number of affected rows by the mutation"
     returningFld =
-      ObjFldInfo (Just desc) "returning" Map.empty $
-      G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
+      mkHsraObjFldInfo (Just desc) "returning" Map.empty $
+        G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
       where
         desc = "data of the affected rows by the mutation"
 
@@ -433,8 +454,8 @@ mkBoolExpInp
   -> [SelField]
   -> InpObjTyInfo
 mkBoolExpInp tn fields =
-  InpObjTyInfo (Just desc) boolExpTy $ Map.fromList
-  [(_iviName inpVal, inpVal) | inpVal <- inpValues]
+  mkHsraInpTyInfo (Just desc) boolExpTy $ Map.fromList
+    [(_iviName inpVal, inpVal) | inpVal <- inpValues]
   where
     desc = G.Description $
       "Boolean expression to filter rows from the table " <> tn <<>
@@ -483,8 +504,8 @@ input table_set_input {
 mkUpdSetInp
   :: QualifiedTable -> [PGColInfo] -> InpObjTyInfo
 mkUpdSetInp tn cols  =
-  InpObjTyInfo (Just desc) (mkUpdSetTy tn) $ fromInpValL $
-  map mkPGColInp cols
+  mkHsraInpTyInfo (Just desc) (mkUpdSetTy tn) $
+    fromInpValL $ map mkPGColInp cols
   where
     desc = G.Description $
       "input type for updating data in table " <>> tn
@@ -509,8 +530,8 @@ mkUpdIncInp tn = maybe Nothing mkType
   where
     mkType cols = let intCols = onlyIntCols cols
                       incObjTy =
-                        InpObjTyInfo (Just desc) (mkUpdIncTy tn) $
-                        fromInpValL $ map mkPGColInp intCols
+                        mkHsraInpTyInfo (Just desc) (mkUpdIncTy tn) $
+                          fromInpValL $ map mkPGColInp intCols
                   in bool (Just incObjTy) Nothing $ null intCols
     desc = G.Description $
       "input type for incrementing integer columne in table " <>> tn
@@ -603,27 +624,27 @@ mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
               ]
 
     appendInpObj =
-      InpObjTyInfo (Just appendDesc) (mkJSONOpTy tn appendOp) $
+      mkHsraInpTyInfo (Just appendDesc) (mkJSONOpTy tn appendOp) $
       fromInpValL $ map mkPGColInp jsonbCols
 
     prependInpObj =
-      InpObjTyInfo (Just prependDesc) (mkJSONOpTy tn prependOp) $
+      mkHsraInpTyInfo (Just prependDesc) (mkJSONOpTy tn prependOp) $
       fromInpValL $ map mkPGColInp jsonbCols
 
     deleteKeyInpObj =
-      InpObjTyInfo (Just deleteKeyDesc) (mkJSONOpTy tn deleteKeyOp) $
+      mkHsraInpTyInfo (Just deleteKeyDesc) (mkJSONOpTy tn deleteKeyOp) $
       fromInpValL $ map deleteKeyInpVal jsonbColNames
     deleteKeyInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) $
       G.toGT $ G.NamedType "String"
 
     deleteElemInpObj =
-      InpObjTyInfo (Just deleteElemDesc) (mkJSONOpTy tn deleteElemOp) $
+      mkHsraInpTyInfo (Just deleteElemDesc) (mkJSONOpTy tn deleteElemOp) $
       fromInpValL $ map deleteElemInpVal jsonbColNames
     deleteElemInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) $
       G.toGT $ G.NamedType "Int"
 
     deleteAtPathInpObj =
-      InpObjTyInfo (Just deleteAtPathDesc) (mkJSONOpTy tn deleteAtPathOp) $
+      mkHsraInpTyInfo (Just deleteAtPathDesc) (mkJSONOpTy tn deleteAtPathOp) $
       fromInpValL $ map deleteAtPathInpVal jsonbColNames
     deleteAtPathInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) $
       G.toGT $ G.toLT $ G.NamedType "String"
@@ -677,8 +698,8 @@ mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
 mkUpdMutFld
   :: QualifiedTable -> [PGColInfo] -> ObjFldInfo
 mkUpdMutFld tn cols =
-  ObjFldInfo (Just desc) fldName (fromInpValL inputValues) $
-  G.toGT $ mkMutRespTy tn
+  mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputValues) $
+    G.toGT $ mkMutRespTy tn
   where
     inputValues = [filterArg, setArg] <> incArg
                   <> mkJSONOpInpVals tn cols
@@ -708,8 +729,8 @@ delete_table(
 mkDelMutFld
   :: QualifiedTable -> ObjFldInfo
 mkDelMutFld tn =
-  ObjFldInfo (Just desc) fldName (fromInpValL [filterArg]) $
-  G.toGT $ mkMutRespTy tn
+  mkHsraObjFldInfo (Just desc) fldName (fromInpValL [filterArg]) $
+    G.toGT $ mkMutRespTy tn
   where
     desc = G.Description $ "delete data from the table: " <>> tn
 
@@ -780,7 +801,7 @@ mkRelInsInps tn upsertAllowed = [objRelInsInp, arrRelInsInp]
 
     objRelDataInp = InpValInfo Nothing "data" $ G.toGT $
                     G.toNT $ mkInsInpTy tn
-    objRelInsInp = InpObjTyInfo (Just objRelDesc) (mkObjInsInpTy tn)
+    objRelInsInp = mkHsraInpTyInfo (Just objRelDesc) (mkObjInsInpTy tn)
                    $ fromInpValL $ objRelDataInp : onConflictInp
 
     arrRelDesc = G.Description $
@@ -788,7 +809,7 @@ mkRelInsInps tn upsertAllowed = [objRelInsInp, arrRelInsInp]
 
     arrRelDataInp = InpValInfo Nothing "data" $ G.toGT $
                     G.toNT $ G.toLT $ G.toNT $ mkInsInpTy tn
-    arrRelInsInp = InpObjTyInfo (Just arrRelDesc) (mkArrInsInpTy tn)
+    arrRelInsInp = mkHsraInpTyInfo (Just arrRelDesc) (mkArrInsInpTy tn)
                    $ fromInpValL $ arrRelDataInp : onConflictInp
 
 {-
@@ -805,7 +826,7 @@ input table_insert_input {
 mkInsInp
   :: QualifiedTable -> InsCtx -> InpObjTyInfo
 mkInsInp tn insCtx =
-  InpObjTyInfo (Just desc) (mkInsInpTy tn) $ fromInpValL $
+  mkHsraInpTyInfo (Just desc) (mkInsInpTy tn) $ fromInpValL $
   map mkPGColInp cols <> relInps
   where
     desc = G.Description $
@@ -835,7 +856,7 @@ input table_on_conflict {
 
 mkOnConflictInp :: QualifiedTable -> InpObjTyInfo
 mkOnConflictInp tn =
-  InpObjTyInfo (Just desc) (mkOnConflictInpTy tn) $ fromInpValL
+  mkHsraInpTyInfo (Just desc) (mkOnConflictInpTy tn) $ fromInpValL
   [actionInpVal, constraintInpVal, updateColumnsInpVal]
   where
     desc = G.Description $
@@ -862,8 +883,8 @@ insert_table(
 mkInsMutFld
   :: QualifiedTable -> Bool -> ObjFldInfo
 mkInsMutFld tn isUpsertable =
-  ObjFldInfo (Just desc) fldName (fromInpValL inputVals) $
-  G.toGT $ mkMutRespTy tn
+  mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputVals) $
+    G.toGT $ mkMutRespTy tn
   where
     inputVals = catMaybes [Just objectsArg , onConflictInpVal]
     desc = G.Description $
@@ -885,7 +906,7 @@ mkInsMutFld tn isUpsertable =
 mkConstriantTy :: QualifiedTable -> [TableConstraint] -> EnumTyInfo
 mkConstriantTy tn cons = enumTyInfo
   where
-    enumTyInfo = EnumTyInfo (Just desc) (mkConstraintInpTy tn) $
+    enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkConstraintInpTy tn) $
                  mapFromL _eviVal $ map (mkConstraintEnumVal . tcName ) cons
 
     desc = G.Description $
@@ -898,7 +919,7 @@ mkConstriantTy tn cons = enumTyInfo
 mkColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
 mkColumnTy tn cols = enumTyInfo
   where
-    enumTyInfo = EnumTyInfo (Just desc) (mkColumnInpTy tn) $
+    enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkColumnInpTy tn) $
                  mapFromL _eviVal $ map mkColumnEnumVal cols
 
     desc = G.Description $
@@ -908,7 +929,7 @@ mkColumnTy tn cols = enumTyInfo
       EnumValInfo (Just "column name") (G.EnumValue $ G.Name col) False
 
 mkConflictActionTy :: EnumTyInfo
-mkConflictActionTy = EnumTyInfo (Just desc) ty $ mapFromL _eviVal
+mkConflictActionTy = mkHsraEnumTyInfo (Just desc) ty $ mapFromL _eviVal
                      [enumValIgnore, enumValUpdate]
   where
     desc = G.Description "conflict action"
@@ -927,7 +948,7 @@ mkOrdByCtx
 mkOrdByCtx tn cols =
   (enumTyInfo, resolveCtx)
   where
-    enumTyInfo = EnumTyInfo (Just desc) enumTy $
+    enumTyInfo = mkHsraEnumTyInfo (Just desc) enumTy $
                  mapFromL _eviVal $ map toEnumValInfo enumValsInt
     enumTy = mkOrdByTy tn
     desc = G.Description $
@@ -1299,73 +1320,52 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols 
       (Just (allCols, noFilter, [])) (Just (noFilter, []))
       viewInfo
 
-mkScalarTyInfo :: PGColType -> ScalarTyInfo
-mkScalarTyInfo = ScalarTyInfo Nothing
-
 type GCtxMap = Map.HashMap RoleName GCtx
-
-type RoledGCtx = Map.HashMap RoleName UniGCtx
 
 checkConflictingNodes
   :: (MonadError QErr m)
-  => RemoteGCtx -> TypeMap -> m ()
-checkConflictingNodes remoteCtx typMap = do
-  let rmTypes = _rgTypes remoteCtx
-  when (any (`elem` typMap) rmTypes) $
-    throw400 NotSupported "remote node names are same as hasura nodes"
+  => TypeMap -> RemoteGCtx -> m ()
+checkConflictingNodes typeMap remoteCtx = do
+  -- TODO: can types have same names?
+  let rmQRoot = _otiFields $ _rgQueryRoot remoteCtx
+      rmMRoot = _otiFields <$> _rgMutationRoot remoteCtx
+      rmRoots = filter (`notElem` builtin) . Map.keys <$> fmap (Map.union rmQRoot) rmMRoot
+      hQR = _otiFields <$>
+            join (getObjTyM <$> Map.lookup (G.NamedType "query_root") typeMap)
+      hMR = _otiFields <$>
+            join (getObjTyM <$> Map.lookup (G.NamedType "mutation_root") typeMap)
+      hRoots = Map.keys <$> liftA2 Map.union hQR hMR
+  case (rmRoots, hRoots) of
+    (Just rmR, Just hR) ->
+      when (any (`elem` hR) rmR) $
+        throw400 RemoteSchemaError
+        "conflicting node names between remote graphql servers and hasura nodes"
+    _ -> return ()
+  where
+    builtin = ["__type", "__schema", "__typename", "Query", "Mutation"]
 
 mkGCtxMap
   :: (MonadError QErr m)
-  => TableCache -> Maybe (Text, RemoteGCtx) -> m RoledGCtx
-mkGCtxMap tableCache mRemoteConf = do
-  -- FIXME: creates an empty hashmap when no tables are tracked
-  -- FIXME: check for type conflicts in hasura and remote schema => throw error
+  => TableCache -> m GCtxMap
+mkGCtxMap tableCache = do
   typesMapL <- mapM (mkGCtxMapTable tableCache) $
                filter tableFltr $ Map.elems tableCache
   let typesMap = foldr (Map.unionWith mappend) Map.empty typesMapL
-  forM typesMap $ \(ty, flds, insCtxMap) -> do
-    checkConflicts (_taTypes ty)
-    return $ UniGCtx (mkGCtx ty flds rr insCtxMap) mRemoteConf
+  return $ flip Map.map typesMap $ \(ty, flds, insCtxMap) ->
+    mkGCtx ty flds insCtxMap
   where
     tableFltr ti = not (tiSystemDefined ti)
                    && isValidTableName (tiName ti)
-    -- make a RootFlds for the remote schema and mappend it with hasura's root fields
-    rr = fromMaybe (RemoteRootFlds [] []) $ RemoteRootFlds <$> (Map.elems <$> remoteQr) <*> (Map.elems <$> remoteMr)
-    remoteQr =
-      let rootObj = onJust $ \rCtx ->
-            Map.lookup (_rgQueryRoot rCtx) $ _rgTypes rCtx
-      in getObj <$> rootObj
-    remoteMr = onJust $ \remoteCtx ->
-      let mr = fromMaybe (G.NamedType "Mutation") (_rgMutationRoot remoteCtx)
-          rootObj = Map.lookup mr $ _rgTypes remoteCtx
-      in getObj <$> rootObj
-
-    onJust action = case mRemoteConf of
-      Just (_, remoteCtx) -> action remoteCtx
-      Nothing             -> Nothing
-
-    getObj ti = case ti of
-      TIObj o -> _otiFields o
-      _       -> Map.empty
-
-    checkConflicts tyMap = case mRemoteConf of
-      Just (_, rmCtx) -> checkConflictingNodes rmCtx tyMap
-      Nothing         -> return ()
 
 
-data RemoteRootFlds
-  = RemoteRootFlds
-  { _rrfQueryRoot :: ![ObjFldInfo]
-  , _rrfMutRoot   :: ![ObjFldInfo]
-  } deriving (Show, Eq)
-
-mkGCtx :: TyAgg -> RootFlds -> RemoteRootFlds -> InsCtxMap -> GCtx
-mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) (RemoteRootFlds rQroot rMroot) insCtxMap =
-  let queryRoot = mkObjTyInfo (Just "query root") (G.NamedType "query_root") $
+mkGCtx :: TyAgg -> RootFlds -> InsCtxMap -> GCtx
+mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
+  let queryRoot = mkHsraObjTyInfo (Just "query root")
+                  (G.NamedType "query_root") $
                   mapFromL _fiName (schemaFld:typeFld:qFlds)
       colTys    = Set.toList $ Set.fromList $ map pgiType $
                   lefts $ Map.elems fldInfos
-      scalarTys = map (TIScalar . mkScalarTyInfo) colTys
+      scalarTys = map (TIScalar . mkHsraScalarTyInfo) colTys
       compTys   = map (TIInpObj . mkCompExpInp) colTys
       allTys    = Map.union tyInfos $ mkTyInfoMap $
                   catMaybes [ Just $ TIObj queryRoot
@@ -1379,44 +1379,33 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) (RemoteRootFlds rQroo
   where
 
     mkMutRoot =
-      mkObjTyInfo (Just "mutation root") (G.NamedType "mutation_root") .
+      mkHsraObjTyInfo (Just "mutation root") (G.NamedType "mutation_root") .
       mapFromL _fiName
 
     mutRootM = bool (Just $ mkMutRoot mFlds) Nothing $ null mFlds
 
     mkSubRoot =
-      mkObjTyInfo (Just "subscription root") (G.NamedType "subscription_root") .
-      mapFromL _fiName
+      mkHsraObjTyInfo (Just "subscription root")
+      (G.NamedType "subscription_root") . mapFromL _fiName
 
     subRootM = bool (Just $ mkSubRoot qFlds) Nothing $ null qFlds
 
-    (qFlds', mFlds') = partitionEithers $ map snd $ Map.elems flds
-    (qFlds, mFlds) = (qFlds' ++ rQroot, mFlds' ++ rMroot)
+    (qFlds, mFlds) = partitionEithers $ map snd $ Map.elems flds
 
-    schemaFld = ObjFldInfo Nothing "__schema" Map.empty $ G.toGT $
-                G.toNT $ G.NamedType "__Schema"
+    schemaFld = mkHsraObjFldInfo Nothing "__schema" Map.empty $
+                  G.toGT $ G.toNT $ G.NamedType "__Schema"
 
-    typeFld = ObjFldInfo Nothing "__type" typeFldArgs $ G.toGT $
-              G.NamedType "__Type"
+    typeFld = mkHsraObjFldInfo Nothing "__type" typeFldArgs $
+                G.toGT $ G.NamedType "__Type"
       where
         typeFldArgs = mapFromL _iviName [
           InpValInfo (Just "name of the type") "name"
           $ G.toGT $ G.toNT $ G.NamedType "String"
           ]
 
-emptyRR :: RemoteRootFlds
-emptyRR = RemoteRootFlds [] []
 
 emptyGCtx :: GCtx
-emptyGCtx = mkGCtx mempty mempty emptyRR mempty
+emptyGCtx = mkGCtx mempty mempty mempty
 
 getGCtx :: RoleName -> Map.HashMap RoleName GCtx -> GCtx
-getGCtx rn =
-  fromMaybe emptyGCtx . Map.lookup rn
-
--- FIXME: is the empty ("", RemoteCtx) correct?
-getUniGCtx :: RoleName -> RoledGCtx -> UniGCtx
-getUniGCtx rn = fromMaybe emptyUniGCtx . Map.lookup rn
-  where
-    emptyUniGCtx = UniGCtx emptyGCtx Nothing
-    --emptyRemoteCtx = RemoteGCtx Map.empty (G.NamedType "Query") Nothing Nothing
+getGCtx rn = fromMaybe emptyGCtx . Map.lookup rn

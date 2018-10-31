@@ -11,8 +11,6 @@ module Hasura.Server.App where
 
 import           Control.Arrow                          ((***))
 import           Control.Concurrent.MVar
-import           Control.Exception                      (try)
-import           Control.Lens                           ((&), (.~), (?~), (^.))
 import           Data.Aeson                             hiding (json)
 import           Data.IORef
 import           Data.Time.Clock                        (UTCTime,
@@ -24,23 +22,19 @@ import           Web.Spock.Core
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as M
 import qualified Data.Text                              as T
-import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.Wai                            as Wai
 import qualified Network.Wai.Handler.WebSockets         as WS
 import qualified Network.Wai.Middleware.Static          as MS
 import qualified Network.WebSockets                     as WS
-import qualified Network.Wreq                           as Wreq
 import qualified Text.Mustache                          as M
 import qualified Text.Mustache.Compile                  as M
-
 
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Transport.WebSocket     as WS
-import qualified Hasura.GraphQL.Validate.Types          as VT
 import qualified Hasura.Logging                         as L
 
 import           Hasura.Prelude                         hiding (get, put)
@@ -85,7 +79,7 @@ data ServerCtx
   { scIsolation :: Q.TxIsolation
   , scPGPool    :: Q.PGPool
   , scLogger    :: L.Logger
-  , scCacheRef  :: IORef (SchemaCache, GS.RoledGCtx)
+  , scCacheRef  :: IORef (SchemaCache, GS.GCtxMap)
   , scCacheLock :: MVar ()
   , scAuthMode  :: AuthMode
   , scManager   :: HTTP.Manager
@@ -232,14 +226,9 @@ v1QueryHandler query = do
       scRef <- scCacheRef . hcServerCtx <$> ask
       httpMgr <- scManager . hcServerCtx <$> ask
       -- FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
-      mRemoteCtx <- case scRemoteResolver newSc of
-        Nothing -> return Nothing
-        Just (url, hdrs) -> do
-          rmSchema <- fetchRemoteSchema httpMgr url hdrs
-          return $ Just (url, rmSchema)
-
-      newGCtxMap <- GS.mkGCtxMap (scTables newSc) mRemoteCtx
-      liftIO $ writeIORef scRef (newSc, newGCtxMap)
+      newGCtxMap <- GS.mkGCtxMap (scTables newSc)
+      mergedGCtxMap <- mergeSchemas newSc newGCtxMap httpMgr
+      liftIO $ writeIORef scRef (newSc, mergedGCtxMap)
       return resp
 
 v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler BL.ByteString
@@ -288,6 +277,17 @@ legacyQueryHandler tn queryType =
   where
     qt = QualifiedTable publicSchema tn
 
+mergeSchemas
+  :: (MonadIO m, MonadError QErr m)
+  => SchemaCache -> GS.GCtxMap -> HTTP.Manager -> m GS.GCtxMap
+mergeSchemas sc gCtxMap httpManager = do
+  -- TODO: better way to do this?
+  let resolvers = scRemoteResolvers sc
+  remoteSchemas <- forM resolvers $ \(url, hdrs) -> do
+    remoteSchema <- fetchRemoteSchema httpManager url hdrs
+    return (url, remoteSchema)
+  mergeRemoteSchemas gCtxMap remoteSchemas
+
 
 mkWaiApp
   :: Q.TxIsolation
@@ -298,21 +298,15 @@ mkWaiApp
   -> AuthMode
   -> CorsConfig
   -> Bool
-  -> IO (Wai.Application, IORef (SchemaCache, GS.RoledGCtx))
+  -> IO (Wai.Application, IORef (SchemaCache, GS.GCtxMap))
 mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole = do
     cacheRef <- do
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
         sc <- buildSchemaCache
-        -- TODO: better way to do this?
-        let mConf = scRemoteResolver sc
-        mRemoteSc <- case mConf of
-          Just (url, hdrs) -> do
-            remoteSchema <- fetchRemoteSchema httpManager url hdrs
-            return $ Just (url, remoteSchema)
-          Nothing -> return Nothing
-        gctxmap <- (,) sc <$> GS.mkGCtxMap (scTables sc) mRemoteSc
-        (,) sc <$> GS.mkGCtxMap (scTables sc) mRemoteSc
+        gCtxMap <- GS.mkGCtxMap (scTables sc)
+        mergedGCtxMap <- mergeSchemas sc gCtxMap httpManager
+        return $ (,) sc mergedGCtxMap
       either initErrExit return pgResp >>= newIORef
 
     cacheLock <- newMVar ()

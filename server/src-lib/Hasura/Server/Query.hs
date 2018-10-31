@@ -125,10 +125,10 @@ buildTx userInfo sc httpManager gCtx q = do
 runQuery
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation
-  -> UserInfo -> SchemaCache -> HTTP.Manager -> RoledGCtx
+  -> UserInfo -> SchemaCache -> HTTP.Manager -> GCtxMap
   -> RQLQuery -> m (BL.ByteString, SchemaCache)
-runQuery pool isoL userInfo sc hMgr rgCtx query = do
-  let gCtx = _ugHasuraCtx $ getUniGCtx (userRole userInfo) rgCtx
+runQuery pool isoL userInfo sc hMgr gCtxMap query = do
+  let gCtx = getGCtx (userRole userInfo) gCtxMap
   tx <- liftEither $ buildTxAny userInfo sc hMgr gCtx query
   res <- liftIO $ runExceptT $ Q.runTx pool (isoL, Nothing) $
          setHeadersTx userInfo >> tx

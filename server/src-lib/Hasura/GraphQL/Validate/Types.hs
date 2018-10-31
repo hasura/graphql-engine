@@ -36,6 +36,7 @@ module Hasura.GraphQL.Validate.Types
   , fromTyDefQ
   , fromSchemaDocQ
   , TypeMap
+  , TypeLoc (..)
   , AnnGValue(..)
   , AnnGObject
   , hasNullVal
@@ -54,6 +55,7 @@ import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.GraphQL.Draft.TH     as G
 import qualified Language.Haskell.TH.Syntax    as TH
+import qualified Network.URI.Extended          as N
 
 import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Instances          ()
@@ -76,12 +78,15 @@ data EnumTyInfo
   { _etiDesc   :: !(Maybe G.Description)
   , _etiName   :: !G.NamedType
   , _etiValues :: !(Map.HashMap G.EnumValue EnumValInfo)
+  , _etiLoc    :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
-fromEnumTyDef :: G.EnumTypeDefinition -> EnumTyInfo
-fromEnumTyDef (G.EnumTypeDefinition descM n _ valDefs) =
-  EnumTyInfo descM (G.NamedType n) $ Map.fromList
-  [(G._evdName valDef, fromEnumValDef valDef) | valDef <- valDefs]
+fromEnumTyDef :: G.EnumTypeDefinition -> TypeLoc -> EnumTyInfo
+fromEnumTyDef (G.EnumTypeDefinition descM n _ valDefs) loc =
+  EnumTyInfo descM (G.NamedType n) enumVals loc
+  where
+    enumVals = Map.fromList $
+      [(G._evdName valDef, fromEnumValDef valDef) | valDef <- valDefs]
 
 data InpValInfo
   = InpValInfo
@@ -97,17 +102,24 @@ fromInpValDef (G.InputValueDefinition descM n ty _) =
 
 type ParamMap = Map.HashMap G.Name InpValInfo
 
+-- | location of the type: a hasura type or a remote type
+data TypeLoc
+  = HasuraType
+  | RemoteType !N.URI
+  deriving (Show, Eq, TH.Lift)
+
 data ObjFldInfo
   = ObjFldInfo
   { _fiDesc   :: !(Maybe G.Description)
   , _fiName   :: !G.Name
   , _fiParams :: !ParamMap
   , _fiTy     :: !G.GType
+  , _fiLoc    :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
-fromFldDef :: G.FieldDefinition -> ObjFldInfo
-fromFldDef (G.FieldDefinition descM n args ty _) =
-  ObjFldInfo descM n params ty
+fromFldDef :: G.FieldDefinition -> TypeLoc -> ObjFldInfo
+fromFldDef (G.FieldDefinition descM n args ty _) loc =
+  ObjFldInfo descM n params ty loc
   where
     params = Map.fromList [(G._ivdName arg, fromInpValDef arg) | arg <- args]
 
@@ -121,21 +133,23 @@ data ObjTyInfo
   } deriving (Show, Eq, TH.Lift)
 
 mkObjTyInfo
-  :: Maybe G.Description -> G.NamedType -> ObjFieldMap -> ObjTyInfo
-mkObjTyInfo descM ty flds =
-  ObjTyInfo descM ty $ Map.insert (_fiName typenameFld) typenameFld flds
+  :: Maybe G.Description -> G.NamedType -> ObjFieldMap -> TypeLoc -> ObjTyInfo
+mkObjTyInfo descM ty flds loc =
+  ObjTyInfo descM ty $ Map.insert (_fiName newFld) newFld flds
+  where newFld = typenameFld loc
 
-typenameFld :: ObjFldInfo
-typenameFld =
-  ObjFldInfo (Just desc) "__typename" Map.empty $
-  G.toGT $ G.toNT $ G.NamedType "String"
+typenameFld :: TypeLoc -> ObjFldInfo
+typenameFld loc =
+  ObjFldInfo (Just desc) "__typename" Map.empty
+    (G.toGT $ G.toNT $ G.NamedType "String") loc
   where
     desc = "The name of the current Object type at runtime"
 
-fromObjTyDef :: G.ObjectTypeDefinition -> ObjTyInfo
-fromObjTyDef (G.ObjectTypeDefinition descM n _ _ flds) =
-  mkObjTyInfo descM (G.NamedType n) $
-  Map.fromList [(G._fldName fld, fromFldDef fld) | fld <- flds]
+fromObjTyDef :: G.ObjectTypeDefinition -> TypeLoc -> ObjTyInfo
+fromObjTyDef (G.ObjectTypeDefinition descM n _ _ flds) loc =
+  mkObjTyInfo descM (G.NamedType n) fldMap loc
+  where
+    fldMap = Map.fromList [(G._fldName fld, fromFldDef fld loc) | fld <- flds]
 
 type InpObjFldMap = Map.HashMap G.Name InpValInfo
 
@@ -144,29 +158,39 @@ data InpObjTyInfo
   { _iotiDesc   :: !(Maybe G.Description)
   , _iotiName   :: !G.NamedType
   , _iotiFields :: !InpObjFldMap
+  , _iotiLoc    :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
-fromInpObjTyDef :: G.InputObjectTypeDefinition -> InpObjTyInfo
-fromInpObjTyDef (G.InputObjectTypeDefinition descM n _ inpFlds) =
-  InpObjTyInfo descM (G.NamedType n) $
-  Map.fromList [(G._ivdName inpFld, fromInpValDef inpFld) | inpFld <- inpFlds]
+fromInpObjTyDef :: G.InputObjectTypeDefinition -> TypeLoc -> InpObjTyInfo
+fromInpObjTyDef (G.InputObjectTypeDefinition descM n _ inpFlds) loc =
+  InpObjTyInfo descM (G.NamedType n) fldMap loc
+  where
+    fldMap = Map.fromList
+      [(G._ivdName inpFld, fromInpValDef inpFld) | inpFld <- inpFlds]
 
 data ScalarTyInfo
   = ScalarTyInfo
   { _stiDesc :: !(Maybe G.Description)
   , _stiType :: !PGColType
+  , _stiLoc  :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
-fromScalarTyDef :: G.ScalarTypeDefinition -> Either Text ScalarTyInfo
-fromScalarTyDef (G.ScalarTypeDefinition descM n _) =
-  ScalarTyInfo descM <$> case n of
-  "Int"     -> return PGInteger
-  "Float"   -> return PGFloat
-  "String"  -> return PGText
-  "Boolean" -> return PGBoolean
-  -- TODO: is this correct?
-  "ID"      -> return $ PGUnknown "ID" --PGText
-  _         -> throwError $ "unexpected type: " <> G.unName n
+fromScalarTyDef
+  :: G.ScalarTypeDefinition
+  -> TypeLoc
+  -> Either Text ScalarTyInfo
+fromScalarTyDef (G.ScalarTypeDefinition descM n _) loc =
+  ScalarTyInfo descM <$> ty <*> pure loc
+  where
+    ty = case n of
+      "Int"     -> return PGInteger
+      "Float"   -> return PGFloat
+      "String"  -> return PGText
+      "Boolean" -> return PGBoolean
+      -- TODO: is this correct?
+      "ID"      -> return $ PGUnknown "ID" --PGText
+      -- FIXME: is this correct for hasura scalar also?
+      _         -> return $ PGUnknown $ G.unName n --throwError $ "unexpected type: " <> G.unName n
 
 data TypeInfo
   = TIScalar !ScalarTyInfo
@@ -210,25 +234,25 @@ mkTyInfoMap :: [TypeInfo] -> TypeMap
 mkTyInfoMap tyInfos =
   Map.fromList [(getNamedTy tyInfo, tyInfo) | tyInfo <- tyInfos]
 
-fromTyDef :: G.TypeDefinition -> Either Text TypeInfo
-fromTyDef = \case
-  G.TypeDefinitionScalar t -> TIScalar <$> fromScalarTyDef t
-  G.TypeDefinitionObject t -> return $ TIObj $ fromObjTyDef t
+fromTyDef :: G.TypeDefinition -> TypeLoc -> Either Text TypeInfo
+fromTyDef tyDef loc = case tyDef of
+  G.TypeDefinitionScalar t -> TIScalar <$> fromScalarTyDef t loc
+  G.TypeDefinitionObject t -> return $ TIObj $ fromObjTyDef t loc
   G.TypeDefinitionInterface t ->
     throwError $ "unexpected interface: " <> showName (G._itdName t)
   G.TypeDefinitionUnion t ->
     throwError $ "unexpected union: " <> showName (G._utdName t)
-  G.TypeDefinitionEnum t -> return $ TIEnum $ fromEnumTyDef t
-  G.TypeDefinitionInputObject t -> return $ TIInpObj $ fromInpObjTyDef t
+  G.TypeDefinitionEnum t -> return $ TIEnum $ fromEnumTyDef t loc
+  G.TypeDefinitionInputObject t -> return $ TIInpObj $ fromInpObjTyDef t loc
 
-fromTyDefQ :: G.TypeDefinition -> TH.Q TH.Exp
-fromTyDefQ tyDef = case fromTyDef tyDef of
+fromTyDefQ :: G.TypeDefinition -> TypeLoc -> TH.Q TH.Exp
+fromTyDefQ tyDef loc = case fromTyDef tyDef loc of
   Left e  -> fail $ T.unpack e
   Right t -> TH.lift t
 
-fromSchemaDocQ :: G.SchemaDocument -> TH.Q TH.Exp
-fromSchemaDocQ (G.SchemaDocument tyDefs _ _ _) =
-  TH.ListE <$> mapM fromTyDefQ tyDefs
+fromSchemaDocQ :: G.SchemaDocument -> TypeLoc -> TH.Q TH.Exp
+fromSchemaDocQ (G.SchemaDocument tyDefs _ _ _) loc =
+  TH.ListE <$> mapM (flip fromTyDefQ loc) tyDefs
 
 defaultSchema :: G.SchemaDocument
 defaultSchema = $(G.parseSchemaDocQ "src-rsr/schema.graphql")

@@ -108,6 +108,7 @@ import           GHC.Generics                (Generic)
 import qualified Data.HashMap.Strict         as M
 import qualified Data.HashSet                as HS
 import qualified Data.Text                   as T
+import qualified Network.URI.Extended        as N
 import qualified PostgreSQL.Binary.Decoding  as PD
 
 data TableObjId
@@ -463,9 +464,9 @@ type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
 
 data SchemaCache
   = SchemaCache
-  { scTables         :: !TableCache
-  , scQTemplates     :: !QTemplateCache
-  , scRemoteResolver :: !(Maybe (Text, [HeaderConf])) -- url
+  { scTables          :: !TableCache
+  , scQTemplates      :: !QTemplateCache
+  , scRemoteResolvers :: ![(N.URI, [HeaderConf])]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
@@ -514,7 +515,7 @@ delQTemplateFromCache qtn = do
 --   askSchemaCache = get
 
 emptySchemaCache :: SchemaCache
-emptySchemaCache = SchemaCache (M.fromList []) (M.fromList []) Nothing
+emptySchemaCache = SchemaCache (M.fromList []) (M.fromList []) []
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do

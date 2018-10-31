@@ -73,20 +73,17 @@ buildTx userInfo gCtx fld = do
 
 -- {-# SCC resolveFld #-}
 resolveFld
-  :: UserInfo -> UniGCtx
+  :: UserInfo -> GCtx
   -> G.OperationType
   -> Field
-  -- -> HTTP.Manager
-  -- -> BL.ByteString
   -> Q.TxE QErr BL.ByteString
 resolveFld userInfo gCtx opTy fld =
   case _fName fld of
     "__type"     -> J.encode <$> runReaderT (typeR fld) gCtx
     "__schema"   -> J.encode <$> runReaderT (schemaR fld) gCtx
     "__typename" -> return $ J.encode $ mkRootTypeName opTy
-    _            -> buildTx userInfo hsraCtx fld
+    _            -> buildTx userInfo gCtx fld
   where
-    hsraCtx = _ugHasuraCtx gCtx
     mkRootTypeName :: G.OperationType -> Text
     mkRootTypeName = \case
       G.OperationTypeQuery        -> "query_root"
@@ -94,7 +91,7 @@ resolveFld userInfo gCtx opTy fld =
       G.OperationTypeSubscription -> "subscription_root"
 
 resolveSelSet
-  :: UserInfo -> UniGCtx --GCtx
+  :: UserInfo -> GCtx
   -> G.OperationType
   -> SelSet
   -- -> HTTP.Manager

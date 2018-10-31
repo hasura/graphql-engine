@@ -203,7 +203,7 @@ validateNamedTypeVal inpValParser nt val = do
     TIEnum eti ->
       withParsed (getEnum inpValParser) val $
       fmap (AGEnum nt) . mapM (validateEnum eti)
-    TIScalar (ScalarTyInfo _ pgColTy) ->
+    TIScalar (ScalarTyInfo _ pgColTy _) ->
       withParsed (getScalar inpValParser) val $
       fmap (AGScalar pgColTy) . mapM (validateScalar pgColTy)
   where

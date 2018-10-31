@@ -232,6 +232,7 @@ CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id);
 
 CREATE TABLE hdb_catalog.custom_resolver (
   id BIGSERIAL PRIMARY KEY,
+  name TEXT UNIQUE,
   url TEXT,
   url_from_env TEXT,
   headers json,

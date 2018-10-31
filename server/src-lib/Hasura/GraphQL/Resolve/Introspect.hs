@@ -66,7 +66,7 @@ scalarR
   => ScalarTyInfo
   -> Field
   -> m J.Object
-scalarR (ScalarTyInfo descM pgColType) fld =
+scalarR (ScalarTyInfo descM pgColType _) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"  -> retJT "__Type"
@@ -91,8 +91,8 @@ objectTypeR (ObjTyInfo descM n flds) fld =
     "description" -> retJ $ fmap G.unDescription descM
     "interfaces"  -> retJ ([] :: [()])
     "fields"      -> fmap J.toJSON $ mapM (`fieldR` subFld) $
-                     sortBy (comparing _fiName) $
-                     filter notBuiltinFld $ Map.elems flds
+                    sortBy (comparing _fiName) $
+                    filter notBuiltinFld $ Map.elems flds
     _             -> return J.Null
 
 notBuiltinFld :: ObjFldInfo -> Bool
@@ -108,7 +108,7 @@ enumTypeR
   => EnumTyInfo
   -> Field
   -> m J.Object
-enumTypeR (EnumTyInfo descM n vals) fld =
+enumTypeR (EnumTyInfo descM n vals _) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"  -> retJT "__Type"
@@ -126,7 +126,7 @@ inputObjR
   => InpObjTyInfo
   -> Field
   -> m J.Object
-inputObjR (InpObjTyInfo descM nt flds) fld =
+inputObjR (InpObjTyInfo descM nt flds _) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"  -> retJT "__Type"
@@ -193,7 +193,7 @@ fieldR
   :: ( MonadReader r m, Has TypeMap r
      , MonadError QErr m)
   => ObjFldInfo -> Field -> m J.Object
-fieldR (ObjFldInfo descM n params ty) fld =
+fieldR (ObjFldInfo descM n params ty _) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"   -> retJT "__Field"
@@ -274,17 +274,15 @@ schemaR
 schemaR fld =
   withSubFields (_fSelSet fld) $ \subFld -> do
   (tyMap :: TypeMap) <- asks getter
-  --liftIO $ print $ _fName subFld
-  --liftIO $ print $ Map.keys tyMap
   case _fName subFld of
     "__typename"   -> retJT "__Schema"
     "types"        -> fmap J.toJSON $ mapM (namedTypeR' subFld) $
-                      sortOn getNamedTy $ Map.elems tyMap
+                      sortBy (comparing getNamedTy) $ Map.elems tyMap
     "queryType"    -> J.toJSON <$> namedTypeR (G.NamedType "query_root") subFld
     "mutationType" -> typeR' "mutation_root" subFld
     "subscriptionType" -> typeR' "subscription_root" subFld
     "directives"   -> J.toJSON <$> mapM (directiveR subFld)
-                      (sortOn _diName defaultDirectives)
+                      (sortBy (comparing _diName) defaultDirectives)
     _              -> return J.Null
 
 typeR
