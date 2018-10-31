@@ -49,7 +49,7 @@ export const SET_TYPE_CONFIG = 'ModifyTable/SET_TYPE_CONFIG';
 
 /* */
 
-const queriesWithPermColumns = ['select', 'update'];
+const queriesWithPermColumns = ['select', 'update', 'insert'];
 const permChangeTypes = {
   save: 'update',
   delete: 'delete',
