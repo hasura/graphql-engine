@@ -8,6 +8,7 @@ module Hasura.RQL.Types.Subscribe
   , SubscribeColumns(..)
   , TriggerName
   , TriggerId
+  , Ops(..)
   , EventId
   , TriggerOpsDef(..)
   , EventTrigger(..)
@@ -18,6 +19,7 @@ module Hasura.RQL.Types.Subscribe
   , HeaderConf(..)
   , HeaderValue(..)
   , HeaderName
+  , EventHeaderInfo(..)
   ) where
 
 import           Data.Aeson
@@ -35,6 +37,8 @@ type TriggerId   = T.Text
 type EventId     = T.Text
 type HeaderName  = T.Text
 
+data Ops = INSERT | UPDATE | DELETE deriving (Show)
+
 data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift)
 
 instance FromJSON SubscribeColumns where
@@ -51,6 +55,7 @@ instance ToJSON SubscribeColumns where
 data SubscribeOpSpec
   = SubscribeOpSpec
   { sosColumns :: !SubscribeColumns
+  , sosPayload :: !(Maybe SubscribeColumns)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
@@ -85,6 +90,14 @@ instance ToJSON HeaderConf where
   toJSON (HeaderConf name (HVValue val)) = object ["name" .= name, "value" .= val]
   toJSON (HeaderConf name (HVEnv val)) = object ["name" .= name, "value_from_env" .= val]
 
+data EventHeaderInfo
+  = EventHeaderInfo
+  { ehiHeaderConf  :: !HeaderConf
+  , ehiCachedValue :: !T.Text
+  } deriving (Show, Eq, Lift)
+
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventHeaderInfo)
+
 data CreateEventTriggerQuery
   = CreateEventTriggerQuery
   { cetqName      :: !T.Text
@@ -117,7 +130,14 @@ instance FromJSON CreateEventTriggerQuery where
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
+    mapM_ checkEmptyCols [insert, update, delete]
     return $ CreateEventTriggerQuery name table insert update delete retryConf webhook headers replace
+    where
+      checkEmptyCols spec
+        = case spec of
+        Just (SubscribeOpSpec (SubCArray cols) _) -> when (null cols) (fail "found empty column specification")
+        Just (SubscribeOpSpec _ (Just (SubCArray cols)) ) -> when (null cols) (fail "found empty payload specification")
+        _ -> return ()
   parseJSON _ = fail "expecting an object"
 
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)

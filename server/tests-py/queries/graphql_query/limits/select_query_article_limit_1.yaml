@@ -13,7 +13,7 @@ response:
 query:
   query: |
     query {
-      article(limit: 1, order_by: id_desc) {
+      article(limit: 1, order_by: {id: desc}) {
         id
         title
         content

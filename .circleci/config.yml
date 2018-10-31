@@ -90,34 +90,19 @@ refs:
         at: /build
     - *wait_for_postgres
     - run:
-        name: run the server in background
-        working_directory: ./server
+        name: Run Python tests
         environment:
-          HASURA_GRAPHQL_DATABASE_URL: postgres://gql_test:@localhost:5432/gql_test
-          EVENT_WEBHOOK_HEADER: MyEnvValue
-        background: true
+          HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
+          GRAPHQL_ENGINE: '/build/_server_output/graphql-engine'
         command: |
-          /build/_server_output/graphql-engine serve
+          apt-get update
+          apt install --yes jq
+          OUTPUT_FOLDER=/build/_server_test_output/$PG_VERSION .circleci/test-server.sh
     - run:
-        name: create test output dir
-        command: |
-          mkdir -p /build/_server_test_output/$PG_VERSION
-    - *wait_for_hge
-    - run:
-        name: pytest the server
-        working_directory: ./server/tests-py
-        environment:
-          DATABASE_URL: postgres://gql_test:@localhost:5432/gql_test
-          HGE_URL: http://localhost:8080
-        command: |
-          pip3 install -r requirements.txt
-          pytest -vv --hge-url="$HGE_URL" --pg-url="$DATABASE_URL"
-    - run:
-        name: stop the server and generate coverage report
+        name: Generate coverage report
         working_directory: ./server
         command: |
-          kill -2 $(ps -e | grep graphql-engine | awk '{print $1}')
-          stack --system-ghc hpc report graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
+          stack --system-ghc hpc report /build/_server_test_output/$PG_VERSION/graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
     - store_artifacts:
         path: /build/_server_test_output
         destination: server_test
@@ -198,7 +183,7 @@ jobs:
       PG_VERSION: "10_4"
     docker:
     - image: hasura/graphql-engine-server-builder:v0.3.2
-    - image: circleci/postgres:10.4-alpine
+    - image: circleci/postgres:10.4-alpine-postgis
       <<: *test_pg_env
 
   pytest_server_pg_9.6:
@@ -207,7 +192,7 @@ jobs:
       PG_VERSION: "9_6"
     docker:
     - image: hasura/graphql-engine-server-builder:v0.3.2
-    - image: circleci/postgres:9.6-alpine
+    - image: circleci/postgres:9.6-alpine-postgis
       <<: *test_pg_env
 
   pytest_server_pg_9.5:
@@ -216,7 +201,7 @@ jobs:
       PG_VERSION: "9_5"
     docker:
     - image: hasura/graphql-engine-server-builder:v0.3.2
-    - image: circleci/postgres:9.5-alpine
+    - image: circleci/postgres:9.5-alpine-postgis
       <<: *test_pg_env
 
   # test and build cli
@@ -268,7 +253,7 @@ jobs:
     - image: hasura/graphql-engine-console-builder:v0.3
       environment:
         CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
-    - image: circleci/postgres:10-alpine
+    - image: circleci/postgres:10-alpine-postgis
       environment:
         POSTGRES_USER: gql_test
         POSTGRES_DB: gql_test

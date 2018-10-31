@@ -2,6 +2,8 @@ Guides: Deployment
 ==================
 
 - :doc:`Deploy on Digital Ocean using Docker <digital-ocean>`
+- :doc:`Digital Ocean One-click App <digital-ocean-one-click>`
+- `Blog: Instant GraphQL on AWS RDS <https://blog.hasura.io/instant-graphql-on-aws-rds-1edfb85b5985>`__
 
 .. note::
    The above are guides to deploy Hasura GraphQL engine on some specific platforms.
@@ -14,3 +16,4 @@ Guides: Deployment
    :hidden:
 
    On Digital Ocean using Docker <digital-ocean>
+   DigitalOcean One-click App <digital-ocean-one-click>

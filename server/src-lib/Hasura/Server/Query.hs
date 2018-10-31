@@ -10,10 +10,11 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax   (Lift)
 
+import qualified Data.Aeson.Text              as AT
 import qualified Data.ByteString.Builder      as BB
 import qualified Data.ByteString.Lazy         as BL
-import qualified Data.HashMap.Strict          as Map
 import qualified Data.Sequence                as Seq
+import qualified Data.Text.Lazy               as LT
 import qualified Data.Vector                  as V
 
 import           Hasura.Prelude
@@ -25,7 +26,6 @@ import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.DML.Returning     (encodeJSONVector)
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query            as Q
@@ -105,7 +105,7 @@ runQuery
 runQuery pool isoL userInfo sc query = do
   tx <- liftEither $ buildTxAny userInfo sc query
   res <- liftIO $ runExceptT $ Q.runTx pool (isoL, Nothing) $
-         setHeadersTx userInfo >> tx
+         setHeadersTx (userVars userInfo) >> tx
   liftEither res
 
 queryNeedsReload :: RQLQuery -> Bool
@@ -218,11 +218,11 @@ buildTxAny userInfo sc rq = case rq of
                , finalSc
                )
 
-setHeadersTx :: UserInfo -> Q.TxE QErr ()
-setHeadersTx userInfo =
-  forM_ hdrs $ \h -> Q.unitQE defaultTxErrorHandler (mkQ h) () False
+setHeadersTx :: UserVars -> Q.TxE QErr ()
+setHeadersTx uVars =
+  Q.unitQE defaultTxErrorHandler setSess () False
   where
-    hdrs = Map.toList $ Map.delete accessKeyHeader
-      $ userHeaders userInfo
-    mkQ (h, v) = Q.fromText $
-      "SET LOCAL hasura." <> dropAndSnakeCase h <> " =  " <> pgFmtLit v
+    toStrictText = LT.toStrict . AT.encodeToLazyText
+    setSess = Q.fromText $
+      "SET LOCAL \"hasura.user\" = " <>
+      pgFmtLit (toStrictText uVars)

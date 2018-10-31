@@ -1,0 +1,45 @@
+- description: Insert a route as a geojson MultiLineString
+  url: /v1alpha1/graphql
+  status: 200
+  response:
+    data:
+      insert_route:
+        returning:
+        - id: 1
+          name: Foo
+          route: &route
+            coordinates:
+            -
+              - [43.75049, 11.03207]
+              - [43.80009, 11.03208]
+            -
+              - [43.80009, 11.03208]
+              - [42.60009, 10.13248]
+            type: MultiLineString
+            crs:
+              type: name
+              properties:
+                name: 'urn:ogc:def:crs:EPSG::4326'
+  query:
+    variables:
+      routes:
+      - name: Foo
+        route: *route
+    query: |
+      mutation insertRoute($routes: [route_insert_input!]!) {
+        insert_route(objects: $routes) {
+          returning{
+            id
+            name
+            route
+          }
+        }
+      }
+- description: Delete the inserted route
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        delete from route

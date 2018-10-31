@@ -1,0 +1,79 @@
+- description: Insert a geometry collection
+  url: /v1alpha1/graphql
+  status: 200
+  response:
+    data:
+      insert_geometry_collection:
+        returning:
+        - id: 1
+          geometries: &geometry
+            type: GeometryCollection
+            geometries:
+            - type: Point
+              coordinates: [43.75049, 11.03207]
+  
+            - type: MultiPoint
+              coordinates:
+              - [43.75049, 11.03207]
+              - [43.80009, 11.03208]
+              - [43.80009, 11.03308]
+  
+            - type: LineString
+              coordinates:
+              - [43.75049, 11.03207]
+              - [43.80009, 11.03208]
+  
+            - type: MultiLineString
+              coordinates:
+              - - [43.75049, 11.03207]
+                - [43.80009, 11.03208]
+              - - [43.80009, 11.03208]
+                - [42.60009, 10.13248]
+  
+            - type: Polygon
+              coordinates: &coords
+              - - [43.75049, 11.03207]
+                - [43.80009, 11.03208]
+                - [42.60009, 10.13248]
+                - [43.75049, 11.03207]
+  
+            - type: MultiPolygon
+              coordinates:
+              - - - [43.75049, 11.03207]
+                  - [43.80009, 11.03208]
+                  - [43.90009, 11.03308]
+                  - [43.75049, 11.03207]
+                - - [43.75049, 11.03207]
+                  - [41.60009, 21.03208]
+                  - [41.70009, 21.03308]
+                  - [43.75049, 11.03207]
+              - - - [23.75049, 31.03207]
+                  - [23.80009, 31.03208]
+                  - [23.80009, 31.03308]
+                  - [23.75049, 31.03207]
+  
+            crs: &crs
+              type: name
+              properties:
+                name: 'urn:ogc:def:crs:EPSG::4326'
+  query:
+    variables:
+      geometries:
+      - geometries: *geometry
+    query: |
+      mutation insertGeometries($geometries: [geometry_collection_insert_input!]!) {
+        insert_geometry_collection(objects: $geometries) {
+          returning{
+            id
+            geometries
+          }
+        }
+      }
+- description: Delete the inserted geometry collection
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        DELETE from geometry_collection
