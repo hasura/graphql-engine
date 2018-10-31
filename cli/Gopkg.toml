@@ -87,3 +87,7 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/gofrs/uuid"
+  version = "3.1.2"
