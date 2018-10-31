@@ -4,7 +4,7 @@ import { Route, IndexRedirect } from 'react-router';
 
 import { LayoutWrapper, rightBar } from '../Layout';
 
-import { CustomResolver } from '.';
+import { CustomResolver, Add } from '.';
 
 const getCustomResolverRouter = connect => {
   return (
@@ -13,6 +13,7 @@ const getCustomResolverRouter = connect => {
       <Route path="manage" component={rightBar(connect)}>
         <IndexRedirect to="resolvers" />
         <Route path="resolvers" component={CustomResolver} />
+        <Route path="add" component={Add} />
       </Route>
     </Route>
   );

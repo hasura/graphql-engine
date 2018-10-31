@@ -1,0 +1,49 @@
+@import "../../Common/Common.scss";
+
+.addPaddCommom
+{
+  padding: 10px 0;
+}
+.addPaddTop
+{
+  padding-top: 20px;
+}
+.resolverWrapper
+{
+  padding: 10px 0;
+  .resolverContent
+  {
+    padding-bottom: 10px;
+  }
+  .resolverImg
+  {
+    width: 100%;
+    height: 200px;
+    border: 1px solid #000;
+  }
+  .commonBtn
+  {
+    text-align: center;
+    padding: 20px 0;
+    padding-bottom: 10px
+  }
+  .readMore
+  {
+    padding-bottom: 10px;
+    text-align: center;
+  }
+}
+.CommonWrapper
+{
+  .radioLabel
+  {
+    padding-right: 20px;
+  }
+  .inputLabel
+  {
+    input
+    {
+      width: 300px;
+    }
+  }
+}
