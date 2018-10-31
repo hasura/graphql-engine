@@ -222,3 +222,33 @@ args:
       - is_user
       filter:
         id: X-Hasura-Resident-Id
+
+#Create insert permission for infant on resident
+- type: create_insert_permission
+  args:
+    table: resident
+    role: infant
+    permission:
+      check:
+        id: X-Hasura-Infant-Id
+      allow_upsert: false
+      set:
+        name: X-Hasura-Infant-Name
+        id: X-Hasura-Infant-Id
+      columns:
+      - age
+
+#Create select permission for infant on resident
+- type: create_select_permission
+  args:
+    table: resident
+    role: infant
+    permission:
+      columns:
+      - id
+      - name
+      - age
+      - is_user
+      filter:
+        id: X-Hasura-Infant-Id
+

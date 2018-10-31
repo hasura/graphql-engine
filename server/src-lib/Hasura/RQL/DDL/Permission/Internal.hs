@@ -47,9 +47,7 @@ instance ToJSON PermColSpec where
 
 convColSpec :: FieldInfoMap -> PermColSpec -> [PGCol]
 convColSpec _ (PCCols cols) = cols
-convColSpec cim PCStar      =
-  map pgiName $ fst $ partitionEithers $
-  map fieldInfoToEither $ M.elems cim
+convColSpec cim PCStar      = map pgiName $ getCols cim
 
 assertPermNotDefined
   :: (MonadError QErr m)

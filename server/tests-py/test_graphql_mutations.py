@@ -117,6 +117,12 @@ class TestGraphqlInsertPermission(DefaultTestQueries):
     def test_resident_user_role_insert(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/resident_user.yaml")
 
+    def test_resident_infant_role_insert(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/resident_infant.yaml")
+
+    def test_resident_infant_role_insert_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/resident_infant_fail.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/permissions"
