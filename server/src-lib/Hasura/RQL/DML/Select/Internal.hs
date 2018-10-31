@@ -263,52 +263,43 @@ buildJsonObject
   -> [(FieldName, AnnFld)] -> (S.Alias, S.SQLExp)
 buildJsonObject pfx parAls flds =
   if any ( (> 63) . T.length . getFieldNameTxt . fst ) flds
-  then withJsonBuildObj pfx parAls flds
-  else withRowToJSON pfx parAls flds
+  then withJsonBuildObj parAls jsonBuildObjExps
+  else withRowToJSON parAls rowToJsonExtrs
+  where
+    jsonBuildObjExps = concatMap (toSQLFld withAlsExp) flds
+    rowToJsonExtrs = map (toSQLFld withAlsExtr) flds
+
+    withAlsExp fldName sqlExp =
+      [S.SELit $ getFieldNameTxt fldName, sqlExp]
+    withAlsExtr fldName sqlExp =
+      S.Extractor sqlExp $ Just $ S.toAlias fldName
+
+    toSQLFld f (fldAls, fld) = f fldAls $ case fld of
+      FCol col    -> toJSONableExp (pgiType col) $
+                     S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
+      FExp e      -> S.SELit e
+      FRel annRel ->
+        let qual = case arType annRel of
+              ObjRel -> mkObjRelTableAls pfx $ arName annRel
+              ArrRel -> mkArrRelTableAls pfx parAls fldAls
+        in S.mkQIdenExp qual fldAls
+      FAgg _      -> S.mkQIdenExp (mkAggAls pfx fldAls) fldAls
 
 -- uses row_to_json to build a json object
 withRowToJSON
-  :: Iden -> FieldName
-  -> [(FieldName, AnnFld)] -> (S.Alias, S.SQLExp)
-withRowToJSON pfx parAls flds =
+  :: FieldName -> [S.Extractor] -> (S.Alias, S.SQLExp)
+withRowToJSON parAls extrs =
   (S.toAlias parAls, jsonRow)
   where
-    withAls fldName sqlExp =
-      S.Extractor sqlExp $ Just $ S.toAlias fldName
-    jsonRow = S.applyRowToJson (map toFldExtr flds)
-    toFldExtr (fldAls, fld) = withAls fldAls $ case fld of
-      FCol col    -> toJSONableExp (pgiType col) $
-                     S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
-      FExp e      -> S.SELit e
-      FRel annRel ->
-        let qual = case arType annRel of
-              ObjRel -> mkObjRelTableAls pfx $ arName annRel
-              ArrRel -> mkArrRelTableAls pfx parAls fldAls
-        in S.mkQIdenExp qual fldAls
-      FAgg _ -> S.mkQIdenExp (mkAggAls pfx fldAls) fldAls
+    jsonRow = S.applyRowToJson extrs
 
 -- uses json_build_object to build a json object
 withJsonBuildObj
-  :: Iden -> FieldName
-  -> [(FieldName, AnnFld)] -> (S.Alias, S.SQLExp)
-withJsonBuildObj pfx parAls flds =
+  :: FieldName -> [S.SQLExp] -> (S.Alias, S.SQLExp)
+withJsonBuildObj parAls exps =
   (S.toAlias parAls, jsonRow)
   where
-    withAls fldName sqlExp =
-      [S.SELit $ getFieldNameTxt fldName, sqlExp]
-
-    jsonRow = S.applyJsonBuildObj (concatMap toFldExtr flds)
-
-    toFldExtr (fldAls, fld) = withAls fldAls $ case fld of
-      FCol col    -> toJSONableExp (pgiType col) $
-                     S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
-      FExp e      -> S.SELit e
-      FRel annRel ->
-        let qual = case arType annRel of
-              ObjRel -> mkObjRelTableAls pfx $ arName annRel
-              ArrRel -> mkArrRelTableAls pfx parAls fldAls
-        in S.mkQIdenExp qual fldAls
-      FAgg _ -> S.mkQIdenExp (mkAggAls pfx fldAls) fldAls
+    jsonRow = S.applyJsonBuildObj exps
 
 processAnnOrderByItem
   :: Iden
