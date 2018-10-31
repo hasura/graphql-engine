@@ -103,6 +103,7 @@ class Main extends React.Component {
       serverVersion,
       latestServerVersion,
     } = this.props;
+    const isCustomResolver = true;
     const styles = require('./Main.scss');
     const appPrefix = '';
     const logo = require('./white-logo.svg');
@@ -211,6 +212,29 @@ class Main extends React.Component {
                     </Link>
                   </li>
                 </OverlayTrigger>
+                {isCustomResolver ? (
+                  <OverlayTrigger placement="right" overlay={tooltip.events}>
+                    <li>
+                      <Link
+                        className={
+                          currentActiveBlock === 'custom-resolver'
+                            ? styles.navSideBarActive
+                            : ''
+                        }
+                        to={appPrefix + '/custom-resolver'}
+                      >
+                        <div className={styles.iconCenter}>
+                          <i
+                            title="Custom Resolver"
+                            className="fa fa-cloud"
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <p>Custom Resolvers</p>
+                      </Link>
+                    </li>
+                  </OverlayTrigger>
+                ) : null}
                 {this.state.showEvents ? (
                   <OverlayTrigger placement="right" overlay={tooltip.events}>
                     <li>
