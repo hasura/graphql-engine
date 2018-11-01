@@ -45,8 +45,12 @@
   .radioLabel
   {
     padding-right: 20px;
-    text-align: right;
+    text-align: left;
     padding-top: 5px;
+    .radioInput
+    {
+      cursor: pointer;
+    }
   }
   .inputLabel
   {
