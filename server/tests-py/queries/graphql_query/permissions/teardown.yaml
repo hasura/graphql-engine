@@ -12,3 +12,13 @@ args:
     sql: |
       drop table author
     cascade: true
+
+- type: run_sql
+  args:
+    sql: |
+      drop table "Artist"
+
+- type: run_sql
+  args:
+    sql: |
+      drop table "Track"

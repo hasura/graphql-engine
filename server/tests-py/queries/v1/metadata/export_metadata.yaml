@@ -22,7 +22,7 @@ response:
     - using:
         foreign_key_constraint_on: author_id
       name: author
-      comment: 
+      comment: null
     array_relationships: []
     insert_permissions: []
     select_permissions: []
