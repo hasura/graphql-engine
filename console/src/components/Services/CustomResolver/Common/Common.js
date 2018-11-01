@@ -32,7 +32,13 @@ class Common extends React.Component {
         </div>
         <div className={styles.addPaddCommom}>
           <label className={styles.radioLabel + ' radio-inline col-md-3'}>
-            <input type="radio" value="" />
+            <input
+              className={styles.radioInput}
+              type="radio"
+              value=""
+              name="optradio"
+              checked
+            />
             Enter manually:
           </label>
           <label
@@ -49,7 +55,12 @@ class Common extends React.Component {
         </div>
         <div className={styles.addPaddCommom}>
           <label className={styles.radioLabel + ' radio-inline col-md-3'}>
-            <input type="radio" value="" />
+            <input
+              className={styles.radioInput}
+              type="radio"
+              name="optradio"
+              value=""
+            />
             Pick from environment variable:
           </label>
           <label
