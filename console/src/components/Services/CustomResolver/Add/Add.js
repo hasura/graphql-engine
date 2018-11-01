@@ -1,15 +1,26 @@
 import React from 'react';
 import Common from '../Common/Common';
 
+import { addResolver, RESET } from './addResolverReducer';
+
 class Add extends React.Component {
+  componentWillUnmount() {
+    this.props.dispatch({ type: RESET });
+  }
   render() {
     const styles = require('../Styles.scss');
+    const { isRequesting, dispatch } = this.props;
     return (
       <div className={styles.addWrapper}>
         <div className={styles.heading_text}>Stitch a new GraphQL schema</div>
-        <Common />
+        <Common {...this.props} />
         <div className={styles.commonBtn}>
-          <button className={styles.yellow_button}>Stitch Schema</button>
+          <button
+            className={styles.yellow_button}
+            onClick={() => dispatch(addResolver())}
+          >
+            {isRequesting ? 'Creating...' : 'Stitch Schema'}
+          </button>
           <button className={styles.default_button}>Cancel</button>
         </div>
       </div>
@@ -17,4 +28,10 @@ class Add extends React.Component {
   }
 }
 
-export default Add;
+const mapStateToProps = state => {
+  return {
+    ...state.customResolverData.addData,
+  };
+};
+
+export default connect => connect(mapStateToProps)(Add);

@@ -1,11 +1,10 @@
 import { combineReducers } from 'redux';
 
 import listReducer from './customActions';
+import addReducer from './Add/addResolverReducer';
 
 const customResolverReducer = combineReducers({
-  addData: () => {
-    return { Hello: 'World' };
-  },
+  addData: addReducer,
   listData: listReducer,
 });
 

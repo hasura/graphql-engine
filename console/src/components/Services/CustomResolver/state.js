@@ -5,6 +5,9 @@ const asyncState = {
 
 const listState = {
   resolvers: [],
+  filtered: [],
+  searchQuery: '',
+  viewResolver: '',
   ...asyncState,
 };
 
@@ -14,6 +17,11 @@ const addState = {
   headers: [],
   name: '',
   ...asyncState,
+  editState: {
+    id: -1,
+    isModify: false,
+    originalName: '',
+  },
 };
 
 export { listState, addState };

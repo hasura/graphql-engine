@@ -1,6 +1,9 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
+
+import { inputChange } from '../Add/addResolverReducer';
 
 const graphqlurl = (
   <Tooltip id="tooltip-cascade">
@@ -20,8 +23,17 @@ const schema = (
 );
 
 class Common extends React.Component {
+  handleInputChange(e) {
+    const fieldName = e.target.getAttribute('data-field-name');
+    this.props.dispatch(inputChange(fieldName, e.target.value));
+  }
+  toggleCheckBox(e) {
+    const fieldName = e.target.getAttribute('data-field-name');
+    this.props.dispatch(inputChange(fieldName, ''));
+  }
   render() {
     const styles = require('../Styles.scss');
+    const { name, manualUrl, envName } = this.props;
     return (
       <div className={styles.CommonWrapper}>
         <div className={styles.subheading_text}>
@@ -35,9 +47,10 @@ class Common extends React.Component {
             <input
               className={styles.radioInput}
               type="radio"
-              value=""
               name="optradio"
-              checked
+              data-field-name="manualUrl"
+              onChange={this.toggleCheckBox.bind(this)}
+              checked={manualUrl && manualUrl.length > 0 ? true : false}
             />
             Enter manually:
           </label>
@@ -50,6 +63,9 @@ class Common extends React.Component {
               className={'form-control'}
               type="text"
               placeholder="GraphQL server URL"
+              value={manualUrl}
+              data-field-name="manualUrl"
+              onChange={this.handleInputChange.bind(this)}
             />
           </label>
         </div>
@@ -59,7 +75,9 @@ class Common extends React.Component {
               className={styles.radioInput}
               type="radio"
               name="optradio"
-              value=""
+              data-field-name="envName"
+              onChange={this.toggleCheckBox.bind(this)}
+              checked={envName && envName.length > 0 ? true : false}
             />
             Pick from environment variable:
           </label>
@@ -72,6 +90,9 @@ class Common extends React.Component {
               className={'form-control'}
               type="text"
               placeholder="env_variable_name"
+              value={envName}
+              data-field-name="envName"
+              onChange={this.handleInputChange.bind(this)}
             />
           </label>
         </div>
@@ -122,11 +143,21 @@ class Common extends React.Component {
             className={'form-control'}
             type="text"
             placeholder="My-graphql-schema"
+            value={name}
+            data-field-name="name"
+            onChange={this.handleInputChange.bind(this)}
           />
         </label>
       </div>
     );
   }
 }
+
+Common.propTypes = {
+  name: PropTypes.string.isRequired,
+  envName: PropTypes.string.isRequired,
+  manualUrl: PropTypes.string.isRequired,
+  dispatch: PropTypes.func.isRequired,
+};
 
 export default Common;

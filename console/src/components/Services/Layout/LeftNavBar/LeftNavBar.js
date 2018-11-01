@@ -1,105 +1,25 @@
 /* eslint-disable no-unused-vars */
 
 import React from 'react';
-import { connect } from 'react-redux';
 import { Link } from 'react-router';
-import globals from '../../../../Globals';
 
 import { LISTING_SCHEMA } from '../../Data/DataActions';
 
-const appPrefix = '/data';
-
 const LeftNavBar = ({
-  schema,
-  listingSchema,
-  currentTable,
-  schemaName,
-  migrationMode,
-  children,
-  dispatch,
+  listItemTemplate,
+  dataList,
+  filtered,
+  searchQuery,
   location,
+  filterItem,
+  viewResolver,
 }) => {
   const styles = require('./LeftNavBar.scss');
   // Now schema might be null or an empty array
-  let tableLinks = (
-    <li className={styles.noTables}>
-      <i>No tables available</i>
-    </li>
-  );
-  const tables = {};
-  listingSchema.map(t => {
-    tables[t.table_name] = t;
-  });
-  const currentLocation = location ? location.pathname : '';
-  if (listingSchema && listingSchema.length) {
-    tableLinks = Object.keys(tables)
-      .sort()
-      .map((tableName, i) => {
-        let activeTableClass = '';
-        if (
-          tableName === currentTable &&
-          currentLocation.indexOf(currentTable) !== -1
-        ) {
-          activeTableClass = styles.activeTable;
-        }
-        if (tables[tableName].detail.table_type === 'BASE TABLE') {
-          return (
-            <li className={activeTableClass} key={i}>
-              <Link
-                to={
-                  appPrefix +
-                  '/schema/' +
-                  schemaName +
-                  '/tables/' +
-                  tableName +
-                  '/browse'
-                }
-                data-test={tableName}
-              >
-                <i
-                  className={styles.tableIcon + ' fa fa-table'}
-                  aria-hidden="true"
-                />
-                {tableName}
-              </Link>
-            </li>
-          );
-        }
-        return (
-          <li className={activeTableClass} key={i}>
-            <Link
-              to={
-                appPrefix +
-                '/schema/' +
-                schemaName +
-                '/views/' +
-                tableName +
-                '/browse'
-              }
-              data-test={tableName}
-            >
-              <i
-                className={styles.tableIcon + ' fa fa-table'}
-                aria-hidden="true"
-              />
-              <i>{tableName}</i>
-            </Link>
-          </li>
-        );
-      });
-  }
 
   function tableSearch(e) {
     const searchTerm = e.target.value;
-    // form new schema
-    const matchedTables = [];
-    schema.map(table => {
-      if (table.table_name.indexOf(searchTerm) !== -1) {
-        matchedTables.push(table);
-      }
-    });
-    // update schema with matchedTables
-    dispatch({ type: LISTING_SCHEMA, updatedSchemas: matchedTables });
+    filterItem(dataList, searchTerm);
   }
 
   return (
@@ -130,47 +50,42 @@ const LeftNavBar = ({
               styles.padd_left_remove
             }
           >
-            Tables ({schema.length})
+            Resolvers(
+            {dataList.length})
           </div>
-          {migrationMode ? (
-            <div
-              className={
-                'col-xs-4 text-center ' +
-                styles.padd_remove +
-                ' ' +
-                styles.sidebarCreateTable
-              }
+
+          <div
+            className={
+              'col-xs-4 text-center ' +
+              styles.padd_remove +
+              ' ' +
+              styles.sidebarCreateTable
+            }
+          >
+            <Link
+              className={styles.padd_remove_full}
+              to={'/custom-resolver/manage/add'}
             >
-              <Link
-                className={styles.padd_remove_full}
-                to={'/data/schema/' + schemaName + '/table/add'}
+              <button
+                className={styles.add_mar_right + ' btn btn-xs btn-default'}
+                data-test="sidebar-add-table"
               >
-                <button
-                  className={styles.add_mar_right + ' btn btn-xs btn-default'}
-                  data-test="sidebar-add-table"
-                >
-                  Add Table
-                </button>
-              </Link>
-            </div>
-          ) : null}
+                Add Resolver
+              </button>
+            </Link>
+          </div>
         </div>
         <ul className={styles.schemaListUl} data-test="table-links">
-          {tableLinks}
+          {listItemTemplate(
+            searchQuery ? filtered : dataList,
+            styles,
+            location,
+            viewResolver
+          )}
         </ul>
       </div>
     </div>
   );
 };
 
-const mapStateToProps = state => {
-  return {
-    schemaName: state.tables.currentSchema,
-    schema: state.tables.allSchemas,
-    listingSchema: state.tables.listingSchemas,
-    currentTable: state.tables.currentTable,
-    migrationMode: state.main.migrationMode,
-  };
-};
-
-export default connect(mapStateToProps)(LeftNavBar);
+export default LeftNavBar;

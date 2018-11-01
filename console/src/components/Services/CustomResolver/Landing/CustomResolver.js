@@ -1,12 +1,10 @@
 import React from 'react';
 import Helmet from 'react-helmet';
+import { Link } from 'react-router';
 
-import { fetchResolvers } from '../customActions';
+const appPrefix = '/custom-resolver';
 
 class CustomResolver extends React.Component {
-  componentDidMount() {
-    this.props.dispatch(fetchResolvers());
-  }
   render() {
     const styles = require('../Styles.scss');
     return (
@@ -18,9 +16,14 @@ class CustomResolver extends React.Component {
         </div>
         <div className={styles.resolverImg} />
         <div className={styles.commonBtn}>
-          <button className={styles.yellow_button}>
-            Add Remote GraphQL schema
-          </button>
+          <Link
+            className={styles.padd_remove_full}
+            to={`${appPrefix}/manage/add`}
+          >
+            <button className={styles.yellow_button}>
+              Add Remote GraphQL schema
+            </button>
+          </Link>
         </div>
         <div className={styles.readMore}>
           <a href="#" target="_blank">

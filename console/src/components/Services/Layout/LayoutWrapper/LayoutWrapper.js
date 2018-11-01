@@ -35,7 +35,7 @@ class LayoutWrapper extends React.Component {
                       </Link>
                     </div>
                   </div>
-                  <LeftNavBar />
+                  <LeftNavBar {...this.props} />
                 </li>
               </ul>
             </div>
@@ -51,6 +51,8 @@ LayoutWrapper.propTypes = {
   appPrefix: PropTypes.string.isRequired,
 };
 
-export default props => {
-  return <LayoutWrapper {...props} />;
-};
+export default (connect, mapStateToProps, mapDispatchToProps) =>
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )(LayoutWrapper);
