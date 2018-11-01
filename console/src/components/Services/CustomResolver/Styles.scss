@@ -35,15 +35,49 @@
 }
 .CommonWrapper
 {
+  .subheading_text
+  {
+    i
+    {
+      cursor: pointer;
+    }
+  }
   .radioLabel
   {
     padding-right: 20px;
+    text-align: right;
+    padding-top: 5px;
   }
   .inputLabel
   {
+    margin-left: 0;
     input
     {
       width: 300px;
+    }
+  }
+}
+.addWrapper
+{
+  .commonBtn
+  {
+    padding: 20px 0;
+    padding-top: 40px;
+    .yellow_button
+    {
+      margin-right: 20px;
+    }
+    a
+    {
+      margin-left: 20px;
+    }
+    span
+    {
+      i
+      {
+        cursor: pointer;
+        margin-left: 5px;
+      }
     }
   }
 }
