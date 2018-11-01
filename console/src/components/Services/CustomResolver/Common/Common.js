@@ -13,6 +13,12 @@ const header = (
     request headers will be forwarded
   </Tooltip>
 );
+const schema = (
+  <Tooltip id="tooltip-cascade">
+    Give this GraphQL schema a friendly name.
+  </Tooltip>
+);
+
 class Common extends React.Component {
   render() {
     const styles = require('../Styles.scss');
@@ -25,7 +31,7 @@ class Common extends React.Component {
           </OverlayTrigger>
         </div>
         <div className={styles.addPaddCommom}>
-          <label className={styles.radioLabel + ' radio-inline'}>
+          <label className={styles.radioLabel + ' radio-inline col-md-3'}>
             <input type="radio" value="" />
             Enter manually:
           </label>
@@ -42,7 +48,7 @@ class Common extends React.Component {
           </label>
         </div>
         <div className={styles.addPaddCommom}>
-          <label className={styles.radioLabel + ' radio-inline'}>
+          <label className={styles.radioLabel + ' radio-inline col-md-3'}>
             <input type="radio" value="" />
             Pick from environment variable:
           </label>
@@ -71,16 +77,10 @@ class Common extends React.Component {
           />
           <select
             className={
-              styles.select +
-              ' form-control ' +
-              styles.selectWidth +
-              ' ' +
-              styles.add_pad_left +
-              ' ' +
-              +styles.add_mar_right
+              'form-control ' + styles.add_pad_left + ' ' + styles.add_mar_right
             }
           >
-            <option disabled value="">
+            <option disabled value="-- value type --">
               -- value type --
             </option>
           </select>
@@ -96,6 +96,23 @@ class Common extends React.Component {
             placeholder="value"
           />
         </div>
+        <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
+          Schema alias *
+          <OverlayTrigger placement="right" overlay={schema}>
+            <i className="fa fa-question-circle" aria-hidden="true" />
+          </OverlayTrigger>
+        </div>
+        <label
+          className={
+            styles.inputLabel + ' radio-inline ' + styles.padd_left_remove
+          }
+        >
+          <input
+            className={'form-control'}
+            type="text"
+            placeholder="My-graphql-schema"
+          />
+        </label>
       </div>
     );
   }

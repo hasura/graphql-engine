@@ -8,6 +8,10 @@ class Add extends React.Component {
       <div className={styles.addWrapper}>
         <div className={styles.heading_text}>Stitch a new GraphQL schema</div>
         <Common />
+        <div className={styles.commonBtn}>
+          <button className={styles.yellow_button}>Stitch Schema</button>
+          <button className={styles.default_button}>Cancel</button>
+        </div>
       </div>
     );
   }
