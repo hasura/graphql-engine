@@ -102,14 +102,63 @@ class Common extends React.Component {
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
         </div>
-        <div className={`${styles.display_flex} form-group`}>
+        <div className={styles.display_flex + ' form-group'}>
           <input
             type="text"
-            className={styles.input + ' form-control ' + styles.add_mar_right}
+            className={
+              styles.input +
+              ' form-control ' +
+              styles.add_mar_right +
+              ' ' +
+              styles.defaultWidth
+            }
           />
           <select
             className={
-              'form-control ' + styles.add_pad_left + ' ' + styles.add_mar_right
+              'form-control ' +
+              styles.add_pad_left +
+              ' ' +
+              styles.add_mar_right +
+              ' ' +
+              styles.defaultWidth
+            }
+          >
+            <option disabled value="-- value type --">
+              -- value type --
+            </option>
+          </select>
+          <input
+            type="text"
+            className={
+              styles.inputDefault +
+              ' form-control ' +
+              styles.defaultWidth +
+              ' ' +
+              styles.add_pad_left
+            }
+            placeholder="value"
+          />
+          <i className={styles.fontAwosomeClose + ' fa-lg fa fa-times'} />
+        </div>
+        <div className={styles.display_flex + ' form-group'}>
+          <input
+            type="text"
+            className={
+              styles.input +
+              ' form-control ' +
+              styles.add_mar_right +
+              ' ' +
+              styles.defaultWidth
+            }
+          />
+          <select
+            className={
+              'form-control ' +
+              styles.add_pad_left +
+              ' ' +
+              styles.add_mar_right +
+              ' ' +
+              styles.defaultWidth
             }
           >
             <option disabled value="-- value type --">
