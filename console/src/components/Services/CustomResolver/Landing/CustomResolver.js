@@ -1,10 +1,12 @@
 import React from 'react';
+import Helmet from 'react-helmet';
 
 class CustomResolver extends React.Component {
   render() {
     const styles = require('../Styles.scss');
     return (
       <div className={styles.resolverWrapper}>
+        <Helmet title={'Custom Resolvers | Hasura'} />
         <div className={styles.resolverContent}>
           Add pre-CURD custom business logic like data validation, etc. or
           stitch an existing or custom GraphQL schema

@@ -1,4 +1,6 @@
 export CustomResolver from './Landing/CustomResolver';
 
-export CustomResolverRouter from './CustomResolverRouter';
+export getCustomResolverRouter from './CustomResolverRouter';
 export Add from './Add/Add';
+
+export customResolverReducer from './customResolverReducer';

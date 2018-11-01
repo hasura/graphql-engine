@@ -23,7 +23,7 @@ import globals from './Globals';
 
 import validateLogin from './components/Common/validateLogin';
 
-import { CustomResolverRouter } from './components/Services/CustomResolver';
+import { getCustomResolverRouter } from './components/Services/CustomResolver';
 
 const routes = store => {
   // load hasuractl migration status
@@ -62,7 +62,7 @@ const routes = store => {
   const makeDataRouter = dataRouterUtils.makeDataRouter;
   const makeEventRouter = eventRouterUtils.makeEventRouter;
 
-  const customResolverRouter = CustomResolverRouter(
+  const customResolverRouter = getCustomResolverRouter(
     connect,
     store,
     composeOnEnterHooks

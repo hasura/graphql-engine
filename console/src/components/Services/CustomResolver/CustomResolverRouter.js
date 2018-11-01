@@ -6,6 +6,11 @@ import { LayoutWrapper, rightBar } from '../Layout';
 
 import { CustomResolver, Add } from '.';
 
+// Objective is to render list of custom resolvers on the
+// left nav bar.
+// Custom resolvers list is fetched from hdb_catalog/custom_resolver
+// Whenever any operation happens like add resolver/delete resolver, this state should update automatically.
+
 const getCustomResolverRouter = connect => {
   return (
     <Route path="custom-resolver" component={LayoutWrapper}>
