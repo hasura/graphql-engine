@@ -1,7 +1,12 @@
 import React from 'react';
 import Helmet from 'react-helmet';
 
+import { fetchResolvers } from '../customActions';
+
 class CustomResolver extends React.Component {
+  componentDidMount() {
+    this.props.dispatch(fetchResolvers());
+  }
   render() {
     const styles = require('../Styles.scss');
     return (
@@ -27,4 +32,6 @@ class CustomResolver extends React.Component {
   }
 }
 
-export default CustomResolver;
+const landingCustomResolverGen = connect => connect()(CustomResolver);
+
+export default landingCustomResolverGen;
