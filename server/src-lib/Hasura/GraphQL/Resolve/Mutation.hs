@@ -36,10 +36,9 @@ convertReturning
   :: QualifiedTable -> G.NamedType -> SelSet -> Convert RS.AnnSel
 convertReturning qt ty selSet = do
   annFlds <- fromSelSet prepare ty selSet
-  let selFlds = RS.ASFSimple annFlds
-      tabFrom = RS.TableFrom qt $ Just frmItem
+  let tabFrom = RS.TableFrom qt $ Just frmItem
       tabPerm = RS.TablePerm (S.BELit True) Nothing
-  return $ RS.AnnSel selFlds tabFrom tabPerm RS.noTableArgs
+  return $ RS.AnnSelG annFlds tabFrom tabPerm RS.noTableArgs
   where
     frmItem = S.FIIden $ RR.qualTableToAliasIden qt
 
