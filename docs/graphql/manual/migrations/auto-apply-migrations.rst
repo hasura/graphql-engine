@@ -26,7 +26,7 @@ If you want to mount the migrations directory at some location other than
 
    HASURA_GRAPHQL_MIGRATIONS_DIR=/custom-path-for-migrations
 
-Once the migrations are ,applied the container resumes operation as a normal
+Once the migrations are applied, the container resumes operation as a normal
 Hasura GraphQL Engine server.
 
 Example:
