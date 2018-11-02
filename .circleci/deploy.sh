@@ -68,9 +68,6 @@ send_pr_to_repo() {
 
 deploy_console() {
     echo "deploying console"
-    echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-    gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
-    gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
 
     cd "$ROOT/console"
     export VERSION=$(../scripts/get-version-circleci.sh)
@@ -81,6 +78,22 @@ deploy_console() {
     unset VERSION
     unset DIST_PATH
 }
+
+# copy docker-compose-https manifests to gcr for digital ocean one-click app
+deploy_do_manifests() {
+    gsutil cp "$ROOT/install-manifests/docker-compose-https/docker-compose.yaml" \
+           gs://graphql-engine-cdn.hasura.io/install-manifests/do-one-click/docker-compose.yaml
+    gsutil cp "$ROOT/install-manifests/docker-compose-https/Caddyfile" \
+           gs://graphql-engine-cdn.hasura.io/install-manifests/do-one-click/Caddyfile
+}
+
+# setup gcloud cli tool
+setup_gcloud() {
+    echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+    gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
+    gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+}
+
 # skip deploy for pull requests
 if [[ -n "${CIRCLE_PR_NUMBER:-}" ]]; then
     echo "not deploying for PRs"
@@ -97,6 +110,8 @@ fi
 # CIRCLE_TAG
 # CIRCLE_PR_NUMBER
 # CIRCLE_BRANCH
+
+setup_gcloud
 
 RELEASE_BRANCH_REGEX="^release-v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
 if [[ "$CIRCLE_BRANCH" =~ $RELEASE_BRANCH_REGEX ]]; then
@@ -120,4 +135,6 @@ EOF
     draft_github_release
     configure_git
     send_pr_to_repo graphql-engine-heroku
+    deploy_do_manifests
+
 fi

@@ -199,9 +199,7 @@ getDependentHeaders boolExp = case boolExp of
         | otherwise -> []
       _ -> []
     parseObject o = flip concatMap (M.toList o) $ \(k, v) ->
-                             if isRQLOp k
-                             then parseOnlyString v
-                             else []
+                      bool (parseValue v) (parseOnlyString v) $ isRQLOp k
 
 valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
 valueParser columnType = \case
