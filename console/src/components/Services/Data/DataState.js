@@ -41,6 +41,7 @@ const defaultQueryPermissions = {
     check: {},
     allow_upsert: true,
     set: {},
+    columns: [],
     localSet: [
       {
         ...defaultInsertSetState,
