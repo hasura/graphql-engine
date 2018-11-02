@@ -15,7 +15,6 @@ import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.ByteString.Lazy          as BL
-import qualified Data.HashMap.Strict           as Map
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Network.URI.Extended          as N
@@ -80,6 +79,7 @@ instance J.FromJSON AddCustomResolverQuery where
     mUrlFromEnv <- o J..:? "url_from_env"
     headers     <- o J..:? "headers"
     name        <- o J..: "name"
+    when (T.null name) $ fail "name cannot be empty string"
 
     eUrlVal <- case (mUrl, mUrlFromEnv) of
       (Just url, Nothing)    -> return $ Left url

@@ -74,7 +74,7 @@ runGQ pool isoL userInfo gCtxRoleMap manager req rawReq = do
     schemaNodes =
       let qr = VT._otiFields $ _gQueryRoot gCtx
           mr = VT._otiFields <$> _gMutRoot gCtx
-      in maybe Map.empty (Map.union qr) mr
+      in maybe qr (Map.union qr) mr
 
     allEq xs = case xs of
       []     -> True

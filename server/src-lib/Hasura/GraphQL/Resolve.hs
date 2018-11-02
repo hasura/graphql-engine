@@ -7,18 +7,13 @@ module Hasura.GraphQL.Resolve
   ( resolveSelSet
   ) where
 
---import           Control.Exception                      (try)
---import           Control.Lens
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as Map
---import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
---import qualified Network.HTTP.Client                    as HTTP
---import qualified Network.Wreq                           as Wreq
 
 
 import           Hasura.GraphQL.Resolve.Context
@@ -96,8 +91,6 @@ resolveSelSet
   :: UserInfo -> GCtx
   -> G.OperationType
   -> SelSet
-  -- -> HTTP.Manager
-  -- -> BL.ByteString
   -> Q.TxE QErr BL.ByteString
 resolveSelSet userInfo gCtx opTy fields =
   fmap mkJSONObj $ forM (toList fields) $ \fld -> do
