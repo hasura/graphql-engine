@@ -38,6 +38,7 @@ class Common extends React.Component {
     const { name, manualUrl, envName } = this.props;
     const { isModify, id } = this.props.editState;
     const isDisabled = id >= 0 && !isModify;
+    const urlRequired = !manualUrl.length > 0 && !envName.length > 0;
     return (
       <div className={styles.CommonWrapper}>
         <div className={styles.subheading_text}>
@@ -72,6 +73,7 @@ class Common extends React.Component {
               data-field-name="manualUrl"
               onChange={this.handleInputChange.bind(this)}
               disabled={isDisabled}
+              required={urlRequired}
             />
           </label>
         </div>
@@ -101,6 +103,7 @@ class Common extends React.Component {
               data-field-name="envName"
               onChange={this.handleInputChange.bind(this)}
               disabled={isDisabled}
+              required={urlRequired}
             />
           </label>
         </div>
@@ -114,86 +117,12 @@ class Common extends React.Component {
           eventPrefix="CUSTOM_RESOLVER"
           headers={this.props.headers}
           dispatch={this.props.dispatch}
-          typeOptions={['static', 'env']}
+          typeOptions={[
+            { display: 'static value', value: 'static' },
+            { display: 'from env variable', value: 'env' },
+          ]}
           isDisabled={isDisabled}
         />
-        {/*
-        <div className={styles.display_flex + ' form-group'}>
-          <input
-            type="text"
-            className={
-              styles.input +
-              ' form-control ' +
-              styles.add_mar_right +
-              ' ' +
-              styles.defaultWidth
-            }
-          />
-          <select
-            className={
-              'form-control ' +
-              styles.add_pad_left +
-              ' ' +
-              styles.add_mar_right +
-              ' ' +
-              styles.defaultWidth
-            }
-          >
-            <option disabled value="-- value type --">
-              -- value type --
-            </option>
-          </select>
-          <input
-            type="text"
-            className={
-              styles.inputDefault +
-              ' form-control ' +
-              styles.defaultWidth +
-              ' ' +
-              styles.add_pad_left
-            }
-            placeholder="value"
-          />
-          <i className={styles.fontAwosomeClose + ' fa-lg fa fa-times'} />
-        </div>
-        <div className={styles.display_flex + ' form-group'}>
-          <input
-            type="text"
-            className={
-              styles.input +
-              ' form-control ' +
-              styles.add_mar_right +
-              ' ' +
-              styles.defaultWidth
-            }
-          />
-          <select
-            className={
-              'form-control ' +
-              styles.add_pad_left +
-              ' ' +
-              styles.add_mar_right +
-              ' ' +
-              styles.defaultWidth
-            }
-          >
-            <option disabled value="-- value type --">
-              -- value type --
-            </option>
-          </select>
-          <input
-            type="text"
-            className={
-              styles.inputDefault +
-              ' form-control ' +
-              styles.defaultWidth +
-              ' ' +
-              styles.add_pad_left
-            }
-            placeholder="value"
-          />
-        </div>
-        */}
         <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
           Schema alias *
           <OverlayTrigger placement="right" overlay={schema}>
@@ -213,6 +142,7 @@ class Common extends React.Component {
             data-field-name="name"
             onChange={this.handleInputChange.bind(this)}
             disabled={isDisabled}
+            required
           />
         </label>
       </div>

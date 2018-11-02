@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 import { LISTING_SCHEMA } from '../../Data/DataActions';
 
 const LeftNavBar = ({
+  appPrefix,
   listItemTemplate,
   dataList,
   filtered,
@@ -21,6 +22,7 @@ const LeftNavBar = ({
     const searchTerm = e.target.value;
     filterItem(dataList, searchTerm);
   }
+  // TODO: Make it generic so that other components can use it.
 
   return (
     <div className={styles.schemaTableList}>
@@ -50,8 +52,7 @@ const LeftNavBar = ({
               styles.padd_left_remove
             }
           >
-            Resolvers(
-            {dataList.length})
+            Schemas ({dataList.length})
           </div>
 
           <div
@@ -64,13 +65,13 @@ const LeftNavBar = ({
           >
             <Link
               className={styles.padd_remove_full}
-              to={'/custom-resolver/manage/add'}
+              to={`${appPrefix}/manage/add`}
             >
               <button
                 className={styles.add_mar_right + ' btn btn-xs btn-default'}
                 data-test="sidebar-add-table"
               >
-                Add Resolver
+                Add Schema
               </button>
             </Link>
           </div>

@@ -220,20 +220,20 @@ class Main extends React.Component {
                     <li>
                       <Link
                         className={
-                          currentActiveBlock === 'custom-resolver'
+                          currentActiveBlock === 'stitched-schemas'
                             ? styles.navSideBarActive
                             : ''
                         }
-                        to={appPrefix + '/custom-resolver'}
+                        to={appPrefix + '/stitched-schemas'}
                       >
                         <div className={styles.iconCenter}>
                           <i
-                            title="Custom Resolver"
+                            title="Stitched Schemas"
                             className="fa fa-plug"
                             aria-hidden="true"
                           />
                         </div>
-                        <p>Custom Resolvers</p>
+                        <p>Stitched Schemas</p>
                       </Link>
                     </li>
                   </OverlayTrigger>

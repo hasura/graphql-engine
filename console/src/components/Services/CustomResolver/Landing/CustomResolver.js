@@ -2,7 +2,7 @@ import React from 'react';
 import Helmet from 'react-helmet';
 import { Link } from 'react-router';
 
-const appPrefix = '/custom-resolver';
+const appPrefix = '/stitched-schemas';
 
 class CustomResolver extends React.Component {
   render() {
@@ -12,10 +12,10 @@ class CustomResolver extends React.Component {
       <div className={styles.resolverWrapper}>
         <Helmet title={'Custom Resolvers | Hasura'} />
         <div className={styles.resolverContent}>
-          Add pre-CURD custom business logic like data validation, etc. or
-          stitch an existing or custom GraphQL schema
+          Add pre-CRUD custom business logic like data validation, etc. or also
+          fetch data from another GraphQL server by stitching schemas
         </div>
-        <div className={styles.resolverImg} >
+        <div className={styles.resolverImg}>
           <img src={landingImage} />
         </div>
         <div className={styles.commonBtn}>
@@ -29,7 +29,11 @@ class CustomResolver extends React.Component {
           </Link>
         </div>
         <div className={styles.readMore}>
-          <a href="#" target="_blank">
+          <a
+            href="https://docs.hasura.io/1.0/graphql/manual/schema/custom-logic/index.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Read more
           </a>
         </div>

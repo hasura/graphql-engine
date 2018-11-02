@@ -13,13 +13,20 @@
   padding: 10px 0;
   .resolverContent
   {
+    text-align: center;
     padding-bottom: 10px;
+    font-weight: 600;
   }
   .resolverImg
   {
     width: 100%;
-    height: 200px;
-    border: 1px solid #000;
+    padding: 20px;
+    text-align: center;
+    // height: 200px;
+    // border: 1px solid #000;
+    img {
+      width: 70%;
+    }
   }
   .commonBtn
   {

@@ -129,8 +129,8 @@ class Header extends React.Component {
             -- value type --
           </option>
           {this.props.typeOptions.map((o, k) => (
-            <option key={k} value={o} data-index-id={i}>
-              {o}
+            <option key={k} value={o.value} data-index-id={i}>
+              {o.display}
             </option>
           ))}
         </select>

@@ -20,6 +20,13 @@ const refresh = (
   </Tooltip>
 );
 class Edit extends React.Component {
+  constructor() {
+    super();
+    this.editClicked = this.editClicked.bind(this);
+    this.modifyClick = this.modifyClick.bind(this);
+    this.handleDeleteResolver = this.handleDeleteResolver.bind(this);
+    this.handleCancelModify = this.handleCancelModify.bind(this);
+  }
   componentDidMount() {
     const { resolverName } = this.props.params;
     if (!resolverName) {
@@ -79,49 +86,68 @@ class Edit extends React.Component {
 
     return (
       <div className={styles.addWrapper}>
-        <div className={styles.subheading_text}>{resolverName || ''}</div>
-        <Common {...this.props} />
-        {'isModify' in editState && !editState.isModify ? (
-          <div className={styles.commonBtn}>
-            <button
-              className={styles.yellow_button}
-              onClick={this.modifyClick.bind(this)}
-            >
-              Modify
-            </button>
-            <button
-              className={styles.danger_button + ' btn-danger'}
-              onClick={this.handleDeleteResolver.bind(this)}
-              disabled={isRequesting}
-            >
-              {isRequesting ? 'Deleting ...' : 'Delete'}
-            </button>
-            <a href="#" target="_blank">
-              Refresh Schema
-            </a>
-            <span>
-              <OverlayTrigger placement="right" overlay={refresh}>
-                <i className="fa fa-question-circle" aria-hidden="true" />
-              </OverlayTrigger>
-            </span>
-          </div>
-        ) : (
-          <div className={styles.commonBtn}>
-            <button
-              className={styles.yellow_button}
-              onClick={this.editClicked.bind(this)}
-              disabled={isRequesting}
-            >
-              {isRequesting ? 'Saving' : 'Save'}
-            </button>
-            <button
-              className={styles.default_button}
-              onClick={this.handleCancelModify.bind(this)}
-            >
-              Cancel
-            </button>
-          </div>
-        )}
+        <div className={styles.subheading_text}>
+          <h3>{resolverName || ''}</h3>
+        </div>
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            this.editClicked();
+          }}
+        >
+          <Common {...this.props} />
+          {'isModify' in editState && !editState.isModify ? (
+            <div className={styles.commonBtn}>
+              <button
+                className={styles.yellow_button}
+                onClick={e => {
+                  e.preventDefault();
+                  console.log('Something');
+                  this.modifyClick();
+                }}
+              >
+                Modify
+              </button>
+              <button
+                className={styles.danger_button + ' btn-danger'}
+                onClick={e => {
+                  e.preventDefault();
+                  this.handleDeleteResolver(e);
+                }}
+                disabled={isRequesting}
+              >
+                {isRequesting ? 'Deleting ...' : 'Delete'}
+              </button>
+              <a href="#" target="_blank">
+                Refresh Schema
+              </a>
+              <span>
+                <OverlayTrigger placement="right" overlay={refresh}>
+                  <i className="fa fa-question-circle" aria-hidden="true" />
+                </OverlayTrigger>
+              </span>
+            </div>
+          ) : (
+            <div className={styles.commonBtn}>
+              <button
+                className={styles.yellow_button}
+                type="submit"
+                disabled={isRequesting}
+              >
+                {isRequesting ? 'Saving' : 'Save'}
+              </button>
+              <button
+                className={styles.default_button}
+                onClick={e => {
+                  e.preventDefault();
+                  this.handleCancelModify();
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </form>
       </div>
     );
   }

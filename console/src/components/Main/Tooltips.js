@@ -14,7 +14,7 @@ export const events = (
 );
 
 export const customresolver = (
-  <Tooltip id="tooltip-customresolver">Manage Custom Resolvers</Tooltip>
+  <Tooltip id="tooltip-customresolver">Manage Stitched Schemas</Tooltip>
 );
 
 export const secureEndpoint = (

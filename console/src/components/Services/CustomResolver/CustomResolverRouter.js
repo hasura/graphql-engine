@@ -15,13 +15,13 @@ import { fetchResolvers, FILTER_RESOLVER } from './customActions';
 // Custom resolvers list is fetched from hdb_catalog/custom_resolver
 // Whenever any operation happens like add resolver/delete resolver, this state should update automatically.
 
-const appPrefix = '/custom-resolver';
+const appPrefix = '/stitched-schemas';
 
 const listItem = (dataList, styles, currentLocation, currentResolver) => {
   if (dataList.length === 0) {
     return (
       <li className={styles.noTables}>
-        <i>No resolvers available</i>
+        <i>No remote schemas available</i>
       </li>
     );
   }
@@ -74,7 +74,7 @@ const leftNavMapStateToProps = state => {
     searchQuery: state.customResolverData.listData.searchQuery,
     viewResolver: state.customResolverData.listData.viewResolver,
     listItemTemplate: listItem,
-    appPrefix: '/custom-resolver',
+    appPrefix,
   };
 };
 
@@ -108,7 +108,7 @@ const fetchInitialData = ({ dispatch, getState }) => {
 const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
   return (
     <Route
-      path="custom-resolver"
+      path="stitched-schemas"
       component={layoutConnector(
         connect,
         leftNavMapStateToProps,
@@ -118,8 +118,8 @@ const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
     >
       <IndexRedirect to="manage" />
       <Route path="manage" component={rightBar(connect)}>
-        <IndexRedirect to="resolvers" />
-        <Route path="resolvers" component={landingCustomResolverGen(connect)} />
+        <IndexRedirect to="schemas" />
+        <Route path="schemas" component={landingCustomResolverGen(connect)} />
         <Route path="add" component={addConnector(connect)} />
         <Route path=":resolverName/edit" component={editConnector(connect)} />
       </Route>
@@ -128,3 +128,4 @@ const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
 };
 
 export default getCustomResolverRouter;
+export { appPrefix };

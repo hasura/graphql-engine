@@ -13,17 +13,26 @@ class Add extends React.Component {
     return (
       <div className={styles.addWrapper}>
         <div className={styles.heading_text}>Stitch a new GraphQL schema</div>
-        <Common {...this.props} />
-        <div className={styles.commonBtn}>
-          <button
-            className={styles.yellow_button}
-            onClick={() => dispatch(addResolver())}
-            disabled={isRequesting}
-          >
-            {isRequesting ? 'Creating...' : 'Stitch Schema'}
-          </button>
-          <button className={styles.default_button}>Cancel</button>
-        </div>
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            dispatch(addResolver());
+          }}
+        >
+          <Common {...this.props} />
+          <div className={styles.commonBtn}>
+            <button
+              type="submit"
+              className={styles.yellow_button}
+              disabled={isRequesting}
+            >
+              {isRequesting ? 'Creating...' : 'Stitch Schema'}
+            </button>
+            {/*
+            <button className={styles.default_button}>Cancel</button>
+            */}
+          </div>
+        </form>
       </div>
     );
   }

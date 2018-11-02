@@ -11,6 +11,7 @@ import { fetchResolvers } from '../customActions';
 import { generateHeaderSyms } from '../../Layout/ReusableHeader/HeaderReducer';
 import { makeRequest } from '../customActions';
 // import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
+import { appPrefix } from '../CustomResolverRouter';
 
 /* */
 const MANUAL_URL_CHANGED = '@addResolver/MANUAL_URL_CHANGED';
@@ -43,7 +44,6 @@ const inputEventMap = {
 
 /* Action creators */
 const inputChange = (type, data) => {
-  console.log('type');
   return dispatch => dispatch({ type: inputEventMap[type], data });
 };
 
@@ -71,6 +71,61 @@ const getReqHeader = headers => {
   return requestHeader;
 };
 
+const fetchResolver = resolver => {
+  return (dispatch, getState) => {
+    const url = Endpoints.getSchema;
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify({
+        type: 'select',
+        args: {
+          table: {
+            name: 'custom_resolver',
+            schema: 'hdb_catalog',
+          },
+          columns: ['*'],
+          where: {
+            name: resolver,
+          },
+        },
+      }),
+    };
+    dispatch({ type: FETCHING_INDIV_RESOLVER });
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        if (data.length > 0) {
+          dispatch({ type: RESOLVER_FETCH_SUCCESS, data: data });
+          const headerObj = [];
+          data[0].headers.forEach(d => {
+            headerObj.push({
+              name: d.name,
+              value: d.value ? d.value : d.value_from_env,
+              type: d.value ? 'static' : 'env',
+            });
+          });
+          headerObj.push({
+            name: '',
+            type: '',
+            value: '',
+          });
+          dispatch({
+            type: getHeaderEvents.UPDATE_HEADERS,
+            data: [...headerObj],
+          });
+          return Promise.resolve();
+        }
+        return dispatch(push(`${appPrefix}`));
+      },
+      error => {
+        console.error('Failed to fetch resolver' + JSON.stringify(error));
+        return dispatch({ type: RESOLVER_FETCH_FAIL, data: error });
+      }
+    );
+  };
+};
+
 const addResolver = () => {
   return (dispatch, getState) => {
     const currState = getState().customResolverData.addData;
@@ -92,7 +147,7 @@ const addResolver = () => {
     }
     /* TODO: Add mandatory fields validation */
 
-    const migrationName = 'create_resolver_' + currState.name.trim();
+    const migrationName = 'create_stitch_schema_' + currState.name.trim();
 
     const payload = {
       type: 'add_custom_resolver',
@@ -122,14 +177,14 @@ const addResolver = () => {
       args: downQueryArgs,
     };
 
-    const requestMsg = 'Creating resolver ...';
-    const successMsg = 'Resolver created';
-    const errorMsg = 'Create resolver failed';
+    const requestMsg = 'Stitching schema...';
+    const successMsg = 'Schema stitched successfully';
+    const errorMsg = 'Stitching schema failed';
 
     const customOnSuccess = data => {
       Promise.all([
         dispatch({ type: RESET, data: data }),
-        dispatch(push(`/custom-resolver/manage/${resolveObj.name}/edit`)),
+        dispatch(push(`${appPrefix}/manage/${resolveObj.name}/edit`)),
         dispatch(fetchResolvers()),
         dispatch({ type: getHeaderEvents.RESET_HEADER, data: data }),
       ]);
@@ -153,25 +208,6 @@ const addResolver = () => {
         errorMsg
       )
     );
-    /*
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        return Promise.all([
-          dispatch({ type: RESET, data: data }),
-          dispatch(push(`/custom-resolver/manage/${resolveObj.name}/edit`)),
-          dispatch(fetchResolvers()),
-          dispatch({ type: getHeaderEvents.RESET, data: data }),
-          Promise.resolve(),
-        ]);
-      },
-      error => {
-        console.error('Failed to delete triggers' + JSON.stringify(error));
-        dispatch({ type: ADD_RESOLVER_FAIL, data: error });
-        alert(JSON.stringify(error));
-        return Promise.reject();
-      }
-    );
-    */
   };
 };
 
@@ -182,7 +218,7 @@ const deleteResolver = () => {
     const resolveObj = {
       name: currState.editState.originalName,
     };
-    const migrationName = 'delete_resolver_' + resolveObj.name.trim();
+    const migrationName = 'delete_stitch_schema_' + resolveObj.name.trim();
     const payload = {
       type: 'delete_custom_resolver',
       args: {
@@ -209,22 +245,20 @@ const deleteResolver = () => {
       type: 'bulk',
       args: downQueryArgs,
     };
-    const requestMsg = 'Deleting resolver...';
-    const successMsg = 'Resolver deleted';
-    const errorMsg = 'Delete resolver failed';
+    const requestMsg = 'Deleting schema...';
+    const successMsg = 'Schema deleted successfully';
+    const errorMsg = 'Delete schema failed';
 
     const customOnSuccess = data => {
       // dispatch({ type: REQUEST_SUCCESS });
-      return Promise.all([
+      Promise.all([
         dispatch({ type: RESET, data: data }),
-        dispatch(push('/custom-resolver')),
+        dispatch(push(appPrefix)),
         dispatch(fetchResolvers()),
       ]);
     };
     const customOnError = error => {
-      return Promise.all([
-        dispatch({ type: DELETE_RESOLVER_FAIL, data: error }),
-      ]);
+      Promise.all([dispatch({ type: DELETE_RESOLVER_FAIL, data: error })]);
     };
 
     dispatch({ type: DELETING_RESOLVER });
@@ -249,7 +283,8 @@ const modifyResolver = () => {
     // const url = Endpoints.getSchema;
     const upQueryArgs = [];
     const downQueryArgs = [];
-    const migrationName = 'update_resolver_' + currState.name.trim();
+    const migrationName = 'update_stitch_schema_' + currState.name.trim();
+    const schemaName = currState.name.trim();
     const deleteResolverUp = {
       type: 'delete_custom_resolver',
       args: {
@@ -323,22 +358,21 @@ const modifyResolver = () => {
       type: 'bulk',
       args: downQueryArgs,
     };
-    const requestMsg = 'Modifying resolver...';
-    const successMsg = 'Resolver modified';
-    const errorMsg = 'Modify resolver failed';
+    const requestMsg = 'Modifying schema...';
+    const successMsg = 'Schema modified';
+    const errorMsg = 'Modify schema failed';
 
     const customOnSuccess = data => {
       // dispatch({ type: REQUEST_SUCCESS });
-      return Promise.all([
+      Promise.all([
         dispatch({ type: RESET, data: data }),
-        dispatch(push(`/custom-resolver/manage/${resolveObj.name}/edit`)),
         dispatch(fetchResolvers()),
-      ]);
+      ]).then(() => {
+        return dispatch(fetchResolver(schemaName));
+      });
     };
     const customOnError = error => {
-      return Promise.all([
-        dispatch({ type: MODIFY_RESOLVER_FAIL, data: error }),
-      ]);
+      Promise.all([dispatch({ type: MODIFY_RESOLVER_FAIL, data: error })]);
     };
 
     dispatch({ type: MODIFYING_RESOLVER });
@@ -353,63 +387,6 @@ const modifyResolver = () => {
         successMsg,
         errorMsg
       )
-    );
-  };
-};
-
-const fetchResolver = resolver => {
-  return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
-    const options = {
-      credentials: globalCookiePolicy,
-      method: 'POST',
-      headers: dataHeaders(getState),
-      body: JSON.stringify({
-        type: 'select',
-        args: {
-          table: {
-            name: 'custom_resolver',
-            schema: 'hdb_catalog',
-          },
-          columns: ['*'],
-          where: {
-            name: resolver,
-          },
-        },
-      }),
-    };
-    dispatch({ type: FETCHING_INDIV_RESOLVER });
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        if (data.length > 0) {
-          dispatch({ type: RESOLVER_FETCH_SUCCESS, data: data });
-          const headerObj = [];
-          data[0].headers.forEach(d => {
-            headerObj.push({
-              name: d.name,
-              value: d.value ? d.value : d.value_from_env,
-              type: d.value ? 'static' : 'env',
-            });
-          });
-          headerObj.push({
-            name: '',
-            type: '',
-            value: '',
-          });
-          dispatch({
-            type: getHeaderEvents.UPDATE_HEADERS,
-            data: [...headerObj],
-          });
-          return Promise.resolve();
-        }
-        alert('Resolver not found');
-        return Promise.reject();
-      },
-      error => {
-        console.error('Failed to fetch resolver' + JSON.stringify(error));
-        dispatch({ type: RESOLVER_FETCH_FAIL, data: error });
-        return Promise.reject();
-      }
     );
   };
 };

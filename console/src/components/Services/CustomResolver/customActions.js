@@ -158,12 +158,12 @@ const makeRequest = (
       if (successMsg) {
         dispatch(showSuccessNotification(successMsg));
       }
-      return dispatch(customOnSuccess(data));
+      customOnSuccess(data);
     };
 
     const onError = err => {
       dispatch(handleMigrationErrors(errorMsg, err));
-      return dispatch(customOnError(err));
+      customOnError(err);
     };
 
     dispatch(showSuccessNotification(requestMsg));
