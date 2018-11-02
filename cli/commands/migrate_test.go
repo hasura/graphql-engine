@@ -29,6 +29,7 @@ var ravenVersions = []mt.Version{
 
 var testMetadata = map[string][]byte{
 	"metadata": []byte(`query_templates: []
+custom_resolvers: []
 tables:
 - array_relationships: []
   delete_permissions: []
