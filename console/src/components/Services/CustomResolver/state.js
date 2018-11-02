@@ -21,6 +21,9 @@ const addState = {
     id: -1,
     isModify: false,
     originalName: '',
+    originalHeaders: [],
+    originalUrl: '',
+    originalEnvUrl: '',
   },
 };
 

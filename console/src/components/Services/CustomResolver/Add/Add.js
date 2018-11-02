@@ -18,6 +18,7 @@ class Add extends React.Component {
           <button
             className={styles.yellow_button}
             onClick={() => dispatch(addResolver())}
+            disabled={isRequesting}
           >
             {isRequesting ? 'Creating...' : 'Stitch Schema'}
           </button>
@@ -31,6 +32,7 @@ class Add extends React.Component {
 const mapStateToProps = state => {
   return {
     ...state.customResolverData.addData,
+    ...state.customResolverData.headerData,
   };
 };
 

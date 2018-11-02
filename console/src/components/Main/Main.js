@@ -213,7 +213,10 @@ class Main extends React.Component {
                   </li>
                 </OverlayTrigger>
                 {isCustomResolver ? (
-                  <OverlayTrigger placement="right" overlay={tooltip.events}>
+                  <OverlayTrigger
+                    placement="right"
+                    overlay={tooltip.customresolver}
+                  >
                     <li>
                       <Link
                         className={
@@ -226,7 +229,7 @@ class Main extends React.Component {
                         <div className={styles.iconCenter}>
                           <i
                             title="Custom Resolver"
-                            className="fa fa-cloud"
+                            className="fa fa-plug"
                             aria-hidden="true"
                           />
                         </div>

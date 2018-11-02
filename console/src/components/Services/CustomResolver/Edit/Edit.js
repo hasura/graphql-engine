@@ -6,7 +6,9 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import {
   fetchResolver,
   deleteResolver,
+  modifyResolver,
   RESET,
+  TOGGLE_MODIFY,
 } from '../Add/addResolverReducer';
 import { VIEW_RESOLVER } from '../customActions';
 import { push } from 'react-router-redux';
@@ -45,30 +47,81 @@ class Edit extends React.Component {
       this.props.dispatch({ type: VIEW_RESOLVER, data: '' }),
     ]);
   }
+
+  handleDeleteResolver(e) {
+    e.preventDefault();
+    const a = prompt(
+      'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema. Please type "DELETE" (in caps, without quotes) to confirm.\n '
+    );
+    try {
+      if (a && typeof a === 'string' && a.trim() === 'DELETE') {
+        this.props.dispatch(deleteResolver());
+      } else {
+        // Input didn't match
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  modifyClick() {
+    this.props.dispatch({ type: TOGGLE_MODIFY });
+  }
+  handleCancelModify() {
+    this.props.dispatch({ type: TOGGLE_MODIFY });
+  }
+  editClicked() {
+    this.props.dispatch(modifyResolver());
+  }
   render() {
     const styles = require('../Styles.scss');
-    const { isRequesting, dispatch } = this.props;
+    const { isRequesting, editState } = this.props;
+    const { resolverName } = this.props.params;
+
     return (
       <div className={styles.addWrapper}>
-        <div className={styles.subheading_text}>my-graphQL-server</div>
+        <div className={styles.subheading_text}>{resolverName || ''}</div>
         <Common {...this.props} />
-        <div className={styles.commonBtn}>
-          <button className={styles.yellow_button}>Modify</button>
-          <button
-            className={styles.danger_button + ' btn-danger'}
-            onClick={() => dispatch(deleteResolver())}
-          >
-            {isRequesting ? 'Deleting ...' : 'Delete'}
-          </button>
-          <a href="#" target="_blank">
-            Refresh Schema
-          </a>
-          <span>
-            <OverlayTrigger placement="right" overlay={refresh}>
-              <i className="fa fa-question-circle" aria-hidden="true" />
-            </OverlayTrigger>
-          </span>
-        </div>
+        {'isModify' in editState && !editState.isModify ? (
+          <div className={styles.commonBtn}>
+            <button
+              className={styles.yellow_button}
+              onClick={this.modifyClick.bind(this)}
+            >
+              Modify
+            </button>
+            <button
+              className={styles.danger_button + ' btn-danger'}
+              onClick={this.handleDeleteResolver.bind(this)}
+              disabled={isRequesting}
+            >
+              {isRequesting ? 'Deleting ...' : 'Delete'}
+            </button>
+            <a href="#" target="_blank">
+              Refresh Schema
+            </a>
+            <span>
+              <OverlayTrigger placement="right" overlay={refresh}>
+                <i className="fa fa-question-circle" aria-hidden="true" />
+              </OverlayTrigger>
+            </span>
+          </div>
+        ) : (
+          <div className={styles.commonBtn}>
+            <button
+              className={styles.yellow_button}
+              onClick={this.editClicked.bind(this)}
+              disabled={isRequesting}
+            >
+              {isRequesting ? 'Saving' : 'Save'}
+            </button>
+            <button
+              className={styles.default_button}
+              onClick={this.handleCancelModify.bind(this)}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -76,6 +129,7 @@ class Edit extends React.Component {
 const mapStateToProps = state => {
   return {
     ...state.customResolverData.addData,
+    ...state.customResolverData.headerData,
   };
 };
 

@@ -3,10 +3,15 @@ import { listState } from './state';
 /* */
 
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
-
 import requestAction from '../../../utils/requestAction';
-
 import dataHeaders from '../Data/Common/Headers';
+import globals from '../../../Globals';
+import returnMigrateUrl from '../Data/Common/getMigrateUrl';
+import { SERVER_CONSOLE_MODE } from '../../../constants';
+import { loadMigrationStatus } from '../../Main/Actions';
+import { handleMigrationErrors } from '../EventTrigger/EventActions';
+
+import { showSuccessNotification } from '../Data/Notification';
 
 /* Action constants */
 
@@ -99,5 +104,73 @@ const listReducer = (state = listState, action) => {
   }
 };
 
-export { fetchResolvers, FILTER_RESOLVER, VIEW_RESOLVER };
+/* makeRequest function to identify what the current mode is and send normal query or a migration call */
+const makeRequest = (
+  upQueries,
+  downQueries,
+  migrationName,
+  customOnSuccess,
+  customOnError,
+  requestMsg,
+  successMsg,
+  errorMsg
+) => {
+  return (dispatch, getState) => {
+    const upQuery = {
+      type: 'bulk',
+      args: upQueries,
+    };
+
+    const downQuery = {
+      type: 'bulk',
+      args: downQueries,
+    };
+
+    const migrationBody = {
+      name: migrationName,
+      up: upQuery.args,
+      down: downQuery.args,
+    };
+
+    const currMigrationMode = getState().main.migrationMode;
+
+    const migrateUrl = returnMigrateUrl(currMigrationMode);
+
+    let finalReqBody;
+    if (globals.consoleMode === SERVER_CONSOLE_MODE) {
+      finalReqBody = upQuery;
+    } else if (globals.consoleMode === 'cli') {
+      finalReqBody = migrationBody;
+    }
+    const url = migrateUrl;
+    const options = {
+      method: 'POST',
+      credentials: globalCookiePolicy,
+      headers: dataHeaders(getState),
+      body: JSON.stringify(finalReqBody),
+    };
+
+    const onSuccess = data => {
+      if (globals.consoleMode === 'cli') {
+        dispatch(loadMigrationStatus()); // don't call for server mode
+      }
+      // dispatch(loadTriggers());
+      if (successMsg) {
+        dispatch(showSuccessNotification(successMsg));
+      }
+      return dispatch(customOnSuccess(data));
+    };
+
+    const onError = err => {
+      dispatch(handleMigrationErrors(errorMsg, err));
+      return dispatch(customOnError(err));
+    };
+
+    dispatch(showSuccessNotification(requestMsg));
+    return dispatch(requestAction(url, options)).then(onSuccess, onError);
+  };
+};
+/* */
+
+export { fetchResolvers, FILTER_RESOLVER, VIEW_RESOLVER, makeRequest };
 export default listReducer;

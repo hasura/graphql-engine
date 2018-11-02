@@ -5,6 +5,8 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 
 import { inputChange } from '../Add/addResolverReducer';
 
+import CommonHeader from '../../Layout/ReusableHeader/Header';
+
 const graphqlurl = (
   <Tooltip id="tooltip-cascade">
     Remote GraphQL server’s URL. E.g. https://my-domai/v1alpha1/graphql
@@ -34,6 +36,8 @@ class Common extends React.Component {
   render() {
     const styles = require('../Styles.scss');
     const { name, manualUrl, envName } = this.props;
+    const { isModify, id } = this.props.editState;
+    const isDisabled = id >= 0 && !isModify;
     return (
       <div className={styles.CommonWrapper}>
         <div className={styles.subheading_text}>
@@ -51,6 +55,7 @@ class Common extends React.Component {
               data-field-name="manualUrl"
               onChange={this.toggleCheckBox.bind(this)}
               checked={manualUrl && manualUrl.length > 0 ? true : false}
+              disabled={isDisabled}
             />
             Enter manually:
           </label>
@@ -66,6 +71,7 @@ class Common extends React.Component {
               value={manualUrl}
               data-field-name="manualUrl"
               onChange={this.handleInputChange.bind(this)}
+              disabled={isDisabled}
             />
           </label>
         </div>
@@ -78,6 +84,7 @@ class Common extends React.Component {
               data-field-name="envName"
               onChange={this.toggleCheckBox.bind(this)}
               checked={envName && envName.length > 0 ? true : false}
+              disabled={isDisabled}
             />
             Pick from environment variable:
           </label>
@@ -93,6 +100,7 @@ class Common extends React.Component {
               value={envName}
               data-field-name="envName"
               onChange={this.handleInputChange.bind(this)}
+              disabled={isDisabled}
             />
           </label>
         </div>
@@ -102,6 +110,14 @@ class Common extends React.Component {
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
         </div>
+        <CommonHeader
+          eventPrefix="CUSTOM_RESOLVER"
+          headers={this.props.headers}
+          dispatch={this.props.dispatch}
+          typeOptions={['static', 'env']}
+          isDisabled={isDisabled}
+        />
+        {/*
         <div className={styles.display_flex + ' form-group'}>
           <input
             type="text"
@@ -177,6 +193,7 @@ class Common extends React.Component {
             placeholder="value"
           />
         </div>
+        */}
         <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
           Schema alias *
           <OverlayTrigger placement="right" overlay={schema}>
@@ -195,6 +212,7 @@ class Common extends React.Component {
             value={name}
             data-field-name="name"
             onChange={this.handleInputChange.bind(this)}
+            disabled={isDisabled}
           />
         </label>
       </div>
@@ -206,6 +224,7 @@ Common.propTypes = {
   name: PropTypes.string.isRequired,
   envName: PropTypes.string.isRequired,
   manualUrl: PropTypes.string.isRequired,
+  headers: PropTypes.array.isRequired,
   dispatch: PropTypes.func.isRequired,
 };
 

@@ -74,6 +74,7 @@ const leftNavMapStateToProps = state => {
     searchQuery: state.customResolverData.listData.searchQuery,
     viewResolver: state.customResolverData.listData.viewResolver,
     listItemTemplate: listItem,
+    appPrefix: '/custom-resolver',
   };
 };
 
