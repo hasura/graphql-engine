@@ -35,10 +35,6 @@ data ConflictClauseP1
   | CP1Update !ConflictTarget ![PGCol]
   deriving (Show, Eq)
 
-isDoNothing :: ConflictClauseP1 -> Bool
-isDoNothing (CP1DoNothing _) = True
-isDoNothing _                = False
-
 data InsertQueryP1
   = InsertQueryP1
   { iqp1Table    :: !QualifiedTable
@@ -51,7 +47,7 @@ data InsertQueryP1
 
 mkSQLInsert :: InsertQueryP1 -> S.SelectWith
 mkSQLInsert (InsertQueryP1 tn vn cols vals c mutFlds) =
-  mkSelWith tn (S.CTEInsert insert) mutFlds
+  mkSelWith tn (S.CTEInsert insert) mutFlds False
   where
     insert =
       S.SQLInsert vn cols vals (toSQLConflict <$> c) $ Just S.returningStar
@@ -186,7 +182,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
 
     withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
-  let mutFlds = mkDefaultMutFlds tableName mAnnRetCols
+  let mutFlds = mkDefaultMutFlds mAnnRetCols
 
   let defInsVals = mkDefValMap fieldInfoMap
       insCols    = HM.keys defInsVals
