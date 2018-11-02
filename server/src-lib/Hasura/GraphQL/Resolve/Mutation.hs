@@ -17,7 +17,6 @@ import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Delete             as RD
 import qualified Hasura.RQL.DML.Returning          as RR
-import qualified Hasura.RQL.DML.Select             as RS
 import qualified Hasura.RQL.DML.Update             as RU
 
 import qualified Hasura.SQL.DML                    as S
@@ -32,24 +31,14 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-convertReturning
-  :: QualifiedTable -> G.NamedType -> SelSet -> Convert RS.AnnSel
-convertReturning qt ty selSet = do
-  annFlds <- fromSelSet prepare ty selSet
-  let tabFrom = RS.TableFrom qt $ Just frmItem
-      tabPerm = RS.TablePerm (S.BELit True) Nothing
-  return $ RS.AnnSelG annFlds tabFrom tabPerm RS.noTableArgs
-  where
-    frmItem = S.FIIden $ RR.qualTableToAliasIden qt
-
 convertMutResp
-  :: QualifiedTable -> G.NamedType -> SelSet -> Convert RR.MutFlds
-convertMutResp qt ty selSet =
+  :: G.NamedType -> SelSet -> Convert RR.MutFlds
+convertMutResp ty selSet =
   withSelSet selSet $ \fld -> case _fName fld of
     "__typename"    -> return $ RR.MExp $ G.unName $ G.unNamedType ty
     "affected_rows" -> return RR.MCount
     "returning"     -> fmap RR.MRet $
-                       convertReturning qt (_fType fld) $ _fSelSet fld
+                       fromSelSet prepare (_fType fld) $ _fSelSet fld
     G.Name t        -> throw500 $ "unexpected field in mutation resp : " <> t
 
 convertRowObj
@@ -130,7 +119,7 @@ convertUpdate tn filterExp fld = do
   -- delete at path in jsonb value
   deleteAtPathExpM <- withArgM args "_delete_at_path" convDeleteAtPathObj
 
-  mutFlds  <- convertMutResp tn (_fType fld) $ _fSelSet fld
+  mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
   prepArgs <- get
   let updExpsM = [ setExpM, incExpM, appendExpM, prependExpM
                  , deleteKeyExpM, deleteElemExpM, deleteAtPathExpM
@@ -152,7 +141,7 @@ convertDelete
   -> Convert RespTx
 convertDelete tn filterExp fld = do
   whereExp <- withArg (_fArguments fld) "where" $ convertBoolExp tn
-  mutFlds  <- convertMutResp tn (_fType fld) $ _fSelSet fld
+  mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
   args <- get
   let p1 = RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds
   return $ RD.deleteP2 (p1, args)
