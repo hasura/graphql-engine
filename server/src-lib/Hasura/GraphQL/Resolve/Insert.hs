@@ -504,8 +504,7 @@ resolveInsCtx tn = do
   InsCtx view colInfos setVals relInfoMap <-
     onNothing (Map.lookup tn ctxMap) $
     throw500 $ "table " <> tn <<> " not found"
-  let defValMap = Map.fromList $ flip zip (repeat $ S.SEUnsafe "DEFAULT") $
-                  map pgiName colInfos
+  let defValMap = S.mkColDefValMap $ map pgiName colInfos
       defValWithSet = Map.union setVals defValMap
   return (view, colInfos, defValWithSet, relInfoMap)
 
