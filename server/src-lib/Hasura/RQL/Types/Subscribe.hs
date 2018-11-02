@@ -209,7 +209,7 @@ instance FromJSON EventTriggerConf where
     webhook <- o .:? "webhook"
     webhookFromEnv <- o .:? "webhook_from_env"
     retryConf <- o .: "retry_conf"
-    headers <- o .: "headers"
+    headers <- o .:? "headers"
     webhookConf <- case (webhook, webhookFromEnv) of
                         (Just w, Nothing)  -> return $ WCValue w
                         (Nothing, Just wEnv) -> return $ WCEnv wEnv
