@@ -34,25 +34,26 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax   (Lift)
+import           Language.Haskell.TH.Syntax    (Lift)
 
-import qualified Data.HashMap.Strict          as M
-import qualified Data.HashSet                 as HS
-import qualified Data.List                    as L
-import qualified Data.Text                    as T
+import qualified Data.HashMap.Strict           as M
+import qualified Data.HashSet                  as HS
+import qualified Data.List                     as L
+import qualified Data.Text                     as T
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query            as Q
-import qualified Hasura.RQL.DDL.Permission    as DP
-import qualified Hasura.RQL.DDL.QueryTemplate as DQ
-import qualified Hasura.RQL.DDL.Relationship  as DR
-import qualified Hasura.RQL.DDL.Schema.Table  as DT
-import qualified Hasura.RQL.DDL.Subscribe     as DS
-import qualified Hasura.RQL.Types.Subscribe   as DTS
+import qualified Database.PG.Query             as Q
+import qualified Hasura.RQL.DDL.CustomResolver as DCR
+import qualified Hasura.RQL.DDL.Permission     as DP
+import qualified Hasura.RQL.DDL.QueryTemplate  as DQ
+import qualified Hasura.RQL.DDL.Relationship   as DR
+import qualified Hasura.RQL.DDL.Schema.Table   as DT
+import qualified Hasura.RQL.DDL.Subscribe      as DS
+import qualified Hasura.RQL.Types.Subscribe    as DTS
 
 data TableMeta
   = TableMeta
@@ -125,6 +126,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
+  Q.unitQ "DELETE FROM hdb_catalog.custom_resolver" () False
   clearHdbViews
 
 instance HDBQuery ClearMetadata where
@@ -141,14 +143,15 @@ instance HDBQuery ClearMetadata where
 
 data ReplaceMetadata
   = ReplaceMetadata
-  { aqTables         :: ![TableMeta]
-  , aqQueryTemplates :: ![DQ.CreateQueryTemplate]
+  { aqTables          :: ![TableMeta]
+  , aqQueryTemplates  :: ![DQ.CreateQueryTemplate]
+  , aqCustomResolvers :: ![DCR.CustomResolverDef]
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 
 applyQP1 :: ReplaceMetadata -> P1 ()
-applyQP1 (ReplaceMetadata tables templates) = do
+applyQP1 (ReplaceMetadata tables templates resolvers) = do
 
   adminOnly
 
@@ -177,6 +180,9 @@ applyQP1 (ReplaceMetadata tables templates) = do
   withPathK "queryTemplates" $
     checkMultipleDecls "query templates" $ map DQ.cqtName templates
 
+  withPathK "customResolvers" $
+    checkMultipleDecls "custom resolvers" $ map DCR._crName resolvers
+
   where
     withTableName qt = withPathK (qualTableToTxt qt)
 
@@ -196,10 +202,11 @@ applyQP2
      , MonadTx m
      , MonadIO m
      , HasTypeMap m
+     , HasHttpManager m
      )
   => ReplaceMetadata
   -> m RespBody
-applyQP2 (ReplaceMetadata tables templates) = do
+applyQP2 (ReplaceMetadata tables templates resolvers) = do
 
   defaultSchemaCache <- liftTx $ clearMetadata >> DT.buildSchemaCache
   writeSchemaCache defaultSchemaCache
@@ -208,7 +215,9 @@ applyQP2 (ReplaceMetadata tables templates) = do
 
     -- tables and views
     indexedForM_ (map _tmTable tables) $ \tableName ->
-      void $ DT.trackExistingTableOrViewP2 tableName False
+      void $ DT.trackExistingTableOrViewP2 tableName False False
+      -- FIXME: after clearing the cache, gctx should be built again, and passed to this!!
+      -- withReaderT (const $ GS.emptyGCtx) $ DT.trackExistingTableOrViewP2 tableName False
 
     -- Relationships
     indexedForM_ tables $ \table -> do
@@ -242,6 +251,13 @@ applyQP2 (ReplaceMetadata tables templates) = do
     indexedForM_ templates $ \template -> do
       qti <- DQ.createQueryTemplateP1 template
       void $ DQ.createQueryTemplateP2 template qti
+
+  -- custom resolvers
+  withPathK "customResolvers" $
+    indexedForM_ resolvers $ \(DCR.CustomResolverDef name urlE hdrs)-> do
+      let resolver = DCR.AddCustomResolverQuery urlE (Just hdrs) name
+      res <- DCR.addCustomResolverP1 resolver
+      void $ DCR.addCustomResolverP2 False res
 
   return successMsg
 
@@ -312,7 +328,10 @@ fetchMetadata = do
         modMetaMap tmDeletePermissions delPermDefs
         modMetaMap tmEventTriggers triggerMetaDefs
 
-  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs
+  -- fetch all custom resolvers
+  resolvers <- DCR.fetchRemoteResolvers
+
+  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs resolvers
 
   where
 

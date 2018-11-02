@@ -149,10 +149,11 @@ trackExistingTableOrViewP2Setup tn isSystemDefined = do
 
 trackExistingTableOrViewP2
   :: (QErrM m, CacheRWM m, MonadTx m, HasTypeMap m)
-  => QualifiedTable -> Bool -> m RespBody
-trackExistingTableOrViewP2 vn isSystemDefined = do
-  tyMap <- askTypeMap
-  GS.checkConflictingNodesTxt tyMap tn
+  => QualifiedTable -> Bool -> Bool -> m RespBody
+trackExistingTableOrViewP2 vn isSystemDefined checkConflict = do
+  when checkConflict $ do
+    tyMap <- askTypeMap
+    GS.checkConflictingNodesTxt tyMap tn
   trackExistingTableOrViewP2Setup vn isSystemDefined
   liftTx $ Q.catchE defaultTxErrorHandler $
     saveTableToCatalog vn
@@ -169,7 +170,7 @@ instance HDBQuery TrackTable where
   type Phase1Res TrackTable = ()
   phaseOne = trackExistingTableOrViewP1
 
-  phaseTwo (TrackTable tn) _ = trackExistingTableOrViewP2 tn False
+  phaseTwo (TrackTable tn) _ = trackExistingTableOrViewP2 tn False True
 
   schemaCachePolicy = SCPReload
 
@@ -401,7 +402,7 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
     liftTx $ mkTriggerQ trid trn qt allCols tDef
 
   res <- liftTx fetchRemoteResolvers
-  forM_ res $ \(eUrlEnv, hdrs) ->
+  forM_ res $ \(CustomResolverDef _ eUrlEnv hdrs) ->
     case eUrlEnv of
       Left url -> addCustomResolverToCache url hdrs
       Right env -> do

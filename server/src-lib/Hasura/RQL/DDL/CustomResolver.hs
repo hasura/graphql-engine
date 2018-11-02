@@ -15,6 +15,7 @@ import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.ByteString.Lazy          as BL
+import qualified Data.HashMap.Strict           as Map
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Network.URI.Extended          as N
@@ -26,6 +27,44 @@ import           Hasura.RQL.Types
 import qualified Hasura.GraphQL.Schema         as GS
 
 type UrlFromEnv = Text
+
+data CustomResolverDef
+  = CustomResolverDef
+  { _crName    :: !Text
+  , _crUrl     :: !(Either N.URI UrlFromEnv)
+  , _crHeaders :: ![HeaderConf]
+  } deriving (Show, Eq, Lift)
+
+instance J.FromJSON CustomResolverDef where
+  parseJSON = J.withObject "CustomResolverDef" $ \o -> do
+    mUrl        <- o J..:? "url"
+    mUrlFromEnv <- o J..:? "url_from_env"
+    headers     <- o J..: "headers"
+    name        <- o J..: "name"
+
+    eUrlVal <- case (mUrl, mUrlFromEnv) of
+      (Just url, Nothing)    -> return $ Left url
+      (Nothing, Just urlEnv) -> return $ Right urlEnv
+      (Nothing, Nothing)     ->
+        fail "both `url` and `url_from_env` can't be empty"
+      (Just _, Just _)       ->
+        fail "both `url` and `url_from_env` can't be present"
+
+    return $ CustomResolverDef name eUrlVal headers
+
+instance J.ToJSON CustomResolverDef where
+  toJSON (CustomResolverDef name eUrlVal headers) =
+    case eUrlVal of
+      Left url ->
+        J.object [ "url" J..= url
+                 , "headers" J..= headers
+                 , "name" J..= name ]
+      Right urlFromEnv ->
+        J.object [ "url_from_env" J..= urlFromEnv
+                 , "headers" J..= headers
+                 , "name" J..= name
+                 ]
+
 
 data AddCustomResolverQuery
   = AddCustomResolverQuery
@@ -69,7 +108,7 @@ instance J.ToJSON AddCustomResolverQuery where
 instance HDBQuery AddCustomResolverQuery where
   type Phase1Res AddCustomResolverQuery = AddCustomResolverQuery
   phaseOne   = addCustomResolverP1
-  phaseTwo _ = addCustomResolverP2
+  phaseTwo _ = addCustomResolverP2 True
   schemaCachePolicy = SCPReload
 
 addCustomResolverP1
@@ -85,14 +124,16 @@ addCustomResolverP2
      , HasHttpManager m
      , HasTypeMap m
      )
-  => AddCustomResolverQuery
+  => Bool
+  -> AddCustomResolverQuery
   -> m BL.ByteString
-addCustomResolverP2 (AddCustomResolverQuery eUrlVal headers name) = do
+addCustomResolverP2 checkConflict (AddCustomResolverQuery eUrlVal headers name) = do
   url <- either return getUrlFromEnv eUrlVal
   manager <- askHttpManager
   typeMap <- askTypeMap
   remoteGCtx <- fetchRemoteSchema manager url $ fromMaybe [] headers
-  GS.checkConflictingNodes typeMap remoteGCtx
+  when checkConflict $
+    GS.checkConflictingNodes typeMap remoteGCtx
   liftTx $ addCustomResolverToCatalog eUrlVal headers name
   addCustomResolverToCache url $ fromMaybe [] headers
   return successMsg
@@ -185,24 +226,24 @@ fetchRemoteResolverUrl name =
     fromRow []    = Nothing
     fromRow (x:_) = Just x
 
-fetchRemoteResolvers :: Q.TxE QErr [(Either N.URI Text, [HeaderConf])]
+fetchRemoteResolvers :: Q.TxE QErr [CustomResolverDef]
 fetchRemoteResolvers = do
   res <- Q.listQE defaultTxErrorHandler
     [Q.sql|
-     SELECT url, url_from_env, headers
+     SELECT name, url, url_from_env, headers
        FROM hdb_catalog.custom_resolver
      |] () True
   mapM fromRow res
   where
     -- FIXME: better way to do this
     -- FIXME: check for json null in headers
-    fromRow (url, urlEnv, Q.AltJ hdrs) =
+    fromRow (name, url, urlEnv, Q.AltJ hdrs) =
       case (url, urlEnv) of
         (Just u, Nothing)  -> do
           url' <- mkUrl u
-          return (Left url', hdrs)
-        (Nothing, Just u)  -> return (Right u, hdrs)
-        (Just _, Just u2)  -> return (Right u2, hdrs)
+          return $ CustomResolverDef name (Left url') hdrs
+        (Nothing, Just u)  -> return $ CustomResolverDef name (Right u) hdrs
+        (Just _, Just u2)  -> return $ CustomResolverDef name (Right u2) hdrs
         (Nothing, Nothing) ->
           throw500 "both url, url_from_env cannot be empty"
 

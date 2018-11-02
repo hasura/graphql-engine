@@ -17,7 +17,7 @@ module Hasura.RQL.Types
        , MonadTx(..)
        , UserInfoM(..)
        , RespBody
-       , P2C
+       --, P2C
        , P2Ctx (..)
        -- , P2Res
        , liftP1
@@ -207,7 +207,7 @@ class (Monad m) => HasTypeMap m where
 instance HasTypeMap P2 where
   askTypeMap = _p2cHasuraTypes <$> ask
 
-type P2C m = (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+--type P2C m = (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
 
 class (Monad m) => MonadTx m where
   liftTx :: Q.TxE QErr a -> m a
