@@ -79,6 +79,15 @@ deploy_console() {
     unset DIST_PATH
 }
 
+# build and push container for auto-migrations
+build_and_push_cli_migrations_image() {
+    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
+    cd "$ROOT/scripts/cli-migrations"
+    cp /build/_cli_output/binaries/cli-hasura-linux-amd64 .
+    docker build -t "$IMAGE_TAG" .
+    docker push "$IMAGE_TAG"
+}
+
 # copy docker-compose-https manifests to gcr for digital ocean one-click app
 deploy_do_manifests() {
     gsutil cp "$ROOT/install-manifests/docker-compose-https/docker-compose.yaml" \
@@ -125,6 +134,7 @@ deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
     deploy_server_latest
+    build_and_push_cli_migrations_image
     CHANGELOG_TEXT=$(changelog server)
     CHANGELOG_TEXT+=$(changelog cli)
     CHANGELOG_TEXT+=$(changelog console)
@@ -136,5 +146,4 @@ EOF
     configure_git
     send_pr_to_repo graphql-engine-heroku
     deploy_do_manifests
-
 fi
