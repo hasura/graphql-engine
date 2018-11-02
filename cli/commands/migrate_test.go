@@ -41,6 +41,7 @@ tables:
   update_permissions: []
 `),
 	"empty-metadata": []byte(`query_templates: []
+custom_resolvers: []
 tables: []
 `),
 }
