@@ -16,9 +16,11 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop table "Artist"
+      drop table "Track"
+    cascade: true
 
 - type: run_sql
   args:
     sql: |
-      drop table "Track"
+      drop table "Artist"
+    cascade: true
