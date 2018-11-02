@@ -190,9 +190,18 @@ from2To3 = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "CREATE INDEX ON hdb_catalog.event_log (trigger_id)" () False
   Q.unitQ "CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id)" () False
 
-from3To4 :: Q.TxE QErr ()
-from3To4 = Q.multiQE defaultTxErrorHandler
-             $(Q.sqlFromFile "src-rsr/migrate_from_3.sql")
+-- custom resolver
+from3To4 :: HTTP.Manager -> Q.TxE QErr ()
+from3To4 httpMgr = do
+  Q.Discard () <- Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_3_to_4.sql")
+  -- migrate metadata
+  tx <- liftEither $ buildTxAny adminUserInfo
+                     emptySchemaCache httpMgr emptyGCtx migrateMetadataFrom3
+  void tx
+  -- set as system defined
+  setAsSystemDefined
+
 
 migrateCatalog :: HTTP.Manager -> UTCTime -> Q.TxE QErr String
 migrateCatalog httpMgr migrationTime = do
@@ -207,7 +216,7 @@ migrateCatalog httpMgr migrationTime = do
                     "migrate: unsupported version : " <> preVer
   where
     from3ToCurrent = do
-      from3To4
+      from3To4 httpMgr
       postMigrate
 
     from2ToCurrent = do
