@@ -165,6 +165,7 @@ library
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert
                      , Hasura.RQL.DML.Returning
+                     , Hasura.RQL.DML.Select.Internal
                      , Hasura.RQL.DML.Select
                      , Hasura.RQL.DML.Update
                      , Hasura.RQL.DML.Count

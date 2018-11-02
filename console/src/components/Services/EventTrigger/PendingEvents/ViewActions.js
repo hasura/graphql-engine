@@ -52,7 +52,6 @@ const vMakeRequest = () => {
       const finalAndClause = currentQuery.where.$and;
       finalAndClause.push({ delivered: false });
       finalAndClause.push({ error: false });
-      finalAndClause.push({ tries: 0 });
       currentQuery.columns[1].where = { $and: finalAndClause };
       currentQuery.where = { name: state.triggers.currentTrigger };
       countQuery.where.$and.push({ trigger_id: triggerId });
@@ -62,7 +61,6 @@ const vMakeRequest = () => {
         currentQuery.columns[1].where = {
           delivered: false,
           error: false,
-          tries: 0,
         };
       }
       currentQuery.where = { name: state.triggers.currentTrigger };
@@ -70,7 +68,6 @@ const vMakeRequest = () => {
         trigger_name: state.triggers.currentTrigger,
         delivered: false,
         error: false,
-        tries: 0,
       };
     }
 

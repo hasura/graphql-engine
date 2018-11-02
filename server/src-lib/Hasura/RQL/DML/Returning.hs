@@ -59,11 +59,10 @@ mkMutFldExp qt singleObj = \case
     }
   MExp t -> S.SELit t
   MRet selFlds ->
-    let flds = ASFSimple selFlds
-        tabFrom = TableFrom qt $ Just frmItem
+    let tabFrom = TableFrom qt $ Just frmItem
         tabPerm = TablePerm (S.BELit True) Nothing
     in S.SESelect $ mkSQLSelect singleObj $
-       AnnSel flds tabFrom tabPerm noTableArgs
+       AnnSelG selFlds tabFrom tabPerm noTableArgs
   where
     frmItem = S.FIIden $ qualTableToAliasIden qt
 
