@@ -63,7 +63,7 @@ data TableMeta
   , _tmSelectPermissions   :: ![DP.SelPermDef]
   , _tmUpdatePermissions   :: ![DP.UpdPermDef]
   , _tmDeletePermissions   :: ![DP.DelPermDef]
-  , _tmEventTriggers       :: ![DTS.EventTriggerDef]
+  , _tmEventTriggers       :: ![DTS.EventTriggerConf]
   } deriving (Show, Eq, Lift)
 
 mkTableMeta :: QualifiedTable -> TableMeta
@@ -165,7 +165,7 @@ applyQP1 (ReplaceMetadata tables templates) = do
           selPerms = map DP.pdRole $ table ^. tmSelectPermissions
           updPerms = map DP.pdRole $ table ^. tmUpdatePermissions
           delPerms = map DP.pdRole $ table ^. tmDeletePermissions
-          eventTriggers = map DTS.etdName $ table ^. tmEventTriggers
+          eventTriggers = map DTS.etcName $ table ^. tmEventTriggers
 
       checkMultipleDecls "relationships" allRels
       checkMultipleDecls "insert permissions" insPerms
@@ -325,9 +325,9 @@ fetchMetadata = do
 
     mkTriggerMetaDefs = mapM trigRowToDef
 
-    trigRowToDef (sn, tn, trn, Q.AltJ tDefVal, webhook, nr, rint, Q.AltJ mheaders) = do
-      tDef <- decodeValue tDefVal
-      return (QualifiedTable sn tn, DTS.EventTriggerDef trn tDef webhook (RetryConf nr rint) mheaders)
+    trigRowToDef (sn, tn, Q.AltJ configuration) = do
+      conf <- decodeValue configuration
+      return (QualifiedTable sn tn, conf::EventTriggerConf)
 
     fetchTables =
       Q.listQ [Q.sql|
@@ -357,7 +357,7 @@ fetchMetadata = do
                   |] () False
     fetchEventTriggers =
      Q.listQ [Q.sql|
-              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
+              SELECT e.schema_name, e.table_name, e.configuration::json
                FROM hdb_catalog.event_triggers e
               |] () False
 
