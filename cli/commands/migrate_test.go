@@ -28,8 +28,8 @@ var ravenVersions = []mt.Version{
 }
 
 var testMetadata = map[string][]byte{
-	"metadata": []byte(`query_templates: []
-custom_resolvers: []
+	"metadata": []byte(`custom_resolvers: []
+query_templates: []
 tables:
 - array_relationships: []
   delete_permissions: []
@@ -40,8 +40,8 @@ tables:
   table: test
   update_permissions: []
 `),
-	"empty-metadata": []byte(`query_templates: []
-custom_resolvers: []
+	"empty-metadata": []byte(`custom_resolvers: []
+query_templates: []
 tables: []
 `),
 }
