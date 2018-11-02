@@ -73,7 +73,13 @@ type ObjRelIns = RelIns SingleObjIns
 type ArrRelIns = RelIns MultiObjIns
 
 type PGColWithValue = (PGCol, PGColValue)
-type WithExp = (S.CTE, Seq.Seq Q.PrepArg)
+
+data InsWithExp
+  = InsWithExp
+  { _iweExp         :: !S.CTE
+  , _iweConflictCtx :: !(Maybe RI.ConflictCtx)
+  , _iwePrepArgs    :: !(Seq.Seq Q.PrepArg)
+  } deriving (Show, Eq)
 
 data AnnInsObj
   = AnnInsObj
@@ -193,20 +199,22 @@ mkSQLRow :: Map.HashMap PGCol S.SQLExp -> [(PGCol, S.SQLExp)] -> [S.SQLExp]
 mkSQLRow defVals withPGCol =
   Map.elems $ Map.union (Map.fromList withPGCol) defVals
 
-mkInsertQ :: QualifiedTable
+mkInsertQ :: MonadError QErr m => QualifiedTable
           -> Maybe RI.ConflictClauseP1 -> [(PGCol, AnnGValue)]
           -> [PGCol] -> Map.HashMap PGCol S.SQLExp -> RoleName
-          -> Q.TxE QErr WithExp
+          -> m InsWithExp
 mkInsertQ vn onConflictM insCols tableCols defVals role = do
   (givenCols, args) <- flip runStateT Seq.Empty $ toSQLExps insCols
   let sqlConflict = RI.toSQLConflict <$> onConflictM
       sqlExps = mkSQLRow defVals givenCols
       sqlInsert = S.SQLInsert vn tableCols [sqlExps] sqlConflict $ Just S.returningStar
-  if isAdmin role then return (S.CTEInsert sqlInsert, args)
-  else do
-    ccM <- mapM RI.extractConflictCtx onConflictM
-    RI.setConflictCtx ccM
-    return (S.CTEInsert (sqlInsert{S.siConflict=Nothing}), args)
+      adminIns = return $ InsWithExp (S.CTEInsert sqlInsert) Nothing args
+      nonAdminInsert = do
+        ccM <- mapM RI.extractConflictCtx onConflictM
+        let cteIns = S.CTEInsert sqlInsert{S.siConflict=Nothing}
+        return $ InsWithExp cteIns ccM args
+
+  bool nonAdminInsert adminIns $ isAdmin role
 
 mkBoolExp
   :: (MonadError QErr m, MonadState PrepArgs m)
@@ -219,8 +227,8 @@ mkBoolExp tn colInfoVals =
     f ci@(PGColInfo _ colTy _) colVal =
       RB.AVCol ci [RB.OEVal $ RB.AEQ (colTy, colVal)]
 
-mkSelQ :: QualifiedTable
-  -> [PGColInfo] -> [PGColWithValue] -> Q.TxE QErr WithExp
+mkSelQ :: MonadError QErr m => QualifiedTable
+       -> [PGColInfo] -> [PGColWithValue] -> m InsWithExp
 mkSelQ tn allColInfos pgColsWithVal = do
   (whereExp, args) <- flip runStateT Seq.Empty $ mkBoolExp tn colWithInfos
   let sqlSel = S.mkSelect { S.selExtr = [S.selectStar]
@@ -228,7 +236,7 @@ mkSelQ tn allColInfos pgColsWithVal = do
                           , S.selWhere = Just $ S.WhereFrag $ RG.cBoolExp whereExp
                           }
 
-  return (S.CTESelect sqlSel, args)
+  return $ InsWithExp (S.CTESelect sqlSel) Nothing args
   where
     colWithInfos = mergeListsWith pgColsWithVal allColInfos
                    (\(c, _) ci -> c == pgiName ci)
@@ -236,10 +244,11 @@ mkSelQ tn allColInfos pgColsWithVal = do
 
 execWithExp
   :: QualifiedTable
-  -> WithExp
+  -> InsWithExp
   -> RR.MutFlds
   -> Q.TxE QErr RespBody
-execWithExp tn (withExp, args) flds =
+execWithExp tn (InsWithExp withExp ccM args) flds = do
+  RI.setConflictCtx ccM
   runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList args) True
   where
@@ -248,7 +257,7 @@ execWithExp tn (withExp, args) flds =
 
 insertAndRetCols
   :: QualifiedTable
-  -> WithExp
+  -> InsWithExp
   -> T.Text
   -> [PGColInfo]
   -> Q.TxE QErr [PGColWithValue]
@@ -347,7 +356,7 @@ insertObj
   -> QualifiedTable
   -> SingleObjIns
   -> [PGColWithValue] -- ^ additional fields
-  -> Q.TxE QErr (Int, WithExp)
+  -> Q.TxE QErr (Int, InsWithExp)
 insertObj role tn singleObjIns addCols = do
   -- validate insert
   validateInsert (map _1 cols) (map _riRelInfo objRels) $ map fst addCols
