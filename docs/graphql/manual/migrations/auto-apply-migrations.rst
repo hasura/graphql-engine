@@ -11,7 +11,8 @@ automatically apply migrations when the server starts:
 The ``migrations`` directory created by Hasura CLI (the one next to 
 ``config.yaml``) can be mounted at ``/hasura-migrations`` path of this docker
 container and the container's entrypoint script will apply the migrations before
-starting the server. 
+starting the server. If no directory is mounted at the designated path, server
+will start ignoring migrations.
 
 .. note::
 
@@ -19,18 +20,20 @@ starting the server.
    used for running any other CI/CD scripts in your workflow.
 
 If you want to mount the migrations directory at some location other than
-``/hasura-migrations``, set the path as environment variable
-``HASURA_GRAPHQL_MIGRATIONS_DIR``.
+``/hasura-migrations``, set the following environment variable:
 
-Once the migrations are applied the container resumes operation as a normal
-Hasura server.
+.. code-block:: bash
+
+   HASURA_GRAPHQL_MIGRATIONS_DIR=/custom-path-for-migrations
+
+Once the migrations are ,applied the container resumes operation as a normal
+Hasura GraphQL Engine server.
 
 Example:
 
 .. code-block:: bash
 
-   # Start Hasura after applying the migrations
-   # present in /home/me/my-project/migrations
+   # Start Hasura after applying the migrations present in /home/me/my-project/migrations
    docker run -p 8080:8080 \
           -v /home/me/my-project/migrations:/hasura-migrations \
           -e HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:@postgres:5432/postgres \
