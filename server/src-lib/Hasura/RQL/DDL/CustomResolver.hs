@@ -174,17 +174,18 @@ deleteCustomResolverP2
   -> m BL.ByteString
 deleteCustomResolverP2 (DeleteCustomResolverQuery name) = do
   mUrl <- liftTx $ fetchRemoteResolverUrl name
-  url  <- liftMaybe (err400 NotExists "no such custom resolver") mUrl
+  eUrlVal <- liftMaybe (err400 NotExists "no such custom resolver") mUrl
+  url <- either return getUrlFromEnv eUrlVal
   deleteCustomResolverFromCache url
   liftTx $ deleteCustomResolverFromCatalog name
   return successMsg
 
 deleteCustomResolverFromCache
-  :: CacheRWM m => Text -> m ()
+  :: CacheRWM m => N.URI -> m ()
 deleteCustomResolverFromCache url = do
   sc <- askSchemaCache
   let resolvers = scRemoteResolvers sc
-      newResolvers = filter (\(u, _) -> T.pack (show u) /= url) resolvers
+      newResolvers = filter (\(u, _) -> u /= url) resolvers
   writeSchemaCache sc { scRemoteResolvers = newResolvers }
 
 
@@ -215,16 +216,27 @@ deleteCustomResolverFromCatalog name =
   |] (Identity name) True
 
 
-fetchRemoteResolverUrl :: Text -> Q.TxE QErr (Maybe Text)
-fetchRemoteResolverUrl name =
-  fromRow . map runIdentity <$> Q.withQE defaultTxErrorHandler
+fetchRemoteResolverUrl :: Text -> Q.TxE QErr (Maybe (Either N.URI Text))
+fetchRemoteResolverUrl name = do
+  res <- Q.listQE defaultTxErrorHandler
     [Q.sql|
-     SELECT url from hdb_catalog.custom_resolver
+     SELECT url, url_from_env from hdb_catalog.custom_resolver
        WHERE name = $1
      |] (Identity name) True
+  fromRow res
   where
-    fromRow []    = Nothing
-    fromRow (x:_) = Just x
+    fromRow []    = return Nothing
+    fromRow (x:_) = do
+      eRes <- mkEither x
+      return $ Just eRes
+
+    mkEither (u, ufe) = case (u, ufe) of
+      (Just u', Nothing)   -> do
+        let mUrl = N.parseURI $ T.unpack u'
+        url <- maybe (throw500 "not a valid URI in DB") return mUrl
+        return $ Left url
+      (Nothing, Just ufe') -> return $ Right ufe'
+      _                    -> throw500 "wrong URI info in db"
 
 fetchRemoteResolvers :: Q.TxE QErr [CustomResolverDef]
 fetchRemoteResolvers = do
