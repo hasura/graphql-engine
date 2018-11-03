@@ -125,6 +125,7 @@ table thead tr th
   margin-left: 10px;
   width: 15px;
   min-width: 15px;
+  cursor: pointer;
 }
 .display_flex
 {
@@ -753,6 +754,20 @@ code
 {
   outline: none;
 }
+.danger_button
+{
+  border-radius: 5px;
+  // color: #292929;
+  color: #000;
+  border: 1px solid #c9302c;
+  padding: 5px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.danger_button:focus
+{
+  outline: none;
+}
 .exploreButton
 {
   background-color: #FEC53D;
@@ -795,6 +810,10 @@ code
   padding-bottom: 20px;
   margin-top: 0;
   margin-bottom: 0;
+  i
+  {
+    margin-left: 5px;
+  }
 }
 .inline_block
 {
