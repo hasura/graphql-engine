@@ -22,10 +22,10 @@ module Hasura.GraphQL.Schema
   , checkConflictingNodes
   , checkConflictingNodesTxt
   , emptyGCtx
+  , mergeMaybeMaps
   ) where
 
 
-import           Control.Applicative            (liftA2)
 import           Data.Has
 
 import qualified Data.HashMap.Strict            as Map
@@ -1545,7 +1545,7 @@ checkConflictingNodes typeMap remoteCtx = do
             join (getObjTyM <$> Map.lookup (G.NamedType "query_root") typeMap)
       hMR = _otiFields <$>
             join (getObjTyM <$> Map.lookup (G.NamedType "mutation_root") typeMap)
-      hRoots = Map.keys <$> liftA2 Map.union hQR hMR
+      hRoots = Map.keys <$> mergeMaybeMaps hQR hMR
   case (rmRoots, hRoots) of
     (Just rmR, Just hR) -> do
       let conflictedNodes = filter (`elem` hR) rmR
@@ -1567,7 +1567,7 @@ checkConflictingNodesTxt typeMap nodeName = do
             join (getObjTyM <$> Map.lookup (G.NamedType "query_root") typeMap)
       hMR = _otiFields <$>
             join (getObjTyM <$> Map.lookup (G.NamedType "mutation_root") typeMap)
-      hRoots = map G.unName . Map.keys <$> liftA2 Map.union hQR hMR
+      hRoots = map G.unName . Map.keys <$> mergeMaybeMaps hQR hMR
   case hRoots of
     Just hR ->
       when (nodeName `elem` hR) $
@@ -1643,3 +1643,14 @@ emptyGCtx = mkGCtx mempty mempty mempty
 
 getGCtx :: RoleName -> Map.HashMap RoleName GCtx -> GCtx
 getGCtx rn = fromMaybe emptyGCtx . Map.lookup rn
+
+mergeMaybeMaps
+  :: (Eq k, Hashable k)
+  => Maybe (Map.HashMap k v)
+  -> Maybe (Map.HashMap k v)
+  -> Maybe (Map.HashMap k v)
+mergeMaybeMaps m1 m2 = case (m1, m2) of
+  (Nothing, Nothing)   -> Nothing
+  (Just m1', Nothing)  -> Just m1'
+  (Nothing, Just m2')  -> Just m2'
+  (Just m1', Just m2') -> Just $ Map.union m1' m2'

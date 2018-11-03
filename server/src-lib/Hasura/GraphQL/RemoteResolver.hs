@@ -5,7 +5,6 @@
 
 module Hasura.GraphQL.RemoteResolver where
 
-import           Control.Applicative           (liftA2)
 import           Control.Exception             (try)
 import           Control.Lens                  ((&), (.~), (?~), (^.))
 import           Data.FileEmbed                (embedStringFile)
@@ -94,36 +93,62 @@ mergeRemoteSchema
   -> m GS.GCtxMap
 mergeRemoteSchema ctxMap (_, rmSchema) = do
   let rmTypes = GS._rgTypes rmSchema
-  res <- forM (Map.toList ctxMap) $ \(role, gCtx) -> do
-    let hsraTyMap = GS._gTypes gCtx
-    GS.checkConflictingNodes hsraTyMap rmSchema
-    -- merge hasura and remote query root
-    let hQR = VT._otiFields $ GS._gQueryRoot gCtx
-        rmQR = VT._otiFields $ GS._rgQueryRoot rmSchema
-        newFlds = Map.union hQR rmQR
-        newQR = (GS._gQueryRoot gCtx) { VT._otiFields = newFlds }
-        -- merge hasura and remote mutation root
-        hMR = VT._otiFields <$> GS._gMutRoot gCtx
-        rmMR = VT._otiFields <$> GS._rgMutationRoot rmSchema
-        newMutFldsM = liftA2 Map.union hMR rmMR
-        newMutFlds = fromMaybe Map.empty newMutFldsM
-        hMrM = GS._gMutRoot gCtx
-        newMR = maybe Nothing
-                (\hMr -> Just hMr { VT._otiFields = newMutFlds })
-                hMrM
-        -- merge the hasura and remote typemap
-        newTyMap' = Map.insert (G.NamedType "query_root") (VT.TIObj newQR) $
-                    Map.union hsraTyMap rmTypes
-        newTyMap = maybe newTyMap'
-                    (\mr -> Map.insert (G.NamedType "mutation_root") (VT.TIObj mr) newTyMap')
-                    newMR
+  case Map.null ctxMap of
+    True  -> return onlyRmSchema
+    False -> do
+      res <- forM (Map.toList ctxMap) $ \(role, gCtx) -> do
+        let hsraTyMap = GS._gTypes gCtx
+        GS.checkConflictingNodes hsraTyMap rmSchema
+        let newQR = mergeQueryRoot gCtx
+            newMR = mergeMutRoot gCtx
+            newTyMap = mergeTyMaps hsraTyMap rmTypes newQR newMR
+        let updatedGCtx = gCtx { GS._gTypes = newTyMap
+                               , GS._gQueryRoot = newQR
+                               , GS._gMutRoot = newMR
+                               }
+        return (role, updatedGCtx)
+      return $ Map.fromList res
 
-    let updatedGCtx = gCtx { GS._gTypes = newTyMap
-                           , GS._gQueryRoot = newQR
-                           , GS._gMutRoot = newMR
-                           }
-    return (role, updatedGCtx)
-  return $ Map.fromList res
+  where
+    onlyRmSchema =
+      let hTy = GS._gTypes GS.emptyGCtx
+          rmTy = GS._rgTypes rmSchema
+          newQR = mergeQueryRoot GS.emptyGCtx
+          newMR = mergeMutRoot GS.emptyGCtx
+          newTyMap = mergeTyMaps hTy rmTy newQR newMR
+          updated = GS.emptyGCtx { GS._gTypes = newTyMap
+                                 , GS._gQueryRoot = newQR
+                                 , GS._gMutRoot = newMR
+                                 }
+      in Map.insert adminRole updated ctxMap
+
+    mergeQueryRoot gCtx =
+      let hQR = VT._otiFields $ GS._gQueryRoot gCtx
+          rmQR = VT._otiFields $ GS._rgQueryRoot rmSchema
+          newFlds = Map.union hQR rmQR
+          newQR = (GS._gQueryRoot gCtx) { VT._otiFields = newFlds }
+      in newQR
+
+    mergeMutRoot gCtx =
+      let hMR = VT._otiFields <$> GS._gMutRoot gCtx
+          rmMR = VT._otiFields <$> GS._rgMutationRoot rmSchema
+          newMutFldsM = GS.mergeMaybeMaps hMR rmMR
+          newMutFlds = fromMaybe Map.empty newMutFldsM
+          hMrM = GS._gMutRoot gCtx
+          newMR = maybe (Just $ mkNewMutRoot newMutFlds)
+                  (\hMr -> Just hMr { VT._otiFields = newMutFlds })
+                  hMrM
+      in newMR
+
+    mkNewMutRoot flds = VT.ObjTyInfo (Just "mutation root")
+                        (G.NamedType "mutation_root") flds
+
+    mergeTyMaps hTyMap rmTyMap newQR newMR =
+      let newTyMap' = Map.insert (G.NamedType "query_root") (VT.TIObj newQR) $
+                        Map.union hTyMap rmTyMap
+      in maybe newTyMap' (\mr -> Map.insert
+                                 (G.NamedType "mutation_root")
+                                 (VT.TIObj mr) newTyMap') newMR
 
 
 getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Text -> m N.URI
