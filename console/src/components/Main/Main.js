@@ -23,6 +23,7 @@ class Main extends React.Component {
     this.state = {
       showBannerNotification: false,
       showEvents: false,
+      showSchemaStitch: false,
     };
 
     this.state.loveConsentState = getLoveConsentState();
@@ -37,10 +38,9 @@ class Main extends React.Component {
       dispatch(checkServerUpdates()).then(() => {
         let isUpdateAvailable = false;
         try {
-          const showEvents = semverCheck('eventsTab', this.props.serverVersion);
-          if (showEvents) {
-            this.setState({ showEvents: true });
-          }
+          this.checkEventsTab().then(() => {
+            this.checkSchemaStitch();
+          });
           isUpdateAvailable = semver.gt(
             this.props.latestServerVersion,
             this.props.serverVersion
@@ -56,10 +56,26 @@ class Main extends React.Component {
           }
         } catch (e) {
           console.error(e);
-          this.setState({ showEvents: true });
         }
       });
     });
+  }
+  checkSchemaStitch() {
+    const showSchemaStitch = semverCheck(
+      'schemaStitching',
+      this.props.serverVersion
+    );
+    if (showSchemaStitch) {
+      this.setState({ ...this.state, showSchemaStitch: true });
+    }
+    return Promise.resolve();
+  }
+  checkEventsTab() {
+    const showEvents = semverCheck('eventsTab', this.props.serverVersion);
+    if (showEvents) {
+      this.setState({ showEvents: true });
+    }
+    return Promise.resolve();
   }
   handleBodyClick(e) {
     const heartDropDownOpen = document.querySelectorAll(
@@ -103,7 +119,6 @@ class Main extends React.Component {
       serverVersion,
       latestServerVersion,
     } = this.props;
-    const isCustomResolver = true;
     const styles = require('./Main.scss');
     const appPrefix = '';
     const logo = require('./white-logo.svg');
@@ -212,7 +227,7 @@ class Main extends React.Component {
                     </Link>
                   </li>
                 </OverlayTrigger>
-                {isCustomResolver ? (
+                {this.state.showSchemaStitch ? (
                   <OverlayTrigger
                     placement="right"
                     overlay={tooltip.customresolver}

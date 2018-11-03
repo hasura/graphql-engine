@@ -14,6 +14,7 @@ const LeftNavBar = ({
   location,
   filterItem,
   viewResolver,
+  migrationMode,
 }) => {
   const styles = require('./LeftNavBar.scss');
   // Now schema might be null or an empty array
@@ -55,26 +56,28 @@ const LeftNavBar = ({
             Schemas ({dataList.length})
           </div>
 
-          <div
-            className={
-              'col-xs-4 text-center ' +
-              styles.padd_remove +
-              ' ' +
-              styles.sidebarCreateTable
-            }
-          >
-            <Link
-              className={styles.padd_remove_full}
-              to={`${appPrefix}/manage/add`}
+          {migrationMode ? (
+            <div
+              className={
+                'col-xs-4 text-center ' +
+                styles.padd_remove +
+                ' ' +
+                styles.sidebarCreateTable
+              }
             >
-              <button
-                className={styles.add_mar_right + ' btn btn-xs btn-default'}
-                data-test="sidebar-add-table"
+              <Link
+                className={styles.padd_remove_full}
+                to={`${appPrefix}/manage/add`}
               >
-                Add Schema
-              </button>
-            </Link>
-          </div>
+                <button
+                  className={styles.add_mar_right + ' btn btn-xs btn-default'}
+                  data-test="sidebar-add-table"
+                >
+                  Add Schema
+                </button>
+              </Link>
+            </div>
+          ) : null}
         </div>
         <ul className={styles.schemaListUl} data-test="table-links">
           {listItemTemplate(

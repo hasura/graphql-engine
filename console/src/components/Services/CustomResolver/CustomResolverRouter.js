@@ -1,13 +1,9 @@
 import React from 'react';
 
 import { Route, IndexRedirect, Link } from 'react-router';
-
 import { layoutConnector, rightBar } from '../Layout';
-
 import globals from '../../../Globals';
-
 import { landingCustomResolverGen, addConnector, editConnector } from '.';
-
 import { fetchResolvers, FILTER_RESOLVER } from './customActions';
 
 // Objective is to render list of custom resolvers on the
@@ -73,6 +69,7 @@ const leftNavMapStateToProps = state => {
     filtered: [...state.customResolverData.listData.filtered],
     searchQuery: state.customResolverData.listData.searchQuery,
     viewResolver: state.customResolverData.listData.viewResolver,
+    migrationMode: state.main.migrationMode ? state.main.migrationMode : false,
     listItemTemplate: listItem,
     appPrefix,
   };
@@ -106,6 +103,14 @@ const fetchInitialData = ({ dispatch, getState }) => {
 };
 
 const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
+  const migrationRedirects = (nextState, replaceState, cb) => {
+    const state = store.getState();
+    if (!state.main.migrationMode) {
+      replaceState(globals.urlPrefix + appPrefix + '/manage');
+      cb();
+    }
+    cb();
+  };
   return (
     <Route
       path="stitched-schemas"
@@ -120,7 +125,11 @@ const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
       <Route path="manage" component={rightBar(connect)}>
         <IndexRedirect to="schemas" />
         <Route path="schemas" component={landingCustomResolverGen(connect)} />
-        <Route path="add" component={addConnector(connect)} />
+        <Route
+          path="add"
+          component={addConnector(connect)}
+          onEnter={composeOnEnterHooks([migrationRedirects])}
+        />
         <Route path=":resolverName/edit" component={editConnector(connect)} />
       </Route>
     </Route>

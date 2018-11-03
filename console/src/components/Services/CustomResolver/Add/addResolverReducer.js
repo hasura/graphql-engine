@@ -183,7 +183,7 @@ const addResolver = () => {
 
     const customOnSuccess = data => {
       Promise.all([
-        dispatch({ type: RESET, data: data }),
+        dispatch({ type: RESET }),
         dispatch(push(`${appPrefix}/manage/${resolveObj.name}/edit`)),
         dispatch(fetchResolvers()),
         dispatch({ type: getHeaderEvents.RESET_HEADER, data: data }),
@@ -249,10 +249,10 @@ const deleteResolver = () => {
     const successMsg = 'Schema deleted successfully';
     const errorMsg = 'Delete schema failed';
 
-    const customOnSuccess = data => {
+    const customOnSuccess = () => {
       // dispatch({ type: REQUEST_SUCCESS });
       Promise.all([
-        dispatch({ type: RESET, data: data }),
+        dispatch({ type: RESET }),
         dispatch(push(appPrefix)),
         dispatch(fetchResolvers()),
       ]);
@@ -277,6 +277,8 @@ const deleteResolver = () => {
   };
 };
 
+/*
+ * TODO: Change it to this function once the issue with bulk operation is fixed
 const modifyResolver = () => {
   return (dispatch, getState) => {
     const currState = getState().customResolverData.addData;
@@ -306,7 +308,6 @@ const modifyResolver = () => {
     } else {
       delete resolveObj.url;
     }
-    /* TODO: Add mandatory fields validation */
 
     const createResolverUp = {
       type: 'add_custom_resolver',
@@ -317,7 +318,6 @@ const modifyResolver = () => {
     upQueryArgs.push(deleteResolverUp);
     upQueryArgs.push(createResolverUp);
 
-    /* Down */
     // Delete the new one and create the old one
     const deleteResolverDown = {
       type: 'delete_custom_resolver',
@@ -338,7 +338,6 @@ const modifyResolver = () => {
     } else {
       delete resolveDownObj.url;
     }
-    /* TODO: Add mandatory fields validation */
 
     const createResolverDown = {
       type: 'add_custom_resolver',
@@ -348,7 +347,7 @@ const modifyResolver = () => {
     };
     downQueryArgs.push(deleteResolverDown);
     downQueryArgs.push(createResolverDown);
-    /* */
+    // End of down
 
     const upQuery = {
       type: 'bulk',
@@ -386,6 +385,156 @@ const modifyResolver = () => {
         requestMsg,
         successMsg,
         errorMsg
+      )
+    );
+  };
+};
+*/
+
+const modifyResolver = () => {
+  return (dispatch, getState) => {
+    const currState = getState().customResolverData.addData;
+    // const url = Endpoints.getSchema;
+    let upQueryArgs = [];
+    let downQueryArgs = [];
+    const migrationName = 'update_stitch_schema_' + currState.name.trim();
+    const schemaName = currState.name.trim();
+    const deleteResolverUp = {
+      type: 'delete_custom_resolver',
+      args: {
+        name: currState.editState.originalName,
+      },
+    };
+
+    /*
+    */
+
+    upQueryArgs.push(deleteResolverUp);
+
+    // Delete the new one and create the old one
+    /*
+    */
+    const resolveDownObj = {
+      name: currState.editState.originalName,
+      url: currState.editState.originalUrl,
+      url_from_env: currState.editState.originalEnvUrl,
+      headers: [],
+    };
+
+    resolveDownObj.headers = [...currState.editState.originalHeaders];
+    if (resolveDownObj.url) {
+      delete resolveDownObj.url_from_env;
+    } else {
+      delete resolveDownObj.url;
+    }
+
+    const createResolverDown = {
+      type: 'add_custom_resolver',
+      args: {
+        ...resolveDownObj,
+      },
+    };
+    downQueryArgs.push(createResolverDown);
+    /*
+    */
+    // End of down
+
+    let upQuery = {
+      type: 'bulk',
+      args: upQueryArgs,
+    };
+    let downQuery = {
+      type: 'bulk',
+      args: downQueryArgs,
+    };
+    const requestMsg = 'Modifying schema...';
+    const successMsg = 'Schema modified';
+    const errorMsg = 'Modify schema failed';
+
+    const customOnSuccess = () => {
+      // dispatch({ type: REQUEST_SUCCESS });
+      // Do the modify thing here
+      upQueryArgs = [];
+      downQueryArgs = [];
+      const resolveObj = {
+        name: currState.name,
+        url: currState.manualUrl,
+        url_from_env: currState.envName,
+        headers: [],
+      };
+
+      resolveObj.headers = [
+        ...getReqHeader(getState().customResolverData.headerData.headers),
+      ];
+      if (resolveObj.url) {
+        delete resolveObj.url_from_env;
+      } else {
+        delete resolveObj.url;
+      }
+
+      const createResolverUp = {
+        type: 'add_custom_resolver',
+        args: {
+          ...resolveObj,
+        },
+      };
+      upQueryArgs.push(createResolverUp);
+
+      const deleteResolverDown = {
+        type: 'delete_custom_resolver',
+        args: {
+          name: currState.name,
+        },
+      };
+      downQueryArgs.push(deleteResolverDown);
+
+      upQuery = {
+        type: 'bulk',
+        args: upQueryArgs,
+      };
+      downQuery = {
+        type: 'bulk',
+        args: downQueryArgs,
+      };
+
+      const tOnSuccess = () => {
+        Promise.all([
+          dispatch({ type: RESET }),
+          dispatch(fetchResolvers()),
+        ]).then(() => {
+          return dispatch(fetchResolver(schemaName));
+        });
+      };
+      const tOnError = error => {
+        Promise.all([dispatch({ type: MODIFY_RESOLVER_FAIL, data: error })]);
+      };
+
+      return dispatch(
+        makeRequest(
+          upQuery.args,
+          downQuery.args,
+          migrationName,
+          tOnSuccess,
+          tOnError,
+          requestMsg,
+          successMsg,
+          errorMsg
+        )
+      );
+    };
+    const customOnError = error => {
+      Promise.all([dispatch({ type: MODIFY_RESOLVER_FAIL, data: error })]);
+    };
+
+    dispatch({ type: MODIFYING_RESOLVER });
+    return dispatch(
+      makeRequest(
+        upQuery.args,
+        downQuery.args,
+        migrationName,
+        customOnSuccess,
+        customOnError,
+        requestMsg
       )
     );
   };

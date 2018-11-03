@@ -81,8 +81,62 @@ class Edit extends React.Component {
   }
   render() {
     const styles = require('../Styles.scss');
-    const { isRequesting, editState } = this.props;
+    const { isRequesting, editState, migrationMode } = this.props;
     const { resolverName } = this.props.params;
+
+    const generateMigrateBtns = () => {
+      return 'isModify' in editState && !editState.isModify ? (
+        <div className={styles.commonBtn}>
+          <button
+            className={styles.yellow_button}
+            onClick={e => {
+              e.preventDefault();
+              console.log('Something');
+              this.modifyClick();
+            }}
+          >
+            Modify
+          </button>
+          <button
+            className={styles.danger_button + ' btn-danger'}
+            onClick={e => {
+              e.preventDefault();
+              this.handleDeleteResolver(e);
+            }}
+            disabled={isRequesting}
+          >
+            {isRequesting ? 'Deleting ...' : 'Delete'}
+          </button>
+          <a href="#" target="_blank">
+            Refresh Schema
+          </a>
+          <span>
+            <OverlayTrigger placement="right" overlay={refresh}>
+              <i className="fa fa-question-circle" aria-hidden="true" />
+            </OverlayTrigger>
+          </span>
+        </div>
+      ) : (
+        <div className={styles.commonBtn}>
+          <button
+            className={styles.yellow_button}
+            type="submit"
+            disabled={isRequesting}
+          >
+            {isRequesting ? 'Saving' : 'Save'}
+          </button>
+          <button
+            className={styles.default_button}
+            onClick={e => {
+              e.preventDefault();
+              this.handleCancelModify();
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      );
+    };
 
     return (
       <div className={styles.addWrapper}>
@@ -96,57 +150,7 @@ class Edit extends React.Component {
           }}
         >
           <Common {...this.props} />
-          {'isModify' in editState && !editState.isModify ? (
-            <div className={styles.commonBtn}>
-              <button
-                className={styles.yellow_button}
-                onClick={e => {
-                  e.preventDefault();
-                  console.log('Something');
-                  this.modifyClick();
-                }}
-              >
-                Modify
-              </button>
-              <button
-                className={styles.danger_button + ' btn-danger'}
-                onClick={e => {
-                  e.preventDefault();
-                  this.handleDeleteResolver(e);
-                }}
-                disabled={isRequesting}
-              >
-                {isRequesting ? 'Deleting ...' : 'Delete'}
-              </button>
-              <a href="#" target="_blank">
-                Refresh Schema
-              </a>
-              <span>
-                <OverlayTrigger placement="right" overlay={refresh}>
-                  <i className="fa fa-question-circle" aria-hidden="true" />
-                </OverlayTrigger>
-              </span>
-            </div>
-          ) : (
-            <div className={styles.commonBtn}>
-              <button
-                className={styles.yellow_button}
-                type="submit"
-                disabled={isRequesting}
-              >
-                {isRequesting ? 'Saving' : 'Save'}
-              </button>
-              <button
-                className={styles.default_button}
-                onClick={e => {
-                  e.preventDefault();
-                  this.handleCancelModify();
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          )}
+          {migrationMode ? generateMigrateBtns() : null}
         </form>
       </div>
     );
@@ -156,6 +160,7 @@ const mapStateToProps = state => {
   return {
     ...state.customResolverData.addData,
     ...state.customResolverData.headerData,
+    migrationMode: state.main.migrationMode,
   };
 };
 
