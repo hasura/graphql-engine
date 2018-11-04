@@ -29,6 +29,7 @@ import           Data.CaseInsensitive    (CI (..), original)
 import           Data.IORef              (newIORef)
 
 import qualified Data.ByteString.Lazy    as BL
+import qualified Data.HashMap.Strict     as Map
 import qualified Data.String.Conversions as CS
 import qualified Data.Text               as T
 import qualified Network.HTTP.Client     as H
@@ -147,7 +148,7 @@ mkUserInfoFromResp logger url statusCode respBody
     throw500 "Invalid response from authorization hook"
   where
     getUserInfoFromHdrs rawHeaders = do
-      let usrVars = mkUserVars rawHeaders
+      let usrVars = mkUserVars $ Map.toList rawHeaders
       case roleFromVars usrVars of
         Nothing -> do
           logError
