@@ -80,7 +80,7 @@ explainField userInfo gCtx fld =
             RS.fromFieldByPKey txtConverter tn permFilter fld
         OCSelectAgg tn permFilter permLimit hdrs -> do
           validateHdrs hdrs
-          RS.mkSQLSelect False <$>
+          RS.mkAggSelect <$>
             RS.fromAggField txtConverter tn permFilter permLimit fld
         _ -> throw500 "unexpected mut field info for explain"
 
