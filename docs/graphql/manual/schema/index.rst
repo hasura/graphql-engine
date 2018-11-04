@@ -20,8 +20,7 @@ See:
   Basics <basics>
   Relationships <relationships/index>
   Customise with views <views>
-  Customise with schema stitching <schema-stitching>
-  Adding custom resolvers <custom-resolvers>
+  Adding custom logic (schema stitching/custom resolvers) <custom-logic/index>
   Enum type fields <enums>
   Default field values <default-values>
   Set values using SQL functions/stored procedures <sql-functions>

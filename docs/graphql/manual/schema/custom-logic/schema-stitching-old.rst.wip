@@ -1,4 +1,3 @@
-========================
 GraphQL Schema Stitching
 ========================
 
@@ -19,7 +18,7 @@ Here are 2 common use cases:
 Schema stitching allows you to have one unified API that allows the client to query multiple GraphQL Schemas at the
 same time, including relations between the schemas.
 
-.. image:: ../../../img/graphql/manual/schema/graphql-schema-stitching.png
+.. image:: ../../../../img/graphql/manual/schema/graphql-schema-stitching.png
     :scale: 50%
 
 In the above architecture, we see that there are multiple decoupled graphql services running somewhere and a central

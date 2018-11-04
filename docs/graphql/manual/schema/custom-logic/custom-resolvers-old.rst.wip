@@ -1,10 +1,7 @@
+Custom GraphQL resolvers
+========================
 
-Adding custom GraphQL resolvers
-===============================
-
-Hasura GraphQL engine provides instant GraphQL APIs over the tables and views of any Postgres database by
-auto-generating the CRUD resolvers. However, sometimes you might have to write custom resolvers to capture business
-logic that is unrelated to the database.
+Custom resolvers can be used to capture business logic that is unrelated to the database.
 
 We have set up `this boilerplate project <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/custom-resolvers>`_
 illustrating how to write your own custom GraphQL resolvers and merge them with the Hasura GraphQL engine's resolvers.
