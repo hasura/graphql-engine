@@ -55,7 +55,7 @@ Serverless/cloud-function platforms covered by boilerplates:
 * [AWS Lambda](community/boilerplates/serverless-triggers/aws-lambda)
 * [Google Cloud Functions](community/boilerplates/serverless-triggers/google-cloud-functions)
 * [Azure Functions](community/boilerplates/serverless-triggers/azure-functions)
-* [Zeit Serverless Docker](community/boilerplates/serverless-triggers/zeit-now)
+* [Zeit Now](community/boilerplates/serverless-triggers/zeit-now)
 
 ## Architecture
 
