@@ -6,7 +6,7 @@ This guide helps you set up the Hasura GraphQL engine (w/ or w/o HTTPS) on Digit
 Step 1: Create and prepare a droplet
 ------------------------------------
 
-- Login to your Digital Ocean account
+- Login to your DigitalOcean account
 - Click on ``create`` droplet then on ``One-click apps``
 - Choose ``Docker`` from the ``One-click apps`` list
 - Choose your droplet size
