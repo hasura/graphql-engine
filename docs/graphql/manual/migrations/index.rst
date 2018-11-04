@@ -19,9 +19,14 @@ Follow the guide that best fits your scenario:
 - :doc:`Migrations with a database with an existing migration system <database-with-migrations>`: Use Hasura only
   for GraphQL schema changes and not database migrations.
 
+Advanced:
+
+- :doc:`Auto-apply migrations when server starts <auto-apply-migrations>`
+
 .. toctree::
    :hidden:
 
    For new project <new-project>
    For existing project <existing-project>
    With a database with an existing migration system <database-with-migrations>
+   Auto-apply migrations when server starts <auto-apply-migrations>

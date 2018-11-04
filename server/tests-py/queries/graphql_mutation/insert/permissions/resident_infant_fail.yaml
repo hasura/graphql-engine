@@ -1,0 +1,27 @@
+description: Insert into resident table with non insertable columns (Error)
+url: /v1alpha1/graphql
+status: 400
+headers:
+  X-Hasura-Role: infant
+  X-Hasura-Infant-Id: '1'
+  X-Hasura-Infant-Name: 'Bittu'
+query:
+  query: |
+    mutation {
+      insert_resident(
+        objects: [
+          {
+            age: 3
+            is_user: true
+          }
+        ]
+      ){
+        affected_rows
+        returning{
+          id
+          name
+          age
+          is_user
+        }
+      }
+    }
