@@ -118,6 +118,8 @@ BoolExp
 
    AndExp_ | OrExp_ | NotExp_ | ColumnExp_
 
+.. _AndExp:
+
 AndExp
 ######
 
@@ -127,6 +129,7 @@ AndExp
       _and: [BoolExp_]
     }
 
+.. _OrExp:
 
 OrExp
 #####
@@ -136,6 +139,8 @@ OrExp
     {
       _or: [BoolExp_]
     }
+
+.. _NotExp:
 
 NotExp
 ######
@@ -154,6 +159,8 @@ ColumnExp
     {
       field-name : {Operator_: Value }
     }
+
+.. _Operator:
 
 Operator
 ########
