@@ -237,7 +237,8 @@ Insert object and get nested object in response
 Set field to its default value during insert
 --------------------------------------------
 
-To set a field to its ``default`` value, just omit it from the input object, irrespective of the :doc:`default value configuration <../schema/default-values>` i.e. via Postgres defaults or using column presets.
+To set a field to its ``default`` value, just omit it from the input object, irrespective of the
+:doc:`default value configuration <../schema/default-values/index>` i.e. via Postgres defaults or using column presets.
 
 **Example:** if default value of ``id`` is set to auto-incrementing integer, no need to pass ``id`` field in input object
 
