@@ -16,15 +16,6 @@ args:
     schema: public
     name: author
 
-#Insert Author 1
-- type: insert
-  args:
-    table: author
-    objects:
-    - id: 1
-      name: Author 1
-      is_registered: true
-
 #Article table
 - type: run_sql
   args:
@@ -42,16 +33,6 @@ args:
     schema: public
     name: article
 
-#Insert Article 1
-- type: insert
-  args:
-    table: article
-    objects:
-    - id: 1
-      title: Article 1
-      content: Sample content
-      author_id: 1
-
 #Create resident table
 - type: run_sql
   args:
@@ -59,7 +40,8 @@ args:
       CREATE TABLE resident (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
-        age INTEGER NOT NULL
+        age INTEGER NOT NULL,
+        is_user BOOLEAN DEFAULT FALSE NOT NULL
       )
 - type: track_table
   args:
@@ -183,6 +165,29 @@ args:
           _is_null: false
       allow_upsert: true
 
+#Insert Author table data
+- type: insert
+  args:
+    table: author
+    objects:
+      - name: Author 1
+      - name: Author 2
+
+#Insert aticle table data
+- type: insert
+  args:
+    table: article
+    objects:
+    - content: Sample article content
+      title: Article 1
+      author_id: 1
+    - content: Sample article content
+      title: Article 2
+      author_id: 1
+    - content: Sample article content
+      title: Article 3
+      author_id: 2
+    
 #Company insert permission for user
 - type: create_insert_permission
   args:
@@ -214,3 +219,60 @@ args:
       - name
       filter:
         id: X-HASURA-COMPANY-ID
+
+#Create insert permission for user on resident
+- type: create_insert_permission
+  args:
+    table: resident
+    role: user
+    permission:
+      check:
+        id: X-Hasura-Resident-Id
+      allow_upsert: true
+      set:
+        name: X-Hasura-Resident-Name
+        is_user: true
+
+#Create select permission for user on resident
+- type: create_select_permission
+  args:
+    table: resident
+    role: user
+    permission:
+      columns:
+      - id
+      - name
+      - age
+      - is_user
+      filter:
+        id: X-Hasura-Resident-Id
+
+#Create insert permission for infant on resident
+- type: create_insert_permission
+  args:
+    table: resident
+    role: infant
+    permission:
+      check:
+        id: X-Hasura-Infant-Id
+      allow_upsert: false
+      set:
+        name: X-Hasura-Infant-Name
+        id: X-Hasura-Infant-Id
+      columns:
+      - age
+
+#Create select permission for infant on resident
+- type: create_select_permission
+  args:
+    table: resident
+    role: infant
+    permission:
+      columns:
+      - id
+      - name
+      - age
+      - is_user
+      filter:
+        id: X-Hasura-Infant-Id
+

@@ -12,7 +12,10 @@ import {
   boolOperators,
   columnOperators,
   arrayColumnOperators,
+  boolColumnOperators,
 } from './utils';
+
+import { getTableName } from '../../utils';
 
 import QueryBuilderJson from '../../../../QueryBuilderJson/QueryBuilderJson';
 
@@ -64,6 +67,10 @@ class PermissionBuilder extends React.Component {
       return arrayColumnOperators.indexOf(value) !== -1;
     };
 
+    const isBoolColumnOperator = value => {
+      return boolColumnOperators.indexOf(value) !== -1;
+    };
+
     const isColumnOperator = value => {
       return columnOperators.indexOf(value) !== -1;
     };
@@ -100,8 +107,8 @@ class PermissionBuilder extends React.Component {
           } else {
             _where[operation].splice(position, 1);
           }
-          // is column name
         } else {
+          // is column name
           _where[operation] = getFilter(
             conditions[operation],
             prefixSplit.slice(1).join('.'),
@@ -110,7 +117,7 @@ class PermissionBuilder extends React.Component {
         }
       } else {
         if (operation === '--') {
-          // blank where
+          /* blank where */
         } else if (isAndOrOperator(operation)) {
           _where[operation] = [];
         } else if (isNotOperator(operation)) {
@@ -119,12 +126,8 @@ class PermissionBuilder extends React.Component {
           _where[operation] = value || [];
         } else if (isColumnOperator(operation)) {
           _where[operation] = value;
-          // if (operation === '$eq') {
-          //   _where = value
-          // }
-
-          // is column name
         } else {
+          // is column name
           _where[operation] = {};
         }
       }
@@ -145,21 +148,39 @@ class PermissionBuilder extends React.Component {
       dispatch(dispatchFunc(JSON.stringify(newFilter)));
     };
 
+    const renderBoolSelect = (dispatchFunc, value) => {
+      const boolDispatchFunc = val => {
+        let boolVal = '';
+        if (val === 'true') {
+          boolVal = true;
+        } else if (val === 'false') {
+          boolVal = false;
+        }
+
+        dispatchFunc(boolVal);
+      };
+
+      let selectValue = '';
+      if (value === true) {
+        selectValue = 'true';
+      } else if (value === false) {
+        selectValue = 'false';
+      }
+
+      const selectValues = ['true', 'false'];
+
+      return renderSelect(boolDispatchFunc, selectValue, selectValues);
+    };
+
     const renderSelect = (
       dispatchFunc,
       value,
       values,
-      prefix,
-      customDispatch = false,
-      wrapQuotes = true,
+      prefix = '',
       disabledValues = []
     ) => {
       const dispatchSelect = e => {
-        if (customDispatch) {
-          dispatchFunc(e);
-        } else {
-          dispatchFunc(e.target.value);
-        }
+        dispatchFunc(e.target.value);
       };
 
       const _selectOptions = [];
@@ -178,7 +199,7 @@ class PermissionBuilder extends React.Component {
 
       const selectedValue = addToPrefix(prefix, value || '--');
 
-      let _select = (
+      return (
         <select
           value={selectedValue}
           name={value}
@@ -188,12 +209,6 @@ class PermissionBuilder extends React.Component {
           {_selectOptions}
         </select>
       );
-
-      if (wrapQuotes) {
-        _select = wrapDoubleQuotes(_select);
-      }
-
-      return _select;
     };
 
     const renderInput = (dispatchFunc, value, prefix) => {
@@ -249,10 +264,8 @@ class PermissionBuilder extends React.Component {
     };
 
     const renderOperatorExp = (dispatchFunc, condition, prefix) => {
-      const dispatchColumnOperator = e => {
-        const _prefix = e.target.value;
-
-        dispatchFunc({ prefix: _prefix });
+      const dispatchColumnOperator = val => {
+        dispatchFunc({ prefix: val });
       };
 
       let _condition = condition;
@@ -267,9 +280,7 @@ class PermissionBuilder extends React.Component {
         dispatchColumnOperator,
         operator,
         columnOperators,
-        prefix,
-        true,
-        false
+        prefix
       );
 
       let valueInput = '';
@@ -280,7 +291,17 @@ class PermissionBuilder extends React.Component {
             operationValue,
             addToPrefix(prefix, operator)
           );
+        } else if (isBoolColumnOperator(operator)) {
+          const boolOperatorDispatchFunc = val => {
+            dispatchFunc({ prefix: addToPrefix(prefix, operator), value: val });
+          };
+
+          valueInput = renderBoolSelect(
+            boolOperatorDispatchFunc,
+            operationValue
+          );
         } else {
+          // normal column operator
           valueInput = renderInput(
             dispatchFunc,
             operationValue,
@@ -290,9 +311,6 @@ class PermissionBuilder extends React.Component {
       }
 
       const _operatorExp = [{ key: operatorSelect, value: valueInput }];
-      // if (operator === '$eq') {
-      //   _operatorExp = valueInput;
-      // }
 
       const unselectedElements = [];
       if (!operator) {
@@ -378,8 +396,8 @@ class PermissionBuilder extends React.Component {
       tableSchemas,
       prefix = ''
     ) => {
-      const dispatchOperation = e => {
-        dispatchFunc({ prefix: e.target.value });
+      const dispatchOperation = val => {
+        dispatchFunc({ prefix: val });
       };
 
       let operation = null;
@@ -390,7 +408,8 @@ class PermissionBuilder extends React.Component {
       let tableColumns = [];
       let tableRelationships = [];
       if (table) {
-        const tableSchema = tableSchemas[table];
+        // In case of a manual relationship the right table is an object for a different schema
+        const tableSchema = tableSchemas[getTableName(table)];
         tableColumns = getTableColumnNames(tableSchema);
         tableRelationships = getTableRelationshipNames(tableSchema);
       }
@@ -407,8 +426,6 @@ class PermissionBuilder extends React.Component {
         operation,
         operatorOptions,
         prefix,
-        true,
-        false,
         ['---']
       );
 

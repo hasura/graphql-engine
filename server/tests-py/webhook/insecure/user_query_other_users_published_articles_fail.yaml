@@ -1,0 +1,26 @@
+description: User can only get his unpublished articles
+url: /v1alpha1/graphql
+status: 500
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+query:
+  query: |
+    query {
+      article (
+        where: { _and:
+          [ { is_published : {_eq : true}}
+            { author : { id : {_neq : 1}}}
+          ]
+        }
+      ) {
+        id
+        title
+        content
+        is_published
+        author {
+          id
+          name
+        }
+      }
+    }

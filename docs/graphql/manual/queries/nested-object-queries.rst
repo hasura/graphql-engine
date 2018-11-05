@@ -9,7 +9,7 @@ Query using an array relationship
 The following is an example of a nested object query using the ``array relationship`` between an author and
 articles.
 
-Fetch a list of authors and a nested list of the each author’s articles:
+Fetch a list of authors and a nested list of each author’s articles:
 
 .. graphiql::
   :view_only:
@@ -129,4 +129,4 @@ Fetch a list of articles and the name of each article’s author:
 .. note::
     
     The name of the nested object is the same as the name of the object or array relationship configured in the
-    console
+    console.

@@ -1,11 +1,11 @@
 const fetch = require('node-fetch');
-const {cli} = require('cli-ux');
 const throwError = require('../error');
+const {spinnerStart, spinnerStop, spinnerStopColorless} = require('../log');
 
 const createTables = async (tables, url, headers, overwrite, runSql, sql) => {
   if (overwrite) {
-    cli.action.stop('Skipped!');
-    cli.action.start('Creating tables');
+    spinnerStopColorless('Skipped!');
+    spinnerStart('Creating tables');
     await runSql(sql, url, headers);
   } else {
     try {
@@ -41,8 +41,8 @@ const createTables = async (tables, url, headers, overwrite, runSql, sql) => {
           }
         });
         if (!found) {
-          cli.action.stop('Done!');
-          cli.action.start('Creating tables');
+          spinnerStop('Done!');
+          spinnerStart('Creating tables');
           await runSql(sql, url, headers);
         }
       }

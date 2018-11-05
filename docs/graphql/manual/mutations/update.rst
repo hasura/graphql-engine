@@ -6,7 +6,7 @@ Objects can be updated based on filters on their own fields or those in their ne
 .. note::
 
    ``where`` argument is compulsory to filter rows.
-   Atleast any one of ``_set``, ``_inc``,  ``_append``, ``_prepend``, ``_delete_key``, ``_delete_elem`` and
+   At least any one of ``_set``, ``_inc``,  ``_append``, ``_prepend``, ``_delete_key``, ``_delete_elem`` and
    ``_delete_at_path`` is expected.
 
 Update based on a filter on an object's fields
@@ -103,7 +103,7 @@ Using jsonb operators
 Update using **_append** operator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Update any ``jsonb`` column by appending it with given value. Since it is a json value, it should
-provided through a variable
+be provided through a variable.
 
 Append the ``extra_info`` of an article:
 
@@ -148,7 +148,7 @@ variables for above query:
 Update using **_prepend** operator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Update any ``jsonb`` column by prepending it with given value. Since it is a json value, it should
-provided through a variable
+provided through a variable.
 
 Prepend the ``extra_info`` of an article:
 
@@ -193,7 +193,7 @@ variables for above query:
 
 Update using **_delete_key** operator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Update any ``jsonb`` column by deleting a top level key. Input value should be a ``String`` 
+Update any ``jsonb`` column by deleting a top level key. Input value should be a ``String``.
 
 Delete the key ``key3`` in the ``extra_info`` of an article:
 
@@ -230,7 +230,7 @@ Delete the key ``key3`` in the ``extra_info`` of an article:
 
 Update using **_delete_elem** operator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Update any ``jsonb`` column by deleting a array element with given index value. Input value should be a ``Int``
+Update any ``jsonb`` column by deleting an array element with given index value. Input value should be a ``Int``.
 
 Delete the element at ``2`` in ``jsonb`` array ``["a", "b", "c"]`` of column ``extra_info`` of an article:
 
@@ -264,7 +264,7 @@ Delete the element at ``2`` in ``jsonb`` array ``["a", "b", "c"]`` of column ``e
 
 Update using **_delete_at_path** operator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Update any ``jsonb`` column by deleting field or element with specified path. Input value should be a ``String Array``
+Update any ``jsonb`` column by deleting field or element with specified path. Input value should be a ``String Array``.
 
 Delete element at json path ``name.last`` in ``extra_info`` column of author table:
 

@@ -1,7 +1,8 @@
 Paginate query results
 ======================
-The operators ``limit`` and ``offset`` are used for pagination, etc. ``limit`` specifies the number of rows to retain
-from the result set and ``offset`` determines which slice to retain from the results.
+The operators :ref:`limit <PaginationExp>` and :ref:`offset <PaginationExp>` are used for pagination.
+``limit`` specifies the number of rows to retain from the result set
+and ``offset`` determines which slice to retain from the results.
 
 The following are examples of pagination in different scenarios:
 
@@ -94,7 +95,7 @@ Fetch 5 authors from the list of all authors, starting with the 6th one:
 
 Limit results in a nested object
 --------------------------------
-Fetch a list of authors and a list of 2 of each of their rticles:
+Fetch a list of authors and a list of 2 of each of their articles:
 
 .. graphiql::
   :view_only:

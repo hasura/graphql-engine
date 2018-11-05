@@ -150,7 +150,6 @@
   -webkit-box-flex: 1;
   -ms-flex: 1;
   flex: 1;
-  overflow-y: hidden;
 }
 
 .graphiql-container .queryWrap {
@@ -227,7 +226,7 @@
   -webkit-box-direction: normal;
   -ms-flex-direction: column;
   flex-direction: column;
-  height: 29px;
+  height: 30px;
   position: relative;
 }
 
@@ -731,6 +730,245 @@ div.CodeMirror-lint-tooltip > * + * {
 /* Type */
 .cm-atom {
   color: #ca9800;
+}
+/* Hasura Analyse modal css */
+.wd25 {
+  width: 25%;
+  display: inline-block;
+}
+.wd75 {
+  width: 75%;
+  display: inline-block;
+}
+.wd40 {
+  width: 40%;
+  display: inline-block;
+}
+.wd60 {
+  width: 60%;
+  display: inline-block;
+}
+.modalWrapper {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  right: 40px;
+  bottom: 40px;
+  border: 1px solid rgb(204, 204, 204);
+  background: rgb(255, 255, 255);
+  border-radius: 4px;
+  outline: none;
+}
+.myOverlayClass {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  background-color: rgba(255, 255, 255, 0.75);
+  z-index: 100;
+}
+.modalHeader {
+  background-color: #43495a;
+  border-bottom: 1px solid #ccc;
+  padding: 10px 20px;
+  position: relative;
+  color: #ffc627;
+}
+.modalTitle {
+  font-size: 18px;
+  font-weight: 500;
+}
+.modalClose {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+.modalClose button {
+  cursor: pointer;
+  border-radius: 5px;
+  border: 0;
+  background-color: transparent;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ccc;
+  padding: 0px;
+  height: auto;
+}
+.modalClose button:hover {
+  border: 0;
+  background-color: transparent;
+  color: #fff;
+}
+.modalClose button:focus {
+  outline: none;
+}
+.modalBody {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  height: calc(100% - 46px);
+}
+.topLevelNodesWrapper {
+  border-right: 1px solid #ccc;
+  height: 100%;
+}
+
+.textCenter {
+  text-align: center;
+}
+.topLevelNodesWrapper .title {
+  padding: 15px 20px;
+  background-color: #fff3d5;
+  margin-bottom: 20px;
+  color: #767e93;
+  font-weight: 600;
+  font-size: 16px;
+}
+.analysisWrapper {
+  height: 100%;
+  position: relative;
+  width: 100%;
+}
+.topLevelNodesWrapper ul {
+  -webkit-padding-start: 0px;
+  padding-inline-start: 0px;
+  -webkit-padding-inline-start: 0px;
+  -moz-padding-inline-start: 0px;
+  -ms-padding-inline-start: 0px;
+  -o-padding-inline-start: 0px;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.borderRight {
+  border-right: 1px solid #ccc;
+}
+.topLevelNodesWrapper ul li {
+  list-style-type: none;
+  padding: 10px 0;
+  padding-left: 20px;
+  cursor: pointer;
+}
+
+.topLevelNodesWrapper ul li i {
+  margin-right: 5px;
+  font-size: 12px;
+}
+
+.topLevelNodesWrapper ul li.active {
+  color: #fd9540;
+}
+.topLevelNodesWrapper ul li:hover {
+  color: #e2701a;
+}
+.plansWrapper {
+  height: 50%;
+  position: relative;
+  padding: 0px 20px;
+}
+.plansTitle {
+  padding: 10px 0px;
+  color: #767e93;
+  font-weight: 600;
+}
+
+.copyGenerated {
+  position: absolute;
+  bottom: 30px;
+  right: 60px;
+  cursor: pointer;
+}
+.copyGenerated img,
+.copyExecution img {
+  width: 20px;
+  opacity: 0.6;
+}
+.copyGenerated img:hover,
+.copyExecution img:hover {
+  opacity: 1;
+}
+.copyGenerated:focus,
+.copyExecution:focus {
+  outline: none;
+}
+
+.codeBlock {
+  /* position: relative;
+  padding: 10px 20px; */
+  background-color: rgb(253, 249, 237);
+  /* margin: 20px;
+  width: 100%; */
+  width: auto;
+  border-radius: 5px;
+  max-height: calc(100% - 60px);
+  overflow: auto;
+  margin-top: 0px;
+  min-height: calc(100% - 60px);
+}
+
+.codeBlock pre {
+  display: block;
+  padding: 10px 20px;
+  margin: 0px;
+  font-size: 13px;
+  line-height: unset;
+  word-break: unset;
+  word-wrap: unset;
+  color: #000;
+  background: none;
+  border: none;
+  border-radius: 0;
+  overflow: unset;
+  padding-bottom: 10px;
+}
+
+.codeBlock code {
+  color: #000;
+  background: none;
+}
+
+.graphiql-container .analyse-button-wrap {
+  position: relative;
+}
+
+.copyTooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.copyTooltip .tooltiptext {
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 4px 0px;
+  font-size: 14px;
+  position: absolute;
+  z-index: 1000000000;
+  right: -21px;
+  bottom: 30px;
+  opacity: 0;
+  -webkit-transition: opacity 0.3s;
+  transition: opacity 0.3s;
+  display: none;
+  width: 57px;
+}
+
+.copyTooltip .tooltiptext::after {
+  content: '';
+  position: absolute;
+  top: 24px;
+  right: 22px;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.copyTooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+  display: block;
 }
 /* BASICS */
 
@@ -1256,7 +1494,7 @@ span.CodeMirror-selectedtext {
   -ms-flex: 1;
   flex: 1;
   font-weight: bold;
-  overflow-x: initial;
+  overflow-x: hidden;
   padding: 10px 0 10px 10px;
   text-align: center;
   text-overflow: ellipsis;
@@ -1549,12 +1787,19 @@ span.CodeMirror-selectedtext {
 .CodeMirror-foldgutter-folded:after {
   content: '\25B8';
 }
-.graphiql-container .history-contents {
+.graphiql-container .history-contents,
+.graphiql-container .history-contents input {
   font-family: 'Consolas', 'Inconsolata', 'Droid Sans Mono', 'Monaco', monospace;
   padding: 0;
 }
 
 .graphiql-container .history-contents p {
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
   font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1564,8 +1809,28 @@ span.CodeMirror-selectedtext {
   border-bottom: 1px solid #e0e0e0;
 }
 
+.graphiql-container .history-contents p.editable {
+  padding-bottom: 6px;
+  padding-top: 7px;
+}
+
+.graphiql-container .history-contents input {
+  -webkit-box-flex: 1;
+  -ms-flex-positive: 1;
+  flex-grow: 1;
+  font-size: 12px;
+}
+
 .graphiql-container .history-contents p:hover {
   cursor: pointer;
+}
+
+.graphiql-container .history-contents p span.history-label {
+  -webkit-box-flex: 1;
+  -ms-flex-positive: 1;
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .CodeMirror-info {
   background: white;

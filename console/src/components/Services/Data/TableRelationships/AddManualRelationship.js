@@ -9,6 +9,7 @@ import {
   relManualAddClicked,
   relTypeChange,
   addRelViewMigrate,
+  REL_SET_MANUAL_COLUMNS,
 } from './Actions';
 import {
   fetchTableListBySchema,
@@ -46,6 +47,10 @@ class AddManualRelationship extends Component {
     this.props.dispatch({
       type: UPDATE_REMOTE_SCHEMA_MANUAL_REL,
       data: e.target.value,
+    });
+    this.props.dispatch({
+      type: REL_SET_MANUAL_COLUMNS,
+      data: [],
     });
     this.props.dispatch(fetchTableListBySchema(e.target.value));
   }
@@ -146,7 +151,13 @@ class AddManualRelationship extends Component {
               className={'form-control'}
               onChange={this.onSchemaChange}
               data-test="remote-schema"
-              value={manualRelInfo.remoteSchema}
+              value={
+                manualRelInfo &&
+                'remoteSchema' in manualRelInfo &&
+                manualRelInfo.remoteSchema
+                  ? manualRelInfo.remoteSchema
+                  : ''
+              }
             >
               <option key="default_table">Remote Schema</option>
               {schemaList.map((s, i) => (

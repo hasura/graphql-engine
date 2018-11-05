@@ -1,11 +1,11 @@
 Filter query results / search queries
 =====================================
 
-You can use the ``where`` argument in your queries to filter the results based on a field’s values (including in a
-nested object’s fields). You can even use multiple filters in the same ``where`` clause using the ``_and`` or the
+You can use the :ref:`where <WhereExp>` argument in your queries to filter results based on some field’s values (even
+nested objects' fields). You can even use multiple filters in the same ``where`` clause using the ``_and`` or the
 ``_or`` operators.
 
-For example, fetch data for an author whose name is "Sidney":
+For example, to fetch data for an author whose name is "Sidney":
 
 .. code-block:: graphql
    :emphasize-lines: 3
@@ -19,24 +19,29 @@ For example, fetch data for an author whose name is "Sidney":
       }
     }
 
-You can also use the nested ``articles`` object to filter rows from the ``author`` table. This query fetches a list of
-authors who have articles with rating greater than 4:
+You can also use nested objects` fields to filter rows from a table and also filter the nested objects as well.
+
+For example, to fetch a list of authors who have articles with a rating greater than 4 along with those articles:
 
 .. code-block:: graphql
-   :emphasize-lines: 3
+   :emphasize-lines: 2,5
 
     query {
-      author(
-        where: {articles: {rating: {_gt: 4}}}
-      ) {
+      author (where: {articles: {rating: {_gt: 4}}}) {
         id
         name
+        articles (where: {rating: {_gt: 4}}) {
+          id
+          title
+          rating
+        }
       }
     }
 
-``_eq`` and ``_gt`` are examples of comparison operators that can be used in the ``where`` argument to filter on
-equality. Let’s take a look at different operators that can be used to filter results and the field types these
-operators are compatible with.
+Here ``_eq`` and ``_gt`` are examples of :ref:`comparison operators <Operator>` that can be used in the ``where`` argument to filter on
+equality.
+
+Let’s take a look at different operators that can be used to filter results and other advanced use cases:
 
 Equality operators (_eq and _neq)
 ---------------------------------
@@ -73,7 +78,7 @@ Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
 
 Example: String or Text
 ^^^^^^^^^^^^^^^^^^^^^^^
-Fetch a list of authors with ``name`` *(a text field)* as "Sidney"
+Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
 
 .. graphiql::
   :view_only:
@@ -465,7 +470,7 @@ Fetch a list of authors whose names begin with A or C (``similar`` is case-sensi
 
 Filter or check for null values
 -------------------------------
-Checking for null values is pretty straightforward using the ``_is_null`` operator.
+Checking for null values can be achieved using the ``_is_null`` operator.
 
 Example: Filter null values in a field
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -511,10 +516,76 @@ Fetch a list of articles that have a value in the ``published_on`` field:
       }
     }
 
+Filter based on failure of some criteria
+----------------------------------------
+
+The ``_not`` operator can be used to fetch results for which some condition does not hold true. i.e. to invert the
+filter set for a condition
+
+Example: _not
+^^^^^^^^^^^^^
+Fetch all authors who don't have any published articles:
+
+.. graphiql::
+  :view_only:
+  :query:
+    {
+      author(
+        where: {
+          _not: {
+            articles: { is_published: {_eq: true} }
+          }
+        }) {
+        id
+        name
+        articles {
+          title
+          is_published
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 7,
+            "name": "Berti",
+            "articles": [
+              {
+                "title": "ipsum primis in",
+                "is_published": false
+              }
+            ]
+          },
+          {
+            "id": 9,
+            "name": "Ninnetta",
+            "articles": []
+          },
+          {
+            "id": 10,
+            "name": "Lyndsay",
+            "articles": [
+              {
+                "title": "dui proin leo",
+                "is_published": false
+              }
+            ]
+          }
+        ]
+      }
+    }
+
 Using multiple filters in the same query
 ----------------------------------------
 You can group multiple parameters in the same ``where`` argument using the ``_and`` or the ``_or`` operators to filter
 results based on more than one criteria.
+
+
+.. note::
+  You can use the ``_or`` and ``_and`` operators along with the ``_not`` operator to create arbitrarily complex boolean
+  expressions involving multiple filtering criteria.
 
 Example:  _and
 ^^^^^^^^^^^^^^
@@ -620,3 +691,406 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
         ]
       }
     }
+
+
+Filter nested objects
+---------------------
+The ``where`` argument can be used in nested objects as well to filter the nested objects
+
+Example:
+^^^^^^^^
+Fetch all authors with only their 5 rated articles:
+
+.. graphiql::
+  :view_only:
+  :query:
+    {
+      author {
+        id
+        name
+        articles(where: {rating: {_eq: 5}}) {
+          title
+          rating
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Justin",
+            "articles": []
+          },
+          {
+            "id": 2,
+            "name": "Beltran",
+            "articles": []
+          },
+          {
+            "id": 5,
+            "name": "Amii",
+            "articles": [
+              {
+                "title": "montes nascetur ridiculus",
+                "rating": 5
+              }
+            ]
+          },
+          {
+            "id": 6,
+            "name": "Corny",
+            "articles": []
+          }
+        ]
+      }
+    }
+
+
+Filter based on nested objects' fields
+--------------------------------------
+
+You can use the fields of nested objects as well to filter your query results.
+
+For example,
+
+.. code-block:: graphql
+   :emphasize-lines: 2
+
+      query {
+        article (where: {author: {name: {_eq: "Sidney"}}}) {
+          id
+          title
+        }
+      }
+
+The behaviour of the comparision operators depends on whether the nested objects are a single object related via an
+object relationship or an array of objects related via an array relationship.
+
+- In case of an **object relationship**, a row will be returned if the single nested object satisfies the defined
+  condition.
+- In case of an **array relationship**, a row will be returned if **any of the nested objects** satisfy the defined
+  condition.
+
+Let's look at a few use cases based on the above:
+
+Fetch if the single nested object defined via an object relationship satisfies a condition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Example:
+~~~~~~~~
+Fetch all articles whose author's name starts with "A":
+
+.. graphiql::
+  :view_only:
+  :query:
+    {
+      article (
+        where: {
+          author: {
+            name: { _similar: "A%"}
+          }
+        }
+      ) {
+        id
+        title
+        author {
+          name
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "article": [
+          {
+            "id": 1,
+            "title": "sit amet",
+            "author": {
+              "name": "Anjela"
+            }
+          },
+          {
+            "id": 3,
+            "title": "amet justo morbi",
+            "author": {
+              "name": "Anjela"
+            }
+          },
+          {
+            "id": 4,
+            "title": "vestibulum ac est",
+            "author": {
+              "name": "Amii"
+            }
+          },
+          {
+            "id": 12,
+            "title": "volutpat quam pede",
+            "author": {
+              "name": "Amii"
+            }
+          },
+          {
+            "id": 13,
+            "title": "vulputate elementum",
+            "author": {
+              "name": "April"
+            }
+          }
+        ]
+      }
+    }
+
+
+Fetch if **any** of the nested objects defined via an array relationship satisfy a condition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Example:
+~~~~~~~~
+Fetch all authors which have written at least one article which is rated 1
+
+.. graphiql::
+  :view_only:
+  :query:
+    {
+      author(
+        where: {
+          articles: {rating: {_eq: 1}}
+        }
+      ) {
+        id
+        name
+        articles {
+          title
+          rating
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Justin",
+            "articles": [
+              {
+                "title": "sem duis aliquam",
+                "rating": 1
+              },
+              {
+                "title": "vel dapibus at",
+                "rating": 4
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "name": "Anjela",
+            "articles": [
+              {
+                "title": "sit amet",
+                "rating": 1
+              },
+              {
+                "title": "amet justo morbi",
+                "rating": 4
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "name": "Sidney",
+            "articles": [
+              {
+                "title": "sapien ut",
+                "rating": 1
+              },
+              {
+                "title": "turpis eget",
+                "rating": 3
+              },
+              {
+                "title": "congue etiam justo",
+                "rating": 4
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+Fetch if **all** of the nested objects defined via an array relationship satisfy a condition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As by default a row is returned if any of the nested objects satisfy a condition, to achieve the above we need to frame
+the ``where`` expression as ``{_not: {inverse-of-condition}}``. This reads as: fetch if not(any of the nested objects
+satisfy the inverted condition) i.e. all of the nested objects satisfy the condition.
+
+For example,
+
++---------------------------------------+-----------------------------------------------+
+| condition                             | where expression                              |
++=======================================+===============================================+
+| ``{object: {field: {_eq: "value"}}}`` | ``{_not: {object: {field: {_neq: "value"}}}`` |
++---------------------------------------+-----------------------------------------------+
+| ``{object: {field: {_gt: "value"}}}`` | ``{_not: {object: {field: {_lte: "value"}}}`` |
++---------------------------------------+-----------------------------------------------+
+
+Example:
+~~~~~~~~
+Fetch all authors which have all of their articles published i.e. have ``{is_published {_eq: true}``.
+
+.. graphiql::
+  :view_only:
+  :query:
+    {
+      author (
+        where: {
+          _not: {
+            articles: {is_published: {_neq: true}}
+          }
+        }
+      ) {
+        id
+        name
+        articles {
+          title
+          is_published
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Justin",
+            "articles": [
+              {
+                "title": "vel dapibus at",
+                "is_published": true
+              },
+              {
+                "title": "sem duis aliquam",
+                "is_published": true
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "name": "Beltran",
+            "articles": [
+              {
+                "title": "a nibh",
+                "is_published": true
+              },
+              {
+                "title": "sit amet",
+                "is_published": true
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "name": "Anjela",
+            "articles": [
+              {
+                "title": "sit amet",
+                "is_published": true
+              }
+            ]
+          },
+          {
+            "id": 8,
+            "name": "April",
+            "articles": [
+              {
+                "title": "vulputate elementum",
+                "is_published": true
+              },
+              {
+                "title": "eu nibh",
+                "is_published": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+
+Fetch if **none** of the nested objects defined via an array relationship satisfy a condition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As by default a row is returned if any of the nested objects satisfy a condition, to achieve the above we need to frame
+the ``where`` expression as ``{_not: {condition}}``. This reads as: fetch if not(any of the nested objects
+satisfy the condition) i.e. none of the nested objects satisy the condition.
+
+For example,
+
++---------------------------------------+----------------------------------------------+
+| condition                             | where expression                             |
++=======================================+==============================================+
+| ``{object: {field: {_eq: "value"}}}`` | ``{_not: {object: {field: {_eq: "value"}}}`` |
++---------------------------------------+----------------------------------------------+
+| ``{object: {field: {_gt: "value"}}}`` | ``{_not: {object: {field: {_gt: "value"}}}`` |
++---------------------------------------+----------------------------------------------+
+
+Example:
+~~~~~~~~
+Fetch all authors which have none of their articles published i.e. have ``{is_published {_eq: true}``.
+
+.. graphiql::
+  :view_only:
+  :query:
+    {
+      author (
+        where: {
+          _not: {
+            articles: {is_published: {_eq: true}}
+          }
+        }
+      ) {
+        id
+        name
+        articles {
+          title
+          is_published
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 7,
+            "name": "Berti",
+            "articles": [
+              {
+                "title": "ipsum primis in",
+                "is_published": false
+              }
+            ]
+          },
+          {
+            "id": 10,
+            "name": "Lyndsay",
+            "articles": [
+              {
+                "title": "dui proin leo",
+                "is_published": false
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+
+
+

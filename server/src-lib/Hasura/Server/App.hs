@@ -30,6 +30,7 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.Wai.Middleware.Static          as MS
 
 import qualified Database.PG.Query                      as Q
+import qualified Hasura.GraphQL.Explain                 as GE
 import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
@@ -103,11 +104,6 @@ parseBody = do
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
 
-filterHeaders :: [(T.Text, T.Text)] -> [(T.Text, T.Text)]
-filterHeaders hdrs = flip filter hdrs $ \(h, _) ->
-  isXHasuraTxt h && (T.toLower h /= userRoleHeader)
-  && (T.toLower h /= accessKeyHeader)
-
 onlyAdmin :: Handler ()
 onlyAdmin = do
   uRole <- asks (userRole . hcUser)
@@ -123,18 +119,20 @@ buildQCtx = do
 
 logResult
   :: (MonadIO m)
-  => Wai.Request -> BL.ByteString -> ServerCtx
+  => Maybe UserInfo -> Wai.Request -> BL.ByteString -> ServerCtx
   -> Either QErr BL.ByteString -> Maybe (UTCTime, UTCTime)
   -> m ()
-logResult req reqBody sc res qTime =
-  liftIO $ logger $ mkAccessLog req (reqBody, res) qTime
+logResult userInfoM req reqBody sc res qTime =
+  liftIO $ logger $ mkAccessLog userInfoM req (reqBody, res) qTime
   where
     logger = L.unLogger $ scLogger sc
 
 logError
   :: MonadIO m
-  => Wai.Request -> BL.ByteString -> ServerCtx -> QErr -> m ()
-logError req reqBody sc qErr = logResult req reqBody sc (Left qErr) Nothing
+  => Maybe UserInfo -> Wai.Request
+  -> BL.ByteString -> ServerCtx -> QErr -> m ()
+logError userInfoM req reqBody sc qErr =
+  logResult userInfoM req reqBody sc (Left qErr) Nothing
 
 mkSpockAction
   :: (MonadIO m)
@@ -159,18 +157,18 @@ mkSpockAction qErrEncoder serverCtx handler = do
   t2 <- liftIO getCurrentTime -- for measuring response time purposes
 
   -- log result
-  logResult req reqBody serverCtx result $ Just (t1, t2)
+  logResult (Just userInfo) req reqBody serverCtx result $ Just (t1, t2)
   either (qErrToResp $ userRole userInfo == adminRole) resToResp result
 
   where
-    logger = L.unLogger $ scLogger serverCtx
+    logger = scLogger serverCtx
     -- encode error response
     qErrToResp includeInternal qErr = do
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
 
     logAndThrow req reqBody includeInternal qErr = do
-      logError req reqBody serverCtx qErr
+      logError Nothing req reqBody serverCtx qErr
       qErrToResp includeInternal qErr
 
     resToResp resp = do
@@ -188,22 +186,6 @@ withLock lk action = do
     onError e   = releaseLock >> throwError e
     acquireLock = liftIO $ takeMVar lk
     releaseLock = liftIO $ putMVar lk ()
-
--- v1ExplainHandler :: RQLExplain -> Handler BL.ByteString
--- v1ExplainHandler expQuery = dbAction
---   where
---     dbAction = do
---       onlyAdmin
---       scRef <- scCacheRef . hcServerCtx <$> ask
---       schemaCache <- liftIO $ readIORef scRef
---       pool <- scPGPool . hcServerCtx <$> ask
---       isoL <- scIsolation . hcServerCtx <$> ask
---       runExplainQuery pool isoL userInfo (fst schemaCache) selectQ
-
---     selectQ = rqleQuery expQuery
---     role = rqleRole expQuery
---     headers = M.toList $ rqleHeaders expQuery
---     userInfo = UserInfo role headers
 
 v1QueryHandler :: RQLQuery -> Handler BL.ByteString
 v1QueryHandler query = do
@@ -237,12 +219,14 @@ v1Alpha1GQHandler query = do
   isoL <- scIsolation . hcServerCtx <$> ask
   GH.runGQ pool isoL userInfo (snd cache) query
 
--- v1Alpha1GQSchemaHandler :: Handler BL.ByteString
--- v1Alpha1GQSchemaHandler = do
---   scRef <- scCacheRef . hcServerCtx <$> ask
---   schemaCache <- liftIO $ readIORef scRef
---   onlyAdmin
---   GS.generateGSchemaH schemaCache
+gqlExplainHandler :: GE.GQLExplain -> Handler BL.ByteString
+gqlExplainHandler query = do
+  onlyAdmin
+  scRef <- scCacheRef . hcServerCtx <$> ask
+  cache <- liftIO $ readIORef scRef
+  pool <- scPGPool . hcServerCtx <$> ask
+  isoL <- scIsolation . hcServerCtx <$> ask
+  GE.explainGQLQuery pool isoL (snd cache) query
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
@@ -332,9 +316,9 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
       query <- parseBody
       v1QueryHandler query
 
-    -- post "v1/query/explain" $ mkSpockAction encodeQErr serverCtx $ do
-    --   expQuery <- parseBody
-    --   v1ExplainHandler expQuery
+    post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
+      expQuery <- parseBody
+      gqlExplainHandler expQuery
 
     post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr serverCtx $ do
       query <- parseBody
@@ -351,7 +335,7 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
       let qErr = err404 NotFound "resource does not exist"
       req <- request
       reqBody <- liftIO $ strictRequestBody req
-      logError req reqBody serverCtx qErr
+      logError Nothing req reqBody serverCtx qErr
       uncurry setHeader jsonHeader
       lazyBytes $ encode qErr
 

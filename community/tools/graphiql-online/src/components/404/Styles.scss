@@ -1,0 +1,42 @@
+.container {
+  padding: 0;
+}
+
+.viewcontainer {
+  height: 100vh;
+  width: 100vw;
+  display: table;
+
+  .centerContent{
+    display: table-cell;
+    vertical-align: middle;
+
+    .message {
+      padding: 50px 20%;
+    }
+    .message h1 {
+      font-size: 54px;
+      font-weight: bold;
+    }
+    .message p {
+      margin-left: 15px;
+    }
+    .message p > a {
+      font-weight: bold;
+    }
+  }
+}
+
+.header {
+  background: #eee;
+  h2 {
+    margin: 0;
+    padding: 26px;
+    float: left;
+    line-height: 26px;
+  }
+  .nav {
+    padding: 20px;
+    float: left;
+  }
+}

@@ -23,6 +23,7 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+import qualified Hasura.GraphQL.Resolve.Insert          as RI
 import qualified Hasura.GraphQL.Resolve.Mutation        as RM
 import qualified Hasura.GraphQL.Resolve.Select          as RS
 
@@ -30,7 +31,7 @@ import qualified Hasura.GraphQL.Resolve.Select          as RS
 buildTx :: UserInfo -> GCtx -> Field -> Q.TxE QErr BL.ByteString
 buildTx userInfo gCtx fld = do
   opCxt <- getOpCtx $ _fName fld
-  join $ fmap fst $ runConvert (fldMap, orderByCtx) $ case opCxt of
+  join $ fmap fst $ runConvert (fldMap, orderByCtx, insCtxMap) $ case opCxt of
 
     OCSelect tn permFilter permLimit hdrs ->
       validateHdrs hdrs >> RS.convertSelect tn permFilter permLimit fld
@@ -38,8 +39,10 @@ buildTx userInfo gCtx fld = do
     OCSelectPkey tn permFilter hdrs ->
       validateHdrs hdrs >> RS.convertSelectByPKey tn permFilter fld
       -- RS.convertSelect tn permFilter fld
-    OCInsert tn vn cols updPermM hdrs    ->
-      validateHdrs hdrs >> RM.convertInsert roleName (tn, vn) cols updPermM fld
+    OCSelectAgg tn permFilter permLimit hdrs ->
+      validateHdrs hdrs >> RS.convertAggSelect tn permFilter permLimit fld
+    OCInsert tn hdrs    ->
+      validateHdrs hdrs >> RI.convertInsert roleName tn fld
       -- RM.convertInsert (tn, vn) cols fld
     OCUpdate tn permFilter hdrs ->
       validateHdrs hdrs >> RM.convertUpdate tn permFilter fld
@@ -51,16 +54,17 @@ buildTx userInfo gCtx fld = do
     roleName = userRole userInfo
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
-    orderByCtx = _gOrdByEnums gCtx
+    orderByCtx = _gOrdByCtx gCtx
+    insCtxMap = _gInsCtxMap gCtx
 
     getOpCtx f =
       onNothing (Map.lookup f opCtxMap) $ throw500 $
       "lookup failed: opctx: " <> showName f
 
     validateHdrs hdrs = do
-      let receivedHdrs = userHeaders userInfo
+      let receivedVars = userVars userInfo
       forM_ hdrs $ \hdr ->
-        unless (Map.member hdr receivedHdrs) $
+        unless (isJust $ getVarVal hdr receivedVars) $
         throw400 NotFound $ hdr <<> " header is expected but not found"
 
 -- {-# SCC resolveFld #-}

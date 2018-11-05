@@ -48,6 +48,7 @@ const fetchSchemaList = () => (dispatch, getState) => {
           schema: 'information_schema',
         },
         columns: ['schema_name'],
+        order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
         where: {
           schema_name: {
             $nin: [
@@ -85,8 +86,16 @@ const loadSchema = () => (dispatch, getState) => {
           name: 'hdb_table',
           schema: 'hdb_catalog',
         },
-        columns: ['*.*'],
+        columns: [
+          '*.*',
+          {
+            name: 'columns',
+            columns: ['*.*'],
+            order_by: [{ column: 'column_name', type: 'asc', nulls: 'last' }],
+          },
+        ],
         where: { table_schema: currentSchema },
+        order_by: [{ column: 'table_name', type: 'asc', nulls: 'last' }],
       },
     }),
   };
@@ -98,6 +107,39 @@ const loadSchema = () => (dispatch, getState) => {
       console.error('Failed to load schema ' + JSON.stringify(error));
     }
   );
+};
+
+const fetchViewInfoFromInformationSchema = (schemaName, viewName) => (
+  dispatch,
+  getState
+) => {
+  const url = Endpoints.getSchema;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify({
+      type: 'select',
+      args: {
+        table: {
+          name: 'views',
+          schema: 'information_schema',
+        },
+        columns: [
+          'is_updatable',
+          'is_insertable_into',
+          'is_trigger_updatable',
+          'is_trigger_deletable',
+          'is_trigger_insertable_into',
+        ],
+        where: {
+          table_name: viewName,
+          table_schema: schemaName,
+        },
+      },
+    }),
+  };
+  return dispatch(requestAction(url, options));
 };
 
 const loadUntrackedSchema = () => (dispatch, getState) => {
@@ -319,8 +361,16 @@ const fetchTableListBySchema = schemaName => (dispatch, getState) => {
           name: 'hdb_table',
           schema: 'hdb_catalog',
         },
-        columns: ['*.*'],
+        columns: [
+          '*.*',
+          {
+            name: 'columns',
+            columns: ['*.*'],
+            order_by: [{ column: 'column_name', type: 'asc', nulls: 'last' }],
+          },
+        ],
         where: { table_schema: schemaName },
+        order_by: [{ column: 'table_name', type: 'asc', nulls: 'last' }],
       },
     }),
   };
@@ -468,4 +518,5 @@ export {
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
   fetchTableListBySchema,
   RESET_MANUAL_REL_TABLE_LIST,
+  fetchViewInfoFromInformationSchema,
 };

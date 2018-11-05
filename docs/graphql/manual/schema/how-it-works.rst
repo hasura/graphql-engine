@@ -1,10 +1,10 @@
 How Hasura's GraphQL schema generation works
 ============================================
 
-Given your Postgres database, Hasura GraphQL engine can automatically generate a GraphQL schema and process GraphQL
+Given your Postgres database, Hasura GraphQL engine can automatically generate a GraphQL schema and process both GraphQL
 queries and mutations.
 
-How does Hasura GraphQL engine know which tables and views in which schema, and how to connect them so that they
+How does Hasura GraphQL engine know which tables and views are in which schema and how to connect them so that they
 form a graph over which queries and mutations should be allowed?
 
 Here's what Hasura GraphQL engine does under the hood:
@@ -32,13 +32,13 @@ mutations.
 Relationships or Connections
 ----------------------------
 
-Between one table/view and another table/view you can tell Hasura GraphQL engine to create a relationship or a
+Between one table/view and another table/view, you can tell Hasura GraphQL engine to create a relationship or a
 connection between
-these 2 nodes in a graph, using a particular column as a link. Often, you have foreign-key constraints that
+their 2 nodes in a graph, using a particular column as a link. Often, you have foreign-key constraints that
 indicate a relationship and you can tell Hasura GraphQL engine to use that foreign-key constraint to create a
 relationship too.
 
-You can specify an ``object relationship`` or an ``array relationship`` between table and views. For example:
+You can specify an ``object relationship`` or an ``array relationship`` between tables and views. For example:
 
 #. You might have a ``restaurant.average_rating`` where ``average_rating`` is a view connected to the ``restaurant``
    table via a ``restaurant_id``.
@@ -46,15 +46,15 @@ You can specify an ``object relationship`` or an ``array relationship`` between 
 
 When you create a relationship, Hasura GraphQL engine does the following:
 
-#. Augments the types of the tables/views involved by adding a reference to the nested type
+#. Augments the types of tables/views involved by adding a reference to the nested type
 #. Augments the possible ``where`` and ``order_by`` clauses that can be used to enable nested filtering and sorting
 
 Resolvers
 ---------
 
-Hasura GraphQL engine does not have any resolvers. The Hasura GraphQL engine is actually a compiler, that compiles
+Hasura GraphQL engine does not have any resolvers. The Hasura GraphQL engine is actually a compiler that compiles
 your GraphQL query into an SQL query.
-Hasura's GraphQL syntax is also optimised to expose the power of the underlying SQL so that you can make powerful
+Hasura's GraphQL syntax is also optimized to expose the power of the underlying SQL so that you can make powerful
 queries via GraphQL.
 
 Metadata

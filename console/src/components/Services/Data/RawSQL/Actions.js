@@ -26,7 +26,7 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
-const executeSQL = isMigration => (dispatch, getState) => {
+const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   dispatch({ type: MAKING_REQUEST });
   dispatch(showSuccessNotification('Executing the Query...'));
 
@@ -34,7 +34,7 @@ const executeSQL = isMigration => (dispatch, getState) => {
   const currMigrationMode = getState().main.migrationMode;
 
   const migrateUrl = returnMigrateUrl(currMigrationMode);
-  const currentSchema = getState().tables.currentSchema;
+  const currentSchema = 'public';
   const isCascadeChecked = getState().rawSQL.isCascadeChecked;
 
   let url = Endpoints.rawSQL;
@@ -46,22 +46,35 @@ const executeSQL = isMigration => (dispatch, getState) => {
   ];
   // check if track view enabled
   if (getState().rawSQL.isTableTrackChecked) {
-    const regExp = /create (view|table) (\S+)/i;
-    const matches = sql.match(regExp);
-    let trackViewName = matches ? matches[2] : '';
-    if (trackViewName.indexOf('.') !== -1) {
-      trackViewName = matches[2].split('.')[1];
-    }
-    trackViewName = trackViewName.replace(/['"]+/g, ''); // replace quotes
-    const trackQuery = {
-      type: 'add_existing_table_or_view',
-      args: {
-        name: trackViewName.trim(),
-        schema: currentSchema,
-      },
-    };
-    if (trackViewName !== '') {
-      schemaChangesUp.push(trackQuery);
+    const regExp = /create (view|table) ((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
+    const matches = sql.match(new RegExp(regExp, 'gmi'));
+    if (matches) {
+      matches.forEach(element => {
+        const itemMatch = element.match(new RegExp(regExp, 'i'));
+        if (itemMatch && itemMatch.length === 6) {
+          const trackQuery = {
+            type: 'add_existing_table_or_view',
+            args: {},
+          };
+          // If group 5 is undefined, use group 3 and 4 for schema and table respectively
+          // If group 5 is present, use group 5 for table name using public schema.
+          if (itemMatch[5]) {
+            trackQuery.args.name = itemMatch[5];
+            trackQuery.args.schema = currentSchema;
+          } else {
+            trackQuery.args.name = itemMatch[4];
+            trackQuery.args.schema = itemMatch[3];
+          }
+          // replace and trim schema and table name
+          trackQuery.args.name = trackQuery.args.name
+            .replace(/['"]+/g, '')
+            .trim();
+          trackQuery.args.schema = trackQuery.args.schema
+            .replace(/['"]+/g, '')
+            .trim();
+          schemaChangesUp.push(trackQuery);
+        }
+      });
     }
   }
   let requestBody = {
@@ -71,7 +84,6 @@ const executeSQL = isMigration => (dispatch, getState) => {
   // check if its a migration and send to hasuractl migrate
   if (isMigration) {
     url = migrateUrl;
-    const migrationName = 'run_sql_migration';
     requestBody = {
       name: migrationName,
       up: schemaChangesUp,

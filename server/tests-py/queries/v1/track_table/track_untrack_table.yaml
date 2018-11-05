@@ -1,0 +1,79 @@
+- description: Track table
+  url: /v1/query
+  status: 200  
+  response:
+    message: success
+  query:
+    type: track_table
+    args:
+      name: author
+
+- description: Track already untracked table
+  url: /v1/query
+  status: 400  
+  response:
+    path: $.args
+    error: 'view/table already tracked : "author"'
+    code: already-tracked
+  query:
+    type: track_table
+    args:
+      name: author
+
+- description: Select query
+  url: /v1/query
+  status: 200
+  response:
+  - id: 1 
+    name: Author 1
+  - id: 2
+    name: Author 2
+  query:
+    type: select
+    args:
+      table: author
+      columns:
+        - id
+        - name
+
+#Untrack table
+- description: Untrack table
+  url: /v1/query
+  status: 200  
+  response:
+    message: success
+  query:
+    type: untrack_table
+    args:
+      table: author
+
+
+#Untrack table
+- description: Untrack table
+  url: /v1/query
+  status: 400  
+  response:
+    path: $.args
+    error: 'view/table already untracked : "author"'
+    code: already-untracked
+  query:
+    type: untrack_table
+    args:
+      table: author
+
+#Run a select query: error
+- description: Select query error
+  url: /v1/query
+  status: 400
+  response:
+    path: $.args.table
+    error: table "author" does not exist
+    code: not-exists
+  query:
+    type: select
+    args:
+      table: author
+      columns:
+        - id
+        - name
+

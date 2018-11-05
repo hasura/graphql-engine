@@ -6,7 +6,7 @@ Hasura GraphQL engine provides instant GraphQL APIs over the tables and views of
 auto-generating the CRUD resolvers. However, sometimes you might have to write custom resolvers to capture business
 logic that is unrelated to the database.
 
-We have setup `this boilerplate project <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/custom-resolvers>`_
+We have set up `this boilerplate project <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/custom-resolvers>`_
 illustrating how to write your own custom GraphQL resolvers and merge them with the Hasura GraphQL engine's resolvers.
 
 Follow the boilerplate's ``README.md`` for detailed instructions.
@@ -17,8 +17,8 @@ The boilerplate includes sample custom resolvers for:
 
 - A ``hello`` query which returns a fixed string.
 - A ``count`` query that returns a counter from some other data source.
-- A ``increment_counter`` mutation that increments the value of the above counter
-- A ``user_average_age`` query that directly makes an SQL query to Postgres using Knex and returns the result
+- A ``increment_counter`` mutation that increments the value of the above counter.
+- A ``user_average_age`` query that directly makes an SQL query to Postgres using Knex and returns the result.
 
 The steps to achieve this are:
 
@@ -28,4 +28,3 @@ The steps to achieve this are:
 - Merge this schema with the existing Hasura GraphQL schema and serve the resulting GraphQL API.
 
 The above steps are implemented using `Apollo's graphql-tools library <https://github.com/apollographql/graphql-tools>`__.
-

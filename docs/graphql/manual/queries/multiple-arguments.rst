@@ -1,6 +1,6 @@
 Using multiple arguments in a query
 ===================================
-Multiple arguments can be used together in the same query. For example, if you want to use the ``where`` argument to
+Multiple arguments can be used together in the same query. For example, you can use the ``where`` argument to
 filter the results and then use the ``order_by`` argument to sort them.
 
 For example, fetch a list of authors and only 2 of their published articles that are sorted by their date of publication:
@@ -14,7 +14,7 @@ For example, fetch a list of authors and only 2 of their published articles that
         name
         articles(
           where: {is_published: {_eq: true}},
-          order_by: published_on_desc,
+          order_by: {published_on: desc},
           limit: 2
         ) {
           id

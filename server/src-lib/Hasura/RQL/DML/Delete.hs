@@ -30,7 +30,7 @@ data DeleteQueryP1
 mkSQLDelete
   :: DeleteQueryP1 -> S.SelectWith
 mkSQLDelete (DeleteQueryP1 tn (fltr, wc) mutFlds) =
-  mkSelWith tn (S.CTEDelete delete) mutFlds
+  mkSelWith tn (S.CTEDelete delete) mutFlds False
   where
     delete = S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
     tableFltr = Just $ S.WhereFrag $ S.BEBin S.AndOp fltr $ cBoolExp wc
@@ -52,6 +52,10 @@ convDeleteQuery
 convDeleteQuery prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
   tableInfo <- askTabInfo tableName
 
+  -- If table is view then check if it deletable
+  mutableView tableName viIsDeletable
+    (tiViewInfo tableInfo) "deletable"
+
   -- Check if the role has delete permissions
   delPerm <- askDelPermInfo tableInfo
 
@@ -66,8 +70,7 @@ convDeleteQuery prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
-    withPathK "returning" $
-    zip retCols <$> checkRetCols fieldInfoMap selPerm retCols
+    withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
@@ -75,7 +78,7 @@ convDeleteQuery prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
 
   return $ DeleteQueryP1 tableName
     (dpiFilter delPerm, annSQLBoolExp)
-    (mkDefaultMutFlds tableName mAnnRetCols)
+    (mkDefaultMutFlds mAnnRetCols)
 
   where
     selNecessaryMsg =

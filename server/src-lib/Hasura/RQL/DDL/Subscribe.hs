@@ -8,20 +8,21 @@
 module Hasura.RQL.DDL.Subscribe where
 
 import           Data.Aeson
-import           Data.Int            (Int64)
+import           Data.Int                (Int64)
 import           Hasura.Prelude
+import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
-import           System.Environment  (lookupEnv)
+import           System.Environment      (lookupEnv)
 
-import qualified Data.FileEmbed      as FE
-import qualified Data.HashMap.Strict as HashMap
-import qualified Data.Text           as T
-import qualified Data.Text.Encoding  as TE
-import qualified Database.PG.Query   as Q
+import qualified Hasura.SQL.DML          as S
 
-data Ops = INSERT | UPDATE | DELETE deriving (Show)
+import qualified Data.FileEmbed          as FE
+import qualified Data.HashMap.Strict     as HashMap
+import qualified Data.Text               as T
+import qualified Database.PG.Query       as Q
+
 
 data OpVar = OLD | NEW deriving (Show)
 
@@ -41,63 +42,89 @@ getDropFuncSql op trn = "DROP FUNCTION IF EXISTS"
                         <> " hdb_views.notify_hasura_" <> trn <> "_" <> T.pack (show op) <> "()"
                         <> " CASCADE"
 
-getTriggerSql :: Ops -> TriggerId -> TriggerName -> SchemaName -> TableName -> Maybe SubscribeOpSpec -> Maybe T.Text
-getTriggerSql op trid trn sn tn spec =
-  let globalCtx =  HashMap.fromList [
-                    (T.pack "ID", trid)
-                  , (T.pack "NAME", trn)
-                  , (T.pack "SCHEMA_NAME", getSchemaTxt sn)
-                  , (T.pack "TABLE_NAME", getTableTxt tn)]
+getTriggerSql
+  :: Ops
+  -> TriggerId
+  -> TriggerName
+  -> QualifiedTable
+  -> [PGColInfo]
+  -> Maybe SubscribeOpSpec
+  -> Maybe T.Text
+getTriggerSql op trid trn qt allCols spec =
+  let globalCtx =  HashMap.fromList
+                   [ (T.pack "ID", trid)
+                   , (T.pack "NAME", trn)
+                   , (T.pack "QUALIFIED_TABLE", toSQLTxt qt)
+                   ]
       opCtx = maybe HashMap.empty (createOpCtx op) spec
       context = HashMap.union globalCtx opCtx
   in
-      spec >> renderSql context <$> triggerTmplt
+      spec >> renderGingerTmplt context <$> triggerTmplt
   where
-    createOpCtx :: Ops -> SubscribeOpSpec -> HashMap.HashMap T.Text T.Text
-    createOpCtx op1 (SubscribeOpSpec columns) = HashMap.fromList [
-                                        (T.pack "OPERATION", T.pack $ show op1)
-                                      , (T.pack "OLD_DATA_EXPRESSION", renderOldDataExp op1 columns )
-                                      , (T.pack "NEW_DATA_EXPRESSION", renderNewDataExp op1 columns )]
-    renderOldDataExp :: Ops -> SubscribeColumns -> T.Text
-    renderOldDataExp op2 scs = case op2 of
-                                 INSERT -> "NULL"
-                                 UPDATE -> getRowExpression OLD scs
-                                 DELETE -> getRowExpression OLD scs
-    renderNewDataExp :: Ops -> SubscribeColumns -> T.Text
-    renderNewDataExp op2 scs = case op2 of
-                                 INSERT -> getRowExpression NEW scs
-                                 UPDATE -> getRowExpression NEW scs
-                                 DELETE -> "NULL"
-    getRowExpression :: OpVar -> SubscribeColumns -> T.Text
-    getRowExpression opVar scs = case scs of
-                                    SubCStar -> "row_to_json(" <> T.pack (show opVar) <> ")"
-                                    SubCArray cols -> "row_to_json((select r from (select " <> listcols cols opVar <> ") as r))"
-                                   where
-                                     listcols :: [PGCol] -> OpVar -> T.Text
-                                     listcols pgcols var = T.intercalate ", " $ fmap (mkQualified (T.pack $ show var).getPGColTxt) pgcols
-                                     mkQualified :: T.Text -> T.Text -> T.Text
-                                     mkQualified v col = v <> "." <> col
+    createOpCtx op1 (SubscribeOpSpec columns payload) =
+      HashMap.fromList
+      [ (T.pack "OPERATION", T.pack $ show op1)
+      , (T.pack "OLD_ROW", toSQLTxt $ renderRow OLD columns )
+      , (T.pack "NEW_ROW", toSQLTxt $ renderRow NEW columns )
+      , (T.pack "OLD_PAYLOAD_EXPRESSION", toSQLTxt $ renderOldDataExp op1 $ fromMaybePayload payload )
+      , (T.pack "NEW_PAYLOAD_EXPRESSION", toSQLTxt $ renderNewDataExp op1 $ fromMaybePayload payload )
+      ]
+    renderOldDataExp op2 scs =
+      case op2 of
+        INSERT -> S.SEUnsafe "NULL"
+        UPDATE -> getRowExpression OLD scs
+        DELETE -> getRowExpression OLD scs
+    renderNewDataExp op2 scs =
+      case op2 of
+        INSERT -> getRowExpression NEW scs
+        UPDATE -> getRowExpression NEW scs
+        DELETE -> S.SEUnsafe "NULL"
+    getRowExpression opVar scs =
+      case scs of
+        SubCStar -> applyRowToJson $ S.SEUnsafe $ opToTxt opVar
+        SubCArray cols -> applyRowToJson $
+          S.mkRowExp $ map (toExtr . mkQId opVar) $
+          getColInfos cols allCols
 
-    renderSql :: HashMap.HashMap T.Text T.Text -> GingerTmplt -> T.Text
-    renderSql = renderGingerTmplt
+    applyRowToJson e = S.SEFnApp "row_to_json" [e] Nothing
+    applyRow e = S.SEFnApp "row" [e] Nothing
+    toExtr = flip S.Extractor Nothing
+    mkQId opVar colInfo = toJSONableExp (pgiType colInfo) $
+      S.SEQIden $ S.QIden (opToQual opVar) $ toIden $ pgiName colInfo
+
+    opToQual = S.QualVar . opToTxt
+    opToTxt = T.pack . show
+
+    renderRow opVar scs =
+      case scs of
+        SubCStar -> applyRow $ S.SEUnsafe $ opToTxt opVar
+        SubCArray cols -> applyRow $
+          S.mkRowExp $ map (toExtr . mkQId opVar) $
+          getColInfos cols allCols
+
+    fromMaybePayload = fromMaybe SubCStar
 
 mkTriggerQ
   :: TriggerId
   -> TriggerName
   -> QualifiedTable
+  -> [PGColInfo]
   -> TriggerOpsDef
   -> Q.TxE QErr ()
-mkTriggerQ trid trn (QualifiedTable sn tn) (TriggerOpsDef insert update delete) = do
-  let msql = getTriggerSql INSERT trid trn sn tn insert
-             <> getTriggerSql UPDATE trid trn sn tn update
-             <> getTriggerSql DELETE trid trn sn tn delete
+mkTriggerQ trid trn qt allCols (TriggerOpsDef insert update delete) = do
+  let msql = getTriggerSql INSERT trid trn qt allCols insert
+             <> getTriggerSql UPDATE trid trn qt allCols update
+             <> getTriggerSql DELETE trid trn qt allCols delete
   case msql of
-    Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder sql)
-    Nothing -> throw500 "no trigger sql generated"
+    Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromText sql)
+    Nothing  -> throw500 "no trigger sql generated"
 
-addEventTriggerToCatalog :: QualifiedTable -> EventTriggerDef
-               -> Q.TxE QErr TriggerId
-addEventTriggerToCatalog qt@(QualifiedTable sn tn) (EventTriggerDef name def webhook rconf mheaders) = do
+addEventTriggerToCatalog
+  :: QualifiedTable
+  -> [PGColInfo]
+  -> EventTriggerDef
+  -> Q.TxE QErr TriggerId
+addEventTriggerToCatalog qt@(QualifiedTable sn tn) allCols (EventTriggerDef name def webhook rconf mheaders) = do
   ids <- map runIdentity <$> Q.listQE defaultTxErrorHandler [Q.sql|
                                   INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook, num_retries, retry_interval, headers)
                                   VALUES ($1, 'table', $2, $3, $4, $5, $6, $7, $8)
@@ -105,7 +132,7 @@ addEventTriggerToCatalog qt@(QualifiedTable sn tn) (EventTriggerDef name def web
                                   |] (name, sn, tn, Q.AltJ $ toJSON def, webhook, toInt64 $ rcNumRetries rconf, toInt64 $ rcIntervalSec rconf, Q.AltJ $ toJSON mheaders) True
 
   trid <- getTrid ids
-  mkTriggerQ trid name qt def
+  mkTriggerQ trid name qt allCols def
   return trid
   where
     getTrid []    = throw500 "could not create event-trigger"
@@ -121,13 +148,14 @@ delEventTriggerFromCatalog trn = do
   mapM_ tx [INSERT, UPDATE, DELETE]
   where
     tx :: Ops -> Q.TxE QErr ()
-    tx op = Q.multiQE defaultTxErrorHandler (Q.fromBuilder $ TE.encodeUtf8Builder $ getDropFuncSql op trn)
+    tx op = Q.multiQE defaultTxErrorHandler (Q.fromText $ getDropFuncSql op trn)
 
 updateEventTriggerToCatalog
   :: QualifiedTable
+  -> [PGColInfo]
   -> EventTriggerDef
   -> Q.TxE QErr TriggerId
-updateEventTriggerToCatalog qt (EventTriggerDef name def webhook rconf mheaders) = do
+updateEventTriggerToCatalog qt allCols (EventTriggerDef name def webhook rconf mheaders) = do
   ids <- map runIdentity <$> Q.listQE defaultTxErrorHandler [Q.sql|
                                   UPDATE hdb_catalog.event_triggers
                                   SET
@@ -140,7 +168,7 @@ updateEventTriggerToCatalog qt (EventTriggerDef name def webhook rconf mheaders)
                                   RETURNING id
                                   |] (Q.AltJ $ toJSON def, webhook, toInt64 $ rcNumRetries rconf, toInt64 $ rcIntervalSec rconf, Q.AltJ $ toJSON mheaders, name) True
   trid <- getTrid ids
-  mkTriggerQ trid name qt def
+  mkTriggerQ trid name qt allCols def
   return trid
   where
     getTrid []    = throw500 "could not update event-trigger"
@@ -157,7 +185,12 @@ fetchEventTrigger trn = do
   getTrigger triggers
   where
     getTrigger []    = throw400 NotExists ("could not find event trigger '" <> trn <> "'")
-    getTrigger (x:_) = return $ EventTrigger (QualifiedTable sn tn) trn' tDef webhook (RetryConf nr rint)
+    getTrigger (x:_) = return $ EventTrigger
+                       (QualifiedTable sn tn)
+                       trn'
+                       tDef
+                       webhook
+                       (RetryConf nr rint)
       where (sn, tn, trn', Q.AltJ tDef, webhook, nr, rint) = x
 
 fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
@@ -215,15 +248,16 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
 
 subTableP2 :: (P2C m) => QualifiedTable -> Bool -> EventTriggerDef -> m ()
 subTableP2 qt replace q@(EventTriggerDef name def webhook rconf mheaders) = do
+  allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
   trid <- if replace
     then do
     delEventTriggerFromCache qt name
-    liftTx $ updateEventTriggerToCatalog qt q
+    liftTx $ updateEventTriggerToCatalog qt allCols q
     else
-    liftTx $ addEventTriggerToCatalog qt q
+    liftTx $ addEventTriggerToCatalog qt allCols q
   let headerConfs = fromMaybe [] mheaders
-  headers <- getHeadersFromConf headerConfs
-  addEventTriggerToCache qt trid name def rconf webhook headers
+  headerInfos <- getHeaderInfosFromConf headerConfs
+  addEventTriggerToCache qt trid name def rconf webhook headerInfos
 
 subTableP2shim :: (P2C m) => (QualifiedTable, Bool, EventTriggerDef) -> m RespBody
 subTableP2shim (qt, replace, etdef) = do
@@ -266,17 +300,17 @@ instance HDBQuery DeliverEventQuery where
   phaseTwo q _ = deliverEvent q
   schemaCachePolicy = SCPNoChange
 
-getHeadersFromConf :: (P2C m) => [HeaderConf] -> m [(HeaderName, T.Text)]
-getHeadersFromConf = mapM getHeader
+getHeaderInfosFromConf :: (P2C m) => [HeaderConf] -> m [EventHeaderInfo]
+getHeaderInfosFromConf = mapM getHeader
   where
-    getHeader :: (P2C m) => HeaderConf -> m (HeaderName, T.Text)
+    getHeader :: (P2C m) => HeaderConf -> m EventHeaderInfo
     getHeader hconf = case hconf of
-      (HeaderConf name (HVValue val)) -> return (name, val)
-      (HeaderConf name (HVEnv val))   -> do
+      (HeaderConf _ (HVValue val)) -> return $ EventHeaderInfo hconf val
+      (HeaderConf _ (HVEnv val))   -> do
         mEnv <- liftIO $ lookupEnv (T.unpack val)
         case mEnv of
           Nothing -> throw400 NotFound $ "environment variable '" <> val <> "' not set"
-          Just val' -> return (name, T.pack val')
+          Just envval -> return $ EventHeaderInfo hconf (T.pack envval)
 
 toInt64 :: (Integral a) => a -> Int64
 toInt64 = fromIntegral

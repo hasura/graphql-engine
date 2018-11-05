@@ -6,10 +6,13 @@
 
 module Hasura.GraphQL.Resolve.Context
   ( FieldMap
-  , OrdByResolveCtx
-  , OrdByResolveCtxElem
-  , NullsOrder(..)
-  , OrdTy(..)
+  , RelationInfoMap
+  , OrdByCtx
+  , OrdByItemMap
+  , OrdByItem(..)
+  , UpdPermForIns
+  , InsCtx(..)
+  , InsCtxMap
   , RespTx
   , InsertTxConflictCtx(..)
   , getFldInfo
@@ -44,29 +47,51 @@ import           Hasura.SQL.Value
 import qualified Hasura.SQL.DML                as S
 
 type FieldMap
-  = Map.HashMap (G.NamedType, G.Name) (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool))
+  = Map.HashMap (G.NamedType, G.Name)
+    (Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int))
 
-data OrdTy
-  = OAsc
-  | ODesc
-  deriving (Show, Eq)
+-- data OrdTy
+--   = OAsc
+--   | ODesc
+--   deriving (Show, Eq)
 
-data NullsOrder
-  = NFirst
-  | NLast
-  deriving (Show, Eq)
+-- data NullsOrder
+--   = NFirst
+--   | NLast
+--   deriving (Show, Eq)
 
 type RespTx = Q.TxE QErr BL.ByteString
 
--- context needed for sql generation
-type OrdByResolveCtxElem = (PGColInfo, OrdTy, NullsOrder)
+-- order by context
+data OrdByItem
+  = OBIPGCol !PGColInfo
+  | OBIRel !RelInfo !S.BoolExp
+  deriving (Show, Eq)
 
-type OrdByResolveCtx
-  = Map.HashMap (G.NamedType, G.EnumValue) OrdByResolveCtxElem
+type OrdByItemMap = Map.HashMap G.Name OrdByItem
+
+type OrdByCtx = Map.HashMap G.NamedType OrdByItemMap
+
+-- insert context
+type RelationInfoMap = Map.HashMap RelName RelInfo
+
+-- updatable columns and filter
+type UpdPermForIns = ([PGCol], S.BoolExp)
+
+data InsCtx
+  = InsCtx
+  { icView      :: !QualifiedTable
+  , icColumns   :: ![PGColInfo]
+  , icSet       :: !InsSetCols
+  , icRelations :: !RelationInfoMap
+  , icUpdPerm   :: !(Maybe UpdPermForIns)
+  } deriving (Show, Eq)
+
+type InsCtxMap = Map.HashMap QualifiedTable InsCtx
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> G.Name -> m (Either PGColInfo (RelInfo, S.BoolExp, Maybe Int, Bool))
+  => G.NamedType -> G.Name -> m (Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int))
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $
@@ -124,7 +149,7 @@ withArgM args arg f = prependArgsInPath $ nameAsPath arg $
 type PrepArgs = Seq.Seq Q.PrepArg
 
 type Convert =
-  StateT PrepArgs (ReaderT (FieldMap, OrdByResolveCtx) (Except QErr))
+  StateT PrepArgs (ReaderT (FieldMap, OrdByCtx, InsCtxMap) (Except QErr))
 
 prepare
   :: (MonadState PrepArgs m)
@@ -136,7 +161,7 @@ prepare (colTy, colVal) = do
 
 runConvert
   :: (MonadError QErr m)
-  => (FieldMap, OrdByResolveCtx) -> Convert a -> m (a, PrepArgs)
+  => (FieldMap, OrdByCtx, InsCtxMap) -> Convert a -> m (a, PrepArgs)
 runConvert ctx m =
   either throwError return $
   runExcept $ runReaderT (runStateT m Seq.empty) ctx

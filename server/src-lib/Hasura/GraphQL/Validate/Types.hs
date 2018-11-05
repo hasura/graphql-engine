@@ -29,6 +29,7 @@ module Hasura.GraphQL.Validate.Types
   , getObjTyM
   , mkScalarTy
   , pgColTyToScalar
+  , pgColValToAnnGVal
   , getNamedTy
   , mkTyInfoMap
   , fromTyDef
@@ -47,6 +48,7 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.GraphQL.Draft.TH     as G
@@ -270,7 +272,7 @@ type FragDefMap = Map.HashMap G.Name FragDef
 type AnnVarVals =
   Map.HashMap G.Variable AnnGValue
 
-type AnnGObject = Map.HashMap G.Name AnnGValue
+type AnnGObject = OMap.InsOrdHashMap G.Name AnnGValue
 
 data AnnGValue
   = AGScalar !PGColType !(Maybe PGColValue)
@@ -284,6 +286,9 @@ instance J.ToJSON AnnGValue where
   toJSON = const J.Null
     -- J.
     -- J.toJSON [J.toJSON ty, J.toJSON valM]
+
+pgColValToAnnGVal :: PGColType -> PGColValue -> AnnGValue
+pgColValToAnnGVal colTy colVal = AGScalar colTy $ Just colVal
 
 hasNullVal :: AnnGValue -> Bool
 hasNullVal = \case

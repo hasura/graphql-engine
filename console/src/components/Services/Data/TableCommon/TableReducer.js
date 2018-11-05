@@ -1,4 +1,8 @@
-import { defaultModifyState, defaultPermissionsState } from '../DataState';
+import {
+  defaultModifyState,
+  defaultPermissionsState,
+  defaultInsertSetState,
+} from '../DataState';
 
 import { MAKE_REQUEST, REQUEST_SUCCESS, REQUEST_ERROR } from '../DataActions';
 
@@ -45,6 +49,7 @@ import {
   PERM_ALLOW_ALL,
   PERM_TOGGLE_MODIFY_LIMIT,
   PERM_TOGGLE_ALLOW_UPSERT,
+  PERM_TOGGLE_ALLOW_AGGREGATION,
   PERM_CUSTOM_CHECKED,
   PERM_REMOVE_ACCESS,
   PERM_SAVE_PERMISSIONS,
@@ -64,6 +69,10 @@ import {
   deleteFromPermissionsState,
   updateBulkSelect,
   updateBulkSameSelect,
+  CREATE_NEW_INSERT_SET_VAL,
+  DELETE_INSERT_SET_VAL,
+  UPDATE_PERM_SET_KEY_VALUE,
+  TOGGLE_PERM_INSERT_SET_OPERATION_CHECK,
 } from '../TablePermissions/Actions';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
@@ -148,14 +157,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         relAdd: {
-          isActive: true,
-          tableName: '',
-          name: '',
-          isObjRel: null,
-          lcol: '',
-          rTable: null,
-          rcol: '',
-          manualColumns: [],
+          ...defaultModifyState.relAdd,
         },
       };
     case REL_SET_TYPE:
@@ -277,7 +279,8 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ...getBasePermissionsState(
             action.tableSchema,
             action.role,
-            action.query
+            action.query,
+            action.insertPermColumnRestriction
           ),
         },
       };
@@ -306,6 +309,18 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ...updatePermissionsState(
             modifyState.permissionsState,
             'allow_upsert',
+            action.data
+          ),
+        },
+      };
+
+    case PERM_TOGGLE_ALLOW_AGGREGATION:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...updatePermissionsState(
+            modifyState.permissionsState,
+            'allow_aggregations',
             action.data
           ),
         },
@@ -448,6 +463,88 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
             action.data,
             false
           ),
+        },
+      };
+
+    /* Set operations */
+    case TOGGLE_PERM_INSERT_SET_OPERATION_CHECK:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          insert: {
+            ...modifyState.permissionsState.insert,
+            isSetConfigChecked: !modifyState.permissionsState.insert
+              .isSetConfigChecked,
+          },
+        },
+      };
+
+    case CREATE_NEW_INSERT_SET_VAL:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          insert: {
+            ...modifyState.permissionsState.insert,
+            localSet: [
+              ...modifyState.permissionsState.insert.localSet.slice(),
+              { ...defaultInsertSetState },
+            ],
+          },
+        },
+      };
+
+    case DELETE_INSERT_SET_VAL:
+      const deleteIndex = action.data.index;
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          insert: {
+            ...modifyState.permissionsState.insert,
+            localSet: [
+              ...modifyState.permissionsState.insert.localSet.slice(
+                0,
+                deleteIndex
+              ),
+              ...modifyState.permissionsState.insert.localSet.slice(
+                deleteIndex + 1,
+                modifyState.permissionsState.insert.localSet.length
+              ),
+            ],
+          },
+        },
+      };
+
+    case UPDATE_PERM_SET_KEY_VALUE:
+      const updatedIndex = action.data.index;
+      const setKeyVal =
+        modifyState.permissionsState.insert.localSet[updatedIndex];
+      setKeyVal[action.data.key] = action.data.value;
+      if (action.data.key === 'key') {
+        // Clear if key changes
+        setKeyVal.value = '';
+      }
+
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          insert: {
+            ...modifyState.permissionsState.insert,
+            localSet: [
+              ...modifyState.permissionsState.insert.localSet.slice(
+                0,
+                updatedIndex
+              ),
+              { ...setKeyVal },
+              ...modifyState.permissionsState.insert.localSet.slice(
+                updatedIndex + 1,
+                modifyState.permissionsState.insert.localSet.length
+              ),
+            ],
+          },
         },
       };
 

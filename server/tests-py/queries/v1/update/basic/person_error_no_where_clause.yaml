@@ -1,0 +1,16 @@
+description: Updated person data without any operator
+url: /v1/query
+status: 400
+response:
+  path: $
+  error: key "where" not present
+  code: parse-failed
+query:
+  type: update
+  args:
+    table: person
+    $set:
+      details: null
+    returning:
+    - id
+    - details

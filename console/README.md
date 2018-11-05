@@ -34,11 +34,11 @@ cd console
 npm install
 ```
 
-Hasura console can be developed in two modes (`server` or `cli` mode). Both modes requires a running instance of GraphQL Enigne. The easiest way to get Hasura GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://docs.hasura.io/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine is documented [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
+Hasura console can be developed in two modes (`server` or `cli` mode). Both modes require a running instance of GraphQL Engine. The easiest way to get Hasura GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://docs.hasura.io/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine are documented [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
 
 ### Development with Hasura GraphQL Engine (`server` mode)
 
-Hasura GraphQL engine should be running to develop console in this mode. If you have set it up on heroku, your url will look like `<app-name>.herokuapp.com`, if it's on you local machine, it's probably `http://localhost:8080`.
+Hasura GraphQL engine should be running to develop console in this mode. If you have set it up on heroku, your url will look like `<app-name>.herokuapp.com`, if it's on your local machine, it's probably `http://localhost:8080`.
 
 [Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. Create a `.env` file in the root directory for console (wherever package.json is). Sample `.env` file will look like below
 
@@ -53,7 +53,7 @@ CONSOLE_MODE=server
 URL_PREFIX=/
 ```
 
-Note that `CONSOLE_MODE` is set to `server`. In this mode, **migrations** will be disabled and the corresponding functionality on the console will be hidden. If you are looking to add/tweak functionality related to migrations, check out [Development with Hasura CLI](#development-with-hasura-cli).
+Note that `CONSOLE_MODE` is set to `server`. In this mode, **migrations** will be disabled and the corresponding functionality on the console will be hidden. If you are looking to add/tweak functionality related to migrations, check out [Development with Hasura CLI](#development-with-hasura-cli-cli-mode).
 
 Environment variables accepted in `server` mode:
 
@@ -119,12 +119,15 @@ Visit [http://localhost:3000](http://localhost:3000) to confirm the setup.
 
 ![Testing Development Server](../assets/console-readme-assets/test-dev-setup.jpg)
 
-### Make changes to code
+### Make changes to the code
 
 Make changes to the code and the console will reload automatically to reflect the new changes. Keep iterating.
 When adding a new feature, it is recommended to add corresponding tests too.
 
 Tests are written using [Cypress](https://www.cypress.io/).
+
+You can use the [Redux DevTools Extension](http://extension.remotedev.io/) to inspect and debug the Redux store.
+It should automatically connect to the Redux store when started in development mode.
 
 ### Run Tests
 

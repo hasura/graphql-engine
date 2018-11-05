@@ -33,7 +33,7 @@ data UpdateQueryP1
 mkSQLUpdate
   :: UpdateQueryP1 -> S.SelectWith
 mkSQLUpdate (UpdateQueryP1 tn setExps (permFltr, wc) mutFlds) =
-  mkSelWith tn (S.CTEUpdate update) mutFlds
+  mkSelWith tn (S.CTEUpdate update) mutFlds False
   where
     update = S.SQLUpdate tn setExp Nothing tableFltr $ Just S.returningStar
     setExp    = S.SetExp $ map S.SetExpItem setExps
@@ -113,6 +113,10 @@ convUpdateQuery f uq = do
   let tableName = uqTable uq
   tableInfo <- withPathK "table" $ askTabInfo tableName
 
+  -- If it is view then check if it is updatable
+  mutableView tableName viIsUpdatable
+    (tiViewInfo tableInfo) "updatable"
+
   -- Check if the role has update permissions
   updPerm <- askUpdPermInfo tableInfo
 
@@ -140,8 +144,7 @@ convUpdateQuery f uq = do
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
-    withPathK "returning" $ zip retCols <$>
-    checkRetCols fieldInfoMap selPerm retCols
+    withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
   let setExpItems = setItems ++ incItems ++ mulItems ++ defItems
       updTable = upiTable updPerm
@@ -157,7 +160,7 @@ convUpdateQuery f uq = do
     tableName
     setExpItems
     (upiFilter updPerm, annSQLBoolExp)
-    (mkDefaultMutFlds tableName mAnnRetCols)
+    (mkDefaultMutFlds mAnnRetCols)
   where
     mRetCols = uqReturning uq
     selNecessaryMsg =

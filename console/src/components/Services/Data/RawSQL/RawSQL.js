@@ -31,6 +31,12 @@ const migrationTip = (
     migrations
   </Tooltip>
 );
+const migrationNameTip = (
+  <Tooltip id="tooltip-migration">
+    Use this to change the name of the generated migration files. Defaults to
+    'run_sql_migration'
+  </Tooltip>
+);
 const trackTableTip = (
   <Tooltip id="tooltip-tracktable">
     If you are creating a table/view, you can track them to query them with
@@ -84,6 +90,41 @@ const RawSQL = ({
     );
   }
 
+  const submitSQL = () => {
+    // check migration mode global
+    if (migrationMode) {
+      const checkboxElem = document.getElementById('migration-checkbox');
+      const isMigration = checkboxElem ? checkboxElem.checked : false;
+      const textboxElem = document.getElementById('migration-name');
+      let migrationName = textboxElem ? textboxElem.value : '';
+      if (migrationName.length === 0) {
+        migrationName = 'run_sql_migration';
+      }
+      if (!isMigration && globals.consoleMode === 'cli') {
+        // if migration is not checked, check if the sql text has any of 'create', 'alter', 'drop'
+        const formattedSql = sql.toLowerCase();
+        if (
+          formattedSql.indexOf('create') !== -1 ||
+          formattedSql.indexOf('alter') !== -1 ||
+          formattedSql.indexOf('drop') !== -1
+        ) {
+          // const confirmation = window.confirm('Your SQL Statement has a schema modifying command. Are you sure its not a migration?');
+          dispatch(modalOpen());
+          const confirmation = false;
+          if (confirmation) {
+            dispatch(executeSQL(isMigration, migrationName));
+          }
+        } else {
+          dispatch(executeSQL(isMigration, migrationName));
+        }
+      } else {
+        dispatch(executeSQL(isMigration, migrationName));
+      }
+    } else {
+      dispatch(executeSQL(false, ''));
+    }
+  };
+
   const onModalClose = () => {
     dispatch(modalClose());
   };
@@ -100,7 +141,9 @@ const RawSQL = ({
     ));
     const rows = result.map((row, i) => (
       <tr key={i}>
-        {row.map((columnValue, j) => <td key={j}>{columnValue}</td>)}
+        {row.map((columnValue, j) => (
+          <td key={j}>{columnValue}</td>
+        ))}
       </tr>
     ));
     return !resultType || resultType === 'command' ? null : (
@@ -163,6 +206,11 @@ const RawSQL = ({
                 </Link>{' '}
                 functionality.
               </li>
+              <li>
+                Please note that if the migrations are enabled,
+                <code>down</code>
+                migrations will not be generated for SQL statements.
+              </li>
             </ul>
           </div>
           <hr />
@@ -177,6 +225,15 @@ const RawSQL = ({
             maxLines={100}
             width="100%"
             showPrintMargin={false}
+            commands={[
+              {
+                name: 'submit',
+                bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
+                exec: () => {
+                  submitSQL();
+                },
+              },
+            ]}
             onChange={val => {
               dispatch({ type: SET_SQL, data: val });
               const formattedSql = val.toLowerCase();
@@ -267,6 +324,28 @@ const RawSQL = ({
                   aria-hidden="true"
                 />
               </OverlayTrigger>
+              <div className={styles.padd_top}>
+                Migration Name:
+                <OverlayTrigger placement="right" overlay={migrationNameTip}>
+                  <i
+                    className={`${styles.padd_small_left} fa fa-info-circle`}
+                    aria-hidden="true"
+                  />
+                </OverlayTrigger>
+              </div>
+              <input
+                className={
+                  styles.add_mar_right_small +
+                  ' ' +
+                  styles.tableNameInput +
+                  ' ' +
+                  styles.add_mar_top_small +
+                  ' form-control'
+                }
+                placeholder={'Name of the generated migration file'}
+                id="migration-name"
+                type="text"
+              />
               <hr />
             </div>
           ) : (
@@ -275,37 +354,7 @@ const RawSQL = ({
           <button
             type="submit"
             className={styles.yellow_button}
-            onClick={() => {
-              // check migration mode global
-              if (migrationMode) {
-                const checkboxElem = document.getElementById(
-                  'migration-checkbox'
-                );
-                const isMigration = checkboxElem ? checkboxElem.checked : false;
-                if (!isMigration && globals.consoleMode === 'cli') {
-                  // if migration is not checked, check if the sql text has any of 'create', 'alter', 'drop'
-                  const formattedSql = sql.toLowerCase();
-                  if (
-                    formattedSql.indexOf('create') !== -1 ||
-                    formattedSql.indexOf('alter') !== -1 ||
-                    formattedSql.indexOf('drop') !== -1
-                  ) {
-                    // const confirmation = window.confirm('Your SQL Statement has a schema modifying command. Are you sure its not a migration?');
-                    dispatch(modalOpen());
-                    const confirmation = false;
-                    if (confirmation) {
-                      dispatch(executeSQL(isMigration));
-                    }
-                  } else {
-                    dispatch(executeSQL(isMigration));
-                  }
-                } else {
-                  dispatch(executeSQL(isMigration));
-                }
-              } else {
-                dispatch(executeSQL(false));
-              }
-            }}
+            onClick={submitSQL}
             data-test="run-sql"
           >
             Run!

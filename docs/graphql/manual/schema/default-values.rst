@@ -4,7 +4,7 @@ Setting default values for fields
 Let's say you want certain fields to have their values set automatically by Postgres if
 not explicitly passed. For example, an auto-incrementing id, a created_at timestamp, etc.
 
-We can achieve this by setting a default value for the field which could either be a fixed value or a simple sql
+We can achieve this by setting a default value for the field which could either be a fixed value or a simple SQL
 function.
 
 **Example:** Say we have a field ``created_at`` in a table ``article``  which we would want to be set to the current
@@ -34,7 +34,7 @@ Open the console and head to ``Data -> article -> Modify``:
 
     CREATE SEQUENCE roll_number_seq;
 
-  Now set the default value of the ``roll_number`` field as ``nextval('roll_number_seq')``
+  Now set the default value of the ``roll_number`` field as ``nextval('roll_number_seq')``.
 
 
 2) Run an insert mutation
@@ -47,5 +47,5 @@ value will be set automatically by Postgres.
 
 .. note::
 
-  The default value is ignored when a value is explicity set to the field. To enforce the value set in a field is the
-  result of the defined SQL function, see: :doc:`sql-functions`
+  The default value is ignored when a value is explicitly set to the field. To enforce the value set in a field is the
+  result of the defined SQL function, see: :doc:`sql-functions`.
