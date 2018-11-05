@@ -51,32 +51,6 @@ convertRowObj val =
     let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (PGCol $ G.unName k, prepExp)
 
--- parseOnConflict
---   :: (MonadError QErr m)
---   => Maybe UpdPermForIns -> [PGCol] -> AnnGValue -> m RI.ConflictCtx
--- parseOnConflict updFltrM inpCols val =
---   flip withObject val $ \_ obj -> do
---     actionM <- parseAction obj
---     constraint <- parseConstraint obj
---     updColsM <- parseUpdCols obj
-
---     let ignoreCtx = return $ RI.CCDoNothing $ Just constraint
---         updateCtx = do
---           (updColsPerm, updFltr) <- onNothing updFltrM $ throwVE
---             "cannot update columns since update permission is not defined"
---           updCols <- maybe (returnInpCols updColsPerm) return updColsM
---           return $ RI.CCUpdate constraint updCols updFltr
-
---     -- consider "action" if "update_columns" is not mentioned
---     case (updColsM, actionM) of
---       (Just [], _)             -> ignoreCtx
---       (Just _, _)              -> updateCtx
---       (Nothing, Just CAIgnore) -> ignoreCtx
---       (Nothing, _)             -> updateCtx
---   where
---     returnInpCols updColsPerm =
---       RI.validateInpCols inpCols updColsPerm >> return inpCols
-
 type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
 
 rhsExpOp :: S.SQLOp -> S.AnnType -> ApplySQLOp

@@ -23,7 +23,6 @@ import           Data.Has
 
 import qualified Data.HashMap.Strict            as Map
 import qualified Data.HashSet                   as Set
-import qualified Data.List                      as L
 
 import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
@@ -1294,7 +1293,7 @@ getRootFldsRole' tn primCols constraints fields insM selM updM delM viM =
     colInfos = fst $ validPartitionFieldInfoMap fields
     getInsDet (hdrs, upsertPerm) =
       let isUpsertable = upsertable constraints upsertPerm $ isJust viM
-      in ( OCInsert tn $ hdrs `L.union` maybe [] _3 updM
+      in ( OCInsert tn $ hdrs `union` maybe [] _3 updM
          , Right $ mkInsMutFld tn isUpsertable
          )
     getUpdDet (updCols, updFltr, hdrs) =
