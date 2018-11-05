@@ -2,6 +2,7 @@ import React from 'react';
 import Common from '../Common/Common';
 
 import { addResolver, RESET } from './addResolverReducer';
+import Helmet from 'react-helmet';
 
 class Add extends React.Component {
   componentWillUnmount() {
@@ -12,6 +13,7 @@ class Add extends React.Component {
     const { isRequesting, dispatch } = this.props;
     return (
       <div className={styles.addWrapper}>
+        <Helmet title="Add Schema - Stitched Schemas | Hasura" />
         <div className={styles.heading_text}>Stitch a new GraphQL schema</div>
         <form
           onSubmit={e => {

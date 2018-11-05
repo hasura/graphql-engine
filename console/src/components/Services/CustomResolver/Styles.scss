@@ -25,7 +25,6 @@
     // height: 200px;
     // border: 1px solid #000;
     img {
-      width: 70%;
     }
   }
   .commonBtn
@@ -49,6 +48,7 @@
       cursor: pointer;
     }
   }
+
   .defaultWidth
   {
     width: 300px;
@@ -95,4 +95,11 @@
       }
     }
   }
+  .remove_padding_bottom {
+    padding-bottom: 0px;
+  }
+  .set_line_height {
+    line-height: 26px;
+  }
+
 }
