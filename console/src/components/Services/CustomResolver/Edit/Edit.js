@@ -2,7 +2,6 @@ import React from 'react';
 import Common from '../Common/Common';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
-import { Link } from 'react-router';
 
 import {
   fetchResolver,
@@ -14,6 +13,8 @@ import {
 import { VIEW_RESOLVER } from '../customActions';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
+
+import ResetMetadata from '../../Data/Metadata/ResetMetadata';
 
 import BreadCrumb from '../../Layout/BreadCrumb/BreadCrumb';
 
@@ -113,7 +114,12 @@ class Edit extends React.Component {
           >
             {isRequesting ? 'Deleting ...' : 'Delete'}
           </button>
+          {/*
           <Link to={'/metadata'}>Refresh Schema</Link>
+          */}
+          <span className={styles.refresh_schema_btn}>
+            <ResetMetadata {...this.props} />
+          </span>
           <span>
             <OverlayTrigger placement="right" overlay={refresh}>
               <i className="fa fa-question-circle" aria-hidden="true" />
@@ -193,6 +199,7 @@ const mapStateToProps = state => {
     ...state.customResolverData.addData,
     ...state.customResolverData.headerData,
     migrationMode: state.main.migrationMode,
+    dataHeaders: { ...state.tables.dataHeaders },
   };
 };
 
