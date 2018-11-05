@@ -7,7 +7,9 @@ const appPrefix = '/stitched-schemas';
 class CustomResolver extends React.Component {
   render() {
     const styles = require('../Styles.scss');
-    const landingImage = require('./schema-stitching-color.png');
+    // const landingImage = require('./schema-stitching-color.png');
+    const landingImage =
+      'https://storage.googleapis.com/hasura-graphql-engine/console/assets/schema-stitching-diagram.png';
     return (
       <div className={styles.resolverWrapper}>
         <Helmet title={'Custom Resolvers | Hasura'} />
