@@ -40,7 +40,7 @@ Hasura console can be developed in two modes (`server` or `cli` mode). Both mode
 
 Hasura GraphQL engine should be running to develop console in this mode. If you have set it up on Heroku, your url will look like `<app-name>.herokuapp.com`, if it's on your local machine, it's probably `http://localhost:8080`.
 
-[Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. Create a `.env` file in the root directory for console (wherever package.json is). Sample `.env` file can contain the example environment variables below:
+[Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. Create a `.env` file in the root directory for console (wherever package.json is). Here's a `.env` file with some environment variable examples :
 
 ```bash
 PORT=3000
