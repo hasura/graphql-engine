@@ -21,7 +21,7 @@ extra-deps:
 # - git: https://github.com/hasura/graphql-parser-hs.git
 #   commit: eae59812ec537b3756c3ddb5f59a7cc59508869b
 - git: https://github.com/ecthiender/graphql-parser-hs.git
-  commit: 88a3c5157ea5b175b12e03dc461fb5562c8d885b
+  commit: 702b06049edb46fb22b39872fa57fe9942cbd9d6
 - ginger-0.8.0.1
 
 # for text-builder

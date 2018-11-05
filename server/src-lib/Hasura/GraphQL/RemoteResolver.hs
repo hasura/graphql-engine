@@ -61,7 +61,7 @@ fetchRemoteSchema manager url headerConf = do
   let typMap = VT.mkTyInfoMap typeInfos
       (qRootN, mRootN, _) = getRootNames schemaDoc
       mQrTyp = Map.lookup qRootN typMap
-      mMrTyp = Map.lookup mRootN typMap
+  let mMrTyp = maybe Nothing (\mr -> Map.lookup mr typMap) mRootN
   qrTyp <- liftMaybe noQueryRoot mQrTyp
   let mRmQR = VT.getObjTyM qrTyp
       mRmMR = join $ VT.getObjTyM <$> mMrTyp
