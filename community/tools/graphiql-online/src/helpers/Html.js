@@ -25,6 +25,9 @@ export default class Html extends Component {
       <html lang="en-us">
         <head>
           <link rel="icon" type="image/png" href="/rstatic/favicon.png" />
+          <title>GraphiQL Online with Headers | Built by Hasura</title>
+          <meta name="title" content="GraphiQL Online with Headers | Built by Hasura" />
+          <meta name="description" content="An online version of GraphiQL. Manage headers easily. Test your GraphQL servers" />
 
           {Object.keys(assets.styles).map((style, key) => (
             <link

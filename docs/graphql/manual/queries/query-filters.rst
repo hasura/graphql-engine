@@ -1,7 +1,7 @@
 Filter query results / search queries
 =====================================
 
-You can use the ``where`` argument in your queries to filter results based on some field’s values (even
+You can use the :ref:`where <WhereExp>` argument in your queries to filter results based on some field’s values (even
 nested objects' fields). You can even use multiple filters in the same ``where`` clause using the ``_and`` or the
 ``_or`` operators.
 
@@ -38,7 +38,7 @@ For example, to fetch a list of authors who have articles with a rating greater 
       }
     }
 
-Here ``_eq`` and ``_gt`` are examples of comparison operators that can be used in the ``where`` argument to filter on
+Here ``_eq`` and ``_gt`` are examples of :ref:`comparison operators <Operator>` that can be used in the ``where`` argument to filter on
 equality.
 
 Let’s take a look at different operators that can be used to filter results and other advanced use cases:
