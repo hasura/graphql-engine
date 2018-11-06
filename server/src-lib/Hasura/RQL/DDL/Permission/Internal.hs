@@ -47,9 +47,7 @@ instance ToJSON PermColSpec where
 
 convColSpec :: FieldInfoMap -> PermColSpec -> [PGCol]
 convColSpec _ (PCCols cols) = cols
-convColSpec cim PCStar      =
-  map pgiName $ fst $ partitionEithers $
-  map fieldInfoToEither $ M.elems cim
+convColSpec cim PCStar      = map pgiName $ getCols cim
 
 assertPermNotDefined
   :: (MonadError QErr m)
@@ -201,9 +199,7 @@ getDependentHeaders boolExp = case boolExp of
         | otherwise -> []
       _ -> []
     parseObject o = flip concatMap (M.toList o) $ \(k, v) ->
-                             if isRQLOp k
-                             then parseOnlyString v
-                             else []
+                      bool (parseValue v) (parseOnlyString v) $ isRQLOp k
 
 valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
 valueParser columnType = \case

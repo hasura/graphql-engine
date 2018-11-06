@@ -30,7 +30,7 @@ data DeleteQueryP1
 mkSQLDelete
   :: DeleteQueryP1 -> S.SelectWith
 mkSQLDelete (DeleteQueryP1 tn (fltr, wc) mutFlds) =
-  mkSelWith tn (S.CTEDelete delete) mutFlds
+  mkSelWith tn (S.CTEDelete delete) mutFlds False
   where
     delete = S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
     tableFltr = Just $ S.WhereFrag $ S.BEBin S.AndOp fltr $ cBoolExp wc
@@ -78,7 +78,7 @@ convDeleteQuery prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
 
   return $ DeleteQueryP1 tableName
     (dpiFilter delPerm, annSQLBoolExp)
-    (mkDefaultMutFlds tableName mAnnRetCols)
+    (mkDefaultMutFlds mAnnRetCols)
 
   where
     selNecessaryMsg =
