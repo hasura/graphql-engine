@@ -68,6 +68,8 @@ Syntax definitions
 Object
 ^^^^^^
 
+Simple Object :-
+
 .. code-block:: none
 
   object-name {
@@ -76,6 +78,7 @@ Object
     ..
     nested object1
     nested object2
+    aggregate nested object1
     ..
   }
 
@@ -89,6 +92,88 @@ E.g.
       article { # nested object
         title
       }
+      article_aggregate{ # aggregate nested object
+        aggregate {
+          count
+        }
+        nodes {
+          title
+        }
+      }
+   }
+
+Aggregate Object :-    
+
+.. code-block:: none
+
+  object-name_aggregate {
+    aggregate {
+      count
+      sum {
+        field
+        ..
+      }
+      avg {
+        field
+        ..
+      }
+      max {
+        field
+        ..
+      }
+      min {
+        field
+        ..
+      }
+    nodes {
+      field1
+      field2
+      ..
+      nested object1
+      nested object2
+      aggregate nested object1
+      ..
+    }
+  }
+
+E.g.
+
+.. code-block:: graphql
+
+   author_aggregate {
+     aggregate {
+       count # total count
+       sum {
+         id # sum aggregate on id
+       }
+       avg {
+         id # avg aggregate on id
+       }
+       max {
+         id # max aggregate on id
+       }
+       min {
+         id # min aggregate on id
+       }
+     }
+
+     nodes { # objects
+       id # scalar field
+       name # scalar field
+
+       article { # nested object
+         title
+       }
+
+       article_aggregate{ # aggregate nested object
+         aggregate {
+           count
+         }
+         nodes {
+           title
+         }
+       }
+     }
    }
 
 .. _Argument:

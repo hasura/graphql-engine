@@ -78,6 +78,69 @@ Fetch a list of authors and a nested list of each author’s articles:
       }
     }
 
+Query using aggregations on an array relationship
+-------------------------------------------------
+The following is an example of a nested object query using ``aggregations on array relationship`` between author and articles.
+
+Fetch an author whose id is ``1`` and a nested list of articles (with aggregations):
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author (where: {id: {_eq: 1}}) {
+        id
+        name
+        articles_aggregate {
+          aggregate {
+            count
+            sum {
+              id
+            }
+            max {
+              id
+            }
+          }
+          nodes {
+            id
+            title
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Justin",
+            "articles_aggregate":{
+               "aggregate":{
+                   "count": 2,
+                   "sum": {
+                     "id": 31
+                   },
+                   "max": {
+                     "id": 16
+                   }
+                },
+               "nodes":[
+                 {
+                   "id": 15,
+                   "title": "vel dapibus at"
+                 },
+                 {
+                   "id": 16,
+                   "title": "sem duis aliquam"
+                 }
+               ]
+            }
+          }
+        ]
+      }
+    }
+
 Query using an object relationship
 ----------------------------------
 The following is an example of a nested object query using the ``object relationship`` between an article and an
