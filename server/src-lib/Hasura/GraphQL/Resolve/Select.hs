@@ -63,11 +63,15 @@ fromSelSet f fldTy flds =
           Left colInfo -> return $ RS.FCol colInfo
           Right (relInfo, isAgg, tableFilter, tableLimit) -> do
             let relTN = riRTable relInfo
-                annSelMaker = bool fromField fromAggField isAgg
-            annSel <- annSelMaker f relTN tableFilter tableLimit fld
-            let annRel = RS.AnnRel (riName relInfo) (riType relInfo)
-                         (riMapping relInfo) annSel
-            return $ RS.FRel annRel
+                colMapping = riMapping relInfo
+            if isAgg then do
+              aggSel <- fromAggField f relTN tableFilter tableLimit fld
+              return $ RS.FAgg $ RS.AggSel colMapping aggSel
+            else do
+              annSel <- fromField f relTN tableFilter tableLimit fld
+              let annRel = RS.AnnRel (riName relInfo) (riType relInfo)
+                           colMapping annSel
+              return $ RS.FRel annRel
 
 fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
 fieldAsPath = nameAsPath . _fName
@@ -92,10 +96,9 @@ fromField f tn permFilter permLimitM fld =
   fieldAsPath fld $ do
   tableArgs <- parseTableArgs f tn args
   annFlds   <- fromSelSet f (_fType fld) $ _fSelSet fld
-  let selFlds = RS.ASFSimple annFlds
-      tabFrom = RS.TableFrom tn Nothing
+  let tabFrom = RS.TableFrom tn Nothing
       tabPerm = RS.TablePerm permFilter permLimitM
-  return $ RS.AnnSel selFlds tabFrom tabPerm tableArgs
+  return $ RS.AnnSelG annFlds tabFrom tabPerm tableArgs
   where
     args = _fArguments fld
 
@@ -174,10 +177,9 @@ fromFieldByPKey
 fromFieldByPKey f tn permFilter fld = fieldAsPath fld $ do
   boolExp <- pgColValToBoolExpG f tn $ _fArguments fld
   annFlds <- fromSelSet f (_fType fld) $ _fSelSet fld
-  let selFlds = RS.ASFSimple annFlds
-      tabFrom = RS.TableFrom tn Nothing
+  let tabFrom = RS.TableFrom tn Nothing
       tabPerm = RS.TablePerm permFilter Nothing
-  return $ RS.AnnSel selFlds tabFrom tabPerm $
+  return $ RS.AnnSelG annFlds tabFrom tabPerm $
     RS.noTableArgs { RS._taWhere = Just boolExp}
 
 convertSelect
@@ -224,14 +226,13 @@ convertAggFld ty selSet =
 fromAggField
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> m RS.AnnSel
+  -> QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> m RS.AnnAggSel
 fromAggField fn tn permFilter permLimitM fld = fieldAsPath fld $ do
   tableArgs <- parseTableArgs fn tn args
   aggSelFlds   <- fromAggSel (_fType fld) $ _fSelSet fld
-  let selFlds = RS.ASFWithAgg aggSelFlds
-      tabFrom = RS.TableFrom tn Nothing
+  let tabFrom = RS.TableFrom tn Nothing
       tabPerm = RS.TablePerm permFilter permLimitM
-  return $ RS.AnnSel selFlds tabFrom tabPerm tableArgs
+  return $ RS.AnnSelG aggSelFlds tabFrom tabPerm tableArgs
   where
     args = _fArguments fld
     fromAggSel ty selSet =
@@ -250,4 +251,4 @@ convertAggSelect qt permFilter permLimit fld = do
   selData <- withPathK "selectionSet" $
              fromAggField prepare qt permFilter permLimit fld
   prepArgs <- get
-  return $ RS.selectP2 False (selData, prepArgs)
+  return $ RS.selectAggP2 (selData, prepArgs)

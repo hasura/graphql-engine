@@ -2,6 +2,7 @@ import yaml
 from validate import check_query_f, check_query
 from super_classes import DefaultTestSelectQueries
 
+
 class TestGraphqlIntrospection(DefaultTestSelectQueries):
 
     def test_introspection(self, hge_ctx):
