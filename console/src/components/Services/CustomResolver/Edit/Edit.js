@@ -12,6 +12,13 @@ import {
 } from '../Add/addResolverReducer';
 import { VIEW_RESOLVER } from '../customActions';
 import { push } from 'react-router-redux';
+import Helmet from 'react-helmet';
+
+import ResetMetadata from '../../Data/Metadata/ResetMetadata';
+
+import BreadCrumb from '../../Layout/BreadCrumb/BreadCrumb';
+
+const appPrefix = '/custom-resolver';
 
 const refresh = (
   <Tooltip id="tooltip-cascade">
@@ -107,9 +114,12 @@ class Edit extends React.Component {
           >
             {isRequesting ? 'Deleting ...' : 'Delete'}
           </button>
-          <a href="#" target="_blank">
-            Refresh Schema
-          </a>
+          {/*
+          <Link to={'/metadata'}>Refresh Schema</Link>
+          */}
+          <span className={styles.refresh_schema_btn}>
+            <ResetMetadata {...this.props} />
+          </span>
           <span>
             <OverlayTrigger placement="right" overlay={refresh}>
               <i className="fa fa-question-circle" aria-hidden="true" />
@@ -138,10 +148,38 @@ class Edit extends React.Component {
       );
     };
 
+    const breadCrumbs = [
+      {
+        title: 'Custom Resolvers',
+        url: appPrefix,
+      },
+    ];
+
+    if (resolverName) {
+      breadCrumbs.push({
+        title: resolverName.trim(),
+        url: '',
+      });
+    }
+
     return (
       <div className={styles.addWrapper}>
+        <BreadCrumb breadCrumbs={breadCrumbs} />
+        <Helmet
+          title={`Edit Schema - ${resolverName} - Stitched Schemas | Hasura`}
+        />
         <div className={styles.subheading_text}>
-          <h3>{resolverName || ''}</h3>
+          <h2
+            className={
+              styles.heading_text +
+              ' ' +
+              styles.remove_padding_bottom +
+              ' ' +
+              styles.set_line_height
+            }
+          >
+            {resolverName || ''}
+          </h2>
         </div>
         <form
           onSubmit={e => {
@@ -161,6 +199,7 @@ const mapStateToProps = state => {
     ...state.customResolverData.addData,
     ...state.customResolverData.headerData,
     migrationMode: state.main.migrationMode,
+    dataHeaders: { ...state.tables.dataHeaders },
   };
 };
 
