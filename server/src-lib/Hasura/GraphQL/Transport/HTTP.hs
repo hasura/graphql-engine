@@ -13,7 +13,9 @@ import           Hasura.Prelude
 import           Language.GraphQL.Draft.JSON            ()
 
 import qualified Data.ByteString.Lazy                   as BL
+import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
@@ -56,15 +58,16 @@ runGQ pool isoL userInfo gCtxRoleMap manager req rawReq = do
     throw400 NotSupported "cannot mix nodes from two different graphql servers"
 
   if null typeLocs
-         --throw400 UnexpectedPayload "cannot find given node in root"
-    then runHasuraGQ pool isoL userInfo gCtxRoleMap
-         opDef opRoot fragDefsL varValsM
+    then runHasuraGQ pool isoL userInfo gCtxRoleMap opDef opRoot fragDefsL
+         varValsM
     else
-    -- TODO: do we worry about head?
-    case head typeLocs of
-      VT.HasuraType     -> runHasuraGQ pool isoL userInfo gCtxRoleMap
-                           opDef opRoot fragDefsL varValsM
-      VT.RemoteType url -> runRemoteGQ manager rawReq url
+    case typeLocs of
+      (typeLoc:_) -> case typeLoc of
+        VT.HasuraType     -> runHasuraGQ pool isoL userInfo gCtxRoleMap
+                             opDef opRoot fragDefsL varValsM
+        VT.RemoteType url -> runRemoteGQ manager userInfo rawReq url
+
+      [] -> throw500 "unexpected: cannot find node in schema"
 
   where
     gCtx = getGCtx (userRole userInfo) gCtxRoleMap
@@ -107,14 +110,14 @@ runHasuraGQ pool isoL userInfo gCtxMap opDef opRoot fragDefsL varValsM = do
 runRemoteGQ
   :: (MonadIO m, MonadError QErr m)
   => HTTP.Manager
-  -- -> UserInfo -- do we send x-hasura headers to remote?
+  -> UserInfo
   -> BL.ByteString
   -- ^ the raw request string
   -> N.URI
   -> m BL.ByteString
-runRemoteGQ manager q url = do
+runRemoteGQ manager userInfo q url = do
   let options = Wreq.defaults
-              & Wreq.headers .~ [("content-type", "application/json")]
+              & Wreq.headers .~ ("content-type", "application/json") : convToHdrs
               & Wreq.checkResponse ?~ (\_ _ -> return ())
               & Wreq.manager .~ Right manager
 
@@ -124,3 +127,6 @@ runRemoteGQ manager q url = do
   where
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow err = throw500 $ T.pack . show $ err
+
+    convToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
+                 userInfoToList userInfo
