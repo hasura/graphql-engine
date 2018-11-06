@@ -1,3 +1,4 @@
 FROM scratch
 COPY rootfs/ /
-CMD ["graphql-engine", "serve", "--enable-console"]
+ENV HASURA_GRAPHQL_ENABLE_CONSOLE=true
+CMD ["graphql-engine", "serve"]
