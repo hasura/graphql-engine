@@ -182,6 +182,12 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
     def test_user_cannot_access_remarks_col(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/user_cannot_access_remarks_col.yaml')
 
+    def test_artist_select_query_Track_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/artist_select_query_Track_fail.yaml')
+
+    def test_artist_select_query_Track(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/artist_select_query_Track.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions'
