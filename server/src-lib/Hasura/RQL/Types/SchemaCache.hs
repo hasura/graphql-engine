@@ -27,7 +27,6 @@ module Hasura.RQL.Types.SchemaCache
        , addTableToCache
        , modTableInCache
        , delTableFromCache
-       , getTableInfoFromCache
 
        , CacheRM(..)
        , CacheRWM(..)
@@ -623,14 +622,14 @@ delTableFromCache :: (QErrM m, CacheRWM m)
                   => QualifiedTable -> m ()
 delTableFromCache tn = do
   sc <- askSchemaCache
-  void $ getTableInfoFromCache tn
+  void $ getTableInfoFromCache tn sc
   modTableCache $ M.delete tn $ scTables sc
 
-getTableInfoFromCache :: (QErrM m, CacheRM m)
+getTableInfoFromCache :: (QErrM m)
                       => QualifiedTable
+                      -> SchemaCache
                       -> m TableInfo
-getTableInfoFromCache tn = do
-  sc <- askSchemaCache
+getTableInfoFromCache tn sc =
   case M.lookup tn (scTables sc) of
     Nothing -> throw500 $ "table not found in cache : " <>> tn
     Just ti -> return ti
@@ -650,7 +649,7 @@ modTableInCache :: (QErrM m, CacheRWM m)
                 -> m ()
 modTableInCache f tn = do
   sc <- askSchemaCache
-  ti <- getTableInfoFromCache tn
+  ti <- getTableInfoFromCache tn sc
   newTi <- f ti
   modTableCache $ M.insert tn newTi $ scTables sc
 

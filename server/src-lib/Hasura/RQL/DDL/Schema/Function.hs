@@ -156,7 +156,7 @@ trackFunctionP1 (TrackFunction qf) = do
 trackFunctionP2Setup :: (P2C m) => QualifiedFunction -> m ()
 trackFunctionP2Setup qf = do
   fi <- withPathK "name" $ liftTx $ getFunctionInfo qf
-  void $ getTableInfoFromCache $ fiReturnType fi
+  void $ askTabInfo $ fiReturnType fi
   addFunctionToCache fi
 
 trackFunctionP2 :: (P2C m) => QualifiedFunction -> m RespBody
