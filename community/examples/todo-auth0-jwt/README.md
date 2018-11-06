@@ -35,7 +35,7 @@ Download your JWT signing X509 certificate by visiting URL:
 Convert the file into one-line, this will be required later:
 
 ```shell
-$ cat filename.pem | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g'
+awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' yourauth0subdomain.pem
 ```
 
 ## Deploy Hasura GraphQL Engine
