@@ -6,7 +6,7 @@ worst that can happen is that you'll be politely asked to change something. We
 appreciate any contributions, and we don't want a wall of rules to get in
 the way of that.
 
-However, for those who want a bit more guidance on the best way to
+However, for those individuals who want a bit more guidance on the best way to
 contribute to the project, read on. This document will cover what we're looking
 for. By addressing all the points we're looking for, it rases the chances that we
 can quickly merge or address your contributions.
@@ -15,7 +15,7 @@ can quickly merge or address your contributions.
 ## Overview
 
 [hasura/graphql-engine](https://github.com/hasura/graphql-engine) is a mono-repo
-consisting of 3 components. Each have their own contributing guides:
+consisting of 3 components. Each has their own contributing guides:
 
 1. [Server (Haskell)](server/CONTRIBUTING.md)
 2. [CLI (Go)](cli/CONTRIBUTING.md)

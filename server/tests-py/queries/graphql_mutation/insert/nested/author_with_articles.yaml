@@ -7,20 +7,17 @@ query:
       insert_author(
         objects: [
           {
-            id: 1,
-            name: "Author 1", 
+            name: "Author 3", 
             articles: {
               data: [
                 {
-                  id: 1,
-                  title: "Article 1 by Author 1", 
-                  content: "Content for Article 1 by Author 1", 
+                  title: "Article 1 by Author 3", 
+                  content: "Content for Article 1 by Author 3", 
                   is_published: false
                 },
                 {
-                  id: 2,
-                  title: "Article 2 by Author 1", 
-                  content: "Content for Article 2 by Author 1", 
+                  title: "Article 2 by Author 3", 
+                  content: "Content for Article 2 by Author 3", 
                   is_published: false
                 }
               ]
@@ -47,14 +44,14 @@ response:
     insert_author:
       affected_rows: 3
       returning:
-      - id: 1
-        name: Author 1
+      - id: 3
+        name: Author 3
         articles:
-        - id: 1
-          title: "Article 1 by Author 1"
-          content: "Content for Article 1 by Author 1"
+        - id: 4
+          title: "Article 1 by Author 3"
+          content: "Content for Article 1 by Author 3"
           is_published: false
-        - id: 2
-          title: "Article 2 by Author 1"
-          content: "Content for Article 2 by Author 1"
+        - id: 5
+          title: "Article 2 by Author 3"
+          content: "Content for Article 2 by Author 3"
           is_published: false
