@@ -1,5 +1,6 @@
 import json
 
+
 def lambda_handler(event, context):
     try:
         body = json.loads(event['body'])
