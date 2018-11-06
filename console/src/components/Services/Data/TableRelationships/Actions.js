@@ -117,7 +117,7 @@ const generateRelationshipsQuery = (
   } else {
     const columnReducer = (accumulator, val) => ({
       ...accumulator,
-      [val.rcol]: val.lcol,
+      [val.lcol]: val.rcol,
     });
     upQuery.args.using = {
       manual_configuration: {
@@ -189,7 +189,8 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
     state.lcol,
     state.rTable,
     state.rcol,
-    state.isObjRel
+    state.isObjRel,
+    currentSchema
   );
   const relChangesUp = [upQuery];
   const relChangesDown = [downQuery];

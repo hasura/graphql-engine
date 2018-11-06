@@ -9,7 +9,7 @@ import 'brace/theme/github';
 
 import { RESET } from '../TableModify/ModifyActions';
 import {
-  queriesWithPermColumns,
+  getQueriesWithPermColumns,
   permChangeTypes,
   permOpenEdit,
   permSetFilter,
@@ -417,7 +417,14 @@ class Permissions extends Component {
         if (isNewPerm && permsState.newRole !== '') {
           dispatch(permOpenEdit(tableSchema, permsState.newRole, queryType));
         } else if (role !== '') {
-          dispatch(permOpenEdit(tableSchema, role, queryType));
+          dispatch(
+            permOpenEdit(
+              tableSchema,
+              role,
+              queryType,
+              semverCheck('insertPermRestrictColumns', this.props.serverVersion)
+            )
+          );
         } else {
           window.alert('Please enter a role name');
         }
@@ -452,21 +459,21 @@ class Permissions extends Component {
         const bulkSelect = permsState.bulkSelect;
         const currentInputSelection = bulkSelect.filter(e => e === role)
           .length ? (
-            <input
-              onChange={dispatchBulkSelect}
-              checked="checked"
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          ) : (
-            <input
-              onChange={dispatchBulkSelect}
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          );
+          <input
+            onChange={dispatchBulkSelect}
+            checked="checked"
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        ) : (
+          <input
+            onChange={dispatchBulkSelect}
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        );
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
@@ -1056,13 +1063,15 @@ class Permissions extends Component {
     const getColumnSection = (tableSchema, permsState) => {
       let _columnSection = '';
       const query = permsState.query;
-
-      if (queriesWithPermColumns.indexOf(query) !== -1) {
+      if (
+        getQueriesWithPermColumns(
+          semverCheck('insertPermRestrictColumns', this.props.serverVersion)
+        ).indexOf(query) !== -1
+      ) {
         const dispatchToggleAllColumns = () => {
           const allColumns = tableSchema.columns.map(c => c.column_name);
           dispatch(permToggleAllColumns(allColumns));
         };
-
         _columnSection = (
           <div className={styles.editPermissionsSection}>
             <div>

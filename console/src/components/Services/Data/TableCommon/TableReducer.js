@@ -157,14 +157,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         relAdd: {
-          isActive: true,
-          tableName: '',
-          name: '',
-          isObjRel: null,
-          lcol: [],
-          rTable: null,
-          rcol: [],
-          manualColumns: [],
+          ...defaultModifyState.relAdd,
         },
       };
     case REL_SET_TYPE:
@@ -286,7 +279,8 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ...getBasePermissionsState(
             action.tableSchema,
             action.role,
-            action.query
+            action.query,
+            action.insertPermColumnRestriction
           ),
         },
       };

@@ -221,18 +221,34 @@ const AddRelationship = ({
   // Finding the object from the suggestedRelationshipsArray which is currently selected
   if (cachedRelationshipData.isObjRel) {
     selectedRelationship = suggestedRelationshipsData.objectRel.find(rel => {
+      const cLcol =
+        typeof cachedRelationshipData.lcol === 'string'
+          ? [cachedRelationshipData.lcol]
+          : cachedRelationshipData.lcol;
+      const cRcol =
+        typeof cachedRelationshipData.rcol === 'string'
+          ? [cachedRelationshipData.rcol]
+          : cachedRelationshipData.rcol;
       return (
-        rel.lcol.join(',') === cachedRelationshipData.lcol.join(',') &&
-        rel.rcol.join(',') === cachedRelationshipData.rcol.join(',') &&
+        rel.lcol.join(',') === cLcol.join(',') &&
+        rel.rcol.join(',') === cRcol.join(',') &&
         rel.rTable === cachedRelationshipData.rTable &&
         rel.tableName === cachedRelationshipData.tableName
       );
     });
   } else {
     selectedRelationship = suggestedRelationshipsData.arrayRel.find(rel => {
+      const cLcol =
+        typeof cachedRelationshipData.lcol === 'string'
+          ? [cachedRelationshipData.lcol]
+          : cachedRelationshipData.lcol;
+      const cRcol =
+        typeof cachedRelationshipData.rcol === 'string'
+          ? [cachedRelationshipData.rcol]
+          : cachedRelationshipData.rcol;
       return (
-        rel.lcol.join(',') === cachedRelationshipData.lcol.join(',') &&
-        rel.rcol.join(',') === cachedRelationshipData.rcol.join(',') &&
+        rel.lcol.join(',') === cLcol.join(',') &&
+        rel.rcol.join(',') === cRcol.join(',') &&
         rel.rTable === cachedRelationshipData.rTable &&
         rel.tableName === cachedRelationshipData.tableName
       );

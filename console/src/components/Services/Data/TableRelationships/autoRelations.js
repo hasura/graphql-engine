@@ -1,3 +1,5 @@
+import { getTableName } from '../utils';
+
 const suggestedRelationshipsRaw = (tableName, allSchemas) => {
   const objRels = [];
   const arrRels = [];
@@ -75,7 +77,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
 
           if (
             currRCol.sort().join(',') === rcol.sort().join(',') &&
-            currTable === constraint.table_name
+            getTableName(currTable) === constraint.table_name
           ) {
             // existing relationship
             isExistingArrayRel = true;
