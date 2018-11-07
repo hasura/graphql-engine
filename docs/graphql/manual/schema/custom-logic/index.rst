@@ -13,7 +13,7 @@ The first use case can be handling by using just **Schema Stitching**, a process
 
 .. image:: ../../../img/graphql/manual/schema/schema-stitching-v1-arch-diagram.png
 
-Implementing this use case will let the frontend query top-level nodes from any of the disparate schemas from a single GraphQL endpoint:
+Implementing this use case will let a frontend app query top-level nodes from any of the disparate schemas from a single GraphQL endpoint:
 
 .. code-block:: graphql
       
@@ -38,7 +38,7 @@ For the other use cases, where you are effectively extending the behaviour of th
 
 .. image:: ../../../img/graphql/manual/schema/using-custom-resolvers-and-stitching.png
 
-Implementingg these use cases will allow the frontend app to make the following types of queries:
+Implementing these use cases will enable a frontend app to make the following types of queries:
 
 .. code-block:: graphql
   :emphasize-lines: 17,18
