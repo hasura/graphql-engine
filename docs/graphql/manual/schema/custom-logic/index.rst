@@ -1,11 +1,9 @@
 Adding custom logic - using schema stitching & custom resolvers
 ===============================================================
 
-Hasura GraphQL engine provides instant GraphQL APIs over the tables and views of any Postgres database by
-auto-generating the CRUD resolvers. However, sometimes you might have other custom business logic that needs to be
-run along with the simple CRUD operations.
+Hasura GraphQL engine provides instant GraphQL APIs over the tables and views of any Postgres database by auto-generating the CRUD resolvers. However, sometimes you might have other custom business logic that needs to be run along with the simple CRUD operations.
 
-Here are a couple of common use cases:
+Here are a couple of common use cases and examples of the resultant queries that are possible when these use cases have been implemented:
 
 - Fetching disparate data from other sources (e.g. from a weather API or another database)
 - Customizing mutations (e.g. running validations before inserts)
@@ -15,10 +13,56 @@ The first use case can be handling by using just **Schema Stitching**, a process
 
 .. image:: ../../../img/graphql/manual/schema/schema-stitching-v1-arch-diagram.png
 
+Implementing this use case will let the frontend query top-level nodes from any of the disparate schemas from a single GraphQL endpoint:
+
+.. code-block:: graphql
+      
+  # Top level node from GraphQL Engine's schema
+  query {
+    author {
+      id
+      city_name
+    }
+  }
+
+  # A new top level node from another GraphQL schema
+  query {
+    city_weather {
+      city_name
+      min_temp
+    }
+  }
+
 
 For the other use cases, where you are effectively extending the behaviour of the GraphQL schema fields exposed by Hasura GraphQL engine, you need to proxy GraphQL Engine with a custom GraphQL Server that serves a modified version of the GraphQL Engine's schema that fits your needs and is supported by custom **resolvers** to handle the required behaviour.
 
 .. image:: ../../../img/graphql/manual/schema/using-custom-resolvers-and-stitching.png
+
+Implementingg these use cases will allow the frontend app to make the following types of queries:
+
+.. code-block:: graphql
+  :emphasize-lines: 17,18
+
+  # related data from multiple schemas
+  query {
+    author {
+      id
+      city {
+        city_name
+        min_temp
+      }
+    }
+  }
+
+  # New fields under an existing top level node from GraphQL Engine's schema
+  query {
+    author {
+      id
+      name
+      profile_name
+      avg_rating
+    }
+  }
 
 .. 
   To support the above example from the third use case (using the  `graphql-tools <https://github.com/apollographql/graphql-tools>`_ package): #. Define custom fields that extend existing types (``author`` and ``article``) with a relationship:
