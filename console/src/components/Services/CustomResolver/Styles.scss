@@ -8,9 +8,19 @@
 {
   padding-top: 20px;
 }
+.dropdown_button {
+  width: 300px;
+}
+.detailsSection {
+  width: 80%;
+  margin-top: 20px;
+}
+.detailsRefreshButton {
+  padding-top: 10px !important;
+}
 .resolverWrapper
 {
-  padding: 10px 0;
+  // padding: 10px 0;
   .resolverContent
   {
     text-align: center;

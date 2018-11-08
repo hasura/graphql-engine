@@ -1,7 +1,5 @@
 import React from 'react';
 import Common from '../Common/Common';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
 
 import {
   fetchResolver,
@@ -13,19 +11,11 @@ import {
 import { VIEW_RESOLVER } from '../customActions';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
+import tabInfo from './tabInfo';
+import CommonTabLayout from '../../Layout/CommonTabLayout/CommonTabLayout';
 
-import ResetMetadata from '../../Data/Metadata/ResetMetadata';
+const appPrefix = '/stitched-schemas';
 
-import BreadCrumb from '../../Layout/BreadCrumb/BreadCrumb';
-
-const appPrefix = '/custom-resolver';
-
-const refresh = (
-  <Tooltip id="tooltip-cascade">
-    If your remote schema has changed, you need to refresh the GraphQL Engine
-    metadata to query the modified schema
-  </Tooltip>
-);
 class Edit extends React.Component {
   constructor() {
     super();
@@ -98,7 +88,6 @@ class Edit extends React.Component {
             className={styles.yellow_button}
             onClick={e => {
               e.preventDefault();
-              console.log('Something');
               this.modifyClick();
             }}
           >
@@ -114,17 +103,6 @@ class Edit extends React.Component {
           >
             {isRequesting ? 'Deleting ...' : 'Delete'}
           </button>
-          {/*
-          <Link to={'/metadata'}>Refresh Schema</Link>
-          */}
-          <span className={styles.refresh_schema_btn}>
-            <ResetMetadata {...this.props} />
-          </span>
-          <span>
-            <OverlayTrigger placement="right" overlay={refresh}>
-              <i className="fa fa-question-circle" aria-hidden="true" />
-            </OverlayTrigger>
-          </span>
         </div>
       ) : (
         <div className={styles.commonBtn}>
@@ -153,34 +131,43 @@ class Edit extends React.Component {
         title: 'Custom Resolvers',
         url: appPrefix,
       },
+      {
+        title: 'Manage',
+        url: appPrefix + '/' + 'manage',
+      },
     ];
 
     if (resolverName) {
       breadCrumbs.push({
         title: resolverName.trim(),
+        url:
+          appPrefix +
+          '/' +
+          'manage' +
+          '/' +
+          resolverName.trim() +
+          '/' +
+          'details',
+      });
+      breadCrumbs.push({
+        title: 'modify',
         url: '',
       });
     }
 
     return (
       <div className={styles.addWrapper}>
-        <BreadCrumb breadCrumbs={breadCrumbs} />
         <Helmet
           title={`Edit Schema - ${resolverName} - Stitched Schemas | Hasura`}
         />
-        <div className={styles.subheading_text}>
-          <h2
-            className={
-              styles.heading_text +
-              ' ' +
-              styles.remove_padding_bottom +
-              ' ' +
-              styles.set_line_height
-            }
-          >
-            {resolverName || ''}
-          </h2>
-        </div>
+        <CommonTabLayout
+          appPrefix={appPrefix}
+          currentTab="modify"
+          heading={resolverName}
+          tabsInfo={tabInfo}
+          breadCrumbs={breadCrumbs}
+          baseUrl={`${appPrefix}/manage/${resolverName}`}
+        />
         <form
           onSubmit={e => {
             e.preventDefault();

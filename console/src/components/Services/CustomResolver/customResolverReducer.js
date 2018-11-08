@@ -7,7 +7,13 @@ import headerReducer from '../Layout/ReusableHeader/HeaderReducer';
 const customResolverReducer = combineReducers({
   addData: addReducer,
   listData: listReducer,
-  headerData: headerReducer('CUSTOM_RESOLVER'),
+  headerData: headerReducer('CUSTOM_RESOLVER', [
+    {
+      name: '',
+      type: 'static',
+      value: '',
+    },
+  ]),
 });
 
 export default customResolverReducer;

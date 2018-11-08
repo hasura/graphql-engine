@@ -107,7 +107,7 @@ const fetchResolver = resolver => {
           });
           headerObj.push({
             name: '',
-            type: '',
+            type: 'static',
             value: '',
           });
           dispatch({
@@ -131,7 +131,7 @@ const addResolver = () => {
     const currState = getState().customResolverData.addData;
     // const url = Endpoints.getSchema;
     const resolveObj = {
-      name: currState.name,
+      name: currState.name.trim(),
       url: currState.manualUrl,
       url_from_env: currState.envName,
       headers: [],
@@ -184,7 +184,7 @@ const addResolver = () => {
     const customOnSuccess = data => {
       Promise.all([
         dispatch({ type: RESET }),
-        dispatch(push(`${appPrefix}/manage/${resolveObj.name}/edit`)),
+        dispatch(push(`${appPrefix}/manage/${resolveObj.name}/details`)),
         dispatch(fetchResolvers()),
         dispatch({ type: getHeaderEvents.RESET_HEADER, data: data }),
       ]);
@@ -457,7 +457,7 @@ const modifyResolver = () => {
       upQueryArgs = [];
       downQueryArgs = [];
       const resolveObj = {
-        name: currState.name,
+        name: currState.name.trim(),
         url: currState.manualUrl,
         url_from_env: currState.envName,
         headers: [],
@@ -546,7 +546,7 @@ const addResolverReducer = (state = addState, action) => {
       return {
         ...state,
         manualUrl: action.data,
-        envName: '',
+        envName: null,
       };
     case NAME_CHANGED:
       return {
@@ -557,7 +557,7 @@ const addResolverReducer = (state = addState, action) => {
       return {
         ...state,
         envName: action.data,
-        manualUrl: '',
+        manualUrl: null,
       };
     case ADDING_RESOLVER:
       return {
@@ -574,6 +574,7 @@ const addResolverReducer = (state = addState, action) => {
     case TOGGLE_MODIFY:
       return {
         ...state,
+        headers: [...state.editState.headers],
         editState: {
           ...state.editState,
           isModify: !state.editState.isModify,

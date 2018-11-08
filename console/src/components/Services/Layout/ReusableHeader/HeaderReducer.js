@@ -25,8 +25,11 @@ const generateHeaderSyms = (prefix = 'API_HEADER') => {
 };
 /* */
 
-const generateReducer = eventPrefix => {
+const generateReducer = (eventPrefix, defaultHeaders) => {
   /* Action constants */
+  if (defaultHeaders && defaultHeaders.length > 0) {
+    defaultState.headers = [...defaultHeaders];
+  }
   const {
     HEADER_KEY_CHANGE,
     HEADER_VALUE_CHANGE,

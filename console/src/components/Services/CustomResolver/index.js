@@ -5,3 +5,4 @@ export addConnector from './Add/Add';
 export customResolverReducer from './customResolverReducer';
 
 export editConnector from './Edit/Edit';
+export viewConnector from './Edit/View';

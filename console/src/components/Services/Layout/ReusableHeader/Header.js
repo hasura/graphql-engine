@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { generateHeaderSyms } from './HeaderReducer';
+import DropdownButton from '../../CustomResolver/Common/DropdownButton';
 
 class Header extends React.Component {
   constructor(props) {
@@ -18,6 +19,9 @@ class Header extends React.Component {
   getIndex(e) {
     const indexId = e.target.getAttribute('data-index-id');
     return parseInt(indexId, 10);
+  }
+  getTitle(val, k) {
+    return val.filter(v => v.value === k);
   }
   headerKeyChange(e) {
     const indexId = this.getIndex(e);
@@ -65,6 +69,7 @@ class Header extends React.Component {
   }
   headerTypeChange(e) {
     const indexId = this.getIndex(e);
+    const typeValue = e.target.getAttribute('value');
     if (indexId < 0) {
       console.error('Unable to handle event');
       return;
@@ -72,7 +77,7 @@ class Header extends React.Component {
     this.props.dispatch({
       type: this.state.HEADER_VALUE_TYPE_CHANGE,
       data: {
-        type: e.target.value,
+        type: typeValue,
         index: indexId,
       },
     });
@@ -91,73 +96,101 @@ class Header extends React.Component {
       },
     });
   }
+
   render() {
     const styles = require('./Header.scss');
     const { isDisabled } = this.props;
-    const generateHeaderHtml = this.props.headers.map((h, i) => (
-      <div className={styles.display_flex + ' form-group'} key={i}>
-        <input
-          type="text"
+    const generateHeaderHtml = this.props.headers.map((h, i) => {
+      const getTitle = this.getTitle(this.props.typeOptions, h.type);
+      return (
+        <div
           className={
-            styles.input +
-            ' form-control ' +
-            styles.add_mar_right +
+            styles.common_header_wrapper +
             ' ' +
-            styles.defaultWidth
+            styles.display_flex +
+            ' form-group'
           }
-          data-index-id={i}
-          value={h.name}
-          onChange={this.headerKeyChange.bind(this)}
-          onBlur={this.checkAndAddNew.bind(this)}
-          disabled={isDisabled}
-        />
-        <select
-          className={
-            'form-control ' +
-            styles.add_pad_left +
-            ' ' +
-            styles.add_mar_right +
-            ' ' +
-            styles.defaultWidth
-          }
-          value={h.type}
-          onChange={this.headerTypeChange.bind(this)}
-          data-index-id={i}
-          disabled={isDisabled}
+          key={i}
         >
-          <option disabled value="">
-            -- value type --
-          </option>
-          {this.props.typeOptions.map((o, k) => (
-            <option key={k} value={o.value} data-index-id={i}>
-              {o.display}
-            </option>
-          ))}
-        </select>
-        <input
-          type="text"
-          className={
-            styles.inputDefault +
-            ' form-control ' +
-            styles.defaultWidth +
-            ' ' +
-            styles.add_pad_left
-          }
-          placeholder="value"
-          value={h.value}
-          onChange={this.headerValueChange.bind(this)}
-          data-index-id={i}
-          disabled={isDisabled}
-        />
-        {i !== this.props.headers.length - 1 && !isDisabled ? (
-          <i
-            className={styles.fontAwosomeClose + ' fa-lg fa fa-times'}
-            onClick={this.deleteHeader.bind(this)}
+          <input
+            type="text"
+            className={
+              styles.input +
+              ' form-control ' +
+              styles.add_mar_right +
+              ' ' +
+              styles.defaultWidth
+            }
             data-index-id={i}
+            value={h.name}
+            onChange={this.headerKeyChange.bind(this)}
+            onBlur={this.checkAndAddNew.bind(this)}
+            placeholder={this.props.keyInputPlaceholder}
+            disabled={isDisabled}
           />
-        ) : null}
-      </div>
-    ));
+          <span className={styles.header_colon}>:</span>
+          <DropdownButton
+            dropdownOptions={this.props.typeOptions}
+            title={getTitle.length > 0 ? getTitle[0].display_text : 'Value'}
+            dataKey={h.type}
+            dataIndex={i}
+            onButtonChange={this.headerTypeChange.bind(this)}
+            onInputChange={this.headerValueChange.bind(this)}
+            inputVal={h.value}
+            disabled={isDisabled}
+            id={'common-header-' + (i + 1)}
+            inputPlaceHolder={this.props.placeHolderText(h.type)}
+          />
+          {/*
+          <select
+            className={
+              'form-control ' +
+              styles.add_pad_left +
+              ' ' +
+              styles.add_mar_right +
+              ' ' +
+              styles.defaultWidth
+            }
+            value={h.type}
+            onChange={this.headerTypeChange.bind(this)}
+            data-index-id={i}
+            disabled={isDisabled}
+          >
+            <option disabled value="">
+              -- value type --
+            </option>
+            {this.props.typeOptions.map((o, k) => (
+              <option key={k} value={o.value} data-index-id={i}>
+                {o.display}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            className={
+              styles.inputDefault +
+              ' form-control ' +
+              styles.defaultWidth +
+              ' ' +
+              styles.add_pad_left
+            }
+            placeholder="value"
+            value={h.value}
+            onChange={this.headerValueChange.bind(this)}
+            data-index-id={i}
+            disabled={isDisabled}
+          />
+          */}
+          {i !== this.props.headers.length - 1 && !isDisabled ? (
+            <i
+              className={styles.fontAwosomeClose + ' fa-lg fa fa-times'}
+              onClick={this.deleteHeader.bind(this)}
+              data-index-id={i}
+            />
+          ) : null}
+        </div>
+      );
+    });
     return <div className={this.props.wrapper_class}>{generateHeaderHtml}</div>;
   }
 }
