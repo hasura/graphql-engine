@@ -27,4 +27,6 @@
 * Step 6: Run the React app
 
   Run `npm start` from the `todo-app` directory to start the TODO app.
-  > THe app runs on port 3000 by default. You can change the port number, but you will also have to reconfigure the callback.
+
+  > The app runs on port 3000 by default. You can change the port number, but you will also have to reconfigure the callback.
+
