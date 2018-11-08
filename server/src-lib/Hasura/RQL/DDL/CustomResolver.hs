@@ -9,14 +9,12 @@ module Hasura.RQL.DDL.CustomResolver where
 
 import           Hasura.Prelude
 import           Language.Haskell.TH.Syntax    (Lift)
---import           Control.Lens                  ((&), (.~), (?~), (^.))
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.HashMap.Strict           as Map
-import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Network.URI.Extended          as N
 
@@ -77,14 +75,14 @@ data AddRemoteSchemaQuery
 
 instance HDBQuery AddRemoteSchemaQuery where
   type Phase1Res AddRemoteSchemaQuery = RemoteSchemaDef
-  phaseOne   = addCustomResolverP1
-  phaseTwo _ = addCustomResolverP2 True
+  phaseOne   = addRemoteSchemaP1
+  phaseTwo _ = addRemoteSchemaP2 True
   schemaCachePolicy = SCPReload
 
-addCustomResolverP1
+addRemoteSchemaP1
   :: (P1C m)
   => AddRemoteSchemaQuery -> m RemoteSchemaDef
-addCustomResolverP1 (AddRemoteSchemaQuery url urlEnv hdrs name) = do
+addRemoteSchemaP1 (AddRemoteSchemaQuery url urlEnv hdrs name) = do
   adminOnly
   eUrlEnv <- case (url, urlEnv) of
     (Just u, Nothing)  -> return $ Left u
@@ -97,7 +95,7 @@ addCustomResolverP1 (AddRemoteSchemaQuery url urlEnv hdrs name) = do
   let hdrs' = fromMaybe [] hdrs
   return $ RemoteSchemaDef name eUrlEnv hdrs'
 
-addCustomResolverP2
+addRemoteSchemaP2
   :: ( QErrM m
      , CacheRWM m
      , MonadTx m
@@ -107,7 +105,7 @@ addCustomResolverP2
   => Bool
   -> RemoteSchemaDef
   -> m BL.ByteString
-addCustomResolverP2 checkConflict (RemoteSchemaDef name eUrlVal headers) = do
+addRemoteSchemaP2 checkConflict def@(RemoteSchemaDef name eUrlVal headers) = do
   url <- either return getUrlFromEnv eUrlVal
   manager <- askHttpManager
   sc <- askSchemaCache
@@ -117,24 +115,24 @@ addCustomResolverP2 checkConflict (RemoteSchemaDef name eUrlVal headers) = do
     forM_ (Map.toList gCtxMap) $ \(_, gCtx) ->
       GS.checkConflictingNodes gCtx remoteGCtx
   newGCtxMap <- mergeRemoteSchema gCtxMap (url, remoteGCtx)
-  liftTx $ addCustomResolverToCatalog eUrlVal headers name
-  addCustomResolverToCache newGCtxMap url headers
+  liftTx $ addRemoteSchemaToCatalog name def
+  addRemoteSchemaToCache newGCtxMap url headers
   return successMsg
 
-addCustomResolverToCache
+addRemoteSchemaToCache
   :: CacheRWM m
   => GS.GCtxMap -> N.URI -> [HeaderConf] -> m ()
-addCustomResolverToCache gCtxMap url hdrs = do
+addRemoteSchemaToCache gCtxMap url hdrs = do
   sc <- askSchemaCache
   let resolvers = scRemoteResolvers sc
   writeSchemaCache sc { scRemoteResolvers = resolvers ++ [(url, hdrs)]
                       , scGCtxMap = gCtxMap
                       }
 
-writeCustomResolversToCache
+writeRemoteSchemasToCache
   :: CacheRWM m
   => GS.GCtxMap -> [(N.URI, [HeaderConf])] -> m ()
-writeCustomResolversToCache gCtxMap resolvers = do
+writeRemoteSchemasToCache gCtxMap resolvers = do
   sc <- askSchemaCache
   writeSchemaCache sc { scRemoteResolvers = resolvers
                       , scGCtxMap = gCtxMap
@@ -148,16 +146,16 @@ data RemoveRemoteSchemaQuery
 
 instance HDBQuery RemoveRemoteSchemaQuery where
   type Phase1Res RemoveRemoteSchemaQuery = RemoveRemoteSchemaQuery
-  phaseOne   = deleteCustomResolverP1
-  phaseTwo _ = deleteCustomResolverP2
+  phaseOne   = removeRemoteSchemaP1
+  phaseTwo _ = removeRemoteSchemaP2
   schemaCachePolicy = SCPReload
 
-deleteCustomResolverP1
+removeRemoteSchemaP1
   :: (P1C m)
   => RemoveRemoteSchemaQuery -> m RemoveRemoteSchemaQuery
-deleteCustomResolverP1 q = adminOnly >> return q
+removeRemoteSchemaP1 q = adminOnly >> return q
 
-deleteCustomResolverP2
+removeRemoteSchemaP2
   :: ( QErrM m
      , CacheRWM m
      , MonadTx m
@@ -166,9 +164,10 @@ deleteCustomResolverP2
      )
   => RemoveRemoteSchemaQuery
   -> m BL.ByteString
-deleteCustomResolverP2 (RemoveRemoteSchemaQuery name) = do
-  mUrl <- liftTx $ fetchRemoteResolverUrl name
-  eUrlVal <- liftMaybe (err400 NotExists "no such custom resolver") mUrl
+removeRemoteSchemaP2 (RemoveRemoteSchemaQuery name) = do
+  mSchema <- liftTx $ fetchRemoteSchemaDef name
+  (RemoteSchemaDef _ eUrlVal _) <-
+    liftMaybe (err400 NotExists "no such remote schema") mSchema
   url <- either return getUrlFromEnv eUrlVal
 
   hMgr <- askHttpManager
@@ -178,13 +177,13 @@ deleteCustomResolverP2 (RemoveRemoteSchemaQuery name) = do
 
   newGCtxMap <- GS.mkGCtxMap (scTables sc)
   mergedGCtxMap <- mergeSchemas newResolvers newGCtxMap hMgr
-  deleteCustomResolverFromCache url mergedGCtxMap
-  liftTx $ deleteCustomResolverFromCatalog name
+  removeRemoteSchemaFromCache url mergedGCtxMap
+  liftTx $ removeRemoteSchemaFromCatalog name
   return successMsg
 
-deleteCustomResolverFromCache
+removeRemoteSchemaFromCache
   :: CacheRWM m => N.URI -> GS.GCtxMap -> m ()
-deleteCustomResolverFromCache url gCtxMap = do
+removeRemoteSchemaFromCache url gCtxMap = do
   sc <- askSchemaCache
   let resolvers = scRemoteResolvers sc
       newResolvers = filter (\(u, _) -> u /= url) resolvers
@@ -192,77 +191,46 @@ deleteCustomResolverFromCache url gCtxMap = do
                       , scGCtxMap = gCtxMap
                       }
 
-addCustomResolverToCatalog
-  :: Either N.URI UrlFromEnv
-  -> [HeaderConf]
-  -> Text
+addRemoteSchemaToCatalog
+  :: Text
+  -> RemoteSchemaDef
   -> Q.TxE QErr ()
-addCustomResolverToCatalog eUrlV headers name = do
-  let (url, urlFromEnv) = case eUrlV of
-        Left u    -> (Just $ T.pack $ show u, Nothing)
-        Right ufe -> (Nothing, Just ufe)
-
+addRemoteSchemaToCatalog name def =
   Q.unitQE defaultTxErrorHandler [Q.sql|
-    INSERT into hdb_catalog.custom_resolver
-      (name, url, url_from_env, headers)
-      VALUES ($1, $2, $3, $4)
-  |] (name, url, urlFromEnv, Q.AltJ $ J.toJSON headers) True
+    INSERT into hdb_catalog.remote_schemas
+      (name, definition)
+      VALUES ($1, $2)
+  |] (name, Q.AltJ $ J.toJSON def) True
 
 
-deleteCustomResolverFromCatalog :: Text -> Q.TxE QErr ()
-deleteCustomResolverFromCatalog name =
+removeRemoteSchemaFromCatalog :: Text -> Q.TxE QErr ()
+removeRemoteSchemaFromCatalog name =
   Q.unitQE defaultTxErrorHandler [Q.sql|
-    DELETE FROM hdb_catalog.custom_resolver
+    DELETE FROM hdb_catalog.remote_schemas
       WHERE name = $1
   |] (Identity name) True
 
 
-fetchRemoteResolverUrl :: Text -> Q.TxE QErr (Maybe (Either N.URI Text))
-fetchRemoteResolverUrl name = do
-  res <- Q.listQE defaultTxErrorHandler
+fetchRemoteSchemaDef :: Text -> Q.TxE QErr (Maybe RemoteSchemaDef)
+fetchRemoteSchemaDef name =
+  fmap (fromRow . runIdentity) <$> Q.withQE defaultTxErrorHandler
     [Q.sql|
-     SELECT url, url_from_env from hdb_catalog.custom_resolver
+     SELECT definition from hdb_catalog.remote_schemas
        WHERE name = $1
      |] (Identity name) True
-  fromRow res
   where
-    fromRow []    = return Nothing
-    fromRow (x:_) = do
-      eRes <- mkEither x
-      return $ Just eRes
+    fromRow (Q.AltJ def) = def
 
-    mkEither (u, ufe) = case (u, ufe) of
-      (Just u', Nothing)   -> do
-        let mUrl = N.parseURI $ T.unpack u'
-        url <- maybe (throw500 "not a valid URI in DB") return mUrl
-        return $ Left url
-      (Nothing, Just ufe') -> return $ Right ufe'
-      _                    -> throw500 "wrong URI info in db"
-
-fetchRemoteResolvers :: Q.TxE QErr [RemoteSchemaDef]
-fetchRemoteResolvers = do
-  res <- Q.listQE defaultTxErrorHandler
+fetchRemoteSchemas :: Q.TxE QErr [RemoteSchemaDef]
+fetchRemoteSchemas =
+  map fromRow <$> Q.listQE defaultTxErrorHandler
     [Q.sql|
-     SELECT name, url, url_from_env, headers
-       FROM hdb_catalog.custom_resolver
+     SELECT name, definition
+       FROM hdb_catalog.remote_schemas
      |] () True
-  mapM fromRow res
   where
-    -- FIXME: better way to do this
-    -- FIXME: check for json null in headers
-    fromRow (name, url, urlEnv, Q.AltJ hdrs) =
-      case (url, urlEnv) of
-        (Just u, Nothing)  -> do
-          url' <- mkUrl u
-          return $ RemoteSchemaDef name (Left url') hdrs
-        (Nothing, Just u)  -> return $ RemoteSchemaDef name (Right u) hdrs
-        (Just _, Just u2)  -> return $ RemoteSchemaDef name (Right u2) hdrs
-        (Nothing, Nothing) ->
-          throw500 "both url, url_from_env cannot be empty"
-
-    mkUrl u = maybe (throw500 "not a valid URI in DB") return $
-              N.parseURI $ T.unpack u
-
+    fromRow :: (Text, Q.AltJ RemoteSchemaDef) -> RemoteSchemaDef
+    fromRow (_, Q.AltJ def) = def
 
 
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaQuery)

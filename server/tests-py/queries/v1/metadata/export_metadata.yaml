@@ -3,7 +3,7 @@ url: /v1/query
 status: 200
 response:
   query_templates: []
-  custom_resolvers: []
+  remote_schemas: []
   tables:
   - table: author
     array_relationships:

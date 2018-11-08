@@ -126,7 +126,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.custom_resolver" () False
+  Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
   clearHdbViews
 
 instance HDBQuery ClearMetadata where
@@ -256,7 +256,7 @@ applyQP2 (ReplaceMetadata tables templates schemas) = do
   -- custom resolvers
   withPathK "remote_schemas" $
     indexedForM_ schemas $ \conf ->
-      void $ DCR.addCustomResolverP2 False conf
+      void $ DCR.addRemoteSchemaP2 False conf
 
   return successMsg
 
@@ -328,9 +328,9 @@ fetchMetadata = do
         modMetaMap tmEventTriggers triggerMetaDefs
 
   -- fetch all custom resolvers
-  resolvers <- DCR.fetchRemoteResolvers
+  schemas <- DCR.fetchRemoteSchemas
 
-  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs resolvers
+  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs schemas
 
   where
 
