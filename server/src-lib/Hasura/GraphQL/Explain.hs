@@ -29,6 +29,7 @@ import           Hasura.SQL.Value
 import qualified Hasura.GraphQL.Resolve.Select          as RS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
+import qualified Hasura.GraphQL.Validate.Types          as VT
 import qualified Hasura.RQL.DML.Select                  as RS
 import qualified Hasura.Server.Query                    as RQ
 
@@ -116,6 +117,11 @@ explainGQLQuery
 explainGQLQuery pool iso gCtxMap (GQLExplain query userVarsRaw)= do
   (opDef, opRoot, fragDefsL, varValsM) <-
     runReaderT (GV.getQueryParts query) gCtx
+  let topLevelNodes = getTopLevelNodes opDef
+
+  unless (allHasuraNodes topLevelNodes) $
+    throw400 InvalidParams "only hasura queries can be explained"
+
   (opTy, selSet) <- runReaderT (GV.validateGQ opDef opRoot fragDefsL varValsM) gCtx
   unless (opTy == G.OperationTypeQuery) $
     throw400 InvalidParams "only queries can be explained"
@@ -129,3 +135,20 @@ explainGQLQuery pool iso gCtxMap (GQLExplain query userVarsRaw)= do
     runTx tx =
       Q.runTx pool (iso, Nothing) $
       RQ.setHeadersTx (userVars userInfo) >> tx
+
+    getTopLevelNodes opDef =
+      map (\(G.SelectionField f) -> G._fName f) $ G._todSelectionSet opDef
+
+    allHasuraNodes nodes =
+      let typeLocs = catMaybes $ flip map nodes $ \node ->
+            let mNode = Map.lookup node schemaNodes
+            in VT._fiLoc <$> mNode
+          isHasuraNode = \case
+            VT.HasuraType     -> True
+            VT.RemoteType _ _ -> False
+      in all isHasuraNode typeLocs
+
+    schemaNodes =
+      let qr = VT._otiFields $ _gQueryRoot gCtx
+          mr = VT._otiFields <$> _gMutRoot gCtx
+      in maybe qr (Map.union qr) mr
