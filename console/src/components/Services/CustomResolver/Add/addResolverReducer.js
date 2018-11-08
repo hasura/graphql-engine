@@ -131,7 +131,7 @@ const addResolver = () => {
     const currState = getState().customResolverData.addData;
     // const url = Endpoints.getSchema;
     const resolveObj = {
-      name: currState.name,
+      name: currState.name.trim(),
       url: currState.manualUrl,
       url_from_env: currState.envName,
       headers: [],
@@ -457,7 +457,7 @@ const modifyResolver = () => {
       upQueryArgs = [];
       downQueryArgs = [];
       const resolveObj = {
-        name: currState.name,
+        name: currState.name.trim(),
         url: currState.manualUrl,
         url_from_env: currState.envName,
         headers: [],

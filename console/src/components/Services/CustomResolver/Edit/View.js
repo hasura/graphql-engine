@@ -122,10 +122,12 @@ class ViewStitchedSchema extends React.Component {
                     </td>
                   </tr>
                 ) : null}
+                {/*
                 <tr>
                   <td>Webhook</td>
                   <td>in-use/bypassed</td>
                 </tr>
+                */}
               </tbody>
             </table>
           </div>
