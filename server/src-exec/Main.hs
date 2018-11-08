@@ -169,10 +169,10 @@ main =  do
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
 
       maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-      evPollSec  <- getFromEnv defaultPollingIntervalSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+      evFetchMilliSec  <- getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
       logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
 
-      eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evPollSec
+      eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
       httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
 
       void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpSession pool cacheRef eventEngineCtx

@@ -1,7 +1,9 @@
-Setting values using SQL functions/stored procedures
-====================================================
+Setting values of fields using SQL functions/stored procedures
+==============================================================
 
 Let's say you want to set the value of some fields as the output of some custom SQL functions or stored procedures.
+This is useful to set values of fields which depend on other fields passed in the input. e.g. set
+``submission_time`` of an online quiz as 1 hour from the ``start_time``.
 
 This can be achieved by:
 
@@ -10,6 +12,11 @@ This can be achieved by:
 #. Creating an insert/update trigger on the table that calls your SQL function and sets the output values in the output
    columns.
 #. Making your mutation requests without setting the SQL function output columns.
+
+.. note::
+
+  This approach enforces the value set in the field to always be the result of the defined SQL function even if a
+  value is explicitly passed in the insert object.
 
 **For example**, say we have a table ``sql_function_table`` with columns ``input`` and ``output`` and we would like
 to set the value of the ``output`` column as the uppercased value of the string received in the ``input`` field.
@@ -21,7 +28,7 @@ Modify the table ``sql_function_table`` and make its ``output`` column nullable.
 
 Open the console and head to ``Data -> sql_function_table -> Modify``:
 
-.. image:: ../../../img/graphql/manual/schema/modify-sql-fn-table.png
+.. image:: ../../../../img/graphql/manual/schema/modify-sql-fn-table.png
 
 2) Create a trigger
 -------------------
@@ -43,7 +50,7 @@ the ``output`` field whenever an insert or update is made to the ``sql_function_
 
 Head to ``Data -> SQL`` and run the above SQL:
 
-.. image:: ../../../img/graphql/manual/schema/create-trigger.png
+.. image:: ../../../../img/graphql/manual/schema/create-trigger.png
 
 3) Run an insert mutation
 -------------------------
@@ -80,7 +87,8 @@ value (output="YABBA DABBA DOO!") will be set automatically.
       }
     }
 
-.. note::
+Also see:
+^^^^^^^^^
 
-  This approach enforces the value set in the field to always be the result of the defined SQL function, unlike
-  :doc:`setting a default value <default-values>`.
+- :doc:`postgres-defaults`
+- :doc:`column-presets`
