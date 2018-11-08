@@ -219,18 +219,20 @@ instance FromJSON EventTriggerConf where
   parseJSON _ = fail "expecting object for event_trigger_def"
 
 instance ToJSON EventTriggerConf where
-  toJSON (EventTriggerConf name def (WCValue w) rc headers) = object ["name" .= name
-                                                                   , "definition" .= def
-                                                                   , "webhook" .= w
-                                                                   , "retry_conf" .= rc
-                                                                   , "headers" .= headers
-                                                                    ]
-  toJSON (EventTriggerConf name def (WCEnv wEnv) rc headers) = object ["name" .= name
-                                                                   , "definition" .= def
-                                                                   , "webhook_from_env" .= wEnv
-                                                                   , "retry_conf" .= rc
-                                                                   , "headers" .= headers
-                                                                   ]
+  toJSON (EventTriggerConf name def (WCValue w) rc headers) = object
+    [ "name" .= name
+    , "definition" .= def
+    , "webhook" .= w
+    , "retry_conf" .= rc
+    , "headers" .= headers
+    ]
+  toJSON (EventTriggerConf name def (WCEnv wEnv) rc headers) = object
+    [ "name" .= name
+    , "definition" .= def
+    , "webhook_from_env" .= wEnv
+    , "retry_conf" .= rc
+    , "headers" .= headers
+    ]
 
 data DeliverEventQuery
   = DeliverEventQuery

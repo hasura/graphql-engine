@@ -384,7 +384,7 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
     allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
     webhookInfo <- getWebhookInfoFromConf webhookConf
     headers <- getHeaderInfosFromConf headerConfs
-    addEventTriggerToCache (QualifiedTable sn tn) trid trn opsdef retryConf webhookInfo headers
+    addEventTriggerToCache qt trid trn opsdef retryConf webhookInfo headers
     liftTx $ mkTriggerQ trid trn qt allCols opsdef
   where
     permHelper sn tn rn pDef pa = do

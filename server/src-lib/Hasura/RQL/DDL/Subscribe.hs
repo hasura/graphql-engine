@@ -308,19 +308,22 @@ getHeaderInfosFromConf = mapM getHeader
     getHeader hconf = case hconf of
       (HeaderConf _ (HVValue val)) -> return $ EventHeaderInfo hconf val
       (HeaderConf _ (HVEnv val))   -> do
-        mEnv <- liftIO $ lookupEnv (T.unpack val)
-        case mEnv of
-          Nothing -> throw400 NotFound $ "environment variable '" <> val <> "' not set"
-          Just envval -> return $ EventHeaderInfo hconf (T.pack envval)
+        envVal <- getEnv val
+        return $ EventHeaderInfo hconf envVal
 
 getWebhookInfoFromConf :: (P2C m) => WebhookConf -> m WebhookConfInfo
 getWebhookInfoFromConf wc = case wc of
-      WCValue w -> return $ WebhookConfInfo wc w
-      WCEnv we -> do
-        mEnv <- liftIO $ lookupEnv (T.unpack we)
-        case mEnv of
-          Nothing -> throw400 NotFound $ "environment variable '" <> we <> "' not set"
-          Just envval -> return $ WebhookConfInfo wc (T.pack envval)
+  WCValue w -> return $ WebhookConfInfo wc w
+  WCEnv we -> do
+    envVal <- getEnv we
+    return $ WebhookConfInfo wc envVal
+
+getEnv :: (QErrM m, MonadIO m) => T.Text -> m T.Text
+getEnv env = do
+    mEnv <- liftIO $ lookupEnv (T.unpack env)
+    case mEnv of
+      Nothing -> throw400 NotFound $ "environment variable '" <> env <> "' not set"
+      Just envVal -> return (T.pack envVal)
 
 toInt64 :: (Integral a) => a -> Int64
 toInt64 = fromIntegral
