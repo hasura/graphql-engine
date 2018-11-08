@@ -3,7 +3,12 @@ import React from 'react';
 import { Route, IndexRedirect, Link } from 'react-router';
 import { layoutConnector, rightBar } from '../Layout';
 import globals from '../../../Globals';
-import { landingCustomResolverGen, addConnector, editConnector } from '.';
+import {
+  landingCustomResolverGen,
+  addConnector,
+  editConnector,
+  viewConnector,
+} from '.';
 import { fetchResolvers, FILTER_RESOLVER } from './customActions';
 
 // Objective is to render list of custom resolvers on the
@@ -31,7 +36,10 @@ const listItem = (dataList, styles, currentLocation, currentResolver) => {
     }
     return (
       <li className={activeTableClass} key={i}>
-        <Link to={appPrefix + '/manage/' + d.name + '/edit'} data-test={d.name}>
+        <Link
+          to={appPrefix + '/manage/' + d.name + '/details'}
+          data-test={d.name}
+        >
           <i className={styles.tableIcon + ' fa fa-table'} aria-hidden="true" />
           {d.name}
         </Link>
@@ -130,7 +138,11 @@ const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
           component={addConnector(connect)}
           onEnter={composeOnEnterHooks([migrationRedirects])}
         />
-        <Route path=":resolverName/edit" component={editConnector(connect)} />
+        <Route
+          path=":resolverName/details"
+          component={viewConnector(connect)}
+        />
+        <Route path=":resolverName/modify" component={editConnector(connect)} />
       </Route>
     </Route>
   );

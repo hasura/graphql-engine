@@ -26,6 +26,12 @@ const schema = (
 );
 
 class Common extends React.Component {
+  getPlaceHolderText(valType) {
+    if (valType === 'static') {
+      return 'ABCDEF';
+    }
+    return 'GRAPHQL_ACCESS_KEY';
+  }
   handleInputChange(e) {
     const fieldName = e.target.getAttribute('data-key');
     this.props.dispatch(inputChange(fieldName, e.target.value));
@@ -74,11 +80,11 @@ class Common extends React.Component {
         <div className={styles.addPaddCommom}>
           <DropdownButton
             dropdownOptions={[
-              { display_text: 'Constant', value: 'manualUrl' },
+              { display_text: 'URL', value: 'manualUrl' },
               { display_text: 'From env var', value: 'envName' },
             ]}
             title={
-              (manualUrl !== null && 'Constant') ||
+              (manualUrl !== null && 'URL') ||
               (envName !== null && 'From env var') ||
               'Value'
             }
@@ -92,6 +98,12 @@ class Common extends React.Component {
             bsClass={styles.dropdown_button}
             inputVal={manualUrl || envName}
             disabled={isDisabled}
+            id="graphql-server-url"
+            inputPlaceHolder={
+              (manualUrl !== null &&
+                'https://my-graphql-service.com/graphql') ||
+              (envName !== null && 'MY_GRAPHQL_ENDPOINT')
+            }
           />
         </div>
         <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
@@ -105,10 +117,12 @@ class Common extends React.Component {
           headers={this.props.headers}
           dispatch={this.props.dispatch}
           typeOptions={[
-            { display_text: 'Constant', value: 'static' },
+            { display_text: 'Value', value: 'static' },
             { display_text: 'From env var', value: 'env' },
           ]}
           isDisabled={isDisabled}
+          placeHolderText={this.getPlaceHolderText.bind(this)}
+          keyInputPlaceholder="Access-Key"
         />
       </div>
     );

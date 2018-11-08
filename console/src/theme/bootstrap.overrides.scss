@@ -17,6 +17,11 @@ input[type="radio"], input[type="checkbox"]
     min-height: 34px;
   }
 }
+
+.form-group .input-group {
+  min-width: 300px;
+}
+
 label
 {
   margin-bottom: 0 !important;

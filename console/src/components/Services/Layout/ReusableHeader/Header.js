@@ -21,7 +21,7 @@ class Header extends React.Component {
     return parseInt(indexId, 10);
   }
   getTitle(val, k) {
-    return val.filter((v) => v.value === k);
+    return val.filter(v => v.value === k);
   }
   headerKeyChange(e) {
     const indexId = this.getIndex(e);
@@ -103,7 +103,15 @@ class Header extends React.Component {
     const generateHeaderHtml = this.props.headers.map((h, i) => {
       const getTitle = this.getTitle(this.props.typeOptions, h.type);
       return (
-        <div className={styles.common_header_wrapper + ' ' + styles.display_flex + ' form-group'} key={i}>
+        <div
+          className={
+            styles.common_header_wrapper +
+            ' ' +
+            styles.display_flex +
+            ' form-group'
+          }
+          key={i}
+        >
           <input
             type="text"
             className={
@@ -117,11 +125,10 @@ class Header extends React.Component {
             value={h.name}
             onChange={this.headerKeyChange.bind(this)}
             onBlur={this.checkAndAddNew.bind(this)}
+            placeholder={this.props.keyInputPlaceholder}
             disabled={isDisabled}
           />
-          <span className={styles.header_colon}>
-            :
-          </span>
+          <span className={styles.header_colon}>:</span>
           <DropdownButton
             dropdownOptions={this.props.typeOptions}
             title={getTitle.length > 0 ? getTitle[0].display_text : 'Value'}
@@ -131,6 +138,8 @@ class Header extends React.Component {
             onInputChange={this.headerValueChange.bind(this)}
             inputVal={h.value}
             disabled={isDisabled}
+            id={'common-header-' + (i + 1)}
+            inputPlaceHolder={this.props.placeHolderText(h.type)}
           />
           {/*
           <select

@@ -107,7 +107,7 @@ const fetchResolver = resolver => {
           });
           headerObj.push({
             name: '',
-            type: '',
+            type: 'static',
             value: '',
           });
           dispatch({
@@ -184,7 +184,7 @@ const addResolver = () => {
     const customOnSuccess = data => {
       Promise.all([
         dispatch({ type: RESET }),
-        dispatch(push(`${appPrefix}/manage/${resolveObj.name}/edit`)),
+        dispatch(push(`${appPrefix}/manage/${resolveObj.name}/details`)),
         dispatch(fetchResolvers()),
         dispatch({ type: getHeaderEvents.RESET_HEADER, data: data }),
       ]);
@@ -574,6 +574,7 @@ const addResolverReducer = (state = addState, action) => {
     case TOGGLE_MODIFY:
       return {
         ...state,
+        headers: [...state.editState.headers],
         editState: {
           ...state.editState,
           isModify: !state.editState.isModify,
