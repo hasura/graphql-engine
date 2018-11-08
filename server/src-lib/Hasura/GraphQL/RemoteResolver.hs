@@ -55,7 +55,7 @@ fetchRemoteSchema manager url headerConf = do
 
   schemaDoc <- either schemaErr return $ J.eitherDecode respData
   --liftIO $ print $ map G.getNamedTyp $ G._sdTypes schemaDoc
-  let etTypeInfos = mapM fromRemoteTyDef $ G._sdTypes schemaDoc
+  let etTypeInfos = mapM (fromRemoteTyDef headerConf) $ G._sdTypes schemaDoc
   typeInfos <- either schemaErr return etTypeInfos
   --liftIO $ print $ map VT.getNamedTy typeInfos
   let typMap = VT.mkTyInfoMap typeInfos
@@ -70,7 +70,7 @@ fetchRemoteSchema manager url headerConf = do
 
   where
     noQueryRoot = err400 Unexpected "query root not found in remote schema"
-    fromRemoteTyDef ty = VT.fromTyDef ty $ VT.RemoteType url
+    fromRemoteTyDef hdrs ty = VT.fromTyDef ty $ VT.RemoteType url hdrs
     getRootNames sc = ( G._sdQueryRoot sc
                       , G._sdMutationRoot sc
                       , G._sdSubscriptionRoot sc )

@@ -219,10 +219,10 @@ v1Alpha1GQHandler query = do
   reqBody <- asks hcReqBody
   manager <- scManager . hcServerCtx <$> ask
   scRef <- scCacheRef . hcServerCtx <$> ask
-  cache <- liftIO $ readIORef scRef
+  (_, gCtxMap) <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  GH.runGQ pool isoL userInfo (snd cache) manager query reqBody
+  GH.runGQ pool isoL userInfo gCtxMap manager query reqBody
 
 gqlExplainHandler :: GE.GQLExplain -> Handler BL.ByteString
 gqlExplainHandler query = do

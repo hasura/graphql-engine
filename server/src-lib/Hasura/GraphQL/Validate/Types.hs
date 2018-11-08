@@ -58,6 +58,7 @@ import qualified Language.Haskell.TH.Syntax    as TH
 import qualified Network.URI.Extended          as N
 
 import           Hasura.GraphQL.Utils
+import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Instances          ()
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -105,7 +106,7 @@ type ParamMap = Map.HashMap G.Name InpValInfo
 -- | location of the type: a hasura type or a remote type
 data TypeLoc
   = HasuraType
-  | RemoteType !N.URI
+  | RemoteType !N.URI [HeaderConf]
   deriving (Show, Eq, TH.Lift)
 
 data ObjFldInfo
