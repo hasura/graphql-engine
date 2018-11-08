@@ -74,6 +74,7 @@ data InsPerm
   { icCheck       :: !BoolExp
   , icAllowUpsert :: !(Maybe Bool)
   , icSet         :: !(Maybe Object)
+  , icColumns     :: !(Maybe PermColSpec)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
@@ -109,7 +110,7 @@ buildInsPermInfo
   => TableInfo
   -> PermDef InsPerm
   -> m InsPermInfo
-buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set) _) = withPathK "permission" $ do
+buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set mCols) _) = withPathK "permission" $ do
   (be, beDeps) <- withPathK "check" $
     procBoolExp tn fieldInfoMap (S.QualVar "NEW") chk
   let deps = mkParentDep tn : beDeps
@@ -125,11 +126,17 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set) _) = withPathK "per
       return (pgCol, sqlExp)
   let setHdrs = mapMaybe (fetchHdr . snd) (HM.toList setObj)
       reqHdrs = fltrHeaders `union` setHdrs
-  return $ InsPermInfo vn be allowUpsrt setColsSQL deps reqHdrs
+      preSetCols = HM.union setColsSQL nonInsColVals
+  return $ InsPermInfo vn be allowUpsrt preSetCols deps reqHdrs
   where
     fieldInfoMap = tiFieldInfoMap tabInfo
     tn = tiName tabInfo
     vn = buildViewName tn rn PTInsert
+    allCols = map pgiName $ getCols fieldInfoMap
+    nonInsCols = case mCols of
+      Nothing   -> []
+      Just cols -> (\\) allCols $ convColSpec fieldInfoMap cols
+    nonInsColVals = S.mkColDefValMap nonInsCols
 
     fetchHdr (String t) = bool Nothing (Just $ T.toLower t)
                           $ isUserVar t

@@ -1,0 +1,18 @@
+description: Artist can only select his/her tracks. Without sending header (Error)
+url: /v1alpha1/graphql
+status: 400
+headers:
+  X-Hasura-Role: Artist
+response:
+  errors:
+  - path: "$"
+    error: '"x-hasura-artist-id" header is expected but not found'
+    code: not-found
+query:
+  query: |
+    query {
+      Track {
+        id
+        name
+      }
+    }

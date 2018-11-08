@@ -234,7 +234,7 @@ or
 .. _TableOrderBy:
 
 TableOrderBy
-***********
+************
 
 For columns:
 

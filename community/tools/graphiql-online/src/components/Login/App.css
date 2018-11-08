@@ -55,3 +55,29 @@ body
   border-radius: 5px;
   background-color: #f6f6f6;
 }
+.footerWrapper {
+  position: fixed;
+  bottom: 20px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.apiHasura {
+  font-size: 14px;
+  text-align: right;
+}
+.apiHasura i {
+  color: #757575;;
+  font-size: 22px;
+}
+.apiHasura i:hover {
+  color: #000;
+}
+.built {
+  text-align: right;
+  font-size: 14px;
+  margin-right: 10px;
+}
+.built i {
+  color: #f93c18;
+}

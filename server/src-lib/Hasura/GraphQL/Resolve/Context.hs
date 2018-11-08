@@ -6,8 +6,7 @@
 {-# LANGUAGE TemplateHaskell       #-}
 
 module Hasura.GraphQL.Resolve.Context
-  ( InsResp(..)
-  , FieldMap
+  ( FieldMap
   , RelationInfoMap
   , OrdByCtx
   , OrdByItemMap
@@ -42,6 +41,7 @@ import qualified Database.PG.Query                   as Q
 import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.GraphQL.Resolve.ContextTypes
+
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types

@@ -33,7 +33,7 @@ data UpdateQueryP1
 mkSQLUpdate
   :: UpdateQueryP1 -> S.SelectWith
 mkSQLUpdate (UpdateQueryP1 tn setExps (permFltr, wc) mutFlds) =
-  mkSelWith tn (S.CTEUpdate update) mutFlds
+  mkSelWith tn (S.CTEUpdate update) mutFlds False
   where
     update = S.SQLUpdate tn setExp Nothing tableFltr $ Just S.returningStar
     setExp    = S.SetExp $ map S.SetExpItem setExps
@@ -160,7 +160,7 @@ convUpdateQuery f uq = do
     tableName
     setExpItems
     (upiFilter updPerm, annSQLBoolExp)
-    (mkDefaultMutFlds tableName mAnnRetCols)
+    (mkDefaultMutFlds mAnnRetCols)
   where
     mRetCols = uqReturning uq
     selNecessaryMsg =
