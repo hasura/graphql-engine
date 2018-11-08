@@ -1,24 +1,25 @@
-Setting default values for fields
-=================================
+Setting default values for fields using Postgres defaults
+=========================================================
 
-Let's say you want certain fields to have their values set automatically by Postgres if
-not explicitly passed. For example, an auto-incrementing id, a created_at timestamp, etc.
+You can set values of certain fields automatically when not explicitly passed to a fixed value, e.g. true for a boolean
+field, or output of a simple SQL function, e.g. now() for a timestamp field, by setting column default values in the
+table definition.
 
-We can achieve this by setting a default value for the field which could either be a fixed value or a simple SQL
-function.
+.. note::
 
-**Example:** Say we have a field ``created_at`` in a table ``article``  which we would want to be set to the current
-timestamp whenever a new row is added to the table.
+  The Postgres default value is ignored when a value is explicitly set to the field.
+
+**Example:** Say we have a field ``created_at`` in a table ``article`` which we want to be set to the current
+timestamp whenever a new row is added to the table:
 
 1) Modify the table
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 Edit the ``created_at`` field and set its Default value as the SQL function ``now()``.
 
-
 Open the console and head to ``Data -> article -> Modify``:
 
-.. image:: ../../../img/graphql/manual/schema/add-default-value.png
+.. image:: ../../../../img/graphql/manual/schema/add-default-value.png
 
 .. admonition:: To set an auto-incrementing default value
 
@@ -38,14 +39,15 @@ Open the console and head to ``Data -> article -> Modify``:
 
 
 2) Run an insert mutation
--------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Now if you do not pass the ``created_at`` field value while running an insert mutation on the ``article`` table, its
 value will be set automatically by Postgres.
 
-.. image:: ../../../img/graphql/manual/schema/default-value-response.png
+.. image:: ../../../../img/graphql/manual/schema/default-value-response.png
 
-.. note::
+Also see:
+^^^^^^^^^
 
-  The default value is ignored when a value is explicitly set to the field. To enforce the value set in a field is the
-  result of the defined SQL function, see: :doc:`sql-functions`.
+- :doc:`sql-functions`
+- :doc:`column-presets`

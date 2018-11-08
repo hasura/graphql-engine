@@ -53,12 +53,6 @@ ci-copy-binary:
 test:
 	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" ./...
 
-# generate docs
-.PHONY: docs
-docs:
-	rm -fr docs
-	go run cmd/hasura/hasura.go docs --type md --directory docs
-
 # clean the output directory
 .PHONY: clean
 clean:
