@@ -144,15 +144,15 @@ instance HDBQuery ClearMetadata where
 
 data ReplaceMetadata
   = ReplaceMetadata
-  { aqTables          :: ![TableMeta]
-  , aqQueryTemplates  :: ![DQ.CreateQueryTemplate]
-  , aqCustomResolvers :: ![DCR.CustomResolverDef]
+  { aqTables         :: ![TableMeta]
+  , aqQueryTemplates :: ![DQ.CreateQueryTemplate]
+  , aqRemoteSchemas  :: ![DCR.RemoteSchemaDef]
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 
 applyQP1 :: ReplaceMetadata -> P1 ()
-applyQP1 (ReplaceMetadata tables templates resolvers) = do
+applyQP1 (ReplaceMetadata tables templates schemas) = do
 
   adminOnly
 
@@ -181,8 +181,8 @@ applyQP1 (ReplaceMetadata tables templates resolvers) = do
   withPathK "queryTemplates" $
     checkMultipleDecls "query templates" $ map DQ.cqtName templates
 
-  withPathK "customResolvers" $
-    checkMultipleDecls "custom resolvers" $ map DCR._crName resolvers
+  withPathK "remote_schemas" $
+    checkMultipleDecls "remote schemas" $ map DCR._rsName schemas
 
   where
     withTableName qt = withPathK (qualTableToTxt qt)
@@ -206,7 +206,7 @@ applyQP2
      )
   => ReplaceMetadata
   -> m RespBody
-applyQP2 (ReplaceMetadata tables templates resolvers) = do
+applyQP2 (ReplaceMetadata tables templates schemas) = do
 
   hMgr <- askHttpManager
   defaultSchemaCache <- liftTx $ clearMetadata >> DT.buildSchemaCache hMgr
@@ -254,11 +254,9 @@ applyQP2 (ReplaceMetadata tables templates resolvers) = do
       void $ DQ.createQueryTemplateP2 template qti
 
   -- custom resolvers
-  withPathK "customResolvers" $
-    indexedForM_ resolvers $ \(DCR.CustomResolverDef name urlE hdrs)-> do
-      let resolver = DCR.AddCustomResolverQuery urlE (Just hdrs) name
-      res <- DCR.addCustomResolverP1 resolver
-      void $ DCR.addCustomResolverP2 False res
+  withPathK "remote_schemas" $
+    indexedForM_ schemas $ \conf ->
+      void $ DCR.addCustomResolverP2 False conf
 
   return successMsg
 

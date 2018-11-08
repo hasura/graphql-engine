@@ -409,7 +409,7 @@ buildSchemaCache httpManager = flip execStateT emptySchemaCache $ do
   res <- liftTx fetchRemoteResolvers
   sc <- askSchemaCache
   gCtxMap <- GS.mkGCtxMap (scTables sc)
-  remoteSrvrs <- forM res $ \(CustomResolverDef _ eUrlEnv hdrs) -> do
+  remoteSrvrs <- forM res $ \(RemoteSchemaDef _ eUrlEnv hdrs) -> do
     url <- either return getUrlFromEnv eUrlEnv
     return (url, hdrs)
   mergedGCtxMap <- mergeSchemas remoteSrvrs gCtxMap httpManager
