@@ -8,29 +8,29 @@ module Hasura.Server.Query where
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Language.Haskell.TH.Syntax   (Lift)
 
-import qualified Data.Aeson.Text               as AT
-import qualified Data.ByteString.Builder       as BB
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text.Lazy                as LT
-import qualified Data.Vector                   as V
-import qualified Network.HTTP.Client           as HTTP
+import qualified Data.Aeson.Text              as AT
+import qualified Data.ByteString.Builder      as BB
+import qualified Data.ByteString.Lazy         as BL
+import qualified Data.Sequence                as Seq
+import qualified Data.Text.Lazy               as LT
+import qualified Data.Vector                  as V
+import qualified Network.HTTP.Client          as HTTP
 
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.CustomResolver
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.QueryTemplate
-import           Hasura.RQL.DML.Returning      (encodeJSONVector)
+import           Hasura.RQL.DML.Returning     (encodeJSONVector)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query             as Q
+import qualified Database.PG.Query            as Q
 
 data RQLQuery
   = RQAddExistingTableOrView !TrackTable

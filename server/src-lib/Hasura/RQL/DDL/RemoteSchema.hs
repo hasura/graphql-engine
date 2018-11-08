@@ -5,24 +5,24 @@
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeFamilies      #-}
 
-module Hasura.RQL.DDL.CustomResolver where
+module Hasura.RQL.DDL.RemoteSchema where
 
 import           Hasura.Prelude
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Language.Haskell.TH.Syntax  (Lift)
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.HashMap.Strict           as Map
-import qualified Database.PG.Query             as Q
-import qualified Network.URI.Extended          as N
+import qualified Data.Aeson                  as J
+import qualified Data.Aeson.Casing           as J
+import qualified Data.Aeson.TH               as J
+import qualified Data.ByteString.Lazy        as BL
+import qualified Data.HashMap.Strict         as Map
+import qualified Database.PG.Query           as Q
+import qualified Network.URI.Extended        as N
 
-import           Hasura.GraphQL.RemoteResolver
-import           Hasura.RQL.DDL.Headers        (HeaderConf (..))
+import           Hasura.GraphQL.RemoteServer
+import           Hasura.RQL.DDL.Headers      (HeaderConf (..))
 import           Hasura.RQL.Types
 
-import qualified Hasura.GraphQL.Schema         as GS
+import qualified Hasura.GraphQL.Schema       as GS
 
 type UrlFromEnv = Text
 

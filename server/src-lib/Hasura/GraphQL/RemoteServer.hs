@@ -3,7 +3,7 @@
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Hasura.GraphQL.RemoteResolver where
+module Hasura.GraphQL.RemoteServer where
 
 import           Control.Exception             (try)
 import           Control.Lens                  ((&), (.~), (?~), (^.))

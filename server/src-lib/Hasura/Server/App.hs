@@ -40,7 +40,7 @@ import qualified Hasura.Logging                         as L
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
 --import           Hasura.RQL.DML.Explain
-import           Hasura.GraphQL.RemoteResolver
+import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),

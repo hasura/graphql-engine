@@ -64,9 +64,11 @@ runGQ pool isoL userInfo gCtxRoleMap manager req rawReq = do
     else
     case typeLocs of
       (typeLoc:_) -> case typeLoc of
-        VT.HasuraType     -> runHasuraGQ pool isoL userInfo gCtxRoleMap
-                             opDef opRoot fragDefsL varValsM
-        VT.RemoteType url hdrs -> runRemoteGQ manager userInfo rawReq url hdrs
+        VT.HasuraType ->
+          runHasuraGQ pool isoL userInfo gCtxRoleMap
+          opDef opRoot fragDefsL varValsM
+        VT.RemoteType url hdrs ->
+          runRemoteGQ manager userInfo rawReq url hdrs
 
       [] -> throw500 "unexpected: cannot find node in schema"
 

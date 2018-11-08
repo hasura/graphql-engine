@@ -34,26 +34,26 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Language.Haskell.TH.Syntax   (Lift)
 
-import qualified Data.HashMap.Strict           as M
-import qualified Data.HashSet                  as HS
-import qualified Data.List                     as L
-import qualified Data.Text                     as T
+import qualified Data.HashMap.Strict          as M
+import qualified Data.HashSet                 as HS
+import qualified Data.List                    as L
+import qualified Data.Text                    as T
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query             as Q
-import qualified Hasura.RQL.DDL.CustomResolver as DCR
-import qualified Hasura.RQL.DDL.Permission     as DP
-import qualified Hasura.RQL.DDL.QueryTemplate  as DQ
-import qualified Hasura.RQL.DDL.Relationship   as DR
-import qualified Hasura.RQL.DDL.Schema.Table   as DT
-import qualified Hasura.RQL.DDL.Subscribe      as DS
-import qualified Hasura.RQL.Types.Subscribe    as DTS
+import qualified Database.PG.Query            as Q
+import qualified Hasura.RQL.DDL.Permission    as DP
+import qualified Hasura.RQL.DDL.QueryTemplate as DQ
+import qualified Hasura.RQL.DDL.Relationship  as DR
+import qualified Hasura.RQL.DDL.RemoteSchema  as DRS
+import qualified Hasura.RQL.DDL.Schema.Table  as DT
+import qualified Hasura.RQL.DDL.Subscribe     as DS
+import qualified Hasura.RQL.Types.Subscribe   as DTS
 
 data TableMeta
   = TableMeta
@@ -146,7 +146,7 @@ data ReplaceMetadata
   = ReplaceMetadata
   { aqTables         :: ![TableMeta]
   , aqQueryTemplates :: ![DQ.CreateQueryTemplate]
-  , aqRemoteSchemas  :: ![DCR.RemoteSchemaDef]
+  , aqRemoteSchemas  :: ![DRS.RemoteSchemaDef]
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
@@ -182,7 +182,7 @@ applyQP1 (ReplaceMetadata tables templates schemas) = do
     checkMultipleDecls "query templates" $ map DQ.cqtName templates
 
   withPathK "remote_schemas" $
-    checkMultipleDecls "remote schemas" $ map DCR._rsName schemas
+    checkMultipleDecls "remote schemas" $ map DRS._rsName schemas
 
   where
     withTableName qt = withPathK (qualTableToTxt qt)
@@ -256,7 +256,7 @@ applyQP2 (ReplaceMetadata tables templates schemas) = do
   -- custom resolvers
   withPathK "remote_schemas" $
     indexedForM_ schemas $ \conf ->
-      void $ DCR.addRemoteSchemaP2 False conf
+      void $ DRS.addRemoteSchemaP2 False conf
 
   return successMsg
 
@@ -328,7 +328,7 @@ fetchMetadata = do
         modMetaMap tmEventTriggers triggerMetaDefs
 
   -- fetch all custom resolvers
-  schemas <- DCR.fetchRemoteSchemas
+  schemas <- DRS.fetchRemoteSchemas
 
   return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs schemas
 

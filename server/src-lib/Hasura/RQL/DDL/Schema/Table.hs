@@ -10,14 +10,14 @@
 
 module Hasura.RQL.DDL.Schema.Table where
 
-import           Hasura.GraphQL.RemoteResolver
+import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.CustomResolver
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Subscribe
 import           Hasura.RQL.DDL.Utils
