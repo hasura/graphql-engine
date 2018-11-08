@@ -109,7 +109,6 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           GHC.Generics                      (Generic)
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS

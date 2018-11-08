@@ -138,6 +138,16 @@ writeRemoteSchemasToCache gCtxMap resolvers = do
                       , scGCtxMap = gCtxMap
                       }
 
+refreshGCtxMapInSchema
+  :: (CacheRWM m, MonadIO m, MonadError QErr m, HasHttpManager m)
+  => m ()
+refreshGCtxMapInSchema = do
+  sc <- askSchemaCache
+  gCtxMap <- GS.mkGCtxMap (scTables sc)
+  httpMgr <- askHttpManager
+  mergedGCtxMap <- mergeSchemas (scRemoteResolvers sc) gCtxMap httpMgr
+  writeSchemaCache sc { scGCtxMap = mergedGCtxMap }
+
 data RemoveRemoteSchemaQuery
   = RemoveRemoteSchemaQuery
   { _rrsqName    :: !Text
