@@ -14,7 +14,7 @@ class Add extends React.Component {
     return (
       <div className={styles.addWrapper}>
         <Helmet title="Add Schema - Stitched Schemas | Hasura" />
-        <div className={styles.heading_text}>Stitch a new GraphQL schema</div>
+        <div className={styles.heading_text}>Add a new remote schema</div>
         <form
           onSubmit={e => {
             e.preventDefault();

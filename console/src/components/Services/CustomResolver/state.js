@@ -13,7 +13,7 @@ const listState = {
 
 const addState = {
   manualUrl: '',
-  envName: '',
+  envName: null,
   headers: [],
   name: '',
   ...asyncState,

@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
+import DropdownButton from './DropdownButton';
 
 import { inputChange } from '../Add/addResolverReducer';
 
@@ -26,105 +27,23 @@ const schema = (
 
 class Common extends React.Component {
   handleInputChange(e) {
-    const fieldName = e.target.getAttribute('data-field-name');
+    const fieldName = e.target.getAttribute('data-key');
     this.props.dispatch(inputChange(fieldName, e.target.value));
   }
-  toggleCheckBox(e) {
-    const fieldName = e.target.getAttribute('data-field-name');
-    this.props.dispatch(inputChange(fieldName, ''));
+  toggleUrlParam(e) {
+    const field = e.target.getAttribute('value');
+    this.props.dispatch(inputChange(field, ''));
   }
   render() {
     const styles = require('../Styles.scss');
     const { name, manualUrl, envName } = this.props;
     const { isModify, id } = this.props.editState;
     const isDisabled = id >= 0 && !isModify;
-    const urlRequired = !manualUrl.length > 0 && !envName.length > 0;
+    const urlRequired = !manualUrl && !envName;
     return (
       <div className={styles.CommonWrapper}>
-        <div className={styles.subheading_text}>
-          Remote GraphQL server URL *
-          <OverlayTrigger placement="right" overlay={graphqlurl}>
-            <i className="fa fa-question-circle" aria-hidden="true" />
-          </OverlayTrigger>
-        </div>
-        <div className={styles.addPaddCommom}>
-          <label className={styles.radioLabel + ' radio-inline col-md-3'}>
-            <input
-              className={styles.radioInput}
-              type="radio"
-              name="optradio"
-              data-field-name="manualUrl"
-              onChange={this.toggleCheckBox.bind(this)}
-              checked={manualUrl && manualUrl.length > 0 ? true : false}
-              disabled={isDisabled}
-            />
-            Enter manually:
-          </label>
-          <label
-            className={
-              styles.inputLabel + ' radio-inline ' + styles.padd_left_remove
-            }
-          >
-            <input
-              className={'form-control'}
-              type="text"
-              placeholder="GraphQL server URL"
-              value={manualUrl}
-              data-field-name="manualUrl"
-              onChange={this.handleInputChange.bind(this)}
-              disabled={isDisabled}
-              required={urlRequired}
-            />
-          </label>
-        </div>
-        <div className={styles.addPaddCommom}>
-          <label className={styles.radioLabel + ' radio-inline col-md-3'}>
-            <input
-              className={styles.radioInput}
-              type="radio"
-              name="optradio"
-              data-field-name="envName"
-              onChange={this.toggleCheckBox.bind(this)}
-              checked={envName && envName.length > 0 ? true : false}
-              disabled={isDisabled}
-            />
-            Pick from environment variable:
-          </label>
-          <label
-            className={
-              styles.inputLabel + ' radio-inline ' + styles.padd_left_remove
-            }
-          >
-            <input
-              className={'form-control'}
-              type="text"
-              placeholder="env_variable_name"
-              value={envName}
-              data-field-name="envName"
-              onChange={this.handleInputChange.bind(this)}
-              disabled={isDisabled}
-              required={urlRequired}
-            />
-          </label>
-        </div>
         <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
-          Header *
-          <OverlayTrigger placement="right" overlay={header}>
-            <i className="fa fa-question-circle" aria-hidden="true" />
-          </OverlayTrigger>
-        </div>
-        <CommonHeader
-          eventPrefix="CUSTOM_RESOLVER"
-          headers={this.props.headers}
-          dispatch={this.props.dispatch}
-          typeOptions={[
-            { display: 'static value', value: 'static' },
-            { display: 'from env variable', value: 'env' },
-          ]}
-          isDisabled={isDisabled}
-        />
-        <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
-          Schema alias *
+          Schema name *
           <OverlayTrigger placement="right" overlay={schema}>
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
@@ -137,14 +56,60 @@ class Common extends React.Component {
           <input
             className={'form-control'}
             type="text"
-            placeholder="My-graphql-schema"
+            placeholder="Name of the schema"
             value={name}
-            data-field-name="name"
+            data-key="name"
             onChange={this.handleInputChange.bind(this)}
             disabled={isDisabled}
             required
           />
         </label>
+        <hr />
+        <div className={styles.subheading_text}>
+          GraphQL server URL *
+          <OverlayTrigger placement="right" overlay={graphqlurl}>
+            <i className="fa fa-question-circle" aria-hidden="true" />
+          </OverlayTrigger>
+        </div>
+        <div className={styles.addPaddCommom}>
+          <DropdownButton
+            dropdownOptions={[
+              { display_text: 'Constant', value: 'manualUrl' },
+              { display_text: 'From env var', value: 'envName' },
+            ]}
+            title={
+              (manualUrl !== null && 'Constant') ||
+              (envName !== null && 'From env var') ||
+              'Value'
+            }
+            dataKey={
+              (manualUrl !== null && 'manualUrl') ||
+              (envName !== null && 'envName')
+            }
+            onButtonChange={this.toggleUrlParam.bind(this)}
+            onInputChange={this.handleInputChange.bind(this)}
+            required={urlRequired}
+            bsClass={styles.dropdown_button}
+            inputVal={manualUrl || envName}
+            disabled={isDisabled}
+          />
+        </div>
+        <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
+          Header
+          <OverlayTrigger placement="right" overlay={header}>
+            <i className="fa fa-question-circle" aria-hidden="true" />
+          </OverlayTrigger>
+        </div>
+        <CommonHeader
+          eventPrefix="CUSTOM_RESOLVER"
+          headers={this.props.headers}
+          dispatch={this.props.dispatch}
+          typeOptions={[
+            { display_text: 'Constant', value: 'static' },
+            { display_text: 'From env var', value: 'env' },
+          ]}
+          isDisabled={isDisabled}
+        />
       </div>
     );
   }

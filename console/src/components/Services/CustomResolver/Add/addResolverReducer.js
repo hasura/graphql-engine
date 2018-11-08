@@ -546,7 +546,7 @@ const addResolverReducer = (state = addState, action) => {
       return {
         ...state,
         manualUrl: action.data,
-        envName: '',
+        envName: null,
       };
     case NAME_CHANGED:
       return {
@@ -557,7 +557,7 @@ const addResolverReducer = (state = addState, action) => {
       return {
         ...state,
         envName: action.data,
-        manualUrl: '',
+        manualUrl: null,
       };
     case ADDING_RESOLVER:
       return {

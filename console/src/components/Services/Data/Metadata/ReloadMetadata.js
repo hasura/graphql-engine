@@ -20,7 +20,7 @@ class ReloadMetadata extends Component {
       <div className={metaDataStyles.display_inline}>
         <button
           data-test="data-reload-metadata"
-          className={styles.default_button + ' ' + metaDataStyles.margin_right}
+          className={styles.default_button}
           onClick={e => {
             e.preventDefault();
             this.setState({ isReloading: true });

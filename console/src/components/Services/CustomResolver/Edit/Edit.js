@@ -14,7 +14,7 @@ import { VIEW_RESOLVER } from '../customActions';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
 
-import ResetMetadata from '../../Data/Metadata/ResetMetadata';
+import ReloadMetadata from '../../Data/Metadata/ReloadMetadata';
 
 import BreadCrumb from '../../Layout/BreadCrumb/BreadCrumb';
 
@@ -98,7 +98,6 @@ class Edit extends React.Component {
             className={styles.yellow_button}
             onClick={e => {
               e.preventDefault();
-              console.log('Something');
               this.modifyClick();
             }}
           >
@@ -118,7 +117,7 @@ class Edit extends React.Component {
           <Link to={'/metadata'}>Refresh Schema</Link>
           */}
           <span className={styles.refresh_schema_btn}>
-            <ResetMetadata {...this.props} />
+            <ReloadMetadata {...this.props} />
           </span>
           <span>
             <OverlayTrigger placement="right" overlay={refresh}>
