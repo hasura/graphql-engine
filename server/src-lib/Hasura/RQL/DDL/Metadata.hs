@@ -135,7 +135,8 @@ instance HDBQuery ClearMetadata where
   phaseOne _ = adminOnly
 
   phaseTwo _ _ = do
-    newSc <- liftTx $ clearMetadata >> DT.buildSchemaCache
+    hMgr <- askHttpManager
+    newSc <- liftTx $ clearMetadata >> DT.buildSchemaCache hMgr
     writeSchemaCache newSc
     return successMsg
 
@@ -201,14 +202,14 @@ applyQP2
      , CacheRWM m
      , MonadTx m
      , MonadIO m
-     , HasGCtxMap m
      , HasHttpManager m
      )
   => ReplaceMetadata
   -> m RespBody
 applyQP2 (ReplaceMetadata tables templates resolvers) = do
 
-  defaultSchemaCache <- liftTx $ clearMetadata >> DT.buildSchemaCache
+  hMgr <- askHttpManager
+  defaultSchemaCache <- liftTx $ clearMetadata >> DT.buildSchemaCache hMgr
   writeSchemaCache defaultSchemaCache
 
   withPathK "tables" $ do
@@ -414,9 +415,10 @@ instance HDBQuery ReloadMetadata where
   phaseOne _ = adminOnly
 
   phaseTwo _ _ = do
+    hMgr <- askHttpManager
     sc <- liftTx $ do
       Q.catchE defaultTxErrorHandler clearHdbViews
-      DT.buildSchemaCache
+      DT.buildSchemaCache hMgr
     writeSchemaCache sc
     return successMsg
 

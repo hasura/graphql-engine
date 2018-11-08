@@ -15,6 +15,7 @@ import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.ByteString.Lazy          as BL
+import qualified Data.HashMap.Strict           as Map
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Network.URI.Extended          as N
@@ -106,18 +107,15 @@ instance J.ToJSON AddCustomResolverQuery where
 
 
 instance HDBQuery AddCustomResolverQuery where
-  type Phase1Res AddCustomResolverQuery = (AddCustomResolverQuery, RoleName)
+  type Phase1Res AddCustomResolverQuery = AddCustomResolverQuery
   phaseOne   = addCustomResolverP1
   phaseTwo _ = addCustomResolverP2 True
   schemaCachePolicy = SCPReload
 
 addCustomResolverP1
   :: (P1C m)
-  => AddCustomResolverQuery -> m (AddCustomResolverQuery, RoleName)
-addCustomResolverP1 q = do
-  adminOnly
-  userInfo <- askUserInfo
-  return (q, userRole userInfo)
+  => AddCustomResolverQuery -> m AddCustomResolverQuery
+addCustomResolverP1 q = adminOnly >> return q
 
 addCustomResolverP2
   :: ( QErrM m
@@ -125,19 +123,19 @@ addCustomResolverP2
      , MonadTx m
      , MonadIO m
      , HasHttpManager m
-     , HasGCtxMap m
      )
   => Bool
-  -> (AddCustomResolverQuery, RoleName)
+  -> AddCustomResolverQuery
   -> m BL.ByteString
-addCustomResolverP2 checkConflict (AddCustomResolverQuery eUrlVal headers name, role) = do
+addCustomResolverP2 checkConflict (AddCustomResolverQuery eUrlVal headers name) = do
   url <- either return getUrlFromEnv eUrlVal
   manager <- askHttpManager
-  gCtxMap <- askGCtxMap
+  sc <- askSchemaCache
+  let gCtxMap = scGCtxMap sc
   remoteGCtx <- fetchRemoteSchema manager url $ fromMaybe [] headers
-  let gCtx = GS.getGCtx role gCtxMap
-  when checkConflict $
-    GS.checkConflictingNodes gCtx remoteGCtx
+  forM_ (Map.toList gCtxMap) $ \(_, gCtx) ->
+    when checkConflict $
+      GS.checkConflictingNodes gCtx remoteGCtx
   newGCtxMap <- mergeRemoteSchema gCtxMap (url, remoteGCtx)
   liftTx $ addCustomResolverToCatalog eUrlVal headers name
   addCustomResolverToCache newGCtxMap url $ fromMaybe [] headers
@@ -150,6 +148,15 @@ addCustomResolverToCache gCtxMap url hdrs = do
   sc <- askSchemaCache
   let resolvers = scRemoteResolvers sc
   writeSchemaCache sc { scRemoteResolvers = resolvers ++ [(url, hdrs)]
+                      , scGCtxMap = gCtxMap
+                      }
+
+writeCustomResolversToCache
+  :: CacheRWM m
+  => GS.GCtxMap -> [(N.URI, [HeaderConf])] -> m ()
+writeCustomResolversToCache gCtxMap resolvers = do
+  sc <- askSchemaCache
+  writeSchemaCache sc { scRemoteResolvers = resolvers
                       , scGCtxMap = gCtxMap
                       }
 
@@ -177,7 +184,6 @@ deleteCustomResolverP2
      , MonadTx m
      , MonadIO m
      , HasHttpManager m
-     , HasGCtxMap m
      )
   => DeleteCustomResolverQuery
   -> m BL.ByteString

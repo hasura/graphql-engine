@@ -199,7 +199,7 @@ v1QueryHandler query = do
       httpMgr <- scManager . hcServerCtx <$> ask
       pool <- scPGPool . hcServerCtx <$> ask
       isoL <- scIsolation . hcServerCtx <$> ask
-      runQuery pool isoL userInfo (fst schemaCache) httpMgr (snd schemaCache) query
+      runQuery pool isoL userInfo (fst schemaCache) httpMgr query
 
     -- Also update the schema cache
     dbActionReload = do
@@ -208,7 +208,8 @@ v1QueryHandler query = do
       httpMgr <- scManager . hcServerCtx <$> ask
       -- FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
       newGCtxMap <- GS.mkGCtxMap (scTables newSc)
-      mergedGCtxMap <- mergeSchemas newSc newGCtxMap httpMgr
+      mergedGCtxMap <-
+        mergeSchemas (scRemoteResolvers newSc) newGCtxMap httpMgr
       liftIO $ writeIORef scRef (newSc, mergedGCtxMap)
       return resp
 
@@ -275,7 +276,7 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
     cacheRef <- do
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
-        sc <- buildSchemaCache
+        sc <- buildSchemaCache httpManager
         gCtxMap <- GS.mkGCtxMap (scTables sc)
         mergedGCtxMap <-
           mergeSchemas (scRemoteResolvers sc) gCtxMap httpManager

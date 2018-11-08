@@ -37,6 +37,7 @@ import qualified Data.HashMap.Strict                as M
 import qualified Data.Text                          as T
 import qualified Data.Text.Encoding                 as TE
 import qualified Database.PostgreSQL.LibPQ          as PQ
+import qualified Network.HTTP.Client                as HTTP
 
 delTableFromCatalog :: QualifiedTable -> Q.Tx ()
 delTableFromCatalog (QualifiedTable sn tn) =
@@ -133,14 +134,12 @@ newtype TrackTable
   { tName :: QualifiedTable }
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
-trackExistingTableOrViewP1 :: TrackTable -> P1 RoleName
+trackExistingTableOrViewP1 :: TrackTable -> P1 ()
 trackExistingTableOrViewP1 (TrackTable vn) = do
   adminOnly
-  userInfo <- askUserInfo
   rawSchemaCache <- getSchemaCache <$> lift ask
   when (M.member vn $ scTables rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> vn
-  return (userRole userInfo)
 
 trackExistingTableOrViewP2Setup
   :: (QErrM m, CacheRWM m, MonadTx m)
@@ -150,13 +149,15 @@ trackExistingTableOrViewP2Setup tn isSystemDefined = do
   addTableToCache ti
 
 trackExistingTableOrViewP2
-  :: (QErrM m, CacheRWM m, MonadTx m, HasGCtxMap m)
-  => QualifiedTable -> Bool -> Bool -> RoleName -> m RespBody
-trackExistingTableOrViewP2 vn isSystemDefined checkConflict role = do
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => QualifiedTable -> Bool -> Bool -> m RespBody
+trackExistingTableOrViewP2 vn isSystemDefined checkConflict = do
   when checkConflict $ do
-    gCtxMap <- askGCtxMap
-    let gCtx = GS.getGCtx role gCtxMap
-    GS.checkConflictingNodesTxt gCtx tn
+    sc <- askSchemaCache
+    let gCtxMap = scGCtxMap sc
+    forM_ (M.toList gCtxMap) $ \(_, gCtx) ->
+      GS.checkConflictingNodesTxt gCtx tn
+
   trackExistingTableOrViewP2Setup vn isSystemDefined
   liftTx $ Q.catchE defaultTxErrorHandler $
     saveTableToCatalog vn
@@ -170,10 +171,10 @@ trackExistingTableOrViewP2 vn isSystemDefined checkConflict role = do
 
 instance HDBQuery TrackTable where
 
-  type Phase1Res TrackTable = RoleName
+  type Phase1Res TrackTable = ()
   phaseOne = trackExistingTableOrViewP1
 
-  phaseTwo (TrackTable tn) r = trackExistingTableOrViewP2 tn False True r
+  phaseTwo (TrackTable tn) _ = trackExistingTableOrViewP2 tn False True
 
   schemaCachePolicy = SCPReload
 
@@ -356,8 +357,8 @@ instance HDBQuery UntrackTable where
 
   schemaCachePolicy = SCPReload
 
-buildSchemaCache :: Q.TxE QErr SchemaCache
-buildSchemaCache = flip execStateT emptySchemaCache $ do
+buildSchemaCache :: HTTP.Manager -> Q.TxE QErr SchemaCache
+buildSchemaCache httpManager = flip execStateT emptySchemaCache $ do
   tables <- lift $ Q.catchE defaultTxErrorHandler fetchTables
   forM_ tables $ \(sn, tn, isSystemDefined) ->
     modifyErr (\e -> "table " <> tn <<> "; " <> e) $
@@ -404,13 +405,15 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
     addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook headers
     liftTx $ mkTriggerQ trid trn qt allCols tDef
 
+  -- remote resolvers
   res <- liftTx fetchRemoteResolvers
-  forM_ res $ \(CustomResolverDef _ eUrlEnv hdrs) ->
-    case eUrlEnv of
-      Left url -> addCustomResolverToCache url hdrs
-      Right env -> do
-        url <- getUrlFromEnv env
-        addCustomResolverToCache url hdrs
+  sc <- askSchemaCache
+  gCtxMap <- GS.mkGCtxMap (scTables sc)
+  remoteSrvrs <- forM res $ \(CustomResolverDef _ eUrlEnv hdrs) -> do
+    url <- either return getUrlFromEnv eUrlEnv
+    return (url, hdrs)
+  mergedGCtxMap <- mergeSchemas remoteSrvrs gCtxMap httpManager
+  writeCustomResolversToCache mergedGCtxMap remoteSrvrs
 
   where
     permHelper sn tn rn pDef pa = do

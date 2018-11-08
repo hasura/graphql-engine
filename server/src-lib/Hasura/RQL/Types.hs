@@ -140,7 +140,6 @@ data P2Ctx
   = P2Ctx
   { _p2cUserInfo    :: !UserInfo
   , _p2cHttpManager :: !HTTP.Manager
-  , _p2cGCtxMap     :: !GC.GCtxMap
   }
 
 type P2 = StateT SchemaCache (ReaderT P2Ctx (Q.TxE QErr))
@@ -204,8 +203,8 @@ instance HasHttpManager P2 where
 class (Monad m) => HasGCtxMap m where
   askGCtxMap :: m GC.GCtxMap
 
-instance HasGCtxMap P2 where
-  askGCtxMap = _p2cGCtxMap <$> ask
+-- instance HasGCtxMap P2 where
+--   askGCtxMap = _p2cGCtxMap <$> ask
 
 --type P2C m = (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
 

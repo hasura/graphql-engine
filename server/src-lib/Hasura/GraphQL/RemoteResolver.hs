@@ -81,7 +81,8 @@ fetchRemoteSchema manager url headerConf = do
 
 mergeSchemas
   :: (MonadIO m, MonadError QErr m)
-  => [(N.URI, [HeaderConf])]-> GS.GCtxMap -> HTTP.Manager -> m GS.GCtxMap
+  => [(N.URI, [HeaderConf])] -> GS.GCtxMap -> HTTP.Manager
+  -> m GS.GCtxMap
 mergeSchemas resolvers gCtxMap httpManager = do
   -- TODO: better way to do this?
   remoteSchemas <- forM resolvers $ \(url, hdrs) -> do
