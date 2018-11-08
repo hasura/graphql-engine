@@ -32,15 +32,16 @@ module Hasura.GraphQL.Resolve.Context
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Sequence                 as Seq
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.Aeson                          as J
+import qualified Data.Aeson.Casing                   as J
+import qualified Data.Aeson.TH                       as J
+import qualified Data.ByteString.Lazy                as BL
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.Sequence                       as Seq
+import qualified Database.PG.Query                   as Q
+import qualified Language.GraphQL.Draft.Syntax       as G
 
+import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
@@ -48,7 +49,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Hasura.SQL.DML                as S
+import qualified Hasura.SQL.DML                      as S
 
 data InsResp
   = InsResp
@@ -57,9 +58,9 @@ data InsResp
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
 
-type FieldMap
-  = Map.HashMap (G.NamedType, G.Name)
-    (Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int))
+-- type FieldMap
+--   = Map.HashMap (G.NamedType, G.Name)
+--     (Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int))
 
 -- data OrdTy
 --   = OAsc
@@ -73,28 +74,28 @@ type FieldMap
 
 type RespTx = Q.TxE QErr BL.ByteString
 
--- order by context
-data OrdByItem
-  = OBIPGCol !PGColInfo
-  | OBIRel !RelInfo !S.BoolExp
-  deriving (Show, Eq)
+-- -- order by context
+-- data OrdByItem
+--   = OBIPGCol !PGColInfo
+--   | OBIRel !RelInfo !S.BoolExp
+--   deriving (Show, Eq)
 
-type OrdByItemMap = Map.HashMap G.Name OrdByItem
+-- type OrdByItemMap = Map.HashMap G.Name OrdByItem
 
-type OrdByCtx = Map.HashMap G.NamedType OrdByItemMap
+-- type OrdByCtx = Map.HashMap G.NamedType OrdByItemMap
 
--- insert context
-type RelationInfoMap = Map.HashMap RelName RelInfo
+-- -- insert context
+-- type RelationInfoMap = Map.HashMap RelName RelInfo
 
-data InsCtx
-  = InsCtx
-  { icView      :: !QualifiedTable
-  , icColumns   :: ![PGColInfo]
-  , icSet       :: !InsSetCols
-  , icRelations :: !RelationInfoMap
-  } deriving (Show, Eq)
+-- data InsCtx
+--   = InsCtx
+--   { icView      :: !QualifiedTable
+--   , icColumns   :: ![PGColInfo]
+--   , icSet       :: !InsSetCols
+--   , icRelations :: !RelationInfoMap
+--   } deriving (Show, Eq)
 
-type InsCtxMap = Map.HashMap QualifiedTable InsCtx
+-- type InsCtxMap = Map.HashMap QualifiedTable InsCtx
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)

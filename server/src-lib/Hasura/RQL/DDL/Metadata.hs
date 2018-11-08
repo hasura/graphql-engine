@@ -201,7 +201,7 @@ applyQP2
      , CacheRWM m
      , MonadTx m
      , MonadIO m
-     , HasTypeMap m
+     , HasGCtxMap m
      , HasHttpManager m
      )
   => ReplaceMetadata

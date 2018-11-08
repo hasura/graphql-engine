@@ -104,7 +104,7 @@ buildTx userInfo sc httpManager gCtx q = do
   return $ flip runReaderT p2Ctx $
     flip runStateT sc $ withPathK "args" $ phaseTwo q p1Res
   where
-    p2Ctx = P2Ctx userInfo httpManager $ _gTypes gCtx
+    p2Ctx = P2Ctx userInfo httpManager gCtx
     qEnv = QCtx userInfo sc
 
 runQuery

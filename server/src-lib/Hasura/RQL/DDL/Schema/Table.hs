@@ -133,12 +133,14 @@ newtype TrackTable
   { tName :: QualifiedTable }
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
-trackExistingTableOrViewP1 :: TrackTable -> P1 ()
+trackExistingTableOrViewP1 :: TrackTable -> P1 RoleName
 trackExistingTableOrViewP1 (TrackTable vn) = do
   adminOnly
+  userInfo <- askUserInfo
   rawSchemaCache <- getSchemaCache <$> lift ask
   when (M.member vn $ scTables rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> vn
+  return (userRole userInfo)
 
 trackExistingTableOrViewP2Setup
   :: (QErrM m, CacheRWM m, MonadTx m)
@@ -148,12 +150,13 @@ trackExistingTableOrViewP2Setup tn isSystemDefined = do
   addTableToCache ti
 
 trackExistingTableOrViewP2
-  :: (QErrM m, CacheRWM m, MonadTx m, HasTypeMap m)
-  => QualifiedTable -> Bool -> Bool -> m RespBody
-trackExistingTableOrViewP2 vn isSystemDefined checkConflict = do
+  :: (QErrM m, CacheRWM m, MonadTx m, HasGCtxMap m)
+  => QualifiedTable -> Bool -> Bool -> RoleName -> m RespBody
+trackExistingTableOrViewP2 vn isSystemDefined checkConflict role = do
   when checkConflict $ do
-    tyMap <- askTypeMap
-    GS.checkConflictingNodesTxt tyMap tn
+    gCtxMap <- askGCtxMap
+    let gCtx = GS.getGCtx role gCtxMap
+    GS.checkConflictingNodesTxt gCtx tn
   trackExistingTableOrViewP2Setup vn isSystemDefined
   liftTx $ Q.catchE defaultTxErrorHandler $
     saveTableToCatalog vn
@@ -167,10 +170,10 @@ trackExistingTableOrViewP2 vn isSystemDefined checkConflict = do
 
 instance HDBQuery TrackTable where
 
-  type Phase1Res TrackTable = ()
+  type Phase1Res TrackTable = RoleName
   phaseOne = trackExistingTableOrViewP1
 
-  phaseTwo (TrackTable tn) _ = trackExistingTableOrViewP2 tn False True
+  phaseTwo (TrackTable tn) r = trackExistingTableOrViewP2 tn False True r
 
   schemaCachePolicy = SCPReload
 

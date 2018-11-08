@@ -145,6 +145,7 @@ library
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
+                     , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Common
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.Error
@@ -197,6 +198,8 @@ library
                      , Hasura.GraphQL.Resolve.Mutation
                      , Hasura.GraphQL.Resolve.Select
                      , Hasura.GraphQL.RemoteResolver
+                     , Hasura.GraphQL.Context
+                     , Hasura.GraphQL.Resolve.ContextTypes
 
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP

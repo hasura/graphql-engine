@@ -69,6 +69,7 @@ runGQ pool isoL userInfo gCtxRoleMap manager req rawReq = do
 
       [] -> throw500 "unexpected: cannot find node in schema"
 
+
   where
     gCtx = getGCtx (userRole userInfo) gCtxRoleMap
     getTopLevelNodes opDef =

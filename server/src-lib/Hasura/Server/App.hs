@@ -2,7 +2,6 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
-
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TemplateHaskell       #-}
@@ -261,17 +260,6 @@ legacyQueryHandler tn queryType =
   where
     qt = QualifiedTable publicSchema tn
 
-mergeSchemas
-  :: (MonadIO m, MonadError QErr m)
-  => SchemaCache -> GS.GCtxMap -> HTTP.Manager -> m GS.GCtxMap
-mergeSchemas sc gCtxMap httpManager = do
-  -- TODO: better way to do this?
-  let resolvers = scRemoteResolvers sc
-  remoteSchemas <- forM resolvers $ \(url, hdrs) -> do
-    remoteSchema <- fetchRemoteSchema httpManager url hdrs
-    return (url, remoteSchema)
-  mergeRemoteSchemas gCtxMap remoteSchemas
-
 
 mkWaiApp
   :: Q.TxIsolation
@@ -289,7 +277,8 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
         Q.catchE defaultTxErrorHandler initStateTx
         sc <- buildSchemaCache
         gCtxMap <- GS.mkGCtxMap (scTables sc)
-        mergedGCtxMap <- mergeSchemas sc gCtxMap httpManager
+        mergedGCtxMap <-
+          mergeSchemas (scRemoteResolvers sc) gCtxMap httpManager
         return $ (,) sc mergedGCtxMap
       either initErrExit return pgResp >>= newIORef
 
