@@ -35,10 +35,6 @@ data ConflictClauseP1
   | CP1Update !ConflictTarget ![PGCol]
   deriving (Show, Eq)
 
-isDoNothing :: ConflictClauseP1 -> Bool
-isDoNothing (CP1DoNothing _) = True
-isDoNothing _                = False
-
 data InsertQueryP1
   = InsertQueryP1
   { iqp1Table    :: !QualifiedTable
@@ -51,7 +47,7 @@ data InsertQueryP1
 
 mkSQLInsert :: InsertQueryP1 -> S.SelectWith
 mkSQLInsert (InsertQueryP1 tn vn cols vals c mutFlds) =
-  mkSelWith tn (S.CTEInsert insert) mutFlds
+  mkSelWith tn (S.CTEInsert insert) mutFlds False
   where
     insert =
       S.SQLInsert vn cols vals (toSQLConflict <$> c) $ Just S.returningStar
@@ -90,9 +86,11 @@ convObj
   -> InsObj
   -> m ([PGCol], [S.SQLExp])
 convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
-  inpInsVals <- flip HM.traverseWithKey reqInsObj $ \c val -> do
+  inpInsVals <- flip HM.traverseWithKey insObj $ \c val -> do
     let relWhenPGErr = "relationships can't be inserted"
     colType <- askPGType fieldInfoMap c relWhenPGErr
+    -- if column has predefined value then throw error
+    when (c `elem` preSetCols) $ throwNotInsErr c
     -- Encode aeson's value into prepared value
     withPathK (getPGColTxt c) $ prepFn colType val
   let insVals = HM.union setInsVals inpInsVals
@@ -101,7 +99,12 @@ convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
 
   return (inpCols, sqlExps)
   where
-    reqInsObj = HM.difference insObj setInsVals
+    preSetCols = HM.keys setInsVals
+
+    throwNotInsErr c = do
+      role <- userRole <$> askUserInfo
+      throw400 NotSupported $ "column " <> c <<> " is not insertable"
+        <> " for role " <>> role
 
 buildConflictClause
   :: (P1C m)
@@ -179,7 +182,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
 
     withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
-  let mutFlds = mkDefaultMutFlds tableName mAnnRetCols
+  let mutFlds = mkDefaultMutFlds mAnnRetCols
 
   let defInsVals = mkDefValMap fieldInfoMap
       insCols    = HM.keys defInsVals

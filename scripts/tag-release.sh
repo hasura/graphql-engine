@@ -16,6 +16,9 @@ set -e
 # get the repo root
 ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
 
+# paths to replace versions
+VERSION_PATHS="$ROOT/install-manifests $ROOT/scripts/cli-migrations"
+
 # check if required argument is set
 if [ -z "$1" ]; then
     echo "Usage: ./tag-release.sh <tag> [<optional-tag-message>]"
@@ -32,10 +35,10 @@ if [ -z "$MESSAGE" ]; then
 fi
 
 # replace the image version with latest tag for all references in install-manifests
-find "$ROOT/install-manifests" -type f -exec sed -i -E 's#(hasura/graphql-engine:)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?( \\)*$#\1'"${TAG}"'\9#' {} \;
+find "$VERSION_PATHS" -type f -exec sed -i -E 's#(hasura/graphql-engine:)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?( \\)*$#\1'"${TAG}"'\9#' {} \;
 
-git add "$ROOT/install-manifests"
-git commit -m "update installation manifests to $TAG"
+git add "$VERSION_PATHS"
+git commit -m "update manifests to $TAG"
 
 git tag -a "$TAG" -m "$MESSAGE"
 
