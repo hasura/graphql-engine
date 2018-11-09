@@ -19,7 +19,7 @@ Pygments==2.2.0
 pytz==2017.2
 PyYAML==3.13
 requests-file==1.4.2
-requests==2.18.4
+requests==2.20.0
 six==1.11.0
 snowballstemmer==1.2.1
 sphinx-autobuild==0.7.1
