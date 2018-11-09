@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { Voyager } from 'graphql-voyager';
 import fetch from 'isomorphic-fetch';
 import Endpoints from '../../Endpoints';
-import hasuraconfig from '../../../hasuraconfig';
 import '../../../node_modules/graphql-voyager/dist/voyager.css';
 import './voyagerView.css';
 
@@ -10,7 +9,10 @@ class VoyagerView extends Component {
   introspectionProvider(query) {
     return fetch(Endpoints.graphQLUrl, {
       method: 'post',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-hasura-access-key': 'abcd',
+      },
       body: JSON.stringify({ query: query }),
     }).then(response => response.json());
   }
@@ -21,7 +23,9 @@ class VoyagerView extends Component {
       <Voyager
         introspection={this.introspectionProvider}
         displayOptions={{ rootType: rootType }}
-        workerURI={hasuraconfig.webpackPrefix + 'voyager.worker.js'}
+        workerURI={
+          'https://storage.googleapis.com/hasura-graphql-engine/console/assets/voyager.worker.js'
+        }
       />
     );
   }
