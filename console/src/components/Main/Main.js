@@ -243,12 +243,12 @@ class Main extends React.Component {
                       >
                         <div className={styles.iconCenter}>
                           <i
-                            title="Remote Schemas"
+                            title="Stitched Schemas"
                             className="fa fa-plug"
                             aria-hidden="true"
                           />
                         </div>
-                        <p>Remote Schemas</p>
+                        <p>Stitched Schemas</p>
                       </Link>
                     </li>
                   </OverlayTrigger>
