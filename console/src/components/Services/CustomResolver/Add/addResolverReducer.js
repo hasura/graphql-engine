@@ -11,7 +11,7 @@ import { fetchResolvers } from '../customActions';
 import { generateHeaderSyms } from '../../Layout/ReusableHeader/HeaderReducer';
 import { makeRequest } from '../customActions';
 // import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
-import { appPrefix } from '../CustomResolverRouter';
+import { appPrefix } from '../constants';
 
 /* */
 const MANUAL_URL_CHANGED = '@addResolver/MANUAL_URL_CHANGED';
@@ -82,7 +82,7 @@ const fetchResolver = resolver => {
         type: 'select',
         args: {
           table: {
-            name: 'custom_resolver',
+            name: 'remote_schemas',
             schema: 'hdb_catalog',
           },
           columns: ['*'],
@@ -98,7 +98,7 @@ const fetchResolver = resolver => {
         if (data.length > 0) {
           dispatch({ type: RESOLVER_FETCH_SUCCESS, data: data });
           const headerObj = [];
-          data[0].headers.forEach(d => {
+          data[0].definition.headers.forEach(d => {
             headerObj.push({
               name: d.name,
               value: d.value ? d.value : d.value_from_env,
@@ -131,7 +131,7 @@ const addResolver = () => {
     const currState = getState().customResolverData.addData;
     // const url = Endpoints.getSchema;
     const resolveObj = {
-      name: currState.name.trim(),
+      name: currState.name.trim().replace(/ +/g, ''),
       url: currState.manualUrl,
       url_from_env: currState.envName,
       headers: [],
@@ -147,17 +147,18 @@ const addResolver = () => {
     }
     /* TODO: Add mandatory fields validation */
 
-    const migrationName = 'create_stitch_schema_' + currState.name.trim();
+    const migrationName =
+      'create_remote_schema_' + currState.name.trim().replace(/ +/g, '');
 
     const payload = {
-      type: 'add_custom_resolver',
+      type: 'add_remote_schema',
       args: {
         ...resolveObj,
       },
     };
 
     const downPayload = {
-      type: 'delete_custom_resolver',
+      type: 'remove_remote_schema',
       args: {
         name: currState.name,
       },
@@ -177,9 +178,9 @@ const addResolver = () => {
       args: downQueryArgs,
     };
 
-    const requestMsg = 'Stitching schema...';
-    const successMsg = 'Schema stitched successfully';
-    const errorMsg = 'Stitching schema failed';
+    const requestMsg = 'Adding remote schema...';
+    const successMsg = 'Remote schema added successfully';
+    const errorMsg = 'Adding schema failed';
 
     const customOnSuccess = data => {
       Promise.all([
@@ -218,15 +219,16 @@ const deleteResolver = () => {
     const resolveObj = {
       name: currState.editState.originalName,
     };
-    const migrationName = 'delete_stitch_schema_' + resolveObj.name.trim();
+    const migrationName =
+      'remove_remote_schema_' + resolveObj.name.trim().replace(/ +/g, '');
     const payload = {
-      type: 'delete_custom_resolver',
+      type: 'remove_remote_schema',
       args: {
         name: currState.editState.originalName,
       },
     };
     const downPayload = {
-      type: 'add_custom_resolver',
+      type: 'add_remote_schema',
       args: {
         name: currState.editState.originalName,
         url: currState.manualUrl,
@@ -245,9 +247,9 @@ const deleteResolver = () => {
       type: 'bulk',
       args: downQueryArgs,
     };
-    const requestMsg = 'Deleting schema...';
-    const successMsg = 'Schema deleted successfully';
-    const errorMsg = 'Delete schema failed';
+    const requestMsg = 'Deleting remote schema...';
+    const successMsg = 'Remote schema deleted successfully';
+    const errorMsg = 'Delete remote schema failed';
 
     const customOnSuccess = () => {
       // dispatch({ type: REQUEST_SUCCESS });
@@ -277,24 +279,24 @@ const deleteResolver = () => {
   };
 };
 
-/*
- * TODO: Change it to this function once the issue with bulk operation is fixed
 const modifyResolver = () => {
   return (dispatch, getState) => {
     const currState = getState().customResolverData.addData;
     // const url = Endpoints.getSchema;
     const upQueryArgs = [];
     const downQueryArgs = [];
-    const migrationName = 'update_stitch_schema_' + currState.name.trim();
-    const schemaName = currState.name.trim();
+    const migrationName =
+      'update_remote_schema_' + currState.name.trim().replace(/ +/g, '');
+    const schemaName = currState.name.trim().replace(/ +/g, '');
     const deleteResolverUp = {
-      type: 'delete_custom_resolver',
+      type: 'remove_remote_schema',
       args: {
         name: currState.editState.originalName,
       },
     };
+    const trimmedName = currState.name.trim().replace(/ +/g, '');
     const resolveObj = {
-      name: currState.name,
+      name: trimmedName,
       url: currState.manualUrl,
       url_from_env: currState.envName,
       headers: [],
@@ -310,7 +312,7 @@ const modifyResolver = () => {
     }
 
     const createResolverUp = {
-      type: 'add_custom_resolver',
+      type: 'add_remote_schema',
       args: {
         ...resolveObj,
       },
@@ -320,9 +322,9 @@ const modifyResolver = () => {
 
     // Delete the new one and create the old one
     const deleteResolverDown = {
-      type: 'delete_custom_resolver',
+      type: 'remove_remote_schema',
       args: {
-        name: currState.name,
+        name: trimmedName,
       },
     };
     const resolveDownObj = {
@@ -340,7 +342,7 @@ const modifyResolver = () => {
     }
 
     const createResolverDown = {
-      type: 'add_custom_resolver',
+      type: 'add_remote_schema',
       args: {
         ...resolveDownObj,
       },
@@ -357,9 +359,9 @@ const modifyResolver = () => {
       type: 'bulk',
       args: downQueryArgs,
     };
-    const requestMsg = 'Modifying schema...';
-    const successMsg = 'Schema modified';
-    const errorMsg = 'Modify schema failed';
+    const requestMsg = 'Modifying remote schema...';
+    const successMsg = 'Remote schema modified';
+    const errorMsg = 'Modify remote schema failed';
 
     const customOnSuccess = data => {
       // dispatch({ type: REQUEST_SUCCESS });
@@ -367,7 +369,10 @@ const modifyResolver = () => {
         dispatch({ type: RESET, data: data }),
         dispatch(fetchResolvers()),
       ]).then(() => {
-        return dispatch(fetchResolver(schemaName));
+        return Promise.all([
+          dispatch(fetchResolver(schemaName)),
+          dispatch(push(`${appPrefix}/manage/${trimmedName}/details`)),
+        ]);
       });
     };
     const customOnError = error => {
@@ -389,31 +394,26 @@ const modifyResolver = () => {
     );
   };
 };
-*/
 
+/*
 const modifyResolver = () => {
   return (dispatch, getState) => {
     const currState = getState().customResolverData.addData;
     // const url = Endpoints.getSchema;
     let upQueryArgs = [];
     let downQueryArgs = [];
-    const migrationName = 'update_stitch_schema_' + currState.name.trim();
+    const migrationName = 'update_add_schema_' + currState.name.trim();
     const schemaName = currState.name.trim();
     const deleteResolverUp = {
-      type: 'delete_custom_resolver',
+      type: 'remove_remote_schema',
       args: {
         name: currState.editState.originalName,
       },
     };
 
-    /*
-    */
-
     upQueryArgs.push(deleteResolverUp);
 
     // Delete the new one and create the old one
-    /*
-    */
     const resolveDownObj = {
       name: currState.editState.originalName,
       url: currState.editState.originalUrl,
@@ -429,15 +429,12 @@ const modifyResolver = () => {
     }
 
     const createResolverDown = {
-      type: 'add_custom_resolver',
+      type: 'add_remote_schema',
       args: {
         ...resolveDownObj,
       },
     };
     downQueryArgs.push(createResolverDown);
-    /*
-    */
-    // End of down
 
     let upQuery = {
       type: 'bulk',
@@ -473,7 +470,7 @@ const modifyResolver = () => {
       }
 
       const createResolverUp = {
-        type: 'add_custom_resolver',
+        type: 'add_remote_schema',
         args: {
           ...resolveObj,
         },
@@ -481,7 +478,7 @@ const modifyResolver = () => {
       upQueryArgs.push(createResolverUp);
 
       const deleteResolverDown = {
-        type: 'delete_custom_resolver',
+        type: 'remove_remote_schema',
         args: {
           name: currState.name,
         },
@@ -539,6 +536,7 @@ const modifyResolver = () => {
     );
   };
 };
+*/
 
 const addResolverReducer = (state = addState, action) => {
   switch (action.type) {
@@ -595,17 +593,17 @@ const addResolverReducer = (state = addState, action) => {
       return {
         ...state,
         name: action.data[0].name,
-        manualUrl: action.data[0].url,
-        envName: action.data[0].url_from_env,
-        headers: action.data[0].headers,
+        manualUrl: action.data[0].definition.url || null,
+        envName: action.data[0].definition.url_from_env || null,
+        headers: action.data[0].definition.headers || [],
         editState: {
           ...state,
           id: action.data[0].id,
           isModify: false,
           originalName: action.data[0].name,
-          originalHeaders: action.data[0].headers,
-          originalUrl: action.data[0].url,
-          originalEnvUrl: action.data[0].url_from_env,
+          originalHeaders: action.data[0].definition.headers || [],
+          originalUrl: action.data[0].definition.url || null,
+          originalEnvUrl: action.data[0].definition.url_from_env || null,
         },
         isRequesting: false,
         isError: null,

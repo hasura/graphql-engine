@@ -235,20 +235,20 @@ class Main extends React.Component {
                     <li>
                       <Link
                         className={
-                          currentActiveBlock === 'stitched-schemas'
+                          currentActiveBlock === 'remote-schemas'
                             ? styles.navSideBarActive
                             : ''
                         }
-                        to={appPrefix + '/stitched-schemas'}
+                        to={appPrefix + '/remote-schemas'}
                       >
                         <div className={styles.iconCenter}>
                           <i
-                            title="Stitched Schemas"
+                            title="Remote Schemas"
                             className="fa fa-plug"
                             aria-hidden="true"
                           />
                         </div>
-                        <p>Stitched Schemas</p>
+                        <p>Remote Schemas</p>
                       </Link>
                     </li>
                   </OverlayTrigger>

@@ -11,7 +11,7 @@ import { fetchResolver, RESET } from '../Add/addResolverReducer';
 import { VIEW_RESOLVER } from '../customActions';
 import ReloadMetadata from '../../Data/Metadata/ReloadMetadata';
 
-const appPrefix = '/stitched-schemas';
+import { appPrefix } from '../constants';
 
 const refresh = (
   <Tooltip id="tooltip-cascade">
@@ -55,7 +55,7 @@ class ViewStitchedSchema extends React.Component {
     const filterHeaders = headers.filter(h => !!h.name);
     const breadCrumbs = [
       {
-        title: 'Custom Resolvers',
+        title: 'Remote schemas',
         url: appPrefix,
       },
       {
@@ -101,7 +101,7 @@ class ViewStitchedSchema extends React.Component {
               <tbody>
                 <tr>
                   <td>GraphQL Server URL</td>
-                  <td>{manualUrl || envName}</td>
+                  <td>{manualUrl || `<${envName}>`}</td>
                 </tr>
                 {filterHeaders.length > 0 ? (
                   <tr>

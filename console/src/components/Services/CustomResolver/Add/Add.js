@@ -4,6 +4,8 @@ import Common from '../Common/Common';
 import { addResolver, RESET } from './addResolverReducer';
 import Helmet from 'react-helmet';
 
+import { pageTitle } from '../constants';
+
 class Add extends React.Component {
   componentWillUnmount() {
     this.props.dispatch({ type: RESET });
@@ -13,7 +15,7 @@ class Add extends React.Component {
     const { isRequesting, dispatch } = this.props;
     return (
       <div className={styles.addWrapper}>
-        <Helmet title="Add Schema - Stitched Schemas | Hasura" />
+        <Helmet title={`Add ${pageTitle} - ${pageTitle}s | Hasura`} />
         <div className={styles.heading_text}>Add a new remote schema</div>
         <form
           onSubmit={e => {
@@ -27,8 +29,9 @@ class Add extends React.Component {
               type="submit"
               className={styles.yellow_button}
               disabled={isRequesting}
+              data-test="add-remote-schema-submit"
             >
-              {isRequesting ? 'Creating...' : 'Stitch Schema'}
+              {isRequesting ? 'Adding...' : 'Add Remote Schema'}
             </button>
             {/*
             <button className={styles.default_button}>Cancel</button>

@@ -16,12 +16,15 @@ import { fetchResolvers, FILTER_RESOLVER } from './customActions';
 // Custom resolvers list is fetched from hdb_catalog/custom_resolver
 // Whenever any operation happens like add resolver/delete resolver, this state should update automatically.
 
-const appPrefix = '/stitched-schemas';
+import { appPrefix } from './constants';
 
 const listItem = (dataList, styles, currentLocation, currentResolver) => {
   if (dataList.length === 0) {
     return (
-      <li className={styles.noTables}>
+      <li
+        className={styles.noTables}
+        data-test="remote-schema-sidebar-no-schemas"
+      >
         <i>No remote schemas available</i>
       </li>
     );
@@ -35,7 +38,11 @@ const listItem = (dataList, styles, currentLocation, currentResolver) => {
       activeTableClass = styles.activeTable;
     }
     return (
-      <li className={activeTableClass} key={i}>
+      <li
+        className={activeTableClass}
+        key={i}
+        data-test={`remote-schema-sidebar-links-${i + 1}`}
+      >
         <Link
           to={appPrefix + '/manage/' + d.name + '/details'}
           data-test={d.name}
@@ -121,7 +128,7 @@ const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
   };
   return (
     <Route
-      path="stitched-schemas"
+      path="remote-schemas"
       component={layoutConnector(
         connect,
         leftNavMapStateToProps,
