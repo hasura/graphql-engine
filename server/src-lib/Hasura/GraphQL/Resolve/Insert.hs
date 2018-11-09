@@ -381,13 +381,15 @@ insertObj role insCtxMap tn annObj ctx addCols onConflictValM errP = do
 mkBoolExp
   :: (MonadError QErr m, MonadState PrepArgs m)
   => QualifiedTable -> [(PGColInfo, PGColValue)]
-  -> m (GBoolExp RG.AnnSQLBoolExp)
+  -> m S.BoolExp
 mkBoolExp tn colInfoVals =
-  RG.convBoolRhs (RG.mkBoolExpBuilder prepare) (S.mkQual tn) boolExp
+  RB.toSQLBoolExp (S.mkQual tn) <$> boolExp
   where
-    boolExp = BoolAnd $ map (BoolCol . uncurry f) colInfoVals
-    f ci@(PGColInfo _ colTy _) colVal =
-      RB.AVCol ci [RB.OEVal $ RB.AEQ (colTy, colVal)]
+    boolExp = BoolAnd <$> mapM (fmap BoolFld . uncurry f) colInfoVals
+
+    f ci@(PGColInfo _ colTy _) colVal = do
+      sqlExp <- prepare (colTy, colVal)
+      return $ AVCol ci [AEQ sqlExp]
 
 mkSelQ :: QualifiedTable
   -> [PGColInfo] -> [PGColWithValue] -> Q.TxE QErr WithExp
@@ -395,7 +397,7 @@ mkSelQ tn allColInfos pgColsWithVal = do
   (whereExp, args) <- flip runStateT Seq.Empty $ mkBoolExp tn colWithInfos
   let sqlSel = S.mkSelect { S.selExtr = [S.selectStar]
                           , S.selFrom = Just $ S.mkSimpleFromExp tn
-                          , S.selWhere = Just $ S.WhereFrag $ RG.cBoolExp whereExp
+                          , S.selWhere = Just $ S.WhereFrag whereExp
                           }
 
   return (S.CTESelect sqlSel, args)
@@ -418,8 +420,8 @@ execWithExp tn (withExp, args) annFlds = do
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList args) True
   where
     selFlds = RS.ASFSimple annFlds
-    tabFrom = RS.TableFrom tn frmItemM
-    tabPerm = RS.TablePerm (S.BELit True) Nothing
+    tabFrom = RS.TableFrom $ Right $ toIden alias
+    tabPerm = RS.TablePerm annBoolExpTrue Nothing
     alias = S.Alias $ Iden $ snakeCaseTable tn <> "__rel_insert_result"
     frmItemM = Just $ S.FIIden $ toIden alias
 

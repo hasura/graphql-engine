@@ -75,9 +75,9 @@ fieldAsPath = nameAsPath . _fName
 parseTableArgs
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> QualifiedTable -> ArgsMap -> m RS.TableArgs
-parseTableArgs f tn args = do
-  whereExpM  <- withArgM args "where" $ convertBoolExpG f tn
+  -> ArgsMap -> m RS.TableArgs
+parseTableArgs f args = do
+  whereExpM  <- withArgM args "where" $ parseBoolExp f
   ordByExpML <- withArgM args "order_by" parseOrderBy
   let ordByExpM = NE.nonEmpty =<< ordByExpML
   limitExpM  <- withArgM args "limit" parseLimit
@@ -87,13 +87,13 @@ parseTableArgs f tn args = do
 fromField
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> m RS.AnnSel
+  -> QualifiedTable -> AnnBoolExpSQL -> Maybe Int -> Field -> m RS.AnnSel
 fromField f tn permFilter permLimitM fld =
   fieldAsPath fld $ do
-  tableArgs <- parseTableArgs f tn args
+  tableArgs <- parseTableArgs f args
   annFlds   <- fromSelSet f (_fType fld) $ _fSelSet fld
   let selFlds = RS.ASFSimple annFlds
-      tabFrom = RS.TableFrom tn Nothing
+      tabFrom = RS.TableFrom $ Left tn
       tabPerm = RS.TablePerm permFilter permLimitM
   return $ RS.AnnSel selFlds tabFrom tabPerm tableArgs
   where
@@ -170,18 +170,18 @@ parseLimit v = do
 fromFieldByPKey
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> QualifiedTable -> S.BoolExp -> Field -> m RS.AnnSel
+  -> QualifiedTable -> AnnBoolExpSQL -> Field -> m RS.AnnSel
 fromFieldByPKey f tn permFilter fld = fieldAsPath fld $ do
-  boolExp <- pgColValToBoolExpG f tn $ _fArguments fld
+  boolExp <- pgColValToBoolExpG f $ _fArguments fld
   annFlds <- fromSelSet f (_fType fld) $ _fSelSet fld
   let selFlds = RS.ASFSimple annFlds
-      tabFrom = RS.TableFrom tn Nothing
+      tabFrom = RS.TableFrom $ Left tn
       tabPerm = RS.TablePerm permFilter Nothing
   return $ RS.AnnSel selFlds tabFrom tabPerm $
     RS.noTableArgs { RS._taWhere = Just boolExp}
 
 convertSelect
-  :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RespTx
+  :: QualifiedTable -> AnnBoolExpSQL -> Maybe Int -> Field -> Convert RespTx
 convertSelect qt permFilter permLimit fld = do
   selData <- withPathK "selectionSet" $
              fromField prepare qt permFilter permLimit fld
@@ -189,7 +189,7 @@ convertSelect qt permFilter permLimit fld = do
   return $ RS.selectP2 False (selData, prepArgs)
 
 convertSelectByPKey
-  :: QualifiedTable -> S.BoolExp -> Field -> Convert RespTx
+  :: QualifiedTable -> AnnBoolExpSQL -> Field -> Convert RespTx
 convertSelectByPKey qt permFilter fld = do
   selData <- withPathK "selectionSet" $
              fromFieldByPKey prepare qt permFilter fld
@@ -224,12 +224,12 @@ convertAggFld ty selSet =
 fromAggField
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> m RS.AnnSel
+  -> QualifiedTable -> AnnBoolExpSQL -> Maybe Int -> Field -> m RS.AnnSel
 fromAggField fn tn permFilter permLimitM fld = fieldAsPath fld $ do
-  tableArgs <- parseTableArgs fn tn args
+  tableArgs <- parseTableArgs fn args
   aggSelFlds   <- fromAggSel (_fType fld) $ _fSelSet fld
   let selFlds = RS.ASFWithAgg aggSelFlds
-      tabFrom = RS.TableFrom tn Nothing
+      tabFrom = RS.TableFrom $ Left tn
       tabPerm = RS.TablePerm permFilter permLimitM
   return $ RS.AnnSel selFlds tabFrom tabPerm tableArgs
   where
@@ -245,7 +245,7 @@ fromAggField fn tn permFilter permLimitM fld = fieldAsPath fld $ do
           G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 convertAggSelect
-  :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RespTx
+  :: QualifiedTable -> AnnBoolExpSQL -> Maybe Int -> Field -> Convert RespTx
 convertAggSelect qt permFilter permLimit fld = do
   selData <- withPathK "selectionSet" $
              fromAggField prepare qt permFilter permLimit fld

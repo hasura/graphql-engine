@@ -67,17 +67,17 @@ data AnnRel
   , arType    :: !RelType    -- Relationship type (ObjRel, ArrRel)
   , arMapping :: ![(PGCol, PGCol)]      -- Column of the left table to join with
   , arAnnSel  :: !AnnSel -- Current table. Almost ~ to SQL Select
-  } deriving (Show, Eq)
+  } deriving (Eq, Show)
 
 data AnnFld
   = FCol !PGColInfo
   | FExp !T.Text
   | FRel !AnnRel
-  deriving (Show, Eq)
+  deriving (Eq, Show)
 
 data TableArgs
   = TableArgs
-  { _taWhere   :: !(Maybe (GBoolExp AnnSQLBoolExp))
+  { _taWhere   :: !(Maybe AnnBoolExpSQL)
   , _taOrderBy :: !(Maybe (NE.NonEmpty AnnOrderByItem))
   , _taLimit   :: !(Maybe Int)
   , _taOffset  :: !(Maybe S.SQLExp)
@@ -108,12 +108,12 @@ data TableAggFld
   = TAFAgg !AggFlds
   | TAFNodes ![(FieldName, AnnFld)]
   | TAFExp !T.Text
-  deriving (Show, Eq)
+  deriving (Eq, Show)
 
 data AnnSelFields
   = ASFSimple ![(FieldName, AnnFld)]
   | ASFWithAgg ![(T.Text, TableAggFld)]
-  deriving (Show, Eq)
+  deriving (Eq, Show)
 
 fetchAnnFlds :: AnnSelFields -> [(FieldName, AnnFld)]
 fetchAnnFlds (ASFSimple flds) = flds
@@ -125,15 +125,24 @@ fetchAnnFlds (ASFWithAgg aggFlds) =
 
 data TableFrom
   = TableFrom
-  { _tfTable :: !QualifiedTable
-  , _tfFrom  :: !(Maybe S.FromItem)
+  { _tfTable :: !(Either QualifiedTable Iden)
   } deriving (Show, Eq)
+
+tableFromToFromItem :: TableFrom -> S.FromItem
+tableFromToFromItem (TableFrom tf) = case tf of
+  Left t  -> S.FISimple t Nothing
+  Right i -> S.FIIden i
+
+tableFromToQual :: TableFrom -> S.Qual
+tableFromToQual (TableFrom tf) = case tf of
+  Left t  -> S.QualTable t
+  Right i -> S.QualIden i
 
 data TablePerm
   = TablePerm
-  { _tpFilter :: !S.BoolExp
+  { _tpFilter :: !AnnBoolExpSQL
   , _tpLimit  :: !(Maybe Int)
-  } deriving (Show, Eq)
+  } deriving (Eq, Show)
 
 data AnnSel
   = AnnSel
@@ -141,7 +150,7 @@ data AnnSel
   , _asnFrom   :: !TableFrom
   , _asnPerm   :: !TablePerm
   , _asnArgs   :: !TableArgs
-  } deriving (Show, Eq)
+  } deriving (Eq, Show)
 
 data BaseNode
   = BaseNode
@@ -381,12 +390,13 @@ processAnnOrderByCol pfx = \case
        , Nothing
        )
   -- "pfx.or.relname"."pfx.ob.or.relname.rest" AS "pfx.ob.or.relname.rest"
-  AOCRel (RelInfo rn _ colMapping relTab _ _) relFltr rest ->
+  AOCRel (RelInfo rn _ colMapping relTab _) relFltr rest ->
     let relPfx  = mkObjRelTableAls pfx rn
         ((nesAls, nesCol), nesNodeM) = processAnnOrderByCol relPfx rest
         qualCol = S.mkQIdenExp relPfx nesAls
         relBaseNode = ANSimple $
-          BaseNode relPfx (S.FISimple relTab Nothing) relFltr
+          BaseNode relPfx (S.FISimple relTab Nothing)
+          (toSQLBoolExp (S.QualTable relTab) relFltr)
           Nothing Nothing Nothing
           (HM.singleton nesAls nesCol)
           (maybe HM.empty (uncurry HM.singleton) nesNodeM)
@@ -402,8 +412,7 @@ mkEmptyBaseNode pfx tableFrom =
   selOne HM.empty HM.empty
   where
     selOne = HM.singleton (S.Alias $ pfx <> Iden "__one") (S.SEUnsafe "1")
-    TableFrom tn fromItemM = tableFrom
-    fromItem = fromMaybe (S.FISimple tn Nothing) fromItemM
+    fromItem = tableFromToFromItem tableFrom
 
 mkBaseNode
   :: Iden
@@ -417,7 +426,6 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
   BaseNode pfx fromItem finalWhere ordByExpM finalLimit offsetM
   allExtrs allObjsWithOb allArrs
   where
-    TableFrom tn fromItemM = tableFrom
     TablePerm fltr permLimitM = tablePerm
     TableArgs whereM orderByM limitM offsetM = tableArgs
     (allExtrs, allObjsWithOb, allArrs) = case annSelFlds of
@@ -457,10 +465,13 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
       in Just (S.Alias colAls, qualCol)
     mkColExp _ = Nothing
 
-    finalWhere = maybe fltr (S.BEBin S.AndOp fltr . cBoolExp) whereM
+    finalWhere =
+      toSQLBoolExp tableQual $ maybe fltr (andAnnBoolExps fltr) whereM
+
     finalLimit = applyPermLimit permLimitM limitM
 
-    fromItem = fromMaybe (S.FISimple tn Nothing) fromItemM
+    fromItem = tableFromToFromItem tableFrom
+    tableQual = tableFromToQual tableFrom
 
     _1 (a, _, _) = a
     _2 (_, b, _) = b
@@ -626,7 +637,7 @@ convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
   let pgWhenRelErr = "only relationships can be expanded"
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap rn pgWhenRelErr
-  let (RelInfo _ _ _ relTab _ _) = relInfo
+  let (RelInfo _ _ _ relTab _) = relInfo
   (rfim, rspi) <- fetchRelDet rn relTab
   resolvedSelQ <- resolveStar rfim rspi selQ
   return [ECRel rn malias resolvedSelQ]
@@ -639,7 +650,7 @@ convWildcard
   -> SelPermInfo
   -> Wildcard
   -> m [ExtCol]
-convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _ _) wildcard =
+convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _) wildcard =
   case wildcard of
   Star         -> return simpleCols
   (StarDot wc) -> (simpleCols ++) <$> (catMaybes <$> relExtCols wc)
@@ -689,7 +700,7 @@ resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
 
 data AnnObCol
   = AOCPG !PGColInfo
-  | AOCRel !RelInfo !S.BoolExp !AnnObCol
+  | AOCRel !RelInfo !AnnBoolExpSQL !AnnObCol
   deriving (Show, Eq)
 
 type AnnOrderByItem = OrderByItemG AnnObCol
@@ -772,12 +783,12 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
       annRel <- convExtRel fieldInfoMap relName mAlias relSelQ prepValBuilder
       return (fromRel $ fromMaybe relName mAlias, FRel annRel)
 
-  let spiT = spiTable selPermInfo
+  -- let spiT = spiTable selPermInfo
 
   -- Convert where clause
   wClause <- forM (sqWhere selQ) $ \be ->
     withPathK "where" $
-    convBoolExp' fieldInfoMap spiT selPermInfo be prepValBuilder
+    convBoolExp' fieldInfoMap selPermInfo be prepValBuilder
 
   annOrdByML <- forM (sqOrderBy selQ) $ \(OrderByExp obItems) ->
     withPathK "order_by" $ indexedForM obItems $ mapM $
@@ -790,7 +801,7 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
   withPathK "offset" $ mapM_ onlyPositiveInt mQueryOffset
 
   let selFlds = ASFSimple annFlds
-      tabFrom = TableFrom (spiTable selPermInfo) Nothing
+      tabFrom = TableFrom $ Left (spiTable selPermInfo)
       tabPerm = TablePerm (spiFilter selPermInfo) mPermLimit
   return $ AnnSel selFlds tabFrom tabPerm $
     TableArgs wClause annOrdByM mQueryLimit (S.intToSQLExp <$> mQueryOffset)
@@ -824,7 +835,7 @@ convExtRel fieldInfoMap relName mAlias selQ prepValBuilder = do
   -- Point to the name key
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap relName pgWhenRelErr
-  let (RelInfo _ relTy colMapping relTab _ _) = relInfo
+  let (RelInfo _ relTy colMapping relTab _) = relInfo
   (relCIM, relSPI) <- fetchRelDet relName relTab
   when (relTy == ObjRel && misused) $
     throw400 UnexpectedPayload objRelMisuseMsg
@@ -854,20 +865,23 @@ getSelectDeps
   :: AnnSel
   -> [SchemaDependency]
 getSelectDeps (AnnSel flds tabFrm _ tableArgs) =
-  mkParentDep tn
-  : fromMaybe [] whereDeps
-  <> colDeps
-  <> relDeps
-  <> nestedDeps
+  case tabFrm of
+    TableFrom (Left tn) ->
+      mkParentDep tn
+      : fromMaybe [] (whereDeps tn)
+      <> colDeps tn
+      <> relDeps tn
+      <> nestedDeps
+    TableFrom (Right _) -> []
   where
-    TableFrom tn _ = tabFrm
+    -- TableFrom tn _ = tabFrm
     annWc = _taWhere tableArgs
     (sCols, rCols) = partAnnFlds $ map snd $ fetchAnnFlds flds
-    colDeps     = map (mkColDep "untyped" tn . fst) sCols
-    relDeps     = map (mkRelDep . arName) rCols
-    nestedDeps  = concatMap (getSelectDeps . arAnnSel) rCols
-    whereDeps   = getBoolExpDeps tn <$> annWc
-    mkRelDep rn =
+    colDeps tn   = map (mkColDep "untyped" tn . fst) sCols
+    relDeps tn   = map (mkRelDep tn . arName) rCols
+    nestedDeps   = concatMap (getSelectDeps . arAnnSel) rCols
+    whereDeps tn = getBoolExpDeps tn <$> annWc
+    mkRelDep tn rn =
       SchemaDependency (SOTableObj tn (TORel rn)) "untyped"
 
 convSelectQuery

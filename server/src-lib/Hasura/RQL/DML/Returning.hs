@@ -38,11 +38,10 @@ pgColsToSelData qt cols =
   AnnSel selFlds tabFrom tabPerm noTableArgs
   where
     selFlds = ASFSimple flds
-    tabFrom = TableFrom qt $ Just frmItem
-    tabPerm = TablePerm (S.BELit True) Nothing
+    tabFrom = TableFrom $ Right $ qualTableToAliasIden qt
+    tabPerm = TablePerm annBoolExpTrue Nothing
     flds = flip map cols $ \pgColInfo ->
       (fromPGCol $ pgiName pgColInfo, FCol pgColInfo)
-    frmItem = S.FIIden $ qualTableToAliasIden qt
 
 pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)

@@ -48,6 +48,7 @@ module Hasura.RQL.Types
        ) where
 
 import           Hasura.Prelude
+import           Hasura.RQL.Types.BoolExp     as R
 import           Hasura.RQL.Types.Common      as R
 import           Hasura.RQL.Types.DML         as R
 import           Hasura.RQL.Types.Error       as R
@@ -117,7 +118,7 @@ data QCtx
   = QCtx
   { qcUserInfo    :: !UserInfo
   , qcSchemaCache :: !SchemaCache
-  } deriving (Show, Eq)
+  } deriving (Show)
 
 class HasQCtx a where
   getQCtx :: a -> QCtx

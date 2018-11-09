@@ -34,7 +34,6 @@ import qualified Database.PG.Query          as Q
 
 import           Data.Aeson
 import           Data.Hashable
-import           Data.Word
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 

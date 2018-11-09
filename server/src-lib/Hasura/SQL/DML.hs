@@ -455,12 +455,12 @@ simplifyBoolExp be = case be of
       | otherwise -> BEBin OrOp e1s e2s
   e                          -> e
 
-mkExists :: QualifiedTable -> BoolExp -> BoolExp
-mkExists qt whereFrag =
-  BEExists mkSelect {
-    selExtr  = [Extractor (SEUnsafe "1") Nothing],
-    selFrom  = Just $ mkSimpleFromExp qt,
-    selWhere = Just $ WhereFrag whereFrag
+mkExists :: FromItem -> BoolExp -> BoolExp
+mkExists fromItem whereFrag =
+  BEExists mkSelect
+  { selExtr  = [Extractor (SEUnsafe "1") Nothing]
+  , selFrom  = Just $ FromExp $ pure fromItem
+  , selWhere = Just $ WhereFrag whereFrag
   }
 
 instance ToSQL BoolExp where

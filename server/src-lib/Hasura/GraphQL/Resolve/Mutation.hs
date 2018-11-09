@@ -37,11 +37,9 @@ convertReturning
 convertReturning qt ty selSet = do
   annFlds <- fromSelSet prepare ty selSet
   let selFlds = RS.ASFSimple annFlds
-      tabFrom = RS.TableFrom qt $ Just frmItem
-      tabPerm = RS.TablePerm (S.BELit True) Nothing
+      tabFrom = RS.TableFrom $ Right $ RR.qualTableToAliasIden qt
+      tabPerm = RS.TablePerm annBoolExpTrue Nothing
   return $ RS.AnnSel selFlds tabFrom tabPerm RS.noTableArgs
-  where
-    frmItem = S.FIIden $ RR.qualTableToAliasIden qt
 
 convertMutResp
   :: QualifiedTable -> G.NamedType -> SelSet -> Convert RR.MutFlds
@@ -105,14 +103,14 @@ convDeleteAtPathObj val =
 
 convertUpdate
   :: QualifiedTable -- table
-  -> S.BoolExp -- the filter expression
+  -> AnnBoolExpSQL -- the filter expression
   -> Field -- the mutation field
   -> Convert RespTx
 convertUpdate tn filterExp fld = do
   -- a set expression is same as a row object
   setExpM   <- withArgM args "_set" $ convertRowObj Map.empty
   -- where bool expression to filter column
-  whereExp <- withArg args "where" $ convertBoolExp tn
+  whereExp <- withArg args "where" convertBoolExp
   -- increment operator on integer columns
   incExpM <- withArgM args "_inc" $
     convObjWithOp $ rhsExpOp S.incOp S.intType
@@ -148,11 +146,11 @@ convertUpdate tn filterExp fld = do
 
 convertDelete
   :: QualifiedTable -- table
-  -> S.BoolExp -- the filter expression
+  -> AnnBoolExpSQL -- the filter expression
   -> Field -- the mutation field
   -> Convert RespTx
 convertDelete tn filterExp fld = do
-  whereExp <- withArg (_fArguments fld) "where" $ convertBoolExp tn
+  whereExp <- withArg (_fArguments fld) "where" convertBoolExp
   mutFlds  <- convertMutResp tn (_fType fld) $ _fSelSet fld
   args <- get
   let p1 = RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds
