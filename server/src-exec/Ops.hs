@@ -14,7 +14,6 @@ module Ops
 import           Data.Time.Clock              (UTCTime)
 import           TH
 
-import           Hasura.GraphQL.Schema        (emptyGCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DDL.Utils         (clearHdbViews)
@@ -91,7 +90,7 @@ initCatalogStrict createSchema initTime httpMgr =  do
     return ()
 
   -- Build the metadata query
-  tx <- liftEither $ buildTxAny adminUserInfo emptySchemaCache httpMgr emptyGCtx metadataQuery
+  tx <- liftEither $ buildTxAny adminUserInfo emptySchemaCache httpMgr metadataQuery
 
   -- Execute the query
   void $ snd <$> tx
@@ -178,7 +177,7 @@ from1To2 httpMgr = do
     $(Q.sqlFromFile "src-rsr/migrate_from_1.sql")
   -- migrate metadata
   tx <- liftEither $ buildTxAny adminUserInfo
-                     emptySchemaCache httpMgr emptyGCtx migrateMetadataFrom1
+                     emptySchemaCache httpMgr migrateMetadataFrom1
   void tx
   -- set as system defined
   setAsSystemDefined
@@ -197,7 +196,7 @@ from3To4 httpMgr = do
     $(Q.sqlFromFile "src-rsr/migrate_from_3_to_4.sql")
   -- migrate metadata
   tx <- liftEither $ buildTxAny adminUserInfo
-                     emptySchemaCache httpMgr emptyGCtx migrateMetadataFrom3
+                     emptySchemaCache httpMgr migrateMetadataFrom3
   void tx
   -- set as system defined
   setAsSystemDefined
@@ -237,7 +236,7 @@ migrateCatalog httpMgr migrationTime = do
        -- clean hdb_views
        Q.catchE defaultTxErrorHandler clearHdbViews
        -- try building the schema cache
-       void buildSchemaCache
+       void $ buildSchemaCache httpMgr
        return $ "migrate: successfully migrated to " ++ show curCatalogVer
 
     updateVersion =
@@ -252,9 +251,9 @@ execQuery httpMgr queryBs = do
   query <- case A.decode queryBs of
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
-  schemaCache <- buildSchemaCache
+  schemaCache <- buildSchemaCache httpMgr
   tx <- liftEither $ buildTxAny adminUserInfo schemaCache
-                                httpMgr emptyGCtx query
+                                httpMgr query
   fst <$> tx
 
 

@@ -8,30 +8,29 @@ module Hasura.Server.Query where
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Language.Haskell.TH.Syntax   (Lift)
 
-import qualified Data.Aeson.Text               as AT
-import qualified Data.ByteString.Builder       as BB
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text.Lazy                as LT
-import qualified Data.Vector                   as V
-import qualified Network.HTTP.Client           as HTTP
+import qualified Data.Aeson.Text              as AT
+import qualified Data.ByteString.Builder      as BB
+import qualified Data.ByteString.Lazy         as BL
+import qualified Data.Sequence                as Seq
+import qualified Data.Text.Lazy               as LT
+import qualified Data.Vector                  as V
+import qualified Network.HTTP.Client          as HTTP
 
-import           Hasura.GraphQL.Schema
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.CustomResolver
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.QueryTemplate
-import           Hasura.RQL.DML.Returning      (encodeJSONVector)
+import           Hasura.RQL.DML.Returning     (encodeJSONVector)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query             as Q
+import qualified Database.PG.Query            as Q
 
 data RQLQuery
   = RQAddExistingTableOrView !TrackTable
@@ -62,8 +61,8 @@ data RQLQuery
   | RQBulk ![RQLQuery]
 
   -- schema-stitching, custom resolver related
-  | RQAddCustomResolver !AddCustomResolverQuery
-  | RQDeleteCustomResolver !DeleteCustomResolverQuery
+  | RQAddRemoteSchema !AddRemoteSchemaQuery
+  | RQRemoveRemoteSchema !RemoveRemoteSchemaQuery
 
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
@@ -96,25 +95,23 @@ buildTx
   => UserInfo
   -> SchemaCache
   -> HTTP.Manager
-  -> GCtx
   -> q
   -> Either QErr (Q.TxE QErr (BL.ByteString, SchemaCache))
-buildTx userInfo sc httpManager gCtx q = do
+buildTx userInfo sc httpManager q = do
   p1Res <- withPathK "args" $ runP1 qEnv $ phaseOne q
   return $ flip runReaderT p2Ctx $
     flip runStateT sc $ withPathK "args" $ phaseTwo q p1Res
   where
-    p2Ctx = P2Ctx userInfo httpManager $ _gTypes gCtx
+    p2Ctx = P2Ctx userInfo httpManager
     qEnv = QCtx userInfo sc
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation
-  -> UserInfo -> SchemaCache -> HTTP.Manager -> GCtxMap
+  -> UserInfo -> SchemaCache -> HTTP.Manager
   -> RQLQuery -> m (BL.ByteString, SchemaCache)
-runQuery pool isoL userInfo sc hMgr gCtxMap query = do
-  let gCtx = getGCtx (userRole userInfo) gCtxMap
-  tx <- liftEither $ buildTxAny userInfo sc hMgr gCtx query
+runQuery pool isoL userInfo sc hMgr query = do
+  tx <- liftEither $ buildTxAny userInfo sc hMgr query
   res <- liftIO $ runExceptT $ Q.runTx pool (isoL, Nothing) $
          setHeadersTx (userVars userInfo) >> tx
   liftEither res
@@ -147,8 +144,8 @@ queryNeedsReload qi = case qi of
   RQDelete q                   -> queryModifiesSchema q
   RQCount q                    -> queryModifiesSchema q
 
-  RQAddCustomResolver q        -> queryModifiesSchema q
-  RQDeleteCustomResolver q     -> queryModifiesSchema q
+  RQAddRemoteSchema q          -> queryModifiesSchema q
+  RQRemoveRemoteSchema q       -> queryModifiesSchema q
 
   RQCreateEventTrigger q       -> queryModifiesSchema q
   RQDeleteEventTrigger q       -> queryModifiesSchema q
@@ -174,10 +171,9 @@ buildTxAny
   :: UserInfo
   -> SchemaCache
   -> HTTP.Manager
-  -> GCtx
   -> RQLQuery
   -> Either QErr (Q.TxE QErr (BL.ByteString, SchemaCache))
-buildTxAny userInfo sc hMgr gCtx rq = case rq of
+buildTxAny userInfo sc hMgr rq = case rq of
   RQAddExistingTableOrView q -> buildTx' q
   RQTrackTable q             -> buildTx' q
   RQUntrackTable q           -> buildTx' q
@@ -204,8 +200,8 @@ buildTxAny userInfo sc hMgr gCtx rq = case rq of
   RQDelete q -> buildTx' q
   RQCount  q -> buildTx' q
 
-  RQAddCustomResolver    q -> buildTx' q
-  RQDeleteCustomResolver q -> buildTx' q
+  RQAddRemoteSchema    q -> buildTx' q
+  RQRemoveRemoteSchema q -> buildTx' q
 
   RQCreateEventTrigger q -> buildTx' q
   RQDeleteEventTrigger q -> buildTx' q
@@ -227,7 +223,7 @@ buildTxAny userInfo sc hMgr gCtx rq = case rq of
 
   RQBulk qs ->
     let f (respList, scf) q = do
-          dbAction <- liftEither $ buildTxAny userInfo scf hMgr gCtx q
+          dbAction <- liftEither $ buildTxAny userInfo scf hMgr q
           (resp, newSc) <- dbAction
           return ((Seq.|>) respList resp, newSc)
     in
@@ -238,7 +234,7 @@ buildTxAny userInfo sc hMgr gCtx rq = case rq of
                , finalSc
                )
 
-  where buildTx' q = buildTx userInfo sc hMgr gCtx q
+  where buildTx' q = buildTx userInfo sc hMgr q
 
 setHeadersTx :: UserVars -> Q.TxE QErr ()
 setHeadersTx uVars =

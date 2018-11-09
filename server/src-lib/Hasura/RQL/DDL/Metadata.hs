@@ -34,26 +34,26 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Language.Haskell.TH.Syntax   (Lift)
 
-import qualified Data.HashMap.Strict           as M
-import qualified Data.HashSet                  as HS
-import qualified Data.List                     as L
-import qualified Data.Text                     as T
+import qualified Data.HashMap.Strict          as M
+import qualified Data.HashSet                 as HS
+import qualified Data.List                    as L
+import qualified Data.Text                    as T
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query             as Q
-import qualified Hasura.RQL.DDL.CustomResolver as DCR
-import qualified Hasura.RQL.DDL.Permission     as DP
-import qualified Hasura.RQL.DDL.QueryTemplate  as DQ
-import qualified Hasura.RQL.DDL.Relationship   as DR
-import qualified Hasura.RQL.DDL.Schema.Table   as DT
-import qualified Hasura.RQL.DDL.Subscribe      as DS
-import qualified Hasura.RQL.Types.Subscribe    as DTS
+import qualified Database.PG.Query            as Q
+import qualified Hasura.RQL.DDL.Permission    as DP
+import qualified Hasura.RQL.DDL.QueryTemplate as DQ
+import qualified Hasura.RQL.DDL.Relationship  as DR
+import qualified Hasura.RQL.DDL.RemoteSchema  as DRS
+import qualified Hasura.RQL.DDL.Schema.Table  as DT
+import qualified Hasura.RQL.DDL.Subscribe     as DS
+import qualified Hasura.RQL.Types.Subscribe   as DTS
 
 data TableMeta
   = TableMeta
@@ -126,7 +126,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.custom_resolver" () False
+  Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
   clearHdbViews
 
 instance HDBQuery ClearMetadata where
@@ -135,7 +135,8 @@ instance HDBQuery ClearMetadata where
   phaseOne _ = adminOnly
 
   phaseTwo _ _ = do
-    newSc <- liftTx $ clearMetadata >> DT.buildSchemaCache
+    hMgr <- askHttpManager
+    newSc <- liftTx $ clearMetadata >> DT.buildSchemaCache hMgr
     writeSchemaCache newSc
     return successMsg
 
@@ -143,15 +144,15 @@ instance HDBQuery ClearMetadata where
 
 data ReplaceMetadata
   = ReplaceMetadata
-  { aqTables          :: ![TableMeta]
-  , aqQueryTemplates  :: ![DQ.CreateQueryTemplate]
-  , aqCustomResolvers :: ![DCR.CustomResolverDef]
+  { aqTables         :: ![TableMeta]
+  , aqQueryTemplates :: ![DQ.CreateQueryTemplate]
+  , aqRemoteSchemas  :: ![DRS.RemoteSchemaDef]
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 
 applyQP1 :: ReplaceMetadata -> P1 ()
-applyQP1 (ReplaceMetadata tables templates resolvers) = do
+applyQP1 (ReplaceMetadata tables templates schemas) = do
 
   adminOnly
 
@@ -180,8 +181,8 @@ applyQP1 (ReplaceMetadata tables templates resolvers) = do
   withPathK "queryTemplates" $
     checkMultipleDecls "query templates" $ map DQ.cqtName templates
 
-  withPathK "customResolvers" $
-    checkMultipleDecls "custom resolvers" $ map DCR._crName resolvers
+  withPathK "remote_schemas" $
+    checkMultipleDecls "remote schemas" $ map DRS._rsName schemas
 
   where
     withTableName qt = withPathK (qualTableToTxt qt)
@@ -201,14 +202,14 @@ applyQP2
      , CacheRWM m
      , MonadTx m
      , MonadIO m
-     , HasTypeMap m
      , HasHttpManager m
      )
   => ReplaceMetadata
   -> m RespBody
-applyQP2 (ReplaceMetadata tables templates resolvers) = do
+applyQP2 (ReplaceMetadata tables templates schemas) = do
 
-  defaultSchemaCache <- liftTx $ clearMetadata >> DT.buildSchemaCache
+  hMgr <- askHttpManager
+  defaultSchemaCache <- liftTx $ clearMetadata >> DT.buildSchemaCache hMgr
   writeSchemaCache defaultSchemaCache
 
   withPathK "tables" $ do
@@ -253,11 +254,9 @@ applyQP2 (ReplaceMetadata tables templates resolvers) = do
       void $ DQ.createQueryTemplateP2 template qti
 
   -- custom resolvers
-  withPathK "customResolvers" $
-    indexedForM_ resolvers $ \(DCR.CustomResolverDef name urlE hdrs)-> do
-      let resolver = DCR.AddCustomResolverQuery urlE (Just hdrs) name
-      res <- DCR.addCustomResolverP1 resolver
-      void $ DCR.addCustomResolverP2 False res
+  withPathK "remote_schemas" $
+    indexedForM_ schemas $ \conf ->
+      void $ DRS.addRemoteSchemaP2 False conf
 
   return successMsg
 
@@ -329,9 +328,9 @@ fetchMetadata = do
         modMetaMap tmEventTriggers triggerMetaDefs
 
   -- fetch all custom resolvers
-  resolvers <- DCR.fetchRemoteResolvers
+  schemas <- DRS.fetchRemoteSchemas
 
-  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs resolvers
+  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs schemas
 
   where
 
@@ -414,9 +413,10 @@ instance HDBQuery ReloadMetadata where
   phaseOne _ = adminOnly
 
   phaseTwo _ _ = do
+    hMgr <- askHttpManager
     sc <- liftTx $ do
       Q.catchE defaultTxErrorHandler clearHdbViews
-      DT.buildSchemaCache
+      DT.buildSchemaCache hMgr
     writeSchemaCache sc
     return successMsg
 

@@ -2,7 +2,6 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
-
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TemplateHaskell       #-}
@@ -41,7 +40,7 @@ import qualified Hasura.Logging                         as L
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
 --import           Hasura.RQL.DML.Explain
-import           Hasura.GraphQL.RemoteResolver
+import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
@@ -200,7 +199,7 @@ v1QueryHandler query = do
       httpMgr <- scManager . hcServerCtx <$> ask
       pool <- scPGPool . hcServerCtx <$> ask
       isoL <- scIsolation . hcServerCtx <$> ask
-      runQuery pool isoL userInfo (fst schemaCache) httpMgr (snd schemaCache) query
+      runQuery pool isoL userInfo (fst schemaCache) httpMgr query
 
     -- Also update the schema cache
     dbActionReload = do
@@ -209,7 +208,8 @@ v1QueryHandler query = do
       httpMgr <- scManager . hcServerCtx <$> ask
       -- FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
       newGCtxMap <- GS.mkGCtxMap (scTables newSc)
-      mergedGCtxMap <- mergeSchemas newSc newGCtxMap httpMgr
+      mergedGCtxMap <-
+        mergeSchemas (scRemoteResolvers newSc) newGCtxMap httpMgr
       liftIO $ writeIORef scRef (newSc, mergedGCtxMap)
       return resp
 
@@ -219,10 +219,10 @@ v1Alpha1GQHandler query = do
   reqBody <- asks hcReqBody
   manager <- scManager . hcServerCtx <$> ask
   scRef <- scCacheRef . hcServerCtx <$> ask
-  cache <- liftIO $ readIORef scRef
+  (_, gCtxMap) <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  GH.runGQ pool isoL userInfo (snd cache) manager query reqBody
+  GH.runGQ pool isoL userInfo gCtxMap manager query reqBody
 
 gqlExplainHandler :: GE.GQLExplain -> Handler BL.ByteString
 gqlExplainHandler query = do
@@ -261,17 +261,6 @@ legacyQueryHandler tn queryType =
   where
     qt = QualifiedTable publicSchema tn
 
-mergeSchemas
-  :: (MonadIO m, MonadError QErr m)
-  => SchemaCache -> GS.GCtxMap -> HTTP.Manager -> m GS.GCtxMap
-mergeSchemas sc gCtxMap httpManager = do
-  -- TODO: better way to do this?
-  let resolvers = scRemoteResolvers sc
-  remoteSchemas <- forM resolvers $ \(url, hdrs) -> do
-    remoteSchema <- fetchRemoteSchema httpManager url hdrs
-    return (url, remoteSchema)
-  mergeRemoteSchemas gCtxMap remoteSchemas
-
 
 mkWaiApp
   :: Q.TxIsolation
@@ -287,9 +276,10 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
     cacheRef <- do
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
-        sc <- buildSchemaCache
+        sc <- buildSchemaCache httpManager
         gCtxMap <- GS.mkGCtxMap (scTables sc)
-        mergedGCtxMap <- mergeSchemas sc gCtxMap httpManager
+        mergedGCtxMap <-
+          mergeSchemas (scRemoteResolvers sc) gCtxMap httpManager
         return $ (,) sc mergedGCtxMap
       either initErrExit return pgResp >>= newIORef
 

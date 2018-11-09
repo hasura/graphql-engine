@@ -248,4 +248,4 @@ args:
 - type: add_existing_table_or_view
   args:
     schema: hdb_catalog
-    name: custom_resolver
+    name: remote_schemas

@@ -25,6 +25,7 @@ import qualified Network.Wreq                           as Wreq
 
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 
 import qualified Hasura.GraphQL.Resolve                 as R
@@ -63,11 +64,14 @@ runGQ pool isoL userInfo gCtxRoleMap manager req rawReq = do
     else
     case typeLocs of
       (typeLoc:_) -> case typeLoc of
-        VT.HasuraType     -> runHasuraGQ pool isoL userInfo gCtxRoleMap
-                             opDef opRoot fragDefsL varValsM
-        VT.RemoteType url -> runRemoteGQ manager userInfo rawReq url
+        VT.HasuraType ->
+          runHasuraGQ pool isoL userInfo gCtxRoleMap
+          opDef opRoot fragDefsL varValsM
+        VT.RemoteType url hdrs ->
+          runRemoteGQ manager userInfo rawReq url hdrs
 
       [] -> throw500 "unexpected: cannot find node in schema"
+
 
   where
     gCtx = getGCtx (userRole userInfo) gCtxRoleMap
@@ -114,19 +118,24 @@ runRemoteGQ
   -> BL.ByteString
   -- ^ the raw request string
   -> N.URI
+  -> [HeaderConf]
   -> m BL.ByteString
-runRemoteGQ manager userInfo q url = do
+runRemoteGQ manager userInfo q url hdrConf = do
+  hdrs <- getHeadersFromConf hdrConf
+  let confHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
   let options = Wreq.defaults
-              & Wreq.headers .~ ("content-type", "application/json") : convToHdrs
+              & Wreq.headers .~ ("content-type", "application/json") :
+                (userInfoToHdrs ++ confHdrs)
               & Wreq.checkResponse ?~ (\_ _ -> return ())
               & Wreq.manager .~ Right manager
 
   res  <- liftIO $ try $ Wreq.postWith options (show url) q
   resp <- either httpThrow return res
   return $ resp ^. Wreq.responseBody
+
   where
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow err = throw500 $ T.pack . show $ err
 
-    convToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
+    userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
                  userInfoToList userInfo

@@ -13,7 +13,7 @@
   response:
     query_templates: []
     tables: []
-    custom_resolvers: []
+    remote_schemas: []
   query:
     type: export_metadata
     args: {}

@@ -10,14 +10,14 @@
 
 module Hasura.RQL.DDL.Schema.Table where
 
-import           Hasura.GraphQL.RemoteResolver
+import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.CustomResolver
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Subscribe
 import           Hasura.RQL.DDL.Utils
@@ -37,6 +37,7 @@ import qualified Data.HashMap.Strict                as M
 import qualified Data.Text                          as T
 import qualified Data.Text.Encoding                 as TE
 import qualified Database.PostgreSQL.LibPQ          as PQ
+import qualified Network.HTTP.Client                as HTTP
 
 delTableFromCatalog :: QualifiedTable -> Q.Tx ()
 delTableFromCatalog (QualifiedTable sn tn) =
@@ -148,15 +149,22 @@ trackExistingTableOrViewP2Setup tn isSystemDefined = do
   addTableToCache ti
 
 trackExistingTableOrViewP2
-  :: (QErrM m, CacheRWM m, MonadTx m, HasTypeMap m)
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
   => QualifiedTable -> Bool -> Bool -> m RespBody
 trackExistingTableOrViewP2 vn isSystemDefined checkConflict = do
   when checkConflict $ do
-    tyMap <- askTypeMap
-    GS.checkConflictingNodesTxt tyMap tn
+    sc <- askSchemaCache
+    let gCtxMap = scGCtxMap sc
+    forM_ (M.toList gCtxMap) $ \(_, gCtx) ->
+      GS.checkConflictingNodesTxt gCtx tn
+
   trackExistingTableOrViewP2Setup vn isSystemDefined
   liftTx $ Q.catchE defaultTxErrorHandler $
     saveTableToCatalog vn
+
+  -- refresh the gCtx in schema cache
+  refreshGCtxMapInSchema
+
   return successMsg
   where
     getSchemaN = getSchemaTxt . qtSchema
@@ -288,7 +296,7 @@ unTrackExistingTableOrViewP1 ut@(UntrackTable vn _) = do
       "view/table already untracked : " <>> vn
 
 unTrackExistingTableOrViewP2
-  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m)
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
   => UntrackTable -> TableInfo -> m RespBody
 unTrackExistingTableOrViewP2 (UntrackTable vn cascade) tableInfo = do
   sc <- askSchemaCache
@@ -317,6 +325,9 @@ unTrackExistingTableOrViewP2 (UntrackTable vn cascade) tableInfo = do
 
   -- update the schema cache with the changes
   processSchemaChanges $ SchemaDiff [vn] []
+
+  -- refresh the gctxmap in schema cache
+  refreshGCtxMapInSchema
 
   return successMsg
   where
@@ -353,8 +364,8 @@ instance HDBQuery UntrackTable where
 
   schemaCachePolicy = SCPReload
 
-buildSchemaCache :: Q.TxE QErr SchemaCache
-buildSchemaCache = flip execStateT emptySchemaCache $ do
+buildSchemaCache :: HTTP.Manager -> Q.TxE QErr SchemaCache
+buildSchemaCache httpManager = flip execStateT emptySchemaCache $ do
   tables <- lift $ Q.catchE defaultTxErrorHandler fetchTables
   forM_ tables $ \(sn, tn, isSystemDefined) ->
     modifyErr (\e -> "table " <> tn <<> "; " <> e) $
@@ -401,13 +412,14 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
     addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook headers
     liftTx $ mkTriggerQ trid trn qt allCols tDef
 
-  res <- liftTx fetchRemoteResolvers
-  forM_ res $ \(CustomResolverDef _ eUrlEnv hdrs) ->
-    case eUrlEnv of
-      Left url -> addCustomResolverToCache url hdrs
-      Right env -> do
-        url <- getUrlFromEnv env
-        addCustomResolverToCache url hdrs
+  -- remote resolvers
+  res <- liftTx fetchRemoteSchemas
+  sc <- askSchemaCache
+  gCtxMap <- GS.mkGCtxMap (scTables sc)
+  remoteSrvrs <- forM res $ \(RemoteSchemaDef _ eUrlEnv hdrs) ->
+    (,) <$> either return getUrlFromEnv eUrlEnv <*> pure hdrs
+  mergedGCtxMap <- mergeSchemas remoteSrvrs gCtxMap httpManager
+  writeRemoteSchemasToCache mergedGCtxMap remoteSrvrs
 
   where
     permHelper sn tn rn pDef pa = do
@@ -466,7 +478,9 @@ data RunSQLRes
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RunSQLRes)
 
-runSqlP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => RunSQL -> m RespBody
+runSqlP2
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  => RunSQL -> m RespBody
 runSqlP2 (RunSQL t cascade) = do
 
   -- Drop hdb_views so no interference is caused to the sql query
@@ -513,6 +527,9 @@ runSqlP2 (RunSQL t cascade) = do
           delete = otiCols <$> etiDelete eti
           trid = etiId eti
       liftTx $ mkTriggerQ trid trn tn cols (TriggerOpsDef insert update delete)
+
+  -- refresh the gCtxMap in schema cache
+  refreshGCtxMapInSchema
 
   return $ encode (res :: RunSQLRes)
 

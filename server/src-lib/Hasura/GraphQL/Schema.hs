@@ -33,6 +33,7 @@ import qualified Data.HashSet                   as Set
 import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
 
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
@@ -59,22 +60,22 @@ getTabInfo tc t =
   onNothing (Map.lookup t tc) $
      throw500 $ "table not found: " <>> t
 
-type OpCtxMap = Map.HashMap G.Name OpCtx
+-- type OpCtxMap = Map.HashMap G.Name OpCtx
 
-data OpCtx
-  -- table, req hdrs
-  = OCInsert QualifiedTable [T.Text]
-  -- tn, filter exp, limit, req hdrs
-  | OCSelect QualifiedTable S.BoolExp (Maybe Int) [T.Text]
-  -- tn, filter exp, reqt hdrs
-  | OCSelectPkey QualifiedTable S.BoolExp [T.Text]
-  -- tn, filter exp, limit, req hdrs
-  | OCSelectAgg QualifiedTable S.BoolExp (Maybe Int) [T.Text]
-  -- tn, filter exp, req hdrs
-  | OCUpdate QualifiedTable S.BoolExp [T.Text]
-  -- tn, filter exp, req hdrs
-  | OCDelete QualifiedTable S.BoolExp [T.Text]
-  deriving (Show, Eq)
+-- data OpCtx
+--   -- table, req hdrs
+--   = OCInsert QualifiedTable [T.Text]
+--   -- tn, filter exp, limit, req hdrs
+--   | OCSelect QualifiedTable S.BoolExp (Maybe Int) [T.Text]
+--   -- tn, filter exp, reqt hdrs
+--   | OCSelectPkey QualifiedTable S.BoolExp [T.Text]
+--   -- tn, filter exp, limit, req hdrs
+--   | OCSelectAgg QualifiedTable S.BoolExp (Maybe Int) [T.Text]
+--   -- tn, filter exp, req hdrs
+--   | OCUpdate QualifiedTable S.BoolExp [T.Text]
+--   -- tn, filter exp, req hdrs
+--   | OCDelete QualifiedTable S.BoolExp [T.Text]
+--   deriving (Show, Eq)
 
 
 data RemoteGCtx
@@ -89,36 +90,36 @@ instance Has TypeMap RemoteGCtx where
   getter = _rgTypes
   modifier f ctx = ctx { _rgTypes = f $ _rgTypes ctx }
 
-data GCtx
-  = GCtx
-  { _gTypes     :: !TypeMap
-  , _gFields    :: !FieldMap
-  , _gOrdByCtx  :: !OrdByCtx
-  , _gQueryRoot :: !ObjTyInfo
-  , _gMutRoot   :: !(Maybe ObjTyInfo)
-  , _gSubRoot   :: !(Maybe ObjTyInfo)
-  , _gOpCtxMap  :: !OpCtxMap
-  , _gInsCtxMap :: !InsCtxMap
-  } deriving (Show, Eq)
+-- data GCtx
+--   = GCtx
+--   { _gTypes     :: !TypeMap
+--   , _gFields    :: !FieldMap
+--   , _gOrdByCtx  :: !OrdByCtx
+--   , _gQueryRoot :: !ObjTyInfo
+--   , _gMutRoot   :: !(Maybe ObjTyInfo)
+--   , _gSubRoot   :: !(Maybe ObjTyInfo)
+--   , _gOpCtxMap  :: !OpCtxMap
+--   , _gInsCtxMap :: !InsCtxMap
+--   } deriving (Show, Eq)
 
-instance Has TypeMap GCtx where
-  getter = _gTypes
-  modifier f ctx = ctx { _gTypes = f $ _gTypes ctx }
+-- instance Has TypeMap GCtx where
+--   getter = _gTypes
+--   modifier f ctx = ctx { _gTypes = f $ _gTypes ctx }
 
-data TyAgg
-  = TyAgg
-  { _taTypes  :: !TypeMap
-  , _taFields :: !FieldMap
-  , _taOrdBy  :: !OrdByCtx
-  } deriving (Show, Eq)
+-- data TyAgg
+--   = TyAgg
+--   { _taTypes  :: !TypeMap
+--   , _taFields :: !FieldMap
+--   , _taOrdBy  :: !OrdByCtx
+--   } deriving (Show, Eq)
 
-instance Semigroup TyAgg where
-  (TyAgg t1 f1 o1) <> (TyAgg t2 f2 o2) =
-    TyAgg (Map.union t1 t2) (Map.union f1 f2) (Map.union o1 o2)
+-- instance Semigroup TyAgg where
+--   (TyAgg t1 f1 o1) <> (TyAgg t2 f2 o2) =
+--     TyAgg (Map.union t1 t2) (Map.union f1 f2) (Map.union o1 o2)
 
-instance Monoid TyAgg where
-  mempty = TyAgg Map.empty Map.empty Map.empty
-  mappend = (<>)
+-- instance Monoid TyAgg where
+--   mempty = TyAgg Map.empty Map.empty Map.empty
+--   mappend = (<>)
 
 type SelField = Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int, Bool)
 
@@ -1143,18 +1144,18 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
                                      , OBIRel ri fltr
                                      )
 
-newtype RootFlds
-  = RootFlds
-  { _taMutation :: Map.HashMap G.Name (OpCtx, Either ObjFldInfo ObjFldInfo)
-  } deriving (Show, Eq)
+-- newtype RootFlds
+--   = RootFlds
+--   { _taMutation :: Map.HashMap G.Name (OpCtx, Either ObjFldInfo ObjFldInfo)
+--   } deriving (Show, Eq)
 
-instance Semigroup RootFlds where
-  (RootFlds m1) <> (RootFlds m2)
-    = RootFlds (Map.union m1 m2)
+-- instance Semigroup RootFlds where
+--   (RootFlds m1) <> (RootFlds m2)
+--     = RootFlds (Map.union m1 m2)
 
-instance Monoid RootFlds where
-  mempty = RootFlds Map.empty
-  mappend  = (<>)
+-- instance Monoid RootFlds where
+--   mempty = RootFlds Map.empty
+--   mappend  = (<>)
 
 mkOnConflictTypes
   :: QualifiedTable -> [TableConstraint] -> [PGCol] -> Bool -> [TypeInfo]
@@ -1531,13 +1532,12 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols 
 noFilter :: S.BoolExp
 noFilter = S.BELit True
 
-type GCtxMap = Map.HashMap RoleName GCtx
-
 checkConflictingNodes
   :: (MonadError QErr m)
-  => TypeMap -> RemoteGCtx -> m ()
-checkConflictingNodes typeMap remoteCtx = do
+  => GCtx -> RemoteGCtx -> m ()
+checkConflictingNodes gCtx remoteCtx = do
   -- TODO: can types have same names?
+  let typeMap = _gTypes gCtx
   let rmQRoot = _otiFields $ _rgQueryRoot remoteCtx
       rmMRoot = _otiFields <$> _rgMutationRoot remoteCtx
       rmRoots = filter (`notElem` builtin) . Map.keys <$> fmap (Map.union rmQRoot) rmMRoot
@@ -1560,9 +1560,10 @@ checkConflictingNodes typeMap remoteCtx = do
 
 checkConflictingNodesTxt
   :: (MonadError QErr m)
-  => TypeMap -> Text -> m ()
-checkConflictingNodesTxt typeMap nodeName = do
+  => GCtx -> Text -> m ()
+checkConflictingNodesTxt gCtx nodeName = do
   -- TODO: can types have same names?
+  let typeMap = _gTypes gCtx
   let hQR = _otiFields <$>
             join (getObjTyM <$> Map.lookup (G.NamedType "query_root") typeMap)
       hMR = _otiFields <$>

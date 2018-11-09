@@ -25,7 +25,7 @@ module Hasura.RQL.Types
        , successMsg
 
        , HasHttpManager (..)
-       , HasTypeMap (..)
+       , HasGCtxMap (..)
 
        , QCtx(..)
        , HasQCtx(..)
@@ -53,24 +53,24 @@ module Hasura.RQL.Types
        ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common       as R
-import           Hasura.RQL.Types.DML          as R
-import           Hasura.RQL.Types.Error        as R
-import           Hasura.RQL.Types.Permission   as R
-import           Hasura.RQL.Types.SchemaCache  as R
-import           Hasura.RQL.Types.Subscribe    as R
+import           Hasura.RQL.Types.Common      as R
+import           Hasura.RQL.Types.DML         as R
+import           Hasura.RQL.Types.Error       as R
+import           Hasura.RQL.Types.Permission  as R
+import           Hasura.RQL.Types.SchemaCache as R
+import           Hasura.RQL.Types.Subscribe   as R
 import           Hasura.SQL.Types
 
-import           Hasura.GraphQL.Validate.Types (TypeMap)
+import qualified Hasura.GraphQL.Context       as GC
 
-import qualified Database.PG.Query             as Q
+import qualified Database.PG.Query            as Q
 
 import           Data.Aeson
 
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.HashMap.Strict           as M
-import qualified Data.Text                     as T
-import qualified Network.HTTP.Client           as HTTP
+import qualified Data.ByteString.Lazy         as BL
+import qualified Data.HashMap.Strict          as M
+import qualified Data.Text                    as T
+import qualified Network.HTTP.Client          as HTTP
 
 class ProvidesFieldInfoMap r where
   getFieldInfoMap :: QualifiedTable -> r -> Maybe FieldInfoMap
@@ -140,7 +140,6 @@ data P2Ctx
   = P2Ctx
   { _p2cUserInfo    :: !UserInfo
   , _p2cHttpManager :: !HTTP.Manager
-  , _p2cHasuraTypes :: !TypeMap
   }
 
 type P2 = StateT SchemaCache (ReaderT P2Ctx (Q.TxE QErr))
@@ -201,11 +200,11 @@ class (Monad m) => HasHttpManager m where
 instance HasHttpManager P2 where
   askHttpManager = _p2cHttpManager <$> ask
 
-class (Monad m) => HasTypeMap m where
-  askTypeMap :: m TypeMap
+class (Monad m) => HasGCtxMap m where
+  askGCtxMap :: m GC.GCtxMap
 
-instance HasTypeMap P2 where
-  askTypeMap = _p2cHasuraTypes <$> ask
+-- instance HasGCtxMap P2 where
+--   askGCtxMap = _p2cGCtxMap <$> ask
 
 --type P2C m = (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
 
