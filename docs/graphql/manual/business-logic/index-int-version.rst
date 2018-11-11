@@ -11,7 +11,7 @@ Here are a couple of common use cases and examples of the resultant queries that
 
 The first use case can be handling by using just **Schema Stitching**, a process to simply merge multiple GraphQL schemas together into a combined schema (think of the merged schema as a union of top-level nodes from each of the subschemas).
 
-.. image:: ../../../img/graphql/manual/schema/schema-stitching-v1-arch-diagram.png
+.. image:: ../../../../img/graphql/manual/schema/schema-stitching-v1-arch-diagram.png
 
 Implementing this use case will let a frontend app query top-level nodes from any of the disparate schemas from a single GraphQL endpoint:
 
@@ -36,7 +36,7 @@ Implementing this use case will let a frontend app query top-level nodes from an
 
 For the other use cases, where you are effectively extending the behaviour of the GraphQL schema fields exposed by Hasura GraphQL engine, you need to proxy GraphQL Engine with a custom GraphQL Server that serves a modified version of the GraphQL Engine's schema that fits your needs and is supported by custom **resolvers** to handle the required behaviour.
 
-.. image:: ../../../img/graphql/manual/schema/using-custom-resolvers-and-stitching.png
+.. image:: ../../../../img/graphql/manual/schema/using-custom-resolvers-and-stitching.png
 
 Implementing these use cases will enable a frontend app to make the following types of queries:
 
