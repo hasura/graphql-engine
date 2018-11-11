@@ -29,7 +29,7 @@ import           Hasura.Prelude
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
 import           Text.Regex                 (matchRegex, mkRegex)
-
+import           Text.Printf
 import qualified Data.Text                  as T
 
 type TriggerName = T.Text
@@ -122,11 +122,11 @@ instance FromJSON CreateEventTriggerQuery where
     webhook   <- o .: "webhook"
     headers   <- o .:? "headers"
     replace   <- o .:? "replace" .!= False
-    let regex = mkRegex "^\\w+$"
+    let regex = mkRegex "\\W"
         mName = matchRegex regex (T.unpack name)
     case mName of
-      Just _  -> return ()
-      Nothing -> fail "only alphanumeric and underscore allowed for name"
+      Just _  -> fail (printf "only alphanumeric and underscore allowed for name: '%s'" (T.unpack name))
+      Nothing -> return ()
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
