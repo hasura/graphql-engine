@@ -37,6 +37,7 @@ import qualified Data.HashMap.Strict                as M
 import qualified Data.Text                          as T
 import qualified Data.Text.Encoding                 as TE
 import qualified Database.PostgreSQL.LibPQ          as PQ
+import qualified Language.GraphQL.Draft.Syntax      as G
 import qualified Network.HTTP.Client                as HTTP
 
 delTableFromCatalog :: QualifiedTable -> Q.Tx ()
@@ -156,7 +157,7 @@ trackExistingTableOrViewP2 vn isSystemDefined checkConflict = do
     sc <- askSchemaCache
     let gCtxMap = scGCtxMap sc
     forM_ (M.toList gCtxMap) $ \(_, gCtx) ->
-      GS.checkConflictingNodesTxt gCtx tn
+      GS.checkConflictingNode gCtx (G.Name tn)
 
   trackExistingTableOrViewP2Setup vn isSystemDefined
   liftTx $ Q.catchE defaultTxErrorHandler $
