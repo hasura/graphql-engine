@@ -4,9 +4,22 @@ Hasura GraphQL Engine on Azure with Container Instances and Postgres
 ====================================================================
 
 This guide talks about how to deploy Hasura GraphQL Engine on `Azure
-<https://azure.microsoft.com>`_ using `Container Instances
-<https://azure.microsoft.com/en-us/services/container-instances/>`_ with `Azure
-Database for PostgreSQL server <https://azure.microsoft.com/en-us/services/postgresql/>`_.
+<https://azure.microsoft.com>`__ using `Container Instances
+<https://azure.microsoft.com/en-us/services/container-instances/>`__ with `Azure
+Database for PostgreSQL server <https://azure.microsoft.com/en-us/services/postgresql/>`__.
+
+One-click deploy using ARM Template
+-----------------------------------
+
+All resources mentioned in this guide can be deployed using the one-click
+the button below. `Read more <https://github.com/hasura/graphql-engine/tree/master/install-manifests/azure-resource-manager>`__
+about this Resource Manager Template.
+
+.. image:: http://azuredeploy.net/deploybutton.png
+  :width: 200px
+  :alt: azure_deploy_button
+  :class: no-shadow
+  :target: https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-resource-manager%2fazuredeploy.json
 
 Pre-requisites
 --------------
@@ -15,8 +28,8 @@ The actions mentioned here can be execute using Azure Portal and Azure CLI. But,
 for the sake of simplicity in documentation, we are going to use Azure CLI, so
 that commands can be easily copy pasted and executed.
 
-- Valid Azure Subscription with billing enabled or credits
-- `Azure CLI <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli>`_
+- Valid Azure Subscription with billing enabled or credits.
+- `Azure CLI <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli>`_.
 
 Once the CLI is installed, login to your Azure account:
 
@@ -52,30 +65,30 @@ Once the resource group is created, we create a Postgres server instance:
       --location westus \
       --admin-user hasura \
       --admin-password "<server_admin_password>" \
-      --sku-name GP_Gen4_2 \
+      --sku-name GP_Gen5_2 \
       --version 10
 
 .. note::
 
    Choose a unique name for ``<server_name>``. Also choose a strong password for
-   ``<server_admin_password>``, including uppercase, lowercase, numeric and
-   special characters. This is will be required later connect to the database.
-   Make sure you escape the special characters depending on your shell. 
+   ``<server_admin_password>``, including uppercase, lowercase and numeric characters.
+   This is will be required later connect to the database.
+   (Make sure you escape the special characters depending on your shell.)
 
 Note down the hostname. It will be shown as below in the output:
 
 .. code-block:: bash
 
      ...
-     "fullyQualifiedDomainName": "hasura-postgres.postgres.database.azure.com",
+     "fullyQualifiedDomainName": "<server_name>.postgres.database.azure.com",
      ...
 
-``hasura-postgres.postgres.database.azure.com`` is the hostname here.
+``<server_name>.postgres.database.azure.com`` is the hostname here.
 
 .. note::
 
    If you get an error saying ``Specified server name is already used``, change
-   the value of ``--name`` to something else.
+   the value of ``--name`` (``<server_name>``) to something else.
 
 Create a new database
 ---------------------
@@ -93,25 +106,27 @@ Create a new database on the server:
 Allow access to Azure Services
 ------------------------------
 
-Go to `Azure Portal <https://portal.azure.com>`_ and navigate to the resource
-group we just created and then to the Postgres Server. 
+Create a firewall rule allowing acess from Azure internal services:
 
-Click on ``Connection security`` under ``Settings`` section on the side bar.
+.. code-block:: bash
 
-Set ``Allow access to Azure services`` to ``ON`` and then click the ``Save``
-button above.
+   az postgres server firewall-rule create --resource-group hasura \
+      --server-name "<server_name>" \
+      --name "allow-azure-internal" \
+      --start-ip-address 0.0.0.0 \
+      --end-ip-address 0.0.0.0
 
 Create a Container Instance
 ---------------------------
 
-Let's launch Hasura using container instances:
+Launch Hasura using a container instance:
 
 .. code-block:: bash
 
    az container create --resource-group hasura \
       --name hasura-graphql-engine \
       --image hasura/graphql-engine \
-      --dns-name-label "<dns-label>" \
+      --dns-name-label "<dns-name-label>" \
       --ports 8080 \
       --secure-environment-variables "HASURA_GRAPHQL_DATABASE_URL=<database-url>"
 
@@ -128,7 +143,7 @@ Let's launch Hasura using container instances:
    username-password from hostname, we need to url-escape it in the username.
    Any other special character should be url-encoded.
 
-If the ``dns-name-label`` is not available, choose another unique name and
+If the ``<dns-name-label>`` is not available, choose another unique name and
 execute the command again.
 
 Open the Hasura Console
@@ -145,15 +160,19 @@ ip or hostname to open Hasura console:
       --out table
 
 Output will contain the FQDN in the format
-``<dns-label>.westus.azurecontainer.io``.
+``<dns-name-label>.westus.azurecontainer.io``.
 
 Visit the following URL for the Hasura Console:
 
 .. code:: 
 
-   http://<dns-label>.westus.azurecontainer.io:8080/console
+   http://<dns-name-label>.westus.azurecontainer.io:8080/console
 
-Replace ``<dns-label>`` withe the label given earlier.
+Replace ``<dns-name-label>`` with the label given earlier.
+
+.. image:: https://storage.googleapis.com/graphql-engine-cdn.hasura.io/main-repo/img/azure_arm_aci_console_graphiql.png
+   :class: no-shadow
+   :alt: Hasura console
 
 References
 ----------
