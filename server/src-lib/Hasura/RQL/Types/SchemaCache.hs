@@ -482,10 +482,11 @@ type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
 
 data SchemaCache
   = SchemaCache
-  { scTables          :: !TableCache
-  , scQTemplates      :: !QTemplateCache
-  , scRemoteResolvers :: ![(N.URI, [HeaderConf])]
-  , scGCtxMap         :: !GC.GCtxMap
+  { scTables            :: !TableCache
+  , scQTemplates        :: !QTemplateCache
+  , scRemoteResolvers   :: ![(N.URI, [HeaderConf])]
+  , scGCtxMap           :: !GC.GCtxMap
+  , scDefaultRemoteGCtx :: !GC.GCtx
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
@@ -535,7 +536,7 @@ delQTemplateFromCache qtn = do
 
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache (M.fromList []) (M.fromList []) [] M.empty
+  SchemaCache (M.fromList []) (M.fromList []) [] M.empty GC.emptyGCtx
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do

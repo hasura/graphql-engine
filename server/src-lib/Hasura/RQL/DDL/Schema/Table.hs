@@ -419,8 +419,10 @@ buildSchemaCache httpManager = flip execStateT emptySchemaCache $ do
   gCtxMap <- GS.mkGCtxMap (scTables sc)
   remoteSrvrs <- forM res $ \(RemoteSchemaDef _ eUrlEnv hdrs) ->
     (,) <$> either return getUrlFromEnv eUrlEnv <*> pure hdrs
-  mergedGCtxMap <- mergeSchemas remoteSrvrs gCtxMap httpManager
+  (mergedGCtxMap, defGCtx) <- mergeSchemas remoteSrvrs gCtxMap httpManager
   writeRemoteSchemasToCache mergedGCtxMap remoteSrvrs
+  postMergeSc <- askSchemaCache
+  writeSchemaCache postMergeSc { scDefaultRemoteGCtx = defGCtx }
 
   where
     permHelper sn tn rn pDef pa = do

@@ -31,7 +31,7 @@ import qualified Data.IORef                                  as IORef
 import           Hasura.GraphQL.Resolve                      (resolveSelSet)
 import           Hasura.GraphQL.Resolve.Context              (RespTx)
 import qualified Hasura.GraphQL.Resolve.LiveQuery            as LQ
-import           Hasura.GraphQL.Schema                       (GCtxMap, getGCtx)
+import           Hasura.GraphQL.Schema                       (getGCtx)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
@@ -114,7 +114,7 @@ data WSServerEnv
   , _wseServer   :: !WSServer
   , _wseRunTx    :: !TxRunner
   , _wseLiveQMap :: !LiveQueryMap
-  , _wseGCtxMap  :: !(IORef.IORef (SchemaCache, GCtxMap))
+  , _wseGCtxMap  :: !(IORef.IORef SchemaCache)
   , _wseHManager :: !H.Manager
   }
 
@@ -165,8 +165,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       withComplete $ sendConnErr connErr
 
   -- validate and build tx
-  gCtxMap <- fmap snd $ liftIO $ IORef.readIORef gCtxMapRef
-  let gCtx = getGCtx (userRole userInfo) gCtxMap
+  sc <- liftIO $ IORef.readIORef gCtxMapRef
+  (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) (scGCtxMap sc)
 
   res <- runExceptT $ runReaderT (getQueryParts q) gCtx
   (opDef, opRoot, fragDefsL, varValsM) <- case res of
@@ -325,12 +325,12 @@ onClose logger lqMap _ wsConn = do
 
 createWSServerEnv
   :: L.Logger
-  -> H.Manager -> IORef.IORef (SchemaCache, GCtxMap)
+  -> H.Manager -> IORef.IORef SchemaCache
   -> TxRunner -> IO WSServerEnv
-createWSServerEnv logger httpManager gCtxMapRef runTx = do
+createWSServerEnv logger httpManager cacheRef runTx = do
   (wsServer, lqMap) <-
     STM.atomically $ (,) <$> WS.createWSServer logger <*> LQ.newLiveQueryMap
-  return $ WSServerEnv logger wsServer runTx lqMap gCtxMapRef httpManager
+  return $ WSServerEnv logger wsServer runTx lqMap cacheRef httpManager
 
 createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp
 createWSServerApp authMode serverEnv =

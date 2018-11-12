@@ -42,7 +42,6 @@ import qualified Data.Text.Encoding            as TE
 import qualified Data.Text.Encoding.Error      as TE
 import qualified Data.Time.Clock               as Time
 import qualified Database.PG.Query             as Q
-import qualified Hasura.GraphQL.Schema         as GS
 import qualified Hasura.Logging                as L
 import qualified Network.HTTP.Types            as N
 import qualified Network.Wreq                  as W
@@ -55,7 +54,7 @@ invocationVersion = "2"
 
 type LogEnvHeaders = Bool
 
-type CacheRef = IORef (SchemaCache, GS.GCtxMap)
+type CacheRef = IORef SchemaCache
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -233,7 +232,7 @@ processEvent logenv pool e = do
     checkError err = do
       let mretryHeader = getRetryAfterHeaderFromError err
       cacheRef::CacheRef <- asks getter
-      (cache, _) <- liftIO $ readIORef cacheRef
+      cache <- liftIO $ readIORef cacheRef
       let eti = getEventTriggerInfoFromEvent cache e
           retryConfM = etiRetryConf <$> eti
           retryConf = fromMaybe (RetryConf 0 10) retryConfM
@@ -275,7 +274,7 @@ tryWebhook
 tryWebhook logenv pool e = do
   logger:: HLogger <- asks getter
   cacheRef::CacheRef <- asks getter
-  (cache, _) <- liftIO $ readIORef cacheRef
+  cache <- liftIO $ readIORef cacheRef
   let meti = getEventTriggerInfoFromEvent cache e
   case meti of
     Nothing -> return $ Left $ HOther "table or event-trigger not found"

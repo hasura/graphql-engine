@@ -38,20 +38,20 @@ runGQ
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation
   -> UserInfo
-  -> GCtxMap
+  -> SchemaCache
   -> HTTP.Manager
   -> GraphQLRequest
   -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m BL.ByteString
-runGQ pool isoL userInfo gCtxRoleMap manager req rawReq = do
-
+runGQ pool isoL userInfo sc manager req rawReq = do
+  (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   (opDef, opRoot, fragDefsL, varValsM) <- flip runReaderT gCtx $
                                           VQ.getQueryParts req
 
   let topLevelNodes = getTopLevelNodes opDef
   -- gather TypeLoc of topLevelNodes
   let typeLocs = catMaybes $ flip map topLevelNodes $ \node ->
-        let mNode = Map.lookup node schemaNodes
+        let mNode = Map.lookup node (schemaNodes gCtx)
         in VT._fiLoc <$> mNode
 
   -- see if they are all the same
@@ -59,14 +59,13 @@ runGQ pool isoL userInfo gCtxRoleMap manager req rawReq = do
     throw400 NotSupported "cannot mix nodes from two different graphql servers"
 
   if null typeLocs
-    then runHasuraGQ pool isoL userInfo gCtxRoleMap opDef opRoot fragDefsL
+    then runHasuraGQ pool isoL userInfo sc opDef opRoot fragDefsL
          varValsM
     else
     case typeLocs of
       (typeLoc:_) -> case typeLoc of
         VT.HasuraType ->
-          runHasuraGQ pool isoL userInfo gCtxRoleMap
-          opDef opRoot fragDefsL varValsM
+          runHasuraGQ pool isoL userInfo sc opDef opRoot fragDefsL varValsM
         VT.RemoteType url hdrs ->
           runRemoteGQ manager userInfo rawReq url hdrs
 
@@ -74,11 +73,11 @@ runGQ pool isoL userInfo gCtxRoleMap manager req rawReq = do
 
 
   where
-    gCtx = getGCtx (userRole userInfo) gCtxRoleMap
+    gCtxRoleMap = scGCtxMap sc
     getTopLevelNodes opDef =
       map (\(G.SelectionField f) -> G._fName f) $ G._todSelectionSet opDef
 
-    schemaNodes =
+    schemaNodes gCtx =
       let qr = VT._otiFields $ _gQueryRoot gCtx
           mr = VT._otiFields <$> _gMutRoot gCtx
       in maybe qr (Map.union qr) mr
@@ -92,21 +91,23 @@ runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation
   -> UserInfo
-  -> GCtxMap
+  -> SchemaCache
   -> G.TypedOperationDefinition
   -> VT.ObjTyInfo
   -> [G.FragmentDefinition]
   -> Maybe VariableValues
   -> m BL.ByteString
-runHasuraGQ pool isoL userInfo gCtxMap opDef opRoot fragDefsL varValsM = do
-  (opTy, fields) <- runReaderT (VQ.validateGQ opDef opRoot fragDefsL varValsM) gCtx
+runHasuraGQ pool isoL userInfo sc opDef opRoot fragDefsL varValsM = do
+  (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxMap
+  (opTy, fields) <- runReaderT
+                    (VQ.validateGQ opDef opRoot fragDefsL varValsM) gCtx
   when (opTy == G.OperationTypeSubscription) $ throw400 UnexpectedPayload
     "subscriptions are not supported over HTTP, use websockets instead"
   let tx = R.resolveSelSet userInfo gCtx opTy fields
   resp <- liftIO (runExceptT $ runTx tx) >>= liftEither
   return $ encodeGQResp $ GQSuccess resp
   where
-    gCtx = getGCtx (userRole userInfo) gCtxMap
+    gCtxMap = scGCtxMap sc
     runTx tx =
       Q.runTx pool (isoL, Nothing) $
       RQ.setHeadersTx (userVars userInfo) >> tx
