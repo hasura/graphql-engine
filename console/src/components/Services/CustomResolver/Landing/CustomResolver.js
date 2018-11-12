@@ -2,7 +2,7 @@ import React from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 
-const appPrefix = '/stitched-schemas';
+import { appPrefix, pageTitle } from '../constants';
 
 class CustomResolver extends React.Component {
   render() {
@@ -18,21 +18,21 @@ class CustomResolver extends React.Component {
         } container-fluid ${styles.padd_top}`}
       >
         <div className={styles.padd_left}>
-          <Helmet title={'Custom Resolvers | Hasura'} />
+          <Helmet title={`${pageTitle}s | Hasura`} />
           <div>
             <h2 className={`${styles.heading_text} ${styles.inline_block}`}>
-              Stitched Schemas &nbsp;
+              Remote Schemas &nbsp;
             </h2>
             {migrationMode ? (
               <button
-                data-test="data-create-trigger"
+                data-test="data-create-remote-schemas"
                 className={styles.yellow_button}
                 onClick={e => {
                   e.preventDefault();
                   dispatch(push(`${appPrefix}/manage/add`));
                 }}
               >
-                Add Schema
+                Add
               </button>
             ) : null}
             <hr />

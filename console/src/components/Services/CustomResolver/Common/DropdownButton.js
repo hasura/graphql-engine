@@ -21,6 +21,7 @@ class DropButton extends React.Component {
       inputVal,
       inputPlaceHolder,
       id,
+      testId,
     } = this.props;
     return (
       <InputGroup className={bsClass}>
@@ -29,6 +30,7 @@ class DropButton extends React.Component {
           componentClass={InputGroup.Button}
           disabled={disabled}
           id={id}
+          data-test={testId + '-' + 'dropdown-button'}
         >
           {dropdownOptions.map((d, i) => (
             <MenuItem
@@ -37,6 +39,7 @@ class DropButton extends React.Component {
               onClick={onButtonChange}
               eventKey={i + 1}
               key={i}
+              data-test={testId + '-' + 'dropdown-item'}
             >
               {d.display_text}
             </MenuItem>
@@ -52,6 +55,7 @@ class DropButton extends React.Component {
           disabled={disabled}
           value={inputVal || ''}
           placeholder={inputPlaceHolder}
+          data-test={testId + '-' + 'input'}
         />
       </InputGroup>
     );
@@ -72,6 +76,7 @@ DropButton.propTypes = {
   onInputChange: PropTypes.func.isRequired,
   bsClass: PropTypes.string,
   id: PropTypes.string,
+  testId: PropTypes.string,
   disabled: PropTypes.bool.isRequired,
 };
 

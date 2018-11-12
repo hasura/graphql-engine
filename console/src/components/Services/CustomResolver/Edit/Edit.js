@@ -14,7 +14,7 @@ import Helmet from 'react-helmet';
 import tabInfo from './tabInfo';
 import CommonTabLayout from '../../Layout/CommonTabLayout/CommonTabLayout';
 
-const appPrefix = '/stitched-schemas';
+import { appPrefix, pageTitle } from '../constants';
 
 class Edit extends React.Component {
   constructor() {
@@ -90,6 +90,7 @@ class Edit extends React.Component {
               e.preventDefault();
               this.modifyClick();
             }}
+            data-test={'remote-schema-edit-modify-btn'}
           >
             Modify
           </button>
@@ -100,6 +101,7 @@ class Edit extends React.Component {
               this.handleDeleteResolver(e);
             }}
             disabled={isRequesting}
+            data-test={'remote-schema-edit-delete-btn'}
           >
             {isRequesting ? 'Deleting ...' : 'Delete'}
           </button>
@@ -110,6 +112,7 @@ class Edit extends React.Component {
             className={styles.yellow_button}
             type="submit"
             disabled={isRequesting}
+            data-test={'remote-schema-edit-save-btn'}
           >
             {isRequesting ? 'Saving' : 'Save'}
           </button>
@@ -119,6 +122,7 @@ class Edit extends React.Component {
               e.preventDefault();
               this.handleCancelModify();
             }}
+            data-test={'remote-schema-edit-cancel-btn'}
           >
             Cancel
           </button>
@@ -128,7 +132,7 @@ class Edit extends React.Component {
 
     const breadCrumbs = [
       {
-        title: 'Custom Resolvers',
+        title: 'Remote schemas',
         url: appPrefix,
       },
       {
@@ -158,7 +162,7 @@ class Edit extends React.Component {
     return (
       <div className={styles.addWrapper}>
         <Helmet
-          title={`Edit Schema - ${resolverName} - Stitched Schemas | Hasura`}
+          title={`Edit ${pageTitle} - ${resolverName} - ${pageTitle}s | Hasura`}
         />
         <CommonTabLayout
           appPrefix={appPrefix}

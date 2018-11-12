@@ -140,6 +140,7 @@ class Header extends React.Component {
             disabled={isDisabled}
             id={'common-header-' + (i + 1)}
             inputPlaceHolder={this.props.placeHolderText(h.type)}
+            testId={`remote-schema-header-test${i + 1}`}
           />
           {/*
           <select

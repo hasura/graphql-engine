@@ -38,8 +38,8 @@ const LeftNavBar = ({
             type="text"
             onChange={tableSearch.bind(this)}
             className="form-control"
-            placeholder="search table/view"
-            data-test="search-tables"
+            placeholder="Search remote schemas"
+            data-test="search-remote-schemas"
           />
         </div>
       </div>
@@ -53,7 +53,7 @@ const LeftNavBar = ({
               styles.padd_left_remove
             }
           >
-            Schemas ({dataList.length})
+            Remote Schemas ({dataList.length})
           </div>
 
           {migrationMode ? (
@@ -71,15 +71,18 @@ const LeftNavBar = ({
               >
                 <button
                   className={styles.add_mar_right + ' btn btn-xs btn-default'}
-                  data-test="sidebar-add-table"
+                  data-test="remote-schema-sidebar-add-table"
                 >
-                  Add Schema
+                  Add
                 </button>
               </Link>
             </div>
           ) : null}
         </div>
-        <ul className={styles.schemaListUl} data-test="table-links">
+        <ul
+          className={styles.schemaListUl}
+          data-test="remote-schema-table-links"
+        >
           {listItemTemplate(
             searchQuery ? filtered : dataList,
             styles,

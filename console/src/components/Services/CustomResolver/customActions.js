@@ -36,7 +36,7 @@ const fetchResolvers = () => {
         type: 'select',
         args: {
           table: {
-            name: 'custom_resolver',
+            name: 'remote_schemas',
             schema: 'hdb_catalog',
           },
           columns: ['*'],

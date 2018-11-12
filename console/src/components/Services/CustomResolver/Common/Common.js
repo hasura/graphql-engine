@@ -49,7 +49,7 @@ class Common extends React.Component {
     return (
       <div className={styles.CommonWrapper}>
         <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
-          Schema name *
+          Remote Schema name *
           <OverlayTrigger placement="right" overlay={schema}>
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
@@ -68,6 +68,7 @@ class Common extends React.Component {
             onChange={this.handleInputChange.bind(this)}
             disabled={isDisabled}
             required
+            data-test="remote-schema-schema-name"
           />
         </label>
         <hr />
@@ -104,6 +105,7 @@ class Common extends React.Component {
                 'https://my-graphql-service.com/graphql') ||
               (envName !== null && 'MY_GRAPHQL_ENDPOINT')
             }
+            testId="remote-schema-graphql-url"
           />
         </div>
         <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
