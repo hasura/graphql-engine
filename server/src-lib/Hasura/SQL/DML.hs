@@ -309,6 +309,10 @@ intToSQLExp :: Int -> SQLExp
 intToSQLExp =
   SEUnsafe . T.pack . show
 
+annotateExp :: SQLExp -> PGColType -> SQLExp
+annotateExp sqlExp =
+  SETyAnn sqlExp . AnnType . T.pack . show
+
 data Extractor = Extractor !SQLExp !(Maybe Alias)
                deriving (Show, Eq)
 
