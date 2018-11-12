@@ -60,6 +60,9 @@ class TestGraphQLQueryAgg(DefaultTestSelectQueries):
     def test_author_agg_with_articles_where(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/author_agg_with_articles_where.yaml')
 
+    def test_article_deeply_nested_aggregate(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/article_deeply_nested_aggregate.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/aggregations'
