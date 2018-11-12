@@ -476,7 +476,7 @@ instance ToSQL BoolExp where
   toSQL (BENot be) =
     "NOT" <-> paren (toSQL be)
   toSQL (BECompare co vl vr) =
-    paren (toSQL vl) <-> toSQL co <-> paren (toSQL vr)
+    toSQL vl <-> toSQL co <-> toSQL vr
   toSQL (BENull v) =
     paren (toSQL v) <-> "IS NULL"
   toSQL (BENotNull v) =

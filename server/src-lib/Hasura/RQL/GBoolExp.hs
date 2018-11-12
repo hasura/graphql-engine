@@ -412,9 +412,9 @@ cColExp annVal = case annVal of
 
 inBoolExpBuilder :: S.SQLExp -> [S.SQLExp] -> S.BoolExp
 inBoolExpBuilder qualColExp rhsExps =
-  foldr (S.BEBin S.OrOp) (S.BELit False) eqExps
+  S.BECompare S.SEQ qualColExp anyExp
   where
-    eqExps = map (equalsBoolExpBuilder qualColExp) rhsExps
+    anyExp = S.SEFnApp "ANY" [S.SEArray rhsExps] Nothing
 
 -- txtValParser
 --   :: (MonadError QErr m)
