@@ -1,6 +1,6 @@
 # Hasura GraphQL Engine on Azure
 
-Click the `Deploy` button below to create a Hasura GraphQL Engine container on
+Click the button below to create a Hasura GraphQL Engine container on
 [Azure Container
 Instances](https://azure.microsoft.com/en-us/services/container-instances/)
 backed by an [Azure Database for
@@ -9,14 +9,9 @@ For a more detailed step-by-step guide on deplopying individual
 resources to Azure using the CLI, refer to the 
 [documentation](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html).
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine-on-azure%2fmaster%2farm-aci%2fazuredeploy.json" target="_blank">
-    <img src="http://azuredeploy.net/deploybutton.png"/>
-</a>
-<!--
-<a href="http://armviz.io/#/?load=https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine-on-azure%2fmaster%2farm-aci%2fazuredeploy.json" target="_blank">
-    <img src="http://armviz.io/visualizebutton.png"/>
-</a>
--->
+[![Deploy to Azure Button](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-resource-manager%2fazuredeploy.json)
+
+(The button opens Azure Portal, you might want to do a <kbd>Ctrl+Click</kbd>, to get it on a new tab)
 
 ## Pre-requisites
 
