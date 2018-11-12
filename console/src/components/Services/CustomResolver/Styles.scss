@@ -88,6 +88,10 @@
   {
     padding: 20px 0;
     padding-top: 40px;
+    .delete_confirmation_error {
+      margin-left: 15px;
+      color: #d9534f;
+    }
     .yellow_button
     {
       margin-right: 20px;

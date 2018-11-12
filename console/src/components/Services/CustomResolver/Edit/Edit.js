@@ -23,6 +23,9 @@ class Edit extends React.Component {
     this.modifyClick = this.modifyClick.bind(this);
     this.handleDeleteResolver = this.handleDeleteResolver.bind(this);
     this.handleCancelModify = this.handleCancelModify.bind(this);
+
+    this.state = {};
+    this.state.deleteConfirmationError = null;
   }
   componentDidMount() {
     const { resolverName } = this.props.params;
@@ -55,17 +58,23 @@ class Edit extends React.Component {
   handleDeleteResolver(e) {
     e.preventDefault();
     const a = prompt(
-      'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema. Please type "DELETE" (in caps, without quotes) to confirm.\n '
+      'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema. Please type "DELETE" (in caps, without quotes) to confirm.\n'
     );
     try {
       if (a && typeof a === 'string' && a.trim() === 'DELETE') {
+        this.updateDeleteConfirmationError(null);
         this.props.dispatch(deleteResolver());
       } else {
         // Input didn't match
+        // Show an error message right next to the button
+        this.updateDeleteConfirmationError('user confirmation error!');
       }
     } catch (err) {
       console.error(err);
     }
+  }
+  updateDeleteConfirmationError(data) {
+    this.setState({ ...this.state, deleteConfirmationError: data });
   }
   modifyClick() {
     this.props.dispatch({ type: TOGGLE_MODIFY });
@@ -105,6 +114,12 @@ class Edit extends React.Component {
           >
             {isRequesting ? 'Deleting ...' : 'Delete'}
           </button>
+          { this.state.deleteConfirmationError ? (
+            <span className={styles.delete_confirmation_error} data-test="delete-confirmation-error">
+              * { this.state.deleteConfirmationError }
+            </span>
+          ) : null
+          }
         </div>
       ) : (
         <div className={styles.commonBtn}>

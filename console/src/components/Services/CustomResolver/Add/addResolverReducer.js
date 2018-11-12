@@ -191,7 +191,7 @@ const addResolver = () => {
       ]);
     };
     const customOnError = err => {
-      console.error('Failed to delete triggers' + JSON.stringify(err));
+      console.error('Failed to create remote schema' + JSON.stringify(err));
       dispatch({ type: ADD_RESOLVER_FAIL, data: err });
       // dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
       // alert(JSON.stringify(err));
