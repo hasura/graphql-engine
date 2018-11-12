@@ -32,6 +32,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
+import           Network.URI.Extended               ()
 
 import qualified Data.HashMap.Strict                as M
 import qualified Data.Text                          as T
@@ -417,10 +418,11 @@ buildSchemaCache httpManager = flip execStateT emptySchemaCache $ do
   res <- liftTx fetchRemoteSchemas
   sc <- askSchemaCache
   gCtxMap <- GS.mkGCtxMap (scTables sc)
-  remoteSrvrs <- forM res $ \(RemoteSchemaDef _ eUrlEnv hdrs) ->
-    (,) <$> either return getUrlFromEnv eUrlEnv <*> pure hdrs
-  mergedGCtxMap <- mergeSchemas remoteSrvrs gCtxMap httpManager
-  writeRemoteSchemasToCache mergedGCtxMap remoteSrvrs
+  remoteScConf <- forM res $ \def@(RemoteSchemaDef _ eUrlEnv _ _) ->
+    (,) <$> either return getUrlFromEnv eUrlEnv <*> pure def
+  let rmScMap = M.fromList remoteScConf
+  mergedGCtxMap <- mergeSchemas rmScMap gCtxMap httpManager
+  writeRemoteSchemasToCache mergedGCtxMap rmScMap
 
   where
     permHelper sn tn rn pDef pa = do

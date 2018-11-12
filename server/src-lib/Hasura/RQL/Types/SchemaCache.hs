@@ -95,11 +95,11 @@ module Hasura.RQL.Types.SchemaCache
 import qualified Database.PG.Query                 as Q
 import qualified Hasura.GraphQL.Context            as GC
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Subscribe
 import qualified Hasura.SQL.DML                    as S
@@ -113,7 +113,6 @@ import           Data.Aeson.TH
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
 import qualified Data.Text                         as T
-import qualified Network.URI.Extended              as N
 import qualified PostgreSQL.Binary.Decoding        as PD
 
 -- data TableObjId
@@ -484,7 +483,7 @@ data SchemaCache
   = SchemaCache
   { scTables          :: !TableCache
   , scQTemplates      :: !QTemplateCache
-  , scRemoteResolvers :: ![(N.URI, [HeaderConf])]
+  , scRemoteResolvers :: !RemoteSchemaMap
   , scGCtxMap         :: !GC.GCtxMap
   } deriving (Show, Eq)
 
@@ -535,7 +534,7 @@ delQTemplateFromCache qtn = do
 
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache (M.fromList []) (M.fromList []) [] M.empty
+  SchemaCache (M.fromList []) (M.fromList []) M.empty M.empty
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do

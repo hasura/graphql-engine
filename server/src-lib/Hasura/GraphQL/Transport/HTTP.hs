@@ -20,7 +20,8 @@ import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.URI                            as N
+import qualified Network.HTTP.Types                     as N
+import qualified Network.URI                            as URI
 import qualified Network.Wreq                           as Wreq
 
 import           Hasura.GraphQL.Schema
@@ -38,12 +39,14 @@ runGQ
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation
   -> UserInfo
+  -> SchemaCache
   -> GCtxMap
   -> HTTP.Manager
+  -> [N.Header]
   -> GraphQLRequest
   -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m BL.ByteString
-runGQ pool isoL userInfo gCtxRoleMap manager req rawReq = do
+runGQ pool isoL userInfo sc gCtxRoleMap manager reqHdrs req rawReq = do
 
   (opDef, opRoot, fragDefsL, varValsM) <- flip runReaderT gCtx $
                                           VQ.getQueryParts req
@@ -68,7 +71,7 @@ runGQ pool isoL userInfo gCtxRoleMap manager req rawReq = do
           runHasuraGQ pool isoL userInfo gCtxRoleMap
           opDef opRoot fragDefsL varValsM
         VT.RemoteType url hdrs ->
-          runRemoteGQ manager userInfo rawReq url hdrs
+          runRemoteGQ manager userInfo sc reqHdrs rawReq url hdrs
 
       [] -> throw500 "unexpected: cannot find node in schema"
 
@@ -115,17 +118,22 @@ runRemoteGQ
   :: (MonadIO m, MonadError QErr m)
   => HTTP.Manager
   -> UserInfo
+  -> SchemaCache
+  -> [N.Header]
   -> BL.ByteString
   -- ^ the raw request string
-  -> N.URI
+  -> URI.URI
   -> [HeaderConf]
   -> m BL.ByteString
-runRemoteGQ manager userInfo q url hdrConf = do
+runRemoteGQ manager userInfo sc reqHdrs q url hdrConf = do
   hdrs <- getHeadersFromConf hdrConf
   let confHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
+      mRmSchemaDef = Map.lookup url (scRemoteResolvers sc)
+      shouldFwd = maybe False _rsFwdClientHeaders mRmSchemaDef
+      clientHdrs = bool [] reqHdrs shouldFwd
   let options = Wreq.defaults
               & Wreq.headers .~ ("content-type", "application/json") :
-                (userInfoToHdrs ++ confHdrs)
+                (userInfoToHdrs ++ clientHdrs ++ confHdrs)
               & Wreq.checkResponse ?~ (\_ _ -> return ())
               & Wreq.manager .~ Right manager
 

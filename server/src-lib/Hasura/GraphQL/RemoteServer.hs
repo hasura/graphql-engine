@@ -81,28 +81,30 @@ fetchRemoteSchema manager url headerConf = do
 
 mergeSchemas
   :: (MonadIO m, MonadError QErr m)
-  => [(N.URI, [HeaderConf])] -> GS.GCtxMap -> HTTP.Manager
+  => RemoteSchemaMap -> GS.GCtxMap -> HTTP.Manager
   -> m GS.GCtxMap
-mergeSchemas resolvers gCtxMap httpManager = do
+mergeSchemas rmSchemaMap gCtxMap httpManager = do
+  let remoteSrvrs = map (\(k, v) -> (k, _rsHeaders v)) $
+                    Map.toList rmSchemaMap
   -- TODO: better way to do this?
-  remoteSchemas <- forM resolvers $ \(url, hdrs) -> do
-    remoteSchema <- fetchRemoteSchema httpManager url hdrs
-    return (url, remoteSchema)
+  remoteSchemas <- forM remoteSrvrs $ \(url, hdrs) ->
+    fetchRemoteSchema httpManager url hdrs
+    --return (url, remoteSchema)
   mergeRemoteSchemas gCtxMap remoteSchemas
 
 mergeRemoteSchemas
   :: (MonadError QErr m)
   => GS.GCtxMap
-  -> [(a, GS.RemoteGCtx)]
+  -> [GS.RemoteGCtx]
   -> m GS.GCtxMap
 mergeRemoteSchemas = foldlM mergeRemoteSchema
 
 mergeRemoteSchema
   :: (MonadError QErr m)
   => GS.GCtxMap
-  -> (a, GS.RemoteGCtx)
+  -> GS.RemoteGCtx
   -> m GS.GCtxMap
-mergeRemoteSchema ctxMap (_, rmSchema) =
+mergeRemoteSchema ctxMap rmSchema =
   case Map.null ctxMap of
     True  -> return onlyRmSchema
     False -> do

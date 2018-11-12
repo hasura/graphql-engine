@@ -53,24 +53,25 @@ module Hasura.RQL.Types
        ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common      as R
-import           Hasura.RQL.Types.DML         as R
-import           Hasura.RQL.Types.Error       as R
-import           Hasura.RQL.Types.Permission  as R
-import           Hasura.RQL.Types.SchemaCache as R
-import           Hasura.RQL.Types.Subscribe   as R
+import           Hasura.RQL.Types.Common       as R
+import           Hasura.RQL.Types.DML          as R
+import           Hasura.RQL.Types.Error        as R
+import           Hasura.RQL.Types.Permission   as R
+import           Hasura.RQL.Types.RemoteSchema as R
+import           Hasura.RQL.Types.SchemaCache  as R
+import           Hasura.RQL.Types.Subscribe    as R
 import           Hasura.SQL.Types
 
-import qualified Hasura.GraphQL.Context       as GC
+import qualified Hasura.GraphQL.Context        as GC
 
-import qualified Database.PG.Query            as Q
+import qualified Database.PG.Query             as Q
 
 import           Data.Aeson
 
-import qualified Data.ByteString.Lazy         as BL
-import qualified Data.HashMap.Strict          as M
-import qualified Data.Text                    as T
-import qualified Network.HTTP.Client          as HTTP
+import qualified Data.ByteString.Lazy          as BL
+import qualified Data.HashMap.Strict           as M
+import qualified Data.Text                     as T
+import qualified Network.HTTP.Client           as HTTP
 
 class ProvidesFieldInfoMap r where
   getFieldInfoMap :: QualifiedTable -> r -> Maybe FieldInfoMap
