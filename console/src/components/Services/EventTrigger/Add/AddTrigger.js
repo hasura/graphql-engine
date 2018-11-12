@@ -632,7 +632,7 @@ class AddTrigger extends Component {
                           'http://httpbin.org/post') ||
                         (webhookUrlType === 'env' && 'MY_WEBHOOK_URL')
                       }
-                      testId="event-webhook-url"
+                      testId="webhook"
                     />
                   </div>
                 ) : (
