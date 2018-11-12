@@ -4,6 +4,9 @@
 {
   padding: 10px 0;
 }
+.wd_300 {
+  width: 300px;
+}
 .addPaddTop
 {
   padding-top: 20px;
@@ -51,6 +54,22 @@
 }
 .CommonWrapper
 {
+  .check_box {
+    margin-bottom: 20px;
+    label {
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    input {
+      margin: 0;
+    }
+    i {
+      cursor: pointer;
+    }
+  }
+  .font_normal {
+    font-weight: normal;
+  }
   .subheading_text
   {
     i

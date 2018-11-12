@@ -31,6 +31,9 @@ const DELETE_RESOLVER_FAIL = '@addResolver/DELETE_RESOLVER_FAIL';
 const MODIFY_RESOLVER_FAIL = '@addResolver/MODIFY_RESOLVER_FAIL';
 const MODIFYING_RESOLVER = '@addResolver/MODIFYING_RESOLVER';
 
+const UPDATE_FORWARD_CLIENT_HEADERS =
+  '@addResolver/UPDATE_FORWARD_CLIENT_HEADERS';
+
 /* */
 const TOGGLE_MODIFY = '@editResolver/TOGGLE_MODIFY';
 /* */
@@ -135,6 +138,7 @@ const addResolver = () => {
       url: currState.manualUrl,
       url_from_env: currState.envName,
       headers: [],
+      forward_client_headers: currState.forwardClientHeaders,
     };
 
     resolveObj.headers = [
@@ -233,6 +237,7 @@ const deleteResolver = () => {
         name: currState.editState.originalName,
         url: currState.manualUrl,
         url_from_env: currState.envName,
+        forward_client_headers: currState.forwardClientHeaders,
       },
     };
     const upQueryArgs = [];
@@ -299,6 +304,7 @@ const modifyResolver = () => {
       name: trimmedName,
       url: currState.manualUrl,
       url_from_env: currState.envName,
+      forward_client_headers: currState.forwardClientHeaders,
       headers: [],
     };
 
@@ -332,6 +338,7 @@ const modifyResolver = () => {
       url: currState.editState.originalUrl,
       url_from_env: currState.editState.originalEnvUrl,
       headers: [],
+      forward_client_headers: currState.editState.originalForwardClientHeaders,
     };
 
     resolveDownObj.headers = [...currState.editState.originalHeaders];
@@ -596,6 +603,7 @@ const addResolverReducer = (state = addState, action) => {
         manualUrl: action.data[0].definition.url || null,
         envName: action.data[0].definition.url_from_env || null,
         headers: action.data[0].definition.headers || [],
+        forwardClientHeaders: action.data[0].definition.forward_client_headers,
         editState: {
           ...state,
           id: action.data[0].id,
@@ -604,6 +612,8 @@ const addResolverReducer = (state = addState, action) => {
           originalHeaders: action.data[0].definition.headers || [],
           originalUrl: action.data[0].definition.url || null,
           originalEnvUrl: action.data[0].definition.url_from_env || null,
+          originalForwardClientHeaders:
+            action.data[0].definition.forward_client_headers || false,
         },
         isRequesting: false,
         isError: null,
@@ -638,6 +648,11 @@ const addResolverReducer = (state = addState, action) => {
         isRequesting: true,
         isError: null,
       };
+    case UPDATE_FORWARD_CLIENT_HEADERS:
+      return {
+        ...state,
+        forwardClientHeaders: !state.forwardClientHeaders,
+      };
     default:
       return {
         ...state,
@@ -653,6 +668,7 @@ export {
   modifyResolver,
   RESET,
   TOGGLE_MODIFY,
+  UPDATE_FORWARD_CLIENT_HEADERS,
 };
 
 export default addResolverReducer;

@@ -4,13 +4,21 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import DropdownButton from './DropdownButton';
 
-import { inputChange } from '../Add/addResolverReducer';
+import {
+  inputChange,
+  UPDATE_FORWARD_CLIENT_HEADERS,
+} from '../Add/addResolverReducer';
 
 import CommonHeader from '../../Layout/ReusableHeader/Header';
 
 const graphqlurl = (
   <Tooltip id="tooltip-cascade">
     Remote GraphQL server’s URL. E.g. https://my-domai/v1alpha1/graphql
+  </Tooltip>
+);
+const clientHeaderForward = (
+  <Tooltip id="tooltip-cascade">
+    Forward all the headers from the client to the remote server.
   </Tooltip>
 );
 const header = (
@@ -40,9 +48,12 @@ class Common extends React.Component {
     const field = e.target.getAttribute('value');
     this.props.dispatch(inputChange(field, ''));
   }
+  toggleForwardHeaders() {
+    this.props.dispatch({ type: UPDATE_FORWARD_CLIENT_HEADERS });
+  }
   render() {
     const styles = require('../Styles.scss');
-    const { name, manualUrl, envName } = this.props;
+    const { name, manualUrl, envName, forwardClientHeaders } = this.props;
     const { isModify, id } = this.props.editState;
     const isDisabled = id >= 0 && !isModify;
     const urlRequired = !manualUrl && !envName;
@@ -78,7 +89,7 @@ class Common extends React.Component {
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
         </div>
-        <div className={styles.addPaddCommom}>
+        <div className={styles.addPaddCommom + ' ' + styles.wd_300}>
           <DropdownButton
             dropdownOptions={[
               { display_text: 'URL', value: 'manualUrl' },
@@ -114,6 +125,26 @@ class Common extends React.Component {
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
         </div>
+        <div className={styles.check_box}>
+          <label>
+            <input
+              onChange={this.toggleForwardHeaders.bind(this)}
+              className={styles.display_inline + ' ' + styles.add_mar_right}
+              type="checkbox"
+              value="forwardHeaders"
+              data-test="forward-remote-schema-headers"
+              checked={forwardClientHeaders}
+              disabled={isDisabled}
+            />
+            <span>Forward all headers from client</span>
+          </label>
+          <OverlayTrigger placement="right" overlay={clientHeaderForward}>
+            <i className="fa fa-question-circle" aria-hidden="true" />
+          </OverlayTrigger>
+        </div>
+        <div className={styles.subheading_text + ' ' + styles.font_normal}>
+          Additional headers:
+        </div>
         <CommonHeader
           eventPrefix="CUSTOM_RESOLVER"
           headers={this.props.headers}
@@ -136,6 +167,7 @@ Common.propTypes = {
   envName: PropTypes.string.isRequired,
   manualUrl: PropTypes.string.isRequired,
   headers: PropTypes.array.isRequired,
+  forwardClientHeaders: PropTypes.bool.isRequired,
   dispatch: PropTypes.func.isRequired,
 };
 

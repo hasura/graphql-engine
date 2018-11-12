@@ -127,21 +127,24 @@ class Header extends React.Component {
             onBlur={this.checkAndAddNew.bind(this)}
             placeholder={this.props.keyInputPlaceholder}
             disabled={isDisabled}
+            data-test={`remote-schema-header-test${i + 1}-key`}
           />
           <span className={styles.header_colon}>:</span>
-          <DropdownButton
-            dropdownOptions={this.props.typeOptions}
-            title={getTitle.length > 0 ? getTitle[0].display_text : 'Value'}
-            dataKey={h.type}
-            dataIndex={i}
-            onButtonChange={this.headerTypeChange.bind(this)}
-            onInputChange={this.headerValueChange.bind(this)}
-            inputVal={h.value}
-            disabled={isDisabled}
-            id={'common-header-' + (i + 1)}
-            inputPlaceHolder={this.props.placeHolderText(h.type)}
-            testId={`remote-schema-header-test${i + 1}`}
-          />
+          <span className={styles.value_wd}>
+            <DropdownButton
+              dropdownOptions={this.props.typeOptions}
+              title={getTitle.length > 0 ? getTitle[0].display_text : 'Value'}
+              dataKey={h.type}
+              dataIndex={i}
+              onButtonChange={this.headerTypeChange.bind(this)}
+              onInputChange={this.headerValueChange.bind(this)}
+              inputVal={h.value}
+              disabled={isDisabled}
+              id={'common-header-' + (i + 1)}
+              inputPlaceHolder={this.props.placeHolderText(h.type)}
+              testId={`remote-schema-header-test${i + 1}`}
+            />
+          </span>
           {/*
           <select
             className={

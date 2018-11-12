@@ -16,6 +16,7 @@ const addState = {
   envName: null,
   headers: [],
   name: '',
+  forwardClientHeaders: false,
   ...asyncState,
   editState: {
     id: -1,
@@ -24,6 +25,7 @@ const addState = {
     originalHeaders: [],
     originalUrl: '',
     originalEnvUrl: '',
+    originalForwardClientHeaders: false,
   },
 };
 
