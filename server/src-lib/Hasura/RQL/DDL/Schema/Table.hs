@@ -32,11 +32,13 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
+import           Network.URI.Extended               ()
 
 import qualified Data.HashMap.Strict                as M
 import qualified Data.Text                          as T
 import qualified Data.Text.Encoding                 as TE
 import qualified Database.PostgreSQL.LibPQ          as PQ
+import qualified Language.GraphQL.Draft.Syntax      as G
 import qualified Network.HTTP.Client                as HTTP
 
 delTableFromCatalog :: QualifiedTable -> Q.Tx ()
@@ -156,7 +158,7 @@ trackExistingTableOrViewP2 vn isSystemDefined checkConflict = do
     sc <- askSchemaCache
     let gCtxMap = scGCtxMap sc
     forM_ (M.toList gCtxMap) $ \(_, gCtx) ->
-      GS.checkConflictingNodesTxt gCtx tn
+      GS.checkConflictingNode gCtx (G.Name tn)
 
   trackExistingTableOrViewP2Setup vn isSystemDefined
   liftTx $ Q.catchE defaultTxErrorHandler $
@@ -416,10 +418,11 @@ buildSchemaCache httpManager = flip execStateT emptySchemaCache $ do
   res <- liftTx fetchRemoteSchemas
   sc <- askSchemaCache
   gCtxMap <- GS.mkGCtxMap (scTables sc)
-  remoteSrvrs <- forM res $ \(RemoteSchemaDef _ eUrlEnv hdrs) ->
-    (,) <$> either return getUrlFromEnv eUrlEnv <*> pure hdrs
-  mergedGCtxMap <- mergeSchemas remoteSrvrs gCtxMap httpManager
-  writeRemoteSchemasToCache mergedGCtxMap remoteSrvrs
+  remoteScConf <- forM res $ \def@(RemoteSchemaDef _ eUrlEnv _ _) ->
+    (,) <$> either return getUrlFromEnv eUrlEnv <*> pure def
+  let rmScMap = M.fromList remoteScConf
+  mergedGCtxMap <- mergeSchemas rmScMap gCtxMap httpManager
+  writeRemoteSchemasToCache mergedGCtxMap rmScMap
 
   where
     permHelper sn tn rn pDef pa = do

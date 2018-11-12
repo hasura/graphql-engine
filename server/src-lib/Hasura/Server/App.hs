@@ -22,6 +22,7 @@ import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as M
 import qualified Data.Text                              as T
 import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Types                     as N
 import qualified Network.Wai                            as Wai
 import qualified Network.Wai.Handler.WebSockets         as WS
 import qualified Network.Wai.Middleware.Static          as MS
@@ -87,9 +88,10 @@ data ServerCtx
 
 data HandlerCtx
   = HandlerCtx
-  { hcServerCtx :: ServerCtx
-  , hcReqBody   :: BL.ByteString
-  , hcUser      :: UserInfo
+  { hcServerCtx  :: ServerCtx
+  , hcReqBody    :: BL.ByteString
+  , hcUser       :: UserInfo
+  , hcReqHeaders :: [N.Header]
   }
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
@@ -148,7 +150,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
   userInfo <- either (logAndThrow req reqBody False) return userInfoE
 
-  let handlerState = HandlerCtx serverCtx reqBody userInfo
+  let handlerState = HandlerCtx serverCtx reqBody userInfo headers
 
   t1 <- liftIO getCurrentTime -- for measuring response time purposes
   result <- liftIO $ runReaderT (runExceptT handler) handlerState
@@ -217,12 +219,13 @@ v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler BL.ByteString
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   reqBody <- asks hcReqBody
+  reqHeaders <- asks hcReqHeaders
   manager <- scManager . hcServerCtx <$> ask
   scRef <- scCacheRef . hcServerCtx <$> ask
-  (_, gCtxMap) <- liftIO $ readIORef scRef
+  (sc, gCtxMap) <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  GH.runGQ pool isoL userInfo gCtxMap manager query reqBody
+  GH.runGQ pool isoL userInfo sc gCtxMap manager reqHeaders query reqBody
 
 gqlExplainHandler :: GE.GQLExplain -> Handler BL.ByteString
 gqlExplainHandler query = do

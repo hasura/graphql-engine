@@ -20,7 +20,7 @@ module Hasura.GraphQL.Schema
   -- Schema stitching related
   , RemoteGCtx (..)
   , checkConflictingNodes
-  , checkConflictingNodesTxt
+  , checkConflictingNode
   , emptyGCtx
   , mergeMaybeMaps
   ) where
@@ -1558,22 +1558,22 @@ checkConflictingNodes gCtx remoteCtx = do
     nodesTxt nodes = T.intercalate ", " $ map G.unName nodes
     builtin = ["__type", "__schema", "__typename", "Query", "Mutation"]
 
-checkConflictingNodesTxt
+checkConflictingNode
   :: (MonadError QErr m)
-  => GCtx -> Text -> m ()
-checkConflictingNodesTxt gCtx nodeName = do
+  => GCtx -> G.Name -> m ()
+checkConflictingNode gCtx node = do
   -- TODO: can types have same names?
   let typeMap = _gTypes gCtx
   let hQR = _otiFields <$>
             join (getObjTyM <$> Map.lookup (G.NamedType "query_root") typeMap)
       hMR = _otiFields <$>
             join (getObjTyM <$> Map.lookup (G.NamedType "mutation_root") typeMap)
-      hRoots = map G.unName . Map.keys <$> mergeMaybeMaps hQR hMR
+      hRoots = Map.keys <$> mergeMaybeMaps hQR hMR
   case hRoots of
     Just hR ->
-      when (nodeName `elem` hR) $
+      when (node `elem` hR) $
         throw400 RemoteSchemaError $
-        "node " <> nodeName <> " already exists in current graphql schema"
+        "node " <> G.unName node <> " already exists in current graphql schema"
     _ -> return ()
 
 

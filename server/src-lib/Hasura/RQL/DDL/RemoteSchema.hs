@@ -1,76 +1,23 @@
-{-# LANGUAGE DeriveLift        #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeFamilies      #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.RQL.DDL.RemoteSchema where
 
 import           Hasura.Prelude
-import           Language.Haskell.TH.Syntax  (Lift)
 
 import qualified Data.Aeson                  as J
-import qualified Data.Aeson.Casing           as J
-import qualified Data.Aeson.TH               as J
 import qualified Data.ByteString.Lazy        as BL
 import qualified Data.HashMap.Strict         as Map
 import qualified Database.PG.Query           as Q
 import qualified Network.URI.Extended        as N
 
 import           Hasura.GraphQL.RemoteServer
-import           Hasura.RQL.DDL.Headers      (HeaderConf (..))
 import           Hasura.RQL.Types
 
 import qualified Hasura.GraphQL.Schema       as GS
-
-type UrlFromEnv = Text
-
-data RemoteSchemaDef
-  = RemoteSchemaDef
-  { _rsName    :: !Text
-  , _rsUrl     :: !(Either N.URI UrlFromEnv)
-  , _rsHeaders :: ![HeaderConf]
-  } deriving (Show, Eq, Lift)
-
-instance J.FromJSON RemoteSchemaDef where
-  parseJSON = J.withObject "RemoteSchemaDef" $ \o -> do
-    mUrl        <- o J..:? "url"
-    mUrlFromEnv <- o J..:? "url_from_env"
-    headers     <- o J..: "headers"
-    name        <- o J..: "name"
-
-    eUrlVal <- case (mUrl, mUrlFromEnv) of
-      (Just url, Nothing)    -> return $ Left url
-      (Nothing, Just urlEnv) -> return $ Right urlEnv
-      (Nothing, Nothing)     ->
-        fail "both `url` and `url_from_env` can't be empty"
-      (Just _, Just _)       ->
-        fail "both `url` and `url_from_env` can't be present"
-
-    return $ RemoteSchemaDef name eUrlVal headers
-
-instance J.ToJSON RemoteSchemaDef where
-  toJSON (RemoteSchemaDef name eUrlVal headers) =
-    case eUrlVal of
-      Left url ->
-        J.object [ "url" J..= url
-                 , "headers" J..= headers
-                 , "name" J..= name ]
-      Right urlFromEnv ->
-        J.object [ "url_from_env" J..= urlFromEnv
-                 , "headers" J..= headers
-                 , "name" J..= name
-                 ]
-
-
-data AddRemoteSchemaQuery
-  = AddRemoteSchemaQuery
-  { _arsqUrl        :: !(Maybe N.URI)
-  , _arsqUrlFromEnv :: !(Maybe Text)
-  , _arsqHeaders    :: !(Maybe [HeaderConf])
-  , _arsqName       :: !Text
-  } deriving (Show, Eq, Lift)
 
 
 instance HDBQuery AddRemoteSchemaQuery where
@@ -82,7 +29,7 @@ instance HDBQuery AddRemoteSchemaQuery where
 addRemoteSchemaP1
   :: (P1C m)
   => AddRemoteSchemaQuery -> m RemoteSchemaDef
-addRemoteSchemaP1 (AddRemoteSchemaQuery url urlEnv hdrs name) = do
+addRemoteSchemaP1 (AddRemoteSchemaQuery url urlEnv hdrs name fwdHdrs) = do
   adminOnly
   eUrlEnv <- case (url, urlEnv) of
     (Just u, Nothing)  -> return $ Left u
@@ -93,7 +40,7 @@ addRemoteSchemaP1 (AddRemoteSchemaQuery url urlEnv hdrs name) = do
       throw400 InvalidParams "both `url` and `url_from_env` can't be present"
 
   let hdrs' = fromMaybe [] hdrs
-  return $ RemoteSchemaDef name eUrlEnv hdrs'
+  return $ RemoteSchemaDef name eUrlEnv hdrs' fwdHdrs
 
 addRemoteSchemaP2
   :: ( QErrM m
@@ -105,7 +52,7 @@ addRemoteSchemaP2
   => Bool
   -> RemoteSchemaDef
   -> m BL.ByteString
-addRemoteSchemaP2 checkConflict def@(RemoteSchemaDef name eUrlVal headers) = do
+addRemoteSchemaP2 checkConflict def@(RemoteSchemaDef name eUrlVal headers _) = do
   url <- either return getUrlFromEnv eUrlVal
   manager <- askHttpManager
   sc <- askSchemaCache
@@ -114,24 +61,24 @@ addRemoteSchemaP2 checkConflict def@(RemoteSchemaDef name eUrlVal headers) = do
   when checkConflict $
     forM_ (Map.toList gCtxMap) $ \(_, gCtx) ->
       GS.checkConflictingNodes gCtx remoteGCtx
-  newGCtxMap <- mergeRemoteSchema gCtxMap (url, remoteGCtx)
+  newGCtxMap <- mergeRemoteSchema gCtxMap remoteGCtx
   liftTx $ addRemoteSchemaToCatalog name def
-  addRemoteSchemaToCache newGCtxMap url headers
+  addRemoteSchemaToCache newGCtxMap url def
   return successMsg
 
 addRemoteSchemaToCache
   :: CacheRWM m
-  => GS.GCtxMap -> N.URI -> [HeaderConf] -> m ()
-addRemoteSchemaToCache gCtxMap url hdrs = do
+  => GS.GCtxMap -> N.URI -> RemoteSchemaDef -> m ()
+addRemoteSchemaToCache gCtxMap url rmDef = do
   sc <- askSchemaCache
   let resolvers = scRemoteResolvers sc
-  writeSchemaCache sc { scRemoteResolvers = resolvers ++ [(url, hdrs)]
+  writeSchemaCache sc { scRemoteResolvers = Map.insert url rmDef resolvers
                       , scGCtxMap = gCtxMap
                       }
 
 writeRemoteSchemasToCache
   :: CacheRWM m
-  => GS.GCtxMap -> [(N.URI, [HeaderConf])] -> m ()
+  => GS.GCtxMap -> RemoteSchemaMap -> m ()
 writeRemoteSchemasToCache gCtxMap resolvers = do
   sc <- askSchemaCache
   writeSchemaCache sc { scRemoteResolvers = resolvers
@@ -147,11 +94,6 @@ refreshGCtxMapInSchema = do
   httpMgr <- askHttpManager
   mergedGCtxMap <- mergeSchemas (scRemoteResolvers sc) gCtxMap httpMgr
   writeSchemaCache sc { scGCtxMap = mergedGCtxMap }
-
-data RemoveRemoteSchemaQuery
-  = RemoveRemoteSchemaQuery
-  { _rrsqName    :: !Text
-  } deriving (Show, Eq, Lift)
 
 
 instance HDBQuery RemoveRemoteSchemaQuery where
@@ -176,14 +118,14 @@ removeRemoteSchemaP2
   -> m BL.ByteString
 removeRemoteSchemaP2 (RemoveRemoteSchemaQuery name) = do
   mSchema <- liftTx $ fetchRemoteSchemaDef name
-  (RemoteSchemaDef _ eUrlVal _) <-
+  (RemoteSchemaDef _ eUrlVal _ _) <-
     liftMaybe (err400 NotExists "no such remote schema") mSchema
   url <- either return getUrlFromEnv eUrlVal
 
   hMgr <- askHttpManager
   sc <- askSchemaCache
   let resolvers = scRemoteResolvers sc
-      newResolvers = filter (\(u, _) -> u /= url) resolvers
+      newResolvers = Map.filterWithKey (\u _ -> u /= url) resolvers
 
   newGCtxMap <- GS.mkGCtxMap (scTables sc)
   mergedGCtxMap <- mergeSchemas newResolvers newGCtxMap hMgr
@@ -196,7 +138,7 @@ removeRemoteSchemaFromCache
 removeRemoteSchemaFromCache url gCtxMap = do
   sc <- askSchemaCache
   let resolvers = scRemoteResolvers sc
-      newResolvers = filter (\(u, _) -> u /= url) resolvers
+      newResolvers = Map.filterWithKey (\u _ -> u /= url) resolvers
   writeSchemaCache sc { scRemoteResolvers = newResolvers
                       , scGCtxMap = gCtxMap
                       }
@@ -241,7 +183,3 @@ fetchRemoteSchemas =
   where
     fromRow :: (Text, Q.AltJ RemoteSchemaDef) -> RemoteSchemaDef
     fromRow (_, Q.AltJ def) = def
-
-
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaQuery)
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoveRemoteSchemaQuery)

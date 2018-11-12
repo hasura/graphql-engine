@@ -151,6 +151,7 @@ library
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.DML
                      , Hasura.RQL.Types.Subscribe
+                     , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
