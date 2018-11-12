@@ -32,6 +32,7 @@ def output_indexed_data():
 
     print('\nTOTAL INDEXED: ' + str(count))
 
+
 def process_data(json_data):
     processed_data = []
 
@@ -44,7 +45,8 @@ def process_data(json_data):
         else:
             obj = json.loads(json.dumps(json_obj))
 
-            split_content = [obj['content'][i:i + CONTENT_MAX_LENGTH] for i in range(0, len(obj['content']), CONTENT_MAX_LENGTH)]
+            split_content = [obj['content'][i:i + CONTENT_MAX_LENGTH] for i in
+                             range(0, len(obj['content']), CONTENT_MAX_LENGTH)]
 
             for content_piece in split_content:
                 obj = json.loads(json.dumps(json_obj))

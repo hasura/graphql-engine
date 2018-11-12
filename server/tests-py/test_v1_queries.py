@@ -2,6 +2,7 @@ import yaml
 from validate import check_query_f
 from super_classes import DefaultTestSelectQueries, DefaultTestQueries
 
+
 class TestV1General(DefaultTestQueries):
 
     def test_query_string_input_err(self, hge_ctx):
@@ -16,6 +17,7 @@ class TestV1General(DefaultTestQueries):
     @classmethod
     def dir(cls):
         return "queries/v1/basic"
+
 
 class TestV1SelectBasic(DefaultTestSelectQueries):
 
@@ -250,25 +252,25 @@ class TestV1InsertPermissions(DefaultTestQueries):
 class TestV1UpdateBasic(DefaultTestQueries):
 
     def test_set_author_name(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/author_set_name.yaml")
+        check_query_f(hge_ctx, self.dir() + "/author_set_name.yaml")
 
     def test_set_person_details(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/person_set_details.yaml")
+        check_query_f(hge_ctx, self.dir() + "/person_set_details.yaml")
 
-    def test_person_id_inc(self,  hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/person_inc.yaml")
+    def test_person_id_inc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/person_inc.yaml")
 
-    def test_product_mul_price(self,  hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/product_mul_price.yaml")
+    def test_product_mul_price(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/product_mul_price.yaml")
 
-    def test_product_set_default_price(self,  hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/product_set_default_price.yaml")
+    def test_product_set_default_price(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/product_set_default_price.yaml")
 
     def test_no_operator_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/person_error_no_operator.yaml")
+        check_query_f(hge_ctx, self.dir() + "/person_error_no_operator.yaml")
 
     def test_no_where_clause_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/person_error_no_where_clause.yaml")
+        check_query_f(hge_ctx, self.dir() + "/person_error_no_where_clause.yaml")
 
     @classmethod
     def dir(cls):
@@ -278,7 +280,7 @@ class TestV1UpdateBasic(DefaultTestQueries):
 class TestV1UpdatePermissions(DefaultTestQueries):
 
     def test_user_can_update_unpublished_article(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/user_can_update_unpublished_article.yaml")
+        check_query_f(hge_ctx, self.dir() + "/user_can_update_unpublished_article.yaml")
 
     def test_user_cannot_update_published_version_col(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_update_published_article_version.yaml")
@@ -300,28 +302,28 @@ class TestV1UpdatePermissions(DefaultTestQueries):
 class TestV1CountBasic(DefaultTestSelectQueries):
 
     def test_count_authors(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/count_authors.yaml")
+        check_query_f(hge_ctx, self.dir() + "/count_authors.yaml")
 
     def test_count_published_articles(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/count_published_articles.yaml")
+        check_query_f(hge_ctx, self.dir() + "/count_published_articles.yaml")
 
     def test_count_unpublished_articles(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/count_unpublished_articles.yaml")
+        check_query_f(hge_ctx, self.dir() + "/count_unpublished_articles.yaml")
 
     def test_count_distinct_authors_with_published_articles(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/count_distinct_authors_with_published_articles.yaml")
+        check_query_f(hge_ctx, self.dir() + "/count_distinct_authors_with_published_articles.yaml")
 
     def test_count_articles_registered_authors(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/count_articles_with_registered_authors.yaml")
+        check_query_f(hge_ctx, self.dir() + "/count_articles_with_registered_authors.yaml")
 
     def test_count_articles_non_registered_authors(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/count_articles_with_non_registered_authors.yaml")
+        check_query_f(hge_ctx, self.dir() + "/count_articles_with_non_registered_authors.yaml")
 
     def test_count_distinct_col_not_present_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/count_distinct_col_not_present_err.yaml")
+        check_query_f(hge_ctx, self.dir() + "/count_distinct_col_not_present_err.yaml")
 
     def test_count_distinct_authors_with_unpublished_articles(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/count_distinct_authors_with_unpublished_articles.yaml")
+        check_query_f(hge_ctx, self.dir() + "/count_distinct_authors_with_unpublished_articles.yaml")
 
     @classmethod
     def dir(cls):
@@ -331,10 +333,10 @@ class TestV1CountBasic(DefaultTestSelectQueries):
 class TestV1CountPermissions(DefaultTestSelectQueries):
 
     def test_count_user_has_no_select_permission_err(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/count_user_has_no_select_perm_error.yaml")
+        check_query_f(hge_ctx, self.dir() + "/count_user_has_no_select_perm_error.yaml")
 
     def test_count_other_users_unpublished_articles(self, hge_ctx):
-       check_query_f(hge_ctx, self.dir() + "/count_users_unpublished_articles.yaml")
+        check_query_f(hge_ctx, self.dir() + "/count_users_unpublished_articles.yaml")
 
     @classmethod
     def dir(cls):

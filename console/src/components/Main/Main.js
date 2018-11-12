@@ -109,6 +109,7 @@ class Main extends React.Component {
     const github = require('./Github.svg');
     const discord = require('./Discord.svg');
     const mail = require('./mail.svg');
+    const docs = require('./logo.svg');
     const pixHeart = require('./pix-heart.svg');
     const currentLocation = location.pathname;
     const currentActiveBlock = currentLocation.split('/')[1];
@@ -304,6 +305,16 @@ class Main extends React.Component {
                           alt={'mail'}
                         />
                         <span>Reach out ({'support@hasura.io'})</span>
+                      </a>
+                    </li>
+                    <li className={'dropdown-item'}>
+                      <a href="https://docs.hasura.io/" target="_blank">
+                        <img
+                          className={'img-responsive'}
+                          src={docs}
+                          alt={'docs'}
+                        />
+                        <span>Head to docs</span>
                       </a>
                     </li>
                   </div>

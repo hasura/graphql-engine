@@ -168,3 +168,79 @@ args:
       content: Sample article content 4
       author_id: 3
       is_published: false
+
+#Create Artist table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "Artist" (
+        id serial PRIMARY KEY ,
+        name text NOT NULL
+      );
+
+- type: track_table
+  args:
+    schema: public
+    name: Artist
+
+#Crete Track table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "Track" (
+        id serial PRIMARY KEY,
+        name text NOT NULL,
+        artist_id integer REFERENCES "Artist"("id")
+      );
+
+- type: track_table
+  args:
+    schema: public
+    name: Track
+
+# Insert data into Artist and Track table
+- type: insert
+  args:
+    table: Artist
+    objects:
+    - name: Camilla
+      id: 1
+    - name: DSP
+      id: 2
+    - name: Akon
+      id: 3
+
+- type: insert
+  args:
+    table: Track
+    objects:
+    - name: Keepup
+      artist_id: 1
+      id: 1
+    - name: Keepdown
+      artist_id: 1
+      id: 2
+    - name: Happy
+      artist_id: 2
+      id: 3
+
+#Object relationship Track::artist_id -> Artist::id
+- type: create_object_relationship
+  args:
+    name: Artist
+    table: Track
+    using:
+      foreign_key_constraint_on: artist_id
+
+#Create select permssion on Track
+- type: create_select_permission
+  args:
+    table: Track
+    role: Artist
+    permission:
+      columns: '*'
+      filter:
+        Artist:
+          id: X-Hasura-Artist-Id
+
+
