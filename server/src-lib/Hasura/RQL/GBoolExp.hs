@@ -410,12 +410,6 @@ cColExp annVal = case annVal of
         innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
     S.mkExists relTN innerBoolExp
 
-inBoolExpBuilder :: S.SQLExp -> [S.SQLExp] -> S.BoolExp
-inBoolExpBuilder qualColExp rhsExps =
-  S.BECompare S.SEQ qualColExp anyExp
-  where
-    anyExp = S.SEFnApp "ANY" [S.SEArray rhsExps] Nothing
-
 -- txtValParser
 --   :: (MonadError QErr m)
 --   => ValueParser m (AnnValOpExpG S.SQLExp)
@@ -481,7 +475,7 @@ mkBoolExpBuilder rhsBldr lhs = \case
 
     mkInOrNotBoolExpBuilder isIn arrVals = do
       rhsExps <- mapM rhsBldr arrVals
-      let boolExp = inBoolExpBuilder lhs rhsExps
+      let boolExp = S.BEEqualsAny lhs rhsExps
       return $ bool (S.BENot boolExp) boolExp isIn
 
 -- txtRHSBuilder :: (MonadError QErr m) => RHSBuilder m

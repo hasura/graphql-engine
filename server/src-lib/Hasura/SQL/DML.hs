@@ -443,6 +443,7 @@ data BoolExp
   | BENull !SQLExp
   | BENotNull !SQLExp
   | BEExists !Select
+  | BEEqualsAny !SQLExp ![SQLExp]
   deriving (Show, Eq)
 
 -- removes extraneous 'AND true's
@@ -480,13 +481,17 @@ instance ToSQL BoolExp where
   toSQL (BENot be) =
     "NOT" <-> paren (toSQL be)
   toSQL (BECompare co vl vr) =
-    toSQL vl <-> toSQL co <-> toSQL vr
+    paren (toSQL vl) <-> toSQL co <-> paren (toSQL vr)
   toSQL (BENull v) =
     paren (toSQL v) <-> "IS NULL"
   toSQL (BENotNull v) =
     paren (toSQL v) <-> "IS NOT NULL"
   toSQL (BEExists sel) =
     "EXISTS " <-> paren (toSQL sel)
+  -- special case to handle 'lhs = ANY(ARRAY[..])'
+  toSQL (BEEqualsAny l rhsExps) =
+    paren (toSQL l) <-> toSQL SEQ
+    <-> toSQL (SEFnApp "ANY" [SEArray rhsExps] Nothing)
 
 data BinOp = AndOp
            | OrOp
