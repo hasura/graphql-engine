@@ -8,6 +8,7 @@ Articles:
 - `Blog: Instant GraphQL on AWS RDS <https://blog.hasura.io/instant-graphql-on-aws-rds-1edfb85b5985>`__.
 - `Blog: Using TimescaleDB with Hasura GraphQL <https://blog.hasura.io/using-timescaledb-with-hasura-graphql-d05f030c4b10>`__.
 - :doc:`Auth0 JWT Integration with Hasura GraphQL <auth0-jwt>`
+- :doc:`Setting up GraphQL subscriptions using apollo-client <apollo-subscriptions>`
 
 .. toctree::
   :maxdepth: 1
@@ -15,3 +16,4 @@ Articles:
   :hidden:
 
   Auth0 JWT Integration <auth0-jwt>
+  apollo-subscriptions
