@@ -1,35 +1,35 @@
-description: Reload schema cache (metadata)
+description: Export schema cache (metadata)
 url: /v1/query
 status: 200
 response:
-  query_templates: []
   tables:
   - table: author
+    object_relationships: []
     array_relationships:
-    - name: articles
-      using:
+    - using:
         foreign_key_constraint_on:
           column: author_id
           table: article
+      name: articles
       comment: List all articles of the author
-    select_permissions: []
-    object_relationships: []
-    event_triggers: []
     insert_permissions: []
+    select_permissions: []
     update_permissions: []
     delete_permissions: []
+    event_triggers: []
   - table: article
     object_relationships:
-    - name: author
-      using:
+    - using:
         foreign_key_constraint_on: author_id
+      name: author
       comment: null
-    select_permissions: []
-    event_triggers: []
+    array_relationships: []
     insert_permissions: []
+    select_permissions: []
     update_permissions: []
     delete_permissions: []
-    array_relationships: []
+    event_triggers: []
+  query_templates: []
 
 query:
   type: export_metadata

@@ -106,3 +106,12 @@ duplicates :: Ord a => [a] -> [a]
 duplicates = mapMaybe greaterThanOne . group . sort
   where
     greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1
+
+_1 :: (a, b, c) -> a
+_1 (x, _, _) = x
+
+_2 :: (a, b, c) -> b
+_2 (_, y, _) = y
+
+_3 :: (a, b, c) -> c
+_3 (_, _, z) = z
