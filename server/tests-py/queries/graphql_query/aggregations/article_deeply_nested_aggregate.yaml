@@ -1,0 +1,222 @@
+description: Deeply nested query with aggregate select
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    article:
+    - id: 1
+      title: Article 1
+      content: Sample article content 1
+      author:
+        id: 1
+        name: Author 1
+        articles:
+        - id: 1
+          title: Article 1
+          content: Sample article content 1
+          author:
+            articles_aggregate:
+              aggregate:
+                count: 2
+                avg:
+                  author_id: 1
+              nodes:
+              - id: 1
+                title: Article 1
+                content: Sample article content 1
+                author:
+                  id: 1
+                  name: Author 1
+                  articles_aggregate:
+                    aggregate:
+                      count: 2
+                      max:
+                        author_id: 1
+              - id: 2
+                title: Article 2
+                content: Sample article content 2
+                author:
+                  id: 1
+                  name: Author 1
+                  articles_aggregate:
+                    aggregate:
+                      count: 2
+                      max:
+                        author_id: 1
+        - id: 2
+          title: Article 2
+          content: Sample article content 2
+          author:
+            articles_aggregate:
+              aggregate:
+                count: 2
+                avg:
+                  author_id: 1
+              nodes:
+              - id: 1
+                title: Article 1
+                content: Sample article content 1
+                author:
+                  id: 1
+                  name: Author 1
+                  articles_aggregate:
+                    aggregate:
+                      count: 2
+                      max:
+                        author_id: 1
+              - id: 2
+                title: Article 2
+                content: Sample article content 2
+                author:
+                  id: 1
+                  name: Author 1
+                  articles_aggregate:
+                    aggregate:
+                      count: 2
+                      max:
+                        author_id: 1
+    - id: 2
+      title: Article 2
+      content: Sample article content 2
+      author:
+        id: 1
+        name: Author 1
+        articles:
+        - id: 1
+          title: Article 1
+          content: Sample article content 1
+          author:
+            articles_aggregate:
+              aggregate:
+                count: 2
+                avg:
+                  author_id: 1
+              nodes:
+              - id: 1
+                title: Article 1
+                content: Sample article content 1
+                author:
+                  id: 1
+                  name: Author 1
+                  articles_aggregate:
+                    aggregate:
+                      count: 2
+                      max:
+                        author_id: 1
+              - id: 2
+                title: Article 2
+                content: Sample article content 2
+                author:
+                  id: 1
+                  name: Author 1
+                  articles_aggregate:
+                    aggregate:
+                      count: 2
+                      max:
+                        author_id: 1
+        - id: 2
+          title: Article 2
+          content: Sample article content 2
+          author:
+            articles_aggregate:
+              aggregate:
+                count: 2
+                avg:
+                  author_id: 1
+              nodes:
+              - id: 1
+                title: Article 1
+                content: Sample article content 1
+                author:
+                  id: 1
+                  name: Author 1
+                  articles_aggregate:
+                    aggregate:
+                      count: 2
+                      max:
+                        author_id: 1
+              - id: 2
+                title: Article 2
+                content: Sample article content 2
+                author:
+                  id: 1
+                  name: Author 1
+                  articles_aggregate:
+                    aggregate:
+                      count: 2
+                      max:
+                        author_id: 1
+    - id: 3
+      title: Article 3
+      content: Sample article content 3
+      author:
+        id: 2
+        name: Author 2
+        articles:
+        - id: 3
+          title: Article 3
+          content: Sample article content 3
+          author:
+            articles_aggregate:
+              aggregate:
+                count: 1
+                avg:
+                  author_id: 2
+              nodes:
+              - id: 3
+                title: Article 3
+                content: Sample article content 3
+                author:
+                  id: 2
+                  name: Author 2
+                  articles_aggregate:
+                    aggregate:
+                      count: 1
+                      max:
+                        author_id: 2
+
+query:
+  query: |
+    query {
+      article{
+        id
+        title
+        content
+        author{
+          id
+          name
+          articles{
+            id
+            title
+            content
+            author{
+              articles_aggregate{
+                aggregate{
+                  count
+                  avg{
+                    author_id
+                  }
+                }
+                nodes{
+                  id
+                  title
+                  content
+                  author{
+                    id
+                    name
+                    articles_aggregate{
+                      aggregate{
+                        count
+                        max{
+                          author_id
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
