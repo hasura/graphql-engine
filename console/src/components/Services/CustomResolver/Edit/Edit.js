@@ -104,6 +104,7 @@ class Edit extends React.Component {
               this.modifyClick();
             }}
             data-test={'remote-schema-edit-modify-btn'}
+            disabled={isRequesting}
           >
             Modify
           </button>
@@ -144,6 +145,7 @@ class Edit extends React.Component {
               this.handleCancelModify();
             }}
             data-test={'remote-schema-edit-cancel-btn'}
+            disabled={isRequesting}
           >
             Cancel
           </button>

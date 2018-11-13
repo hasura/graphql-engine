@@ -239,11 +239,16 @@ const deleteResolver = () => {
       type: 'add_remote_schema',
       args: {
         name: currState.editState.originalName,
-        url: currState.manualUrl,
-        url_from_env: currState.envName,
-        forward_client_headers: currState.forwardClientHeaders,
+        url: currState.editState.originalUrl,
+        url_from_env: currState.editState.originalEnvUrl,
+        headers: [],
+        forward_client_headers:
+          currState.editState.originalForwardClientHeaders,
       },
     };
+
+    downPayload.headers = [...currState.editState.originalHeaders];
+
     const upQueryArgs = [];
     upQueryArgs.push(payload);
     const downQueryArgs = [];
