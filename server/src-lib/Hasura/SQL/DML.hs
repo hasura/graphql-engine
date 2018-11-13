@@ -12,6 +12,7 @@ import           Hasura.SQL.Types
 import           Data.String                (fromString)
 import           Language.Haskell.TH.Syntax (Lift)
 
+import qualified Data.HashMap.Strict        as HM
 import qualified Data.Text.Extended         as T
 import qualified Text.Builder               as TB
 
@@ -317,6 +318,10 @@ mkSQLOpExp
   -> SQLExp -- rhs
   -> SQLExp -- result
 mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
+
+mkColDefValMap :: [PGCol] -> HM.HashMap PGCol SQLExp
+mkColDefValMap cols =
+  HM.fromList $ zip cols (repeat $ SEUnsafe "DEFAULT")
 
 handleIfNull :: SQLExp -> SQLExp -> SQLExp
 handleIfNull l e = SEFnApp "coalesce" [e, l] Nothing

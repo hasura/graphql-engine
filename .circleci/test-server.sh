@@ -123,7 +123,7 @@ pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL"
 
 kill -INT $PID
 sleep 4
-mv graphql-engine.tix graphql-engine-combined.tix
+mv graphql-engine.tix graphql-engine-combined.tix || true
 
 ##########
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY #####################################>\n"
@@ -203,4 +203,4 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 	kill $WH_PID
 fi
 
-mv graphql-engine-combined.tix "$OUTPUT_FOLDER/graphql-engine.tix"
+mv graphql-engine-combined.tix "$OUTPUT_FOLDER/graphql-engine.tix" || true
