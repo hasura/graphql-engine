@@ -218,7 +218,7 @@ convertCount args = do
       case val of
         PGValBoolean b -> return b
         _              ->
-          throwVE "expecting Boolean for \"distinct\""
+          throw500 "expecting Boolean for \"distinct\""
 
     mkCType isDistinct cols = return $
       bool (S.CTSimple cols) (S.CTDistinct cols) isDistinct
