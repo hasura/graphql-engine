@@ -443,7 +443,7 @@ class AddTrigger extends Component {
                 data-test="trigger-name"
                 placeholder="trigger_name"
                 required
-                pattern="^\w+$"
+                pattern="^[a-zA-Z0-9-_]+$"
                 className={`${styles.tableNameInput} form-control`}
                 onChange={e => {
                   dispatch(setTriggerName(e.target.value));
