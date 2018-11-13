@@ -30,22 +30,25 @@ const setup = () => {
 
 export const runCreateRemoteSchemaTableTests = () => {
   describe('Create Remote Schema', () => {
-    // it(
-    //   'Create table button opens the correct route',
-    //   checkCreateRemoteSchemaRoute
-    // );
-    // it(
-    //   'Fails to create remote schema without name',
-    //   failRSWithInvalidRemoteUrl
-    // );
-    // it('Create a simple remote schema', createSimpleRemoteSchema);
-    // it('Fails to add remote schema with same name', failRSDuplicateSchemaName);
-    // it('Fails to add remote schema which is already added', failRSDuplicateSchemaNodes);
-    // it(
-    //   'Delete simple remote schema fail due to user confirmation error',
-    //   deleteSimpleRemoteSchemaFailUserConfirmationError
-    // );
-    // it('Delete simple remote schema', deleteSimpleRemoteSchema);
+    it(
+      'Create table button opens the correct route',
+      checkCreateRemoteSchemaRoute
+    );
+    it(
+      'Fails to create remote schema without name',
+      failRSWithInvalidRemoteUrl
+    );
+    it('Create a simple remote schema', createSimpleRemoteSchema);
+    it('Fails to add remote schema with same name', failRSDuplicateSchemaName);
+    it(
+      'Fails to add remote schema which is already added',
+      failRSDuplicateSchemaNodes
+    );
+    it(
+      'Delete simple remote schema fail due to user confirmation error',
+      deleteSimpleRemoteSchemaFailUserConfirmationError
+    );
+    it('Delete simple remote schema', deleteSimpleRemoteSchema);
     it('Create remote schema with url from env', failWithRemoteSchemaEnvUrl);
     it(
       'Create remote schema with headers from env',

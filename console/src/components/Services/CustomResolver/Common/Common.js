@@ -18,7 +18,8 @@ const graphqlurl = (
 );
 const clientHeaderForward = (
   <Tooltip id="tooltip-cascade">
-    Forward all the headers from the client to the remote server.
+    Toggle forwarding headers sent by the client app in the request to your
+    remote GraphQL server
   </Tooltip>
 );
 const header = (

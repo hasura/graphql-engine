@@ -1,6 +1,8 @@
 const asyncState = {
   isRequesting: false,
   isError: false,
+  isFetching: false,
+  isFetchError: null,
 };
 
 const listState = {

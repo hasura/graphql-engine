@@ -593,8 +593,8 @@ const addResolverReducer = (state = addState, action) => {
     case FETCHING_INDIV_RESOLVER:
       return {
         ...state,
-        isRequesting: true,
-        isError: null,
+        isFetching: true,
+        isFetchError: null,
       };
     case RESOLVER_FETCH_SUCCESS:
       return {
@@ -615,14 +615,14 @@ const addResolverReducer = (state = addState, action) => {
           originalForwardClientHeaders:
             action.data[0].definition.forward_client_headers || false,
         },
-        isRequesting: false,
-        isError: null,
+        isFetching: false,
+        isFetchError: null,
       };
     case RESOLVER_FETCH_FAIL:
       return {
         ...state,
-        isRequesting: false,
-        isError: action.data,
+        isFetching: false,
+        isFetchError: action.data,
       };
     case DELETE_RESOLVER_FAIL:
       return {
