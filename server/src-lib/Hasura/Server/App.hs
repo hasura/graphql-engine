@@ -32,11 +32,13 @@ import qualified Text.Mustache.Compile                  as M
 
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Explain                 as GE
+import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Transport.WebSocket     as WS
 import qualified Hasura.Logging                         as L
 
+import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
 --import           Hasura.RQL.DML.Explain
@@ -205,12 +207,14 @@ v1QueryHandler query = do
     dbActionReload = do
       (resp, newSc) <- dbAction
       scRef <- scCacheRef . hcServerCtx <$> ask
-      --httpMgr <- scManager . hcServerCtx <$> ask
-      -- FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
-      -- newGCtxMap <- GS.mkGCtxMap (scTables newSc)
-      -- (mergedGCtxMap, _) <-
-      --   mergeSchemas (scRemoteResolvers newSc) newGCtxMap httpMgr
-      liftIO $ writeIORef scRef newSc
+      httpMgr <- scManager . hcServerCtx <$> ask
+      --FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
+      newGCtxMap <- GS.mkGCtxMap (scTables newSc)
+      (mergedGCtxMap, defGCtx) <-
+        mergeSchemas (scRemoteResolvers newSc) newGCtxMap httpMgr
+      let newSc' =
+            newSc { scGCtxMap = mergedGCtxMap, scDefaultRemoteGCtx = defGCtx }
+      liftIO $ writeIORef scRef newSc'
       return resp
 
 v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler BL.ByteString

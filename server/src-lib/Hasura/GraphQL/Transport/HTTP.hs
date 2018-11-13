@@ -131,7 +131,7 @@ runRemoteGQ manager userInfo sc reqHdrs q url hdrConf = do
   let confHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       mRmSchemaDef = Map.lookup url (scRemoteResolvers sc)
       shouldFwd = maybe False _rsFwdClientHeaders mRmSchemaDef
-      clientHdrs = bool [] reqHdrs shouldFwd
+      clientHdrs = bool [] filteredHeaders shouldFwd
   let options = Wreq.defaults
               & Wreq.headers .~ ("content-type", "application/json") :
                 (userInfoToHdrs ++ clientHdrs ++ confHdrs)
@@ -148,3 +148,9 @@ runRemoteGQ manager userInfo sc reqHdrs q url hdrConf = do
 
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
                  userInfoToList userInfo
+    filteredHeaders = flip filter reqHdrs $ \(n, _) ->
+      n `notElem` [ "Content-Length", "Content-MD5", "User-Agent", "Host"
+                  , "Origin", "Referer" , "Accept", "Accept-Encoding"
+                  , "Accept-Language", "Accept-Datetime"
+                  , "Cache-Control", "Connection", "DNT"
+                  ]
