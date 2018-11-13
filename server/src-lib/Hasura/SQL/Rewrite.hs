@@ -123,6 +123,8 @@ uBoolExp = restoringIdens . \case
   S.BENull e -> S.BENull <$> uSqlExp e
   S.BENotNull e -> S.BENotNull <$> uSqlExp e
   S.BEExists sel -> S.BEExists <$> uSelect sel
+  S.BEEqualsAny l rExps ->
+    S.BEEqualsAny <$> uSqlExp l <*> mapM uSqlExp rExps
 
 uOrderBy :: S.OrderByExp -> Uniq S.OrderByExp
 uOrderBy (S.OrderByExp ordByItems) =
