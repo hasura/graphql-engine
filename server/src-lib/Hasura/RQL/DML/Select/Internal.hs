@@ -168,8 +168,8 @@ data BaseNode
 txtToAlias :: Text -> S.Alias
 txtToAlias = S.Alias . Iden
 
-aggFldToExp :: Iden -> AggFlds -> S.SQLExp
-aggFldToExp pfx aggFlds = jsonRow
+aggFldToExp :: AggFlds -> S.SQLExp
+aggFldToExp aggFlds = jsonRow
   where
     jsonRow = S.applyJsonBuildObj (concatMap aggToFlds aggFlds)
     withAls fldName sqlExp = [S.SELit fldName, sqlExp]
@@ -186,7 +186,7 @@ aggFldToExp pfx aggFlds = jsonRow
 
     colFldsToExtr op (t, PCFCol col) =
       [ S.SELit t
-      , S.SEFnApp op [S.SEIden $ mkBaseTableColAls pfx col] Nothing
+      , S.SEFnApp op [S.SEIden $ toIden col] Nothing
       ]
     colFldsToExtr _ (t, PCFExp e) =
       [ S.SELit t , S.SELit e]
@@ -439,8 +439,7 @@ aggSelToAggNode pfx als aggSel =
       mkBaseNode pfx (FieldName t) selFld tabFrm tabPerm tabArgs
 
     selFldToExtr (t, fld) = (:) (S.SELit t) $ pure $ case fld of
-      TAFAgg flds ->
-        aggFldToExp pfx flds
+      TAFAgg flds -> aggFldToExp flds
       TAFNodes _ ->
         let jsonAgg = S.SEFnApp "json_agg" [S.SEIden $ Iden t] ordBy
         in S.SEFnApp "coalesce" [jsonAgg, S.SELit "[]"] Nothing
@@ -495,7 +494,7 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
 
     mkColExp (PCFCol c) =
       let qualCol = S.mkQIdenExp (mkBaseTableAls pfx) (toIden c)
-          colAls = mkBaseTableColAls pfx c
+          colAls = toIden c
       in Just (S.Alias colAls, qualCol)
     mkColExp _ = Nothing
 

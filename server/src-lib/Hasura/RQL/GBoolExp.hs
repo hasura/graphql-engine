@@ -421,11 +421,11 @@ convColRhs tableQual = \case
 --         innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
 --     S.mkExists (S.FISimple tn $ Just $ S.Alias tIden) innerBoolExp
 
-inBoolExpBuilder :: S.SQLExp -> [S.SQLExp] -> S.BoolExp
-inBoolExpBuilder qualColExp rhsExps =
-  foldr (S.BEBin S.OrOp) (S.BELit False) eqExps
-  where
-    eqExps = map (equalsBoolExpBuilder qualColExp) rhsExps
+-- txtValParser
+--   :: (MonadError QErr m)
+--   => ValueParser m (AnnValOpExpG S.SQLExp)
+-- txtValParser =
+--   undefined
 
 pgValParser
   :: (MonadError QErr m)
@@ -528,9 +528,9 @@ mkColCompExp qual lhsCol = \case
     -- mkSimpleBoolExpBuilder beF pgColVal =
     --   beF lhs <$> rhsBldr pgColVal
 
-    mkInOrNotBoolExpBuilder isIn rhsExps =
-      let boolExp = inBoolExpBuilder lhs rhsExps
-      in bool (S.BENot boolExp) boolExp isIn
+    mkInOrNotBoolExpBuilder isIn rhsExps = do
+      let boolExp = S.BEEqualsAny lhs rhsExps
+      return $ bool (S.BENot boolExp) boolExp isIn
 
 -- txtRHSBuilder :: (MonadError QErr m) => RHSBuilder m
 -- txtRHSBuilder colType = runAesonParser (convToTxt colType)
