@@ -1,6 +1,6 @@
+{-# LANGUAGE DeriveFoldable    #-}
 {-# LANGUAGE DeriveLift        #-}
 {-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase        #-}
@@ -17,7 +17,6 @@ module Hasura.RQL.Types.BoolExp
 
        , AnnBoolExpFld(..)
        , AnnBoolExp
-       -- , traverseAnnBoolExp
        , annBoolExpTrue
        , andAnnBoolExps
 
@@ -30,15 +29,11 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
 import qualified Hasura.SQL.DML             as S
 import           Hasura.SQL.Types
--- import           Hasura.SQL.Value
 
 import           Data.Aeson
--- import           Data.Aeson.TH
--- import           Data.Aeson.Casing
 import           Data.Aeson.Internal
 import qualified Data.Aeson.Types           as J
 import qualified Data.HashMap.Strict        as M
--- import qualified Data.Text.Extended         as T
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -59,24 +54,6 @@ gBoolExpToJSON f = \case
   BoolNot bExp  -> object ["$not" .= gBoolExpToJSON f bExp ]
   BoolFld a     -> object $ pure $ f a
 
--- instance ToJSON (GBoolExp ColExp) where
---   toJSON (BoolAnd bExps) =
---     object $ flip map bExps $ \case
---     BoolOr cbExps        -> "$or" .= cbExps
---     BoolAnd cbExps       -> "$and" .= cbExps
---     BoolFld (ColExp k v) -> getFieldNameTxt k .= v
---     BoolNot notExp       -> "$not" .= notExp
---   toJSON (BoolOr bExps) =
---     object $ flip map bExps $ \case
---     BoolOr cbExps        -> "$or" .= cbExps
---     BoolAnd cbExps       -> "$and" .= cbExps
---     BoolFld (ColExp k v) -> getFieldNameTxt k .= v
---     BoolNot notExp       -> "$not" .= notExp
---   toJSON (BoolFld (ColExp k v)) =
---     object [ getFieldNameTxt k .= v ]
---   toJSON (BoolNot notExp) =
---     object [ "$not" .= notExp ]
-
 parseGBoolExp
   :: ((Text, Value) -> J.Parser a) -> Value -> J.Parser (GBoolExp a)
 parseGBoolExp f = \case
@@ -94,19 +71,6 @@ parseGBoolExp f = \case
   where
     parseGBoolExpL v =
       parseJSON v >>= mapM (parseGBoolExp f)
-
--- instance FromJSON (GBoolExp ColExp) where
---   parseJSON (Object o) = do
---     boolExps <- forM (M.toList o) $ \(k, v) -> if
---       | k == "$or"  -> BoolOr  <$> parseJSON v <?> Key k
---       | k == "_or"  -> BoolOr  <$> parseJSON v <?> Key k
---       | k == "$and" -> BoolAnd <$> parseJSON v <?> Key k
---       | k == "_and" -> BoolAnd <$> parseJSON v <?> Key k
---       | k == "$not" -> BoolNot <$> parseJSON v <?> Key k
---       | k == "_not" -> BoolNot <$> parseJSON v <?> Key k
---       | otherwise   -> BoolFld . ColExp (FieldName k) <$> parseJSON v
---     return $ BoolAnd boolExps
---   parseJSON _ = fail "expecting an Object for boolean exp"
 
 foldBoolExp :: (Monad m)
             => (a -> m S.BoolExp)
@@ -200,31 +164,6 @@ opExpToJPair f = \case
   CGTE a         -> ("_cgte", toJSON a)
   CLTE a         -> ("_clte", toJSON a)
 
--- data OpExpG a
---   = OEVal !(AnnValOpExpG a)
---   | OECol !ColOp !PGCol
---   deriving (Show, Eq)
-
--- type OpExp = OpExpG (PGColType, PGColValue)
-
--- data AnnBoolExpFldG a b
---   = AVCol !PGColInfo !a
---   | AVRel !RelInfo !b
---   deriving (Show, Eq)
-
--- instance Bifunctor AnnBoolExpFldG where
---   bimap f g = \case
---     AVCol ci a -> AVCol ci $ f a
---     AVRel ri b -> AVRel ri $ g b
-
--- newtype AnnBoolExpFld a
---   = AnnBoolExpFld { unAnnBoolExpFld :: AnnBoolExpFldG [OpExpG a] (AnnBoolExp a) }
---   deriving (Show, Eq)
-
--- instance Functor AnnBoolExpFld where
---   fmap f (AnnBoolExpFld annBoolExpFld) =
---     AnnBoolExpFld $ bimap (map (fmap f)) (fmap f) annBoolExpFld
-
 data AnnBoolExpFld a
   = AVCol !PGColInfo ![OpExpG a]
   | AVRel !RelInfo !(AnnBoolExp a)
@@ -239,14 +178,6 @@ annBoolExpTrue = gBoolExpTrue
 andAnnBoolExps :: AnnBoolExp a -> AnnBoolExp a -> AnnBoolExp a
 andAnnBoolExps l r =
   BoolAnd [l, r]
-
--- traverseAnnBoolExp
---   :: (Applicative f)
---   => (AnnBoolExpFld a -> f (AnnBoolExpFld b))
---   -> AnnBoolExp a
---   -> f (AnnBoolExp b)
--- traverseAnnBoolExp f boolExp =
---   traverse f boolExp
 
 type AnnBoolExpFldSQL = AnnBoolExpFld S.SQLExp
 type AnnBoolExpSQL = AnnBoolExp S.SQLExp
@@ -266,79 +197,3 @@ instance ToJSON AnnBoolExpSQL where
       opExpSToJSON :: OpExpG S.SQLExp -> Value
       opExpSToJSON =
         object . pure . opExpToJPair (toJSON . toSQLTxt)
-
--- $(deriveToJSON
---   defaultOptions{constructorTagModifier = snakeCase . drop 2}
---   ''AnnBoolExpFldG)
-
--- type AnnValO a = AnnBoolExpFldG [OpExpG a]
--- type AnnVal = AnnValO (PGColType, PGColValue)
-
--- data ColOp
---   = CEQ
---   | CNE
---   | CGT
---   | CLT
---   | CGTE
---   | CLTE
---   deriving (Eq)
-
--- instance Show ColOp where
---   show CEQ  = "$ceq"
---   show CNE  = "$cne"
-
---   show CGT  = "$cgt"
---   show CLT  = "$clt"
---   show CGTE = "$cgte"
---   show CLTE = "$clte"
-
--- data RQLOp
---   = REQ -- equals
---   | RNE -- <>
-
---   | RIN  -- in an array
---   | RNIN -- not in an array
-
---   | RGT    -- >
---   | RLT    -- <
---   | RGTE   -- >=
---   | RLTE   -- <=
-
---   | RLIKE  -- LIKE
---   | RNLIKE  -- NOT LIKE
-
---   | RILIKE  -- ILIKE, case insensitive
---   | RNILIKE -- NOT ILIKE, case insensitive
-
---   | RSIMILAR  -- similar, regex
---   | RNSIMILAR -- not similar, regex
-
---   | RISNULL -- is null
-
---   deriving (Eq)
-
--- instance Show RQLOp where
---   show REQ       = "$eq"
---   show RNE       = "$ne"
-
---   show RIN       = "$in"
---   show RNIN      = "$nin"
-
---   show RGT       = "$gt"
---   show RLT       = "$lt"
---   show RGTE      = "$gte"
---   show RLTE      = "$lte"
-
---   show RLIKE     = "$like"
---   show RNLIKE    = "$nlike"
-
---   show RILIKE    = "$ilike"
---   show RNILIKE   = "$nilike"
-
---   show RSIMILAR  = "$similar"
---   show RNSIMILAR = "$nsimilar"
-
---   show RISNULL   = "$is_null"
-
--- instance DQuote RQLOp where
---   dquoteTxt op = T.pack $ show op

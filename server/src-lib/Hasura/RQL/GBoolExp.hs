@@ -109,12 +109,13 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = case opStr of
     parseLt       = ALT <$> parseOne -- <
     parseGte      = AGTE <$> parseOne -- >=
     parseLte      = ALTE <$> parseOne -- <=
-    parseLike     = ALIKE <$> parseOne -- LIKE
-    parseNlike    = ANLIKE <$> parseOne -- NOT LIKE
-    parseIlike    = AILIKE <$> parseOne -- ILIKE, case insensitive
-    parseNilike   = ANILIKE <$> parseOne -- NOT ILIKE, case insensitive
-    parseSimilar  = ASIMILAR <$> parseOne -- similar, regex
-    parseNsimilar = ANSIMILAR <$> parseOne -- not similar, regex
+    parseLike     = textOnlyOp colTy >> ALIKE <$> parseOne
+    parseNlike    = textOnlyOp colTy >> ANLIKE <$> parseOne
+    parseIlike    = textOnlyOp colTy >> AILIKE <$> parseOne
+    parseNilike   = textOnlyOp colTy >> ANILIKE <$> parseOne
+    parseSimilar  = textOnlyOp colTy >> ASIMILAR <$> parseOne
+    parseNsimilar = textOnlyOp colTy >> ANSIMILAR <$> parseOne
+
     parseIsNull   = bool ANISNOTNULL ANISNULL -- is null
                     <$> decodeValue val
     parseCeq      = CEQ <$> decodeAndValidateRhsCol
@@ -136,7 +137,6 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = case opStr of
         else return rhsCol
 
     parseOne = parser colTy val
-      -- runAesonParser (parsePGValue ty) val
     parseMany = do
       vals <- runAesonParser parseJSON val
       indexedForM vals (parser colTy)
@@ -152,69 +152,7 @@ parseOpExps valParser cim colInfo = \case
   (Object o) -> mapM (parseOpExp valParser cim colInfo)(M.toList o)
   val        -> pure . AEQ <$> valParser (pgiType colInfo) val
 
--- parseAnnOpExpG
---   :: (MonadError QErr m)
---   => (PGColType -> Value -> m a)
---   -> RQLOp -> PGColType -> Value -> m (AnnValOpExpG a)
--- parseAnnOpExpG parser op ty val = case op of
---   REQ       -> AEQ <$> parseOne -- equals
---   RNE       -> ANE <$> parseOne -- <>
---   RIN       -> AIN <$> parseMany -- in an array
---   RNIN      -> ANIN <$> parseMany -- not in an array
---   RGT       -> AGT <$> parseOne -- >
---   RLT       -> ALT <$> parseOne -- <
---   RGTE      -> AGTE <$> parseOne -- >=
---   RLTE      -> ALTE <$> parseOne -- <=
---   RLIKE     -> ALIKE <$> parseOne -- LIKE
---   RNLIKE    -> ANLIKE <$> parseOne -- NOT LIKE
---   RILIKE    -> AILIKE <$> parseOne -- ILIKE, case insensitive
---   RNILIKE   -> ANILIKE <$> parseOne -- NOT ILIKE, case insensitive
---   RSIMILAR  -> ASIMILAR <$> parseOne -- similar, regex
---   RNSIMILAR -> ANSIMILAR <$> parseOne -- not similar, regex
---   RISNULL   -> bool ANISNOTNULL ANISNULL -- is null
---                <$> decodeValue val
-  -- where
-  --   parseOne = parser ty val
-  --     -- runAesonParser (parsePGValue ty) val
-  --   parseMany = do
-  --     vals <- runAesonParser parseJSON val
-  --     indexedForM vals (parser ty)
-
--- isRQLOp :: T.Text -> Bool
--- isRQLOp t = case runIdentity . runExceptT $ parseOpExp t of
---   Left _  -> False
---   Right r -> either (const True) (const False) r
-
 type ValueParser m a = PGColType -> Value -> m a
-
--- parseOpExps
---   :: (MonadError QErr m)
---   => ValueParser m a
---   -> FieldInfoMap
---   -> PGColInfo
---   -> Value
---   -> m [OpExpG a]
--- parseOpExps valParser cim (PGColInfo cn colTy _) (Object o) =
---   forM (M.toList o) $ \(k, v) -> do
---   op <- parseOpExp k
---   case (op, v) of
---     (Left rqlOp, _) -> do
---       modifyErr (cn <<>) $ getOpTypeChecker rqlOp colTy
---       annValOp <- withPathK (T.pack $ show rqlOp) $
---                   parseAnnOpExpG valParser rqlOp colTy v
---       return $ OEVal annValOp
---     (Right colOp, String c) -> do
---       let rhsCol  = PGCol c
---           errMsg = "column operators can only compare postgres columns"
---       rhsType <- askPGType cim rhsCol errMsg
---       when (colTy /= rhsType) $
---         throw400 UnexpectedPayload $
---         "incompatible column types : " <> cn <<> ", " <>> rhsCol
---       return $ OECol colOp rhsCol
---     (Right _, _) -> throw400 UnexpectedPayload "expecting a string for column operator"
--- parseOpExps valParser _ (PGColInfo _ colTy _) val = do
---   annValOp <- parseAnnOpExpG valParser REQ colTy val
---   return [OEVal annValOp]
 
 buildMsg :: PGColType -> [PGColType] -> QErr
 buildMsg ty expTys =
@@ -225,33 +163,11 @@ buildMsg ty expTys =
   , T.intercalate "/" $ map (T.dquote . T.pack . show) expTys
   ]
 
-type OpTypeChecker m = PGColType -> m ()
-
-textOnlyOp :: (MonadError QErr m) => OpTypeChecker m
+textOnlyOp :: (MonadError QErr m) => PGColType -> m ()
 textOnlyOp PGText    = return ()
 textOnlyOp PGVarchar = return ()
 textOnlyOp ty =
   throwError $ buildMsg ty [PGVarchar, PGText]
-
--- validOnAllTypes :: (MonadError QErr m) => OpTypeChecker m
--- validOnAllTypes _ = return ()
-
--- getOpTypeChecker :: (MonadError QErr m) => RQLOp -> OpTypeChecker m
--- getOpTypeChecker REQ       = validOnAllTypes
--- getOpTypeChecker RNE       = validOnAllTypes
--- getOpTypeChecker RIN       = validOnAllTypes
--- getOpTypeChecker RNIN      = validOnAllTypes
--- getOpTypeChecker RGT       = validOnAllTypes
--- getOpTypeChecker RLT       = validOnAllTypes
--- getOpTypeChecker RGTE      = validOnAllTypes
--- getOpTypeChecker RLTE      = validOnAllTypes
--- getOpTypeChecker RLIKE     = textOnlyOp
--- getOpTypeChecker RNLIKE    = textOnlyOp
--- getOpTypeChecker RILIKE    = textOnlyOp
--- getOpTypeChecker RNILIKE   = textOnlyOp
--- getOpTypeChecker RSIMILAR  = textOnlyOp
--- getOpTypeChecker RNSIMILAR = textOnlyOp
--- getOpTypeChecker RISNULL   = validOnAllTypes
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
@@ -269,14 +185,6 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
       (S.BENotNull qualColExp)
       (S.BENull rhsExp))
 
--- mapBoolExp :: (Monad m)
---            => (a -> m b)
---            -> GBoolExp a -> m (GBoolExp b)
--- mapBoolExp f (BoolAnd bes)    = BoolAnd <$> mapM (mapBoolExp f) bes
--- mapBoolExp f (BoolOr bes)     = BoolOr  <$> mapM (mapBoolExp f) bes
--- mapBoolExp f (BoolFld ce)     = BoolFld <$> f ce
--- mapBoolExp f (BoolNot notExp) = BoolNot <$> mapBoolExp f notExp
-
 annBoolExp
   :: (QErrM m, CacheRM m)
   => ValueParser m a
@@ -285,11 +193,6 @@ annBoolExp
   -> m (AnnBoolExp a)
 annBoolExp valParser fim (BoolExp boolExp) =
   traverse (annColExp valParser fim) boolExp
--- annBoolExp valParser cim = \case
---   (BoolAnd bes)    -> BoolAnd <$> mapM (annBoolExp valParser cim) bes
---   (BoolOr bes)     -> BoolOr  <$> mapM (annBoolExp valParser cim) bes
---   (BoolFld ce)     -> BoolFld <$> annColExp valParser cim ce
---   (BoolNot notExp) -> BoolNot <$> annBoolExp valParser cim notExp
 
 annColExp
   :: (QErrM m, CacheRM m)
@@ -311,57 +214,6 @@ annColExp valueParser colInfoMap (ColExp fieldName colVal) = do
       relFieldInfoMap <- askFieldInfoMap $ riRTable relInfo
       annRelBoolExp   <- annBoolExp valueParser relFieldInfoMap relBoolExp
       return $ AVRel relInfo annRelBoolExp
-
--- toSQLBoolExp
---   :: (Monad m)
---   => BoolExpBuilder m a -> S.Qual
---   -> GBoolExp (AnnValO a) -> m S.BoolExp
--- toSQLBoolExp vp tq e =
---   evalStateT (convBoolRhs' vp tq e) 0
-
--- convBoolRhs'
---   :: (Monad m)
---   => BoolExpBuilder m a -> S.Qual
---   -> GBoolExp (AnnValO a) -> StateT Word64 m S.BoolExp
--- convBoolRhs' vp tq =
---   foldBoolExp (convColRhs vp tq)
-
--- convColRhs
---   :: (Monad m)
---   => BoolExpBuilder m a
---   -> S.Qual -> AnnValO a -> StateT Word64 m S.BoolExp
--- convColRhs bExpBuilder tableQual annVal = case annVal of
---   AVCol (PGColInfo cn _ _) opExps -> do
---     let qualColExp = mkQCol tableQual cn
---     -- bExps <- forM opExps $ \case
---     --   OEVal annOpValExp -> lift $ bExpBuilder qualColExp annOpValExp
---     --   OECol op rCol -> do
---     --     let rhsColExp = mkQCol tableQual rCol
---     --     return $ mkColOpSQLExp op qualColExp rhsColExp
---     bExps <- forM opExps $ \opExp ->
---       lift $ bExpBuilder tableQual qualColExp annOpValExp
---     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
-
---   AVRel (RelInfo _ _ colMapping relTN _ _) nesAnn -> do
---     -- Convert the where clause on the relationship
---     curVarNum <- get
---     put $ curVarNum + 1
---     let newIden  = Iden $ "_be_" <> T.pack (show curVarNum) <> "_"
---                    <> snakeCaseTable relTN
---         newIdenQ = S.QualIden newIden
---     annRelBoolExp <- convBoolRhs' bExpBuilder (Just newIdenQ) nesAnn
---     let backCompExp = foldr (S.BEBin S.AndOp) (S.BELit True) $
---           flip map colMapping $ \(lCol, rCol) ->
---           S.BECompare S.SEQ
---           (S.SEQIden $ S.QIden (S.QualIden newIden) (toIden rCol))
---           (mkQCol tableQual lCol)
---         innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
---     -- return $ ABERel rn (relTN, newIden) annRelBoolExp backCompExp
---     return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIden) innerBoolExp
---   where
---     mkQCol colQM col = case colQM of
---       Just colQ -> S.SEQIden $ S.QIden colQ $ toIden col
---       Nothing   -> S.SEIden $ toIden col
 
 toSQLBoolExp
   :: S.Qual -> AnnBoolExpSQL -> S.BoolExp
@@ -394,38 +246,9 @@ convColRhs tableQual = \case
           (mkQCol (S.QualIden newIden) rCol)
           (mkQCol tableQual lCol)
         innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
-    -- return $ ABERel rn (relTN, newIden) annRelBoolExp backCompExp
     return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIden) innerBoolExp
   where
     mkQCol q = S.SEQIden . S.QIden q . toIden
-
-    -- mkQCol colQM col = case colQM of
-    --   Just colQ -> S.SEQIden $ S.QIden colQ $ toIden col
-    --   Nothing   -> S.SEIden $ toIden col
-
--- cBoolExp
---   :: GBoolExp AnnSQLBoolExp
---   -> S.BoolExp
--- cBoolExp be =
---   runIdentity $ flip foldBoolExp be $ \ace ->
---   return $ cColExp ace
-
--- cColExp
---   :: AnnSQLBoolExp
---   -> S.BoolExp
--- cColExp annVal = case annVal of
---   ABECol _ be -> be
---   ABERel _ (tn, tIden) nesAnn backCompExp -> do
---     -- Convert the where clause on the relationship
---     let annRelBoolExp = cBoolExp nesAnn
---         innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
---     S.mkExists (S.FISimple tn $ Just $ S.Alias tIden) innerBoolExp
-
--- txtValParser
---   :: (MonadError QErr m)
---   => ValueParser m (AnnValOpExpG S.SQLExp)
--- txtValParser =
---   undefined
 
 pgValParser
   :: (MonadError QErr m)
@@ -439,62 +262,13 @@ txtRHSBuilder
 txtRHSBuilder ty val =
   txtEncoder <$> pgValParser ty val
 
--- this does not parse the value
-noValParser
-  :: (MonadError QErr m)
-  => ValueParser m Value
-noValParser _ = return
-
--- mkColCompExp
---   :: S.Qual -> PGCol -> OpExpG S.SQLExp -> S.BoolExp
--- mkColCompExp qual lhsCol = \case
---   AEQ val          -> equalsBoolExpBuilder lhs val
---   ANE val          -> notEqualsBoolExpBuilder lhs val
---   AIN  vals        -> mkInOrNotBoolExpBuilder True vals
---   ANIN vals        -> mkInOrNotBoolExpBuilder False vals
---   AGT val          -> mkSimpleBoolExpBuilder (S.BECompare S.SGT) val
---   ALT val          -> mkSimpleBoolExpBuilder (S.BECompare S.SLT) val
---   AGTE val         -> mkSimpleBoolExpBuilder (S.BECompare S.SGTE) val
---   ALTE val         -> mkSimpleBoolExpBuilder (S.BECompare S.SLTE) val
---   ALIKE val        -> mkSimpleBoolExpBuilder (S.BECompare S.SLIKE) val
---   ANLIKE val       -> mkSimpleBoolExpBuilder (S.BECompare S.SNLIKE) val
---   AILIKE val       -> mkSimpleBoolExpBuilder (S.BECompare S.SILIKE) val
---   ANILIKE val      -> mkSimpleBoolExpBuilder (S.BECompare S.SNILIKE) val
---   ASIMILAR val     -> mkSimpleBoolExpBuilder (S.BECompare S.SSIMILAR) val
---   ANSIMILAR val    -> mkSimpleBoolExpBuilder (S.BECompare S.SNSIMILAR) val
---   AContains val    -> mkSimpleBoolExpBuilder (S.BECompare S.SContains) val
---   AContainedIn val -> mkSimpleBoolExpBuilder (S.BECompare S.SContainedIn) val
---   AHasKey val      -> mkSimpleBoolExpBuilder (S.BECompare S.SHasKey) val
---   AHasKeysAny keys -> return $ S.BECompare S.SHasKeysAny lhs $ toTextArray keys
---   AHasKeysAll keys -> return $ S.BECompare S.SHasKeysAll lhs $ toTextArray keys
---   ANISNULL         -> return $ S.BENull lhs
---   ANISNOTNULL      -> return $ S.BENotNull lhs
---   CEQ rhsCol       -> return $ S.BECompare S.SEQ lhs rhsCol
---   CNE rhsCol       -> return $ S.BECompare S.SNE lhs rhsCol
---   CGT rhsCol       -> return $ S.BECompare S.SGT lhs rhsCol
---   CLT rhsCol       -> return $ S.BECompare S.SLT lhs rhsCol
---   CGTE rhsCol      -> return $ S.BECompare S.SGTE lhs rhsCol
---   CLTE rhsCol      -> return $ S.BECompare S.SLTE lhs rhsCol
---   where
---     lhs = undefined
-
---     toTextArray arr =
---       S.SETyAnn (S.SEArray $ map (txtEncoder . PGValText) arr) S.textArrType
-
---     mkSimpleBoolExpBuilder beF pgColVal =
---       beF lhs <$> rhsBldr pgColVal
-
---     mkInOrNotBoolExpBuilder isIn arrVals = do
---       rhsExps <- mapM rhsBldr arrVals
---       let boolExp = inBoolExpBuilder lhs rhsExps
---       return $ bool (S.BENot boolExp) boolExp isIn
 mkColCompExp
   :: S.Qual -> PGCol -> OpExpG S.SQLExp -> S.BoolExp
 mkColCompExp qual lhsCol = \case
   AEQ val          -> equalsBoolExpBuilder lhs val
   ANE val          -> notEqualsBoolExpBuilder lhs val
-  AIN  vals        -> mkInOrNotBoolExpBuilder True vals
-  ANIN vals        -> mkInOrNotBoolExpBuilder False vals
+  AIN  vals        -> S.BEEqualsAny lhs vals
+  ANIN vals        -> S.BENot $ S.BEEqualsAny lhs vals
   AGT val          -> S.BECompare S.SGT lhs val
   ALT val          -> S.BECompare S.SLT lhs val
   AGTE val         -> S.BECompare S.SGTE lhs val
@@ -524,26 +298,6 @@ mkColCompExp qual lhsCol = \case
 
     toTextArray arr =
       S.SETyAnn (S.SEArray $ map (txtEncoder . PGValText) arr) S.textArrType
-
-    -- mkSimpleBoolExpBuilder beF pgColVal =
-    --   beF lhs <$> rhsBldr pgColVal
-
-    mkInOrNotBoolExpBuilder isIn rhsExps = do
-      let boolExp = S.BEEqualsAny lhs rhsExps
-      return $ bool (S.BENot boolExp) boolExp isIn
-
--- txtRHSBuilder :: (MonadError QErr m) => RHSBuilder m
--- txtRHSBuilder colType = runAesonParser (convToTxt colType)
-
--- mkColOpSQLExp :: ColOp -> S.SQLExp -> S.SQLExp -> S.BoolExp
--- mkColOpSQLExp colOp =
---   case colOp of
---     CEQ  -> S.BECompare S.SEQ
---     CNE  -> S.BECompare S.SNE
---     CGT  -> S.BECompare S.SGT
---     CLT  -> S.BECompare S.SLT
---     CGTE -> S.BECompare S.SGTE
---     CLTE -> S.BECompare S.SLTE
 
 getColExpDeps :: QualifiedTable -> AnnBoolExpFld a -> [SchemaDependency]
 getColExpDeps tn = \case
