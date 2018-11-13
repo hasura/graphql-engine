@@ -5,6 +5,10 @@
 
 module Hasura.GraphQL.Transport.HTTP
   ( runGQ
+  , getTopLevelNodes
+  , gatherTypeLocs
+  , assertSameLocationNodes
+  , runRemoteGQ
   ) where
 
 import           Control.Exception                      (try)
@@ -52,14 +56,11 @@ runGQ pool isoL userInfo sc manager reqHdrs req rawReq = do
                                           VQ.getQueryParts req
 
   let topLevelNodes = getTopLevelNodes opDef
-  -- gather TypeLoc of topLevelNodes
-  let typeLocs = catMaybes $ flip map topLevelNodes $ \node ->
-        let mNode = Map.lookup node (schemaNodes gCtx)
-        in VT._fiLoc <$> mNode
+      -- gather TypeLoc of topLevelNodes
+      typeLocs = gatherTypeLocs gCtx topLevelNodes
 
   -- see if they are all the same
-  unless (allEq typeLocs) $
-    throw400 NotSupported "cannot mix nodes from two different graphql servers"
+  assertSameLocationNodes typeLocs
 
   if null typeLocs
     then runHasuraGQ pool isoL userInfo sc opDef opRoot fragDefsL
@@ -74,20 +75,33 @@ runGQ pool isoL userInfo sc manager reqHdrs req rawReq = do
 
       [] -> throw500 "unexpected: cannot find node in schema"
 
-
   where
     gCtxRoleMap = scGCtxMap sc
-    getTopLevelNodes opDef =
-      map (\(G.SelectionField f) -> G._fName f) $ G._todSelectionSet opDef
 
-    schemaNodes gCtx =
-      let qr = VT._otiFields $ _gQueryRoot gCtx
-          mr = VT._otiFields <$> _gMutRoot gCtx
-      in maybe qr (Map.union qr) mr
-
+assertSameLocationNodes :: (MonadError QErr m) => [VT.TypeLoc] -> m ()
+assertSameLocationNodes typeLocs =
+  -- see if they are all the same
+  unless (allEq typeLocs) $
+    throw400 NotSupported msg
+  where
+    msg = "cannot mix nodes from two different graphql servers"
     allEq xs = case xs of
       []     -> True
       (y:ys) -> all ((==) y) ys
+
+getTopLevelNodes :: G.TypedOperationDefinition -> [G.Name]
+getTopLevelNodes opDef =
+  map (\(G.SelectionField f) -> G._fName f) $ G._todSelectionSet opDef
+
+gatherTypeLocs :: GCtx -> [G.Name] -> [VT.TypeLoc]
+gatherTypeLocs gCtx nodes =
+  catMaybes $ flip map nodes $ \node ->
+    VT._fiLoc <$> Map.lookup node schemaNodes
+  where
+    schemaNodes =
+      let qr = VT._otiFields $ _gQueryRoot gCtx
+          mr = VT._otiFields <$> _gMutRoot gCtx
+      in maybe qr (Map.union qr) mr
 
 
 runHasuraGQ

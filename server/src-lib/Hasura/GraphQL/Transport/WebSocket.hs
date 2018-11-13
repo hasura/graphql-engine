@@ -21,7 +21,7 @@ import qualified Data.Text.Encoding                          as TE
 import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified ListT
 import qualified Network.HTTP.Client                         as H
-import qualified Network.HTTP.Types.Status                   as H
+import qualified Network.HTTP.Types                          as H
 import qualified Network.WebSockets                          as WS
 import qualified STMContainers.Map                           as STMMap
 
@@ -32,11 +32,13 @@ import           Hasura.GraphQL.Resolve                      (resolveSelSet)
 import           Hasura.GraphQL.Resolve.Context              (RespTx)
 import qualified Hasura.GraphQL.Resolve.LiveQuery            as LQ
 import           Hasura.GraphQL.Schema                       (getGCtx)
+import qualified Hasura.GraphQL.Transport.HTTP               as TH
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import           Hasura.GraphQL.Validate                     (getQueryParts,
                                                               validateGQ)
+import qualified Hasura.GraphQL.Validate.Types               as VT
 import qualified Hasura.Logging                              as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -55,7 +57,7 @@ type OperationMap
 data WSConnData
   = WSConnData
   -- the role and headers are set only on connection_init message
-  { _wscUser  :: !(IORef.IORef (Maybe (Either Text UserInfo)))
+  { _wscUser  :: !(IORef.IORef (Maybe (Either Text (UserInfo, [H.Header]))))
   -- we only care about subscriptions,
   -- the other operations (query/mutations)
   -- are not tracked here
@@ -146,8 +148,8 @@ onConn (L.Logger logger) wsId requestHead = do
       when (WS.requestPath requestHead /= "/v1alpha1/graphql") $
       throw404 "only /v1alpha1/graphql is supported on websockets"
 
-onStart :: WSServerEnv -> WSConn -> StartMsg -> IO ()
-onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
+onStart :: WSServerEnv -> WSConn -> StartMsg -> BL.ByteString -> IO ()
+onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
@@ -155,7 +157,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     "an operation already exists with this id: " <> unOperationId opId
 
   userInfoM <- liftIO $ IORef.readIORef userInfoR
-  userInfo <- case userInfoM of
+  (userInfo, reqHdrs) <- case userInfoM of
     Just (Right userInfo) -> return userInfo
     Just (Left initErr) -> do
       let connErr = "cannot start as connection_init failed with : " <> initErr
@@ -173,26 +175,49 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     Left (QErr _ _ err _ _) -> withComplete $ sendConnErr err
     Right vals              -> return vals
 
-  (opTy, fields) <- either (withComplete . preExecErr) return $
-                    runReaderT (validateGQ opDef opRoot fragDefsL varValsM) gCtx
-  let qTx = RQ.setHeadersTx (userVars userInfo) >>
-            resolveSelSet userInfo gCtx opTy fields
+  let topLevelNodes = TH.getTopLevelNodes opDef
+      typeLocs = TH.gatherTypeLocs gCtx topLevelNodes
 
-  case opTy of
-    G.OperationTypeSubscription -> do
-      let lq = LQ.LiveQuery userInfo q
-      liftIO $ STM.atomically $ STMMap.insert lq opId opMap
-      liftIO $ LQ.addLiveQuery runTx lqMap lq
-       qTx (wsId, opId) liveQOnChange
-      logOpEv ODStarted
-    _ ->  do
-      logOpEv ODStarted
-      resp <- liftIO $ runTx qTx
-      either postExecErr sendSuccResp resp
-      sendCompleted
+  res' <- runExceptT $ TH.assertSameLocationNodes typeLocs
+  either (\(QErr _ _ err _ _) -> withComplete $ sendConnErr err) return res'
+
+  if null typeLocs
+    then runHasuraQ opDef opRoot fragDefsL varValsM userInfo gCtx
+    else
+    case typeLocs of
+      (typeLoc:_) -> case typeLoc of
+        VT.HasuraType ->
+          runHasuraQ opDef opRoot fragDefsL varValsM userInfo gCtx
+        VT.RemoteType url hdrs -> do
+          resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo sc
+                               reqHdrs msgRaw url hdrs
+          either postExecErr sendSuccResp resp
+          sendCompleted
+
+      [] -> withComplete $ sendConnErr "unexpected: cannot find node in schema"
 
   where
-    WSServerEnv logger _ runTx lqMap gCtxMapRef _ = serverEnv
+    runHasuraQ opDef opRoot fragDefsL varValsM userInfo gCtx = do
+      (opTy, fields) <- either (withComplete . preExecErr) return $
+                        runReaderT (validateGQ opDef opRoot fragDefsL varValsM)
+                        gCtx
+      let qTx = RQ.setHeadersTx (userVars userInfo) >>
+                resolveSelSet userInfo gCtx opTy fields
+
+      case opTy of
+        G.OperationTypeSubscription -> do
+          let lq = LQ.LiveQuery userInfo q
+          liftIO $ STM.atomically $ STMMap.insert lq opId opMap
+          liftIO $ LQ.addLiveQuery runTx lqMap lq
+            qTx (wsId, opId) liveQOnChange
+          logOpEv ODStarted
+        _ ->  do
+          logOpEv ODStarted
+          resp <- liftIO $ runTx qTx
+          either postExecErr sendSuccResp resp
+          sendCompleted
+
+    WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr = serverEnv
     wsId = WS.getWSId wsConn
     WSConnData userInfoR opMap = WS.getData wsConn
 
@@ -248,7 +273,7 @@ onMessage authMode serverEnv wsConn msgRaw =
       CMConnInit params -> onConnInit (_wseLogger serverEnv)
                            (_wseHManager serverEnv)
                            wsConn authMode params
-      CMStart startMsg  -> onStart serverEnv wsConn startMsg
+      CMStart startMsg  -> onStart serverEnv wsConn startMsg msgRaw
       CMStop stopMsg    -> onStop serverEnv wsConn stopMsg
       CMConnTerm        -> WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
   where
@@ -277,8 +302,8 @@ logWSEvent
 logWSEvent (L.Logger logger) wsConn wsEv = do
   userInfoME <- liftIO $ IORef.readIORef userInfoR
   let userInfoM = case userInfoME of
-        Just (Right userInfo) -> return $ userVars userInfo
-        _                     -> Nothing
+        Just (Right (userInfo, _)) -> return $ userVars userInfo
+        _                          -> Nothing
   liftIO $ logger $ WSLog wsId userInfoM wsEv
   where
     WSConnData userInfoR _ = WS.getData wsConn
@@ -298,7 +323,7 @@ onConnInit logger manager wsConn authMode connParamsM = do
       sendMsg wsConn $ SMConnErr connErr
     Right userInfo -> do
       liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
-        Just $ Right userInfo
+        Just $ Right (userInfo, headers)
       sendMsg wsConn SMConnAck
       -- TODO: send it periodically? Why doesn't apollo's protocol use
       -- ping/pong frames of websocket spec?
