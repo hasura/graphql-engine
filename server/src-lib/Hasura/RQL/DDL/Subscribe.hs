@@ -37,9 +37,14 @@ triggerTmplt = case parseGingerTmplt $(FE.embedStringFile "src-rsr/trigger.sql.j
   Left _      -> Nothing
   Right tmplt -> Just tmplt
 
+pgIdenTrigger:: Ops -> TriggerName -> T.Text
+pgIdenTrigger op trn = pgFmtIden (qualifyTriggerName op trn)
+  where
+    qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> T.pack (show op')
+
 getDropFuncSql :: Ops -> TriggerName -> T.Text
 getDropFuncSql op trn = "DROP FUNCTION IF EXISTS"
-                        <> " hdb_views.notify_hasura_" <> trn <> "_" <> T.pack (show op) <> "()"
+                        <> " hdb_views." <> pgIdenTrigger op trn <> "()"
                         <> " CASCADE"
 
 getTriggerSql
@@ -54,6 +59,7 @@ getTriggerSql op trid trn qt allCols spec =
   let globalCtx =  HashMap.fromList
                    [ (T.pack "ID", trid)
                    , (T.pack "NAME", trn)
+                   , (T.pack "QUALIFIED_TRIGGER_NAME", pgIdenTrigger op trn)
                    , (T.pack "QUALIFIED_TABLE", toSQLTxt qt)
                    ]
       opCtx = maybe HashMap.empty (createOpCtx op) spec
