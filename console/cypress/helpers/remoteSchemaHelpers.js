@@ -1,7 +1,8 @@
 export const baseUrl = Cypress.config('baseUrl');
 export const getRemoteSchemaName = (i, schemaName) =>
   `test-remote-schema-${schemaName}-${i}`;
-export const getRemoteGraphQLURL = () => 'https://countries.trevorblades.com/';
+export const getRemoteGraphQLURL = () =>
+  'https://hasura-realtime-poll.herokuapp.com/v1alpha1/graphql';
 export const getRemoteGraphQLURLFromEnv = () => 'GRAPHQL_URL';
 export const getInvalidRemoteSchemaUrl = () => 'http://httpbin.org/post';
 export const getHeaderAccessKey = i => `ACCESS_KEY-${i}`;
