@@ -218,9 +218,6 @@ processAuthZHeader jwtCtx headers authzHeader = do
   -- transform the map of text:aeson-value -> text:text
   metadata <- decodeJSON $ A.Object finalClaims
 
-  -- delete the x-hasura-access-key from this map, and insert x-hasura-role
-  let hasuraMd = Map.delete accessKeyHeader metadata
-
   return $ mkUserInfo role $ mkUserVars $ Map.toList hasuraMd
 
   where
