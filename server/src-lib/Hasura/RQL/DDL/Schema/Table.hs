@@ -377,20 +377,12 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
 
   eventTriggers <- lift $ Q.catchE defaultTxErrorHandler fetchEventTriggers
   forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ configuration) -> do
-    conf <- decodeValue configuration
+    etc <- decodeValue configuration
 
-    let EventTriggerConf _ opsdef webhook webhookFromEnv retryConf mheaders = conf
-        headerConfs = fromMaybe [] mheaders
-        qt = QualifiedTable sn tn
-    webhookConf <- case (webhook, webhookFromEnv) of
-              (Just w, Nothing)    -> return $ WCValue w
-              (Nothing, Just wEnv) -> return $ WCEnv wEnv
-              _                    -> throw500 "expected webhook or webhook_from_env"
+    let qt = QualifiedTable sn tn
+    subTableP2Setup qt trid etc
     allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
-    webhookInfo <- getWebhookInfoFromConf webhookConf
-    headers <- getHeaderInfosFromConf headerConfs
-    addEventTriggerToCache qt trid trn opsdef retryConf webhookInfo headers
-    liftTx $ mkTriggerQ trid trn qt allCols opsdef
+    liftTx $ mkTriggerQ trid trn qt allCols (etcDefinition etc)
   where
     permHelper sn tn rn pDef pa = do
       qCtx <- mkAdminQCtx <$> get

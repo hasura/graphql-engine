@@ -229,23 +229,27 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
         SubCStar         -> return ()
         SubCArray pgcols -> forM_ pgcols (assertPGCol (tiFieldInfoMap ti) "")
 
-subTableP2 :: (P2C m) => QualifiedTable -> Bool -> EventTriggerConf -> m ()
-subTableP2 qt replace etc@(EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
+subTableP2Setup :: (P2C m) => QualifiedTable -> TriggerId -> EventTriggerConf -> m ()
+subTableP2Setup qt trid (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
   webhookConf <- case (webhook, webhookFromEnv) of
-                      (Just w, Nothing)    -> return $ WCValue w
-                      (Nothing, Just wEnv) -> return $ WCEnv wEnv
-                      _                    -> throw500 "expected webhook or webhook_from_env"
-  allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
-  trid <- if replace
-    then do
-    delEventTriggerFromCache qt name
-    liftTx $ updateEventTriggerToCatalog qt allCols etc
-    else
-    liftTx $ addEventTriggerToCatalog qt allCols etc
+    (Just w, Nothing)    -> return $ WCValue w
+    (Nothing, Just wEnv) -> return $ WCEnv wEnv
+    _                    -> throw500 "expected webhook or webhook_from_env"
   let headerConfs = fromMaybe [] mheaders
   webhookInfo <- getWebhookInfoFromConf webhookConf
   headerInfos <- getHeaderInfosFromConf headerConfs
   addEventTriggerToCache qt trid name def rconf webhookInfo headerInfos
+
+subTableP2 :: (P2C m) => QualifiedTable -> Bool -> EventTriggerConf -> m ()
+subTableP2 qt replace etc = do
+  allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
+  trid <- if replace
+    then do
+    delEventTriggerFromCache qt (etcName etc)
+    liftTx $ updateEventTriggerToCatalog qt allCols etc
+    else
+    liftTx $ addEventTriggerToCatalog qt allCols etc
+  subTableP2Setup qt trid etc
 
 subTableP2shim :: (P2C m) => (QualifiedTable, Bool, EventTriggerConf) -> m RespBody
 subTableP2shim (qt, replace, etc) = do
