@@ -21,6 +21,7 @@ export const checkCreateRemoteSchemaRoute = () => {
   cy.wait(2000);
   cy.get(getElementFromAlias('data-create-remote-schemas')).click();
   cy.url().should('eq', `${baseUrl}/remote-schemas/manage/add`);
+  cy.wait(5000);
 };
 
 export const failRSWithInvalidRemoteUrl = () => {
@@ -34,7 +35,7 @@ export const failRSWithInvalidRemoteUrl = () => {
   cy.get(getElementFromAlias('add-remote-schema-submit')).click();
 
   validateRS(getRemoteSchemaName(0, testName), 'failure');
-  cy.wait(3000);
+  cy.wait(5000);
 };
 
 export const createSimpleRemoteSchema = () => {
@@ -54,6 +55,7 @@ export const createSimpleRemoteSchema = () => {
       testName
     )}/details`
   );
+  cy.wait(5000);
 };
 
 export const failRSDuplicateSchemaName = () => {
@@ -67,6 +69,7 @@ export const failRSDuplicateSchemaName = () => {
   cy.get(getElementFromAlias('add-remote-schema-submit')).click();
   cy.wait(5000);
   cy.url().should('eq', `${baseUrl}/remote-schemas/manage/add`);
+  cy.wait(5000);
 };
 
 export const failRSDuplicateSchemaNodes = () => {
@@ -80,6 +83,7 @@ export const failRSDuplicateSchemaNodes = () => {
   cy.get(getElementFromAlias('add-remote-schema-submit')).click();
   cy.wait(5000);
   cy.url().should('eq', `${baseUrl}/remote-schemas/manage/add`);
+  cy.wait(5000);
 };
 
 export const deleteSimpleRemoteSchemaFailUserConfirmationError = () => {
@@ -101,6 +105,7 @@ export const deleteSimpleRemoteSchemaFailUserConfirmationError = () => {
     .should('be.called');
 
   cy.get(getElementFromAlias('delete-confirmation-error')).should('exist');
+  cy.wait(5000);
 };
 
 export const deleteSimpleRemoteSchema = () => {
@@ -122,6 +127,7 @@ export const deleteSimpleRemoteSchema = () => {
     .its('prompt')
     .should('be.called');
   cy.get(getElementFromAlias('delete-confirmation-error')).should('not.exist');
+  cy.wait(5000);
 };
 
 export const failWithRemoteSchemaEnvUrl = () => {
@@ -141,6 +147,7 @@ export const failWithRemoteSchemaEnvUrl = () => {
   cy.get(getElementFromAlias('add-remote-schema-submit')).click();
   cy.wait(5000);
   cy.url().should('eq', `${baseUrl}/remote-schemas/manage/add`);
+  cy.wait(5000);
 };
 
 export const failWithRemoteSchemaEnvHeader = () => {
@@ -178,6 +185,7 @@ export const failWithRemoteSchemaEnvHeader = () => {
   cy.get(getElementFromAlias('add-remote-schema-submit')).click();
   cy.wait(5000);
   cy.url().should('eq', `${baseUrl}/remote-schemas/manage/add`);
+  cy.wait(5000);
 };
 
 export const passWithRemoteSchemaHeader = () => {
@@ -215,6 +223,7 @@ export const passWithRemoteSchemaHeader = () => {
       testName
     )}/details`
   );
+  cy.wait(5000);
 };
 
 export const passWithEditRemoteSchema = () => {
@@ -243,6 +252,7 @@ export const passWithEditRemoteSchema = () => {
     getRemoteSchemaName(5, testName)
   );
   cy.get(getElementFromAlias('remote-schema-edit-modify-btn')).should('exist');
+  cy.wait(5000);
 };
 
 export const deleteRemoteSchema = () => {
