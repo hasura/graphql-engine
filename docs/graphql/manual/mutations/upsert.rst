@@ -29,7 +29,6 @@ Insert into ``author`` table using unique constraint ``author_name_key``. All co
         ],
         on_conflict: {
           constraint: author_pkey,
-          update_columns: [name]
         }
       ) {
         affected_rows
