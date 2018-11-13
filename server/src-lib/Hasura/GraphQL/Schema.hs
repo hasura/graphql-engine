@@ -378,7 +378,14 @@ mkTableAggObj tn =
 {-
 type table_aggregate_fields{
   count: Int
-  sum: table_num_fields
+  sum: table_sum_fields
+  avg: table_avg_fields
+  stddev: table_stddev_fields
+  stddev_pop: table_stddev_pop_fields
+  variance: table_variance_fields
+  var_pop: table_var_pop_fields
+  max: table_max_fields
+  min: table_min_fields
 }
 -}
 mkTableAggFldsObj
@@ -390,14 +397,32 @@ mkTableAggFldsObj tn numCols compCols =
     desc = G.Description $
       "aggregate fields of " <>> tn
 
-    countFld = ObjFldInfo Nothing "count" Map.empty $ G.toGT $
+    countFld = ObjFldInfo Nothing "count" countParams $ G.toGT $
                mkScalarTy PGInteger
 
-    numFlds = bool [sumFld, avgFld] [] $ null numCols
+    countParams = fromInpValL [countColInpVal, distinctInpVal]
+
+    countColInpVal = InpValInfo Nothing "columns" $ G.toGT $
+                     G.toLT $ G.toNT $ mkSelColumnInpTy tn
+    distinctInpVal = InpValInfo Nothing "distinct" $ G.toGT $
+                     mkScalarTy PGBoolean
+
+    numFlds = bool [ sumFld
+                   , avgFld
+                   , stddevFld
+                   , stddevPopFld
+                   , varianceFld
+                   , varPopFld
+                   ] [] $ null numCols
     compFlds = bool [maxFld, minFld] [] $ null compCols
 
     sumFld = mkColOpFld "sum"
     avgFld = mkColOpFld "avg"
+    stddevFld = mkColOpFld "stddev"
+    stddevPopFld = mkColOpFld "stddev_pop"
+    varianceFld = mkColOpFld "variance"
+    varPopFld = mkColOpFld "var_pop"
+
     maxFld = mkColOpFld "max"
     minFld = mkColOpFld "min"
 
@@ -405,7 +430,7 @@ mkTableAggFldsObj tn numCols compCols =
                     mkTableColAggFldsTy op tn
 
 {-
-type table_sum_fields{
+type table_<agg-op>_fields{
    num_col: Int
    .        .
    .        .
@@ -840,10 +865,15 @@ mkConstraintInpTy :: QualifiedTable -> G.NamedType
 mkConstraintInpTy tn =
   G.NamedType $ qualTableToName tn <> "_constraint"
 
--- table_column
-mkColumnInpTy :: QualifiedTable -> G.NamedType
-mkColumnInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_column"
+-- table_update_column
+mkUpdColumnInpTy :: QualifiedTable -> G.NamedType
+mkUpdColumnInpTy tn =
+  G.NamedType $ qualTableToName tn <> "_update_column"
+
+--table_select_column
+mkSelColumnInpTy :: QualifiedTable -> G.NamedType
+mkSelColumnInpTy tn =
+  G.NamedType $ qualTableToName tn <> "_select_column"
 {-
 input table_obj_rel_insert_input {
   data: table_insert_input!
@@ -946,7 +976,7 @@ mkOnConflictInp tn =
       G.toGT $ G.toNT $ mkConstraintInpTy tn
 
     updateColumnsInpVal = InpValInfo Nothing (G.Name "update_columns") $
-      G.toGT $ G.toLT $ G.toNT $ mkColumnInpTy tn
+      G.toGT $ G.toLT $ G.toNT $ mkUpdColumnInpTy tn
 {-
 
 insert_table(
@@ -991,17 +1021,27 @@ mkConstriantTy tn cons = enumTyInfo
       EnumValInfo (Just "unique or primary key constraint")
       (G.EnumValue $ G.Name n) False
 
-mkColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
-mkColumnTy tn cols = enumTyInfo
+mkColumnEnumVal :: PGCol -> EnumValInfo
+mkColumnEnumVal (PGCol col) =
+  EnumValInfo (Just "column name") (G.EnumValue $ G.Name col) False
+
+mkUpdColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
+mkUpdColumnTy tn cols = enumTyInfo
   where
-    enumTyInfo = EnumTyInfo (Just desc) (mkColumnInpTy tn) $
+    enumTyInfo = EnumTyInfo (Just desc) (mkUpdColumnInpTy tn) $
                  mapFromL _eviVal $ map mkColumnEnumVal cols
 
     desc = G.Description $
-      "columns of table " <>> tn
+      "update columns of table " <>> tn
 
-    mkColumnEnumVal (PGCol col) =
-      EnumValInfo (Just "column name") (G.EnumValue $ G.Name col) False
+mkSelColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
+mkSelColumnTy tn cols = enumTyInfo
+  where
+    enumTyInfo = EnumTyInfo (Just desc) (mkSelColumnInpTy tn) $
+                 mapFromL _eviVal $ map mkColumnEnumVal cols
+
+    desc = G.Description $
+      "select columns of table " <>> tn
 
 mkConflictActionTy :: EnumTyInfo
 mkConflictActionTy = EnumTyInfo (Just desc) ty $ mapFromL _eviVal
@@ -1108,7 +1148,7 @@ mkOnConflictTypes tn c cols =
   where
     tyInfos = [ TIEnum mkConflictActionTy
               , TIEnum $ mkConstriantTy tn constraints
-              , TIEnum $ mkColumnTy tn cols
+              , TIEnum $ mkUpdColumnTy tn cols
               , TIInpObj $ mkOnConflictInp tn
               ]
     constraints = filter isUniqueOrPrimary c
@@ -1159,6 +1199,7 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
       , TIInpObj <$> mutHelper viIsUpdatable updSetInpObjM
       , TIInpObj <$> mutHelper viIsUpdatable updIncInpObjM
       , TIObj <$> mutRespObjM
+      , TIEnum <$> selColInpTyM
       ]
     mutHelper f objM = bool Nothing objM $ isMutable f viM
 
@@ -1190,6 +1231,8 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
     updSetInpObjFldsM = mkColFldMap (mkUpdSetTy tn) <$> updColsM
 
     selFldsM = snd <$> selPermM
+    selColsM = (map pgiName . lefts) <$> selFldsM
+    selColInpTyM = mkSelColumnTy tn <$> selColsM
     -- boolexp input type
     boolExpInpObjM = case selFldsM of
       Just selFlds  -> Just $ mkBoolExpInp tn selFlds
@@ -1240,14 +1283,25 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
       _ -> []
     getNumCols = onlyNumCols . lefts
     getCompCols = onlyComparableCols . lefts
+    onlyFloat = const $ mkScalarTy PGFloat
     mkColAggFldsObjs flds =
       let numCols = getNumCols flds
           compCols = getCompCols flds
           sumFldsObj = mkTableColAggFldsObj tn "sum" mkScalarTy numCols
-          avgFldsObj = mkTableColAggFldsObj tn "avg" (const $ mkScalarTy PGFloat) numCols
+          avgFldsObj = mkTableColAggFldsObj tn "avg" onlyFloat numCols
+          stddevFldsObj = mkTableColAggFldsObj tn "stddev" onlyFloat numCols
+          stddevPopFldsObj = mkTableColAggFldsObj tn "stddev_pop" onlyFloat numCols
+          varianceFldsObj = mkTableColAggFldsObj tn "variance" onlyFloat numCols
+          varPopFldsObj = mkTableColAggFldsObj tn "var_pop" onlyFloat numCols
           maxFldsObj = mkTableColAggFldsObj tn "max" mkScalarTy compCols
           minFldsObj = mkTableColAggFldsObj tn "min" mkScalarTy compCols
-          numFldsObjs = bool [sumFldsObj, avgFldsObj] [] $ null numCols
+          numFldsObjs = bool [ sumFldsObj
+                             , avgFldsObj
+                             , stddevFldsObj
+                             , stddevPopFldsObj
+                             , varianceFldsObj
+                             , varPopFldsObj
+                             ] [] $ null numCols
           compFldsObjs = bool [maxFldsObj, minFldsObj] [] $ null compCols
       in numFldsObjs <> compFldsObjs
     -- the fields used in table object
