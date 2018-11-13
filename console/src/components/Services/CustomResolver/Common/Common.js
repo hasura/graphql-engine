@@ -18,7 +18,8 @@ const graphqlurl = (
 );
 const clientHeaderForward = (
   <Tooltip id="tooltip-cascade">
-    Forward all the headers from the client to the remote server.
+    Toggle forwarding headers sent by the client app in the request to your
+    remote GraphQL server
   </Tooltip>
 );
 const header = (
@@ -120,7 +121,7 @@ class Common extends React.Component {
           />
         </div>
         <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
-          Header
+          Headers
           <OverlayTrigger placement="right" overlay={header}>
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>

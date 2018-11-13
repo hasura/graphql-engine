@@ -87,7 +87,7 @@ class Edit extends React.Component {
   }
   render() {
     const styles = require('../Styles.scss');
-    const { isRequesting, editState, migrationMode } = this.props;
+    const { isFetching, isRequesting, editState, migrationMode } = this.props;
     const { resolverName } = this.props.params;
 
     const generateMigrateBtns = () => {
@@ -114,12 +114,14 @@ class Edit extends React.Component {
           >
             {isRequesting ? 'Deleting ...' : 'Delete'}
           </button>
-          { this.state.deleteConfirmationError ? (
-            <span className={styles.delete_confirmation_error} data-test="delete-confirmation-error">
-              * { this.state.deleteConfirmationError }
+          {this.state.deleteConfirmationError ? (
+            <span
+              className={styles.delete_confirmation_error}
+              data-test="delete-confirmation-error"
+            >
+              * {this.state.deleteConfirmationError}
             </span>
-          ) : null
-          }
+          ) : null}
         </div>
       ) : (
         <div className={styles.commonBtn}>
@@ -186,16 +188,19 @@ class Edit extends React.Component {
           tabsInfo={tabInfo}
           breadCrumbs={breadCrumbs}
           baseUrl={`${appPrefix}/manage/${resolverName}`}
+          showLoader={isFetching}
         />
-        <form
-          onSubmit={e => {
-            e.preventDefault();
-            this.editClicked();
-          }}
-        >
-          <Common {...this.props} />
-          {migrationMode ? generateMigrateBtns() : null}
-        </form>
+        {isFetching ? null : (
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              this.editClicked();
+            }}
+          >
+            <Common {...this.props} />
+            {migrationMode ? generateMigrateBtns() : null}
+          </form>
+        )}
       </div>
     );
   }

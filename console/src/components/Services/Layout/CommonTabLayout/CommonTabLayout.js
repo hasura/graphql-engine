@@ -13,6 +13,7 @@ class CommonTabLayout extends React.Component {
       currentTab,
       tabsInfo,
       baseUrl,
+      showLoader,
     } = this.props;
 
     return (
@@ -26,6 +27,7 @@ class CommonTabLayout extends React.Component {
           tabName={currentTab}
           tabsInfo={tabsInfo}
           baseUrl={baseUrl}
+          showLoader={showLoader}
         />
       </div>
     );

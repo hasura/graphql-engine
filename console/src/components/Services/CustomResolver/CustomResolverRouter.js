@@ -96,14 +96,17 @@ const leftNavMapDispatchToProps = dispatch => {
   };
 };
 
-const fetchInitialData = ({ dispatch, getState }) => {
+const fetchInitialData = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
+    /*
     const currState = getState();
     const dataList = currState.customResolverData.listData.resolvers;
     if (dataList.length) {
       cb();
       return;
     }
+    */
+
     Promise.all([dispatch(fetchResolvers())]).then(
       () => {
         cb();
@@ -135,6 +138,7 @@ const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
         leftNavMapDispatchToProps
       )}
       onEnter={composeOnEnterHooks([fetchInitialData(store)])}
+      onChange={fetchInitialData(store)}
     >
       <IndexRedirect to="manage" />
       <Route path="manage" component={rightBar(connect)}>
