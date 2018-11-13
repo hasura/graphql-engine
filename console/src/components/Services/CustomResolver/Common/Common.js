@@ -121,7 +121,7 @@ class Common extends React.Component {
           />
         </div>
         <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
-          Header
+          Headers
           <OverlayTrigger placement="right" overlay={header}>
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
