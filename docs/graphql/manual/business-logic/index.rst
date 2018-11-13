@@ -60,13 +60,14 @@ You need to enter the following information:
 
 - **Remote Schema name**: an alias for the remote schema that must be unique on an instance of GraphQL Engine.
 - **GraphQL server URL**: the endpoint at which your remote GraphQL server is available. This value can be entered manually or by specifying an environment variable that contains this information. If you want to specify an environment variable, please note that currently there is no validation that the environment variable is actually available at the time of this configuration, so any errors in this configuration will result in a runtime error.
-- **Headers**: configure the headers to be sent to your custom GraphQL server. A header can either be a constant key-value pair or a key-value pair whose value is picked up from an environment variable.
+- **Headers**: configure the headers to be sent to your custom GraphQL server.
 
-.. - Toggle forwarding all headers from the client app.
+  - Toggle forwarding headers sent by the client app in the request to your remote GraphQL server.   
+  - Additional headers, constant key-value pairs and/or key-value pairs whose values are picked up from an environment variable.
 
 Click on the ``Add Remote Schema`` button to merge the remote schema.
 
-For some use cases, you may need to extend (*and not merely augment as we have done above*) the GraphQL schema fields exposed by Hasura GraphQL engine with a custom schema/server. To support them, you can use community tooling to write your own client-facing GraphQL server that interacts with GraphQL Engine.
+For some use cases, you may need to extend the GraphQL schema fields exposed by Hasura GraphQL engine (*and not merely augment as we have done above*) with a custom schema/server. To support them, you can use community tooling to write your own client-facing GraphQL gateway that interacts with GraphQL Engine.
 
 .. note::
 
