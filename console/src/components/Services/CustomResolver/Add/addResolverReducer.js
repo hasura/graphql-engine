@@ -13,6 +13,10 @@ import { makeRequest } from '../customActions';
 // import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { appPrefix } from '../constants';
 
+import globals from '../../../../Globals';
+
+const prefixUrl = globals.urlPrefix + appPrefix;
+
 /* */
 const MANUAL_URL_CHANGED = '@addResolver/MANUAL_URL_CHANGED';
 const ENV_URL_CHANGED = '@addResolver/ENV_URL_CHANGED';
@@ -119,7 +123,7 @@ const fetchResolver = resolver => {
           });
           return Promise.resolve();
         }
-        return dispatch(push(`${appPrefix}`));
+        return dispatch(push(`${prefixUrl}`));
       },
       error => {
         console.error('Failed to fetch resolver' + JSON.stringify(error));
@@ -189,7 +193,7 @@ const addResolver = () => {
     const customOnSuccess = data => {
       Promise.all([
         dispatch({ type: RESET }),
-        dispatch(push(`${appPrefix}/manage/${resolveObj.name}/details`)),
+        dispatch(push(`${prefixUrl}/manage/${resolveObj.name}/details`)),
         dispatch(fetchResolvers()),
         dispatch({ type: getHeaderEvents.RESET_HEADER, data: data }),
       ]);
@@ -260,7 +264,7 @@ const deleteResolver = () => {
       // dispatch({ type: REQUEST_SUCCESS });
       Promise.all([
         dispatch({ type: RESET }),
-        dispatch(push(appPrefix)),
+        dispatch(push(prefixUrl)),
         dispatch(fetchResolvers()),
       ]);
     };
@@ -378,7 +382,7 @@ const modifyResolver = () => {
       ]).then(() => {
         return Promise.all([
           dispatch(fetchResolver(schemaName)),
-          dispatch(push(`${appPrefix}/manage/${trimmedName}/details`)),
+          dispatch(push(`${prefixUrl}/manage/${trimmedName}/details`)),
         ]);
       });
     };

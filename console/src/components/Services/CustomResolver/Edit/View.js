@@ -13,6 +13,10 @@ import ReloadMetadata from '../../Data/Metadata/ReloadMetadata';
 
 import { appPrefix } from '../constants';
 
+import globals from '../../../../Globals';
+
+const prefixUrl = globals.urlPrefix + appPrefix;
+
 const refresh = (
   <Tooltip id="tooltip-cascade">
     If your remote schema has changed, you need to refresh the GraphQL Engine
@@ -24,7 +28,7 @@ class ViewStitchedSchema extends React.Component {
   componentDidMount() {
     const { resolverName } = this.props.params;
     if (!resolverName) {
-      this.props.dispatch(push('/custom-resolver'));
+      this.props.dispatch(push(prefixUrl));
     }
     Promise.all([
       this.props.dispatch(fetchResolver(resolverName)),

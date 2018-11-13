@@ -3,6 +3,7 @@ import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 
 import { appPrefix, pageTitle } from '../constants';
+import globals from '../../../../Globals';
 
 class CustomResolver extends React.Component {
   render() {
@@ -29,7 +30,7 @@ class CustomResolver extends React.Component {
                 className={styles.yellow_button}
                 onClick={e => {
                   e.preventDefault();
-                  dispatch(push(`${appPrefix}/manage/add`));
+                  dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
                 }}
               >
                 Add

@@ -16,6 +16,10 @@ import CommonTabLayout from '../../Layout/CommonTabLayout/CommonTabLayout';
 
 import { appPrefix, pageTitle } from '../constants';
 
+import globals from '../../../../Globals';
+
+const prefixUrl = globals.urlPrefix + appPrefix;
+
 class Edit extends React.Component {
   constructor() {
     super();
@@ -30,7 +34,7 @@ class Edit extends React.Component {
   componentDidMount() {
     const { resolverName } = this.props.params;
     if (!resolverName) {
-      this.props.dispatch(push('/custom-resolver'));
+      this.props.dispatch(push(prefixUrl));
     }
     Promise.all([
       this.props.dispatch(fetchResolver(resolverName)),
