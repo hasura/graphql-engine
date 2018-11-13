@@ -204,14 +204,13 @@ from3To4 = Q.catchE defaultTxErrorHandler $ do
           \, DROP COLUMN retry_interval\
           \, DROP COLUMN headers" () False
   where
-    uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers) = EventTriggerConf trn tDef (WCValue w) (RetryConf nr rint) headers
-    updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _) = Q.unitQ [Q.sql|
+    uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers) = EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint) headers
+    updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _) = Q.unitQ [Q.sql|
                                          UPDATE hdb_catalog.event_triggers
                                          SET
                                          configuration = $1
                                          WHERE name = $2
                                          |] (Q.AltJ $ A.toJSON etc, name) True
-
 
 migrateCatalog :: UTCTime -> Q.TxE QErr String
 migrateCatalog migrationTime = do

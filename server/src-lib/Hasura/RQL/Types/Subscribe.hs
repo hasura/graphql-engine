@@ -11,7 +11,6 @@ module Hasura.RQL.Types.Subscribe
   , Ops(..)
   , EventId
   , TriggerOpsDef(..)
-  , EventTrigger(..)
   , EventTriggerConf(..)
   , RetryConf(..)
   , DeleteEventTriggerQuery(..)
@@ -146,14 +145,14 @@ instance FromJSON CreateEventTriggerQuery where
         compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
         isMatch = TDFA.match compiledRegex (T.unpack name)
     if isMatch then return ()
-      else fail "only alphanumeric and underscore allowed for name"
+      else fail "only alphanumeric and underscore and hyphens allowed for name"
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
     case (webhook, webhookFromEnv) of
-      (Just _, Nothing)  -> return ()
+      (Just _, Nothing) -> return ()
       (Nothing, Just _) -> return ()
-      (Just _, Just _) -> fail "only one of webhook or webhook_from_env should be given"
+      (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
       _ ->   fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
     return $ CreateEventTriggerQuery name table insert update delete retryConf webhook webhookFromEnv headers replace
@@ -183,57 +182,17 @@ data DeleteEventTriggerQuery
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
 
-data EventTrigger
-  = EventTrigger
-  { etTable      :: !QualifiedTable
-  , etName       :: !TriggerName
-  , etDefinition :: !TriggerOpsDef
-  , etWebhook    :: !T.Text
-  , etRetryConf  :: !RetryConf
-  }
-
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventTrigger)
-
 data EventTriggerConf
   = EventTriggerConf
-  { etcName          :: !TriggerName
-  , etcOpsDefinition :: !TriggerOpsDef
-  , etcWebhookConf   :: !WebhookConf
-  , etcRetryConf     :: !RetryConf
-  , etcHeaders       :: !(Maybe [HeaderConf])
+  { etcName           :: !TriggerName
+  , etcDefinition     :: !TriggerOpsDef
+  , etcWebhook        :: !(Maybe T.Text)
+  , etcWebhookFromEnv :: !(Maybe T.Text)
+  , etcRetryConf      :: !RetryConf
+  , etcHeaders        :: !(Maybe [HeaderConf])
   } deriving (Show, Eq, Lift)
 
-instance FromJSON EventTriggerConf where
-  parseJSON (Object o) = do
-    name <- o .: "name"
-    opsDef <- o .: "definition"
-    webhook <- o .:? "webhook"
-    webhookFromEnv <- o .:? "webhook_from_env"
-    retryConf <- o .: "retry_conf"
-    headers <- o .:? "headers"
-    webhookConf <- case (webhook, webhookFromEnv) of
-                        (Just w, Nothing)  -> return $ WCValue w
-                        (Nothing, Just wEnv) -> return $ WCEnv wEnv
-                        (Just _, Just _) -> fail "only one of webhook or webhook_from_env should be given"
-                        _ ->   fail "must provide webhook or webhook_from_env"
-    return $ EventTriggerConf name opsDef webhookConf retryConf headers
-  parseJSON _ = fail "expecting object for event_trigger_def"
-
-instance ToJSON EventTriggerConf where
-  toJSON (EventTriggerConf name def (WCValue w) rc headers) = object
-    [ "name" .= name
-    , "definition" .= def
-    , "webhook" .= w
-    , "retry_conf" .= rc
-    , "headers" .= headers
-    ]
-  toJSON (EventTriggerConf name def (WCEnv wEnv) rc headers) = object
-    [ "name" .= name
-    , "definition" .= def
-    , "webhook_from_env" .= wEnv
-    , "retry_conf" .= rc
-    , "headers" .= headers
-    ]
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerConf)
 
 data DeliverEventQuery
   = DeliverEventQuery
