@@ -111,15 +111,16 @@ explainGQLQuery
   :: (MonadError QErr m, MonadIO m)
   => Q.PGPool
   -> Q.TxIsolation
-  -> GCtxMap
+  -> SchemaCache
   -> GQLExplain
   -> m BL.ByteString
-explainGQLQuery pool iso gCtxMap (GQLExplain query userVarsRaw)= do
+explainGQLQuery pool iso sc (GQLExplain query userVarsRaw)= do
+  (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxMap
   (opDef, opRoot, fragDefsL, varValsM) <-
     runReaderT (GV.getQueryParts query) gCtx
   let topLevelNodes = getTopLevelNodes opDef
 
-  unless (allHasuraNodes topLevelNodes) $
+  unless (allHasuraNodes gCtx topLevelNodes) $
     throw400 InvalidParams "only hasura queries can be explained"
 
   (opTy, selSet) <- runReaderT (GV.validateGQ opDef opRoot fragDefsL varValsM) gCtx
@@ -129,9 +130,9 @@ explainGQLQuery pool iso gCtxMap (GQLExplain query userVarsRaw)= do
   plans <- liftIO (runExceptT $ runTx tx) >>= liftEither
   return $ J.encode plans
   where
+    gCtxMap = scGCtxMap sc
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
-    gCtx = getGCtx (userRole userInfo) gCtxMap
     runTx tx =
       Q.runTx pool (iso, Nothing) $
       RQ.setHeadersTx (userVars userInfo) >> tx
@@ -139,16 +140,16 @@ explainGQLQuery pool iso gCtxMap (GQLExplain query userVarsRaw)= do
     getTopLevelNodes opDef =
       map (\(G.SelectionField f) -> G._fName f) $ G._todSelectionSet opDef
 
-    allHasuraNodes nodes =
+    allHasuraNodes gCtx nodes =
       let typeLocs = catMaybes $ flip map nodes $ \node ->
-            let mNode = Map.lookup node schemaNodes
+            let mNode = Map.lookup node (schemaNodes gCtx)
             in VT._fiLoc <$> mNode
           isHasuraNode = \case
             VT.HasuraType     -> True
             VT.RemoteType _ _ -> False
       in all isHasuraNode typeLocs
 
-    schemaNodes =
+    schemaNodes gCtx =
       let qr = VT._otiFields $ _gQueryRoot gCtx
           mr = VT._otiFields <$> _gMutRoot gCtx
       in maybe qr (Map.union qr) mr

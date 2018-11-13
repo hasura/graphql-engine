@@ -81,16 +81,23 @@ fetchRemoteSchema manager url headerConf = do
 
 mergeSchemas
   :: (MonadIO m, MonadError QErr m)
+
   => RemoteSchemaMap -> GS.GCtxMap -> HTTP.Manager
-  -> m GS.GCtxMap
+  -> m (GS.GCtxMap, GS.GCtx) -- the merged GCtxMap and the default GCtx without roles
 mergeSchemas rmSchemaMap gCtxMap httpManager = do
+  -- TODO: better way to do this?
   let remoteSrvrs = map (\(k, v) -> (k, _rsHeaders v)) $
                     Map.toList rmSchemaMap
-  -- TODO: better way to do this?
   remoteSchemas <- forM remoteSrvrs $ \(url, hdrs) ->
     fetchRemoteSchema httpManager url hdrs
-    --return (url, remoteSchema)
-  mergeRemoteSchemas gCtxMap remoteSchemas
+  merged <- mergeRemoteSchemas gCtxMap remoteSchemas
+  def <- mkDefaultRemoteGCtx remoteSchemas
+  return (merged, def)
+
+mkDefaultRemoteGCtx
+  :: (MonadError QErr m)
+  => [GS.RemoteGCtx] -> m GS.GCtx
+mkDefaultRemoteGCtx = foldlM mergeGCtx GS.emptyGCtx
 
 mergeRemoteSchemas
   :: (MonadError QErr m)
@@ -104,27 +111,11 @@ mergeRemoteSchema
   => GS.GCtxMap
   -> GS.RemoteGCtx
   -> m GS.GCtxMap
-mergeRemoteSchema ctxMap rmSchema =
-  case Map.null ctxMap of
-    True  -> return onlyRmSchema
-    False -> do
-      res <- forM (Map.toList ctxMap) $ \(role, gCtx) -> do
-        updatedGCtx <- mergeGCtx gCtx rmSchema
-        return (role, updatedGCtx)
-      return $ Map.fromList res
-
-  where
-    onlyRmSchema =
-      let hTy = GS._gTypes GS.emptyGCtx
-          rmTy = GS._rgTypes rmSchema
-          newQR = mergeQueryRoot GS.emptyGCtx rmSchema
-          newMR = mergeMutRoot GS.emptyGCtx rmSchema
-          newTyMap = mergeTyMaps hTy rmTy newQR newMR
-          updated = GS.emptyGCtx { GS._gTypes = newTyMap
-                                 , GS._gQueryRoot = newQR
-                                 , GS._gMutRoot = newMR
-                                 }
-      in Map.insert adminRole updated ctxMap
+mergeRemoteSchema ctxMap rmSchema = do
+  res <- forM (Map.toList ctxMap) $ \(role, gCtx) -> do
+    updatedGCtx <- mergeGCtx gCtx rmSchema
+    return (role, updatedGCtx)
+  return $ Map.fromList res
 
 mergeGCtx
   :: (MonadError QErr m)

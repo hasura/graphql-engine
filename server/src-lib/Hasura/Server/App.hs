@@ -38,10 +38,10 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Transport.WebSocket     as WS
 import qualified Hasura.Logging                         as L
 
+import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
 --import           Hasura.RQL.DML.Explain
-import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
@@ -80,7 +80,7 @@ data ServerCtx
   { scIsolation :: Q.TxIsolation
   , scPGPool    :: Q.PGPool
   , scLogger    :: L.Logger
-  , scCacheRef  :: IORef (SchemaCache, GS.GCtxMap)
+  , scCacheRef  :: IORef SchemaCache
   , scCacheLock :: MVar ()
   , scAuthMode  :: AuthMode
   , scManager   :: HTTP.Manager
@@ -115,7 +115,7 @@ buildQCtx = do
   scRef    <- scCacheRef . hcServerCtx <$> ask
   userInfo <- asks hcUser
   cache <- liftIO $ readIORef scRef
-  return $ QCtx userInfo $ fst cache
+  return $ QCtx userInfo cache
 
 logResult
   :: (MonadIO m)
@@ -201,18 +201,20 @@ v1QueryHandler query = do
       httpMgr <- scManager . hcServerCtx <$> ask
       pool <- scPGPool . hcServerCtx <$> ask
       isoL <- scIsolation . hcServerCtx <$> ask
-      runQuery pool isoL userInfo (fst schemaCache) httpMgr query
+      runQuery pool isoL userInfo schemaCache httpMgr query
 
     -- Also update the schema cache
     dbActionReload = do
       (resp, newSc) <- dbAction
       scRef <- scCacheRef . hcServerCtx <$> ask
       httpMgr <- scManager . hcServerCtx <$> ask
-      -- FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
+      --FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
       newGCtxMap <- GS.mkGCtxMap (scTables newSc)
-      mergedGCtxMap <-
+      (mergedGCtxMap, defGCtx) <-
         mergeSchemas (scRemoteResolvers newSc) newGCtxMap httpMgr
-      liftIO $ writeIORef scRef (newSc, mergedGCtxMap)
+      let newSc' =
+            newSc { scGCtxMap = mergedGCtxMap, scDefaultRemoteGCtx = defGCtx }
+      liftIO $ writeIORef scRef newSc'
       return resp
 
 v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler BL.ByteString
@@ -222,19 +224,19 @@ v1Alpha1GQHandler query = do
   reqHeaders <- asks hcReqHeaders
   manager <- scManager . hcServerCtx <$> ask
   scRef <- scCacheRef . hcServerCtx <$> ask
-  (sc, gCtxMap) <- liftIO $ readIORef scRef
+  sc <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  GH.runGQ pool isoL userInfo sc gCtxMap manager reqHeaders query reqBody
+  GH.runGQ pool isoL userInfo sc manager reqHeaders query reqBody
 
 gqlExplainHandler :: GE.GQLExplain -> Handler BL.ByteString
 gqlExplainHandler query = do
   onlyAdmin
   scRef <- scCacheRef . hcServerCtx <$> ask
-  cache <- liftIO $ readIORef scRef
+  sc <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  GE.explainGQLQuery pool isoL (snd cache) query
+  GE.explainGQLQuery pool isoL sc query
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
@@ -274,16 +276,12 @@ mkWaiApp
   -> AuthMode
   -> CorsConfig
   -> Bool
-  -> IO (Wai.Application, IORef (SchemaCache, GS.GCtxMap))
+  -> IO (Wai.Application, IORef SchemaCache)
 mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole = do
     cacheRef <- do
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
-        sc <- buildSchemaCache httpManager
-        gCtxMap <- GS.mkGCtxMap (scTables sc)
-        mergedGCtxMap <-
-          mergeSchemas (scRemoteResolvers sc) gCtxMap httpManager
-        return $ (,) sc mergedGCtxMap
+        buildSchemaCache httpManager
       either initErrExit return pgResp >>= newIORef
 
     cacheLock <- newMVar ()

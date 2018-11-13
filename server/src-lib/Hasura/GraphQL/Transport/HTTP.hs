@@ -40,21 +40,21 @@ runGQ
   => Q.PGPool -> Q.TxIsolation
   -> UserInfo
   -> SchemaCache
-  -> GCtxMap
   -> HTTP.Manager
   -> [N.Header]
   -> GraphQLRequest
   -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m BL.ByteString
-runGQ pool isoL userInfo sc gCtxRoleMap manager reqHdrs req rawReq = do
+runGQ pool isoL userInfo sc manager reqHdrs req rawReq = do
 
+  (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   (opDef, opRoot, fragDefsL, varValsM) <- flip runReaderT gCtx $
                                           VQ.getQueryParts req
 
   let topLevelNodes = getTopLevelNodes opDef
   -- gather TypeLoc of topLevelNodes
   let typeLocs = catMaybes $ flip map topLevelNodes $ \node ->
-        let mNode = Map.lookup node schemaNodes
+        let mNode = Map.lookup node (schemaNodes gCtx)
         in VT._fiLoc <$> mNode
 
   -- see if they are all the same
@@ -62,14 +62,13 @@ runGQ pool isoL userInfo sc gCtxRoleMap manager reqHdrs req rawReq = do
     throw400 NotSupported "cannot mix nodes from two different graphql servers"
 
   if null typeLocs
-    then runHasuraGQ pool isoL userInfo gCtxRoleMap opDef opRoot fragDefsL
+    then runHasuraGQ pool isoL userInfo sc opDef opRoot fragDefsL
          varValsM
     else
     case typeLocs of
       (typeLoc:_) -> case typeLoc of
         VT.HasuraType ->
-          runHasuraGQ pool isoL userInfo gCtxRoleMap
-          opDef opRoot fragDefsL varValsM
+          runHasuraGQ pool isoL userInfo sc opDef opRoot fragDefsL varValsM
         VT.RemoteType url hdrs ->
           runRemoteGQ manager userInfo sc reqHdrs rawReq url hdrs
 
@@ -77,11 +76,11 @@ runGQ pool isoL userInfo sc gCtxRoleMap manager reqHdrs req rawReq = do
 
 
   where
-    gCtx = getGCtx (userRole userInfo) gCtxRoleMap
+    gCtxRoleMap = scGCtxMap sc
     getTopLevelNodes opDef =
       map (\(G.SelectionField f) -> G._fName f) $ G._todSelectionSet opDef
 
-    schemaNodes =
+    schemaNodes gCtx =
       let qr = VT._otiFields $ _gQueryRoot gCtx
           mr = VT._otiFields <$> _gMutRoot gCtx
       in maybe qr (Map.union qr) mr
@@ -95,21 +94,23 @@ runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation
   -> UserInfo
-  -> GCtxMap
+  -> SchemaCache
   -> G.TypedOperationDefinition
   -> VT.ObjTyInfo
   -> [G.FragmentDefinition]
   -> Maybe VariableValues
   -> m BL.ByteString
-runHasuraGQ pool isoL userInfo gCtxMap opDef opRoot fragDefsL varValsM = do
-  (opTy, fields) <- runReaderT (VQ.validateGQ opDef opRoot fragDefsL varValsM) gCtx
+runHasuraGQ pool isoL userInfo sc opDef opRoot fragDefsL varValsM = do
+  (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxMap
+  (opTy, fields) <- runReaderT
+                    (VQ.validateGQ opDef opRoot fragDefsL varValsM) gCtx
   when (opTy == G.OperationTypeSubscription) $ throw400 UnexpectedPayload
     "subscriptions are not supported over HTTP, use websockets instead"
   let tx = R.resolveSelSet userInfo gCtx opTy fields
   resp <- liftIO (runExceptT $ runTx tx) >>= liftEither
   return $ encodeGQResp $ GQSuccess resp
   where
-    gCtx = getGCtx (userRole userInfo) gCtxMap
+    gCtxMap = scGCtxMap sc
     runTx tx =
       Q.runTx pool (isoL, Nothing) $
       RQ.setHeadersTx (userVars userInfo) >> tx
@@ -130,7 +131,7 @@ runRemoteGQ manager userInfo sc reqHdrs q url hdrConf = do
   let confHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       mRmSchemaDef = Map.lookup url (scRemoteResolvers sc)
       shouldFwd = maybe False _rsFwdClientHeaders mRmSchemaDef
-      clientHdrs = bool [] reqHdrs shouldFwd
+      clientHdrs = bool [] filteredHeaders shouldFwd
   let options = Wreq.defaults
               & Wreq.headers .~ ("content-type", "application/json") :
                 (userInfoToHdrs ++ clientHdrs ++ confHdrs)
@@ -147,3 +148,9 @@ runRemoteGQ manager userInfo sc reqHdrs q url hdrConf = do
 
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
                  userInfoToList userInfo
+    filteredHeaders = flip filter reqHdrs $ \(n, _) ->
+      n `notElem` [ "Content-Length", "Content-MD5", "User-Agent", "Host"
+                  , "Origin", "Referer" , "Accept", "Accept-Encoding"
+                  , "Accept-Language", "Accept-Datetime"
+                  , "Cache-Control", "Connection", "DNT"
+                  ]
