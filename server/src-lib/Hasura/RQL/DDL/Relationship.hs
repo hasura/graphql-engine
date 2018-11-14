@@ -193,7 +193,7 @@ objRelP2Setup qt (RelDef rn ru _) = do
           return (RelInfo rn ObjRel colMapping refqt False, deps)
         _  -> throw400 ConstraintError
                 "more than one foreign key constraint exists on the given column"
-  addFldToCache (fromRel rn) (FIRelationship relInfo) deps qt
+  addRelToCache rn relInfo deps qt
   where
     QualifiedTable sn tn = qt
     fetchFKeyDetail cn =
@@ -288,7 +288,7 @@ arrRelP2Setup qt (RelDef rn ru _) = do
           return (RelInfo rn ArrRel (map swap mapping) refqt False, deps)
         _  -> throw400 ConstraintError
                 "more than one foreign key constraint exists on the given column"
-  addFldToCache (fromRel rn) (FIRelationship relInfo) deps qt
+  addRelToCache rn relInfo deps qt
   where
     QualifiedTable sn tn = qt
     fetchFKeyDetail refsn reftn refcn = Q.listQ [Q.sql|
@@ -354,7 +354,7 @@ purgeRelDep d = throw500 $ "unexpected dependency of relationship : "
 dropRelP2 :: (P2C m) => DropRel -> [SchemaObjId] -> m RespBody
 dropRelP2 (DropRel qt rn _) depObjs = do
   mapM_ purgeRelDep depObjs
-  delFldFromCache (fromRel rn) qt
+  delRelFromCache rn qt
   liftTx $ delRelFromCatalog qt rn
   return successMsg
 

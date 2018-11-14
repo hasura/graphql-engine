@@ -169,7 +169,7 @@ purgeDep schemaObjId = case schemaObjId of
 
   (SOTableObj qt (TORel rn))     -> do
     liftTx $ delRelFromCatalog qt rn
-    delFldFromCache (fromRel rn) qt
+    delRelFromCache rn qt
 
   (SOQTemplate qtn)              -> do
     liftTx $ delQTemplateFromCatalog qtn
@@ -191,7 +191,7 @@ processTableChanges ti tableDiff = do
   -- for all the dropped columns
   forM_ droppedCols $ \droppedCol ->
     -- Drop the column from the cache
-    delFldFromCache (fromPGCol droppedCol) tn
+    delColFromCache droppedCol tn
 
   -- In the newly added columns check that there is no conflict with relationships
   forM_ addedCols $ \colInfo@(PGColInfo colName _ _) ->
@@ -200,7 +200,7 @@ processTableChanges ti tableDiff = do
         throw400 AlreadyExists $ "cannot add column " <> colName
         <<> " in table " <> tn <<>
         " as a relationship with the name already exists"
-      _ -> addFldToCache (fromPGCol colName) (FIColumn colInfo) [] tn
+      _ -> addColToCache colName colInfo tn
 
   sc <- askSchemaCache
   -- for rest of the columns
@@ -212,15 +212,15 @@ processTableChanges ti tableDiff = do
            let colId   = SOTableObj tn $ TOCol oColName
                depObjs = getDependentObjsWith (== "on_type") sc colId
            if null depObjs
-             then updateFldInCache oColName $ FIColumn nci
+             then updateFldInCache oColName nci
              else throw400 DependencyError $ "cannot change type of column " <> oColName <<> " in table "
                   <> tn <<> " because of the following dependencies : " <>
                   reportSchemaObjs depObjs
        | otherwise -> return ()
   where
     updateFldInCache cn ci = do
-      delFldFromCache (fromPGCol cn) tn
-      addFldToCache (fromPGCol cn) ci [] tn
+      delColFromCache cn tn
+      addColToCache cn ci tn
     tn = tiName ti
     TableDiff mNewName droppedCols addedCols alteredCols _ = tableDiff
 
