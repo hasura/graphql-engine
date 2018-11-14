@@ -117,6 +117,30 @@ Aggregate Object :-
         field
         ..
       }
+      stddev {
+        field
+        ..
+      }
+      stddev_samp {
+        field
+        ..
+      }
+      stddev_pop {
+        field
+        ..
+      }
+      variance {
+        field
+        ..
+      }
+      var_samp {
+        field
+        ..
+      }
+      var_pop {
+        field
+        ..
+      }
       max {
         field
         ..
@@ -136,6 +160,8 @@ Aggregate Object :-
     }
   }
 
+(For more details on aggregate functions, refer to `Postgres docs <https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE>`_.)
+
 E.g.
 
 .. code-block:: graphql
@@ -148,6 +174,24 @@ E.g.
        }
        avg {
          id # avg aggregate on id
+       }
+       stddev {
+         id # stddev aggregate on id
+       }
+       stddev_samp {
+         id # stddev_samp aggregate on id
+       }
+       stddev_pop {
+         id # stddev_pop aggregate on id
+       }
+       variance {
+         id # variance aggregate on id
+       }
+       var_samp {
+         id # var_samp aggregate on id
+       }
+       var_pop {
+         id # var_pop aggregate on id
        }
        max {
          id # max aggregate on id
