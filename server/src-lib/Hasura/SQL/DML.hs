@@ -238,6 +238,19 @@ jsonType = AnnType "json"
 jsonbType :: AnnType
 jsonbType = AnnType "jsonb"
 
+data CountType
+  = CTStar
+  | CTSimple ![PGCol]
+  | CTDistinct ![PGCol]
+  deriving(Show, Eq)
+
+instance ToSQL CountType where
+  toSQL CTStar            = "*"
+  toSQL (CTSimple cols)   =
+    paren $ ", " <+> cols
+  toSQL (CTDistinct cols) =
+    "DISTINCT" <-> paren (", " <+> cols)
+
 data SQLExp
   = SEPrep !Int
   | SELit !T.Text
@@ -255,6 +268,7 @@ data SQLExp
   | SEBool !BoolExp
   | SEExcluded !T.Text
   | SEArray ![SQLExp]
+  | SECount !CountType
   deriving (Show, Eq)
 
 newtype Alias
@@ -269,6 +283,9 @@ instance ToSQL Alias where
 
 toAlias :: (IsIden a) => a -> Alias
 toAlias = Alias . toIden
+
+countStar :: SQLExp
+countStar = SECount CTStar
 
 instance ToSQL SQLExp where
   toSQL (SEPrep argNumber) =
@@ -304,10 +321,15 @@ instance ToSQL SQLExp where
                          <> toSQL (PGCol t)
   toSQL (SEArray exps) = "ARRAY" <> TB.char '['
                          <> (", " <+> exps) <> TB.char ']'
+  toSQL (SECount ty) = "COUNT" <> paren (toSQL ty)
 
 intToSQLExp :: Int -> SQLExp
 intToSQLExp =
   SEUnsafe . T.pack . show
+
+annotateExp :: SQLExp -> PGColType -> SQLExp
+annotateExp sqlExp =
+  SETyAnn sqlExp . AnnType . T.pack . show
 
 data Extractor = Extractor !SQLExp !(Maybe Alias)
                deriving (Show, Eq)
@@ -439,6 +461,7 @@ data BoolExp
   | BENull !SQLExp
   | BENotNull !SQLExp
   | BEExists !Select
+  | BEEqualsAny !SQLExp ![SQLExp]
   deriving (Show, Eq)
 
 -- removes extraneous 'AND true's
@@ -483,6 +506,10 @@ instance ToSQL BoolExp where
     paren (toSQL v) <-> "IS NOT NULL"
   toSQL (BEExists sel) =
     "EXISTS " <-> paren (toSQL sel)
+  -- special case to handle 'lhs = ANY(ARRAY[..])'
+  toSQL (BEEqualsAny l rhsExps) =
+    paren (toSQL l) <-> toSQL SEQ
+    <-> toSQL (SEFnApp "ANY" [SEArray rhsExps] Nothing)
 
 data BinOp = AndOp
            | OrOp

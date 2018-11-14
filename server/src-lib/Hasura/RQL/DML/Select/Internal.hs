@@ -101,12 +101,15 @@ data PGColFld
 
 type ColFlds = [(T.Text, PGColFld)]
 
+data AggOp
+  = AggOp
+  { _aoOp   :: !T.Text
+  , _aoFlds :: !ColFlds
+  } deriving (Show, Eq)
+
 data AggFld
-  = AFCount
-  | AFSum !ColFlds
-  | AFAvg !ColFlds
-  | AFMax !ColFlds
-  | AFMin !ColFlds
+  = AFCount !S.CountType
+  | AFOp !AggOp
   | AFExp !T.Text
   deriving (Show, Eq)
 
@@ -165,14 +168,11 @@ aggFldToExp aggFlds = jsonRow
     jsonRow = S.applyJsonBuildObj (concatMap aggToFlds aggFlds)
     withAls fldName sqlExp = [S.SELit fldName, sqlExp]
     aggToFlds (t, fld) = withAls t $ case fld of
-      AFCount       -> S.SEUnsafe "count(*)"
-      AFSum sumFlds -> colFldsToObj "sum" sumFlds
-      AFAvg avgFlds -> colFldsToObj "avg" avgFlds
-      AFMax maxFlds -> colFldsToObj "max" maxFlds
-      AFMin minFlds -> colFldsToObj "min" minFlds
-      AFExp e       -> S.SELit e
+      AFCount cty -> S.SECount cty
+      AFOp aggOp  -> aggOpToObj aggOp
+      AFExp e     -> S.SELit e
 
-    colFldsToObj op flds =
+    aggOpToObj (AggOp op flds) =
       S.applyJsonBuildObj $ concatMap (colFldsToExtr op) flds
 
     colFldsToExtr op (t, PCFCol col) =
@@ -442,14 +442,17 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
            )
       TAFExp _ -> (HM.fromList obExtrs, HM.empty, HM.empty, HM.empty)
 
-    fetchExtrFromAggFld AFCount         = []
-    fetchExtrFromAggFld (AFSum sumFlds) = colFldsToExps sumFlds
-    fetchExtrFromAggFld (AFAvg avgFlds) = colFldsToExps avgFlds
-    fetchExtrFromAggFld (AFMax maxFlds) = colFldsToExps maxFlds
-    fetchExtrFromAggFld (AFMin minFlds) = colFldsToExps minFlds
-    fetchExtrFromAggFld (AFExp _)       = []
+    fetchExtrFromAggFld (AFCount cty) = countTyToExps cty
+    fetchExtrFromAggFld (AFOp aggOp)  = aggOpToExps aggOp
+    fetchExtrFromAggFld (AFExp _)     = []
 
-    colFldsToExps = mapMaybe (mkColExp . snd)
+    countTyToExps S.CTStar            = []
+    countTyToExps (S.CTSimple cols)   = colsToExps cols
+    countTyToExps (S.CTDistinct cols) = colsToExps cols
+
+    colsToExps = mapMaybe (mkColExp . PCFCol)
+
+    aggOpToExps = mapMaybe (mkColExp . snd) . _aoFlds
 
     mkColExp (PCFCol c) =
       let qualCol = S.mkQIdenExp (mkBaseTableAls pfx) (toIden c)
