@@ -3,7 +3,7 @@ Adding custom business logic (remote schemas)
 
 Hasura GraphQL engine provides instant GraphQL APIs over the tables and views of any Postgres database by auto-generating the CRUD resolvers. However, sometimes you may need additional resolvers to support some use cases. 
 
-Here are a couple of common use cases and examples of the resultant queries that are possible when these use cases have been implemented:
+Here are a couple of common use cases:
 
 
 - Customizing mutations (e.g. running validations before inserts)
@@ -14,23 +14,24 @@ These use cases can be handling by writing resolvers in a custom GraphQL server 
 
 .. image:: ../../../img/graphql/manual/business-logic/schema-stitching-v1-arch-diagram.png
 
-Implementing this use case will let a frontend app query top-level nodes from any of the disparate schemas from a single GraphQL endpoint:
+The combined schema will let a frontend app query top-level nodes from any of the merged schemas from the same GraphQL endpoint:
 
 .. code-block:: graphql
       
-  # Top level node from GraphQL Engine's schema
-  query {
-    author {
-      id
-      city_name
-    }
-  }
-
-  # A new top level node from another GraphQL schema
+  # query a new top level node from another GraphQL schema
   query {
     city_weather {
       city_name
       min_temp
+    }
+  }
+
+  # invoke business logic (e.g. payment) in a remote schema's resolver
+  mutation {
+    insert_payment {
+      order_id
+      total_amount
+      ...
     }
   }
 
