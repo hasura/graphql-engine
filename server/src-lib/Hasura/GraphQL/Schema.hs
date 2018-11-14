@@ -5,8 +5,6 @@
 {-# LANGUAGE MultiWayIf            #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
-{-# LANGUAGE TupleSections         #-}
 
 module Hasura.GraphQL.Schema
   ( mkGCtxMap
@@ -1566,7 +1564,7 @@ checkConflictingNodes gCtx remoteCtx = do
     tyMsg ty = "types: [" <> nodesTxt ty <> "] already exist in current graphql schema"
     nodesMsg n = "nodes : [" <> nodesTxt n <> "] already exist in current graphql schema"
     nodesTxt nodes = T.intercalate ", " $ map G.unName nodes
-    builtin = ["__type", "__schema", "__typename", "Query", "Mutation"]
+    builtin = ["__type", "__schema", "__typename", "Query", "Mutation", "query_root", "mutation_root"]
     builtinTy = [ "__Directive"
                 , "__DirectiveLocation"
                 , "__EnumValue"
@@ -1577,6 +1575,8 @@ checkConflictingNodes gCtx remoteCtx = do
                 , "__TypeKind"
                 , "Query"
                 , "Mutation"
+                , "query_root"
+                , "mutation_root"
                 , "Int"
                 , "Float"
                 , "String"
