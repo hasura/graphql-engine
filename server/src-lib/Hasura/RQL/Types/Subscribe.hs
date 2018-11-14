@@ -29,9 +29,10 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
-import           Text.Regex                 (matchRegex, mkRegex)
 
+import qualified Data.ByteString.Lazy       as LBS
 import qualified Data.Text                  as T
+import qualified Text.Regex.TDFA            as TDFA
 
 type TriggerName = T.Text
 type TriggerId   = T.Text
@@ -100,11 +101,11 @@ instance FromJSON CreateEventTriggerQuery where
     webhook   <- o .: "webhook"
     headers   <- o .:? "headers"
     replace   <- o .:? "replace" .!= False
-    let regex = mkRegex "^\\w+$"
-        mName = matchRegex regex (T.unpack name)
-    case mName of
-      Just _  -> return ()
-      Nothing -> fail "only alphanumeric and underscore allowed for name"
+    let regex = "^[A-Za-z]+[A-Za-z0-9_\\-]*$" :: LBS.ByteString
+        compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
+        isMatch = TDFA.match compiledRegex (T.unpack name)
+    if isMatch then return ()
+      else fail "only alphanumeric and underscore allowed for name"
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"

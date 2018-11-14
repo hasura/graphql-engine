@@ -130,7 +130,7 @@ library
                      , auto-update
 
                      -- regex related
-                     , regex-compat
+                     , regex-tdfa >= 1.2
 
   exposed-modules:     Hasura.Server.App
                      , Hasura.Server.Auth

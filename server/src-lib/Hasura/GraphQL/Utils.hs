@@ -21,11 +21,12 @@ module Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
 
+import qualified Data.ByteString.Lazy          as LBS
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Text.Regex                    as R
+import qualified Text.Regex.TDFA               as TDFA
 
 showName :: G.Name -> Text
 showName name = "\"" <> G.unName name <> "\""
@@ -89,6 +90,6 @@ showNames names =
 -- Ref: http://facebook.github.io/graphql/June2018/#sec-Names
 isValidName :: G.Name -> Bool
 isValidName =
-  isJust . R.matchRegex regex . T.unpack . G.unName
+  TDFA.match compiledRegex . T.unpack . G.unName
   where
-    regex = R.mkRegex "^[_a-zA-Z][_a-zA-Z0-9]*$"
+    compiledRegex = TDFA.makeRegex ("^[_a-zA-Z][_a-zA-Z0-9]*$" ::LBS.ByteString) :: TDFA.Regex
