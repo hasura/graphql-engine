@@ -54,7 +54,7 @@ mkMutFldExp :: QualifiedTable -> Bool -> MutFld -> S.SQLExp
 mkMutFldExp qt singleObj = \case
   MCount -> S.SESelect $
     S.mkSelect
-    { S.selExtr = [S.Extractor (S.SEUnsafe "count(*)") Nothing]
+    { S.selExtr = [S.Extractor S.countStar Nothing]
     , S.selFrom = Just $ S.FromExp $ pure frmItem
     }
   MExp t -> S.SELit t

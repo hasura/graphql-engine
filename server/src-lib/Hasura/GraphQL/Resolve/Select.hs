@@ -10,6 +10,7 @@ module Hasura.GraphQL.Resolve.Select
   ( convertSelect
   , convertSelectByPKey
   , convertAggSelect
+  , parseColumns
   , withSelSet
   , fromSelSet
   , fieldAsPath
@@ -32,6 +33,7 @@ import qualified Hasura.SQL.DML                    as S
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
+import           Hasura.GraphQL.Schema             (isAggFld)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Internal           (onlyPositiveInt)
@@ -199,6 +201,29 @@ convertSelectByPKey qt permFilter fld = do
   return $ RS.selectP2 True (selData, prepArgs)
 
 -- agg select related
+parseColumns :: MonadError QErr m => AnnGValue -> m [PGCol]
+parseColumns val =
+  flip withArray val $ \_ vals ->
+    forM vals $ \v -> do
+      (_, enumVal) <- asEnumVal v
+      return $ PGCol $ G.unName $ G.unEnumValue enumVal
+
+convertCount :: MonadError QErr m => ArgsMap -> m S.CountType
+convertCount args = do
+  columnsM <- withArgM args "columns" parseColumns
+  isDistinct <- or <$> withArgM args "distinct" parseDistinct
+  maybe (return S.CTStar) (mkCType isDistinct) columnsM
+  where
+    parseDistinct v = do
+      (_, val) <- asPGColVal v
+      case val of
+        PGValBoolean b -> return b
+        _              ->
+          throw500 "expecting Boolean for \"distinct\""
+
+    mkCType isDistinct cols = return $
+      bool (S.CTSimple cols) (S.CTDistinct cols) isDistinct
+
 convertColFlds
   :: Monad m => G.NamedType -> SelSet -> m RS.ColFlds
 convertColFlds ty selSet =
@@ -216,12 +241,14 @@ convertAggFld ty selSet =
         fSelSet = _fSelSet fld
     case _fName fld of
       "__typename" -> return $ RS.AFExp $ G.unName $ G.unNamedType ty
-      "count"      -> return RS.AFCount
-      "sum"        -> RS.AFSum <$> convertColFlds fType fSelSet
-      "avg"        -> RS.AFAvg <$> convertColFlds fType fSelSet
-      "max"        -> RS.AFMax <$> convertColFlds fType fSelSet
-      "min"        -> RS.AFMin <$> convertColFlds fType fSelSet
-      G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
+      "count"      -> RS.AFCount <$> convertCount (_fArguments fld)
+      n            -> do
+        colFlds <- convertColFlds fType fSelSet
+        unless (isAggFld n) $ throwInvalidFld n
+        return $ RS.AFOp $ RS.AggOp (G.unName n) colFlds
+  where
+      throwInvalidFld (G.Name t) =
+        throw500 $ "unexpected field in _aggregate node: " <> t
 
 fromAggField
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
