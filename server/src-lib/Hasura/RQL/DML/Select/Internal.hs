@@ -101,16 +101,15 @@ data PGColFld
 
 type ColFlds = [(T.Text, PGColFld)]
 
+data AggOp
+  = AggOp
+  { _aoOp   :: !T.Text
+  , _aoFlds :: !ColFlds
+  } deriving (Show, Eq)
+
 data AggFld
   = AFCount !S.CountType
-  | AFSum !ColFlds
-  | AFAvg !ColFlds
-  | AFStddev !ColFlds
-  | AFStddevPop !ColFlds
-  | AFVariance !ColFlds
-  | AFVarPop !ColFlds
-  | AFMax !ColFlds
-  | AFMin !ColFlds
+  | AFOp !AggOp
   | AFExp !T.Text
   deriving (Show, Eq)
 
@@ -169,18 +168,11 @@ aggFldToExp aggFlds = jsonRow
     jsonRow = S.applyJsonBuildObj (concatMap aggToFlds aggFlds)
     withAls fldName sqlExp = [S.SELit fldName, sqlExp]
     aggToFlds (t, fld) = withAls t $ case fld of
-      AFCount cty               -> S.SECount cty
-      AFSum sumFlds             -> colFldsToObj "sum" sumFlds
-      AFAvg avgFlds             -> colFldsToObj "avg" avgFlds
-      AFStddev stddevFlds       -> colFldsToObj "stddev" stddevFlds
-      AFStddevPop stddevPopFlds -> colFldsToObj "stddev_pop" stddevPopFlds
-      AFVariance varFlds        -> colFldsToObj "variance" varFlds
-      AFVarPop varPopFlds       -> colFldsToObj "var_pop" varPopFlds
-      AFMax maxFlds             -> colFldsToObj "max" maxFlds
-      AFMin minFlds             -> colFldsToObj "min" minFlds
-      AFExp e                   -> S.SELit e
+      AFCount cty -> S.SECount cty
+      AFOp aggOp  -> aggOpToObj aggOp
+      AFExp e     -> S.SELit e
 
-    colFldsToObj op flds =
+    aggOpToObj (AggOp op flds) =
       S.applyJsonBuildObj $ concatMap (colFldsToExtr op) flds
 
     colFldsToExtr op (t, PCFCol col) =
@@ -450,16 +442,9 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
            )
       TAFExp _ -> (HM.fromList obExtrs, HM.empty, HM.empty, HM.empty)
 
-    fetchExtrFromAggFld (AFCount cty)         = countTyToExps cty
-    fetchExtrFromAggFld (AFSum sumFlds)       = colFldsToExps sumFlds
-    fetchExtrFromAggFld (AFAvg avgFlds)       = colFldsToExps avgFlds
-    fetchExtrFromAggFld (AFStddev stddevFlds) = colFldsToExps stddevFlds
-    fetchExtrFromAggFld (AFStddevPop stddevPopFlds) = colFldsToExps stddevPopFlds
-    fetchExtrFromAggFld (AFVariance varFlds)  = colFldsToExps varFlds
-    fetchExtrFromAggFld (AFVarPop varPopFlds) = colFldsToExps varPopFlds
-    fetchExtrFromAggFld (AFMax maxFlds)       = colFldsToExps maxFlds
-    fetchExtrFromAggFld (AFMin minFlds)       = colFldsToExps minFlds
-    fetchExtrFromAggFld (AFExp _)             = []
+    fetchExtrFromAggFld (AFCount cty) = countTyToExps cty
+    fetchExtrFromAggFld (AFOp aggOp)  = aggOpToExps aggOp
+    fetchExtrFromAggFld (AFExp _)     = []
 
     countTyToExps S.CTStar            = []
     countTyToExps (S.CTSimple cols)   = colsToExps cols
@@ -467,7 +452,7 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
 
     colsToExps = mapMaybe (mkColExp . PCFCol)
 
-    colFldsToExps = mapMaybe (mkColExp . snd)
+    aggOpToExps = mapMaybe (mkColExp . snd) . _aoFlds
 
     mkColExp (PCFCol c) =
       let qualCol = S.mkQIdenExp (mkBaseTableAls pfx) (toIden c)

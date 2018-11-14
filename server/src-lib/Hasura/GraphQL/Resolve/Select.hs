@@ -33,6 +33,7 @@ import qualified Hasura.SQL.DML                    as S
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
+import           Hasura.GraphQL.Schema             (isAggFld)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Internal           (onlyPositiveInt)
@@ -241,15 +242,13 @@ convertAggFld ty selSet =
     case _fName fld of
       "__typename" -> return $ RS.AFExp $ G.unName $ G.unNamedType ty
       "count"      -> RS.AFCount <$> convertCount (_fArguments fld)
-      "sum"        -> RS.AFSum <$> convertColFlds fType fSelSet
-      "avg"        -> RS.AFAvg <$> convertColFlds fType fSelSet
-      "stddev"     -> RS.AFStddev <$> convertColFlds fType fSelSet
-      "stddev_pop" -> RS.AFStddevPop <$> convertColFlds fType fSelSet
-      "variance"   -> RS.AFVariance <$> convertColFlds fType fSelSet
-      "var_pop"    -> RS.AFVarPop <$> convertColFlds fType fSelSet
-      "max"        -> RS.AFMax <$> convertColFlds fType fSelSet
-      "min"        -> RS.AFMin <$> convertColFlds fType fSelSet
-      G.Name t     -> throw500 $ "unexpected field in _aggregate node: " <> t
+      n            -> do
+        colFlds <- convertColFlds fType fSelSet
+        unless (isAggFld n) $ throwInvalidFld n
+        return $ RS.AFOp $ RS.AggOp (G.unName n) colFlds
+  where
+      throwInvalidFld (G.Name t) =
+        throw500 $ "unexpected field in _aggregate node: " <> t
 
 fromAggField
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)

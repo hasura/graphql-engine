@@ -38,6 +38,16 @@ response:
           id_stddev: 0.7071067811865476
           author_id: 0.7071067811865476
           author_id_stddev: 0.7071067811865476
+        stddev_samp:
+          id: 0.7071067811865476
+          id_stddev_samp: 0.7071067811865476
+          author_id: 0.7071067811865476
+          author_id_stddev_samp: 0.7071067811865476
+        stddev_samp_fields:
+          id: 0.7071067811865476
+          id_stddev_samp: 0.7071067811865476
+          author_id: 0.7071067811865476
+          author_id_stddev_samp: 0.7071067811865476
         stddev_pop:
           id: 0.5
           id_stddev_pop: 0.5
@@ -58,6 +68,16 @@ response:
           id_variance: 0.5
           author_id: 0.5
           author_id_variance: 0.5
+        var_samp:
+          id: 0.5
+          id_var_samp: 0.5
+          author_id: 0.5
+          author_id_var_samp: 0.5
+        var_samp_fields:
+          id: 0.25
+          id_var_pop: 0.25
+          author_id: 0.25
+          author_id_var_pop: 0.25
         var_pop:
           id: 0.25
           id_var_pop: 0.25
@@ -179,6 +199,18 @@ query:
             author_id
             author_id_stddev: author_id
           }
+          stddev_samp {
+            id
+            id_stddev_samp: id
+            author_id
+            author_id_stddev_samp: author_id
+          }
+          stddev_samp_fields: stddev_samp {
+            id
+            id_stddev_samp: id
+            author_id
+            author_id_stddev_samp: author_id
+          }
           stddev_pop {
             id
             id_stddev_pop: id
@@ -202,6 +234,18 @@ query:
             id_variance: id
             author_id
             author_id_variance: author_id
+          }
+          var_samp {
+            id
+            id_var_samp: id
+            author_id
+            author_id_var_samp: author_id
+          }
+          var_samp_fields: var_pop {
+            id
+            id_var_pop: id
+            author_id
+            author_id_var_pop: author_id
           }
           var_pop {
             id

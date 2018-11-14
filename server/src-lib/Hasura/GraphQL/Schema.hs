@@ -17,6 +17,7 @@ module Hasura.GraphQL.Schema
   , InsCtx(..)
   , InsCtxMap
   , RelationInfoMap
+  , isAggFld
   ) where
 
 import           Data.Has
@@ -152,6 +153,17 @@ isRelNullable fim ri = isNullable
     allCols = getValidCols fim
     lColInfos = getColInfos lCols allCols
     isNullable = any pgiIsNullable lColInfos
+
+numAggOps :: [G.Name]
+numAggOps = [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
+            , "variance", "var_samp", "var_pop"
+            ]
+
+compAggOps :: [G.Name]
+compAggOps = ["max", "min"]
+
+isAggFld :: G.Name -> Bool
+isAggFld = flip elem (numAggOps <> compAggOps)
 
 mkColName :: PGCol -> G.Name
 mkColName (PGCol n) = G.Name n
@@ -407,24 +419,8 @@ mkTableAggFldsObj tn numCols compCols =
     distinctInpVal = InpValInfo Nothing "distinct" $ G.toGT $
                      mkScalarTy PGBoolean
 
-    numFlds = bool [ sumFld
-                   , avgFld
-                   , stddevFld
-                   , stddevPopFld
-                   , varianceFld
-                   , varPopFld
-                   ] [] $ null numCols
-    compFlds = bool [maxFld, minFld] [] $ null compCols
-
-    sumFld = mkColOpFld "sum"
-    avgFld = mkColOpFld "avg"
-    stddevFld = mkColOpFld "stddev"
-    stddevPopFld = mkColOpFld "stddev_pop"
-    varianceFld = mkColOpFld "variance"
-    varPopFld = mkColOpFld "var_pop"
-
-    maxFld = mkColOpFld "max"
-    minFld = mkColOpFld "min"
+    numFlds = bool (map mkColOpFld numAggOps) [] $ null numCols
+    compFlds = bool (map mkColOpFld compAggOps) [] $ null compCols
 
     mkColOpFld op = ObjFldInfo Nothing op Map.empty $ G.toGT $
                     mkTableColAggFldsTy op tn
@@ -1284,25 +1280,17 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
     getNumCols = onlyNumCols . lefts
     getCompCols = onlyComparableCols . lefts
     onlyFloat = const $ mkScalarTy PGFloat
+
+    mkTypeMaker "sum" = mkScalarTy
+    mkTypeMaker _     = onlyFloat
+
     mkColAggFldsObjs flds =
       let numCols = getNumCols flds
           compCols = getCompCols flds
-          sumFldsObj = mkTableColAggFldsObj tn "sum" mkScalarTy numCols
-          avgFldsObj = mkTableColAggFldsObj tn "avg" onlyFloat numCols
-          stddevFldsObj = mkTableColAggFldsObj tn "stddev" onlyFloat numCols
-          stddevPopFldsObj = mkTableColAggFldsObj tn "stddev_pop" onlyFloat numCols
-          varianceFldsObj = mkTableColAggFldsObj tn "variance" onlyFloat numCols
-          varPopFldsObj = mkTableColAggFldsObj tn "var_pop" onlyFloat numCols
-          maxFldsObj = mkTableColAggFldsObj tn "max" mkScalarTy compCols
-          minFldsObj = mkTableColAggFldsObj tn "min" mkScalarTy compCols
-          numFldsObjs = bool [ sumFldsObj
-                             , avgFldsObj
-                             , stddevFldsObj
-                             , stddevPopFldsObj
-                             , varianceFldsObj
-                             , varPopFldsObj
-                             ] [] $ null numCols
-          compFldsObjs = bool [maxFldsObj, minFldsObj] [] $ null compCols
+          mkNumObjFld n = mkTableColAggFldsObj tn n (mkTypeMaker n) numCols
+          mkCompObjFld n = mkTableColAggFldsObj tn n mkScalarTy compCols
+          numFldsObjs = bool (map mkNumObjFld numAggOps) [] $ null numCols
+          compFldsObjs = bool (map mkCompObjFld compAggOps) [] $ null compCols
       in numFldsObjs <> compFldsObjs
     -- the fields used in table object
     selObjFldsM = mkFldMap (mkTableTy tn) <$> selFldsM
