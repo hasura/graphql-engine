@@ -78,10 +78,8 @@ module Hasura.RQL.Types.SchemaCache
 
        , addEventTriggerToCache
        , delEventTriggerFromCache
-       , getOpInfo
        , EventTriggerInfo(..)
        , EventTriggerInfoMap
-       , OpTriggerInfo(..)
 
        , TableObjId(..)
        , SchemaObjId(..)
@@ -313,22 +311,11 @@ makeLenses ''RolePermInfo
 
 type RolePermInfoMap = M.HashMap RoleName RolePermInfo
 
-data OpTriggerInfo
-  = OpTriggerInfo
-  { otiTable       :: !QualifiedTable
-  , otiTriggerName :: !TriggerName
-  , otiCols        :: !SubscribeOpSpec
-  , otiDeps        :: ![SchemaDependency]
-  } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''OpTriggerInfo)
-
 data EventTriggerInfo
  = EventTriggerInfo
    { etiId          :: !TriggerId
    , etiName        :: !TriggerName
-   , etiInsert      :: !(Maybe OpTriggerInfo)
-   , etiUpdate      :: !(Maybe OpTriggerInfo)
-   , etiDelete      :: !(Maybe OpTriggerInfo)
+   , etiOpsDef      :: !TriggerOpsDef
    , etiRetryConf   :: !RetryConf
    , etiWebhookInfo :: !WebhookConfInfo
    , etiHeaders     :: ![EventHeaderInfo]
@@ -640,28 +627,16 @@ withPermType PTDelete f = f PADelete
 addEventTriggerToCache
   :: (QErrM m, CacheRWM m)
   => QualifiedTable
-  -> TriggerId
-  -> TriggerName
-  -> TriggerOpsDef
-  -> RetryConf
-  -> WebhookConfInfo
-  -> [EventHeaderInfo]
+  -> EventTriggerInfo
+  -> [SchemaDependency]
   -> m ()
-addEventTriggerToCache qt trid trn tdef rconf webhookInfo headers =
+addEventTriggerToCache qt eti deps = do
   modTableInCache modEventTriggerInfo qt
+  modDepMapInCache (addToDepMap schObjId deps)
   where
+    trn = etiName eti
     modEventTriggerInfo ti = do
-      let eti = EventTriggerInfo
-                trid
-                trn
-                (getOpInfo trn ti $ tdInsert tdef)
-                (getOpInfo trn ti $ tdUpdate tdef)
-                (getOpInfo trn ti $ tdDelete tdef)
-                rconf
-                webhookInfo
-                headers
-          etim = tiEventTriggerInfoMap ti
-      -- fail $ show (toJSON eti)
+      let etim = tiEventTriggerInfoMap ti
       return $ ti { tiEventTriggerInfoMap = M.insert trn eti etim}
     schObjId = SOTableObj qt $ TOTrigger trn
 
@@ -752,27 +727,3 @@ getDependentObjsWith f sc objId =
       \(SchemaDependency depId reason) -> depId == objId && f reason
 
     -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc
-
-getOpInfo :: TriggerName -> TableInfo -> Maybe SubscribeOpSpec -> Maybe OpTriggerInfo
-getOpInfo trn ti mos= fromSubscrOpSpec <$> mos
-  where
-    fromSubscrOpSpec :: SubscribeOpSpec -> OpTriggerInfo
-    fromSubscrOpSpec os =
-      let qt = tiName ti
-          tableDep = SchemaDependency (SOTable qt) ("event trigger " <> trn <> " is dependent on table")
-          cols = getColsFromSub $ sosColumns os
-          colDeps = map (\col ->
-                           SchemaDependency (SOTableObj qt (TOCol col))
-                          ("event trigger " <> trn <> " is dependent on column " <> getPGColTxt col))
-                    (toList cols)
-          payload = maybe HS.empty getColsFromSub (sosPayload os)
-          payloadDeps = map (\col ->
-                               SchemaDependency (SOTableObj qt (TOCol col))
-                               ("event trigger " <> trn <> " is dependent on column " <> getPGColTxt col))
-                        (toList payload)
-          schemaDeps = tableDep : colDeps ++ payloadDeps
-        in OpTriggerInfo qt trn os schemaDeps
-        where
-          getColsFromSub sc = case sc of
-            SubCStar         -> HS.fromList []
-            SubCArray pgcols -> HS.fromList pgcols

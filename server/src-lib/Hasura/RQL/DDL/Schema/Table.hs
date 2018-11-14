@@ -468,11 +468,9 @@ runSqlP2 (RunSQL t cascade) = do
     let tn = tiName ti
         cols = getCols $ tiFieldInfoMap ti
     forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
-      let insert = otiCols <$> etiInsert eti
-          update = otiCols <$> etiUpdate eti
-          delete = otiCols <$> etiDelete eti
+      let opsDef = etiOpsDef eti
           trid = etiId eti
-      liftTx $ mkTriggerQ trid trn tn cols (TriggerOpsDef insert update delete)
+      liftTx $ mkTriggerQ trid trn tn cols opsDef
 
   return $ encode (res :: RunSQLRes)
 
