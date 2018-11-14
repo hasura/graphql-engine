@@ -154,7 +154,7 @@ parseOnConflict inpCols val = withPathK "on_conflict" $
   flip withObject val $ \_ obj -> do
     actionM <- forM (OMap.lookup "action" obj) parseAction
     constraint <- parseConstraint obj
-    updColsM <- forM (OMap.lookup "update_columns" obj) parseUpdCols
+    updColsM <- forM (OMap.lookup "update_columns" obj) parseColumns
     -- consider "action" if "update_columns" is not mentioned
     return $ mkConflictClause $ case (updColsM, actionM) of
       (Just [], _)             -> RI.CCDoNothing $ Just constraint
@@ -176,11 +176,6 @@ parseOnConflict inpCols val = withPathK "on_conflict" $
            "\"constraint\" is expected, but not found"
       (_, enumVal) <- asEnumVal v
       return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
-
-    parseUpdCols v = flip withArray v $ \_ enumVals ->
-      forM enumVals $ \eVal -> do
-        (_, ev) <- asEnumVal eVal
-        return $ PGCol $ G.unName $ G.unEnumValue ev
 
     mkConflictClause (RI.CCDoNothing constrM) =
       RI.CP1DoNothing $ fmap RI.Constraint constrM
