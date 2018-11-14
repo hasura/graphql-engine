@@ -21,6 +21,9 @@ about this Resource Manager Template.
   :class: no-shadow
   :target: https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-resource-manager%2fazuredeploy.json
 
+(The button takes you to Azure Portal, you might want to :kbd:`Ctrl+Click` to
+open it in new tab)
+
 Pre-requisites
 --------------
 
@@ -28,7 +31,8 @@ The actions mentioned here can be execute using Azure Portal and Azure CLI. But,
 for the sake of simplicity in documentation, we are going to use Azure CLI, so
 that commands can be easily copy pasted and executed.
 
-- Valid Azure Subscription with billing enabled or credits.
+- Valid Azure Subscription with billing enabled or credits. (`click
+  here <https://azure.microsoft.com/en-us/free/>`__ for a free trial)
 - `Azure CLI <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli>`_.
 
 Once the CLI is installed, login to your Azure account:
@@ -173,6 +177,44 @@ Replace ``<dns-name-label>`` with the label given earlier.
 .. image:: https://storage.googleapis.com/graphql-engine-cdn.hasura.io/main-repo/img/azure_arm_aci_console_graphiql.png
    :class: no-shadow
    :alt: Hasura console
+
+You can create tables and test your GraphQL queries here. Checkout :ref:`Making
+your first GraphQL Query <first_graphql_query>` for a detailed guide.
+
+Troubleshooting
+---------------
+
+If your password contains special characters, check if they were URL encoded
+and given as the environment variables. Also check for proper escaping of
+these characters based on your shell.
+
+You can check the logs to see if the database credentials are proper and if
+Hasura is able to connect to the database.
+
+If you're using an existing/external database, make sure the firewall rules for
+the database allow connection for Azure services.
+
+Checking logs
+^^^^^^^^^^^^^
+
+If the console is not loading, you might want to check logs and see if something
+is wrong:
+
+.. code-block:: bash
+
+   az container logs --resource-group hasura \
+      --name hasura-graphql-engine \
+      --container-name hasura-graphql-engine
+   # use --follow flag to stream logs
+
+Tearing down
+------------
+
+To clean-up, just delete the resource group:
+
+.. code-block:: bash
+
+   az group delete --resource-group hasura
 
 References
 ----------

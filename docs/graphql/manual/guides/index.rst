@@ -6,7 +6,7 @@ Deployment guides
 
 - :doc:`Deploy on Digital Ocean using Docker <deployment/digital-ocean>`
 - :doc:`Digital Ocean One-click App <deployment/digital-ocean-one-click>`
-- :doc:`Azure Container Instances with Postgres <azure-container-instances-postgres>`
+- :doc:`Azure Container Instances with Postgres <deployment/azure-container-instances-postgres>`
 - `Blog: Instant GraphQL on AWS RDS <https://blog.hasura.io/instant-graphql-on-aws-rds-1edfb85b5985>`__
 
 .. note::
