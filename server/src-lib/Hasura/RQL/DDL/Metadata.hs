@@ -218,8 +218,6 @@ applyQP2 (ReplaceMetadata tables templates schemas) = do
     -- tables and views
     indexedForM_ (map _tmTable tables) $ \tableName ->
       void $ DT.trackExistingTableOrViewP2 tableName False False
-      -- FIXME: after clearing the cache, gctx should be built again, and passed to this!!
-      -- withReaderT (const $ GS.emptyGCtx) $ DT.trackExistingTableOrViewP2 tableName False
 
     -- Relationships
     indexedForM_ tables $ \table -> do
@@ -257,7 +255,7 @@ applyQP2 (ReplaceMetadata tables templates schemas) = do
   -- custom resolvers
   withPathK "remote_schemas" $
     indexedForM_ schemas $ \conf ->
-      void $ DRS.addRemoteSchemaP2 False conf
+      void $ DRS.addRemoteSchemaP2 conf
 
   return successMsg
 

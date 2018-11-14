@@ -1536,8 +1536,17 @@ checkConflictingNodes
   :: (MonadError QErr m)
   => GCtx -> RemoteGCtx -> m ()
 checkConflictingNodes gCtx remoteCtx = do
-  -- TODO: can types have same names?
+  -- check type conflicts
   let typeMap = _gTypes gCtx
+      types = map G.unNamedType $ Map.keys typeMap
+      rmTypes = filter (`notElem` builtinTy) $
+                map G.unNamedType $ Map.keys $ _rgTypes remoteCtx
+      conflictedTypes = filter (`elem` types) rmTypes
+
+  unless (null conflictedTypes) $
+    throw400 RemoteSchemaConflicts $ tyMsg conflictedTypes
+
+  -- check node conflicts
   let rmQRoot = _otiFields $ _rgQueryRoot remoteCtx
       rmMRoot = _otiFields <$> _rgMutationRoot remoteCtx
       rmRoots = filter (`notElem` builtin) . Map.keys <$> fmap (Map.union rmQRoot) rmMRoot
@@ -1550,20 +1559,39 @@ checkConflictingNodes gCtx remoteCtx = do
     (Just rmR, Just hR) -> do
       let conflictedNodes = filter (`elem` hR) rmR
       unless (null conflictedNodes) $
-        throw400 RemoteSchemaError $
-        "nodes: [" <> nodesTxt conflictedNodes
-        <> "] already exists in current graphql schema"
+        throw400 RemoteSchemaConflicts $ nodesMsg conflictedNodes
     _ -> return ()
+
   where
+    tyMsg ty = "types: [" <> nodesTxt ty <> "] already exist in current graphql schema"
+    nodesMsg n = "nodes : [" <> nodesTxt n <> "] already exist in current graphql schema"
     nodesTxt nodes = T.intercalate ", " $ map G.unName nodes
     builtin = ["__type", "__schema", "__typename", "Query", "Mutation"]
+    builtinTy = [ "__Directive"
+                , "__DirectiveLocation"
+                , "__EnumValue"
+                , "__Field"
+                , "__InputValue"
+                , "__Schema"
+                , "__Type"
+                , "__TypeKind"
+                , "Query"
+                , "Mutation"
+                , "Int"
+                , "Float"
+                , "String"
+                , "Boolean"
+                , "ID"
+                ]
+
 
 checkConflictingNode
   :: (MonadError QErr m)
   => GCtx -> G.Name -> m ()
 checkConflictingNode gCtx node = do
-  -- TODO: can types have same names?
   let typeMap = _gTypes gCtx
+      --types = map G.unNamedType $ Map.keys typeMap
+  --when (node `elem` types) $ throw400 RemoteSchemaError msg
   let hQR = _otiFields <$>
             join (getObjTyM <$> Map.lookup (G.NamedType "query_root") typeMap)
       hMR = _otiFields <$>
@@ -1572,9 +1600,10 @@ checkConflictingNode gCtx node = do
   case hRoots of
     Just hR ->
       when (node `elem` hR) $
-        throw400 RemoteSchemaError $
-        "node " <> G.unName node <> " already exists in current graphql schema"
+        throw400 RemoteSchemaConflicts msg
     _ -> return ()
+  where
+    msg = "node " <> G.unName node <> " already exists in current graphql schema"
 
 
 mkGCtxMap

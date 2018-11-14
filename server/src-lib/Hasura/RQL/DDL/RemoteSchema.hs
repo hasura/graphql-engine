@@ -23,7 +23,7 @@ import qualified Hasura.GraphQL.Schema       as GS
 instance HDBQuery AddRemoteSchemaQuery where
   type Phase1Res AddRemoteSchemaQuery = RemoteSchemaDef
   phaseOne   = addRemoteSchemaP1
-  phaseTwo _ = addRemoteSchemaP2 True
+  phaseTwo _ = addRemoteSchemaP2
   schemaCachePolicy = SCPReload
 
 addRemoteSchemaP1
@@ -49,19 +49,18 @@ addRemoteSchemaP2
      , MonadIO m
      , HasHttpManager m
      )
-  => Bool
-  -> RemoteSchemaDef
+  => RemoteSchemaDef
   -> m BL.ByteString
-addRemoteSchemaP2 checkConflict def@(RemoteSchemaDef name eUrlVal headers _) = do
+addRemoteSchemaP2 def@(RemoteSchemaDef name eUrlVal headers _) = do
   url <- either return getUrlFromEnv eUrlVal
   manager <- askHttpManager
   sc <- askSchemaCache
   let gCtxMap = scGCtxMap sc
       defRemoteGCtx = scDefaultRemoteGCtx sc
   remoteGCtx <- fetchRemoteSchema manager url headers
-  when checkConflict $
-    forM_ (Map.toList gCtxMap) $ \(_, gCtx) ->
-      GS.checkConflictingNodes gCtx remoteGCtx
+  --when checkConflict $
+  forM_ (Map.toList gCtxMap) $ \(_, gCtx) ->
+    GS.checkConflictingNodes gCtx remoteGCtx
   newGCtxMap <- mergeRemoteSchema gCtxMap remoteGCtx
   defGCtx <- mergeGCtx defRemoteGCtx remoteGCtx
   liftTx $ addRemoteSchemaToCatalog name def
