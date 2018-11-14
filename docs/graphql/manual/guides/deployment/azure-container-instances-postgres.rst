@@ -11,9 +11,7 @@ Database for PostgreSQL server <https://azure.microsoft.com/en-us/services/postg
 One-click deploy using ARM Template
 -----------------------------------
 
-All resources mentioned in this guide can be deployed using the one-click
-the button below. `Read more <https://github.com/hasura/graphql-engine/tree/master/install-manifests/azure-resource-manager>`__
-about this Resource Manager Template.
+All resources mentioned in this guide can be deployed using the one-click button below.
 
 .. image:: http://azuredeploy.net/deploybutton.png
   :width: 200px
@@ -21,19 +19,19 @@ about this Resource Manager Template.
   :class: no-shadow
   :target: https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-resource-manager%2fazuredeploy.json
 
-(The button takes you to Azure Portal, you might want to :kbd:`Ctrl+Click` to
-open it in new tab)
+(This button takes you to the Azure Portal, you might want to :kbd:`Ctrl+Click` to
+open it in a new tab. Read more about this Resource Manager Template `here <https://github.com/hasura/graphql-engine/tree/master/install-manifests/azure-resource-manager>`__.)
 
 Pre-requisites
 --------------
 
-The actions mentioned here can be execute using Azure Portal and Azure CLI. But,
-for the sake of simplicity in documentation, we are going to use Azure CLI, so
-that commands can be easily copy pasted and executed.
-
 - Valid Azure Subscription with billing enabled or credits. (`click
   here <https://azure.microsoft.com/en-us/free/>`__ for a free trial)
 - `Azure CLI <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli>`_.
+
+The actions mentioned below can be executed using Azure Portal and Azure CLI. But,
+for the sake of simplicity in documentation, we are going to use Azure CLI, so
+that commands can be easily copy pasted and executed.
 
 Once the CLI is installed, login to your Azure account:
 
@@ -45,7 +43,7 @@ Create a new Resource Group
 ---------------------------
 
 As the name suggestes, Resource Groups are used to group together various
-resources on Azure. We'll create a resource group called ``hasura`` at
+resources on Azure. We'll create a resource group called ``hasura`` at the
 ``westus`` location.
 
 .. code-block:: bash
@@ -76,7 +74,7 @@ Once the resource group is created, we create a Postgres server instance:
 
    Choose a unique name for ``<server_name>``. Also choose a strong password for
    ``<server_admin_password>``, including uppercase, lowercase and numeric characters.
-   This is will be required later connect to the database.
+   This will be required later to connect to the database.
    (Make sure you escape the special characters depending on your shell.)
 
 Note down the hostname. It will be shown as below in the output:
@@ -153,8 +151,8 @@ execute the command again.
 Open the Hasura Console
 -----------------------
 
-That's it! Once the deployment is complete, navigate to the container instance
-ip or hostname to open Hasura console:
+That's it! Once the deployment is complete, navigate to the container instance's
+IP or hostname to open Hasura console:
 
 .. code-block:: bash
 
@@ -185,7 +183,7 @@ Troubleshooting
 ---------------
 
 If your password contains special characters, check if they were URL encoded
-and given as the environment variables. Also check for proper escaping of
+and given as environment variables. Also check for proper escaping of
 these characters based on your shell.
 
 You can check the logs to see if the database credentials are proper and if
