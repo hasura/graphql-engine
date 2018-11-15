@@ -32,11 +32,11 @@ based on a typical author/article schema for reference.
 
   simple-object-queries
   nested-object-queries
-  aggregations-queries
+  aggregation-queries
   query-filters
   sorting
   pagination
   Using multiple arguments <multiple-arguments>
   multiple-queries
-  aggregations
+  derived-data
   control-access
