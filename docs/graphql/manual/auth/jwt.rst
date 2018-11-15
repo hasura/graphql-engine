@@ -316,6 +316,26 @@ And use it in the ``key`` field:
     "
         }
 
+Add rules for custom JWT claims
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In the Auth0 dashboard, navigate to "Rules". Add the following rules to add our custom JWT claims:
+
+.. code-block:: javascript
+
+
+    function (user, context, callback) {
+      const namespace = "https://hasura.io/jwt/claims";
+      context.idToken[namespace] = 
+        { 
+          'x-hasura-default-role': 'user',
+          // do some custom logic to decide allowed roles
+          'x-hasura-allowed-roles': ['user'],
+          'x-hasura-user-id': user.user_id
+        };
+      callback(null, user, context);
+    }
+
 Generate JWT Config
 ^^^^^^^^^^^^^^^^^^^
 The JWT Config to be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt-secret`` flag can be generated using the following UI https://hasura.io/jwt-config.
