@@ -8,7 +8,6 @@ module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
   , pgColValToBoolExpG
   , pgColValToBoolExp
-  -- , convertBoolExpG
   , convertBoolExp
   , prepare
   ) where
@@ -20,8 +19,6 @@ import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Language.GraphQL.Draft.Syntax     as G
 
--- import qualified Hasura.RQL.GBoolExp               as RA
--- import qualified Hasura.RQL.GBoolExp               as RG
 import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.GraphQL.Resolve.Context
@@ -126,16 +123,6 @@ parseBoolExp f annGVal = do
           | otherwise   -> BoolFld <$> parseColExp f nt k v parseOpExps
   return $ BoolAnd $ fromMaybe [] boolExpsM
 
--- convertBoolExpG
---   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
---   => ((PGColType, PGColValue) -> m S.SQLExp)
---   -> QualifiedTable
---   -> AnnGValue
---   -> m AnnBoolExpSQL
--- convertBoolExpG f tn whereArg = do
---   whereExp <- parseBoolExp f whereArg
---   traverse f whereExp
-
 convertBoolExp
   :: AnnGValue
   -> Convert AnnBoolExpSQL
@@ -150,10 +137,10 @@ pgColValToBoolExpG
   -> PGColValMap
   -> m AnnBoolExpSQL
 pgColValToBoolExpG f colValMap = do
-  colExps <- forM colVals $ \(name, valR) -> do
-    (ty, val) <- asPGColVal valR
+  colExps <- forM colVals $ \(name, val) -> do
+    (ty, _) <- asPGColVal val
     let namedTy = mkScalarTy ty
-    BoolFld <$> parseColExp f namedTy name valR parseAsEqOp
+    BoolFld <$> parseColExp f namedTy name val parseAsEqOp
   return $ BoolAnd colExps
   where
     colVals = Map.toList colValMap
