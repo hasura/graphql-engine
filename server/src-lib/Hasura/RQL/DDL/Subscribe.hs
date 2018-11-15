@@ -129,17 +129,17 @@ mkTriggerQ trid trn qt allCols (TriggerOpsDef insert update delete) = do
 addEventTriggerToCatalog
   :: QualifiedTable
   -> [PGColInfo]
-  -> EventTriggerDef
+  -> EventTriggerConf
   -> Q.TxE QErr TriggerId
-addEventTriggerToCatalog qt@(QualifiedTable sn tn) allCols (EventTriggerDef name def webhook rconf mheaders) = do
+addEventTriggerToCatalog qt@(QualifiedTable sn tn) allCols etc@(EventTriggerConf name opsdef _ _ _ _) = do
   ids <- map runIdentity <$> Q.listQE defaultTxErrorHandler [Q.sql|
-                                  INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, definition, webhook, num_retries, retry_interval, headers)
-                                  VALUES ($1, 'table', $2, $3, $4, $5, $6, $7, $8)
+                                  INSERT into hdb_catalog.event_triggers (name, type, schema_name, table_name, configuration)
+                                  VALUES ($1, 'table', $2, $3, $4)
                                   RETURNING id
-                                  |] (name, sn, tn, Q.AltJ $ toJSON def, webhook, toInt64 $ rcNumRetries rconf, toInt64 $ rcIntervalSec rconf, Q.AltJ $ toJSON mheaders) True
+                                  |] (name, sn, tn, Q.AltJ $ toJSON etc) True
 
   trid <- getTrid ids
-  mkTriggerQ trid name qt allCols def
+  mkTriggerQ trid name qt allCols opsdef
   return trid
   where
     getTrid []    = throw500 "could not create event-trigger"
@@ -160,45 +160,22 @@ delEventTriggerFromCatalog trn = do
 updateEventTriggerToCatalog
   :: QualifiedTable
   -> [PGColInfo]
-  -> EventTriggerDef
+  -> EventTriggerConf
   -> Q.TxE QErr TriggerId
-updateEventTriggerToCatalog qt allCols (EventTriggerDef name def webhook rconf mheaders) = do
+updateEventTriggerToCatalog qt allCols etc@(EventTriggerConf name opsdef _ _ _ _) = do
   ids <- map runIdentity <$> Q.listQE defaultTxErrorHandler [Q.sql|
                                   UPDATE hdb_catalog.event_triggers
                                   SET
-                                  definition = $1,
-                                  webhook = $2,
-                                  num_retries = $3,
-                                  retry_interval = $4,
-                                  headers = $5
-                                  WHERE name = $6
+                                  configuration = $1
+                                  WHERE name = $2
                                   RETURNING id
-                                  |] (Q.AltJ $ toJSON def, webhook, toInt64 $ rcNumRetries rconf, toInt64 $ rcIntervalSec rconf, Q.AltJ $ toJSON mheaders, name) True
+                                  |] (Q.AltJ $ toJSON etc, name) True
   trid <- getTrid ids
-  mkTriggerQ trid name qt allCols def
+  mkTriggerQ trid name qt allCols opsdef
   return trid
   where
     getTrid []    = throw500 "could not update event-trigger"
     getTrid (x:_) = return x
-
-
-fetchEventTrigger :: TriggerName -> Q.TxE QErr EventTrigger
-fetchEventTrigger trn = do
-  triggers <- Q.listQE defaultTxErrorHandler [Q.sql|
-                                              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval
-                                              FROM hdb_catalog.event_triggers e
-                                              WHERE e.name = $1
-                                  |] (Identity trn) True
-  getTrigger triggers
-  where
-    getTrigger []    = throw400 NotExists ("could not find event trigger '" <> trn <> "'")
-    getTrigger (x:_) = return $ EventTrigger
-                       (QualifiedTable sn tn)
-                       trn'
-                       tDef
-                       webhook
-                       (RetryConf nr rint)
-      where (sn, tn, trn', Q.AltJ tDef, webhook, nr, rint) = x
 
 fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
 fetchEvent eid = do
@@ -230,8 +207,8 @@ markForDelivery eid =
           WHERE id = $1
           |] (Identity eid) True
 
-subTableP1 :: (P1C m) => CreateEventTriggerQuery -> m (QualifiedTable, Bool, EventTriggerDef)
-subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webhook mheaders replace) = do
+subTableP1 :: (P1C m) => CreateEventTriggerQuery -> m (QualifiedTable, Bool, EventTriggerConf)
+subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webhook webhookFromEnv mheaders replace) = do
   adminOnly
   ti <- askTabInfo qt
   -- can only replace for same table
@@ -244,7 +221,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
   assertCols ti delete
 
   let rconf = fromMaybe (RetryConf defaultNumRetries defaultRetryInterval) retryConf
-  return (qt, replace, EventTriggerDef name (TriggerOpsDef insert update delete) webhook rconf mheaders)
+  return (qt, replace, EventTriggerConf name (TriggerOpsDef insert update delete) webhook webhookFromEnv rconf mheaders)
   where
     assertCols _ Nothing = return ()
     assertCols ti (Just sos) = do
@@ -253,28 +230,44 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
         SubCStar         -> return ()
         SubCArray pgcols -> forM_ pgcols (assertPGCol (tiFieldInfoMap ti) "")
 
+--(QErrM m, CacheRWM m, MonadTx m, MonadIO m)
+
+subTableP2Setup
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m)
+  => QualifiedTable -> TriggerId -> EventTriggerConf -> m ()
+subTableP2Setup qt trid (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
+  webhookConf <- case (webhook, webhookFromEnv) of
+    (Just w, Nothing)    -> return $ WCValue w
+    (Nothing, Just wEnv) -> return $ WCEnv wEnv
+    _                    -> throw500 "expected webhook or webhook_from_env"
+  let headerConfs = fromMaybe [] mheaders
+  webhookInfo <- getWebhookInfoFromConf webhookConf
+  headerInfos <- getHeaderInfosFromConf headerConfs
+  addEventTriggerToCache qt trid name def rconf webhookInfo headerInfos
+
 subTableP2
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m)
-  => QualifiedTable -> Bool -> EventTriggerDef -> m ()
-subTableP2 qt replace q@(EventTriggerDef name def webhook rconf mheaders) = do
+  => QualifiedTable -> Bool -> EventTriggerConf -> m ()
+subTableP2 qt replace etc = do
   allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
   trid <- if replace
     then do
-    delEventTriggerFromCache qt name
-    liftTx $ updateEventTriggerToCatalog qt allCols q
+    delEventTriggerFromCache qt (etcName etc)
+    liftTx $ updateEventTriggerToCatalog qt allCols etc
     else
-    liftTx $ addEventTriggerToCatalog qt allCols q
-  let headerConfs = fromMaybe [] mheaders
-  headerInfos <- getHeaderInfosFromConf headerConfs
-  addEventTriggerToCache qt trid name def rconf webhook headerInfos
+    liftTx $ addEventTriggerToCatalog qt allCols etc
+  subTableP2Setup qt trid etc
 
-subTableP2shim :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => (QualifiedTable, Bool, EventTriggerDef) -> m RespBody
-subTableP2shim (qt, replace, etdef) = do
-  subTableP2 qt replace etdef
+
+subTableP2shim
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m)
+  => (QualifiedTable, Bool, EventTriggerConf) -> m RespBody
+subTableP2shim (qt, replace, etc) = do
+  subTableP2 qt replace etc
   return successMsg
 
 instance HDBQuery CreateEventTriggerQuery where
-  type Phase1Res CreateEventTriggerQuery = (QualifiedTable, Bool, EventTriggerDef)
+  type Phase1Res CreateEventTriggerQuery = (QualifiedTable, Bool, EventTriggerConf)
   phaseOne = subTableP1
   phaseTwo _ = subTableP2shim
   schemaCachePolicy = SCPReload
@@ -316,10 +309,22 @@ getHeaderInfosFromConf = mapM getHeader
     getHeader hconf = case hconf of
       (HeaderConf _ (HVValue val)) -> return $ EventHeaderInfo hconf val
       (HeaderConf _ (HVEnv val))   -> do
-        mEnv <- liftIO $ lookupEnv (T.unpack val)
-        case mEnv of
-          Nothing -> throw400 NotFound $ "environment variable '" <> val <> "' not set"
-          Just envval -> return $ EventHeaderInfo hconf (T.pack envval)
+        envVal <- getEnv val
+        return $ EventHeaderInfo hconf envVal
+
+getWebhookInfoFromConf :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => WebhookConf -> m WebhookConfInfo
+getWebhookInfoFromConf wc = case wc of
+  WCValue w -> return $ WebhookConfInfo wc w
+  WCEnv we -> do
+    envVal <- getEnv we
+    return $ WebhookConfInfo wc envVal
+
+getEnv :: (QErrM m, MonadIO m) => T.Text -> m T.Text
+getEnv env = do
+    mEnv <- liftIO $ lookupEnv (T.unpack env)
+    case mEnv of
+      Nothing -> throw400 NotFound $ "environment variable '" <> env <> "' not set"
+      Just envVal -> return (T.pack envVal)
 
 toInt64 :: (Integral a) => a -> Int64
 toInt64 = fromIntegral

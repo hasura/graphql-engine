@@ -30,7 +30,7 @@ import qualified Database.PG.Query.Connection as Q
 import qualified Network.HTTP.Client          as HTTP
 
 curCatalogVer :: T.Text
-curCatalogVer = "4"
+curCatalogVer = "5"
 
 initCatalogSafe :: UTCTime -> HTTP.Manager -> Q.TxE QErr String
 initCatalogSafe initTime httpMgr =  do
@@ -190,17 +190,42 @@ from2To3 = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id)" () False
 
 -- custom resolver
-from3To4 :: HTTP.Manager -> Q.TxE QErr ()
-from3To4 httpMgr = do
+from4To5 :: HTTP.Manager -> Q.TxE QErr ()
+from4To5 httpMgr = do
   Q.Discard () <- Q.multiQE defaultTxErrorHandler
-    $(Q.sqlFromFile "src-rsr/migrate_from_3_to_4.sql")
+    $(Q.sqlFromFile "src-rsr/migrate_from_4_to_5.sql")
   -- migrate metadata
   tx <- liftEither $ buildTxAny adminUserInfo
-                     emptySchemaCache httpMgr migrateMetadataFrom3
+                     emptySchemaCache httpMgr migrateMetadataFrom4
   void tx
   -- set as system defined
   setAsSystemDefined
 
+
+from3To4 :: Q.TxE QErr ()
+from3To4 = Q.catchE defaultTxErrorHandler $ do
+  Q.unitQ "ALTER TABLE hdb_catalog.event_triggers ADD COLUMN configuration JSON" () False
+  eventTriggers <- map uncurryEventTrigger <$> Q.listQ [Q.sql|
+           SELECT e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
+           FROM hdb_catalog.event_triggers e
+           |] () False
+  forM_ eventTriggers updateEventTrigger3To4
+  Q.unitQ "ALTER TABLE hdb_catalog.event_triggers\
+          \  DROP COLUMN definition\
+          \, DROP COLUMN query\
+          \, DROP COLUMN webhook\
+          \, DROP COLUMN num_retries\
+          \, DROP COLUMN retry_interval\
+          \, DROP COLUMN headers" () False
+  where
+    uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers) =
+      EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint) headers
+    updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _) = Q.unitQ [Q.sql|
+                                         UPDATE hdb_catalog.event_triggers
+                                         SET
+                                         configuration = $1
+                                         WHERE name = $2
+                                         |] (Q.AltJ $ A.toJSON etc, name) True
 
 migrateCatalog :: HTTP.Manager -> UTCTime -> Q.TxE QErr String
 migrateCatalog httpMgr migrationTime = do
@@ -211,12 +236,17 @@ migrateCatalog httpMgr migrationTime = do
      | preVer == "1"   -> from1ToCurrent
      | preVer == "2"   -> from2ToCurrent
      | preVer == "3"   -> from3ToCurrent
+     | preVer == "4"   -> from4ToCurrent
      | otherwise -> throw400 NotSupported $
                     "migrate: unsupported version : " <> preVer
   where
-    from3ToCurrent = do
-      from3To4 httpMgr
+    from4ToCurrent = do
+      from4To5 httpMgr
       postMigrate
+
+    from3ToCurrent = do
+      from3To4
+      from4ToCurrent
 
     from2ToCurrent = do
       from2To3

@@ -403,16 +403,15 @@ buildSchemaCache httpManager = flip execStateT emptySchemaCache $ do
     addQTemplateToCache qti
 
   eventTriggers <- lift $ Q.catchE defaultTxErrorHandler fetchEventTriggers
-  forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ tDefVal, webhook, nr, rint, Q.AltJ mheaders) -> do
-    let headerConfs = fromMaybe [] mheaders
-        qt = QualifiedTable sn tn
-    allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
-    headers <- getHeaderInfosFromConf headerConfs
-    tDef <- decodeValue tDefVal
-    addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook headers
-    liftTx $ mkTriggerQ trid trn qt allCols tDef
+  forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ configuration) -> do
+    etc <- decodeValue configuration
 
-  -- remote resolvers
+    let qt = QualifiedTable sn tn
+    subTableP2Setup qt trid etc
+    allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
+    liftTx $ mkTriggerQ trid trn qt allCols (etcDefinition etc)
+
+  -- remote schemas
   res <- liftTx fetchRemoteSchemas
   sc <- askSchemaCache
   gCtxMap <- GS.mkGCtxMap (scTables sc)
@@ -462,7 +461,7 @@ buildSchemaCache httpManager = flip execStateT emptySchemaCache $ do
 
     fetchEventTriggers =
       Q.listQ [Q.sql|
-               SELECT e.schema_name, e.table_name, e.id, e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
+               SELECT e.schema_name, e.table_name, e.id, e.name, e.configuration::json
                  FROM hdb_catalog.event_triggers e
                |] () False
 

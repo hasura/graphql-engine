@@ -20,11 +20,14 @@ import {
   operationToggleAllColumns,
   setOperationSelection,
   setDefaults,
+  UPDATE_WEBHOOK_URL_TYPE,
 } from './AddActions';
 import { listDuplicate } from '../../../../utils/data';
 import { showErrorNotification } from '../Notification';
 import { createTrigger } from './AddActions';
 import { fetchTableListBySchema } from './AddActions';
+
+import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 
 import semverCheck from '../../../../helpers/semver';
 
@@ -35,18 +38,23 @@ class AddTrigger extends Component {
     this.state = {
       advancedExpanded: false,
       supportColumnChangeFeature: false,
+      supportWebhookEnv: false,
     };
   }
   componentDidMount() {
     // set defaults
     this.props.dispatch(setDefaults());
     if (this.props.serverVersion) {
-      this.checkSemVer(this.props.serverVersion);
+      this.checkSemVer(this.props.serverVersion).then(() => {
+        this.checkWebhookEnvSupport(this.props.serverVersion);
+      });
     }
   }
   componentWillReceiveProps(nextProps) {
     if (nextProps.serverVersion !== this.props.serverVersion) {
-      this.checkSemVer(nextProps.serverVersion);
+      this.checkSemVer(nextProps.serverVersion).then(() => {
+        this.checkWebhookEnvSupport(nextProps.serverVersion);
+      });
     }
   }
   componentWillUnmount() {
@@ -69,6 +77,13 @@ class AddTrigger extends Component {
       this.updateSupportColumnChangeFeature(false);
       console.error(e);
     }
+    return Promise.resolve();
+  }
+
+  checkWebhookEnvSupport(version) {
+    const supportWebhookEnv = semverCheck('webhookEnvSupport', version);
+    this.setState({ ...this.state, supportWebhookEnv });
+    return Promise.resolve();
   }
 
   updateSupportColumnChangeFeature(val) {
@@ -76,6 +91,14 @@ class AddTrigger extends Component {
       ...this.state,
       supportColumnChangeFeature: val,
     });
+  }
+
+  updateWebhookUrlType(e) {
+    const field = e.target.getAttribute('value');
+    if (field === 'env' || field === 'url') {
+      this.props.dispatch({ type: UPDATE_WEBHOOK_URL_TYPE, data: field });
+      this.props.dispatch(setWebhookURL(''));
+    }
   }
 
   submitValidation(e) {
@@ -172,6 +195,8 @@ class AddTrigger extends Component {
       lastSuccess,
       internalError,
       headers,
+      webhookURL,
+      webhookUrlType,
     } = this.props;
 
     const { supportColumnChangeFeature } = this.state;
@@ -578,16 +603,50 @@ class AddTrigger extends Component {
                     <i className="fa fa-question-circle" aria-hidden="true" />
                   </OverlayTrigger>{' '}
                 </h4>
-                <input
-                  type="url"
-                  required
-                  data-test="webhook"
-                  placeholder="webhook url"
-                  className={`${styles.tableNameInput} form-control`}
-                  onChange={e => {
-                    dispatch(setWebhookURL(e.target.value));
-                  }}
-                />
+                {this.state.supportWebhookEnv ? (
+                  <div className={styles.dropdown_wrapper}>
+                    <DropdownButton
+                      dropdownOptions={[
+                        { display_text: 'URL', value: 'url' },
+                        { display_text: 'From env var', value: 'env' },
+                      ]}
+                      title={
+                        (webhookUrlType === 'url' && 'URL') ||
+                        (webhookUrlType === 'env' && 'From env var') ||
+                        'Value'
+                      }
+                      dataKey={
+                        (webhookUrlType === 'url' && 'url') ||
+                        (webhookUrlType === 'env' && 'env')
+                      }
+                      onButtonChange={this.updateWebhookUrlType.bind(this)}
+                      onInputChange={e => {
+                        dispatch(setWebhookURL(e.target.value));
+                      }}
+                      required
+                      bsClass={styles.dropdown_button}
+                      inputVal={webhookURL}
+                      id="webhook-url"
+                      inputPlaceHolder={
+                        (webhookUrlType === 'url' &&
+                          'http://httpbin.org/post') ||
+                        (webhookUrlType === 'env' && 'MY_WEBHOOK_URL')
+                      }
+                      testId="webhook"
+                    />
+                  </div>
+                ) : (
+                  <input
+                    type="url"
+                    required
+                    data-test="webhook"
+                    placeholder="webhook url"
+                    className={`${styles.tableNameInput} form-control`}
+                    onChange={e => {
+                      dispatch(setWebhookURL(e.target.value));
+                    }}
+                  />
+                )}
               </div>
               <hr />
               <button
