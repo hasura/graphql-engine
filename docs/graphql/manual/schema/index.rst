@@ -20,11 +20,9 @@ See:
   Basics <basics>
   Relationships <relationships/index>
   Customise with views <views>
-  Customise with schema stitching <schema-stitching>
-  Adding custom resolvers <custom-resolvers>
+  Merge remote schemas <remote-schemas>
   Default field values <default-values/index>
   Enum type fields <enums>
   Using an existing database <using-existing-database>
   Export GraphQL schema <export-graphql-schema>
   How schema generation works <how-it-works>
-
