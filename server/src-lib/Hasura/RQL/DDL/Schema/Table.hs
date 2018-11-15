@@ -152,13 +152,11 @@ trackExistingTableOrViewP2Setup tn isSystemDefined = do
 
 trackExistingTableOrViewP2
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
-  => QualifiedTable -> Bool -> Bool -> m RespBody
-trackExistingTableOrViewP2 vn isSystemDefined checkConflict = do
-  when checkConflict $ do
-    sc <- askSchemaCache
-    let gCtxMap = scGCtxMap sc
-    forM_ (M.toList gCtxMap) $ \(_, gCtx) ->
-      GS.checkConflictingNode gCtx (G.Name tn)
+  => QualifiedTable -> Bool -> m RespBody
+trackExistingTableOrViewP2 vn isSystemDefined = do
+  sc <- askSchemaCache
+  let defGCtx = scDefaultRemoteGCtx sc
+  GS.checkConflictingNode defGCtx (G.Name tn)
 
   trackExistingTableOrViewP2Setup vn isSystemDefined
   liftTx $ Q.catchE defaultTxErrorHandler $
@@ -180,7 +178,7 @@ instance HDBQuery TrackTable where
   type Phase1Res TrackTable = ()
   phaseOne = trackExistingTableOrViewP1
 
-  phaseTwo (TrackTable tn) _ = trackExistingTableOrViewP2 tn False True
+  phaseTwo (TrackTable tn) _ = trackExistingTableOrViewP2 tn False
 
   schemaCachePolicy = SCPReload
 

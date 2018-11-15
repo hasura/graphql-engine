@@ -17,7 +17,7 @@ module Hasura.GraphQL.Schema
   , RelationInfoMap
   -- Schema stitching related
   , RemoteGCtx (..)
-  , checkConflictingNodes
+  , checkSchemaConflicts
   , checkConflictingNode
   , emptyGCtx
   , mergeMaybeMaps
@@ -25,6 +25,7 @@ module Hasura.GraphQL.Schema
 
 
 import           Data.Has
+import           Data.Maybe                     (maybeToList)
 
 import qualified Data.HashMap.Strict            as Map
 import qualified Data.HashSet                   as Set
@@ -1530,29 +1531,36 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols 
 noFilter :: S.BoolExp
 noFilter = S.BELit True
 
-checkConflictingNodes
+
+checkSchemaConflicts
   :: (MonadError QErr m)
-  => GCtx -> RemoteGCtx -> m ()
-checkConflictingNodes gCtx remoteCtx = do
+  => GCtx -> GCtx -> m ()
+checkSchemaConflicts gCtx remoteCtx = do
   -- check type conflicts
-  let typeMap = _gTypes gCtx
-      types = map G.unNamedType $ Map.keys typeMap
-      rmTypes = filter (`notElem` builtinTy) $
-                map G.unNamedType $ Map.keys $ _rgTypes remoteCtx
-      conflictedTypes = filter (`elem` types) rmTypes
+  let typeMap     = _gTypes gCtx -- hasura typemap
+      hTypes      = map G.unNamedType $ Map.keys typeMap
+      rmQRootName = _otiName $ _gQueryRoot remoteCtx
+      rmMRootName = maybeToList $ _otiName <$> _gMutRoot remoteCtx
+      rmRootNames = map G.unNamedType (rmQRootName:rmMRootName)
+      rmTypes     = filter (`notElem` builtinTy ++ rmRootNames) $
+                    map G.unNamedType $ Map.keys $ _gTypes remoteCtx
+
+      conflictedTypes = filter (`elem` hTypes) rmTypes
 
   unless (null conflictedTypes) $
     throw400 RemoteSchemaConflicts $ tyMsg conflictedTypes
 
   -- check node conflicts
-  let rmQRoot = _otiFields $ _rgQueryRoot remoteCtx
-      rmMRoot = _otiFields <$> _rgMutationRoot remoteCtx
-      rmRoots = filter (`notElem` builtin) . Map.keys <$> fmap (Map.union rmQRoot) rmMRoot
-      hQR = _otiFields <$>
-            join (getObjTyM <$> Map.lookup (G.NamedType "query_root") typeMap)
-      hMR = _otiFields <$>
-            join (getObjTyM <$> Map.lookup (G.NamedType "mutation_root") typeMap)
-      hRoots = Map.keys <$> mergeMaybeMaps hQR hMR
+  let rmQRoot = _otiFields $ _gQueryRoot remoteCtx
+      rmMRoot = _otiFields <$> _gMutRoot remoteCtx
+      rmRoots = filter (`notElem` builtinNodes ++ rmRootNames) . Map.keys <$>
+                fmap (Map.union rmQRoot) rmMRoot
+      hQR     = _otiFields <$>
+                join (getObjTyM <$> Map.lookup hQRName typeMap)
+      hMR     = _otiFields <$>
+                join (getObjTyM <$> Map.lookup hMRName typeMap)
+      hRoots  = Map.keys <$> mergeMaybeMaps hQR hMR
+
   case (rmRoots, hRoots) of
     (Just rmR, Just hR) -> do
       let conflictedNodes = filter (`elem` hR) rmR
@@ -1561,10 +1569,14 @@ checkConflictingNodes gCtx remoteCtx = do
     _ -> return ()
 
   where
-    tyMsg ty = "types: [" <> nodesTxt ty <> "] already exist in current graphql schema"
-    nodesMsg n = "nodes : [" <> nodesTxt n <> "] already exist in current graphql schema"
-    nodesTxt nodes = T.intercalate ", " $ map G.unName nodes
-    builtin = ["__type", "__schema", "__typename", "Query", "Mutation", "query_root", "mutation_root"]
+    hQRName = G.NamedType "query_root"
+    hMRName = G.NamedType "mutation_root"
+    tyMsg ty = "types: [" <> namesToTxt ty <>
+               "] already exist in current graphql schema"
+    nodesMsg n = "nodes : [" <> namesToTxt n <>
+                 "] already exist in current graphql schema"
+    namesToTxt = T.intercalate ", " . map G.unName
+    builtinNodes = ["__type", "__schema", "__typename"]
     builtinTy = [ "__Directive"
                 , "__DirectiveLocation"
                 , "__EnumValue"
@@ -1573,10 +1585,6 @@ checkConflictingNodes gCtx remoteCtx = do
                 , "__Schema"
                 , "__Type"
                 , "__TypeKind"
-                , "Query"
-                , "Mutation"
-                , "query_root"
-                , "mutation_root"
                 , "Int"
                 , "Float"
                 , "String"
@@ -1584,26 +1592,28 @@ checkConflictingNodes gCtx remoteCtx = do
                 , "ID"
                 ]
 
-
 checkConflictingNode
   :: (MonadError QErr m)
-  => GCtx -> G.Name -> m ()
+  => GCtx
+  -> G.Name
+  -> m ()
 checkConflictingNode gCtx node = do
   let typeMap = _gTypes gCtx
-      --types = map G.unNamedType $ Map.keys typeMap
-  --when (node `elem` types) $ throw400 RemoteSchemaError msg
-  let hQR = _otiFields <$>
-            join (getObjTyM <$> Map.lookup (G.NamedType "query_root") typeMap)
-      hMR = _otiFields <$>
-            join (getObjTyM <$> Map.lookup (G.NamedType "mutation_root") typeMap)
-      hRoots = Map.keys <$> mergeMaybeMaps hQR hMR
+      hQR     = _otiFields <$>
+                join (getObjTyM <$> Map.lookup hQRName typeMap)
+      hMR     = _otiFields <$>
+                join (getObjTyM <$> Map.lookup hMRName typeMap)
+      hRoots  = Map.keys <$> mergeMaybeMaps hQR hMR
   case hRoots of
     Just hR ->
       when (node `elem` hR) $
         throw400 RemoteSchemaConflicts msg
     _ -> return ()
   where
-    msg = "node " <> G.unName node <> " already exists in current graphql schema"
+    hQRName = G.NamedType "query_root"
+    hMRName = G.NamedType "mutation_root"
+    msg = "node " <> G.unName node <>
+          " already exists in current graphql schema"
 
 
 mkGCtxMap

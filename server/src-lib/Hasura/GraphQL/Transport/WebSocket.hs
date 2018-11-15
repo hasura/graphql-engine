@@ -36,7 +36,8 @@ import qualified Hasura.GraphQL.Transport.HTTP               as TH
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
-import           Hasura.GraphQL.Validate                     (getQueryParts,
+import           Hasura.GraphQL.Validate                     (QueryParts (..),
+                                                              getQueryParts,
                                                               validateGQ)
 import qualified Hasura.GraphQL.Validate.Types               as VT
 import qualified Hasura.Logging                              as L
@@ -54,10 +55,15 @@ type TxRunner = RespTx -> IO (Either QErr BL.ByteString)
 type OperationMap
   = STMMap.Map OperationId LQ.LiveQuery
 
+data WSConnState
+  = CSNotInitialised
+  | CSInitError Text
+  | CSInitialised UserInfo [H.Header]
+
 data WSConnData
   = WSConnData
   -- the role and headers are set only on connection_init message
-  { _wscUser  :: !(IORef.IORef (Maybe (Either Text (UserInfo, [H.Header]))))
+  { _wscUser  :: !(IORef.IORef WSConnState)
   -- we only care about subscriptions,
   -- the other operations (query/mutations)
   -- are not tracked here
@@ -132,7 +138,9 @@ onConn (L.Logger logger) wsId requestHead = do
 
     accept _ = do
       logger $ WSLog wsId Nothing EAccepted
-      connData <- WSConnData <$> IORef.newIORef Nothing <*> STMMap.newIO
+      connData <- WSConnData
+                  <$> IORef.newIORef CSNotInitialised
+                  <*> STMMap.newIO
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
       return $ Right (connData, acceptRequest, Just keepAliveAction)
@@ -158,11 +166,11 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
   userInfoM <- liftIO $ IORef.readIORef userInfoR
   (userInfo, reqHdrs) <- case userInfoM of
-    Just (Right userInfo) -> return userInfo
-    Just (Left initErr) -> do
+    CSInitialised userInfo reqHdrs -> return (userInfo, reqHdrs)
+    CSInitError initErr -> do
       let connErr = "cannot start as connection_init failed with : " <> initErr
       withComplete $ sendConnErr connErr
-    Nothing       -> do
+    CSNotInitialised -> do
       let connErr = "start received before the connection is initialised"
       withComplete $ sendConnErr connErr
 
@@ -171,36 +179,32 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) (scGCtxMap sc)
 
   res <- runExceptT $ runReaderT (getQueryParts q) gCtx
-  (opDef, opRoot, fragDefsL, varValsM) <- case res of
+  queryParts <- case res of
     Left (QErr _ _ err _ _) -> withComplete $ sendConnErr err
     Right vals              -> return vals
 
-  let topLevelNodes = TH.getTopLevelNodes opDef
+  let topLevelNodes = TH.getTopLevelNodes (qpOpDef queryParts)
       typeLocs = TH.gatherTypeLocs gCtx topLevelNodes
 
   res' <- runExceptT $ TH.assertSameLocationNodes typeLocs
   either (\(QErr _ _ err _ _) -> withComplete $ sendConnErr err) return res'
 
-  if null typeLocs
-    then runHasuraQ opDef opRoot fragDefsL varValsM userInfo gCtx
-    else
-    case typeLocs of
-      (typeLoc:_) -> case typeLoc of
-        VT.HasuraType ->
-          runHasuraQ opDef opRoot fragDefsL varValsM userInfo gCtx
-        VT.RemoteType url hdrs -> do
-          resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo sc
-                               reqHdrs msgRaw url hdrs
-          either postExecErr sendSuccResp resp
-          sendCompleted
+  case typeLocs of
+    [] -> runHasuraQ userInfo gCtx queryParts
 
-      [] -> withComplete $ sendConnErr "unexpected: cannot find node in schema"
+    (typeLoc:_) -> case typeLoc of
+      VT.HasuraType ->
+        runHasuraQ userInfo gCtx queryParts
+      VT.RemoteType url hdrs -> do
+        resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo sc
+                              reqHdrs msgRaw url hdrs
+        either postExecErr sendSuccResp resp
+        sendCompleted
 
   where
-    runHasuraQ opDef opRoot fragDefsL varValsM userInfo gCtx = do
+    runHasuraQ userInfo gCtx queryParts = do
       (opTy, fields) <- either (withComplete . preExecErr) return $
-                        runReaderT (validateGQ opDef opRoot fragDefsL varValsM)
-                        gCtx
+                        runReaderT (validateGQ queryParts) gCtx
       let qTx = RQ.setHeadersTx (userVars userInfo) >>
                 resolveSelSet userInfo gCtx opTy fields
 
@@ -302,8 +306,8 @@ logWSEvent
 logWSEvent (L.Logger logger) wsConn wsEv = do
   userInfoME <- liftIO $ IORef.readIORef userInfoR
   let userInfoM = case userInfoME of
-        Just (Right (userInfo, _)) -> return $ userVars userInfo
-        _                          -> Nothing
+        CSInitialised userInfo _ -> return $ userVars userInfo
+        _                        -> Nothing
   liftIO $ logger $ WSLog wsId userInfoM wsEv
   where
     WSConnData userInfoR _ = WS.getData wsConn
@@ -317,13 +321,13 @@ onConnInit logger manager wsConn authMode connParamsM = do
   case res of
     Left e  -> do
       liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
-        Just $ Left $ qeError e
+        CSInitError $ qeError e
       let connErr = ConnErrMsg $ qeError e
       logWSEvent logger wsConn $ EConnErr connErr
       sendMsg wsConn $ SMConnErr connErr
     Right userInfo -> do
       liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
-        Just $ Right (userInfo, headers)
+        CSInitialised userInfo headers
       sendMsg wsConn SMConnAck
       -- TODO: send it periodically? Why doesn't apollo's protocol use
       -- ping/pong frames of websocket spec?

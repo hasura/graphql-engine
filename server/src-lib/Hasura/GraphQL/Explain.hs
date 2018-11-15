@@ -119,14 +119,13 @@ explainGQLQuery
   -> m BL.ByteString
 explainGQLQuery pool iso sc (GQLExplain query userVarsRaw)= do
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxMap
-  (opDef, opRoot, fragDefsL, varValsM) <-
-    runReaderT (GV.getQueryParts query) gCtx
-  let topLevelNodes = TH.getTopLevelNodes opDef
+  queryParts <- runReaderT (GV.getQueryParts query) gCtx
+  let topLevelNodes = TH.getTopLevelNodes (GV.qpOpDef queryParts)
 
   unless (allHasuraNodes gCtx topLevelNodes) $
     throw400 InvalidParams "only hasura queries can be explained"
 
-  (opTy, selSet) <- runReaderT (GV.validateGQ opDef opRoot fragDefsL varValsM) gCtx
+  (opTy, selSet) <- runReaderT (GV.validateGQ queryParts) gCtx
   unless (opTy == G.OperationTypeQuery) $
     throw400 InvalidParams "only queries can be explained"
   let tx = mapM (explainField userInfo gCtx) (toList selSet)

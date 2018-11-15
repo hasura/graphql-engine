@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE DeriveLift        #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE LambdaCase        #-}
@@ -107,7 +108,9 @@ type ParamMap = Map.HashMap G.Name InpValInfo
 data TypeLoc
   = HasuraType
   | RemoteType !N.URI [HeaderConf]
-  deriving (Show, Eq, TH.Lift)
+  deriving (Show, Eq, TH.Lift, Generic)
+
+instance Hashable TypeLoc
 
 data ObjFldInfo
   = ObjFldInfo
@@ -132,6 +135,14 @@ data ObjTyInfo
   , _otiName   :: !G.NamedType
   , _otiFields :: !ObjFieldMap
   } deriving (Show, Eq, TH.Lift)
+
+instance Monoid ObjTyInfo where
+  mempty = ObjTyInfo Nothing (G.NamedType "") Map.empty
+
+instance Semigroup ObjTyInfo where
+  objA <> objB =
+    objA { _otiFields = Map.union (_otiFields objA) (_otiFields objB)
+         }
 
 mkObjTyInfo
   :: Maybe G.Description -> G.NamedType -> ObjFieldMap -> TypeLoc -> ObjTyInfo

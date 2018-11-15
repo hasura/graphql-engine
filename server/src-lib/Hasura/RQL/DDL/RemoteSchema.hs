@@ -58,13 +58,12 @@ addRemoteSchemaP2 def@(RemoteSchemaDef name eUrlVal headers _) = do
   let gCtxMap = scGCtxMap sc
       defRemoteGCtx = scDefaultRemoteGCtx sc
   remoteGCtx <- fetchRemoteSchema manager url headers
-  --when checkConflict $
-  forM_ (Map.toList gCtxMap) $ \(_, gCtx) ->
-    GS.checkConflictingNodes gCtx remoteGCtx
-  newGCtxMap <- mergeRemoteSchema gCtxMap remoteGCtx
-  defGCtx <- mergeGCtx defRemoteGCtx remoteGCtx
+  newDefGCtx <- mergeGCtx defRemoteGCtx $ convRemoteGCtx remoteGCtx
+  -- forM_ (Map.toList gCtxMap) $ \(_, gCtx) ->
+  --   GS.checkSchemaConflicts gCtx newDefGCtx
+  newGCtxMap <- mergeRemoteSchema gCtxMap newDefGCtx
   liftTx $ addRemoteSchemaToCatalog name def
-  addRemoteSchemaToCache newGCtxMap defGCtx url def
+  addRemoteSchemaToCache newGCtxMap newDefGCtx url def
   return successMsg
 
 addRemoteSchemaToCache

@@ -6,6 +6,7 @@ module Hasura.GraphQL.Validate
   ( validateGQ
   , getTypedOp
   , GraphQLRequest
+  , QueryParts (..)
   , getQueryParts
   ) where
 
@@ -22,6 +23,15 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
+
+
+data QueryParts
+  = QueryParts
+  { qpOpDef     :: !G.TypedOperationDefinition
+  , qpOpRoot    :: !ObjTyInfo
+  , qpFragDefsL :: ![G.FragmentDefinition]
+  , qpVarValsM  :: !(Maybe VariableValues)
+  } deriving (Show, Eq)
 
 getTypedOp
   :: (MonadError QErr m)
@@ -108,12 +118,9 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
 validateGQ
   :: (MonadError QErr m, MonadReader GCtx m)
   -- => GraphQLRequest
-  => G.TypedOperationDefinition
-  -> ObjTyInfo
-  -> [G.FragmentDefinition]
-  -> Maybe VariableValues
+  => QueryParts
   -> m (G.OperationType, SelSet)
-validateGQ opDef opRoot fragDefsL varValsM = do
+validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
 
   -- get the operation that needs to be evaluated
   --opDef <- getTypedOp opNameM selSets opDefs
@@ -148,7 +155,7 @@ validateGQ opDef opRoot fragDefsL varValsM = do
 getQueryParts
   :: ( MonadError QErr m, MonadReader GCtx m)
   => GraphQLRequest
-  -> m (G.TypedOperationDefinition, ObjTyInfo, [G.FragmentDefinition], Maybe VariableValues)
+  -> m QueryParts
 getQueryParts (GraphQLRequest opNameM q varValsM) = do
   -- get the operation that needs to be evaluated
   opDef <- getTypedOp opNameM selSets opDefs
@@ -161,6 +168,6 @@ getQueryParts (GraphQLRequest opNameM q varValsM) = do
       onNothing (_gMutRoot ctx) $ throwVE "no mutations exist"
     G.OperationTypeSubscription ->
       onNothing (_gSubRoot ctx) $ throwVE "no subscriptions exist"
-  return (opDef, opRoot, fragDefsL, varValsM)
+  return $ QueryParts opDef opRoot fragDefsL varValsM
   where
     (selSets, opDefs, fragDefsL) = G.partitionExDefs $ unGraphQLQuery q
