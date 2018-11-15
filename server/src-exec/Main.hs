@@ -45,7 +45,7 @@ data RavenOptions
 
 data ServeOptions
   = ServeOptions
-  { soPort          :: !Int
+  { soPort          :: !(Maybe Int)
   , soConnParams    :: !Q.ConnParams
   , soTxIso         :: !Q.TxIsolation
   , soRootDir       :: !(Maybe String)
@@ -133,7 +133,7 @@ main =  do
   hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case ravenMode of
-    ROServe (ServeOptions port cp isoL mRootDir mAccessKey mWebHook mJwtSecret
+    ROServe (ServeOptions mPort cp isoL mRootDir mAccessKey mWebHook mJwtSecret
              mUnAuthRole corsCfg enableConsole) -> do
 
       -- get all auth mode related config
@@ -141,6 +141,8 @@ main =  do
       mFinalWebHook   <- considerEnv "HASURA_GRAPHQL_AUTH_HOOK" $ getWebhook <$> mWebHook
       mFinalJwtSecret <- considerEnv "HASURA_GRAPHQL_JWT_SECRET" mJwtSecret
       mFinalUnAuthRole <- considerEnv "HASURA_GRAPHQL_UNAUTHORIZED_ROLE" $ getRoleTxt <$> mUnAuthRole
+      defaultPort <- getFromEnv 8080 "HASURA_GRAPHQL_SERVER_PORT"
+      let port = fromMaybe defaultPort mPort
       -- prepare auth mode
       authModeRes <- runExceptT $ mkAuthMode (AccessKey <$> mFinalAccessKey)
                                              (Webhook <$> mFinalWebHook)
@@ -208,6 +210,7 @@ main =  do
       putStrLn "event_triggers: preparing data"
       res <- runTx ci unlockAllEvents
       either ((>> exitFailure) . printJSON) return res
+
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
       mEnv <- lookupEnv env
