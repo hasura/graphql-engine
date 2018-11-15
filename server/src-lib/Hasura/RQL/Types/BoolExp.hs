@@ -48,11 +48,23 @@ gBoolExpTrue :: GBoolExp a
 gBoolExpTrue = BoolAnd []
 
 gBoolExpToJSON :: (a -> (Text, Value)) -> GBoolExp a -> Value
-gBoolExpToJSON f = \case
-  BoolAnd bExps -> object ["$and" .= map (gBoolExpToJSON f) bExps ]
-  BoolOr bExps  -> object ["$or" .= map (gBoolExpToJSON f) bExps ]
-  BoolNot bExp  -> object ["$not" .= gBoolExpToJSON f bExp ]
-  BoolFld a     -> object $ pure $ f a
+gBoolExpToJSON f be = case be of
+  -- special encoding for _and
+  BoolAnd bExps ->
+    let m = M.fromList $ map getKV bExps
+    -- if the keys aren't repeated, then object encoding can be used
+    in if length m == length bExps
+       then toJSON m
+       else object $ pure kv
+  _ -> object $ pure kv
+  where
+    kv = getKV be
+    getKV = \case
+      BoolAnd bExps -> "_and" .= map (gBoolExpToJSON f) bExps
+      BoolOr bExps  -> "_or" .= map (gBoolExpToJSON f) bExps
+      BoolNot bExp  -> "_not" .= gBoolExpToJSON f bExp
+      BoolFld a     ->  f a
+
 
 parseGBoolExp
   :: ((Text, Value) -> J.Parser a) -> Value -> J.Parser (GBoolExp a)
