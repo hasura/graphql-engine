@@ -20,7 +20,7 @@ See:
   Basics <basics>
   Relationships <relationships/index>
   Customise with views <views>
-  Adding custom logic (schema stitching/custom resolvers) <custom-logic/index>
+  Merge remote schemas <remote-schemas>
   Enum type fields <enums>
   Default field values <default-values>
   Set values using SQL functions/stored procedures <sql-functions>

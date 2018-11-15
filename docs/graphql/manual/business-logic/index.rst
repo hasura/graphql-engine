@@ -1,79 +1,86 @@
-Adding custom business logic (remote schemas)
-=============================================
+Add custom business logic
+=========================
 
-Hasura GraphQL engine provides instant GraphQL APIs over the tables and views of any Postgres database by auto-generating the CRUD resolvers. However, sometimes you may need additional resolvers to support some use cases. 
+For the backends of most apps, you may have to implement custom business logic to complement the CRUD and real-time API provided by GraphQL Engine. Depending on the nature of the use case and its position vis-a-vis GraphQL Engine/Postgres, different avenues are recommended for introducing such business logic in your app's backend:
 
-Here are a couple of common use cases:
 
+.. image:: ../../../img/graphql/manual/business-logic/custom-business-logic.png
+
+- **Pre-CRUD**: :ref:`remote-schemas`
+
+- :ref:`derived-data`
+
+- **Post-CRUD**: :ref:`event-triggers`
+
+
+.. _remote-schemas:
+
+Custom resolvers in remote schemas
+----------------------------------
+
+Merging remote schemas is ideal for adding "pre-CRUD" business logic (*logic to be run before you invoke GraphQL Engine's GraphQL API to insert/modify data in Postgres*) or custom business logic that is not part of your GraphQL Engine schema. Here are some use-cases where remote schemas are ideal:
 
 - Customizing mutations (e.g. running validations before inserts)
-- Supporting features like payments, etc. and providing a consistent interface to access them i.e. behind the GraphQL Engine' API
+- Supporting features like payments, etc. and providing a consistent interface to access them i.e. behind the GraphQL Engine’s API
 - Fetching disparate data from other sources (e.g. from a weather API or another database)
 
-These use cases can be handling by writing resolvers in a custom GraphQL server and stitching its schema (``remote schema``) with GraphQL Engine's schema (think of the merged schema as a union of top-level nodes from each of the subschemas). 
+To support these kinds of business logic, a custom GraphQL schema with resolvers that implement said business logic is needed (*see link below for boilerplates*). This remote schema can then be merged with GraphQL Engine's schema using the console. Here's a reference architecture diagram for such a setup:
 
-.. image:: ../../../img/graphql/manual/business-logic/schema-stitching-v1-arch-diagram.png
+.. image:: ../../../img/graphql/manual/schema/schema-stitching-v1-arch-diagram.png
 
-The combined schema will let a frontend app query top-level nodes from any of the merged schemas from the same GraphQL endpoint:
+For more details, links to boilerplates for custom GraphQL servers, etc. please head to :doc:`../schema/remote-schemas`.
 
-.. code-block:: graphql
-      
-  # query a new top level node from another GraphQL schema
-  query {
-    city_weather {
-      city_name
-      min_temp
-    }
-  }
+.. _derived-data:
 
-  # invoke business logic (e.g. payment) in a remote schema's resolver
-  mutation {
-    insert_payment {
-      order_id
-      total_amount
-      ...
-    }
-  }
+Derived data / Data transformations
+-----------------------------------
 
-Here's how you can add a remote schema to GraphQL Engine:
+For some use cases, you may want to transform your data in Postgres or run some predetermined function on it to derive another dataset (*that will be queried using GraphQL Engine*). E.g. let's say you store each user's location data in the database as a ``point`` type. You are interested in calculating the distance (*say the  haversine distance*) between each set of two users i.e. you want this derived dataset:
 
-Step-1: Write a custom GraphQL server
--------------------------------------
+.. list-table::
+   :header-rows: 1
 
-You need to create a custom GraphQL server with a schema and corresponding resolvers that solve your use case (*if you already have a functional GraphQL server that meets your requirements, you can skip this step*). You can use any language/framework of your choice to author this server or deploy it anywhere. A great way to get started is to use one of our boilerplates:
+   * - user_id_1
+     - user_id_2
+     - distance between users
+   * - 12
+     - 23
+     - 10.50
+   * - 12
+     - 47
+     - 76.00
 
-- `Boilerplates <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/graphql-servers>`_
-- `Serverless boilerplates <https://github.com/hasura/graphql-serverless>`_
+The easiest way to handle these kinds of use cases is to create a view, which encapsulates your business logic (*in our example, calculating the distance between any two users*), and query your derived/tranformed data as you would a table using GraphQL Engine (*with permissions defined explicitly for your view if needed*).
 
-.. note::
+For more information on how to do this, please see :doc:`../queries/aggregations`.
 
-  - GraphQL Engine does not currently support conflicting top level nodes, so please be careful with your custom schema's nomenclature and ensure that the top-level node names in it do not clash with the top-level nodes in GraphQL Engine's schema.
+.. _event-triggers:
 
+Asynchronous business logic / Events triggers
+---------------------------------------------
 
-Step-2: Merge remote schema
----------------------------
-Head to the console to merge your remote schema with GraphQL Engine's auto-generated schema. In a top level tab, named ``Remote Schemas`, click on the ``Add`` button.
+Post-CRUD business logic (*follow up logic to be run after GraphQL Engine's GraphQL API has been used to insert or modify data in Postgres*) typically tends to be asychronous, stateless and is triggered on changes to data relevant to each use case. E.g. for every new user in your database, you may want to send out a notification. This business logic is triggered for every new row in your ``users`` table. 
 
-.. image:: ../../../img/graphql/manual/business-logic/add-remote-schemas-interface.png
+GraphQL Engine comes with built-in events triggers on tables in the Postgres database. These triggers capture events on specified tables and then invoke configured webhooks, which contain your business logic.
 
+If your business logic is stateful, it can even store its state back in the Postgres instance configured to work with GraphQL Engine, allowing your frontend app to offer a reactive user experience, where the app uses GraphQL subscriptions to listen to updates from your webhook via Postgres.
 
-You need to enter the following information:
+.. image:: ../../../img/graphql/manual/event-triggers/database-event-triggers.png
 
-- **Remote Schema name**: an alias for the remote schema that must be unique on an instance of GraphQL Engine.
-- **GraphQL server URL**: the endpoint at which your remote GraphQL server is available. This value can be entered manually or by specifying an environment variable that contains this information. If you want to specify an environment variable, please note that currently there is no validation that the environment variable is actually available at the time of this configuration, so any errors in this configuration will result in a runtime error.
-- **Headers**: configure the headers to be sent to your custom GraphQL server.
+Event triggers are ideal for use cases such as the following:
 
-  - Toggle forwarding headers sent by the client app in the request to your remote GraphQL server.   
-  - Additional headers, constant key-value pairs and/or key-value pairs whose values are picked up from an environment variable.
+- Notifications: Trigger push notifications and emails based on database events
 
-Click on the ``Add Remote Schema`` button to merge the remote schema.
+- ETL: Transform and load data into external data-stores. 
+  
+  - E.g. transform data from Postgres and populate an Algolia index when a product is inserted, updated or deleted.
 
-For some use cases, you may need to extend the GraphQL schema fields exposed by Hasura GraphQL engine (*and not merely augment as we have done above*) with a custom schema/server. To support them, you can use community tooling to write your own client-facing GraphQL gateway that interacts with GraphQL Engine.
+- Long-running business logic:
 
-.. note::
+  - Provision some infrastructure
+  - Process multimedia files
+  - Background jobs
 
-  Adding an additional layer on top of Hasura GraphQL engine significantly impacts the performance provided by it out of the box (*by as much as 4X*). If you need any help with remodeling these kind of use cases to use the built-in remote schemas feature, please get in touch with us on `Discord <https://discord.gg/vBPpJkS>`_.
+- Cache/CDN purge: invalidate/update entries in your cache/CDN when the underlying data in Postgres changes.
 
-
-
-
+For more information on event triggers and how to set them up, please see :doc:`../event-triggers/index`.
