@@ -515,6 +515,10 @@ delTableFromCache tn = do
   sc <- askSchemaCache
   void $ getTableInfoFromCache tn sc
   modTableCache $ M.delete tn $ scTables sc
+  modDepMapInCache (M.filterWithKey notThisTableObj)
+  where
+    notThisTableObj (SOTableObj depTn _) _ = depTn /= tn
+    notThisTableObj _                    _ = True
 
 getTableInfoFromCache :: (QErrM m)
                       => QualifiedTable

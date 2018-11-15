@@ -245,22 +245,7 @@ delTableAndDirectDeps qtn@(QualifiedTable sn tn) = do
 processSchemaChanges :: (P2C m) => SchemaDiff -> m ()
 processSchemaChanges schemaDiff = do
   -- Purge the dropped tables
-  forM_ droppedTables $ \qtn@(QualifiedTable sn tn) -> do
-    liftTx $ Q.catchE defaultTxErrorHandler $ do
-      Q.unitQ [Q.sql|
-               DELETE FROM "hdb_catalog"."hdb_relationship"
-               WHERE table_schema = $1 AND table_name = $2
-                |] (sn, tn) False
-      Q.unitQ [Q.sql|
-               DELETE FROM "hdb_catalog"."hdb_permission"
-               WHERE table_schema = $1 AND table_name = $2
-                |] (sn, tn) False
-      Q.unitQ [Q.sql|
-               DELETE FROM "hdb_catalog"."event_triggers"
-               WHERE schema_name = $1 AND table_name = $2
-                |] (sn, tn) False
-      delTableFromCatalog qtn
-    delTableFromCache qtn
+  mapM_ delTableAndDirectDeps droppedTables
   -- Get schema cache
   sc <- askSchemaCache
   forM_ alteredTables $ \(oldQtn, tableDiff) -> do
