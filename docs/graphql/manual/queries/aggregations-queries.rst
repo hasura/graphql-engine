@@ -1,5 +1,5 @@
-Using Aggregations
-==================
+Aggregation queries
+===================
 
 You can fetch aggregations on columns along with nodes using an aggregation query.
 Available aggregation queries are ``count``, ``sum``, ``avg``, ``max`` and ``min``.

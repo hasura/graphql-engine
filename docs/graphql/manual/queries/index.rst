@@ -32,7 +32,7 @@ based on a typical author/article schema for reference.
 
   simple-object-queries
   nested-object-queries
-  using-aggregations
+  aggregations-queries
   query-filters
   sorting
   pagination
