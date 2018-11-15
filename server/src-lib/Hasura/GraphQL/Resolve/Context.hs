@@ -65,6 +65,7 @@ type RespTx = Q.TxE QErr BL.ByteString
 data OrdByItem
   = OBIPGCol !PGColInfo
   | OBIRel !RelInfo !S.BoolExp
+  | OBIAgg !RelInfo !S.BoolExp
   deriving (Show, Eq)
 
 type OrdByItemMap = Map.HashMap G.Name OrdByItem

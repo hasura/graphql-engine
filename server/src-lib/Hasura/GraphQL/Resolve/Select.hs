@@ -146,9 +146,37 @@ getAnnObItems f nt obj = do
         (_, enumVal) <- asEnumVal v
         (ordTy, nullsOrd) <- parseOrderByEnum enumVal
         return [OrderByItemG (Just ordTy) aobCol (Just nullsOrd)]
+
       OBIRel ri fltr -> do
         let annObColFn = f . RS.AOCRel ri fltr
         withObject (getAnnObItems annObColFn) v
+
+      OBIAgg ri fltr -> do
+        let aobColFn = f . RS.AOCAgg ri fltr
+        flip withObject v $ \_ o -> parseAggOrdBy aobColFn o
+
+parseAggOrdBy
+  :: (MonadError QErr m)
+  => (RS.AnnAggOrdBy -> RS.AnnObCol)
+  -> AnnGObject
+  -> m [RS.AnnOrderByItem]
+parseAggOrdBy f annObj =
+  fmap concat <$> forM (OMap.toList annObj) $ \(op, obVal) ->
+    case op of
+      "count" -> do
+        (ordTy, nullsOrd) <- parseAsEnum obVal
+        return [OrderByItemG (Just ordTy) (f RS.AAOCount) $ Just nullsOrd]
+
+      G.Name opT ->
+        flip withObject obVal $ \_ opObObj ->
+          forM (OMap.toList opObObj) $ \(col, eVal) -> do
+            (ordTy, nullsOrd) <- parseAsEnum eVal
+            let aobCol = f $ RS.AAOOp opT $ PGCol $ G.unName col
+            return $ OrderByItemG (Just ordTy) aobCol $ Just nullsOrd
+  where
+    parseAsEnum v = do
+      (_, enumVal) <- asEnumVal v
+      parseOrderByEnum enumVal
 
 parseOrderByEnum
   :: (MonadError QErr m)

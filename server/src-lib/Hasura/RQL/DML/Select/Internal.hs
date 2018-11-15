@@ -17,6 +17,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
 import qualified Hasura.SQL.DML             as S
@@ -53,9 +54,15 @@ instance FromJSON ExtCol where
     , "object (relationship)"
     ]
 
+data AnnAggOrdBy
+  = AAOCount
+  | AAOOp !T.Text !PGCol
+  deriving (Show, Eq)
+
 data AnnObCol
   = AOCPG !PGColInfo
   | AOCRel !RelInfo !S.BoolExp !AnnObCol
+  | AOCAgg !RelInfo !S.BoolExp !AnnAggOrdBy
   deriving (Show, Eq)
 
 type AnnOrderByItem = OrderByItemG AnnObCol
@@ -195,10 +202,10 @@ asSingleRow col fromItem =
               , S.SEUnsafe "0"
               ]
 
-aggNodeToSelect :: BaseNode -> S.Extractor -> S.BoolExp -> S.Select
-aggNodeToSelect bn extr joinCond =
+aggNodeToSelect :: BaseNode -> [S.Extractor] -> S.BoolExp -> S.Select
+aggNodeToSelect bn extrs joinCond =
   S.mkSelect
-    { S.selExtr = [extr]
+    { S.selExtr = extrs
     , S.selFrom = Just $ S.FromExp [selFrom]
     }
   where
@@ -245,6 +252,10 @@ mkObjRelTableAls pfx relName =
 mkAggAls :: Iden -> FieldName -> Iden
 mkAggAls pfx fldAls =
   pfx <> Iden ".agg." <> toIden fldAls
+
+mkAggOrdByAls :: Iden -> RelName -> Iden
+mkAggOrdByAls pfx relName =
+  pfx <> Iden ".agg." <> toIden relName <> Iden ".order_by"
 
 mkBaseTableAls :: Iden -> Iden
 mkBaseTableAls pfx =
@@ -301,6 +312,30 @@ withJsonBuildObj parAls exps =
   where
     jsonRow = S.applyJsonBuildObj exps
 
+data OrderByNode
+  = OBNNothing
+  | OBNRelNode !RelName !RelNode
+  | OBNAggNode !S.Alias !AggNode
+  deriving (Show, Eq)
+
+mkAggObFld :: AnnAggOrdBy -> FieldName
+mkAggObFld AAOCount = FieldName "count"
+mkAggObFld (AAOOp op col) =
+  FieldName $ op <> "." <> getPGColTxt col
+
+mkAggObExtrAndFlds :: AnnAggOrdBy -> (S.Extractor, AggFlds)
+mkAggObExtrAndFlds annAggOb = case annAggOb of
+  AAOCount       ->
+    ( S.Extractor S.countStar als
+    , [("count", AFCount S.CTStar)]
+    )
+  AAOOp op pgCol ->
+    ( S.Extractor (S.SEFnApp op [S.SEIden $ toIden pgCol] Nothing) als
+    , [(op, AFOp $ AggOp op [(getPGColTxt pgCol, PCFCol pgCol)])]
+    )
+  where
+    als = Just $ S.toAlias $ mkAggObFld annAggOb
+
 processAnnOrderByItem
   :: Iden
   -> AnnOrderByItem
@@ -308,8 +343,8 @@ processAnnOrderByItem
   -> ( (S.Alias, S.SQLExp)
        -- the sql order by item that is attached to the final select
      , S.OrderByItem
-       -- optionally we may have to add an obj rel node
-     , Maybe (RelName, RelNode)
+       -- extra nodes for order by
+     , OrderByNode
      )
 processAnnOrderByItem pfx (OrderByItemG obTyM annObCol obNullsM) =
   ( (obColAls, obColExp)
@@ -327,8 +362,8 @@ processAnnOrderByCol
   -> AnnObCol
        -- the extractors which will select the needed columns
   -> ( (S.Alias, S.SQLExp)
-       -- optionally we may have to add an obj rel node
-     , Maybe (RelName, RelNode)
+       -- extra nodes for order by
+     , OrderByNode
      )
 processAnnOrderByCol pfx = \case
   AOCPG colInfo ->
@@ -336,22 +371,40 @@ processAnnOrderByCol pfx = \case
       qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden $ pgiName colInfo)
       obColAls = mkBaseTableColAls pfx $ pgiName colInfo
     in ( (S.Alias obColAls, qualCol)
-       , Nothing
+       , OBNNothing
        )
   -- "pfx.or.relname"."pfx.ob.or.relname.rest" AS "pfx.ob.or.relname.rest"
   AOCRel (RelInfo rn _ colMapping relTab _ _) relFltr rest ->
     let relPfx  = mkObjRelTableAls pfx rn
-        ((nesAls, nesCol), nesNodeM) = processAnnOrderByCol relPfx rest
+        ((nesAls, nesCol), ordByNode) = processAnnOrderByCol relPfx rest
+        (objRelNodeM, aggNodeM) = case ordByNode of
+          OBNNothing           -> (Nothing, Nothing)
+          OBNRelNode name node -> (Just (name, node), Nothing)
+          OBNAggNode als node  -> (Nothing, Just (als, node))
         qualCol = S.mkQIdenExp relPfx nesAls
         relBaseNode =
           BaseNode relPfx (S.FISimple relTab Nothing) relFltr
           Nothing Nothing Nothing
           (HM.singleton nesAls nesCol)
-          (maybe HM.empty (uncurry HM.singleton) nesNodeM)
-          HM.empty HM.empty
+          (maybe HM.empty (uncurry HM.singleton) objRelNodeM)
+          HM.empty
+          (maybe HM.empty (uncurry HM.singleton) aggNodeM)
         relNode = RelNode rn (fromRel rn) colMapping relBaseNode
     in ( (nesAls, qualCol)
-       , Just (rn, relNode)
+       , OBNRelNode rn relNode
+       )
+  AOCAgg (RelInfo rn _ colMapping relTab _ _) relFltr annAggOb ->
+    let aggAls = mkAggOrdByAls pfx rn
+        fldName = mkAggObFld annAggOb
+        qOrdBy = S.mkQIdenExp aggAls $ toIden fldName
+        tabFrom = TableFrom relTab Nothing
+        tabPerm = TablePerm relFltr Nothing
+        (extr, aggFlds) = mkAggObExtrAndFlds annAggOb
+        selFld = TAFAgg aggFlds
+        bn = mkBaseNode pfx fldName selFld tabFrom tabPerm noTableArgs
+        aggNode = AggNode colMapping [extr] bn
+    in ( (S.Alias $ toIden fldName, qOrdBy)
+       , OBNAggNode (S.Alias aggAls) aggNode
        )
 
 mkEmptyBaseNode :: Iden -> TableFrom -> BaseNode
@@ -378,7 +431,7 @@ applyPermLimit mPermLimit mQueryLimit =
 
 aggSelToAggNode :: Iden -> FieldName -> AggSel -> AggNode
 aggSelToAggNode pfx als aggSel =
-  AggNode colMapping extr mergedBN
+  AggNode colMapping [extr] mergedBN
   where
     AggSel colMapping annSel = aggSel
     AnnSelG aggFlds tabFrm tabPerm tabArgs = annSel
@@ -423,22 +476,19 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
             (allObjs, allArrRels) =
               foldl' addRel (HM.empty, HM.empty) $
               mapMaybe (\(als, f) -> (als,) <$> getAnnRel f) flds
-            allObjRelsWithOb =
-              foldl' (\objs (rn, relNode) -> HM.insertWith mergeRelNodes rn relNode objs)
-              allObjs $ catMaybes $ maybe [] _3 procOrdByM
             aggItems = HM.fromList $ map mkAggItem $
               mapMaybe (\(als, f) -> (als,) <$> getAggFld f) flds
         in ( HM.fromList $ selExtr:obExtrs
-           , allObjRelsWithOb
+           , mkTotalObjRels allObjs
            , allArrRels
-           , aggItems
+           , aggItems `HM.union` aggItemsWithOb
            )
       TAFAgg aggFlds ->
         let extrs = concatMap (fetchExtrFromAggFld . snd) aggFlds
         in ( HM.fromList $ extrs <> obExtrs
+           , mkTotalObjRels HM.empty
            , HM.empty
-           , HM.empty
-           , HM.empty
+           , aggItemsWithOb
            )
       TAFExp _ -> (HM.fromList obExtrs, HM.empty, HM.empty, HM.empty)
 
@@ -465,12 +515,13 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
 
     fromItem = fromMaybe (S.FISimple tn Nothing) fromItemM
 
-    _1 (a, _, _) = a
-    _2 (_, b, _) = b
-    _3 (_, _, c) = c
-
     procOrdByM = unzip3 . map (processAnnOrderByItem pfx) . toList <$> orderByM
     ordByExpM  = S.OrderByExp . _2 <$> procOrdByM
+    mkTotalObjRels objRels =
+      foldl' (\objs (rn, relNode) -> HM.insertWith mergeRelNodes rn relNode objs)
+      objRels $ mapMaybe getOrdByRelNode $ maybe [] _3 procOrdByM
+    aggItemsWithOb = HM.fromListWith mergeAggNodes
+      $ mapMaybe getOrdByAggNode $ maybe [] _3 procOrdByM
 
     -- the columns needed for orderby
     obExtrs  = maybe [] _1 procOrdByM
@@ -506,6 +557,12 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
     getAggFld = \case
       FAgg af -> Just af
       _ -> Nothing
+
+    getOrdByRelNode (OBNRelNode name node) = Just (name, node)
+    getOrdByRelNode _                      = Nothing
+
+    getOrdByAggNode (OBNAggNode als node) = Just (als, node)
+    getOrdByAggNode _                     = Nothing
 
 annSelToBaseNode :: Iden -> FieldName -> AnnSel -> BaseNode
 annSelToBaseNode pfx fldAls annSel =
@@ -547,9 +604,16 @@ mkRelNode pfx (relAls, AnnRel rn _ rMapn rAnnSel) =
 data AggNode
   = AggNode
   { _anColMapping :: ![(PGCol, PGCol)]
-  , _anExtr       :: !S.Extractor
+  , _anExtr       :: ![S.Extractor]
   , _anNodeDet    :: !BaseNode
   } deriving (Show, Eq)
+
+mergeAggNodes :: AggNode -> AggNode -> AggNode
+mergeAggNodes lAggNode rAggNode =
+  AggNode colMapn (lExtrs `union` rExtrs) $ mergeBaseNodes lBN rBN
+  where
+    AggNode colMapn lExtrs lBN = lAggNode
+    AggNode _ rExtrs rBN = rAggNode
 
 injectJoinCond :: S.BoolExp       -- ^ Join condition
                -> S.BoolExp -- ^ Where condition
