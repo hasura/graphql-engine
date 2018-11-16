@@ -98,7 +98,7 @@ fromField f tn permFilter permLimitM fld =
   fieldAsPath fld $ do
   tableArgs <- parseTableArgs f args
   annFlds   <- fromSelSet f (_fType fld) $ _fSelSet fld
-  let tabFrom = RS.TableFrom $ Left tn
+  let tabFrom = RS.TableFrom tn Nothing
       tabPerm = RS.TablePerm permFilter permLimitM
   return $ RS.AnnSelG annFlds tabFrom tabPerm tableArgs
   where
@@ -179,7 +179,7 @@ fromFieldByPKey
 fromFieldByPKey f tn permFilter fld = fieldAsPath fld $ do
   boolExp <- pgColValToBoolExpG f $ _fArguments fld
   annFlds <- fromSelSet f (_fType fld) $ _fSelSet fld
-  let tabFrom = RS.TableFrom $ Left tn
+  let tabFrom = RS.TableFrom tn Nothing
       tabPerm = RS.TablePerm permFilter Nothing
   return $ RS.AnnSelG annFlds tabFrom tabPerm $
     RS.noTableArgs { RS._taWhere = Just boolExp}
@@ -257,7 +257,7 @@ fromAggField
 fromAggField fn tn permFilter permLimitM fld = fieldAsPath fld $ do
   tableArgs <- parseTableArgs fn args
   aggSelFlds   <- fromAggSel (_fType fld) $ _fSelSet fld
-  let tabFrom = RS.TableFrom $ Left tn
+  let tabFrom = RS.TableFrom tn Nothing
       tabPerm = RS.TablePerm permFilter permLimitM
   return $ RS.AnnSelG aggSelFlds tabFrom tabPerm tableArgs
   where

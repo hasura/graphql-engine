@@ -123,18 +123,19 @@ data TableAggFld
 
 data TableFrom
   = TableFrom
-  { _tfTable :: !(Either QualifiedTable Iden)
+  { _tfTable :: !QualifiedTable
+  , _tfIden  :: !(Maybe Iden)
   } deriving (Show, Eq)
 
 tableFromToFromItem :: TableFrom -> S.FromItem
-tableFromToFromItem (TableFrom tf) = case tf of
-  Left t  -> S.FISimple t Nothing
-  Right i -> S.FIIden i
+tableFromToFromItem = \case
+  TableFrom tn Nothing  -> S.FISimple tn Nothing
+  TableFrom _  (Just i) -> S.FIIden i
 
 tableFromToQual :: TableFrom -> S.Qual
-tableFromToQual (TableFrom tf) = case tf of
-  Left t  -> S.QualTable t
-  Right i -> S.QualIden i
+tableFromToQual = \case
+  TableFrom tn Nothing  -> S.QualTable tn
+  TableFrom _  (Just i) -> S.QualIden i
 
 data TablePerm
   = TablePerm

@@ -182,7 +182,7 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
   withPathK "limit" $ mapM_ onlyPositiveInt mQueryLimit
   withPathK "offset" $ mapM_ onlyPositiveInt mQueryOffset
 
-  let tabFrom = TableFrom $ Left (spiTable selPermInfo)
+  let tabFrom = TableFrom (spiTable selPermInfo) Nothing
       tabPerm = TablePerm (spiFilter selPermInfo) mPermLimit
   return $ AnnSelG annFlds tabFrom tabPerm $
     TableArgs wClause annOrdByM mQueryLimit (S.intToSQLExp <$> mQueryOffset)
@@ -249,23 +249,20 @@ getSelectDeps
   :: AnnSel
   -> [SchemaDependency]
 getSelectDeps (AnnSelG flds tabFrm _ tableArgs) =
-  case tabFrm of
-    TableFrom (Left tn) ->
-      mkParentDep tn
-      : fromMaybe [] (whereDeps tn)
-      <> colDeps tn
-      <> relDeps tn
-      <> nestedDeps
-    TableFrom (Right _) -> []
+  mkParentDep tn
+  : fromMaybe [] whereDeps
+  <> colDeps
+  <> relDeps
+  <> nestedDeps
   where
-    -- TableFrom tn _ = tabFrm
+    TableFrom tn _ = tabFrm
     annWc = _taWhere tableArgs
     (sCols, rCols) = partAnnFlds $ map snd flds
-    colDeps tn   = map (mkColDep "untyped" tn . fst) sCols
-    relDeps tn   = map (mkRelDep tn . arName) rCols
+    colDeps      = map (mkColDep "untyped" tn . fst) sCols
+    relDeps      = map (mkRelDep . arName) rCols
     nestedDeps   = concatMap (getSelectDeps . arAnnSel) rCols
-    whereDeps tn = getBoolExpDeps tn <$> annWc
-    mkRelDep tn rn =
+    whereDeps    = getBoolExpDeps tn <$> annWc
+    mkRelDep rn  =
       SchemaDependency (SOTableObj tn (TORel rn)) "untyped"
 
 convSelectQuery
