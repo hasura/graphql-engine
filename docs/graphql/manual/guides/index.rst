@@ -20,7 +20,13 @@ Sample apps
 Articles:
 ^^^^^^^^^
 - `Build a realtime chat app with GraphQL Subscriptions <https://blog.hasura.io/building-a-realtime-chat-app-with-graphql-subscriptions-d68cd33e73f>`__.
-- `Build a React To Do Application <https://hackernoon.com/building-a-react-todo-app-with-hasura-graphql-engine-511b703a7ef>`__.
+- `Handling Authentication in GraphQL Auth0 part-1<https://blog.pusher.com/handling-authentication-in-graphql/>`__.
+- `Handling Authentication in GraphQL Auth0 part-2 <https://blog.pusher.com/handling-authentication-in-graphql-jwt>`__.
+- `Handling Authentication in GraphQL Auth0 part-3 <https://blog.pusher.com/handling-authentication-in-graphql-auth0/>`__.
+
+ 
+  `Build a React To Do Application <https://hackerno
+  
 
 Videos:
 ^^^^^^^
