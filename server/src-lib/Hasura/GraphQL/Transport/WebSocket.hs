@@ -183,7 +183,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     Left (QErr _ _ err _ _) -> withComplete $ sendConnErr err
     Right vals              -> return vals
 
-  let topLevelNodes = TH.getTopLevelNodes (qpOpDef queryParts)
+  let opDef = qpOpDef queryParts
+      topLevelNodes = TH.getTopLevelNodes opDef
       typeLocs = TH.gatherTypeLocs gCtx topLevelNodes
 
   res' <- runExceptT $ TH.assertSameLocationNodes typeLocs
@@ -197,7 +198,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
         runHasuraQ userInfo gCtx queryParts
       VT.RemoteType _ rsi -> do
         resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
-                             msgRaw rsi
+                             msgRaw rsi opDef
         either postExecErr sendSuccResp resp
         sendCompleted
 

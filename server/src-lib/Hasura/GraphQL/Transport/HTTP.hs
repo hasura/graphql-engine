@@ -54,7 +54,8 @@ runGQ pool isoL userInfo sc manager reqHdrs req rawReq = do
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
-  let topLevelNodes = getTopLevelNodes (VQ.qpOpDef queryParts)
+  let opDef = VQ.qpOpDef queryParts
+      topLevelNodes = getTopLevelNodes opDef
       -- gather TypeLoc of topLevelNodes
       typeLocs = gatherTypeLocs gCtx topLevelNodes
 
@@ -68,7 +69,7 @@ runGQ pool isoL userInfo sc manager reqHdrs req rawReq = do
       VT.HasuraType ->
         runHasuraGQ pool isoL userInfo sc queryParts
       VT.RemoteType _ rsi ->
-        runRemoteGQ manager userInfo reqHdrs rawReq rsi
+        runRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
   where
     gCtxRoleMap = scGCtxMap sc
 
@@ -126,8 +127,12 @@ runRemoteGQ
   -> BL.ByteString
   -- ^ the raw request string
   -> RemoteSchemaInfo
+  -> G.TypedOperationDefinition
   -> m BL.ByteString
-runRemoteGQ manager userInfo reqHdrs q rsi = do
+runRemoteGQ manager userInfo reqHdrs q rsi opDef = do
+  let opTy = G._todType opDef
+  when (opTy == G.OperationTypeSubscription) $
+    throw400 NotSupported "subscription to remote server is not supported"
   hdrs <- getHeadersFromConf hdrConf
   let confHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs

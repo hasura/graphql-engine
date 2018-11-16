@@ -140,10 +140,16 @@ mergeQueryRoot a b = GS._gQueryRoot a <> GS._gQueryRoot b
 
 mergeMutRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
 mergeMutRoot a b =
-  let objA = fromMaybe mkNewEmptyMutRoot $ GS._gMutRoot a
-      objB = fromMaybe mempty $ GS._gMutRoot b
+  let objA' = fromMaybe mempty $ GS._gMutRoot a
+      objB  = fromMaybe mempty $ GS._gMutRoot b
+      objA  = newRootOrEmpty objA' objB
       merged = objA <> objB
   in bool (Just merged) Nothing $ merged == mempty
+  where
+    newRootOrEmpty x y =
+      if x == mempty && y /= mempty
+      then mkNewEmptyMutRoot
+      else x
 
 mkNewEmptyMutRoot :: VT.ObjTyInfo
 mkNewEmptyMutRoot = VT.ObjTyInfo (Just "mutation root")
