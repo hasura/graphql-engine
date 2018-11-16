@@ -6,7 +6,7 @@
   },
   "description": "A boilerplate for Hasura Graphql Engine auth webhook with passport js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "bash test.js",
     "start": "node app.js",
     "lint": "eslint \"**/*.js\""
   },
