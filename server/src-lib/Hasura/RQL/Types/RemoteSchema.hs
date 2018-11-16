@@ -68,7 +68,7 @@ type RemoteSchemaMap = Map.HashMap RemoteSchemaName RemoteSchemaInfo
 
 data AddRemoteSchemaQuery
   = AddRemoteSchemaQuery
-  { _arsqName       :: !RemoteSchemaName
+  { _arsqName       :: !RemoteSchemaName -- TODO: name validation: cannot be empty?
   , _arsqDefinition :: !RemoteSchemaDef
   , _arsqComment    :: !(Maybe Text)
   } deriving (Show, Eq, Lift)

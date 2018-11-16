@@ -98,13 +98,6 @@ mkDefaultRemoteGCtx
 mkDefaultRemoteGCtx =
   foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GS.emptyGCtx
 
--- mergeRemoteSchemas
---   :: (MonadError QErr m)
---   => GS.GCtxMap
---   -> [GS.RemoteGCtx]
---   -> m GS.GCtxMap
--- mergeRemoteSchemas = foldlM mergeRemoteSchema
-
 mergeRemoteSchema
   :: (MonadError QErr m)
   => GS.GCtxMap
@@ -147,10 +140,14 @@ mergeQueryRoot a b = GS._gQueryRoot a <> GS._gQueryRoot b
 
 mergeMutRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
 mergeMutRoot a b =
-  let objA = fromMaybe mempty $ GS._gMutRoot a
+  let objA = fromMaybe mkNewEmptyMutRoot $ GS._gMutRoot a
       objB = fromMaybe mempty $ GS._gMutRoot b
       merged = objA <> objB
   in bool (Just merged) Nothing $ merged == mempty
+
+mkNewEmptyMutRoot :: VT.ObjTyInfo
+mkNewEmptyMutRoot = VT.ObjTyInfo (Just "mutation root")
+                    (G.NamedType "mutation_root") Map.empty
 
 mkNewMutRoot :: VT.ObjFieldMap -> VT.ObjTyInfo
 mkNewMutRoot flds = VT.ObjTyInfo (Just "mutation root")
@@ -169,15 +166,3 @@ mergeTyMaps hTyMap rmTyMap newQR newMR =
   in maybe newTyMap' (\mr -> Map.insert
                               (G.NamedType "mutation_root")
                               (VT.TIObj mr) newTyMap') newMR
-
-
--- getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Text -> m N.URI
--- getUrlFromEnv urlFromEnv = do
---   mEnv <- liftIO . lookupEnv $ T.unpack urlFromEnv
---   env  <- maybe (throw400 Unexpected $ envNotFoundMsg urlFromEnv) return
---           mEnv
---   maybe (throw400 Unexpected $ invalidUri env) return $ N.parseURI env
---   where
---     invalidUri uri = "not a valid URI: " <> T.pack uri
---     envNotFoundMsg e =
---       "cannot find environment variable " <> e <> " for custom resolver"
