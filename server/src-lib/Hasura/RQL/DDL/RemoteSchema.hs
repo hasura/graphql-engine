@@ -12,7 +12,6 @@ import qualified Data.Aeson                  as J
 import qualified Data.ByteString.Lazy        as BL
 import qualified Data.HashMap.Strict         as Map
 import qualified Database.PG.Query           as Q
-import qualified Network.URI.Extended        as N
 
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.Types
@@ -21,26 +20,15 @@ import qualified Hasura.GraphQL.Schema       as GS
 
 
 instance HDBQuery AddRemoteSchemaQuery where
-  type Phase1Res AddRemoteSchemaQuery = RemoteSchemaDef
+  type Phase1Res AddRemoteSchemaQuery = AddRemoteSchemaQuery
   phaseOne   = addRemoteSchemaP1
   phaseTwo _ = addRemoteSchemaP2
   schemaCachePolicy = SCPReload
 
 addRemoteSchemaP1
   :: (P1C m)
-  => AddRemoteSchemaQuery -> m RemoteSchemaDef
-addRemoteSchemaP1 (AddRemoteSchemaQuery url urlEnv hdrs name fwdHdrs) = do
-  adminOnly
-  eUrlEnv <- case (url, urlEnv) of
-    (Just u, Nothing)  -> return $ Left u
-    (Nothing, Just ue) -> return $ Right ue
-    (Nothing, Nothing) ->
-      throw400 InvalidParams "both `url` and `url_from_env` can't be empty"
-    (Just _, Just _)   ->
-      throw400 InvalidParams "both `url` and `url_from_env` can't be present"
-
-  let hdrs' = fromMaybe [] hdrs
-  return $ RemoteSchemaDef name eUrlEnv hdrs' fwdHdrs
+  => AddRemoteSchemaQuery -> m AddRemoteSchemaQuery
+addRemoteSchemaP1 q = adminOnly >> return q
 
 addRemoteSchemaP2
   :: ( QErrM m
@@ -49,30 +37,34 @@ addRemoteSchemaP2
      , MonadIO m
      , HasHttpManager m
      )
-  => RemoteSchemaDef
+  => AddRemoteSchemaQuery
   -> m BL.ByteString
-addRemoteSchemaP2 def@(RemoteSchemaDef name eUrlVal headers _) = do
-  url <- either return getUrlFromEnv eUrlVal
+addRemoteSchemaP2 q@(AddRemoteSchemaQuery name def _) = do
+  rsi <- validateRemoteSchemaDef def
   manager <- askHttpManager
   sc <- askSchemaCache
   let gCtxMap = scGCtxMap sc
       defRemoteGCtx = scDefaultRemoteGCtx sc
-  remoteGCtx <- fetchRemoteSchema manager url headers
+  remoteGCtx <- fetchRemoteSchema manager name rsi
   newDefGCtx <- mergeGCtx defRemoteGCtx $ convRemoteGCtx remoteGCtx
   -- forM_ (Map.toList gCtxMap) $ \(_, gCtx) ->
   --   GS.checkSchemaConflicts gCtx newDefGCtx
   newGCtxMap <- mergeRemoteSchema gCtxMap newDefGCtx
-  liftTx $ addRemoteSchemaToCatalog name def
-  addRemoteSchemaToCache newGCtxMap newDefGCtx url def
+  liftTx $ addRemoteSchemaToCatalog q
+  addRemoteSchemaToCache newGCtxMap newDefGCtx name rsi
   return successMsg
 
 addRemoteSchemaToCache
   :: CacheRWM m
-  => GS.GCtxMap -> GS.GCtx -> N.URI -> RemoteSchemaDef -> m ()
-addRemoteSchemaToCache gCtxMap defGCtx url rmDef = do
+  => GS.GCtxMap
+  -> GS.GCtx
+  -> RemoteSchemaName
+  -> RemoteSchemaInfo
+  -> m ()
+addRemoteSchemaToCache gCtxMap defGCtx name rmDef = do
   sc <- askSchemaCache
   let resolvers = scRemoteResolvers sc
-  writeSchemaCache sc { scRemoteResolvers = Map.insert url rmDef resolvers
+  writeSchemaCache sc { scRemoteResolvers = Map.insert name rmDef resolvers
                       , scGCtxMap = gCtxMap
                       , scDefaultRemoteGCtx = defGCtx
                       }
@@ -121,42 +113,38 @@ removeRemoteSchemaP2
   -> m BL.ByteString
 removeRemoteSchemaP2 (RemoveRemoteSchemaQuery name) = do
   mSchema <- liftTx $ fetchRemoteSchemaDef name
-  (RemoteSchemaDef _ eUrlVal _ _) <-
-    liftMaybe (err400 NotExists "no such remote schema") mSchema
-  url <- either return getUrlFromEnv eUrlVal
+  _ <- liftMaybe (err400 NotExists "no such remote schema") mSchema
+  --url <- either return getUrlFromEnv eUrlVal
 
   hMgr <- askHttpManager
   sc <- askSchemaCache
   let resolvers = scRemoteResolvers sc
-      newResolvers = Map.filterWithKey (\u _ -> u /= url) resolvers
+      newResolvers = Map.filterWithKey (\n _ -> n /= name) resolvers
 
   newGCtxMap <- GS.mkGCtxMap (scTables sc)
   (mergedGCtxMap, defGCtx) <- mergeSchemas newResolvers newGCtxMap hMgr
-  removeRemoteSchemaFromCache url mergedGCtxMap defGCtx
+  removeRemoteSchemaFromCache newResolvers mergedGCtxMap defGCtx
   liftTx $ removeRemoteSchemaFromCatalog name
   return successMsg
 
 removeRemoteSchemaFromCache
-  :: CacheRWM m => N.URI -> GS.GCtxMap -> GS.GCtx -> m ()
-removeRemoteSchemaFromCache url gCtxMap defGCtx = do
+  :: CacheRWM m => RemoteSchemaMap -> GS.GCtxMap -> GS.GCtx -> m ()
+removeRemoteSchemaFromCache newResolvers gCtxMap defGCtx = do
   sc <- askSchemaCache
-  let resolvers = scRemoteResolvers sc
-      newResolvers = Map.filterWithKey (\u _ -> u /= url) resolvers
   writeSchemaCache sc { scRemoteResolvers = newResolvers
                       , scGCtxMap = gCtxMap
                       , scDefaultRemoteGCtx = defGCtx
                       }
 
 addRemoteSchemaToCatalog
-  :: Text
-  -> RemoteSchemaDef
+  :: AddRemoteSchemaQuery
   -> Q.TxE QErr ()
-addRemoteSchemaToCatalog name def =
+addRemoteSchemaToCatalog (AddRemoteSchemaQuery name def comment) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
     INSERT into hdb_catalog.remote_schemas
-      (name, definition)
-      VALUES ($1, $2)
-  |] (name, Q.AltJ $ J.toJSON def) True
+      (name, definition, comment)
+      VALUES ($1, $2, $3)
+  |] (name, Q.AltJ $ J.toJSON def, comment) True
 
 
 removeRemoteSchemaFromCatalog :: Text -> Q.TxE QErr ()
@@ -177,13 +165,12 @@ fetchRemoteSchemaDef name =
   where
     fromRow (Q.AltJ def) = def
 
-fetchRemoteSchemas :: Q.TxE QErr [RemoteSchemaDef]
+fetchRemoteSchemas :: Q.TxE QErr [AddRemoteSchemaQuery]
 fetchRemoteSchemas =
   map fromRow <$> Q.listQE defaultTxErrorHandler
     [Q.sql|
-     SELECT name, definition
+     SELECT name, definition, comment
        FROM hdb_catalog.remote_schemas
      |] () True
   where
-    fromRow :: (Text, Q.AltJ RemoteSchemaDef) -> RemoteSchemaDef
-    fromRow (_, Q.AltJ def) = def
+    fromRow (n, Q.AltJ def, comm) = AddRemoteSchemaQuery n def comm

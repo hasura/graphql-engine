@@ -26,7 +26,6 @@ import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
-import qualified Network.URI                            as URI
 import qualified Network.Wreq                           as Wreq
 
 import           Hasura.GraphQL.Schema
@@ -68,8 +67,8 @@ runGQ pool isoL userInfo sc manager reqHdrs req rawReq = do
     (typeLoc:_) -> case typeLoc of
       VT.HasuraType ->
         runHasuraGQ pool isoL userInfo sc queryParts
-      VT.RemoteType url hdrs ->
-        runRemoteGQ manager userInfo sc reqHdrs rawReq url hdrs
+      VT.RemoteType _ rsi ->
+        runRemoteGQ manager userInfo reqHdrs rawReq rsi
   where
     gCtxRoleMap = scGCtxMap sc
 
@@ -123,19 +122,15 @@ runRemoteGQ
   :: (MonadIO m, MonadError QErr m)
   => HTTP.Manager
   -> UserInfo
-  -> SchemaCache
   -> [N.Header]
   -> BL.ByteString
   -- ^ the raw request string
-  -> URI.URI
-  -> [HeaderConf]
+  -> RemoteSchemaInfo
   -> m BL.ByteString
-runRemoteGQ manager userInfo sc reqHdrs q url hdrConf = do
+runRemoteGQ manager userInfo reqHdrs q rsi = do
   hdrs <- getHeadersFromConf hdrConf
   let confHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
-      mRmSchemaDef = Map.lookup url (scRemoteResolvers sc)
-      shouldFwd = maybe False _rsFwdClientHeaders mRmSchemaDef
-      clientHdrs = bool [] filteredHeaders shouldFwd
+      clientHdrs = bool [] filteredHeaders fwdClientHdrs
   let options = Wreq.defaults
               & Wreq.headers .~ ("content-type", "application/json") :
                 (userInfoToHdrs ++ clientHdrs ++ confHdrs)
@@ -147,6 +142,7 @@ runRemoteGQ manager userInfo sc reqHdrs q url hdrConf = do
   return $ resp ^. Wreq.responseBody
 
   where
+    RemoteSchemaInfo url hdrConf fwdClientHdrs = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow err = throw500 $ T.pack . show $ err
 

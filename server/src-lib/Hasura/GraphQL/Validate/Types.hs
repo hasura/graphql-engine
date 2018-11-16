@@ -56,11 +56,10 @@ import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.GraphQL.Draft.TH     as G
 import qualified Language.Haskell.TH.Syntax    as TH
-import qualified Network.URI.Extended          as N
 
 import           Hasura.GraphQL.Utils
-import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Instances          ()
+import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -107,7 +106,7 @@ type ParamMap = Map.HashMap G.Name InpValInfo
 -- | location of the type: a hasura type or a remote type
 data TypeLoc
   = HasuraType
-  | RemoteType !N.URI [HeaderConf]
+  | RemoteType RemoteSchemaName RemoteSchemaInfo
   deriving (Show, Eq, TH.Lift, Generic)
 
 instance Hashable TypeLoc

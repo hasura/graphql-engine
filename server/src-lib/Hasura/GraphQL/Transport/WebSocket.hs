@@ -195,9 +195,9 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     (typeLoc:_) -> case typeLoc of
       VT.HasuraType ->
         runHasuraQ userInfo gCtx queryParts
-      VT.RemoteType url hdrs -> do
-        resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo sc
-                              reqHdrs msgRaw url hdrs
+      VT.RemoteType _ rsi -> do
+        resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
+                             msgRaw rsi
         either postExecErr sendSuccResp resp
         sendCompleted
 

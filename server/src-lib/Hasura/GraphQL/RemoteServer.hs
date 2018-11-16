@@ -10,7 +10,6 @@ import           Control.Lens                  ((&), (.~), (?~), (^.))
 import           Data.FileEmbed                (embedStringFile)
 import           Data.Foldable                 (foldlM)
 import           Hasura.Prelude
-import           System.Environment            (lookupEnv)
 
 import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as BL
@@ -21,11 +20,9 @@ import qualified Data.Text.Encoding            as T
 import qualified Language.GraphQL.Draft.JSON   ()
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
-import qualified Network.URI.Extended          as N
 import qualified Network.Wreq                  as Wreq
 
-import           Hasura.RQL.DDL.Headers        (HeaderConf (..),
-                                                getHeadersFromConf)
+import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
 import           Hasura.RQL.Types
 
 import qualified Hasura.GraphQL.Schema         as GS
@@ -37,8 +34,11 @@ introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
 
 fetchRemoteSchema
   :: (MonadIO m, MonadError QErr m)
-  => HTTP.Manager -> N.URI -> [HeaderConf] -> m GS.RemoteGCtx
-fetchRemoteSchema manager url headerConf = do
+  => HTTP.Manager
+  -> RemoteSchemaName
+  -> RemoteSchemaInfo
+  -> m GS.RemoteGCtx
+fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
   headers <- getHeadersFromConf headerConf
   let hdrs = map (\(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)) headers
   let options = Wreq.defaults
@@ -55,7 +55,7 @@ fetchRemoteSchema manager url headerConf = do
 
   schemaDoc <- either schemaErr return $ J.eitherDecode respData
   --liftIO $ print $ map G.getNamedTyp $ G._sdTypes schemaDoc
-  let etTypeInfos = mapM (fromRemoteTyDef headerConf) $ G._sdTypes schemaDoc
+  let etTypeInfos = mapM fromRemoteTyDef $ G._sdTypes schemaDoc
   typeInfos <- either schemaErr return etTypeInfos
   --liftIO $ print $ map VT.getNamedTy typeInfos
   let typMap = VT.mkTyInfoMap typeInfos
@@ -70,7 +70,7 @@ fetchRemoteSchema manager url headerConf = do
 
   where
     noQueryRoot = err400 Unexpected "query root not found in remote schema"
-    fromRemoteTyDef hdrs ty = VT.fromTyDef ty $ VT.RemoteType url hdrs
+    fromRemoteTyDef ty = VT.fromTyDef ty $ VT.RemoteType name def
     getRootNames sc = ( G._sdQueryRoot sc
                       , G._sdMutationRoot sc
                       , G._sdSubscriptionRoot sc )
@@ -86,11 +86,8 @@ mergeSchemas
   -> HTTP.Manager
   -> m (GS.GCtxMap, GS.GCtx) -- the merged GCtxMap and the default GCtx without roles
 mergeSchemas rmSchemaMap gCtxMap httpManager = do
-  -- TODO: better way to do this?
-  let remoteSrvrs = map (\(k, v) -> (k, _rsHeaders v)) $
-                    Map.toList rmSchemaMap
-  remoteSchemas <- forM remoteSrvrs $ \(url, hdrs) ->
-    fetchRemoteSchema httpManager url hdrs
+  remoteSchemas <- forM (Map.toList rmSchemaMap) $ \(name, def) ->
+    fetchRemoteSchema httpManager name def
   def <- mkDefaultRemoteGCtx remoteSchemas
   merged <- mergeRemoteSchema gCtxMap def
   return (merged, def)
@@ -174,13 +171,13 @@ mergeTyMaps hTyMap rmTyMap newQR newMR =
                               (VT.TIObj mr) newTyMap') newMR
 
 
-getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Text -> m N.URI
-getUrlFromEnv urlFromEnv = do
-  mEnv <- liftIO . lookupEnv $ T.unpack urlFromEnv
-  env  <- maybe (throw400 Unexpected $ envNotFoundMsg urlFromEnv) return
-          mEnv
-  maybe (throw400 Unexpected $ invalidUri env) return $ N.parseURI env
-  where
-    invalidUri uri = "not a valid URI: " <> T.pack uri
-    envNotFoundMsg e =
-      "cannot find environment variable " <> e <> " for custom resolver"
+-- getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Text -> m N.URI
+-- getUrlFromEnv urlFromEnv = do
+--   mEnv <- liftIO . lookupEnv $ T.unpack urlFromEnv
+--   env  <- maybe (throw400 Unexpected $ envNotFoundMsg urlFromEnv) return
+--           mEnv
+--   maybe (throw400 Unexpected $ invalidUri env) return $ N.parseURI env
+--   where
+--     invalidUri uri = "not a valid URI: " <> T.pack uri
+--     envNotFoundMsg e =
+--       "cannot find environment variable " <> e <> " for custom resolver"

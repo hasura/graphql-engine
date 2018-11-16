@@ -147,7 +147,7 @@ data ReplaceMetadata
   = ReplaceMetadata
   { aqTables         :: ![TableMeta]
   , aqQueryTemplates :: ![DQ.CreateQueryTemplate]
-  , aqRemoteSchemas  :: ![TRS.RemoteSchemaDef]
+  , aqRemoteSchemas  :: ![TRS.AddRemoteSchemaQuery]
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
@@ -183,7 +183,7 @@ applyQP1 (ReplaceMetadata tables templates schemas) = do
     checkMultipleDecls "query templates" $ map DQ.cqtName templates
 
   withPathK "remote_schemas" $
-    checkMultipleDecls "remote schemas" $ map TRS._rsName schemas
+    checkMultipleDecls "remote schemas" $ map TRS._arsqName schemas
 
   where
     withTableName qt = withPathK (qualTableToTxt qt)

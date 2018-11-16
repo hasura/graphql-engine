@@ -416,8 +416,8 @@ buildSchemaCache httpManager = flip execStateT emptySchemaCache $ do
   sc <- askSchemaCache
   gCtxMap <- GS.mkGCtxMap (scTables sc)
 
-  remoteScConf <- forM res $ \def@(RemoteSchemaDef _ eUrlEnv _ _) ->
-    (,) <$> either return getUrlFromEnv eUrlEnv <*> pure def
+  remoteScConf <- forM res $ \(AddRemoteSchemaQuery n def _) ->
+    (,) n <$> validateRemoteSchemaDef def
   let rmScMap = M.fromList remoteScConf
   (mergedGCtxMap, defGCtx) <- mergeSchemas rmScMap gCtxMap httpManager
   writeRemoteSchemasToCache mergedGCtxMap rmScMap
