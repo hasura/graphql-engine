@@ -295,6 +295,25 @@ jobs:
         paths:
           - _console_output
 
+  test_community_apps:
+    docker:
+    - image: face11301/community:latest
+    - image: circleci/postgres:10-alpine-postgis
+      environment:
+        POSTGRES_USER: gql_test
+        POSTGRES_DB: gql_test
+        POSTGRES_PASSWORD: gql_test
+    working_directory: ~/graphql-engine
+    steps:
+    - *setup_remote_docker
+    - checkout
+    - run:
+        name: install requirements
+        command: pip3 install -r .circleci/community-apps-requirements.txt
+    - run:
+        name: test community apps
+        command: python3 .circleci/community-apps-test.py
+
   deploy:
     docker:
     - image: hasura/graphql-engine-deployer:v0.3
@@ -343,6 +362,10 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - test_and_build_cli
+    - test_community_apps:
+        <<: *filter_only_vtags
+        requires:
+        - test_and_build_console
     - deploy:
         <<: *filter_only_vtags_dev_release_branches
         requires:

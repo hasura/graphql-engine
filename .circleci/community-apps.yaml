@@ -1,0 +1,5 @@
+apps:
+- name: passportjs
+  path: community/boilerplates/auth-webhooks/passport-js
+  dockerfile: Dockerfile
+  access_key: false
