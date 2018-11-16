@@ -139,19 +139,21 @@ const addResolver = () => {
     // const url = Endpoints.getSchema;
     const resolveObj = {
       name: currState.name.trim().replace(/ +/g, ''),
-      url: currState.manualUrl,
-      url_from_env: currState.envName,
-      headers: [],
-      forward_client_headers: currState.forwardClientHeaders,
+      definition: {
+        url: currState.manualUrl,
+        url_from_env: currState.envName,
+        headers: [],
+        forward_client_headers: currState.forwardClientHeaders,
+      },
     };
 
-    resolveObj.headers = [
+    resolveObj.definition.headers = [
       ...getReqHeader(getState().customResolverData.headerData.headers),
     ];
-    if (resolveObj.url) {
-      delete resolveObj.url_from_env;
+    if (resolveObj.definition.url) {
+      delete resolveObj.definition.url_from_env;
     } else {
-      delete resolveObj.url;
+      delete resolveObj.definition.url;
     }
     /* TODO: Add mandatory fields validation */
 
@@ -239,15 +241,19 @@ const deleteResolver = () => {
       type: 'add_remote_schema',
       args: {
         name: currState.editState.originalName,
-        url: currState.editState.originalUrl,
-        url_from_env: currState.editState.originalEnvUrl,
-        headers: [],
-        forward_client_headers:
-          currState.editState.originalForwardClientHeaders,
+        definition: {
+          url: currState.editState.originalUrl,
+          url_from_env: currState.editState.originalEnvUrl,
+          headers: [],
+          forward_client_headers:
+            currState.editState.originalForwardClientHeaders,
+        },
       },
     };
 
-    downPayload.headers = [...currState.editState.originalHeaders];
+    downPayload.args.definition.headers = [
+      ...currState.editState.originalHeaders,
+    ];
 
     const upQueryArgs = [];
     upQueryArgs.push(payload);
@@ -311,19 +317,21 @@ const modifyResolver = () => {
     const trimmedName = currState.name.trim().replace(/ +/g, '');
     const resolveObj = {
       name: trimmedName,
-      url: currState.manualUrl,
-      url_from_env: currState.envName,
-      forward_client_headers: currState.forwardClientHeaders,
-      headers: [],
+      definition: {
+        url: currState.manualUrl,
+        url_from_env: currState.envName,
+        forward_client_headers: currState.forwardClientHeaders,
+        headers: [],
+      },
     };
 
-    resolveObj.headers = [
+    resolveObj.definition.headers = [
       ...getReqHeader(getState().customResolverData.headerData.headers),
     ];
-    if (resolveObj.url) {
-      delete resolveObj.url_from_env;
+    if (resolveObj.definition.url) {
+      delete resolveObj.definition.url_from_env;
     } else {
-      delete resolveObj.url;
+      delete resolveObj.definition.url;
     }
 
     const createResolverUp = {
@@ -344,17 +352,22 @@ const modifyResolver = () => {
     };
     const resolveDownObj = {
       name: currState.editState.originalName,
-      url: currState.editState.originalUrl,
-      url_from_env: currState.editState.originalEnvUrl,
-      headers: [],
-      forward_client_headers: currState.editState.originalForwardClientHeaders,
+      definition: {
+        url: currState.editState.originalUrl,
+        url_from_env: currState.editState.originalEnvUrl,
+        headers: [],
+        forward_client_headers:
+          currState.editState.originalForwardClientHeaders,
+      },
     };
 
-    resolveDownObj.headers = [...currState.editState.originalHeaders];
-    if (resolveDownObj.url) {
-      delete resolveDownObj.url_from_env;
+    resolveDownObj.definition.headers = [
+      ...currState.editState.originalHeaders,
+    ];
+    if (resolveDownObj.definition.url) {
+      delete resolveDownObj.definition.url_from_env;
     } else {
-      delete resolveDownObj.url;
+      delete resolveDownObj.definition.url;
     }
 
     const createResolverDown = {
