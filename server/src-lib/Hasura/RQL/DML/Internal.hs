@@ -24,9 +24,6 @@ import qualified Data.HashSet                 as HS
 import qualified Data.Sequence                as DS
 import qualified Data.Text                    as T
 
--- class (P1C m) => Preparable m where
---   prepValBuilder :: PGColType -> Value -> m S.SQLExp
-
 type DMLP1 = StateT (DS.Seq Q.PrepArg) P1
 
 instance CacheRM DMLP1 where
@@ -34,12 +31,6 @@ instance CacheRM DMLP1 where
 
 instance UserInfoM DMLP1 where
   askUserInfo = lift askUserInfo
-
--- instance P1C DMLP1 where
---   askUserInfo = lift askUserInfo
-
--- instance Preparable DMLP1 where
---   prepValBuilder = binRHSBuilder
 
 peelDMLP1 :: QCtx -> DMLP1 a -> Either QErr (a, [Q.PrepArg])
 peelDMLP1 qEnv m = do
@@ -201,17 +192,6 @@ checkSelPerm
   -> m AnnBoolExpSQL
 checkSelPerm spi =
   traverse (checkOnColExp spi)
-
--- convBoolExp
---   :: (P1C m)
---   => FieldInfoMap
---   -> QualifiedTable
---   -> SelPermInfo
---   -> BoolExp
---   -> (PGColType -> Value -> m S.SQLExp)
---   -> m S.BoolExp
--- convBoolExp cim tn spi be prepValBuilder =
---   cBoolExp <$> convBoolExp' cim tn spi be prepValBuilder
 
 convBoolExp'
   :: (P1C m)
