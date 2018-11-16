@@ -1,23 +1,27 @@
 .. _auth0_jwt:
 
-Auth0 JWT Integration with Hasura GraphQL
-=========================================
+Auth0 JWT Integration with Hasura GraphQL engine
+================================================
 
-In this guide, we will walkthrough on how to set up Auth0 to work with Hasura.
+In this guide, we will walk-through on how to set up Auth0 to work with Hasura GraphQL engine.
 
-Create an Application
-^^^^^^^^^^^^^^^^^^^^^
+Create an Auth0 Application
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Create an application in Auth0 dashboard. Navigate to the `dashboard <https://manage.auth0.com>`_ and click on the Applications menu option on the left. Clicking the + Create Application button. In the Create Application window, set a name for your application and select Single Page Web Applications. (Assuming your application is React/Angular/Vue etc).
+- Navigate to the `Auth0 dashboard <https://manage.auth0.com>`__
+- Click on the ``Applications`` menu option on the left and then click the ``+ Create Application`` button.
+- In the ``Create Application`` window, set a name for your application and select ``Single Page Web Applications``.
+  (Assuming your application is React/Angular/Vue etc).
 
 .. image:: ../../../../img/graphql/manual/guides/create-client-popup.png
 
 Configure Auth0 Rules & Callback URLs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the settings of the application, add appropriate (for ex: http://localhost:3000/callback) URLs as "Allowed Callback URLs" and "Allowed Web Origins". Add domain specific URLs as well for production apps. (for ex: https://myapp.com/callback)
+In the settings of the application, add appropriate (e.g: http://localhost:3000/callback) URLs as ``Allowed Callback
+URLs`` and ``Allowed Web Origins``. Add domain specific URLs as well for production apps. (e.g: https://myapp.com/callback)
 
-In the dashboard, navigate to "Rules". Add the following rules to add our custom JWT claims:
+In the dashboard, navigate to ``Rules``. Add the following rules to add our custom JWT claims:
 
 .. code-block:: javascript
 
@@ -42,7 +46,7 @@ Auth0 publishes their JWK under:
 ``https://<your-auth0-domain>.auth0.com/.well-known/jwks.json``
 
 But they have a `bug where the certificate thumbprint does not match
-<https://community.auth0.com/t/certificate-thumbprint-is-longer-than-20-bytes/7794/3>`_.
+<https://community.auth0.com/t/certificate-thumbprint-is-longer-than-20-bytes/7794/3>`__.
 Hence, currently this URL does not work with Hasura.
 
 Current workaround is to download the X590 certificate from:
@@ -77,10 +81,13 @@ And use it in the ``key`` field:
     "
         }
 
-An easier way to generate the above config is to use the following UI https://hasura.io/jwt-config.
+An easier way to generate the above config is to use the following UI:
+
+https://hasura.io/jwt-config.
 
 The generated config can be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt-secret`` flag.
-The config generated from this page can be directly pasted in yaml files and command line arguments as it takes care of escaping new lines.
+The config generated from this page can be directly pasted in yaml files and command line arguments as it takes care of
+escaping new lines.
 
 .. image:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
 
@@ -88,4 +95,7 @@ The config generated from this page can be directly pasted in yaml files and com
 Add Access Control Rules via Hasura Console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-With the above steps, Auth0 is configured and ready to be used in the application. But to further restrict querying on a table, you can setup access control rules. Refer :doc:`../../auth/basics` this for more information.
+With the above steps, Auth0 is configured and ready to be used in the application. But to further restrict querying on
+a table, you can setup access control rules.
+
+Refer :doc:`../../auth/basics` for more information.
