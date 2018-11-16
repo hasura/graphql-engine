@@ -6,10 +6,7 @@
 
 module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
-  , pgColValToBoolExpG
   , pgColValToBoolExp
-  , convertBoolExp
-  , prepare
   ) where
 
 import           Data.Has
@@ -123,20 +120,14 @@ parseBoolExp f annGVal = do
           | otherwise   -> BoolFld <$> parseColExp f nt k v parseOpExps
   return $ BoolAnd $ fromMaybe [] boolExpsM
 
-convertBoolExp
-  :: AnnGValue
-  -> Convert AnnBoolExpSQL
-convertBoolExp =
-  parseBoolExp prepare
-
 type PGColValMap = Map.HashMap G.Name AnnGValue
 
-pgColValToBoolExpG
+pgColValToBoolExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => ((PGColType, PGColValue) -> m S.SQLExp)
   -> PGColValMap
   -> m AnnBoolExpSQL
-pgColValToBoolExpG f colValMap = do
+pgColValToBoolExp f colValMap = do
   colExps <- forM colVals $ \(name, val) -> do
     (ty, _) <- asPGColVal val
     let namedTy = mkScalarTy ty
@@ -144,9 +135,3 @@ pgColValToBoolExpG f colValMap = do
   return $ BoolAnd colExps
   where
     colVals = Map.toList colValMap
-
-pgColValToBoolExp
-  :: PGColValMap
-  -> Convert AnnBoolExpSQL
-pgColValToBoolExp =
-  pgColValToBoolExpG prepare

@@ -177,7 +177,7 @@ fromFieldByPKey
   => ((PGColType, PGColValue) -> m S.SQLExp)
   -> QualifiedTable -> AnnBoolExpSQL -> Field -> m RS.AnnSel
 fromFieldByPKey f tn permFilter fld = fieldAsPath fld $ do
-  boolExp <- pgColValToBoolExpG f $ _fArguments fld
+  boolExp <- pgColValToBoolExp f $ _fArguments fld
   annFlds <- fromSelSet f (_fType fld) $ _fSelSet fld
   let tabFrom = RS.TableFrom tn Nothing
       tabPerm = RS.TablePerm permFilter Nothing

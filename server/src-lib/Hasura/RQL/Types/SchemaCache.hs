@@ -254,14 +254,10 @@ data InsPermInfo
   , ipiCheck           :: !AnnBoolExpSQL
   , ipiAllowUpsert     :: !Bool
   , ipiSet             :: !InsSetCols
-  -- , ipiDeps            :: ![SchemaDependency]
   , ipiRequiredHeaders :: ![T.Text]
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''InsPermInfo)
-
--- instance CachedSchemaObj InsPermInfo where
---   dependsOn = ipiDeps
 
 data SelPermInfo
   = SelPermInfo
@@ -270,9 +266,8 @@ data SelPermInfo
   , spiFilter          :: !AnnBoolExpSQL
   , spiLimit           :: !(Maybe Int)
   , spiAllowAgg        :: !Bool
-  -- , spiDeps            :: ![SchemaDependency]
   , spiRequiredHeaders :: ![T.Text]
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''SelPermInfo)
 
@@ -282,7 +277,7 @@ data UpdPermInfo
   , upiTable           :: !QualifiedTable
   , upiFilter          :: !AnnBoolExpSQL
   , upiRequiredHeaders :: ![T.Text]
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''UpdPermInfo)
 
@@ -291,7 +286,7 @@ data DelPermInfo
   { dpiTable           :: !QualifiedTable
   , dpiFilter          :: !AnnBoolExpSQL
   , dpiRequiredHeaders :: ![T.Text]
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''DelPermInfo)
 
@@ -304,7 +299,7 @@ data RolePermInfo
   , _permSel :: !(Maybe SelPermInfo)
   , _permUpd :: !(Maybe UpdPermInfo)
   , _permDel :: !(Maybe DelPermInfo)
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 5 snakeCase) ''RolePermInfo)
 makeLenses ''RolePermInfo
@@ -397,7 +392,7 @@ data TableInfo
   , tiPrimaryKeyCols      :: ![PGCol]
   , tiViewInfo            :: !(Maybe ViewInfo)
   , tiEventTriggerInfoMap :: !EventTriggerInfoMap
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 
@@ -435,7 +430,7 @@ data SchemaCache
   { scTables     :: !TableCache
   , scQTemplates :: !QTemplateCache
   , scDepMap     :: !DepMap
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
 
@@ -728,6 +723,10 @@ getDependentObjsWith f sc objId =
   map fst $ filter (isDependency . snd) $ M.toList $ scDepMap sc
   where
     isDependency deps = not $ HS.null $ flip HS.filter deps $
-      \(SchemaDependency depId reason) -> depId == objId && f reason
+      \(SchemaDependency depId reason) -> objId `induces` depId && f reason
 
+    -- induces a b : is b dependent on a
+    induces (SOTable tn1) (SOTable tn2)      = tn1 == tn2
+    induces (SOTable tn1) (SOTableObj tn2 _) = tn1 == tn2
+    induces objId1 objId2                    = objId1 == objId2
     -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc

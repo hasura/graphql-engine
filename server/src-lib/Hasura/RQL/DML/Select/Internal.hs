@@ -365,39 +365,6 @@ processAnnOrderByCol pfx = \case
        , Just (rn, relNode)
        )
 
--- processAnnOrderByCol
---   :: Iden
---   -> AnnObCol
---        -- the extractors which will select the needed columns
---   -> ( (S.Alias, S.SQLExp)
---        -- optionally we may have to add an obj rel node
---      , Maybe (RelName, RelNode)
---      )
--- processAnnOrderByCol pfx = \case
---   AOCPG colInfo ->
---     let
---       qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden $ pgiName colInfo)
---       obColAls = mkBaseTableColAls pfx $ pgiName colInfo
---     in ( (S.Alias obColAls, qualCol)
---        , Nothing
---        )
---   -- "pfx.or.relname"."pfx.ob.or.relname.rest" AS "pfx.ob.or.relname.rest"
---   AOCRel (RelInfo rn _ colMapping relTab _) relFltr rest ->
---     let relPfx  = mkObjRelTableAls pfx rn
---         ((nesAls, nesCol), nesNodeM) = processAnnOrderByCol relPfx rest
---         qualCol = S.mkQIdenExp relPfx nesAls
---         relBaseNode = ANSimple $
---           BaseNode relPfx (S.FISimple relTab Nothing)
---           (toSQLBoolExp (S.QualTable relTab) relFltr)
---           Nothing Nothing Nothing
---           (HM.singleton nesAls nesCol)
---           (maybe HM.empty (uncurry HM.singleton) nesNodeM)
---           HM.empty
---         relNode = RelNode rn (fromRel rn) colMapping relBaseNode
---     in ( (nesAls, qualCol)
---        , Just (rn, relNode)
---        )
-
 mkEmptyBaseNode :: Iden -> TableFrom -> BaseNode
 mkEmptyBaseNode pfx tableFrom =
   BaseNode pfx fromItem (S.BELit True) Nothing Nothing Nothing

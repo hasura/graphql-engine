@@ -32,7 +32,6 @@ import qualified Hasura.RQL.GBoolExp               as RB
 
 import qualified Hasura.SQL.DML                    as S
 
-import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Mutation

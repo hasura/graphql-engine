@@ -98,7 +98,7 @@ convertUpdate tn filterExp fld = do
   -- a set expression is same as a row object
   setExpM   <- withArgM args "_set" convertRowObj
   -- where bool expression to filter column
-  whereExp <- withArg args "where" convertBoolExp
+  whereExp <- withArg args "where" (parseBoolExp prepare)
   -- increment operator on integer columns
   incExpM <- withArgM args "_inc" $
     convObjWithOp $ rhsExpOp S.incOp S.intType
@@ -138,7 +138,7 @@ convertDelete
   -> Field -- the mutation field
   -> Convert RespTx
 convertDelete tn filterExp fld = do
-  whereExp <- withArg (_fArguments fld) "where" convertBoolExp
+  whereExp <- withArg (_fArguments fld) "where" (parseBoolExp prepare)
   mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
   args <- get
   let p1 = RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds

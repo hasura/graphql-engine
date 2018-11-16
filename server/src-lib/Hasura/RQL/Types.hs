@@ -118,7 +118,7 @@ data QCtx
   = QCtx
   { qcUserInfo    :: !UserInfo
   , qcSchemaCache :: !SchemaCache
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 class HasQCtx a where
   getQCtx :: a -> QCtx
