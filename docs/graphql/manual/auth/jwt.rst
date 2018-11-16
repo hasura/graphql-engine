@@ -276,6 +276,9 @@ If you are using Firebase and Hasura, use this config:
 
 Auth0
 ^^^^^
+
+Refer this :doc:`../guides/integrations/auth0-jwt` for full integration guide with Auth0
+
 Auth0 publishes their JWK under:
 
 ``https://<your-auth0-domain>.auth0.com/.well-known/jwks.json``
@@ -315,26 +318,6 @@ And use it in the ``key`` field:
     -----END CERTIFICATE-----
     "
         }
-
-Add rules for custom JWT claims
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-In the Auth0 dashboard, navigate to "Rules". Add the following rules to add our custom JWT claims:
-
-.. code-block:: javascript
-
-
-    function (user, context, callback) {
-      const namespace = "https://hasura.io/jwt/claims";
-      context.idToken[namespace] = 
-        { 
-          'x-hasura-default-role': 'user',
-          // do some custom logic to decide allowed roles
-          'x-hasura-allowed-roles': ['user'],
-          'x-hasura-user-id': user.user_id
-        };
-      callback(null, user, context);
-    }
 
 Generate JWT Config
 ^^^^^^^^^^^^^^^^^^^
