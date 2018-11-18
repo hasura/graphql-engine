@@ -59,8 +59,9 @@ mkMutFldExp qt singleObj = \case
     }
   MExp t -> S.SELit t
   MRet selFlds ->
-    let tabFrom = TableFrom qt $ Just frmItem
-        tabPerm = TablePerm (S.BELit True) Nothing
+    -- let tabFrom = TableFrom qt $ Just frmItem
+    let tabFrom = TableFrom qt $ Just  $ qualTableToAliasIden qt
+        tabPerm = TablePerm annBoolExpTrue Nothing
     in S.SESelect $ mkSQLSelect singleObj $
        AnnSelG selFlds tabFrom tabPerm noTableArgs
   where

@@ -28,12 +28,10 @@ import qualified Database.PG.Query                 as Q
 import qualified Hasura.RQL.DML.Insert             as RI
 import qualified Hasura.RQL.DML.Returning          as RR
 import qualified Hasura.RQL.DML.Select             as RS
-import qualified Hasura.RQL.GBoolExp               as RG
 import qualified Hasura.RQL.GBoolExp               as RB
 
 import qualified Hasura.SQL.DML                    as S
 
-import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Mutation
@@ -214,13 +212,13 @@ mkInsertQ vn onConflictM insCols tableCols defVals role = do
 mkBoolExp
   :: (MonadError QErr m, MonadState PrepArgs m)
   => QualifiedTable -> [(PGColInfo, PGColValue)]
-  -> m (GBoolExp RG.AnnSQLBoolExp)
+  -> m S.BoolExp
 mkBoolExp tn colInfoVals =
-  RG.convBoolRhs (RG.mkBoolExpBuilder prepare) (S.mkQual tn) boolExp
+  RB.toSQLBoolExp (S.mkQual tn) . BoolAnd <$>
+  mapM (fmap BoolFld . uncurry f) colInfoVals
   where
-    boolExp = BoolAnd $ map (BoolCol . uncurry f) colInfoVals
     f ci@(PGColInfo _ colTy _) colVal =
-      RB.AVCol ci [RB.OEVal $ RB.AEQ (colTy, colVal)]
+      AVCol ci . pure . AEQ <$> prepare (colTy, colVal)
 
 mkSelQ :: MonadError QErr m => QualifiedTable
        -> [PGColInfo] -> [PGColWithValue] -> m InsWithExp
@@ -228,7 +226,7 @@ mkSelQ tn allColInfos pgColsWithVal = do
   (whereExp, args) <- flip runStateT Seq.Empty $ mkBoolExp tn colWithInfos
   let sqlSel = S.mkSelect { S.selExtr = [S.selectStar]
                           , S.selFrom = Just $ S.mkSimpleFromExp tn
-                          , S.selWhere = Just $ S.WhereFrag $ RG.cBoolExp whereExp
+                          , S.selWhere = Just $ S.WhereFrag whereExp
                           }
 
   return $ InsWithExp (S.CTESelect sqlSel) Nothing args
