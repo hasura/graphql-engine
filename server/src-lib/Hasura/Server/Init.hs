@@ -148,13 +148,12 @@ parseConnParams =
                value 180 <>
                help "Each connection's idle time before it is closed" )
 
-parseServerPort :: Parser Int
-parseServerPort =
+parseServerPort :: Parser (Maybe Int)
+parseServerPort = optional $
   option auto ( long "server-port" <>
-           metavar "PORT" <>
-           value 8080 <>
-           showDefault <>
-           help "Port on which graphql-engine should be served")
+                metavar "PORT" <>
+                help "Port on which graphql-engine should be served (default: 8080)"
+              )
 
 parseAccessKey :: Parser (Maybe AccessKey)
 parseAccessKey =

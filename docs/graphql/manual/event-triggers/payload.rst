@@ -115,8 +115,6 @@ JSON payload
 Syntax definitions
 ------------------
 
-.. _Object:
-
 Object
 ^^^^^^
 
@@ -128,8 +126,6 @@ Object
     ..
   }
 
-
-.. _OpName:
 
 OpName
 ^^^^^^
