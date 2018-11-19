@@ -313,10 +313,10 @@ jobs:
     - *wait_for_postgres
     - run:
         name: install requirements
-        command: pip3 install -r .circleci/community-apps-requirements.txt
+        command: pip install -r .circleci/community-apps-requirements.txt
     - run:
         name: test community apps
-        command: python3 .circleci/community-apps-test.py
+        command: python .circleci/community-apps-test.py
 
   deploy:
     docker:
