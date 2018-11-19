@@ -2,7 +2,7 @@ const { promisify } = require('util');
 const Knex = require('knex');
 const connection = require('../knexfile');
 const { Model } = require('objection');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt-nodejs');
 const crypto = require('crypto');
 
 const knexConnection = Knex(connection);
