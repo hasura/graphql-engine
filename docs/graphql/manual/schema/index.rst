@@ -20,7 +20,6 @@ See:
   Basics <basics>
   Relationships <relationships/index>
   Customise with views <views>
-  Merge remote schemas <remote-schemas>
   Default field values <default-values/index>
   Enum type fields <enums>
   Using an existing database <using-existing-database>

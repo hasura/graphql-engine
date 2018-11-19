@@ -32,7 +32,7 @@ schema using the console. Here's a reference architecture diagram for such a set
 
 .. image:: ../../../img/graphql/manual/schema/schema-stitching-v1-arch-diagram.png
 
-For more details, links to boilerplates for custom GraphQL servers, etc. please head to :doc:`../schema/remote-schemas`.
+For more details, links to boilerplates for custom GraphQL servers, etc. please head to :doc:`../remote-schemas/index`.
 
 .. _event-triggers:
 
