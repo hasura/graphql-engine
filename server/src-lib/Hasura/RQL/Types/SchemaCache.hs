@@ -371,14 +371,14 @@ instance CachedSchemaObj OpTriggerInfo where
 
 data EventTriggerInfo
  = EventTriggerInfo
-   { etiId        :: !TriggerId
-   , etiName      :: !TriggerName
-   , etiInsert    :: !(Maybe OpTriggerInfo)
-   , etiUpdate    :: !(Maybe OpTriggerInfo)
-   , etiDelete    :: !(Maybe OpTriggerInfo)
-   , etiRetryConf :: !RetryConf
-   , etiWebhook   :: !T.Text
-   , etiHeaders   :: ![EventHeaderInfo]
+   { etiId          :: !TriggerId
+   , etiName        :: !TriggerName
+   , etiInsert      :: !(Maybe OpTriggerInfo)
+   , etiUpdate      :: !(Maybe OpTriggerInfo)
+   , etiDelete      :: !(Maybe OpTriggerInfo)
+   , etiRetryConf   :: !RetryConf
+   , etiWebhookInfo :: !WebhookConfInfo
+   , etiHeaders     :: ![EventHeaderInfo]
    } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)
@@ -642,10 +642,10 @@ addEventTriggerToCache
   -> TriggerName
   -> TriggerOpsDef
   -> RetryConf
-  -> T.Text
+  -> WebhookConfInfo
   -> [EventHeaderInfo]
   -> m ()
-addEventTriggerToCache qt trid trn tdef rconf webhook headers =
+addEventTriggerToCache qt trid trn tdef rconf webhookInfo headers =
   modTableInCache modEventTriggerInfo qt
   where
     modEventTriggerInfo ti = do
@@ -656,7 +656,7 @@ addEventTriggerToCache qt trid trn tdef rconf webhook headers =
                 (getOpInfo trn ti $ tdUpdate tdef)
                 (getOpInfo trn ti $ tdDelete tdef)
                 rconf
-                webhook
+                webhookInfo
                 headers
           etim = tiEventTriggerInfoMap ti
       -- fail $ show (toJSON eti)

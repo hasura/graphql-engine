@@ -10,7 +10,6 @@ import           Control.Lens                  ((&), (.~), (?~), (^.))
 import           Data.FileEmbed                (embedStringFile)
 import           Data.Foldable                 (foldlM)
 import           Hasura.Prelude
-import           System.Environment            (lookupEnv)
 
 import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as BL
@@ -21,11 +20,9 @@ import qualified Data.Text.Encoding            as T
 import qualified Language.GraphQL.Draft.JSON   ()
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
-import qualified Network.URI.Extended          as N
 import qualified Network.Wreq                  as Wreq
 
-import           Hasura.RQL.DDL.Headers        (HeaderConf (..),
-                                                getHeadersFromConf)
+import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
 import           Hasura.RQL.Types
 
 import qualified Hasura.GraphQL.Schema         as GS
@@ -37,8 +34,11 @@ introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
 
 fetchRemoteSchema
   :: (MonadIO m, MonadError QErr m)
-  => HTTP.Manager -> N.URI -> [HeaderConf] -> m GS.RemoteGCtx
-fetchRemoteSchema manager url headerConf = do
+  => HTTP.Manager
+  -> RemoteSchemaName
+  -> RemoteSchemaInfo
+  -> m GS.RemoteGCtx
+fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
   headers <- getHeadersFromConf headerConf
   let hdrs = map (\(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)) headers
   let options = Wreq.defaults
@@ -55,7 +55,7 @@ fetchRemoteSchema manager url headerConf = do
 
   schemaDoc <- either schemaErr return $ J.eitherDecode respData
   --liftIO $ print $ map G.getNamedTyp $ G._sdTypes schemaDoc
-  let etTypeInfos = mapM (fromRemoteTyDef headerConf) $ G._sdTypes schemaDoc
+  let etTypeInfos = mapM fromRemoteTyDef $ G._sdTypes schemaDoc
   typeInfos <- either schemaErr return etTypeInfos
   --liftIO $ print $ map VT.getNamedTy typeInfos
   let typMap = VT.mkTyInfoMap typeInfos
@@ -70,7 +70,7 @@ fetchRemoteSchema manager url headerConf = do
 
   where
     noQueryRoot = err400 Unexpected "query root not found in remote schema"
-    fromRemoteTyDef hdrs ty = VT.fromTyDef ty $ VT.RemoteType url hdrs
+    fromRemoteTyDef ty = VT.fromTyDef ty $ VT.RemoteType name def
     getRootNames sc = ( G._sdQueryRoot sc
                       , G._sdMutationRoot sc
                       , G._sdSubscriptionRoot sc )
@@ -81,53 +81,45 @@ fetchRemoteSchema manager url headerConf = do
 
 mergeSchemas
   :: (MonadIO m, MonadError QErr m)
-
-  => RemoteSchemaMap -> GS.GCtxMap -> HTTP.Manager
+  => RemoteSchemaMap
+  -> GS.GCtxMap
+  -> HTTP.Manager
   -> m (GS.GCtxMap, GS.GCtx) -- the merged GCtxMap and the default GCtx without roles
 mergeSchemas rmSchemaMap gCtxMap httpManager = do
-  -- TODO: better way to do this?
-  let remoteSrvrs = map (\(k, v) -> (k, _rsHeaders v)) $
-                    Map.toList rmSchemaMap
-  remoteSchemas <- forM remoteSrvrs $ \(url, hdrs) ->
-    fetchRemoteSchema httpManager url hdrs
-  merged <- mergeRemoteSchemas gCtxMap remoteSchemas
+  remoteSchemas <- forM (Map.toList rmSchemaMap) $ \(name, def) ->
+    fetchRemoteSchema httpManager name def
   def <- mkDefaultRemoteGCtx remoteSchemas
+  merged <- mergeRemoteSchema gCtxMap def
   return (merged, def)
 
 mkDefaultRemoteGCtx
   :: (MonadError QErr m)
   => [GS.RemoteGCtx] -> m GS.GCtx
-mkDefaultRemoteGCtx = foldlM mergeGCtx GS.emptyGCtx
-
-mergeRemoteSchemas
-  :: (MonadError QErr m)
-  => GS.GCtxMap
-  -> [GS.RemoteGCtx]
-  -> m GS.GCtxMap
-mergeRemoteSchemas = foldlM mergeRemoteSchema
+mkDefaultRemoteGCtx =
+  foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GS.emptyGCtx
 
 mergeRemoteSchema
   :: (MonadError QErr m)
   => GS.GCtxMap
-  -> GS.RemoteGCtx
+  -> GS.GCtx
   -> m GS.GCtxMap
-mergeRemoteSchema ctxMap rmSchema = do
+mergeRemoteSchema ctxMap mergedRemoteGCtx = do
   res <- forM (Map.toList ctxMap) $ \(role, gCtx) -> do
-    updatedGCtx <- mergeGCtx gCtx rmSchema
+    updatedGCtx <- mergeGCtx gCtx mergedRemoteGCtx
     return (role, updatedGCtx)
   return $ Map.fromList res
 
 mergeGCtx
   :: (MonadError QErr m)
   => GS.GCtx
-  -> GS.RemoteGCtx
+  -> GS.GCtx
   -> m GS.GCtx
-mergeGCtx gCtx rmSchema = do
-  let rmTypes = GS._rgTypes rmSchema
+mergeGCtx gCtx rmMergedGCtx = do
+  let rmTypes = GS._gTypes rmMergedGCtx
       hsraTyMap = GS._gTypes gCtx
-  GS.checkConflictingNodes gCtx rmSchema
-  let newQR = mergeQueryRoot gCtx rmSchema
-      newMR = mergeMutRoot gCtx rmSchema
+  GS.checkSchemaConflicts gCtx rmMergedGCtx
+  let newQR = mergeQueryRoot gCtx rmMergedGCtx
+      newMR = mergeMutRoot gCtx rmMergedGCtx
       newTyMap = mergeTyMaps hsraTyMap rmTypes newQR newMR
       updatedGCtx = gCtx { GS._gTypes = newTyMap
                          , GS._gQueryRoot = newQR
@@ -135,46 +127,48 @@ mergeGCtx gCtx rmSchema = do
                          }
   return updatedGCtx
 
-mergeQueryRoot :: GS.GCtx -> GS.RemoteGCtx -> VT.ObjTyInfo
-mergeQueryRoot gCtx rmSchema =
-  let hQR = VT._otiFields $ GS._gQueryRoot gCtx
-      rmQR = VT._otiFields $ GS._rgQueryRoot rmSchema
-      newFlds = Map.union hQR rmQR
-      newQR = (GS._gQueryRoot gCtx) { VT._otiFields = newFlds }
-  in newQR
+convRemoteGCtx :: GS.RemoteGCtx -> GS.GCtx
+convRemoteGCtx rmGCtx =
+  GS.emptyGCtx { GS._gTypes     = GS._rgTypes rmGCtx
+               , GS._gQueryRoot = GS._rgQueryRoot rmGCtx
+               , GS._gMutRoot   = GS._rgMutationRoot rmGCtx
+               }
 
-mergeMutRoot :: GS.GCtx -> GS.RemoteGCtx -> Maybe VT.ObjTyInfo
-mergeMutRoot gCtx rmSchema =
-  let hMR = VT._otiFields <$> GS._gMutRoot gCtx
-      rmMR = VT._otiFields <$> GS._rgMutationRoot rmSchema
-      newMutFldsM = GS.mergeMaybeMaps hMR rmMR
-      newMutFlds = fromMaybe Map.empty newMutFldsM
-      hMrM = GS._gMutRoot gCtx
-      newMR = maybe (Just $ mkNewMutRoot newMutFlds)
-              (\hMr -> Just hMr { VT._otiFields = newMutFlds })
-              hMrM
-  in newMR
+
+mergeQueryRoot :: GS.GCtx -> GS.GCtx -> VT.ObjTyInfo
+mergeQueryRoot a b = GS._gQueryRoot a <> GS._gQueryRoot b
+
+mergeMutRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
+mergeMutRoot a b =
+  let objA' = fromMaybe mempty $ GS._gMutRoot a
+      objB  = fromMaybe mempty $ GS._gMutRoot b
+      objA  = newRootOrEmpty objA' objB
+      merged = objA <> objB
+  in bool (Just merged) Nothing $ merged == mempty
+  where
+    newRootOrEmpty x y =
+      if x == mempty && y /= mempty
+      then mkNewEmptyMutRoot
+      else x
+
+mkNewEmptyMutRoot :: VT.ObjTyInfo
+mkNewEmptyMutRoot = VT.ObjTyInfo (Just "mutation root")
+                    (G.NamedType "mutation_root") Map.empty
 
 mkNewMutRoot :: VT.ObjFieldMap -> VT.ObjTyInfo
 mkNewMutRoot flds = VT.ObjTyInfo (Just "mutation root")
                     (G.NamedType "mutation_root") flds
 
-mergeTyMaps :: VT.TypeMap -> VT.TypeMap -> VT.ObjTyInfo -> Maybe VT.ObjTyInfo -> VT.TypeMap
+mergeTyMaps
+  :: VT.TypeMap
+  -> VT.TypeMap
+  -> VT.ObjTyInfo
+  -> Maybe VT.ObjTyInfo
+  -> VT.TypeMap
 mergeTyMaps hTyMap rmTyMap newQR newMR =
-  let newTyMap' = Map.insert (G.NamedType "query_root") (VT.TIObj newQR) $
-                    Map.union hTyMap rmTyMap
+  let newTyMap  = hTyMap <> rmTyMap
+      newTyMap' = Map.insert (G.NamedType "query_root") (VT.TIObj newQR) $
+                  newTyMap
   in maybe newTyMap' (\mr -> Map.insert
                               (G.NamedType "mutation_root")
                               (VT.TIObj mr) newTyMap') newMR
-
-
-getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Text -> m N.URI
-getUrlFromEnv urlFromEnv = do
-  mEnv <- liftIO . lookupEnv $ T.unpack urlFromEnv
-  env  <- maybe (throw400 Unexpected $ envNotFoundMsg urlFromEnv) return
-          mEnv
-  maybe (throw400 Unexpected $ invalidUri env) return $ N.parseURI env
-  where
-    invalidUri uri = "not a valid URI: " <> T.pack uri
-    envNotFoundMsg e =
-      "cannot find environment variable " <> e <> " for custom resolver"

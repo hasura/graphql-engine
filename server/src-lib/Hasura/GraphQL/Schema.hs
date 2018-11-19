@@ -15,9 +15,10 @@ module Hasura.GraphQL.Schema
   , InsCtx(..)
   , InsCtxMap
   , RelationInfoMap
+  , isAggFld
   -- Schema stitching related
   , RemoteGCtx (..)
-  , checkConflictingNodes
+  , checkSchemaConflicts
   , checkConflictingNode
   , emptyGCtx
   , mergeMaybeMaps
@@ -25,6 +26,7 @@ module Hasura.GraphQL.Schema
 
 
 import           Data.Has
+import           Data.Maybe                     (maybeToList)
 
 import qualified Data.HashMap.Strict            as Map
 import qualified Data.HashSet                   as Set
@@ -205,6 +207,17 @@ isRelNullable fim ri = isNullable
     allCols = getValidCols fim
     lColInfos = getColInfos lCols allCols
     isNullable = any pgiIsNullable lColInfos
+
+numAggOps :: [G.Name]
+numAggOps = [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
+            , "variance", "var_samp", "var_pop"
+            ]
+
+compAggOps :: [G.Name]
+compAggOps = ["max", "min"]
+
+isAggFld :: G.Name -> Bool
+isAggFld = flip elem (numAggOps <> compAggOps)
 
 mkColName :: PGCol -> G.Name
 mkColName (PGCol n) = G.Name n
@@ -432,7 +445,14 @@ mkTableAggObj tn =
 {-
 type table_aggregate_fields{
   count: Int
-  sum: table_num_fields
+  sum: table_sum_fields
+  avg: table_avg_fields
+  stddev: table_stddev_fields
+  stddev_pop: table_stddev_pop_fields
+  variance: table_variance_fields
+  var_pop: table_var_pop_fields
+  max: table_max_fields
+  min: table_min_fields
 }
 -}
 mkTableAggFldsObj
@@ -444,22 +464,24 @@ mkTableAggFldsObj tn numCols compCols =
     desc = G.Description $
       "aggregate fields of " <>> tn
 
-    countFld = mkHsraObjFldInfo Nothing "count" Map.empty $ G.toGT $
+    countFld = mkHsraObjFldInfo Nothing "count" countParams $ G.toGT $
                mkScalarTy PGInteger
 
-    numFlds = bool [sumFld, avgFld] [] $ null numCols
-    compFlds = bool [maxFld, minFld] [] $ null compCols
+    countParams = fromInpValL [countColInpVal, distinctInpVal]
 
-    sumFld = mkColOpFld "sum"
-    avgFld = mkColOpFld "avg"
-    maxFld = mkColOpFld "max"
-    minFld = mkColOpFld "min"
+    countColInpVal = InpValInfo Nothing "columns" $ G.toGT $
+                     G.toLT $ G.toNT $ mkSelColumnInpTy tn
+    distinctInpVal = InpValInfo Nothing "distinct" $ G.toGT $
+                     mkScalarTy PGBoolean
+
+    numFlds = bool (map mkColOpFld numAggOps) [] $ null numCols
+    compFlds = bool (map mkColOpFld compAggOps) [] $ null compCols
 
     mkColOpFld op = mkHsraObjFldInfo Nothing op Map.empty $ G.toGT $
                     mkTableColAggFldsTy op tn
 
 {-
-type table_sum_fields{
+type table_<agg-op>_fields{
    num_col: Int
    .        .
    .        .
@@ -894,10 +916,15 @@ mkConstraintInpTy :: QualifiedTable -> G.NamedType
 mkConstraintInpTy tn =
   G.NamedType $ qualTableToName tn <> "_constraint"
 
--- table_column
-mkColumnInpTy :: QualifiedTable -> G.NamedType
-mkColumnInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_column"
+-- table_update_column
+mkUpdColumnInpTy :: QualifiedTable -> G.NamedType
+mkUpdColumnInpTy tn =
+  G.NamedType $ qualTableToName tn <> "_update_column"
+
+--table_select_column
+mkSelColumnInpTy :: QualifiedTable -> G.NamedType
+mkSelColumnInpTy tn =
+  G.NamedType $ qualTableToName tn <> "_select_column"
 {-
 input table_obj_rel_insert_input {
   data: table_insert_input!
@@ -1000,7 +1027,7 @@ mkOnConflictInp tn =
       G.toGT $ G.toNT $ mkConstraintInpTy tn
 
     updateColumnsInpVal = InpValInfo Nothing (G.Name "update_columns") $
-      G.toGT $ G.toLT $ G.toNT $ mkColumnInpTy tn
+      G.toGT $ G.toLT $ G.toNT $ mkUpdColumnInpTy tn
 {-
 
 insert_table(
@@ -1045,17 +1072,27 @@ mkConstriantTy tn cons = enumTyInfo
       EnumValInfo (Just "unique or primary key constraint")
       (G.EnumValue $ G.Name n) False
 
-mkColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
-mkColumnTy tn cols = enumTyInfo
+mkColumnEnumVal :: PGCol -> EnumValInfo
+mkColumnEnumVal (PGCol col) =
+  EnumValInfo (Just "column name") (G.EnumValue $ G.Name col) False
+
+mkUpdColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
+mkUpdColumnTy tn cols = enumTyInfo
   where
-    enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkColumnInpTy tn) $
+    enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkUpdColumnInpTy tn) $
                  mapFromL _eviVal $ map mkColumnEnumVal cols
 
     desc = G.Description $
-      "columns of table " <>> tn
+      "update columns of table " <>> tn
 
-    mkColumnEnumVal (PGCol col) =
-      EnumValInfo (Just "column name") (G.EnumValue $ G.Name col) False
+mkSelColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
+mkSelColumnTy tn cols = enumTyInfo
+  where
+    enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkSelColumnInpTy tn) $
+                 mapFromL _eviVal $ map mkColumnEnumVal cols
+
+    desc = G.Description $
+      "select columns of table " <>> tn
 
 mkConflictActionTy :: EnumTyInfo
 mkConflictActionTy = mkHsraEnumTyInfo (Just desc) ty $ mapFromL _eviVal
@@ -1162,7 +1199,7 @@ mkOnConflictTypes tn c cols =
   where
     tyInfos = [ TIEnum mkConflictActionTy
               , TIEnum $ mkConstriantTy tn constraints
-              , TIEnum $ mkColumnTy tn cols
+              , TIEnum $ mkUpdColumnTy tn cols
               , TIInpObj $ mkOnConflictInp tn
               ]
     constraints = filter isUniqueOrPrimary c
@@ -1213,6 +1250,7 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
       , TIInpObj <$> mutHelper viIsUpdatable updSetInpObjM
       , TIInpObj <$> mutHelper viIsUpdatable updIncInpObjM
       , TIObj <$> mutRespObjM
+      , TIEnum <$> selColInpTyM
       ]
     mutHelper f objM = bool Nothing objM $ isMutable f viM
 
@@ -1244,6 +1282,8 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
     updSetInpObjFldsM = mkColFldMap (mkUpdSetTy tn) <$> updColsM
 
     selFldsM = snd <$> selPermM
+    selColsM = (map pgiName . lefts) <$> selFldsM
+    selColInpTyM = mkSelColumnTy tn <$> selColsM
     -- boolexp input type
     boolExpInpObjM = case selFldsM of
       Just selFlds  -> Just $ mkBoolExpInp tn selFlds
@@ -1294,15 +1334,18 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
       _ -> []
     getNumCols = onlyNumCols . lefts
     getCompCols = onlyComparableCols . lefts
+    onlyFloat = const $ mkScalarTy PGFloat
+
+    mkTypeMaker "sum" = mkScalarTy
+    mkTypeMaker _     = onlyFloat
+
     mkColAggFldsObjs flds =
       let numCols = getNumCols flds
           compCols = getCompCols flds
-          sumFldsObj = mkTableColAggFldsObj tn "sum" mkScalarTy numCols
-          avgFldsObj = mkTableColAggFldsObj tn "avg" (const $ mkScalarTy PGFloat) numCols
-          maxFldsObj = mkTableColAggFldsObj tn "max" mkScalarTy compCols
-          minFldsObj = mkTableColAggFldsObj tn "min" mkScalarTy compCols
-          numFldsObjs = bool [sumFldsObj, avgFldsObj] [] $ null numCols
-          compFldsObjs = bool [maxFldsObj, minFldsObj] [] $ null compCols
+          mkNumObjFld n = mkTableColAggFldsObj tn n (mkTypeMaker n) numCols
+          mkCompObjFld n = mkTableColAggFldsObj tn n mkScalarTy compCols
+          numFldsObjs = bool (map mkNumObjFld numAggOps) [] $ null numCols
+          compFldsObjs = bool (map mkCompObjFld compAggOps) [] $ null compCols
       in numFldsObjs <> compFldsObjs
     -- the fields used in table object
     selObjFldsM = mkFldMap (mkTableTy tn) <$> selFldsM
@@ -1530,29 +1573,36 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols 
 noFilter :: S.BoolExp
 noFilter = S.BELit True
 
-checkConflictingNodes
+
+checkSchemaConflicts
   :: (MonadError QErr m)
-  => GCtx -> RemoteGCtx -> m ()
-checkConflictingNodes gCtx remoteCtx = do
+  => GCtx -> GCtx -> m ()
+checkSchemaConflicts gCtx remoteCtx = do
   -- check type conflicts
-  let typeMap = _gTypes gCtx
-      types = map G.unNamedType $ Map.keys typeMap
-      rmTypes = filter (`notElem` builtinTy) $
-                map G.unNamedType $ Map.keys $ _rgTypes remoteCtx
-      conflictedTypes = filter (`elem` types) rmTypes
+  let typeMap     = _gTypes gCtx -- hasura typemap
+      hTypes      = map G.unNamedType $ Map.keys typeMap
+      rmQRootName = _otiName $ _gQueryRoot remoteCtx
+      rmMRootName = maybeToList $ _otiName <$> _gMutRoot remoteCtx
+      rmRootNames = map G.unNamedType (rmQRootName:rmMRootName)
+      rmTypes     = filter (`notElem` builtinTy ++ rmRootNames) $
+                    map G.unNamedType $ Map.keys $ _gTypes remoteCtx
+
+      conflictedTypes = filter (`elem` hTypes) rmTypes
 
   unless (null conflictedTypes) $
     throw400 RemoteSchemaConflicts $ tyMsg conflictedTypes
 
   -- check node conflicts
-  let rmQRoot = _otiFields $ _rgQueryRoot remoteCtx
-      rmMRoot = _otiFields <$> _rgMutationRoot remoteCtx
-      rmRoots = filter (`notElem` builtin) . Map.keys <$> fmap (Map.union rmQRoot) rmMRoot
-      hQR = _otiFields <$>
-            join (getObjTyM <$> Map.lookup (G.NamedType "query_root") typeMap)
-      hMR = _otiFields <$>
-            join (getObjTyM <$> Map.lookup (G.NamedType "mutation_root") typeMap)
-      hRoots = Map.keys <$> mergeMaybeMaps hQR hMR
+  let rmQRoot = _otiFields $ _gQueryRoot remoteCtx
+      rmMRoot = _otiFields <$> _gMutRoot remoteCtx
+      rmRoots = filter (`notElem` builtinNodes ++ rmRootNames) . Map.keys <$>
+                fmap (Map.union rmQRoot) rmMRoot
+      hQR     = _otiFields <$>
+                join (getObjTyM <$> Map.lookup hQRName typeMap)
+      hMR     = _otiFields <$>
+                join (getObjTyM <$> Map.lookup hMRName typeMap)
+      hRoots  = Map.keys <$> mergeMaybeMaps hQR hMR
+
   case (rmRoots, hRoots) of
     (Just rmR, Just hR) -> do
       let conflictedNodes = filter (`elem` hR) rmR
@@ -1561,10 +1611,14 @@ checkConflictingNodes gCtx remoteCtx = do
     _ -> return ()
 
   where
-    tyMsg ty = "types: [" <> nodesTxt ty <> "] already exist in current graphql schema"
-    nodesMsg n = "nodes : [" <> nodesTxt n <> "] already exist in current graphql schema"
-    nodesTxt nodes = T.intercalate ", " $ map G.unName nodes
-    builtin = ["__type", "__schema", "__typename", "Query", "Mutation", "query_root", "mutation_root"]
+    hQRName = G.NamedType "query_root"
+    hMRName = G.NamedType "mutation_root"
+    tyMsg ty = "types: [" <> namesToTxt ty <>
+               "] already exist in current graphql schema"
+    nodesMsg n = "nodes : [" <> namesToTxt n <>
+                 "] already exist in current graphql schema"
+    namesToTxt = T.intercalate ", " . map G.unName
+    builtinNodes = ["__type", "__schema", "__typename"]
     builtinTy = [ "__Directive"
                 , "__DirectiveLocation"
                 , "__EnumValue"
@@ -1573,10 +1627,6 @@ checkConflictingNodes gCtx remoteCtx = do
                 , "__Schema"
                 , "__Type"
                 , "__TypeKind"
-                , "Query"
-                , "Mutation"
-                , "query_root"
-                , "mutation_root"
                 , "Int"
                 , "Float"
                 , "String"
@@ -1584,26 +1634,28 @@ checkConflictingNodes gCtx remoteCtx = do
                 , "ID"
                 ]
 
-
 checkConflictingNode
   :: (MonadError QErr m)
-  => GCtx -> G.Name -> m ()
+  => GCtx
+  -> G.Name
+  -> m ()
 checkConflictingNode gCtx node = do
   let typeMap = _gTypes gCtx
-      --types = map G.unNamedType $ Map.keys typeMap
-  --when (node `elem` types) $ throw400 RemoteSchemaError msg
-  let hQR = _otiFields <$>
-            join (getObjTyM <$> Map.lookup (G.NamedType "query_root") typeMap)
-      hMR = _otiFields <$>
-            join (getObjTyM <$> Map.lookup (G.NamedType "mutation_root") typeMap)
-      hRoots = Map.keys <$> mergeMaybeMaps hQR hMR
+      hQR     = _otiFields <$>
+                join (getObjTyM <$> Map.lookup hQRName typeMap)
+      hMR     = _otiFields <$>
+                join (getObjTyM <$> Map.lookup hMRName typeMap)
+      hRoots  = Map.keys <$> mergeMaybeMaps hQR hMR
   case hRoots of
     Just hR ->
       when (node `elem` hR) $
         throw400 RemoteSchemaConflicts msg
     _ -> return ()
   where
-    msg = "node " <> G.unName node <> " already exists in current graphql schema"
+    hQRName = G.NamedType "query_root"
+    hMRName = G.NamedType "mutation_root"
+    msg = "node " <> G.unName node <>
+          " already exists in current graphql schema"
 
 
 mkGCtxMap

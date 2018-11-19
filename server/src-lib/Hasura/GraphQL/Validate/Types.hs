@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE DeriveLift        #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE LambdaCase        #-}
@@ -55,11 +56,10 @@ import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.GraphQL.Draft.TH     as G
 import qualified Language.Haskell.TH.Syntax    as TH
-import qualified Network.URI.Extended          as N
 
 import           Hasura.GraphQL.Utils
-import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Instances          ()
+import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -106,8 +106,10 @@ type ParamMap = Map.HashMap G.Name InpValInfo
 -- | location of the type: a hasura type or a remote type
 data TypeLoc
   = HasuraType
-  | RemoteType !N.URI [HeaderConf]
-  deriving (Show, Eq, TH.Lift)
+  | RemoteType RemoteSchemaName RemoteSchemaInfo
+  deriving (Show, Eq, TH.Lift, Generic)
+
+instance Hashable TypeLoc
 
 data ObjFldInfo
   = ObjFldInfo
@@ -132,6 +134,14 @@ data ObjTyInfo
   , _otiName   :: !G.NamedType
   , _otiFields :: !ObjFieldMap
   } deriving (Show, Eq, TH.Lift)
+
+instance Monoid ObjTyInfo where
+  mempty = ObjTyInfo Nothing (G.NamedType "") Map.empty
+
+instance Semigroup ObjTyInfo where
+  objA <> objB =
+    objA { _otiFields = Map.union (_otiFields objA) (_otiFields objB)
+         }
 
 mkObjTyInfo
   :: Maybe G.Description -> G.NamedType -> ObjFieldMap -> TypeLoc -> ObjTyInfo

@@ -41,7 +41,7 @@ mkSQLCount
   :: CountQueryP1 -> S.Select
 mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
   S.mkSelect
-    { S.selExtr = [S.Extractor (S.SEFnApp "count" [S.SEStar] Nothing) Nothing]
+    { S.selExtr = [S.Extractor S.countStar Nothing]
     , S.selFrom = Just $ S.FromExp
                   [S.mkSelFromExp False innerSel $ TableName "r"]
     }

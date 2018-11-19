@@ -279,7 +279,7 @@ tryWebhook logenv pool e = do
   case meti of
     Nothing -> return $ Left $ HOther "table or event-trigger not found"
     Just eti -> do
-      let webhook = etiWebhook eti
+      let webhook = wciCachedValue $ etiWebhookInfo eti
           createdAt = eCreatedAt e
           eventId =  eId e
           headerInfos = etiHeaders eti

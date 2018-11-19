@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE DeriveLift        #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -15,12 +16,16 @@ import qualified Data.Text                  as T
 
 
 data HeaderConf = HeaderConf HeaderName HeaderValue
-   deriving (Show, Eq, Lift)
+   deriving (Show, Eq, Lift, Generic)
+
+instance Hashable HeaderConf
 
 type HeaderName  = T.Text
 
 data HeaderValue = HVValue T.Text | HVEnv T.Text
-   deriving (Show, Eq, Lift)
+   deriving (Show, Eq, Lift, Generic)
+
+instance Hashable HeaderValue
 
 instance FromJSON HeaderConf where
   parseJSON (Object o) = do

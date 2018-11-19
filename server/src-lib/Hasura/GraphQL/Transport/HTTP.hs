@@ -19,13 +19,13 @@ import           Language.GraphQL.Draft.JSON            ()
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashSet                           as Set
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
-import qualified Network.URI                            as URI
 import qualified Network.Wreq                           as Wreq
 
 import           Hasura.GraphQL.Schema
@@ -52,42 +52,36 @@ runGQ
 runGQ pool isoL userInfo sc manager reqHdrs req rawReq = do
 
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
-  (opDef, opRoot, fragDefsL, varValsM) <- flip runReaderT gCtx $
-                                          VQ.getQueryParts req
+  queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
-  let topLevelNodes = getTopLevelNodes opDef
+  let opDef = VQ.qpOpDef queryParts
+      topLevelNodes = getTopLevelNodes opDef
       -- gather TypeLoc of topLevelNodes
       typeLocs = gatherTypeLocs gCtx topLevelNodes
 
   -- see if they are all the same
   assertSameLocationNodes typeLocs
 
-  if null typeLocs
-    then runHasuraGQ pool isoL userInfo sc opDef opRoot fragDefsL
-         varValsM
-    else
-    case typeLocs of
-      (typeLoc:_) -> case typeLoc of
-        VT.HasuraType ->
-          runHasuraGQ pool isoL userInfo sc opDef opRoot fragDefsL varValsM
-        VT.RemoteType url hdrs ->
-          runRemoteGQ manager userInfo sc reqHdrs rawReq url hdrs
+  case typeLocs of
+    [] -> runHasuraGQ pool isoL userInfo sc queryParts
 
-      [] -> throw500 "unexpected: cannot find node in schema"
-
+    (typeLoc:_) -> case typeLoc of
+      VT.HasuraType ->
+        runHasuraGQ pool isoL userInfo sc queryParts
+      VT.RemoteType _ rsi ->
+        runRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
   where
     gCtxRoleMap = scGCtxMap sc
 
+
 assertSameLocationNodes :: (MonadError QErr m) => [VT.TypeLoc] -> m ()
 assertSameLocationNodes typeLocs =
-  -- see if they are all the same
-  unless (allEq typeLocs) $
-    throw400 NotSupported msg
+  unless (allEq typeLocs) $ throw400 NotSupported msg
   where
-    msg = "cannot mix nodes from two different graphql servers"
     allEq xs = case xs of
-      []     -> True
-      (y:ys) -> all ((==) y) ys
+      [] -> True
+      _  -> Set.size (Set.fromList xs) == 1
+    msg = "cannot mix nodes from two different graphql servers"
 
 getTopLevelNodes :: G.TypedOperationDefinition -> [G.Name]
 getTopLevelNodes opDef =
@@ -109,15 +103,11 @@ runHasuraGQ
   => Q.PGPool -> Q.TxIsolation
   -> UserInfo
   -> SchemaCache
-  -> G.TypedOperationDefinition
-  -> VT.ObjTyInfo
-  -> [G.FragmentDefinition]
-  -> Maybe VariableValues
+  -> VQ.QueryParts
   -> m BL.ByteString
-runHasuraGQ pool isoL userInfo sc opDef opRoot fragDefsL varValsM = do
+runHasuraGQ pool isoL userInfo sc queryParts = do
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxMap
-  (opTy, fields) <- runReaderT
-                    (VQ.validateGQ opDef opRoot fragDefsL varValsM) gCtx
+  (opTy, fields) <- runReaderT (VQ.validateGQ queryParts) gCtx
   when (opTy == G.OperationTypeSubscription) $ throw400 UnexpectedPayload
     "subscriptions are not supported over HTTP, use websockets instead"
   let tx = R.resolveSelSet userInfo gCtx opTy fields
@@ -133,19 +123,19 @@ runRemoteGQ
   :: (MonadIO m, MonadError QErr m)
   => HTTP.Manager
   -> UserInfo
-  -> SchemaCache
   -> [N.Header]
   -> BL.ByteString
   -- ^ the raw request string
-  -> URI.URI
-  -> [HeaderConf]
+  -> RemoteSchemaInfo
+  -> G.TypedOperationDefinition
   -> m BL.ByteString
-runRemoteGQ manager userInfo sc reqHdrs q url hdrConf = do
+runRemoteGQ manager userInfo reqHdrs q rsi opDef = do
+  let opTy = G._todType opDef
+  when (opTy == G.OperationTypeSubscription) $
+    throw400 NotSupported "subscription to remote server is not supported"
   hdrs <- getHeadersFromConf hdrConf
   let confHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
-      mRmSchemaDef = Map.lookup url (scRemoteResolvers sc)
-      shouldFwd = maybe False _rsFwdClientHeaders mRmSchemaDef
-      clientHdrs = bool [] filteredHeaders shouldFwd
+      clientHdrs = bool [] filteredHeaders fwdClientHdrs
   let options = Wreq.defaults
               & Wreq.headers .~ ("content-type", "application/json") :
                 (userInfoToHdrs ++ clientHdrs ++ confHdrs)
@@ -157,6 +147,7 @@ runRemoteGQ manager userInfo sc reqHdrs q url hdrConf = do
   return $ resp ^. Wreq.responseBody
 
   where
+    RemoteSchemaInfo url hdrConf fwdClientHdrs = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow err = throw500 $ T.pack . show $ err
 

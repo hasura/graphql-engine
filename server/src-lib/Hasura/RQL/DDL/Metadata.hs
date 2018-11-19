@@ -65,7 +65,7 @@ data TableMeta
   , _tmSelectPermissions   :: ![DP.SelPermDef]
   , _tmUpdatePermissions   :: ![DP.UpdPermDef]
   , _tmDeletePermissions   :: ![DP.DelPermDef]
-  , _tmEventTriggers       :: ![DTS.EventTriggerDef]
+  , _tmEventTriggers       :: ![DTS.EventTriggerConf]
   } deriving (Show, Eq, Lift)
 
 mkTableMeta :: QualifiedTable -> TableMeta
@@ -147,7 +147,7 @@ data ReplaceMetadata
   = ReplaceMetadata
   { aqTables         :: ![TableMeta]
   , aqQueryTemplates :: ![DQ.CreateQueryTemplate]
-  , aqRemoteSchemas  :: ![TRS.RemoteSchemaDef]
+  , aqRemoteSchemas  :: ![TRS.AddRemoteSchemaQuery]
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
@@ -170,7 +170,7 @@ applyQP1 (ReplaceMetadata tables templates schemas) = do
           selPerms = map DP.pdRole $ table ^. tmSelectPermissions
           updPerms = map DP.pdRole $ table ^. tmUpdatePermissions
           delPerms = map DP.pdRole $ table ^. tmDeletePermissions
-          eventTriggers = map DTS.etdName $ table ^. tmEventTriggers
+          eventTriggers = map DTS.etcName $ table ^. tmEventTriggers
 
       checkMultipleDecls "relationships" allRels
       checkMultipleDecls "insert permissions" insPerms
@@ -183,7 +183,7 @@ applyQP1 (ReplaceMetadata tables templates schemas) = do
     checkMultipleDecls "query templates" $ map DQ.cqtName templates
 
   withPathK "remote_schemas" $
-    checkMultipleDecls "remote schemas" $ map TRS._rsName schemas
+    checkMultipleDecls "remote schemas" $ map TRS._arsqName schemas
 
   where
     withTableName qt = withPathK (qualTableToTxt qt)
@@ -217,7 +217,7 @@ applyQP2 (ReplaceMetadata tables templates schemas) = do
 
     -- tables and views
     indexedForM_ (map _tmTable tables) $ \tableName ->
-      void $ DT.trackExistingTableOrViewP2 tableName False False
+      void $ DT.trackExistingTableOrViewP2 tableName False
 
     -- Relationships
     indexedForM_ tables $ \table -> do
@@ -243,8 +243,8 @@ applyQP2 (ReplaceMetadata tables templates schemas) = do
 
     indexedForM_ tables $ \table ->
       withPathK "event_triggers" $
-        indexedForM_ (table ^. tmEventTriggers) $ \et ->
-        DS.subTableP2 (table ^. tmTable) False et
+        indexedForM_ (table ^. tmEventTriggers) $ \etc ->
+        DS.subTableP2 (table ^. tmTable) False etc
 
   -- query templates
   withPathK "queryTemplates" $
@@ -351,9 +351,9 @@ fetchMetadata = do
 
     mkTriggerMetaDefs = mapM trigRowToDef
 
-    trigRowToDef (sn, tn, trn, Q.AltJ tDefVal, webhook, nr, rint, Q.AltJ mheaders) = do
-      tDef <- decodeValue tDefVal
-      return (QualifiedTable sn tn, DTS.EventTriggerDef trn tDef webhook (RetryConf nr rint) mheaders)
+    trigRowToDef (sn, tn, Q.AltJ configuration) = do
+      conf <- decodeValue configuration
+      return (QualifiedTable sn tn, conf::EventTriggerConf)
 
     fetchTables =
       Q.listQ [Q.sql|
@@ -383,7 +383,7 @@ fetchMetadata = do
                   |] () False
     fetchEventTriggers =
      Q.listQ [Q.sql|
-              SELECT e.schema_name, e.table_name, e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
+              SELECT e.schema_name, e.table_name, e.configuration::json
                FROM hdb_catalog.event_triggers e
               |] () False
 

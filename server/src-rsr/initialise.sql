@@ -188,13 +188,8 @@ CREATE TABLE hdb_catalog.event_triggers
   type TEXT NOT NULL,
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
-  definition JSON,
-  query TEXT,
-  webhook TEXT NOT NULL,
-  num_retries INTEGER DEFAULT 0,
-  retry_interval INTEGER DEFAULT 10,
-  comment TEXT,
-  headers JSON
+  configuration JSON,
+  comment TEXT
 );
 
 CREATE TABLE hdb_catalog.event_log
@@ -233,5 +228,6 @@ CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id);
 CREATE TABLE hdb_catalog.remote_schemas (
   id BIGSERIAL PRIMARY KEY,
   name TEXT UNIQUE,
-  definition JSON
+  definition JSON,
+  comment TEXT
 );

@@ -1,5 +1,5 @@
-Add custom business logic
-=========================
+Custom business logic
+=====================
 
 For the backends of most apps, you may have to implement custom business logic to complement the CRUD and
 real-time API provided by GraphQL Engine. Depending on the nature of the use case and its position vis-a-vis
