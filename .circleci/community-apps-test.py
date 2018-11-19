@@ -23,6 +23,7 @@ with open(".circleci/community-apps.yaml", 'r') as stream:
 
 for app in APPS_DATA['apps']:
     print("Running test for app {}".format(app['name']))
+    global POSTGRES_DEFAULT_CMD
     subprocess.call(POSTGRES_DEFAULT_CMD + ['"CREATE DATABASE {};"'.format(app['name'])])
     subprocess.call(POSTGRES_DEFAULT_CMD + ['"ALTER DATABASE {} OWNER TO gql_test;"'.format(app['name'])])
     subprocess.call(['docker', 'build', '-t', app['name'], '-f', '{}/{}'.format(app['path'], app['dockerfile']), app['path']])
