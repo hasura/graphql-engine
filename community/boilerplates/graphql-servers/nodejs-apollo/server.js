@@ -1,6 +1,8 @@
 const { ApolloServer } = require('apollo-server');
 const { makeExecutableSchema } = require('graphql-tools');
 
+const port = process.env.PORT || 3000;
+
 let count = 0;
 
 const typeDefs = `
@@ -43,6 +45,6 @@ const server = new ApolloServer({
   schema
 });
 
-server.listen().then(({url}) => {
+server.listen({ port }).then(({url}) => {
   console.log(`GraphQL server running at ${url}`);
 });
