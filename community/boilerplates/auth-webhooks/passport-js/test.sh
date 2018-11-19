@@ -5,3 +5,4 @@ export DATABASE_URL=postgres://${DATABASE_USER}:${DATABASE_PASS}@${DATABASE_HOST
 echo "Migrate database"
 knex migrate:latest
 echo "Migrated database"
+echo "Running tests"
