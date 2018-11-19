@@ -32,8 +32,8 @@ for app in APPS_DATA['apps']:
     for port_mapping in app['port_mappings']:
         docker_cmd = docker_cmd + ['-p', port_mapping]
     docker_cmd.append(app['name'])
-    if app['command']:
+    if 'command' in app and app['command']:
         docker_cmd.append(app['command'])
     print(docker_cmd)
     subprocess.call(docker_cmd)
-    subprocess.call(POSTGRES_DEFAULT_CMD + ['"DROP DATABASE {};"'.format(app['name'])])
+    subprocess.call(POSTGRES_DEFAULT_CMD + ['DROP DATABASE {};'.format(app['name'])])
