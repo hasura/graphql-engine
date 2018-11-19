@@ -298,9 +298,17 @@ jobs:
   test_community_apps:
     machine:
       enabled: true
-      image: face11301/community:latest
+      image: circleci/classic:latest
     working_directory: ~/graphql-engine
     steps:
+    - run:
+        name: install dependencies
+        command: |
+          apt-get -y update && apt-get install -y curl git python3 python3-pip wget netcat
+          echo "deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+          apt-get -y update
+          apt-get -y install postgresql-client-9.6
     - checkout
     - run:
         name: Run postgres container
