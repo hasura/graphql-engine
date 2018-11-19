@@ -6,5 +6,5 @@ PGPASSWORD=gql_test psql -h localhost -p 5432 -U gql_test -c "CREATE DATABASE ${
 PGPASSWORD=gql_test psql -h localhost -p 5432 -U gql_test -c "ALTER DATABASE ${1} OWNER TO gql_test;"
 docker network ls
 docker build -t ${1} -f ${2}/${3} ${2}
-docker run -e "DATABASE_NAME=${1}" -e "DATABASE_USER=gql_test" -e "DATABASE_HOST=localhost" -e "DATABASE_PORT=5432" -e "DATABASE_PASS=gql_test" --net bridge ${1}
+( docker run -e "DATABASE_NAME=${1}" -e "DATABASE_USER=gql_test" -e "DATABASE_HOST=localhost" -e "DATABASE_PORT=5432" -e "DATABASE_PASS=gql_test" --net host ${1} ) || true
 PGPASSWORD=gql_test psql -h localhost -p 5432 -U gql_test -c "DROP DATABASE ${1};"

@@ -329,6 +329,10 @@ jobs:
 
 workflows:
   version: 2
+  community_test:
+    jobs:
+    - test_community_apps:
+        <<: *filter_only_vtags
   build_and_test:
     jobs:
     - check_build_worthiness: *filter_only_vtags
@@ -362,10 +366,6 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - test_and_build_cli
-    - test_community_apps:
-        <<: *filter_only_vtags
-        requires:
-        - test_and_build_console
     - deploy:
         <<: *filter_only_vtags_dev_release_branches
         requires:
