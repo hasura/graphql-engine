@@ -3,7 +3,7 @@ const graphqlHTTP = require('express-graphql');
 const { buildSchema } = require('graphql');
 
 let count = 0;
-const port = process.env.PORT || 3000;
+const port = process.env.port || 3000;
 
 // Construct a schema, using GraphQL schema language
 const schema = buildSchema(`
@@ -41,4 +41,4 @@ app.use('/graphql', graphqlHTTP({
   graphiql: true,
 }));
 app.listen(port);
-console.log(`Running a GraphQL API server at localhost:${PORT}/graphql`);
+console.log(`Running a GraphQL API server at localhost:${port}/graphql`);
