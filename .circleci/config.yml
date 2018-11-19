@@ -307,6 +307,7 @@ jobs:
     steps:
     - *setup_remote_docker
     - checkout
+    - *wait_for_postgres
     - run:
         name: install requirements
         command: pip3 install -r .circleci/community-apps-requirements.txt
