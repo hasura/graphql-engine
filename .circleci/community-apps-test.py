@@ -28,7 +28,7 @@ for app in APPS_DATA['apps']:
     subprocess.call(['docker', 'build', '-t', app['name'], '-f', '{}/{}'.format(app['path'], app['dockerfile']), app['path']])
     file_path='{}/.env.list'.format(app['path'])
     default_env(file_path, app['name'])
-    docker_cmd = DEFAULT_DOCKER_CMD.copy()
+    docker_cmd = DEFAULT_DOCKER_CMD[:]
     for port_mapping in app['port_mappings']:
         docker_cmd = docker_cmd + ['-p', port_mapping]
     docker_cmd.append(app['name'])
