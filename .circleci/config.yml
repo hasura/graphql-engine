@@ -305,8 +305,8 @@ jobs:
         name: install dependencies
         command: |
           sudo apt-get -y update && sudo apt-get install -y curl git python3 python3-pip wget netcat
-          echo "deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list
-          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+          echo "deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
           sudo apt-get -y update
           sudo apt-get -y install postgresql-client-9.6
     - checkout
