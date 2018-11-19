@@ -309,7 +309,7 @@ jobs:
     - run:
         name: Run postgres container
         command: |
-          docker run -d -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" -e "POSTGRES_PASSWORD=gql_test" circleci/postgres:10-alpine-postgis
+          docker run -d -p 5432:5432 -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" -e "POSTGRES_PASSWORD=gql_test" circleci/postgres:10-alpine-postgis
     - *wait_for_postgres
     - run:
         name: install requirements
