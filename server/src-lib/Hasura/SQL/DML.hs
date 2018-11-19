@@ -238,6 +238,19 @@ jsonType = AnnType "json"
 jsonbType :: AnnType
 jsonbType = AnnType "jsonb"
 
+data CountType
+  = CTStar
+  | CTSimple ![PGCol]
+  | CTDistinct ![PGCol]
+  deriving(Show, Eq)
+
+instance ToSQL CountType where
+  toSQL CTStar            = "*"
+  toSQL (CTSimple cols)   =
+    paren $ ", " <+> cols
+  toSQL (CTDistinct cols) =
+    "DISTINCT" <-> paren (", " <+> cols)
+
 data SQLExp
   = SEPrep !Int
   | SELit !T.Text
@@ -255,6 +268,7 @@ data SQLExp
   | SEBool !BoolExp
   | SEExcluded !T.Text
   | SEArray ![SQLExp]
+  | SECount !CountType
   deriving (Show, Eq)
 
 newtype Alias
@@ -269,6 +283,9 @@ instance ToSQL Alias where
 
 toAlias :: (IsIden a) => a -> Alias
 toAlias = Alias . toIden
+
+countStar :: SQLExp
+countStar = SECount CTStar
 
 instance ToSQL SQLExp where
   toSQL (SEPrep argNumber) =
@@ -304,6 +321,7 @@ instance ToSQL SQLExp where
                          <> toSQL (PGCol t)
   toSQL (SEArray exps) = "ARRAY" <> TB.char '['
                          <> (", " <+> exps) <> TB.char ']'
+  toSQL (SECount ty) = "COUNT" <> paren (toSQL ty)
 
 intToSQLExp :: Int -> SQLExp
 intToSQLExp =
@@ -465,12 +483,12 @@ simplifyBoolExp be = case be of
       | otherwise -> BEBin OrOp e1s e2s
   e                          -> e
 
-mkExists :: QualifiedTable -> BoolExp -> BoolExp
-mkExists qt whereFrag =
-  BEExists mkSelect {
-    selExtr  = [Extractor (SEUnsafe "1") Nothing],
-    selFrom  = Just $ mkSimpleFromExp qt,
-    selWhere = Just $ WhereFrag whereFrag
+mkExists :: FromItem -> BoolExp -> BoolExp
+mkExists fromItem whereFrag =
+  BEExists mkSelect
+  { selExtr  = [Extractor (SEUnsafe "1") Nothing]
+  , selFrom  = Just $ FromExp $ pure fromItem
+  , selWhere = Just $ WhereFrag whereFrag
   }
 
 instance ToSQL BoolExp where

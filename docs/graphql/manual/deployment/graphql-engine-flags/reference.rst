@@ -80,6 +80,7 @@ These are the environment variables which are available:
                                     <postgres/postgresql>://<user>:<password>@<host>:<port>/<db-
                                     name>
                                     Example: postgres://admin:mypass@mydomain.com:5432/mydb
+   HASURA_GRAPHQL_SERVER_PORT       Port on which graphql-engine should be served
 
    HASURA_GRAPHQL_ACCESS_KEY        Secret access key, required to access this instance.
                                     If specified client needs to send 'X-Hasura-Access-Key'

@@ -9,6 +9,7 @@ const componentsSemver = {
   supportColumnChangeTrigger: '1.0.0-alpha26',
   analyzeApiChange: '1.0.0-alpha26',
   insertPrefix: '1.0.0-alpha26',
+  webhookEnvSupport: '1.0.0-alpha29',
   insertPermRestrictColumns: '1.0.0-alpha28',
 };
 

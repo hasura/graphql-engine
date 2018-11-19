@@ -11,8 +11,7 @@ module Hasura.RQL.Types.Subscribe
   , Ops(..)
   , EventId
   , TriggerOpsDef(..)
-  , EventTrigger(..)
-  , EventTriggerDef(..)
+  , EventTriggerConf(..)
   , RetryConf(..)
   , DeleteEventTriggerQuery(..)
   , DeliverEventQuery(..)
@@ -20,6 +19,8 @@ module Hasura.RQL.Types.Subscribe
   , HeaderValue(..)
   , HeaderName
   , EventHeaderInfo(..)
+  , WebhookConf(..)
+  , WebhookConfInfo(..)
   ) where
 
 import           Data.Aeson
@@ -99,40 +100,62 @@ data EventHeaderInfo
 
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventHeaderInfo)
 
+data WebhookConf = WCValue T.Text | WCEnv T.Text
+  deriving (Show, Eq, Lift)
+
+instance ToJSON WebhookConf where
+  toJSON (WCValue w)  = String w
+  toJSON (WCEnv wEnv) = String wEnv
+
+data WebhookConfInfo
+  = WebhookConfInfo
+  { wciWebhookConf :: !WebhookConf
+  , wciCachedValue :: !T.Text
+  } deriving (Show, Eq, Lift)
+
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookConfInfo)
+
 data CreateEventTriggerQuery
   = CreateEventTriggerQuery
-  { cetqName      :: !T.Text
-  , cetqTable     :: !QualifiedTable
-  , cetqInsert    :: !(Maybe SubscribeOpSpec)
-  , cetqUpdate    :: !(Maybe SubscribeOpSpec)
-  , cetqDelete    :: !(Maybe SubscribeOpSpec)
-  , cetqRetryConf :: !(Maybe RetryConf)
-  , cetqWebhook   :: !T.Text
-  , cetqHeaders   :: !(Maybe [HeaderConf])
-  , cetqReplace   :: !Bool
+  { cetqName           :: !T.Text
+  , cetqTable          :: !QualifiedTable
+  , cetqInsert         :: !(Maybe SubscribeOpSpec)
+  , cetqUpdate         :: !(Maybe SubscribeOpSpec)
+  , cetqDelete         :: !(Maybe SubscribeOpSpec)
+  , cetqRetryConf      :: !(Maybe RetryConf)
+  , cetqWebhook        :: !(Maybe T.Text)
+  , cetqWebhookFromEnv :: !(Maybe T.Text)
+  , cetqHeaders        :: !(Maybe [HeaderConf])
+  , cetqReplace        :: !Bool
   } deriving (Show, Eq, Lift)
 
 instance FromJSON CreateEventTriggerQuery where
   parseJSON (Object o) = do
-    name      <- o .: "name"
-    table     <- o .: "table"
-    insert    <- o .:? "insert"
-    update    <- o .:? "update"
-    delete    <- o .:? "delete"
-    retryConf <- o .:? "retry_conf"
-    webhook   <- o .: "webhook"
-    headers   <- o .:? "headers"
-    replace   <- o .:? "replace" .!= False
+    name           <- o .: "name"
+    table          <- o .: "table"
+    insert         <- o .:? "insert"
+    update         <- o .:? "update"
+    delete         <- o .:? "delete"
+    retryConf      <- o .:? "retry_conf"
+    webhook        <- o .:? "webhook"
+    webhookFromEnv <- o .:? "webhook_from_env"
+    headers        <- o .:? "headers"
+    replace        <- o .:? "replace" .!= False
     let regex = "^[A-Za-z]+[A-Za-z0-9_\\-]*$" :: LBS.ByteString
         compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
         isMatch = TDFA.match compiledRegex (T.unpack name)
     if isMatch then return ()
-      else fail "only alphanumeric and underscore allowed for name"
+      else fail "only alphanumeric and underscore and hyphens allowed for name"
     case insert <|> update <|> delete of
       Just _  -> return ()
       Nothing -> fail "must provide operation spec(s)"
+    case (webhook, webhookFromEnv) of
+      (Just _, Nothing) -> return ()
+      (Nothing, Just _) -> return ()
+      (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
+      _ ->   fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    return $ CreateEventTriggerQuery name table insert update delete retryConf webhook headers replace
+    return $ CreateEventTriggerQuery name table insert update delete retryConf webhook webhookFromEnv headers replace
     where
       checkEmptyCols spec
         = case spec of
@@ -159,27 +182,17 @@ data DeleteEventTriggerQuery
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
 
-data EventTrigger
-  = EventTrigger
-  { etTable      :: !QualifiedTable
-  , etName       :: !TriggerName
-  , etDefinition :: !TriggerOpsDef
-  , etWebhook    :: !T.Text
-  , etRetryConf  :: !RetryConf
-  }
-
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventTrigger)
-
-data EventTriggerDef
-  = EventTriggerDef
-  { etdName       :: !TriggerName
-  , etdDefinition :: !TriggerOpsDef
-  , etdWebhook    :: !T.Text
-  , etdRetryConf  :: !RetryConf
-  , etdHeaders    :: !(Maybe [HeaderConf])
+data EventTriggerConf
+  = EventTriggerConf
+  { etcName           :: !TriggerName
+  , etcDefinition     :: !TriggerOpsDef
+  , etcWebhook        :: !(Maybe T.Text)
+  , etcWebhookFromEnv :: !(Maybe T.Text)
+  , etcRetryConf      :: !RetryConf
+  , etcHeaders        :: !(Maybe [HeaderConf])
   } deriving (Show, Eq, Lift)
 
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerDef)
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerConf)
 
 data DeliverEventQuery
   = DeliverEventQuery

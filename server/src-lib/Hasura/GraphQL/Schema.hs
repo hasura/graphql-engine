@@ -17,6 +17,7 @@ module Hasura.GraphQL.Schema
   , InsCtx(..)
   , InsCtxMap
   , RelationInfoMap
+  , isAggFld
   ) where
 
 import           Data.Has
@@ -34,8 +35,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal        (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-
-import qualified Hasura.SQL.DML                 as S
 
 defaultTypes :: [TypeInfo]
 defaultTypes = $(fromSchemaDocQ defaultSchema)
@@ -60,15 +59,15 @@ data OpCtx
   -- table, req hdrs
   = OCInsert QualifiedTable [T.Text]
   -- tn, filter exp, limit, req hdrs
-  | OCSelect QualifiedTable S.BoolExp (Maybe Int) [T.Text]
+  | OCSelect QualifiedTable AnnBoolExpSQL (Maybe Int) [T.Text]
   -- tn, filter exp, reqt hdrs
-  | OCSelectPkey QualifiedTable S.BoolExp [T.Text]
+  | OCSelectPkey QualifiedTable AnnBoolExpSQL [T.Text]
   -- tn, filter exp, limit, req hdrs
-  | OCSelectAgg QualifiedTable S.BoolExp (Maybe Int) [T.Text]
+  | OCSelectAgg QualifiedTable AnnBoolExpSQL (Maybe Int) [T.Text]
   -- tn, filter exp, req hdrs
-  | OCUpdate QualifiedTable S.BoolExp [T.Text]
+  | OCUpdate QualifiedTable AnnBoolExpSQL [T.Text]
   -- tn, filter exp, req hdrs
-  | OCDelete QualifiedTable S.BoolExp [T.Text]
+  | OCDelete QualifiedTable AnnBoolExpSQL [T.Text]
   deriving (Show, Eq)
 
 data GCtx
@@ -102,7 +101,7 @@ instance Monoid TyAgg where
   mempty = TyAgg Map.empty Map.empty Map.empty
   mappend = (<>)
 
-type SelField = Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int, Bool)
+type SelField = Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int, Bool)
 
 qualTableToName :: QualifiedTable -> G.Name
 qualTableToName = G.Name <$> \case
@@ -115,7 +114,7 @@ isValidTableName = isValidName . qualTableToName
 isValidField :: FieldInfo -> Bool
 isValidField = \case
   FIColumn (PGColInfo col _ _) -> isColEligible col
-  FIRelationship (RelInfo rn _ _ remTab _ _) -> isRelEligible rn remTab
+  FIRelationship (RelInfo rn _ _ remTab _) -> isRelEligible rn remTab
   where
     isColEligible = isValidName . G.Name . getPGColTxt
     isRelEligible rn rt = isValidName (G.Name $ getRelTxt rn)
@@ -152,6 +151,17 @@ isRelNullable fim ri = isNullable
     allCols = getValidCols fim
     lColInfos = getColInfos lCols allCols
     isNullable = any pgiIsNullable lColInfos
+
+numAggOps :: [G.Name]
+numAggOps = [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
+            , "variance", "var_samp", "var_pop"
+            ]
+
+compAggOps :: [G.Name]
+compAggOps = ["max", "min"]
+
+isAggFld :: G.Name -> Bool
+isAggFld = flip elem (numAggOps <> compAggOps)
 
 mkColName :: PGCol -> G.Name
 mkColName (PGCol n) = G.Name n
@@ -317,7 +327,7 @@ mkRelFld
   -> RelInfo
   -> Bool
   -> [ObjFldInfo]
-mkRelFld allowAgg (RelInfo rn rTy _ remTab _ isManual) isNullable = case rTy of
+mkRelFld allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
   ArrRel -> bool [arrRelFld] [arrRelFld, aggArrRelFld] allowAgg
   ObjRel -> [objRelFld]
   where
@@ -378,7 +388,14 @@ mkTableAggObj tn =
 {-
 type table_aggregate_fields{
   count: Int
-  sum: table_num_fields
+  sum: table_sum_fields
+  avg: table_avg_fields
+  stddev: table_stddev_fields
+  stddev_pop: table_stddev_pop_fields
+  variance: table_variance_fields
+  var_pop: table_var_pop_fields
+  max: table_max_fields
+  min: table_min_fields
 }
 -}
 mkTableAggFldsObj
@@ -390,22 +407,24 @@ mkTableAggFldsObj tn numCols compCols =
     desc = G.Description $
       "aggregate fields of " <>> tn
 
-    countFld = ObjFldInfo Nothing "count" Map.empty $ G.toGT $
+    countFld = ObjFldInfo Nothing "count" countParams $ G.toGT $
                mkScalarTy PGInteger
 
-    numFlds = bool [sumFld, avgFld] [] $ null numCols
-    compFlds = bool [maxFld, minFld] [] $ null compCols
+    countParams = fromInpValL [countColInpVal, distinctInpVal]
 
-    sumFld = mkColOpFld "sum"
-    avgFld = mkColOpFld "avg"
-    maxFld = mkColOpFld "max"
-    minFld = mkColOpFld "min"
+    countColInpVal = InpValInfo Nothing "columns" $ G.toGT $
+                     G.toLT $ G.toNT $ mkSelColumnInpTy tn
+    distinctInpVal = InpValInfo Nothing "distinct" $ G.toGT $
+                     mkScalarTy PGBoolean
+
+    numFlds = bool (map mkColOpFld numAggOps) [] $ null numCols
+    compFlds = bool (map mkColOpFld compAggOps) [] $ null compCols
 
     mkColOpFld op = ObjFldInfo Nothing op Map.empty $ G.toGT $
                     mkTableColAggFldsTy op tn
 
 {-
-type table_sum_fields{
+type table_<agg-op>_fields{
    num_col: Int
    .        .
    .        .
@@ -553,7 +572,7 @@ mkBoolExpInp tn fields =
     mkFldExpInp = \case
       Left (PGColInfo colName colTy _) ->
         mk (mkColName colName) (mkCompExpTy colTy)
-      Right (RelInfo relName _ _ remTab _ _, _, _, _, _) ->
+      Right (RelInfo relName _ _ remTab _, _, _, _, _) ->
         mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
 
 mkPGColInp :: PGColInfo -> InpValInfo
@@ -840,10 +859,15 @@ mkConstraintInpTy :: QualifiedTable -> G.NamedType
 mkConstraintInpTy tn =
   G.NamedType $ qualTableToName tn <> "_constraint"
 
--- table_column
-mkColumnInpTy :: QualifiedTable -> G.NamedType
-mkColumnInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_column"
+-- table_update_column
+mkUpdColumnInpTy :: QualifiedTable -> G.NamedType
+mkUpdColumnInpTy tn =
+  G.NamedType $ qualTableToName tn <> "_update_column"
+
+--table_select_column
+mkSelColumnInpTy :: QualifiedTable -> G.NamedType
+mkSelColumnInpTy tn =
+  G.NamedType $ qualTableToName tn <> "_select_column"
 {-
 input table_obj_rel_insert_input {
   data: table_insert_input!
@@ -946,7 +970,7 @@ mkOnConflictInp tn =
       G.toGT $ G.toNT $ mkConstraintInpTy tn
 
     updateColumnsInpVal = InpValInfo Nothing (G.Name "update_columns") $
-      G.toGT $ G.toLT $ G.toNT $ mkColumnInpTy tn
+      G.toGT $ G.toLT $ G.toNT $ mkUpdColumnInpTy tn
 {-
 
 insert_table(
@@ -991,17 +1015,27 @@ mkConstriantTy tn cons = enumTyInfo
       EnumValInfo (Just "unique or primary key constraint")
       (G.EnumValue $ G.Name n) False
 
-mkColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
-mkColumnTy tn cols = enumTyInfo
+mkColumnEnumVal :: PGCol -> EnumValInfo
+mkColumnEnumVal (PGCol col) =
+  EnumValInfo (Just "column name") (G.EnumValue $ G.Name col) False
+
+mkUpdColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
+mkUpdColumnTy tn cols = enumTyInfo
   where
-    enumTyInfo = EnumTyInfo (Just desc) (mkColumnInpTy tn) $
+    enumTyInfo = EnumTyInfo (Just desc) (mkUpdColumnInpTy tn) $
                  mapFromL _eviVal $ map mkColumnEnumVal cols
 
     desc = G.Description $
-      "columns of table " <>> tn
+      "update columns of table " <>> tn
 
-    mkColumnEnumVal (PGCol col) =
-      EnumValInfo (Just "column name") (G.EnumValue $ G.Name col) False
+mkSelColumnTy :: QualifiedTable -> [PGCol] -> EnumTyInfo
+mkSelColumnTy tn cols = enumTyInfo
+  where
+    enumTyInfo = EnumTyInfo (Just desc) (mkSelColumnInpTy tn) $
+                 mapFromL _eviVal $ map mkColumnEnumVal cols
+
+    desc = G.Description $
+      "select columns of table " <>> tn
 
 mkConflictActionTy :: EnumTyInfo
 mkConflictActionTy = EnumTyInfo (Just desc) ty $ mapFromL _eviVal
@@ -1108,7 +1142,7 @@ mkOnConflictTypes tn c cols =
   where
     tyInfos = [ TIEnum mkConflictActionTy
               , TIEnum $ mkConstriantTy tn constraints
-              , TIEnum $ mkColumnTy tn cols
+              , TIEnum $ mkUpdColumnTy tn cols
               , TIInpObj $ mkOnConflictInp tn
               ]
     constraints = filter isUniqueOrPrimary c
@@ -1159,6 +1193,7 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
       , TIInpObj <$> mutHelper viIsUpdatable updSetInpObjM
       , TIInpObj <$> mutHelper viIsUpdatable updIncInpObjM
       , TIObj <$> mutRespObjM
+      , TIEnum <$> selColInpTyM
       ]
     mutHelper f objM = bool Nothing objM $ isMutable f viM
 
@@ -1190,6 +1225,8 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
     updSetInpObjFldsM = mkColFldMap (mkUpdSetTy tn) <$> updColsM
 
     selFldsM = snd <$> selPermM
+    selColsM = (map pgiName . lefts) <$> selFldsM
+    selColInpTyM = mkSelColumnTy tn <$> selColsM
     -- boolexp input type
     boolExpInpObjM = case selFldsM of
       Just selFlds  -> Just $ mkBoolExpInp tn selFlds
@@ -1240,15 +1277,18 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
       _ -> []
     getNumCols = onlyNumCols . lefts
     getCompCols = onlyComparableCols . lefts
+    onlyFloat = const $ mkScalarTy PGFloat
+
+    mkTypeMaker "sum" = mkScalarTy
+    mkTypeMaker _     = onlyFloat
+
     mkColAggFldsObjs flds =
       let numCols = getNumCols flds
           compCols = getCompCols flds
-          sumFldsObj = mkTableColAggFldsObj tn "sum" mkScalarTy numCols
-          avgFldsObj = mkTableColAggFldsObj tn "avg" (const $ mkScalarTy PGFloat) numCols
-          maxFldsObj = mkTableColAggFldsObj tn "max" mkScalarTy compCols
-          minFldsObj = mkTableColAggFldsObj tn "min" mkScalarTy compCols
-          numFldsObjs = bool [sumFldsObj, avgFldsObj] [] $ null numCols
-          compFldsObjs = bool [maxFldsObj, minFldsObj] [] $ null compCols
+          mkNumObjFld n = mkTableColAggFldsObj tn n (mkTypeMaker n) numCols
+          mkCompObjFld n = mkTableColAggFldsObj tn n mkScalarTy compCols
+          numFldsObjs = bool (map mkNumObjFld numAggOps) [] $ null numCols
+          compFldsObjs = bool (map mkCompObjFld compAggOps) [] $ null compCols
       in numFldsObjs <> compFldsObjs
     -- the fields used in table object
     selObjFldsM = mkFldMap (mkTableTy tn) <$> selFldsM
@@ -1268,9 +1308,9 @@ getRootFldsRole'
   -> [TableConstraint]
   -> FieldInfoMap
   -> Maybe ([T.Text], Bool) -- insert perm
-  -> Maybe (S.BoolExp, Maybe Int, [T.Text], Bool) -- select filter
-  -> Maybe ([PGCol], S.BoolExp, [T.Text]) -- update filter
-  -> Maybe (S.BoolExp, [T.Text]) -- delete filter
+  -> Maybe (AnnBoolExpSQL, Maybe Int, [T.Text], Bool) -- select filter
+  -> Maybe ([PGCol], AnnBoolExpSQL, [T.Text]) -- update filter
+  -> Maybe (AnnBoolExpSQL, [T.Text]) -- delete filter
   -> Maybe ViewInfo
   -> RootFlds
 getRootFldsRole' tn primCols constraints fields insM selM updM delM viM =
@@ -1473,8 +1513,8 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols 
       (Just (allCols, noFilter, [])) (Just (noFilter, []))
       viewInfo
 
-noFilter :: S.BoolExp
-noFilter = S.BELit True
+noFilter :: AnnBoolExpSQL
+noFilter = annBoolExpTrue
 
 mkScalarTyInfo :: PGColType -> ScalarTyInfo
 mkScalarTyInfo = ScalarTyInfo Nothing
