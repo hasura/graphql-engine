@@ -13,7 +13,7 @@ def default_env(path, app_name):
     set_key(path, 'DATABASE_URL', 'postgres://gql_test@localhost:5432/{}'.format(app_name))
 
 POSTGRES_DEFAULT_CMD=['psql', '-h', 'localhost', '-p', '5432', '-U', 'gql_test', '-c']
-DEFAULT_DOCKER_CMD=['docker', 'run', '--env-file', '{}/.env.list', '--net', 'host']
+DEFAULT_DOCKER_CMD=['docker', 'run', '--net', 'host']
 APPS_DATA = {}
 with open(".circleci/community-apps.yaml", 'r') as stream:
     try:
@@ -29,6 +29,7 @@ for app in APPS_DATA['apps']:
     file_path='{}/.env.list'.format(app['path'])
     default_env(file_path, app['name'])
     docker_cmd = DEFAULT_DOCKER_CMD[:]
+    docker_cmd = docker_cmd + ['--env-file', '{}/.env.list'.format(app['path'])]
     for port_mapping in app['port_mappings']:
         docker_cmd = docker_cmd + ['-p', port_mapping]
     docker_cmd.append(app['name'])
