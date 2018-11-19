@@ -5,12 +5,12 @@ from dotenv import set_key
 def default_env(path, app_name):
     with open(path, "w") as file:
         file.write("")
-    set_key(path, 'DATABASE_NAME', app_name)
-    set_key(path, 'DATABASE_USER', 'gql_test')
-    set_key(path, 'DATABASE_HOST', 'localhost')
-    set_key(path, 'DATABASE_PORT', '5432')
-    set_key(path, 'DATABASE_PASS', '')
-    set_key(path, 'DATABASE_URL', 'postgres://gql_test@localhost:5432/{}'.format(app_name))
+    set_key(path, 'DATABASE_NAME', app_name, quote_mode="never")
+    set_key(path, 'DATABASE_USER', 'gql_test', quote_mode="never")
+    set_key(path, 'DATABASE_HOST', 'localhost', quote_mode="never")
+    set_key(path, 'DATABASE_PORT', '5432', quote_mode="never")
+    set_key(path, 'DATABASE_PASS', '', quote_mode="never")
+    set_key(path, 'DATABASE_URL', 'postgres://gql_test@localhost:5432/{}'.format(app_name), quote_mode="never")
 
 POSTGRES_DEFAULT_CMD=['psql', '-h', 'localhost', '-p', '5432', '-U', 'gql_test', '-c']
 DEFAULT_DOCKER_CMD=['docker', 'run', '--net', 'host']
