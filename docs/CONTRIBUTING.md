@@ -64,6 +64,9 @@ some conflicts with other links sometimes (a conflict will show up as a Warning 
 - Before adding an image to docs, first compress it via some tool to ensure users won't have to unnecessarily 
 download more data than needed. You can use www.tinypng.com for this. Sometimes you can compress images by 
 upto 75% without losing any visible quality.
+- Add appropriate cross-links in content to assist users. i.e. if you refer to some functionality that is documented in 
+some other docs page, add a link to that page. e.g. if you have a statement like "create a relationship between tables
+X and Y ...", make "create a relationship" a link to the `Create relationships` page.
 - Try to commit logically separate changes into different commits. i.e. if you need to update the `.gitignore` 
 file for some reason and also have other normal docs changes, commit the gitignore change separately for better 
 visibility. Ideally each commit should perform just one specific function. e.g. add xyz deployment guide, update 
