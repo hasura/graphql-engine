@@ -153,7 +153,7 @@ Adding a domain & Enabling HTTPS
 --------------------------------
 
 If you own a domain, you can enable HTTPS on this Droplet by mapping the domain
-to the Droplet IP. The One-Click Droplet is configured with Caddy which is an
+to the Droplet's IP. The One-Click Droplet is configured with Caddy which is an
 HTTP/2 web server with automatic HTTPS using Let's Encrypt.
 
 1. Go to your domain's DNS dashboard and add an A record mapping the domain to the Droplet IP.
@@ -202,7 +202,7 @@ Updating to latest version
 
 When a new version of GraphQL Engine is released, you can upgrade to it by just
 changing the version tag in docker-compose.yaml. You can find the latest
-releases in the GitHub releases page.
+releases on the GitHub releases page.
 
 1. Connect to the Droplet via SSH:
 

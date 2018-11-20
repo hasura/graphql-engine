@@ -46,7 +46,7 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   ];
   // check if track view enabled
   if (getState().rawSQL.isTableTrackChecked) {
-    const regExp = /create (view|table) ((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
+    const regExp = /create\s*(?:|or\s*replace)\s*(view|table)\s*((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
     const matches = sql.match(new RegExp(regExp, 'gmi'));
     if (matches) {
       matches.forEach(element => {

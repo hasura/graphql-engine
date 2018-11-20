@@ -31,6 +31,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.RQL.DML.Select                  as RS
 import qualified Hasura.Server.Query                    as RQ
+import qualified Hasura.SQL.DML                         as S
 
 data GQLExplain
   = GQLExplain
@@ -69,32 +70,34 @@ explainField userInfo gCtx fld =
     "__typename" -> return $ FieldPlan fName Nothing Nothing
     _            -> do
       opCxt <- getOpCtx fName
-      sel <- runExplain (fldMap, orderByCtx, funcArgCtx) $ case opCxt of
-        OCSelect tn permFilter permLimit hdrs -> do
-          validateHdrs hdrs
-          RS.mkSQLSelect False <$>
-            RS.fromField txtConverter tn permFilter permLimit fld
-        OCSelectPkey tn permFilter hdrs -> do
-          validateHdrs hdrs
-          RS.mkSQLSelect True <$>
-            RS.fromFieldByPKey txtConverter tn permFilter fld
-        OCSelectAgg tn permFilter permLimit hdrs -> do
-          validateHdrs hdrs
-          RS.mkAggSelect <$>
-            RS.fromAggField txtConverter tn permFilter permLimit fld
-        OCFuncQuery tn fn permLimit ->
-          RS.mkSQLSelect False <$>
-             RS.fromFuncQueryField txtConverter tn fn permLimit fld
-        _ -> throw500 "unexpected mut field info for explain"
+      builderSQL <- runExplain (fldMap, orderByCtx, funcArgCtx) $
+        case opCxt of
+          OCSelect tn permFilter permLimit hdrs -> do
+            validateHdrs hdrs
+            toSQL . RS.mkSQLSelect False <$>
+              RS.fromField txtConverter tn permFilter permLimit fld
+          OCSelectPkey tn permFilter hdrs -> do
+            validateHdrs hdrs
+            toSQL . RS.mkSQLSelect True <$>
+              RS.fromFieldByPKey txtConverter tn permFilter fld
+          OCSelectAgg tn permFilter permLimit hdrs -> do
+            validateHdrs hdrs
+            toSQL . RS.mkAggSelect <$>
+              RS.fromAggField txtConverter tn permFilter permLimit fld
+          OCFuncQuery tn fn permLimit ->
+            toSQL . RS.mkFuncSelectWith fn <$>
+               RS.fromFuncQueryField txtConverter tn fn permLimit fld
+          _ -> throw500 "unexpected mut field info for explain"
 
-      let selectSQL = TB.run $ toSQL sel
-          withExplain = "EXPLAIN (FORMAT TEXT) " <> selectSQL
+      let txtSQL = TB.run builderSQL
+          withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
       planLines <- liftTx $ map runIdentity <$>
         Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
-      return $ FieldPlan fName (Just selectSQL) $ Just planLines
+      return $ FieldPlan fName (Just txtSQL) $ Just planLines
   where
     fName = _fName fld
-    txtConverter = return . txtEncoder . snd
+    txtConverter (ty, val) =
+      return $ S.annotateExp (txtEncoder val) ty
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByCtx gCtx

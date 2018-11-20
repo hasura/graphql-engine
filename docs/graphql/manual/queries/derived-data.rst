@@ -1,15 +1,15 @@
-.. meta::
-  :keywords: computed fields, derived data, aggregations
-
 Derived data in queries
 =======================
-GraphQL’s "select" query language is designed to be simple yet powerful. But there are still certain
-queries that you cannot express with a GraphQL query. For example, getting the average rating of articles by an
-author.
+
+GraphQL’s "select" query language is designed to be simple yet powerful. But there are certain
+queries that you cannot express with a simple GraphQL query. For example, getting data from a custom join.
 
 To express complex queries for derived data like aggregations or custom joins etc., use SQL, which is designed for this
-purpose. If you can express your aggregation query in SQL, define a view with it and then use the newly created
+purpose. If you can express your query in SQL, define a view with it and then use the newly created
 type in the GraphQL query.
+
+.. note::
+  Also see :doc:`aggregation-queries` to fetch aggregation data without creating a view.
 
 For example, let’s see how to fetch the average article rating for each author in our author/article schema:
 
@@ -90,4 +90,4 @@ Fetch a list of authors along with their average article rating:
       }
     }
 
-This example can be easily extended to cover any use-case involving an SQL aggregate function that you may want to use.
+This example can be easily extended to cover any use-case involving a complicated SQL query that you may want to use.
