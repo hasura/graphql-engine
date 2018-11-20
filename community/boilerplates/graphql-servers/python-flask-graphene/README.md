@@ -28,7 +28,7 @@ now
 
 Get the URL and make a sample query:
 ```bash
-curl https://python-flask-graphene-iovzaeuswl.now.sh/graphql \
+curl https://python-flask-graphene-vynveodwau.now.sh/graphql \
      -H 'Content-Type:application/json' \
      -d'{"query":"{ hello }"}'
 
@@ -36,7 +36,7 @@ curl https://python-flask-graphene-iovzaeuswl.now.sh/graphql \
 ```
 
 You can also visit the now url to open GraphiQL:
-[`https://python-flask-graphene-iovzaeuswl.now.sh/graphql`](https://python-flask-graphene-iovzaeuswl.now.sh/graphql).
+[`https://python-flask-graphene-vynveodwau.now.sh/graphql`](https://python-flask-graphene-vynveodwau.now.sh/graphql).
 
 
 ## Running locally

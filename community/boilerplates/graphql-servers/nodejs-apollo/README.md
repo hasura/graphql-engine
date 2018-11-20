@@ -47,7 +47,7 @@ Running the server using Docker:
 
 ```bash
 docker build -t nodejs-apollo-graphql .
-docker run -p 4000:4000nodejs-apollo-graphql
+docker run -p 4000:4000 nodejs-apollo-graphql
 ```
 
 GraphQL endpoint will be `http://localhost:4000/graphql`.
