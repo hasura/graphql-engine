@@ -1,4 +1,4 @@
-# GraphQL server using python-flask
+# GraphQL server using python-flask-graphene
 
 A boilerplate Python GraphQL Server using
 [Flask](https://github.com/graphql-python/flask-graphql) and
@@ -10,7 +10,7 @@ Clone the repo:
 
 ```bash
 git clone https://github.com/hasura/graphql-engine
-cd graphql-engine/community/boilerplates/graphql-servers/python-flask
+cd graphql-engine/community/boilerplates/graphql-servers/python-flask-graphene
 ```
 
 ### Using Zeit Now
@@ -28,7 +28,7 @@ now
 
 Get the URL and make a sample query:
 ```bash
-curl https://python-flask-zcfsjgdrol.now.sh/graphql \
+curl https://python-flask-graphene-iovzaeuswl.now.sh/graphql \
      -H 'Content-Type:application/json' \
      -d'{"query":"{ hello }"}'
 
@@ -36,7 +36,7 @@ curl https://python-flask-zcfsjgdrol.now.sh/graphql \
 ```
 
 You can also visit the now url to open GraphiQL:
-[`https://python-flask-zcfsjgdrol.now.sh/graphql`](https://python-flask-zcfsjgdrol.now.sh/graphql).
+[`https://python-flask-graphene-iovzaeuswl.now.sh/graphql`](https://python-flask-graphene-iovzaeuswl.now.sh/graphql).
 
 
 ## Running locally
@@ -52,8 +52,8 @@ flask run
 Running the server using Docker:
 
 ```bash
-docker build -t python-flask-graphql .
-docker run -p 5000:5000 python-flask-graphql
+docker build -t python-flask-graphene .
+docker run -p 5000:5000 python-flask-graphene
 ```
 
 GraphQL endpoint will be `http://localhost:5000/graphql`.
