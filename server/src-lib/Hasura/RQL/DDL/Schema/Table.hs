@@ -454,7 +454,12 @@ runSqlP2 (RunSQL t cascade) = do
   mapM_ purgeDep indirectDeps
 
   -- Purge all dropped functions
-  forM_ droppedFuncs $ \qf -> do
+  let purgedFuncs = flip mapMaybe indirectDeps $ \dep ->
+        case dep of
+          SOFunction qf -> Just qf
+          _             -> Nothing
+
+  forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
     liftTx $ delFunctionFromCatalog qf
     delFunctionFromCache qf
 

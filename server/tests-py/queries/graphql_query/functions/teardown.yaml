@@ -17,3 +17,4 @@ args:
   args:
     sql: |
       drop table post cascade;
+    cascade: true
