@@ -115,7 +115,6 @@ args:
     permission:
       check:
         author_id: X-Hasura-User-Id
-      allow_upsert: true
 
 #Article udpate permission for user
 - type: create_update_permission
@@ -151,7 +150,6 @@ args:
         $and:
         - id: X-HASURA-USER-ID
         - is_registered: false
-      allow_upsert: true
 
 #Author insert permission for student
 #A Student should specify their Bio
@@ -163,7 +161,6 @@ args:
       check:
         bio:
           _is_null: false
-      allow_upsert: true
 
 #Insert Author table data
 - type: insert
@@ -196,7 +193,6 @@ args:
     permission:
       check:
         id: X-HASURA-COMPANY-ID
-      allow_upsert: true
 
 #Company update permission for user
 - type: create_update_permission
@@ -228,7 +224,6 @@ args:
     permission:
       check:
         id: X-Hasura-Resident-Id
-      allow_upsert: true
       set:
         name: X-Hasura-Resident-Name
         is_user: true
@@ -255,7 +250,6 @@ args:
     permission:
       check:
         id: X-Hasura-Infant-Id
-      allow_upsert: false
       set:
         name: X-Hasura-Infant-Name
         id: X-Hasura-Infant-Id

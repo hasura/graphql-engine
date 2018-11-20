@@ -251,7 +251,7 @@ class (ToJSON a) => IsPerm a where
     :: PermAccessor (PermInfo a)
 
   buildPermInfo
-    :: (QErrM m, CacheRM m)
+    :: (QErrM m, CacheRM m, UserInfoM m)
     => TableInfo
     -> PermDef a
     -> m (WithDeps (PermInfo a))
@@ -289,7 +289,7 @@ validateViewPerm permDef tableInfo =
     permAcc = getPermAcc1 permDef
 
 addPermP1
-  :: (QErrM m, CacheRM m, IsPerm a)
+  :: (QErrM m, CacheRM m, UserInfoM m, IsPerm a)
   => TableInfo -> PermDef a -> m (WithDeps (PermInfo a))
 addPermP1 tabInfo pd = do
   assertPermNotDefined (pdRole pd) (getPermAcc1 pd) tabInfo

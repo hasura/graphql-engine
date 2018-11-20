@@ -11,7 +11,6 @@ query:
       permission:
         check:
           id: X-Hasura-User-Id
-        allow_upsert: true
   - type: create_update_permission
     args:
       table: test_table

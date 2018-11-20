@@ -14,7 +14,6 @@
       insert_permissions:
       - comment: null
         permission:
-          allow_upsert: true
           check:
             user_id:
               _eq: X-HASURA-USER-ID

@@ -51,7 +51,7 @@ module Hasura.RQL.DDL.Permission
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Permission.Triggers
-import           Hasura.RQL.DML.Internal            (onlyPositiveInt)
+import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -71,10 +71,9 @@ import qualified Data.Text                          as T
 -- Insert permission
 data InsPerm
   = InsPerm
-  { icCheck       :: !BoolExp
-  , icAllowUpsert :: !(Maybe Bool)
-  , icSet         :: !(Maybe Object)
-  , icColumns     :: !(Maybe PermColSpec)
+  { icCheck   :: !BoolExp
+  , icSet     :: !(Maybe Object)
+  , icColumns :: !(Maybe PermColSpec)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
@@ -106,18 +105,17 @@ dropView vn =
       "DROP VIEW " <> toSQL vn
 
 buildInsPermInfo
-  :: (QErrM m, CacheRM m)
+  :: (QErrM m, CacheRM m, UserInfoM m)
   => TableInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
-buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set mCols) _) = withPathK "permission" $ do
+buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) = withPathK "permission" $ do
   (be, beDeps) <- withPathK "check" $
     -- procBoolExp tn fieldInfoMap (S.QualVar "NEW") chk
     procBoolExp tn fieldInfoMap chk
   let deps = mkParentDep tn : beDeps
       fltrHeaders = getDependentHeaders chk
       setObj = fromMaybe mempty set
-      allowUpsrt = fromMaybe False upsrt
   setColsSQL <- withPathK "set" $
     fmap HM.fromList $ forM (HM.toList setObj) $ \(t, val) -> do
       let pgCol = PGCol t
@@ -128,6 +126,7 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set mCols) _) = withPath
   let setHdrs = mapMaybe (fetchHdr . snd) (HM.toList setObj)
       reqHdrs = fltrHeaders `union` setHdrs
   preSetCols <- HM.union setColsSQL <$> nonInsColVals
+  allowUpsrt <- isUpsertAllowed . userRole <$> askUserInfo
   return (InsPermInfo vn be allowUpsrt preSetCols reqHdrs, deps)
   where
     fieldInfoMap = tiFieldInfoMap tabInfo
@@ -146,6 +145,11 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set mCols) _) = withPath
     fetchHdr (String t) = bool Nothing (Just $ T.toLower t)
                           $ isUserVar t
     fetchHdr _          = Nothing
+
+    rolePermInfoMap = tiRolePermInfoMap tabInfo
+    isUpsertAllowed role
+      | role == adminRole = True
+      | otherwise = isJust $ HM.lookup role rolePermInfoMap >>= _permUpd
 
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
 buildInsInfra tn (InsPermInfo vn be _ _ _) = do

@@ -21,7 +21,6 @@ query:
         permission:
           check:
             author_id: X-Hasura-User-Id
-          allow_upsert: true
     - type: create_update_permission
       args:
         table: article
@@ -45,7 +44,6 @@ query:
         permission:
           check:
             id: X-HASURA-USER-ID
-          allow_upsert: true
     - type: create_update_permission
       args:
         table: author

@@ -105,5 +105,4 @@ args:
     permission:
       check:
         id: X-HASURA-USER-ID
-      allow_upsert: true
 

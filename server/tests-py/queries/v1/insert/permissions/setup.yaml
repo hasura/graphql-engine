@@ -126,7 +126,6 @@ args:
         $and:
         - id: X-HASURA-USER-ID
         - is_registered: false
-      allow_upsert: true
 
 #Author insert permission for student
 #A Student should specify their Bio
@@ -138,7 +137,6 @@ args:
       check:
         bio:
           _is_null: false
-      allow_upsert: true
 
 #Insert Author table data
 - type: insert
