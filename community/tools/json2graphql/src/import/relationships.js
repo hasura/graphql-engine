@@ -7,7 +7,7 @@ const getObjRelationshipName = dep => {
 };
 
 const getArrayRelationshipName = (table, parent) => {
-  const relName = `${table}sBy${parent[0].toUpperCase()}`;
+  const relName = `${table}By${parent[0].toUpperCase()}`;
   return parent.length === 1 ? `${relName}Id` : `${relName}${parent.substring(1, parent.length)}Id`;
 };
 
