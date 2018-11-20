@@ -13,7 +13,7 @@ import CommonHeader from '../../Layout/ReusableHeader/Header';
 
 const graphqlurl = (
   <Tooltip id="tooltip-cascade">
-    Remote GraphQL server’s URL. E.g. https://my-domai/v1alpha1/graphql
+    Remote GraphQL server’s URL. E.g. https://my-domain/v1alpha1/graphql
   </Tooltip>
 );
 const clientHeaderForward = (
