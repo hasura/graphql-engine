@@ -166,6 +166,9 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
     def test_article_author_unexpected_operator_in_where_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_unexpected_operator_in_where_err.yaml')
 
+    def test_self_referential_relationships(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/self_referential_relationships.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/basic'

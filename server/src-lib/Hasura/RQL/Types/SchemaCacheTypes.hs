@@ -7,6 +7,7 @@ module Hasura.RQL.Types.SchemaCacheTypes where
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Aeson.Types
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict         as M
@@ -60,34 +61,36 @@ instance Show SchemaObjId where
 instance ToJSON SchemaObjId where
   toJSON = String . reportSchemaObj
 
+-- data PGColInfo
+--   = PGColInfo
+--   { pgiName       :: !PGCol
+--   , pgiType       :: !PGColType
+--   , pgiIsNullable :: !Bool
+--   } deriving (Show, Eq)
 
-data PGColInfo
-  = PGColInfo
-  { pgiName       :: !PGCol
-  , pgiType       :: !PGColType
-  , pgiIsNullable :: !Bool
-  } deriving (Show, Eq)
+-- $(deriveToJSON (aesonDrop 3 snakeCase) ''PGColInfo)
 
-$(deriveToJSON (aesonDrop 3 snakeCase) ''PGColInfo)
+instance ToJSONKey SchemaObjId where
+  toJSONKey = toJSONKeyText reportSchemaObj
 
 data SchemaDependency
   = SchemaDependency
   { sdObjId  :: !SchemaObjId
   , sdReason :: !T.Text
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaDependency)
 
-data RelInfo
-  = RelInfo
-  { riName     :: !RelName
-  , riType     :: !RelType
-  , riMapping  :: ![(PGCol, PGCol)]
-  , riRTable   :: !QualifiedTable
-  , riDeps     :: ![SchemaDependency]
-  , riIsManual :: !Bool
-  } deriving (Show, Eq)
+-- data RelInfo
+--   = RelInfo
+--   { riName     :: !RelName
+--   , riType     :: !RelType
+--   , riMapping  :: ![(PGCol, PGCol)]
+--   , riRTable   :: !QualifiedTable
+--   , riDeps     :: ![SchemaDependency]
+--   , riIsManual :: !Bool
+--   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
+-- $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 type InsSetCols = M.HashMap PGCol S.SQLExp

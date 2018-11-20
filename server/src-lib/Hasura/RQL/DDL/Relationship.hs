@@ -174,13 +174,13 @@ objRelP2Setup
   :: (QErrM m, CacheRWM m, MonadTx m)
   => QualifiedTable -> RelDef ObjRelUsing -> m ()
 objRelP2Setup qt (RelDef rn ru _) = do
-  relInfo <- case ru of
+  (relInfo, deps) <- case ru of
     RUManual (ObjRelManualConfig rm) -> do
       let refqt = rmTable rm
           (lCols, rCols) = unzip $ M.toList $ rmColumns rm
           deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) "lcol") lCols
                   <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) "rcol") rCols
-      return $ RelInfo rn ObjRel (zip lCols rCols) refqt deps True
+      return (RelInfo rn ObjRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn cn -> do
       res  <- liftTx $ Q.catchE defaultTxErrorHandler $ fetchFKeyDetail cn
       case mapMaybe processRes res of
@@ -192,10 +192,10 @@ objRelP2Setup qt (RelDef rn ru _) = do
                      ]
               refqt = QualifiedTable refsn reftn
           void $ askTabInfo refqt
-          return $ RelInfo rn ObjRel colMapping refqt deps False
+          return (RelInfo rn ObjRel colMapping refqt False, deps)
         _  -> throw400 ConstraintError
                 "more than one foreign key constraint exists on the given column"
-  addFldToCache (fromRel rn) (FIRelationship relInfo) qt
+  addRelToCache rn relInfo deps qt
   where
     QualifiedTable sn tn = qt
     fetchFKeyDetail cn =
@@ -278,13 +278,13 @@ arrRelP2Setup
   :: (QErrM m, CacheRWM m, MonadTx m)
   => QualifiedTable -> ArrRelDef -> m ()
 arrRelP2Setup qt (RelDef rn ru _) = do
-  relInfo <- case ru of
+  (relInfo, deps) <- case ru of
     RUManual (ArrRelManualConfig rm) -> do
       let refqt = rmTable rm
           (lCols, rCols) = unzip $ M.toList $ rmColumns rm
           deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) "lcol") lCols
                   <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) "rcol") rCols
-      return $ RelInfo rn ArrRel (zip lCols rCols) refqt deps True
+      return (RelInfo rn ArrRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
       let QualifiedTable refSn refTn = refqt
       res <- liftTx $ Q.catchE defaultTxErrorHandler $
@@ -296,10 +296,10 @@ arrRelP2Setup qt (RelDef rn ru _) = do
           let deps = [ SchemaDependency (SOTableObj refqt $ TOCons consName) "remote_fkey"
                      , SchemaDependency (SOTableObj refqt $ TOCol refCol) "using_col"
                      ]
-          return $ RelInfo rn ArrRel (map swap mapping) refqt deps False
+          return (RelInfo rn ArrRel (map swap mapping) refqt False, deps)
         _  -> throw400 ConstraintError
                 "more than one foreign key constraint exists on the given column"
-  addFldToCache (fromRel rn) (FIRelationship relInfo) qt
+  addRelToCache rn relInfo deps qt
   where
     QualifiedTable sn tn = qt
     fetchFKeyDetail refsn reftn refcn = Q.listQ [Q.sql|
@@ -367,7 +367,7 @@ purgeRelDep d = throw500 $ "unexpected dependency of relationship : "
 dropRelP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DropRel -> [SchemaObjId] -> m RespBody
 dropRelP2 (DropRel qt rn _) depObjs = do
   mapM_ purgeRelDep depObjs
-  delFldFromCache (fromRel rn) qt
+  delRelFromCache rn qt
   liftTx $ delRelFromCatalog qt rn
   return successMsg
 

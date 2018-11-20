@@ -125,7 +125,7 @@ convQT args qt = case qt of
 
 execQueryTemplateP1 :: ExecQueryTemplate -> P1 QueryTProc
 execQueryTemplateP1 (ExecQueryTemplate qtn args) = do
-  (QueryTemplateInfo _ qt _) <- askQTemplateInfo qtn
+  (QueryTemplateInfo _ qt) <- askQTemplateInfo qtn
   convQT args qt
 
 execQueryTP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QueryTProc -> m RespBody

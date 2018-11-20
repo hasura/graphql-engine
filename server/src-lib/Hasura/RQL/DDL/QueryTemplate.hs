@@ -124,7 +124,9 @@ collectDeps qt = case qt of
   QTP1Bulk qp1   -> concatMap collectDeps qp1
 
 createQueryTemplateP1
-  :: (P1C m) => CreateQueryTemplate -> m QueryTemplateInfo
+  :: (P1C m)
+  => CreateQueryTemplate
+  -> m (WithDeps QueryTemplateInfo)
 createQueryTemplateP1 (CreateQueryTemplate qtn qt _) = do
   adminOnly
   ui <- askUserInfo
@@ -134,7 +136,7 @@ createQueryTemplateP1 (CreateQueryTemplate qtn qt _) = do
   let qCtx = QCtx ui sc
   qtp1 <- withPathK "template" $ liftP1 qCtx $ validateTQuery qt
   let deps = collectDeps qtp1
-  return $ QueryTemplateInfo qtn qt deps
+  return (QueryTemplateInfo qtn qt, deps)
 
 addQTemplateToCatalog
   :: CreateQueryTemplate
@@ -148,16 +150,18 @@ addQTemplateToCatalog (CreateQueryTemplate qtName qtDef mComment) =
                 |] (qtName, Q.AltJ qtDef, mComment) False
 
 createQueryTemplateP2
-  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m)
-  => CreateQueryTemplate -> QueryTemplateInfo -> m RespBody
-createQueryTemplateP2 cqt qti = do
-  addQTemplateToCache qti
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => CreateQueryTemplate
+  -> WithDeps QueryTemplateInfo
+  -> m RespBody
+createQueryTemplateP2 cqt (qti, deps) = do
+  addQTemplateToCache qti deps
   liftTx $ addQTemplateToCatalog cqt
   return successMsg
 
 instance HDBQuery CreateQueryTemplate where
 
-  type Phase1Res CreateQueryTemplate = QueryTemplateInfo
+  type Phase1Res CreateQueryTemplate = WithDeps QueryTemplateInfo
   phaseOne = createQueryTemplateP1
 
   phaseTwo = createQueryTemplateP2

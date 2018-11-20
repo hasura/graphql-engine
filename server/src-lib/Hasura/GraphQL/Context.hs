@@ -19,11 +19,11 @@ import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Permission
-import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Types
 
-import qualified Hasura.SQL.DML                      as S
 
 type OpCtxMap = Map.HashMap G.Name OpCtx
 
@@ -31,15 +31,15 @@ data OpCtx
   -- table, req hdrs
   = OCInsert QualifiedTable [T.Text]
   -- tn, filter exp, limit, req hdrs
-  | OCSelect QualifiedTable S.BoolExp (Maybe Int) [T.Text]
+  | OCSelect QualifiedTable AnnBoolExpSQL (Maybe Int) [T.Text]
   -- tn, filter exp, reqt hdrs
-  | OCSelectPkey QualifiedTable S.BoolExp [T.Text]
+  | OCSelectPkey QualifiedTable AnnBoolExpSQL [T.Text]
   -- tn, filter exp, limit, req hdrs
-  | OCSelectAgg QualifiedTable S.BoolExp (Maybe Int) [T.Text]
+  | OCSelectAgg QualifiedTable AnnBoolExpSQL (Maybe Int) [T.Text]
   -- tn, filter exp, req hdrs
-  | OCUpdate QualifiedTable S.BoolExp [T.Text]
+  | OCUpdate QualifiedTable AnnBoolExpSQL [T.Text]
   -- tn, filter exp, req hdrs
-  | OCDelete QualifiedTable S.BoolExp [T.Text]
+  | OCDelete QualifiedTable AnnBoolExpSQL [T.Text]
   deriving (Show, Eq)
 
 data GCtx
@@ -57,6 +57,37 @@ data GCtx
 instance Has TypeMap GCtx where
   getter = _gTypes
   modifier f ctx = ctx { _gTypes = f $ _gTypes ctx }
+
+-- data OpCtx
+--   -- table, req hdrs
+--   = OCInsert QualifiedTable [T.Text]
+--   -- tn, filter exp, limit, req hdrs
+--   | OCSelect QualifiedTable S.BoolExp (Maybe Int) [T.Text]
+--   -- tn, filter exp, reqt hdrs
+--   | OCSelectPkey QualifiedTable S.BoolExp [T.Text]
+--   -- tn, filter exp, limit, req hdrs
+--   | OCSelectAgg QualifiedTable S.BoolExp (Maybe Int) [T.Text]
+--   -- tn, filter exp, req hdrs
+--   | OCUpdate QualifiedTable S.BoolExp [T.Text]
+--   -- tn, filter exp, req hdrs
+--   | OCDelete QualifiedTable S.BoolExp [T.Text]
+--   deriving (Show, Eq)
+
+-- data GCtx
+--   = GCtx
+--   { _gTypes     :: !TypeMap
+--   , _gFields    :: !FieldMap
+--   , _gOrdByCtx  :: !OrdByCtx
+--   , _gQueryRoot :: !ObjTyInfo
+--   , _gMutRoot   :: !(Maybe ObjTyInfo)
+--   , _gSubRoot   :: !(Maybe ObjTyInfo)
+--   , _gOpCtxMap  :: !OpCtxMap
+--   , _gInsCtxMap :: !InsCtxMap
+--   } deriving (Show, Eq)
+
+-- instance Has TypeMap GCtx where
+--   getter = _gTypes
+--   modifier f ctx = ctx { _gTypes = f $ _gTypes ctx }
 
 instance ToJSON GCtx where
   toJSON _ = String "GCtx"

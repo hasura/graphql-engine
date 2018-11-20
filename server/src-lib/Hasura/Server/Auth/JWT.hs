@@ -65,10 +65,11 @@ data JWTCtx
   { jcxKey      :: !(IORef JWKSet)
   , jcxClaimNs  :: !(Maybe T.Text)
   , jcxAudience :: !(Maybe T.Text)
-  } deriving (Show, Eq)
+  } deriving (Eq)
 
-instance Show (IORef JWKSet) where
-  show _ = "<IORef JWKRef>"
+instance Show JWTCtx where
+  show (JWTCtx _ nsM audM) =
+    show ["<IORef JWKSet>", show nsM, show audM]
 
 data HasuraClaims
   = HasuraClaims

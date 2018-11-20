@@ -60,7 +60,7 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
 
 -- type FieldMap
 --   = Map.HashMap (G.NamedType, G.Name)
---     (Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int))
+--     (Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int))
 
 -- data OrdTy
 --   = OAsc
@@ -77,7 +77,7 @@ type RespTx = Q.TxE QErr BL.ByteString
 -- -- order by context
 -- data OrdByItem
 --   = OBIPGCol !PGColInfo
---   | OBIRel !RelInfo !S.BoolExp
+--   | OBIRel !RelInfo !AnnBoolExpSQL
 --   deriving (Show, Eq)
 
 -- type OrdByItemMap = Map.HashMap G.Name OrdByItem
@@ -99,7 +99,8 @@ type RespTx = Q.TxE QErr BL.ByteString
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> G.Name -> m (Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int))
+  => G.NamedType -> G.Name
+  -> m (Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int))
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $

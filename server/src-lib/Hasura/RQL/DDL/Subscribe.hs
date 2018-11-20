@@ -243,7 +243,29 @@ subTableP2Setup qt trid (EventTriggerConf name def webhook webhookFromEnv rconf 
   let headerConfs = fromMaybe [] mheaders
   webhookInfo <- getWebhookInfoFromConf webhookConf
   headerInfos <- getHeaderInfosFromConf headerConfs
-  addEventTriggerToCache qt trid name def rconf webhookInfo headerInfos
+  let eTrigInfo = EventTriggerInfo trid name def rconf webhookInfo headerInfos
+      tabDep = SchemaDependency (SOTable qt) "parent"
+  addEventTriggerToCache qt eTrigInfo (tabDep:getTrigDefDeps qt def)
+
+getTrigDefDeps :: QualifiedTable -> TriggerOpsDef -> [SchemaDependency]
+getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel) =
+  mconcat $ catMaybes [ subsOpSpecDeps <$> mIns
+                      , subsOpSpecDeps <$> mUpd
+                      , subsOpSpecDeps <$> mDel
+                      ]
+  where
+    subsOpSpecDeps :: SubscribeOpSpec -> [SchemaDependency]
+    subsOpSpecDeps os =
+      let cols = getColsFromSub $ sosColumns os
+          colDeps = flip map cols $ \col ->
+            SchemaDependency (SOTableObj qt (TOCol col)) "column"
+          payload = maybe [] getColsFromSub (sosPayload os)
+          payloadDeps = flip map payload $ \col ->
+            SchemaDependency (SOTableObj qt (TOCol col)) "payload"
+        in colDeps <> payloadDeps
+    getColsFromSub sc = case sc of
+      SubCStar         -> []
+      SubCArray pgcols -> pgcols
 
 subTableP2
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m)

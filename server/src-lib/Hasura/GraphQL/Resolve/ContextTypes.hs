@@ -5,21 +5,20 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict               as Map
 import qualified Language.GraphQL.Draft.Syntax     as G
 
+import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Types
 
-import qualified Hasura.SQL.DML                    as S
-
 
 type FieldMap
   = Map.HashMap (G.NamedType, G.Name)
-    (Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int))
+    (Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int))
 
 -- order by context
 data OrdByItem
   = OBIPGCol !PGColInfo
-  | OBIRel !RelInfo !S.BoolExp
+  | OBIRel !RelInfo !AnnBoolExpSQL
   deriving (Show, Eq)
 
 type OrdByItemMap = Map.HashMap G.Name OrdByItem

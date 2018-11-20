@@ -41,7 +41,6 @@ import           Hasura.RQL.DML.Internal        (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Hasura.SQL.DML                 as S
 
 -- defaultTypes :: [TypeInfo]
 -- defaultTypes = $(fromSchemaDocQ defaultSchema HasuraType)
@@ -121,7 +120,7 @@ instance Has TypeMap RemoteGCtx where
 --   mempty = TyAgg Map.empty Map.empty Map.empty
 --   mappend = (<>)
 
-type SelField = Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int, Bool)
+type SelField = Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int, Bool)
 
 -- mkHsraObjFldInfo
 --   :: Maybe G.Description
@@ -170,7 +169,7 @@ isValidTableName = isValidName . qualTableToName
 isValidField :: FieldInfo -> Bool
 isValidField = \case
   FIColumn (PGColInfo col _ _) -> isColEligible col
-  FIRelationship (RelInfo rn _ _ remTab _ _) -> isRelEligible rn remTab
+  FIRelationship (RelInfo rn _ _ remTab _) -> isRelEligible rn remTab
   where
     isColEligible = isValidName . G.Name . getPGColTxt
     isRelEligible rn rt = isValidName (G.Name $ getRelTxt rn)
@@ -384,7 +383,7 @@ mkRelFld
   -> RelInfo
   -> Bool
   -> [ObjFldInfo]
-mkRelFld allowAgg (RelInfo rn rTy _ remTab _ isManual) isNullable = case rTy of
+mkRelFld allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
   ArrRel -> bool [arrRelFld] [arrRelFld, aggArrRelFld] allowAgg
   ObjRel -> [objRelFld]
   where
@@ -629,7 +628,7 @@ mkBoolExpInp tn fields =
     mkFldExpInp = \case
       Left (PGColInfo colName colTy _) ->
         mk (mkColName colName) (mkCompExpTy colTy)
-      Right (RelInfo relName _ _ remTab _ _, _, _, _, _) ->
+      Right (RelInfo relName _ _ remTab _, _, _, _, _) ->
         mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
 
 mkPGColInp :: PGColInfo -> InpValInfo
@@ -1365,9 +1364,9 @@ getRootFldsRole'
   -> [TableConstraint]
   -> FieldInfoMap
   -> Maybe ([T.Text], Bool) -- insert perm
-  -> Maybe (S.BoolExp, Maybe Int, [T.Text], Bool) -- select filter
-  -> Maybe ([PGCol], S.BoolExp, [T.Text]) -- update filter
-  -> Maybe (S.BoolExp, [T.Text]) -- delete filter
+  -> Maybe (AnnBoolExpSQL, Maybe Int, [T.Text], Bool) -- select filter
+  -> Maybe ([PGCol], AnnBoolExpSQL, [T.Text]) -- update filter
+  -> Maybe (AnnBoolExpSQL, [T.Text]) -- delete filter
   -> Maybe ViewInfo
   -> RootFlds
 getRootFldsRole' tn primCols constraints fields insM selM updM delM viM =
@@ -1570,8 +1569,8 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols 
       (Just (allCols, noFilter, [])) (Just (noFilter, []))
       viewInfo
 
-noFilter :: S.BoolExp
-noFilter = S.BELit True
+noFilter :: AnnBoolExpSQL
+noFilter = annBoolExpTrue
 
 
 checkSchemaConflicts
