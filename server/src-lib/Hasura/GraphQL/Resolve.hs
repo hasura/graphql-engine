@@ -43,7 +43,10 @@ buildTx userInfo gCtx fld = do
       validateHdrs hdrs >> RS.convertAggSelect tn permFilter permLimit fld
 
     OCFuncQuery tn fn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertFuncQuery tn fn permFilter permLimit fld
+      validateHdrs hdrs >> RS.convertFuncQuery tn fn permFilter permLimit False fld
+
+    OCFuncAggQuery tn fn permFilter permLimit hdrs ->
+      validateHdrs hdrs >> RS.convertFuncQuery tn fn permFilter permLimit True fld
 
     OCInsert tn hdrs    ->
       validateHdrs hdrs >> RI.convertInsert roleName tn fld

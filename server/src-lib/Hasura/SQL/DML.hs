@@ -132,7 +132,7 @@ mkFuncFromItem qf args =
 mkFuncAlias :: QualifiedFunction -> Alias
 mkFuncAlias (QualifiedFunction sn fn) =
   Alias $ Iden $ getSchemaTxt sn <> "_" <> getFunctionTxt fn
-  <> "_result"
+  <> "__result"
 
 mkRowExp :: [Extractor] -> SQLExp
 mkRowExp extrs = let

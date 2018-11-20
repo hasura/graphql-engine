@@ -1,0 +1,19 @@
+description: Search tracks of an artist
+url: /v1alpha1/graphql
+status: 200
+headers:
+  X-Hasura-Role: Artist
+  X-Hasura-Artist-Id: '1'
+response:
+  data:
+    search_tracks:
+    - id: 1
+      name: Keepup
+query:
+  query: |
+    query {
+      search_tracks(args: {search: "up"}){
+        id
+        name
+      }
+    }

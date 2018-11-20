@@ -303,7 +303,10 @@ mkSQLSelect isSingleObject annSel =
     rootFldName = FieldName "root"
     rootFldAls  = S.Alias $ toIden rootFldName
 
-mkFuncSelectWith :: QualifiedFunction -> (AnnSel, S.FromItem) -> S.SelectWith
+mkFuncSelectWith
+  :: QualifiedFunction
+  -> (Either AnnAggSel AnnSel, S.FromItem)
+  -> S.SelectWith
 mkFuncSelectWith fn (sel, frmItem) = selWith
   where
     -- SELECT * FROM function_name(args)
@@ -311,14 +314,17 @@ mkFuncSelectWith fn (sel, frmItem) = selWith
                          , S.selExtr = [S.Extractor S.SEStar Nothing]
                          }
 
-    mainSel = mkSQLSelect False sel
+    mainSel = case sel of
+      Left aggSel  -> mkAggSelect aggSel
+      Right annSel -> mkSQLSelect False annSel
+
     funcAls = S.mkFuncAlias fn
     selWith = S.SelectWith [(funcAls, S.CTESelect funcSel)] mainSel
 
 selectFuncP2
   :: S.FromItem
   -> QualifiedFunction
-  -> (AnnSel, DS.Seq Q.PrepArg)
+  -> (Either AnnAggSel AnnSel, DS.Seq Q.PrepArg)
   -> Q.TxE QErr RespBody
 selectFuncP2 frmItem fn (sel, p) =
   runIdentity . Q.getRow

@@ -1,0 +1,19 @@
+description: Custom GraphQL aggregate query using search_posts function
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    search_posts_aggregate:
+      aggregate:
+        count: 2
+query:
+  query: |
+    query {
+      search_posts_aggregate(
+        args: {search: "post"}
+      ) {
+        aggregate{
+          count
+        }
+      }
+    }

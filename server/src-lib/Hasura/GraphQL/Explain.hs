@@ -83,11 +83,16 @@ explainField userInfo gCtx fld =
           OCSelectAgg tn permFilter permLimit hdrs -> do
             validateHdrs hdrs
             toSQL . RS.mkAggSelect <$>
-              RS.fromAggField txtConverter tn permFilter permLimit fld
+              RS.fromAggField txtConverter
+              (RS.TableFrom tn Nothing) (RS.TablePerm permFilter permLimit) fld
           OCFuncQuery tn fn permFilter permLimit hdrs -> do
             validateHdrs hdrs
             toSQL . RS.mkFuncSelectWith fn <$>
-               RS.fromFuncQueryField txtConverter tn fn permFilter permLimit fld
+               RS.fromFuncQueryField txtConverter tn fn permFilter permLimit False fld
+          OCFuncAggQuery tn fn permFilter permLimit hdrs -> do
+            validateHdrs hdrs
+            toSQL . RS.mkFuncSelectWith fn <$>
+               RS.fromFuncQueryField txtConverter tn fn permFilter permLimit True fld
           _ -> throw500 "unexpected mut field info for explain"
 
       let txtSQL = TB.run builderSQL

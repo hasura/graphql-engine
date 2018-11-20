@@ -16,6 +16,11 @@ args:
 - type: run_sql
   args:
     sql: |
+      drop function search_tracks
+
+- type: run_sql
+  args:
+    sql: |
       drop table "Track"
     cascade: true
 

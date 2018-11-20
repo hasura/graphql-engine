@@ -67,6 +67,8 @@ data OpCtx
   | OCSelectAgg QualifiedTable AnnBoolExpSQL (Maybe Int) [T.Text]
   -- tn, fn, limit, req hdrs
   | OCFuncQuery QualifiedTable QualifiedFunction AnnBoolExpSQL (Maybe Int) [T.Text]
+  -- tn, fn, limit, req hdrs
+  | OCFuncAggQuery QualifiedTable QualifiedFunction AnnBoolExpSQL (Maybe Int) [T.Text]
   -- tn, filter exp, req hdrs
   | OCUpdate QualifiedTable AnnBoolExpSQL [T.Text]
   -- tn, filter exp, req hdrs
@@ -538,26 +540,60 @@ function(
 
 -}
 
-mkFuncQueryFld
-  :: FunctionInfo -> ObjFldInfo
-mkFuncQueryFld funInfo =
-  ObjFldInfo (Just desc) fldName args ty
+mkFuncArgs :: FunctionInfo -> ParamMap
+mkFuncArgs funInfo =
+  fromInpValL $ funcInpArgs <> mkSelArgs retTable
   where
     funcName = fiName funInfo
-    retTable = fiReturnType funInfo
     funcArgs = fiInputArgs funInfo
-
-    desc = G.Description $ "execute function " <> funcName
-           <<> " which returns " <>> retTable
-    fldName = qualFunctionToName funcName
-    args = fromInpValL $ funcInpArgs <> mkSelArgs retTable
-    funcInpArgs = bool [funcInpArg] [] $ null funcArgs
+    retTable = fiReturnType funInfo
 
     funcArgDesc = G.Description $ "input parameters for function " <>> funcName
     funcInpArg = InpValInfo (Just funcArgDesc) "args" $ G.toGT $ G.toNT $
                  mkFuncArgsTy funcName
+    funcInpArgs = bool [funcInpArg] [] $ null funcArgs
+
+mkFuncQueryFld
+  :: FunctionInfo -> ObjFldInfo
+mkFuncQueryFld funInfo =
+  ObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
+  where
+    retTable = fiReturnType funInfo
+    funcName = fiName funInfo
+
+    desc = G.Description $ "execute function " <> funcName
+           <<> " which returns " <>> retTable
+    fldName = qualFunctionToName funcName
 
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy retTable
+
+{-
+
+function_aggregate(
+  args: function_args
+  where: table_bool_exp
+  limit: Int
+  offset: Int
+): table_aggregate!
+
+-}
+
+mkFuncAggQueryFld
+  :: FunctionInfo -> ObjFldInfo
+mkFuncAggQueryFld funInfo =
+  ObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
+  where
+    funcName = fiName funInfo
+    retTable = fiReturnType funInfo
+
+    desc = G.Description $ "execute function " <> funcName
+           <<> " and query aggregates on result of table type "
+           <>> retTable
+
+    fldName = qualFunctionToName funcName <> "_aggregate"
+
+    ty = G.toGT $ G.toNT $ mkTableAggTy retTable
+
 
 -- table_mutation_response
 mkMutRespTy :: QualifiedTable -> G.NamedType
@@ -1415,15 +1451,19 @@ getRootFldsRole'
 getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
   RootFlds mFlds
   where
-    mFlds = mapFromL (either _fiName _fiName . snd) $ funcQueries <>
-            catMaybes
+    mFlds = mapFromL (either _fiName _fiName . snd) $
+      funcQueries <>
+      funcAggQueries <>
+      catMaybes
             [ mutHelper viIsInsertable getInsDet insM
             , mutHelper viIsUpdatable getUpdDet updM
             , mutHelper viIsDeletable getDelDet delM
             , getSelDet <$> selM, getSelAggDet selM
             , getPKeySelDet selM $ getColInfos primCols colInfos
             ]
+
     funcQueries = maybe [] getFuncQueryFlds selM
+    funcAggQueries = maybe [] getFuncAggQueryFlds selM
     mutHelper f getDet mutM =
       bool Nothing (getDet <$> mutM) $ isMutable f viM
     colInfos = fst $ validPartitionFieldInfoMap fields
@@ -1453,6 +1493,11 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
     getFuncQueryFlds (selFltr, pLimit, hdrs, _) =
       flip map funcs $ \fi ->
       (OCFuncQuery tn (fiName fi) selFltr pLimit hdrs, Left $ mkFuncQueryFld fi)
+
+    getFuncAggQueryFlds (selFltr, pLimit, hdrs, True) =
+      flip map funcs $ \fi ->
+      (OCFuncAggQuery tn (fiName fi) selFltr pLimit hdrs, Left $ mkFuncAggQueryFld fi)
+    getFuncAggQueryFlds _ = []
 
 
 -- getRootFlds

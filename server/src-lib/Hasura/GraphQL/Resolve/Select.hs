@@ -70,7 +70,8 @@ fromSelSet f fldTy flds =
             let relTN = riRTable relInfo
                 colMapping = riMapping relInfo
             if isAgg then do
-              aggSel <- fromAggField f relTN tableFilter tableLimit fld
+              aggSel <- fromAggField f (RS.TableFrom relTN Nothing)
+                        (RS.TablePerm tableFilter tableLimit) fld
               return $ RS.FAgg $ RS.AggSel colMapping aggSel
             else do
               annSel <- fromField f relTN tableFilter tableLimit fld
@@ -256,12 +257,13 @@ convertAggFld ty selSet =
 fromAggField
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> QualifiedTable -> AnnBoolExpSQL -> Maybe Int -> Field -> m RS.AnnAggSel
-fromAggField fn tn permFilter permLimitM fld = fieldAsPath fld $ do
+  -> RS.TableFrom
+  -> RS.TablePerm
+  -> Field
+  -> m RS.AnnAggSel
+fromAggField fn tabFrom tabPerm fld = fieldAsPath fld $ do
   tableArgs <- parseTableArgs fn args
   aggSelFlds   <- fromAggSel (_fType fld) $ _fSelSet fld
-  let tabFrom = RS.TableFrom tn Nothing
-      tabPerm = RS.TablePerm permFilter permLimitM
   return $ RS.AnnSelG aggSelFlds tabFrom tabPerm tableArgs
   where
     args = _fArguments fld
@@ -279,7 +281,8 @@ convertAggSelect
   :: QualifiedTable -> AnnBoolExpSQL -> Maybe Int -> Field -> Convert RespTx
 convertAggSelect qt permFilter permLimit fld = do
   selData <- withPathK "selectionSet" $
-             fromAggField prepare qt permFilter permLimit fld
+             fromAggField prepare (RS.TableFrom qt Nothing)
+             (RS.TablePerm permFilter permLimit) fld
   prepArgs <- get
   return $ RS.selectAggP2 (selData, prepArgs)
 
@@ -292,20 +295,26 @@ fromFuncQueryField
   -> QualifiedFunction
   -> AnnBoolExpSQL
   -> Maybe Int
+  -> Bool
   -> Field
-  -> m (RS.AnnSel, S.FromItem)
-fromFuncQueryField fn tn qf permFilter permLimit fld = fieldAsPath fld $ do
+  -> m (Either RS.AnnAggSel RS.AnnSel, S.FromItem)
+fromFuncQueryField fn tn qf permFilter permLimit isAgg fld = fieldAsPath fld $ do
   funcArgsM <- withArgM args "args" $ parseFunctionArgs fn
   let funcArgs = fromMaybe [] funcArgsM
       funcFrmItem = S.mkFuncFromItem qf funcArgs
   tableArgs <- parseTableArgs fn args
-  annFlds    <- fromSelSet fn (_fType fld) $ _fSelSet fld
-  let tabFrom = RS.TableFrom tn $ Just $ toIden $ S.mkFuncAlias qf
-      tabPerm = RS.TablePerm permFilter permLimit
-      annSel = RS.AnnSelG annFlds tabFrom tabPerm tableArgs
-  return (annSel, funcFrmItem)
+  sel <- bool (nonAggSel tableArgs) aggSel isAgg
+  return (sel, funcFrmItem)
   where
     args = _fArguments fld
+    tabFrom = RS.TableFrom tn $ Just $ toIden $ S.mkFuncAlias qf
+    tabPerm = RS.TablePerm permFilter permLimit
+
+    nonAggSel tableArgs = do
+      selFlds <- fromSelSet fn (_fType fld) $ _fSelSet fld
+      return $ Right $ RS.AnnSelG selFlds tabFrom tabPerm tableArgs
+    aggSel = Left <$> fromAggField fn tabFrom tabPerm fld
+
 
 parseFunctionArgs
   ::(MonadError QErr m, MonadReader r m, Has FieldMap r, Has FuncArgCtx r)
@@ -327,9 +336,12 @@ convertFuncQuery
   :: QualifiedTable
   -> QualifiedFunction
   -> AnnBoolExpSQL
-  -> Maybe Int -> Field -> Convert RespTx
-convertFuncQuery qt qf permFilter permLimit fld = do
-  (selData, frmItem) <- withPathK "selectionSet" $
-             fromFuncQueryField prepare qt qf permFilter permLimit fld
+  -> Maybe Int
+  -> Bool
+  -> Field
+  -> Convert RespTx
+convertFuncQuery qt qf permFilter permLimit isAgg fld = do
+  (sel, frmItem) <- withPathK "selectionSet" $
+    fromFuncQueryField prepare qt qf permFilter permLimit isAgg fld
   prepArgs <- get
-  return $ RS.selectFuncP2 frmItem qf (selData, prepArgs)
+  return $ RS.selectFuncP2 frmItem qf (sel, prepArgs)
