@@ -31,6 +31,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.RQL.DML.Select                  as RS
 import qualified Hasura.Server.Query                    as RQ
+import qualified Hasura.SQL.DML                         as S
 
 data GQLExplain
   = GQLExplain
@@ -91,7 +92,8 @@ explainField userInfo gCtx fld =
       return $ FieldPlan fName (Just selectSQL) $ Just planLines
   where
     fName = _fName fld
-    txtConverter = return . txtEncoder . snd
+    txtConverter (ty, val) =
+      return $ S.annotateExp (txtEncoder val) ty
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByCtx gCtx

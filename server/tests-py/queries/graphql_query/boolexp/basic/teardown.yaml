@@ -7,7 +7,7 @@ args:
     table:
       schema: public
       name: author
-    
+
 - type: run_sql
   args:
     sql: |
@@ -27,3 +27,8 @@ args:
   args:
     sql: |
       drop table orders
+
+- type: run_sql
+  args:
+    sql: |
+      drop table message

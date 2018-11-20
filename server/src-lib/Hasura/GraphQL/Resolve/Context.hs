@@ -48,7 +48,7 @@ import qualified Hasura.SQL.DML                as S
 
 type FieldMap
   = Map.HashMap (G.NamedType, G.Name)
-    (Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int))
+    (Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int))
 
 -- data OrdTy
 --   = OAsc
@@ -65,7 +65,7 @@ type RespTx = Q.TxE QErr BL.ByteString
 -- order by context
 data OrdByItem
   = OBIPGCol !PGColInfo
-  | OBIRel !RelInfo !S.BoolExp
+  | OBIRel !RelInfo !AnnBoolExpSQL
   deriving (Show, Eq)
 
 type OrdByItemMap = Map.HashMap G.Name OrdByItem
@@ -76,7 +76,7 @@ type OrdByCtx = Map.HashMap G.NamedType OrdByItemMap
 type RelationInfoMap = Map.HashMap RelName RelInfo
 
 -- updatable columns and filter
-type UpdPermForIns = ([PGCol], S.BoolExp)
+type UpdPermForIns = ([PGCol], AnnBoolExpSQL)
 
 data InsCtx
   = InsCtx
@@ -91,7 +91,8 @@ type InsCtxMap = Map.HashMap QualifiedTable InsCtx
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> G.Name -> m (Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int))
+  => G.NamedType -> G.Name
+  -> m (Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int))
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $

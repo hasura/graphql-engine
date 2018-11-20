@@ -3,8 +3,8 @@ Guides: Sample apps
 
 Articles:
 ^^^^^^^^^
-- `Build a realtime chat app with GraphQL Subscriptions <https://blog.hasura.io/building-a-realtime-chat-app-with-graphql-subscriptions-d68cd33e73f>`__.
-- `Build a React To Do Application <https://hackernoon.com/building-a-react-todo-app-with-hasura-graphql-engine-511b703a7ef>`__.
+- `Blog: Build a realtime chat app with GraphQL Subscriptions <https://blog.hasura.io/building-a-realtime-chat-app-with-graphql-subscriptions-d68cd33e73f>`__.
+- `Blog: Build a React To Do Application <https://hackernoon.com/building-a-react-todo-app-with-hasura-graphql-engine-511b703a7ef>`__.
 
 Videos:
 ^^^^^^^

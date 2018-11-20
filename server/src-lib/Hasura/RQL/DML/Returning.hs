@@ -54,13 +54,14 @@ mkMutFldExp :: QualifiedTable -> Bool -> MutFld -> S.SQLExp
 mkMutFldExp qt singleObj = \case
   MCount -> S.SESelect $
     S.mkSelect
-    { S.selExtr = [S.Extractor (S.SEUnsafe "count(*)") Nothing]
+    { S.selExtr = [S.Extractor S.countStar Nothing]
     , S.selFrom = Just $ S.FromExp $ pure frmItem
     }
   MExp t -> S.SELit t
   MRet selFlds ->
-    let tabFrom = TableFrom qt $ Just frmItem
-        tabPerm = TablePerm (S.BELit True) Nothing
+    -- let tabFrom = TableFrom qt $ Just frmItem
+    let tabFrom = TableFrom qt $ Just  $ qualTableToAliasIden qt
+        tabPerm = TablePerm annBoolExpTrue Nothing
     in S.SESelect $ mkSQLSelect singleObj $
        AnnSelG selFlds tabFrom tabPerm noTableArgs
   where

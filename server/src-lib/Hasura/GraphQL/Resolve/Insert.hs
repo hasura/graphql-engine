@@ -26,12 +26,10 @@ import qualified Database.PG.Query                 as Q
 import qualified Hasura.RQL.DML.Insert             as RI
 import qualified Hasura.RQL.DML.Returning          as RR
 import qualified Hasura.RQL.DML.Select             as RS
-import qualified Hasura.RQL.GBoolExp               as RG
 import qualified Hasura.RQL.GBoolExp               as RB
 
 import qualified Hasura.SQL.DML                    as S
 
-import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Mutation
@@ -39,6 +37,7 @@ import           Hasura.GraphQL.Resolve.Select
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Internal           (dmlTxErrorHandler)
+import           Hasura.RQL.GBoolExp               (toSQLBoolExp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -122,15 +121,15 @@ traverseInsObj rim (gName, annVal) (AnnInsObj cols objRels arrRels) =
       relInfo <- onNothing (Map.lookup relName rim) $
                  throw500 $ "relation " <> relName <<> " not found"
 
-      InsCtx rtView rtCols rtDefVals rtRelInfoMap rtUpdPerm <-
-        getInsCtx $ riRTable relInfo
+      let rTable = riRTable relInfo
+      InsCtx rtView rtCols rtDefVals rtRelInfoMap rtUpdPerm <- getInsCtx rTable
 
       withPathK (G.unName gName) $ case riType relInfo of
         ObjRel -> do
           dataObj <- asObject dataVal
           annDataObj <- mkAnnInsObj rtRelInfoMap dataObj
           let insCols = getAllInsCols [annDataObj]
-          ccM <- forM onConflictM $ parseOnConflict rtUpdPerm insCols
+          ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm insCols
           let singleObjIns = AnnIns annDataObj ccM rtView rtCols rtDefVals
               objRelIns = RelIns singleObjIns relInfo
           return (AnnInsObj cols (objRelIns:objRels) arrRels)
@@ -141,19 +140,20 @@ traverseInsObj rim (gName, annVal) (AnnInsObj cols objRels arrRels) =
             dataObj <- asObject arrDataVal
             mkAnnInsObj rtRelInfoMap dataObj
           let insCols = getAllInsCols annDataObjs
-          ccM <- forM onConflictM $ parseOnConflict rtUpdPerm insCols
+          ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm insCols
           let multiObjIns = AnnIns annDataObjs ccM rtView rtCols rtDefVals
               arrRelIns = RelIns multiObjIns relInfo
           return (AnnInsObj cols objRels (arrRelIns:arrRels))
 
 parseOnConflict
   :: (MonadError QErr m)
-  => Maybe UpdPermForIns -> [PGCol] -> AnnGValue -> m RI.ConflictClauseP1
-parseOnConflict updFiltrM inpCols val = withPathK "on_conflict" $
+  => QualifiedTable -> Maybe UpdPermForIns
+  -> [PGCol] -> AnnGValue -> m RI.ConflictClauseP1
+parseOnConflict tn updFiltrM inpCols val = withPathK "on_conflict" $
   flip withObject val $ \_ obj -> do
     actionM <- forM (OMap.lookup "action" obj) parseAction
     constraint <- parseConstraint obj
-    updColsM <- forM (OMap.lookup "update_columns" obj) parseUpdCols
+    updColsM <- forM (OMap.lookup "update_columns" obj) parseColumns
     let ignoreCtx = return $ RI.CCDoNothing $ Just constraint
         mkUpdCtx cols = do
           (updPermCols, updFiltr) <- onNothing updFiltrM $ throwVE $
@@ -163,7 +163,7 @@ parseOnConflict updFiltrM inpCols val = withPathK "on_conflict" $
           let nonUpdCols = cols \\ updPermCols
           unless (null nonUpdCols) $
             throwVE $ "columns " <> showPGCols nonUpdCols <> " are not updatable"
-          return $ RI.CCUpdate constraint cols updFiltr
+          return $ RI.CCUpdate constraint cols $ toSQLBoolExp (S.mkQual tn) updFiltr
 
     -- consider "action" if "update_columns" is not mentioned
     mkConflictClause <$> case (updColsM, actionM) of
@@ -186,11 +186,6 @@ parseOnConflict updFiltrM inpCols val = withPathK "on_conflict" $
            "\"constraint\" is expected, but not found"
       (_, enumVal) <- asEnumVal v
       return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
-
-    parseUpdCols v = flip withArray v $ \_ enumVals ->
-      forM enumVals $ \eVal -> do
-        (_, ev) <- asEnumVal eVal
-        return $ PGCol $ G.unName $ G.unEnumValue ev
 
     mkConflictClause (RI.CCDoNothing constrM) =
       RI.CP1DoNothing $ fmap RI.Constraint constrM
@@ -229,13 +224,13 @@ mkInsertQ vn onConflictM insCols tableCols defVals role = do
 mkBoolExp
   :: (MonadError QErr m, MonadState PrepArgs m)
   => QualifiedTable -> [(PGColInfo, PGColValue)]
-  -> m (GBoolExp RG.AnnSQLBoolExp)
+  -> m S.BoolExp
 mkBoolExp tn colInfoVals =
-  RG.convBoolRhs (RG.mkBoolExpBuilder prepare) (S.mkQual tn) boolExp
+  RB.toSQLBoolExp (S.mkQual tn) . BoolAnd <$>
+  mapM (fmap BoolFld . uncurry f) colInfoVals
   where
-    boolExp = BoolAnd $ map (BoolCol . uncurry f) colInfoVals
     f ci@(PGColInfo _ colTy _) colVal =
-      RB.AVCol ci [RB.OEVal $ RB.AEQ (colTy, colVal)]
+      AVCol ci . pure . AEQ <$> prepare (colTy, colVal)
 
 mkSelQ :: MonadError QErr m => QualifiedTable
        -> [PGColInfo] -> [PGColWithValue] -> m InsWithExp
@@ -243,7 +238,7 @@ mkSelQ tn allColInfos pgColsWithVal = do
   (whereExp, args) <- flip runStateT Seq.Empty $ mkBoolExp tn colWithInfos
   let sqlSel = S.mkSelect { S.selExtr = [S.selectStar]
                           , S.selFrom = Just $ S.mkSimpleFromExp tn
-                          , S.selWhere = Just $ S.WhereFrag $ RG.cBoolExp whereExp
+                          , S.selWhere = Just $ S.WhereFrag whereExp
                           }
 
   return $ InsWithExp (S.CTESelect sqlSel) Nothing args
@@ -490,7 +485,7 @@ convertInsert role tn fld = prefixErrPath fld $ do
   annObjs <- mapM asObject annVals
   annInsObjs <- forM annObjs $ mkAnnInsObj relInfoMap
   let insCols = getAllInsCols annInsObjs
-  conflictClauseM <- forM onConflictM $ parseOnConflict updPerm insCols
+  conflictClauseM <- forM onConflictM $ parseOnConflict tn updPerm insCols
   mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
   let multiObjIns = AnnIns annInsObjs conflictClauseM vn tableCols defValMap
   return $ prefixErrPath fld $ insertMultipleObjects role tn

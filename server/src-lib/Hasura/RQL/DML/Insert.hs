@@ -18,6 +18,7 @@ import qualified Data.Text.Lazy           as LT
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning
+import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Instances     ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -131,15 +132,18 @@ buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
     (Just col, Nothing, CAUpdate)   -> do
       validateCols col
       updFiltr <- getUpdFilter
-      return $ CP1Update (Column $ getPGCols col) inpCols updFiltr
+      return $ CP1Update (Column $ getPGCols col) inpCols $
+        toSQLBool updFiltr
     (Nothing, Just cons, CAUpdate)  -> do
       validateConstraint cons
       updFiltr <- getUpdFilter
-      return $ CP1Update (Constraint cons) inpCols updFiltr
+      return $ CP1Update (Constraint cons) inpCols $
+        toSQLBool updFiltr
     (Just _, Just _, _)             -> throw400 UnexpectedPayload
       "'constraint' and 'constraint_on' cannot be set at a time"
   where
     fieldInfoMap = tiFieldInfoMap tableInfo
+    toSQLBool = toSQLBoolExp (S.mkQual $ tiName tableInfo)
 
     validateCols c = do
       let targetcols = getPGCols c
