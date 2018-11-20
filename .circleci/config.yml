@@ -310,6 +310,8 @@ jobs:
         command: |
           docker run -d -p 5432:5432 -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" circleci/postgres:10-alpine-postgis
     - checkout
+    - attach_workspace:
+        at: /build
     - *wait_for_postgres
     - run:
         name: install requirements
@@ -333,10 +335,6 @@ jobs:
 
 workflows:
   version: 2
-  community_test:
-    jobs:
-    - test_community_apps:
-        <<: *filter_only_vtags
   build_and_test:
     jobs:
     - check_build_worthiness: *filter_only_vtags
@@ -370,6 +368,10 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - test_and_build_cli
+    - test_community_apps:
+        <<: *filter_only_vtags
+        requires:
+        - test_and_build_console
     - deploy:
         <<: *filter_only_vtags_dev_release_branches
         requires:

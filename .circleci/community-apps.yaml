@@ -2,7 +2,10 @@ apps:
 - name: passportjs
   path: community/boilerplates/auth-webhooks/passport-js
   dockerfile: Dockerfile
-  access_key: abcd
-  webhook_url: http://localhost:8081/webhook
+  access_key: abcd #optional
+  webhook_url: http://localhost:8081/webhook #optional
+  jwt_secret: False #optional
+  command: False #optional
+  migrations_dir: /path/to/migrations_dir #optional
   port_mappings:
     - 8081:8081
