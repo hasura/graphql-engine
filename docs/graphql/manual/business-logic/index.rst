@@ -1,5 +1,5 @@
-Add custom business logic
-=========================
+Custom business logic
+=====================
 
 For the backends of most apps, you may have to implement custom business logic to complement the CRUD and
 real-time API provided by GraphQL Engine. Depending on the nature of the use case and its position vis-a-vis
@@ -32,7 +32,7 @@ schema using the console. Here's a reference architecture diagram for such a set
 
 .. image:: ../../../img/graphql/manual/schema/schema-stitching-v1-arch-diagram.png
 
-For more details, links to boilerplates for custom GraphQL servers, etc. please head to :doc:`../schema/remote-schemas`.
+For more details, links to boilerplates for custom GraphQL servers, etc. please head to :doc:`../remote-schemas/index`.
 
 .. _event-triggers:
 

@@ -12,7 +12,7 @@ Here are a couple of common use cases:
   Engine's API
 - Fetching disparate data from other sources (e.g. from a weather API or another database)
 
-These use cases can be handling by writing resolvers in a custom GraphQL server and stitching its schema
+These use cases can be handled by writing resolvers in a custom GraphQL server and stitching its schema
 (``remote schema``) with GraphQL Engine's schema (think of the merged schema as a union of top-level nodes from
 each of the sub-schemas).
 

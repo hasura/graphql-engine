@@ -18,6 +18,7 @@ The Hasura GraphQL engine lets you setup a GraphQL server and event triggers ove
   mutations/index
   subscriptions/index
   business-logic/index
+  remote-schemas/index
   event-triggers/index
   auth/index
   migrations/index
