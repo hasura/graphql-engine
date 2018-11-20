@@ -37,7 +37,7 @@ for app in APPS_DATA['apps']:
     file_path='{}/.env.list'.format(app['path'])
     default_env(file_path, app['name'])
     if 'access_key' in app and app['access_key']:
-        set_kcalley(file_path, 'HASURA_GRAPHQL_ACCESS_KEY', app['access_key'], quote_mode="never")
+        set_key(file_path, 'HASURA_GRAPHQL_ACCESS_KEY', app['access_key'], quote_mode="never")
     if 'webhook_url' in app and app['webhook_url']:
         set_key(file_path, 'HASURA_GRAPHQL_AUTH_HOOK', app['webhook_url'], quote_mode="never")
     if 'jwt_secret' in app and app['jwt_secret']:
