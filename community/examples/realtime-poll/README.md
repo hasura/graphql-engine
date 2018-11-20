@@ -13,7 +13,7 @@ hosted on GitHub pages and the Postgres+GraphQL Engine is running on Postgres.
 
 - Checkout the [live app](https://shahidh.in/hasura-realtime-poll/).
 - Explore the database using [Hasura
-  Console](https://hasura-realtime-dashboard.herokuapp.com/console/data/schema/public).
+  Console](https://hasura-realtime-poll.herokuapp.com/console/data/schema/public).
   
 # Running the app yourself
 
@@ -43,5 +43,6 @@ hosted on GitHub pages and the Postgres+GraphQL Engine is running on Postgres.
   ```
 - Run the app (go the root of repo):
   ```bash
+  npm install
   npm start
   ```
