@@ -10,7 +10,7 @@ To support custom business logic, you'll need to create a custom GraphQL server 
 
 ![Reactive apps architecture](assets/remote-schemas-arch.png)
 
-##Demo (*40 seconds*)
+## Demo (*40 seconds*)
 
 [![Merge remote schemas](https://img.youtube.com/vi/eY4n9aPsi0M/0.jpg)](https://www.youtube.com/watch?v=eY4n9aPsi0M)
 
