@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 
-import socketserver
+from http import HTTPStatus
+from urllib.parse import urlparse
+# import socketserver
 import threading
 import http.server
 import json
-import yaml
 import queue
-import requests
 import socket
-import websocket
 import subprocess
 
-from http import HTTPStatus
-from urllib.parse import urlparse
-
+import yaml
+import requests
+import websocket
 from sqlalchemy import create_engine
 from sqlalchemy.schema import MetaData
 
@@ -28,20 +27,24 @@ class WebhookHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
-        contentLen = self.headers.get('Content-Length')
-        reqBody = self.rfile.read(int(contentLen)).decode("utf-8")
-        reqJson = json.loads(reqBody)
-        reqHeaders = self.headers
-        reqPath = self.path
-        self.log_message(json.dumps(reqJson))
-        if reqPath == "/fail":
+        content_len = self.headers.get('Content-Length')
+        req_body = self.rfile.read(int(content_len)).decode("utf-8")
+        req_json = json.loads(req_body)
+        req_headers = self.headers
+        req_path = self.path
+        self.log_message(json.dumps(req_json))
+        if req_path == "/fail":
             self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
             self.end_headers()
-            self.server.error_queue.put({"path": reqPath, "body": reqJson, "headers": reqHeaders})
+            self.server.error_queue.put({"path": req_path,
+                                         "body": req_json,
+                                         "headers": req_headers})
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
-            self.server.resp_queue.put({"path": reqPath, "body": reqJson, "headers": reqHeaders})
+            self.server.resp_queue.put({"path": req_path,
+                                        "body": req_json,
+                                        "headers": req_headers})
 
 
 class WebhookServer(http.server.HTTPServer):
