@@ -63,7 +63,7 @@ CREATE VIEW hdb_catalog.hdb_function_agg AS
           ARRAY ['information_schema'::text, 'hdb_catalog'::text, 'hdb_views'::text]
         )
       )
-      AND (p.proisagg = false)
+      AND (NOT EXISTS (SELECT 1 FROM pg_catalog.pg_aggregate WHERE aggfnoid = p.oid))
     )
   GROUP BY
     r.routine_name,

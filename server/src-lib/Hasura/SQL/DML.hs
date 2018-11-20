@@ -127,7 +127,7 @@ mkSelFromExp isLateral sel tn =
 
 mkFuncFromItem :: QualifiedFunction -> [SQLExp] -> FromItem
 mkFuncFromItem qf args =
-  FIFunc qf args $ Just $ mkFuncAlias qf
+  FIFunc qf args Nothing
 
 mkFuncAlias :: QualifiedFunction -> Alias
 mkFuncAlias (QualifiedFunction sn fn) =

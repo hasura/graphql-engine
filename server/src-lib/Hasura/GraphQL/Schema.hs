@@ -66,7 +66,7 @@ data OpCtx
   -- tn, filter exp, limit, req hdrs
   | OCSelectAgg QualifiedTable AnnBoolExpSQL (Maybe Int) [T.Text]
   -- tn, fn, limit, req hdrs
-  | OCFuncQuery QualifiedTable QualifiedFunction (Maybe Int)
+  | OCFuncQuery QualifiedTable QualifiedFunction AnnBoolExpSQL (Maybe Int) [T.Text]
   -- tn, filter exp, req hdrs
   | OCUpdate QualifiedTable AnnBoolExpSQL [T.Text]
   -- tn, filter exp, req hdrs
@@ -1450,9 +1450,9 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
     getPKeySelDet (Just (selFltr, _, hdrs, _)) pCols = Just
       (OCSelectPkey tn selFltr hdrs, Left $ mkSelFldPKey tn pCols)
 
-    getFuncQueryFlds (_, pLimit, _, _) =
+    getFuncQueryFlds (selFltr, pLimit, hdrs, _) =
       flip map funcs $ \fi ->
-      (OCFuncQuery tn (fiName fi) pLimit, Left $ mkFuncQueryFld fi)
+      (OCFuncQuery tn (fiName fi) selFltr pLimit hdrs, Left $ mkFuncQueryFld fi)
 
 
 -- getRootFlds
