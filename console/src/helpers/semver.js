@@ -11,6 +11,7 @@ const componentsSemver = {
   insertPrefix: '1.0.0-alpha26',
   webhookEnvSupport: '1.0.0-alpha29',
   insertPermRestrictColumns: '1.0.0-alpha28',
+  permHideUpsertSection: '1.0.0-alpha30',
 };
 
 const getPreRelease = version => {

@@ -203,16 +203,22 @@ class Permissions extends Component {
   }
   checkSemVer(version) {
     let showAggregation = false;
+    let showUpsertSection = false;
     try {
       showAggregation = semverCheck('aggregationPerm', version);
-      if (showAggregation) {
-        this.setState({ ...this.state, showAggregation: true });
-      } else {
-        this.setState({ ...this.state, showAggregation: false });
-      }
+      showUpsertSection = !semverCheck('permHideUpsertSection', version);
+      this.setState({
+        ...this.state,
+        showAggregation,
+        showUpsertSection,
+      });
     } catch (e) {
       console.error(e);
-      this.setState({ ...this.state, showAggregation: false });
+      this.setState({
+        ...this.state,
+        showAggregation: false,
+        showUpsertSection: false,
+      });
     }
     return Promise.resolve();
   }
@@ -686,9 +692,12 @@ class Permissions extends Component {
         </div>
       );
     };
-
     const getUpsertSection = permsState => {
-      let _upsertSection = '';
+      if (!this.state.showUpsertSection) {
+        return null;
+      }
+
+      let _upsertSection;
       const query = permsState.query;
 
       if (query === 'insert') {
@@ -732,7 +741,6 @@ class Permissions extends Component {
           </div>
         );
       }
-
       return _upsertSection;
     };
 
