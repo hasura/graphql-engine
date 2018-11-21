@@ -28,13 +28,13 @@ module Hasura.RQL.Types.Permission
        ) where
 
 import           Hasura.Prelude
+import           Hasura.Server.Utils        (accessKeyHeader, userRoleHeader)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query          as Q
 
 import           Data.Aeson
 import           Data.Hashable
-import           Data.Word
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -68,7 +68,7 @@ isUserVar = T.isPrefixOf "x-hasura-" . T.toLower
 
 roleFromVars :: UserVars -> Maybe RoleName
 roleFromVars =
-  fmap RoleName . getVarVal userRoleVar
+  fmap RoleName . getVarVal userRoleHeader
 
 getVarVal :: Text -> UserVars -> Maybe Text
 getVarVal k =
@@ -85,9 +85,6 @@ mkUserVars l =
   | (k, v) <- l, isUserVar k
   ]
 
-userRoleVar :: Text
-userRoleVar = "x-hasura-role"
-
 data UserInfo
   = UserInfo
   { userRole :: !RoleName
@@ -96,7 +93,8 @@ data UserInfo
 
 mkUserInfo :: RoleName -> UserVars -> UserInfo
 mkUserInfo rn (UserVars v) =
-  UserInfo rn $ UserVars $ Map.insert userRoleVar (getRoleTxt rn) v
+  UserInfo rn $ UserVars $ Map.insert userRoleHeader (getRoleTxt rn) $
+  Map.delete accessKeyHeader v
 
 instance Hashable UserInfo
 
