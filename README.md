@@ -48,7 +48,7 @@ Read more at [https://hasura.io](https://hasura.io) and the [docs](https://docs.
 - [Architecture](#architecture)
 - [Client-side tooling](#client-side-tooling)
 - [Add business logic](#add-business-logic)
-    - [Custom resolvers](#custom-resolvers)
+    - [Remote schemas](#remote-schemas)
     - [Trigger webhooks on database events](#trigger-webhooks-on-database-events)
 - [Demos](#demos)
     - [Realtime applications](#realtime-applications)
@@ -102,8 +102,7 @@ GraphQL Engine provides easy-to-reason, scalable and performant methods for addi
 
 ### Remote schemas
 
-Add custom resolvers in addition to Hasura's Postgres-based GraphQL schema. Ideal for delegating
-to HTTP APIs, making direct calls to another data-source or writing business
+Add custom resolvers in a remote schema in addition to Hasura's Postgres-based GraphQL schema. Ideal for delegating to HTTP APIs, making direct calls to another data-source or writing business
 logic in code - [read more](remote-schemas.md).
 
 ### Trigger webhooks on database events
