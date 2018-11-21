@@ -15,7 +15,6 @@ def default_env(path, app_name):
 
 POSTGRES_DEFAULT_CMD=['psql', '-h', 'localhost', '-p', '5432', '-U', 'gql_test', '-c']
 DEFAULT_DOCKER_CMD=['docker', 'run', '--net', 'host']
-DEFAULT_SERVER_DOCKER_LOAD_CMD=['docker', 'load', '--input', '/build/_server_output/image.tar']
 APPS_DATA = {}
 with open(".circleci/community-apps.yaml", 'r') as stream:
     try:
@@ -42,9 +41,6 @@ for app in APPS_DATA['apps']:
         set_key(file_path, 'HASURA_GRAPHQL_AUTH_HOOK', app['webhook_url'], quote_mode="never")
     if 'jwt_secret' in app and app['jwt_secret']:
         set_key(file_path, 'HASURA_GRAPHQL_JWT_SECRET', app['jwt_secret'], quote_mode="auto")
-    exit_code = subprocess.call(DEFAULT_SERVER_DOCKER_LOAD_CMD)
-    if exit_code:
-        continue
     docker_community_cmd = DEFAULT_DOCKER_CMD[:]
     docker_community_cmd = docker_community_cmd + ['--env-file', '{}/.env.list'.format(app['path'])]
     for port_mapping in app['port_mappings']:

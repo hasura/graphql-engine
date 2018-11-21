@@ -305,13 +305,20 @@ jobs:
         name: install dependencies
         command: |
           sudo apt-get -y update && sudo apt-get install -y curl git python3 python3-pip wget netcat postgresql-client
+    - checkout
+    - attach_workspace:
+        at: /home/circleci/build
+    - run:
+        name: Create server cli migrations docker image
+        command: |
+          docker load --input /home/circleci/build/_server_output/image.tar
+          cd scripts/cli-migrations
+          cp /home/circleci/build/_cli_output/binaries/cli-hasura-linux-amd64 .
+          docker build -t server:latest .
     - run:
         name: Run postgres container
         command: |
           docker run -d -p 5432:5432 -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" circleci/postgres:10-alpine-postgis
-    - checkout
-    - attach_workspace:
-        at: /home/circleci/build
     - *wait_for_postgres
     - run:
         name: install requirements
