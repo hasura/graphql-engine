@@ -60,6 +60,9 @@ class TestGraphQLQueryAgg(DefaultTestSelectQueries):
     def test_author_agg_with_articles_where(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/author_agg_with_articles_where.yaml')
 
+    def test_article_deeply_nested_aggregate(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/article_deeply_nested_aggregate.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/aggregations'
@@ -142,6 +145,12 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
     def test_author_article_where_in(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in.yaml')
 
+    def test_author_article_where_in_empty_array(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in_empty_array.yaml')
+
+    def test_author_article_where_nin_empty_array(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin_empty_array.yaml')
+
     def test_author_article_where_nin(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin.yaml')
 
@@ -163,6 +172,9 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
     def test_article_author_unexpected_operator_in_where_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_unexpected_operator_in_where_err.yaml')
 
+    def test_self_referential_relationships(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/self_referential_relationships.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/basic'
@@ -181,6 +193,12 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
 
     def test_user_cannot_access_remarks_col(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/user_cannot_access_remarks_col.yaml')
+
+    def test_artist_select_query_Track_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/artist_select_query_Track_fail.yaml')
+
+    def test_artist_select_query_Track(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/artist_select_query_Track.yaml')
 
     @classmethod
     def dir(cls):

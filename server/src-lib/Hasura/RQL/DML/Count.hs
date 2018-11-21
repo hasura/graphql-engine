@@ -23,7 +23,7 @@ import qualified Hasura.SQL.DML          as S
 data CountQueryP1
   = CountQueryP1
   { cqp1Table    :: !QualifiedTable
-  , cqp1Where    :: !(S.BoolExp, Maybe (GBoolExp AnnSQLBoolExp))
+  , cqp1Where    :: !(AnnBoolExpSQL, Maybe AnnBoolExpSQL)
   , cqp1Distinct :: !(Maybe [PGCol])
   } deriving (Show, Eq)
 
@@ -41,15 +41,15 @@ mkSQLCount
   :: CountQueryP1 -> S.Select
 mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
   S.mkSelect
-    { S.selExtr = [S.Extractor (S.SEFnApp "count" [S.SEStar] Nothing) Nothing]
+    { S.selExtr = [S.Extractor S.countStar Nothing]
     , S.selFrom = Just $ S.FromExp
                   [S.mkSelFromExp False innerSel $ TableName "r"]
     }
   where
 
     finalWC =
-      S.BEBin S.AndOp permFltr $
-      maybe (S.BELit True) cBoolExp mWc
+      toSQLBoolExp (S.QualTable tn) $
+      maybe permFltr (andAnnBoolExps permFltr) mWc
 
     innerSel = partSel
       { S.selFrom  = Just $ S.mkSimpleFromExp tn
@@ -90,7 +90,7 @@ countP1 prepValBuilder (CountQuery qt mDistCols mWhere) = do
   -- convert the where clause
   annSQLBoolExp <- forM mWhere $ \be ->
     withPathK "where" $
-    convBoolExp' colInfoMap qt selPerm be prepValBuilder
+    convBoolExp' colInfoMap selPerm be prepValBuilder
 
   return $ CountQueryP1
     qt
@@ -105,7 +105,8 @@ countP1 prepValBuilder (CountQuery qt mDistCols mWhere) = do
 
 countP2 :: (P2C m) => (CountQueryP1, DS.Seq Q.PrepArg) -> m RespBody
 countP2 (u, p) = do
-  qRes <- liftTx $ Q.rawQE dmlTxErrorHandler (Q.fromBuilder countSQL) (toList p) True
+  qRes <- liftTx $ Q.rawQE dmlTxErrorHandler
+          (Q.fromBuilder countSQL) (toList p) True
   return $ BB.toLazyByteString $ encodeCount qRes
   where
     countSQL = toSQL $ mkSQLCount u
