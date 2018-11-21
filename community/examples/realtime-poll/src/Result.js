@@ -2,20 +2,18 @@ import React from 'react';
 import {
   Subscription,
 } from 'react-apollo';
-import {
-  Well,
-} from 'react-bootstrap';
 import {Chart} from 'react-google-charts';
 import gql from 'graphql-tag';
-import { SUBSCRIPTION_RESULT } from './GraphQL.jsx'
+import { SUBSCRIPTION_RESULT } from './GraphQL'
 
 const renderChart = (data) => {
   const d = [
     ['Option', 'No. of votes', {role:'annotation'}, {role:'style'}],
   ];
-  data.poll_results.map((r, i) => {
-    d.push([r.option.text, r.votes, r.votes, 'color: #4285f4']);
-  })
+  for (var r of data.poll_results) {
+    console.log(r);
+    d.push([r.option.text, parseInt(r.votes, 10), parseInt(r.votes, 10), 'color: #4285f4']);
+  }
 
   return (
     <Chart className="poll-result-chart-container"
