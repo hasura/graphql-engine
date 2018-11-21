@@ -50,12 +50,14 @@ for app in APPS_DATA['apps']:
     docker_server_cmd = docker_server_cmd + ['--env-file', '{}/.env.list'.format(app['path'])]
     docker_server_cmd = docker_server_cmd + ['-p', '8080:8080']
     if 'migrations_dir' in app and app['migrations_dir']:
-        docker_server_cmd = docker_server_cmd + ['-v', '{}/{}:/hasura-migrations'.format(app['path'], app['migrations_dir'])]
-    docker_server_cmd.append('server:latest')
-    exit_code = subprocess.call(docker_server_cmd)
-    if exit_code:
-        EXIT_FAILURE=True
-        continue
+        docker_migration_cmd = DEFAULT_DOCKER_CMD[:]
+        docker_migration_cmd = docker_migration_cmd + ['-e', 'HASURA_GRAPHQL_ONLY_MIGRATION:true']
+        docker_migration_cmd = docker_migration_cmd + ['-v', '{}/{}:/hasura-migrations'.format(app['path'], app['migrations_dir'])]
+        docker_migration_cmd.append('server:latest')
+        exit_code = subprocess.call(docker_migration_cmd)
+        if exit_code:
+            EXIT_FAILURE=True
+            continue
     docker_community_cmd = DEFAULT_DOCKER_CMD[:]
     docker_community_cmd = docker_community_cmd + ['--env-file', '{}/.env.list'.format(app['path'])]
     for port_mapping in app['port_mappings']:

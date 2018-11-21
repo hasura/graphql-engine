@@ -51,5 +51,8 @@ fi
 # kill graphql engine that we started earlier
 kill $PID
 
-# pass control to CMD
-exec "$@"
+if [ -z ${HASURA_GRAPHQL_ONLY_MIGRATION} ]; then
+
+  # pass control to CMD
+  exec "$@"
+fi
