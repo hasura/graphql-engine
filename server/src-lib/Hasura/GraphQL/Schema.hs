@@ -290,6 +290,7 @@ mkPGColFld (PGColInfo colName colTy isNullable) =
 -- where: table_bool_exp
 -- limit: Int
 -- offset: Int
+-- distinct_on: [table_select_column!]
 mkSelArgs :: QualifiedTable -> [InpValInfo]
 mkSelArgs tn =
   [ InpValInfo (Just whereDesc) "where" $ G.toGT $ mkBoolExpTy tn
@@ -297,12 +298,15 @@ mkSelArgs tn =
   , InpValInfo (Just offsetDesc) "offset" $ G.toGT $ mkScalarTy PGInteger
   , InpValInfo (Just orderByDesc) "order_by" $ G.toGT $ G.toLT $ G.toNT $
     mkOrdByTy tn
+  , InpValInfo (Just distinctDesc) "distinct_on" $ G.toGT $ G.toLT $
+    G.toNT $ mkSelColumnInpTy tn
   ]
   where
     whereDesc   = "filter the rows returned"
     limitDesc   = "limit the nuber of rows returned"
     offsetDesc  = "skip the first n rows. Use only with order_by"
     orderByDesc = "sort the rows by one or more columns"
+    distinctDesc = "distinct select on columns"
 
 fromInpValL :: [InpValInfo] -> Map.HashMap G.Name InpValInfo
 fromInpValL = mapFromL _iviName

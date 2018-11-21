@@ -185,7 +185,8 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
   let tabFrom = TableFrom (spiTable selPermInfo) Nothing
       tabPerm = TablePerm (spiFilter selPermInfo) mPermLimit
   return $ AnnSelG annFlds tabFrom tabPerm $
-    TableArgs wClause annOrdByM mQueryLimit (S.intToSQLExp <$> mQueryOffset)
+    TableArgs wClause annOrdByM mQueryLimit
+    (S.intToSQLExp <$> mQueryOffset) Nothing
 
   where
     mQueryOffset = sqOffset selQ
