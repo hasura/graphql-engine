@@ -7,5 +7,5 @@ apps:
   jwt_secret: false #optional
   command: false #optional
   migrations_dir: false #optional
-  port_mappings:
+  port_mappings: #optional
     - 8081:8081
