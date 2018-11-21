@@ -3,7 +3,7 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 
 export const triggerNameDescription = (
   <Tooltip id="tooltip-trigger-name-description">
-    Trigger name can be alphanumeric and can contain underscores and hyphens
+    Trigger name can be alphanumeric and can contain underscores
   </Tooltip>
 );
 

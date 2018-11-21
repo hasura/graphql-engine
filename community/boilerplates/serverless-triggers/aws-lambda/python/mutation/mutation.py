@@ -24,7 +24,6 @@ mutation updateNoteRevision ($noteId: Int!, $data: String!) {
 }
 """
 
-
 def lambda_handler(event, context):
     try:
         body = json.loads(event['body'])

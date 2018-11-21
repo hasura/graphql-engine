@@ -81,7 +81,7 @@ export const passCT = () => {
   cy.get(getElementFromAlias('delete-operation')).check();
 
   // webhook url
-  cy.get(getElementFromAlias('webhook-input'))
+  cy.get(getElementFromAlias('webhook'))
     .clear()
     .type(getWebhookURL());
 
@@ -120,7 +120,7 @@ export const failCTDuplicateTrigger = () => {
   cy.get(getElementFromAlias('delete-operation')).check();
 
   // webhook url
-  cy.get(getElementFromAlias('webhook-input'))
+  cy.get(getElementFromAlias('webhook'))
     .clear()
     .type(getWebhookURL());
 

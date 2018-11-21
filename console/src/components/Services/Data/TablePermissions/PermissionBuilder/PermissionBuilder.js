@@ -15,8 +15,6 @@ import {
   boolColumnOperators,
 } from './utils';
 
-import { getTableName } from '../../utils';
-
 import QueryBuilderJson from '../../../../QueryBuilderJson/QueryBuilderJson';
 
 const styles = require('./Styles.scss');
@@ -408,8 +406,7 @@ class PermissionBuilder extends React.Component {
       let tableColumns = [];
       let tableRelationships = [];
       if (table) {
-        // In case of a manual relationship the right table is an object for a different schema
-        const tableSchema = tableSchemas[getTableName(table)];
+        const tableSchema = tableSchemas[table];
         tableColumns = getTableColumnNames(tableSchema);
         tableRelationships = getTableRelationshipNames(tableSchema);
       }

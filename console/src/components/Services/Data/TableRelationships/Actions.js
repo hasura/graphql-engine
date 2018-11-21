@@ -117,7 +117,7 @@ const generateRelationshipsQuery = (
   } else {
     const columnReducer = (accumulator, val) => ({
       ...accumulator,
-      [val.lcol]: val.rcol,
+      [val.rcol]: val.lcol,
     });
     upQuery.args.using = {
       manual_configuration: {

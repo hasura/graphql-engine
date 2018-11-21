@@ -9,7 +9,7 @@ module Hasura.Events.Lib
   , processEventQueue
   , unlockAllEvents
   , defaultMaxEventThreads
-  , defaultFetchIntervalMilliSec
+  , defaultPollingIntervalSec
   , Event(..)
   ) where
 
@@ -129,45 +129,45 @@ data Invocation
 
 data EventEngineCtx
   = EventEngineCtx
-  { _eeCtxEventQueue            :: TQ.TQueue Event
-  , _eeCtxEventThreads          :: TVar Int
-  , _eeCtxMaxEventThreads       :: Int
-  , _eeCtxFetchIntervalMilliSec :: Int
+  { _eeCtxEventQueue         :: TQ.TQueue Event
+  , _eeCtxEventThreads       :: TVar Int
+  , _eeCtxMaxEventThreads    :: Int
+  , _eeCtxPollingIntervalSec :: Int
   }
 
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100
 
-defaultFetchIntervalMilliSec :: Int
-defaultFetchIntervalMilliSec = 1000
+defaultPollingIntervalSec :: Int
+defaultPollingIntervalSec = 1
 
 retryAfterHeader :: CI.CI T.Text
 retryAfterHeader = "Retry-After"
 
 initEventEngineCtx :: Int -> Int -> STM EventEngineCtx
-initEventEngineCtx maxT fetchI = do
+initEventEngineCtx maxT pollI = do
   q <- TQ.newTQueue
   c <- newTVar 0
-  return $ EventEngineCtx q c maxT fetchI
+  return $ EventEngineCtx q c maxT pollI
 
 processEventQueue :: L.LoggerCtx -> LogEnvHeaders -> WS.Session -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
 processEventQueue logctx logenv httpSess pool cacheRef eectx = do
   putStrLn "event_trigger: starting workers"
-  threads <- mapM async [fetchThread , consumeThread]
+  threads <- mapM async [pollThread , consumeThread]
   void $ waitAny threads
   where
-    fetchThread = pushEvents (mkHLogger logctx) pool eectx
+    pollThread = pollEvents (mkHLogger logctx) pool eectx
     consumeThread = consumeEvents (mkHLogger logctx) logenv httpSess pool cacheRef eectx
 
-pushEvents
+pollEvents
   :: HLogger -> Q.PGPool -> EventEngineCtx -> IO ()
-pushEvents logger pool eectx  = forever $ do
-  let EventEngineCtx q _ _ fetchI = eectx
+pollEvents logger pool eectx  = forever $ do
+  let EventEngineCtx q _ _ pollI = eectx
   eventsOrError <- runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) fetchEvents
   case eventsOrError of
     Left err     -> logger $ L.toEngineLog $ EventInternalErr err
     Right events -> atomically $ mapM_ (TQ.writeTQueue q) events
-  threadDelay (fetchI * 1000)
+  threadDelay (pollI * 1000 * 1000)
 
 consumeEvents
   :: HLogger -> LogEnvHeaders -> WS.Session -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
@@ -237,13 +237,13 @@ processEvent logenv pool e = do
           retryConfM = etiRetryConf <$> eti
           retryConf = fromMaybe (RetryConf 0 10) retryConfM
           tries = eTries e
-          mretryHeaderSeconds = parseRetryHeader mretryHeader
+          retryHeaderSeconds = parseRetryHeader mretryHeader
           triesExhausted = tries >= rcNumRetries retryConf
-          noRetryHeader = isNothing mretryHeaderSeconds
+          noRetryHeader = isNothing retryHeaderSeconds
       if triesExhausted && noRetryHeader -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
         then liftIO $ runExceptT $ runErrorAndUnlockQ pool e
         else do
-        let delay = fromMaybe (rcIntervalSec retryConf) mretryHeaderSeconds -- give precedence to Retry-After header
+        let delay = chooseDelay triesExhausted (rcIntervalSec retryConf) retryHeaderSeconds
         liftIO $ runExceptT $ runRetryAfterAndUnlockQ pool e delay
 
     getRetryAfterHeaderFromError (HStatus resp) = getRetryAfterHeaderFromResp resp
@@ -262,6 +262,12 @@ processEvent logenv pool e = do
              Nothing  -> Nothing
              Just sec -> if sec > 0 then Just sec else Nothing
 
+    -- we need to choose delay between the retry conf and the retry-after header
+    chooseDelay _ retryConfSec Nothing = retryConfSec
+    chooseDelay triesExhausted retryConfSec (Just retryHeaderSec) = if triesExhausted
+                                                                    then retryHeaderSec
+                                                                    else min retryHeaderSec retryConfSec
+
 tryWebhook
   :: ( MonadReader r m
      , MonadIO m
@@ -279,7 +285,7 @@ tryWebhook logenv pool e = do
   case meti of
     Nothing -> return $ Left $ HOther "table or event-trigger not found"
     Just eti -> do
-      let webhook = wciCachedValue $ etiWebhookInfo eti
+      let webhook = etiWebhook eti
           createdAt = eCreatedAt e
           eventId =  eId e
           headerInfos = etiHeaders eti

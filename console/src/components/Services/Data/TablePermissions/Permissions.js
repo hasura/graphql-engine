@@ -9,7 +9,7 @@ import 'brace/theme/github';
 
 import { RESET } from '../TableModify/ModifyActions';
 import {
-  getQueriesWithPermColumns,
+  queriesWithPermColumns,
   permChangeTypes,
   permOpenEdit,
   permSetFilter,
@@ -417,14 +417,7 @@ class Permissions extends Component {
         if (isNewPerm && permsState.newRole !== '') {
           dispatch(permOpenEdit(tableSchema, permsState.newRole, queryType));
         } else if (role !== '') {
-          dispatch(
-            permOpenEdit(
-              tableSchema,
-              role,
-              queryType,
-              semverCheck('insertPermRestrictColumns', this.props.serverVersion)
-            )
-          );
+          dispatch(permOpenEdit(tableSchema, role, queryType));
         } else {
           window.alert('Please enter a role name');
         }
@@ -1063,15 +1056,13 @@ class Permissions extends Component {
     const getColumnSection = (tableSchema, permsState) => {
       let _columnSection = '';
       const query = permsState.query;
-      if (
-        getQueriesWithPermColumns(
-          semverCheck('insertPermRestrictColumns', this.props.serverVersion)
-        ).indexOf(query) !== -1
-      ) {
+
+      if (queriesWithPermColumns.indexOf(query) !== -1) {
         const dispatchToggleAllColumns = () => {
           const allColumns = tableSchema.columns.map(c => c.column_name);
           dispatch(permToggleAllColumns(allColumns));
         };
+
         _columnSection = (
           <div className={styles.editPermissionsSection}>
             <div>

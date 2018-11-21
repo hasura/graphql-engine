@@ -98,18 +98,14 @@ class Chat extends React.Component {
         />
         <footer className="App-footer">
           <div className="hasura-logo">
-            <img src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black.svg" onClick={() => window.open("https://hasura.io")} alt="Powered by Hasura"/>
+            <img src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black.svg" onClick={() => window.open("https://hasura.io")}/>
             &nbsp; | &nbsp;
-            <a href="https://hasura-realtime-group-chat.herokuapp.com/console" target="_blank" rel="noopener noreferrer">
-              Backend
+            <a href="https://hasura-realtime-group-chat.herokuapp.com/console" target="_blank">
+              Database
             </a>
             &nbsp; | &nbsp;
-            <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-chat" target="_blank" rel="noopener noreferrer">
+            <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-chat" target="_blank">
               Source
-            </a>
-            &nbsp; | &nbsp;
-            <a href="https://blog.hasura.io/building-a-realtime-chat-app-with-graphql-subscriptions-d68cd33e73f" target="_blank" rel="noopener noreferrer">
-              Blogpost
             </a>
           </div>
           <div className="footer-small-text"><span>(The database resets every 24 hours)</span></div>

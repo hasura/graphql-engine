@@ -6,15 +6,17 @@ import {
 import gql from 'graphql-tag';
 import {
   Button,
+  ButtonGroup,
   FormGroup,
   Radio,
+  Alert,
 } from 'react-bootstrap';
-import { Result } from './Result';
-import { Users } from './Users'
+import { Result } from './Result.react.js';
+import { Users } from './Users.react'
 import {
   QUERY_GET_POLL,
   MUTATION_VOTE,
-} from './GraphQL';
+} from './GraphQL.jsx';
 
 
 class PollQuestion extends Component {
@@ -27,15 +29,15 @@ class PollQuestion extends Component {
     this.setState({ ...this.state, optionId: e.currentTarget.value });
   }
 
-  onMutationCompleted = () => {
-    this.setState({ ...this.state, voteBtnText: '👍 Done', voteBtnStyle: 'success' });
+  onMutationCompleted = (e) => {
+    this.setState({...this.state, voteBtnText: '👍 Done', voteBtnStyle: 'success'});
     window.setTimeout(() => {
-      this.setState({ ...this.state, voteBtnText: '🗳️ Vote', voteBtnStyle: 'primary' });
-    }, 3000);
+      this.setState({...this.state, voteBtnText: '🗳️ Vote', voteBtnStyle: 'primary'});
+    }, 3000)
   }
 
-  onMutationError = () => {
-    this.setState({ ...this.state, voteBtnText: 'Error 😞 Try again', voteBtnStyle: 'danger' });
+  onMutationError = (e) => {
+    this.setState({...this.state, voteBtnText: 'Error 😞 Try again', voteBtnStyle: 'danger'});
   }
 
   render () {
@@ -45,7 +47,7 @@ class PollQuestion extends Component {
         onCompleted={this.onMutationCompleted}
         onError={this.onMutationError}
       >
-      {(vote) => (
+      {(vote, { loading, error }) => (
         <div className="textLeft">
           <h3>{this.props.poll.question}</h3>
           <form className="pollForm textLeft"

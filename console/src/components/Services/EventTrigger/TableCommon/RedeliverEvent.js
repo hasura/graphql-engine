@@ -144,9 +144,6 @@ class RedeliverEvent extends Component {
               finalResponse = JSON.stringify(finalResponse, null, 4);
             } catch (e) {
               console.error(e);
-              if (typeof finalResponse === 'object') {
-                finalResponse = JSON.stringify(finalResponse, null, 4);
-              }
             }
             return (
               <div style={{ padding: '20px' }}>
@@ -190,9 +187,6 @@ class RedeliverEvent extends Component {
       latestResponse = log.eventInvocations[0]
         ? log.eventInvocations[0].response
         : '';
-      if (typeof latestResponse === 'object') {
-        latestResponse = JSON.stringify(latestResponse, null, 4);
-      }
     }
 
     return (
@@ -227,10 +221,10 @@ class RedeliverEvent extends Component {
                       value={
                         log.eventInvocations[0]
                           ? JSON.stringify(
-                              log.eventInvocations[0].request,
-                              null,
-                              4
-                            )
+                            log.eventInvocations[0].request,
+                            null,
+                            4
+                          )
                           : ''
                       }
                       minLines={8}

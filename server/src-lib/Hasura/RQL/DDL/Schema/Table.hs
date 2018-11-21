@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveLift                 #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE MultiWayIf                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE QuasiQuotes                #-}
@@ -169,7 +168,7 @@ purgeDep schemaObjId = case schemaObjId of
 
   (SOTableObj qt (TORel rn))     -> do
     liftTx $ delRelFromCatalog qt rn
-    delRelFromCache rn qt
+    delFldFromCache (fromRel rn) qt
 
   (SOQTemplate qtn)              -> do
     liftTx $ delQTemplateFromCatalog qtn
@@ -191,7 +190,7 @@ processTableChanges ti tableDiff = do
   -- for all the dropped columns
   forM_ droppedCols $ \droppedCol ->
     -- Drop the column from the cache
-    delColFromCache droppedCol tn
+    delFldFromCache (fromPGCol droppedCol) tn
 
   -- In the newly added columns check that there is no conflict with relationships
   forM_ addedCols $ \colInfo@(PGColInfo colName _ _) ->
@@ -200,7 +199,7 @@ processTableChanges ti tableDiff = do
         throw400 AlreadyExists $ "cannot add column " <> colName
         <<> " in table " <> tn <<>
         " as a relationship with the name already exists"
-      _ -> addColToCache colName colInfo tn
+      _ -> addFldToCache (fromPGCol colName) (FIColumn colInfo) tn
 
   sc <- askSchemaCache
   -- for rest of the columns
@@ -212,40 +211,37 @@ processTableChanges ti tableDiff = do
            let colId   = SOTableObj tn $ TOCol oColName
                depObjs = getDependentObjsWith (== "on_type") sc colId
            if null depObjs
-             then updateFldInCache oColName nci
+             then updateFldInCache oColName $ FIColumn nci
              else throw400 DependencyError $ "cannot change type of column " <> oColName <<> " in table "
                   <> tn <<> " because of the following dependencies : " <>
                   reportSchemaObjs depObjs
        | otherwise -> return ()
   where
     updateFldInCache cn ci = do
-      delColFromCache cn tn
-      addColToCache cn ci tn
+      delFldFromCache (fromPGCol cn) tn
+      addFldToCache (fromPGCol cn) ci tn
     tn = tiName ti
     TableDiff mNewName droppedCols addedCols alteredCols _ = tableDiff
-
-delTableAndDirectDeps :: (P2C m) => QualifiedTable -> m ()
-delTableAndDirectDeps qtn@(QualifiedTable sn tn) = do
-  liftTx $ Q.catchE defaultTxErrorHandler $ do
-    Q.unitQ [Q.sql|
-             DELETE FROM "hdb_catalog"."hdb_relationship"
-             WHERE table_schema = $1 AND table_name = $2
-              |] (sn, tn) False
-    Q.unitQ [Q.sql|
-             DELETE FROM "hdb_catalog"."hdb_permission"
-             WHERE table_schema = $1 AND table_name = $2
-              |] (sn, tn) False
-    Q.unitQ [Q.sql|
-             DELETE FROM "hdb_catalog"."event_triggers"
-             WHERE schema_name = $1 AND table_name = $2
-              |] (sn, tn) False
-    delTableFromCatalog qtn
-  delTableFromCache qtn
 
 processSchemaChanges :: (P2C m) => SchemaDiff -> m ()
 processSchemaChanges schemaDiff = do
   -- Purge the dropped tables
-  mapM_ delTableAndDirectDeps droppedTables
+  forM_ droppedTables $ \qtn@(QualifiedTable sn tn) -> do
+    liftTx $ Q.catchE defaultTxErrorHandler $ do
+      Q.unitQ [Q.sql|
+               DELETE FROM "hdb_catalog"."hdb_relationship"
+               WHERE table_schema = $1 AND table_name = $2
+                |] (sn, tn) False
+      Q.unitQ [Q.sql|
+               DELETE FROM "hdb_catalog"."hdb_permission"
+               WHERE table_schema = $1 AND table_name = $2
+                |] (sn, tn) False
+      Q.unitQ [Q.sql|
+               DELETE FROM "hdb_catalog"."event_triggers"
+               WHERE schema_name = $1 AND table_name = $2
+                |] (sn, tn) False
+      delTableFromCatalog qtn
+    delTableFromCache qtn
   -- Get schema cache
   sc <- askSchemaCache
   forM_ alteredTables $ \(oldQtn, tableDiff) -> do
@@ -263,48 +259,81 @@ data UntrackTable =
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UntrackTable)
 
-unTrackExistingTableOrViewP1 :: UntrackTable -> P1 ()
-unTrackExistingTableOrViewP1 (UntrackTable vn _) = do
+unTrackExistingTableOrViewP1 :: UntrackTable -> P1 (UntrackTable, TableInfo)
+unTrackExistingTableOrViewP1 ut@(UntrackTable vn _) = do
   adminOnly
   rawSchemaCache <- getSchemaCache <$> lift ask
   case M.lookup vn (scTables rawSchemaCache) of
-    Just ti ->
+    Just ti -> do
       -- Check if table/view is system defined
       when (tiSystemDefined ti) $ throw400 NotSupported $
         vn <<> " is system defined, cannot untrack"
+      return (ut, ti)
     Nothing -> throw400 AlreadyUntracked $
       "view/table already untracked : " <>> vn
 
-unTrackExistingTableOrViewP2
-  :: (P2C m)
-  => UntrackTable -> m RespBody
-unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
+unTrackExistingTableOrViewP2 :: (P2C m)
+                             => UntrackTable -> TableInfo -> m RespBody
+unTrackExistingTableOrViewP2 (UntrackTable vn cascade) tableInfo = do
   sc <- askSchemaCache
 
+  -- Get Foreign key constraints to this table
+  fKeyTables <- liftTx getFKeyTables
+  let fKeyDepIds = mkFKeyObjIds $ filterTables fKeyTables $ scTables sc
+
+  -- Report back with an error if any fkey object ids are present
+  when (fKeyDepIds /= []) $ reportDepsExt fKeyDepIds []
+
   -- Get relational and query template dependants
-  let allDeps = getDependentObjs sc (SOTable qtn)
-      indirectDeps = filter (not . isDirectDep) allDeps
+  let allRels = getAllRelations $ scTables sc
+      directRelDep = (vn, getRels $ tiFieldInfoMap tableInfo)
+      relDeps = directRelDep : foldl go [] allRels
+      relDepIds = concatMap mkObjIdFromRel relDeps
+      queryTDepIds = getDependentObjsOfQTemplateCache (SOTable vn)
+                     (scQTemplates sc)
+      allDepIds = relDepIds <> queryTDepIds
 
   -- Report bach with an error if cascade is not set
-  when (indirectDeps /= [] && not (or cascade)) $ reportDepsExt indirectDeps []
+  when (allDepIds /= [] && not (or cascade)) $ reportDepsExt allDepIds []
 
   -- Purge all the dependants from state
-  mapM_ purgeDep indirectDeps
+  mapM_ purgeDep allDepIds
 
-  -- delete the table and its direct dependencies
-  delTableAndDirectDeps qtn
+  -- update the schema cache with the changes
+  processSchemaChanges $ SchemaDiff [vn] []
 
   return successMsg
   where
-    isDirectDep = \case
-      (SOTableObj dtn _) -> qtn == dtn
-      _                  -> False
+    QualifiedTable sn tn = vn
+    getFKeyTables = Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
+                    SELECT constraint_name,
+                           table_schema,
+                           table_name
+                     FROM  hdb_catalog.hdb_foreign_key_constraint
+                     WHERE ref_table_table_schema = $1
+                       AND ref_table = $2
+                   |] (sn, tn) False
+    filterTables tables tc = flip filter tables $ \(_, s, t) ->
+      isJust $ M.lookup (QualifiedTable s t) tc
+
+    mkFKeyObjIds tables = flip map tables $ \(cn, s, t) ->
+                     SOTableObj (QualifiedTable s t) (TOCons cn)
+
+    getAllRelations tc = map getRelInfo $ M.toList tc
+    getRelInfo (qt, ti) = (qt, getRels $ tiFieldInfoMap ti)
+
+    go l (qt, ris) = if any isDep ris
+                     then (qt, filter isDep ris):l
+                     else l
+    isDep relInfo = vn == riRTable relInfo
+    mkObjIdFromRel (qt, ris) = flip map ris $ \ri ->
+      SOTableObj qt (TORel $ riName ri)
 
 instance HDBQuery UntrackTable where
-  type Phase1Res UntrackTable = ()
+  type Phase1Res UntrackTable = (UntrackTable, TableInfo)
   phaseOne = unTrackExistingTableOrViewP1
 
-  phaseTwo q _ = unTrackExistingTableOrViewP2 q
+  phaseTwo _ = uncurry unTrackExistingTableOrViewP2
 
   schemaCachePolicy = SCPReload
 
@@ -342,18 +371,19 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
   forM_ qtemplates $ \(qtn, Q.AltJ qtDefVal) -> do
     qtDef <- decodeValue qtDefVal
     qCtx <- mkAdminQCtx <$> get
-    (qti, deps) <- liftP1 qCtx $ createQueryTemplateP1 $
+    qti <- liftP1 qCtx $ createQueryTemplateP1 $
            CreateQueryTemplate qtn qtDef Nothing
-    addQTemplateToCache qti deps
+    addQTemplateToCache qti
 
   eventTriggers <- lift $ Q.catchE defaultTxErrorHandler fetchEventTriggers
-  forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ configuration) -> do
-    etc <- decodeValue configuration
-
-    let qt = QualifiedTable sn tn
-    subTableP2Setup qt trid etc
+  forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ tDefVal, webhook, nr, rint, Q.AltJ mheaders) -> do
+    let headerConfs = fromMaybe [] mheaders
+        qt = QualifiedTable sn tn
     allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
-    liftTx $ mkTriggerQ trid trn qt allCols (etcDefinition etc)
+    headers <- getHeaderInfosFromConf headerConfs
+    tDef <- decodeValue tDefVal
+    addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook headers
+    liftTx $ mkTriggerQ trid trn qt allCols tDef
   where
     permHelper sn tn rn pDef pa = do
       qCtx <- mkAdminQCtx <$> get
@@ -361,9 +391,9 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
       let qt = QualifiedTable sn tn
           permDef = PermDef rn perm Nothing
           createPerm = WithTable qt permDef
-      (permInfo, deps) <- liftP1 qCtx $ phaseOne createPerm
-      addPermP2Setup qt permDef permInfo
-      addPermToCache qt rn pa permInfo deps
+      p1Res <- liftP1 qCtx $ phaseOne createPerm
+      addPermP2Setup qt permDef p1Res
+      addPermToCache qt rn pa p1Res
       -- p2F qt rn p1Res
 
     fetchTables =
@@ -391,7 +421,7 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
 
     fetchEventTriggers =
       Q.listQ [Q.sql|
-               SELECT e.schema_name, e.table_name, e.id, e.name, e.configuration::json
+               SELECT e.schema_name, e.table_name, e.id, e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
                  FROM hdb_catalog.event_triggers e
                |] () False
 
@@ -453,9 +483,11 @@ runSqlP2 (RunSQL t cascade) = do
     let tn = tiName ti
         cols = getCols $ tiFieldInfoMap ti
     forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
-      let opsDef = etiOpsDef eti
+      let insert = otiCols <$> etiInsert eti
+          update = otiCols <$> etiUpdate eti
+          delete = otiCols <$> etiDelete eti
           trid = etiId eti
-      liftTx $ mkTriggerQ trid trn tn cols opsDef
+      liftTx $ mkTriggerQ trid trn tn cols (TriggerOpsDef insert update delete)
 
   return $ encode (res :: RunSQLRes)
 

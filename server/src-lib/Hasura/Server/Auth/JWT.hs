@@ -31,7 +31,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (bsToTxt, userRoleHeader)
+import           Hasura.Server.Utils             (accessKeyHeader, bsToTxt,
+                                                  userRoleHeader)
 
 import qualified Control.Concurrent              as C
 import qualified Data.Aeson                      as A
@@ -65,11 +66,10 @@ data JWTCtx
   { jcxKey      :: !(IORef JWKSet)
   , jcxClaimNs  :: !(Maybe T.Text)
   , jcxAudience :: !(Maybe T.Text)
-  } deriving (Eq)
+  } deriving (Show, Eq)
 
-instance Show JWTCtx where
-  show (JWTCtx _ nsM audM) =
-    show ["<IORef JWKSet>", show nsM, show audM]
+instance Show (IORef JWKSet) where
+  show _ = "<IORef JWKRef>"
 
 data HasuraClaims
   = HasuraClaims
@@ -218,7 +218,10 @@ processAuthZHeader jwtCtx headers authzHeader = do
   -- transform the map of text:aeson-value -> text:text
   metadata <- decodeJSON $ A.Object finalClaims
 
-  return $ mkUserInfo role $ mkUserVars $ Map.toList metadata
+  -- delete the x-hasura-access-key from this map, and insert x-hasura-role
+  let hasuraMd = Map.delete accessKeyHeader metadata
+
+  return $ mkUserInfo role $ mkUserVars $ Map.toList hasuraMd
 
   where
     parseAuthzHeader = do

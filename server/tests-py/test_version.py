@@ -2,7 +2,6 @@
 
 import pytest
 
-
 class TestServerVersion(object):
 
     def test_version(self, hge_ctx):

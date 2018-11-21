@@ -23,18 +23,17 @@ import qualified Hasura.SQL.DML           as S
 data DeleteQueryP1
   = DeleteQueryP1
   { dqp1Table   :: !QualifiedTable
-  , dqp1Where   :: !(AnnBoolExpSQL, AnnBoolExpSQL)
+  , dqp1Where   :: !(S.BoolExp, GBoolExp AnnSQLBoolExp)
   , dqp1MutFlds :: !MutFlds
   } deriving (Show, Eq)
 
 mkSQLDelete
   :: DeleteQueryP1 -> S.SelectWith
 mkSQLDelete (DeleteQueryP1 tn (fltr, wc) mutFlds) =
-  mkSelWith tn (S.CTEDelete delete) mutFlds False
+  mkSelWith tn (S.CTEDelete delete) mutFlds
   where
     delete = S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
-    tableFltr = Just $ S.WhereFrag $
-                toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps fltr wc
+    tableFltr = Just $ S.WhereFrag $ S.BEBin S.AndOp fltr $ cBoolExp wc
 
 getDeleteDeps
   :: DeleteQueryP1 -> [SchemaDependency]
@@ -75,11 +74,11 @@ convDeleteQuery prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp' fieldInfoMap selPerm rqlBE prepValBuilder
+    convBoolExp' fieldInfoMap tableName selPerm rqlBE prepValBuilder
 
   return $ DeleteQueryP1 tableName
     (dpiFilter delPerm, annSQLBoolExp)
-    (mkDefaultMutFlds mAnnRetCols)
+    (mkDefaultMutFlds tableName mAnnRetCols)
 
   where
     selNecessaryMsg =

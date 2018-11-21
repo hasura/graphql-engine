@@ -7,7 +7,6 @@ query:
       insert_author(
         objects: [
           {
-            id: 1,
             name: "Author 1", 
             articles: {
               data: [

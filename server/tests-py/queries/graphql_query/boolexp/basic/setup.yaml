@@ -6,7 +6,7 @@ args:
   args:
     sql: |
       create table author(
-          id serial primary key,
+          id serial primary key, 
           name text unique,
           is_registered boolean not null default false
       );
@@ -86,66 +86,6 @@ args:
         column: author_id
 
 
-#Message table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE message (
-        id int PRIMARY KEY,
-        content TEXT NOT NULL,
-        parent_id INT NULL
-      );
-      alter table message
-      add constraint parent_fk foreign key (parent_id)
-      references message(id)
-
-- type: track_table
-  args:
-    schema: public
-    name: message
-
-# parent obj rel
-- type: create_object_relationship
-  args:
-    table: message
-    name: parent
-    using:
-      foreign_key_constraint_on: parent_id
-
-# children array rel
-- type: create_array_relationship
-  args:
-    table: message
-    name: children
-    using:
-      foreign_key_constraint_on:
-        table: message
-        column: parent_id
-
-#Insert messages
-- type: insert
-  args:
-    table: message
-    objects:
-    - id: 1
-      content: "hello world"
-      parent_id: null
-    - id: 2
-      content: "content 2"
-      parent_id: 1
-    - id: 3
-      content: "content 3"
-      parent_id: 1
-    - id: 4
-      content: "ahoy"
-      parent_id: null
-    - id: 5
-      content: "content 5"
-      parent_id: 4
-    - id: 6
-      content: "hello there"
-      parent_id: 4
-
 #Insert Authors
 - type: insert
   args:
@@ -194,12 +134,12 @@ args:
     table: city
     objects:
     - name: Durham
-      country: USA
+      country: USA 
     - name:  New York
       country: USA
     - name: Framlingham
       country: UK
-    - name: New Orleans
+    - name: New Orleans 
       country: USA
 
 - type: insert

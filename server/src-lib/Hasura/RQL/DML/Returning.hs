@@ -19,7 +19,7 @@ import qualified Hasura.SQL.DML          as S
 data MutFld
   = MCount
   | MExp !T.Text
-  | MRet ![(FieldName, AnnFld)]
+  | MRet !AnnSel
   deriving (Show, Eq)
 
 type MutFlds = [(T.Text, MutFld)]
@@ -28,48 +28,50 @@ pgColsFromMutFld :: MutFld -> [(PGCol, PGColType)]
 pgColsFromMutFld = \case
   MCount -> []
   MExp _ -> []
-  MRet selFlds ->
-    flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
+  MRet selData ->
+    flip mapMaybe ( fetchAnnFlds $ _asnFields selData) $ \(_, annFld) -> case annFld of
     FCol (PGColInfo col colTy _) -> Just (col, colTy)
     _                            -> Nothing
+
+pgColsToSelData :: QualifiedTable -> [PGColInfo] -> AnnSel
+pgColsToSelData qt cols =
+  AnnSel selFlds tabFrom tabPerm noTableArgs
+  where
+    selFlds = ASFSimple flds
+    tabFrom = TableFrom qt $ Just frmItem
+    tabPerm = TablePerm (S.BELit True) Nothing
+    flds = flip map cols $ \pgColInfo ->
+      (fromPGCol $ pgiName pgColInfo, FCol pgColInfo)
+    frmItem = S.FIIden $ qualTableToAliasIden qt
 
 pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 
-mkDefaultMutFlds :: Maybe [PGColInfo] -> MutFlds
-mkDefaultMutFlds = \case
+mkDefaultMutFlds :: QualifiedTable -> Maybe [PGColInfo] -> MutFlds
+mkDefaultMutFlds qt = \case
   Nothing   -> mutFlds
-  Just cols -> ("returning", MRet $ pgColsToSelFlds cols):mutFlds
+  Just cols -> ("returning", (MRet $ pgColsToSelData qt cols)):mutFlds
   where
     mutFlds = [("affected_rows", MCount)]
-    pgColsToSelFlds cols = flip map cols $ \pgColInfo ->
-      (fromPGCol $ pgiName pgColInfo, FCol pgColInfo)
 
 qualTableToAliasIden :: QualifiedTable -> Iden
 qualTableToAliasIden (QualifiedTable sn tn) =
   Iden $ getSchemaTxt sn <> "_" <> getTableTxt tn
   <> "__mutation_result_alias"
 
-mkMutFldExp :: QualifiedTable -> Bool -> MutFld -> S.SQLExp
-mkMutFldExp qt singleObj = \case
+mkMutFldExp :: QualifiedTable -> MutFld -> S.SQLExp
+mkMutFldExp qt = \case
   MCount -> S.SESelect $
     S.mkSelect
-    { S.selExtr = [S.Extractor S.countStar Nothing]
-    , S.selFrom = Just $ S.FromExp $ pure frmItem
+    { S.selExtr = [S.Extractor (S.SEUnsafe "count(*)") Nothing]
+    , S.selFrom = Just $ S.FromExp $ pure $
+                  S.FIIden $ qualTableToAliasIden qt
     }
   MExp t -> S.SELit t
-  MRet selFlds ->
-    -- let tabFrom = TableFrom qt $ Just frmItem
-    let tabFrom = TableFrom qt $ Just  $ qualTableToAliasIden qt
-        tabPerm = TablePerm annBoolExpTrue Nothing
-    in S.SESelect $ mkSQLSelect singleObj $
-       AnnSelG selFlds tabFrom tabPerm noTableArgs
-  where
-    frmItem = S.FIIden $ qualTableToAliasIden qt
+  MRet selData -> S.SESelect $ mkSQLSelect False selData
 
-mkSelWith
-  :: QualifiedTable -> S.CTE -> MutFlds -> Bool -> S.SelectWith
-mkSelWith qt cte mutFlds singleObj =
+mkSelWith :: QualifiedTable -> S.CTE -> MutFlds -> S.SelectWith
+mkSelWith qt cte mutFlds =
   S.SelectWith [(alias, cte)] sel
   where
     alias = S.Alias $ qualTableToAliasIden qt
@@ -79,7 +81,7 @@ mkSelWith qt cte mutFlds singleObj =
 
     jsonBuildObjArgs =
       flip concatMap mutFlds $
-      \(k, mutFld) -> [S.SELit k, mkMutFldExp qt singleObj mutFld]
+      \(k, mutFld) -> [S.SELit k, mkMutFldExp qt mutFld]
 
 encodeJSONVector :: (a -> BB.Builder) -> V.Vector a -> BB.Builder
 encodeJSONVector builder xs

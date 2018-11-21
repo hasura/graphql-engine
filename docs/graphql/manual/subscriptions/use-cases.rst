@@ -157,7 +157,7 @@ Subscribe to latest value of some derived data
 ----------------------------------------------
 
 In case you are interested in the latest value of some derived data, you can :doc:`create a view to query the derived
-data <../queries/derived-data>` and then use subscriptions to fetch the derived value and get its latest value
+data <../queries/aggregations>` and then use subscriptions to fetch the derived value and get its latest value
 whenever it updates.
 
 Example: A poll dashboard

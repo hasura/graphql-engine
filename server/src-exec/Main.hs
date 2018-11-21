@@ -45,7 +45,7 @@ data RavenOptions
 
 data ServeOptions
   = ServeOptions
-  { soPort          :: !(Maybe Int)
+  { soPort          :: !Int
   , soConnParams    :: !Q.ConnParams
   , soTxIso         :: !Q.TxIsolation
   , soRootDir       :: !(Maybe String)
@@ -133,7 +133,7 @@ main =  do
   hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case ravenMode of
-    ROServe (ServeOptions mPort cp isoL mRootDir mAccessKey mWebHook mJwtSecret
+    ROServe (ServeOptions port cp isoL mRootDir mAccessKey mWebHook mJwtSecret
              mUnAuthRole corsCfg enableConsole) -> do
 
       -- get all auth mode related config
@@ -141,8 +141,6 @@ main =  do
       mFinalWebHook   <- considerEnv "HASURA_GRAPHQL_AUTH_HOOK" $ getWebhook <$> mWebHook
       mFinalJwtSecret <- considerEnv "HASURA_GRAPHQL_JWT_SECRET" mJwtSecret
       mFinalUnAuthRole <- considerEnv "HASURA_GRAPHQL_UNAUTHORIZED_ROLE" $ getRoleTxt <$> mUnAuthRole
-      defaultPort <- getFromEnv 8080 "HASURA_GRAPHQL_SERVER_PORT"
-      let port = fromMaybe defaultPort mPort
       -- prepare auth mode
       authModeRes <- runExceptT $ mkAuthMode (AccessKey <$> mFinalAccessKey)
                                              (Webhook <$> mFinalWebHook)
@@ -171,10 +169,10 @@ main =  do
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
 
       maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-      evFetchMilliSec  <- getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+      evPollSec  <- getFromEnv defaultPollingIntervalSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
       logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
 
-      eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
+      eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evPollSec
       httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
 
       void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpSession pool cacheRef eventEngineCtx
@@ -210,7 +208,6 @@ main =  do
       putStrLn "event_triggers: preparing data"
       res <- runTx ci unlockAllEvents
       either ((>> exitFailure) . printJSON) return res
-
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
       mEnv <- lookupEnv env
