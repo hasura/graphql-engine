@@ -312,9 +312,10 @@ jobs:
         name: Create server cli migrations docker image
         command: |
           docker load --input /home/circleci/build/_server_output/image.tar
+          export SERVER_VERSION=$(cat /home/circleci/build/_server_output/version.txt)
           cd scripts/cli-migrations
           cp /home/circleci/build/_cli_output/binaries/cli-hasura-linux-amd64 .
-          sed -i '1s/.*/FROM server:latest/' Dockerfile
+          sed -i '1s/.*/FROM hasura\/graphql-engine:'"$SERVER_VERSION"'/' Dockerfile
           docker build -t server:latest .
     - run:
         name: Run postgres container
@@ -343,6 +344,21 @@ jobs:
 
 workflows:
   version: 2
+  build_and_test_community:
+    jobs:
+    - check_build_worthiness: *filter_only_vtags
+    - build_server:
+        <<: *filter_only_vtags
+        requires:
+        - check_build_worthiness
+    - test_and_build_cli:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - test_community_apps:
+        <<: *filter_only_vtags
+        requires:
+        - test_and_build_cli
   build_and_test:
     jobs:
     - check_build_worthiness: *filter_only_vtags
