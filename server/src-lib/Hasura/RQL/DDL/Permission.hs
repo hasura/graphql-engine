@@ -53,7 +53,6 @@ import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Permission.Triggers
 import           Hasura.RQL.DML.Internal            (onlyPositiveInt)
 import           Hasura.RQL.Types
-import           Hasura.RQL.GBoolExp
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
@@ -75,7 +74,6 @@ data InsPerm
   { icCheck       :: !BoolExp
   , icAllowUpsert :: !(Maybe Bool)
   , icSet         :: !(Maybe Object)
-  , icColumns     :: !(Maybe PermColSpec)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
@@ -110,11 +108,10 @@ buildInsPermInfo
   :: (QErrM m, CacheRM m)
   => TableInfo
   -> PermDef InsPerm
-  -> m (WithDeps InsPermInfo)
-buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set mCols) _) = withPathK "permission" $ do
+  -> m InsPermInfo
+buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set) _) = withPathK "permission" $ do
   (be, beDeps) <- withPathK "check" $
-    -- procBoolExp tn fieldInfoMap (S.QualVar "NEW") chk
-    procBoolExp tn fieldInfoMap chk
+    procBoolExp tn fieldInfoMap (S.QualVar "NEW") chk
   let deps = mkParentDep tn : beDeps
       fltrHeaders = getDependentHeaders chk
       setObj = fromMaybe mempty set
@@ -128,25 +125,19 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set mCols) _) = withPath
       return (pgCol, sqlExp)
   let setHdrs = mapMaybe (fetchHdr . snd) (HM.toList setObj)
       reqHdrs = fltrHeaders `union` setHdrs
-      preSetCols = HM.union setColsSQL nonInsColVals
-  return (InsPermInfo vn be allowUpsrt preSetCols reqHdrs, deps)
+  return $ InsPermInfo vn be allowUpsrt setColsSQL deps reqHdrs
   where
     fieldInfoMap = tiFieldInfoMap tabInfo
     tn = tiName tabInfo
     vn = buildViewName tn rn PTInsert
-    allCols = map pgiName $ getCols fieldInfoMap
-    nonInsCols = case mCols of
-      Nothing   -> []
-      Just cols -> (\\) allCols $ convColSpec fieldInfoMap cols
-    nonInsColVals = S.mkColDefValMap nonInsCols
 
     fetchHdr (String t) = bool Nothing (Just $ T.toLower t)
                           $ isUserVar t
     fetchHdr _          = Nothing
 
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
-buildInsInfra tn (InsPermInfo vn be _ _ _) = do
-  trigFnQ <- buildInsTrigFn vn tn $ toSQLBoolExp (S.QualVar "NEW") be
+buildInsInfra tn (InsPermInfo vn be _ _ _ _) = do
+  trigFnQ <- buildInsTrigFn vn tn be
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
     Q.unitQ (buildView tn vn) () False
@@ -201,12 +192,12 @@ buildSelPermInfo
   :: (QErrM m, CacheRM m)
   => TableInfo
   -> SelPerm
-  -> m (WithDeps SelPermInfo)
+  -> m SelPermInfo
 buildSelPermInfo tabInfo sp = do
   let pgCols     = convColSpec fieldInfoMap $ spColumns sp
 
   (be, beDeps) <- withPathK "filter" $
-    procBoolExp tn fieldInfoMap  $ spFilter sp
+    procBoolExp tn fieldInfoMap (S.mkQual tn) $ spFilter sp
 
   -- check if the columns exist
   void $ withPathK "columns" $ indexedForM pgCols $ \pgCol ->
@@ -218,7 +209,7 @@ buildSelPermInfo tabInfo sp = do
 
   withPathK "limit" $ mapM_ onlyPositiveInt mLimit
 
-  return (SelPermInfo (HS.fromList pgCols) tn be mLimit allowAgg depHeaders, deps)
+  return $ SelPermInfo (HS.fromList pgCols) tn be mLimit allowAgg deps depHeaders
 
   where
     tn = tiName tabInfo
@@ -267,10 +258,10 @@ buildUpdPermInfo
   :: (QErrM m, CacheRM m)
   => TableInfo
   -> UpdPerm
-  -> m (WithDeps UpdPermInfo)
+  -> m UpdPermInfo
 buildUpdPermInfo tabInfo (UpdPerm colSpec fltr) = do
   (be, beDeps) <- withPathK "filter" $
-    procBoolExp tn fieldInfoMap fltr
+    procBoolExp tn fieldInfoMap (S.mkQual tn) fltr
 
   -- check if the columns exist
   _ <- withPathK "columns" $ indexedForM updCols $ \updCol ->
@@ -279,7 +270,7 @@ buildUpdPermInfo tabInfo (UpdPerm colSpec fltr) = do
   let deps = mkParentDep tn : beDeps ++ map (mkColDep "untyped" tn) updCols
       depHeaders = getDependentHeaders fltr
 
-  return (UpdPermInfo (HS.fromList updCols) tn be depHeaders, deps)
+  return $ UpdPermInfo (HS.fromList updCols) tn be deps depHeaders
 
   where
     tn = tiName tabInfo
@@ -324,13 +315,13 @@ buildDelPermInfo
   :: (QErrM m, CacheRM m)
   => TableInfo
   -> DelPerm
-  -> m (WithDeps DelPermInfo)
+  -> m DelPermInfo
 buildDelPermInfo tabInfo (DelPerm fltr) = do
   (be, beDeps) <- withPathK "filter" $
-    procBoolExp tn fieldInfoMap  fltr
+    procBoolExp tn fieldInfoMap  (S.mkQual tn) fltr
   let deps = mkParentDep tn : beDeps
       depHeaders = getDependentHeaders fltr
-  return (DelPermInfo tn be depHeaders, deps)
+  return $ DelPermInfo tn be deps depHeaders
   where
     tn = tiName tabInfo
     fieldInfoMap = tiFieldInfoMap tabInfo

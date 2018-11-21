@@ -1,6 +1,5 @@
 from flask import jsonify
 
-
 def function(request):
     request_json = request.get_json()
     op = request_json['event']['op']

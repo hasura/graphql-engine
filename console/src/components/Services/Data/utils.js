@@ -119,16 +119,6 @@ const escapeRegExp = string => {
   return string.replace(/([.*+?^${}()|[\]\\])/g, '\\$1');
 };
 
-const getTableName = t => {
-  const typ = typeof t;
-  if (typ === 'string') {
-    return t;
-  } else if (typ === 'object') {
-    return 'name' in t ? t.name : '';
-  }
-  return '';
-};
-
 export {
   ordinalColSort,
   findTableFromRel,
@@ -136,5 +126,4 @@ export {
   getEdForm,
   getIngForm,
   escapeRegExp,
-  getTableName,
 };

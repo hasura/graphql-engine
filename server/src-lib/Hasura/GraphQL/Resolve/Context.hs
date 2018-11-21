@@ -3,9 +3,11 @@
 {-# LANGUAGE MultiWayIf            #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Hasura.GraphQL.Resolve.Context
-  ( FieldMap
+  ( InsResp(..)
+  , FieldMap
   , RelationInfoMap
   , OrdByCtx
   , OrdByItemMap
@@ -30,6 +32,9 @@ module Hasura.GraphQL.Resolve.Context
 import           Data.Has
 import           Hasura.Prelude
 
+import qualified Data.Aeson                    as J
+import qualified Data.Aeson.Casing             as J
+import qualified Data.Aeson.TH                 as J
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.Sequence                 as Seq
@@ -45,9 +50,16 @@ import           Hasura.SQL.Value
 
 import qualified Hasura.SQL.DML                as S
 
+data InsResp
+  = InsResp
+  { _irAffectedRows :: !Int
+  , _irResponse     :: !(Maybe J.Object)
+  } deriving (Show, Eq)
+$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
+
 type FieldMap
   = Map.HashMap (G.NamedType, G.Name)
-    (Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int))
+    (Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int))
 
 -- data OrdTy
 --   = OAsc
@@ -64,7 +76,7 @@ type RespTx = Q.TxE QErr BL.ByteString
 -- order by context
 data OrdByItem
   = OBIPGCol !PGColInfo
-  | OBIRel !RelInfo !AnnBoolExpSQL
+  | OBIRel !RelInfo !S.BoolExp
   deriving (Show, Eq)
 
 type OrdByItemMap = Map.HashMap G.Name OrdByItem
@@ -86,8 +98,7 @@ type InsCtxMap = Map.HashMap QualifiedTable InsCtx
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> G.Name
-  -> m (Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int))
+  => G.NamedType -> G.Name -> m (Either PGColInfo (RelInfo, Bool, S.BoolExp, Maybe Int))
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $

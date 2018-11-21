@@ -7,13 +7,12 @@ query:
      insert_article(
        objects: [
          {
-           title: "Article 1 by Author 1",
-           content: "Article content for Article 1 by Author 1",
+           title: "Article 1 by Author 2",
+           content: "Article content for Article 1 by Author 2",
            is_published: true
            author: {
              data: {
-               id: 1
-               name: "Author 1"
+               name: "Author 2"
              }
              on_conflict: {
                constraint: author_pkey,

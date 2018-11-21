@@ -323,6 +323,8 @@ E.g.:
 
     where: BoolExp_
 
+.. _BoolExp:
+
 BoolExp
 *******
 

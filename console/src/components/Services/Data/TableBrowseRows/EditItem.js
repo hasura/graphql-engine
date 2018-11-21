@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import TableHeader from '../TableCommon/TableHeader';
 import { editItem, E_ONGOING_REQ } from './EditActions';
-import globals from '../../../../Globals';
+
 import { modalClose } from './EditActions';
 
 // import RichTextEditor from 'react-rte';
@@ -45,11 +45,9 @@ class EditItem extends Component {
     if (!oldItem) {
       dispatch(
         replace(
-          `${globals.urlPrefix ||
-            ''}/data/schema/${currentSchema}/tables/${tableName}/browse`
+          '/data/schema/' + currentSchema + '/tables/' + tableName + '/browse'
         )
       );
-      return null;
     }
 
     const styles = require('../TableCommon/Table.scss');

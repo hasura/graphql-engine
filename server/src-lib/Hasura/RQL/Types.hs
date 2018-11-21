@@ -48,7 +48,6 @@ module Hasura.RQL.Types
        ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.BoolExp     as R
 import           Hasura.RQL.Types.Common      as R
 import           Hasura.RQL.Types.DML         as R
 import           Hasura.RQL.Types.Error       as R

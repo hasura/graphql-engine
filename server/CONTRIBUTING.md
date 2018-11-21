@@ -22,7 +22,7 @@ own machine and how to contribute.
 ### Run
 - Make sure postgres is running
 - Create a database on postgres
-- Run the binary: `stack exec graphql-engine -- --database-url=<database-url> serve`
+- Run the binary: `stack exec graphql-engine -- --database-url=<database-url>`
 
 ### Work
 - Work on the feature/fix

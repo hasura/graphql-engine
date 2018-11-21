@@ -10,9 +10,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.RQL.Types.DML
-       ( BoolExp(..)
-       , ColExp(..)
-       , DMLQuery(..)
+       ( DMLQuery(..)
 
        , OrderByExp(..)
        , OrderByItemG(..)
@@ -51,7 +49,6 @@ import qualified Hasura.SQL.DML             as S
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.BoolExp
 import           Hasura.SQL.Types
 
 import           Data.Aeson
@@ -65,28 +62,6 @@ import qualified Data.Text                  as T
 import           Hasura.RQL.Instances       ()
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
-
-data ColExp
-  = ColExp
-  { ceCol :: !FieldName
-  , ceVal :: !Value
-  } deriving (Show, Eq, Lift)
-
-newtype BoolExp
-  = BoolExp { unBoolExp :: GBoolExp ColExp } deriving (Show, Eq, Lift)
-
-instance ToJSON BoolExp where
-  toJSON (BoolExp gBoolExp) =
-    gBoolExpToJSON f gBoolExp
-    where
-      f (ColExp k v) =
-        (getFieldNameTxt k,  v)
-
-instance FromJSON BoolExp where
-  parseJSON =
-    fmap BoolExp . parseGBoolExp f
-    where
-      f (k, v) = ColExp (FieldName k) <$> parseJSON v
 
 data DMLQuery a
   = DMLQuery !QualifiedTable a

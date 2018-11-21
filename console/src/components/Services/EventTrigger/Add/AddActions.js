@@ -32,7 +32,6 @@ const SET_HEADERKEY = 'AddTrigger/SET_HEADERKEY';
 const SET_HEADERTYPE = 'AddTrigger/SET_HEADERTYPE';
 const SET_HEADERVALUE = 'AddTrigger/SET_HEADERVALUE';
 const ADD_HEADER = 'AddTrigger/ADD_HEADER';
-const UPDATE_WEBHOOK_URL_TYPE = 'AddTrigger/UPDATE_WEBHOOK_URL_TYPE';
 
 const setTriggerName = value => ({ type: SET_TRIGGERNAME, value });
 const setTableName = value => ({ type: SET_TABLENAME, value });
@@ -66,10 +65,6 @@ const validationError = error => {
   return { type: VALIDATION_ERROR, error };
 };
 
-const getWebhookKey = (type, val) => {
-  return { [type === 'url' ? 'webhook' : 'webhook_from_env']: val };
-};
-
 const createTrigger = () => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
@@ -79,7 +74,6 @@ const createTrigger = () => {
     const triggerName = currentState.triggerName;
     const tableName = currentState.tableName;
     const webhook = currentState.webhookURL;
-    const webhookType = currentState.webhookUrlType;
 
     // apply migrations
     const migrationName = 'create_trigger_' + triggerName.trim();
@@ -88,8 +82,7 @@ const createTrigger = () => {
       args: {
         name: triggerName,
         table: { name: tableName, schema: currentSchema },
-        // webhook: webhook,
-        ...getWebhookKey(webhookType, webhook),
+        webhook: webhook,
       },
     };
     const downPayload = {
@@ -359,11 +352,6 @@ const addTriggerReducer = (state = defaultState, action) => {
       const deselectedOperations = state.selectedOperations;
       deselectedOperations[action.data] = false;
       return { ...state, selectedOperations: { ...deselectedOperations } };
-    case UPDATE_WEBHOOK_URL_TYPE:
-      return {
-        ...state,
-        webhookUrlType: action.data,
-      };
     default:
       return state;
   }
@@ -388,6 +376,5 @@ export {
   operationToggleAllColumns,
   setOperationSelection,
   setDefaults,
-  UPDATE_WEBHOOK_URL_TYPE,
 };
 export { validationError };

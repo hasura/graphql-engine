@@ -12,7 +12,6 @@ import           Hasura.SQL.Types
 import           Data.String                (fromString)
 import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.HashMap.Strict        as HM
 import qualified Data.Text.Extended         as T
 import qualified Text.Builder               as TB
 
@@ -238,19 +237,6 @@ jsonType = AnnType "json"
 jsonbType :: AnnType
 jsonbType = AnnType "jsonb"
 
-data CountType
-  = CTStar
-  | CTSimple ![PGCol]
-  | CTDistinct ![PGCol]
-  deriving(Show, Eq)
-
-instance ToSQL CountType where
-  toSQL CTStar            = "*"
-  toSQL (CTSimple cols)   =
-    paren $ ", " <+> cols
-  toSQL (CTDistinct cols) =
-    "DISTINCT" <-> paren (", " <+> cols)
-
 data SQLExp
   = SEPrep !Int
   | SELit !T.Text
@@ -268,7 +254,6 @@ data SQLExp
   | SEBool !BoolExp
   | SEExcluded !T.Text
   | SEArray ![SQLExp]
-  | SECount !CountType
   deriving (Show, Eq)
 
 newtype Alias
@@ -283,9 +268,6 @@ instance ToSQL Alias where
 
 toAlias :: (IsIden a) => a -> Alias
 toAlias = Alias . toIden
-
-countStar :: SQLExp
-countStar = SECount CTStar
 
 instance ToSQL SQLExp where
   toSQL (SEPrep argNumber) =
@@ -321,15 +303,10 @@ instance ToSQL SQLExp where
                          <> toSQL (PGCol t)
   toSQL (SEArray exps) = "ARRAY" <> TB.char '['
                          <> (", " <+> exps) <> TB.char ']'
-  toSQL (SECount ty) = "COUNT" <> paren (toSQL ty)
 
 intToSQLExp :: Int -> SQLExp
 intToSQLExp =
   SEUnsafe . T.pack . show
-
-annotateExp :: SQLExp -> PGColType -> SQLExp
-annotateExp sqlExp =
-  SETyAnn sqlExp . AnnType . T.pack . show
 
 data Extractor = Extractor !SQLExp !(Maybe Alias)
                deriving (Show, Eq)
@@ -340,10 +317,6 @@ mkSQLOpExp
   -> SQLExp -- rhs
   -> SQLExp -- result
 mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
-
-mkColDefValMap :: [PGCol] -> HM.HashMap PGCol SQLExp
-mkColDefValMap cols =
-  HM.fromList $ zip cols (repeat $ SEUnsafe "DEFAULT")
 
 handleIfNull :: SQLExp -> SQLExp -> SQLExp
 handleIfNull l e = SEFnApp "coalesce" [e, l] Nothing
@@ -461,7 +434,6 @@ data BoolExp
   | BENull !SQLExp
   | BENotNull !SQLExp
   | BEExists !Select
-  | BEEqualsAny !SQLExp ![SQLExp]
   deriving (Show, Eq)
 
 -- removes extraneous 'AND true's
@@ -483,12 +455,12 @@ simplifyBoolExp be = case be of
       | otherwise -> BEBin OrOp e1s e2s
   e                          -> e
 
-mkExists :: FromItem -> BoolExp -> BoolExp
-mkExists fromItem whereFrag =
-  BEExists mkSelect
-  { selExtr  = [Extractor (SEUnsafe "1") Nothing]
-  , selFrom  = Just $ FromExp $ pure fromItem
-  , selWhere = Just $ WhereFrag whereFrag
+mkExists :: QualifiedTable -> BoolExp -> BoolExp
+mkExists qt whereFrag =
+  BEExists mkSelect {
+    selExtr  = [Extractor (SEUnsafe "1") Nothing],
+    selFrom  = Just $ mkSimpleFromExp qt,
+    selWhere = Just $ WhereFrag whereFrag
   }
 
 instance ToSQL BoolExp where
@@ -506,10 +478,6 @@ instance ToSQL BoolExp where
     paren (toSQL v) <-> "IS NOT NULL"
   toSQL (BEExists sel) =
     "EXISTS " <-> paren (toSQL sel)
-  -- special case to handle 'lhs = ANY(ARRAY[..])'
-  toSQL (BEEqualsAny l rhsExps) =
-    paren (toSQL l) <-> toSQL SEQ
-    <-> toSQL (SEFnApp "ANY" [SEArray rhsExps] Nothing)
 
 data BinOp = AndOp
            | OrOp

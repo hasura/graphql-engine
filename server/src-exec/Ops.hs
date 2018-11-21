@@ -29,7 +29,7 @@ import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "4"
+curCatalogVer = "3"
 
 initCatalogSafe :: UTCTime -> Q.TxE QErr String
 initCatalogSafe initTime =  do
@@ -188,30 +188,6 @@ from2To3 = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "CREATE INDEX ON hdb_catalog.event_log (trigger_id)" () False
   Q.unitQ "CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id)" () False
 
-from3To4 :: Q.TxE QErr ()
-from3To4 = Q.catchE defaultTxErrorHandler $ do
-  Q.unitQ "ALTER TABLE hdb_catalog.event_triggers ADD COLUMN configuration JSON" () False
-  eventTriggers <- map uncurryEventTrigger <$> Q.listQ [Q.sql|
-           SELECT e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
-           FROM hdb_catalog.event_triggers e
-           |] () False
-  forM_ eventTriggers updateEventTrigger3To4
-  Q.unitQ "ALTER TABLE hdb_catalog.event_triggers\
-          \  DROP COLUMN definition\
-          \, DROP COLUMN query\
-          \, DROP COLUMN webhook\
-          \, DROP COLUMN num_retries\
-          \, DROP COLUMN retry_interval\
-          \, DROP COLUMN headers" () False
-  where
-    uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers) = EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint) headers
-    updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _) = Q.unitQ [Q.sql|
-                                         UPDATE hdb_catalog.event_triggers
-                                         SET
-                                         configuration = $1
-                                         WHERE name = $2
-                                         |] (Q.AltJ $ A.toJSON etc, name) True
-
 migrateCatalog :: UTCTime -> Q.TxE QErr String
 migrateCatalog migrationTime = do
   preVer <- getCatalogVersion
@@ -220,17 +196,12 @@ migrateCatalog migrationTime = do
      | preVer == "0.8" -> from08ToCurrent
      | preVer == "1"   -> from1ToCurrent
      | preVer == "2"   -> from2ToCurrent
-     | preVer == "3"   -> from3ToCurrent
      | otherwise -> throw400 NotSupported $
                     "migrate: unsupported version : " <> preVer
   where
-    from3ToCurrent = do
-      from3To4
-      postMigrate
-
     from2ToCurrent = do
       from2To3
-      from3ToCurrent
+      postMigrate
 
     from1ToCurrent = do
       from1To2

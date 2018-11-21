@@ -15,6 +15,6 @@ Please see the following pages for details about the above use-cases:
 
 - :doc:`../queries/control-access`
 
-- :doc:`../queries/derived-data`
+- :doc:`../queries/aggregations`
 
 

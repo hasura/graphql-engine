@@ -322,10 +322,8 @@ const ViewRows = ({
                         null,
                         4
                       );
-                      const finalResponse = JSON.stringify(
-                        finalRow.response,
-                        null,
-                        4
+                      const finalResponse = JSON.parse(
+                        JSON.stringify(finalRow.response, null, 4)
                       );
                       return (
                         <div style={{ padding: '20px' }}>

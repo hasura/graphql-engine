@@ -1,4 +1,12 @@
-import { getTableName } from '../utils';
+const getTableName = t => {
+  const typ = typeof t;
+  if (typ === 'string') {
+    return t;
+  } else if (typ === 'object') {
+    return 'name' in t ? t.name : '';
+  }
+  return '';
+};
 
 const suggestedRelationshipsRaw = (tableName, allSchemas) => {
   const objRels = [];

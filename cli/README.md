@@ -37,6 +37,10 @@ cd <my-project>
 hasura console
 ```
 
+## Docs
+
+Read complete docs [here](docs/hasura.md).
+
 ## Contributing
 
 Checkout the [contributing guide](CONTRIBUTING.md).

@@ -1,6 +1,5 @@
 from flask import Flask
 from flask import request, jsonify, abort
-
 app = Flask(__name__)
 
 
@@ -24,7 +23,6 @@ def get_details_for_token(token):
 @app.route('/')
 def hello():
     return 'webhook is running'
-
 
 @app.route('/auth-webhook')
 def auth_webhook():

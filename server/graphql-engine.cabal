@@ -130,7 +130,7 @@ library
                      , auto-update
 
                      -- regex related
-                     , regex-tdfa >= 1.2
+                     , regex-compat
 
   exposed-modules:     Hasura.Server.App
                      , Hasura.Server.Auth
@@ -144,9 +144,8 @@ library
                      , Hasura.Server.CheckUpdates
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
-                     , Hasura.RQL.Types.Common
-                     , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.SchemaCache
+                     , Hasura.RQL.Types.Common
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.DML
@@ -166,7 +165,6 @@ library
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert
                      , Hasura.RQL.DML.Returning
-                     , Hasura.RQL.DML.Select.Internal
                      , Hasura.RQL.DML.Select
                      , Hasura.RQL.DML.Update
                      , Hasura.RQL.DML.Count
