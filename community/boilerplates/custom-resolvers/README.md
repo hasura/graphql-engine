@@ -1,6 +1,6 @@
-# GraphQL Custom Resolver Example
+# (Deprecated) GraphQL Custom Resolver Example
 
-## **DEPRECATED**: now merge [Remote Schemas](../../../remote-schemas.md) from [GraphQL Servers](../graphql-servers)
+## **DEPRECATED**: now merge [Remote Schemas](../../../remote-schemas.md) from [GraphQL Servers](../graphql-servers) using Hasura
 
 - We have added a new feature that deprecates the need for custom resolvers. Now, write your own GraphQL Servers in any language ([boilerplates](../graphql-servers)) and merge them with Hasura's GraphQL API - [read more](../../../remote-schemas.md).
 - Instead of fronting Hasura with a custom GraphQL server, Hasura can proxy requests to other GraphQL servers.
