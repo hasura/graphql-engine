@@ -43,13 +43,11 @@ addRemoteSchemaP2 q@(AddRemoteSchemaQuery name def _) = do
   rsi <- validateRemoteSchemaDef def
   manager <- askHttpManager
   sc <- askSchemaCache
-  let gCtxMap = scGCtxMap sc
-      defRemoteGCtx = scDefaultRemoteGCtx sc
+  let defRemoteGCtx = scDefaultRemoteGCtx sc
   remoteGCtx <- fetchRemoteSchema manager name rsi
   newDefGCtx <- mergeGCtx defRemoteGCtx $ convRemoteGCtx remoteGCtx
-  -- forM_ (Map.toList gCtxMap) $ \(_, gCtx) ->
-  --   GS.checkSchemaConflicts gCtx newDefGCtx
-  newGCtxMap <- mergeRemoteSchema gCtxMap newDefGCtx
+  newHsraGCtxMap <- GS.mkGCtxMap (scTables sc)
+  newGCtxMap <- mergeRemoteSchema newHsraGCtxMap newDefGCtx
   liftTx $ addRemoteSchemaToCatalog q
   addRemoteSchemaToCache newGCtxMap newDefGCtx name rsi
   return successMsg

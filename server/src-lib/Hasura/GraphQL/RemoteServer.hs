@@ -6,7 +6,7 @@
 module Hasura.GraphQL.RemoteServer where
 
 import           Control.Exception             (try)
-import           Control.Lens                  ((&), (.~), (?~), (^.))
+import           Control.Lens                  ((^.))
 import           Data.FileEmbed                (embedStringFile)
 import           Data.Foldable                 (foldlM)
 import           Hasura.Prelude
@@ -22,6 +22,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.Wreq                  as Wreq
 
+import           Hasura.HTTP.Utils             (wreqOptions)
 import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
 import           Hasura.RQL.Types
 
@@ -41,11 +42,7 @@ fetchRemoteSchema
 fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
   headers <- getHeadersFromConf headerConf
   let hdrs = map (\(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)) headers
-  let options = Wreq.defaults
-              & Wreq.headers .~ ("content-type", "application/json") : hdrs
-              & Wreq.checkResponse ?~ (\_ _ -> return ())
-              & Wreq.manager .~ Right manager
-
+      options = wreqOptions manager hdrs
   res  <- liftIO $ try $ Wreq.postWith options (show url) introspectionQuery
   resp <- either throwHttpErr return res
 

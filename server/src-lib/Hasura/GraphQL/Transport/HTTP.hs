@@ -30,6 +30,7 @@ import qualified Network.Wreq                           as Wreq
 
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.HTTP.Utils
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 
@@ -134,13 +135,9 @@ runRemoteGQ manager userInfo reqHdrs q rsi opDef = do
   when (opTy == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
   hdrs <- getHeadersFromConf hdrConf
-  let confHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
+  let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
-  let options = Wreq.defaults
-              & Wreq.headers .~ ("content-type", "application/json") :
-                (userInfoToHdrs ++ clientHdrs ++ confHdrs)
-              & Wreq.checkResponse ?~ (\_ _ -> return ())
-              & Wreq.manager .~ Right manager
+      options    = wreqOptions manager (userInfoToHdrs ++ clientHdrs ++ confHdrs)
 
   res  <- liftIO $ try $ Wreq.postWith options (show url) q
   resp <- either httpThrow return res

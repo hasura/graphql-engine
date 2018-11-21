@@ -18,18 +18,7 @@ def mk_add_remote_q(name, url):
         }
     }
 
-
-add_country_gql_remote = {
-    "type": "add_remote_schema",
-    "args": {
-        "name": "test-remote",
-        "comment": "test remote",
-        "definition": {
-            "url": "https://countries.trevorblades.com/",
-            "forward_client_headers": False
-        }
-    }
-}
+add_country_gql_remote = mk_add_remote_q('test-remote', 'https://countries.trevorblades.com/')
 
 
 class TestRemoteSchemaBasic:
@@ -72,6 +61,14 @@ class TestRemoteSchemaBasic:
         assert st_code == 400
         assert resp['code'] == 'remote-schema-conflicts'
 
+    def test_add_second_remote_schema(self, hge_ctx):
+        """add 2 remote schemas with different node and types"""
+        q = mk_add_remote_q('my remote', 'https://bahnql.herokuapp.com/graphql')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200, resp
+        hge_ctx.v1q({"type": "remove_remote_schema", "args": {"name": "my remote"}})
+        assert st_code == 200, resp
+
 
 class TestAddRemoteSchemaTbls:
     """ tests with adding a table in hasura """
@@ -99,6 +96,15 @@ class TestAddRemoteSchemaTbls:
         st_code, resp = hge_ctx.v1q(add_country_gql_remote)
         assert st_code == 400
         assert resp['code'] == 'remote-schema-conflicts'
+
+    def test_add_second_remote_schema(self, hge_ctx):
+        """add 2 remote schemas with different node and types"""
+        q = mk_add_remote_q('my remote2',
+                            'https://nodejs-express-gql-server-scelkxvtts.now.sh/graphql')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200, resp
+        hge_ctx.v1q({"type": "remove_remote_schema", "args": {"name": "my remote2"}})
+        assert st_code == 200, resp
 
     def test_remote_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/bahnql_query.yaml')

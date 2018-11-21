@@ -22,6 +22,7 @@ module Hasura.GraphQL.Schema
   , checkConflictingNode
   , emptyGCtx
   , mergeMaybeMaps
+  , ppGCtx
   ) where
 
 
@@ -1737,3 +1738,17 @@ mergeMaybeMaps m1 m2 = case (m1, m2) of
   (Just m1', Nothing)  -> Just m1'
   (Nothing, Just m2')  -> Just m2'
   (Just m1', Just m2') -> Just $ Map.union m1' m2'
+
+
+-- pretty print GCtx
+ppGCtx :: GCtx -> IO ()
+ppGCtx gCtx = do
+  let types = map (G.unName . G.unNamedType) $ Map.keys $ _gTypes gCtx
+      qRoot = map G.unName $ Map.keys $ _otiFields $ _gQueryRoot gCtx
+      mRoot = maybe [] (map G.unName . Map.keys . _otiFields) $ _gMutRoot gCtx
+
+  print ("GCtx [" :: Text)
+  print $ "  types = " <> show types
+  print $ "  query root = " <> show qRoot
+  print $ "  mutation root = " <> show mRoot
+  print ("]" :: Text)
