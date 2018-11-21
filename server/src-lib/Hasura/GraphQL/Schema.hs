@@ -1595,7 +1595,7 @@ checkSchemaConflicts gCtx remoteCtx = do
   let rmQRoot = _otiFields $ _gQueryRoot remoteCtx
       rmMRoot = _otiFields <$> _gMutRoot remoteCtx
       rmRoots = filter (`notElem` builtinNodes ++ rmRootNames) . Map.keys <$>
-                fmap (Map.union rmQRoot) rmMRoot
+                mergeMaybeMaps (Just rmQRoot) rmMRoot
       hQR     = _otiFields <$>
                 join (getObjTyM <$> Map.lookup hQRName typeMap)
       hMR     = _otiFields <$>

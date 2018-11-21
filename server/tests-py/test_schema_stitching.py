@@ -5,6 +5,20 @@ import yaml
 
 from validate import check_query_f, check_query
 
+def mk_add_remote_q(name, url):
+    return {
+        "type": "add_remote_schema",
+        "args": {
+            "name": name,
+            "comment": "testing " + name,
+            "definition": {
+                "url": url,
+                "forward_client_headers": False
+            }
+        }
+    }
+
+
 add_country_gql_remote = {
     "type": "add_remote_schema",
     "args": {
@@ -21,18 +35,6 @@ add_country_gql_remote = {
 class TestRemoteSchemaBasic:
     """ basic => no hasura tables are tracked """
 
-    q2 = {
-        "type": "add_remote_schema",
-        "args": {
-            "name": "new-test-remote",
-            "comment": "second test remote",
-            "definition": {
-                "url": "https://countries.trevorblades.com/",
-                "forward_client_headers": True
-            }
-        }
-    }
-
     teardown = {"type": "clear_metadata", "args": {}}
     dir = 'queries/remote_schemas'
 
@@ -43,7 +45,7 @@ class TestRemoteSchemaBasic:
         yield
         hge_ctx.v1q(self.teardown)
 
-    def test_add_schema_basic(self, hge_ctx):
+    def test_add_schema(self, hge_ctx):
         """ check if the remote schema is added in the db """
         conn = hge_ctx.engine.connect()
         res = conn.execute('select * from hdb_catalog.remote_schemas')
@@ -51,21 +53,22 @@ class TestRemoteSchemaBasic:
         assert row['name'] == "test-remote"
         conn.close()
 
-    def test_introspection_basic(self, hge_ctx):
+    def test_introspection(self, hge_ctx):
         check_query_f(hge_ctx, 'queries/graphql_introspection/introspection.yaml')
 
-    def test_introspection_as_user_basic(self, hge_ctx):
+    def test_introspection_as_user(self, hge_ctx):
         check_query_f(hge_ctx, 'queries/graphql_introspection/introspection_user_role.yaml')
 
-    def test_remote_query_basic(self, hge_ctx):
+    def test_remote_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/basic_query.yaml')
 
-    def test_remote_subscription_basic(self, hge_ctx):
+    def test_remote_subscription(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/basic_subscription_not_supported.yaml')
 
-    def test_add_schema_conflicts_basic(self, hge_ctx):
+    def test_add_schema_conflicts(self, hge_ctx):
         """add 2 remote schemas with same node or types"""
-        st_code, resp = hge_ctx.v1q(self.q2)
+        q = mk_add_remote_q('new-test-remote', 'https://countries.trevorblades.com/')
+        st_code, resp = hge_ctx.v1q(q)
         assert st_code == 400
         assert resp['code'] == 'remote-schema-conflicts'
 
