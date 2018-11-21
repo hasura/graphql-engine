@@ -297,6 +297,9 @@ E.g.:
 
 Conflict Clause
 ^^^^^^^^^^^^^^^
+
+Conflict clause is generated only for tables with update permission.
+
 .. code-block:: none
     
     on_conflict: {

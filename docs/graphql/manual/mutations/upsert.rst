@@ -7,15 +7,17 @@ update columns using the ``update_columns`` argument.
 
 .. note::
     
-    You can fetch the name of unique or primary key constraints by querying the ``information_schema.table_constraints`` table.
-    GraphQL Engine will automatically generate constraint names as enum values for ``constraint`` (try autocompleting in GraphiQL).
-    Typically, the constraint is automatically named as ``<table-name>_<column-name>_key``. 
+    #. Only tables with **update** permissions are **upsertable**.
+       Learn more about permissions :doc:`here <../api-reference/schema-metadata-api/permission>`.
+    #. You can fetch the name of unique or primary key constraints by querying the ``information_schema.table_constraints`` table.
+       GraphQL Engine will automatically generate constraint names as enum values for ``constraint`` (try autocompleting in GraphiQL).
+       Typically, the constraint is automatically named as ``<table-name>_<column-name>_key``.
 
 
 Without "update_columns" argument
 ---------------------------------
 When you don't explicitly specify ``update_columns``, the columns that are given in objects are updated (it doesn't matter if they
-are different, you should see the same end result).
+are different, you should see the same end result) only if those columns are specified in update permission.
 
 Insert into ``author`` table using unique constraint ``author_name_key``. All columns specified in objects get updated:
 
