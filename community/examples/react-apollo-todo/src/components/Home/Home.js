@@ -120,7 +120,7 @@ class App extends Component {
           </span>
           <span className="footerLinkPadd">
             <a
-              href="https://github.com/hasura/graphql-engine/tree/master/community/tutorials/react-apollo-todo"
+              href="https://github.com/hasura/graphql-engine/tree/master/community/examples/react-apollo-todo"
               target="_blank"
               rel="noopener noreferrer"
             >
