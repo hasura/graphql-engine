@@ -6,7 +6,8 @@ Event triggers can be created using the Hasura console.
 Open the Hasura console, head to the ``Events`` tab and click on the ``Create trigger`` button to open up the
 interface below to create an event trigger:
 
-.. image:: ../../../img/graphql/manual/event-triggers/create-event-trigger-annotations.png
+.. image:: ../../../img/graphql/manual/event-triggers/create-event-trigger.png
+   :scale: 50 %
 
 Parameters
 ----------
@@ -26,10 +27,14 @@ The operation on which event trigger needs to be invoked. Can be INSERT, UPDATE 
 
 **Webhook URL**
 
-The HTTP(s) URL which will be called with event payload on configured operation. Must be a POST handler.
+The HTTP(s) URL which will be called with event payload on configured operation. Must be a POST handler. This URL can be entered manually or can be picked up from an environment variable (*the environment variable needs to be defined before using it for this configuration*).
 
 Advanced Settings
 -----------------
+
+.. image:: ../../../img/graphql/manual/event-triggers/create-event-trigger-advanced-settings.png
+   :scale: 50 %
+
 
 Listen columns for update
 ^^^^^^^^^^^^^^^^^^^^^^^^^
