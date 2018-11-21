@@ -55,9 +55,7 @@ is to use one of our boilerplates:
 
 .. note::
 
-  GraphQL Engine does not currently support conflicting top level nodes, so please be careful with your custom
-  schema's nomenclature and ensure that the top-level node names in it do not clash with the top-level nodes in
-  GraphQL Engine's schema.
+  GraphQL Engine does not currently support conflicting top level nodes, so please be careful with your custom schema's nomenclature and ensure that the top-level node names in it do not clash with the top-level nodes in GraphQL Engine's schema. Also, having remote GraphQL nodes and Hasura nodes in a single query/mutation will throw an error. These limitations will be addressed in upcoming iterations.
 
 
 Step-2: Merge remote schema
