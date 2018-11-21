@@ -1459,7 +1459,7 @@ mkGCtxRole tableCache tn fields pCols constraints viM role permInfo = do
   selPermM <- mapM (getSelPerm tableCache fields role) $ _permSel permInfo
   tabInsCtxM <- forM (_permIns permInfo) $ \ipi -> do
     tic <- mkInsCtx role tableCache fields ipi $ _permUpd permInfo
-    return (tic, ipiAllowUpsert ipi)
+    return (tic, isJust $ _permUpd permInfo)
   let updColsM = filterColInfos . upiCols <$> _permUpd permInfo
       tyAgg = mkGCtxRole' tn tabInsCtxM selPermM updColsM
               (void $ _permDel permInfo) pColInfos constraints viM
@@ -1486,7 +1486,7 @@ getRootFldsRole tn pCols constraints fields viM (RolePermInfo insM selM updM del
   (mkUpd <$> updM) (mkDel <$> delM)
   viM
   where
-    mkIns i = (ipiRequiredHeaders i, ipiAllowUpsert i)
+    mkIns i = (ipiRequiredHeaders i, isJust updM)
     mkSel s = ( spiFilter s, spiLimit s
               , spiRequiredHeaders s, spiAllowAgg s
               )

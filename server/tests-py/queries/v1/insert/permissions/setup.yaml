@@ -93,13 +93,22 @@ args:
           - author_id: X-HASURA-USER-ID
           - is_published: true
 
-#Article insert permission for user
+#Article insert and udpate permission for user
 - type: create_insert_permission
   args:
     table: article
     role: user
     permission:
       check:
+        author_id: X-Hasura-User-Id
+
+- type: create_update_permission
+  args:
+    table: article
+    role: user
+    permission:
+      columns: '*'
+      filter:
         author_id: X-Hasura-User-Id
 
 #Author select permission for user
@@ -115,7 +124,7 @@ args:
       filter:
         id: X-HASURA-USER-ID
 
-#Author insert permission for user
+#Author insert and update permission for user
 #Only admin can set is_registered to true
 - type: create_insert_permission
   args:
@@ -123,6 +132,17 @@ args:
     role: user
     permission:
       check:
+        $and:
+        - id: X-HASURA-USER-ID
+        - is_registered: false
+
+- type: create_update_permission
+  args:
+    table: author
+    role: user
+    permission:
+      columns: '*'
+      filter:
         $and:
         - id: X-HASURA-USER-ID
         - is_registered: false

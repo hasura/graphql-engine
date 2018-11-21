@@ -213,7 +213,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
 
   conflictClause <- withPathK "on_conflict" $ forM oC $ \c -> do
       roleName <- askCurRole
-      unless (ipiAllowUpsert insPerm) $ throw400 PermissionDenied $
+      unless (isTabUpdatable roleName tableInfo) $ throw400 PermissionDenied $
         "upsert is not allowed for role " <> roleName
         <<> " since update permissions are not defined"
       buildConflictClause tableInfo inpCols c

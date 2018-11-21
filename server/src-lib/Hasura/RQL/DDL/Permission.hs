@@ -105,7 +105,7 @@ dropView vn =
       "DROP VIEW " <> toSQL vn
 
 buildInsPermInfo
-  :: (QErrM m, CacheRM m, UserInfoM m)
+  :: (QErrM m, CacheRM m)
   => TableInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
@@ -126,8 +126,7 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) = withPathK "per
   let setHdrs = mapMaybe (fetchHdr . snd) (HM.toList setObj)
       reqHdrs = fltrHeaders `union` setHdrs
   preSetCols <- HM.union setColsSQL <$> nonInsColVals
-  allowUpsrt <- isUpsertAllowed . userRole <$> askUserInfo
-  return (InsPermInfo vn be allowUpsrt preSetCols reqHdrs, deps)
+  return (InsPermInfo vn be preSetCols reqHdrs, deps)
   where
     fieldInfoMap = tiFieldInfoMap tabInfo
     tn = tiName tabInfo
@@ -146,13 +145,8 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) = withPathK "per
                           $ isUserVar t
     fetchHdr _          = Nothing
 
-    rolePermInfoMap = tiRolePermInfoMap tabInfo
-    isUpsertAllowed role
-      | role == adminRole = True
-      | otherwise = isJust $ HM.lookup role rolePermInfoMap >>= _permUpd
-
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
-buildInsInfra tn (InsPermInfo vn be _ _ _) = do
+buildInsInfra tn (InsPermInfo vn be _ _) = do
   trigFnQ <- buildInsTrigFn vn tn $ toSQLBoolExp (S.QualVar "NEW") be
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view

@@ -139,7 +139,7 @@ args:
       filter:
         id: X-HASURA-USER-ID
 
-#Author insert permission for user
+#Author insert and update permission for user
 #Only admin can set is_registered to true
 - type: create_insert_permission
   args:
@@ -147,6 +147,17 @@ args:
     role: user
     permission:
       check:
+        $and:
+        - id: X-HASURA-USER-ID
+        - is_registered: false
+
+- type: create_update_permission
+  args:
+    table: author
+    role: user
+    permission:
+      columns: '*'
+      filter:
         $and:
         - id: X-HASURA-USER-ID
         - is_registered: false
