@@ -64,9 +64,14 @@ Please note that boilerplates for more languages, frameworks, serverless platfor
 
 ## Caveats
 
-Currently, conflicting top level nodes are not supported.Please be careful with your custom schema's nomenclature and ensure that the top-level node names in it do not clash with the top-level nodes in GraphQL Engine's schema. Also, having remote GraphQL nodes and Hasura nodes in a single query/mutation will throw an error.
+**Current limitations**:
 
-We plan to address these limitations in upcoming iterations.
+* Nomenclature: Type names and node names need to be unique across all merged schemas (case-sensitive match). In the next few iterations, support for merging types with the exact same name and structure will be available.
+* Nodes from different GraphQL servers cannot be used in the same query/mutation. All top-level nodes have to be from the same GraphQL server.
+* Subscriptions on remote GraphQL server are not supported.
+* Interfaces are not supported - if a remote schema has interfaces, an error will be thrown if you try to merge it.
+
+These limitations will be addressed in upcoming versions.
 
 ## Documentation
 
