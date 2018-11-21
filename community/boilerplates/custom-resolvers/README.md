@@ -2,9 +2,9 @@
 
 ## **DEPRECATED**: now merge [Remote Schemas](../../../remote-schemas.md) from [GraphQL Servers](../graphql-servers) using Hasura
 
-- We have added a new feature that deprecates the need for custom resolvers. Now, write your own GraphQL Servers in any language ([boilerplates](../graphql-servers)) and merge them with Hasura's GraphQL API - [read more](../../../remote-schemas.md).
-- Instead of fronting Hasura with a custom GraphQL server, Hasura can proxy requests to other GraphQL servers.
-- Performance is impacted by as much as 4x if we add another layer in front of GraphQL Engine, due the serialization-deserialization overhead.
+- Boilerplates for custom GraphQL servers have been moved [here](../graphql-servers). Also, a recently released feature deprecates the need for an external GraphQL gateway and lets you merge remote schemas in GraphQL Engine itself - [read more](../../../remote-schemas.md).
+- Once schemas have been merged, Hasura proxies requests to remote GraphQL servers.
+- Adding another layer in front of GraphQL Engine impacts performance by as much as **4X**, due the serialization-deserialization overhead.
 
 ## Motivation
 
@@ -173,6 +173,8 @@ const executableCustomSchema = makeExecutableSchema({
 ```
 
 ### Merging with existing Hasura schema and serving it
+
+**Note**: This part has been deprecated. You can now merge remote schemas in GraphQL Engine itself - [read more](../../../remote-schemas.md).
 
 Merge these custom resolvers with the Hasura GraphQL Engine by using the
 `mergeSchemas()` function from the `graphql-tools` library. 
