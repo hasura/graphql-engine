@@ -34,10 +34,6 @@ for app in APPS_DATA['apps']:
     if exit_code:
         EXIT_FAILURE=True
         continue
-    exit_code = subprocess.call(['docker', 'build', '-t', app['name'], '-f', '{}/{}'.format(app['path'], app['dockerfile']), app['path']])
-    if exit_code:
-        EXIT_FAILURE=True
-        continue
     file_path='{}/.env.list'.format(app['path'])
     default_env(file_path, app['name'])
     if 'access_key' in app and app['access_key']:
@@ -46,9 +42,6 @@ for app in APPS_DATA['apps']:
         set_key(file_path, 'HASURA_GRAPHQL_AUTH_HOOK', app['webhook_url'], quote_mode="never")
     if 'jwt_secret' in app and app['jwt_secret']:
         set_key(file_path, 'HASURA_GRAPHQL_JWT_SECRET', app['jwt_secret'], quote_mode="auto")
-    docker_server_cmd = DEFAULT_DOCKER_CMD[:]
-    docker_server_cmd = docker_server_cmd + ['--env-file', '{}/.env.list'.format(app['path'])]
-    docker_server_cmd = docker_server_cmd + ['-p', '8080:8080']
     if 'migrations_dir' in app and app['migrations_dir']:
         docker_migration_cmd = DEFAULT_DOCKER_CMD[:]
         docker_migration_cmd = docker_migration_cmd + ['-e', 'HASURA_GRAPHQL_ONLY_MIGRATION:true']
@@ -58,6 +51,20 @@ for app in APPS_DATA['apps']:
         if exit_code:
             EXIT_FAILURE=True
             continue
+    docker_server_cmd = DEFAULT_DOCKER_CMD[:]
+    docker_server_cmd = docker_server_cmd + ['--env-file', '{}/.env.list'.format(app['path'])]
+    docker_server_cmd = docker_server_cmd + ['-p', '8080:8080']
+    docker_server_cmd = docker_server_cmd + ['--name', 'graphql-engine-server']
+    docker_server_cmd.append('-d')
+    docker_server_cmd.append('server:latest')
+    exit_code = subprocess.call(docker_server_cmd)
+    if exit_code:
+        EXIT_FAILURE=True
+        continue
+    exit_code = subprocess.call(['docker', 'build', '-t', app['name'], '-f', '{}/{}'.format(app['path'], app['dockerfile']), app['path']])
+    if exit_code:
+        EXIT_FAILURE=True
+        continue
     docker_community_cmd = DEFAULT_DOCKER_CMD[:]
     docker_community_cmd = docker_community_cmd + ['--env-file', '{}/.env.list'.format(app['path'])]
     for port_mapping in app['port_mappings']:
@@ -66,6 +73,14 @@ for app in APPS_DATA['apps']:
     if 'command' in app and app['command']:
         docker_community_cmd.append(app['command'])
     exit_code = subprocess.call(docker_community_cmd)
+    if exit_code:
+        EXIT_FAILURE=True
+        continue
+    exit_code = subprocess.call(['docker', 'stop', 'graphql-engine-server'])
+    if exit_code:
+        EXIT_FAILURE=True
+        continue
+    exit_code = subprocess.call(['docker', 'rm', 'graphql-engine-server'])
     if exit_code:
         EXIT_FAILURE=True
         continue
