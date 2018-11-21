@@ -146,7 +146,14 @@ func (ec *ExecutionContext) Prepare() error {
 	// setup global config
 	err := ec.setupGlobalConfig()
 	if err != nil {
-		return errors.Wrap(err, "setting up config directory failed")
+		// TODO(shahidhk): should this be a failure?
+		return errors.Wrap(err, "setting up global config directory failed")
+	}
+
+	// read global config
+	err = ec.readGlobalConfig()
+	if err != nil {
+		return errors.Wrap(err, "reading global config failed")
 	}
 
 	// initialize a blank config
@@ -204,34 +211,53 @@ func (ec *ExecutionContext) checkServerVersion() error {
 	return nil
 }
 
+// readGlobalConfig reads the configuration from global config file env vars,
+// through viper.
+func (ec *ExecutionContext) readGlobalConfig() error {
+	// need to get existing viper because https://github.com/spf13/viper/issues/233
+	v := viper.New()
+	v.SetEnvPrefix("HASURA_GRAPHQL")
+	v.AutomaticEnv()
+	v.SetConfigName("config")
+	v.AddConfigPath(ec.GlobalConfigDir)
+	err := v.ReadInConfig()
+	if err != nil {
+		return errors.Wrap(err, "cannor read global config from file/env")
+	}
+	if ec.GlobalConfig == nil {
+		ec.Logger.Debugf("global config is not pre-set, reading from current env")
+		ec.GlobalConfig = &GlobalConfig{
+			UUID:             v.GetString("uuid"),
+			DisableTelemetry: v.GetBool("disable_telemetry"),
+		}
+	} else {
+		ec.Logger.Debugf("global config is pre-set to %#v", ec.GlobalConfig)
+	}
+	ec.Logger.Debugf("global config: uuid: %v", ec.GlobalConfig.UUID)
+	ec.Logger.Debugf("global config: disable_telemetry: %v", ec.GlobalConfig.DisableTelemetry)
+	return nil
+}
+
 // readConfig reads the configuration from config file, flags and env vars,
 // through viper.
 func (ec *ExecutionContext) readConfig() error {
 	// need to get existing viper because https://github.com/spf13/viper/issues/233
 	v := ec.Viper
-	v.SetDefault("endpoint", "http://localhost:8080")
-	v.SetDefault("access_key", "")
 	v.SetEnvPrefix("HASURA_GRAPHQL")
 	v.AutomaticEnv()
 	v.SetConfigName("config")
+	v.SetDefault("endpoint", "http://localhost:8080")
+	v.SetDefault("access_key", "")
 	v.AddConfigPath(ec.ExecutionDirectory)
-	v.AddConfigPath(ec.GlobalConfigFile)
 	err := v.ReadInConfig()
 	if err != nil {
-		return errors.Wrap(err, "cannor read config file")
+		return errors.Wrap(err, "cannor read config from file/env")
 	}
 	ec.Config = &HasuraGraphQLConfig{
 		Endpoint:  v.GetString("endpoint"),
 		AccessKey: v.GetString("access_key"),
 	}
-	if ec.GlobalConfig == nil {
-		ec.GlobalConfig = &GlobalConfig{
-			UUID:             v.GetString("uuid"),
-			DisableTelemetry: v.GetBool("disable_telemetry"),
-		}
-	}
-	err = ec.Config.ParseEndpoint()
-	return err
+	return ec.Config.ParseEndpoint()
 }
 
 // setupSpinner creates a default spinner if the context does not already have
@@ -277,22 +303,26 @@ func (ec *ExecutionContext) setupLogger() {
 // reads it into the GlobalConfig object.
 func (ec *ExecutionContext) setupGlobalConfig() error {
 	if len(ec.GlobalConfigDir) == 0 {
+		ec.Logger.Debug("global config directory is not pre-set, defaulting")
 		home, err := homedir.Dir()
 		if err != nil {
 			return errors.Wrap(err, "cannot get home directory")
 		}
 		globalConfigDir := filepath.Join(home, GLOBAL_CONFIG_DIR_NAME)
 		ec.GlobalConfigDir = globalConfigDir
+		ec.Logger.Debugf("global config directory set as '%s'", ec.GlobalConfigDir)
 	}
 	err := os.MkdirAll(ec.GlobalConfigDir, os.ModePerm)
 	if err != nil {
-		return errors.Wrap(err, "cannot create config directory")
+		return errors.Wrap(err, "cannot create global config directory")
 	}
 	if len(ec.GlobalConfigFile) == 0 {
 		ec.GlobalConfigFile = filepath.Join(ec.GlobalConfigDir, GLOBAL_CONFIG_FILE_NAME)
+		ec.Logger.Debugf("global config file set as '%s'", ec.GlobalConfigFile)
 	}
 	if _, err := os.Stat(ec.GlobalConfigFile); os.IsNotExist(err) {
 		// file does not exist, teat as first run and create it
+		ec.Logger.Debug("global config file does not exist, this could be the first run, creating it...")
 		u, err := uuid.NewV4()
 		if err != nil {
 			return errors.Wrap(err, "failed to generate uuid")
@@ -306,6 +336,7 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 			return errors.Wrap(err, "cannot marshal json for config file")
 		}
 		ioutil.WriteFile(ec.GlobalConfigFile, data, os.ModePerm)
+		ec.Logger.Debugf("global config file written at '%s' with content '%v'", ec.GlobalConfigFile, string(data))
 	}
 	return nil
 }

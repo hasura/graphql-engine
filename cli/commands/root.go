@@ -4,6 +4,7 @@ package commands
 
 import (
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/telemetry"
 	"github.com/spf13/cobra"
 )
 
@@ -13,6 +14,13 @@ var rootCmd = &cobra.Command{
 	Short:         "Hasura GraphQL Engine command line tool",
 	SilenceUsage:  true,
 	SilenceErrors: true,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		telemetry.Waiter.Add(1)
+		go func() {
+			defer telemetry.Waiter.Done()
+			telemetry.SendExecutionEvent(cmd, args)
+		}()
+	},
 }
 
 func init() {

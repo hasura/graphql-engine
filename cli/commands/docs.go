@@ -7,8 +7,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
+	"github.com/spf13/viper"
 )
 
+// NewDocsCmd returns the docs command
 func NewDocsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	var docType, docDirectory string
 	docsCmd := &cobra.Command{
@@ -17,6 +19,7 @@ func NewDocsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Hidden:       true,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
+			ec.Viper = viper.New()
 			return ec.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) (err error) {

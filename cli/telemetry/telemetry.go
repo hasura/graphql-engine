@@ -1,17 +1,21 @@
 package telemetry
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/spf13/cobra"
+)
 
 // Waiter waits for telemetry ops to complete, if required
 var Waiter sync.WaitGroup
 
-type telemetryPayload struct {
-	Topic string        `json:"topic"`
-	Data  TelemetryData `json:"data"`
+type requestPayload struct {
+	Topic string `json:"topic"`
+	Data  `json:"data"`
 }
 
-// TelemetryData holds all info collected and transmitted
-type TelemetryData struct {
+// Data holds all info collected and transmitted
+type Data struct {
 	// UUID used for telemetry, generated on first run.
 	UUID string `json:"uuid"`
 
@@ -36,4 +40,9 @@ type TelemetryData struct {
 
 	// Any additional payload information.
 	Payload map[string]interface{} `json:"payload"`
+}
+
+// SendExecutionEvent sends the execution event for cmd to the telemtry server
+func SendExecutionEvent(cmd *cobra.Command, args []string) {
+
 }
