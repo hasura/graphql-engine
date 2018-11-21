@@ -64,9 +64,9 @@ Please note that boilerplates for more languages, frameworks, serverless platfor
 
 ## Caveats
 
-In this first iteration, conflicting top level nodes are not supported.Please be careful with your custom schema's nomenclature and ensure that the top-level node names in it do not clash with the top-level nodes in GraphQL Engine's schema. Also, having remote GraphQL nodes and Hasura nodes in a single query/mutation will throw and error.
+Currently, conflicting top level nodes are not supported.Please be careful with your custom schema's nomenclature and ensure that the top-level node names in it do not clash with the top-level nodes in GraphQL Engine's schema. Also, having remote GraphQL nodes and Hasura nodes in a single query/mutation will throw an error.
 
-We plan to address these issues in the upcoming iterations.
+We plan to address these limitations in upcoming iterations.
 
 ## Documentation
 
