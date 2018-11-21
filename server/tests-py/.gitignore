@@ -128,5 +128,11 @@ dmypy.json
 pyvenv.cfg
 pip-selfcheck.json
 
-
 # End of https://www.gitignore.io/api/python
+
+*.pem
+ca.srl
+webhook-req.cnf
+webhook.csr
+*.tix
+*.tix2

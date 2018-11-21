@@ -1,7 +1,7 @@
 Filter query results / search queries
 =====================================
 
-You can use the ``where`` argument in your queries to filter results based on some field’s values (even
+You can use the :ref:`where <WhereExp>` argument in your queries to filter results based on some field’s values (even
 nested objects' fields). You can even use multiple filters in the same ``where`` clause using the ``_and`` or the
 ``_or`` operators.
 
@@ -38,7 +38,7 @@ For example, to fetch a list of authors who have articles with a rating greater 
       }
     }
 
-Here ``_eq`` and ``_gt`` are examples of comparison operators that can be used in the ``where`` argument to filter on
+Here ``_eq`` and ``_gt`` are examples of :ref:`comparison operators <Operator>` that can be used in the ``where`` argument to filter on
 equality.
 
 Let’s take a look at different operators that can be used to filter results and other advanced use cases:
@@ -729,16 +729,6 @@ Fetch all authors with only their 5 rated articles:
             "articles": []
           },
           {
-            "id": 3,
-            "name": "Sidney",
-            "articles": []
-          },
-          {
-            "id": 4,
-            "name": "Anjela",
-            "articles": []
-          },
-          {
             "id": 5,
             "name": "Amii",
             "articles": [
@@ -751,26 +741,6 @@ Fetch all authors with only their 5 rated articles:
           {
             "id": 6,
             "name": "Corny",
-            "articles": []
-          },
-          {
-            "id": 7,
-            "name": "Berti",
-            "articles": []
-          },
-          {
-            "id": 8,
-            "name": "April",
-            "articles": []
-          },
-          {
-            "id": 9,
-            "name": "Ninnetta",
-            "articles": []
-          },
-          {
-            "id": 10,
-            "name": "Lyndsay",
             "articles": []
           }
         ]
@@ -867,34 +837,6 @@ Fetch all articles whose author's name starts with "A":
             "title": "vulputate elementum",
             "author": {
               "name": "April"
-            }
-          },
-          {
-            "id": 20,
-            "title": "eu nibh",
-            "author": {
-              "name": "April"
-            }
-          },
-          {
-            "id": 5,
-            "title": "ut blandit",
-            "author": {
-              "name": "Amii"
-            }
-          },
-          {
-            "id": 17,
-            "title": "montes nascetur ridiculus",
-            "author": {
-              "name": "Amii"
-            }
-          },
-          {
-            "id": 19,
-            "title": "pede venenatis",
-            "author": {
-              "name": "Amii"
             }
           }
         ]
@@ -1058,10 +1000,6 @@ Fetch all authors which have all of their articles published i.e. have ``{is_pub
             "articles": [
               {
                 "title": "sit amet",
-                "is_published": true
-              },
-              {
-                "title": "amet justo morbi",
                 "is_published": true
               }
             ]
