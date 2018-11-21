@@ -314,6 +314,7 @@ jobs:
           docker load --input /home/circleci/build/_server_output/image.tar
           cd scripts/cli-migrations
           cp /home/circleci/build/_cli_output/binaries/cli-hasura-linux-amd64 .
+          sed -i '1s/.*/FROM server:latest/' Dockerfile
           docker build -t server:latest .
     - run:
         name: Run postgres container
