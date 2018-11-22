@@ -27,7 +27,7 @@ export default class RenderMessagesProxy extends React.Component {
           <OnlineUsers
             userId={this.props.userId}
             username={this.props.username}
-          /> 
+          />
         </div>
         <div className="wd75">
           <RenderMessages

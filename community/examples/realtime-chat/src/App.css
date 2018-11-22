@@ -548,6 +548,10 @@ body {
   font-size: 12px;
 }
 @media (max-width: 767px) {
+  .headerDescription
+  {
+    text-align: center;
+  }
   .headerWrapper {
     display: block !important;
   }
@@ -567,8 +571,9 @@ body {
     height: auto;
   }
   .mainWrapper {
-    min-height: 80vh;
+    min-height: auto;
     padding-left: 0;
+    height: auto;
   }
   .minHeight {
     height: auto;

@@ -28,7 +28,7 @@ const LandingPage = (props) => {
   const handleKeyPress = (key, mutate, loading) => {
     if (!loading && key.charCode === 13) {
       mutate();
-    } 
+    }
   };
   return (
     <Mutation
@@ -122,8 +122,7 @@ const LandingPage = (props) => {
                         </div>
                         <div className="col-md-11 col-sm-11 col-xs-10 noPadd">
                           <div className="description removePaddBottom">
-                            Explore the Hasura console and try out some queries &
-                            mutations
+                            Explore the Hasura GraphQL backend and try out some queries & mutations
                           </div>
                         </div>
                       </div>
@@ -221,7 +220,7 @@ const LandingPage = (props) => {
           );
         }
       }
-    </Mutation> 
+    </Mutation>
   );
 }
 
