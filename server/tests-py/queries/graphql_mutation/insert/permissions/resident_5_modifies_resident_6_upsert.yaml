@@ -1,0 +1,37 @@
+description: Resident 5 trying to update Resident 6 age
+url: /v1alpha1/graphql
+status: 200
+headers:
+  X-Hasura-Role: resident
+  X-Hasura-Resident-Id: '5'
+# affects zero rows
+response:
+  data:
+    insert_resident:
+      affected_rows: 0
+      returning: []
+query:
+  query: |
+    mutation {
+      insert_resident(
+        objects: [
+          {
+            id: 5
+            name: "Resident 6",
+            age: 23
+          }
+        ]
+        on_conflict: {
+        	constraint: resident_name_key
+          update_columns: [name, age]
+        }
+      ){
+        affected_rows
+        returning{
+          id
+          name
+          age
+          is_user
+        }
+      }
+    }

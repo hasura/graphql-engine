@@ -39,7 +39,7 @@ args:
     sql: |
       CREATE TABLE resident (
         id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
+        name TEXT NOT NULL UNIQUE,
         age INTEGER NOT NULL
       )
 - type: track_table
@@ -158,6 +158,44 @@ args:
         bio:
           _is_null: false
 
+#resident table permissions for resident role
+- type: create_insert_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      check:
+        id: X-Hasura-Resident-Id
+
+- type: create_update_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      columns: '*'
+      filter:
+        id: X-Hasura-Resident-Id
+- type: create_select_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      columns: '*'
+      filter:
+        id: X-Hasura-Resident-Id
+
+#Insert residents
+- type: insert
+  args:
+    table: resident
+    objects:
+    - id: 1
+      name: Resident 1
+      age: 21
+    - id: 2
+      name: Resident 2
+      age: 22
+
 #Insert Author table data
 - type: insert
   args:
@@ -173,7 +211,10 @@ args:
     objects:
     - content: Sample article content
       title: Article 1
+      author_id: 1
     - content: Sample article content
       title: Article 2
+      author_id: 1
     - content: Sample article content
       title: Article 3
+      author_id: 2

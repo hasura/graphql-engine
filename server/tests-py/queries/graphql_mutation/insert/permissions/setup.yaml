@@ -39,7 +39,7 @@ args:
     sql: |
       CREATE TABLE resident (
         id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
+        name TEXT NOT NULL UNIQUE,
         age INTEGER NOT NULL,
         is_user BOOLEAN DEFAULT FALSE NOT NULL
       )
@@ -281,3 +281,40 @@ args:
       filter:
         id: X-Hasura-Infant-Id
 
+#Create permissions for resident role on resident table
+- type: create_insert_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      check:
+        id: X-Hasura-Resident-Id
+
+- type: create_update_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      columns: '*'
+      filter:
+        id: X-Hasura-Resident-Id
+- type: create_select_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      columns: '*'
+      filter:
+        id: X-Hasura-Resident-Id
+
+#Insert residents
+- type: insert
+  args:
+    table: resident
+    objects:
+    - id: 5
+      name: Resident 5
+      age: 21
+    - id: 6
+      name: Resident 6
+      age: 22
