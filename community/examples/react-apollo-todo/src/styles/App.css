@@ -501,6 +501,9 @@ body {
 .footerWrapper a:hover {
   color: #406282;
 }
+.footerWrapper span i {
+  margin-left: 5px;
+}
 .footerWrapper a i {
   margin-left: 5px;
 }
@@ -510,6 +513,20 @@ body {
 .footerWrapper .accessKey button {
   background-color: #a5b9cc;
   border: 0;
+  padding-right: 0;
+}
+@media (max-width: 767px) {
+  .headerWrapper {
+    display: block !important;
+  }
+  .headerDescription {
+    text-align: center;
+    padding-bottom: 10px;
+  }
+  .loginBtn {
+    display: flex;
+    justify-content: center;
+  }
 }
 @media (max-width: 991px) {
   .sliderMenu {
@@ -527,6 +544,7 @@ body {
     margin: 0 auto;
   }
   .headerWrapper {
+    display: flex;
     padding-left: 0;
     height: auto;
   }
