@@ -29,7 +29,7 @@
     "eject": "react-scripts eject"
   },
   "devDependencies": {
-    "eslint-plugin-jsx-a11y": "^6.1.1",
+    "eslint-plugin-jsx-a11y": "5.1.1",
     "gh-pages": "^1.2.0"
   }
 }

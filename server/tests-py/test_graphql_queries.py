@@ -145,6 +145,12 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
     def test_author_article_where_in(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in.yaml')
 
+    def test_author_article_where_in_empty_array(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in_empty_array.yaml')
+
+    def test_author_article_where_nin_empty_array(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin_empty_array.yaml')
+
     def test_author_article_where_nin(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin.yaml')
 
