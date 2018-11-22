@@ -249,7 +249,7 @@ Flattening many-to-many relationship query
 ------------------------------------------
 
 In case you would like to flatten the above queries and avoid the intermediate fields ``article_tags`` &
-``tag_articles``, you can :doc:`create views <../../views>` as shown below and then query using these views via
+``tag_articles``, you can :doc:`create views <../../views>`, in addition to the ones above, as shown below and then query using these views via
 relationships:
 
 .. code-block:: sql
@@ -371,8 +371,6 @@ We can now:
 
 .. note::
 
-  **We do not recommend this** flattening pattern of modelling as this introduces the extra overhead of managing
-  permissions and relationships on the newly created views. e.g. You cannot query for the author of the nested articles
-  without setting up a new relationship to ``author`` table from the ``tag_articles_view``
+  **We do not recommend this** flattening pattern of modelling as this introduces an additional overhead of managing permissions and relationships on the newly created views. e.g. You cannot query for the author of the nested articles without setting up a new relationship to ``author`` table from the ``tag_articles_view``
 
   In our opinion, the cons seem to outweigh the pros of this approach.
