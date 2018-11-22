@@ -110,14 +110,19 @@ class App extends Component {
               rel="noopener noreferrer"
             >
               Backend
-              <i className="fa fa-angle-double-right" />
             </a>
+            <span className="accessKey">
+              <button>(use Access Key: hasurademoapp)</button>
+            </span>
+            <i className="fa fa-angle-double-right" />
           </span>
+          {/*
           <span className="footerLinkPadd accessKey">
             <button>
               Access Key: hasurademoapp
             </button>
           </span>
+          */}
           <span className="footerLinkPadd">
             <a
               href="https://github.com/hasura/graphql-engine/tree/master/community/examples/react-apollo-todo"
