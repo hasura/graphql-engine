@@ -94,7 +94,6 @@ for app in APPS_DATA['apps']:
     if exit_code:
         print('Test for the app failed')
         EXIT_FAILURE=True
-        continue
     stop_and_remove_server()
     drop_database(app['name'])
 
