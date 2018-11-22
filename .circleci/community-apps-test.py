@@ -23,16 +23,37 @@ with open(".circleci/community-apps.yaml", 'r') as stream:
         APPS_DATA = yaml.safe_load(stream)
     except yaml.YAMLError as exc:
         print(exc)
+        sys.exit(1)
+
+def stop_and_remove_server():
+    global EXIT_FAILURE
+    exit_code = subprocess.call(['docker', 'stop', 'graphql-engine-server'])
+    if exit_code:
+        print('Unable to stop server container')
+        EXIT_FAILURE=True
+    exit_code = subprocess.call(['docker', 'rm', 'graphql-engine-server'])
+    if exit_code:
+        print('Unable to remove server container')
+        EXIT_FAILURE=True
+
+def drop_database(app_name):
+    exit_code = subprocess.call(POSTGRES_DEFAULT_CMD + ['DROP DATABASE {};'.format(app['name'])])
+    if exit_code:
+        print('Unable to drop database')
+        EXIT_FAILURE=True
 
 for app in APPS_DATA['apps']:
-    print("Running test for app {}".format(app['name']))
+    print("-------Running test for app {}-------".format(app['name']))
     exit_code = subprocess.call(POSTGRES_DEFAULT_CMD + ['CREATE DATABASE {};'.format(app['name'])])
     if exit_code:
+        print('Unable to create database')
         EXIT_FAILURE=True
         continue
     exit_code = subprocess.call(POSTGRES_DEFAULT_CMD + ['ALTER DATABASE {} OWNER TO gql_test;'.format(app['name'])])
     if exit_code:
+        print('Unable to assign owner')
         EXIT_FAILURE=True
+        drop_database(app['name'])
         continue
     file_path='{}/.env.list'.format(app['path'])
     default_env(file_path, app['name'])
@@ -42,28 +63,25 @@ for app in APPS_DATA['apps']:
         set_key(file_path, 'HASURA_GRAPHQL_AUTH_HOOK', app['webhook_url'], quote_mode="never")
     if 'jwt_secret' in app and app['jwt_secret']:
         set_key(file_path, 'HASURA_GRAPHQL_JWT_SECRET', app['jwt_secret'], quote_mode="auto")
-    if 'migrations_dir' in app and app['migrations_dir']:
-        docker_migration_cmd = DEFAULT_DOCKER_CMD[:]
-        docker_migration_cmd = docker_migration_cmd + ['-e', 'HASURA_GRAPHQL_ONLY_MIGRATION:true']
-        docker_migration_cmd = docker_migration_cmd + ['-v', '{}/{}:/hasura-migrations'.format(app['path'], app['migrations_dir'])]
-        docker_migration_cmd.append('server:latest')
-        exit_code = subprocess.call(docker_migration_cmd)
-        if exit_code:
-            EXIT_FAILURE=True
-            continue
     docker_server_cmd = DEFAULT_DOCKER_CMD[:]
     docker_server_cmd = docker_server_cmd + ['--env-file', '{}/.env.list'.format(app['path'])]
     docker_server_cmd = docker_server_cmd + ['-p', '8080:8080']
+    if 'migrations_dir' in app and app['migrations_dir']:
+        docker_server_cmd = docker_server_cmd + ['-v', '{}/{}:/hasura-migrations'.format(app['path'], app['migrations_dir'])]
     docker_server_cmd = docker_server_cmd + ['--name', 'graphql-engine-server']
     docker_server_cmd.append('-d')
     docker_server_cmd.append('server:latest')
     exit_code = subprocess.call(docker_server_cmd)
     if exit_code:
+        print('Unable to run server')
         EXIT_FAILURE=True
+        drop_database(app['name'])
         continue
     exit_code = subprocess.call(['docker', 'build', '-t', app['name'], '-f', '{}/{}'.format(app['path'], app['dockerfile']), app['path']])
     if exit_code:
+        print('Unable to build app docker image')
         EXIT_FAILURE=True
+        drop_database(app['name'])
         continue
     docker_community_cmd = DEFAULT_DOCKER_CMD[:]
     docker_community_cmd = docker_community_cmd + ['--env-file', '{}/.env.list'.format(app['path'])]
@@ -74,19 +92,11 @@ for app in APPS_DATA['apps']:
         docker_community_cmd.append(app['command'])
     exit_code = subprocess.call(docker_community_cmd)
     if exit_code:
+        print('Test for the app failed')
         EXIT_FAILURE=True
         continue
-    exit_code = subprocess.call(['docker', 'stop', 'graphql-engine-server'])
-    if exit_code:
-        EXIT_FAILURE=True
-        continue
-    exit_code = subprocess.call(['docker', 'rm', 'graphql-engine-server'])
-    if exit_code:
-        EXIT_FAILURE=True
-        continue
-    exit_code = subprocess.call(POSTGRES_DEFAULT_CMD + ['DROP DATABASE {};'.format(app['name'])])
-    if exit_code:
-        EXIT_FAILURE=True
+    stop_and_remove_server()
+    drop_database(app['name'])
 
 if EXIT_FAILURE:
     sys.exit(1)
