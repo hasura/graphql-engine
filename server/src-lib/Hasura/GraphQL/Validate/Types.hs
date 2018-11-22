@@ -262,7 +262,7 @@ fromTyDefQ tyDef loc = case fromTyDef tyDef loc of
   Right t -> TH.lift t
 
 fromSchemaDocQ :: G.SchemaDocument -> TypeLoc -> TH.Q TH.Exp
-fromSchemaDocQ (G.SchemaDocument tyDefs _ _ _) loc =
+fromSchemaDocQ (G.SchemaDocument tyDefs) loc =
   TH.ListE <$> mapM (flip fromTyDefQ loc) tyDefs
 
 defaultSchema :: G.SchemaDocument

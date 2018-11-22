@@ -14,7 +14,6 @@ module Hasura.GraphQL.Transport.HTTP
 import           Control.Exception                      (try)
 import           Control.Lens
 import           Hasura.Prelude
-import           Language.GraphQL.Draft.JSON            ()
 
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.CaseInsensitive                   as CI

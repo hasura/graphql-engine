@@ -22,5 +22,5 @@ wreqOptions manager hdrs =
   where
     contentType = ("Content-Type", "application/json")
     userAgent   = ( "User-Agent"
-                  , "hasura/graphql-engine-" <> T.encodeUtf8 currentVersion
+                  , "hasura-graphql-engine/" <> T.encodeUtf8 currentVersion
                   )
