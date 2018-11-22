@@ -40,7 +40,11 @@ export default class Main extends React.Component {
       <div className="app">
         {
           !isLoggedIn ? (
-            <LandingPage />
+            <LandingPage
+              setUsername={this.setUsername}
+              login={this.login}
+              username={username}
+            />
           ) : (
             <ApolloConsumer>
               {
