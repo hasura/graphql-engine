@@ -127,8 +127,8 @@ class LandingPage extends Component {
                   </div>
                   <div className="col-md-11 col-sm-11 col-xs-10 noPadd">
                     <div className="description removePaddBottom">
-                      Explore the Hasura console and try out some queries &
-                      mutations
+                      Explore the Hasura GraphQL backend and try out some
+                      queries & mutations
                     </div>
                   </div>
                 </div>
