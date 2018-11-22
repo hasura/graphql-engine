@@ -29,13 +29,13 @@ Check the sample docker run command in ``docker-run.sh``.
 Edit the ``HASURA_GRAPHQL_DATABASE_URL`` env var value, so that you can connect to your Postgres instance.
 
 .. code-block:: bash
-   :emphasize-lines: 5
+   :emphasize-lines: 3
 
    #! /bin/bash
    docker run -d -p 8080:8080 \
-         -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@hostname:port/dbname \
-         -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
-         hasura/graphql-engine:latest
+     -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@hostname:port/dbname \
+     -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
+     hasura/graphql-engine:latest
 
 Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
 
@@ -57,9 +57,9 @@ Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
 
           #! /bin/bash
           docker run -d --net=host \
-                -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@hostname:port/dbname \
-                -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
-                hasura/graphql-engine:latest
+            -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@hostname:port/dbname \
+            -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
+            hasura/graphql-engine:latest
 
     .. tab:: Docker for Mac
 
@@ -69,11 +69,11 @@ Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
        .. code-block:: bash
           :emphasize-lines: 3
 
-            #! /bin/bash
-            docker run -d -p 8080:8080 \
-                   -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@host.docker.internal:port/dbname \
-                   -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
-                   hasura/graphql-engine:latest
+          #! /bin/bash
+          docker run -d -p 8080:8080 \
+            -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@host.docker.internal:port/dbname \
+            -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
+            hasura/graphql-engine:latest
 
 Step 3: Run the hasura docker container
 ---------------------------------------
