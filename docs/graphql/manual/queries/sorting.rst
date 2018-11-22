@@ -6,8 +6,9 @@ objects too.
 The sort order (ascending vs. descending) is set by specifying ``asc`` or ``desc``
 enum value for the column name in the ``order_by`` input object e.g. ``{name: desc}``.
 
-By default, ``null`` values are returned at the end of the results. ``null`` values can be fetched first by specifying
-``asc_nulls_first`` (ascending) and ``desc_nulls_first`` (descending) enum value e.g. ``{name: desc_nulls_first}``.
+By default, for ascending ordering ``null`` values are returned at the end of the results and for descending ordering ``null``
+values are returned at the start of the results. ``null`` values can be fetched first on ascending ordering by specifying
+``asc_nulls_first`` and last on descending ordering by specifying ``desc_nulls_last`` enum value e.g. ``{name: desc_nulls_last}``.
 
 The ``order_by`` argument takes an array of objects to allow sorting by multiple columns.
 
@@ -43,14 +44,18 @@ The ``order_by`` argument takes an array of objects to allow sorting by multiple
 
    #the order_by enum type
    enum order_by {
-     #in the ascending order
+     #in the ascending order, nulls last
      asc
-     #in the descending order
-     desc
+     #in the ascending order, nulls last
+     asc_nulls_last
      #in the ascending order, nulls first
      asc_nulls_first
      #in the descending order, nulls first
+     desc
+     #in the descending order, nulls first
      desc_nulls_first
+     #in the descending order, nulls last
+     desc_nulls_last
    }
 
 

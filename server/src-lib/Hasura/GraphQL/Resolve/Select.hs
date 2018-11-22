@@ -184,9 +184,11 @@ parseOrderByEnum
   -> m (S.OrderType, S.NullsOrder)
 parseOrderByEnum = \case
   G.EnumValue "asc"              -> return (S.OTAsc, S.NLast)
-  G.EnumValue "desc"             -> return (S.OTDesc, S.NLast)
+  G.EnumValue "asc_nulls_last"  -> return (S.OTAsc, S.NLast)
   G.EnumValue "asc_nulls_first"  -> return (S.OTAsc, S.NFirst)
+  G.EnumValue "desc"             -> return (S.OTDesc, S.NFirst)
   G.EnumValue "desc_nulls_first" -> return (S.OTDesc, S.NFirst)
+  G.EnumValue "desc_nulls_last" -> return (S.OTDesc, S.NLast)
   G.EnumValue v                   -> throw500 $
     "enum value " <> showName v <> " not found in type order_by"
 
