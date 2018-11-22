@@ -70,18 +70,19 @@ body {
   padding-right: 75px;
 }
 .loginBtn button {
-  background-color: #8da5c1;
-  border: 1px solid #fff;
-  border-radius: 20px;
-  padding: 4px 30px;
-  font-family: "Raleway";
-  font-size: 16px;
+  background-color: #f93c18;
+  padding: 10px 30px;
+  border: 0;
   color: #fff;
-  font-weight: 600;
-  cursor: pointer;
+  font-family: "raleway";
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-radius: 25px;
+  text-transform: uppercase;
 }
 .loginBtn button:hover {
-  background-color: #7792b2;
+  background-color: #e0270e;
 }
 .loginBtn button:focus {
   outline: none;
