@@ -280,6 +280,15 @@ class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
     def test_album_order_by_tracks_bytes_stddev(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_bytes_stddev.yaml')
 
+    def test_employee_distinct_department_order_by_salary_desc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/employee_distinct_department_order_by_salary_desc.yaml')
+
+    def test_employee_distinct_department_order_by_salary_asc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/employee_distinct_department_order_by_salary_asc.yaml')
+
+    def test_employee_distinct_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/employee_distinct_fail.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/order_by'

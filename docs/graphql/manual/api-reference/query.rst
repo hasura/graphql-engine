@@ -225,7 +225,32 @@ Argument
 
 .. parsed-literal::
 
-   WhereExp_ | OrderByExp_ | PaginationExp_
+   DistinctOnExp_ | WhereExp_ | OrderByExp_ | PaginationExp_
+
+
+.. _DistinctOnExp:
+
+DistinctOnExp
+************
+
+.. parsed-literal::
+
+   distinct_on: [ TableSelectColumnEnum_ ]
+
+TableSelectColumnEnum
+"""""""""""""""""""""
+
+.. code-block:: graphql
+
+   #example table_select_column enum for "article" table
+   enum article_select_column {
+     id
+     title
+     content
+     author_id
+     is_published
+   }
+
 
 .. _WhereExp:
 

@@ -78,6 +78,7 @@ fromSelSet f fldTy flds =
 fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
 fieldAsPath = nameAsPath . _fName
 
+
 parseTableArgs
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => ((PGColType, PGColValue) -> m S.SQLExp)
@@ -88,7 +89,24 @@ parseTableArgs f args = do
   let ordByExpM = NE.nonEmpty =<< ordByExpML
   limitExpM  <- withArgM args "limit" parseLimit
   offsetExpM <- withArgM args "offset" $ asPGColVal >=> f
-  return $ RS.TableArgs whereExpM ordByExpM limitExpM offsetExpM
+  distOnColsML <- withArgM args "distinct_on" parseColumns
+  let distOnColsM = NE.nonEmpty =<< distOnColsML
+  mapM_ (validateDistOn ordByExpM) distOnColsM
+  return $ RS.TableArgs whereExpM ordByExpM limitExpM offsetExpM distOnColsM
+  where
+    validateDistOn Nothing _ = return ()
+    validateDistOn (Just ordBys) cols = withPathK "args" $ do
+      let colsLen = length cols
+          initOrdBys = take colsLen $ toList ordBys
+          initOrdByCols = flip mapMaybe initOrdBys $ \ob ->
+            case obiColumn ob of
+              RS.AOCPG ci -> Just $ pgiName ci
+              _           -> Nothing
+          isValid = (colsLen == length initOrdByCols)
+                    && all (`elem` initOrdByCols) (toList cols)
+
+      unless isValid $ throwVE
+        "\"distinct_on\" columns must match initial \"order_by\" columns"
 
 fromField
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
