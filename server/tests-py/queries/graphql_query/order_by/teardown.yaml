@@ -22,3 +22,8 @@ args:
   args:
     sql: |
       drop table contact
+
+- type: run_sql
+  args:
+    sql: |
+      drop table employee
