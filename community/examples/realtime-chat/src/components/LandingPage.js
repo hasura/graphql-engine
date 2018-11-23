@@ -40,6 +40,7 @@ const LandingPage = (props) => {
         props.login(data.insert_user.returning[0].id);
       }}
       onError={() => {
+        alert('Please try again with a different username.')
         props.setUsername('');
       }}
     >
@@ -184,7 +185,7 @@ const LandingPage = (props) => {
                             type="submit"
                             onClick={(e) => {
                               e.preventDefault();
-                              if (props.username.match(/^[A-Za-z0-9_-]{3,15}$/g)) {
+                              if (props.username.match(/^[a-z0-9_-]{3,15}$/g)) {
                                 insert_user();
                               } else {
                                 alert("Invalid username. Spaces and special characters not allowed. Please try again");
