@@ -76,9 +76,20 @@ You need to enter the following information:
   runtime error.
 - **Headers**: configure the headers to be sent to your custom GraphQL server.
 
-  - Toggle forwarding headers sent by the client app in the request to your remote GraphQL server.   
-  - Additional headers, constant key-value pairs and/or key-value pairs whose values are picked up
-    from an environment variable.
+  - Toggle forwarding all headers sent by the client (when making a GraphQL query) to your remote GraphQL server.
+  - Send additional headers to your remote server - These can be static header name-value pairs; and/or pairs of "header name-environment variable name".
+    You can specify the value of the header to picked up from the enviroment variable.
+
+    **Example**: Let's say your remote GraphQL server needs a ``X-Api-Key`` as a header. As this value contains sensitive data (like API key in this
+    example), you can configure name of an environment variable which will hold the value. This environment variable needs to be present when you start
+    GraphQL Engine. When Hasura sends requests to your remote server, it will pick up the value from this environment variable.
+
+.. note::
+
+   If the remote schema configuration contains environment variables - either
+   for URL or headers - **environment variables need to be present** (GraphQL
+   engine should be started with these env variables) with valid values, when
+   adding the remote schema.
 
 Click on the ``Add Remote Schema`` button to merge the remote schema.
 
