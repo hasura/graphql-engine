@@ -84,7 +84,7 @@
     "firewallRuleName": "allow-all-azure-firewall-rule",
     "containerGroupName": "[concat(parameters('name'), '-container-group')]",
     "containerName": "hasura-graphql-engine",
-    "containerImage": "hasura/graphql-engine:v1.0.0-alpha28"
+    "containerImage": "hasura/graphql-engine:v1.0.0-alpha29"
   },
   "resources": [
     {
@@ -147,12 +147,6 @@
             "name": "[variables('containerName')]",
             "properties": {
               "image": "[variables('containerImage')]",
-              "command": [
-                "graphql-engine",
-                "serve",
-                "--server-port",
-                "80"
-              ],
               "ports": [
                 {
                   "protocol": "TCP",
@@ -163,6 +157,14 @@
                 {
                   "name": "HASURA_GRAPHQL_DATABASE_URL",
                   "secureValue": "[concat('postgres://', variables('adminUser'), '%40', variables('serverName'), ':', parameters('urlEncodedAdminPassword'), '@', reference(resourceId('Microsoft.DBforPostgreSQL/servers', variables('serverName'))).fullyQualifiedDomainName, ':5432/', variables('dbName'))]"
+                },
+                {
+                  "name": "HASURA_GRAPHQL_ENABLE_CONSOLE",
+                  "value": "true"
+                },
+                {
+                  "name": "HASURA_GRAPHQL_SERVER_PORT",
+                  "value": "80"
                 }
               ],
               "resources": {
