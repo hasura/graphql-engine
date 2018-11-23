@@ -198,6 +198,7 @@ const LandingPage = (props) => {
                         </div>
                       </div>
                     </div>
+                    {/*
                     <div className="footer">
                       Built with
                       <i className="fas fa-heart" />
@@ -210,6 +211,7 @@ const LandingPage = (props) => {
                         Hasura
                       </a>
                     </div>
+                    */}
                   </div>
                   <div className="tutorialImg col-md-6 col-sm-6 col-xs-12 hidden-xs noPadd">
                     <img className="img-responsive" src={rightImg} alt="View" />

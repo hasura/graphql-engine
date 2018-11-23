@@ -143,6 +143,7 @@ class LandingPage extends Component {
                   </div>
                 </div>
               </div>
+              {/*
               <div className="footer">
                 Built with
                 <i className="fas fa-heart" />
@@ -155,6 +156,7 @@ class LandingPage extends Component {
                   Hasura
                 </a>
               </div>
+              */}
             </div>
             <div className="tutorialImg col-md-6 col-sm-6 col-xs-12 hidden-xs noPadd">
               <img className="img-responsive" src={rightImg} alt="View" />
