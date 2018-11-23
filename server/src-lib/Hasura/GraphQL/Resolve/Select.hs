@@ -66,13 +66,13 @@ fromSelSet f fldTy flds =
           Right (relInfo, isAgg, tableFilter, tableLimit) -> do
             let relTN = riRTable relInfo
                 colMapping = riMapping relInfo
+                rn = riName relInfo
             if isAgg then do
               aggSel <- fromAggField f relTN tableFilter tableLimit fld
-              return $ RS.FAgg $ RS.AggSel colMapping aggSel
+              return $ RS.FAgg $ RS.AggSel rn colMapping aggSel
             else do
               annSel <- fromField f relTN tableFilter tableLimit fld
-              let annRel = RS.AnnRel (riName relInfo) (riType relInfo)
-                           colMapping annSel
+              let annRel = RS.AnnRel rn (riType relInfo) colMapping annSel
               return $ RS.FRel annRel
 
 fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a

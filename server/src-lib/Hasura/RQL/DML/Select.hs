@@ -281,7 +281,7 @@ mkAggSelect :: AnnAggSel -> S.Select
 mkAggSelect annAggSel =
   prefixNumToAliases $ aggNodeToSelect bn extr $ S.BELit True
   where
-    aggSel = AggSel [] annAggSel
+    aggSel = AggSel (RelName "root") [] annAggSel
     AggNode _ extr bn =
       aggSelToAggNode (Iden "root") (FieldName "root") aggSel
 
@@ -294,7 +294,7 @@ selectAggP2 (sel, p) =
 
 mkSQLSelect :: Bool -> AnnSel -> S.Select
 mkSQLSelect isSingleObject annSel =
-  prefixNumToAliases $ asJsonAggSel isSingleObject rootFldAls (S.BELit True)
+  prefixNumToAliases $ asJsonAggSel isSingleObject [rootFldAls] (S.BELit True)
   $ annSelToBaseNode (toIden rootFldName)
   rootFldName annSel
   where

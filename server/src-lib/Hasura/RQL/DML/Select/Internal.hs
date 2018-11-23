@@ -1,11 +1,11 @@
 {-# LANGUAGE DeriveLift        #-}
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TupleSections     #-}
 
 module Hasura.RQL.DML.Select.Internal where
 
 import           Data.Aeson.Types
+import           Data.List                  (delete, sort)
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -75,11 +75,26 @@ data AnnRel
   , arAnnSel  :: !AnnSel -- Current table. Almost ~ to SQL Select
   } deriving (Show, Eq)
 
+data ArrRelNode
+  = ArrRelNode
+  { arnExtrAls :: ![S.Alias]
+  , arnNode    :: !RelNode
+  } deriving (Show, Eq)
+
+mergeArrRelNodes :: ArrRelNode -> ArrRelNode -> ArrRelNode
+mergeArrRelNodes lJAS rJAS =
+  ArrRelNode (lExtrs `union` rExtrs) $ mergeRelNodes lBN rBN
+  where
+    ArrRelNode lExtrs lBN = lJAS
+    ArrRelNode rExtrs rBN = rJAS
+
+
 type AnnAggSel = AnnSelG [(T.Text, TableAggFld)]
 
 data AggSel
   = AggSel
-  { agColMapping :: ![(PGCol, PGCol)]
+  { agRelName    :: !RelName
+  , agColMapping :: ![(PGCol, PGCol)]
   , agAnnSel     :: !AnnAggSel
   } deriving (Show, Eq)
 
@@ -171,9 +186,8 @@ data BaseNode
 
   , _bnExtrs   :: !(HM.HashMap S.Alias S.SQLExp)
   , _bnObjRels :: !(HM.HashMap RelName RelNode)
-  , _bnArrRels :: !(HM.HashMap S.Alias RelNode)
+  , _bnArrRels :: !(HM.HashMap S.Alias ArrRelNode)
   , _bnAggs    :: !(HM.HashMap S.Alias AggNode)
-
   } deriving (Show, Eq)
 
 txtToAlias :: Text -> S.Alias
@@ -199,16 +213,17 @@ aggFldToExp aggFlds = jsonRow
     colFldsToExtr _ (t, PCFExp e) =
       [ S.SELit t , S.SELit e]
 
-asSingleRow :: S.Alias -> S.FromItem -> S.Select
-asSingleRow col fromItem =
+asSingleRow :: [S.Alias] -> S.FromItem -> S.Select
+asSingleRow cols fromItem =
   S.mkSelect
-  { S.selExtr  = [S.Extractor extr $ Just col]
+  { S.selExtr  = flip map cols $
+                 \c -> S.Extractor (mkExtr c) $ Just c
   , S.selFrom  = Just $ S.FromExp [fromItem]
   }
   where
-    extr    = S.SEFnApp "coalesce" [jsonAgg, S.SELit "null"] Nothing
-    jsonAgg = S.SEOpApp (S.SQLOp "->")
-              [ S.SEFnApp "json_agg" [S.SEIden $ toIden col] Nothing
+    mkExtr c    = S.SEFnApp "coalesce" [jsonAgg c, S.SELit "null"] Nothing
+    jsonAgg c = S.SEOpApp (S.SQLOp "->")
+              [ S.SEFnApp "json_agg" [S.SEIden $ toIden c] Nothing
               , S.SEUnsafe "0"
               ]
 
@@ -222,17 +237,18 @@ aggNodeToSelect bn extrs joinCond =
     selFrom = S.mkSelFromItem (baseNodeToSel joinCond bn) $ S.Alias $
               _bnPrefix bn
 
-withJsonAgg :: Maybe S.OrderByExp -> S.Alias -> S.FromItem -> S.Select
-withJsonAgg orderByM col fromItem =
+withJsonAgg :: Maybe S.OrderByExp -> [S.Alias] -> S.FromItem -> S.Select
+withJsonAgg orderByM cols fromItem =
   S.mkSelect
-  { S.selExtr = [S.Extractor extr $ Just col]
+  { S.selExtr = flip map cols $
+                \c -> S.Extractor (mkExtr c) $ Just c
   , S.selFrom = Just $ S.FromExp [fromItem]
   }
   where
-    extr    = S.SEFnApp "coalesce" [jsonAgg, S.SELit "[]"] Nothing
-    jsonAgg = S.SEFnApp "json_agg" [S.SEIden $ toIden col] orderByM
+    mkExtr c = S.SEFnApp "coalesce" [jsonAgg c, S.SELit "[]"] Nothing
+    jsonAgg c = S.SEFnApp "json_agg" [S.SEIden $ toIden c] orderByM
 
-asJsonAggSel :: Bool -> S.Alias -> S.BoolExp -> BaseNode -> S.Select
+asJsonAggSel :: Bool -> [S.Alias] -> S.BoolExp -> BaseNode -> S.Select
 asJsonAggSel singleObj als joinCond n =
   let ordByM = _bnOrderBy n
       fromItem = S.mkSelFromItem (baseNodeToSel joinCond n) $
@@ -244,16 +260,17 @@ asJsonAggSel singleObj als joinCond n =
 
 -- array relationships are not grouped, so have to be prefixed by
 -- parent's alias
-mkUniqArrRelAls :: FieldName -> FieldName -> Iden
-mkUniqArrRelAls parAls relAls =
+mkUniqArrRelAls :: FieldName -> [FieldName] -> Iden
+mkUniqArrRelAls parAls flds =
   Iden $
-  getFieldNameTxt parAls <> "." <> getFieldNameTxt relAls
+  getFieldNameTxt parAls <> "."
+  <> T.intercalate "." (map getFieldNameTxt flds)
 
-mkArrRelTableAls :: Iden -> FieldName -> FieldName -> Iden
-mkArrRelTableAls pfx parAls relAls =
+mkArrRelTableAls :: Iden -> FieldName -> [FieldName] -> Iden
+mkArrRelTableAls pfx parAls flds =
   pfx <> Iden ".ar." <> uniqArrRelAls
   where
-    uniqArrRelAls = mkUniqArrRelAls parAls relAls
+    uniqArrRelAls = mkUniqArrRelAls parAls flds
 
 mkObjRelTableAls :: Iden -> RelName -> Iden
 mkObjRelTableAls pfx relName =
@@ -263,9 +280,10 @@ mkAggAls :: Iden -> FieldName -> Iden
 mkAggAls pfx fldAls =
   pfx <> Iden ".agg." <> toIden fldAls
 
-mkAggOrdByAls :: Iden -> RelName -> Iden
-mkAggOrdByAls pfx relName =
-  pfx <> Iden ".agg." <> toIden relName <> Iden ".order_by"
+mkMergedAggNodeAls :: Iden -> RelName -> [FieldName] -> Iden
+mkMergedAggNodeAls pfx relName flds =
+  pfx <> Iden ".agg." <> toIden relName <> Iden "."
+  <> Iden (T.intercalate "." $ map getFieldNameTxt flds)
 
 mkBaseTableAls :: Iden -> Iden
 mkBaseTableAls pfx =
@@ -280,9 +298,9 @@ mkBaseTableColAls pfx pgCol =
 -- json_build_object is slower than row_to_json hence it is only
 -- used when needed
 buildJsonObject
-  :: Iden -> FieldName
+  :: Iden -> FieldName -> AllAggCtx -> [(FieldName, AnnRel)]
   -> [(FieldName, AnnFld)] -> (S.Alias, S.SQLExp)
-buildJsonObject pfx parAls flds =
+buildJsonObject pfx parAls allAggCtx allArrRels flds =
   if any ( (> 63) . T.length . getFieldNameTxt . fst ) flds
   then withJsonBuildObj parAls jsonBuildObjExps
   else withRowToJSON parAls rowToJsonExtrs
@@ -302,9 +320,13 @@ buildJsonObject pfx parAls flds =
       FRel annRel ->
         let qual = case arType annRel of
               ObjRel -> mkObjRelTableAls pfx $ arName annRel
-              ArrRel -> mkArrRelTableAls pfx parAls fldAls
+              ArrRel -> snd $ mkArrRelPfx pfx parAls
+                        allArrRels (fldAls, annRel)
         in S.mkQIdenExp qual fldAls
-      FAgg _      -> S.mkQIdenExp (mkAggAls pfx fldAls) fldAls
+      FAgg aggSel      ->
+        let aggPfx = mkAggNodePfx pfx allAggCtx $
+                     ANIField (fldAls, aggSel)
+        in S.mkQIdenExp aggPfx fldAls
 
 -- uses row_to_json to build a json object
 withRowToJSON
@@ -329,9 +351,9 @@ data OrderByNode
   deriving (Show, Eq)
 
 mkAggObFld :: AnnAggOrdBy -> FieldName
-mkAggObFld AAOCount = FieldName "count"
-mkAggObFld (AAOOp op col) =
-  FieldName $ op <> "." <> getPGColTxt col
+mkAggObFld = \case
+  AAOCount     -> FieldName "count"
+  AAOOp op col -> FieldName $ op <> "." <> getPGColTxt col
 
 mkAggObExtrAndFlds :: AnnAggOrdBy -> (S.Extractor, AggFlds)
 mkAggObExtrAndFlds annAggOb = case annAggOb of
@@ -348,6 +370,7 @@ mkAggObExtrAndFlds annAggOb = case annAggOb of
 
 processAnnOrderByItem
   :: Iden
+  -> AllAggCtx
   -> AnnOrderByItem
        -- the extractors which will select the needed columns
   -> ( (S.Alias, S.SQLExp)
@@ -356,26 +379,27 @@ processAnnOrderByItem
        -- extra nodes for order by
      , OrderByNode
      )
-processAnnOrderByItem pfx (OrderByItemG obTyM annObCol obNullsM) =
+processAnnOrderByItem pfx aggCtx (OrderByItemG obTyM annObCol obNullsM) =
   ( (obColAls, obColExp)
   , sqlOrdByItem
   , relNodeM
   )
   where
-    ((obColAls, obColExp), relNodeM) = processAnnOrderByCol pfx annObCol
+    ((obColAls, obColExp), relNodeM) = processAnnOrderByCol pfx aggCtx annObCol
 
     sqlOrdByItem =
       S.OrderByItem (S.SEIden $ toIden obColAls) obTyM obNullsM
 
 processAnnOrderByCol
   :: Iden
+  -> AllAggCtx
   -> AnnObCol
        -- the extractors which will select the needed columns
   -> ( (S.Alias, S.SQLExp)
        -- extra nodes for order by
      , OrderByNode
      )
-processAnnOrderByCol pfx = \case
+processAnnOrderByCol pfx aggCtx = \case
   AOCPG colInfo ->
     let
       qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden $ pgiName colInfo)
@@ -386,7 +410,8 @@ processAnnOrderByCol pfx = \case
   -- "pfx.or.relname"."pfx.ob.or.relname.rest" AS "pfx.ob.or.relname.rest"
   AOCRel (RelInfo rn _ colMapping relTab _) relFltr rest ->
     let relPfx  = mkObjRelTableAls pfx rn
-        ((nesAls, nesCol), ordByNode) = processAnnOrderByCol relPfx rest
+        emptyAggCtx = AllAggCtx [] []
+        ((nesAls, nesCol), ordByNode) = processAnnOrderByCol relPfx emptyAggCtx rest
         (objRelNodeM, aggNodeM) = case ordByNode of
           OBNNothing           -> (Nothing, Nothing)
           OBNRelNode name node -> (Just (name, node), Nothing)
@@ -405,17 +430,19 @@ processAnnOrderByCol pfx = \case
        , OBNRelNode rn relNode
        )
   AOCAgg (RelInfo rn _ colMapping relTab _ ) relFltr annAggOb ->
-    let aggAls = mkAggOrdByAls pfx rn
+    let aggPfx = mkAggNodePfx pfx aggCtx $ ANIOrdBy rn
         fldName = mkAggObFld annAggOb
-        qOrdBy = S.mkQIdenExp aggAls $ toIden fldName
+        qOrdBy = S.mkQIdenExp aggPfx $ toIden fldName
         tabFrom = TableFrom relTab Nothing
         tabPerm = TablePerm relFltr Nothing
         (extr, aggFlds) = mkAggObExtrAndFlds annAggOb
         selFld = TAFAgg aggFlds
-        bn = mkBaseNode pfx fldName selFld tabFrom tabPerm noTableArgs
-        aggNode = AggNode colMapping [extr] bn
-    in ( (S.Alias $ toIden fldName, qOrdBy)
-       , OBNAggNode (S.Alias aggAls) aggNode
+        bn = mkBaseNode aggPfx fldName selFld tabFrom tabPerm noTableArgs
+        aggNode = AggNode colMapping [extr] $ mergeBaseNodes bn $
+                  mkEmptyBaseNode aggPfx tabFrom
+        obAls = aggPfx <> Iden "." <> toIden fldName
+    in ( (S.Alias obAls, qOrdBy)
+       , OBNAggNode (S.Alias aggPfx) aggNode
        )
 
 mkEmptyBaseNode :: Iden -> TableFrom -> BaseNode
@@ -443,7 +470,7 @@ aggSelToAggNode :: Iden -> FieldName -> AggSel -> AggNode
 aggSelToAggNode pfx als aggSel =
   AggNode colMapping [extr] mergedBN
   where
-    AggSel colMapping annSel = aggSel
+    AggSel _ colMapping annSel = aggSel
     AnnSelG aggFlds tabFrm tabPerm tabArgs = annSel
     fldAls = S.Alias $ toIden als
 
@@ -469,6 +496,78 @@ aggSelToAggNode pfx als aggSel =
         S.SEFnApp "coalesce"
         [ S.SELit e , S.SEUnsafe "bool_or('true')::text"] Nothing
 
+data AllAggCtx
+  = AllAggCtx
+  { aacFields :: ![(FieldName, AggSel)]
+  , aacOrdBys :: ![RelName]
+  } deriving (Show, Eq)
+
+data AggNodeItem
+  = ANIField !(FieldName, AggSel)
+  | ANIOrdBy !RelName
+  deriving (Show, Eq)
+
+mkAggNodePfx
+  :: Iden
+  -> AllAggCtx
+  -> AggNodeItem
+  -> Iden
+mkAggNodePfx pfx (AllAggCtx aggFlds obRels) = \case
+  ANIField aggFld@(fld, AggSel rn _ annAggSel) ->
+    let tabArgs = _asnArgs annAggSel
+        similarFlds = getSimilarAggFlds rn tabArgs $ delete aggFld
+        similarOrdByFound = rn `elem` obRels && tabArgs == noTableArgs
+        similarFound = not (null similarFlds) || similarOrdByFound
+        extraOrdByFlds = bool [] [ordByFld] similarOrdByFound
+        sortedFlds = sort $ fld : (similarFlds <> extraOrdByFlds)
+    in bool (mkAggAls pfx fld) (mkMergedAggNodeAls pfx rn sortedFlds)
+             similarFound
+  ANIOrdBy rn ->
+    let similarFlds = getSimilarAggFlds rn noTableArgs id
+        sortedFlds = sort $ ordByFld:similarFlds
+    in mkMergedAggNodeAls pfx rn sortedFlds
+  where
+    ordByFld = FieldName "order_by"
+    getSimilarAggFlds rn tabArgs f = map fst $
+      flip filter (f aggFlds) $ \(_, AggSel arn _ annAggSel) ->
+        (rn == arn) && (tabArgs == _asnArgs annAggSel)
+
+mkAllAggCtx
+  :: TableAggFld
+  -> Maybe (NE.NonEmpty AnnOrderByItem)
+  -> AllAggCtx
+mkAllAggCtx tabAggFld orderByM =
+  AllAggCtx aggFlds ordByAggRels
+  where
+    aggFlds = case tabAggFld of
+      TAFNodes flds -> mapMaybe getAggFld flds
+      _             -> []
+
+    ordByAggRels = maybe []
+      (mapMaybe (fetchAggOrdByRels . obiColumn) . toList) orderByM
+
+    getAggFld (f, annFld) = case annFld of
+        FAgg af -> Just (f, af)
+        _       -> Nothing
+
+    fetchAggOrdByRels (AOCAgg ri _ _) = Just $ riName ri
+    fetchAggOrdByRels _               = Nothing
+
+mkArrRelPfx
+  :: Iden -> FieldName -> [(FieldName, AnnRel)]
+  -> (FieldName, AnnRel) -> (S.Alias, Iden)
+mkArrRelPfx pfx parAls allArrRels arrRel@(fld, annRel) =
+  let getTabArgs = _asnArgs . arAnnSel
+      similarFlds = map fst $
+        flip filter (delete arrRel allArrRels) $
+          \(_, ar) -> (arName ar == arName annRel)
+                      && (getTabArgs ar == getTabArgs annRel)
+      sortedFlds = sort $ fld:similarFlds
+  in ( S.Alias $ mkUniqArrRelAls parAls sortedFlds
+     , mkArrRelTableAls pfx parAls sortedFlds
+     )
+
+
 mkBaseNode
   :: Iden -> FieldName -> TableAggFld -> TableFrom
   -> TablePerm -> TableArgs -> BaseNode
@@ -478,22 +577,25 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
   where
     TablePerm fltr permLimitM = tablePerm
     TableArgs whereM orderByM limitM offsetM = tableArgs
+    allAggCtx@(AllAggCtx aggFlds _) = mkAllAggCtx annSelFlds orderByM
+
     (allExtrs, allObjsWithOb, allArrs, aggs) = case annSelFlds of
       TAFNodes flds ->
-        let selExtr = buildJsonObject pfx fldAls flds
+        let selExtr = buildJsonObject pfx fldAls allAggCtx arrRels flds
             -- all the relationships
+            relFlds = mapMaybe getAnnRel flds
+            arrRels = flip filter relFlds $ \(_, annRel) ->
+                      arType annRel == ArrRel
             (allObjs, allArrRels) =
-              foldl' addRel (HM.empty, HM.empty) $
-              mapMaybe (\(als, f) -> (als,) <$> getAnnRel f) flds
-            aggItems = HM.fromList $ map mkAggItem $
-              mapMaybe (\(als, f) -> (als,) <$> getAggFld f) flds
+              foldl' (addRel arrRels) (HM.empty, HM.empty) relFlds
+            aggItems = HM.fromListWith mergeAggNodes $ map mkAggItem aggFlds
         in ( HM.fromList $ selExtr:obExtrs
            , mkTotalObjRels allObjs
            , allArrRels
-           , aggItems `HM.union` aggItemsWithOb
+           , HM.unionWith mergeAggNodes aggItems aggItemsWithOb
            )
-      TAFAgg aggFlds ->
-        let extrs = concatMap (fetchExtrFromAggFld . snd) aggFlds
+      TAFAgg tabAggs ->
+        let extrs = concatMap (fetchExtrFromAggFld . snd) tabAggs
         in ( HM.fromList $ extrs <> obExtrs
            , mkTotalObjRels HM.empty
            , HM.empty
@@ -525,7 +627,7 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
     tableQual = tableFromToQual tableFrom
     finalLimit = applyPermLimit permLimitM limitM
 
-    procOrdByM = unzip3 . map (processAnnOrderByItem pfx) . toList <$> orderByM
+    procOrdByM = unzip3 . map (processAnnOrderByItem pfx allAggCtx) . toList <$> orderByM
     ordByExpM  = S.OrderByExp . _2 <$> procOrdByM
     mkTotalObjRels objRels =
       foldl' (\objs (rn, relNode) -> HM.insertWith mergeRelNodes rn relNode objs)
@@ -536,37 +638,34 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
     -- the columns needed for orderby
     obExtrs  = maybe [] _1 procOrdByM
 
-    mkRelPfx rTy rn relAls = case rTy of
-      ObjRel -> mkObjRelTableAls pfx rn
-      ArrRel -> mkArrRelTableAls pfx fldAls relAls
-
     -- process a relationship
-    addRel (objs, arrs) (relAls, annRel) =
+    addRel allArrRels (objs, arrs) (relAls, annRel) =
       let relName    = arName annRel
-          relNodePfx = mkRelPfx (arType annRel) relName relAls
-          relNode    = mkRelNode relNodePfx (relAls, annRel)
       in case arType annRel of
         -- in case of object relationships, we merge
         ObjRel ->
-          (HM.insertWith mergeRelNodes relName relNode objs, arrs)
+          let relNodePfx = mkObjRelTableAls pfx relName
+              relNode = mkRelNode relNodePfx (relAls, annRel)
+          in (HM.insertWith mergeRelNodes relName relNode objs, arrs)
         ArrRel ->
-          let arrRelTableAls = S.Alias $ mkUniqArrRelAls fldAls relAls
-          in (objs, HM.insert arrRelTableAls relNode arrs)
+          let --arrRelTableAls = S.Alias $ mkUniqArrRelAls fldAls relAls
+              (arrRelTableAls, relNodePfx) =
+                mkArrRelPfx pfx fldAls allArrRels (relAls, annRel)
+              relNode = mkRelNode relNodePfx (relAls, annRel)
+              jsonAggNode = ArrRelNode [S.Alias $ toIden relAls] relNode
+          in (objs, HM.insertWith mergeArrRelNodes arrRelTableAls jsonAggNode arrs)
+
 
     -- process agg field
     mkAggItem (f, aggSel) =
-      let aggPfx = mkAggAls pfx f
+      let aggPfx = mkAggNodePfx pfx allAggCtx $ ANIField (f, aggSel)
           aggAls = S.Alias aggPfx
           aggNode = aggSelToAggNode aggPfx f aggSel
       in (aggAls, aggNode)
 
-    getAnnRel = \case
-      FRel ar -> Just ar
-      _ -> Nothing
-
-    getAggFld = \case
-      FAgg af -> Just af
-      _ -> Nothing
+    getAnnRel (f, annFld) = case annFld of
+      FRel ar -> Just (f, ar)
+      _       -> Nothing
 
     getOrdByRelNode (OBNRelNode name node) = Just (name, node)
     getOrdByRelNode _                      = Nothing
@@ -674,11 +773,11 @@ baseNodeToSel joinCond (BaseNode pfx fromItem whr ordByM limitM offsetM extrs ob
           sel = baseNodeToSel (mkJoinCond baseSelAls relMapn) relBaseNode
       in S.mkLateralFromItem sel als
 
-    arrRelToFromItem :: RelNode -> S.FromItem
-    arrRelToFromItem (RelNode _ relFld relMapn relBaseNode) =
-      let als = S.Alias $ _bnPrefix relBaseNode
-          fldAls = S.Alias $ toIden relFld
-          sel = asJsonAggSel False fldAls (mkJoinCond baseSelAls relMapn) relBaseNode
+    arrRelToFromItem :: ArrRelNode -> S.FromItem
+    arrRelToFromItem (ArrRelNode alses relNode) =
+      let RelNode _ _ relMapn relBaseNode = relNode
+          als = S.Alias $ _bnPrefix relBaseNode
+          sel = asJsonAggSel False alses (mkJoinCond baseSelAls relMapn) relBaseNode
       in S.mkLateralFromItem sel als
 
     aggToFromItem :: (S.Alias, AggNode) -> S.FromItem
