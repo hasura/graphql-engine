@@ -13,7 +13,8 @@ import           Data.Bool              as M (bool)
 import           Data.Either            as M (lefts, partitionEithers, rights)
 import           Data.Foldable          as M (toList)
 import           Data.Hashable          as M (Hashable)
-import           Data.List              as M (find, foldl', group, sort, sortBy)
+import           Data.List              as M (find, foldl', group, sort, sortBy,
+                                              sortOn, union)
 import           Data.Maybe             as M (catMaybes, fromMaybe, isJust,
                                               isNothing, listToMaybe, mapMaybe,
                                               maybeToList)
@@ -21,6 +22,7 @@ import           Data.Ord               as M (comparing)
 import           Data.Semigroup         as M (Semigroup (..))
 import           Data.String            as M (IsString)
 import           Data.Text              as M (Text)
+import           Data.Word              as M (Word64)
 import           GHC.Generics           as M (Generic)
 import           Prelude                as M hiding (fail, init, lookup)
 import           Text.Read              as M (readEither, readMaybe)

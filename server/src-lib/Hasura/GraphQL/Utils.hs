@@ -18,14 +18,15 @@ module Hasura.GraphQL.Utils
   , isValidName
   ) where
 
-import           Hasura.RQL.Types
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Error
 
+import qualified Data.ByteString.Lazy          as LBS
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Text.Regex                    as R
+import qualified Text.Regex.TDFA               as TDFA
 
 showName :: G.Name -> Text
 showName name = "\"" <> G.unName name <> "\""
@@ -42,14 +43,10 @@ showNamedTy nt =
 
 getBaseTy :: G.GType -> G.NamedType
 getBaseTy = \case
-  G.TypeNamed n     -> n
-  G.TypeList lt     -> getBaseTyL lt
-  G.TypeNonNull nnt -> getBaseTyNN nnt
+  G.TypeNamed _ n     -> n
+  G.TypeList _ lt     -> getBaseTyL lt
   where
     getBaseTyL = getBaseTy . G.unListType
-    getBaseTyNN = \case
-      G.NonNullTypeList lt -> getBaseTyL lt
-      G.NonNullTypeNamed n -> n
 
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f l =
@@ -93,6 +90,6 @@ showNames names =
 -- Ref: http://facebook.github.io/graphql/June2018/#sec-Names
 isValidName :: G.Name -> Bool
 isValidName =
-  isJust . R.matchRegex regex . T.unpack . G.unName
+  TDFA.match compiledRegex . T.unpack . G.unName
   where
-    regex = R.mkRegex "^[_a-zA-Z][_a-zA-Z0-9]*$"
+    compiledRegex = TDFA.makeRegex ("^[_a-zA-Z][_a-zA-Z0-9]*$" ::LBS.ByteString) :: TDFA.Regex

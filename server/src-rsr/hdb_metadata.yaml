@@ -244,3 +244,8 @@ args:
           schema: hdb_catalog
           name: event_invocation_logs
         column: event_id
+
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: remote_schemas

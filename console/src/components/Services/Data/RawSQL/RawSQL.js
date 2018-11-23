@@ -248,10 +248,9 @@ const RawSQL = ({
                 dispatch({ type: SET_MIGRATION_CHECKED, data: false });
               }
               // set track table checkbox true
-              if (
-                formattedSql.indexOf('create view') !== -1 ||
-                formattedSql.indexOf('create table') !== -1
-              ) {
+              const regExp = /create\s*(?:|or\s*replace)\s*(?:view|table)/; // eslint-disable-line
+              const matches = formattedSql.match(new RegExp(regExp, 'gmi'));
+              if (matches) {
                 dispatch({ type: SET_TRACK_TABLE_CHECKED, data: true });
               } else {
                 dispatch({ type: SET_TRACK_TABLE_CHECKED, data: false });
