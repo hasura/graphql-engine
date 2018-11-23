@@ -157,7 +157,7 @@ getTableDiff oldtm newtm =
       map cmConstraintName $ getDifference cmConstraintOid
       (tmConstraints oldtm) (tmConstraints newtm)
 
-getTableChangeDeps :: (P2C m) => TableInfo -> TableDiff -> m [SchemaObjId]
+getTableChangeDeps :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => TableInfo -> TableDiff -> m [SchemaObjId]
 getTableChangeDeps ti tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
@@ -188,7 +188,7 @@ getSchemaDiff oldMeta newMeta =
       flip map (getOverlap tmOid oldMeta newMeta) $ \(oldtm, newtm) ->
       (tmTable oldtm, getTableDiff oldtm newtm)
 
-getSchemaChangeDeps :: (P2C m) => SchemaDiff -> m [SchemaObjId]
+getSchemaChangeDeps :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => SchemaDiff -> m [SchemaObjId]
 getSchemaChangeDeps schemaDiff = do
   -- Get schema cache
   sc <- askSchemaCache

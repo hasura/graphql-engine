@@ -27,25 +27,26 @@ import qualified Data.Text                    as T
 
 import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
+import qualified Network.HTTP.Client          as HTTP
 
 curCatalogVer :: T.Text
-curCatalogVer = "5"
+curCatalogVer = "6"
 
-runRQLQuery :: RQLQuery -> Q.TxE QErr ()
-runRQLQuery =
-    void . join . liftEither . buildTxAny adminUserInfo emptySchemaCache
+runRQLQuery :: HTTP.Manager -> RQLQuery -> Q.TxE QErr ()
+runRQLQuery httpMgr =
+    void . join . liftEither . buildTxAny adminUserInfo emptySchemaCache httpMgr
 
-initCatalogSafe :: UTCTime -> Q.TxE QErr String
-initCatalogSafe initTime =  do
+initCatalogSafe :: UTCTime -> HTTP.Manager -> Q.TxE QErr String
+initCatalogSafe initTime httpMgr =  do
   hdbCatalogExists <- Q.catchE defaultTxErrorHandler $
                       doesSchemaExist $ SchemaName "hdb_catalog"
-  bool (initCatalogStrict True initTime) onCatalogExists hdbCatalogExists
+  bool (initCatalogStrict True initTime httpMgr) onCatalogExists hdbCatalogExists
   where
     onCatalogExists = do
       versionExists <- Q.catchE defaultTxErrorHandler $
                        doesVersionTblExist
                        (SchemaName "hdb_catalog") (TableName "hdb_version")
-      bool (initCatalogStrict False initTime) (return initialisedMsg) versionExists
+      bool (initCatalogStrict False initTime httpMgr) (return initialisedMsg) versionExists
 
     initialisedMsg = "initialise: the state is already initialised"
 
@@ -66,8 +67,8 @@ initCatalogSafe initTime =  do
            )
                     |] (Identity sn) False
 
-initCatalogStrict :: Bool -> UTCTime -> Q.TxE QErr String
-initCatalogStrict createSchema initTime =  do
+initCatalogStrict :: Bool -> UTCTime -> HTTP.Manager -> Q.TxE QErr String
+initCatalogStrict createSchema initTime httpMgr =  do
   Q.catchE defaultTxErrorHandler $ do
 
     when createSchema $ do
@@ -92,8 +93,8 @@ initCatalogStrict createSchema initTime =  do
     Q.Discard () <- Q.multiQ $(Q.sqlFromFile "src-rsr/initialise.sql")
     return ()
 
-  -- run the metadata query
-  runRQLQuery metadataQuery
+  -- Build the metadata query
+  runRQLQuery httpMgr metadataQuery
 
   setAllAsSystemDefined >> addVersion initTime
   return "initialise: successfully initialised"
@@ -171,13 +172,13 @@ from08To1 = Q.catchE defaultTxErrorHandler $ do
                  json_build_object('type', 'select', 'args', template_defn->'select');
                 |] () False
 
-from1To2 :: Q.TxE QErr ()
-from1To2 = do
+from1To2 :: HTTP.Manager -> Q.TxE QErr ()
+from1To2 httpMgr = do
   -- migrate database
   Q.Discard () <- Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_1.sql")
   -- migrate metadata
-  runRQLQuery migrateMetadataFrom1
+  runRQLQuery httpMgr migrateMetadataFrom1
   -- set as system defined
   setAsSystemDefined
 
@@ -188,15 +189,28 @@ from2To3 = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "CREATE INDEX ON hdb_catalog.event_log (trigger_id)" () False
   Q.unitQ "CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id)" () False
 
-from4To5 :: Q.TxE QErr ()
-from4To5 = do
+from5To6 :: HTTP.Manager -> Q.TxE QErr ()
+from5To6 httpMgr = do
   -- migrate database
   Q.Discard () <- Q.multiQE defaultTxErrorHandler
-    $(Q.sqlFromFile "src-rsr/migrate_from_4.sql")
+    $(Q.sqlFromFile "src-rsr/migrate_from_5_to_6.sql")
   -- migrate metadata
-  runRQLQuery migrateMetadataFrom3
+  runRQLQuery httpMgr migrateMetadataFrom5
   -- set as system defined
   setAsSystemDefined
+
+-- custom resolver
+from4To5 :: HTTP.Manager -> Q.TxE QErr ()
+from4To5 httpMgr = do
+  Q.Discard () <- Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_4_to_5.sql")
+  -- migrate metadata
+  tx <- liftEither $ buildTxAny adminUserInfo
+                     emptySchemaCache httpMgr migrateMetadataFrom4
+  void tx
+  -- set as system defined
+  setAsSystemDefined
+
 
 from3To4 :: Q.TxE QErr ()
 from3To4 = Q.catchE defaultTxErrorHandler $ do
@@ -214,7 +228,8 @@ from3To4 = Q.catchE defaultTxErrorHandler $ do
           \, DROP COLUMN retry_interval\
           \, DROP COLUMN headers" () False
   where
-    uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers) = EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint) headers
+    uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers) =
+      EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint) headers
     updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _) = Q.unitQ [Q.sql|
                                          UPDATE hdb_catalog.event_triggers
                                          SET
@@ -222,8 +237,8 @@ from3To4 = Q.catchE defaultTxErrorHandler $ do
                                          WHERE name = $2
                                          |] (Q.AltJ $ A.toJSON etc, name) True
 
-migrateCatalog :: UTCTime -> Q.TxE QErr String
-migrateCatalog migrationTime = do
+migrateCatalog :: HTTP.Manager -> UTCTime -> Q.TxE QErr String
+migrateCatalog httpMgr migrationTime = do
   preVer <- getCatalogVersion
   if | preVer == curCatalogVer ->
          return "migrate: already at the latest version"
@@ -232,12 +247,17 @@ migrateCatalog migrationTime = do
      | preVer == "2"   -> from2ToCurrent
      | preVer == "3"   -> from3ToCurrent
      | preVer == "4"   -> from4ToCurrent
+     | preVer == "5"   -> from5ToCurrent
      | otherwise -> throw400 NotSupported $
                     "migrate: unsupported version : " <> preVer
   where
-    from4ToCurrent = do
-      from4To5
+    from5ToCurrent = do
+      from5To6 httpMgr
       postMigrate
+
+    from4ToCurrent = do
+      from4To5 httpMgr
+      from5ToCurrent
 
     from3ToCurrent = do
       from3To4
@@ -248,7 +268,7 @@ migrateCatalog migrationTime = do
       from3ToCurrent
 
     from1ToCurrent = do
-      from1To2
+      from1To2 httpMgr
       from2ToCurrent
 
     from08ToCurrent = do
@@ -261,7 +281,7 @@ migrateCatalog migrationTime = do
        -- clean hdb_views
        Q.catchE defaultTxErrorHandler clearHdbViews
        -- try building the schema cache
-       void buildSchemaCache
+       void $ buildSchemaCache httpMgr
        return $ "migrate: successfully migrated to " ++ show curCatalogVer
 
     updateVersion =
@@ -271,13 +291,14 @@ migrateCatalog migrationTime = do
                        "upgraded_on" = $2
                     |] (curCatalogVer, migrationTime) False
 
-execQuery :: BL.ByteString -> Q.TxE QErr BL.ByteString
-execQuery queryBs = do
+execQuery :: HTTP.Manager -> BL.ByteString -> Q.TxE QErr BL.ByteString
+execQuery httpMgr queryBs = do
   query <- case A.decode queryBs of
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
-  schemaCache <- buildSchemaCache
-  tx <- liftEither $ buildTxAny adminUserInfo schemaCache query
+  schemaCache <- buildSchemaCache httpMgr
+  tx <- liftEither $ buildTxAny adminUserInfo schemaCache
+                                httpMgr query
   fst <$> tx
 
 

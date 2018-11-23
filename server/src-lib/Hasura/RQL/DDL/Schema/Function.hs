@@ -153,13 +153,15 @@ trackFunctionP1 (TrackFunction qf) = do
   when (M.member qf $ scFunctions rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
 
-trackFunctionP2Setup :: (P2C m) => QualifiedFunction -> m ()
+trackFunctionP2Setup :: (QErrM m, CacheRWM m, MonadTx m)
+                     => QualifiedFunction -> m ()
 trackFunctionP2Setup qf = do
   fi <- withPathK "name" $ liftTx $ getFunctionInfo qf
   void $ askTabInfo $ fiReturnType fi
   addFunctionToCache fi
 
-trackFunctionP2 :: (P2C m) => QualifiedFunction -> m RespBody
+trackFunctionP2 :: (QErrM m, CacheRWM m, MonadTx m)
+                => QualifiedFunction -> m RespBody
 trackFunctionP2 qf = do
   trackFunctionP2Setup qf
   liftTx $ saveFunctionToCatalog qf

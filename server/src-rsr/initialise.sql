@@ -305,3 +305,10 @@ CREATE VIEW hdb_catalog.hdb_function_agg AS
     p.proargtypes,
     p.proargnames
 );
+
+CREATE TABLE hdb_catalog.remote_schemas (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT UNIQUE,
+  definition JSON,
+  comment TEXT
+);

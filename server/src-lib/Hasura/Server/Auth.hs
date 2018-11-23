@@ -36,6 +36,7 @@ import qualified Network.HTTP.Client     as H
 import qualified Network.HTTP.Types      as N
 import qualified Network.Wreq            as Wreq
 
+import           Hasura.HTTP.Utils       (wreqOptions)
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -172,13 +173,8 @@ userInfoFromWebhook
   -> [N.Header]
   -> m UserInfo
 userInfoFromWebhook logger manager hook reqHeaders = do
-  let options =
-        Wreq.defaults
-        & Wreq.headers .~ filteredHeaders
-        & Wreq.checkResponse ?~ (\_ _ -> return ())
-        & Wreq.manager .~ Right manager
-
-      urlT = getWebhook hook
+  let options = wreqOptions manager filteredHeaders
+      urlT    = getWebhook hook
   res <- liftIO $ try $ Wreq.getWith options $ T.unpack urlT
   resp <- either logAndThrow return res
   let status = resp ^. Wreq.responseStatus

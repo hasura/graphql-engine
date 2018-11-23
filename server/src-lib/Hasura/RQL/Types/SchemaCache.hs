@@ -103,85 +103,90 @@ module Hasura.RQL.Types.SchemaCache
        , delFunctionFromCache
        ) where
 
-import qualified Database.PG.Query           as Q
+import qualified Database.PG.Query                 as Q
+import qualified Hasura.GraphQL.Context            as GC
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Subscribe
-import qualified Hasura.SQL.DML              as S
+import qualified Hasura.SQL.DML                    as S
 import           Hasura.SQL.Types
 
 import           Control.Lens
 import           Data.Aeson
-import           Data.Aeson.Types
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           GHC.Generics                (Generic)
 
-import qualified Data.HashMap.Strict         as M
-import qualified Data.Sequence               as Seq
-import qualified Data.HashSet                as HS
-import qualified Data.Text                   as T
-import qualified PostgreSQL.Binary.Decoding  as PD
+import qualified Data.HashMap.Strict               as M
+import qualified Data.HashSet                      as HS
+import qualified Data.Sequence as Seq
+import qualified Data.Text                         as T
+import qualified PostgreSQL.Binary.Decoding        as PD
 
-data TableObjId
-  = TOCol !PGCol
-  | TORel !RelName
-  | TOCons !ConstraintName
-  | TOPerm !RoleName !PermType
-  | TOTrigger !TriggerName
-  deriving (Show, Eq, Generic)
+-- data TableObjId
+--   = TOCol !PGCol
+--   | TORel !RelName
+--   | TOCons !ConstraintName
+--   | TOPerm !RoleName !PermType
+--   | TOTrigger !TriggerName
+--   deriving (Show, Eq, Generic)
 
-instance Hashable TableObjId
+-- instance Hashable TableObjId
 
-data SchemaObjId
-  = SOTable !QualifiedTable
-  | SOQTemplate !TQueryName
-  | SOTableObj !QualifiedTable !TableObjId
-  | SOFunction !QualifiedFunction
-   deriving (Eq, Generic)
+-- data SchemaObjId
+--   = SOTable !QualifiedTable
+--   | SOQTemplate !TQueryName
+--   | SOTableObj !QualifiedTable !TableObjId
+--    deriving (Eq, Generic)
 
-instance Hashable SchemaObjId
+--instance Hashable SchemaObjId
 
-reportSchemaObj :: SchemaObjId -> T.Text
-reportSchemaObj (SOTable tn) = "table " <> qualTableToTxt tn
-reportSchemaObj (SOFunction fn) = "function " <> qualFunctionToTxt fn
-reportSchemaObj (SOQTemplate qtn) =
-  "query-template " <> getTQueryName qtn
-reportSchemaObj (SOTableObj tn (TOCol cn)) =
-  "column " <> qualTableToTxt tn <> "." <> getPGColTxt cn
-reportSchemaObj (SOTableObj tn (TORel cn)) =
-  "relationship " <> qualTableToTxt tn <> "." <> getRelTxt cn
-reportSchemaObj (SOTableObj tn (TOCons cn)) =
-  "constraint " <> qualTableToTxt tn <> "." <> getConstraintTxt cn
-reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
-  "permission " <> qualTableToTxt tn <> "." <> getRoleTxt rn
-  <> "." <> permTypeToCode pt
-reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
-  "event-trigger " <> qualTableToTxt tn <> "." <> trn
+-- reportSchemaObj :: SchemaObjId -> T.Text
+-- reportSchemaObj (SOTable tn) = "table " <> qualTableToTxt tn
+-- reportSchemaObj (SOQTemplate qtn) =
+--   "query-template " <> getTQueryName qtn
+-- reportSchemaObj (SOTableObj tn (TOCol cn)) =
+--   "column " <> qualTableToTxt tn <> "." <> getPGColTxt cn
+-- reportSchemaObj (SOTableObj tn (TORel cn)) =
+--   "relationship " <> qualTableToTxt tn <> "." <> getRelTxt cn
+-- reportSchemaObj (SOTableObj tn (TOCons cn)) =
+--   "constraint " <> qualTableToTxt tn <> "." <> getConstraintTxt cn
+-- reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
+--   "permission " <> qualTableToTxt tn <> "." <> getRoleTxt rn
+--   <> "." <> permTypeToCode pt
+-- reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
+--   "event-trigger " <> qualTableToTxt tn <> "." <> trn
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
 
-instance Show SchemaObjId where
-  show soi = T.unpack $ reportSchemaObj soi
+-- instance Show SchemaObjId where
+--   show soi = T.unpack $ reportSchemaObj soi
 
-instance ToJSON SchemaObjId where
-  toJSON = String . reportSchemaObj
+-- instance ToJSON SchemaObjId where
+--   toJSON = String . reportSchemaObj
 
-instance ToJSONKey SchemaObjId where
-  toJSONKey = toJSONKeyText reportSchemaObj
+-- data SchemaDependency
+--   = SchemaDependency
+--   { sdObjId  :: !SchemaObjId
+--   , sdReason :: !T.Text
+--   } deriving (Show, Eq)
 
-data SchemaDependency
-  = SchemaDependency
-  { sdObjId  :: !SchemaObjId
-  , sdReason :: !T.Text
-  } deriving (Show, Eq, Generic)
+-- instance ToJSONKey SchemaObjId where
+--   toJSONKey = toJSONKeyText reportSchemaObj
 
-$(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaDependency)
+-- data SchemaDependency
+--   = SchemaDependency
+--   { sdObjId  :: !SchemaObjId
+--   , sdReason :: !T.Text
+--   } deriving (Show, Eq, Generic)
+
+-- $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaDependency)
 
 instance Hashable SchemaDependency
 
@@ -202,6 +207,15 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''QueryTemplateInfo)
 
 type QTemplateCache = M.HashMap TQueryName QueryTemplateInfo
 
+-- data PGColInfo
+--   = PGColInfo
+--   { pgiName       :: !PGCol
+--   , pgiType       :: !PGColType
+--   , pgiIsNullable :: !Bool
+--   } deriving (Show, Eq)
+
+-- $(deriveToJSON (aesonDrop 3 snakeCase) ''PGColInfo)
+
 onlyIntCols :: [PGColInfo] -> [PGColInfo]
 onlyIntCols = filter (isIntegerType . pgiType)
 
@@ -217,6 +231,18 @@ onlyComparableCols = filter (isComparableType . pgiType)
 getColInfos :: [PGCol] -> [PGColInfo] -> [PGColInfo]
 getColInfos cols allColInfos = flip filter allColInfos $ \ci ->
   pgiName ci `elem` cols
+
+-- data RelInfo
+--   = RelInfo
+--   { riName     :: !RelName
+--   , riType     :: !RelType
+--   , riMapping  :: ![(PGCol, PGCol)]
+--   , riRTable   :: !QualifiedTable
+--   , riDeps     :: ![SchemaDependency]
+--   , riIsManual :: !Bool
+--   } deriving (Show, Eq)
+
+-- $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 type WithDeps a = (a, [SchemaDependency])
 
@@ -260,7 +286,7 @@ isPGColInfo _            = False
 instance ToJSON S.SQLExp where
   toJSON = String . T.pack . show
 
-type InsSetCols = M.HashMap PGCol S.SQLExp
+--type InsSetCols = M.HashMap PGCol S.SQLExp
 
 data InsPermInfo
   = InsPermInfo
@@ -489,10 +515,13 @@ removeFromDepMap =
 
 data SchemaCache
   = SchemaCache
-  { scTables     :: !TableCache
+  { scTables            :: !TableCache
   , scFunctions  :: !FunctionCache
-  , scQTemplates :: !QTemplateCache
-  , scDepMap     :: !DepMap
+  , scQTemplates        :: !QTemplateCache
+  , scRemoteResolvers   :: !RemoteSchemaMap
+  , scGCtxMap           :: !GC.GCtxMap
+  , scDefaultRemoteGCtx :: !GC.GCtx
+  , scDepMap            :: !DepMap
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
@@ -556,7 +585,8 @@ delQTemplateFromCache qtn = do
     objId = SOQTemplate qtn
 
 emptySchemaCache :: SchemaCache
-emptySchemaCache = SchemaCache mempty mempty mempty mempty
+emptySchemaCache =
+  SchemaCache (M.fromList []) M.empty (M.fromList []) M.empty M.empty GC.emptyGCtx mempty
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do

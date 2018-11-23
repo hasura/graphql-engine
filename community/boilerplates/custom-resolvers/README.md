@@ -1,6 +1,9 @@
 # GraphQL Custom Resolver Example
 
-This is a simple example of using a custom resolver with Hasura's GraphQL API.
+> **NOTE**: now merge [Remote Schemas](../../../remote-schemas.md) from [GraphQL servers](../graphql-servers) using Hasura
+> - Boilerplates for custom GraphQL servers have been moved [here](../graphql-servers). Also, a recently released feature removes the need for an external GraphQL gateway by letting you merge remote schemas in GraphQL Engine itself - [read more](../../../remote-schemas.md) (*Please check caveats for current limitations in the feature*).
+> - Once schemas have been merged in GraphQL Engine, Hasura proxies requests to remote GraphQL servers.
+> - Adding another layer in front of GraphQL Engine impacts performance by as much as **4X**, due the serialization-deserialization overhead. Using an external GraphQL gateway is recommended only if your use case is blocked on any of the current limitations.
 
 ## Motivation
 
