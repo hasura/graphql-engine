@@ -5,5 +5,5 @@ This is the source code for a fully working group chat app that uses subscriptio
 - [Fully working app](https://chat-example-trial-roar.herokuapp.com)
 - [Backend](https://hasura-realtime-group-chat.herokuapp.com)
 
-For a complete tutorial about data modelling, [check out this blog](https://medium.com/@rishichandrawawhal/building-a-realtime-chat-app-with-graphql-subscriptions-d68cd33e73f).
+For a complete tutorial about data modelling, [check out this blog](https://blog.hasura.io/building-a-realtime-chat-app-with-graphql-subscriptions-d68cd33e73f).
 
