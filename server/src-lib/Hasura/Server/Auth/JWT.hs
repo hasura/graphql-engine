@@ -25,7 +25,9 @@ import           Data.List                       (find)
 import           Data.Time.Clock                 (NominalDiffTime, diffUTCTime,
                                                   getCurrentTime)
 import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
+import           Network.URI                     (URI)
 
+import           Hasura.HTTP.Utils
 import           Hasura.Logging                  (Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -45,7 +47,6 @@ import qualified Data.String.Conversions         as CS
 import qualified Data.Text                       as T
 import qualified Network.HTTP.Client             as HTTP
 import qualified Network.HTTP.Types              as HTTP
-import qualified Network.URI                     as N
 import qualified Network.Wreq                    as Wreq
 
 
@@ -54,7 +55,7 @@ newtype RawJWT = RawJWT BL.ByteString
 data JWTConfig
   = JWTConfig
   { jcType     :: !T.Text
-  , jcKeyOrUrl :: !(Either JWK N.URI)
+  , jcKeyOrUrl :: !(Either JWK URI)
   , jcClaimNs  :: !(Maybe T.Text)
   , jcAudience :: !(Maybe T.Text)
   -- , jcIssuer   :: !(Maybe T.Text)
@@ -92,7 +93,7 @@ jwkRefreshCtrl
   :: (MonadIO m)
   => Logger
   -> HTTP.Manager
-  -> N.URI
+  -> URI
   -> IORef JWKSet
   -> NominalDiffTime
   -> m ()
@@ -114,14 +115,11 @@ updateJwkRef
      , MonadError T.Text m)
   => Logger
   -> HTTP.Manager
-  -> N.URI
+  -> URI
   -> IORef JWKSet
   -> m (Maybe NominalDiffTime)
 updateJwkRef (Logger logger) manager url jwkRef = do
-  let options = Wreq.defaults
-              & Wreq.checkResponse ?~ (\_ _ -> return ())
-              & Wreq.manager .~ Right manager
-
+  let options = wreqOptions manager []
   res  <- liftIO $ try $ Wreq.getWith options $ show url
   resp <- either logAndThrowHttp return res
   let status = resp ^. Wreq.responseStatus

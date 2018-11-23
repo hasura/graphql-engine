@@ -165,7 +165,7 @@ clearInsInfra vn =
 
 type DropInsPerm = DropPerm InsPerm
 
-dropInsPermP2 :: (P2C m) => DropInsPerm -> QualifiedTable -> m ()
+dropInsPermP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DropInsPerm -> QualifiedTable -> m ()
 dropInsPermP2 = dropPermP2
 
 type instance PermInfo InsPerm = InsPermInfo
@@ -232,7 +232,7 @@ type DropSelPerm = DropPerm SelPerm
 
 type instance PermInfo SelPerm = SelPermInfo
 
-dropSelPermP2 :: (P2C m) => DropSelPerm -> m ()
+dropSelPermP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DropSelPerm -> m ()
 dropSelPermP2 dp = dropPermP2 dp ()
 
 instance IsPerm SelPerm where
@@ -291,7 +291,7 @@ type instance PermInfo UpdPerm = UpdPermInfo
 
 type DropUpdPerm = DropPerm UpdPerm
 
-dropUpdPermP2 :: (P2C m) => DropUpdPerm -> m ()
+dropUpdPermP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DropUpdPerm -> m ()
 dropUpdPermP2 dp = dropPermP2 dp ()
 
 instance IsPerm UpdPerm where
@@ -337,7 +337,7 @@ buildDelPermInfo tabInfo (DelPerm fltr) = do
 
 type DropDelPerm = DropPerm DelPerm
 
-dropDelPermP2 :: (P2C m) => DropDelPerm -> m ()
+dropDelPermP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DropDelPerm -> m ()
 dropDelPermP2 dp = dropPermP2 dp ()
 
 type instance PermInfo DelPerm = DelPermInfo
@@ -380,7 +380,7 @@ setPermCommentP1 (SetPermComment qt rn pt _) = do
       PTUpdate -> assertPermDefined rn PAUpdate tabInfo
       PTDelete -> assertPermDefined rn PADelete tabInfo
 
-setPermCommentP2 :: (P2C m) => SetPermComment -> m RespBody
+setPermCommentP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => SetPermComment -> m RespBody
 setPermCommentP2 apc = do
   liftTx $ setPermCommentTx apc
   return successMsg
@@ -407,7 +407,7 @@ setPermCommentTx (SetPermComment (QualifiedTable sn tn) rn pt comment) =
              AND perm_type = $5
                 |] (comment, sn, tn, rn, permTypeToCode pt) True
 
-purgePerm :: (P2C m) => QualifiedTable -> RoleName -> PermType -> m ()
+purgePerm :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> RoleName -> PermType -> m ()
 purgePerm qt rn pt =
   case pt of
     PTInsert -> dropInsPermP2 dp $ buildViewName qt rn PTInsert
