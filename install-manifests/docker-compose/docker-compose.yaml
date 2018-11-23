@@ -14,9 +14,8 @@ services:
     restart: always
     environment:
       HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:@postgres:5432/postgres
-    command:
-      - graphql-engine
-      - serve
-      - --enable-console
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
+      ## uncomment next line to set an access key
+      # HASURA_GRAPHQL_ACCESS_KEY: mysecretaccesskey
 volumes:
   db_data:

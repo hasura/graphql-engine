@@ -22,10 +22,9 @@ const clientHeaderForward = (
     remote GraphQL server
   </Tooltip>
 );
-const header = (
+const additionalHeaders = (
   <Tooltip id="tooltip-cascade">
-    Configure headers for requests to remote GraphQL server. All incoming
-    request headers will be forwarded
+    Custom headers to be sent to the remote GraphQL server. E.g. an access key
   </Tooltip>
 );
 const schema = (
@@ -37,9 +36,9 @@ const schema = (
 class Common extends React.Component {
   getPlaceHolderText(valType) {
     if (valType === 'static') {
-      return 'ABCDEF';
+      return 'header value';
     }
-    return 'GRAPHQL_ACCESS_KEY';
+    return 'env var name';
   }
   handleInputChange(e) {
     const fieldName = e.target.getAttribute('data-key');
@@ -123,10 +122,7 @@ class Common extends React.Component {
           />
         </div>
         <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
-          Headers
-          <OverlayTrigger placement="right" overlay={header}>
-            <i className="fa fa-question-circle" aria-hidden="true" />
-          </OverlayTrigger>
+          Headers for the remote GraphQL server
         </div>
         <div className={styles.check_box}>
           <label>
@@ -147,6 +143,9 @@ class Common extends React.Component {
         </div>
         <div className={styles.subheading_text + ' ' + styles.font_normal}>
           Additional headers:
+          <OverlayTrigger placement="right" overlay={additionalHeaders}>
+            <i className="fa fa-question-circle" aria-hidden="true" />
+          </OverlayTrigger>
         </div>
         <CommonHeader
           eventPrefix="CUSTOM_RESOLVER"
@@ -158,7 +157,7 @@ class Common extends React.Component {
           ]}
           isDisabled={isDisabled}
           placeHolderText={this.getPlaceHolderText.bind(this)}
-          keyInputPlaceholder="Access-Key"
+          keyInputPlaceholder="header name"
         />
       </div>
     );
