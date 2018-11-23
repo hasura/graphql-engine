@@ -88,7 +88,7 @@ guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) or
 
 The Hasura GraphQL Engine fronts a Postgres database instance and can accept GraphQL requests from your client apps. It can be configured to work with your existing auth system and can handle access control using field-level rules with dynamic variables from your auth system.
 
-You can also place the engine behind a central GraphQL proxy that fronts multiple GraphQL APIs via schema stitching.
+You can also merge remote GraphQL schemas and provide a unified GraphQL API.
 
 ![Hasura GraphQL Engine architecture](assets/hasura-arch.svg)
 
@@ -102,8 +102,7 @@ GraphQL Engine provides easy-to-reason, scalable and performant methods for addi
 
 ### Remote schemas
 
-Add custom resolvers in a remote schema in addition to Hasura's Postgres-based GraphQL schema. Ideal for delegating to HTTP APIs, making direct calls to another data-source or writing business
-logic in code - [read more](remote-schemas.md).
+Add custom resolvers in a remote schema in addition to Hasura's Postgres-based GraphQL schema. Ideal for use-cases like implementing a payment API, or querying data that is not in your database - [read more](remote-schemas.md).
 
 ### Trigger webhooks on database events
 
