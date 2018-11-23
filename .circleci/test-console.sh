@@ -18,19 +18,19 @@ wait_for_port() {
 
 cd "$CONSOLE_ROOT"
 
-mkdir -p /build/_console_output
-touch /build/_console_output/server.log
-touch /build/_console_output/cli.log
+mkdir -p /home/circleci/build/_console_output
+touch /home/circleci/build/_console_output/server.log
+touch /home/circleci/build/_console_output/cli.log
 
 # start graphql-engine
-/build/_server_output/graphql-engine \
-    --database-url postgres://gql_test@localhost:5432/gql_test serve > /build/_console_output/server.log 2>&1 &
+/home/circleci/build/_server_output/graphql-engine \
+    --database-url postgres://gql_test@localhost:5432/gql_test serve > /home/circleci/build/_console_output/server.log 2>&1 &
 
 wait_for_port 8080
 
 # start cli
-/build/_cli_output/binaries/cli-hasura-linux-amd64 init --directory gql-test && cd gql-test
-/build/_cli_output/binaries/cli-hasura-linux-amd64 console --no-browser > /build/_console_output/cli.log 2>&1 &
+/home/circleci/build/_cli_output/binaries/cli-hasura-linux-amd64 init --directory gql-test && cd gql-test
+/home/circleci/build/_cli_output/binaries/cli-hasura-linux-amd64 console --no-browser > /home/circleci/build/_console_output/cli.log 2>&1 &
 
 cd ..
 
@@ -50,4 +50,12 @@ npm run dev &
 # wait for console to build
 sleep 60
 # run console tests
-npm run test
+docker run --name test1 --net host -d -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 cypress run --spec 'cypress/integration/data/relationships/test.js,cypress/integration/data/modify/test.js'
+docker run --name test2 --net host -d -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 cypress run --spec 'cypress/integration/data/insert-browse/test.js,cypress/integration/data/migration-mode/test.js,cypress/integration/remote-schemas/create-remote-schema/test.js'
+docker run --name test3 --net host -d -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 cypress run --spec 'cypress/integration/data/views/test.js,cypress/integration/events/create-trigger/test.js,cypress/integration/data/create-table/test.js'
+docker run --name test4 --net host -d -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 cypress run --spec 'cypress/integration/data/permissions/test.js,cypress/integration/data/raw-sql/test.js,cypress/integration/api-explorer/graphql/test.js,cypress/integration/data/404/test.js'
+
+docker wait test1
+docker wait test2
+docker wait test3
+docker wait test4

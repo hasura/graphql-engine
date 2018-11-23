@@ -301,6 +301,9 @@ jobs:
     - store_artifacts:
         path: /home/circleci/build/_console_output
         destination: console
+    - store_artifacts:
+        path: /home/circleci/graphql-engine/console/cypress/screenshots
+        destination: cypress-screenshots
     - persist_to_workspace:
         root: /home/circleci/build
         paths:
