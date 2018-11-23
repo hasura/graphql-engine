@@ -3,7 +3,7 @@ import client from './apollo';
 import {
   MUTATION_MARK_USER_ONLINE,
   MUTATION_NEW_USER,
-} from './GraphQL.jsx';
+} from './GraphQL';
 
 const newUUID = () => {
   const p8 = (s) => {
