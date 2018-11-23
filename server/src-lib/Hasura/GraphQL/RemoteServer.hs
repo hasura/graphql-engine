@@ -1,12 +1,16 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE FlexibleInstances   #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE QuasiQuotes         #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 
 module Hasura.GraphQL.RemoteServer where
 
 import           Control.Exception             (try)
-import           Control.Lens                  ((&), (.~), (?~), (^.))
+import           Control.Lens                  ((^.))
+import           Data.Aeson                    ((.:), (.:?))
 import           Data.FileEmbed                (embedStringFile)
 import           Data.Foldable                 (foldlM)
 import           Hasura.Prelude
@@ -17,11 +21,11 @@ import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
-import qualified Language.GraphQL.Draft.JSON   ()
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.Wreq                  as Wreq
 
+import           Hasura.HTTP.Utils             (wreqOptions)
 import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
 import           Hasura.RQL.Types
 
@@ -41,11 +45,7 @@ fetchRemoteSchema
 fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
   headers <- getHeadersFromConf headerConf
   let hdrs = map (\(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)) headers
-  let options = Wreq.defaults
-              & Wreq.headers .~ ("content-type", "application/json") : hdrs
-              & Wreq.checkResponse ?~ (\_ _ -> return ())
-              & Wreq.manager .~ Right manager
-
+      options = wreqOptions manager hdrs
   res  <- liftIO $ try $ Wreq.postWith options (show url) introspectionQuery
   resp <- either throwHttpErr return res
 
@@ -53,13 +53,13 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
       statusCode = resp ^. Wreq.responseStatus . Wreq.statusCode
   when (statusCode /= 200) $ schemaErr respData
 
-  schemaDoc <- either schemaErr return $ J.eitherDecode respData
-  --liftIO $ print $ map G.getNamedTyp $ G._sdTypes schemaDoc
-  let etTypeInfos = mapM fromRemoteTyDef $ G._sdTypes schemaDoc
+  introspectRes :: (FromIntrospection IntrospectionResult) <-
+    either schemaErr return $ J.eitherDecode respData
+  let (G.SchemaDocument tyDefs, qRootN, mRootN, _) =
+        fromIntrospection introspectRes
+  let etTypeInfos = mapM fromRemoteTyDef tyDefs
   typeInfos <- either schemaErr return etTypeInfos
-  --liftIO $ print $ map VT.getNamedTy typeInfos
   let typMap = VT.mkTyInfoMap typeInfos
-      (qRootN, mRootN, _) = getRootNames schemaDoc
       mQrTyp = Map.lookup qRootN typMap
       mMrTyp = maybe Nothing (\mr -> Map.lookup mr typMap) mRootN
   qrTyp <- liftMaybe noQueryRoot mQrTyp
@@ -71,9 +71,6 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
   where
     noQueryRoot = err400 Unexpected "query root not found in remote schema"
     fromRemoteTyDef ty = VT.fromTyDef ty $ VT.RemoteType name def
-    getRootNames sc = ( G._sdQueryRoot sc
-                      , G._sdMutationRoot sc
-                      , G._sdSubscriptionRoot sc )
     schemaErr err = throw400 RemoteSchemaError (T.pack $ show err)
 
     throwHttpErr :: (MonadError QErr m) => HTTP.HttpException -> m a
@@ -172,3 +169,236 @@ mergeTyMaps hTyMap rmTyMap newQR newMR =
   in maybe newTyMap' (\mr -> Map.insert
                               (G.NamedType "mutation_root")
                               (VT.TIObj mr) newTyMap') newMR
+
+
+-- parsing the introspection query result
+
+newtype FromIntrospection a
+  = FromIntrospection { fromIntrospection :: a }
+  deriving (Show, Eq, Generic)
+
+pErr :: (Monad m) => Text -> m a
+pErr = fail . T.unpack
+
+kindErr :: (Monad m) => Text -> Text -> m a
+kindErr gKind eKind = pErr $ "Invalid `kind: " <> gKind <> "` in " <> eKind
+
+instance J.FromJSON (FromIntrospection G.Description) where
+  parseJSON = fmap (FromIntrospection . G.Description) . J.parseJSON
+
+instance J.FromJSON (FromIntrospection G.ScalarTypeDefinition) where
+  parseJSON = J.withObject "ScalarTypeDefinition" $ \o -> do
+    kind <- o .: "kind"
+    name <- o .:  "name"
+    desc <- o .:? "description"
+    when (kind /= "SCALAR") $ kindErr kind "scalar"
+    let desc' = fmap fromIntrospection desc
+        r = G.ScalarTypeDefinition desc' name []
+    return $ FromIntrospection r
+
+instance J.FromJSON (FromIntrospection G.ObjectTypeDefinition) where
+  parseJSON = J.withObject "ObjectTypeDefinition" $ \o -> do
+    kind       <- o .: "kind"
+    name       <- o .:  "name"
+    desc       <- o .:? "description"
+    fields     <- o .:? "fields"
+    interfaces <- o .:? "interfaces"
+    when (kind /= "OBJECT") $ kindErr kind "object"
+    let implIfaces = map (G.NamedType . G._itdName) $
+                     maybe [] (fmap fromIntrospection) interfaces
+        flds = maybe [] (fmap fromIntrospection) fields
+        desc' = fmap fromIntrospection desc
+        r = G.ObjectTypeDefinition desc' name implIfaces [] flds
+    return $ FromIntrospection r
+
+instance J.FromJSON (FromIntrospection G.FieldDefinition) where
+  parseJSON = J.withObject "FieldDefinition" $ \o -> do
+    name  <- o .:  "name"
+    desc  <- o .:? "description"
+    args  <- o .: "args"
+    _type <- o .: "type"
+    let desc' = fmap fromIntrospection desc
+        r = G.FieldDefinition desc' name (fmap fromIntrospection args)
+            (fromIntrospection _type) []
+    return $ FromIntrospection r
+
+instance J.FromJSON (FromIntrospection G.GType) where
+  parseJSON = J.withObject "GType" $ \o -> do
+    kind  <- o .: "kind"
+    mName <- o .:? "name"
+    mType <- o .:? "ofType"
+    r <- case (kind, mName, mType) of
+      ("NON_NULL", _, Just typ) -> return $ mkNotNull (fromIntrospection typ)
+      ("NON_NULL", _, Nothing)  -> pErr "NON_NULL should have `ofType`"
+      ("LIST", _, Just typ)     ->
+        return $ G.TypeList (G.Nullability True)
+                 (G.ListType $ fromIntrospection typ)
+      ("LIST", _, Nothing)      -> pErr "LIST should have `ofType`"
+      (_, Just name, _)         -> return $ G.TypeNamed (G.Nullability True) name
+      _                         -> pErr $ "kind: " <> kind <> " should have name"
+    return $ FromIntrospection r
+
+    where
+      mkNotNull typ = case typ of
+        G.TypeList _ ty -> G.TypeList (G.Nullability False) ty
+        G.TypeNamed _ n -> G.TypeNamed (G.Nullability False) n
+
+
+instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
+  parseJSON = J.withObject "InputValueDefinition" $ \o -> do
+    name  <- o .:  "name"
+    desc  <- o .:? "description"
+    _type <- o .: "type"
+    --defValue <- o .: "defaultValue"
+    let desc' = fmap fromIntrospection desc
+        r = G.InputValueDefinition desc' name (fromIntrospection _type) Nothing
+    return $ FromIntrospection r
+
+
+-- instance J.FromJSON (FromIntrospection G.ListType) where
+--   parseJSON = parseJSON
+
+-- instance (J.FromJSON (G.ObjectFieldG a)) =>
+--          J.FromJSON (FromIntrospection (G.ObjectValueG a)) where
+--   parseJSON = fmap (FromIntrospection . G.ObjectValueG) . J.parseJSON
+
+-- instance (J.FromJSON a) => J.FromJSON (FromIntrospection (G.ObjectFieldG a)) where
+--   parseJSON = J.withObject "ObjectValueG a" $ \o -> do
+--     name <- o .: "name"
+--     ofVal <- o .: "value"
+--     return $ FromIntrospection $ G.ObjectFieldG name ofVal
+
+-- instance J.FromJSON (FromIntrospection G.ValueConst) where
+--   parseJSON =
+--     fmap FromIntrospection .
+--     $(J.mkParseJSON J.defaultOptions{J.sumEncoding=J.UntaggedValue} ''G.ValueConst)
+
+-- instance J.FromJSON (FromIntrospection G.Value) where
+--   parseJSON =
+--     fmap FromIntrospection .
+--     $(J.mkParseJSON J.defaultOptions{J.sumEncoding=J.UntaggedValue} ''G.Value)
+
+
+-- $(J.deriveFromJSON J.defaultOptions{J.sumEncoding=J.UntaggedValue} ''G.Value)
+
+
+instance J.FromJSON (FromIntrospection G.InterfaceTypeDefinition) where
+  parseJSON = J.withObject "InterfaceTypeDefinition" $ \o -> do
+    kind  <- o .: "kind"
+    name  <- o .:  "name"
+    desc  <- o .:? "description"
+    fields <- o .:? "fields"
+    let flds = maybe [] (fmap fromIntrospection) fields
+        desc' = fmap fromIntrospection desc
+    when (kind /= "INTERFACE") $ kindErr kind "interface"
+    let r = G.InterfaceTypeDefinition desc' name [] flds
+    return $ FromIntrospection r
+
+instance J.FromJSON (FromIntrospection G.UnionTypeDefinition) where
+  parseJSON = J.withObject "UnionTypeDefinition" $ \o -> do
+    kind  <- o .: "kind"
+    name  <- o .:  "name"
+    desc  <- o .:? "description"
+    possibleTypes <- o .: "possibleTypes"
+    let memberTys = map (G.NamedType . G._otdName) $
+                    fmap fromIntrospection possibleTypes
+        desc' = fmap fromIntrospection desc
+    when (kind /= "UNION") $ kindErr kind "union"
+    let r = G.UnionTypeDefinition desc' name [] memberTys
+    return $ FromIntrospection r
+
+instance J.FromJSON (FromIntrospection G.EnumTypeDefinition) where
+  parseJSON = J.withObject "EnumTypeDefinition" $ \o -> do
+    kind  <- o .: "kind"
+    name  <- o .:  "name"
+    desc  <- o .:? "description"
+    vals  <- o .: "enumValues"
+    when (kind /= "ENUM") $ kindErr kind "enum"
+    let desc' = fmap fromIntrospection desc
+    let r = G.EnumTypeDefinition desc' name [] (fmap fromIntrospection vals)
+    return $ FromIntrospection r
+
+instance J.FromJSON (FromIntrospection G.EnumValueDefinition) where
+  parseJSON = J.withObject "EnumValueDefinition" $ \o -> do
+    name  <- o .:  "name"
+    desc  <- o .:? "description"
+    let desc' = fmap fromIntrospection desc
+    let r = G.EnumValueDefinition desc' name []
+    return $ FromIntrospection r
+
+instance J.FromJSON (FromIntrospection G.InputObjectTypeDefinition) where
+  parseJSON = J.withObject "InputObjectTypeDefinition" $ \o -> do
+    kind  <- o .: "kind"
+    name  <- o .:  "name"
+    desc  <- o .:? "description"
+    mInputFields <- o .:? "inputFields"
+    let inputFields = maybe [] (fmap fromIntrospection) mInputFields
+    let desc' = fmap fromIntrospection desc
+    when (kind /= "INPUT_OBJECT") $ kindErr kind "input_object"
+    let r = G.InputObjectTypeDefinition desc' name [] inputFields
+    return $ FromIntrospection r
+
+instance J.FromJSON (FromIntrospection G.TypeDefinition) where
+  parseJSON = J.withObject "TypeDefinition" $ \o -> do
+    kind :: Text <- o .: "kind"
+    r <- case kind of
+      "SCALAR" ->
+        G.TypeDefinitionScalar . fromIntrospection <$> J.parseJSON (J.Object o)
+      "OBJECT" ->
+        G.TypeDefinitionObject . fromIntrospection <$> J.parseJSON (J.Object o)
+      "INTERFACE" ->
+        G.TypeDefinitionInterface . fromIntrospection <$> J.parseJSON (J.Object o)
+      "UNION" ->
+        G.TypeDefinitionUnion . fromIntrospection <$> J.parseJSON (J.Object o)
+      "ENUM" ->
+        G.TypeDefinitionEnum . fromIntrospection <$> J.parseJSON (J.Object o)
+      "INPUT_OBJECT" ->
+        G.TypeDefinitionInputObject . fromIntrospection <$> J.parseJSON (J.Object o)
+      _ -> pErr $ "unknown kind: " <> kind
+    return $ FromIntrospection r
+
+type IntrospectionResult = ( G.SchemaDocument
+                           , G.NamedType
+                           , Maybe G.NamedType
+                           , Maybe G.NamedType
+                           )
+
+instance J.FromJSON (FromIntrospection IntrospectionResult) where
+  parseJSON = J.withObject "SchemaDocument" $ \o -> do
+    _data <- o .: "data"
+    schema <- _data .: "__schema"
+    -- the list of types
+    types <- schema .: "types"
+    -- query root
+    queryType <- schema .: "queryType"
+    queryRoot <- queryType .: "name"
+    -- mutation root
+    mMutationType <- schema .:? "mutationType"
+    mutationRoot <- case mMutationType of
+      Nothing      -> return Nothing
+      Just mutType -> do
+        mutRoot <- mutType .: "name"
+        return $ Just mutRoot
+    -- subscription root
+    mSubsType <- schema .:? "subscriptionType"
+    subsRoot <- case mSubsType of
+      Nothing      -> return Nothing
+      Just subsType -> do
+        subRoot <- subsType .: "name"
+        return $ Just subRoot
+    let r = ( G.SchemaDocument (fmap fromIntrospection types)
+            , queryRoot
+            , mutationRoot
+            , subsRoot
+            )
+    return $ FromIntrospection r
+
+
+getNamedTyp :: G.TypeDefinition -> G.Name
+getNamedTyp ty = case ty of
+  G.TypeDefinitionScalar t      -> G._stdName t
+  G.TypeDefinitionObject t      -> G._otdName t
+  G.TypeDefinitionInterface t   -> G._itdName t
+  G.TypeDefinitionUnion t       -> G._utdName t
+  G.TypeDefinitionEnum t        -> G._etdName t
+  G.TypeDefinitionInputObject t -> G._iotdName t

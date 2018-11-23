@@ -111,3 +111,49 @@ args:
         2,
         true
       )
+
+# Create employee table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE employee (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        department TEXT,
+        salary INTEGER
+      )
+- type: track_table
+  args:
+    name: employee
+    schema: public
+
+# Insert data into employee table
+- type: insert
+  args:
+    table: employee
+    objects:
+    - name: Kai
+      department: Engineering
+      salary: 2345
+    - name: Zara
+      department: Services
+      salary: 1234
+    - name: Kelsy
+      department: Services
+      salary: 2134
+    - name: Damien
+      department: Product
+      salary: 3124
+    - name: Kamila
+      department: Engineering
+      salary: 4325
+    - name: Dara
+      department: Product
+      salary: 1209
+    - name: Rickard
+      department: Services
+      salary: 2223
+    - name: Bent
+      department: Engineering
+      salary: 4122
+      

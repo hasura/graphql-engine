@@ -27,6 +27,7 @@ import           Data.Time.Clock                 (NominalDiffTime, diffUTCTime,
 import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
 import           Network.URI                     (URI)
 
+import           Hasura.HTTP.Utils
 import           Hasura.Logging                  (Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -118,10 +119,7 @@ updateJwkRef
   -> IORef JWKSet
   -> m (Maybe NominalDiffTime)
 updateJwkRef (Logger logger) manager url jwkRef = do
-  let options = Wreq.defaults
-              & Wreq.checkResponse ?~ (\_ _ -> return ())
-              & Wreq.manager .~ Right manager
-
+  let options = wreqOptions manager []
   res  <- liftIO $ try $ Wreq.getWith options $ show url
   resp <- either logAndThrowHttp return res
   let status = resp ^. Wreq.responseStatus

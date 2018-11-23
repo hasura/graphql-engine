@@ -22,6 +22,7 @@ module Hasura.GraphQL.Schema
   , checkConflictingNode
   , emptyGCtx
   , mergeMaybeMaps
+  , ppGCtx
   ) where
 
 
@@ -346,6 +347,7 @@ mkPGColFld (PGColInfo colName colTy isNullable) =
 -- where: table_bool_exp
 -- limit: Int
 -- offset: Int
+-- distinct_on: [table_select_column!]
 mkSelArgs :: QualifiedTable -> [InpValInfo]
 mkSelArgs tn =
   [ InpValInfo (Just whereDesc) "where" $ G.toGT $ mkBoolExpTy tn
@@ -353,12 +355,15 @@ mkSelArgs tn =
   , InpValInfo (Just offsetDesc) "offset" $ G.toGT $ mkScalarTy PGInteger
   , InpValInfo (Just orderByDesc) "order_by" $ G.toGT $ G.toLT $ G.toNT $
     mkOrdByTy tn
+  , InpValInfo (Just distinctDesc) "distinct_on" $ G.toGT $ G.toLT $
+    G.toNT $ mkSelColumnInpTy tn
   ]
   where
     whereDesc   = "filter the rows returned"
     limitDesc   = "limit the nuber of rows returned"
     offsetDesc  = "skip the first n rows. Use only with order_by"
     orderByDesc = "sort the rows by one or more columns"
+    distinctDesc = "distinct select on columns"
 
 -- fromInpValL :: [InpValInfo] -> Map.HashMap G.Name InpValInfo
 -- fromInpValL = mapFromL _iviName
@@ -1595,7 +1600,7 @@ checkSchemaConflicts gCtx remoteCtx = do
   let rmQRoot = _otiFields $ _gQueryRoot remoteCtx
       rmMRoot = _otiFields <$> _gMutRoot remoteCtx
       rmRoots = filter (`notElem` builtinNodes ++ rmRootNames) . Map.keys <$>
-                fmap (Map.union rmQRoot) rmMRoot
+                mergeMaybeMaps (Just rmQRoot) rmMRoot
       hQR     = _otiFields <$>
                 join (getObjTyM <$> Map.lookup hQRName typeMap)
       hMR     = _otiFields <$>
@@ -1737,3 +1742,17 @@ mergeMaybeMaps m1 m2 = case (m1, m2) of
   (Just m1', Nothing)  -> Just m1'
   (Nothing, Just m2')  -> Just m2'
   (Just m1', Just m2') -> Just $ Map.union m1' m2'
+
+
+-- pretty print GCtx
+ppGCtx :: GCtx -> IO ()
+ppGCtx gCtx = do
+  let types = map (G.unName . G.unNamedType) $ Map.keys $ _gTypes gCtx
+      qRoot = map G.unName $ Map.keys $ _otiFields $ _gQueryRoot gCtx
+      mRoot = maybe [] (map G.unName . Map.keys . _otiFields) $ _gMutRoot gCtx
+
+  print ("GCtx [" :: Text)
+  print $ "  types = " <> show types
+  print $ "  query root = " <> show qRoot
+  print $ "  mutation root = " <> show mRoot
+  print ("]" :: Text)

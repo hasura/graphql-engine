@@ -77,8 +77,7 @@ These are the environment variables which are available:
 .. code-block:: none
 
    HASURA_GRAPHQL_DATABASE_URL      Postgres database URL
-                                    <postgres/postgresql>://<user>:<password>@<host>:<port>/<db-
-                                    name>
+                                    <postgres/postgresql>://<user>:<password>@<host>:<port>/<db-name>
                                     Example: postgres://admin:mypass@mydomain.com:5432/mydb
    HASURA_GRAPHQL_SERVER_PORT       Port on which graphql-engine should be served
 

@@ -206,6 +206,8 @@ library
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP
 
+                     , Hasura.HTTP.Utils
+
                      , Data.Text.Extended
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
