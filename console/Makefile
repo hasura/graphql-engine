@@ -26,9 +26,9 @@ gzip-assets:
 
 # to be run inside circle-ci
 ci-copy-assets:
-	mkdir -p /build/_console_output
-	cp $(DIST_PATH)/* /build/_console_output/
-	echo "$(VERSION)" > /build/_console_output/version.txt
+	mkdir -p /home/circleci/build/_console_output
+	cp $(DIST_PATH)/* /home/circleci/build/_console_output/
+	echo "$(VERSION)" > /home/circleci/build/_console_output/version.txt
 
 gcloud-cp-stable:
 	gsutil cp -r $(DIST_PATH)/main.css gs://$(BUCKET_NAME)/console/$(VERSION)/main.css

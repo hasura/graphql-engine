@@ -249,6 +249,64 @@ jobs:
 
   # test and build console
   test_and_build_console:
+    machine:
+      enabled: true
+      image: circleci/classic:latest
+    working_directory: ~/graphql-engine
+    steps:
+    - run:
+        name: install dependencies
+        command: |
+          curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+          sudo apt-get install -y nodejs
+          npm install -g npm@5
+          apt-get update && apt-get install -y \
+            netcat \
+            libpq5 \
+            libgtk2.0-0 \
+            libnotify-dev \
+            libgconf-2-4 \
+            libnss3 \
+            libxss1 \
+            libasound2 \
+            xvfb
+    - checkout
+    - attach_workspace:
+        at: /home/circleci/build
+    - restore_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+    - run:
+        name: install dependencies
+        working_directory: console
+        command: make ci-deps
+    - save_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+        paths:
+        - console/node_modules
+        - ~/.npm
+        - ~/.cache
+    - run:
+        name: Run postgres container
+        command: |
+          docker run -d -p 5432:5432 -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" circleci/postgres:10-alpine-postgis
+    - *wait_for_postgres
+    - run:
+        name: build console
+        working_directory: console
+        command: |
+          make build
+          make ci-copy-assets
+    - store_artifacts:
+        path: /home/circleci/build/_console_output
+        destination: console
+    - persist_to_workspace:
+        root: /home/circleci/build
+        paths:
+          - _console_output
+
+  test_and_build_console_old:
     docker:
     - image: hasura/graphql-engine-console-builder:v0.3
       environment:
