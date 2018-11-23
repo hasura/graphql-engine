@@ -295,7 +295,7 @@ instance HDBQuery InsertQuery where
   phaseOne = convInsQ
 
   phaseTwo _ p1Res = do
-    role <- userRole <$> ask
+    role <- userRole <$> askUserInfo
     liftTx $
       bool (nonAdminInsert p1Res) (insertP2 p1Res) $ isAdmin role
 

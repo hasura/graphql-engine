@@ -70,18 +70,19 @@ body {
   padding-right: 75px;
 }
 .loginBtn button {
-  background-color: #8da5c1;
-  border: 1px solid #fff;
-  border-radius: 20px;
-  padding: 4px 30px;
-  font-family: "Raleway";
-  font-size: 16px;
+  background-color: #f93c18;
+  padding: 10px 30px;
+  border: 0;
   color: #fff;
-  font-weight: 600;
-  cursor: pointer;
+  font-family: "raleway";
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-radius: 25px;
+  text-transform: uppercase;
 }
 .loginBtn button:hover {
-  background-color: #7792b2;
+  background-color: #e0270e;
 }
 .loginBtn button:focus {
   outline: none;
@@ -501,6 +502,9 @@ body {
 .footerWrapper a:hover {
   color: #406282;
 }
+.footerWrapper span i {
+  margin-left: 5px;
+}
 .footerWrapper a i {
   margin-left: 5px;
 }
@@ -510,6 +514,20 @@ body {
 .footerWrapper .accessKey button {
   background-color: #a5b9cc;
   border: 0;
+  padding-right: 0;
+}
+@media (max-width: 767px) {
+  .headerWrapper {
+    display: block !important;
+  }
+  .headerDescription {
+    text-align: center;
+    padding-bottom: 10px;
+  }
+  .loginBtn {
+    display: flex;
+    justify-content: center;
+  }
 }
 @media (max-width: 991px) {
   .sliderMenu {
@@ -527,6 +545,7 @@ body {
     margin: 0 auto;
   }
   .headerWrapper {
+    display: flex;
     padding-left: 0;
     height: auto;
   }

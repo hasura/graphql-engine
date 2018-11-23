@@ -30,6 +30,35 @@ export const createView = sql => {
 
 // ******************* VALIDATION FUNCTIONS *******************************
 
+// ******************* Remote schema Validator ****************************
+export const validateRS = (remoteSchemaName, result) => {
+  const reqBody = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'remote_schemas',
+        schema: 'hdb_catalog',
+      },
+      columns: ['*'],
+      where: {
+        name: remoteSchemaName,
+      },
+    },
+  };
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === 'success') {
+      expect(
+        response.body.length > 0 && response.body[0].name === remoteSchemaName
+      ).to.be.true;
+    } else {
+      expect(
+        response.body.length > 0 && response.body[0].name === remoteSchemaName
+      ).to.be.false;
+    }
+  });
+};
+
 // ****************** Table Validator *********************
 
 export const validateCT = (tableName, result) => {
