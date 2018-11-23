@@ -4,7 +4,7 @@ import { Subscription } from 'react-apollo';
 import {
   Alert,
 } from 'react-bootstrap';
-import {SUBSCRIPTION_ONLINE_USERS} from './GraphQL.jsx';
+import {SUBSCRIPTION_ONLINE_USERS} from './GraphQL';
 
 export const Users = () => (
   <Subscription subscription={gql`${SUBSCRIPTION_ONLINE_USERS}`}>
@@ -13,7 +13,7 @@ export const Users = () => (
        if (error) return <span>Error :</span>;
        return (
          <Alert bsStyle="info">
-           👥 Online users: {data.online_users[0].count}
+           <span role="img" aria-label="online users">👥</span>Online users: {data.online_users[0].count}
          </Alert>
        );
     }}
