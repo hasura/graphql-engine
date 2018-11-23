@@ -79,6 +79,12 @@ Step 3: Initialize the migrations as per your current state
   
      pg_dump -O -x -h <db-host> -p <db-port> -U <db-user> -d <db-name> --schema public --schema-only > public-schema.sql
 
+  .. note::
+
+     If the exported file contains ``SELECT pg_catalog.set_config('search_path', '', false);``, remove the whole line.
+     This can cause issues later when SQL is run without schema qualifiers, since this statement sets search path to ``''``
+     instead of the default ``public`` and ``pg_catalog``.
+
 - Export the metadata (this creates a file ``metadata.yaml``):
 
   .. code-block:: bash
