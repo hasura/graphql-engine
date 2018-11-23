@@ -270,6 +270,17 @@ jobs:
             libxss1 \
             libasound2 \
             xvfb
+    - run:
+        name: Download and start X
+        command: |
+          sudo apt-get install -y x11vnc
+          x11vnc -forever -nopw
+        background: true
+    - run:
+        name: Run postgres container
+        command: |
+          docker run -d -p 5432:5432 -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" circleci/postgres:10-alpine-postgis
+    - *wait_for_postgres
     - checkout
     - attach_workspace:
         at: /home/circleci/build
@@ -287,11 +298,6 @@ jobs:
         - console/node_modules
         - ~/.npm
         - ~/.cache
-    - run:
-        name: Run postgres container
-        command: |
-          docker run -d -p 5432:5432 -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" circleci/postgres:10-alpine-postgis
-    - *wait_for_postgres
     - run:
         name: test console
         command: .circleci/test-console.sh
