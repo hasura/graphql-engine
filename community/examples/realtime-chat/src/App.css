@@ -613,8 +613,8 @@ body {
     border-bottom: 1px solid #444;
   }
   .hasura-logo a {
-    padding: 0 5px;
-    font-size: 14px;
+    padding: 0 0px;
+    font-size: 12px;
   }
 }
 @media (max-width: 991px) {
@@ -652,10 +652,15 @@ body {
   }
   .inputGroup input
   {
-    width: 65% !important;
+    width: 63% !important;
   }
   .inputGroup .groupAppend
   {
-    width: 35% !important;
+    width: 37% !important;
   }
+  .groupAppend button {
+    font-size: 13px;
+    letter-spacing: 0;
+  }
+
 }
