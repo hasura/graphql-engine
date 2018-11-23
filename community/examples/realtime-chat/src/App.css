@@ -563,6 +563,59 @@ body {
     display: flex;
     justify-content: center;
   }
+  .wd75
+  {
+    width: 100%;
+  }
+  .message
+  {
+    width: 90%;
+  }
+  .textboxWrapper
+  {
+    width: 100%;
+  }
+  .mobileview
+  {
+    position: absolute;
+    right: 0px;
+    bottom: 152px;
+    width: 50%;
+  }
+  .mobileuserListHeading
+  {
+    font-size: 14px;
+    background-color: #222;
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 0;
+    padding: 5px;
+  }
+  .mobileuserListHeading i
+  {
+    margin-left: 10px;
+  }
+  .mobileUserList
+  {
+    background-color: #4f5050;
+    padding-inline-start: 0px;
+    -webkit-padding-start: 0px;
+    -moz-padding-start: 0px;
+    -o-padding-start: 0px;
+    margin-bottom: 0;
+  }
+  .mobileUserList li
+  {
+    list-style-type: none;
+    color: #fff;
+    padding: 5px;
+    font-size: 12px;
+    border-bottom: 1px solid #444;
+  }
+  .hasura-logo a {
+    padding: 0 5px;
+    font-size: 14px;
+  }
 }
 @media (max-width: 991px) {
   .headerWrapper {
