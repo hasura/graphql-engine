@@ -1,6 +1,11 @@
 Schema/Metadata API Reference
 =============================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The Schema/Metadata API provides the following features:
 
 1. Execute SQL on the underlying Postgres database, supports schema modifying actions.

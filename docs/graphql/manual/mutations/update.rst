@@ -1,6 +1,11 @@
 Update mutation
 ===============
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Objects can be updated based on filters on their own fields or those in their nested objects. 
 
 .. note::

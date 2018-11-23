@@ -1,6 +1,11 @@
 Subscriptions
 =============
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 A GraphQL subscription is essentially a query where the client receives an event whenever the value of any field changes
 upstream. The Hasura GraphQL engine supports subscriptions for all kind of queries. All the concepts of
 :doc:`queries <../queries/index>` hold true with subscriptions as well.

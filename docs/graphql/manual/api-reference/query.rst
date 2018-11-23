@@ -3,6 +3,11 @@
 API Reference - Query/Subscription
 ==================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Query/Subscription syntax
 -------------------------
 

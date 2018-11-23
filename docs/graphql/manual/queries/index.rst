@@ -1,6 +1,11 @@
 Queries
 =======
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Hasura GraphQL engine auto-generates queries and mutations as part of the GraphQL schema from your Postgres schema
 model. It generates a range of possible queries and operators that also work with relationships defined in your SQL
 schema.

@@ -1,6 +1,11 @@
 Nested object queries
 =====================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 You can use the object (one-to-one) or array (one-to-many) :doc:`relationships <../schema/relationships/index>` defined
 in your schema to make a nested query i.e. fetch data for a type along with data from a nested or related type.
 

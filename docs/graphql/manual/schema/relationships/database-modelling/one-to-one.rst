@@ -1,6 +1,11 @@
 Modelling one-to-one table relationships
 ========================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 A ``one-to-one`` relationship between two tables can be established via a **unique foreign-key constraint**.
 
 Say we have the following two tables in our database schema:

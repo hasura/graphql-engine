@@ -1,6 +1,11 @@
 Guides / Tutorials / Resources
 ==============================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Deployment guides
 -----------------
 

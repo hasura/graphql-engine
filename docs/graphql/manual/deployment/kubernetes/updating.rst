@@ -1,6 +1,11 @@
 Updating Hasura GraphQL engine running on Kubernetes
 ====================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 This guide will help you update Hasura GraphQL engine running on Kubernetes. This guide assumes that you already have
 Hasura GraphQL engine running on Kubernetes.
 

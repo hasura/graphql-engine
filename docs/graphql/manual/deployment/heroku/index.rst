@@ -1,6 +1,11 @@
 Run Hasura GraphQL Engine on Heroku
 ===================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 This guide will help you get Hasura GraphQL engine running as a "git push to deploy" app on
 `Heroku <https://www.heroku.com/platform>`_ and connecting it to a `Heroku Postgres <https://www.heroku.com/postgres>`_
 instance. If you want a simple, quick deployment on Heroku, follow this :doc:`Heroku quickstart

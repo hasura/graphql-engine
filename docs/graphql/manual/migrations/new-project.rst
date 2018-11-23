@@ -1,6 +1,11 @@
 Migrations for a new project
 ============================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 This guide will help you if you are about to start setting up your schema from scratch. You can use migrations
 to help track the database and GraphQL schema changes.
 

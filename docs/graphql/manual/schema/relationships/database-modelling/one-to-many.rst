@@ -1,6 +1,11 @@
 Modelling one-to-many table relationships
 =========================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 A ``one-to-many`` relationship between two tables can be established via a **foreign-key constraint**.
 
 Say we have the following two tables in our database schema:

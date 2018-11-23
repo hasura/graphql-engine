@@ -1,6 +1,11 @@
 Hasura GraphQL engine internals
 ===============================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Hasura GraphQL engine uses a set of internal tables to manage the state of the database and the
 GraphQL schema. It uses the data in these tables to generate the GraphQL API which then can be accessed
 from different clients.

@@ -1,6 +1,11 @@
 Hasura GraphQL Engine DigitalOcean One-click App
 ================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Hasura GraphQL Engine is available as a One-click app on DigitalOcean. It is
 packed with a Postgres database and `Caddy <https://caddyserver.com/>`__
 webserver for easy and automatic HTTPS using Let's Encrypt.

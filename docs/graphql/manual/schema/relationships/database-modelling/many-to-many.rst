@@ -1,6 +1,11 @@
 Modelling many-to-many table relationships
 ==========================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 A ``many-to-many`` relationship between two tables can be established by creating a table typically called as
 **bridge/junction/join table** and adding **foreign-key constraints** from it to the original tables.
 

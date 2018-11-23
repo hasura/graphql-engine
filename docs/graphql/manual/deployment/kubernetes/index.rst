@@ -1,6 +1,11 @@
 Run Hasura GraphQL Engine on Kubernetes
 =======================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 This guide assumes that you already have Postgres running and helps you set up the Hasura GraphQL engine on Kubernetes
 and connect it to your Postgres database.
 

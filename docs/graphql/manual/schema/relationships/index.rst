@@ -1,6 +1,11 @@
 Relationships between tables/views
 ==================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 To make :doc:`nested object queries <../../queries/nested-object-queries>`, the tables/views in your database need to
 be connected via relationships.
 

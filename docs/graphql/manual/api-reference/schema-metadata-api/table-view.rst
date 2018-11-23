@@ -1,5 +1,11 @@
 Schema/Metadata API Reference: Tables/Views
 ============================================
+
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Add or remove a table/view to Hasura GraphQL Engine's metadata using following API.
 
 .. Note::

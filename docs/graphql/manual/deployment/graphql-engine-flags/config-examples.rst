@@ -1,6 +1,11 @@
 GraphQL engine server config examples
 =====================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The following are a few configuration use cases:
 
 - :ref:`add-access-key`

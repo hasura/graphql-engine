@@ -1,6 +1,11 @@
 Getting started
 ===============
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 To use the Hasura GraphQL engine, you need to:
 
 #. Run the Hasura GraphQL engine with access to a Postgres database

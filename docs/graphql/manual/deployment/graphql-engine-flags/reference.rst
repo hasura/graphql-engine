@@ -1,6 +1,11 @@
 GraphQL engine server flags reference
 =====================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Every GraphQL engine command is structured as:
 
 .. code-block:: bash

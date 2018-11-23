@@ -1,6 +1,11 @@
 Authentication / Access control
 ===============================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Hasura helps you define granular access controls for every field in your GraphQL schema (i.e. every table or
 view in your Postgres schema). These access control rules can use dynamic variables that come in with every request.
 

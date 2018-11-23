@@ -1,6 +1,11 @@
 Customise schema with views
 ===========================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 You may want to customise your GraphQL schema to:
 
 - Limit scope (i.e. expose only a subset of the columns in a table)

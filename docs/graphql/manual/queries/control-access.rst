@@ -1,6 +1,11 @@
 Control access to certain data
 ==============================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 If you want to control access to sensitive fields in a table, you can either use views to expose only the safe fields
 or :ref:`restrict access via permissions <restrict_columns>`.
 

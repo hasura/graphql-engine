@@ -1,6 +1,11 @@
 Authorization using JWT
 =======================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 You can configure JWT authorization mode (see :doc:`GraphQL server options
 <../deployment/graphql-engine-flags/reference>`) to authorize all incoming
 requests to Hasura GraphQL engine server.

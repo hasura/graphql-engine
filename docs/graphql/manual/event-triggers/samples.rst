@@ -1,6 +1,11 @@
 Event trigger samples
 =====================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Here are a few sample apps built using Hasura event triggers:
 
 Push Notifications

@@ -1,6 +1,11 @@
 Insert mutation
 ===============
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Insert single object
 --------------------
 **Example:** Insert a new ``article`` object and return the inserted article object in the response

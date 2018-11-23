@@ -1,6 +1,11 @@
 Deploying Hasura GraphQL Engine
 ===============================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 .. note::
   This section talks in depth about deploying the Hasura GraphQL engine for a **production like environment**.
   If you would simply like to take the Hasura GraphQL engine for a quick spin, choose from our

@@ -1,6 +1,11 @@
 Subscriptions sample use cases
 ==============================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The following are a few use cases for using subscriptions:
 
 - :ref:`subscribe_field`

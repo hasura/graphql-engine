@@ -1,6 +1,11 @@
 Updating Hasura GraphQL engine running with Docker
 ==================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 This guide will help you update Hasura GraphQL engine running with Docker. This guide assumes that you already have
 Hasura GraphQL engine running with Docker.
 

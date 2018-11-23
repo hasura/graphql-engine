@@ -1,6 +1,11 @@
 Migrations with a database with an existing migration system
 ============================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 This guide will help you setup Hasura specific migrations in case you're working with an existing database
 that already has its database migration tooling.
 

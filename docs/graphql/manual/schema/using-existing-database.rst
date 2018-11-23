@@ -1,6 +1,11 @@
 Setting up GraphQL schema using an existing database
 ====================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 When you have an existing database with a schema already present, you don't need to create tables or views or run
 DDL queries through the Hasura console.
 

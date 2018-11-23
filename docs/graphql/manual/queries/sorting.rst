@@ -1,5 +1,11 @@
 Sort query results
 ==================
+
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Results from your query can be sorted by using the :ref:`order_by <OrderByExp>` argument. The argument can be used to sort nested
 objects too.
 

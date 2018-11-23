@@ -1,6 +1,11 @@
 Guides: Sample apps
 ===================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Articles:
 ^^^^^^^^^
 - `Blog: Build a realtime chat app with GraphQL Subscriptions <https://blog.hasura.io/building-a-realtime-chat-app-with-graphql-subscriptions-d68cd33e73f>`__.

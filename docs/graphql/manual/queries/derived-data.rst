@@ -1,6 +1,11 @@
 Derived data in queries
 =======================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 GraphQL’s "select" query language is designed to be simple yet powerful. But there are certain
 queries that you cannot express with a simple GraphQL query. For example, getting data from a custom join.
 

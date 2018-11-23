@@ -215,6 +215,17 @@ a.current.reference.internal {
   font-size: 3.2rem;
 }
 
+.topic-title {
+  font-weight: bold;
+}
+
+#table-of-contents {
+  padding: 0 20px;
+  border-radius: 4px;
+  background: #F8F8F9;
+  border: 1px solid #EAEAEC;
+}
+
 .back_link#guides {
   padding-left: 3% !important;
 }

@@ -1,6 +1,11 @@
 Upsert mutation
 ===============
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 To convert an **insert** mutation into an **upsert** one, you need to specify the unique or primary key constraint(s) and the
 columns to be updated in the case of a conflict or violation. You can specify a constraint using the ``constraint`` argument and
 update columns using the ``update_columns`` argument.

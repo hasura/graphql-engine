@@ -1,6 +1,11 @@
 Setting up your first event trigger
 ===================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 You can use Hasura to setup event triggers which call configured webhooks whenever specific database events occur.
 
 Let's create a sample event trigger with https://httpbin.org as our simple webhook.

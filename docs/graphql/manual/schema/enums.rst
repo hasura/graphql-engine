@@ -1,6 +1,11 @@
 Enum type fields
 ================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Enum type fields can only take a value from a fixed set of allowed values.
 
 In a relational database such as Postgres, an enum type field in a table can be defined by setting a foreign-key
