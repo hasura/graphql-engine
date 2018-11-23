@@ -53,7 +53,7 @@ is to use one of our boilerplates:
   - Nomenclature: Type names and node names need to be unique across all merged schemas (*case-sensitive match*). In the next few iterations, support for merging types with the exact same name and structure will be available.
   - Nodes from different GraphQL servers cannot be used in the same query/mutation. All top-level nodes have to be from the same GraphQL server.
   - Subscriptions on remote GraphQL server are not supported.
-  - Interfaces are not supported - if a remote schema has interfaces, an error will be thrown if you try to merge it.
+  - Interfaces_ and Unions_ are not supported - if a remote schema has interfaces/unions, an error will be thrown if you try to merge it.
 
   These limitations will be addressed in upcoming versions.
 
@@ -82,6 +82,14 @@ You need to enter the following information:
 
 Click on the ``Add Remote Schema`` button to merge the remote schema.
 
+
+Step-3: Make queries to the remote server from Hasura
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Now you can head to *GraphiQL* and make queries to your remote server from Hasura.
+
+Query your remote server by making requests to the Hasura graphql endpoint (``/v1alpha1/graphql``).
+
+
 .. note::
 
   For some use cases, you may need to extend the GraphQL schema fields exposed by Hasura GraphQL engine
@@ -93,5 +101,5 @@ Click on the ``Add Remote Schema`` button to merge the remote schema.
   built-in remote schemas feature, please get in touch with us on `Discord <https://discord.gg/vBPpJkS>`__.
 
 
-
-
+.. _Interfaces: https://graphql.github.io/learn/schema/#interfaces
+.. _Unions: https://graphql.github.io/learn/schema/#union-types
