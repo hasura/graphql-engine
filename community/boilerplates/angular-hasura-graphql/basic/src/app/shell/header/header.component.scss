@@ -1,0 +1,19 @@
+@import "src/theme/theme-variables";
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+}
+
+.brand {
+  color: mat-color($app-primary, "default-contrast");
+  text-decoration: none;
+  padding-right: 1rem;
+}
+
+.menu-button {
+  margin-right: 1rem;
+}
