@@ -93,8 +93,8 @@ Remember to change ``HEROKU_GIT_REMOTE`` to your git remote below. In our case:
 Visit ``https://graphql-on-postgres.herokuapp.com`` (replace ``graphql-on-postgres`` with your app name) and
 you should see the Hasura console.
 
-Advanced:
----------
+Advanced
+--------
 
 - :doc:`Securing your GraphQL endpoint <securing-graphql-endpoint>`
 - :doc:`using-existing-heroku-database`

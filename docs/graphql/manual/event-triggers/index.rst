@@ -12,8 +12,7 @@ events happening on the specified tables and then call configured webhooks to ca
 .. image:: ../../../img/graphql/manual/event-triggers/database-event-triggers.png
    :class: no-shadow
 
-See:
-^^^^
+**See:**
 
 .. toctree::
    :maxdepth: 2

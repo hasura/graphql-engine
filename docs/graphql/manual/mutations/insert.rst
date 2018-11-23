@@ -185,8 +185,8 @@ Insert object and get nested object in response
     }
 
 
-Insert object with nested object and get nested object in response
-------------------------------------------------------------------
+Insert object with nested object
+--------------------------------
 **Example:** Insert a new ``article`` object with its ``author`` and return the inserted article object with its author
 in the response
 

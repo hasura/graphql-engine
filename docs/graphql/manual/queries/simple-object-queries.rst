@@ -8,6 +8,8 @@ Simple object queries
 
 You can fetch a single node or multiple nodes of the same type using a simple object query. 
 
+Fetch list of objects
+---------------------
 For example, fetch a list of authors:
 
 .. graphiql::

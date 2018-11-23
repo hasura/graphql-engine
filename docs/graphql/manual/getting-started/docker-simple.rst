@@ -14,7 +14,8 @@ In case you'd like to run Hasura on an existing Postgres database, follow this
 guide to :doc:`deploy the Hasura GraphQL engine as a standalone docker container
 <../deployment/docker/index>` and connect it to your Postgres instance. 
 
-**Prerequisites**:
+Prerequisites
+-------------
 
 - `Docker <https://docs.docker.com/install/>`_
 - `Docker Compose <https://docs.docker.com/compose/install/>`_
@@ -61,8 +62,8 @@ OR
 
 Set up your :doc:`first event trigger <first-event-trigger>`
 
-Advanced:
----------
+Advanced
+--------
 
 This was a quickstart guide to get the Hasura GraphQL engine up and running
 quickly. For more detailed instructions on deploying using Docker, check out

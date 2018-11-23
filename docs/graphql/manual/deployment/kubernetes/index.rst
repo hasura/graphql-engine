@@ -71,8 +71,8 @@ Step 5: Track existing tables and relationships
 
 See :doc:`../../schema/using-existing-database` to enable GraphQL over the database.
 
-Advanced:
----------
+Advanced
+--------
 
 - :doc:`Securing your GraphQL endpoint <securing-graphql-endpoint>`
 - :doc:`GraphQL engine server logs <logging>`

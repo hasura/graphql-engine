@@ -27,8 +27,7 @@ See :doc:`webhook` or :doc:`jwt` for more details.
 
 Next, let's setup some :doc:`basic access control rules <basics>`.
 
-See:
-----
+**See:**
 
 .. toctree::
    :maxdepth: 1

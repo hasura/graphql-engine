@@ -10,6 +10,9 @@ A GraphQL subscription is essentially a query where the client receives an event
 upstream. The Hasura GraphQL engine supports subscriptions for all kind of queries. All the concepts of
 :doc:`queries <../queries/index>` hold true with subscriptions as well.
 
+Convert query to subscription
+-----------------------------
+
 You can turn any query into a subscription by simply replacing ``query`` with ``subscription`` as the operation type.
 
 .. admonition:: Caveat
@@ -25,8 +28,8 @@ Some use cases
 - :ref:`subscribe_table`
 - :ref:`subscribe_derived`
 
-Protocol
---------
+Communication protocol
+----------------------
 
 Hasura GraphQL engine uses the `GraphQL over Websocket Protocol
 <https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md>`_ by the

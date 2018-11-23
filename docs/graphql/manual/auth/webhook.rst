@@ -3,7 +3,7 @@ Authorization using webhooks
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 You can configure a webhook (see :doc:`GraphQL server options <../deployment/graphql-engine-flags/reference>`) to
@@ -67,7 +67,6 @@ If you want to deny the GraphQL request return a ``401 Unauthorized`` exception.
    Anything other than a ``200`` or ``401`` response from webhook makes server raise a ``500 Internal Server Error``
    exception.
 
-See:
-----
+**See:**
 
 - :doc:`Auth webhook samples <webhook-examples>`

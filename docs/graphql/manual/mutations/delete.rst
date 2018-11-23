@@ -8,8 +8,8 @@ Delete mutation
 
 Objects can be updated based on filters on their own fields or those in their nested objects. 
 
-Filter on an object's fields
-----------------------------
+Delete based an object's fields
+-------------------------------
 Delete all articles rated less than 3:
 
 .. graphiql::
@@ -32,8 +32,8 @@ Delete all articles rated less than 3:
     }
 
 
-Filter on a nested object's fields
-----------------------------------
+Delete based on a nested object's fields
+----------------------------------------
 Delete all articles written by an author:
 
 .. graphiql::

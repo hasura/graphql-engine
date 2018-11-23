@@ -30,6 +30,9 @@ These two tables are related via a ``many-to-many`` relationship. i.e:
 - an ``article`` can have many ``tags``
 - a ``tag`` has many ``articles``
 
+Setup table relationship in the database
+----------------------------------------
+
 This ``many-to-many`` relationship can be established in the database by:
 
 1. Creating a **bridge table** called ``article_tag`` with the following structure:
@@ -52,6 +55,9 @@ This ``many-to-many`` relationship can be established in the database by:
 The table ``article_tag`` sits between the two tables involved in the many-to-many relationship and captures possible
 permutations of their association via the foreign-keys.
 
+Setup GraphQL relationships
+---------------------------
+
 To access the nested objects via the GraphQL API, :doc:`create the following relationships <../create>`:
 
 - Array relationship, ``article_tags`` from ``article`` table using  ``article_tag :: article_id -> id``
@@ -59,6 +65,8 @@ To access the nested objects via the GraphQL API, :doc:`create the following rel
 - Array relationship, ``tag_articles`` from ``tag`` table using  ``article_tag :: tag_id -> id``
 - Object relationship, ``article`` from ``article_tag`` table using  ``article_id -> article :: id``
 
+Query using relationships
+-------------------------
 
 We can now:
 

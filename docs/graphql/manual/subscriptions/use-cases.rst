@@ -8,10 +8,6 @@ Subscriptions sample use cases
 
 The following are a few use cases for using subscriptions:
 
-- :ref:`subscribe_field`
-- :ref:`subscribe_table`
-- :ref:`subscribe_derived`
-
 .. _subscribe_field:
 
 Subscribe to the latest value of a particular field

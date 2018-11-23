@@ -11,10 +11,11 @@ be connected via relationships.
 
 Let's say we have the following tables in our database: ``author``, ``passport_info``, ``article`` and ``tag``.
 
+Table relationships
+-------------------
+
 The tables/views in any relational database are typically related to each other via one of the
 following types of table relationships:
-
-**Table relationships:**
 
 +------------------+-----------------------------------+------------------------------------------------+
 | Type             | Example                           | Meaning                                        |
@@ -29,10 +30,11 @@ following types of table relationships:
 |                  |                                   | - a ``tag`` can have many ``articles``         |
 +------------------+-----------------------------------+------------------------------------------------+
 
+GraphQL schema relationships
+----------------------------
+
 As you can see, each table relationship will have two component relationships (one in either direction) in the GraphQL
 schema. These relationships can be one of the following types:
-
-**GraphQL schema relationships:**
 
 +-----------------------------------------+------------------------------------------+---------------------------------------------------------------------------------------+
 | Type                                    | Example                                  | Meaning                                                                               |
@@ -47,10 +49,16 @@ schema. These relationships can be one of the following types:
   The relationship name is used to refer to the nested objects in queries. For example, "``articles``" of an ``author``
   and "``author``" of an ``article``.
 
+Managing GraphQL relationships
+------------------------------
+
 See the following to manage the object/array relationships between tables/views for the GraphQL schema:
 
 - :doc:`create`
 - :doc:`rename`
+
+Table relationships modelling guides
+------------------------------------
 
 The following guides will help you model the different types of table relationships in the database:
 

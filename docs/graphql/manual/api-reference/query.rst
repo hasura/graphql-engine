@@ -5,7 +5,7 @@ API Reference - Query/Subscription
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 3
   :local:
 
 Query/Subscription syntax
@@ -71,8 +71,8 @@ Syntax definitions
 Object
 ^^^^^^
 
-Simple Object :-
-****************
+Simple Object
+*************
 
 .. code-block:: none
 
@@ -106,8 +106,8 @@ E.g.
       }
    }
 
-Aggregate Object :-
-*******************
+Aggregate Object
+****************
 
 .. code-block:: none
 
@@ -236,7 +236,7 @@ Argument
 .. _DistinctOnExp:
 
 DistinctOnExp
-************
+*************
 
 .. parsed-literal::
 

@@ -13,11 +13,6 @@ Typically, relationships are defined using foreign-key constraints. But in some 
 use foreign-key constraints to create the relation. For example, while trying to create a relationship involving a view
 as foreign-keys can't be created on views.
 
-Here are examples to create relationships using the two methods:
-
-- :ref:`relationships-using-fkey`
-- :ref:`relationships-without-fkey`
-
 .. _relationships-using-fkey:
 
 Using Foreign Keys

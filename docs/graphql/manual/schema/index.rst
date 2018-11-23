@@ -16,8 +16,7 @@ version control.
 Hasura GraphQL engine lets you do anything you would usually do with Postgres by giving you GraphQL over native
 Postgres constructs.
 
-See:
-^^^^
+**See:**
 
 .. toctree::
   :maxdepth: 1

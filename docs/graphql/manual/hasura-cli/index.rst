@@ -46,8 +46,8 @@ Commands
 - :doc:`hasura user-info <hasura_user-info>`
 - :doc:`hasura version <hasura_version>`
 
-Uninstall
----------
+Uninstalling
+------------
 
 Refer to :doc:`uninstall-hasura-cli`.
 

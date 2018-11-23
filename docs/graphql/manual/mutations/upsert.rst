@@ -6,9 +6,13 @@ Upsert mutation
   :depth: 1
   :local:
 
-To convert an **insert** mutation into an **upsert** one, you need to specify the unique or primary key constraint(s) and the
-columns to be updated in the case of a conflict or violation. You can specify a constraint using the ``constraint`` argument and
-update columns using the ``update_columns`` argument.
+An upsert query will insert an object into the database in case there is no conflict with another row in the table. In
+case there is a conflict with one or more rows, it will update the fields of the conflicted rows based on the value of
+value of the ``update_columns`` argument.
+
+To convert an **insert** mutation into an **upsert** one, you need to specify the unique or primary key constraint
+and the columns to be updated in the case of a conflict or violation of that constraint. You can specify a constraint
+using the ``constraint`` argument and choose the columns to update using the ``update_columns`` argument.
 
 .. note::
     
@@ -17,8 +21,8 @@ update columns using the ``update_columns`` argument.
     Typically, the constraint is automatically named as ``<table-name>_<column-name>_key``. 
 
 
-Without "update_columns" argument
----------------------------------
+Update all columns on conflict
+------------------------------
 When you don't explicitly specify ``update_columns``, the columns that are given in objects are updated (it doesn't matter if they
 are different, you should see the same end result).
 
@@ -109,8 +113,8 @@ The column ``"is_premium"`` for the ``"Jack"`` row is set to its ``DEFAULT`` val
 is ``{name, email_sent, is_premium}``. However, you can explicitly control the columns that are updated on conflict using
 ``update_columns`` as specified in the following section.
 
-With non empty "update_columns"
--------------------------------
+Update selected columns on conflict
+-----------------------------------
 Insert a new object in the author table or, if the primary key constraint, ``author_pkey``, is violated, update the columns
 specified in ``update_columns``:
 
@@ -150,9 +154,9 @@ specified in ``update_columns``:
     }
 
 
-With empty "update_columns"
----------------------------
-If ``update_columns`` is an empty array then GraphQL Engine ignore changes on conflict. Insert a new object into the author
+Ignore request on conflict
+--------------------------
+If ``update_columns`` is an **empty array** then GraphQL Engine ignore changes on conflict. Insert a new object into the author
 table or, if the unique constraint, ``author_name_key``, is violated, ignore the request
 
 .. graphiql::
@@ -302,9 +306,9 @@ You can specify ``on_conflict`` clause while inserting nested objects
     }
 
 
-.. warning::
-   Inserting nested objects fails when
+.. note::
 
-   1. Any of upsert in object relationships does not affect any rows (``update_columns: []`` or ``action: ignore``)
+  Inserting nested objects fails when:
 
-   2. Array relationships are queued for insert and parent insert does not affect any rows (``update_columns: []`` or ``action: ignore``)
+  - Any of upsert in object relationships does not affect any rows (``update_columns: []`` or ``action: ignore``)
+  - Array relationships are queued for insert and parent insert does not affect any rows (``update_columns: []`` or ``action: ignore``)

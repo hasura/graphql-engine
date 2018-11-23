@@ -6,6 +6,9 @@ Hasura GraphQL engine logs
   :depth: 1
   :local:
 
+Accessing logs
+--------------
+
 Based on your deployment method, Hasura GraphQL engine logs can be accessed as follows:
 
 - :doc:`On Heroku <heroku/logging>`

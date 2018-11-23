@@ -35,6 +35,23 @@ Add a table/view ``author``:
        }
    }
 
+.. _track_table_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName <TableName>`
+     - Name of the table
+
 .. _untrack_table:
 
 untrack_table

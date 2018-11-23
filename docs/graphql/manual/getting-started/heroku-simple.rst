@@ -48,8 +48,8 @@ OR
 
 Set up your :doc:`first event trigger <first-event-trigger>`
 
-Advanced:
----------
+Advanced
+--------
 
 This was a quickstart guide to get the Hasura GraphQL engine up and running quickly. For more detailed instructions
 on deploying using Heroku, check out :doc:`../deployment/heroku/index`.

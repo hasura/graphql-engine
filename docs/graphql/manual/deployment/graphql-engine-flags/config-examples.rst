@@ -8,10 +8,6 @@ GraphQL engine server config examples
 
 The following are a few configuration use cases:
 
-- :ref:`add-access-key`
-- :ref:`cli-with-access-key`
-- :ref:`configure-cors`
-
 .. _add-access-key:
 
 Add an access key
