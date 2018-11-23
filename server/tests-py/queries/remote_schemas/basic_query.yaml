@@ -1,0 +1,16 @@
+description: Simple GraphQL query on the remote schema with countries
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    country:
+      name: India
+      code: IN
+query:
+  query: |
+    query {
+      country (code: "IN")  {
+        name
+        code
+      }
+    }

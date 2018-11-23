@@ -15,9 +15,9 @@ module Hasura.RQL.Types.Subscribe
   , RetryConf(..)
   , DeleteEventTriggerQuery(..)
   , DeliverEventQuery(..)
-  , HeaderConf(..)
-  , HeaderValue(..)
-  , HeaderName
+  -- , HeaderConf(..)
+  -- , HeaderValue(..)
+  -- , HeaderName
   , EventHeaderInfo(..)
   , WebhookConf(..)
   , WebhookConfInfo(..)
@@ -27,6 +27,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Headers
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -37,7 +38,6 @@ import qualified Text.Regex.TDFA            as TDFA
 type TriggerName = T.Text
 type TriggerId   = T.Text
 type EventId     = T.Text
-type HeaderName  = T.Text
 
 data Ops = INSERT | UPDATE | DELETE deriving (Show)
 
@@ -69,28 +69,6 @@ data RetryConf
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
-
-data HeaderConf = HeaderConf HeaderName HeaderValue
-   deriving (Show, Eq, Lift)
-
-data HeaderValue = HVValue T.Text | HVEnv T.Text
-   deriving (Show, Eq, Lift)
-
-instance FromJSON HeaderConf where
-  parseJSON (Object o) = do
-    name <- o .: "name"
-    value <- o .:? "value"
-    valueFromEnv <- o .:? "value_from_env"
-    case (value, valueFromEnv ) of
-      (Nothing, Nothing)  -> fail "expecting value or value_from_env keys"
-      (Just val, Nothing) -> return $ HeaderConf name (HVValue val)
-      (Nothing, Just val) -> return $ HeaderConf name (HVEnv val)
-      (Just _, Just _)    -> fail "expecting only one of value or value_from_env keys"
-  parseJSON _ = fail "expecting object for headers"
-
-instance ToJSON HeaderConf where
-  toJSON (HeaderConf name (HVValue val)) = object ["name" .= name, "value" .= val]
-  toJSON (HeaderConf name (HVEnv val)) = object ["name" .= name, "value_from_env" .= val]
 
 data EventHeaderInfo
   = EventHeaderInfo

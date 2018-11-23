@@ -22,7 +22,7 @@ class ResetMetadata extends Component {
       <div className={metaDataStyles.display_inline}>
         <button
           data-test="data-reset-metadata"
-          className={styles.default_button + ' ' + metaDataStyles.margin_right}
+          className={styles.default_button}
           onClick={e => {
             e.preventDefault();
             const a = prompt(
