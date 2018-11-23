@@ -185,8 +185,7 @@ badge to your applications built using Hasura. ❤️
 ## License
 
 The core GraphQL Engine is available under the [GNU Affero General Public
-License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0), the same
-license as [MongoDB](https://www.mongodb.com/community/licensing). We have
+License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0). We have
 written more about what you can and cannot do under AGPL
 [here](https://github.com/hasura/graphql-engine/wiki/License-Explained). 
 
