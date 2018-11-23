@@ -323,14 +323,14 @@ jobs:
         at: /build
     - restore_cache:
         key:
-          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+          console-npm-cache-v2-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
     - run:
         name: install dependencies
         working_directory: console
         command: make ci-deps
     - save_cache:
         key:
-          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+          console-npm-cache-v2-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
         paths:
         - console/node_modules
         - ~/.npm
