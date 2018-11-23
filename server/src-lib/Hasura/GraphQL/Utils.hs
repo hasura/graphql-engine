@@ -19,7 +19,7 @@ module Hasura.GraphQL.Utils
   ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Error
 
 import qualified Data.ByteString.Lazy          as LBS
 import qualified Data.HashMap.Strict           as Map
@@ -43,14 +43,10 @@ showNamedTy nt =
 
 getBaseTy :: G.GType -> G.NamedType
 getBaseTy = \case
-  G.TypeNamed n     -> n
-  G.TypeList lt     -> getBaseTyL lt
-  G.TypeNonNull nnt -> getBaseTyNN nnt
+  G.TypeNamed _ n     -> n
+  G.TypeList _ lt     -> getBaseTyL lt
   where
     getBaseTyL = getBaseTy . G.unListType
-    getBaseTyNN = \case
-      G.NonNullTypeList lt -> getBaseTyL lt
-      G.NonNullTypeNamed n -> n
 
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f l =
