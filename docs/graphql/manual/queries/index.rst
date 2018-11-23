@@ -13,6 +13,7 @@ types, ``query_root`` and ``mutation_root`` respectively. For example, the auto-
 .. code-block:: graphql
 
     author (
+      distinct_on: [author_select_column]
       where: author_bool_exp
       limit: Int
       offset: Int
@@ -33,6 +34,7 @@ based on a typical author/article schema for reference.
   simple-object-queries
   nested-object-queries
   aggregation-queries
+  distinct-queries
   query-filters
   sorting
   pagination
