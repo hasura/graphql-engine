@@ -508,7 +508,7 @@ instance ToSQL BoolExp where
     "EXISTS " <-> paren (toSQL sel)
   -- special case to handle lhs IN (exp1, exp2)
   toSQL (BEIN vl exps) =
-    toSQL vl <-> toSQL SIN <-> paren (", " <+> exps)
+    paren (toSQL vl) <-> toSQL SIN <-> paren (", " <+> exps)
 
 data BinOp = AndOp
            | OrOp
