@@ -1,4 +1,4 @@
-description: Simple GraphQL subscription to the remote schema with countries - not supported
+description: Simple GraphQL subscription - not supported
 url: /v1alpha1/graphql
 status: 400
 response:
@@ -9,8 +9,5 @@ response:
 query:
   query: |
     subscription {
-      country (code: "IN")  {
-        name
-        code
-      }
+      hello
     }
