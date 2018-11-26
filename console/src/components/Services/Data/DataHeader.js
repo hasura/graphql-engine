@@ -72,20 +72,20 @@ const DataHeader = ({
                       to={appPrefix + '/schema'}
                     >
                       Schema:
-                      <select
-                        onChange={handleSchemaChange}
-                        className={styles.changeSchema + ' form-control'}
-                      >
-                        {schemaList.map(s => (
-                          <option
-                            key={s.schema_name}
-                            selected={s.schema_name === currentSchema}
-                          >
-                            {s.schema_name}
-                          </option>
-                        ))}
-                      </select>
                     </Link>
+                    <select
+                      onChange={handleSchemaChange}
+                      className={styles.changeSchema + ' form-control'}
+                    >
+                      {schemaList.map(s => (
+                        <option
+                          key={s.schema_name}
+                          selected={s.schema_name === currentSchema}
+                        >
+                          {s.schema_name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <PageContainer
