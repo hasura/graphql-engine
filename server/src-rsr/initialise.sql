@@ -223,3 +223,11 @@ CREATE TABLE hdb_catalog.event_invocation_logs
 );
 
 CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id);
+
+
+CREATE TABLE hdb_catalog.remote_schemas (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT UNIQUE,
+  definition JSON,
+  comment TEXT
+);

@@ -14,7 +14,7 @@ import           Data.Either            as M (lefts, partitionEithers, rights)
 import           Data.Foldable          as M (toList)
 import           Data.Hashable          as M (Hashable)
 import           Data.List              as M (find, foldl', group, sort, sortBy,
-                                              union)
+                                              sortOn, union)
 import           Data.Maybe             as M (catMaybes, fromMaybe, isJust,
                                               isNothing, listToMaybe, mapMaybe,
                                               maybeToList)

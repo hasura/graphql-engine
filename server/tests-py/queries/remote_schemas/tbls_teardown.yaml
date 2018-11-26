@@ -1,0 +1,11 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      drop table country
+
+- type: remove_remote_schema
+  args:
+    name: bahnql-remote
+ 
