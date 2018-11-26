@@ -3,9 +3,9 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop table country
+      drop table hello
 
 - type: remove_remote_schema
   args:
-    name: bahnql-remote
+    name: simple2-graphql
  
