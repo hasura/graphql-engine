@@ -129,7 +129,7 @@ export const passCreateForeignKey = () => {
   cy.get(getElementFromAlias('ref-table')).select(getTableName(0, testName));
   cy.get(getElementFromAlias('ref-col')).select(getColName(0));
   cy.get(getElementFromAlias('save-button')).click();
-  cy.wait(500);
+  cy.wait(1000);
 };
 
 export const passRemoveForeignKey = () => {
