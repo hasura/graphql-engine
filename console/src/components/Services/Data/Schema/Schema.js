@@ -17,10 +17,8 @@ import {
 import {
   loadSchema,
   loadUntrackedSchema,
-  loadUntrackedRelations,
   fetchSchemaList,
   LOAD_UNTRACKED_RELATIONS,
-  UPDATE_CURRENT_SCHEMA,
 } from '../DataActions';
 import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
 import AutoAddRelationsConnector from './AutoAddRelations';
@@ -63,24 +61,12 @@ class Schema extends Component {
   render() {
     const {
       schema,
-      schemaList,
       untracked,
       migrationMode,
       untrackedRelations,
       currentSchema,
       dispatch,
     } = this.props;
-
-    const handleSchemaChange = e => {
-      const updatedSchema = e.target.value;
-      dispatch(push(`${appPrefix}/schema/${updatedSchema}`));
-      Promise.all([
-        dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
-        dispatch(loadSchema()),
-        dispatch(loadUntrackedSchema()),
-        dispatch(loadUntrackedRelations()),
-      ]);
-    };
 
     const styles = require('../PageContainer/PageContainer.scss');
 
@@ -167,27 +153,6 @@ class Schema extends Component {
                 Create Table
               </button>
             ) : null}
-          </div>
-          <hr />
-          <div>
-            <div className={styles.display_inline}>Current postgres schema</div>
-            <div className={styles.display_inline}>
-              <select
-                onChange={handleSchemaChange}
-                className={styles.changeSchema + ' form-control'}
-              >
-                {schemaList.map(s => {
-                  if (s.schema_name === currentSchema) {
-                    return (
-                      <option key={s.schema_name} selected="selected">
-                        {s.schema_name}
-                      </option>
-                    );
-                  }
-                  return <option key={s.schema_name}>{s.schema_name}</option>;
-                })}
-              </select>
-            </div>
           </div>
           <hr />
           <div className={styles.add_pad_bottom}>

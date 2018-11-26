@@ -1,14 +1,22 @@
 import React from 'react';
 import { Link } from 'react-router';
+import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
 import PageContainer from './PageContainer/PageContainer';
 import globals from '../../../Globals';
+import {
+  loadSchema,
+  loadUntrackedSchema,
+  loadUntrackedRelations,
+  UPDATE_CURRENT_SCHEMA,
+} from './DataActions';
 
 const appPrefix = '/data';
 
 const DataHeader = ({
   schema,
   currentSchema,
+  schemaList,
   children,
   location,
   dispatch,
@@ -28,6 +36,17 @@ const DataHeader = ({
       </li>
     );
   }
+
+  const handleSchemaChange = e => {
+    const updatedSchema = e.target.value;
+    dispatch(push(`${appPrefix}/schema/${updatedSchema}`));
+    Promise.all([
+      dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
+      dispatch(loadSchema()),
+      dispatch(loadUntrackedSchema()),
+      dispatch(loadUntrackedRelations()),
+    ]);
+  };
   return (
     <div>
       <Helmet title={'Data | Hasura'} />
@@ -52,8 +71,21 @@ const DataHeader = ({
                       className={styles.schemaBorder}
                       to={appPrefix + '/schema'}
                     >
-                      Schema - {currentSchema}
+                      Schema:
                     </Link>
+                    <select
+                      onChange={handleSchemaChange}
+                      className={styles.changeSchema + ' form-control'}
+                    >
+                      {schemaList.map(s => (
+                        <option
+                          key={s.schema_name}
+                          selected={s.schema_name === currentSchema}
+                        >
+                          {s.schema_name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <PageContainer

@@ -19,10 +19,15 @@
   width: 100%;
   .schemaSidebarSection {
     display: inline-block;
-    width: 60%;
+    width: 100%;
   }
 }
-
+.changeSchema
+{
+  width: 50%;
+  margin-left: 10px;
+  display: inline-block;
+}
 .aceBlock {
   max-height: 300px;
   position: relative;
