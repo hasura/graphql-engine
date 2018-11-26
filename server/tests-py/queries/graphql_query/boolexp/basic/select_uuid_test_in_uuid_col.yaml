@@ -1,0 +1,30 @@
+description: Fetch data from uuid_test table using _in operator in where filter
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    uuid_test:
+    - id: 1
+      uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e5
+    - id: 2
+      uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e6
+
+query:
+  query: |
+    query {
+      uuid_test(
+        where: {
+          uuid_col: {
+            _in: [ "28d6d683-1317-49f7-b1cf-7d195242e4e5"
+                 , "28d6d683-1317-49f7-b1cf-7d195242e4e6"
+                 , "28d6d683-1317-49f7-b1cf-7d195242e4e8"
+                 ]
+          }
+        }
+      ) {
+        id
+        uuid_col
+      }
+    }
+
+

@@ -1,6 +1,6 @@
 
-import pytest
 import yaml
+import pytest
 import jwt
 from validate import check_query
 
