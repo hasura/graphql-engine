@@ -10,13 +10,18 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import { split } from 'apollo-link';
 import { getMainDefinition } from 'apollo-utilities';
 
-const GRAPHQL_ENDPOINT = "https://hasura-realtime-group-chat.herokuapp.com/v1alpha1/graphql";
+const scheme = (proto) => {
+  return window.location.protocol === 'https:' ? `${proto}s` : proto;
+}
+const HASURA_GRAPHQL_ENGINE_HOSTNAME = window.location.host;
+export const GRAPHQL_ENDPOINT = `${scheme('http')}://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1alpha1/graphql`;
+export const WEBSOCKET_ENDPOINT = `${scheme('ws')}://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1alpha1/graphql`;
 
 // Make WebSocketLink with appropriate url
 const mkWsLink = (uri) => {
   const splitUri = uri.split('//');
   const subClient = new SubscriptionClient(
-    'wss://' + splitUri[1],
+    WEBSOCKET_ENDPOINT,
     { reconnect: true }
   );
   return new WebSocketLink(subClient);
