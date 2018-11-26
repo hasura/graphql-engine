@@ -5,11 +5,12 @@ IFS=$'\n\t'
 CONSOLE_ROOT="${BASH_SOURCE[0]%/*}/../console"
 
 wait_for_port() {
-    local PORT=$1
-    echo "waiting for $PORT"
+    local ADDRESS=$1
+    local PORT=$2
+    echo "waiting for $PORT on $ADDRESS"
     for i in `seq 1 60`;
     do
-      nc -z localhost $PORT && echo "port $PORT is ready" && return
+      nc -z $ADDRESS $PORT && echo "port $PORT on $ADDRESS is ready" && return
       echo -n .
       sleep 1
     done
@@ -26,13 +27,13 @@ touch /root/build/_console_output/cli.log
 /root/build/_server_output/graphql-engine \
     --database-url postgres://gql_test@${POSTGRES_HOST}:5432/gql_test serve > /root/build/_console_output/server.log 2>&1 &
 
-wait_for_port 8080
+wait_for_port localhost 8080
 
 # start cli
 /root/build/_cli_output/binaries/cli-hasura-linux-amd64 init --directory gql-test && cd gql-test
 /root/build/_cli_output/binaries/cli-hasura-linux-amd64 console --no-browser --address $(awk 'END{print $1}' /etc/hosts) > /root/build/_console_output/cli.log 2>&1 &
 
-wait_for_port 9693
+wait_for_port $(awk 'END{print $1}' /etc/hosts) 9693
 
 export PORT=3000
 export NODE_ENV=development

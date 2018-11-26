@@ -8,26 +8,6 @@ docker run --name server -d -e POSTGRES_HOST=$(docker inspect -f "{{ .NetworkSet
 
 CONSOLE_HOST=$(docker inspect -f "{{ .NetworkSettings.IPAddress }}" server)
 
-wait_for_port() {
-    local PORT=$1
-    echo "waiting for $PORT"
-    for i in `seq 1 60`;
-    do
-      nc -z localhost $PORT && echo "port $PORT is ready" && return
-      echo -n .
-      sleep 1
-    done
-    echo "Failed waiting for $PORT" && exit 1
-}
-
-wait_for_port 8080
-
-wait_for_port 9693
-
-wait_for_port 3000
-
-wait_for_port 3001
-
 cd "$CONSOLE_ROOT"
 
 while [ ! -f ./webpack-assets.json ]
