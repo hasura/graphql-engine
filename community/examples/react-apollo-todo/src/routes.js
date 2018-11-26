@@ -45,7 +45,6 @@ export const makeMainRoutes = () => {
           }
         />
         <Route
-          exact
           path="/callback"
           render={props => {
             handleAuthentication(props);
