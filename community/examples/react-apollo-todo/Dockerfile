@@ -11,4 +11,4 @@ RUN npm -g install serve
 
 WORKDIR /app
 COPY --from=builder /app/build .
-CMD ["serve", "-s", "-d", "-p", "8080"]
+CMD ["serve", "-s", "-p", "8080"]
