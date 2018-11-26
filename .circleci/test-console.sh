@@ -4,7 +4,7 @@ set -euo pipefail
 IFS=$'\n\t'
 CONSOLE_ROOT="${BASH_SOURCE[0]%/*}/../console"
 
-docker run --name server -e POSTGRES_HOST=$(docker inspect -f "{{ .NetworkSettings.IPAddress }}" postgres) -d -v /home/circleci/build:/root/build -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 bash -c "cd /root/graphql-engine && ./.circleci/start_console.sh"
+docker run --name server -d -e POSTGRES_HOST=$(docker inspect -f "{{ .NetworkSettings.IPAddress }}" postgres) -d -v /home/circleci/build:/root/build -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 bash -c "cd /root/graphql-engine && ./.circleci/start_console.sh"
 
 CONSOLE_HOST=$(docker inspect -f "{{ .NetworkSettings.IPAddress }}" server)
 
