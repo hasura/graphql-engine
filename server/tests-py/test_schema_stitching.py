@@ -19,8 +19,6 @@ def mk_add_remote_q(name, url):
         }
     }
 
-add_country_gql_remote = mk_add_remote_q('test-remote', 'https://countries.trevorblades.com/')
-
 
 class TestRemoteSchemaBasic:
     """ basic => no hasura tables are tracked """
@@ -30,7 +28,7 @@ class TestRemoteSchemaBasic:
 
     @pytest.fixture(autouse=True)
     def transact(self, hge_ctx):
-        q = mk_add_remote_q('simple 1', 'http://localhost:5000/simple-graphql')
+        q = mk_add_remote_q('simple 1', 'http://localhost:5000/hello-graphql')
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 200, resp
         yield
@@ -64,17 +62,21 @@ class TestRemoteSchemaBasic:
 
     def test_add_schema_conflicts(self, hge_ctx):
         """add 2 remote schemas with same node or types"""
-        q = mk_add_remote_q('simple 2', 'http://localhost:5000/simple-graphql')
+        q = mk_add_remote_q('simple 2', 'http://localhost:5000/hello-graphql')
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 400
         assert resp['code'] == 'remote-schema-conflicts'
 
     def test_add_second_remote_schema(self, hge_ctx):
         """add 2 remote schemas with different node and types"""
-        q = mk_add_remote_q('my remote', 'http://localhost:5000/simple2-graphql')
+        q = mk_add_remote_q('my remote', 'http://localhost:5000/user-graphql')
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 200, resp
         hge_ctx.v1q({"type": "remove_remote_schema", "args": {"name": "my remote"}})
+        assert st_code == 200, resp
+
+    def test_bulk_remove_add_remote_schema(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/basic_bulk_remove_add.yaml')
         assert st_code == 200, resp
 
 
@@ -101,14 +103,14 @@ class TestAddRemoteSchemaTbls:
 
     def test_add_schema_conflicts_with_tables(self, hge_ctx):
         """add remote schema which conflicts with hasura tables"""
-        q = mk_add_remote_q('simple2', 'http://localhost:5000/simple-graphql')
+        q = mk_add_remote_q('simple2', 'http://localhost:5000/hello-graphql')
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 400
         assert resp['code'] == 'remote-schema-conflicts'
 
     def test_add_second_remote_schema(self, hge_ctx):
         """add 2 remote schemas with different node and types"""
-        q = mk_add_remote_q('my remote2', 'https://countries.trevorblades.com/')
+        q = mk_add_remote_q('my remote2', 'http://localhost:5000/country-graphql')
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 200, resp
         hge_ctx.v1q({"type": "remove_remote_schema", "args": {"name": "my remote2"}})
@@ -116,6 +118,9 @@ class TestAddRemoteSchemaTbls:
 
     def test_remote_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/simple2_query.yaml')
+
+    def test_remote_mutation(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/simple2_mutation.yaml')
 
     def test_add_conflicting_table(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir + '/create_conflicting_table.yaml')
@@ -128,21 +133,18 @@ class TestAddRemoteSchemaTbls:
         st_code, resp = check_query(hge_ctx, query)
         assert st_code == 200, resp
         assert check_introspection_result(resp, ['User', 'hello'], ['user', 'hello'])
+
+    def test_add_schema_duplicate_name(self, hge_ctx):
+        q = mk_add_remote_q('simple2-graphql', 'http://localhost:5000/country-graphql')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 500, resp
+        assert resp['code'] == 'postgres-error'
+#    def test_remote_query_variables(self, hge_ctx):
+#        pass
 #    def test_add_schema_url_from_env(self, hge_ctx):
 #        pass
 #    def test_add_schema_header_from_env(self, hge_ctx):
 #        pass
-#    def test_add_schema_duplicate_name(self, hge_ctx):
-#        pass
-#
-#class TestRemoveRemoteSchema:
-#    def test_remove_schema_basic(self, hge_ctx):
-#        pass
-#    def test_remove_schema_not_exists(self, hge_ctx):
-#        pass
-#
-#class TestResolveRemoteSchemaQuery:
-#    pass
 
 
 def _map(f, l):

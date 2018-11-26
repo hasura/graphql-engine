@@ -6,6 +6,11 @@ import graphene
 
 from webserver import RequestHandler, WebServer, MkHandlers, Response
 
+def mkJSONResp(graphql_result):
+    return Response(HTTPStatus.OK, graphql_result.to_dict(),
+                    {'Content-Type': 'application/json'})
+
+
 class HelloWorldHandler(RequestHandler):
     def get(self, request):
         return Response(HTTPStatus.OK, 'hello world')
@@ -13,27 +18,22 @@ class HelloWorldHandler(RequestHandler):
     def post(self, request):
         return Response(HTTPStatus.METHOD_NOT_ALLOWED)
 
-def mkJSONResp(graphql_result):
-    return Response(HTTPStatus.OK, graphql_result.to_dict(),
-                    {'Content-Type': 'application/json'})
-
-
 class Hello(graphene.ObjectType):
     hello = graphene.String(arg=graphene.String(default_value="world"))
 
     def resolve_hello(self, info, arg):
         return "Hello " + arg
 
-simple_schema = graphene.Schema(query=Hello)
+hello_schema = graphene.Schema(query=Hello)
 
-class SimpleGraphQL(RequestHandler):
+class HelloGraphQL(RequestHandler):
     def get(self, request):
         return Response(HTTPStatus.METHOD_NOT_ALLOWED)
 
     def post(self, request):
         if not request.json:
             return Response(HTTPStatus.BAD_REQUEST)
-        res = simple_schema.execute(request.json['query'])
+        res = hello_schema.execute(request.json['query'])
         return mkJSONResp(res)
 
 class User(graphene.ObjectType):
@@ -62,7 +62,20 @@ all_users = [
     User(3, 'joe'),
 ]
 
-class Simple2Query(graphene.ObjectType):
+class CreateUser(graphene.Mutation):
+    class Arguments:
+        id = graphene.Int(required=True)
+        username = graphene.String(required=True)
+
+    ok = graphene.Boolean()
+    user = graphene.Field(lambda: User)
+
+    def mutate(self, info, id, username):
+        user = User(id, username)
+        all_users.append(user)
+        return CreateUser(ok=True, user=user)
+
+class UserQuery(graphene.ObjectType):
     user = graphene.Field(User, id=graphene.Int(required=True))
     allUsers = graphene.List(User)
 
@@ -72,21 +85,51 @@ class Simple2Query(graphene.ObjectType):
     def resolve_allUsers(self, info):
         return all_users
 
-simple2_schema = graphene.Schema(query=Simple2Query)
+class UserMutation(graphene.ObjectType):
+    createUser = CreateUser.Field()
 
-class Simple2GraphQL(RequestHandler):
+user_schema = graphene.Schema(query=UserQuery, mutation=UserMutation)
+
+class UserGraphQL(RequestHandler):
     def get(self, req):
         return Response(HTTPStatus.METHOD_NOT_ALLOWED)
     def post(self, req):
         if not req.json:
             return Response(HTTPStatus.BAD_REQUEST)
-        res = simple2_schema.execute(req.json['query'])
+        res = user_schema.execute(req.json['query'])
+        return mkJSONResp(res)
+
+class Country(graphene.ObjectType):
+    name = graphene.String()
+
+    def __init__(self, name):
+        self.name = name
+
+    def resolve_name(self, info):
+        return self.name
+
+class CountryQuery(graphene.ObjectType):
+    country = graphene.Field(Country)
+
+    def resolve_country(self, info):
+        return Country("India")
+
+country_schema = graphene.Schema(query=CountryQuery)
+
+class CountryGraphQL(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = country_schema.execute(req.json['query'])
         return mkJSONResp(res)
 
 handlers = MkHandlers({
     '/hello': HelloWorldHandler,
-    '/simple-graphql': SimpleGraphQL,
-    '/simple2-graphql': Simple2GraphQL
+    '/hello-graphql': HelloGraphQL,
+    '/user-graphql': UserGraphQL,
+    '/country-graphql': CountryGraphQL,
 })
 
 
