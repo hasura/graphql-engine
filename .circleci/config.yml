@@ -257,9 +257,6 @@ jobs:
     - run:
         name: install dependencies
         command: |
-          curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-          sudo apt-get install -y nodejs
-          npm install -g npm@5
           sudo apt-get update && sudo apt-get install -y \
             netcat \
             libpq5 \
@@ -279,34 +276,14 @@ jobs:
     - run:
         name: Run postgres container
         command: |
-          docker run -d -p 5432:5432 -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" circleci/postgres:10-alpine-postgis
+          docker run --name postgres -d -p 5432:5432 -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" circleci/postgres:10-alpine-postgis
     - *wait_for_postgres
     - checkout
     - attach_workspace:
         at: /home/circleci/build
-    - restore_cache:
-        key:
-          console-npm-cache-v2-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
-    - run:
-        name: install dependencies
-        working_directory: console
-        command: make ci-deps
-    - save_cache:
-        key:
-          console-npm-cache-v2-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
-        paths:
-        - console/node_modules
-        - ~/.npm
-        - ~/.cache
     - run:
         name: test console
         command: .circleci/test-console.sh
-    - run:
-        name: build console
-        working_directory: console
-        command: |
-          make build
-          make ci-copy-assets
     - store_artifacts:
         path: /home/circleci/build/_console_output
         destination: console

@@ -4,6 +4,10 @@ set -euo pipefail
 IFS=$'\n\t'
 CONSOLE_ROOT="${BASH_SOURCE[0]%/*}/../console"
 
+docker run --name server -e POSTGRES_HOST=$(docker inspect -f "{{ .NetworkSettings.IPAddress }}" postgres) -d -v /home/circleci/build:/root/build -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 bash -c "cd /root/graphql-engine && ./.circleci/start_console.sh"
+
+CONSOLE_HOST=$(docker inspect -f "{{ .NetworkSettings.IPAddress }}" server)
+
 wait_for_port() {
     local PORT=$1
     echo "waiting for $PORT"
@@ -16,46 +20,33 @@ wait_for_port() {
     echo "Failed waiting for $PORT" && exit 1
 }
 
-cd "$CONSOLE_ROOT"
-
-mkdir -p /home/circleci/build/_console_output
-touch /home/circleci/build/_console_output/server.log
-touch /home/circleci/build/_console_output/cli.log
-
-# start graphql-engine
-/home/circleci/build/_server_output/graphql-engine \
-    --database-url postgres://gql_test@localhost:5432/gql_test serve > /home/circleci/build/_console_output/server.log 2>&1 &
-
 wait_for_port 8080
-
-# start cli
-/home/circleci/build/_cli_output/binaries/cli-hasura-linux-amd64 init --directory gql-test && cd gql-test
-/home/circleci/build/_cli_output/binaries/cli-hasura-linux-amd64 console --no-browser > /home/circleci/build/_console_output/cli.log 2>&1 &
-
-cd ..
 
 wait_for_port 9693
 
-export PORT=3000
-export NODE_ENV=development
-export DATA_API_URL=http://localhost:8080
-export API_HOST=http://localhost
-export API_PORT=9693
-export CONSOLE_MODE=cli
-export DEV_DATA_API_URL=http://localhost:8080
-export URL_PREFIX=/
+wait_for_port 3000
 
-# test console
-npm run dev &
-# wait for console to build
-sleep 60
+wait_for_port 3001
+
+cd "$CONSOLE_ROOT"
+
+while [ ! -f ./webpack-assets.json ]
+do
+  sleep 2
+done
+
 # run console tests
-docker run --name test1 --net host -d -v /home/circleci/.cache/Cypress/3.1.0/Cypress:/usr/local/bin/Cypress -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine/console && node_modules/.bin/cypress open run --spec 'cypress/integration/data/relationships/test.js,cypress/integration/data/modify/test.js'"
-#docker run --name test2 --net host -d -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 cypress run --spec 'cypress/integration/data/insert-browse/test.js,cypress/integration/data/migration-mode/test.js,cypress/integration/remote-schemas/create-remote-schema/test.js'
-#docker run --name test3 --net host -d -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 cypress run --spec 'cypress/integration/data/views/test.js,cypress/integration/events/create-trigger/test.js,cypress/integration/data/create-table/test.js'
-#docker run --name test4 --net host -d -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 cypress run --spec 'cypress/integration/data/permissions/test.js,cypress/integration/data/raw-sql/test.js,cypress/integration/api-explorer/graphql/test.js,cypress/integration/data/404/test.js'
+docker run --name test1 -e TEST_ENV=MIGRATE_URL=http://${CONSOLE_HOST}:9693/apis/migrate -e TEST_CONFIG=baseUrl=http://${CONSOLE_HOST}:3000 -e 'TEST_SPECS=cypress/integration/data/relationships/test.js,cypress/integration/data/modify/test.js' -d -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine && ./.circleci/run_test.sh"
+docker run --name test2 -e TEST_ENV=MIGRATE_URL=http://${CONSOLE_HOST}:9693/apis/migrate -e TEST_CONFIG=baseUrl=http://${CONSOLE_HOST}:3000 -e 'TEST_SPECS=cypress/integration/data/insert-browse/test.js,cypress/integration/data/migration-mode/test.js,cypress/integration/remote-schemas/create-remote-schema/test.js' -d -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine && ./.circleci/run_test.sh"
+docker run --name test3 -e TEST_ENV=MIGRATE_URL=http://${CONSOLE_HOST}:9693/apis/migrate -e TEST_CONFIG=baseUrl=http://${CONSOLE_HOST}:3000 -e 'TEST_SPECS=cypress/integration/data/views/test.js,cypress/integration/events/create-trigger/test.js,cypress/integration/data/create-table/test.js' -d -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine && ./.circleci/run_test.sh"
+docker run --name test4 -e TEST_ENV=MIGRATE_URL=http://${CONSOLE_HOST}:9693/apis/migrate -e TEST_CONFIG=baseUrl=http://${CONSOLE_HOST}:3000 -e 'TEST_SPECS=cypress/integration/data/permissions/test.js,cypress/integration/data/raw-sql/test.js,cypress/integration/api-explorer/graphql/test.js,cypress/integration/data/404/test.js' -d -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine && ./.circleci/run_test.sh"
 
 docker wait test1
-#docker wait test2
-#docker wait test3
-#docker wait test4
+docker wait test2
+docker wait test3
+docker wait test4
+
+docker logs test1
+docker logs test2
+docker logs test3
+docker logs test4

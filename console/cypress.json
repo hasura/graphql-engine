@@ -1,7 +1,6 @@
 {
   "baseUrl": "http://localhost:3000",
   "env": {
-    "BASE_URL": "http://localhost:3000",
     "MIGRATE_URL": "http://localhost:9693/apis/migrate"
   },
   "ignoreTestFiles": ["*spec.js", "validators.js", "utils.js"],
