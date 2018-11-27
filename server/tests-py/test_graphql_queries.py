@@ -92,6 +92,9 @@ class TestGraphQLQueryLimits(DefaultTestSelectQueries):
     def test_limit_2(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_2.yaml')
 
+    def test_limit_null(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_null.yaml')
+
     def test_err_str_limit_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_string_limit_error.yaml')
 
