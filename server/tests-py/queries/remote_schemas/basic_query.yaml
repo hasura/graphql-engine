@@ -1,0 +1,11 @@
+description: Simple GraphQL query
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    hello: Hello me
+query:
+  query: |
+    query {
+      hello(arg: "me")
+    }

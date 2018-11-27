@@ -1,0 +1,13 @@
+description: Simple GraphQL subscription - not supported
+url: /v1alpha1/graphql
+status: 400
+response:
+  errors:
+  - path: $
+    error: subscription to remote server is not supported
+    code: not-supported
+query:
+  query: |
+    subscription {
+      hello
+    }

@@ -1,0 +1,10 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      create table "user" ( id int );
+- type: track_table
+  args:
+    schema: public
+    name: user

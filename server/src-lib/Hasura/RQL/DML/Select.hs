@@ -185,7 +185,8 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
   let tabFrom = TableFrom (spiTable selPermInfo) Nothing
       tabPerm = TablePerm (spiFilter selPermInfo) mPermLimit
   return $ AnnSelG annFlds tabFrom tabPerm $
-    TableArgs wClause annOrdByM mQueryLimit (S.intToSQLExp <$> mQueryOffset)
+    TableArgs wClause annOrdByM mQueryLimit
+    (S.intToSQLExp <$> mQueryOffset) Nothing
 
   where
     mQueryOffset = sqOffset selQ
@@ -301,7 +302,8 @@ mkSQLSelect isSingleObject annSel =
     rootFldName = FieldName "root"
     rootFldAls  = S.Alias $ toIden rootFldName
 
--- selectP2 :: (P2C m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m RespBody
+
+-- selectP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m RespBody
 selectP2 :: Bool -> (AnnSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 selectP2 asSingleObject (sel, p) =
   runIdentity . Q.getRow
