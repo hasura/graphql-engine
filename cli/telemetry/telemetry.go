@@ -1,13 +1,25 @@
 package telemetry
 
 import (
+	"runtime"
 	"sync"
+	"time"
 
+	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/version"
+	"github.com/parnurzeal/gorequest"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 // Waiter waits for telemetry ops to complete, if required
 var Waiter sync.WaitGroup
+
+// Endpoint is where telemetry data is sent.
+const Endpoint = "https://analytics.stats.hasura.io/v1/http"
+
+// Topic is the name under which telemetry is sent.
+const Topic = "cli_test"
 
 type requestPayload struct {
 	Topic string `json:"topic"`
@@ -32,6 +44,9 @@ type Data struct {
 	// Current cli version.
 	Version string `json:"version"`
 
+	// Current Server version.
+	ServerVersion string `json:"server_version"`
+
 	// Command being executed.
 	Command string `json:"command"`
 
@@ -43,6 +58,53 @@ type Data struct {
 }
 
 // SendExecutionEvent sends the execution event for cmd to the telemtry server
-func SendExecutionEvent(cmd *cobra.Command, args []string) {
+func SendExecutionEvent(ec *cli.ExecutionContext, cmd *cobra.Command, args []string) {
+	if ec.GlobalConfig.DisableTelemetry {
+		ec.Logger.Debugf("telemtry is disabled, not sending data")
+		return
+	}
+	data := makeData(ec)
+	data.Command = cmd.CommandPath()
+	beam(&data, ec.Logger)
+}
 
+// SendErrorEvent makes a telemtry call indicating the current execution
+// resulted in an error.
+func SendErrorEvent(ec *cli.ExecutionContext) {
+	if ec.GlobalConfig.DisableTelemetry {
+		ec.Logger.Debugf("telemtry is disabled, not sending data")
+		return
+	}
+	data := makeData(ec)
+	data.IsError = true
+	beam(&data, ec.Logger)
+}
+
+func makeData(ec *cli.ExecutionContext) Data {
+	return Data{
+		OSPlatform:  runtime.GOOS,
+		OSArch:      runtime.GOARCH,
+		Version:     version.BuildVersion,
+		UUID:        ec.GlobalConfig.UUID,
+		ExecutionID: ec.ID,
+	}
+}
+
+func beam(d *Data, log *logrus.Logger) {
+	p := requestPayload{
+		Topic: Topic,
+		Data:  *d,
+	}
+	tick := time.Now()
+	_, _, err := gorequest.New().
+		Post(Endpoint).
+		Timeout(2 * time.Second).
+		Send(p).
+		End()
+	if err != nil {
+		log.Debugf("sending telemetry payload failed: %v", err)
+	}
+	tock := time.Now()
+	delta := tock.Sub(tick)
+	log.WithField("isError", d.IsError).WithField("time", delta.String()).Debug("telemetry sent")
 }

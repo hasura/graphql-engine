@@ -83,6 +83,9 @@ type ExecutionContext struct {
 	// correctly render example strings etc.
 	CMDName string
 
+	// ID is a unique ID for this Execution
+	ID string
+
 	// Spinner is the global spinner object used to show progress across the cli.
 	Spinner *spinner.Spinner
 	// Logger is the global logger object to print logs.
@@ -157,7 +160,22 @@ func (ec *ExecutionContext) Prepare() error {
 	}
 
 	// initialize a blank config
-	ec.Config = &HasuraGraphQLConfig{}
+	if ec.Config == nil {
+		ec.Config = &HasuraGraphQLConfig{}
+	}
+
+	// generate an execution id
+	if ec.ID == "" {
+		id := "00000000-0000-0000-0000-000000000000"
+		u, err := uuid.NewV4()
+		if err == nil {
+			id = u.String()
+		} else {
+			ec.Logger.Debugf("generating uuid for execution ID failed, %v", err)
+		}
+		ec.ID = id
+		ec.Logger.Debugf("execution id: %v", ec.ID)
+	}
 
 	return nil
 }
@@ -166,14 +184,9 @@ func (ec *ExecutionContext) Prepare() error {
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
 func (ec *ExecutionContext) Validate() error {
-	// prepare the context
-	err := ec.Prepare()
-	if err != nil {
-		return errors.Wrap(err, "failed preparing context")
-	}
 
 	// validate execution directory
-	err = ec.validateDirectory()
+	err := ec.validateDirectory()
 	if err != nil {
 		return errors.Wrap(err, "validating current directory failed")
 	}
@@ -299,7 +312,7 @@ func (ec *ExecutionContext) setupLogger() {
 	}
 }
 
-// setupGlobalConfig ensures that global config directory and file exists and
+// setupGlobConfig ensures that global config directory and file exists and
 // reads it into the GlobalConfig object.
 func (ec *ExecutionContext) setupGlobalConfig() error {
 	if len(ec.GlobalConfigDir) == 0 {
