@@ -14,6 +14,7 @@ module Hasura.GraphQL.Resolve.Context
   , InsCtx(..)
   , InsCtxMap
   , RespTx
+  , PrepFn
   , InsertTxConflictCtx(..)
   , getFldInfo
   , getPGColInfo
@@ -73,6 +74,7 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
 --   deriving (Show, Eq)
 
 type RespTx = Q.TxE QErr BL.ByteString
+type PrepFn m = (PGColType, PGColValue) -> m S.SQLExp
 
 -- -- order by context
 -- data OrdByItem
@@ -162,8 +164,7 @@ type Convert =
   StateT PrepArgs (ReaderT (FieldMap, OrdByCtx, InsCtxMap) (Except QErr))
 
 prepare
-  :: (MonadState PrepArgs m)
-  => (PGColType, PGColValue) -> m S.SQLExp
+  :: (MonadState PrepArgs m) => PrepFn m
 prepare (colTy, colVal) = do
   preparedArgs <- get
   put (preparedArgs Seq.|> binEncoder colVal)
