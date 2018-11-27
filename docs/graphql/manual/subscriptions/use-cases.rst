@@ -280,5 +280,5 @@ Now we can use the following subscription to display the latest poll result:
       }
     }
 
-Check this `sample app <https://shahidh.in/hasura-realtime-poll/>`__ for a working demo
+Check this `sample app <https://realtime-poll.demo.hasura.app/>`__ for a working demo
 (`source code <https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-poll>`__).
