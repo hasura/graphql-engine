@@ -44,6 +44,7 @@
     "prefer-template": 0,
     "prefer-spread": 0,
     "object-shorthand": 0,
+    "camelcase": 0,
     "object-curly-newline": 0,
     "spaced-comment": 0,
     "prefer-destructuring": ["error", {"object": false, "array": false}],

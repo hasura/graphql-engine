@@ -7,6 +7,12 @@ export const triggerNameDescription = (
   </Tooltip>
 );
 
+export const triggerNameDisabled = (
+  <Tooltip id="tooltip-trigger-name-disabled-info">
+    Trigger name can not be modified
+  </Tooltip>
+);
+
 export const operationsDescription = (
   <Tooltip id="tooltip-operations-description">
     Listen to these operations on the table
@@ -29,5 +35,11 @@ export const advancedOperationDescription = (
 export const postgresDescription = (
   <Tooltip id="tooltip-postgres-description">
     Select the postgres schema and table
+  </Tooltip>
+);
+
+export const schemaDisabled = (
+  <Tooltip id="tooltip-schema-disabled-info">
+    Schema and table names cannot be modified
   </Tooltip>
 );

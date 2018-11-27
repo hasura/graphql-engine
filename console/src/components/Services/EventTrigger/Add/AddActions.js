@@ -70,7 +70,7 @@ const getWebhookKey = (type, val) => {
   return { [type === 'url' ? 'webhook' : 'webhook_from_env']: val };
 };
 
-const createTrigger = () => {
+const createTrigger = modify => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
     dispatch(showSuccessNotification('Creating Trigger...'));
@@ -82,7 +82,9 @@ const createTrigger = () => {
     const webhookType = currentState.webhookUrlType;
 
     // apply migrations
-    const migrationName = 'create_trigger_' + triggerName.trim();
+    const migrationName = modify
+      ? 'modify'
+      : 'create' + '_trigger_' + triggerName.trim();
     const payload = {
       type: 'create_event_trigger',
       args: {
@@ -92,12 +94,41 @@ const createTrigger = () => {
         ...getWebhookKey(webhookType, webhook),
       },
     };
-    const downPayload = {
-      type: 'delete_event_trigger',
-      args: {
-        name: triggerName,
-      },
-    };
+
+    let downPayload;
+
+    if (modify) {
+      payload.args.replace = true;
+
+      const oldTrigger = getState().triggers.triggerList.find(
+        tr => tr.name === triggerName
+      );
+      downPayload = {
+        type: 'create_event_trigger',
+        args: {
+          name: triggerName,
+          table: oldTrigger.table_name,
+          schema: oldTrigger.schema_name,
+          ...oldTrigger.configuration.definition,
+          retry_conf: oldTrigger.configuration.retry_conf,
+          replace: true,
+        },
+      };
+      if (oldTrigger.configuration.webhook) {
+        downPayload.args.webhook = oldTrigger.configuration.webhook;
+      } else {
+        downPayload.args.webhook_from_env =
+          oldTrigger.configuration.webhook_from_env;
+      }
+    } else {
+      downPayload = {
+        type: 'delete_event_trigger',
+        args: {
+          name: triggerName,
+        },
+      };
+    }
+
     // operation definition
     if (currentState.selectedOperations.insert) {
       payload.args.insert = { columns: currentState.operations.insert };
@@ -137,9 +168,9 @@ const createTrigger = () => {
       type: 'bulk',
       args: downQueryArgs,
     };
-    const requestMsg = 'Creating trigger...';
-    const successMsg = 'Trigger Created';
-    const errorMsg = 'Create trigger failed';
+    const requestMsg = (modify ? 'Updating' : 'Creating') + ' trigger...';
+    const successMsg = 'Trigger ' + (modify ? 'updated' : 'created');
+    const errorMsg = (modify ? 'Creating ' : 'Updating ') + 'trigger failed';
 
     const customOnSuccess = () => {
       // dispatch({ type: REQUEST_SUCCESS });
@@ -148,7 +179,11 @@ const createTrigger = () => {
       dispatch(loadTriggers()).then(() => {
         dispatch(loadProcessedEvents()).then(() => {
           dispatch(
-            _push('/manage/triggers/' + triggerName.trim() + '/processed')
+            _push(
+              '/manage/triggers/' +
+                triggerName.trim() +
+                (modify ? 'settings' : '/processed')
+            )
           );
         });
       });
@@ -160,6 +195,8 @@ const createTrigger = () => {
       return;
     };
 
+    console.log(upQuery);
+    console.log(downQuery);
     makeMigrationCall(
       dispatch,
       getState,

@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
+import { push } from 'react-router-redux';
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
@@ -31,7 +32,7 @@ import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 
 import semverCheck from '../../../../helpers/semver';
 
-class AddTrigger extends Component {
+export class AddTrigger extends Component {
   constructor(props) {
     super(props);
     this.props.dispatch(fetchTableListBySchema('public'));
@@ -43,7 +44,11 @@ class AddTrigger extends Component {
   }
   componentDidMount() {
     // set defaults
-    this.props.dispatch(setDefaults());
+    if (this.props.modify) {
+      this.setTrigger();
+    } else {
+      this.props.dispatch(setDefaults());
+    }
     if (this.props.serverVersion) {
       this.checkSemVer(this.props.serverVersion).then(() => {
         this.checkWebhookEnvSupport(this.props.serverVersion);
@@ -62,23 +67,55 @@ class AddTrigger extends Component {
     this.props.dispatch(setDefaults());
   }
 
-  checkSemVer(version) {
-    try {
-      const supportColumnChangeFeature = semverCheck(
-        'supportColumnChangeTrigger',
-        version
-      );
-      if (supportColumnChangeFeature) {
-        this.updateSupportColumnChangeFeature(true);
-      } else {
-        this.updateSupportColumnChangeFeature(false);
+  // templating values for modifying trigger
+  setTrigger = () => {
+    const { modifyTriggerName, triggerList, dispatch } = this.props;
+    const currentTrigger = triggerList.find(
+      tr => tr.name === modifyTriggerName
+    );
+    if (currentTrigger) {
+      const {
+        configuration: {
+          headers,
+          webhook,
+          webhook_from_env,
+          definition,
+          retry_conf,
+        },
+        table_name,
+        schema_name,
+      } = currentTrigger;
+      dispatch(setTriggerName(modifyTriggerName));
+      dispatch(setSchemaName(schema_name));
+      dispatch(setTableName(table_name));
+      dispatch({
+        type: UPDATE_WEBHOOK_URL_TYPE,
+        data: webhook_from_env ? 'env' : 'url',
+      });
+      dispatch(setWebhookURL(webhook || webhook_from_env));
+      for (const queryType in definition) {
+        if (definition[queryType]) {
+          const { columns } = definition[queryType];
+          dispatch(
+            setOperationSelection(queryType, columns.length ? true : false)
+          );
+          columns.forEach(col => {
+            dispatch(operationToggleColumn(col, queryType));
+          });
+        }
       }
-    } catch (e) {
-      this.updateSupportColumnChangeFeature(false);
-      console.error(e);
+      headers.forEach((header, i) => {
+        dispatch(setHeaderKey(header.name, i));
+        dispatch(setHeaderValue(header.value || header.value_from_env, i));
+        dispatch(setHeaderType(header.value_from_env ? 'env' : 'static', i));
+        dispatch(addHeader());
+      });
+      dispatch(setRetryNum(retry_conf.num_retries));
+      dispatch(setRetryInterval(retry_conf.interval_sec));
+    } else {
+      dispatch(push('/events/manage/triggers'));
     }
-    return Promise.resolve();
-  }
+  };
 
   checkWebhookEnvSupport(version) {
     const supportWebhookEnv = semverCheck('webhookEnvSupport', version);
@@ -101,7 +138,32 @@ class AddTrigger extends Component {
     }
   }
 
-  submitValidation(e) {
+  checkSemVer(version) {
+    try {
+      const supportColumnChangeFeature = semverCheck(
+        'supportColumnChangeTrigger',
+        version
+      );
+      if (supportColumnChangeFeature) {
+        this.updateSupportColumnChangeFeature(true);
+      } else {
+        this.updateSupportColumnChangeFeature(false);
+      }
+    } catch (e) {
+      this.updateSupportColumnChangeFeature(false);
+      console.error(e);
+    }
+    return Promise.resolve();
+  }
+
+  cancelTriggerModify = e => {
+    e.preventDefault();
+    this.props.dispatch(
+      push(`/events/manage/triggers/${this.props.modifyTriggerName}/settings`)
+    );
+  };
+
+  submitValidation = e => {
     // validations
     e.preventDefault();
     let isValid = true;
@@ -169,7 +231,7 @@ class AddTrigger extends Component {
       // Check for empty header keys and key/value validation?
     }
     if (isValid) {
-      this.props.dispatch(createTrigger());
+      this.props.dispatch(createTrigger(this.props.modify));
     } else {
       this.props.dispatch(
         showErrorNotification('Error creating trigger!', errorMsg, '', {
@@ -177,7 +239,7 @@ class AddTrigger extends Component {
         })
       );
     }
-  }
+  };
   toggleAdvanced() {
     this.setState({ advancedExpanded: !this.state.advancedExpanded });
   }
@@ -197,20 +259,23 @@ class AddTrigger extends Component {
       headers,
       webhookURL,
       webhookUrlType,
+      modify,
+      triggerName,
+      modifyTriggerName,
+      retryConf,
     } = this.props;
 
     const { supportColumnChangeFeature } = this.state;
 
     const styles = require('../TableCommon/Table.scss');
-    let createBtnText = 'Create';
+    let submitButtonText = modify ? 'Save' : 'Create';
     if (ongoingRequest) {
-      createBtnText = 'Creating...';
-    } else if (lastError) {
-      createBtnText = 'Creating Failed. Try again';
-    } else if (internalError) {
-      createBtnText = 'Creating Failed. Try again';
+      submitButtonText = modify ? 'Saving...' : 'Creating...';
+    } else if (lastError || internalError) {
+      submitButtonText =
+        (modify ? 'Modifying' : 'Creating') + ' failed. Try again';
     } else if (lastSuccess) {
-      createBtnText = 'Created! Redirecting...';
+      submitButtonText = (modify ? 'Saved' : 'Created') + '! Redirecting...';
     }
     const updateTableList = e => {
       dispatch(setSchemaName(e.target.value));
@@ -435,20 +500,28 @@ class AddTrigger extends Component {
       );
     });
 
+    const helmetTitle = modify
+      ? `Modify ${modifyTriggerName} - Events | Hasura`
+      : 'Add Trigger - Events | Hasura';
+
+    const heading = modify
+      ? `Modify ${modifyTriggerName}`
+      : 'Add a new trigger';
+
     return (
       <div
         className={`${styles.addTablesBody} ${styles.main_wrapper} ${
           styles.padd_left
         }`}
       >
-        <Helmet title="Add Trigger - Events | Hasura" />
+        <Helmet title={helmetTitle} />
         <div className={styles.subHeader}>
-          <h2 className={styles.heading_text}>Add a new trigger</h2>
+          <h2 className={styles.heading_text}>{heading}</h2>
           <div className="clearfix" />
         </div>
         <br />
         <div className={`container-fluid ${styles.padd_left_remove}`}>
-          <form onSubmit={this.submitValidation.bind(this)}>
+          <form onSubmit={this.submitValidation}>
             <div
               className={`${styles.addCol} col-xs-12 ${
                 styles.padd_left_remove
@@ -458,7 +531,11 @@ class AddTrigger extends Component {
                 Trigger Name &nbsp; &nbsp;
                 <OverlayTrigger
                   placement="right"
-                  overlay={tooltip.triggerNameDescription}
+                  overlay={
+                    modify
+                      ? tooltip.triggerNameDisabled
+                      : tooltip.triggerNameDescription
+                  }
                 >
                   <i className="fa fa-question-circle" aria-hidden="true" />
                 </OverlayTrigger>{' '}
@@ -473,13 +550,19 @@ class AddTrigger extends Component {
                 onChange={e => {
                   dispatch(setTriggerName(e.target.value));
                 }}
+                value={triggerName}
+                disabled={modify}
               />
               <hr />
               <h4 className={styles.subheading_text}>
                 Schema/Table &nbsp; &nbsp;
                 <OverlayTrigger
                   placement="right"
-                  overlay={tooltip.postgresDescription}
+                  overlay={
+                    modify
+                      ? tooltip.schemaDisabled
+                      : tooltip.postgresDescription
+                  }
                 >
                   <i className="fa fa-question-circle" aria-hidden="true" />
                 </OverlayTrigger>{' '}
@@ -488,15 +571,13 @@ class AddTrigger extends Component {
                 onChange={updateTableList}
                 data-test="select-schema"
                 className={styles.selectTrigger + ' form-control'}
+                disabled={modify}
+                value={schemaName}
               >
                 {schemaList.map(s => {
                   if (s.schema_name === schemaName) {
                     return (
-                      <option
-                        value={s.schema_name}
-                        key={s.schema_name}
-                        selected="selected"
-                      >
+                      <option value={s.schema_name} key={s.schema_name}>
                         {s.schema_name}
                       </option>
                     );
@@ -515,6 +596,8 @@ class AddTrigger extends Component {
                 className={
                   styles.selectTrigger + ' form-control ' + styles.add_mar_left
                 }
+                disabled={modify}
+                value={tableName}
               >
                 <option value="">Select table</option>
                 {tableListBySchema.map(t => {
@@ -697,6 +780,7 @@ class AddTrigger extends Component {
                         className={styles.display_inline + ' form-control'}
                         type="text"
                         placeholder="no of retries"
+                        value={retryConf && retryConf.num_retries}
                       />
                     </div>
                     <div
@@ -719,6 +803,7 @@ class AddTrigger extends Component {
                         className={styles.display_inline + ' form-control'}
                         type="text"
                         placeholder="interval time in seconds"
+                        value={retryConf && retryConf.interval_sec}
                       />
                     </div>
                   </div>
@@ -733,11 +818,22 @@ class AddTrigger extends Component {
               <hr />
               <button
                 type="submit"
-                className={`btn ${styles.yellow_button}`}
-                data-test="trigger-create"
+                className={`btn ${styles.yellow_button} ${
+                  styles.triggerSettingsModifyButton
+                }`}
+                data-test={modify ? 'trigger-create' : 'trigger-modify'}
               >
-                {createBtnText}
+                {submitButtonText}
               </button>
+              {modify && (
+                <button
+                  className={'btn btn-sm btn-default'}
+                  data-test="trigger-delete"
+                  onClick={this.cancelTriggerModify}
+                >
+                  Cancel
+                </button>
+              )}
             </div>
           </form>
         </div>
@@ -747,7 +843,9 @@ class AddTrigger extends Component {
 }
 
 AddTrigger.propTypes = {
+  modifyTriggerName: PropTypes.string,
   triggerName: PropTypes.string,
+  triggerList: PropTypes.array,
   tableName: PropTypes.string,
   schemaName: PropTypes.string,
   schemaList: PropTypes.array,

@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import AceEditor from 'react-ace';
 import TableHeader from '../TableCommon/TableHeader';
 import { deleteTrigger } from '../EventActions';
+import { push } from 'react-router-redux';
 
 class Settings extends Component {
   render() {
@@ -52,6 +53,10 @@ class Settings extends Component {
       if (isOk) {
         dispatch(deleteTrigger(triggerName));
       }
+    };
+
+    const handleModifyTrigger = () => {
+      dispatch(push(`/events/manage/triggers/${triggerName}/modify`));
     };
 
     return (
@@ -133,6 +138,15 @@ class Settings extends Component {
             </table>
           </div>
           <div className={styles.add_mar_bottom}>
+            <button
+              onClick={handleModifyTrigger}
+              className={`btn ${styles.yellow_button} ${
+                styles.triggerSettingsModifyButton
+              }`}
+              data-test="modify-trigger"
+            >
+              Modify Trigger
+            </button>
             <button
               onClick={handleDeleteTrigger}
               className={'btn btn-sm btn-danger'}
