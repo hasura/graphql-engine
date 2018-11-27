@@ -3,8 +3,8 @@ args:
 - type: run_sql
   args:
     sql: |
-      create table routing (id int)
+      create table "user" ( id int );
 - type: track_table
   args:
     schema: public
-    name: routing
+    name: user

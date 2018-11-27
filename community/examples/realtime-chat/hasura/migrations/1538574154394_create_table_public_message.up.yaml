@@ -1,0 +1,9 @@
+- args:
+    sql: CREATE TABLE public."message"("id" serial NOT NULL, "username" text NOT NULL,
+      "text" text NOT NULL, "timestamp" timestamptz NOT NULL DEFAULT now(), PRIMARY
+      KEY ("id") );
+  type: run_sql
+- args:
+    name: message
+    schema: public
+  type: add_existing_table_or_view
