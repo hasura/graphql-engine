@@ -41,6 +41,7 @@ import qualified Data.HashSet                  as HS
 import qualified Data.List                     as L
 import qualified Data.Text                     as T
 
+import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
@@ -147,13 +148,13 @@ data ReplaceMetadata
   = ReplaceMetadata
   { aqTables         :: ![TableMeta]
   , aqQueryTemplates :: ![DQ.CreateQueryTemplate]
-  , aqRemoteSchemas  :: ![TRS.AddRemoteSchemaQuery]
+  , aqRemoteSchemas  :: !(Maybe [TRS.AddRemoteSchemaQuery])
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 
 applyQP1 :: ReplaceMetadata -> P1 ()
-applyQP1 (ReplaceMetadata tables templates schemas) = do
+applyQP1 (ReplaceMetadata tables templates mSchemas) = do
 
   adminOnly
 
@@ -182,8 +183,9 @@ applyQP1 (ReplaceMetadata tables templates schemas) = do
   withPathK "queryTemplates" $
     checkMultipleDecls "query templates" $ map DQ.cqtName templates
 
-  withPathK "remote_schemas" $
-    checkMultipleDecls "remote schemas" $ map TRS._arsqName schemas
+  onJust mSchemas $ \schemas ->
+      withPathK "remote_schemas" $
+        checkMultipleDecls "remote schemas" $ map TRS._arsqName schemas
 
   where
     withTableName qt = withPathK (qualTableToTxt qt)
@@ -207,7 +209,7 @@ applyQP2
      )
   => ReplaceMetadata
   -> m RespBody
-applyQP2 (ReplaceMetadata tables templates schemas) = do
+applyQP2 (ReplaceMetadata tables templates mSchemas) = do
 
   hMgr <- askHttpManager
   defaultSchemaCache <- liftTx $ clearMetadata >> DT.buildSchemaCache hMgr
@@ -252,10 +254,11 @@ applyQP2 (ReplaceMetadata tables templates schemas) = do
       qti <- DQ.createQueryTemplateP1 template
       void $ DQ.createQueryTemplateP2 template qti
 
-  -- custom resolvers
-  withPathK "remote_schemas" $
-    indexedForM_ schemas $ \conf ->
-      void $ DRS.addRemoteSchemaP2 conf
+  -- remote schemas
+  onJust mSchemas $ \schemas ->
+    withPathK "remote_schemas" $
+      indexedForM_ schemas $ \conf ->
+        void $ DRS.addRemoteSchemaP2 conf
 
   return successMsg
 
@@ -329,7 +332,7 @@ fetchMetadata = do
   -- fetch all custom resolvers
   schemas <- DRS.fetchRemoteSchemas
 
-  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs schemas
+  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs (Just schemas)
 
   where
 
