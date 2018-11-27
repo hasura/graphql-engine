@@ -1,5 +1,5 @@
 {
-  "name": "react-graphql-boilerplate",
+  "name": "realtime-group-chat",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
