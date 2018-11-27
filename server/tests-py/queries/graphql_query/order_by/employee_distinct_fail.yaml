@@ -3,10 +3,10 @@ url: /v1alpha1/graphql
 status: 400
 response:
   errors:
-  - path: "$.selectionSet.employee.args"
-    error: '"distinct_on" columns must match initial "order_by" columns'
-    code: validation-failed
-
+  - extensions:
+      code: validation-failed
+      path: "$.selectionSet.employee.args"
+    message: '"distinct_on" columns must match initial "order_by" columns'
 query:
   query: |
     query {

@@ -190,7 +190,7 @@ parseLimit v = do
   onlyPositiveInt limit
   return limit
   where
-    noIntErr = throw400 Unexpected "expecting Integer value for \"limit\""
+    noIntErr = throwVE "expecting Integer value for \"limit\""
 
 fromFieldByPKey
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
