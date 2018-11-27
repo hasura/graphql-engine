@@ -72,7 +72,7 @@ Now we can use the following subscription to fetch the latest location of a vehi
     }
 
 
-Check this `sample app <https://hasura.github.io/realtime-location-app/>`__ for a working demo
+Check this `sample app <https://realtime-location-tracking.demo.hasura.app/>`__ for a working demo
 (`source code <https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-location-tracking>`__).
 
 .. _subscribe_table:
@@ -148,7 +148,7 @@ Now we can use the following subscription to display the latest messages in a ch
       }
     }
 
-Check this `sample app <https://chat-example-trial-roar.herokuapp.com/>`__ for a working demo
+Check this `sample app <https://realtime-chat.demo.hasura.app/>`__ for a working demo
 (`source code <https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-chat>`__).
 
 .. _subscribe_derived:
