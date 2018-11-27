@@ -205,6 +205,7 @@ class PermissionBuilder extends React.Component {
           name={value}
           onChange={dispatchSelect}
           className={styles.qb_select}
+          data-test="qb-select"
         >
           {_selectOptions}
         </select>
