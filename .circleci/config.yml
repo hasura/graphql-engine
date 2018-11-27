@@ -257,7 +257,6 @@ jobs:
         name: Run Postgres container
         command: |
           docker run --name postgres -d -p 5432:5432 -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" circleci/postgres:10-alpine-postgis
-    - *wait_for_postgres
     - checkout
     - restore_cache:
         key:
