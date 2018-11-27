@@ -20,6 +20,32 @@ class Settings extends Component {
     )[0];
     triggerSchema = triggerSchema ? triggerSchema : {};
 
+    const triggerConfiguration =
+      ('configuration' in triggerSchema && triggerSchema.configuration) || {};
+
+    const webhookConf =
+      ('webhook' in triggerConfiguration && triggerConfiguration.webhook) ||
+      ('webhook_from_env' in triggerConfiguration &&
+        '<' + triggerConfiguration.webhook_from_env + '>') ||
+      triggerSchema.webhook;
+    let retryInterval = '';
+    let noOfRetries = '';
+    if ('retry_conf' in triggerConfiguration) {
+      retryInterval = triggerConfiguration.retry_conf.interval_sec;
+      noOfRetries = triggerConfiguration.retry_conf.num_retries;
+    } else {
+      retryInterval = triggerSchema.retry_interval;
+      noOfRetries = triggerSchema.num_retries;
+    }
+    const headers =
+      ('headers' in triggerConfiguration && triggerConfiguration.headers) ||
+      ('headers' in triggerSchema && triggerSchema.headers) ||
+      [];
+    const definition =
+      ('definition' in triggerConfiguration &&
+        triggerConfiguration.definition) ||
+      triggerSchema.definition;
+
     const handleDeleteTrigger = e => {
       e.preventDefault();
       const isOk = confirm('Are you sure?');
@@ -45,7 +71,7 @@ class Settings extends Component {
               <tbody>
                 <tr>
                   <td>Webhook URL</td>
-                  <td>{triggerSchema.webhook}</td>
+                  <td>{webhookConf}</td>
                 </tr>
                 <tr>
                   <td>Table</td>
@@ -61,34 +87,31 @@ class Settings extends Component {
                 </tr>
                 <tr>
                   <td>Number of Retries</td>
-                  <td>{triggerSchema.num_retries}</td>
+                  <td>{noOfRetries}</td>
                 </tr>
                 <tr>
                   <td>Retry Interval</td>
                   <td>
-                    {triggerSchema.retry_interval}{' '}
-                    {triggerSchema.retry_interval > 1 ? 'seconds' : 'second'}
+                    {retryInterval} {retryInterval > 1 ? 'seconds' : 'second'}
                   </td>
                 </tr>
-                {'headers' in triggerSchema ? (
-                  <tr>
-                    <td>Headers</td>
-                    <td>
-                      <AceEditor
-                        mode="json"
-                        theme="github"
-                        name="headers"
-                        value={JSON.stringify(triggerSchema.headers, null, 4)}
-                        minLines={4}
-                        maxLines={100}
-                        width="100%"
-                        showPrintMargin={false}
-                        showGutter={false}
-                        readOnly
-                      />
-                    </td>
-                  </tr>
-                ) : null}
+                <tr>
+                  <td>Headers</td>
+                  <td>
+                    <AceEditor
+                      mode="json"
+                      theme="github"
+                      name="headers"
+                      value={JSON.stringify(headers, null, 4)}
+                      minLines={4}
+                      maxLines={100}
+                      width="100%"
+                      showPrintMargin={false}
+                      showGutter={false}
+                      readOnly
+                    />
+                  </td>
+                </tr>
                 <tr>
                   <td>Operation / Columns</td>
                   <td>
@@ -96,7 +119,7 @@ class Settings extends Component {
                       mode="json"
                       theme="github"
                       name="payload"
-                      value={JSON.stringify(triggerSchema.definition, null, 4)}
+                      value={JSON.stringify(definition, null, 4)}
                       minLines={4}
                       maxLines={100}
                       width="100%"

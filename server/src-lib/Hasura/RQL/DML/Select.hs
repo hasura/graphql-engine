@@ -47,7 +47,7 @@ convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
   let pgWhenRelErr = "only relationships can be expanded"
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap rn pgWhenRelErr
-  let (RelInfo _ _ _ relTab _ _) = relInfo
+  let (RelInfo _ _ _ relTab _) = relInfo
   (rfim, rspi) <- fetchRelDet rn relTab
   resolvedSelQ <- resolveStar rfim rspi selQ
   return [ECRel rn malias resolvedSelQ]
@@ -60,7 +60,7 @@ convWildcard
   -> SelPermInfo
   -> Wildcard
   -> m [ExtCol]
-convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _ _) wildcard =
+convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _) wildcard =
   case wildcard of
   Star         -> return simpleCols
   (StarDot wc) -> (simpleCols ++) <$> (catMaybes <$> relExtCols wc)
@@ -165,12 +165,12 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
       annRel <- convExtRel fieldInfoMap relName mAlias relSelQ prepValBuilder
       return (fromRel $ fromMaybe relName mAlias, FRel annRel)
 
-  let spiT = spiTable selPermInfo
+  -- let spiT = spiTable selPermInfo
 
   -- Convert where clause
   wClause <- forM (sqWhere selQ) $ \be ->
     withPathK "where" $
-    convBoolExp' fieldInfoMap spiT selPermInfo be prepValBuilder
+    convBoolExp' fieldInfoMap selPermInfo be prepValBuilder
 
   annOrdByML <- forM (sqOrderBy selQ) $ \(OrderByExp obItems) ->
     withPathK "order_by" $ indexedForM obItems $ mapM $
@@ -185,7 +185,8 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
   let tabFrom = TableFrom (spiTable selPermInfo) Nothing
       tabPerm = TablePerm (spiFilter selPermInfo) mPermLimit
   return $ AnnSelG annFlds tabFrom tabPerm $
-    TableArgs wClause annOrdByM mQueryLimit (S.intToSQLExp <$> mQueryOffset)
+    TableArgs wClause annOrdByM mQueryLimit
+    (S.intToSQLExp <$> mQueryOffset) Nothing
 
   where
     mQueryOffset = sqOffset selQ
@@ -216,7 +217,7 @@ convExtRel fieldInfoMap relName mAlias selQ prepValBuilder = do
   -- Point to the name key
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap relName pgWhenRelErr
-  let (RelInfo _ relTy colMapping relTab _ _) = relInfo
+  let (RelInfo _ relTy colMapping relTab _) = relInfo
   (relCIM, relSPI) <- fetchRelDet relName relTab
   when (relTy == ObjRel && misused) $
     throw400 UnexpectedPayload objRelMisuseMsg
@@ -258,11 +259,11 @@ getSelectDeps (AnnSelG flds tabFrm _ tableArgs) =
     TableFrom tn _ = tabFrm
     annWc = _taWhere tableArgs
     (sCols, rCols) = partAnnFlds $ map snd flds
-    colDeps     = map (mkColDep "untyped" tn . fst) sCols
-    relDeps     = map (mkRelDep . arName) rCols
-    nestedDeps  = concatMap (getSelectDeps . arAnnSel) rCols
-    whereDeps   = getBoolExpDeps tn <$> annWc
-    mkRelDep rn =
+    colDeps      = map (mkColDep "untyped" tn . fst) sCols
+    relDeps      = map (mkRelDep . arName) rCols
+    nestedDeps   = concatMap (getSelectDeps . arAnnSel) rCols
+    whereDeps    = getBoolExpDeps tn <$> annWc
+    mkRelDep rn  =
       SchemaDependency (SOTableObj tn (TORel rn)) "untyped"
 
 convSelectQuery
@@ -301,7 +302,8 @@ mkSQLSelect isSingleObject annSel =
     rootFldName = FieldName "root"
     rootFldAls  = S.Alias $ toIden rootFldName
 
--- selectP2 :: (P2C m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m RespBody
+
+-- selectP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m RespBody
 selectP2 :: Bool -> (AnnSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 selectP2 asSingleObject (sel, p) =
   runIdentity . Q.getRow

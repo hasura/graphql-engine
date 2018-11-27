@@ -17,11 +17,15 @@ module Hasura.RQL.Types
        , MonadTx(..)
        , UserInfoM(..)
        , RespBody
-       , P2C
+       --, P2C
+       , P2Ctx (..)
        -- , P2Res
        , liftP1
        , runP1
        , successMsg
+
+       , HasHttpManager (..)
+       , HasGCtxMap (..)
 
        , QCtx(..)
        , HasQCtx(..)
@@ -44,25 +48,31 @@ module Hasura.RQL.Types
 
        , HeaderObj
 
+       , liftMaybe
        , module R
        ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common      as R
-import           Hasura.RQL.Types.DML         as R
-import           Hasura.RQL.Types.Error       as R
-import           Hasura.RQL.Types.Permission  as R
-import           Hasura.RQL.Types.SchemaCache as R
-import           Hasura.RQL.Types.Subscribe   as R
+import           Hasura.RQL.Types.BoolExp      as R
+import           Hasura.RQL.Types.Common       as R
+import           Hasura.RQL.Types.DML          as R
+import           Hasura.RQL.Types.Error        as R
+import           Hasura.RQL.Types.Permission   as R
+import           Hasura.RQL.Types.RemoteSchema as R
+import           Hasura.RQL.Types.SchemaCache  as R
+import           Hasura.RQL.Types.Subscribe    as R
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query            as Q
+import qualified Hasura.GraphQL.Context        as GC
+
+import qualified Database.PG.Query             as Q
 
 import           Data.Aeson
 
-import qualified Data.ByteString.Lazy         as BL
-import qualified Data.HashMap.Strict          as M
-import qualified Data.Text                    as T
+import qualified Data.ByteString.Lazy          as BL
+import qualified Data.HashMap.Strict           as M
+import qualified Data.Text                     as T
+import qualified Network.HTTP.Client           as HTTP
 
 class ProvidesFieldInfoMap r where
   getFieldInfoMap :: QualifiedTable -> r -> Maybe FieldInfoMap
@@ -128,7 +138,13 @@ instance HasQCtx QCtx where
 mkAdminQCtx :: SchemaCache -> QCtx
 mkAdminQCtx = QCtx adminUserInfo
 
-type P2 = StateT SchemaCache (ReaderT UserInfo (Q.TxE QErr))
+data P2Ctx
+  = P2Ctx
+  { _p2cUserInfo    :: !UserInfo
+  , _p2cHttpManager :: !HTTP.Manager
+  }
+
+type P2 = StateT SchemaCache (ReaderT P2Ctx (Q.TxE QErr))
 
 class (Monad m) => UserInfoM m where
   askUserInfo :: m UserInfo
@@ -178,9 +194,21 @@ instance CacheRM P1 where
   askSchemaCache = qcSchemaCache <$> ask
 
 instance UserInfoM P2 where
-  askUserInfo = ask
+  askUserInfo = _p2cUserInfo <$> ask
 
-type P2C m = (QErrM m, CacheRWM m, MonadTx m, MonadIO m)
+class (Monad m) => HasHttpManager m where
+  askHttpManager :: m HTTP.Manager
+
+instance HasHttpManager P2 where
+  askHttpManager = _p2cHttpManager <$> ask
+
+class (Monad m) => HasGCtxMap m where
+  askGCtxMap :: m GC.GCtxMap
+
+-- instance HasGCtxMap P2 where
+--   askGCtxMap = _p2cGCtxMap <$> ask
+
+--type P2C m = (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
 
 class (Monad m) => MonadTx m where
   liftTx :: Q.TxE QErr a -> m a

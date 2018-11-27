@@ -5,7 +5,6 @@ import AceEditor from 'react-ace';
 import 'brace/mode/sql';
 import Modal from 'react-bootstrap/lib/Modal';
 import Button from 'react-bootstrap/lib/Button';
-import { Link } from 'react-router';
 
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
@@ -58,7 +57,6 @@ const RawSQL = ({
   isMigrationChecked,
   isTableTrackChecked,
   migrationMode,
-  currentSchema,
 }) => {
   const styles = require('../TableCommon/Table.scss');
 
@@ -196,20 +194,13 @@ const RawSQL = ({
               </li>
               <li>
                 If you plan to create a Table/View using Raw SQL, remember to
-                link it to Hasura DB using&nbsp;
-                <Link
-                  to={
-                    '/data/schema/' + currentSchema + '/existing-table-view/add'
-                  }
-                >
-                  Add Existing Table View
-                </Link>{' '}
-                functionality.
+                link it to Hasura DB by checking the <code>Track table</code>{' '}
+                checkbox below.
               </li>
               <li>
-                Please note that if the migrations are enabled,
-                <code>down</code>
-                migrations will not be generated for SQL statements.
+                Please note that if the migrations are enabled,{' '}
+                <code>down</code> migrations will not be generated when you
+                change the schema using Raw SQL.
               </li>
             </ul>
           </div>
@@ -248,10 +239,9 @@ const RawSQL = ({
                 dispatch({ type: SET_MIGRATION_CHECKED, data: false });
               }
               // set track table checkbox true
-              if (
-                formattedSql.indexOf('create view') !== -1 ||
-                formattedSql.indexOf('create table') !== -1
-              ) {
+              const regExp = /create\s*(?:|or\s*replace)\s*(?:view|table)/; // eslint-disable-line
+              const matches = formattedSql.match(new RegExp(regExp, 'gmi'));
+              if (matches) {
                 dispatch({ type: SET_TRACK_TABLE_CHECKED, data: true });
               } else {
                 dispatch({ type: SET_TRACK_TABLE_CHECKED, data: false });
