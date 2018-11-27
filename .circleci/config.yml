@@ -247,8 +247,40 @@ jobs:
         paths:
           - _cli_output
 
-  # test and build console
   test_and_build_console:
+    docker:
+    - image: face11301/community:latest
+    working_directory: ~/graphql-engine
+    steps:
+    - *setup_remote_docker
+    - run:
+        name: Run Postgres container
+        command: |
+          docker run --name postgres -d -p 5432:5432 -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" circleci/postgres:10-alpine-postgis
+    - *wait_for_postgres
+    - checkout
+    - restore_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+    - run:
+        name: install dependencies
+        working_directory: console
+        command: make ci-deps
+    - save_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+        paths:
+        - console/node_modules
+        - ~/.npm
+        - ~/.cache
+    - attach_workspace:
+        at: /root/build
+    - run:
+        name: test console
+        command: .circleci/test-console.sh
+
+  # test and build console
+  test_and_build_console_vm:
     machine:
       enabled: true
       image: circleci/classic:latest
