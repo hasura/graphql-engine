@@ -19,7 +19,14 @@ var Waiter sync.WaitGroup
 const Endpoint = "https://analytics.stats.hasura.io/v1/http"
 
 // Topic is the name under which telemetry is sent.
-const Topic = "cli_test"
+var Topic = "cli_test"
+
+func init() {
+	var v = version.New()
+	if v.CLISemver != nil {
+		Topic = "cli"
+	}
+}
 
 type requestPayload struct {
 	Topic string `json:"topic"`
