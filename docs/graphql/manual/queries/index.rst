@@ -17,7 +17,7 @@ types, ``query_root`` and ``mutation_root`` respectively.
 Auto-generated query schema
 ---------------------------
 
-**For example**, the auto-generated query schema for an "author" table may look like this:
+**For example**, the auto-generated query schema for an ``author`` table may look like this:
 
 .. code-block:: graphql
 
@@ -29,8 +29,11 @@ Auto-generated query schema
       order_by:  [author_order_by!]
     ): [author]
 
-**Note:** If a table is in any Postgres schema other than the ``public`` schema, the query field will be of the format
-``<schema_name>_<table_name>``.
+
+.. note::
+
+  If a table is not in the ``public`` Postgres schema, the query field will be of the format
+  ``<schema_name>_<table_name>``.
 
 Exploring queries
 -----------------

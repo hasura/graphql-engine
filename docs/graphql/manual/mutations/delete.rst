@@ -6,11 +6,31 @@ Delete mutation
   :depth: 1
   :local:
 
-Objects can be updated based on filters on their own fields or those in their nested objects. 
+Here’s the schema for the delete mutation field for a table ``article``:
 
-Delete based an object's fields
--------------------------------
-Delete all articles rated less than 3:
+.. code-block:: graphql
+
+  delete_article (
+    where: article_bool_exp!
+  ): article_mutation_response
+
+  # response of any mutation on the table "article"
+  type article_mutation_response {
+    # number of affected rows by the mutation
+    affected_rows: Int!
+    #data of the affected rows by the mutation
+    returning: [article!]!
+  }
+
+As you can see from the schema:
+
+- ``where`` argument is compulsory to filter rows to be deleted. See :doc:`Filter queries <../queries/query-filters>`
+  for filtering options. Objects can be deleted based on filters on their own fields or those in their nested objects.
+- You can return the number of affected rows and the affected objects (with nested objects) in the response.
+
+Delete based on an object's fields
+----------------------------------
+**Example:** Delete all articles rated less than 3:
 
 .. graphiql::
   :view_only:
@@ -34,7 +54,7 @@ Delete all articles rated less than 3:
 
 Delete based on a nested object's fields
 ----------------------------------------
-Delete all articles written by an author:
+**Example:** Delete all articles written by a particular author:
 
 .. graphiql::
   :view_only:

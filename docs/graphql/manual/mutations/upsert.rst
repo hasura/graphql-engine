@@ -7,14 +7,19 @@ Upsert mutation
   :local:
 
 An upsert query will insert an object into the database in case there is no conflict with another row in the table. In
-case there is a conflict with one or more rows, it will update the fields of the conflicted rows based on the value of
-value of the ``update_columns`` argument.
+case there is a conflict with one or more rows, it will either update the fields of the conflicted rows or ignore
+the request.
 
-To convert an **insert** mutation into an **upsert** one, you need to specify the unique or primary key constraint
-and the columns to be updated in the case of a conflict or violation of that constraint. You can specify a constraint
-using the ``constraint`` argument and choose the columns to update using the ``update_columns`` argument.
+Convert insert mutation to upsert
+---------------------------------
 
-.. note::
+To convert an :doc:`insert mutation <insert>` into an upsert, you need to specify a unique or primary key constraint
+and the columns to be updated in the case of a violation of that constraint using the ``on_conflict`` argument. You can
+specify a constraint using the ``constraint`` field and choose the columns to update using the
+``update_columns`` field of the argument. The value of the ``update_columns`` field determines the behaviour of the
+upsert request in case of conflicts.
+
+.. admonition:: Fetching Postgres constraint names
     
     You can fetch the name of unique or primary key constraints by querying the ``information_schema.table_constraints`` table.
     GraphQL Engine will automatically generate constraint names as enum values for ``constraint`` (try autocompleting in GraphiQL).
@@ -23,51 +28,11 @@ using the ``constraint`` argument and choose the columns to update using the ``u
 
 Update all columns on conflict
 ------------------------------
-When you don't explicitly specify ``update_columns``, the columns that are given in objects are updated (it doesn't matter if they
-are different, you should see the same end result).
+When you don't explicitly specify ``update_columns``, all the columns that are present in any of the input objects are
+updated for all objects. i.e. if a column value is not passed for an object but is passed for another object, its value
+will be set to its default value.
 
-Insert into ``author`` table using unique constraint ``author_name_key``. All columns specified in objects get updated:
-
-.. graphiql::
-  :view_only:
-  :query:
-    mutation upsert_author {
-      insert_author(
-        objects: [
-          {name: "John", age: 25, mobile: 9876543210}
-        ],
-        on_conflict: {
-          constraint: author_pkey
-        }
-      ) {
-        affected_rows
-        returning{
-          id
-          name
-          age
-          mobile
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_author": {
-          "affected_rows": 1,
-          "returning": [
-             {
-               "id": 10,
-               "name": "John",
-               "age": 25,
-               "mobile": 9876543210
-             }
-           ]
-        }
-      }
-    }
-
-**Note:** You'll need to ensure that all objects have the same set of columns. If not, the union of column sets across all objects
-is the set of columns that is updated. For example, if your query as follows:
+**Example:** Upsert into ``user`` table using unique constraint ``user_name_key``:
 
 .. graphiql::
   :view_only:
@@ -109,9 +74,7 @@ is the set of columns that is updated. For example, if your query as follows:
       }
     }
 
-The column ``"is_premium"`` for the ``"Jack"`` row is set to its ``DEFAULT`` value because the union of all columns across objects
-is ``{name, email_sent, is_premium}``. However, you can explicitly control the columns that are updated on conflict using
-``update_columns`` as specified in the following section.
+Here ``is_premium`` value of "Jack" is reset to its default value as it is passed for "John" but not for "Jack".
 
 Update selected columns on conflict
 -----------------------------------
@@ -187,11 +150,14 @@ table or, if the unique constraint, ``author_name_key``, is violated, ignore the
 In this case, the insert mutation is ignored because there is a conflict.
 
 
-Using "action" argument
------------------------
+Using **action** argument
+-------------------------
 
 .. note::
-   ``action`` argument is deprecated. Always ``update_columns`` will take precedence over ``action`` argument
+
+   The ``action`` argument is deprecated.
+
+   The ``update_columns`` argument will always take precedence over the ``action`` argument
 
 On conflict, you can choose to either ignore the mutation (``action: ignore``) or update the row that caused the conflict
 (``action: update``). ``ignore`` and ``update`` are enum values for ``action``.

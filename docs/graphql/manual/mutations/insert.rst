@@ -6,6 +6,29 @@ Insert mutation
   :depth: 1
   :local:
 
+Here’s the schema for the insert mutation field for a table ``article``:
+
+.. code-block:: graphql
+
+  insert_article (
+    objects: [article_insert_input!]!
+    on_conflict: article_on_conflict
+  ): article_mutation_response
+
+  # response of any mutation on the table "article"
+  type article_mutation_response {
+    # number of affected rows by the mutation
+    affected_rows: Int!
+    #data of the affected rows by the mutation
+    returning: [article!]!
+  }
+
+As you can see from the schema:
+
+- ``objects`` argument is necessary and you can pass multiple ``objects`` to the mutation.
+- You can pass an ``on_conflict`` argument to convert the mutation to an :doc:`upsert mutation <upsert>`
+- You can return the number of affected rows and the affected objects (with nested objects) in the response.
+
 Insert single object
 --------------------
 **Example:** Insert a new ``article`` object and return the inserted article object in the response
