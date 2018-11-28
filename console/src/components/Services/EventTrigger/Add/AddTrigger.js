@@ -821,7 +821,7 @@ export class AddTrigger extends Component {
                 className={`btn ${styles.yellow_button} ${
                   styles.triggerSettingsModifyButton
                 }`}
-                data-test={modify ? 'trigger-create' : 'trigger-modify'}
+                data-test={modify ? 'trigger-modify' : 'trigger-create'}
               >
                 {submitButtonText}
               </button>
