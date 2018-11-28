@@ -25,6 +25,7 @@ query:
           ],
         on_conflict: {
           constraint: article_pkey
+          update_columns: [content]
         }
       ) {
         affected_rows

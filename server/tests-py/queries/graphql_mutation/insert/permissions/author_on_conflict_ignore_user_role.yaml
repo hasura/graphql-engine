@@ -21,7 +21,7 @@
             ],
           on_conflict: {
             constraint: author_pkey,
-            action: ignore
+            update_columns: []
           }
         ) {
           affected_rows

@@ -1023,21 +1023,16 @@ input table_on_conflict {
 mkOnConflictInp :: QualifiedTable -> InpObjTyInfo
 mkOnConflictInp tn =
   mkHsraInpTyInfo (Just desc) (mkOnConflictInpTy tn) $ fromInpValL
-  [actionInpVal, constraintInpVal, updateColumnsInpVal]
+  [constraintInpVal, updateColumnsInpVal]
   where
     desc = G.Description $
       "on conflict condition type for table " <>> tn
-
-    actionDesc = "action when conflict occurs (deprecated)"
-
-    actionInpVal = InpValInfo (Just actionDesc) (G.Name "action") $
-      G.toGT conflictActionTy
 
     constraintInpVal = InpValInfo Nothing (G.Name "constraint") $
       G.toGT $ G.toNT $ mkConstraintInpTy tn
 
     updateColumnsInpVal = InpValInfo Nothing (G.Name "update_columns") $
-      G.toGT $ G.toLT $ G.toNT $ mkUpdColumnInpTy tn
+      G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkUpdColumnInpTy tn
 {-
 
 insert_table(

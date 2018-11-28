@@ -41,9 +41,6 @@ class TestGraphqlInsertOnConflict(DefaultTestQueries):
     def test_on_conflict_update(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_update.yaml")
 
-    def test_on_conflict_no_action_specified(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/article_on_conflict_no_action_specified.yaml")
-
     def test_on_conflict_ignore(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_ignore_constraint.yaml")
         hge_ctx.may_skip_test_teardown = True

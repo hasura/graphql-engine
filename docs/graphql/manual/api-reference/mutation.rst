@@ -303,9 +303,8 @@ Conflict clause is generated only for tables with update permission.
 .. code-block:: none
     
     on_conflict: {
-      constraint: <unique_constraint_name>!
-      [update_columns: [table_column!]]
-      [action: [update|ignore]]
+      constraint: table_constraint!
+      update_columns: [table_update_column!]!
     }
 
 E.g.:

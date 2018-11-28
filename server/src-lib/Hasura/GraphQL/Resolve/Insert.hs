@@ -17,7 +17,6 @@ import qualified Data.Aeson.Casing                 as J
 import qualified Data.Aeson.TH                     as J
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
-import qualified Data.HashSet                      as Set
 import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
@@ -85,10 +84,6 @@ data AnnInsObj
   , _aioArrRels :: ![ArrRelIns]
   } deriving (Show, Eq)
 
-getAllInsCols :: [AnnInsObj] -> [PGCol]
-getAllInsCols =
-  Set.toList . Set.fromList . concatMap (map _1 . _aioColumns)
-
 mkAnnInsObj
   :: (MonadError QErr m, Has InsCtxMap r, MonadReader r m)
   => RelationInfoMap
@@ -128,8 +123,7 @@ traverseInsObj rim (gName, annVal) (AnnInsObj cols objRels arrRels) =
         ObjRel -> do
           dataObj <- asObject dataVal
           annDataObj <- mkAnnInsObj rtRelInfoMap dataObj
-          let insCols = getAllInsCols [annDataObj]
-          ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm insCols
+          ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm
           let singleObjIns = AnnIns annDataObj ccM rtView rtCols rtDefVals
               objRelIns = RelIns singleObjIns relInfo
           return (AnnInsObj cols (objRelIns:objRels) arrRels)
@@ -139,8 +133,7 @@ traverseInsObj rim (gName, annVal) (AnnInsObj cols objRels arrRels) =
           annDataObjs <- forM arrDataVals $ \arrDataVal -> do
             dataObj <- asObject arrDataVal
             mkAnnInsObj rtRelInfoMap dataObj
-          let insCols = getAllInsCols annDataObjs
-          ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm insCols
+          ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm
           let multiObjIns = AnnIns annDataObjs ccM rtView rtCols rtDefVals
               arrRelIns = RelIns multiObjIns relInfo
           return (AnnInsObj cols objRels (arrRelIns:arrRels))
@@ -148,49 +141,29 @@ traverseInsObj rim (gName, annVal) (AnnInsObj cols objRels arrRels) =
 parseOnConflict
   :: (MonadError QErr m)
   => QualifiedTable -> Maybe UpdPermForIns
-  -> [PGCol] -> AnnGValue -> m RI.ConflictClauseP1
-parseOnConflict tn updFiltrM inpCols val = withPathK "on_conflict" $
+  -> AnnGValue -> m RI.ConflictClauseP1
+parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
   flip withObject val $ \_ obj -> do
-    actionM <- forM (OMap.lookup "action" obj) parseAction
-    constraint <- parseConstraint obj
-    updColsM <- forM (OMap.lookup "update_columns" obj) parseColumns
-    let ignoreCtx = return $ RI.CCDoNothing $ Just constraint
-        mkUpdCtx cols = do
-          (updPermCols, updFiltr) <- onNothing updFiltrM $ throwVE $
-            "cannot update columns since update permission is not defined. "
-            <> "Specify \"update_columns: []\" or \"action: ignore\" in "
-            <> "\"on_conflict\" input object"
-          let nonUpdCols = cols \\ updPermCols
-          unless (null nonUpdCols) $
-            throwVE $ "columns " <> showPGCols nonUpdCols <> " are not updatable"
-          return $ RI.CCUpdate constraint cols $ toSQLBoolExp (S.mkQual tn) updFiltr
+    constraint <- RI.Constraint <$> parseConstraint obj
+    updCols <- getUpdCols obj
+    case updCols of
+      [] -> return $ RI.CP1DoNothing $ Just constraint
+      _  -> do
+          (_, updFiltr) <- onNothing updFiltrM $ throw500
+            "cannot update columns since update permission is not defined"
+          return $ RI.CP1Update constraint updCols $ toSQLBoolExp (S.mkQual tn) updFiltr
 
-    -- consider "action" if "update_columns" is not mentioned
-    mkConflictClause <$> case (updColsM, actionM) of
-      (Just [], _)             -> ignoreCtx
-      (Just cols, _)           -> mkUpdCtx cols
-      (Nothing, Just CAIgnore) -> ignoreCtx
-      (Nothing, _)             -> mkUpdCtx inpCols
   where
-    parseAction v = do
-      (enumTy, enumVal) <- asEnumVal v
-      case G.unName $ G.unEnumValue enumVal of
-        "ignore" -> return CAIgnore
-        "update" -> return CAUpdate
-        _ -> throw500 $
-          "only \"ignore\" and \"update\" allowed for enum type "
-          <> showNamedTy enumTy
+    getUpdCols o = do
+      updColsVal <- onNothing (OMap.lookup "update_columns" o) $ throw500
+        "\"update_columns\" argument in expected in \"on_conflict\" field "
+      parseColumns updColsVal
 
     parseConstraint o = do
       v <- onNothing (OMap.lookup "constraint" o) $ throw500
            "\"constraint\" is expected, but not found"
       (_, enumVal) <- asEnumVal v
       return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
-
-    mkConflictClause (RI.CCDoNothing constrM) =
-      RI.CP1DoNothing $ fmap RI.Constraint constrM
-    mkConflictClause (RI.CCUpdate constr updCols whr) =
-      RI.CP1Update (RI.Constraint constr) updCols whr
 
 toSQLExps :: (MonadError QErr m, MonadState PrepArgs m)
      => [(PGCol, AnnGValue)] -> m [(PGCol, S.SQLExp)]
@@ -484,8 +457,7 @@ convertInsert role tn fld = prefixErrPath fld $ do
   annVals <- withArg arguments "objects" asArray
   annObjs <- mapM asObject annVals
   annInsObjs <- forM annObjs $ mkAnnInsObj relInfoMap
-  let insCols = getAllInsCols annInsObjs
-  conflictClauseM <- forM onConflictM $ parseOnConflict tn updPerm insCols
+  conflictClauseM <- forM onConflictM $ parseOnConflict tn updPerm
   mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
   let multiObjIns = AnnIns annInsObjs conflictClauseM vn tableCols defValMap
   return $ prefixErrPath fld $ insertMultipleObjects role tn

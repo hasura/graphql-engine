@@ -25,7 +25,7 @@ query:
           ],
         on_conflict: {
           constraint: article_pkey,
-          action: update
+          update_columns: [content]
         }
       ) {
         returning {
