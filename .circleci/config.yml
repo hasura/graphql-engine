@@ -247,7 +247,7 @@ jobs:
         paths:
           - _cli_output
 
-  test_and_build_console:
+  test_and_build_console_docker:
     docker:
     - image: face11301/console:latest
     working_directory: ~/graphql-engine
@@ -279,7 +279,7 @@ jobs:
         command: .circleci/test-console.sh
 
   # test and build console
-  test_and_build_console_vm:
+  test_and_build_console:
     machine:
       enabled: true
       image: circleci/classic:latest
