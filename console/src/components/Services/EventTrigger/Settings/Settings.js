@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import AceEditor from 'react-ace';
 import TableHeader from '../TableCommon/TableHeader';
 import { deleteTrigger } from '../EventActions';
-import { push } from 'react-router-redux';
+import _push from '../push';
 
 class Settings extends Component {
   render() {
@@ -56,7 +56,7 @@ class Settings extends Component {
     };
 
     const handleModifyTrigger = () => {
-      dispatch(push(`/events/manage/triggers/${triggerName}/modify`));
+      dispatch(_push(`/manage/triggers/${triggerName}/modify`));
     };
 
     return (

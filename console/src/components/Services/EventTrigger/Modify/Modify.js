@@ -7,6 +7,7 @@ const mapStateToProps = (state, ownProps) => {
     modifyTriggerName: ownProps.params.trigger,
     triggerList: state.triggers.triggerList,
     schemaList: state.tables.schemaList,
+    allSchemas: state.tables.allSchemas,
     serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   };
 };

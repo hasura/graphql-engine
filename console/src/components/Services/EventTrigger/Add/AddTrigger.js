@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
-import { push } from 'react-router-redux';
+import _push from '../push';
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
@@ -27,6 +27,7 @@ import { listDuplicate } from '../../../../utils/data';
 import { showErrorNotification } from '../Notification';
 import { createTrigger } from './AddActions';
 import { fetchTableListBySchema } from './AddActions';
+import { getTableColumns } from '../utils';
 
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 
@@ -35,19 +36,22 @@ import semverCheck from '../../../../helpers/semver';
 export class AddTrigger extends Component {
   constructor(props) {
     super(props);
-    this.props.dispatch(fetchTableListBySchema('public'));
     this.state = {
       advancedExpanded: false,
       supportColumnChangeFeature: false,
       supportWebhookEnv: false,
     };
   }
+
+  componentWillMount() {
+    this.props.dispatch(fetchTableListBySchema('public'));
+  }
+
   componentDidMount() {
     // set defaults
+    this.props.dispatch(setDefaults());
     if (this.props.modify) {
       this.setTrigger();
-    } else {
-      this.props.dispatch(setDefaults());
     }
     if (this.props.serverVersion) {
       this.checkSemVer(this.props.serverVersion).then(() => {
@@ -69,7 +73,7 @@ export class AddTrigger extends Component {
 
   // templating values for modifying trigger
   setTrigger = () => {
-    const { modifyTriggerName, triggerList, dispatch } = this.props;
+    const { modifyTriggerName, triggerList, dispatch, allSchemas } = this.props;
     const currentTrigger = triggerList.find(
       tr => tr.name === modifyTriggerName
     );
@@ -88,22 +92,35 @@ export class AddTrigger extends Component {
       dispatch(setTriggerName(modifyTriggerName));
       dispatch(setSchemaName(schema_name));
       dispatch(setTableName(table_name));
+      const tableColumns = getTableColumns(
+        allSchemas.find(t => t.table_name === table_name)
+      );
       dispatch({
         type: UPDATE_WEBHOOK_URL_TYPE,
         data: webhook_from_env ? 'env' : 'url',
       });
       dispatch(setWebhookURL(webhook || webhook_from_env));
-      for (const queryType in definition) {
-        if (definition[queryType]) {
-          const { columns } = definition[queryType];
-          dispatch(
-            setOperationSelection(queryType, columns.length ? true : false)
-          );
-          columns.forEach(col => {
+      ['insert', 'delete', 'update'].forEach(queryType => {
+        if (queryType !== 'update') {
+          tableColumns.forEach(col => {
             dispatch(operationToggleColumn(col, queryType));
           });
         }
-      }
+        if (definition[queryType]) {
+          const operationColumns = definition[queryType].columns;
+          dispatch(
+            setOperationSelection(
+              queryType,
+              operationColumns.length ? true : false
+            )
+          );
+          if (queryType === 'update') {
+            operationColumns.forEach(col => {
+              dispatch(operationToggleColumn(col, queryType));
+            });
+          }
+        }
+      });
       headers.forEach((header, i) => {
         dispatch(setHeaderKey(header.name, i));
         dispatch(setHeaderValue(header.value || header.value_from_env, i));
@@ -113,7 +130,7 @@ export class AddTrigger extends Component {
       dispatch(setRetryNum(retry_conf.num_retries));
       dispatch(setRetryInterval(retry_conf.interval_sec));
     } else {
-      dispatch(push('/events/manage/triggers'));
+      dispatch(_push('/manage/triggers'));
     }
   };
 
@@ -159,7 +176,7 @@ export class AddTrigger extends Component {
   cancelTriggerModify = e => {
     e.preventDefault();
     this.props.dispatch(
-      push(`/events/manage/triggers/${this.props.modifyTriggerName}/settings`)
+      _push(`/manage/triggers/${this.props.modifyTriggerName}/settings`)
     );
   };
 
@@ -284,17 +301,9 @@ export class AddTrigger extends Component {
 
     const updateTableSelection = e => {
       dispatch(setTableName(e.target.value));
-      const tableSchema = tableListBySchema.find(
-        t => t.table_name === e.target.value
+      const columns = getTableColumns(
+        tableListBySchema.find(t => t.table_name === e.target.value)
       );
-
-      const columns = [];
-      if (tableSchema) {
-        tableSchema.columns.map(colObj => {
-          const column = colObj.column_name;
-          columns.push(column);
-        });
-      }
       dispatch(operationToggleAllColumns(columns));
     };
 
@@ -863,6 +872,7 @@ const mapStateToProps = state => {
   return {
     ...state.addTrigger,
     schemaList: state.tables.schemaList,
+    allSchemas: state.tables.allSchemas,
     serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   };
 };

@@ -182,7 +182,7 @@ const createTrigger = modify => {
             _push(
               '/manage/triggers/' +
                 triggerName.trim() +
-                (modify ? 'settings' : '/processed')
+                (modify ? '/settings' : '/processed')
             )
           );
         });
@@ -195,8 +195,6 @@ const createTrigger = modify => {
       return;
     };
 
-    console.log(upQuery);
-    console.log(downQuery);
     makeMigrationCall(
       dispatch,
       getState,
