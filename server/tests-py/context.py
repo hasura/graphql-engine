@@ -15,6 +15,7 @@ import requests
 import websocket
 from sqlalchemy import create_engine
 from sqlalchemy.schema import MetaData
+import graphql_server
 
 
 class HGECtxError(Exception):
@@ -93,6 +94,11 @@ class HGECtx:
         self.wst.daemon = True
         self.wst.start()
 
+        # start the graphql server
+        self.graphql_server = graphql_server.create_server('127.0.0.1', 5000)
+        self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
+        self.gql_srvr_thread.start()
+
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         self.version = result.stdout.decode('utf-8').strip()
         try:
@@ -154,3 +160,5 @@ class HGECtx:
         self.ws.close()
         self.web_server.join()
         self.wst.join()
+        graphql_server.stop_server(self.graphql_server)
+        self.gql_srvr_thread.join()

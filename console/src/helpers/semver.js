@@ -17,12 +17,15 @@ const componentsSemver = {
 
 const getPreRelease = version => {
   const prerelease = semver.prerelease(version);
+  if (!prerelease) {
+    return '';
+  }
   if (prerelease.length === 1) {
     const regex = /(alpha|beta)(\d+)/gm;
     const str = prerelease[0];
     const m = regex.exec(str);
     if (m.length < 3) {
-      return [];
+      return '';
     }
     return m.slice(1, 3);
   }

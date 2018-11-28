@@ -10,9 +10,9 @@ The application makes use of Hasura GraphQL Engine's real-time capabilities
 using `subscription`. There is no backend code involved. The application is
 hosted on GitHub pages and the Postgres+GraphQL Engine is running on Postgres.
 
-- Checkout the [live app](https://hasura.github.io/realtime-location-app/).
-- Explore the database using [Hasura
-  Console](https://realtime-backend.herokuapp.com/).
+- Checkout the [live app](https://realtime-location-tracking.demo.hasura.app/).
+- Explore the backend using [Hasura
+  Console](https://realtime-location-tracking.demo.hasura.app/console).
   
 # Running the app yourself
 
