@@ -329,11 +329,11 @@ pgColValToAnnGVal colTy colVal = AGScalar colTy $ Just colVal
 
 hasNullVal :: AnnGValue -> Bool
 hasNullVal = \case
-  AGScalar _ Nothing   -> True
+  AGScalar _ Nothing -> True
   AGEnum _ Nothing   -> True
   AGObject _ Nothing -> True
   AGArray _ Nothing  -> True
-  _ -> False
+  _                  -> False
 
 getAnnInpValKind :: AnnGValue -> Text
 getAnnInpValKind = \case
