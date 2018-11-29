@@ -331,7 +331,7 @@ const sanitizeRelName = arg =>
   arg
     .trim()
     .toLowerCase()
-    .replace(/([^A-Z]+)(.)/gi, function modifyRel() {
+    .replace(/([^A-Z0-9]+)(.)/gi, function modifyRel() {
       return arguments[2].toUpperCase();
     });
 
