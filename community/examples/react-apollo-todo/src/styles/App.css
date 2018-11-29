@@ -546,12 +546,13 @@ body {
   }
   .headerWrapper {
     display: flex;
+    padding: 15px 0;
     padding-left: 0;
     height: auto;
   }
   .mainWrapper {
-    min-height: 80vh;
     padding-left: 0;
+    height: auto;
   }
   .minHeight {
     height: auto;
@@ -559,6 +560,7 @@ body {
   }
   .loginBtn {
     padding-right: 0;
+    padding-bottom: 15px;
   }
   .appstackWrapper {
     padding: 20px;

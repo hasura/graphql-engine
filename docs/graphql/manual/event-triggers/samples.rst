@@ -11,7 +11,7 @@ Here are a few sample apps built using Hasura event triggers:
 Push Notifications
 ^^^^^^^^^^^^^^^^^^
 
-Here's a `notification demo app <https://shahidh.in/hasura-web-push-notifs/>`_ showcasing sending web
+Here's a `notification demo app <https://serverless-push.demo.hasura.app/>`_ showcasing sending web
 notifications using Hasura event triggers and FCM.
 
 * Video: https://www.youtube.com/watch?v=nuSHkzE2-zo&feature=youtu.be
@@ -19,7 +19,7 @@ notifications using Hasura event triggers and FCM.
 
 Data Transformations (ETL)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Here's a `serverless ETL demo app <https://shahidh.in/hasura-serverless-etl/>`_ built using Hasura event triggers and
+Here's a `serverless ETL demo app <https://serverless-etl.demo.hasura.app/>`_ built using Hasura event triggers and
 Algolia search.
 
 * Video: https://youtu.be/kWVEBWdEVAA

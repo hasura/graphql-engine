@@ -123,20 +123,20 @@ Check out all the example applications in the
 
 - Group Chat application built with React, includes a typing indicator, online users & new
   message notifications.
-  - [Try it out](https://chat-example-trial-roar.herokuapp.com/)
+  - [Try it out](https://realtime-chat.demo.hasura.app/)
   - [Tutorial](community/examples/realtime-chat)
-  - [Browse APIs](https://hasura-realtime-group-chat.herokuapp.com/)
+  - [Browse APIs](https://realtime-chat.demo.hasura.app/console)
 
 - Live location tracking app that shows a running vehicle changing current GPS
   coordinates moving on a map. 
-  - [Try it out](https://hasura.github.io/realtime-location-app/)
+  - [Try it out](https://realtime-location-tracking.demo.hasura.app/)
   - [Tutorial](community/examples/realtime-location-tracking)
-  - [Browse APIs](https://realtime-backend.herokuapp.com/)
+  - [Browse APIs](https://realtime-location-tracking.demo.hasura.app/console)
 
 - A realtime dashboard for data aggregations on continuously changing data.
-  - [Try it out](https://shahidh.in/hasura-realtime-poll/)
+  - [Try it out](https://realtime-poll.demo.hasura.app/)
   - [Tutorial](community/examples/realtime-poll)
-  - [Browse APIs](https://hasura-realtime-poll.herokuapp.com/)
+  - [Browse APIs](https://realtime-poll.demo.hasura.app/console)
 
 ### Videos
 
