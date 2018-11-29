@@ -1,6 +1,6 @@
 # Serverless ETL demo using Hasura GraphQL Engine Event Triggers and Algolia Search
 
-Live demo at https://shahidh.in/hasura-serverless-etl
+Live demo at https://serverless-etl.demo.hasura.app/
 
 This application demonstrates an ETL process using event triggers on [Hasura
 GraphQL Engine](https://github.com/hasura/graphql-engine).
