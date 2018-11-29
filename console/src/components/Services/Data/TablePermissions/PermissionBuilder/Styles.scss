@@ -8,6 +8,10 @@
   //color: #CB3837
 }
 
+.qb_select {
+  cursor: pointer;
+}
+
 .qb_select:focus, .qb_input:focus {
   outline: none;
 }
