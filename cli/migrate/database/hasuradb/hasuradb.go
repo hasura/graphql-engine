@@ -48,6 +48,7 @@ type HasuraDB struct {
 	settings       []database.Setting
 	migrations     *database.Migrations
 	migrationQuery HasuraInterfaceBulk
+	jsonPath       map[string]string
 	isLocked       bool
 	logger         *log.Logger
 }
@@ -146,6 +147,7 @@ func (h *HasuraDB) Lock() error {
 		Type: "bulk",
 		Args: make([]interface{}, 0),
 	}
+	h.jsonPath = make(map[string]string)
 	h.isLocked = true
 	return nil
 }
@@ -180,7 +182,10 @@ func (h *HasuraDB) UnLock() error {
 
 			result := re1.FindAllStringSubmatch(horror.Path, -1)
 			if len(result) != 0 {
-
+				migrationNumber, ok := h.jsonPath[result[0][1]]
+				if ok {
+					horror.MigrationFile = migrationNumber
+				}
 			}
 		}
 		return horror.Error(h.config.isCMD)
@@ -189,7 +194,7 @@ func (h *HasuraDB) UnLock() error {
 	return nil
 }
 
-func (h *HasuraDB) Run(migration io.Reader, fileType string) error {
+func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 	migr, err := ioutil.ReadAll(migration)
 	if err != nil {
 		return err
@@ -207,6 +212,7 @@ func (h *HasuraDB) Run(migration io.Reader, fileType string) error {
 			},
 		}
 		h.migrationQuery.Args = append(h.migrationQuery.Args, t)
+		h.jsonPath[fmt.Sprintf("%d", len(h.migrationQuery.Args)-1)] = fileName
 
 	case "meta":
 		var t []interface{}
@@ -218,6 +224,7 @@ func (h *HasuraDB) Run(migration io.Reader, fileType string) error {
 
 		for _, v := range t {
 			h.migrationQuery.Args = append(h.migrationQuery.Args, v)
+			h.jsonPath[fmt.Sprintf("%d", len(h.migrationQuery.Args)-1)] = fileName
 		}
 	}
 	return nil
