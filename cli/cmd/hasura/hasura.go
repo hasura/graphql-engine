@@ -15,7 +15,7 @@ func main() {
 	}
 	telemetry.Waiter.Wait()
 	if err != nil {
-		telemetry.SendErrorEvent(commands.EC)
+		telemetry.SendErrorEvent(commands.EC, nil)
 		log.Fatal(err)
 	}
 }

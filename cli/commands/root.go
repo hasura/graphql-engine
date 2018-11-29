@@ -27,7 +27,7 @@ var rootCmd = &cobra.Command{
 		telemetry.Waiter.Add(1)
 		go func() {
 			defer telemetry.Waiter.Done()
-			telemetry.SendExecutionEvent(EC, cmd, args)
+			telemetry.SendExecutionEvent(EC, cmd, args, nil)
 		}()
 		EC.Spin("Running...")
 		return nil
