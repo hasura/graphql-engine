@@ -69,7 +69,7 @@ Skip this step if you already have a project directory.
 Step 3: Open the console via the CLI & disable Postgres schema changes
 ----------------------------------------------------------------------
 
-Instead of using the console at ``http://my-grapqhl.herokuapp.com/console`` you should now use the console by running:
+Instead of using the console at ``http://my-graphql.herokuapp.com/console`` you should now use the console by running:
 
 .. code-block:: bash
 
@@ -99,12 +99,12 @@ metadata file changes automatically at ``migrations/metadata.yaml``.
 Step 6: Apply the metadata to another instance of GraphQL engine
 ----------------------------------------------------------------
 
-- Edit ``config.yaml`` and change the endpoint to another instance, say ``https://my-another-grapqhl.herokuapp.com``
+- Edit ``config.yaml`` and change the endpoint to another instance, say ``https://my-another-graphql.herokuapp.com``
 
   .. code-block:: yaml
 
      # config.yaml
-     endpoint: https://my-another-grapqhl.herokuapp.com
+     endpoint: https://my-another-graphql.herokuapp.com
 
 - Apply metadata present in the ``migrations/metadata.yaml`` on this new instance:
 
