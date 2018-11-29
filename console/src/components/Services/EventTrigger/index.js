@@ -4,7 +4,7 @@ export eventRouter from './EventRouter';
 export eventReducer from './EventReducer';
 export addTriggerConnector from './Add/AddTrigger';
 
-export modifyTriggerConnector from './Modify/Modify.js';
+export modifyTriggerConnector from './Modify/Connector';
 
 export processedEventsConnector from './ProcessedEvents/ViewTable';
 export pendingEventsConnector from './PendingEvents/ViewTable';

@@ -83,11 +83,11 @@ const TableHeader = ({ triggerName, tabName, count }) => {
             </li>
             <li
               role="presentation"
-              className={tabName === 'settings' ? styles.active : ''}
+              className={tabName === 'modify' ? styles.active : ''}
               data-test="trigger-settings"
             >
-              <Link to={'/events/manage/triggers/' + triggerName + '/settings'}>
-                Settings
+              <Link to={'/events/manage/triggers/' + triggerName + '/modify'}>
+                Modify
               </Link>
             </li>
           </ul>

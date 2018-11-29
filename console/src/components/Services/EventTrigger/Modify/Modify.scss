@@ -1,0 +1,120 @@
+@import "../../../Common/Common.scss";
+@import "../TableCommon/Table.scss";
+
+.containerWhole {
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.modifySection {
+  display: flex;
+  flex-direction: column;
+  margin: 10px 0;
+}
+
+.modifySectionHeading {
+  font-weight: bold;
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.modifyEditButton {
+  display: flex;
+  flex-direction: column;
+  max-width: 40px;
+  align-items: center;
+  justify-content: center;
+  max-height: 23px;
+}
+
+.modifySaveButton {
+  display: flex;
+  flex-direction: column;
+  max-width: 40px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.modifyWebhookCollapsed {
+  display: flex;
+  flex-direction: row;
+  margin: 10px 0;
+}
+
+.modifyWebhookExpanded {
+  display: flex;
+  margin: 10px 0;
+  padding: 10px;
+  flex-direction: column;
+  background-color: white;
+  border: 1px solid #ccc;
+  max-width: 700px;
+}
+
+.modifyOpsCollapsedContent {
+  padding-bottom: 10px;
+  max-width: 408px;
+  display: flex;
+  flex-direction: row;
+
+}
+
+.modifyOpsCollapsed {
+  display: flex;
+  margin: 10px 0;
+  flex-direction: row;
+}
+
+.modifyOpsExpanded {
+  display: flex;
+  margin: 10px 0;
+  padding: 10px;
+  flex-direction: column;
+  background-color: white;
+  border: 1px solid #ccc;
+  max-width: 700px;
+}
+
+.modifyWhDropdownWrapper {
+  padding-left: 50px;
+  padding-bottom: 10px;
+  padding-top: 10px;
+  max-width: 408px;
+}
+
+.modifyProperty {
+  align-self: center;
+  font-size: 14px;
+}
+
+.opsCheckboxWrapper {
+  margin: 0 10px;
+  display: flex;
+  flex-direction: row;
+}
+
+.modifyOps {
+  display: flex;
+  flex-direction: column;
+}
+
+.modifyOpsPadLeft {
+  display: flex;
+  flex-direction: column;
+  padding-left: 50px;
+}
+
+.opsCheckbox {
+  margin-right: 5px;
+}
+
+.modifyHeadersTextbox {
+  margin-right: 5px;  
+}
