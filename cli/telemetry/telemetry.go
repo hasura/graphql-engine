@@ -16,7 +16,7 @@ import (
 var Waiter sync.WaitGroup
 
 // Endpoint is where telemetry data is sent.
-const Endpoint = "https://analytics.stats.hasura.io/v1/http"
+const Endpoint = "https://telemetry.hasura.io/v1/http"
 
 // Topic is the name under which telemetry is sent.
 var Topic = "cli_test"
