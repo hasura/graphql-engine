@@ -48,7 +48,7 @@ For ``serve`` subcommand these are the flags available
        --auth-hook              The authentication webhook, required to authenticate
                                 incoming request
 
-       --auth-hook-enable-post  Use authentication webhook with POST (default: GET)
+       --auth-hook-mode         The authentication webhook mode. GET|POST (default: GET)
 
        --jwt-secret             The JSON containing type and the JWK used for
                                 verifying. e.g: `{"type": "HS256", "key":
@@ -93,34 +93,35 @@ These are the environment variables which are available:
 
 .. code-block:: none
 
-   HASURA_GRAPHQL_DATABASE_URL            Postgres database URL
-                                          <postgres/postgresql>://<user>:<password>@<host>:
-                                          <port>/<db-name> Example:
-                                          postgres://admin:mypass@mydomain.com:5432/mydb
+   HASURA_GRAPHQL_DATABASE_URL          Postgres database URL
+                                        <postgres/postgresql>://<user>:<password>@<host>:
+                                        <port>/<db-name> Example:
+                                        postgres://admin:mypass@mydomain.com:5432/mydb
 
-   HASURA_GRAPHQL_SERVER_PORT             Port on which graphql-engine should be served
+   HASURA_GRAPHQL_SERVER_PORT           Port on which graphql-engine should be served
 
-   HASURA_GRAPHQL_ACCESS_KEY              Secret access key, required to access this
-                                          instance. If specified client needs to send
-                                          'X-Hasura-Access-Key' header
+   HASURA_GRAPHQL_ACCESS_KEY            Secret access key, required to access this
+                                        instance. If specified client needs to send
+                                        'X-Hasura-Access-Key' header
 
-   HASURA_GRAPHQL_AUTH_HOOK               The authentication webhook, required to
-                                          authenticate incoming request
+   HASURA_GRAPHQL_AUTH_HOOK             The authentication webhook, required to
+                                        authenticate incoming request
 
-   HASURA_GRAPHQL_AUTH_HOOK_ENABLE_POST   Use authentication webhook with POST (default: GET)
+   HASURA_GRAPHQL_AUTH_HOOK_MODE        The authentication webhook mode, GET|POST
+                                        (default: GET)
 
-   HASURA_GRAPHQL_CORS_DOMAIN             The domain, including sheme and port,
-                                          to allow CORS for
+   HASURA_GRAPHQL_CORS_DOMAIN           The domain, including sheme and port,
+                                        to allow CORS for
 
-   HASURA_GRAPHQL_JWT_SECRET              The JSON containing type and the JWK used for
-                                          verifying. e.g: `{"type": "HS256", "key":
-                                          "<your-hmac-shared-secret>"}`,`{"type": "RS256",
-                                          "key": "<your-PEM-RSA-public-key>"}
-                                          Enable JWT mode, the value of which is a JSON
+   HASURA_GRAPHQL_JWT_SECRET            The JSON containing type and the JWK used for
+                                        verifying. e.g: `{"type": "HS256", "key":
+                                        "<your-hmac-shared-secret>"}`,`{"type": "RS256",
+                                        "key": "<your-PEM-RSA-public-key>"}
+                                        Enable JWT mode, the value of which is a JSON
 
-   HASURA_GRAPHQL_UNAUTHORIZED_ROLE       Unauthorized role, used when access-key is not sent
-                                          in access-key only mode or "Authorization" header
-                                          is absent in JWT mode
+   HASURA_GRAPHQL_UNAUTHORIZED_ROLE     Unauthorized role, used when access-key is not sent
+                                        in access-key only mode or "Authorization" header
+                                        is absent in JWT mode
 
-   HASURA_GRAPHQL_ENABLE_CONSOLE          Enable API console. It is served at
-                                          '/' and '/console'
+   HASURA_GRAPHQL_ENABLE_CONSOLE        Enable API console. It is served at
+                                        '/' and '/console'

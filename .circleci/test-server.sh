@@ -167,7 +167,7 @@ fi
 
 if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
-	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & WEBHOOK #########################>\n"
+	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & WEBHOOK (GET) #########################>\n"
 
 	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
 	init_ssl
@@ -187,7 +187,7 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 	combine_hpc_reports
 
   echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & WEBHOOK (POST) #########################>\n"
-  export HASURA_GRAPHQL_AUTH_HOOK_ENABLE_POST="true"
+  export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 
 	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
@@ -202,8 +202,8 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 	sleep 4
 	combine_hpc_reports
 
-	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & HTTPS INSECURE WEBHOOK ########>\n"
-  export HASURA_GRAPHQL_AUTH_HOOK_ENABLE_POST="false"
+	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & HTTPS INSECURE WEBHOOK (GET) ########>\n"
+  export HASURA_GRAPHQL_AUTH_HOOK_MODE="GET"
 
 	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
@@ -216,7 +216,7 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 	combine_hpc_reports
 
 	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & HTTPS INSECURE WEBHOOK (POST) ########>\n"
-  export HASURA_GRAPHQL_AUTH_HOOK_ENABLE_POST="true"
+  export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 
 	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 

@@ -11,6 +11,7 @@ module Hasura.Server.Auth
   , AuthMode(..)
   , mkAuthMode
   , AccessKey (..)
+  , AuthHookType(..)
   , AuthHookG (..)
   , AuthHookConf
   , AuthHook
@@ -54,14 +55,19 @@ newtype AccessKey
   = AccessKey { getAccessKey :: T.Text }
   deriving (Show, Eq)
 
-data AuthHookG a
+data AuthHookType
+  = AHTGet
+  | AHTPost
+  deriving (Show, Eq)
+
+data AuthHookG a b
   = AuthHookG
-  { ahUrl    :: !a
-  , ahIsPost :: !Bool
+  { ahUrl  :: !a
+  , ahType :: !b
   } deriving (Show, Eq)
 
-type AuthHookConf = AuthHookG (Maybe T.Text)
-type AuthHook = AuthHookG T.Text
+type AuthHookConf = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
+type AuthHook = AuthHookG T.Text AuthHookType
 
 data AuthMode
   = AMNoAuth
@@ -196,7 +202,10 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
   mkUserInfoFromResp logger urlT method status respBody
   where
     mkOptions = wreqOptions manager
-    AuthHookG urlT isPost = hook
+    AuthHookG urlT ty = hook
+    isPost = case ty of
+      AHTPost -> True
+      AHTGet  -> False
     method = bool N.GET N.POST isPost
 
     withGET = Wreq.getWith (mkOptions filteredHeaders) $

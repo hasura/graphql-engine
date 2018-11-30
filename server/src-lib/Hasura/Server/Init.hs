@@ -163,6 +163,13 @@ parseAccessKey =
                 help "Secret access key, required to access this instance"
               )
 
+readHookType :: String -> Either String AuthHookType
+readHookType tyS =
+  case tyS of
+    "GET"  -> Right AHTGet
+    "POST" -> Right AHTPost
+    _      -> Left "Only expecting GET / POST"
+
 parseWebHook :: Parser AuthHookConf
 parseWebHook =
   AuthHookG <$> parseUrl <*> parseEnablePost
@@ -172,10 +179,13 @@ parseWebHook =
                              metavar "AUTHENTICATION WEB HOOK" <>
                              help "The authentication webhook, required to authenticate requests"
                            )
-    parseEnablePost =
-      switch ( long "auth-hook-enable-post" <>
-               help "Use authentication webhook with POST (default: GET)"
-             )
+    parseEnablePost = optional $
+      option (eitherReader readHookType)
+        ( long "auth-hook-mode" <>
+          metavar "GET|POST" <>
+          help "The authentication webhook type (default: GET)"
+        )
+
 
 parseJwtSecret :: Parser (Maybe Text)
 parseJwtSecret =

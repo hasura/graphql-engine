@@ -132,12 +132,12 @@ main =  do
   hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case ravenMode of
-    ROServe (ServeOptions mPort cp isoL mRootDir mAccessKey mWebHook mJwtSecret
+    ROServe (ServeOptions mPort cp isoL mRootDir mAccessKey authHookC mJwtSecret
              mUnAuthRole corsCfg enableConsole) -> do
 
       -- get all auth mode related config
       mFinalAccessKey <- considerEnv "HASURA_GRAPHQL_ACCESS_KEY" $ getAccessKey <$> mAccessKey
-      mFinalAuthHook   <- mkAuthHook mWebHook
+      mFinalAuthHook   <- mkAuthHook authHookC
       mFinalJwtSecret <- considerEnv "HASURA_GRAPHQL_JWT_SECRET" mJwtSecret
       mFinalUnAuthRole <- considerEnv "HASURA_GRAPHQL_UNAUTHORIZED_ROLE" $ getRoleTxt <$> mUnAuthRole
       defaultPort <- getFromEnv 8080 "HASURA_GRAPHQL_SERVER_PORT"
@@ -231,11 +231,19 @@ main =  do
         ++ "\n    User: " ++ Q.connUser ci
         ++ "\n    Database: " ++ Q.connDatabase ci
 
-    mkAuthHook (AuthHookG mUrl isPostC) = do
+    mkAuthHook (AuthHookG mUrl mTy) = do
       url <- considerEnv "HASURA_GRAPHQL_AUTH_HOOK" mUrl
-      isPost <-
-        considerBoolEnv "HASURA_GRAPHQL_AUTH_HOOK_ENABLE_POST" isPostC
-      return $ AuthHookG <$> url <*> pure isPost
+      ty <- maybe getHookTypeEnv return mTy
+      return $ AuthHookG <$> url <*> pure ty
+
+    getHookTypeEnv = do
+      let envVar = "HASURA_GRAPHQL_AUTH_HOOK_MODE"
+          errorFn s = putStrLn (s ++ " for Env " ++ envVar)
+                      >> exitFailure
+      mEnvVal <- lookupEnv "HASURA_GRAPHQL_AUTH_HOOK_MODE"
+      case mEnvVal of
+        Just s  -> either errorFn return $ readHookType s
+        Nothing -> return AHTGet
 
     -- if flags given are Nothing consider it's value from Env
     considerEnv _ (Just t) = return $ Just t
