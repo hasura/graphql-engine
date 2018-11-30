@@ -12,7 +12,6 @@ import {
   pendingEventsConnector,
   runningEventsConnector,
   eventHeaderConnector,
-  settingsConnector,
   streamingLogsConnector,
 } from '.';
 
@@ -59,10 +58,6 @@ const makeEventRouter = (
           path="triggers/:trigger/running"
           component={runningEventsConnector(connect)}
           onEnter={composeOnEnterHooks([requireRunningEvents])}
-        />
-        <Route
-          path="triggers/:trigger/settings"
-          component={settingsConnector(connect)}
         />
         <Route
           path="triggers/:trigger/logs"

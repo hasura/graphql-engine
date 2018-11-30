@@ -33,36 +33,38 @@ class HeadersEditor extends React.Component {
     const collapsed = toggleButton => (
       <div className={styles.modifyOpsCollapsed}>
         {toggleButton('Edit')}
-        <div className={styles.modifyHeaders}>
-          {headers.length > 0 &&
-            headers.map(h => {
+        {headers.length > 0 ? (
+          <div className={styles.modifyHeaders}>
+            {headers.map(h => {
               const { name, value, value_from_env } = h;
               return (
                 <div className={styles.modifyHeadersCollapsedContent}>
-                  <div className={styles.headersInputWrapper}>
-                    <input
-                      type="text"
-                      className={`${styles.input} form-control ${
-                        styles.add_mar_right
-                      } ${styles.modifyHeaderCollapsedInput}`}
-                      value={name}
-                      disabled
-                    />
-                    <input
-                      type="text"
-                      className={`${styles.input} form-control ${
-                        styles.add_mar_right
-                      } ${styles.modifyHeaderCollapsedInput}`}
-                      value={value || value_from_env}
-                      disabled
-                    />
-                    {value_from_env && <p>(from env)</p>}
-                  </div>
+                  {
+                    <div className={styles.headersInputWrapper}>
+                      <input
+                        type="text"
+                        className={`${styles.input} form-control ${
+                          styles.add_mar_right
+                        } ${styles.modifyHeaderCollapsedInput}`}
+                        value={name}
+                        disabled
+                      />
+                      <input
+                        type="text"
+                        className={`${styles.input} form-control ${
+                          styles.add_mar_right
+                        } ${styles.modifyHeaderCollapsedInput}`}
+                        value={value || value_from_env}
+                        disabled
+                      />
+                      {value_from_env && <p>(from env)</p>}
+                    </div>
+                  }
                 </div>
               );
             })}
-        </div>
-        {headers.length === 0 && (
+          </div>
+        ) : (
           <div className={styles.modifyProperty}>No headers</div>
         )}
       </div>
