@@ -51,6 +51,46 @@ export const setHeaderValue = (data, index) => ({
 // const REQUEST_ERROR = 'ModifyTrigger/REQUEST_ERROR';
 // const VALIDATION_ERROR = 'ModifyTrigger/VALIDATION_ERROR';
 
+/*
+{
+  "type": "bulk",
+  "args": [{
+    "type": "create_event_trigger",
+    "args": {
+      "name": "new_trigger",
+      "table": {
+        "name": "test_table",
+        "schema": "public"
+      },
+      "webhook": "https://github.com",
+      "insert": {
+        "columns": ["id", "text", "awesomething"]
+      },
+      "update": {
+        "columns": ["id", "awesomething"]
+      },
+      "retry_conf": {
+        "num_retries": 12,
+        "interval_sec": 123
+      },
+      "headers": [{
+        "name": "one",
+        "value": "two"
+      }, {
+        "name": "three",
+        "value_from_env": "HASURA_GRAPHQL_DATABASE_URL"
+      }]
+    }
+  }]
+}
+*/
+
+export const save = property => {
+  return (dispatch, getState) => {
+    console.log(property, dispatch, getState);
+  };
+};
+
 const reducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_WEBHOOK_URL:
