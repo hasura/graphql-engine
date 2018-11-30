@@ -1,4 +1,14 @@
 import defaultState from './State';
+import {
+  loadTriggers,
+  makeMigrationCall,
+  setTrigger,
+  loadProcessedEvents,
+} from '../EventActions';
+import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
+
+const SET_DEFAULTS = 'ModifyTrigger/SET_DEFAULTS';
+export const setDefaults = () => ({ type: SET_DEFAULTS });
 
 const SET_WEBHOOK_URL = 'ModifyTrigger/SET_WEBHOOK_URL';
 const SET_WEBHOOK_URL_TYPE = 'ModifyTrigger/SET_WEBHOOK_URL_TYPE';
@@ -46,48 +56,154 @@ export const setHeaderValue = (data, index) => ({
   index,
 });
 
-// const MAKING_REQUEST = 'ModifyTrigger/MAKING_REQUEST';
-// const REQUEST_SUCCESS = 'ModifyTrigger/REQUEST_SUCCESS';
-// const REQUEST_ERROR = 'ModifyTrigger/REQUEST_ERROR';
-// const VALIDATION_ERROR = 'ModifyTrigger/VALIDATION_ERROR';
+const REQUEST_ERROR = 'ModifyTrigger/REQUEST_ERROR';
 
-/*
-{
-  "type": "bulk",
-  "args": [{
-    "type": "create_event_trigger",
-    "args": {
-      "name": "new_trigger",
-      "table": {
-        "name": "test_table",
-        "schema": "public"
-      },
-      "webhook": "https://github.com",
-      "insert": {
-        "columns": ["id", "text", "awesomething"]
-      },
-      "update": {
-        "columns": ["id", "awesomething"]
-      },
-      "retry_conf": {
-        "num_retries": 12,
-        "interval_sec": 123
-      },
-      "headers": [{
-        "name": "one",
-        "value": "two"
-      }, {
-        "name": "three",
-        "value_from_env": "HASURA_GRAPHQL_DATABASE_URL"
-      }]
-    }
-  }]
-}
-*/
-
-export const save = property => {
+export const save = (property, triggerName) => {
   return (dispatch, getState) => {
-    console.log(property, dispatch, getState);
+    const { modifyTrigger } = getState();
+    const oldTrigger = getState().triggers.triggerList.find(
+      tr => tr.name === triggerName
+    );
+    console.log(oldTrigger);
+    const downPayload = {
+      replace: true,
+      name: oldTrigger.name,
+      table: {
+        name: oldTrigger.table_name,
+        schema: oldTrigger.schema_name,
+      },
+      retry_conf: { ...oldTrigger.configuration.retry_conf },
+      ...oldTrigger.configuration.definition,
+      headers: [...oldTrigger.configuration.headers],
+    };
+    if (oldTrigger.configuration.webhook_from_env) {
+      downPayload.webhook_from_env = oldTrigger.configuration.webhook_from_env;
+    } else {
+      downPayload.webhook = oldTrigger.configuration.webhook;
+    }
+    const upPayload = {
+      ...downPayload,
+    };
+    let postModifyCallback;
+    if (property === 'webhook') {
+      if (modifyTrigger.webhookUrlType === 'env') {
+        delete upPayload.webhook;
+        upPayload.webhook_from_env = modifyTrigger.webhookURL;
+      } else {
+        delete upPayload.webhook_from_env;
+        upPayload.webhook = modifyTrigger.webhookURL;
+      }
+      postModifyCallback = () => {
+        dispatch(setWebhookUrl(modifyTrigger.webhookURL));
+        dispatch(setWebhookUrlType(modifyTrigger.webhookUrlType));
+      };
+    } else if (property === 'ops') {
+      delete upPayload.update;
+      delete upPayload.delete;
+      delete upPayload.insert;
+      upPayload.update = modifyTrigger.definition.update;
+      upPayload.insert = modifyTrigger.definition.insert;
+      upPayload.delete = modifyTrigger.definition.delete;
+      postModifyCallback = () => {
+        for (const queryType in modifyTrigger.definition) {
+          if (modifyTrigger.definition[queryType]) {
+            dispatch(
+              toggleQueryType(
+                queryType,
+                modifyTrigger.definition[queryType].columns
+              )
+            );
+          }
+        }
+      };
+    } else if (property === 'retry') {
+      upPayload.retry_conf = {
+        num_retries: modifyTrigger.retryConf.numRetrys,
+        interval_sec: modifyTrigger.retryConf.retryInterval,
+      };
+      postModifyCallback = () => {
+        dispatch(setRetryNum(modifyTrigger.retryConf.numRetrys));
+        dispatch(setRetryInterval(modifyTrigger.retryConf.retryInterval));
+      };
+    } else if (property === 'headers') {
+      delete upPayload.headers;
+      upPayload.headers = [];
+      modifyTrigger.headers.filter(h => Boolean(h.key.trim())).forEach(h => {
+        const { key, value, type } = h;
+        if (type === 'env') {
+          upPayload.headers.push({
+            name: key.trim(),
+            value_from_env: value.trim(),
+          });
+        } else {
+          upPayload.headers.push({
+            name: key.trim(),
+            value: value.trim(),
+          });
+        }
+      });
+      postModifyCallback = () => {
+        modifyTrigger.headers.forEach((h, i) => {
+          dispatch(setHeaderKey(h.key, i));
+          dispatch(setHeaderType(h.type, i));
+          dispatch(setHeaderValue(h.value, i));
+          dispatch(addHeader());
+        });
+      };
+    }
+    const upQuery = {
+      type: 'bulk',
+      args: [
+        {
+          type: 'create_event_trigger',
+          args: {
+            ...upPayload,
+          },
+        },
+      ],
+    };
+    const downQuery = {
+      type: 'bulk',
+      args: [
+        {
+          type: 'create_event_trigger',
+          args: {
+            ...downPayload,
+          },
+        },
+      ],
+    };
+    const migrationName = `modify_tr_${triggerName}_${property}`;
+    const requestMsg = `Updating trigger ${property}`;
+    const successMsg = `Updated trigger ${property}`;
+    const errorMsg = `Updating trigger ${property} failed`;
+    const customOnSuccess = () => {
+      dispatch(setTrigger(triggerName.trim()));
+      dispatch(loadTriggers()).then(() => {
+        dispatch(loadProcessedEvents()).then(() => {
+          postModifyCallback();
+        });
+      });
+      return;
+    };
+    const customOnError = err => {
+      dispatch({ type: REQUEST_ERROR, data: errorMsg });
+      dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+      postModifyCallback();
+      return;
+    };
+    makeMigrationCall(
+      dispatch,
+      getState,
+      upQuery.args,
+      downQuery.args,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
   };
 };
 

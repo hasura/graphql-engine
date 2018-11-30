@@ -11,7 +11,12 @@ import RetryConfEditor from './RetryConfEditor';
 import HeadersEditor from './HeadersEditor';
 import ActionButtons from './ActionButtons';
 
+import { save, setDefaults } from './Actions';
+
 class Modify extends React.Component {
+  componentDidMount() {
+    this.props.dispatch(setDefaults());
+  }
   render() {
     const {
       modifyTriggerName,
@@ -61,7 +66,7 @@ class Modify extends React.Component {
             modifyTrigger={modifyTrigger}
             env={Boolean(webhook_from_env)}
             newWebhook={null}
-            save={() => console.log('saved')}
+            save={() => dispatch(save('webhook', modifyTriggerName))}
             styles={styles}
           />
           <OperationEditor
@@ -71,20 +76,20 @@ class Modify extends React.Component {
             modifyTrigger={modifyTrigger}
             newDefinition={null}
             styles={styles}
-            save={() => console.log('saved')}
+            save={() => dispatch(save('ops', modifyTriggerName))}
           />
           <RetryConfEditor
             retryConf={retry_conf}
             modifyTrigger={modifyTrigger}
             styles={styles}
-            save={() => console.log('saved')}
+            save={() => dispatch(save('retry', modifyTriggerName))}
             dispatch={dispatch}
           />
           <HeadersEditor
             headers={headers}
             styles={styles}
             modifyTrigger={modifyTrigger}
-            save={() => console.log('saved')}
+            save={() => dispatch(save('headers', modifyTriggerName))}
             dispatch={dispatch}
           />
           <hr />

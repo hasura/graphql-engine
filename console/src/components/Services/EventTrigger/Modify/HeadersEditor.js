@@ -11,11 +11,7 @@ import {
 
 class HeadersEditor extends React.Component {
   componentDidUpdate() {
-    const { dispatch, modifyTrigger } = this.props;
-    const lastHeader = modifyTrigger.headers[modifyTrigger.headers.length - 1];
-    if (lastHeader.key && lastHeader.value && lastHeader.type) {
-      dispatch(addHeader());
-    }
+    this.addExtraHeader();
   }
 
   setValues = () => {
@@ -25,7 +21,16 @@ class HeadersEditor extends React.Component {
       dispatch(setHeaderKey(name, i));
       dispatch(setHeaderType(value_from_env ? 'env' : 'static', i));
       dispatch(setHeaderValue(value || value_from_env, i));
+      this.addExtraHeader();
     });
+  };
+
+  addExtraHeader = () => {
+    const { dispatch, modifyTrigger } = this.props;
+    const lastHeader = modifyTrigger.headers[modifyTrigger.headers.length - 1];
+    if (lastHeader.key && lastHeader.value && lastHeader.type) {
+      dispatch(addHeader());
+    }
   };
 
   render() {
@@ -35,31 +40,43 @@ class HeadersEditor extends React.Component {
         {toggleButton('Edit')}
         {headers.length > 0 ? (
           <div className={styles.modifyHeaders}>
-            {headers.map(h => {
+            {headers.map((h, i) => {
               const { name, value, value_from_env } = h;
               return (
-                <div className={styles.modifyHeadersCollapsedContent}>
-                  {
-                    <div className={styles.headersInputWrapper}>
-                      <input
-                        type="text"
-                        className={`${styles.input} form-control ${
-                          styles.add_mar_right
-                        } ${styles.modifyHeaderCollapsedInput}`}
-                        value={name}
-                        disabled
-                      />
-                      <input
-                        type="text"
-                        className={`${styles.input} form-control ${
-                          styles.add_mar_right
-                        } ${styles.modifyHeaderCollapsedInput}`}
-                        value={value || value_from_env}
-                        disabled
-                      />
-                      {value_from_env && <p>(from env)</p>}
-                    </div>
-                  }
+                <div className={styles.modifyHeadersCollapsedContent} key={i}>
+                  <input
+                    type="text"
+                    className={`${styles.input} form-control ${
+                      styles.add_mar_right
+                    } ${styles.modifyHeadersTextboxDisabled}`}
+                    value={name}
+                    disabled
+                  />
+                  <select
+                    value={value_from_env ? 'env' : 'static'}
+                    className={`${styles.select} ${
+                      styles.selectWidth
+                    } form-control ${styles.add_pad_left} ${
+                      styles.add_mar_right
+                    } ${styles.modifyHeadersTextboxDisabled}`}
+                    data-test={`header-type-${i}`}
+                    disabled
+                  >
+                    <option value="static" key="0" title="static">
+                      static
+                    </option>
+                    <option value="env" key="1" title="env">
+                      from env variable
+                    </option>
+                  </select>
+                  <input
+                    type="text"
+                    className={`${styles.input} form-control ${
+                      styles.add_mar_right
+                    } ${styles.modifyHeadersTextboxDisabled}`}
+                    value={value || value_from_env}
+                    disabled
+                  />
                 </div>
               );
             })}
@@ -76,7 +93,7 @@ class HeadersEditor extends React.Component {
         <div className={styles.modifyOpsPadLeft}>
           {modifyTrigger.headers.map((h, i) => {
             return (
-              <div className={styles.modifyHeadersCollapsedContent}>
+              <div className={styles.modifyHeadersCollapsedContent} key={i}>
                 <input
                   type="text"
                   className={`${styles.input} form-control ${

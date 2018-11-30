@@ -79,6 +79,12 @@
   font-size: 13px;
 }
 
+modifyHeadersCollapsedHeadings {
+  max-width: 600px;
+  display: flex;
+  flex-direction: row;
+  font-size: 13px;
+}
 
 .modifyHeadersCollapsedContent p{
   font-size: 14px;
@@ -182,6 +188,17 @@
 
 .modifyHeadersTextbox {
   width: 200px;
+}
+
+
+.modifyHeadersTextboxDisabled {
+  width: 200px;
+}
+
+
+.modifyHeadersTextboxDisabled:hover {
+  width: 200px;
+  cursor: text;
 }
 
 .modifyHeadersDropdown {

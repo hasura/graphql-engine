@@ -29,8 +29,8 @@ class OperationEditor extends React.Component {
         <div className={styles.modifyOps}>
           <div className={styles.modifyOpsCollapsedContent}>
             Operations:
-            {queryTypes.map(qt => (
-              <div className={styles.opsCheckboxWrapper}>
+            {queryTypes.map((qt, i) => (
+              <div className={styles.opsCheckboxWrapper} key={i}>
                 <input
                   type="checkbox"
                   className={styles.opsCheckboxDisabled}
@@ -44,8 +44,8 @@ class OperationEditor extends React.Component {
           <div className={styles.modifyOpsCollapsedContent}>
             <p>Listen columns for update:&nbsp;</p>
             {definition.update ? (
-              allTableColumns.map(col => (
-                <div className={styles.opsCheckboxWrapper}>
+              allTableColumns.map((col, i) => (
+                <div className={styles.opsCheckboxWrapper} key={i}>
                   <input
                     type="checkbox"
                     className={styles.opsCheckboxDisabled}
@@ -71,8 +71,8 @@ class OperationEditor extends React.Component {
         <div className={styles.modifyOpsPadLeft}>
           <div className={styles.modifyOpsCollapsedContent}>
             Operations:
-            {queryTypes.map(qt => (
-              <div className={styles.opsCheckboxWrapper}>
+            {queryTypes.map((qt, i) => (
+              <div className={styles.opsCheckboxWrapper} key={i}>
                 <input
                   type="checkbox"
                   className={styles.opsCheckbox}
@@ -88,8 +88,8 @@ class OperationEditor extends React.Component {
           <div className={styles.modifyOpsCollapsedContent}>
             Listen columns for update:&nbsp;
             {modifyTrigger.definition.update ? (
-              allTableColumns.map(col => (
-                <div className={styles.opsCheckboxWrapper}>
+              allTableColumns.map((col, i) => (
+                <div className={styles.opsCheckboxWrapper} key={i}>
                   <input
                     type="checkbox"
                     className={styles.opsCheckbox}
