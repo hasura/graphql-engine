@@ -14,6 +14,7 @@ import (
 
 	yaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
+	"github.com/oliveagle/jsonpath"
 	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
 )
@@ -175,16 +176,32 @@ func (h *HasuraDB) UnLock() error {
 
 		// Handle migration version here
 		if horror.Path != "" {
+			jsonData, err := json.Marshal(h.migrationQuery)
+			if err != nil {
+				return err
+			}
+			var migrationQuery interface{}
+			err = json.Unmarshal(jsonData, &migrationQuery)
+			if err != nil {
+				return err
+			}
+			res, err := jsonpath.JsonPathLookup(migrationQuery, horror.Path)
+			if err == nil {
+				queryData, err := json.MarshalIndent(res, "", "    ")
+				if err != nil {
+					return err
+				}
+				horror.migrationQuery = string(queryData)
+			}
 			re1, err := regexp.Compile(`\$.args\[([0-9]+)\]*`)
 			if err != nil {
 				return err
 			}
-
 			result := re1.FindAllStringSubmatch(horror.Path, -1)
 			if len(result) != 0 {
 				migrationNumber, ok := h.jsonPath[result[0][1]]
 				if ok {
-					horror.MigrationFile = migrationNumber
+					horror.migrationFile = migrationNumber
 				}
 			}
 		}
