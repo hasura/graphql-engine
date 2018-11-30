@@ -38,6 +38,7 @@ module Hasura.GraphQL.Validate.Types
   , fromSchemaDocQ
   , TypeMap
   , TypeLoc (..)
+  , TyEq (..)
   , AnnGValue(..)
   , AnnGObject
   , hasNullVal
@@ -63,6 +64,10 @@ import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
+
+class (Eq a) => TyEq a where
+  tyEq :: a -> a -> Bool
+
 data EnumValInfo
   = EnumValInfo
   { _eviDesc         :: !(Maybe G.Description)
@@ -81,6 +86,9 @@ data EnumTyInfo
   , _etiValues :: !(Map.HashMap G.EnumValue EnumValInfo)
   , _etiLoc    :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
+
+instance TyEq EnumTyInfo where
+  tyEq a b = (_etiName a == _etiName b) && (_etiValues a == _etiValues b)
 
 fromEnumTyDef :: G.EnumTypeDefinition -> TypeLoc -> EnumTyInfo
 fromEnumTyDef (G.EnumTypeDefinition descM n _ valDefs) loc =
@@ -120,6 +128,11 @@ data ObjFldInfo
   , _fiLoc    :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
+instance TyEq ObjFldInfo where
+  tyEq a b =  (_fiName a == _fiName b)
+           && (_fiTy a == _fiTy b)
+           && (_fiParams a == _fiParams b)
+
 fromFldDef :: G.FieldDefinition -> TypeLoc -> ObjFldInfo
 fromFldDef (G.FieldDefinition descM n args ty _) loc =
   ObjFldInfo descM n params ty loc
@@ -134,6 +147,18 @@ data ObjTyInfo
   , _otiName   :: !G.NamedType
   , _otiFields :: !ObjFieldMap
   } deriving (Show, Eq, TH.Lift)
+
+instance TyEq ObjTyInfo where
+  -- incase of ObjTyInfo fields from the first Obj are compared with the second
+  tyEq a b = (_otiName a == _otiName b) && fldsEq
+    where
+      aFlds  = _otiFields a
+      bFlds  = _otiFields b
+      fldsEq = any (== True) $ flip map (Map.toList aFlds) $
+               \(n, fld) ->
+                 case Map.lookup n bFlds of
+                   Nothing -> False
+                   Just f  -> tyEq fld f
 
 instance Monoid ObjTyInfo where
   mempty = ObjTyInfo Nothing (G.NamedType "") Map.empty
@@ -172,6 +197,10 @@ data InpObjTyInfo
   , _iotiLoc    :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
+instance TyEq InpObjTyInfo where
+  tyEq a b =  (_iotiName a == _iotiName b)
+           && (_iotiFields a == _iotiFields b)
+
 fromInpObjTyDef :: G.InputObjectTypeDefinition -> TypeLoc -> InpObjTyInfo
 fromInpObjTyDef (G.InputObjectTypeDefinition descM n _ inpFlds) loc =
   InpObjTyInfo descM (G.NamedType n) fldMap loc
@@ -185,6 +214,9 @@ data ScalarTyInfo
   , _stiType :: !PGColType
   , _stiLoc  :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
+
+instance TyEq ScalarTyInfo where
+  tyEq a b =  _stiType a == _stiType b
 
 fromScalarTyDef
   :: G.ScalarTypeDefinition

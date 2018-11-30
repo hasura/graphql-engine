@@ -139,6 +139,23 @@ class TestAddRemoteSchemaTbls:
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 500, resp
         assert resp['code'] == 'postgres-error'
+
+    def test_add_schema_same_type(self, hge_ctx):
+        """
+        test types get merged when remote schema has type with same name and
+        same structure
+        """
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/person_table.yaml')
+        assert st_code == 200, resp
+        q = mk_add_remote_q('person-graphql', 'http://localhost:5000/person-graphql')
+
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/drop_person_table.yaml')
+        assert st_code == 200, resp
+        hge_ctx.v1q({"type": "remove_remote_schema", "args": {"name": "person-graphql"}})
+        assert st_code == 200, resp
+
 #    def test_remote_query_variables(self, hge_ctx):
 #        pass
 #    def test_add_schema_url_from_env(self, hge_ctx):

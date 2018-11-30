@@ -1582,19 +1582,26 @@ checkSchemaConflicts
   :: (MonadError QErr m)
   => GCtx -> GCtx -> m ()
 checkSchemaConflicts gCtx remoteCtx = do
-  -- check type conflicts
   let typeMap     = _gTypes gCtx -- hasura typemap
-      hTypes      = map G.unNamedType $ Map.keys typeMap
+  -- check type conflicts
+  let hTypes      = Map.elems typeMap
+      hTyNames    = map G.unNamedType $ Map.keys typeMap
       rmQRootName = _otiName $ _gQueryRoot remoteCtx
       rmMRootName = maybeToList $ _otiName <$> _gMutRoot remoteCtx
       rmRootNames = map G.unNamedType (rmQRootName:rmMRootName)
-      rmTypes     = filter (`notElem` builtinTy ++ rmRootNames) $
-                    map G.unNamedType $ Map.keys $ _gTypes remoteCtx
+      rmTypes     = Map.filterWithKey
+                    (\k _ -> G.unNamedType k `notElem` builtinTy ++ rmRootNames)
+                    $ _gTypes remoteCtx
 
-      conflictedTypes = filter (`elem` hTypes) rmTypes
+      isTyInfoSame ty = any (\t -> tyinfoEq t ty) hTypes
+      -- name is same and structure is not same
+      isSame n ty = G.unNamedType n `elem` hTyNames &&
+                    not (isTyInfoSame ty)
+      conflictedTypes = Map.filterWithKey isSame rmTypes
+      conflictedTyNames = map G.unNamedType $ Map.keys conflictedTypes
 
-  unless (null conflictedTypes) $
-    throw400 RemoteSchemaConflicts $ tyMsg conflictedTypes
+  unless (Map.null conflictedTypes) $
+    throw400 RemoteSchemaConflicts $ tyMsg conflictedTyNames
 
   -- check node conflicts
   let rmQRoot = _otiFields $ _gQueryRoot remoteCtx
@@ -1615,6 +1622,13 @@ checkSchemaConflicts gCtx remoteCtx = do
     _ -> return ()
 
   where
+    tyinfoEq a b = case (a, b) of
+      (TIScalar t1, TIScalar t2) -> tyEq t1 t2
+      (TIObj t1, TIObj t2)       -> tyEq t1 t2
+      (TIEnum t1, TIEnum t2)     -> tyEq t1 t2
+      (TIInpObj t1, TIInpObj t2) -> tyEq t1 t2
+      _                          -> False
+
     hQRName = G.NamedType "query_root"
     hMRName = G.NamedType "mutation_root"
     tyMsg ty = "types: [" <> namesToTxt ty <>
