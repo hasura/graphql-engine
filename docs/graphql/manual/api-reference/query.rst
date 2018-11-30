@@ -63,10 +63,11 @@ Query/Subscription syntax
 Syntax definitions
 ------------------
 
-.. _Object:
-
 Object
 ^^^^^^
+
+Simple Object :-
+****************
 
 .. code-block:: none
 
@@ -76,6 +77,7 @@ Object
     ..
     nested object1
     nested object2
+    aggregate nested object1
     ..
   }
 
@@ -84,21 +86,171 @@ E.g.
 .. code-block:: graphql
 
    author {
-      id # scalar field
-      name # scalar field
-      article { # nested object
+      id  # scalar field
+      name  # scalar field
+      article {  # nested object
         title
+      }
+      article_aggregate {  # aggregate nested object
+        aggregate {
+          count
+        }
+        nodes {
+          title
+        }
       }
    }
 
-.. _Argument:
+Aggregate Object :-
+*******************
+
+.. code-block:: none
+
+  object-name_aggregate {
+    aggregate {
+      count
+      sum {
+        field
+        ..
+      }
+      avg {
+        field
+        ..
+      }
+      stddev {
+        field
+        ..
+      }
+      stddev_samp {
+        field
+        ..
+      }
+      stddev_pop {
+        field
+        ..
+      }
+      variance {
+        field
+        ..
+      }
+      var_samp {
+        field
+        ..
+      }
+      var_pop {
+        field
+        ..
+      }
+      max {
+        field
+        ..
+      }
+      min {
+        field
+        ..
+      }
+    nodes {
+      field1
+      field2
+      ..
+      nested object1
+      nested object2
+      aggregate nested object1
+      ..
+    }
+  }
+
+(For more details on aggregate functions, refer to `Postgres docs <https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE>`__.)
+
+E.g.
+
+.. code-block:: graphql
+
+   author_aggregate {
+     aggregate {
+       count  # total count
+       sum {
+         id  # sum aggregate on id
+       }
+       avg {
+         id  # avg aggregate on id
+       }
+       stddev {
+         id  # stddev aggregate on id
+       }
+       stddev_samp {
+         id  # stddev_samp aggregate on id
+       }
+       stddev_pop {
+         id  # stddev_pop aggregate on id
+       }
+       variance {
+         id  # variance aggregate on id
+       }
+       var_samp {
+         id  # var_samp aggregate on id
+       }
+       var_pop {
+         id  # var_pop aggregate on id
+       }
+       max {
+         id  # max aggregate on id
+       }
+       min {
+         id  # min aggregate on id
+       }
+     }
+
+     nodes {  # objects
+       id  # scalar field
+       name  # scalar field
+
+       article {  # nested object
+         title
+       }
+
+       article_aggregate{  # aggregate nested object
+         aggregate {
+           count
+         }
+         nodes {
+           title
+         }
+       }
+     }
+   }
 
 Argument
 ^^^^^^^^
 
 .. parsed-literal::
 
-   WhereExp_ | OrderByExp_ | PaginationExp_
+   DistinctOnExp_ | WhereExp_ | OrderByExp_ | PaginationExp_
+
+
+.. _DistinctOnExp:
+
+DistinctOnExp
+************
+
+.. parsed-literal::
+
+   distinct_on: [ TableSelectColumnEnum_ ]
+
+TableSelectColumnEnum
+"""""""""""""""""""""
+
+.. code-block:: graphql
+
+   #example table_select_column enum for "article" table
+   enum article_select_column {
+     id
+     title
+     content
+     author_id
+     is_published
+   }
+
 
 .. _WhereExp:
 
@@ -108,8 +260,6 @@ WhereExp
 .. parsed-literal::
 
    where: BoolExp_
-
-.. _BoolExp:
 
 BoolExp
 """""""
@@ -126,7 +276,6 @@ AndExp
     {
       _and: [BoolExp_]
     }
-
 
 OrExp
 #####
@@ -154,6 +303,8 @@ ColumnExp
     {
       field-name : {Operator_: Value }
     }
+
+.. _Operator:
 
 Operator
 ########
@@ -186,7 +337,7 @@ JSONB operators:
    * - ``_has_keys_all``
      - ``?&``
 
-(For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`_.)
+(For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.)
 
 Text related operators :
 
@@ -224,10 +375,8 @@ or
    order_by: [{id: desc}, {author: {id: asc}}]
 
 
-.. _TableOrderBy:
-
 TableOrderBy
-***********
+************
 
 For columns:
 
@@ -255,8 +404,6 @@ Order by type for "article" table:
      author: author_order_by
    }
 
-.. _OrderByEnum:
-
 OrderByEnum
 ***********
 
@@ -264,14 +411,18 @@ OrderByEnum
 
    #the order_by enum type
    enum order_by {
-     #in the ascending order
+     #in the ascending order, nulls last
      asc
-     #in the descending order
-     desc
+     #in the ascending order, nulls last
+     asc_nulls_last
      #in the ascending order, nulls first
      asc_nulls_first
      #in the descending order, nulls first
+     desc
+     #in the descending order, nulls first
      desc_nulls_first
+     #in the descending order, nulls last
+     desc_nulls_last
    }
 
 

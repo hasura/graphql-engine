@@ -26,18 +26,19 @@ data UpdateQueryP1
   = UpdateQueryP1
   { uqp1Table   :: !QualifiedTable
   , uqp1SetExps :: ![(PGCol, S.SQLExp)]
-  , uqp1Where   :: !(S.BoolExp, GBoolExp AnnSQLBoolExp)
+  , uqp1Where   :: !(AnnBoolExpSQL, AnnBoolExpSQL)
   , pqp1MutFlds :: !MutFlds
   } deriving (Show, Eq)
 
 mkSQLUpdate
   :: UpdateQueryP1 -> S.SelectWith
 mkSQLUpdate (UpdateQueryP1 tn setExps (permFltr, wc) mutFlds) =
-  mkSelWith tn (S.CTEUpdate update) mutFlds
+  mkSelWith tn (S.CTEUpdate update) mutFlds False
   where
     update = S.SQLUpdate tn setExp Nothing tableFltr $ Just S.returningStar
     setExp    = S.SetExp $ map S.SetExpItem setExps
-    tableFltr = Just $ S.WhereFrag $ S.BEBin S.AndOp permFltr $ cBoolExp wc
+    tableFltr = Just $ S.WhereFrag $
+                toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
 
 getUpdateDeps
   :: UpdateQueryP1
@@ -147,20 +148,19 @@ convUpdateQuery f uq = do
     withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
   let setExpItems = setItems ++ incItems ++ mulItems ++ defItems
-      updTable = upiTable updPerm
 
   when (null setExpItems) $
     throw400 UnexpectedPayload "atleast one of $set, $inc, $mul has to be present"
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp' fieldInfoMap updTable selPerm (uqWhere uq) f
+    convBoolExp' fieldInfoMap selPerm (uqWhere uq) f
 
   return $ UpdateQueryP1
     tableName
     setExpItems
     (upiFilter updPerm, annSQLBoolExp)
-    (mkDefaultMutFlds tableName mAnnRetCols)
+    (mkDefaultMutFlds mAnnRetCols)
   where
     mRetCols = uqReturning uq
     selNecessaryMsg =

@@ -6,7 +6,7 @@ args:
   args:
     sql: |
       create table author(
-          id serial primary key, 
+          id serial primary key,
           name text unique,
           is_registered boolean not null default false
       );
@@ -86,6 +86,66 @@ args:
         column: author_id
 
 
+#Message table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE message (
+        id int PRIMARY KEY,
+        content TEXT NOT NULL,
+        parent_id INT NULL
+      );
+      alter table message
+      add constraint parent_fk foreign key (parent_id)
+      references message(id)
+
+- type: track_table
+  args:
+    schema: public
+    name: message
+
+# parent obj rel
+- type: create_object_relationship
+  args:
+    table: message
+    name: parent
+    using:
+      foreign_key_constraint_on: parent_id
+
+# children array rel
+- type: create_array_relationship
+  args:
+    table: message
+    name: children
+    using:
+      foreign_key_constraint_on:
+        table: message
+        column: parent_id
+
+#Insert messages
+- type: insert
+  args:
+    table: message
+    objects:
+    - id: 1
+      content: "hello world"
+      parent_id: null
+    - id: 2
+      content: "content 2"
+      parent_id: 1
+    - id: 3
+      content: "content 3"
+      parent_id: 1
+    - id: 4
+      content: "ahoy"
+      parent_id: null
+    - id: 5
+      content: "content 5"
+      parent_id: 4
+    - id: 6
+      content: "hello there"
+      parent_id: 4
+
 #Insert Authors
 - type: insert
   args:
@@ -134,12 +194,12 @@ args:
     table: city
     objects:
     - name: Durham
-      country: USA 
+      country: USA
     - name:  New York
       country: USA
     - name: Framlingham
       country: UK
-    - name: New Orleans 
+    - name: New Orleans
       country: USA
 
 - type: insert
@@ -149,3 +209,23 @@ args:
       - received_at: '2018-09-21T09:39:44Z'
       - received_at: '2018-09-21T09:40:44Z'
         delivered_at: '2018-09-21T09:50:44Z'
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "uuid_test" (
+        id serial primary key,
+        uuid_col UUID NOT NULL
+      )
+- type: track_table
+  args:
+    name: uuid_test
+    schema: public
+
+- type: insert
+  args:
+    table: uuid_test
+    objects:
+    - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e5
+    - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e6
+    - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e7

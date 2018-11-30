@@ -11,11 +11,11 @@
 module Hasura.RQL.DDL.Relationship where
 
 import qualified Database.PG.Query          as Q
+import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission  (purgePerm)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.Prelude
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -170,15 +170,17 @@ createObjRelP1 (WithTable qt rd) = do
   tabInfo <- askTabInfo qt
   objRelP1 tabInfo rd
 
-objRelP2Setup :: (P2C m) => QualifiedTable -> RelDef ObjRelUsing -> m ()
+objRelP2Setup
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => QualifiedTable -> RelDef ObjRelUsing -> m ()
 objRelP2Setup qt (RelDef rn ru _) = do
-  relInfo <- case ru of
+  (relInfo, deps) <- case ru of
     RUManual (ObjRelManualConfig rm) -> do
       let refqt = rmTable rm
           (lCols, rCols) = unzip $ M.toList $ rmColumns rm
           deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) "lcol") lCols
                   <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) "rcol") rCols
-      return $ RelInfo rn ObjRel (zip lCols rCols) refqt deps True
+      return (RelInfo rn ObjRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn cn -> do
       res  <- liftTx $ Q.catchE defaultTxErrorHandler $ fetchFKeyDetail cn
       case mapMaybe processRes res of
@@ -190,10 +192,10 @@ objRelP2Setup qt (RelDef rn ru _) = do
                      ]
               refqt = QualifiedTable refsn reftn
           void $ askTabInfo refqt
-          return $ RelInfo rn ObjRel colMapping refqt deps False
+          return (RelInfo rn ObjRel colMapping refqt False, deps)
         _  -> throw400 ConstraintError
                 "more than one foreign key constraint exists on the given column"
-  addFldToCache (fromRel rn) (FIRelationship relInfo) qt
+  addRelToCache rn relInfo deps qt
   where
     QualifiedTable sn tn = qt
     fetchFKeyDetail cn =
@@ -209,12 +211,19 @@ objRelP2Setup qt (RelDef rn ru _) = do
       m@[_] -> Just (consn, refsn, reftn, m)
       _     -> Nothing
 
-objRelP2 :: (P2C m) => QualifiedTable -> ObjRelDef -> m ()
+objRelP2
+  :: ( QErrM m
+     , CacheRWM m
+     , MonadTx m
+     )
+  => QualifiedTable
+  -> ObjRelDef
+  -> m ()
 objRelP2 qt rd@(RelDef rn ru comment) = do
   objRelP2Setup qt rd
   liftTx $ persistRel qt rn ObjRel (toJSON ru) comment
 
-createObjRelP2 :: (P2C m) => CreateObjRel -> m RespBody
+createObjRelP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => CreateObjRel -> m RespBody
 createObjRelP2 (WithTable qt rd) = do
   objRelP2 qt rd
   return successMsg
@@ -265,15 +274,17 @@ arrRelP1 tabInfo (RelDef rn ru _) = do
     RUManual (ArrRelManualConfig rm) ->
       validateManualConfig fim rm
 
-arrRelP2Setup :: (P2C m) => QualifiedTable -> ArrRelDef -> m ()
+arrRelP2Setup
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => QualifiedTable -> ArrRelDef -> m ()
 arrRelP2Setup qt (RelDef rn ru _) = do
-  relInfo <- case ru of
+  (relInfo, deps) <- case ru of
     RUManual (ArrRelManualConfig rm) -> do
       let refqt = rmTable rm
           (lCols, rCols) = unzip $ M.toList $ rmColumns rm
           deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) "lcol") lCols
                   <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) "rcol") rCols
-      return $ RelInfo rn ArrRel (zip lCols rCols) refqt deps True
+      return (RelInfo rn ArrRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
       let QualifiedTable refSn refTn = refqt
       res <- liftTx $ Q.catchE defaultTxErrorHandler $
@@ -285,10 +296,10 @@ arrRelP2Setup qt (RelDef rn ru _) = do
           let deps = [ SchemaDependency (SOTableObj refqt $ TOCons consName) "remote_fkey"
                      , SchemaDependency (SOTableObj refqt $ TOCol refCol) "using_col"
                      ]
-          return $ RelInfo rn ArrRel (map swap mapping) refqt deps False
+          return (RelInfo rn ArrRel (map swap mapping) refqt False, deps)
         _  -> throw400 ConstraintError
                 "more than one foreign key constraint exists on the given column"
-  addFldToCache (fromRel rn) (FIRelationship relInfo) qt
+  addRelToCache rn relInfo deps qt
   where
     QualifiedTable sn tn = qt
     fetchFKeyDetail refsn reftn refcn = Q.listQ [Q.sql|
@@ -305,12 +316,14 @@ arrRelP2Setup qt (RelDef rn ru _) = do
       m@[_] -> Just (consn, m)
       _     -> Nothing
 
-arrRelP2 :: (P2C m) => QualifiedTable -> ArrRelDef -> m ()
+arrRelP2
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => QualifiedTable -> ArrRelDef -> m ()
 arrRelP2 qt rd@(RelDef rn u comment) = do
   arrRelP2Setup qt rd
   liftTx $ persistRel qt rn ArrRel (toJSON u) comment
 
-createArrRelP2 :: (P2C m) => CreateArrRel -> m RespBody
+createArrRelP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => CreateArrRel -> m RespBody
 createArrRelP2 (WithTable qt rd) = do
   arrRelP2 qt rd
   return successMsg
@@ -345,16 +358,16 @@ dropRelP1 (DropRel qt rn cascade) = do
   where
     relObjId = SOTableObj qt $ TORel rn
 
-purgeRelDep :: (P2C m) => SchemaObjId -> m ()
+purgeRelDep :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => SchemaObjId -> m ()
 purgeRelDep (SOTableObj tn (TOPerm rn pt)) =
   purgePerm tn rn pt
 purgeRelDep d = throw500 $ "unexpected dependency of relationship : "
                 <> reportSchemaObj d
 
-dropRelP2 :: (P2C m) => DropRel -> [SchemaObjId] -> m RespBody
+dropRelP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DropRel -> [SchemaObjId] -> m RespBody
 dropRelP2 (DropRel qt rn _) depObjs = do
   mapM_ purgeRelDep depObjs
-  delFldFromCache (fromRel rn) qt
+  delRelFromCache rn qt
   liftTx $ delRelFromCatalog qt rn
   return successMsg
 
@@ -394,7 +407,7 @@ setRelCommentP1 (SetRelComment qt rn _) = do
   tabInfo <- askTabInfo qt
   void $ askRelType (tiFieldInfoMap tabInfo) rn ""
 
-setRelCommentP2 :: (P2C m) => SetRelComment -> m RespBody
+setRelCommentP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => SetRelComment -> m RespBody
 setRelCommentP2 arc = do
   liftTx $ setRelComment arc
   return successMsg

@@ -13,9 +13,10 @@ verified by GraphQL engine to authorize and get metadata about the request
 .. image:: ../../../img/graphql/manual/auth/jwt-auth.png
 
 The JWT is decoded, the signature is verified, then it is asserted that the
-current role of the user is in the list of allowed roles. If the authorization
-passes, then all of the ``x-hasura-*`` values in the claim is used for the
-permissions system.
+current role of the user (if specified in the request) is in the list of allowed roles.
+If current role is not specified in the request, then the default role is picked.
+If the authorization passes, then all of the ``x-hasura-*`` values in the claim
+is used for the permissions system.
 
 .. note::
    Configuring JWT requires Hasura to run with an access key (``--access-key``).
@@ -174,7 +175,7 @@ Examples
 ^^^^^^^^
 
 HMAC-SHA based
-+++++++++++++++
+++++++++++++++
 Your auth server is using HMAC-SHA algorithms to sign JWTs, and is using a
 256-bit key. In this case, the JWT config will look like:
 
@@ -185,7 +186,7 @@ Your auth server is using HMAC-SHA algorithms to sign JWTs, and is using a
      "key": "3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"
    }
 
-The ``key`` is the actual shared secret, which is used by your auth server as well.
+The ``key`` is the actual shared secret, which is used by Hasura and the external auth server.
 
 RSA based
 +++++++++
@@ -252,7 +253,7 @@ Well known providers and known issues
 
 Firebase
 ^^^^^^^^
-This page of Firebase `docs <https://firebase.google.com/docs/auth/admin/verify-id-tokens#verify_id_tokens_using_a_third-party_jwt_library>`_
+This page of Firebase `docs <https://firebase.google.com/docs/auth/admin/verify-id-tokens#verify_id_tokens_using_a_third-party_jwt_library>`__
 mentions that JWKs are published under:
 
 https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com .
@@ -276,12 +277,16 @@ If you are using Firebase and Hasura, use this config:
 
 Auth0
 ^^^^^
+
+Refer the :doc:`Auth0 JWT Integration guide <../guides/integrations/auth0-jwt>` for a full integration guide
+with Auth0
+
 Auth0 publishes their JWK under:
 
 ``https://<your-auth0-domain>.auth0.com/.well-known/jwks.json``
 
 But they have a `bug where the certificate thumbprint does not match
-<https://community.auth0.com/t/certificate-thumbprint-is-longer-than-20-bytes/7794/3>`_.
+<https://community.auth0.com/t/certificate-thumbprint-is-longer-than-20-bytes/7794/3>`__.
 Hence, currently this URL does not work with Hasura.
 
 Current workaround is - download the X590 certificate from:
@@ -315,3 +320,13 @@ And use it in the ``key`` field:
     -----END CERTIFICATE-----
     "
         }
+
+Generate JWT Config
+^^^^^^^^^^^^^^^^^^^
+The JWT Config to be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt-secret`` flag can be generated using
+the following UI https://hasura.io/jwt-config.
+
+Currently the UI supports generating config for Auth0 and Firebase. The config generated from this page can be
+directly pasted in yaml files and command line arguments as it takes care of escaping new lines.
+
+.. image:: ../../../img/graphql/manual/auth/jwt-config-generated.png

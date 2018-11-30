@@ -53,6 +53,7 @@ import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Permission.Triggers
 import           Hasura.RQL.DML.Internal            (onlyPositiveInt)
 import           Hasura.RQL.Types
+import           Hasura.RQL.GBoolExp
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
@@ -74,6 +75,7 @@ data InsPerm
   { icCheck       :: !BoolExp
   , icAllowUpsert :: !(Maybe Bool)
   , icSet         :: !(Maybe Object)
+  , icColumns     :: !(Maybe PermColSpec)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
@@ -108,10 +110,11 @@ buildInsPermInfo
   :: (QErrM m, CacheRM m)
   => TableInfo
   -> PermDef InsPerm
-  -> m InsPermInfo
-buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set) _) = withPathK "permission" $ do
+  -> m (WithDeps InsPermInfo)
+buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set mCols) _) = withPathK "permission" $ do
   (be, beDeps) <- withPathK "check" $
-    procBoolExp tn fieldInfoMap (S.QualVar "NEW") chk
+    -- procBoolExp tn fieldInfoMap (S.QualVar "NEW") chk
+    procBoolExp tn fieldInfoMap chk
   let deps = mkParentDep tn : beDeps
       fltrHeaders = getDependentHeaders chk
       setObj = fromMaybe mempty set
@@ -125,19 +128,25 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set) _) = withPathK "per
       return (pgCol, sqlExp)
   let setHdrs = mapMaybe (fetchHdr . snd) (HM.toList setObj)
       reqHdrs = fltrHeaders `union` setHdrs
-  return $ InsPermInfo vn be allowUpsrt setColsSQL deps reqHdrs
+      preSetCols = HM.union setColsSQL nonInsColVals
+  return (InsPermInfo vn be allowUpsrt preSetCols reqHdrs, deps)
   where
     fieldInfoMap = tiFieldInfoMap tabInfo
     tn = tiName tabInfo
     vn = buildViewName tn rn PTInsert
+    allCols = map pgiName $ getCols fieldInfoMap
+    nonInsCols = case mCols of
+      Nothing   -> []
+      Just cols -> (\\) allCols $ convColSpec fieldInfoMap cols
+    nonInsColVals = S.mkColDefValMap nonInsCols
 
     fetchHdr (String t) = bool Nothing (Just $ T.toLower t)
                           $ isUserVar t
     fetchHdr _          = Nothing
 
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
-buildInsInfra tn (InsPermInfo vn be _ _ _ _) = do
-  trigFnQ <- buildInsTrigFn vn tn be
+buildInsInfra tn (InsPermInfo vn be _ _ _) = do
+  trigFnQ <- buildInsTrigFn vn tn $ toSQLBoolExp (S.QualVar "NEW") be
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
     Q.unitQ (buildView tn vn) () False
@@ -156,7 +165,7 @@ clearInsInfra vn =
 
 type DropInsPerm = DropPerm InsPerm
 
-dropInsPermP2 :: (P2C m) => DropInsPerm -> QualifiedTable -> m ()
+dropInsPermP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DropInsPerm -> QualifiedTable -> m ()
 dropInsPermP2 = dropPermP2
 
 type instance PermInfo InsPerm = InsPermInfo
@@ -192,12 +201,12 @@ buildSelPermInfo
   :: (QErrM m, CacheRM m)
   => TableInfo
   -> SelPerm
-  -> m SelPermInfo
+  -> m (WithDeps SelPermInfo)
 buildSelPermInfo tabInfo sp = do
   let pgCols     = convColSpec fieldInfoMap $ spColumns sp
 
   (be, beDeps) <- withPathK "filter" $
-    procBoolExp tn fieldInfoMap (S.mkQual tn) $ spFilter sp
+    procBoolExp tn fieldInfoMap  $ spFilter sp
 
   -- check if the columns exist
   void $ withPathK "columns" $ indexedForM pgCols $ \pgCol ->
@@ -209,7 +218,7 @@ buildSelPermInfo tabInfo sp = do
 
   withPathK "limit" $ mapM_ onlyPositiveInt mLimit
 
-  return $ SelPermInfo (HS.fromList pgCols) tn be mLimit allowAgg deps depHeaders
+  return (SelPermInfo (HS.fromList pgCols) tn be mLimit allowAgg depHeaders, deps)
 
   where
     tn = tiName tabInfo
@@ -223,7 +232,7 @@ type DropSelPerm = DropPerm SelPerm
 
 type instance PermInfo SelPerm = SelPermInfo
 
-dropSelPermP2 :: (P2C m) => DropSelPerm -> m ()
+dropSelPermP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DropSelPerm -> m ()
 dropSelPermP2 dp = dropPermP2 dp ()
 
 instance IsPerm SelPerm where
@@ -258,10 +267,10 @@ buildUpdPermInfo
   :: (QErrM m, CacheRM m)
   => TableInfo
   -> UpdPerm
-  -> m UpdPermInfo
+  -> m (WithDeps UpdPermInfo)
 buildUpdPermInfo tabInfo (UpdPerm colSpec fltr) = do
   (be, beDeps) <- withPathK "filter" $
-    procBoolExp tn fieldInfoMap (S.mkQual tn) fltr
+    procBoolExp tn fieldInfoMap fltr
 
   -- check if the columns exist
   _ <- withPathK "columns" $ indexedForM updCols $ \updCol ->
@@ -270,7 +279,7 @@ buildUpdPermInfo tabInfo (UpdPerm colSpec fltr) = do
   let deps = mkParentDep tn : beDeps ++ map (mkColDep "untyped" tn) updCols
       depHeaders = getDependentHeaders fltr
 
-  return $ UpdPermInfo (HS.fromList updCols) tn be deps depHeaders
+  return (UpdPermInfo (HS.fromList updCols) tn be depHeaders, deps)
 
   where
     tn = tiName tabInfo
@@ -282,7 +291,7 @@ type instance PermInfo UpdPerm = UpdPermInfo
 
 type DropUpdPerm = DropPerm UpdPerm
 
-dropUpdPermP2 :: (P2C m) => DropUpdPerm -> m ()
+dropUpdPermP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DropUpdPerm -> m ()
 dropUpdPermP2 dp = dropPermP2 dp ()
 
 instance IsPerm UpdPerm where
@@ -315,20 +324,20 @@ buildDelPermInfo
   :: (QErrM m, CacheRM m)
   => TableInfo
   -> DelPerm
-  -> m DelPermInfo
+  -> m (WithDeps DelPermInfo)
 buildDelPermInfo tabInfo (DelPerm fltr) = do
   (be, beDeps) <- withPathK "filter" $
-    procBoolExp tn fieldInfoMap  (S.mkQual tn) fltr
+    procBoolExp tn fieldInfoMap  fltr
   let deps = mkParentDep tn : beDeps
       depHeaders = getDependentHeaders fltr
-  return $ DelPermInfo tn be deps depHeaders
+  return (DelPermInfo tn be depHeaders, deps)
   where
     tn = tiName tabInfo
     fieldInfoMap = tiFieldInfoMap tabInfo
 
 type DropDelPerm = DropPerm DelPerm
 
-dropDelPermP2 :: (P2C m) => DropDelPerm -> m ()
+dropDelPermP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DropDelPerm -> m ()
 dropDelPermP2 dp = dropPermP2 dp ()
 
 type instance PermInfo DelPerm = DelPermInfo
@@ -371,7 +380,7 @@ setPermCommentP1 (SetPermComment qt rn pt _) = do
       PTUpdate -> assertPermDefined rn PAUpdate tabInfo
       PTDelete -> assertPermDefined rn PADelete tabInfo
 
-setPermCommentP2 :: (P2C m) => SetPermComment -> m RespBody
+setPermCommentP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => SetPermComment -> m RespBody
 setPermCommentP2 apc = do
   liftTx $ setPermCommentTx apc
   return successMsg
@@ -398,7 +407,7 @@ setPermCommentTx (SetPermComment (QualifiedTable sn tn) rn pt comment) =
              AND perm_type = $5
                 |] (comment, sn, tn, rn, permTypeToCode pt) True
 
-purgePerm :: (P2C m) => QualifiedTable -> RoleName -> PermType -> m ()
+purgePerm :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> RoleName -> PermType -> m ()
 purgePerm qt rn pt =
   case pt of
     PTInsert -> dropInsPermP2 dp $ buildViewName qt rn PTInsert

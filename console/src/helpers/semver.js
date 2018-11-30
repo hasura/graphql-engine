@@ -9,16 +9,22 @@ const componentsSemver = {
   supportColumnChangeTrigger: '1.0.0-alpha26',
   analyzeApiChange: '1.0.0-alpha26',
   insertPrefix: '1.0.0-alpha26',
+  schemaStitching: '1.0.0-alpha30',
+  webhookEnvSupport: '1.0.0-alpha29',
+  insertPermRestrictColumns: '1.0.0-alpha28',
 };
 
 const getPreRelease = version => {
   const prerelease = semver.prerelease(version);
+  if (!prerelease) {
+    return '';
+  }
   if (prerelease.length === 1) {
     const regex = /(alpha|beta)(\d+)/gm;
     const str = prerelease[0];
     const m = regex.exec(str);
     if (m.length < 3) {
-      return [];
+      return '';
     }
     return m.slice(1, 3);
   }

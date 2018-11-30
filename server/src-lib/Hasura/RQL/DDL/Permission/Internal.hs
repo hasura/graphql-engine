@@ -47,9 +47,7 @@ instance ToJSON PermColSpec where
 
 convColSpec :: FieldInfoMap -> PermColSpec -> [PGCol]
 convColSpec _ (PCCols cols) = cols
-convColSpec cim PCStar      =
-  map pgiName $ fst $ partitionEithers $
-  map fieldInfoToEither $ M.elems cim
+convColSpec cim PCStar      = map pgiName $ getCols cim
 
 assertPermNotDefined
   :: (MonadError QErr m)
@@ -172,23 +170,19 @@ createPermP1 tn = do
 
 procBoolExp
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> FieldInfoMap -> S.Qual -> BoolExp
-  -> m (S.BoolExp, [SchemaDependency])
-procBoolExp tn fieldInfoMap tq be = do
-  abe   <- annBoolExp valueParser fieldInfoMap be
-  sqlbe <- convFilterExp tq abe
+  => QualifiedTable -> FieldInfoMap -> BoolExp
+  -> m (AnnBoolExpSQL, [SchemaDependency])
+procBoolExp tn fieldInfoMap be = do
+  abe <- annBoolExp valueParser fieldInfoMap be
   let deps = getBoolExpDeps tn abe
-  return (sqlbe, deps)
+  return (abe, deps)
 
 isReqUserId :: T.Text -> Bool
 isReqUserId = (== "req_user_id") . T.toLower
 
 getDependentHeaders :: BoolExp -> [T.Text]
-getDependentHeaders boolExp = case boolExp of
-  BoolAnd exps         -> concatMap getDependentHeaders exps
-  BoolOr exps          -> concatMap getDependentHeaders exps
-  BoolCol (ColExp _ v) -> parseValue v
-  BoolNot be           -> getDependentHeaders be
+getDependentHeaders (BoolExp boolExp) =
+  flip foldMap boolExp $ \(ColExp _ v) -> parseValue v
   where
     parseValue val = case val of
       (Object o) -> parseObject o
@@ -200,10 +194,11 @@ getDependentHeaders boolExp = case boolExp of
         | isReqUserId t -> [userIdHeader]
         | otherwise -> []
       _ -> []
-    parseObject o = flip concatMap (M.toList o) $ \(k, v) ->
-                             if isRQLOp k
-                             then parseOnlyString v
-                             else []
+    parseObject o =
+      concatMap parseOnlyString (M.elems o)
+      -- if isRQLOp k
+      --                        then parseOnlyString v
+      --                        else []
 
 valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
 valueParser columnType = \case
@@ -219,14 +214,6 @@ valueParser columnType = \case
     fromCurSess hdr =
       S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower hdr]
       `S.SETyAnn` (S.AnnType $ T.pack $ show columnType)
-
--- Convert where clause into SQL BoolExp
-convFilterExp :: (MonadError QErr m)
-              => S.Qual -> GBoolExp AnnValS -> m S.BoolExp
-convFilterExp tq be =
-  cBoolExp <$> convBoolRhs builderStrategy tq be
-  where
-    builderStrategy = mkBoolExpBuilder return
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
 injectDefaults qv qt =
@@ -267,7 +254,7 @@ class (ToJSON a) => IsPerm a where
     :: (QErrM m, CacheRM m)
     => TableInfo
     -> PermDef a
-    -> m (PermInfo a)
+    -> m (WithDeps (PermInfo a))
 
   addPermP2Setup
     :: (MonadTx m, QErrM m) => QualifiedTable -> PermDef a -> PermInfo a -> m ()
@@ -301,16 +288,18 @@ validateViewPerm permDef tableInfo =
     viewInfo = tiViewInfo tableInfo
     permAcc = getPermAcc1 permDef
 
-addPermP1 :: (QErrM m, CacheRM m, IsPerm a) => TableInfo -> PermDef a -> m (PermInfo a)
+addPermP1
+  :: (QErrM m, CacheRM m, IsPerm a)
+  => TableInfo -> PermDef a -> m (WithDeps (PermInfo a))
 addPermP1 tabInfo pd = do
   assertPermNotDefined (pdRole pd) (getPermAcc1 pd) tabInfo
   buildPermInfo tabInfo pd
 
 addPermP2 :: (IsPerm a, QErrM m, CacheRWM m, MonadTx m)
-          => QualifiedTable -> PermDef a -> PermInfo a -> m ()
-addPermP2 tn pd permInfo = do
+          => QualifiedTable -> PermDef a -> WithDeps (PermInfo a) -> m ()
+addPermP2 tn pd (permInfo, deps) = do
   addPermP2Setup tn pd permInfo
-  addPermToCache tn (pdRole pd) pa permInfo
+  addPermToCache tn (pdRole pd) pa permInfo deps
   liftTx $ savePermToCatalog pt tn pd
   where
     pa = getPermAcc1 pd
@@ -318,7 +307,7 @@ addPermP2 tn pd permInfo = do
 
 instance (IsPerm a) => HDBQuery (CreatePerm a) where
 
-  type Phase1Res (CreatePerm a) = PermInfo a
+  type Phase1Res (CreatePerm a) = WithDeps (PermInfo a)
 
   phaseOne (WithTable tn pd) = do
     tabInfo <- createPermP1 tn

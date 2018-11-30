@@ -23,6 +23,7 @@ class Main extends React.Component {
     this.state = {
       showBannerNotification: false,
       showEvents: false,
+      showSchemaStitch: false,
     };
 
     this.state.loveConsentState = getLoveConsentState();
@@ -37,10 +38,9 @@ class Main extends React.Component {
       dispatch(checkServerUpdates()).then(() => {
         let isUpdateAvailable = false;
         try {
-          const showEvents = semverCheck('eventsTab', this.props.serverVersion);
-          if (showEvents) {
-            this.setState({ showEvents: true });
-          }
+          this.checkEventsTab().then(() => {
+            this.checkSchemaStitch();
+          });
           isUpdateAvailable = semver.gt(
             this.props.latestServerVersion,
             this.props.serverVersion
@@ -56,10 +56,26 @@ class Main extends React.Component {
           }
         } catch (e) {
           console.error(e);
-          this.setState({ showEvents: true });
         }
       });
     });
+  }
+  checkSchemaStitch() {
+    const showSchemaStitch = semverCheck(
+      'schemaStitching',
+      this.props.serverVersion
+    );
+    if (showSchemaStitch) {
+      this.setState({ ...this.state, showSchemaStitch: true });
+    }
+    return Promise.resolve();
+  }
+  checkEventsTab() {
+    const showEvents = semverCheck('eventsTab', this.props.serverVersion);
+    if (showEvents) {
+      this.setState({ showEvents: true });
+    }
+    return Promise.resolve();
   }
   handleBodyClick(e) {
     const heartDropDownOpen = document.querySelectorAll(
@@ -109,6 +125,7 @@ class Main extends React.Component {
     const github = require('./Github.svg');
     const discord = require('./Discord.svg');
     const mail = require('./mail.svg');
+    const docs = require('./logo.svg');
     const pixHeart = require('./pix-heart.svg');
     const currentLocation = location.pathname;
     const currentActiveBlock = currentLocation.split('/')[1];
@@ -211,6 +228,32 @@ class Main extends React.Component {
                     </Link>
                   </li>
                 </OverlayTrigger>
+                {this.state.showSchemaStitch ? (
+                  <OverlayTrigger
+                    placement="right"
+                    overlay={tooltip.customresolver}
+                  >
+                    <li>
+                      <Link
+                        className={
+                          currentActiveBlock === 'remote-schemas'
+                            ? styles.navSideBarActive
+                            : ''
+                        }
+                        to={appPrefix + '/remote-schemas'}
+                      >
+                        <div className={styles.iconCenter}>
+                          <i
+                            title="Remote Schemas"
+                            className="fa fa-plug"
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <p>Remote Schemas</p>
+                      </Link>
+                    </li>
+                  </OverlayTrigger>
+                ) : null}
                 {this.state.showEvents ? (
                   <OverlayTrigger placement="right" overlay={tooltip.events}>
                     <li>
@@ -304,6 +347,20 @@ class Main extends React.Component {
                           alt={'mail'}
                         />
                         <span>Reach out ({'support@hasura.io'})</span>
+                      </a>
+                    </li>
+                    <li className={'dropdown-item'}>
+                      <a
+                        href="https://docs.hasura.io/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <img
+                          className={'img-responsive'}
+                          src={docs}
+                          alt={'docs'}
+                        />
+                        <span>Head to docs</span>
                       </a>
                     </li>
                   </div>

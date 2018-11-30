@@ -7,26 +7,22 @@ query:
      insert_article(
        objects: [
          {
-           id: 3,
-           title: "Article 3 by Author 2",
-           content: "Article content for Article 1 by Author 2",
-           is_published: true
-           author: {
-             data: {
-               id: 2,
-               name: "Author 2"
-             }
-           }
-         },
-         {
-           id: 4,
-           title: "Article 4 by Author 3",
+           title: "Article 1 by Author 3",
            content: "Article content for Article 1 by Author 3",
            is_published: true
            author: {
              data: {
-               id: 3,
                name: "Author 3"
+             }
+           }
+         },
+         {
+           title: "Article 1 by Author 4",
+           content: "Article content for Article 1 by Author 4",
+           is_published: true
+           author: {
+             data: {
+               name: "Author 4"
              }
            }
          }
@@ -50,15 +46,15 @@ response:
     insert_article:
       affected_rows: 4
       returning:
-      - id: 3
-        title: "Article 3 by Author 2"
-        content: "Article content for Article 1 by Author 2"
-        author:
-          id: 2
-          name: Author 2
       - id: 4
-        title: "Article 4 by Author 3"
+        title: "Article 1 by Author 3"
         content: "Article content for Article 1 by Author 3"
         author:
-          id: 3
+          id: 4
           name: Author 3
+      - id: 5
+        title: "Article 1 by Author 4"
+        content: "Article content for Article 1 by Author 4"
+        author:
+          id: 5 
+          name: Author 4
