@@ -37,6 +37,9 @@ class RetryConfEditor extends React.Component {
             <input
               type="text"
               value={modifyTrigger.retryConf.numRetrys}
+              className={`${styles.input} form-control ${
+                styles.add_mar_right
+              } ${styles.modifyRetryConfTextbox}`}
               onChange={e => dispatch(setRetryNum(e.target.value))}
             />
           </div>
@@ -44,6 +47,9 @@ class RetryConfEditor extends React.Component {
             Retry interval (seconds):&nbsp;
             <input
               type="text"
+              className={`${styles.input} form-control ${
+                styles.add_mar_right
+              } ${styles.modifyRetryConfTextbox}`}
               value={modifyTrigger.retryConf.retryInterval}
               onChange={e => dispatch(setRetryInterval(e.target.value))}
             />

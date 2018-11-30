@@ -33,24 +33,26 @@ class OperationEditor extends React.Component {
               <div className={styles.opsCheckboxWrapper}>
                 <input
                   type="checkbox"
-                  className={styles.opsCheckbox}
+                  className={styles.opsCheckboxDisabled}
                   checked={Boolean(definition[qt])}
+                  disabled
                 />
                 {qt}
               </div>
             ))}
           </div>
           <div className={styles.modifyOpsCollapsedContent}>
-            Listen columns for update:&nbsp;
+            <p>Listen columns for update:&nbsp;</p>
             {definition.update ? (
               allTableColumns.map(col => (
                 <div className={styles.opsCheckboxWrapper}>
                   <input
                     type="checkbox"
-                    className={styles.opsCheckbox}
+                    className={styles.opsCheckboxDisabled}
                     checked={Boolean(
                       definition.update.columns.find(c => c === col)
                     )}
+                    disabled
                   />
                   {col}
                 </div>

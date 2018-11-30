@@ -22,8 +22,11 @@ class WebhookEditor extends React.Component {
       <div className={styles.modifyWebhookCollapsed}>
         {toggleButton('Edit')}
         <div className={styles.modifyProperty}>
-          <b>{webhook}</b>
-          <i>{env && ' - from env variable'}</i>
+          <p>
+            {webhook}
+            &nbsp;
+          </p>
+          <i>{env && '- from env'}</i>
         </div>
       </div>
     );

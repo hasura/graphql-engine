@@ -63,7 +63,26 @@
   max-width: 408px;
   display: flex;
   flex-direction: row;
+  font-size: 13px;
+}
 
+
+.modifyOpsCollapsedContent p{
+  font-size: 14px;
+}
+
+.modifyHeadersCollapsedContent {
+  padding-bottom: 10px;
+  max-width: 600px;
+  display: flex;
+  flex-direction: row;
+  font-size: 13px;
+}
+
+
+.modifyHeadersCollapsedContent p{
+  font-size: 14px;
+  width: 100%
 }
 
 .modifyOpsCollapsed {
@@ -91,6 +110,12 @@
 
 .modifyProperty {
   align-self: center;
+  font-size: 13px;
+  display:flex;
+  flex-direction: row;
+}
+
+.modifyProperty p{
   font-size: 14px;
 }
 
@@ -100,21 +125,100 @@
   flex-direction: row;
 }
 
+.opsCheckboxWrapper p {
+  font-size: 13px;
+  font-style:italic;
+  align-self: center;
+  margin-top: 8px;
+}
+
+.headersInputWrapper {
+  margin: 0 10px;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.headersInputWrapper p {
+  font-size: 13px;
+  font-style:italic;
+  align-self: center;
+  margin-top: 8px;
+}
+
 .modifyOps {
   display: flex;
   flex-direction: column;
+}
+
+.modifyHeaders {
+  display: flex;
+  flex-direction: column;
+  width: 70%;
 }
 
 .modifyOpsPadLeft {
   display: flex;
   flex-direction: column;
   padding-left: 50px;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 .opsCheckbox {
-  margin-right: 5px;
+  margin-right: 5px !important;
 }
 
+
+.opsCheckboxDisabled {
+  margin-right: 5px !important;
+}
+
+.opsCheckboxDisabled:hover {
+  margin-right: 5px !important;
+  cursor: default;
+}
+
+
 .modifyHeadersTextbox {
-  margin-right: 5px;  
+  width: 200px;
+}
+
+.modifyHeadersDropdown {
+  width: 200px;
+}
+
+.modifyRetryConfTextbox {
+  height: 25px;
+  width: 100px;
+}
+
+.removeHeader {
+  align-self: center;
+}
+
+.modifyHeaderCollapsedInput {
+  width: 200px;
+}
+
+
+.modifyHeaderCollapsedInput:hover {
+  cursor: text;
+}
+
+.info {
+  display: flex;
+  flex-direction: row;
+  margin: 5px 0;
+  input {
+    height: 25px;
+    margin-left: 5px;
+    width: 300px
+  }
+}
+
+.infoContent {
+  display: flex;
+  flex-direction: column;
+  margin: 10px 0;
 }

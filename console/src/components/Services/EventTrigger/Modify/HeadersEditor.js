@@ -25,7 +25,6 @@ class HeadersEditor extends React.Component {
       dispatch(setHeaderKey(name, i));
       dispatch(setHeaderType(value_from_env ? 'env' : 'static', i));
       dispatch(setHeaderValue(value || value_from_env, i));
-      dispatch(addHeader());
     });
   };
 
@@ -34,24 +33,30 @@ class HeadersEditor extends React.Component {
     const collapsed = toggleButton => (
       <div className={styles.modifyOpsCollapsed}>
         {toggleButton('Edit')}
-        <div className={styles.modifyOps}>
+        <div className={styles.modifyHeaders}>
           {headers.length > 0 &&
             headers.map(h => {
               const { name, value, value_from_env } = h;
               return (
-                <div className={styles.modifyOpsCollapsedContent}>
-                  <div className={styles.opsCheckboxWrapper}>
+                <div className={styles.modifyHeadersCollapsedContent}>
+                  <div className={styles.headersInputWrapper}>
                     <input
                       type="text"
-                      className={styles.modifyHeadersTextbox}
+                      className={`${styles.input} form-control ${
+                        styles.add_mar_right
+                      } ${styles.modifyHeaderCollapsedInput}`}
                       value={name}
+                      disabled
                     />
                     <input
                       type="text"
-                      className={styles.modifyHeadersTextbox}
+                      className={`${styles.input} form-control ${
+                        styles.add_mar_right
+                      } ${styles.modifyHeaderCollapsedInput}`}
                       value={value || value_from_env}
+                      disabled
                     />
-                    {value_from_env && '(from env var)'}
+                    {value_from_env && <p>(from env)</p>}
                   </div>
                 </div>
               );
@@ -69,18 +74,26 @@ class HeadersEditor extends React.Component {
         <div className={styles.modifyOpsPadLeft}>
           {modifyTrigger.headers.map((h, i) => {
             return (
-              <div className={styles.modifyOpsCollapsedContent}>
+              <div className={styles.modifyHeadersCollapsedContent}>
                 <input
                   type="text"
-                  className={styles.modifyHeadersTextbox}
+                  className={`${styles.input} form-control ${
+                    styles.add_mar_right
+                  } ${styles.modifyHeadersTextbox}`}
                   value={h.key}
                   onChange={e => {
                     dispatch(setHeaderKey(e.target.value, i));
                   }}
+                  placeholder="key"
                 />
                 <select
                   value={h.type}
                   className={styles.modifyHeadersTextbox}
+                  className={`${styles.select} ${
+                    styles.selectWidth
+                  } form-control ${styles.add_pad_left} ${
+                    styles.add_mar_right
+                  } ${styles.modifyHeadersTextbox}`}
                   onChange={e => {
                     dispatch(setHeaderType(e.target.value, i));
                   }}
@@ -95,20 +108,25 @@ class HeadersEditor extends React.Component {
                 </select>
                 <input
                   type="text"
-                  className={styles.modifyHeadersTextbox}
+                  className={`${styles.input} form-control ${
+                    styles.add_mar_right
+                  } ${styles.modifyHeadersTextbox}`}
                   value={h.value}
                   onChange={e => {
                     dispatch(setHeaderValue(e.target.value, i));
                   }}
+                  placeholder={'value'}
                 />
-                {i !== modifyTrigger.headers.length - 1 && (
-                  <i
-                    className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
-                    onClick={() => {
-                      dispatch(removeHeader(i));
-                    }}
-                  />
-                )}
+                <i
+                  className={`${styles.fontAwosomeClose}
+                      ${styles.removeHeader}
+                      ${i !== modifyTrigger.headers.length - 1 &&
+                        'fa-lg fa fa-times'}
+                    `}
+                  onClick={() => {
+                    dispatch(removeHeader(i));
+                  }}
+                />
               </div>
             );
           })}
