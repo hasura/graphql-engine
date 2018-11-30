@@ -232,7 +232,12 @@ library
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
-  ghc-options: -O2 -Wall
+  ghc-options: -O2
+               -Wall
+               -Wcompat
+               -Wincomplete-record-updates
+               -Wincomplete-uni-patterns
+               -Wredundant-constraints
 
 executable graphql-engine
   default-extensions:  NoImplicitPrelude

@@ -2,9 +2,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE TypeFamilies      #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.RQL.DDL.RemoteSchema where
+module Hasura.RQL.DDL.RemoteSchema
+  ( runAddRemoteSchema
+  , runRemoveRemoteSchema
+  , writeRemoteSchemasToCache
+  , refreshGCtxMapInSchema
+  , fetchRemoteSchemas
+  , addRemoteSchemaP2
+  ) where
 
 import           Hasura.Prelude
 
@@ -18,17 +24,15 @@ import           Hasura.RQL.Types
 
 import qualified Hasura.GraphQL.Schema       as GS
 
-
-instance HDBQuery AddRemoteSchemaQuery where
-  type Phase1Res AddRemoteSchemaQuery = AddRemoteSchemaQuery
-  phaseOne   = addRemoteSchemaP1
-  phaseTwo _ = addRemoteSchemaP2
-  schemaCachePolicy = SCPReload
-
-addRemoteSchemaP1
-  :: (P1C m)
-  => AddRemoteSchemaQuery -> m AddRemoteSchemaQuery
-addRemoteSchemaP1 q = adminOnly >> return q
+runAddRemoteSchema
+  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
+     , MonadIO m
+     , HasHttpManager m
+     )
+  => AddRemoteSchemaQuery -> m RespBody
+runAddRemoteSchema q = do
+  adminOnly
+  addRemoteSchemaP2 q
 
 addRemoteSchemaP2
   :: ( QErrM m
@@ -88,15 +92,14 @@ refreshGCtxMapInSchema = do
   writeSchemaCache sc { scGCtxMap = mergedGCtxMap
                       , scDefaultRemoteGCtx = defGCtx }
 
-
-instance HDBQuery RemoveRemoteSchemaQuery where
-  type Phase1Res RemoveRemoteSchemaQuery = RemoveRemoteSchemaQuery
-  phaseOne   = removeRemoteSchemaP1
-  phaseTwo _ = removeRemoteSchemaP2
-  schemaCachePolicy = SCPReload
+runRemoveRemoteSchema
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  => RemoveRemoteSchemaQuery -> m RespBody
+runRemoveRemoteSchema q =
+  removeRemoteSchemaP1 q >>= removeRemoteSchemaP2
 
 removeRemoteSchemaP1
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m)
   => RemoveRemoteSchemaQuery -> m RemoveRemoteSchemaQuery
 removeRemoteSchemaP1 q = adminOnly >> return q
 

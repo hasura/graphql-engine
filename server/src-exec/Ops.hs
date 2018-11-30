@@ -27,22 +27,23 @@ import qualified Data.Text                    as T
 
 import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
-import qualified Network.HTTP.Client          as HTTP
 
 curCatalogVer :: T.Text
 curCatalogVer = "6"
 
-initCatalogSafe :: UTCTime -> HTTP.Manager -> Q.TxE QErr String
-initCatalogSafe initTime httpMgr =  do
-  hdbCatalogExists <- Q.catchE defaultTxErrorHandler $
+initCatalogSafe
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  => UTCTime -> m String
+initCatalogSafe initTime =  do
+  hdbCatalogExists <- liftTx $ Q.catchE defaultTxErrorHandler $
                       doesSchemaExist $ SchemaName "hdb_catalog"
-  bool (initCatalogStrict True initTime httpMgr) onCatalogExists hdbCatalogExists
+  bool (initCatalogStrict True initTime) onCatalogExists hdbCatalogExists
   where
     onCatalogExists = do
-      versionExists <- Q.catchE defaultTxErrorHandler $
+      versionExists <- liftTx $ Q.catchE defaultTxErrorHandler $
                        doesVersionTblExist
                        (SchemaName "hdb_catalog") (TableName "hdb_version")
-      bool (initCatalogStrict False initTime httpMgr) (return initialisedMsg) versionExists
+      bool (initCatalogStrict False initTime) (return initialisedMsg) versionExists
 
     initialisedMsg = "initialise: the state is already initialised"
 
@@ -63,32 +64,34 @@ initCatalogSafe initTime httpMgr =  do
            )
                     |] (Identity sn) False
 
-initCatalogStrict :: Bool -> UTCTime -> HTTP.Manager -> Q.TxE QErr String
-initCatalogStrict createSchema initTime httpMgr =  do
-  Q.catchE defaultTxErrorHandler $
-
+initCatalogStrict
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  => Bool -> UTCTime -> m String
+initCatalogStrict createSchema initTime =  do
+  liftTx $ Q.catchE defaultTxErrorHandler $
     when createSchema $ do
       Q.unitQ "CREATE SCHEMA hdb_catalog" () False
       -- This is where the generated views and triggers are stored
       Q.unitQ "CREATE SCHEMA hdb_views" () False
 
-  pgcryptoExtExists <- Q.catchE defaultTxErrorHandler $ isExtAvailable "pgcrypto"
+  pgcryptoExtExists <- liftTx $
+    Q.catchE defaultTxErrorHandler $ isExtAvailable "pgcrypto"
+
   if pgcryptoExtExists
     -- only if we created the schema, create the extension
-    then when createSchema $
-         Q.unitQE needsPgCryptoExt
-           "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public" () False
+    then when createSchema $ liftTx $ Q.unitQE needsPgCryptoExt
+         "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public" () False
     else throw500 "FATAL: Could not find extension pgcrytpo. This extension is required."
 
-  Q.catchE defaultTxErrorHandler $ do
+  liftTx $ Q.catchE defaultTxErrorHandler $ do
     Q.Discard () <- Q.multiQ $(Q.sqlFromFile "src-rsr/initialise.sql")
     return ()
 
   -- Build the metadata query
-  tx <- liftEither $ buildTxAny adminUserInfo emptySchemaCache httpMgr metadataQuery
+  void $ runQueryM metadataQuery
 
   -- Execute the query
-  void $ snd <$> tx
+  -- void $ snd <$> tx
   setAllAsSystemDefined >> addVersion initTime
   return "initialise: successfully initialised"
 
@@ -102,7 +105,7 @@ initCatalogStrict createSchema initTime httpMgr =  do
             Just "42501" -> err500 PostgresError pgcryptoPermsMsg
             _ -> (err500 PostgresError pgcryptoReqdMsg) { qeInternal = Just $ A.toJSON e }
 
-    addVersion modTime = Q.catchE defaultTxErrorHandler $
+    addVersion modTime = liftTx $ Q.catchE defaultTxErrorHandler $
       Q.unitQ [Q.sql|
                 INSERT INTO "hdb_catalog"."hdb_version" VALUES ($1, $2)
                 |] (curCatalogVer, modTime) False
@@ -118,15 +121,16 @@ initCatalogStrict createSchema initTime httpMgr =  do
                     |] (Identity sn) False
 
 
-setAllAsSystemDefined :: Q.TxE QErr ()
-setAllAsSystemDefined = Q.catchE defaultTxErrorHandler $ do
+setAllAsSystemDefined :: (MonadTx m) => m ()
+setAllAsSystemDefined = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "UPDATE hdb_catalog.hdb_table SET is_system_defined = 'true'" () False
   Q.unitQ "UPDATE hdb_catalog.hdb_relationship SET is_system_defined = 'true'" () False
   Q.unitQ "UPDATE hdb_catalog.hdb_permission SET is_system_defined = 'true'" () False
   Q.unitQ "UPDATE hdb_catalog.hdb_query_template SET is_system_defined = 'true'" () False
 
-setAsSystemDefined :: Q.TxE QErr ()
-setAsSystemDefined = Q.catchE defaultTxErrorHandler $
+setAsSystemDefined :: (MonadTx m) => m ()
+setAsSystemDefined =
+  liftTx $ Q.catchE defaultTxErrorHandler $
   Q.multiQ [Q.sql|
             UPDATE hdb_catalog.hdb_table
             SET is_system_defined = 'true'
@@ -141,21 +145,23 @@ setAsSystemDefined = Q.catchE defaultTxErrorHandler $
             WHERE table_schema = 'hdb_catalog';
             |]
 
-cleanCatalog :: Q.TxE QErr ()
-cleanCatalog = Q.catchE defaultTxErrorHandler $ do
+cleanCatalog :: (MonadTx m) => m ()
+cleanCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
   -- This is where the generated views and triggers are stored
   Q.unitQ "DROP SCHEMA IF EXISTS hdb_views CASCADE" () False
   Q.unitQ "DROP SCHEMA hdb_catalog CASCADE" () False
 
-getCatalogVersion :: Q.TxE QErr T.Text
+getCatalogVersion
+  :: (MonadTx m)
+  => m T.Text
 getCatalogVersion = do
-  res <- Q.withQE defaultTxErrorHandler [Q.sql|
+  res <- liftTx $ Q.withQE defaultTxErrorHandler [Q.sql|
                 SELECT version FROM hdb_catalog.hdb_version
                     |] () False
   return $ runIdentity $ Q.getRow res
 
-from08To1 :: Q.TxE QErr ()
-from08To1 = Q.catchE defaultTxErrorHandler $ do
+from08To1 :: (MonadTx m) => m ()
+from08To1 = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "ALTER TABLE hdb_catalog.hdb_relationship ADD COLUMN comment TEXT NULL" () False
   Q.unitQ "ALTER TABLE hdb_catalog.hdb_permission ADD COLUMN comment TEXT NULL" () False
   Q.unitQ "ALTER TABLE hdb_catalog.hdb_query_template ADD COLUMN comment TEXT NULL" () False
@@ -165,40 +171,45 @@ from08To1 = Q.catchE defaultTxErrorHandler $ do
                  json_build_object('type', 'select', 'args', template_defn->'select');
                 |] () False
 
-from1To2 :: HTTP.Manager -> Q.TxE QErr ()
-from1To2 httpMgr = do
+from1To2
+  :: (MonadTx m, HasHttpManager m, QErrM m, CacheRWM m, UserInfoM m, MonadIO m)
+  => m ()
+from1To2 = do
   -- migrate database
-  Q.Discard () <- Q.multiQE defaultTxErrorHandler
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_1.sql")
   -- migrate metadata
-  tx <- liftEither $ buildTxAny adminUserInfo
-                     emptySchemaCache httpMgr migrateMetadataFrom1
-  void tx
+  -- tx <- liftEither $ buildTxAny adminUserInfo
+  --                    emptySchemaCache httpMgr migrateMetadataFrom1
+  void $ runQueryM migrateMetadataFrom1
   -- set as system defined
   setAsSystemDefined
 
-from2To3 :: Q.TxE QErr ()
-from2To3 = Q.catchE defaultTxErrorHandler $ do
+from2To3 :: (MonadTx m) => m ()
+from2To3 = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "ALTER TABLE hdb_catalog.event_triggers ADD COLUMN headers JSON" () False
   Q.unitQ "ALTER TABLE hdb_catalog.event_log ADD COLUMN next_retry_at TIMESTAMP" () False
   Q.unitQ "CREATE INDEX ON hdb_catalog.event_log (trigger_id)" () False
   Q.unitQ "CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id)" () False
 
 -- custom resolver
-from4To5 :: HTTP.Manager -> Q.TxE QErr ()
-from4To5 httpMgr = do
-  Q.Discard () <- Q.multiQE defaultTxErrorHandler
+from4To5
+  :: (MonadTx m, HasHttpManager m, QErrM m, CacheRWM m, UserInfoM m, MonadIO m)
+  => m ()
+from4To5 = do
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_4_to_5.sql")
   -- migrate metadata
-  tx <- liftEither $ buildTxAny adminUserInfo
-                     emptySchemaCache httpMgr migrateMetadataFrom4
-  void tx
+  -- tx <- liftEither $ buildTxAny adminUserInfo
+  --                    emptySchemaCache httpMgr migrateMetadataFrom4
+  -- void tx
+  void $ runQueryM migrateMetadataFrom4
   -- set as system defined
   setAsSystemDefined
 
 
-from3To4 :: Q.TxE QErr ()
-from3To4 = Q.catchE defaultTxErrorHandler $ do
+from3To4 :: (MonadTx m) => m ()
+from3To4 = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "ALTER TABLE hdb_catalog.event_triggers ADD COLUMN configuration JSON" () False
   eventTriggers <- map uncurryEventTrigger <$> Q.listQ [Q.sql|
            SELECT e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
@@ -222,15 +233,17 @@ from3To4 = Q.catchE defaultTxErrorHandler $ do
                                          WHERE name = $2
                                          |] (Q.AltJ $ A.toJSON etc, name) True
 
-from5To6 :: Q.TxE QErr ()
-from5To6 = do
+from5To6 :: (MonadTx m) => m ()
+from5To6 = liftTx $ do
   -- migrate database
   Q.Discard () <- Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_5_to_6.sql")
   return ()
 
-migrateCatalog :: HTTP.Manager -> UTCTime -> Q.TxE QErr String
-migrateCatalog httpMgr migrationTime = do
+migrateCatalog
+  :: (MonadTx m, CacheRWM m, QErrM m, MonadIO m, UserInfoM m, HasHttpManager m)
+  => UTCTime -> m String
+migrateCatalog migrationTime = do
   preVer <- getCatalogVersion
   if | preVer == curCatalogVer ->
          return "migrate: already at the latest version"
@@ -248,7 +261,7 @@ migrateCatalog httpMgr migrationTime = do
       postMigrate
 
     from4ToCurrent = do
-      from4To5 httpMgr
+      from4To5
       from5ToCurrent
 
     from3ToCurrent = do
@@ -260,7 +273,7 @@ migrateCatalog httpMgr migrationTime = do
       from3ToCurrent
 
     from1ToCurrent = do
-      from1To2 httpMgr
+      from1To2
       from2ToCurrent
 
     from08ToCurrent = do
@@ -271,27 +284,27 @@ migrateCatalog httpMgr migrationTime = do
        -- update the catalog version
        updateVersion
        -- clean hdb_views
-       Q.catchE defaultTxErrorHandler clearHdbViews
+       liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
        -- try building the schema cache
-       void $ buildSchemaCache httpMgr
+       void buildSchemaCache
        return $ "migrate: successfully migrated to " ++ show curCatalogVer
 
     updateVersion =
-      Q.unitQE defaultTxErrorHandler [Q.sql|
+      liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
                 UPDATE "hdb_catalog"."hdb_version"
                    SET "version" = $1,
                        "upgraded_on" = $2
                     |] (curCatalogVer, migrationTime) False
 
-execQuery :: HTTP.Manager -> BL.ByteString -> Q.TxE QErr BL.ByteString
-execQuery httpMgr queryBs = do
+execQuery
+  :: (MonadTx m, CacheRWM m, QErrM m, MonadIO m, UserInfoM m, HasHttpManager m)
+  => BL.ByteString -> m BL.ByteString
+execQuery queryBs = do
   query <- case A.decode queryBs of
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
-  schemaCache <- buildSchemaCache httpMgr
-  tx <- liftEither $ buildTxAny adminUserInfo schemaCache
-                                httpMgr query
-  fst <$> tx
+  buildSchemaCache
+  runQueryM query
 
 
 -- error messages

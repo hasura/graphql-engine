@@ -5,7 +5,10 @@
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeFamilies      #-}
 
-module Hasura.RQL.DML.QueryTemplate where
+module Hasura.RQL.DML.QueryTemplate
+  ( ExecQueryTemplate(..)
+  , runExecQueryTemplate
+  ) where
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.QueryTemplate
@@ -17,7 +20,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query            as Q
-import qualified Hasura.RQL.DML.Count         as R
+import qualified Hasura.RQL.DML.Count         as RC
 import qualified Hasura.RQL.DML.Delete        as R
 import qualified Hasura.RQL.DML.Insert        as R
 import qualified Hasura.RQL.DML.Select        as R
@@ -62,7 +65,7 @@ data QueryTProc
   | QTPSelect !(R.AnnSel, DS.Seq Q.PrepArg)
   | QTPUpdate !(R.UpdateQueryP1, DS.Seq Q.PrepArg)
   | QTPDelete !(R.DeleteQueryP1, DS.Seq Q.PrepArg)
-  | QTPCount !(R.CountQueryP1, DS.Seq Q.PrepArg)
+  | QTPCount !(RC.CountQueryP1, DS.Seq Q.PrepArg)
   | QTPBulk ![QueryTProc]
   deriving (Show, Eq)
 
@@ -98,7 +101,7 @@ mkSelQWithArgs (DMLQuery tn (SelectG c w o lim offset)) args = do
   return $ DMLQuery tn $ SelectG c w o intLim intOffset
 
 convQT
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => TemplateArgs
   -> QueryT
   -> m QueryTProc
@@ -107,9 +110,9 @@ convQT args qt = case qt of
                 R.convInsertQuery decodeParam binRHSBuilder q
   QTSelect q -> fmap QTPSelect $ peelSt $
                 mkSelQWithArgs q args >>= R.convSelectQuery f
-  QTUpdate q -> fmap QTPUpdate $ peelSt $ R.convUpdateQuery f q
-  QTDelete q -> fmap QTPDelete $ peelSt $ R.convDeleteQuery f q
-  QTCount q  -> fmap QTPCount $ peelSt $ R.countP1 f q
+  QTUpdate q -> fmap QTPUpdate $ peelSt $ R.validateUpdateQueryWith f q
+  QTDelete q -> fmap QTPDelete $ peelSt $ R.validateDeleteQWith f q
+  QTCount q  -> fmap QTPCount $ peelSt $ RC.validateCountQWith f q
   QTBulk q   -> fmap QTPBulk $ mapM (convQT args) q
   where
     decodeParam val = do
@@ -118,33 +121,30 @@ convQT args qt = case qt of
       R.decodeInsObjs v
 
     f = buildPrepArg args
-    peelSt m = do
-      sc <- askSchemaCache
-      ui <- askUserInfo
-      liftEither $ runP1 (QCtx ui sc) $ runStateT m DS.empty
+    peelSt m =
+      liftP1 $ runStateT m DS.empty
 
-execQueryTemplateP1 :: ExecQueryTemplate -> P1 QueryTProc
+execQueryTemplateP1
+  :: (UserInfoM m, QErrM m, CacheRM m)
+  => ExecQueryTemplate -> m QueryTProc
 execQueryTemplateP1 (ExecQueryTemplate qtn args) = do
   (QueryTemplateInfo _ qt) <- askQTemplateInfo qtn
   convQT args qt
 
-execQueryTP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QueryTProc -> m RespBody
+execQueryTP2 :: (QErrM m, CacheRM m, MonadTx m) => QueryTProc -> m RespBody
 execQueryTP2 qtProc = case qtProc of
   QTPInsert qp -> liftTx $ R.insertP2 qp
   QTPSelect qp -> liftTx $ R.selectP2 False qp
-  QTPUpdate qp -> liftTx $ R.updateP2 qp
-  QTPDelete qp -> liftTx $ R.deleteP2 qp
-  QTPCount qp  -> R.countP2 qp
+  QTPUpdate qp -> liftTx $ R.updateQueryToTx qp
+  QTPDelete qp -> liftTx $ R.deleteQueryToTx qp
+  QTPCount qp  -> RC.countQToTx qp
   QTPBulk qps  -> do
     respList <- mapM execQueryTP2 qps
     let bsVector = V.fromList respList
     return $ BB.toLazyByteString $ encodeJSONVector BB.lazyByteString bsVector
 
-instance HDBQuery ExecQueryTemplate where
-
-  type Phase1Res ExecQueryTemplate = QueryTProc
-  phaseOne = execQueryTemplateP1
-
-  phaseTwo _ = execQueryTP2
-
-  schemaCachePolicy = SCPNoChange
+runExecQueryTemplate
+  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m)
+  => ExecQueryTemplate -> m RespBody
+runExecQueryTemplate q =
+  execQueryTemplateP1 q >>= execQueryTP2

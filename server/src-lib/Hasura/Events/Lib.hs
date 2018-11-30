@@ -195,10 +195,8 @@ processEvent logenv pool e = do
     errorFn
       :: ( MonadReader r m
          , MonadIO m
-         , Has WS.Session r
          , Has HLogger r
          , Has CacheRef r
-         , Has EventEngineCtx r
          )
       => HTTPErr -> m (Either QErr ())
     errorFn err = do
@@ -207,13 +205,7 @@ processEvent logenv pool e = do
       checkError err
 
     successFn
-      :: ( MonadReader r m
-         , MonadIO m
-         , Has WS.Session r
-         , Has HLogger r
-         , Has CacheRef r
-         , Has EventEngineCtx r
-         )
+      :: (MonadIO m)
       => HTTPResp -> m (Either QErr ())
     successFn _ = liftIO $ runExceptT $ runUnlockQ pool e
 
@@ -223,10 +215,7 @@ processEvent logenv pool e = do
     checkError
       :: ( MonadReader r m
          , MonadIO m
-         , Has WS.Session r
-         , Has HLogger r
          , Has CacheRef r
-         , Has EventEngineCtx r
          )
       => HTTPErr -> m (Either QErr ())
     checkError err = do

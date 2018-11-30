@@ -7,7 +7,6 @@
 {-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TemplateHaskell            #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.RQL.Types.DML
        ( BoolExp(..)

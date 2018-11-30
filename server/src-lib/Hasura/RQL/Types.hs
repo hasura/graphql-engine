@@ -6,22 +6,25 @@
 {-# LANGUAGE TypeFamilies          #-}
 
 module Hasura.RQL.Types
-       ( HasSchemaCache(..)
-       , ProvidesFieldInfoMap(..)
-       , HDBQuery(..)
-       , SchemaCachePolicy(..)
-       , queryModifiesSchema
+       ( -- HasSchemaCache(..)
+       -- , ProvidesFieldInfoMap(..)
+       -- , HDBQuery(..)
+       -- , SchemaCachePolicy(..)
+       -- , queryModifiesSchema
+       -- LazyTx(..)
 
-       , P1
-       , P1C
+       P1
+       , liftP1
+       , liftP1WithQCtx
+       -- , P1C
        , MonadTx(..)
        , UserInfoM(..)
        , RespBody
        --, P2C
-       , P2Ctx (..)
+       -- , P2Ctx (..)
        -- , P2Res
-       , liftP1
-       , runP1
+       -- , liftP1
+       -- , runER
        , successMsg
 
        , HasHttpManager (..)
@@ -74,54 +77,57 @@ import qualified Data.HashMap.Strict           as M
 import qualified Data.Text                     as T
 import qualified Network.HTTP.Client           as HTTP
 
-class ProvidesFieldInfoMap r where
-  getFieldInfoMap :: QualifiedTable -> r -> Maybe FieldInfoMap
+-- class ProvidesFieldInfoMap r where
+--   getFieldInfoMap :: QualifiedTable -> r -> Maybe FieldInfoMap
 
-class HasSchemaCache a where
-  getSchemaCache :: a -> SchemaCache
+-- class HasSchemaCache a where
+--   getSchemaCache :: a -> SchemaCache
 
-instance HasSchemaCache QCtx where
-  getSchemaCache = qcSchemaCache
+-- instance HasSchemaCache QCtx where
+--   getSchemaCache = qcSchemaCache
 
-instance HasSchemaCache SchemaCache where
-  getSchemaCache = id
+-- instance HasSchemaCache SchemaCache where
+--   getSchemaCache = id
 
-instance ProvidesFieldInfoMap SchemaCache where
-  getFieldInfoMap tn =
-    fmap tiFieldInfoMap . M.lookup tn . scTables
+-- instance ProvidesFieldInfoMap SchemaCache where
+getFieldInfoMap
+  :: QualifiedTable
+  -> SchemaCache -> Maybe FieldInfoMap
+getFieldInfoMap tn =
+  fmap tiFieldInfoMap . M.lookup tn . scTables
 
 -- There are two phases to every query.
 -- Phase 1 : Use the cached env to validate or invalidate
 -- Phase 2 : Hit Postgres if need to
 
-class HDBQuery q where
-  type Phase1Res q -- Phase 1 result
+-- class HDBQuery q where
+--   type Phase1Res q -- Phase 1 result
 
-  -- Use QCtx
-  phaseOne :: q -> P1 (Phase1Res q)
+--   -- Use QCtx
+--   phaseOne :: q -> P1 (Phase1Res q)
 
-  -- Hit Postgres
-  phaseTwo :: q -> Phase1Res q -> P2 BL.ByteString
+--   -- Hit Postgres
+--   phaseTwo :: q -> Phase1Res q -> P2 BL.ByteString
 
-  schemaCachePolicy :: SchemaCachePolicy q
+--   schemaCachePolicy :: SchemaCachePolicy q
 
-data SchemaCachePolicy a
-  = SCPReload
-  | SCPNoChange
-  deriving (Show, Eq)
+-- data SchemaCachePolicy a
+--   = SCPReload
+--   | SCPNoChange
+--   deriving (Show, Eq)
 
-schemaCachePolicyToBool :: SchemaCachePolicy a -> Bool
-schemaCachePolicyToBool SCPReload   = True
-schemaCachePolicyToBool SCPNoChange = False
+-- schemaCachePolicyToBool :: SchemaCachePolicy a -> Bool
+-- schemaCachePolicyToBool SCPReload   = True
+-- schemaCachePolicyToBool SCPNoChange = False
 
-getSchemaCachePolicy :: (HDBQuery a) => a -> SchemaCachePolicy a
-getSchemaCachePolicy _ = schemaCachePolicy
+-- getSchemaCachePolicy :: (HDBQuery a) => a -> SchemaCachePolicy a
+-- getSchemaCachePolicy _ = schemaCachePolicy
 
 type RespBody = BL.ByteString
 
-queryModifiesSchema :: (HDBQuery q) => q -> Bool
-queryModifiesSchema =
-  schemaCachePolicyToBool . getSchemaCachePolicy
+-- queryModifiesSchema :: (HDBQuery q) => q -> Bool
+-- queryModifiesSchema =
+--   schemaCachePolicyToBool . getSchemaCachePolicy
 
 data QCtx
   = QCtx
@@ -138,13 +144,13 @@ instance HasQCtx QCtx where
 mkAdminQCtx :: SchemaCache -> QCtx
 mkAdminQCtx = QCtx adminUserInfo
 
-data P2Ctx
-  = P2Ctx
-  { _p2cUserInfo    :: !UserInfo
-  , _p2cHttpManager :: !HTTP.Manager
-  }
+-- data P2Ctx
+--   = P2Ctx
+--   { _p2cUserInfo    :: !UserInfo
+--   , _p2cHttpManager :: !HTTP.Manager
+--   }
 
-type P2 = StateT SchemaCache (ReaderT P2Ctx (Q.TxE QErr))
+-- type P2 = StateT SchemaCache (ReaderT P2Ctx (LazyTx QErr))
 
 class (Monad m) => UserInfoM m where
   askUserInfo :: m UserInfo
@@ -171,7 +177,7 @@ askTabInfoFromTrigger trn = do
     errMsg = "event trigger " <> trn <<> " does not exist"
 
 askEventTriggerInfo
-  :: (QErrM m, CacheRM m)
+  :: (QErrM m)
   => EventTriggerInfoMap -> TriggerName -> m EventTriggerInfo
 askEventTriggerInfo etim trn = liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
   where
@@ -193,14 +199,14 @@ instance UserInfoM P1 where
 instance CacheRM P1 where
   askSchemaCache = qcSchemaCache <$> ask
 
-instance UserInfoM P2 where
-  askUserInfo = _p2cUserInfo <$> ask
+-- instance UserInfoM P2 where
+--   askUserInfo = _p2cUserInfo <$> ask
 
 class (Monad m) => HasHttpManager m where
   askHttpManager :: m HTTP.Manager
 
-instance HasHttpManager P2 where
-  askHttpManager = _p2cHttpManager <$> ask
+-- instance HasHttpManager P2 where
+--   askHttpManager = _p2cHttpManager <$> ask
 
 class (Monad m) => HasGCtxMap m where
   askGCtxMap :: m GC.GCtxMap
@@ -222,16 +228,30 @@ instance (MonadTx m) => MonadTx (ReaderT s m) where
 instance MonadTx (Q.TxE QErr) where
   liftTx = id
 
-type P1 = ExceptT QErr (Reader QCtx)
+type ER e r = ExceptT e (Reader r)
+type P1 = ER QErr QCtx
 
-runP1 :: QCtx -> P1 a -> Either QErr a
-runP1 qEnv m = runReader (runExceptT m) qEnv
+runER :: r -> ER e r a -> Either e a
+runER r m = runReader (runExceptT m) r
 
 liftMaybe :: (QErrM m) => QErr -> Maybe a -> m a
 liftMaybe e = maybe (throwError e) return
 
-liftP1 :: (MonadError QErr m) => QCtx -> P1 a -> m a
-liftP1 r m = liftEither $ runP1 r m
+liftP1
+  :: ( QErrM m
+     , UserInfoM m
+     , CacheRM m
+     ) => P1 a -> m a
+liftP1 m = do
+  ui <- askUserInfo
+  sc <- askSchemaCache
+  let qCtx = QCtx ui sc
+  liftP1WithQCtx qCtx m
+
+liftP1WithQCtx
+  :: (MonadError e m) => r -> ER e r a -> m a
+liftP1WithQCtx r m =
+  liftEither $ runER r m
 
 askFieldInfoMap
   :: (QErrM m, CacheRM m)

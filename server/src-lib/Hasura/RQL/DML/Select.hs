@@ -12,6 +12,7 @@ module Hasura.RQL.DML.Select
   , convSelectQuery
   , getSelectDeps
   , module Hasura.RQL.DML.Select.Internal
+  , runSelect
   )
 where
 
@@ -35,7 +36,7 @@ import           Hasura.SQL.Types
 import qualified Database.PG.Query              as Q
 import qualified Hasura.SQL.DML                 as S
 
-convSelCol :: (P1C m)
+convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
            => FieldInfoMap
            -> SelPermInfo
            -> SelCol
@@ -55,7 +56,7 @@ convSelCol fieldInfoMap spi (SCStar wildcard) =
   convWildcard fieldInfoMap spi wildcard
 
 convWildcard
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap
   -> SelPermInfo
   -> Wildcard
@@ -83,7 +84,7 @@ convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _) wildcard =
 
     relExtCols wc = mapM (mkRelCol wc) relColInfos
 
-resolveStar :: (P1C m)
+resolveStar :: (UserInfoM m, QErrM m, CacheRM m)
             => FieldInfoMap
             -> SelPermInfo
             -> SelectQ
@@ -109,7 +110,7 @@ resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
     equals _ _                         = False
 
 convOrderByElem
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => (FieldInfoMap, SelPermInfo)
   -> OrderByCol
   -> m AnnObCol
@@ -148,7 +149,7 @@ convOrderByElem (flds, spi) = \case
           convOrderByElem (relFim, relSpi) rest
 
 convSelectQ
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap  -- Table information of current table
   -> SelPermInfo   -- Additional select permission info
   -> SelectQExt     -- Given Select Query
@@ -194,7 +195,7 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
     mPermLimit = spiLimit selPermInfo
 
 convExtSimple
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m)
   => FieldInfoMap
   -> SelPermInfo
   -> PGCol
@@ -206,7 +207,7 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
     relWhenPGErr = "relationships have to be expanded"
 
 convExtRel
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap
   -> RelName
   -> Maybe RelName
@@ -267,7 +268,7 @@ getSelectDeps (AnnSelG flds tabFrm _ tableArgs) =
       SchemaDependency (SOTableObj tn (TORel rn)) "untyped"
 
 convSelectQuery
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => (PGColType -> Value -> m S.SQLExp)
   -> SelectQuery
   -> m AnnSel
@@ -311,12 +312,18 @@ selectP2 asSingleObject (sel, p) =
   where
     selectSQL = toSQL $ mkSQLSelect asSingleObject sel
 
-instance HDBQuery SelectQuery where
+phaseOne
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => SelectQuery -> m (AnnSel, DS.Seq Q.PrepArg)
+phaseOne =
+  liftP1 . flip runStateT DS.empty . convSelectQuery binRHSBuilder
 
-  -- type Phase1Res SelectQuery = (SelectQueryP1, DS.Seq Q.PrepArg)
-  type Phase1Res SelectQuery = (AnnSel, DS.Seq Q.PrepArg)
-  phaseOne q = flip runStateT DS.empty $ convSelectQuery binRHSBuilder q
+phaseTwo :: (MonadTx m) => (AnnSel, DS.Seq Q.PrepArg) -> m RespBody
+phaseTwo =
+  liftTx . selectP2 False
 
-  phaseTwo _ = liftTx . selectP2 False
-
-  schemaCachePolicy = SCPNoChange
+runSelect
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  => SelectQuery -> m RespBody
+runSelect q =
+  phaseOne q >>= phaseTwo

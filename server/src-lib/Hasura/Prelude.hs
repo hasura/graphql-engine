@@ -4,6 +4,7 @@ module Hasura.Prelude
 
 import           Control.Applicative    as M ((<|>))
 import           Control.Monad          as M (void, when)
+import           Control.Monad.Base     as M
 import           Control.Monad.Except   as M
 import           Control.Monad.Fail     as M (MonadFail)
 import           Control.Monad.Identity as M

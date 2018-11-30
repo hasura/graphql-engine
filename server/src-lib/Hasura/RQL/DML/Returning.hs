@@ -89,7 +89,7 @@ encodeJSONVector builder xs
     where go v b  = BB.char7 ',' <> builder v <> b
 
 checkRetCols
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m)
   => FieldInfoMap
   -> SelPermInfo
   -> [PGCol]
