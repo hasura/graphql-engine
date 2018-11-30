@@ -174,7 +174,7 @@ parseWebHook =
                            )
     parseEnablePost =
       switch ( long "auth-hook-enable-post" <>
-               help "Use authentication webhook with POST (default GET)"
+               help "Use authentication webhook with POST (default: GET)"
              )
 
 parseJwtSecret :: Parser (Maybe Text)
