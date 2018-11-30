@@ -75,7 +75,7 @@ Skip this step if you already have a project directory.
 Step 3: Use the console from the CLI
 ------------------------------------
 
-Instead of using the console at ``http://my-grapqhl.herokuapp.com/console`` you should now use the console by running:
+Instead of using the console at ``http://my-graphql.herokuapp.com/console`` you should now use the console by running:
 
 .. code-block:: bash
 
@@ -95,12 +95,12 @@ in the ``migrations/`` directory in your project.
 Step 5: Apply the migrations to another instance of the GraphQL engine
 ----------------------------------------------------------------------
 
-- Edit ``config.yaml`` and change the endpoint to another instance, say ``https://my-another-grapqhl.herokuapp.com``:
+- Edit ``config.yaml`` and change the endpoint to another instance, say ``https://my-another-graphql.herokuapp.com``:
 
   .. code-block:: yaml
 
      # config.yaml
-     endpoint: https://my-another-grapqhl.herokuapp.com
+     endpoint: https://my-another-graphql.herokuapp.com
 
 - Apply all migrations present in the ``migrations/`` directory on this new instance:
 
