@@ -87,7 +87,9 @@ type PostgresError struct {
 func (h *HasuraError) CMDError() error {
 	var errorStrings []string
 	errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s (%s)", h.Code, h.ErrorMessage, h.Path))
-	errorStrings = append(errorStrings, fmt.Sprintf("File: '%s'", h.MigrationFile))
+	if h.MigrationFile != "" {
+		errorStrings = append(errorStrings, fmt.Sprintf("File: '%s'", h.MigrationFile))
+	}
 	if h.Internal != nil {
 		// postgres error
 		errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", h.Internal.Error.StatusCode, h.Internal.Error.ExecStatus, h.Internal.Error.Message))
