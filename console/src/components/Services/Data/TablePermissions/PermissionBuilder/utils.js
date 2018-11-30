@@ -152,3 +152,37 @@ export function getRefTable(rel, tableSchema) {
 
   return _refTable;
 }
+
+export function getAllJsonPaths(json, prefix = '') {
+  const _paths = [];
+
+  const addPrefix = subPath => {
+    return prefix + (prefix && subPath ? '.' : '') + subPath;
+  };
+
+  const handleSubJson = (subJson, newPrefix) => {
+    const subPaths = getAllJsonPaths(subJson, newPrefix);
+
+    subPaths.forEach(subPath => {
+      _paths.push(subPath);
+    });
+
+    if (!subPaths.length) {
+      _paths.push(newPrefix);
+    }
+  };
+
+  if (json instanceof Array) {
+    json.forEach((subJson, i) => {
+      handleSubJson(subJson, addPrefix(i.toString()));
+    });
+  } else if (json instanceof Object) {
+    Object.keys(json).forEach(key => {
+      handleSubJson(json[key], addPrefix(key));
+    });
+  } else {
+    _paths.push(addPrefix(json));
+  }
+
+  return _paths;
+}

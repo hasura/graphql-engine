@@ -11,6 +11,7 @@ import {
   getTableRelationship,
   getTableDef,
   getTableSchema,
+  getAllJsonPaths,
   isNotOperator,
   isAndOrOperator,
   isColumnOperator,
@@ -34,6 +35,89 @@ class PermissionBuilder extends React.Component {
     tableName: PropTypes.string,
     schemaName: PropTypes.string,
   };
+
+  componentDidMount() {
+    this.fetchMissingSchemas();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (
+      this.props.filter !== prevProps.filter ||
+      this.props.allTableSchemas.length !== prevProps.allTableSchemas.length
+    ) {
+      this.fetchMissingSchemas();
+    }
+  }
+
+  fetchMissingSchemas() {
+    const {
+      dispatch,
+      tableName,
+      schemaName,
+      dispatchFuncAddTableSchemas,
+      filter,
+    } = this.props;
+
+    const findMissingSchemas = (path, currTable) => {
+      let _missingSchemas = [];
+
+      const pathSplit = path.split('.');
+
+      const operator = pathSplit[0];
+
+      if (isAndOrOperator(operator)) {
+        const newPath = pathSplit.slice(2).join('.');
+        _missingSchemas = findMissingSchemas(newPath, currTable);
+      } else if (isNotOperator(operator)) {
+        const newPath = pathSplit.slice(1).join('.');
+        _missingSchemas = findMissingSchemas(newPath, currTable);
+      } else if (
+        isColumnOperator(operator) ||
+        isArrayColumnOperator(operator)
+      ) {
+        // no missing schemas
+      } else {
+        const { allTableSchemas } = this.props;
+
+        const tableSchema = getTableSchema(allTableSchemas, currTable);
+        const tableRelationships = getTableRelationshipNames(tableSchema);
+
+        if (tableRelationships.includes(operator)) {
+          const rel = getTableRelationship(tableSchema, operator);
+          const refTable = getRefTable(rel, tableSchema);
+
+          const refTableSchema = getTableSchema(allTableSchemas, refTable);
+          if (!refTableSchema) {
+            _missingSchemas.push(refTable.schema);
+          }
+
+          const newPath = pathSplit.slice(1).join('.');
+          _missingSchemas.push(...findMissingSchemas(newPath, refTable));
+        } else {
+          // no missing schemas
+        }
+      }
+
+      return _missingSchemas;
+    };
+
+    const table = getTableDef(tableName, schemaName);
+
+    const missingSchemas = [];
+    const paths = getAllJsonPaths(JSON.parse(filter || '{}'));
+
+    for (let i = 0; i < paths.length; i++) {
+      const path = paths[i];
+
+      const subMissingSchemas = findMissingSchemas(path, table);
+
+      missingSchemas.push(...subMissingSchemas);
+    }
+
+    if (missingSchemas.length > 0) {
+      dispatch(dispatchFuncAddTableSchemas(missingSchemas));
+    }
+  }
 
   render() {
     const wrapDoubleQuotes = value => {
