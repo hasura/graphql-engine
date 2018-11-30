@@ -182,6 +182,19 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
 	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
 
+	kill -INT $PID
+	sleep 4
+	combine_hpc_reports
+
+  echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & WEBHOOK (POST) #########################>\n"
+  export HASURA_GRAPHQL_AUTH_HOOK_ENABLE_POST="true"
+
+	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+
+  wait_for_port 8080
+
+	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
+
 	rm /etc/ssl/certs/webhook.crt
 	update-ca-certificates
 
@@ -190,6 +203,20 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 	combine_hpc_reports
 
 	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & HTTPS INSECURE WEBHOOK ########>\n"
+  export HASURA_GRAPHQL_AUTH_HOOK_ENABLE_POST="false"
+
+	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+
+	wait_for_port 8080
+
+	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
+
+	kill -INT $PID
+	sleep 4
+	combine_hpc_reports
+
+	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & HTTPS INSECURE WEBHOOK (POST) ########>\n"
+  export HASURA_GRAPHQL_AUTH_HOOK_ENABLE_POST="true"
 
 	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 

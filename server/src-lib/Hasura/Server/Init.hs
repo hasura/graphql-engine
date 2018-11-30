@@ -17,8 +17,8 @@ import           Hasura.Server.Auth
 import           Hasura.Server.Utils
 
 
-data InitError
-  = InitError !String
+newtype InitError
+  = InitError String
   deriving (Show, Eq)
 
 instance Q.FromPGConnErr InitError where
@@ -163,14 +163,19 @@ parseAccessKey =
                 help "Secret access key, required to access this instance"
               )
 
-parseWebHook :: Parser (Maybe Webhook)
+parseWebHook :: Parser AuthHookConf
 parseWebHook =
-  optional $ Webhook <$>
-    strOption ( long "auth-hook" <>
-                metavar "AUTHENTICATION WEB HOOK" <>
-                help "The authentication webhook, required to authenticate requests"
-              )
-
+  AuthHookG <$> parseUrl <*> parseEnablePost
+  where
+    parseUrl =
+      optional $ strOption ( long "auth-hook" <>
+                             metavar "AUTHENTICATION WEB HOOK" <>
+                             help "The authentication webhook, required to authenticate requests"
+                           )
+    parseEnablePost =
+      switch ( long "auth-hook-enable-post" <>
+               help "Use authentication webhook with POST (default GET)"
+             )
 
 parseJwtSecret :: Parser (Maybe Text)
 parseJwtSecret =

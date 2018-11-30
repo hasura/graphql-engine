@@ -50,7 +50,7 @@ data ServeOptions
   , soTxIso         :: !Q.TxIsolation
   , soRootDir       :: !(Maybe String)
   , soAccessKey     :: !(Maybe AccessKey)
-  , soWebHook       :: !(Maybe Webhook)
+  , soAuthHook      :: !AuthHookConf
   , soJwtSecret     :: !(Maybe Text)
   , soUnAuthRole    :: !(Maybe RoleName)
   , soCorsConfig    :: !CorsConfigFlags
@@ -103,12 +103,11 @@ printJSON = BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a) => a -> IO ()
 printYaml = BC.putStrLn . Y.encode
 
-getEnableConsoleEnv :: IO Bool
-getEnableConsoleEnv = do
-  mVal <- fmap T.pack <$> lookupEnv enableConsoleEnvVar
+parseEnvAsBool :: String -> IO Bool
+parseEnvAsBool envVar = do
+  mVal <- fmap T.pack <$> lookupEnv envVar
   maybe (return False) (parseAsBool . T.toLower) mVal
   where
-    enableConsoleEnvVar = "HASURA_GRAPHQL_ENABLE_CONSOLE"
     truthVals = ["true", "t", "yes", "y"]
     falseVals = ["false", "f", "no", "n"]
 
@@ -117,7 +116,7 @@ getEnableConsoleEnv = do
       | t `elem` falseVals = return False
       | otherwise = putStrLn errMsg >> exitFailure
 
-    errMsg = "Fatal Error: " ++ enableConsoleEnvVar
+    errMsg = "Fatal Error: " ++ envVar
              ++ " is not valid boolean text. " ++ "True values are "
              ++ show truthVals ++ " and  False values are " ++ show falseVals
              ++ ". All values are case insensitive"
@@ -138,14 +137,15 @@ main =  do
 
       -- get all auth mode related config
       mFinalAccessKey <- considerEnv "HASURA_GRAPHQL_ACCESS_KEY" $ getAccessKey <$> mAccessKey
-      mFinalWebHook   <- considerEnv "HASURA_GRAPHQL_AUTH_HOOK" $ getWebhook <$> mWebHook
+      mFinalAuthHook   <- mkAuthHook mWebHook
       mFinalJwtSecret <- considerEnv "HASURA_GRAPHQL_JWT_SECRET" mJwtSecret
       mFinalUnAuthRole <- considerEnv "HASURA_GRAPHQL_UNAUTHORIZED_ROLE" $ getRoleTxt <$> mUnAuthRole
       defaultPort <- getFromEnv 8080 "HASURA_GRAPHQL_SERVER_PORT"
       let port = fromMaybe defaultPort mPort
       -- prepare auth mode
+      -- use webhook post config
       authModeRes <- runExceptT $ mkAuthMode (AccessKey <$> mFinalAccessKey)
-                                             (Webhook <$> mFinalWebHook)
+                                             mFinalAuthHook
                                              mFinalJwtSecret
                                              (RoleName <$> mFinalUnAuthRole)
                                              httpManager
@@ -154,7 +154,8 @@ main =  do
       finalCorsDomain <- fromMaybe "*" <$> considerEnv "HASURA_GRAPHQL_CORS_DOMAIN" (ccDomain corsCfg)
       let finalCorsCfg = CorsConfigG finalCorsDomain $ ccDisabled corsCfg
       -- enable console config
-      finalEnableConsole <- bool getEnableConsoleEnv (return True) enableConsole
+      finalEnableConsole <-
+        considerBoolEnv "HASURA_GRAPHQL_ENABLE_CONSOLE" enableConsole
       -- init catalog if necessary
       initialise ci httpManager
       -- migrate catalog if necessary
@@ -230,6 +231,15 @@ main =  do
         ++ "\n    User: " ++ Q.connUser ci
         ++ "\n    Database: " ++ Q.connDatabase ci
 
+    mkAuthHook (AuthHookG mUrl isPostC) = do
+      url <- considerEnv "HASURA_GRAPHQL_AUTH_HOOK" mUrl
+      isPost <-
+        considerBoolEnv "HASURA_GRAPHQL_AUTH_HOOK_ENABLE_POST" isPostC
+      return $ AuthHookG <$> url <*> pure isPost
+
     -- if flags given are Nothing consider it's value from Env
     considerEnv _ (Just t) = return $ Just t
     considerEnv e Nothing  = fmap T.pack <$> lookupEnv e
+
+    considerBoolEnv envVar =
+      bool (parseEnvAsBool envVar) (return True)

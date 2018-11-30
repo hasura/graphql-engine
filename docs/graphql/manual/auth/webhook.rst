@@ -27,6 +27,20 @@ Hasura will send a ``GET`` request to your webhook with **all headers it receive
    GET https://<your-custom-webhook>/ HTTP/1.1
    <Header-Key>: <Header-Value>
 
+If you configure your webhook to use with ``POST``, then Hasura will send **all client headers in payload:**
+
+.. code-block:: http
+
+   POST https://<your-custom-webhook>/ HTTP/1.1
+   Content-Type: application/json
+
+   {
+    "headers": {
+      "header-key1": "header-value1",
+      "header-key2": "header-value2"
+      }
+   }
+
 Response
 ^^^^^^^^
 
