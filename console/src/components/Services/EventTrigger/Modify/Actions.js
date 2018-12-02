@@ -64,7 +64,6 @@ export const save = (property, triggerName) => {
     const oldTrigger = getState().triggers.triggerList.find(
       tr => tr.name === triggerName
     );
-    console.log(oldTrigger);
     const downPayload = {
       replace: true,
       name: oldTrigger.name,
@@ -232,7 +231,6 @@ const reducer = (state = defaultState, action) => {
       };
     case TOGGLE_COLUMN:
       const queryColumns = [...state.definition[action.query].columns];
-      console.log(queryColumns);
       if (queryColumns.find(qc => qc === action.column)) {
         return {
           ...state,
