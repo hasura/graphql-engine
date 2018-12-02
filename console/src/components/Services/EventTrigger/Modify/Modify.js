@@ -3,6 +3,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import styles from './Modify.scss';
 
 import { getTableColumns } from '../utils';
+import _push from '../push';
 
 import Info from './Info';
 import WebhookEditor from './WebhookEditor';
@@ -30,6 +31,11 @@ class Modify extends React.Component {
     const currentTrigger = triggerList.find(
       tr => tr.name === modifyTriggerName
     );
+
+    if (!currentTrigger) {
+      dispatch(_push('/events/manage'));
+      return null;
+    }
 
     const {
       definition,
@@ -93,7 +99,11 @@ class Modify extends React.Component {
             dispatch={dispatch}
           />
           <hr />
-          <ActionButtons styles={styles} dispatch={dispatch} />
+          <ActionButtons
+            styles={styles}
+            dispatch={dispatch}
+            triggerName={modifyTriggerName}
+          />
         </div>
         <br />
         <br />
