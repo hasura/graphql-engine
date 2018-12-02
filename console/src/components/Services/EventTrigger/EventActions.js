@@ -10,7 +10,7 @@ import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
-import { push } from 'react-router-redux';
+import push from './push';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 
@@ -437,7 +437,7 @@ const deleteTrigger = triggerName => {
 
     const customOnSuccess = () => {
       // dispatch({ type: REQUEST_SUCCESS });
-      dispatch(loadTriggers()).then(() => dispatch(push('/events/manage')));
+      dispatch(loadTriggers()).then(() => dispatch(push('/manage/triggers')));
       return;
     };
     const customOnError = () => {

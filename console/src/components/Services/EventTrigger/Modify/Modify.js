@@ -17,6 +17,7 @@ import { save, setDefaults } from './Actions';
 class Modify extends React.Component {
   componentDidMount() {
     this.props.dispatch(setDefaults());
+    console.log('Did mount called');
   }
   render() {
     const {

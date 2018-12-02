@@ -84,7 +84,7 @@ const TableHeader = ({ triggerName, tabName, count }) => {
             <li
               role="presentation"
               className={tabName === 'modify' ? styles.active : ''}
-              data-test="trigger-settings"
+              data-test="trigger-modify"
             >
               <Link to={'/events/manage/triggers/' + triggerName + '/modify'}>
                 Modify
