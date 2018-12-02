@@ -5,7 +5,7 @@ const Info = ({ triggerName, tableName, schemaName, triggerId, styles }) => (
     <div className={styles.modifySection}>
       <h4 className={styles.modifySectionHeading}>Info</h4>
       <div className={styles.infoContent}>
-        <KeyValues keyname="Trigger Name" value={triggerName} styles={styles} />
+        <KeyValues keyname="Trigger name" value={triggerName} styles={styles} />
         <KeyValues keyname="Trigger ID" value={triggerId} styles={styles} />
         <KeyValues keyname="Table" value={tableName} styles={styles} />
         <KeyValues keyname="Schema" value={schemaName} styles={styles} />

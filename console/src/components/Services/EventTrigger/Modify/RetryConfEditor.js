@@ -11,8 +11,30 @@ class RetryConfEditor extends React.Component {
     dispatch(setRetryInterval(retryConf.interval_sec || 10));
   };
 
+  validateAndSave = () => {
+    const {
+      dispatch,
+      modifyTrigger: {
+        retryConf: { numRetrys, retryInterval },
+      },
+    } = this.props;
+    if (isNaN(numRetrys)) {
+      alert('Number of retries should be an integer!');
+      return;
+    }
+    dispatch(setRetryNum(parseInt(numRetrys, 10)));
+
+    if (isNaN(retryInterval)) {
+      alert('Retry interval should be an integer!');
+      return;
+    }
+    dispatch(setRetryInterval(parseInt(retryInterval, 10)));
+
+    this.props.save();
+  };
+
   render() {
-    const { styles, save, dispatch, modifyTrigger } = this.props;
+    const { styles, dispatch, modifyTrigger } = this.props;
     const retryConf = this.props.retryConf || {};
     const collapsed = toggleButton => (
       <div className={styles.modifyOpsCollapsed}>
@@ -55,7 +77,7 @@ class RetryConfEditor extends React.Component {
             />
           </div>
         </div>
-        {saveButton(save)}
+        {saveButton(this.validateAndSave)}
       </div>
     );
 

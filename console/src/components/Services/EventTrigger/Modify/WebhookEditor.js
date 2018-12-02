@@ -7,7 +7,7 @@ class WebhookEditor extends React.Component {
   setValues = () => {
     const { webhook, env, dispatch } = this.props;
     dispatch(setWebhookUrl(webhook));
-    dispatch(setWebhookUrlType(env ? 'env' : 'static'));
+    dispatch(setWebhookUrlType(env ? 'env' : 'url'));
   };
 
   handleSelectionChange = e => {
@@ -16,8 +16,25 @@ class WebhookEditor extends React.Component {
     dispatch(setWebhookUrl(''));
   };
 
+  validateAndSave = () => {
+    const { modifyTrigger } = this.props;
+    if (modifyTrigger.webhookUrlType === 'url') {
+      let tempUrl = false;
+      try {
+        tempUrl = new URL(modifyTrigger.webhookURL);
+      } catch (e) {
+        console.error(e);
+      }
+      if (!tempUrl) {
+        alert('Invalid URL');
+        return;
+      }
+    }
+    this.props.save();
+  }
+
   render() {
-    const { webhook, modifyTrigger, env, dispatch, save, styles } = this.props;
+    const { webhook, modifyTrigger, env, dispatch, styles } = this.props;
     const collapsed = toggleButton => (
       <div className={styles.modifyWebhookCollapsed}>
         {toggleButton('Edit')}
@@ -51,12 +68,12 @@ class WebhookEditor extends React.Component {
             inputVal={modifyTrigger.webhookURL}
             id="webhook-url"
             inputPlaceHolder={
-              env ? 'MY_WEBHOOK_URL' : 'http://httpbin.org/post'
+              modifyTrigger.webhookUrlType === 'env' ? 'MY_WEBHOOK_URL' : 'http://httpbin.org/post'
             }
             testId="webhook"
           />
         </div>
-        {saveButton(save)}
+        {saveButton(this.validateAndSave)}
       </div>
     );
 

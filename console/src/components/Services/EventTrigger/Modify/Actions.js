@@ -174,9 +174,9 @@ export const save = (property, triggerName) => {
       ],
     };
     const migrationName = `modify_tr_${triggerName}_${property}`;
-    const requestMsg = `Updating trigger ${property}`;
-    const successMsg = `Updated trigger ${property}`;
-    const errorMsg = `Updating trigger ${property} failed`;
+    const requestMsg = 'Updating trigger';
+    const successMsg = 'Updated trigger';
+    const errorMsg = 'Updating trigger failed';
     const customOnSuccess = () => {
       dispatch(setTrigger(triggerName.trim()));
       dispatch(loadTriggers()).then(() => {
