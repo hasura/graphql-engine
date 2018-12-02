@@ -32,8 +32,8 @@ Head to the ``GraphiQL`` tab of the console and run an insert mutation to insert
 
 .. image:: ../../../img/graphql/manual/schema/enum-insert-ref-values.png
 
-Set a foreign-key to the reference table
-----------------------------------------
+Add a foreign-key constraint to the reference table
+---------------------------------------------------
 
 Head to the ``Data -> magazine -> Modify`` tab of the console and set a foreign-key to the ``months_of_the_year`` table
 using the fields: ``issue_month -> months_of_the_year :: month``:

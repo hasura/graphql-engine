@@ -29,8 +29,8 @@ As you can see from the schema:
 - You can pass an ``on_conflict`` argument to convert the mutation to an :doc:`upsert mutation <upsert>`
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
 
-Insert single object
---------------------
+Insert a single object
+----------------------
 **Example:** Insert a new ``article`` object and return the inserted article object in the response
 
 .. graphiql::
@@ -160,8 +160,8 @@ Insert multiple objects of the same type in the same mutation
       }
     }
 
-Insert object and get nested object in response
------------------------------------------------
+Insert an object and get a nested object in response
+----------------------------------------------------
 **Example:** Insert a new ``article`` object and return the inserted article object with its author in the response
 
 .. graphiql::
@@ -208,8 +208,8 @@ Insert object and get nested object in response
     }
 
 
-Insert object with nested object
---------------------------------
+Insert an object and its nested object in the same mutation
+-----------------------------------------------------------
 **Example:** Insert a new ``article`` object with its ``author`` and return the inserted article object with its author
 in the response
 
@@ -262,8 +262,8 @@ in the response
       }
     }
 
-Set field to its default value during insert
---------------------------------------------
+Set a field to its default value during insert
+----------------------------------------------
 
 To set a field to its ``default`` value, just omit it from the input object, irrespective of the
 :doc:`default value configuration <../schema/default-values/index>` i.e. via Postgres defaults or using column presets.
@@ -304,8 +304,8 @@ To set a field to its ``default`` value, just omit it from the input object, irr
       }
     }
 
-Set field to null during insert
--------------------------------
+Set a field to null during insert
+---------------------------------
 
 If a field is ``nullable`` in the database, to set its value to ``null``, either pass its value as ``null`` or
 just omit it from the input object.

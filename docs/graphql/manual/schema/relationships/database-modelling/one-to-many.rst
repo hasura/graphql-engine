@@ -29,8 +29,8 @@ These two tables are related via a ``one-to-many`` relationship. i.e:
 - an ``author`` can have many ``articles``
 - an ``article`` has one ``author``
 
-Setup table relationship in the database
-----------------------------------------
+Set up a table relationship in the database
+-------------------------------------------
 
 This ``one-to-many`` relationship can be established in the database by:
 
@@ -40,8 +40,8 @@ This ``one-to-many`` relationship can be established in the database by:
 This will ensure that the value of ``author_id`` column in ``article`` table  is present in the ``id`` column of
 the ``author`` table.
 
-Setup GraphQL relationships
----------------------------
+Set up GraphQL relationships
+----------------------------
 
 To access the nested objects via the GraphQL API, :doc:`create the following relationships <../create>`:
 

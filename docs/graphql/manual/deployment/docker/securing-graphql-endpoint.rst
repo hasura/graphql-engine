@@ -1,11 +1,6 @@
 Securing the GraphQL endpoint (Docker)
 ======================================
 
-.. contents:: Table of contents
-  :backlinks: none
-  :depth: 1
-  :local:
-
 To make sure that your GraphQL endpoint and the Hasura console are not publicly accessible, you need to
 configure an access key.
 

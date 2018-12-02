@@ -49,7 +49,7 @@ Step 3: Create the Kubernetes deployment and service
   $ kubectl create -f deployment.yaml
   $ kubectl create -f svc.yaml
 
-Step 4: Open the hasura console
+Step 4: Open the Hasura console
 -------------------------------
 
 The above creates a LoadBalancer type service with port 80. So you should be able to access the console at the

@@ -63,8 +63,8 @@ Step 1: Install the Hasura CLI
       getting a "command not found" error after installing Hasura CLI, please restart ``git bash``.
 
 
-Step 2: Setup a project directory
----------------------------------
+Step 2: Set up a project directory
+----------------------------------
 Skip this step if you already have a project directory.
 
 .. code-block:: bash

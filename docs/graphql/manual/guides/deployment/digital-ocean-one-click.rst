@@ -14,8 +14,8 @@ webserver for easy and automatic HTTPS using Let's Encrypt.
 Quickstart
 ----------
 
-1. Create Hasura One-click Droplet
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1. Create a Hasura One-click Droplet
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Create a new droplet and choose Hasura GraphQL Engine under One-click apps while
 choosing the image.
@@ -24,7 +24,7 @@ choosing the image.
 ~~~~~~~~~~~~~~~
 
 Once Hasura GraphQL Engine One-Click Droplet is ready, you can visit the Droplet
-IP to open Hasura console, where you can create tables, explore GraphQL APIs
+IP to open the Hasura console, where you can create tables, explore GraphQL APIs
 etc. Note that it might take 1 or 2 minutes for everything to start running.
 
 The Hasura console will be at:
@@ -202,8 +202,8 @@ HTTP/2 web server with automatic HTTPS using Let's Encrypt.
 
 Visit ``https://your_domain/console`` to visit the Hasura console.
 
-Updating to latest version
---------------------------
+Updating to the latest version
+------------------------------
 
 When a new version of GraphQL Engine is released, you can upgrade to it by just
 changing the version tag in docker-compose.yaml. You can find the latest

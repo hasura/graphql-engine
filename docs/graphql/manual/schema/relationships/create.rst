@@ -172,8 +172,8 @@ Fetch a list of authors and a nested list of each author's articles:
 
 .. _relationships-without-fkey:
 
-Without Foreign Keys
---------------------
+Using Manual Relationships
+--------------------------
 
 Let's say you have a table ``author(id, name)`` and a view ``author_avg_rating(id, avg)`` which has the
 average rating of articles for each author.

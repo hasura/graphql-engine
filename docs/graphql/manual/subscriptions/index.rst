@@ -10,8 +10,8 @@ A GraphQL subscription is essentially a query where the client receives an event
 upstream. The Hasura GraphQL engine supports subscriptions for all kind of queries. All the concepts of
 :doc:`queries <../queries/index>` hold true with subscriptions as well.
 
-Convert query to subscription
------------------------------
+Convert a query to a subscription
+---------------------------------
 
 You can turn any query into a subscription by simply replacing ``query`` with ``subscription`` as the operation type.
 
@@ -21,8 +21,8 @@ You can turn any query into a subscription by simply replacing ``query`` with ``
   field in a subscription. So though Hasura GraphQL engine supports multiple root fields in subscriptions, most clients
   will not allow it.
 
-Some use cases
---------------
+Use cases
+---------
 
 - :ref:`subscribe_field`
 - :ref:`subscribe_table`

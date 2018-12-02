@@ -29,8 +29,8 @@ These two tables are related via a ``one-to-one`` relationship. i.e:
 - an ``author`` can have one ``passport_info``
 - a ``passport_info`` has one ``owner``
 
-Setup table relationship in the database
-----------------------------------------
+Set up a table relationship in the database
+-------------------------------------------
 
 This ``one-to-one`` relationship can be established in the database by:
 
@@ -42,7 +42,7 @@ This ``one-to-one`` relationship can be established in the database by:
 This will ensure that the value of ``owner_id`` column in ``passport_info`` table  is present in the ``id`` column of
 the ``author`` table and there will be only one row with a particular ``owner_id``.
 
-Setup GraphQL relationships
+Set up GraphQL relationships
 ---------------------------
 
 To access the nested objects via the GraphQL API, :doc:`create the following relationships <../create>`:

@@ -53,8 +53,8 @@ Step 3: Open the Hasura console
 
 Head to ``http://localhost:8080/console`` to open the Hasura console.
 
-Next: Try Hasura out!
----------------------
+Hello World (GraphQL or event triggers)
+---------------------------------------
 
 Make your :doc:`first graphql query <first-graphql-query>`
 

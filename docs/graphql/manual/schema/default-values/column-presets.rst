@@ -20,8 +20,8 @@ be an Authorization header's value or a static value.
 **Example:** Say we have a field ``user_id`` in a table ``article`` which is to be set to the id of the user, from
 the value of the user's Authorization header whenever a new row is added to the ``article`` table.
 
-Step 1: Configure column preset
--------------------------------
+Step 1: Configure a column preset
+---------------------------------
 
 The column preset option is available under the ``Permissions`` tab of a table. Open the console and head to
 ``Data -> article -> Permissions``:

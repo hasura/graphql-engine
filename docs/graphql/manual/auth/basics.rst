@@ -113,8 +113,8 @@ Head to the ``Permissions`` tab of the table and edit the ``Select`` permissions
 
 .. image:: ../../../img/graphql/manual/auth/limit-results.png
 
-Next, learn more about how permissions work
--------------------------------------------
+More about permissions
+----------------------
 
 Next: :doc:`Roles and dynamic variables <roles-variables>`
 

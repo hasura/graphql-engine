@@ -253,8 +253,8 @@ Using env vars:
       serve
 
 
-Well known providers and known issues
--------------------------------------
+Popular providers and known issues
+----------------------------------
 
 Firebase
 ^^^^^^^^

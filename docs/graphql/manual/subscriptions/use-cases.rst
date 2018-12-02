@@ -154,8 +154,8 @@ Check this `sample app <https://realtime-chat.demo.hasura.app/>`__ for a working
 
 .. _subscribe_derived:
 
-Subscribe to latest value of some derived data
-----------------------------------------------
+Subscribe to the latest value of some derived data
+--------------------------------------------------
 
 In case you are interested in the latest value of some derived data, you can :doc:`create a view to query the derived
 data <../queries/derived-data>` and then use subscriptions to fetch the derived value and get its latest value

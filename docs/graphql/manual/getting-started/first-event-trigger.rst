@@ -10,8 +10,8 @@ You can use Hasura to setup event triggers which call configured webhooks whenev
 
 Let's create a sample event trigger with https://httpbin.org as our simple webhook.
 
-Create table
-------------
+Create a table
+--------------
 Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
 the following columns:
 

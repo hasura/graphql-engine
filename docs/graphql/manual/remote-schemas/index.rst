@@ -35,8 +35,8 @@ You can handle these use-cases by writing resolvers in a custom GraphQL server a
 Note that if you are looking for adding authorization & access control for your app users
 to the GraphQL APIs that are auto-generated via Hasura, head to :doc:`Authorization / Access control <../auth/index>`
 
-How-to
-------
+How to add a remote schema
+--------------------------
 
 Follow the steps below to add your "remote schema" to hasura.
 
