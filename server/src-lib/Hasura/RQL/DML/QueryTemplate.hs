@@ -1,10 +1,3 @@
-{-# LANGUAGE DeriveLift        #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE TypeFamilies      #-}
-
 module Hasura.RQL.DML.QueryTemplate
   ( ExecQueryTemplate(..)
   , runExecQueryTemplate

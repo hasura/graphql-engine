@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies      #-}
-
 module Hasura.RQL.DML.Delete
   ( validateDeleteQWith
   , validateDeleteQ

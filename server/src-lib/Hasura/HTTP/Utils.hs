@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.HTTP.Utils where
 
 import           Control.Lens

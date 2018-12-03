@@ -1,10 +1,5 @@
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE DataKinds  #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Hasura.Server.App where
 
@@ -41,7 +36,6 @@ import qualified Hasura.Logging                         as L
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
---import           Hasura.RQL.DML.Explain
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
@@ -163,6 +157,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
   where
     logger = scLogger serverCtx
     -- encode error response
+    qErrToResp :: (MonadIO m) => Bool -> QErr -> ActionCtxT ctx m b
     qErrToResp includeInternal qErr = do
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr

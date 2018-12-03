@@ -1,7 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.GraphQL.Validate
   ( validateGQ
   , getTypedOp

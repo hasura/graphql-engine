@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.RQL.DDL.Utils
   ( clearHdbViews
   ) where

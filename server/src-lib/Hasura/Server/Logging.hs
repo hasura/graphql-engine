@@ -1,7 +1,3 @@
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-
 -- This is taken from wai-logger and customised for our use
 
 module Hasura.Server.Logging

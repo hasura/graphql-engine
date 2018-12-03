@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.Server.Auth.JWT.Logging
   ( JwkRefreshLog (..)
   , JwkRefreshHttpError (..)

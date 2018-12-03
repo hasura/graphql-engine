@@ -1,7 +1,3 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
 module Hasura.RQL.Types.SchemaCacheTypes where
 
 import           Data.Aeson

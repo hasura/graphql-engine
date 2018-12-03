@@ -1,10 +1,5 @@
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE DataKinds  #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Hasura.Server.Auth
   ( getUserInfo

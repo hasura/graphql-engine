@@ -1,9 +1,3 @@
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE QuasiQuotes         #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell     #-}
-
 module Hasura.Events.Lib
   ( initEventEngineCtx
   , processEventQueue

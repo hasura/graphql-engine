@@ -1,8 +1,3 @@
-{-# LANGUAGE DeriveLift        #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TupleSections     #-}
-
 module Hasura.RQL.DML.Select.Internal where
 
 import           Control.Arrow              ((&&&))
@@ -284,9 +279,12 @@ buildJsonObject pfx parAls flds =
 
     withAlsExp fldName sqlExp =
       [S.SELit $ getFieldNameTxt fldName, sqlExp]
+
     withAlsExtr fldName sqlExp =
       S.Extractor sqlExp $ Just $ S.toAlias fldName
 
+    toSQLFld :: (FieldName -> S.SQLExp -> f)
+             -> (FieldName, AnnFld) -> f
     toSQLFld f (fldAls, fld) = f fldAls $ case fld of
       FCol col    -> toJSONableExp (pgiType col) $
                      S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col

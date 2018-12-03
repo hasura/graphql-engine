@@ -1,13 +1,3 @@
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE NoImplicitPrelude          #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE TemplateHaskell            #-}
-
 module Hasura.RQL.Types.DML
        ( BoolExp(..)
        , ColExp(..)
@@ -49,8 +39,8 @@ module Hasura.RQL.Types.DML
 import qualified Hasura.SQL.DML             as S
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
 
 import           Data.Aeson

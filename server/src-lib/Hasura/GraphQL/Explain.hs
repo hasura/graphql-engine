@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
 module Hasura.GraphQL.Explain
   ( explainGQLQuery
   , GQLExplain

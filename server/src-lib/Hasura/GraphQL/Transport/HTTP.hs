@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
 module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   , getTopLevelNodes

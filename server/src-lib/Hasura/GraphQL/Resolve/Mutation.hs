@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.GraphQL.Resolve.Mutation
   ( convertUpdate
   , convertDelete

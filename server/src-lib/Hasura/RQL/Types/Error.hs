@@ -1,7 +1,4 @@
-{-# LANGUAGE ConstraintKinds   #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Hasura.RQL.Types.Error
        ( Code(..)

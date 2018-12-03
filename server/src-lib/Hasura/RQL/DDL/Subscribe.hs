@@ -1,10 +1,3 @@
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE QuasiQuotes         #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell     #-}
-{-# LANGUAGE TypeFamilies        #-}
-
 module Hasura.RQL.DDL.Subscribe
   ( CreateEventTriggerQuery
   , runCreateEventTriggerQuery

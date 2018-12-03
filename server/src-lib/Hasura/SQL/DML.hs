@@ -1,9 +1,3 @@
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE MultiWayIf                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-
 module Hasura.SQL.DML where
 
 import           Hasura.Prelude

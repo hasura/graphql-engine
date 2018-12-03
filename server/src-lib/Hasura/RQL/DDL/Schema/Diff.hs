@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
 module Hasura.RQL.DDL.Schema.Diff
   ( TableMeta(..)
   , PGColMeta(..)

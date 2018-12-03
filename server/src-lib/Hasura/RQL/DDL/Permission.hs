@@ -1,11 +1,3 @@
-{-# LANGUAGE DeriveLift        #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE TypeFamilies      #-}
-
 module Hasura.RQL.DDL.Permission
     ( CreatePerm
     , runCreatePerm

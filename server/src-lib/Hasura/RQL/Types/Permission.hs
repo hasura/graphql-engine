@@ -1,9 +1,3 @@
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-
 module Hasura.RQL.Types.Permission
        ( RoleName(..)
        , UserId(..)

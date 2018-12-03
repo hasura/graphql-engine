@@ -1,8 +1,3 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE DeriveLift        #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.RQL.DDL.Headers where
 
 import           Data.Aeson

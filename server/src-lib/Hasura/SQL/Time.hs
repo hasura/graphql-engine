@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module Hasura.SQL.Time
     ( ZonedTimeOfDay(..)
     ) where

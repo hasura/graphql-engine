@@ -1,7 +1,4 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes        #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Hasura.GraphQL.Transport.WebSocket
   ( createWSServerApp

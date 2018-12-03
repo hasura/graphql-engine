@@ -1,30 +1,12 @@
-{-# LANGUAGE ConstraintKinds       #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Hasura.RQL.Types
-       ( -- HasSchemaCache(..)
-       -- , ProvidesFieldInfoMap(..)
-       -- , HDBQuery(..)
-       -- , SchemaCachePolicy(..)
-       -- , queryModifiesSchema
-       -- LazyTx(..)
-
-       P1
+       ( P1
        , liftP1
        , liftP1WithQCtx
-       -- , P1C
        , MonadTx(..)
        , UserInfoM(..)
        , RespBody
-       --, P2C
-       -- , P2Ctx (..)
-       -- , P2Res
-       -- , liftP1
-       -- , runER
        , successMsg
 
        , HasHttpManager (..)

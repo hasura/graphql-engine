@@ -1,11 +1,3 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE DeriveLift        #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
 module Hasura.GraphQL.Validate.Types
   ( InpValInfo(..)
   , ParamMap

@@ -1,6 +1,3 @@
-{-# LANGUAGE DeriveGeneric    #-}
-{-# LANGUAGE FlexibleContexts #-}
-
 module Hasura.GraphQL.Resolve.LiveQuery
   ( LiveQuery(..)
   , LiveQueryMap

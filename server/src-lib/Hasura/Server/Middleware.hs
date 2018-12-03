@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.Server.Middleware where
 
 import           Data.Maybe            (fromMaybe)

@@ -1,12 +1,5 @@
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE GADTs      #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Hasura.RQL.Types.SchemaCache
        ( TableCache

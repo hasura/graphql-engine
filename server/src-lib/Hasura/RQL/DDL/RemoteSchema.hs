@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TypeFamilies      #-}
-
 module Hasura.RQL.DDL.RemoteSchema
   ( runAddRemoteSchema
   , runRemoveRemoteSchema
