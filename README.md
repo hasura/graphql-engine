@@ -112,7 +112,7 @@ processing - [read more](event-triggers.md).
 
 ### Derived data or data transformations
 
-Transform data in Postgres or run business logic on it to derive another dataset that can be queried using GraphQL Engine - [read more](https://docs.hasura.io/1.0/graphql/manual/business-logic/index.html).
+Transform data in Postgres or run business logic on it to derive another dataset that can be queried using GraphQL Engine - [read more](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
 
 ## Demos
 

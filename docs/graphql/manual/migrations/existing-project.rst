@@ -68,7 +68,7 @@ Step 1: Install the Hasura CLI
 
 
 Step 2: Set up a project directory
----------------------------------
+----------------------------------
 Skip this step if you already have a project directory.
 
 .. code-block:: bash

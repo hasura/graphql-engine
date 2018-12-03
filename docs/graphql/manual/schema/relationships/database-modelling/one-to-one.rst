@@ -43,7 +43,7 @@ This will ensure that the value of ``owner_id`` column in ``passport_info`` tabl
 the ``author`` table and there will be only one row with a particular ``owner_id``.
 
 Set up GraphQL relationships
----------------------------
+----------------------------
 
 To access the nested objects via the GraphQL API, :doc:`create the following relationships <../create>`:
 
