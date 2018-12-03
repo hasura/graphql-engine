@@ -36,7 +36,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 * **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
 * **Postgres** ❤️: Supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
 
-Read more at [https://hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
+Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
 
 ## Table of contents
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
