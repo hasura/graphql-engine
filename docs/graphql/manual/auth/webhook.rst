@@ -20,7 +20,9 @@ Spec for the webhook
 
 Request
 ^^^^^^^
-Hasura will send a ``GET`` request to your webhook with **all headers it received from client:**
+Hasura will send a ``GET`` request to your webhook with headers it received from client **except**
+``Content-Length``, ``Content-MD5``, ``User-Agent``, ``Host`` , ``Origin``, ``Referer`` , ``Accept``, ``Accept-Encoding``
+``Accept-Language``, ``Accept-Datetime`` , ``Cache-Control``, ``Connection`` and ``DNT``:
 
 .. code-block:: http
 
@@ -36,8 +38,8 @@ If you configure your webhook to use with ``POST``, then Hasura will send **all 
 
    {
     "headers": {
-      "header-key1": "header-value1",
-      "header-key2": "header-value2"
+        "header-key1": "header-value1",
+        "header-key2": "header-value2"
       }
    }
 
