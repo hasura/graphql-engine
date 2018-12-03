@@ -1,6 +1,11 @@
 Updating Hasura GraphQL engine
 ==============================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The Hasura GraphQL engine runs off a Docker image and updates are as simple as changing the image tag.
 
 The current latest version is:

@@ -1,6 +1,11 @@
 Schema/Metadata API Reference: Run SQL
 ======================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 2
+  :local:
+
 .. _run_sql:
 
 run_sql
