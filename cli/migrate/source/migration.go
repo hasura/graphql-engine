@@ -59,7 +59,7 @@ func (i *Migrations) Append(m *Migration) (err error) {
 
 	// reject duplicate versions
 	if migration, dup := i.migrations[m.Version][m.Direction]; dup {
-		return fmt.Errorf("found duplicate %s for version %d\n- %s\n- %s", m.Direction, m.Version, m.Identifier, migration.Identifier)
+		return fmt.Errorf("found duplicate migrations for version %d\n- %s\n- %s", m.Version, m.Raw, migration.Raw)
 	}
 
 	i.migrations[m.Version][m.Direction] = m
