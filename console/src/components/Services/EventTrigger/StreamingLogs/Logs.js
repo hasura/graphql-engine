@@ -65,7 +65,7 @@ class StreamingLogs extends Component {
         this.setState({ ...this.state, showRedeliver: false });
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
       this.setState({ ...this.state, showRedeliver: false });
     }
   }

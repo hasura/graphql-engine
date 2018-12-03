@@ -64,7 +64,6 @@ export const save = (property, triggerName) => {
     const oldTrigger = getState().triggers.triggerList.find(
       tr => tr.name === triggerName
     );
-    console.log(oldTrigger);
     const downPayload = {
       replace: true,
       name: oldTrigger.name,
@@ -128,20 +127,22 @@ export const save = (property, triggerName) => {
     } else if (property === 'headers') {
       delete upPayload.headers;
       upPayload.headers = [];
-      modifyTrigger.headers.filter(h => Boolean(h.key.trim())).forEach(h => {
-        const { key, value, type } = h;
-        if (type === 'env') {
-          upPayload.headers.push({
-            name: key.trim(),
-            value_from_env: value.trim(),
-          });
-        } else {
-          upPayload.headers.push({
-            name: key.trim(),
-            value: value.trim(),
-          });
-        }
-      });
+      modifyTrigger.headers
+        .filter(h => Boolean(h.key.trim()))
+        .forEach(h => {
+          const { key, value, type } = h;
+          if (type === 'env') {
+            upPayload.headers.push({
+              name: key.trim(),
+              value_from_env: value.trim(),
+            });
+          } else {
+            upPayload.headers.push({
+              name: key.trim(),
+              value: value.trim(),
+            });
+          }
+        });
       postModifyCallback = () => {
         modifyTrigger.headers.forEach((h, i) => {
           dispatch(setHeaderKey(h.key, i));
@@ -232,7 +233,6 @@ const reducer = (state = defaultState, action) => {
       };
     case TOGGLE_COLUMN:
       const queryColumns = [...state.definition[action.query].columns];
-      console.log(queryColumns);
       if (queryColumns.find(qc => qc === action.column)) {
         return {
           ...state,
@@ -301,7 +301,7 @@ const reducer = (state = defaultState, action) => {
       };
     default:
       return {
-        ...defaultState,
+        ...state,
       };
   }
 };
