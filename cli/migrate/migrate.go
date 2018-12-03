@@ -801,7 +801,7 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 		case *Migration:
 			migr := r.(*Migration)
 			if migr.Body != nil {
-				if err := m.databaseDrv.Run(migr.BufferedBody, migr.FileType); err != nil {
+				if err := m.databaseDrv.Run(migr.BufferedBody, migr.FileType, migr.FileName); err != nil {
 					return err
 				}
 
