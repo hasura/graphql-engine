@@ -1,6 +1,11 @@
 Mutations
 =========
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 GraphQL mutations are used to modify server-side data (i.e. write, update or delete data). As with queries, mutation
 fields are auto-generated based on the Postgres schema.
 
