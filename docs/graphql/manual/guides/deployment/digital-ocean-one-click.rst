@@ -12,8 +12,14 @@ Quickstart
 1. Create Hasura One-click Droplet
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Create a new droplet and choose Hasura GraphQL Engine under One-click apps while
-choosing the image.
+Click the button below to create a new Hasura GraphQL Engine Droplet on
+DigitalOcean using One-Click App. (``Ctrl+Click`` to open in a new tab)
+
+.. image:: https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet.png
+   :width: 300px
+   :alt: do_create_droplet_button
+   :class: no-shadow
+   :target: https://cloud.digitalocean.com/droplets/new?image=hasura-18-04&utm_source=hasura&utm_campaign=docs
 
 2. Open console
 ~~~~~~~~~~~~~~~
