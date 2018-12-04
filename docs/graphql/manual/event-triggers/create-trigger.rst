@@ -27,7 +27,7 @@ The operation on which event trigger needs to be invoked. Can be INSERT, UPDATE 
 
 **Webhook URL**
 
-The HTTP(s) URL which will be called with event payload on configured operation. Must be a POST handler. This URL can be entered manually or can be picked up from an environment variable (*the environment variable needs to be defined before using it for this configuration*).
+The HTTP(s) URL which will be called with event payload on configured operation. Must be a POST handler. This URL can be entered manually or can be picked up from an environment variable (*the environment variable needs to be set before using it for this configuration*).
 
 Advanced Settings
 -----------------
