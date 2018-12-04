@@ -62,12 +62,13 @@ type HasuraColumn struct {
 
 type HasuraError struct {
 	// MigrationFile is used internally for hasuractl
-	MigrationFile string            `json:"migrationFile,omitempty"`
-	Path          string            `json:"path"`
-	ErrorMessage  string            `json:"error"`
-	Internal      *SQLInternalError `json:"internal,omitempty"`
-	Message       string            `json:"message,omitempty"`
-	Code          string            `json:"code"`
+	migrationFile  string
+	migrationQuery string
+	Path           string            `json:"path"`
+	ErrorMessage   string            `json:"error"`
+	Internal       *SQLInternalError `json:"internal,omitempty"`
+	Message        string            `json:"message,omitempty"`
+	Code           string            `json:"code"`
 }
 
 type SQLInternalError struct {
@@ -87,7 +88,12 @@ type PostgresError struct {
 func (h *HasuraError) CMDError() error {
 	var errorStrings []string
 	errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s (%s)", h.Code, h.ErrorMessage, h.Path))
-	errorStrings = append(errorStrings, fmt.Sprintf("File: '%s'", h.MigrationFile))
+	if h.migrationFile != "" {
+		errorStrings = append(errorStrings, fmt.Sprintf("File: '%s'", h.migrationFile))
+	}
+	if h.migrationQuery != "" {
+		errorStrings = append(errorStrings, fmt.Sprintf("%s", h.migrationQuery))
+	}
 	if h.Internal != nil {
 		// postgres error
 		errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", h.Internal.Error.StatusCode, h.Internal.Error.ExecStatus, h.Internal.Error.Message))

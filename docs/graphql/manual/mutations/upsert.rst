@@ -1,64 +1,38 @@
 Upsert mutation
 ===============
 
-To convert an **insert** mutation into an **upsert** one, you need to specify the unique or primary key constraint(s) and the
-columns to be updated in the case of a conflict or violation. You can specify a constraint using the ``constraint`` argument and
-update columns using the ``update_columns`` argument.
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
 
-.. note::
+An upsert query will insert an object into the database in case there is no conflict with another row in the table. In
+case there is a conflict with one or more rows, it will either update the fields of the conflicted rows or ignore
+the request.
+
+Convert insert mutation to upsert
+---------------------------------
+
+To convert an :doc:`insert mutation <insert>` into an upsert, you need to specify a unique or primary key constraint
+and the columns to be updated in the case of a violation of that constraint using the ``on_conflict`` argument. You can
+specify a constraint using the ``constraint`` field and choose the columns to update using the
+``update_columns`` field of the argument. The value of the ``update_columns`` field determines the behaviour of the
+upsert request in case of conflicts.
+
+.. admonition:: Fetching Postgres constraint names
     
     You can fetch the name of unique or primary key constraints by querying the ``information_schema.table_constraints`` table.
     GraphQL Engine will automatically generate constraint names as enum values for ``constraint`` (try autocompleting in GraphiQL).
     Typically, the constraint is automatically named as ``<table-name>_<column-name>_key``. 
 
 
-Without "update_columns" argument
----------------------------------
-When you don't explicitly specify ``update_columns``, the columns that are given in objects are updated (it doesn't matter if they
-are different, you should see the same end result).
+Update all columns on conflict
+------------------------------
+When you don't explicitly specify ``update_columns``, all the columns that are present in any of the input objects are
+updated for all objects. i.e. if a column value is not passed for an object but is passed for another object, its value
+will be set to its default value.
 
-Insert into ``author`` table using unique constraint ``author_name_key``. All columns specified in objects get updated:
-
-.. graphiql::
-  :view_only:
-  :query:
-    mutation upsert_author {
-      insert_author(
-        objects: [
-          {name: "John", age: 25, mobile: 9876543210}
-        ],
-        on_conflict: {
-          constraint: author_pkey
-        }
-      ) {
-        affected_rows
-        returning{
-          id
-          name
-          age
-          mobile
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_author": {
-          "affected_rows": 1,
-          "returning": [
-             {
-               "id": 10,
-               "name": "John",
-               "age": 25,
-               "mobile": 9876543210
-             }
-           ]
-        }
-      }
-    }
-
-**Note:** You'll need to ensure that all objects have the same set of columns. If not, the union of column sets across all objects
-is the set of columns that is updated. For example, if your query as follows:
+**Example:** Upsert into ``user`` table using unique constraint ``user_name_key``:
 
 .. graphiql::
   :view_only:
@@ -100,12 +74,10 @@ is the set of columns that is updated. For example, if your query as follows:
       }
     }
 
-The column ``"is_premium"`` for the ``"Jack"`` row is set to its ``DEFAULT`` value because the union of all columns across objects
-is ``{name, email_sent, is_premium}``. However, you can explicitly control the columns that are updated on conflict using
-``update_columns`` as specified in the following section.
+Here ``is_premium`` value of "Jack" is reset to its default value as it is passed for "John" but not for "Jack".
 
-With non empty "update_columns"
--------------------------------
+Update selected columns on conflict
+-----------------------------------
 Insert a new object in the author table or, if the primary key constraint, ``author_pkey``, is violated, update the columns
 specified in ``update_columns``:
 
@@ -145,9 +117,9 @@ specified in ``update_columns``:
     }
 
 
-With empty "update_columns"
----------------------------
-If ``update_columns`` is an empty array then GraphQL Engine ignore changes on conflict. Insert a new object into the author
+Ignore request on conflict
+--------------------------
+If ``update_columns`` is an **empty array** then GraphQL Engine ignore changes on conflict. Insert a new object into the author
 table or, if the unique constraint, ``author_name_key``, is violated, ignore the request
 
 .. graphiql::
@@ -178,11 +150,14 @@ table or, if the unique constraint, ``author_name_key``, is violated, ignore the
 In this case, the insert mutation is ignored because there is a conflict.
 
 
-Using "action" argument
------------------------
+Using **action** argument
+-------------------------
 
 .. note::
-   ``action`` argument is deprecated. Always ``update_columns`` will take precedence over ``action`` argument
+
+   The ``action`` argument is deprecated.
+
+   The ``update_columns`` argument will always take precedence over the ``action`` argument
 
 On conflict, you can choose to either ignore the mutation (``action: ignore``) or update the row that caused the conflict
 (``action: update``). ``ignore`` and ``update`` are enum values for ``action``.
@@ -297,9 +272,9 @@ You can specify ``on_conflict`` clause while inserting nested objects
     }
 
 
-.. warning::
-   Inserting nested objects fails when
+.. note::
 
-   1. Any of upsert in object relationships does not affect any rows (``update_columns: []`` or ``action: ignore``)
+  Inserting nested objects fails when:
 
-   2. Array relationships are queued for insert and parent insert does not affect any rows (``update_columns: []`` or ``action: ignore``)
+  - Any of upsert in object relationships does not affect any rows (``update_columns: []`` or ``action: ignore``)
+  - Array relationships are queued for insert and parent insert does not affect any rows (``update_columns: []`` or ``action: ignore``)
