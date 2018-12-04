@@ -1,4 +1,4 @@
-FROM hasura/graphql-engine:v1.0.0-alpha30
+FROM hasura/graphql-engine:v1.0.0-alpha31
 
 ENV HASURA_GRAPHQL_ENABLE_CONSOLE=true
 

@@ -1,5 +1,10 @@
-Using existing Heroku database
-==============================
+Using an existing Heroku database
+=================================
+
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
 
 Let's say you have an existing `Heroku Postgres <https://www.heroku.com/postgres>`_ database with data in it, and you'd
 like add GraphQL on it.
@@ -30,8 +35,8 @@ Head to your Heroku dashboard and delete the Postgres addon:
 
 .. image:: ../../../../img/graphql/manual/deployment/remove-heroku-postgres-addon.png
 
-Step 2: Configure the environment variables
--------------------------------------------
+Step 2: Configure environment variables
+---------------------------------------
 
 Now configure the ``DATABASE_URL`` with your existing Heroku Postgres database URL and a ``HASURA_GRAPHQL_ACCESS_KEY``
 if you want to secure your endpoint.

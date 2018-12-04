@@ -1,6 +1,11 @@
 Access control basics
 =====================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 In this section, we're going to set up a simple access control rule for restricting querying on a table.
 We're working with a simple ``author`` table where users have some information stored about themselves.
 
@@ -108,8 +113,8 @@ Head to the ``Permissions`` tab of the table and edit the ``Select`` permissions
 
 .. image:: ../../../img/graphql/manual/auth/limit-results.png
 
-Next, learn more about how permissions work
--------------------------------------------
+More about permissions
+----------------------
 
 Next: :doc:`Roles and dynamic variables <roles-variables>`
 
