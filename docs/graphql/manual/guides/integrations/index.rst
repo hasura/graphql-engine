@@ -1,8 +1,11 @@
 Guides: Integration/migration tutorials
 =======================================
 
-Articles:
-^^^^^^^^^
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 - `Blog: Move from firebase to realtime GraphQL on Postgres <https://blog.hasura.io/firebase2graphql-moving-from-firebase-to-realtime-graphql-on-postgres-4d36cb7f4eaf>`__.
 - `Blog: Create a Gatsby site using GraphQL on Postgres <https://blog.hasura.io/create-gatsby-sites-using-graphql-on-postgres-603b5dd1e516>`__.
 - `Blog: Instant GraphQL on AWS RDS <https://blog.hasura.io/instant-graphql-on-aws-rds-1edfb85b5985>`__.

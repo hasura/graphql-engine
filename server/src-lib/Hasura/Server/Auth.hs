@@ -6,7 +6,10 @@ module Hasura.Server.Auth
   , AuthMode(..)
   , mkAuthMode
   , AccessKey (..)
-  , Webhook (..)
+  , AuthHookType(..)
+  , AuthHookG (..)
+  , AuthHookConf
+  , AuthHook
   -- JWT related
   , RawJWT
   , JWTConfig (..)
@@ -23,6 +26,7 @@ import           Data.Aeson
 import           Data.CaseInsensitive    (CI (..), original)
 import           Data.IORef              (newIORef)
 
+import qualified Data.Aeson              as J
 import qualified Data.ByteString.Lazy    as BL
 import qualified Data.HashMap.Strict     as Map
 import qualified Data.String.Conversions as CS
@@ -46,23 +50,39 @@ newtype AccessKey
   = AccessKey { getAccessKey :: T.Text }
   deriving (Show, Eq)
 
-newtype Webhook
-  = Webhook { getWebhook :: T.Text }
+data AuthHookType
+  = AHTGet
+  | AHTPost
   deriving (Show, Eq)
+
+data AuthHookG a b
+  = AuthHookG
+  { ahUrl  :: !a
+  , ahType :: !b
+  } deriving (Show, Eq)
+
+type AuthHookConf = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
+type AuthHook = AuthHookG T.Text AuthHookType
 
 data AuthMode
   = AMNoAuth
   | AMAccessKey !AccessKey !(Maybe RoleName)
-  | AMAccessKeyAndHook !AccessKey !Webhook
+  | AMAccessKeyAndHook !AccessKey !AuthHook
   | AMAccessKeyAndJWT !AccessKey !JWTCtx !(Maybe RoleName)
   deriving (Show, Eq)
+
+hdrsToText :: [N.Header] -> [(T.Text, T.Text)]
+hdrsToText hdrs =
+  [ (bsToTxt $ original hdrName, bsToTxt hdrVal)
+  | (hdrName, hdrVal) <- hdrs
+  ]
 
 mkAuthMode
   :: ( MonadIO m
      , MonadError T.Text m
      )
   => Maybe AccessKey
-  -> Maybe Webhook
+  -> Maybe AuthHook
   -> Maybe T.Text
   -> Maybe RoleName
   -> H.Manager
@@ -124,10 +144,11 @@ mkUserInfoFromResp
   :: (MonadIO m, MonadError QErr m)
   => L.Logger
   -> T.Text
+  -> N.StdMethod
   -> N.Status
   -> BL.ByteString
   -> m UserInfo
-mkUserInfoFromResp logger url statusCode respBody
+mkUserInfoFromResp logger url method statusCode respBody
   | statusCode == N.status200 =
     case eitherDecode respBody of
       Left e -> do
@@ -158,29 +179,41 @@ mkUserInfoFromResp logger url statusCode respBody
 
     logWebHookResp logLevel mResp =
       liftIO $ L.unLogger logger $ WebHookLog logLevel (Just statusCode)
-        url Nothing $ fmap (bsToTxt . BL.toStrict) mResp
+        url method Nothing $ fmap (bsToTxt . BL.toStrict) mResp
 
-userInfoFromWebhook
+userInfoFromAuthHook
   :: (MonadIO m, MonadError QErr m)
   => L.Logger
   -> H.Manager
-  -> Webhook
+  -> AuthHook
   -> [N.Header]
   -> m UserInfo
-userInfoFromWebhook logger manager hook reqHeaders = do
-  let options = wreqOptions manager filteredHeaders
-      urlT    = getWebhook hook
-  res <- liftIO $ try $ Wreq.getWith options $ T.unpack urlT
+userInfoFromAuthHook logger manager hook reqHeaders = do
+  res <- liftIO $ try $ bool withGET withPOST isPost
   resp <- either logAndThrow return res
   let status = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody
 
-  mkUserInfoFromResp logger urlT status respBody
+  mkUserInfoFromResp logger urlT method status respBody
   where
+    mkOptions = wreqOptions manager
+    AuthHookG urlT ty = hook
+    isPost = case ty of
+      AHTPost -> True
+      AHTGet  -> False
+    method = bool N.GET N.POST isPost
+
+    withGET = Wreq.getWith (mkOptions filteredHeaders) $
+              T.unpack urlT
+
+    contentType = ("Content-Type", "application/json")
+    postHdrsPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
+    withPOST = Wreq.postWith (mkOptions [contentType]) (T.unpack urlT) $
+               object ["headers" J..= postHdrsPayload]
+
     logAndThrow err = do
-      let urlT = getWebhook hook
       liftIO $ L.unLogger logger $
-        WebHookLog L.LevelError Nothing urlT (Just err) Nothing
+        WebHookLog L.LevelError Nothing urlT method (Just err) Nothing
       throw500 "Internal Server Error"
 
     filteredHeaders = flip filter reqHeaders $ \(n, _) ->
@@ -208,7 +241,7 @@ getUserInfo logger manager rawHeaders = \case
       Nothing          -> userInfoWhenNoAccessKey unAuthRole
 
   AMAccessKeyAndHook accKey hook ->
-    whenAccessKeyAbsent accKey (userInfoFromWebhook logger manager hook rawHeaders)
+    whenAccessKeyAbsent accKey (userInfoFromAuthHook logger manager hook rawHeaders)
 
   AMAccessKeyAndJWT accKey jwtSecret unAuthRole ->
     whenAccessKeyAbsent accKey (processJwt jwtSecret rawHeaders unAuthRole)
@@ -219,11 +252,7 @@ getUserInfo logger manager rawHeaders = \case
     whenAccessKeyAbsent ak action =
       maybe action (userInfoWhenAccessKey ak) $ getVarVal accessKeyHeader usrVars
 
-    usrVars =
-      mkUserVars
-      [ (T.toLower $ bsToTxt $ original hdrName, bsToTxt hdrVal)
-      | (hdrName, hdrVal) <- rawHeaders
-      ]
+    usrVars = mkUserVars $ hdrsToText rawHeaders
 
     userInfoFromHeaders =
       case roleFromVars usrVars of

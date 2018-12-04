@@ -1,6 +1,11 @@
 Custom business logic
 =====================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 For the backends of most apps, you may have to implement custom business logic to complement the CRUD and
 real-time API provided by GraphQL Engine. Depending on the nature of the use case and its position vis-a-vis
 GraphQL Engine/Postgres, different avenues are recommended for introducing such business logic in your app's backend:
