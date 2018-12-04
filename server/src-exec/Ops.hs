@@ -166,7 +166,7 @@ from08To1 = liftTx $ Q.catchE defaultTxErrorHandler $ do
                 |] () False
 
 from1To2
-  :: (MonadTx m, HasHttpManager m, QErrM m, CacheRWM m, UserInfoM m, MonadIO m)
+  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
   => m ()
 from1To2 = do
   -- migrate database
@@ -188,7 +188,7 @@ from2To3 = liftTx $ Q.catchE defaultTxErrorHandler $ do
 
 -- custom resolver
 from4To5
-  :: (MonadTx m, HasHttpManager m, QErrM m, CacheRWM m, UserInfoM m, MonadIO m)
+  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
   => m ()
 from4To5 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
@@ -235,7 +235,7 @@ from5To6 = liftTx $ do
   return ()
 
 migrateCatalog
-  :: (MonadTx m, CacheRWM m, QErrM m, MonadIO m, UserInfoM m, HasHttpManager m)
+  :: (MonadTx m, CacheRWM m, MonadIO m, UserInfoM m, HasHttpManager m)
   => UTCTime -> m String
 migrateCatalog migrationTime = do
   preVer <- getCatalogVersion
@@ -291,7 +291,7 @@ migrateCatalog migrationTime = do
                     |] (curCatalogVer, migrationTime) False
 
 execQuery
-  :: (MonadTx m, CacheRWM m, QErrM m, MonadIO m, UserInfoM m, HasHttpManager m)
+  :: (MonadTx m, CacheRWM m, MonadIO m, UserInfoM m, HasHttpManager m)
   => BL.ByteString -> m BL.ByteString
 execQuery queryBs = do
   query <- case A.decode queryBs of

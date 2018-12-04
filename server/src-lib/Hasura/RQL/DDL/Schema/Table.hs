@@ -172,7 +172,7 @@ runTrackTableQ q = do
   trackExistingTableOrViewP1 q
   trackExistingTableOrViewP2 (tName q) False
 
-purgeDep :: (CacheRWM m, MonadError QErr m, MonadTx m)
+purgeDep :: (CacheRWM m, MonadTx m)
          => SchemaObjId -> m ()
 purgeDep schemaObjId = case schemaObjId of
   (SOTableObj tn (TOPerm rn pt)) -> do
@@ -329,7 +329,7 @@ runUntrackTableQ q = do
   unTrackExistingTableOrViewP2 q
 
 buildSchemaCache
-  :: (MonadTx m, CacheRWM m, QErrM m, MonadIO m, HasHttpManager m)
+  :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m)
   => m ()
 buildSchemaCache = do
   -- reset the current schemacache

@@ -331,7 +331,8 @@ processAnnOrderByItem pfx (OrderByItemG obTyM annObCol obNullsM) =
     ((obColAls, obColExp), relNodeM) = processAnnOrderByCol pfx annObCol
 
     sqlOrdByItem =
-      S.OrderByItem (S.SEIden $ toIden obColAls) obTyM obNullsM
+      S.OrderByItem (S.SEIden $ toIden obColAls)
+      (unOrderType <$> obTyM) (unNullsOrder <$> obNullsM)
 
 processAnnOrderByCol
   :: Iden

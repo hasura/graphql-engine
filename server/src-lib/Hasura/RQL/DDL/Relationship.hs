@@ -347,7 +347,7 @@ dropRelP1 (DropRel qt rn cascade) = do
     relObjId = SOTableObj qt $ TORel rn
 
 purgeRelDep
-  :: (QErrM m, CacheRWM m, MonadTx m) => SchemaObjId -> m ()
+  :: (CacheRWM m, MonadTx m) => SchemaObjId -> m ()
 purgeRelDep (SOTableObj tn (TOPerm rn pt)) =
   purgePerm tn rn pt
 purgeRelDep d = throw500 $ "unexpected dependency of relationship : "

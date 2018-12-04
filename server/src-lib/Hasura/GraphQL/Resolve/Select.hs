@@ -155,7 +155,9 @@ getAnnObItems f nt obj = do
         let aobCol = f $ RS.AOCPG ci
         (_, enumVal) <- asEnumVal v
         (ordTy, nullsOrd) <- parseOrderByEnum enumVal
-        return [OrderByItemG (Just ordTy) aobCol (Just nullsOrd)]
+        let annObItem = OrderByItemG (Just $ OrderType ordTy) aobCol
+                        (Just $ NullsOrder nullsOrd)
+        return [annObItem]
       OBIRel ri fltr -> do
         let annObColFn = f . RS.AOCRel ri fltr
         withObject (getAnnObItems annObColFn) v

@@ -2,6 +2,8 @@ module Hasura.RQL.Types.DML
        ( BoolExp(..)
        , ColExp(..)
        , DMLQuery(..)
+       , OrderType(..)
+       , NullsOrder(..)
 
        , OrderByExp(..)
        , OrderByItemG(..)
@@ -89,9 +91,44 @@ instance (FromJSON a) => FromJSON (DMLQuery a) where
   parseJSON _          =
     fail "Expected an object for query"
 
-$(deriveJSON defaultOptions{constructorTagModifier = snakeCase . drop 2} ''S.OrderType)
+newtype OrderType
+  = OrderType { unOrderType :: S.OrderType }
+  deriving (Show, Eq, Lift, Generic)
 
-$(deriveJSON defaultOptions{constructorTagModifier = snakeCase . drop 1} ''S.NullsOrder)
+instance FromJSON OrderType where
+  parseJSON =
+    fmap OrderType . f
+    where f = $(mkParseJSON
+                defaultOptions{constructorTagModifier = snakeCase . drop 2}
+                ''S.OrderType)
+
+newtype NullsOrder
+  = NullsOrder { unNullsOrder :: S.NullsOrder }
+  deriving (Show, Eq, Lift, Generic)
+
+instance FromJSON NullsOrder where
+  parseJSON =
+    fmap NullsOrder . f
+    where f = $(mkParseJSON
+                defaultOptions{constructorTagModifier = snakeCase . drop 2}
+                ''S.NullsOrder)
+
+instance ToJSON OrderType where
+  toJSON =
+    f . unOrderType
+    where f = $(mkToJSON
+                defaultOptions{constructorTagModifier = snakeCase . drop 2}
+                ''S.OrderType)
+
+instance ToJSON NullsOrder where
+  toJSON =
+    f . unNullsOrder
+    where f = $(mkToJSON
+                defaultOptions{constructorTagModifier = snakeCase . drop 2}
+                ''S.NullsOrder)
+
+-- $(deriveJSON defaultOptions{constructorTagModifier = snakeCase . drop 2} ''S.OrderType)
+-- $(deriveJSON defaultOptions{constructorTagModifier = snakeCase . drop 1} ''S.NullsOrder)
 
 data OrderByCol
   = OCPG !FieldName
@@ -136,9 +173,9 @@ instance FromJSON OrderByCol where
 
 data OrderByItemG a
   = OrderByItemG
-  { obiType   :: !(Maybe S.OrderType)
+  { obiType   :: !(Maybe OrderType)
   , obiColumn :: !a
-  , obiNulls  :: !(Maybe S.NullsOrder)
+  , obiNulls  :: !(Maybe NullsOrder)
   } deriving (Show, Eq, Lift, Functor, Foldable, Traversable)
 
 type OrderByItem = OrderByItemG OrderByCol
@@ -178,8 +215,8 @@ orderByParser :: AttoT.Parser T.Text OrderByItem
 orderByParser =
   OrderByItemG <$> otP <*> colP <*> return Nothing
   where
-    otP  = ("+" *> return (Just S.OTAsc))
-           <|> ("-" *> return (Just S.OTDesc))
+    otP  = ("+" *> return (Just $ OrderType S.OTAsc))
+           <|> ("-" *> return (Just $ OrderType S.OTDesc))
            <|> return Nothing
     colP = Atto.takeText >>= orderByColFromTxt
 

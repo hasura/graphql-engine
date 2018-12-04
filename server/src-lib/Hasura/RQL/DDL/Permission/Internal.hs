@@ -244,7 +244,7 @@ class (ToJSON a) => IsPerm a where
     -> m (WithDeps (PermInfo a))
 
   addPermP2Setup
-    :: (MonadTx m, QErrM m) => QualifiedTable -> PermDef a -> PermInfo a -> m ()
+    :: (MonadTx m) => QualifiedTable -> PermDef a -> PermInfo a -> m ()
 
   buildDropPermP1Res
     :: (QErrM m, CacheRM m, UserInfoM m)
@@ -304,7 +304,7 @@ createPermP1 (WithTable tn pd) = do
   addPermP1 tabInfo pd
 
 runCreatePerm
-  :: ( UserInfoM m, MonadError QErr m
+  :: ( UserInfoM m
      , CacheRWM m, IsPerm a, MonadTx m
      )
   => CreatePerm a -> m RespBody
@@ -333,7 +333,7 @@ dropPermP2 dp@(DropPerm tn rn) p1Res = do
     pt = permAccToType pa
 
 runDropPerm
-  :: (IsPerm a, UserInfoM m, QErrM m, CacheRWM m, MonadTx m)
+  :: (IsPerm a, UserInfoM m, CacheRWM m, MonadTx m)
   => DropPerm a -> m RespBody
 runDropPerm defn = do
   permInfo <- buildDropPermP1Res defn

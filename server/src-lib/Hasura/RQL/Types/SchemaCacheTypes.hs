@@ -76,6 +76,7 @@ data SchemaDependency
   } deriving (Show, Eq, Generic)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaDependency)
+instance Hashable SchemaDependency
 
 -- data RelInfo
 --   = RelInfo

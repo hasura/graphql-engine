@@ -188,7 +188,6 @@ applyQP1 (ReplaceMetadata tables templates mSchemas) = do
 
 applyQP2
   :: ( UserInfoM m
-     , QErrM m
      , CacheRWM m
      , MonadTx m
      , MonadIO m

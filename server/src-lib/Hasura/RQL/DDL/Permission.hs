@@ -163,7 +163,7 @@ clearInsInfra vn =
 type DropInsPerm = DropPerm InsPerm
 
 dropInsPermP2
-  :: (QErrM m, CacheRWM m, MonadTx m)
+  :: (CacheRWM m, MonadTx m)
   => DropInsPerm -> QualifiedTable -> m ()
 dropInsPermP2 = dropPermP2
 
@@ -232,7 +232,7 @@ type DropSelPerm = DropPerm SelPerm
 type instance PermInfo SelPerm = SelPermInfo
 
 dropSelPermP2
-  :: (QErrM m, CacheRWM m, MonadTx m)
+  :: (CacheRWM m, MonadTx m)
   => DropSelPerm -> m ()
 dropSelPermP2 dp =
   dropPermP2 dp ()
@@ -294,7 +294,7 @@ type instance PermInfo UpdPerm = UpdPermInfo
 type DropUpdPerm = DropPerm UpdPerm
 
 dropUpdPermP2
-  :: (QErrM m, CacheRWM m, MonadTx m)
+  :: (CacheRWM m, MonadTx m)
   => DropUpdPerm -> m ()
 dropUpdPermP2 dp = dropPermP2 dp ()
 
@@ -341,7 +341,7 @@ buildDelPermInfo tabInfo (DelPerm fltr) = do
 
 type DropDelPerm = DropPerm DelPerm
 
-dropDelPermP2 :: (QErrM m, CacheRWM m, MonadTx m) => DropDelPerm -> m ()
+dropDelPermP2 :: (CacheRWM m, MonadTx m) => DropDelPerm -> m ()
 dropDelPermP2 dp = dropPermP2 dp ()
 
 type instance PermInfo DelPerm = DelPermInfo
@@ -410,7 +410,7 @@ setPermCommentTx (SetPermComment (QualifiedTable sn tn) rn pt comment) =
                 |] (comment, sn, tn, rn, permTypeToCode pt) True
 
 purgePerm
-  :: (QErrM m, CacheRWM m, MonadTx m)
+  :: (CacheRWM m, MonadTx m)
   => QualifiedTable -> RoleName -> PermType -> m ()
 purgePerm qt rn pt =
   case pt of
