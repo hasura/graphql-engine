@@ -1,0 +1,20 @@
+description: Select author and their articles (in empty array)
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    author: []
+query:
+  query: |
+    query {
+      author (
+      where: {name: {_in: [] }}
+      ) {
+        name
+        articles{
+          id
+          title 
+          content
+        }
+      }
+    }

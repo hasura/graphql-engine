@@ -3,6 +3,11 @@
 API Reference - Query/Subscription
 ==================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 3
+  :local:
+
 Query/Subscription syntax
 -------------------------
 
@@ -66,8 +71,8 @@ Syntax definitions
 Object
 ^^^^^^
 
-Simple Object :-
-****************
+Simple Object
+*************
 
 .. code-block:: none
 
@@ -101,8 +106,8 @@ E.g.
       }
    }
 
-Aggregate Object :-
-*******************
+Aggregate Object
+****************
 
 .. code-block:: none
 
@@ -225,7 +230,32 @@ Argument
 
 .. parsed-literal::
 
-   WhereExp_ | OrderByExp_ | PaginationExp_
+   DistinctOnExp_ | WhereExp_ | OrderByExp_ | PaginationExp_
+
+
+.. _DistinctOnExp:
+
+DistinctOnExp
+*************
+
+.. parsed-literal::
+
+   distinct_on: [ TableSelectColumnEnum_ ]
+
+TableSelectColumnEnum
+"""""""""""""""""""""
+
+.. code-block:: graphql
+
+   #example table_select_column enum for "article" table
+   enum article_select_column {
+     id
+     title
+     content
+     author_id
+     is_published
+   }
+
 
 .. _WhereExp:
 
@@ -386,14 +416,18 @@ OrderByEnum
 
    #the order_by enum type
    enum order_by {
-     #in the ascending order
+     #in the ascending order, nulls last
      asc
-     #in the descending order
-     desc
+     #in the ascending order, nulls last
+     asc_nulls_last
      #in the ascending order, nulls first
      asc_nulls_first
      #in the descending order, nulls first
+     desc
+     #in the descending order, nulls first
      desc_nulls_first
+     #in the descending order, nulls last
+     desc_nulls_last
    }
 
 

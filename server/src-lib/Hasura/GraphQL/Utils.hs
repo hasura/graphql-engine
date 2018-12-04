@@ -16,10 +16,11 @@ module Hasura.GraphQL.Utils
   , onLeft
   , showNames
   , isValidName
+  , onJust
   ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Error
 
 import qualified Data.ByteString.Lazy          as LBS
 import qualified Data.HashMap.Strict           as Map
@@ -34,6 +35,9 @@ showName name = "\"" <> G.unName name <> "\""
 onNothing :: (Monad m) => Maybe a -> m a -> m a
 onNothing m act = maybe act return m
 
+onJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
+onJust m action = maybe (return ()) action m
+
 throwVE :: (MonadError QErr m) => Text -> m a
 throwVE = throw400 ValidationFailed
 
@@ -43,14 +47,10 @@ showNamedTy nt =
 
 getBaseTy :: G.GType -> G.NamedType
 getBaseTy = \case
-  G.TypeNamed n     -> n
-  G.TypeList lt     -> getBaseTyL lt
-  G.TypeNonNull nnt -> getBaseTyNN nnt
+  G.TypeNamed _ n     -> n
+  G.TypeList _ lt     -> getBaseTyL lt
   where
     getBaseTyL = getBaseTy . G.unListType
-    getBaseTyNN = \case
-      G.NonNullTypeList lt -> getBaseTyL lt
-      G.NonNullTypeNamed n -> n
 
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f l =

@@ -1,6 +1,11 @@
 Setting default values for fields using role based column presets
 =================================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Let's say you want certain fields to have their values set automatically when not explicitly passed using session
 variables or fixed values when a new row is created with a particular :doc:`user role <../../auth/roles-variables>`
 
@@ -15,8 +20,9 @@ be an Authorization header's value or a static value.
 **Example:** Say we have a field ``user_id`` in a table ``article`` which is to be set to the id of the user, from
 the value of the user's Authorization header whenever a new row is added to the ``article`` table.
 
-1) Configure column preset
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 1: Configure a column preset
+---------------------------------
+
 The column preset option is available under the ``Permissions`` tab of a table. Open the console and head to
 ``Data -> article -> Permissions``:
 
@@ -30,8 +36,8 @@ setting the preset using a static value or from a session variable.
 For our chosen example, we'll use the ``from session variable`` option and configure the ``user_id`` column to be
 automatically populated based on the value of the Authorization header ``X-Hasura-User-Id``.
 
-2) Run an insert mutation
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 2: Run an insert mutation
+------------------------------
 
 Head to the GraphiQL interface in the console and try making an insert mutation on the ``article`` table with the
 following headers (*to run through this example, don't forget to also grant the* ``user`` *role sufficient permissions
@@ -67,8 +73,8 @@ passed in the ``X-Hasura-User-Id`` header:
     }
 
 
-Also see:
-^^^^^^^^^
+Also see
+--------
 
 - :doc:`postgres-defaults`
 - :doc:`sql-functions`

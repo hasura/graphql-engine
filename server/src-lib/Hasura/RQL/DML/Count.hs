@@ -103,7 +103,7 @@ countP1 prepValBuilder (CountQuery qt mDistCols mWhere) = do
     relInDistColsErr =
       "Relationships can't be used in \"distinct\"."
 
-countP2 :: (P2C m) => (CountQueryP1, DS.Seq Q.PrepArg) -> m RespBody
+countP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => (CountQueryP1, DS.Seq Q.PrepArg) -> m RespBody
 countP2 (u, p) = do
   qRes <- liftTx $ Q.rawQE dmlTxErrorHandler
           (Q.fromBuilder countSQL) (toList p) True

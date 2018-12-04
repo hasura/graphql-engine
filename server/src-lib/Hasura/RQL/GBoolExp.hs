@@ -267,8 +267,8 @@ mkColCompExp
 mkColCompExp qual lhsCol = \case
   AEQ val          -> equalsBoolExpBuilder lhs val
   ANE val          -> notEqualsBoolExpBuilder lhs val
-  AIN  vals        -> S.BEEqualsAny lhs vals
-  ANIN vals        -> S.BENot $ S.BEEqualsAny lhs vals
+  AIN vals         -> handleEmptyIn vals
+  ANIN vals        -> S.BENot $ handleEmptyIn vals
   AGT val          -> S.BECompare S.SGT lhs val
   ALT val          -> S.BECompare S.SLT lhs val
   AGTE val         -> S.BECompare S.SGTE lhs val
@@ -298,6 +298,9 @@ mkColCompExp qual lhsCol = \case
 
     toTextArray arr =
       S.SETyAnn (S.SEArray $ map (txtEncoder . PGValText) arr) S.textArrType
+
+    handleEmptyIn []   = S.BELit False
+    handleEmptyIn vals = S.BEIN lhs vals
 
 getColExpDeps :: QualifiedTable -> AnnBoolExpFld a -> [SchemaDependency]
 getColExpDeps tn = \case

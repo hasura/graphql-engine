@@ -1,7 +1,12 @@
 Modelling one-to-one table relationships
 ========================================
 
-A one-to-one relationship between two tables can be established via a **unique foreign-key constraint**.
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
+A ``one-to-one`` relationship between two tables can be established via a **unique foreign-key constraint**.
 
 Say we have the following two tables in our database schema:
 
@@ -24,15 +29,21 @@ These two tables are related via a ``one-to-one`` relationship. i.e:
 - an ``author`` can have one ``passport_info``
 - a ``passport_info`` has one ``owner``
 
+Set up a table relationship in the database
+-------------------------------------------
+
 This ``one-to-one`` relationship can be established in the database by:
 
-1. Adding a foreign-key constraint from the ``passport_info`` table to the ``author`` table using the ``owner_id`` and
-   ``id`` columns of the tables respectively
-2. Adding a unique constraint to the ``owner_id`` column for the ``passport_info`` table
+1. Adding a **foreign-key constraint** from the ``passport_info`` table to the ``author`` table using the ``owner_id``
+   and ``id`` columns of the tables respectively
+2. Adding a **unique constraint** to the ``owner_id`` column for the ``passport_info`` table
 
 
 This will ensure that the value of ``owner_id`` column in ``passport_info`` table  is present in the ``id`` column of
 the ``author`` table and there will be only one row with a particular ``owner_id``.
+
+Set up GraphQL relationships
+----------------------------
 
 To access the nested objects via the GraphQL API, :doc:`create the following relationships <../create>`:
 
@@ -42,8 +53,11 @@ To access the nested objects via the GraphQL API, :doc:`create the following rel
 .. note::
 
   Currently the console suggests an array relationship from ``author`` to ``passport_info`` table as it doesn't
-  detect the unique constraint on ``owner_id``. You will have to create the object relationship without using the
-  foreign-key as of now.
+  detect the unique constraint on ``owner_id``. This will be fixed soon. For now, you can :ref:`create the
+  object relationship manually <relationships-without-fkey>` without using the foreign-key.
+
+Query using relationships
+-------------------------
 
 We can now:
 

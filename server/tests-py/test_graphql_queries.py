@@ -92,6 +92,9 @@ class TestGraphQLQueryLimits(DefaultTestSelectQueries):
     def test_limit_2(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_2.yaml')
 
+    def test_limit_null(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_null.yaml')
+
     def test_err_str_limit_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_string_limit_error.yaml')
 
@@ -145,8 +148,17 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
     def test_author_article_where_in(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in.yaml')
 
+    def test_author_article_where_in_empty_array(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in_empty_array.yaml')
+
+    def test_author_article_where_nin_empty_array(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin_empty_array.yaml')
+
     def test_author_article_where_nin(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin.yaml')
+
+    def test_uuid_test_in_uuid_col(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_uuid_test_in_uuid_col.yaml')
 
     def test_order_delivered_at_is_null(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_order_delivered_at_is_null.yaml')
@@ -261,6 +273,15 @@ class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
 
     def test_articles_order_by_rel_author_rel_contact_phone(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/articles_order_by_rel_author_rel_contact_phone.yaml')
+
+    def test_employee_distinct_department_order_by_salary_desc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/employee_distinct_department_order_by_salary_desc.yaml')
+
+    def test_employee_distinct_department_order_by_salary_asc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/employee_distinct_department_order_by_salary_asc.yaml')
+
+    def test_employee_distinct_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/employee_distinct_fail.yaml')
 
     @classmethod
     def dir(cls):

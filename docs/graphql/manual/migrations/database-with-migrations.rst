@@ -1,6 +1,11 @@
 Migrations with a database with an existing migration system
 ============================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 This guide will help you setup Hasura specific migrations in case you're working with an existing database
 that already has its database migration tooling.
 
@@ -58,8 +63,8 @@ Step 1: Install the Hasura CLI
       getting a "command not found" error after installing Hasura CLI, please restart ``git bash``.
 
 
-Step 2: Setup a project directory
----------------------------------
+Step 2: Set up a project directory
+----------------------------------
 Skip this step if you already have a project directory.
 
 .. code-block:: bash
@@ -69,7 +74,7 @@ Skip this step if you already have a project directory.
 Step 3: Open the console via the CLI & disable Postgres schema changes
 ----------------------------------------------------------------------
 
-Instead of using the console at ``http://my-grapqhl.herokuapp.com/console`` you should now use the console by running:
+Instead of using the console at ``http://my-graphql.herokuapp.com/console`` you should now use the console by running:
 
 .. code-block:: bash
 
@@ -99,12 +104,12 @@ metadata file changes automatically at ``migrations/metadata.yaml``.
 Step 6: Apply the metadata to another instance of GraphQL engine
 ----------------------------------------------------------------
 
-- Edit ``config.yaml`` and change the endpoint to another instance, say ``https://my-another-grapqhl.herokuapp.com``
+- Edit ``config.yaml`` and change the endpoint to another instance, say ``https://my-another-graphql.herokuapp.com``
 
   .. code-block:: yaml
 
      # config.yaml
-     endpoint: https://my-another-grapqhl.herokuapp.com
+     endpoint: https://my-another-graphql.herokuapp.com
 
 - Apply metadata present in the ``migrations/metadata.yaml`` on this new instance:
 

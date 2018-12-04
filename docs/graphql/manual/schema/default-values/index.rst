@@ -1,6 +1,11 @@
 Setting default values for fields
 =================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Let's say you want certain fields to have their values set automatically when not explicitly passed. You can do this in
 the following ways:
 

@@ -9,10 +9,14 @@ import { getMainDefinition } from 'apollo-utilities';
 
 import { InMemoryCache } from 'apollo-cache-inmemory';
 
-export const HASURA_GRAPHQL_ENGINE_HOSTNAME = 'hasura-realtime-poll.herokuapp.com';
+export const HASURA_GRAPHQL_ENGINE_HOSTNAME = window.location.host;
 
-const wsurl = `wss://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1alpha1/graphql`;
-const httpurl = `https://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1alpha1/graphql`;
+const scheme = (proto) => {
+  return window.location.protocol === 'https:' ? `${proto}s` : proto;
+}
+
+const wsurl = `${scheme('ws')}://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1alpha1/graphql`;
+const httpurl = `${scheme('http')}://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1alpha1/graphql`;
 
 const wsLink = new WebSocketLink({
   uri: wsurl,

@@ -242,6 +242,12 @@
   revision = "9ac6cf4d929b2fa8fd2d2e6dec5bb0feb4f4911d"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/oliveagle/jsonpath"
+  packages = ["."]
+  revision = "2e52cf6e685269ed8aefec6390f3cac3ef74e730"
+
+[[projects]]
   name = "github.com/parnurzeal/gorequest"
   packages = ["."]
   revision = "a578a48e8d6ca8b01a3b18314c43c6716bb5f5a3"
@@ -403,6 +409,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7ccdaac1d19b4713c51034dd3d36a9dfe1b37316904227576c454618103a9f29"
+  inputs-digest = "81fcfffa8a80b8583e2e0904bb40d9d8cac3a889a2965d0c68896871578acf73"
   solver-name = "gps-cdcl"
   solver-version = 1
