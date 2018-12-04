@@ -3,9 +3,10 @@ url: /v1alpha1/graphql
 status: 400
 response:
   errors:
-  - code: parse-failed
-    error: A Position needs at least 2 elements
-    path: '$.variableValues[0].location.coordinates'
+  - extensions:
+      path: '$.variableValues[0].location.coordinates'
+      code: parse-failed
+    message: A Position needs at least 2 elements
 query:
   variables:
     landmarks:
