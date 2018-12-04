@@ -295,6 +295,40 @@ jobs:
         paths:
           - _console_output
 
+  test_community_apps:
+    machine:
+      enabled: true
+      image: circleci/classic:latest
+    working_directory: ~/graphql-engine
+    steps:
+    - run:
+        name: install dependencies
+        command: |
+          sudo apt-get -y update && sudo apt-get install -y curl git python3 python3-pip wget netcat postgresql-client
+    - checkout
+    - attach_workspace:
+        at: /home/circleci/build
+    - run:
+        name: Create server cli migrations docker image
+        command: |
+          docker load --input /home/circleci/build/_server_output/image.tar
+          export SERVER_VERSION=$(cat /home/circleci/build/_server_output/version.txt)
+          cd scripts/cli-migrations
+          cp /home/circleci/build/_cli_output/binaries/cli-hasura-linux-amd64 .
+          sed -i '1s/.*/FROM hasura\/graphql-engine:'"$SERVER_VERSION"'/' Dockerfile
+          docker build -t server:latest .
+    - run:
+        name: Run postgres container
+        command: |
+          docker run -d -p 5432:5432 -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" circleci/postgres:10-alpine-postgis
+    - *wait_for_postgres
+    - run:
+        name: install requirements
+        command: pip install -r .circleci/community-apps-requirements.txt
+    - run:
+        name: test community apps
+        command: python .circleci/community-apps-test.py
+
   deploy:
     docker:
     - image: hasura/graphql-engine-deployer:v0.3
@@ -343,6 +377,10 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - test_and_build_cli
+    - test_community_apps:
+        <<: *filter_only_vtags
+        requires:
+        - test_and_build_console
     - deploy:
         <<: *filter_only_vtags_dev_release_branches
         requires:

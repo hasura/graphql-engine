@@ -1,7 +1,7 @@
 const passport = require('../config/passport');
 const { User } = require('../db/schema');
 const { errorHandler } = require('../db/errors');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt-nodejs');
 
 /**
  * POST /login
