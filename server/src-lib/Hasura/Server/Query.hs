@@ -5,10 +5,8 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax   (Lift)
 
-import qualified Data.Aeson.Text              as AT
 import qualified Data.ByteString.Builder      as BB
 import qualified Data.ByteString.Lazy         as BL
-import qualified Data.Text.Lazy               as LT
 import qualified Data.Vector                  as V
 import qualified Network.HTTP.Client          as HTTP
 
@@ -28,7 +26,6 @@ import           Hasura.RQL.DML.Returning     (encodeJSONVector)
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
 import qualified Database.PG.Query            as Q
 
@@ -90,51 +87,6 @@ $(deriveJSON
                  }
   ''RQLQuery)
 
-data LazyTx e a
-  = LTErr e
-  | LTNoTx a
-  | LTTx (Q.TxE e a)
-
-lazyTxToQTx :: LazyTx e a -> Q.TxE e a
-lazyTxToQTx = \case
-  LTErr e  -> throwError e
-  LTNoTx r -> return r
-  LTTx tx  -> tx
-
-instance Functor (LazyTx e) where
-  fmap f = \case
-    LTErr e  -> LTErr e
-    LTNoTx a -> LTNoTx $ f a
-    LTTx tx  -> LTTx $ fmap f tx
-
-instance Applicative (LazyTx e) where
-  pure = LTNoTx
-
-  LTErr e   <*> _         = LTErr e
-  LTNoTx f  <*> r         = fmap f r
-  LTTx _    <*> LTErr e   = LTErr e
-  LTTx txf  <*> LTNoTx a  = LTTx $ txf <*> pure a
-  LTTx txf  <*> LTTx tx   = LTTx $ txf <*> tx
-
-instance Monad (LazyTx e) where
-  LTErr e >>= _  = LTErr e
-  LTNoTx a >>= f = f a
-  LTTx txa >>= f =
-    LTTx $ txa >>= lazyTxToQTx . f
-
-instance MonadError e (LazyTx e) where
-  throwError = LTErr
-  LTErr e  `catchError` f = f e
-  LTNoTx a `catchError` _ = LTNoTx a
-  LTTx txe `catchError` f =
-    LTTx $ txe `catchError` (lazyTxToQTx . f)
-
-instance MonadTx (LazyTx QErr) where
-  liftTx = LTTx
-
-instance MonadIO (LazyTx QErr) where
-  liftIO = LTTx . liftIO
-
 newtype Run a
   = Run {unRun :: StateT SchemaCache (ReaderT (UserInfo, HTTP.Manager) (LazyTx QErr)) a}
   deriving ( Functor, Applicative, Monad
@@ -160,11 +112,7 @@ peelRun
   -> Q.PGPool -> Q.TxIsolation
   -> Run a -> ExceptT QErr IO (a, SchemaCache)
 peelRun sc userInfo httMgr pgPool txIso (Run m) =
-  case lazyTx of
-    LTErr e  -> throwError e
-    LTNoTx a -> return a
-    LTTx tx  -> Q.runTx pgPool (txIso, Nothing) $
-                setHeadersTx (userVars userInfo) >> tx
+  runLazyTx pgPool txIso $ withUserInfo userInfo lazyTx
   where
     lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr)
 
@@ -235,7 +183,7 @@ runQueryM
      )
   => RQLQuery
   -> m RespBody
-runQueryM rq = case rq of
+runQueryM rq = withPathK "args" $ case rq of
   RQAddExistingTableOrView q -> runTrackTableQ q
   RQTrackTable q             -> runTrackTableQ q
   RQUntrackTable q           -> runUntrackTableQ q
@@ -288,12 +236,3 @@ runQueryM rq = case rq of
     respList <- indexedMapM runQueryM qs
     let bsVector = V.fromList respList
     return $ BB.toLazyByteString $ encodeJSONVector BB.lazyByteString bsVector
-
-setHeadersTx :: UserVars -> Q.TxE QErr ()
-setHeadersTx uVars =
-  Q.unitQE defaultTxErrorHandler setSess () False
-  where
-    toStrictText = LT.toStrict . AT.encodeToLazyText
-    setSess = Q.fromText $
-      "SET LOCAL \"hasura.user\" = " <>
-      pgFmtLit (toStrictText uVars)

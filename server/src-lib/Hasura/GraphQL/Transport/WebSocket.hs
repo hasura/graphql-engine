@@ -26,7 +26,7 @@ import           Control.Concurrent                          (threadDelay)
 import qualified Data.IORef                                  as IORef
 
 import           Hasura.GraphQL.Resolve                      (resolveSelSet)
-import           Hasura.GraphQL.Resolve.Context              (RespTx)
+import           Hasura.GraphQL.Resolve.Context              (LazyRespTx)
 import qualified Hasura.GraphQL.Resolve.LiveQuery            as LQ
 import           Hasura.GraphQL.Schema                       (getGCtx)
 import qualified Hasura.GraphQL.Transport.HTTP               as TH
@@ -42,12 +42,11 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode,
                                                               getUserInfo)
-import qualified Hasura.Server.Query                         as RQ
 
 -- uniquely identifies an operation
 type GOperationId = (WS.WSId, OperationId)
 
-type TxRunner = RespTx -> IO (Either QErr BL.ByteString)
+type TxRunner = LazyRespTx -> IO (Either QErr BL.ByteString)
 
 type OperationMap
   = STMMap.Map OperationId LQ.LiveQuery
@@ -203,7 +202,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     runHasuraQ userInfo gCtx queryParts = do
       (opTy, fields) <- either (withComplete . preExecErr) return $
                         runReaderT (validateGQ queryParts) gCtx
-      let qTx = RQ.setHeadersTx (userVars userInfo) >>
+      let qTx = withUserInfo userInfo $
                 resolveSelSet userInfo gCtx opTy fields
 
       case opTy of

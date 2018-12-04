@@ -289,7 +289,7 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
     spockApp <- spockAsApp $ spockT id $
                 httpApp mRootDir corsCfg serverCtx enableConsole
 
-    let runTx tx = runExceptT $ Q.runTx pool (isoLevel, Nothing) tx
+    let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
 
     wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager cacheRef runTx
     let wsServerApp = WS.createWSServerApp mode wsServerEnv

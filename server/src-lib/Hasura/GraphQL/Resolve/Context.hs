@@ -7,6 +7,7 @@ module Hasura.GraphQL.Resolve.Context
   , InsCtx(..)
   , InsCtxMap
   , RespTx
+  , LazyRespTx
   , InsertTxConflictCtx(..)
   , getFldInfo
   , getPGColInfo
@@ -66,6 +67,7 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
 --   deriving (Show, Eq)
 
 type RespTx = Q.TxE QErr BL.ByteString
+type LazyRespTx = LazyTx QErr BL.ByteString
 
 -- -- order by context
 -- data OrdByItem

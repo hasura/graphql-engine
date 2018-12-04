@@ -31,7 +31,6 @@ import           Hasura.RQL.Types
 import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
-import qualified Hasura.Server.Query                    as RQ
 
 
 runGQ
@@ -92,7 +91,6 @@ gatherTypeLocs gCtx nodes =
           mr = VT._otiFields <$> _gMutRoot gCtx
       in maybe qr (Map.union qr) mr
 
-
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation
@@ -110,9 +108,7 @@ runHasuraGQ pool isoL userInfo sc queryParts = do
   return $ encodeGQResp $ GQSuccess resp
   where
     gCtxMap = scGCtxMap sc
-    runTx tx =
-      Q.runTx pool (isoL, Nothing) $
-      RQ.setHeadersTx (userVars userInfo) >> tx
+    runTx tx = runLazyTx pool isoL $ withUserInfo userInfo tx
 
 runRemoteGQ
   :: (MonadIO m, MonadError QErr m)
