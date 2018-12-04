@@ -110,7 +110,7 @@ instance FromJSON NullsOrder where
   parseJSON =
     fmap NullsOrder . f
     where f = $(mkParseJSON
-                defaultOptions{constructorTagModifier = snakeCase . drop 2}
+                defaultOptions{constructorTagModifier = snakeCase . drop 1}
                 ''S.NullsOrder)
 
 instance ToJSON OrderType where
@@ -124,20 +124,13 @@ instance ToJSON NullsOrder where
   toJSON =
     f . unNullsOrder
     where f = $(mkToJSON
-                defaultOptions{constructorTagModifier = snakeCase . drop 2}
+                defaultOptions{constructorTagModifier = snakeCase . drop 1}
                 ''S.NullsOrder)
-
--- $(deriveJSON defaultOptions{constructorTagModifier = snakeCase . drop 2} ''S.OrderType)
--- $(deriveJSON defaultOptions{constructorTagModifier = snakeCase . drop 1} ''S.NullsOrder)
 
 data OrderByCol
   = OCPG !FieldName
   | OCRel !FieldName !OrderByCol
   deriving (Show, Eq, Lift)
-
--- newtype OrderByCol
---   = OrderByCol { getOrderByColPath :: [T.Text] }
---   deriving (Show, Eq, Lift)
 
 orderByColToTxt :: OrderByCol -> Text
 orderByColToTxt = \case
