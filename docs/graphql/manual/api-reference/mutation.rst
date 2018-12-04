@@ -3,6 +3,11 @@
 API Reference - Mutation
 ========================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Insert/Upsert syntax
 --------------------
 

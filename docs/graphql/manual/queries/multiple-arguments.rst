@@ -1,5 +1,11 @@
 Using multiple arguments in a query
 ===================================
+
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Multiple arguments can be used together in the same query. For example, you can use the ``where`` argument to
 filter the results and then use the ``order_by`` argument to sort them.
 

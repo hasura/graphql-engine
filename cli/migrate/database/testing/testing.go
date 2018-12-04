@@ -73,13 +73,14 @@ func TestRunUp(t *testing.T, d database.Driver) {
 		version       int64
 		migrationData []byte
 		migrationType string
+		migrationFile string
 	}{
 		{version: 1, migrationData: []byte("/* foobar migration */"), migrationType: "sql"},
 		{version: 3, migrationData: []byte("/* foobar migration */"), migrationType: "sql"},
 	}
 
 	for i, v := range tt {
-		err := d.Run(bytes.NewReader(v.migrationData), v.migrationType)
+		err := d.Run(bytes.NewReader(v.migrationData), v.migrationType, v.migrationFile)
 		if err != nil {
 			t.Fatalf("TestRun: expected err not to be nil in index %d", i)
 		}

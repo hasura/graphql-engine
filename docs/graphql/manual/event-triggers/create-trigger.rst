@@ -1,6 +1,11 @@
 Creating an event trigger
 =========================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Event triggers can be created using the Hasura console.
 
 Open the Hasura console, head to the ``Events`` tab and click on the ``Create trigger`` button to open up the

@@ -1,6 +1,11 @@
 Migrations with a database with an existing migration system
 ============================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 This guide will help you setup Hasura specific migrations in case you're working with an existing database
 that already has its database migration tooling.
 
@@ -58,8 +63,8 @@ Step 1: Install the Hasura CLI
       getting a "command not found" error after installing Hasura CLI, please restart ``git bash``.
 
 
-Step 2: Setup a project directory
----------------------------------
+Step 2: Set up a project directory
+----------------------------------
 Skip this step if you already have a project directory.
 
 .. code-block:: bash
