@@ -222,14 +222,6 @@ insertP2 (u, p) =
   where
     insertSQL = toSQL $ mkSQLInsert u
 
-runInsert
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
-  => InsertQuery
-  -> m RespBody
-runInsert q = do
-  res <- convInsQ q
-  liftTx $ insertP2 res
-
 data ConflictCtx
   = CCUpdate !ConstraintName ![PGCol]
   | CCDoNothing !(Maybe ConstraintName)
@@ -274,14 +266,11 @@ setConflictCtx conflictCtxM = do
         encToText $ InsertTxConflictCtx CAUpdate (Just constr) $
         Just $ toSQLTxt $ S.buildSEWithExcluded updCols
 
--- instance HDBQuery InsertQuery where
-
---   type Phase1Res InsertQuery = (InsertQueryP1, DS.Seq Q.PrepArg)
---   phaseOne = convInsQ
-
---   phaseTwo _ p1Res = do
---     role <- userRole <$> askUserInfo
---     liftTx $
---       bool (nonAdminInsert p1Res) (insertP2 p1Res) $ isAdmin role
-
---   schemaCachePolicy = SCPNoChange
+runInsert
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  => InsertQuery
+  -> m RespBody
+runInsert q = do
+  res <- convInsQ q
+  role <- userRole <$> askUserInfo
+  liftTx $ bool (nonAdminInsert res) (insertP2 res) $ isAdmin role
