@@ -95,7 +95,7 @@ jsonParser =
 toJValue :: (MonadError QErr m) => G.Value -> m J.Value
 toJValue = \case
   G.VVariable _                   ->
-    throwVE "variables are not accepted in scalars"
+    throwVE "variables are not allowed in scalars"
   G.VInt i                        -> return $ J.toJSON i
   G.VFloat f                      -> return $ J.toJSON f
   G.VString (G.StringValue t)     -> return $ J.toJSON t
