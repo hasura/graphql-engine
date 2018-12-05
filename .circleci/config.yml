@@ -430,4 +430,3 @@ workflows:
         <<: *filter_only_vtags_dev_release_branches
         requires:
         - test_and_build_console
-        - all_server_tests_pass
