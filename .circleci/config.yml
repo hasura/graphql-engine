@@ -300,12 +300,19 @@ jobs:
         path: /home/circleci/build/_console_output
         destination: console
     - store_artifacts:
+        path: /home/circleci/build/_console_test_logs
+        destination: console_test_logs
+    - store_artifacts:
         path: /home/circleci/graphql-engine/console/cypress/screenshots
         destination: cypress-screenshots
 
   test_and_build_console:
     docker:
     - image: hasura/graphql-engine-console-builder:v0.3
+    - image: circleci/postgres:10-alpine-postgis
+      environment:
+        POSTGRES_USER: gql_test
+        POSTGRES_DB: gql_test
     working_directory: ~/graphql-engine
     steps:
     - checkout
@@ -335,6 +342,9 @@ jobs:
     - store_artifacts:
         path: /home/circleci/build/_console_output
         destination: console
+    - store_artifacts:
+        path: /home/circleci/build/_console_test_logs
+        destination: console_test_logs
     - persist_to_workspace:
         root: /home/circleci/build
         paths:
