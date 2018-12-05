@@ -257,18 +257,13 @@ jobs:
     working_directory: ~/graphql-engine
     steps:
     - run:
-        name: install dependencies
-        command: |
-          sudo apt-get update && sudo apt-get install -y \
-            netcat
-    - run:
         name: Run postgres container
         command: |
           docker run --name postgres -d -p 5432:5432 -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" circleci/postgres:10-alpine-postgis
-    - *wait_for_postgres
     - checkout
     - attach_workspace:
         at: /home/circleci/build
+    - *wait_for_postgres
     - run:
         name: test console
         command: .circleci/test-console.sh
@@ -290,18 +285,13 @@ jobs:
     working_directory: ~/graphql-engine
     steps:
     - run:
-        name: install dependencies
-        command: |
-          sudo apt-get update && sudo apt-get install -y \
-            netcat
-    - run:
         name: Run postgres container
         command: |
           docker run --name postgres -d -p 5432:5432 -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" circleci/postgres:10-alpine-postgis
-    - *wait_for_postgres
     - checkout
     - attach_workspace:
         at: /home/circleci/build
+    - *wait_for_postgres
     - run:
         name: test console
         command: .circleci/test-console.sh
@@ -312,6 +302,43 @@ jobs:
     - store_artifacts:
         path: /home/circleci/graphql-engine/console/cypress/screenshots
         destination: cypress-screenshots
+
+  test_and_build_console:
+    docker:
+    - image: hasura/graphql-engine-console-builder:v0.3
+    working_directory: ~/graphql-engine
+    steps:
+    - checkout
+    - attach_workspace:
+        at: /build
+    - restore_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+    - run:
+        name: install dependencies
+        working_directory: console
+        command: make ci-deps
+    - save_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+        paths:
+        - console/node_modules
+        - ~/.npm
+        - ~/.cache
+    - *wait_for_postgres
+    - run:
+        name: build console
+        working_directory: console
+        command: |
+          make build
+          make ci-copy-assets
+    - store_artifacts:
+        path: /home/circleci/build/_console_output
+        destination: console
+    - persist_to_workspace:
+        root: /home/circleci/build
+        paths:
+          - _console_output
 
   test_and_build_console_old:
     docker:
@@ -382,32 +409,23 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - check_build_worthiness
-    - pytest_server_pg_10.4:
-        <<: *filter_only_vtags
-        requires:
-        - build_server
-    - pytest_server_pg_9.6:
-        <<: *filter_only_vtags
-        requires:
-        - build_server
-    - pytest_server_pg_9.5:
-        <<: *filter_only_vtags
-        requires:
-        - build_server
-    - all_server_tests_pass:
-        <<: *filter_only_vtags
-        requires:
-        - pytest_server_pg_10.4
-        - pytest_server_pg_9.6
-        - pytest_server_pg_9.5
     - test_and_build_cli:
         <<: *filter_only_vtags
         requires:
         - build_server
-    - test_and_build_console:
+    - test_console_1:
         <<: *filter_only_vtags
         requires:
         - test_and_build_cli
+    - test_console_2:
+        <<: *filter_only_vtags
+        requires:
+        - test_and_build_cli
+    - test_and_build_console:
+        <<: *filter_only_vtags
+        requires:
+        - test_console_1
+        - test_console_2
     - deploy:
         <<: *filter_only_vtags_dev_release_branches
         requires:
