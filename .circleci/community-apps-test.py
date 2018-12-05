@@ -37,6 +37,7 @@ def stop_and_remove_server():
         EXIT_FAILURE=True
 
 def drop_database(app_name):
+    global EXIT_FAILURE
     exit_code = subprocess.call(POSTGRES_DEFAULT_CMD + ['DROP DATABASE {};'.format(app['name'])])
     if exit_code:
         print('Unable to drop database')
