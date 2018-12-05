@@ -1,6 +1,11 @@
 Auditing actions on tables in Postgres
 ======================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Typically audit logging is added to some of the tables to comply with various certifications.
 You may want to capture the user information (role and the session variables) for every change in Postgres that is done through graphql-engine.
 

@@ -1,6 +1,11 @@
 Remote schemas
 ==============
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 2
+  :local:
+
 Hasura gives you CRUD + realtime GraphQL APIs with authorization & access control. However, in many cases, you will need to write APIs (queries, mutations) that contain custom logic. For example, implementing a payment API, or querying data that is not in your database.
 
 Hasura has the ability to merge remote GraphQL schemas and provide a unified GraphQL API. Think of it
@@ -30,8 +35,8 @@ You can handle these use-cases by writing resolvers in a custom GraphQL server a
 Note that if you are looking for adding authorization & access control for your app users
 to the GraphQL APIs that are auto-generated via Hasura, head to :doc:`Authorization / Access control <../auth/index>`
 
-How-to
-------
+How to add a remote schema
+--------------------------
 
 Follow the steps below to add your "remote schema" to hasura.
 

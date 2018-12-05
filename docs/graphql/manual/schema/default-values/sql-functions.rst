@@ -1,6 +1,11 @@
 Setting values of fields using SQL functions/stored procedures
 ==============================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Let's say you want to set the value of some fields as the output of some custom SQL functions or stored procedures.
 This is useful to set values of fields which depend on other fields passed in the input. e.g. set
 ``submission_time`` of an online quiz as 1 hour from the ``start_time``.
@@ -21,8 +26,8 @@ This can be achieved by:
 **For example**, say we have a table ``sql_function_table`` with columns ``input`` and ``output`` and we would like
 to set the value of the ``output`` column as the uppercased value of the string received in the ``input`` field.
 
-1) Modify the table
--------------------
+Step 1: Modify the table
+------------------------
 
 Modify the table ``sql_function_table`` and make its ``output`` column nullable.
 
@@ -30,8 +35,8 @@ Open the console and head to ``Data -> sql_function_table -> Modify``:
 
 .. image:: ../../../../img/graphql/manual/schema/modify-sql-fn-table.png
 
-2) Create a trigger
--------------------
+Step 2: Create a trigger
+------------------------
 
 The below SQL defines a ``trigger`` which will simply uppercase the value passed in the ``input`` field and set it to
 the ``output`` field whenever an insert or update is made to the ``sql_function_table``:
@@ -52,8 +57,8 @@ Head to ``Data -> SQL`` and run the above SQL:
 
 .. image:: ../../../../img/graphql/manual/schema/create-trigger.png
 
-3) Run an insert mutation
--------------------------
+Step 3: Run an insert mutation
+------------------------------
 
 Run a mutation to insert an object with (input = "yabba dabba doo!", output=null) and you'll see the output
 value (output="YABBA DABBA DOO!") will be set automatically.
@@ -87,8 +92,8 @@ value (output="YABBA DABBA DOO!") will be set automatically.
       }
     }
 
-Also see:
-^^^^^^^^^
+Also see
+--------
 
 - :doc:`postgres-defaults`
 - :doc:`column-presets`
