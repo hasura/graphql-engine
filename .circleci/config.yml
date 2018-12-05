@@ -247,63 +247,20 @@ jobs:
         paths:
           - _cli_output
 
-  test_and_build_console_docker:
-    docker:
-    - image: face11301/console:latest
-    working_directory: ~/graphql-engine
-    steps:
-    - *setup_remote_docker
-    - run:
-        name: Run Postgres container
-        command: |
-          docker run --name postgres -d -p 5432:5432 -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" circleci/postgres:10-alpine-postgis
-    - checkout
-    - restore_cache:
-        key:
-          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
-    - run:
-        name: install dependencies
-        working_directory: console
-        command: make ci-deps
-    - save_cache:
-        key:
-          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
-        paths:
-        - console/node_modules
-        - ~/.npm
-        - ~/.cache
-    - attach_workspace:
-        at: /root/build
-    - run:
-        name: test console
-        command: .circleci/test-console.sh
-
   # test and build console
-  test_and_build_console:
+  test_console_1:
     machine:
       enabled: true
       image: circleci/classic:latest
+    environment:
+      TEST_SUITE_NUMBER: "1"
     working_directory: ~/graphql-engine
     steps:
     - run:
         name: install dependencies
         command: |
           sudo apt-get update && sudo apt-get install -y \
-            netcat \
-            libpq5 \
-            libgtk2.0-0 \
-            libnotify-dev \
-            libgconf-2-4 \
-            libnss3 \
-            libxss1 \
-            libasound2 \
-            xvfb
-    - run:
-        name: Download and start X
-        command: |
-          sudo apt-get install -y x11vnc
-          x11vnc -forever -nopw
-        background: true
+            netcat
     - run:
         name: Run postgres container
         command: |
@@ -315,16 +272,46 @@ jobs:
     - run:
         name: test console
         command: .circleci/test-console.sh
+        no_output_timeout: 20m
     - store_artifacts:
         path: /home/circleci/build/_console_output
         destination: console
     - store_artifacts:
         path: /home/circleci/graphql-engine/console/cypress/screenshots
         destination: cypress-screenshots
-    - persist_to_workspace:
-        root: /home/circleci/build
-        paths:
-          - _console_output
+
+  # test and build console
+  test_console_2:
+    machine:
+      enabled: true
+      image: circleci/classic:latest
+    environment:
+      TEST_SUITE_NUMBER: "2"
+    working_directory: ~/graphql-engine
+    steps:
+    - run:
+        name: install dependencies
+        command: |
+          sudo apt-get update && sudo apt-get install -y \
+            netcat
+    - run:
+        name: Run postgres container
+        command: |
+          docker run --name postgres -d -p 5432:5432 -e "POSTGRES_USER=gql_test" -e "POSTGRES_DB=gql_test" circleci/postgres:10-alpine-postgis
+    - *wait_for_postgres
+    - checkout
+    - attach_workspace:
+        at: /home/circleci/build
+    - run:
+        name: test console
+        command: .circleci/test-console.sh
+        no_output_timeout: 20m
+    - store_artifacts:
+        path: /home/circleci/build/_console_output
+        destination: console
+    - store_artifacts:
+        path: /home/circleci/graphql-engine/console/cypress/screenshots
+        destination: cypress-screenshots
 
   test_and_build_console_old:
     docker:
