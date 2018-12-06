@@ -213,6 +213,9 @@ export const validateMigrationMode = mode => {
     method: 'GET',
     url: migrateModeUrl,
   }).then(response => {
+    cy.log('*********');
+    cy.log(response.body);
+    cy.log('*********');
     expect(response.body.migration_mode == mode.toString()).to.be.true; // eslint-disable-line
   });
 };
