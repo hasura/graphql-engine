@@ -35,6 +35,8 @@ wait_for_port localhost 8080
 
 wait_for_port $(awk 'END{print $1}' /etc/hosts) 9693
 
+cd ..
+
 export PORT=3000
 export NODE_ENV=development
 export DATA_API_URL=http://$(awk 'END{print $1}' /etc/hosts):8080
