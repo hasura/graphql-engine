@@ -263,14 +263,25 @@ jobs:
     - checkout
     - attach_workspace:
         at: /home/circleci/build
+    - restore_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
     - *wait_for_postgres
     - run:
         name: test console
         command: .circleci/test-console.sh
         no_output_timeout: 20m
+    - save_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+        paths:
+        - console/node_modules
     - store_artifacts:
         path: /home/circleci/build/_console_output
         destination: console
+    - store_artifacts:
+        path: /home/circleci/build/_console_test_logs
+        destination: console_test_logs
     - store_artifacts:
         path: /home/circleci/graphql-engine/console/cypress/screenshots
         destination: cypress-screenshots
@@ -291,11 +302,19 @@ jobs:
     - checkout
     - attach_workspace:
         at: /home/circleci/build
+    - restore_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
     - *wait_for_postgres
     - run:
         name: test console
         command: .circleci/test-console.sh
         no_output_timeout: 20m
+    - save_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+        paths:
+        - console/node_modules
     - store_artifacts:
         path: /home/circleci/build/_console_output
         destination: console
@@ -342,9 +361,6 @@ jobs:
     - store_artifacts:
         path: /home/circleci/build/_console_output
         destination: console
-    - store_artifacts:
-        path: /home/circleci/build/_console_test_logs
-        destination: console_test_logs
     - persist_to_workspace:
         root: /home/circleci/build
         paths:
