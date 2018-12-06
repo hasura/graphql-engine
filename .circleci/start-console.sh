@@ -45,7 +45,9 @@ export DEV_DATA_API_URL=http://$(awk 'END{print $1}' /etc/hosts):8080
 export URL_PREFIX=/
 export HOST=$(awk 'END{print $1}' /etc/hosts)
 
-npm install
+make ci-deps
+
+node_modules/.bin/cypress install
 
 # test console
 npm run dev
