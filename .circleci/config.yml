@@ -276,6 +276,7 @@ jobs:
           console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
         paths:
         - console/node_modules
+        - ~/.cache/Cypress
     - store_artifacts:
         path: /home/circleci/build/_console_output
         destination: console
@@ -315,6 +316,7 @@ jobs:
           console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
         paths:
         - console/node_modules
+        - ~/.cache/Cypress
     - store_artifacts:
         path: /home/circleci/build/_console_output
         destination: console
