@@ -1,0 +1,23 @@
+{
+    "parser": "babel-eslint",
+    "env": {
+        "browser": true
+    },
+    "plugins": [
+        "react"
+    ],
+    "settings": {
+      "react": {
+        "version": "16.3.1"
+      }
+    },
+    "extends": [
+        "eslint:recommended",
+        "plugin:react/recommended"
+    ],
+    "rules": {
+        "react/prop-types": "off",
+        "react/display-name": "off",
+        "no-console": "off"
+    }
+}
