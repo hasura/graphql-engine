@@ -358,11 +358,12 @@ jobs:
         command: |
           make build
           make ci-copy-assets
+          mkdir -p /root/build/_console_output
     - store_artifacts:
-        path: /home/circleci/build/_console_output
+        path: /root/build/_console_output
         destination: console
     - persist_to_workspace:
-        root: /home/circleci/build
+        root: /root/build
         paths:
           - _console_output
 
