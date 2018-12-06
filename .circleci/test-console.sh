@@ -30,7 +30,7 @@ if [ "$TEST_SUITE_NUMBER" = "1" ]; then
   fi
 fi
 if [ "$TEST_SUITE_NUMBER" = "2" ]; then
-  docker run --name migration_mode -e TEST_ENV=MIGRATE_URL=http://${CONSOLE_HOST}:9693/apis/migrate -e TEST_CONFIG=baseUrl=http://${CONSOLE_HOST}:3000 -e 'TEST_SPECS=ypress/integration/data/migration-mode/test.js' -d -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine && ./.circleci/run-console-test.sh"
+  docker run --name migration_mode -e TEST_ENV=MIGRATE_URL=http://${CONSOLE_HOST}:9693/apis/migrate -e TEST_CONFIG=baseUrl=http://${CONSOLE_HOST}:3000 -e 'TEST_SPECS=cypress/integration/data/migration-mode/test.js' -d -v /home/circleci/graphql-engine:/root/graphql-engine hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine && ./.circleci/run-console-test.sh"
   EXIT_CODE_MIGRATION_MODE="$(docker wait migration_mode)"
   docker logs migration_mode > /home/circleci/build/_console_test_logs/migration_mode.log
   if [ "$EXIT_CODE_MIGRATION_MODE" != "0" ]; then
