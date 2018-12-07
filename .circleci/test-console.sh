@@ -30,7 +30,7 @@ if [ "$TEST_SUITE_NUMBER" = "1" ]; then
   fi
 fi
 if [ "$TEST_SUITE_NUMBER" = "2" ]; then
-  docker run --name test3 -e TEST_ENV=MIGRATE_URL=http://${CONSOLE_HOST}:9693/apis/migrate -e TEST_CONFIG=baseUrl=http://${CONSOLE_HOST}:3000 -e 'TEST_SPECS=cypress/integration/data/permissions/test.js,cypress/integration/data/raw-sql/test.js,ypress/integration/events/create-trigger/test.js' -d -v /home/circleci/graphql-engine:/root/graphql-engine -v /home/circleci/.cache/Cypress:/root/.cache/Cypress hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine && ./.circleci/run-console-test.sh"
+  docker run --name test3 -e TEST_ENV=MIGRATE_URL=http://${CONSOLE_HOST}:9693/apis/migrate -e TEST_CONFIG=baseUrl=http://${CONSOLE_HOST}:3000 -e 'TEST_SPECS=cypress/integration/data/permissions/test.js,cypress/integration/events/create-trigger/test.js' -d -v /home/circleci/graphql-engine:/root/graphql-engine -v /home/circleci/.cache/Cypress:/root/.cache/Cypress hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine && ./.circleci/run-console-test.sh"
   docker run --name test4 -e TEST_ENV=MIGRATE_URL=http://${CONSOLE_HOST}:9693/apis/migrate -e TEST_CONFIG=baseUrl=http://${CONSOLE_HOST}:3000 -e 'TEST_SPECS=cypress/integration/api-explorer/graphql/test.js,cypress/integration/data/create-table/test.js,cypress/integration/data/modify/test.js,cypress/integration/data/404/test.js' -d -v /home/circleci/graphql-engine:/root/graphql-engine -v /home/circleci/.cache/Cypress:/root/.cache/Cypress hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine && ./.circleci/run-console-test.sh"
   EXIT_CODE_3="$(docker wait test3)"
   docker logs test3 > /home/circleci/build/_console_test_logs/test3.log
@@ -40,7 +40,7 @@ if [ "$TEST_SUITE_NUMBER" = "2" ]; then
   if [ "$EXIT_CODE_3" != "0" ] || [ "$EXIT_CODE_4" != "0" ]; then
     exit 1
   fi
-  docker run --name migration_mode -e TEST_ENV=MIGRATE_URL=http://${CONSOLE_HOST}:9693/apis/migrate -e TEST_CONFIG=baseUrl=http://${CONSOLE_HOST}:3000 -e 'TEST_SPECS=cypress/integration/data/migration-mode/test.js' -d -v /home/circleci/graphql-engine:/root/graphql-engine -v /home/circleci/.cache/Cypress:/root/.cache/Cypress hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine && ./.circleci/run-console-test.sh"
+  docker run --name migration_mode -e TEST_ENV=MIGRATE_URL=http://${CONSOLE_HOST}:9693/apis/migrate -e TEST_CONFIG=baseUrl=http://${CONSOLE_HOST}:3000 -e 'TEST_SPECS=cypress/integration/data/raw-sql/test.js,cypress/integration/data/migration-mode/test.js' -d -v /home/circleci/graphql-engine:/root/graphql-engine -v /home/circleci/.cache/Cypress:/root/.cache/Cypress hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine && ./.circleci/run-console-test.sh"
   EXIT_CODE_MIGRATION_MODE="$(docker wait migration_mode)"
   docker logs migration_mode > /home/circleci/build/_console_test_logs/migration_mode.log
   if [ "$EXIT_CODE_MIGRATION_MODE" != "0" ]; then
