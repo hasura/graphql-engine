@@ -20,16 +20,16 @@ Options
 
 ::
 
-  -h, --help   help for status
+      --access-key string   access key for Hasura GraphQL Engine
+      --endpoint string     http(s) endpoint for Hasura GraphQL Engine
+  -h, --help                help for status
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-      --access-key string   access key for Hasura GraphQL Engine
-      --endpoint string     http(s) endpoint for Hasura GraphQL Engine
-      --project string      hasura project directory where the commands should be executed. (default: current directory)
+      --project string   hasura project directory where the commands should be executed. (default: current directory)
 
 SEE ALSO
 ~~~~~~~~

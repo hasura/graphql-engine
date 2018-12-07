@@ -16,7 +16,6 @@ Synopsis
    / / / // /_/ /(__  )/ /_/ // /   / /_/ /
   /_/ /_/ \__,_//____/ \__,_//_/    \__,_/
 
-  hasura cli manages a Hasura project
 
 ::
 
@@ -36,10 +35,10 @@ SEE ALSO
 * :ref:`hasura completion <hasura_completion>` 	 - Generate auto completion code
 * :ref:`hasura console <hasura_console>` 	 - Open console to manage database and try out APIs
 * :ref:`hasura example <hasura_example>` 	 - Show some examples for using hasura
-* :ref:`hasura init <hasura_init>` 	 - Initialize directory for Hasura GraphQL Engine
+* :ref:`hasura init <hasura_init>` 	 - Initialize directory for Hasura GraphQL Engine migrations
 * :ref:`hasura login <hasura_login>` 	 - Login to hasura.io
 * :ref:`hasura logout <hasura_logout>` 	 - Logout from hasura.io
-* :ref:`hasura metadata <hasura_metadata>` 	 - Manage Hasura GraphQL Engine metdata saved in the database
+* :ref:`hasura metadata <hasura_metadata>` 	 - Manage Hasura GraphQL Engine metadata saved in the database
 * :ref:`hasura migrate <hasura_migrate>` 	 - Manage migrations on the database
 * :ref:`hasura update-cli <hasura_update-cli>` 	 - Update hasura to latest version
 * :ref:`hasura user-info <hasura_user-info>` 	 - Get details for current logged in user
