@@ -5,9 +5,7 @@ Guides: Integration/migration tutorials
   :backlinks: none
   :depth: 1
   :local:
-  
-Articles:
-^^^^^^^^^
+
 - :doc:`auth0-jwt`
 - :doc:`apollo-subscriptions`
 - `Blog: Move from firebase to realtime GraphQL on Postgres <https://blog.hasura.io/firebase2graphql-moving-from-firebase-to-realtime-graphql-on-postgres-4d36cb7f4eaf>`__.
