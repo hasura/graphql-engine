@@ -1,20 +1,25 @@
 Setting up GraphQL subscriptions using apollo-client
 ====================================================
 
-Setup :
--------
-Assuming you have the basic apollo-client working as per
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
+Setup
+-----
+This guide assumes you have the basic apollo-client working as per
 https://www.apollographql.com/docs/react/essentials/get-started.html and now you want to enable subscriptions.
 
-Packages to be installed :
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Install packages
+^^^^^^^^^^^^^^^^
 
-.. code-block:: js
+.. code-block:: bash
 
   npm install --save apollo-client apollo-link-ws apollo-link-http apollo-link apollo-utilities apollo-cache-inmemory
 
-Once these packages are installed, import them as follows in the file where you have currently initialised you client.
-(usually in your 'App.js' file)
+Once these packages are installed, import them as follows in the file where you have currently initialised your client
+(usually your ``App.js`` file).
 
 .. code-block:: js
 
@@ -28,7 +33,7 @@ Once these packages are installed, import them as follows in the file where you 
   import { InMemoryCache } from 'apollo-cache-inmemory';
 
 
-below these imports initialise you client to fetch subscriptions along with query and mutation.
+below these imports initialise your client to fetch subscriptions along with query and mutation.
 
 .. code-block:: js
 
@@ -62,8 +67,8 @@ below these imports initialise you client to fetch subscriptions along with quer
     cache: new InMemoryCache()
   })
 
-Next step is to write your subscription :
------------------------------------------
+Write your subscription
+-----------------------
 
 Most likely, when switching from ``<Query>`` to ``<subscription>`` there are few things that you might miss out on.
 
@@ -141,7 +146,7 @@ care of when switching to subscriptions.
       httpLink,
     )
 
-Related Blog :
---------------
+Related Blog
+------------
 
 - `moving-from-apollo-boost-to-graphql-subscriptions-with-apollo-client <https://blog.hasura.io/moving-from-apollo-boost-to-graphql-subscriptions-with-apollo-client-cc0373e0adb0>`__.
