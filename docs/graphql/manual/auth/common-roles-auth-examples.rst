@@ -1,6 +1,11 @@
 Common roles and auth examples
 ==============================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 This is a guide to help you set up a basic authorization architecture for your GraphQL fields.
 
 Here are some examples of common use-cases.

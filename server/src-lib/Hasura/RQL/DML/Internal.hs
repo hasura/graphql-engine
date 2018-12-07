@@ -24,9 +24,6 @@ import qualified Data.HashSet                 as HS
 import qualified Data.Sequence                as DS
 import qualified Data.Text                    as T
 
--- class (P1C m) => Preparable m where
---   prepValBuilder :: PGColType -> Value -> m S.SQLExp
-
 type DMLP1 = StateT (DS.Seq Q.PrepArg) P1
 
 instance CacheRM DMLP1 where
@@ -34,12 +31,6 @@ instance CacheRM DMLP1 where
 
 instance UserInfoM DMLP1 where
   askUserInfo = lift askUserInfo
-
--- instance P1C DMLP1 where
---   askUserInfo = lift askUserInfo
-
--- instance Preparable DMLP1 where
---   prepValBuilder = binRHSBuilder
 
 peelDMLP1 :: QCtx -> DMLP1 a -> Either QErr (a, [Q.PrepArg])
 peelDMLP1 qEnv m = do
@@ -55,10 +46,11 @@ mkAdminRolePermInfo ti =
       . map fieldInfoToEither . M.elems $ tiFieldInfoMap ti
 
     tn = tiName ti
-    i = InsPermInfo tn (S.BELit True) True M.empty [] []
-    s = SelPermInfo (HS.fromList pgCols) tn (S.BELit True) Nothing True [] []
-    u = UpdPermInfo (HS.fromList pgCols) tn (S.BELit True) [] []
-    d = DelPermInfo tn (S.BELit True) [] []
+    i = InsPermInfo tn annBoolExpTrue True M.empty []
+    s = SelPermInfo (HS.fromList pgCols) tn annBoolExpTrue
+        Nothing True []
+    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue []
+    d = DelPermInfo tn annBoolExpTrue []
 
 askPermInfo'
   :: (P1C m)
@@ -178,47 +170,39 @@ fetchRelDet relName refTabName = do
       , " table " <>> rTable
       ]
 
-checkOnColExp :: (P1C m)
-              => SelPermInfo -> AnnValS -> m AnnValS
-checkOnColExp spi annVal =
-  case annVal of
-    AVCol pci@(PGColInfo cn _ _) opExps -> do
-      checkSelOnCol spi cn
-      return $ AVCol pci opExps
-    AVRel relInfo nesAnn _ -> do
-      relSPI <- snd <$> fetchRelDet (riName relInfo) (riRTable relInfo)
-      modAnn <- checkSelPerm relSPI nesAnn
-      return $ AVRel relInfo modAnn $ spiFilter relSPI
-
-checkSelPerm :: (P1C m)
-             => SelPermInfo -> GBoolExp AnnValS -> m (GBoolExp AnnValS)
-checkSelPerm spi = mapBoolExp (checkOnColExp spi)
-
-convBoolExp
+checkOnColExp
   :: (P1C m)
-  => FieldInfoMap
-  -> QualifiedTable
-  -> SelPermInfo
-  -> BoolExp
-  -> (PGColType -> Value -> m S.SQLExp)
-  -> m S.BoolExp
-convBoolExp cim tn spi be prepValBuilder =
-  cBoolExp <$> convBoolExp' cim tn spi be prepValBuilder
+  => SelPermInfo
+  -> AnnBoolExpFldSQL
+  -> m AnnBoolExpFldSQL
+checkOnColExp spi annFld = case annFld of
+  AVCol (PGColInfo cn _ _) _ -> do
+    checkSelOnCol spi cn
+    return annFld
+  AVRel relInfo nesAnn -> do
+    relSPI <- snd <$> fetchRelDet (riName relInfo) (riRTable relInfo)
+    modAnn <- checkSelPerm relSPI nesAnn
+    return $ AVRel relInfo $
+      andAnnBoolExps modAnn $ spiFilter relSPI
+
+checkSelPerm
+  :: (P1C m)
+  => SelPermInfo
+  -> AnnBoolExpSQL
+  -> m AnnBoolExpSQL
+checkSelPerm spi =
+  traverse (checkOnColExp spi)
 
 convBoolExp'
   :: (P1C m)
   => FieldInfoMap
-  -> QualifiedTable
   -> SelPermInfo
   -> BoolExp
   -> (PGColType -> Value -> m S.SQLExp)
-  -> m (GBoolExp AnnSQLBoolExp)
-convBoolExp' cim tn spi be prepValBuilder = do
+  -> m AnnBoolExpSQL
+convBoolExp' cim spi be prepValBuilder = do
   abe <- annBoolExp prepValBuilder cim be
-  modABE <- checkSelPerm spi abe
-  convBoolRhs binStrat (S.mkQual tn) modABE
-  where
-    binStrat = mkBoolExpBuilder return
+  checkSelPerm spi abe
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr
 dmlTxErrorHandler p2Res =

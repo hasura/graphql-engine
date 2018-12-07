@@ -3,9 +3,10 @@ url: /v1alpha1/graphql
 status: 400
 response:
   errors:
-  - path: $.variableValues[0].path.coordinates
-    error: A LineString needs at least 2 Positions
-    code: parse-failed
+  - extensions:
+      path: $.variableValues[0].path.coordinates
+      code: parse-failed
+    message: A LineString needs at least 2 Positions
 query:
   variables:
     roads:

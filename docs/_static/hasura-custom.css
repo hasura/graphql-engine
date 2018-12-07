@@ -161,6 +161,13 @@ p {
   color: #6f6f6f;
 }
 
+code.docutils.literal {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  background-color: rgba(27,31,35,0.05);
+  border-radius: 3px;
+}
+
 #docs-content a.reference {
   /*color: #FEC53D !important;*/
   /*color: #FF993A !important;*/
@@ -206,6 +213,17 @@ a.current.reference.internal {
   font-weight: 600;
   color: #333;
   font-size: 3.2rem;
+}
+
+.topic-title {
+  font-weight: bold;
+}
+
+#table-of-contents {
+  padding: 0 20px;
+  border-radius: 4px;
+  background: #F8F8F9;
+  border: 1px solid #EAEAEC;
 }
 
 .back_link#guides {

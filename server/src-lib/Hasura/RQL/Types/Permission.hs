@@ -19,6 +19,7 @@ module Hasura.RQL.Types.Permission
        , userRole
        , userVars
        , mkUserInfo
+       , userInfoToList
        , adminUserInfo
        , adminRole
        , isAdmin
@@ -35,7 +36,6 @@ import qualified Database.PG.Query          as Q
 
 import           Data.Aeson
 import           Data.Hashable
-import           Data.Word
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -102,6 +102,12 @@ instance Hashable UserInfo
 -- $(J.deriveToJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
 --   ''UserInfo
 --  )
+
+userInfoToList :: UserInfo -> [(Text, Text)]
+userInfoToList userInfo =
+  let vars = Map.toList $ unUserVars . userVars $ userInfo
+      rn = getRoleTxt . userRole $ userInfo
+  in (userRoleHeader, rn) : vars
 
 adminUserInfo :: UserInfo
 adminUserInfo =

@@ -1,6 +1,11 @@
 API Reference - Supported PostgreSQL Types
 ==========================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 .. _types_table:
 
 List of PostgreSQL types supported by the Hasura GraphQL engine with their equivalent Hasura types:

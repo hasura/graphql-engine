@@ -19,6 +19,10 @@ import {
 import eventRouter from './src/components/Services/EventTrigger/EventRouter';
 import { eventReducer } from './src/components/Services/EventTrigger';
 
+// import Remote Schema parts
+import getCustomResolverRouter from './src/components/Services/CustomResolver/CustomResolverRouter.js';
+import customResolverReducer from './src/components/Services/CustomResolver/customResolverReducer.js';
+
 // import other globals
 import routes from './src/routes';
 import globals from './src/Globals';
@@ -41,6 +45,9 @@ export { dataHeaders };
 
 // export Event Tab parts
 export { eventRouter, eventReducer };
+
+// export Remote Schema parts
+export { getCustomResolverRouter, customResolverReducer };
 
 // export other globals
 export default routes;

@@ -16,6 +16,7 @@ import qualified Data.ByteString.Lazy         as BL
 import qualified Data.Sequence                as Seq
 import qualified Data.Text.Lazy               as LT
 import qualified Data.Vector                  as V
+import qualified Network.HTTP.Client          as HTTP
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata
@@ -58,6 +59,10 @@ data RQLQuery
   | RQCount !CountQuery
   | RQBulk ![RQLQuery]
 
+  -- schema-stitching, custom resolver related
+  | RQAddRemoteSchema !AddRemoteSchemaQuery
+  | RQRemoveRemoteSchema !RemoveRemoteSchemaQuery
+
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
   | RQDeliverEvent       !DeliverEventQuery
@@ -88,22 +93,24 @@ buildTx
   :: (HDBQuery q)
   => UserInfo
   -> SchemaCache
+  -> HTTP.Manager
   -> q
   -> Either QErr (Q.TxE QErr (BL.ByteString, SchemaCache))
-buildTx userInfo sc q = do
+buildTx userInfo sc httpManager q = do
   p1Res <- withPathK "args" $ runP1 qEnv $ phaseOne q
-  return $ flip runReaderT (qcUserInfo qEnv) $
+  return $ flip runReaderT p2Ctx $
     flip runStateT sc $ withPathK "args" $ phaseTwo q p1Res
   where
+    p2Ctx = P2Ctx userInfo httpManager
     qEnv = QCtx userInfo sc
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation
-  -> UserInfo -> SchemaCache
+  -> UserInfo -> SchemaCache -> HTTP.Manager
   -> RQLQuery -> m (BL.ByteString, SchemaCache)
-runQuery pool isoL userInfo sc query = do
-  tx <- liftEither $ buildTxAny userInfo sc query
+runQuery pool isoL userInfo sc hMgr query = do
+  tx <- liftEither $ buildTxAny userInfo sc hMgr query
   res <- liftIO $ runExceptT $ Q.runTx pool (isoL, Nothing) $
          setHeadersTx (userVars userInfo) >> tx
   liftEither res
@@ -136,6 +143,9 @@ queryNeedsReload qi = case qi of
   RQDelete q                   -> queryModifiesSchema q
   RQCount q                    -> queryModifiesSchema q
 
+  RQAddRemoteSchema q          -> queryModifiesSchema q
+  RQRemoveRemoteSchema q       -> queryModifiesSchema q
+
   RQCreateEventTrigger q       -> queryModifiesSchema q
   RQDeleteEventTrigger q       -> queryModifiesSchema q
   RQDeliverEvent q             -> queryModifiesSchema q
@@ -156,58 +166,63 @@ queryNeedsReload qi = case qi of
 
   RQBulk qs                    -> any queryNeedsReload qs
 
-buildTxAny :: UserInfo
-           -> SchemaCache
-           -> RQLQuery
-           -> Either QErr (Q.TxE QErr (BL.ByteString, SchemaCache))
-buildTxAny userInfo sc rq = case rq of
-  RQAddExistingTableOrView q    -> buildTx userInfo sc q
-  RQTrackTable q                -> buildTx userInfo sc q
-  RQUntrackTable q              -> buildTx userInfo sc q
+buildTxAny
+  :: UserInfo
+  -> SchemaCache
+  -> HTTP.Manager
+  -> RQLQuery
+  -> Either QErr (Q.TxE QErr (BL.ByteString, SchemaCache))
+buildTxAny userInfo sc hMgr rq = case rq of
+  RQAddExistingTableOrView q -> buildTx' q
+  RQTrackTable q             -> buildTx' q
+  RQUntrackTable q           -> buildTx' q
 
-  RQCreateObjectRelationship q -> buildTx userInfo sc q
-  RQCreateArrayRelationship  q -> buildTx userInfo sc q
-  RQDropRelationship  q        -> buildTx userInfo sc q
-  RQSetRelationshipComment  q  -> buildTx userInfo sc q
+  RQCreateObjectRelationship q -> buildTx' q
+  RQCreateArrayRelationship  q -> buildTx' q
+  RQDropRelationship  q        -> buildTx' q
+  RQSetRelationshipComment  q  -> buildTx' q
 
-  RQCreateInsertPermission q -> buildTx userInfo sc q
-  RQCreateSelectPermission q -> buildTx userInfo sc q
-  RQCreateUpdatePermission q -> buildTx userInfo sc q
-  RQCreateDeletePermission q -> buildTx userInfo sc q
+  RQCreateInsertPermission q -> buildTx' q
+  RQCreateSelectPermission q -> buildTx' q
+  RQCreateUpdatePermission q -> buildTx' q
+  RQCreateDeletePermission q -> buildTx' q
 
-  RQDropInsertPermission q -> buildTx userInfo sc q
-  RQDropSelectPermission q -> buildTx userInfo sc q
-  RQDropUpdatePermission q -> buildTx userInfo sc q
-  RQDropDeletePermission q -> buildTx userInfo sc q
-  RQSetPermissionComment q -> buildTx userInfo sc q
+  RQDropInsertPermission q -> buildTx' q
+  RQDropSelectPermission q -> buildTx' q
+  RQDropUpdatePermission q -> buildTx' q
+  RQDropDeletePermission q -> buildTx' q
+  RQSetPermissionComment q -> buildTx' q
 
-  RQInsert q -> buildTx userInfo sc q
-  RQSelect q -> buildTx userInfo sc q
-  RQUpdate q -> buildTx userInfo sc q
-  RQDelete q -> buildTx userInfo sc q
-  RQCount q  -> buildTx userInfo sc q
+  RQInsert q -> buildTx' q
+  RQSelect q -> buildTx' q
+  RQUpdate q -> buildTx' q
+  RQDelete q -> buildTx' q
+  RQCount  q -> buildTx' q
 
-  RQCreateEventTrigger q -> buildTx userInfo sc q
-  RQDeleteEventTrigger q -> buildTx userInfo sc q
-  RQDeliverEvent q -> buildTx userInfo sc q
+  RQAddRemoteSchema    q -> buildTx' q
+  RQRemoveRemoteSchema q -> buildTx' q
 
-  RQCreateQueryTemplate q     -> buildTx userInfo sc q
-  RQDropQueryTemplate q       -> buildTx userInfo sc q
-  RQExecuteQueryTemplate q    -> buildTx userInfo sc q
-  RQSetQueryTemplateComment q -> buildTx userInfo sc q
+  RQCreateEventTrigger q -> buildTx' q
+  RQDeleteEventTrigger q -> buildTx' q
+  RQDeliverEvent q       -> buildTx' q
 
-  RQReplaceMetadata q -> buildTx userInfo sc q
-  RQClearMetadata q -> buildTx userInfo sc q
-  RQExportMetadata q -> buildTx userInfo sc q
-  RQReloadMetadata q -> buildTx userInfo sc q
+  RQCreateQueryTemplate q     -> buildTx' q
+  RQDropQueryTemplate q       -> buildTx' q
+  RQExecuteQueryTemplate q    -> buildTx' q
+  RQSetQueryTemplateComment q -> buildTx' q
 
-  RQDumpInternalState q -> buildTx userInfo sc q
+  RQReplaceMetadata q -> buildTx' q
+  RQClearMetadata q   -> buildTx' q
+  RQExportMetadata q  -> buildTx' q
+  RQReloadMetadata q  -> buildTx' q
 
-  RQRunSql q -> buildTx userInfo sc q
+  RQDumpInternalState q -> buildTx' q
 
-  RQBulk qs  ->
+  RQRunSql q -> buildTx' q
+
+  RQBulk qs ->
     let f (respList, scf) q = do
-          dbAction <- liftEither $ buildTxAny userInfo scf q
+          dbAction <- liftEither $ buildTxAny userInfo scf hMgr q
           (resp, newSc) <- dbAction
           return ((Seq.|>) respList resp, newSc)
     in
@@ -217,6 +232,8 @@ buildTxAny userInfo sc rq = case rq of
         return ( BB.toLazyByteString $ encodeJSONVector BB.lazyByteString bsVector
                , finalSc
                )
+
+  where buildTx' q = buildTx userInfo sc hMgr q
 
 setHeadersTx :: UserVars -> Q.TxE QErr ()
 setHeadersTx uVars =
