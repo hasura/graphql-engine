@@ -29,8 +29,6 @@ Sample apps
 Integration/migration tutorials
 -------------------------------
 
-Articles:
-^^^^^^^^^
 - :doc:`integrations/auth0-jwt`
 - :doc:`integrations/apollo-subscriptions`
 - `Blog: Move from firebase to realtime GraphQL on Postgres <https://blog.hasura.io/firebase2graphql-moving-from-firebase-to-realtime-graphql-on-postgres-4d36cb7f4eaf>`__.
