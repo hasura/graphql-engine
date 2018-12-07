@@ -23,11 +23,17 @@ export default class RenderMessagesProxy extends React.Component {
   render() {
     return (
       <div className="chatWrapper">
-        <div className="wd25">
+        <div className="wd25 hidden-xs">
           <OnlineUsers
             userId={this.props.userId}
             username={this.props.username}
-          /> 
+          />
+        </div>
+        <div className="mobileview visible-xs">
+          <OnlineUsers
+            userId={this.props.userId}
+            username={this.props.username}
+          />
         </div>
         <div className="wd75">
           <RenderMessages

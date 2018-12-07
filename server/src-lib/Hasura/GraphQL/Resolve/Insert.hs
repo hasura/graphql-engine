@@ -28,12 +28,10 @@ import qualified Database.PG.Query                 as Q
 import qualified Hasura.RQL.DML.Insert             as RI
 import qualified Hasura.RQL.DML.Returning          as RR
 import qualified Hasura.RQL.DML.Select             as RS
-import qualified Hasura.RQL.GBoolExp               as RG
 import qualified Hasura.RQL.GBoolExp               as RB
 
 import qualified Hasura.SQL.DML                    as S
 
-import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Mutation
@@ -154,7 +152,7 @@ parseOnConflict inpCols val = withPathK "on_conflict" $
   flip withObject val $ \_ obj -> do
     actionM <- forM (OMap.lookup "action" obj) parseAction
     constraint <- parseConstraint obj
-    updColsM <- forM (OMap.lookup "update_columns" obj) parseUpdCols
+    updColsM <- forM (OMap.lookup "update_columns" obj) parseColumns
     -- consider "action" if "update_columns" is not mentioned
     return $ mkConflictClause $ case (updColsM, actionM) of
       (Just [], _)             -> RI.CCDoNothing $ Just constraint
@@ -176,11 +174,6 @@ parseOnConflict inpCols val = withPathK "on_conflict" $
            "\"constraint\" is expected, but not found"
       (_, enumVal) <- asEnumVal v
       return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
-
-    parseUpdCols v = flip withArray v $ \_ enumVals ->
-      forM enumVals $ \eVal -> do
-        (_, ev) <- asEnumVal eVal
-        return $ PGCol $ G.unName $ G.unEnumValue ev
 
     mkConflictClause (RI.CCDoNothing constrM) =
       RI.CP1DoNothing $ fmap RI.Constraint constrM
@@ -219,13 +212,13 @@ mkInsertQ vn onConflictM insCols tableCols defVals role = do
 mkBoolExp
   :: (MonadError QErr m, MonadState PrepArgs m)
   => QualifiedTable -> [(PGColInfo, PGColValue)]
-  -> m (GBoolExp RG.AnnSQLBoolExp)
+  -> m S.BoolExp
 mkBoolExp tn colInfoVals =
-  RG.convBoolRhs (RG.mkBoolExpBuilder prepare) (S.mkQual tn) boolExp
+  RB.toSQLBoolExp (S.mkQual tn) . BoolAnd <$>
+  mapM (fmap BoolFld . uncurry f) colInfoVals
   where
-    boolExp = BoolAnd $ map (BoolCol . uncurry f) colInfoVals
     f ci@(PGColInfo _ colTy _) colVal =
-      RB.AVCol ci [RB.OEVal $ RB.AEQ (colTy, colVal)]
+      AVCol ci . pure . AEQ <$> prepare (colTy, colVal)
 
 mkSelQ :: MonadError QErr m => QualifiedTable
        -> [PGColInfo] -> [PGColWithValue] -> m InsWithExp
@@ -233,7 +226,7 @@ mkSelQ tn allColInfos pgColsWithVal = do
   (whereExp, args) <- flip runStateT Seq.Empty $ mkBoolExp tn colWithInfos
   let sqlSel = S.mkSelect { S.selExtr = [S.selectStar]
                           , S.selFrom = Just $ S.mkSimpleFromExp tn
-                          , S.selWhere = Just $ S.WhereFrag $ RG.cBoolExp whereExp
+                          , S.selWhere = Just $ S.WhereFrag whereExp
                           }
 
   return $ InsWithExp (S.CTESelect sqlSel) Nothing args

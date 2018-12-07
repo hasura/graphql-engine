@@ -1,6 +1,6 @@
 # Web notifications using Hasura GraphQL Engine Event Triggers and FCM
 
-Visit https://shahidhk.github.io/hasura-web-push-notifs for a live demo.
+Visit https://serverless-push.demo.hasura.app/ for a live demo.
 
 ## Pre-requisites
 

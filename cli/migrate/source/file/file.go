@@ -79,8 +79,9 @@ func (f *File) Open(url string, logger *log.Logger) (source.Driver, error) {
 				continue // ignore files that we can't parse
 			}
 
-			if !nf.migrations.Append(m) {
-				return nil, fmt.Errorf("unable to parse file %v", fi.Name())
+			err = nf.migrations.Append(m)
+			if err != nil {
+				return nil, err
 			}
 		}
 	}

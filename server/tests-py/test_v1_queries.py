@@ -364,8 +364,15 @@ class TestMetadata(DefaultTestQueries):
     def test_clear_metadata(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/clear_metadata.yaml')
 
+    def test_replace_metadata(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
+
+    def test_replace_metadata_wo_remote_schemas(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_wo_rs.yaml')
+
     def test_dump_internal_state(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/dump_internal_state.yaml')
+
 
     @classmethod
     def dir(cls):

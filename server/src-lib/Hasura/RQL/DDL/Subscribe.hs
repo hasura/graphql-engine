@@ -10,6 +10,7 @@ module Hasura.RQL.DDL.Subscribe where
 import           Data.Aeson
 import           Data.Int                (Int64)
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
@@ -229,7 +230,11 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
         SubCStar         -> return ()
         SubCArray pgcols -> forM_ pgcols (assertPGCol (tiFieldInfoMap ti) "")
 
-subTableP2Setup :: (P2C m) => QualifiedTable -> TriggerId -> EventTriggerConf -> m ()
+--(QErrM m, CacheRWM m, MonadTx m, MonadIO m)
+
+subTableP2Setup
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m)
+  => QualifiedTable -> TriggerId -> EventTriggerConf -> m ()
 subTableP2Setup qt trid (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
   webhookConf <- case (webhook, webhookFromEnv) of
     (Just w, Nothing)    -> return $ WCValue w
@@ -238,9 +243,33 @@ subTableP2Setup qt trid (EventTriggerConf name def webhook webhookFromEnv rconf 
   let headerConfs = fromMaybe [] mheaders
   webhookInfo <- getWebhookInfoFromConf webhookConf
   headerInfos <- getHeaderInfosFromConf headerConfs
-  addEventTriggerToCache qt trid name def rconf webhookInfo headerInfos
+  let eTrigInfo = EventTriggerInfo trid name def rconf webhookInfo headerInfos
+      tabDep = SchemaDependency (SOTable qt) "parent"
+  addEventTriggerToCache qt eTrigInfo (tabDep:getTrigDefDeps qt def)
 
-subTableP2 :: (P2C m) => QualifiedTable -> Bool -> EventTriggerConf -> m ()
+getTrigDefDeps :: QualifiedTable -> TriggerOpsDef -> [SchemaDependency]
+getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel) =
+  mconcat $ catMaybes [ subsOpSpecDeps <$> mIns
+                      , subsOpSpecDeps <$> mUpd
+                      , subsOpSpecDeps <$> mDel
+                      ]
+  where
+    subsOpSpecDeps :: SubscribeOpSpec -> [SchemaDependency]
+    subsOpSpecDeps os =
+      let cols = getColsFromSub $ sosColumns os
+          colDeps = flip map cols $ \col ->
+            SchemaDependency (SOTableObj qt (TOCol col)) "column"
+          payload = maybe [] getColsFromSub (sosPayload os)
+          payloadDeps = flip map payload $ \col ->
+            SchemaDependency (SOTableObj qt (TOCol col)) "payload"
+        in colDeps <> payloadDeps
+    getColsFromSub sc = case sc of
+      SubCStar         -> []
+      SubCArray pgcols -> pgcols
+
+subTableP2
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m)
+  => QualifiedTable -> Bool -> EventTriggerConf -> m ()
 subTableP2 qt replace etc = do
   allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
   trid <- if replace
@@ -251,7 +280,10 @@ subTableP2 qt replace etc = do
     liftTx $ addEventTriggerToCatalog qt allCols etc
   subTableP2Setup qt trid etc
 
-subTableP2shim :: (P2C m) => (QualifiedTable, Bool, EventTriggerConf) -> m RespBody
+
+subTableP2shim
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m)
+  => (QualifiedTable, Bool, EventTriggerConf) -> m RespBody
 subTableP2shim (qt, replace, etc) = do
   subTableP2 qt replace etc
   return successMsg
@@ -268,7 +300,7 @@ unsubTableP1 (DeleteEventTriggerQuery name)  = do
   ti <- askTabInfoFromTrigger name
   return $ tiName ti
 
-unsubTableP2 :: (P2C m) => QualifiedTable -> DeleteEventTriggerQuery -> m RespBody
+unsubTableP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> DeleteEventTriggerQuery -> m RespBody
 unsubTableP2 qt (DeleteEventTriggerQuery name) = do
   delEventTriggerFromCache qt name
   liftTx $ delEventTriggerFromCatalog name
@@ -280,7 +312,7 @@ instance HDBQuery DeleteEventTriggerQuery where
   phaseTwo q qt = unsubTableP2 qt q
   schemaCachePolicy = SCPReload
 
-deliverEvent :: (P2C m) => DeliverEventQuery -> m RespBody
+deliverEvent :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DeliverEventQuery -> m RespBody
 deliverEvent (DeliverEventQuery eventId) = do
   _ <- liftTx $ fetchEvent eventId
   liftTx $ markForDelivery eventId
@@ -292,17 +324,17 @@ instance HDBQuery DeliverEventQuery where
   phaseTwo q _ = deliverEvent q
   schemaCachePolicy = SCPNoChange
 
-getHeaderInfosFromConf :: (P2C m) => [HeaderConf] -> m [EventHeaderInfo]
+getHeaderInfosFromConf :: (QErrM m, MonadIO m) => [HeaderConf] -> m [EventHeaderInfo]
 getHeaderInfosFromConf = mapM getHeader
   where
-    getHeader :: (P2C m) => HeaderConf -> m EventHeaderInfo
+    getHeader :: (QErrM m, MonadIO m) => HeaderConf -> m EventHeaderInfo
     getHeader hconf = case hconf of
       (HeaderConf _ (HVValue val)) -> return $ EventHeaderInfo hconf val
       (HeaderConf _ (HVEnv val))   -> do
         envVal <- getEnv val
         return $ EventHeaderInfo hconf envVal
 
-getWebhookInfoFromConf :: (P2C m) => WebhookConf -> m WebhookConfInfo
+getWebhookInfoFromConf :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => WebhookConf -> m WebhookConfInfo
 getWebhookInfoFromConf wc = case wc of
   WCValue w -> return $ WebhookConfInfo wc w
   WCEnv we -> do

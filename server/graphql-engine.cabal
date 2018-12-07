@@ -145,11 +145,14 @@ library
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
+                     , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Common
+                     , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.DML
                      , Hasura.RQL.Types.Subscribe
+                     , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
@@ -161,6 +164,8 @@ library
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Utils
                      , Hasura.RQL.DDL.Subscribe
+                     , Hasura.RQL.DDL.Headers
+                     , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert
@@ -194,9 +199,14 @@ library
                      , Hasura.GraphQL.Resolve.Insert
                      , Hasura.GraphQL.Resolve.Mutation
                      , Hasura.GraphQL.Resolve.Select
+                     , Hasura.GraphQL.RemoteServer
+                     , Hasura.GraphQL.Context
+                     , Hasura.GraphQL.Resolve.ContextTypes
 
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP
+
+                     , Hasura.HTTP.Utils
 
                      , Data.Text.Extended
                      , Data.Sequence.NonEmpty
@@ -211,6 +221,7 @@ library
                      , Hasura.SQL.Rewrite
                      , Hasura.Prelude
                      , Hasura.Logging
+                     , Network.URI.Extended
                      , Ops
                      , TH
 

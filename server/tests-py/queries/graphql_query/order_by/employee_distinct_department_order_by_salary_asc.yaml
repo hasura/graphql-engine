@@ -1,0 +1,32 @@
+description: Fetch lowest salaried employee from each department and sort results on department descending
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    employee:
+    - id: 2
+      name: Zara
+      department: Services
+      salary: 1234
+    - id: 6
+      name: Dara
+      department: Product
+      salary: 1209
+    - id: 1
+      name: Kai
+      department: Engineering
+      salary: 2345
+
+query:
+  query: |
+    query {
+      employee(
+        distinct_on: [department]
+        order_by: [{department: desc}, {salary: asc}]
+      ){
+        id
+        name
+        department
+        salary
+      }
+    }

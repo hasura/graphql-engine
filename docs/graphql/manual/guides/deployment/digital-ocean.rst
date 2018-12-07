@@ -1,6 +1,11 @@
 Run Hasura GraphQL Engine on DigitalOcean using Docker
 ======================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 This guide helps you set up the Hasura GraphQL engine (w/ or w/o HTTPS) on DigitalOcean using Docker.
 
 Step 1: Create and prepare a droplet

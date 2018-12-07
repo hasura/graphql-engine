@@ -1,0 +1,22 @@
+description: Fetch highest salaried employee from each department (fail)
+url: /v1alpha1/graphql
+status: 400
+response:
+  errors:
+  - extensions:
+      code: validation-failed
+      path: "$.selectionSet.employee.args"
+    message: '"distinct_on" columns must match initial "order_by" columns'
+query:
+  query: |
+    query {
+      employee(
+        distinct_on: [department]
+        order_by: [{salary: desc}]
+      ){
+        id
+        name
+        department
+        salary
+      }
+    }

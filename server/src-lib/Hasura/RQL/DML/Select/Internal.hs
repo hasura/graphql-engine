@@ -5,6 +5,7 @@
 
 module Hasura.RQL.DML.Select.Internal where
 
+import           Control.Arrow              ((&&&))
 import           Data.Aeson.Types
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
@@ -55,7 +56,7 @@ instance FromJSON ExtCol where
 
 data AnnObCol
   = AOCPG !PGColInfo
-  | AOCRel !RelInfo !S.BoolExp !AnnObCol
+  | AOCRel !RelInfo !AnnBoolExpSQL !AnnObCol
   deriving (Show, Eq)
 
 type AnnOrderByItem = OrderByItemG AnnObCol
@@ -85,14 +86,15 @@ data AnnFld
 
 data TableArgs
   = TableArgs
-  { _taWhere   :: !(Maybe (GBoolExp AnnSQLBoolExp))
-  , _taOrderBy :: !(Maybe (NE.NonEmpty AnnOrderByItem))
-  , _taLimit   :: !(Maybe Int)
-  , _taOffset  :: !(Maybe S.SQLExp)
+  { _taWhere    :: !(Maybe AnnBoolExpSQL)
+  , _taOrderBy  :: !(Maybe (NE.NonEmpty AnnOrderByItem))
+  , _taLimit    :: !(Maybe Int)
+  , _taOffset   :: !(Maybe S.SQLExp)
+  , _taDistCols :: !(Maybe (NE.NonEmpty PGCol))
   } deriving (Show, Eq)
 
 noTableArgs :: TableArgs
-noTableArgs = TableArgs Nothing Nothing Nothing Nothing
+noTableArgs = TableArgs Nothing Nothing Nothing Nothing Nothing
 
 data PGColFld
   = PCFCol !PGCol
@@ -101,12 +103,15 @@ data PGColFld
 
 type ColFlds = [(T.Text, PGColFld)]
 
+data AggOp
+  = AggOp
+  { _aoOp   :: !T.Text
+  , _aoFlds :: !ColFlds
+  } deriving (Show, Eq)
+
 data AggFld
-  = AFCount
-  | AFSum !ColFlds
-  | AFAvg !ColFlds
-  | AFMax !ColFlds
-  | AFMin !ColFlds
+  = AFCount !S.CountType
+  | AFOp !AggOp
   | AFExp !T.Text
   deriving (Show, Eq)
 
@@ -121,14 +126,24 @@ data TableAggFld
 data TableFrom
   = TableFrom
   { _tfTable :: !QualifiedTable
-  , _tfFrom  :: !(Maybe S.FromItem)
+  , _tfIden  :: !(Maybe Iden)
   } deriving (Show, Eq)
+
+tableFromToFromItem :: TableFrom -> S.FromItem
+tableFromToFromItem = \case
+  TableFrom tn Nothing  -> S.FISimple tn Nothing
+  TableFrom _  (Just i) -> S.FIIden i
+
+tableFromToQual :: TableFrom -> S.Qual
+tableFromToQual = \case
+  TableFrom tn Nothing  -> S.QualTable tn
+  TableFrom _  (Just i) -> S.QualIden i
 
 data TablePerm
   = TablePerm
-  { _tpFilter :: !S.BoolExp
+  { _tpFilter :: !AnnBoolExpSQL
   , _tpLimit  :: !(Maybe Int)
-  } deriving (Show, Eq)
+  } deriving (Eq, Show)
 
 data AnnSelG a
   = AnnSelG
@@ -142,17 +157,18 @@ type AnnSel = AnnSelG [(FieldName, AnnFld)]
 
 data BaseNode
   = BaseNode
-  { _bnPrefix  :: !Iden
-  , _bnFrom    :: !S.FromItem
-  , _bnWhere   :: !S.BoolExp
-  , _bnOrderBy :: !(Maybe S.OrderByExp)
-  , _bnLimit   :: !(Maybe Int)
-  , _bnOffset  :: !(Maybe S.SQLExp)
+  { _bnPrefix   :: !Iden
+  , _bnDistinct :: !(Maybe S.DistinctExpr)
+  , _bnFrom     :: !S.FromItem
+  , _bnWhere    :: !S.BoolExp
+  , _bnOrderBy  :: !(Maybe S.OrderByExp)
+  , _bnLimit    :: !(Maybe Int)
+  , _bnOffset   :: !(Maybe S.SQLExp)
 
-  , _bnExtrs   :: !(HM.HashMap S.Alias S.SQLExp)
-  , _bnObjRels :: !(HM.HashMap RelName RelNode)
-  , _bnArrRels :: !(HM.HashMap S.Alias RelNode)
-  , _bnAggs    :: !(HM.HashMap S.Alias AggNode)
+  , _bnExtrs    :: !(HM.HashMap S.Alias S.SQLExp)
+  , _bnObjRels  :: !(HM.HashMap RelName RelNode)
+  , _bnArrRels  :: !(HM.HashMap S.Alias RelNode)
+  , _bnAggs     :: !(HM.HashMap S.Alias AggNode)
 
   } deriving (Show, Eq)
 
@@ -165,14 +181,11 @@ aggFldToExp aggFlds = jsonRow
     jsonRow = S.applyJsonBuildObj (concatMap aggToFlds aggFlds)
     withAls fldName sqlExp = [S.SELit fldName, sqlExp]
     aggToFlds (t, fld) = withAls t $ case fld of
-      AFCount       -> S.SEUnsafe "count(*)"
-      AFSum sumFlds -> colFldsToObj "sum" sumFlds
-      AFAvg avgFlds -> colFldsToObj "avg" avgFlds
-      AFMax maxFlds -> colFldsToObj "max" maxFlds
-      AFMin minFlds -> colFldsToObj "min" minFlds
-      AFExp e       -> S.SELit e
+      AFCount cty -> S.SECount cty
+      AFOp aggOp  -> aggOpToObj aggOp
+      AFExp e     -> S.SELit e
 
-    colFldsToObj op flds =
+    aggOpToObj (AggOp op flds) =
       S.applyJsonBuildObj $ concatMap (colFldsToExtr op) flds
 
     colFldsToExtr op (t, PCFCol col) =
@@ -339,12 +352,13 @@ processAnnOrderByCol pfx = \case
        , Nothing
        )
   -- "pfx.or.relname"."pfx.ob.or.relname.rest" AS "pfx.ob.or.relname.rest"
-  AOCRel (RelInfo rn _ colMapping relTab _ _) relFltr rest ->
+  AOCRel (RelInfo rn _ colMapping relTab _) relFltr rest ->
     let relPfx  = mkObjRelTableAls pfx rn
         ((nesAls, nesCol), nesNodeM) = processAnnOrderByCol relPfx rest
         qualCol = S.mkQIdenExp relPfx nesAls
         relBaseNode =
-          BaseNode relPfx (S.FISimple relTab Nothing) relFltr
+          BaseNode relPfx Nothing (S.FISimple relTab Nothing)
+          (toSQLBoolExp (S.QualTable relTab) relFltr)
           Nothing Nothing Nothing
           (HM.singleton nesAls nesCol)
           (maybe HM.empty (uncurry HM.singleton) nesNodeM)
@@ -354,14 +368,29 @@ processAnnOrderByCol pfx = \case
        , Just (rn, relNode)
        )
 
+processDistinctOnCol
+  :: Iden
+  -> NE.NonEmpty PGCol
+  -> ( S.DistinctExpr
+     -- additional column extractors
+     , [(S.Alias, S.SQLExp)]
+     )
+processDistinctOnCol pfx neCols = (distOnExp, colExtrs)
+  where
+    cols = toList neCols
+    distOnExp = S.DistinctOn $ map (S.SEIden . toIden . mkQColAls) cols
+    mkQCol c = S.mkQIdenExp (mkBaseTableAls pfx) $ toIden c
+    mkQColAls = S.Alias . mkBaseTableColAls pfx
+    colExtrs = flip map cols $ mkQColAls &&& mkQCol
+
+
 mkEmptyBaseNode :: Iden -> TableFrom -> BaseNode
 mkEmptyBaseNode pfx tableFrom =
-  BaseNode pfx fromItem (S.BELit True) Nothing Nothing Nothing
+  BaseNode pfx Nothing fromItem (S.BELit True) Nothing Nothing Nothing
   selOne HM.empty HM.empty HM.empty
   where
     selOne = HM.singleton (S.Alias $ pfx <> Iden "__one") (S.SEUnsafe "1")
-    TableFrom tn fromItemM = tableFrom
-    fromItem = fromMaybe (S.FISimple tn Nothing) fromItemM
+    fromItem = tableFromToFromItem tableFrom
 
 -- If query limit > permission limit then consider permission limit Else consider query limit
 applyPermLimit
@@ -410,12 +439,11 @@ mkBaseNode
   :: Iden -> FieldName -> TableAggFld -> TableFrom
   -> TablePerm -> TableArgs -> BaseNode
 mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
-  BaseNode pfx fromItem finalWhere ordByExpM finalLimit offsetM
+  BaseNode pfx distExprM fromItem finalWhere ordByExpM finalLimit offsetM
   allExtrs allObjsWithOb allArrs aggs
   where
-    TableFrom tn fromItemM = tableFrom
     TablePerm fltr permLimitM = tablePerm
-    TableArgs whereM orderByM limitM offsetM = tableArgs
+    TableArgs whereM orderByM limitM offsetM distM = tableArgs
     (allExtrs, allObjsWithOb, allArrs, aggs) = case annSelFlds of
       TAFNodes flds ->
         let selExtr = buildJsonObject pfx fldAls flds
@@ -428,28 +456,31 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
               allObjs $ catMaybes $ maybe [] _3 procOrdByM
             aggItems = HM.fromList $ map mkAggItem $
               mapMaybe (\(als, f) -> (als,) <$> getAggFld f) flds
-        in ( HM.fromList $ selExtr:obExtrs
+        in ( HM.fromList $ selExtr:obExtrs <> distExtrs
            , allObjRelsWithOb
            , allArrRels
            , aggItems
            )
       TAFAgg aggFlds ->
         let extrs = concatMap (fetchExtrFromAggFld . snd) aggFlds
-        in ( HM.fromList $ extrs <> obExtrs
+        in ( HM.fromList $ extrs <> obExtrs <> distExtrs
            , HM.empty
            , HM.empty
            , HM.empty
            )
       TAFExp _ -> (HM.fromList obExtrs, HM.empty, HM.empty, HM.empty)
 
-    fetchExtrFromAggFld AFCount         = []
-    fetchExtrFromAggFld (AFSum sumFlds) = colFldsToExps sumFlds
-    fetchExtrFromAggFld (AFAvg avgFlds) = colFldsToExps avgFlds
-    fetchExtrFromAggFld (AFMax maxFlds) = colFldsToExps maxFlds
-    fetchExtrFromAggFld (AFMin minFlds) = colFldsToExps minFlds
-    fetchExtrFromAggFld (AFExp _)       = []
+    fetchExtrFromAggFld (AFCount cty) = countTyToExps cty
+    fetchExtrFromAggFld (AFOp aggOp)  = aggOpToExps aggOp
+    fetchExtrFromAggFld (AFExp _)     = []
 
-    colFldsToExps = mapMaybe (mkColExp . snd)
+    countTyToExps S.CTStar            = []
+    countTyToExps (S.CTSimple cols)   = colsToExps cols
+    countTyToExps (S.CTDistinct cols) = colsToExps cols
+
+    colsToExps = mapMaybe (mkColExp . PCFCol)
+
+    aggOpToExps = mapMaybe (mkColExp . snd) . _aoFlds
 
     mkColExp (PCFCol c) =
       let qualCol = S.mkQIdenExp (mkBaseTableAls pfx) (toIden c)
@@ -457,14 +488,19 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
       in Just (S.Alias colAls, qualCol)
     mkColExp _ = Nothing
 
-    finalWhere = maybe fltr (S.BEBin S.AndOp fltr . cBoolExp) whereM
+    finalWhere =
+      toSQLBoolExp tableQual $ maybe fltr (andAnnBoolExps fltr) whereM
+    fromItem = tableFromToFromItem tableFrom
+    tableQual = tableFromToQual tableFrom
     finalLimit = applyPermLimit permLimitM limitM
-
-    fromItem = fromMaybe (S.FISimple tn Nothing) fromItemM
 
     _1 (a, _, _) = a
     _2 (_, b, _) = b
     _3 (_, _, c) = c
+
+    distItemsM = processDistinctOnCol pfx <$> distM
+    distExprM = fst <$> distItemsM
+    distExtrs = fromMaybe [] (snd <$> distItemsM)
 
     procOrdByM = unzip3 . map (processAnnOrderByItem pfx) . toList <$> orderByM
     ordByExpM  = S.OrderByExp . _2 <$> procOrdByM
@@ -512,14 +548,14 @@ annSelToBaseNode pfx fldAls annSel =
 
 mergeBaseNodes :: BaseNode -> BaseNode -> BaseNode
 mergeBaseNodes lNodeDet rNodeDet =
-  BaseNode pfx f whr ordBy limit offset
+  BaseNode pfx dExp f whr ordBy limit offset
   (HM.union lExtrs rExtrs)
   (HM.unionWith mergeRelNodes lObjs rObjs)
   (HM.union lArrs rArrs)
   (HM.union lAggs rAggs)
   where
-    (BaseNode pfx f whr ordBy limit offset lExtrs lObjs lArrs lAggs) = lNodeDet
-    (BaseNode _   _ _   _     _     _      rExtrs rObjs rArrs rAggs) = rNodeDet
+    (BaseNode pfx dExp f whr ordBy limit offset lExtrs lObjs lArrs lAggs) = lNodeDet
+    (BaseNode _ _  _ _   _     _     _      rExtrs rObjs rArrs rAggs) = rNodeDet
 
 -- should only be used to merge obj rel nodes
 mergeRelNodes :: RelNode -> RelNode -> RelNode
@@ -561,15 +597,19 @@ mkJoinCond baseTableAls colMapn =
     S.BECompare S.SEQ (S.mkQIdenExp baseTableAls lCol) (S.mkSIdenExp rCol)
 
 baseNodeToSel :: S.BoolExp -> BaseNode -> S.Select
-baseNodeToSel joinCond (BaseNode pfx fromItem whr ordByM limitM offsetM extrs objRels arrRels aggs) =
+baseNodeToSel joinCond baseNode =
   S.mkSelect
   { S.selExtr    = [S.Extractor e $ Just a | (a, e) <- HM.toList extrs]
   , S.selFrom    = Just $ S.FromExp [joinedFrom]
   , S.selOrderBy = ordByM
   , S.selLimit   = S.LimitExp . S.intToSQLExp <$> limitM
   , S.selOffset  = S.OffsetExp <$> offsetM
+  , S.selDistinct = dExp
   }
   where
+    BaseNode pfx dExp fromItem whr ordByM limitM
+             offsetM extrs objRels arrRels aggs
+             = baseNode
     -- this is the table which is aliased as "pfx.base"
     baseSel = S.mkSelect
       { S.selExtr  = [S.Extractor S.SEStar Nothing]

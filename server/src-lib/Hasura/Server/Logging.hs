@@ -45,6 +45,7 @@ data WebHookLog
   { whlLogLevel   :: !L.LogLevel
   , whlStatusCode :: !(Maybe N.Status)
   , whlUrl        :: !T.Text
+  , whlMethod     :: !N.StdMethod
   , whlError      :: !(Maybe H.HttpException)
   , whlResponse   :: !(Maybe T.Text)
   } deriving (Show)
@@ -66,6 +67,7 @@ instance ToJSON H.HttpException where
 instance ToJSON WebHookLog where
   toJSON whl = object [ "status_code" .= (N.statusCode <$> whlStatusCode whl)
                       , "url" .= whlUrl whl
+                      , "method" .= show (whlMethod whl)
                       , "http_error" .= whlError whl
                       , "response" .= whlResponse whl
                       ]
@@ -74,17 +76,17 @@ type WebHookLogger = WebHookLog -> IO ()
 
 data AccessLog
   = AccessLog
-  { alStatus         :: !N.Status
-  , alMethod         :: !T.Text
-  , alSource         :: !T.Text
-  , alPath           :: !T.Text
-  , alHttpVersion    :: !N.HttpVersion
-  , alDetail         :: !(Maybe Value)
-  , alRequestId      :: !(Maybe T.Text)
-  , alHasuraUser     :: !(Maybe UserVars)
-  , alQueryHash      :: !(Maybe T.Text)
-  , alResponseSize   :: !(Maybe Int64)
-  , alResponseTime   :: !(Maybe Double)
+  { alStatus       :: !N.Status
+  , alMethod       :: !T.Text
+  , alSource       :: !T.Text
+  , alPath         :: !T.Text
+  , alHttpVersion  :: !N.HttpVersion
+  , alDetail       :: !(Maybe Value)
+  , alRequestId    :: !(Maybe T.Text)
+  , alHasuraUser   :: !(Maybe UserVars)
+  , alQueryHash    :: !(Maybe T.Text)
+  , alResponseSize :: !(Maybe Int64)
+  , alResponseTime :: !(Maybe Double)
   } deriving (Show, Eq)
 
 instance L.ToEngineLog AccessLog where

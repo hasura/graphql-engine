@@ -3,6 +3,11 @@
 Hasura GraphQL Engine on Azure with Container Instances and Postgres
 ====================================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 This guide talks about how to deploy Hasura GraphQL Engine on `Azure
 <https://azure.microsoft.com>`__ using `Container Instances
 <https://azure.microsoft.com/en-us/services/container-instances/>`__ with `Azure
@@ -129,8 +134,9 @@ Launch Hasura using a container instance:
       --name hasura-graphql-engine \
       --image hasura/graphql-engine \
       --dns-name-label "<dns-name-label>" \
-      --ports 8080 \
-      --secure-environment-variables "HASURA_GRAPHQL_DATABASE_URL=<database-url>"
+      --ports 80 \
+      --environment-variables "HASURA_GRAPHQL_SERVER_PORT"="80" "HASURA_GRAPHQL_ENABLE_CONSOLE"="true" \
+      --secure-environment-variables "HASURA_GRAPHQL_DATABASE_URL"="<database-url>"
 
 ``<database-url>`` should be replaced by the following format:
 
@@ -168,7 +174,7 @@ Visit the following URL for the Hasura Console:
 
 .. code:: 
 
-   http://<dns-name-label>.westus.azurecontainer.io:8080/console
+   http://<dns-name-label>.westus.azurecontainer.io/console
 
 Replace ``<dns-name-label>`` with the label given earlier.
 
