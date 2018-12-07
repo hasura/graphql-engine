@@ -22,6 +22,7 @@ query:
     } 
 response:
   errors:
-  - path: $.selectionSet.insert_author.args.objects
-    error: "Uniqueness violation. duplicate key value violates unique constraint \"author_name_key\""
-    code: constraint-violation
+  - extensions:
+      code: constraint-violation
+      path: $.selectionSet.insert_author.args.objects
+    message: "Uniqueness violation. duplicate key value violates unique constraint \"author_name_key\""

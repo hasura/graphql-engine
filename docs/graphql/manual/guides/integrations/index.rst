@@ -1,6 +1,11 @@
 Guides: Integration/migration tutorials
 =======================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+  
 Articles:
 ^^^^^^^^^
 - :doc:`auth0-jwt`

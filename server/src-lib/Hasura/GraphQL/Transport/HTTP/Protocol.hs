@@ -71,7 +71,7 @@ instance Hashable GraphQLRequest
 
 encodeGQErr :: Bool -> QErr -> J.Value
 encodeGQErr includeInternal qErr =
-  J.object [ "errors" J..= [encodeQErr includeInternal qErr]]
+  J.object [ "errors" J..= [encodeGQLErr includeInternal qErr]]
 
 data GQResp
   = GQSuccess BL.ByteString

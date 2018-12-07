@@ -1,6 +1,11 @@
 API Reference
 =============
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 GraphQL API
 -----------
 
