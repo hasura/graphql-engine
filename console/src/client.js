@@ -19,13 +19,107 @@ import getRoutes from './routes';
 
 import reducer from './reducer';
 import globals from './Globals';
+import Endpoints from './Endpoints';
+import {
+  filterEventsBlockList,
+  filterPayloadAllowList,
+} from './telemetryFilter';
+
+const analyticsUrl = Endpoints.telemetryServer;
+let analyticsConnection;
+try {
+  analyticsConnection = new WebSocket(analyticsUrl);
+} catch (error) {
+  console.error(error);
+}
+
+const onError = error => {
+  console.log('WebSocket Error for Events' + error);
+};
+
+const onClose = () => {
+  try {
+    analyticsConnection = new WebSocket(analyticsUrl);
+  } catch (error) {
+    console.error(error);
+  }
+  analyticsConnection.onclose = onClose();
+  analyticsConnection.onerror = onError();
+};
+
+function analyticsLogger({ getState }) {
+  return next => action => {
+    // Call the next dispatch method in the middleware chain.
+    const returnValue = next(action);
+    // check if analytics tracking is enabled
+    if (getState().main.telemetryEnabled) {
+      const serverVersion = getState().main.serverVersion;
+      const actionType = action.type;
+      const url = window.location.pathname;
+
+      const reqBody = {
+        server_version: serverVersion,
+        event_type: actionType,
+        url: url,
+      };
+
+      let isLocationType = false;
+      if (actionType === '@@router/LOCATION_CHANGE') {
+        isLocationType = true;
+      }
+      // filter events
+      if (!filterEventsBlockList.includes(actionType)) {
+        if (
+          analyticsConnection &&
+          analyticsConnection.readyState === analyticsConnection.OPEN
+        ) {
+          // When the connection is open, send data to the server
+          if (isLocationType) {
+            // capture page views
+            const payload = action.payload;
+            reqBody.url = payload.pathname;
+            reqBody.event_data = JSON.stringify(payload);
+            analyticsConnection.send(
+              JSON.stringify({ data: reqBody, topic: 'console-pageviews' })
+            ); // Send the data
+          } else {
+            // capture events
+            // check for allowed list
+            if (filterPayloadAllowList.includes(actionType)) {
+              reqBody.event_data = action.data
+                ? JSON.stringify(action.data)
+                : null;
+            } else {
+              reqBody.event_data = null;
+            }
+            analyticsConnection.send(
+              JSON.stringify({ data: reqBody, topic: 'console_test' })
+            ); // Send the data
+          }
+          // check for possible error events and store more data?
+        } else {
+          // retry websocket connection
+          // analyticsConnection = new WebSocket(analyticsUrl);
+        }
+      }
+    }
+    // This will likely be the action itself, unless
+    // a middleware further in chain changed it.
+    return returnValue;
+  };
+}
 
 // Create the store
 let _finalCreateStore;
 
 if (__DEVELOPMENT__) {
   const tools = [
-    applyMiddleware(thunk, routerMiddleware(browserHistory), createLogger()),
+    applyMiddleware(
+      thunk,
+      routerMiddleware(browserHistory),
+      createLogger(),
+      analyticsLogger
+    ),
     require('redux-devtools').persistState(
       window.location.href.match(/[?&]debug_session=([^&]+)\b/)
     ),
