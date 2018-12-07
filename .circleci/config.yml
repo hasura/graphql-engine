@@ -369,53 +369,6 @@ jobs:
         paths:
           - _console_output
 
-  test_and_build_console_old:
-    docker:
-    - image: hasura/graphql-engine-console-builder:v0.3
-      environment:
-        CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
-    - image: circleci/postgres:10-alpine-postgis
-      environment:
-        POSTGRES_USER: gql_test
-        POSTGRES_DB: gql_test
-    working_directory: ~/graphql-engine
-    parallelism: 4
-    steps:
-    - checkout
-    - attach_workspace:
-        at: /build
-    - restore_cache:
-        key:
-          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
-    - run:
-        name: install dependencies
-        working_directory: console
-        command: make ci-deps
-    - save_cache:
-        key:
-          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
-        paths:
-        - console/node_modules
-        - ~/.npm
-        - ~/.cache
-    - *wait_for_postgres
-    - run:
-        name: test console
-        command: .circleci/test-console.sh
-    - run:
-        name: build console
-        working_directory: console
-        command: |
-          make build
-          make ci-copy-assets
-    - store_artifacts:
-        path: /build/_console_output
-        destination: console
-    - persist_to_workspace:
-        root: /build
-        paths:
-          - _console_output
-
   deploy:
     docker:
     - image: hasura/graphql-engine-deployer:v0.3
@@ -438,6 +391,24 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - check_build_worthiness
+    - pytest_server_pg_10.4:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - pytest_server_pg_9.6:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - pytest_server_pg_9.5:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - all_server_tests_pass:
+        <<: *filter_only_vtags
+        requires:
+        - pytest_server_pg_10.4
+        - pytest_server_pg_9.6
+        - pytest_server_pg_9.5
     - test_and_build_cli:
         <<: *filter_only_vtags
         requires:
