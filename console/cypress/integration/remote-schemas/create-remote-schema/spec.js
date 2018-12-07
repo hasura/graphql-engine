@@ -18,7 +18,7 @@ export const checkCreateRemoteSchemaRoute = () => {
     },
   });
 
-  cy.wait(2000);
+  cy.wait(5000);
   cy.get(getElementFromAlias('data-create-remote-schemas')).click();
   cy.url().should('eq', `${baseUrl}/remote-schemas/manage/add`);
   cy.wait(5000);
@@ -60,6 +60,7 @@ export const createSimpleRemoteSchema = () => {
 
 export const failRSDuplicateSchemaName = () => {
   cy.visit('remote-schemas/manage/add');
+  cy.wait(5000);
   cy.get(getElementFromAlias('remote-schema-schema-name'))
     .clear()
     .type(getRemoteSchemaName(1, testName));
@@ -74,6 +75,7 @@ export const failRSDuplicateSchemaName = () => {
 
 export const failRSDuplicateSchemaNodes = () => {
   cy.visit('remote-schemas/manage/add');
+  cy.wait(5000);
   cy.get(getElementFromAlias('remote-schema-schema-name'))
     .clear()
     .type(getRemoteSchemaName(2, testName));
@@ -95,6 +97,7 @@ export const deleteSimpleRemoteSchemaFailUserConfirmationError = () => {
       },
     }
   );
+  cy.wait(5000);
 
   cy.get(getElementFromAlias('remote-schemas-modify')).click();
   cy.wait(5000);
@@ -118,6 +121,7 @@ export const deleteSimpleRemoteSchema = () => {
       },
     }
   );
+  cy.wait(5000);
 
   cy.get(getElementFromAlias('remote-schemas-modify')).click();
   cy.wait(5000);
@@ -132,6 +136,7 @@ export const deleteSimpleRemoteSchema = () => {
 
 export const failWithRemoteSchemaEnvUrl = () => {
   cy.visit('remote-schemas/manage/add');
+  cy.wait(5000);
   cy.get(getElementFromAlias('remote-schema-schema-name'))
     .clear()
     .type(getRemoteSchemaName(3, testName));
@@ -152,6 +157,8 @@ export const failWithRemoteSchemaEnvUrl = () => {
 
 export const failWithRemoteSchemaEnvHeader = () => {
   cy.visit('remote-schemas/manage/add');
+
+  cy.wait(5000);
   cy.get(getElementFromAlias('remote-schema-schema-name'))
     .clear()
     .type(getRemoteSchemaName(3, testName));
@@ -190,6 +197,7 @@ export const failWithRemoteSchemaEnvHeader = () => {
 
 export const passWithRemoteSchemaHeader = () => {
   cy.visit('remote-schemas/manage/add');
+  cy.wait(5000);
   cy.get(getElementFromAlias('remote-schema-schema-name'))
     .clear()
     .type(getRemoteSchemaName(3, testName));
@@ -233,7 +241,7 @@ export const passWithEditRemoteSchema = () => {
       testName
     )}/modify`
   );
-  cy.wait(3000);
+  cy.wait(5000);
   cy.get(getElementFromAlias('remote-schema-edit-modify-btn'))
     .should('exist')
     .click();
@@ -265,6 +273,7 @@ export const deleteRemoteSchema = () => {
     }
   );
 
+  cy.wait(5000);
   cy.get(getElementFromAlias('remote-schemas-modify')).click();
   cy.wait(5000);
   cy.get(getElementFromAlias('remote-schema-edit-delete-btn')).click();
