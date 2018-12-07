@@ -64,13 +64,14 @@ isAccessKeySet :: AuthMode -> T.Text
 isAccessKeySet AMNoAuth = "false"
 isAccessKeySet _        = "true"
 
-mkConsoleHTML :: AuthMode -> IO T.Text
-mkConsoleHTML authMode =
+mkConsoleHTML :: T.Text -> AuthMode -> IO T.Text
+mkConsoleHTML urlRoot authMode =
   bool (initErrExit errMsg) (return res) (null errs)
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
                    object [ "version" .= consoleVersion
                           , "isAccessKeySet" .= isAccessKeySet authMode
+                          , "urlRoot" .= urlRoot
                           ]
     errMsg = "Fatal Error : console template rendering failed"
              ++ show errs
@@ -276,8 +277,9 @@ mkWaiApp
   -> AuthMode
   -> CorsConfig
   -> Bool
+  -> T.Text
   -> IO (Wai.Application, IORef SchemaCache)
-mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole = do
+mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole urlRoot = do
     cacheRef <- do
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
@@ -291,7 +293,7 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
           cacheLock mode httpManager
 
     spockApp <- spockAsApp $ spockT id $
-                httpApp mRootDir corsCfg serverCtx enableConsole
+                httpApp mRootDir corsCfg serverCtx enableConsole urlRoot
 
     let runTx tx = runExceptT $ Q.runTx pool (isoLevel, Nothing) tx
 
@@ -299,8 +301,8 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp, cacheRef)
 
-httpApp :: Maybe String -> CorsConfig -> ServerCtx -> Bool -> SpockT IO ()
-httpApp mRootDir corsCfg serverCtx enableConsole = do
+httpApp :: Maybe String -> CorsConfig -> ServerCtx -> Bool -> T.Text -> SpockT IO ()
+httpApp mRootDir corsCfg serverCtx enableConsole urlRootRaw = do
     liftIO $ putStrLn "HasuraDB is now waiting for connections"
 
     -- cors middleware
@@ -309,35 +311,35 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
 
     -- API Console and Root Dir
     if enableConsole then do
-      consoleHTML <- lift $ mkConsoleHTML $ scAuthMode serverCtx
+      consoleHTML <- lift $ mkConsoleHTML urlRoot $ scAuthMode serverCtx
       serveApiConsole consoleHTML
     else maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
 
-    get "v1/version" $ do
+    get v1Version $ do
       uncurry setHeader jsonHeader
       lazyBytes $ encode $ object [ "version" .= currentVersion ]
 
-    get    ("v1/template" <//> var) tmpltGetOrDeleteH
-    post   ("v1/template" <//> var) tmpltPutOrPostH
-    put    ("v1/template" <//> var) tmpltPutOrPostH
-    delete ("v1/template" <//> var) tmpltGetOrDeleteH
+    get    (v1Template <//> var) tmpltGetOrDeleteH
+    post   (v1Template <//> var) tmpltPutOrPostH
+    put    (v1Template <//> var) tmpltPutOrPostH
+    delete (v1Template <//> var) tmpltGetOrDeleteH
 
-    post "v1/query" $ mkSpockAction encodeQErr serverCtx $ do
+    post v1Query $ mkSpockAction encodeQErr serverCtx $ do
       query <- parseBody
       v1QueryHandler query
 
-    post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
+    post (v1Alpha1GQL <//> "/explain") $ mkSpockAction encodeQErr serverCtx $ do
       expQuery <- parseBody
       gqlExplainHandler expQuery
 
-    post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr serverCtx $ do
+    post v1Alpha1GQL $ mkSpockAction GH.encodeGQErr serverCtx $ do
       query <- parseBody
       v1Alpha1GQHandler query
 
     -- get "v1alpha1/graphql/schema" $
     --   mkSpockAction encodeQErr serverCtx v1Alpha1GQSchemaHandler
 
-    post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
+    post (api1Table <//> var <//> var) $ \tableName queryType ->
       mkSpockAction encodeQErr serverCtx $
       legacyQueryHandler (TableName tableName) queryType
 
@@ -370,5 +372,17 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
       ExecQueryTemplate (TQueryName tmpltName) tmpltArgs
 
     serveApiConsole htmlFile = do
-      get root $ redirect "/console"
-      get ("console" <//> wildcard) $ const $ html htmlFile
+      get root $ redirect $ urlRoot <> "console"
+      get (console <//> wildcard) $ const $ html htmlFile
+
+    -- routes
+    urlRoot = case T.dropAround (== '/') urlRootRaw of
+                    "" -> ""
+                    r  -> r <> "/"
+    staticUrlRoot = static $ T.unpack urlRoot
+    v1Version = staticUrlRoot <//> "v1/version"
+    v1Template = staticUrlRoot <//> "v1/template"
+    v1Query = staticUrlRoot <//> "v1/query"
+    v1Alpha1GQL = staticUrlRoot <//> "v1alpha1/graphql"
+    api1Table = staticUrlRoot <//> "api/1/table"
+    console = staticUrlRoot <//> "console"

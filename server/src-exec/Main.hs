@@ -55,6 +55,7 @@ data ServeOptions
   , soUnAuthRole    :: !(Maybe RoleName)
   , soCorsConfig    :: !CorsConfigFlags
   , soEnableConsole :: !Bool
+  , soUrlRoot       :: !(Maybe T.Text)
   } deriving (Show, Eq)
 
 data RavenMode
@@ -88,6 +89,7 @@ parseRavenMode = subparser
                 <*> parseUnAuthRole
                 <*> parseCorsConfig
                 <*> parseEnableConsole
+                <*> parseUrlRoot
 
 parseArgs :: IO RavenOptions
 parseArgs = execParser opts
@@ -133,13 +135,15 @@ main =  do
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case ravenMode of
     ROServe (ServeOptions mPort cp isoL mRootDir mAccessKey authHookC mJwtSecret
-             mUnAuthRole corsCfg enableConsole) -> do
+             mUnAuthRole corsCfg enableConsole mUrlRoot) -> do
 
       -- get all auth mode related config
       mFinalAccessKey <- considerEnv "HASURA_GRAPHQL_ACCESS_KEY" $ getAccessKey <$> mAccessKey
       mFinalAuthHook   <- mkAuthHook authHookC
       mFinalJwtSecret <- considerEnv "HASURA_GRAPHQL_JWT_SECRET" mJwtSecret
       mFinalUnAuthRole <- considerEnv "HASURA_GRAPHQL_UNAUTHORIZED_ROLE" $ getRoleTxt <$> mUnAuthRole
+      finalUrlRoot <- fromMaybe "" <$>
+                      considerEnv "HASURA_GRAPHQL_URL_ROOT" mUrlRoot
       defaultPort <- getFromEnv 8080 "HASURA_GRAPHQL_SERVER_PORT"
       let port = fromMaybe defaultPort mPort
       -- prepare auth mode
@@ -164,7 +168,7 @@ main =  do
       pool <- Q.initPGPool ci cp
       putStrLn $ "server: running on port " ++ show port
       (app, cacheRef) <- mkWaiApp isoL mRootDir loggerCtx pool httpManager
-                         am finalCorsCfg finalEnableConsole
+                         am finalCorsCfg finalEnableConsole finalUrlRoot
       let warpSettings = Warp.setPort port Warp.defaultSettings
                          -- Warp.setHost "*" Warp.defaultSettings
 

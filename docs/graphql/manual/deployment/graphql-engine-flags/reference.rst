@@ -78,6 +78,8 @@ For ``serve`` subcommand these are the flags available
                                 
        --enable-console         Enable API console. It is served at '/' and '/console'
 
+       --url-root               All APIs served at this path
+
 
 Default environment variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -130,3 +132,5 @@ These are the environment variables which are available:
 
    HASURA_GRAPHQL_ENABLE_CONSOLE        Enable API console. It is served at
                                         '/' and '/console'
+
+   HASURA_GRAPHQL_URL_ROOT               All APIs served at this path

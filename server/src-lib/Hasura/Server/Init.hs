@@ -224,3 +224,10 @@ parseEnableConsole :: Parser Bool
 parseEnableConsole = switch ( long "enable-console" <>
                               help "Enable API Console"
                             )
+
+parseUrlRoot :: Parser (Maybe T.Text)
+parseUrlRoot =
+  optional $ strOption ( long "url-root" <>
+                         metavar "URL ROOT" <>
+                         help "All APIs served at this path"
+                       )
