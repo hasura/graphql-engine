@@ -1,6 +1,11 @@
 Roles & Session variables
 =========================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The permissions system offered by Hasura GraphQL engine is extremely flexible and is built to capture complex
 use-cases conveniently.
 

@@ -20,9 +20,11 @@ class TestJWTBasic:
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'errors': [{
-                'path': '$',
-                'code': 'access-denied',
-                'error': 'Your current role is not in allowed roles'
+                'extensions': {
+                    'code': 'access-denied',
+                    'path': '$'
+                },
+                'message': 'Your current role is not in allowed roles'
             }]
         }
         self.conf['status'] = 400
@@ -37,9 +39,11 @@ class TestJWTBasic:
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'errors': [{
-                'path': '$',
-                'code': 'jwt-missing-role-claims',
-                'error': 'JWT claim does not contain x-hasura-allowed-roles'
+                'extensions': {
+                    'code': 'jwt-missing-role-claims',
+                    'path': '$'
+                },
+                'message': 'JWT claim does not contain x-hasura-allowed-roles'
             }]
         }
         self.conf['status'] = 400
@@ -55,9 +59,11 @@ class TestJWTBasic:
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'errors': [{
-                'path': '$',
-                'code': 'jwt-invalid-claims',
-                'error': 'invalid x-hasura-allowed-roles; should be a list of roles'
+                'extensions': {
+                    'code': 'jwt-invalid-claims',
+                    'path': '$'
+                },
+                'message': 'invalid x-hasura-allowed-roles; should be a list of roles'
             }]
         }
         self.conf['status'] = 400
@@ -72,9 +78,11 @@ class TestJWTBasic:
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'errors': [{
-                'path': '$',
-                'code': 'jwt-missing-role-claims',
-                'error': 'JWT claim does not contain x-hasura-default-role'
+                'extensions': {
+                    'code': 'jwt-missing-role-claims',
+                    'path': '$'
+                },
+                'message': 'JWT claim does not contain x-hasura-default-role'
             }]
         }
         self.conf['status'] = 400

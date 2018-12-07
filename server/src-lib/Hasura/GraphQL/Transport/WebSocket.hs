@@ -150,7 +150,7 @@ onConn (L.Logger logger) wsId requestHead = do
       return $ Left $ WS.RejectRequest
         (H.statusCode $ qeStatus qErr)
         (H.statusMessage $ qeStatus qErr) []
-        (BL.toStrict $ J.encode $ encodeQErr False qErr)
+        (BL.toStrict $ J.encode $ encodeGQLErr False qErr)
 
     checkPath =
       when (WS.requestPath requestHead /= "/v1alpha1/graphql") $
@@ -208,7 +208,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     runHasuraQ userInfo gCtx queryParts = do
       (opTy, fields) <- either (withComplete . preExecErr) return $
                         runReaderT (validateGQ queryParts) gCtx
-      let qTx = RQ.setHeadersTx (userVars userInfo) >>
+      let qTx = onlyOneSubcriptionField fields >>
+                RQ.setHeadersTx (userVars userInfo) >>
                 resolveSelSet userInfo gCtx opTy fields
 
       case opTy of
@@ -264,6 +265,10 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
     catchAndIgnore :: ExceptT () IO () -> IO ()
     catchAndIgnore m = void $ runExceptT m
+
+    onlyOneSubcriptionField fields =
+      unless (length fields == 1) $
+      VT.throwVE "subscription must select only one top level field"
 
 onMessage
   :: AuthMode

@@ -1,6 +1,11 @@
 Derived data in queries
 =======================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 GraphQL’s "select" query language is designed to be simple yet powerful. But there are certain
 queries that you cannot express with a simple GraphQL query. For example, getting data from a custom join.
 
@@ -13,8 +18,8 @@ type in the GraphQL query.
 
 For example, let’s see how to fetch the average article rating for each author in our author/article schema:
 
-1) Create a view
-----------------
+Step 1: Create a view
+---------------------
 Open the Hasura console and head to the ``Data -> SQL`` tab.
 
 A view that averages the rating of articles for each author can be created using the following SQL query:
@@ -27,16 +32,16 @@ A view that averages the rating of articles for each author can be created using
   WHERE author.id = article.author_id
   GROUP BY author.id
 
-2) Add a relationship
----------------------
+Step 2: Add a relationship
+--------------------------
 Relationships are generally defined using foreign-key constraints. However, you cannot define foreign-key constraints
 on/to views. So, in these cases, we can define a relationship without using a foreign-key as described
 :doc:`here <../schema/relationships/index>`.
 
 Create an object relationship, ``avg_rating``, by mapping ``author::id -> author_average_rating::id``.
 
-3) Query using the relationship
--------------------------------
+Step 3: Query using the relationship
+------------------------------------
 Now that we have the relationship between the ``author`` table and the ``author_average_rating`` view has been set
 up, we can query the aggregate data in ``author_average_rating`` as with any regular nested object.
 
