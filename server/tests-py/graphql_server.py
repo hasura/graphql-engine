@@ -24,7 +24,7 @@ class Hello(graphene.ObjectType):
     def resolve_hello(self, info, arg):
         return "Hello " + arg
 
-hello_schema = graphene.Schema(query=Hello)
+hello_schema = graphene.Schema(query=Hello, subscription=Hello)
 
 class HelloGraphQL(RequestHandler):
     def get(self, request):

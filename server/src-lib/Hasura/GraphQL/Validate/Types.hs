@@ -5,6 +5,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE TypeFamilies      #-}
 
 module Hasura.GraphQL.Validate.Types
   ( InpValInfo(..)
@@ -38,7 +39,8 @@ module Hasura.GraphQL.Validate.Types
   , fromSchemaDocQ
   , TypeMap
   , TypeLoc (..)
-  , TyEq (..)
+  --, TyEq (..)
+  , typeEq
   , AnnGValue(..)
   , AnnGObject
   , hasNullVal
@@ -65,8 +67,14 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 
-class (Eq a) => TyEq a where
-  tyEq :: a -> a -> Bool
+-- | Typeclass for equating relevant properties of various GraphQL types
+-- | defined below
+class EquatableGType a where
+  type EqProps a
+  getEqProps :: a -> EqProps a
+
+typeEq :: (Show (EqProps a), EquatableGType a, Eq (EqProps a)) => a -> a -> Bool
+typeEq a b = getEqProps a == getEqProps b
 
 data EnumValInfo
   = EnumValInfo
@@ -87,8 +95,9 @@ data EnumTyInfo
   , _etiLoc    :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
-instance TyEq EnumTyInfo where
-  tyEq a b = (_etiName a == _etiName b) && (_etiValues a == _etiValues b)
+instance EquatableGType EnumTyInfo where
+  type EqProps EnumTyInfo = (G.NamedType, Map.HashMap G.EnumValue EnumValInfo)
+  getEqProps ety = (,) (_etiName ety) (_etiValues ety)
 
 fromEnumTyDef :: G.EnumTypeDefinition -> TypeLoc -> EnumTyInfo
 fromEnumTyDef (G.EnumTypeDefinition descM n _ valDefs) loc =
@@ -128,10 +137,9 @@ data ObjFldInfo
   , _fiLoc    :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
-instance TyEq ObjFldInfo where
-  tyEq a b =  (_fiName a == _fiName b)
-           && (_fiTy a == _fiTy b)
-           && (_fiParams a == _fiParams b)
+instance EquatableGType ObjFldInfo where
+  type EqProps ObjFldInfo = (G.Name, G.GType, ParamMap)
+  getEqProps o = (,,) (_fiName o) (_fiTy o) (_fiParams o)
 
 fromFldDef :: G.FieldDefinition -> TypeLoc -> ObjFldInfo
 fromFldDef (G.FieldDefinition descM n args ty _) loc =
@@ -148,17 +156,10 @@ data ObjTyInfo
   , _otiFields :: !ObjFieldMap
   } deriving (Show, Eq, TH.Lift)
 
-instance TyEq ObjTyInfo where
-  -- incase of ObjTyInfo fields from the first Obj are compared with the second
-  tyEq a b = (_otiName a == _otiName b) && fldsEq
-    where
-      aFlds  = _otiFields a
-      bFlds  = _otiFields b
-      fldsEq = any (== True) $ flip map (Map.toList aFlds) $
-               \(n, fld) ->
-                 case Map.lookup n bFlds of
-                   Nothing -> False
-                   Just f  -> tyEq fld f
+instance EquatableGType ObjTyInfo where
+  type EqProps ObjTyInfo =
+    (G.NamedType, Map.HashMap G.Name (G.Name, G.GType, ParamMap))
+  getEqProps a = (,) (_otiName a) (Map.map getEqProps (_otiFields a))
 
 instance Monoid ObjTyInfo where
   mempty = ObjTyInfo Nothing (G.NamedType "") Map.empty
@@ -197,9 +198,9 @@ data InpObjTyInfo
   , _iotiLoc    :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
-instance TyEq InpObjTyInfo where
-  tyEq a b =  (_iotiName a == _iotiName b)
-           && (_iotiFields a == _iotiFields b)
+instance EquatableGType InpObjTyInfo where
+  type EqProps InpObjTyInfo = (G.NamedType, InpObjFldMap)
+  getEqProps a = (,) (_iotiName a) (_iotiFields a)
 
 fromInpObjTyDef :: G.InputObjectTypeDefinition -> TypeLoc -> InpObjTyInfo
 fromInpObjTyDef (G.InputObjectTypeDefinition descM n _ inpFlds) loc =
@@ -215,8 +216,9 @@ data ScalarTyInfo
   , _stiLoc  :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
-instance TyEq ScalarTyInfo where
-  tyEq a b =  _stiType a == _stiType b
+instance EquatableGType ScalarTyInfo where
+  type EqProps ScalarTyInfo = PGColType
+  getEqProps a = _stiType a
 
 fromScalarTyDef
   :: G.ScalarTypeDefinition

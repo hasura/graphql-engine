@@ -1586,10 +1586,12 @@ checkSchemaConflicts gCtx remoteCtx = do
   -- check type conflicts
   let hTypes      = Map.elems typeMap
       hTyNames    = map G.unNamedType $ Map.keys typeMap
+      -- get the root names from the remote schema
       rmQRootName = _otiName $ _gQueryRoot remoteCtx
       rmMRootName = maybeToList $ _otiName <$> _gMutRoot remoteCtx
-      rmRootNames = map G.unNamedType (rmQRootName:rmMRootName)
-      rmTypes     = Map.filterWithKey
+      rmSRootName = maybeToList $ _otiName <$> _gSubRoot remoteCtx
+      rmRootNames = map G.unNamedType (rmQRootName:(rmMRootName ++ rmSRootName))
+  let rmTypes     = Map.filterWithKey
                     (\k _ -> G.unNamedType k `notElem` builtinTy ++ rmRootNames)
                     $ _gTypes remoteCtx
 
@@ -1623,10 +1625,10 @@ checkSchemaConflicts gCtx remoteCtx = do
 
   where
     tyinfoEq a b = case (a, b) of
-      (TIScalar t1, TIScalar t2) -> tyEq t1 t2
-      (TIObj t1, TIObj t2)       -> tyEq t1 t2
-      (TIEnum t1, TIEnum t2)     -> tyEq t1 t2
-      (TIInpObj t1, TIInpObj t2) -> tyEq t1 t2
+      (TIScalar t1, TIScalar t2) -> typeEq t1 t2
+      (TIObj t1, TIObj t2)       -> typeEq t1 t2
+      (TIEnum t1, TIEnum t2)     -> typeEq t1 t2
+      (TIInpObj t1, TIInpObj t2) -> typeEq t1 t2
       _                          -> False
 
     hQRName = G.NamedType "query_root"
@@ -1759,14 +1761,23 @@ mergeMaybeMaps m1 m2 = case (m1, m2) of
 
 
 -- pretty print GCtx
-ppGCtx :: GCtx -> IO ()
-ppGCtx gCtx = do
-  let types = map (G.unName . G.unNamedType) $ Map.keys $ _gTypes gCtx
-      qRoot = map G.unName $ Map.keys $ _otiFields $ _gQueryRoot gCtx
-      mRoot = maybe [] (map G.unName . Map.keys . _otiFields) $ _gMutRoot gCtx
+ppGCtx :: GCtx -> String
+ppGCtx gCtx =
+  "GCtx ["
+  <> "\n  types = " <> show types
+  <> "\n  query root = " <> show qRoot
+  <> "\n  mutation root = " <> show mRoot
+  <> "\n  subscription root = " <> show sRoot
+  <> "\n]"
 
-  print ("GCtx [" :: Text)
-  print $ "  types = " <> show types
-  print $ "  query root = " <> show qRoot
-  print $ "  mutation root = " <> show mRoot
-  print ("]" :: Text)
+  where
+    types = map (G.unName . G.unNamedType) $ Map.keys $ _gTypes gCtx
+    qRoot = (,) (_otiName qRootO) $
+            map G.unName $ Map.keys $ _otiFields qRootO
+    mRoot = (,) (_otiName <$> mRootO) $
+            maybe [] (map G.unName . Map.keys . _otiFields) mRootO
+    sRoot = (,) (_otiName <$> sRootO) $
+            maybe [] (map G.unName . Map.keys . _otiFields) sRootO
+    qRootO = _gQueryRoot gCtx
+    mRootO = _gMutRoot gCtx
+    sRootO = _gSubRoot gCtx
