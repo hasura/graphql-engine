@@ -24,6 +24,14 @@ export default class Html extends Component {
     return (
       <html lang="en-us">
         <head>
+          <script async src="https://www.googletagmanager.com/gtag/js?id=UA-130585335-1"></script>
+          <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'UA-130585335-1');
+          </script>
           <link rel="icon" type="image/png" href="/rstatic/favicon.png" />
           <title>GraphiQL Online with Headers | Built by Hasura</title>
           <meta name="title" content="GraphiQL Online with Headers | Built by Hasura" />
