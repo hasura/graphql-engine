@@ -7,7 +7,7 @@ Assuming you have the basic apollo-client working as per
 https://www.apollographql.com/docs/react/essentials/get-started.html and now you want to enable subscriptions.
 
 Packages to be installed :
-^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: js
 
@@ -116,12 +116,12 @@ Below is an example where you can convert a query to subscription and see what c
 We can see that there are in total 3 places where the word ``query`` is changed to ``subscription`` and has to be taken
 care of when switching to subscriptions.
 
-.. code-block:: js
+.. code-block:: none
 
   <Query                                    <subscription
     query = {gql`          ->                 subscription = {gql`
         query {                                 subscription {
-
+          ...                                     ...
 
 .. admonition:: Caveat
 
