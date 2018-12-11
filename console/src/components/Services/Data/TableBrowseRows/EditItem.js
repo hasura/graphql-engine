@@ -4,7 +4,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import { editItem, E_ONGOING_REQ } from './EditActions';
 import globals from '../../../../Globals';
 import { modalClose } from './EditActions';
-
+import Jsontoggler from '../../../Common/Toggler/Jsontoggler';
 // import RichTextEditor from 'react-rte';
 import { replace } from 'react-router-redux';
 
@@ -144,15 +144,18 @@ class EditItem extends Component {
           />
         );
       } else if (colType === 'json' || colType === 'jsonb') {
+        const standardEditProps = {
+          className: `form-control ${styles.insertBox}`,
+          onClick: clicker,
+          ref: inputRef,
+          defaultValue: JSON.stringify(oldItem[colName]),
+          'data-test': `typed-input-${i}`,
+          type: 'text',
+        };
         typedInput = (
-          <input
-            placeholder={'{"name": "foo"} or [12, "asdf"]'}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={JSON.stringify(oldItem[colName])}
-            data-test={`typed-input-${i}`}
+          <Jsontoggler
+            standardProps={standardEditProps}
+            placeholderProp={'{"name": "foo"} or [12, "asdf"]'}
           />
         );
       } else if (colType === 'boolean') {

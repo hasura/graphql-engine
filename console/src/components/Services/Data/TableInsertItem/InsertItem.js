@@ -4,6 +4,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import { insertItem, I_RESET } from './InsertActions';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
+import Jsontoggler from '../../../Common/Toggler/Jsontoggler';
 
 class InsertItem extends Component {
   constructor() {
@@ -152,12 +153,9 @@ class InsertItem extends Component {
       if (colType === 'json' || colType === 'jsonb') {
         // JSON/JSONB
         typedInput = (
-          <input
-            {...standardInputProps}
-            placeholder={getPlaceholder(colType)}
-            defaultValue={
-              clone && colName in clone ? JSON.stringify(clone[colName]) : ''
-            }
+          <Jsontoggler
+            standardProps={standardInputProps}
+            placeholderProp={getPlaceholder(colType)}
           />
         );
       }
@@ -299,7 +297,12 @@ class InsertItem extends Component {
                       // default
                       return;
                     } else {
-                      inputValues[colName] = refs[colName].valueNode.value;
+                      if (refs[colName].valueNode.props !== undefined) {
+                        inputValues[colName] =
+                          refs[colName].valueNode.refEditor.innerText;
+                      } else {
+                        inputValues[colName] = refs[colName].valueNode.value;
+                      }
                     }
                   });
                   dispatch(insertItem(tableName, inputValues)).then(() => {
