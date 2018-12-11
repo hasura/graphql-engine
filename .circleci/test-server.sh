@@ -107,6 +107,7 @@ mkdir -p "$OUTPUT_FOLDER"
 
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
 export HGE_URL="http://localhost:8080"
+export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 
 PID=""
 WH_PID=""
@@ -166,7 +167,7 @@ fi
 
 if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
-	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & WEBHOOK #########################>\n"
+	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & WEBHOOK (GET) #########################>\n"
 
 	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
 	init_ssl
@@ -181,6 +182,19 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
 	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
 
+	kill -INT $PID
+	sleep 4
+	combine_hpc_reports
+
+  echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & WEBHOOK (POST) #########################>\n"
+  export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
+
+	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+
+  wait_for_port 8080
+
+	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
+
 	rm /etc/ssl/certs/webhook.crt
 	update-ca-certificates
 
@@ -188,7 +202,21 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 	sleep 4
 	combine_hpc_reports
 
-	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & HTTPS INSECURE WEBHOOK ########>\n"
+	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & HTTPS INSECURE WEBHOOK (GET) ########>\n"
+  export HASURA_GRAPHQL_AUTH_HOOK_MODE="GET"
+
+	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+
+	wait_for_port 8080
+
+	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
+
+	kill -INT $PID
+	sleep 4
+	combine_hpc_reports
+
+	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & HTTPS INSECURE WEBHOOK (POST) ########>\n"
+  export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 
 	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 

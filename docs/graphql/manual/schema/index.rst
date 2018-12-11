@@ -1,6 +1,11 @@
 Schema
 ======
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Hasura GraphQL engine automatically generates your GraphQL schema and resolvers based on your tables/views
 in Postgres. **You don't need to write a GraphQL schema or resolvers.**
 
@@ -11,8 +16,7 @@ version control.
 Hasura GraphQL engine lets you do anything you would usually do with Postgres by giving you GraphQL over native
 Postgres constructs.
 
-See:
-^^^^
+**See:**
 
 .. toctree::
   :maxdepth: 1
@@ -20,11 +24,8 @@ See:
   Basics <basics>
   Relationships <relationships/index>
   Customise with views <views>
-  Customise with schema stitching <schema-stitching>
-  Adding custom resolvers <custom-resolvers>
+  Default field values <default-values/index>
   Enum type fields <enums>
-  Default field values <default-values>
-  Set values using SQL functions/stored procedures <sql-functions>
   Using an existing database <using-existing-database>
   Export GraphQL schema <export-graphql-schema>
   How schema generation works <how-it-works>

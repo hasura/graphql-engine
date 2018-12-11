@@ -5,6 +5,11 @@
 Hasura GraphQL Engine documentation
 ===================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The Hasura GraphQL engine lets you setup a GraphQL server and event triggers over a Postgres database in minutes.
 
 
@@ -17,6 +22,7 @@ The Hasura GraphQL engine lets you setup a GraphQL server and event triggers ove
   queries/index
   mutations/index
   subscriptions/index
+  remote-schemas/index
   event-triggers/index
   auth/index
   migrations/index

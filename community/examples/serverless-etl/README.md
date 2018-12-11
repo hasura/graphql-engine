@@ -1,6 +1,6 @@
 # Serverless ETL demo using Hasura GraphQL Engine Event Triggers and Algolia Search
 
-Live demo at https://shahidh.in/hasura-serverless-etl
+Live demo at https://serverless-etl.demo.hasura.app/
 
 This application demonstrates an ETL process using event triggers on [Hasura
 GraphQL Engine](https://github.com/hasura/graphql-engine).
@@ -25,7 +25,7 @@ users add more books, the search index gets bigger.
 
 ### Step 1: Create table
 
-Goto HGE console and create the following table:
+Go to HGE console and create the following table:
 ```
 Table name: book
 
@@ -39,11 +39,11 @@ Primary key: id
 
 ### Step 2: Setup an Algolia index
 
-- Sign-up for and [Algolia account](https://www.algolia.com)
-- Goto the Dashboard, 
+- Sign-up for [Algolia account](https://www.algolia.com)
+- Go to the Dashboard, 
 - Click on `Indices` tab on the left sidebar
 - Click on `New Index` button
-- Name it `demo_serverless_etl_app`
+- Name it as `demo_serverless_etl_app`
 - Goto `API Keys` tab on the sidebar
 - Copy the `Application ID` (we'll call this `APP_ID`)
 - Click on `All API Keys` tab and then click `New API Key` button
@@ -56,7 +56,7 @@ Primary key: id
 
 ### Step 3: Deploy the cloud function
 
-- Goto `cloudfunction` directory and deploy the function:
+- Go to `cloudfunction` directory and deploy the function:
   ```bash
   gcloud beta functions deploy serverless-etl \
          --runtime nodejs8 --trigger-http \
@@ -72,7 +72,7 @@ Primary key: id
 
 ### Step 4: Create an Event Trigger
 
-Goto `Events` tab in HGE Console and add a new trigger:
+Go to `Events` tab in HGE Console and add a new trigger:
 ```
 Trigger name: book_event
 Schema/Table: public/book
@@ -84,8 +84,8 @@ Use the `TRIGGER_URL` from previous step.
 
 ### Step 5: Add configuration variables
 
-Edit `index.js`, add the following values:
-- `HGE_URL`, you GraphQL Engine URL (ending with `v1alpha1/graphql`)
+Edit `index.js` and add the following values:
+- `HGE_URL`, your GraphQL Engine URL (ending with `v1alpha1/graphql`)
 - `APP_ID`, the algolia application id
 - `SEARCH_KEY`, algolia search api key created in Step 2
 

@@ -83,12 +83,12 @@ SELECT
     q.table_schema :: text,
     q.table_name :: text,
     q.constraint_name :: text,
-    hdb_catalog.first(q.constraint_oid) :: integer as constraint_oid,
-    hdb_catalog.first(q.ref_table_table_schema) :: text as ref_table_table_schema,
-    hdb_catalog.first(q.ref_table) :: text as ref_table,
+    min(q.constraint_oid) :: integer as constraint_oid,
+    min(q.ref_table_table_schema) :: text as ref_table_table_schema,
+    min(q.ref_table) :: text as ref_table,
     json_object_agg(ac.attname, afc.attname) as column_mapping,
-    hdb_catalog.first(q.confupdtype) :: text as on_update,
-    hdb_catalog.first(q.confdeltype) :: text as on_delete
+    min(q.confupdtype) :: text as on_update,
+    min(q.confdeltype) :: text as on_delete
 FROM
     (SELECT
         ctn.nspname AS table_schema,
@@ -188,13 +188,8 @@ CREATE TABLE hdb_catalog.event_triggers
   type TEXT NOT NULL,
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
-  definition JSON,
-  query TEXT,
-  webhook TEXT NOT NULL,
-  num_retries INTEGER DEFAULT 0,
-  retry_interval INTEGER DEFAULT 10,
-  comment TEXT,
-  headers JSON
+  configuration JSON,
+  comment TEXT
 );
 
 CREATE TABLE hdb_catalog.event_log
@@ -228,3 +223,11 @@ CREATE TABLE hdb_catalog.event_invocation_logs
 );
 
 CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id);
+
+
+CREATE TABLE hdb_catalog.remote_schemas (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT UNIQUE,
+  definition JSON,
+  comment TEXT
+);

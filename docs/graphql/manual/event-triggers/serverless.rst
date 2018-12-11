@@ -1,6 +1,11 @@
 Using serverless functions
 ==========================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 You can use serverless functions along with Hasura event triggers to design an async business workflow without
 having to manage any dedicated infrastructure.
 

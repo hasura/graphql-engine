@@ -48,6 +48,7 @@ import           Data.Has
 import           Hasura.Logging
 -- import           Data.Monoid
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.Subscribe
 
 -- import           Context                  (HTTPSessionMgr (..))

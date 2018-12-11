@@ -1,6 +1,11 @@
 Filter query results / search queries
 =====================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 You can use the :ref:`where <WhereExp>` argument in your queries to filter results based on some field’s values (even
 nested objects' fields). You can even use multiple filters in the same ``where`` clause using the ``_and`` or the
 ``_or`` operators.

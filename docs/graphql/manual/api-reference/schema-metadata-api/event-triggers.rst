@@ -1,6 +1,11 @@
 Schema/Metadata API Reference: Event Triggers 
 =============================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Event triggers are used to capture database changes and send them to a configured webhook.
 
 .. _create_event_trigger:

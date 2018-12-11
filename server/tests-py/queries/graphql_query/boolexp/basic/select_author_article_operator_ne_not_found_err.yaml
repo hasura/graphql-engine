@@ -3,10 +3,11 @@ url: /v1alpha1/graphql
 status: 400
 response:
   errors:
-  - path: $.selectionSet.author.args.where.name._ne
-    error: |-
+  - extensions:
+      code: validation-failed
+      path: $.selectionSet.author.args.where.name._ne
+    message: |-
       field "_ne" not found in type: 'text_comparison_exp'
-    code: validation-failed
 query:
   query: |
     query {

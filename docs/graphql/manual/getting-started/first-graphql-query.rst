@@ -1,5 +1,12 @@
+.. _first_graphql_query:
+
 Making your first GraphQL query
 ===============================
+
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
 
 Let's create a sample table and query from it using the Hasura console, a UI tool meant for doing exactly this:
 

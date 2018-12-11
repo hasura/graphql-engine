@@ -1,6 +1,6 @@
 # Web notifications using Hasura GraphQL Engine Event Triggers and FCM
 
-Visit https://shahidhk.github.io/hasura-web-push-notifs for a live demo.
+Visit https://serverless-push.demo.hasura.app/ for a live demo.
 
 ## Pre-requisites
 
@@ -30,9 +30,9 @@ Primary key: id
 
 ### Step 2: Setup FCM
 
-- Create a new project or use an exisiting project on [Firebase
+- Create a new project or use an existing project on [Firebase
   Console](https://console.firebase.google.com).
-- Note down the Google Cloud project name is also called `PROJECT_ID`.
+- Note down the Google Cloud project name - also called `PROJECT_ID`.
 - Open the [Cloud
   Messaging](https://console.firebase.google.com/project/_/settings/cloudmessaging/)
   tab of the Firebase console Settings pane and scroll to the Web configuration
@@ -69,7 +69,7 @@ We'll deploy this webhook as a Google Cloud Function.
 ### Step 4: Setup event trigger
 
 Goto HGE console and then to the "Events" tab. Here we can add triggers which
-will be execute on insert/update/delete actions on tables configured.
+will be executed on insert/update/delete actions on tables configured.
 
 Add a new trigger with details as follows:
 

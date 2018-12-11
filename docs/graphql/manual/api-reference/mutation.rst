@@ -3,6 +3,11 @@
 API Reference - Mutation
 ========================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Insert/Upsert syntax
 --------------------
 
@@ -322,8 +327,6 @@ E.g.:
 .. parsed-literal::
 
     where: BoolExp_
-
-.. _BoolExp:
 
 BoolExp
 *******

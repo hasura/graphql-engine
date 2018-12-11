@@ -1,22 +1,26 @@
 Securing the GraphQL endpoint (Docker)
 ======================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 To make sure that your GraphQL endpoint and the Hasura console are not publicly accessible, you need to
 configure an access key.
 
-Run the docker command with an access-key flag
-----------------------------------------------
+Run the docker command with an access-key env var
+-------------------------------------------------
 
 .. code-block:: bash
-   :emphasize-lines: 7
+   :emphasize-lines: 5
 
     #! /bin/bash
-    docker run -p 8080:8080 \
-     hasura/graphql-engine:latest \
-     graphql-engine \
-     --database-url postgres://username:password@hostname:port/dbname \
-     serve \
-     --access-key mysecretkey
+    docker run -d -p 8080:8080 \
+     -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@hostname:port/dbname \
+     -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
+     -e HASURA_GRAPHQL_ACCESS_KEY=mysecretkey \
+     hasura/graphql-engine:latest
 
 
 .. note::

@@ -1,6 +1,11 @@
 Control access to certain data
 ==============================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 If you want to control access to sensitive fields in a table, you can either use views to expose only the safe fields
 or :ref:`restrict access via permissions <restrict_columns>`.
 
@@ -9,8 +14,8 @@ The following section describes setting up a view for this purpose.
 For example, to mask access to the ``article`` table and only expose the ``id``, ``title`` and ``rating`` columns
 from this table:
 
-1) Create a view
-----------------
+Step 1: Create a view
+---------------------
 Open the Hasura console and head to the ``Data -> SQL`` tab.
 
 Create a view with data from only the required (or safe) columns:
@@ -21,8 +26,8 @@ Create a view with data from only the required (or safe) columns:
     SELECT id, title, rating 
     FROM article;
 
-2) Modify permissions
----------------------
+Step 2: Modify permissions
+--------------------------
 You will need to revoke permission (if already granted) from the source table and grant access to the newly created
 view. So, in our example, we do the following:
 
@@ -30,8 +35,8 @@ view. So, in our example, we do the following:
 
 #. Grant access permissions to the ``article_safe`` view
 
-3) Query the view
------------------
+Step 3: Query the view
+----------------------
 You can now query the newly created view like you would a regular table. For example, the following query will access
 only the *safe* fields:
 

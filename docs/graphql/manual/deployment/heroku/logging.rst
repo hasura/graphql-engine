@@ -1,6 +1,11 @@
 Hasura GraphQL engine server logs (Heroku)
 ==========================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 You can use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`_ to check logs
 of Hasura GraphQL engine deployed on Heroku:
 

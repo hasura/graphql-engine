@@ -6,6 +6,7 @@ const defaultState = {
   operations: { insert: [], update: [], delete: [] },
   selectedOperations: { insert: false, update: false, delete: false },
   webhookURL: '',
+  webhookUrlType: 'url',
   retryConf: null,
   ongoingRequest: false,
   lastError: null,
