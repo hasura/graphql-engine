@@ -372,13 +372,15 @@ httpApp mRootDir corsCfg serverCtx enableConsole urlRootRaw = do
       ExecQueryTemplate (TQueryName tmpltName) tmpltArgs
 
     serveApiConsole htmlFile = do
-      get root $ redirect $ urlRoot <> "console"
+      get root $ redirect consoleRoot
+      get staticUrlRoot $ redirect consoleRoot
       get (console <//> wildcard) $ const $ html htmlFile
 
     -- routes
     urlRoot = case T.dropAround (== '/') urlRootRaw of
                     "" -> ""
                     r  -> r <> "/"
+    consoleRoot = urlRoot <> "console"
     staticUrlRoot = static $ T.unpack urlRoot
     v1Version = staticUrlRoot <//> "v1/version"
     v1Template = staticUrlRoot <//> "v1/template"
