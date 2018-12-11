@@ -231,8 +231,6 @@ runQueryM rq = withPathK "args" $ case rq of
 
   RQRunSql q -> runRunSQL q
 
-  RQBulk qs ->
-    withPathK "args" $ do
-    respList <- indexedMapM runQueryM qs
-    let bsVector = V.fromList respList
-    return $ BB.toLazyByteString $ encodeJSONVector BB.lazyByteString bsVector
+  RQBulk qs -> do
+    respVector <- V.fromList <$> indexedMapM runQueryM qs
+    return $ BB.toLazyByteString $ encodeJSONVector BB.lazyByteString respVector
