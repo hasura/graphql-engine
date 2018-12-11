@@ -3,9 +3,10 @@ url: /v1alpha1/graphql
 status: 400
 response:
   errors:
-  - path: $.variableValues[0].area.coordinates[0]
-    error: the first and last locations have to be equal for a LinearRing
-    code: parse-failed
+  - extensions:
+      code: parse-failed
+      path: $.variableValues[0].area.coordinates[0]
+    message: the first and last locations have to be equal for a LinearRing
 query:
   variables:
     areas:

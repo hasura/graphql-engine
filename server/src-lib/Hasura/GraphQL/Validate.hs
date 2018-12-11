@@ -145,6 +145,10 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
 
   selSet <- flip runReaderT valCtx $ denormSelSet [] opRoot $
             G._todSelectionSet opDef
+
+  when (G._todType opDef == G.OperationTypeSubscription && length selSet > 1) $
+    throwVE "subscription must select only one top level field"
+
   return (G._todType opDef, selSet)
 
 

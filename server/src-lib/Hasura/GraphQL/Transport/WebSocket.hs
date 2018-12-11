@@ -146,7 +146,7 @@ onConn (L.Logger logger) wsId requestHead = do
       return $ Left $ WS.RejectRequest
         (H.statusCode $ qeStatus qErr)
         (H.statusMessage $ qeStatus qErr) []
-        (BL.toStrict $ J.encode $ encodeQErr False qErr)
+        (BL.toStrict $ J.encode $ encodeGQLErr False qErr)
 
     checkPath =
       when (WS.requestPath requestHead /= "/v1alpha1/graphql") $
@@ -202,9 +202,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     runHasuraQ userInfo gCtx queryParts = do
       (opTy, fields) <- either (withComplete . preExecErr) return $
                         runReaderT (validateGQ queryParts) gCtx
-      let qTx = withUserInfo userInfo $
-                resolveSelSet userInfo gCtx opTy fields
-
+      let qTx = withUserInfo userInfo $ resolveSelSet userInfo gCtx opTy fields
       case opTy of
         G.OperationTypeSubscription -> do
           let lq = LQ.LiveQuery userInfo q

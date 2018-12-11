@@ -3,10 +3,11 @@ url: /v1alpha1/graphql
 status: 400
 response:
   errors:
-  - path: $.selectionSet.author.selectionSet.notPresentCol
-    error: |-
+  - extensions:
+      code: validation-failed
+      path: $.selectionSet.author.selectionSet.notPresentCol
+    message: |-
       field "notPresentCol" not found in type: 'author'
-    code: validation-failed
 query:
   query: |
     query {
