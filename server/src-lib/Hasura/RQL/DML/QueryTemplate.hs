@@ -41,12 +41,10 @@ data ExecQueryTemplate
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ExecQueryTemplate)
 
-type EQTP1 = StateT (DS.Seq Q.PrepArg) P1
-
 getParamValue
   :: TemplateArgs
   -> TemplateParamConf
-  -> EQTP1 Value
+  -> DMLP1 Value
 getParamValue params (TemplateParamConf paramName paramVal) =
   maybe paramMissing return $ M.lookup paramName params <|> paramVal
   where
@@ -66,7 +64,7 @@ buildPrepArg
   :: TemplateArgs
   -> PGColType
   -> Value
-  -> EQTP1 S.SQLExp
+  -> DMLP1 S.SQLExp
 buildPrepArg args pct val =
   case val of
     Object _ -> do
@@ -78,7 +76,7 @@ buildPrepArg args pct val =
     withParamErrMsg tpc t =
       "when processing parameter " <> tpcParam tpc  <<> " : " <> t
 
-decodeIntValue :: TemplateArgs -> Value -> EQTP1 Int
+decodeIntValue :: TemplateArgs -> Value -> DMLP1 Int
 decodeIntValue args val =
   case val of
    Object _ -> do
@@ -87,7 +85,7 @@ decodeIntValue args val =
      decodeValue v
    _        -> decodeValue val
 
-mkSelQWithArgs :: SelectQueryT -> TemplateArgs -> EQTP1 SelectQuery
+mkSelQWithArgs :: SelectQueryT -> TemplateArgs -> DMLP1 SelectQuery
 mkSelQWithArgs (DMLQuery tn (SelectG c w o lim offset)) args = do
   intLim <- mapM (decodeIntValue args) lim
   intOffset <- mapM (decodeIntValue args) offset
@@ -99,13 +97,13 @@ convQT
   -> QueryT
   -> m QueryTProc
 convQT args qt = case qt of
-  QTInsert q -> fmap QTPInsert $ peelSt $
+  QTInsert q -> fmap QTPInsert $ liftDMLP1 $
                 R.convInsertQuery decodeParam binRHSBuilder q
-  QTSelect q -> fmap QTPSelect $ peelSt $
+  QTSelect q -> fmap QTPSelect $ liftDMLP1 $
                 mkSelQWithArgs q args >>= R.convSelectQuery f
-  QTUpdate q -> fmap QTPUpdate $ peelSt $ R.validateUpdateQueryWith f q
-  QTDelete q -> fmap QTPDelete $ peelSt $ R.validateDeleteQWith f q
-  QTCount q  -> fmap QTPCount $ peelSt $ RC.validateCountQWith f q
+  QTUpdate q -> fmap QTPUpdate $ liftDMLP1 $ R.validateUpdateQueryWith f q
+  QTDelete q -> fmap QTPDelete $ liftDMLP1 $ R.validateDeleteQWith f q
+  QTCount q  -> fmap QTPCount $ liftDMLP1 $ RC.validateCountQWith f q
   QTBulk q   -> fmap QTPBulk $ mapM (convQT args) q
   where
     decodeParam val = do
@@ -114,8 +112,6 @@ convQT args qt = case qt of
       R.decodeInsObjs v
 
     f = buildPrepArg args
-    peelSt m =
-      liftP1 $ runStateT m DS.empty
 
 execQueryTemplateP1
   :: (UserInfoM m, QErrM m, CacheRM m)

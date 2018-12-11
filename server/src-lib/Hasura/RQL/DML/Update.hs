@@ -173,8 +173,8 @@ validateUpdateQueryWith f uq = do
 validateUpdateQuery
   :: (QErrM m, UserInfoM m, CacheRM m)
   => UpdateQuery -> m (UpdateQueryP1, DS.Seq Q.PrepArg)
-validateUpdateQuery updQ =
-  liftP1 $ flip runStateT DS.empty $ validateUpdateQueryWith binRHSBuilder updQ
+validateUpdateQuery =
+  liftDMLP1 . validateUpdateQueryWith binRHSBuilder
 
 updateQueryToTx :: (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 updateQueryToTx (u, p) =

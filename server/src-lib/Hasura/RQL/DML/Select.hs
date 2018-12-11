@@ -310,7 +310,7 @@ phaseOne
   :: (QErrM m, UserInfoM m, CacheRM m)
   => SelectQuery -> m (AnnSel, DS.Seq Q.PrepArg)
 phaseOne =
-  liftP1 . flip runStateT DS.empty . convSelectQuery binRHSBuilder
+  liftDMLP1 . convSelectQuery binRHSBuilder
 
 phaseTwo :: (MonadTx m) => (AnnSel, DS.Seq Q.PrepArg) -> m RespBody
 phaseTwo =

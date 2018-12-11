@@ -109,7 +109,7 @@ validateCountQ
   :: (QErrM m, UserInfoM m, CacheRM m)
   => CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
 validateCountQ =
-  liftP1. flip runStateT DS.empty . validateCountQWith binRHSBuilder
+  liftDMLP1 . validateCountQWith binRHSBuilder
 
 countQToTx
   :: (QErrM m, MonadTx m)

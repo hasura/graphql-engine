@@ -93,7 +93,7 @@ validateDeleteQ
   :: (QErrM m, UserInfoM m, CacheRM m)
   => DeleteQuery -> m (DeleteQueryP1, DS.Seq Q.PrepArg)
 validateDeleteQ =
-  liftP1 . flip runStateT DS.empty . validateDeleteQWith binRHSBuilder
+  liftDMLP1 . validateDeleteQWith binRHSBuilder
 
 deleteQueryToTx :: (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 deleteQueryToTx (u, p) =

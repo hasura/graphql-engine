@@ -18,13 +18,25 @@ import qualified Data.HashSet                 as HS
 import qualified Data.Sequence                as DS
 import qualified Data.Text                    as T
 
-type DMLP1 = StateT (DS.Seq Q.PrepArg) P1
+newtype DMLP1 a
+  = DMLP1 {unDMLP1 :: StateT (DS.Seq Q.PrepArg) P1 a}
+  deriving ( Functor, Applicative
+           , Monad
+           , MonadState (DS.Seq Q.PrepArg)
+           , MonadError QErr
+           )
+
+liftDMLP1
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => DMLP1 a -> m (a, DS.Seq Q.PrepArg)
+liftDMLP1 =
+  liftP1 . flip runStateT DS.empty . unDMLP1
 
 instance CacheRM DMLP1 where
-  askSchemaCache = lift askSchemaCache
+  askSchemaCache = DMLP1 $ lift askSchemaCache
 
 instance UserInfoM DMLP1 where
-  askUserInfo = lift askUserInfo
+  askUserInfo = DMLP1 $ lift askUserInfo
 
 mkAdminRolePermInfo :: TableInfo -> RolePermInfo
 mkAdminRolePermInfo ti =

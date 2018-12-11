@@ -211,9 +211,9 @@ convInsQ
   :: (QErrM m, UserInfoM m, CacheRM m)
   => InsertQuery
   -> m (InsertQueryP1, DS.Seq Q.PrepArg)
-convInsQ insQ =
-  liftP1 $ flip runStateT DS.empty $ convInsertQuery
-  (withPathK "objects" . decodeInsObjs) binRHSBuilder insQ
+convInsQ =
+  liftDMLP1 .
+  convInsertQuery (withPathK "objects" . decodeInsObjs) binRHSBuilder
 
 insertP2 :: (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 insertP2 (u, p) =
