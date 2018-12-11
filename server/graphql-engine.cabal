@@ -222,7 +222,6 @@ library
                      , Hasura.Logging
                      , Network.URI.Extended
                      , Ops
-                     , TH
 
   other-modules:       Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
@@ -307,7 +306,6 @@ executable graphql-engine
                      , string-conversions
 
   other-modules:     Ops
-                     TH
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries

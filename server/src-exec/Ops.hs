@@ -6,7 +6,7 @@ module Ops
   ) where
 
 import           Data.Time.Clock              (UTCTime)
-import           TH
+import           Language.Haskell.TH.Syntax (Q, TExp, unTypeQ)
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
@@ -18,6 +18,7 @@ import           Hasura.SQL.Types
 import qualified Data.Aeson                   as A
 import qualified Data.ByteString.Lazy         as BL
 import qualified Data.Text                    as T
+import qualified Data.Yaml.TH               as Y
 
 import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
@@ -81,15 +82,15 @@ initCatalogStrict createSchema initTime =  do
     Q.Discard () <- Q.multiQ $(Q.sqlFromFile "src-rsr/initialise.sql")
     return ()
 
-  -- Build the metadata query
+  -- add default metadata
   void $ runQueryM metadataQuery
 
-  -- Execute the query
-  -- void $ snd <$> tx
   setAllAsSystemDefined >> addVersion initTime
   return "initialise: successfully initialised"
 
   where
+    metadataQuery =
+      $(unTypeQ (Y.decodeFile "src-rsr/hdb_metadata.yaml" :: Q (TExp RQLQuery)))
     needsPgCryptoExt :: Q.PGTxErr -> QErr
     needsPgCryptoExt e@(Q.PGTxErr _ _ _ err) =
       case err of
@@ -172,12 +173,12 @@ from1To2 = do
   -- migrate database
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_1.sql")
-  -- migrate metadata
-  -- tx <- liftEither $ buildTxAny adminUserInfo
-  --                    emptySchemaCache httpMgr migrateMetadataFrom1
   void $ runQueryM migrateMetadataFrom1
   -- set as system defined
   setAsSystemDefined
+  where
+    migrateMetadataFrom1 =
+      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_1.yaml" :: Q (TExp RQLQuery)))
 
 from2To3 :: (MonadTx m) => m ()
 from2To3 = liftTx $ Q.catchE defaultTxErrorHandler $ do
@@ -193,13 +194,12 @@ from4To5
 from4To5 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_4_to_5.sql")
-  -- migrate metadata
-  -- tx <- liftEither $ buildTxAny adminUserInfo
-  --                    emptySchemaCache httpMgr migrateMetadataFrom4
-  -- void tx
   void $ runQueryM migrateMetadataFrom4
   -- set as system defined
   setAsSystemDefined
+  where
+    migrateMetadataFrom4 =
+      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_4_to_5.yaml" :: Q (TExp RQLQuery)))
 
 
 from3To4 :: (MonadTx m) => m ()
