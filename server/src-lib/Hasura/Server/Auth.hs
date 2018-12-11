@@ -35,7 +35,7 @@ import qualified Network.HTTP.Client     as H
 import qualified Network.HTTP.Types      as N
 import qualified Network.Wreq            as Wreq
 
-import           Hasura.HTTP.Utils       (wreqOptions)
+import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -213,7 +213,8 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
 
     logAndThrow err = do
       liftIO $ L.unLogger logger $
-        WebHookLog L.LevelError Nothing urlT method (Just err) Nothing
+        WebHookLog L.LevelError Nothing urlT method
+        (Just $ HttpException err) Nothing
       throw500 "Internal Server Error"
 
     filteredHeaders = flip filter reqHeaders $ \(n, _) ->

@@ -17,7 +17,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.Wreq                  as Wreq
 
-import           Hasura.HTTP.Utils             (wreqOptions)
+import           Hasura.HTTP                   (wreqOptions)
 import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
 import           Hasura.RQL.Types
 

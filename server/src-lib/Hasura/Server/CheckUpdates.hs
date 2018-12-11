@@ -16,7 +16,7 @@ import qualified Network.HTTP.Client   as H
 import qualified Network.Wreq          as Wreq
 import qualified System.Log.FastLogger as FL
 
-import           Hasura.HTTP.Utils
+import           Hasura.HTTP
 import           Hasura.Logging        (LoggerCtx (..))
 import           Hasura.Prelude
 import           Hasura.Server.Version (currentVersion)

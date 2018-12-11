@@ -24,7 +24,7 @@ import qualified Network.Wreq                           as Wreq
 
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.HTTP.Utils
+import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 

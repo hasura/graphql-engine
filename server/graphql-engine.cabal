@@ -205,7 +205,7 @@ library
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP
 
-                     , Hasura.HTTP.Utils
+                     , Hasura.HTTP
 
                      , Data.Text.Extended
                      , Data.Sequence.NonEmpty
