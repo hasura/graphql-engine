@@ -55,6 +55,7 @@ For ``serve`` subcommand these are the flags available
        --root-dir           This static dir is served at / and takes precedence over
                             all routes
        --enable-console     Enable API console. It is served at '/' and '/console'
+       --disable-telemetry  Disable console telemetry
 
 
 Default environment variables
@@ -99,3 +100,4 @@ These are the environment variables which are available:
    HASURA_GRAPHQL_UNAUTHORIZED_ROLE Unauthorized role, used when access-key is not sent in access-key
                                     only mode or "Authorization" header is absent in JWT mode
    HASURA_GRAPHQL_ENABLE_CONSOLE    Enable API console. It is served at '/' and '/console'
+   HASURA_GRAPHQL_DISABLE_TELEMETRY Disable console telemetry

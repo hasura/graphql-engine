@@ -60,17 +60,21 @@ import           Hasura.SQL.Types
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
 
-isAccessKeySet :: AuthMode -> T.Text
-isAccessKeySet AMNoAuth = "false"
-isAccessKeySet _        = "true"
+boolToText :: Bool -> T.Text
+boolToText = bool "false" "true"
 
-mkConsoleHTML :: AuthMode -> IO T.Text
-mkConsoleHTML authMode =
+isAccessKeySet :: AuthMode -> T.Text
+isAccessKeySet AMNoAuth = boolToText False
+isAccessKeySet _        = boolToText True
+
+mkConsoleHTML :: Bool -> AuthMode -> IO T.Text
+mkConsoleHTML disableTelemetry authMode =
   bool (initErrExit errMsg) (return res) (null errs)
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
                    object [ "version" .= consoleVersion
                           , "isAccessKeySet" .= isAccessKeySet authMode
+                          , "disableTelemetry" .= boolToText disableTelemetry
                           ]
     errMsg = "Fatal Error : console template rendering failed"
              ++ show errs
@@ -276,8 +280,9 @@ mkWaiApp
   -> AuthMode
   -> CorsConfig
   -> Bool
+  -> Bool
   -> IO (Wai.Application, IORef SchemaCache)
-mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole = do
+mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole disableTelemetry = do
     cacheRef <- do
       pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
         Q.catchE defaultTxErrorHandler initStateTx
@@ -291,7 +296,7 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
           cacheLock mode httpManager
 
     spockApp <- spockAsApp $ spockT id $
-                httpApp mRootDir corsCfg serverCtx enableConsole
+                httpApp mRootDir corsCfg serverCtx enableConsole disableTelemetry
 
     let runTx tx = runExceptT $ Q.runTx pool (isoLevel, Nothing) tx
 
@@ -299,8 +304,8 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp, cacheRef)
 
-httpApp :: Maybe String -> CorsConfig -> ServerCtx -> Bool -> SpockT IO ()
-httpApp mRootDir corsCfg serverCtx enableConsole = do
+httpApp :: Maybe String -> CorsConfig -> ServerCtx -> Bool -> Bool -> SpockT IO ()
+httpApp mRootDir corsCfg serverCtx enableConsole disableTelemetry = do
     liftIO $ putStrLn "HasuraDB is now waiting for connections"
 
     -- cors middleware
@@ -309,7 +314,7 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
 
     -- API Console and Root Dir
     if enableConsole then do
-      consoleHTML <- lift $ mkConsoleHTML $ scAuthMode serverCtx
+      consoleHTML <- lift $ mkConsoleHTML disableTelemetry $ scAuthMode serverCtx
       serveApiConsole consoleHTML
     else maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
 

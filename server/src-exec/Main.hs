@@ -45,16 +45,17 @@ data RavenOptions
 
 data ServeOptions
   = ServeOptions
-  { soPort          :: !(Maybe Int)
-  , soConnParams    :: !Q.ConnParams
-  , soTxIso         :: !Q.TxIsolation
-  , soRootDir       :: !(Maybe String)
-  , soAccessKey     :: !(Maybe AccessKey)
-  , soWebHook       :: !(Maybe Webhook)
-  , soJwtSecret     :: !(Maybe Text)
-  , soUnAuthRole    :: !(Maybe RoleName)
-  , soCorsConfig    :: !CorsConfigFlags
-  , soEnableConsole :: !Bool
+  { soPort             :: !(Maybe Int)
+  , soConnParams       :: !Q.ConnParams
+  , soTxIso            :: !Q.TxIsolation
+  , soRootDir          :: !(Maybe String)
+  , soAccessKey        :: !(Maybe AccessKey)
+  , soWebHook          :: !(Maybe Webhook)
+  , soJwtSecret        :: !(Maybe Text)
+  , soUnAuthRole       :: !(Maybe RoleName)
+  , soCorsConfig       :: !CorsConfigFlags
+  , soEnableConsole    :: !Bool
+  , soDisableTelemetry :: !Bool
   } deriving (Show, Eq)
 
 data RavenMode
@@ -88,6 +89,7 @@ parseRavenMode = subparser
                 <*> parseUnAuthRole
                 <*> parseCorsConfig
                 <*> parseEnableConsole
+                <*> parseDisableTelemetry
 
 parseArgs :: IO RavenOptions
 parseArgs = execParser opts
@@ -103,12 +105,11 @@ printJSON = BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a) => a -> IO ()
 printYaml = BC.putStrLn . Y.encode
 
-getEnableConsoleEnv :: IO Bool
-getEnableConsoleEnv = do
-  mVal <- fmap T.pack <$> lookupEnv enableConsoleEnvVar
+getBoolEnv :: String -> IO Bool
+getBoolEnv envVar = do
+  mVal <- fmap T.pack <$> lookupEnv envVar
   maybe (return False) (parseAsBool . T.toLower) mVal
   where
-    enableConsoleEnvVar = "HASURA_GRAPHQL_ENABLE_CONSOLE"
     truthVals = ["true", "t", "yes", "y"]
     falseVals = ["false", "f", "no", "n"]
 
@@ -117,7 +118,7 @@ getEnableConsoleEnv = do
       | t `elem` falseVals = return False
       | otherwise = putStrLn errMsg >> exitFailure
 
-    errMsg = "Fatal Error: " ++ enableConsoleEnvVar
+    errMsg = "Fatal Error: " ++ envVar
              ++ " is not valid boolean text. " ++ "True values are "
              ++ show truthVals ++ " and  False values are " ++ show falseVals
              ++ ". All values are case insensitive"
@@ -134,7 +135,7 @@ main =  do
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case ravenMode of
     ROServe (ServeOptions mPort cp isoL mRootDir mAccessKey mWebHook mJwtSecret
-             mUnAuthRole corsCfg enableConsole) -> do
+             mUnAuthRole corsCfg enableConsole disableTelemetry) -> do
 
       -- get all auth mode related config
       mFinalAccessKey <- considerEnv "HASURA_GRAPHQL_ACCESS_KEY" $ getAccessKey <$> mAccessKey
@@ -154,7 +155,11 @@ main =  do
       finalCorsDomain <- fromMaybe "*" <$> considerEnv "HASURA_GRAPHQL_CORS_DOMAIN" (ccDomain corsCfg)
       let finalCorsCfg = CorsConfigG finalCorsDomain $ ccDisabled corsCfg
       -- enable console config
-      finalEnableConsole <- bool getEnableConsoleEnv (return True) enableConsole
+      finalEnableConsole <- bool (getBoolEnv "HASURA_GRAPHQL_ENABLE_CONSOLE")
+                            (return True) enableConsole
+      -- disable telemetry config
+      finalDisableTelemetry <- bool (getBoolEnv "HASURA_GRAPHQL_DISABLE_TELEMETRY")
+                               (return True) disableTelemetry
       -- init catalog if necessary
       initialise ci httpManager
       -- migrate catalog if necessary
@@ -163,12 +168,13 @@ main =  do
       pool <- Q.initPGPool ci cp
       putStrLn $ "server: running on port " ++ show port
       (app, cacheRef) <- mkWaiApp isoL mRootDir loggerCtx pool httpManager
-                         am finalCorsCfg finalEnableConsole
+                         am finalCorsCfg finalEnableConsole finalDisableTelemetry
       let warpSettings = Warp.setPort port Warp.defaultSettings
                          -- Warp.setHost "*" Warp.defaultSettings
 
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
+
 
       maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
       evFetchMilliSec  <- getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"

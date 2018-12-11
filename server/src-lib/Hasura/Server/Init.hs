@@ -209,3 +209,8 @@ parseEnableConsole :: Parser Bool
 parseEnableConsole = switch ( long "enable-console" <>
                               help "Enable API Console"
                             )
+
+parseDisableTelemetry :: Parser Bool
+parseDisableTelemetry = switch ( long "disable-telemetry" <>
+                                 help "Disable console telemetry"
+                               )
