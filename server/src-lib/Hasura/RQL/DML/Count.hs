@@ -128,14 +128,3 @@ runCount
   => CountQuery -> m RespBody
 runCount q =
   validateCountQ q >>= countQToTx
-
--- phaseTwo = phaseTwo
-
--- instance HDBQuery CountQuery where
-
---   type Phase1Res CountQuery = (CountQueryP1, DS.Seq Q.PrepArg)
---   validateCountQ = flip runStateT DS.empty . countP1 binRHSBuilder
-
---   phaseTwo _ = phaseTwo
-
---   schemaCachePolicy = SCPNoChange

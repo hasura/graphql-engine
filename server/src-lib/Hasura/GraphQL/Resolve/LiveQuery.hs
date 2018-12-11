@@ -92,7 +92,7 @@ addLiveQuery
   -- the query
   -> LiveQuery
   -- the transaction associated with this query
-  -> LazyTx QErr BL.ByteString
+  -> LazyRespTx
   -- a unique operation id
   -> k
   -- the action to be executed when result changes

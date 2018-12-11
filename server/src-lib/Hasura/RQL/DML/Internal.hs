@@ -26,11 +26,6 @@ instance CacheRM DMLP1 where
 instance UserInfoM DMLP1 where
   askUserInfo = lift askUserInfo
 
--- peelDMLP1 :: QCtx -> DMLP1 a -> Either QErr (a, [Q.PrepArg])
--- peelDMLP1 qEnv m = do
---   (a, prepSeq) <- runP1 qEnv $ runStateT m DS.empty
---   return (a, toList prepSeq)
-
 mkAdminRolePermInfo :: TableInfo -> RolePermInfo
 mkAdminRolePermInfo ti =
   RolePermInfo (Just i) (Just s) (Just u) (Just d)
@@ -126,10 +121,6 @@ checkPermOnCol pt allowedCols pgCol = do
       , " does not have permission to "
       , permTypeToCode pt <> " column " <>> pgCol
       ]
-
--- type PrepArgsM m = (MonadState (DS.Seq Q.PrepArg) m)
-
--- type BinRHS = StateT (DS.Seq Q.PrepArg)
 
 binRHSBuilder
   :: PGColType -> Value -> DMLP1 S.SQLExp
