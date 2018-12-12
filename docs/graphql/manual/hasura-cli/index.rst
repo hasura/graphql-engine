@@ -67,6 +67,7 @@ Refer to :doc:`uninstall-hasura-cli`.
    hasura metadata <hasura_metadata>
    hasura metadata apply <hasura_metadata_apply>
    hasura metadata export <hasura_metadata_export>
+   hasura metadata reload <hasura_metadata_reload>
    hasura metadata reset <hasura_metadata_reset>
    hasura migrate <hasura_migrate>
    hasura migrate apply <hasura_migrate_apply>
