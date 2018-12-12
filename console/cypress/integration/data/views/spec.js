@@ -404,7 +404,7 @@ export const passVDeleteRelationships = () => {
   cy.on('window:alert', str => {
     expect(str === 'Are you sure?').to.be.true;
   });
-  cy.wait(15000);
+  cy.wait(7000);
   validateColumn(
     'author_average_rating_vt',
     ['avg', { name: 'author', columns: ['name'] }],
@@ -418,7 +418,7 @@ export const passVDeleteView = () => {
   cy.on('window:confirm', str => {
     expect(str === 'Are you sure').to.be.true;
   });
-  cy.wait(15000);
+  cy.wait(7000);
   // cy.get('.notification-error');
   validateView('author_average_rating_vt', 'failure');
 };
@@ -430,9 +430,9 @@ export const Deletetable = name => {
   cy.on('window:alert', str => {
     expect(str === 'Are you sure?').to.be.true;
   });
-  cy.wait(15000);
+  cy.wait(7000);
   validateCT(name, 'failure');
-  cy.wait(15000);
+  cy.wait(7000);
 };
 
 export const passVDeleteTables = () => {
