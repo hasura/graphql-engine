@@ -55,18 +55,20 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
 
   introspectRes :: (FromIntrospection IntrospectionResult) <-
     either schemaErr return $ J.eitherDecode respData
-  let (G.SchemaDocument tyDefs, qRootN, mRootN, _) =
+  let (G.SchemaDocument tyDefs, qRootN, mRootN, sRootN) =
         fromIntrospection introspectRes
   let etTypeInfos = mapM fromRemoteTyDef tyDefs
   typeInfos <- either schemaErr return etTypeInfos
   let typMap = VT.mkTyInfoMap typeInfos
       mQrTyp = Map.lookup qRootN typMap
       mMrTyp = maybe Nothing (\mr -> Map.lookup mr typMap) mRootN
+      mSrTyp = maybe Nothing (\sr -> Map.lookup sr typMap) sRootN
   qrTyp <- liftMaybe noQueryRoot mQrTyp
   let mRmQR = VT.getObjTyM qrTyp
       mRmMR = join $ VT.getObjTyM <$> mMrTyp
+      mRmSR = join $ VT.getObjTyM <$> mSrTyp
   rmQR <- liftMaybe (err400 Unexpected "query root has to be an object type") mRmQR
-  return $ GS.RemoteGCtx typMap rmQR mRmMR Nothing
+  return $ GS.RemoteGCtx typMap rmQR mRmMR mRmSR
 
   where
     noQueryRoot = err400 Unexpected "query root not found in remote schema"
@@ -95,6 +97,7 @@ mkDefaultRemoteGCtx
 mkDefaultRemoteGCtx =
   foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GS.emptyGCtx
 
+-- merge a remote schema `gCtx` into current `gCtxMap`
 mergeRemoteSchema
   :: (MonadError QErr m)
   => GS.GCtxMap
@@ -117,10 +120,12 @@ mergeGCtx gCtx rmMergedGCtx = do
   GS.checkSchemaConflicts gCtx rmMergedGCtx
   let newQR = mergeQueryRoot gCtx rmMergedGCtx
       newMR = mergeMutRoot gCtx rmMergedGCtx
+      newSR = mergeSubRoot gCtx rmMergedGCtx
       newTyMap = mergeTyMaps hsraTyMap rmTypes newQR newMR
       updatedGCtx = gCtx { GS._gTypes = newTyMap
                          , GS._gQueryRoot = newQR
                          , GS._gMutRoot = newMR
+                         , GS._gSubRoot = newSR
                          }
   return updatedGCtx
 
@@ -129,6 +134,7 @@ convRemoteGCtx rmGCtx =
   GS.emptyGCtx { GS._gTypes     = GS._rgTypes rmGCtx
                , GS._gQueryRoot = GS._rgQueryRoot rmGCtx
                , GS._gMutRoot   = GS._rgMutationRoot rmGCtx
+               , GS._gSubRoot   = GS._rgSubscriptionRoot rmGCtx
                }
 
 
@@ -155,6 +161,24 @@ mkNewEmptyMutRoot = VT.ObjTyInfo (Just "mutation root")
 mkNewMutRoot :: VT.ObjFieldMap -> VT.ObjTyInfo
 mkNewMutRoot flds = VT.ObjTyInfo (Just "mutation root")
                     (G.NamedType "mutation_root") flds
+
+mergeSubRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
+mergeSubRoot a b =
+  let objA' = fromMaybe mempty $ GS._gSubRoot a
+      objB  = fromMaybe mempty $ GS._gSubRoot b
+      objA  = newRootOrEmpty objA' objB
+      merged = objA <> objB
+  in bool (Just merged) Nothing $ merged == mempty
+  where
+    newRootOrEmpty x y =
+      if x == mempty && y /= mempty
+      then mkNewEmptySubRoot
+      else x
+
+mkNewEmptySubRoot :: VT.ObjTyInfo
+mkNewEmptySubRoot = VT.ObjTyInfo (Just "subscription root")
+                    (G.NamedType "subscription_root") Map.empty
+
 
 mergeTyMaps
   :: VT.TypeMap

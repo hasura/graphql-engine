@@ -270,6 +270,7 @@ class ApiRequest extends Component {
             data={this.props}
             dispatch={this.props.dispatch}
             headerFocus={this.props.headerFocus}
+            queryParams={this.props.queryParams}
           />
         );
       default:
@@ -320,6 +321,7 @@ ApiRequest.propTypes = {
   route: PropTypes.object.isRequired,
   numberOfTables: PropTypes.number.isRequired,
   headerFocus: PropTypes.bool.isRequired,
+  queryParams: PropTypes.object.isRequired,
 };
 
 export default ApiRequest;

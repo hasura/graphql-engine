@@ -274,6 +274,18 @@ class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
     def test_articles_order_by_rel_author_rel_contact_phone(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/articles_order_by_rel_author_rel_contact_phone.yaml')
 
+    def test_album_order_by_tracks_count(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_count.yaml')
+
+    def test_album_order_by_tracks_duration_avg(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_duration_avg.yaml')
+
+    def test_album_order_by_tracks_max_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_max_name.yaml')
+
+    def test_album_order_by_tracks_bytes_stddev(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_bytes_stddev.yaml')
+
     def test_employee_distinct_department_order_by_salary_desc(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/employee_distinct_department_order_by_salary_desc.yaml')
 
