@@ -1,0 +1,14 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE person (
+        id SERIAL PRIMARY KEY,
+        name TEXT
+      );
+
+- type: track_table
+  args:
+    schema: public
+    name: person
