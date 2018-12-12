@@ -1650,19 +1650,28 @@ checkSchemaConflicts
   :: (MonadError QErr m)
   => GCtx -> GCtx -> m ()
 checkSchemaConflicts gCtx remoteCtx = do
-  -- check type conflicts
   let typeMap     = _gTypes gCtx -- hasura typemap
-      hTypes      = map G.unNamedType $ Map.keys typeMap
+  -- check type conflicts
+  let hTypes      = Map.elems typeMap
+      hTyNames    = map G.unNamedType $ Map.keys typeMap
+      -- get the root names from the remote schema
       rmQRootName = _otiName $ _gQueryRoot remoteCtx
       rmMRootName = maybeToList $ _otiName <$> _gMutRoot remoteCtx
-      rmRootNames = map G.unNamedType (rmQRootName:rmMRootName)
-      rmTypes     = filter (`notElem` builtinTy ++ rmRootNames) $
-                    map G.unNamedType $ Map.keys $ _gTypes remoteCtx
+      rmSRootName = maybeToList $ _otiName <$> _gSubRoot remoteCtx
+      rmRootNames = map G.unNamedType (rmQRootName:(rmMRootName ++ rmSRootName))
+  let rmTypes     = Map.filterWithKey
+                    (\k _ -> G.unNamedType k `notElem` builtinTy ++ rmRootNames)
+                    $ _gTypes remoteCtx
 
-      conflictedTypes = filter (`elem` hTypes) rmTypes
+      isTyInfoSame ty = any (\t -> tyinfoEq t ty) hTypes
+      -- name is same and structure is not same
+      isSame n ty = G.unNamedType n `elem` hTyNames &&
+                    not (isTyInfoSame ty)
+      conflictedTypes = Map.filterWithKey isSame rmTypes
+      conflictedTyNames = map G.unNamedType $ Map.keys conflictedTypes
 
-  unless (null conflictedTypes) $
-    throw400 RemoteSchemaConflicts $ tyMsg conflictedTypes
+  unless (Map.null conflictedTypes) $
+    throw400 RemoteSchemaConflicts $ tyMsg conflictedTyNames
 
   -- check node conflicts
   let rmQRoot = _otiFields $ _gQueryRoot remoteCtx
@@ -1683,6 +1692,13 @@ checkSchemaConflicts gCtx remoteCtx = do
     _ -> return ()
 
   where
+    tyinfoEq a b = case (a, b) of
+      (TIScalar t1, TIScalar t2) -> typeEq t1 t2
+      (TIObj t1, TIObj t2)       -> typeEq t1 t2
+      (TIEnum t1, TIEnum t2)     -> typeEq t1 t2
+      (TIInpObj t1, TIInpObj t2) -> typeEq t1 t2
+      _                          -> False
+
     hQRName = G.NamedType "query_root"
     hMRName = G.NamedType "mutation_root"
     tyMsg ty = "types: [" <> namesToTxt ty <>
@@ -1813,14 +1829,23 @@ mergeMaybeMaps m1 m2 = case (m1, m2) of
 
 
 -- pretty print GCtx
-ppGCtx :: GCtx -> IO ()
-ppGCtx gCtx = do
-  let types = map (G.unName . G.unNamedType) $ Map.keys $ _gTypes gCtx
-      qRoot = map G.unName $ Map.keys $ _otiFields $ _gQueryRoot gCtx
-      mRoot = maybe [] (map G.unName . Map.keys . _otiFields) $ _gMutRoot gCtx
+ppGCtx :: GCtx -> String
+ppGCtx gCtx =
+  "GCtx ["
+  <> "\n  types = " <> show types
+  <> "\n  query root = " <> show qRoot
+  <> "\n  mutation root = " <> show mRoot
+  <> "\n  subscription root = " <> show sRoot
+  <> "\n]"
 
-  print ("GCtx [" :: Text)
-  print $ "  types = " <> show types
-  print $ "  query root = " <> show qRoot
-  print $ "  mutation root = " <> show mRoot
-  print ("]" :: Text)
+  where
+    types = map (G.unName . G.unNamedType) $ Map.keys $ _gTypes gCtx
+    qRoot = (,) (_otiName qRootO) $
+            map G.unName $ Map.keys $ _otiFields qRootO
+    mRoot = (,) (_otiName <$> mRootO) $
+            maybe [] (map G.unName . Map.keys . _otiFields) mRootO
+    sRoot = (,) (_otiName <$> sRootO) $
+            maybe [] (map G.unName . Map.keys . _otiFields) sRootO
+    qRootO = _gQueryRoot gCtx
+    mRootO = _gMutRoot gCtx
+    sRootO = _gSubRoot gCtx

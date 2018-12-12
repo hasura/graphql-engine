@@ -24,7 +24,7 @@ class Hello(graphene.ObjectType):
     def resolve_hello(self, info, arg):
         return "Hello " + arg
 
-hello_schema = graphene.Schema(query=Hello)
+hello_schema = graphene.Schema(query=Hello, subscription=Hello)
 
 class HelloGraphQL(RequestHandler):
     def get(self, request):
@@ -87,7 +87,6 @@ class UserQuery(graphene.ObjectType):
 
 class UserMutation(graphene.ObjectType):
     createUser = CreateUser.Field()
-
 user_schema = graphene.Schema(query=UserQuery, mutation=UserMutation)
 
 class UserGraphQL(RequestHandler):
@@ -125,11 +124,39 @@ class CountryGraphQL(RequestHandler):
         res = country_schema.execute(req.json['query'])
         return mkJSONResp(res)
 
+
+class person(graphene.ObjectType):
+    id = graphene.Int(required=True)
+    name = graphene.String()
+
+    def resolve_id(self, info):
+        return 42
+    def resolve_name(self, info):
+        return 'Arthur Dent'
+
+class PersonQuery(graphene.ObjectType):
+    person_ = graphene.Field(person)
+
+    def resolve_person_(self, info):
+        return person()
+
+person_schema = graphene.Schema(query=PersonQuery)
+
+class PersonGraphQL(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = person_schema.execute(req.json['query'])
+        return mkJSONResp(res)
+
 handlers = MkHandlers({
     '/hello': HelloWorldHandler,
     '/hello-graphql': HelloGraphQL,
     '/user-graphql': UserGraphQL,
     '/country-graphql': CountryGraphQL,
+    '/person-graphql': PersonGraphQL
 })
 
 
