@@ -525,7 +525,6 @@ class AddTrigger extends Component {
                   if (aName > bName) return 1;
                   return 0;
                 }).map(t => {
-                  console.log(t);
                   if (t.detail.table_type === 'BASE TABLE') {
                     return (
                       <option key={t.table_name} value={t.table_name}>
