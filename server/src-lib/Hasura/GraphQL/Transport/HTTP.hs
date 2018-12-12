@@ -77,9 +77,16 @@ assertSameLocationNodes typeLocs =
       _  -> Set.size (Set.fromList xs) == 1
     msg = "cannot mix nodes from two different graphql servers"
 
+-- TODO: we should retire the function asap
 getTopLevelNodes :: G.TypedOperationDefinition -> [G.Name]
 getTopLevelNodes opDef =
-  map (\(G.SelectionField f) -> G._fName f) $ G._todSelectionSet opDef
+  mapMaybe f $ G._todSelectionSet opDef
+  where
+    -- TODO: this will fail when there is a fragment at the top level
+    f = \case
+      G.SelectionField fld        -> Just $ G._fName fld
+      G.SelectionFragmentSpread _ -> Nothing
+      G.SelectionInlineFragment _ -> Nothing
 
 gatherTypeLocs :: GCtx -> [G.Name] -> [VT.TypeLoc]
 gatherTypeLocs gCtx nodes =
