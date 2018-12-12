@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
 
@@ -10,7 +11,7 @@ import           Control.Monad.STM          (atomically)
 import           Data.Time.Clock            (getCurrentTime)
 import           Options.Applicative
 import           System.Environment         (getEnvironment, lookupEnv)
-import           System.Exit                (exitFailure)
+import           System.Exit                (exitFailure, exitSuccess)
 
 import qualified Control.Concurrent         as C
 import qualified Data.Aeson                 as A
@@ -32,6 +33,7 @@ import           Hasura.Server.App          (mkWaiApp)
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
+import           Hasura.Server.Version      (currentVersion)
 
 import qualified Database.PG.Query          as Q
 import qualified Network.HTTP.Client.TLS    as TLS
@@ -62,6 +64,7 @@ data RavenMode
   | ROExport
   | ROClean
   | ROExecute
+  | ROVersion
   deriving (Show, Eq)
 
 parseRavenMode :: Env -> Parser (Either String RavenMode)
@@ -77,6 +80,8 @@ parseRavenMode env =
           ( progDesc "Clean graphql-engine's metadata to start afresh" ))
         <> command "execute" (info (pure $ Right ROExecute)
           ( progDesc "Execute a query" ))
+        <> command "version" (info (pure $ Right ROVersion)
+          (progDesc "Prints the version of GraphQL Engine"))
     )
   where
     serveOptsParser = runConfig env serveOptsconfig
@@ -113,10 +118,18 @@ printJSON = BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a) => a -> IO ()
 printYaml = BC.putStrLn . Y.encode
 
+printVersion :: RavenMode -> IO ()
+printVersion = \case
+  ROVersion -> putStrLn versionLine >> exitSuccess
+  _         -> return ()
+  where
+    versionLine = "Hasura GraphQL Engine: " ++ T.unpack currentVersion
+
 main :: IO ()
 main =  do
   env <- getEnvironment
   (RavenOptions rci ravenMode) <- parseArgs env
+  printVersion ravenMode
   ci <- either ((>> exitFailure) . putStrLn . connInfoErrModifier)
     return $ mkConnInfo rci
   printConnInfo ci
@@ -166,6 +179,7 @@ main =  do
       queryBs <- BL.getContents
       res <- runTx ci $ execQuery httpManager queryBs
       either ((>> exitFailure) . printJSON) BLC.putStrLn res
+    ROVersion -> return ()
   where
     runTx ci tx = do
       pool <- getMinimalPool ci
