@@ -1,12 +1,18 @@
 import React from 'react';
 import { deleteTrigger } from '../EventActions';
 
+const verifyDeleteTrigger = (triggerName, dispatch) => {
+  if (confirm('Are you sure?')) {
+    dispatch(deleteTrigger(triggerName));
+  }
+};
+
 const Buttons = ({ styles, dispatch, triggerName }) => (
   <div className={styles.add_mar_bottom}>
     <button
       className={'btn btn-sm btn-danger'}
       data-test="delete-trigger"
-      onClick={() => dispatch(deleteTrigger(triggerName))}
+      onClick={() => verifyDeleteTrigger(triggerName, dispatch)}
     >
       Delete Trigger
     </button>

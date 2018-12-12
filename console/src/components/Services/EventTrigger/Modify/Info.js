@@ -1,9 +1,12 @@
 import React from 'react';
+import Tooltip from './Tooltip';
 
 const Info = ({ triggerName, tableName, schemaName, triggerId, styles }) => (
   <div className={`${styles.container} ${styles.borderBottom}`}>
     <div className={styles.modifySection}>
-      <h4 className={styles.modifySectionHeading}>Info</h4>
+      <h4 className={styles.modifySectionHeading}>
+        Info <Tooltip message="These fields cannot be edited" />
+      </h4>
       <div className={styles.infoContent}>
         <table className="table table-striped table-bordered">
           <thead />

@@ -1,5 +1,6 @@
 import React from 'react';
 import Editor from './Editor';
+import Tooltip from './Tooltip';
 
 import { toggleQueryType, toggleColumn } from './Actions';
 
@@ -167,7 +168,9 @@ class OperationEditor extends React.Component {
     return (
       <div className={`${styles.container} ${styles.borderBottom}`}>
         <div className={styles.modifySection}>
-          <h4 className={styles.modifySectionHeading}>Operations</h4>
+          <h4 className={styles.modifySectionHeading}>
+            Operations <Tooltip message="Edit operations and related columns" />
+          </h4>
           <Editor
             editorCollapsed={collapsed}
             editorExpanded={expanded}

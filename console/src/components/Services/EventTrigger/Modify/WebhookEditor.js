@@ -2,6 +2,7 @@ import React from 'react';
 import Editor from './Editor';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 import { setWebhookUrl, setWebhookUrlType } from './Actions';
+import Tooltip from './Tooltip';
 
 class WebhookEditor extends React.Component {
   setValues = () => {
@@ -82,7 +83,9 @@ class WebhookEditor extends React.Component {
     return (
       <div className={`${styles.container} ${styles.borderBottom}`}>
         <div className={styles.modifySection}>
-          <h4 className={styles.modifySectionHeading}>Webhook URL</h4>
+          <h4 className={styles.modifySectionHeading}>
+            Webhook URL <Tooltip message="Edit your webhook URL" />
+          </h4>
           <Editor
             editorCollapsed={collapsed}
             editorExpanded={expanded}

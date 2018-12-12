@@ -1,5 +1,6 @@
 import React from 'react';
 import Editor from './Editor';
+import AceEditor from 'react-ace';
 
 import {
   addHeader,
@@ -8,6 +9,8 @@ import {
   setHeaderType,
   setHeaderValue,
 } from './Actions';
+import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
+import Tooltip from './Tooltip';
 
 class HeadersEditor extends React.Component {
   componentDidUpdate() {
@@ -33,53 +36,40 @@ class HeadersEditor extends React.Component {
     }
   };
 
+  handleSelectionChange = (e, i) => {
+    const { dispatch } = this.props;
+    dispatch(setHeaderType(e.target.getAttribute('value'), i));
+    dispatch(setHeaderValue('', i));
+  };
+
   render() {
     const { headers, styles, save, modifyTrigger, dispatch } = this.props;
+    const sanitiseHeaders = rawHeaders => {
+      return rawHeaders.map(h => {
+        return {
+          name: h.name,
+          value: h.value,
+          value_from_env: h.value_from_env,
+        };
+      });
+    };
     const collapsed = toggleButton => (
       <div className={styles.modifyOpsCollapsed}>
         {toggleButton('Edit')}
         {headers.length > 0 ? (
           <div className={styles.modifyHeaders}>
-            {headers.map((h, i) => {
-              const { name, value, value_from_env } = h;
-              return (
-                <div className={styles.modifyHeadersCollapsedContent} key={i}>
-                  <input
-                    type="text"
-                    className={`${styles.input} form-control ${
-                      styles.add_mar_right
-                    } ${styles.modifyHeadersTextboxDisabled}`}
-                    value={name}
-                    disabled
-                  />
-                  <select
-                    value={value_from_env ? 'env' : 'static'}
-                    className={`${styles.select} ${
-                      styles.selectWidth
-                    } form-control ${styles.add_pad_left} ${
-                      styles.add_mar_right
-                    } ${styles.modifyHeadersTextboxDisabled}`}
-                    data-test={`header-type-${i}`}
-                    disabled
-                  >
-                    <option value="static" key="0" title="static">
-                      static
-                    </option>
-                    <option value="env" key="1" title="env">
-                      from env variable
-                    </option>
-                  </select>
-                  <input
-                    type="text"
-                    className={`${styles.input} form-control ${
-                      styles.add_mar_right
-                    } ${styles.modifyHeadersTextboxDisabled}`}
-                    value={value || value_from_env}
-                    disabled
-                  />
-                </div>
-              );
-            })}
+            <AceEditor
+              mode="json"
+              theme="github"
+              name="headers"
+              value={JSON.stringify(sanitiseHeaders(headers), null, 2)}
+              minLines={4}
+              maxLines={100}
+              width="100%"
+              showPrintMargin={false}
+              showGutter={false}
+              readOnly
+            />
           </div>
         ) : (
           <div className={styles.modifyProperty}>No headers</div>
@@ -105,37 +95,28 @@ class HeadersEditor extends React.Component {
                   }}
                   placeholder="key"
                 />
-                <select
-                  value={h.type}
-                  className={styles.modifyHeadersTextbox}
-                  className={`${styles.select} ${
-                    styles.selectWidth
-                  } form-control ${styles.add_pad_left} ${
-                    styles.add_mar_right
-                  } ${styles.modifyHeadersTextbox}`}
-                  onChange={e => {
-                    dispatch(setHeaderType(e.target.value, i));
-                  }}
-                  data-test={`header-type-${i}`}
-                >
-                  <option value="static" key="0" title="static">
-                    static
-                  </option>
-                  <option value="env" key="1" title="env">
-                    from env variable
-                  </option>
-                </select>
-                <input
-                  type="text"
-                  className={`${styles.input} form-control ${
-                    styles.add_mar_right
-                  } ${styles.modifyHeadersTextbox}`}
-                  value={h.value}
-                  onChange={e => {
-                    dispatch(setHeaderValue(e.target.value, i));
-                  }}
-                  placeholder={'value'}
-                />
+                <div>
+                  <DropdownButton
+                    dropdownOptions={[
+                      { display_text: 'Static', value: 'static' },
+                      { display_text: 'From env var', value: 'env' },
+                    ]}
+                    title={h.type === 'env' ? 'From env var' : 'Static'}
+                    dataKey={h.type === 'env' ? 'env' : 'static'}
+                    onButtonChange={e => this.handleSelectionChange(e, i)}
+                    onInputChange={e =>
+                      dispatch(setHeaderValue(e.target.value, i))
+                    }
+                    required
+                    bsClass={styles.dropdown_button}
+                    inputVal={h.value}
+                    id={`header-value-${i}`}
+                    inputPlaceHolder={
+                      h.type === 'env' ? 'HEADER_FROM_ENV' : 'value'
+                    }
+                    testId={`header-value-${i}`}
+                  />
+                </div>
                 <i
                   className={`${styles.fontAwosomeClose}
                       ${styles.removeHeader}
@@ -157,7 +138,10 @@ class HeadersEditor extends React.Component {
     return (
       <div className={`${styles.container} ${styles.borderBottom}`}>
         <div className={styles.modifySection}>
-          <h4 className={styles.modifySectionHeading}>Headers</h4>
+          <h4 className={styles.modifySectionHeading}>
+            Headers{' '}
+            <Tooltip message="Edit headers to be sent along with the event to your webhook" />
+          </h4>
           <Editor
             editorCollapsed={collapsed}
             editorExpanded={expanded}

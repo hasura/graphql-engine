@@ -2,6 +2,7 @@ import React from 'react';
 import Editor from './Editor';
 
 import { setRetryNum, setRetryInterval } from './Actions';
+import Tooltip from './Tooltip';
 
 class RetryConfEditor extends React.Component {
   setValues = () => {
@@ -84,7 +85,10 @@ class RetryConfEditor extends React.Component {
     return (
       <div className={`${styles.container} ${styles.borderBottom}`}>
         <div className={styles.modifySection}>
-          <h4 className={styles.modifySectionHeading}>Retry configuration</h4>
+          <h4 className={styles.modifySectionHeading}>
+            Retry configuration{' '}
+            <Tooltip message="Edit your retry settings for event failures" />
+          </h4>
           <Editor
             editorCollapsed={collapsed}
             editorExpanded={expanded}
