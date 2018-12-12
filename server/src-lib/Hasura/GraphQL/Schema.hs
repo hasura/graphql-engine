@@ -1127,6 +1127,57 @@ mkConflictActionTy = mkHsraEnumTyInfo (Just desc) ty $ mapFromL _eviVal
 --         )
 --       ]
 
+mkTabAggOpOrdByTy :: QualifiedTable -> G.Name -> G.NamedType
+mkTabAggOpOrdByTy tn op =
+  G.NamedType $ qualTableToName tn <> "_" <> op <> "_order_by"
+
+{-
+input table_<op>_order_by {
+  col1: order_by
+  .     .
+  .     .
+}
+-}
+
+mkTabAggOpOrdByInpObjs
+  :: QualifiedTable -> [PGCol] -> [PGCol] -> [InpObjTyInfo]
+mkTabAggOpOrdByInpObjs tn numCols compCols =
+  map (mkInpObjTy numCols) numAggOps <> map (mkInpObjTy compCols) compAggOps
+  where
+
+    mkDesc (G.Name op) = G.Description $ "order by " <> op <> "() on columns of table " <>> tn
+    mkInpObjTy cols op = mkHsraInpTyInfo (Just $ mkDesc op) (mkTabAggOpOrdByTy tn op) $
+                         fromInpValL $ map mkColInpVal cols
+    mkColInpVal c = InpValInfo Nothing (mkColName c) $ G.toGT
+                    ordByTy
+
+mkTabAggOrdByTy :: QualifiedTable -> G.NamedType
+mkTabAggOrdByTy tn =
+  G.NamedType $ qualTableToName tn <> "_aggregate_order_by"
+
+{-
+input table_aggregate_order_by {
+count: order_by
+  <op-name>: table_<op-name>_order_by
+}
+-}
+
+mkTabAggOrdByInpObj
+  :: QualifiedTable -> [PGCol] -> [PGCol] -> InpObjTyInfo
+mkTabAggOrdByInpObj tn numCols compCols =
+  mkHsraInpTyInfo (Just desc) (mkTabAggOrdByTy tn) $ fromInpValL $
+  numOpOrdBys <> compOpOrdBys <> [countInpVal]
+  where
+    desc = G.Description $
+      "order by aggregate values of table " <>> tn
+
+    numOpOrdBys = bool (map mkInpValInfo numAggOps) [] $ null numCols
+    compOpOrdBys = bool (map mkInpValInfo compAggOps) [] $ null compCols
+    mkInpValInfo op = InpValInfo Nothing op $ G.toGT $
+                     mkTabAggOpOrdByTy tn op
+
+    countInpVal = InpValInfo Nothing "count" $ G.toGT ordByTy
+
 mkOrdByTy :: QualifiedTable -> G.NamedType
 mkOrdByTy tn =
   G.NamedType $ qualTableToName tn <> "_order_by"
@@ -1149,14 +1200,17 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
     inpObjTy =
       mkHsraInpTyInfo (Just desc) namedTy $ fromInpValL $
       map mkColOrdBy pgCols <> map mkObjRelOrdBy objRels
+      <> mapMaybe mkArrRelAggOrdBy arrRels
 
     namedTy = mkOrdByTy tn
     desc = G.Description $
       "ordering options when selecting data from " <>> tn
 
     pgCols = lefts selFlds
-    objRels = flip filter (rights selFlds) $ \(ri, _, _, _, _) ->
-      riType ri == ObjRel
+    relFltr ty = flip filter (rights selFlds) $ \(ri, _, _, _, _) ->
+      riType ri == ty
+    objRels = relFltr ObjRel
+    arrRels = relFltr ArrRel
 
     mkColOrdBy ci = InpValInfo Nothing (mkColName $ pgiName ci) $
                     G.toGT ordByTy
@@ -1164,8 +1218,13 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
       InpValInfo Nothing (mkRelName $ riName ri) $
       G.toGT $ mkOrdByTy $ riRTable ri
 
+    mkArrRelAggOrdBy (ri, isAggAllowed, _, _, _) =
+      let ivi = InpValInfo Nothing (mkAggRelName $ riName ri) $
+            G.toGT $ mkTabAggOrdByTy $ riRTable ri
+      in bool Nothing (Just ivi) isAggAllowed
+
     ordByCtx = Map.singleton namedTy $ Map.fromList $
-               colOrdBys <> relOrdBys
+               colOrdBys <> relOrdBys <> arrRelOrdBys
     colOrdBys = flip map pgCols $ \ci ->
                                     ( mkColName $ pgiName ci
                                     , OBIPGCol ci
@@ -1174,6 +1233,11 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
                                      ( mkRelName $ riName ri
                                      , OBIRel ri fltr
                                      )
+    arrRelOrdBys = flip mapMaybe arrRels $ \(ri, isAggAllowed, fltr, _, _) ->
+                     let obItem = ( mkAggRelName $ riName ri
+                                  , OBIAgg ri fltr
+                                  )
+                     in bool Nothing (Just obItem) isAggAllowed
 
 -- newtype RootFlds
 --   = RootFlds
@@ -1239,7 +1303,7 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
       , TIInpObj <$> ordByInpObjM
       , TIObj <$> selObjM
       ]
-    aggQueryTypes = map TIObj aggObjs
+    aggQueryTypes = map TIObj aggObjs <> map TIInpObj aggOrdByInps
 
     mutationTypes = catMaybes
       [ TIInpObj <$> mutHelper viIsInsertable insInpObjM
@@ -1321,15 +1385,19 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
 
     -- table obj
     selObjM = mkTableObj tn <$> selFldsM
-    -- aggregate objs
-    aggObjs = case selPermM of
+    -- aggregate objs and order by inputs
+    (aggObjs, aggOrdByInps) = case selPermM of
       Just (True, selFlds) ->
         let numCols = (map pgiName . getNumCols) selFlds
             compCols = (map pgiName . getCompCols) selFlds
-        in [ mkTableAggObj tn
-           , mkTableAggFldsObj tn numCols compCols
-           ] <> mkColAggFldsObjs selFlds
-      _ -> []
+            objs = [ mkTableAggObj tn
+                   , mkTableAggFldsObj tn numCols compCols
+                   ] <> mkColAggFldsObjs selFlds
+            ordByInps = mkTabAggOrdByInpObj tn numCols compCols
+                        : mkTabAggOpOrdByInpObjs tn numCols compCols
+        in (objs, ordByInps)
+      _ -> ([], [])
+
     getNumCols = onlyNumCols . lefts
     getCompCols = onlyComparableCols . lefts
     onlyFloat = const $ mkScalarTy PGFloat
