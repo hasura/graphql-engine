@@ -17,7 +17,6 @@ const V_EXPAND_REL = 'ProcessedEvents/V_EXPAND_REL';
 const V_CLOSE_REL = 'ProcessedEvents/V_CLOSE_REL';
 const V_SET_ACTIVE = 'ProcessedEvents/V_SET_ACTIVE';
 const V_SET_QUERY_OPTS = 'ProcessedEvents/V_SET_QUERY_OPTS';
-const V_REQUEST_PROGRESS = 'ProcessedEvents/V_REQUEST_PROGRESS';
 const V_EXPAND_ROW = 'ProcessedEvents/V_EXPAND_ROW';
 const V_COLLAPSE_ROW = 'ProcessedEvents/V_COLLAPSE_ROW';
 // const V_ADD_WHERE;
@@ -48,7 +47,6 @@ const vMakeRequest = () => {
     const triggerList = getState().triggers.triggerList;
     const triggerSchema = triggerList.filter(t => t.name === originalTrigger);
     const triggerId = triggerSchema[0].id;
-    dispatch({ type: V_REQUEST_PROGRESS, data: true });
     const currentQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
     // count query
     const countQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
@@ -152,7 +150,6 @@ const vMakeRequest = () => {
               data: data[0],
               count: data[1].count,
             }),
-            dispatch({ type: V_REQUEST_PROGRESS, data: false }),
           ]);
         }
       },
@@ -513,8 +510,6 @@ const processedEventsReducer = (
       };
     case V_REQUEST_SUCCESS:
       return { ...viewState, rows: action.data, count: action.count };
-    case V_REQUEST_PROGRESS:
-      return { ...viewState, isProgressing: action.data };
     case V_EXPAND_ROW:
       return {
         ...viewState,

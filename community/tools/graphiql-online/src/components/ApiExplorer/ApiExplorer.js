@@ -6,13 +6,23 @@ import { push } from 'react-router-redux';
 
 class ApiExplorer extends Component {
   componentWillMount() {
-    const localStorageUrl = window.localStorage.getItem('ONLINE_GRAPHIQL_ENDPOINT');
-    if (!this.props.graphqlEndpoint && localStorageUrl === null) {
+    let localStorageUrl;
+    if (window.__env.graphqlEndpoint && window.__env.graphqlEndpoint !== 'undefined') {
+      localStorageUrl = window.__env.graphqlEndpoint;
+    } else {
+      localStorageUrl = window.localStorage.getItem('ONLINE_GRAPHIQL_ENDPOINT');
+    }
+    if (!this.props.graphqlEndpoint && (localStorageUrl === 'undefined' || localStorageUrl === null)) {
       this.props.dispatch(push('/'));
     }
   }
   render() {
-    const localStorageUrl = window.localStorage.getItem('ONLINE_GRAPHIQL_ENDPOINT');
+    let localStorageUrl;
+    if (window.__env.graphqlEndpoint && window.__env.graphqlEndpoint !== 'undefined') {
+      localStorageUrl = window.__env.graphqlEndpoint;
+    } else {
+      localStorageUrl = window.localStorage.getItem('ONLINE_GRAPHIQL_ENDPOINT');
+    }
     const styles = require('./ApiExplorer.scss');
     const wrapperClass = styles.apiExplorerWrapper;
     const requestStyles = '';
@@ -29,6 +39,7 @@ class ApiExplorer extends Component {
         route={this.props.route}
         dataHeaders={this.props.dataHeaders}
         headerFocus={this.props.headerFocus}
+        queryParams={this.props.location.query}
         graphqlEndpoint={localStorageUrl}
       />
     );
@@ -50,6 +61,7 @@ ApiExplorer.propTypes = {
   dispatch: PropTypes.func.isRequired,
   route: PropTypes.object.isRequired,
   headerFocus: PropTypes.bool.isRequired,
+  location: PropTypes.object.isRequired,
 };
 
 export default ApiExplorer;
