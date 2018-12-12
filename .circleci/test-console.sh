@@ -36,22 +36,10 @@ if [ "$TEST_SUITE_NUMBER" = "1" ]; then
   fi
 fi
 if [ "$TEST_SUITE_NUMBER" = "2" ]; then
-  docker run --name test_views -e TEST_ENV=MIGRATE_URL=http://${CONSOLE_HOST}:9693/apis/migrate -e TEST_CONFIG=baseUrl=http://${CONSOLE_HOST}:3000 -e 'TEST_SPECS=cypress/integration/data/views/test.js' -d -v /home/circleci/graphql-engine:/root/graphql-engine -v /home/circleci/.cache/Cypress:/root/.cache/Cypress hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine && ./.circleci/run-console-test.sh"
-  EXIT_CODE_VIEWS="$(docker wait test_views)"
-  docker logs test_views > /home/circleci/build/_console_test_logs/test_views.log
-  if [ "$EXIT_CODE_VIEWS" != "0" ]; then
-    exit 1
-  fi
-  docker run --name remote_schema -e TEST_ENV=MIGRATE_URL=http://${CONSOLE_HOST}:9693/apis/migrate -e TEST_CONFIG=baseUrl=http://${CONSOLE_HOST}:3000 -e 'TEST_SPECS=cypress/integration/remote-schemas/create-remote-schema/test.js' -d -v /home/circleci/graphql-engine:/root/graphql-engine -v /home/circleci/.cache/Cypress:/root/.cache/Cypress hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine && ./.circleci/run-console-test.sh"
-  EXIT_CODE_REMOTE_SCHEMA="$(docker wait remote_schema)"
-  docker logs remote_schema > /home/circleci/build/_console_test_logs/remote_schema.log
-  if [ "$EXIT_CODE_REMOTE_SCHEMA" != "0" ]; then
-    exit 1
-  fi
-  docker run --name migration_mode -e TEST_ENV=MIGRATE_URL=http://${CONSOLE_HOST}:9693/apis/migrate -e TEST_CONFIG=baseUrl=http://${CONSOLE_HOST}:3000 -e 'TEST_SPECS=cypress/integration/data/raw-sql/test.js,cypress/integration/data/migration-mode/test.js' -d -v /home/circleci/graphql-engine:/root/graphql-engine -v /home/circleci/.cache/Cypress:/root/.cache/Cypress hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine && ./.circleci/run-console-test.sh"
-  EXIT_CODE_MIGRATION_MODE="$(docker wait migration_mode)"
-  docker logs migration_mode > /home/circleci/build/_console_test_logs/migration_mode.log
-  if [ "$EXIT_CODE_MIGRATION_MODE" != "0" ]; then
+  docker run --name test5 -e TEST_ENV=MIGRATE_URL=http://${CONSOLE_HOST}:9693/apis/migrate -e TEST_CONFIG=baseUrl=http://${CONSOLE_HOST}:3000 -e 'TEST_SPECS=cypress/integration/data/views/test.js,cypress/integration/remote-schemas/create-remote-schema/test.js,cypress/integration/data/raw-sql/test.js,cypress/integration/data/migration-mode/test.js' -d -v /home/circleci/graphql-engine:/root/graphql-engine -v /home/circleci/.cache/Cypress:/root/.cache/Cypress hasura/graphql-engine-console-builder:v0.3 /bin/bash -c "cd /root/graphql-engine && ./.circleci/run-console-test.sh"
+  EXIT_CODE_5="$(docker wait test5)"
+  docker logs test5 > /home/circleci/build/_console_test_logs/test5.log
+  if [ "$EXIT_CODE_5" != "0" ]; then
     exit 1
   fi
 fi
