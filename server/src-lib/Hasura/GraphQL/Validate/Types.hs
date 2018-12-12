@@ -102,7 +102,7 @@ fromEnumTyDef :: G.EnumTypeDefinition -> TypeLoc -> EnumTyInfo
 fromEnumTyDef (G.EnumTypeDefinition descM n _ valDefs) loc =
   EnumTyInfo descM (G.NamedType n) enumVals loc
   where
-    enumVals = Map.fromList $
+    enumVals = Map.fromList
       [(G._evdName valDef, fromEnumValDef valDef) | valDef <- valDefs]
 
 data InpValInfo
@@ -112,6 +112,10 @@ data InpValInfo
   , _iviType :: !G.GType
   -- TODO, handle default values
   } deriving (Show, Eq, TH.Lift)
+
+instance EquatableGType InpValInfo where
+  type EqProps InpValInfo = (G.Name, G.GType)
+  getEqProps ity = (,) (_iviName ity) (_iviType ity)
 
 fromInpValDef :: G.InputValueDefinition -> InpValInfo
 fromInpValDef (G.InputValueDefinition descM n ty _) =
@@ -198,8 +202,8 @@ data InpObjTyInfo
   } deriving (Show, Eq, TH.Lift)
 
 instance EquatableGType InpObjTyInfo where
-  type EqProps InpObjTyInfo = (G.NamedType, InpObjFldMap)
-  getEqProps a = (,) (_iotiName a) (_iotiFields a)
+  type EqProps InpObjTyInfo = (G.NamedType, Map.HashMap G.Name (G.Name, G.GType))
+  getEqProps a = (,) (_iotiName a) (Map.map getEqProps $ _iotiFields a)
 
 fromInpObjTyDef :: G.InputObjectTypeDefinition -> TypeLoc -> InpObjTyInfo
 fromInpObjTyDef (G.InputObjectTypeDefinition descM n _ inpFlds) loc =
@@ -217,7 +221,7 @@ data ScalarTyInfo
 
 instance EquatableGType ScalarTyInfo where
   type EqProps ScalarTyInfo = PGColType
-  getEqProps a = _stiType a
+  getEqProps = _stiType
 
 fromScalarTyDef
   :: G.ScalarTypeDefinition
