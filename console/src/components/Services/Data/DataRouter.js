@@ -25,9 +25,7 @@ import {
 } from '.';
 
 import {
-  loadSchema,
-  loadUntrackedSchema,
-  fetchSchemaList,
+  fetchDataInit,
   UPDATE_CURRENT_SCHEMA,
   // UPDATE_DATA_HEADERS,
   // ACCESS_KEY_ERROR,
@@ -146,9 +144,7 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
         type: UPDATE_CURRENT_SCHEMA,
         currentSchema: currentSchema,
       }),
-      store.dispatch(fetchSchemaList()),
-      store.dispatch(loadSchema()),
-      store.dispatch(loadUntrackedSchema()),
+      store.dispatch(fetchDataInit()),
     ]).then(
       () => {
         cb();
