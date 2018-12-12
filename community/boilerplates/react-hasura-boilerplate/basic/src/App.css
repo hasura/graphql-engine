@@ -1,0 +1,76 @@
+.App {
+  padding: 0;
+  margin: 0;
+}
+
+.input-bar {
+  text-align: center;
+  margin: 0 auto;
+  height: 40px;
+  width: 300px;
+  margin-top: 10%;
+  border-radius: 20px;
+}
+
+p {
+  text-align: center;
+  font-size: 12px;
+  color: black;
+}
+
+.login {
+  text-align: center;
+  margin: 0 auto;
+  display: none;
+  border-radius: 10px;
+}
+
+.logged-in {
+  text-align: center;
+  margin: 0 auto;
+  border-radius: 10px;
+}
+
+.login-main {
+  text-align: center;
+  margin: 0 auto;
+}
+
+.cross {
+  color: black;
+  font-size: 20px;
+  float: right;
+  position: relative;
+  margin-left: 2em;
+  margin-top: 0.2em;
+}
+
+.cross:hover {
+  cursor: pointer;
+}
+
+.todos {
+  height: 115px;
+  width: 500px;
+  border: 1px solid black;
+  border-radius: 10px;
+  line-height: 75px;
+  text-align: center;
+  margin: 0 auto;
+  display: block;
+  margin-bottom: 1em;
+}
+
+.todos:hover {
+  cursor: pointer;
+}
+
+.todo-list, .todo-list-completed {
+  text-align: center;
+  margin: 0 auto;
+  margin-top: 2em;
+}
+
+.todo-list-completed h3 {
+  text-decoration: line-through;
+}
