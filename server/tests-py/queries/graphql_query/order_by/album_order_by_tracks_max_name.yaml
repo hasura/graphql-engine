@@ -1,0 +1,53 @@
+description: Fetch Album order by their tracks' maximum name
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    Album:
+    - album_id: 2
+      title: Face Lift
+      Tracks_aggregate:
+        aggregate:
+          stddev:
+            bytes: 653697.39166707
+        nodes:
+        - track_id: 5
+          name: Random
+        - track_id: 7
+          name: Mistress
+        - track_id: 6
+          name: Good One
+        - track_id: 4
+          name: Evil Walks
+    - album_id: 1
+      title: Big Ones
+      Tracks_aggregate:
+        aggregate:
+          stddev:
+            bytes: 4460362.9621
+        nodes:
+        - track_id: 1
+          name: Restless
+        - track_id: 2
+          name: Keepup
+        - track_id: 3
+          name: Havana
+query:
+  query: |
+    query {
+      Album(order_by: {Tracks_aggregate: {max: {name: asc}}}){
+        album_id
+        title
+        Tracks_aggregate(order_by: {name: desc}){
+          aggregate{
+            stddev{
+              bytes
+            }
+          }
+          nodes{
+            track_id
+            name
+          }
+        }
+      }
+    }

@@ -7,8 +7,6 @@
 module Hasura.RQL.DML.Select
   ( selectP2
   , selectAggP2
-  , mkSQLSelect
-  , mkAggSelect
   , convSelectQuery
   , getSelectDeps
   , module Hasura.RQL.DML.Select.Internal
@@ -29,7 +27,6 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
-import           Hasura.SQL.Rewrite             (prefixNumToAliases)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query              as Q
@@ -144,7 +141,7 @@ convOrderByElem (flds, spi) = \case
           ," and can't be used in 'order_by'"
           ]
         (relFim, relSpi) <- fetchRelDet (riName relInfo) (riRTable relInfo)
-        AOCRel relInfo (spiFilter relSpi) <$>
+        AOCObj relInfo (spiFilter relSpi) <$>
           convOrderByElem (relFim, relSpi) rest
 
 convSelectQ
@@ -163,7 +160,9 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
       return (fromPGCol pgCol, FCol colInfo)
     (ECRel relName mAlias relSelQ) -> do
       annRel <- convExtRel fieldInfoMap relName mAlias relSelQ prepValBuilder
-      return (fromRel $ fromMaybe relName mAlias, FRel annRel)
+      return ( fromRel $ fromMaybe relName mAlias
+             , either FObj FArr annRel
+             )
 
   -- let spiT = spiTable selPermInfo
 
@@ -212,17 +211,21 @@ convExtRel
   -> Maybe RelName
   -> SelectQExt
   -> (PGColType -> Value -> m S.SQLExp)
-  -> m AnnRel
+  -> m (Either ObjSel ArrSel)
 convExtRel fieldInfoMap relName mAlias selQ prepValBuilder = do
   -- Point to the name key
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap relName pgWhenRelErr
   let (RelInfo _ relTy colMapping relTab _) = relInfo
   (relCIM, relSPI) <- fetchRelDet relName relTab
-  when (relTy == ObjRel && misused) $
-    throw400 UnexpectedPayload objRelMisuseMsg
   annSel <- convSelectQ relCIM relSPI selQ prepValBuilder
-  return $ AnnRel (fromMaybe relName mAlias) relTy colMapping annSel
+  case relTy of
+    ObjRel -> do
+      when misused $ throw400 UnexpectedPayload objRelMisuseMsg
+      return $ Left $ AnnRelG (fromMaybe relName mAlias) colMapping annSel
+    ArrRel ->
+      return $ Right $ ASSimple $ AnnRelG (fromMaybe relName mAlias)
+               colMapping annSel
   where
     pgWhenRelErr = "only relationships can be expanded"
     misused      =
@@ -238,12 +241,13 @@ convExtRel fieldInfoMap relName mAlias selQ prepValBuilder = do
               ]
 
 partAnnFlds
-  :: [AnnFld] -> ([(PGCol, PGColType)], [AnnRel])
+  :: [AnnFld]
+  -> ([(PGCol, PGColType)], [Either ObjSel ArrSel])
 partAnnFlds flds =
   partitionEithers $ catMaybes $ flip map flds $ \case
   FCol c -> Just $ Left (pgiName c, pgiType c)
-  FRel r -> Just $ Right r
-  FAgg _ -> Nothing
+  FObj o -> Just $ Right $ Left o
+  FArr a -> Just $ Right $ Right a
   FExp _ -> Nothing
 
 getSelectDeps
@@ -259,12 +263,22 @@ getSelectDeps (AnnSelG flds tabFrm _ tableArgs) =
     TableFrom tn _ = tabFrm
     annWc = _taWhere tableArgs
     (sCols, rCols) = partAnnFlds $ map snd flds
+    (objSels, arrSels) = partitionEithers rCols
     colDeps      = map (mkColDep "untyped" tn . fst) sCols
-    relDeps      = map (mkRelDep . arName) rCols
-    nestedDeps   = concatMap (getSelectDeps . arAnnSel) rCols
+    relDeps      = map mkRelDep $ map aarName objSels
+                   <> mapMaybe getRelName arrSels
+    nestedDeps   = concatMap getSelectDeps $ map aarAnnSel objSels
+                   <> mapMaybe getAnnSel arrSels
     whereDeps    = getBoolExpDeps tn <$> annWc
     mkRelDep rn  =
       SchemaDependency (SOTableObj tn (TORel rn)) "untyped"
+
+    -- ignore aggregate selections to calculate schema deps
+    getRelName (ASSimple aar) = Just $ aarName aar
+    getRelName (ASAgg _)      = Nothing
+
+    getAnnSel (ASSimple aar) = Just $ aarAnnSel aar
+    getAnnSel (ASAgg _)      = Nothing
 
 convSelectQuery
   :: (P1C m)
@@ -278,29 +292,12 @@ convSelectQuery prepArgBuilder (DMLQuery qt selQ) = do
   validateHeaders $ spiRequiredHeaders selPermInfo
   convSelectQ (tiFieldInfoMap tabInfo) selPermInfo extSelQ prepArgBuilder
 
-mkAggSelect :: AnnAggSel -> S.Select
-mkAggSelect annAggSel =
-  prefixNumToAliases $ aggNodeToSelect bn extr $ S.BELit True
-  where
-    aggSel = AggSel [] annAggSel
-    AggNode _ extr bn =
-      aggSelToAggNode (Iden "root") (FieldName "root") aggSel
-
 selectAggP2 :: (AnnAggSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 selectAggP2 (sel, p) =
   runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkAggSelect sel
-
-mkSQLSelect :: Bool -> AnnSel -> S.Select
-mkSQLSelect isSingleObject annSel =
-  prefixNumToAliases $ asJsonAggSel isSingleObject rootFldAls (S.BELit True)
-  $ annSelToBaseNode (toIden rootFldName)
-  rootFldName annSel
-  where
-    rootFldName = FieldName "root"
-    rootFldAls  = S.Alias $ toIden rootFldName
 
 
 -- selectP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m RespBody

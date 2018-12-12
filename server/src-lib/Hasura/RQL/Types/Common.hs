@@ -28,8 +28,8 @@ import           Hasura.Prelude
 import           Hasura.SQL.Types
 
 import           Data.Aeson
-import           Data.Aeson.TH
 import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import           Instances.TH.Lift          ()
@@ -91,7 +91,7 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 newtype FieldName
   = FieldName { getFieldNameTxt :: T.Text }
-  deriving (Show, Eq, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift)
+  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift)
 
 instance IsIden FieldName where
   toIden (FieldName f) = Iden f
