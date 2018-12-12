@@ -517,7 +517,15 @@ class AddTrigger extends Component {
                 }
               >
                 <option value="">Select table</option>
-                {tableListBySchema.map(t => {
+                {tableListBySchema.sort((a, b) => {
+                  // Sort tables by name alphabetically (case-insensitive)
+                  const aName = a.table_name.toLowerCase();
+                  const bName = b.table_name.toLowerCase();
+                  if (aName < bName) return -1;
+                  if (aName > bName) return 1;
+                  return 0;
+                }).map(t => {
+                  console.log(t);
                   if (t.detail.table_type === 'BASE TABLE') {
                     return (
                       <option key={t.table_name} value={t.table_name}>
