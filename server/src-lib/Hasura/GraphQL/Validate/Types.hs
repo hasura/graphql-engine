@@ -39,7 +39,6 @@ module Hasura.GraphQL.Validate.Types
   , fromSchemaDocQ
   , TypeMap
   , TypeLoc (..)
-  --, TyEq (..)
   , typeEq
   , AnnGValue(..)
   , AnnGObject
@@ -73,7 +72,7 @@ class EquatableGType a where
   type EqProps a
   getEqProps :: a -> EqProps a
 
-typeEq :: (Show (EqProps a), EquatableGType a, Eq (EqProps a)) => a -> a -> Bool
+typeEq :: (EquatableGType a, Eq (EqProps a)) => a -> a -> Bool
 typeEq a b = getEqProps a == getEqProps b
 
 data EnumValInfo
