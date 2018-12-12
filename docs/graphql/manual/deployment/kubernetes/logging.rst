@@ -1,6 +1,11 @@
 Hasura GraphQL engine server logs (Kubernetes)
 ==============================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 You can check logs of Hasura GraphQL engine deployed on Kubernetes by checking the logs of the GraphQL engine
 service, i.e. ``hasura``:
 

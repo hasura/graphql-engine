@@ -3,9 +3,10 @@ url: /v1alpha1/graphql
 status: 400
 response:
   errors:
-  - path: $.variableValues[0].location
-    error: 'unexpected geometry type: Random'
-    code: parse-failed
+  - extensions:
+      code: parse-failed
+      path: $.variableValues[0].location
+    message: 'unexpected geometry type: Random'
 query:
   variables:
     landmarks:

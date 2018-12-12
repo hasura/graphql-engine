@@ -156,7 +156,9 @@ withArgM
   -> (AnnGValue -> m a)
   -> m (Maybe a)
 withArgM args arg f = prependArgsInPath $ nameAsPath arg $
-  mapM f $ Map.lookup arg args
+  mapM f $ handleNull =<< Map.lookup arg args
+  where
+    handleNull v = bool (Just v) Nothing $ hasNullVal v
 
 type PrepArgs = Seq.Seq Q.PrepArg
 

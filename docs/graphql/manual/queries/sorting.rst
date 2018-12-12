@@ -1,5 +1,11 @@
 Sort query results
 ==================
+
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Results from your query can be sorted by using the :ref:`order_by <OrderByExp>` argument. The argument can be used to sort nested
 objects too.
 
@@ -65,8 +71,9 @@ The ``order_by`` argument takes an array of objects to allow sorting by multiple
 
 The following are example queries for different sorting use cases:
 
-Sorting in a simple object query
---------------------------------
+Sorting objects
+---------------
+
 Fetch list of authors sorted by their names in an ascending order:
 
 .. graphiql::
@@ -112,8 +119,8 @@ Fetch list of authors sorted by their names in an ascending order:
       }
     }
 
-Sorting a nested object query
------------------------------
+Sorting nested objects
+----------------------
 Fetch a list of authors sorted by their names with a list of their articles that is sorted by their rating:
 
 .. graphiql::
@@ -191,8 +198,8 @@ Fetch a list of authors sorted by their names with a list of their articles that
       }
     }
 
-Sorting a nested object query using columns in relationship
------------------------------------------------------------
+Sorting objects based on nested object's fields
+-----------------------------------------------
 Fetch a list of articles that is sorted by their author's id (descending).
 Only columns in object relationships are allowed:
 

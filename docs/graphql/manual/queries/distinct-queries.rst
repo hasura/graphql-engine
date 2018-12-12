@@ -1,6 +1,11 @@
 Distinct queries
 ================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 You can fetch distinct columns using ``distinct_on`` argument. Initial ``order_by`` columns must
 match ``distinct_on`` columns. Learn more about ``order_by`` :doc:`here <sorting>`.
 

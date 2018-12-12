@@ -19,6 +19,7 @@ import           Control.Concurrent                     (threadDelay)
 
 import           Hasura.GraphQL.Resolve.Context         (RespTx)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
@@ -86,9 +87,6 @@ removeLiveQuery lqMap liveQ k = do
           STMMap.delete liveQ lqMap
           Just <$> STM.takeTMVar threadRef
         else return Nothing
-
-onJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
-onJust m action = maybe (return ()) action m
 
 addLiveQuery
   :: (Eq k, Hashable k)

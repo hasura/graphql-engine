@@ -1,0 +1,13 @@
+type: bulk
+args:
+- type: remove_remote_schema
+  args:
+    name: simple 1
+
+- type: add_remote_schema
+  args:
+    name: simple 2
+    comment: testing
+    definition:
+      url: http://localhost:5000/hello-graphql
+      forward_client_headers: false

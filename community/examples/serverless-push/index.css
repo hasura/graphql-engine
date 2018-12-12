@@ -96,4 +96,6 @@ div .error {
     to {left: 100%;}
 }
 
-
+.hasura-logo img {
+  margin-bottom: 12px;
+}

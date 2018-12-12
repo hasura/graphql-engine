@@ -127,8 +127,8 @@ class LandingPage extends Component {
                   </div>
                   <div className="col-md-11 col-sm-11 col-xs-10 noPadd">
                     <div className="description removePaddBottom">
-                      Explore the Hasura console and try out some queries &
-                      mutations
+                      Explore the Hasura GraphQL backend and try out some
+                      queries & mutations
                     </div>
                   </div>
                 </div>
@@ -143,6 +143,7 @@ class LandingPage extends Component {
                   </div>
                 </div>
               </div>
+              {/*
               <div className="footer">
                 Built with
                 <i className="fas fa-heart" />
@@ -155,6 +156,7 @@ class LandingPage extends Component {
                   Hasura
                 </a>
               </div>
+              */}
             </div>
             <div className="tutorialImg col-md-6 col-sm-6 col-xs-12 hidden-xs noPadd">
               <img className="img-responsive" src={rightImg} alt="View" />

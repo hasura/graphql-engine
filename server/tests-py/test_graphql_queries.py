@@ -92,6 +92,9 @@ class TestGraphQLQueryLimits(DefaultTestSelectQueries):
     def test_limit_2(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_2.yaml')
 
+    def test_limit_null(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_null.yaml')
+
     def test_err_str_limit_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_string_limit_error.yaml')
 
@@ -153,6 +156,9 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
 
     def test_author_article_where_nin(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin.yaml')
+
+    def test_uuid_test_in_uuid_col(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_uuid_test_in_uuid_col.yaml')
 
     def test_order_delivered_at_is_null(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_order_delivered_at_is_null.yaml')

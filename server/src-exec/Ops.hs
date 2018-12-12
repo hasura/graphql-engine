@@ -30,7 +30,7 @@ import qualified Database.PG.Query.Connection as Q
 import qualified Network.HTTP.Client          as HTTP
 
 curCatalogVer :: T.Text
-curCatalogVer = "5"
+curCatalogVer = "6"
 
 initCatalogSafe :: UTCTime -> HTTP.Manager -> Q.TxE QErr String
 initCatalogSafe initTime httpMgr =  do
@@ -65,17 +65,12 @@ initCatalogSafe initTime httpMgr =  do
 
 initCatalogStrict :: Bool -> UTCTime -> HTTP.Manager -> Q.TxE QErr String
 initCatalogStrict createSchema initTime httpMgr =  do
-  Q.catchE defaultTxErrorHandler $ do
+  Q.catchE defaultTxErrorHandler $
 
     when createSchema $ do
       Q.unitQ "CREATE SCHEMA hdb_catalog" () False
       -- This is where the generated views and triggers are stored
       Q.unitQ "CREATE SCHEMA hdb_views" () False
-
-    flExtExists <- isExtAvailable "first_last_agg"
-    if flExtExists
-      then Q.unitQ "CREATE EXTENSION first_last_agg SCHEMA hdb_catalog" () False
-      else Q.multiQ $(Q.sqlFromFile "src-rsr/first_last.sql") >>= \(Q.Discard _) -> return ()
 
   pgcryptoExtExists <- Q.catchE defaultTxErrorHandler $ isExtAvailable "pgcrypto"
   if pgcryptoExtExists
@@ -227,6 +222,13 @@ from3To4 = Q.catchE defaultTxErrorHandler $ do
                                          WHERE name = $2
                                          |] (Q.AltJ $ A.toJSON etc, name) True
 
+from5To6 :: Q.TxE QErr ()
+from5To6 = do
+  -- migrate database
+  Q.Discard () <- Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_5_to_6.sql")
+  return ()
+
 migrateCatalog :: HTTP.Manager -> UTCTime -> Q.TxE QErr String
 migrateCatalog httpMgr migrationTime = do
   preVer <- getCatalogVersion
@@ -237,12 +239,17 @@ migrateCatalog httpMgr migrationTime = do
      | preVer == "2"   -> from2ToCurrent
      | preVer == "3"   -> from3ToCurrent
      | preVer == "4"   -> from4ToCurrent
+     | preVer == "5"   -> from5ToCurrent
      | otherwise -> throw400 NotSupported $
                     "migrate: unsupported version : " <> preVer
   where
+    from5ToCurrent = do
+      from5To6
+      postMigrate
+
     from4ToCurrent = do
       from4To5 httpMgr
-      postMigrate
+      from5ToCurrent
 
     from3ToCurrent = do
       from3To4

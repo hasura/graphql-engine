@@ -1,0 +1,36 @@
+- description: Inserts person data via GraphQL mutation (without Variable)
+  url: /v1alpha1/graphql
+  status: 200
+  response:
+    data:
+      insert_person:
+        returning:
+        - details:
+            name:
+              last: murphy
+              first: json
+
+  query:
+    query: |
+      mutation insert_person{
+        insert_person(
+          objects: [
+            {
+              details: {name: {first: json last: murphy}}
+            }
+          ]
+        ) {
+          returning {
+            details
+          }
+        }
+      }
+- description: Delete the inserted persons
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        delete from person;
+        SELECT setval('person_id_seq', 1, FALSE);

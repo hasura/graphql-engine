@@ -1,16 +1,14 @@
-description: Simple GraphQL subscription to the remote schema with countries - not supported
+description: Simple GraphQL subscription - not supported
 url: /v1alpha1/graphql
 status: 400
 response:
   errors:
-  - path: $
-    error: subscription to remote server is not supported
-    code: not-supported
+  - extensions:
+      code: not-supported
+      path: $
+    message: subscription to remote server is not supported
 query:
   query: |
     subscription {
-      country (code: "IN")  {
-        name
-        code
-      }
+      hello
     }
