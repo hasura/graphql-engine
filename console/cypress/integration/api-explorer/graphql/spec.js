@@ -84,7 +84,7 @@ export const checkMutation = () => {
       '{enter}{uparrow}#{leftarrow}{enter}{uparrow}mutation insert_user{{}insert_users(objects:[{{}name:"someName"}]){{}returning{{}id}}}',
       { force: true }
     );
-  cy.wait(1000);
+  cy.wait(5000);
   cy.get('.execute-button').click();
   cy.wait(5000);
   cy.get('.cm-property').contains('id');
