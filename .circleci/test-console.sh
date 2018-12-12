@@ -29,7 +29,6 @@ if [ "$TEST_SUITE_NUMBER" = "1" ]; then
   docker logs test2 > /home/circleci/build/_console_test_logs/test2.log
   EXIT_CODE_3="$(docker wait test3)"
   docker logs test3 > /home/circleci/build/_console_test_logs/test3.log
-  docker wait test4
   EXIT_CODE_4="$(docker wait test4)"
   docker logs test4 > /home/circleci/build/_console_test_logs/test4.log
   if [ "$EXIT_CODE_1" != "0" ] || [ "$EXIT_CODE_2" != "0" ] || [ "$EXIT_CODE_3" != "0" ] || [ "$EXIT_CODE_4" != "0" ]; then
