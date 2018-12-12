@@ -31,7 +31,7 @@ class WebhookEditor extends React.Component {
       }
     }
     this.props.save();
-  }
+  };
 
   render() {
     const { webhook, modifyTrigger, env, dispatch, styles } = this.props;
@@ -68,7 +68,9 @@ class WebhookEditor extends React.Component {
             inputVal={modifyTrigger.webhookURL}
             id="webhook-url"
             inputPlaceHolder={
-              modifyTrigger.webhookUrlType === 'env' ? 'MY_WEBHOOK_URL' : 'http://httpbin.org/post'
+              modifyTrigger.webhookUrlType === 'env'
+                ? 'MY_WEBHOOK_URL'
+                : 'http://httpbin.org/post'
             }
             testId="webhook"
           />
@@ -78,7 +80,7 @@ class WebhookEditor extends React.Component {
     );
 
     return (
-      <div className={styles.container}>
+      <div className={`${styles.container} ${styles.borderBottom}`}>
         <div className={styles.modifySection}>
           <h4 className={styles.modifySectionHeading}>Webhook URL</h4>
           <Editor

@@ -155,7 +155,7 @@ class HeadersEditor extends React.Component {
     );
 
     return (
-      <div className={styles.container}>
+      <div className={`${styles.container} ${styles.borderBottom}`}>
         <div className={styles.modifySection}>
           <h4 className={styles.modifySectionHeading}>Headers</h4>
           <Editor

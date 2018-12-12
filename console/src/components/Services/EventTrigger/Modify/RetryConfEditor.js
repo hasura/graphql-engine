@@ -82,7 +82,7 @@ class RetryConfEditor extends React.Component {
     );
 
     return (
-      <div className={styles.container}>
+      <div className={`${styles.container} ${styles.borderBottom}`}>
         <div className={styles.modifySection}>
           <h4 className={styles.modifySectionHeading}>Retry configuration</h4>
           <Editor

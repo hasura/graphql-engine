@@ -98,7 +98,6 @@ class Modify extends React.Component {
             save={() => dispatch(save('headers', modifyTriggerName))}
             dispatch={dispatch}
           />
-          <hr />
           <ActionButtons
             styles={styles}
             dispatch={dispatch}
