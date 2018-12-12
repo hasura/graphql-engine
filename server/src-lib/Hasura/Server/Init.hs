@@ -80,6 +80,9 @@ instance FromConfig RoleName where
 instance FromConfig Bool where
   fromConfig = parseStrAsBool
 
+instance FromConfig Q.TxIsolation where
+  fromConfig = readIsoLevel
+
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
   | t `elem` truthVals = Right True
@@ -145,7 +148,8 @@ mkEnvVarDoc envVars =
   PP.indent 2 (PP.vsep $ map mkEnvVarLine envVars)
   where
     mkEnvVarLine (var, desc) =
-      (PP.fillBreak 30 (PP.text var) PP.<+> PP.text desc) <> PP.hardline
+      (PP.fillBreak 30 (PP.text var) PP.<+> prettifyDesc desc) <> PP.hardline
+    prettifyDesc = PP.align . PP.fillSep . map PP.text . words
 
 mainCmdFooter :: PP.Doc
 mainCmdFooter =
@@ -204,8 +208,9 @@ serveCmdFooter =
 
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
-      [ servePortEnv, accessKeyEnv, authHookEnv, authHookTypeEnv
-      , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
+      [ servePortEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
+      , txIsoEnv, rootDirEnv, accessKeyEnv, authHookEnv , authHookTypeEnv
+      , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv
       ]
 
     eventEnvs =
@@ -222,6 +227,34 @@ servePortEnv =
   ( "HASURA_GRAPHQL_SERVER_PORT"
   , "Port on which graphql-engine should be served (default: 8080)"
   )
+
+pgConnsEnv :: (String, String)
+pgConnsEnv =
+  ( "HASURA_GRAPHQL_PG_CONNECTIONS"
+  , "Number of conns that need to be opened to Postgres (default: 50)"
+  )
+
+pgStripesEnv :: (String, String)
+pgStripesEnv =
+  ( "HASURA_GRAPHQL_PG_STRIPES"
+  , "Number of conns that need to be opened to Postgres (default: 1)")
+
+pgTimeoutEnv :: (String, String)
+pgTimeoutEnv =
+  ( "HASURA_GRAPHQL_PG_TIMEOUT"
+  , "Each connection's idle time before it is closed (default: 180 sec)"
+  )
+
+txIsoEnv :: (String, String)
+txIsoEnv =
+  ( "HASURA_GRAPHQL_TX_ISOLATION"
+  , "transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)"
+  )
+
+rootDirEnv :: (String, String)
+rootDirEnv =
+  ( "HASURA_GRAPHQL_ROOT_DIR"
+  , "this static dir is served at / and takes precedence over all routes")
 
 accessKeyEnv :: (String, String)
 accessKeyEnv =
@@ -273,7 +306,6 @@ configRawConnInfo =
   where
     host = fromParser $
       optional (strOption ( long "host" <>
-                  short 'h' <>
                   metavar "HOST" <>
                   help "Postgres server host" ))
 
@@ -338,36 +370,51 @@ readIsoLevel isoS =
     _ -> Left "Only expecting read-comitted / repeatable-read / serializable"
 
 configTxIsolation :: ConfigM Q.TxIsolation
-configTxIsolation = fromParser $
-  option (eitherReader readIsoLevel) ( long "tx-iso" <>
-                  short 'i' <>
-                  value Q.ReadCommitted <>
-                  metavar "TXISO" <>
-                  help "transaction isolation. read-committed / repeatable-read / serializable" )
+configTxIsolation = fromMaybe Q.ReadCommitted <$>
+  withEnvOption envVar
+    ( long "tx-iso" <>
+      short 'i' <>
+      metavar "TXISO" <>
+      help helpDesc
+    )
+  where
+    (envVar, helpDesc) = txIsoEnv
 
 configRootDir :: ConfigM (Maybe String)
-configRootDir = fromParser $
-  optional $ strOption ( long "root-dir" <>
-               metavar "STATIC-DIR" <>
-               help "this static dir is served at / and takes precedence over all routes" )
+configRootDir = withEnvOption envVar
+                ( long "root-dir" <>
+                  metavar "STATIC-DIR" <>
+                  help helpDesc
+                )
+  where
+    (envVar, helpDesc) = rootDirEnv
 
 configConnParams :: ConfigM Q.ConnParams
-configConnParams = fromParser $
-  Q.ConnParams
-  <$> option auto ( long "stripes" <>
-               short 's' <>
-               metavar "NO OF STRIPES" <>
-               value 1 <>
-               help "Number of stripes" )
-  <*> option auto ( long "connections" <>
+configConnParams =
+  Q.ConnParams <$> stripes <*> conns <*> timeout
+  where
+    (stripesEnv, stripesHelp) = pgStripesEnv
+    stripes = fromMaybe 1 <$> withEnvOption stripesEnv
+              ( long "stripes" <>
+                 short 's' <>
+                 metavar "NO OF STRIPES" <>
+                 help stripesHelp
+              )
+
+    (connEnv, connHelp) = pgConnsEnv
+    conns = fromMaybe 50 <$> withEnvOption connEnv
+            ( long "connections" <>
                short 'c' <>
                metavar "NO OF CONNS" <>
-               value 50 <>
-               help "Number of conns that need to be opened to Postgres" )
-  <*> option auto ( long "timeout" <>
-               metavar "SECONDS" <>
-               value 180 <>
-               help "Each connection's idle time before it is closed" )
+               help connHelp
+            )
+
+    (timeoutEnv, timeoutHelp) = pgTimeoutEnv
+    timeout = fromMaybe 180 <$> withEnvOption timeoutEnv
+              ( long "timeout" <>
+                metavar "SECONDS" <>
+                help timeoutHelp
+              )
 
 configServerPort :: ConfigM Int
 configServerPort =
