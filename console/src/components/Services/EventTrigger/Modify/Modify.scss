@@ -31,6 +31,7 @@
   align-items: center;
   justify-content: center;
   max-height: 23px;
+  margin-bottom: 10px;
 }
 
 .modifySaveButton {
@@ -57,17 +58,35 @@
   border: 1px solid #ccc;
   max-width: 700px;
 }
-
+.textRight
+{
+  text-align: right;
+}
+.noPadd
+{
+  padding-left: 0;
+  padding-right: 0;
+}
 .modifyOpsCollapsedContent {
-  padding-bottom: 10px;
-  max-width: 408px;
+  padding-bottom: 5px;
+  max-width: 530px;
+  display: block;
+  flex-direction: row;
+  font-size: 13px;
+  align-items: center;
+}
+.modifyOpsCollapsedContent1
+{
+  padding-bottom: 5px;
+  max-width: 530px;
   display: flex;
   flex-direction: row;
   font-size: 13px;
+  align-items: center;
 }
 
-
-.modifyOpsCollapsedContent p{
+.modifyOpsCollapsedContent p, .modifyOpsCollapsedContent1 p {
+  margin-bottom: 0;
   font-size: 14px;
 }
 
@@ -92,7 +111,7 @@ modifyHeadersCollapsedHeadings {
 }
 
 .modifyOpsCollapsed {
-  display: flex;
+  display: block;
   margin: 10px 0;
   flex-direction: row;
 }
@@ -108,7 +127,6 @@ modifyHeadersCollapsedHeadings {
 }
 
 .modifyWhDropdownWrapper {
-  padding-left: 50px;
   padding-bottom: 10px;
   padding-top: 10px;
   max-width: 408px;
@@ -124,11 +142,24 @@ modifyHeadersCollapsedHeadings {
 .modifyProperty p{
   font-size: 14px;
 }
-
+.modifyOpsCollapsedtitle
+{
+  margin:5px 0;
+  i
+  {
+    font-size: 11px;
+  }
+}
 .opsCheckboxWrapper {
-  margin: 0 10px;
   display: flex;
   flex-direction: row;
+  align-items: center;
+  flex: 1;
+  margin: 5px 0;
+  input
+  {
+    margin-top: 0;
+  }
 }
 
 .opsCheckboxWrapper p {
@@ -166,7 +197,6 @@ modifyHeadersCollapsedHeadings {
 .modifyOpsPadLeft {
   display: flex;
   flex-direction: column;
-  padding-left: 50px;
   padding-top: 10px;
   padding-bottom: 10px;
 }
@@ -238,4 +268,9 @@ modifyHeadersCollapsedHeadings {
   display: flex;
   flex-direction: column;
   margin: 10px 0;
+  table
+  {
+    width: 80%;
+    margin-top: 20px;
+  }
 }

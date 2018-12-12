@@ -40,10 +40,10 @@ class RetryConfEditor extends React.Component {
       <div className={styles.modifyOpsCollapsed}>
         {toggleButton('Edit')}
         <div className={styles.modifyOps}>
-          <div className={styles.modifyOpsCollapsedContent}>
+          <div className={styles.modifyOpsCollapsedContent1}>
             Number of retries: {retryConf.num_retries || 0}
           </div>
-          <div className={styles.modifyOpsCollapsedContent}>
+          <div className={styles.modifyOpsCollapsedContent1}>
             Retry interval (seconds): {retryConf.interval_sec || 10}
           </div>
         </div>
@@ -54,7 +54,7 @@ class RetryConfEditor extends React.Component {
       <div className={styles.modifyOpsExpanded}>
         {toggleButton('Close')}
         <div className={styles.modifyOpsPadLeft}>
-          <div className={styles.modifyOpsCollapsedContent}>
+          <div className={styles.modifyOpsCollapsedContent1}>
             Number of retries: &nbsp;
             <input
               type="text"
@@ -65,7 +65,7 @@ class RetryConfEditor extends React.Component {
               onChange={e => dispatch(setRetryNum(e.target.value))}
             />
           </div>
-          <div className={styles.modifyOpsCollapsedContent}>
+          <div className={styles.modifyOpsCollapsedContent1}>
             Retry interval (seconds):&nbsp;
             <input
               type="text"

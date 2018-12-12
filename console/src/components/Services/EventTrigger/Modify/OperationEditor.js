@@ -25,41 +25,49 @@ class OperationEditor extends React.Component {
     const queryTypes = ['delete', 'update', 'insert'];
     const collapsed = toggleButton => (
       <div className={styles.modifyOpsCollapsed}>
-        {toggleButton('Edit')}
+        <div>
+          {toggleButton('Edit')}
+        </div>
         <div className={styles.modifyOps}>
           <div className={styles.modifyOpsCollapsedContent}>
-            Operations:
-            {queryTypes.map((qt, i) => (
-              <div className={styles.opsCheckboxWrapper} key={i}>
-                <input
-                  type="checkbox"
-                  className={styles.opsCheckboxDisabled}
-                  checked={Boolean(definition[qt])}
-                  disabled
-                />
-                {qt}
-              </div>
-            ))}
-          </div>
-          <div className={styles.modifyOpsCollapsedContent}>
-            <p>Listen columns for update:&nbsp;</p>
-            {definition.update ? (
-              allTableColumns.map((col, i) => (
-                <div className={styles.opsCheckboxWrapper} key={i}>
+            <div className={'col-md-12 ' + styles.noPadd}>Operations:</div>
+            <div className={'col-md-12 ' + styles.noPadd}>
+              {queryTypes.map((qt, i) => (
+                <div className={styles.opsCheckboxWrapper + ' col-md-4 ' + styles.noPadd} key={i}>
                   <input
                     type="checkbox"
                     className={styles.opsCheckboxDisabled}
-                    checked={Boolean(
-                      definition.update.columns.find(c => c === col)
-                    )}
+                    checked={Boolean(definition[qt])}
                     disabled
                   />
-                  {col}
+                  {qt}
                 </div>
-              ))
-            ) : (
-              <i>Applicable only for update operation</i>
-            )}
+              ))}
+            </div>
+          </div>
+          <div className={styles.modifyOpsCollapsedContent}>
+            <div className={'col-md-12 ' + styles.noPadd}>Listen columns for update:&nbsp;</div>
+            <div className={'col-md-12 ' + styles.noPadd}>
+              {definition.update ? (
+                allTableColumns.map((col, i) => (
+                    <div className={styles.opsCheckboxWrapper + ' col-md-4 ' + styles.noPadd} key={i}>
+                      <input
+                        type="checkbox"
+                        className={styles.opsCheckboxDisabled}
+                        checked={Boolean(
+                          definition.update.columns.find(c => c === col)
+                        )}
+                        disabled
+                      />
+                      {col}
+                    </div>
+                ))
+              ) : (
+                <div className={'col-md-12 ' + styles.noPadd + ' ' + styles.modifyOpsCollapsedtitle}>
+                  <i>(Applicable only for update operation)</i>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -67,47 +75,55 @@ class OperationEditor extends React.Component {
 
     const expanded = (toggleButton, saveButton) => (
       <div className={styles.modifyOpsExpanded}>
-        {toggleButton('Close')}
+        <div>
+          {toggleButton('Close')}
+        </div>
         <div className={styles.modifyOpsPadLeft}>
           <div className={styles.modifyOpsCollapsedContent}>
-            Operations:
-            {queryTypes.map((qt, i) => (
-              <div className={styles.opsCheckboxWrapper} key={i}>
-                <input
-                  type="checkbox"
-                  className={styles.opsCheckbox}
-                  checked={Boolean(modifyTrigger.definition[qt])}
-                  onChange={() => {
-                    dispatch(toggleQueryType(qt, allTableColumns));
-                  }}
-                />
-                {qt}
-              </div>
-            ))}
-          </div>
-          <div className={styles.modifyOpsCollapsedContent}>
-            Listen columns for update:&nbsp;
-            {modifyTrigger.definition.update ? (
-              allTableColumns.map((col, i) => (
-                <div className={styles.opsCheckboxWrapper} key={i}>
+            <div className={'col-md-12 ' + styles.noPadd}>Operations:</div>
+            <div className={'col-md-12 ' + styles.noPadd}>
+              {queryTypes.map((qt, i) => (
+                <div className={styles.opsCheckboxWrapper + ' col-md-4 ' + styles.noPadd} key={i}>
                   <input
                     type="checkbox"
                     className={styles.opsCheckbox}
-                    checked={Boolean(
-                      modifyTrigger.definition.update.columns.find(
-                        c => c === col
-                      )
-                    )}
+                    checked={Boolean(modifyTrigger.definition[qt])}
                     onChange={() => {
-                      dispatch(toggleColumn('update', col));
+                      dispatch(toggleQueryType(qt, allTableColumns));
                     }}
                   />
-                  {col}
+                  {qt}
                 </div>
-              ))
-            ) : (
-              <i>Applicable only for update operation</i>
-            )}
+              ))}
+            </div>
+          </div>
+          <div className={styles.modifyOpsCollapsedContent}>
+            <div className={'col-md-12 ' + styles.noPadd}>Listen columns for update:&nbsp;</div>
+            <div className={'col-md-12 ' + styles.noPadd}>
+              {modifyTrigger.definition.update ? (
+                allTableColumns.map((col, i) => (
+                  <div className={styles.opsCheckboxWrapper + ' col-md-4 ' + styles.noPadd} key={i}>
+                    <input
+                      type="checkbox"
+                      className={styles.opsCheckbox}
+                      checked={Boolean(
+                        modifyTrigger.definition.update.columns.find(
+                          c => c === col
+                        )
+                      )}
+                      onChange={() => {
+                        dispatch(toggleColumn('update', col));
+                      }}
+                    />
+                    {col}
+                  </div>
+                ))
+              ) : (
+                <div className={'col-md-12 ' + styles.noPadd + ' ' + styles.modifyOpsCollapsedtitle}>
+                  <i>(Applicable only for update operation)</i>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         {saveButton(save)}
