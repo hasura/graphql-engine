@@ -127,20 +127,22 @@ export const save = (property, triggerName) => {
     } else if (property === 'headers') {
       delete upPayload.headers;
       upPayload.headers = [];
-      modifyTrigger.headers.filter(h => Boolean(h.key.trim())).forEach(h => {
-        const { key, value, type } = h;
-        if (type === 'env') {
-          upPayload.headers.push({
-            name: key.trim(),
-            value_from_env: value.trim(),
-          });
-        } else {
-          upPayload.headers.push({
-            name: key.trim(),
-            value: value.trim(),
-          });
-        }
-      });
+      modifyTrigger.headers
+        .filter(h => Boolean(h.key.trim()))
+        .forEach(h => {
+          const { key, value, type } = h;
+          if (type === 'env') {
+            upPayload.headers.push({
+              name: key.trim(),
+              value_from_env: value.trim(),
+            });
+          } else {
+            upPayload.headers.push({
+              name: key.trim(),
+              value: value.trim(),
+            });
+          }
+        });
       postModifyCallback = () => {
         modifyTrigger.headers.forEach((h, i) => {
           dispatch(setHeaderKey(h.key, i));
@@ -299,7 +301,7 @@ const reducer = (state = defaultState, action) => {
       };
     default:
       return {
-        ...defaultState,
+        ...state,
       };
   }
 };
