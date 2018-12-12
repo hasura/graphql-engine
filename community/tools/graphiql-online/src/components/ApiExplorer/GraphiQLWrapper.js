@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import GraphiQL from 'hasura-console-graphiql';
 import PropTypes from 'prop-types';
 import ErrorBoundary from './ErrorBoundary';
-import { graphQLFetcherFinal } from './Actions';
+import { graphQLFetcherFinal, getRemoteQueries } from './Actions';
 
 import './GraphiQL.css';
 
@@ -12,8 +12,17 @@ class GraphiQLWrapper extends Component {
     this.state = {
       schema: null,
       error: false,
+      queries: null,
       onBoardingEnabled: false,
     };
+    const queryFile = this.props.queryParams
+      ? this.props.queryParams.query_file
+      : null;
+    if (queryFile) {
+      getRemoteQueries(queryFile, queries =>
+        this.setState({ ...this.state, queries })
+      );
+    }
   }
 
   shouldComponentUpdate(nextProps) {
@@ -38,6 +47,8 @@ class GraphiQLWrapper extends Component {
       if (variables !== 'undefined') {
         graphiqlProps.variables = JSON.stringify(variables, null, 2);
       }
+    } else if (this.state.queries) {
+      graphiqlProps.query = this.state.queries;
     }
     return (
       <ErrorBoundary>
