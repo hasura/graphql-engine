@@ -13,18 +13,16 @@ import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 import Tooltip from './Tooltip';
 
 class HeadersEditor extends React.Component {
-  componentDidUpdate() {
-    this.addExtraHeader();
-  }
-
   setValues = () => {
-    const { dispatch, headers } = this.props;
+    const { dispatch, headers, modifyTrigger } = this.props;
     headers.forEach((h, i) => {
       const { name, value, value_from_env } = h;
       dispatch(setHeaderKey(name, i));
       dispatch(setHeaderType(value_from_env ? 'env' : 'static', i));
       dispatch(setHeaderValue(value || value_from_env, i));
-      this.addExtraHeader();
+      if (!modifyTrigger[i + 1]) {
+        this.addExtraHeader();
+      }
     });
   };
 
@@ -95,7 +93,7 @@ class HeadersEditor extends React.Component {
                   }}
                   placeholder="key"
                 />
-                <div>
+                <div className={styles.dropDownGroup}>
                   <DropdownButton
                     dropdownOptions={[
                       { display_text: 'Value', value: 'static' },
@@ -104,9 +102,10 @@ class HeadersEditor extends React.Component {
                     title={h.type === 'env' ? 'From env var' : 'Value'}
                     dataKey={h.type === 'env' ? 'env' : 'static'}
                     onButtonChange={e => this.handleSelectionChange(e, i)}
-                    onInputChange={e =>
-                      dispatch(setHeaderValue(e.target.value, i))
-                    }
+                    onInputChange={e => {
+                      dispatch(setHeaderValue(e.target.value, i));
+                      this.addExtraHeader();
+                    }}
                     required
                     bsClass={styles.dropdown_button}
                     inputVal={h.value}

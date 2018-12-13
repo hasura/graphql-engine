@@ -9,7 +9,9 @@ class OperationEditor extends React.Component {
     const { dispatch, definition } = this.props;
     for (const queryType in definition) {
       if (definition[queryType]) {
-        dispatch(toggleQueryType(queryType, definition[queryType].columns));
+        dispatch(
+          toggleQueryType(queryType, definition[queryType].columns, true)
+        );
       }
     }
   };
@@ -23,7 +25,7 @@ class OperationEditor extends React.Component {
       modifyTrigger,
       dispatch,
     } = this.props;
-    const queryTypes = ['delete', 'update', 'insert'];
+    const queryTypes = ['insert', 'update', 'delete'];
     const collapsed = toggleButton => (
       <div className={styles.modifyOpsCollapsed}>
         <div>{toggleButton('Edit')}</div>
@@ -109,8 +111,10 @@ class OperationEditor extends React.Component {
                     type="checkbox"
                     className={styles.opsCheckbox}
                     checked={Boolean(modifyTrigger.definition[qt])}
-                    onChange={() => {
-                      dispatch(toggleQueryType(qt, allTableColumns));
+                    onChange={e => {
+                      dispatch(
+                        toggleQueryType(qt, allTableColumns, e.target.checked)
+                      );
                     }}
                   />
                   {qt}

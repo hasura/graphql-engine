@@ -22,10 +22,11 @@ export const setRetryInterval = data => ({ type: SET_RETRY_INTERVAL, data });
 
 const TOGGLE_COLUMN = 'ModifyTrigger/TOGGLE_COLUMNS';
 const TOGGLE_QUERY_TYPE = 'ModifyTrigger/TOGGLE_QUERY_TYPE_SELECTED';
-export const toggleQueryType = (query, columns) => ({
+export const toggleQueryType = (query, columns, value) => ({
   type: TOGGLE_QUERY_TYPE,
   query,
   columns,
+  value,
 });
 export const toggleColumn = (query, column) => ({
   type: TOGGLE_COLUMN,
@@ -83,7 +84,6 @@ export const save = (property, triggerName) => {
     const upPayload = {
       ...downPayload,
     };
-    let postModifyCallback;
     if (property === 'webhook') {
       if (modifyTrigger.webhookUrlType === 'env') {
         delete upPayload.webhook;
@@ -92,10 +92,6 @@ export const save = (property, triggerName) => {
         delete upPayload.webhook_from_env;
         upPayload.webhook = modifyTrigger.webhookURL;
       }
-      postModifyCallback = () => {
-        dispatch(setWebhookUrl(modifyTrigger.webhookURL));
-        dispatch(setWebhookUrlType(modifyTrigger.webhookUrlType));
-      };
     } else if (property === 'ops') {
       delete upPayload.update;
       delete upPayload.delete;
@@ -103,54 +99,28 @@ export const save = (property, triggerName) => {
       upPayload.update = modifyTrigger.definition.update;
       upPayload.insert = modifyTrigger.definition.insert;
       upPayload.delete = modifyTrigger.definition.delete;
-      postModifyCallback = () => {
-        for (const queryType in modifyTrigger.definition) {
-          if (modifyTrigger.definition[queryType]) {
-            dispatch(
-              toggleQueryType(
-                queryType,
-                modifyTrigger.definition[queryType].columns
-              )
-            );
-          }
-        }
-      };
     } else if (property === 'retry') {
       upPayload.retry_conf = {
         num_retries: modifyTrigger.retryConf.numRetrys,
         interval_sec: modifyTrigger.retryConf.retryInterval,
       };
-      postModifyCallback = () => {
-        dispatch(setRetryNum(modifyTrigger.retryConf.numRetrys));
-        dispatch(setRetryInterval(modifyTrigger.retryConf.retryInterval));
-      };
     } else if (property === 'headers') {
       delete upPayload.headers;
       upPayload.headers = [];
-      modifyTrigger.headers
-        .filter(h => Boolean(h.key.trim()))
-        .forEach(h => {
-          const { key, value, type } = h;
-          if (type === 'env') {
-            upPayload.headers.push({
-              name: key.trim(),
-              value_from_env: value.trim(),
-            });
-          } else {
-            upPayload.headers.push({
-              name: key.trim(),
-              value: value.trim(),
-            });
-          }
-        });
-      postModifyCallback = () => {
-        modifyTrigger.headers.forEach((h, i) => {
-          dispatch(setHeaderKey(h.key, i));
-          dispatch(setHeaderType(h.type, i));
-          dispatch(setHeaderValue(h.value, i));
-          dispatch(addHeader());
-        });
-      };
+      modifyTrigger.headers.filter(h => Boolean(h.key.trim())).forEach(h => {
+        const { key, value, type } = h;
+        if (type === 'env') {
+          upPayload.headers.push({
+            name: key.trim(),
+            value_from_env: value.trim(),
+          });
+        } else {
+          upPayload.headers.push({
+            name: key.trim(),
+            value: value.trim(),
+          });
+        }
+      });
     }
     const upQuery = {
       type: 'bulk',
@@ -181,16 +151,13 @@ export const save = (property, triggerName) => {
     const customOnSuccess = () => {
       dispatch(setTrigger(triggerName.trim()));
       dispatch(loadTriggers()).then(() => {
-        dispatch(loadProcessedEvents()).then(() => {
-          postModifyCallback();
-        });
+        dispatch(loadProcessedEvents());
       });
       return;
     };
     const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: errorMsg });
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
-      postModifyCallback();
       return;
     };
     makeMigrationCall(
@@ -222,10 +189,10 @@ const reducer = (state = defaultState, action) => {
       };
     case TOGGLE_QUERY_TYPE:
       const newDefinition = { ...state.definition };
-      if (newDefinition[action.query] !== undefined) {
-        delete newDefinition[action.query];
-      } else {
+      if (action.value) {
         newDefinition[action.query] = { columns: action.columns };
+      } else {
+        delete newDefinition[action.query];
       }
       return {
         ...state,
