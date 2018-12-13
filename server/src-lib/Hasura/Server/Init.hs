@@ -1,6 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.Server.Init where
 
 import qualified Database.PG.Query    as Q
@@ -15,7 +12,6 @@ import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types     (RoleName (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Utils
-
 
 newtype InitError
   = InitError String

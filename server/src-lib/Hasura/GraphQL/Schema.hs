@@ -1,11 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
 module Hasura.GraphQL.Schema
   ( mkGCtxMap
   , GCtxMap
@@ -1320,6 +1312,8 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
       , TIObj <$> mutRespObjM
       , TIEnum <$> selColInpTyM
       ]
+
+    mutHelper :: (ViewInfo -> Bool) -> Maybe a -> Maybe a
     mutHelper f objM = bool Nothing objM $ isMutable f viM
 
     fieldMap = Map.unions $ catMaybes
@@ -1452,14 +1446,18 @@ getRootFldsRole' tn primCols constraints fields insM selM updM delM viM =
             , getSelDet <$> selM, getSelAggDet selM
             , getPKeySelDet selM $ getColInfos primCols colInfos
             ]
+
+    mutHelper :: (ViewInfo -> Bool) -> (a -> b) -> Maybe a -> Maybe b
     mutHelper f getDet mutM =
       bool Nothing (getDet <$> mutM) $ isMutable f viM
+
     colInfos = fst $ validPartitionFieldInfoMap fields
     getInsDet (hdrs, upsertPerm) =
       let isUpsertable = upsertable constraints upsertPerm $ isJust viM
       in ( OCInsert tn hdrs
          , Right $ mkInsMutFld tn isUpsertable
          )
+
     getUpdDet (updCols, updFltr, hdrs) =
       ( OCUpdate tn updFltr hdrs
       , Right $ mkUpdMutFld tn $ getColInfos updCols colInfos
