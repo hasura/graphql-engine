@@ -255,7 +255,7 @@ Only columns in object relationships are allowed:
     }
 
 Sorting by array relationship aggregates
----------------------------------------
+----------------------------------------
 Fetch a list of authors sorted by their article count.
 
 .. graphiql::
