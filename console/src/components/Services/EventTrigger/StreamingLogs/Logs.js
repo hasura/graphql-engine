@@ -412,7 +412,7 @@ class StreamingLogs extends Component {
                         ) : null}
                         <div className={styles.add_mar_top}>
                           <div className={styles.subheading_text + ' col-md-6'}>
-                            Payload
+                            {finalResponse.status_code ? 'Payload' : 'Error'}
                           </div>
                           <div
                             className={styles.status_code_right + ' col-md-6'}

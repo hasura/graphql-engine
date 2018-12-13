@@ -411,7 +411,9 @@ const ViewRows = ({
                                     styles.subheading_text + ' col-md-6'
                                   }
                                 >
-                                  Payload
+                                  {finalResponse.status_code
+                                    ? 'Payload'
+                                    : 'Error'}
                                 </div>
                                 <div
                                   className={
