@@ -19,6 +19,7 @@ type FieldMap
 data OrdByItem
   = OBIPGCol !PGColInfo
   | OBIRel !RelInfo !AnnBoolExpSQL
+  | OBIAgg !RelInfo !AnnBoolExpSQL
   deriving (Show, Eq)
 
 type OrdByItemMap = Map.HashMap G.Name OrdByItem
