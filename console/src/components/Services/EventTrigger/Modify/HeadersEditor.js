@@ -98,10 +98,10 @@ class HeadersEditor extends React.Component {
                 <div>
                   <DropdownButton
                     dropdownOptions={[
-                      { display_text: 'Static', value: 'static' },
+                      { display_text: 'Value', value: 'static' },
                       { display_text: 'From env var', value: 'env' },
                     ]}
-                    title={h.type === 'env' ? 'From env var' : 'Static'}
+                    title={h.type === 'env' ? 'From env var' : 'Value'}
                     dataKey={h.type === 'env' ? 'env' : 'static'}
                     onButtonChange={e => this.handleSelectionChange(e, i)}
                     onInputChange={e =>

@@ -398,11 +398,11 @@ class AddTrigger extends Component {
           <div className={styles.dropDownGroup}>
             <DropdownButton
               dropdownOptions={[
-                { display_text: 'Static', value: 'static' },
+                { display_text: 'Value', value: 'static' },
                 { display_text: 'From env var', value: 'env' },
               ]}
               title={
-                (header.type === 'static' && 'Static') ||
+                (header.type === 'static' && 'Value') ||
                 (header.type === 'env' && 'From env var') ||
                 'Value'
               }
@@ -410,7 +410,7 @@ class AddTrigger extends Component {
                 (header.type === 'static' && 'static') ||
                 (header.type === 'env' && 'env')
               }
-              title={header.type === 'env' ? 'From env var' : 'Static'}
+              title={header.type === 'env' ? 'From env var' : 'Value'}
               dataKey={header.type === 'env' ? 'env' : 'static'}
               onButtonChange={e => {
                 dispatch(setHeaderType(e.target.getAttribute('value'), i));
@@ -430,7 +430,7 @@ class AddTrigger extends Component {
               testId={`header-value-${i}`}
             />
           </div>
-          {removeIcon}
+          <div>{removeIcon}</div>
         </div>
       );
     });
