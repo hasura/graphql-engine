@@ -1,6 +1,3 @@
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.RQL.DML.Select.Internal
   ( mkSQLSelect
   , mkAggSelect
@@ -137,9 +134,12 @@ buildJsonObject pfx parAls arrRelCtx flds =
 
     withAlsExp fldName sqlExp =
       [S.SELit $ getFieldNameTxt fldName, sqlExp]
+
     withAlsExtr fldName sqlExp =
       S.Extractor sqlExp $ Just $ S.toAlias fldName
 
+    toSQLFld :: (FieldName -> S.SQLExp -> f)
+             -> (FieldName, AnnFld) -> f
     toSQLFld f (fldAls, fld) = f fldAls $ case fld of
       FCol col    -> toJSONableExp (pgiType col) $
                      S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
@@ -207,7 +207,8 @@ processAnnOrderByItem pfx parAls arrRelCtx (OrderByItemG obTyM annObCol obNullsM
     ((obColAls, obColExp), relNodeM) = processAnnOrderByCol pfx parAls arrRelCtx annObCol
 
     sqlOrdByItem =
-      S.OrderByItem (S.SEIden $ toIden obColAls) obTyM obNullsM
+      S.OrderByItem (S.SEIden $ toIden obColAls)
+      (unOrderType <$> obTyM) (unNullsOrder <$> obNullsM)
 
 processAnnOrderByCol
   :: Iden

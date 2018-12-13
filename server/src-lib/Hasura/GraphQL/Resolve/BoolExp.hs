@@ -1,9 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
 module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
   , pgColValToBoolExp
@@ -27,7 +21,7 @@ import           Hasura.SQL.Value
 type OpExp = OpExpG (PGColType, PGColValue)
 
 parseOpExps
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
+  :: (MonadError QErr m)
   => AnnGValue -> m [OpExp]
 parseOpExps annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->

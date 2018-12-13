@@ -1,17 +1,8 @@
-{-# LANGUAGE DeriveLift        #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE TypeFamilies      #-}
-
 module Hasura.RQL.DDL.Permission
     ( CreatePerm
-    , SetPermComment(..)
+    , runCreatePerm
     , purgePerm
     , PermDef(..)
-
 
     , InsPerm(..)
     , InsPermDef
@@ -46,6 +37,12 @@ module Hasura.RQL.DDL.Permission
     , IsPerm(..)
     , addPermP1
     , addPermP2
+
+    , DropPerm
+    , runDropPerm
+
+    , SetPermComment(..)
+    , runSetPermComment
     ) where
 
 import           Hasura.Prelude
@@ -165,7 +162,9 @@ clearInsInfra vn =
 
 type DropInsPerm = DropPerm InsPerm
 
-dropInsPermP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DropInsPerm -> QualifiedTable -> m ()
+dropInsPermP2
+  :: (CacheRWM m, MonadTx m)
+  => DropInsPerm -> QualifiedTable -> m ()
 dropInsPermP2 = dropPermP2
 
 type instance PermInfo InsPerm = InsPermInfo
@@ -232,8 +231,11 @@ type DropSelPerm = DropPerm SelPerm
 
 type instance PermInfo SelPerm = SelPermInfo
 
-dropSelPermP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DropSelPerm -> m ()
-dropSelPermP2 dp = dropPermP2 dp ()
+dropSelPermP2
+  :: (CacheRWM m, MonadTx m)
+  => DropSelPerm -> m ()
+dropSelPermP2 dp =
+  dropPermP2 dp ()
 
 instance IsPerm SelPerm where
 
@@ -291,7 +293,9 @@ type instance PermInfo UpdPerm = UpdPermInfo
 
 type DropUpdPerm = DropPerm UpdPerm
 
-dropUpdPermP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DropUpdPerm -> m ()
+dropUpdPermP2
+  :: (CacheRWM m, MonadTx m)
+  => DropUpdPerm -> m ()
 dropUpdPermP2 dp = dropPermP2 dp ()
 
 instance IsPerm UpdPerm where
@@ -337,7 +341,7 @@ buildDelPermInfo tabInfo (DelPerm fltr) = do
 
 type DropDelPerm = DropPerm DelPerm
 
-dropDelPermP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DropDelPerm -> m ()
+dropDelPermP2 :: (CacheRWM m, MonadTx m) => DropDelPerm -> m ()
 dropDelPermP2 dp = dropPermP2 dp ()
 
 type instance PermInfo DelPerm = DelPermInfo
@@ -368,7 +372,7 @@ data SetPermComment
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''SetPermComment)
 
-setPermCommentP1 :: (P1C m) => SetPermComment -> m ()
+setPermCommentP1 :: (UserInfoM m, QErrM m, CacheRM m) => SetPermComment -> m ()
 setPermCommentP1 (SetPermComment qt rn pt _) = do
   adminOnly
   tabInfo <- askTabInfo qt
@@ -380,19 +384,17 @@ setPermCommentP1 (SetPermComment qt rn pt _) = do
       PTUpdate -> assertPermDefined rn PAUpdate tabInfo
       PTDelete -> assertPermDefined rn PADelete tabInfo
 
-setPermCommentP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => SetPermComment -> m RespBody
+setPermCommentP2 :: (QErrM m, MonadTx m) => SetPermComment -> m RespBody
 setPermCommentP2 apc = do
   liftTx $ setPermCommentTx apc
   return successMsg
 
-instance HDBQuery SetPermComment where
-
-  type Phase1Res SetPermComment = ()
-  phaseOne = setPermCommentP1
-
-  phaseTwo q _ = setPermCommentP2 q
-
-  schemaCachePolicy = SCPNoChange
+runSetPermComment
+  :: (QErrM m, CacheRM m, MonadTx m, UserInfoM m)
+  => SetPermComment -> m RespBody
+runSetPermComment defn =  do
+  setPermCommentP1 defn
+  setPermCommentP2 defn
 
 setPermCommentTx
   :: SetPermComment
@@ -407,7 +409,9 @@ setPermCommentTx (SetPermComment (QualifiedTable sn tn) rn pt comment) =
              AND perm_type = $5
                 |] (comment, sn, tn, rn, permTypeToCode pt) True
 
-purgePerm :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> RoleName -> PermType -> m ()
+purgePerm
+  :: (CacheRWM m, MonadTx m)
+  => QualifiedTable -> RoleName -> PermType -> m ()
 purgePerm qt rn pt =
   case pt of
     PTInsert -> dropInsPermP2 dp $ buildViewName qt rn PTInsert

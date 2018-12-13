@@ -1,9 +1,3 @@
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE MultiWayIf                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-
 module Hasura.SQL.DML where
 
 import           Hasura.Prelude
@@ -12,6 +6,7 @@ import           Hasura.SQL.Types
 import           Data.String                (fromString)
 import           Language.Haskell.TH.Syntax (Lift)
 
+import qualified Data.Aeson                 as J
 import qualified Data.HashMap.Strict        as HM
 import qualified Data.Text.Extended         as T
 import qualified Text.Builder               as TB
@@ -270,6 +265,9 @@ data SQLExp
   | SEArray ![SQLExp]
   | SECount !CountType
   deriving (Show, Eq)
+
+instance J.ToJSON SQLExp where
+  toJSON = J.toJSON . toSQLTxt
 
 newtype Alias
   = Alias { getAlias :: Iden }
