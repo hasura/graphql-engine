@@ -74,9 +74,6 @@ For ``serve`` subcommand these are the flags available
 
    -i, --tx-iso                 Transaction isolation. read-commited / repeatable-read /
                                 serializable
-
-       --root-dir               This static dir is served at / and takes precedence over
-                                all routes
                                 
        --enable-console         Enable API console. It is served at '/' and '/console'
 
@@ -116,9 +113,6 @@ These are the environment variables which are available:
    HASURA_GRAPHQL_TX_ISOLATION          transaction isolation. read-committed /
                                         repeatable-read / serializable
                                         (default: read-commited)
-
-   HASURA_GRAPHQL_ROOT_DIR              this static dir is served at / and takes precedence
-                                        over all routes
 
    HASURA_GRAPHQL_SERVER_PORT           Port on which graphql-engine should be served
 
