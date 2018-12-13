@@ -25,6 +25,8 @@ import {
   toggleOldAvailable,
   toggleNewAvailable,
 } from './LogActions';
+import * as tooltip from '../Common/Tooltips';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 class StreamingLogs extends Component {
   constructor(props) {
@@ -409,7 +411,44 @@ class StreamingLogs extends Component {
                           </div>
                         ) : null}
                         <div className={styles.add_mar_top}>
-                          <div className={styles.subheading_text}>Response</div>
+                          <div className={styles.subheading_text + ' col-md-6'}>
+                            Payload
+                          </div>
+                          <div
+                            className={styles.status_code_right + ' col-md-6'}
+                          >
+                            {finalResponse.status_code
+                              ? [
+                                'Status Code: ',
+                                finalResponse.status_code === 200 ? (
+                                  <i
+                                    className={
+                                      styles.invocationSuccess +
+                                        ' fa fa-check'
+                                    }
+                                  />
+                                ) : (
+                                  <i
+                                    className={
+                                      styles.invocationFailure +
+                                        ' fa fa-times'
+                                    }
+                                  />
+                                ),
+                                finalResponse.status_code,
+                                ' ',
+                                <OverlayTrigger
+                                  placement="right"
+                                  overlay={tooltip.statusCodeDescription}
+                                >
+                                  <i
+                                    className="fa fa-question-circle"
+                                    aria-hidden="true"
+                                  />
+                                </OverlayTrigger>,
+                              ]
+                              : null}
+                          </div>
                           <AceEditor
                             mode="json"
                             theme="github"
