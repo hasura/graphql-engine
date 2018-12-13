@@ -64,14 +64,13 @@ if (
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   if (globals.nodeEnv !== 'development') {
     const windowUrl = window.location.protocol + '//' + window.location.host;
-    globals.dataApiUrl = windowUrl;
+    globals.dataApiUrl = windowUrl + window.__env.urlPrefix.slice(0, -8);
   }
-  /*
-   * Require the exact usecase
   if (globals.nodeEnv === 'development') {
-    globals.dataApiUrl = globals.devDataApiUrl;
+    globals.dataApiUrl =
+      checkExtraSlashes(window.__env.dataApiUrl) +
+      window.__env.urlPrefix.slice(0, -8);
   }
-  */
 }
 
 export default globals;
