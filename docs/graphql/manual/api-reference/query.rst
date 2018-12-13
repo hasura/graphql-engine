@@ -423,7 +423,7 @@ Order by type for "article" table:
    }
 
 AggregateOrderBy               
-***************
+****************
 
 Count aggregate
 
