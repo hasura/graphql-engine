@@ -72,7 +72,7 @@ parseRavenMode env =
             <> footerDoc (Just serveCmdFooter)
           ))
         <> command "export" (info (pure $ Right ROExport)
-          ( progDesc "Export graphql-engine's schema to stdout" ))
+          ( progDesc "Export graphql-engine's metadata to stdout" ))
         <> command "clean" (info (pure $ Right ROClean)
           ( progDesc "Clean graphql-engine's metadata to start afresh" ))
         <> command "execute" (info (pure $ Right ROExecute)
@@ -105,7 +105,7 @@ parseArgs env = do
     parseRawConnInfo = runConfig env configRawConnInfo
     opts = info (helper <*> optParser)
            ( fullDesc <>
-             header "Hasura GraphQL Engine: Expose Postgres over GraphQL APIs with access control" <>
+             header "Hasura GraphQL Engine: Realtime GraphQL API over Postgres with access control" <>
              footerDoc (Just mainCmdFooter)
            )
 
