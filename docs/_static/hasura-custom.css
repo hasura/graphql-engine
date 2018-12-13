@@ -1167,20 +1167,6 @@ ol, ul {
 
 /* Reference Page ends here */
 
-/* Media Query */
-@media (min-width: 0) and (max-width: 1220px) {
-  body
-  {
-    min-width: 100% !important;
-    overflow-y: auto;
-  }
-  html
-  {
-    font-size: 100% !important;
-  }
-
-}
-
 /* Note overrides */
 .note, .admonition, .help-block {
   background: #f1f9ff;
@@ -1205,67 +1191,6 @@ ol, ul {
   padding-top: 10px;
   text-decoration: none;
   color: #333 !important;
-}
-
-/* Mobile + Tab overrides */
-@media (max-width: 1024px) {
-  body {
-    max-width: 100%;
-    min-width: 0px !important;
-  }
-
-  .input_search_box {
-    width: 60%;
-    margin-left: 10px;
-  }
-
-  .mobile-only {
-    display: initial;
-  }
-
-  .mobile-hide {
-    display: none !important;
-  }
-
-  #sidebar {
-    position: absolute;
-    width: 90% !important;
-    max-width: 800px !important;
-    left: 0;
-    right: 0;
-    margin: 0 auto;
-    top: 120px;
-    height: calc(100% - 120px);
-  }
-
-  .main_container_wrapper {
-    min-width: 0px !important;
-  }
-
-  .content_inner_wrapper {
-    width: 100% !important;
-  }
-
-  [role="main"] {
-    float: none !important;
-    width: 90% !important;
-    margin: 0 auto !important;
-  }
-
-  .mobile-logo {
-    display: flex;
-    margin-top: 20px;
-  }
-
-  .search_head_wrapper {
-    margin-top: 20px;
-  }
-
-  #docs-content {
-    margin-left: 0;
-    margin-right: 0;
-  }
-
 }
 
 .api-tabs .docutils {
@@ -1416,6 +1341,81 @@ ol, ul {
 
 .graphiql.view-only .execute-button {
   display: none !important;
+}
+
+/* Media Query */
+@media (min-width: 0) and (max-width: 1220px) {
+  body
+  {
+    min-width: 100% !important;
+    overflow-y: auto;
+  }
+  html
+  {
+    font-size: 100% !important;
+  }
+
+}
+
+/* Mobile + Tab overrides */
+@media (max-width: 1024px) {
+  body {
+    max-width: 100%;
+    min-width: 0px !important;
+  }
+
+  .input_search_box {
+    width: 60%;
+    margin-left: 10px;
+  }
+
+  .mobile-only {
+    display: initial;
+  }
+
+  .mobile-hide {
+    display: none !important;
+  }
+
+  #sidebar {
+    position: absolute;
+    width: 90% !important;
+    max-width: 800px !important;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    top: 120px;
+    height: calc(100% - 120px);
+  }
+
+  .main_container_wrapper {
+    min-width: 0px !important;
+  }
+
+  .content_inner_wrapper {
+    width: 100% !important;
+  }
+
+  [role="main"] {
+    float: none !important;
+    width: 90% !important;
+    margin: 0 auto !important;
+  }
+
+  .mobile-logo {
+    display: flex;
+    margin-top: 20px;
+  }
+
+  .search_head_wrapper {
+    margin-top: 20px;
+  }
+
+  #docs-content {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
 }
 
 /* Mobile overrides */
