@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
 module Main where
 
 import           Ops
@@ -28,11 +23,13 @@ import           Hasura.Events.Lib
 import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
-import           Hasura.RQL.Types           (RoleName (..))
+import           Hasura.RQL.Types           (QErr, RoleName (..), adminUserInfo,
+                                             emptySchemaCache)
 import           Hasura.Server.App          (mkWaiApp)
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
+import           Hasura.Server.Query        (peelRun)
 import           Hasura.Server.Version      (currentVersion)
 
 import qualified Database.PG.Query          as Q
@@ -177,23 +174,30 @@ main =  do
       either ((>> exitFailure) . printJSON) (const cleanSuccess) res
     ROExecute -> do
       queryBs <- BL.getContents
-      res <- runTx ci $ execQuery httpManager queryBs
+      res <- runAsAdmin ci httpManager $ execQuery queryBs
       either ((>> exitFailure) . printJSON) BLC.putStrLn res
     ROVersion -> return ()
   where
+    runTx :: Q.ConnInfo -> Q.TxE QErr a -> IO (Either QErr a)
     runTx ci tx = do
       pool <- getMinimalPool ci
       runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
+
+    runAsAdmin ci httpManager m = do
+      pool <- getMinimalPool ci
+      res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
+              httpManager pool Q.Serializable m
+      return $ fmap fst res
     getMinimalPool ci = do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
       Q.initPGPool ci connParams
     initialise ci httpMgr = do
       currentTime <- getCurrentTime
-      res <- runTx ci $ initCatalogSafe currentTime httpMgr
+      res <- runAsAdmin ci httpMgr $ initCatalogSafe currentTime
       either ((>> exitFailure) . printJSON) putStrLn res
     migrate ci httpMgr = do
       currentTime <- getCurrentTime
-      res <- runTx ci $ migrateCatalog httpMgr currentTime
+      res <- runAsAdmin ci httpMgr $ migrateCatalog currentTime
       either ((>> exitFailure) . printJSON) putStrLn res
     prepareEvents ci = do
       putStrLn "event_triggers: preparing data"

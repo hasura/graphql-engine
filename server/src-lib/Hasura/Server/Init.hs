@@ -1,7 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.Server.Init where
 
 import qualified Database.PG.Query            as Q
