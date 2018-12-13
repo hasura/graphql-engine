@@ -65,13 +65,13 @@ isAccessKeySet AMNoAuth = "false"
 isAccessKeySet _        = "true"
 
 mkConsoleHTML :: T.Text -> AuthMode -> IO T.Text
-mkConsoleHTML urlRoot authMode =
+mkConsoleHTML consoleRoot authMode =
   bool (initErrExit errMsg) (return res) (null errs)
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
                    object [ "version" .= consoleVersion
                           , "isAccessKeySet" .= isAccessKeySet authMode
-                          , "urlRoot" .= urlRoot
+                          , "consoleRoot" .= consoleRoot
                           ]
     errMsg = "Fatal Error : console template rendering failed"
              ++ show errs
@@ -311,7 +311,7 @@ httpApp mRootDir corsCfg serverCtx enableConsole urlRootRaw = do
 
     -- API Console and Root Dir
     if enableConsole then do
-      consoleHTML <- lift $ mkConsoleHTML urlRoot $ scAuthMode serverCtx
+      consoleHTML <- lift $ mkConsoleHTML consoleRoot $ scAuthMode serverCtx
       serveApiConsole consoleHTML
     else maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
 
@@ -377,14 +377,14 @@ httpApp mRootDir corsCfg serverCtx enableConsole urlRootRaw = do
       get (console <//> wildcard) $ const $ html htmlFile
 
     -- routes
-    urlRoot = case T.dropAround (== '/') urlRootRaw of
-                    "" -> ""
-                    r  -> r <> "/"
-    consoleRoot = urlRoot <> "console"
+    urlRoot = T.dropAround (== '/') urlRootRaw
+    consoleRoot = case urlRoot of
+                     "" -> "/console"
+                     r  -> "/" <> r <> "/console"
     staticUrlRoot = static $ T.unpack urlRoot
-    v1Version = staticUrlRoot <//> "v1/version"
-    v1Template = staticUrlRoot <//> "v1/template"
-    v1Query = staticUrlRoot <//> "v1/query"
-    v1Alpha1GQL = staticUrlRoot <//> "v1alpha1/graphql"
-    api1Table = staticUrlRoot <//> "api/1/table"
-    console = staticUrlRoot <//> "console"
+    v1Version = staticUrlRoot <//> "/v1/version"
+    v1Template = staticUrlRoot <//> "/v1/template"
+    v1Query = staticUrlRoot <//> "/v1/query"
+    v1Alpha1GQL = staticUrlRoot <//> "/v1alpha1/graphql"
+    api1Table = staticUrlRoot <//> "/api/1/table"
+    console = staticUrlRoot <//> "/console"
