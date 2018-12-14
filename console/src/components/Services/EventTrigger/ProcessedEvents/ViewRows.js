@@ -408,7 +408,9 @@ const ViewRows = ({
                               <div className={styles.add_mar_top}>
                                 <div
                                   className={
-                                    styles.subheading_text + ' col-md-6'
+                                    styles.subheading_text +
+                                    ' col-md-6 ' +
+                                    styles.padd_remove
                                   }
                                 >
                                   {finalResponse.status_code
@@ -417,7 +419,9 @@ const ViewRows = ({
                                 </div>
                                 <div
                                   className={
-                                    styles.status_code_right + ' col-md-6'
+                                    styles.status_code_right +
+                                    ' col-md-6 ' +
+                                    styles.padd_remove
                                   }
                                 >
                                   {finalResponse.status_code
@@ -441,7 +445,7 @@ const ViewRows = ({
                                       finalResponse.status_code,
                                       ' ',
                                       <OverlayTrigger
-                                        placement="right"
+                                        placement="top"
                                         overlay={
                                           tooltip.statusCodeDescription
                                         }
