@@ -1,12 +1,5 @@
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE GADTs      #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Hasura.RQL.Types.SchemaCache
        ( TableCache
@@ -103,7 +96,6 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Subscribe
-import qualified Hasura.SQL.DML                    as S
 import           Hasura.SQL.Types
 
 import           Control.Lens
@@ -175,8 +167,6 @@ reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
 --   } deriving (Show, Eq, Generic)
 
 -- $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaDependency)
-
-instance Hashable SchemaDependency
 
 mkParentDep :: QualifiedTable -> SchemaDependency
 mkParentDep tn = SchemaDependency (SOTable tn) "table"
@@ -270,11 +260,6 @@ getRels fim = rights $ map fieldInfoToEither $ M.elems fim
 isPGColInfo :: FieldInfo -> Bool
 isPGColInfo (FIColumn _) = True
 isPGColInfo _            = False
-
-instance ToJSON S.SQLExp where
-  toJSON = String . T.pack . show
-
---type InsSetCols = M.HashMap PGCol S.SQLExp
 
 data InsPermInfo
   = InsPermInfo

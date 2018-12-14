@@ -18,7 +18,6 @@ import {
   addOrder,
 } from './FilterActions';
 import { ordinalColSort } from '../utils';
-import Spinner from '../../../Common/Spinner/Spinner';
 import '../TableCommon/ReactTableFix.css';
 
 const ViewRows = ({
@@ -31,7 +30,6 @@ const ViewRows = ({
   activePath,
   triggerList,
   dispatch,
-  isProgressing,
   isView,
   count,
   expandedRow,
@@ -451,12 +449,6 @@ const ViewRows = ({
       <div className="row">
         <div className="col-xs-12">
           <div className={styles.tableContainer + ' eventsTableBody'}>
-            {isProgressing ? (
-              <div>
-                {' '}
-                <Spinner />{' '}
-              </div>
-            ) : null}
             {renderTableBody()}
           </div>
           <br />

@@ -29,6 +29,12 @@ const updateGraphQLEndpoint = (endpoint) => {
   };
 };
 
+const getRemoteQueries = (queryUrl, cb) => {
+  fetch(queryUrl)
+    .then(resp => resp.text().then(cb))
+    .catch(e => console.log('Invalid query URL: ', e));
+};
+
 const createWsClient = (url, headers) => {
   const gqlUrl = new URL(url);
   let websocketProtocol = 'ws';
@@ -236,5 +242,6 @@ export {
   graphQLFetcherFinal,
   focusHeaderTextbox,
   unfocusTypingHeader,
+  getRemoteQueries,
   updateGraphQLEndpoint,
 };

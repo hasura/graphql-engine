@@ -1,10 +1,5 @@
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE DataKinds  #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Hasura.Server.Auth
   ( getUserInfo
@@ -12,9 +7,7 @@ module Hasura.Server.Auth
   , mkAuthMode
   , AccessKey (..)
   , AuthHookType(..)
-  , AuthHookG (..)
-  , AuthHookConf
-  , AuthHook
+  , AuthHook (..)
   -- JWT related
   , RawJWT
   , JWTConfig (..)
@@ -40,7 +33,7 @@ import qualified Network.HTTP.Client     as H
 import qualified Network.HTTP.Types      as N
 import qualified Network.Wreq            as Wreq
 
-import           Hasura.HTTP.Utils       (wreqOptions)
+import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -60,14 +53,11 @@ data AuthHookType
   | AHTPost
   deriving (Show, Eq)
 
-data AuthHookG a b
-  = AuthHookG
-  { ahUrl  :: !a
-  , ahType :: !b
+data AuthHook
+  = AuthHook
+  { ahUrl  :: !T.Text
+  , ahType :: !AuthHookType
   } deriving (Show, Eq)
-
-type AuthHookConf = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
-type AuthHook = AuthHookG T.Text AuthHookType
 
 data AuthMode
   = AMNoAuth
@@ -202,7 +192,7 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
   mkUserInfoFromResp logger urlT method status respBody
   where
     mkOptions = wreqOptions manager
-    AuthHookG urlT ty = hook
+    AuthHook urlT ty = hook
     isPost = case ty of
       AHTPost -> True
       AHTGet  -> False
@@ -218,7 +208,8 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
 
     logAndThrow err = do
       liftIO $ L.unLogger logger $
-        WebHookLog L.LevelError Nothing urlT method (Just err) Nothing
+        WebHookLog L.LevelError Nothing urlT method
+        (Just $ HttpException err) Nothing
       throw500 "Internal Server Error"
 
     filteredHeaders = flip filter reqHeaders $ \(n, _) ->

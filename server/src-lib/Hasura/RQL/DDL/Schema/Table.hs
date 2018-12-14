@@ -1,14 +1,3 @@
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE MultiWayIf                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE QuasiQuotes                #-}
-{-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE TypeApplications           #-}
-{-# LANGUAGE TypeFamilies               #-}
-
 module Hasura.RQL.DDL.Schema.Table where
 
 import           Hasura.GraphQL.RemoteServer
@@ -40,7 +29,6 @@ import qualified Data.Text                          as T
 import qualified Data.Text.Encoding                 as TE
 import qualified Database.PostgreSQL.LibPQ          as PQ
 import qualified Language.GraphQL.Draft.Syntax      as G
-import qualified Network.HTTP.Client                as HTTP
 
 delTableFromCatalog :: QualifiedTable -> Q.Tx ()
 delTableFromCatalog (QualifiedTable sn tn) =
@@ -137,10 +125,11 @@ newtype TrackTable
   { tName :: QualifiedTable }
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
-trackExistingTableOrViewP1 :: TrackTable -> P1 ()
+trackExistingTableOrViewP1
+  :: (CacheRM m, UserInfoM m, QErrM m) => TrackTable -> m ()
 trackExistingTableOrViewP1 (TrackTable vn) = do
   adminOnly
-  rawSchemaCache <- getSchemaCache <$> lift ask
+  rawSchemaCache <- askSchemaCache
   when (M.member vn $ scTables rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> vn
 
@@ -174,16 +163,16 @@ trackExistingTableOrViewP2 vn isSystemDefined = do
       "public" -> getTableN vn
       _        -> getSchemaN vn <> "_" <> getTableN vn
 
-instance HDBQuery TrackTable where
+runTrackTableQ
+  :: ( QErrM m, CacheRWM m, MonadTx m
+     , MonadIO m, HasHttpManager m, UserInfoM m
+     )
+  => TrackTable -> m RespBody
+runTrackTableQ q = do
+  trackExistingTableOrViewP1 q
+  trackExistingTableOrViewP2 (tName q) False
 
-  type Phase1Res TrackTable = ()
-  phaseOne = trackExistingTableOrViewP1
-
-  phaseTwo (TrackTable tn) _ = trackExistingTableOrViewP2 tn False
-
-  schemaCachePolicy = SCPReload
-
-purgeDep :: (CacheRWM m, MonadError QErr m, MonadTx m)
+purgeDep :: (CacheRWM m, MonadTx m)
          => SchemaObjId -> m ()
 purgeDep schemaObjId = case schemaObjId of
   (SOTableObj tn (TOPerm rn pt)) -> do
@@ -205,7 +194,8 @@ purgeDep schemaObjId = case schemaObjId of
   _                              -> throw500 $
     "unexpected dependent object : " <> reportSchemaObj schemaObjId
 
-processTableChanges :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => TableInfo -> TableDiff -> m ()
+processTableChanges
+  :: (QErrM m, CacheRWM m) => TableInfo -> TableDiff -> m ()
 processTableChanges ti tableDiff = do
 
   when (isJust mNewName) $
@@ -247,7 +237,8 @@ processTableChanges ti tableDiff = do
     tn = tiName ti
     TableDiff mNewName droppedCols addedCols alteredCols _ = tableDiff
 
-delTableAndDirectDeps :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => QualifiedTable -> m ()
+delTableAndDirectDeps
+  :: (QErrM m, CacheRWM m, MonadTx m) => QualifiedTable -> m ()
 delTableAndDirectDeps qtn@(QualifiedTable sn tn) = do
   liftTx $ Q.catchE defaultTxErrorHandler $ do
     Q.unitQ [Q.sql|
@@ -265,7 +256,8 @@ delTableAndDirectDeps qtn@(QualifiedTable sn tn) = do
     delTableFromCatalog qtn
   delTableFromCache qtn
 
-processSchemaChanges :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => SchemaDiff -> m ()
+processSchemaChanges
+  :: (QErrM m, CacheRWM m, MonadTx m) => SchemaDiff -> m ()
 processSchemaChanges schemaDiff = do
   -- Purge the dropped tables
   mapM_ delTableAndDirectDeps droppedTables
@@ -286,10 +278,11 @@ data UntrackTable =
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UntrackTable)
 
-unTrackExistingTableOrViewP1 :: UntrackTable -> P1 ()
+unTrackExistingTableOrViewP1
+  :: (CacheRM m, UserInfoM m, QErrM m) => UntrackTable -> m ()
 unTrackExistingTableOrViewP1 (UntrackTable vn _) = do
   adminOnly
-  rawSchemaCache <- getSchemaCache <$> lift ask
+  rawSchemaCache <- askSchemaCache
   case M.lookup vn (scTables rawSchemaCache) of
     Just ti ->
       -- Check if table/view is system defined
@@ -326,23 +319,29 @@ unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
       (SOTableObj dtn _) -> qtn == dtn
       _                  -> False
 
-instance HDBQuery UntrackTable where
-  type Phase1Res UntrackTable = ()
-  phaseOne = unTrackExistingTableOrViewP1
+runUntrackTableQ
+  :: ( QErrM m, CacheRWM m, MonadTx m
+     , MonadIO m, HasHttpManager m, UserInfoM m
+     )
+  => UntrackTable -> m RespBody
+runUntrackTableQ q = do
+  unTrackExistingTableOrViewP1 q
+  unTrackExistingTableOrViewP2 q
 
-  phaseTwo q _ = unTrackExistingTableOrViewP2 q
-
-  schemaCachePolicy = SCPReload
-
-buildSchemaCache :: HTTP.Manager -> Q.TxE QErr SchemaCache
-buildSchemaCache httpManager = flip execStateT emptySchemaCache $ do
-  tables <- lift $ Q.catchE defaultTxErrorHandler fetchTables
+buildSchemaCache
+  :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m)
+  => m ()
+buildSchemaCache = do
+  -- reset the current schemacache
+  writeSchemaCache emptySchemaCache
+  hMgr <- askHttpManager
+  tables <- liftTx $ Q.catchE defaultTxErrorHandler fetchTables
   forM_ tables $ \(sn, tn, isSystemDefined) ->
     modifyErr (\e -> "table " <> tn <<> "; " <> e) $
     trackExistingTableOrViewP2Setup (QualifiedTable sn tn) isSystemDefined
 
   -- Fetch all the relationships
-  relationships <- lift $ Q.catchE defaultTxErrorHandler fetchRelationships
+  relationships <- liftTx $ Q.catchE defaultTxErrorHandler fetchRelationships
 
   forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef) ->
     modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $ case rt of
@@ -354,7 +353,7 @@ buildSchemaCache httpManager = flip execStateT emptySchemaCache $ do
       arrRelP2Setup (QualifiedTable sn tn) $ RelDef rn using Nothing
 
   -- Fetch all the permissions
-  permissions <- lift $ Q.catchE defaultTxErrorHandler fetchPermissions
+  permissions <- liftTx $ Q.catchE defaultTxErrorHandler fetchPermissions
 
   forM_ permissions $ \(sn, tn, rn, pt, Q.AltJ pDef) ->
     modifyErr (\e -> "table " <> tn <<> "; role " <> rn <<> "; " <> e) $ case pt of
@@ -364,15 +363,15 @@ buildSchemaCache httpManager = flip execStateT emptySchemaCache $ do
     PTDelete -> permHelper sn tn rn pDef PADelete
 
   -- Fetch all the query templates
-  qtemplates <- lift $ Q.catchE defaultTxErrorHandler fetchQTemplates
+  qtemplates <- liftTx $ Q.catchE defaultTxErrorHandler fetchQTemplates
   forM_ qtemplates $ \(qtn, Q.AltJ qtDefVal) -> do
     qtDef <- decodeValue qtDefVal
-    qCtx <- mkAdminQCtx <$> get
-    (qti, deps) <- liftP1 qCtx $ createQueryTemplateP1 $
+    qCtx <- mkAdminQCtx <$> askSchemaCache
+    (qti, deps) <- liftP1WithQCtx qCtx $ createQueryTemplateP1 $
            CreateQueryTemplate qtn qtDef Nothing
     addQTemplateToCache qti deps
 
-  eventTriggers <- lift $ Q.catchE defaultTxErrorHandler fetchEventTriggers
+  eventTriggers <- liftTx $ Q.catchE defaultTxErrorHandler fetchEventTriggers
   forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ configuration) -> do
     etc <- decodeValue configuration
 
@@ -389,19 +388,19 @@ buildSchemaCache httpManager = flip execStateT emptySchemaCache $ do
   remoteScConf <- forM res $ \(AddRemoteSchemaQuery n def _) ->
     (,) n <$> validateRemoteSchemaDef def
   let rmScMap = M.fromList remoteScConf
-  (mergedGCtxMap, defGCtx) <- mergeSchemas rmScMap gCtxMap httpManager
+  (mergedGCtxMap, defGCtx) <- mergeSchemas rmScMap gCtxMap hMgr
   writeRemoteSchemasToCache mergedGCtxMap rmScMap
   postMergeSc <- askSchemaCache
   writeSchemaCache postMergeSc { scDefaultRemoteGCtx = defGCtx }
 
   where
     permHelper sn tn rn pDef pa = do
-      qCtx <- mkAdminQCtx <$> get
+      qCtx <- mkAdminQCtx <$> askSchemaCache
       perm <- decodeValue pDef
       let qt = QualifiedTable sn tn
           permDef = PermDef rn perm Nothing
           createPerm = WithTable qt permDef
-      (permInfo, deps) <- liftP1 qCtx $ phaseOne createPerm
+      (permInfo, deps) <- liftP1WithQCtx qCtx $ createPermP1 createPerm
       addPermP2Setup qt permDef permInfo
       addPermToCache qt rn pa permInfo deps
       -- p2F qt rn p1Res
@@ -510,14 +509,11 @@ runSqlP2 (RunSQL t cascade) = do
       let e = err400 PostgresError "query execution failed"
       in e {qeInternal = Just $ toJSON txe}
 
-instance HDBQuery RunSQL where
-
-  type Phase1Res RunSQL = ()
-  phaseOne _ = adminOnly
-
-  phaseTwo q _ = runSqlP2 q
-
-  schemaCachePolicy = SCPReload
+runRunSQL
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  => RunSQL -> m RespBody
+runRunSQL q =
+  adminOnly >> runSqlP2 q
 
 -- Should be used only after checking the status
 resToCSV :: PQ.Result -> ExceptT T.Text IO [[T.Text]]

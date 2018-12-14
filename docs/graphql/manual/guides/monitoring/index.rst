@@ -1,5 +1,10 @@
 Guides: Integrating with monitoring frameworks
-----------------------------------------------
+==============================================
+
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
 
 The following demonstrate integrating Hasura GraphQL engine logs with some external
 monitoring frameworks:
