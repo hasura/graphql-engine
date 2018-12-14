@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.RQL.Instances where

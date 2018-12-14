@@ -1,11 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TupleSections         #-}
-
 module Hasura.GraphQL.Resolve.Select
   ( convertSelect
   , convertSelectByPKey
@@ -162,8 +154,7 @@ getAnnObItems f nt obj = do
         let aobCol = f $ RS.AOCPG ci
         (_, enumVal) <- asEnumVal v
         (ordTy, nullsOrd) <- parseOrderByEnum enumVal
-        return [OrderByItemG (Just ordTy) aobCol (Just nullsOrd)]
-
+        return [mkOrdByItemG ordTy aobCol nullsOrd]
       OBIRel ri fltr -> do
         let annObColFn = f . RS.AOCObj ri fltr
         withObject (getAnnObItems annObColFn) v
@@ -171,6 +162,10 @@ getAnnObItems f nt obj = do
       OBIAgg ri fltr -> do
         let aobColFn = f . RS.AOCAgg ri fltr
         flip withObject v $ \_ o -> parseAggOrdBy aobColFn o
+
+mkOrdByItemG :: S.OrderType -> a -> S.NullsOrder -> OrderByItemG a
+mkOrdByItemG ordTy aobCol nullsOrd =
+  OrderByItemG (Just $ OrderType ordTy) aobCol (Just $ NullsOrder nullsOrd)
 
 parseAggOrdBy
   :: (MonadError QErr m)
@@ -182,14 +177,14 @@ parseAggOrdBy f annObj =
     case op of
       "count" -> do
         (ordTy, nullsOrd) <- parseAsEnum obVal
-        return [OrderByItemG (Just ordTy) (f RS.AAOCount) $ Just nullsOrd]
+        return [mkOrdByItemG ordTy (f RS.AAOCount) nullsOrd]
 
       G.Name opT ->
         flip withObject obVal $ \_ opObObj ->
           forM (OMap.toList opObObj) $ \(col, eVal) -> do
             (ordTy, nullsOrd) <- parseAsEnum eVal
             let aobCol = f $ RS.AAOOp opT $ PGCol $ G.unName col
-            return $ OrderByItemG (Just ordTy) aobCol $ Just nullsOrd
+            return $ mkOrdByItemG ordTy aobCol nullsOrd
   where
     parseAsEnum v = do
       (_, enumVal) <- asEnumVal v

@@ -1,11 +1,3 @@
-{-# LANGUAGE DeriveGeneric       #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE FlexibleInstances   #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE QuasiQuotes         #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell     #-}
-
 module Hasura.GraphQL.RemoteServer where
 
 import           Control.Exception             (try)
@@ -25,7 +17,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.Wreq                  as Wreq
 
-import           Hasura.HTTP.Utils             (wreqOptions)
+import           Hasura.HTTP                   (wreqOptions)
 import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
 import           Hasura.RQL.Types
 

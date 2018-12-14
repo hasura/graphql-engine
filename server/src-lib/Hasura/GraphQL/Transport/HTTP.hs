@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
 module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   , getTopLevelNodes
@@ -29,14 +24,13 @@ import qualified Network.Wreq                           as Wreq
 
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.HTTP.Utils
+import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 
 import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
-import qualified Hasura.Server.Query                    as RQ
 
 
 runGQ
@@ -83,9 +77,16 @@ assertSameLocationNodes typeLocs =
       _  -> Set.size (Set.fromList xs) == 1
     msg = "cannot mix nodes from two different graphql servers"
 
+-- TODO: we should retire the function asap
 getTopLevelNodes :: G.TypedOperationDefinition -> [G.Name]
 getTopLevelNodes opDef =
-  map (\(G.SelectionField f) -> G._fName f) $ G._todSelectionSet opDef
+  mapMaybe f $ G._todSelectionSet opDef
+  where
+    -- TODO: this will fail when there is a fragment at the top level
+    f = \case
+      G.SelectionField fld        -> Just $ G._fName fld
+      G.SelectionFragmentSpread _ -> Nothing
+      G.SelectionInlineFragment _ -> Nothing
 
 gatherTypeLocs :: GCtx -> [G.Name] -> [VT.TypeLoc]
 gatherTypeLocs gCtx nodes =
@@ -96,7 +97,6 @@ gatherTypeLocs gCtx nodes =
       let qr = VT._otiFields $ _gQueryRoot gCtx
           mr = VT._otiFields <$> _gMutRoot gCtx
       in maybe qr (Map.union qr) mr
-
 
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
@@ -115,9 +115,7 @@ runHasuraGQ pool isoL userInfo sc queryParts = do
   return $ encodeGQResp $ GQSuccess resp
   where
     gCtxMap = scGCtxMap sc
-    runTx tx =
-      Q.runTx pool (isoL, Nothing) $
-      RQ.setHeadersTx (userVars userInfo) >> tx
+    runTx tx = runLazyTx pool isoL $ withUserInfo userInfo tx
 
 runRemoteGQ
   :: (MonadIO m, MonadError QErr m)

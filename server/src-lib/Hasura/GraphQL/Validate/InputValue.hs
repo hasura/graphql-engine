@@ -1,11 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TupleSections         #-}
-
 module Hasura.GraphQL.Validate.InputValue
   ( validateInputValue
   , jsonParser
