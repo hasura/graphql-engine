@@ -27,6 +27,10 @@ extra-deps:
 - deferred-folds-0.9.9
 - primitive-0.6.4.0
 
+# jose for the x5t bugfix (0.8.0.0)
+- git: https://github.com/frasertweedale/hs-jose.git
+  commit: d47572fb0650ac6cc2c9e00711c7f99132d897cb
+
 
 # Override default flag values for local packages and extra-deps
 flags: {}
