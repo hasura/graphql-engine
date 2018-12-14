@@ -13,6 +13,11 @@ the request.
 Convert insert mutation to upsert
 ---------------------------------
 
+.. note::
+
+  Only tables with **update** permissions are **upsertable**. i.e. a table's update permissions are respected
+  before updating an existing row in case of a conflict.
+
 To convert an :doc:`insert mutation <insert>` into an upsert, you need to specify a unique or primary key constraint
 and the columns to be updated in the case of a violation of that constraint using the ``on_conflict`` argument. You can
 specify a constraint using the ``constraint`` field and choose the columns to update using the
@@ -20,12 +25,10 @@ specify a constraint using the ``constraint`` field and choose the columns to up
 upsert request in case of conflicts.
 
 .. admonition:: Fetching Postgres constraint names
-    
-    #. Only tables with **update** permissions are **upsertable**.
-       Learn more about permissions :doc:`here <../api-reference/schema-metadata-api/permission>`.
-    #. You can fetch the name of unique or primary key constraints by querying the ``information_schema.table_constraints`` table.
-       GraphQL Engine will automatically generate constraint names as enum values for ``constraint`` (try autocompleting in GraphiQL).
-       Typically, the constraint is automatically named as ``<table-name>_<column-name>_key``.
+
+  You can fetch the name of unique or primary key constraints by querying the ``information_schema.table_constraints``
+  table. GraphQL Engine will automatically generate constraint names as enum values for ``constraint`` (try
+  autocompleting in GraphiQL). Typically, the constraint is automatically named as ``<table-name>_<column-name>_key``.
 
 
 Update selected columns on conflict
@@ -68,11 +71,10 @@ specified in ``update_columns``:
       }
     }
 
-
 Ignore request on conflict
 --------------------------
-If ``update_columns`` is an **empty array** then GraphQL Engine ignore changes on conflict. Insert a new object into the author
-table or, if the unique constraint, ``author_name_key``, is violated, ignore the request
+If ``update_columns`` is an **empty array** then GraphQL Engine ignore changes on conflict. Insert a new object into
+the author table or, if the unique constraint, ``author_name_key``, is violated, ignore the request
 
 .. graphiql::
   :view_only:
