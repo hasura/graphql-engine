@@ -1,9 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
 module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
   , pgColValToBoolExp
@@ -16,8 +10,6 @@ import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Language.GraphQL.Draft.Syntax     as G
 
-import qualified Hasura.SQL.DML                    as S
-
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Types
@@ -29,7 +21,7 @@ import           Hasura.SQL.Value
 type OpExp = OpExpG (PGColType, PGColValue)
 
 parseOpExps
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
+  :: (MonadError QErr m)
   => AnnGValue -> m [OpExp]
 parseOpExps annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
@@ -87,12 +79,8 @@ parseAsEqOp annVal = do
 
 parseColExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> G.NamedType
-  -> G.Name
-  -> AnnGValue
-  -> (AnnGValue -> m [OpExp])
-  -> m AnnBoolExpFldSQL
+  => PrepFn m -> G.NamedType -> G.Name -> AnnGValue
+  -> (AnnGValue -> m [OpExp]) -> m AnnBoolExpFldSQL
 parseColExp f nt n val expParser = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
@@ -105,9 +93,7 @@ parseColExp f nt n val expParser = do
 
 parseBoolExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> AnnGValue
-  -> m AnnBoolExpSQL
+  => PrepFn m -> AnnGValue -> m AnnBoolExpSQL
 parseBoolExp f annGVal = do
   boolExpsM <-
     flip withObjectM annGVal
@@ -124,9 +110,7 @@ type PGColValMap = Map.HashMap G.Name AnnGValue
 
 pgColValToBoolExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> PGColValMap
-  -> m AnnBoolExpSQL
+  => PrepFn m -> PGColValMap -> m AnnBoolExpSQL
 pgColValToBoolExp f colValMap = do
   colExps <- forM colVals $ \(name, val) -> do
     (ty, _) <- asPGColVal val

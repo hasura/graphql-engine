@@ -12,7 +12,7 @@ class ApiExplorer extends Component {
     } else {
       localStorageUrl = window.localStorage.getItem('ONLINE_GRAPHIQL_ENDPOINT');
     }
-    if (!this.props.graphqlEndpoint && (localStorageUrl === 'undefined' || localStorage === null)) {
+    if (!this.props.graphqlEndpoint && (localStorageUrl === 'undefined' || localStorageUrl === null)) {
       this.props.dispatch(push('/'));
     }
   }
@@ -39,6 +39,7 @@ class ApiExplorer extends Component {
         route={this.props.route}
         dataHeaders={this.props.dataHeaders}
         headerFocus={this.props.headerFocus}
+        queryParams={this.props.location.query}
         graphqlEndpoint={localStorageUrl}
       />
     );
@@ -60,6 +61,7 @@ ApiExplorer.propTypes = {
   dispatch: PropTypes.func.isRequired,
   route: PropTypes.object.isRequired,
   headerFocus: PropTypes.bool.isRequired,
+  location: PropTypes.object.isRequired,
 };
 
 export default ApiExplorer;
