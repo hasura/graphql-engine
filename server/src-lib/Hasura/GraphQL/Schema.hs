@@ -1,11 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
 module Hasura.GraphQL.Schema
   ( mkGCtxMap
   , GCtxMap
@@ -1135,6 +1127,57 @@ mkConflictActionTy = mkHsraEnumTyInfo (Just desc) ty $ mapFromL _eviVal
 --         )
 --       ]
 
+mkTabAggOpOrdByTy :: QualifiedTable -> G.Name -> G.NamedType
+mkTabAggOpOrdByTy tn op =
+  G.NamedType $ qualTableToName tn <> "_" <> op <> "_order_by"
+
+{-
+input table_<op>_order_by {
+  col1: order_by
+  .     .
+  .     .
+}
+-}
+
+mkTabAggOpOrdByInpObjs
+  :: QualifiedTable -> [PGCol] -> [PGCol] -> [InpObjTyInfo]
+mkTabAggOpOrdByInpObjs tn numCols compCols =
+  map (mkInpObjTy numCols) numAggOps <> map (mkInpObjTy compCols) compAggOps
+  where
+
+    mkDesc (G.Name op) = G.Description $ "order by " <> op <> "() on columns of table " <>> tn
+    mkInpObjTy cols op = mkHsraInpTyInfo (Just $ mkDesc op) (mkTabAggOpOrdByTy tn op) $
+                         fromInpValL $ map mkColInpVal cols
+    mkColInpVal c = InpValInfo Nothing (mkColName c) $ G.toGT
+                    ordByTy
+
+mkTabAggOrdByTy :: QualifiedTable -> G.NamedType
+mkTabAggOrdByTy tn =
+  G.NamedType $ qualTableToName tn <> "_aggregate_order_by"
+
+{-
+input table_aggregate_order_by {
+count: order_by
+  <op-name>: table_<op-name>_order_by
+}
+-}
+
+mkTabAggOrdByInpObj
+  :: QualifiedTable -> [PGCol] -> [PGCol] -> InpObjTyInfo
+mkTabAggOrdByInpObj tn numCols compCols =
+  mkHsraInpTyInfo (Just desc) (mkTabAggOrdByTy tn) $ fromInpValL $
+  numOpOrdBys <> compOpOrdBys <> [countInpVal]
+  where
+    desc = G.Description $
+      "order by aggregate values of table " <>> tn
+
+    numOpOrdBys = bool (map mkInpValInfo numAggOps) [] $ null numCols
+    compOpOrdBys = bool (map mkInpValInfo compAggOps) [] $ null compCols
+    mkInpValInfo op = InpValInfo Nothing op $ G.toGT $
+                     mkTabAggOpOrdByTy tn op
+
+    countInpVal = InpValInfo Nothing "count" $ G.toGT ordByTy
+
 mkOrdByTy :: QualifiedTable -> G.NamedType
 mkOrdByTy tn =
   G.NamedType $ qualTableToName tn <> "_order_by"
@@ -1157,14 +1200,17 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
     inpObjTy =
       mkHsraInpTyInfo (Just desc) namedTy $ fromInpValL $
       map mkColOrdBy pgCols <> map mkObjRelOrdBy objRels
+      <> mapMaybe mkArrRelAggOrdBy arrRels
 
     namedTy = mkOrdByTy tn
     desc = G.Description $
       "ordering options when selecting data from " <>> tn
 
     pgCols = lefts selFlds
-    objRels = flip filter (rights selFlds) $ \(ri, _, _, _, _) ->
-      riType ri == ObjRel
+    relFltr ty = flip filter (rights selFlds) $ \(ri, _, _, _, _) ->
+      riType ri == ty
+    objRels = relFltr ObjRel
+    arrRels = relFltr ArrRel
 
     mkColOrdBy ci = InpValInfo Nothing (mkColName $ pgiName ci) $
                     G.toGT ordByTy
@@ -1172,8 +1218,13 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
       InpValInfo Nothing (mkRelName $ riName ri) $
       G.toGT $ mkOrdByTy $ riRTable ri
 
+    mkArrRelAggOrdBy (ri, isAggAllowed, _, _, _) =
+      let ivi = InpValInfo Nothing (mkAggRelName $ riName ri) $
+            G.toGT $ mkTabAggOrdByTy $ riRTable ri
+      in bool Nothing (Just ivi) isAggAllowed
+
     ordByCtx = Map.singleton namedTy $ Map.fromList $
-               colOrdBys <> relOrdBys
+               colOrdBys <> relOrdBys <> arrRelOrdBys
     colOrdBys = flip map pgCols $ \ci ->
                                     ( mkColName $ pgiName ci
                                     , OBIPGCol ci
@@ -1182,6 +1233,11 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
                                      ( mkRelName $ riName ri
                                      , OBIRel ri fltr
                                      )
+    arrRelOrdBys = flip mapMaybe arrRels $ \(ri, isAggAllowed, fltr, _, _) ->
+                     let obItem = ( mkAggRelName $ riName ri
+                                  , OBIAgg ri fltr
+                                  )
+                     in bool Nothing (Just obItem) isAggAllowed
 
 -- newtype RootFlds
 --   = RootFlds
@@ -1247,7 +1303,7 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
       , TIInpObj <$> ordByInpObjM
       , TIObj <$> selObjM
       ]
-    aggQueryTypes = map TIObj aggObjs
+    aggQueryTypes = map TIObj aggObjs <> map TIInpObj aggOrdByInps
 
     mutationTypes = catMaybes
       [ TIInpObj <$> mutHelper viIsInsertable insInpObjM
@@ -1256,6 +1312,8 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
       , TIObj <$> mutRespObjM
       , TIEnum <$> selColInpTyM
       ]
+
+    mutHelper :: (ViewInfo -> Bool) -> Maybe a -> Maybe a
     mutHelper f objM = bool Nothing objM $ isMutable f viM
 
     fieldMap = Map.unions $ catMaybes
@@ -1327,15 +1385,19 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM allC
 
     -- table obj
     selObjM = mkTableObj tn <$> selFldsM
-    -- aggregate objs
-    aggObjs = case selPermM of
+    -- aggregate objs and order by inputs
+    (aggObjs, aggOrdByInps) = case selPermM of
       Just (True, selFlds) ->
         let numCols = (map pgiName . getNumCols) selFlds
             compCols = (map pgiName . getCompCols) selFlds
-        in [ mkTableAggObj tn
-           , mkTableAggFldsObj tn numCols compCols
-           ] <> mkColAggFldsObjs selFlds
-      _ -> []
+            objs = [ mkTableAggObj tn
+                   , mkTableAggFldsObj tn numCols compCols
+                   ] <> mkColAggFldsObjs selFlds
+            ordByInps = mkTabAggOrdByInpObj tn numCols compCols
+                        : mkTabAggOpOrdByInpObjs tn numCols compCols
+        in (objs, ordByInps)
+      _ -> ([], [])
+
     getNumCols = onlyNumCols . lefts
     getCompCols = onlyComparableCols . lefts
     onlyFloat = const $ mkScalarTy PGFloat
@@ -1384,14 +1446,18 @@ getRootFldsRole' tn primCols constraints fields insM selM updM delM viM =
             , getSelDet <$> selM, getSelAggDet selM
             , getPKeySelDet selM $ getColInfos primCols colInfos
             ]
+
+    mutHelper :: (ViewInfo -> Bool) -> (a -> b) -> Maybe a -> Maybe b
     mutHelper f getDet mutM =
       bool Nothing (getDet <$> mutM) $ isMutable f viM
+
     colInfos = fst $ validPartitionFieldInfoMap fields
     getInsDet (hdrs, upsertPerm) =
       let isUpsertable = upsertable constraints upsertPerm $ isJust viM
       in ( OCInsert tn hdrs
          , Right $ mkInsMutFld tn isUpsertable
          )
+
     getUpdDet (updCols, updFltr, hdrs) =
       ( OCUpdate tn updFltr hdrs
       , Right $ mkUpdMutFld tn $ getColInfos updCols colInfos
@@ -1582,19 +1648,28 @@ checkSchemaConflicts
   :: (MonadError QErr m)
   => GCtx -> GCtx -> m ()
 checkSchemaConflicts gCtx remoteCtx = do
-  -- check type conflicts
   let typeMap     = _gTypes gCtx -- hasura typemap
-      hTypes      = map G.unNamedType $ Map.keys typeMap
+  -- check type conflicts
+  let hTypes      = Map.elems typeMap
+      hTyNames    = map G.unNamedType $ Map.keys typeMap
+      -- get the root names from the remote schema
       rmQRootName = _otiName $ _gQueryRoot remoteCtx
       rmMRootName = maybeToList $ _otiName <$> _gMutRoot remoteCtx
-      rmRootNames = map G.unNamedType (rmQRootName:rmMRootName)
-      rmTypes     = filter (`notElem` builtinTy ++ rmRootNames) $
-                    map G.unNamedType $ Map.keys $ _gTypes remoteCtx
+      rmSRootName = maybeToList $ _otiName <$> _gSubRoot remoteCtx
+      rmRootNames = map G.unNamedType (rmQRootName:(rmMRootName ++ rmSRootName))
+  let rmTypes     = Map.filterWithKey
+                    (\k _ -> G.unNamedType k `notElem` builtinTy ++ rmRootNames)
+                    $ _gTypes remoteCtx
 
-      conflictedTypes = filter (`elem` hTypes) rmTypes
+      isTyInfoSame ty = any (\t -> tyinfoEq t ty) hTypes
+      -- name is same and structure is not same
+      isSame n ty = G.unNamedType n `elem` hTyNames &&
+                    not (isTyInfoSame ty)
+      conflictedTypes = Map.filterWithKey isSame rmTypes
+      conflictedTyNames = map G.unNamedType $ Map.keys conflictedTypes
 
-  unless (null conflictedTypes) $
-    throw400 RemoteSchemaConflicts $ tyMsg conflictedTypes
+  unless (Map.null conflictedTypes) $
+    throw400 RemoteSchemaConflicts $ tyMsg conflictedTyNames
 
   -- check node conflicts
   let rmQRoot = _otiFields $ _gQueryRoot remoteCtx
@@ -1615,6 +1690,13 @@ checkSchemaConflicts gCtx remoteCtx = do
     _ -> return ()
 
   where
+    tyinfoEq a b = case (a, b) of
+      (TIScalar t1, TIScalar t2) -> typeEq t1 t2
+      (TIObj t1, TIObj t2)       -> typeEq t1 t2
+      (TIEnum t1, TIEnum t2)     -> typeEq t1 t2
+      (TIInpObj t1, TIInpObj t2) -> typeEq t1 t2
+      _                          -> False
+
     hQRName = G.NamedType "query_root"
     hMRName = G.NamedType "mutation_root"
     tyMsg ty = "types: [" <> namesToTxt ty <>
@@ -1745,14 +1827,23 @@ mergeMaybeMaps m1 m2 = case (m1, m2) of
 
 
 -- pretty print GCtx
-ppGCtx :: GCtx -> IO ()
-ppGCtx gCtx = do
-  let types = map (G.unName . G.unNamedType) $ Map.keys $ _gTypes gCtx
-      qRoot = map G.unName $ Map.keys $ _otiFields $ _gQueryRoot gCtx
-      mRoot = maybe [] (map G.unName . Map.keys . _otiFields) $ _gMutRoot gCtx
+ppGCtx :: GCtx -> String
+ppGCtx gCtx =
+  "GCtx ["
+  <> "\n  types = " <> show types
+  <> "\n  query root = " <> show qRoot
+  <> "\n  mutation root = " <> show mRoot
+  <> "\n  subscription root = " <> show sRoot
+  <> "\n]"
 
-  print ("GCtx [" :: Text)
-  print $ "  types = " <> show types
-  print $ "  query root = " <> show qRoot
-  print $ "  mutation root = " <> show mRoot
-  print ("]" :: Text)
+  where
+    types = map (G.unName . G.unNamedType) $ Map.keys $ _gTypes gCtx
+    qRoot = (,) (_otiName qRootO) $
+            map G.unName $ Map.keys $ _otiFields qRootO
+    mRoot = (,) (_otiName <$> mRootO) $
+            maybe [] (map G.unName . Map.keys . _otiFields) mRootO
+    sRoot = (,) (_otiName <$> sRootO) $
+            maybe [] (map G.unName . Map.keys . _otiFields) sRootO
+    qRootO = _gQueryRoot gCtx
+    mRootO = _gMutRoot gCtx
+    sRootO = _gSubRoot gCtx
