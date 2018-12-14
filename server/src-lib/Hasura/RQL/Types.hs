@@ -1,27 +1,17 @@
-{-# LANGUAGE ConstraintKinds       #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Hasura.RQL.Types
-       ( HasSchemaCache(..)
-       , ProvidesFieldInfoMap(..)
-       , HDBQuery(..)
-       , SchemaCachePolicy(..)
-       , queryModifiesSchema
-
-       , P1
-       , P1C
+       ( P1
+       , liftP1
+       , liftP1WithQCtx
        , MonadTx(..)
+
+       , LazyTx
+       , runLazyTx
+       , withUserInfo
+
        , UserInfoM(..)
        , RespBody
-       --, P2C
-       , P2Ctx (..)
-       -- , P2Res
-       , liftP1
-       , runP1
        , successMsg
 
        , HasHttpManager (..)
@@ -69,59 +59,20 @@ import qualified Database.PG.Query             as Q
 
 import           Data.Aeson
 
+import qualified Data.Aeson.Text               as AT
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.HashMap.Strict           as M
 import qualified Data.Text                     as T
+import qualified Data.Text.Lazy                as LT
 import qualified Network.HTTP.Client           as HTTP
 
-class ProvidesFieldInfoMap r where
-  getFieldInfoMap :: QualifiedTable -> r -> Maybe FieldInfoMap
-
-class HasSchemaCache a where
-  getSchemaCache :: a -> SchemaCache
-
-instance HasSchemaCache QCtx where
-  getSchemaCache = qcSchemaCache
-
-instance HasSchemaCache SchemaCache where
-  getSchemaCache = id
-
-instance ProvidesFieldInfoMap SchemaCache where
-  getFieldInfoMap tn =
-    fmap tiFieldInfoMap . M.lookup tn . scTables
-
--- There are two phases to every query.
--- Phase 1 : Use the cached env to validate or invalidate
--- Phase 2 : Hit Postgres if need to
-
-class HDBQuery q where
-  type Phase1Res q -- Phase 1 result
-
-  -- Use QCtx
-  phaseOne :: q -> P1 (Phase1Res q)
-
-  -- Hit Postgres
-  phaseTwo :: q -> Phase1Res q -> P2 BL.ByteString
-
-  schemaCachePolicy :: SchemaCachePolicy q
-
-data SchemaCachePolicy a
-  = SCPReload
-  | SCPNoChange
-  deriving (Show, Eq)
-
-schemaCachePolicyToBool :: SchemaCachePolicy a -> Bool
-schemaCachePolicyToBool SCPReload   = True
-schemaCachePolicyToBool SCPNoChange = False
-
-getSchemaCachePolicy :: (HDBQuery a) => a -> SchemaCachePolicy a
-getSchemaCachePolicy _ = schemaCachePolicy
+getFieldInfoMap
+  :: QualifiedTable
+  -> SchemaCache -> Maybe FieldInfoMap
+getFieldInfoMap tn =
+  fmap tiFieldInfoMap . M.lookup tn . scTables
 
 type RespBody = BL.ByteString
-
-queryModifiesSchema :: (HDBQuery q) => q -> Bool
-queryModifiesSchema =
-  schemaCachePolicyToBool . getSchemaCachePolicy
 
 data QCtx
   = QCtx
@@ -137,14 +88,6 @@ instance HasQCtx QCtx where
 
 mkAdminQCtx :: SchemaCache -> QCtx
 mkAdminQCtx = QCtx adminUserInfo
-
-data P2Ctx
-  = P2Ctx
-  { _p2cUserInfo    :: !UserInfo
-  , _p2cHttpManager :: !HTTP.Manager
-  }
-
-type P2 = StateT SchemaCache (ReaderT P2Ctx (Q.TxE QErr))
 
 class (Monad m) => UserInfoM m where
   askUserInfo :: m UserInfo
@@ -171,7 +114,7 @@ askTabInfoFromTrigger trn = do
     errMsg = "event trigger " <> trn <<> " does not exist"
 
 askEventTriggerInfo
-  :: (QErrM m, CacheRM m)
+  :: (QErrM m)
   => EventTriggerInfoMap -> TriggerName -> m EventTriggerInfo
 askEventTriggerInfo etim trn = liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
   where
@@ -193,24 +136,13 @@ instance UserInfoM P1 where
 instance CacheRM P1 where
   askSchemaCache = qcSchemaCache <$> ask
 
-instance UserInfoM P2 where
-  askUserInfo = _p2cUserInfo <$> ask
-
 class (Monad m) => HasHttpManager m where
   askHttpManager :: m HTTP.Manager
-
-instance HasHttpManager P2 where
-  askHttpManager = _p2cHttpManager <$> ask
 
 class (Monad m) => HasGCtxMap m where
   askGCtxMap :: m GC.GCtxMap
 
--- instance HasGCtxMap P2 where
---   askGCtxMap = _p2cGCtxMap <$> ask
-
---type P2C m = (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
-
-class (Monad m) => MonadTx m where
+class (MonadError QErr m) => MonadTx m where
   liftTx :: Q.TxE QErr a -> m a
 
 instance (MonadTx m) => MonadTx (StateT s m) where
@@ -219,19 +151,101 @@ instance (MonadTx m) => MonadTx (StateT s m) where
 instance (MonadTx m) => MonadTx (ReaderT s m) where
   liftTx = lift . liftTx
 
+data LazyTx e a
+  = LTErr e
+  | LTNoTx a
+  | LTTx (Q.TxE e a)
+
+lazyTxToQTx :: LazyTx e a -> Q.TxE e a
+lazyTxToQTx = \case
+  LTErr e  -> throwError e
+  LTNoTx r -> return r
+  LTTx tx  -> tx
+
+runLazyTx
+  :: Q.PGPool -> Q.TxIsolation
+  -> LazyTx QErr a -> ExceptT QErr IO a
+runLazyTx pgPool txIso = \case
+  LTErr e  -> throwError e
+  LTNoTx a -> return a
+  LTTx tx  -> Q.runTx pgPool (txIso, Nothing) tx
+
+setHeadersTx :: UserVars -> Q.TxE QErr ()
+setHeadersTx uVars =
+  Q.unitQE defaultTxErrorHandler setSess () False
+  where
+    toStrictText = LT.toStrict . AT.encodeToLazyText
+    setSess = Q.fromText $
+      "SET LOCAL \"hasura.user\" = " <>
+      pgFmtLit (toStrictText uVars)
+
+withUserInfo :: UserInfo -> LazyTx QErr a -> LazyTx QErr a
+withUserInfo uInfo = \case
+  LTErr e  -> LTErr e
+  LTNoTx a -> LTNoTx a
+  LTTx tx  -> LTTx $ setHeadersTx (userVars uInfo) >> tx
+
+instance Functor (LazyTx e) where
+  fmap f = \case
+    LTErr e  -> LTErr e
+    LTNoTx a -> LTNoTx $ f a
+    LTTx tx  -> LTTx $ fmap f tx
+
+instance Applicative (LazyTx e) where
+  pure = LTNoTx
+
+  LTErr e   <*> _         = LTErr e
+  LTNoTx f  <*> r         = fmap f r
+  LTTx _    <*> LTErr e   = LTErr e
+  LTTx txf  <*> LTNoTx a  = LTTx $ txf <*> pure a
+  LTTx txf  <*> LTTx tx   = LTTx $ txf <*> tx
+
+instance Monad (LazyTx e) where
+  LTErr e >>= _  = LTErr e
+  LTNoTx a >>= f = f a
+  LTTx txa >>= f =
+    LTTx $ txa >>= lazyTxToQTx . f
+
+instance MonadError e (LazyTx e) where
+  throwError = LTErr
+  LTErr e  `catchError` f = f e
+  LTNoTx a `catchError` _ = LTNoTx a
+  LTTx txe `catchError` f =
+    LTTx $ txe `catchError` (lazyTxToQTx . f)
+
+instance MonadTx (LazyTx QErr) where
+  liftTx = LTTx
+
 instance MonadTx (Q.TxE QErr) where
   liftTx = id
 
-type P1 = ExceptT QErr (Reader QCtx)
+instance MonadIO (LazyTx QErr) where
+  liftIO = LTTx . liftIO
 
-runP1 :: QCtx -> P1 a -> Either QErr a
-runP1 qEnv m = runReader (runExceptT m) qEnv
+type ER e r = ExceptT e (Reader r)
+type P1 = ER QErr QCtx
+
+runER :: r -> ER e r a -> Either e a
+runER r m = runReader (runExceptT m) r
 
 liftMaybe :: (QErrM m) => QErr -> Maybe a -> m a
 liftMaybe e = maybe (throwError e) return
 
-liftP1 :: (MonadError QErr m) => QCtx -> P1 a -> m a
-liftP1 r m = liftEither $ runP1 r m
+liftP1
+  :: ( QErrM m
+     , UserInfoM m
+     , CacheRM m
+     ) => P1 a -> m a
+liftP1 m = do
+  ui <- askUserInfo
+  sc <- askSchemaCache
+  let qCtx = QCtx ui sc
+  liftP1WithQCtx qCtx m
+
+liftP1WithQCtx
+  :: (MonadError e m) => r -> ER e r a -> m a
+liftP1WithQCtx r m =
+  liftEither $ runER r m
 
 askFieldInfoMap
   :: (QErrM m, CacheRM m)

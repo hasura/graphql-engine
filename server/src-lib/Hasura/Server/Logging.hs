@@ -1,7 +1,3 @@
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-
 -- This is taken from wai-logger and customised for our use
 
 module Hasura.Server.Logging
@@ -9,6 +5,7 @@ module Hasura.Server.Logging
   , getRequestHeader
   , WebHookLog(..)
   , WebHookLogger
+  , HttpException
   ) where
 
 import           Crypto.Hash                 (Digest, SHA1, hash)
@@ -30,7 +27,6 @@ import           Text.Printf                 (printf)
 
 import qualified Data.ByteString.Char8       as BS
 import qualified Data.CaseInsensitive        as CI
-import qualified Network.HTTP.Client         as H
 import qualified Network.HTTP.Types          as N
 
 import qualified Hasura.Logging              as L
@@ -38,7 +34,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
 import           Hasura.Server.Utils
-
+import           Hasura.HTTP
 
 data WebHookLog
   = WebHookLog
@@ -46,7 +42,7 @@ data WebHookLog
   , whlStatusCode :: !(Maybe N.Status)
   , whlUrl        :: !T.Text
   , whlMethod     :: !N.StdMethod
-  , whlError      :: !(Maybe H.HttpException)
+  , whlError      :: !(Maybe HttpException)
   , whlResponse   :: !(Maybe T.Text)
   } deriving (Show)
 
@@ -54,23 +50,14 @@ instance L.ToEngineLog WebHookLog where
   toEngineLog webHookLog =
     (whlLogLevel webHookLog, "webhook-log", toJSON webHookLog)
 
-instance ToJSON H.HttpException where
-  toJSON (H.InvalidUrlException _ e) =
-    object [ "type" .= ("invalid_url" :: T.Text)
-           , "message" .= e
-           ]
-  toJSON (H.HttpExceptionRequest _ cont) =
-    object [ "type" .= ("http_exception" :: T.Text)
-           , "message" .= show cont
-           ]
-
 instance ToJSON WebHookLog where
-  toJSON whl = object [ "status_code" .= (N.statusCode <$> whlStatusCode whl)
-                      , "url" .= whlUrl whl
-                      , "method" .= show (whlMethod whl)
-                      , "http_error" .= whlError whl
-                      , "response" .= whlResponse whl
-                      ]
+  toJSON whl =
+    object [ "status_code" .= (N.statusCode <$> whlStatusCode whl)
+           , "url" .= whlUrl whl
+           , "method" .= show (whlMethod whl)
+           , "http_error" .= whlError whl
+           , "response" .= whlResponse whl
+           ]
 
 type WebHookLogger = WebHookLog -> IO ()
 

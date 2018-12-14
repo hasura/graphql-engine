@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.Server.Auth.JWT.Logging
   ( JwkRefreshLog (..)
   , JwkRefreshHttpError (..)
@@ -9,12 +7,12 @@ module Hasura.Server.Auth.JWT.Logging
 
 import           Data.Aeson
 
+import           Hasura.HTTP
 import           Hasura.Logging        (LogLevel (..), ToEngineLog (..))
 import           Hasura.Prelude
 import           Hasura.Server.Logging ()
 
 import qualified Data.Text             as T
-import qualified Network.HTTP.Client   as HTTP
 import qualified Network.HTTP.Types    as HTTP
 
 
@@ -29,7 +27,7 @@ data JwkRefreshHttpError
   = JwkRefreshHttpError
   { jrheStatus        :: !(Maybe HTTP.Status)
   , jrheUrl           :: !T.Text
-  , jrheHttpException :: !(Maybe HTTP.HttpException)
+  , jrheHttpException :: !(Maybe HttpException)
   , jrheResponse      :: !(Maybe T.Text)
   } deriving (Show)
 
