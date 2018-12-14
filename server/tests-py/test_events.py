@@ -178,7 +178,8 @@ class TestUpdateEvtQuery(object):
         headers = {}
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_cols", table, "INSERT", exp_ev_data, headers, "/new")
+        with pytest.raises(queue.Empty):
+            check_event(hge_ctx, "t1_cols", table, "INSERT", exp_ev_data, headers, "/new")
 
         where_exp = {"c1": 1}
         set_exp = {"c2": "world"}
