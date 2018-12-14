@@ -131,6 +131,9 @@ library
                      -- regex related
                      , regex-tdfa >= 1.2
 
+                     -- pretty printer
+                     , ansi-wl-pprint
+
   exposed-modules:     Hasura.Server.App
                      , Hasura.Server.Auth
                      , Hasura.Server.Auth.JWT
