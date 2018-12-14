@@ -64,17 +64,16 @@ For ``serve`` subcommand these are the flags available
                                 access-key only mode or "Authorization" header is absent
                                 in JWT mode
 
-   -s, --stripes                Number of stripes
+   -s, --stripes                Number of stripes (default: 1)
 
    -c, --connections            Number of connections that need to be opened to Postgres
+                                (default: 50)
 
        --timeout                Each connection's idle time before it is closed
+                                (default: 180 sec)
 
    -i, --tx-iso                 Transaction isolation. read-commited / repeatable-read /
                                 serializable
-
-       --root-dir               This static dir is served at / and takes precedence over
-                                all routes
                                 
        --enable-console         Enable API console. It is served at '/' and '/console'
 
@@ -104,6 +103,18 @@ These are the environment variables which are available:
                                         <postgres/postgresql>://<user>:<password>@<host>:
                                         <port>/<db-name> Example:
                                         postgres://admin:mypass@mydomain.com:5432/mydb
+
+   HASURA_GRAPHQL_PG_STRIPES            Number of stripes (default: 1)
+
+   HASURA_GRAPHQL_PG_CONNECTIONS        Number of connections that need to be opened to
+                                        Postgres (default: 50)
+
+   HASURA_GRAPHQL_PG_TIMEOUT            Each connection's idle time before it is closed
+                                        (default: 180 sec)
+
+   HASURA_GRAPHQL_TX_ISOLATION          transaction isolation. read-committed /
+                                        repeatable-read / serializable
+                                        (default: read-commited)
 
    HASURA_GRAPHQL_SERVER_PORT           Port on which graphql-engine should be served
 
