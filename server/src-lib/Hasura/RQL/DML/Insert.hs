@@ -1,9 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TypeFamilies          #-}
-
 module Hasura.RQL.DML.Insert where
 
 import           Data.Aeson.Types
@@ -78,7 +72,7 @@ getInsertDeps (InsertQueryP1 tn _ _ _ _ mutFlds) =
               pgColsFromMutFlds mutFlds
 
 convObj
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m)
   => (PGColType -> Value -> m S.SQLExp)
   -> HM.HashMap PGCol S.SQLExp
   -> HM.HashMap PGCol S.SQLExp
@@ -107,7 +101,7 @@ convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
         <> " for role " <>> role
 
 buildConflictClause
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m)
   => TableInfo
   -> [PGCol]
   -> OnConflict
@@ -149,7 +143,7 @@ buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
 
 
 convInsertQuery
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => (Value -> m [InsObj])
   -> (PGColType -> Value -> m S.SQLExp)
   -> InsertQuery
@@ -207,16 +201,19 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
       "; \"returning\" can only be used if the role has "
       <> "\"select\" permission on the table"
 
-decodeInsObjs :: (P1C m) => Value -> m [InsObj]
+decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj]
 decodeInsObjs v = do
   objs <- decodeValue v
   when (null objs) $ throw400 UnexpectedPayload "objects should not be empty"
   return objs
 
-convInsQ :: InsertQuery -> P1 (InsertQueryP1, DS.Seq Q.PrepArg)
-convInsQ insQ =
-  flip runStateT DS.empty $ convInsertQuery
-  (withPathK "objects" . decodeInsObjs) binRHSBuilder insQ
+convInsQ
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => InsertQuery
+  -> m (InsertQueryP1, DS.Seq Q.PrepArg)
+convInsQ =
+  liftDMLP1 .
+  convInsertQuery (withPathK "objects" . decodeInsObjs) binRHSBuilder
 
 insertP2 :: (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 insertP2 (u, p) =
@@ -269,14 +266,11 @@ setConflictCtx conflictCtxM = do
         encToText $ InsertTxConflictCtx CAUpdate (Just constr) $
         Just $ toSQLTxt $ S.buildSEWithExcluded updCols
 
-instance HDBQuery InsertQuery where
-
-  type Phase1Res InsertQuery = (InsertQueryP1, DS.Seq Q.PrepArg)
-  phaseOne = convInsQ
-
-  phaseTwo _ p1Res = do
-    role <- userRole <$> askUserInfo
-    liftTx $
-      bool (nonAdminInsert p1Res) (insertP2 p1Res) $ isAdmin role
-
-  schemaCachePolicy = SCPNoChange
+runInsert
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  => InsertQuery
+  -> m RespBody
+runInsert q = do
+  res <- convInsQ q
+  role <- userRole <$> askUserInfo
+  liftTx $ bool (nonAdminInsert res) (insertP2 res) $ isAdmin role

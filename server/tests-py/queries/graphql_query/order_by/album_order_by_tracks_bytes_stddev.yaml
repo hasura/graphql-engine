@@ -1,0 +1,33 @@
+description: Fetch Albums order by their tracks' standard deviation on bytes
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    Album:
+    - album_id: 1
+      title: Big Ones
+      Tracks_aggregate:
+        aggregate:
+          stddev:
+            bytes: 4460362.9621
+    - album_id: 2
+      title: Face Lift
+      Tracks_aggregate:
+        aggregate:
+          stddev:
+            bytes: 653697.39166707
+query:
+  query: |
+    query {
+      Album(order_by: {Tracks_aggregate: {stddev: {bytes: desc}}}){
+        album_id
+        title
+        Tracks_aggregate{
+          aggregate{
+            stddev{
+              bytes
+            }
+          }
+        }
+      }
+    }
