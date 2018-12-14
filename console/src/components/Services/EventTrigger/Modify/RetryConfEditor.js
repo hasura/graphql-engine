@@ -110,6 +110,8 @@ class RetryConfEditor extends React.Component {
           <Editor
             editorCollapsed={collapsed}
             editorExpanded={expanded}
+            ongoingRequest={modifyTrigger.ongoingRequest}
+            property={'retry'}
             toggleCallback={this.setValues}
             styles={styles}
           />

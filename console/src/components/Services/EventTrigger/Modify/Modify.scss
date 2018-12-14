@@ -2,9 +2,12 @@
 @import "../TableCommon/Table.scss";
 
 .containerWhole {
-  display: flex;
-  flex-direction: column;
-  padding: 15px;
+  padding: 0;
+  padding-left: 15px;
+  height: calc(100vh - 50px - 25px);
+  overflow: auto;
+  padding-right: 15px;
+  padding-top: 20px;
 }
 
 .container {
@@ -41,6 +44,17 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 10px;
+}
+
+.modifySaveButtonDisabled {
+  display: flex;
+  flex-direction: column;
+  max-width: 55px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  background-color: #e6cd8f;
+  border-color: #e6cd8f;
 }
 
 .modifyWebhookCollapsed {
@@ -267,7 +281,7 @@ modifyHeadersCollapsedHeadings {
 .infoContent {
   display: flex;
   flex-direction: column;
-  margin: 10px 0;
+  margin-bottom: 10px;
   table
   {
     width: 80%;
@@ -278,4 +292,8 @@ modifyHeadersCollapsedHeadings {
 .borderBottom {
   border-bottom: 1px solid #eee;
   margin-bottom: 20px;
+}
+
+.tooltipIcon{
+  padding-left: 5px; 
 }

@@ -57,7 +57,8 @@ export const setHeaderValue = (data, index) => ({
   index,
 });
 
-const REQUEST_ERROR = 'ModifyTrigger/REQUEST_ERROR';
+export const REQUEST_ONGOING = 'ModifyTrigger/REQUEST_ONGOING';
+export const REQUEST_COMPLETE = 'ModifyTrigger/REQUEST_COMPLETE';
 
 export const save = (property, triggerName) => {
   return (dispatch, getState) => {
@@ -149,6 +150,7 @@ export const save = (property, triggerName) => {
     const successMsg = 'Updated trigger';
     const errorMsg = 'Updating trigger failed';
     const customOnSuccess = () => {
+      dispatch({ type: REQUEST_COMPLETE });
       dispatch(setTrigger(triggerName.trim()));
       dispatch(loadTriggers()).then(() => {
         dispatch(loadProcessedEvents());
@@ -156,10 +158,11 @@ export const save = (property, triggerName) => {
       return;
     };
     const customOnError = err => {
-      dispatch({ type: REQUEST_ERROR, data: errorMsg });
+      dispatch({ type: REQUEST_COMPLETE });
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
       return;
     };
+    dispatch({ type: REQUEST_ONGOING, data: property });
     makeMigrationCall(
       dispatch,
       getState,
@@ -265,6 +268,16 @@ const reducer = (state = defaultState, action) => {
       return {
         ...state,
         headers: tNewHeaders,
+      };
+    case REQUEST_ONGOING:
+      return {
+        ...state,
+        ongoingRequest: action.data,
+      };
+    case REQUEST_COMPLETE:
+      return {
+        ...state,
+        ongoingRequest: null,
       };
     default:
       return {

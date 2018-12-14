@@ -29,19 +29,26 @@ class Editor extends React.Component {
     </button>
   );
 
-  saveButton = saveFunc => (
-    <button
-      type="submit"
-      className={`
-        btn
-        ${this.props.styles.yellow_button}
-        ${this.props.styles.modifySaveButton}`}
-      onClick={saveFunc}
-      data-test={`modify-trigger-${this.props.name}-save`}
-    >
-      Save
-    </button>
-  );
+  saveButton = saveFunc => {
+    const { name, property, ongoingRequest, styles } = this.props;
+    const isSaving = ongoingRequest === property;
+    return (
+      <button
+        type="submit"
+        className={`
+          btn
+          ${styles.yellow_button}
+          ${
+            isSaving ? styles.modifySaveButtonDisabled : styles.modifySaveButton
+          }`}
+        onClick={saveFunc}
+        data-test={`modify-trigger-${name}-save`}
+        disabled={isSaving}
+      >
+        {isSaving ? 'Saving ...' : 'Save'}
+      </button>
+    );
+  };
 
   render() {
     const { isEditing } = this.state;

@@ -145,6 +145,8 @@ class HeadersEditor extends React.Component {
             editorCollapsed={collapsed}
             editorExpanded={expanded}
             toggleCallback={this.setValues}
+            ongoingRequest={modifyTrigger.ongoingRequest}
+            property="headers"
             styles={styles}
           />
         </div>

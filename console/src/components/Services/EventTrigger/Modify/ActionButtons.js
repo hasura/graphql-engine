@@ -7,14 +7,15 @@ const verifyDeleteTrigger = (triggerName, dispatch) => {
   }
 };
 
-const Buttons = ({ styles, dispatch, triggerName }) => (
+const Buttons = ({ styles, dispatch, triggerName, ongoingRequest }) => (
   <div className={styles.add_mar_bottom}>
     <button
       className={'btn btn-sm btn-danger'}
       data-test="delete-trigger"
       onClick={() => verifyDeleteTrigger(triggerName, dispatch)}
+      disabled={ongoingRequest === 'delete'}
     >
-      Delete Trigger
+      {ongoingRequest === 'delete' ? 'Deleting ...' : 'Delete'}
     </button>
   </div>
 );

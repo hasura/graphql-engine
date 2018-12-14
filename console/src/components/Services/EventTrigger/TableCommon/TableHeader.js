@@ -15,8 +15,10 @@ const TableHeader = ({ triggerName, tabName, count }) => {
     activeTab = 'Processed';
   } else if (tabName === 'pending') {
     activeTab = 'Pending';
-  } else if (tabName === 'settings') {
-    activeTab = 'Settings';
+  } else if (tabName === 'modify') {
+    activeTab = 'Modify';
+  } else if (tabName === 'logs') {
+    activeTab = 'Logs';
   }
   return (
     <div>

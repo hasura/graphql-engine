@@ -13,6 +13,7 @@ import globals from '../../../Globals';
 import push from './push';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
+import { REQUEST_COMPLETE, REQUEST_ONGOING } from './Modify/Actions';
 
 const SET_TRIGGER = 'Event/SET_TRIGGER';
 const LOAD_TRIGGER_LIST = 'Event/LOAD_TRIGGER_LIST';
@@ -437,13 +438,18 @@ const deleteTrigger = triggerName => {
 
     const customOnSuccess = () => {
       // dispatch({ type: REQUEST_SUCCESS });
+      dispatch({ type: REQUEST_COMPLETE }); // modify trigger action
       dispatch(loadTriggers()).then(() => dispatch(push('/manage/triggers')));
       return;
     };
     const customOnError = () => {
+      dispatch({ type: REQUEST_COMPLETE }); // modify trigger action
       dispatch({ type: REQUEST_ERROR, data: errorMsg });
       return;
     };
+
+    // modify trigger action
+    dispatch({ type: REQUEST_ONGOING, data: 'delete' });
 
     makeMigrationCall(
       dispatch,

@@ -179,6 +179,8 @@ class OperationEditor extends React.Component {
             editorCollapsed={collapsed}
             editorExpanded={expanded}
             styles={styles}
+            property="ops"
+            ongoingRequest={modifyTrigger.ongoingRequest}
             toggleCallback={this.setValues}
           />
         </div>

@@ -101,6 +101,7 @@ class Modify extends React.Component {
           <ActionButtons
             styles={styles}
             dispatch={dispatch}
+            ongoingRequest={modifyTrigger.ongoingRequest}
             triggerName={modifyTriggerName}
           />
         </div>
