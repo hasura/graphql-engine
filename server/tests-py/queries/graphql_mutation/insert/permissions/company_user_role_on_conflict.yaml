@@ -1,7 +1,7 @@
 description: Upsert Company name as user role
 url: /v1alpha1/graphql
 status: 200
-header:
+headers:
   X-Hasura-Company-Id: '1'
   X-Hasura-Role: user
 response:

@@ -9,7 +9,6 @@ module Hasura.RQL.DML.Select
 where
 
 import           Data.Aeson.Types
-import           Data.List                      (unionBy)
 import           Instances.TH.Lift              ()
 
 import qualified Data.HashMap.Strict            as HM

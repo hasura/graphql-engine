@@ -265,7 +265,6 @@ data InsPermInfo
   = InsPermInfo
   { ipiView            :: !QualifiedTable
   , ipiCheck           :: !AnnBoolExpSQL
-  , ipiAllowUpsert     :: !Bool
   , ipiSet             :: !InsSetCols
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
