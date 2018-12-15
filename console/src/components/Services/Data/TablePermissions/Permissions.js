@@ -1069,10 +1069,18 @@ class Permissions extends Component {
           const allColumns = tableSchema.columns.map(c => c.column_name);
           dispatch(permToggleAllColumns(allColumns));
         };
+        let accessText;
+        if (query === 'insert') {
+          accessText = 'Allow input for';
+        } else if (query === 'select') {
+          accessText = 'Allow access to';
+        } else {
+          accessText = 'Allow updates to';
+        }
         _columnSection = (
           <div className={styles.editPermissionsSection}>
             <div>
-              With access to <b>columns</b>:
+              {accessText} these <b>columns</b>:
               <span
                 className={styles.toggleAll}
                 onClick={dispatchToggleAllColumns}
