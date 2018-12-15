@@ -59,9 +59,9 @@ class OperationEditor extends React.Component {
               {definition.update ? (
                 allTableColumns.map((col, i) => (
                   <div
-                    className={
-                      `${styles.opsCheckboxWrapper} col-md-4 ${styles.noPadd}`
-                    }
+                    className={`${styles.opsCheckboxWrapper} col-md-4 ${
+                      styles.noPadd
+                    }`}
                     key={i}
                   >
                     <input
@@ -102,21 +102,24 @@ class OperationEditor extends React.Component {
             <div className={'col-md-12 ' + styles.noPadd}>
               {queryTypes.map((qt, i) => (
                 <div
-                  className={`${styles.opsCheckboxWrapper} col-md-4 ${styles.noPadd} ${styles.cursorPointer}`}
+                  className={`${styles.opsCheckboxWrapper} col-md-4 ${
+                    styles.noPadd
+                  } ${styles.cursorPointer}`}
                   key={i}
                   onClick={() => {
-                    dispatch(toggleQueryType(qt, allTableColumns, !modifyTrigger.definition[qt]));
+                    dispatch(
+                      toggleQueryType(
+                        qt,
+                        allTableColumns,
+                        !modifyTrigger.definition[qt]
+                      )
+                    );
                   }}
                 >
                   <input
                     type="checkbox"
-                    className={styles.opsCheckbox}
+                    className={`${styles.opsCheckbox} ${styles.cursorPointer}`}
                     checked={Boolean(modifyTrigger.definition[qt])}
-                    onChange={e => {
-                      dispatch(
-                        toggleQueryType(qt, allTableColumns, e.target.checked)
-                      );
-                    }}
                   />
                   {qt}
                 </div>
@@ -131,21 +134,22 @@ class OperationEditor extends React.Component {
               {modifyTrigger.definition.update ? (
                 allTableColumns.map((col, i) => (
                   <div
-                    className={`${styles.opsCheckboxWrapper} col-md-4 ${styles.noPadd} ${styles.cursorPointer}`}
+                    className={`${styles.opsCheckboxWrapper} col-md-4 ${
+                      styles.noPadd
+                    } ${styles.cursorPointer}`}
                     key={i}
                     onClick={() => dispatch(toggleColumn('update', col))}
                   >
                     <input
                       type="checkbox"
-                      className={styles.opsCheckbox}
+                      className={`${styles.opsCheckbox} ${
+                        styles.cursorPointer
+                      }`}
                       checked={Boolean(
                         modifyTrigger.definition.update.columns.find(
                           c => c === col
                         )
                       )}
-                      onChange={() => {
-                        dispatch(toggleColumn('update', col));
-                      }}
                     />
                     {col}
                   </div>
