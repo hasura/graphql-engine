@@ -60,7 +60,7 @@ class OperationEditor extends React.Component {
                 allTableColumns.map((col, i) => (
                   <div
                     className={
-                      styles.opsCheckboxWrapper + ' col-md-4 ' + styles.noPadd
+                      `${styles.opsCheckboxWrapper} col-md-4 ${styles.noPadd}`
                     }
                     key={i}
                   >
@@ -102,10 +102,11 @@ class OperationEditor extends React.Component {
             <div className={'col-md-12 ' + styles.noPadd}>
               {queryTypes.map((qt, i) => (
                 <div
-                  className={
-                    styles.opsCheckboxWrapper + ' col-md-4 ' + styles.noPadd
-                  }
+                  className={`${styles.opsCheckboxWrapper} col-md-4 ${styles.noPadd} ${styles.cursorPointer}`}
                   key={i}
+                  onClick={() => {
+                    dispatch(toggleQueryType(qt, allTableColumns, !modifyTrigger.definition[qt]));
+                  }}
                 >
                   <input
                     type="checkbox"
@@ -130,10 +131,9 @@ class OperationEditor extends React.Component {
               {modifyTrigger.definition.update ? (
                 allTableColumns.map((col, i) => (
                   <div
-                    className={
-                      styles.opsCheckboxWrapper + ' col-md-4 ' + styles.noPadd
-                    }
+                    className={`${styles.opsCheckboxWrapper} col-md-4 ${styles.noPadd} ${styles.cursorPointer}`}
                     key={i}
+                    onClick={() => dispatch(toggleColumn('update', col))}
                   >
                     <input
                       type="checkbox"
