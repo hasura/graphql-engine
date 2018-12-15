@@ -18,7 +18,12 @@ const parseRowData = (row, dataType) => {
       switch (row.response.version) {
         case '2':
           try {
-            data = JSON.parse(row.response.data.body);
+            // Handle graphql-engine server error message
+            if (row.response.data.message) {
+              data = row.response.data;
+            } else {
+              data = JSON.parse(row.response.data.body);
+            }
           } catch (e) {
             console.log(e);
             data = row.response.data.body;
@@ -26,6 +31,7 @@ const parseRowData = (row, dataType) => {
           return {
             data: data,
             headers: row.response.data.headers,
+            status_code: row.response.data.status,
           };
         default:
           try {
@@ -36,6 +42,7 @@ const parseRowData = (row, dataType) => {
           }
           return {
             data: data,
+            status_code: row.status,
           };
       }
     default:

@@ -131,6 +131,11 @@ mkTriggerQ trid trn qt allCols (TriggerOpsDef insert update delete) = do
     Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromText sql)
     Nothing  -> throw500 "no trigger sql generated"
 
+delTriggerQ :: TriggerName -> Q.TxE QErr ()
+delTriggerQ trn = mapM_ (\op -> Q.unitQE
+                          defaultTxErrorHandler
+                          (Q.fromText $ getDropFuncSql op trn) () False) [INSERT, UPDATE, DELETE]
+
 addEventTriggerToCatalog
   :: QualifiedTable
   -> [PGColInfo]
@@ -161,10 +166,7 @@ delEventTriggerFromCatalog trn = do
                   hdb_catalog.event_triggers
            WHERE name = $1
                 |] (Identity trn) True
-  mapM_ tx [INSERT, UPDATE, DELETE]
-  where
-    tx :: Ops -> Q.TxE QErr ()
-    tx op = Q.multiQE defaultTxErrorHandler (Q.fromText $ getDropFuncSql op trn)
+  delTriggerQ trn
 
 updateEventTriggerToCatalog
   :: QualifiedTable
@@ -181,6 +183,7 @@ updateEventTriggerToCatalog qt allCols etc = do
            RETURNING id
                |] (Q.AltJ $ toJSON etc, name) True
   trid <- getTrid ids
+  delTriggerQ name
   mkTriggerQ trid name qt allCols opsdef
   return trid
   where

@@ -31,26 +31,13 @@
           {% set pagenameSplit = pagename.split('/') %}
           {% block sidebarwrapper %}
             <div class="yui-b mobile-hide" id="sidebar">
-              {%- if last_updated %}
-                <span><b>Last updated:</b> {{ last_updated }}</span>
-              {%- endif %}
               {{ sidebar() }}
             </div>
           {% endblock %}
           <div class="content_inner_wrapper">
             <div role="main" parent={{ rootpage }}>
-              <div id="docs-content">
-                <!-- div class="media_wrapper details_media">
-                  <div class="float_right wd_100">
-                    <div class="share_wrapper">
-                      <button class="share_btn green_btn">
-                        <span>Share</span>
-                        <i class="fa fa-share" aria-hidden="true"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div -->
-                <div class="mobile-logo mobile-only">
+              <div id="docs-header">
+                <div class="mobile-only" id="mobile-logo">
                   <a href="https://{{ BASE_DOMAIN }}/" target="_blank">
                     <div class="img_wrapper inline-block">
                       <img class="responsive logo_img no-shadow" src="{{ pathto('_images/layout/logo-dark.svg', 1) }}" />
@@ -58,15 +45,15 @@
                   </a>
                   <a href="https://docs.{{ BASE_DOMAIN }}" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
                 </div>
-                <div class="search_head_wrapper">
+                <div id="docs-header-actions">
                   <div class="inline-block mobile-only" id="nav_tree_icon">
                     <span class="fa fa-bars"></span>
                   </div>
-                  <div class="inline-block input_search_box">
+                  <div class="inline-block" id="input_search_box">
                     <span class="fa fa-search search_icon"></span>
                     <input type="text" class="search_element" placeholder="Search docs..." />
                   </div>
-                  <div class="header_links inline-block">
+                  <div class="inline-block header_links">
                     <div class="social_icons_wrapper">
                       <div class="social_icons">
                         <iframe src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true" frameBorder="0" scrolling="0" width="95px" height="25px"></iframe>
@@ -82,26 +69,16 @@
                         </a>
                         <span class="tooltiptext">Get instant support on our discord server</span>
                       </div>
-
                     </div>
-                    <!-- no need support button
-                    <div class="buttons">
-                      <div class="inline-block"> -->
-                        <!-- a target="_blank" href="https://dashboard.{{ BASE_DOMAIN }}/login" -->
-                          <!-- no need support button <button class="indiv_btns black supportBtn"> Support </button> -->
-                        <!--/ a -->
-                        <!-- no need support button
-                      </div>
-                    </div> -->
                   </div>
                 </div>
+              </div>
+              <div id="docs-content">
                 <div id="{{ pagename|replace('/', '-') }}">
                   {% block body %}{% endblock %}
                 </div>
-
               </div>
               <div class="nav">{{ secondnav() }}</div>
-
               <div class="feedback_wrapper">
                 <div class="feedback">
                   Was this page helpful?
@@ -135,7 +112,6 @@
                   Thank you for your feedback!
                 </div>
               </div>
-
               <div class="footer-hasura-custom">
                 Want to contribute or report missing content? Check out the <a target="_blank" href="https://github.com/hasura/graphql-engine/tree/master/docs">github repo for docs</a>.<br>
                 Powered by <a target="_blank" href="http://www.sphinx-doc.org">Sphinx</a>.
@@ -271,6 +247,22 @@
       apiKey: 'c59018461c19e20fe11459136e57900c',
       indexName: 'hasura',
       inputSelector: '.search_element',
+      transformData: function(suggestions) {
+        if (window.location.origin !== 'https://docs.hasura.io') {
+          suggestions.forEach(suggestion => {
+            if (window.location.origin === 'http://localhost:8000') {
+              suggestion.url = suggestion.url.replace(/https:\/\/docs.hasura.io\/[^\/]*/, window.location.origin)
+            } else {
+              suggestion.url = suggestion.url.replace('https://docs.hasura.io', window.location.origin);
+            }
+          });
+        }
+
+        return suggestions;
+      },
+      // algoliaOptions: {
+      //   hitsPerPage: 10
+      // },
       debug: false
   });
 </script>
