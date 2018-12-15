@@ -39,7 +39,7 @@ args:
     sql: |
       CREATE TABLE resident (
         id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
+        name TEXT NOT NULL UNIQUE,
         age INTEGER NOT NULL
       )
 - type: track_table
@@ -93,13 +93,22 @@ args:
           - author_id: X-HASURA-USER-ID
           - is_published: true
 
-#Article insert permission for user
+#Article insert and udpate permission for user
 - type: create_insert_permission
   args:
     table: article
     role: user
     permission:
       check:
+        author_id: X-Hasura-User-Id
+
+- type: create_update_permission
+  args:
+    table: article
+    role: user
+    permission:
+      columns: '*'
+      filter:
         author_id: X-Hasura-User-Id
 
 #Author select permission for user
@@ -115,7 +124,7 @@ args:
       filter:
         id: X-HASURA-USER-ID
 
-#Author insert permission for user
+#Author insert and update permission for user
 #Only admin can set is_registered to true
 - type: create_insert_permission
   args:
@@ -126,7 +135,17 @@ args:
         $and:
         - id: X-HASURA-USER-ID
         - is_registered: false
-      allow_upsert: true
+
+- type: create_update_permission
+  args:
+    table: author
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        $and:
+        - id: X-HASURA-USER-ID
+        - is_registered: false
 
 #Author insert permission for student
 #A Student should specify their Bio
@@ -138,7 +157,44 @@ args:
       check:
         bio:
           _is_null: false
-      allow_upsert: true
+
+#resident table permissions for resident role
+- type: create_insert_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      check:
+        id: X-Hasura-Resident-Id
+
+- type: create_update_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      columns: '*'
+      filter:
+        id: X-Hasura-Resident-Id
+- type: create_select_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      columns: '*'
+      filter:
+        id: X-Hasura-Resident-Id
+
+#Insert residents
+- type: insert
+  args:
+    table: resident
+    objects:
+    - id: 1
+      name: Resident 1
+      age: 21
+    - id: 2
+      name: Resident 2
+      age: 22
 
 #Insert Author table data
 - type: insert
@@ -155,7 +211,10 @@ args:
     objects:
     - content: Sample article content
       title: Article 1
+      author_id: 1
     - content: Sample article content
       title: Article 2
+      author_id: 1
     - content: Sample article content
       title: Article 3
+      author_id: 2

@@ -206,6 +206,10 @@ instance ToSQL PGCol where
 instance DQuote PGCol where
   dquoteTxt (PGCol t) = t
 
+showPGCols :: (Foldable t) => t PGCol -> T.Text
+showPGCols cols =
+  T.intercalate ", " $ map (T.dquote . getPGColTxt) $ toList cols
+
 data PGColType
   = PGSmallInt
   | PGInteger

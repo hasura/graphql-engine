@@ -29,12 +29,15 @@ type OrdByCtx = Map.HashMap G.NamedType OrdByItemMap
 -- insert context
 type RelationInfoMap = Map.HashMap RelName RelInfo
 
+type UpdPermForIns = ([PGCol], AnnBoolExpSQL)
+
 data InsCtx
   = InsCtx
   { icView      :: !QualifiedTable
   , icColumns   :: ![PGColInfo]
   , icSet       :: !InsSetCols
   , icRelations :: !RelationInfoMap
+  , icUpdPerm   :: !(Maybe UpdPermForIns)
   } deriving (Show, Eq)
 
 type InsCtxMap = Map.HashMap QualifiedTable InsCtx

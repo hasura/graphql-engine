@@ -48,9 +48,9 @@ module Hasura.RQL.DDL.Permission
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Permission.Triggers
-import           Hasura.RQL.DML.Internal            (onlyPositiveInt)
-import           Hasura.RQL.Types
+import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.GBoolExp
+import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
@@ -59,7 +59,6 @@ import qualified Hasura.SQL.DML                     as S
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.List
 import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Data.HashMap.Strict                as HM
@@ -69,10 +68,9 @@ import qualified Data.Text                          as T
 -- Insert permission
 data InsPerm
   = InsPerm
-  { icCheck       :: !BoolExp
-  , icAllowUpsert :: !(Maybe Bool)
-  , icSet         :: !(Maybe Object)
-  , icColumns     :: !(Maybe PermColSpec)
+  { icCheck   :: !BoolExp
+  , icSet     :: !(Maybe Object)
+  , icColumns :: !(Maybe PermColSpec)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
@@ -108,14 +106,13 @@ buildInsPermInfo
   => TableInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
-buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set mCols) _) = withPathK "permission" $ do
+buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) = withPathK "permission" $ do
   (be, beDeps) <- withPathK "check" $
     -- procBoolExp tn fieldInfoMap (S.QualVar "NEW") chk
     procBoolExp tn fieldInfoMap chk
   let deps = mkParentDep tn : beDeps
       fltrHeaders = getDependentHeaders chk
       setObj = fromMaybe mempty set
-      allowUpsrt = fromMaybe False upsrt
   setColsSQL <- withPathK "set" $
     fmap HM.fromList $ forM (HM.toList setObj) $ \(t, val) -> do
       let pgCol = PGCol t
@@ -125,24 +122,28 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk upsrt set mCols) _) = withPath
       return (pgCol, sqlExp)
   let setHdrs = mapMaybe (fetchHdr . snd) (HM.toList setObj)
       reqHdrs = fltrHeaders `union` setHdrs
-      preSetCols = HM.union setColsSQL nonInsColVals
-  return (InsPermInfo vn be allowUpsrt preSetCols reqHdrs, deps)
+  preSetCols <- HM.union setColsSQL <$> nonInsColVals
+  return (InsPermInfo vn be preSetCols reqHdrs, deps)
   where
     fieldInfoMap = tiFieldInfoMap tabInfo
     tn = tiName tabInfo
     vn = buildViewName tn rn PTInsert
     allCols = map pgiName $ getCols fieldInfoMap
     nonInsCols = case mCols of
-      Nothing   -> []
-      Just cols -> (\\) allCols $ convColSpec fieldInfoMap cols
-    nonInsColVals = S.mkColDefValMap nonInsCols
+      Nothing   -> return []
+      Just cols -> do
+        let insCols = convColSpec fieldInfoMap cols
+        withPathK "columns" $
+          indexedForM_ insCols $ \c -> void $ askPGType fieldInfoMap c ""
+        return $ allCols \\ insCols
+    nonInsColVals = S.mkColDefValMap <$> nonInsCols
 
     fetchHdr (String t) = bool Nothing (Just $ T.toLower t)
                           $ isUserVar t
     fetchHdr _          = Nothing
 
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
-buildInsInfra tn (InsPermInfo vn be _ _ _) = do
+buildInsInfra tn (InsPermInfo vn be _ _) = do
   trigFnQ <- buildInsTrigFn vn tn $ toSQLBoolExp (S.QualVar "NEW") be
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
