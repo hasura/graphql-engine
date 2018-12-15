@@ -9,6 +9,11 @@
 Hasura CLI
 ==========
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The ``Hasura CLI`` is a command line tool which is the primary mode of managing Hasura projects and migrations.
 
 .. _hasuractl-installation:
@@ -41,8 +46,8 @@ Commands
 - :doc:`hasura user-info <hasura_user-info>`
 - :doc:`hasura version <hasura_version>`
 
-Uninstall
----------
+Uninstalling
+------------
 
 Refer to :doc:`uninstall-hasura-cli`.
 
@@ -62,6 +67,7 @@ Refer to :doc:`uninstall-hasura-cli`.
    hasura metadata <hasura_metadata>
    hasura metadata apply <hasura_metadata_apply>
    hasura metadata export <hasura_metadata_export>
+   hasura metadata reload <hasura_metadata_reload>
    hasura metadata reset <hasura_metadata_reset>
    hasura migrate <hasura_migrate>
    hasura migrate apply <hasura_migrate_apply>

@@ -1,11 +1,12 @@
 Subscriptions sample use cases
 ==============================
 
-The following are a few use cases for using subscriptions:
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
 
-- :ref:`subscribe_field`
-- :ref:`subscribe_table`
-- :ref:`subscribe_derived`
+The following are a few use cases for using subscriptions:
 
 .. _subscribe_field:
 
@@ -72,7 +73,7 @@ Now we can use the following subscription to fetch the latest location of a vehi
     }
 
 
-Check this `sample app <https://hasura.github.io/realtime-location-app/>`__ for a working demo
+Check this `sample app <https://realtime-location-tracking.demo.hasura.app/>`__ for a working demo
 (`source code <https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-location-tracking>`__).
 
 .. _subscribe_table:
@@ -148,13 +149,13 @@ Now we can use the following subscription to display the latest messages in a ch
       }
     }
 
-Check this `sample app <https://chat-example-trial-roar.herokuapp.com/>`__ for a working demo
+Check this `sample app <https://realtime-chat.demo.hasura.app/>`__ for a working demo
 (`source code <https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-chat>`__).
 
 .. _subscribe_derived:
 
-Subscribe to latest value of some derived data
-----------------------------------------------
+Subscribe to the latest value of some derived data
+--------------------------------------------------
 
 In case you are interested in the latest value of some derived data, you can :doc:`create a view to query the derived
 data <../queries/derived-data>` and then use subscriptions to fetch the derived value and get its latest value
@@ -280,5 +281,5 @@ Now we can use the following subscription to display the latest poll result:
       }
     }
 
-Check this `sample app <https://shahidh.in/hasura-realtime-poll/>`__ for a working demo
+Check this `sample app <https://realtime-poll.demo.hasura.app/>`__ for a working demo
 (`source code <https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-poll>`__).

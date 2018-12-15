@@ -1,6 +1,11 @@
 Schema
 ======
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Hasura GraphQL engine automatically generates your GraphQL schema and resolvers based on your tables/views
 in Postgres. **You don't need to write a GraphQL schema or resolvers.**
 
@@ -11,8 +16,7 @@ version control.
 Hasura GraphQL engine lets you do anything you would usually do with Postgres by giving you GraphQL over native
 Postgres constructs.
 
-See:
-^^^^
+**See:**
 
 .. toctree::
   :maxdepth: 1

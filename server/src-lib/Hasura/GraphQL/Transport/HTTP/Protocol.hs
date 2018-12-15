@@ -1,10 +1,3 @@
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE NoImplicitPrelude          #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE TemplateHaskell            #-}
-
 module Hasura.GraphQL.Transport.HTTP.Protocol
   ( GraphQLRequest(..)
   , GraphQLQuery(..)
@@ -71,7 +64,7 @@ instance Hashable GraphQLRequest
 
 encodeGQErr :: Bool -> QErr -> J.Value
 encodeGQErr includeInternal qErr =
-  J.object [ "errors" J..= [encodeQErr includeInternal qErr]]
+  J.object [ "errors" J..= [encodeGQLErr includeInternal qErr]]
 
 data GQResp
   = GQSuccess BL.ByteString

@@ -1,0 +1,18 @@
+description: Fetch Albums order by their tracks count
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    Album:
+    - album_id: 2
+      title: Face Lift
+    - album_id: 1
+      title: Big Ones
+query:
+  query: |
+   query {
+     Album(order_by: {Tracks_aggregate: {count: desc}}){
+       album_id
+       title
+     }
+   }

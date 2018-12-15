@@ -1,6 +1,11 @@
 Schema design basics
 ====================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The Hasura GraphQL engine creates GraphQL schema object types and corresponding query/mutation fields with resolvers
 automatically as we create tables/views in the Postgres database.
 

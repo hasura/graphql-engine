@@ -1,6 +1,3 @@
-
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.Server.Utils where
 
 import qualified Database.PG.Query.Connection as Q

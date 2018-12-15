@@ -1,10 +1,18 @@
 Aggregation queries
 ===================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 You can fetch aggregations on columns along with nodes using an aggregation query.
 Available aggregation queries are ``count``, ``sum``, ``avg``, ``max`` and ``min``.
 
-For example, fetch a list of articles with aggregated data:
+Fetch aggregated data of an object
+----------------------------------
+
+For example, fetch a list of articles with aggregated data of their rating:
 
 .. graphiql::
   :view_only:
@@ -102,8 +110,8 @@ For example, fetch a list of articles with aggregated data:
       }
     }
 
-Fetch aggregations data on nested objects
------------------------------------------
+Fetch aggregated data on nested objects
+---------------------------------------
 The following is an example of a nested object query with aggregations on the **array relationship** between author and
 articles.
 

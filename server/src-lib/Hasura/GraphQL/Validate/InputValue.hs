@@ -1,9 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
 module Hasura.GraphQL.Validate.InputValue
   ( validateInputValue
   , jsonParser
@@ -90,6 +84,23 @@ jsonParser =
     jScalar J.Null = pNull
     jScalar v      = pVal v
 
+toJValue :: (MonadError QErr m) => G.Value -> m J.Value
+toJValue = \case
+  G.VVariable _                   ->
+    throwVE "variables are not allowed in scalars"
+  G.VInt i                        -> return $ J.toJSON i
+  G.VFloat f                      -> return $ J.toJSON f
+  G.VString (G.StringValue t)     -> return $ J.toJSON t
+  G.VBoolean b                    -> return $ J.toJSON b
+  G.VNull                         -> return J.Null
+  G.VEnum (G.EnumValue n)         -> return $ J.toJSON n
+  G.VList (G.ListValueG vals)     ->
+    J.toJSON <$> mapM toJValue vals
+  G.VObject (G.ObjectValueG objs) ->
+    J.toJSON . Map.fromList <$> mapM toTup objs
+  where
+    toTup (G.ObjectFieldG f v) = (f,) <$> toJValue v
+
 valueParser
   :: ( MonadError QErr m
      , MonadReader ValidationCtx m)
@@ -121,8 +132,22 @@ valueParser =
     pScalar (G.VBoolean b)    = pVal $ J.Bool b
     pScalar (G.VString sv)    = pVal $ J.String $ G.unStringValue sv
     pScalar (G.VEnum _)       = throwVE "unexpected enum for a scalar"
-    pScalar (G.VObject _)     = throwVE "unexpected object for a scalar"
-    pScalar (G.VList _)       = throwVE "unexpected array for a scalar"
+    pScalar v                 = pVal =<< toJValue v
+
+toJValueC :: G.ValueConst -> J.Value
+toJValueC = \case
+  G.VCInt i                        -> J.toJSON i
+  G.VCFloat f                      -> J.toJSON f
+  G.VCString (G.StringValue t)     -> J.toJSON t
+  G.VCBoolean b                    -> J.toJSON b
+  G.VCNull                         -> J.Null
+  G.VCEnum (G.EnumValue n)         -> J.toJSON n
+  G.VCList (G.ListValueG vals)     ->
+    J.toJSON $ map toJValueC vals
+  G.VCObject (G.ObjectValueG objs) ->
+    J.toJSON . Map.fromList $ map toTup objs
+  where
+    toTup (G.ObjectFieldG f v) = (f, toJValueC v)
 
 constValueParser :: (MonadError QErr m) => InputValueParser G.ValueConst m
 constValueParser =
@@ -148,8 +173,7 @@ constValueParser =
     pScalar (G.VCBoolean b) = pVal $ J.Bool b
     pScalar (G.VCString sv) = pVal $ J.String $ G.unStringValue sv
     pScalar (G.VCEnum _)    = throwVE "unexpected enum for a scalar"
-    pScalar (G.VCObject _)  = throwVE "unexpected object for a scalar"
-    pScalar (G.VCList _)    = throwVE "unexpected array for a scalar"
+    pScalar v               = pVal $ toJValueC v
 
 validateObject
   :: ( MonadReader r m, Has TypeMap r

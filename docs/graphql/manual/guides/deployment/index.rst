@@ -1,6 +1,11 @@
 Guides: Deployment
 ==================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 - :doc:`Deploy on Digital Ocean using Docker <digital-ocean>`
 - :doc:`Digital Ocean One-click App <digital-ocean-one-click>`
 - :doc:`Azure Container Instances with Postgres <azure-container-instances-postgres>`

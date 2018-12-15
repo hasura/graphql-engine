@@ -1,33 +1,21 @@
-{-# LANGUAGE DeriveLift        #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE TypeFamilies      #-}
-
 module Hasura.RQL.DDL.Metadata
-  ( ReplaceMetadata(..)
-  , TableMeta(..)
-  , tmObjectRelationships
-  , tmArrayRelationships
-  , tmInsertPermissions
-  , tmSelectPermissions
-  , tmUpdatePermissions
-  , tmDeletePermissions
+  ( TableMeta
 
-  , mkTableMeta
-  , applyQP1
-  , applyQP2
-
-  , DumpInternalState(..)
+  , ReplaceMetadata(..)
+  , runReplaceMetadata
 
   , ExportMetadata(..)
+  , runExportMetadata
   , fetchMetadata
 
   , ClearMetadata(..)
-  , clearMetadata
+  , runClearMetadata
 
   , ReloadMetadata(..)
+  , runReloadMetadata
+
+  , DumpInternalState(..)
+  , runDumpInternalState
   ) where
 
 import           Control.Lens
@@ -41,6 +29,7 @@ import qualified Data.HashSet                  as HS
 import qualified Data.List                     as L
 import qualified Data.Text                     as T
 
+import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
@@ -130,30 +119,29 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
   clearHdbViews
 
-instance HDBQuery ClearMetadata where
-
-  type Phase1Res ClearMetadata = ()
-  phaseOne _ = adminOnly
-
-  phaseTwo _ _ = do
-    hMgr <- askHttpManager
-    newSc <- liftTx $ clearMetadata >> DT.buildSchemaCache hMgr
-    writeSchemaCache newSc
-    return successMsg
-
-  schemaCachePolicy = SCPReload
+runClearMetadata
+  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
+     , MonadIO m, HasHttpManager m)
+  => ClearMetadata -> m RespBody
+runClearMetadata _ = do
+  adminOnly
+  liftTx clearMetadata
+  DT.buildSchemaCache
+  return successMsg
 
 data ReplaceMetadata
   = ReplaceMetadata
   { aqTables         :: ![TableMeta]
   , aqQueryTemplates :: ![DQ.CreateQueryTemplate]
-  , aqRemoteSchemas  :: ![TRS.AddRemoteSchemaQuery]
+  , aqRemoteSchemas  :: !(Maybe [TRS.AddRemoteSchemaQuery])
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 
-applyQP1 :: ReplaceMetadata -> P1 ()
-applyQP1 (ReplaceMetadata tables templates schemas) = do
+applyQP1
+  :: (QErrM m, UserInfoM m)
+  => ReplaceMetadata -> m ()
+applyQP1 (ReplaceMetadata tables templates mSchemas) = do
 
   adminOnly
 
@@ -182,8 +170,9 @@ applyQP1 (ReplaceMetadata tables templates schemas) = do
   withPathK "queryTemplates" $
     checkMultipleDecls "query templates" $ map DQ.cqtName templates
 
-  withPathK "remote_schemas" $
-    checkMultipleDecls "remote schemas" $ map TRS._arsqName schemas
+  onJust mSchemas $ \schemas ->
+      withPathK "remote_schemas" $
+        checkMultipleDecls "remote schemas" $ map TRS._arsqName schemas
 
   where
     withTableName qt = withPathK (qualTableToTxt qt)
@@ -199,7 +188,6 @@ applyQP1 (ReplaceMetadata tables templates schemas) = do
 
 applyQP2
   :: ( UserInfoM m
-     , QErrM m
      , CacheRWM m
      , MonadTx m
      , MonadIO m
@@ -207,11 +195,10 @@ applyQP2
      )
   => ReplaceMetadata
   -> m RespBody
-applyQP2 (ReplaceMetadata tables templates schemas) = do
+applyQP2 (ReplaceMetadata tables templates mSchemas) = do
 
-  hMgr <- askHttpManager
-  defaultSchemaCache <- liftTx $ clearMetadata >> DT.buildSchemaCache hMgr
-  writeSchemaCache defaultSchemaCache
+  liftTx clearMetadata
+  DT.buildSchemaCache
 
   withPathK "tables" $ do
 
@@ -252,10 +239,11 @@ applyQP2 (ReplaceMetadata tables templates schemas) = do
       qti <- DQ.createQueryTemplateP1 template
       void $ DQ.createQueryTemplateP2 template qti
 
-  -- custom resolvers
-  withPathK "remote_schemas" $
-    indexedForM_ schemas $ \conf ->
-      void $ DRS.addRemoteSchemaP2 conf
+  -- remote schemas
+  onJust mSchemas $ \schemas ->
+    withPathK "remote_schemas" $
+      indexedForM_ schemas $ \conf ->
+        void $ DRS.addRemoteSchemaP2 conf
 
   return successMsg
 
@@ -265,15 +253,12 @@ applyQP2 (ReplaceMetadata tables templates schemas) = do
         permInfo <- DP.addPermP1 tabInfo permDef
         DP.addPermP2 (tiName tabInfo) permDef permInfo
 
-
-instance HDBQuery ReplaceMetadata where
-
-  type Phase1Res ReplaceMetadata = ()
-  phaseOne = applyQP1
-
-  phaseTwo q _ = applyQP2 q
-
-  schemaCachePolicy = SCPReload
+runReplaceMetadata
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  => ReplaceMetadata -> m RespBody
+runReplaceMetadata q = do
+  applyQP1 q
+  applyQP2 q
 
 data ExportMetadata
   = ExportMetadata
@@ -329,7 +314,7 @@ fetchMetadata = do
   -- fetch all custom resolvers
   schemas <- DRS.fetchRemoteSchemas
 
-  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs schemas
+  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs (Just schemas)
 
   where
 
@@ -387,15 +372,12 @@ fetchMetadata = do
                FROM hdb_catalog.event_triggers e
               |] () False
 
-
-instance HDBQuery ExportMetadata where
-
-  type Phase1Res ExportMetadata = ()
-  phaseOne _ = adminOnly
-
-  phaseTwo _ _ = encode <$> liftTx fetchMetadata
-
-  schemaCachePolicy = SCPNoChange
+runExportMetadata
+  :: (QErrM m, UserInfoM m, MonadTx m)
+  => ExportMetadata -> m RespBody
+runExportMetadata _ = do
+  adminOnly
+  encode <$> liftTx fetchMetadata
 
 data ReloadMetadata
   = ReloadMetadata
@@ -406,20 +388,15 @@ instance FromJSON ReloadMetadata where
 
 $(deriveToJSON defaultOptions ''ReloadMetadata)
 
-instance HDBQuery ReloadMetadata where
-
-  type Phase1Res ReloadMetadata = ()
-  phaseOne _ = adminOnly
-
-  phaseTwo _ _ = do
-    hMgr <- askHttpManager
-    sc <- liftTx $ do
-      Q.catchE defaultTxErrorHandler clearHdbViews
-      DT.buildSchemaCache hMgr
-    writeSchemaCache sc
-    return successMsg
-
-  schemaCachePolicy = SCPReload
+runReloadMetadata
+  :: ( QErrM m, UserInfoM m, CacheRWM m
+     , MonadTx m, MonadIO m, HasHttpManager m)
+  => ReloadMetadata -> m RespBody
+runReloadMetadata _ = do
+  adminOnly
+  liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
+  DT.buildSchemaCache
+  return successMsg
 
 data DumpInternalState
   = DumpInternalState
@@ -430,12 +407,9 @@ instance FromJSON DumpInternalState where
 
 $(deriveToJSON defaultOptions ''DumpInternalState)
 
-instance HDBQuery DumpInternalState where
-
-  type Phase1Res DumpInternalState = ()
-  phaseOne _ = adminOnly
-
-  phaseTwo _ _ =
-    encode <$> askSchemaCache
-
-  schemaCachePolicy = SCPNoChange
+runDumpInternalState
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => DumpInternalState -> m RespBody
+runDumpInternalState _ = do
+  adminOnly
+  encode <$> askSchemaCache

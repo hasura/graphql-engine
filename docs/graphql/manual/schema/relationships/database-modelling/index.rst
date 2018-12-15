@@ -1,6 +1,11 @@
 Database modelling guides
 =========================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The following guides will help you model the different types of table relationships in the database:
 
 - :doc:`one-to-one`

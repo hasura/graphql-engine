@@ -27,6 +27,14 @@ class TestGraphQLInsert(DefaultTestQueries):
         check_query_f(hge_ctx, self.dir() + "/person_jsonb_variable_array.yaml")
         hge_ctx.may_skip_test_teardown = True
 
+    def test_insert_person(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/person_jsonb.yaml")
+        hge_ctx.may_skip_test_teardown = True
+
+    def test_insert_person_array(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/person_jsonb_array.yaml")
+        hge_ctx.may_skip_test_teardown = True
+
     def test_insert_null_col_value(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/order_col_shipped_null.yaml")
         hge_ctx.may_skip_test_teardown = True

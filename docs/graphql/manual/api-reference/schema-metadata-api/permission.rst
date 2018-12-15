@@ -1,6 +1,11 @@
 Schema/Metadata API Reference: Permissions
 ==========================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The permission layer is designed to restrict the operations that can be
 performed by various users. Permissions can be defined on various operations
 (insert/select/update/delete) at a role level granularity. By default, the ``admin``

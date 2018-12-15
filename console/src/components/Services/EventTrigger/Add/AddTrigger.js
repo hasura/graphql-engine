@@ -249,6 +249,7 @@ class AddTrigger extends Component {
       if (tableSchema) {
         return tableSchema.columns.map((colObj, i) => {
           const column = colObj.column_name;
+          const columnDataType = colObj.udt_name;
           const checked = operations[type]
             ? operations[type].includes(column)
             : false;
@@ -272,6 +273,7 @@ class AddTrigger extends Component {
                 <label>
                   {inputHtml}
                   {column}
+                  <small> ({columnDataType})</small>
                 </label>
               </div>
             </div>

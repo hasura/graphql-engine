@@ -1,6 +1,11 @@
 Auth webhook samples
 ====================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 We have put together a `GitHub Node.js repo <https://github.com/hasura/sample-auth-webhook>`__ that has some sample auth
 webhooks configured.
 
