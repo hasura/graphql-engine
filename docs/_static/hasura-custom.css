@@ -588,6 +588,10 @@ p {
   color: #FF993A;
 }
 
+#input_search_box .algolia-autocomplete .algolia-docsearch-suggestion--subcategory-column {
+  color: #84878E
+}
+
 #input_search_box .algolia-autocomplete .algolia-docsearch-suggestion--category-header .algolia-docsearch-suggestion--category-header-lvl0 .algolia-docsearch-suggestion--highlight,
 #input_search_box .algolia-autocomplete .algolia-docsearch-suggestion--category-header .algolia-docsearch-suggestion--category-header-lvl1 .algolia-docsearch-suggestion--highlight,
 #input_search_box .algolia-autocomplete .algolia-docsearch-suggestion--text .algolia-docsearch-suggestion--highlight {
