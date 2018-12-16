@@ -307,3 +307,8 @@ Logs
 
 Where ``<container_name>`` is one of ``graphql-engine``, ``postgres`` or
 ``caddy``.
+
+License
+-------
+The Hasura GraphQL Engine is open source. View license `here <https://github.com/hasura/graphql-engine/blob/master/LICENSE>`_.
+
