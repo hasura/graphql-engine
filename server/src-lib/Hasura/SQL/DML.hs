@@ -658,7 +658,7 @@ instance ToSQL SQLConflictTarget where
 
 data SQLConflict
   = DoNothing !(Maybe SQLConflictTarget)
-  | Update !SQLConflictTarget !SetExp
+  | Update !SQLConflictTarget !SetExp !(Maybe WhereFrag)
   deriving (Show, Eq)
 
 instance ToSQL SQLConflict where
@@ -666,9 +666,9 @@ instance ToSQL SQLConflict where
   toSQL (DoNothing (Just ct)) = "ON CONFLICT"
                                 <-> toSQL ct
                                 <-> "DO NOTHING"
-  toSQL (Update ct ex)        = "ON CONFLICT"
+  toSQL (Update ct set whr)   = "ON CONFLICT"
                                 <-> toSQL ct <-> "DO UPDATE"
-                                <-> toSQL ex
+                                <-> toSQL set <-> toSQL whr
 
 data SQLInsert = SQLInsert
     { siTable    :: !QualifiedTable

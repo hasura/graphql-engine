@@ -47,7 +47,7 @@ mkAdminRolePermInfo ti =
       . map fieldInfoToEither . M.elems $ tiFieldInfoMap ti
 
     tn = tiName ti
-    i = InsPermInfo tn annBoolExpTrue True M.empty []
+    i = InsPermInfo tn annBoolExpTrue M.empty []
     s = SelPermInfo (HS.fromList pgCols) tn annBoolExpTrue
         Nothing True []
     u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue []
@@ -85,6 +85,13 @@ askPermInfo pa tableInfo = do
       ]
   where
     pt = permTypeToCode $ permAccToType pa
+
+isTabUpdatable :: RoleName -> TableInfo -> Bool
+isTabUpdatable role ti
+  | role == adminRole = True
+  | otherwise = isJust $ M.lookup role rpim >>= _permUpd
+  where
+    rpim = tiRolePermInfoMap ti
 
 askInsPermInfo
   :: (UserInfoM m, QErrM m)

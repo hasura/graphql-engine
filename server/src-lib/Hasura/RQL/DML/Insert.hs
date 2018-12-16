@@ -12,6 +12,7 @@ import qualified Data.Text.Lazy           as LT
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning
+import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Instances     ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -26,7 +27,7 @@ data ConflictTarget
 
 data ConflictClauseP1
   = CP1DoNothing !(Maybe ConflictTarget)
-  | CP1Update !ConflictTarget ![PGCol]
+  | CP1Update !ConflictTarget ![PGCol] !S.BoolExp
   deriving (Show, Eq)
 
 data InsertQueryP1
@@ -48,10 +49,10 @@ mkSQLInsert (InsertQueryP1 tn vn cols vals c mutFlds) =
 
 toSQLConflict :: ConflictClauseP1 -> S.SQLConflict
 toSQLConflict conflict = case conflict of
-  (CP1DoNothing Nothing)   -> S.DoNothing Nothing
-  (CP1DoNothing (Just ct)) -> S.DoNothing $ Just $ toSQLCT ct
-  (CP1Update ct inpCols)    -> S.Update (toSQLCT ct)
-    (S.buildSEWithExcluded inpCols)
+  CP1DoNothing Nothing          -> S.DoNothing Nothing
+  CP1DoNothing (Just ct)        -> S.DoNothing $ Just $ toSQLCT ct
+  CP1Update ct inpCols filtr    -> S.Update (toSQLCT ct)
+    (S.buildSEWithExcluded inpCols) $ Just $ S.WhereFrag filtr
 
   where
     toSQLCT ct = case ct of
@@ -100,6 +101,11 @@ convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
       throw400 NotSupported $ "column " <> c <<> " is not insertable"
         <> " for role " <>> role
 
+validateInpCols :: (MonadError QErr m) => [PGCol] -> [PGCol] -> m ()
+validateInpCols inpCols updColsPerm = forM_ inpCols $ \inpCol ->
+  unless (inpCol `elem` updColsPerm) $ throw400 ValidationFailed $
+    "column " <> inpCol <<> " is not updatable"
+
 buildConflictClause
   :: (UserInfoM m, QErrM m)
   => TableInfo
@@ -119,14 +125,19 @@ buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
       "Expecting 'constraint' or 'constraint_on' when the 'action' is 'update'"
     (Just col, Nothing, CAUpdate)   -> do
       validateCols col
-      return $ CP1Update (Column $ getPGCols col) inpCols
+      updFiltr <- getUpdFilter
+      return $ CP1Update (Column $ getPGCols col) inpCols $
+        toSQLBool updFiltr
     (Nothing, Just cons, CAUpdate)  -> do
       validateConstraint cons
-      return $ CP1Update (Constraint cons) inpCols
+      updFiltr <- getUpdFilter
+      return $ CP1Update (Constraint cons) inpCols $
+        toSQLBool updFiltr
     (Just _, Just _, _)             -> throw400 UnexpectedPayload
       "'constraint' and 'constraint_on' cannot be set at a time"
   where
     fieldInfoMap = tiFieldInfoMap tableInfo
+    toSQLBool = toSQLBoolExp (S.mkQual $ tiName tableInfo)
 
     validateCols c = do
       let targetcols = getPGCols c
@@ -140,6 +151,13 @@ buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
        throw400 Unexpected $ "constraint " <> getConstraintTxt c
                    <<> " for table " <> tiName tableInfo
                    <<> " does not exist"
+
+    getUpdFilter = do
+      upi <- askUpdPermInfo tableInfo
+      let updFiltr = upiFilter upi
+          updCols = HS.toList $ upiCols upi
+      validateInpCols inpCols updCols
+      return updFiltr
 
 
 convInsertQuery
@@ -189,8 +207,9 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
 
   conflictClause <- withPathK "on_conflict" $ forM oC $ \c -> do
       roleName <- askCurRole
-      unless (ipiAllowUpsert insPerm) $ throw400 PermissionDenied $
-        "upsert is not allowed for role" <>> roleName
+      unless (isTabUpdatable roleName tableInfo) $ throw400 PermissionDenied $
+        "upsert is not allowed for role " <> roleName
+        <<> " since update permissions are not defined"
       buildConflictClause tableInfo inpCols c
 
   return $ InsertQueryP1 tableName insView insCols sqlExps
@@ -223,7 +242,7 @@ insertP2 (u, p) =
     insertSQL = toSQL $ mkSQLInsert u
 
 data ConflictCtx
-  = CCUpdate !ConstraintName ![PGCol]
+  = CCUpdate !ConstraintName ![PGCol] !S.BoolExp
   | CCDoNothing !(Maybe ConstraintName)
   deriving (Show, Eq)
 
@@ -242,9 +261,9 @@ extractConflictCtx cp =
     (CP1DoNothing mConflictTar) -> do
       mConstraintName <- mapM extractConstraintName mConflictTar
       return $ CCDoNothing mConstraintName
-    (CP1Update conflictTar inpCols) -> do
+    (CP1Update conflictTar inpCols filtr) -> do
       constraintName <- extractConstraintName conflictTar
-      return $ CCUpdate constraintName inpCols
+      return $ CCUpdate constraintName inpCols filtr
   where
     extractConstraintName (Constraint cn) = return cn
     extractConstraintName _ = throw400 NotSupported
@@ -262,9 +281,10 @@ setConflictCtx conflictCtxM = do
 
     conflictCtxToJSON (CCDoNothing constrM) =
         encToText $ InsertTxConflictCtx CAIgnore constrM Nothing
-    conflictCtxToJSON (CCUpdate constr updCols) =
+    conflictCtxToJSON (CCUpdate constr updCols filtr) =
         encToText $ InsertTxConflictCtx CAUpdate (Just constr) $
-        Just $ toSQLTxt $ S.buildSEWithExcluded updCols
+        Just $ toSQLTxt (S.buildSEWithExcluded updCols)
+               <> " " <> toSQLTxt (S.WhereFrag filtr)
 
 runInsert
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)

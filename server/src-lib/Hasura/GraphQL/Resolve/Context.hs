@@ -4,6 +4,7 @@ module Hasura.GraphQL.Resolve.Context
   , OrdByCtx
   , OrdByItemMap
   , OrdByItem(..)
+  , UpdPermForIns
   , InsCtx(..)
   , InsCtxMap
   , RespTx
@@ -54,6 +55,7 @@ data InsResp
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
 
 type RespTx = Q.TxE QErr BL.ByteString
+
 type LazyRespTx = LazyTx QErr BL.ByteString
 type PrepFn m = (PGColType, PGColValue) -> m S.SQLExp
 

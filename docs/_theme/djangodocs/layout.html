@@ -1,6 +1,14 @@
 {% extends "basic/layout.html" %}
 
+{%- if pagename == 'index' %}
+  {% set is_landing_page = true %}
+{%- endif %}
+
 {% set css_files = css_files + ['_static/hasura-custom.css', '_static/djangosite.css'] %}
+
+{%- if is_landing_page %}
+  {% set css_files = css_files + ['_static/landing.css'] %}
+{%- endif %}
 
 {%- macro secondnav() %}
   {%- if prev %}
@@ -20,22 +28,25 @@
 {% endblock %}
 
 {% block document %}
-  <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if pagename != 'index' else '' }}{% endblock %}">
+  <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if not is_landing_page else '' }}{% endblock %}">
     <div class="main_container_wrapper">
       {% include 'pages/loading.html' %}
       <div id="" class="content_wrapper">
-        {%- if pagename == 'index' %}
+        {%- if is_landing_page %}
           {% include 'pages/landing.html' %}
         {%- else %}
           {% set rootpage = 'common' %}
           {% set pagenameSplit = pagename.split('/') %}
+
           {% block sidebarwrapper %}
             <div class="yui-b mobile-hide" id="sidebar">
               {{ sidebar() }}
             </div>
           {% endblock %}
+
           <div class="content_inner_wrapper">
             <div role="main" parent={{ rootpage }}>
+
               <div id="docs-header">
                 <div class="mobile-only" id="mobile-logo">
                   <a href="https://{{ BASE_DOMAIN }}/" target="_blank">
@@ -73,12 +84,15 @@
                   </div>
                 </div>
               </div>
+
               <div id="docs-content">
                 <div id="{{ pagename|replace('/', '-') }}">
                   {% block body %}{% endblock %}
                 </div>
               </div>
+
               <div class="nav">{{ secondnav() }}</div>
+
               <div class="feedback_wrapper">
                 <div class="feedback">
                   Was this page helpful?
@@ -112,6 +126,7 @@
                   Thank you for your feedback!
                 </div>
               </div>
+
               <div class="footer-hasura-custom">
                 Want to contribute or report missing content? Check out the <a target="_blank" href="https://github.com/hasura/graphql-engine/tree/master/docs">github repo for docs</a>.<br>
                 Powered by <a target="_blank" href="http://www.sphinx-doc.org">Sphinx</a>.
@@ -264,8 +279,8 @@
       //   hitsPerPage: 10
       // },
       debug: false
-  });
-</script>
+    });
+  </script>
 
   <!-- mobile sidebar -->
   <script type="text/javascript">

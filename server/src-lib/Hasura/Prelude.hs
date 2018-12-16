@@ -12,11 +12,11 @@ import           Control.Monad.Reader   as M
 import           Control.Monad.State    as M
 import           Data.Bool              as M (bool)
 import           Data.Either            as M (lefts, partitionEithers, rights)
-import           Data.Foldable          as M (toList)
+import           Data.Foldable          as M (foldrM, toList)
 import           Data.Hashable          as M (Hashable)
 import           Data.List              as M (find, foldl', group, intercalate,
-                                              lookup, sort, sortBy, sortOn,
-                                              union)
+                                              intersect, lookup, sort, sortBy,
+                                              sortOn, union, unionBy, (\\))
 import           Data.Maybe             as M (catMaybes, fromMaybe, isJust,
                                               isNothing, listToMaybe, mapMaybe,
                                               maybeToList)
