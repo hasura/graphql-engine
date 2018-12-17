@@ -719,7 +719,7 @@ article ol ol {
 }
 
 #input_search_box .algolia-autocomplete .algolia-docsearch-suggestion--highlight {
-  background: #FEEFFE;
+  background: #FFF1DB;
 }
 
 /*** Algolia docsearch overrides END ***/
