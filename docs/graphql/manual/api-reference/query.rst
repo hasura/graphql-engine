@@ -71,6 +71,8 @@ Syntax definitions
 Object
 ^^^^^^
 
+.. _simple_object:
+
 Simple Object
 *************
 
@@ -105,6 +107,8 @@ E.g.
         }
       }
    }
+
+.. _aggregate_object:
 
 Aggregate Object
 ****************
