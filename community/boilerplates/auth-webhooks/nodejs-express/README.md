@@ -6,7 +6,6 @@ It has boilerplate code written for auth0 and firebase auth. There is also a gen
 
 ## Quick deploy
 
-<!--
 ### Deploy with Heroku (recommended)
 
 1. Click the following button for deploying to Heroku.
@@ -33,7 +32,6 @@ It has boilerplate code written for auth0 and firebase auth. There is also a gen
      ```
 
    If you are not using an auth provider, you need not enter the environment variable associated with it
--->
 
 ### Deploy using [Now](https://zeit.co/now)
 
