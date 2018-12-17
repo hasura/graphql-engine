@@ -1,10 +1,3 @@
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE LambdaCase          #-}
-{-# LANGUAGE MultiWayIf          #-}
-{-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module Hasura.GraphQL.Resolve.Introspect
   ( schemaR
   , typeR
@@ -61,8 +54,7 @@ retJT = pure . J.toJSON
 
 -- 4.5.2.1
 scalarR
-  :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+  :: (Monad m)
   => ScalarTyInfo
   -> Field
   -> m J.Object
@@ -103,8 +95,7 @@ notBuiltinFld f =
 
 -- 4.5.2.5
 enumTypeR
-  :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+  :: ( Monad m )
   => EnumTyInfo
   -> Field
   -> m J.Object
@@ -223,8 +214,7 @@ inputValueR fld (InpValInfo descM n ty) =
 
 -- 4.5.5
 enumValueR
-  :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+  :: (Monad m)
   => Field -> EnumValInfo -> m J.Object
 enumValueR fld (EnumValInfo descM enumVal isDeprecated) =
   withSubFields (_fSelSet fld) $ \subFld ->

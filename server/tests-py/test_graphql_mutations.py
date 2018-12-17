@@ -49,9 +49,6 @@ class TestGraphqlInsertOnConflict(DefaultTestQueries):
     def test_on_conflict_update(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_update.yaml")
 
-    def test_on_conflict_no_action_specified(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/article_on_conflict_no_action_specified.yaml")
-
     def test_on_conflict_ignore(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_ignore_constraint.yaml")
         hge_ctx.may_skip_test_teardown = True
@@ -85,9 +82,6 @@ class TestGraphqlInsertPermission(DefaultTestQueries):
     def test_user_role_on_conflict_ignore(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_on_conflict_ignore_user_role.yaml")
         hge_ctx.may_skip_test_teardown = True
-
-    def test_user_on_conflict_err_no_action_specified(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/user_article_on_conflict_err_no_action_specified.yaml")
 
     def test_user_err_missing_article_constraint(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_article_on_conflict_error_missing_article_constraint.yaml")
@@ -130,6 +124,9 @@ class TestGraphqlInsertPermission(DefaultTestQueries):
 
     def test_resident_infant_role_insert_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/resident_infant_fail.yaml")
+
+    def test_resident_5_modifies_resident_6_upsert(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/resident_5_modifies_resident_6_upsert.yaml")
 
     @classmethod
     def dir(cls):

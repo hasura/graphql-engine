@@ -2,7 +2,7 @@
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
 # resolver: lts-10.8
-resolver: nightly-2018-06-27
+resolver: nightly-2018-12-10
 
 # Local packages, usually specified by relative directory name
 packages:
@@ -13,13 +13,19 @@ packages:
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps:
-# - graphql-api-0.3.0
-- git: git@github.com:hasura/pg-client-hs.git
-  commit: 77995388cab656f9180b851f33f3d603cf1017c7
-- git: git@github.com:hasura/graphql-parser-hs.git
-  commit: 59426f985a68a71cef566fe4ee11ae3b11deaa65
-- Spock-core-0.13.0.0
+- git: https://github.com/hasura/pg-client-hs.git
+  commit: 47b168d252d4adc800137a8b2cd3fc977cb3468d
+- git: https://github.com/hasura/graphql-parser-hs.git
+  commit: 75782ae894cce05ed31e5b87fd696fc10e88baf9
+- ginger-0.8.1.0
+- wreq-0.5.3.0
+
+- primitive-extras-0.7.1
+- stm-hamt-1.2.0.2
+- stm-containers-1.1.0.2
+
 - reroute-0.5.0.0
+- Spock-core-0.13.0.0
 
 # Override default flag values for local packages and extra-deps
 flags: {}

@@ -1,9 +1,3 @@
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE MultiWayIf                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-
 module Hasura.SQL.DML where
 
 import           Hasura.Prelude
@@ -12,6 +6,7 @@ import           Hasura.SQL.Types
 import           Data.String                (fromString)
 import           Language.Haskell.TH.Syntax (Lift)
 
+import qualified Data.Aeson                 as J
 import qualified Data.HashMap.Strict        as HM
 import qualified Data.Text.Extended         as T
 import qualified Text.Builder               as TB
@@ -270,6 +265,9 @@ data SQLExp
   | SEArray ![SQLExp]
   | SECount !CountType
   deriving (Show, Eq)
+
+instance J.ToJSON SQLExp where
+  toJSON = J.toJSON . toSQLTxt
 
 newtype Alias
   = Alias { getAlias :: Iden }
@@ -660,7 +658,7 @@ instance ToSQL SQLConflictTarget where
 
 data SQLConflict
   = DoNothing !(Maybe SQLConflictTarget)
-  | Update !SQLConflictTarget !SetExp
+  | Update !SQLConflictTarget !SetExp !(Maybe WhereFrag)
   deriving (Show, Eq)
 
 instance ToSQL SQLConflict where
@@ -668,9 +666,9 @@ instance ToSQL SQLConflict where
   toSQL (DoNothing (Just ct)) = "ON CONFLICT"
                                 <-> toSQL ct
                                 <-> "DO NOTHING"
-  toSQL (Update ct ex)        = "ON CONFLICT"
+  toSQL (Update ct set whr)   = "ON CONFLICT"
                                 <-> toSQL ct <-> "DO UPDATE"
-                                <-> toSQL ex
+                                <-> toSQL set <-> toSQL whr
 
 data SQLInsert = SQLInsert
     { siTable    :: !QualifiedTable
