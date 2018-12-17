@@ -397,42 +397,42 @@ class AddTrigger extends Component {
             }}
             data-test={`header-${i}`}
           />
-          <select
-            value={header.type}
-            className={`${styles.select} ${styles.selectWidth} form-control ${
-              styles.add_pad_left
-            } ${styles.add_mar_right}`}
-            onChange={e => {
-              dispatch(setHeaderType(e.target.value, i));
-              if (i + 1 === headers.length) {
-                dispatch(addHeader());
+          <div className={styles.dropDownGroup}>
+            <DropdownButton
+              dropdownOptions={[
+                { display_text: 'Value', value: 'static' },
+                { display_text: 'From env var', value: 'env' },
+              ]}
+              title={
+                (header.type === 'static' && 'Value') ||
+                (header.type === 'env' && 'From env var') ||
+                'Value'
               }
-            }}
-            data-test={`header-type-${i}`}
-          >
-            {header.type === '' ? (
-              <option disabled value="">
-                -- value type --
-              </option>
-            ) : null}
-            <option value="static" key="0" title="static">
-              static
-            </option>
-            <option value="env" key="1" title="env">
-              from env variable
-            </option>
-          </select>{' '}
-          <input
-            type="text"
-            className={`${styles.input} form-control ${styles.add_mar_right}`}
-            value={header.value}
-            placeholder="value"
-            onChange={e => {
-              dispatch(setHeaderValue(e.target.value, i));
-            }}
-            data-test={`header-value-${i}`}
-          />{' '}
-          {removeIcon}
+              dataKey={
+                (header.type === 'static' && 'static') ||
+                (header.type === 'env' && 'env')
+              }
+              title={header.type === 'env' ? 'From env var' : 'Value'}
+              dataKey={header.type === 'env' ? 'env' : 'static'}
+              onButtonChange={e => {
+                dispatch(setHeaderType(e.target.getAttribute('value'), i));
+              }}
+              onInputChange={e => {
+                dispatch(setHeaderValue(e.target.value, i));
+                if (i + 1 === headers.length) {
+                  dispatch(addHeader());
+                }
+              }}
+              bsClass={styles.dropdown_button}
+              inputVal={header.value}
+              id={`header-value-${i}`}
+              inputPlaceHolder={
+                header.type === 'env' ? 'HEADER_FROM_ENV' : 'value'
+              }
+              testId={`header-value-${i}`}
+            />
+          </div>
+          <div>{removeIcon}</div>
         </div>
       );
     });

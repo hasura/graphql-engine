@@ -1,13 +1,11 @@
 const defaultState = {
-  triggerName: '',
-  tableName: '',
-  schemaName: 'public',
-  tableListBySchema: [],
-  operations: { insert: [], update: [], delete: [] },
-  selectedOperations: { insert: false, update: false, delete: false },
+  definition: {},
   webhookURL: '',
   webhookUrlType: 'url',
-  retryConf: null,
+  retryConf: {
+    numRetrys: 0,
+    retryInterval: 10,
+  },
   ongoingRequest: false,
   lastError: null,
   internalError: null,

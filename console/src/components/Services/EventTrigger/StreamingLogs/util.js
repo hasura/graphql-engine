@@ -25,7 +25,7 @@ const parseRowData = (row, dataType) => {
               data = JSON.parse(row.response.data.body);
             }
           } catch (e) {
-            console.log(e);
+            console.error(e);
             data = row.response.data.body;
           }
           return {
@@ -37,7 +37,7 @@ const parseRowData = (row, dataType) => {
           try {
             data = JSON.parse(row.response);
           } catch (e) {
-            console.log(e);
+            console.error(e);
             data = row.response;
           }
           return {
