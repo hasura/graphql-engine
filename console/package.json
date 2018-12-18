@@ -73,7 +73,6 @@
     "prettier": "^1.13.0",
     "pretty-error": "^1.2.0",
     "prop-types": "^15.6.0",
-    "query-string": "^6.1.0",
     "react": "16.4.2",
     "react-ace": "^6.1.1",
     "react-bootstrap": "^0.32.1",

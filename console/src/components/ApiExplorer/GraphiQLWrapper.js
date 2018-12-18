@@ -23,14 +23,29 @@ class GraphiQLWrapper extends Component {
       queries: null,
       supportAnalyze: false,
       analyzeApiChange: false,
+      variables: null,
     };
     const queryFile = this.props.queryParams
       ? this.props.queryParams.query_file
+      : null;
+    const queryString = this.props.queryParams
+      ? this.props.queryParams.query_string
+      : null;
+    const queryVariables = this.props.queryParams
+      ? this.props.queryParams.query_variables
       : null;
     if (queryFile) {
       getRemoteQueries(queryFile, queries =>
         this.setState({ ...this.state, queries })
       );
+    }
+
+    if (queryString) {
+      this.state.queries = queryString;
+    }
+
+    if (queryVariables) {
+      this.state.variables = queryVariables;
     }
   }
 
@@ -127,6 +142,7 @@ class GraphiQLWrapper extends Component {
             analyzeFetcher={analyzeFetcherInstance}
             supportAnalyze={supportAnalyze}
             query={this.state.queries}
+            variables={this.state.variables}
           />
         );
       } else {

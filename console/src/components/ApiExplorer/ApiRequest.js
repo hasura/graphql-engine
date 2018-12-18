@@ -34,6 +34,7 @@ class ApiRequest extends Component {
         window.localStorage.removeItem('graphiql:query');
       }
     }
+    this.setHeaderFromURL();
   }
 
   onGenerateApiCodeClicked = () => {
@@ -88,6 +89,20 @@ class ApiRequest extends Component {
       this.props.dispatch(
         addRequestHeader(this.state.newHeader.key, this.state.newHeader.value)
       );
+    }
+  }
+
+  setHeaderFromURL() {
+    let headers = this.props.queryParams
+      ? this.props.queryParams.graphiql_headers
+      : null;
+    if (headers) {
+      headers = headers.trim().split(',');
+      for (let i = 0; i < headers.length; i++) {
+        const key = headers[i].trim().split(':')[0];
+        const value = headers[i].trim().split(':')[1];
+        this.props.dispatch(addRequestHeader(key, value));
+      }
     }
   }
 
@@ -340,6 +355,7 @@ class ApiRequest extends Component {
       </div>
     );
   }
+
   getValidBody() {
     switch (this.props.bodyType) {
       case 'graphql':
