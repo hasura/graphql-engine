@@ -32,7 +32,6 @@ const globals = {
       ? 'server'
       : window.__env.consoleMode,
   urlPrefix: checkExtraSlashes(window.__env.urlPrefix),
-  consolePath: window.__env.consolePath,
 };
 
 // set defaults
@@ -64,15 +63,8 @@ if (
 
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   if (globals.nodeEnv !== 'development') {
-    const safeCurrentUrl = checkExtraSlashes(window.location.href);
-    globals.dataApiUrl = safeCurrentUrl.slice(
-      0,
-      safeCurrentUrl.lastIndexOf(window.__env.consolePath)
-    );
-    const currentPath = checkExtraSlashes(window.location.pathname);
-    globals.urlPrefix =
-      currentPath.slice(0, currentPath.lastIndexOf(window.__env.consolePath)) +
-      '/console';
+    const windowUrl = window.location.protocol + '//' + window.location.host;
+    globals.dataApiUrl = windowUrl;
   }
   /*
    * Require the exact usecase
