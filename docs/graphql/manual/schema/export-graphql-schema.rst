@@ -10,8 +10,8 @@ If you need to share, introspect or export the GraphQL schema, you can use commu
 `graphqurl <https://github.com/hasura/graphqurl>`_, `apollo <https://github.com/apollographql/apollo-cli>`_,
 `get-graphql-schema <https://github.com/prismagraphql/get-graphql-schema>`_, etc.
 
-Using "graphqurl"
------------------
+Using **graphqurl**
+-------------------
 
 For example, using ``graphqurl``, you can get the schema as follows:
 
