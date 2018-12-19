@@ -1,6 +1,14 @@
 {% extends "basic/layout.html" %}
 
+{%- if pagename == 'index' %}
+  {% set is_landing_page = true %}
+{%- endif %}
+
 {% set css_files = css_files + ['_static/hasura-custom.css', '_static/djangosite.css'] %}
+
+{%- if is_landing_page %}
+  {% set css_files = css_files + ['_static/landing.css'] %}
+{%- endif %}
 
 {%- macro secondnav() %}
   {%- if prev %}
@@ -16,40 +24,31 @@
   <!--<meta name="viewport" content="user-scalable=no">-->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css" />
 {% endblock %}
 
 {% block document %}
-  <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if pagename != 'index' else '' }}{% endblock %}">
+  <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if not is_landing_page else '' }}{% endblock %}">
     <div class="main_container_wrapper">
       {% include 'pages/loading.html' %}
       <div id="" class="content_wrapper">
-        {%- if pagename == 'index' %}
+        {%- if is_landing_page %}
           {% include 'pages/landing.html' %}
         {%- else %}
           {% set rootpage = 'common' %}
           {% set pagenameSplit = pagename.split('/') %}
+
           {% block sidebarwrapper %}
             <div class="yui-b mobile-hide" id="sidebar">
-              {%- if last_updated %}
-                <span><b>Last updated:</b> {{ last_updated }}</span>
-              {%- endif %}
               {{ sidebar() }}
             </div>
           {% endblock %}
+
           <div class="content_inner_wrapper">
             <div role="main" parent={{ rootpage }}>
-              <div id="docs-content">
-                <!-- div class="media_wrapper details_media">
-                  <div class="float_right wd_100">
-                    <div class="share_wrapper">
-                      <button class="share_btn green_btn">
-                        <span>Share</span>
-                        <i class="fa fa-share" aria-hidden="true"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div -->
-                <div class="mobile-logo mobile-only">
+
+              <div id="docs-header">
+                <div class="mobile-only" id="mobile-logo">
                   <a href="https://{{ BASE_DOMAIN }}/" target="_blank">
                     <div class="img_wrapper inline-block">
                       <img class="responsive logo_img no-shadow" src="{{ pathto('_images/layout/logo-dark.svg', 1) }}" />
@@ -57,15 +56,15 @@
                   </a>
                   <a href="https://docs.{{ BASE_DOMAIN }}" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
                 </div>
-                <div class="search_head_wrapper">
+                <div id="docs-header-actions">
                   <div class="inline-block mobile-only" id="nav_tree_icon">
                     <span class="fa fa-bars"></span>
                   </div>
-                  <div class="inline-block input_search_box">
+                  <div class="inline-block" id="input_search_box">
                     <span class="fa fa-search search_icon"></span>
                     <input type="text" class="search_element" placeholder="Search docs..." />
                   </div>
-                  <div class="header_links inline-block">
+                  <div class="inline-block header_links">
                     <div class="social_icons_wrapper">
                       <div class="social_icons">
                         <iframe src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true" frameBorder="0" scrolling="0" width="95px" height="25px"></iframe>
@@ -81,24 +80,17 @@
                         </a>
                         <span class="tooltiptext">Get instant support on our discord server</span>
                       </div>
-
                     </div>
-                    <!-- no need support button
-                    <div class="buttons">
-                      <div class="inline-block"> -->
-                        <!-- a target="_blank" href="https://dashboard.{{ BASE_DOMAIN }}/login" -->
-                          <!-- no need support button <button class="indiv_btns black supportBtn"> Support </button> -->
-                        <!--/ a -->
-                        <!-- no need support button
-                      </div>
-                    </div> -->
                   </div>
                 </div>
+              </div>
+
+              <div id="docs-content">
                 <div id="{{ pagename|replace('/', '-') }}">
                   {% block body %}{% endblock %}
                 </div>
-
               </div>
+
               <div class="nav">{{ secondnav() }}</div>
 
               <div class="feedback_wrapper">
@@ -144,75 +136,6 @@
           </div>
           <div style="clear: both;"></div>
         {%- endif %}
-      </div>
-    </div>
-    <div class="search_wrapper_template hide">
-      <div class="search_box_head">
-        <h3 class="head_wrapper search_heading">
-          <div class="inline-block">
-            <%= totalResults %> result<%= totalResults > 1 ? 's' : '' %> for <span class="search_query">'<%= _.escape(searchString) %>'</span>
-          </div>
-          <div class="algolia_search_attribution">
-            <span>
-              powered by
-            </span>
-            <span>
-              <img class="algolia_image" src="{{ pathto('_images/layout/algolia-logo.svg', 1) }}" alt="Algolia Hasura Search" />
-            </span>
-          </div>
-        </h3>
-      </div>
-      <%
-          if ( objs.length > 0 ) {
-      %>
-      <ul>
-      <%
-            _.each(objs, function(obj, index ) {
-      %>
-              <li class="search_bullets">
-                <a class="search_results_anchor" href="{{ pathto('', 1) }}<%= obj.url %>">
-                  <div class="no_of_results">
-                    <%= obj.title %>
-                  </div>
-                </a>
-                <div class="search_results_description">
-                  <%= obj.description.length > 200 ? obj.description.slice(0, 200 ) + ' ...' : obj.description %>
-                </div>
-              </li>
-            </a>
-      <%
-          });
-      %>
-      </ul>
-      <%
-        } else {
-      %>
-        <div class="no_results"> Sorry! we cannot find what you are searching for! </div>
-      <%
-        }
-      %>
-      <div class = "pagination_container wd_100" id = "pagination_container"></div>
-      <div style="clear: both;"></div>
-    </div>
-    <div class="search_wrapper main_wrapper hide">
-      <div class="wd_80">
-        <div class="search_head_wrapper">
-          <div class="inline-block input_search_box">
-            <span class="fa fa-search search_icon"></span>
-            <input type="text" class="search_element" placeholder="Search docs..." />
-          </div>
-          <div class="header_links inline-block">
-            <div class="buttons">
-              <div class="inline-block">
-                <!-- a target="_blank" href="https://dashboard.{{ BASE_DOMAIN }}/login" -->
-                <button class="indiv_btns black supportBtn"> Support </button>
-                <!--/ a -->
-              </div>
-            </div>
-          </div>
-        </div>
-        <br/>
-        <div class="search_wrapper_content"></div>
       </div>
     </div>
   </div>
@@ -333,122 +256,29 @@
   </script>
 
   <!-- search -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.js"></script>
   <script type="text/javascript">
-    $(document).ready( function() {
-      var lastSearched = "";
-
-      const showContent = function() {
-        $('.content_wrapper').removeClass('hide');
-        $('.search_wrapper').addClass('hide');
-      };
-
-      const showSearchResults = function() {
-        $('.content_wrapper').addClass('hide');
-        $('.search_wrapper').removeClass('hide');
-      };
-
-      const searchFunc = function( query, callback, page, restrictAttributes, attributesToRetrieve ) {
-        var ALGOLIA_APPLICATION_ID = "{{ ALGOLIA_APPLICATION_ID }}";
-        var ALGOLIA_SEARCH_KEY = "{{ ALGOLIA_SEARCH_KEY }}";
-
-        var hitsPerPage = 100;
-        var page_no = parseInt(page) - 1;
-        var offset = (hitsPerPage * (page - 1));
-
-        var indexName = "{{ ALGOLIA_INDEX_NAME }}";
-
-        //var client = algoliasearch(APPLICATION_ID, SEARCH_ONLY_KEY);
-        var client = algoliasearch(ALGOLIA_APPLICATION_ID, ALGOLIA_SEARCH_KEY, {"protocol":"https:"}); // localhost
-        var index = client.initIndex(indexName);
-
-        var queries = {
-          query: query,
-          hitsPerPage: hitsPerPage,
-          page: page_no,
-          offset: offset,
-          restrictSearchableAttributes : restrictAttributes
-        };
-
-        if ( attributesToRetrieve ) {
-          queries["attributesToRetrieve"] = attributesToRetrieve;
-        }
-
-        index.search(queries, callback );
-      };
-
-      const search = function(searchTerm) {
-        function callback(err, content ) {
-          const searchHtmlTemplate = $('.search_wrapper_template').html();
-          const template = _.template(_.unescape(searchHtmlTemplate));
-          const templated_html = template({
-            "objs": content.hits,
-            "searchString": content.query,
-            "totalResults": content.nbHits
+    docsearch({
+      apiKey: 'c59018461c19e20fe11459136e57900c',
+      indexName: 'hasura',
+      inputSelector: '.search_element',
+      transformData: function(suggestions) {
+        if (window.location.origin !== 'https://docs.hasura.io') {
+          suggestions.forEach(suggestion => {
+            if (window.location.origin === 'http://localhost:8000') {
+              suggestion.url = suggestion.url.replace(/https:\/\/docs.hasura.io\/[^\/]*/, window.location.origin)
+            } else {
+              suggestion.url = suggestion.url.replace('https://docs.hasura.io', window.location.origin);
+            }
           });
-
-          $(".search_wrapper_content").html(templated_html);
-
-          hideLoading();
-          showSearchResults();
-
-          trackga('docs', 'search', content.query, content.nbHits);
         }
 
-
-        showLoading();
-
-        searchFunc(searchTerm, callback, 1, [], ['url', 'description', 'title', 'image', 'tags']);
-      };
-
-      const handleQueryParams = function() {
-        const re = /query=(.*)$/;
-        const match = re.exec(window.location.search);
-
-        var searchTerm = '';
-        if ( match ) {
-          searchTerm = decodeURIComponent(match[1]);
-
-          if (searchTerm) {
-            search(searchTerm);
-          } else {
-            showContent();
-          }
-        } else {
-          showContent();
-        }
-
-        $('.search_element').val(searchTerm);
-        lastSearched = searchTerm;
-      };
-
-      const doSearch = function(value) {
-        if (lastSearched !== value) {
-          window.history.pushState({"url": (window.location.pathname + '?query=' + value + '')}, 'Search Page', '?query=' + value + '');
-          handleQueryParams();
-        }
-      };
-
-      const inputSearchHandler = function(e) {
-        // Execute on enter only
-        if (e.keyCode === 13) {
-          doSearch(e.target.value)
-        }
-      };
-      $('.search_element').on('keyup', inputSearchHandler);
-
-      const iconSearchHandler = function(e) {
-        doSearch(e.target.nextSibling.nextSibling.value)
-      };
-      $('.fa-search').on('click', iconSearchHandler);
-
-      // handle state
-      window.onpopstate = function() {
-        handleQueryParams();
-      };
-
-      if (window.location.search.length > 0) {
-        handleQueryParams();
-      }
+        return suggestions;
+      },
+      // algoliaOptions: {
+      //   hitsPerPage: 10
+      // },
+      debug: false
     });
   </script>
 

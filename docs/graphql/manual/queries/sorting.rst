@@ -32,6 +32,20 @@ The ``order_by`` argument takes an array of objects to allow sorting by multiple
      author_id: order_by
      #order by using "author" object relationship columns
      author: author_order_by
+     #order by using "likes" array relationship aggregates
+     likes_aggregate: likes_aggregate_order_by
+   }
+
+   #the likes_aggregate_order_by type
+   input likes_aggregate_order_by {
+     count: order_by
+     op_name: likes_op_name_order_by
+   }
+   #Available "op_name"s are 'max', 'min', 'sum', 'avg', 'stddev', 'stddev_samp', 'stddev_pop', 'variance', 'var_samp' and 'var_pop'
+
+   #the likes_<op-name>_order_by type
+   input likes_sum_order_by {
+     like_id: order_by
    }
 
    #the order_by enum type
@@ -50,8 +64,10 @@ The ``order_by`` argument takes an array of objects to allow sorting by multiple
      desc_nulls_last
    }
 
+
 .. Note::
    Only columns from **object** relationships are allowed for sorting.
+   Only aggregates from **array** relationships are allowed for sorting.
 
 The following are example queries for different sorting use cases:
 
@@ -237,6 +253,60 @@ Only columns in object relationships are allowed:
         ]
       }
     }
+
+Sorting by array relationship aggregates
+----------------------------------------
+Fetch a list of authors sorted by their article count.
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author(order_by: {articles_aggregate: {count: desc}}) {
+        id
+        name
+        articles_aggregate {
+          aggregate{
+            count
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 5,
+            "name": "Amii",
+            "articles_aggregate":{
+              "aggregate": {
+                "count": 3
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "Anjela",
+            "articles_aggregate":{
+              "aggregate": {
+                "count": 2
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "April",
+            "articles_aggregate":{
+              "aggregate": {
+                "count": 2
+              }
+            }
+          }
+        ]
+      }
+    }
+
 
 Sorting by multiple fields
 --------------------------

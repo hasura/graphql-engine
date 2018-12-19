@@ -9,7 +9,7 @@ export const triggerNameDescription = (
 
 export const operationsDescription = (
   <Tooltip id="tooltip-operations-description">
-    Listen to these operations on the table
+    Trigger on these operations on the table
   </Tooltip>
 );
 

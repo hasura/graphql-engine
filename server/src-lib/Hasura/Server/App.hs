@@ -1,10 +1,5 @@
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE DataKinds  #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Hasura.Server.App where
 
@@ -41,7 +36,6 @@ import qualified Hasura.Logging                         as L
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
---import           Hasura.RQL.DML.Explain
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
@@ -64,16 +58,20 @@ isAccessKeySet :: AuthMode -> T.Text
 isAccessKeySet AMNoAuth = "false"
 isAccessKeySet _        = "true"
 
-mkConsoleHTML :: AuthMode -> IO T.Text
-mkConsoleHTML authMode =
-  bool (initErrExit errMsg) (return res) (null errs)
+mkConsoleHTML :: T.Text -> AuthMode -> Either String T.Text
+mkConsoleHTML path authMode =
+  bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
                    object [ "version" .= consoleVersion
                           , "isAccessKeySet" .= isAccessKeySet authMode
+                          , "consolePath" .= consolePath
                           ]
-    errMsg = "Fatal Error : console template rendering failed"
-             ++ show errs
+    consolePath = case path of
+      "" -> "/console"
+      r  -> "/console/" <> r
+
+    errMsg = "console template rendering failed: " ++ show errs
 
 data ServerCtx
   = ServerCtx
@@ -163,6 +161,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
   where
     logger = scLogger serverCtx
     -- encode error response
+    qErrToResp :: (MonadIO m) => Bool -> QErr -> ActionCtxT ctx m b
     qErrToResp includeInternal qErr = do
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
@@ -279,10 +278,11 @@ mkWaiApp
   -> IO (Wai.Application, IORef SchemaCache)
 mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole = do
     cacheRef <- do
-      pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
-        Q.catchE defaultTxErrorHandler initStateTx
-        buildSchemaCache httpManager
-      either initErrExit return pgResp >>= newIORef
+      pgResp <- runExceptT $
+        peelRun emptySchemaCache adminUserInfo httpManager pool Q.Serializable $ do
+        liftTx $ Q.catchE defaultTxErrorHandler initStateTx
+        buildSchemaCache
+      either initErrExit return pgResp >>= newIORef . snd
 
     cacheLock <- newMVar ()
 
@@ -293,7 +293,7 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
     spockApp <- spockAsApp $ spockT id $
                 httpApp mRootDir corsCfg serverCtx enableConsole
 
-    let runTx tx = runExceptT $ Q.runTx pool (isoLevel, Nothing) tx
+    let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
 
     wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager cacheRef runTx
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
@@ -308,10 +308,7 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
       middleware $ corsMiddleware (mkDefaultCorsPolicy $ ccDomain corsCfg)
 
     -- API Console and Root Dir
-    if enableConsole then do
-      consoleHTML <- lift $ mkConsoleHTML $ scAuthMode serverCtx
-      serveApiConsole consoleHTML
-    else maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
+    bool serveRootDir serveApiConsole enableConsole
 
     get "v1/version" $ do
       uncurry setHeader jsonHeader
@@ -343,11 +340,7 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
 
     hookAny GET $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
-      req <- request
-      reqBody <- liftIO $ strictRequestBody req
-      logError Nothing req reqBody serverCtx qErr
-      uncurry setHeader jsonHeader
-      lazyBytes $ encode qErr
+      raiseGenericApiError qErr
 
   where
     tmpltGetOrDeleteH tmpltName = do
@@ -369,6 +362,19 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
       v1QueryHandler $ RQExecuteQueryTemplate $
       ExecQueryTemplate (TQueryName tmpltName) tmpltArgs
 
-    serveApiConsole htmlFile = do
-      get root $ redirect "/console"
-      get ("console" <//> wildcard) $ const $ html htmlFile
+    raiseGenericApiError qErr = do
+      req <- request
+      reqBody <- liftIO $ strictRequestBody req
+      logError Nothing req reqBody serverCtx qErr
+      uncurry setHeader jsonHeader
+      setStatus $ qeStatus qErr
+      lazyBytes $ encode qErr
+
+    serveRootDir =
+      maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
+
+    serveApiConsole = do
+      get root $ redirect "console"
+      get ("console" <//> wildcard) $ \path ->
+        either (raiseGenericApiError . err500 Unexpected . T.pack) html $
+          mkConsoleHTML path $ scAuthMode serverCtx

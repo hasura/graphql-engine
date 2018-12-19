@@ -1,9 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
-
 module Hasura.Server.Auth.JWT
   ( processJwt
   , RawJWT
@@ -27,7 +21,7 @@ import           Data.Time.Clock                 (NominalDiffTime, diffUTCTime,
 import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
 import           Network.URI                     (URI)
 
-import           Hasura.HTTP.Utils
+import           Hasura.HTTP
 import           Hasura.Logging                  (Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -150,7 +144,8 @@ updateJwkRef (Logger logger) manager url jwkRef = do
 
     logAndThrowHttp :: (MonadIO m, MonadError T.Text m) => HTTP.HttpException -> m a
     logAndThrowHttp err = do
-      let httpErr = JwkRefreshHttpError Nothing (T.pack $ show url) (Just err) Nothing
+      let httpErr = JwkRefreshHttpError Nothing (T.pack $ show url)
+                    (Just $ HttpException err) Nothing
           errMsg = "error fetching JWK: " <> T.pack (show err)
       logAndThrow errMsg (Just httpErr)
 

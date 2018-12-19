@@ -7,11 +7,11 @@ import {
   schemaConnector,
   schemaContainerConnector,
   addTriggerConnector,
+  modifyTriggerConnector,
   processedEventsConnector,
   pendingEventsConnector,
   runningEventsConnector,
   eventHeaderConnector,
-  settingsConnector,
   streamingLogsConnector,
 } from '.';
 
@@ -60,10 +60,6 @@ const makeEventRouter = (
           onEnter={composeOnEnterHooks([requireRunningEvents])}
         />
         <Route
-          path="triggers/:trigger/settings"
-          component={settingsConnector(connect)}
-        />
-        <Route
           path="triggers/:trigger/logs"
           component={streamingLogsConnector(connect)}
         />
@@ -72,6 +68,11 @@ const makeEventRouter = (
         path="manage/triggers/add"
         onEnter={composeOnEnterHooks([migrationRedirects])}
         component={addTriggerConnector(connect)}
+      />
+      <Route
+        path="manage/triggers/:trigger/modify"
+        onEnter={composeOnEnterHooks([migrationRedirects])}
+        component={modifyTriggerConnector(connect)}
       />
     </Route>
   );

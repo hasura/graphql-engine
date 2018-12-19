@@ -61,6 +61,7 @@ const getQueriesWithPermColumns = insert => {
   }
   return queries;
 };
+
 const permChangeTypes = {
   save: 'update',
   delete: 'delete',
