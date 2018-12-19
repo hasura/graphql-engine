@@ -3,7 +3,6 @@ module Hasura.Server.Init where
 import qualified Database.PG.Query            as Q
 
 import           Options.Applicative
-import           Options.Applicative.Types
 import           System.Exit                  (exitFailure)
 
 import qualified Data.Text                    as T
@@ -15,23 +14,58 @@ import           Hasura.RQL.Types             (RoleName (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Utils
 
-newtype InitError
-  = InitError String
-  deriving (Show, Eq)
-
-instance Q.FromPGConnErr InitError where
-  fromPGConnErr = InitError . show
-
-instance Q.FromPGTxErr InitError where
-  fromPGTxErr = InitError . show
-
-
 initErrExit :: (Show e) => e -> IO a
 initErrExit e = print e >> exitFailure
 
 -- clear the hdb_views schema
 initStateTx :: Q.Tx ()
 initStateTx = clearHdbViews
+
+data RawConnParams
+  = RawConnParams
+  { rcpStripes  :: !(Maybe Int)
+  , rcpConns    :: !(Maybe Int)
+  , rcpIdleTime :: !(Maybe Int)
+  } deriving (Show, Eq)
+
+type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
+
+data RawServeOptions
+  = RawServeOptions
+  { rsoPort          :: !(Maybe Int)
+  , rsoConnParams    :: !RawConnParams
+  , rsoTxIso         :: !(Maybe Q.TxIsolation)
+  , rsoRootDir       :: !(Maybe String)
+  , rsoAccessKey     :: !(Maybe AccessKey)
+  , rsoAuthHook      :: !RawAuthHook
+  , rsoJwtSecret     :: !(Maybe Text)
+  , rsoUnAuthRole    :: !(Maybe RoleName)
+  , rsoCorsConfig    :: !RawCorsConfig
+  , rsoEnableConsole :: !Bool
+  } deriving (Show, Eq)
+
+data CorsConfigG a
+  = CorsConfigG
+  { ccDomain   :: !a
+  , ccDisabled :: !Bool
+  } deriving (Show, Eq)
+
+type RawCorsConfig = CorsConfigG (Maybe T.Text)
+type CorsConfig = CorsConfigG T.Text
+
+data ServeOptions
+  = ServeOptions
+  { soPort          :: !Int
+  , soConnParams    :: !Q.ConnParams
+  , soTxIso         :: !Q.TxIsolation
+  , soRootDir       :: !(Maybe String)
+  , soAccessKey     :: !(Maybe AccessKey)
+  , soAuthHook      :: !(Maybe AuthHook)
+  , soJwtSecret     :: !(Maybe Text)
+  , soUnAuthRole    :: !(Maybe RoleName)
+  , soCorsConfig    :: !CorsConfig
+  , soEnableConsole :: !Bool
+  } deriving (Show, Eq)
 
 data RawConnInfo =
   RawConnInfo
@@ -44,40 +78,54 @@ data RawConnInfo =
   , connOptions  :: !(Maybe String)
   } deriving (Eq, Read, Show)
 
-data CorsConfig
-  = CorsConfig
-  { ccDomain   :: !T.Text
-  , ccDisabled :: !Bool
+data HGECommandG a
+  = HCServe !a
+  | HCExport
+  | HCClean
+  | HCExecute
+  | HCVersion
+  deriving (Show, Eq)
+
+type HGECommand = HGECommandG ServeOptions
+type RawHGECommand = HGECommandG RawServeOptions
+
+data HGEOptionsG a
+  = HGEOptionsG
+  { hoConnInfo :: !RawConnInfo
+  , hoCommand  :: !(HGECommandG a)
   } deriving (Show, Eq)
+
+type RawHGEOptions = HGEOptionsG RawServeOptions
+type HGEOptions = HGEOptionsG ServeOptions
 
 type Env = [(String, String)]
 
-class FromConfig a where
-  fromConfig :: String -> Either String a
+class FromEnv a where
+  fromEnv :: String -> Either String a
 
-instance FromConfig String where
-  fromConfig = Right
+instance FromEnv String where
+  fromEnv = Right
 
-instance FromConfig Text where
-  fromConfig = Right . T.pack
+instance FromEnv Text where
+  fromEnv = Right . T.pack
 
-instance FromConfig AuthHookType where
-  fromConfig = readHookType
+instance FromEnv AuthHookType where
+  fromEnv = readHookType
 
-instance FromConfig Int where
-  fromConfig = maybe (Left "Expecting Int value") Right . readMaybe
+instance FromEnv Int where
+  fromEnv = maybe (Left "Expecting Int value") Right . readMaybe
 
-instance FromConfig AccessKey where
-  fromConfig = Right . AccessKey . T.pack
+instance FromEnv AccessKey where
+  fromEnv = Right . AccessKey . T.pack
 
-instance FromConfig RoleName where
-  fromConfig = Right . RoleName . T.pack
+instance FromEnv RoleName where
+  fromEnv = Right . RoleName . T.pack
 
-instance FromConfig Bool where
-  fromConfig = parseStrAsBool
+instance FromEnv Bool where
+  fromEnv = parseStrAsBool
 
-instance FromConfig Q.TxIsolation where
-  fromConfig = readIsoLevel
+instance FromEnv Q.TxIsolation where
+  fromEnv = readIsoLevel
 
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
@@ -92,45 +140,95 @@ parseStrAsBool t
              ++ show truthVals ++ " and  False values are " ++ show falseVals
              ++ ". All values are case insensitive"
 
-type ConfigM a = ReaderT Env (ExceptT String ParserM) a
+readIsoLevel :: String -> Either String Q.TxIsolation
+readIsoLevel isoS =
+  case isoS of
+    "read-comitted" -> return Q.ReadCommitted
+    "repeatable-read" -> return Q.RepeatableRead
+    "serializable" -> return Q.ReadCommitted
+    _ -> Left "Only expecting read-comitted / repeatable-read / serializable"
 
-runConfig :: Env -> ConfigM a -> Parser (Either String a)
-runConfig env m = fromM $ runExceptT $ runReaderT m env
+type WithEnv a = ReaderT Env (ExceptT String Identity) a
 
-fromParser :: Parser a -> ConfigM a
-fromParser = lift . lift . oneM
+runWithEnv :: Env -> WithEnv a -> Either String a
+runWithEnv env m = runIdentity $ runExceptT $ runReaderT m env
 
 returnJust :: Monad m => a -> m (Maybe a)
 returnJust = return . Just
 
-withEnvOption :: FromConfig a
-              => String -> Mod OptionFields a -> ConfigM (Maybe a)
-withEnvOption envVar optFldsMod = do
-  valM <- fromParser optParser
-  maybe (considerEnv envVar) returnJust valM
-  where
-    optParser = optional $
-                option (eitherReader fromConfig) optFldsMod
-
-withEnvFlag :: String -> Mod FlagFields Bool -> ConfigM Bool
-withEnvFlag envVar flagFldsMod = do
-  boolVal <- fromParser flagParser
-  bool considerEnv' (return True) boolVal
-  where
-    flagParser = switch flagFldsMod
-    considerEnv' = fromMaybe False <$> considerEnv envVar
-
-considerEnv :: FromConfig a => String -> ConfigM (Maybe a)
+considerEnv :: FromEnv a => String -> WithEnv (Maybe a)
 considerEnv envVar = do
   env <- ask
-  let envValM = lookup envVar env
-  case envValM of
+  case lookup envVar env of
     Nothing  -> return Nothing
-    Just val -> either throwErr returnJust $ fromConfig val
-
+    Just val -> either throwErr returnJust $ fromEnv val
   where
     throwErr s = throwError $
-             "Fatal Error: Environment variable " ++ envVar ++ ": " ++ s
+      "Fatal Error:- Environment variable " ++ envVar ++ ": " ++ s
+
+withEnv :: FromEnv a => Maybe a -> String -> WithEnv (Maybe a)
+withEnv mVal envVar =
+  maybe (considerEnv envVar) returnJust mVal
+
+withEnvBool :: Bool -> String -> WithEnv Bool
+withEnvBool bVal envVar =
+  bool considerEnv' (return True) bVal
+  where
+    considerEnv' = do
+      mEnvVal <- considerEnv envVar
+      maybe (return False) return mEnvVal
+
+mkHGEOptions :: RawHGEOptions -> WithEnv HGEOptions
+mkHGEOptions (HGEOptionsG rawConnInfo rawCmd) =
+  HGEOptionsG <$> connInfo <*> cmd
+  where
+    connInfo = mkRawConnInfo rawConnInfo
+    cmd = case rawCmd of
+      HCServe rso -> HCServe <$> mkServeOptions rso
+      HCExport    -> return HCExport
+      HCClean     -> return HCClean
+      HCExecute   -> return HCExecute
+      HCVersion   -> return HCVersion
+
+mkRawConnInfo :: RawConnInfo -> WithEnv RawConnInfo
+mkRawConnInfo rawConnInfo = do
+  withEnvUrl <- withEnv rawDBUrl $ fst databaseUrlEnv
+  return $ rawConnInfo {connUrl = withEnvUrl}
+  where
+    rawDBUrl = connUrl rawConnInfo
+
+mkServeOptions :: RawServeOptions -> WithEnv ServeOptions
+mkServeOptions rso = do
+  port <- fromMaybe 8080 <$>
+          withEnv (rsoPort rso) (fst servePortEnv)
+  connParams <- mkConnParams $ rsoConnParams rso
+  txIso <- fromMaybe Q.ReadCommitted <$>
+           withEnv (rsoTxIso rso) (fst txIsoEnv)
+  rootDir <- withEnv (rsoRootDir rso) $ fst rootDirEnv
+  accKey <- withEnv (rsoAccessKey rso) $ fst accessKeyEnv
+  authHook <- mkAuthHook $ rsoAuthHook rso
+  jwtSecr <- withEnv (rsoJwtSecret rso) $ fst jwtSecretEnv
+  unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
+  corsCfg <- mkCorsConfig $ rsoCorsConfig rso
+  enableConsole <- withEnvBool (rsoEnableConsole rso) $
+                   fst enableConsoleEnv
+  return $ ServeOptions port connParams txIso rootDir accKey authHook
+                        jwtSecr unAuthRole corsCfg enableConsole
+  where
+    mkConnParams (RawConnParams s c i) = do
+      stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
+      conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
+      iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
+      return $ Q.ConnParams stripes conns iTime
+
+    mkAuthHook (AuthHookG mUrl mType) = do
+      mUrlEnv <- withEnv mUrl $ fst authHookEnv
+      ty <- fromMaybe AHTGet <$> withEnv mType (fst authHookTypeEnv)
+      return (flip AuthHookG ty <$> mUrlEnv)
+
+    mkCorsConfig (CorsConfigG mDom isDis) = do
+      domEnv <- fromMaybe "*" <$> withEnv mDom (fst corsDomainEnv)
+      return $ CorsConfigG domEnv isDis
 
 mkExamplesDoc :: [[String]] -> PP.Doc
 mkExamplesDoc exampleLines =
@@ -295,47 +393,48 @@ enableConsoleEnv =
   , "Enable API Console"
   )
 
-configRawConnInfo :: ConfigM RawConnInfo
-configRawConnInfo =
+parseRawConnInfo :: Parser RawConnInfo
+parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
               <*> dbUrl <*> dbName <*> pure Nothing
   where
-    host = fromParser $
-      optional (strOption ( long "host" <>
+    host = optional $
+      strOption ( long "host" <>
                   metavar "HOST" <>
-                  help "Postgres server host" ))
+                  help "Postgres server host" )
 
-    port = fromParser $
-      optional (option auto ( long "port" <>
+    port = optional $
+      option auto ( long "port" <>
                   short 'p' <>
                   metavar "PORT" <>
-                  help "Postgres server port" ))
+                  help "Postgres server port" )
 
-    user = fromParser $
-      optional (strOption ( long "user" <>
+    user = optional $
+      strOption ( long "user" <>
                   short 'u' <>
                   metavar "USER" <>
-                  help "Database user name" ))
+                  help "Database user name" )
 
-    password = fromParser $
+    password =
       strOption ( long "password" <>
                   metavar "PASSWORD" <>
                   value "" <>
-                  help "Password of the user" )
+                  help "Password of the user"
+                )
 
-    (dbUrlEnv, dbUrlHelp) = databaseUrlEnv
-    dbUrl = withEnvOption dbUrlEnv
-              ( long "database-url" <>
-                metavar "DATABASE-URL" <>
-                help dbUrlHelp
-              )
+    dbUrl = optional $
+      strOption
+                ( long "database-url" <>
+                  metavar "DATABASE-URL" <>
+                  help (snd databaseUrlEnv)
+                )
 
-    dbName = fromParser $
-      optional (strOption ( long "dbname" <>
+    dbName = optional $
+      strOption ( long "dbname" <>
                   short 'd' <>
                   metavar "NAME" <>
-                  help "Database name to connect to" )
-               )
+                  help "Database name to connect to"
+                )
 
 connInfoErrModifier :: String -> String
 connInfoErrModifier s = "Fatal Error : " ++ s
@@ -357,80 +456,66 @@ mkConnInfo (RawConnInfo mHost mPort mUser pass mURL mDB opts) =
     invalidUrlMsg = "Invalid database-url (HASURA_GRAPHQL_DATABASE_URL). "
                     ++ "Example postgres://foo:bar@example.com:2345/database"
 
-readIsoLevel :: String -> Either String Q.TxIsolation
-readIsoLevel isoS =
-  case isoS of
-    "read-comitted" -> return Q.ReadCommitted
-    "repeatable-read" -> return Q.RepeatableRead
-    "serializable" -> return Q.ReadCommitted
-    _ -> Left "Only expecting read-comitted / repeatable-read / serializable"
+parseTxIsolation :: Parser (Maybe Q.TxIsolation)
+parseTxIsolation = optional $
+  option (eitherReader readIsoLevel)
+           ( long "tx-iso" <>
+             short 'i' <>
+             metavar "TXISO" <>
+             help (snd txIsoEnv)
+           )
 
-configTxIsolation :: ConfigM Q.TxIsolation
-configTxIsolation = fromMaybe Q.ReadCommitted <$>
-  withEnvOption envVar
-    ( long "tx-iso" <>
-      short 'i' <>
-      metavar "TXISO" <>
-      help helpDesc
-    )
-  where
-    (envVar, helpDesc) = txIsoEnv
+parseRootDir :: Parser (Maybe String)
+parseRootDir =
+  optional (strOption
+               ( long "root-dir" <>
+                 metavar "STATIC-DIR" <>
+                 help (snd rootDirEnv)
+               )
+             )
 
-configRootDir :: ConfigM (Maybe String)
-configRootDir = withEnvOption envVar
-                ( long "root-dir" <>
-                  metavar "STATIC-DIR" <>
-                  help helpDesc
-                )
+parseConnParams :: Parser RawConnParams
+parseConnParams =
+  RawConnParams <$> stripes <*> conns <*> timeout
   where
-    (envVar, helpDesc) = rootDirEnv
-
-configConnParams :: ConfigM Q.ConnParams
-configConnParams =
-  Q.ConnParams <$> stripes <*> conns <*> timeout
-  where
-    (stripesEnv, stripesHelp) = pgStripesEnv
-    stripes = fromMaybe 1 <$> withEnvOption stripesEnv
+    stripes = optional $
+      option auto
               ( long "stripes" <>
                  short 's' <>
                  metavar "NO OF STRIPES" <>
-                 help stripesHelp
+                 help (snd pgStripesEnv)
               )
 
-    (connEnv, connHelp) = pgConnsEnv
-    conns = fromMaybe 50 <$> withEnvOption connEnv
+    conns = optional $
+      option auto
             ( long "connections" <>
                short 'c' <>
                metavar "NO OF CONNS" <>
-               help connHelp
+               help (snd pgConnsEnv)
             )
 
-    (timeoutEnv, timeoutHelp) = pgTimeoutEnv
-    timeout = fromMaybe 180 <$> withEnvOption timeoutEnv
+    timeout = optional $
+      option auto
               ( long "timeout" <>
                 metavar "SECONDS" <>
-                help timeoutHelp
+                help (snd pgTimeoutEnv)
               )
 
-configServerPort :: ConfigM Int
-configServerPort =
-  fromMaybe 8080 <$> withEnvOption envVar
+parseServerPort :: Parser (Maybe Int)
+parseServerPort = optional $
+  option auto
        ( long "server-port" <>
          metavar "PORT" <>
-         help helpDesc
+         help (snd servePortEnv)
        )
-  where
-    (envVar, helpDesc) = servePortEnv
 
-configAccessKey :: ConfigM (Maybe AccessKey)
-configAccessKey =
-  fmap AccessKey <$> withEnvOption envVar
-                         ( long "access-key" <>
-                           metavar "SECRET ACCESS KEY" <>
-                           help helpDesc
-                         )
-  where
-    (envVar, helpDesc) = accessKeyEnv
+parseAccessKey :: Parser (Maybe AccessKey)
+parseAccessKey =
+  optional $ AccessKey <$>
+    strOption ( long "access-key" <>
+                metavar "SECRET ACCESS KEY" <>
+                help (snd accessKeyEnv)
+              )
 
 readHookType :: String -> Either String AuthHookType
 readHookType tyS =
@@ -439,71 +524,61 @@ readHookType tyS =
     "POST" -> Right AHTPost
     _      -> Left "Only expecting GET / POST"
 
-configWebHook :: ConfigM (Maybe AuthHook)
-configWebHook =
-  liftA2 mkAuthHook configUrl configEnablePost
+parseWebHook :: Parser RawAuthHook
+parseWebHook =
+  AuthHookG <$> url <*> urlType
   where
-    mkAuthHook mUrl mTy = flip AuthHook (fromMaybe AHTGet mTy) <$> mUrl
-    (urlEnvVar, urlHelp) = authHookEnv
-    (urlTyEnvVar, urlTyHelp) = authHookTypeEnv
-    configUrl = withEnvOption urlEnvVar
-                  ( long "auth-hook" <>
-                    metavar "AUTHENTICATION WEB HOOK" <>
-                    help urlHelp
-                  )
-    configEnablePost = withEnvOption urlTyEnvVar
+    url = optional $
+      strOption ( long "auth-hook" <>
+                  metavar "AUTHENTICATION WEB HOOK" <>
+                  help (snd authHookEnv)
+                )
+    urlType = optional $
+      option (eitherReader readHookType)
                   ( long "auth-hook-mode" <>
                     metavar "GET|POST" <>
-                    help urlTyHelp
+                    help (snd authHookTypeEnv)
                   )
 
 
-configJwtSecret :: ConfigM (Maybe Text)
-configJwtSecret =
-  withEnvOption envVar
+parseJwtSecret :: Parser (Maybe Text)
+parseJwtSecret =
+  optional $ strOption
              ( long "jwt-secret" <>
                metavar "JWK" <>
-               help jwtSecretHelp
+               help (snd jwtSecretEnv)
              )
-  where
-    envVar = fst jwtSecretEnv
 
 jwtSecretHelp :: String
 jwtSecretHelp = "The JSON containing type and the JWK used for verifying. e.g: "
               <> "`{\"type\": \"HS256\", \"key\": \"<your-hmac-shared-secret>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`,"
               <> "`{\"type\": \"RS256\", \"key\": \"<your-PEM-RSA-public-key>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`"
 
-configUnAuthRole :: ConfigM (Maybe RoleName)
-configUnAuthRole =
-  fmap RoleName <$> withEnvOption envVar
-                        ( long "unauthorized-role" <>
+parseUnAuthRole :: Parser (Maybe RoleName)
+parseUnAuthRole = optional $
+  RoleName <$> strOption ( long "unauthorized-role" <>
                           metavar "UNAUTHORIZED ROLE" <>
-                          help helpDesc
+                          help (snd unAuthRoleEnv)
                         )
-  where
-    (envVar, helpDesc) = unAuthRoleEnv
 
-configCorsConfig :: ConfigM CorsConfig
-configCorsConfig = do
-  corsDomain <- fromMaybe "*" <$> corsDomainConfig
-  CorsConfig corsDomain <$> disableCors
+parseCorsConfig :: Parser RawCorsConfig
+parseCorsConfig =
+  CorsConfigG <$> corsDomain <*> disableCors
   where
-    (corsDomainEnvVar, corsDomainHelp) = corsDomainEnv
-    corsDomainConfig = withEnvOption corsDomainEnvVar
-                       ( long "cors-domain" <>
-                         metavar "CORS DOMAIN" <>
-                         help corsDomainHelp
-                       )
-    disableCors = fromParser $
+    corsDomain =
+      optional (strOption
+                 ( long "cors-domain" <>
+                   metavar "CORS DOMAIN" <>
+                   help (snd corsDomainEnv)
+                 )
+               )
+    disableCors =
       switch ( long "disable-cors" <>
                help "Disable CORS handling"
              )
 
-configEnableConsole :: ConfigM Bool
-configEnableConsole =
-  withEnvFlag envVar
-             ( long "enable-console" <>
-               help helpDesc
-             )
-  where
-    (envVar, helpDesc) = enableConsoleEnv
+parseEnableConsole :: Parser Bool
+parseEnableConsole =
+  switch ( long "enable-console" <>
+           help (snd enableConsoleEnv)
+         )
