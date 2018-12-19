@@ -6,7 +6,7 @@ import           Control.Monad.STM          (atomically)
 import           Data.Time.Clock            (getCurrentTime)
 import           Options.Applicative
 import           System.Environment         (getEnvironment, lookupEnv)
-import           System.Exit                (exitFailure, exitSuccess)
+import           System.Exit                (exitFailure)
 
 import qualified Control.Concurrent         as C
 import qualified Data.Aeson                 as A
@@ -91,31 +91,37 @@ printJSON = BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a) => a -> IO ()
 printYaml = BC.putStrLn . Y.encode
 
-printVersion :: HGECommand -> IO ()
-printVersion = \case
-  HCVersion -> putStrLn versionLine >> exitSuccess
-  _         -> return ()
+procConnInfo :: RawConnInfo -> IO Q.ConnInfo
+procConnInfo rci = do
+  ci <- either (printErrExit . connInfoErrModifier)
+        return $ mkConnInfo rci
+  printConnInfo ci
+  return ci
   where
-    versionLine = "Hasura GraphQL Engine: " ++ T.unpack currentVersion
+    printConnInfo ci =
+      putStrLn $
+        "Postgres connection info:"
+        ++ "\n    Host: " ++ Q.connHost ci
+        ++ "\n    Port: " ++ show (Q.connPort ci)
+        ++ "\n    User: " ++ Q.connUser ci
+        ++ "\n    Database: " ++ Q.connDatabase ci
 
 main :: IO ()
 main =  do
   (HGEOptionsG rci hgeCmd) <- parseArgs
-  printVersion hgeCmd
-  ci <- either (printErrExit . connInfoErrModifier)
-    return $ mkConnInfo rci
-  printConnInfo ci
-  loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
-  hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
+  -- global http manager
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case hgeCmd of
     HCServe (ServeOptions port cp isoL mRootDir mAccessKey mAuthHook mJwtSecret
              mUnAuthRole corsCfg enableConsole) -> do
+      loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
+      hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
 
       authModeRes <- runExceptT $ mkAuthMode mAccessKey mAuthHook mJwtSecret
                                              mUnAuthRole httpManager loggerCtx
 
       am <- either (printErrExit . T.unpack) return authModeRes
+      ci <- procConnInfo rci
       initialise ci httpManager
       -- migrate catalog if necessary
       migrate ci httpManager
@@ -142,16 +148,19 @@ main =  do
       Warp.runSettings warpSettings app
 
     HCExport -> do
+      ci <- procConnInfo rci
       res <- runTx ci fetchMetadata
       either printErrJExit printJSON res
     HCClean -> do
+      ci <- procConnInfo rci
       res <- runTx ci cleanCatalog
       either printErrJExit (const cleanSuccess) res
     HCExecute -> do
       queryBs <- BL.getContents
+      ci <- procConnInfo rci
       res <- runAsAdmin ci httpManager $ execQuery queryBs
       either printErrJExit BLC.putStrLn res
-    HCVersion -> return ()
+    HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where
     runTx :: Q.ConnInfo -> Q.TxE QErr a -> IO (Either QErr a)
     runTx ci tx = do
@@ -189,11 +198,3 @@ main =  do
       either printErrExit return eRes
 
     cleanSuccess = putStrLn "successfully cleaned graphql-engine related data"
-
-    printConnInfo ci =
-      putStrLn $
-        "Postgres connection info:"
-        ++ "\n    Host: " ++ Q.connHost ci
-        ++ "\n    Port: " ++ show (Q.connPort ci)
-        ++ "\n    User: " ++ Q.connUser ci
-        ++ "\n    Database: " ++ Q.connDatabase ci
