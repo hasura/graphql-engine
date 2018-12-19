@@ -75,7 +75,7 @@ func IsEmptyFile(m *Migration, directory string) (ok bool, err error) {
 		var t []interface{}
 		err = yaml.Unmarshal(data, &t)
 		if err != nil {
-			return false, errors.Wrapf(err, "check yaml file %s", m.Raw)
+			return false, errors.Wrapf(err, "invalid yaml file: %s", m.Raw)
 		}
 		if len(t) == 0 {
 			return false, nil
