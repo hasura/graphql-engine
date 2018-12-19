@@ -65,7 +65,7 @@ func Parse(raw string, directory string) (*Migration, error) {
 }
 
 // Validate file to check for empty sql or yaml content.
-func IsEmptyFile(m *Migration, directory string) (ok bool, err error) {
+func IsEmptyFile(m *Migration, directory string) (bool, error) {
 	data, err := ioutil.ReadFile(filepath.Join(directory, m.Raw))
 	if err != nil {
 		return false, errors.Wrapf(err, "cannot read file %s", m.Raw)
@@ -85,5 +85,5 @@ func IsEmptyFile(m *Migration, directory string) (ok bool, err error) {
 			return false, nil
 		}
 	}
-	return
+	return true, nil
 }
