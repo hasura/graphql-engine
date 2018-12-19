@@ -6,7 +6,7 @@ import           Control.Monad.STM          (atomically)
 import           Data.Time.Clock            (getCurrentTime)
 import           Options.Applicative
 import           System.Environment         (getEnvironment, lookupEnv)
-import           System.Exit                (exitFailure, exitSuccess)
+import           System.Exit                (exitFailure)
 
 import qualified Control.Concurrent         as C
 import qualified Data.Aeson                 as A
@@ -23,7 +23,7 @@ import           Hasura.Events.Lib
 import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
-import           Hasura.RQL.Types           (QErr, RoleName (..), adminUserInfo,
+import           Hasura.RQL.Types           (QErr, adminUserInfo,
                                              emptySchemaCache)
 import           Hasura.Server.App          (mkWaiApp)
 import           Hasura.Server.Auth
@@ -36,78 +36,54 @@ import qualified Database.PG.Query          as Q
 import qualified Network.HTTP.Client.TLS    as TLS
 import qualified Network.Wreq.Session       as WrqS
 
-data RavenOptions
-  = RavenOptions
-  { roConnInfo :: !RawConnInfo
-  , roMode     :: !RavenMode
-  } deriving (Show, Eq)
+printErrExit :: forall a . String -> IO a
+printErrExit = (>> exitFailure) . putStrLn
 
-data ServeOptions
-  = ServeOptions
-  { soPort          :: !Int
-  , soConnParams    :: !Q.ConnParams
-  , soTxIso         :: !Q.TxIsolation
-  , soRootDir       :: !(Maybe String)
-  , soAccessKey     :: !(Maybe AccessKey)
-  , soAuthHook      :: !(Maybe AuthHook)
-  , soJwtSecret     :: !(Maybe Text)
-  , soUnAuthRole    :: !(Maybe RoleName)
-  , soCorsConfig    :: !CorsConfig
-  , soEnableConsole :: !Bool
-  } deriving (Show, Eq)
+printErrJExit :: A.ToJSON a => forall b . a -> IO b
+printErrJExit = (>> exitFailure) . printJSON
 
-data RavenMode
-  = ROServe !ServeOptions
-  | ROExport
-  | ROClean
-  | ROExecute
-  | ROVersion
-  deriving (Show, Eq)
-
-parseRavenMode :: Env -> Parser (Either String RavenMode)
-parseRavenMode env =
+parseHGECommand :: Parser RawHGECommand
+parseHGECommand =
   subparser
-    ( command "serve" (info (helper <*> serveOptsParser)
+    ( command "serve" (info (helper <*> (HCServe <$> serveOpts))
           ( progDesc "Start the GraphQL Engine Server"
             <> footerDoc (Just serveCmdFooter)
           ))
-        <> command "export" (info (pure $ Right ROExport)
+        <> command "export" (info (pure  HCExport)
           ( progDesc "Export graphql-engine's metadata to stdout" ))
-        <> command "clean" (info (pure $ Right ROClean)
+        <> command "clean" (info (pure  HCClean)
           ( progDesc "Clean graphql-engine's metadata to start afresh" ))
-        <> command "execute" (info (pure $ Right ROExecute)
+        <> command "execute" (info (pure  HCExecute)
           ( progDesc "Execute a query" ))
-        <> command "version" (info (pure $ Right ROVersion)
+        <> command "version" (info (pure  HCVersion)
           (progDesc "Prints the version of GraphQL Engine"))
     )
   where
-    serveOptsParser = runConfig env serveOptsconfig
-    serveOptsconfig = ROServe <$> serveOpts
-    serveOpts = ServeOptions
-                <$> configServerPort
-                <*> configConnParams
-                <*> configTxIsolation
-                <*> configRootDir
-                <*> configAccessKey
-                <*> configWebHook
-                <*> configJwtSecret
-                <*> configUnAuthRole
-                <*> configCorsConfig
-                <*> configEnableConsole
+    serveOpts = RawServeOptions
+                <$> parseServerPort
+                <*> parseConnParams
+                <*> parseTxIsolation
+                <*> parseRootDir
+                <*> parseAccessKey
+                <*> parseWebHook
+                <*> parseJwtSecret
+                <*> parseUnAuthRole
+                <*> parseCorsConfig
+                <*> parseEnableConsole
 
-parseArgs :: Env -> IO RavenOptions
-parseArgs env = do
-  eArgs <- execParser opts
-  either ((>> exitFailure) . putStrLn) return eArgs
+parseArgs :: IO HGEOptions
+parseArgs = do
+  rawHGEOpts <- execParser opts
+  env <- getEnvironment
+  let eitherOpts = runWithEnv env $ mkHGEOptions rawHGEOpts
+  either printErrExit return eitherOpts
   where
-    mkEitherRavenOpts a b = RavenOptions <$> a <*> b
-    optParser = liftA2 mkEitherRavenOpts parseRawConnInfo $ parseRavenMode env
-    parseRawConnInfo = runConfig env configRawConnInfo
-    opts = info (helper <*> optParser)
+    opts = info (helper <*> hgeOpts)
            ( fullDesc <>
              header "Hasura GraphQL Engine: Realtime GraphQL API over Postgres with access control" <>
              footerDoc (Just mainCmdFooter)
            )
+    hgeOpts = HGEOptionsG <$> parseRawConnInfo <*> parseHGECommand
 
 printJSON :: (A.ToJSON a) => a -> IO ()
 printJSON = BLC.putStrLn . A.encode
@@ -115,32 +91,37 @@ printJSON = BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a) => a -> IO ()
 printYaml = BC.putStrLn . Y.encode
 
-printVersion :: RavenMode -> IO ()
-printVersion = \case
-  ROVersion -> putStrLn versionLine >> exitSuccess
-  _         -> return ()
+procConnInfo :: RawConnInfo -> IO Q.ConnInfo
+procConnInfo rci = do
+  ci <- either (printErrExit . connInfoErrModifier)
+        return $ mkConnInfo rci
+  printConnInfo ci
+  return ci
   where
-    versionLine = "Hasura GraphQL Engine: " ++ T.unpack currentVersion
+    printConnInfo ci =
+      putStrLn $
+        "Postgres connection info:"
+        ++ "\n    Host: " ++ Q.connHost ci
+        ++ "\n    Port: " ++ show (Q.connPort ci)
+        ++ "\n    User: " ++ Q.connUser ci
+        ++ "\n    Database: " ++ Q.connDatabase ci
 
 main :: IO ()
 main =  do
-  env <- getEnvironment
-  (RavenOptions rci ravenMode) <- parseArgs env
-  printVersion ravenMode
-  ci <- either ((>> exitFailure) . putStrLn . connInfoErrModifier)
-    return $ mkConnInfo rci
-  printConnInfo ci
-  loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
-  hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
+  (HGEOptionsG rci hgeCmd) <- parseArgs
+  -- global http manager
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-  case ravenMode of
-    ROServe (ServeOptions port cp isoL mRootDir mAccessKey mAuthHook mJwtSecret
+  case hgeCmd of
+    HCServe (ServeOptions port cp isoL mRootDir mAccessKey mAuthHook mJwtSecret
              mUnAuthRole corsCfg enableConsole) -> do
+      loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
+      hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
 
       authModeRes <- runExceptT $ mkAuthMode mAccessKey mAuthHook mJwtSecret
                                              mUnAuthRole httpManager loggerCtx
 
-      am <- either ((>> exitFailure) . putStrLn . T.unpack) return authModeRes
+      am <- either (printErrExit . T.unpack) return authModeRes
+      ci <- procConnInfo rci
       initialise ci httpManager
       -- migrate catalog if necessary
       migrate ci httpManager
@@ -166,17 +147,20 @@ main =  do
 
       Warp.runSettings warpSettings app
 
-    ROExport -> do
+    HCExport -> do
+      ci <- procConnInfo rci
       res <- runTx ci fetchMetadata
-      either ((>> exitFailure) . printJSON) printJSON res
-    ROClean -> do
+      either printErrJExit printJSON res
+    HCClean -> do
+      ci <- procConnInfo rci
       res <- runTx ci cleanCatalog
-      either ((>> exitFailure) . printJSON) (const cleanSuccess) res
-    ROExecute -> do
+      either printErrJExit (const cleanSuccess) res
+    HCExecute -> do
       queryBs <- BL.getContents
+      ci <- procConnInfo rci
       res <- runAsAdmin ci httpManager $ execQuery queryBs
-      either ((>> exitFailure) . printJSON) BLC.putStrLn res
-    ROVersion -> return ()
+      either printErrJExit BLC.putStrLn res
+    HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where
     runTx :: Q.ConnInfo -> Q.TxE QErr a -> IO (Either QErr a)
     runTx ci tx = do
@@ -194,15 +178,15 @@ main =  do
     initialise ci httpMgr = do
       currentTime <- getCurrentTime
       res <- runAsAdmin ci httpMgr $ initCatalogSafe currentTime
-      either ((>> exitFailure) . printJSON) putStrLn res
+      either printErrJExit putStrLn res
     migrate ci httpMgr = do
       currentTime <- getCurrentTime
       res <- runAsAdmin ci httpMgr $ migrateCatalog currentTime
-      either ((>> exitFailure) . printJSON) putStrLn res
+      either printErrJExit putStrLn res
     prepareEvents ci = do
       putStrLn "event_triggers: preparing data"
       res <- runTx ci unlockAllEvents
-      either ((>> exitFailure) . printJSON) return res
+      either printErrJExit return res
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
@@ -211,14 +195,6 @@ main =  do
             Nothing  -> Just defaults
             Just val -> readMaybe val
           eRes = maybe (Left $ "Wrong expected type for environment variable: " <> env) Right mRes
-      either ((>> exitFailure) . putStrLn) return eRes
+      either printErrExit return eRes
 
     cleanSuccess = putStrLn "successfully cleaned graphql-engine related data"
-
-    printConnInfo ci =
-      putStrLn $
-        "Postgres connection info:"
-        ++ "\n    Host: " ++ Q.connHost ci
-        ++ "\n    Port: " ++ show (Q.connPort ci)
-        ++ "\n    User: " ++ Q.connUser ci
-        ++ "\n    Database: " ++ Q.connDatabase ci
