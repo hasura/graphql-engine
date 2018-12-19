@@ -35,7 +35,7 @@ data PGColInfo
   , pgiIsNullable :: !Bool
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 3 snakeCase) ''PGColInfo)
+$(deriveJSON (aesonDrop 3 snakeCase) ''PGColInfo)
 
 newtype RelName
   = RelName {getRelTxt :: T.Text}
