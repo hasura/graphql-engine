@@ -20,6 +20,15 @@ table thead tr th
   color: #4D4D4D;
   font-weight: 600 !important;
 }
+
+.textareaButtonAlign {
+  position: relative;
+  float: right;
+  margin-left: -30px;
+  margin-right: 5px;
+  margin-top: 10px;
+}
+
 .pageSidebar {
   height: calc(100vh - 50px);
   overflow: auto;

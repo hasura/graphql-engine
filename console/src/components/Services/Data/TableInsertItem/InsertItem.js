@@ -5,6 +5,7 @@ import { insertItem, I_RESET } from './InsertActions';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
 import Button from '../../Layout/Button/Button';
+import Toggler from '../../../Common/Toggler/Toggler';
 
 class InsertItem extends Component {
   constructor() {
@@ -146,6 +147,15 @@ class InsertItem extends Component {
             {...standardInputProps}
             readOnly
             placeholder={getPlaceholder(colType)}
+          />
+        );
+      }
+
+      if (colType === 'text') {
+        typedInput = (
+          <Toggler
+            standardProps={standardInputProps}
+            placeholderProp={getPlaceholder(colType)}
           />
         );
       }

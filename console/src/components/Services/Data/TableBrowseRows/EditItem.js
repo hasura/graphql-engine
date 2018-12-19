@@ -6,6 +6,7 @@ import globals from '../../../../Globals';
 import { modalClose } from './EditActions';
 import Button from '../../Layout/Button/Button';
 
+import Toggler from '../../../Common/Toggler/Toggler';
 // import RichTextEditor from 'react-rte';
 import { replace } from 'react-router-redux';
 
@@ -187,37 +188,33 @@ class EditItem extends Component {
           defaultValue = this.state.editorColumnMap[colName];
           currentValue = this.state.editorColumnMap[colName];
         }
+        const standardInputProps = {
+          type: 'text',
+          className: `form-control ${styles.insertBox}`,
+          onClick: clicker,
+          ref: inputRef,
+          onChange: e => {
+            this.onTextChange(e, colName);
+          },
+          defaultValue: currentValue,
+          'data-test': `typed-input-${i}`,
+        };
         if (currentValue !== '') {
           typedInput = (
             <span>
-              <input
-                placeholder={'text'}
-                type="text"
-                className={'form-control ' + styles.insertBox}
-                onClick={clicker}
-                ref={inputRef}
-                onChange={e => {
-                  this.onTextChange(e, colName);
-                }}
-                value={currentValue}
-                data-test={`typed-input-${i}`}
+              <Toggler
+                placeholderProp={'text'}
+                standardProps={standardInputProps}
               />
             </span>
           );
         } else {
+          standardInputProps.defaultValue = defaultValue;
           typedInput = (
             <span>
-              <input
-                placeholder={'text'}
-                type="text"
-                className={'form-control ' + styles.insertBox}
-                onClick={clicker}
-                ref={inputRef}
-                onChange={e => {
-                  this.onTextChange(e, colName);
-                }}
-                value={defaultValue}
-                data-test={`typed-input-${i}`}
+              <Toggler
+                placeholderProp={'text'}
+                standardProps={standardInputProps}
               />
             </span>
           );
