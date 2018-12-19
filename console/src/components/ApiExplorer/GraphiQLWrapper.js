@@ -24,6 +24,8 @@ class GraphiQLWrapper extends Component {
       supportAnalyze: false,
       analyzeApiChange: false,
       variables: null,
+      onEditQuery: null,
+      onEditVariables: null,
     };
     const queryFile = this.props.queryParams
       ? this.props.queryParams.query_file
@@ -47,6 +49,10 @@ class GraphiQLWrapper extends Component {
     if (queryVariables) {
       this.state.variables = queryVariables;
     }
+
+    this.onEditQuery = this.onEditQuery.bind(this);
+    this.onEditVariables = this.onEditVariables.bind(this);
+    this.updateURL = this.updateURL.bind(this);
   }
 
   componentDidMount() {
@@ -109,6 +115,42 @@ class GraphiQLWrapper extends Component {
     });
   }
 
+  onEditQuery(newQuery) {
+    console.log(newQuery);
+    this.setState({ ...this.state, onEditQuery: newQuery });
+    this.updateURL();
+  }
+
+  onEditVariables(newVariables) {
+    console.log(newVariables);
+    this.setState({ ...this.state, onEditVariables: newVariables });
+    this.updateURL();
+  }
+
+  updateURL() {
+      var search = window.location.search;
+      var parameters = {};
+
+      search.substr(1).split('&').forEach(function (entry) {
+        var eq = entry.indexOf('=');
+        if (eq >= 0) {
+          parameters[decodeURIComponent(entry.slice(0, eq))] =
+            decodeURIComponent(entry.slice(eq + 1));
+        }
+      });
+      
+      parameters.query_string = this.state.onEditQuery;
+      parameters.query_variables = JSON.stringify(JSON.parse(this.state.onEditVariables), null, 2);
+
+      var newSearch = '?' + Object.keys(parameters).filter(function (key) {
+        return Boolean(parameters[key]);
+      }).map(function (key) {
+        return encodeURIComponent(key) + '=' +
+          encodeURIComponent(parameters[key]);
+      }).join('&');
+      history.replaceState(null, null, newSearch);
+  }
+
   render() {
     const styles = require('../Common/Common.scss');
     const { supportAnalyze, analyzeApiChange } = this.state;
@@ -134,6 +176,20 @@ class GraphiQLWrapper extends Component {
       <i className={'fa fa-spinner fa-spin ' + styles.graphSpinner} />
     );
 
+    if(!this.state.error && this.props.numberOfTables == 0 && this.state.queries) {
+      content = (
+        <GraphiQL
+          fetcher={graphQLFetcher}
+          analyzeFetcher={analyzeFetcherInstance}
+          supportAnalyze={supportAnalyze}
+          query={this.state.queries}
+          variables={this.state.variables}
+          onEditQuery={this.onEditQuery}
+          onEditVariables={this.onEditVariables}
+        />
+      );
+    }
+
     if (!this.state.error && this.props.numberOfTables !== 0) {
       if (this.state.queries) {
         content = (
@@ -143,14 +199,19 @@ class GraphiQLWrapper extends Component {
             supportAnalyze={supportAnalyze}
             query={this.state.queries}
             variables={this.state.variables}
+            onEditQuery={this.onEditQuery}
+            onEditVariables={this.onEditVariables}
           />
         );
-      } else {
+      }
+      else {
         content = (
           <GraphiQL
             fetcher={graphQLFetcher}
             analyzeFetcher={analyzeFetcherInstance}
             supportAnalyze={supportAnalyze}
+            onEditQuery={this.onEditQuery}
+            onEditVariables={this.onEditVariables}
           />
         );
       }
@@ -164,6 +225,8 @@ class GraphiQLWrapper extends Component {
             '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n'
           }
           schema={undefined}
+          onEditQuery={this.onEditQuery}
+          onEditVariables={this.onEditVariables}
         />
       );
     } else if (this.state.error) {
