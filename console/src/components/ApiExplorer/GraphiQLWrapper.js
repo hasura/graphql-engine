@@ -12,6 +12,8 @@ import './GraphiQL.css';
 
 import semverCheck from '../../helpers/semver';
 
+import isJSON from 'is-valid-json';
+
 class GraphiQLWrapper extends Component {
   constructor(props) {
     super(props);
@@ -74,20 +76,16 @@ class GraphiQLWrapper extends Component {
     return !nextProps.headerFocus;
   }
 
-  checkSemVer(version) {
-    try {
-      const showAnalyze = semverCheck('sqlAnalyze', version);
-      if (showAnalyze) {
-        this.updateAnalyzeState(true);
-      } else {
-        this.updateAnalyzeState(false);
-      }
-    } catch (e) {
-      this.updateAnalyzeState(false);
-      console.error(e);
-    }
-    return Promise.resolve();
+  onEditQuery(newQuery) {
+    this.setState({ ...this.state, onEditQuery: newQuery });
+    this.updateURL();
   }
+
+  onEditVariables(newVariables) {
+    this.setState({ ...this.state, onEditVariables: newVariables });
+    this.updateURL();
+  }
+
   checkNewAnalyzeVersion(version) {
     try {
       const analyzeApiChange = semverCheck('analyzeApiChange', version);
@@ -115,40 +113,60 @@ class GraphiQLWrapper extends Component {
     });
   }
 
-  onEditQuery(newQuery) {
-    console.log(newQuery);
-    this.setState({ ...this.state, onEditQuery: newQuery });
-    this.updateURL();
-  }
-
-  onEditVariables(newVariables) {
-    console.log(newVariables);
-    this.setState({ ...this.state, onEditVariables: newVariables });
-    this.updateURL();
+  checkSemVer(version) {
+    try {
+      const showAnalyze = semverCheck('sqlAnalyze', version);
+      if (showAnalyze) {
+        this.updateAnalyzeState(true);
+      } else {
+        this.updateAnalyzeState(false);
+      }
+    } catch (e) {
+      this.updateAnalyzeState(false);
+      console.error(e);
+    }
+    return Promise.resolve();
   }
 
   updateURL() {
-      var search = window.location.search;
-      var parameters = {};
+    const search = window.location.search;
+    const parameters = {};
 
-      search.substr(1).split('&').forEach(function (entry) {
-        var eq = entry.indexOf('=');
+    search
+      .substr(1)
+      .split('&')
+      .forEach(entry => {
+        const eq = entry.indexOf('=');
         if (eq >= 0) {
-          parameters[decodeURIComponent(entry.slice(0, eq))] =
-            decodeURIComponent(entry.slice(eq + 1));
+          parameters[
+            decodeURIComponent(entry.slice(0, eq))
+          ] = decodeURIComponent(entry.slice(eq + 1));
         }
       });
-      
-      parameters.query_string = this.state.onEditQuery;
-      parameters.query_variables = JSON.stringify(JSON.parse(this.state.onEditVariables), null, 2);
 
-      var newSearch = '?' + Object.keys(parameters).filter(function (key) {
-        return Boolean(parameters[key]);
-      }).map(function (key) {
-        return encodeURIComponent(key) + '=' +
-          encodeURIComponent(parameters[key]);
-      }).join('&');
-      history.replaceState(null, null, newSearch);
+    parameters.query_string = this.state.onEditQuery;
+    if (isJSON(this.state.onEditVariables)) {
+      parameters.query_variables = JSON.stringify(
+        JSON.parse(this.state.onEditVariables),
+        null,
+        2
+      );
+    }
+
+    const newSearch =
+      '?' +
+      Object.keys(parameters)
+        .filter(key => {
+          return Boolean(parameters[key]);
+        })
+        .map(key => {
+          return (
+            encodeURIComponent(key) + '=' + encodeURIComponent(parameters[key])
+          );
+        })
+        .join('&');
+
+    history.replaceState(null, null, newSearch);
   }
 
   render() {
@@ -176,7 +194,11 @@ class GraphiQLWrapper extends Component {
       <i className={'fa fa-spinner fa-spin ' + styles.graphSpinner} />
     );
 
-    if(!this.state.error && this.props.numberOfTables == 0 && this.state.queries) {
+    if (
+      !this.state.error &&
+      this.props.numberOfTables === 0 &&
+      this.state.queries
+    ) {
       content = (
         <GraphiQL
           fetcher={graphQLFetcher}
@@ -203,8 +225,7 @@ class GraphiQLWrapper extends Component {
             onEditVariables={this.onEditVariables}
           />
         );
-      }
-      else {
+      } else {
         content = (
           <GraphiQL
             fetcher={graphQLFetcher}
