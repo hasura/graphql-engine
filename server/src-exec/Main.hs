@@ -138,7 +138,7 @@ main =  do
 
       maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
       evFetchMilliSec  <- getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-      logEnvHeaders <- getFromEnv False "LOG_HEADERS_FHCM_ENV"
+      logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
 
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
       httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
