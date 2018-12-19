@@ -1,5 +1,5 @@
 select
-  columns.columns,
+  coalesce(columns.columns, '[]') as columns,
   coalesce(pk.columns, '[]') as primary_key_columns,
   coalesce(constraints.constraints, '[]') as constraints,
   coalesce(views.view_info, 'null') as view_info
