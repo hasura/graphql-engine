@@ -644,6 +644,8 @@ class ModifyTable extends Component {
             {commentHtml}
             <h4 className={styles.subheading_text}>Columns</h4>
             {columnEditors}
+            <hr />
+            <h4 className={styles.subheading_text}>Add a new column</h4>
             <div className={styles.activeEdit}>
               <form
                 className={`form-inline ${styles.display_flex}`}
