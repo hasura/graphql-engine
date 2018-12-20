@@ -1667,7 +1667,7 @@ checkSchemaConflicts gCtx remoteCtx = do
                     (\k _ -> G.unNamedType k `notElem` builtinTy ++ rmRootNames)
                     $ _gTypes remoteCtx
 
-      isTyInfoSame ty = any (\t -> tyinfoEq t ty) hTypes
+      isTyInfoSame ty = isScalarTy ty || any (`tyinfoEq` ty) hTypes
       -- name is same and structure is not same
       isSame n ty = G.unNamedType n `elem` hTyNames &&
                     not (isTyInfoSame ty)

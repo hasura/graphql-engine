@@ -19,6 +19,7 @@ module Hasura.GraphQL.Validate.Types
   , defaultSchema
   , TypeInfo(..)
   , isObjTy
+  , isScalarTy
   , getObjTyM
   , mkScalarTy
   , pgColTyToScalar
@@ -229,6 +230,11 @@ fromScalarTyDef (G.ScalarTypeDefinition descM n _) loc =
       -- TODO: is this correct?
       "ID"      -> return $ PGUnknown "ID" --PGText
       -- FIXME: is this correct for hasura scalar also?
+      -- TODO: hasura built-in scalars can have other PG* types. When parsing a
+      -- remote type (specifically another hasura), not built-in scalar types
+      -- get parsed as PGUnknown, and hence scalar comparison might give
+      -- unexpected result. E.g - timestamptz scalar in local will be of
+      -- PGTimeStampTZ but from remote hasura will be PGUnknown "timestamptz".
       _         -> return $ PGUnknown $ G.unName n --throwError $ "unexpected type: " <> G.unName n
 
 data TypeInfo
@@ -237,6 +243,11 @@ data TypeInfo
   | TIEnum !EnumTyInfo
   | TIInpObj !InpObjTyInfo
   deriving (Show, Eq, TH.Lift)
+
+isScalarTy :: TypeInfo -> Bool
+isScalarTy = \case
+  TIScalar _ -> True
+  _          -> False
 
 isObjTy :: TypeInfo -> Bool
 isObjTy = \case
