@@ -1,7 +1,3 @@
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.SQL.Rewrite
   ( prefixNumToAliases
   ) where
@@ -123,6 +119,7 @@ uBoolExp = restoringIdens . \case
   S.BENull e -> S.BENull <$> uSqlExp e
   S.BENotNull e -> S.BENotNull <$> uSqlExp e
   S.BEExists sel -> S.BEExists <$> uSelect sel
+  S.BEIN left exps -> S.BEIN <$> uSqlExp left <*> mapM uSqlExp exps
 
 uOrderBy :: S.OrderByExp -> Uniq S.OrderByExp
 uOrderBy (S.OrderByExp ordByItems) =
@@ -171,6 +168,7 @@ uSqlExp = restoringIdens . \case
     S.SEExcluded <$> return t
   S.SEArray l                   ->
     S.SEArray <$> mapM uSqlExp l
+  S.SECount cty                 -> return $ S.SECount cty
   where
     uQual = \case
       S.QualIden iden -> S.QualIden <$> getIden iden

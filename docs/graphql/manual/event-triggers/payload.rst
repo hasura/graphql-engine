@@ -1,6 +1,11 @@
 Event trigger payload
 =====================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The following is the payload and delivery mechanism of an event to the webhook when an event trigger is invoked.
 
 HTTP request method
@@ -115,8 +120,6 @@ JSON payload
 Syntax definitions
 ------------------
 
-.. _Object:
-
 Object
 ^^^^^^
 
@@ -128,8 +131,6 @@ Object
     ..
   }
 
-
-.. _OpName:
 
 OpName
 ^^^^^^

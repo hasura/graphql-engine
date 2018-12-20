@@ -1,10 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TupleSections     #-}
-
 module Hasura.GraphQL.Resolve.InputValue
   ( withNotNull
   , tyMismatch
@@ -59,7 +52,7 @@ asPGColVal
 asPGColVal = \case
   AGScalar colTy (Just val) -> return (colTy, val)
   AGScalar colTy Nothing ->
-    throw500 $ "unexpected null for ty"
+    throw500 $ "unexpected null for ty "
     <> T.pack (show colTy)
   v            -> tyMismatch "pgvalue" v
 
@@ -79,7 +72,7 @@ withObject fn v = case v of
   AGObject nt (Just obj) -> fn nt obj
   AGObject nt Nothing  ->
     throw500 $ "unexpected null for ty"
-    <> G.showGT (G.TypeNamed nt)
+    <> G.showGT (G.TypeNamed (G.Nullability True) nt)
   _               -> tyMismatch "object" v
 
 asObject
@@ -107,7 +100,7 @@ withArray
 withArray fn v = case v of
   AGArray lt (Just l) -> fn lt l
   AGArray lt Nothing  -> throw500 $ "unexpected null for ty"
-                         <> G.showGT (G.TypeList lt)
+                         <> G.showGT (G.TypeList (G.Nullability True) lt)
   _                   -> tyMismatch "array" v
 
 asArray

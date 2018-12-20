@@ -2,7 +2,9 @@
 .container {
   padding: 0;
 }
-
+.dropdown_wrapper {
+  width: 300px;
+}
 .tableContainer {
   overflow: auto;
   //margin-top: 25px;
@@ -306,4 +308,23 @@ a.expanded {
 .redeliverEventSection {
   clear: both;
   margin: 0;
+}
+.triggerSettingsModifyButton {
+  margin-right: 10px;
+  border-radius: 3px;
+}
+.dropDownGroup {
+  max-width: 300px;
+}
+.status_code_right {
+  text-align: right;
+  font-weight: bold;
+  font-size: 15px;
+  padding-bottom: 20px;
+  margin-top: 0;
+  margin-bottom: 0;
+  i
+  {
+    margin-left: 5px;
+  }
 }

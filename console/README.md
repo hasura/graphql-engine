@@ -4,8 +4,7 @@
 
 The Hasura console is an admin dashboard to manage the connected database and to try out GraphQL APIs. It is a React application bundled with webpack and the state is managed using Redux.
 
-Served by
-
+Served by:
 1. Hasura GraphQL Engine:
    The console is served by GraphQL Engine at `/console` endpoint (when `--enable-console` flag is used). Typically runs in **No Migration Mode** which means that actions on the console are not spitting out migration “yaml” files automatically. Most users will be using the Hasura console in this mode.
 
@@ -18,7 +17,7 @@ This guide is for setting-up the console for development on your own machine, an
 
 ### Prerequisites
 
-- Node.js (v8.9+)
+- [Node.js](https://nodejs.org/en/) (v8.9+)
 - [Hasura GraphQL Engine](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html)
 - [Hasura CLI](https://docs.hasura.io/1.0/graphql/manual/hasura-cli/install-hasura-cli.html) (for working with migrations)
 
@@ -38,11 +37,9 @@ Hasura console can be developed in two modes (`server` or `cli` mode). Both mode
 
 ### Development with Hasura GraphQL Engine (`server` mode)
 
-Hasura GraphQL engine should be running to develop console in this mode. If you have set it up on heroku, your url will look like `<app-name>.herokuapp.com`, if it's on your local machine, it's probably `http://localhost:8080`.
+Hasura GraphQL engine should be running to develop console in this mode. If you have set it up on Heroku, your url will look like `<app-name>.herokuapp.com`, if it's on your local machine, it's probably `http://localhost:8080`.
 
-[Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. Create a `.env` file in the root directory for console (wherever package.json is). Sample `.env` file will look like below
-
-Sample environment variables:
+[Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. Create a `.env` file in the root directory for console (wherever package.json is). Here's a `.env` file with some environment variable examples :
 
 ```bash
 PORT=3000
@@ -59,10 +56,10 @@ Environment variables accepted in `server` mode:
 
 1. `PORT`: Configure the port where Hasura console will run locally.
 2. `NODE_ENV`: `development`
-3. `DATA_API_URL`: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com.
+3. `DATA_API_URL`: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku, your url will look like <app-name>.herokuapp.com.
 4. `ACCESS_KEY`: Set access key if Hasura GraphQL engine is configured to run with ACCESS_KEY.
 5. `CONSOLE_MODE`: `server`
-6. `URL_PREFIX`: ‘/’ (forward slash)
+6. `URL_PREFIX`: `/` (forward slash)
 
 #### Run Development Server:
 
@@ -72,9 +69,7 @@ Environment variables accepted in `server` mode:
 
 ### Development with Hasura CLI (`cli` mode)
 
-Configure .env file with appropriate values for the required environment variables.
-
-Sample environment variables:
+Configure .env file with appropriate values for the required environment variables, such as the examples below:
 
 ```bash
 PORT=3000
@@ -140,7 +135,7 @@ It should automatically connect to the Redux store when started in development m
 - Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md#commit-messages).
 - Once the changes are done, create a pull request.
 - CI configured for PR will run the test suite.
-- Once everything goes well, it will generate a preview heroku app.
+- Once everything goes well, it will generate a preview Heroku app.
 - The source code and the preview app will be reviewed by maintainers.
 
 <!-- prettier-ignore-end -->

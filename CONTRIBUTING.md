@@ -6,7 +6,7 @@ worst that can happen is that you'll be politely asked to change something. We
 appreciate any contributions, and we don't want a wall of rules to get in
 the way of that.
 
-However, for individuals who want a bit more guidance on the best way to
+However, for those individuals who want a bit more guidance on the best way to
 contribute to the project, read on. This document will cover what we're looking
 for. By addressing all the points we're looking for, the chances that we
 can quickly merge or address your contributions will increase.
@@ -44,8 +44,8 @@ aforementioned sections).
 
 ### Reporting an Issue
 
-- Make sure you test against the latest released version. It is possible we
-  already fixed the bug you're experiencing.
+- Make sure you test against the latest released version. It is possible that we
+  may have already fixed the bug you're experiencing.
 
 - Provide steps to reproduce the issue, including Postgres version,
   graphql-engine version and the provider you are running on (Heroku, Docker,

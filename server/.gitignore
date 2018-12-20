@@ -1,6 +1,8 @@
 __pycache__/
 dist
 cabal-dev
+Pipfile
+Pipfile.lock
 *.o
 *.hi
 *.chi

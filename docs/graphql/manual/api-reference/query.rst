@@ -3,6 +3,11 @@
 API Reference - Query/Subscription
 ==================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 3
+  :local:
+
 Query/Subscription syntax
 -------------------------
 
@@ -63,10 +68,13 @@ Query/Subscription syntax
 Syntax definitions
 ------------------
 
-.. _Object:
-
 Object
 ^^^^^^
+
+.. _simple_object:
+
+Simple Object
+*************
 
 .. code-block:: none
 
@@ -76,6 +84,7 @@ Object
     ..
     nested object1
     nested object2
+    aggregate nested object1
     ..
   }
 
@@ -84,21 +93,173 @@ E.g.
 .. code-block:: graphql
 
    author {
-      id # scalar field
-      name # scalar field
-      article { # nested object
+      id  # scalar field
+      name  # scalar field
+      article {  # nested object
         title
+      }
+      article_aggregate {  # aggregate nested object
+        aggregate {
+          count
+        }
+        nodes {
+          title
+        }
       }
    }
 
-.. _Argument:
+.. _aggregate_object:
+
+Aggregate Object
+****************
+
+.. code-block:: none
+
+  object-name_aggregate {
+    aggregate {
+      count
+      sum {
+        field
+        ..
+      }
+      avg {
+        field
+        ..
+      }
+      stddev {
+        field
+        ..
+      }
+      stddev_samp {
+        field
+        ..
+      }
+      stddev_pop {
+        field
+        ..
+      }
+      variance {
+        field
+        ..
+      }
+      var_samp {
+        field
+        ..
+      }
+      var_pop {
+        field
+        ..
+      }
+      max {
+        field
+        ..
+      }
+      min {
+        field
+        ..
+      }
+    nodes {
+      field1
+      field2
+      ..
+      nested object1
+      nested object2
+      aggregate nested object1
+      ..
+    }
+  }
+
+(For more details on aggregate functions, refer to `Postgres docs <https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE>`__.)
+
+E.g.
+
+.. code-block:: graphql
+
+   author_aggregate {
+     aggregate {
+       count  # total count
+       sum {
+         id  # sum aggregate on id
+       }
+       avg {
+         id  # avg aggregate on id
+       }
+       stddev {
+         id  # stddev aggregate on id
+       }
+       stddev_samp {
+         id  # stddev_samp aggregate on id
+       }
+       stddev_pop {
+         id  # stddev_pop aggregate on id
+       }
+       variance {
+         id  # variance aggregate on id
+       }
+       var_samp {
+         id  # var_samp aggregate on id
+       }
+       var_pop {
+         id  # var_pop aggregate on id
+       }
+       max {
+         id  # max aggregate on id
+       }
+       min {
+         id  # min aggregate on id
+       }
+     }
+
+     nodes {  # objects
+       id  # scalar field
+       name  # scalar field
+
+       article {  # nested object
+         title
+       }
+
+       article_aggregate{  # aggregate nested object
+         aggregate {
+           count
+         }
+         nodes {
+           title
+         }
+       }
+     }
+   }
 
 Argument
 ^^^^^^^^
 
 .. parsed-literal::
 
-   WhereExp_ | OrderByExp_ | PaginationExp_
+   DistinctOnExp_ | WhereExp_ | OrderByExp_ | PaginationExp_
+
+
+.. _DistinctOnExp:
+
+DistinctOnExp
+*************
+
+.. parsed-literal::
+
+   distinct_on: [ TableSelectColumnEnum_ ]
+
+TableSelectColumnEnum
+"""""""""""""""""""""
+
+.. code-block:: graphql
+
+   #example table_select_column enum for "article" table
+   enum article_select_column {
+     id
+     title
+     content
+     author_id
+     is_published
+   }
+
 
 .. _WhereExp:
 
@@ -109,16 +270,12 @@ WhereExp
 
    where: BoolExp_
 
-.. _BoolExp:
-
 BoolExp
 """""""
 
 .. parsed-literal::
 
    AndExp_ | OrExp_ | NotExp_ | ColumnExp_
-
-.. _AndExp:
 
 AndExp
 ######
@@ -129,8 +286,6 @@ AndExp
       _and: [BoolExp_]
     }
 
-.. _OrExp:
-
 OrExp
 #####
 
@@ -139,8 +294,6 @@ OrExp
     {
       _or: [BoolExp_]
     }
-
-.. _NotExp:
 
 NotExp
 ######
@@ -193,7 +346,7 @@ JSONB operators:
    * - ``_has_keys_all``
      - ``?&``
 
-(For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`_.)
+(For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.)
 
 Text related operators :
 
@@ -230,11 +383,15 @@ or
 
    order_by: [{id: desc}, {author: {id: asc}}]
 
+or
 
-.. _TableOrderBy:
+.. parsed-literal::
+
+   order_by: {articles_aggregate: {count: asc}}
+
 
 TableOrderBy
-***********
+************
 
 For columns:
 
@@ -246,6 +403,11 @@ For object relations:
 
 .. parsed-literal::
    {relation-name: TableOrderBy_}
+
+For array relations aggregate:
+
+.. parsed-literal::
+   {relation-name_aggregate: AggregateOrderBy_}
 
 E.g.
 
@@ -260,9 +422,33 @@ Order by type for "article" table:
      author_id: order_by
      #order by using "author" object relationship columns
      author: author_order_by
+     #order by using "likes" array relationship aggregates
+     likes_aggregate: likes_aggregate_order_by
    }
 
-.. _OrderByEnum:
+AggregateOrderBy               
+****************
+
+Count aggregate
+
+.. parsed-literal::
+   {count: OrderByEnum_}
+
+Operation aggregate
+
+.. parsed-literal::
+   {op_name: TableAggOpOrderBy_}
+
+Available operations are ``sum``, ``avg``, ``max``, ``min``, ``stddev``, ``stddev_samp``,
+``stddev_pop``, ``variance``, ``var_samp`` and ``var_pop``
+
+TableAggOpOrderBy
+*****************
+
+.. parsed-literal::
+   {column: OrderByEnum_}
+
+
 
 OrderByEnum
 ***********
@@ -271,14 +457,18 @@ OrderByEnum
 
    #the order_by enum type
    enum order_by {
-     #in the ascending order
+     #in the ascending order, nulls last
      asc
-     #in the descending order
-     desc
+     #in the ascending order, nulls last
+     asc_nulls_last
      #in the ascending order, nulls first
      asc_nulls_first
      #in the descending order, nulls first
+     desc
+     #in the descending order, nulls first
      desc_nulls_first
+     #in the descending order, nulls last
+     desc_nulls_last
    }
 
 

@@ -1,7 +1,7 @@
 # Contributing
 
-[Sphinx](http://www.sphinx-doc.org/en/master/) files are written in
-the RST markup language. [Here](http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html) is a guide to the RST markup language.
+Hasura GraphQL engine docs are built using [Sphinx](http://www.sphinx-doc.org/en/master/).
+Sphinx files are written using the [RST markup language](http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html).
 
 ## Requirements
 
@@ -47,4 +47,35 @@ the RST markup language. [Here](http://www.sphinx-doc.org/en/master/usage/restru
 contributing guide](../CONTRIBUTING.md#common-guidelines).
 - Push the changes to your fork and submit a pull request.
 
-**Note:** The search is powered by [Algolia](https://www.algolia.com/) and is updated on every deployment. Your local changes will not be reflected in search results.        
+## Some guidelines while modifying docs
+- Just before committing your changes, delete your local `_build` folder completely and then build docs again. Scan 
+the output and look for any Warnings (e.g. title underline too short, Could not lex literal block, etc.). Ideally 
+there should not be any Warnings that are being thrown.
+- Keep heading underlining the same length as the heading. It's just aesthetically nice. (Short underlines will 
+even throw a Warning)
+- Page titles should be self sufficient. Don't expect the user to have context of the hierarchy of the page in the 
+docs tree. A user can land on a page via search as well. e.g. Say you are adding a new deployment guide for AWS under 
+`Guides -> Deployment -> AWS`. The title of this page should not be just `AWS` but instead `AWS deployment guide for 
+Hasura GraphQL engine`. It's fine to alias it to just `AWS` in the sidebar as there the user has the context of the 
+page hierarchy.
+- Ensure every new added page has a ``Table of contents`` section with the right depth. You can see any existing
+page for reference on how to do this.
+- When referring to an external link using `` `....`_``, add an extra underscore to the link. ie. `` `...`__``. A 
+single underscore creates a global link which can then be referred from any page in the docs and hence might cause 
+some conflicts with other links sometimes (a conflict will show up as a Warning though while building).   
+- Before adding an image to docs, first compress it via some tool to ensure users won't have to unnecessarily 
+download more data than needed. You can use www.tinypng.com for this. Sometimes you can compress images by 
+upto 75% without losing any visible quality.
+- Add appropriate cross-links in content to assist users. i.e. if you refer to some functionality that is documented in 
+some other docs page, add a link to that page. e.g. if you have a statement like "create a relationship between tables
+X and Y ...", make "create a relationship" a link to the `Create relationships` page.
+- Try to commit logically separate changes into different commits. i.e. if you need to update the `.gitignore` 
+file for some reason and also have other normal docs changes, commit the gitignore change separately for better 
+visibility. Ideally each commit should perform just one specific function. e.g. add xyz deployment guide, update 
+gitignore, fix broken link, etc. This is not very important though so don't spend too much effort trying to achieve 
+this. 
+
+**Notes:** 
+- Docs are currently deployed manually. Changes will not reflect immediately after a PR gets merged.
+- The search is powered by [Algolia](https://www.algolia.com/) and is updated everyday. Your local changes 
+will not be reflected in search results.        

@@ -1,0 +1,35 @@
+description: Self referential relationships
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    m1:
+    - id: 1
+    - id: 4
+    - id: 6
+    level1:
+    - id: 2
+    - id: 3
+    - id: 5
+    - id: 6
+query:
+  query: |
+    query {
+      m1: message (
+        where : {
+          _or: [
+            {content: {_ilike: "%hello%"}}
+            {children: {content: {_ilike: "%hello%"}}}
+          ]
+        }
+      ) {
+        id
+      }
+      level1: message (
+        where : {
+          parent: {parent_id: {_is_null: true}}
+        }
+      ) {
+        id
+      }
+    }

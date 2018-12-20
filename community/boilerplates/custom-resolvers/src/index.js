@@ -35,7 +35,7 @@ const runServer = async () => {
   const server = new ApolloServer({
     schema: finalSchema,
     introspection: true,
-    playground: false
+    playground: true
   });
 
   // run the server

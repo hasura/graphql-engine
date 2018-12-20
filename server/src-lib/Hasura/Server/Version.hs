@@ -1,6 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
 module Hasura.Server.Version
   ( currentVersion
   , consoleVersion
@@ -16,7 +13,7 @@ import           Hasura.Prelude
 import           Hasura.Server.Utils (runScript)
 
 version :: T.Text
-version = T.dropWhileEnd (== '\n') $ $(runScript "../scripts/get-version.sh")
+version = T.dropWhileEnd (== '\n') $(runScript "../scripts/get-version.sh")
 
 consoleVersion :: T.Text
 consoleVersion = case V.fromText $ T.dropWhile (== 'v') version of

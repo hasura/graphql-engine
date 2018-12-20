@@ -1,0 +1,142 @@
+@import "../../Common/Common.scss";
+
+.addPaddCommom
+{
+  padding: 10px 0;
+}
+.wd_300 {
+  width: 300px;
+}
+.addPaddTop
+{
+  padding-top: 20px;
+}
+.dropdown_button {
+  width: 300px;
+}
+.detailsSection {
+  width: 80%;
+  margin-top: 20px;
+}
+.detailsRefreshButton {
+  padding-top: 10px !important;
+}
+.resolverWrapper
+{
+  // padding: 10px 0;
+  .resolverContent
+  {
+    text-align: center;
+    padding-bottom: 10px;
+    font-weight: 600;
+  }
+  .resolverImg
+  {
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    // height: 200px;
+    // border: 1px solid #000;
+    img {
+    }
+  }
+  .commonBtn
+  {
+    text-align: center;
+    padding: 20px 0;
+    padding-bottom: 10px
+  }
+  .readMore
+  {
+    padding-bottom: 10px;
+    text-align: center;
+  }
+}
+.CommonWrapper
+{
+  .check_box {
+    margin-bottom: 20px;
+    label {
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    input {
+      margin: 0;
+      cursor: pointer;
+    }
+    i {
+      cursor: pointer;
+    }
+  }
+  .font_normal {
+    font-weight: normal;
+  }
+  .subheading_text
+  {
+    i
+    {
+      cursor: pointer;
+    }
+  }
+
+  .defaultWidth
+  {
+    width: 300px;
+  }
+  .radioLabel
+  {
+    padding-right: 20px;
+    text-align: left;
+    padding-top: 5px;
+    .radioInput
+    {
+      cursor: pointer;
+    }
+  }
+  .inputLabel
+  {
+    margin-left: 0;
+    input
+    {
+      width: 300px;
+    }
+  }
+}
+.addWrapper
+{
+  .commonBtn
+  {
+    padding: 20px 0;
+    padding-top: 40px;
+    .delete_confirmation_error {
+      margin-left: 15px;
+      color: #d9534f;
+    }
+    .yellow_button
+    {
+      margin-right: 20px;
+    }
+    a
+    {
+      margin-left: 20px;
+    }
+    .refresh_schema_btn {
+      margin-left: 20px;
+    }
+    span
+    {
+      i
+      {
+        cursor: pointer;
+        margin-left: 10px;
+      }
+    }
+  }
+  .remove_padding_bottom {
+    padding-bottom: 0px;
+  }
+  .set_line_height {
+    line-height: 26px;
+  }
+
+}

@@ -23,6 +23,8 @@ import globals from './Globals';
 
 import validateLogin from './components/Common/validateLogin';
 
+import { getCustomResolverRouter } from './components/Services/CustomResolver';
+
 const routes = store => {
   // load hasuractl migration status
   const requireMigrationStatus = (nextState, replaceState, cb) => {
@@ -60,6 +62,11 @@ const routes = store => {
   const makeDataRouter = dataRouterUtils.makeDataRouter;
   const makeEventRouter = eventRouterUtils.makeEventRouter;
 
+  const customResolverRouter = getCustomResolverRouter(
+    connect,
+    store,
+    composeOnEnterHooks
+  );
   return (
     <Route path="/" component={App} onEnter={validateLogin(store)}>
       <Route path="login" component={generatedLoginConnector(connect)} />
@@ -77,6 +84,7 @@ const routes = store => {
           <Route path="metadata" component={metadataConnector(connect)} />
           {makeDataRouter}
           {makeEventRouter}
+          {customResolverRouter}
         </Route>
       </Route>
       <Route path="404" component={PageNotFound} status="404" />

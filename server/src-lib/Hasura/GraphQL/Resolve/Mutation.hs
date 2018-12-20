@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.GraphQL.Resolve.Mutation
   ( convertUpdate
   , convertDelete
@@ -91,14 +86,14 @@ convDeleteAtPathObj val =
 
 convertUpdate
   :: QualifiedTable -- table
-  -> S.BoolExp -- the filter expression
+  -> AnnBoolExpSQL -- the filter expression
   -> Field -- the mutation field
   -> Convert RespTx
 convertUpdate tn filterExp fld = do
   -- a set expression is same as a row object
   setExpM   <- withArgM args "_set" convertRowObj
   -- where bool expression to filter column
-  whereExp <- withArg args "where" $ convertBoolExp tn
+  whereExp <- withArg args "where" (parseBoolExp prepare)
   -- increment operator on integer columns
   incExpM <- withArgM args "_inc" $
     convObjWithOp $ rhsExpOp S.incOp S.intType
@@ -128,18 +123,18 @@ convertUpdate tn filterExp fld = do
     "atleast any one of _set, _inc, _append, _prepend, _delete_key, _delete_elem and "
     <> " _delete_at_path operator is expected"
   let p1 = RU.UpdateQueryP1 tn updExp (filterExp, whereExp) mutFlds
-  return $ RU.updateP2 (p1, prepArgs)
+  return $ RU.updateQueryToTx (p1, prepArgs)
   where
     args = _fArguments fld
 
 convertDelete
   :: QualifiedTable -- table
-  -> S.BoolExp -- the filter expression
+  -> AnnBoolExpSQL -- the filter expression
   -> Field -- the mutation field
   -> Convert RespTx
 convertDelete tn filterExp fld = do
-  whereExp <- withArg (_fArguments fld) "where" $ convertBoolExp tn
+  whereExp <- withArg (_fArguments fld) "where" (parseBoolExp prepare)
   mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
   args <- get
   let p1 = RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds
-  return $ RD.deleteP2 (p1, args)
+  return $ RD.deleteQueryToTx (p1, args)

@@ -1,12 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TemplateHaskell       #-}
-
 module Hasura.Events.HTTP
   ( HTTP(..)
   , mkAnyHTTPPost
@@ -48,6 +39,7 @@ import           Data.Has
 import           Hasura.Logging
 -- import           Data.Monoid
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.Subscribe
 
 -- import           Context                  (HTTPSessionMgr (..))
@@ -261,4 +253,3 @@ mkHLogger (LoggerCtx loggerSet serverLogLevel timeGetter) (logLevel, logTy, logD
   when (logLevel >= serverLogLevel) $
     FL.pushLogStrLn loggerSet $ FL.toLogStr $
     J.encode $ EngineLog localTime logLevel logTy logDet
-

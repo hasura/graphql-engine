@@ -11,9 +11,9 @@ The application makes use of Hasura GraphQL Engine's real-time capabilities
 using `subscription`. There is no backend code involved. The application is
 hosted on GitHub pages and the Postgres+GraphQL Engine is running on Postgres.
 
-- Checkout the [live app](https://shahidh.in/hasura-realtime-poll/).
-- Explore the database using [Hasura
-  Console](https://hasura-realtime-dashboard.herokuapp.com/console/data/schema/public).
+- Checkout the [live app](https://realtime-poll.demo.hasura.app/).
+- Explore the backend using [Hasura
+  Console](https://realtime-poll.demo.hasura.app/console).
   
 # Running the app yourself
 
@@ -43,5 +43,6 @@ hosted on GitHub pages and the Postgres+GraphQL Engine is running on Postgres.
   ```
 - Run the app (go the root of repo):
   ```bash
+  npm install
   npm start
   ```

@@ -5,8 +5,7 @@ import { ApolloProvider } from 'react-apollo';
 import client, {HASURA_GRAPHQL_ENGINE_HOSTNAME} from './apollo';
 import Poll from './Poll';
 import { getUserId } from './session';
-import hasura_logo from './img/hasura_logo_200.png';
-import { GraphQL } from './GraphQL.jsx';
+import { GraphQL } from './GraphQL';
 
 class App extends Component {
   constructor (props) {
@@ -21,7 +20,6 @@ class App extends Component {
   }
 
   render() {
-    const consoleURL = `https://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/console/data/schema/public`;
     if (this.state.loading) return <p>Loading...</p>;
     return (
       <ApolloProvider client={client}>
@@ -41,18 +39,18 @@ class App extends Component {
 
           <footer className="App-footer displayFlex">
             <div className="container hasura-logo">
-              <a href="https://hasura.io" target="_blank">
-                Powered by <img src={hasura_logo} />
+              <a href="https://hasura.io" target="_blank" rel="noopener noreferrer">
+                <img className="hasura-logo" alt="hasura logo" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black_200px.png" />
               </a>
               &nbsp; | &nbsp;
-              <a href={consoleURL} target="_blank">
-                Database
+              <a href="/console" target="_blank">
+                Backend
               </a>
               &nbsp; | &nbsp;
-              <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-poll" target="_blank">
+              <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-poll" target="_blank" rel="noopener noreferrer">
                 Source
               </a>
-              <div className="footer-small-text"><span>(The database resets every 30 minutes)</span></div>
+              <div className="footer-small-text"><span>(The database resets every 24 hours)</span></div>
             </div>
           </footer>
 

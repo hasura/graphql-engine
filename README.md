@@ -4,11 +4,11 @@
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
 
-<a href="https://discord.gg/3FNQnWj"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
+<a href="https://discord.gg/vBPpJkS"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, realtime GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events for asynchronous business logic.
+Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, realtime GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events, and [**remote schemas**](remote-schemas.md) for business logic.
 
 Hasura helps you build GraphQL apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
 
@@ -28,6 +28,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 
 * **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations
 * **Realtime**: Convert any GraphQL query to a live query by using subscriptions
+* **Merge remote schemas**: Access custom GraphQL schemas for business logic via a single GraphQL Engine endpoint. [**Read more**](remote-schemas.md). 
 * **Trigger webhooks or serverless functions**: On Postgres insert/update/delete events ([read more](event-triggers.md))
 * **Works with existing, live databases**: Point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
 * **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
@@ -35,7 +36,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 * **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
 * **Postgres** ❤️: Supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
 
-Read more at [https://hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
+Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
 
 ## Table of contents
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
@@ -47,7 +48,7 @@ Read more at [https://hasura.io](https://hasura.io) and the [docs](https://docs.
 - [Architecture](#architecture)
 - [Client-side tooling](#client-side-tooling)
 - [Add business logic](#add-business-logic)
-    - [Custom resolvers](#custom-resolvers)
+    - [Remote schemas](#remote-schemas)
     - [Trigger webhooks on database events](#trigger-webhooks-on-database-events)
 - [Demos](#demos)
     - [Realtime applications](#realtime-applications)
@@ -87,7 +88,7 @@ guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) or
 
 The Hasura GraphQL Engine fronts a Postgres database instance and can accept GraphQL requests from your client apps. It can be configured to work with your existing auth system and can handle access control using field-level rules with dynamic variables from your auth system.
 
-You can also place the engine behind a central GraphQL proxy that fronts multiple GraphQL APIs via schema stitching.
+You can also merge remote GraphQL schemas and provide a unified GraphQL API.
 
 ![Hasura GraphQL Engine architecture](assets/hasura-arch.svg)
 
@@ -97,17 +98,21 @@ Hasura works with any GraphQL client. We recommend using [Apollo Client](https:/
 
 ## Add business logic
 
-### Custom resolvers
+GraphQL Engine provides easy-to-reason, scalable and performant methods for adding custom business logic to your backend:
 
-Add custom resolvers in addition to Hasura GraphQL engine. Ideal for delegating
-to HTTP APIs, making direct calls to another data-source or writing business
-logic in code - [read more](community/boilerplates/custom-resolvers).
+### Remote schemas
+
+Add custom resolvers in a remote schema in addition to Hasura's Postgres-based GraphQL schema. Ideal for use-cases like implementing a payment API, or querying data that is not in your database - [read more](remote-schemas.md).
 
 ### Trigger webhooks on database events
 
 Add asynchronous business logic that is triggered based on database events.
 Ideal for notifications, data-pipelines from Postgres or asynchronous
 processing - [read more](event-triggers.md).
+
+### Derived data or data transformations
+
+Transform data in Postgres or run business logic on it to derive another dataset that can be queried using GraphQL Engine - [read more](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
 
 ## Demos
 
@@ -118,20 +123,20 @@ Check out all the example applications in the
 
 - Group Chat application built with React, includes a typing indicator, online users & new
   message notifications.
-  - [Try it out](https://chat-example-trial-roar.herokuapp.com/)
+  - [Try it out](https://realtime-chat.demo.hasura.app/)
   - [Tutorial](community/examples/realtime-chat)
-  - [Browse APIs](https://hasura-realtime-group-chat.herokuapp.com/)
+  - [Browse APIs](https://realtime-chat.demo.hasura.app/console)
 
 - Live location tracking app that shows a running vehicle changing current GPS
   coordinates moving on a map. 
-  - [Try it out](https://hasura.github.io/realtime-location-app/)
+  - [Try it out](https://realtime-location-tracking.demo.hasura.app/)
   - [Tutorial](community/examples/realtime-location-tracking)
-  - [Browse APIs](https://realtime-backend.herokuapp.com/)
+  - [Browse APIs](https://realtime-location-tracking.demo.hasura.app/console)
 
 - A realtime dashboard for data aggregations on continuously changing data.
-  - [Try it out](https://shahidh.in/hasura-realtime-poll/)
+  - [Try it out](https://realtime-poll.demo.hasura.app/)
   - [Tutorial](community/examples/realtime-poll)
-  - [Browse APIs](https://hasura-realtime-poll.herokuapp.com/)
+  - [Browse APIs](https://realtime-poll.demo.hasura.app/console)
 
 ### Videos
 
@@ -145,7 +150,7 @@ Check out all the example applications in the
 
 The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
 
-* Support & feedback: [Discord](https://discord.gg/3FNQnWj)
+* Support & feedback: [Discord](https://discord.gg/vBPpJkS)
 * Issue & bug tracking: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
 * Follow product updates: [@HasuraHQ](https://twitter.com/hasurahq)
 * Talk to us on our [website chat](https://hasura.io)
@@ -185,8 +190,7 @@ badge to your applications built using Hasura. ❤️
 ## License
 
 The core GraphQL Engine is available under the [GNU Affero General Public
-License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0), the same
-license as [MongoDB](https://www.mongodb.com/community/licensing). We have
+License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0). We have
 written more about what you can and cannot do under AGPL
 [here](https://github.com/hasura/graphql-engine/wiki/License-Explained). 
 

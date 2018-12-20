@@ -3,6 +3,11 @@
 API Reference - Mutation
 ========================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Insert/Upsert syntax
 --------------------
 
@@ -297,12 +302,15 @@ E.g.:
 
 Conflict Clause
 ^^^^^^^^^^^^^^^
+Conflict clause is used to convert an *insert* query to an *upsert* query. *Upsert* respects the table's *update*
+permissions before editing an existing row in case of a conflict. Hence the conflict clause is permitted only if a
+table has *update* permissions defined.
+
 .. code-block:: none
     
     on_conflict: {
-      constraint: <unique_constraint_name>!
-      [update_columns: [table_column!]]
-      [action: [update|ignore]]
+      constraint: table_constraint!
+      update_columns: [table_update_column!]!
     }
 
 E.g.:
@@ -322,8 +330,6 @@ E.g.:
 .. parsed-literal::
 
     where: BoolExp_
-
-.. _BoolExp:
 
 BoolExp
 *******

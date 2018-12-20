@@ -2,6 +2,8 @@ description: Export schema cache (metadata)
 url: /v1/query
 status: 200
 response:
+  query_templates: []
+  remote_schemas: []
   tables:
   - table: author
     object_relationships: []
@@ -29,7 +31,6 @@ response:
     update_permissions: []
     delete_permissions: []
     event_triggers: []
-  query_templates: []
 
 query:
   type: export_metadata

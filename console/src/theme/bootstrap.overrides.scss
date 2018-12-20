@@ -12,6 +12,16 @@ input[type="radio"], input[type="checkbox"]
 {
   margin: 0 5px 0px 0px;
 }
+.dropdown.input-group-btn {
+  button {
+    min-height: 34px;
+  }
+}
+
+.form-group .input-group {
+  min-width: 300px;
+}
+
 label
 {
   margin-bottom: 0 !important;

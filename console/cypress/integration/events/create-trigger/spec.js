@@ -81,7 +81,7 @@ export const passCT = () => {
   cy.get(getElementFromAlias('delete-operation')).check();
 
   // webhook url
-  cy.get(getElementFromAlias('webhook'))
+  cy.get(getElementFromAlias('webhook-input'))
     .clear()
     .type(getWebhookURL());
 
@@ -120,7 +120,7 @@ export const failCTDuplicateTrigger = () => {
   cy.get(getElementFromAlias('delete-operation')).check();
 
   // webhook url
-  cy.get(getElementFromAlias('webhook'))
+  cy.get(getElementFromAlias('webhook-input'))
     .clear()
     .type(getWebhookURL());
 
@@ -151,7 +151,7 @@ export const deleteCTTestTrigger = () => {
   //  Go to the settings section of the trigger
   cy.visit(`/events/manage/triggers/${getTriggerName(0, testName)}/processed`);
   //  click on settings tab
-  cy.get(getElementFromAlias('trigger-settings')).click();
+  cy.get(getElementFromAlias('trigger-modify')).click();
   //  Click on delete
   cy.get(getElementFromAlias('delete-trigger')).click();
   //  Confirm

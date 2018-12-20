@@ -1,15 +1,8 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TupleSections         #-}
-
 module Hasura.GraphQL.Resolve.Select
   ( convertSelect
   , convertSelectByPKey
   , convertAggSelect
+  , parseColumns
   , withSelSet
   , fromSelSet
   , fieldAsPath
@@ -18,12 +11,14 @@ module Hasura.GraphQL.Resolve.Select
   , fromAggField
   ) where
 
+import           Control.Arrow                     (first)
 import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Data.List.NonEmpty                as NE
+import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Select             as RS
@@ -32,6 +27,7 @@ import qualified Hasura.SQL.DML                    as S
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
+import           Hasura.GraphQL.Schema             (isAggFld)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Internal           (onlyPositiveInt)
@@ -47,10 +43,7 @@ withSelSet selSet f =
 
 fromSelSet
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
-  => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> G.NamedType
-  -> SelSet
-  -> m [(FieldName, RS.AnnFld)]
+  => PrepFn m -> G.NamedType -> SelSet -> m [(FieldName, RS.AnnFld)]
 fromSelSet f fldTy flds =
   forM (toList flds) $ \fld -> do
     let fldName = _fName fld
@@ -64,37 +57,55 @@ fromSelSet f fldTy flds =
           Right (relInfo, isAgg, tableFilter, tableLimit) -> do
             let relTN = riRTable relInfo
                 colMapping = riMapping relInfo
+                rn = riName relInfo
             if isAgg then do
               aggSel <- fromAggField f relTN tableFilter tableLimit fld
-              return $ RS.FAgg $ RS.AggSel colMapping aggSel
+              return $ RS.FArr $ RS.ASAgg $ RS.AnnRelG rn colMapping aggSel
             else do
               annSel <- fromField f relTN tableFilter tableLimit fld
-              let annRel = RS.AnnRel (riName relInfo) (riType relInfo)
-                           colMapping annSel
-              return $ RS.FRel annRel
+              let annRel = RS.AnnRelG rn colMapping annSel
+              return $ case riType relInfo of
+                ObjRel -> RS.FObj annRel
+                ArrRel -> RS.FArr $ RS.ASSimple annRel
 
 fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
 fieldAsPath = nameAsPath . _fName
 
 parseTableArgs
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
-  => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> QualifiedTable -> ArgsMap -> m RS.TableArgs
-parseTableArgs f tn args = do
-  whereExpM  <- withArgM args "where" $ convertBoolExpG f tn
+  => PrepFn m -> ArgsMap -> m RS.TableArgs
+parseTableArgs f args = do
+  whereExpM  <- withArgM args "where" $ parseBoolExp f
   ordByExpML <- withArgM args "order_by" parseOrderBy
   let ordByExpM = NE.nonEmpty =<< ordByExpML
   limitExpM  <- withArgM args "limit" parseLimit
   offsetExpM <- withArgM args "offset" $ asPGColVal >=> f
-  return $ RS.TableArgs whereExpM ordByExpM limitExpM offsetExpM
+  distOnColsML <- withArgM args "distinct_on" parseColumns
+  let distOnColsM = NE.nonEmpty =<< distOnColsML
+  mapM_ (validateDistOn ordByExpM) distOnColsM
+  return $ RS.TableArgs whereExpM ordByExpM limitExpM offsetExpM distOnColsM
+  where
+    validateDistOn Nothing _ = return ()
+    validateDistOn (Just ordBys) cols = withPathK "args" $ do
+      let colsLen = length cols
+          initOrdBys = take colsLen $ toList ordBys
+          initOrdByCols = flip mapMaybe initOrdBys $ \ob ->
+            case obiColumn ob of
+              RS.AOCPG ci -> Just $ pgiName ci
+              _           -> Nothing
+          isValid = (colsLen == length initOrdByCols)
+                    && all (`elem` initOrdByCols) (toList cols)
+
+      unless isValid $ throwVE
+        "\"distinct_on\" columns must match initial \"order_by\" columns"
 
 fromField
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
-  => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> m RS.AnnSel
+  => PrepFn m -> QualifiedTable -> AnnBoolExpSQL
+  -> Maybe Int -> Field -> m RS.AnnSel
 fromField f tn permFilter permLimitM fld =
   fieldAsPath fld $ do
-  tableArgs <- parseTableArgs f tn args
+  tableArgs <- parseTableArgs f args
   annFlds   <- fromSelSet f (_fType fld) $ _fSelSet fld
   let tabFrom = RS.TableFrom tn Nothing
       tabPerm = RS.TablePerm permFilter permLimitM
@@ -143,10 +154,41 @@ getAnnObItems f nt obj = do
         let aobCol = f $ RS.AOCPG ci
         (_, enumVal) <- asEnumVal v
         (ordTy, nullsOrd) <- parseOrderByEnum enumVal
-        return [OrderByItemG (Just ordTy) aobCol (Just nullsOrd)]
+        return [mkOrdByItemG ordTy aobCol nullsOrd]
       OBIRel ri fltr -> do
-        let annObColFn = f . RS.AOCRel ri fltr
+        let annObColFn = f . RS.AOCObj ri fltr
         withObject (getAnnObItems annObColFn) v
+
+      OBIAgg ri fltr -> do
+        let aobColFn = f . RS.AOCAgg ri fltr
+        flip withObject v $ \_ o -> parseAggOrdBy aobColFn o
+
+mkOrdByItemG :: S.OrderType -> a -> S.NullsOrder -> OrderByItemG a
+mkOrdByItemG ordTy aobCol nullsOrd =
+  OrderByItemG (Just $ OrderType ordTy) aobCol (Just $ NullsOrder nullsOrd)
+
+parseAggOrdBy
+  :: (MonadError QErr m)
+  => (RS.AnnAggOrdBy -> RS.AnnObCol)
+  -> AnnGObject
+  -> m [RS.AnnOrderByItem]
+parseAggOrdBy f annObj =
+  fmap concat <$> forM (OMap.toList annObj) $ \(op, obVal) ->
+    case op of
+      "count" -> do
+        (ordTy, nullsOrd) <- parseAsEnum obVal
+        return [mkOrdByItemG ordTy (f RS.AAOCount) nullsOrd]
+
+      G.Name opT ->
+        flip withObject obVal $ \_ opObObj ->
+          forM (OMap.toList opObObj) $ \(col, eVal) -> do
+            (ordTy, nullsOrd) <- parseAsEnum eVal
+            let aobCol = f $ RS.AAOOp opT $ PGCol $ G.unName col
+            return $ mkOrdByItemG ordTy aobCol nullsOrd
+  where
+    parseAsEnum v = do
+      (_, enumVal) <- asEnumVal v
+      parseOrderByEnum enumVal
 
 parseOrderByEnum
   :: (MonadError QErr m)
@@ -154,9 +196,11 @@ parseOrderByEnum
   -> m (S.OrderType, S.NullsOrder)
 parseOrderByEnum = \case
   G.EnumValue "asc"              -> return (S.OTAsc, S.NLast)
-  G.EnumValue "desc"             -> return (S.OTDesc, S.NLast)
+  G.EnumValue "asc_nulls_last"  -> return (S.OTAsc, S.NLast)
   G.EnumValue "asc_nulls_first"  -> return (S.OTAsc, S.NFirst)
+  G.EnumValue "desc"             -> return (S.OTDesc, S.NFirst)
   G.EnumValue "desc_nulls_first" -> return (S.OTDesc, S.NFirst)
+  G.EnumValue "desc_nulls_last" -> return (S.OTDesc, S.NLast)
   G.EnumValue v                   -> throw500 $
     "enum value " <> showName v <> " not found in type order_by"
 
@@ -168,14 +212,14 @@ parseLimit v = do
   onlyPositiveInt limit
   return limit
   where
-    noIntErr = throw400 Unexpected "expecting Integer value for \"limit\""
+    noIntErr = throwVE "expecting Integer value for \"limit\""
 
 fromFieldByPKey
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> QualifiedTable -> S.BoolExp -> Field -> m RS.AnnSel
+  -> QualifiedTable -> AnnBoolExpSQL -> Field -> m RS.AnnSel
 fromFieldByPKey f tn permFilter fld = fieldAsPath fld $ do
-  boolExp <- pgColValToBoolExpG f tn $ _fArguments fld
+  boolExp <- pgColValToBoolExp f $ _fArguments fld
   annFlds <- fromSelSet f (_fType fld) $ _fSelSet fld
   let tabFrom = RS.TableFrom tn Nothing
       tabPerm = RS.TablePerm permFilter Nothing
@@ -183,7 +227,7 @@ fromFieldByPKey f tn permFilter fld = fieldAsPath fld $ do
     RS.noTableArgs { RS._taWhere = Just boolExp}
 
 convertSelect
-  :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RespTx
+  :: QualifiedTable -> AnnBoolExpSQL -> Maybe Int -> Field -> Convert RespTx
 convertSelect qt permFilter permLimit fld = do
   selData <- withPathK "selectionSet" $
              fromField prepare qt permFilter permLimit fld
@@ -191,7 +235,7 @@ convertSelect qt permFilter permLimit fld = do
   return $ RS.selectP2 False (selData, prepArgs)
 
 convertSelectByPKey
-  :: QualifiedTable -> S.BoolExp -> Field -> Convert RespTx
+  :: QualifiedTable -> AnnBoolExpSQL -> Field -> Convert RespTx
 convertSelectByPKey qt permFilter fld = do
   selData <- withPathK "selectionSet" $
              fromFieldByPKey prepare qt permFilter fld
@@ -199,9 +243,35 @@ convertSelectByPKey qt permFilter fld = do
   return $ RS.selectP2 True (selData, prepArgs)
 
 -- agg select related
+parseColumns :: MonadError QErr m => AnnGValue -> m [PGCol]
+parseColumns val =
+  flip withArray val $ \_ vals ->
+    forM vals $ \v -> do
+      (_, enumVal) <- asEnumVal v
+      return $ PGCol $ G.unName $ G.unEnumValue enumVal
+
+convertCount :: MonadError QErr m => ArgsMap -> m S.CountType
+convertCount args = do
+  columnsM <- withArgM args "columns" parseColumns
+  isDistinct <- or <$> withArgM args "distinct" parseDistinct
+  maybe (return S.CTStar) (mkCType isDistinct) columnsM
+  where
+    parseDistinct v = do
+      (_, val) <- asPGColVal v
+      case val of
+        PGValBoolean b -> return b
+        _              ->
+          throw500 "expecting Boolean for \"distinct\""
+
+    mkCType isDistinct cols = return $
+      bool (S.CTSimple cols) (S.CTDistinct cols) isDistinct
+
+toFields :: [(T.Text, a)] -> [(FieldName, a)]
+toFields = map (first FieldName)
+
 convertColFlds
   :: Monad m => G.NamedType -> SelSet -> m RS.ColFlds
-convertColFlds ty selSet =
+convertColFlds ty selSet = fmap toFields $
   withSelSet selSet $ \fld ->
     case _fName fld of
       "__typename" -> return $ RS.PCFExp $ G.unName $ G.unNamedType ty
@@ -210,26 +280,29 @@ convertColFlds ty selSet =
 convertAggFld
   :: (Monad m, MonadError QErr m)
   => G.NamedType -> SelSet -> m RS.AggFlds
-convertAggFld ty selSet =
+convertAggFld ty selSet = fmap toFields $
   withSelSet selSet $ \fld -> do
     let fType = _fType fld
         fSelSet = _fSelSet fld
     case _fName fld of
       "__typename" -> return $ RS.AFExp $ G.unName $ G.unNamedType ty
-      "count"      -> return RS.AFCount
-      "sum"        -> RS.AFSum <$> convertColFlds fType fSelSet
-      "avg"        -> RS.AFAvg <$> convertColFlds fType fSelSet
-      "max"        -> RS.AFMax <$> convertColFlds fType fSelSet
-      "min"        -> RS.AFMin <$> convertColFlds fType fSelSet
-      G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
+      "count"      -> RS.AFCount <$> convertCount (_fArguments fld)
+      n            -> do
+        colFlds <- convertColFlds fType fSelSet
+        unless (isAggFld n) $ throwInvalidFld n
+        return $ RS.AFOp $ RS.AggOp (G.unName n) colFlds
+  where
+      throwInvalidFld (G.Name t) =
+        throw500 $ "unexpected field in _aggregate node: " <> t
 
 fromAggField
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
-  => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> m RS.AnnAggSel
+  => PrepFn m -> QualifiedTable -> AnnBoolExpSQL
+  -> Maybe Int -> Field -> m RS.AnnAggSel
 fromAggField fn tn permFilter permLimitM fld = fieldAsPath fld $ do
-  tableArgs <- parseTableArgs fn tn args
-  aggSelFlds   <- fromAggSel (_fType fld) $ _fSelSet fld
+  tableArgs <- parseTableArgs fn args
+  aggSelFlds <- toFields <$>
+                fromAggSel (_fType fld) (_fSelSet fld)
   let tabFrom = RS.TableFrom tn Nothing
       tabPerm = RS.TablePerm permFilter permLimitM
   return $ RS.AnnSelG aggSelFlds tabFrom tabPerm tableArgs
@@ -246,7 +319,7 @@ fromAggField fn tn permFilter permLimitM fld = fieldAsPath fld $ do
           G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 convertAggSelect
-  :: QualifiedTable -> S.BoolExp -> Maybe Int -> Field -> Convert RespTx
+  :: QualifiedTable -> AnnBoolExpSQL -> Maybe Int -> Field -> Convert RespTx
 convertAggSelect qt permFilter permLimit fld = do
   selData <- withPathK "selectionSet" $
              fromAggField prepare qt permFilter permLimit fld

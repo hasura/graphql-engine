@@ -4,8 +4,8 @@ import pytest
 import queue
 import yaml
 import time
-from validate import check_event
-
+from super_classes import DefaultTestQueries
+from validate import check_query_f, check_query, check_event
 
 def select_last_event_fromdb(hge_ctx):
     q = {
@@ -58,6 +58,17 @@ def delete(hge_ctx, table, where_exp):
     st_code, resp = hge_ctx.v1q(q)
     return st_code, resp
 
+class TestCreateAndDelete(DefaultTestQueries):
+
+    def test_create_delete(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/create_and_delete.yaml")
+
+    def test_create_reset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/create_and_reset.yaml")
+
+    @classmethod
+    def dir(cls):
+        return 'queries/event_triggers/create-delete'
 
 class TestCreateEvtQuery(object):
 
@@ -178,7 +189,8 @@ class TestUpdateEvtQuery(object):
         headers = {}
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_cols", table, "INSERT", exp_ev_data, headers, "/new")
+        with pytest.raises(queue.Empty):
+            check_event(hge_ctx, "t1_cols", table, "INSERT", exp_ev_data, headers, "/new")
 
         where_exp = {"c1": 1}
         set_exp = {"c2": "world"}
@@ -442,3 +454,45 @@ class TestEvtSelPayload:
         })
         assert st_code == 400, resp
         assert resp['code'] == "dependency-error", resp
+
+class TestWebhookEnv(object):
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        print("In setup method")
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/webhook_env/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/webhook_env/teardown.yaml')
+        assert st_code == 200, resp
+
+    def test_basic(self, hge_ctx):
+        table = {"schema": "hge_tests", "name": "test_t1"}
+
+        init_row = {"c1": 1, "c2": "hello"}
+        exp_ev_data = {
+            "old": None,
+            "new": init_row
+        }
+        headers = {}
+        st_code, resp = insert(hge_ctx, table, init_row)
+        assert st_code == 200, resp
+        check_event(hge_ctx, "t1_all", table, "INSERT", exp_ev_data, headers, "/")
+
+        where_exp = {"c1": 1}
+        set_exp = {"c2": "world"}
+        exp_ev_data = {
+            "old": init_row,
+            "new": {"c1": 1, "c2": "world"}
+        }
+        st_code, resp = update(hge_ctx, table, where_exp, set_exp)
+        assert st_code == 200, resp
+        check_event(hge_ctx, "t1_all", table, "UPDATE", exp_ev_data, headers, "/")
+
+        exp_ev_data = {
+            "old": {"c1": 1, "c2": "world"},
+            "new": None
+        }
+        st_code, resp = delete(hge_ctx, table, where_exp)
+        assert st_code == 200, resp
+        check_event(hge_ctx, "t1_all", table, "DELETE", exp_ev_data, headers, "/")

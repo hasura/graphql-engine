@@ -3,7 +3,7 @@ const throwError = require('../error');
 const {log, spinnerStart, spinnerStop} = require('../log');
 
 const shouldIgnoreTable = table => {
-  return (table.columns.find(c => c.name === '__value'));
+  return (table.columns.find(c => c.name === '_value'));
 };
 
 const getDupeCandidates = tables => {

@@ -1,7 +1,8 @@
 import { ApolloConsumer } from 'react-apollo';
 import React from 'react';
 import Chat from './Chat';
-import Login from './Login';
+// import Login from './Login';
+import LandingPage from './LandingPage';
 import '../App.css';
 
 export default class Main extends React.Component {
@@ -13,14 +14,14 @@ export default class Main extends React.Component {
       username:"",
       userId: null
     };
-  } 
+  }
 
   // set username
   setUsername = (username) => {
     this.setState({
       ...this.state,
       username
-    }) 
+    })
   }
 
   // check usernme and  perform login
@@ -39,11 +40,10 @@ export default class Main extends React.Component {
       <div className="app">
         {
           !isLoggedIn ? (
-            <Login
-              username={username}
-              userId={userId}
+            <LandingPage
               setUsername={this.setUsername}
               login={this.login}
+              username={username}
             />
           ) : (
             <ApolloConsumer>
@@ -58,7 +58,7 @@ export default class Main extends React.Component {
                   );
                 }
               }
-                
+
             </ApolloConsumer>
           )
         }
@@ -66,5 +66,3 @@ export default class Main extends React.Component {
     )
   }
 };
-
-

@@ -1,33 +1,29 @@
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
-{-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE DataKinds  #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Hasura.Server.App where
 
 import           Control.Arrow                          ((***))
 import           Control.Concurrent.MVar
-import           Data.IORef
-
 import           Data.Aeson                             hiding (json)
-import qualified Data.ByteString.Lazy                   as BL
-import qualified Data.HashMap.Strict                    as M
-import qualified Data.Text                              as T
+import           Data.IORef
 import           Data.Time.Clock                        (UTCTime,
                                                          getCurrentTime)
 import           Network.Wai                            (requestHeaders,
                                                          strictRequestBody)
-import qualified Text.Mustache                          as M
-import qualified Text.Mustache.Compile                  as M
-
 import           Web.Spock.Core
 
+import qualified Data.ByteString.Lazy                   as BL
+import qualified Data.HashMap.Strict                    as M
+import qualified Data.Text                              as T
 import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Types                     as N
+import qualified Network.Wai                            as Wai
+import qualified Network.Wai.Handler.WebSockets         as WS
 import qualified Network.Wai.Middleware.Static          as MS
+import qualified Network.WebSockets                     as WS
+import qualified Text.Mustache                          as M
+import qualified Text.Mustache.Compile                  as M
 
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Explain                 as GE
@@ -36,13 +32,10 @@ import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Transport.WebSocket     as WS
 import qualified Hasura.Logging                         as L
-import qualified Network.Wai                            as Wai
-import qualified Network.Wai.Handler.WebSockets         as WS
-import qualified Network.WebSockets                     as WS
 
+import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
---import           Hasura.RQL.DML.Explain
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
@@ -65,23 +58,27 @@ isAccessKeySet :: AuthMode -> T.Text
 isAccessKeySet AMNoAuth = "false"
 isAccessKeySet _        = "true"
 
-mkConsoleHTML :: AuthMode -> IO T.Text
-mkConsoleHTML authMode =
-  bool (initErrExit errMsg) (return res) (null errs)
+mkConsoleHTML :: T.Text -> AuthMode -> Either String T.Text
+mkConsoleHTML path authMode =
+  bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
                    object [ "version" .= consoleVersion
                           , "isAccessKeySet" .= isAccessKeySet authMode
+                          , "consolePath" .= consolePath
                           ]
-    errMsg = "Fatal Error : console template rendering failed"
-             ++ show errs
+    consolePath = case path of
+      "" -> "/console"
+      r  -> "/console/" <> r
+
+    errMsg = "console template rendering failed: " ++ show errs
 
 data ServerCtx
   = ServerCtx
   { scIsolation :: Q.TxIsolation
   , scPGPool    :: Q.PGPool
   , scLogger    :: L.Logger
-  , scCacheRef  :: IORef (SchemaCache, GS.GCtxMap)
+  , scCacheRef  :: IORef SchemaCache
   , scCacheLock :: MVar ()
   , scAuthMode  :: AuthMode
   , scManager   :: HTTP.Manager
@@ -89,9 +86,10 @@ data ServerCtx
 
 data HandlerCtx
   = HandlerCtx
-  { hcServerCtx :: ServerCtx
-  , hcReqBody   :: BL.ByteString
-  , hcUser      :: UserInfo
+  { hcServerCtx  :: ServerCtx
+  , hcReqBody    :: BL.ByteString
+  , hcUser       :: UserInfo
+  , hcReqHeaders :: [N.Header]
   }
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
@@ -115,7 +113,7 @@ buildQCtx = do
   scRef    <- scCacheRef . hcServerCtx <$> ask
   userInfo <- asks hcUser
   cache <- liftIO $ readIORef scRef
-  return $ QCtx userInfo $ fst cache
+  return $ QCtx userInfo cache
 
 logResult
   :: (MonadIO m)
@@ -150,7 +148,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
   userInfo <- either (logAndThrow req reqBody False) return userInfoE
 
-  let handlerState = HandlerCtx serverCtx reqBody userInfo
+  let handlerState = HandlerCtx serverCtx reqBody userInfo headers
 
   t1 <- liftIO getCurrentTime -- for measuring response time purposes
   result <- liftIO $ runReaderT (runExceptT handler) handlerState
@@ -163,6 +161,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
   where
     logger = scLogger serverCtx
     -- encode error response
+    qErrToResp :: (MonadIO m) => Bool -> QErr -> ActionCtxT ctx m b
     qErrToResp includeInternal qErr = do
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
@@ -198,35 +197,45 @@ v1QueryHandler query = do
       userInfo <- asks hcUser
       scRef <- scCacheRef . hcServerCtx <$> ask
       schemaCache <- liftIO $ readIORef scRef
+      httpMgr <- scManager . hcServerCtx <$> ask
       pool <- scPGPool . hcServerCtx <$> ask
       isoL <- scIsolation . hcServerCtx <$> ask
-      runQuery pool isoL userInfo (fst schemaCache) query
+      runQuery pool isoL userInfo schemaCache httpMgr query
 
     -- Also update the schema cache
     dbActionReload = do
       (resp, newSc) <- dbAction
-      newGCtxMap <- GS.mkGCtxMap $ scTables newSc
       scRef <- scCacheRef . hcServerCtx <$> ask
-      liftIO $ writeIORef scRef (newSc, newGCtxMap)
+      httpMgr <- scManager . hcServerCtx <$> ask
+      --FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
+      newGCtxMap <- GS.mkGCtxMap (scTables newSc)
+      (mergedGCtxMap, defGCtx) <-
+        mergeSchemas (scRemoteResolvers newSc) newGCtxMap httpMgr
+      let newSc' =
+            newSc { scGCtxMap = mergedGCtxMap, scDefaultRemoteGCtx = defGCtx }
+      liftIO $ writeIORef scRef newSc'
       return resp
 
 v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler BL.ByteString
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
+  reqBody <- asks hcReqBody
+  reqHeaders <- asks hcReqHeaders
+  manager <- scManager . hcServerCtx <$> ask
   scRef <- scCacheRef . hcServerCtx <$> ask
-  cache <- liftIO $ readIORef scRef
+  sc <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  GH.runGQ pool isoL userInfo (snd cache) query
+  GH.runGQ pool isoL userInfo sc manager reqHeaders query reqBody
 
 gqlExplainHandler :: GE.GQLExplain -> Handler BL.ByteString
 gqlExplainHandler query = do
   onlyAdmin
   scRef <- scCacheRef . hcServerCtx <$> ask
-  cache <- liftIO $ readIORef scRef
+  sc <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  GE.explainGQLQuery pool isoL (snd cache) query
+  GE.explainGQLQuery pool isoL sc query
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
@@ -256,6 +265,7 @@ legacyQueryHandler tn queryType =
   where
     qt = QualifiedTable publicSchema tn
 
+
 mkWaiApp
   :: Q.TxIsolation
   -> Maybe String
@@ -265,14 +275,14 @@ mkWaiApp
   -> AuthMode
   -> CorsConfig
   -> Bool
-  -> IO (Wai.Application, IORef (SchemaCache, GS.GCtxMap))
+  -> IO (Wai.Application, IORef SchemaCache)
 mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole = do
     cacheRef <- do
-      pgResp <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) $ do
-        Q.catchE defaultTxErrorHandler initStateTx
-        sc <- buildSchemaCache
-        (,) sc <$> GS.mkGCtxMap (scTables sc)
-      either initErrExit return pgResp >>= newIORef
+      pgResp <- runExceptT $
+        peelRun emptySchemaCache adminUserInfo httpManager pool Q.Serializable $ do
+        liftTx $ Q.catchE defaultTxErrorHandler initStateTx
+        buildSchemaCache
+      either initErrExit return pgResp >>= newIORef . snd
 
     cacheLock <- newMVar ()
 
@@ -283,7 +293,7 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
     spockApp <- spockAsApp $ spockT id $
                 httpApp mRootDir corsCfg serverCtx enableConsole
 
-    let runTx tx = runExceptT $ Q.runTx pool (isoLevel, Nothing) tx
+    let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
 
     wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager cacheRef runTx
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
@@ -298,10 +308,7 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
       middleware $ corsMiddleware (mkDefaultCorsPolicy $ ccDomain corsCfg)
 
     -- API Console and Root Dir
-    if enableConsole then do
-      consoleHTML <- lift $ mkConsoleHTML $ scAuthMode serverCtx
-      serveApiConsole consoleHTML
-    else maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
+    bool serveRootDir serveApiConsole enableConsole
 
     get "v1/version" $ do
       uncurry setHeader jsonHeader
@@ -333,11 +340,7 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
 
     hookAny GET $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
-      req <- request
-      reqBody <- liftIO $ strictRequestBody req
-      logError Nothing req reqBody serverCtx qErr
-      uncurry setHeader jsonHeader
-      lazyBytes $ encode qErr
+      raiseGenericApiError qErr
 
   where
     tmpltGetOrDeleteH tmpltName = do
@@ -359,6 +362,19 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
       v1QueryHandler $ RQExecuteQueryTemplate $
       ExecQueryTemplate (TQueryName tmpltName) tmpltArgs
 
-    serveApiConsole htmlFile = do
-      get root $ redirect "/console"
-      get ("console" <//> wildcard) $ const $ html htmlFile
+    raiseGenericApiError qErr = do
+      req <- request
+      reqBody <- liftIO $ strictRequestBody req
+      logError Nothing req reqBody serverCtx qErr
+      uncurry setHeader jsonHeader
+      setStatus $ qeStatus qErr
+      lazyBytes $ encode qErr
+
+    serveRootDir =
+      maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
+
+    serveApiConsole = do
+      get root $ redirect "console"
+      get ("console" <//> wildcard) $ \path ->
+        either (raiseGenericApiError . err500 Unexpected . T.pack) html $
+          mkConsoleHTML path $ scAuthMode serverCtx

@@ -1,8 +1,36 @@
 Insert mutation
 ===============
 
-Insert single object
---------------------
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
+Here’s the schema for the insert mutation field for a table ``article``:
+
+.. code-block:: graphql
+
+  insert_article (
+    objects: [article_insert_input!]!
+    on_conflict: article_on_conflict
+  ): article_mutation_response
+
+  # response of any mutation on the table "article"
+  type article_mutation_response {
+    # number of affected rows by the mutation
+    affected_rows: Int!
+    #data of the affected rows by the mutation
+    returning: [article!]!
+  }
+
+As you can see from the schema:
+
+- ``objects`` argument is necessary and you can pass multiple ``objects`` to the mutation.
+- You can pass an ``on_conflict`` argument to convert the mutation to an :doc:`upsert mutation <upsert>`
+- You can return the number of affected rows and the affected objects (with nested objects) in the response.
+
+Insert a single object
+----------------------
 **Example:** Insert a new ``article`` object and return the inserted article object in the response
 
 .. graphiql::
@@ -132,62 +160,8 @@ Insert multiple objects of the same type in the same mutation
       }
     }
 
-Insert nested object and get nested object in response
-------------------------------------------------------
-**Example:** Insert a new ``article`` object with its ``author`` and return the inserted article object with its author in the response
-
-
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insert_article {
-      insert_article(
-        objects: [
-          {
-            id: 21,
-            title: "Article 1",
-            content: "Sample article content",
-            author: {
-              data: {
-                id: 3,
-                name: "Sidney"
-              }
-            }
-          }
-        ]
-      ) {
-        returning {
-          id
-          title
-          author {
-            id
-            name
-          }
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_article": {
-          "affected_rows": 2,
-          "returning": [
-            {
-              "id": 21,
-              "title": "Article 1",
-              "author": {
-                "id": 3,
-                "name": "Sidney"
-              }
-            }
-          ]
-        }
-      }
-    }
-
-
-Insert object and get nested object in response
------------------------------------------------
+Insert an object and get a nested object in response
+----------------------------------------------------
 **Example:** Insert a new ``article`` object and return the inserted article object with its author in the response
 
 .. graphiql::
@@ -234,10 +208,65 @@ Insert object and get nested object in response
     }
 
 
-Set field to its default value during insert
---------------------------------------------
+Insert an object and its nested object in the same mutation
+-----------------------------------------------------------
+**Example:** Insert a new ``article`` object with its ``author`` and return the inserted article object with its author
+in the response
 
-To set a field to its ``default`` value, just omit it from the input object.
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insert_article {
+      insert_article(
+        objects: [
+          {
+            id: 21,
+            title: "Article 1",
+            content: "Sample article content",
+            author: {
+              data: {
+                id: 11,
+                name: "Cory"
+              }
+            }
+          }
+        ]
+      ) {
+        affected_rows
+        returning {
+          id
+          title
+          author {
+            id
+            name
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_article": {
+          "affected_rows": 2,
+          "returning": [
+            {
+              "id": 21,
+              "title": "Article 1",
+              "author": {
+                "id": 11,
+                "name": "Cory"
+              }
+            }
+          ]
+        }
+      }
+    }
+
+Set a field to its default value during insert
+----------------------------------------------
+
+To set a field to its ``default`` value, just omit it from the input object, irrespective of the
+:doc:`default value configuration <../schema/default-values/index>` i.e. via Postgres defaults or using column presets.
 
 **Example:** if default value of ``id`` is set to auto-incrementing integer, no need to pass ``id`` field in input object
 
@@ -275,8 +304,8 @@ To set a field to its ``default`` value, just omit it from the input object.
       }
     }
 
-Set field to null during insert
--------------------------------
+Set a field to null during insert
+---------------------------------
 
 If a field is ``nullable`` in the database, to set its value to ``null``, either pass its value as ``null`` or
 just omit it from the input object.

@@ -1,6 +1,11 @@
 Troubleshooting Hasura GraphQL Engine Errors
 ============================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Hasura GraphQL engine may not work as expected and will throw unexpected errors if the tables/views tracked by
 the GraphQL engine are altered using ``psql`` or any other PostgreSQL client.
 

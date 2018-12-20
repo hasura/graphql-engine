@@ -17,7 +17,6 @@ import {
   addOrder,
 } from './FilterActions';
 import { ordinalColSort } from '../utils';
-import Spinner from '../../../Common/Spinner/Spinner';
 import '../TableCommon/ReactTableFix.css';
 
 const ViewRows = ({
@@ -30,7 +29,6 @@ const ViewRows = ({
   activePath,
   triggerList,
   dispatch,
-  isProgressing,
   isView,
   count,
   expandedRow,
@@ -207,14 +205,7 @@ const ViewRows = ({
   };
 
   const renderTableBody = () => {
-    if (isProgressing) {
-      return (
-        <div>
-          {' '}
-          <Spinner />{' '}
-        </div>
-      );
-    } else if (count === 0) {
+    if (count === 0) {
       return <div> No rows found. </div>;
     }
     let shouldSortColumn = true;

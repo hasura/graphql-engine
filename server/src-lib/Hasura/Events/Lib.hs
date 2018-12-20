@@ -1,9 +1,3 @@
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE QuasiQuotes         #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell     #-}
-
 module Hasura.Events.Lib
   ( initEventEngineCtx
   , processEventQueue
@@ -26,6 +20,7 @@ import           Data.IORef                    (IORef, readIORef)
 import           Data.Time.Clock
 import           Hasura.Events.HTTP
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -41,7 +36,6 @@ import qualified Data.Text.Encoding            as TE
 import qualified Data.Text.Encoding.Error      as TE
 import qualified Data.Time.Clock               as Time
 import qualified Database.PG.Query             as Q
-import qualified Hasura.GraphQL.Schema         as GS
 import qualified Hasura.Logging                as L
 import qualified Network.HTTP.Types            as N
 import qualified Network.Wreq                  as W
@@ -54,7 +48,7 @@ invocationVersion = "2"
 
 type LogEnvHeaders = Bool
 
-type CacheRef = IORef (SchemaCache, GS.GCtxMap)
+type CacheRef = IORef SchemaCache
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -195,10 +189,8 @@ processEvent logenv pool e = do
     errorFn
       :: ( MonadReader r m
          , MonadIO m
-         , Has WS.Session r
          , Has HLogger r
          , Has CacheRef r
-         , Has EventEngineCtx r
          )
       => HTTPErr -> m (Either QErr ())
     errorFn err = do
@@ -207,13 +199,7 @@ processEvent logenv pool e = do
       checkError err
 
     successFn
-      :: ( MonadReader r m
-         , MonadIO m
-         , Has WS.Session r
-         , Has HLogger r
-         , Has CacheRef r
-         , Has EventEngineCtx r
-         )
+      :: (MonadIO m)
       => HTTPResp -> m (Either QErr ())
     successFn _ = liftIO $ runExceptT $ runUnlockQ pool e
 
@@ -223,16 +209,13 @@ processEvent logenv pool e = do
     checkError
       :: ( MonadReader r m
          , MonadIO m
-         , Has WS.Session r
-         , Has HLogger r
          , Has CacheRef r
-         , Has EventEngineCtx r
          )
       => HTTPErr -> m (Either QErr ())
     checkError err = do
       let mretryHeader = getRetryAfterHeaderFromError err
       cacheRef::CacheRef <- asks getter
-      (cache, _) <- liftIO $ readIORef cacheRef
+      cache <- liftIO $ readIORef cacheRef
       let eti = getEventTriggerInfoFromEvent cache e
           retryConfM = etiRetryConf <$> eti
           retryConf = fromMaybe (RetryConf 0 10) retryConfM
@@ -274,12 +257,12 @@ tryWebhook
 tryWebhook logenv pool e = do
   logger:: HLogger <- asks getter
   cacheRef::CacheRef <- asks getter
-  (cache, _) <- liftIO $ readIORef cacheRef
+  cache <- liftIO $ readIORef cacheRef
   let meti = getEventTriggerInfoFromEvent cache e
   case meti of
     Nothing -> return $ Left $ HOther "table or event-trigger not found"
     Just eti -> do
-      let webhook = etiWebhook eti
+      let webhook = wciCachedValue $ etiWebhookInfo eti
           createdAt = eCreatedAt e
           eventId =  eId e
           headerInfos = etiHeaders eti

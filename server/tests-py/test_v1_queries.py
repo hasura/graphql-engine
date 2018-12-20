@@ -244,6 +244,9 @@ class TestV1InsertPermissions(DefaultTestQueries):
     def test_student_role_insert_check_bio_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_student_role_insert_check_bio_fail.yaml")
 
+    def test_resident_1_modifies_resident_2_upsert(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/resident_1_modifies_resident_2_upsert.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/v1/insert/permissions"
@@ -364,8 +367,15 @@ class TestMetadata(DefaultTestQueries):
     def test_clear_metadata(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/clear_metadata.yaml')
 
+    def test_replace_metadata(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
+
+    def test_replace_metadata_wo_remote_schemas(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_wo_rs.yaml')
+
     def test_dump_internal_state(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/dump_internal_state.yaml')
+
 
     @classmethod
     def dir(cls):

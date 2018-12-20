@@ -1,6 +1,11 @@
 Postgres permissions
 ====================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 If you're running in a controlled environment, you might need to configure Hasura GraphQL engine to use a
 specific Postgres user that your DBA gives you.
 

@@ -20,11 +20,14 @@ import {
   operationToggleAllColumns,
   setOperationSelection,
   setDefaults,
+  UPDATE_WEBHOOK_URL_TYPE,
 } from './AddActions';
 import { listDuplicate } from '../../../../utils/data';
 import { showErrorNotification } from '../Notification';
 import { createTrigger } from './AddActions';
 import { fetchTableListBySchema } from './AddActions';
+
+import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 
 import semverCheck from '../../../../helpers/semver';
 
@@ -35,18 +38,23 @@ class AddTrigger extends Component {
     this.state = {
       advancedExpanded: false,
       supportColumnChangeFeature: false,
+      supportWebhookEnv: false,
     };
   }
   componentDidMount() {
     // set defaults
     this.props.dispatch(setDefaults());
     if (this.props.serverVersion) {
-      this.checkSemVer(this.props.serverVersion);
+      this.checkSemVer(this.props.serverVersion).then(() => {
+        this.checkWebhookEnvSupport(this.props.serverVersion);
+      });
     }
   }
   componentWillReceiveProps(nextProps) {
     if (nextProps.serverVersion !== this.props.serverVersion) {
-      this.checkSemVer(nextProps.serverVersion);
+      this.checkSemVer(nextProps.serverVersion).then(() => {
+        this.checkWebhookEnvSupport(nextProps.serverVersion);
+      });
     }
   }
   componentWillUnmount() {
@@ -69,6 +77,13 @@ class AddTrigger extends Component {
       this.updateSupportColumnChangeFeature(false);
       console.error(e);
     }
+    return Promise.resolve();
+  }
+
+  checkWebhookEnvSupport(version) {
+    const supportWebhookEnv = semverCheck('webhookEnvSupport', version);
+    this.setState({ ...this.state, supportWebhookEnv });
+    return Promise.resolve();
   }
 
   updateSupportColumnChangeFeature(val) {
@@ -76,6 +91,14 @@ class AddTrigger extends Component {
       ...this.state,
       supportColumnChangeFeature: val,
     });
+  }
+
+  updateWebhookUrlType(e) {
+    const field = e.target.getAttribute('value');
+    if (field === 'env' || field === 'url') {
+      this.props.dispatch({ type: UPDATE_WEBHOOK_URL_TYPE, data: field });
+      this.props.dispatch(setWebhookURL(''));
+    }
   }
 
   submitValidation(e) {
@@ -172,6 +195,8 @@ class AddTrigger extends Component {
       lastSuccess,
       internalError,
       headers,
+      webhookURL,
+      webhookUrlType,
     } = this.props;
 
     const { supportColumnChangeFeature } = this.state;
@@ -224,6 +249,7 @@ class AddTrigger extends Component {
       if (tableSchema) {
         return tableSchema.columns.map((colObj, i) => {
           const column = colObj.column_name;
+          const columnDataType = colObj.udt_name;
           const checked = operations[type]
             ? operations[type].includes(column)
             : false;
@@ -247,6 +273,7 @@ class AddTrigger extends Component {
                 <label>
                   {inputHtml}
                   {column}
+                  <small> ({columnDataType})</small>
                 </label>
               </div>
             </div>
@@ -370,42 +397,42 @@ class AddTrigger extends Component {
             }}
             data-test={`header-${i}`}
           />
-          <select
-            value={header.type}
-            className={`${styles.select} ${styles.selectWidth} form-control ${
-              styles.add_pad_left
-            } ${styles.add_mar_right}`}
-            onChange={e => {
-              dispatch(setHeaderType(e.target.value, i));
-              if (i + 1 === headers.length) {
-                dispatch(addHeader());
+          <div className={styles.dropDownGroup}>
+            <DropdownButton
+              dropdownOptions={[
+                { display_text: 'Value', value: 'static' },
+                { display_text: 'From env var', value: 'env' },
+              ]}
+              title={
+                (header.type === 'static' && 'Value') ||
+                (header.type === 'env' && 'From env var') ||
+                'Value'
               }
-            }}
-            data-test={`header-type-${i}`}
-          >
-            {header.type === '' ? (
-              <option disabled value="">
-                -- value type --
-              </option>
-            ) : null}
-            <option value="static" key="0" title="static">
-              static
-            </option>
-            <option value="env" key="1" title="env">
-              from env variable
-            </option>
-          </select>{' '}
-          <input
-            type="text"
-            className={`${styles.input} form-control ${styles.add_mar_right}`}
-            value={header.value}
-            placeholder="value"
-            onChange={e => {
-              dispatch(setHeaderValue(e.target.value, i));
-            }}
-            data-test={`header-value-${i}`}
-          />{' '}
-          {removeIcon}
+              dataKey={
+                (header.type === 'static' && 'static') ||
+                (header.type === 'env' && 'env')
+              }
+              title={header.type === 'env' ? 'From env var' : 'Value'}
+              dataKey={header.type === 'env' ? 'env' : 'static'}
+              onButtonChange={e => {
+                dispatch(setHeaderType(e.target.getAttribute('value'), i));
+              }}
+              onInputChange={e => {
+                dispatch(setHeaderValue(e.target.value, i));
+                if (i + 1 === headers.length) {
+                  dispatch(addHeader());
+                }
+              }}
+              bsClass={styles.dropdown_button}
+              inputVal={header.value}
+              id={`header-value-${i}`}
+              inputPlaceHolder={
+                header.type === 'env' ? 'HEADER_FROM_ENV' : 'value'
+              }
+              testId={`header-value-${i}`}
+            />
+          </div>
+          <div>{removeIcon}</div>
         </div>
       );
     });
@@ -443,7 +470,7 @@ class AddTrigger extends Component {
                 data-test="trigger-name"
                 placeholder="trigger_name"
                 required
-                pattern="^\w+$"
+                pattern="^[A-Za-z]+[A-Za-z0-9_\\-]*$"
                 className={`${styles.tableNameInput} form-control`}
                 onChange={e => {
                   dispatch(setTriggerName(e.target.value));
@@ -578,16 +605,50 @@ class AddTrigger extends Component {
                     <i className="fa fa-question-circle" aria-hidden="true" />
                   </OverlayTrigger>{' '}
                 </h4>
-                <input
-                  type="url"
-                  required
-                  data-test="webhook"
-                  placeholder="webhook url"
-                  className={`${styles.tableNameInput} form-control`}
-                  onChange={e => {
-                    dispatch(setWebhookURL(e.target.value));
-                  }}
-                />
+                {this.state.supportWebhookEnv ? (
+                  <div className={styles.dropdown_wrapper}>
+                    <DropdownButton
+                      dropdownOptions={[
+                        { display_text: 'URL', value: 'url' },
+                        { display_text: 'From env var', value: 'env' },
+                      ]}
+                      title={
+                        (webhookUrlType === 'url' && 'URL') ||
+                        (webhookUrlType === 'env' && 'From env var') ||
+                        'Value'
+                      }
+                      dataKey={
+                        (webhookUrlType === 'url' && 'url') ||
+                        (webhookUrlType === 'env' && 'env')
+                      }
+                      onButtonChange={this.updateWebhookUrlType.bind(this)}
+                      onInputChange={e => {
+                        dispatch(setWebhookURL(e.target.value));
+                      }}
+                      required
+                      bsClass={styles.dropdown_button}
+                      inputVal={webhookURL}
+                      id="webhook-url"
+                      inputPlaceHolder={
+                        (webhookUrlType === 'url' &&
+                          'http://httpbin.org/post') ||
+                        (webhookUrlType === 'env' && 'MY_WEBHOOK_URL')
+                      }
+                      testId="webhook"
+                    />
+                  </div>
+                ) : (
+                  <input
+                    type="url"
+                    required
+                    data-test="webhook"
+                    placeholder="webhook url"
+                    className={`${styles.tableNameInput} form-control`}
+                    onChange={e => {
+                      dispatch(setWebhookURL(e.target.value));
+                    }}
+                  />
+                )}
               </div>
               <hr />
               <button

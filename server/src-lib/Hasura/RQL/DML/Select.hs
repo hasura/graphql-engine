@@ -1,22 +1,14 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies      #-}
-
 module Hasura.RQL.DML.Select
   ( selectP2
   , selectAggP2
-  , mkSQLSelect
-  , mkAggSelect
   , convSelectQuery
   , getSelectDeps
   , module Hasura.RQL.DML.Select.Internal
+  , runSelect
   )
 where
 
 import           Data.Aeson.Types
-import           Data.List                      (unionBy)
 import           Instances.TH.Lift              ()
 
 import qualified Data.HashMap.Strict            as HM
@@ -29,13 +21,12 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
-import           Hasura.SQL.Rewrite             (prefixNumToAliases)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query              as Q
 import qualified Hasura.SQL.DML                 as S
 
-convSelCol :: (P1C m)
+convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
            => FieldInfoMap
            -> SelPermInfo
            -> SelCol
@@ -47,7 +38,7 @@ convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
   let pgWhenRelErr = "only relationships can be expanded"
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap rn pgWhenRelErr
-  let (RelInfo _ _ _ relTab _ _) = relInfo
+  let (RelInfo _ _ _ relTab _) = relInfo
   (rfim, rspi) <- fetchRelDet rn relTab
   resolvedSelQ <- resolveStar rfim rspi selQ
   return [ECRel rn malias resolvedSelQ]
@@ -55,12 +46,12 @@ convSelCol fieldInfoMap spi (SCStar wildcard) =
   convWildcard fieldInfoMap spi wildcard
 
 convWildcard
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap
   -> SelPermInfo
   -> Wildcard
   -> m [ExtCol]
-convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _ _) wildcard =
+convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _) wildcard =
   case wildcard of
   Star         -> return simpleCols
   (StarDot wc) -> (simpleCols ++) <$> (catMaybes <$> relExtCols wc)
@@ -83,7 +74,7 @@ convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _ _) wildcard =
 
     relExtCols wc = mapM (mkRelCol wc) relColInfos
 
-resolveStar :: (P1C m)
+resolveStar :: (UserInfoM m, QErrM m, CacheRM m)
             => FieldInfoMap
             -> SelPermInfo
             -> SelectQ
@@ -109,7 +100,7 @@ resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
     equals _ _                         = False
 
 convOrderByElem
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => (FieldInfoMap, SelPermInfo)
   -> OrderByCol
   -> m AnnObCol
@@ -144,11 +135,11 @@ convOrderByElem (flds, spi) = \case
           ," and can't be used in 'order_by'"
           ]
         (relFim, relSpi) <- fetchRelDet (riName relInfo) (riRTable relInfo)
-        AOCRel relInfo (spiFilter relSpi) <$>
+        AOCObj relInfo (spiFilter relSpi) <$>
           convOrderByElem (relFim, relSpi) rest
 
 convSelectQ
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap  -- Table information of current table
   -> SelPermInfo   -- Additional select permission info
   -> SelectQExt     -- Given Select Query
@@ -163,14 +154,16 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
       return (fromPGCol pgCol, FCol colInfo)
     (ECRel relName mAlias relSelQ) -> do
       annRel <- convExtRel fieldInfoMap relName mAlias relSelQ prepValBuilder
-      return (fromRel $ fromMaybe relName mAlias, FRel annRel)
+      return ( fromRel $ fromMaybe relName mAlias
+             , either FObj FArr annRel
+             )
 
-  let spiT = spiTable selPermInfo
+  -- let spiT = spiTable selPermInfo
 
   -- Convert where clause
   wClause <- forM (sqWhere selQ) $ \be ->
     withPathK "where" $
-    convBoolExp' fieldInfoMap spiT selPermInfo be prepValBuilder
+    convBoolExp' fieldInfoMap selPermInfo be prepValBuilder
 
   annOrdByML <- forM (sqOrderBy selQ) $ \(OrderByExp obItems) ->
     withPathK "order_by" $ indexedForM obItems $ mapM $
@@ -185,7 +178,8 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
   let tabFrom = TableFrom (spiTable selPermInfo) Nothing
       tabPerm = TablePerm (spiFilter selPermInfo) mPermLimit
   return $ AnnSelG annFlds tabFrom tabPerm $
-    TableArgs wClause annOrdByM mQueryLimit (S.intToSQLExp <$> mQueryOffset)
+    TableArgs wClause annOrdByM mQueryLimit
+    (S.intToSQLExp <$> mQueryOffset) Nothing
 
   where
     mQueryOffset = sqOffset selQ
@@ -193,7 +187,7 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
     mPermLimit = spiLimit selPermInfo
 
 convExtSimple
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m)
   => FieldInfoMap
   -> SelPermInfo
   -> PGCol
@@ -205,23 +199,27 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
     relWhenPGErr = "relationships have to be expanded"
 
 convExtRel
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap
   -> RelName
   -> Maybe RelName
   -> SelectQExt
   -> (PGColType -> Value -> m S.SQLExp)
-  -> m AnnRel
+  -> m (Either ObjSel ArrSel)
 convExtRel fieldInfoMap relName mAlias selQ prepValBuilder = do
   -- Point to the name key
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap relName pgWhenRelErr
-  let (RelInfo _ relTy colMapping relTab _ _) = relInfo
+  let (RelInfo _ relTy colMapping relTab _) = relInfo
   (relCIM, relSPI) <- fetchRelDet relName relTab
-  when (relTy == ObjRel && misused) $
-    throw400 UnexpectedPayload objRelMisuseMsg
   annSel <- convSelectQ relCIM relSPI selQ prepValBuilder
-  return $ AnnRel (fromMaybe relName mAlias) relTy colMapping annSel
+  case relTy of
+    ObjRel -> do
+      when misused $ throw400 UnexpectedPayload objRelMisuseMsg
+      return $ Left $ AnnRelG (fromMaybe relName mAlias) colMapping annSel
+    ArrRel ->
+      return $ Right $ ASSimple $ AnnRelG (fromMaybe relName mAlias)
+               colMapping annSel
   where
     pgWhenRelErr = "only relationships can be expanded"
     misused      =
@@ -237,12 +235,13 @@ convExtRel fieldInfoMap relName mAlias selQ prepValBuilder = do
               ]
 
 partAnnFlds
-  :: [AnnFld] -> ([(PGCol, PGColType)], [AnnRel])
+  :: [AnnFld]
+  -> ([(PGCol, PGColType)], [Either ObjSel ArrSel])
 partAnnFlds flds =
   partitionEithers $ catMaybes $ flip map flds $ \case
   FCol c -> Just $ Left (pgiName c, pgiType c)
-  FRel r -> Just $ Right r
-  FAgg _ -> Nothing
+  FObj o -> Just $ Right $ Left o
+  FArr a -> Just $ Right $ Right a
   FExp _ -> Nothing
 
 getSelectDeps
@@ -258,15 +257,25 @@ getSelectDeps (AnnSelG flds tabFrm _ tableArgs) =
     TableFrom tn _ = tabFrm
     annWc = _taWhere tableArgs
     (sCols, rCols) = partAnnFlds $ map snd flds
-    colDeps     = map (mkColDep "untyped" tn . fst) sCols
-    relDeps     = map (mkRelDep . arName) rCols
-    nestedDeps  = concatMap (getSelectDeps . arAnnSel) rCols
-    whereDeps   = getBoolExpDeps tn <$> annWc
-    mkRelDep rn =
+    (objSels, arrSels) = partitionEithers rCols
+    colDeps      = map (mkColDep "untyped" tn . fst) sCols
+    relDeps      = map mkRelDep $ map aarName objSels
+                   <> mapMaybe getRelName arrSels
+    nestedDeps   = concatMap getSelectDeps $ map aarAnnSel objSels
+                   <> mapMaybe getAnnSel arrSels
+    whereDeps    = getBoolExpDeps tn <$> annWc
+    mkRelDep rn  =
       SchemaDependency (SOTableObj tn (TORel rn)) "untyped"
 
+    -- ignore aggregate selections to calculate schema deps
+    getRelName (ASSimple aar) = Just $ aarName aar
+    getRelName (ASAgg _)      = Nothing
+
+    getAnnSel (ASSimple aar) = Just $ aarAnnSel aar
+    getAnnSel (ASAgg _)      = Nothing
+
 convSelectQuery
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => (PGColType -> Value -> m S.SQLExp)
   -> SelectQuery
   -> m AnnSel
@@ -277,14 +286,6 @@ convSelectQuery prepArgBuilder (DMLQuery qt selQ) = do
   validateHeaders $ spiRequiredHeaders selPermInfo
   convSelectQ (tiFieldInfoMap tabInfo) selPermInfo extSelQ prepArgBuilder
 
-mkAggSelect :: AnnAggSel -> S.Select
-mkAggSelect annAggSel =
-  prefixNumToAliases $ aggNodeToSelect bn extr $ S.BELit True
-  where
-    aggSel = AggSel [] annAggSel
-    AggNode _ extr bn =
-      aggSelToAggNode (Iden "root") (FieldName "root") aggSel
-
 selectAggP2 :: (AnnAggSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 selectAggP2 (sel, p) =
   runIdentity . Q.getRow
@@ -292,16 +293,8 @@ selectAggP2 (sel, p) =
   where
     selectSQL = toSQL $ mkAggSelect sel
 
-mkSQLSelect :: Bool -> AnnSel -> S.Select
-mkSQLSelect isSingleObject annSel =
-  prefixNumToAliases $ asJsonAggSel isSingleObject rootFldAls (S.BELit True)
-  $ annSelToBaseNode (toIden rootFldName)
-  rootFldName annSel
-  where
-    rootFldName = FieldName "root"
-    rootFldAls  = S.Alias $ toIden rootFldName
 
--- selectP2 :: (P2C m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m RespBody
+-- selectP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m RespBody
 selectP2 :: Bool -> (AnnSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 selectP2 asSingleObject (sel, p) =
   runIdentity . Q.getRow
@@ -309,12 +302,18 @@ selectP2 asSingleObject (sel, p) =
   where
     selectSQL = toSQL $ mkSQLSelect asSingleObject sel
 
-instance HDBQuery SelectQuery where
+phaseOne
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => SelectQuery -> m (AnnSel, DS.Seq Q.PrepArg)
+phaseOne =
+  liftDMLP1 . convSelectQuery binRHSBuilder
 
-  -- type Phase1Res SelectQuery = (SelectQueryP1, DS.Seq Q.PrepArg)
-  type Phase1Res SelectQuery = (AnnSel, DS.Seq Q.PrepArg)
-  phaseOne q = flip runStateT DS.empty $ convSelectQuery binRHSBuilder q
+phaseTwo :: (MonadTx m) => (AnnSel, DS.Seq Q.PrepArg) -> m RespBody
+phaseTwo =
+  liftTx . selectP2 False
 
-  phaseTwo _ = liftTx . selectP2 False
-
-  schemaCachePolicy = SCPNoChange
+runSelect
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  => SelectQuery -> m RespBody
+runSelect q =
+  phaseOne q >>= phaseTwo

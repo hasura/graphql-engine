@@ -3,13 +3,13 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 
 export const triggerNameDescription = (
   <Tooltip id="tooltip-trigger-name-description">
-    Trigger name can be alphanumeric and can contain underscores
+    Trigger name can be alphanumeric and can contain underscores and hyphens
   </Tooltip>
 );
 
 export const operationsDescription = (
   <Tooltip id="tooltip-operations-description">
-    Listen to these operations on the table
+    Trigger on these operations on the table
   </Tooltip>
 );
 

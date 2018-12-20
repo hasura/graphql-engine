@@ -2,7 +2,6 @@
   "name": "realtime-location-app",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://hasura.github.io/realtime-location-app",
   "dependencies": {
     "apollo-boost": "^0.1.14",
     "apollo-cache-inmemory": "^1.2.8",

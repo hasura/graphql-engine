@@ -22,3 +22,25 @@ args:
   args:
     sql: |
       drop table contact
+
+- type: drop_relationship
+  args:
+    relationship: Tracks
+    table:
+      schema: public
+      name: Album
+
+- type: run_sql
+  args:
+    sql: |
+      drop table "Track"
+
+- type: run_sql
+  args:
+    sql: |
+      drop table "Album"
+
+- type: run_sql
+  args:
+    sql: |
+      drop table employee

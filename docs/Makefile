@@ -84,7 +84,7 @@ algolia_index:
 	$(call check_defined, ALGOLIA_INDEX_NAME)
 
 	export ALGOLIA_APPLICATION_ID=${ALGOLIA_APPLICATION_ID} ALGOLIA_ADMIN_KEY=${ALGOLIA_ADMIN_KEY} ALGOLIA_INDEX_NAME=${ALGOLIA_INDEX_NAME}
-	python ./algolia_index/algolia_index.py _build/algolia_index/index.json
+	python3 ./algolia_index/algolia_index.py _build/algolia_index/index.json
 
 
 .PHONY: dirhtml

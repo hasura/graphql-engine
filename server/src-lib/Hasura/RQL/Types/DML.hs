@@ -1,16 +1,9 @@
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE NoImplicitPrelude          #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE TemplateHaskell            #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-
 module Hasura.RQL.Types.DML
-       ( DMLQuery(..)
+       ( BoolExp(..)
+       , ColExp(..)
+       , DMLQuery(..)
+       , OrderType(..)
+       , NullsOrder(..)
 
        , OrderByExp(..)
        , OrderByItemG(..)
@@ -48,6 +41,7 @@ module Hasura.RQL.Types.DML
 import qualified Hasura.SQL.DML             as S
 
 import           Hasura.Prelude
+import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
 
@@ -63,6 +57,28 @@ import           Hasura.RQL.Instances       ()
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
+data ColExp
+  = ColExp
+  { ceCol :: !FieldName
+  , ceVal :: !Value
+  } deriving (Show, Eq, Lift)
+
+newtype BoolExp
+  = BoolExp { unBoolExp :: GBoolExp ColExp } deriving (Show, Eq, Lift)
+
+instance ToJSON BoolExp where
+  toJSON (BoolExp gBoolExp) =
+    gBoolExpToJSON f gBoolExp
+    where
+      f (ColExp k v) =
+        (getFieldNameTxt k,  v)
+
+instance FromJSON BoolExp where
+  parseJSON =
+    fmap BoolExp . parseGBoolExp f
+    where
+      f (k, v) = ColExp (FieldName k) <$> parseJSON v
+
 data DMLQuery a
   = DMLQuery !QualifiedTable a
   deriving (Show, Eq, Lift)
@@ -75,18 +91,46 @@ instance (FromJSON a) => FromJSON (DMLQuery a) where
   parseJSON _          =
     fail "Expected an object for query"
 
-$(deriveJSON defaultOptions{constructorTagModifier = snakeCase . drop 2} ''S.OrderType)
+newtype OrderType
+  = OrderType { unOrderType :: S.OrderType }
+  deriving (Show, Eq, Lift, Generic)
 
-$(deriveJSON defaultOptions{constructorTagModifier = snakeCase . drop 1} ''S.NullsOrder)
+instance FromJSON OrderType where
+  parseJSON =
+    fmap OrderType . f
+    where f = $(mkParseJSON
+                defaultOptions{constructorTagModifier = snakeCase . drop 2}
+                ''S.OrderType)
+
+newtype NullsOrder
+  = NullsOrder { unNullsOrder :: S.NullsOrder }
+  deriving (Show, Eq, Lift, Generic)
+
+instance FromJSON NullsOrder where
+  parseJSON =
+    fmap NullsOrder . f
+    where f = $(mkParseJSON
+                defaultOptions{constructorTagModifier = snakeCase . drop 1}
+                ''S.NullsOrder)
+
+instance ToJSON OrderType where
+  toJSON =
+    f . unOrderType
+    where f = $(mkToJSON
+                defaultOptions{constructorTagModifier = snakeCase . drop 2}
+                ''S.OrderType)
+
+instance ToJSON NullsOrder where
+  toJSON =
+    f . unNullsOrder
+    where f = $(mkToJSON
+                defaultOptions{constructorTagModifier = snakeCase . drop 1}
+                ''S.NullsOrder)
 
 data OrderByCol
   = OCPG !FieldName
   | OCRel !FieldName !OrderByCol
   deriving (Show, Eq, Lift)
-
--- newtype OrderByCol
---   = OrderByCol { getOrderByColPath :: [T.Text] }
---   deriving (Show, Eq, Lift)
 
 orderByColToTxt :: OrderByCol -> Text
 orderByColToTxt = \case
@@ -122,9 +166,9 @@ instance FromJSON OrderByCol where
 
 data OrderByItemG a
   = OrderByItemG
-  { obiType   :: !(Maybe S.OrderType)
+  { obiType   :: !(Maybe OrderType)
   , obiColumn :: !a
-  , obiNulls  :: !(Maybe S.NullsOrder)
+  , obiNulls  :: !(Maybe NullsOrder)
   } deriving (Show, Eq, Lift, Functor, Foldable, Traversable)
 
 type OrderByItem = OrderByItemG OrderByCol
@@ -164,8 +208,8 @@ orderByParser :: AttoT.Parser T.Text OrderByItem
 orderByParser =
   OrderByItemG <$> otP <*> colP <*> return Nothing
   where
-    otP  = ("+" *> return (Just S.OTAsc))
-           <|> ("-" *> return (Just S.OTDesc))
+    otP  = ("+" *> return (Just $ OrderType S.OTAsc))
+           <|> ("-" *> return (Just $ OrderType S.OTDesc))
            <|> return Nothing
     colP = Atto.takeText >>= orderByColFromTxt
 

@@ -25,7 +25,7 @@ const handleTableCandidate = (obj, tableName, tableDetectedCallback, isRootLevel
       for (var listKey in object) {
         const dummyRow = {...row};
         dummyRow[getPrimaryKeyName(dummyRow, null, 'self')] = uuid();
-        dummyRow.__value = listKey;
+        dummyRow._value = listKey;
         if (Object.keys(dummyRow).length > 0) {
           rowArray.push(dummyRow);
         }
@@ -44,7 +44,7 @@ const handleTableCandidate = (obj, tableName, tableDetectedCallback, isRootLevel
                 tableName: parent || tableName,
                 name: objectKey,
                 pkeys: pkeyMap,
-                data: Object.keys(value).map(item => ({__value: item})),
+                data: Object.keys(value).map(item => ({_value: item})),
               }
             );
           } else if (isObjectList(value)) {
@@ -77,7 +77,7 @@ const handleTableCandidate = (obj, tableName, tableDetectedCallback, isRootLevel
     if (isList(obj)) {
       for (var listKey in obj) {
         rowArray.push({
-          __value: listKey,
+          _value: listKey,
           _id: uuid(),
         });
       }
@@ -86,8 +86,8 @@ const handleTableCandidate = (obj, tableName, tableDetectedCallback, isRootLevel
     if (isRandomList(obj)) {
       for (var objKey in obj) {
         rowArray.push({
-          __key: objKey,
-          __value: obj[objKey],
+          _key: objKey,
+          _value: obj[objKey],
           _id: uuid(),
         });
       }
