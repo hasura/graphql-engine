@@ -182,6 +182,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/kardianos/osext"
+  packages = ["."]
+  revision = "ae77be60afb1dcacde03767a8c37337fad28ac14"
+
+[[projects]]
+  branch = "master"
   name = "github.com/lib/pq"
   packages = [
     ".",
@@ -409,6 +415,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "81fcfffa8a80b8583e2e0904bb40d9d8cac3a889a2965d0c68896871578acf73"
+  inputs-digest = "6abaaaf45d044084979a00f8bdf9d2e4f3cdcbe8c5a496789447e21e233af0ef"
   solver-name = "gps-cdcl"
   solver-version = 1
