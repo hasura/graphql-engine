@@ -301,8 +301,6 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
 
 httpApp :: Maybe String -> CorsConfig -> ServerCtx -> Bool -> SpockT IO ()
 httpApp mRootDir corsCfg serverCtx enableConsole = do
-    liftIO $ putStrLn "HasuraDB is now waiting for connections"
-
     -- cors middleware
     unless (ccDisabled corsCfg) $
       middleware $ corsMiddleware (mkDefaultCorsPolicy $ ccDomain corsCfg)
