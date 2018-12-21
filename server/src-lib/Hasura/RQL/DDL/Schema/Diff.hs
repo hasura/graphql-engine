@@ -58,7 +58,7 @@ fetchTableMeta = do
         t.table_schema,
         t.table_name,
         t.table_oid,
-        c.columns,
+        coalesce(c.columns, '[]') as columns,
         coalesce(f.constraints, '[]') as constraints
     FROM
         (SELECT
@@ -72,7 +72,7 @@ fetchTableMeta = do
            ON
              c.relnamespace = n.oid
         ) t
-        INNER JOIN
+        LEFT OUTER JOIN
         (SELECT
              table_schema,
              table_name,
