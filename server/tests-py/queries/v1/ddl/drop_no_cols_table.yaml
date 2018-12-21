@@ -1,0 +1,32 @@
+url: /v1/query
+status: 200
+response:
+- {result: null, result_type: CommandOk}
+- {message: success}
+- {result: null, result_type: CommandOk}
+- []
+query:
+  type: bulk
+  args:
+    - type: run_sql
+      args:
+        sql: |
+          create table hge_tests.t ();
+    - type: track_table
+      args:
+        schema: hge_tests
+        name: t
+    - type: run_sql
+      args:
+        sql: |
+          drop table hge_tests.t;
+    - type: select
+      args:
+        table:
+          schema: hdb_catalog
+          name: hdb_table
+        columns:
+        - table_name
+        where:
+          table_name: t
+          table_schema: hge_tests
