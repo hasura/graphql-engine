@@ -197,7 +197,34 @@ class ApiRequest extends Component {
   }
 
   getHeaderRows() {
-    const rows = this.props.headers.map((header, i) => {
+    let headers;
+    if (localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS')) {
+      const stored_headers = JSON.parse(
+        localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS')
+      );
+      console.log(stored_headers);
+      console.log(this.props.headers);
+      //Case when user loads again.
+      if (stored_headers.length > this.props.headers.length) {
+        const input_row = this.props.headers.pop();
+        for (let i = 2; i <= stored_headers.length - 2; i++) {
+          this.props.headers.push(stored_headers[i]);
+        }
+        this.props.headers.push(input_row);
+      }
+      headers = this.props.headers;
+      localStorage.setItem(
+        'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+        JSON.stringify(headers)
+      );
+    } else {
+      headers = this.props.headers;
+      localStorage.setItem(
+        'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+        JSON.stringify(headers)
+      );
+    }
+    const rows = headers.map((header, i) => {
       return (
         <tr key={i}>
           {header.isNewHeader ? null : (
