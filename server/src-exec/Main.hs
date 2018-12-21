@@ -64,7 +64,6 @@ parseHGECommand =
                 <$> parseServerPort
                 <*> parseConnParams
                 <*> parseTxIsolation
-                <*> parseRootDir
                 <*> parseAccessKey
                 <*> parseWebHook
                 <*> parseJwtSecret
@@ -100,7 +99,7 @@ main =  do
   loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
   let logger = mkLogger loggerCtx
   case hgeCmd of
-    HCServe so@(ServeOptions port cp isoL mRootDir mAccessKey mAuthHook mJwtSecret
+    HCServe so@(ServeOptions port cp isoL mAccessKey mAuthHook mJwtSecret
              mUnAuthRole corsCfg enableConsole) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
@@ -122,7 +121,7 @@ main =  do
       prepareEvents logger ci
 
       pool <- Q.initPGPool ci cp
-      (app, cacheRef) <- mkWaiApp isoL mRootDir loggerCtx pool httpManager
+      (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
                          am corsCfg enableConsole
       let warpSettings = Warp.setPort port Warp.defaultSettings
                          -- Warp.setHost "*" Warp.defaultSettings

@@ -38,7 +38,6 @@ data RawServeOptions
   { rsoPort          :: !(Maybe Int)
   , rsoConnParams    :: !RawConnParams
   , rsoTxIso         :: !(Maybe Q.TxIsolation)
-  , rsoRootDir       :: !(Maybe String)
   , rsoAccessKey     :: !(Maybe AccessKey)
   , rsoAuthHook      :: !RawAuthHook
   , rsoJwtSecret     :: !(Maybe Text)
@@ -61,7 +60,6 @@ data ServeOptions
   { soPort          :: !Int
   , soConnParams    :: !Q.ConnParams
   , soTxIso         :: !Q.TxIsolation
-  , soRootDir       :: !(Maybe String)
   , soAccessKey     :: !(Maybe AccessKey)
   , soAuthHook      :: !(Maybe AuthHook)
   , soJwtSecret     :: !(Maybe Text)
@@ -207,7 +205,6 @@ mkServeOptions rso = do
   connParams <- mkConnParams $ rsoConnParams rso
   txIso <- fromMaybe Q.ReadCommitted <$>
            withEnv (rsoTxIso rso) (fst txIsoEnv)
-  rootDir <- withEnv (rsoRootDir rso) $ fst rootDirEnv
   accKey <- withEnv (rsoAccessKey rso) $ fst accessKeyEnv
   authHook <- mkAuthHook $ rsoAuthHook rso
   jwtSecr <- withEnv (rsoJwtSecret rso) $ fst jwtSecretEnv
@@ -215,7 +212,7 @@ mkServeOptions rso = do
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <- withEnvBool (rsoEnableConsole rso) $
                    fst enableConsoleEnv
-  return $ ServeOptions port connParams txIso rootDir accKey authHook
+  return $ ServeOptions port connParams txIso accKey authHook
                         jwtSecr unAuthRole corsCfg enableConsole
   where
     mkConnParams (RawConnParams s c i) = do
@@ -306,7 +303,7 @@ serveCmdFooter =
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
       [ servePortEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
-      , txIsoEnv, rootDirEnv, accessKeyEnv, authHookEnv , authHookTypeEnv
+      , txIsoEnv, accessKeyEnv, authHookEnv , authHookTypeEnv
       , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv
       ]
 
@@ -347,11 +344,6 @@ txIsoEnv =
   ( "HASURA_GRAPHQL_TX_ISOLATION"
   , "transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)"
   )
-
-rootDirEnv :: (String, String)
-rootDirEnv =
-  ( "HASURA_GRAPHQL_ROOT_DIR"
-  , "this static dir is served at / and takes precedence over all routes")
 
 accessKeyEnv :: (String, String)
 accessKeyEnv =
@@ -467,15 +459,6 @@ parseTxIsolation = optional $
              metavar "TXISO" <>
              help (snd txIsoEnv)
            )
-
-parseRootDir :: Parser (Maybe String)
-parseRootDir =
-  optional (strOption
-               ( long "root-dir" <>
-                 metavar "STATIC-DIR" <>
-                 help (snd rootDirEnv)
-               )
-             )
 
 parseConnParams :: Parser RawConnParams
 parseConnParams =
