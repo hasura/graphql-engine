@@ -143,7 +143,7 @@ class TestAddRemoteSchemaTbls:
     def test_add_schema_same_type_contains_same_scalar(self, hge_ctx):
         """
         test types get merged when remote schema has type with same name and
-        same structure
+        same structure + same custom scalar
         """
         st_code, resp = hge_ctx.v1q_f(self.dir + '/person_table.yaml')
         assert st_code == 200, resp

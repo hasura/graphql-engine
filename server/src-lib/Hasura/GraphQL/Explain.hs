@@ -136,6 +136,6 @@ explainGQLQuery pool iso sc (GQLExplain query userVarsRaw)= do
     allHasuraNodes gCtx nodes =
       let typeLocs = TH.gatherTypeLocs gCtx nodes
           isHasuraNode = \case
-            VT.HasuraType     -> True
-            VT.RemoteType _ _ -> False
+            VT.TLHasura     -> True
+            VT.TLRemote _ _ -> False
       in all isHasuraNode typeLocs

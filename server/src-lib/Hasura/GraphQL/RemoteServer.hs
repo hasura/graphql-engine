@@ -64,7 +64,7 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
 
   where
     noQueryRoot = err400 Unexpected "query root not found in remote schema"
-    fromRemoteTyDef ty = VT.fromTyDef ty $ VT.RemoteType name def
+    fromRemoteTyDef ty = VT.fromTyDef ty $ VT.TLRemote name def
     schemaErr err = throw400 RemoteSchemaError (T.pack $ show err)
 
     throwHttpErr :: (MonadError QErr m) => HTTP.HttpException -> m a

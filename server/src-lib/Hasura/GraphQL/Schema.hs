@@ -262,7 +262,7 @@ mkTableByPKeyTy tn = qualTableToName tn <> "_by_pk"
 --   InpObjTyInfo (Just tyDesc) (mkCompExpTy colTy) (fromInpValL $ concat
 --   [ map (mk colScalarTy) typedOps
 --   , map (mk $ G.toLT colScalarTy) listOps
---   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
+--   , bool [] (map (mk $ mkHsraScalarTy PGText) stringOps) isStringTy
 --   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
 --   , [InpValInfo Nothing "_is_null" $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
 --   ]) HasuraType
@@ -280,7 +280,7 @@ mkTableByPKeyTy tn = qualTableToName tn <> "_by_pk"
 
 --     mk t n = InpValInfo Nothing n $ G.toGT t
 
---     colScalarTy = mkScalarTy colTy
+--     colScalarTy = mkHsraScalarTy colTy
 --     -- colScalarListTy = GA.GTList colGTy
 
 --     typedOps =
@@ -306,23 +306,23 @@ mkTableByPKeyTy tn = qualTableToName tn <> "_by_pk"
 
 --     jsonbOps =
 --       [ ( "_contains"
---         , G.toGT $ mkScalarTy PGJSONB
+--         , G.toGT $ mkHsraScalarTy PGJSONB
 --         , "does the column contain the given json value at the top level"
 --         )
 --       , ( "_contained_in"
---         , G.toGT $ mkScalarTy PGJSONB
+--         , G.toGT $ mkHsraScalarTy PGJSONB
 --         , "is the column contained in the given json value"
 --         )
 --       , ( "_has_key"
---         , G.toGT $ mkScalarTy PGText
+--         , G.toGT $ mkHsraScalarTy PGText
 --         , "does the string exist as a top-level key in the column"
 --         )
 --       , ( "_has_keys_any"
---         , G.toGT $ G.toLT $ G.toNT $ mkScalarTy PGText
+--         , G.toGT $ G.toLT $ G.toNT $ mkHsraScalarTy PGText
 --         , "do any of these strings exist as top-level keys in the column"
 --         )
 --       , ( "_has_keys_all"
---         , G.toGT $ G.toLT $ G.toNT $ mkScalarTy PGText
+--         , G.toGT $ G.toLT $ G.toNT $ mkHsraScalarTy PGText
 --         , "do all of these strings exist as top-level keys in the column"
 --         )
 --       ]
@@ -333,7 +333,7 @@ mkPGColFld (PGColInfo colName colTy isNullable) =
   where
     n  = G.Name $ getPGColTxt colName
     ty = bool notNullTy nullTy isNullable
-    scalarTy = mkScalarTy colTy
+    scalarTy = mkHsraScalarTy colTy
     notNullTy = G.toGT $ G.toNT scalarTy
     nullTy = G.toGT scalarTy
 
@@ -344,8 +344,8 @@ mkPGColFld (PGColInfo colName colTy isNullable) =
 mkSelArgs :: QualifiedTable -> [InpValInfo]
 mkSelArgs tn =
   [ InpValInfo (Just whereDesc) "where" $ G.toGT $ mkBoolExpTy tn
-  , InpValInfo (Just limitDesc) "limit" $ G.toGT $ mkScalarTy PGInteger
-  , InpValInfo (Just offsetDesc) "offset" $ G.toGT $ mkScalarTy PGInteger
+  , InpValInfo (Just limitDesc) "limit" $ G.toGT $ mkHsraScalarTy PGInteger
+  , InpValInfo (Just offsetDesc) "offset" $ G.toGT $ mkHsraScalarTy PGInteger
   , InpValInfo (Just orderByDesc) "order_by" $ G.toGT $ G.toLT $ G.toNT $
     mkOrdByTy tn
   , InpValInfo (Just distinctDesc) "distinct_on" $ G.toGT $ G.toLT $
@@ -412,7 +412,7 @@ mkTableObj
   -> [SelField]
   -> ObjTyInfo
 mkTableObj tn allowedFlds =
-  mkObjTyInfo (Just desc) (mkTableTy tn) (mapFromL _fiName flds) HasuraType
+  mkObjTyInfo (Just desc) (mkTableTy tn) (mapFromL _fiName flds) TLHasura
   where
     flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
@@ -462,14 +462,14 @@ mkTableAggFldsObj tn numCols compCols =
       "aggregate fields of " <>> tn
 
     countFld = mkHsraObjFldInfo Nothing "count" countParams $ G.toGT $
-               mkScalarTy PGInteger
+               mkHsraScalarTy PGInteger
 
     countParams = fromInpValL [countColInpVal, distinctInpVal]
 
     countColInpVal = InpValInfo Nothing "columns" $ G.toGT $
                      G.toLT $ G.toNT $ mkSelColumnInpTy tn
     distinctInpVal = InpValInfo Nothing "distinct" $ G.toGT $
-                     mkScalarTy PGBoolean
+                     mkHsraScalarTy PGBoolean
 
     numFlds = bool (map mkColOpFld numAggOps) [] $ null numCols
     compFlds = bool (map mkColOpFld compAggOps) [] $ null compCols
@@ -539,7 +539,7 @@ mkSelFldPKey tn cols =
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
     colInpVal (PGColInfo n typ _) =
-      InpValInfo Nothing (mkColName n) $ G.toGT $ G.toNT $ mkScalarTy typ
+      InpValInfo Nothing (mkColName n) $ G.toGT $ G.toNT $ mkHsraScalarTy typ
 
 {-
 
@@ -585,7 +585,7 @@ mkMutRespObj tn sel =
       "response of any mutation on the table " <>> tn
     affectedRowsFld =
       mkHsraObjFldInfo (Just desc) "affected_rows" Map.empty $
-        G.toGT $ G.toNT $ mkScalarTy PGInteger
+        G.toGT $ G.toNT $ mkHsraScalarTy PGInteger
       where
         desc = "number of affected rows by the mutation"
     returningFld =
@@ -632,7 +632,7 @@ mkBoolExpInp tn fields =
 mkPGColInp :: PGColInfo -> InpValInfo
 mkPGColInp (PGColInfo colName colTy _) =
   InpValInfo Nothing (G.Name $ getPGColTxt colName) $
-  G.toGT $ mkScalarTy colTy
+  G.toGT $ mkHsraScalarTy colTy
 
 -- table_set_input
 mkUpdSetTy :: QualifiedTable -> G.NamedType
@@ -1401,16 +1401,16 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM =
 
     getNumCols = onlyNumCols . lefts
     getCompCols = onlyComparableCols . lefts
-    onlyFloat = const $ mkScalarTy PGFloat
+    onlyFloat = const $ mkHsraScalarTy PGFloat
 
-    mkTypeMaker "sum" = mkScalarTy
+    mkTypeMaker "sum" = mkHsraScalarTy
     mkTypeMaker _     = onlyFloat
 
     mkColAggFldsObjs flds =
       let numCols = getNumCols flds
           compCols = getCompCols flds
           mkNumObjFld n = mkTableColAggFldsObj tn n (mkTypeMaker n) numCols
-          mkCompObjFld n = mkTableColAggFldsObj tn n mkScalarTy compCols
+          mkCompObjFld n = mkTableColAggFldsObj tn n mkHsraScalarTy compCols
           numFldsObjs = bool (map mkNumObjFld numAggOps) [] $ null numCols
           compFldsObjs = bool (map mkCompObjFld compAggOps) [] $ null compCols
       in numFldsObjs <> compFldsObjs
@@ -1418,7 +1418,7 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM =
     selObjFldsM = mkFldMap (mkTableTy tn) <$> selFldsM
     -- the field used in table_by_pkey object
     selByPKeyObjFlds = Map.fromList $ flip map pkeyCols $
-      \pgi@(PGColInfo col ty _) -> ((mkScalarTy ty, mkColName col), Left pgi)
+      \pgi@(PGColInfo col ty _) -> ((mkHsraScalarTy ty, mkColName col), Left pgi)
 
     ordByInpCtxM = mkOrdByInpObj tn <$> selFldsM
     (ordByInpObjM, ordByCtxM) = case ordByInpCtxM of
@@ -1667,7 +1667,7 @@ checkSchemaConflicts gCtx remoteCtx = do
                     (\k _ -> G.unNamedType k `notElem` builtinTy ++ rmRootNames)
                     $ _gTypes remoteCtx
 
-      isTyInfoSame ty = isScalarTy ty || any (`tyinfoEq` ty) hTypes
+      isTyInfoSame ty = any (`tyinfoEq` ty) hTypes
       -- name is same and structure is not same
       isSame n ty = G.unNamedType n `elem` hTyNames &&
                     not (isTyInfoSame ty)

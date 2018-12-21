@@ -60,9 +60,9 @@ runGQ pool isoL userInfo sc manager reqHdrs req rawReq = do
     [] -> runHasuraGQ pool isoL userInfo sc queryParts
 
     (typeLoc:_) -> case typeLoc of
-      VT.HasuraType ->
+      VT.TLHasura ->
         runHasuraGQ pool isoL userInfo sc queryParts
-      VT.RemoteType _ rsi ->
+      VT.TLRemote _ rsi ->
         runRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
   where
     gCtxRoleMap = scGCtxMap sc

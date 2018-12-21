@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Hasura.GraphQL.Validate.Types
   ( InpValInfo(..)
   , ParamMap
@@ -12,6 +14,7 @@ module Hasura.GraphQL.Validate.Types
   , EnumValInfo(..)
   , InpObjFldMap
   , InpObjTyInfo(..)
+  , ScalarType (..)
   , ScalarTyInfo(..)
   , DirectiveInfo(..)
   , defaultDirectives
@@ -117,8 +120,8 @@ type ParamMap = Map.HashMap G.Name InpValInfo
 
 -- | location of the type: a hasura type or a remote type
 data TypeLoc
-  = HasuraType
-  | RemoteType RemoteSchemaName RemoteSchemaInfo
+  = TLHasura
+  | TLRemote RemoteSchemaName RemoteSchemaInfo
   deriving (Show, Eq, TH.Lift, Generic)
 
 instance Hashable TypeLoc
@@ -204,38 +207,41 @@ fromInpObjTyDef (G.InputObjectTypeDefinition descM n _ inpFlds) loc =
     fldMap = Map.fromList
       [(G._ivdName inpFld, fromInpValDef inpFld) | inpFld <- inpFlds]
 
+data ScalarType
+  = STHasura PGColType
+  | STRemote G.Name
+  deriving (Show, Eq, TH.Lift)
+
 data ScalarTyInfo
   = ScalarTyInfo
   { _stiDesc :: !(Maybe G.Description)
-  , _stiType :: !PGColType
+  , _stiType :: !ScalarType
   , _stiLoc  :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
 instance EquatableGType ScalarTyInfo where
-  type EqProps ScalarTyInfo = PGColType
-  getEqProps = _stiType
+  type EqProps ScalarTyInfo = G.NamedType
+  getEqProps = mkScalarTy . _stiType
 
 fromScalarTyDef
   :: G.ScalarTypeDefinition
   -> TypeLoc
   -> Either Text ScalarTyInfo
 fromScalarTyDef (G.ScalarTypeDefinition descM n _) loc =
-  ScalarTyInfo descM <$> ty <*> pure loc
-  where
-    ty = case n of
-      "Int"     -> return PGInteger
-      "Float"   -> return PGFloat
-      "String"  -> return PGText
-      "Boolean" -> return PGBoolean
-      -- TODO: is this correct?
-      "ID"      -> return $ PGUnknown "ID" --PGText
-      -- FIXME: is this correct for hasura scalar also?
-      -- TODO: hasura built-in scalars can have other PG* types. When parsing a
-      -- remote type (specifically another hasura), not built-in scalar types
-      -- get parsed as PGUnknown, and hence scalar comparison might give
-      -- unexpected result. E.g - timestamptz scalar in local will be of
-      -- PGTimeStampTZ but from remote hasura will be PGUnknown "timestamptz".
-      _         -> return $ PGUnknown $ G.unName n --throwError $ "unexpected type: " <> G.unName n
+  case loc of
+    TLHasura ->
+      ScalarTyInfo descM <$> fmap STHasura ty <*> pure loc
+      where
+        ty = case n of
+          "Int"     -> return PGInteger
+          "Float"   -> return PGFloat
+          "String"  -> return PGText
+          "Boolean" -> return PGBoolean
+          -- TODO: is this correct?
+          "ID"      -> return $ PGUnknown "ID" --PGText
+          -- FIXME: is this correct for hasura scalar also?
+          _         -> return $ PGUnknown $ G.unName n --throwError $ "unexpected type: " <> G.unName n
+    TLRemote _ _ -> pure $ ScalarTyInfo descM (STRemote n) loc
 
 data TypeInfo
   = TIScalar !ScalarTyInfo
@@ -269,9 +275,10 @@ pgColTyToScalar = \case
   PGVarchar -> "String"
   t         -> T.pack $ show t
 
-mkScalarTy :: PGColType -> G.NamedType
-mkScalarTy =
-  G.NamedType . G.Name . pgColTyToScalar
+mkScalarTy :: ScalarType -> G.NamedType
+mkScalarTy = \case
+  STHasura t -> G.NamedType . G.Name $ pgColTyToScalar t
+  STRemote t -> G.NamedType t
 
 getNamedTy :: TypeInfo -> G.NamedType
 getNamedTy = \case

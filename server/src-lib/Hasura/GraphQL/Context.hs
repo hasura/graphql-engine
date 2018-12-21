@@ -121,7 +121,7 @@ mkHsraObjFldInfo
   -> G.GType
   -> ObjFldInfo
 mkHsraObjFldInfo descM name params ty =
-  ObjFldInfo descM name params ty HasuraType
+  ObjFldInfo descM name params ty TLHasura
 
 mkHsraObjTyInfo
   :: Maybe G.Description
@@ -129,7 +129,7 @@ mkHsraObjTyInfo
   -> ObjFieldMap
   -> ObjTyInfo
 mkHsraObjTyInfo descM ty flds =
-  mkObjTyInfo descM ty flds HasuraType
+  mkObjTyInfo descM ty flds TLHasura
 
 mkHsraInpTyInfo
   :: Maybe G.Description
@@ -137,7 +137,7 @@ mkHsraInpTyInfo
   -> InpObjFldMap
   -> InpObjTyInfo
 mkHsraInpTyInfo descM ty flds =
-  InpObjTyInfo descM ty flds HasuraType
+  InpObjTyInfo descM ty flds TLHasura
 
 mkHsraEnumTyInfo
   :: Maybe G.Description
@@ -145,10 +145,13 @@ mkHsraEnumTyInfo
   -> Map.HashMap G.EnumValue EnumValInfo
   -> EnumTyInfo
 mkHsraEnumTyInfo descM ty enumVals =
-  EnumTyInfo descM ty enumVals HasuraType
+  EnumTyInfo descM ty enumVals TLHasura
+
+mkHsraScalarTy :: PGColType -> G.NamedType
+mkHsraScalarTy = mkScalarTy . STHasura
 
 mkHsraScalarTyInfo :: PGColType -> ScalarTyInfo
-mkHsraScalarTyInfo ty = ScalarTyInfo Nothing ty HasuraType
+mkHsraScalarTyInfo ty = ScalarTyInfo Nothing (STHasura ty) TLHasura
 
 fromInpValL :: [InpValInfo] -> Map.HashMap G.Name InpValInfo
 fromInpValL = mapFromL _iviName
@@ -167,10 +170,10 @@ mkCompExpInp colTy =
   InpObjTyInfo (Just tyDesc) (mkCompExpTy colTy) (fromInpValL $ concat
   [ map (mk colScalarTy) typedOps
   , map (mk $ G.toLT colScalarTy) listOps
-  , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
+  , bool [] (map (mk $ mkHsraScalarTy PGText) stringOps) isStringTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
   , [InpValInfo Nothing "_is_null" $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
-  ]) HasuraType
+  ]) TLHasura
   where
     tyDesc = mconcat
       [ "expression to compare columns of type "
@@ -182,7 +185,7 @@ mkCompExpInp colTy =
       PGText    -> True
       _         -> False
     mk t n = InpValInfo Nothing n $ G.toGT t
-    colScalarTy = mkScalarTy colTy
+    colScalarTy = mkHsraScalarTy colTy
     -- colScalarListTy = GA.GTList colGTy
     typedOps =
        ["_eq", "_neq", "_gt", "_lt", "_gte", "_lte"]
@@ -201,23 +204,23 @@ mkCompExpInp colTy =
     jsonbOpToInpVal (op, ty, desc) = InpValInfo (Just desc) op ty
     jsonbOps =
       [ ( "_contains"
-        , G.toGT $ mkScalarTy PGJSONB
+        , G.toGT $ mkHsraScalarTy PGJSONB
         , "does the column contain the given json value at the top level"
         )
       , ( "_contained_in"
-        , G.toGT $ mkScalarTy PGJSONB
+        , G.toGT $ mkHsraScalarTy PGJSONB
         , "is the column contained in the given json value"
         )
       , ( "_has_key"
-        , G.toGT $ mkScalarTy PGText
+        , G.toGT $ mkHsraScalarTy PGText
         , "does the string exist as a top-level key in the column"
         )
       , ( "_has_keys_any"
-        , G.toGT $ G.toLT $ G.toNT $ mkScalarTy PGText
+        , G.toGT $ G.toLT $ G.toNT $ mkHsraScalarTy PGText
         , "do any of these strings exist as top-level keys in the column"
         )
       , ( "_has_keys_all"
-        , G.toGT $ G.toLT $ G.toNT $ mkScalarTy PGText
+        , G.toGT $ G.toLT $ G.toNT $ mkHsraScalarTy PGText
         , "do all of these strings exist as top-level keys in the column"
         )
       ]
@@ -255,7 +258,7 @@ ordByEnumTy =
       ]
 
 defaultTypes :: [TypeInfo]
-defaultTypes = $(fromSchemaDocQ defaultSchema HasuraType)
+defaultTypes = $(fromSchemaDocQ defaultSchema TLHasura)
 
 
 mkGCtx :: TyAgg -> RootFlds -> InsCtxMap -> GCtx

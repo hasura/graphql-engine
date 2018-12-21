@@ -190,9 +190,9 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     [] -> runHasuraQ userInfo gCtx queryParts
 
     (typeLoc:_) -> case typeLoc of
-      VT.HasuraType ->
+      VT.TLHasura ->
         runHasuraQ userInfo gCtx queryParts
-      VT.RemoteType _ rsi -> do
+      VT.TLRemote _ rsi -> do
         when (G._todType opDef == G.OperationTypeSubscription) $
           withComplete $ sendConnErr "subscription to remote server is not supported"
         resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs

@@ -227,10 +227,15 @@ validateNamedTypeVal inpValParser nt val = do
     TIEnum eti ->
       withParsed (getEnum inpValParser) val $
       fmap (AGEnum nt) . mapM (validateEnum eti)
-    TIScalar (ScalarTyInfo _ pgColTy _) ->
+    TIScalar (ScalarTyInfo _ sclrTy _) -> do
+      pgColTy <- getPGColTy sclrTy
       withParsed (getScalar inpValParser) val $
-      fmap (AGScalar pgColTy) . mapM (validateScalar pgColTy)
+        fmap (AGScalar pgColTy) . mapM (validateScalar pgColTy)
   where
+    getPGColTy = \case
+      STHasura pct -> return pct
+      STRemote _ -> throw500 "unexpected remote scalar for validation"
+
     validateEnum enumTyInfo enumVal  =
       if Map.member enumVal (_etiValues enumTyInfo)
       then return enumVal

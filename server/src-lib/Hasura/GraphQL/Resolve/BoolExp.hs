@@ -10,6 +10,7 @@ import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Language.GraphQL.Draft.Syntax     as G
 
+import           Hasura.GraphQL.Context            (mkHsraScalarTy)
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Types
@@ -114,7 +115,7 @@ pgColValToBoolExp
 pgColValToBoolExp f colValMap = do
   colExps <- forM colVals $ \(name, val) -> do
     (ty, _) <- asPGColVal val
-    let namedTy = mkScalarTy ty
+    let namedTy = mkHsraScalarTy ty
     BoolFld <$> parseColExp f namedTy name val parseAsEqOp
   return $ BoolAnd colExps
   where
