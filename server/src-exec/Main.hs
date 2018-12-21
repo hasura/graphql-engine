@@ -63,7 +63,6 @@ parseHGECommand =
                 <$> parseServerPort
                 <*> parseConnParams
                 <*> parseTxIsolation
-                <*> parseRootDir
                 <*> parseAccessKey
                 <*> parseWebHook
                 <*> parseJwtSecret
@@ -112,7 +111,7 @@ main =  do
   -- global http manager
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   case hgeCmd of
-    HCServe (ServeOptions port cp isoL mRootDir mAccessKey mAuthHook mJwtSecret
+    HCServe (ServeOptions port cp isoL mAccessKey mAuthHook mJwtSecret
              mUnAuthRole corsCfg enableConsole) -> do
       loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
@@ -128,7 +127,7 @@ main =  do
       prepareEvents ci
       pool <- Q.initPGPool ci cp
       putStrLn $ "server: running on port " ++ show port
-      (app, cacheRef) <- mkWaiApp isoL mRootDir loggerCtx pool httpManager
+      (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
                          am corsCfg enableConsole
       let warpSettings = Warp.setPort port Warp.defaultSettings
                          -- Warp.setHost "*" Warp.defaultSettings
