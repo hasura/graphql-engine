@@ -216,9 +216,17 @@ class ApiRequest extends Component {
         stored_headers.length > this.props.headers.length &&
         this.state.deletedHeader === false
       ) {
+        const initHeaderCount = this.props.headers.length - 1;
         const input_row = this.props.headers.pop();
-        for (let i = 2; i <= stored_headers.length - 2; i++) {
-          if (!headers_map.has(stored_headers[i].key)) { this.props.headers.push(stored_headers[i]); }
+        for (
+          let i = initHeaderCount;
+          i <= stored_headers.length - initHeaderCount;
+          i++
+        ) {
+          console.log(i);
+          if (!headers_map.has(stored_headers[i].key)) {
+            this.props.headers.push(stored_headers[i]);
+          }
         }
         this.props.headers.push(input_row);
       }
