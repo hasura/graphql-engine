@@ -15,8 +15,10 @@ const TableHeader = ({ triggerName, tabName, count }) => {
     activeTab = 'Processed';
   } else if (tabName === 'pending') {
     activeTab = 'Pending';
-  } else if (tabName === 'settings') {
-    activeTab = 'Settings';
+  } else if (tabName === 'modify') {
+    activeTab = 'Modify';
+  } else if (tabName === 'logs') {
+    activeTab = 'Logs';
   }
   return (
     <div>
@@ -83,11 +85,11 @@ const TableHeader = ({ triggerName, tabName, count }) => {
             </li>
             <li
               role="presentation"
-              className={tabName === 'settings' ? styles.active : ''}
-              data-test="trigger-settings"
+              className={tabName === 'modify' ? styles.active : ''}
+              data-test="trigger-modify"
             >
-              <Link to={'/events/manage/triggers/' + triggerName + '/settings'}>
-                Settings
+              <Link to={'/events/manage/triggers/' + triggerName + '/modify'}>
+                Modify
               </Link>
             </li>
           </ul>

@@ -1,6 +1,11 @@
 Hasura GraphQL Engine DigitalOcean One-click App
 ================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Hasura GraphQL Engine is available as a One-click app on DigitalOcean. It is
 packed with a Postgres database and `Caddy <https://caddyserver.com/>`__
 webserver for easy and automatic HTTPS using Let's Encrypt.
@@ -9,8 +14,8 @@ webserver for easy and automatic HTTPS using Let's Encrypt.
 Quickstart
 ----------
 
-1. Create Hasura One-click Droplet
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1. Create a Hasura One-click Droplet
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Click the button below to create a new Hasura GraphQL Engine Droplet on
 DigitalOcean using One-Click App. (``Ctrl+Click`` to open in a new tab)
@@ -25,7 +30,7 @@ DigitalOcean using One-Click App. (``Ctrl+Click`` to open in a new tab)
 ~~~~~~~~~~~~~~~
 
 Once Hasura GraphQL Engine One-Click Droplet is ready, you can visit the Droplet
-IP to open Hasura console, where you can create tables, explore GraphQL APIs
+IP to open the Hasura console, where you can create tables, explore GraphQL APIs
 etc. Note that it might take 1 or 2 minutes for everything to start running.
 
 The Hasura console will be at:
@@ -203,8 +208,8 @@ HTTP/2 web server with automatic HTTPS using Let's Encrypt.
 
 Visit ``https://your_domain/console`` to visit the Hasura console.
 
-Updating to latest version
---------------------------
+Updating to the latest version
+------------------------------
 
 When a new version of GraphQL Engine is released, you can upgrade to it by just
 changing the version tag in docker-compose.yaml. You can find the latest
@@ -302,3 +307,8 @@ Logs
 
 Where ``<container_name>`` is one of ``graphql-engine``, ``postgres`` or
 ``caddy``.
+
+License
+-------
+The Hasura GraphQL Engine is open source. View license `here <https://github.com/hasura/graphql-engine/blob/master/LICENSE>`_.
+

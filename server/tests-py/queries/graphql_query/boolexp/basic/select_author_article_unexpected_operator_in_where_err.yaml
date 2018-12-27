@@ -3,10 +3,11 @@ url: /v1alpha1/graphql
 status: 400
 response:
   errors:
-  - path: $.selectionSet.author.args.where.id._unexpected
-    error: |-
+  - extensions:
+      code: validation-failed
+      path: $.selectionSet.author.args.where.id._unexpected
+    message: |-
       field "_unexpected" not found in type: 'integer_comparison_exp'
-    code: validation-failed
 query:
   query: |
     query {

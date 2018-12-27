@@ -1,13 +1,18 @@
 Migrations for an existing project
 ==================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 This guide will help you if you already have set up a schema and now want
 to start using migrations to help you track the database and GraphQL schema changes.
 
 These are the steps you need to follow:
 
 #. Install the Hasura CLI
-#. Setup a project directory
+#. Set up a project directory
 #. Initialize migrations
 #. For further changes, use the Hasura CLI console (``http://localhost:9695``) instead of the console served by the
    GraphQL engine (E.g.: ``http://my-graphql.herokuapp.com``)
@@ -62,8 +67,8 @@ Step 1: Install the Hasura CLI
       getting a "command not found" error after installing Hasura CLI, please restart ``git bash``.
 
 
-Step 2: Setup a project directory
----------------------------------
+Step 2: Set up a project directory
+----------------------------------
 Skip this step if you already have a project directory.
 
 .. code-block:: bash

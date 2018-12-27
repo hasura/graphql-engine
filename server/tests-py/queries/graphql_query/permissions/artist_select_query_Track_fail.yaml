@@ -5,9 +5,10 @@ headers:
   X-Hasura-Role: Artist
 response:
   errors:
-  - path: "$"
-    error: '"x-hasura-artist-id" header is expected but not found'
-    code: not-found
+  - extensions:
+      code: not-found
+      path: "$"
+    message: '"x-hasura-artist-id" header is expected but not found'
 query:
   query: |
     query {

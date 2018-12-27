@@ -1,5 +1,11 @@
 Multiple mutations in a request
 ===============================
+
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 If multiple mutations are part of the same request, they are executed **sequentially**. If any of the mutations fail,
 all the executed mutations will be rolled back (i.e. all the mutations are run as a **transaction**).
 

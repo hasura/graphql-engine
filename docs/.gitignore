@@ -51,6 +51,7 @@ Thumbs.db
 # Virtual Environment
 venv
 .venv
+myenv
 
 
 # Jetbrains folder
