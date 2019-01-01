@@ -36,6 +36,7 @@ type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 data RawServeOptions
   = RawServeOptions
   { rsoPort          :: !(Maybe Int)
+  , rsoHost          :: !(Maybe String)
   , rsoConnParams    :: !RawConnParams
   , rsoTxIso         :: !(Maybe Q.TxIsolation)
   , rsoAccessKey     :: !(Maybe AccessKey)
@@ -58,6 +59,7 @@ type CorsConfig = CorsConfigG T.Text
 data ServeOptions
   = ServeOptions
   { soPort          :: !Int
+  , soHost          :: !String
   , soConnParams    :: !Q.ConnParams
   , soTxIso         :: !Q.TxIsolation
   , soAccessKey     :: !(Maybe AccessKey)
@@ -202,6 +204,8 @@ mkServeOptions :: RawServeOptions -> WithEnv ServeOptions
 mkServeOptions rso = do
   port <- fromMaybe 8080 <$>
           withEnv (rsoPort rso) (fst servePortEnv)
+  host <- fromMaybe "*" <$>
+          withEnv (rsoHost rso) (fst serveHostEnv)
   connParams <- mkConnParams $ rsoConnParams rso
   txIso <- fromMaybe Q.ReadCommitted <$>
            withEnv (rsoTxIso rso) (fst txIsoEnv)
@@ -212,7 +216,7 @@ mkServeOptions rso = do
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <- withEnvBool (rsoEnableConsole rso) $
                    fst enableConsoleEnv
-  return $ ServeOptions port connParams txIso accKey authHook
+  return $ ServeOptions port host connParams txIso accKey authHook
                         jwtSecr unAuthRole corsCfg enableConsole
   where
     mkConnParams (RawConnParams s c i) = do
@@ -308,7 +312,7 @@ serveCmdFooter =
 
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
-      [ servePortEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
+      [ servePortEnv, serveHostEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
       , txIsoEnv, accessKeyEnv, authHookEnv , authHookModeEnv
       , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv
       ]
@@ -326,6 +330,12 @@ servePortEnv :: (String, String)
 servePortEnv =
   ( "HASURA_GRAPHQL_SERVER_PORT"
   , "Port on which graphql-engine should be served (default: 8080)"
+  )
+
+serveHostEnv :: (String, String)
+serveHostEnv =
+  ( "HASURA_GRAPHQL_SERVER_HOST"
+  , "Host on which graphql-engine will listen (default: *)"
   )
 
 pgConnsEnv :: (String, String)
@@ -500,6 +510,12 @@ parseServerPort = optional $
          metavar "PORT" <>
          help (snd servePortEnv)
        )
+
+parseServerHost :: Parser (Maybe String)
+parseServerHost = optional $ strOption ( long "server-host" <>
+                metavar "HOST" <>
+                help "Host on which graphql-engine will listen (default: *)"
+              )
 
 parseAccessKey :: Parser (Maybe AccessKey)
 parseAccessKey =

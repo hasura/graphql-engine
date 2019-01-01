@@ -18,6 +18,7 @@ import qualified Data.Yaml                  as Y
 import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
+import qualified Data.String                as DataString
 
 import           Hasura.Events.Lib
 import           Hasura.Logging             (Logger (..), defaultLoggerSettings,
@@ -62,6 +63,7 @@ parseHGECommand =
   where
     serveOpts = RawServeOptions
                 <$> parseServerPort
+                <*> parseServerHost
                 <*> parseConnParams
                 <*> parseTxIsolation
                 <*> parseAccessKey
@@ -99,8 +101,8 @@ main =  do
   loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
   let logger = mkLogger loggerCtx
   case hgeCmd of
-    HCServe so@(ServeOptions port cp isoL mAccessKey mAuthHook mJwtSecret
-             mUnAuthRole corsCfg enableConsole) -> do
+    HCServe so@(ServeOptions port host cp isoL mAccessKey mAuthHook
+             mJwtSecret mUnAuthRole corsCfg enableConsole) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
@@ -123,8 +125,9 @@ main =  do
       pool <- Q.initPGPool ci cp
       (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
                          am corsCfg enableConsole
-      let warpSettings = Warp.setPort port Warp.defaultSettings
-                         -- Warp.setHost "*" Warp.defaultSettings
+
+      let hostS = DataString.fromString(host)
+      let warpSettings = Warp.setPort port $ Warp.setHost hostS Warp.defaultSettings
 
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
