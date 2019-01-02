@@ -223,7 +223,6 @@ class ApiRequest extends Component {
           i <= stored_headers.length - initHeaderCount;
           i++
         ) {
-          console.log(i);
           if (!headers_map.has(stored_headers[i].key)) {
             this.props.headers.push(stored_headers[i]);
           }
