@@ -220,8 +220,14 @@ mkServeOptions rso = do
 
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
-      ty <- fromMaybe AHTGet <$> withEnv mType (fst authHookTypeEnv)
+      authModeM <- withEnv mType (fst authHookModeEnv)
+      ty <- maybe (authHookTyEnv mType) return authModeM
       return (flip AuthHookG ty <$> mUrlEnv)
+
+    -- Also support HASURA_GRAPHQL_AUTH_HOOK_TYPE
+    -- TODO:- drop this in next major update
+    authHookTyEnv mType = fromMaybe AHTGet <$>
+      withEnv mType "HASURA_GRAPHQL_AUTH_HOOK_TYPE"
 
     mkCorsConfig (CorsConfigG mDom isDis) = do
       domEnv <- fromMaybe "*" <$> withEnv mDom (fst corsDomainEnv)
@@ -300,7 +306,7 @@ serveCmdFooter =
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
       [ servePortEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
-      , txIsoEnv, accessKeyEnv, authHookEnv , authHookTypeEnv
+      , txIsoEnv, accessKeyEnv, authHookEnv , authHookModeEnv
       , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv
       ]
 
@@ -354,10 +360,10 @@ authHookEnv =
   , "The authentication webhook, required to authenticate requests"
   )
 
-authHookTypeEnv :: (String, String)
-authHookTypeEnv =
-  ( "HASURA_GRAPHQL_AUTH_HOOK_TYPE"
-  , "The authentication webhook type (default: GET)"
+authHookModeEnv :: (String, String)
+authHookModeEnv =
+  ( "HASURA_GRAPHQL_AUTH_HOOK_MODE"
+  , "The authentication webhook mode (default: GET)"
   )
 
 jwtSecretEnv :: (String, String)
@@ -520,7 +526,7 @@ parseWebHook =
       option (eitherReader readHookType)
                   ( long "auth-hook-mode" <>
                     metavar "GET|POST" <>
-                    help (snd authHookTypeEnv)
+                    help (snd authHookModeEnv)
                   )
 
 
