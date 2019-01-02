@@ -172,7 +172,7 @@ processTableChanges ti tableDiff = do
       delColFromCache cn tn
       addColToCache cn ci tn
     replaceConstraints = flip modTableInCache tn $ \tInfo ->
-      return $ tInfo {tiConstraints = constraints}
+      return $ tInfo {tiUniqOrPrimConstraints = constraints}
     tn = tiName ti
     TableDiff mNewName droppedCols addedCols alteredCols _ constraints = tableDiff
 

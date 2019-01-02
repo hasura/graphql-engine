@@ -322,14 +322,14 @@ mutableView qt f mVI operation =
 
 data TableInfo
   = TableInfo
-  { tiName                :: !QualifiedTable
-  , tiSystemDefined       :: !Bool
-  , tiFieldInfoMap        :: !FieldInfoMap
-  , tiRolePermInfoMap     :: !RolePermInfoMap
-  , tiConstraints         :: ![TableConstraint]
-  , tiPrimaryKeyCols      :: ![PGCol]
-  , tiViewInfo            :: !(Maybe ViewInfo)
-  , tiEventTriggerInfoMap :: !EventTriggerInfoMap
+  { tiName                  :: !QualifiedTable
+  , tiSystemDefined         :: !Bool
+  , tiFieldInfoMap          :: !FieldInfoMap
+  , tiRolePermInfoMap       :: !RolePermInfoMap
+  , tiUniqOrPrimConstraints :: ![ConstraintName]
+  , tiPrimaryKeyCols        :: ![PGCol]
+  , tiViewInfo              :: !(Maybe ViewInfo)
+  , tiEventTriggerInfoMap   :: !EventTriggerInfoMap
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
@@ -337,13 +337,13 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 mkTableInfo
   :: QualifiedTable
   -> Bool
-  -> [TableConstraint]
+  -> [ConstraintName]
   -> [PGColInfo]
   -> [PGCol]
   -> Maybe ViewInfo -> TableInfo
-mkTableInfo tn isSystemDefined constraints cols pcols mVI =
+mkTableInfo tn isSystemDefined uniqCons cols pcols mVI =
   TableInfo tn isSystemDefined colMap (M.fromList [])
-  constraints pcols mVI (M.fromList [])
+  uniqCons pcols mVI (M.fromList [])
   where
     colMap     = M.fromList $ map f cols
     f colInfo = (fromPGCol $ pgiName colInfo, FIColumn colInfo)

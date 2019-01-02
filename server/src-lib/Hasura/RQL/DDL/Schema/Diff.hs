@@ -37,9 +37,9 @@ $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''PGColMeta)
 
 data ConstraintMeta
   = ConstraintMeta
-  { cmConstraintName :: !ConstraintName
-  , cmConstraintOid  :: !Int
-  , cmConstraintType :: !ConstraintType
+  { cmName :: !ConstraintName
+  , cmOid  :: !Int
+  , cmType :: !ConstraintType
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ConstraintMeta)
@@ -87,7 +87,13 @@ fetchTableMeta = do
         (SELECT
              tc.table_schema,
              tc.table_name,
-             json_agg((SELECT r FROM (SELECT tc.constraint_name, r.oid::integer AS constraint_oid, tc.constraint_type) r)) as constraints
+             json_agg(
+              json_build_object(
+                  'name', tc.constraint_name,
+                  'oid', r.oid::integer,
+                  'type', tc.constraint_type
+                  )
+             ) as constraints
          FROM
              information_schema.table_constraints tc
              JOIN pg_catalog.pg_constraint r
@@ -115,9 +121,6 @@ getDifference getKey left right =
   where
     mkMap = M.fromList . map (\v -> (getKey v, v))
 
-fromConstraintMeta :: ConstraintMeta -> TableConstraint
-fromConstraintMeta (ConstraintMeta n _ ty) = TableConstraint ty n
-
 data TableDiff
   = TableDiff
   { _tdNewName         :: !(Maybe QualifiedTable)
@@ -125,17 +128,23 @@ data TableDiff
   , _tdAddedCols       :: ![PGColInfo]
   , _tdAlteredCols     :: ![(PGColInfo, PGColInfo)]
   , _tdDroppedFKeyCons :: ![ConstraintName]
-  , _tdAllCons         :: ![TableConstraint]
+  -- The final list of uniq/primary constraint names
+  -- used for generating types on_conflict clauses
+  -- TODO: this ideally should't be part of TableDiff
+  , _tdUniqOrPriCons   :: ![ConstraintName]
   } deriving (Show, Eq)
 
 getTableDiff :: TableMeta -> TableMeta -> TableDiff
 getTableDiff oldtm newtm =
-  TableDiff mNewName droppedCols addedCols alteredCols droppedFKeyConstraints allCons
+  TableDiff mNewName droppedCols addedCols alteredCols
+  droppedFKeyConstraints uniqueOrPrimaryCons
   where
     mNewName = bool (Just $ tmTable newtm) Nothing $ tmTable oldtm == tmTable newtm
     oldCols = tmColumns oldtm
     newCols = tmColumns newtm
-    allCons = map fromConstraintMeta $ tmConstraints newtm
+
+    uniqueOrPrimaryCons =
+      [cmName cm | cm <- tmConstraints newtm, isUniqueOrPrimary $ cmType cm]
 
     droppedCols =
       map pcmColumnName $ getDifference pcmOrdinalPosition oldCols newCols
@@ -152,8 +161,8 @@ getTableDiff oldtm newtm =
       flip map (filter (uncurry (/=)) existingCols) $ \(pcmo, pcmn) ->
       (pcmToPci pcmo, pcmToPci pcmn)
 
-    droppedFKeyConstraints = map cmConstraintName $
-      filter (isForeignKey . cmConstraintType) $ getDifference cmConstraintOid
+    droppedFKeyConstraints = map cmName $
+      filter (isForeignKey . cmType) $ getDifference cmOid
       (tmConstraints oldtm) (tmConstraints newtm)
 
 getTableChangeDeps
