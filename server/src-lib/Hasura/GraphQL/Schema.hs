@@ -1143,12 +1143,16 @@ input table_<op>_order_by {
 mkTabAggOpOrdByInpObjs
   :: QualifiedTable -> [PGCol] -> [PGCol] -> [InpObjTyInfo]
 mkTabAggOpOrdByInpObjs tn numCols compCols =
-  map (mkInpObjTy numCols) numAggOps <> map (mkInpObjTy compCols) compAggOps
+  mapMaybe (mkInpObjTyM numCols) numAggOps
+  <> mapMaybe (mkInpObjTyM compCols) compAggOps
   where
 
     mkDesc (G.Name op) = G.Description $ "order by " <> op <> "() on columns of table " <>> tn
+
+    mkInpObjTyM cols op = bool (Just $ mkInpObjTy cols op) Nothing $ null cols
     mkInpObjTy cols op = mkHsraInpTyInfo (Just $ mkDesc op) (mkTabAggOpOrdByTy tn op) $
                          fromInpValL $ map mkColInpVal cols
+
     mkColInpVal c = InpValInfo Nothing (mkColName c) $ G.toGT
                     ordByTy
 

@@ -86,7 +86,6 @@ module Hasura.RQL.Types.SchemaCache
        , getDependentObjsWith
        ) where
 
-import qualified Database.PG.Query                 as Q
 import qualified Hasura.GraphQL.Context            as GC
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
@@ -107,67 +106,9 @@ import           Data.Aeson.TH
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
 import qualified Data.Text                         as T
-import qualified PostgreSQL.Binary.Decoding        as PD
-
--- data TableObjId
---   = TOCol !PGCol
---   | TORel !RelName
---   | TOCons !ConstraintName
---   | TOPerm !RoleName !PermType
---   | TOTrigger !TriggerName
---   deriving (Show, Eq, Generic)
-
--- instance Hashable TableObjId
-
--- data SchemaObjId
---   = SOTable !QualifiedTable
---   | SOQTemplate !TQueryName
---   | SOTableObj !QualifiedTable !TableObjId
---    deriving (Eq, Generic)
-
---instance Hashable SchemaObjId
-
--- reportSchemaObj :: SchemaObjId -> T.Text
--- reportSchemaObj (SOTable tn) = "table " <> qualTableToTxt tn
--- reportSchemaObj (SOQTemplate qtn) =
---   "query-template " <> getTQueryName qtn
--- reportSchemaObj (SOTableObj tn (TOCol cn)) =
---   "column " <> qualTableToTxt tn <> "." <> getPGColTxt cn
--- reportSchemaObj (SOTableObj tn (TORel cn)) =
---   "relationship " <> qualTableToTxt tn <> "." <> getRelTxt cn
--- reportSchemaObj (SOTableObj tn (TOCons cn)) =
---   "constraint " <> qualTableToTxt tn <> "." <> getConstraintTxt cn
--- reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
---   "permission " <> qualTableToTxt tn <> "." <> getRoleTxt rn
---   <> "." <> permTypeToCode pt
--- reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
---   "event-trigger " <> qualTableToTxt tn <> "." <> trn
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
-
--- instance Show SchemaObjId where
---   show soi = T.unpack $ reportSchemaObj soi
-
--- instance ToJSON SchemaObjId where
---   toJSON = String . reportSchemaObj
-
--- data SchemaDependency
---   = SchemaDependency
---   { sdObjId  :: !SchemaObjId
---   , sdReason :: !T.Text
---   } deriving (Show, Eq)
-
--- instance ToJSONKey SchemaObjId where
---   toJSONKey = toJSONKeyText reportSchemaObj
-
--- data SchemaDependency
---   = SchemaDependency
---   { sdObjId  :: !SchemaObjId
---   , sdReason :: !T.Text
---   } deriving (Show, Eq, Generic)
-
--- $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaDependency)
 
 mkParentDep :: QualifiedTable -> SchemaDependency
 mkParentDep tn = SchemaDependency (SOTable tn) "table"
@@ -186,15 +127,6 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''QueryTemplateInfo)
 
 type QTemplateCache = M.HashMap TQueryName QueryTemplateInfo
 
--- data PGColInfo
---   = PGColInfo
---   { pgiName       :: !PGCol
---   , pgiType       :: !PGColType
---   , pgiIsNullable :: !Bool
---   } deriving (Show, Eq)
-
--- $(deriveToJSON (aesonDrop 3 snakeCase) ''PGColInfo)
-
 onlyIntCols :: [PGColInfo] -> [PGColInfo]
 onlyIntCols = filter (isIntegerType . pgiType)
 
@@ -210,18 +142,6 @@ onlyComparableCols = filter (isComparableType . pgiType)
 getColInfos :: [PGCol] -> [PGColInfo] -> [PGColInfo]
 getColInfos cols allColInfos = flip filter allColInfos $ \ci ->
   pgiName ci `elem` cols
-
--- data RelInfo
---   = RelInfo
---   { riName     :: !RelName
---   , riType     :: !RelType
---   , riMapping  :: ![(PGCol, PGCol)]
---   , riRTable   :: !QualifiedTable
---   , riDeps     :: ![SchemaDependency]
---   , riIsManual :: !Bool
---   } deriving (Show, Eq)
-
--- $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 type WithDeps a = (a, [SchemaDependency])
 
@@ -351,24 +271,15 @@ instance Show ConstraintType where
   show = T.unpack . constraintTyToTxt
 
 instance FromJSON ConstraintType where
-  parseJSON (String "CHECK") = return CTCHECK
-  parseJSON (String "FOREIGN KEY") = return CTFOREIGNKEY
-  parseJSON (String "PRIMARY KEY") = return CTPRIMARYKEY
-  parseJSON (String "UNIQUE") = return CTUNIQUE
-  parseJSON (String _) = fail
-    "expecting 'CHECK', 'FOREIGN KEY', 'PRIMARY KEY' and 'UNIQUE' for constraint_type"
-  parseJSON _ = fail "expecting String for constraint_type"
+  parseJSON = withText "ConstraintType" $ \case
+    "CHECK"       -> return CTCHECK
+    "FOREIGN KEY" -> return CTFOREIGNKEY
+    "PRIMARY KEY" -> return CTPRIMARYKEY
+    "UNIQUE"      -> return CTUNIQUE
+    c             -> fail $ "unexpected ConstraintType: " <> T.unpack c
 
 instance ToJSON ConstraintType where
   toJSON = String . constraintTyToTxt
-
-instance Q.FromCol ConstraintType where
-  fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
-    "CHECK"       -> Just CTCHECK
-    "FOREIGN KEY" -> Just CTFOREIGNKEY
-    "PRIMARY KEY" -> Just CTPRIMARYKEY
-    "UNIQUE"      -> Just CTUNIQUE
-    _             -> Nothing
 
 isUniqueOrPrimary :: ConstraintType -> Bool
 isUniqueOrPrimary = \case
@@ -387,7 +298,7 @@ data TableConstraint
   , tcName :: !ConstraintName
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase) ''TableConstraint)
+$(deriveJSON (aesonDrop 2 snakeCase) ''TableConstraint)
 
 data ViewInfo
   = ViewInfo
@@ -396,7 +307,7 @@ data ViewInfo
   , viIsInsertable :: !Bool
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase) ''ViewInfo)
+$(deriveJSON (aesonDrop 2 snakeCase) ''ViewInfo)
 
 isMutable :: (ViewInfo -> Bool) -> Maybe ViewInfo -> Bool
 isMutable _ Nothing   = True
@@ -423,15 +334,19 @@ data TableInfo
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 
-mkTableInfo :: QualifiedTable -> Bool -> [(ConstraintType, ConstraintName)]
-            -> [(PGCol, PGColType, Bool)] -> [PGCol]
-            -> Maybe ViewInfo -> TableInfo
-mkTableInfo tn isSystemDefined rawCons cols pcols mVI =
-  TableInfo tn isSystemDefined colMap (M.fromList []) constraints pcols mVI (M.fromList [])
+mkTableInfo
+  :: QualifiedTable
+  -> Bool
+  -> [TableConstraint]
+  -> [PGColInfo]
+  -> [PGCol]
+  -> Maybe ViewInfo -> TableInfo
+mkTableInfo tn isSystemDefined constraints cols pcols mVI =
+  TableInfo tn isSystemDefined colMap (M.fromList [])
+  constraints pcols mVI (M.fromList [])
   where
-    constraints = flip map rawCons $ uncurry TableConstraint
     colMap     = M.fromList $ map f cols
-    f (cn, ct, b) = (fromPGCol cn, FIColumn $ PGColInfo cn ct b)
+    f colInfo = (fromPGCol $ pgiName colInfo, FIColumn colInfo)
 
 type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
 

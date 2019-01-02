@@ -43,82 +43,16 @@ saveTableToCatalog (QualifiedTable sn tn) =
             INSERT INTO "hdb_catalog"."hdb_table" VALUES ($1, $2)
                 |] (sn, tn) False
 
-getViewInfo :: QualifiedTable -> Q.TxE QErr (Maybe ViewInfo)
-getViewInfo (QualifiedTable sn tn) = do
-  tableTy <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
-             [Q.sql|
-              SELECT table_type FROM information_schema.tables
-              WHERE table_schema = $1
-                AND table_name = $2
-                   |] (sn, tn) False
-
-  bool (return Nothing) buildViewInfo $ isView tableTy
-  where
-    buildViewInfo = do
-      (is_upd, is_ins, is_trig_upd, is_trig_del, is_trig_ins)
-        <- Q.getRow <$> Q.withQE defaultTxErrorHandler
-             [Q.sql|
-              SELECT is_updatable :: boolean,
-                     is_insertable_into::boolean,
-                     is_trigger_updatable::boolean,
-                     is_trigger_deletable::boolean,
-                     is_trigger_insertable_into::boolean
-               FROM information_schema.views
-              WHERE table_schema = $1
-                AND table_name = $2
-                    |] (sn, tn) False
-      return $ Just $ ViewInfo
-               (is_upd || is_trig_upd)
-               (is_upd || is_trig_del)
-               (is_ins || is_trig_ins)
-
 -- Build the TableInfo with all its columns
 getTableInfo :: QualifiedTable -> Bool -> Q.TxE QErr TableInfo
 getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
-  tableExists <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
-            SELECT true from information_schema.tables
-             WHERE table_schema = $1
-               AND table_name = $2;
-                           |] (sn, tn) False
-
-  -- if no columns are found, there exists no such view/table
-  unless (tableExists == [Identity True]) $
-    throw400 NotExists $ "no such table/view exists in postgres : " <>> qt
-
-  -- Fetch View information
-  viewInfo <- getViewInfo qt
-
-  -- Fetch the column details
-  colData <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
-            SELECT column_name, to_json(udt_name), is_nullable::boolean
-              FROM information_schema.columns
-             WHERE table_schema = $1
-               AND table_name = $2
-                           |] (sn, tn) False
-
-  -- Fetch primary key columns
-  rawPrimaryCols <- Q.listQE defaultTxErrorHandler [Q.sql|
-           SELECT columns
-             FROM hdb_catalog.hdb_primary_key
-            WHERE table_schema = $1
-              AND table_name = $2
-                           |] (sn, tn) False
-  pkeyCols <- mkPKeyCols rawPrimaryCols
-
-  -- Fetch the constraint details
-  rawConstraints <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
-           SELECT constraint_type, constraint_name
-             FROM information_schema.table_constraints
-             WHERE table_schema = $1
-               AND table_name = $2
-                           |] (sn, tn) False
-  let colDetails = flip map colData $ \(colName, Q.AltJ colTy, isNull)
-                   -> (colName, colTy, isNull)
-  return $ mkTableInfo qt isSystemDefined rawConstraints colDetails pkeyCols viewInfo
-  where
-    mkPKeyCols [] = return []
-    mkPKeyCols [Identity (Q.AltJ pkeyCols)] = return pkeyCols
-    mkPKeyCols _ = throw500 "found multiple rows for a table in hdb_primary_key"
+  tableData <- Q.catchE defaultTxErrorHandler $
+               Q.listQ $(Q.sqlFromFile "src-rsr/table_info.sql")(sn, tn) True
+  case tableData of
+    [] -> throw400 NotExists $ "no such table/view exists in postgres : " <>> qt
+    [(Q.AltJ cols, Q.AltJ pkeyCols, Q.AltJ cons, Q.AltJ viewInfoM)] ->
+      return $ mkTableInfo qt isSystemDefined cons cols pkeyCols viewInfoM
+    _ -> throw500 $ "more than one row found for: " <>> qt
 
 newtype TrackTable
   = TrackTable
