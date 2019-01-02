@@ -67,6 +67,7 @@ ul {
 .main_container_wrapper {
   min-width: 90%;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* for iOS momentum scroll */
 }
 
 .content_wrapper {
