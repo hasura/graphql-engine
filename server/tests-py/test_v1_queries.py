@@ -2,6 +2,9 @@ import yaml
 from validate import check_query_f
 from super_classes import DefaultTestSelectQueries, DefaultTestQueries
 
+class TestDropNoColsTable:
+    def test_drop_no_cols_table(self, hge_ctx):
+        check_query_f(hge_ctx, 'queries/v1/ddl/drop_no_cols_table.yaml')
 
 class TestV1General(DefaultTestQueries):
 

@@ -22,6 +22,11 @@ flag developer
   default: False
   manual: True
 
+flag local-console
+  description: embeds resources needed by console and serves them at /static/
+  default: False
+  manual: True
+
 library
   hs-source-dirs:      src-lib
                      , src-exec
@@ -82,7 +87,6 @@ library
 
                      -- GraphQL related
                      , graphql-parser
-                     , wai-middleware-static
 
                      -- URL parser related
                      , network-uri
@@ -255,6 +259,8 @@ library
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
+  if flag(local-console)
+    cpp-options: -DLocalConsole
 
   ghc-options: -O2
                -Wall
