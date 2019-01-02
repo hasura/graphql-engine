@@ -16,6 +16,7 @@ module Hasura.RQL.Types.SchemaCache
        , onlyJSONBCols
        , onlyComparableCols
        , isUniqueOrPrimary
+       , isForeignKey
        , mkTableInfo
        , addTableToCache
        , modTableInCache
@@ -259,8 +260,6 @@ data ConstraintType
   | CTUNIQUE
   deriving Eq
 
-$(deriveToJSON defaultOptions{constructorTagModifier = drop 2} ''ConstraintType)
-
 constraintTyToTxt :: ConstraintType -> T.Text
 constraintTyToTxt ty = case ty of
   CTCHECK      -> "CHECK"
@@ -279,6 +278,20 @@ instance FromJSON ConstraintType where
     "UNIQUE"      -> return CTUNIQUE
     c             -> fail $ "unexpected ConstraintType: " <> T.unpack c
 
+instance ToJSON ConstraintType where
+  toJSON = String . constraintTyToTxt
+
+isUniqueOrPrimary :: ConstraintType -> Bool
+isUniqueOrPrimary = \case
+  CTPRIMARYKEY -> True
+  CTUNIQUE     -> True
+  _            -> False
+
+isForeignKey :: ConstraintType -> Bool
+isForeignKey = \case
+  CTFOREIGNKEY -> True
+  _            -> False
+
 data TableConstraint
   = TableConstraint
   { tcType :: !ConstraintType
@@ -286,13 +299,6 @@ data TableConstraint
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''TableConstraint)
-
-isUniqueOrPrimary :: TableConstraint -> Bool
-isUniqueOrPrimary (TableConstraint ty _) = case ty of
-  CTCHECK      -> False
-  CTFOREIGNKEY -> False
-  CTPRIMARYKEY -> True
-  CTUNIQUE     -> True
 
 data ViewInfo
   = ViewInfo
