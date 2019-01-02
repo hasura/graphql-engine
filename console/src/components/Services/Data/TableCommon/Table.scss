@@ -21,6 +21,11 @@
     display: inline-block;
     width: 100%;
     padding-left: 15px;
+    a
+    {
+      display: inline-block !important;
+      font-weight: bold;
+    }
   }
 }
 .changeSchema
@@ -28,6 +33,7 @@
   width: 50%;
   margin-left: 10px;
   display: inline-block;
+  font-weight: bold;
 }
 .aceBlock {
   max-height: 300px;

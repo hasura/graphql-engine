@@ -101,7 +101,11 @@ const DataHeader = ({
                   currentLocation.indexOf('sql') !== -1 ? styles.active : ''
                 }
               >
-                <Link to={appPrefix + '/sql'} data-test="sql-link">
+                <Link
+                  className={styles.wd100}
+                  to={appPrefix + '/sql'}
+                  data-test="sql-link"
+                >
                   SQL
                 </Link>
               </li>
