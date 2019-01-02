@@ -799,6 +799,7 @@ article ol ol {
 
   #sidebar {
     position: absolute;
+    z-index: 10;
     width: 90% !important;
     max-width: 800px !important;
     left: 0;
@@ -859,7 +860,6 @@ article ol ol {
   #sidebar {
     top: 170px;
     height: calc(100% - 170px);
-    z-index: 10;
   }
 
   #input_search_box {
