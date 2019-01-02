@@ -37,26 +37,6 @@ export const permNoCheck = (tableName, query, first) => {
   savePermission();
   // Validate
   validatePermission(tableName, 'role0', query, 'none', 'success', null, true);
-  // Do not allow users to make upset queries in case of Insert
-  if (query === 'insert') {
-    // Reopen insert permission
-    cy.get(getElementFromAlias('role0-insert')).click();
-    cy.get('span')
-      .contains('upsert queries')
-      .click();
-    // Save
-    savePermission();
-    // Validate
-    validatePermission(
-      tableName,
-      'role0',
-      query,
-      'none',
-      'success',
-      null,
-      false
-    );
-  }
 };
 
 export const permCustomCheck = (tableName, query) => {

@@ -1,9 +1,3 @@
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE MultiWayIf                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-
 module Hasura.SQL.DML where
 
 import           Hasura.Prelude
@@ -12,6 +6,7 @@ import           Hasura.SQL.Types
 import           Data.String                (fromString)
 import           Language.Haskell.TH.Syntax (Lift)
 
+import qualified Data.Aeson                 as J
 import qualified Data.HashMap.Strict        as HM
 import qualified Data.Text.Extended         as T
 import qualified Text.Builder               as TB
@@ -271,6 +266,9 @@ data SQLExp
   | SECount !CountType
   deriving (Show, Eq)
 
+instance J.ToJSON SQLExp where
+  toJSON = J.toJSON . toSQLTxt
+
 newtype Alias
   = Alias { getAlias :: Iden }
   deriving (Show, Eq, Hashable)
@@ -461,7 +459,7 @@ data BoolExp
   | BENull !SQLExp
   | BENotNull !SQLExp
   | BEExists !Select
-  | BEEqualsAny !SQLExp ![SQLExp]
+  | BEIN !SQLExp ![SQLExp]
   deriving (Show, Eq)
 
 -- removes extraneous 'AND true's
@@ -506,10 +504,9 @@ instance ToSQL BoolExp where
     paren (toSQL v) <-> "IS NOT NULL"
   toSQL (BEExists sel) =
     "EXISTS " <-> paren (toSQL sel)
-  -- special case to handle 'lhs = ANY(ARRAY[..])'
-  toSQL (BEEqualsAny l rhsExps) =
-    paren (toSQL l) <-> toSQL SEQ
-    <-> toSQL (SEFnApp "ANY" [SEArray rhsExps] Nothing)
+  -- special case to handle lhs IN (exp1, exp2)
+  toSQL (BEIN vl exps) =
+    paren (toSQL vl) <-> toSQL SIN <-> paren (", " <+> exps)
 
 data BinOp = AndOp
            | OrOp
@@ -661,7 +658,7 @@ instance ToSQL SQLConflictTarget where
 
 data SQLConflict
   = DoNothing !(Maybe SQLConflictTarget)
-  | Update !SQLConflictTarget !SetExp
+  | Update !SQLConflictTarget !SetExp !(Maybe WhereFrag)
   deriving (Show, Eq)
 
 instance ToSQL SQLConflict where
@@ -669,9 +666,9 @@ instance ToSQL SQLConflict where
   toSQL (DoNothing (Just ct)) = "ON CONFLICT"
                                 <-> toSQL ct
                                 <-> "DO NOTHING"
-  toSQL (Update ct ex)        = "ON CONFLICT"
+  toSQL (Update ct set whr)   = "ON CONFLICT"
                                 <-> toSQL ct <-> "DO UPDATE"
-                                <-> toSQL ex
+                                <-> toSQL set <-> toSQL whr
 
 data SQLInsert = SQLInsert
     { siTable    :: !QualifiedTable

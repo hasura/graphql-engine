@@ -1,7 +1,3 @@
-{-# LANGUAGE DeriveLift        #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
 module Hasura.RQL.Types.Subscribe
   ( CreateEventTriggerQuery(..)
   , SubscribeOpSpec(..)

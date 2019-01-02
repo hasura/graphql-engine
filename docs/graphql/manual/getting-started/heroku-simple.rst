@@ -1,6 +1,11 @@
 Quickstart with Heroku
 ======================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 This guide will help you get Hasura GraphQL engine and Postgres running on `Heroku's free tier <https://www.heroku.com/free>`_.
 It is the easiest and fastest way of trying Hasura out.
 
@@ -34,8 +39,8 @@ You should see the Hasura console.
 
 .. image:: ../../../img/graphql/manual/getting-started/heroku-app-deployed.png
 
-Next: Try Hasura out!
----------------------
+Hello World (GraphQL or event triggers)
+---------------------------------------
 
 Make your :doc:`first graphql query <first-graphql-query>`
 
@@ -43,8 +48,12 @@ OR
 
 Set up your :doc:`first event trigger <first-event-trigger>`
 
-Advanced:
----------
+Advanced
+--------
 
 This was a quickstart guide to get the Hasura GraphQL engine up and running quickly. For more detailed instructions
 on deploying using Heroku, check out :doc:`../deployment/heroku/index`.
+
+License
+-------
+The Hasura GraphQL Engine is open source. View license `here <https://github.com/hasura/graphql-engine/blob/master/LICENSE>`_.

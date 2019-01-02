@@ -14,12 +14,7 @@ import {
   addExistingTableSql,
   addAllUntrackedTablesSql,
 } from '../Add/AddExistingTableViewActions';
-import {
-  loadSchema,
-  loadUntrackedSchema,
-  fetchSchemaList,
-  LOAD_UNTRACKED_RELATIONS,
-} from '../DataActions';
+import { fetchDataInit, LOAD_UNTRACKED_RELATIONS } from '../DataActions';
 import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
 import AutoAddRelationsConnector from './AutoAddRelations';
 import globals from '../../../../Globals';
@@ -34,9 +29,7 @@ class Schema extends Component {
     };
     // Initialize this table
     const dispatch = this.props.dispatch;
-    dispatch(fetchSchemaList());
-    dispatch(loadSchema());
-    dispatch(loadUntrackedSchema());
+    dispatch(fetchDataInit());
     const untrackedRelations = getAllUnTrackedRelations(
       this.props.schema,
       this.props.currentSchema
@@ -67,9 +60,7 @@ class Schema extends Component {
       currentSchema,
       dispatch,
     } = this.props;
-
     const styles = require('../PageContainer/PageContainer.scss');
-
     let relationships = 0;
     schema.map(t => (relationships += t.relationships.length));
 

@@ -150,19 +150,19 @@ class Vehicle extends Component { constructor() {
           <footer className="Vehicle-footer displayFlex">
             <div className="container hasura-logo">
               <a href="https://hasura.io" target="_blank" rel="noopener noreferrer">
-                <img src={ hasuraImg } alt="hasura logo" />
+                <img alt="hasura logo" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black_200px.png" />
               </a>
                 &nbsp; | &nbsp;
-              <a href="https://realtime-backend.herokuapp.com/console/data/schema/public" target="_blank" rel="noopener noreferrer">
-                Database
+              <a href="/console" target="_blank" rel="noopener noreferrer">
+                Backend
               </a>
               &nbsp; | &nbsp;
-              <a href="https://github.com/hasura/realtime-location-app" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-location-tracking" target="_blank" rel="noopener noreferrer">
                 Source
               </a>
               <div className="footer-small-text">
                 <span>
-                  (The database resets every 30 minutes)
+                  (The database resets every 24 hours)
                 </span>
               </div>
             </div>

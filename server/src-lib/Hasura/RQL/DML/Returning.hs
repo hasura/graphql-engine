@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.RQL.DML.Returning where
 
 import           Hasura.Prelude
@@ -89,7 +84,7 @@ encodeJSONVector builder xs
     where go v b  = BB.char7 ',' <> builder v <> b
 
 checkRetCols
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m)
   => FieldInfoMap
   -> SelPermInfo
   -> [PGCol]

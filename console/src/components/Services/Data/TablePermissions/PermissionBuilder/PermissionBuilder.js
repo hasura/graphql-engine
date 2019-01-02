@@ -9,13 +9,17 @@ import {
   getTableColumnNames,
   getTableRelationshipNames,
   getTableRelationship,
+  getTableDef,
+  getTableSchema,
+  getAllJsonPaths,
+  isNotOperator,
+  isAndOrOperator,
+  isColumnOperator,
+  isBoolColumnOperator,
+  isArrayColumnOperator,
   boolOperators,
   columnOperators,
-  arrayColumnOperators,
-  boolColumnOperators,
 } from './utils';
-
-import { getTableName } from '../../utils';
 
 import QueryBuilderJson from '../../../../QueryBuilderJson/QueryBuilderJson';
 
@@ -23,12 +27,97 @@ const styles = require('./Styles.scss');
 
 class PermissionBuilder extends React.Component {
   static propTypes = {
-    allSchemas: PropTypes.array.isRequired,
+    allTableSchemas: PropTypes.array.isRequired,
     dispatch: PropTypes.func.isRequired,
-    dispatchFunc: PropTypes.func.isRequired,
+    dispatchFuncSetFilter: PropTypes.func.isRequired,
+    dispatchFuncAddTableSchemas: PropTypes.func.isRequired,
     filter: PropTypes.string,
-    table: PropTypes.string,
+    tableName: PropTypes.string,
+    schemaName: PropTypes.string,
   };
+
+  componentDidMount() {
+    this.fetchMissingSchemas();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (
+      this.props.filter !== prevProps.filter ||
+      this.props.allTableSchemas.length !== prevProps.allTableSchemas.length
+    ) {
+      this.fetchMissingSchemas();
+    }
+  }
+
+  fetchMissingSchemas() {
+    const {
+      dispatch,
+      tableName,
+      schemaName,
+      dispatchFuncAddTableSchemas,
+      filter,
+    } = this.props;
+
+    const findMissingSchemas = (path, currTable) => {
+      let _missingSchemas = [];
+
+      const pathSplit = path.split('.');
+
+      const operator = pathSplit[0];
+
+      if (isAndOrOperator(operator)) {
+        const newPath = pathSplit.slice(2).join('.');
+        _missingSchemas = findMissingSchemas(newPath, currTable);
+      } else if (isNotOperator(operator)) {
+        const newPath = pathSplit.slice(1).join('.');
+        _missingSchemas = findMissingSchemas(newPath, currTable);
+      } else if (
+        isColumnOperator(operator) ||
+        isArrayColumnOperator(operator)
+      ) {
+        // no missing schemas
+      } else {
+        const { allTableSchemas } = this.props;
+
+        const tableSchema = getTableSchema(allTableSchemas, currTable);
+        const tableRelationships = getTableRelationshipNames(tableSchema);
+
+        if (tableRelationships.includes(operator)) {
+          const rel = getTableRelationship(tableSchema, operator);
+          const refTable = getRefTable(rel, tableSchema);
+
+          const refTableSchema = getTableSchema(allTableSchemas, refTable);
+          if (!refTableSchema) {
+            _missingSchemas.push(refTable.schema);
+          }
+
+          const newPath = pathSplit.slice(1).join('.');
+          _missingSchemas.push(...findMissingSchemas(newPath, refTable));
+        } else {
+          // no missing schemas
+        }
+      }
+
+      return _missingSchemas;
+    };
+
+    const table = getTableDef(tableName, schemaName);
+
+    const missingSchemas = [];
+    const paths = getAllJsonPaths(JSON.parse(filter || '{}'));
+
+    for (let i = 0; i < paths.length; i++) {
+      const path = paths[i];
+
+      const subMissingSchemas = findMissingSchemas(path, table);
+
+      missingSchemas.push(...subMissingSchemas);
+    }
+
+    if (missingSchemas.length > 0) {
+      dispatch(dispatchFuncAddTableSchemas(missingSchemas));
+    }
+  }
 
   render() {
     const wrapDoubleQuotes = value => {
@@ -41,102 +130,162 @@ class PermissionBuilder extends React.Component {
       );
     };
 
-    const getTableSchemas = allSchemas => {
-      const _tableSchemas = {};
-
-      allSchemas.forEach(tableSchema => {
-        _tableSchemas[tableSchema.table_name] = {
-          columns: tableSchema.columns,
-          relationships: tableSchema.relationships,
-          foreign_key_constraints: tableSchema.foreign_key_constraints,
-        };
-      });
-
-      return _tableSchemas;
-    };
-
-    const isNotOperator = value => {
-      return value === boolOperators.not;
-    };
-
-    const isAndOrOperator = value => {
-      return value === boolOperators.or || value === boolOperators.and;
-    };
-
-    const isArrayColumnOperator = value => {
-      return arrayColumnOperators.indexOf(value) !== -1;
-    };
-
-    const isBoolColumnOperator = value => {
-      return boolColumnOperators.indexOf(value) !== -1;
-    };
-
-    const isColumnOperator = value => {
-      return columnOperators.indexOf(value) !== -1;
-    };
-
     const getFilter = (conditions, prefix, value = '') => {
-      const _where = {};
+      let _where = {};
+
+      const getAndOrOperatorFilter = (
+        operator,
+        opValue,
+        opConditions,
+        opPrefix,
+        isLast
+      ) => {
+        const _filter = {};
+
+        if (isLast) {
+          _filter[operator] = [];
+        } else {
+          const opPrefixSplit = opPrefix.split('.');
+
+          const position = parseInt(opPrefixSplit[0], 10);
+          const newPrefix = opPrefixSplit.slice(1).join('.');
+
+          _filter[operator] = opConditions;
+          _filter[operator][position] = getFilter(
+            opConditions[position],
+            newPrefix,
+            opValue
+          );
+          if (Object.keys(_filter[operator][position]).length === 0) {
+            _filter[operator].splice(position, 1);
+          }
+        }
+
+        return _filter;
+      };
+
+      const getNotOperatorFilter = (
+        operator,
+        opValue,
+        opConditions,
+        opPrefix,
+        isLast
+      ) => {
+        const _filter = {};
+
+        if (isLast) {
+          _filter[operator] = {};
+        } else {
+          _filter[operator] = getFilter(opConditions, opPrefix, opValue);
+        }
+
+        return _filter;
+      };
+
+      const getArrayColumnOperatorFilter = (
+        operator,
+        opValue,
+        opConditions,
+        opPrefix,
+        isLast
+      ) => {
+        const _filter = {};
+
+        if (isLast) {
+          _filter[operator] = opValue || [];
+        } else {
+          const opPrefixSplit = opPrefix.split('.');
+          const position = parseInt(opPrefixSplit[0], 10);
+
+          _filter[operator] = opConditions || [];
+          if (opValue) {
+            _filter[operator][position] = opValue;
+          } else {
+            _filter[operator].splice(position, 1);
+          }
+        }
+
+        return _filter;
+      };
+
+      const getColumnOperatorFilter = (operator, opValue) => {
+        const _filter = {};
+
+        _filter[operator] = opValue;
+
+        return _filter;
+      };
+
+      const getColumnFilter = (
+        operator,
+        opValue,
+        opConditions,
+        opPrefix,
+        isLast
+      ) => {
+        const _filter = {};
+
+        if (isLast) {
+          _filter[operator] = {};
+        } else {
+          _filter[operator] = getFilter(opConditions, opPrefix, opValue);
+        }
+
+        return _filter;
+      };
 
       const prefixSplit = prefix.split('.');
-      const operation = prefixSplit[0];
 
-      if (prefixSplit.length !== 1) {
-        if (isAndOrOperator(operation)) {
-          const position = parseInt(prefixSplit[1], 10);
-          _where[operation] = conditions[operation];
-          _where[operation][position] = getFilter(
-            conditions[operation][position],
-            prefixSplit.slice(2).join('.'),
-            value
-          );
-          if (Object.keys(_where[operation][position]).length === 0) {
-            _where[operation].splice(position, 1);
-          }
-        } else if (isNotOperator(operation)) {
-          _where[operation] = getFilter(
-            conditions[operation],
-            prefixSplit.slice(1).join('.'),
-            value
-          );
-        } else if (isArrayColumnOperator(operation)) {
-          const position = parseInt(prefixSplit[1], 10);
-          _where[operation] = conditions[operation] || [];
-          if (value) {
-            _where[operation][position] = value;
-          } else {
-            _where[operation].splice(position, 1);
-          }
-        } else {
-          // is column name
-          _where[operation] = getFilter(
-            conditions[operation],
-            prefixSplit.slice(1).join('.'),
-            value
-          );
-        }
+      const operator = prefixSplit[0];
+      const newPrefix = prefixSplit.slice(1).join('.');
+
+      const isLast = prefixSplit.length === 1;
+
+      const opConditions = isLast ? null : conditions[operator];
+
+      if (operator === '--') {
+        // blank where
+      } else if (isAndOrOperator(operator)) {
+        _where = getAndOrOperatorFilter(
+          operator,
+          value,
+          opConditions,
+          newPrefix,
+          isLast
+        );
+      } else if (isNotOperator(operator)) {
+        _where = getNotOperatorFilter(
+          operator,
+          value,
+          opConditions,
+          newPrefix,
+          isLast
+        );
+      } else if (isArrayColumnOperator(operator)) {
+        _where = getArrayColumnOperatorFilter(
+          operator,
+          value,
+          opConditions,
+          newPrefix,
+          isLast
+        );
+      } else if (isColumnOperator(operator)) {
+        _where = getColumnOperatorFilter(operator, value);
       } else {
-        if (operation === '--') {
-          /* blank where */
-        } else if (isAndOrOperator(operation)) {
-          _where[operation] = [];
-        } else if (isNotOperator(operation)) {
-          _where[operation] = {};
-        } else if (isArrayColumnOperator(operation)) {
-          _where[operation] = value || [];
-        } else if (isColumnOperator(operation)) {
-          _where[operation] = value;
-        } else {
-          // is column name
-          _where[operation] = {};
-        }
+        _where = getColumnFilter(
+          operator,
+          value,
+          opConditions,
+          newPrefix,
+          isLast
+        );
       }
 
       return _where;
     };
 
     const _dispatchFunc = data => {
-      const { dispatch, filter, dispatchFunc } = this.props;
+      const { dispatch, filter, dispatchFuncSetFilter } = this.props;
 
       const newFilter = getFilter(
         JSON.parse(filter || '{}'),
@@ -144,8 +293,8 @@ class PermissionBuilder extends React.Component {
         data.value
       );
 
-      // dispatch(dispatchFunc(JSON.stringify(newFilter, null, 4)));
-      dispatch(dispatchFunc(JSON.stringify(newFilter)));
+      // dispatch(dispatchFuncSetFilter(JSON.stringify(newFilter, null, 4)));
+      dispatch(dispatchFuncSetFilter(JSON.stringify(newFilter)));
     };
 
     const renderBoolSelect = (dispatchFunc, value) => {
@@ -337,7 +486,7 @@ class PermissionBuilder extends React.Component {
       let tableRelationships = [];
       let tableSchema;
       if (table) {
-        tableSchema = tableSchemas[table];
+        tableSchema = getTableSchema(tableSchemas, table);
         tableRelationships = getTableRelationshipNames(tableSchema);
       }
 
@@ -409,8 +558,7 @@ class PermissionBuilder extends React.Component {
       let tableColumns = [];
       let tableRelationships = [];
       if (table) {
-        // In case of a manual relationship the right table is an object for a different schema
-        const tableSchema = tableSchemas[getTableName(table)];
+        const tableSchema = getTableSchema(tableSchemas, table);
         tableColumns = getTableColumnNames(tableSchema);
         tableRelationships = getTableRelationshipNames(tableSchema);
       }
@@ -477,13 +625,15 @@ class PermissionBuilder extends React.Component {
     };
 
     const showPermissionBuilder = () => {
-      const { table, filter, allSchemas } = this.props;
+      const { tableName, schemaName, filter, allTableSchemas } = this.props;
+
+      const table = getTableDef(tableName, schemaName);
 
       return renderBoolExp(
         _dispatchFunc,
         JSON.parse(filter || '{}'),
         table,
-        getTableSchemas(allSchemas)
+        allTableSchemas
       );
     };
 

@@ -1,6 +1,11 @@
 Authorization using JWT
 =======================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 You can configure JWT authorization mode (see :doc:`GraphQL server options
 <../deployment/graphql-engine-flags/reference>`) to authorize all incoming
 requests to Hasura GraphQL engine server.
@@ -13,9 +18,10 @@ verified by GraphQL engine to authorize and get metadata about the request
 .. image:: ../../../img/graphql/manual/auth/jwt-auth.png
 
 The JWT is decoded, the signature is verified, then it is asserted that the
-current role of the user is in the list of allowed roles. If the authorization
-passes, then all of the ``x-hasura-*`` values in the claim is used for the
-permissions system.
+current role of the user (if specified in the request) is in the list of allowed roles.
+If current role is not specified in the request, then the default role is picked.
+If the authorization passes, then all of the ``x-hasura-*`` values in the claim
+is used for the permissions system.
 
 .. note::
    Configuring JWT requires Hasura to run with an access key (``--access-key``).
@@ -247,8 +253,8 @@ Using env vars:
       serve
 
 
-Well known providers and known issues
--------------------------------------
+Popular providers and known issues
+----------------------------------
 
 Firebase
 ^^^^^^^^

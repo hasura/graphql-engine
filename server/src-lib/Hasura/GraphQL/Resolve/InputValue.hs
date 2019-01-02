@@ -1,10 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TupleSections     #-}
-
 module Hasura.GraphQL.Resolve.InputValue
   ( withNotNull
   , tyMismatch
@@ -59,7 +52,7 @@ asPGColVal
 asPGColVal = \case
   AGScalar colTy (Just val) -> return (colTy, val)
   AGScalar colTy Nothing ->
-    throw500 $ "unexpected null for ty"
+    throw500 $ "unexpected null for ty "
     <> T.pack (show colTy)
   v            -> tyMismatch "pgvalue" v
 

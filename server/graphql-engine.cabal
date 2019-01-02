@@ -22,8 +22,12 @@ flag developer
   default: False
   manual: True
 
+flag local-console
+  description: embeds resources needed by console and serves them at /static/
+  default: False
+  manual: True
+
 library
-  default-extensions:  NoImplicitPrelude
   hs-source-dirs:      src-lib
                      , src-exec
   default-language:    Haskell2010
@@ -83,7 +87,6 @@ library
 
                      -- GraphQL related
                      , graphql-parser
-                     , wai-middleware-static
 
                      -- URL parser related
                      , network-uri
@@ -132,6 +135,9 @@ library
                      -- regex related
                      , regex-tdfa >= 1.2
 
+                     -- pretty printer
+                     , ansi-wl-pprint
+
   exposed-modules:     Hasura.Server.App
                      , Hasura.Server.Auth
                      , Hasura.Server.Auth.JWT
@@ -171,6 +177,7 @@ library
                      , Hasura.RQL.DML.Insert
                      , Hasura.RQL.DML.Returning
                      , Hasura.RQL.DML.Select.Internal
+                     , Hasura.RQL.DML.Select.Types
                      , Hasura.RQL.DML.Select
                      , Hasura.RQL.DML.Update
                      , Hasura.RQL.DML.Count
@@ -206,7 +213,7 @@ library
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP
 
-                     , Hasura.HTTP.Utils
+                     , Hasura.HTTP
 
                      , Data.Text.Extended
                      , Data.Sequence.NonEmpty
@@ -223,19 +230,68 @@ library
                      , Hasura.Logging
                      , Network.URI.Extended
                      , Ops
-                     , TH
 
   other-modules:       Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
 
+  default-extensions: EmptyCase
+                      FlexibleContexts
+                      FlexibleInstances
+                      InstanceSigs
+                      MultiParamTypeClasses
+                      LambdaCase
+                      MultiWayIf
+                      TupleSections
+                      DeriveFoldable
+                      DeriveFunctor
+                      DeriveGeneric
+                      DeriveLift
+                      DeriveTraversable
+                      GeneralizedNewtypeDeriving
+                      BangPatterns
+                      OverloadedStrings
+                      ScopedTypeVariables
+                      TemplateHaskell
+                      QuasiQuotes
+                      TypeFamilies
+                      NoImplicitPrelude
+
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
+  if flag(local-console)
+    cpp-options: -DLocalConsole
 
-  ghc-options: -O2 -Wall
+  ghc-options: -O2
+               -Wall
+               -Wcompat
+               -Wincomplete-record-updates
+               -Wincomplete-uni-patterns
+               -Wredundant-constraints
 
 executable graphql-engine
-  default-extensions:  NoImplicitPrelude
+  default-extensions: EmptyCase
+                      FlexibleContexts
+                      FlexibleInstances
+                      InstanceSigs
+                      MultiParamTypeClasses
+                      LambdaCase
+                      MultiWayIf
+                      TupleSections
+                      DeriveFoldable
+                      DeriveFunctor
+                      DeriveGeneric
+                      DeriveLift
+                      DeriveTraversable
+                      GeneralizedNewtypeDeriving
+                      BangPatterns
+                      OverloadedStrings
+                      ScopedTypeVariables
+                      TemplateHaskell
+                      QuasiQuotes
+                      TypeFamilies
+                      NoImplicitPrelude
+
   main-is:           Main.hs
   default-language:  Haskell2010
   hs-source-dirs:    src-exec
@@ -260,7 +316,6 @@ executable graphql-engine
                      , string-conversions
 
   other-modules:     Ops
-                     TH
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries

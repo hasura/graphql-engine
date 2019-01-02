@@ -10,7 +10,6 @@ SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
@@ -19,18 +18,18 @@ SET row_security = off;
 -- Data for Name: poll; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.poll (id, created_at, created_by, question) VALUES ('98277113-a7a2-428c-9c8b-0fe7a91bf42c', '2018-08-16 12:35:44.202376+00', NULL, 'Who''ll win the Men''s Singles Championship at US Open 2018?');
+INSERT INTO public.poll (id, created_at, created_by, question) VALUES ('98277113-a7a2-428c-9c8b-0fe7a91bf42c', '2018-08-16 12:35:44.202376+00', NULL, 'What''s your favourite frontend framework?');
 
 
 --
 -- Data for Name: option; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.option (id, poll_id, text) VALUES ('c44f6201-8095-421c-bfcd-b9eb8713ca84', '98277113-a7a2-428c-9c8b-0fe7a91bf42c', 'Roger Federer');
-INSERT INTO public.option (id, poll_id, text) VALUES ('88b78394-cdab-4b5c-a59a-0ed90c4848cf', '98277113-a7a2-428c-9c8b-0fe7a91bf42c', 'Rafael Nadal');
-INSERT INTO public.option (id, poll_id, text) VALUES ('1c6477bc-fb30-4eb8-b7a2-c6855da8a4f1', '98277113-a7a2-428c-9c8b-0fe7a91bf42c', 'Juan Martín del Potro');
-INSERT INTO public.option (id, poll_id, text) VALUES ('10710f03-3124-42ac-a9bd-eb8d4661657f', '98277113-a7a2-428c-9c8b-0fe7a91bf42c', 'Novak Djokovic');
-INSERT INTO public.option (id, poll_id, text) VALUES ('3d10e209-e906-4849-92cd-88bdd18f5b63', '98277113-a7a2-428c-9c8b-0fe7a91bf42c', 'Alexander Zverev');
+INSERT INTO public.option (id, poll_id, text) VALUES ('c44f6201-8095-421c-bfcd-b9eb8713ca84', '98277113-a7a2-428c-9c8b-0fe7a91bf42c', 'React');
+INSERT INTO public.option (id, poll_id, text) VALUES ('88b78394-cdab-4b5c-a59a-0ed90c4848cf', '98277113-a7a2-428c-9c8b-0fe7a91bf42c', 'Vue');
+INSERT INTO public.option (id, poll_id, text) VALUES ('1c6477bc-fb30-4eb8-b7a2-c6855da8a4f1', '98277113-a7a2-428c-9c8b-0fe7a91bf42c', 'Angular');
+INSERT INTO public.option (id, poll_id, text) VALUES ('10710f03-3124-42ac-a9bd-eb8d4661657f', '98277113-a7a2-428c-9c8b-0fe7a91bf42c', 'Ember');
+INSERT INTO public.option (id, poll_id, text) VALUES ('3d10e209-e906-4849-92cd-88bdd18f5b63', '98277113-a7a2-428c-9c8b-0fe7a91bf42c', 'vanilla-js.com');
 
 
 --

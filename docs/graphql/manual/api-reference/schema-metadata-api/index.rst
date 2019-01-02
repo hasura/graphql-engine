@@ -1,6 +1,11 @@
 Schema/Metadata API Reference
 =============================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The Schema/Metadata API provides the following features:
 
 1. Execute SQL on the underlying Postgres database, supports schema modifying actions.
@@ -13,8 +18,8 @@ Endpoint
 
 All requests are ``POST`` requests to the ``/v1/query`` endpoint.
 
-Request
--------
+Request structure
+-----------------
 
 .. code-block:: http
 
@@ -133,7 +138,7 @@ The various types of queries are listed in the following table:
      - :ref:`delete_event_trigger_args <delete_event_trigger_syntax>`
      - Delete existing event trigger
 
-**See**
+**See:**
 
 - :doc:`Run SQL <run-sql>`
 - :doc:`Tables/Views <table-view>`

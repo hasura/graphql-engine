@@ -1,0 +1,19 @@
+description: Simple2 GraphQL mutation
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    createUser:
+      user:
+        username: foobar
+        id: 123
+query:
+  query: |
+    mutation {
+      createUser(id: 123, username: "foobar") {
+        user {
+          id
+          username
+        }
+      }
+    }

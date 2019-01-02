@@ -1,12 +1,4 @@
-{-# LANGUAGE DeriveLift             #-}
-{-# LANGUAGE FlexibleContexts       #-}
-{-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE LambdaCase             #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
-{-# LANGUAGE OverloadedStrings      #-}
-{-# LANGUAGE QuasiQuotes            #-}
 {-# LANGUAGE RankNTypes             #-}
-{-# LANGUAGE TemplateHaskell        #-}
 {-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
@@ -163,11 +155,6 @@ data CreatePermP1Res a
   , cprDeps :: ![SchemaDependency]
   } deriving (Show, Eq)
 
-createPermP1 :: (P1C m) => QualifiedTable -> m TableInfo
-createPermP1 tn = do
-  adminOnly
-  askTabInfo tn
-
 procBoolExp
   :: (QErrM m, CacheRM m)
   => QualifiedTable -> FieldInfoMap -> BoolExp
@@ -257,7 +244,7 @@ class (ToJSON a) => IsPerm a where
     -> m (WithDeps (PermInfo a))
 
   addPermP2Setup
-    :: (MonadTx m, QErrM m) => QualifiedTable -> PermDef a -> PermInfo a -> m ()
+    :: (MonadTx m) => QualifiedTable -> PermDef a -> PermInfo a -> m ()
 
   buildDropPermP1Res
     :: (QErrM m, CacheRM m, UserInfoM m)
@@ -305,22 +292,30 @@ addPermP2 tn pd (permInfo, deps) = do
     pa = getPermAcc1 pd
     pt = permAccToType pa
 
-instance (IsPerm a) => HDBQuery (CreatePerm a) where
+createPermP1
+  :: ( UserInfoM m, MonadError QErr m
+     , CacheRM m, IsPerm a
+     )
+  => WithTable (PermDef a) -> m (WithDeps (PermInfo a))
+createPermP1 (WithTable tn pd) = do
+  adminOnly
+  tabInfo <- askTabInfo tn
+  validateViewPerm pd tabInfo
+  addPermP1 tabInfo pd
 
-  type Phase1Res (CreatePerm a) = WithDeps (PermInfo a)
+runCreatePerm
+  :: ( UserInfoM m
+     , CacheRWM m, IsPerm a, MonadTx m
+     )
+  => CreatePerm a -> m RespBody
+runCreatePerm defn@(WithTable tn pd) = do
+  permInfo <- createPermP1 defn
+  addPermP2 tn pd permInfo
+  return successMsg
 
-  phaseOne (WithTable tn pd) = do
-    tabInfo <- createPermP1 tn
-    validateViewPerm pd tabInfo
-    addPermP1 tabInfo pd
-
-  phaseTwo (WithTable tn pd) permInfo = do
-    addPermP2 tn pd permInfo
-    return successMsg
-
-  schemaCachePolicy = SCPReload
-
-dropPermP1 :: (QErrM m, CacheRM m, UserInfoM m, IsPerm a) => DropPerm a -> m (PermInfo a)
+dropPermP1
+  :: (QErrM m, CacheRM m, UserInfoM m, IsPerm a)
+  => DropPerm a -> m (PermInfo a)
 dropPermP1 dp@(DropPerm tn rn) = do
   adminOnly
   tabInfo <- askTabInfo tn
@@ -337,12 +332,20 @@ dropPermP2 dp@(DropPerm tn rn) p1Res = do
     pa = getPermAcc2 dp
     pt = permAccToType pa
 
-instance (IsPerm a) => HDBQuery (DropPerm a) where
+runDropPerm
+  :: (IsPerm a, UserInfoM m, CacheRWM m, MonadTx m)
+  => DropPerm a -> m RespBody
+runDropPerm defn = do
+  permInfo <- buildDropPermP1Res defn
+  dropPermP2 defn permInfo
+  return successMsg
 
-  type Phase1Res (DropPerm a) = DropPermP1Res a
+-- instance (IsPerm a) => HDBQuery (DropPerm a) where
 
-  phaseOne = buildDropPermP1Res
+--   type Phase1Res (DropPerm a) = DropPermP1Res a
 
-  phaseTwo dp p1Res = dropPermP2 dp p1Res >> return successMsg
+--   phaseOne = buildDropPermP1Res
 
-  schemaCachePolicy = SCPReload
+--   phaseTwo dp p1Res = dropPermP2 dp p1Res >> return successMsg
+
+--   schemaCachePolicy = SCPReload

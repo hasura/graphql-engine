@@ -1,6 +1,11 @@
 Setting default values for fields using Postgres defaults
 =========================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 You can set values of certain fields automatically when not explicitly passed to a fixed value, e.g. true for a boolean
 field, or output of a simple SQL function, e.g. now() for a timestamp field, by setting column default values in the
 table definition.
@@ -12,8 +17,8 @@ table definition.
 **Example:** Say we have a field ``created_at`` in a table ``article`` which we want to be set to the current
 timestamp whenever a new row is added to the table:
 
-1) Modify the table
-^^^^^^^^^^^^^^^^^^^
+Step 1: Modify the table
+------------------------
 
 Edit the ``created_at`` field and set its Default value as the SQL function ``now()``.
 
@@ -38,16 +43,16 @@ Open the console and head to ``Data -> article -> Modify``:
   Now set the default value of the ``roll_number`` field as ``nextval('roll_number_seq')``.
 
 
-2) Run an insert mutation
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 2: Run an insert mutation
+------------------------------
 
 Now if you do not pass the ``created_at`` field value while running an insert mutation on the ``article`` table, its
 value will be set automatically by Postgres.
 
 .. image:: ../../../../img/graphql/manual/schema/default-value-response.png
 
-Also see:
-^^^^^^^^^
+Also see
+--------
 
 - :doc:`sql-functions`
 - :doc:`column-presets`

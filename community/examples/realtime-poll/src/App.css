@@ -106,3 +106,7 @@ pre
         display: block;
     }
 }
+
+.hasura-logo img {
+  margin-bottom: 12px;
+}

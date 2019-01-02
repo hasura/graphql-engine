@@ -209,3 +209,23 @@ args:
       - received_at: '2018-09-21T09:39:44Z'
       - received_at: '2018-09-21T09:40:44Z'
         delivered_at: '2018-09-21T09:50:44Z'
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "uuid_test" (
+        id serial primary key,
+        uuid_col UUID NOT NULL
+      )
+- type: track_table
+  args:
+    name: uuid_test
+    schema: public
+
+- type: insert
+  args:
+    table: uuid_test
+    objects:
+    - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e5
+    - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e6
+    - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e7

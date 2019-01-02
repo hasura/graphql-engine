@@ -1,0 +1,3 @@
+- args:
+    sql: DROP TABLE public."message"
+  type: run_sql

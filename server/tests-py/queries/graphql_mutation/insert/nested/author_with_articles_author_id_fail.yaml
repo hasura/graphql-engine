@@ -3,9 +3,10 @@ url: /v1alpha1/graphql
 status: 400
 response:
   errors:
-  - path: $.selectionSet.insert_author.args.objects[0].articles.data[0]
-    error: cannot insert author_id columns as their values are already being determined by parent insert
-    code: validation-failed
+  - extensions:
+      code: validation-failed
+      path: $.selectionSet.insert_author.args.objects[0].articles.data[0]
+    message: "cannot insert \"author_id\" columns as their values are already being determined by parent insert"
 query:
   query: |
    mutation nested_author_insert {

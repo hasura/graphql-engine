@@ -12,16 +12,20 @@ const componentsSemver = {
   schemaStitching: '1.0.0-alpha30',
   webhookEnvSupport: '1.0.0-alpha29',
   insertPermRestrictColumns: '1.0.0-alpha28',
+  permHideUpsertSection: '1.0.0-alpha32',
 };
 
 const getPreRelease = version => {
   const prerelease = semver.prerelease(version);
+  if (!prerelease) {
+    return '';
+  }
   if (prerelease.length === 1) {
     const regex = /(alpha|beta)(\d+)/gm;
     const str = prerelease[0];
     const m = regex.exec(str);
     if (m.length < 3) {
-      return [];
+      return '';
     }
     return m.slice(1, 3);
   }
@@ -30,14 +34,12 @@ const getPreRelease = version => {
 
 const semverCheck = (component, serverVersion) => {
   if (component in componentsSemver) {
-    const componentCoerce = semver.valid(
-      semver.coerce(componentsSemver[component])
-    );
+    const componentCoerce = semver.valid(componentsSemver[component]);
     if (componentCoerce == null) {
       return false;
     }
 
-    const serverCoerce = semver.valid(semver.coerce(serverVersion));
+    const serverCoerce = semver.valid(serverVersion);
     if (serverCoerce == null) {
       return true;
     }

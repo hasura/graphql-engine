@@ -16,6 +16,15 @@
     <link rel="shortcut icon" type="image/png" href="favicon.png"/>
 
     <title>ETL demo using Hasura GraphQL Engine Event Triggers</title>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-129818961-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-129818961-1');
+    </script>
   </head>
   <body class="main">
 
@@ -69,7 +78,7 @@
             <div id="pagination"></div>
           </main>
           <div class="pt-2">
-            <a href="https://github.com/shahidhk/hasura-serverless-etl#architecture" target="_blank">
+            <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/serverless-etl#architecture" target="_blank">
               <img class="col-6 img-fluid" src="arch.png" />
             </a>
           </div>
@@ -82,17 +91,17 @@
       <div class="main-content">
         <div class="hasura-logo">
           <a href="https://hasura.io" target="_blank">
-            Powered by <img src="hasura_logo.png" />
+            <img class="hasura-logo" alt="hasura logo" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white_200px.png" />
           </a>
           &nbsp; | &nbsp;
-          <a href="#" target="_blank" id="hge-console-link">
-            Database
+          <a href="/console" target="_blank" id="hge-console-link">
+            Backend
           </a>
           &nbsp; | &nbsp;
-          <a href="https://github.com/shahidhk/hasura-serverless-etl" target="_blank">
+          <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/serverless-etl" target="_blank">
             Source
           </a>
-          <!-- <div class="footer-small-text"><span>(The database resets every 30 minutes)</span></div> -->
+          <div class="footer-small-text"><span>(The database resets every 24 hours)</span></div>
         </div>
       </div>
     </footer>

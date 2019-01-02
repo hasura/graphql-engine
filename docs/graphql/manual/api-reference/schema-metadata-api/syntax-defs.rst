@@ -1,6 +1,11 @@
 Schema/Metadata API reference: Syntax definitions
 =================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 
 .. _TableName:
 

@@ -3,6 +3,11 @@
 Auth0 JWT Integration with Hasura GraphQL engine
 ================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 In this guide, we will walk-through on how to set up Auth0 to work with Hasura GraphQL engine.
 
 Create an Auth0 Application

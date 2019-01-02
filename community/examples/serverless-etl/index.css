@@ -125,3 +125,8 @@ img.algolia_image {
 .algolia_search_attribution {
     font-size: 0.8em;
 }
+
+.hasura-logo img {
+    height: 30px;
+    margin-bottom: 12px;
+}

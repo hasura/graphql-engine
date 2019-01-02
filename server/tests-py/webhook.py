@@ -15,9 +15,10 @@ import sys
 
 class S(http.server.BaseHTTPRequestHandler):
 
-    def do_GET(self):
-        if 'Authorization' in self.headers:
-            auth = self.headers['Authorization']
+
+    def handle_headers(self, headers):
+        if 'Authorization' in headers:
+            auth = headers['Authorization']
             h = dict()
             if auth.startswith("Bearer "):
                 try:
@@ -43,6 +44,18 @@ class S(http.server.BaseHTTPRequestHandler):
             self.send_response(401)
             self.end_headers()
             print ('forbidden')
+
+    def do_GET(self):
+        self.handle_headers(self.headers)
+
+    def do_POST(self):
+        content_len = self.headers.get('Content-Length')
+        req_body = self.rfile.read(int(content_len)).decode("utf-8")
+        req_json = json.loads(req_body)
+        if 'headers' in req_json:
+            self.handle_headers(req_json['headers'])
+        else:
+            self.handler_headers({})
 
 def run(keyfile, certfile, server_class=http.server.HTTPServer, handler_class=S, port=9090):
     server_address = ('', port)

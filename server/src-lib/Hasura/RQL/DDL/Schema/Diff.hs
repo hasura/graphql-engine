@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
 module Hasura.RQL.DDL.Schema.Diff
   ( TableMeta(..)
   , PGColMeta(..)
@@ -63,7 +58,7 @@ fetchTableMeta = do
         t.table_schema,
         t.table_name,
         t.table_oid,
-        c.columns,
+        coalesce(c.columns, '[]') as columns,
         coalesce(f.constraints, '[]') as constraints
     FROM
         (SELECT
@@ -77,7 +72,7 @@ fetchTableMeta = do
            ON
              c.relnamespace = n.oid
         ) t
-        INNER JOIN
+        LEFT OUTER JOIN
         (SELECT
              table_schema,
              table_name,
@@ -153,7 +148,9 @@ getTableDiff oldtm newtm =
       map cmConstraintName $ getDifference cmConstraintOid
       (tmConstraints oldtm) (tmConstraints newtm)
 
-getTableChangeDeps :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => TableInfo -> TableDiff -> m [SchemaObjId]
+getTableChangeDeps
+  :: (QErrM m, CacheRWM m)
+  => TableInfo -> TableDiff -> m [SchemaObjId]
 getTableChangeDeps ti tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
@@ -184,7 +181,9 @@ getSchemaDiff oldMeta newMeta =
       flip map (getOverlap tmOid oldMeta newMeta) $ \(oldtm, newtm) ->
       (tmTable oldtm, getTableDiff oldtm newtm)
 
-getSchemaChangeDeps :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => SchemaDiff -> m [SchemaObjId]
+getSchemaChangeDeps
+  :: (QErrM m, CacheRWM m)
+  => SchemaDiff -> m [SchemaObjId]
 getSchemaChangeDeps schemaDiff = do
   -- Get schema cache
   sc <- askSchemaCache
