@@ -169,11 +169,9 @@ isValidField = \case
     isRelEligible rn rt = isValidName (G.Name $ getRelTxt rn)
                           && isValidTableName rt
 
-upsertable :: [TableConstraint] -> Bool -> Bool -> Bool
-upsertable constraints isUpsertAllowed view =
+upsertable :: [ConstraintName] -> Bool -> Bool -> Bool
+upsertable uniqueOrPrimaryCons isUpsertAllowed view =
   not (null uniqueOrPrimaryCons) && isUpsertAllowed && not view
-  where
-    uniqueOrPrimaryCons = filter isUniqueOrPrimary constraints
 
 toValidFieldInfos :: FieldInfoMap -> [FieldInfo]
 toValidFieldInfos = filter isValidField . Map.elems
@@ -187,11 +185,9 @@ getValidCols = fst . validPartitionFieldInfoMap
 getValidRels :: FieldInfoMap -> [RelInfo]
 getValidRels = snd . validPartitionFieldInfoMap
 
-mkValidConstraints :: [TableConstraint] -> [TableConstraint]
-mkValidConstraints = filter isValid
-  where
-    isValid (TableConstraint _ n) =
-      isValidName $ G.Name $ getConstraintTxt n
+mkValidConstraints :: [ConstraintName] -> [ConstraintName]
+mkValidConstraints =
+  filter (isValidName . G.Name . getConstraintTxt)
 
 isRelNullable :: FieldInfoMap -> RelInfo -> Bool
 isRelNullable fim ri = isNullable
@@ -1056,11 +1052,11 @@ mkInsMutFld tn isUpsertable =
     onConflictArg =
       InpValInfo (Just onConflictDesc) "on_conflict" $ G.toGT $ mkOnConflictInpTy tn
 
-mkConstriantTy :: QualifiedTable -> [TableConstraint] -> EnumTyInfo
+mkConstriantTy :: QualifiedTable -> [ConstraintName] -> EnumTyInfo
 mkConstriantTy tn cons = enumTyInfo
   where
     enumTyInfo = mkHsraEnumTyInfo (Just desc) (mkConstraintInpTy tn) $
-                 mapFromL _eviVal $ map (mkConstraintEnumVal . tcName ) cons
+                 mapFromL _eviVal $ map mkConstraintEnumVal cons
 
     desc = G.Description $
       "unique or primary key constraints on table " <>> tn
@@ -1258,16 +1254,15 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
 --   mappend  = (<>)
 
 mkOnConflictTypes
-  :: QualifiedTable -> [TableConstraint] -> [PGCol] -> Bool -> [TypeInfo]
-mkOnConflictTypes tn c cols =
+  :: QualifiedTable -> [ConstraintName] -> [PGCol] -> Bool -> [TypeInfo]
+mkOnConflictTypes tn uniqueOrPrimaryCons cols =
   bool [] tyInfos
   where
     tyInfos = [ TIEnum $ mkConflictActionTy isUpdAllowed
-              , TIEnum $ mkConstriantTy tn constraints
+              , TIEnum $ mkConstriantTy tn uniqueOrPrimaryCons
               , TIEnum $ mkUpdColumnTy tn cols
               , TIInpObj $ mkOnConflictInp tn
               ]
-    constraints = filter isUniqueOrPrimary c
     isUpdAllowed = not $ null cols
 
 mkGCtxRole'
@@ -1283,7 +1278,7 @@ mkGCtxRole'
   -- primary key columns
   -> [PGColInfo]
   -- constraints
-  -> [TableConstraint]
+  -> [ConstraintName]
   -> Maybe ViewInfo
   -> TyAgg
 mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM =
@@ -1433,7 +1428,7 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM =
 getRootFldsRole'
   :: QualifiedTable
   -> [PGCol]
-  -> [TableConstraint]
+  -> [ConstraintName]
   -> FieldInfoMap
   -> Maybe ([T.Text], Bool) -- insert perm
   -> Maybe (AnnBoolExpSQL, Maybe Int, [T.Text], Bool) -- select filter
@@ -1576,7 +1571,7 @@ mkGCtxRole
   -> QualifiedTable
   -> FieldInfoMap
   -> [PGCol]
-  -> [TableConstraint]
+  -> [ConstraintName]
   -> Maybe ViewInfo
   -> RoleName
   -> RolePermInfo
@@ -1601,7 +1596,7 @@ mkGCtxRole tableCache tn fields pCols constraints viM role permInfo = do
 getRootFldsRole
   :: QualifiedTable
   -> [PGCol]
-  -> [TableConstraint]
+  -> [ConstraintName]
   -> FieldInfoMap
   -> Maybe ViewInfo
   -> RolePermInfo
@@ -1671,7 +1666,7 @@ checkSchemaConflicts gCtx remoteCtx = do
                     (\k _ -> G.unNamedType k `notElem` builtinTy ++ rmRootNames)
                     $ _gTypes remoteCtx
 
-      isTyInfoSame ty = any (\t -> tyinfoEq t ty) hTypes
+      isTyInfoSame ty = any (`tyinfoEq` ty) hTypes
       -- name is same and structure is not same
       isSame n ty = G.unNamedType n `elem` hTyNames &&
                     not (isTyInfoSame ty)
