@@ -20,7 +20,8 @@ import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
 import           Hasura.Events.Lib
-import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
+import           Hasura.Logging             (Logger (..), defaultLoggerSettings,
+                                             mkLogger, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types           (QErr, adminUserInfo,
@@ -63,7 +64,6 @@ parseHGECommand =
                 <$> parseServerPort
                 <*> parseConnParams
                 <*> parseTxIsolation
-                <*> parseRootDir
                 <*> parseAccessKey
                 <*> parseWebHook
                 <*> parseJwtSecret
@@ -91,44 +91,37 @@ printJSON = BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a) => a -> IO ()
 printYaml = BC.putStrLn . Y.encode
 
-procConnInfo :: RawConnInfo -> IO Q.ConnInfo
-procConnInfo rci = do
-  ci <- either (printErrExit . connInfoErrModifier)
-        return $ mkConnInfo rci
-  printConnInfo ci
-  return ci
-  where
-    printConnInfo ci =
-      putStrLn $
-        "Postgres connection info:"
-        ++ "\n    Host: " ++ Q.connHost ci
-        ++ "\n    Port: " ++ show (Q.connPort ci)
-        ++ "\n    User: " ++ Q.connUser ci
-        ++ "\n    Database: " ++ Q.connDatabase ci
-
 main :: IO ()
 main =  do
   (HGEOptionsG rci hgeCmd) <- parseArgs
   -- global http manager
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
+  loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
+  let logger = mkLogger loggerCtx
   case hgeCmd of
-    HCServe (ServeOptions port cp isoL mRootDir mAccessKey mAuthHook mJwtSecret
+    HCServe so@(ServeOptions port cp isoL mAccessKey mAuthHook mJwtSecret
              mUnAuthRole corsCfg enableConsole) -> do
-      loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
+      -- log serve options
+      unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
 
       authModeRes <- runExceptT $ mkAuthMode mAccessKey mAuthHook mJwtSecret
                                              mUnAuthRole httpManager loggerCtx
 
       am <- either (printErrExit . T.unpack) return authModeRes
+
       ci <- procConnInfo rci
-      initialise ci httpManager
+      -- log postgres connection info
+      unLogger logger $ connInfoToLog ci
+      -- safe init catalog
+      initialise logger ci httpManager
       -- migrate catalog if necessary
-      migrate ci httpManager
-      prepareEvents ci
+      migrate logger ci httpManager
+      -- prepare event triggers data
+      prepareEvents logger ci
+
       pool <- Q.initPGPool ci cp
-      putStrLn $ "server: running on port " ++ show port
-      (app, cacheRef) <- mkWaiApp isoL mRootDir loggerCtx pool httpManager
+      (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
                          am corsCfg enableConsole
       let warpSettings = Warp.setPort port Warp.defaultSettings
                          -- Warp.setHost "*" Warp.defaultSettings
@@ -143,23 +136,30 @@ main =  do
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
       httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
 
+      unLogger logger $
+        mkGenericStrLog "event_triggers" "starting workers"
       void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpSession pool cacheRef eventEngineCtx
 
+      unLogger logger $
+        mkGenericStrLog "server" "starting API server"
       Warp.runSettings warpSettings app
 
     HCExport -> do
       ci <- procConnInfo rci
       res <- runTx ci fetchMetadata
       either printErrJExit printJSON res
+
     HCClean -> do
       ci <- procConnInfo rci
       res <- runTx ci cleanCatalog
       either printErrJExit (const cleanSuccess) res
+
     HCExecute -> do
       queryBs <- BL.getContents
       ci <- procConnInfo rci
       res <- runAsAdmin ci httpManager $ execQuery queryBs
       either printErrJExit BLC.putStrLn res
+
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where
     runTx :: Q.ConnInfo -> Q.TxE QErr a -> IO (Either QErr a)
@@ -172,19 +172,27 @@ main =  do
       res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
               httpManager pool Q.Serializable m
       return $ fmap fst res
+
+    procConnInfo rci =
+      either (printErrExit . connInfoErrModifier) return $
+        mkConnInfo rci
+
     getMinimalPool ci = do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
       Q.initPGPool ci connParams
-    initialise ci httpMgr = do
+
+    initialise (Logger logger) ci httpMgr = do
       currentTime <- getCurrentTime
       res <- runAsAdmin ci httpMgr $ initCatalogSafe currentTime
-      either printErrJExit putStrLn res
-    migrate ci httpMgr = do
+      either printErrJExit (logger . mkGenericStrLog "db_init") res
+
+    migrate (Logger logger) ci httpMgr = do
       currentTime <- getCurrentTime
       res <- runAsAdmin ci httpMgr $ migrateCatalog currentTime
-      either printErrJExit putStrLn res
-    prepareEvents ci = do
-      putStrLn "event_triggers: preparing data"
+      either printErrJExit (logger . mkGenericStrLog "db_migrate") res
+
+    prepareEvents (Logger logger) ci = do
+      logger $ mkGenericStrLog "event_triggers" "preparing data"
       res <- runTx ci unlockAllEvents
       either printErrJExit return res
 
@@ -197,4 +205,5 @@ main =  do
           eRes = maybe (Left $ "Wrong expected type for environment variable: " <> env) Right mRes
       either printErrExit return eRes
 
-    cleanSuccess = putStrLn "successfully cleaned graphql-engine related data"
+    cleanSuccess =
+      putStrLn "successfully cleaned graphql-engine related data"

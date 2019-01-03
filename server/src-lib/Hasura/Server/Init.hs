@@ -5,13 +5,16 @@ import qualified Database.PG.Query            as Q
 import           Options.Applicative
 import           System.Exit                  (exitFailure)
 
+import qualified Data.Aeson                   as J
 import qualified Data.Text                    as T
+import qualified Hasura.Logging               as L
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types             (RoleName (..))
 import           Hasura.Server.Auth
+import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 
 initErrExit :: (Show e) => e -> IO a
@@ -35,7 +38,6 @@ data RawServeOptions
   { rsoPort          :: !(Maybe Int)
   , rsoConnParams    :: !RawConnParams
   , rsoTxIso         :: !(Maybe Q.TxIsolation)
-  , rsoRootDir       :: !(Maybe String)
   , rsoAccessKey     :: !(Maybe AccessKey)
   , rsoAuthHook      :: !RawAuthHook
   , rsoJwtSecret     :: !(Maybe Text)
@@ -58,7 +60,6 @@ data ServeOptions
   { soPort          :: !Int
   , soConnParams    :: !Q.ConnParams
   , soTxIso         :: !Q.TxIsolation
-  , soRootDir       :: !(Maybe String)
   , soAccessKey     :: !(Maybe AccessKey)
   , soAuthHook      :: !(Maybe AuthHook)
   , soJwtSecret     :: !(Maybe Text)
@@ -204,7 +205,6 @@ mkServeOptions rso = do
   connParams <- mkConnParams $ rsoConnParams rso
   txIso <- fromMaybe Q.ReadCommitted <$>
            withEnv (rsoTxIso rso) (fst txIsoEnv)
-  rootDir <- withEnv (rsoRootDir rso) $ fst rootDirEnv
   accKey <- withEnv (rsoAccessKey rso) $ fst accessKeyEnv
   authHook <- mkAuthHook $ rsoAuthHook rso
   jwtSecr <- withEnv (rsoJwtSecret rso) $ fst jwtSecretEnv
@@ -212,7 +212,7 @@ mkServeOptions rso = do
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <- withEnvBool (rsoEnableConsole rso) $
                    fst enableConsoleEnv
-  return $ ServeOptions port connParams txIso rootDir accKey authHook
+  return $ ServeOptions port connParams txIso accKey authHook
                         jwtSecr unAuthRole corsCfg enableConsole
   where
     mkConnParams (RawConnParams s c i) = do
@@ -303,7 +303,7 @@ serveCmdFooter =
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
       [ servePortEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
-      , txIsoEnv, rootDirEnv, accessKeyEnv, authHookEnv , authHookTypeEnv
+      , txIsoEnv, accessKeyEnv, authHookEnv , authHookTypeEnv
       , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv
       ]
 
@@ -344,11 +344,6 @@ txIsoEnv =
   ( "HASURA_GRAPHQL_TX_ISOLATION"
   , "transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)"
   )
-
-rootDirEnv :: (String, String)
-rootDirEnv =
-  ( "HASURA_GRAPHQL_ROOT_DIR"
-  , "this static dir is served at / and takes precedence over all routes")
 
 accessKeyEnv :: (String, String)
 accessKeyEnv =
@@ -465,15 +460,6 @@ parseTxIsolation = optional $
              help (snd txIsoEnv)
            )
 
-parseRootDir :: Parser (Maybe String)
-parseRootDir =
-  optional (strOption
-               ( long "root-dir" <>
-                 metavar "STATIC-DIR" <>
-                 help (snd rootDirEnv)
-               )
-             )
-
 parseConnParams :: Parser RawConnParams
 parseConnParams =
   RawConnParams <$> stripes <*> conns <*> timeout
@@ -582,3 +568,32 @@ parseEnableConsole =
   switch ( long "enable-console" <>
            help (snd enableConsoleEnv)
          )
+
+-- Init logging related
+connInfoToLog :: Q.ConnInfo -> StartupLog
+connInfoToLog (Q.ConnInfo host port user _ db _) =
+  StartupLog L.LevelInfo "postgres_connection" infoVal
+  where
+    infoVal = J.object [ "host" J..= host
+                       , "port" J..= port
+                       , "user" J..= user
+                       , "database" J..= db
+                       ]
+
+serveOptsToLog :: ServeOptions -> StartupLog
+serveOptsToLog so =
+  StartupLog L.LevelInfo "serve_options" infoVal
+  where
+    infoVal = J.object [ "port" J..= soPort so
+                       , "accesskey_set" J..= isJust (soAccessKey so)
+                       , "auth_hook" J..= (ahUrl <$> soAuthHook so)
+                       , "auth_hook_mode" J..= (show . ahType <$> soAuthHook so)
+                       , "unauth_role" J..= soUnAuthRole so
+                       , "cors_domain" J..= (ccDomain . soCorsConfig) so
+                       , "cors_disabled" J..= (ccDisabled . soCorsConfig) so
+                       , "enable_console" J..= soEnableConsole so
+                       ]
+
+mkGenericStrLog :: T.Text -> String -> StartupLog
+mkGenericStrLog k msg =
+  StartupLog L.LevelInfo k $ J.toJSON msg

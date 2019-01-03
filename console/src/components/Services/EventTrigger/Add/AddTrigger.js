@@ -267,9 +267,9 @@ class AddTrigger extends Component {
           return (
             <div
               key={i}
-              className={styles.display_inline + ' ' + styles.add_mar_right}
+              className={styles.noPadd + ' col-md-4'}
             >
-              <div className="checkbox">
+              <div className={'checkbox '}>
                 <label>
                   {inputHtml}
                   {column}
@@ -295,7 +295,7 @@ class AddTrigger extends Component {
           </OverlayTrigger>{' '}
         </h4>
         {selectedOperations.update ? (
-          <div>{getColumnList('update')}</div>
+          <div className={styles.clearBoth + ' ' + styles.listenColumnWrapper}> {getColumnList('update')} </div>
         ) : (
           <div>
             <div
@@ -671,12 +671,12 @@ class AddTrigger extends Component {
                     ' ' +
                     styles.add_mar_bottom +
                     ' ' +
-                    styles.add_mar_top
+                    styles.add_mar_top + ' ' + styles.wd100
                   }
                 >
                   {tableName ? advancedColumnSection : null}
                   <div
-                    className={styles.add_mar_bottom + ' ' + styles.add_mar_top}
+                    className={styles.add_mar_bottom + ' ' + styles.add_mar_top + ' ' + styles.wd100}
                   >
                     <h4 className={styles.subheading_text}>Retry Logic</h4>
                     <div
@@ -725,7 +725,7 @@ class AddTrigger extends Component {
                     </div>
                   </div>
                   <div
-                    className={styles.add_mar_bottom + ' ' + styles.add_mar_top}
+                    className={styles.add_mar_bottom + ' ' + styles.add_mar_top + ' ' + styles.wd100}
                   >
                     <h4 className={styles.subheading_text}>Headers</h4>
                     {heads}
