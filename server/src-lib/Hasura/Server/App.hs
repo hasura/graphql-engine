@@ -58,16 +58,20 @@ isAccessKeySet :: AuthMode -> T.Text
 isAccessKeySet AMNoAuth = "false"
 isAccessKeySet _        = "true"
 
-mkConsoleHTML :: AuthMode -> IO T.Text
-mkConsoleHTML authMode =
-  bool (initErrExit errMsg) (return res) (null errs)
+mkConsoleHTML :: T.Text -> AuthMode -> Either String T.Text
+mkConsoleHTML path authMode =
+  bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
                    object [ "version" .= consoleVersion
                           , "isAccessKeySet" .= isAccessKeySet authMode
+                          , "consolePath" .= consolePath
                           ]
-    errMsg = "Fatal Error : console template rendering failed"
-             ++ show errs
+    consolePath = case path of
+      "" -> "/console"
+      r  -> "/console/" <> r
+
+    errMsg = "console template rendering failed: " ++ show errs
 
 data ServerCtx
   = ServerCtx
@@ -304,10 +308,7 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
       middleware $ corsMiddleware (mkDefaultCorsPolicy $ ccDomain corsCfg)
 
     -- API Console and Root Dir
-    if enableConsole then do
-      consoleHTML <- lift $ mkConsoleHTML $ scAuthMode serverCtx
-      serveApiConsole consoleHTML
-    else maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
+    bool serveRootDir serveApiConsole enableConsole
 
     get "v1/version" $ do
       uncurry setHeader jsonHeader
@@ -339,11 +340,7 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
 
     hookAny GET $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
-      req <- request
-      reqBody <- liftIO $ strictRequestBody req
-      logError Nothing req reqBody serverCtx qErr
-      uncurry setHeader jsonHeader
-      lazyBytes $ encode qErr
+      raiseGenericApiError qErr
 
   where
     tmpltGetOrDeleteH tmpltName = do
@@ -365,6 +362,19 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
       v1QueryHandler $ RQExecuteQueryTemplate $
       ExecQueryTemplate (TQueryName tmpltName) tmpltArgs
 
-    serveApiConsole htmlFile = do
-      get root $ redirect "/console"
-      get ("console" <//> wildcard) $ const $ html htmlFile
+    raiseGenericApiError qErr = do
+      req <- request
+      reqBody <- liftIO $ strictRequestBody req
+      logError Nothing req reqBody serverCtx qErr
+      uncurry setHeader jsonHeader
+      setStatus $ qeStatus qErr
+      lazyBytes $ encode qErr
+
+    serveRootDir =
+      maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
+
+    serveApiConsole = do
+      get root $ redirect "console"
+      get ("console" <//> wildcard) $ \path ->
+        either (raiseGenericApiError . err500 Unexpected . T.pack) html $
+          mkConsoleHTML path $ scAuthMode serverCtx
