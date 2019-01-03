@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP        #-}
 {-# LANGUAGE DataKinds  #-}
 {-# LANGUAGE RankNTypes #-}
 
@@ -14,13 +15,15 @@ import           Network.Wai                            (requestHeaders,
 import           Web.Spock.Core
 
 import qualified Data.ByteString.Lazy                   as BL
+#ifdef LocalConsole
+import qualified Data.FileEmbed                         as FE
+#endif
 import qualified Data.HashMap.Strict                    as M
 import qualified Data.Text                              as T
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wai                            as Wai
 import qualified Network.Wai.Handler.WebSockets         as WS
-import qualified Network.Wai.Middleware.Static          as MS
 import qualified Network.WebSockets                     as WS
 import qualified Text.Mustache                          as M
 import qualified Text.Mustache.Compile                  as M
@@ -49,8 +52,6 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.SQL.Types
 
-
-
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
 
@@ -58,16 +59,29 @@ isAccessKeySet :: AuthMode -> T.Text
 isAccessKeySet AMNoAuth = "false"
 isAccessKeySet _        = "true"
 
-mkConsoleHTML :: AuthMode -> IO T.Text
-mkConsoleHTML authMode =
-  bool (initErrExit errMsg) (return res) (null errs)
+#ifdef LocalConsole
+consoleAssetsLoc :: Text
+consoleAssetsLoc = "/static"
+#else
+consoleAssetsLoc :: Text
+consoleAssetsLoc =
+  "https://storage.googleapis.com/hasura-graphql-engine/console/" <> consoleVersion
+#endif
+
+mkConsoleHTML :: T.Text -> AuthMode -> Either String T.Text
+mkConsoleHTML path authMode =
+  bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
-                   object [ "version" .= consoleVersion
-                          , "isAccessKeySet" .= isAccessKeySet authMode
-                          ]
-    errMsg = "Fatal Error : console template rendering failed"
-             ++ show errs
+                  object [ "consoleAssetsLoc" .= consoleAssetsLoc
+                         , "isAccessKeySet" .= isAccessKeySet authMode
+                         , "consolePath" .= consolePath
+                         ]
+    consolePath = case path of
+      "" -> "/console"
+      r  -> "/console/" <> r
+
+    errMsg = "console template rendering failed: " ++ show errs
 
 data ServerCtx
   = ServerCtx
@@ -264,7 +278,6 @@ legacyQueryHandler tn queryType =
 
 mkWaiApp
   :: Q.TxIsolation
-  -> Maybe String
   -> L.LoggerCtx
   -> Q.PGPool
   -> HTTP.Manager
@@ -272,7 +285,7 @@ mkWaiApp
   -> CorsConfig
   -> Bool
   -> IO (Wai.Application, IORef SchemaCache)
-mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole = do
+mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole = do
     cacheRef <- do
       pgResp <- runExceptT $
         peelRun emptySchemaCache adminUserInfo httpManager pool Q.Serializable $ do
@@ -287,7 +300,7 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
           cacheLock mode httpManager
 
     spockApp <- spockAsApp $ spockT id $
-                httpApp mRootDir corsCfg serverCtx enableConsole
+                httpApp corsCfg serverCtx enableConsole
 
     let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
 
@@ -295,19 +308,14 @@ mkWaiApp isoLevel mRootDir loggerCtx pool httpManager mode corsCfg enableConsole
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp, cacheRef)
 
-httpApp :: Maybe String -> CorsConfig -> ServerCtx -> Bool -> SpockT IO ()
-httpApp mRootDir corsCfg serverCtx enableConsole = do
-    liftIO $ putStrLn "HasuraDB is now waiting for connections"
-
+httpApp :: CorsConfig -> ServerCtx -> Bool -> SpockT IO ()
+httpApp corsCfg serverCtx enableConsole = do
     -- cors middleware
     unless (ccDisabled corsCfg) $
       middleware $ corsMiddleware (mkDefaultCorsPolicy $ ccDomain corsCfg)
 
     -- API Console and Root Dir
-    if enableConsole then do
-      consoleHTML <- lift $ mkConsoleHTML $ scAuthMode serverCtx
-      serveApiConsole consoleHTML
-    else maybe (return ()) (middleware . MS.staticPolicy . MS.addBase) mRootDir
+    when enableConsole serveApiConsole
 
     get "v1/version" $ do
       uncurry setHeader jsonHeader
@@ -339,11 +347,7 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
 
     hookAny GET $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
-      req <- request
-      reqBody <- liftIO $ strictRequestBody req
-      logError Nothing req reqBody serverCtx qErr
-      uncurry setHeader jsonHeader
-      lazyBytes $ encode qErr
+      raiseGenericApiError qErr
 
   where
     tmpltGetOrDeleteH tmpltName = do
@@ -365,6 +369,28 @@ httpApp mRootDir corsCfg serverCtx enableConsole = do
       v1QueryHandler $ RQExecuteQueryTemplate $
       ExecQueryTemplate (TQueryName tmpltName) tmpltArgs
 
-    serveApiConsole htmlFile = do
-      get root $ redirect "/console"
-      get ("console" <//> wildcard) $ const $ html htmlFile
+    raiseGenericApiError qErr = do
+      req <- request
+      reqBody <- liftIO $ strictRequestBody req
+      logError Nothing req reqBody serverCtx qErr
+      uncurry setHeader jsonHeader
+      setStatus $ qeStatus qErr
+      lazyBytes $ encode qErr
+
+    serveApiConsole = do
+      get root $ redirect "console"
+      get ("console" <//> wildcard) $ \path ->
+        either (raiseGenericApiError . err500 Unexpected . T.pack) html $
+          mkConsoleHTML path $ scAuthMode serverCtx
+
+#ifdef LocalConsole
+      get "static/main.js" $ do
+        setHeader "Content-Type" "text/javascript;charset=UTF-8"
+        bytes $(FE.embedFile "../console/static/dist/main.js")
+      get "static/main.css" $ do
+        setHeader "Content-Type" "text/css;charset=UTF-8"
+        bytes $(FE.embedFile "../console/static/dist/main.css")
+      get "static/vendor.js" $ do
+        setHeader "Content-Type" "text/javascript;charset=UTF-8"
+        bytes $(FE.embedFile "../console/static/dist/vendor.js")
+#endif

@@ -80,6 +80,17 @@ Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
             -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@host.docker.internal:port/dbname \
             -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
             hasura/graphql-engine:latest
+     
+    .. tab:: Docker for Windows
+
+       If your Postgres database is running on ``localhost``, use ``docker.for.win.localhost`` as hostname to access
+       the host's Postgres service. This is what your command should look like:
+
+       .. code-block:: bash
+          :emphasize-lines: 1
+
+          docker run -d -p 8080:8080 -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@docker.for.win.localhost:port/dbname -e HASURA_GRAPHQL_ENABLE_CONSOLE=true hasura/graphql-engine:latest
+          
 
 Step 3: Run the hasura docker container
 ---------------------------------------

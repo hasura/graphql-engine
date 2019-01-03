@@ -7,7 +7,8 @@ module Hasura.Server.Auth
   , mkAuthMode
   , AccessKey (..)
   , AuthHookType(..)
-  , AuthHook (..)
+  , AuthHookG (..)
+  , AuthHook
   -- JWT related
   , RawJWT
   , JWTConfig (..)
@@ -51,13 +52,19 @@ newtype AccessKey
 data AuthHookType
   = AHTGet
   | AHTPost
-  deriving (Show, Eq)
+  deriving (Eq)
 
-data AuthHook
-  = AuthHook
-  { ahUrl  :: !T.Text
-  , ahType :: !AuthHookType
+instance Show AuthHookType where
+  show AHTGet  = "GET"
+  show AHTPost = "POST"
+
+data AuthHookG a b
+  = AuthHookG
+  { ahUrl  :: !a
+  , ahType :: !b
   } deriving (Show, Eq)
+
+type AuthHook = AuthHookG T.Text AuthHookType
 
 data AuthMode
   = AMNoAuth
@@ -192,7 +199,7 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
   mkUserInfoFromResp logger urlT method status respBody
   where
     mkOptions = wreqOptions manager
-    AuthHook urlT ty = hook
+    AuthHookG urlT ty = hook
     isPost = case ty of
       AHTPost -> True
       AHTGet  -> False
