@@ -36,6 +36,17 @@ import {
 } from '../DataActions';
 import { showErrorNotification } from '../Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
+import {
+  INTEGER,
+  SERIAL,
+  BIGINT,
+  BIGSERIAL,
+  UUID,
+  JSON,
+  JSONB,
+  TIMESTAMP,
+  TIME,
+} from '../../../../constants';
 
 const appPrefix = '/data';
 
@@ -221,6 +232,70 @@ const ColumnEditor = ({
       </option>
     );
   }
+
+  const generateAlterOptions = datatypeOptions => {
+    return dataTypes.map(datatype => {
+      if (datatypeOptions.includes(datatype.value)) {
+        return (
+          <option
+            value={datatype.value}
+            key={datatype.name}
+            title={datatype.description}
+          >
+            {datatype.name}
+          </option>
+        );
+      }
+    });
+  };
+
+  const modifyAlterOptions = columntype => {
+    const integerOptions = [
+      'integer',
+      'serial',
+      'bigint',
+      'bigserial',
+      'numeric',
+      'text',
+    ];
+    const bigintOptions = ['bigint', 'bigserial', 'text', 'numeric'];
+    const uuidOptions = ['uuid', 'text'];
+    const jsonOptions = ['json', 'jsonb', 'text'];
+    const timestampOptions = ['timestamptz', 'text'];
+    const timeOptions = ['timetz', 'text'];
+    switch (columntype) {
+      case INTEGER:
+        return generateAlterOptions(integerOptions);
+
+      case SERIAL:
+        return generateAlterOptions(integerOptions);
+
+      case BIGINT:
+        return generateAlterOptions(bigintOptions);
+
+      case BIGSERIAL:
+        return generateAlterOptions(bigintOptions);
+
+      case UUID:
+        return generateAlterOptions(uuidOptions);
+
+      case JSON:
+        return generateAlterOptions(jsonOptions);
+
+      case JSONB:
+        return generateAlterOptions(jsonOptions);
+
+      case TIMESTAMP:
+        return generateAlterOptions(timestampOptions);
+
+      case TIME:
+        return generateAlterOptions(timeOptions);
+
+      default:
+        return generateAlterOptions([columntype, 'text']);
+    }
+  };
+
   return (
     <div className={`${styles.colEditor} container-fluid`}>
       <form
@@ -246,7 +321,7 @@ const ColumnEditor = ({
               defaultValue={finalDefaultValue}
               disabled={isPrimaryKey}
             >
-              {alterTypeOptions}
+              {modifyAlterOptions(column.data_type)}
               {additionalOptions}
             </select>
           </div>

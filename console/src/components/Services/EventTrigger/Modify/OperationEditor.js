@@ -68,11 +68,12 @@ class OperationEditor extends React.Component {
                       type="checkbox"
                       className={styles.opsCheckboxDisabled}
                       checked={Boolean(
-                        definition.update.columns.find(c => c === col)
+                        definition.update.columns.find(c => c === col.name)
                       )}
                       disabled
                     />
-                    {col}
+                    {col.name}
+                    <small className={styles.addPaddSmall}> ({col.type})</small>
                   </div>
                 ))
               ) : (
@@ -147,11 +148,12 @@ class OperationEditor extends React.Component {
                       }`}
                       checked={Boolean(
                         modifyTrigger.definition.update.columns.find(
-                          c => c === col
+                          c => c === col.name
                         )
                       )}
                     />
-                    {col}
+                    {col.name}
+                    <small className={styles.addPaddSmall}> ({col.type})</small>
                   </div>
                 ))
               ) : (
