@@ -122,9 +122,12 @@ const escapeRegExp = string => {
   return string.replace(/([.*+?^${}()|[\]\\])/g, '\\$1');
 };
 
-const getTableColumns = (tableSchema) => {
+const getTableColumns = tableSchema => {
   if (tableSchema) {
-    return tableSchema.columns.map(colObj => colObj.column_name);
+    return tableSchema.columns.map(colObj => ({
+      name: colObj.column_name,
+      type: colObj.udt_name,
+    }));
   }
   return [];
 };
@@ -136,5 +139,5 @@ export {
   getEdForm,
   getIngForm,
   escapeRegExp,
-  getTableColumns
+  getTableColumns,
 };

@@ -18,7 +18,25 @@
     width: 40%;
   }
 }
-
+.clearBoth
+{
+  clear: both;
+}
+.wd100
+{
+  width: 100%;
+  float: left;
+  clear: both;
+}
+.noPadd
+{
+  padding-left: 0;
+  padding-right: 0;
+}
+.listenColumnWrapper
+{
+  max-width: 700px;
+}
 .aceBlock {
   max-height: 300px;
   position: relative;

@@ -169,7 +169,7 @@ modifyHeadersCollapsedHeadings {
   flex-direction: row;
   align-items: center;
   flex: 1;
-  margin: 5px 0;
+  margin: 10px 0;
   input
   {
     margin-top: 0;
@@ -295,9 +295,13 @@ modifyHeadersCollapsedHeadings {
 }
 
 .tooltipIcon{
-  padding-left: 5px; 
+  padding-left: 5px;
 }
 
 .cursorPointer {
   cursor: pointer;
+}
+
+.addPaddSmall {
+  padding-left: 5px;
 }
