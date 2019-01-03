@@ -15,7 +15,7 @@ func NewUpdateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	updateCmd := &cobra.Command{
 		Use:          "update-cli",
-		Short:        "Update graphql-engine CLI tool to latest version",
+		Short:        "Update the Hasura CLI to latest version",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return ec.Prepare()
@@ -32,12 +32,12 @@ type updateOptions struct {
 }
 
 func (o *updateOptions) run() error {
-	isUpdate, releaseInfo, asset, err := update.CheckUpdate(o.EC.Version.GetCLIVersion())
+	hasUpdate, releaseInfo, asset, err := update.CheckUpdate(o.EC.Version.GetCLIVersion())
 	if err != nil {
 		return err
 	}
 
-	if !isUpdate {
+	if !hasUpdate {
 		o.EC.Logger.WithField("version", o.EC.Version.GetCLIVersion()).Info("hasura is up to date")
 		return nil
 	}
