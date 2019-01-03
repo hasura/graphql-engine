@@ -77,12 +77,16 @@ class GraphiQLWrapper extends Component {
   }
 
   onEditQuery(newQuery) {
-    this.setState({ ...this.state, onEditQuery: newQuery });
+    this.setState({ ...this.state, onEditQuery: newQuery, queries: newQuery });
     this.updateURL();
   }
 
   onEditVariables(newVariables) {
-    this.setState({ ...this.state, onEditVariables: newVariables });
+    this.setState({
+      ...this.state,
+      onEditVariables: newVariables,
+      variables: newVariables,
+    });
     this.updateURL();
   }
 
