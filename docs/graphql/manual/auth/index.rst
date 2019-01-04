@@ -34,7 +34,8 @@ Next, let's setup some :doc:`basic access control rules <basics>`.
 
    basics
    roles-variables
-   Permissions examples <common-roles-auth-examples>
+   common-roles-auth-examples
    webhook
    webhook-examples
    jwt
+   jwt-examples
