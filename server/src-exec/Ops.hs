@@ -24,7 +24,7 @@ import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "6"
+curCatalogVer = "7"
 
 initCatalogSafe
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
@@ -234,6 +234,13 @@ from5To6 = liftTx $ do
     $(Q.sqlFromFile "src-rsr/migrate_from_5_to_6.sql")
   return ()
 
+from6To7 :: (MonadTx m) => m ()
+from6To7 = liftTx $ do
+  -- migrate database
+  Q.Discard () <- Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_6_to_7.sql")
+  return ()
+
 migrateCatalog
   :: (MonadTx m, CacheRWM m, MonadIO m, UserInfoM m, HasHttpManager m)
   => UTCTime -> m String
@@ -247,12 +254,17 @@ migrateCatalog migrationTime = do
      | preVer == "3"   -> from3ToCurrent
      | preVer == "4"   -> from4ToCurrent
      | preVer == "5"   -> from5ToCurrent
+     | preVer == "6"   -> from6ToCurrent
      | otherwise -> throw400 NotSupported $
                     "unsupported version : " <> preVer
   where
+    from6ToCurrent = do
+      from6To7
+      postMigrate
+
     from5ToCurrent = do
       from5To6
-      postMigrate
+      from6ToCurrent
 
     from4ToCurrent = do
       from4To5
