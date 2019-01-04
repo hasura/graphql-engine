@@ -12,13 +12,13 @@ queries, subscriptions and mutations. Here’s what Hasura GraphQL engine does u
 Schema generation
 -----------------
 
-Hasura GraphQL engine automatically generates GraphQL schema components when you create/track a
-table/view in Postgres and create relationships between them.
+Hasura GraphQL engine automatically generates GraphQL schema components when you track a
+Postgres table/view in Hasura and create relationships between them.
 
 Tables
 ^^^^^^
 
-When you create a new table or track an existing table in Postgres, Hasura GraphQL engine
+When you track a table in Postgres, Hasura GraphQL engine
 automatically generates the following for it:
 
 - A GraphQL type definition for the table
@@ -31,7 +31,7 @@ automatically generates the following for it:
 Views
 ^^^^^
 
-When you create a new view or track an existing view in Postgres, Hasura GraphQL engine
+When you track a view in Postgres, Hasura GraphQL engine
 automatically generates the following for it:
 
 - A GraphQL type definition for the view
