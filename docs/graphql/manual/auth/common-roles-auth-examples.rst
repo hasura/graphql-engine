@@ -1,5 +1,5 @@
-Common roles and auth examples
-==============================
+Access control examples
+=======================
 
 .. contents:: Table of contents
   :backlinks: none

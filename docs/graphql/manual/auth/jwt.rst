@@ -342,4 +342,4 @@ care of escaping new lines.
 
 **See:**
 
-- :doc:`JWT Examples <jwt-examples>`
+- :doc:`Auth JWT examples <jwt-examples>`
