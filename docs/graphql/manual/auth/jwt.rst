@@ -326,12 +326,20 @@ And use it in the ``key`` field:
     "
         }
 
-Generate JWT Config
-^^^^^^^^^^^^^^^^^^^
-The JWT Config to be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt-secret`` flag can be generated using
-the following UI https://hasura.io/jwt-config.
+Generating JWT Config
+---------------------
 
-Currently the UI supports generating config for Auth0 and Firebase. The config generated from this page can be
-directly pasted in yaml files and command line arguments as it takes care of escaping new lines.
+The JWT Config to be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt-secret`` flag can be generated using:
+https://hasura.io/jwt-config.
+
+**Currently the UI supports generating config for Auth0 and Firebase**.
+
+The config generated from this page can be directly pasted in yaml files and command line arguments as it takes
+care of escaping new lines.
 
 .. image:: ../../../img/graphql/manual/auth/jwt-config-generated.png
+   :scale: 50 %
+
+**See:**
+
+- :doc:`Auth JWT examples <jwt-examples>`
