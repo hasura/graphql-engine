@@ -1,10 +1,12 @@
 package commands
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/update"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -32,26 +34,30 @@ type updateOptions struct {
 }
 
 func (o *updateOptions) run() error {
-	hasUpdate, releaseInfo, asset, err := update.CheckUpdate(o.EC.Version.GetCLIVersion())
+	currentVersion := o.EC.Version.GetCLIVersion()
+	o.EC.Logger.Infof("Current version: %s", currentVersion)
+	o.EC.Spin("Checking for update... ")
+	hasUpdate, releaseInfo, asset, err := update.CheckUpdate(currentVersion)
+	o.EC.Spinner.Stop()
 	if err != nil {
 		return err
 	}
 
 	if !hasUpdate {
-		o.EC.Logger.WithField("version", o.EC.Version.GetCLIVersion()).Info("hasura is up to date")
+		o.EC.Logger.WithField("version", currentVersion).Info("CLI is up to date")
 		return nil
 	}
 
+	o.EC.Spin(fmt.Sprintf("Updating to %s... ", releaseInfo.TagName))
 	err = update.ApplyUpdate(asset)
+	o.EC.Spinner.Stop()
 	if err != nil {
 		if os.IsPermission(err) {
-			o.EC.Logger.Fatal(`# permission denied, try in admin mode or sudo:
-     $ sudo hasura update-cli`)
-			return nil
+			return errors.New("permission denied, try again as admin or with sudo")
 		}
-		return err
+		return errors.Wrap(err, "apply update")
 	}
 
-	o.EC.Logger.WithField("version", releaseInfo.TagName).Info("hasura updated to latest version")
+	o.EC.Logger.WithField("version", releaseInfo.TagName).Info("Updated to latest version")
 	return nil
 }
