@@ -38,3 +38,4 @@ Next, let's setup some :doc:`basic access control rules <basics>`.
    webhook
    webhook-examples
    jwt
+   jwt-examples
