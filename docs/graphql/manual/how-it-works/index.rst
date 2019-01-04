@@ -6,7 +6,7 @@ How Hasura GraphQL engine works
   :depth: 1
   :local:
 
-Given your Postgres database, Hasura GraphQL engine can automatically generate a GraphQL schema and process GraphQL
+Given a Postgres database, Hasura GraphQL engine can automatically generate a GraphQL schema and process GraphQL
 queries, subscriptions and mutations. Here’s what Hasura GraphQL engine does under the hood.
 
 Schema generation
