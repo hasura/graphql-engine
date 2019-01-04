@@ -27,6 +27,7 @@ import {
 } from './LogActions';
 import * as tooltip from '../Common/Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import { convertDateTimeToLocale } from '../utils';
 
 class StreamingLogs extends Component {
   constructor(props) {
@@ -221,7 +222,7 @@ class StreamingLogs extends Component {
             return <div className={conditionalClassname}>{r.id}</div>;
           }
           if (col === 'created_at') {
-            const formattedDate = new Date(r.created_at).toUTCString();
+            const formattedDate = convertDateTimeToLocale(r.created_at);
             return <div className={conditionalClassname}>{formattedDate}</div>;
           }
           if (col === 'operation') {
