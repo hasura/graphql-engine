@@ -4,7 +4,7 @@ import gql from 'graphql-tag';
 import TypingIndicator from './TypingIndicator';
 import '../App.css';
 
-const insertMessage = gql`
+export const insertMessage = gql`
   mutation insert_message ($message: message_insert_input! ){
     insert_message (
       objects: [$message]
@@ -19,7 +19,7 @@ const insertMessage = gql`
   }
 `;
 
-const emitTypingEvent = gql`
+export const emitTypingEvent = gql`
   mutation ($userId: Int) {
     update_user (
       _set: {

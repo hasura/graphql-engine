@@ -1572,6 +1572,11 @@ chalk@^2.0.0, chalk@^2.0.1, chalk@^2.1.0, chalk@^2.4.1:
     escape-string-regexp "^1.0.5"
     supports-color "^5.3.0"
 
+chance@^1.0.16:
+  version "1.0.18"
+  resolved "https://registry.yarnpkg.com/chance/-/chance-1.0.18.tgz#79788fe6fca4c338bf404321c347eecc80f969ee"
+  integrity sha512-g9YLQVHVZS/3F+zIicfB58vjcxopvYQRp7xHzvyDFDhXH1aRZI/JhwSAO0X5qYiQluoGnaNAU6wByD2KTxJN1A==
+
 chardet@^0.4.0:
   version "0.4.2"
   resolved "https://registry.yarnpkg.com/chardet/-/chardet-0.4.2.tgz#b5473b33dc97c424e5d98dc87d55d4d8a29c8bf2"
@@ -2326,6 +2331,33 @@ duplexer3@^0.1.4:
 duplexer@^0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/duplexer/-/duplexer-0.1.1.tgz#ace6ff808c1ce66b57d1ebf97977acb02334cfc1"
+
+easygraphql-mock@^0.1.6:
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/easygraphql-mock/-/easygraphql-mock-0.1.6.tgz#6a056fe896effe1df5f0ed96dea4f668109bad20"
+  integrity sha512-mS3fSCVCfIkzLTBEuGyJhQ/frHp3AO7UmXgOY9IyfDJQmI0ZZOdOUAEcnM9Tg3vGiExPuxE79N4Zlh4lf8o0QA==
+  dependencies:
+    chance "^1.0.16"
+    easygraphql-parser "^0.0.5"
+
+easygraphql-parser@^0.0.5:
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/easygraphql-parser/-/easygraphql-parser-0.0.5.tgz#a796b9a43cc4daaa40a8079d7b12c82bf8d0f755"
+  integrity sha512-039Mpk6HG2PH3rCsT/rPiQcZPVq4VixK5Yyyae7KDx5+aV425z3qjG6suJs3ipqFIGNMOCUXK2zR5x/I0ALv+w==
+  dependencies:
+    graphql "^14.0.2"
+    lodash.mergewith "^4.6.1"
+
+easygraphql-tester@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/easygraphql-tester/-/easygraphql-tester-3.0.1.tgz#d25b1b1842f8891555384969d414b7a5e4042087"
+  integrity sha512-tsIB1oehhcueNm9g61t422xo6pDzOPFMpoEvTRK3gyPdPZgCanyrtV13VVLLoLpBV8nMfTWIy9yYfjh7p0nMBw==
+  dependencies:
+    easygraphql-mock "^0.1.6"
+    easygraphql-parser "^0.0.5"
+    graphql-tag "^2.9.2"
+    lodash.isempty "^4.4.0"
+    lodash.isobject "^3.0.2"
 
 ecc-jsbn@~0.1.1:
   version "0.1.2"
@@ -3352,6 +3384,13 @@ graphql@^0.13.2:
   dependencies:
     iterall "^1.2.1"
 
+graphql@^14.0.2:
+  version "14.0.2"
+  resolved "https://registry.yarnpkg.com/graphql/-/graphql-14.0.2.tgz#7dded337a4c3fd2d075692323384034b357f5650"
+  integrity sha512-gUC4YYsaiSJT1h40krG3J+USGlwhzNTXSb4IOZljn9ag5Tj+RkoXrWp+Kh7WyE3t1NCfab5kzCuxBIvOMERMXw==
+  dependencies:
+    iterall "^1.2.2"
+
 growly@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/growly/-/growly-1.3.0.tgz#f10748cbe76af964b7c96c93c6bcc28af120c081"
@@ -4148,7 +4187,7 @@ iterall@1.1.3:
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/iterall/-/iterall-1.1.3.tgz#1cbbff96204056dde6656e2ed2e2226d0e6d72c9"
 
-iterall@^1.1.3, iterall@^1.2.1:
+iterall@^1.1.3, iterall@^1.2.1, iterall@^1.2.2:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/iterall/-/iterall-1.2.2.tgz#92d70deb8028e0c39ff3164fdbf4d8b088130cd7"
 
@@ -4646,9 +4685,24 @@ lodash.defaults@^4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/lodash.defaults/-/lodash.defaults-4.2.0.tgz#d09178716ffea4dde9e5fb7b37f6f0802274580c"
 
+lodash.isempty@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/lodash.isempty/-/lodash.isempty-4.4.0.tgz#6f86cbedd8be4ec987be9aaf33c9684db1b31e7e"
+  integrity sha1-b4bL7di+TsmHvpqvM8loTbGzHn4=
+
+lodash.isobject@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/lodash.isobject/-/lodash.isobject-3.0.2.tgz#3c8fb8d5b5bf4bf90ae06e14f2a530a4ed935e1d"
+  integrity sha1-PI+41bW/S/kK4G4U8qUwpO2TXh0=
+
 lodash.memoize@^4.1.2:
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/lodash.memoize/-/lodash.memoize-4.1.2.tgz#bcc6c49a42a2840ed997f323eada5ecd182e0bfe"
+
+lodash.mergewith@^4.6.1:
+  version "4.6.1"
+  resolved "https://registry.yarnpkg.com/lodash.mergewith/-/lodash.mergewith-4.6.1.tgz#639057e726c3afbdb3e7d42741caa8d6e4335927"
+  integrity sha512-eWw5r+PYICtEBgrBE5hhlT6aAa75f411bgDz/ZL2KZqYV03USvucsxcHUIlGTDTECs1eunpI7HOV7U+WLDvNdQ==
 
 lodash.template@^4.4.0:
   version "4.4.0"

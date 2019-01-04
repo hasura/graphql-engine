@@ -3,7 +3,7 @@ import { Subscription } from 'react-apollo';
 import gql from 'graphql-tag';
 import '../App.css';
 
-const getUserTyping = gql`
+export const getUserTyping = gql`
   subscription ($selfId: Int ) {
     user_typing (
       where: {

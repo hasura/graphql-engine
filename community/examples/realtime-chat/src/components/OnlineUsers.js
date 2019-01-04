@@ -3,7 +3,7 @@ import { Subscription } from 'react-apollo';
 import moment from 'moment';
 import gql from 'graphql-tag';
 
-const fetchOnlineUsersSubscription = gql`
+export const fetchOnlineUsersSubscription = gql`
   subscription {
     user_online (
       order_by: {username:asc}

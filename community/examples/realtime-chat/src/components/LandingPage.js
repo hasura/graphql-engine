@@ -4,7 +4,7 @@ import gql from 'graphql-tag';
 import { Mutation } from 'react-apollo';
 import "../App.css";
 
-const addUser = gql`
+export const addUser = gql`
   mutation ($username: String!) {
     insert_user (
       objects: [{

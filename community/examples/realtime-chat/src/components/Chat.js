@@ -4,7 +4,7 @@ import gql from 'graphql-tag';
 import ChatWrapper from './ChatWrapper';
 import '../App.css';
 
-const subscribeToNewMessages = gql`
+export const subscribeToNewMessages = gql`
   subscription {
     message ( order_by: {id:desc} limit: 1) {
       id
@@ -14,7 +14,7 @@ const subscribeToNewMessages = gql`
     } }
 `;
 
-const emitOnlineEvent = gql`
+export const emitOnlineEvent = gql`
   mutation ($userId:Int!){
     update_user (
       _set: {

@@ -5,7 +5,7 @@ import '../App.js';
 import Banner from './Banner';
 import MessageList from './MessageList';
 
-const fetchMessages = gql`
+export const fetchMessages = gql`
   query ($last_received_id: Int, $last_received_ts: timestamptz){
     message (
       order_by: {timestamp:asc}
