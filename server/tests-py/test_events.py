@@ -4,8 +4,8 @@ import pytest
 import queue
 import yaml
 import time
-from validate import check_event
-
+from super_classes import DefaultTestQueries
+from validate import check_query_f, check_query, check_event
 
 def select_last_event_fromdb(hge_ctx):
     q = {
@@ -58,6 +58,17 @@ def delete(hge_ctx, table, where_exp):
     st_code, resp = hge_ctx.v1q(q)
     return st_code, resp
 
+class TestCreateAndDelete(DefaultTestQueries):
+
+    def test_create_delete(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/create_and_delete.yaml")
+
+    def test_create_reset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/create_and_reset.yaml")
+
+    @classmethod
+    def dir(cls):
+        return 'queries/event_triggers/create-delete'
 
 class TestCreateEvtQuery(object):
 

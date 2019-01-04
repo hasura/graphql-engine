@@ -1,7 +1,8 @@
 -- This is taken from wai-logger and customised for our use
 
 module Hasura.Server.Logging
-  ( mkAccessLog
+  ( StartupLog(..)
+  , mkAccessLog
   , getRequestHeader
   , WebHookLog(..)
   , WebHookLogger
@@ -29,12 +30,29 @@ import qualified Data.ByteString.Char8       as BS
 import qualified Data.CaseInsensitive        as CI
 import qualified Network.HTTP.Types          as N
 
+import           Hasura.HTTP
 import qualified Hasura.Logging              as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
 import           Hasura.Server.Utils
-import           Hasura.HTTP
+
+data StartupLog
+  = StartupLog
+  { slLogLevel :: !L.LogLevel
+  , slKind     :: !T.Text
+  , slInfo     :: !Value
+  } deriving (Show, Eq)
+
+instance ToJSON StartupLog where
+  toJSON (StartupLog _ k info) =
+    object [ "kind" .= k
+           , "info" .= info
+           ]
+
+instance L.ToEngineLog StartupLog where
+  toEngineLog startupLog =
+    (slLogLevel startupLog, "startup", toJSON startupLog)
 
 data WebHookLog
   = WebHookLog
@@ -106,27 +124,6 @@ instance ToJSON LogDetail where
     object [ "request"  .= q
            , "error" .= e
            ]
-
--- type ServerLogger = Request -> BL.ByteString -> Either QErr BL.ByteString -> IO ()
--- type ServerLogger r = Request -> r -> Maybe (UTCTime, UTCTime) -> IO ()
-
--- type LogDetailG r = Request -> r -> (N.Status, Maybe Value, Maybe T.Text, Maybe Int64)
-
--- withStdoutLogger :: LogDetailG r -> (ServerLogger r -> IO a) -> IO a
--- withStdoutLogger detailF appf =
---   bracket setup teardown $ \(rlogger, _) -> appf rlogger
---   where
---     setup = do
---       getter <- newTimeCache "%FT%T%z"
---       lgrset <- newStdoutLoggerSet defaultBufSize
---       let logger req env timeT = do
---             zdata <- getter
---             let serverLog = mkAccessLog detailF zdata req env timeT
---             pushLogStrLn lgrset $ toLogStr $ encode serverLog
---             when (isJust $ slDetail serverLog) $ flushLogStr lgrset
---           remover = rmLoggerSet lgrset
---       return (logger, remover)
---     teardown (_, remover) = void remover
 
 ravenLogGen
   :: (BL.ByteString, Either QErr BL.ByteString)
