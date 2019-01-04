@@ -18,8 +18,7 @@ Postgres table/view in Hasura and create relationships between them.
 Tables
 ^^^^^^
 
-When you track a table in Postgres, Hasura GraphQL engine
-automatically generates the following for it:
+When you track a Postgres table in Hasura GraphQL engine, it automatically generates the following for it:
 
 - A GraphQL type definition for the table
 - A Query field with ``where``, ``order_by``, ``limit`` and ``offset`` arguments
@@ -31,8 +30,7 @@ automatically generates the following for it:
 Views
 ^^^^^
 
-When you track a view in Postgres, Hasura GraphQL engine
-automatically generates the following for it:
+When you track a Postgres view in Hasura GraphQL engine, it automatically generates the following for it:
 
 - A GraphQL type definition for the view
 - A Query field with ``where``, ``order_by``, ``limit`` and ``offset`` arguments
@@ -43,7 +41,8 @@ and delete mutations.
 
 Relationships
 ^^^^^^^^^^^^^
-When you create a relationship between a table/view with another table/view, Hasura GraphQL engine does the following:
+When you create a relationship between a table/view with another table/view in Hasura GraphQL engine, it does the
+following:
 
 - Augments the type of the table/view by adding a reference to the nested type to allow fetching nested objects.
 - Augments the ``where`` and ``order_by`` clauses to allow filtering and sorting based on nested objects.
