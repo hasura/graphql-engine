@@ -107,8 +107,10 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
         for (let k = 0; k < currentArrRels.length; k++) {
           // check if this is already an existing relationship
           if (
-            currentArrRels[k].rel_def.foreign_key_constraint_on.column ===
-              rcol &&
+            currentArrRels[k].rel_def.foreign_key_constraint_on &&
+            rcol.includes(
+              currentArrRels[k].rel_def.foreign_key_constraint_on.column
+            ) &&
             currentArrRels[k].rel_def.foreign_key_constraint_on.table ===
               constraint.table_name
           ) {
