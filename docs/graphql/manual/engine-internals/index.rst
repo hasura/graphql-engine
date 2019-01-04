@@ -1,6 +1,11 @@
 Hasura GraphQL engine internals
 ===============================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 2
+  :local:
+
 Hasura GraphQL engine uses a set of internal tables to manage the state of the database and the
 GraphQL schema. It uses the data in these tables to generate the GraphQL API which then can be accessed
 from different clients.
@@ -8,8 +13,8 @@ from different clients.
 Hasura GraphQL engine when initialized, creates a schema called ``hdb_catalog`` in the Postgres database and
 initializes a few tables under it as described below.
 
-hdb_catalog
------------
+hdb_catalog schema
+------------------
 
 This schema is created by Hasura GraphQL Engine to manage its internal state. Whenever a
 table/permission/relationship is created/updated using the Hasura console or Hasura CLI. Hasura GraphQL engine
@@ -17,8 +22,8 @@ captures that information and stores it in the corresponding tables.
 
 The following tables are used by Hasura GraphQL engine:
 
-hdb_table
-^^^^^^^^^
+hdb_table table
+^^^^^^^^^^^^^^^
 
 This table stores information about all the tables/views which are created/tracked using the Hasura console or
 Hasura CLI.
@@ -43,8 +48,8 @@ Column Definitions
   table/view is created by the end user.
 
 
-hdb_relationship
-^^^^^^^^^^^^^^^^
+hdb_relationship table
+^^^^^^^^^^^^^^^^^^^^^^
 
 This table stores information about the relationships created for tables/views using the Hasura console or
 Hasura CLI.
@@ -84,8 +89,8 @@ Column Definitions
   If it is true, then the relationship is created by GraphQL engine for internal purpose. If it is false, then
   the relationship is created by the end user.
 
-hdb_permission
-^^^^^^^^^^^^^^
+hdb_permission table
+^^^^^^^^^^^^^^^^^^^^
 
 This table stores information about the access control rules on tables/views.
 

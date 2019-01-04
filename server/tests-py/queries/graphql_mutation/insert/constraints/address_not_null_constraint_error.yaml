@@ -12,8 +12,10 @@ query:
         affected_rows
       }
     } 
+
 response:
   errors:
-  - path: $.selectionSet.insert_address.args.objects
-    error: "Not-NULL violation. null value in column \"door_no\" violates not-null constraint"
-    code: constraint-violation
+  - extensions:
+      code: constraint-violation
+      path: $.selectionSet.insert_address.args.objects
+    message: "Not-NULL violation. null value in column \"door_no\" violates not-null constraint"

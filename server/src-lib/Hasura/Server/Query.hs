@@ -1,9 +1,3 @@
-{-# LANGUAGE DeriveLift            #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
-
 module Hasura.Server.Query where
 
 import           Data.Aeson
@@ -11,11 +5,8 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax     (Lift)
 
-import qualified Data.Aeson.Text                as AT
 import qualified Data.ByteString.Builder        as BB
 import qualified Data.ByteString.Lazy           as BL
-import qualified Data.Sequence                  as Seq
-import qualified Data.Text.Lazy                 as LT
 import qualified Data.Vector                    as V
 import qualified Network.HTTP.Client            as HTTP
 
@@ -24,12 +15,18 @@ import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
+import           Hasura.RQL.DDL.Subscribe
+import           Hasura.RQL.DML.Count
+import           Hasura.RQL.DML.Delete
+import           Hasura.RQL.DML.Insert
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.DML.Returning       (encodeJSONVector)
+import           Hasura.RQL.DML.Select
+import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
 import qualified Database.PG.Query              as Q
 
@@ -94,20 +91,34 @@ $(deriveJSON
                  }
   ''RQLQuery)
 
-buildTx
-  :: (HDBQuery q)
-  => UserInfo
-  -> SchemaCache
+newtype Run a
+  = Run {unRun :: StateT SchemaCache (ReaderT (UserInfo, HTTP.Manager) (LazyTx QErr)) a}
+  deriving ( Functor, Applicative, Monad
+           , MonadError QErr
+           , MonadState SchemaCache
+           , MonadReader (UserInfo, HTTP.Manager)
+           , CacheRM
+           , CacheRWM
+           , MonadTx
+           , MonadIO
+           )
+
+instance UserInfoM Run where
+  askUserInfo = asks fst
+
+instance HasHttpManager Run where
+  askHttpManager = asks snd
+
+peelRun
+  :: SchemaCache
+  -> UserInfo
   -> HTTP.Manager
-  -> q
-  -> Either QErr (Q.TxE QErr (BL.ByteString, SchemaCache))
-buildTx userInfo sc httpManager q = do
-  p1Res <- withPathK "args" $ runP1 qEnv $ phaseOne q
-  return $ flip runReaderT p2Ctx $
-    flip runStateT sc $ withPathK "args" $ phaseTwo q p1Res
+  -> Q.PGPool -> Q.TxIsolation
+  -> Run a -> ExceptT QErr IO (a, SchemaCache)
+peelRun sc userInfo httMgr pgPool txIso (Run m) =
+  runLazyTx pgPool txIso $ withUserInfo userInfo lazyTx
   where
-    p2Ctx = P2Ctx userInfo httpManager
-    qEnv = QCtx userInfo sc
+    lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr)
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
@@ -115,142 +126,120 @@ runQuery
   -> UserInfo -> SchemaCache -> HTTP.Manager
   -> RQLQuery -> m (BL.ByteString, SchemaCache)
 runQuery pool isoL userInfo sc hMgr query = do
-  tx <- liftEither $ buildTxAny userInfo sc hMgr query
-  res <- liftIO $ runExceptT $ Q.runTx pool (isoL, Nothing) $
-         setHeadersTx (userVars userInfo) >> tx
+  res <- liftIO $ runExceptT $
+         peelRun sc userInfo hMgr pool isoL $ runQueryM query
   liftEither res
 
 queryNeedsReload :: RQLQuery -> Bool
 queryNeedsReload qi = case qi of
-  RQAddExistingTableOrView q   -> queryModifiesSchema q
-  RQTrackTable q               -> queryModifiesSchema q
-  RQUntrackTable q             -> queryModifiesSchema q
+  RQAddExistingTableOrView _   -> True
+  RQTrackTable _               -> True
+  RQUntrackTable _             -> True
+  RQTrackFunction _            -> True
+  RQUntrackFunction _          -> True
 
-  RQTrackFunction q            -> queryModifiesSchema q
-  RQUntrackFunction q          -> queryModifiesSchema q
+  RQCreateObjectRelationship _ -> True
+  RQCreateArrayRelationship  _ -> True
+  RQDropRelationship  _        -> True
+  RQSetRelationshipComment  _  -> False
 
-  RQCreateObjectRelationship q -> queryModifiesSchema q
-  RQCreateArrayRelationship  q -> queryModifiesSchema q
-  RQDropRelationship  q        -> queryModifiesSchema q
-  RQSetRelationshipComment  q  -> queryModifiesSchema q
+  RQCreateInsertPermission _   -> True
+  RQCreateSelectPermission _   -> True
+  RQCreateUpdatePermission _   -> True
+  RQCreateDeletePermission _   -> True
 
-  RQCreateInsertPermission q   -> queryModifiesSchema q
-  RQCreateSelectPermission q   -> queryModifiesSchema q
-  RQCreateUpdatePermission q   -> queryModifiesSchema q
-  RQCreateDeletePermission q   -> queryModifiesSchema q
+  RQDropInsertPermission _     -> True
+  RQDropSelectPermission _     -> True
+  RQDropUpdatePermission _     -> True
+  RQDropDeletePermission _     -> True
+  RQSetPermissionComment _     -> False
 
-  RQDropInsertPermission q     -> queryModifiesSchema q
-  RQDropSelectPermission q     -> queryModifiesSchema q
-  RQDropUpdatePermission q     -> queryModifiesSchema q
-  RQDropDeletePermission q     -> queryModifiesSchema q
-  RQSetPermissionComment q     -> queryModifiesSchema q
+  RQInsert _                   -> False
+  RQSelect _                   -> False
+  RQUpdate _                   -> False
+  RQDelete _                   -> False
+  RQCount _                    -> False
 
-  RQInsert q                   -> queryModifiesSchema q
-  RQSelect q                   -> queryModifiesSchema q
-  RQUpdate q                   -> queryModifiesSchema q
-  RQDelete q                   -> queryModifiesSchema q
-  RQCount q                    -> queryModifiesSchema q
+  RQAddRemoteSchema _          -> True
+  RQRemoveRemoteSchema _       -> True
 
-  RQAddRemoteSchema q          -> queryModifiesSchema q
-  RQRemoveRemoteSchema q       -> queryModifiesSchema q
+  RQCreateEventTrigger _       -> True
+  RQDeleteEventTrigger _       -> True
+  RQDeliverEvent _             -> False
 
-  RQCreateEventTrigger q       -> queryModifiesSchema q
-  RQDeleteEventTrigger q       -> queryModifiesSchema q
-  RQDeliverEvent q             -> queryModifiesSchema q
+  RQCreateQueryTemplate _      -> True
+  RQDropQueryTemplate _        -> True
+  RQExecuteQueryTemplate _     -> False
+  RQSetQueryTemplateComment _  -> False
 
-  RQCreateQueryTemplate q      -> queryModifiesSchema q
-  RQDropQueryTemplate q        -> queryModifiesSchema q
-  RQExecuteQueryTemplate q     -> queryModifiesSchema q
-  RQSetQueryTemplateComment q  -> queryModifiesSchema q
+  RQRunSql _                   -> True
 
-  RQRunSql q                   -> queryModifiesSchema q
+  RQReplaceMetadata _          -> True
+  RQExportMetadata _           -> False
+  RQClearMetadata _            -> True
+  RQReloadMetadata _           -> True
 
-  RQReplaceMetadata q          -> queryModifiesSchema q
-  RQExportMetadata q           -> queryModifiesSchema q
-  RQClearMetadata q            -> queryModifiesSchema q
-  RQReloadMetadata q           -> queryModifiesSchema q
-
-  RQDumpInternalState q        -> queryModifiesSchema q
+  RQDumpInternalState _        -> False
 
   RQBulk qs                    -> any queryNeedsReload qs
 
-buildTxAny
-  :: UserInfo
-  -> SchemaCache
-  -> HTTP.Manager
-  -> RQLQuery
-  -> Either QErr (Q.TxE QErr (BL.ByteString, SchemaCache))
-buildTxAny userInfo sc hMgr rq = case rq of
-  RQAddExistingTableOrView q -> buildTx' q
-  RQTrackTable q             -> buildTx' q
-  RQUntrackTable q           -> buildTx' q
+runQueryM
+  :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
+     , MonadIO m, HasHttpManager m
+     )
+  => RQLQuery
+  -> m RespBody
+runQueryM rq = withPathK "args" $ case rq of
+  RQAddExistingTableOrView q -> runTrackTableQ q
+  RQTrackTable q             -> runTrackTableQ q
+  RQUntrackTable q           -> runUntrackTableQ q
 
-  RQTrackFunction q   -> buildTx' q
-  RQUntrackFunction q -> buildTx' q
+  RQTrackFunction q   -> runTrackFunc q
+  RQUntrackFunction q -> runUntrackFunc q
 
-  RQCreateObjectRelationship q -> buildTx' q
-  RQCreateArrayRelationship  q -> buildTx' q
-  RQDropRelationship  q        -> buildTx' q
-  RQSetRelationshipComment  q  -> buildTx' q
+  RQCreateObjectRelationship q -> runCreateObjRel q
+  RQCreateArrayRelationship  q -> runCreateArrRel q
+  RQDropRelationship  q        -> runDropRel q
+  RQSetRelationshipComment  q  -> runSetRelComment q
 
-  RQCreateInsertPermission q -> buildTx' q
-  RQCreateSelectPermission q -> buildTx' q
-  RQCreateUpdatePermission q -> buildTx' q
-  RQCreateDeletePermission q -> buildTx' q
+  RQCreateInsertPermission q -> runCreatePerm q
+  RQCreateSelectPermission q -> runCreatePerm q
+  RQCreateUpdatePermission q -> runCreatePerm q
+  RQCreateDeletePermission q -> runCreatePerm q
 
-  RQDropInsertPermission q -> buildTx' q
-  RQDropSelectPermission q -> buildTx' q
-  RQDropUpdatePermission q -> buildTx' q
-  RQDropDeletePermission q -> buildTx' q
-  RQSetPermissionComment q -> buildTx' q
+  RQDropInsertPermission q -> runDropPerm q
+  RQDropSelectPermission q -> runDropPerm q
+  RQDropUpdatePermission q -> runDropPerm q
+  RQDropDeletePermission q -> runDropPerm q
+  RQSetPermissionComment q -> runSetPermComment q
 
-  RQInsert q -> buildTx' q
-  RQSelect q -> buildTx' q
-  RQUpdate q -> buildTx' q
-  RQDelete q -> buildTx' q
-  RQCount  q -> buildTx' q
+  RQInsert q -> runInsert q
+  RQSelect q -> runSelect q
+  RQUpdate q -> runUpdate q
+  RQDelete q -> runDelete q
+  RQCount  q -> runCount q
 
-  RQAddRemoteSchema    q -> buildTx' q
-  RQRemoveRemoteSchema q -> buildTx' q
+  RQAddRemoteSchema    q -> runAddRemoteSchema q
+  RQRemoveRemoteSchema q -> runRemoveRemoteSchema q
 
-  RQCreateEventTrigger q -> buildTx' q
-  RQDeleteEventTrigger q -> buildTx' q
-  RQDeliverEvent q       -> buildTx' q
+  RQCreateEventTrigger q -> runCreateEventTriggerQuery q
+  RQDeleteEventTrigger q -> runDeleteEventTriggerQuery q
+  RQDeliverEvent q       -> runDeliverEvent q
 
-  RQCreateQueryTemplate q     -> buildTx' q
-  RQDropQueryTemplate q       -> buildTx' q
-  RQExecuteQueryTemplate q    -> buildTx' q
-  RQSetQueryTemplateComment q -> buildTx' q
+  RQCreateQueryTemplate q     -> runCreateQueryTemplate q
+  RQDropQueryTemplate q       -> runDropQueryTemplate q
+  RQExecuteQueryTemplate q    -> runExecQueryTemplate q
+  RQSetQueryTemplateComment q -> runSetQueryTemplateComment q
 
-  RQReplaceMetadata q -> buildTx' q
-  RQClearMetadata q   -> buildTx' q
-  RQExportMetadata q  -> buildTx' q
-  RQReloadMetadata q  -> buildTx' q
+  RQReplaceMetadata q -> runReplaceMetadata q
+  RQClearMetadata q   -> runClearMetadata q
+  RQExportMetadata q  -> runExportMetadata q
+  RQReloadMetadata q  -> runReloadMetadata q
 
-  RQDumpInternalState q -> buildTx' q
+  RQDumpInternalState q -> runDumpInternalState q
 
-  RQRunSql q -> buildTx' q
+  RQRunSql q -> runRunSQL q
 
-  RQBulk qs ->
-    let f (respList, scf) q = do
-          dbAction <- liftEither $ buildTxAny userInfo scf hMgr q
-          (resp, newSc) <- dbAction
-          return ((Seq.|>) respList resp, newSc)
-    in
-      return $ withPathK "args" $ do
-        (respList, finalSc) <- indexedFoldM f (Seq.empty, sc) qs
-        let bsVector = V.fromList $ toList respList
-        return ( BB.toLazyByteString $ encodeJSONVector BB.lazyByteString bsVector
-               , finalSc
-               )
-
-  where buildTx' q = buildTx userInfo sc hMgr q
-
-setHeadersTx :: UserVars -> Q.TxE QErr ()
-setHeadersTx uVars =
-  Q.unitQE defaultTxErrorHandler setSess () False
-  where
-    toStrictText = LT.toStrict . AT.encodeToLazyText
-    setSess = Q.fromText $
-      "SET LOCAL \"hasura.user\" = " <>
-      pgFmtLit (toStrictText uVars)
+  RQBulk qs -> do
+    respVector <- V.fromList <$> indexedMapM runQueryM qs
+    return $ BB.toLazyByteString $ encodeJSONVector BB.lazyByteString respVector

@@ -24,17 +24,17 @@
     "react-dom": "^16.5.1",
     "react-router": "^4.3.1",
     "react-router-dom": "^4.3.1",
+    "react-scripts": "^1.1.5",
     "subscriptions-transport-ws": "^0.9.15"
   },
   "devDependencies": {
     "cypress": "^3.1.0",
     "husky": "^1.0.0-rc.15",
     "lint-staged": "^7.3.0",
-    "prettier": "1.14.3",
-    "react-scripts": "^1.1.5"
+    "prettier": "1.14.3"
   },
   "scripts": {
-    "start": "REACT_APP_CALLBACK_URL=http://localhost:3000/callback react-scripts start",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "cypress run --spec 'cypress/integration/**/**/test.js'",
     "cypress": "cypress open",

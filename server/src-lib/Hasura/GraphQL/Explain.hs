@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
 module Hasura.GraphQL.Explain
   ( explainGQLQuery
   , GQLExplain
@@ -32,7 +27,6 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.GraphQL.Validate.Types          as VT
 import qualified Hasura.RQL.DML.Select                  as RS
-import qualified Hasura.Server.Query                    as RQ
 import qualified Hasura.SQL.DML                         as S
 
 data GQLExplain
@@ -64,7 +58,8 @@ runExplain ctx m =
   either throwError return $ runExcept $ runReaderT m ctx
 
 explainField
-  :: UserInfo -> GCtx -> Field -> Q.TxE QErr FieldPlan
+  :: (MonadTx m)
+  => UserInfo -> GCtx -> Field -> m FieldPlan
 explainField userInfo gCtx fld =
   case fName of
     "__type"     -> return $ FieldPlan fName Nothing Nothing
@@ -146,9 +141,8 @@ explainGQLQuery pool iso sc (GQLExplain query userVarsRaw)= do
     gCtxMap = scGCtxMap sc
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
-    runTx tx =
-      Q.runTx pool (iso, Nothing) $
-      RQ.setHeadersTx (userVars userInfo) >> tx
+
+    runTx tx = runLazyTx pool iso $ withUserInfo userInfo tx
 
     allHasuraNodes gCtx nodes =
       let typeLocs = TH.gatherTypeLocs gCtx nodes

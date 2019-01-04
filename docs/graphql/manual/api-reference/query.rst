@@ -3,6 +3,11 @@
 API Reference - Query/Subscription
 ==================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 3
+  :local:
+
 Query/Subscription syntax
 -------------------------
 
@@ -66,8 +71,10 @@ Syntax definitions
 Object
 ^^^^^^
 
-Simple Object :-
-****************
+.. _simple_object:
+
+Simple Object
+*************
 
 .. code-block:: none
 
@@ -101,8 +108,10 @@ E.g.
       }
    }
 
-Aggregate Object :-
-*******************
+.. _aggregate_object:
+
+Aggregate Object
+****************
 
 .. code-block:: none
 
@@ -231,7 +240,7 @@ Argument
 .. _DistinctOnExp:
 
 DistinctOnExp
-************
+*************
 
 .. parsed-literal::
 
@@ -374,6 +383,12 @@ or
 
    order_by: [{id: desc}, {author: {id: asc}}]
 
+or
+
+.. parsed-literal::
+
+   order_by: {articles_aggregate: {count: asc}}
+
 
 TableOrderBy
 ************
@@ -389,6 +404,11 @@ For object relations:
 .. parsed-literal::
    {relation-name: TableOrderBy_}
 
+For array relations aggregate:
+
+.. parsed-literal::
+   {relation-name_aggregate: AggregateOrderBy_}
+
 E.g.
 
 Order by type for "article" table:
@@ -402,7 +422,33 @@ Order by type for "article" table:
      author_id: order_by
      #order by using "author" object relationship columns
      author: author_order_by
+     #order by using "likes" array relationship aggregates
+     likes_aggregate: likes_aggregate_order_by
    }
+
+AggregateOrderBy               
+****************
+
+Count aggregate
+
+.. parsed-literal::
+   {count: OrderByEnum_}
+
+Operation aggregate
+
+.. parsed-literal::
+   {op_name: TableAggOpOrderBy_}
+
+Available operations are ``sum``, ``avg``, ``max``, ``min``, ``stddev``, ``stddev_samp``,
+``stddev_pop``, ``variance``, ``var_samp`` and ``var_pop``
+
+TableAggOpOrderBy
+*****************
+
+.. parsed-literal::
+   {column: OrderByEnum_}
+
+
 
 OrderByEnum
 ***********

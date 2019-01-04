@@ -1,7 +1,4 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes        #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Hasura.GraphQL.Transport.WebSocket
   ( createWSServerApp
@@ -29,7 +26,7 @@ import           Control.Concurrent                          (threadDelay)
 import qualified Data.IORef                                  as IORef
 
 import           Hasura.GraphQL.Resolve                      (resolveSelSet)
-import           Hasura.GraphQL.Resolve.Context              (RespTx)
+import           Hasura.GraphQL.Resolve.Context              (LazyRespTx)
 import qualified Hasura.GraphQL.Resolve.LiveQuery            as LQ
 import           Hasura.GraphQL.Schema                       (getGCtx)
 import qualified Hasura.GraphQL.Transport.HTTP               as TH
@@ -45,12 +42,11 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode,
                                                               getUserInfo)
-import qualified Hasura.Server.Query                         as RQ
 
 -- uniquely identifies an operation
 type GOperationId = (WS.WSId, OperationId)
 
-type TxRunner = RespTx -> IO (Either QErr BL.ByteString)
+type TxRunner = LazyRespTx -> IO (Either QErr BL.ByteString)
 
 type OperationMap
   = STMMap.Map OperationId LQ.LiveQuery
@@ -150,7 +146,7 @@ onConn (L.Logger logger) wsId requestHead = do
       return $ Left $ WS.RejectRequest
         (H.statusCode $ qeStatus qErr)
         (H.statusMessage $ qeStatus qErr) []
-        (BL.toStrict $ J.encode $ encodeQErr False qErr)
+        (BL.toStrict $ J.encode $ encodeGQLErr False qErr)
 
     checkPath =
       when (WS.requestPath requestHead /= "/v1alpha1/graphql") $
@@ -197,6 +193,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       VT.HasuraType ->
         runHasuraQ userInfo gCtx queryParts
       VT.RemoteType _ rsi -> do
+        when (G._todType opDef == G.OperationTypeSubscription) $
+          withComplete $ sendConnErr "subscription to remote server is not supported"
         resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
                              msgRaw rsi opDef
         either postExecErr sendSuccResp resp
@@ -206,9 +204,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     runHasuraQ userInfo gCtx queryParts = do
       (opTy, fields) <- either (withComplete . preExecErr) return $
                         runReaderT (validateGQ queryParts) gCtx
-      let qTx = RQ.setHeadersTx (userVars userInfo) >>
-                resolveSelSet userInfo gCtx opTy fields
-
+      let qTx = withUserInfo userInfo $ resolveSelSet userInfo gCtx opTy fields
       case opTy of
         G.OperationTypeSubscription -> do
           let lq = LQ.LiveQuery userInfo q

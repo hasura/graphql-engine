@@ -91,8 +91,12 @@ select.form-control
 }
 .btn-warning:hover {
   color: #000;
-  background-color: #ec971f;
-  border-color: #d58512;
+  background-color: #F2B130 !important;
+  border-color: #F2B130 !important;
+}
+.btn-warning:focus
+{
+  background-color: #F2B130 !important;
 }
 // Generate Code modal
 .padd_remove

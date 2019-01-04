@@ -23,7 +23,9 @@ const styles = require('./ApiExplorer.scss');
 class ApiRequest extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      deletedHeader: false,
+    };
     this.state.accessKeyVisible = false;
     this.state.bodyAllowedMethods = ['POST'];
     this.state.tabIndex = 0;
@@ -66,6 +68,7 @@ class ApiRequest extends Component {
 
   onDeleteHeaderClicked(e) {
     const index = parseInt(e.target.getAttribute('data-header-id'), 10);
+    this.setState({ deletedHeader: true });
     this.props.dispatch(removeRequestHeader(index));
   }
 
@@ -197,7 +200,55 @@ class ApiRequest extends Component {
   }
 
   getHeaderRows() {
-    const rows = this.props.headers.map((header, i) => {
+    let headers;
+    const headers_map = new Map();
+    if (localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS')) {
+      const stored_headers = JSON.parse(
+        localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS')
+      );
+      for (const s_h of this.props.headers) {
+        if (!headers_map.has(s_h.key)) {
+          headers_map.set(s_h.key, 1);
+        }
+      }
+      //Case when user loads again.
+      if (
+        stored_headers.length > this.props.headers.length &&
+        this.state.deletedHeader === false
+      ) {
+        const initHeaderCount = this.props.headers.length - 1;
+        const input_row = this.props.headers.pop();
+        for (
+          let i = initHeaderCount;
+          i <= stored_headers.length - initHeaderCount;
+          i++
+        ) {
+          if (!headers_map.has(stored_headers[i].key)) {
+            this.props.headers.push(stored_headers[i]);
+          }
+        }
+        this.props.headers.push(input_row);
+      }
+      //Case when user deletes a header from console.
+      if (
+        stored_headers.length > this.props.headers.length &&
+        this.state.deletedHeader === true
+      ) {
+        this.setState({ deletedHeader: false });
+      }
+      headers = this.props.headers;
+      localStorage.setItem(
+        'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+        JSON.stringify(headers)
+      );
+    } else {
+      headers = this.props.headers;
+      localStorage.setItem(
+        'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+        JSON.stringify(headers)
+      );
+    }
+    const rows = headers.map((header, i) => {
       return (
         <tr key={i}>
           {header.isNewHeader ? null : (

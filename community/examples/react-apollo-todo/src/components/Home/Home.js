@@ -105,7 +105,7 @@ class App extends Component {
         <div className="footerWrapper">
           <span>
             <a
-              href="https://react-apollo-todo-demo.hasura.app/console"
+              href="/console"
               target="_blank"
               rel="noopener noreferrer"
             >

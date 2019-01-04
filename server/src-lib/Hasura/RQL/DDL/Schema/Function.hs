@@ -146,10 +146,11 @@ newtype TrackFunction
   { tfName :: QualifiedFunction}
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
-trackFunctionP1 :: TrackFunction -> P1 ()
+trackFunctionP1
+  :: (CacheRM m, UserInfoM m, QErrM m) => TrackFunction -> m ()
 trackFunctionP1 (TrackFunction qf) = do
   adminOnly
-  rawSchemaCache <- getSchemaCache <$> lift ask
+  rawSchemaCache <- askSchemaCache
   when (M.member qf $ scFunctions rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
 
@@ -167,30 +168,28 @@ trackFunctionP2 qf = do
   liftTx $ saveFunctionToCatalog qf
   return successMsg
 
-instance HDBQuery TrackFunction where
-
-  type Phase1Res TrackFunction = ()
-  phaseOne = trackFunctionP1
-
-  phaseTwo (TrackFunction qf) _ = trackFunctionP2 qf
-
-  schemaCachePolicy = SCPReload
+runTrackFunc
+  :: ( QErrM m, CacheRWM m, MonadTx m
+     , UserInfoM m
+     )
+  => TrackFunction -> m RespBody
+runTrackFunc q = do
+  trackFunctionP1 q
+  trackFunctionP2 $ tfName q
 
 newtype UnTrackFunction
   = UnTrackFunction
   { utfName :: QualifiedFunction }
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
-instance HDBQuery UnTrackFunction where
-
-  type Phase1Res UnTrackFunction = ()
-  phaseOne (UnTrackFunction qf) = do
-    adminOnly
-    void $ askFunctionInfo qf
-
-  phaseTwo (UnTrackFunction qf) _ = do
-    liftTx $ delFunctionFromCatalog qf
-    delFunctionFromCache qf
-    return successMsg
-
-  schemaCachePolicy = SCPReload
+runUntrackFunc
+  :: ( QErrM m, CacheRWM m, MonadTx m
+     , UserInfoM m
+     )
+  => UnTrackFunction -> m RespBody
+runUntrackFunc (UnTrackFunction qf) = do
+  adminOnly
+  void $ askFunctionInfo qf
+  liftTx $ delFunctionFromCatalog qf
+  delFunctionFromCache qf
+  return successMsg

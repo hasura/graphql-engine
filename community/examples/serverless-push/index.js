@@ -5,8 +5,9 @@ if (!("Notification" in window)) {
 
 const messaging = firebase.messaging();
 const screens = ['#loading-screen', '#permission-screen', '#input-screen', '#waiting-screen'];
+
 // Replace with HGE_URL
-const HGE_URL = 'https://hasura-serverless-push.herokuapp.com/v1alpha1/graphql';
+const HGE_URL = '/v1alpha1/graphql';
 
 function showScreen(name) {
   for (screen of screens) {

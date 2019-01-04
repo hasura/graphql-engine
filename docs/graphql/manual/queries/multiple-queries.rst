@@ -1,5 +1,11 @@
 Multiple queries in a request
 =============================
+
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 If multiple queries are part of the same request, they are executed **parallelly**, the individual responses are
 collated and returned. You can fetch objects of different unrelated types in the same query.
 

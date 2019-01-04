@@ -5,7 +5,12 @@ import {
 } from '../DataState';
 import { getEdForm, getIngForm } from '../utils';
 import { makeMigrationCall } from '../DataActions';
+import dataHeaders from '../Common/Headers';
+import { globalCookiePolicy } from '../../../../Endpoints';
+import requestAction from '../../../../utils/requestAction';
+import Endpoints from '../../../../Endpoints';
 
+export const PERM_ADD_TABLE_SCHEMAS = 'ModifyTable/PERM_ADD_TABLE_SCHEMAS';
 export const PERM_OPEN_EDIT = 'ModifyTable/PERM_OPEN_EDIT';
 export const PERM_SET_FILTER = 'ModifyTable/PERM_SET_FILTER';
 export const PERM_SET_FILTER_SAME_AS = 'ModifyTable/PERM_SET_FILTER_SAME_AS';
@@ -56,6 +61,7 @@ const getQueriesWithPermColumns = insert => {
   }
   return queries;
 };
+
 const permChangeTypes = {
   save: 'update',
   delete: 'delete',
@@ -199,6 +205,45 @@ const getBasePermissionsState = (
   }
 
   return _permissions;
+};
+
+const permAddTableSchemas = schemaNames => {
+  return (dispatch, getState) => {
+    const url = Endpoints.getSchema;
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify({
+        type: 'select',
+        args: {
+          table: {
+            name: 'hdb_table',
+            schema: 'hdb_catalog',
+          },
+          columns: [
+            '*.*',
+            {
+              name: 'columns',
+              columns: ['*.*'],
+              order_by: [{ column: 'column_name', type: 'asc', nulls: 'last' }],
+            },
+          ],
+          where: { table_schema: { $in: schemaNames } },
+          order_by: [{ column: 'table_name', type: 'asc', nulls: 'last' }],
+        },
+      }),
+    };
+
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        dispatch({ type: PERM_ADD_TABLE_SCHEMAS, schemas: data });
+      },
+      error => {
+        console.error('Failed to load table schemas: ' + JSON.stringify(error));
+      }
+    );
+  };
 };
 
 const updatePermissionsState = (permissions, key, value) => {
@@ -626,6 +671,7 @@ const permChangePermissions = changeType => {
 
 export {
   permChangeTypes,
+  permAddTableSchemas,
   permOpenEdit,
   permSetFilter,
   permSetFilterSameAs,

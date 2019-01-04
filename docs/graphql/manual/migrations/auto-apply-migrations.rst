@@ -1,6 +1,11 @@
 Auto-apply migrations when server starts
 ========================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Hasura ships a special docker container which can be used to
 automatically apply migrations when the server starts:
 

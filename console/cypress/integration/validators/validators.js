@@ -143,11 +143,10 @@ export const validateInsert = (tableName, rows) => {
 
 // ******************* Permissiosn Validator ****************
 
-const compareChecks = (permObj, check, query, columns, allowUpsert) => {
+const compareChecks = (permObj, check, query, columns) => {
   if (check === 'none') {
     if (query === 'insert') {
       expect(Object.keys(permObj.check).length === 0).to.be.true;
-      expect(permObj.allow_upsert === allowUpsert).to.be.true;
     } else {
       expect(Object.keys(permObj.filter).length === 0).to.be.true;
       if (query === 'select' || query === 'update') {
@@ -159,7 +158,6 @@ const compareChecks = (permObj, check, query, columns, allowUpsert) => {
   } else if (query === 'insert') {
     // eslint-disable-line no-lonely-if
     expect(permObj.check[getColName(0)]._eq === '1').to.be.true; // eslint-dsable-line eqeqeq
-    expect(permObj.allow_upsert === allowUpsert).to.be.true;
   } else {
     expect(permObj.filter[getColName(0)]._eq === '1').to.be.true;
     if (query === 'select' || query === 'update') {
@@ -176,8 +174,7 @@ const handlePermValidationResponse = (
   query,
   check,
   result,
-  columns,
-  allowUpsert
+  columns
 ) => {
   const rolePerms = tableSchema.permissions.find(
     permission => permission.role_name === role
@@ -185,7 +182,7 @@ const handlePermValidationResponse = (
   if (rolePerms) {
     const permObj = rolePerms.permissions[query];
     if (permObj) {
-      compareChecks(permObj, check, query, columns, allowUpsert, result);
+      compareChecks(permObj, check, query, columns);
     } else {
       // this block can be reached only if the permission doesn't exist (failure case)
       expect(result === 'failure').to.be.true;
@@ -202,8 +199,7 @@ export const validatePermission = (
   query,
   check,
   result,
-  columns,
-  allowUpsert
+  columns
 ) => {
   const reqBody = {
     type: 'select',
@@ -230,8 +226,7 @@ export const validatePermission = (
       query,
       check,
       result,
-      columns,
-      allowUpsert
+      columns
     );
   });
 };

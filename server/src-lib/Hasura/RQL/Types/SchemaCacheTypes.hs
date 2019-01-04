@@ -1,7 +1,3 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
 module Hasura.RQL.Types.SchemaCacheTypes where
 
 import           Data.Aeson
@@ -82,6 +78,7 @@ data SchemaDependency
   } deriving (Show, Eq, Generic)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaDependency)
+instance Hashable SchemaDependency
 
 -- data RelInfo
 --   = RelInfo

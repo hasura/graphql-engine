@@ -1,16 +1,8 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TemplateHaskell       #-}
-
 module Hasura.GraphQL.Resolve.Insert
   (convertInsert)
 where
 
-import           Data.Foldable                     (foldrM)
 import           Data.Has
-import           Data.List                         (intersect, union)
 import           Hasura.Prelude
 import           Hasura.Server.Utils
 
@@ -19,7 +11,6 @@ import qualified Data.Aeson.Casing                 as J
 import qualified Data.Aeson.TH                     as J
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
-import qualified Data.HashSet                      as Set
 import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
@@ -39,6 +30,7 @@ import           Hasura.GraphQL.Resolve.Select
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Internal           (dmlTxErrorHandler)
+import           Hasura.RQL.GBoolExp               (toSQLBoolExp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -86,10 +78,6 @@ data AnnInsObj
   , _aioArrRels :: ![ArrRelIns]
   } deriving (Show, Eq)
 
-getAllInsCols :: [AnnInsObj] -> [PGCol]
-getAllInsCols =
-  Set.toList . Set.fromList . concatMap (map _1 . _aioColumns)
-
 mkAnnInsObj
   :: (MonadError QErr m, Has InsCtxMap r, MonadReader r m)
   => RelationInfoMap
@@ -122,14 +110,14 @@ traverseInsObj rim (gName, annVal) (AnnInsObj cols objRels arrRels) =
       relInfo <- onNothing (Map.lookup relName rim) $
                  throw500 $ "relation " <> relName <<> " not found"
 
-      (rtView, rtCols, rtDefVals, rtRelInfoMap) <- resolveInsCtx $ riRTable relInfo
+      let rTable = riRTable relInfo
+      InsCtx rtView rtCols rtDefVals rtRelInfoMap rtUpdPerm <- getInsCtx rTable
 
       withPathK (G.unName gName) $ case riType relInfo of
         ObjRel -> do
           dataObj <- asObject dataVal
           annDataObj <- mkAnnInsObj rtRelInfoMap dataObj
-          let insCols = getAllInsCols [annDataObj]
-          ccM <- forM onConflictM $ parseOnConflict insCols
+          ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm
           let singleObjIns = AnnIns annDataObj ccM rtView rtCols rtDefVals
               objRelIns = RelIns singleObjIns relInfo
           return (AnnInsObj cols (objRelIns:objRels) arrRels)
@@ -139,46 +127,37 @@ traverseInsObj rim (gName, annVal) (AnnInsObj cols objRels arrRels) =
           annDataObjs <- forM arrDataVals $ \arrDataVal -> do
             dataObj <- asObject arrDataVal
             mkAnnInsObj rtRelInfoMap dataObj
-          let insCols = getAllInsCols annDataObjs
-          ccM <- forM onConflictM $ parseOnConflict insCols
+          ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm
           let multiObjIns = AnnIns annDataObjs ccM rtView rtCols rtDefVals
               arrRelIns = RelIns multiObjIns relInfo
           return (AnnInsObj cols objRels (arrRelIns:arrRels))
 
 parseOnConflict
   :: (MonadError QErr m)
-  => [PGCol] -> AnnGValue -> m RI.ConflictClauseP1
-parseOnConflict inpCols val = withPathK "on_conflict" $
+  => QualifiedTable -> Maybe UpdPermForIns
+  -> AnnGValue -> m RI.ConflictClauseP1
+parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
   flip withObject val $ \_ obj -> do
-    actionM <- forM (OMap.lookup "action" obj) parseAction
-    constraint <- parseConstraint obj
-    updColsM <- forM (OMap.lookup "update_columns" obj) parseColumns
-    -- consider "action" if "update_columns" is not mentioned
-    return $ mkConflictClause $ case (updColsM, actionM) of
-      (Just [], _)             -> RI.CCDoNothing $ Just constraint
-      (Just cols, _)           -> RI.CCUpdate constraint cols
-      (Nothing, Just CAIgnore) -> RI.CCDoNothing $ Just constraint
-      (Nothing, _)             -> RI.CCUpdate constraint inpCols
+    constraint <- RI.Constraint <$> parseConstraint obj
+    updCols <- getUpdCols obj
+    case updCols of
+      [] -> return $ RI.CP1DoNothing $ Just constraint
+      _  -> do
+          (_, updFiltr) <- onNothing updFiltrM $ throw500
+            "cannot update columns since update permission is not defined"
+          return $ RI.CP1Update constraint updCols $ toSQLBoolExp (S.mkQual tn) updFiltr
+
   where
-    parseAction v = do
-      (enumTy, enumVal) <- asEnumVal v
-      case G.unName $ G.unEnumValue enumVal of
-        "ignore" -> return CAIgnore
-        "update" -> return CAUpdate
-        _ -> throw500 $
-          "only \"ignore\" and \"update\" allowed for enum type "
-          <> showNamedTy enumTy
+    getUpdCols o = do
+      updColsVal <- onNothing (OMap.lookup "update_columns" o) $ throw500
+        "\"update_columns\" argument in expected in \"on_conflict\" field "
+      parseColumns updColsVal
 
     parseConstraint o = do
       v <- onNothing (OMap.lookup "constraint" o) $ throw500
            "\"constraint\" is expected, but not found"
       (_, enumVal) <- asEnumVal v
       return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
-
-    mkConflictClause (RI.CCDoNothing constrM) =
-      RI.CP1DoNothing $ fmap RI.Constraint constrM
-    mkConflictClause (RI.CCUpdate constr updCols) =
-      RI.CP1Update (RI.Constraint constr) updCols
 
 toSQLExps :: (MonadError QErr m, MonadState PrepArgs m)
      => [(PGCol, AnnGValue)] -> m [(PGCol, S.SQLExp)]
@@ -278,7 +257,7 @@ validateInsert
 validateInsert insCols objRels addCols = do
   -- validate insertCols
   unless (null insConflictCols) $ throwVE $
-    "cannot insert " <> pgColsToText insConflictCols
+    "cannot insert " <> showPGCols insConflictCols
     <> " columns as their values are already being determined by parent insert"
 
   forM_ objRels $ \relInfo -> do
@@ -288,11 +267,10 @@ validateInsert insCols objRels addCols = do
         lColConflicts = lCols `intersect` (addCols <> insCols)
     withPathK relNameTxt $ unless (null lColConflicts) $ throwVE $
       "cannot insert object relation ship " <> relName
-      <<> " as " <> pgColsToText lColConflicts
+      <<> " as " <> showPGCols lColConflicts
       <> " column values are already determined"
   where
     insConflictCols = insCols `intersect` addCols
-    pgColsToText cols = T.intercalate ", " $ map getPGColTxt cols
 
 -- | insert an object relationship and return affected rows
 -- | and parent dependent columns
@@ -469,12 +447,11 @@ convertInsert
   -> Field -- the mutation field
   -> Convert RespTx
 convertInsert role tn fld = prefixErrPath fld $ do
-  (vn, tableCols, defValMap, relInfoMap) <- resolveInsCtx tn
+  InsCtx vn tableCols defValMap relInfoMap updPerm <- getInsCtx tn
   annVals <- withArg arguments "objects" asArray
   annObjs <- mapM asObject annVals
   annInsObjs <- forM annObjs $ mkAnnInsObj relInfoMap
-  let insCols = getAllInsCols annInsObjs
-  conflictClauseM <- forM onConflictM $ parseOnConflict insCols
+  conflictClauseM <- forM onConflictM $ parseOnConflict tn updPerm
   mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
   let multiObjIns = AnnIns annInsObjs conflictClauseM vn tableCols defValMap
   return $ prefixErrPath fld $ insertMultipleObjects role tn
@@ -484,22 +461,16 @@ convertInsert role tn fld = prefixErrPath fld $ do
     onConflictM = Map.lookup "on_conflict" arguments
 
 -- helper functions
-resolveInsCtx
+getInsCtx
   :: (MonadError QErr m, MonadReader r m, Has InsCtxMap r)
-  => QualifiedTable
-  -> m ( QualifiedTable
-       , [PGColInfo]
-       , Map.HashMap PGCol S.SQLExp
-       , RelationInfoMap
-       )
-resolveInsCtx tn = do
+  => QualifiedTable -> m InsCtx
+getInsCtx tn = do
   ctxMap <- asks getter
-  InsCtx view colInfos setVals relInfoMap <-
-    onNothing (Map.lookup tn ctxMap) $
+  insCtx <- onNothing (Map.lookup tn ctxMap) $
     throw500 $ "table " <> tn <<> " not found"
-  let defValMap = S.mkColDefValMap $ map pgiName colInfos
-      defValWithSet = Map.union setVals defValMap
-  return (view, colInfos, defValWithSet, relInfoMap)
+  let defValMap = S.mkColDefValMap $ map pgiName $ icColumns insCtx
+      setCols = icSet insCtx
+  return $ insCtx {icSet = Map.union setCols defValMap}
 
 fetchVal :: (MonadError QErr m)
   => T.Text -> Map.HashMap T.Text a -> m a

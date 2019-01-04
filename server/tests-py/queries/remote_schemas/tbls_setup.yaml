@@ -3,7 +3,7 @@ args:
 - type: run_sql
   args:
     sql: |
-      CREATE TABLE country (
+      CREATE TABLE hello (
         id SERIAL PRIMARY KEY,
         code TEXT,
         name TEXT
@@ -12,12 +12,12 @@ args:
 - type: track_table
   args:
     schema: public
-    name: country
+    name: hello
 
 - type: add_remote_schema
   args:
-    name: bahnql-remote
+    name: simple2-graphql
     comment: testing
     definition:
-      url: https://bahnql.herokuapp.com/graphql
+      url: http://localhost:5000/user-graphql
       forward_client_headers: false

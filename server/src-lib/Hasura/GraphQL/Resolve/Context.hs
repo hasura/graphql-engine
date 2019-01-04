@@ -1,10 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
-
 module Hasura.GraphQL.Resolve.Context
   ( FieldMap
   , RelationInfoMap
@@ -13,9 +6,12 @@ module Hasura.GraphQL.Resolve.Context
   , OrdByCtx
   , OrdByItemMap
   , OrdByItem(..)
+  , UpdPermForIns
   , InsCtx(..)
   , InsCtxMap
   , RespTx
+  , LazyRespTx
+  , PrepFn
   , InsertTxConflictCtx(..)
   , getFldInfo
   , getPGColInfo
@@ -60,44 +56,10 @@ data InsResp
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
 
--- type FieldMap
---   = Map.HashMap (G.NamedType, G.Name)
---     (Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int))
-
--- data OrdTy
---   = OAsc
---   | ODesc
---   deriving (Show, Eq)
-
--- data NullsOrder
---   = NFirst
---   | NLast
---   deriving (Show, Eq)
-
 type RespTx = Q.TxE QErr BL.ByteString
 
--- -- order by context
--- data OrdByItem
---   = OBIPGCol !PGColInfo
---   | OBIRel !RelInfo !AnnBoolExpSQL
---   deriving (Show, Eq)
-
--- type OrdByItemMap = Map.HashMap G.Name OrdByItem
-
--- type OrdByCtx = Map.HashMap G.NamedType OrdByItemMap
-
--- -- insert context
--- type RelationInfoMap = Map.HashMap RelName RelInfo
-
--- data InsCtx
---   = InsCtx
---   { icView      :: !QualifiedTable
---   , icColumns   :: ![PGColInfo]
---   , icSet       :: !InsSetCols
---   , icRelations :: !RelationInfoMap
---   } deriving (Show, Eq)
-
--- type InsCtxMap = Map.HashMap QualifiedTable InsCtx
+type LazyRespTx = LazyTx QErr BL.ByteString
+type PrepFn m = (PGColType, PGColValue) -> m S.SQLExp
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
@@ -155,7 +117,9 @@ withArgM
   -> (AnnGValue -> m a)
   -> m (Maybe a)
 withArgM args arg f = prependArgsInPath $ nameAsPath arg $
-  mapM f $ Map.lookup arg args
+  mapM f $ handleNull =<< Map.lookup arg args
+  where
+    handleNull v = bool (Just v) Nothing $ hasNullVal v
 
 type PrepArgs = Seq.Seq Q.PrepArg
 
@@ -163,8 +127,7 @@ type Convert =
   StateT PrepArgs (ReaderT (FieldMap, OrdByCtx, InsCtxMap, FuncArgCtx) (Except QErr))
 
 prepare
-  :: (MonadState PrepArgs m)
-  => (PGColType, PGColValue) -> m S.SQLExp
+  :: (MonadState PrepArgs m) => PrepFn m
 prepare (colTy, colVal) = do
   preparedArgs <- get
   put (preparedArgs Seq.|> binEncoder colVal)

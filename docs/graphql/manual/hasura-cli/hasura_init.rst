@@ -3,13 +3,13 @@
 Hasura CLI: hasura init
 -----------------------
 
-Initialize directory for Hasura GraphQL Engine
+Initialize directory for Hasura GraphQL Engine migrations
 
 Synopsis
 ~~~~~~~~
 
 
-Create directories and files required for Hasura GraphQL Engine
+Create directories and files required for enabling migrations on Hasura GraphQL Engine
 
 ::
 
@@ -20,13 +20,15 @@ Examples
 
 ::
 
-    # Create a directory with installation manifests:
-    hasura init --directory <my-directory>
+    # Create a directory to store migrations
+    hasura init
 
-    # Create a directory with an endpoint configured:
-    hasura --directory <my-directory> --endpoint <graphql-engine-endpoint>
+    # Now, edit <my-directory>/config.yaml to add endpoint and access key
 
-    # See https://docs.hasura.io/0.15/graphql/manual/getting-started for more details
+    # Create a directory with endpoint and access key configured:
+    hasura init --directory <my-project> --endpoint https://my-graphql-engine.com --access-key secretaccesskey
+
+    # See https://docs.hasura.io/1.0/graphql/manual/migrations/index.html for more details
 
 Options
 ~~~~~~~

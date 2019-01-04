@@ -2,10 +2,14 @@
 
 const GOOGLE_API_KEY = process.env.NODE_ENV==='production'? process.env.REACT_APP_GOOGLE_API_KEY : ''; 
 
-const HASURA_GRAPHQL_URL = 'realtime-backend.herokuapp.com/v1alpha1/graphql';
+const HASURA_GRAPHQL_ENGINE_HOSTNAME = window.location.host;
 
-const wsurl = `wss://${ HASURA_GRAPHQL_URL }`;
-const httpurl = `https://${ HASURA_GRAPHQL_URL }`;
+const scheme = (proto) => {
+  return window.location.protocol === 'https:' ? `${proto}s` : proto;
+}
+
+const wsurl = `${scheme('ws')}://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1alpha1/graphql`;
+const httpurl = `${scheme('http')}://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1alpha1/graphql`;
 
 const HASURA_LOCATION = {
   lat: 12.93958,

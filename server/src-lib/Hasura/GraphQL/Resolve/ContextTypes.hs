@@ -20,6 +20,7 @@ type FieldMap
 data OrdByItem
   = OBIPGCol !PGColInfo
   | OBIRel !RelInfo !AnnBoolExpSQL
+  | OBIAgg !RelInfo !AnnBoolExpSQL
   deriving (Show, Eq)
 
 type OrdByItemMap = Map.HashMap G.Name OrdByItem
@@ -37,12 +38,15 @@ type FuncArgCtx = Map.HashMap G.NamedType (Seq.Seq FuncArgItem)
 -- insert context
 type RelationInfoMap = Map.HashMap RelName RelInfo
 
+type UpdPermForIns = ([PGCol], AnnBoolExpSQL)
+
 data InsCtx
   = InsCtx
   { icView      :: !QualifiedTable
   , icColumns   :: ![PGColInfo]
   , icSet       :: !InsSetCols
   , icRelations :: !RelationInfoMap
+  , icUpdPerm   :: !(Maybe UpdPermForIns)
   } deriving (Show, Eq)
 
 type InsCtxMap = Map.HashMap QualifiedTable InsCtx

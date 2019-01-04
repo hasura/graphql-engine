@@ -43,7 +43,7 @@ const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
   ) : (
     <span>
       &nbsp;
-      {rTable.name} :: {rcol}
+      {rTable} :: {rcol}
       &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
       {getGrayText(lcol)}
     </span>

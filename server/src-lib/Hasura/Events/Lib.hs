@@ -1,9 +1,3 @@
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE QuasiQuotes         #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell     #-}
-
 module Hasura.Events.Lib
   ( initEventEngineCtx
   , processEventQueue
@@ -152,7 +146,6 @@ initEventEngineCtx maxT fetchI = do
 
 processEventQueue :: L.LoggerCtx -> LogEnvHeaders -> WS.Session -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
 processEventQueue logctx logenv httpSess pool cacheRef eectx = do
-  putStrLn "event_trigger: starting workers"
   threads <- mapM async [fetchThread , consumeThread]
   void $ waitAny threads
   where
@@ -195,10 +188,8 @@ processEvent logenv pool e = do
     errorFn
       :: ( MonadReader r m
          , MonadIO m
-         , Has WS.Session r
          , Has HLogger r
          , Has CacheRef r
-         , Has EventEngineCtx r
          )
       => HTTPErr -> m (Either QErr ())
     errorFn err = do
@@ -207,13 +198,7 @@ processEvent logenv pool e = do
       checkError err
 
     successFn
-      :: ( MonadReader r m
-         , MonadIO m
-         , Has WS.Session r
-         , Has HLogger r
-         , Has CacheRef r
-         , Has EventEngineCtx r
-         )
+      :: (MonadIO m)
       => HTTPResp -> m (Either QErr ())
     successFn _ = liftIO $ runExceptT $ runUnlockQ pool e
 
@@ -223,10 +208,7 @@ processEvent logenv pool e = do
     checkError
       :: ( MonadReader r m
          , MonadIO m
-         , Has WS.Session r
-         , Has HLogger r
          , Has CacheRef r
-         , Has EventEngineCtx r
          )
       => HTTPErr -> m (Either QErr ())
     checkError err = do

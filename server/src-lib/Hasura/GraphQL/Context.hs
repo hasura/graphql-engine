@@ -1,11 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
-
 module Hasura.GraphQL.Context where
 
 import           Data.Aeson
@@ -291,7 +283,7 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums funcArgCtx) (RootFlds flds) insCtxMap 
                             ] <>
                   scalarTys <> compTys <> defaultTypes
   -- for now subscription root is query root
-  in GCtx allTys fldInfos ordByEnums funcArgCtx queryRoot mutRootM (Just queryRoot)
+  in GCtx allTys fldInfos ordByEnums funcArgCtx queryRoot mutRootM subRootM
      (Map.map fst flds) insCtxMap
   where
     mkMutRoot =

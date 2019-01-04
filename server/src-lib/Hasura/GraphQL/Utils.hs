@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.GraphQL.Utils
   ( onNothing
   , showName
@@ -16,6 +11,7 @@ module Hasura.GraphQL.Utils
   , onLeft
   , showNames
   , isValidName
+  , onJust
   ) where
 
 import           Hasura.Prelude
@@ -33,6 +29,9 @@ showName name = "\"" <> G.unName name <> "\""
 
 onNothing :: (Monad m) => Maybe a -> m a -> m a
 onNothing m act = maybe act return m
+
+onJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
+onJust m action = maybe (return ()) action m
 
 throwVE :: (MonadError QErr m) => Text -> m a
 throwVE = throw400 ValidationFailed

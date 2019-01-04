@@ -1,6 +1,11 @@
 Modelling many-to-many table relationships
 ==========================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 A ``many-to-many`` relationship between two tables can be established by creating a table typically called as
 **bridge/junction/join table** and adding **foreign-key constraints** from it to the original tables.
 
@@ -25,6 +30,9 @@ These two tables are related via a ``many-to-many`` relationship. i.e:
 - an ``article`` can have many ``tags``
 - a ``tag`` has many ``articles``
 
+Set up a table relationship in the database
+-------------------------------------------
+
 This ``many-to-many`` relationship can be established in the database by:
 
 1. Creating a **bridge table** called ``article_tag`` with the following structure:
@@ -47,6 +55,9 @@ This ``many-to-many`` relationship can be established in the database by:
 The table ``article_tag`` sits between the two tables involved in the many-to-many relationship and captures possible
 permutations of their association via the foreign-keys.
 
+Set up GraphQL relationships
+----------------------------
+
 To access the nested objects via the GraphQL API, :doc:`create the following relationships <../create>`:
 
 - Array relationship, ``article_tags`` from ``article`` table using  ``article_tag :: article_id -> id``
@@ -54,6 +65,8 @@ To access the nested objects via the GraphQL API, :doc:`create the following rel
 - Array relationship, ``tag_articles`` from ``tag`` table using  ``article_tag :: tag_id -> id``
 - Object relationship, ``article`` from ``article_tag`` table using  ``article_id -> article :: id``
 
+Query using relationships
+-------------------------
 
 We can now:
 
@@ -245,8 +258,8 @@ table which you can fetch as follows:
     }
 
 
-Flattening many-to-many relationship query
-------------------------------------------
+Flattening a many-to-many relationship query
+--------------------------------------------
 
 In case you would like to flatten the above queries and avoid the intermediate fields ``article_tags`` &
 ``tag_articles``, you can :doc:`create the following views <../../views>` additionally and then
