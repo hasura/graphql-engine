@@ -61,6 +61,8 @@ Environment variables accepted in `server` mode:
 5. `CONSOLE_MODE`: `server`
 6. `URL_PREFIX`: `/` (forward slash)
 
+> The server also templates `consolePath` in `window.__env` which is the relative path of the current page (something like `/console/data/schema/public`). Using this path, the console determines the DATA_API_URL. You do not need to worry about this in development since you are hardcoding the value of DATA_API_URL in `.env`. 
+
 #### Run Development Server:
 
 ```bash
