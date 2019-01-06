@@ -23,8 +23,7 @@ wait_for_port() {
     log "waiting 30s for $PORT to be ready"
     for i in `seq 1 30`;
     do
-        # set 0.0.0.0 to the HOST env var after the feature is added
-        nc 0.0.0.0 $PORT > /dev/null 2>&1 && log "port $PORT is ready" && return
+        nc localhost $PORT > /dev/null 2>&1 && log "port $PORT is ready" && return
         sleep 1
     done
     log "failed waiting for $PORT" && exit 1
@@ -43,8 +42,7 @@ wait_for_port $HASURA_GRAPHQL_SERVER_PORT
 # check if migration directory is set, default otherwise
 log "checking for migrations directory"
 if [ -z ${HASURA_GRAPHQL_MIGRATIONS_DIR+x} ]; then
-    log "env var HASURA_GRAPHQL_MIGRATIONS_DIR is not set"
-    log "defaulting to $DEFAULT_MIGRATIONS_DIR"
+    log "env var HASURA_GRAPHQL_MIGRATIONS_DIR is not set, defaulting to $DEFAULT_MIGRATIONS_DIR"
     HASURA_GRAPHQL_MIGRATIONS_DIR="$DEFAULT_MIGRATIONS_DIR"
 fi
 
@@ -54,7 +52,7 @@ if [ -d "$HASURA_GRAPHQL_MIGRATIONS_DIR" ]; then
     mkdir -p "$TEMP_MIGRATIONS_DIR"
     cp -a "$HASURA_GRAPHQL_MIGRATIONS_DIR/." "$TEMP_MIGRATIONS_DIR/migrations/"
     cd "$TEMP_MIGRATIONS_DIR"
-    log "endpoint: http://localhost:8080" > config.yaml
+    echo "endpoint: http://localhost:$HASURA_GRAPHQL_SERVER_PORT" > config.yaml
     hasura-cli migrate apply
     # check if metadata.yaml exist and apply
     if [ -f migrations/metadata.yaml ]; then
@@ -62,8 +60,7 @@ if [ -d "$HASURA_GRAPHQL_MIGRATIONS_DIR" ]; then
         hasura-cli metadata apply
     fi
 else
-    log "directory $HASURA_GRAPHQL_MIGRATIONS_DIR does not exist"
-    log "skipping migrations"
+    log "directory $HASURA_GRAPHQL_MIGRATIONS_DIR does not exist, skipping migrations"
 fi
 
 # kill graphql engine that we started earlier
