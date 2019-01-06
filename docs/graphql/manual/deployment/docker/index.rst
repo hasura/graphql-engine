@@ -1,10 +1,16 @@
 Run Hasura GraphQL Engine using Docker
 ======================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 This guide assumes that you already have Postgres running and helps you set up the Hasura GraphQL engine using Docker
 and connect it to your Postgres database.
 
-**Prerequisites**:
+Prerequisites
+-------------
 
 - `Docker <https://docs.docker.com/install/>`_
 
@@ -74,6 +80,17 @@ Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
             -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@host.docker.internal:port/dbname \
             -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
             hasura/graphql-engine:latest
+     
+    .. tab:: Docker for Windows
+
+       If your Postgres database is running on ``localhost``, use ``docker.for.win.localhost`` as hostname to access
+       the host's Postgres service. This is what your command should look like:
+
+       .. code-block:: bash
+          :emphasize-lines: 1
+
+          docker run -d -p 8080:8080 -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@docker.for.win.localhost:port/dbname -e HASURA_GRAPHQL_ENABLE_CONSOLE=true hasura/graphql-engine:latest
+          
 
 Step 3: Run the hasura docker container
 ---------------------------------------
@@ -98,8 +115,8 @@ Step 4: Track existing tables and relationships
 
 See :doc:`../../schema/using-existing-database` to enable GraphQL over the database.
 
-Advanced:
----------
+Advanced
+--------
 
 - :doc:`Securing your GraphQL endpoint <securing-graphql-endpoint>`
 - :doc:`GraphQL engine server logs <logging>`

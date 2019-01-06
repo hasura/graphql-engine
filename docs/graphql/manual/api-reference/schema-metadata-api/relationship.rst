@@ -1,6 +1,11 @@
 Schema/Metadata API Reference: Relationships
 ============================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Relationships are used to capture the connectedness of data amongst tables.
 In general, when retrieving data from tables, it is very helpful if we can also
 fetch the related data alongside the columns. This is where relationships come

@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.SQL.Value where
 
 import           Hasura.SQL.GeoJSON

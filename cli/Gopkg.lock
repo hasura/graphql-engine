@@ -314,7 +314,12 @@
   revision = "9ac6cf4d929b2fa8fd2d2e6dec5bb0feb4f4911d"
 
 [[projects]]
-  digest = "1:d776f3e95774a8719f2e57fabbbb33103035fe072dcf6f1864f33abd17b753e5"
+  branch = "master"
+  name = "github.com/oliveagle/jsonpath"
+  packages = ["."]
+  revision = "2e52cf6e685269ed8aefec6390f3cac3ef74e730"
+
+[[projects]]
   name = "github.com/parnurzeal/gorequest"
   packages = ["."]
   pruneopts = "UT"
@@ -517,35 +522,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = [
-    "github.com/Masterminds/semver",
-    "github.com/briandowns/spinner",
-    "github.com/docker/docker/api/types",
-    "github.com/docker/docker/api/types/container",
-    "github.com/docker/docker/api/types/network",
-    "github.com/docker/docker/client",
-    "github.com/docker/go-connections/nat",
-    "github.com/elazarl/go-bindata-assetfs",
-    "github.com/fatih/color",
-    "github.com/ghodss/yaml",
-    "github.com/gin-contrib/cors",
-    "github.com/gin-contrib/static",
-    "github.com/gin-gonic/contrib/renders/multitemplate",
-    "github.com/gin-gonic/gin",
-    "github.com/gofrs/uuid",
-    "github.com/lib/pq",
-    "github.com/manifoldco/promptui",
-    "github.com/mattn/go-colorable",
-    "github.com/mitchellh/go-homedir",
-    "github.com/parnurzeal/gorequest",
-    "github.com/pkg/errors",
-    "github.com/sirupsen/logrus",
-    "github.com/sirupsen/logrus/hooks/test",
-    "github.com/skratchdot/open-golang/open",
-    "github.com/spf13/cobra",
-    "github.com/spf13/cobra/doc",
-    "github.com/spf13/viper",
-    "github.com/stretchr/testify/assert",
-  ]
+  inputs-digest = "81fcfffa8a80b8583e2e0904bb40d9d8cac3a889a2965d0c68896871578acf73"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Data.Text.Extended
        ( module DT
        , squote

@@ -1,12 +1,10 @@
-{-# LANGUAGE ConstraintKinds   #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Hasura.RQL.Types.Error
        ( Code(..)
        , QErr(..)
        , encodeQErr
+       , encodeGQLErr
        , noInternalQErrEnc
        , err400
        , err404
@@ -152,6 +150,20 @@ noInternalQErrEnc (QErr jPath _ msg code _) =
   , "error" .= msg
   , "code"  .= show code
   ]
+
+encodeGQLErr :: Bool -> QErr -> Value
+encodeGQLErr includeInternal (QErr jPath _ msg code mIE) =
+  object
+  [ "message" .= msg
+  , "extensions" .= extnsObj
+  ]
+  where
+    extnsObj = object $ bool codeAndPath
+               (codeAndPath ++ internal) includeInternal
+    codeAndPath = [ "code" .= show code
+                  , "path" .= encodeJSONPath jPath
+                  ]
+    internal = maybe [] (\ie -> ["internal" .= ie]) mIE
 
 -- whether internal should be included or not
 encodeQErr :: Bool -> QErr -> Value

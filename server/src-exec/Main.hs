@@ -1,7 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
 module Main where
 
 import           Ops
@@ -9,7 +5,7 @@ import           Ops
 import           Control.Monad.STM          (atomically)
 import           Data.Time.Clock            (getCurrentTime)
 import           Options.Applicative
-import           System.Environment         (lookupEnv)
+import           System.Environment         (getEnvironment, lookupEnv)
 import           System.Exit                (exitFailure)
 
 import qualified Control.Concurrent         as C
@@ -24,65 +20,50 @@ import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
 import           Hasura.Events.Lib
-import           Hasura.Logging             (defaultLoggerSettings, mkLoggerCtx)
+import           Hasura.Logging             (Logger (..), defaultLoggerSettings,
+                                             mkLogger, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
-import           Hasura.RQL.Types           (RoleName (..))
+import           Hasura.RQL.Types           (QErr, adminUserInfo,
+                                             emptySchemaCache)
 import           Hasura.Server.App          (mkWaiApp)
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
+import           Hasura.Server.Query        (peelRun)
+import           Hasura.Server.Version      (currentVersion)
 
 import qualified Database.PG.Query          as Q
 import qualified Network.HTTP.Client.TLS    as TLS
 import qualified Network.Wreq.Session       as WrqS
 
-data RavenOptions
-  = RavenOptions
-  { roConnInfo :: !RawConnInfo
-  , roMode     :: !RavenMode
-  } deriving (Show, Eq)
+printErrExit :: forall a . String -> IO a
+printErrExit = (>> exitFailure) . putStrLn
 
-data ServeOptions
-  = ServeOptions
-  { soPort             :: !(Maybe Int)
-  , soConnParams       :: !Q.ConnParams
-  , soTxIso            :: !Q.TxIsolation
-  , soRootDir          :: !(Maybe String)
-  , soAccessKey        :: !(Maybe AccessKey)
-  , soWebHook          :: !(Maybe Webhook)
-  , soJwtSecret        :: !(Maybe Text)
-  , soUnAuthRole       :: !(Maybe RoleName)
-  , soCorsConfig       :: !CorsConfigFlags
-  , soEnableConsole    :: !Bool
-  , soDisableTelemetry :: !Bool
-  } deriving (Show, Eq)
+printErrJExit :: A.ToJSON a => forall b . a -> IO b
+printErrJExit = (>> exitFailure) . printJSON
 
-data RavenMode
-  = ROServe !ServeOptions
-  | ROExport
-  | ROClean
-  | ROExecute
-  deriving (Show, Eq)
-
-parseRavenMode :: Parser RavenMode
-parseRavenMode = subparser
-  ( command "serve" (info (helper <*> serveOptsParser)
-      ( progDesc "Start the HTTP api server" ))
-    <> command "export" (info (pure ROExport)
-      ( progDesc "Export graphql-engine's schema to stdout" ))
-    <> command "clean" (info (pure ROClean)
-      ( progDesc "Clean graphql-engine's metadata to start afresh" ))
-    <> command "execute" (info (pure ROExecute)
-      ( progDesc "Execute a query" ))
-  )
+parseHGECommand :: Parser RawHGECommand
+parseHGECommand =
+  subparser
+    ( command "serve" (info (helper <*> (HCServe <$> serveOpts))
+          ( progDesc "Start the GraphQL Engine Server"
+            <> footerDoc (Just serveCmdFooter)
+          ))
+        <> command "export" (info (pure  HCExport)
+          ( progDesc "Export graphql-engine's metadata to stdout" ))
+        <> command "clean" (info (pure  HCClean)
+          ( progDesc "Clean graphql-engine's metadata to start afresh" ))
+        <> command "execute" (info (pure  HCExecute)
+          ( progDesc "Execute a query" ))
+        <> command "version" (info (pure  HCVersion)
+          (progDesc "Prints the version of GraphQL Engine"))
+    )
   where
-    serveOptsParser = ROServe <$> serveOpts
-    serveOpts = ServeOptions
+    serveOpts = RawServeOptions
                 <$> parseServerPort
                 <*> parseConnParams
                 <*> parseTxIsolation
-                <*> parseRootDir
                 <*> parseAccessKey
                 <*> parseWebHook
                 <*> parseJwtSecret
@@ -91,13 +72,19 @@ parseRavenMode = subparser
                 <*> parseEnableConsole
                 <*> parseDisableTelemetry
 
-parseArgs :: IO RavenOptions
-parseArgs = execParser opts
+parseArgs :: IO HGEOptions
+parseArgs = do
+  rawHGEOpts <- execParser opts
+  env <- getEnvironment
+  let eitherOpts = runWithEnv env $ mkHGEOptions rawHGEOpts
+  either printErrExit return eitherOpts
   where
-    optParser = RavenOptions <$> parseRawConnInfo <*> parseRavenMode
-    opts = info (helper <*> optParser)
+    opts = info (helper <*> hgeOpts)
            ( fullDesc <>
-             header "Hasura's graphql-engine - Exposes Postgres over GraphQL")
+             header "Hasura GraphQL Engine: Realtime GraphQL API over Postgres with access control" <>
+             footerDoc (Just mainCmdFooter)
+           )
+    hgeOpts = HGEOptionsG <$> parseRawConnInfo <*> parseHGECommand
 
 printJSON :: (A.ToJSON a) => a -> IO ()
 printJSON = BLC.putStrLn . A.encode
@@ -105,70 +92,38 @@ printJSON = BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a) => a -> IO ()
 printYaml = BC.putStrLn . Y.encode
 
-getBoolEnv :: String -> IO Bool
-getBoolEnv envVar = do
-  mVal <- fmap T.pack <$> lookupEnv envVar
-  maybe (return False) (parseAsBool . T.toLower) mVal
-  where
-    truthVals = ["true", "t", "yes", "y"]
-    falseVals = ["false", "f", "no", "n"]
-
-    parseAsBool t
-      | t `elem` truthVals = return True
-      | t `elem` falseVals = return False
-      | otherwise = putStrLn errMsg >> exitFailure
-
-    errMsg = "Fatal Error: " ++ envVar
-             ++ " is not valid boolean text. " ++ "True values are "
-             ++ show truthVals ++ " and  False values are " ++ show falseVals
-             ++ ". All values are case insensitive"
-
 main :: IO ()
 main =  do
-  (RavenOptions rci ravenMode) <- parseArgs
-  mEnvDbUrl <- lookupEnv "HASURA_GRAPHQL_DATABASE_URL"
-  ci <- either ((>> exitFailure) . putStrLn . connInfoErrModifier)
-    return $ mkConnInfo mEnvDbUrl rci
-  printConnInfo ci
-  loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
-  hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
+  (HGEOptionsG rci hgeCmd) <- parseArgs
+  -- global http manager
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-  case ravenMode of
-    ROServe (ServeOptions mPort cp isoL mRootDir mAccessKey mWebHook mJwtSecret
+  loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
+  let logger = mkLogger loggerCtx
+  case hgeCmd of
+    HCServe so@(ServeOptions port cp isoL mAccessKey mAuthHook mJwtSecret
              mUnAuthRole corsCfg enableConsole disableTelemetry) -> do
+      -- log serve options
+      unLogger logger $ serveOptsToLog so
+      hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
 
-      -- get all auth mode related config
-      mFinalAccessKey <- considerEnv "HASURA_GRAPHQL_ACCESS_KEY" $ getAccessKey <$> mAccessKey
-      mFinalWebHook   <- considerEnv "HASURA_GRAPHQL_AUTH_HOOK" $ getWebhook <$> mWebHook
-      mFinalJwtSecret <- considerEnv "HASURA_GRAPHQL_JWT_SECRET" mJwtSecret
-      mFinalUnAuthRole <- considerEnv "HASURA_GRAPHQL_UNAUTHORIZED_ROLE" $ getRoleTxt <$> mUnAuthRole
-      defaultPort <- getFromEnv 8080 "HASURA_GRAPHQL_SERVER_PORT"
-      let port = fromMaybe defaultPort mPort
-      -- prepare auth mode
-      authModeRes <- runExceptT $ mkAuthMode (AccessKey <$> mFinalAccessKey)
-                                             (Webhook <$> mFinalWebHook)
-                                             mFinalJwtSecret
-                                             (RoleName <$> mFinalUnAuthRole)
-                                             httpManager
-                                             loggerCtx
-      am <- either ((>> exitFailure) . putStrLn . T.unpack) return authModeRes
-      finalCorsDomain <- fromMaybe "*" <$> considerEnv "HASURA_GRAPHQL_CORS_DOMAIN" (ccDomain corsCfg)
-      let finalCorsCfg = CorsConfigG finalCorsDomain $ ccDisabled corsCfg
-      -- enable console config
-      finalEnableConsole <- bool (getBoolEnv "HASURA_GRAPHQL_ENABLE_CONSOLE")
-                            (return True) enableConsole
-      -- disable telemetry config
-      finalDisableTelemetry <- bool (getBoolEnv "HASURA_GRAPHQL_DISABLE_TELEMETRY")
-                               (return True) disableTelemetry
-      -- init catalog if necessary
-      initialise ci httpManager
+      authModeRes <- runExceptT $ mkAuthMode mAccessKey mAuthHook mJwtSecret
+                                             mUnAuthRole httpManager loggerCtx
+
+      am <- either (printErrExit . T.unpack) return authModeRes
+
+      ci <- procConnInfo rci
+      -- log postgres connection info
+      unLogger logger $ connInfoToLog ci
+      -- safe init catalog
+      initialise logger ci httpManager
       -- migrate catalog if necessary
-      migrate ci httpManager
-      prepareEvents ci
+      migrate logger ci httpManager
+      -- prepare event triggers data
+      prepareEvents logger ci
+
       pool <- Q.initPGPool ci cp
-      putStrLn $ "server: running on port " ++ show port
-      (app, cacheRef) <- mkWaiApp isoL mRootDir loggerCtx pool httpManager
-                         am finalCorsCfg finalEnableConsole finalDisableTelemetry
+      (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
+                         am corsCfg enableConsole disableTelemetry
       let warpSettings = Warp.setPort port Warp.defaultSettings
                          -- Warp.setHost "*" Warp.defaultSettings
 
@@ -183,39 +138,65 @@ main =  do
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
       httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
 
+      unLogger logger $
+        mkGenericStrLog "event_triggers" "starting workers"
       void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpSession pool cacheRef eventEngineCtx
 
+      unLogger logger $
+        mkGenericStrLog "server" "starting API server"
       Warp.runSettings warpSettings app
 
-    ROExport -> do
+    HCExport -> do
+      ci <- procConnInfo rci
       res <- runTx ci fetchMetadata
-      either ((>> exitFailure) . printJSON) printJSON res
-    ROClean -> do
+      either printErrJExit printJSON res
+
+    HCClean -> do
+      ci <- procConnInfo rci
       res <- runTx ci cleanCatalog
-      either ((>> exitFailure) . printJSON) (const cleanSuccess) res
-    ROExecute -> do
+      either printErrJExit (const cleanSuccess) res
+
+    HCExecute -> do
       queryBs <- BL.getContents
-      res <- runTx ci $ execQuery httpManager queryBs
-      either ((>> exitFailure) . printJSON) BLC.putStrLn res
+      ci <- procConnInfo rci
+      res <- runAsAdmin ci httpManager $ execQuery queryBs
+      either printErrJExit BLC.putStrLn res
+
+    HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where
+    runTx :: Q.ConnInfo -> Q.TxE QErr a -> IO (Either QErr a)
     runTx ci tx = do
       pool <- getMinimalPool ci
       runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
+
+    runAsAdmin ci httpManager m = do
+      pool <- getMinimalPool ci
+      res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
+              httpManager pool Q.Serializable m
+      return $ fmap fst res
+
+    procConnInfo rci =
+      either (printErrExit . connInfoErrModifier) return $
+        mkConnInfo rci
+
     getMinimalPool ci = do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
       Q.initPGPool ci connParams
-    initialise ci httpMgr = do
+
+    initialise (Logger logger) ci httpMgr = do
       currentTime <- getCurrentTime
-      res <- runTx ci $ initCatalogSafe currentTime httpMgr
-      either ((>> exitFailure) . printJSON) putStrLn res
-    migrate ci httpMgr = do
+      res <- runAsAdmin ci httpMgr $ initCatalogSafe currentTime
+      either printErrJExit (logger . mkGenericStrLog "db_init") res
+
+    migrate (Logger logger) ci httpMgr = do
       currentTime <- getCurrentTime
-      res <- runTx ci $ migrateCatalog httpMgr currentTime
-      either ((>> exitFailure) . printJSON) putStrLn res
-    prepareEvents ci = do
-      putStrLn "event_triggers: preparing data"
+      res <- runAsAdmin ci httpMgr $ migrateCatalog currentTime
+      either printErrJExit (logger . mkGenericStrLog "db_migrate") res
+
+    prepareEvents (Logger logger) ci = do
+      logger $ mkGenericStrLog "event_triggers" "preparing data"
       res <- runTx ci unlockAllEvents
-      either ((>> exitFailure) . printJSON) return res
+      either printErrJExit return res
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
@@ -224,18 +205,7 @@ main =  do
             Nothing  -> Just defaults
             Just val -> readMaybe val
           eRes = maybe (Left $ "Wrong expected type for environment variable: " <> env) Right mRes
-      either ((>> exitFailure) . putStrLn) return eRes
+      either printErrExit return eRes
 
-    cleanSuccess = putStrLn "successfully cleaned graphql-engine related data"
-
-    printConnInfo ci =
-      putStrLn $
-        "Postgres connection info:"
-        ++ "\n    Host: " ++ Q.connHost ci
-        ++ "\n    Port: " ++ show (Q.connPort ci)
-        ++ "\n    User: " ++ Q.connUser ci
-        ++ "\n    Database: " ++ Q.connDatabase ci
-
-    -- if flags given are Nothing consider it's value from Env
-    considerEnv _ (Just t) = return $ Just t
-    considerEnv e Nothing  = fmap T.pack <$> lookupEnv e
+    cleanSuccess =
+      putStrLn "successfully cleaned graphql-engine related data"

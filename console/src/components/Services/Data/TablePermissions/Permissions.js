@@ -12,6 +12,7 @@ import {
   getQueriesWithPermColumns,
   permChangeTypes,
   permOpenEdit,
+  permAddTableSchemas,
   permSetFilter,
   permSetFilterSameAs,
   permToggleColumn,
@@ -203,16 +204,22 @@ class Permissions extends Component {
   }
   checkSemVer(version) {
     let showAggregation = false;
+    let showUpsertSection = false;
     try {
       showAggregation = semverCheck('aggregationPerm', version);
-      if (showAggregation) {
-        this.setState({ ...this.state, showAggregation: true });
-      } else {
-        this.setState({ ...this.state, showAggregation: false });
-      }
+      showUpsertSection = !semverCheck('permHideUpsertSection', version);
+      this.setState({
+        ...this.state,
+        showAggregation,
+        showUpsertSection,
+      });
     } catch (e) {
       console.error(e);
-      this.setState({ ...this.state, showAggregation: false });
+      this.setState({
+        ...this.state,
+        showAggregation: false,
+        showUpsertSection: false,
+      });
     }
     return Promise.resolve();
   }
@@ -527,9 +534,7 @@ class Permissions extends Component {
         _permissionsRowHtml.push(
           <td
             key={i}
-            className={
-              className + (role === '' ? ' ' + styles.newRoleTd : null)
-            }
+            className={className + (role === '' ? ' ' + styles.newRoleTd : '')}
             onClick={onClick}
             title="Click to edit permissions"
             data-test={`${role}-${queryType}`}
@@ -686,9 +691,12 @@ class Permissions extends Component {
         </div>
       );
     };
-
     const getUpsertSection = permsState => {
-      let _upsertSection = '';
+      if (!this.state.showUpsertSection) {
+        return null;
+      }
+
+      let _upsertSection;
       const query = permsState.query;
 
       if (query === 'insert') {
@@ -707,7 +715,6 @@ class Permissions extends Component {
           </Tooltip>
         );
 
-        // TODO: Fix the controlled component
         _upsertSection = (
           <div>
             <div className="radio">
@@ -718,7 +725,7 @@ class Permissions extends Component {
                     disabled={!permsState.insert}
                     checked={upsertAllowed}
                     value="toggle_upsert"
-                    onClick={e => dispatchToggleAllowUpsert(e.target.checked)}
+                    onChange={e => dispatchToggleAllowUpsert(e.target.checked)}
                   />
                   <span className={styles.mar_left}>
                     Allow role '{permsState.role}' to make upsert queries &nbsp;
@@ -732,7 +739,6 @@ class Permissions extends Component {
           </div>
         );
       }
-
       return _upsertSection;
     };
 
@@ -995,7 +1001,6 @@ class Permissions extends Component {
           </Tooltip>
         );
 
-        // TODO: Fix the controlled component
         _aggregationSection = (
           <div className={styles.mar_small_neg_left_1}>
             <div className="radio">
@@ -1005,7 +1010,7 @@ class Permissions extends Component {
                   disabled={!permsState.select}
                   checked={aggregationAllowed}
                   value="toggle_aggregation"
-                  onClick={e =>
+                  onChange={e =>
                     dispatchToggleAllowAggregation(e.target.checked)
                   }
                 />
@@ -1072,10 +1077,18 @@ class Permissions extends Component {
           const allColumns = tableSchema.columns.map(c => c.column_name);
           dispatch(permToggleAllColumns(allColumns));
         };
+        let accessText;
+        if (query === 'insert') {
+          accessText = 'Allow input for';
+        } else if (query === 'select') {
+          accessText = 'Allow access to';
+        } else {
+          accessText = 'Allow updates to';
+        }
         _columnSection = (
           <div className={styles.editPermissionsSection}>
             <div>
-              With access to <b>columns</b>:
+              {accessText} these <b>columns</b>:
               <span
                 className={styles.toggleAll}
                 onClick={dispatchToggleAllColumns}
@@ -1194,11 +1207,27 @@ class Permissions extends Component {
         dispatch(permCustomChecked());
       };
 
-      const _filterOptions = [];
+      const _filterOptionsSection = [];
 
       const filterQueries = getFilterQueries(queryTypes, permsState);
 
+      let isSelected;
+      const selectedValue = (
+        <AceEditor
+          mode="json"
+          value={filterString}
+          readOnly
+          theme="github"
+          height="5em"
+          maxLines={5}
+          width="100%"
+          showPrintMargin={false}
+          key={-3}
+        />
+      );
+
       // Add allow all option
+      isSelected = !permsState.custom_checked && filterString === '{}';
       let allowAllQueryInfo = '';
       if (filterQueries['{}']) {
         allowAllQueryInfo = (
@@ -1212,46 +1241,57 @@ class Permissions extends Component {
           Without any checks {allowAllQueryInfo}
         </span>
       );
-      _filterOptions.push(
+      _filterOptionsSection.push(
         getFilterRadio(
           -1,
-          !permsState.custom_checked && filterString === '{}',
+          isSelected,
           'AllowAll',
           dispatchAllowAll,
           allowAllLabel
         )
       );
+      if (isSelected) {
+        _filterOptionsSection.push(selectedValue);
+      }
 
       // Add other query options
       Object.keys(filterQueries).forEach((filter, i) => {
+        isSelected = !permsState.custom_checked && filterString === filter;
         if (filter === '{}') {
           return;
         }
-
         const queries = filterQueries[filter].join(', ');
         const queryLabel = (
           <span data-test="mutual-check">
             With same checks as <b>{queries}</b>
           </span>
         );
-        _filterOptions.push(
+        _filterOptionsSection.push(
           getFilterRadio(
             i,
-            !permsState.custom_checked && filterString === filter,
+            isSelected,
             queries,
             dispatchSetFilterSameAs(filter),
             queryLabel
           )
         );
+        if (isSelected) {
+          _filterOptionsSection.push(selectedValue);
+        }
       });
 
       // Add custom option
+      isSelected =
+        permsState.custom_checked ||
+        isUniqueFilter(queryTypes, permsState, filterString);
+      const dispatchFuncSetFilter = filter => permSetFilter(JSON.parse(filter));
+      const dispatchFuncAddTableSchemas = schemaNames =>
+        permAddTableSchemas(schemaNames);
       const customCheckToolTip = (
         <Tooltip id="tooltip-custom-check">
-          Create custom check using permissions builder below
+          Create custom check using permissions builder
         </Tooltip>
       );
-
       const customChecklabel = (
         <span data-test="custom-check">
           With custom check: &nbsp;
@@ -1260,25 +1300,36 @@ class Permissions extends Component {
           </OverlayTrigger>
         </span>
       );
-
-      _filterOptions.push(
+      _filterOptionsSection.push(
         getFilterRadio(
           -2,
-          permsState.custom_checked ||
-            isUniqueFilter(queryTypes, permsState, filterString),
+          isSelected,
           'Custom',
           dispatchCustomChecked,
           customChecklabel
         )
       );
+      if (isSelected) {
+        _filterOptionsSection.push(selectedValue);
+        _filterOptionsSection.push(
+          <PermissionBuilder
+            dispatchFuncSetFilter={dispatchFuncSetFilter}
+            dispatchFuncAddTableSchemas={dispatchFuncAddTableSchemas}
+            tableName={tableName}
+            schemaName={currentSchema}
+            allTableSchemas={permissionsState.tableSchemas}
+            filter={filterString}
+            dispatch={dispatch}
+            key={-4}
+          />
+        );
+      }
 
-      return _filterOptions;
+      return _filterOptionsSection;
     };
 
     const getRowSection = (queryTypes, permsState) => {
       const query = permsState.query;
-
-      const dispatchFuncSetFilter = filter => permSetFilter(JSON.parse(filter));
 
       const filterKey = query === 'insert' ? 'check' : 'filter';
 
@@ -1302,26 +1353,7 @@ class Permissions extends Component {
           Allow {getIngForm(permsState.query)} <b>rows</b> for role '
           {permsState.role}
           ':
-          <div>
-            {getFilterOptions(queryTypes, permsState, filterString)}
-            <AceEditor
-              mode="json"
-              value={filterString}
-              readOnly
-              theme="github"
-              height="5em"
-              maxLines={5}
-              width="100%"
-              showPrintMargin={false}
-            />
-            <PermissionBuilder
-              dispatchFunc={dispatchFuncSetFilter}
-              table={tableName}
-              allSchemas={allSchemas}
-              filter={filterString}
-              dispatch={dispatch}
-            />
-          </div>
+          <div>{getFilterOptions(queryTypes, permsState, filterString)}</div>
         </div>
       );
     };

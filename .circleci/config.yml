@@ -177,13 +177,23 @@ jobs:
         command: echo 'all server tests passed!'
 
   # pytest the server with postgres versions >= 9.5
-  pytest_server_pg_10.4:
+  pytest_server_pg_11.1:
     <<: *pytest_server
     environment:
-      PG_VERSION: "10_4"
+      PG_VERSION: "11_1"
     docker:
     - image: hasura/graphql-engine-server-builder:v0.3.2
-    - image: circleci/postgres:10.4-alpine-postgis
+      # TODO: change this to circleci postgis when they have one for pg 11
+    - image: mdillon/postgis:11-alpine
+      <<: *test_pg_env
+
+  pytest_server_pg_10.6:
+    <<: *pytest_server
+    environment:
+      PG_VERSION: "10_6"
+    docker:
+    - image: hasura/graphql-engine-server-builder:v0.3.2
+    - image: circleci/postgres:10.6-alpine-postgis
       <<: *test_pg_env
 
   pytest_server_pg_9.6:
@@ -317,7 +327,11 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - check_build_worthiness
-    - pytest_server_pg_10.4:
+    - pytest_server_pg_11.1:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - pytest_server_pg_10.6:
         <<: *filter_only_vtags
         requires:
         - build_server
@@ -332,7 +346,8 @@ workflows:
     - all_server_tests_pass:
         <<: *filter_only_vtags
         requires:
-        - pytest_server_pg_10.4
+        - pytest_server_pg_11.1
+        - pytest_server_pg_10.6
         - pytest_server_pg_9.6
         - pytest_server_pg_9.5
     - test_and_build_cli:

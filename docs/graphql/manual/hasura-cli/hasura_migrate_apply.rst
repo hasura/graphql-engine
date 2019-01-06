@@ -20,20 +20,20 @@ Options
 
 ::
 
-      --down string      apply all or N down migration steps
-  -h, --help             help for apply
-      --type string      migrate the database to a specific version specified by the timestamp
-      --up string        apply all or N up migration steps
-      --version string   migrate the database to a specific version specified by the timestamp
+      --access-key string   access key for Hasura GraphQL Engine
+      --down string         apply all or N down migration steps
+      --endpoint string     http(s) endpoint for Hasura GraphQL Engine
+  -h, --help                help for apply
+      --type string         type of migration (up, down) to be used with version flag (default "up")
+      --up string           apply all or N up migration steps
+      --version string      migrate the database to a specific version
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-      --access-key string   access key for Hasura GraphQL Engine
-      --endpoint string     http(s) endpoint for Hasura GraphQL Engine
-      --project string      hasura project directory where the commands should be executed. (default: current directory)
+      --project string   hasura project directory where the commands should be executed. (default: current directory)
 
 SEE ALSO
 ~~~~~~~~

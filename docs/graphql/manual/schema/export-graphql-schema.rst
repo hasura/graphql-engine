@@ -1,9 +1,17 @@
 Exporting the Hasura GraphQL schema
 ===================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 If you need to share, introspect or export the GraphQL schema, you can use community tooling such as
 `graphqurl <https://github.com/hasura/graphqurl>`_, `apollo <https://github.com/apollographql/apollo-cli>`_,
 `get-graphql-schema <https://github.com/prismagraphql/get-graphql-schema>`_, etc.
+
+Using **graphqurl**
+-------------------
 
 For example, using ``graphqurl``, you can get the schema as follows:
 

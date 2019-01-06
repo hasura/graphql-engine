@@ -89,5 +89,5 @@
   unused-packages = true
 
 [[constraint]]
-  name = "github.com/gofrs/uuid"
-  version = "3.1.2"
+  branch = "master"
+  name = "github.com/oliveagle/jsonpath"

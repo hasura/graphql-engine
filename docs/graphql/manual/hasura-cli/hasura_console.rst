@@ -37,6 +37,8 @@ Options
       --console-port string   port for serving console (default "9695")
       --endpoint string       http(s) endpoint for Hasura GraphQL Engine
   -h, --help                  help for console
+      --no-browser            do not automatically open console in browser
+      --static-dir string     directory where static assets mentioned in the console html template can be served from
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
