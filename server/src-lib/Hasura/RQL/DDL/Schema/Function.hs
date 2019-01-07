@@ -9,6 +9,8 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax (Lift)
 
+import qualified Hasura.GraphQL.Schema      as GS
+
 import qualified Data.HashMap.Strict        as M
 import qualified Data.Sequence              as Seq
 import qualified Data.Text                  as T
@@ -23,7 +25,6 @@ data PGTypType
   | PTRANGE
   | PTPSUEDO
   deriving (Show, Eq)
-
 $(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''PGTypType)
 
 data RawFuncInfo
@@ -159,6 +160,11 @@ trackFunctionP2Setup qf = do
 trackFunctionP2 :: (QErrM m, CacheRWM m, MonadTx m)
                 => QualifiedFunction -> m RespBody
 trackFunctionP2 qf = do
+  sc <- askSchemaCache
+  let defGCtx = scDefaultRemoteGCtx sc
+  -- check for conflicts in remote schema
+  GS.checkConflictingNode defGCtx $ GS.qualFunctionToName qf
+
   trackFunctionP2Setup qf
   liftTx $ saveFunctionToCatalog qf False
   return successMsg

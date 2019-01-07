@@ -8,6 +8,7 @@ module Hasura.GraphQL.Schema
   , InsCtxMap
   , RelationInfoMap
   , isAggFld
+  , qualFunctionToName
   -- Schema stitching related
   , RemoteGCtx (..)
   , checkSchemaConflicts
