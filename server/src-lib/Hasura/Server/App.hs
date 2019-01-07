@@ -79,7 +79,7 @@ mkConsoleHTML path disableConsoleTelemetry authMode =
                   object [ "consoleAssetsLoc" .= consoleAssetsLoc
                          , "isAccessKeySet" .= isAccessKeySet authMode
                          , "consolePath" .= consolePath
-                         , "disableTelemetry" .= boolToText disableConsoleTelemetry
+                         , "disableConsoleTelemetry" .= boolToText disableConsoleTelemetry
                          ]
     consolePath = case path of
       "" -> "/console"
