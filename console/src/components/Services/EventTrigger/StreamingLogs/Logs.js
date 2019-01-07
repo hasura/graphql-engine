@@ -132,8 +132,8 @@ class StreamingLogs extends Component {
       triggerName,
       migrationMode,
       log,
+      currentTableSchema,
       count,
-      allSchemas,
       dispatch,
     } = this.props;
 
@@ -233,8 +233,10 @@ class StreamingLogs extends Component {
           }
           if (col === 'primary_key') {
             const tableName = requestData[i].data.table.name;
-            const tableData = allSchemas.filter(
-              row => row.table_name === tableName
+            const tableSchema = requestData[i].data.table.schema;
+            const tableData = currentTableSchema.filter(
+              row =>
+                row.table_name === tableName && row.table_schema === tableSchema
             );
             const primaryKey = tableData[0].primary_key.columns; // handle all primary keys
             const pkHtml = [];
@@ -429,34 +431,34 @@ class StreamingLogs extends Component {
                           >
                             {finalResponse.status_code
                               ? [
-                                'Status Code: ',
-                                finalResponse.status_code === 200 ? (
-                                  <i
-                                    className={
-                                      styles.invocationSuccess +
+                                  'Status Code: ',
+                                  finalResponse.status_code === 200 ? (
+                                    <i
+                                      className={
+                                        styles.invocationSuccess +
                                         ' fa fa-check'
-                                    }
-                                  />
-                                ) : (
-                                  <i
-                                    className={
-                                      styles.invocationFailure +
+                                      }
+                                    />
+                                  ) : (
+                                    <i
+                                      className={
+                                        styles.invocationFailure +
                                         ' fa fa-times'
-                                    }
-                                  />
-                                ),
-                                finalResponse.status_code,
-                                ' ',
-                                <OverlayTrigger
-                                  placement="top"
-                                  overlay={tooltip.statusCodeDescription}
-                                >
-                                  <i
-                                    className="fa fa-question-circle"
-                                    aria-hidden="true"
-                                  />
-                                </OverlayTrigger>,
-                              ]
+                                      }
+                                    />
+                                  ),
+                                  finalResponse.status_code,
+                                  ' ',
+                                  <OverlayTrigger
+                                    placement="top"
+                                    overlay={tooltip.statusCodeDescription}
+                                  >
+                                    <i
+                                      className="fa fa-question-circle"
+                                      aria-hidden="true"
+                                    />
+                                  </OverlayTrigger>,
+                                ]
                               : null}
                           </div>
                           <AceEditor
@@ -511,6 +513,7 @@ class StreamingLogs extends Component {
 
 StreamingLogs.propTypes = {
   log: PropTypes.object,
+  currentTableSchema: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   allSchemas: PropTypes.array.isRequired,
   dispatch: PropTypes.func.isRequired,

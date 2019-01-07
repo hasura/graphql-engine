@@ -11,6 +11,8 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 import push from './push';
+import { initQueries } from '../Data/DataActions';
+import { replace } from 'react-router-redux';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 import { REQUEST_COMPLETE, REQUEST_ONGOING } from './Modify/Actions';
@@ -24,6 +26,7 @@ const ACCESS_KEY_ERROR = 'Event/ACCESS_KEY_ERROR';
 const UPDATE_DATA_HEADERS = 'Event/UPDATE_DATA_HEADERS';
 const LISTING_TRIGGER = 'Event/LISTING_TRIGGER';
 const LOAD_EVENT_LOGS = 'Event/LOAD_EVENT_LOGS';
+const LOAD_EVENT_TABLE_SCHEMA = 'Event/LOAD_EVENT_TABLE_SCHEMA';
 const MODAL_OPEN = 'Event/MODAL_OPEN';
 const SET_REDELIVER_EVENT = 'Event/SET_REDELIVER_EVENT';
 const LOAD_EVENT_INVOCATIONS = 'Event/LOAD_EVENT_INVOCATIONS';
@@ -183,7 +186,7 @@ const loadRunningEvents = () => (dispatch, getState) => {
 
 const loadEventLogs = triggerName => (dispatch, getState) => {
   const url = Endpoints.getSchema;
-  const options = {
+  const triggerOptions = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
@@ -191,28 +194,71 @@ const loadEventLogs = triggerName => (dispatch, getState) => {
       type: 'select',
       args: {
         table: {
-          name: 'event_invocation_logs',
+          name: 'event_triggers',
           schema: 'hdb_catalog',
         },
-        columns: [
-          '*',
-          {
-            name: 'event',
-            columns: ['*'],
-          },
-        ],
-        where: { event: { trigger_name: triggerName } },
-        order_by: ['-created_at'],
-        limit: 10,
+        columns: ['*'],
+        where: {
+          name: triggerName,
+        },
       },
     }),
   };
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      dispatch({ type: LOAD_EVENT_LOGS, data: data });
+  return dispatch(requestAction(url, triggerOptions)).then(
+    triggerData => {
+      if (triggerData.length !== 0) {
+        const body = {
+          type: 'bulk',
+          args: [
+            {
+              type: 'select',
+              args: {
+                table: {
+                  name: 'event_invocation_logs',
+                  schema: 'hdb_catalog',
+                },
+                columns: [
+                  '*',
+                  {
+                    name: 'event',
+                    columns: ['*'],
+                  },
+                ],
+                where: { event: { trigger_id: triggerData[0].id } },
+                order_by: ['-created_at'],
+                limit: 10,
+              },
+            },
+            initQueries.loadSchema,
+          ],
+        };
+        body.args[1].args.where.table_schema = triggerData[0].schema_name;
+        body.args[1].args.where.table_name = triggerData[0].table_name;
+        const logOptions = {
+          credentials: globalCookiePolicy,
+          method: 'POST',
+          headers: dataHeaders(getState),
+          body: JSON.stringify(body),
+        };
+        dispatch(requestAction(url, logOptions)).then(
+          logsData => {
+            dispatch({ type: LOAD_EVENT_TABLE_SCHEMA, data: logsData[1] });
+            dispatch({ type: LOAD_EVENT_LOGS, data: logsData[0] });
+          },
+          error => {
+            console.error(
+              'Failed to load trigger logs' + JSON.stringify(error)
+            );
+          }
+        );
+      } else {
+        dispatch(replace('/404'));
+      }
     },
     error => {
-      console.error('Failed to load triggers' + JSON.stringify(error));
+      console.error(
+        'Failed to fetch trigger information' + JSON.stringify(error)
+      );
     }
   );
 };
@@ -544,6 +590,11 @@ const eventReducer = (state = defaultState, action) => {
       return {
         ...state,
         log: { ...state.log, rows: action.data, count: action.data.length },
+      };
+    case LOAD_EVENT_TABLE_SCHEMA:
+      return {
+        ...state,
+        currentTableSchema: action.data,
       };
     case SET_TRIGGER:
       return { ...state, currentTrigger: action.triggerName };
