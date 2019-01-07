@@ -23,6 +23,7 @@ import Endpoints from './Endpoints';
 import {
   filterEventsBlockList,
   filterPayloadAllowList,
+  sanitiseUrl,
 } from './telemetryFilter';
 
 const analyticsUrl = Endpoints.telemetryServer;
@@ -56,7 +57,6 @@ function analyticsLogger({ getState }) {
       const serverVersion = getState().main.serverVersion;
       const actionType = action.type;
       const url = window.location.pathname;
-
       const reqBody = {
         server_version: serverVersion,
         event_type: actionType,
@@ -77,7 +77,7 @@ function analyticsLogger({ getState }) {
           if (isLocationType) {
             // capture page views
             const payload = action.payload;
-            reqBody.url = payload.pathname;
+            reqBody.url = sanitiseUrl(payload.pathname);
             reqBody.event_data = JSON.stringify(payload);
             analyticsConnection.send(
               JSON.stringify({ data: reqBody, topic: 'console-pageviews' })
