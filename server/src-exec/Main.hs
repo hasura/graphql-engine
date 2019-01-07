@@ -71,7 +71,6 @@ parseHGECommand =
                 <*> parseCorsConfig
                 <*> parseEnableConsole
                 <*> parseDisableConsoleTelemetry
-                <*> parseDisableServerTelemetry
 
 parseArgs :: IO HGEOptions
 parseArgs = do
