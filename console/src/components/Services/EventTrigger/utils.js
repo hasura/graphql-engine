@@ -122,6 +122,16 @@ const escapeRegExp = string => {
   return string.replace(/([.*+?^${}()|[\]\\])/g, '\\$1');
 };
 
+const getTableColumns = tableSchema => {
+  if (tableSchema) {
+    return tableSchema.columns.map(colObj => ({
+      name: colObj.column_name,
+      type: colObj.udt_name,
+    }));
+  }
+  return [];
+};
+
 export {
   ordinalColSort,
   findTableFromRel,
@@ -129,4 +139,5 @@ export {
   getEdForm,
   getIngForm,
   escapeRegExp,
+  getTableColumns,
 };

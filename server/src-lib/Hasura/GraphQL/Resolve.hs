@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.GraphQL.Resolve
   ( resolveSelSet
   ) where
@@ -70,16 +65,17 @@ buildTx userInfo gCtx fld = do
 
 -- {-# SCC resolveFld #-}
 resolveFld
-  :: UserInfo -> GCtx
+  :: (MonadTx m)
+  => UserInfo -> GCtx
   -> G.OperationType
   -> Field
-  -> Q.TxE QErr BL.ByteString
+  -> m BL.ByteString
 resolveFld userInfo gCtx opTy fld =
   case _fName fld of
     "__type"     -> J.encode <$> runReaderT (typeR fld) gCtx
     "__schema"   -> J.encode <$> runReaderT (schemaR fld) gCtx
     "__typename" -> return $ J.encode $ mkRootTypeName opTy
-    _            -> buildTx userInfo gCtx fld
+    _            -> liftTx $ buildTx userInfo gCtx fld
   where
     mkRootTypeName :: G.OperationType -> Text
     mkRootTypeName = \case
@@ -88,10 +84,11 @@ resolveFld userInfo gCtx opTy fld =
       G.OperationTypeSubscription -> "subscription_root"
 
 resolveSelSet
-  :: UserInfo -> GCtx
+  :: (MonadTx m)
+  => UserInfo -> GCtx
   -> G.OperationType
   -> SelSet
-  -> Q.TxE QErr BL.ByteString
+  -> m BL.ByteString
 resolveSelSet userInfo gCtx opTy fields =
   fmap mkJSONObj $ forM (toList fields) $ \fld -> do
     fldResp <- resolveFld userInfo gCtx opTy fld

@@ -1,12 +1,3 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE DeriveLift        #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE TypeFamilies      #-}
-
 module Hasura.RQL.Types.RemoteSchema where
 
 import           Hasura.Prelude
@@ -21,7 +12,6 @@ import qualified Network.URI.Extended       as N
 
 import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
 import           Hasura.RQL.Types.Error
-
 
 type UrlFromEnv = Text
 type RemoteSchemaName = Text

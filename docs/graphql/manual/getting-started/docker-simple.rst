@@ -68,3 +68,8 @@ Advanced
 This was a quickstart guide to get the Hasura GraphQL engine up and running
 quickly. For more detailed instructions on deploying using Docker, check out
 :doc:`../deployment/docker/index`.
+
+License
+-------
+The Hasura GraphQL Engine is open source. View license `here <https://github.com/hasura/graphql-engine/blob/master/LICENSE>`_.
+

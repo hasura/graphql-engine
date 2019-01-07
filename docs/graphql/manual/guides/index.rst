@@ -9,7 +9,6 @@ Guides / Tutorials / Resources
 Deployment guides
 -----------------
 
-- :doc:`Deploy on Digital Ocean using Docker <deployment/digital-ocean>`
 - :doc:`Digital Ocean One-click App <deployment/digital-ocean-one-click>`
 - :doc:`Azure Container Instances with Postgres <deployment/azure-container-instances-postgres>`
 - `Blog: Instant GraphQL on AWS RDS <https://blog.hasura.io/instant-graphql-on-aws-rds-1edfb85b5985>`__
@@ -29,11 +28,12 @@ Sample apps
 Integration/migration tutorials
 -------------------------------
 
+- :doc:`integrations/auth0-jwt`
+- :doc:`integrations/apollo-subscriptions`
 - `Blog: Move from firebase to realtime GraphQL on Postgres <https://blog.hasura.io/firebase2graphql-moving-from-firebase-to-realtime-graphql-on-postgres-4d36cb7f4eaf>`__.
 - `Blog: Create a Gatsby site using GraphQL on Postgres <https://blog.hasura.io/create-gatsby-sites-using-graphql-on-postgres-603b5dd1e516>`__.
 - `Blog: Instant GraphQL on AWS RDS <https://blog.hasura.io/instant-graphql-on-aws-rds-1edfb85b5985>`__.
 - `Blog: Using TimescaleDB with Hasura GraphQL <https://blog.hasura.io/using-timescaledb-with-hasura-graphql-d05f030c4b10>`__.
-- :doc:`Auth0 JWT Integration with Hasura GraphQL <integrations/auth0-jwt>`
 
 Integrating with monitoring frameworks
 --------------------------------------

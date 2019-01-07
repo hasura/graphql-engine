@@ -6,8 +6,6 @@ args:
     table:
       schema: hge_tests
       name: test_t1
-    insert:
-      columns: ["c1"]
     update:
       columns: ["c1"]
     delete:
