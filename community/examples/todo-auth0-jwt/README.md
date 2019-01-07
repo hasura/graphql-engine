@@ -48,7 +48,7 @@ HASURA_GRAPHQL_ACCESS_KEY: yoursecretaccesskey
 ```
 
 ```
-HASURA_GRAPHQL_JWT_SECRET: {"type":"RS256", "key": "<the-certificate-data-in-one-line"}
+HASURA_GRAPHQL_JWT_SECRET: {"type":"RS256", "key": "<the-certificate-data-in-one-line>"}
 ```
 
 For example, (copy the certificate from above step):
