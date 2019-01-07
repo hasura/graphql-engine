@@ -132,7 +132,7 @@ class StreamingLogs extends Component {
       triggerName,
       migrationMode,
       log,
-      currentTableSchema,
+      tableSchemas,
       count,
       dispatch,
     } = this.props;
@@ -234,7 +234,7 @@ class StreamingLogs extends Component {
           if (col === 'primary_key') {
             const tableName = requestData[i].data.table.name;
             const tableSchema = requestData[i].data.table.schema;
-            const tableData = currentTableSchema.filter(
+            const tableData = tableSchemas.filter(
               row =>
                 row.table_name === tableName && row.table_schema === tableSchema
             );

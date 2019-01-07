@@ -40,24 +40,37 @@ const REQUEST_ERROR = 'Event/REQUEST_ERROR';
 /* ************ action creators *********************** */
 const loadTriggers = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
+  const body = {
+    type: 'bulk',
+    args: [
+      {
+        type: 'select',
+        args: {
+          table: {
+            name: 'event_triggers',
+            schema: 'hdb_catalog',
+          },
+          columns: ['*'],
+        },
+      },
+      initQueries.loadSchema,
+    ],
+  };
+  body.args[1].args.where = {
+    table_schema: {
+      $nin: ['information_schema', 'pg_catalog', 'hdb_catalog', 'hdb_views'],
+    },
+  };
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'event_triggers',
-          schema: 'hdb_catalog',
-        },
-        columns: ['*'],
-      },
-    }),
+    body: JSON.stringify(body),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: LOAD_TRIGGER_LIST, triggerList: data });
+      dispatch({ type: LOAD_EVENT_TABLE_SCHEMA, data: data[1] });
+      dispatch({ type: LOAD_TRIGGER_LIST, triggerList: data[0] });
     },
     error => {
       console.error('Failed to load triggers' + JSON.stringify(error));
@@ -229,11 +242,8 @@ const loadEventLogs = triggerName => (dispatch, getState) => {
                 limit: 10,
               },
             },
-            initQueries.loadSchema,
           ],
         };
-        body.args[1].args.where.table_schema = triggerData[0].schema_name;
-        body.args[1].args.where.table_name = triggerData[0].table_name;
         const logOptions = {
           credentials: globalCookiePolicy,
           method: 'POST',
@@ -242,7 +252,6 @@ const loadEventLogs = triggerName => (dispatch, getState) => {
         };
         dispatch(requestAction(url, logOptions)).then(
           logsData => {
-            dispatch({ type: LOAD_EVENT_TABLE_SCHEMA, data: logsData[1] });
             dispatch({ type: LOAD_EVENT_LOGS, data: logsData[0] });
           },
           error => {
@@ -594,7 +603,7 @@ const eventReducer = (state = defaultState, action) => {
     case LOAD_EVENT_TABLE_SCHEMA:
       return {
         ...state,
-        currentTableSchema: action.data,
+        tableSchemas: action.data,
       };
     case SET_TRIGGER:
       return { ...state, currentTrigger: action.triggerName };
