@@ -76,7 +76,7 @@ initCatalogStrict createSchema initTime =  do
     -- only if we created the schema, create the extension
     then when createSchema $ liftTx $ Q.unitQE needsPgCryptoExt
          "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public" () False
-    else throw500 "FATAL: Could not find extension pgcrytpo. This extension is required."
+    else throw500 "FATAL: Could not find postgres extension pgcrypto. This extension is required."
 
   liftTx $ Q.catchE defaultTxErrorHandler $ do
     Q.Discard () <- Q.multiQ $(Q.sqlFromFile "src-rsr/initialise.sql")
