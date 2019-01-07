@@ -45,7 +45,6 @@ data RawServeOptions
   , rsoCorsConfig              :: !RawCorsConfig
   , rsoEnableConsole           :: !Bool
   , rsoDisableConsoleTelemetry :: !Bool
-  , rsoDisableServerTelemetry  :: !Bool
   } deriving (Show, Eq)
 
 data CorsConfigG a
@@ -317,7 +316,7 @@ serveCmdFooter =
       [ servePortEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
       , txIsoEnv, accessKeyEnv, authHookEnv , authHookModeEnv
       , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv
-      , enableConsoleEnv , disableConsoleTelemetryEnv, disableServerTelemetryEnv
+      , enableConsoleEnv , disableConsoleTelemetryEnv
       ]
 
     eventEnvs =
@@ -405,12 +404,6 @@ disableConsoleTelemetryEnv :: (String, String)
 disableConsoleTelemetryEnv =
   ( "HASURA_GRAPHQL_DISABLE_CONSOLE_TELEMETRY"
   , "Disable console telemetry"
-  )
-
-disableServerTelemetryEnv :: (String, String)
-disableServerTelemetryEnv =
-  ( "HASURA_GRAPHQL_DISABLE_SERVER_TELEMETRY"
-  , "Disable server telemetry"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -598,12 +591,6 @@ parseDisableConsoleTelemetry :: Parser Bool
 parseDisableConsoleTelemetry =
   switch ( long "disable-console-telemetry" <>
            help (snd disableConsoleTelemetryEnv)
-         )
-
-parseDisableServerTelemetry :: Parser Bool
-parseDisableServerTelemetry =
-  switch ( long "disable-server-telemetry" <>
-           help (snd disableServerTelemetryEnv)
          )
 
 -- Init logging related
