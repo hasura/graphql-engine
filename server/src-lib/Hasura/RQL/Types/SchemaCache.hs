@@ -118,8 +118,6 @@ import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
 import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
-import qualified Database.PG.Query                 as Q
-import qualified PostgreSQL.Binary.Decoding        as PD
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
@@ -368,7 +366,7 @@ data FunctionType
   | FTSTABLE
   deriving (Eq)
 
-$(deriveToJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionType)
+$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionType)
 
 funcTypToTxt :: FunctionType -> T.Text
 funcTypToTxt FTVOLATILE  = "VOLATILE"
@@ -377,13 +375,6 @@ funcTypToTxt FTSTABLE    = "STABLE"
 
 instance Show FunctionType where
   show = T.unpack . funcTypToTxt
-
-instance Q.FromCol FunctionType where
-  fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
-    "VOLATILE"  -> Just FTVOLATILE
-    "IMMUTABLE" -> Just FTIMMUTABLE
-    "STABLE"    -> Just FTSTABLE
-    _           -> Nothing
 
 newtype FunctionArgName =
   FunctionArgName { getFuncArgNameTxt :: T.Text}
