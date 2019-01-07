@@ -24,11 +24,11 @@ const dataHandler = path => {
     const parts = path.split('/').filter(p => p !== '');
     const numParts = parts.length;
     if (numParts >= 2) {
-      parts[1] = 'schemaname';
+      parts[1] = 'SCHEMA_NAME';
     }
     if (numParts >= 4) {
       if (parts[2] === 'tables') {
-        parts[3] = 'tablename';
+        parts[3] = 'TABLE_NAME';
       }
     }
     return addSlashes(['data', ...parts]);
@@ -44,7 +44,7 @@ const remoteSchemasHandler = path => {
   const parts = path.split('/').filter(p => p !== '');
   const numParts = parts.length;
   if (numParts > 2) {
-    parts[1] = 'remoteschemaname';
+    parts[1] = 'REMOTE_SCHEMA_NAME';
   }
   return addSlashes(['remote-schemas', ...parts]);
 };
@@ -53,7 +53,7 @@ const eventsHandler = path => {
   const parts = path.split('/').filter(p => p !== '');
   const numParts = parts.length;
   if (numParts > 3) {
-    parts[2] = 'triggername';
+    parts[2] = 'TRIGGER_NAME';
   }
   return addSlashes(['events', ...parts]);
 };

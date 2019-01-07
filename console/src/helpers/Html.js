@@ -47,7 +47,8 @@ export default class Html extends Component {
                 isAccessKeySet: ${process.env.IS_ACCESS_KEY_SET},
                 consoleMode: '${process.env.CONSOLE_MODE}',
                 nodeEnv: '${process.env.NODE_ENV}',
-                urlPrefix: '${process.env.URL_PREFIX}'
+                urlPrefix: '${process.env.URL_PREFIX}',
+                disableTelemetry: ${process.env.DISABLE_TELEMETRY}
               };`,
             }}
           />

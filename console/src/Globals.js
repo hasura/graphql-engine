@@ -32,6 +32,7 @@ const globals = {
       ? 'server'
       : window.__env.consoleMode,
   urlPrefix: checkExtraSlashes(window.__env.urlPrefix),
+  disableTelemetry: window.__env.disableTelemetry,
 };
 
 // set defaults
