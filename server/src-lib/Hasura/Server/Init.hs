@@ -9,13 +9,15 @@ import qualified Data.Aeson                   as J
 import qualified Data.Text                    as T
 import qualified Hasura.Logging               as L
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
-
+import qualified Data.String                  as DataString
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types             (RoleName (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
+import           Network.Wai.Handler.Warp
+
 
 initErrExit :: (Show e) => e -> IO a
 initErrExit e = print e >> exitFailure
@@ -36,7 +38,7 @@ type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 data RawServeOptions
   = RawServeOptions
   { rsoPort          :: !(Maybe Int)
-  , rsoHost          :: !(Maybe String)
+  , rsoHost          :: !(Maybe HostPreference)
   , rsoConnParams    :: !RawConnParams
   , rsoTxIso         :: !(Maybe Q.TxIsolation)
   , rsoAccessKey     :: !(Maybe AccessKey)
@@ -59,7 +61,7 @@ type CorsConfig = CorsConfigG T.Text
 data ServeOptions
   = ServeOptions
   { soPort          :: !Int
-  , soHost          :: !String
+  , soHost          :: !HostPreference
   , soConnParams    :: !Q.ConnParams
   , soTxIso         :: !Q.TxIsolation
   , soAccessKey     :: !(Maybe AccessKey)
@@ -108,6 +110,9 @@ class FromEnv a where
 
 instance FromEnv String where
   fromEnv = Right
+
+instance FromEnv HostPreference where
+  fromEnv = Right . DataString.fromString
 
 instance FromEnv Text where
   fromEnv = Right . T.pack
@@ -206,6 +211,7 @@ mkServeOptions rso = do
           withEnv (rsoPort rso) (fst servePortEnv)
   host <- fromMaybe "*" <$>
           withEnv (rsoHost rso) (fst serveHostEnv)
+
   connParams <- mkConnParams $ rsoConnParams rso
   txIso <- fromMaybe Q.ReadCommitted <$>
            withEnv (rsoTxIso rso) (fst txIsoEnv)
@@ -511,7 +517,7 @@ parseServerPort = optional $
          help (snd servePortEnv)
        )
 
-parseServerHost :: Parser (Maybe String)
+parseServerHost :: Parser (Maybe HostPreference)
 parseServerHost = optional $ strOption ( long "server-host" <>
                 metavar "HOST" <>
                 help "Host on which graphql-engine will listen (default: *)"

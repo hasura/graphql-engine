@@ -18,7 +18,6 @@ import qualified Data.Yaml                  as Y
 import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
-import qualified Data.String                as DataString
 
 import           Hasura.Events.Lib
 import           Hasura.Logging             (Logger (..), defaultLoggerSettings,
@@ -126,8 +125,7 @@ main =  do
       (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
                          am corsCfg enableConsole
 
-      let hostS = DataString.fromString(host)
-      let warpSettings = Warp.setPort port $ Warp.setHost hostS Warp.defaultSettings
+      let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
 
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
