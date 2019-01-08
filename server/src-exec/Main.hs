@@ -31,8 +31,7 @@ import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Query        (peelRun)
-import           Hasura.Server.Telemetry    (generateFingerprint, getPgUuid,
-                                             runTelemetry)
+import           Hasura.Server.Telemetry
 import           Hasura.Server.Version      (currentVersion)
 
 import qualified Database.PG.Query          as Q
@@ -146,8 +145,8 @@ main =  do
       -- start a background thread for telemetry
       unless disableTelemetry $ do
         res <- getUniqIds ci
-        runEither res (logTelemetryErr logger) $ \(pgUuid, uniqId) ->
-          void $ C.forkIO $ runTelemetry logger httpManager uniqId pgUuid
+        runEither res (logTelemetryErr logger) $
+          void . C.forkIO . runTelemetry logger httpManager cacheRef
 
       unLogger logger $
         mkGenericStrLog "server" "starting API server"
@@ -208,13 +207,14 @@ main =  do
 
     getUniqIds ci =
       runTx ci $ do
-        pgUuid <- getPgUuid
+        dbId <- getDbId
         fp <- generateFingerprint
-        return (pgUuid, fp)
+        return (dbId, fp)
 
-    -- TODO: different logger?
-    logTelemetryErr (Logger logger) err =
-      logger $ mkGenericStrLog "telemetry" ("failed to start telemetry: " ++ show err)
+    logTelemetryErr (Logger logger) err = do
+      let err' = T.pack $ BLC.unpack $ A.encode err
+      logger $ mkTelemetryLog "initialise_error"
+               ("failed to start telemetry: " <> err') Nothing
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
