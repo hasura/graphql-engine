@@ -1,6 +1,8 @@
 CREATE TABLE hdb_catalog.hdb_version (
+    hasura_uuid UUID PRIMARY KEY,
     version TEXT NOT NULL,
-    upgraded_on TIMESTAMPTZ NOT NULL
+    upgraded_on TIMESTAMPTZ NOT NULL,
+    misc_state JSONB
 );
 
 CREATE UNIQUE INDEX hdb_version_one_row

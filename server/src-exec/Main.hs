@@ -31,6 +31,8 @@ import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Query        (peelRun)
+import           Hasura.Server.Telemetry    (generateFingerprint, getPgUuid,
+                                             runTelemetry)
 import           Hasura.Server.Version      (currentVersion)
 
 import qualified Database.PG.Query          as Q
@@ -70,6 +72,7 @@ parseHGECommand =
                 <*> parseUnAuthRole
                 <*> parseCorsConfig
                 <*> parseEnableConsole
+                <*> parseDisableTelemetry
 
 parseArgs :: IO HGEOptions
 parseArgs = do
@@ -100,7 +103,7 @@ main =  do
   let logger = mkLogger loggerCtx
   case hgeCmd of
     HCServe so@(ServeOptions port cp isoL mAccessKey mAuthHook mJwtSecret
-             mUnAuthRole corsCfg enableConsole) -> do
+             mUnAuthRole corsCfg enableConsole disableTelemetry) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
@@ -122,12 +125,9 @@ main =  do
 
       pool <- Q.initPGPool ci cp
       (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
-                         am corsCfg enableConsole
+                         am corsCfg enableConsole disableTelemetry
       let warpSettings = Warp.setPort port Warp.defaultSettings
                          -- Warp.setHost "*" Warp.defaultSettings
-
-      -- start a background thread to check for updates
-      void $ C.forkIO $ checkForUpdates loggerCtx httpManager
 
       maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
       evFetchMilliSec  <- getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
@@ -139,6 +139,15 @@ main =  do
       unLogger logger $
         mkGenericStrLog "event_triggers" "starting workers"
       void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpSession pool cacheRef eventEngineCtx
+
+      -- start a background thread to check for updates
+      void $ C.forkIO $ checkForUpdates loggerCtx httpManager
+
+      -- start a background thread for telemetry
+      unless disableTelemetry $ do
+        res <- getUniqIds ci
+        runEither res (logTelemetryErr logger) $ \(pgUuid, uniqId) ->
+          void $ C.forkIO $ runTelemetry logger httpManager uniqId pgUuid
 
       unLogger logger $
         mkGenericStrLog "server" "starting API server"
@@ -162,6 +171,7 @@ main =  do
 
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where
+
     runTx :: Q.ConnInfo -> Q.TxE QErr a -> IO (Either QErr a)
     runTx ci tx = do
       pool <- getMinimalPool ci
@@ -196,6 +206,16 @@ main =  do
       res <- runTx ci unlockAllEvents
       either printErrJExit return res
 
+    getUniqIds ci =
+      runTx ci $ do
+        pgUuid <- getPgUuid
+        fp <- generateFingerprint
+        return (pgUuid, fp)
+
+    -- TODO: different logger?
+    logTelemetryErr (Logger logger) err =
+      logger $ mkGenericStrLog "telemetry" ("failed to start telemetry: " ++ show err)
+
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
       mEnv <- lookupEnv env
@@ -207,3 +227,5 @@ main =  do
 
     cleanSuccess =
       putStrLn "successfully cleaned graphql-engine related data"
+
+    runEither ev lAction rAction = either lAction rAction ev

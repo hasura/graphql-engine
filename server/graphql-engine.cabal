@@ -148,6 +148,7 @@ library
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
                      , Hasura.Server.CheckUpdates
+                     , Hasura.Server.Telemetry
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
