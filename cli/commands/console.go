@@ -100,13 +100,14 @@ func (o *consoleOptions) run() error {
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
 	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, gin.H{
-		"apiHost":        "http://" + o.Address,
-		"apiPort":        o.APIPort,
-		"cliVersion":     o.EC.Version.GetCLIVersion(),
-		"dataApiUrl":     o.EC.Config.ParsedEndpoint.String(),
-		"dataApiVersion": "",
-		"accessKey":      o.EC.Config.AccessKey,
-		"assetsVersion":  consoleAssetsVersion,
+		"apiHost":          "http://" + o.Address,
+		"apiPort":          o.APIPort,
+		"cliVersion":       o.EC.Version.GetCLIVersion(),
+		"dataApiUrl":       o.EC.Config.ParsedEndpoint.String(),
+		"dataApiVersion":   "",
+		"accessKey":        o.EC.Config.AccessKey,
+		"assetsVersion":    consoleAssetsVersion,
+		"disableTelemetry": o.EC.GlobalConfig.DisableConsoleTelemetry,
 	})
 	if err != nil {
 		return errors.Wrap(err, "error serving console")

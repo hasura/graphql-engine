@@ -77,6 +77,8 @@ For ``serve`` subcommand these are the flags available
                                 
        --enable-console         Enable API console. It is served at '/' and '/console'
 
+       --disable-telemetry      Disable console telemetry
+
 
 Default environment variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -141,3 +143,5 @@ These are the environment variables which are available:
 
    HASURA_GRAPHQL_ENABLE_CONSOLE        Enable API console. It is served at
                                         '/' and '/console'
+
+   HASURA_GRAPHQL_DISABLE_TELEMETRY     Disable console telemetry

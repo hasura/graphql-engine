@@ -12,6 +12,7 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -37,8 +38,8 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 
   # See https://docs.hasura.io/1.0/graphql/manual/migrations/index.html for more details`,
 		SilenceUsage: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return ec.Prepare()
+		PreRun: func(cmd *cobra.Command, args []string) {
+			ec.Viper = viper.New()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return opts.run()
@@ -61,6 +62,7 @@ type initOptions struct {
 }
 
 func (o *initOptions) run() error {
+	o.EC.Spinner.Stop()
 	var dir string
 	// prompt for init directory if it's not set already
 	if o.InitDir == "" {

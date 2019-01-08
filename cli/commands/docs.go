@@ -7,8 +7,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
+	"github.com/spf13/viper"
 )
 
+// NewDocsCmd returns the docs command
 func NewDocsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	var docType, docDirectory string
 	docsCmd := &cobra.Command{
@@ -16,8 +18,8 @@ func NewDocsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "Generate CLI docs in various formats",
 		Hidden:       true,
 		SilenceUsage: true,
-		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
-			return ec.Prepare()
+		PreRun: func(cmd *cobra.Command, args []string) {
+			ec.Viper = viper.New()
 		},
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			err = os.MkdirAll(docDirectory, os.ModePerm)

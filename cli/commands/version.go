@@ -12,12 +12,11 @@ func NewVersionCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Use:          "version",
 		Short:        "Print the CLI version",
 		SilenceUsage: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return ec.Prepare()
+		PreRun: func(cmd *cobra.Command, args []string) {
+			ec.Viper = viper.New()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ec.Logger.WithField("version", ec.Version.GetCLIVersion()).Info("hasura cli")
-			ec.Viper = viper.New()
 			err := ec.Validate()
 			if err == nil {
 				ec.Logger.

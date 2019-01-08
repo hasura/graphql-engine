@@ -55,9 +55,12 @@ import           Hasura.SQL.Types
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
 
+boolToText :: Bool -> T.Text
+boolToText = bool "false" "true"
+
 isAccessKeySet :: AuthMode -> T.Text
-isAccessKeySet AMNoAuth = "false"
-isAccessKeySet _        = "true"
+isAccessKeySet AMNoAuth = boolToText False
+isAccessKeySet _        = boolToText True
 
 #ifdef LocalConsole
 consoleAssetsLoc :: Text
