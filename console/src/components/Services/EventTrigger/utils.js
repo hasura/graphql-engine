@@ -132,6 +132,22 @@ const getTableColumns = tableSchema => {
   return [];
 };
 
+const convertDateTimeToLocale = dateTime => {
+  const options = {
+    hourCycle: 'h24',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: 'short',
+    second: '2-digit',
+    timeZoneName: 'short',
+    weekday: 'short',
+    year: 'numeric',
+  };
+
+  return new Date(dateTime + 'Z').toLocaleString('en-US', options);
+};
+
 export {
   ordinalColSort,
   findTableFromRel,
@@ -140,4 +156,5 @@ export {
   getIngForm,
   escapeRegExp,
   getTableColumns,
+  convertDateTimeToLocale,
 };
