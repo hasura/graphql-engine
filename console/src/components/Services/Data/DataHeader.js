@@ -32,7 +32,12 @@ const DataHeader = ({
           currentLocation.indexOf('migrations') !== -1 ? styles.active : ''
         }
       >
-        <Link to={appPrefix + '/migrations'}>Migrations</Link>
+        <Link
+          className={styles.sidebarMigration}
+          to={appPrefix + '/migrations'}
+        >
+          Migrations
+        </Link>
       </li>
     );
   }
