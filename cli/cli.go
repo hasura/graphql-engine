@@ -45,6 +45,13 @@ const (
 	GLOBAL_CONFIG_FILE_NAME = "config.json"
 )
 
+// String constants
+const (
+	StrTelemetryNotice = `To help improve Hasura, the CLI sends anonymous usage stats to the team.
+The resulting data plays a key role in deciding what to focus on.
+To read more and for instructions to opt-out, visit https://telemetry.hasura.io/faq`
+)
+
 // HasuraGraphQLConfig has the config values required to contact the server.
 type HasuraGraphQLConfig struct {
 	// Endpoint for the GraphQL Engine
@@ -358,6 +365,8 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 			return errors.Wrap(err, "writing global config file failed")
 		}
 		ec.Logger.Debugf("global config file written at '%s' with content '%v'", ec.GlobalConfigFile, string(data))
+		// also show a notice about telemetry
+		ec.Logger.Info(StrTelemetryNotice)
 	} else if os.IsExist(err) || err == nil {
 		// file exists, verify contents
 		ec.Logger.Debug("global config file exisits, verifying contents")
