@@ -1,5 +1,5 @@
-Auto-apply migrations when server starts
-========================================
+Auto-apply migrations or metadata when server starts
+====================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -7,22 +7,25 @@ Auto-apply migrations when server starts
   :local:
 
 Hasura ships a special docker container which can be used to
-automatically apply migrations when the server starts:
+automatically apply migrations/metadata when the server starts:
 
 .. code-block:: bash
 
    hasura/graphql-engine:<version>.cli-migrations
+
+.. note::
+
+   This container image includes Hasura CLI at ``/bin/hasura-cli`` and can be
+   used for running any other CI/CD scripts in your workflow.
+
+Applying migrations
+-------------------
 
 The ``migrations`` directory created by Hasura CLI (the one next to 
 ``config.yaml``) can be mounted at ``/hasura-migrations`` path of this docker
 container and the container's entrypoint script will apply the migrations before
 starting the server. If no directory is mounted at the designated path, server
 will start ignoring migrations.
-
-.. note::
-
-   This container image includes Hasura CLI at ``/bin/hasura-cli`` and can be
-   used for running any other CI/CD scripts in your workflow.
 
 If you want to mount the migrations directory at some location other than
 ``/hasura-migrations``, set the following environment variable:
@@ -43,3 +46,11 @@ Example:
           -v /home/me/my-project/migrations:/hasura-migrations \
           -e HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:@postgres:5432/postgres \
           hasura/graphql-engine:v1.0.0-alpha27.cli-migrations
+
+
+Applying only metadata
+----------------------
+
+If you're managing migrations with a different tool and want to use this image to apply only the
+metadata, mount a directory with just a ``metadata.yaml`` file and the script will
+apply the meatadata.
