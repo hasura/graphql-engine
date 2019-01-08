@@ -52,7 +52,11 @@ newtype AccessKey
 data AuthHookType
   = AHTGet
   | AHTPost
-  deriving (Show, Eq)
+  deriving (Eq)
+
+instance Show AuthHookType where
+  show AHTGet  = "GET"
+  show AHTPost = "POST"
 
 data AuthHookG a b
   = AuthHookG

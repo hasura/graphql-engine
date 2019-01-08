@@ -6,7 +6,7 @@ module Ops
   ) where
 
 import           Data.Time.Clock              (UTCTime)
-import           Language.Haskell.TH.Syntax (Q, TExp, unTypeQ)
+import           Language.Haskell.TH.Syntax   (Q, TExp, unTypeQ)
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
@@ -18,13 +18,13 @@ import           Hasura.SQL.Types
 import qualified Data.Aeson                   as A
 import qualified Data.ByteString.Lazy         as BL
 import qualified Data.Text                    as T
-import qualified Data.Yaml.TH               as Y
+import qualified Data.Yaml.TH                 as Y
 
 import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "6"
+curCatalogVer = "7"
 
 initCatalogSafe
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
@@ -40,7 +40,7 @@ initCatalogSafe initTime =  do
                        (SchemaName "hdb_catalog") (TableName "hdb_version")
       bool (initCatalogStrict False initTime) (return initialisedMsg) versionExists
 
-    initialisedMsg = "initialise: the state is already initialised"
+    initialisedMsg = "the state is already initialised"
 
     doesVersionTblExist sn tblN =
       (runIdentity . Q.getRow) <$> Q.withQ [Q.sql|
@@ -86,7 +86,7 @@ initCatalogStrict createSchema initTime =  do
   void $ runQueryM metadataQuery
 
   setAllAsSystemDefined >> addVersion initTime
-  return "initialise: successfully initialised"
+  return "successfully initialised"
 
   where
     metadataQuery =
@@ -234,25 +234,37 @@ from5To6 = liftTx $ do
     $(Q.sqlFromFile "src-rsr/migrate_from_5_to_6.sql")
   return ()
 
+from6To7 :: (MonadTx m) => m ()
+from6To7 = liftTx $ do
+  -- migrate database
+  Q.Discard () <- Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_6_to_7.sql")
+  return ()
+
 migrateCatalog
   :: (MonadTx m, CacheRWM m, MonadIO m, UserInfoM m, HasHttpManager m)
   => UTCTime -> m String
 migrateCatalog migrationTime = do
   preVer <- getCatalogVersion
   if | preVer == curCatalogVer ->
-         return "migrate: already at the latest version"
+         return "already at the latest version"
      | preVer == "0.8" -> from08ToCurrent
      | preVer == "1"   -> from1ToCurrent
      | preVer == "2"   -> from2ToCurrent
      | preVer == "3"   -> from3ToCurrent
      | preVer == "4"   -> from4ToCurrent
      | preVer == "5"   -> from5ToCurrent
+     | preVer == "6"   -> from6ToCurrent
      | otherwise -> throw400 NotSupported $
-                    "migrate: unsupported version : " <> preVer
+                    "unsupported version : " <> preVer
   where
+    from6ToCurrent = do
+      from6To7
+      postMigrate
+
     from5ToCurrent = do
       from5To6
-      postMigrate
+      from6ToCurrent
 
     from4ToCurrent = do
       from4To5
@@ -281,7 +293,7 @@ migrateCatalog migrationTime = do
        liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
        -- try building the schema cache
        void buildSchemaCache
-       return $ "migrate: successfully migrated to " ++ show curCatalogVer
+       return $ "successfully migrated to " ++ show curCatalogVer
 
     updateVersion =
       liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
