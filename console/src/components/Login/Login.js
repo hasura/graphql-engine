@@ -28,7 +28,7 @@ class Login extends Component {
       loginText = 'Error. Try again?';
     }
 
-    const hasuraLogo = require('./logo.svg');
+    const hasuraLogo = require('./blue-logo.svg');
     const { dispatch } = this.props;
     return (
       <div className={styles.mainWrapper + ' container-fluid'}>
