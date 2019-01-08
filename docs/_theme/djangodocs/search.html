@@ -1,1 +1,28 @@
 {% extends "layout.html" %}
+
+{% block extrafooter %}
+  <!-- handle search query -->
+  <script>
+    const handleQueryParams = function() {
+      const re = /query=(.*)$/;
+      const match = re.exec(window.location.search);
+
+      let searchTerm = '';
+      if ( match ) {
+        searchTerm = decodeURIComponent(match[1]);
+
+        if (searchTerm) {
+          const searchInput = document.getElementById('search_element');
+
+          searchInput.value = searchTerm;
+          searchInput.dispatchEvent(new Event('input'));
+        }
+      }
+    };
+
+    if (window.location.search.length > 0) {
+      handleQueryParams();
+    }
+
+  </script>
+{% endblock %}
