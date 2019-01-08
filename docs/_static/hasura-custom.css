@@ -67,6 +67,7 @@ ul {
 .main_container_wrapper {
   min-width: 90%;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* for iOS momentum scroll */
 }
 
 .content_wrapper {
@@ -799,6 +800,7 @@ article ol ol {
 
   #sidebar {
     position: absolute;
+    z-index: 10;
     width: 90% !important;
     max-width: 800px !important;
     left: 0;
@@ -859,7 +861,6 @@ article ol ol {
   #sidebar {
     top: 170px;
     height: calc(100% - 170px);
-    z-index: 10;
   }
 
   #input_search_box {

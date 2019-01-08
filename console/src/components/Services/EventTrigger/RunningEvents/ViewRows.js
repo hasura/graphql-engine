@@ -16,7 +16,7 @@ import {
   setLimit,
   addOrder,
 } from './FilterActions';
-import { ordinalColSort } from '../utils';
+import { ordinalColSort, convertDateTimeToLocale } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
 import '../TableCommon/ReactTableFix.css';
 
@@ -114,7 +114,7 @@ const ViewRows = ({
           }
           let content = row[col] === undefined ? 'NULL' : row[col].toString();
           if (col === 'created_at') {
-            content = new Date(row[col]).toUTCString();
+            content = convertDateTimeToLocale(row[col]);
           }
           return <div className={conditionalClassname}>{content}</div>;
         };
@@ -288,7 +288,7 @@ const ViewRows = ({
                   return status;
                 }
                 if (col === 'created_at') {
-                  const formattedDate = new Date(r.created_at).toUTCString();
+                  const formattedDate = convertDateTimeToLocale(row[col]);
                   return formattedDate;
                 }
                 const content =

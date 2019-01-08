@@ -63,8 +63,22 @@ if (
 
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   if (globals.nodeEnv !== 'development') {
-    const windowUrl = window.location.protocol + '//' + window.location.host;
-    globals.dataApiUrl = windowUrl;
+    if (window.__env.consolePath) {
+      const safeCurrentUrl = checkExtraSlashes(window.location.href);
+      globals.dataApiUrl = safeCurrentUrl.slice(
+        0,
+        safeCurrentUrl.lastIndexOf(window.__env.consolePath)
+      );
+      const currentPath = checkExtraSlashes(window.location.pathname);
+      globals.urlPrefix =
+        currentPath.slice(
+          0,
+          currentPath.lastIndexOf(window.__env.consolePath)
+        ) + '/console';
+    } else {
+      const windowUrl = window.location.protocol + '//' + window.location.host;
+      globals.dataApiUrl = windowUrl;
+    }
   }
   /*
    * Require the exact usecase

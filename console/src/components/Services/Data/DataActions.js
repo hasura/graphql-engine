@@ -562,4 +562,5 @@ export {
   fetchTableListBySchema,
   RESET_MANUAL_REL_TABLE_LIST,
   fetchViewInfoFromInformationSchema,
+  initQueries,
 };

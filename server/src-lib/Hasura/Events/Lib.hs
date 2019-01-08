@@ -146,7 +146,6 @@ initEventEngineCtx maxT fetchI = do
 
 processEventQueue :: L.LoggerCtx -> LogEnvHeaders -> WS.Session -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
 processEventQueue logctx logenv httpSess pool cacheRef eectx = do
-  putStrLn "event_trigger: starting workers"
   threads <- mapM async [fetchThread , consumeThread]
   void $ waitAny threads
   where
