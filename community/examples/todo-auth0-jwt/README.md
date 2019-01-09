@@ -1,6 +1,6 @@
 # (MOVED) Integrating Todo app with Auth0 and JWT authorization with Hasura GraphQL Engine
 
-**This folder has been moved to [sample-apps/todo-auth0-jwt](../sample-apps/todo-auth0-jwt).**
+**This folder has been moved to [sample-apps/todo-auth0-jwt](../../sample-apps/todo-auth0-jwt).**
 
 In this example, we use Hasura GraphQL engine's JWT authorization mode. We use
 Auth0 as our authentication and JWT token provider.

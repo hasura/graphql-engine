@@ -1,6 +1,6 @@
 # (MOVED) hasura-realtime-poll
 
-**This folder has been moved to [sample-apps/hasura-realtime-poll](../sample-apps/hasura-realtime-poll).**
+**This folder has been moved to [sample-apps/realtime-poll](../../sample-apps/realtime-poll)**
 
 A demo application to showcase real-time capabilities of [Hasura GraphQL
 Engine](https://github.com/hasura/graphql-engine).

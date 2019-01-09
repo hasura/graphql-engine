@@ -1,6 +1,6 @@
 # (MOVED) Realtime Chat using GraphQL Subscriptions
 
-**This folder has been moved to [sample-apps/realtime-chat](../sample-apps/realtime-chat).**
+**This folder has been moved to [sample-apps/realtime-chat](../../sample-apps/realtime-chat).**
 
 This is the source code for a fully working group chat app that uses subscriptions in Hasura GraphQL Engine. It is built using React and Apollo.
 
