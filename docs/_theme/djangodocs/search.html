@@ -4,19 +4,14 @@
   <!-- handle search query -->
   <script>
     const handleQueryParams = function() {
-      const re = /query=(.*)$/;
-      const match = re.exec(window.location.search);
+      const urlParams = new URLSearchParams(window.location.search);
+      const searchTerm = urlParams.get('query');
 
-      let searchTerm = '';
-      if ( match ) {
-        searchTerm = decodeURIComponent(match[1]);
+      if (searchTerm) {
+        const searchInput = document.getElementById('search_element');
 
-        if (searchTerm) {
-          const searchInput = document.getElementById('search_element');
-
-          searchInput.value = searchTerm;
-          searchInput.dispatchEvent(new Event('input'));
-        }
+        searchInput.value = searchTerm;
+        searchInput.dispatchEvent(new Event('input'));
       }
     };
 
