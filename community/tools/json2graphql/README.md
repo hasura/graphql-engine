@@ -17,9 +17,9 @@ This is A CLI tool to import a schema and data to Postgres using JSON data. You 
 
    [![Deploy to heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
-  Note the URL. It will be of the form: `https://<app-name>.herokuapp.com`
+   Note the URL. It will be of the form: `https://<app-name>.herokuapp.com`
 
-2. Create a db.js file. Your data file should export an object where the keys are the entity types. The values should be lists of entities, i.e. arrays of value objects with at least an id key. For instance:
+2. Create a `db.js` file. Your data file should export an object where the keys are the entity types. The values should be the lists of entities, i.e. arrays of value objects with at least an id key. For instance:
 
     ```js
     module.exports = {
@@ -195,7 +195,7 @@ If you want to overwrite the existing tables in the database with the new tables
 
 ## Credits and related projects
 
-- [Fredi Bach](fredibach.ch)
+- [Fredi Bach](https://fredibach.ch)
 - [json-graphql-server](https://github.com/marmelab/json-graphql-server)
 - [Blowson](https://www.blowson.com/docs/)
 - [Firebase2GraphQL](https://firebase2graphql.com/)
