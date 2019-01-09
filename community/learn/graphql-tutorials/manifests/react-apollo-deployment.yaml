@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: react-apollo
+    hasuraService: custom
+  name: react-apollo
+  namespace: default
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: react-apollo
+    spec:
+      containers:
+      - image: hasura/base-git-image:0.7
+        imagePullPolicy: IfNotPresent
+        name: react-apollo
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}
+      securityContext: {}
+      terminationGracePeriodSeconds: 0
+status: {}

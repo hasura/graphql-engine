@@ -13,12 +13,20 @@ spec:
         backend:
           serviceName: homepage
           servicePort: 80
+      - path: /react-apollo
+        backend:
+          serviceName: react-apollo
+          servicePort: 80
   - host: www.graphql-tutorials.org
     http:
       paths:
       - path: /
         backend:
           serviceName: homepage
+          servicePort: 80
+      - path: /react-apollo
+        backend:
+          serviceName: react-apollo
           servicePort: 80
   - host: backend.graphql-tutorials.org
     http:
