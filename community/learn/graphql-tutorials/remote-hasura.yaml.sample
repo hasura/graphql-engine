@@ -19,6 +19,11 @@ spec:
       name: graphiql
       path: ./community/learn/graphql-tutorials/backend-services/graphiql
     name: graphiql
+  - containers:
+    - dockerfile: ./community/learn/graphql-tutorials/tutorials/react-apollo/tutorial-site/Dockerfile
+      name: graphiql
+      path: ./community/learn/graphql-tutorials/tutorials/react-apollo/tutorial-site
+    name: react-apollo
   manifests:
     helm: {}
     path: ./community/learn/graphql-tutorials/manifests
