@@ -1,6 +1,6 @@
 module Hasura.RQL.DDL.Relationship where
 
-import qualified Database.PG.Query          as Q
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission  (purgePerm)
@@ -10,12 +10,14 @@ import           Hasura.SQL.Types
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.Map.Strict            as M
-import qualified Data.Text                  as T
 import           Data.Tuple                 (swap)
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
+
+import qualified Data.HashMap.Strict        as HM
+import qualified Data.Map.Strict            as M
+import qualified Data.Text                  as T
+import qualified Database.PG.Query          as Q
 
 data RelDef a
   = RelDef
@@ -218,14 +220,14 @@ objRelP2 qt rd@(RelDef rn ru comment) = do
   liftTx $ persistRel qt rn ObjRel (toJSON ru) comment
 
 createObjRelP2
-  :: (QErrM m, CacheRWM m, MonadTx m) => CreateObjRel -> m RespBody
+  :: (QErrM m, CacheRWM m, MonadTx m) => CreateObjRel -> m EncJSON
 createObjRelP2 (WithTable qt rd) = do
   objRelP2 qt rd
   return successMsg
 
 runCreateObjRel
   :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
-  => CreateObjRel -> m RespBody
+  => CreateObjRel -> m EncJSON
 runCreateObjRel defn = do
   createObjRelP1 defn
   createObjRelP2 defn
@@ -321,14 +323,14 @@ arrRelP2 qt rd@(RelDef rn u comment) = do
   liftTx $ persistRel qt rn ArrRel (toJSON u) comment
 
 createArrRelP2
-  :: (QErrM m, CacheRWM m, MonadTx m) => CreateArrRel -> m RespBody
+  :: (QErrM m, CacheRWM m, MonadTx m) => CreateArrRel -> m EncJSON
 createArrRelP2 (WithTable qt rd) = do
   arrRelP2 qt rd
   return successMsg
 
 runCreateArrRel
   :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
-  => CreateArrRel -> m RespBody
+  => CreateArrRel -> m EncJSON
 runCreateArrRel defn = do
   createArrRelP1 defn
   createArrRelP2 defn
@@ -363,7 +365,7 @@ purgeRelDep d = throw500 $ "unexpected dependency of relationship : "
 
 dropRelP2
   :: (QErrM m, CacheRWM m, MonadTx m)
-  => DropRel -> [SchemaObjId] -> m RespBody
+  => DropRel -> [SchemaObjId] -> m EncJSON
 dropRelP2 (DropRel qt rn _) depObjs = do
   mapM_ purgeRelDep depObjs
   delRelFromCache rn qt
@@ -372,7 +374,7 @@ dropRelP2 (DropRel qt rn _) depObjs = do
 
 runDropRel
   :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
-  => DropRel -> m RespBody
+  => DropRel -> m EncJSON
 runDropRel defn = do
   depObjs <- dropRelP1 defn
   dropRelP2 defn depObjs
@@ -407,14 +409,14 @@ setRelCommentP1 (SetRelComment qt rn _) = do
 
 setRelCommentP2
   :: (QErrM m, MonadTx m)
-  => SetRelComment -> m RespBody
+  => SetRelComment -> m EncJSON
 setRelCommentP2 arc = do
   liftTx $ setRelComment arc
   return successMsg
 
 runSetRelComment
   :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
-  => SetRelComment -> m RespBody
+  => SetRelComment -> m EncJSON
 runSetRelComment defn = do
   setRelCommentP1 defn
   setRelCommentP2 defn

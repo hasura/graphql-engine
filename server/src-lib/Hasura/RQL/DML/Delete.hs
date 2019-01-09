@@ -12,6 +12,7 @@ import           Instances.TH.Lift        ()
 
 import qualified Data.Sequence            as DS
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning
@@ -95,15 +96,15 @@ validateDeleteQ
 validateDeleteQ =
   liftDMLP1 . validateDeleteQWith binRHSBuilder
 
-deleteQueryToTx :: (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+deleteQueryToTx :: (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 deleteQueryToTx (u, p) =
-  runIdentity . Q.getRow
+  encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder deleteSQL) (toList p) True
   where
     deleteSQL = toSQL $ mkSQLDelete u
 
 runDelete
   :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m)
-  => DeleteQuery -> m RespBody
+  => DeleteQuery -> m EncJSON
 runDelete q =
   validateDeleteQ q >>= liftTx . deleteQueryToTx

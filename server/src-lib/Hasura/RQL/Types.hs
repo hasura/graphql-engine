@@ -11,7 +11,7 @@ module Hasura.RQL.Types
        , withUserInfo
 
        , UserInfoM(..)
-       , RespBody
+       -- , RespBody
        , successMsg
 
        , HasHttpManager (..)
@@ -42,6 +42,7 @@ module Hasura.RQL.Types
        , module R
        ) where
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp      as R
 import           Hasura.RQL.Types.Common       as R
@@ -61,7 +62,6 @@ import qualified Database.PG.Query             as Q
 import           Data.Aeson
 
 import qualified Data.Aeson.Text               as AT
-import qualified Data.ByteString.Lazy          as BL
 import qualified Data.HashMap.Strict           as M
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
@@ -73,7 +73,7 @@ getFieldInfoMap
 getFieldInfoMap tn =
   fmap tiFieldInfoMap . M.lookup tn . scTables
 
-type RespBody = BL.ByteString
+-- type RespBody = BL.ByteString
 
 data QCtx
   = QCtx
@@ -338,7 +338,7 @@ defaultTxErrorHandler txe =
   let e = err500 PostgresError "postgres query error"
   in e {qeInternal = Just $ toJSON txe}
 
-successMsg :: BL.ByteString
+successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
 
 type HeaderObj = M.HashMap T.Text T.Text

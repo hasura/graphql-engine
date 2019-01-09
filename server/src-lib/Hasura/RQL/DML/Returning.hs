@@ -6,9 +6,7 @@ import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Data.ByteString.Builder as BB
 import qualified Data.Text               as T
-import qualified Data.Vector             as V
 import qualified Hasura.SQL.DML          as S
 
 data MutFld
@@ -74,13 +72,6 @@ mkSelWith qt cte mutFlds singleObj =
     jsonBuildObjArgs =
       flip concatMap mutFlds $
       \(k, mutFld) -> [S.SELit k, mkMutFldExp qt singleObj mutFld]
-
-encodeJSONVector :: (a -> BB.Builder) -> V.Vector a -> BB.Builder
-encodeJSONVector builder xs
-  | V.null xs = BB.char7 '[' <> BB.char7 ']'
-  | otherwise = BB.char7 '[' <> builder (V.unsafeHead xs) <>
-                V.foldr go (BB.char7 ']') (V.unsafeTail xs)
-    where go v b  = BB.char7 ',' <> builder v <> b
 
 checkRetCols
   :: (UserInfoM m, QErrM m)

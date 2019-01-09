@@ -32,7 +32,6 @@ import           Hasura.Prelude
 import qualified Data.Aeson                          as J
 import qualified Data.Aeson.Casing                   as J
 import qualified Data.Aeson.TH                       as J
-import qualified Data.ByteString.Lazy                as BL
 import qualified Data.HashMap.Strict                 as Map
 import qualified Data.Sequence                       as Seq
 import qualified Database.PG.Query                   as Q
@@ -40,6 +39,7 @@ import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.GraphQL.Resolve.ContextTypes
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
@@ -56,9 +56,9 @@ data InsResp
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
 
-type RespTx = Q.TxE QErr BL.ByteString
+type RespTx = Q.TxE QErr EncJSON
 
-type LazyRespTx = LazyTx QErr BL.ByteString
+type LazyRespTx = LazyTx QErr EncJSON
 type PrepFn m = (PGColType, PGColValue) -> m S.SQLExp
 
 getFldInfo

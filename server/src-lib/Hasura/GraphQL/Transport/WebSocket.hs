@@ -39,6 +39,7 @@ import           Hasura.GraphQL.Validate                     (QueryParts (..),
 import qualified Hasura.GraphQL.Validate.Types               as VT
 import qualified Hasura.Logging                              as L
 import           Hasura.Prelude
+import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode,
                                                               getUserInfo)
@@ -46,7 +47,7 @@ import           Hasura.Server.Auth                          (AuthMode,
 -- uniquely identifies an operation
 type GOperationId = (WS.WSId, OperationId)
 
-type TxRunner = LazyRespTx -> IO (Either QErr BL.ByteString)
+type TxRunner = LazyRespTx -> IO (Either QErr EncJSON)
 
 type OperationMap
   = STMMap.Map OperationId LQ.LiveQuery
@@ -72,7 +73,7 @@ type WSServer = WS.WSServer WSConnData
 type WSConn = WS.WSConn WSConnData
 sendMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
 sendMsg wsConn =
-  liftIO . WS.sendMsg wsConn . encodeServerMsg
+  liftIO . WS.sendMsg wsConn . encJToLBS . encodeServerMsg
 
 data OpDetail
   = ODStarted
@@ -235,8 +236,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
     postExecErr qErr = do
       logOpEv $ ODQueryErr qErr
-      sendMsg wsConn $ SMData $ DataMsg opId $
-        GQExecError $ pure $ encodeQErr False qErr
+      sendMsg wsConn $ SMData $ DataMsg opId $ encJToLBS $
+        encodeGQResp $ GQExecError $ pure $ encodeQErr False qErr
 
     -- why wouldn't pre exec error use graphql response?
     preExecErr qErr = do
@@ -244,7 +245,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       sendMsg wsConn $ SMErr $ ErrorMsg opId $ encodeQErr False qErr
 
     sendSuccResp bs =
-      sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess bs
+      sendMsg wsConn $ SMData $ DataMsg opId $ encJToLBS $
+        encodeGQResp $ GQSuccess bs
 
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do
@@ -254,7 +256,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
     -- on change, send message on the websocket
     liveQOnChange resp =
-      WS.sendMsg wsConn $ encodeServerMsg $ SMData $ DataMsg opId resp
+      WS.sendMsg wsConn $ encJToLBS $ encodeServerMsg $
+      SMData $ DataMsg opId resp
 
     catchAndIgnore :: ExceptT () IO () -> IO ()
     catchAndIgnore m = void $ runExceptT m

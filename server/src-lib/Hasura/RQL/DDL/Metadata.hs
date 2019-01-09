@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+
 module Hasura.RQL.DDL.Metadata
   ( TableMeta
 
@@ -30,6 +31,7 @@ import qualified Data.HashSet                   as HS
 import qualified Data.List                      as L
 import qualified Data.Text                      as T
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -124,7 +126,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
 runClearMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
      , MonadIO m, HasHttpManager m)
-  => ClearMetadata -> m RespBody
+  => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
   adminOnly
   liftTx clearMetadata
@@ -201,7 +203,7 @@ applyQP2
      , HasHttpManager m
      )
   => ReplaceMetadata
-  -> m RespBody
+  -> m EncJSON
 applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
 
   liftTx clearMetadata
@@ -267,7 +269,7 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
 
 runReplaceMetadata
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
-  => ReplaceMetadata -> m RespBody
+  => ReplaceMetadata -> m EncJSON
 runReplaceMetadata q = do
   applyQP1 q
   applyQP2 q
@@ -396,10 +398,10 @@ fetchMetadata = do
 
 runExportMetadata
   :: (QErrM m, UserInfoM m, MonadTx m)
-  => ExportMetadata -> m RespBody
+  => ExportMetadata -> m EncJSON
 runExportMetadata _ = do
   adminOnly
-  encode <$> liftTx fetchMetadata
+  encJFromJ <$> liftTx fetchMetadata
 
 data ReloadMetadata
   = ReloadMetadata
@@ -413,7 +415,7 @@ $(deriveToJSON defaultOptions ''ReloadMetadata)
 runReloadMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m
      , MonadTx m, MonadIO m, HasHttpManager m)
-  => ReloadMetadata -> m RespBody
+  => ReloadMetadata -> m EncJSON
 runReloadMetadata _ = do
   adminOnly
   DT.buildSchemaCache
@@ -430,7 +432,7 @@ $(deriveToJSON defaultOptions ''DumpInternalState)
 
 runDumpInternalState
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => DumpInternalState -> m RespBody
+  => DumpInternalState -> m EncJSON
 runDumpInternalState _ = do
   adminOnly
-  encode <$> askSchemaCache
+  encJFromJ <$> askSchemaCache

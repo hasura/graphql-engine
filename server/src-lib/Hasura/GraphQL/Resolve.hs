@@ -4,27 +4,24 @@ module Hasura.GraphQL.Resolve
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                             as J
-import qualified Data.ByteString.Lazy                   as BL
-import qualified Data.HashMap.Strict                    as Map
-import qualified Database.PG.Query                      as Q
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.HashMap.Strict               as Map
+import qualified Database.PG.Query                 as Q
+import qualified Language.GraphQL.Draft.Syntax     as G
 
-
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.Introspect
 import           Hasura.GraphQL.Schema
-import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Hasura.GraphQL.Resolve.Insert          as RI
-import qualified Hasura.GraphQL.Resolve.Mutation        as RM
-import qualified Hasura.GraphQL.Resolve.Select          as RS
+import qualified Hasura.GraphQL.Resolve.Insert     as RI
+import qualified Hasura.GraphQL.Resolve.Mutation   as RM
+import qualified Hasura.GraphQL.Resolve.Select     as RS
 
 -- {-# SCC buildTx #-}
-buildTx :: UserInfo -> GCtx -> Field -> Q.TxE QErr BL.ByteString
+buildTx :: UserInfo -> GCtx -> Field -> Q.TxE QErr EncJSON
 buildTx userInfo gCtx fld = do
   opCxt <- getOpCtx $ _fName fld
   join $ fmap fst $ runConvert (fldMap, orderByCtx, insCtxMap, funcArgCtx) $ case opCxt of
@@ -76,12 +73,12 @@ resolveFld
   => UserInfo -> GCtx
   -> G.OperationType
   -> Field
-  -> m BL.ByteString
+  -> m EncJSON
 resolveFld userInfo gCtx opTy fld =
   case _fName fld of
-    "__type"     -> J.encode <$> runReaderT (typeR fld) gCtx
-    "__schema"   -> J.encode <$> runReaderT (schemaR fld) gCtx
-    "__typename" -> return $ J.encode $ mkRootTypeName opTy
+    "__type"     -> encJFromJ <$> runReaderT (typeR fld) gCtx
+    "__schema"   -> encJFromJ <$> runReaderT (schemaR fld) gCtx
+    "__typename" -> return $ encJFromJ $ mkRootTypeName opTy
     _            -> liftTx $ buildTx userInfo gCtx fld
   where
     mkRootTypeName :: G.OperationType -> Text
@@ -95,8 +92,8 @@ resolveSelSet
   => UserInfo -> GCtx
   -> G.OperationType
   -> SelSet
-  -> m BL.ByteString
+  -> m EncJSON
 resolveSelSet userInfo gCtx opTy fields =
-  fmap mkJSONObj $ forM (toList fields) $ \fld -> do
+  fmap encJFromAL $ forM (toList fields) $ \fld -> do
     fldResp <- resolveFld userInfo gCtx opTy fld
     return (G.unName $ G.unAlias $ _fAlias fld, fldResp)

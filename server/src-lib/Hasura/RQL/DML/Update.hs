@@ -13,6 +13,7 @@ import           Instances.TH.Lift        ()
 import qualified Data.HashMap.Strict      as M
 import qualified Data.Sequence            as DS
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning
@@ -176,15 +177,15 @@ validateUpdateQuery
 validateUpdateQuery =
   liftDMLP1 . validateUpdateQueryWith binRHSBuilder
 
-updateQueryToTx :: (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+updateQueryToTx :: (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 updateQueryToTx (u, p) =
-  runIdentity . Q.getRow
+  encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder updateSQL) (toList p) True
   where
     updateSQL = toSQL $ mkSQLUpdate u
 
 runUpdate
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
-  => UpdateQuery -> m RespBody
+  => UpdateQuery -> m EncJSON
 runUpdate q =
   validateUpdateQuery q >>= liftTx . updateQueryToTx

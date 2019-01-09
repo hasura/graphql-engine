@@ -23,6 +23,7 @@ import           Hasura.RQL.DML.Select.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.EncJSON
 
 import qualified Database.PG.Query              as Q
 import qualified Hasura.SQL.DML                 as S
@@ -291,25 +292,24 @@ funcQueryTx
   :: S.FromItem -> QualifiedFunction -> QualifiedTable
   -> TablePerm -> TableArgs
   -> (Either TableAggFlds AnnFlds, DS.Seq Q.PrepArg)
-  -> Q.TxE QErr RespBody
+  -> Q.TxE QErr EncJSON
 funcQueryTx frmItem fn tn tabPerm tabArgs (eSelFlds, p) =
-  runIdentity . Q.getRow
+  encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList p) True
   where
     sqlBuilder = toSQL $
       mkFuncSelectWith fn tn tabPerm tabArgs eSelFlds frmItem
 
-selectAggP2 :: (AnnAggSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+selectAggP2 :: (AnnAggSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectAggP2 (sel, p) =
-  runIdentity . Q.getRow
+  encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkAggSelect sel
 
--- selectP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m RespBody
-selectP2 :: Bool -> (AnnSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+selectP2 :: Bool -> (AnnSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 asSingleObject (sel, p) =
-  runIdentity . Q.getRow
+  encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkSQLSelect asSingleObject sel
@@ -320,12 +320,12 @@ phaseOne
 phaseOne =
   liftDMLP1 . convSelectQuery binRHSBuilder
 
-phaseTwo :: (MonadTx m) => (AnnSel, DS.Seq Q.PrepArg) -> m RespBody
+phaseTwo :: (MonadTx m) => (AnnSel, DS.Seq Q.PrepArg) -> m EncJSON
 phaseTwo =
   liftTx . selectP2 False
 
 runSelect
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
-  => SelectQuery -> m RespBody
+  => SelectQuery -> m EncJSON
 runSelect q =
   phaseOne q >>= phaseTwo
