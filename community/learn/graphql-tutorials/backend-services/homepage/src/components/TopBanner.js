@@ -103,7 +103,7 @@ class TopBanner extends React.Component {
                     SCENARIO 3
                   </div>
                   <div className={'sectionDescription'}>
-                    Your task is to integrate the APIs to your app, ensure best practices and be production ready
+                    Your task is to integrate the APIs to your app while ensuring best practices
                   </div>
                 </div>
               </div>

@@ -10,18 +10,18 @@ spec:
     <add ssh keys here; one per line>
   deployments:
   - containers:
-    - dockerfile: ./services/homepage/Dockerfile
+    - dockerfile: ./community/learn/graphql-tutorials/backend-services/homepage/Dockerfile
       name: homepage
-      path: ./services/homepage
+      path: ./community/learn/graphql-tutorials/backend-services/homepage
     name: homepage
   - containers:
-    - dockerfile: ./services/graphiql/Dockerfile
+    - dockerfile: ./community/learn/graphql-tutorials/backend-services/graphiql/Dockerfile
       name: graphiql
-      path: ./services/graphiql
+      path: ./community/learn/graphql-tutorials/backend-services/graphiql
     name: graphiql
   manifests:
     helm: {}
-    path: ./manifests
+    path: ./community/learn/graphql-tutorials/manifests
   registry:
     credentials:
       secretKeyRef:
