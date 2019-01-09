@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="index.css">
+
+    <link rel="shortcut icon" type="image/png" href="favicon.png"/>
+
+    <title>Push Notifications using Hasura GraphQL Engine Event Triggers</title>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-129818961-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-129818961-1');
+    </script>
+  </head>
+  <body class="main">
+
+    <div class="container h-100 main-content " id="loading-screen">
+      <div class="row h-100 justify-content-center align-items-center">
+        <div class="col-12">
+          <div><h4 id="loading-text">Loading... 🏃‍️</h4></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container h-100 main-content" id="permission-screen" style="display: none;">
+      <div class="row h-100 justify-content-center align-items-center">
+        <div class="col-12">
+          <div><h4>Enable browser notifications to run the demo 🙏</h4></div>
+          <button class="btn btn-light" onclick="requestPermission()" id="enable-button">Enable</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container h-100 main-content hidden" id="input-screen" style="display:none;">
+      <div class="row h-100 justify-content-center align-items-center">
+        <div class="col-12">
+          <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="Type something and click Send" style="text-align: center;" id="text-input">
+          </div>
+          <button class="btn btn-light" type="button" id="title-submit" onclick="submitText()">🔔 Send</button>
+          <div class="error"><span id="error-text"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container h-100 main-content " id="waiting-screen" style="display:none;">
+      <div class="row h-100 justify-content-center align-items-center">
+        <div class="col-12">
+          <div id="waiting-ui">
+            <div class="loader"></div>
+            <div class="waiting-text"><h5>Watiting for notification</h5></div>
+          </div>
+          <div class="try-again">
+            <button class="btn btn-light" type="button" id="try-again" onclick="tryAgain()">🔔 Send another</button>
+          </div>
+          <div><img id="arch" src="arch.png" /></div>
+          <div class="notifications" style="display: none;">
+            <div class="container">
+              <div class="row justify-content-center align-items-center">
+                <div class="col-4">
+                  <h5>Past notifications</h5>
+                  <ul class="list-group" id="notifications-list">
+                    <!-- <li class="list-group-item list-group-item-light">Cras justo odio</li> -->
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="main-content">
+        <div class="hasura-logo">
+          <a href="https://hasura.io" target="_blank">
+            <img class="hasura-logo" alt="hasura logo" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white_200px.png" />
+          </a>
+          &nbsp; | &nbsp;
+          <a href="/console" target="_blank" id="hge-console-link">
+            Backend
+          </a>
+          &nbsp; | &nbsp;
+          <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/serverless-push" target="_blank">
+            Source
+          </a>
+          <div class="footer-small-text"><span>(The database resets every 24 hours)</span></div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/5.4.1/firebase.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.4.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.4.1/firebase-messaging.js"></script>
+
+    <script>
+     // Initialize Firebase
+     var config = {
+       // Replace with PROJECT_ID
+       projectId: "hasura-test",
+       // Replace with SENDER_ID
+       messagingSenderId: "795709254723",
+     };
+     firebase.initializeApp(config);
+    </script>
+
+    <!-- custom js -->
+    <script src="index.js"></script>
+  </body>
+</html>

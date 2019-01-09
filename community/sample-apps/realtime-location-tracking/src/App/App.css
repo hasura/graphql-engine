@@ -1,0 +1,61 @@
+.App {
+  text-align: center;
+}
+
+.App-header {
+  background-color: #222;
+  // height: 75px;
+  padding: 20px;
+  color: white;
+  margin-bottom: 25px;
+}
+
+.App-title {
+  font-size: 1.5em;
+}
+
+.map_wrapper {
+  position: relative;
+  margin: 0 auto;
+  border: 3px solid gray;
+  width: 90%;
+  height: 400px;
+}
+
+pre {
+  text-align: left;
+  padding: 10px;
+}
+
+.subscription_query {
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.tracking_info {
+  text-align: left;
+  width: 90%;
+  margin: 0 auto;
+  margin-bottom: 0px;
+  margin-bottom: 10px;
+}
+
+.request_block {
+  border-right: 1px solid #eee;
+}
+
+.request_block .subscription_wrapper {
+  width: 90%;
+  margin: 0 auto;
+}
+
+@keyframes App-logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 767px) {
+  .request_block {
+    margin-bottom: 10px;
+  }
+}

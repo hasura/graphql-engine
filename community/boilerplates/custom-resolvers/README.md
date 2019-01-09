@@ -1,4 +1,6 @@
-# GraphQL Custom Resolver Example
+# (DEPRECATED) GraphQL Custom Resolver Example
+
+**This folder has been deprecated in favour of [remote-schemas](../remote-schemas).**
 
 > **NOTE**: now merge [Remote Schemas](../../../remote-schemas.md) from [GraphQL servers](../graphql-servers) using Hasura
 > - Boilerplates for custom GraphQL servers have been moved [here](../graphql-servers). Also, a recently released feature removes the need for an external GraphQL gateway by letting you merge remote schemas in GraphQL Engine itself - [read more](../../../remote-schemas.md) (*Please check caveats for current limitations in the feature*).

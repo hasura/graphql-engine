@@ -1,0 +1,26 @@
+version: '3.6'
+services:
+  postgres:
+    image: postgres
+    environment:
+    - "POSTGRES_PASSWORD:mysecretpassword"
+    ports:
+    - "5432:5432"
+    restart: always
+    volumes:
+    - db_data:/var/lib/postgresql/data
+  graphql-engine:
+    image: hasura/graphql-engine:v1.0.0-alpha13
+    ports:
+    - "8000:8080"
+    depends_on:
+    - "postgres"
+    restart: always
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:mysecretpassword@postgres:5432/postgres
+    command:
+      - graphql-engine
+      - serve
+      - --enable-console
+volumes:
+  db_data:

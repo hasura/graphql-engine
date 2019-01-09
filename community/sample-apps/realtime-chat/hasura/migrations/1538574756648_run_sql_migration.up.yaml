@@ -1,0 +1,6 @@
+- args:
+    cascade: false
+    sql: "CREATE OR REPLACE VIEW public.\"user_online\" AS \n SELECT \"user\".id,\n
+      \   \"user\".username,\n    \"user\".last_typed,\n    \"user\".last_seen\n   FROM
+      \"user\"\n  WHERE (\"user\".last_seen > (now() - '00:00:10'::interval));"
+  type: run_sql
