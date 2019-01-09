@@ -29,7 +29,6 @@ var rootCmd = &cobra.Command{
 			defer telemetry.Waiter.Done()
 			telemetry.SendExecutionEvent(EC, cmd, args, nil)
 		}()
-		EC.Spin("Running...")
 		return nil
 	},
 }

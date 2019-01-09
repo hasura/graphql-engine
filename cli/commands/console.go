@@ -107,7 +107,8 @@ func (o *consoleOptions) run() error {
 		"dataApiVersion":   "",
 		"accessKey":        o.EC.Config.AccessKey,
 		"assetsVersion":    consoleAssetsVersion,
-		"disableTelemetry": o.EC.GlobalConfig.DisableConsoleTelemetry,
+		"disableTelemetry": o.EC.GlobalConfig.DisableTelemetry,
+		"uuid":             o.EC.GlobalConfig.UUID,
 	})
 	if err != nil {
 		return errors.Wrap(err, "error serving console")

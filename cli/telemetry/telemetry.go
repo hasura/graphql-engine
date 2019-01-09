@@ -69,7 +69,7 @@ func SendExecutionEvent(ec *cli.ExecutionContext, cmd *cobra.Command, args []str
 	if ec.GlobalConfig == nil {
 		return
 	}
-	if ec.GlobalConfig.DisableCLITelemetry {
+	if ec.GlobalConfig.DisableTelemetry {
 		ec.Logger.Debugf("telemtry is disabled, not sending data")
 		return
 	}
@@ -85,7 +85,7 @@ func SendErrorEvent(ec *cli.ExecutionContext, payload map[string]interface{}) {
 	if ec.GlobalConfig == nil {
 		return
 	}
-	if ec.GlobalConfig.DisableCLITelemetry {
+	if ec.GlobalConfig.DisableTelemetry {
 		ec.Logger.Debugf("telemtry is disabled, not sending data")
 		return
 	}

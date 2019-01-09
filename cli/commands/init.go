@@ -62,7 +62,6 @@ type initOptions struct {
 }
 
 func (o *initOptions) run() error {
-	o.EC.Spinner.Stop()
 	var dir string
 	// prompt for init directory if it's not set already
 	if o.InitDir == "" {

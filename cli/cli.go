@@ -45,6 +45,12 @@ const (
 	GLOBAL_CONFIG_FILE_NAME = "config.json"
 )
 
+// String constants
+const (
+	StrTelemetryNotice = `Help us improve Hasura! The cli collects anonymized usage stats which allows us
+to keep improving Hasura at warp speed. To opt-out or read more, visit <link>`
+)
+
 // HasuraGraphQLConfig has the config values required to contact the server.
 type HasuraGraphQLConfig struct {
 	// Endpoint for the GraphQL Engine
@@ -71,8 +77,7 @@ type GlobalConfig struct {
 	UUID string `json:"uuid"`
 
 	// Set to true if telemetry is disabled, can be set manually.
-	DisableCLITelemetry     bool `json:"disable_cli_telemetry"`
-	DisableConsoleTelemetry bool `json:"disable_console_telemetry"`
+	DisableTelemetry bool `json:"disable_telemetry"`
 }
 
 // ExecutionContext contains various contextual information required by the cli
@@ -241,16 +246,14 @@ func (ec *ExecutionContext) readGlobalConfig() error {
 	if ec.GlobalConfig == nil {
 		ec.Logger.Debugf("global config is not pre-set, reading from current env")
 		ec.GlobalConfig = &GlobalConfig{
-			UUID:                    v.GetString("uuid"),
-			DisableCLITelemetry:     v.GetBool("disable_cli_telemetry"),
-			DisableConsoleTelemetry: v.GetBool("disable_console_telemetry"),
+			UUID:             v.GetString("uuid"),
+			DisableTelemetry: v.GetBool("disable_telemetry"),
 		}
 	} else {
 		ec.Logger.Debugf("global config is pre-set to %#v", ec.GlobalConfig)
 	}
 	ec.Logger.Debugf("global config: uuid: %v", ec.GlobalConfig.UUID)
-	ec.Logger.Debugf("global config: disable_cli_telemetry: %v", ec.GlobalConfig.DisableCLITelemetry)
-	ec.Logger.Debugf("global config: disable_console_telemetry: %v", ec.GlobalConfig.DisableConsoleTelemetry)
+	ec.Logger.Debugf("global config: disable_telemetry: %v", ec.GlobalConfig.DisableTelemetry)
 	return nil
 }
 
@@ -345,11 +348,10 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 			return errors.Wrap(err, "failed to generate uuid")
 		}
 		gc := GlobalConfig{
-			UUID:                    u.String(),
-			DisableCLITelemetry:     false,
-			DisableConsoleTelemetry: false,
+			UUID:             u.String(),
+			DisableTelemetry: false,
 		}
-		data, err := json.MarshalIndent(gc, "", "  ")
+		data, err := json.Marshal(gc)
 		if err != nil {
 			return errors.Wrap(err, "cannot marshal json for config file")
 		}
@@ -358,6 +360,8 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 			return errors.Wrap(err, "writing global config file failed")
 		}
 		ec.Logger.Debugf("global config file written at '%s' with content '%v'", ec.GlobalConfigFile, string(data))
+		// also show a notice about telemetry
+		ec.Logger.Info(StrTelemetryNotice)
 	} else if os.IsExist(err) || err == nil {
 		// file exists, verify contents
 		ec.Logger.Debug("global config file exisits, verifying contents")

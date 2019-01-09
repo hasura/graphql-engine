@@ -1,5 +1,5 @@
 CREATE TABLE hdb_catalog.hdb_version (
-    hasura_uuid UUID PRIMARY KEY,
+    hasura_uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     version TEXT NOT NULL,
     upgraded_on TIMESTAMPTZ NOT NULL,
     misc_state JSONB
