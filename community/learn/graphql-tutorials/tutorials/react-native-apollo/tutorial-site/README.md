@@ -1,30 +1,33 @@
-# GraphQL tutorial for React Native
+# Gatsby Tutorial Starter Kit
 
-This tutorial is for React Native developers to learn what GraphQL is and how to use GraphQL in react applications.
-It is ideal if you follow along with code and should not take you more than a few hours to finish end to end.
+- Uses `gatsby-mdx` boilerplate
+- Theme similar to gitbook
+- Parses markdown files from `content` folder and generates UI with sidebar navigation, markdown content rendered, table of contents hash navigation on the right and with previous, next functionality.
 
-## What do I need to take this tutorial?
-Your dev environment set up to build React Native apps. If you can run create-react-native-app you're good to go. You might need the `Expo` app on your phone for development.
+## Set up and configure
 
-## How long will this tutorial take?
-Less than 2 hours
+- Tutorial content in markdown goes into `content` folder.
+- Modify `gatsby-config.js` for site metadata like title, description and github tutorial location.
+- Modify `src/config.js` for left sidebar navigation order. It should be in the format "/<filename.md>"
+- For sub nesting in left sidebar, create a folder with the same name as the top level .md filename and the sub navigation is auto-generated. Currently supports only one level of nesting.
 
-## What you'll be able to do after this tutorial
-Use (realtime) GraphQL in your React Native app.
+## Environment Variables
 
-## Who is this tutorial for
-You should know the basics of how to build a React Native app.
+`GATSBY_SITE_TITLE` - title tag for the current tutorial
+`GATSBY_SITE_DESCRIPTION` - description tag for the current tutorial
+`GATSBY_DOCS_LOCATION` - github url for Edit on Github functionality
+`GATSBY_PATH_PREFIX` - url prefix at which the tutorial will be hosted
+`GATSBY_HEADER_TITLE` - title that appears on the top header
 
-## Topics covered in this tutorial
-- Introduction to GraphQL
-- Using Apollo client
-- GraphQL queries
-- GraphQL mutations & variables
-- GraphQL subscriptions
-- Making direct GraphQL API calls without Apollo's higher-order-components
+## Develop
 
-## Final app
+```
+$ npm run develop
+```
 
-This is the final app that you will build:
+## Build
 
-[complete-app-gif](./images/complete-app.gif)
+```
+$ npm run build
+```
+
