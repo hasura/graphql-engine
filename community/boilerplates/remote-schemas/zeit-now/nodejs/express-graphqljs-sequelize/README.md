@@ -1,6 +1,6 @@
-# Zeit + NodeJS + Apollo + Sequelize GraphQL boilerplate
+# Zeit + NodeJS + Express + GraphQL.js + Sequelize GraphQL boilerplate
 
-A boilerplate using nodejs and [Apollo Server](https://www.apollographql.com/docs/apollo-server/) that can be deployed on Zeit.
+A boilerplate using nodejs, express and [GraphQL.js](https://graphql.github.io/graphql-js/running-an-express-graphql-server/) that can be deployed on Zeit.
 
 ## Stack
 
@@ -12,17 +12,19 @@ Zeit Now
 
 #### Frameworks/Libraries
 
-Apollo Server (GraphQL framework)
+Express (NodeJS framework)
+
+GraphQL.js (GraphQL framework)
 
 Sequelize (Postgres ORM)
 
 ## Local Development
 
-The sample source code is present in `server.js`. Clone the repo and go to `community/boilerplates/remote-schemas/remote-schema/zeit-now/nodejs/apollo-sequelize` folder:
+The sample source code is present in `server.js`. Clone the repo and go to `community/boilerplates/remote-schemas/remote-schema/zeit-now/nodejs/express-graphqljs-sequelize` folder:
 
 ```bash
 $ git clone git@github.com:hasura/graphql-engine
-$ cd graphql-engine/community/boilerplates/remote-schemas/remote-schema/zeit-now/nodejs/apollo-sequelize
+$ cd graphql-engine/community/boilerplates/remote-schemas/remote-schema/zeit-now/nodejs/express-graphqljs-sequelize
 ```
 
 1) First, let's set the environment variable for connecting to the postgres instance. This can be a local postgres instance or some managed postgres instance like AWS RDS.

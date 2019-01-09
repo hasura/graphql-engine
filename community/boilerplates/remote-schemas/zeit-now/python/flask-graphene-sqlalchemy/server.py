@@ -1,12 +1,10 @@
 from flask import Flask
 from flask_graphql import GraphQLView
 import graphene
+from models import UserModel, User, MinAmountModel, MinAmount, db_session
 
 # create the flask application
 app = Flask(__name__)
-
-# a global variale to store count temporarily
-count = 0
 
 # create a query root using graphene
 class Query(graphene.ObjectType):
@@ -16,23 +14,39 @@ class Query(graphene.ObjectType):
     def resolve_hello(self, info):
         return "Hello World!"
 
-    count = graphene.Int(description='Current value of the counter')
-    def resolve_count(self, info):
-        return count
+# We consider a user schema where a user can be added only if a custom validation passes.
+# The custom validation involves fetching a min amount from a table
+# and checking if the user balance is greater than the min amount.
+# This will be done in a transaction.
 
+class ValidateAndAddUser(graphene.Mutation):
+    class Arguments:
+        name = graphene.String()
+        balance = graphene.Int()
 
-# increment_counter mutation
-class IncrementCounter(graphene.Mutation):
-    new_count = graphene.Int(description='Updated value of the coutner')
-
-    def mutate(self, info):
-        global count
-        count+=1
-        return IncrementCounter(new_count=count)            
+    id = graphene.Int()
+    name = graphene.String()
+    balance = graphene.Int()
+    def mutate(self, info, name, balance):
+        try:
+            #fetch min amount
+            minAmount = db_session.query(MinAmountModel).one()
+            # check balance
+            if balance >= minAmount.amount:
+                #create user if balance is greater
+                user = UserModel(name=name, balance=balance)
+                db_session.add(user)
+                db_session.commit()
+                db_session.refresh(user)
+                return ValidateAndAddUser(id = user.id, name = user.name, balance=user.balance)
+            else:
+                raise ValueError('balance too low, required atleast ' + str(minAmount.amount))
+        except Exception as exc:
+            raise exc
 
 # mutation root
 class Mutation(graphene.ObjectType):
-    increment_counter = IncrementCounter.Field(description='Increment the value of counter by 1')
+    validateAndAddUser = ValidateAndAddUser.Field()
 
 # create a schema object using the query and mutation roots
 schema = graphene.Schema(query=Query, mutation=Mutation)

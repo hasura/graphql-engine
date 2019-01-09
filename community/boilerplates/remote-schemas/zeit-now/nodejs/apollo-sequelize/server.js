@@ -1,39 +1,60 @@
 const { ApolloServer } = require('apollo-server');
 const { makeExecutableSchema } = require('graphql-tools');
+const Sequelize = require("sequelize");
+const {User, MinAmount, sequelize} = require('./models.js');
 
-const port = process.env.PORT || 3000;
-
-let count = 0;
+const port = process.env.PORT || 4000;
 
 const typeDefs = `
   type Query {
-    hello: String!
-    count: Int!
+    hello:  String
   }
 
   type Mutation {
-    increment_counter: count_mutation_response!
+    validateAndAddUser(name: String, balance: Int): User
   }
 
-  type count_mutation_response {
-    new_count: Int!
+  type User {
+    id:       Int
+    name:     String
+    balance:  Int
   }
 `;
 
+// We consider a user schema where a user can be added only if a custom validation passes.
+// The custom validation involves fetching a min amount from a table
+// and checking if the user balance is greater than the min amount.
+// This will be done in a transaction.
+
 const resolvers = {
-  Query: {
-    hello: () => {
-      return "Hello World!"
+    Query: {
+        hello: () => "world",
     },
-    count: () => {
-      return count;
+    Mutation: {
+        validateAndAddUser: async (_, { name, balance }) => {
+            //begin transaction
+            return await sequelize.transaction(async (t) => {
+                try {
+                    //fetch min amount
+                    const minAmount = await MinAmount.findOne({}, {transaction: t});
+                    //check balance
+                    if (balance >= minAmount.amount) {
+                        //create user if balance is greater
+                        const user = await User.create({
+                            name: name,
+                            balance: balance
+                        });
+                        return user;
+                    } else {
+                        throw new Error("balance too low, required atleast " + minAmount.amount);
+                    }
+                } catch (e) {
+                    console.log(e);
+                    throw new Error(e);
+                }
+            });
+        }
     }
-  },
-  Mutation: {
-    increment_counter: () => {
-      return { new_count: ++count }
-    }
-  }
 };
 
 const schema = makeExecutableSchema({
