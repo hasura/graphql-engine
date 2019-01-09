@@ -14,7 +14,7 @@ const getDataType = (data, column) => {
     return 'timestamptz';
   }
   if (data.constructor.name === 'Object') {
-    return 'json';
+    return 'jsonb';
   }
   throwError(`message: invalid data type given for column ${column}: ${typeof data}`);
 };
