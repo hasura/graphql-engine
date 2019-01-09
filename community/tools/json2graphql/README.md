@@ -1,11 +1,15 @@
 # JSON database to GraphQL
 
-[Hasura GraphQL Engine](https://hasura.io) gives instant GraphQL APIs over Postgres.
-
 This is A CLI tool to import a schema and data to Postgres using JSON data. You can then leverage all the features of Hasura GraphQL Engine to query the Postgres data over GraphQL.
+
+> [Hasura GraphQL Engine](https://hasura.io) gives instant realtime GraphQL APIs over Postgres.
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/json2graphql.svg)](https://npmjs.org/package/json2graphql)
+
+## Basic example
+
+![demo-gif](https://graphql-engine-cdn.hasura.io/assets/json2graphql/j2g.gif)
 
 ## Quick start
 
@@ -57,15 +61,11 @@ Check [this section](#foreign-keys-and-relationships) for knowing about foreign 
 
 ## Installation
 
-### CLI
-
 ```bash
 npm install -g json2graphql
 ```
 
-## Usage
-
-### CLI
+## CLI Usage
 
 #### Without access key
 
@@ -102,7 +102,7 @@ $ gq URL [flags]
 
 You can also define foreign keys and relationships in your JSON sample data. The CLI infers foreign keys and relationships from column names and table names.
 
-For example, in the following data set, the `posts` table has a field called `users_id` which is a foreign key to the `id`  column of table `users`. Also, the `comments` table has a field called `posts_id` which is a foreign key to the `id`  column of table `posts`.
+For example, in the following data set, the `post` table has a field called `user_id` which is a foreign key to the `id`  column of table `user`. Also, the `comment` table has a field called `post_id` which is a foreign key to the `id`  column of table `post`.
 
 ```js
 module.exports = {
@@ -192,6 +192,13 @@ The response would be:
 If your Postgres already contains tables that you are trying to import using `json2graphql`, the command will fail.
 
 If you want to overwrite the existing tables in the database with the new tables from your sample JSON database, you must provide a flag `-o` or `--overwrite`
+
+## Credits and related projects
+
+- [Fredi Bach](fredibach.ch)
+- [json-graphql-server](https://github.com/marmelab/json-graphql-server)
+- [Blowson](https://www.blowson.com/docs/)
+- [Firebase2GraphQL](https://firebase2graphql.com/)
 
 ---
 Maintained with :heart: by <a href="https://hasura.io">Hasura</a>
