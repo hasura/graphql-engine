@@ -47,9 +47,8 @@ const (
 
 // String constants
 const (
-	StrTelemetryNotice = `To help improve Hasura, the CLI sends anonymous usage stats to the team.
-The resulting data plays a key role in deciding what to focus on.
-To read more and for instructions to opt-out, visit https://telemetry.hasura.io/faq`
+	StrTelemetryNotice = `Help us improve Hasura! The cli collects anonymized usage stats which allows us
+to keep improving Hasura at warp speed. To opt-out or read more, visit <link>`
 )
 
 // HasuraGraphQLConfig has the config values required to contact the server.
