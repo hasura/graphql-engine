@@ -72,6 +72,7 @@ const defaultState = {
   pendingEvents: [],
   runningEvents: [],
   eventLogs: [],
+  tableSchemas: [],
   schemaList: ['public'],
   currentSchema: 'public',
   accessKeyError: false,

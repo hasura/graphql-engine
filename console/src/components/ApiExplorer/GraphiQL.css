@@ -1487,7 +1487,10 @@ span.CodeMirror-selectedtext {
   -ms-user-select: none;
   user-select: none;
 }
-
+.doc-explorer-title
+{
+  height: 34px;
+}
 .graphiql-container .doc-explorer-title,
 .graphiql-container .history-title {
   -webkit-box-flex: 1;

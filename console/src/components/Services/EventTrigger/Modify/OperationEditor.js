@@ -139,7 +139,7 @@ class OperationEditor extends React.Component {
                       styles.noPadd
                     } ${styles.cursorPointer}`}
                     key={i}
-                    onClick={() => dispatch(toggleColumn('update', col))}
+                    onClick={() => dispatch(toggleColumn('update', col.name))}
                   >
                     <input
                       type="checkbox"

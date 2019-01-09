@@ -21,8 +21,7 @@ Once deployed, you can use any of the following endpoints as your auth webhook i
 
 - ``/simple/webhook``  (`View source <https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-express/server.js>`__)
 - ``/firebase/webhook`` (`View source <https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-express/firebase/firebaseHandler.js>`__) 
-- ``/auth0/webhook`` (`View source <https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-express/auth0/auth0Handler.js>`__) 
 
 .. note::
 
-    If you are using ``auth0`` or ``firebase`` you will have to set the associated environment variables.
+    If you are using ``firebase`` you will have to set the associated environment variables.

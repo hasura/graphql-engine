@@ -76,7 +76,7 @@ initCatalogStrict createSchema initTime =  do
     -- only if we created the schema, create the extension
     then when createSchema $ liftTx $ Q.unitQE needsPgCryptoExt
          "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public" () False
-    else throw500 "FATAL: Could not find extension pgcrytpo. This extension is required."
+    else throw500 pgcryptoNotAvlMsg
 
   liftTx $ Q.catchE defaultTxErrorHandler $ do
     Q.Discard () <- Q.multiQ $(Q.sqlFromFile "src-rsr/initialise.sql")
@@ -328,10 +328,15 @@ execQuery queryBs = do
 -- error messages
 pgcryptoReqdMsg :: T.Text
 pgcryptoReqdMsg =
-  "pgcrypto extension is required, but could not install; encountered postgres error"
+  "pgcrypto extension is required, but could not install; encountered unknown postgres error"
 
 pgcryptoPermsMsg :: T.Text
 pgcryptoPermsMsg =
   "pgcrypto extension is required, but current user doesn't have permission to create it. "
   <> "Please grant superuser permission or setup initial schema via "
   <> "https://docs.hasura.io/1.0/graphql/manual/deployment/postgres-permissions.html"
+
+pgcryptoNotAvlMsg :: T.Text
+pgcryptoNotAvlMsg =
+  "pgcrypto extension is required, but could not find the extension in the "
+  <> "PostgreSQL server. Please make sure this extension is available."
