@@ -21,7 +21,7 @@ spec:
     name: graphiql
   - containers:
     - dockerfile: ./community/learn/graphql-tutorials/tutorials/react-apollo/tutorial-site/Dockerfile
-      name: graphiql
+      name: react-apollo
       path: ./community/learn/graphql-tutorials/tutorials/react-apollo/tutorial-site
     name: react-apollo
   manifests:
