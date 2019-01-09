@@ -410,6 +410,12 @@ disableTelemetryEnv =
   , "Disable anonymous telemetry (default: enabled)"
   )
 
+disableServerTelemetryEnv :: (String, String)
+disableServerTelemetryEnv =
+  ( "HASURA_GRAPHQL_DISABLE_SERVER_TELEMETRY"
+  , "Disable server telemetry"
+  )
+
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
@@ -595,6 +601,12 @@ parseDisableTelemetry :: Parser Bool
 parseDisableTelemetry =
   switch ( long "disable-telemetry" <>
            help (snd disableTelemetryEnv)
+         )
+
+parseDisableServerTelemetry :: Parser Bool
+parseDisableServerTelemetry =
+  switch ( long "disable-server-telemetry" <>
+           help (snd disableServerTelemetryEnv)
          )
 
 -- Init logging related
