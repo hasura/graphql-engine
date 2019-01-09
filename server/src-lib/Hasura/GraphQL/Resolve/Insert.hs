@@ -3,6 +3,7 @@ module Hasura.GraphQL.Resolve.Insert
 where
 
 import           Data.Has
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.Server.Utils
 
@@ -260,9 +261,9 @@ execCTEExp
   -> QualifiedTable
   -> CTEExp
   -> RR.MutFlds
-  -> Q.TxE QErr RespBody
+  -> Q.TxE QErr J.Object
 execCTEExp strfyNum tn (CTEExp cteExp args) flds =
-  runIdentity . Q.getRow
+  Q.getAltJ . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList args) True
   where
     sqlBuilder = toSQL $ RR.mkSelWith tn cteExp flds True strfyNum
@@ -303,7 +304,7 @@ insertObjRel
 insertObjRel strfyNum role objRelIns =
   withPathK relNameTxt $ do
     resp <- insertMultipleObjects strfyNum role tn multiObjIns [] mutFlds "data"
-    MutateResp aRows colVals <- decodeFromBS resp
+    MutateResp aRows colVals <- decodeEncJSON resp
     colValM <- asSingleObject colVals
     colVal <- onNothing colValM $ throw400 NotSupported errMsg
     retColsWithVals <- fetchFromColVals colVal rColInfos pgiName
@@ -330,6 +331,11 @@ insertObjRel strfyNum role objRelIns =
                 )
               ]
 
+decodeEncJSON :: (J.FromJSON a, QErrM m) => EncJSON -> m a
+decodeEncJSON =
+  either (throw500 . T.pack) decodeValue .
+  J.eitherDecode . encJToLBS
+
 -- | insert an array relationship and return affected rows
 insertArrRel
   :: Bool
@@ -344,7 +350,7 @@ insertArrRel strfyNum role resCols arrRelIns =
                (\(_, colVal) (_, rCol) -> (rCol, colVal))
 
     resBS <- insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds "data"
-    resObj <- decodeFromBS resBS
+    resObj <- decodeEncJSON resBS
     onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
       throw500 "affected_rows not returned in array rel insert"
   where
@@ -421,7 +427,7 @@ insertMultipleObjects
   -> [PGColWithValue] -- ^ additional fields
   -> RR.MutFlds
   -> T.Text -- ^ error path
-  -> Q.TxE QErr RespBody
+  -> Q.TxE QErr EncJSON
 insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
@@ -459,16 +465,15 @@ insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
       let affRows = sum $ map fst insResps
           cteExps = map snd insResps
           retFlds = mapMaybe getRet mutFlds
-      rawResps <- forM cteExps
-        $ \cteExp -> execCTEExp strfyNum tn cteExp retFlds
-      respVals :: [J.Object] <- mapM decodeFromBS rawResps
+      respVals <- forM cteExps $ \cteExp ->
+        execCTEExp strfyNum tn cteExp retFlds
       respTups <- forM mutFlds $ \(t, mutFld) -> do
         jsonVal <- case mutFld of
           RR.MCount   -> return $ J.toJSON affRows
           RR.MExp txt -> return $ J.toJSON txt
           RR.MRet _   -> J.toJSON <$> mapM (fetchVal t) respVals
         return (t, jsonVal)
-      return $ J.encode $ OMap.fromList respTups
+      return $ encJFromJValue $ OMap.fromList respTups
 
     getRet (t, r@(RR.MRet _)) = Just (t, r)
     getRet _                  = Nothing
@@ -487,7 +492,7 @@ convertInsert role tn fld = prefixErrPath fld $ do
   annVals <- withArg arguments "objects" asArray
   -- if insert input objects is empty array then
   -- do not perform insert and return mutation response
-  bool (withNonEmptyObjs annVals mutFlds) (buildEmptyMutResp mutFlds) $ null annVals
+  bool (withNonEmptyObjs annVals mutFlds) (withEmptyObjs mutFlds) $ null annVals
   where
     withNonEmptyObjs annVals mutFlds = do
       InsCtx vn tableCols defValMap relInfoMap updPerm uniqCols <- getInsCtx tn
@@ -498,7 +503,8 @@ convertInsert role tn fld = prefixErrPath fld $ do
       strfyNum <- stringifyNum <$> asks getter
       return $ prefixErrPath fld $ insertMultipleObjects strfyNum role tn
         multiObjIns [] mutFlds "objects"
-
+    withEmptyObjs mutFlds =
+      return $ return $ buildEmptyMutResp mutFlds
     arguments = _fArguments fld
     onConflictM = Map.lookup "on_conflict" arguments
 
