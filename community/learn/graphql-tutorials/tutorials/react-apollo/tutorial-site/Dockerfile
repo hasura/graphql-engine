@@ -15,14 +15,13 @@ RUN npm install
 COPY . .
 
 #Build react/vue/angular bundle static files
+ENV GATSBY_PATH_PREFIX='/react-apollo'
 RUN npm run build
 RUN cp -r public react-apollo
 RUN mv react-apollo public/
 
-
 EXPOSE 8080
 # serve dist folder on port 8080
 # CMD ["serve", "-s", "public", "-p", "8080"]
-ENV GATSBY_PATH_PREFIX='/react-apollo'
 
 CMD ["gatsby", "serve", "--verbose", "--prefix-paths", "-p", "8080"]
