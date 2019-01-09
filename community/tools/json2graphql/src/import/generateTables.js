@@ -13,7 +13,7 @@ const getDataType = (data, column) => {
   if (data.constructor.name === 'Date') {
     return 'timestamptz';
   }
-  if (data.constructor.name === 'Object') {
+  if (data.constructor.name === 'Object' || data.constructor.name === 'Array') {
     return 'jsonb';
   }
   throwError(`message: invalid data type given for column ${column}: ${typeof data}`);
