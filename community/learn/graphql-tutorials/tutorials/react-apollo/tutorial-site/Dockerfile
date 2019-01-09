@@ -1,11 +1,5 @@
 FROM node:carbon
 
-ENV GATSBY_SITE_TITLE='React Apollo Todo'
-ENV GATSBY_SITE_DESCRIPTION='Tutorial'
-ENV GATSBY_DOCS_LOCATION='https://github.com/hasura/graphql-engine/tree/master/community/tutorials/react-apollo'
-ENV GATSBY_PATH_PREFIX='/react-apollo'
-ENV GATSBY_HEADER_TITLE='React Apollo'
-
 # Create app directory
 WORKDIR /app
 
@@ -29,4 +23,6 @@ RUN mv react-apollo public/
 EXPOSE 8080
 # serve dist folder on port 8080
 # CMD ["serve", "-s", "public", "-p", "8080"]
+ENV GATSBY_PATH_PREFIX='/react-apollo'
+
 CMD ["gatsby", "serve", "--verbose", "--prefix-paths", "-p", "8080"]
