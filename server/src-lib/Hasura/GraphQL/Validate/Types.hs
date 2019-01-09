@@ -5,6 +5,7 @@ module Hasura.GraphQL.Validate.Types
   , ObjFieldMap
   , ObjTyInfo(..)
   , mkObjTyInfo
+  , IFaceTyInfo(..)
   , FragDef(..)
   , FragDefMap
   , AnnVarVals
@@ -14,11 +15,14 @@ module Hasura.GraphQL.Validate.Types
   , InpObjTyInfo(..)
   , ScalarTyInfo(..)
   , DirectiveInfo(..)
+  , AsObjType(..)
   , defaultDirectives
   , defDirectivesMap
   , defaultSchema
   , TypeInfo(..)
   , isObjTy
+  , isIFaceTy
+  , getPossibleObjTypes'
   , getObjTyM
   , mkScalarTy
   , pgColTyToScalar
@@ -145,9 +149,10 @@ type ObjFieldMap = Map.HashMap G.Name ObjFldInfo
 
 data ObjTyInfo
   = ObjTyInfo
-  { _otiDesc   :: !(Maybe G.Description)
-  , _otiName   :: !G.NamedType
-  , _otiFields :: !ObjFieldMap
+  { _otiDesc       :: !(Maybe G.Description)
+  , _otiName       :: !G.NamedType
+  , _otiImplIFaces :: [G.NamedType]
+  , _otiFields     :: !ObjFieldMap
   } deriving (Show, Eq, TH.Lift)
 
 instance EquatableGType ObjTyInfo where
@@ -156,17 +161,23 @@ instance EquatableGType ObjTyInfo where
   getEqProps a = (,) (_otiName a) (Map.map getEqProps (_otiFields a))
 
 instance Monoid ObjTyInfo where
-  mempty = ObjTyInfo Nothing (G.NamedType "") Map.empty
+  mempty = ObjTyInfo Nothing (G.NamedType "") [] Map.empty
 
 instance Semigroup ObjTyInfo where
   objA <> objB =
     objA { _otiFields = Map.union (_otiFields objA) (_otiFields objB)
+         , _otiImplIFaces = _otiImplIFaces objA ++ _otiImplIFaces objB
          }
 
 mkObjTyInfo
-  :: Maybe G.Description -> G.NamedType -> ObjFieldMap -> TypeLoc -> ObjTyInfo
-mkObjTyInfo descM ty flds loc =
-  ObjTyInfo descM ty $ Map.insert (_fiName newFld) newFld flds
+  :: Maybe G.Description -> G.NamedType -> [G.NamedType] -> ObjFieldMap -> TypeLoc -> ObjTyInfo
+mkObjTyInfo descM ty iFaces flds loc =
+  ObjTyInfo descM ty iFaces $ Map.insert (_fiName newFld) newFld flds
+  where newFld = typenameFld loc
+
+mkIFaceTyInfo :: Maybe G.Description -> G.NamedType -> Map.HashMap G.Name ObjFldInfo -> TypeLoc -> IFaceTyInfo
+mkIFaceTyInfo descM ty flds loc =
+  IFaceTyInfo descM ty $ Map.insert (_fiName newFld) newFld flds
   where newFld = typenameFld loc
 
 typenameFld :: TypeLoc -> ObjFldInfo
@@ -177,10 +188,36 @@ typenameFld loc =
     desc = "The name of the current Object type at runtime"
 
 fromObjTyDef :: G.ObjectTypeDefinition -> TypeLoc -> ObjTyInfo
-fromObjTyDef (G.ObjectTypeDefinition descM n _ _ flds) loc =
-  mkObjTyInfo descM (G.NamedType n) fldMap loc
+fromObjTyDef (G.ObjectTypeDefinition descM n ifaces _ flds) loc =
+  mkObjTyInfo descM (G.NamedType n) ifaces fldMap loc
   where
     fldMap = Map.fromList [(G._fldName fld, fromFldDef fld loc) | fld <- flds]
+
+data IFaceTyInfo
+  = IFaceTyInfo
+  { _ifDesc   :: !(Maybe G.Description)
+  , _ifName   :: !G.NamedType
+  , _ifFields :: !ObjFieldMap
+  } deriving (Show, Eq, TH.Lift)
+
+instance EquatableGType IFaceTyInfo where
+  type EqProps IFaceTyInfo =
+    (G.NamedType, Map.HashMap G.Name (G.Name, G.GType, ParamMap))
+  getEqProps a = (,) (_ifName a) (Map.map getEqProps (_ifFields a))
+
+instance Monoid IFaceTyInfo where
+  mempty = IFaceTyInfo Nothing (G.NamedType "") Map.empty
+
+instance Semigroup IFaceTyInfo where
+  objA <> objB =
+    objA { _ifFields = Map.union (_ifFields objA) (_ifFields objB)
+         }
+
+fromIFaceDef :: G.InterfaceTypeDefinition -> TypeLoc -> IFaceTyInfo
+fromIFaceDef (G.InterfaceTypeDefinition descM n _ flds) loc =
+  mkIFaceTyInfo descM (G.NamedType n) fldMap loc
+  where
+    fldMap =  Map.fromList [(G._fldName fld, fromFldDef fld loc) | fld <- flds]
 
 type InpObjFldMap = Map.HashMap G.Name InpValInfo
 
@@ -236,7 +273,21 @@ data TypeInfo
   | TIObj !ObjTyInfo
   | TIEnum !EnumTyInfo
   | TIInpObj !InpObjTyInfo
+  | TIIFace !IFaceTyInfo
   deriving (Show, Eq, TH.Lift)
+
+data AsObjType
+  = AOTObj ObjTyInfo
+  | AOTIFace IFaceTyInfo
+
+getPossibleObjTypes' :: [TypeInfo] -> AsObjType -> [ObjTyInfo]
+getPossibleObjTypes' _ (AOTObj obj) = [obj]
+getPossibleObjTypes' allTy (AOTIFace i) = mapMaybe getImplTypeM allTy
+  where
+    getImplTypeM = \case
+      TIObj objTyInfo -> bool Nothing (Just objTyInfo) $
+         _ifName i `elem` _otiImplIFaces objTyInfo
+      _               -> Nothing
 
 isObjTy :: TypeInfo -> Bool
 isObjTy = \case
@@ -247,6 +298,127 @@ getObjTyM :: TypeInfo -> Maybe ObjTyInfo
 getObjTyM = \case
   (TIObj t) -> return t
   _         -> Nothing
+
+isIFaceTy :: TypeInfo -> Bool
+isIFaceTy = \case
+  (TIIFace _) -> True
+  _         -> False
+
+data SchemaPath
+  = SchemaPath
+  { _spTypeName :: !(Maybe G.NamedType)
+  , _spFldName  :: !(Maybe G.Name)
+  , _spArgName  :: !(Maybe G.Name)
+  , _spType     :: !(Maybe T.Text)
+  }
+
+setFldNameSP :: SchemaPath -> G.Name -> SchemaPath
+setFldNameSP sp fn = sp { _spFldName = Just fn}
+
+setArgNameSP :: SchemaPath -> G.Name -> SchemaPath
+setArgNameSP sp an = sp { _spArgName = Just an}
+
+showSP :: SchemaPath -> Text
+showSP (SchemaPath t f a _) = maybe "" (\x -> showNamedTy x <> fN) t
+  where
+    fN = maybe "" (\x -> "." <> showName x <> aN) f
+    aN = maybe "" showArg a
+    showArg x = "(" <> showName x <> ":)"
+
+showSPTxt' :: SchemaPath -> Text
+showSPTxt' (SchemaPath _ f a t)  = maybe "" (<> " "<> fld) t
+  where
+    fld = maybe "" (const $ "field " <> arg) f
+    arg = maybe "" (const "argument ") a
+
+showSPTxt :: SchemaPath -> Text
+showSPTxt p = showSPTxt' p <> showSP p
+
+implmntsIFace :: TypeMap -> ObjTyInfo -> IFaceTyInfo -> Either Text ()
+implmntsIFace tyMap objTyInfo iFaceTyInfo = do
+  let path =
+        ( SchemaPath (Just $ _otiName objTyInfo) Nothing Nothing (Just "Object")
+        , SchemaPath  (Just $ _ifName iFaceTyInfo) Nothing Nothing (Just "Interface")
+        )
+  mapM_ (includesIFaceFld path) $ _ifFields iFaceTyInfo
+  where
+    includesIFaceFld (spO,spIF) ifFld = do
+      let pathA@(spOA, spIFA) = (spO, setFldNameSP spIF $ _fiName ifFld)
+      objFld <- sameNameFld pathA ifFld
+      let pathB = (setFldNameSP spOA $ _fiName objFld, spIFA)
+      validateIsSubType' pathB (_fiTy objFld) (_fiTy ifFld)
+      hasAllArgs pathB objFld ifFld
+      isExtraArgsNullable pathB objFld ifFld
+
+    validateIsSubType' (spO,spIF) oFld iFld = validateIsSubType tyMap oFld iFld `catchError` \_ ->
+      throwError $ "The type of " <> showSPTxt spO <> " (" <> G.showGT oFld <>
+      ") is not the same type/sub type of " <> showSPTxt spIF <> " (" <> G.showGT iFld <> ")"
+
+    sameNameFld (spO, spIF) ifFld = do
+      let spIFN = setFldNameSP spIF $ _fiName ifFld
+      onNothing (Map.lookup (_fiName ifFld) objFlds)
+        $ throwError $ showSPTxt spIFN <> " expected, but  " <> showSP spO <> " does not provide it"
+
+    hasAllArgs (spO, spIF) objFld ifFld = forM_ (_fiParams ifFld) $ \ifArg -> do
+      objArg <- sameNameArg ifArg
+      let (spON, spIFN) = (setArgNameSP spO $ _iviName objArg, setArgNameSP spIF $ _iviName ifArg)
+      unless (_iviType objArg == _iviType ifArg) $ throwError $
+        showSPTxt spIFN <> " expects type " <> G.showGT (_iviType ifArg) <> ", but " <>
+        showSP spON <> " has type " <> G.showGT (_iviType objArg)
+      where
+        sameNameArg ivi = do
+          let spIFN = setArgNameSP spIF $ _iviName ivi
+          onNothing (Map.lookup (_iviName ivi) objArgs) $ throwError $ showSPTxt spIFN <> " required, but " <>
+            showSPTxt spO <> " does not provide it"
+        objArgs = _fiParams objFld
+
+    isExtraArgsNullable (spO, spIF) objFld ifFld = forM_ extraArgs isInpValNullable
+      where
+        extraArgs = Map.difference (_fiParams objFld) (_fiParams ifFld)
+        isInpValNullable ivi = unless (G.isNullable $ _iviType ivi) $ throwError $
+          showSPTxt spO <> " is of required type " <> G.showGT (_iviType ivi) <>
+          ", but is not provided by " <> showSPTxt spIF
+
+    objFlds =  _otiFields objTyInfo
+
+extrTyInfo :: TypeMap -> G.NamedType -> Either Text TypeInfo
+extrTyInfo tyMap tn = maybe
+  (throwError $ "Could not find type with name " <> showNamedTy tn)
+  return
+  $ Map.lookup tn tyMap
+
+extrIFaceTyInfo :: MonadError Text m => Map.HashMap G.NamedType TypeInfo -> G.NamedType -> m IFaceTyInfo
+extrIFaceTyInfo tyMap tn = case Map.lookup tn tyMap of
+  Just (TIIFace i) -> return i
+  _ -> throwError $ "Could not find interface with name " <> showNamedTy tn
+
+validateIsSubType :: Map.HashMap G.NamedType TypeInfo -> G.GType -> G.GType -> Either Text ()
+validateIsSubType tyMap subFldTy supFldTy = do
+  checkNullMismatch subFldTy supFldTy
+  case (subFldTy,supFldTy) of
+    (G.TypeNamed _ subTy, G.TypeNamed _ supTy) -> do
+      subTyInfo <- extrTyInfo tyMap subTy
+      supTyInfo <- extrTyInfo tyMap supTy
+      isSubTypeBase subTyInfo supTyInfo
+    (G.TypeList _ (G.ListType sub), G.TypeList _ (G.ListType sup) ) -> do
+      validateIsSubType tyMap sub sup
+    _ -> throwError $ showIsListTy subFldTy <> " Type " <> G.showGT subFldTy <>
+      " cannot be a sub-type of " <> showIsListTy supFldTy <> " Type " <> G.showGT supFldTy
+  where
+    checkNullMismatch subTy supTy = when (G.isNotNull supTy && G.isNullable subTy ) $
+      throwError $ "Nullable Type " <> G.showGT subFldTy <> " cannot be a sub-type of Non-Null Type " <> G.showGT supFldTy
+    showIsListTy = \case
+      G.TypeList  {} -> "List"
+      G.TypeNamed {} -> "Named"
+
+-- TODO Should we check the schema location as well?
+isSubTypeBase :: (MonadError Text m) => TypeInfo -> TypeInfo -> m ()
+isSubTypeBase subTyInfo supTyInfo = case (subTyInfo,supTyInfo) of
+  (TIObj obj, TIIFace iFace) -> unless (_ifName iFace `elem` _otiImplIFaces obj) notSubTyErr
+  _ -> unless (subTyInfo == supTyInfo) notSubTyErr
+  where
+    showTy = showNamedTy . getNamedTy
+    notSubTyErr = throwError $ "Type " <> showTy subTyInfo <> " is not a sub type of " <> showTy supTyInfo
 
 -- map postgres types to builtin scalars
 pgColTyToScalar :: PGColType -> Text
@@ -266,6 +438,7 @@ getNamedTy :: TypeInfo -> G.NamedType
 getNamedTy = \case
   TIScalar t -> mkScalarTy $ _stiType t
   TIObj t -> _otiName t
+  TIIFace i -> _ifName i
   TIEnum t -> _etiName t
   TIInpObj t -> _iotiName t
 
@@ -278,11 +451,20 @@ fromTyDef tyDef loc = case tyDef of
   G.TypeDefinitionScalar t -> TIScalar <$> fromScalarTyDef t loc
   G.TypeDefinitionObject t -> return $ TIObj $ fromObjTyDef t loc
   G.TypeDefinitionInterface t ->
-    throwError $ "unexpected interface: " <> showName (G._itdName t)
+    return $ TIIFace $ fromIFaceDef t loc
   G.TypeDefinitionUnion t ->
     throwError $ "unexpected union: " <> showName (G._utdName t)
   G.TypeDefinitionEnum t -> return $ TIEnum $ fromEnumTyDef t loc
   G.TypeDefinitionInputObject t -> return $ TIInpObj $ fromInpObjTyDef t loc
+
+fromSchemaDoc :: G.SchemaDocument -> TypeLoc -> Either Text TypeMap
+fromSchemaDoc (G.SchemaDocument tyDefs) loc = do
+  tyMap <- fmap mkTyInfoMap $ mapM (flip fromTyDef loc) tyDefs
+  mapM_ (validateAllIFaceImpls tyMap) $ mapMaybe getObjTyM $ Map.elems tyMap
+  return tyMap
+  where
+    validateAllIFaceImpls tyMap objTyInfo = mapM_ (extrIFaceTyInfo tyMap >=> validateIFaceImpl objTyInfo) $ _otiImplIFaces objTyInfo
+      where validateIFaceImpl = implmntsIFace tyMap
 
 fromTyDefQ :: G.TypeDefinition -> TypeLoc -> TH.Q TH.Exp
 fromTyDefQ tyDef loc = case fromTyDef tyDef loc of
@@ -290,8 +472,9 @@ fromTyDefQ tyDef loc = case fromTyDef tyDef loc of
   Right t -> TH.lift t
 
 fromSchemaDocQ :: G.SchemaDocument -> TypeLoc -> TH.Q TH.Exp
-fromSchemaDocQ (G.SchemaDocument tyDefs) loc =
-  TH.ListE <$> mapM (flip fromTyDefQ loc) tyDefs
+fromSchemaDocQ sd loc = case fromSchemaDoc sd loc of
+  Left e      -> fail $ T.unpack e
+  Right tyMap -> TH.ListE <$> mapM TH.lift (Map.elems tyMap)
 
 defaultSchema :: G.SchemaDocument
 defaultSchema = $(G.parseSchemaDocQ "src-rsr/schema.graphql")

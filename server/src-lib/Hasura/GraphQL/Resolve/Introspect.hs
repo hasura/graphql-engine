@@ -74,14 +74,14 @@ objectTypeR
   => ObjTyInfo
   -> Field
   -> m J.Object
-objectTypeR (ObjTyInfo descM n flds) fld =
+objectTypeR (ObjTyInfo descM n iFaces flds) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"  -> retJT "__Type"
     "kind"        -> retJ TKOBJECT
     "name"        -> retJ $ namedTyToTxt n
     "description" -> retJ $ fmap G.unDescription descM
-    "interfaces"  -> retJ ([] :: [()])
+    "interfaces"  -> fmap J.toJSON $ mapM (`ifaceR` subFld) iFaces
     "fields"      -> fmap J.toJSON $ mapM (`fieldR` subFld) $
                     sortBy (comparing _fiName) $
                     filter notBuiltinFld $ Map.elems flds
@@ -92,6 +92,43 @@ notBuiltinFld f =
   fldName /= "__typename" && fldName /= "__type" && fldName /= "__schema"
   where
     fldName = _fiName f
+
+-- 4.5.2.4
+
+ifaceR
+  :: ( MonadReader r m, Has TypeMap r
+     , MonadError QErr m)
+  => G.NamedType
+  -> Field
+  -> m J.Object
+ifaceR n fld = do
+  tyInfo <- getTyInfo n
+  case tyInfo of
+    TIIFace ifaceTyInfo -> ifaceR' ifaceTyInfo fld
+    _                   -> throw500 $ "Unknown interface " <> G.unName (G.unNamedType n)
+
+ifaceR'
+  :: ( MonadReader r m, Has TypeMap r
+     , MonadError QErr m)
+  => IFaceTyInfo
+  -> Field
+  -> m J.Object
+ifaceR' i@(IFaceTyInfo descM n flds) fld =
+  withSubFields (_fSelSet fld) $ \subFld ->
+  case _fName subFld of
+    "__typename"    -> retJT "__Type"
+    "kind"          -> retJ TKINTERFACE
+    "name"          -> retJ $ namedTyToTxt n
+    "description"   -> retJ $ fmap G.unDescription descM
+    "fields"        -> fmap J.toJSON $ mapM (`fieldR` subFld) $
+                      sortBy (comparing _fiName) $
+                      filter notBuiltinFld $ Map.elems flds
+    "possibleTypes" -> fmap J.toJSON $ mapM (`objectTypeR` subFld) =<< getImplTypes
+    _               -> return J.Null
+    where
+      getImplTypes = do
+        tyInfo :: TypeMap <- asks getter
+        return $ getPossibleObjTypes' (Map.elems tyInfo) $ AOTIFace i
 
 -- 4.5.2.5
 enumTypeR
@@ -178,6 +215,7 @@ namedTypeR' fld = \case
   TIObj objTyInfo       -> objectTypeR objTyInfo fld
   TIEnum enumTypeInfo   -> enumTypeR enumTypeInfo fld
   TIInpObj inpObjTyInfo -> inputObjR inpObjTyInfo fld
+  TIIFace iFaceTyInfo   -> ifaceR' iFaceTyInfo fld
 
 -- 4.5.3
 fieldR

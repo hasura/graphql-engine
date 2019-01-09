@@ -221,6 +221,9 @@ validateNamedTypeVal inpValParser nt val = do
     TIObj _ ->
       throw500 $ "unexpected object type info for: "
       <> showNamedTy nt
+    TIIFace _ ->
+      throw500 $ "unexpected interface type info for: "
+      <> showNamedTy nt
     TIInpObj ioti ->
       withParsed (getObject inpValParser) val $
       fmap (AGObject nt) . mapM (validateObject inpValParser ioti)
