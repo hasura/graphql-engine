@@ -1,0 +1,31 @@
+apiVersion: gitkube.sh/v1alpha1
+kind: Remote
+metadata:
+  creationTimestamp: null
+  name: hasura
+  namespace: default
+spec:
+  authorizedKeys:
+  - |
+    <add ssh keys here; one per line>
+  deployments:
+  - containers:
+    - dockerfile: ./services/homepage/Dockerfile
+      name: homepage
+      path: ./services/homepage
+    name: homepage
+  - containers:
+    - dockerfile: ./services/graphiql/Dockerfile
+      name: graphiql
+      path: ./services/graphiql
+    name: graphiql
+  manifests:
+    helm: {}
+    path: ./manifests
+  registry:
+    credentials:
+      secretKeyRef:
+        key: ""
+status:
+  remoteUrl: ""
+  remoteUrlDesc: ""

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 22.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 150 150" style="enable-background:new 0 0 150 150;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:url(#SVGID_1_);stroke:url(#SVGID_2_);stroke-width:2;}
+</style>
+<title>Group 6</title>
+<desc>Created with Sketch.</desc>
+<g id="Welcome">
+	<g id="Hasura-website-design-V3" transform="translate(-142.000000, -2432.000000)">
+		<g id="Group-6" transform="translate(145.000000, 2446.000000)">
+			
+				<g id="react-2" transform="translate(86.521127, 74.000000) scale(-1, 1) translate(-86.521127, -74.000000) translate(34.521127, 39.000000)">
+				<g id="Mask">
+				</g>
+			</g>
+		</g>
+	</g>
+</g>
+<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="-1527.7456" y1="139.5853" x2="-1526.7257" y2="138.5754" gradientTransform="matrix(148 0 0 -148 226107 20660)">
+	<stop  offset="0" style="stop-color:#3023AE"/>
+	<stop  offset="1" style="stop-color:#8B4C95"/>
+</linearGradient>
+<linearGradient id="SVGID_2_" gradientUnits="userSpaceOnUse" x1="-1527.7456" y1="139.5853" x2="-1526.7257" y2="138.5754" gradientTransform="matrix(148 0 0 -148 226107 20660)">
+	<stop  offset="0" style="stop-color:#3023AE;stop-opacity:0.1395"/>
+	<stop  offset="1" style="stop-color:#C86DD7;stop-opacity:0.5847"/>
+</linearGradient>
+<path class="st0" d="M13,1h124c6.6,0,12,5.4,12,12v124c0,6.6-5.4,12-12,12H13c-6.6,0-12-5.4-12-12V13C1,6.4,6.4,1,13,1z"/>
+</svg>

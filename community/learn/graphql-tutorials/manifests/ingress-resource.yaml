@@ -1,0 +1,36 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: graphql-tutorials.org
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: homepage
+          servicePort: 80
+  - host: www.graphql-tutorials.org
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: homepage
+          servicePort: 80
+  - host: backend.graphql-tutorials.org
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: hasura
+          servicePort: 80
+  - host: graphiql.graphql-tutorials.org
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: graphiql
+          servicePort: 80
