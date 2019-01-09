@@ -78,8 +78,7 @@ type GlobalConfig struct {
 	UUID string `json:"uuid"`
 
 	// Set to true if telemetry is disabled, can be set manually.
-	DisableCLITelemetry     bool `json:"disable_cli_telemetry"`
-	DisableConsoleTelemetry bool `json:"disable_console_telemetry"`
+	DisableTelemetry bool `json:"disable_telemetry"`
 }
 
 // ExecutionContext contains various contextual information required by the cli
@@ -248,16 +247,14 @@ func (ec *ExecutionContext) readGlobalConfig() error {
 	if ec.GlobalConfig == nil {
 		ec.Logger.Debugf("global config is not pre-set, reading from current env")
 		ec.GlobalConfig = &GlobalConfig{
-			UUID:                    v.GetString("uuid"),
-			DisableCLITelemetry:     v.GetBool("disable_cli_telemetry"),
-			DisableConsoleTelemetry: v.GetBool("disable_console_telemetry"),
+			UUID:             v.GetString("uuid"),
+			DisableTelemetry: v.GetBool("disable_telemetry"),
 		}
 	} else {
 		ec.Logger.Debugf("global config is pre-set to %#v", ec.GlobalConfig)
 	}
 	ec.Logger.Debugf("global config: uuid: %v", ec.GlobalConfig.UUID)
-	ec.Logger.Debugf("global config: disable_cli_telemetry: %v", ec.GlobalConfig.DisableCLITelemetry)
-	ec.Logger.Debugf("global config: disable_console_telemetry: %v", ec.GlobalConfig.DisableConsoleTelemetry)
+	ec.Logger.Debugf("global config: disable_telemetry: %v", ec.GlobalConfig.DisableTelemetry)
 	return nil
 }
 
@@ -352,11 +349,10 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 			return errors.Wrap(err, "failed to generate uuid")
 		}
 		gc := GlobalConfig{
-			UUID:                    u.String(),
-			DisableCLITelemetry:     false,
-			DisableConsoleTelemetry: false,
+			UUID:             u.String(),
+			DisableTelemetry: false,
 		}
-		data, err := json.MarshalIndent(gc, "", "  ")
+		data, err := json.Marshal(gc)
 		if err != nil {
 			return errors.Wrap(err, "cannot marshal json for config file")
 		}
