@@ -17,6 +17,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/telemetry"
+	"github.com/hasura/graphql-engine/cli/util"
+
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/version"
@@ -92,6 +95,9 @@ type ExecutionContext struct {
 	// ID is a unique ID for this Execution
 	ID string
 
+	// ServerUUID is the unique ID for the server this execution is contacting.
+	ServerUUID string
+
 	// Spinner is the global spinner object used to show progress across the cli.
 	Spinner *spinner.Spinner
 	// Logger is the global logger object to print logs.
@@ -130,6 +136,9 @@ type ExecutionContext struct {
 
 	// LogLevel indicates the logrus default logging level
 	LogLevel string
+
+	// Telemetry collects the telemetry data throughout the execution
+	Telemetry *telemetry.Data
 }
 
 // Prepare as the name suggests, prepares the ExecutionContext ec by
@@ -182,6 +191,7 @@ func (ec *ExecutionContext) Prepare() error {
 		ec.ID = id
 		ec.Logger.Debugf("execution id: %v", ec.ID)
 	}
+	ec.Telemetry.ExecutionID = ec.ID
 
 	return nil
 }
@@ -212,7 +222,17 @@ func (ec *ExecutionContext) Validate() error {
 	ec.Logger.Debug("graphql engine access_key: ", ec.Config.AccessKey)
 
 	// get version from the server and match with the cli version
-	return ec.checkServerVersion()
+	err = ec.checkServerVersion()
+	if err != nil {
+		return errors.Wrap(err, "version check")
+	}
+
+	state := util.GetServerState(ec.Config.Endpoint, ec.Config.AccessKey, ec.Version.ServerSemver, ec.Logger)
+	ec.ServerUUID = state.UUID
+	ec.Telemetry.ServerUUID = ec.ServerUUID
+	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
+
+	return nil
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
@@ -221,6 +241,7 @@ func (ec *ExecutionContext) checkServerVersion() error {
 		return errors.Wrap(err, "failed to get version from server")
 	}
 	ec.Version.SetServerVersion(v)
+	ec.Telemetry.ServerVersion = ec.Version.GetServerVersion()
 	isCompatible, reason := ec.Version.CheckCLIServerCompatibility()
 	ec.Logger.Debugf("versions: cli: [%s] server: [%s]", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion())
 	ec.Logger.Debugf("compatibility check: [%v] %v", isCompatible, reason)
@@ -254,6 +275,9 @@ func (ec *ExecutionContext) readGlobalConfig() error {
 	}
 	ec.Logger.Debugf("global config: uuid: %v", ec.GlobalConfig.UUID)
 	ec.Logger.Debugf("global config: disable_telemetry: %v", ec.GlobalConfig.DisableTelemetry)
+	// set if telemetry can be beamed or not
+	ec.Telemetry.CanBeam = !ec.GlobalConfig.DisableTelemetry
+	ec.Telemetry.UUID = ec.GlobalConfig.UUID
 	return nil
 }
 
@@ -316,6 +340,9 @@ func (ec *ExecutionContext) setupLogger() {
 		}
 		ec.Logger.SetLevel(level)
 	}
+
+	// set the logger for telemetry
+	ec.Telemetry.Logger = ec.Logger
 }
 
 // setupGlobConfig ensures that global config directory and file exists and
@@ -394,7 +421,6 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 			}
 			ec.Logger.Debugf("global config file written at '%s' with content '%v'", ec.GlobalConfigFile, string(data))
 		}
-
 	}
 	return nil
 }

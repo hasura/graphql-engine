@@ -149,6 +149,8 @@ func (o *consoleOptions) run() error {
 	o.EC.Spinner.Stop()
 	log.Infof("console running at: %s", consoleURL)
 
+	o.EC.Telemetry.Beam()
+
 	wg.Wait()
 	return nil
 }

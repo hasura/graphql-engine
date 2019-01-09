@@ -3,7 +3,6 @@ package main
 
 import (
 	"github.com/hasura/graphql-engine/cli/commands"
-	"github.com/hasura/graphql-engine/cli/telemetry"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -13,9 +12,12 @@ func main() {
 	if commands.EC.Spinner != nil {
 		commands.EC.Spinner.Stop()
 	}
-	telemetry.Waiter.Wait()
 	if err != nil {
-		telemetry.SendErrorEvent(commands.EC, nil)
+		// telemetry.SendErrorEvent(commands.EC, nil)
+		commands.EC.Telemetry.IsError = true
+		commands.EC.Telemetry.Beam()
 		log.Fatal(err)
+	} else {
+		commands.EC.Telemetry.Beam()
 	}
 }

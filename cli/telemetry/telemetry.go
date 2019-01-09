@@ -5,11 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/parnurzeal/gorequest"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 )
 
 // Waiter waits for telemetry ops to complete, if required
@@ -62,50 +60,41 @@ type Data struct {
 
 	// Any additional payload information.
 	Payload map[string]interface{} `json:"payload"`
+
+	// Additional objects - mandatory
+	Logger *logrus.Logger `json:"-"`
+
+	// IsBeamed indicates if this data is already beamed or not.
+	IsBeamed bool `json:"-"`
+
+	// CanBeam indicates if data can be beamed or not, e.g. disabled telemetry.
+	CanBeam bool `json:"-"`
 }
 
-// SendExecutionEvent sends the execution event for cmd to the telemtry server
-func SendExecutionEvent(ec *cli.ExecutionContext, cmd *cobra.Command, args []string, payload map[string]interface{}) {
-	if ec.GlobalConfig == nil {
-		return
+// BuildEvent returns a Data object which represent a telemetry event
+func BuildEvent() *Data {
+	return &Data{
+		OSPlatform: runtime.GOOS,
+		OSArch:     runtime.GOARCH,
+		CanBeam:    true,
 	}
-	if ec.GlobalConfig.DisableTelemetry {
-		ec.Logger.Debugf("telemtry is disabled, not sending data")
-		return
-	}
-	data := makeData(ec)
-	data.Command = cmd.CommandPath()
-	data.Payload = payload
-	beam(&data, ec.Logger)
 }
 
-// SendErrorEvent makes a telemtry call indicating the current execution
-// resulted in an error.
-func SendErrorEvent(ec *cli.ExecutionContext, payload map[string]interface{}) {
-	if ec.GlobalConfig == nil {
+// Beam the telemetry data
+func (d *Data) Beam() {
+	if !d.CanBeam {
+		d.Logger.Debugf("telemetry: disabled, not beaming any data")
 		return
 	}
-	if ec.GlobalConfig.DisableTelemetry {
-		ec.Logger.Debugf("telemtry is disabled, not sending data")
-		return
-	}
-	data := makeData(ec)
-	data.IsError = true
-	data.Payload = payload
-	beam(&data, ec.Logger)
-}
-
-func makeData(ec *cli.ExecutionContext) Data {
-	return Data{
-		OSPlatform:  runtime.GOOS,
-		OSArch:      runtime.GOARCH,
-		Version:     version.BuildVersion,
-		UUID:        ec.GlobalConfig.UUID,
-		ExecutionID: ec.ID,
+	if !d.IsBeamed {
+		beam(d, d.Logger)
+	} else {
+		d.Logger.Debugf("telemetry: data already beamed")
 	}
 }
 
 func beam(d *Data, log *logrus.Logger) {
+	d.IsBeamed = true
 	p := requestPayload{
 		Topic: Topic,
 		Data:  *d,
@@ -117,9 +106,11 @@ func beam(d *Data, log *logrus.Logger) {
 		Send(p).
 		End()
 	if err != nil {
-		log.Debugf("sending telemetry payload failed: %v", err)
+		log.Debugf("telemetry: beaming payload failed: %v", err)
+	} else {
+		tock := time.Now()
+		delta := tock.Sub(tick)
+		log.WithField("isError", d.IsError).WithField("time", delta.String()).Debug("telemetry: beamed")
+
 	}
-	tock := time.Now()
-	delta := tock.Sub(tick)
-	log.WithField("isError", d.IsError).WithField("time", delta.String()).Debug("telemetry sent")
 }
