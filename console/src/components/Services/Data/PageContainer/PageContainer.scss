@@ -130,9 +130,15 @@
       padding: 5px 0px !important;
       font-weight: 400 !important;
       padding-left: 5px !important;
-      .tableIcon {
+      .tableIcon, .functionIcon {
         margin-right: 5px;
         font-size: 12px;
+      }
+      .functionIcon {
+        width: 12px;
+        img {
+          width: 100%;
+        }
       }
     }
   }

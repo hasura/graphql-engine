@@ -21,6 +21,9 @@ import {
   permissionsConnector,
   dataHeaderConnector,
   migrationsConnector,
+  functionWrapperConnector,
+  ModifyCustomFunction,
+  PermissionCustomFunction,
   // metadataConnector,
 } from '.';
 
@@ -50,6 +53,14 @@ const makeDataRouter = (
         <Route path=":schema" component={schemaConnector(connect)} />
         <Route path=":schema/tables" component={schemaConnector(connect)} />
         <Route path=":schema/views" component={schemaConnector(connect)} />
+        <Route
+          path=":schema/functions/:functionName"
+          component={functionWrapperConnector(connect)}
+        >
+          <IndexRedirect to="modify" />
+          <Route path="modify" component={ModifyCustomFunction} />
+          <Route path="permissions" component={PermissionCustomFunction} />
+        </Route>
         <Route
           path=":schema/tables/:table/browse"
           component={viewTableConnector(connect)}

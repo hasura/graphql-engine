@@ -12,6 +12,7 @@ const appPrefix = '/data';
 const PageContainer = ({
   schema,
   listingSchema,
+  functionsList,
   currentTable,
   schemaName,
   migrationMode,
@@ -20,6 +21,7 @@ const PageContainer = ({
   location,
 }) => {
   const styles = require('./PageContainer.scss');
+  const functionSymbol = require('./function.svg');
   // Now schema might be null or an empty array
   let tableLinks = (
     <li className={styles.noTables}>
@@ -87,6 +89,31 @@ const PageContainer = ({
           </li>
         );
       });
+  }
+
+  // If the functionsList is non empty
+  if (functionsList.length > 0) {
+    const functionHtml = functionsList.map((f, i) => (
+      <li key={i}>
+        <Link
+          to={
+            appPrefix +
+            '/schema/' +
+            schemaName +
+            '/functions/' +
+            f.function_name
+          }
+          data-test={f.function_name}
+        >
+          <div className={styles.display_inline + ' ' + styles.functionIcon}>
+            <img src={functionSymbol} />
+          </div>
+          {f.function_name}
+        </Link>
+      </li>
+    ));
+
+    tableLinks = [...tableLinks, ...functionHtml];
   }
 
   function tableSearch(e) {
@@ -170,6 +197,7 @@ const mapStateToProps = state => {
     listingSchema: state.tables.listingSchemas,
     currentTable: state.tables.currentTable,
     migrationMode: state.main.migrationMode,
+    functionsList: state.tables.trackedFunctions,
   };
 };
 
