@@ -102,7 +102,7 @@ initCatalogStrict createSchema initTime =  do
 
     addVersion modTime = liftTx $ Q.catchE defaultTxErrorHandler $
       Q.unitQ [Q.sql|
-                INSERT INTO "hdb_catalog"."hdb_version" VALUES ($1, $2)
+                INSERT INTO "hdb_catalog"."hdb_version" ("version", "upgraded_on") VALUES ($1, $2)
                 |] (curCatalogVer, modTime) False
 
     isExtAvailable :: T.Text -> Q.Tx Bool
