@@ -103,8 +103,7 @@ initCatalogStrict createSchema initTime =  do
     addVersion modTime = liftTx $ Q.catchE defaultTxErrorHandler $
       Q.unitQ [Q.sql|
                 INSERT INTO "hdb_catalog"."hdb_version"
-                (hasura_uuid, version, upgraded_on)
-                VALUES (gen_random_uuid(), $1, $2)
+                (version, upgraded_on) VALUES ($1, $2)
                 |] (curCatalogVer, modTime) False
 
     isExtAvailable :: T.Text -> Q.Tx Bool
@@ -273,7 +272,7 @@ migrateCatalog migrationTime = do
 
     from6ToCurrent = do
       from6To7
-      postMigrate
+      from7ToCurrent
 
     from5ToCurrent = do
       from5To6
