@@ -5,35 +5,15 @@ const filterEventsBlockList = [
   'App/ERROR_REQUEST',
 ];
 
-const filterPayloadAllowList = [
-  'ViewTable/FilterQuery/SET_FILTEROP',
-  'ViewTable/FilterQuery/SET_ORDERTYPE',
-  'Login/REQUEST_SUCCESS',
-];
-
-const addSlashes = array => {
-  let str = '';
-  array.forEach(item => {
-    str += `/${item}`;
-  });
-  return str;
-};
+const filterPayloadAllowList = [];
 
 const dataHandler = path => {
-  if (path.indexOf('/schema') === 0) {
-    const parts = path.split('/').filter(p => p !== '');
-    const numParts = parts.length;
-    if (numParts >= 2) {
-      parts[1] = 'SCHEMA_NAME';
-    }
-    if (numParts >= 4) {
-      if (parts[2] === 'tables') {
-        parts[3] = 'TABLE_NAME';
-      }
-    }
-    return addSlashes(['data', ...parts]);
-  }
-  return `/data${path}`;
+  return (
+    'data' +
+    path
+      .replace(/\/schema\/(\w+)(\/)?/, '/schema/SCHEMA_NAME$2')
+      .replace(/(\/schema\/.*)\/tables\/(\w*)(\/.*)?/, '$1/tables/TABLE_NAME$3')
+  );
 };
 
 const apiExplorerHandler = () => {
@@ -41,21 +21,17 @@ const apiExplorerHandler = () => {
 };
 
 const remoteSchemasHandler = path => {
-  const parts = path.split('/').filter(p => p !== '');
-  const numParts = parts.length;
-  if (numParts > 2) {
-    parts[1] = 'REMOTE_SCHEMA_NAME';
-  }
-  return addSlashes(['remote-schemas', ...parts]);
+  return (
+    'remote-schemas' +
+    path.replace(/(\/manage\/).*(\/\w+.*)$/, '$1REMOTE_SCHEMA_NAME$2')
+  );
 };
 
 const eventsHandler = path => {
-  const parts = path.split('/').filter(p => p !== '');
-  const numParts = parts.length;
-  if (numParts > 3) {
-    parts[2] = 'TRIGGER_NAME';
-  }
-  return addSlashes(['events', ...parts]);
+  return (
+    'events' +
+    path.replace(/(\/manage\/triggers\/).*(\/\w+.*)$/, '$1TRIGGER_NAME$2')
+  );
 };
 
 const sanitiseUrl = path => {
