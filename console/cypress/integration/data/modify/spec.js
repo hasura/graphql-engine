@@ -100,7 +100,7 @@ export const passMTAddColumn = () => {
   cy.get(getElementFromAlias('column-name')).type(getColName(0));
   cy.get(getElementFromAlias('data-type')).select('integer');
   cy.get(getElementFromAlias('add-column-button')).click();
-  cy.wait(2500);
+  cy.wait(5000);
   // cy.get('.notification-success').click();
   validateColumn(getTableName(0, testName), [getColName(0)], 'success');
 };
@@ -129,11 +129,12 @@ export const passCreateForeignKey = () => {
   cy.get(getElementFromAlias('ref-table')).select(getTableName(0, testName));
   cy.get(getElementFromAlias('ref-col')).select(getColName(0));
   cy.get(getElementFromAlias('save-button')).click();
-  cy.wait(1000);
+  cy.wait(3000);
 };
 
 export const passRemoveForeignKey = () => {
   cy.get(getElementFromAlias('remove-constraint-button')).click();
+  cy.wait(3000);
 };
 
 export const passMTDeleteCol = () => {

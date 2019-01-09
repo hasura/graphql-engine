@@ -46,7 +46,7 @@ export const createSimpleRemoteSchema = () => {
     .clear()
     .type(getRemoteGraphQLURL());
   cy.get(getElementFromAlias('add-remote-schema-submit')).click();
-  cy.wait(10000);
+  cy.wait(15000);
   validateRS(getRemoteSchemaName(1, testName), 'success');
   cy.url().should(
     'eq',
