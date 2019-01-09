@@ -168,5 +168,5 @@ def stop_server(server):
     server.server_close()
 
 if __name__ == '__main__':
-    s = create_server()
+    s = create_server(host='0.0.0.0')
     s.serve_forever()

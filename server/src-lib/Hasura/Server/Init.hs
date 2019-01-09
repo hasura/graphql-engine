@@ -35,16 +35,16 @@ type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 
 data RawServeOptions
   = RawServeOptions
-  { rsoPort                    :: !(Maybe Int)
-  , rsoConnParams              :: !RawConnParams
-  , rsoTxIso                   :: !(Maybe Q.TxIsolation)
-  , rsoAccessKey               :: !(Maybe AccessKey)
-  , rsoAuthHook                :: !RawAuthHook
-  , rsoJwtSecret               :: !(Maybe Text)
-  , rsoUnAuthRole              :: !(Maybe RoleName)
-  , rsoCorsConfig              :: !RawCorsConfig
-  , rsoEnableConsole           :: !Bool
-  , rsoDisableConsoleTelemetry :: !Bool
+  { rsoPort             :: !(Maybe Int)
+  , rsoConnParams       :: !RawConnParams
+  , rsoTxIso            :: !(Maybe Q.TxIsolation)
+  , rsoAccessKey        :: !(Maybe AccessKey)
+  , rsoAuthHook         :: !RawAuthHook
+  , rsoJwtSecret        :: !(Maybe Text)
+  , rsoUnAuthRole       :: !(Maybe RoleName)
+  , rsoCorsConfig       :: !RawCorsConfig
+  , rsoEnableConsole    :: !Bool
+  , rsoDisableTelemetry :: !Bool
   } deriving (Show, Eq)
 
 data CorsConfigG a
@@ -58,16 +58,16 @@ type CorsConfig = CorsConfigG T.Text
 
 data ServeOptions
   = ServeOptions
-  { soPort                    :: !Int
-  , soConnParams              :: !Q.ConnParams
-  , soTxIso                   :: !Q.TxIsolation
-  , soAccessKey               :: !(Maybe AccessKey)
-  , soAuthHook                :: !(Maybe AuthHook)
-  , soJwtSecret               :: !(Maybe Text)
-  , soUnAuthRole              :: !(Maybe RoleName)
-  , soCorsConfig              :: !CorsConfig
-  , soEnableConsole           :: !Bool
-  , soDisableConsoleTelemetry :: !Bool
+  { soPort             :: !Int
+  , soConnParams       :: !Q.ConnParams
+  , soTxIso            :: !Q.TxIsolation
+  , soAccessKey        :: !(Maybe AccessKey)
+  , soAuthHook         :: !(Maybe AuthHook)
+  , soJwtSecret        :: !(Maybe Text)
+  , soUnAuthRole       :: !(Maybe RoleName)
+  , soCorsConfig       :: !CorsConfig
+  , soEnableConsole    :: !Bool
+  , soDisableTelemetry :: !Bool
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -209,16 +209,16 @@ mkServeOptions rso = do
            withEnv (rsoTxIso rso) (fst txIsoEnv)
   accKey <- withEnv (rsoAccessKey rso) $ fst accessKeyEnv
   authHook <- mkAuthHook $ rsoAuthHook rso
-  jwtSecr <- withEnv (rsoJwtSecret rso) $ fst jwtSecretEnv
+  jwtSecret <- withEnv (rsoJwtSecret rso) $ fst jwtSecretEnv
   unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <- withEnvBool (rsoEnableConsole rso) $
                    fst enableConsoleEnv
-  disableConsoleTelemetry <- withEnvBool (rsoDisableConsoleTelemetry rso) $
-                      fst disableConsoleTelemetryEnv
-  return $ ServeOptions port connParams txIso accKey authHook
-                        jwtSecr unAuthRole corsCfg enableConsole
-                        disableConsoleTelemetry
+  disableTelemetry <- withEnvBool (rsoDisableTelemetry rso) $
+                   fst disableTelemetryEnv
+
+  return $ ServeOptions port connParams txIso accKey authHook jwtSecret
+                        unAuthRole corsCfg enableConsole disableTelemetry
   where
     mkConnParams (RawConnParams s c i) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -286,7 +286,7 @@ serveCmdFooter =
     examplesDoc = mkExamplesDoc examples
     examples =
       [
-        [ "# Start GraphQL Engine on default port (8080) with console enabled"
+        [ "# Start GraphQL Engine on default port (8080) with console cnabled"
         , "graphql-engine --database-url <database-url> serve --enable-console"
         ]
       , [ "# Start GraphQL Engine on default port (8080) with console disabled"
@@ -309,14 +309,17 @@ serveCmdFooter =
         , "graphql-engine --database-url <database-url> serve --access-key <secretaccesskey>"
           <> " --auth-hook https://mywebhook.com/post --auth-hook-mode POST"
         ]
+      , [ "# Start GraphQL Engine with telemetry disabled"
+        , "graphql-engine --database-url <database-url> serve --disable-telemetry"
+        ]
       ]
 
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
       [ servePortEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
       , txIsoEnv, accessKeyEnv, authHookEnv , authHookModeEnv
-      , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv
-      , enableConsoleEnv , disableConsoleTelemetryEnv
+      , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv
+      , disableTelemetryEnv
       ]
 
     eventEnvs =
@@ -400,10 +403,11 @@ enableConsoleEnv =
   , "Enable API Console"
   )
 
-disableConsoleTelemetryEnv :: (String, String)
-disableConsoleTelemetryEnv =
-  ( "HASURA_GRAPHQL_DISABLE_CONSOLE_TELEMETRY"
-  , "Disable console telemetry"
+disableTelemetryEnv :: (String, String)
+disableTelemetryEnv =
+  ( "HASURA_GRAPHQL_DISABLE_TELEMETRY"
+  -- TODO: better description
+  , "Disable anonymous telemetry (default: enabled)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -587,10 +591,10 @@ parseEnableConsole =
            help (snd enableConsoleEnv)
          )
 
-parseDisableConsoleTelemetry :: Parser Bool
-parseDisableConsoleTelemetry =
-  switch ( long "disable-console-telemetry" <>
-           help (snd disableConsoleTelemetryEnv)
+parseDisableTelemetry :: Parser Bool
+parseDisableTelemetry =
+  switch ( long "disable-telemetry" <>
+           help (snd disableTelemetryEnv)
          )
 
 -- Init logging related
@@ -616,7 +620,7 @@ serveOptsToLog so =
                        , "cors_domain" J..= (ccDomain . soCorsConfig) so
                        , "cors_disabled" J..= (ccDisabled . soCorsConfig) so
                        , "enable_console" J..= soEnableConsole so
-                       , "disable_console_telemetry" J..= soDisableConsoleTelemetry so
+                       , "disable_telemetry" J..= soDisableTelemetry so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog

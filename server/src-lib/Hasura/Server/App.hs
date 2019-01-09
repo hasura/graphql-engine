@@ -71,15 +71,15 @@ consoleAssetsLoc =
   "https://storage.googleapis.com/hasura-graphql-engine/console/" <> consoleVersion
 #endif
 
-mkConsoleHTML :: T.Text -> Bool -> AuthMode -> Either String T.Text
-mkConsoleHTML path disableConsoleTelemetry authMode =
+mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Either String T.Text
+mkConsoleHTML path authMode disableTelemetry =
   bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
                   object [ "consoleAssetsLoc" .= consoleAssetsLoc
                          , "isAccessKeySet" .= isAccessKeySet authMode
                          , "consolePath" .= consolePath
-                         , "disableConsoleTelemetry" .= boolToText disableConsoleTelemetry
+                         , "disableTelemetry" .= boolToText disableTelemetry
                          ]
     consolePath = case path of
       "" -> "/console"
@@ -290,7 +290,7 @@ mkWaiApp
   -> Bool
   -> Bool
   -> IO (Wai.Application, IORef SchemaCache)
-mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole disableConsoleTelemetry = do
+mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole disableTelemetry = do
     cacheRef <- do
       pgResp <- runExceptT $
         peelRun emptySchemaCache adminUserInfo httpManager pool Q.Serializable $ do
@@ -305,7 +305,7 @@ mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole disableC
           cacheLock mode httpManager
 
     spockApp <- spockAsApp $ spockT id $
-                httpApp corsCfg serverCtx enableConsole disableConsoleTelemetry
+                httpApp corsCfg serverCtx enableConsole disableTelemetry
 
     let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
 
@@ -314,7 +314,7 @@ mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole disableC
     return (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp, cacheRef)
 
 httpApp :: CorsConfig -> ServerCtx -> Bool -> Bool -> SpockT IO ()
-httpApp corsCfg serverCtx enableConsole disableConsoleTelemetry = do
+httpApp corsCfg serverCtx enableConsole disableTelemetry = do
     -- cors middleware
     unless (ccDisabled corsCfg) $
       middleware $ corsMiddleware (mkDefaultCorsPolicy $ ccDomain corsCfg)
@@ -386,7 +386,7 @@ httpApp corsCfg serverCtx enableConsole disableConsoleTelemetry = do
       get root $ redirect "console"
       get ("console" <//> wildcard) $ \path ->
         either (raiseGenericApiError . err500 Unexpected . T.pack) html $
-          mkConsoleHTML path disableConsoleTelemetry $ scAuthMode serverCtx
+          mkConsoleHTML path (scAuthMode serverCtx) disableTelemetry
 
 #ifdef LocalConsole
       get "static/main.js" $ do
