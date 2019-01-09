@@ -66,6 +66,9 @@ type Data struct {
 
 // SendExecutionEvent sends the execution event for cmd to the telemtry server
 func SendExecutionEvent(ec *cli.ExecutionContext, cmd *cobra.Command, args []string, payload map[string]interface{}) {
+	if ec.GlobalConfig == nil {
+		return
+	}
 	if ec.GlobalConfig.DisableTelemetry {
 		ec.Logger.Debugf("telemtry is disabled, not sending data")
 		return
@@ -79,6 +82,9 @@ func SendExecutionEvent(ec *cli.ExecutionContext, cmd *cobra.Command, args []str
 // SendErrorEvent makes a telemtry call indicating the current execution
 // resulted in an error.
 func SendErrorEvent(ec *cli.ExecutionContext, payload map[string]interface{}) {
+	if ec.GlobalConfig == nil {
+		return
+	}
 	if ec.GlobalConfig.DisableTelemetry {
 		ec.Logger.Debugf("telemtry is disabled, not sending data")
 		return
