@@ -62,7 +62,7 @@
                   </div>
                   <div class="inline-block" id="input_search_box">
                     <span class="fa fa-search search_icon"></span>
-                    <input type="text" class="search_element" placeholder="Search docs..." />
+                    <input type="text" id="search_element" placeholder="Search docs..." />
                   </div>
                   <div class="inline-block header_links">
                     <div class="social_icons_wrapper">
@@ -261,7 +261,7 @@
     docsearch({
       apiKey: 'c59018461c19e20fe11459136e57900c',
       indexName: 'hasura',
-      inputSelector: '.search_element',
+      inputSelector: '#search_element',
       transformData: function(suggestions) {
         if (window.location.origin !== 'https://docs.hasura.io') {
           suggestions.forEach(suggestion => {
@@ -501,4 +501,5 @@
     });
   </script>
 
+  {%- block extrafooter %} {% endblock %}
 {% endblock %}

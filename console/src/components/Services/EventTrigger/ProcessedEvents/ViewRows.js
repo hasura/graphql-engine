@@ -17,7 +17,7 @@ import {
   setLimit,
   addOrder,
 } from './FilterActions';
-import { ordinalColSort } from '../utils';
+import { ordinalColSort, convertDateTimeToLocale } from '../utils';
 import '../TableCommon/ReactTableFix.css';
 import * as tooltip from '../Common/Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
@@ -115,7 +115,7 @@ const ViewRows = ({
           }
           let content = row[col] === undefined ? 'NULL' : row[col].toString();
           if (col === 'created_at') {
-            content = new Date(row[col]).toUTCString();
+            content = convertDateTimeToLocale(row[col]);
           }
           if (col === 'event_id') {
             content = row.id.toString();
@@ -304,7 +304,7 @@ const ViewRows = ({
                   return status;
                 }
                 if (col === 'created_at') {
-                  const formattedDate = new Date(r.created_at).toUTCString();
+                  const formattedDate = convertDateTimeToLocale(r.created_at);
                   return formattedDate;
                 }
                 const content =
