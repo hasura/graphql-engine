@@ -1,4 +1,6 @@
-# realtime-location-app
+# (MOVED) realtime-location-app
+
+**This folder has been moved to [sample-apps/realtime-location-app](../sample-apps/realtime-location-app).**
 
 A demo application to showcase real-time capabilities of [Hasura GraphQL
 Engine](https://github.com/hasura/graphql-engine).

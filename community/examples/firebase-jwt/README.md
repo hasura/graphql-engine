@@ -1,4 +1,6 @@
-# Firebase Auth + Hasura JWT
+# (MOVED) Firebase Auth + Hasura JWT
+
+**This folder has been moved to [sample-apps/firebase-jwt](../sample-apps/firebase-jwt).**
 
 Barebones example to show how to have Firebase Auth integrated with Hasura JWT mode.
 

@@ -1,3 +1,0 @@
-- args:
-    sql: ALTER TABLE public."message" DROP CONSTRAINT "message_username_fkey"
-  type: run_sql

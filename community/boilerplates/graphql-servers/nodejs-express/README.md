@@ -1,4 +1,6 @@
-# GraphQL server using NodeJS-Express
+# (MOVED) GraphQL server using NodeJS-Express
+
+**This folder has been moved to [remote-schemas/zeit-now/nodejs/express-sequelize](../remote-schemas/zeit-now/nodejs/express-sequelize).**
 
 A boilerplate Python GraphQL Server using NodeJS-Express using the official [graphql-js](https://graphql.github.io/graphql-js/running-an-express-graphql-server/) library.
 

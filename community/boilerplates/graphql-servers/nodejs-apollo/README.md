@@ -1,4 +1,6 @@
-# GraphQL server using NodeJS and Apollo
+# (MOVED) GraphQL server using NodeJS and Apollo
+
+**This folder has been moved to [remote-schemas/zeit-now/nodejs/apollo-sequelize](../remote-schemas/zeit-now/nodejs/apollo-sequelize).**
 
 A boilerplate Python GraphQL Server using NodeJS and [Apollo Server](https://www.apollographql.com/docs/apollo-server/)
 

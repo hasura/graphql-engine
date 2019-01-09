@@ -1,3 +1,0 @@
-- args:
-    sql: DROP TABLE public."vehicle_location"
-  type: run_sql

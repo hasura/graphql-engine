@@ -1,5 +1,8 @@
-Live demo
+(MOVED) Live demo
 ---------
+
+**This folder has been moved to [sample-apps/react-apollo-todo](../sample-apps/reach-apollo-todo).**
+
 
 - [React App](https://react-apollo-todo.demo.hasura.app/)
 - [Hasura Console](https://react-apollo-todo.demo.hasura.app/console)

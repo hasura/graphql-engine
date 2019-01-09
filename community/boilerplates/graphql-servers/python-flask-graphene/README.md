@@ -1,4 +1,6 @@
-# GraphQL server using python-flask-graphene
+# (MOVED) GraphQL server using python-flask-graphene
+
+**This folder has been moved to [remote-schemas/zeit-now/python/flask-graphene-sqlalchemy](../remote-schemas/zeit-now/python/flask-graphene-sqlalchemy).**
 
 A boilerplate Python GraphQL Server using
 [Flask](https://github.com/graphql-python/flask-graphql) and

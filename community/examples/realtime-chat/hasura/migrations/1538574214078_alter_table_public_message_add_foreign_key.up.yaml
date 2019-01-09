@@ -1,4 +1,0 @@
-- args:
-    sql: ALTER TABLE public."message" ADD FOREIGN KEY ("username") REFERENCES public."user"
-      ("username")
-  type: run_sql
