@@ -176,7 +176,7 @@ $ gq URL [flags]
 
 ## JSON Structure
 
-The top level of your JSON database should be a JSON object with keys being the name of entities and values being the lists of entities. For example:
+The top level of your JSON database should be a JSON object with keys being the name of entities and values being list of entities. For example:
 
 ```json
 {
