@@ -14,8 +14,9 @@ RUN npm install
 # Bundle app source
 COPY . .
 
-#Build react/vue/angular bundle static files
 ENV GATSBY_PATH_PREFIX='/react-apollo'
+
+#Build react/vue/angular bundle static files
 RUN npm run build
 RUN cp -r public react-apollo
 RUN mv react-apollo public/
