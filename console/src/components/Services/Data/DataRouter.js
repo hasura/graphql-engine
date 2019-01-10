@@ -24,6 +24,8 @@ import {
   // metadataConnector,
 } from '.';
 
+import { loadMiscOpts } from '../../../telemetry/Actions';
+
 import {
   fetchDataInit,
   UPDATE_CURRENT_SCHEMA,
@@ -171,6 +173,16 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
     }
     cb();
   };
+  const telemetryOpts = (nextState, replaceState, cb) => {
+    Promise.all([store.dispatch(loadMiscOpts())]).then(
+      () => {
+        cb();
+      },
+      () => {
+        cb();
+      }
+    );
+  };
   return {
     makeDataRouter: makeDataRouter(
       connect,
@@ -182,6 +194,7 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
     ),
     requireSchema,
     migrationRedirects,
+    telemetryOpts,
   };
 };
 
