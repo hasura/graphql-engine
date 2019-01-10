@@ -2,7 +2,7 @@
   position: relative;
   width: 80%;
 }
-.codeBlock
+.codeBlockCustom
 {
   /* position: relative;
   padding: 10px 20px; */
@@ -11,13 +11,13 @@
   width: 100%; */
   width: auto;
   border-radius: 5px;
-  max-height: calc(100% - 60px);
+  // max-height: calc(100% - 60px);
   overflow: auto;
   margin-top: 0px;
-  min-height: calc(100% - 60px);
+  // min-height: calc(100% - 60px);
 }
 
-.codeBlock pre {
+.codeBlockCustom pre {
   display: block;
   padding: 10px 20px;
   margin: 0px;
@@ -33,12 +33,12 @@
   padding-bottom: 10px;
 }
 
-.codeBlock code {
+.codeBlockCustom code {
   color: #000;
   background: none;
 }
 
-.codeBlock .formattedCode {
+.codeBlockCustom .formattedCode {
   padding: 0px 0px !important;
 }
 

@@ -90,7 +90,7 @@ $$ language sql stable;
 
     const { migrationMode } = this.props;
 
-    const baseUrl = `${appPrefix}/schema/${schema}/functions/${functionName}`;
+    const baseUrl = `/${appPrefix}/schema/${schema}/functions/${functionName}`;
 
     const generateMigrateBtns = () => {
       return (
@@ -150,22 +150,22 @@ $$ language sql stable;
     const breadCrumbs = [
       {
         title: 'Data',
-        url: appPrefix,
+        url: '/' + appPrefix,
       },
       {
         title: 'Schema',
-        url: appPrefix + '/schema',
+        url: '/' + appPrefix + '/schema',
       },
       {
         title: schema,
-        url: appPrefix + '/schema/' + schema,
+        url: '/' + appPrefix + '/schema/' + schema,
       },
     ];
 
     if (functionName) {
       breadCrumbs.push({
         title: functionName,
-        url: appPrefix + '/schema/' + schema + '/' + functionName,
+        url: '/' + appPrefix + '/schema/' + schema + '/' + functionName,
       });
       breadCrumbs.push({
         title: 'Modify',

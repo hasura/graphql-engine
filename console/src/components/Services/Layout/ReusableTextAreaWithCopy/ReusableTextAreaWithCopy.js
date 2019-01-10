@@ -8,8 +8,8 @@ class ReusableTextAreaWithCopy extends React.Component {
     if (this.props.copyText.length > 0) {
       text = window.sqlFormatter
         ? window.sqlFormatter.format(this.props.copyText, {
-            language: this.props.textLanguage,
-          })
+          language: this.props.textLanguage,
+        })
         : this.props.copyText;
     }
     const textArea = document.createElement('textarea');
@@ -39,7 +39,7 @@ class ReusableTextAreaWithCopy extends React.Component {
     const style = require('./style.scss');
     const { copyText } = this.props;
     return (
-      <div className={`${style.codeBlock}`}>
+      <div className={`${style.codeBlockCustom}`}>
         <div className={`${style.copyGenerated}`}>
           <div className={`${style.copyTooltip}`}>
             <span className={style.tooltiptext} id="copyCustomFunctionSQL">

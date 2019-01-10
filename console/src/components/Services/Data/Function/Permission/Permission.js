@@ -30,28 +30,28 @@ class Permission extends React.Component {
       functionName,
       setOffTable,
     } = this.props.functions;
-    const baseUrl = `${appPrefix}/schema/${schema}/functions/${functionName}`;
-    const permissionTableUrl = `${appPrefix}/schema/${schema}/tables/${setOffTable}/permissions`;
+    const baseUrl = `/${appPrefix}/schema/${schema}/functions/${functionName}`;
+    const permissionTableUrl = `/${appPrefix}/schema/${schema}/tables/${setOffTable}/permissions`;
 
     const breadCrumbs = [
       {
         title: 'Data',
-        url: appPrefix,
+        url: '/' + appPrefix,
       },
       {
         title: 'Schema',
-        url: appPrefix + '/schema',
+        url: '/' + appPrefix + '/schema',
       },
       {
         title: schema,
-        url: appPrefix + '/schema/' + schema,
+        url: '/' + appPrefix + '/schema/' + schema,
       },
     ];
 
     if (functionName) {
       breadCrumbs.push({
         title: functionName,
-        url: appPrefix + '/schema/' + schema + '/' + functionName,
+        url: '/' + appPrefix + '/schema/' + schema + '/' + functionName,
       });
       breadCrumbs.push({
         title: 'Permission',
