@@ -151,11 +151,87 @@ class PersonGraphQL(RequestHandler):
         res = person_schema.execute(req.json['query'])
         return mkJSONResp(res)
 
+class Character(graphene.Interface):
+    id = graphene.ID(required=True)
+    name = graphene.String(required=True)
+
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+
+class Human(graphene.ObjectType):
+    class Meta:
+        interfaces = (Character, )
+
+    home_planet = graphene.String()
+
+    def __init__(self, home_planet, character):
+        self.home_planet = home_planet
+        self.character = character
+
+    def resolve_id(self, info):
+        return self.character.id
+
+    def resolve_name(self, info):
+        return self.character.name
+
+    def refolve_primary_function(self, info):
+        return self.home_planet
+
+class Droid(graphene.ObjectType):
+    class Meta:
+        interfaces = (Character, )
+
+    primary_function = graphene.String()
+
+    def __init__(self, primary_function, character):
+        self.primary_function = primary_function
+        self.character = character
+
+    def resolve_id(self, info):
+        return self.character.id
+
+    def resolve_name(self, info):
+        return self.character.name
+
+    def resolve_primary_function(self, info):
+        return self.primary_function
+
+all_characters = {
+ 4: Droid("Astromech", Character(1,'R2-D2')),
+ 5: Human("Tatooine", Character(2, "Luke Skywalker")),
+}
+
+class CharacterQuery(graphene.ObjectType):
+    hero = graphene.Field(
+        Character,
+        required=False,
+        episode=graphene.Int(required=True)
+    )
+
+    def resolve_hero(_, info, episode):
+        return all_characters.get(episode)
+
+schema = graphene.Schema(query=CharacterQuery, types=[Human, Droid])
+
+character_interface_schema = graphene.Schema(query=CharacterQuery, types=[Human, Droid])
+
+class CharacterInterfaceGraphQL(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = character_interface_schema.execute(req.json['query'])
+        return mkJSONResp(res)
+
+
 handlers = MkHandlers({
     '/hello': HelloWorldHandler,
     '/hello-graphql': HelloGraphQL,
     '/user-graphql': UserGraphQL,
     '/country-graphql': CountryGraphQL,
+    '/character-iface-graphql' : CharacterInterfaceGraphQL,
     '/person-graphql': PersonGraphQL
 })
 
