@@ -204,7 +204,7 @@ const SidebarLayout = ({ location }) => (
       return (
         <Sidebar>
           {/* <Logo /> */}
-          <ul className={'sideBarUl'}>
+          <ul className={'sideBarUL'}>
             {nav}
             <Divider />
             <ListItem to="https://docs.hasura.io/">

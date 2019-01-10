@@ -45,11 +45,11 @@ const Header = ({location}) => (
                 <Sidebar location={location} />
                 <hr/>
               </div>
-              <ul className={'nav navbar-nav navBarUl'}>
+              <ul className={'nav navbar-nav navBarUL'}>
                 <li><a href="https://github.com/hasura/graphql-engine">GitHub</a></li>
                 <li><a href="https://discordapp.com/invite/vBPpJkS">Need Help?</a></li>
               </ul>
-              <ul className={'nav navbar-nav navBarUl navbar-right'}>
+              <ul className={'nav navbar-nav navBarUL navbar-right'}>
                 <li><a href="http://graphql-tutorials.org/" target="_blank">graphql-tutorials.org</a></li>
               </ul>
             </div>
