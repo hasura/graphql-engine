@@ -35,16 +35,16 @@ type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 
 data RawServeOptions
   = RawServeOptions
-  { rsoPort             :: !(Maybe Int)
-  , rsoConnParams       :: !RawConnParams
-  , rsoTxIso            :: !(Maybe Q.TxIsolation)
-  , rsoAccessKey        :: !(Maybe AccessKey)
-  , rsoAuthHook         :: !RawAuthHook
-  , rsoJwtSecret        :: !(Maybe Text)
-  , rsoUnAuthRole       :: !(Maybe RoleName)
-  , rsoCorsConfig       :: !RawCorsConfig
-  , rsoEnableConsole    :: !Bool
-  , rsoDisableTelemetry :: !Bool
+  { rsoPort            :: !(Maybe Int)
+  , rsoConnParams      :: !RawConnParams
+  , rsoTxIso           :: !(Maybe Q.TxIsolation)
+  , rsoAccessKey       :: !(Maybe AccessKey)
+  , rsoAuthHook        :: !RawAuthHook
+  , rsoJwtSecret       :: !(Maybe Text)
+  , rsoUnAuthRole      :: !(Maybe RoleName)
+  , rsoCorsConfig      :: !RawCorsConfig
+  , rsoEnableConsole   :: !Bool
+  , rsoEnableTelemetry :: !(Maybe Bool)
   } deriving (Show, Eq)
 
 data CorsConfigG a
@@ -58,16 +58,16 @@ type CorsConfig = CorsConfigG T.Text
 
 data ServeOptions
   = ServeOptions
-  { soPort             :: !Int
-  , soConnParams       :: !Q.ConnParams
-  , soTxIso            :: !Q.TxIsolation
-  , soAccessKey        :: !(Maybe AccessKey)
-  , soAuthHook         :: !(Maybe AuthHook)
-  , soJwtSecret        :: !(Maybe Text)
-  , soUnAuthRole       :: !(Maybe RoleName)
-  , soCorsConfig       :: !CorsConfig
-  , soEnableConsole    :: !Bool
-  , soDisableTelemetry :: !Bool
+  { soPort            :: !Int
+  , soConnParams      :: !Q.ConnParams
+  , soTxIso           :: !Q.TxIsolation
+  , soAccessKey       :: !(Maybe AccessKey)
+  , soAuthHook        :: !(Maybe AuthHook)
+  , soJwtSecret       :: !(Maybe Text)
+  , soUnAuthRole      :: !(Maybe RoleName)
+  , soCorsConfig      :: !CorsConfig
+  , soEnableConsole   :: !Bool
+  , soEnableTelemetry :: !Bool
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -214,11 +214,11 @@ mkServeOptions rso = do
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <- withEnvBool (rsoEnableConsole rso) $
                    fst enableConsoleEnv
-  disableTelemetry <- withEnvBool (rsoDisableTelemetry rso) $
-                   fst disableTelemetryEnv
+  enableTelemetry <- fromMaybe True <$>
+                     withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
 
   return $ ServeOptions port connParams txIso accKey authHook jwtSecret
-                        unAuthRole corsCfg enableConsole disableTelemetry
+                        unAuthRole corsCfg enableConsole enableTelemetry
   where
     mkConnParams (RawConnParams s c i) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -253,7 +253,7 @@ mkEnvVarDoc envVars =
   PP.indent 2 (PP.vsep $ map mkEnvVarLine envVars)
   where
     mkEnvVarLine (var, desc) =
-      (PP.fillBreak 30 (PP.text var) PP.<+> prettifyDesc desc) <> PP.hardline
+      (PP.fillBreak 40 (PP.text var) PP.<+> prettifyDesc desc) <> PP.hardline
     prettifyDesc = PP.align . PP.fillSep . map PP.text . words
 
 mainCmdFooter :: PP.Doc
@@ -319,7 +319,7 @@ serveCmdFooter =
       [ servePortEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
       , txIsoEnv, accessKeyEnv, authHookEnv , authHookModeEnv
       , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv
-      , disableTelemetryEnv
+      , enableTelemetryEnv
       ]
 
     eventEnvs =
@@ -403,11 +403,11 @@ enableConsoleEnv =
   , "Enable API Console"
   )
 
-disableTelemetryEnv :: (String, String)
-disableTelemetryEnv =
-  ( "HASURA_GRAPHQL_DISABLE_TELEMETRY"
+enableTelemetryEnv :: (String, String)
+enableTelemetryEnv =
+  ( "HASURA_GRAPHQL_ENABLE_TELEMETRY"
   -- TODO: better description
-  , "Disable anonymous telemetry (default: enabled)"
+  , "Enable anonymous telemetry (default: true)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -591,10 +591,11 @@ parseEnableConsole =
            help (snd enableConsoleEnv)
          )
 
-parseDisableTelemetry :: Parser Bool
-parseDisableTelemetry =
-  switch ( long "disable-telemetry" <>
-           help (snd disableTelemetryEnv)
+parseEnableTelemetry :: Parser (Maybe Bool)
+parseEnableTelemetry = optional $
+  option (eitherReader parseStrAsBool)
+         ( long "enable-telemetry" <>
+           help (snd enableTelemetryEnv)
          )
 
 -- Init logging related
@@ -620,7 +621,7 @@ serveOptsToLog so =
                        , "cors_domain" J..= (ccDomain . soCorsConfig) so
                        , "cors_disabled" J..= (ccDisabled . soCorsConfig) so
                        , "enable_console" J..= soEnableConsole so
-                       , "disable_telemetry" J..= soDisableTelemetry so
+                       , "enable_telemetry" J..= soEnableTelemetry so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog

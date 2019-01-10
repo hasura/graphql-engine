@@ -71,7 +71,7 @@ parseHGECommand =
                 <*> parseUnAuthRole
                 <*> parseCorsConfig
                 <*> parseEnableConsole
-                <*> parseDisableTelemetry
+                <*> parseEnableTelemetry
 
 parseArgs :: IO HGEOptions
 parseArgs = do
@@ -102,7 +102,7 @@ main =  do
   let logger = mkLogger loggerCtx
   case hgeCmd of
     HCServe so@(ServeOptions port cp isoL mAccessKey mAuthHook mJwtSecret
-             mUnAuthRole corsCfg enableConsole disableTelemetry) -> do
+             mUnAuthRole corsCfg enableConsole enableTelemetry) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
@@ -124,7 +124,7 @@ main =  do
 
       pool <- Q.initPGPool ci cp
       (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
-                         am corsCfg enableConsole disableTelemetry
+                         am corsCfg enableConsole enableTelemetry
       let warpSettings = Warp.setPort port Warp.defaultSettings
                          -- Warp.setHost "*" Warp.defaultSettings
 
@@ -143,7 +143,7 @@ main =  do
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
 
       -- start a background thread for telemetry
-      unless disableTelemetry $ do
+      unless enableTelemetry $ do
         res <- getUniqIds ci
         runEither res (logTelemetryErr logger) $
           void . C.forkIO . runTelemetry logger httpManager cacheRef
