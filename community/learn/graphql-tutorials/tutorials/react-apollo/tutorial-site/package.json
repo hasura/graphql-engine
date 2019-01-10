@@ -38,7 +38,7 @@
   "main": "n/a",
   "scripts": {
     "develop": "gatsby develop",
-    "build": "gatsby build --prefix-paths"
+    "build": "gatsby build"
   },
   "devDependencies": {
     "gatsby-plugin-remove-trailing-slashes": "^2.0.6",
