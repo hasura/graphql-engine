@@ -57,7 +57,7 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
         const itemMatch = element.match(new RegExp(regExp, 'i'));
         if (itemMatch && itemMatch.length === 6) {
           let trackQuery = {};
-          if (itemMatch[1] === 'function') {
+          if (itemMatch[1].toLowerCase() === 'function') {
             trackQuery = {
               type: 'track_function',
               args: {},
