@@ -11,6 +11,76 @@ This is A CLI tool to import a schema and data to Postgres using JSON data. You 
 
 ![demo-gif](https://graphql-engine-cdn.hasura.io/assets/json2graphql/j2g.gif)
 
+In the above GIF, we are importing a schema and data from a JSON database. The Hasura GraphQL Engine is running at `https://j2gtest.herokuapp.com` The JSON database (`db.json`) is:
+
+```
+{
+    "post": [
+        { "id": 1, "title": "Lorem Ipsum", "views": 254, "user_id": 123 },
+        { "id": 2, "title": "Sic Dolor amet", "views": 65, "user_id": 456 }
+    ],
+    "user": [
+        { "id": 123, "name": "John Doe" },
+        { "id": 456, "name": "Alison Craus" }
+    ],
+    "comment": [
+        { "id": 987, "post_id": 1, "body": "Consectetur adipiscing elit", "user_id": 123 },
+        { "id": 995, "post_id": 2, "body": "Nam molestie pellentesque dui", "user_id": 456 },
+        { "id": 999, "post_id": 1, "body": "quid agis", "user_id": 456 }
+    ]
+}
+```
+
+We import the database using the command:
+
+```
+json2graphql https://j2gtest.herokuapp.com -d ./db.json
+```
+
+Once this is imported, the tables created in Postgres are:
+
+```sql
+
+user (
+  id integer not null primary key,
+  name text
+)
+
+post (
+  id integer not null primary key,
+  title text,
+  views integer,
+  user_id integer foreign key references user(id)
+)
+
+comment (
+  id integer not null primary key,
+  body text,
+  post_id integer foreign key references post(id),
+  user_id integer foreign key references user(id)
+)
+
+```
+
+You can query the data in Postgres tables over GraphQL using Hasura GraphQL Engine. You can make complicated queries like:
+
+```graphql
+query {
+  user {
+    postsByUserId {
+      id
+      title
+      commentsByPostId {
+        body
+        id
+      }
+    }
+    id
+  }
+}
+```
+
+
 ## Quick start
 
 1. Quickly get the GraphQL Engine running by clicking this button:
