@@ -7,9 +7,14 @@ const filterEventsBlockList = [
 
 const filterPayloadAllowList = [];
 
+const DATA_PATH = '/data',
+      API_EXPLORER_PATH = '/api-explorer',
+      REMOTE_SCHEMAS_PATH = '/remote-schemas',
+      EVENTS_PATH = '/events'
+
 const dataHandler = path => {
   return (
-    'data' +
+    DATA_PATH +
     path
       .replace(/\/schema\/(\w+)(\/)?/, '/schema/SCHEMA_NAME$2')
       .replace(/(\/schema\/.*)\/tables\/(\w*)(\/.*)?/, '$1/tables/TABLE_NAME$3')
@@ -17,35 +22,35 @@ const dataHandler = path => {
 };
 
 const apiExplorerHandler = () => {
-  return '/api-explorer';
+  return API_EXPLORER_PATH;
 };
 
 const remoteSchemasHandler = path => {
   return (
-    'remote-schemas' +
+    REMOTE_SCHEMAS_PATH +
     path.replace(/(\/manage\/).*(\/\w+.*)$/, '$1REMOTE_SCHEMA_NAME$2')
   );
 };
 
 const eventsHandler = path => {
   return (
-    'events' +
+    EVENTS_PATH +
     path.replace(/(\/manage\/triggers\/).*(\/\w+.*)$/, '$1TRIGGER_NAME$2')
   );
 };
 
 const sanitiseUrl = path => {
-  if (path.indexOf('/data') === 0) {
-    return dataHandler(path.slice(5));
+  if (path.indexOf(DATA_PATH) === 0) {
+    return dataHandler(path.slice(DATA_PATH.length));
   }
-  if (path.indexOf('/api-explorer') === 0) {
-    return apiExplorerHandler(path.slice(13));
+  if (path.indexOf(API_EXPLORER_PATH) === 0) {
+    return apiExplorerHandler(path.slice(API_EXPLORER_PATH.length));
   }
-  if (path.indexOf('/remote-schemas') === 0) {
-    return remoteSchemasHandler(path.slice(15));
+  if (path.indexOf(REMOTE_SCHEMAS_PATH) === 0) {
+    return remoteSchemasHandler(path.slice(REMOTE_SCHEMAS_PATH.length));
   }
-  if (path.indexOf('/events') === 0) {
-    return eventsHandler(path.slice(7));
+  if (path.indexOf(EVENTS_PATH) === 0) {
+    return eventsHandler(path.slice(EVENTS_PATH.length));
   }
   return '/';
 };
