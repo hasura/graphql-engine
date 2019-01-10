@@ -52,18 +52,18 @@ Where is the data sent?
 The data is sent to Hasura's servers addressed by ``telemetry.hasura.io``.
 
 
-How do I disable telemetry (opt-out)?
--------------------------------------
+How do I turn off telemetry (opt-out)?
+--------------------------------------
 
-You can disable telemetry on the server and on the console hosted by server
+You can turn off telemetry on the server and on the console hosted by server
 by setting the following environment variable on the server or by using
-the flag ``--disable-telemetry``:
+the flag ``--enable-telemetry=false``:
 
 .. code-block:: bash
 
-   HASURA_GRAPHQL_DISABLE_TELEMETRY=true
+   HASURA_GRAPHQL_ENABLE_TELEMETRY=false
 
-In order to disable telemetry on CLI and on the console served by CLI,
+In order to turn off telemetry on CLI and on the console served by CLI,
 you can set the same environment varibale on the machine running CLI.
-You can also set ``"disableTelemetry": true`` in the JSON file created
+You can also set ``"enable_telemetry": false`` in the JSON file created
 by the CLI at ``~/.hasura/.config.json`` to perisist the setting.
