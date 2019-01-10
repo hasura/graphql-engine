@@ -38,16 +38,12 @@ from
     select
       c.table_schema,
       c.table_name,
-      json_agg(
-        json_build_object(
-          'name',
-          constraint_name,
-          'type',
-          constraint_type
-        )
-      ) as constraints
+      json_agg(constraint_name) as constraints
     from
       information_schema.table_constraints c
+    where
+      c.constraint_type = 'UNIQUE'
+      or c.constraint_type = 'PRIMARY KEY'
     group by
       c.table_schema,
       c.table_name

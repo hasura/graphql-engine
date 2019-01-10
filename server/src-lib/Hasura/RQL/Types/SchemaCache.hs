@@ -16,6 +16,7 @@ module Hasura.RQL.Types.SchemaCache
        , onlyJSONBCols
        , onlyComparableCols
        , isUniqueOrPrimary
+       , isForeignKey
        , mkTableInfo
        , addTableToCache
        , modTableInCache
@@ -259,8 +260,6 @@ data ConstraintType
   | CTUNIQUE
   deriving Eq
 
-$(deriveToJSON defaultOptions{constructorTagModifier = drop 2} ''ConstraintType)
-
 constraintTyToTxt :: ConstraintType -> T.Text
 constraintTyToTxt ty = case ty of
   CTCHECK      -> "CHECK"
@@ -279,6 +278,20 @@ instance FromJSON ConstraintType where
     "UNIQUE"      -> return CTUNIQUE
     c             -> fail $ "unexpected ConstraintType: " <> T.unpack c
 
+instance ToJSON ConstraintType where
+  toJSON = String . constraintTyToTxt
+
+isUniqueOrPrimary :: ConstraintType -> Bool
+isUniqueOrPrimary = \case
+  CTPRIMARYKEY -> True
+  CTUNIQUE     -> True
+  _            -> False
+
+isForeignKey :: ConstraintType -> Bool
+isForeignKey = \case
+  CTFOREIGNKEY -> True
+  _            -> False
+
 data TableConstraint
   = TableConstraint
   { tcType :: !ConstraintType
@@ -286,13 +299,6 @@ data TableConstraint
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''TableConstraint)
-
-isUniqueOrPrimary :: TableConstraint -> Bool
-isUniqueOrPrimary (TableConstraint ty _) = case ty of
-  CTCHECK      -> False
-  CTFOREIGNKEY -> False
-  CTPRIMARYKEY -> True
-  CTUNIQUE     -> True
 
 data ViewInfo
   = ViewInfo
@@ -316,14 +322,14 @@ mutableView qt f mVI operation =
 
 data TableInfo
   = TableInfo
-  { tiName                :: !QualifiedTable
-  , tiSystemDefined       :: !Bool
-  , tiFieldInfoMap        :: !FieldInfoMap
-  , tiRolePermInfoMap     :: !RolePermInfoMap
-  , tiConstraints         :: ![TableConstraint]
-  , tiPrimaryKeyCols      :: ![PGCol]
-  , tiViewInfo            :: !(Maybe ViewInfo)
-  , tiEventTriggerInfoMap :: !EventTriggerInfoMap
+  { tiName                  :: !QualifiedTable
+  , tiSystemDefined         :: !Bool
+  , tiFieldInfoMap          :: !FieldInfoMap
+  , tiRolePermInfoMap       :: !RolePermInfoMap
+  , tiUniqOrPrimConstraints :: ![ConstraintName]
+  , tiPrimaryKeyCols        :: ![PGCol]
+  , tiViewInfo              :: !(Maybe ViewInfo)
+  , tiEventTriggerInfoMap   :: !EventTriggerInfoMap
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
@@ -331,13 +337,13 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 mkTableInfo
   :: QualifiedTable
   -> Bool
-  -> [TableConstraint]
+  -> [ConstraintName]
   -> [PGColInfo]
   -> [PGCol]
   -> Maybe ViewInfo -> TableInfo
-mkTableInfo tn isSystemDefined constraints cols pcols mVI =
+mkTableInfo tn isSystemDefined uniqCons cols pcols mVI =
   TableInfo tn isSystemDefined colMap (M.fromList [])
-  constraints pcols mVI (M.fromList [])
+  uniqCons pcols mVI (M.fromList [])
   where
     colMap     = M.fromList $ map f cols
     f colInfo = (fromPGCol $ pgiName colInfo, FIColumn colInfo)

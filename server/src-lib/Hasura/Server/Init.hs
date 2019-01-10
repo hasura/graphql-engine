@@ -5,13 +5,16 @@ import qualified Database.PG.Query            as Q
 import           Options.Applicative
 import           System.Exit                  (exitFailure)
 
+import qualified Data.Aeson                   as J
 import qualified Data.Text                    as T
+import qualified Hasura.Logging               as L
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types             (RoleName (..))
 import           Hasura.Server.Auth
+import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 
 initErrExit :: (Show e) => e -> IO a
@@ -220,8 +223,14 @@ mkServeOptions rso = do
 
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
-      ty <- fromMaybe AHTGet <$> withEnv mType (fst authHookTypeEnv)
+      authModeM <- withEnv mType (fst authHookModeEnv)
+      ty <- maybe (authHookTyEnv mType) return authModeM
       return (flip AuthHookG ty <$> mUrlEnv)
+
+    -- Also support HASURA_GRAPHQL_AUTH_HOOK_TYPE
+    -- TODO:- drop this in next major update
+    authHookTyEnv mType = fromMaybe AHTGet <$>
+      withEnv mType "HASURA_GRAPHQL_AUTH_HOOK_TYPE"
 
     mkCorsConfig (CorsConfigG mDom isDis) = do
       domEnv <- fromMaybe "*" <$> withEnv mDom (fst corsDomainEnv)
@@ -300,7 +309,7 @@ serveCmdFooter =
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
       [ servePortEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
-      , txIsoEnv, accessKeyEnv, authHookEnv , authHookTypeEnv
+      , txIsoEnv, accessKeyEnv, authHookEnv , authHookModeEnv
       , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv
       ]
 
@@ -354,10 +363,10 @@ authHookEnv =
   , "The authentication webhook, required to authenticate requests"
   )
 
-authHookTypeEnv :: (String, String)
-authHookTypeEnv =
-  ( "HASURA_GRAPHQL_AUTH_HOOK_TYPE"
-  , "The authentication webhook type (default: GET)"
+authHookModeEnv :: (String, String)
+authHookModeEnv =
+  ( "HASURA_GRAPHQL_AUTH_HOOK_MODE"
+  , "The authentication webhook mode (default: GET)"
   )
 
 jwtSecretEnv :: (String, String)
@@ -520,7 +529,7 @@ parseWebHook =
       option (eitherReader readHookType)
                   ( long "auth-hook-mode" <>
                     metavar "GET|POST" <>
-                    help (snd authHookTypeEnv)
+                    help (snd authHookModeEnv)
                   )
 
 
@@ -565,3 +574,32 @@ parseEnableConsole =
   switch ( long "enable-console" <>
            help (snd enableConsoleEnv)
          )
+
+-- Init logging related
+connInfoToLog :: Q.ConnInfo -> StartupLog
+connInfoToLog (Q.ConnInfo host port user _ db _) =
+  StartupLog L.LevelInfo "postgres_connection" infoVal
+  where
+    infoVal = J.object [ "host" J..= host
+                       , "port" J..= port
+                       , "user" J..= user
+                       , "database" J..= db
+                       ]
+
+serveOptsToLog :: ServeOptions -> StartupLog
+serveOptsToLog so =
+  StartupLog L.LevelInfo "serve_options" infoVal
+  where
+    infoVal = J.object [ "port" J..= soPort so
+                       , "accesskey_set" J..= isJust (soAccessKey so)
+                       , "auth_hook" J..= (ahUrl <$> soAuthHook so)
+                       , "auth_hook_mode" J..= (show . ahType <$> soAuthHook so)
+                       , "unauth_role" J..= soUnAuthRole so
+                       , "cors_domain" J..= (ccDomain . soCorsConfig) so
+                       , "cors_disabled" J..= (ccDisabled . soCorsConfig) so
+                       , "enable_console" J..= soEnableConsole so
+                       ]
+
+mkGenericStrLog :: T.Text -> String -> StartupLog
+mkGenericStrLog k msg =
+  StartupLog L.LevelInfo k $ J.toJSON msg

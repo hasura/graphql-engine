@@ -34,7 +34,7 @@ Follow the guide that best fits your scenario:
 Advanced
 --------
 
-- :doc:`Auto-apply migrations when server starts <auto-apply-migrations>`
+- :doc:`Auto-apply migrations or metadata when server starts <auto-apply-migrations>`
 
 .. toctree::
    :hidden:
@@ -42,4 +42,4 @@ Advanced
    For new project <new-project>
    For existing project <existing-project>
    With a database with an existing migration system <database-with-migrations>
-   Auto-apply migrations when server starts <auto-apply-migrations>
+   Auto-apply migrations or metadata when server starts <auto-apply-migrations>
