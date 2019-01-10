@@ -249,3 +249,8 @@ args:
   args:
     schema: hdb_catalog
     name: remote_schemas
+
+- type: track_table
+  args:
+    schema: hdb_catalog
+    name: hdb_version

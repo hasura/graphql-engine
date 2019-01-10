@@ -242,11 +242,19 @@ from6To7 = liftTx $ do
     $(Q.sqlFromFile "src-rsr/migrate_from_6_to_7.sql")
   return ()
 
-from7To8 :: (MonadTx m) => m ()
-from7To8 = liftTx $ do
-  Q.Discard () <- Q.multiQE defaultTxErrorHandler
+-- alter hdb_version table and track it
+from7To8
+  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  => m ()
+from7To8 = do
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_7_to_8.sql")
-  return ()
+  void $ runQueryM migrateMetadataFrom7
+  -- set as system defined
+  setAsSystemDefined
+  where
+    migrateMetadataFrom7 =
+      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_7_to_8.yaml" :: Q (TExp RQLQuery)))
 
 migrateCatalog
   :: (MonadTx m, CacheRWM m, MonadIO m, UserInfoM m, HasHttpManager m)
