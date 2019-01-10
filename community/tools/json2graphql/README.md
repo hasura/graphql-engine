@@ -7,6 +7,13 @@ This is A CLI tool to import a schema and data to Postgres using JSON data. You 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/json2graphql.svg)](https://npmjs.org/package/json2graphql)
 
+- [Basic example](#basic-example)
+- [Quick start](#quick-start)
+- [Installation](#installation)
+- [CLI Usage](#cli-usage)
+- [More features](#more-features)
+- [Credits and related projects](#credits-and-related-projects)
+
 ## Basic example
 
 ![demo-gif](https://graphql-engine-cdn.hasura.io/assets/json2graphql/j2g.gif)
