@@ -24,9 +24,9 @@ import { filterEventsBlockList, sanitiseUrl } from './telemetryFilter';
 
 const analyticsUrl = Endpoints.telemetryServer;
 let analyticsConnection;
-const { consoleMode, disableTelemetry, uuid } = window.__env;
+const { consoleMode, enableTelemetry, uuid } = window.__env;
 const telemetryEnabled =
-  disableTelemetry !== undefined && disableTelemetry !== true;
+  enableTelemetry !== undefined && enableTelemetry === true;
 if (telemetryEnabled) {
   try {
     analyticsConnection = new WebSocket(analyticsUrl);

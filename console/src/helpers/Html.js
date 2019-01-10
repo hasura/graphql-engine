@@ -48,7 +48,7 @@ export default class Html extends Component {
                 consoleMode: '${process.env.CONSOLE_MODE}',
                 nodeEnv: '${process.env.NODE_ENV}',
                 urlPrefix: '${process.env.URL_PREFIX}',
-                disableTelemetry: ${process.env.DISABLE_TELEMETRY}
+                enableTelemetry: ${process.env.ENABLE_TELEMETRY}
               };`,
             }}
           />
