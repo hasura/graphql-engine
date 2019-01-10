@@ -1,6 +1,6 @@
 # JSON database to GraphQL
 
-This is A CLI tool to import a schema and data to Postgres using JSON data. You can then leverage all the features of Hasura GraphQL Engine to query the Postgres data over GraphQL.
+This is A CLI tool to import a schema and data to Postgres using JSON data ([of an opinionated structure](#json-structure)). You can then leverage all the features of Hasura GraphQL Engine to query the Postgres data over GraphQL.
 
 > [Hasura GraphQL Engine](https://hasura.io) gives instant realtime GraphQL APIs over Postgres.
 
@@ -11,6 +11,7 @@ This is A CLI tool to import a schema and data to Postgres using JSON data. You 
 - [Quick start](#quick-start)
 - [Installation](#installation)
 - [CLI Usage](#cli-usage)
+- [JSON Structure](#json-structure)
 - [More features](#more-features)
 - [Credits and related projects](#credits-and-related-projects)
 
@@ -172,6 +173,27 @@ $ gq URL [flags]
 - `-o --overwrite`: Overwrite tables if they already exist in database
 - `-v --version`: show CLI version
 - `-h, --help`: show CLI help
+
+## JSON Structure
+
+The top level of your JSON database should be a JSON object with keys being the name of entities and values being the lists of entities. For example:
+
+```json
+{
+    "user": [
+        { "id": 123, "name": "John Doe" },
+        { "id": 456, "name": "Jane Doe" }
+    ],
+    "city": [
+        { "id": 987, "name": "Stockholm", "country": "Sweden" },
+        { "id": 995, "name": "Sydney", "country": "Australia" }
+    ]
+}
+```
+
+The CLI will treat the entities as tables and the fields in the entities as columns. If some column name is of the form `<ENTITY_NAME>_id`, the CLI will consider it a foreign key the the entity with name `<ENTITY_NAME>`.
+
+The types of the columns will be inferred from the data in the columns. If the data in the columns is not consistent, the data insertion would fail.
 
 ## More features
 
