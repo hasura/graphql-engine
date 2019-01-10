@@ -1,6 +1,10 @@
 import defaultState from './State';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import { loadSchema, handleMigrationErrors } from '../DataActions';
+import {
+  loadSchema,
+  handleMigrationErrors,
+  fetchTrackedFunctions,
+} from '../DataActions';
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -46,16 +50,24 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   ];
   // check if track view enabled
   if (getState().rawSQL.isTableTrackChecked) {
-    const regExp = /create\s*(?:|or\s*replace)\s*(view|table)\s*((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
+    const regExp = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
     const matches = sql.match(new RegExp(regExp, 'gmi'));
     if (matches) {
       matches.forEach(element => {
         const itemMatch = element.match(new RegExp(regExp, 'i'));
         if (itemMatch && itemMatch.length === 6) {
-          const trackQuery = {
-            type: 'add_existing_table_or_view',
-            args: {},
-          };
+          let trackQuery = {};
+          if (itemMatch[1] === 'function') {
+            trackQuery = {
+              type: 'track_function',
+              args: {},
+            };
+          } else {
+            trackQuery = {
+              type: 'add_existing_table_or_view',
+              args: {},
+            };
+          }
           // If group 5 is undefined, use group 3 and 4 for schema and table respectively
           // If group 5 is present, use group 5 for table name using public schema.
           if (itemMatch[5]) {
@@ -108,6 +120,7 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
             dispatch(loadSchema()).then(() => {
               dispatch({ type: REQUEST_SUCCESS, data });
             });
+            dispatch(fetchTrackedFunctions());
           },
           err => {
             const parsedErrorMsg = err;

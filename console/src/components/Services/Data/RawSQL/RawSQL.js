@@ -38,8 +38,8 @@ const migrationNameTip = (
 );
 const trackTableTip = (
   <Tooltip id="tooltip-tracktable">
-    If you are creating a table/view, you can track them to query them with
-    GraphQL
+    If you are creating a table/view/function, you can track them to query them
+    with GraphQL
   </Tooltip>
 );
 
@@ -169,6 +169,7 @@ const RawSQL = ({
       </div>
     );
   })();
+  const functionText = true ? 'Function' : '';
   return (
     <div
       className={`${styles.main_wrapper} ${styles.padd_left} ${
@@ -193,9 +194,10 @@ const RawSQL = ({
                 communicate with the database.
               </li>
               <li>
-                If you plan to create a Table/View using Raw SQL, remember to
-                link it to Hasura DB by checking the <code>Track table</code>{' '}
-                checkbox below.
+                If you plan to create a Table/View
+                {'/' + functionText} using Raw SQL, remember to link it to
+                Hasura DB by checking the <code>Track table</code> checkbox
+                below.
               </li>
               <li>
                 Please note that if the migrations are enabled,{' '}
@@ -239,7 +241,7 @@ const RawSQL = ({
                 dispatch({ type: SET_MIGRATION_CHECKED, data: false });
               }
               // set track table checkbox true
-              const regExp = /create\s*(?:|or\s*replace)\s*(?:view|table)/; // eslint-disable-line
+              const regExp = /create\s*(?:|or\s*replace)\s*(?:view|table|function)/; // eslint-disable-line
               const matches = formattedSql.match(new RegExp(regExp, 'gmi'));
               if (matches) {
                 dispatch({ type: SET_TRACK_TABLE_CHECKED, data: true });
