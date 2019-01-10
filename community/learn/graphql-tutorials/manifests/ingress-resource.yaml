@@ -3,7 +3,7 @@ kind: Ingress
 metadata:
   name: ingress
   #  annotations:
-  #    nginx.ingress.kubernetes.io/rewrite-target: /$1
+  #    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
   - host: graphql-tutorials.org
