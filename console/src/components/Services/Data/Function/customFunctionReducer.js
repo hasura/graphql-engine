@@ -159,7 +159,7 @@ const fetchCustomFunction = (functionName, schema) => {
           });
           return Promise.resolve();
         }
-        return dispatch(push(`${prefixUrl}`));
+        return dispatch(push(`/${prefixUrl}`));
       },
       error => {
         console.error('Failed to fetch resolver' + JSON.stringify(error));
@@ -270,7 +270,7 @@ const unTrackCustomFunction = () => {
       // dispatch({ type: REQUEST_SUCCESS });
       Promise.all([
         dispatch({ type: RESET }),
-        dispatch(push(prefixUrl)),
+        dispatch(push('/' + prefixUrl)),
         dispatch(fetchTrackedFunctions()),
       ]);
     };
