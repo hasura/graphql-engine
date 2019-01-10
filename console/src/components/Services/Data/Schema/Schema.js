@@ -186,14 +186,11 @@ class Schema extends Component {
               <select
                 onChange={handleSchemaChange}
                 className={styles.changeSchema + ' form-control'}
+                value={currentSchema}
               >
                 {schemaList.map(s => {
                   if (s.schema_name === currentSchema) {
-                    return (
-                      <option key={s.schema_name} selected="selected">
-                        {s.schema_name}
-                      </option>
-                    );
+                    return <option key={s.schema_name}>{s.schema_name}</option>;
                   }
                   return <option key={s.schema_name}>{s.schema_name}</option>;
                 })}

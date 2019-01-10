@@ -18,6 +18,7 @@ const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
 const LOAD_NON_TRACKABLE_FUNCTIONS = 'Data/LOAD_NON_TRACKABLE_FUNCTIONS';
 const LOAD_TRACKED_FUNCTIONS = 'Data/LOAD_TRACKED_FUNCTIONS';
+const UPDATE_TRACKED_FUNCTIONS = 'Data/UPDATE_TRACKED_FUNCTIONS';
 const LOAD_SCHEMA = 'Data/LOAD_SCHEMA';
 const LOAD_UNTRACKED_SCHEMA = 'Data/LOAD_UNTRACKED_SCHEMA';
 const LOAD_TABLE_COMMENT = 'Data/LOAD_TABLE_COMMENT';
@@ -597,6 +598,13 @@ const dataReducer = (state = defaultState, action) => {
       return {
         ...state,
         trackedFunctions: action.data,
+        listedFunctions: action.data,
+      };
+
+    case UPDATE_TRACKED_FUNCTIONS:
+      return {
+        ...state,
+        listedFunctions: [...action.data],
       };
     case LOAD_SCHEMA:
       return {
@@ -697,4 +705,5 @@ export {
   RESET_MANUAL_REL_TABLE_LIST,
   fetchViewInfoFromInformationSchema,
   fetchTrackedFunctions,
+  UPDATE_TRACKED_FUNCTIONS,
 };

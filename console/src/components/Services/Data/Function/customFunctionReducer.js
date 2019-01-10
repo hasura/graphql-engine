@@ -362,5 +362,5 @@ const customFunctionReducer = (state = functionData, action) => {
 
 /* End of it */
 
-export { fetchCustomFunction, deleteFunctionSql, unTrackCustomFunction };
+export { RESET, fetchCustomFunction, deleteFunctionSql, unTrackCustomFunction };
 export default customFunctionReducer;

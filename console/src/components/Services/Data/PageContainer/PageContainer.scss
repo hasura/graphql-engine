@@ -125,6 +125,11 @@
   li {
     border-bottom: 0px !important;
     padding: 0 0 !important;
+    .tableFunctionDivider {
+      margin-top: 5px;
+      margin-bottom: 5px;
+      width: 95%;
+    }
     a {
       background: transparent !important;
       padding: 5px 0px !important;

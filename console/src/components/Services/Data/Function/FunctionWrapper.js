@@ -1,7 +1,19 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import { RESET } from './customFunctionReducer';
+
+import { setTable } from '../DataActions';
+
 class FunctionWrapper extends React.Component {
+  componentDidMount() {
+    this.props.dispatch(setTable(''));
+  }
+  componentWillUnmount() {
+    this.props.dispatch({
+      type: RESET,
+    });
+  }
   render() {
     const { children } = this.props;
     return <div>{children && React.cloneElement(children, this.props)}</div>;
@@ -18,6 +30,7 @@ const mapStateToProps = state => {
     functions: {
       ...state.functions,
     },
+    migrationMode: state.main.migrationMode,
   };
 };
 

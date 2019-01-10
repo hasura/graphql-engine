@@ -1,13 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Link } from 'react-router';
-
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 import CommonTabLayout from '../../../Layout/CommonTabLayout/CommonTabLayout';
 
-import { appPrefix } from '../../push';
+import _push, { appPrefix } from '../../push';
 import { pageTitle } from './constants';
 
 import tabInfo from './tabInfo';
@@ -22,6 +20,8 @@ import {
   deleteFunctionSql,
   unTrackCustomFunction,
 } from '../customFunctionReducer';
+
+import { SET_SQL } from '../../RawSQL/Actions';
 
 class ModifyCustomFunction extends React.Component {
   constructor() {
@@ -44,6 +44,13 @@ $$ language sql stable;
       this.props.dispatch(push(prefixUrl));
     }
     Promise.all([this.props.dispatch(fetchCustomFunction(functionName))]);
+  }
+  loadRunSQLAndLoadPage() {
+    const { functionDefinition } = this.props.functions;
+    Promise.all([
+      this.props.dispatch({ type: SET_SQL, data: functionDefinition }),
+      this.props.dispatch(_push('/sql')),
+    ]);
   }
   updateDeleteConfirmationError(data) {
     this.setState({ ...this.state, deleteConfirmationError: data });
@@ -80,28 +87,28 @@ $$ language sql stable;
       isDeleting,
       isUntracking,
     } = this.props.functions;
-    const baseUrl = `${appPrefix}/schema/${schema}/functions/${functionName}`;
 
-    const modifyUrl = `${appPrefix}/sql?function=${functionDefinition}`;
+    const { migrationMode } = this.props;
+
+    const baseUrl = `${appPrefix}/schema/${schema}/functions/${functionName}`;
 
     const generateMigrateBtns = () => {
       return (
         <div className={styles.commonBtn}>
-          <Link to={modifyUrl}>
-            <button
-              className={styles.yellow_button}
-              data-test={'custom-function-edit-modify-btn'}
-            >
-              Modify
-            </button>
-          </Link>
+          <button
+            className={styles.yellow_button}
+            data-test={'custom-function-edit-modify-btn'}
+            onClick={this.loadRunSQLAndLoadPage.bind(this)}
+          >
+            Modify
+          </button>
           <button
             className={
               styles.danger_button +
               ' ' +
-              styles.red_button +
+              styles.white_button +
               ' ' +
-              'btn-danger'
+              'btn-default'
             }
             onClick={e => {
               e.preventDefault();
@@ -166,7 +173,7 @@ $$ language sql stable;
       });
     }
     return (
-      <div className={styles.modifyWrapper}>
+      <div className={'col-xs-8' + ' ' + styles.modifyWrapper}>
         <Helmet
           title={`Edit ${pageTitle} - ${functionName} - ${pageTitle}s | Hasura`}
         />
@@ -180,13 +187,16 @@ $$ language sql stable;
           showLoader={false}
         />
         <br />
+        <h4>Function Definition:</h4>
         <div className={styles.sqlBlock}>
           <ReusableTextAreaWithCopy
             copyText={functionDefinition}
             textLanguage={'sql'}
           />
         </div>
-        {generateMigrateBtns()}
+        {migrationMode
+          ? [<hr key="modify-custom-function-divider" />, generateMigrateBtns()]
+          : null}
       </div>
     );
   }

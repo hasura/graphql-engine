@@ -145,6 +145,9 @@ const addExistingFunction = name => {
       dispatch({ type: REQUEST_SUCCESS });
       // Update the left side bar
       dispatch(fetchTrackedFunctions(currentSchema));
+      dispatch(
+        _push('/schema/' + currentSchema + '/functions/' + name + '/modify')
+      );
       return;
     };
     const customOnError = err => {

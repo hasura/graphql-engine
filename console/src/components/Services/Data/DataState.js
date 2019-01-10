@@ -129,6 +129,7 @@ const defaultState = {
   postgresFunctions: [],
   nonTrackablePostgresFunctions: [],
   trackedFunctions: [],
+  listedFunctions: [],
 
   listingSchemas: [],
   untrackedSchemas: [],

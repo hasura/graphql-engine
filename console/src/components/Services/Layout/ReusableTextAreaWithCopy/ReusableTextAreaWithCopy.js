@@ -60,9 +60,26 @@ class ReusableTextAreaWithCopy extends React.Component {
             */}
           </div>
         </div>
-        <pre>
-          <code>{copyText}</code>
-        </pre>
+
+        {window && window.sqlFormatter && window.hljs ? (
+          <pre>
+            <code
+              className={style.formattedCode}
+              dangerouslySetInnerHTML={{
+                __html: window.hljs.highlight(
+                  'sql',
+                  window.sqlFormatter.format(copyText, {
+                    language: this.props.textLanguage,
+                  })
+                ).value,
+              }}
+            />
+          </pre>
+        ) : (
+          <pre>
+            <code className={style.formattedCode}>{copyText}</code>
+          </pre>
+        )}
       </div>
     );
   }
