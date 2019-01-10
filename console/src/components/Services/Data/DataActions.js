@@ -706,4 +706,5 @@ export {
   fetchViewInfoFromInformationSchema,
   fetchTrackedFunctions,
   UPDATE_TRACKED_FUNCTIONS,
+  initQueries,
 };

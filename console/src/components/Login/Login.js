@@ -21,14 +21,15 @@ class Login extends Component {
     if (loginInProgress) {
       loginText = (
         <span>
-          Verifying...<i className="fa fa-spinner fa-spin" aria-hidden="true" />
+          Verifying...
+          <i className="fa fa-spinner fa-spin" aria-hidden="true" />
         </span>
       );
     } else if (loginError) {
       loginText = 'Error. Try again?';
     }
 
-    const hasuraLogo = require('./logo.svg');
+    const hasuraLogo = require('./blue-logo.svg');
     const { dispatch } = this.props;
     return (
       <div className={styles.mainWrapper + ' container-fluid'}>

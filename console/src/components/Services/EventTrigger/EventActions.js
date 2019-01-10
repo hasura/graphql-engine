@@ -11,6 +11,8 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 import push from './push';
+import { initQueries } from '../Data/DataActions';
+import { replace } from 'react-router-redux';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 import { REQUEST_COMPLETE, REQUEST_ONGOING } from './Modify/Actions';
@@ -24,6 +26,7 @@ const ACCESS_KEY_ERROR = 'Event/ACCESS_KEY_ERROR';
 const UPDATE_DATA_HEADERS = 'Event/UPDATE_DATA_HEADERS';
 const LISTING_TRIGGER = 'Event/LISTING_TRIGGER';
 const LOAD_EVENT_LOGS = 'Event/LOAD_EVENT_LOGS';
+const LOAD_EVENT_TABLE_SCHEMA = 'Event/LOAD_EVENT_TABLE_SCHEMA';
 const MODAL_OPEN = 'Event/MODAL_OPEN';
 const SET_REDELIVER_EVENT = 'Event/SET_REDELIVER_EVENT';
 const LOAD_EVENT_INVOCATIONS = 'Event/LOAD_EVENT_INVOCATIONS';
@@ -37,24 +40,37 @@ const REQUEST_ERROR = 'Event/REQUEST_ERROR';
 /* ************ action creators *********************** */
 const loadTriggers = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
+  const body = {
+    type: 'bulk',
+    args: [
+      {
+        type: 'select',
+        args: {
+          table: {
+            name: 'event_triggers',
+            schema: 'hdb_catalog',
+          },
+          columns: ['*'],
+        },
+      },
+      initQueries.loadSchema,
+    ],
+  };
+  body.args[1].args.where = {
+    table_schema: {
+      $nin: ['information_schema', 'pg_catalog', 'hdb_catalog', 'hdb_views'],
+    },
+  };
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'event_triggers',
-          schema: 'hdb_catalog',
-        },
-        columns: ['*'],
-      },
-    }),
+    body: JSON.stringify(body),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: LOAD_TRIGGER_LIST, triggerList: data });
+      dispatch({ type: LOAD_EVENT_TABLE_SCHEMA, data: data[1] });
+      dispatch({ type: LOAD_TRIGGER_LIST, triggerList: data[0] });
     },
     error => {
       console.error('Failed to load triggers' + JSON.stringify(error));
@@ -183,7 +199,7 @@ const loadRunningEvents = () => (dispatch, getState) => {
 
 const loadEventLogs = triggerName => (dispatch, getState) => {
   const url = Endpoints.getSchema;
-  const options = {
+  const triggerOptions = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
@@ -191,28 +207,67 @@ const loadEventLogs = triggerName => (dispatch, getState) => {
       type: 'select',
       args: {
         table: {
-          name: 'event_invocation_logs',
+          name: 'event_triggers',
           schema: 'hdb_catalog',
         },
-        columns: [
-          '*',
-          {
-            name: 'event',
-            columns: ['*'],
-          },
-        ],
-        where: { event: { trigger_name: triggerName } },
-        order_by: ['-created_at'],
-        limit: 10,
+        columns: ['*'],
+        where: {
+          name: triggerName,
+        },
       },
     }),
   };
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      dispatch({ type: LOAD_EVENT_LOGS, data: data });
+  return dispatch(requestAction(url, triggerOptions)).then(
+    triggerData => {
+      if (triggerData.length !== 0) {
+        const body = {
+          type: 'bulk',
+          args: [
+            {
+              type: 'select',
+              args: {
+                table: {
+                  name: 'event_invocation_logs',
+                  schema: 'hdb_catalog',
+                },
+                columns: [
+                  '*',
+                  {
+                    name: 'event',
+                    columns: ['*'],
+                  },
+                ],
+                where: { event: { trigger_id: triggerData[0].id } },
+                order_by: ['-created_at'],
+                limit: 10,
+              },
+            },
+          ],
+        };
+        const logOptions = {
+          credentials: globalCookiePolicy,
+          method: 'POST',
+          headers: dataHeaders(getState),
+          body: JSON.stringify(body),
+        };
+        dispatch(requestAction(url, logOptions)).then(
+          logsData => {
+            dispatch({ type: LOAD_EVENT_LOGS, data: logsData[0] });
+          },
+          error => {
+            console.error(
+              'Failed to load trigger logs' + JSON.stringify(error)
+            );
+          }
+        );
+      } else {
+        dispatch(replace('/404'));
+      }
     },
     error => {
-      console.error('Failed to load triggers' + JSON.stringify(error));
+      console.error(
+        'Failed to fetch trigger information' + JSON.stringify(error)
+      );
     }
   );
 };
@@ -544,6 +599,11 @@ const eventReducer = (state = defaultState, action) => {
       return {
         ...state,
         log: { ...state.log, rows: action.data, count: action.data.length },
+      };
+    case LOAD_EVENT_TABLE_SCHEMA:
+      return {
+        ...state,
+        tableSchemas: action.data,
       };
     case SET_TRIGGER:
       return { ...state, currentTrigger: action.triggerName };

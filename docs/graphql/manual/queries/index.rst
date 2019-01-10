@@ -50,6 +50,7 @@ based on a typical author/article schema for reference.
   nested-object-queries
   aggregation-queries
   distinct-queries
+  custom-functions
   query-filters
   sorting
   pagination
