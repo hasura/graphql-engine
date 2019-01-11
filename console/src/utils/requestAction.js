@@ -58,10 +58,7 @@ const requestAction = (
                   statusCode: response.status,
                 });
               }
-              if (
-                (msg.code && msg.code === 'access-denied') ||
-                msg.code === 'permission-denied'
-              ) {
+              if (msg.code && msg.code === 'access-denied') {
                 dispatch({
                   type: UPDATE_DATA_HEADERS,
                   data: {
@@ -72,6 +69,8 @@ const requestAction = (
                 dispatch({ type: LOGIN_IN_PROGRESS, data: false });
                 dispatch({ type: LOGIN_ERROR, data: false });
                 dispatch(push(globals.urlPrefix + '/login'));
+              } else {
+                alert(JSON.stringify(msg));
               }
               reject(msg);
             });
