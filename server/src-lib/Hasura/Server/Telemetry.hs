@@ -49,6 +49,7 @@ data PermissionMetric
   , _pmInsert :: !Int
   , _pmUpdate :: !Int
   , _pmDelete :: !Int
+  , _pmRoles  :: !Int
   } deriving (Show, Eq)
 $(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''PermissionMetric)
 
@@ -99,7 +100,7 @@ runTelemetry (Logger logger) manager cacheRef (dbId, instanceId) = do
     schemaCache <- readIORef cacheRef
     let metrics = computeMetrics schemaCache
         payload = A.encode $ mkPayload dbId instanceId currentVersion metrics
-    logger $ mkDebugLog "metrics_info" (CS.cs payload) Nothing
+    logger $ debugLBS $ "metrics_info: " <> payload
     resp <- try $ Wreq.postWith options (T.unpack telemetryUrl) payload
     either logHttpEx handleHttpResp resp
     C.threadDelay aDay
@@ -110,11 +111,11 @@ runTelemetry (Logger logger) manager cacheRef (dbId, instanceId) = do
       let httpErr = Just $ mkHttpError telemetryUrl Nothing (Just $ HttpException ex)
       logger $ mkTelemetryLog "http_exception" "http exception occurred" httpErr
 
-    handleHttpResp res = do
-      let statusCode = res ^. Wreq.responseStatus . Wreq.statusCode
-      logger $ mkDebugLog "http_success" (CS.cs $ res ^. Wreq.responseBody) Nothing
+    handleHttpResp resp = do
+      let statusCode = resp ^. Wreq.responseStatus . Wreq.statusCode
+      logger $ debugLBS $ "http_success: " <> resp ^. Wreq.responseBody
       when (statusCode /= 200) $ do
-        let httpErr = Just $ mkHttpError telemetryUrl (Just res) Nothing
+        let httpErr = Just $ mkHttpError telemetryUrl (Just resp) Nothing
         logger $ mkTelemetryLog "http_error" "failed to post telemetry" httpErr
 
     aDay = 86400 * 1000 * 1000
@@ -126,12 +127,15 @@ computeMetrics sc =
       allRels = join $ Map.elems $ Map.map relsOfTbl usrTbls
       (manualRels, autoRels) = partition riIsManual allRels
       relMetrics = RelationshipMetric (length manualRels) (length autoRels)
-      allPerms = join $ Map.elems $ Map.map permsOfTbl usrTbls
+      rolePerms = join $ Map.elems $ Map.map permsOfTbl usrTbls
+      nRoles = length $ nub $ fst <$> rolePerms
+      allPerms = snd <$> rolePerms
       insPerms = calcPerms _permIns allPerms
       selPerms = calcPerms _permSel allPerms
       updPerms = calcPerms _permUpd allPerms
       delPerms = calcPerms _permDel allPerms
-      permMetrics = PermissionMetric selPerms insPerms updPerms delPerms
+      permMetrics =
+        PermissionMetric selPerms insPerms updPerms delPerms nRoles
       evtTriggers = Map.size $ Map.filter (not . Map.null)
                     $ Map.map tiEventTriggerInfoMap usrTbls
       rmSchemas   = Map.size $ scRemoteResolvers sc
@@ -147,8 +151,8 @@ computeMetrics sc =
     relsOfTbl :: TableInfo -> [RelInfo]
     relsOfTbl = rights . Map.elems . Map.map fieldInfoToEither . tiFieldInfoMap
 
-    permsOfTbl :: TableInfo -> [RolePermInfo]
-    permsOfTbl = Map.elems . tiRolePermInfoMap
+    permsOfTbl :: TableInfo -> [(RoleName, RolePermInfo)]
+    permsOfTbl = Map.toList . tiRolePermInfoMap
 
 
 -- TODO: use a 3rd party library?
@@ -220,6 +224,3 @@ mkHttpError url mResp httpEx =
 
 mkTelemetryLog :: Text -> Text -> Maybe TelemetryHttpError -> TelemetryLog
 mkTelemetryLog = TelemetryLog LevelInfo
-
-mkDebugLog :: Text -> Text -> Maybe TelemetryHttpError -> TelemetryLog
-mkDebugLog = TelemetryLog LevelDebug

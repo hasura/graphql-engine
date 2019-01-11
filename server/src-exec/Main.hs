@@ -143,7 +143,8 @@ main =  do
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
 
       -- start a background thread for telemetry
-      unless enableTelemetry $ do
+      when enableTelemetry $ do
+        unLogger logger $ mkGenericStrLog "telemetry" telemetryNotice
         res <- getUniqIds ci
         runEither res (logTelemetryErr logger) $
           void . C.forkIO . runTelemetry logger httpManager cacheRef
@@ -229,3 +230,10 @@ main =  do
       putStrLn "successfully cleaned graphql-engine related data"
 
     runEither ev lAction rAction = either lAction rAction ev
+
+
+telemetryNotice :: String
+telemetryNotice =
+  "Help us improve Hasura! The graphql-engine server collects anonymized "
+  <> "usage stats which allows us to keep improving Hasura at warp speed. "
+  <> "To opt-out or read more, visit <link>"
