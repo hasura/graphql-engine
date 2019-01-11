@@ -63,6 +63,7 @@ parseHGECommand =
   where
     serveOpts = RawServeOptions
                 <$> parseServerPort
+                <*> parseServerHost
                 <*> parseConnParams
                 <*> parseTxIsolation
                 <*> parseAccessKey
@@ -101,7 +102,7 @@ main =  do
   loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
   let logger = mkLogger loggerCtx
   case hgeCmd of
-    HCServe so@(ServeOptions port cp isoL mAccessKey mAuthHook mJwtSecret
+    HCServe so@(ServeOptions port host cp isoL mAccessKey mAuthHook mJwtSecret
              mUnAuthRole corsCfg enableConsole enableTelemetry) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
@@ -125,8 +126,8 @@ main =  do
       pool <- Q.initPGPool ci cp
       (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
                          am corsCfg enableConsole enableTelemetry
-      let warpSettings = Warp.setPort port Warp.defaultSettings
-                         -- Warp.setHost "*" Warp.defaultSettings
+
+      let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
 
       maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
       evFetchMilliSec  <- getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
