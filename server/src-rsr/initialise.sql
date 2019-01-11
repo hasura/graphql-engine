@@ -2,7 +2,8 @@ CREATE TABLE hdb_catalog.hdb_version (
     hasura_uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     version TEXT NOT NULL,
     upgraded_on TIMESTAMPTZ NOT NULL,
-    misc_state JSONB NOT NULL DEFAULT '{}'::jsonb
+    cli_state JSONB NOT NULL DEFAULT '{}'::jsonb,
+    console_state JSONB NOT NULL DEFAULT '{}'::jsonb
 );
 
 CREATE UNIQUE INDEX hdb_version_one_row
