@@ -208,18 +208,14 @@ const fetchDataInit = () => (dispatch, getState) => {
       initQueries.schemaList,
       initQueries.loadSchema,
       initQueries.loadUntrackedSchema,
-      initQueries.loadTrackableFunctions,
-      initQueries.loadNonTrackableFunctions,
-      initQueries.loadTrackedFunctions,
     ],
   };
+
   // set schema in queries
   const currentSchema = getState().tables.currentSchema;
   body.args[1].args.where.table_schema = currentSchema;
   body.args[2].args.where.table_schema = currentSchema;
-  body.args[3].args.where.function_schema = currentSchema;
-  body.args[4].args.where.function_schema = currentSchema;
-  body.args[5].args.where.function_schema = currentSchema;
+
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -231,9 +227,41 @@ const fetchDataInit = () => (dispatch, getState) => {
       dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data[0] });
       dispatch({ type: LOAD_SCHEMA, allSchemas: data[1] });
       dispatch({ type: LOAD_UNTRACKED_SCHEMA, untrackedSchemas: data[2] });
-      dispatch({ type: LOAD_FUNCTIONS, data: data[3] });
-      dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: data[4] });
-      dispatch({ type: LOAD_TRACKED_FUNCTIONS, data: data[5] });
+    },
+    error => {
+      console.error('Failed to fetch schema ' + JSON.stringify(error));
+    }
+  );
+};
+
+const fetchFunctionInit = () => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const body = {
+    type: 'bulk',
+    args: [
+      initQueries.loadTrackableFunctions,
+      initQueries.loadNonTrackableFunctions,
+      initQueries.loadTrackedFunctions,
+    ],
+  };
+
+  // set schema in queries
+  const currentSchema = getState().tables.currentSchema;
+  body.args[0].args.where.function_schema = currentSchema;
+  body.args[1].args.where.function_schema = currentSchema;
+  body.args[2].args.where.function_schema = currentSchema;
+
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(body),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      dispatch({ type: LOAD_FUNCTIONS, data: data[0] });
+      dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: data[1] });
+      dispatch({ type: LOAD_TRACKED_FUNCTIONS, data: data[2] });
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
@@ -698,6 +726,7 @@ export {
   loadUntrackedRelations,
   fetchSchemaList,
   fetchDataInit,
+  fetchFunctionInit,
   ACCESS_KEY_ERROR,
   UPDATE_DATA_HEADERS,
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,

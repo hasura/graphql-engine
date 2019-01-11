@@ -23,6 +23,7 @@ import {
 import {
   loadUntrackedRelations,
   fetchDataInit,
+  fetchFunctionInit,
   LOAD_UNTRACKED_RELATIONS,
   UPDATE_CURRENT_SCHEMA,
 } from '../DataActions';
@@ -41,6 +42,7 @@ class Schema extends Component {
     // Initialize this table
     const dispatch = this.props.dispatch;
     dispatch(fetchDataInit());
+    dispatch(fetchFunctionInit());
     const untrackedRelations = getAllUnTrackedRelations(
       this.props.schema,
       this.props.currentSchema
@@ -95,6 +97,7 @@ class Schema extends Component {
       Promise.all([
         dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
         dispatch(fetchDataInit()),
+        dispatch(fetchFunctionInit()),
         dispatch(loadUntrackedRelations()),
       ]);
     };
@@ -383,6 +386,7 @@ const mapStateToProps = state => ({
   functionsList: [...state.tables.postgresFunctions],
   nonTrackableFunctionsList: [...state.tables.nonTrackablePostgresFunctions],
   trackedFunctions: [...state.tables.trackedFunctions],
+  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
 });
 
 const schemaConnector = connect => connect(mapStateToProps)(Schema);

@@ -16,6 +16,8 @@ import {
 import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
 
+import semverCheck from '../../../../helpers/semver';
+
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
 const SET_CASCADE_CHECKED = 'RawSQL/SET_CASCADE_CHECKED';
@@ -35,7 +37,12 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   dispatch(showSuccessNotification('Executing the Query...'));
 
   const sql = getState().rawSQL.sql;
+  const serverVersion = getState().main.serverVersion;
   const currMigrationMode = getState().main.migrationMode;
+
+  const handleFunc = semverCheck('customFunctionSection', serverVersion)
+    ? true
+    : false;
 
   const migrateUrl = returnMigrateUrl(currMigrationMode);
   const currentSchema = 'public';
@@ -49,8 +56,14 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
     },
   ];
   // check if track view enabled
+
   if (getState().rawSQL.isTableTrackChecked) {
-    const regExp = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
+    let regExp;
+    if (handleFunc) {
+      regExp = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
+    } else {
+      regExp = /create\s*(?:|or\s*replace)\s*(view|table)\s*((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
+    }
     const matches = sql.match(new RegExp(regExp, 'gmi'));
     if (matches) {
       matches.forEach(element => {
