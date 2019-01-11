@@ -121,6 +121,7 @@ export const passMCWithRightDefaultValue = () => {
     .clear()
     .type('1234');
   cy.get(getElementFromAlias('save-button')).click();
+  cy.wait(15000);
 };
 
 export const passCreateForeignKey = () => {
@@ -129,12 +130,12 @@ export const passCreateForeignKey = () => {
   cy.get(getElementFromAlias('ref-table')).select(getTableName(0, testName));
   cy.get(getElementFromAlias('ref-col')).select(getColName(0));
   cy.get(getElementFromAlias('save-button')).click();
-  cy.wait(3000);
+  cy.wait(15000);
 };
 
 export const passRemoveForeignKey = () => {
   cy.get(getElementFromAlias('remove-constraint-button')).click();
-  cy.wait(3000);
+  cy.wait(10000);
 };
 
 export const passMTDeleteCol = () => {

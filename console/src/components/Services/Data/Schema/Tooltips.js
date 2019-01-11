@@ -32,3 +32,11 @@ export const quickDefaultReadOnly = (
     The selected role can perform select on all rows of the table.
   </Tooltip>
 );
+
+export const trackableFunctions = (
+  <Tooltip id="tooltip-permission-read">WIP</Tooltip>
+);
+
+export const nonTrackableFunctions = (
+  <Tooltip id="tooltip-permission-read">WIP</Tooltip>
+);

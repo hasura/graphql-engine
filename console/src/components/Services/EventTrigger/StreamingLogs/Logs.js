@@ -432,34 +432,34 @@ class StreamingLogs extends Component {
                           >
                             {finalResponse.status_code
                               ? [
-                                  'Status Code: ',
-                                  finalResponse.status_code === 200 ? (
-                                    <i
-                                      className={
-                                        styles.invocationSuccess +
+                                'Status Code: ',
+                                finalResponse.status_code === 200 ? (
+                                  <i
+                                    className={
+                                      styles.invocationSuccess +
                                         ' fa fa-check'
-                                      }
-                                    />
-                                  ) : (
-                                    <i
-                                      className={
-                                        styles.invocationFailure +
+                                    }
+                                  />
+                                ) : (
+                                  <i
+                                    className={
+                                      styles.invocationFailure +
                                         ' fa fa-times'
-                                      }
-                                    />
-                                  ),
-                                  finalResponse.status_code,
-                                  ' ',
-                                  <OverlayTrigger
-                                    placement="top"
-                                    overlay={tooltip.statusCodeDescription}
-                                  >
-                                    <i
-                                      className="fa fa-question-circle"
-                                      aria-hidden="true"
-                                    />
-                                  </OverlayTrigger>,
-                                ]
+                                    }
+                                  />
+                                ),
+                                finalResponse.status_code,
+                                ' ',
+                                <OverlayTrigger
+                                  placement="top"
+                                  overlay={tooltip.statusCodeDescription}
+                                >
+                                  <i
+                                    className="fa fa-question-circle"
+                                    aria-hidden="true"
+                                  />
+                                </OverlayTrigger>,
+                              ]
                               : null}
                           </div>
                           <AceEditor

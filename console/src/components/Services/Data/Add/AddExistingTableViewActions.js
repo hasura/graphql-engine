@@ -3,6 +3,7 @@ import _push from '../push';
 import {
   loadSchema,
   LOAD_UNTRACKED_RELATIONS,
+  fetchTrackedFunctions,
   makeMigrationCall,
 } from '../DataActions';
 import { showSuccessNotification } from '../Notification';
@@ -86,6 +87,67 @@ const addExistingTableSql = () => {
           );
         }
       });
+      return;
+    };
+    const customOnError = err => {
+      dispatch({ type: REQUEST_ERROR, data: err });
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      upQuery.args,
+      downQuery.args,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+const addExistingFunction = name => {
+  return (dispatch, getState) => {
+    dispatch({ type: MAKING_REQUEST });
+    dispatch(showSuccessNotification('Adding an function...'));
+    const currentSchema = getState().tables.currentSchema;
+
+    const requestBodyUp = {
+      type: 'track_function',
+      args: {
+        name,
+        schema: currentSchema,
+      },
+    };
+    const requestBodyDown = {
+      type: 'untrack_function',
+      args: {
+        name,
+        schema: currentSchema,
+      },
+    };
+    const migrationName = 'add_existing_function ' + currentSchema + '_' + name;
+    const upQuery = {
+      type: 'bulk',
+      args: [requestBodyUp],
+    };
+    const downQuery = {
+      type: 'bulk',
+      args: [requestBodyDown],
+    };
+
+    const requestMsg = 'Adding existing function...';
+    const successMsg = 'Existing function added';
+    const errorMsg = 'Adding existing function failed';
+    const customOnSuccess = () => {
+      dispatch({ type: REQUEST_SUCCESS });
+      // Update the left side bar
+      dispatch(fetchTrackedFunctions(currentSchema));
+      dispatch(
+        _push('/schema/' + currentSchema + '/functions/' + name + '/modify')
+      );
       return;
     };
     const customOnError = err => {
@@ -218,6 +280,7 @@ const addExistingTableReducer = (state = defaultState, action) => {
 
 export default addExistingTableReducer;
 export {
+  addExistingFunction,
   setDefaults,
   setTableName,
   addExistingTableSql,

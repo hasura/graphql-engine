@@ -8,11 +8,17 @@ import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
-import { untrackedTip, untrackedRelTip } from './Tooltips';
+import {
+  untrackedTip,
+  untrackedRelTip,
+  trackableFunctions,
+  nonTrackableFunctions,
+} from './Tooltips';
 import {
   setTableName,
   addExistingTableSql,
   addAllUntrackedTablesSql,
+  addExistingFunction,
 } from '../Add/AddExistingTableViewActions';
 import {
   loadUntrackedRelations,
@@ -65,7 +71,17 @@ class Schema extends Component {
       untrackedRelations,
       currentSchema,
       dispatch,
+      functionsList,
+      nonTrackableFunctionsList,
+      trackedFunctions,
     } = this.props;
+
+    /* Filter */
+    const trackedFuncs = trackedFunctions.map(t => t.function_name);
+    const trackableFuncs = functionsList.filter(
+      f => trackedFuncs.indexOf(f.function_name) === -1
+    );
+    /* */
 
     const handleSchemaChange = e => {
       const updatedSchema = e.target.value;
@@ -170,14 +186,11 @@ class Schema extends Component {
               <select
                 onChange={handleSchemaChange}
                 className={styles.changeSchema + ' form-control'}
+                value={currentSchema}
               >
                 {schemaList.map(s => {
                   if (s.schema_name === currentSchema) {
-                    return (
-                      <option key={s.schema_name} selected="selected">
-                        {s.schema_name}
-                      </option>
-                    );
+                    return <option key={s.schema_name}>{s.schema_name}</option>;
                   }
                   return <option key={s.schema_name}>{s.schema_name}</option>;
                 })}
@@ -216,29 +229,129 @@ class Schema extends Component {
             </div>
           </div>
           <hr />
-          <div>
-            <div>
-              <h4
-                className={`${styles.subheading_text} ${
-                  styles.heading_tooltip
-                }`}
-              >
-                Untracked foreign-key relations
-              </h4>
-              <OverlayTrigger placement="right" overlay={untrackedRelTip}>
-                <i className="fa fa-info-circle" aria-hidden="true" />
-              </OverlayTrigger>
-              <div className={`${styles.padd_left_remove} col-xs-12`}>
-                <div>
-                  <AutoAddRelationsConnector
-                    untrackedRelations={untrackedRelations}
-                    schema={schema}
-                    dispatch={dispatch}
-                  />
-                </div>
+          <div className={styles.wd100 + ' ' + styles.clear_fix}>
+            <h4
+              className={`${styles.subheading_text} ${styles.heading_tooltip}`}
+            >
+              Untracked foreign-key relations
+            </h4>
+            <OverlayTrigger placement="right" overlay={untrackedRelTip}>
+              <i className="fa fa-info-circle" aria-hidden="true" />
+            </OverlayTrigger>
+            <div className={`${styles.padd_left_remove} col-xs-12`}>
+              <div>
+                <AutoAddRelationsConnector
+                  untrackedRelations={untrackedRelations}
+                  schema={schema}
+                  dispatch={dispatch}
+                />
               </div>
             </div>
           </div>
+
+          {trackableFuncs.length > 0
+            ? [
+              <hr
+                className={styles.wd100 + ' ' + styles.clear_fix}
+                key={'custom-functions-hr'}
+              />,
+              <div
+                className={styles.wd100 + ' ' + styles.clear_fix}
+                key={'custom-functions-content'}
+              >
+                <h4
+                  className={`${styles.subheading_text} ${
+                    styles.heading_tooltip
+                  }`}
+                >
+                    Untracked custom functions
+                </h4>
+                <OverlayTrigger
+                  placement="right"
+                  overlay={trackableFunctions}
+                >
+                  <i className="fa fa-info-circle" aria-hidden="true" />
+                </OverlayTrigger>
+                <div className={`${styles.padd_left_remove} col-xs-12`}>
+                  {trackableFuncs.map((p, i) => (
+                    <div
+                      className={styles.padd_bottom}
+                      key={`${i}untracked-function`}
+                    >
+                      <div
+                        className={`${styles.display_inline} ${
+                          styles.padd_right
+                        }`}
+                      >
+                        <button
+                          data-test={`add-track-function-${p.function_name}`}
+                          className={`${
+                            styles.display_inline
+                          } btn btn-xs btn-default`}
+                          onClick={e => {
+                            e.preventDefault();
+                            dispatch(addExistingFunction(p.function_name));
+                          }}
+                        >
+                            Add
+                        </button>
+                      </div>
+                      <div
+                        className={`${styles.padd_right} ${
+                          styles.inline_block
+                        }`}
+                      >
+                        {p.function_name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>,
+            ]
+            : null}
+
+          {nonTrackableFunctionsList.length > 0
+            ? [
+              <hr
+                className={styles.wd100 + ' ' + styles.clear_fix}
+                key={'non-trackable-custom-functions-id'}
+              />,
+              <div
+                className={styles.wd100 + ' ' + styles.clear_fix}
+                key={'non-trackable-custom-functions-content'}
+              >
+                <h4
+                  className={`${styles.subheading_text} ${
+                    styles.heading_tooltip
+                  }`}
+                >
+                    Non trackable custom functions
+                </h4>
+                <OverlayTrigger
+                  placement="right"
+                  overlay={nonTrackableFunctions}
+                >
+                  <i className="fa fa-info-circle" aria-hidden="true" />
+                </OverlayTrigger>
+                <div className={`${styles.padd_left_remove} col-xs-12`}>
+                  {nonTrackableFunctionsList.map((p, i) => (
+                    <div
+                      className={styles.padd_bottom}
+                      key={`${i}untracked-function`}
+                    >
+                      <div
+                        className={`${styles.padd_right} ${
+                          styles.inline_block
+                        }`}
+                      >
+                        {p.function_name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>,
+            ]
+            : null}
         </div>
       </div>
     );
@@ -261,6 +374,9 @@ const mapStateToProps = state => ({
   migrationMode: state.main.migrationMode,
   untrackedRelations: state.tables.untrackedRelations,
   currentSchema: state.tables.currentSchema,
+  functionsList: [...state.tables.postgresFunctions],
+  nonTrackableFunctionsList: [...state.tables.nonTrackablePostgresFunctions],
+  trackedFunctions: [...state.tables.trackedFunctions],
 });
 
 const schemaConnector = connect => connect(mapStateToProps)(Schema);
