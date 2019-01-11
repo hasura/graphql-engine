@@ -22,12 +22,12 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Language.Haskell.TH.Syntax     (Lift)
 
-import qualified Data.HashMap.Strict           as M
-import qualified Data.HashSet                  as HS
-import qualified Data.List                     as L
-import qualified Data.Text                     as T
+import qualified Data.HashMap.Strict            as M
+import qualified Data.HashSet                   as HS
+import qualified Data.List                      as L
+import qualified Data.Text                      as T
 
 import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
@@ -35,15 +35,16 @@ import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query             as Q
-import qualified Hasura.RQL.DDL.Permission     as DP
-import qualified Hasura.RQL.DDL.QueryTemplate  as DQ
-import qualified Hasura.RQL.DDL.Relationship   as DR
-import qualified Hasura.RQL.DDL.RemoteSchema   as DRS
-import qualified Hasura.RQL.DDL.Schema.Table   as DT
-import qualified Hasura.RQL.DDL.Subscribe      as DS
-import qualified Hasura.RQL.Types.RemoteSchema as TRS
-import qualified Hasura.RQL.Types.Subscribe    as DTS
+import qualified Database.PG.Query              as Q
+import qualified Hasura.RQL.DDL.Permission      as DP
+import qualified Hasura.RQL.DDL.QueryTemplate   as DQ
+import qualified Hasura.RQL.DDL.Relationship    as DR
+import qualified Hasura.RQL.DDL.RemoteSchema    as DRS
+import qualified Hasura.RQL.DDL.Schema.Function as DF
+import qualified Hasura.RQL.DDL.Schema.Table    as DT
+import qualified Hasura.RQL.DDL.Subscribe       as DS
+import qualified Hasura.RQL.Types.RemoteSchema  as TRS
+import qualified Hasura.RQL.Types.Subscribe     as DTS
 
 data TableMeta
   = TableMeta
@@ -113,6 +114,7 @@ instance FromJSON ClearMetadata where
 clearMetadata :: Q.TxE QErr ()
 clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_template WHERE is_system_defined <> 'true'" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_function WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
@@ -134,6 +136,7 @@ data ReplaceMetadata
   = ReplaceMetadata
   { aqTables         :: ![TableMeta]
   , aqQueryTemplates :: ![DQ.CreateQueryTemplate]
+  , aqFunctions      :: ![QualifiedFunction]
   , aqRemoteSchemas  :: !(Maybe [TRS.AddRemoteSchemaQuery])
   } deriving (Show, Eq, Lift)
 
@@ -142,7 +145,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 applyQP1
   :: (QErrM m, UserInfoM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata tables templates mSchemas) = do
+applyQP1 (ReplaceMetadata tables templates functions mSchemas) = do
 
   adminOnly
 
@@ -171,6 +174,9 @@ applyQP1 (ReplaceMetadata tables templates mSchemas) = do
   withPathK "queryTemplates" $
     checkMultipleDecls "query templates" $ map DQ.cqtName templates
 
+  withPathK "functions" $
+    checkMultipleDecls "functions" functions
+
   onJust mSchemas $ \schemas ->
       withPathK "remote_schemas" $
         checkMultipleDecls "remote schemas" $ map TRS._arsqName schemas
@@ -196,7 +202,7 @@ applyQP2
      )
   => ReplaceMetadata
   -> m RespBody
-applyQP2 (ReplaceMetadata tables templates mSchemas) = do
+applyQP2 (ReplaceMetadata tables templates functions mSchemas) = do
 
   liftTx clearMetadata
   DT.buildSchemaCache
@@ -240,6 +246,10 @@ applyQP2 (ReplaceMetadata tables templates mSchemas) = do
       qti <- DQ.createQueryTemplateP1 template
       void $ DQ.createQueryTemplateP2 template qti
 
+  -- sql functions
+  withPathK "functions" $
+    indexedMapM_ (void . DF.trackFunctionP2) functions
+
   -- remote schemas
   onJust mSchemas $ \schemas ->
     withPathK "remote_schemas" $
@@ -273,7 +283,6 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 fetchMetadata :: Q.TxE QErr ReplaceMetadata
 fetchMetadata = do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
-
   let qts          = map (uncurry QualifiedTable) tables
       tableMetaMap = M.fromList $ zip qts $ map mkTableMeta qts
 
@@ -312,10 +321,15 @@ fetchMetadata = do
         modMetaMap tmDeletePermissions delPermDefs
         modMetaMap tmEventTriggers triggerMetaDefs
 
+  -- fetch all functions
+  functions <- map (uncurry QualifiedFunction) <$>
+    Q.catchE defaultTxErrorHandler fetchFunctions
+
   -- fetch all custom resolvers
   schemas <- DRS.fetchRemoteSchemas
 
-  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs (Just schemas)
+  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs
+                            functions (Just schemas)
 
   where
 
@@ -372,6 +386,12 @@ fetchMetadata = do
               SELECT e.schema_name, e.table_name, e.configuration::json
                FROM hdb_catalog.event_triggers e
               |] () False
+    fetchFunctions =
+      Q.listQ [Q.sql|
+                SELECT function_schema, function_name
+                FROM hdb_catalog.hdb_function
+                WHERE is_system_defined = 'false'
+                    |] () False
 
 runExportMetadata
   :: (QErrM m, UserInfoM m, MonadTx m)
