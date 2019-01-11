@@ -88,15 +88,9 @@ $$ language sql stable;
       isUntracking,
     } = this.props.functions;
 
-    console.log('prefixUrl');
-    console.log(prefixUrl);
-
     const { migrationMode } = this.props;
 
     const baseUrl = `${appPrefix}/schema/${schema}/functions/${functionName}`;
-
-    console.log('BaseUrl');
-    console.log(baseUrl);
 
     const generateMigrateBtns = () => {
       return (

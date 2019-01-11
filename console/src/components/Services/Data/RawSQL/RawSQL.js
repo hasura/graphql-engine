@@ -17,6 +17,7 @@ import {
 } from './Actions';
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
+import semverCheck from '../../../../helpers/semver';
 
 const cascadeTip = (
   <Tooltip id="tooltip-cascade">
@@ -57,6 +58,7 @@ const RawSQL = ({
   isMigrationChecked,
   isTableTrackChecked,
   migrationMode,
+  serverVersion,
 }) => {
   const styles = require('../TableCommon/Table.scss');
 
@@ -169,7 +171,10 @@ const RawSQL = ({
       </div>
     );
   })();
-  const functionText = true ? 'Function' : '';
+  const functionText = semverCheck('customFunctionSection', serverVersion)
+    ? 'Function'
+    : '';
+  const placeholderText = functionText ? 'this' : 'table';
   return (
     <div
       className={`${styles.main_wrapper} ${styles.padd_left} ${
@@ -195,9 +200,9 @@ const RawSQL = ({
               </li>
               <li>
                 If you plan to create a Table/View
-                {'/' + functionText} using Raw SQL, remember to link it to
-                Hasura DB by checking the <code>Track this</code> checkbox
-                below.
+                {functionText ? '/' + functionText : ''} using Raw SQL, remember
+                to link it to Hasura DB by checking the{' '}
+                <code>Track {placeholderText}</code> checkbox below.
               </li>
               <li>
                 Please note that if the migrations are enabled,{' '}
@@ -241,7 +246,13 @@ const RawSQL = ({
                 dispatch({ type: SET_MIGRATION_CHECKED, data: false });
               }
               // set track table checkbox true
-              const regExp = /create\s*(?:|or\s*replace)\s*(?:view|table|function)/; // eslint-disable-line
+              let regExp;
+              if (functionText) {
+                regExp = /create\s*(?:|or\s*replace)\s*(?:view|table|function)/; // eslint-disable-line
+              } else {
+                regExp = /create\s*(?:|or\s*replace)\s*(?:view|table)/; // eslint-disable-line
+              }
+              // const regExp = /create\s*(?:|or\s*replace)\s*(?:view|table|function)/; // eslint-disable-line
               const matches = formattedSql.match(new RegExp(regExp, 'gmi'));
               if (matches) {
                 dispatch({ type: SET_TRACK_TABLE_CHECKED, data: true });
@@ -286,7 +297,7 @@ const RawSQL = ({
               }}
               data-test="raw-sql-track-check"
             />
-            Track this
+            Track {placeholderText}
             <OverlayTrigger placement="right" overlay={trackTableTip}>
               <i
                 className={`${styles.padd_small_left} fa fa-info-circle`}
@@ -406,6 +417,7 @@ const mapStateToProps = state => ({
   ...state.rawSQL,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
+  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
 });
 
 const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);

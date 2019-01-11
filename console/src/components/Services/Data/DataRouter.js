@@ -29,6 +29,7 @@ import {
 
 import {
   fetchDataInit,
+  fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
   // UPDATE_DATA_HEADERS,
   // ACCESS_KEY_ERROR,
@@ -156,6 +157,7 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
         currentSchema: currentSchema,
       }),
       store.dispatch(fetchDataInit()),
+      store.dispatch(fetchFunctionInit()),
     ]).then(
       () => {
         cb();

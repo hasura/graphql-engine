@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 import globals from '../../../../Globals';
 
 import { LISTING_SCHEMA, UPDATE_TRACKED_FUNCTIONS } from '../DataActions';
+import semverCheck from '../../../../helpers/semver';
 
 const appPrefix = '/data';
 
@@ -21,10 +22,15 @@ const PageContainer = ({
   dispatch,
   location,
   currentFunction,
+  serverVersion,
 }) => {
   const styles = require('./PageContainer.scss');
   const functionSymbol = require('./function.svg');
   const functionSymbolActive = require('./function_high.svg');
+
+  const handleFunc = semverCheck('customFunctionSection', serverVersion)
+    ? true
+    : false;
   // Now schema might be null or an empty array
   let tableLinks = [
     <li className={styles.noTables} key="no-tables-1">
@@ -178,7 +184,7 @@ const PageContainer = ({
             type="text"
             onChange={tableSearch.bind(this)}
             className="form-control"
-            placeholder="search table/view/function"
+            placeholder={`search table/view${handleFunc ? '/function' : ''}`}
             data-test="search-tables"
           />
         </div>
@@ -236,6 +242,7 @@ const mapStateToProps = state => {
     functionsList: state.tables.trackedFunctions,
     listedFunctions: state.tables.listedFunctions,
     currentFunction: state.functions.functionName,
+    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   };
 };
 
