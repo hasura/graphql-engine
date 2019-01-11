@@ -18,7 +18,8 @@ track_function
 --------------
 
 ``track_function`` is used to add a custom SQL function.
-Refer :doc:`here <../../queries/custom-functions>` to learn more about limitations for a function that Hasura supports.
+
+Refer :ref:`this <supported_sql_functions>` for constraints on supported functions.
 
 Add a SQL function ``search_articles``:
 
