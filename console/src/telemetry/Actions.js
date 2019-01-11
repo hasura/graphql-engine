@@ -6,6 +6,7 @@ import defaultTelemetryState from './State';
 const SET_MISC_OPTS = 'Telemetry/SET_MISC_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
 const SET_HASURA_UUID = 'Telemetry/SET_HASURA_UUID';
+const SET_TELEMETRY_DISABLED = 'Telemetr/SET_TELEMETRY_DISABLED';
 
 const telemetryNotificationShown = () => dispatch => {
   dispatch({ type: SET_NOTIFICATION_SHOWN });
@@ -40,42 +41,47 @@ const setNotificationShownInDB = () => (dispatch, getState) => {
   );
 };
 
-const loadMiscOpts = () => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'hdb_version',
-          schema: 'hdb_catalog',
-        },
-        columns: ['hasura_uuid', 'misc_state'],
-      },
-    }),
-  };
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      if (data.length !== 0) {
-        dispatch({
-          type: SET_HASURA_UUID,
-          data: data[0].hasura_uuid,
-        });
-        dispatch({
-          type: SET_MISC_OPTS,
-          data: data[0].misc_state,
-        });
-      }
-    },
-    error => {
-      console.error(
-        'Failed to load telemetry misc options' + JSON.stringify(error)
-      );
+const loadMiscOpts = () => {
+  return (dispatch, getState) => {
+    if (window.__env.enableTelemetry === undefined) {
+      return { type: SET_TELEMETRY_DISABLED };
     }
-  );
+    const url = Endpoints.getSchema;
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify({
+        type: 'select',
+        args: {
+          table: {
+            name: 'hdb_version',
+            schema: 'hdb_catalog',
+          },
+          columns: ['hasura_uuid', 'misc_state'],
+        },
+      }),
+    };
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        if (data.length !== 0) {
+          dispatch({
+            type: SET_HASURA_UUID,
+            data: data[0].hasura_uuid,
+          });
+          dispatch({
+            type: SET_MISC_OPTS,
+            data: data[0].misc_state,
+          });
+        }
+      },
+      error => {
+        console.error(
+          'Failed to load telemetry misc options' + JSON.stringify(error)
+        );
+      }
+    );
+  };
 };
 
 const telemetryReducer = (state = defaultTelemetryState, action) => {

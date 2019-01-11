@@ -24,7 +24,7 @@ import { filterEventsBlockList, sanitiseUrl } from './telemetryFilter';
 
 const analyticsUrl = Endpoints.telemetryServer;
 let analyticsConnection;
-const { consoleMode, enableTelemetry, uuid } = window.__env;
+const { consoleMode, enableTelemetry, cliUUID } = window.__env;
 const telemetryEnabled =
   enableTelemetry !== undefined && enableTelemetry === true;
 if (telemetryEnabled) {
@@ -62,8 +62,8 @@ function analyticsLogger({ getState }) {
         server_version: serverVersion,
         event_type: actionType,
         url,
-        served_by: consoleMode,
-        uuid,
+        console_mode: consoleMode,
+        server_uuid: cliUUID || getState().telemetry.hasura_uuid,
       };
 
       let isLocationType = false;
