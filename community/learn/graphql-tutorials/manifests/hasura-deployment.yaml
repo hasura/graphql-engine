@@ -26,6 +26,8 @@ spec:
           value: postgres://postgres:@postgres.default:5432/postgres
         - name: HASURA_GRAPHQL_ENABLE_CONSOLE
           value: "true"
+        - name: HASURA_GRAPHQL_ACCESS_KEY
+          value: "veryverysecret"
         ports:
         - containerPort: 8080
           protocol: TCP
