@@ -276,6 +276,18 @@ mkColCompExp qual lhsCol = \case
   AHasKey val      -> S.BECompare S.SHasKey lhs val
   AHasKeysAny keys -> S.BECompare S.SHasKeysAny lhs $ toTextArray keys
   AHasKeysAll keys -> S.BECompare S.SHasKeysAll lhs $ toTextArray keys
+
+  ASTContains val   -> mkGeomOpBe "ST_Contains" val
+  ASTContainsIn val -> S.BEFunc "ST_Contains" [val, lhs]
+  ASTCrosses val    -> mkGeomOpBe "ST_Crosses" val
+  ASTDisjoint val   -> mkGeomOpBe "ST_Disjoint" val
+  ASTDWithin r val  -> S.BEFunc "ST_DWithin" [lhs, val, r]
+  ASTEquals val     -> mkGeomOpBe "ST_Equals" val
+  ASTIntersects val -> mkGeomOpBe "ST_Intersects" val
+  ASTOverlaps val   -> mkGeomOpBe "ST_Overlaps" val
+  ASTTouches val    -> mkGeomOpBe "ST_Touches" val
+  ASTWithin val     -> mkGeomOpBe "ST_Within" val
+
   ANISNULL         -> S.BENull lhs
   ANISNOTNULL      -> S.BENotNull lhs
   CEQ rhsCol       -> S.BECompare S.SEQ lhs $ mkQCol rhsCol
@@ -290,6 +302,8 @@ mkColCompExp qual lhsCol = \case
 
     toTextArray arr =
       S.SETyAnn (S.SEArray $ map (txtEncoder . PGValText) arr) S.textArrType
+
+    mkGeomOpBe fn v = S.BEFunc fn [lhs, v]
 
     handleEmptyIn []   = S.BELit False
     handleEmptyIn vals = S.BEIN lhs vals

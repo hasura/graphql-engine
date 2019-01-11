@@ -460,6 +460,7 @@ data BoolExp
   | BENotNull !SQLExp
   | BEExists !Select
   | BEIN !SQLExp ![SQLExp]
+  | BEFunc !T.Text ![SQLExp]
   deriving (Show, Eq)
 
 -- removes extraneous 'AND true's
@@ -507,6 +508,9 @@ instance ToSQL BoolExp where
   -- special case to handle lhs IN (exp1, exp2)
   toSQL (BEIN vl exps) =
     paren (toSQL vl) <-> toSQL SIN <-> paren (", " <+> exps)
+  -- SQL functions which returns boolean
+  toSQL (BEFunc fn exps) =
+    TB.text fn <> paren (", " <+> exps)
 
 data BinOp = AndOp
            | OrOp

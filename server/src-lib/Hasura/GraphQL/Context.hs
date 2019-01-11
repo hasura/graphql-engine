@@ -161,6 +161,9 @@ mkCompExpTy :: PGColType -> G.NamedType
 mkCompExpTy =
   G.NamedType . mkCompExpName
 
+stDWithinTy :: G.NamedType
+stDWithinTy = G.NamedType "st_d_within_val"
+
 --- | make compare expression input type
 mkCompExpInp :: PGColType -> InpObjTyInfo
 mkCompExpInp colTy =
@@ -169,6 +172,7 @@ mkCompExpInp colTy =
   , map (mk $ G.toLT colScalarTy) listOps
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
+  , bool [] (stDWithinOpInpVal : map geomOpToInpVal geomOps) isGeometryTy
   , [InpValInfo Nothing "_is_null" $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
   ]) HasuraType
   where
@@ -195,6 +199,7 @@ mkCompExpInp colTy =
       [ "_like", "_nlike", "_ilike", "_nilike"
       , "_similar", "_nsimilar"
       ]
+
     isJsonbTy = case colTy of
       PGJSONB -> True
       _       -> False
@@ -219,6 +224,50 @@ mkCompExpInp colTy =
       , ( "_has_keys_all"
         , G.toGT $ G.toLT $ G.toNT $ mkScalarTy PGText
         , "do all of these strings exist as top-level keys in the column"
+        )
+      ]
+
+    -- Geometry related ops
+    stDWithinOpInpVal =
+      InpValInfo (Just stDWithinDesc) "st_d_within" $ G.toGT stDWithinTy
+    stDWithinDesc =
+      "is the column within in the given distance from given geometry value"
+
+    isGeometryTy = case colTy of
+      PGGeometry -> True
+      _          -> False
+
+    geomOpToInpVal (op, desc) =
+      InpValInfo (Just desc) op $ G.toGT $ mkScalarTy PGGeometry
+    geomOps =
+      [
+        ( "st_contains"
+        , "does the column contain given geometry value"
+        )
+      ,
+        ( "st_contains_in"
+        , "is the column contained in given geometry value"
+        )
+      , ( "st_crosses"
+        , "does the column crosses given geometry value"
+        )
+      , ( "st_disjoint"
+        , "does the column don't spatially intersect the given geometry value"
+        )
+      , ( "st_equals"
+        , "is the column equal to given geometry value. Directionality is ignored"
+        )
+      , ( "st_intersects"
+        , "does the column spatially intersect the given geometry value"
+        )
+      , ( "st_overlaps"
+        , "does the column overlaps given geometry value"
+        )
+      , ( "st_touches"
+        , "does the column have atleast one point in common with given geometry value"
+        )
+      , ( "st_within"
+        , "does the column completely inside given geometry value"
         )
       ]
 
@@ -263,8 +312,6 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
   let queryRoot = mkHsraObjTyInfo (Just "query root")
                   (G.NamedType "query_root") $
                   mapFromL _fiName (schemaFld:typeFld:qFlds)
-      colTys    = Set.toList $ Set.fromList $ map pgiType $
-                  lefts $ Map.elems fldInfos
       scalarTys = map (TIScalar . mkHsraScalarTyInfo) colTys
       compTys   = map (TIInpObj . mkCompExpInp) colTys
       ordByEnumTyM = bool (Just ordByEnumTy) Nothing $ null qFlds
@@ -273,12 +320,15 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
                             , TIObj <$> mutRootM
                             , TIObj <$> subRootM
                             , TIEnum <$> ordByEnumTyM
+                            , TIInpObj <$> stDWithinInpM
                             ] <>
                   scalarTys <> compTys <> defaultTypes
   -- for now subscription root is query root
   in GCtx allTys fldInfos ordByEnums queryRoot mutRootM subRootM
      (Map.map fst flds) insCtxMap
   where
+    colTys    = Set.toList $ Set.fromList $ map pgiType $
+                  lefts $ Map.elems fldInfos
     mkMutRoot =
       mkHsraObjTyInfo (Just "mutation root") (G.NamedType "mutation_root") .
       mapFromL _fiName
@@ -297,6 +347,13 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
           InpValInfo (Just "name of the type") "name"
           $ G.toGT $ G.toNT $ G.NamedType "String"
           ]
+
+    stDWithinInpM = bool Nothing (Just stDWithinInp) (PGGeometry `elem` colTys)
+    stDWithinInp =
+      mkHsraInpTyInfo Nothing stDWithinTy $ fromInpValL
+      [ InpValInfo Nothing "from" $ G.toGT $ mkScalarTy PGGeometry
+      , InpValInfo Nothing "distance" $ G.toNT $ G.toNT $ mkScalarTy PGDouble
+      ]
 
 emptyGCtx :: GCtx
 emptyGCtx = mkGCtx mempty mempty mempty
