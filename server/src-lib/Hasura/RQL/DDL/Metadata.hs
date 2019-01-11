@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes #-}
 module Hasura.RQL.DDL.Metadata
   ( TableMeta
 
@@ -136,7 +137,7 @@ data ReplaceMetadata
   = ReplaceMetadata
   { aqTables         :: ![TableMeta]
   , aqQueryTemplates :: ![DQ.CreateQueryTemplate]
-  , aqFunctions      :: ![QualifiedFunction]
+  , aqFunctions      :: !(Maybe [QualifiedFunction])
   , aqRemoteSchemas  :: !(Maybe [TRS.AddRemoteSchemaQuery])
   } deriving (Show, Eq, Lift)
 
@@ -145,7 +146,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 applyQP1
   :: (QErrM m, UserInfoM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata tables templates functions mSchemas) = do
+applyQP1 (ReplaceMetadata tables templates mFunctions mSchemas) = do
 
   adminOnly
 
@@ -183,6 +184,7 @@ applyQP1 (ReplaceMetadata tables templates functions mSchemas) = do
 
   where
     withTableName qt = withPathK (qualTableToTxt qt)
+    functions = fromMaybe [] mFunctions
 
     checkMultipleDecls t l = do
       let dups = getDups l
@@ -202,7 +204,7 @@ applyQP2
      )
   => ReplaceMetadata
   -> m RespBody
-applyQP2 (ReplaceMetadata tables templates functions mSchemas) = do
+applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
 
   liftTx clearMetadata
   DT.buildSchemaCache
@@ -259,6 +261,7 @@ applyQP2 (ReplaceMetadata tables templates functions mSchemas) = do
   return successMsg
 
   where
+    functions = fromMaybe [] mFunctions
     processPerms tabInfo perms =
       indexedForM_ perms $ \permDef -> do
         permInfo <- DP.addPermP1 tabInfo permDef
@@ -329,7 +332,7 @@ fetchMetadata = do
   schemas <- DRS.fetchRemoteSchemas
 
   return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs
-                            functions (Just schemas)
+                            (Just functions) (Just schemas)
 
   where
 
