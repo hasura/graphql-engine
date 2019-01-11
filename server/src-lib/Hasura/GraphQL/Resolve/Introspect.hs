@@ -8,6 +8,7 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                        as J
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashSet                      as Set
 import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
 
@@ -81,7 +82,7 @@ objectTypeR (ObjTyInfo descM n iFaces flds) fld =
     "kind"        -> retJ TKOBJECT
     "name"        -> retJ $ namedTyToTxt n
     "description" -> retJ $ fmap G.unDescription descM
-    "interfaces"  -> fmap J.toJSON $ mapM (`ifaceR` subFld) iFaces
+    "interfaces"  -> fmap J.toJSON $ mapM (`ifaceR` subFld) $ Set.toList iFaces
     "fields"      -> fmap J.toJSON $ mapM (`fieldR` subFld) $
                     sortBy (comparing _fiName) $
                     filter notBuiltinFld $ Map.elems flds

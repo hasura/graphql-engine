@@ -6,6 +6,7 @@ module Hasura.GraphQL.Validate.Types
   , ObjTyInfo(..)
   , mkObjTyInfo
   , IFaceTyInfo(..)
+  , IFacesSet
   , FragDef(..)
   , FragDefMap
   , AnnVarVals
@@ -49,6 +50,7 @@ import           Instances.TH.Lift             ()
 import qualified Data.Aeson                    as J
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashMap.Strict.InsOrd    as OMap
+import qualified Data.HashSet                  as Set
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.GraphQL.Draft.TH     as G
@@ -147,30 +149,32 @@ fromFldDef (G.FieldDefinition descM n args ty _) loc =
 
 type ObjFieldMap = Map.HashMap G.Name ObjFldInfo
 
+type IFacesSet = Set.HashSet G.NamedType
+
 data ObjTyInfo
   = ObjTyInfo
   { _otiDesc       :: !(Maybe G.Description)
   , _otiName       :: !G.NamedType
-  , _otiImplIFaces :: [G.NamedType]
+  , _otiImplIFaces :: !IFacesSet
   , _otiFields     :: !ObjFieldMap
   } deriving (Show, Eq, TH.Lift)
 
 instance EquatableGType ObjTyInfo where
   type EqProps ObjTyInfo =
-    (G.NamedType, Map.HashMap G.Name (G.Name, G.GType, ParamMap))
-  getEqProps a = (,) (_otiName a) (Map.map getEqProps (_otiFields a))
+    (G.NamedType, Set.HashSet G.NamedType,  Map.HashMap G.Name (G.Name, G.GType, ParamMap))
+  getEqProps a = (,,) (_otiName a) (_otiImplIFaces a) (Map.map getEqProps (_otiFields a))
 
 instance Monoid ObjTyInfo where
-  mempty = ObjTyInfo Nothing (G.NamedType "") [] Map.empty
+  mempty = ObjTyInfo Nothing (G.NamedType "") Set.empty Map.empty
 
 instance Semigroup ObjTyInfo where
   objA <> objB =
     objA { _otiFields = Map.union (_otiFields objA) (_otiFields objB)
-         , _otiImplIFaces = _otiImplIFaces objA ++ _otiImplIFaces objB
+         , _otiImplIFaces = _otiImplIFaces objA `Set.union` _otiImplIFaces objB
          }
 
 mkObjTyInfo
-  :: Maybe G.Description -> G.NamedType -> [G.NamedType] -> ObjFieldMap -> TypeLoc -> ObjTyInfo
+  :: Maybe G.Description -> G.NamedType -> IFacesSet -> ObjFieldMap -> TypeLoc -> ObjTyInfo
 mkObjTyInfo descM ty iFaces flds loc =
   ObjTyInfo descM ty iFaces $ Map.insert (_fiName newFld) newFld flds
   where newFld = typenameFld loc
@@ -189,7 +193,7 @@ typenameFld loc =
 
 fromObjTyDef :: G.ObjectTypeDefinition -> TypeLoc -> ObjTyInfo
 fromObjTyDef (G.ObjectTypeDefinition descM n ifaces _ flds) loc =
-  mkObjTyInfo descM (G.NamedType n) ifaces fldMap loc
+  mkObjTyInfo descM (G.NamedType n) (Set.fromList ifaces) fldMap loc
   where
     fldMap = Map.fromList [(G._fldName fld, fromFldDef fld loc) | fld <- flds]
 

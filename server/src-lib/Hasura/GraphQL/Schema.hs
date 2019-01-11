@@ -408,7 +408,7 @@ mkTableObj
   -> [SelField]
   -> ObjTyInfo
 mkTableObj tn allowedFlds =
-  mkObjTyInfo (Just desc) (mkTableTy tn) [] (mapFromL _fiName flds) HasuraType
+  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) HasuraType
   where
     flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
@@ -424,7 +424,7 @@ type table_aggregate {
 mkTableAggObj
   :: QualifiedTable -> ObjTyInfo
 mkTableAggObj tn =
-  mkHsraObjTyInfo (Just desc) (mkTableAggTy tn) [] $ mapFromL _fiName
+  mkHsraObjTyInfo (Just desc) (mkTableAggTy tn) Set.empty $ mapFromL _fiName
   [aggFld, nodesFld]
   where
     desc = G.Description $
@@ -451,7 +451,7 @@ type table_aggregate_fields{
 mkTableAggFldsObj
   :: QualifiedTable -> [PGCol] -> [PGCol] -> ObjTyInfo
 mkTableAggFldsObj tn numCols compCols =
-  mkHsraObjTyInfo (Just desc) (mkTableAggFldsTy tn) [] $ mapFromL _fiName $
+  mkHsraObjTyInfo (Just desc) (mkTableAggFldsTy tn) Set.empty $ mapFromL _fiName $
   countFld : (numFlds <> compFlds)
   where
     desc = G.Description $
@@ -487,7 +487,7 @@ mkTableColAggFldsObj
   -> [PGColInfo]
   -> ObjTyInfo
 mkTableColAggFldsObj tn op f cols =
-  mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) [] $ mapFromL _fiName $
+  mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) Set.empty $ mapFromL _fiName $
   map mkColObjFld cols
   where
     desc = G.Description $ "aggregate " <> G.unName op <> " on columns"
@@ -574,7 +574,7 @@ mkMutRespObj
   -> Bool -- is sel perm defined
   -> ObjTyInfo
 mkMutRespObj tn sel =
-  mkHsraObjTyInfo (Just objDesc) (mkMutRespTy tn) [] $ mapFromL _fiName
+  mkHsraObjTyInfo (Just objDesc) (mkMutRespTy tn) Set.empty $ mapFromL _fiName
     $ affectedRowsFld : bool [] [returningFld] sel
   where
     objDesc = G.Description $

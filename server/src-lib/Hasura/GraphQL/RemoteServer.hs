@@ -11,6 +11,7 @@ import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashSet                  as Set
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -148,11 +149,11 @@ mergeMutRoot a b =
 
 mkNewEmptyMutRoot :: VT.ObjTyInfo
 mkNewEmptyMutRoot = VT.ObjTyInfo (Just "mutation root")
-                    (G.NamedType "mutation_root") [] Map.empty
+                    (G.NamedType "mutation_root") Set.empty Map.empty
 
 mkNewMutRoot :: VT.ObjFieldMap -> VT.ObjTyInfo
 mkNewMutRoot flds = VT.ObjTyInfo (Just "mutation root")
-                    (G.NamedType "mutation_root") [] flds
+                    (G.NamedType "mutation_root") Set.empty flds
 
 mergeSubRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
 mergeSubRoot a b =
@@ -169,7 +170,7 @@ mergeSubRoot a b =
 
 mkNewEmptySubRoot :: VT.ObjTyInfo
 mkNewEmptySubRoot = VT.ObjTyInfo (Just "subscription root")
-                    (G.NamedType "subscription_root") [] Map.empty
+                    (G.NamedType "subscription_root") Set.empty Map.empty
 
 
 mergeTyMaps
