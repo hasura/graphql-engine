@@ -176,6 +176,12 @@ class GraphiQLWrapper extends Component {
   render() {
     const styles = require('../Common/Common.scss');
     const { supportAnalyze, analyzeApiChange } = this.state;
+    const noTableQuery =
+      '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n';
+    const checkTables =
+      this.props.numberOfTables === 0 && this.state.queries !== null
+        ? this.state.queries
+        : noTableQuery;
     const graphQLFetcher = graphQLParams => {
       if (this.state.headerFocus) {
         return null;
@@ -197,24 +203,6 @@ class GraphiQLWrapper extends Component {
     let content = (
       <i className={'fa fa-spinner fa-spin ' + styles.graphSpinner} />
     );
-
-    if (
-      !this.state.error &&
-      this.props.numberOfTables === 0 &&
-      this.state.queries
-    ) {
-      content = (
-        <GraphiQL
-          fetcher={graphQLFetcher}
-          analyzeFetcher={analyzeFetcherInstance}
-          supportAnalyze={supportAnalyze}
-          query={this.state.queries}
-          variables={this.state.variables}
-          onEditQuery={this.onEditQuery}
-          onEditVariables={this.onEditVariables}
-        />
-      );
-    }
 
     if (!this.state.error && this.props.numberOfTables !== 0) {
       if (this.state.queries) {
@@ -246,9 +234,7 @@ class GraphiQLWrapper extends Component {
           fetcher={graphQLFetcher}
           supportAnalyze={supportAnalyze}
           analyzeFetcher={analyzeFetcherInstance}
-          query={
-            '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n'
-          }
+          query={checkTables}
           schema={undefined}
           onEditQuery={this.onEditQuery}
           onEditVariables={this.onEditVariables}
