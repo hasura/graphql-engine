@@ -1,7 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router';
 
-const Tabs = ({ appPrefix, tabsInfo, tabName, count, baseUrl, showLoader }) => {
+const Tabs = ({
+  appPrefix,
+  tabsInfo,
+  tabName,
+  count,
+  baseUrl,
+  showLoader,
+  testPrefix,
+}) => {
   let showCount = '';
   if (!(count === null || count === undefined)) {
     showCount = '(' + count + ')';
@@ -25,7 +33,9 @@ const Tabs = ({ appPrefix, tabsInfo, tabName, count, baseUrl, showLoader }) => {
           >
             <Link
               to={`${baseUrl}/${t}`}
-              data-test={`${appPrefix.slice(1)}-${t}`}
+              data-test={`${
+                testPrefix ? testPrefix + '-' : ''
+              }${appPrefix.slice(1)}-${t}`}
             >
               {tabsInfo[t].display_text} {tabName === t ? showCount : null}
               {tabName === t && showLoader ? dataLoader() : null}

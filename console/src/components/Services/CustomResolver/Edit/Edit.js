@@ -109,7 +109,9 @@ class Edit extends React.Component {
             Modify
           </button>
           <button
-            className={styles.danger_button + ' btn-danger'}
+            className={
+              styles.red_button + ' ' + styles.danger_button + ' btn-danger'
+            }
             onClick={e => {
               e.preventDefault();
               this.handleDeleteResolver(e);

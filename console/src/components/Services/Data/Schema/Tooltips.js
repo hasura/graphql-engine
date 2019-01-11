@@ -34,7 +34,9 @@ export const quickDefaultReadOnly = (
 );
 
 export const trackableFunctions = (
-  <Tooltip id="tooltip-permission-read">WIP</Tooltip>
+  <Tooltip id="tooltip-permission-read">
+    Track supported functions to query them with GraphQL
+  </Tooltip>
 );
 
 export const nonTrackableFunctions = (

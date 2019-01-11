@@ -196,7 +196,7 @@ const RawSQL = ({
               <li>
                 If you plan to create a Table/View
                 {'/' + functionText} using Raw SQL, remember to link it to
-                Hasura DB by checking the <code>Track table</code> checkbox
+                Hasura DB by checking the <code>Track this</code> checkbox
                 below.
               </li>
               <li>
@@ -286,7 +286,7 @@ const RawSQL = ({
               }}
               data-test="raw-sql-track-check"
             />
-            Track table
+            Track this
             <OverlayTrigger placement="right" overlay={trackTableTip}>
               <i
                 className={`${styles.padd_small_left} fa fa-info-circle`}

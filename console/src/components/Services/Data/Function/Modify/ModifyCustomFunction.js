@@ -5,8 +5,8 @@ import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 import CommonTabLayout from '../../../Layout/CommonTabLayout/CommonTabLayout';
 
-import _push, { appPrefix } from '../../push';
-import { pageTitle } from './constants';
+import _push from '../../push';
+import { pageTitle, appPrefix } from './constants';
 
 import tabInfo from './tabInfo';
 import globals from '../../../../../Globals';
@@ -88,9 +88,15 @@ $$ language sql stable;
       isUntracking,
     } = this.props.functions;
 
+    console.log('prefixUrl');
+    console.log(prefixUrl);
+
     const { migrationMode } = this.props;
 
-    const baseUrl = `/${appPrefix}/schema/${schema}/functions/${functionName}`;
+    const baseUrl = `${appPrefix}/schema/${schema}/functions/${functionName}`;
+
+    console.log('BaseUrl');
+    console.log(baseUrl);
 
     const generateMigrateBtns = () => {
       return (
@@ -125,6 +131,8 @@ $$ language sql stable;
               ' ' +
               styles.red_button +
               ' ' +
+              styles.no_mr_right +
+              ' ' +
               'btn-danger'
             }
             onClick={e => {
@@ -150,22 +158,22 @@ $$ language sql stable;
     const breadCrumbs = [
       {
         title: 'Data',
-        url: '/' + appPrefix,
+        url: appPrefix,
       },
       {
         title: 'Schema',
-        url: '/' + appPrefix + '/schema',
+        url: appPrefix + '/schema',
       },
       {
         title: schema,
-        url: '/' + appPrefix + '/schema/' + schema,
+        url: appPrefix + '/schema/' + schema,
       },
     ];
 
     if (functionName) {
       breadCrumbs.push({
         title: functionName,
-        url: '/' + appPrefix + '/schema/' + schema + '/' + functionName,
+        url: appPrefix + '/schema/' + schema + '/functions/' + functionName,
       });
       breadCrumbs.push({
         title: 'Modify',
@@ -185,6 +193,7 @@ $$ language sql stable;
           breadCrumbs={breadCrumbs}
           baseUrl={baseUrl}
           showLoader={false}
+          testPrefix={'functions'}
         />
         <br />
         <h4>Function Definition:</h4>

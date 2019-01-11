@@ -5,8 +5,7 @@ import CommonTabLayout from '../../../Layout/CommonTabLayout/CommonTabLayout';
 import { Link } from 'react-router';
 import { push } from 'react-router-redux';
 
-import { appPrefix } from '../../push';
-import { pageTitle } from '../Modify/constants';
+import { pageTitle, appPrefix } from '../Modify/constants';
 
 import tabInfo from '../Modify/tabInfo';
 import globals from '../../../../../Globals';
@@ -30,28 +29,28 @@ class Permission extends React.Component {
       functionName,
       setOffTable,
     } = this.props.functions;
-    const baseUrl = `/${appPrefix}/schema/${schema}/functions/${functionName}`;
-    const permissionTableUrl = `/${appPrefix}/schema/${schema}/tables/${setOffTable}/permissions`;
+    const baseUrl = `${appPrefix}/schema/${schema}/functions/${functionName}`;
+    const permissionTableUrl = `${appPrefix}/schema/${schema}/tables/${setOffTable}/permissions`;
 
     const breadCrumbs = [
       {
         title: 'Data',
-        url: '/' + appPrefix,
+        url: appPrefix,
       },
       {
         title: 'Schema',
-        url: '/' + appPrefix + '/schema',
+        url: appPrefix + '/schema',
       },
       {
         title: schema,
-        url: '/' + appPrefix + '/schema/' + schema,
+        url: appPrefix + '/schema/' + schema,
       },
     ];
 
     if (functionName) {
       breadCrumbs.push({
         title: functionName,
-        url: '/' + appPrefix + '/schema/' + schema + '/' + functionName,
+        url: appPrefix + '/schema/' + schema + '/functions/' + functionName,
       });
       breadCrumbs.push({
         title: 'Permission',
@@ -59,7 +58,7 @@ class Permission extends React.Component {
       });
     }
     return (
-      <div>
+      <div className={'col-xs-8' + ' ' + styles.modifyWrapper}>
         <Helmet
           title={`Permission ${pageTitle} - ${functionName} - ${pageTitle}s | Hasura`}
         />
@@ -71,10 +70,11 @@ class Permission extends React.Component {
           breadCrumbs={breadCrumbs}
           baseUrl={baseUrl}
           showLoader={false}
+          testPrefix={'functions'}
         />
         <br />
         <p>
-          Note: Permission defined for the setoff table, {`${setOffTable}`} are
+          Note: Permission defined for the setof table, {`${setOffTable}`}, are
           applicable to the data returned by this function
         </p>
         <div className={styles.commonBtn}>

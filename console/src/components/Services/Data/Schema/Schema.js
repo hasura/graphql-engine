@@ -78,9 +78,15 @@ class Schema extends Component {
 
     /* Filter */
     const trackedFuncs = trackedFunctions.map(t => t.function_name);
-    const trackableFuncs = functionsList.filter(
-      f => trackedFuncs.indexOf(f.function_name) === -1
-    );
+    // Assuming schema for both function and tables are same
+    const trackedTables = schema.map(t => t.table_name);
+    const trackableFuncs = functionsList.filter(f => {
+      // return function which are tracked && function name whose setof tables are tracked
+      return (
+        trackedFuncs.indexOf(f.function_name) === -1 &&
+        trackedTables.indexOf(f.return_type_name) !== -1
+      ); // && add condition which will check whether the setoff table is tracked or not
+    });
     /* */
 
     const handleSchemaChange = e => {

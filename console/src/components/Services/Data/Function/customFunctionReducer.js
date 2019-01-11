@@ -15,13 +15,11 @@ import { loadMigrationStatus } from '../../../Main/Actions';
 import { handleMigrationErrors } from '../../EventTrigger/EventActions';
 
 import { showSuccessNotification } from '../Notification';
-import { push } from 'react-router-redux';
+// import { push } from 'react-router-redux';
 
 import { fetchTrackedFunctions } from '../DataActions';
 
-import _push, { appPrefix } from '../push';
-
-const prefixUrl = globals.urlPrefix + appPrefix;
+import _push from '../push';
 
 /* Constants */
 
@@ -159,7 +157,7 @@ const fetchCustomFunction = (functionName, schema) => {
           });
           return Promise.resolve();
         }
-        return dispatch(push(`/${prefixUrl}`));
+        return dispatch(_push('/'));
       },
       error => {
         console.error('Failed to fetch resolver' + JSON.stringify(error));
@@ -270,7 +268,7 @@ const unTrackCustomFunction = () => {
       // dispatch({ type: REQUEST_SUCCESS });
       Promise.all([
         dispatch({ type: RESET }),
-        dispatch(push('/' + prefixUrl)),
+        dispatch(_push('/')),
         dispatch(fetchTrackedFunctions()),
       ]);
     };
