@@ -15,7 +15,7 @@ const showTelemetryNotification = () => {
     dispatch(
       Notifications.show({
         position: 'tr',
-        autoDismiss: 5,
+        autoDismiss: 15,
         level: 'info',
         title: 'Telemetry',
         message: message,

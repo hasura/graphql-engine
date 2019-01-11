@@ -81,8 +81,8 @@ class App extends Component {
       );
     }
 
-    if (telemetry.misc_opts) {
-      if (!telemetry.misc_opts.console.telemetryNotificationShown) {
+    if (telemetry.console_opts) {
+      if (!telemetry.console_opts.telemetryNotificationShown) {
         dispatch(showTelemetryNotification());
         dispatch(telemetryNotificationShown());
       }

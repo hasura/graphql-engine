@@ -1,5 +1,5 @@
 const defaultTelemetryState = {
-  misc_opts: null,
+  console_opts: null,
   hasura_uuid: null,
 };
 

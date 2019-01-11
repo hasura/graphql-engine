@@ -3,7 +3,7 @@ import requestAction from '../utils/requestAction';
 import dataHeaders from '../components/Services/Data/Common/Headers';
 import defaultTelemetryState from './State';
 
-const SET_MISC_OPTS = 'Telemetry/SET_MISC_OPTS';
+const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
 const SET_HASURA_UUID = 'Telemetry/SET_HASURA_UUID';
 const SET_TELEMETRY_DISABLED = 'Telemetr/SET_TELEMETRY_DISABLED';
@@ -22,7 +22,7 @@ const setNotificationShownInDB = () => (dispatch, getState) => {
     body: JSON.stringify({
       type: 'run_sql',
       args: {
-        sql: `update hdb_catalog.hdb_version set misc_state = misc_state::jsonb || jsonb_build_object('console', ( select coalesce(misc_state->'console', '{}'::jsonb)||'{"telemetryNotificationShown":true}'::jsonb from hdb_catalog.hdb_version)) where hasura_uuid='${uuid}';`,
+        sql: `update hdb_catalog.hdb_version set console_state = console_state || jsonb_build_object('telemetryNotificationShown', true) where hasura_uuid='${uuid}';`,
       },
     }),
   };
@@ -41,7 +41,7 @@ const setNotificationShownInDB = () => (dispatch, getState) => {
   );
 };
 
-const loadMiscOpts = () => {
+const loadConsoleOpts = () => {
   return (dispatch, getState) => {
     if (window.__env.enableTelemetry === undefined) {
       return dispatch({ type: SET_TELEMETRY_DISABLED });
@@ -58,7 +58,7 @@ const loadMiscOpts = () => {
             name: 'hdb_version',
             schema: 'hdb_catalog',
           },
-          columns: ['hasura_uuid', 'misc_state'],
+          columns: ['hasura_uuid', 'console_state'],
         },
       }),
     };
@@ -70,8 +70,8 @@ const loadMiscOpts = () => {
             data: data[0].hasura_uuid,
           });
           dispatch({
-            type: SET_MISC_OPTS,
-            data: data[0].misc_state,
+            type: SET_CONSOLE_OPTS,
+            data: data[0].console_state,
           });
         }
       },
@@ -86,37 +86,22 @@ const loadMiscOpts = () => {
 
 const telemetryReducer = (state = defaultTelemetryState, action) => {
   switch (action.type) {
-    case SET_MISC_OPTS:
-      if (action.data.console) {
-        if (
-          typeof action.data.console.telemetryNotificationShown === 'undefined'
-        ) {
-          action.data.console = {
-            ...action.data.console,
-            telemetryNotificationShown: false,
-          };
-        }
-      } else {
-        action.data = {
-          ...action.data,
-          console: {
-            telemetryNotificationShown: false,
-          },
-        };
-      }
+    case SET_CONSOLE_OPTS:
       return {
         ...state,
-        misc_opts: action.data,
+        console_opts: {
+          ...action.data,
+          telemetryNotificationShown: action.data.telemetryNotificationShown
+            ? true
+            : false,
+        },
       };
     case SET_NOTIFICATION_SHOWN:
       return {
         ...state,
-        misc_opts: {
-          ...state.misc_opts,
-          console: {
-            ...state.misc_opts.console,
-            telemetryNotificationShown: true,
-          },
+        console_opts: {
+          ...state.console_opts,
+          telemetryNotificationShown: true,
         },
       };
     case SET_HASURA_UUID:
@@ -130,4 +115,8 @@ const telemetryReducer = (state = defaultTelemetryState, action) => {
 };
 
 export default telemetryReducer;
-export { loadMiscOpts, telemetryNotificationShown, setNotificationShownInDB };
+export {
+  loadConsoleOpts,
+  telemetryNotificationShown,
+  setNotificationShownInDB,
+};
