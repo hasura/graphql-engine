@@ -6,10 +6,9 @@ import           Options.Applicative
 import           System.Exit                  (exitFailure)
 
 import qualified Data.Aeson                   as J
+import qualified Data.String                  as DataString
 import qualified Data.Text                    as T
 import qualified Hasura.Logging               as L
-import qualified Text.PrettyPrint.ANSI.Leijen as PP
-import qualified Data.String                  as DataString
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types             (RoleName (..))
@@ -17,6 +16,7 @@ import           Hasura.Server.Auth
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 import           Network.Wai.Handler.Warp
+import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
 
 initErrExit :: (Show e) => e -> IO a
@@ -37,16 +37,16 @@ type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 
 data RawServeOptions
   = RawServeOptions
-  { rsoPort          :: !(Maybe Int)
-  , rsoHost          :: !(Maybe HostPreference)
-  , rsoConnParams    :: !RawConnParams
-  , rsoTxIso         :: !(Maybe Q.TxIsolation)
-  , rsoAccessKey     :: !(Maybe AccessKey)
-  , rsoAuthHook      :: !RawAuthHook
-  , rsoJwtSecret     :: !(Maybe Text)
-  , rsoUnAuthRole    :: !(Maybe RoleName)
-  , rsoCorsConfig    :: !RawCorsConfig
-  , rsoEnableConsole :: !Bool
+  { rsoPort            :: !(Maybe Int)
+  , rsoHost            :: !(Maybe HostPreference)
+  , rsoConnParams      :: !RawConnParams
+  , rsoTxIso           :: !(Maybe Q.TxIsolation)
+  , rsoAccessKey       :: !(Maybe AccessKey)
+  , rsoAuthHook        :: !RawAuthHook
+  , rsoJwtSecret       :: !(Maybe Text)
+  , rsoUnAuthRole      :: !(Maybe RoleName)
+  , rsoCorsConfig      :: !RawCorsConfig
+  , rsoEnableConsole   :: !Bool
   , rsoEnableTelemetry :: !(Maybe Bool)
   } deriving (Show, Eq)
 
@@ -61,16 +61,16 @@ type CorsConfig = CorsConfigG T.Text
 
 data ServeOptions
   = ServeOptions
-  { soPort          :: !Int
-  , soHost          :: !HostPreference
-  , soConnParams    :: !Q.ConnParams
-  , soTxIso         :: !Q.TxIsolation
-  , soAccessKey     :: !(Maybe AccessKey)
-  , soAuthHook      :: !(Maybe AuthHook)
-  , soJwtSecret     :: !(Maybe Text)
-  , soUnAuthRole    :: !(Maybe RoleName)
-  , soCorsConfig    :: !CorsConfig
-  , soEnableConsole :: !Bool
+  { soPort            :: !Int
+  , soHost            :: !HostPreference
+  , soConnParams      :: !Q.ConnParams
+  , soTxIso           :: !Q.TxIsolation
+  , soAccessKey       :: !(Maybe AccessKey)
+  , soAuthHook        :: !(Maybe AuthHook)
+  , soJwtSecret       :: !(Maybe Text)
+  , soUnAuthRole      :: !(Maybe RoleName)
+  , soCorsConfig      :: !CorsConfig
+  , soEnableConsole   :: !Bool
   , soEnableTelemetry :: !Bool
   } deriving (Show, Eq)
 
