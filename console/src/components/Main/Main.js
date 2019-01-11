@@ -7,6 +7,7 @@ import * as tooltip from './Tooltips';
 import 'react-toggle/style.css';
 import Spinner from '../Common/Spinner/Spinner';
 import { loadServerVersion, checkServerUpdates } from './Actions';
+import { loadMiscOpts } from '../../telemetry/Actions.js';
 import './NotificationOverrides.css';
 import semverCheck from '../../helpers/semver';
 
@@ -35,6 +36,7 @@ class Main extends React.Component {
       .querySelector('body')
       .addEventListener('click', this.handleBodyClick);
     dispatch(loadServerVersion()).then(() => {
+      dispatch(loadMiscOpts());
       dispatch(checkServerUpdates()).then(() => {
         let isUpdateAvailable = false;
         try {

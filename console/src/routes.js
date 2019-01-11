@@ -60,7 +60,6 @@ const routes = store => {
   const eventRouterUtils = eventRouter(connect, store, composeOnEnterHooks);
   const requireSchema = dataRouterUtils.requireSchema;
   const makeDataRouter = dataRouterUtils.makeDataRouter;
-  const telemetryOpts = dataRouterUtils.telemetryOpts;
   const makeEventRouter = eventRouterUtils.makeEventRouter;
 
   const customResolverRouter = getCustomResolverRouter(
@@ -74,11 +73,7 @@ const routes = store => {
       <Route
         path=""
         component={Main}
-        onEnter={composeOnEnterHooks([
-          telemetryOpts,
-          requireSchema,
-          requireMigrationStatus,
-        ])}
+        onEnter={composeOnEnterHooks([requireSchema, requireMigrationStatus])}
       >
         <Route path="">
           <IndexRoute component={generatedApiExplorer(connect)} />
