@@ -44,7 +44,7 @@ const setNotificationShownInDB = () => (dispatch, getState) => {
 const loadMiscOpts = () => {
   return (dispatch, getState) => {
     if (window.__env.enableTelemetry === undefined) {
-      return { type: SET_TELEMETRY_DISABLED };
+      return dispatch({ type: SET_TELEMETRY_DISABLED });
     }
     const url = Endpoints.getSchema;
     const options = {
