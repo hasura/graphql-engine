@@ -1,8 +1,6 @@
 package util
 
 import (
-	"encoding/json"
-
 	"github.com/sirupsen/logrus"
 
 	"github.com/Masterminds/semver"
@@ -11,23 +9,13 @@ import (
 
 // ServerState is the state of Hasura stored on the server.
 type ServerState struct {
-	UUID string
-	MiscState
+	UUID     string
+	CLIState map[string]interface{}
 }
 
-// MiscState is the miscellaneous state values stored on the server by
-// console and CLI.
-type MiscState struct {
-	CLIState `json:"cli"`
-}
-
-// CLIState is the state stored by CLI on the server.
-type CLIState struct {
-}
-
-type runSQLResponse struct {
-	ResultType string     `json:"result_type"`
-	Result     [][]string `json:"result"`
+type hdbVersion struct {
+	UUID     string                 `json:"hasura_uuid"`
+	CLIState map[string]interface{} `json:"cli_state"`
 }
 
 // GetServerState queries a server for the state.
@@ -36,52 +24,35 @@ func GetServerState(endpoint, accessKey string, serverVersion *semver.Version, l
 		UUID: "00000000-0000-0000-0000-000000000000",
 	}
 	payload := `{
-		"type": "run_sql",
+		"type": "select",
 		"args": {
-			"sql": "select hasura_uuid, misc_state from hdb_catalog.hdb_version"
+			"table": {
+				"schema": "hdb_catalog",
+				"name": "hdb_version"
+			},
+			"columns": [
+				"hasura_uuid",
+				"cli_state"
+			]
 		}
 	}`
 	req := gorequest.New()
 	req = req.Post(endpoint + "/v1/query").Send(payload)
 	req.Set("X-Hasura-Access-Key", accessKey)
 
-	var r runSQLResponse
+	var r []hdbVersion
 	_, _, errs := req.EndStruct(&r)
 	if len(errs) != 0 {
 		log.Debugf("server state: errors: %v", errs)
 		return state
 	}
 
-	if r.ResultType != "TuplesOk" {
-		log.Debugf("server state: resultType: %s", r.ResultType)
+	if len(r) != 1 {
+		log.Debugf("invalid response: %v", r)
 		return state
 	}
 
-	if len(r.Result) != 2 {
-		log.Debugf("server state: result: %v", r.Result)
-		return state
-	}
-
-	header := r.Result[0]
-	var i_uuid, i_state int
-	for i, k := range header {
-		if k == "hasura_uuid" {
-			i_uuid = i
-		}
-		if k == "misc_state" {
-			i_state = i
-		}
-	}
-	values := r.Result[1]
-
-	state.UUID = values[i_uuid]
-
-	var ms MiscState
-	err := json.Unmarshal([]byte(values[i_state]), &ms)
-	if err != nil {
-		log.Debugf("server state: %v", values[i_state])
-		return state
-	}
-	state.MiscState = ms
+	state.UUID = r[0].UUID
+	state.CLIState = r[0].CLIState
 	return state
 }
