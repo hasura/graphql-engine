@@ -48,6 +48,11 @@ const loadTriggers = () => (dispatch, getState) => {
           schema: 'hdb_catalog',
         },
         columns: ['*'],
+        order_by: {
+          column: 'name',
+          order: 'asc',
+          nulls: 'last',
+        },
       },
     }),
   };
